@@ -1,156 +1,40 @@
-From: "Tobias Oed" <tobiasoed@hotmail.com>
-Subject: Re: [2.6 patch] always enable CONFIG_PDC202XX_FORCE
-Date: Mon, 03 Apr 2006 20:10:46 -0400
-Message-ID: <BAY105-F31FF2F6DBC43E2A09B7EBEA3CA0@phx.gbl>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata machine check on Alpha
+Date: Tue, 04 Apr 2006 10:43:41 +0900
+Message-ID: <4431CF4D.6000806@gmail.com>
+References: <1br232p2g092l611qrqvmvpuus2bqp7bc2@4ax.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bay105-f31.bay105.hotmail.com ([65.54.224.41]:61711 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S964898AbWDDAKw
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Apr 2006 20:10:52 -0400
+Received: from zproxy.gmail.com ([64.233.162.192]:43982 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751265AbWDDBnq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Apr 2006 21:43:46 -0400
+Received: by zproxy.gmail.com with SMTP id o37so2055889nzf
+        for <linux-ide@vger.kernel.org>; Mon, 03 Apr 2006 18:43:45 -0700 (PDT)
+In-Reply-To: <1br232p2g092l611qrqvmvpuus2bqp7bc2@4ax.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: tobiasoed@hotmail.com, bzolnier@gmail.com
+To: Jonathan Blake Benson <airbatica@verizon.net>
+Cc: linux-ide@vger.kernel.org
 
-> > On 3/27/06, Sergei Shtylylov <sshtylyov@ru.mvista.com> wrote:
-> > Hello.
-> >
-> > Adrian Bunk wrote:
-> >
-> > > This patch removes the CONFIG_PDC202XX_FORCE=n case.
-> >
-> > > Signed-off-by: Adrian Bunk <bunk@stusta.de>
-> >
-> > > ---
-> > >
-> > > This patch was already sent on:
-> > > - 14 Jan 2006
-> > >
-> > >  drivers/ide/Kconfig            |    7 -------
-> > >  drivers/ide/pci/pdc202xx_new.c |    6 ------
-> > >  drivers/ide/pci/pdc202xx_old.c |   15 ---------------
-> > >  3 files changed, 28 deletions(-)
-> >
-> > [skipped]
-> >
-> > > --- linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c.old  
->2006-01-14 20:44:01.000000000 +0100
-> > > +++ linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c      
->2006-01-14 20:44:21.000000000 +0100
-> > > @@ -786,9 +786,6 @@
-> > >               .init_dma       = init_dma_pdc202xx,
-> > >               .channels       = 2,
-> > >               .autodma        = AUTODMA,
-> > > -#ifndef CONFIG_PDC202XX_FORCE
-> > > -             .enablebits     = {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
-> > > -#endif
-> > >               .bootable       = OFF_BOARD,
-> > >               .extra          = 16,
-> > >       },{     /* 1 */
-> > > @@ -799,9 +796,6 @@
-> > >               .init_dma       = init_dma_pdc202xx,
-> > >               .channels       = 2,
-> > >               .autodma        = AUTODMA,
-> > > -#ifndef CONFIG_PDC202XX_FORCE
-> > > -             .enablebits     = {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
-> > > -#endif
-> > >               .bootable       = OFF_BOARD,
-> > >               .extra          = 48,
-> > >               .flags          = IDEPCI_FLAG_FORCE_PDC,
-> >
-> >     A late question: wasn't that IDEPCI_FLAG_FORCE_PDC flag there for 
->the same
-> > purpose -- to bypass enablebits check? Wasn't it enough?
->
->It was for the same purpose but it wasn't enough,
->now this flag can die...
->
->Bartlomiej
+Jonathan Blake Benson wrote:
+> I posted a couple of months ago regarding enabling libata.atapi on a
+> Digital Alpha 164LX, equipped with a Silicon Image 3114 controller.  I
+> decied to give kernel 2.6.16 (release, was previously using rc-1) a
+> shot, and it no longer longer panics.  I still have a Lite-ON DVD ROM
+> drive connected via a sil3611 bridge to port number 4, hoping that I
+> can avoid using the onboard CMD646.
+> 
+> No panic this time, though it appears to throw a machine check.  The
+> system continues all the way to multi-user, and the Maxtor drives are
+> usable.  Hope the attached dmesg helps.  Let me know if I can be of
+> any assitance.
+> 
 
-Here is a patch to remove the IDEPCI_FLAG_FORCE_PDC flag. Lightly tested 
-with
-my onboard pdc20265.
-Tobias.
+Can you build your kernel with ATA_DEBUG set and post dmesg?  Just 
+change #undef ATA_DEBUG to #define ATA_DEBUG at the top of 
+include/linux/libata.h
 
-Signed-off-by: Tobias Oed <tobiasoed@hotmail.com>
-
-diff -r -u linux-2.6.16.orig/drivers/ide/pci/pdc202xx_old.c 
-linux-2.6.16.clean/drivers/ide/pci/pdc202xx_old.c
---- linux-2.6.16.orig/drivers/ide/pci/pdc202xx_old.c    2006-03-20 
-06:53:29.000000000 +0100
-+++ linux-2.6.16.clean/drivers/ide/pci/pdc202xx_old.c   2006-04-04 
-01:29:19.000000000 +0200
-@@ -798,7 +798,6 @@
-                .autodma        = AUTODMA,
-                .bootable       = OFF_BOARD,
-                .extra          = 48,
--               .flags          = IDEPCI_FLAG_FORCE_PDC,
-        },{     /* 2 */
-                .name           = "PDC20263",
-                .init_setup     = init_setup_pdc202ata4,
-@@ -819,7 +818,6 @@
-                .autodma        = AUTODMA,
-                .bootable       = OFF_BOARD,
-                .extra          = 48,
--               .flags          = IDEPCI_FLAG_FORCE_PDC,
-        },{     /* 4 */
-                .name           = "PDC20267",
-                .init_setup     = init_setup_pdc202xx,
-diff -r -u linux-2.6.16.orig/drivers/ide/setup-pci.c 
-linux-2.6.16.clean/drivers/ide/setup-pci.c
---- linux-2.6.16.orig/drivers/ide/setup-pci.c   2006-03-20 
-06:53:29.000000000 +0100
-+++ linux-2.6.16.clean/drivers/ide/setup-pci.c  2006-04-04 
-01:33:11.000000000 +0200
-@@ -580,7 +580,6 @@
-        int port;
-        int at_least_one_hwif_enabled = 0;
-        ide_hwif_t *hwif, *mate = NULL;
--       static int secondpdc = 0;
-        u8 tmp;
-
-        index->all = 0xf0f0;
-@@ -591,22 +590,10 @@
-
-        for (port = 0; port <= 1; ++port) {
-                ide_pci_enablebit_t *e = &(d->enablebits[port]);
--
--               /*
--                * If this is a Promise FakeRaid controller,
--                * the 2nd controller will be marked as
--                * disabled while it is actually there and enabled
--                * by the bios for raid purposes.
--                * Skip the normal "is it enabled" test for those.
--                */
--               if ((d->flags & IDEPCI_FLAG_FORCE_PDC) &&
--                   (secondpdc++==1) && (port==1))
--                       goto controller_ok;
-
-                if (e->reg && (pci_read_config_byte(dev, e->reg, &tmp) ||
-                    (tmp & e->mask) != e->val))
-                        continue;       /* port not enabled */
--controller_ok:
-
-                if (d->channels <= port)
-                        break;
-diff -r -u linux-2.6.16.orig/include/linux/ide.h 
-linux-2.6.16.clean/include/linux/ide.h
---- linux-2.6.16.orig/include/linux/ide.h       2006-03-20 
-06:53:29.000000000 +0100
-+++ linux-2.6.16.clean/include/linux/ide.h      2006-04-04 
-01:29:31.000000000 +0200
-@@ -1219,7 +1219,6 @@
-enum {
-        /* Uses ISA control ports not PCI ones. */
-        IDEPCI_FLAG_ISA_PORTS           = (1 << 0),
--       IDEPCI_FLAG_FORCE_PDC           = (1 << 1),
-};
-
-typedef struct ide_pci_device_s {
-
-_________________________________________________________________
-Express yourself instantly with MSN Messenger! Download today - it's FREE! 
-http://messenger.msn.click-url.com/go/onm00200471ave/direct/01/
-
+-- 
+tejun
