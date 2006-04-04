@@ -1,64 +1,156 @@
-From: Dan Aloni <da-x@monatomic.org>
-Subject: Re: sata_mv: module reloading doesn't work
-Date: Tue, 4 Apr 2006 00:57:29 +0300
-Message-ID: <20060403215729.GA17731@localdomain>
-References: <20060402155647.GB20270@localdomain> <311601c90604021059jcdf56e4ja35e3507ab291179@mail.gmail.com>
+From: "Tobias Oed" <tobiasoed@hotmail.com>
+Subject: Re: [2.6 patch] always enable CONFIG_PDC202XX_FORCE
+Date: Mon, 03 Apr 2006 20:10:46 -0400
+Message-ID: <BAY105-F31FF2F6DBC43E2A09B7EBEA3CA0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from noname.neutralserver.com ([70.84.186.210]:44420 "EHLO
-	noname.neutralserver.com") by vger.kernel.org with ESMTP
-	id S932373AbWDCV4M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Apr 2006 17:56:12 -0400
-Content-Disposition: inline
-In-Reply-To: <311601c90604021059jcdf56e4ja35e3507ab291179@mail.gmail.com>
+Received: from bay105-f31.bay105.hotmail.com ([65.54.224.41]:61711 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S964898AbWDDAKw
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Apr 2006 20:10:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lkml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: tobiasoed@hotmail.com, bzolnier@gmail.com
 
-On Sun, Apr 02, 2006 at 11:59:45AM -0600, Eric D. Mudama wrote:
-> On 4/2/06, Dan Aloni <da-x@monatomic.org> wrote:
-> > Hello,
+> > On 3/27/06, Sergei Shtylylov <sshtylyov@ru.mvista.com> wrote:
+> > Hello.
 > >
-> > I'm testing the sata_mv driver to see whether reloading (rmmod
-> > - insmod) works, and it seems something is broken there. The
-> > first insmod goes okay - however all the insmods that follow
-> > emit error=0x01 { AddrMarkNotFound } and status=0x50 { DriveReady
-> > SeekComplete } from all the drives.
-> 
-> More to Jeff/Mark etc... wouldn't this be expected?  0x50/0x01 is the
-> contents of a reset signature FIS.  If the module was removed, and
-> upon insmod the bus came back up, the drive would complete ASR or
-> COMRESET processing and post a signature FIS.  Is the phy disabled
-> when sata_mv is removed?
+> > Adrian Bunk wrote:
+> >
+> > > This patch removes the CONFIG_PDC202XX_FORCE=n case.
+> >
+> > > Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> >
+> > > ---
+> > >
+> > > This patch was already sent on:
+> > > - 14 Jan 2006
+> > >
+> > >  drivers/ide/Kconfig            |    7 -------
+> > >  drivers/ide/pci/pdc202xx_new.c |    6 ------
+> > >  drivers/ide/pci/pdc202xx_old.c |   15 ---------------
+> > >  3 files changed, 28 deletions(-)
+> >
+> > [skipped]
+> >
+> > > --- linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c.old  
+>2006-01-14 20:44:01.000000000 +0100
+> > > +++ linux-2.6.15-mm4-full/drivers/ide/pci/pdc202xx_old.c      
+>2006-01-14 20:44:21.000000000 +0100
+> > > @@ -786,9 +786,6 @@
+> > >               .init_dma       = init_dma_pdc202xx,
+> > >               .channels       = 2,
+> > >               .autodma        = AUTODMA,
+> > > -#ifndef CONFIG_PDC202XX_FORCE
+> > > -             .enablebits     = {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+> > > -#endif
+> > >               .bootable       = OFF_BOARD,
+> > >               .extra          = 16,
+> > >       },{     /* 1 */
+> > > @@ -799,9 +796,6 @@
+> > >               .init_dma       = init_dma_pdc202xx,
+> > >               .channels       = 2,
+> > >               .autodma        = AUTODMA,
+> > > -#ifndef CONFIG_PDC202XX_FORCE
+> > > -             .enablebits     = {{0x50,0x02,0x02}, {0x50,0x04,0x04}},
+> > > -#endif
+> > >               .bootable       = OFF_BOARD,
+> > >               .extra          = 48,
+> > >               .flags          = IDEPCI_FLAG_FORCE_PDC,
+> >
+> >     A late question: wasn't that IDEPCI_FLAG_FORCE_PDC flag there for 
+>the same
+> > purpose -- to bypass enablebits check? Wasn't it enough?
+>
+>It was for the same purpose but it wasn't enough,
+>now this flag can die...
+>
+>Bartlomiej
 
-Okay, finally got to test sata_mv with kexec, perhaps this can shed
-some light on the matter.
+Here is a patch to remove the IDEPCI_FLAG_FORCE_PDC flag. Lightly tested 
+with
+my onboard pdc20265.
+Tobias.
 
- * Normal boot
- * insmod sata_mv
- * all is okay, as expected
- * Did kexec    
- * insmod sata_mv
- * all is okay!
+Signed-off-by: Tobias Oed <tobiasoed@hotmail.com>
 
-Good! It means that sata_mv doesn't mess things on its initialization 
-sequence.
+diff -r -u linux-2.6.16.orig/drivers/ide/pci/pdc202xx_old.c 
+linux-2.6.16.clean/drivers/ide/pci/pdc202xx_old.c
+--- linux-2.6.16.orig/drivers/ide/pci/pdc202xx_old.c    2006-03-20 
+06:53:29.000000000 +0100
++++ linux-2.6.16.clean/drivers/ide/pci/pdc202xx_old.c   2006-04-04 
+01:29:19.000000000 +0200
+@@ -798,7 +798,6 @@
+                .autodma        = AUTODMA,
+                .bootable       = OFF_BOARD,
+                .extra          = 48,
+-               .flags          = IDEPCI_FLAG_FORCE_PDC,
+        },{     /* 2 */
+                .name           = "PDC20263",
+                .init_setup     = init_setup_pdc202ata4,
+@@ -819,7 +818,6 @@
+                .autodma        = AUTODMA,
+                .bootable       = OFF_BOARD,
+                .extra          = 48,
+-               .flags          = IDEPCI_FLAG_FORCE_PDC,
+        },{     /* 4 */
+                .name           = "PDC20267",
+                .init_setup     = init_setup_pdc202xx,
+diff -r -u linux-2.6.16.orig/drivers/ide/setup-pci.c 
+linux-2.6.16.clean/drivers/ide/setup-pci.c
+--- linux-2.6.16.orig/drivers/ide/setup-pci.c   2006-03-20 
+06:53:29.000000000 +0100
++++ linux-2.6.16.clean/drivers/ide/setup-pci.c  2006-04-04 
+01:33:11.000000000 +0200
+@@ -580,7 +580,6 @@
+        int port;
+        int at_least_one_hwif_enabled = 0;
+        ide_hwif_t *hwif, *mate = NULL;
+-       static int secondpdc = 0;
+        u8 tmp;
 
- * Normal boot
- * insmod sata_mv
- * all is okay, as expected
- * rmmod sata_mv
- * insmod sata_mv 
- * all is bad, as expected
- * kexec
- * insmod sata_mv
- * all is bad!
+        index->all = 0xf0f0;
+@@ -591,22 +590,10 @@
 
-Conclusion: sata_mv's shutdown does something bad.
+        for (port = 0; port <= 1; ++port) {
+                ide_pci_enablebit_t *e = &(d->enablebits[port]);
+-
+-               /*
+-                * If this is a Promise FakeRaid controller,
+-                * the 2nd controller will be marked as
+-                * disabled while it is actually there and enabled
+-                * by the bios for raid purposes.
+-                * Skip the normal "is it enabled" test for those.
+-                */
+-               if ((d->flags & IDEPCI_FLAG_FORCE_PDC) &&
+-                   (secondpdc++==1) && (port==1))
+-                       goto controller_ok;
 
--- 
-Dan Aloni, Linux specialist
-XIV LTD, http://www.xivstorage.com
-da-x@monatomic.org, da-x@colinux.org, da-x@gmx.net, dan@xiv.co.il
+                if (e->reg && (pci_read_config_byte(dev, e->reg, &tmp) ||
+                    (tmp & e->mask) != e->val))
+                        continue;       /* port not enabled */
+-controller_ok:
+
+                if (d->channels <= port)
+                        break;
+diff -r -u linux-2.6.16.orig/include/linux/ide.h 
+linux-2.6.16.clean/include/linux/ide.h
+--- linux-2.6.16.orig/include/linux/ide.h       2006-03-20 
+06:53:29.000000000 +0100
++++ linux-2.6.16.clean/include/linux/ide.h      2006-04-04 
+01:29:31.000000000 +0200
+@@ -1219,7 +1219,6 @@
+enum {
+        /* Uses ISA control ports not PCI ones. */
+        IDEPCI_FLAG_ISA_PORTS           = (1 << 0),
+-       IDEPCI_FLAG_FORCE_PDC           = (1 << 1),
+};
+
+typedef struct ide_pci_device_s {
+
+_________________________________________________________________
+Express yourself instantly with MSN Messenger! Download today - it's FREE! 
+http://messenger.msn.click-url.com/go/onm00200471ave/direct/01/
+
