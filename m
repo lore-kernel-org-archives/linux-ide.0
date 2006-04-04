@@ -1,54 +1,54 @@
-From: "Lukasz Kosewski" <lkosewsk@gmail.com>
-Subject: Re: register/unregister SATA drive
-Date: Wed, 5 Apr 2006 12:04:12 -0400
-Message-ID: <355e5e5e0604050904r1e14cfe5vf17a50ed52c57410@mail.gmail.com>
-References: <4433E038.3040607@conterra.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: IDE CDROM tail read errors
+Date: Tue, 04 Apr 2006 15:09:20 -0400
+Message-ID: <4432C460.3080606@tmr.com>
+References: <m3wtedrrpf.fsf@defiant.localdomain> <1143717489.29388.32.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.181]:58748 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751137AbWDEQEN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Apr 2006 12:04:13 -0400
-Received: by pproxy.gmail.com with SMTP id i49so1117899pye
-        for <linux-ide@vger.kernel.org>; Wed, 05 Apr 2006 09:04:12 -0700 (PDT)
-In-Reply-To: <4433E038.3040607@conterra.de>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751320AbWDES0y@vger.kernel.org>
+In-Reply-To: <1143717489.29388.32.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Dieter_St=FCken?= <stueken@conterra.de>
-Cc: linux-ide@vger.kernel.org
 
-Hey Dieter,
+Alan Cox wrote:
+> On Mer, 2006-03-29 at 21:11 +0200, Krzysztof Halasa wrote:
+>> # ls -l
+>> -rw-r--r-- 1 root root 687177728 Mar 29 15:51 img-15.iso
+>> -rw-r--r-- 1 root root 687177728 Mar 29 15:58 img-15a.iso
+>>
+>> The files are just truncated FC5d1 images (57344 bytes missing).
+> 
+> The final partial read is dropped rather than partially completed.
+> 
+>> # cat /sys/block/sr0/size
+>> 1342264 (i.e., the same as with 2.6.15 + drivers/ide)
+>>
+>> # cat /dev/cdrw > img-16a.iso
+>> cat: /dev/cdrw: Input/output error
+>>
+>> # cat /sys/block/sr0/size
+>> 1342256 (looks like it has been adjusted to .iso image size / 512 when
+>>          the first I/O error occured)
+> 
+> The SCSI layer does this bit for everyone. Its actually not libata or
+> the PATA drivers that have done the work here. You should find ide-scsi
+> does the same.
+> 
+> I patched the old IDE driver a bit to try and deal with this and if you
+> want the patch to hack on and tidy up further feel free. 
+> 
+> 
+Any hope in hell of getting this fixed? It's been broken for too long to 
+remember. IIRC the problem is that on a read which hits EOF, instead of 
+returning partial data read and no error, the status returned is just 
+some "didn't work" variant and the partial read is lost. I also seem to 
+remember that if the length of the ISO was a multiple of a magic number, 
+32k, or the metric hexadecimal phase of the moon, you got a clean EOF.
 
-On 4/5/06, Dieter St=FCken <stueken@conterra.de> wrote:
-> is it possible to unregister a single SATA port and to detach the dis=
-k?
-> how do I inform the kernel to rescan for a newly attached drive on th=
-at
-> port?
+As you say, ide-scsi fixes this, if the people who don't like it would 
+make the alternatives work right it wouldn't be an issue...
 
-To actually do this, I direct you to
-http://lkml.org/lkml/2005/12/29/216
-http://lkml.org/lkml/2005/12/29/215
-
-This is the last submitted version of my hotswap patches for libata,
-which, assuming that you have a Promise controller, will go and
-register unplugged and plugged devices for you.
-
-Now of course, caveats:  those patches aren't updated for 2.6.16
-because I haven't had time to do so and test them.  And, of course,
-they work with some Promise controllers only.
-
-Until they're a) revised to work with new libata EH, b) accepted and
-c) more hardware support is layered on them, they might not help you
-much.
-
-You can use the patches to figure out how to write a system which does
-what you want though, provided you add a way to hook the sata_hot_plug
-and sata_hot_unplug methods from the command line, for instance.
-
-Hope this alleviates the problem a bit,
-
-Luke Kosewski
+Thanks for the info.
