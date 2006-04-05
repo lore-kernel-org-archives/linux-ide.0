@@ -1,77 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/03] libata: set default cbl in probeinit
-Date: Wed, 5 Apr 2006 22:16:37 +0900
-Message-ID: <20060405131637.GB31998@htj.dyndns.org>
+Subject: [PATCH 4/8] libata: separate out sil24_poll_register()
+Date: Wed, 5 Apr 2006 22:29:02 +0900
+Message-ID: <1144243742725-git-send-email-htejun@gmail.com>
+References: <11442437413563-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.238]:44075 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751145AbWDENmk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Apr 2006 09:42:40 -0400
-Received: by wproxy.gmail.com with SMTP id i11so173496wra
-        for <linux-ide@vger.kernel.org>; Wed, 05 Apr 2006 06:42:39 -0700 (PDT)
-Content-Disposition: inline
+Received: from pproxy.gmail.com ([64.233.166.177]:7141 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750742AbWDEN7X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Apr 2006 09:59:23 -0400
+Received: by pproxy.gmail.com with SMTP id i49so1090295pye
+        for <linux-ide@vger.kernel.org>; Wed, 05 Apr 2006 06:59:22 -0700 (PDT)
+In-Reply-To: <11442437413563-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, Carlos.Pardo@siliconimage.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Make setting CBL type responsibility of probeinit.  This allows using
-only ap->cbl == ATA_CBL_SATA test in all other parts.  Without this,
-ata_down_sata_spd_limit() doesn't work during probe reset.
+This will be used by later patches.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
-Jeff, this series is against #upstream and breaks EH patchsets.
-Please let me know when you want me to regenerate and resend the EH
-patchsets.
+ drivers/scsi/sata_sil24.c |   34 +++++++++++++++++++++++-----------
+ 1 files changed, 23 insertions(+), 11 deletions(-)
 
- drivers/scsi/libata-core.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
-
-bc07abde59f78a4faec3f348b91289b39cf31e61
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 3387fe3..8d3fed4 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2369,12 +2369,16 @@ void ata_std_probeinit(struct ata_port *
- 	if ((ap->flags & ATA_FLAG_SATA) && ap->ops->scr_read) {
- 		u32 spd;
+dbf21a7fbc3fe926671416fecebfea70aef78c8a
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 86233ac..0941f74 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -431,6 +431,24 @@ static void sil24_tf_read(struct ata_por
+ 	*tf = pp->tf;
+ }
  
-+		/* set cable type and resume link */
-+		ap->cbl = ATA_CBL_SATA;
- 		sata_phy_resume(ap);
- 
-+		/* init sata_spd_limit to the current value */
- 		spd = (scr_read(ap, SCR_CONTROL) & 0xf0) >> 4;
- 		if (spd)
- 			ap->sata_spd_limit &= (1 << spd) - 1;
- 
-+		/* wait for device */
- 		if (sata_dev_present(ap))
- 			ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
- 	}
-@@ -2531,10 +2535,6 @@ void ata_std_postreset(struct ata_port *
++static int sil24_poll_register(void __iomem *reg, u32 mask, u32 val,
++			       unsigned long interval_msec,
++			       unsigned long timeout_msec)
++{
++	unsigned long timeout;
++	u32 tmp;
++
++	timeout = jiffies + (timeout_msec * HZ) / 1000;
++	do {
++		tmp = readl(reg);
++		if ((tmp & mask) == val)
++			return 0;
++		msleep(interval_msec);
++	} while (time_before(jiffies, timeout));
++
++	return -1;
++}
++
+ static int sil24_softreset(struct ata_port *ap, unsigned int *class)
  {
- 	DPRINTK("ENTER\n");
+ 	void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
+@@ -949,13 +967,12 @@ static int sil24_init_one(struct pci_dev
+ 			probe_ent->host_flags &= ~SIL24_FLAG_PCIX_IRQ_WOC;
+ 	}
  
--	/* set cable type if it isn't already set */
--	if (ap->cbl == ATA_CBL_NONE && ap->flags & ATA_FLAG_SATA)
--		ap->cbl = ATA_CBL_SATA;
--
- 	/* print link status */
- 	if (ap->cbl == ATA_CBL_SATA)
- 		sata_print_link_status(ap);
-@@ -2584,7 +2584,7 @@ int ata_std_probe_reset(struct ata_port 
- 	ata_reset_fn_t hardreset;
+-	/* Mask interrupts during initialization */
++	/* Clear global reset & mask interrupts during initialization */
+ 	writel(0, host_base + HOST_CTRL);
  
- 	hardreset = NULL;
--	if (ap->flags & ATA_FLAG_SATA && ap->ops->scr_read)
-+	if (ap->cbl == ATA_CBL_SATA && ap->ops->scr_read)
- 		hardreset = sata_std_hardreset;
+ 	for (i = 0; i < probe_ent->n_ports; i++) {
+ 		void __iomem *port = port_base + i * PORT_REGS_SIZE;
+ 		unsigned long portu = (unsigned long)port;
+-		int cnt;
  
- 	return ata_drive_probe_reset(ap, ata_std_probeinit,
+ 		probe_ent->port[i].cmd_addr = portu + PORT_PRB;
+ 		probe_ent->port[i].scr_addr = portu + PORT_SCONTROL;
+@@ -975,16 +992,11 @@ static int sil24_init_one(struct pci_dev
+ 		tmp = readl(port + PORT_CTRL_STAT);
+ 		if (tmp & PORT_CS_PORT_RST) {
+ 			writel(PORT_CS_PORT_RST, port + PORT_CTRL_CLR);
+-			readl(port + PORT_CTRL_STAT);	/* sync */
+-			for (cnt = 0; cnt < 10; cnt++) {
+-				msleep(10);
+-				tmp = readl(port + PORT_CTRL_STAT);
+-				if (!(tmp & PORT_CS_PORT_RST))
+-					break;
+-			}
+-			if (tmp & PORT_CS_PORT_RST)
++			if (sil24_poll_register(port + PORT_CTRL_STAT,
++						PORT_CS_PORT_RST, 0, 10, 100))
+ 				dev_printk(KERN_ERR, &pdev->dev,
+-				           "failed to clear port RST\n");
++					   "failed to clear RST for port %d\n",
++					   i);
+ 		}
+ 
+ 		/* Zero error counters. */
 -- 
 1.2.4
+
 
