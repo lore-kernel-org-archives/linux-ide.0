@@ -1,122 +1,77 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/8] sata_sil24: implement loss of completion interrupt on PCI-X errta fix
-Date: Wed, 5 Apr 2006 22:29:02 +0900
-Message-ID: <11442437421505-git-send-email-htejun@gmail.com>
-References: <11442437413563-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 01/03] libata: set default cbl in probeinit
+Date: Wed, 5 Apr 2006 22:16:37 +0900
+Message-ID: <20060405131637.GB31998@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.230]:10522 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751124AbWDEN3L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Apr 2006 09:29:11 -0400
-Received: by wproxy.gmail.com with SMTP id 68so150136wra
-        for <linux-ide@vger.kernel.org>; Wed, 05 Apr 2006 06:29:10 -0700 (PDT)
-In-Reply-To: <11442437413563-git-send-email-htejun@gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.238]:44075 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751145AbWDENmk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Apr 2006 09:42:40 -0400
+Received: by wproxy.gmail.com with SMTP id i11so173496wra
+        for <linux-ide@vger.kernel.org>; Wed, 05 Apr 2006 06:42:39 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, Carlos.Pardo@siliconimage.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-SiI3124 might lose completion interrupt if completion interrupt occurs
-shortly after SLOT_STAT register is read for the previous completion
-interrupt if it is operating in PCI-X mode.
-
-This currently doesn't trigger as libata never queues more than one
-command, but it will with NCQ changes.  This patch implements the
-workaround - turning on WoC and explicitly clearing interrupt.
+Make setting CBL type responsibility of probeinit.  This allows using
+only ap->cbl == ATA_CBL_SATA test in all other parts.  Without this,
+ata_down_sata_spd_limit() doesn't work during probe reset.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil24.c |   29 +++++++++++++++++++++++++++--
- 1 files changed, 27 insertions(+), 2 deletions(-)
+Jeff, this series is against #upstream and breaks EH patchsets.
+Please let me know when you want me to regenerate and resend the EH
+patchsets.
 
-1ecf730e0c67d7a94881897cd955b4623b0b9b58
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 3d301b2..86233ac 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -207,6 +207,9 @@ enum {
- 	BID_SIL3132		= 1,
- 	BID_SIL3131		= 2,
+ drivers/scsi/libata-core.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+bc07abde59f78a4faec3f348b91289b39cf31e61
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 3387fe3..8d3fed4 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2369,12 +2369,16 @@ void ata_std_probeinit(struct ata_port *
+ 	if ((ap->flags & ATA_FLAG_SATA) && ap->ops->scr_read) {
+ 		u32 spd;
  
-+	/* private host flags */
-+	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
-+
- 	IRQ_STAT_4PORTS		= 0xf,
- };
++		/* set cable type and resume link */
++		ap->cbl = ATA_CBL_SATA;
+ 		sata_phy_resume(ap);
  
-@@ -336,7 +339,8 @@ static struct ata_port_info sil24_port_i
- 		.sht		= &sil24_sht,
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
--				  SIL24_NPORTS2FLAG(4),
-+				  SIL24_NPORTS2FLAG(4) |
-+				  SIL24_FLAG_PCIX_IRQ_WOC,
- 		.pio_mask	= 0x1f,			/* pio0-4 */
- 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
- 		.udma_mask	= 0x3f,			/* udma0-5 */
-@@ -725,6 +729,10 @@ static inline void sil24_host_intr(struc
- 	slot_stat = readl(port + PORT_SLOT_STAT);
- 	if (!(slot_stat & HOST_SSTAT_ATTN)) {
- 		struct sil24_port_priv *pp = ap->private_data;
-+
-+		if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+			writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
-+
- 		/*
- 		 * !HOST_SSAT_ATTN guarantees successful completion,
- 		 * so reading back tf registers is unnecessary for
-@@ -856,6 +864,7 @@ static int sil24_init_one(struct pci_dev
- 	void __iomem *host_base = NULL;
- 	void __iomem *port_base = NULL;
- 	int i, rc;
-+	u32 tmp;
++		/* init sata_spd_limit to the current value */
+ 		spd = (scr_read(ap, SCR_CONTROL) & 0xf0) >> 4;
+ 		if (spd)
+ 			ap->sata_spd_limit &= (1 << spd) - 1;
  
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-@@ -929,13 +938,23 @@ static int sil24_init_one(struct pci_dev
- 	/* GPIO off */
- 	writel(0, host_base + HOST_FLASH_CMD);
++		/* wait for device */
+ 		if (sata_dev_present(ap))
+ 			ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
+ 	}
+@@ -2531,10 +2535,6 @@ void ata_std_postreset(struct ata_port *
+ {
+ 	DPRINTK("ENTER\n");
  
-+	/* Apply workaround for completion IRQ loss on PCI-X errata */
-+	if (probe_ent->host_flags & SIL24_FLAG_PCIX_IRQ_WOC) {
-+		tmp = readl(host_base + HOST_CTRL);
-+		if (tmp & 0xe0000)
-+			dev_printk(KERN_INFO, &pdev->dev,
-+				   "Applying completion IRQ loss on PCI-X "
-+				   "errata fix\n");
-+		else
-+			probe_ent->host_flags &= ~SIL24_FLAG_PCIX_IRQ_WOC;
-+	}
-+
- 	/* Mask interrupts during initialization */
- 	writel(0, host_base + HOST_CTRL);
+-	/* set cable type if it isn't already set */
+-	if (ap->cbl == ATA_CBL_NONE && ap->flags & ATA_FLAG_SATA)
+-		ap->cbl = ATA_CBL_SATA;
+-
+ 	/* print link status */
+ 	if (ap->cbl == ATA_CBL_SATA)
+ 		sata_print_link_status(ap);
+@@ -2584,7 +2584,7 @@ int ata_std_probe_reset(struct ata_port 
+ 	ata_reset_fn_t hardreset;
  
- 	for (i = 0; i < probe_ent->n_ports; i++) {
- 		void __iomem *port = port_base + i * PORT_REGS_SIZE;
- 		unsigned long portu = (unsigned long)port;
--		u32 tmp;
- 		int cnt;
+ 	hardreset = NULL;
+-	if (ap->flags & ATA_FLAG_SATA && ap->ops->scr_read)
++	if (ap->cbl == ATA_CBL_SATA && ap->ops->scr_read)
+ 		hardreset = sata_std_hardreset;
  
- 		probe_ent->port[i].cmd_addr = portu + PORT_PRB;
-@@ -946,6 +965,12 @@ static int sil24_init_one(struct pci_dev
- 		/* Initial PHY setting */
- 		writel(0x20c, port + PORT_PHY_CFG);
- 
-+		/* Configure IRQ WoC */
-+		if (probe_ent->host_flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
-+		else
-+			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
-+
- 		/* Clear port RST */
- 		tmp = readl(port + PORT_CTRL_STAT);
- 		if (tmp & PORT_CS_PORT_RST) {
+ 	return ata_drive_probe_reset(ap, ata_std_probeinit,
 -- 
 1.2.4
-
 
