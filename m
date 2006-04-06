@@ -1,54 +1,68 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: IDE CDROM tail read errors
-Date: Tue, 04 Apr 2006 15:09:20 -0400
-Message-ID: <4432C460.3080606@tmr.com>
-References: <m3wtedrrpf.fsf@defiant.localdomain> <1143717489.29388.32.camel@localhost.localdomain>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: libata machine check on Alpha
+Date: Thu, 06 Apr 2006 10:04:03 +0800
+Message-ID: <44347713.9000408@tw.ibm.com>
+References: <2E9B8131C44AF746B1E06BF9B15A434B045D8198@mail.siliconimage.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751320AbWDES0y@vger.kernel.org>
-In-Reply-To: <1143717489.29388.32.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:27596 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751233AbWDFCEd
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Apr 2006 22:04:33 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3624NFg026360
+	for <linux-ide@vger.kernel.org>; Wed, 5 Apr 2006 22:04:23 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k36210OS273640
+	for <linux-ide@vger.kernel.org>; Wed, 5 Apr 2006 20:01:02 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k3624KSJ008162
+	for <linux-ide@vger.kernel.org>; Wed, 5 Apr 2006 20:04:21 -0600
+In-Reply-To: <2E9B8131C44AF746B1E06BF9B15A434B045D8198@mail.siliconimage.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Carlos Pardo <Carlos.Pardo@siliconimage.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jonathan Blake Benson <airbatica@verizon.net>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Alan Cox wrote:
-> On Mer, 2006-03-29 at 21:11 +0200, Krzysztof Halasa wrote:
->> # ls -l
->> -rw-r--r-- 1 root root 687177728 Mar 29 15:51 img-15.iso
->> -rw-r--r-- 1 root root 687177728 Mar 29 15:58 img-15a.iso
->>
->> The files are just truncated FC5d1 images (57344 bytes missing).
-> 
-> The final partial read is dropped rather than partially completed.
-> 
->> # cat /sys/block/sr0/size
->> 1342264 (i.e., the same as with 2.6.15 + drivers/ide)
->>
->> # cat /dev/cdrw > img-16a.iso
->> cat: /dev/cdrw: Input/output error
->>
->> # cat /sys/block/sr0/size
->> 1342256 (looks like it has been adjusted to .iso image size / 512 when
->>          the first I/O error occured)
-> 
-> The SCSI layer does this bit for everyone. Its actually not libata or
-> the PATA drivers that have done the work here. You should find ide-scsi
-> does the same.
-> 
-> I patched the old IDE driver a bit to try and deal with this and if you
-> want the patch to hack on and tidy up further feel free. 
-> 
-> 
-Any hope in hell of getting this fixed? It's been broken for too long to 
-remember. IIRC the problem is that on a read which hits EOF, instead of 
-returning partial data read and no error, the status returned is just 
-some "didn't work" variant and the partial read is lost. I also seem to 
-remember that if the length of the ISO was a multiple of a magic number, 
-32k, or the metric hexadecimal phase of the moon, you got a clean EOF.
+Carlos Pardo wrote:
+> The 3611 bridge does not support the ATAPI DMA direction bit in hardw=
+are.(software support only) =20
+>=20
+> The 3811 bridge supports ATAPI DMA direction bit in both software and=
+ hardware.
+>=20
+> The 646 chip is ancient and he should upgrade.  The behavior of this =
+device is unknown since this part was EOL'd years ago.
+>=20
+>=20
 
-As you say, ide-scsi fixes this, if the people who don't like it would 
-make the alternatives work right it wouldn't be an issue...
+Hi Carlos,
 
-Thanks for the info.
+Does this mean that only the 3611 bridge needs the DMA_DIR bit set by h=
+ost software, while 3811
+can detect the ATAPI DMA direction by hardware and doesn't need the DMA=
+_DIR bit?
+(I guess that 3811 detects the direction by looking into the SCSI CDB. =
+If the SCSI command is
+unknown to it, 3811 still needs the DMA_DIR bit set by software.)
+Is there anyway that we could detect whether the DMA_DIR needs to be se=
+t by host software?
+Is there anyway that we could detect whether the bridge is a 3611 or a =
+3811 chip automatically?
+
+Per Jeff's comment, there is a document on t13 (http://www.t13.org/docs=
+2003/e03131r0.pdf).
+The documents reads:
+"Eg. =96 Word 50, bit 13: Set to 1 for devices that support DMAIN bit i=
+n Features Register for Packet Command".
+However, this looks more for the ATAPI device than for the bridge?
+Also it looks not a t13 standard yet?
+Can we use this word 50 to identify 3611/3811?
+
+Thanks,
+
+Albert
+
