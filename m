@@ -1,94 +1,67 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/8] sata_sil24: implement loss of completion interrupt
- on PCI-X errta fix
-Date: Thu, 06 Apr 2006 12:48:19 -0400
-Message-ID: <44354653.5090008@pobox.com>
-References: <11442437421505-git-send-email-htejun@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 8/8] sata_sil24: reimplement hardreset
+Date: Fri, 7 Apr 2006 01:53:11 +0900
+Message-ID: <20060406165311.GH31998@htj.dyndns.org>
+References: <11442437423316-git-send-email-htejun@gmail.com> <4435456E.6060504@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:20664 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932188AbWDFQsX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Apr 2006 12:48:23 -0400
-In-Reply-To: <11442437421505-git-send-email-htejun@gmail.com>
+Received: from pproxy.gmail.com ([64.233.166.179]:24706 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932193AbWDFQxR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Apr 2006 12:53:17 -0400
+Received: by pproxy.gmail.com with SMTP id f28so218330pyf
+        for <linux-ide@vger.kernel.org>; Thu, 06 Apr 2006 09:53:16 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <4435456E.6060504@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Carlos.Pardo@siliconimage.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> SiI3124 might lose completion interrupt if completion interrupt occurs
-> shortly after SLOT_STAT register is read for the previous completion
-> interrupt if it is operating in PCI-X mode.
+On Thu, Apr 06, 2006 at 12:44:30PM -0400, Jeff Garzik wrote:
+> >+
+> >+	if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
+> >+		reason = "device not ready";
+> >+		goto err;
+> >+	}
+> >+
+> >+	/* SStatus is a bit sluggish (reports 0) on sil24, wait for it */
+> >+	sil24_poll_register(port + PORT_SSTATUS, 0xf, 0x0, 10, 100);
 > 
-> This currently doesn't trigger as libata never queues more than one
-> command, but it will with NCQ changes.  This patch implements the
-> workaround - turning on WoC and explicitly clearing interrupt.
+> Its weird to poll BSY before polling SStatus.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+
+It turned out that the above delay is not enough.  SStatus oscillates
+between zero and valid status for short duration after hardreset
+resulting in weird messages like 'ata2: SATA link up <unknown>
+(SStatus 0 Scontrol 310)".  I've added unconditional msleep(100) right
+afer hardreset and removed this code.
+
 > 
-> ---
+> >+	/* no classification, just return */
 > 
->  drivers/scsi/sata_sil24.c |   29 +++++++++++++++++++++++++++--
->  1 files changed, 27 insertions(+), 2 deletions(-)
+> bad comment?
+
+How about...
+
+	/* Sil24 hardreset doesn't report device signature, leave
+	 * classes[] alone.
+	 */
+?
+
+> >+	return 0;
+> > 
+> >-	/* sil24 doesn't report device signature after hard reset */
+> >-	return sata_std_hardreset(ap, &dummy_class);
+> >+ err:
+> >+	printk(KERN_ERR "ata%u: hardreset failed (%s)\n", ap->id, reason);
+> >+	return -EIO;
+> > }
+> > 
+> > static int sil24_probe_reset(struct ata_port *ap, unsigned int *classes)
 > 
-> 1ecf730e0c67d7a94881897cd955b4623b0b9b58
-> diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-> index 3d301b2..86233ac 100644
-> --- a/drivers/scsi/sata_sil24.c
-> +++ b/drivers/scsi/sata_sil24.c
-> @@ -207,6 +207,9 @@ enum {
->  	BID_SIL3132		= 1,
->  	BID_SIL3131		= 2,
->  
-> +	/* private host flags */
-> +	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
-> +
->  	IRQ_STAT_4PORTS		= 0xf,
->  };
->  
-> @@ -336,7 +339,8 @@ static struct ata_port_info sil24_port_i
->  		.sht		= &sil24_sht,
->  		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
->  				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
-> -				  SIL24_NPORTS2FLAG(4),
-> +				  SIL24_NPORTS2FLAG(4) |
-> +				  SIL24_FLAG_PCIX_IRQ_WOC,
->  		.pio_mask	= 0x1f,			/* pio0-4 */
->  		.mwdma_mask	= 0x07,			/* mwdma0-2 */
->  		.udma_mask	= 0x3f,			/* udma0-5 */
-> @@ -725,6 +729,10 @@ static inline void sil24_host_intr(struc
->  	slot_stat = readl(port + PORT_SLOT_STAT);
->  	if (!(slot_stat & HOST_SSTAT_ATTN)) {
->  		struct sil24_port_priv *pp = ap->private_data;
-> +
-> +		if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
-> +			writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
-> +
->  		/*
->  		 * !HOST_SSAT_ATTN guarantees successful completion,
->  		 * so reading back tf registers is unnecessary for
-> @@ -856,6 +864,7 @@ static int sil24_init_one(struct pci_dev
->  	void __iomem *host_base = NULL;
->  	void __iomem *port_base = NULL;
->  	int i, rc;
-> +	u32 tmp;
->  
->  	if (!printed_version++)
->  		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-> @@ -929,13 +938,23 @@ static int sil24_init_one(struct pci_dev
->  	/* GPIO off */
->  	writel(0, host_base + HOST_FLASH_CMD);
->  
-> +	/* Apply workaround for completion IRQ loss on PCI-X errata */
-> +	if (probe_ent->host_flags & SIL24_FLAG_PCIX_IRQ_WOC) {
-> +		tmp = readl(host_base + HOST_CTRL);
-> +		if (tmp & 0xe0000)
 
-Please turn this magic number (0xe0000) into a constant.
+Thanks.
 
-	Jeff
-
-
-
+-- 
+tejun
