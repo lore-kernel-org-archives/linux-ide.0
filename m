@@ -1,60 +1,34 @@
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-Subject: HDIO_SCAN_HWIF causes hwif to "forget" PCI parent
-Date: Sat, 8 Apr 2006 00:30:06 +0400
-Message-ID: <200604080030.07236.arvidjaar@mail.ru>
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Jure =?UTF-8?Q?Pe=C4=8Dar?= <pegasus@nerv.eu.org>
+Subject: Re: Gigabyte i-Ram cards
+Date: Fri, 7 Apr 2006 23:10:04 +0200
+Message-ID: <20060407231004.9a0c2622.pegasus@nerv.eu.org>
+References: <441F63E6.2090204@garzik.org>
+	<20060321235313.dd36d8ff.pegasus@nerv.eu.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx27.mail.ru ([194.67.23.63]:59397 "EHLO mx27.mail.ru")
-	by vger.kernel.org with ESMTP id S964931AbWDGUaP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 16:30:15 -0400
-Content-Disposition: inline
+Received: from mail.pecar.org ([193.95.219.68]:14143 "EHLO mail.pecar.org")
+	by vger.kernel.org with ESMTP id S964958AbWDGVJr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 17:09:47 -0400
+In-Reply-To: <20060321235313.dd36d8ff.pegasus@nerv.eu.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: jeff@garzik.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Tue, 21 Mar 2006 23:53:13 +0100
+Jure Pe=C4=8Dar <pegasus@nerv.eu.org> wrote:
 
-I have notebook with ALi IDE interface:
+> I hope I'll manage to post my benchmarks by the end of the week. So f=
+ar
+> it looks very useful.=20
 
-00:04.0 IDE interface: ALi Corporation M5229 IDE (rev c3)
+=46inally, I have something: http://nerv.eu.org/iram/
 
-One of scripts called on Mandriva during suspend/resume calls hdparm -U for 
-hdc on suspend and hdparm -R on resume.
+I plan to do some more tests, when time permits.
 
-Now, hdparm -U (HDIO_UNREGISTER_HWIF) completely wipes out hwif reinitializing 
-it. It means, that also hwif->pci_dev is nulled. On hdparm -R 
-(HDIO_SCAN_HWIF) it basically calls hwif_register without initializing 
-pci_dev which means hdc appears in sysfs in different place:
+--=20
 
-before
-
-lrwxrwxrwx  1 root root 0 Apr  7 23:53 /sys/block/hdc/device 
-- -> ../../devices/pci0000:00/0000:00:04.0/ide1/1.0/
-
-after
-
-lrwxrwxrwx  1 root root 0 Apr  7 23:53 /sys/block/hdc/device 
-- -> ../../devices/ide1/1.0/
-
-this slightly confuses udev that receives a new path and regenerates cdrom 
-links (OK this is no more kernel problem but how I noticed it in the first 
-place :) so what has been cdrom0 before suddenly becomes cdrom1.
-
-Looking at ide.c, I do not see any obvious ways to fix it. I appreciate any 
-hint how this can be fixed; alternatively if libpata does not have this issue 
-I am ready to test it.
-
-Thank you
-
-- -andrey
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-
-iD8DBQFENsvPR6LMutpd94wRAjFNAJ0VsKOZZOKn6/SIilrblrXuj4eGhgCePEnm
-VP+KZQOGbpye9esLG6lSC/k=
-=VXbN
------END PGP SIGNATURE-----
+Jure Pe=C4=8Dar
+http://jure.pecar.org/
