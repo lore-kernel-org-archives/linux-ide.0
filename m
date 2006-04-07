@@ -1,62 +1,69 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] sata_sil24: fixes, errata workaround and reset updates, take 2
+Subject: [PATCH 01/13] libata: export ata_set_sata_spd()
 Date: Fri, 7 Apr 2006 17:16:53 +0900
-Message-ID: <114439781363-git-send-email-htejun@gmail.com>
+Message-ID: <11443978131307-git-send-email-htejun@gmail.com>
+References: <114439781363-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.205]:30944 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932369AbWDGIQ5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 04:16:57 -0400
-Received: by xproxy.gmail.com with SMTP id t10so260172wxc
-        for <linux-ide@vger.kernel.org>; Fri, 07 Apr 2006 01:16:57 -0700 (PDT)
-In-Reply-To: 
+Received: from wproxy.gmail.com ([64.233.184.236]:62430 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932372AbWDGIQ7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 04:16:59 -0400
+Received: by wproxy.gmail.com with SMTP id 58so295241wri
+        for <linux-ide@vger.kernel.org>; Fri, 07 Apr 2006 01:16:58 -0700 (PDT)
+In-Reply-To: <114439781363-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, Carlos.Pardo@siliconimage.com, htejun@gmail.com
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, Carlos.Pardo@siliconimage.com
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, Jeff and Carlos.
+This will be used by LLDD hardreset implementation.
 
-This is the second take of sata_sil24-fixes-errata-workaround-and-
-reset-updates patchset.  Changes from the last take[1] are...
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-* sil24_poll_register() is replaced by ata_wait_register()
-* comment update as suggested by Jeff
-* better constants
-* byteorder fix and 64bit patches are pushed backward, as they're
-  untested.
-* hardreset routine updated to unconditionally wait 100ms after reset
-* new patch #11 removes hardresetting in sil24_init_one() as it's
-  already done during host reset and even if the port is in a funky
-  state, we have hardreset to back us up.
+---
 
-This patchset contains 13 patches.
+ drivers/scsi/libata-core.c |    3 ++-
+ include/linux/libata.h     |    1 +
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
-#01	prep
-#02-06	fixes, updates, errata workaround
-#07-09	update softreset
-#10-11	update hardreset
-#12-13	untested fixes
-
-This patchset is against
-
-  upstream[2]
-  + libata-reset-updates patchset (3 patches) [3]
-  + implement-and-use-ata_wait_register patchset [4]
-
-After these updates, sil24 is ready for new EN and NCQ.  In my repo,
-sil24 is working fine with both new EH and NCQ.
-
-Thanks.
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.ide/9406
-[2] c2a6585296009379e0f4eff39cdcb108b457ebf2
-[3] http://article.gmane.org/gmane.linux.ide/9414
-[4] http://article.gmane.org/gmane.linux.ide/9450
+850540dc36ec347cca6604f668804fc81b537660
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 56e1cc6..3668845 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1736,7 +1736,7 @@ int ata_set_sata_spd_needed(struct ata_p
+  *	0 if spd doesn't need to be changed, 1 if spd has been
+  *	changed.  -EOPNOTSUPP if SCR registers are inaccessible.
+  */
+-static int ata_set_sata_spd(struct ata_port *ap)
++int ata_set_sata_spd(struct ata_port *ap)
+ {
+ 	u32 scontrol;
+ 
+@@ -5111,6 +5111,7 @@ EXPORT_SYMBOL_GPL(ata_bmdma_irq_clear);
+ EXPORT_SYMBOL_GPL(ata_bmdma_status);
+ EXPORT_SYMBOL_GPL(ata_bmdma_stop);
+ EXPORT_SYMBOL_GPL(ata_port_probe);
++EXPORT_SYMBOL_GPL(ata_set_sata_spd);
+ EXPORT_SYMBOL_GPL(sata_phy_reset);
+ EXPORT_SYMBOL_GPL(__sata_phy_reset);
+ EXPORT_SYMBOL_GPL(ata_bus_reset);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index bf2f334..1c75024 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -503,6 +503,7 @@ extern void ata_port_probe(struct ata_po
+ extern void __sata_phy_reset(struct ata_port *ap);
+ extern void sata_phy_reset(struct ata_port *ap);
+ extern void ata_bus_reset(struct ata_port *ap);
++extern int ata_set_sata_spd(struct ata_port *ap);
+ extern int ata_drive_probe_reset(struct ata_port *ap,
+ 			ata_probeinit_fn_t probeinit,
+ 			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+-- 
+1.2.4
 
 
