@@ -1,54 +1,45 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
-Date: Fri, 07 Apr 2006 08:36:44 -0500
-Message-ID: <44366AEC.4070504@us.ibm.com>
-References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com> <20060329091104.GB7940@infradead.org> <442B15F4.30506@pobox.com> <442C09A8.50200@us.ibm.com> <44323B73.9070903@pobox.com>
-Reply-To: brking@us.ibm.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH/RFC] libata: turn on the ATAPI DMADIR support per word
+ 62 (revised)
+Date: Fri, 07 Apr 2006 13:54:56 -0400
+Message-ID: <4436A770.70107@garzik.org>
+References: <CF6023AC-C62F-4BA8-A1DA-5CF6100B9608@verizon.net> <44360922.8050801@tw.ibm.com> <44360B05.6050509@garzik.org> <44363D2E.7010700@tw.ibm.com> <4436431C.8070800@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:33669 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964791AbWDGNhF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 09:37:05 -0400
-In-Reply-To: <44323B73.9070903@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:38617 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964831AbWDGRzA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 13:55:00 -0400
+In-Reply-To: <4436431C.8070800@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: albertl@mail.com
+Cc: linux-ide@vger.kernel.org, Jonathan Benson <airbatica@verizon.net>, Tejun Heo <htejun@gmail.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Doug Maxey <dwm@maxeymade.com>
 
-Jeff Garzik wrote:
-> Brian King wrote:
->> Jeff Garzik wrote:
->>> James Bottomley wrote:
->>>> This really doesn't look correct.  What you want is a sata transport
->>>> class with a max command length in the host device.
->>> Christoph Hellwig wrote:
->>>> this sounds wrong to me.  cdb length is a limitation of the host (driver).
->>>> A target will reject unknown commands, no matter what length they have.
->>> In practice, CDB length may be limited by both the host and the device. 
->>>   This applies to ATAPI, and some USB storage too IIRC.  For ATAPI, you 
->>> read the CDB length from the device's IDENTIFY PACKET DEVICE info page.
->> So the question remains, do we need to police the CDB length on a per device
->> basis, or is a per host basis ok? Will we have ATAPI devices falling on the
->> floor if they get sent too large of a cdb?
+Albert Lee wrote:
+> Turn on the ATAPI DMADIR support if word 62 indicates it.
 > 
-> It _must_ be limited by both device and host.  If you have a device that 
-> supports 16-byte CDBs and a host controller which only supports 12-byte 
-> CDBs, clearly the limit is 12, due to host.  However, a reversed 
-> situation (limited by device) is equally plausible/possible.
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> ---
+> (Revised to add mwdma/udma mask of word 62 per Jeff's comments.
+> Need more testing once I get the SiI 3811, etc.)
+> 
+> ATAPI DMADIR follow-up patch to turn on the DMADIR support automatically
+> by checking identify device word 62. (Thanks for Jeff and Tejun's pointer.)
+> 
+> According to Jonathan's test result, SiI 3611 (the current known bridge that
+> requires the ATAPI DMADIR support) doesn't implement word 62. So, the
+> atapi_dmadir parameter is preserved to enable the DMA DIR support manually as
+> work around.
+> 
+> Patch against upstream (c2a6585296009379e0f4eff39cdcb108b457ebf2).
+> For your review, thanks.
 
-Ok. That is what I was assuming, which was the reason I submitted this
-patch in the first place.
+I ACK the patch, though like I said, I would like to see this tested 
+first with some compliant devices.
 
-James, given this information, are you ok with the patch, or do you
-still have an objection?
+	Jeff
 
-Thanks,
 
-Brian
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
