@@ -1,46 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH/RFC] libata: turn on the ATAPI DMA DIR support per word
- 62
-Date: Fri, 07 Apr 2006 02:47:33 -0400
-Message-ID: <44360B05.6050509@garzik.org>
-References: <CF6023AC-C62F-4BA8-A1DA-5CF6100B9608@verizon.net> <44360922.8050801@tw.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 1/5] sata_sil24: fix timeout calculation in sil24_softreset
+Date: Fri, 7 Apr 2006 17:02:47 +0900
+Message-ID: <11443969673236-git-send-email-htejun@gmail.com>
+References: <11443969673485-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47559 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932318AbWDGGri (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 02:47:38 -0400
-In-Reply-To: <44360922.8050801@tw.ibm.com>
+Received: from wproxy.gmail.com ([64.233.184.232]:28627 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932330AbWDGICx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 04:02:53 -0400
+Received: by wproxy.gmail.com with SMTP id 37so323546wra
+        for <linux-ide@vger.kernel.org>; Fri, 07 Apr 2006 01:02:52 -0700 (PDT)
+In-Reply-To: <11443969673485-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: linux-ide@vger.kernel.org, Jonathan Benson <airbatica@verizon.net>, Tejun Heo <htejun@gmail.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Doug Maxey <dwm@maxeymade.com>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Albert Lee wrote:
-> Turn on the ATAPI DMA DIR support if word 62 indicates it.
-> 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> ---
-> ATAPI DMA DIR follow-up patch to turn on the DMA_DIR support automatically
-> by checking identify device word 62. (Thanks for Jeff and Tejun's pointer.)
-> 
-> According to Jonathan's test result, SiI 3611 (the current known bridge that
-> requires the ATAPI DMA DIR support) doesn't implement word 62. So, the
-> atapi_dmadir parameter is preserved to enable the DMA DIR support manually as
-> work around.
+sil24_softreset calculated timeout by adding ATA_TMOUT_BOOT * HZ to
+jiffies; however, as ATA_TMOUT_BOOT is already in jiffies, multiplying
+by HZ makes the value way off.  Fix it.
 
-Two comments:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-* I would like to find a device that's compliant with the spec, and test 
-the patch, before committing.
+---
 
-* DMADIR not only includes a bit flag indicating its presence, it also 
-moves all the DMA capability bits from their standard places.  You'll 
-have to audit every place that reads dev->id[]'s mwdma/udma masks and 
-make sure they look at the DMADIR-special-case location, when DMADIR is set.
+ drivers/scsi/sata_sil24.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-	Jeff
-
+d95c3c50429bdb09fadb3286128b7b0154116e80
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 60dd6f1..512ee6f 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -433,7 +433,7 @@ static int sil24_softreset(struct ata_po
+ 	struct sil24_port_priv *pp = ap->private_data;
+ 	struct sil24_prb *prb = &pp->cmd_block[0].ata.prb;
+ 	dma_addr_t paddr = pp->cmd_block_dma;
+-	unsigned long timeout = jiffies + ATA_TMOUT_BOOT * HZ;
++	unsigned long timeout = jiffies + ATA_TMOUT_BOOT;
+ 	u32 irq_enable, irq_stat;
+ 
+ 	DPRINTK("ENTER\n");
+-- 
+1.2.4
 
 
