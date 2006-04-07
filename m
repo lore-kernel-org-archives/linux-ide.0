@@ -1,45 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH/RFC] libata: turn on the ATAPI DMADIR support per word
- 62 (revised)
-Date: Fri, 07 Apr 2006 13:54:56 -0400
-Message-ID: <4436A770.70107@garzik.org>
-References: <CF6023AC-C62F-4BA8-A1DA-5CF6100B9608@verizon.net> <44360922.8050801@tw.ibm.com> <44360B05.6050509@garzik.org> <44363D2E.7010700@tw.ibm.com> <4436431C.8070800@tw.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: HDIO_SCAN_HWIF causes hwif to "forget" PCI parent
+Date: Sat, 8 Apr 2006 00:30:06 +0400
+Message-ID: <200604080030.07236.arvidjaar@mail.ru>
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38617 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964831AbWDGRzA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 13:55:00 -0400
-In-Reply-To: <4436431C.8070800@tw.ibm.com>
+Received: from mx27.mail.ru ([194.67.23.63]:59397 "EHLO mx27.mail.ru")
+	by vger.kernel.org with ESMTP id S964931AbWDGUaP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 16:30:15 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: linux-ide@vger.kernel.org, Jonathan Benson <airbatica@verizon.net>, Tejun Heo <htejun@gmail.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Doug Maxey <dwm@maxeymade.com>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Albert Lee wrote:
-> Turn on the ATAPI DMADIR support if word 62 indicates it.
-> 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> ---
-> (Revised to add mwdma/udma mask of word 62 per Jeff's comments.
-> Need more testing once I get the SiI 3811, etc.)
-> 
-> ATAPI DMADIR follow-up patch to turn on the DMADIR support automatically
-> by checking identify device word 62. (Thanks for Jeff and Tejun's pointer.)
-> 
-> According to Jonathan's test result, SiI 3611 (the current known bridge that
-> requires the ATAPI DMADIR support) doesn't implement word 62. So, the
-> atapi_dmadir parameter is preserved to enable the DMA DIR support manually as
-> work around.
-> 
-> Patch against upstream (c2a6585296009379e0f4eff39cdcb108b457ebf2).
-> For your review, thanks.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I ACK the patch, though like I said, I would like to see this tested 
-first with some compliant devices.
+I have notebook with ALi IDE interface:
 
-	Jeff
+00:04.0 IDE interface: ALi Corporation M5229 IDE (rev c3)
 
+One of scripts called on Mandriva during suspend/resume calls hdparm -U for 
+hdc on suspend and hdparm -R on resume.
 
+Now, hdparm -U (HDIO_UNREGISTER_HWIF) completely wipes out hwif reinitializing 
+it. It means, that also hwif->pci_dev is nulled. On hdparm -R 
+(HDIO_SCAN_HWIF) it basically calls hwif_register without initializing 
+pci_dev which means hdc appears in sysfs in different place:
 
+before
+
+lrwxrwxrwx  1 root root 0 Apr  7 23:53 /sys/block/hdc/device 
+- -> ../../devices/pci0000:00/0000:00:04.0/ide1/1.0/
+
+after
+
+lrwxrwxrwx  1 root root 0 Apr  7 23:53 /sys/block/hdc/device 
+- -> ../../devices/ide1/1.0/
+
+this slightly confuses udev that receives a new path and regenerates cdrom 
+links (OK this is no more kernel problem but how I noticed it in the first 
+place :) so what has been cdrom0 before suddenly becomes cdrom1.
+
+Looking at ide.c, I do not see any obvious ways to fix it. I appreciate any 
+hint how this can be fixed; alternatively if libpata does not have this issue 
+I am ready to test it.
+
+Thank you
+
+- -andrey
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+
+iD8DBQFENsvPR6LMutpd94wRAjFNAJ0VsKOZZOKn6/SIilrblrXuj4eGhgCePEnm
+VP+KZQOGbpye9esLG6lSC/k=
+=VXbN
+-----END PGP SIGNATURE-----
