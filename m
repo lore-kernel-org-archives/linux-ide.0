@@ -1,34 +1,26 @@
-From: Jure =?UTF-8?Q?Pe=C4=8Dar?= <pegasus@nerv.eu.org>
-Subject: Re: Gigabyte i-Ram cards
-Date: Fri, 7 Apr 2006 23:10:04 +0200
-Message-ID: <20060407231004.9a0c2622.pegasus@nerv.eu.org>
-References: <441F63E6.2090204@garzik.org>
-	<20060321235313.dd36d8ff.pegasus@nerv.eu.org>
+From: Bastian Blank <waldi@debian.org>
+Subject: AHCI suspend support
+Date: Sun, 9 Apr 2006 12:30:54 +0200
+Message-ID: <20060409103054.GA27026@wavehammer.waldi.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.pecar.org ([193.95.219.68]:14143 "EHLO mail.pecar.org")
-	by vger.kernel.org with ESMTP id S964958AbWDGVJr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Apr 2006 17:09:47 -0400
-In-Reply-To: <20060321235313.dd36d8ff.pegasus@nerv.eu.org>
+Received: from moeglingen.blank.eu.org ([82.139.201.30]:51167 "EHLO
+	wavehammer.waldi.eu.org") by vger.kernel.org with ESMTP
+	id S1750722AbWDIKbB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Apr 2006 06:31:01 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jeff@garzik.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Tue, 21 Mar 2006 23:53:13 +0100
-Jure Pe=C4=8Dar <pegasus@nerv.eu.org> wrote:
+Hi Jeff
 
-> I hope I'll manage to post my benchmarks by the end of the week. So f=
-ar
-> it looks very useful.=20
+Do you know what the current state of suspend support in the AHCI driver
+is? There was a patch from Hannes Reinecke some weeks ago.
 
-=46inally, I have something: http://nerv.eu.org/iram/
+Bastian
 
-I plan to do some more tests, when time permits.
-
---=20
-
-Jure Pe=C4=8Dar
-http://jure.pecar.org/
+-- 
+But Captain -- the engines can't take this much longer!
