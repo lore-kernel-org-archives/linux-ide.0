@@ -1,81 +1,60 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [RFC: 2.6 patch] remove unused ide_init_default_hwifs()'s
-Date: Mon, 10 Apr 2006 22:39:50 +0200
-Message-ID: <20060410203950.GG2408@stusta.de>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [RFC: 2.6 patch] remove unused ide_init_default_hwifs()'s
+Date: Mon, 10 Apr 2006 22:18:00 +0100
+Message-ID: <20060410211759.GA26732@flint.arm.linux.org.uk>
+References: <20060410203950.GG2408@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:29713 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S932140AbWDJUjv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Apr 2006 16:39:51 -0400
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:13331 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S1751200AbWDJVSj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Apr 2006 17:18:39 -0400
 Content-Disposition: inline
+In-Reply-To: <20060410203950.GG2408@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, rmk@arm.linux.org.uk, starvik@axis.com, dev-etrax@axis.com
+To: Adrian Bunk <bunk@stusta.de>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, starvik@axis.com, dev-etrax@axis.com
 
-The arm and the cris port both still contained unused 
-ide_init_default_hwifs() static inline's being removed by this patch.
+On Mon, Apr 10, 2006 at 10:39:50PM +0200, Adrian Bunk wrote:
+> --- linux-2.6.17-rc1-mm2-full/include/asm-arm/arch-sa1100/ide.h.old	2006-04-10 21:15:04.000000000 +0200
+> +++ linux-2.6.17-rc1-mm2-full/include/asm-arm/arch-sa1100/ide.h	2006-04-10 21:15:37.000000000 +0200
+> @@ -49,28 +49,3 @@
+>  		*irq = 0;
+>  }
+>  
+> -/*
+> - * This registers the standard ports for this architecture with the IDE
+> - * driver.
+> - */
+> -static __inline__ void
+> -ide_init_default_hwifs(void)
+> -{
+> -    if (machine_is_lart()) {
+> -#ifdef CONFIG_SA1100_LART
+> -        hw_regs_t hw;
+> -
+> -        /* Enable GPIO as interrupt line */
+> -        GPDR &= ~LART_GPIO_IDE;
+> -	set_irq_type(LART_IRQ_IDE, IRQT_RISING);
+> -
+> -        /* set PCMCIA interface timing */
+> -        MECR = 0x00060006;
+> -
+> -        /* init the interface */
+> -	ide_init_hwif_ports(&hw, PCMCIA_IO_0_BASE + 0x0000, PCMCIA_IO_0_BASE + 0x1000, NULL);
+> -        hw.irq = LART_IRQ_IDE;
+> -        ide_register_hw(&hw);
+> -#endif
+> -    }
+> -}
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+NAK.  Waiting for the LART folk to get off their backsides and submit a
+patch to do what's required.  Think of the above as merely documentation
+for what's required.
 
----
-
- include/asm-arm/arch-sa1100/ide.h |   25 -------------------------
- include/asm-cris/arch-v10/ide.h   |   12 ------------
- 2 files changed, 37 deletions(-)
-
---- linux-2.6.17-rc1-mm2-full/include/asm-arm/arch-sa1100/ide.h.old	2006-04-10 21:15:04.000000000 +0200
-+++ linux-2.6.17-rc1-mm2-full/include/asm-arm/arch-sa1100/ide.h	2006-04-10 21:15:37.000000000 +0200
-@@ -49,28 +49,3 @@
- 		*irq = 0;
- }
- 
--/*
-- * This registers the standard ports for this architecture with the IDE
-- * driver.
-- */
--static __inline__ void
--ide_init_default_hwifs(void)
--{
--    if (machine_is_lart()) {
--#ifdef CONFIG_SA1100_LART
--        hw_regs_t hw;
--
--        /* Enable GPIO as interrupt line */
--        GPDR &= ~LART_GPIO_IDE;
--	set_irq_type(LART_IRQ_IDE, IRQT_RISING);
--
--        /* set PCMCIA interface timing */
--        MECR = 0x00060006;
--
--        /* init the interface */
--	ide_init_hwif_ports(&hw, PCMCIA_IO_0_BASE + 0x0000, PCMCIA_IO_0_BASE + 0x1000, NULL);
--        hw.irq = LART_IRQ_IDE;
--        ide_register_hw(&hw);
--#endif
--    }
--}
---- linux-2.6.17-rc1-mm2-full/include/asm-cris/arch-v10/ide.h.old	2006-04-10 21:15:47.000000000 +0200
-+++ linux-2.6.17-rc1-mm2-full/include/asm-cris/arch-v10/ide.h	2006-04-10 21:16:00.000000000 +0200
-@@ -77,18 +77,6 @@
- 	hw->io_ports[IDE_IRQ_OFFSET] = 0;
- }
- 
--static inline void ide_init_default_hwifs(void)
--{
--	hw_regs_t hw;
--	int index;
--
--	for(index = 0; index < MAX_HWIFS; index++) {
--		ide_init_hwif_ports(&hw, ide_default_io_base(index), 0, NULL);
--		hw.irq = ide_default_irq(ide_default_io_base(index));
--		ide_register_hw(&hw, NULL);
--	}
--}
--
- /* some configuration options we don't need */
- 
- #undef SUPPORT_VLB_SYNC
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
