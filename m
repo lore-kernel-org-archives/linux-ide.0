@@ -1,17 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 13/16] libata-eh-fw: activate ->error_handler
-Date: Tue, 11 Apr 2006 22:42:55 +0900
-Message-ID: <11447629753003-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/16] libata-eh-fw: implement new EH scheduling from PIO
+Date: Tue, 11 Apr 2006 22:42:54 +0900
+Message-ID: <11447629741866-git-send-email-htejun@gmail.com>
 References: <11447629733305-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.195]:22650 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750918AbWDKNnE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:43:04 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1094464nzf
+Received: from wproxy.gmail.com ([64.233.184.239]:13463 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750901AbWDKNnB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:43:01 -0400
+Received: by wproxy.gmail.com with SMTP id i11so925405wra
         for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:43:01 -0700 (PDT)
 In-Reply-To: <11447629733305-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,108 +19,66 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Update ata_scsi_error() such that ->error_handler is invoked if
-implemented.  ata_scsi_error() also takes care of merging
-ATA_QCFLAG_TIMEOUT into qc->err_mask and clearing SCSI EH conditions.
+PIO executes without holding host_set lock, so it cannot be
+synchronized using the same mechanism as interrupt driven execution.
+port_task framework makes sure that EH is not entered until PIO task
+is flushed, so PIO task can be sure the qc in progress won't go away
+underneath it.  One thing it cannot be sure of is whether the qc has
+already been scheduled for EH by another exception condition while
+host_set lock was released.
+
+This patch makes ata_poll_qc-complete() handle such conditions
+properly and make it freeze the port if HSM violation is detected
+during PIO execution.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-eh.c |   56 +++++++++++++++++++++++++++++++++++++++++++---
- include/linux/libata.h   |    3 ++
- 2 files changed, 55 insertions(+), 4 deletions(-)
+ drivers/scsi/libata-core.c |   23 +++++++++++++++++++----
+ 1 files changed, 19 insertions(+), 4 deletions(-)
 
-dc24434e3e0ed074dd1f11231e9f0fc50e457d13
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 97ec527..1015f89 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -123,18 +123,66 @@ enum scsi_eh_timer_return ata_scsi_timed
- int ata_scsi_error(struct Scsi_Host *host)
+f4a9faac776713cb0983f4fd551e56e6f0845d27
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index b6f6815..43e47f3 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -3479,16 +3479,31 @@ skip_map:
+  *	LOCKING:
+  *	None.  (grabs host lock)
+  */
+-
+ void ata_poll_qc_complete(struct ata_queued_cmd *qc)
  {
- 	struct ata_port *ap = (struct ata_port *)&host->hostdata[0];
-+	spinlock_t *hs_lock = &ap->host_set->lock;
-+	int repeat_cnt = ATA_EH_MAX_REPEAT;
-+	unsigned long flags;
+ 	struct ata_port *ap = qc->ap;
+ 	unsigned long flags;
  
- 	DPRINTK("ENTER\n");
- 
-+ repeat:
- 	/* synchronize with IRQ handler and port task */
--	spin_unlock_wait(&ap->host_set->lock);
-+	spin_unlock_wait(hs_lock);
- 	ata_port_flush_task(ap);
- 
--	WARN_ON(ata_qc_from_tag(ap, ap->active_tag) == NULL);
-+	/* invoke error handler */
+ 	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	ap->flags &= ~ATA_FLAG_NOINTR;
+-	ata_irq_on(ap);
+-	ata_qc_complete(qc);
++
 +	if (ap->ops->error_handler) {
-+		int i;
-+
-+		/* for new EH, all the qc's are ours now */
-+		for (i = 0; i < ATA_MAX_QUEUE; i++) {
-+			struct ata_queued_cmd *qc;
-+			qc = __ata_qc_from_tag(ap, i);
-+			if (qc->flags & ATA_QCFLAG_TIMEOUT)
-+				qc->err_mask |= AC_ERR_TIMEOUT;;
++		/* EH might have kicked in while host_set lock is released */
++		qc = ata_qc_from_tag(ap, qc->tag);
++		if (qc) {
++			if (!(qc->err_mask & AC_ERR_HSM)) {
++				ap->flags &= ~ATA_FLAG_NOINTR;
++				ata_irq_on(ap);
++				ata_qc_complete(qc);
++			} else
++				ata_eh_schedule_port(ap, ATA_EH_FREEZE);
 +		}
-+
-+		/* invoke EH */
-+		ap->ops->error_handler(ap);
- 
--	ap->ops->eng_timeout(ap);
-+		/* Exception might have happend after ->error_handler
-+		 * recovered the port but before reaching this point.
-+		 * repeat EH if that happens.
-+		 */
-+		spin_lock_irqsave(hs_lock, flags);
-+
-+		if (ap->flags & ATA_FLAG_FROZEN) {
-+			if (--repeat_cnt) {
-+				printk(KERN_INFO "ata%u: port is frozen after "
-+				       "EH completed, repeating EH (cnt=%d)\n",
-+				       ap->id, repeat_cnt);
-+				spin_unlock_irqrestore(hs_lock, flags);
-+				goto repeat;
-+			}
-+			printk(KERN_ERR "ata%u: port is frozen after %d tries, "
-+			       "giving up\n", ap->id, ATA_EH_MAX_REPEAT);
-+		}
-+
-+		/* Clear host_eh_scheduled while holding hs_lock such
-+		 * that if exception occurs after this point but
-+		 * before EH completion, SCSI midlayer will
-+		 * re-initiate EH.
-+		 */
-+		host->host_eh_scheduled = 0;
-+
-+		spin_unlock_irqrestore(hs_lock, flags);
 +	} else {
-+		WARN_ON(ata_qc_from_tag(ap, ap->active_tag) == NULL);
-+		ap->ops->eng_timeout(ap);
++		/* old EH */
++		ap->flags &= ~ATA_FLAG_NOINTR;
++		ata_irq_on(ap);
++		ata_qc_complete(qc);
 +	}
- 
--	WARN_ON(host->host_failed || !list_empty(&host->eh_cmd_q));
-+	/* finish or retry handled scmd's and clean up */
-+	WARN_ON(host->host_failed || !list_empty(&host->eh_cmd_q) ||
-+		host->host_eh_scheduled);
- 
- 	scsi_eh_flush_done_q(&ap->eh_done_q);
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 47fbd68..0ac5214 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -226,6 +226,9 @@ enum {
- 	ATA_EH_ABORT		= (1 << 0), /* abort all active commands */
- 	ATA_EH_FREEZE		= (1 << 1), /* freeze port (implies ABORT) */
- 
-+	/* max repeat if error condition is still set after ->error_handler */
-+	ATA_EH_MAX_REPEAT	= 5,
 +
- 	/* how hard are we gonna try to probe/recover devices */
- 	ATA_PROBE_MAX_TRIES	= 3,
- };
+ 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ }
+ 
 -- 
 1.2.4
 
