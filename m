@@ -1,84 +1,80 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/16] libata-eh-fw: implement new EH scheduling from PIO
-Date: Tue, 11 Apr 2006 22:42:54 +0900
-Message-ID: <11447629741866-git-send-email-htejun@gmail.com>
-References: <11447629733305-git-send-email-htejun@gmail.com>
+Subject: [PATCH 01/14] libata-eh: add constants and flags to be used by EH
+Date: Tue, 11 Apr 2006 22:48:22 +0900
+Message-ID: <11447633021920-git-send-email-htejun@gmail.com>
+References: <11447633013561-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.239]:13463 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750901AbWDKNnB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:43:01 -0400
-Received: by wproxy.gmail.com with SMTP id i11so925405wra
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:43:01 -0700 (PDT)
-In-Reply-To: <11447629733305-git-send-email-htejun@gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.225]:12958 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750929AbWDKNsX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:48:23 -0400
+Received: by wproxy.gmail.com with SMTP id i11so926518wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:48:23 -0700 (PDT)
+In-Reply-To: <11447633013561-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-PIO executes without holding host_set lock, so it cannot be
-synchronized using the same mechanism as interrupt driven execution.
-port_task framework makes sure that EH is not entered until PIO task
-is flushed, so PIO task can be sure the qc in progress won't go away
-underneath it.  One thing it cannot be sure of is whether the qc has
-already been scheduled for EH by another exception condition while
-host_set lock was released.
-
-This patch makes ata_poll_qc-complete() handle such conditions
-properly and make it freeze the port if HSM violation is detected
-during PIO execution.
+Add constants and flags to be used by EH.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   23 +++++++++++++++++++----
- 1 files changed, 19 insertions(+), 4 deletions(-)
+ include/linux/ata.h    |   11 +++++++++++
+ include/linux/libata.h |    5 +++++
+ 2 files changed, 16 insertions(+), 0 deletions(-)
 
-f4a9faac776713cb0983f4fd551e56e6f0845d27
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index b6f6815..43e47f3 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -3479,16 +3479,31 @@ skip_map:
-  *	LOCKING:
-  *	None.  (grabs host lock)
-  */
--
- void ata_poll_qc_complete(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
- 	unsigned long flags;
+27f8a9a882a40d389aaeea10e03594e8c41911d6
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 312a2c0..283138f 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -97,6 +97,9 @@ enum {
+ 	ATA_DRQ			= (1 << 3),	/* data request i/o */
+ 	ATA_ERR			= (1 << 0),	/* have an error */
+ 	ATA_SRST		= (1 << 2),	/* software reset */
++	ATA_ICRC		= (1 << 7),	/* interface CRC error */
++	ATA_UNC			= (1 << 6),	/* uncorrectable media error */
++	ATA_IDNF		= (1 << 4),	/* ID not found */
+ 	ATA_ABORTED		= (1 << 2),	/* command aborted */
  
- 	spin_lock_irqsave(&ap->host_set->lock, flags);
--	ap->flags &= ~ATA_FLAG_NOINTR;
--	ata_irq_on(ap);
--	ata_qc_complete(qc);
-+
-+	if (ap->ops->error_handler) {
-+		/* EH might have kicked in while host_set lock is released */
-+		qc = ata_qc_from_tag(ap, qc->tag);
-+		if (qc) {
-+			if (!(qc->err_mask & AC_ERR_HSM)) {
-+				ap->flags &= ~ATA_FLAG_NOINTR;
-+				ata_irq_on(ap);
-+				ata_qc_complete(qc);
-+			} else
-+				ata_eh_schedule_port(ap, ATA_EH_FREEZE);
-+		}
-+	} else {
-+		/* old EH */
-+		ap->flags &= ~ATA_FLAG_NOINTR;
-+		ata_irq_on(ap);
-+		ata_qc_complete(qc);
-+	}
-+
- 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
- }
+ 	/* ATA command block registers */
+@@ -192,6 +195,14 @@ enum {
+ 	SCR_ACTIVE		= 3,
+ 	SCR_NOTIFICATION	= 4,
  
++	/* SError bits */
++	SERR_DATA_RECOVERED	= (1 << 0), /* recovered data error */
++	SERR_COMM_RECOVERED	= (1 << 1), /* recovered comm failure */
++	SERR_DATA		= (1 << 8), /* unrecovered data error */
++	SERR_PERSISTENT		= (1 << 9), /* persistent data/comm error */
++	SERR_PROTOCOL		= (1 << 10), /* protocol violation */
++	SERR_INTERNAL		= (1 << 11), /* host internal error */
++
+ 	/* struct ata_taskfile flags */
+ 	ATA_TFLAG_LBA48		= (1 << 0), /* enable 48-bit LBA and "HOB" */
+ 	ATA_TFLAG_ISADDR	= (1 << 1), /* enable r/w to nsect/lba regs */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0ac5214..58ad515 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -222,6 +222,11 @@ enum {
+ 	ATA_PORT_PRIMARY	= (1 << 0),
+ 	ATA_PORT_SECONDARY	= (1 << 1),
+ 
++	/* reset / recovery action types */
++	ATA_PORT_REVALIDATE	= (1 << 0),
++	ATA_PORT_SOFTRESET	= (1 << 1),
++	ATA_PORT_HARDRESET	= (1 << 2),
++
+ 	/* flags for ata_eh_shduled_port */
+ 	ATA_EH_ABORT		= (1 << 0), /* abort all active commands */
+ 	ATA_EH_FREEZE		= (1 << 1), /* freeze port (implies ABORT) */
 -- 
 1.2.4
 
