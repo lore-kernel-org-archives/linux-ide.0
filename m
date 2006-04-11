@@ -1,91 +1,155 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/14] libata-eh: implement ata_eh_determine_qc()
-Date: Tue, 11 Apr 2006 22:48:22 +0900
-Message-ID: <11447633023845-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/14] sata_sil: convert to new EH
+Date: Tue, 11 Apr 2006 22:48:23 +0900
+Message-ID: <11447633031072-git-send-email-htejun@gmail.com>
 References: <11447633013561-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.229]:11678 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750956AbWDKNsa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:48:30 -0400
-Received: by wproxy.gmail.com with SMTP id i11so926519wra
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:48:30 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.239]:21406 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750951AbWDKNs3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:48:29 -0400
+Received: by wproxy.gmail.com with SMTP id i11so926550wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:48:29 -0700 (PDT)
 In-Reply-To: <11447633013561-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement EH helper ata_eh_determine_qc().  This function determines
-which is the offending qc and loads TF registers for the qc.
+Convert sata_sil to new EH.  As these controllers have hardware
+interrupt mask and are known to have screaming interrupts issues, use
+hardware IRQ masking for freezing.  sil_freeze() masks interrupts for
+the port and sil_postreset() thaws it.  As ports are automatically
+frozen before probing reset, there is no need to initialize interrupt
+masks sil_init_onde().  Remove related code.
+
+Other than freezing, sata_sil uses stock BMDMA EH routines.a
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    1 +
- drivers/scsi/libata-eh.c   |   24 ++++++++++++++++++++++++
- include/linux/libata.h     |    2 ++
- 3 files changed, 27 insertions(+), 0 deletions(-)
+ drivers/scsi/sata_sil.c |   62 +++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 46 insertions(+), 16 deletions(-)
 
-96065c0f71d63ac4bb80855a432b2c435db73765
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 13954f6..a4456bd 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5342,3 +5342,4 @@ EXPORT_SYMBOL_GPL(ata_eng_timeout);
- EXPORT_SYMBOL_GPL(ata_eh_schedule_port);
- EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
- EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
-+EXPORT_SYMBOL_GPL(ata_eh_determine_qc);
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 7ef2b78..8a1a4c7 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -558,3 +558,27 @@ static unsigned int atapi_eh_request_sen
- 	return ata_exec_internal(ap, dev, &tf, cdb, DMA_FROM_DEVICE,
- 				 sense_buf, SCSI_SENSE_BUFFERSIZE);
+32a0f7961c59f9de17e29356f06a072367c64c43
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index f29c3e7..4b9b2d1 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -95,7 +95,10 @@ static int sil_init_one (struct pci_dev 
+ static void sil_dev_config(struct ata_port *ap, struct ata_device *dev);
+ static u32 sil_scr_read (struct ata_port *ap, unsigned int sc_reg);
+ static void sil_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int sil_probe_reset(struct ata_port *ap, unsigned int *classes);
+ static void sil_post_set_mode (struct ata_port *ap);
++static void sil_freeze(struct ata_port *ap);
++static void sil_error_handler(struct ata_port *ap);
+ 
+ 
+ static const struct pci_device_id sil_pci_tbl[] = {
+@@ -167,7 +170,7 @@ static const struct ata_port_operations 
+ 	.check_status		= ata_check_status,
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
+-	.probe_reset		= ata_std_probe_reset,
++	.probe_reset		= sil_probe_reset,
+ 	.post_set_mode		= sil_post_set_mode,
+ 	.bmdma_setup            = ata_bmdma_setup,
+ 	.bmdma_start            = ata_bmdma_start,
+@@ -175,7 +178,9 @@ static const struct ata_port_operations 
+ 	.bmdma_status		= ata_bmdma_status,
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
+-	.eng_timeout		= ata_eng_timeout,
++	.freeze			= sil_freeze,
++	.error_handler		= sil_error_handler,
++	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.scr_read		= sil_scr_read,
+@@ -315,6 +320,44 @@ static void sil_scr_write (struct ata_po
+ 		writel(val, mmio);
  }
-+
-+/**
-+ *	ata_eh_determine_qc - Determine which qc caused error
-+ *	@ap: port which failed
-+ *	@tf: resulting taskfile registers of the failed command
-+ *
-+ *	Determine which qc caused failure and read associated tf
-+ *	registers.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	Pointer to the failed qc.
-+ */
-+struct ata_queued_cmd * ata_eh_determine_qc(struct ata_port *ap,
-+					    struct ata_taskfile *tf)
+ 
++static void sil_postreset(struct ata_port *ap, unsigned int *classes)
 +{
-+	memset(tf, 0, sizeof(*tf));
-+	ap->ops->tf_read(ap, tf);
++	void __iomem *mmio_base = ap->host_set->mmio_base;
++	u32 tmp;
 +
-+	return __ata_qc_from_tag(ap, ap->active_tag);
++	ata_std_postreset(ap, classes);
++
++	/* everything is back to normal, turn on IRQ */
++	tmp = readl(mmio_base + SIL_SYSCFG);
++	tmp &= ~(SIL_MASK_IDE0_INT << ap->port_no);
++	writel(tmp, mmio_base + SIL_SYSCFG);
 +}
 +
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9447bd2..6376379 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -688,6 +688,8 @@ extern void ata_eng_timeout(struct ata_p
- extern void ata_eh_schedule_port(struct ata_port *ap, unsigned int flags);
- extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
- extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
-+extern struct ata_queued_cmd * ata_eh_determine_qc(struct ata_port *ap,
-+						   struct ata_taskfile *tf);
++static int sil_probe_reset(struct ata_port *ap, unsigned int *classes)
++{
++	return ata_drive_probe_reset(ap, ata_std_probeinit,
++				     ata_std_softreset, sata_std_hardreset,
++				     sil_postreset, classes);
++}
++
++static void sil_freeze(struct ata_port *ap)
++{
++	void __iomem *mmio_base = ap->host_set->mmio_base;
++	u32 tmp;
++
++	/* plug IRQ */
++	tmp = readl(mmio_base + SIL_SYSCFG);
++	tmp |= SIL_MASK_IDE0_INT << ap->port_no;
++	writel(tmp, mmio_base + SIL_SYSCFG);
++	readl(mmio_base + SIL_SYSCFG);	/* flush */
++}
++
++static void sil_error_handler(struct ata_port *ap)
++{
++	ata_bmdma_drive_eh(ap, ata_std_softreset, sata_std_hardreset,
++			   sil_postreset);
++}
++
+ /**
+  *	sil_dev_config - Apply device/host-specific errata fixups
+  *	@ap: Port containing device to be examined
+@@ -385,7 +428,7 @@ static int sil_init_one (struct pci_dev 
+ 	int rc;
+ 	unsigned int i;
+ 	int pci_dev_busy = 0;
+-	u32 tmp, irq_mask;
++	u32 tmp;
+ 	u8 cls;
  
+ 	if (!printed_version++)
+@@ -475,24 +518,11 @@ static int sil_init_one (struct pci_dev 
+ 	}
  
- static inline int
+ 	if (ent->driver_data == sil_3114) {
+-		irq_mask = SIL_MASK_4PORT;
+-
+ 		/* flip the magic "make 4 ports work" bit */
+ 		tmp = readl(mmio_base + sil_port[2].bmdma);
+ 		if ((tmp & SIL_INTR_STEERING) == 0)
+ 			writel(tmp | SIL_INTR_STEERING,
+ 			       mmio_base + sil_port[2].bmdma);
+-
+-	} else {
+-		irq_mask = SIL_MASK_2PORT;
+-	}
+-
+-	/* make sure IDE0/1/2/3 interrupts are not masked */
+-	tmp = readl(mmio_base + SIL_SYSCFG);
+-	if (tmp & irq_mask) {
+-		tmp &= ~irq_mask;
+-		writel(tmp, mmio_base + SIL_SYSCFG);
+-		readl(mmio_base + SIL_SYSCFG);	/* flush */
+ 	}
+ 
+ 	/* mask all SATA phy-related interrupts */
 -- 
 1.2.4
 
