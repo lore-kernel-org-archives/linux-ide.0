@@ -1,74 +1,91 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 15/15] sata_sil24: add hotplug support
+Subject: [PATCH 11/15] sata_sil: add new constants in preparation for new interrupt handler
 Date: Tue, 11 Apr 2006 23:14:08 +0900
-Message-ID: <11447648483948-git-send-email-htejun@gmail.com>
+Message-ID: <11447648483270-git-send-email-htejun@gmail.com>
 References: <1144764846705-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.203]:45939 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751301AbWDKOOT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:14:19 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1102581nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:14:19 -0700 (PDT)
+Received: from pproxy.gmail.com ([64.233.166.180]:7863 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751268AbWDKOOP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:14:15 -0400
+Received: by pproxy.gmail.com with SMTP id i49so1396235pye
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:14:15 -0700 (PDT)
 In-Reply-To: <1144764846705-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add hotplug support by enabling PORT_IRQ_PHYRDY_CHG and scheduling
-probe when either of PORT_IRQ_PHYRDY_CHG or PORT_IRQ_DEV_XCHG happens.
-Explicit ata_schedule_probe() is necessary because sil24's SError
-doesn't always reflect DEV_XCHG or PHYRDY_CHG conditions properly.
+sata_sil is about to get brand new interrupt handler.  Add relevant
+constants.  While at it, add a new line for readability.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil24.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/sata_sil.c |   24 ++++++++++++++++++++----
+ 1 files changed, 20 insertions(+), 4 deletions(-)
 
-dc756727b3be5cf5bff4a327bc13604235419fc6
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 1ca76f7..06c0ab0 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -156,7 +156,8 @@ enum {
- 	PORT_IRQ_HANDSHAKE	= (1 << 10), /* handshake error threshold */
- 	PORT_IRQ_SDB_NOTIFY	= (1 << 11), /* SDB notify received */
- 
--	PORT_IRQ_FREEZE		= PORT_IRQ_DEV_XCHG | PORT_IRQ_UNK_FIS,
-+	PORT_IRQ_FREEZE		= PORT_IRQ_PHYRDY_CHG | PORT_IRQ_DEV_XCHG |
-+				  PORT_IRQ_UNK_FIS,
- 	DEF_PORT_IRQ		= PORT_IRQ_FREEZE |
- 				  PORT_IRQ_COMPLETE | PORT_IRQ_ERROR,
- 
-@@ -770,15 +771,20 @@ static unsigned int sil24_eh_autopsy(str
- 	desc += rc;
- 	desc_sz -= rc;
- 
--	if (irq_stat & PORT_IRQ_DEV_XCHG) {
-+	if (irq_stat & (PORT_IRQ_PHYRDY_CHG | PORT_IRQ_DEV_XCHG)) {
- 		err_mask |= AC_ERR_ATA_BUS;
- 		/* sil24 doesn't recover very well from phy
- 		 * disconnection with a softreset.  Force hardreset.
- 		 */
- 		action |= ATA_PORT_HARDRESET;
--		rc = scnprintf(desc, desc_sz, ", device exchanged");
-+		rc = scnprintf(desc, desc_sz, ", %s",
-+			       irq_stat & PORT_IRQ_PHYRDY_CHG ?
-+			       "PHY RDY changed" : "device exchanged");
- 		desc += rc;
- 		desc_sz -= rc;
+7e4271599752e0c0ba1742e98c26094502638a0e
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index 3853c46..e46c044 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -54,6 +54,7 @@ enum {
+ 	 */
+ 	SIL_FLAG_RERR_ON_DMA_ACT = (1 << 29),
+ 	SIL_FLAG_MOD15WRITE	= (1 << 30),
 +
-+		/* request probing */
-+		ata_schedule_probe(ap);
- 	}
+ 	SIL_DFL_HOST_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO,
  
- 	if (irq_stat & PORT_IRQ_UNK_FIS) {
+@@ -84,6 +85,20 @@ enum {
+ 	/* BMDMA/BMDMA2 */
+ 	SIL_INTR_STEERING	= (1 << 1),
+ 
++	SIL_DMA_ENABLE		= (1 << 0),  /* DMA run switch */
++	SIL_DMA_RDWR		= (1 << 3),  /* DMA Rd-Wr */
++	SIL_DMA_SATA_IRQ	= (1 << 4),  /* OR of all SATA IRQs */
++	SIL_DMA_ACTIVE		= (1 << 16), /* DMA running */
++	SIL_DMA_ERROR		= (1 << 17), /* PCI bus error */
++	SIL_DMA_COMPLETE	= (1 << 18), /* cmd complete / IRQ pending */
++	SIL_DMA_N_SATA_IRQ	= (1 << 6),  /* SATA_IRQ for the next channel */
++	SIL_DMA_N_ACTIVE	= (1 << 24), /* ACTIVE for the next channel */
++	SIL_DMA_N_ERROR		= (1 << 25), /* ERROR for the next channel */
++	SIL_DMA_N_COMPLETE	= (1 << 26), /* COMPLETE for the next channel */
++
++	/* SIEN */
++	SIL_SIEN_N		= (1 << 16), /* triggered by SError.N */
++
+ 	/*
+ 	 * Others
+ 	 */
+@@ -227,6 +242,7 @@ static const struct {
+ 	unsigned long tf;	/* ATA taskfile register block */
+ 	unsigned long ctl;	/* ATA control/altstatus register block */
+ 	unsigned long bmdma;	/* DMA register block */
++	unsigned long bmdma2;	/* DMA register block #2 */
+ 	unsigned long fifo_cfg;	/* FIFO Valid Byte Count and Control */
+ 	unsigned long scr;	/* SATA control register block */
+ 	unsigned long sien;	/* SATA Interrupt Enable register */
+@@ -234,10 +250,10 @@ static const struct {
+ 	unsigned long sfis_cfg;	/* SATA FIS reception config register */
+ } sil_port[] = {
+ 	/* port 0 ... */
+-	{ 0x80, 0x8A, 0x00, 0x40, 0x100, 0x148, 0xb4, 0x14c },
+-	{ 0xC0, 0xCA, 0x08, 0x44, 0x180, 0x1c8, 0xf4, 0x1cc },
+-	{ 0x280, 0x28A, 0x200, 0x240, 0x300, 0x348, 0x2b4, 0x34c },
+-	{ 0x2C0, 0x2CA, 0x208, 0x244, 0x380, 0x3c8, 0x2f4, 0x3cc },
++	{ 0x80, 0x8A, 0x00, 0x10, 0x40, 0x100, 0x148, 0xb4, 0x14c },
++	{ 0xC0, 0xCA, 0x08, 0x18, 0x44, 0x180, 0x1c8, 0xf4, 0x1cc },
++	{ 0x280, 0x28A, 0x200, 0x210, 0x240, 0x300, 0x348, 0x2b4, 0x34c },
++	{ 0x2C0, 0x2CA, 0x208, 0x218, 0x244, 0x380, 0x3c8, 0x2f4, 0x3cc },
+ 	/* ... port 3 */
+ };
+ 
 -- 
 1.2.4
 
