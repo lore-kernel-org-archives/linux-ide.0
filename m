@@ -1,43 +1,137 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: libata-pata works on ICH4-M
-Date: Tue, 11 Apr 2006 20:46:15 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0604112044340.25940@yvahk01.tjqt.qr>
-References: <443B9EBB.6010607@gmx.net>
+From: Bastiaan Jacques <b.jacques@planet.nl>
+Subject: Re: [PATCH/RFC] ahci: add support for VIA VT8251
+Date: Tue, 11 Apr 2006 22:10:29 +0200
+Message-ID: <200604112210.29525.b.jacques@planet.nl>
+References: <200604111915.45564.b.jacques@planet.nl>
+ <20060411214118.12653818.vsu@altlinux.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from linux01.gwdg.de ([134.76.13.21]:12449 "EHLO linux01.gwdg.de")
-	by vger.kernel.org with ESMTP id S1750892AbWDKSqX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 14:46:23 -0400
-In-Reply-To: <443B9EBB.6010607@gmx.net>
+Received: from smtp13.wxs.nl ([195.121.247.4]:45522 "EHLO smtp13.wxs.nl")
+	by vger.kernel.org with ESMTP id S1751364AbWDKUK3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 16:10:29 -0400
+Received: from [192.168.2.10] (ip56538861.direct-adsl.nl [86.83.136.97])
+ by smtp13.wxs.nl (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
+ with ESMTP id <0IXK000W9QPAAK@smtp13.wxs.nl> for linux-ide@vger.kernel.org;
+ Tue, 11 Apr 2006 22:10:22 +0200 (CEST)
+In-reply-to: <20060411214118.12653818.vsu@altlinux.ru>
+Content-disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Sergey Vlasov <vsu@altlinux.ru>
+Cc: linux-ide@vger.kernel.org
 
-Hello list,
-
->just a quick note to tell you that with ATA_ENABLE_PATA my
->system works fine and does even survive suspend-to-ram.
->This is a Samsung P35 laptop with one builtin 80 GB harddisk
->and one builtin DVD-RAM drive.
->libata patches are the ones included in 2.6.17-rc1-mm2 with
->an additional one-liner:
+On Tuesday 11 April 2006 19:41, Sergey Vlasov wrote:
+> > @@ -565,7 +578,6 @@
+> >  	/* check BUSY/DRQ, perform Command List Override if necessary */
+> >  	ahci_tf_read(ap, &tf);
+> >  	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
+> > -		u32 tmp;
 >
->ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0x1860 irq 14
->ata1: dev 0 cfg 49:2f00 82:346b 83:7f01 84:6003 85:3c69 86:3f01 87:6003 88:203f
->ata1: dev 0 ATA-7, max UDMA/100, 156368016 sectors: LBA48
->ata1: dev 0 configured for UDMA/100
->scsi0 : ata_piix
->  Vendor: ATA       Model: SAMSUNG MP0804H   Rev: UE10
->  Type:   Direct-Access                      ANSI SCSI revision: 05
->SCSI device sda: 156368016 512-byte hdwr sectors (80060 MB)
-[...]
+> The following empty line should probably be deleted too.
 
-So libata has the overhead of using SCSI commands? At least 
-that's what it suggests to the normal user.
+Done.
+
+> > +	{ PCI_VENDOR_ID_VIA, 0x3349, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+> > +	  board_ahci }, /* VT8251 */
+>
+> You can add a separate host type (e.g., board_via_vt8251_ahci), and then
+> add an entry for this type to ahci_port_info[].  The entry would have a
+> special flag in .host_flags, but the same .port_ops, so there will not
+> be excessive duplication like in the original vendor patch.
+>
+> Look like other drivers which need workarounds for hardware bugs (e.g.,
+> sata_sil) do this.
+
+I noticed there already is a similar mechanism in ahci.c (see AHCI_FLAG_MSI). 
+I decided to use that instead. Will that be acceptable?
 
 
-
-Jan
-
+--- drivers/scsi/ahci.c.orig	2006-04-11 18:58:32.000000000 +0200
++++ drivers/scsi/ahci.c	2006-04-11 22:05:37.000000000 +0200
+@@ -152,7 +152,8 @@ enum {
+ 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
+ 
+ 	/* hpriv->flags bits */
+-	AHCI_FLAG_MSI		= (1 << 0),
++	AHCI_FLAG_MSI			= (1 << 0),
++	AHCI_FLAG_RESET_NEEDS_CLO 	= (1 << 1),
+ };
+ 
+ struct ahci_cmd_hdr {
+@@ -297,6 +298,8 @@ static const struct pci_device_id ahci_p
+ 	  board_ahci }, /* ATI SB600 non-raid */
+ 	{ PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_ahci }, /* ATI SB600 raid */
++	{ PCI_VENDOR_ID_VIA, 0x3349, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* VT8251 */
+ 	{ }	/* terminate list */
+ };
+ 
+@@ -535,6 +538,17 @@ static int ahci_poll_register(void __iom
+ 	return -1;
+ }
+ 
++static void ahci_clo(struct ata_port *ap)
++{
++	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
++	u32 tmp;
++
++	tmp = readl(port_mmio + PORT_CMD);
++	tmp |= PORT_CMD_CLO;
++	writel(tmp, port_mmio + PORT_CMD);
++	readl(port_mmio + PORT_CMD); /* flush */
++}
++
+ static int ahci_softreset(struct ata_port *ap, int verbose, unsigned int 
+*class)
+ {
+ 	struct ahci_host_priv *hpriv = ap->host_set->private_data;
+@@ -565,18 +579,13 @@ static int ahci_softreset(struct ata_por
+ 	/* check BUSY/DRQ, perform Command List Override if necessary */
+ 	ahci_tf_read(ap, &tf);
+ 	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
+-		u32 tmp;
+-
+ 		if (!(hpriv->cap & HOST_CAP_CLO)) {
+ 			rc = -EIO;
+ 			reason = "port busy but no CLO";
+ 			goto fail_restart;
+ 		}
+ 
+-		tmp = readl(port_mmio + PORT_CMD);
+-		tmp |= PORT_CMD_CLO;
+-		writel(tmp, port_mmio + PORT_CMD);
+-		readl(port_mmio + PORT_CMD); /* flush */
++		ahci_clo(ap);
+ 
+ 		if (ahci_poll_register(port_mmio + PORT_CMD, PORT_CMD_CLO, 0x0,
+ 				       1, 500)) {
+@@ -695,6 +704,15 @@ static void ahci_postreset(struct ata_po
+ 
+ static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
+ {
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
++
++	if (hpriv->flags & AHCI_FLAG_RESET_NEEDS_CLO) {
++		if (ata_busy_wait(ap, ATA_BUSY, 1000) & ATA_BUSY) {
++			/* ATA_BUSY hasn't cleared, so send a CLO */
++			ahci_clo(ap);
++		}
++	}
++
+ 	return ata_drive_probe_reset(ap, ata_std_probeinit,
+ 				     ahci_softreset, ahci_hardreset,
+ 				     ahci_postreset, classes);
+@@ -1266,6 +1284,10 @@ static int ahci_init_one (struct pci_dev
+ 	if (pdev->vendor == 0x197b)
+ 		pci_write_config_byte(pdev, 0x41, 0xa1);
+ 
++	/* VIA VT8251-specific fixup: CLO before reset */
++	if (pdev->device == 0x3349)
++		hpriv->flags |= AHCI_FLAG_RESET_NEEDS_CLO;
++
+ 	/* initialize adapter */
+ 	rc = ahci_host_init(probe_ent);
+ 	if (rc)
