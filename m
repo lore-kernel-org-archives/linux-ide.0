@@ -1,79 +1,76 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: updated new EH and hotplug support are about to be posted...
-Date: Tue, 11 Apr 2006 22:08:49 +0900
-Message-ID: <20060411130849.GA25147@htj.dyndns.org>
+Subject: [PATCH 3/3] libata: make reset methods complain when they fail
+Date: Tue, 11 Apr 2006 22:16:45 +0900
+Message-ID: <1144761405822-git-send-email-htejun@gmail.com>
+References: <11447614041095-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.198]:58252 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750812AbWDKNIy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:08:54 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1085291nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:08:53 -0700 (PDT)
-Content-Disposition: inline
+Received: from wproxy.gmail.com ([64.233.184.226]:54135 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750814AbWDKNQs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:16:48 -0400
+Received: by wproxy.gmail.com with SMTP id i11so920396wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:16:47 -0700 (PDT)
+In-Reply-To: <11447614041095-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, axboe@htj.dyndns.org, Albert Lee <albertcc@tw.ibm.com>, Lukasz Kosewski <lkosewsk@gmail.com>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, people.
+Make reset methods complain loud when they fail.
 
-It's been another looooooong week.  Build number of my ATA work tree,
-which was created at the end of Feburary, is now over 1040 and all my
-SATA plugs are worn and unplug easily.  But, hey, hotplug works now.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-I'm about to post the following 9 patchsets composed of 97 patches.
-The first two patchsets have been posted previously but I'll repost
-them for simplicity's sake.
+---
 
-1. misc-reset-updates			: repost (3 patches)
-2. implement-and-use-ata_wait_register	: repost (5 patches)
-3. misc-ata_bus_probe-updates		: take 1 (3 patches)
-4. fixes-errata-workaround-and-reset-updates : take 3 (13 patches)
-5. new-EH-framework			: take 2 (16 patches)
-6. new-EH-implementation		: take 2 (14 patches)
-7. add-NCQ-support			: take 3 (15 patches)
-8. prep-for-hotplug-support		: take 1 (15 patches)
-9. add-hotplug-support			: take 1 (13 patches)
+ drivers/scsi/libata-core.c |    8 +++++---
+ drivers/scsi/sata_sil24.c  |    2 +-
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-All patchsets are against the current upstream[1] and stacks on the
-previous ones.  However, patchsets 5 and upwards depend on the
-following SCSI updates.
+3bf1cd4f285525deb2381a6f9d625a0f25007899
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 9e49251..ed089a0 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2232,8 +2232,10 @@ static unsigned int ata_bus_softreset(st
+ 	 * the bus shows 0xFF because the odd clown forgets the D7
+ 	 * pulldown resistor.
+ 	 */
+-	if (ata_check_status(ap) == 0xFF)
++	if (ata_check_status(ap) == 0xFF) {
++		printk(KERN_ERR "ata%u: SRST failed (status 0xFF)\n", ap->id);
+ 		return AC_ERR_OTHER;
++	}
+ 
+ 	ata_bus_post_reset(ap, devmask);
+ 
+@@ -2494,8 +2496,8 @@ int sata_std_hardreset(struct ata_port *
+ 	}
+ 
+ 	if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
+-		printk(KERN_ERR "ata%u: COMRESET failed "
+-		       "(device not ready)\n", ap->id);
++		printk(KERN_ERR
++		       "ata%u: COMRESET failed (device not ready)\n", ap->id);
+ 		return -EIO;
+ 	}
+ 
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 7f3fbac..60dd6f1 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -474,7 +474,7 @@ static int sil24_softreset(struct ata_po
+ 	writel(irq_enable, port + PORT_IRQ_ENABLE_SET);
+ 
+ 	if (!(irq_stat & PORT_IRQ_COMPLETE)) {
+-		DPRINTK("EXIT, srst failed\n");
++		printk(KERN_ERR "ata%u: softreset failed (timeout)\n", ap->id);
+ 		return -EIO;
+ 	}
+ 
+-- 
+1.2.4
 
-implement-scsi_eh_schedule patchset [2]
-fix-scsi_kill_request-busy-count-handling patch [3]
 
-new-EH-framwork and new-EH-implementation patchsets received a lot of
-updates (all recorded in the head message of the patchests).  NCQ
-patchset is largely unchanged except other than addition of sata_sil24
-support.
-
-Hotplug supports both warm and hot unplug/plug.  More details are on
-the head message of add-hotplug-support patchset and inidividual patch
-descriptions.
-
-I'm planning on making combined patches against release kernels
-(stable kernel and maybe -rc?) such that the whole EH/NCQ/hotplug can
-be tested more widely and impatient and living-on-the-cutting-edge
-people don't have to wait till these make it to mainline.
-
-Also, if you guys have any major objection or concerns with the
-current design and implementation.  Please let me know early as I'm
-gonna start working on port multiplier support on top of these very
-soon.
-
-Albert, sata_sil-new_interrupt_handler patch in the patchset
-add-hotplug-support implements a private interrupt handler for
-sata_sil but sata_sil still needs to use PIO support in libata.
-Currently it's okay as irq-driven path and PIO path are completely
-separate, but to merge with irq-pio branch, we need to separate PIO
-HSM from the standard interrupt handler such that LLDD's private
-interrupt handler can drive HSM.
-
-Thanks!
-
---
-tejun
-
-[1] c2a6585296009379e0f4eff39cdcb108b457ebf2
-[2] http://article.gmane.org/gmane.linux.ide/9290
-[3] http://article.gmane.org/gmane.linux.ide/9487
