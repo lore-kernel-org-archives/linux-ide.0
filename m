@@ -1,115 +1,75 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/15] libata-ncq: implement ata_ncq_complete()
-Date: Tue, 11 Apr 2006 22:53:37 +0900
-Message-ID: <11447636172422-git-send-email-htejun@gmail.com>
+Subject: [PATCH 01/15] libata-ncq: add NCQ related ATA constants and id macros
+Date: Tue, 11 Apr 2006 22:53:36 +0900
+Message-ID: <11447636163226-git-send-email-htejun@gmail.com>
 References: <1144763616819-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.203]:55835 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750992AbWDKNxp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:53:45 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1097582nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:53:44 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.235]:52388 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750981AbWDKNxl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:53:41 -0400
+Received: by wproxy.gmail.com with SMTP id i11so927606wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:53:40 -0700 (PDT)
 In-Reply-To: <1144763616819-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement NCQ helper function ata_ncq_complete().  This function takes
-the current value of SActive, compares it against ap->sactive and
-invoke ata_qc_complete() on all finished commands.  This function is
-to be used by interrupt handlers implementing NCQ.
+Add NCQ related ATA constants and id macros.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   47 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h     |    1 +
- 2 files changed, 48 insertions(+), 0 deletions(-)
+ include/linux/ata.h |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-99b30184e83c4f6b32e604d792af8ae45f12815a
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 0158b5f..d49d4c7 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4589,6 +4589,52 @@ irqreturn_t ata_interrupt (int irq, void
- 	return IRQ_RETVAL(handled);
- }
+5d6abbcdeb6bcb7eb9e427e1d84aa41f39dd22f9
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 283138f..0509340 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -133,6 +133,8 @@ enum {
+ 	ATA_CMD_WRITE		= 0xCA,
+ 	ATA_CMD_WRITE_EXT	= 0x35,
+ 	ATA_CMD_WRITE_FUA_EXT	= 0x3D,
++	ATA_CMD_FPDMA_READ	= 0x60,
++	ATA_CMD_FPDMA_WRITE	= 0x61,
+ 	ATA_CMD_PIO_READ	= 0x20,
+ 	ATA_CMD_PIO_READ_EXT	= 0x24,
+ 	ATA_CMD_PIO_WRITE	= 0x30,
+@@ -151,6 +153,10 @@ enum {
+ 	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
+ 	ATA_CMD_READ_NATIVE_MAX	= 0xF8,
+ 	ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
++	ATA_CMD_READ_LOG_EXT	= 0x2f,
++
++	/* READ_LOG_EXT pages */
++	ATA_LOG_SATA_NCQ	= 0x10,
  
-+/**
-+ *	ata_ncq_complete - NCQ driver helper.  Complete requests normally.
-+ *	@ap: port in question
-+ *	@sactive: current SActive value
-+ *
-+ *	Complete in-flight commands.  One device per port is assumed.
-+ *	This functions is meant to be called from low-level driver's
-+ *	interrupt routine to complete requests normally.  On
-+ *	invocation, if non-NCQ command was in-flight, it's completed
-+ *	normally.  If NCQ commands were in-flight, cached ap->sactive
-+ *	and new @sactive is compared and commands are completed
-+ *	accordingly.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	Number of completed commands on success, -errno otherwise.
-+ */
-+int ata_ncq_complete(struct ata_port *ap, u32 sactive)
-+{
-+	int nr_done = 0;
-+	unsigned long done_mask = 0;
-+	int i;
-+
-+	if (ap->sactive) {
-+		done_mask = ap->sactive ^ sactive;
-+
-+		if (unlikely(done_mask & sactive)) {
-+			printk(KERN_ERR "ata%u: illegal sactive transition "
-+			       "(%08x->%08x)\n", ap->id, ap->sactive, sactive);
-+			return -EINVAL;
-+		}
-+	} else if (ap->active_tag != ATA_TAG_POISON)
-+		done_mask = 1 << ap->active_tag;
-+
-+	for (i = 0; i < ATA_MAX_QUEUE; i++) {
-+		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, i);
-+		if (done_mask & (1 << i) && qc) {
-+			ata_qc_complete(qc);
-+			nr_done++;
-+		}
-+	}
-+
-+	return nr_done;
-+}
- 
- /*
-  * Execute a 'simple' command, that only consists of the opcode 'cmd' itself,
-@@ -5363,6 +5409,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_slave_config)
- EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
- EXPORT_SYMBOL_GPL(ata_scsi_release);
- EXPORT_SYMBOL_GPL(ata_host_intr);
-+EXPORT_SYMBOL_GPL(ata_ncq_complete);
- EXPORT_SYMBOL_GPL(ata_id_string);
- EXPORT_SYMBOL_GPL(ata_id_c_string);
- EXPORT_SYMBOL_GPL(ata_scsi_simulate);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0413c7b..e86d63c 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -581,6 +581,7 @@ extern int ata_scsi_ioctl(struct scsi_de
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
- extern int ata_scsi_release(struct Scsi_Host *host);
- extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
-+extern int ata_ncq_complete(struct ata_port *ap, u32 sactive);
- extern int ata_scsi_device_resume(struct scsi_device *);
- extern int ata_scsi_device_suspend(struct scsi_device *, pm_message_t state);
- extern int ata_device_resume(struct ata_port *, struct ata_device *);
+ 	/* SETFEATURES stuff */
+ 	SETFEATURES_XFER	= 0x03,
+@@ -218,6 +224,7 @@ enum ata_tf_protocols {
+ 	ATA_PROT_NODATA,	/* no data */
+ 	ATA_PROT_PIO,		/* PIO single sector */
+ 	ATA_PROT_DMA,		/* DMA */
++	ATA_PROT_NCQ,		/* NCQ */
+ 	ATA_PROT_ATAPI,		/* packet command, PIO data xfer*/
+ 	ATA_PROT_ATAPI_NODATA,	/* packet command, no data */
+ 	ATA_PROT_ATAPI_DMA,	/* packet command with special DMA sauce */
+@@ -273,6 +280,8 @@ struct ata_taskfile {
+ #define ata_id_has_pm(id)	((id)[82] & (1 << 3))
+ #define ata_id_has_lba(id)	((id)[49] & (1 << 9))
+ #define ata_id_has_dma(id)	((id)[49] & (1 << 8))
++#define ata_id_has_ncq(id)	((id)[76] & (1 << 8))
++#define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
+ #define ata_id_removeable(id)	((id)[0] & (1 << 7))
+ #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
+ #define ata_id_u32(id,n)	\
 -- 
 1.2.4
 
