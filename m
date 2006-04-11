@@ -1,78 +1,69 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET 5/9] new EH framework, take 2
+Subject: [PATCH 01/16] libata-eh-fw: add flags for new EH
 Date: Tue, 11 Apr 2006 22:42:53 +0900
-Message-ID: <11447629733305-git-send-email-htejun@gmail.com>
+Message-ID: <11447629731739-git-send-email-htejun@gmail.com>
+References: <11447629733305-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.239]:13463 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750882AbWDKNmz (ORCPT
+Received: from pproxy.gmail.com ([64.233.166.183]:9317 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750879AbWDKNmz (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:42:55 -0400
-Received: by wproxy.gmail.com with SMTP id i11so925405wra
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:42:55 -0700 (PDT)
-In-Reply-To: 
+Received: by pproxy.gmail.com with SMTP id i49so1385350pye
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:42:54 -0700 (PDT)
+In-Reply-To: <11447629733305-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+Add new device, port and ac flags to be used for new EH.
 
-This is the second take of new-EH-framework patchset.  Changes from
-the last take[L] are...
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-* adjusted to removal of @verbose from reset methods
+---
 
-* ata_exec_internal() synchronizes properly while freeing qc
+ include/linux/libata.h |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-* ata_exec_internal() whine and force ATA_ERR_OTHER if the internal qc
-  has failed but neither the interrupt handler nor ->post_internal_cmd
-  sets error code.
-
-* SError and IRQ are cleared in ata_std_postreset() to clear error
-  conditions and IRQs which can be raised during reset.
-
-* ata_do_reset() now automatically freezes the port before proceeding
-  with reset.  So, reset operations are guaranteed to be performed on
-  frozen ports.
-
-* ata_port_freeze() and thus ->freeze() method can be called multiple
-  times without being thawed inbetween.  ->freeze() must not assume
-  that the port is in thawed state.
-
-* ata_scsi_error() retries ->error_handler() if the port is frozen on
-  completion.  This is to handle cases where errors occur after
-  ->error_handler() revived the port but before EH finishes.  This is
-  done in such a way that EH doesn't miss freezing error condition
-  under any condition.  Repeat is limited to 5 times.
-
-* EH is inactive until the SCSI host is activated (SHOST_RUNNING).
-  This prevents EH from running simultaneously with initial probing.
-
-* various cosmetic changes (comments, new lines, messages...)
-
-This patchset is against...
-
-  upstream (c2a6585296009379e0f4eff39cdcb108b457ebf2)
-  + [1] misc-reset-updates patchset (repost)
-  + [2] implement-and-use-ata_wait_register patchset (repost)
-  + [3] misc-ata_bus_probe-updates patchset
-  + [4] sata_sil24-fixes-errata-workaround-and-reset-updates patchset, take 3
-  + [5] implement-scsi_eh_schedule patchset
-  + [6] fix-scsi_kill_request-busy-count-handling patch
-
-Thanks.
-
---
-tejun
-
-[L] http://article.gmane.org/gmane.linux.ide/9311
-[1] http://article.gmane.org/gmane.linux.ide/9495
-[2] http://article.gmane.org/gmane.linux.ide/9499
-[3] http://article.gmane.org/gmane.linux.ide/9506
-[4] http://article.gmane.org/gmane.linux.ide/9516
-[5] http://article.gmane.org/gmane.linux.ide/9290
-[6] http://article.gmane.org/gmane.linux.ide/9487
+83d510e57ad1843999195e7c5b00f7086ebf57d9
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 1c75024..d80dbb5 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -124,6 +124,7 @@ enum {
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+ 
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
++	ATA_DFLAG_FAILED	= (1 << 9), /* device has failed */
+ 
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+@@ -151,7 +152,8 @@ enum {
+ 	ATA_FLAG_FLUSH_PORT_TASK = (1 << 18), /* flush port task */
+ 
+ 	ATA_FLAG_DISABLED	= (1 << 19), /* port is disabled, ignore it */
+-	ATA_FLAG_SUSPENDED	= (1 << 20), /* port is suspended */
++	ATA_FLAG_FROZEN		= (1 << 20), /* port is frozen */
++	ATA_FLAG_SUSPENDED	= (1 << 21), /* port is suspended (power) */
+ 
+ 	/* bits 24:31 of ap->flags are reserved for LLDD specific flags */
+ 
+@@ -161,7 +163,10 @@ enum {
+ 	ATA_QCFLAG_SINGLE	= (1 << 2), /* no s/g, just a single buffer */
+ 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
+ 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
+-	ATA_QCFLAG_EH_SCHEDULED = (1 << 4), /* EH scheduled */
++	ATA_QCFLAG_TIMEOUT	= (1 << 4), /* cmd has timed out */
++	ATA_QCFLAG_FAILED	= (1 << 5), /* cmd has failed */
++	ATA_QCFLAG_EH_SCHEDULED	= (1 << 6), /* EH scheduled */
++	ATA_QCFLAG_SENSE_VALID	= (1 << 7), /* sense data valid */
+ 
+ 	/* host set flags */
+ 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host_set only */
+-- 
+1.2.4
 
 
