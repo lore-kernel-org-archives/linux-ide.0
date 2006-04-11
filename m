@@ -1,73 +1,224 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/15] libata-hp: add hotplug hooks into regular EH
+Subject: [PATCH 02/15] libata-hp: implement ata_eh_hotplug()
 Date: Tue, 11 Apr 2006 23:14:07 +0900
-Message-ID: <11447648472663-git-send-email-htejun@gmail.com>
+Message-ID: <11447648473440-git-send-email-htejun@gmail.com>
 References: <1144764846705-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:52965 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751292AbWDKOOO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:14:14 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1102585nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:14:14 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.226]:31678 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751289AbWDKOOJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:14:09 -0400
+Received: by wproxy.gmail.com with SMTP id i3so967079wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:14:09 -0700 (PDT)
 In-Reply-To: <1144764846705-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add hotplug handling into ata_eh_analyze_serror() and ata_eh_revive()
-such that they schedule probe or detach if it seems appropriate.
+This is ATA part of hotplug support.  This function is to be called
+from ->error_handler after all regular EH stuff is complete.
+ata_eh_hotplug() may automatically mark some devices for detach and
+detaches all marked devices.  Then, if requested and makes sense,
+ata_bus_probe() is invoked to probe newly attached devices.
+
+ata_eh_hotplug() makes sure that a detached ATA device is not accessed
+from its corresponding SCSI device by offlining the SCSI device before
+reusing the ATA device.  The rest of SCSI hotplug will be implemented
+in the next patch.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-eh.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/libata-core.c |    1 
+ drivers/scsi/libata-eh.c   |  103 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libata-scsi.c |   18 ++++++++
+ drivers/scsi/libata.h      |    1 
+ include/linux/libata.h     |    1 
+ 5 files changed, 124 insertions(+), 0 deletions(-)
 
-a335b73795061654e9dee96c2fc5f161e92780c7
+adf5feec346d7dea425d98a9e473a8704b2751d6
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 8f50a99..85f0600 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5489,3 +5489,4 @@ EXPORT_SYMBOL_GPL(ata_eh_autopsy);
+ EXPORT_SYMBOL_GPL(ata_eh_report);
+ EXPORT_SYMBOL_GPL(ata_eh_revive);
+ EXPORT_SYMBOL_GPL(ata_eh_finish_qcs);
++EXPORT_SYMBOL_GPL(ata_eh_hotplug);
 diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 6a61c5c..443f81f 100644
+index 1f55cc9..7dc6ea6 100644
 --- a/drivers/scsi/libata-eh.c
 +++ b/drivers/scsi/libata-eh.c
-@@ -855,7 +855,8 @@ static unsigned int ata_eh_analyze_tf(st
-  *	@p_err_mask: Resulting err_mask
-  *
-  *	Analyze SError if available and further determine cause of
-- *	failure.
-+ *	failure.  This function also schedules probing if PHY status
-+ *	has changed.
-  *
-  *	LOCKING:
-  *	None.
-@@ -885,6 +886,11 @@ static unsigned int ata_eh_analyze_serro
- 		*p_err_mask |= AC_ERR_SYSTEM;
- 		action |= ATA_PORT_SOFTRESET;
- 	}
-+	if (serror & (SERR_PHYRDY_CHG | SERR_DEV_XCHG)) {
-+		*p_err_mask |= AC_ERR_ATA_BUS;
-+		action |= ATA_PORT_SOFTRESET;
-+		ata_schedule_probe(ap);
-+	}
+@@ -237,6 +237,9 @@ int ata_scsi_error(struct Scsi_Host *hos
  
- 	return action;
+ 	scsi_eh_flush_done_q(&ap->eh_done_q);
+ 
++	/* bookkeeping for hotplug */
++	ata_clr_hotplug_flags(ap, ATA_HOTPLUG_PROBE | ATA_HOTPLUG_DID_PROBE);
++
+ 	DPRINTK("EXIT\n");
+ 	return 0;
  }
-@@ -1282,8 +1288,10 @@ int ata_eh_revive(struct ata_port *ap, u
+@@ -1369,3 +1372,103 @@ void ata_eh_finish_qcs(struct ata_port *
+ 		}
+ 	}
+ }
++
++/**
++ *	ata_eh_hotplug - ATA part of hot [un]plugging
++ *	@ap: ATA port to perform ATA hot [un]plugging on
++ *
++ *	Perform ATA port of hot [un]plugging.  Devices to be removed
++ *	are offlined and marked gone.  If probing is requested,
++ *	ata_bus_probe() is called.  This function only handles ATA
++ *	part of hot [un]plugging.  After ATA part is complete SCSI
++ *	operation is requested using SCSI_HOT[UN]PLUG host flags.
++ *	ata_eh_scsi_hotplug() performs the SCSI part.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ */
++void ata_eh_hotplug(struct ata_port *ap)
++{
++	int scr_valid = ap->cbl == ATA_CBL_SATA && ap->ops->scr_read;
++	int i;
++
++	/* Turn off probing request and mark disabled device gone if
++	 * SStatus says no device is attached.
++	 */
++	if (scr_valid && !sata_dev_present(ap)) {
++		struct ata_device *dev = &ap->device[0];
++
++		ata_clr_hotplug_flags(ap, ATA_HOTPLUG_PROBE);
++		if (ata_dev_disabled(dev))
++			ata_eh_detach_dev(ap, dev);
++	}
++
++	/* probe only once per EH run to prevent EH->probe->EH->probe cycle */
++	if (ap->hotplug_flags & ATA_HOTPLUG_DID_PROBE)
++		ata_clr_hotplug_flags(ap, ATA_HOTPLUG_PROBE);
++	ata_set_hotplug_flags(ap, ATA_HOTPLUG_DID_PROBE);
++
++	/* detach all !enabled devices if probing is requested */
++	if (ap->hotplug_flags & ATA_HOTPLUG_PROBE) {
++		for (i = 0; i < ATA_MAX_DEVICES; i++) {
++			struct ata_device *dev = &ap->device[i];
++
++			if (!ata_dev_enabled(dev))
++				ata_eh_detach_dev(ap, dev);
++		}
++	}
++
++	/* offline and detach devices marked for ATA detach */
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		struct ata_device *dev = &ap->device[i];
++		unsigned long flags;
++
++		if (!(dev->flags & ATA_DFLAG_DETACH_ATA))
++			continue;
++
++		/* probably already disabled, but make sure */
++		ata_dev_disable(ap, dev);
++
++		spin_lock_irqsave(&ap->host_set->lock, flags);
++		dev->class = ATA_DEV_UNKNOWN;
++		dev->flags &= ~ATA_DFLAG_DETACH_ATA;
++		ata_scsi_offline_dev(ap, dev);
++		spin_unlock_irqrestore(&ap->host_set->lock, flags);
++	}
++
++	/* probe requested? */
++	if (!(ap->hotplug_flags & ATA_HOTPLUG_PROBE))
++		return;
++
++	/* do we have any unoccupied slot? */
++	if (ap->device[0].class == ATA_DEV_UNKNOWN ||
++	    ((ap->flags & ATA_FLAG_SLAVE_POSS) &&
++	     ap->device[1].class == ATA_DEV_UNKNOWN)) {
++		unsigned long flags;
++
++		printk("ata%u: probing bus for new devices\n", ap->id);
++
++		/* make sure the port is frozen */
++		spin_lock_irqsave(&ap->host_set->lock, flags);
++		ata_port_freeze(ap);
++		spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++		ata_eh_wait_before_reset(ap);
++
++		/* probe */
++		if (ata_bus_probe(ap) == 1) {
++			/* An existing device has failed, we need to
++			 * repeat EH.  Freeze the port forcing EH
++			 * framework to reinvoke EH.
++			 */
++			ata_eh_schedule_port(ap, ATA_EH_FREEZE);
++		}
++	}
++
++	/* Probing is allowed only once per EH invocation and probing
++	 * request isn't maintained acress multiple EH runs.  To
++	 * implement these rules, HOTPLUG_PROBE and HOTPLUG_DID_PROBE
++	 * are cleared at the tail of ata_scsi_error() after the
++	 * current EH run is complete.
++	 */
++}
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 1793474..2e8fb2f 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -2760,3 +2760,21 @@ void ata_scsi_scan_host(struct ata_port 
+ 	}
+ }
  
-  fail:
- 	switch (rc) {
--	case -EINVAL:
- 	case -ENODEV:
-+		ata_schedule_probe(ap);
-+	case -EINVAL:
-+		ata_eh_detach_dev(ap, dev);
- 		tries[dev->devno] = 0;
- 		break;
- 	case -EIO:
++/**
++ *	ata_scsi_offline_dev - offline attached SCSI device
++ *	@ap: ATA port @dev is on
++ *	@dev: ATA device to offline attached SCSI device for
++ *
++ *	This function is called from ata_eh_hotplug() and responsible
++ *	for taking the SCSI device attached to @dev offline.  This
++ *	function is called with host_set lock which protects dev->sdev
++ *	against clearing.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ */
++void ata_scsi_offline_dev(struct ata_port *ap, struct ata_device *dev)
++{
++	if (dev->sdev)
++		scsi_device_set_state(dev->sdev, SDEV_OFFLINE);
++}
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index 09fddf6..9e8adee 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -76,6 +76,7 @@ extern int ata_cmd_ioctl(struct scsi_dev
+ extern struct scsi_transport_template ata_scsi_transport_template;
+ 
+ extern void ata_scsi_scan_host(struct ata_port *ap);
++extern void ata_scsi_offline_dev(struct ata_port *ap, struct ata_device *dev);
+ extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
+ 			       unsigned int buflen);
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index ee86a87..b9dd793 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -734,6 +734,7 @@ extern int ata_eh_revive(struct ata_port
+ 			 ata_postreset_fn_t postreset);
+ extern void ata_eh_finish_qcs(struct ata_port *ap, struct ata_queued_cmd *qc,
+ 			      struct ata_taskfile *tf);
++extern void ata_eh_hotplug(struct ata_port *ap);
+ 
+ 
+ static inline int
 -- 
 1.2.4
 
