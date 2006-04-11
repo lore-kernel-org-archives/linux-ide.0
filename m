@@ -1,17 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/13] libata-hp: prepare ata_bus_probe() for hotplug
+Subject: [PATCH 11/13] libata-hp: add hotplug flags and flag handling functions
 Date: Tue, 11 Apr 2006 23:06:22 +0900
-Message-ID: <1144764382509-git-send-email-htejun@gmail.com>
+Message-ID: <11447643824116-git-send-email-htejun@gmail.com>
 References: <11447643813451-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:29188 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750824AbWDKOG2 (ORCPT
+Received: from wproxy.gmail.com ([64.233.184.226]:36020 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750841AbWDKOG2 (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:06:28 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1100680nzf
+Received: by wproxy.gmail.com with SMTP id i11so930347wra
         for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:06:28 -0700 (PDT)
 In-Reply-To: <11447643813451-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,100 +19,94 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Update ata_bus_probe() such that it probes only for ATA_DEV_UNKNOWN
-devices, ignore errors from already existing devices and return 1 in
-such cases.  This is in preparation for hotplug.
+Add ap->hotplug_flags field, define ATA_HOTPLUG_*, ATA_DFLAG_DETACH_*
+and flag manipulation functions.
+
+As ap->hotplug_flags will be accessed by EH and SCSI hotplug work
+simultaneosly, changes should be atomic.  Define functions to
+manipulate ap->hostplug_flags - ata_set_hotplug_flags(),
+ata_clr_hotplug_flags() and ata_schedule_probe(), which is a shortcut
+for setting ATA_HOTPLUG_PROBE, a common operation for LLDDs.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   37 +++++++++++++++++++++++++++++--------
- 1 files changed, 29 insertions(+), 8 deletions(-)
+ include/linux/libata.h |   37 ++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 36 insertions(+), 1 deletions(-)
 
-57aed4a29833e54263afce342e44361642a6b8a0
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index e68a64d..a6c984f 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -1469,18 +1469,24 @@ static void ata_dev_init(struct ata_port
-  *	PCI/etc. bus probe sem.
-  *
-  *	RETURNS:
-- *	Zero on success, negative errno otherwise.
-+ *	Zero on success, one if any existing device failed, -ENODEV if
-+ *	the port has no enabled device after probing, or any negative
-+ *	errno from ->probe_reset.
-  */
- static int ata_bus_probe(struct ata_port *ap)
- {
-+	int existing_dev_failed = 0;
- 	unsigned int classes[ATA_MAX_DEVICES];
- 	int tries[ATA_MAX_DEVICES];
- 	int i, rc, down_xfermask;
- 	struct ata_device *dev;
+a0d2a754a788df7a123013480a3295d0c61c0940
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 94f1e9a..2a93c44 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -130,6 +130,9 @@ enum {
+ 	ATA_DFLAG_FAILED	= (1 << 9), /* device has failed */
+ 	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
  
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
--		tries[i] = ATA_PROBE_MAX_TRIES;
--		ata_dev_init(ap, &ap->device[i]);
-+		if (ap->device[i].class == ATA_DEV_UNKNOWN) {
-+			tries[i] = ATA_PROBE_MAX_TRIES;
-+			ata_dev_init(ap, &ap->device[i]);
-+		} else
-+			tries[i] = -1;
- 	}
- 
-  retry:
-@@ -1514,6 +1520,16 @@ static int ata_bus_probe(struct ata_port
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		dev = &ap->device[i];
- 
-+		/* Existing devices are EH's responsitbilities.  Just
-+		 * revalidate them.
-+		 */
-+		if (tries[i] < 0) {
-+			if (ata_dev_enabled(dev))
-+				if (ata_dev_revalidate(ap, dev, 1))
-+					existing_dev_failed = 1;
-+			continue;
-+		}
++	ATA_DFLAG_DETACH_ATA	= (1 << 16), /* detach ATA device */
++	ATA_DFLAG_DETACH_SCSI	= (1 << 17), /* detach SCSI device */
 +
- 		if (tries[i])
- 			dev->class = classes[i];
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+ 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
+@@ -161,9 +164,15 @@ enum {
+ 	ATA_FLAG_DISABLED	= (1 << 19), /* port is disabled, ignore it */
+ 	ATA_FLAG_FROZEN		= (1 << 20), /* port is frozen */
+ 	ATA_FLAG_SUSPENDED	= (1 << 21), /* port is suspended (power) */
+-
+ 	/* bits 24:31 of ap->flags are reserved for LLDD specific flags */
  
-@@ -1547,14 +1563,19 @@ static int ata_bus_probe(struct ata_port
- 		rc = ata_set_mode(ap, &dev);
++	/* struct ata_port hotplug_flags */
++	ATA_HOTPLUG_RUNNING	= (1 << 0), /* hotplugging online */
++	ATA_HOTPLUG_PROBE	= (1 << 1), /* probe requested */
++	ATA_HOTPLUG_DID_PROBE	= (1 << 2), /* already probed in this run */
++	ATA_HOTPLUG_SCSI_PLUG	= (1 << 3), /* SCSI hotplug scheduled */
++	ATA_HOTPLUG_SCSI_UNPLUG	= (1 << 4), /* SCSI hotunplug scheduled */
++
+ 	/* struct ata_queued_cmd flags */
+ 	ATA_QCFLAG_ACTIVE	= (1 << 0), /* cmd not yet ack'd to scsi lyer */
+ 	ATA_QCFLAG_SG		= (1 << 1), /* have s/g table? */
+@@ -471,6 +480,8 @@ struct ata_port {
+ 	u32			msg_enable;
+ 	struct list_head	eh_done_q;
  
- 	if (rc) {
--		down_xfermask = 1;
--		goto fail;
-+		if (tries[dev->devno] < 0) {
-+			existing_dev_failed = 1;
-+		} else {
-+			down_xfermask = 1;
-+			goto fail;
-+		}
- 	}
++	unsigned long		hotplug_flags;
++
+ 	void			*private_data;
+ };
  
-+	rc = -ENODEV;
- 	for (i = 0; i < ATA_MAX_DEVICES; i++)
- 		if (ata_dev_enabled(&ap->device[i]))
--			return 0;
--	return -ENODEV;
-+			rc = 0;
-+	return existing_dev_failed ? 1 : rc;
+@@ -800,6 +811,30 @@ static inline unsigned int ata_dev_absen
+ 	return ata_class_absent(dev->class);
+ }
  
-  fail:
- 	switch (rc) {
-@@ -5041,7 +5062,7 @@ int ata_device_add(const struct ata_prob
- 		rc = ata_bus_probe(ap);
- 		DPRINTK("ata%u: bus probe end\n", ap->id);
- 
--		if (rc && !ap->ops->error_handler) {
-+		if (rc < 0 && !ap->ops->error_handler) {
- 			/* no device attached and no hotplug support */
- 			ata_port_disable(ap);
- 			ap->ops->port_disable(ap);
++/* hotplug flag manipulation helpers */
++static inline void ata_set_hotplug_flags(struct ata_port *ap,
++					 unsigned int flags)
++{
++	unsigned long old;
++	do {
++		old = ap->hotplug_flags;
++	} while (cmpxchg(&ap->hotplug_flags, old, old | flags) != old);
++}
++
++static inline void ata_clr_hotplug_flags(struct ata_port *ap,
++					 unsigned int flags)
++{
++	unsigned long old;
++	do {
++		old = ap->hotplug_flags;
++	} while (cmpxchg(&ap->hotplug_flags, old, old & ~flags) != old);
++}
++
++static inline void ata_schedule_probe(struct ata_port *ap)
++{
++	ata_set_hotplug_flags(ap, ATA_HOTPLUG_PROBE);
++}
++
+ static inline u8 ata_chk_status(struct ata_port *ap)
+ {
+ 	return ap->ops->check_status(ap);
 -- 
 1.2.4
 
