@@ -1,144 +1,150 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/15] libata-hp: implement ata_scsi_slave_destroy()
-Date: Tue, 11 Apr 2006 23:14:07 +0900
-Message-ID: <11447648471249-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/15] sata_sil: new interrupt handler
+Date: Tue, 11 Apr 2006 23:14:08 +0900
+Message-ID: <11447648483027-git-send-email-htejun@gmail.com>
 References: <1144764846705-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.176]:16055 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751289AbWDKOOQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:14:16 -0400
-Received: by pproxy.gmail.com with SMTP id i49so1396236pye
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:14:15 -0700 (PDT)
+Received: from zproxy.gmail.com ([64.233.162.196]:19875 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751294AbWDKOOO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:14:14 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1102564nzf
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:14:14 -0700 (PDT)
 In-Reply-To: <1144764846705-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-This function is called during sdev removal by SCSI midlayer.  For
-user-initiated removals, this is the only indication we get from SCSI
-midlayer that the sdev is going away.  In such cases, schedule ATA
-detach and invoke EH.  For libata-initiated removal, nothing needs to
-be done.
+The DMA complete bit of these controllers reflects ATA IRQ status
+while no DMA command is in progress.  So, we can tell whether the
+controller is raising an interrupt or not in deterministic manner.
+This patch gives sata_sil its own interrupt handler which behaves much
+better than the original one in terms of error detection and handling.
+This change is also necessary for later hotplug support.
+
+Further improvements are possible, in both 2 and 4 ports versions, we
+can get all status with only one readl and using custom bmdma
+operations can further cut down register accesses.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    1 +
- drivers/scsi/libata-eh.c   |   15 ++++++++++++---
- drivers/scsi/libata-scsi.c |   33 +++++++++++++++++++++++++++++++++
- include/linux/libata.h     |    1 +
- 4 files changed, 47 insertions(+), 3 deletions(-)
+ drivers/scsi/sata_sil.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 81 insertions(+), 1 deletions(-)
 
-50661abaf2563e89f2277c7e39c817123459779f
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 91a01ca..87a6579 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5452,6 +5452,7 @@ EXPORT_SYMBOL_GPL(ata_port_queue_task);
- EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
- EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
- EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
-+EXPORT_SYMBOL_GPL(ata_scsi_slave_destroy);
- EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
- EXPORT_SYMBOL_GPL(ata_scsi_release);
- EXPORT_SYMBOL_GPL(ata_host_intr);
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 64edf48..6a61c5c 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -175,7 +175,7 @@ int ata_scsi_error(struct Scsi_Host *hos
- {
- 	struct ata_port *ap = (struct ata_port *)&host->hostdata[0];
- 	spinlock_t *hs_lock = &ap->host_set->lock;
--	int repeat_cnt = ATA_EH_MAX_REPEAT;
-+	int i, repeat_cnt = ATA_EH_MAX_REPEAT;
- 	unsigned long flags;
+cae31a3e780bd2cef46e299e6bf681af88d7f51d
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index e46c044..0b72585 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -112,6 +112,8 @@ static u32 sil_scr_read (struct ata_port
+ static void sil_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static int sil_probe_reset(struct ata_port *ap, unsigned int *classes);
+ static void sil_post_set_mode (struct ata_port *ap);
++static irqreturn_t sil_interrupt(int irq, void *dev_instance,
++				 struct pt_regs *regs);
+ static void sil_freeze(struct ata_port *ap);
+ static void sil_error_handler(struct ata_port *ap);
  
- 	DPRINTK("ENTER\n");
-@@ -185,10 +185,19 @@ int ata_scsi_error(struct Scsi_Host *hos
- 	spin_unlock_wait(hs_lock);
- 	ata_port_flush_task(ap);
- 
-+	/* Scheduled to be detached but not disabled status happens
-+	 * only for devices user requested to be detached via
-+	 * slave_destroy.  Make sure they are disabled.
-+	 */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+
-+		if (dev->flags & ATA_DFLAG_DETACH_ATA)
-+			ata_dev_disable(ap, dev);
-+	}
-+
- 	/* invoke error handler */
- 	if (ap->ops->error_handler) {
--		int i;
--
- 		/* for new EH, all the qc's are ours now */
- 		for (i = 0; i < ATA_MAX_QUEUE; i++) {
- 			struct ata_queued_cmd *qc;
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index fac37cd..5e68305 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -723,6 +723,39 @@ int ata_scsi_slave_config(struct scsi_de
+@@ -197,7 +199,7 @@ static const struct ata_port_operations 
+ 	.freeze			= sil_freeze,
+ 	.error_handler		= sil_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+-	.irq_handler		= ata_interrupt,
++	.irq_handler		= sil_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.scr_read		= sil_scr_read,
+ 	.scr_write		= sil_scr_write,
+@@ -357,6 +359,84 @@ static int sil_probe_reset(struct ata_po
+ 				     sil_postreset, classes);
  }
  
- /**
-+ *	ata_scsi_slave_destroy - SCSI device is about to be destroyed
-+ *	@sdev: SCSI device to be destroyed
-+ *
-+ *	@sdev is about to be destroyed for hot/warm unplugging.  If
-+ *	this unplugging was initiated by libata as indicated by NULL
-+ *	dev->sdev, this function doesn't have to do anything.
-+ *	Otherwise, SCSI layer initiated warm-unplug is in progress.
-+ *	Clear dev->sdev, schedule the device for ATA detach and invoke
-+ *	EH.
-+ *
-+ *	LOCKING:
-+ *	Defined by SCSI layer.  We don't really care.
-+ */
-+void ata_scsi_slave_destroy(struct scsi_device *sdev)
++static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
 +{
-+	struct ata_port *ap = (struct ata_port *)&sdev->host->hostdata[0];
-+	unsigned long flags;
-+	struct ata_device *dev;
++	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
++	u8 status;
 +
-+	if (!ap->ops->error_handler)
-+		return;
++	if (unlikely(!qc || qc->tf.ctl & ATA_NIEN))
++		goto freeze;
 +
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	dev = __ata_scsi_find_dev(ap, sdev);
-+	if (dev && dev->sdev) {
-+		dev->sdev = NULL;
-+		dev->flags |= ATA_DFLAG_DETACH_ATA;
-+		ata_eh_schedule_port(ap, ATA_EH_FREEZE);
++	switch (qc->tf.protocol) {
++	case ATA_PROT_DMA:
++	case ATA_PROT_ATAPI_DMA:
++	case ATA_PROT_ATAPI:
++		if (bmdma2 & SIL_DMA_ERROR) {
++			qc->err_mask |= AC_ERR_HOST_BUS;
++			goto freeze;
++		}
++
++		/* clear DMA-Start bit */
++		ap->ops->bmdma_stop(qc);
++
++		/* fall through */
++	case ATA_PROT_ATAPI_NODATA:
++	case ATA_PROT_NODATA:
++		/* check main status, clearing INTRQ */
++		status = ata_chk_status(ap);
++		if (unlikely(status & ATA_BUSY)) {
++			qc->err_mask |= AC_ERR_HSM;
++			goto freeze;
++		}
++
++		/* ack bmdma irq events */
++		ap->ops->irq_clear(ap);
++
++		/* complete taskfile transaction */
++		qc->err_mask |= ac_err_mask(status);
++		ata_qc_complete(qc);
++		break;
++
++	default:
++		goto freeze;
 +	}
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++	return;
++
++ freeze:
++	ata_eh_schedule_port(ap, ATA_EH_FREEZE);
 +}
 +
-+/**
-  *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
-  *	@sdev: SCSI device to configure queue depth for
-  *	@queue_depth: new queue depth
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f145f0e..84162b2 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -663,6 +663,7 @@ extern int ata_std_bios_param(struct scs
- 			      struct block_device *bdev,
- 			      sector_t capacity, int geom[]);
- extern int ata_scsi_slave_config(struct scsi_device *sdev);
-+extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
- 				       int queue_depth);
- extern struct ata_device *ata_dev_pair(struct ata_port *ap, 
++static irqreturn_t sil_interrupt(int irq, void *dev_instance,
++				 struct pt_regs *regs)
++{
++	struct ata_host_set *host_set = dev_instance;
++	void __iomem *mmio_base = host_set->mmio_base;
++	int handled = 0;
++	unsigned long flags;
++	int i;
++
++	/* TODO: make _irqsave conditional on x86 PCI IDE legacy mode */
++	spin_lock_irqsave(&host_set->lock, flags);
++
++	for (i = 0; i < host_set->n_ports; i++) {
++		struct ata_port *ap = host_set->ports[i];
++		u32 bmdma2 = readl(mmio_base + sil_port[ap->port_no].bmdma2);
++
++		if (unlikely(!ap || ap->flags & ATA_FLAG_DISABLED))
++			continue;
++
++		if (!(bmdma2 & SIL_DMA_COMPLETE))
++			continue;
++
++		sil_host_intr(ap, bmdma2);
++		handled = 1;
++	}
++
++	spin_unlock_irqrestore(&host_set->lock, flags);
++
++	return IRQ_RETVAL(handled);
++}
++
+ static void sil_freeze(struct ata_port *ap)
+ {
+ 	void __iomem *mmio_base = ap->host_set->mmio_base;
 -- 
 1.2.4
 
