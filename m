@@ -1,147 +1,162 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/16] libata-eh-fw: implement ata_eh_schedule_port()
+Subject: [PATCH 07/16] libata-eh-fw: implement ata_port_freeze()
 Date: Tue, 11 Apr 2006 22:42:54 +0900
-Message-ID: <11447629744155-git-send-email-htejun@gmail.com>
+Message-ID: <11447629743966-git-send-email-htejun@gmail.com>
 References: <11447629733305-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:6314 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750910AbWDKNnB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:43:01 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1094466nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:43:01 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.227]:17559 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750898AbWDKNnA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:43:00 -0400
+Received: by wproxy.gmail.com with SMTP id i11so925425wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:43:00 -0700 (PDT)
 In-Reply-To: <11447629733305-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-ata_eh_schedule_port() is the gateway to EH and does one of the
-followings depending on how it's invoked.
+Freezing is performed atomic w.r.t. host_set->lock and once frozen
+LLDD is not allowed to access the port or any qc on it.  Also, libata
+makes sure that no new qc gets issued to a frozen port.
 
-* Without any flag: It simply schedules EH.  EH will kick in after all
-  commands are drained (unless another event occurs, of course).
+A frozen port is thawed after a reset operation completes
+successfully, so reset methods must do its job while the port is
+frozen.  During initialization all ports get frozen before requesting
+IRQ, so reset methods are always invoked on a frozen port.
 
-* ATA_EH_ABORT: EH is scheduled and all currently active qc's get
-  aborted.  The caller is responsible for making sure the controller
-  and devices are in stable state in this case.
-
-* ATA_EH_FREEZE: It does everything ATA_EH_ABORT does and then freezes
-  the port; thus, making the port inaccessible until it gets reset.
-  This can be used to safely schedule EH when an HSM violation event
-  occurs.
+Optional ->freeze operation notifies LLDD that the port is being
+frozen.  LLDD can disable hardware interrupt in this callback if the
+controller's IRQ mask can be changed dynamically.  If the controller
+doesn't allow such operation, LLDD can check for frozen state in the
+interrupt handler and ack/clear interrupts unconditionally while
+frozen.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    1 +
- drivers/scsi/libata-eh.c   |   53 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h     |    5 ++++
- 3 files changed, 59 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-core.c |   53 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libata.h      |    1 +
+ 2 files changed, 54 insertions(+), 0 deletions(-)
 
-a46608a256d68fd1e1e68a3e73f0be45c752c6a8
+2e00d608564e9ac28cdbc9cb5421cf2078a9c558
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 2a5d3f6..b6f6815 100644
+index 7a7297d..e8566bb 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -5300,5 +5300,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_device_resume
+@@ -991,6 +991,12 @@ unsigned ata_exec_internal(struct ata_po
  
- EXPORT_SYMBOL_GPL(ata_scsi_error);
- EXPORT_SYMBOL_GPL(ata_eng_timeout);
-+EXPORT_SYMBOL_GPL(ata_eh_schedule_port);
- EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
- EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index a1fe14f..e731c04 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -239,6 +239,59 @@ void ata_eh_schedule_qc(struct ata_queue
- 	scsi_eh_schedule_cmd(qc->scsicmd);
+ 	spin_lock_irqsave(&ap->host_set->lock, flags);
+ 
++	/* no internal command while frozen */
++	if (ap->flags & ATA_FLAG_FROZEN) {
++		spin_unlock_irqrestore(&ap->host_set->lock, flags);
++		return AC_ERR_SYSTEM;
++	}
++
+ 	/* initialize internal qc */
+ 
+ 	/* XXX: Tag 0 is used for drivers with legacy EH as some
+@@ -1668,6 +1674,37 @@ void ata_port_disable(struct ata_port *a
  }
  
-+/**
-+ *	ata_eh_schedule_port - schedule error handling without a qc
-+ *	@ap: ATA port to schedule EH for
-+ *	@flags: ATA_EH_* flags
+ /**
++ *	ata_port_freeze - freeze port until reset thaws it
++ *	@ap: ATA port to freeze
 + *
-+ *	Schedule error hanlding for the speficied ATA port.  EH will
-+ *	kick in as soon as all commands are drained.
++ *	This function is called when HSM violation or some other
++ *	condition disrupts normal operation of the port.  Frozen port
++ *	is not allowed to perform any operation until a reset puts it
++ *	into known state and thaws it.
++ *
++ *	ap->ops->freeze() callback can be used for freezing the port
++ *	hardware-wise (e.g. mask interrupt / stop DMA engine).  If a
++ *	port cannot be frozen hardware-wise, the interrupt handler
++ *	must ack and clear interrupts unconditionally while the port
++ *	is frozen.
 + *
 + *	LOCKING:
 + *	spin_lock_irqsave(host_set lock)
 + */
-+void ata_eh_schedule_port(struct ata_port *ap, unsigned int flags)
++void ata_port_freeze(struct ata_port *ap)
 +{
-+	int internal_cmd = ata_tag_internal(ap->active_tag);
-+	int i;
-+
-+	WARN_ON(!ap->ops->error_handler);
-+
-+	/* SHOST_RUNNING test is to avoid invoking EH during boot probing */
-+	if (!internal_cmd && ap->host->shost_state == SHOST_RUNNING)
-+		scsi_eh_schedule_host(ap->host);
-+
-+	/* abort if requested */
-+	if (!(flags & (ATA_EH_ABORT | ATA_EH_FREEZE)))
++	if (!ap->ops->error_handler)
 +		return;
 +
-+	for (i = 0; i < ATA_MAX_QUEUE; i++) {
-+		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, i);
-+		if (qc) {
-+			if (!internal_cmd)
-+				ata_eh_schedule_qc(qc);
-+			else {
-+				qc->flags |= ATA_QCFLAG_FAILED;
-+				__ata_qc_complete(qc);
-+			}
-+		}
-+	}
++	if (ap->ops->freeze)
++		ap->ops->freeze(ap);
 +
-+	/* freeze if requested */
-+	if (!(flags & ATA_EH_FREEZE))
-+		return;
++	ap->flags |= ATA_FLAG_FROZEN;
 +
-+	/* Timeout handler might try to freeze an already frozen port
-+	 * if it races against interrupt handler or another timeout.
-+	 * Such conditions should be rare.  Whine.
-+	 */
-+	if (ap->flags & ATA_FLAG_FROZEN && ata_ratelimit())
-+		printk(KERN_INFO "ata%u: ata_eh_schedule_port invoked on "
-+		       "a frozen port\n", ap->id);
-+
-+	ata_port_freeze(ap);
++	DPRINTK("ata%u port frozen\n", ap->id);
 +}
 +
- static void ata_eh_scsidone(struct scsi_cmnd *scmd)
++/**
+  *	ata_down_sata_spd_limit - adjust SATA spd limit downward
+  *	@ap: Port to adjust SATA spd limit for
+  *
+@@ -2623,15 +2660,26 @@ int ata_std_probe_reset(struct ata_port 
+ int ata_do_reset(struct ata_port *ap, ata_reset_fn_t reset,
+ 		 ata_postreset_fn_t postreset, unsigned int *classes)
  {
- 	/* nada */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 8aeead3..47fbd68 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -222,6 +222,10 @@ enum {
- 	ATA_PORT_PRIMARY	= (1 << 0),
- 	ATA_PORT_SECONDARY	= (1 << 1),
++	unsigned long flags;
+ 	int i, rc;
  
-+	/* flags for ata_eh_shduled_port */
-+	ATA_EH_ABORT		= (1 << 0), /* abort all active commands */
-+	ATA_EH_FREEZE		= (1 << 1), /* freeze port (implies ABORT) */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++)
+ 		classes[i] = ATA_DEV_UNKNOWN;
+ 
++	/* make sure it's frozen */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	ata_port_freeze(ap);
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
 +
- 	/* how hard are we gonna try to probe/recover devices */
- 	ATA_PROBE_MAX_TRIES	= 3,
- };
-@@ -653,6 +657,7 @@ extern unsigned long ata_pci_default_fil
-  */
- extern int ata_scsi_error(struct Scsi_Host *host);
- extern void ata_eng_timeout(struct ata_port *ap);
-+extern void ata_eh_schedule_port(struct ata_port *ap, unsigned int flags);
- extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
- extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
+ 	rc = reset(ap, classes);
+ 	if (rc)
+ 		return rc;
  
++	/* a successful reset thaws the port */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	ap->flags &= ~ATA_FLAG_FROZEN;
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
+ 	/* If any class isn't ATA_DEV_UNKNOWN, consider classification
+ 	 * is complete and convert all ATA_DEV_UNKNOWN to
+ 	 * ATA_DEV_NONE.
+@@ -4056,6 +4104,10 @@ static struct ata_queued_cmd *ata_qc_new
+ 	struct ata_queued_cmd *qc = NULL;
+ 	unsigned int i;
+ 
++	/* no command while frozen */
++	if (unlikely(ap->flags & ATA_FLAG_FROZEN))
++		return NULL;
++
+ 	/* the last tag is reserved for internal command. */
+ 	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
+ 		if (!test_and_set_bit(i, &ap->qactive)) {
+@@ -4768,6 +4820,7 @@ int ata_device_add(const struct ata_prob
+ 
+ 		ata_chk_status(ap);
+ 		host_set->ops->irq_clear(ap);
++		ata_port_freeze(ap);
+ 		count++;
+ 	}
+ 
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index 4299aa1..3fd31f9 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -51,6 +51,7 @@ extern void ata_port_flush_task(struct a
+ extern unsigned ata_exec_internal(struct ata_port *ap, struct ata_device *dev,
+ 				  struct ata_taskfile *tf, const u8 *cdb,
+ 				  int dma_dir, void *buf, unsigned int buflen);
++extern void ata_port_freeze(struct ata_port *ap);
+ extern int ata_down_sata_spd_limit(struct ata_port *ap);
+ extern int ata_set_sata_spd_needed(struct ata_port *ap);
+ extern int ata_down_xfermask_limit(struct ata_port *ap, struct ata_device *dev,
 -- 
 1.2.4
 
