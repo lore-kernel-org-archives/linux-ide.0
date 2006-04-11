@@ -1,81 +1,78 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/14] libata-eh: add constants and flags to be used by EH
-Date: Tue, 11 Apr 2006 22:48:22 +0900
-Message-ID: <11447633021920-git-send-email-htejun@gmail.com>
-References: <11447633013561-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET 6/9] new EH implementation, take 2
+Date: Tue, 11 Apr 2006 22:48:21 +0900
+Message-ID: <11447633013561-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.225]:12958 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750929AbWDKNsX (ORCPT
+Received: from wproxy.gmail.com ([64.233.184.229]:11678 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750930AbWDKNsX (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:48:23 -0400
-Received: by wproxy.gmail.com with SMTP id i11so926518wra
+Received: by wproxy.gmail.com with SMTP id i11so926519wra
         for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:48:23 -0700 (PDT)
-In-Reply-To: <11447633013561-git-send-email-htejun@gmail.com>
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Add constants and flags to be used by EH.
+Hello, all.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+This is the second take of new-EH-implementation patchset.  Changes
+from the last take[L] are...
 
----
+* !tries[] and ata_set_mode() failure handlings in ata_eh_revive() are
+  updated in the same way ata_bus_probe() is updated.
 
- include/linux/ata.h    |   11 +++++++++++
- include/linux/libata.h |    5 +++++
- 2 files changed, 16 insertions(+), 0 deletions(-)
+* ata_eh_analyze_serror() is updated such that it doesn't depend on
+  existence of qc.  Result from analyze_serror() will be used for hot
+  plug event detection.
 
-27f8a9a882a40d389aaeea10e03594e8c41911d6
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 312a2c0..283138f 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -97,6 +97,9 @@ enum {
- 	ATA_DRQ			= (1 << 3),	/* data request i/o */
- 	ATA_ERR			= (1 << 0),	/* have an error */
- 	ATA_SRST		= (1 << 2),	/* software reset */
-+	ATA_ICRC		= (1 << 7),	/* interface CRC error */
-+	ATA_UNC			= (1 << 6),	/* uncorrectable media error */
-+	ATA_IDNF		= (1 << 4),	/* ID not found */
- 	ATA_ABORTED		= (1 << 2),	/* command aborted */
- 
- 	/* ATA command block registers */
-@@ -192,6 +195,14 @@ enum {
- 	SCR_ACTIVE		= 3,
- 	SCR_NOTIFICATION	= 4,
- 
-+	/* SError bits */
-+	SERR_DATA_RECOVERED	= (1 << 0), /* recovered data error */
-+	SERR_COMM_RECOVERED	= (1 << 1), /* recovered comm failure */
-+	SERR_DATA		= (1 << 8), /* unrecovered data error */
-+	SERR_PERSISTENT		= (1 << 9), /* persistent data/comm error */
-+	SERR_PROTOCOL		= (1 << 10), /* protocol violation */
-+	SERR_INTERNAL		= (1 << 11), /* host internal error */
-+
- 	/* struct ata_taskfile flags */
- 	ATA_TFLAG_LBA48		= (1 << 0), /* enable 48-bit LBA and "HOB" */
- 	ATA_TFLAG_ISADDR	= (1 << 1), /* enable r/w to nsect/lba regs */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0ac5214..58ad515 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -222,6 +222,11 @@ enum {
- 	ATA_PORT_PRIMARY	= (1 << 0),
- 	ATA_PORT_SECONDARY	= (1 << 1),
- 
-+	/* reset / recovery action types */
-+	ATA_PORT_REVALIDATE	= (1 << 0),
-+	ATA_PORT_SOFTRESET	= (1 << 1),
-+	ATA_PORT_HARDRESET	= (1 << 2),
-+
- 	/* flags for ata_eh_shduled_port */
- 	ATA_EH_ABORT		= (1 << 0), /* abort all active commands */
- 	ATA_EH_FREEZE		= (1 << 1), /* freeze port (implies ABORT) */
--- 
-1.2.4
+* better wait logic before the first reset in ata_eh_revive().  The
+  wait logic now lives in a separate function
+  ata_eh_wait_before_reset().
+
+* ata_eh_revive() skips EH reset if possible
+
+* ata_eh_revive() skips revalidation if SATA PHY reports no device is
+  attached to the port.
+
+* ahci error_handler grabs host_set lock when accessing pp->eh_* fields
+
+* ahci_host_intr is converted to return void
+
+* ahci autopsy is performed before determine_qc such that the result
+  can be used for NCQ determine_qc later.
+
+* sata_sil24 is converted to new EH
+
+* sata_sil postreset now calls ata_std_postreset() before reenabling
+  interrupts
+
+This patchset is against
+
+  upstream (c2a6585296009379e0f4eff39cdcb108b457ebf2)
+  + [1] misc-reset-updates patchset (repost)
+  + [2] implement-and-use-ata_wait_register patchset (repost)
+  + [3] misc-ata_bus_probe-updates patchset
+  + [4] fixes-errata-workaround-and-reset-updates patchset, take 2
+  + [5] implement-scsi_eh_schedule patchset
+  + [6] fix-scsi_kill_request-busy-count handling patch
+  + [7] new-EH-framework patchset, take 2
+
+Thanks.
+
+--
+tejun
+
+[L] http://article.gmane.org/gmane.linux.ide/9322
+[1] http://article.gmane.org/gmane.linux.ide/9495
+[2] http://article.gmane.org/gmane.linux.ide/9499
+[3] http://article.gmane.org/gmane.linux.ide/9506
+[4] http://article.gmane.org/gmane.linux.ide/9516
+[5] http://article.gmane.org/gmane.linux.ide/9290
+[6] http://article.gmane.org/gmane.linux.ide/9487
+[7] http://article.gmane.org/gmane.linux.ide/9524
 
 
