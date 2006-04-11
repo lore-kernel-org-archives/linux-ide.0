@@ -1,164 +1,76 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: [PATCH/RFC] ahci: add support for VIA VT8251
-Date: Tue, 11 Apr 2006 21:41:18 +0400
-Message-ID: <20060411214118.12653818.vsu@altlinux.ru>
-References: <200604111915.45564.b.jacques@planet.nl>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
+Date: Tue, 11 Apr 2006 13:41:57 -0400
+Message-ID: <443BEA65.7020800@pobox.com>
+References: <20060401103857.GG13172@htj.dyndns.org> <442EDF1F.6000001@pobox.com> <442F25BD.8040000@gmail.com> <20060402160414.GM13172@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__11_Apr_2006_21_41_18_+0400_BUgw0Dt5+bKNFWQi"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from master.altlinux.org ([62.118.250.235]:56079 "EHLO
-	master.altlinux.org") by vger.kernel.org with ESMTP
-	id S1750814AbWDKRmA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Apr 2006 13:42:00 -0400
-In-Reply-To: <200604111915.45564.b.jacques@planet.nl>
+Received: from srv5.dvmed.net ([207.36.208.214]:3206 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750817AbWDKRmK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 13:42:10 -0400
+In-Reply-To: <20060402160414.GM13172@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bastiaan Jacques <b.jacques@planet.nl>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
---Signature=_Tue__11_Apr_2006_21_41_18_+0400_BUgw0Dt5+bKNFWQi
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 11 Apr 2006 19:15:45 +0200 Bastiaan Jacques wrote:
-
-> This patch adds AHCI support for the VIA VT8251 chipset. The patch does s=
-o by:
-> 	1) Adding the PCI device ID.
-> 	2) Adding a workaround in ahci_probe_reset() for a VIA hardware bug.
->=20
-> Signed-off-by: Bastiaan Jacques <b.jacques@planet.nl>
+Tejun Heo wrote:
+> This patch implements scsi_eh_schedule_cmd() which provides a way to
+> directly invoke SCSI EH from drivers implementing
+> ->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
+> gives such drivers complete control over when and how to invoke EH and
+> handle failed commands.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
 > ---
->=20
-> The patch is based upon the patch[1] provided by VIA. With the softreset =
-and=20
-> probing work that has been merged, this patch has become much simpler.
->=20
-> I am happy to report that without the workaround in ahci_probe_reset(), t=
-he=20
-> chipset works quite well; both my SATA drives are recognised. However,=20
-> softreset does not work (but hardreset does), and ata_std_probeinit delay=
-s,=20
-> for my primary SATA drive/port,  due to the "busy" bug. A Command List=20
-> Override will unbusy the drive/port.
->=20
-> Since the CLO sequence also appears in ahci_softreset(), I have moved tha=
-t=20
-> code into a new ahci_clo() function.
->=20
-> This patch is against 2.6.17-rc1 (and -mm2).
->=20
-> This patch has only been tested by yours truly. Whilst I am waiting for=20
-> feedback from other people, I am sending this patch to solicit comments.
->=20
-> NOTE: My email client cuts off some lines (of context) in my patch becaus=
-e=20
-> they are longer than 78 characters. Therefore, I am making the patch=20
-> available from my web server [2], as well.
->=20
-> Bastiaan
->=20
-> [1] http://lkml.org/lkml/2005/12/11/204
-> [2] http://mirrors.pagefault.net/linux-via-ahci-latest.patch
->=20
-> --- drivers/scsi/ahci.c.orig	2006-04-11 18:58:32.000000000 +0200
-> +++ drivers/scsi/ahci.c	2006-04-11 12:44:41.000000000 +0200
-> @@ -297,6 +297,8 @@
->  	  board_ahci }, /* ATI SB600 non-raid */
->  	{ PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->  	  board_ahci }, /* ATI SB600 raid */
-> +	{ PCI_VENDOR_ID_VIA, 0x3349, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-> +	  board_ahci }, /* VT8251 */
-
-You can add a separate host type (e.g., board_via_vt8251_ahci), and then
-add an entry for this type to ahci_port_info[].  The entry would have a
-special flag in .host_flags, but the same .port_ops, so there will not
-be excessive duplication like in the original vendor patch.
-
-Look like other drivers which need workarounds for hardware bugs (e.g.,
-sata_sil) do this.
-
->  	{ }	/* terminate list */
->  };
->=20
-> @@ -535,6 +537,17 @@
->  	return -1;
+> 
+>  drivers/scsi/scsi_error.c |   24 ++++++++++++++++++++++++
+>  include/scsi/scsi_eh.h    |    1 +
+>  2 files changed, 25 insertions(+), 0 deletions(-)
+> 
+> caaed524eab41fab88be717d06627bd50cf66ee2
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 5f0fdfb..c314095 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -90,6 +90,30 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
 >  }
->=20
-> +static void ahci_clo(struct ata_port *ap)
+>  
+>  /**
+> + * scsi_eh_schedule_cmd - schedule scsi cmd for error handling.
+> + * @scmd:	scmd to run eh on.
+> + *
+> + * Description:
+> + *	This function is used by LLDDs which don't use standard SCSI
+> + *	EH to schedule scmd for EH.
+> + *
+> + * Return value:
+> + *	0 on failure.
+> + **/
+> +int scsi_eh_schedule_cmd(struct scsi_cmnd *scmd)
 > +{
-> +	void __iomem *port_mmio =3D (void __iomem *) ap->ioaddr.cmd_addr;
-> +	u32 tmp;
+> +	struct Scsi_Host *shost = scmd->device->host;
 > +
-> +	tmp =3D readl(port_mmio + PORT_CMD);
-> +	tmp |=3D PORT_CMD_CLO;
-> +	writel(tmp, port_mmio + PORT_CMD);
-> +	readl(port_mmio + PORT_CMD); /* flush */
+> +	WARN_ON(!shost->hostt->eh_strategy_handler);
+> +
+> +	if (!scsi_delete_timer(scmd))
+> +		return 0;	/* timeout won */
+> +
+> +	return scsi_eh_scmd_add(scmd, 0);
 > +}
-> +
->  static int ahci_softreset(struct ata_port *ap, int verbose, unsigned int=
-=20
-> *class)
->  {
->  	struct ahci_host_priv *hpriv =3D ap->host_set->private_data;
-> @@ -565,7 +578,6 @@
->  	/* check BUSY/DRQ, perform Command List Override if necessary */
->  	ahci_tf_read(ap, &tf);
->  	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
-> -		u32 tmp;
->=20
+> +EXPORT_SYMBOL_GPL(scsi_eh_schedule_cmd);
 
-The following empty line should probably be deleted too.
 
->  		if (!(hpriv->cap & HOST_CAP_CLO)) {
->  			rc =3D -EIO;
-> @@ -573,10 +585,7 @@
->  			goto fail_restart;
->  		}
->=20
-> -		tmp =3D readl(port_mmio + PORT_CMD);
-> -		tmp |=3D PORT_CMD_CLO;
-> -		writel(tmp, port_mmio + PORT_CMD);
-> -		readl(port_mmio + PORT_CMD); /* flush */
-> +		ahci_clo(ap);
->=20
->  		if (ahci_poll_register(port_mmio + PORT_CMD, PORT_CMD_CLO, 0x0,
->  				       1, 500)) {
-> @@ -695,6 +704,16 @@
->=20
->  static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
->  {
-> +	struct pci_dev *pdev =3D to_pci_dev(ap->host_set->dev);
-> +
-> +	/* Workaround for VIA VT8251 "busy" bug */
-> +	if (pdev->device =3D=3D 0x3349) {
+ACK, though this patch makes me think that there are some non-libata 
+pieces of code that could use this function.
 
-After adding a separate host type and a host flag this will be:
+Unfortunately for libata, we are stuck waiting on linux-scsi people to 
+return and give their opinion.  If nobody complains, I'll apply it, if 
+it doesn't appear in scsi-misc-2.6 sometime vaguely soon.
 
-	if (ap->flags & AHCI_FLAG_RESET_NEEDS_CLO) {
+	Jeff
 
-> +		if (ata_busy_wait(ap, ATA_BUSY, 1000) & ATA_BUSY) {
-> +			/* ATA_BUSY hasn't cleared, so send a CLO */
-> +			ahci_clo(ap);
-> +		}
-> +	}
-> +
->  	return ata_drive_probe_reset(ap, ata_std_probeinit,
->  				     ahci_softreset, ahci_hardreset,
->  				     ahci_postreset, classes);
 
---Signature=_Tue__11_Apr_2006_21_41_18_+0400_BUgw0Dt5+bKNFWQi
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.9.17 (GNU/Linux)
-
-iD8DBQFEO+pBW82GfkQfsqIRAoYmAKCGYbX/VGrSm1wEpo3Zg6v4i5domQCcC4FH
-I039H2F7Yql/pKb9g3iI69c=
-=oxJh
------END PGP SIGNATURE-----
-
---Signature=_Tue__11_Apr_2006_21_41_18_+0400_BUgw0Dt5+bKNFWQi--
