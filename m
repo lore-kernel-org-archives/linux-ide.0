@@ -1,113 +1,74 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 13/13] sata_sil24: enable 64bit
-Date: Tue, 11 Apr 2006 22:32:19 +0900
-Message-ID: <11447623391631-git-send-email-htejun@gmail.com>
-References: <11447623382439-git-send-email-htejun@gmail.com>
+Subject: [PATCH 06/13] libata-hp: prepare for persistent device flags
+Date: Tue, 11 Apr 2006 23:06:21 +0900
+Message-ID: <11447643811744-git-send-email-htejun@gmail.com>
+References: <11447643813451-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.200]:33482 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750814AbWDKN5e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:57:34 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1098619nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:57:34 -0700 (PDT)
-In-Reply-To: <11447623382439-git-send-email-htejun@gmail.com>
+Received: from wproxy.gmail.com ([64.233.184.226]:36020 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750835AbWDKOG1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:06:27 -0400
+Received: by wproxy.gmail.com with SMTP id i11so930347wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:06:27 -0700 (PDT)
+In-Reply-To: <11447643813451-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Enable 64bit.
+This patch makes dev->flags persistent, defines ATA_DFLAG_INIT_MASK as
+lower 16 bits of device flags and clear them in ata_dev_init().  So,
+device flags in bits [0:15] are cleared over hotplugging while flags
+from bit 16 upward are maintained.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil24.c |   47 +++++++++++++++++++++++++++------------------
- 1 files changed, 28 insertions(+), 19 deletions(-)
+ drivers/scsi/libata-core.c |    2 ++
+ include/linux/libata.h     |    3 ++-
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-709a645787936306deaf99ec7e9a4cdf3629493c
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 40795e6..9320368 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -486,6 +486,7 @@ static int sil24_softreset(struct ata_po
- 	prb->fis[1] = 0; /* no PM yet */
- 
- 	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
-+	writel((u64)paddr >> 32, port + PORT_CMD_ACTIVATE + 4);
- 
- 	mask = (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR) << PORT_IRQ_RAW_SHIFT;
- 	irq_stat = ata_wait_register(port + PORT_IRQ_STAT, mask, 0x0,
-@@ -645,6 +646,8 @@ static unsigned int sil24_qc_issue(struc
- 	dma_addr_t paddr = pp->cmd_block_dma + qc->tag * sizeof(*pp->cmd_block);
- 
- 	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
-+	writel((u64)paddr >> 32, port + PORT_CMD_ACTIVATE + 4);
+3a7b8630e4c5cc409562164a941b40bc2b6b8728
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 09e82f9..930f387 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1444,6 +1444,8 @@ err_out_nosup:
+  */
+ static void ata_dev_init(struct ata_port *ap, struct ata_device *dev)
+ {
++	dev->flags &= ~ATA_DFLAG_INIT_MASK;
 +
- 	return 0;
- }
+ 	memset((void *)dev + ATA_DEVICE_CLEAR_OFFSET, 0,
+ 	       sizeof(*dev) - ATA_DEVICE_CLEAR_OFFSET);
+ 	dev->pio_mask = UINT_MAX;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 809f3b9..33ce8a4 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -128,6 +128,7 @@ enum {
  
-@@ -981,22 +984,29 @@ static int sil24_init_one(struct pci_dev
- 	/*
- 	 * Configure the device
- 	 */
--	/*
--	 * FIXME: This device is certainly 64-bit capable.  We just
--	 * don't know how to use it.  After fixing 32bit activation in
--	 * this function, enable 64bit masks here.
--	 */
--	rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
--	if (rc) {
--		dev_printk(KERN_ERR, &pdev->dev,
--			   "32-bit DMA enable failed\n");
--		goto out_free;
--	}
--	rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
--	if (rc) {
--		dev_printk(KERN_ERR, &pdev->dev,
--			   "32-bit consistent DMA enable failed\n");
--		goto out_free;
-+	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
-+		rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
-+		if (rc) {
-+			rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
-+			if (rc) {
-+				dev_printk(KERN_ERR, &pdev->dev,
-+					   "64-bit DMA enable failed\n");
-+				goto out_free;
-+			}
-+		}
-+	} else {
-+		rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-+		if (rc) {
-+			dev_printk(KERN_ERR, &pdev->dev,
-+				   "32-bit DMA enable failed\n");
-+			goto out_free;
-+		}
-+		rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
-+		if (rc) {
-+			dev_printk(KERN_ERR, &pdev->dev,
-+				   "32-bit consistent DMA enable failed\n");
-+			goto out_free;
-+		}
- 	}
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
+ 	ATA_DFLAG_FAILED	= (1 << 9), /* device has failed */
++	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
  
- 	/* GPIO off */
-@@ -1054,9 +1064,8 @@ static int sil24_init_one(struct pci_dev
- 		writel(0x0000, port + PORT_CRC_ERR_CNT);
- 		writel(0x0000, port + PORT_HSHK_ERR_CNT);
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+@@ -396,9 +397,9 @@ struct ata_ering {
  
--		/* FIXME: 32bit activation? */
--		writel(0, port + PORT_ACTIVATE_UPPER_ADDR);
--		writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_STAT);
-+		/* Always use 64bit activation */
-+		writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
- 
- 		/* Configure interrupts */
- 		writel(0xffff, port + PORT_IRQ_ENABLE_CLR);
+ struct ata_device {
+ 	unsigned int		devno;		/* 0 or 1 */
++	unsigned long		flags;		/* ATA_DFLAG_xxx */
+ 	/* fields above n_sectors are not cleared across device init */
+ 	u64			n_sectors;	/* size of device, if ATA */
+-	unsigned long		flags;		/* ATA_DFLAG_xxx */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	u16			*id;		/* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
 -- 
 1.2.4
 
