@@ -1,68 +1,79 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/16] libata-eh-fw: add flags for new EH
-Date: Tue, 11 Apr 2006 22:42:53 +0900
-Message-ID: <11447629731739-git-send-email-htejun@gmail.com>
+Subject: [PATCH 15/16] libata-eh-fw: update SCSI command completion path for new EH
+Date: Tue, 11 Apr 2006 22:42:55 +0900
+Message-ID: <1144762975483-git-send-email-htejun@gmail.com>
 References: <11447629733305-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.183]:9317 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750879AbWDKNmz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:42:55 -0400
-Received: by pproxy.gmail.com with SMTP id i49so1385350pye
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:42:54 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.237]:25239 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750917AbWDKNnE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:43:04 -0400
+Received: by wproxy.gmail.com with SMTP id i12so1030488wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:43:04 -0700 (PDT)
 In-Reply-To: <11447629733305-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add new device, port and ac flags to be used for new EH.
+New EH is responsible for filling qc->tf with status and filling sense
+data for ATAPI check sense.  Update SCSI command completion path to
+reflect this.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- include/linux/libata.h |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/libata-scsi.c |   25 ++++++++++++++++++++++++-
+ 1 files changed, 24 insertions(+), 1 deletions(-)
 
-83d510e57ad1843999195e7c5b00f7086ebf57d9
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 1c75024..d80dbb5 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -124,6 +124,7 @@ enum {
- 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+394065e67293178b8ed4766800e655f9cc8ec33e
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index c9c0014..1c1b510 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1204,7 +1204,9 @@ static void ata_scsi_qc_complete(struct 
+ 		if (!need_sense) {
+ 			cmd->result = SAM_STAT_GOOD;
+ 		} else {
+-			qc->ap->ops->tf_read(qc->ap, &qc->tf);
++			/* new EH already loaded qc->tf */
++			if (!qc->ap->ops->error_handler)
++				qc->ap->ops->tf_read(qc->ap, &qc->tf);
  
- 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
-+	ATA_DFLAG_FAILED	= (1 << 9), /* device has failed */
+ 			/* TODO: decide which descriptor format to use
+ 			 * for 48b LBA devices and call that here
+@@ -2069,6 +2071,27 @@ static void atapi_qc_complete(struct ata
  
- 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
- 	ATA_DEV_ATA		= 1,	/* ATA device */
-@@ -151,7 +152,8 @@ enum {
- 	ATA_FLAG_FLUSH_PORT_TASK = (1 << 18), /* flush port task */
+ 	VPRINTK("ENTER, err_mask 0x%X\n", err_mask);
  
- 	ATA_FLAG_DISABLED	= (1 << 19), /* port is disabled, ignore it */
--	ATA_FLAG_SUSPENDED	= (1 << 20), /* port is suspended */
-+	ATA_FLAG_FROZEN		= (1 << 20), /* port is frozen */
-+	ATA_FLAG_SUSPENDED	= (1 << 21), /* port is suspended (power) */
- 
- 	/* bits 24:31 of ap->flags are reserved for LLDD specific flags */
- 
-@@ -161,7 +163,10 @@ enum {
- 	ATA_QCFLAG_SINGLE	= (1 << 2), /* no s/g, just a single buffer */
- 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
- 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
--	ATA_QCFLAG_EH_SCHEDULED = (1 << 4), /* EH scheduled */
-+	ATA_QCFLAG_TIMEOUT	= (1 << 4), /* cmd has timed out */
-+	ATA_QCFLAG_FAILED	= (1 << 5), /* cmd has failed */
-+	ATA_QCFLAG_EH_SCHEDULED	= (1 << 6), /* EH scheduled */
-+	ATA_QCFLAG_SENSE_VALID	= (1 << 7), /* sense data valid */
- 
- 	/* host set flags */
- 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host_set only */
++	/* handle completion from new EH */
++	if (unlikely(qc->ap->ops->error_handler &&
++		     (err_mask || qc->flags & ATA_QCFLAG_SENSE_VALID))) {
++
++		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID)) {
++			/* FIXME: not quite right; we don't want the
++			 * translation of taskfile registers into a
++			 * sense descriptors, since that's only
++			 * correct for ATA, not ATAPI
++			 */
++			/* new EH already loaded qc->tf */
++			ata_gen_ata_desc_sense(qc);
++		}
++
++		qc->scsicmd->result = SAM_STAT_CHECK_CONDITION;
++		qc->scsidone(cmd);
++		ata_qc_free(qc);
++		return;
++	}
++
++	/* successful completion or old EH failure path */
+ 	if (unlikely(err_mask & AC_ERR_DEV)) {
+ 		cmd->result = SAM_STAT_CHECK_CONDITION;
+ 		atapi_request_sense(qc);
 -- 
 1.2.4
 
