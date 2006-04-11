@@ -1,86 +1,89 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/13] libata-hp: store attached SCSI device
-Date: Tue, 11 Apr 2006 23:06:22 +0900
-Message-ID: <1144764382410-git-send-email-htejun@gmail.com>
+Subject: [PATCH 03/13] libata-hp: implement ata_dev_init()
+Date: Tue, 11 Apr 2006 23:06:21 +0900
+Message-ID: <11447643811565-git-send-email-htejun@gmail.com>
 References: <11447643813451-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.196]:34748 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750837AbWDKOG2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:06:28 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1100709nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:06:27 -0700 (PDT)
+Received: from zproxy.gmail.com ([64.233.162.204]:29188 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750822AbWDKOGX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:06:23 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1100680nzf
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:06:23 -0700 (PDT)
 In-Reply-To: <11447643813451-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add device persistent field dev->sdev and store the attached SCSI
-device.  With hotplug, libata needs to know the attached SCSI device
-to offline and detach it, but scsi_device_lookup() cannot be used
-because libata will reuse SCSI ID numbers - dead but not gone devices
-(due to zombie opens, etc...) interfere with the lookup.
-
-dev->sdev doesn't hold reference to the SCSI device.  dev->sdev is
-cleared when the SCSI device goes away.
+Move initialization of struct ata_device into ata_dev_init() in
+preparation for hotplug.  This patch calls ata_dev_init() from
+ata_host_init() and thus makes no functional difference.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |   14 ++++++++++----
- include/linux/libata.h     |    1 +
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/scsi/libata-core.c |   28 ++++++++++++++++++++++------
+ 1 files changed, 22 insertions(+), 6 deletions(-)
 
-784f79074e0ab0441363c7a87d1b93d6d11ac437
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 4ce390a..1793474 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2740,17 +2740,23 @@ void ata_scsi_simulate(struct ata_port *
- 
- void ata_scsi_scan_host(struct ata_port *ap)
- {
--	struct ata_device *dev;
- 	unsigned int i;
- 
- 	if (ap->flags & ATA_FLAG_DISABLED)
- 		return;
- 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
--		dev = &ap->device[i];
-+		struct ata_device *dev = &ap->device[i];
- 
--		if (ata_dev_enabled(dev))
--			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
-+		if (ata_dev_enabled(dev) && dev->sdev == NULL) {
-+			struct scsi_device *sdev;
-+
-+			sdev = __scsi_add_device(ap->host, 0, i, 0, NULL);
-+			if (!IS_ERR(sdev)) {
-+				dev->sdev = sdev;
-+				scsi_device_put(sdev);
-+			}
-+		}
- 	}
+442eed97d84e43eb0860e19398c508c4a02c2860
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index d49d4c7..1378b6f 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1433,6 +1433,27 @@ err_out_nosup:
  }
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2a93c44..5f8faca 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -407,6 +407,7 @@ struct ata_ering {
- struct ata_device {
- 	unsigned int		devno;		/* 0 or 1 */
- 	unsigned long		flags;		/* ATA_DFLAG_xxx */
-+	struct scsi_device	*sdev;		/* attached SCSI device */
- 	/* fields above n_sectors are not cleared across device init */
- 	u64			n_sectors;	/* size of device, if ATA */
- 	unsigned int		class;		/* ATA_DEV_xxx */
+ /**
++ *	ata_dev_init - Initialize an ata_device structure
++ *	@ap: ATA port device to initialize is attached to
++ *	@dev: Device structure to initialize
++ *
++ *	Initialize @dev in preparation for probing.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++static void ata_dev_init(struct ata_port *ap, struct ata_device *dev)
++{
++	memset((void *)dev + ATA_DEVICE_CLEAR_OFFSET, 0,
++	       sizeof(*dev) - ATA_DEVICE_CLEAR_OFFSET);
++	dev->devno = dev - ap->device;
++	dev->pio_mask = UINT_MAX;
++	dev->mwdma_mask = UINT_MAX;
++	dev->udma_mask = UINT_MAX;
++	ata_ering_init(&dev->ering, ATA_DEV_ERING_SIZE);
++}
++
++/**
+  *	ata_bus_probe - Reset and probe ATA bus
+  *	@ap: Bus to probe
+  *
+@@ -4828,7 +4849,6 @@ static void ata_host_remove(struct ata_p
+  *	LOCKING:
+  *	Inherited from caller.
+  */
+-
+ static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
+ 			  struct ata_host_set *host_set,
+ 			  const struct ata_probe_ent *ent, unsigned int port_no)
+@@ -4865,11 +4885,7 @@ static void ata_host_init(struct ata_por
+ 
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+-		dev->devno = i;
+-		dev->pio_mask = UINT_MAX;
+-		dev->mwdma_mask = UINT_MAX;
+-		dev->udma_mask = UINT_MAX;
+-		ata_ering_init(&dev->ering, ATA_DEV_ERING_SIZE);
++		ata_dev_init(ap, dev);
+ 	}
+ 
+ #ifdef ATA_IRQ_TRAP
 -- 
 1.2.4
 
