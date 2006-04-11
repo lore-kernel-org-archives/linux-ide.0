@@ -1,95 +1,110 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 11/16] libata-eh-fw: implement new EH scheduling via timeout
+Subject: [PATCH 08/16] libata-eh-fw: update ata_qc_from_tag() to enforce normal/EH qc ownership
 Date: Tue, 11 Apr 2006 22:42:54 +0900
-Message-ID: <1144762974340-git-send-email-htejun@gmail.com>
+Message-ID: <1144762974987-git-send-email-htejun@gmail.com>
 References: <11447629733305-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.237]:25239 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750911AbWDKNnC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:43:02 -0400
-Received: by wproxy.gmail.com with SMTP id i12so1030488wra
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:43:01 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.227]:18071 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750900AbWDKNnA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:43:00 -0400
+Received: by wproxy.gmail.com with SMTP id i11so925428wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:43:00 -0700 (PDT)
 In-Reply-To: <11447629733305-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement new EH scheduling from timeout.  ata_scsi_timedout() also
-takes care of the race condition in which scsi_eh_schedule_qc() sets
-ATA_QCFLAG_EH_SCHEDULED but fails to acutally schedule EH for the qc
-because it loses to timeout.
+New EH framework has clear distinction about who owns a qc.  Every qc
+starts owned by normal execution path - PIO, interrupt or whatever.
+When an exception condition occurs which affects the qc, the qc gets
+scheduled for EH.  Note that some events (say, link lost and regained,
+command timeout) may schedule qc's which are not directly related but
+could have been affected for EH too.  Scheduling for EH is atomic
+w.r.t. ap->host_set->lock and once schedule for EH, normal execution
+path is not allowed to access the qc in whatever way.  (PIO
+synchronization acts a bit different and will be dealt with later)
 
-A timeout is HSM violation condition.  New EH assumes that on a
-timeout the state of the controller and devices are unknown and
-dangerous.  So, all active commands are aborted and the port is
-frozen.  Note that commands which get aborted this way don't have its
-qc->err_mask set and its retries count will be compensated.
+This patch make ata_qc_from_tag() check whether a qc is active and
+owned by normal path before returning it.  If conditions don't match,
+NULL is returned and thus access to the qc is denied.
+__ata_qc_from_tag() is the original ata_qc_from_tag() and is used by
+libata core/EH layers to access inactive/failed qc's.
+
+This change is applied only if the associated LLDD implements new EH
+as indicated by non-NULL ->error_handler
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-eh.c |   33 ++++++++++++++++++++++++++++-----
- 1 files changed, 28 insertions(+), 5 deletions(-)
+ drivers/scsi/libata-core.c |    4 ++--
+ include/linux/libata.h     |   19 +++++++++++++++++--
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-0f79b4bddad85f3b2a55a46f316721b5492fd8ba
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index e731c04..97ec527 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -66,19 +66,42 @@ enum scsi_eh_timer_return ata_scsi_timed
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct ata_port *ap = (struct ata_port *) &host->hostdata[0];
- 	unsigned long flags;
-+	int i;
- 	struct ata_queued_cmd *qc;
- 	enum scsi_eh_timer_return ret = EH_HANDLED;
+efaa885fb5b63f1235ef0db268ed283074d7fd9b
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index e8566bb..f019d5d 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1011,7 +1011,7 @@ unsigned ata_exec_internal(struct ata_po
  
- 	DPRINTK("ENTER\n");
+ 	if (test_and_set_bit(tag, &ap->qactive))
+ 		BUG();
+-	qc = ata_qc_from_tag(ap, tag);
++	qc = __ata_qc_from_tag(ap, tag);
  
- 	spin_lock_irqsave(&ap->host_set->lock, flags);
--	qc = ata_qc_from_tag(ap, ap->active_tag);
--	if (qc) {
--		WARN_ON(qc->scsicmd != cmd);
--		qc->flags |= ATA_QCFLAG_EH_SCHEDULED;
--		qc->err_mask |= AC_ERR_TIMEOUT;
-+
-+	for (i = 0; i < ATA_MAX_QUEUE; i++) {
-+		/* If ata_eh_scheduled_qc() raced with us and lost,
-+		 * EH_SCHEDULED flag would already be set, so we
-+		 * cannot use ata_qc_from_tag() here.
-+		 */
-+		qc = __ata_qc_from_tag(ap, i);
-+		if (qc && qc->flags & ATA_QCFLAG_ACTIVE && qc->scsicmd == cmd)
-+			break;
-+	}
-+
-+	if (i < ATA_MAX_QUEUE) {
-+		/* qc->err_mask belongs to the command owner, so it
-+		 * cannot be altered here.  Use ATA_QCFLAG_TIMEOUT
-+		 * instead.  EH is responsible for merging this flag
-+		 * into err_mask after claiming qc ownership.
-+		 */
-+		qc->flags |= ATA_QCFLAG_TIMEOUT | ATA_QCFLAG_EH_SCHEDULED;
-+		qc->dev->flags |= ATA_DFLAG_FAILED;
-+
-+		if (ap->ops->error_handler)
-+			ata_eh_schedule_port(ap, ATA_EH_FREEZE);
-+		else
-+			/* old EH, do what it used to do */
-+			qc->err_mask |= AC_ERR_TIMEOUT;
-+
- 		ret = EH_NOT_HANDLED;
- 	}
-+
- 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 	qc->tag = tag;
+ 	qc->scsicmd = NULL;
+@@ -4111,7 +4111,7 @@ static struct ata_queued_cmd *ata_qc_new
+ 	/* the last tag is reserved for internal command. */
+ 	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
+ 		if (!test_and_set_bit(i, &ap->qactive)) {
+-			qc = ata_qc_from_tag(ap, i);
++			qc = __ata_qc_from_tag(ap, i);
+ 			break;
+ 		}
  
- 	DPRINTK("EXIT, ret=%d\n", ret);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index e814f38..e059cd3 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -812,14 +812,29 @@ static inline void ata_qc_set_polling(st
+ 	qc->tf.ctl |= ATA_NIEN;
+ }
+ 
+-static inline struct ata_queued_cmd *ata_qc_from_tag (struct ata_port *ap,
+-						      unsigned int tag)
++static inline struct ata_queued_cmd *__ata_qc_from_tag(struct ata_port *ap,
++						       unsigned int tag)
+ {
+ 	if (likely(ata_tag_valid(tag)))
+ 		return &ap->qcmd[tag];
+ 	return NULL;
+ }
+ 
++static inline struct ata_queued_cmd *ata_qc_from_tag(struct ata_port *ap,
++						     unsigned int tag)
++{
++	struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
++
++	if (unlikely(!qc) || !ap->ops->error_handler)
++		return qc;
++
++	if ((qc->flags & (ATA_QCFLAG_ACTIVE |
++			  ATA_QCFLAG_EH_SCHEDULED)) == ATA_QCFLAG_ACTIVE)
++		return qc;
++
++	return NULL;
++}
++
+ static inline void ata_tf_init(struct ata_port *ap, struct ata_taskfile *tf, unsigned int device)
+ {
+ 	memset(tf, 0, sizeof(*tf));
 -- 
 1.2.4
 
