@@ -1,114 +1,95 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/15] libata-ncq: implement command exclusion
+Subject: [PATCH 06/15] libata-ncq: implement NCQ command translation
 Date: Tue, 11 Apr 2006 22:53:36 +0900
-Message-ID: <1144763616442-git-send-email-htejun@gmail.com>
+Message-ID: <11447636163701-git-send-email-htejun@gmail.com>
 References: <1144763616819-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:55716 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750985AbWDKNxo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:53:44 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1097574nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:53:44 -0700 (PDT)
+Received: from wproxy.gmail.com ([64.233.184.235]:52388 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750995AbWDKNxp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:53:45 -0400
+Received: by wproxy.gmail.com with SMTP id i11so927606wra
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:53:45 -0700 (PDT)
 In-Reply-To: <1144763616819-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-NCQ enabled device will have queue depth larger than one but no two
-non-NCQ commands can be issued simultaneously, neither can a non-NCQ
-command and NCQ commands.  This patch makes ata_scsi_translate()
-return SCSI_MLQUEUE_DEVICE_BUSY if such exclusion is necessary.  SCSI
-midlayer will retry the command later.
+This patch implements NCQ command translation.  Note that NCQ commands
+don't use ata_rwcmd_protocol() to choose ATA command.  This is
+because, unlike non-NCQ RW commands, NCQ commands can only be used for
+NCQ protocol and FUA handling is done with a flag rather than separate
+command.
 
-As SCSI midlayer always retries once a command completes, this doesn't
-incur unnecessary delays and as most commands will be NCQ ones for NCQ
-device, so the overhead should be negligible.
-
-Initial implementation is from Jens Axboe and using
-SCSI_MLQUEUE_DEVICE_BUSY for exclusion is suggested by Jeff Garzik.
+Original implementation is from Jens Axboe.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |   41 +++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 41 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-core.c |    1 +
+ drivers/scsi/libata-scsi.c |   31 ++++++++++++++++++++++++++++++-
+ 2 files changed, 31 insertions(+), 1 deletions(-)
 
-7f78182953826cfcd2c9b0a7d897e01f6724cb6b
+d3819d03d822cf98a8b932fde42fcdc3e553edb1
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 7dc668c..8e90aa0 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4287,6 +4287,7 @@ static inline int ata_should_dma_map(str
+ 	struct ata_port *ap = qc->ap;
+ 
+ 	switch (qc->tf.protocol) {
++	case ATA_PROT_NCQ:
+ 	case ATA_PROT_DMA:
+ 	case ATA_PROT_ATAPI_DMA:
+ 		return 1;
 diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index c978a5d..00cb9ca 100644
+index 00cb9ca..fdc95f1 100644
 --- a/drivers/scsi/libata-scsi.c
 +++ b/drivers/scsi/libata-scsi.c
-@@ -1229,6 +1229,39 @@ static void ata_scsi_qc_complete(struct 
- }
+@@ -1098,7 +1098,36 @@ static unsigned int ata_scsi_rw_xlat(str
+ 		 */
+ 		goto nothing_to_do;
  
- /**
-+ *	ata_scmd_need_defer - Check whether we need to defer scmd
-+ *	@ap: ATA port to which the command is addressed
-+ *	@dev: ATA device to which the command is addressed
-+ *	@is_io: Is the command IO (and thus possibly NCQ)?
-+ *
-+ *	NCQ and non-NCQ commands cannot run together.  As upper layer
-+ *	only knows the queue depth, we are responsible for maintaining
-+ *	exclusion.  This function checks whether a new command can be
-+ *	issued to @dev.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	1 if deferring is needed, 0 otherwise.
-+ */
-+static int ata_scmd_need_defer(struct ata_port *ap, struct ata_device *dev,
-+			       int is_io)
-+{
-+	if (!(dev->flags & ATA_DFLAG_NCQ))
-+		return 0;
+-	if (dev->flags & ATA_DFLAG_LBA) {
++	if ((dev->flags & (ATA_DFLAG_PIO | ATA_DFLAG_NCQ)) == ATA_DFLAG_NCQ) {
++		/* yay, NCQ */
++		if (!lba_48_ok(block, n_block))
++			goto out_of_range;
 +
-+	if (is_io) {
-+		if (!ata_tag_valid(ap->active_tag))
-+			return 0;
-+	} else {
-+		if (!ata_tag_valid(ap->active_tag) && !ap->sactive)
-+			return 0;
-+	}
-+	return 1;
-+}
++		tf->protocol = ATA_PROT_NCQ;
++		tf->flags |= ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
 +
-+/**
-  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
-  *	@ap: ATA port to which the command is addressed
-  *	@dev: ATA device to which the command is addressed
-@@ -1263,9 +1296,13 @@ static int ata_scsi_translate(struct ata
- {
- 	struct ata_queued_cmd *qc;
- 	u8 *scsicmd = cmd->cmnd;
-+	int is_io = xlat_func == ata_scsi_rw_xlat;
++		if (tf->flags & ATA_TFLAG_WRITE)
++			tf->command = ATA_CMD_FPDMA_WRITE;
++		else
++			tf->command = ATA_CMD_FPDMA_READ;
++
++		qc->nsect = n_block;
++
++		tf->nsect = qc->tag << 3;
++		tf->hob_feature = (n_block >> 8) & 0xff;
++		tf->feature = n_block & 0xff;
++
++		tf->hob_lbah = (block >> 40) & 0xff;
++		tf->hob_lbam = (block >> 32) & 0xff;
++		tf->hob_lbal = (block >> 24) & 0xff;
++		tf->lbah = (block >> 16) & 0xff;
++		tf->lbam = (block >> 8) & 0xff;
++		tf->lbal = block & 0xff;
++
++		tf->device = 1 << 6;
++		if (tf->flags & ATA_TFLAG_FUA)
++			tf->device |= 1 << 7;
++	} else if (dev->flags & ATA_DFLAG_LBA) {
+ 		tf->flags |= ATA_TFLAG_LBA;
  
- 	VPRINTK("ENTER\n");
- 
-+	if (unlikely(ata_scmd_need_defer(ap, dev, is_io)))
-+		goto defer;
-+
- 	qc = ata_scsi_qc_new(ap, dev, cmd, done);
- 	if (!qc)
- 		goto err_mem;
-@@ -1312,6 +1349,10 @@ err_mem:
- 	done(cmd);
- 	DPRINTK("EXIT - internal\n");
- 	return 0;
-+
-+defer:
-+	DPRINTK("EXIT - defer\n");
-+	return SCSI_MLQUEUE_DEVICE_BUSY;
- }
- 
- /**
+ 		if (lba_28_ok(block, n_block)) {
 -- 
 1.2.4
 
