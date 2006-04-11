@@ -1,17 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/13] libata-hp: call ata_dev_init() from ata_bus_probe()
-Date: Tue, 11 Apr 2006 23:06:21 +0900
-Message-ID: <11447643811206-git-send-email-htejun@gmail.com>
+Subject: [PATCH 13/13] libata-hp: add ata_hotplug_wq
+Date: Tue, 11 Apr 2006 23:06:22 +0900
+Message-ID: <11447643821791-git-send-email-htejun@gmail.com>
 References: <11447643813451-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.230]:43444 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750826AbWDKOG2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:06:28 -0400
-Received: by wproxy.gmail.com with SMTP id 69so1067515wri
+Received: from zproxy.gmail.com ([64.233.162.196]:34748 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751013AbWDKOG3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 10:06:29 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1100709nzf
         for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 07:06:28 -0700 (PDT)
 In-Reply-To: <11447643813451-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,55 +19,65 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Call ata_dev_init() before actual probing instead of during host
-initialization.  This is in preparation of hotplug.
+It's best to run ATA hotplug from EH but attaching SCSI devices needs
+working EH.  ata_hotplug_wq is used to give SCSI hotplug operations a
+separate context.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/scsi/libata-core.c |    9 +++++++++
+ drivers/scsi/libata.h      |    1 +
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-bc205de9459b473c8fef86b3f4e6e356aa9186fd
+1438492c4408fc908d3fb5865fd56231360a2fcd
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 3406f3d..09e82f9 100644
+index 0206791..610f963 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1466,7 +1466,6 @@ static void ata_dev_init(struct ata_port
-  *	RETURNS:
-  *	Zero on success, negative errno otherwise.
-  */
--
- static int ata_bus_probe(struct ata_port *ap)
- {
- 	unsigned int classes[ATA_MAX_DEVICES];
-@@ -1476,8 +1475,10 @@ static int ata_bus_probe(struct ata_port
+@@ -72,6 +72,8 @@ static void ata_dev_xfermask(struct ata_
+ static unsigned int ata_unique_id = 1;
+ static struct workqueue_struct *ata_wq;
  
- 	ata_port_probe(ap);
++struct workqueue_struct *ata_hotplug_wq;
++
+ int atapi_enabled = 1;
+ module_param(atapi_enabled, int, 0444);
+ MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+@@ -5300,6 +5302,12 @@ static int __init ata_init(void)
+ 	if (!ata_wq)
+ 		return -ENOMEM;
  
--	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		tries[i] = ATA_PROBE_MAX_TRIES;
-+		ata_dev_init(ap, &ap->device[i]);
++	ata_hotplug_wq = create_workqueue("ata_hotplug");
++	if (!ata_hotplug_wq) {
++		destroy_workqueue(ata_wq);
++		return -ENOMEM;
 +	}
++
+ 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
+ 	return 0;
+ }
+@@ -5307,6 +5315,7 @@ static int __init ata_init(void)
+ static void __exit ata_exit(void)
+ {
+ 	destroy_workqueue(ata_wq);
++	destroy_workqueue(ata_hotplug_wq);
+ }
  
-  retry:
- 	down_xfermask = 0;
-@@ -4882,11 +4883,8 @@ static void ata_host_init(struct ata_por
- 	INIT_WORK(&ap->port_task, NULL, NULL);
- 	INIT_LIST_HEAD(&ap->eh_done_q);
+ module_init(ata_init);
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index 659badb..09fddf6 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -40,6 +40,7 @@ struct ata_scsi_args {
+ };
  
--	for (i = 0; i < ATA_MAX_DEVICES; i++) {
--		struct ata_device *dev = &ap->device[i];
--		dev->devno = i;
--		ata_dev_init(ap, dev);
--	}
-+	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+		ap->device[i].devno = i;
- 
- #ifdef ATA_IRQ_TRAP
- 	ap->stats.unhandled_irq = 1;
+ /* libata-core.c */
++extern struct workqueue_struct *ata_hotplug_wq;
+ extern int atapi_enabled;
+ extern int atapi_dmadir;
+ extern int libata_fua;
 -- 
 1.2.4
 
