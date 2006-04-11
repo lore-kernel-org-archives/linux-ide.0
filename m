@@ -1,17 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/14] sata_sil: convert to new EH
-Date: Tue, 11 Apr 2006 22:48:23 +0900
-Message-ID: <11447633031072-git-send-email-htejun@gmail.com>
+Subject: [PATCH 11/14] ata_piix: convert to new EH
+Date: Tue, 11 Apr 2006 22:48:22 +0900
+Message-ID: <11447633022693-git-send-email-htejun@gmail.com>
 References: <11447633013561-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.239]:21406 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750951AbWDKNs3 (ORCPT
+Received: from wproxy.gmail.com ([64.233.184.225]:12958 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750947AbWDKNs3 (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 09:48:29 -0400
-Received: by wproxy.gmail.com with SMTP id i11so926550wra
+Received: by wproxy.gmail.com with SMTP id i11so926518wra
         for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 06:48:29 -0700 (PDT)
 In-Reply-To: <11447633013561-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,137 +19,42 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Convert sata_sil to new EH.  As these controllers have hardware
-interrupt mask and are known to have screaming interrupts issues, use
-hardware IRQ masking for freezing.  sil_freeze() masks interrupts for
-the port and sil_postreset() thaws it.  As ports are automatically
-frozen before probing reset, there is no need to initialize interrupt
-masks sil_init_onde().  Remove related code.
-
-Other than freezing, sata_sil uses stock BMDMA EH routines.a
+ata_piix can use stock BMDMA EH routines.  Convert to new EH.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil.c |   62 +++++++++++++++++++++++++++++++++++------------
- 1 files changed, 46 insertions(+), 16 deletions(-)
+ drivers/scsi/ata_piix.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-32a0f7961c59f9de17e29356f06a072367c64c43
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index f29c3e7..4b9b2d1 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -95,7 +95,10 @@ static int sil_init_one (struct pci_dev 
- static void sil_dev_config(struct ata_port *ap, struct ata_device *dev);
- static u32 sil_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void sil_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
-+static int sil_probe_reset(struct ata_port *ap, unsigned int *classes);
- static void sil_post_set_mode (struct ata_port *ap);
-+static void sil_freeze(struct ata_port *ap);
-+static void sil_error_handler(struct ata_port *ap);
- 
- 
- static const struct pci_device_id sil_pci_tbl[] = {
-@@ -167,7 +170,7 @@ static const struct ata_port_operations 
- 	.check_status		= ata_check_status,
- 	.exec_command		= ata_exec_command,
- 	.dev_select		= ata_std_dev_select,
--	.probe_reset		= ata_std_probe_reset,
-+	.probe_reset		= sil_probe_reset,
- 	.post_set_mode		= sil_post_set_mode,
- 	.bmdma_setup            = ata_bmdma_setup,
- 	.bmdma_start            = ata_bmdma_start,
-@@ -175,7 +178,9 @@ static const struct ata_port_operations 
- 	.bmdma_status		= ata_bmdma_status,
+57fba9792fb7047599ffe8dfc9ca5854ea3b91fb
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index 8383970..382ea51 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -244,7 +244,9 @@ static const struct ata_port_operations 
  	.qc_prep		= ata_qc_prep,
  	.qc_issue		= ata_qc_issue_prot,
+ 
 -	.eng_timeout		= ata_eng_timeout,
-+	.freeze			= sil_freeze,
-+	.error_handler		= sil_error_handler,
++	.freeze			= ata_bmdma_freeze,
++	.error_handler		= ata_bmdma_error_handler,
 +	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 
  	.irq_handler		= ata_interrupt,
  	.irq_clear		= ata_bmdma_irq_clear,
- 	.scr_read		= sil_scr_read,
-@@ -315,6 +320,44 @@ static void sil_scr_write (struct ata_po
- 		writel(val, mmio);
- }
+@@ -272,7 +274,9 @@ static const struct ata_port_operations 
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
  
-+static void sil_postreset(struct ata_port *ap, unsigned int *classes)
-+{
-+	void __iomem *mmio_base = ap->host_set->mmio_base;
-+	u32 tmp;
-+
-+	ata_std_postreset(ap, classes);
-+
-+	/* everything is back to normal, turn on IRQ */
-+	tmp = readl(mmio_base + SIL_SYSCFG);
-+	tmp &= ~(SIL_MASK_IDE0_INT << ap->port_no);
-+	writel(tmp, mmio_base + SIL_SYSCFG);
-+}
-+
-+static int sil_probe_reset(struct ata_port *ap, unsigned int *classes)
-+{
-+	return ata_drive_probe_reset(ap, ata_std_probeinit,
-+				     ata_std_softreset, sata_std_hardreset,
-+				     sil_postreset, classes);
-+}
-+
-+static void sil_freeze(struct ata_port *ap)
-+{
-+	void __iomem *mmio_base = ap->host_set->mmio_base;
-+	u32 tmp;
-+
-+	/* plug IRQ */
-+	tmp = readl(mmio_base + SIL_SYSCFG);
-+	tmp |= SIL_MASK_IDE0_INT << ap->port_no;
-+	writel(tmp, mmio_base + SIL_SYSCFG);
-+	readl(mmio_base + SIL_SYSCFG);	/* flush */
-+}
-+
-+static void sil_error_handler(struct ata_port *ap)
-+{
-+	ata_bmdma_drive_eh(ap, ata_std_softreset, sata_std_hardreset,
-+			   sil_postreset);
-+}
-+
- /**
-  *	sil_dev_config - Apply device/host-specific errata fixups
-  *	@ap: Port containing device to be examined
-@@ -385,7 +428,7 @@ static int sil_init_one (struct pci_dev 
- 	int rc;
- 	unsigned int i;
- 	int pci_dev_busy = 0;
--	u32 tmp, irq_mask;
-+	u32 tmp;
- 	u8 cls;
+-	.eng_timeout		= ata_eng_timeout,
++	.freeze			= ata_bmdma_freeze,
++	.error_handler		= ata_bmdma_error_handler,
++	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
  
- 	if (!printed_version++)
-@@ -475,24 +518,11 @@ static int sil_init_one (struct pci_dev 
- 	}
- 
- 	if (ent->driver_data == sil_3114) {
--		irq_mask = SIL_MASK_4PORT;
--
- 		/* flip the magic "make 4 ports work" bit */
- 		tmp = readl(mmio_base + sil_port[2].bmdma);
- 		if ((tmp & SIL_INTR_STEERING) == 0)
- 			writel(tmp | SIL_INTR_STEERING,
- 			       mmio_base + sil_port[2].bmdma);
--
--	} else {
--		irq_mask = SIL_MASK_2PORT;
--	}
--
--	/* make sure IDE0/1/2/3 interrupts are not masked */
--	tmp = readl(mmio_base + SIL_SYSCFG);
--	if (tmp & irq_mask) {
--		tmp &= ~irq_mask;
--		writel(tmp, mmio_base + SIL_SYSCFG);
--		readl(mmio_base + SIL_SYSCFG);	/* flush */
- 	}
- 
- 	/* mask all SATA phy-related interrupts */
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
 -- 
 1.2.4
 
