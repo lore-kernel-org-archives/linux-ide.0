@@ -1,19 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 06/13] sata_sil24: implement loss of completion interrupt
- on PCI-X errta fix
-Date: Wed, 12 Apr 2006 10:13:00 +0900
-Message-ID: <443C541C.3010108@gmail.com>
-References: <1144762339715-git-send-email-htejun@gmail.com> <443BE6F9.8020403@pobox.com>
+Subject: Re: [PATCH 3/3] libata: prefix sata register print outs with 0x
+Date: Wed, 12 Apr 2006 10:20:46 +0900
+Message-ID: <443C55EE.9020009@gmail.com>
+References: <1144761989558-git-send-email-htejun@gmail.com> <443BE634.7060406@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:26036 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751243AbWDLBNO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 21:13:14 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1240541nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 18:13:13 -0700 (PDT)
-In-Reply-To: <443BE6F9.8020403@pobox.com>
+Received: from xproxy.gmail.com ([66.249.82.205]:51998 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751246AbWDLBVC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 21:21:02 -0400
+Received: by xproxy.gmail.com with SMTP id t10so912423wxc
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 18:20:59 -0700 (PDT)
+In-Reply-To: <443BE634.7060406@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
@@ -21,35 +20,25 @@ Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> @@ -738,6 +740,10 @@ static inline void sil24_host_intr(struc
->>      slot_stat = readl(port + PORT_SLOT_STAT);
->>      if (!(slot_stat & HOST_SSTAT_ATTN)) {
->>          struct sil24_port_priv *pp = ap->private_data;
->> +
->> +        if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
->> +            writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
->> +
+>> Prefix SStatus and SControl values with 0x as they are hex.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
+> NAK, libata always prints out device id, register, etc. values in hex. 
+> Basically anything other than things like sectors or bytes is printed in 
+> hex.  Therefore, the "0x" is largely redundant.
 > 
-> This looks racy.  Since the interrupt is usually level-triggered, 
-> doesn't this introduce the possibility of losing interrupt events?
+> The prefix/base is implicit in the context.
 > 
 
-Above code without the WOC flag test is actually equivalent to...
+The reason why I submitted this patch was messages like the following...
 
-irq_stat = readl(port + PORT_IRQ_STAT);
-if (irq_stat & 0xffff == PORT_IRQ_COMPLETE) {
-	writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
-	/* finish commands */
-	return;
-}
-/* error processing */
+ata2: SATA link down (SStatus 11 SControl 310)
 
-So, no race condition that I can think of.  It's just like any other 
-interrupt clearing.  Read it, clear it, handle it.  If anything happens 
-before the clearing we catch it while handling (in this case, sil24 NCQ 
-support will read outstanding command mask after clearing the 
-interrupt).  if anything happens after the clearing, we'll be called again.
+When it was three digits, it was okay.  But two or just one digits look 
+just weird.  Maybe what's needed is %03.
+
+Well, no big deal either way.
 
 -- 
 tejun
