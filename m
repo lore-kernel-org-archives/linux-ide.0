@@ -1,52 +1,106 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 05/15] libata-hp: implement ata_scsi_slave_destroy()
-Date: Wed, 12 Apr 2006 14:27:42 +0900
-Message-ID: <20060412052742.GA25726@htj.dyndns.org>
-References: <1144764846705-git-send-email-htejun@gmail.com> <11447648471249-git-send-email-htejun@gmail.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
+Date: Wed, 12 Apr 2006 01:24:42 -0700 (PDT)
+Message-ID: <20060412082442.49921.qmail@web31809.mail.mud.yahoo.com>
+References: <443C642E.5090106@gmail.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.202]:12008 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750797AbWDLF1o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Apr 2006 01:27:44 -0400
-Received: by zproxy.gmail.com with SMTP id o37so1279069nzf
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 22:27:43 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <11447648471249-git-send-email-htejun@gmail.com>
+Received: from web31809.mail.mud.yahoo.com ([68.142.207.72]:39090 "HELO
+	web31809.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S932105AbWDLIYp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Apr 2006 04:24:45 -0400
+In-Reply-To: <443C642E.5090106@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Patrick Mansfield <patmans@us.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Apr 11, 2006 at 11:14:07PM +0900, Tejun Heo wrote:
-> This function is called during sdev removal by SCSI midlayer.  For
-> user-initiated removals, this is the only indication we get from SCSI
-> midlayer that the sdev is going away.  In such cases, schedule ATA
-> detach and invoke EH.  For libata-initiated removal, nothing needs to
-> be done.
+--- Tejun Heo <htejun@gmail.com> wrote:
+> Patrick Mansfield wrote:
+> > On Tue, Apr 11, 2006 at 01:41:57PM -0400, Jeff Garzik wrote:
+> >> Tejun Heo wrote:
+> >>> + * scsi_eh_schedule_cmd - schedule scsi cmd for error handling.
+> >>> + * @scmd:	scmd to run eh on.
+> >>> + *
+> >>> + * Description:
+> >>> + *	This function is used by LLDDs which don't use standard SCSI
+> >>> + *	EH to schedule scmd for EH.
+> >>> + *
+> >>> + * Return value:
+> >>> + *	0 on failure.
+> >>> + **/
+> >>> +int scsi_eh_schedule_cmd(struct scsi_cmnd *scmd)
+> [--snip--]
+> >>
+> >> ACK, though this patch makes me think that there are some non-libata 
+> >> pieces of code that could use this function.
+> >>
+> >> Unfortunately for libata, we are stuck waiting on linux-scsi people to 
+> >> return and give their opinion.  If nobody complains, I'll apply it, if 
+> >> it doesn't appear in scsi-misc-2.6 sometime vaguely soon.
+> > 
+> > Per other email it should be called scsi_req_abort_cmd() or such, as that
+> > is the only reason to call it, correct?
 > 
+> Well, it's named this way is to keep it consistent with 
+> scsi_eh_schedule_host().  Either name is okay with me but driver which 
+> use this function probably have interest in schedule_host() but not in 
+> other SCSI EH functions.  So, considering that, I think the current 
+> naming is okay.
 
-User initiated warm unplugging has a race condition.  If user
-initiated warm unplug kicks int after ata_scsi_remove_dev() fetched
-dev->sdev but before it actually removes the device, the sdev will go
-away while ata_scsi_remove_dev() is still trying to remove it.  This
-can be solved by doing scsi_device_get() in ata_scsi_remove_dev()
-after fetching dev->sdev.
+Tejun, note that scsi_req_abort_cmd() absolves your patch.
+I think this is what Pat is trying to say.  I.e. it is much
+more general and thus applies to more applications (as in uses).
+Plus it is shorter, simpler (3 lines) and more straightforward.
 
-I'll post the fixed version in the next round.  The #upstream change
-breaks all EH/NCQ/hotplug patchsets anyway.  My repo currently
-contains the following changes from the posted version.
+So, scsi_eh_reschedule_host() is equivalent to simply scsi_req_abort_cmd(cmd)
+xor scsi_req_dev_reset(dev), the latter in case you want to notify without
+piggybacking on a command.
 
-* above mentioned sdev removal race fix
-* scsi_eh_schedule_* are updated to reflect ->eh_strategy_handler
-  relocation
-* duplicate .can_queue initialization removed from sil24-NCQ patch
-  removed (why doesn't compiler complian about this?)
-* updated to use ata_shost_to_port()
+Also, your routine calls more specific eh routines and you should try
+to be more general.
 
-I think above changes shouldn't hinder reviewing process too much.
-Though, if you want me to post the updated version, just let me know.
+> > Any other handling can be completed by calling the ->done function.
+> > 
+> > Even the abort/cancel could be done in the driver without this, I assume
+> > it is avaiable so the driver can use the eh process and existing code
+> > paths rather than duplicate similar code.
+> 
+> Yeap, as I noted earlier, passing scmds to EH is possible without this 
+> function but it has to be done in a quite hackish way.  My earlier 
 
-Thanks.
+Indeed.
 
--- 
-tejun
+> libata EH implementation did this by completing the scmd with CHECK 
+> CONDITION but without sense data which makes SCSI midlayer invoke EH to 
+> acquire sense data, at which point libata EH can take over and do EH. 
+
+Ouch!
+
+Good thing you rewrought your solution:
+1. you naturally arive at a better solution,
+2. you are trying to bring some sense into "libata" and indirectly SCSI.
+
+> It's just ugly.  Again, I'm okay with whatever that works, but things 
+> are much simpler this way.
+
+Or maybe even simpler this way:
+
+void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
+{
+	if (!scsi_delete_timer(cmd))
+		return;
+	scsi_times_out(cmd);
+}
+EXPORT_SYMBOL(scsi_req_abort_cmd);
+as posted here: http://marc.theaimsgroup.com/?l=linux-scsi&m=113833937421677&w=2
+
+(Had one page on error recovery discussion here, but deleted it
+as it wasn't relevant.)
+
+Good luck!
+      Luben
+
