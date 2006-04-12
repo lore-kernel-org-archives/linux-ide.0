@@ -1,53 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH/RFC] ahci: add support for VIA VT8251
-Date: Tue, 11 Apr 2006 18:16:04 -0400
-Message-ID: <443C2AA4.7090303@garzik.org>
+Date: Wed, 12 Apr 2006 09:42:32 +0900
+Message-ID: <20060412004232.GA31115@htj.dyndns.org>
 References: <200604111915.45564.b.jacques@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39572 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751155AbWDKWQH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 18:16:07 -0400
+Received: from pproxy.gmail.com ([64.233.166.180]:57124 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751222AbWDLAmc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 20:42:32 -0400
+Received: by pproxy.gmail.com with SMTP id i49so1546271pye
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 17:42:32 -0700 (PDT)
+Content-Disposition: inline
 In-Reply-To: <200604111915.45564.b.jacques@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bastiaan Jacques <b.jacques@planet.nl>
 Cc: linux-ide@vger.kernel.org
 
-Bastiaan Jacques wrote:
-> This patch adds AHCI support for the VIA VT8251 chipset. The patch does so by:
-> 	1) Adding the PCI device ID.
-> 	2) Adding a workaround in ahci_probe_reset() for a VIA hardware bug.
-> 
-> Signed-off-by: Bastiaan Jacques <b.jacques@planet.nl>
-> ---
-> 
-> The patch is based upon the patch[1] provided by VIA. With the softreset and 
-> probing work that has been merged, this patch has become much simpler.
-> 
-> I am happy to report that without the workaround in ahci_probe_reset(), the 
-> chipset works quite well; both my SATA drives are recognised. However, 
-> softreset does not work (but hardreset does), and ata_std_probeinit delays, 
-> for my primary SATA drive/port,  due to the "busy" bug. A Command List 
-> Override will unbusy the drive/port.
-> 
-> Since the CLO sequence also appears in ahci_softreset(), I have moved that 
-> code into a new ahci_clo() function.
-> 
-> This patch is against 2.6.17-rc1 (and -mm2).
-> 
-> This patch has only been tested by yours truly. Whilst I am waiting for 
-> feedback from other people, I am sending this patch to solicit comments.
+Hello, Bastiaan.
 
-Thanks for doing this.  VIA AHCI support was indeed waiting on Tejun's 
-EH work.
+On Tue, Apr 11, 2006 at 07:15:45PM +0200, Bastiaan Jacques wrote:
+> +static void ahci_clo(struct ata_port *ap)
+> +{
+> +	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+> +	u32 tmp;
+> +
+> +	tmp = readl(port_mmio + PORT_CMD);
+> +	tmp |= PORT_CMD_CLO;
+> +	writel(tmp, port_mmio + PORT_CMD);
+> +	readl(port_mmio + PORT_CMD); /* flush */
+> +}
 
-Would you please resubmit the latest version of your patch including a 
-Signed-off-by line, per guidelines at 
-http://linux.yyz.us/patch-format.html ?
+Can you please make ahci_clo() check for HOST_CAP_CLO and return
+-EOPNOTSUPP (or whatever) if it's not supported?
 
-	Jeff
+Thanks.
 
-
+-- 
+tejun
