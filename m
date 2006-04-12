@@ -1,106 +1,28 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
-Date: Wed, 12 Apr 2006 01:24:42 -0700 (PDT)
-Message-ID: <20060412082442.49921.qmail@web31809.mail.mud.yahoo.com>
-References: <443C642E.5090106@gmail.com>
-Reply-To: ltuikov@yahoo.com
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: IDE CDROM tail read errors
+Date: Wed, 12 Apr 2006 09:57:39 +0100
+Message-ID: <1144832260.1952.13.camel@localhost.localdomain>
+References: <m3wtedrrpf.fsf@defiant.localdomain>
+	 <1143717489.29388.32.camel@localhost.localdomain>
+	 <4432C460.3080606@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web31809.mail.mud.yahoo.com ([68.142.207.72]:39090 "HELO
-	web31809.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S932105AbWDLIYp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Apr 2006 04:24:45 -0400
-In-Reply-To: <443C642E.5090106@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:5612 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932114AbWDLIsh
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Apr 2006 04:48:37 -0400
+In-Reply-To: <4432C460.3080606@tmr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Patrick Mansfield <patmans@us.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
---- Tejun Heo <htejun@gmail.com> wrote:
-> Patrick Mansfield wrote:
-> > On Tue, Apr 11, 2006 at 01:41:57PM -0400, Jeff Garzik wrote:
-> >> Tejun Heo wrote:
-> >>> + * scsi_eh_schedule_cmd - schedule scsi cmd for error handling.
-> >>> + * @scmd:	scmd to run eh on.
-> >>> + *
-> >>> + * Description:
-> >>> + *	This function is used by LLDDs which don't use standard SCSI
-> >>> + *	EH to schedule scmd for EH.
-> >>> + *
-> >>> + * Return value:
-> >>> + *	0 on failure.
-> >>> + **/
-> >>> +int scsi_eh_schedule_cmd(struct scsi_cmnd *scmd)
-> [--snip--]
-> >>
-> >> ACK, though this patch makes me think that there are some non-libata 
-> >> pieces of code that could use this function.
-> >>
-> >> Unfortunately for libata, we are stuck waiting on linux-scsi people to 
-> >> return and give their opinion.  If nobody complains, I'll apply it, if 
-> >> it doesn't appear in scsi-misc-2.6 sometime vaguely soon.
-> > 
-> > Per other email it should be called scsi_req_abort_cmd() or such, as that
-> > is the only reason to call it, correct?
-> 
-> Well, it's named this way is to keep it consistent with 
-> scsi_eh_schedule_host().  Either name is okay with me but driver which 
-> use this function probably have interest in schedule_host() but not in 
-> other SCSI EH functions.  So, considering that, I think the current 
-> naming is okay.
+On Maw, 2006-04-04 at 15:09 -0400, Bill Davidsen wrote:
+> Any hope in hell of getting this fixed? It's been broken for too long to 
+> remember. IIRC the problem is that on a read which hits EOF, instead of 
 
-Tejun, note that scsi_req_abort_cmd() absolves your patch.
-I think this is what Pat is trying to say.  I.e. it is much
-more general and thus applies to more applications (as in uses).
-Plus it is shorter, simpler (3 lines) and more straightforward.
-
-So, scsi_eh_reschedule_host() is equivalent to simply scsi_req_abort_cmd(cmd)
-xor scsi_req_dev_reset(dev), the latter in case you want to notify without
-piggybacking on a command.
-
-Also, your routine calls more specific eh routines and you should try
-to be more general.
-
-> > Any other handling can be completed by calling the ->done function.
-> > 
-> > Even the abort/cancel could be done in the driver without this, I assume
-> > it is avaiable so the driver can use the eh process and existing code
-> > paths rather than duplicate similar code.
-> 
-> Yeap, as I noted earlier, passing scmds to EH is possible without this 
-> function but it has to be done in a quite hackish way.  My earlier 
-
-Indeed.
-
-> libata EH implementation did this by completing the scmd with CHECK 
-> CONDITION but without sense data which makes SCSI midlayer invoke EH to 
-> acquire sense data, at which point libata EH can take over and do EH. 
-
-Ouch!
-
-Good thing you rewrought your solution:
-1. you naturally arive at a better solution,
-2. you are trying to bring some sense into "libata" and indirectly SCSI.
-
-> It's just ugly.  Again, I'm okay with whatever that works, but things 
-> are much simpler this way.
-
-Or maybe even simpler this way:
-
-void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
-{
-	if (!scsi_delete_timer(cmd))
-		return;
-	scsi_times_out(cmd);
-}
-EXPORT_SYMBOL(scsi_req_abort_cmd);
-as posted here: http://marc.theaimsgroup.com/?l=linux-scsi&m=113833937421677&w=2
-
-(Had one page on error recovery discussion here, but deleted it
-as it wasn't relevant.)
-
-Good luck!
-      Luben
+The libata layer doesn't have the problem. So it will get fixed as the
+libata PATA stuff gets upstream and merged
 
