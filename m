@@ -1,28 +1,29 @@
 From: Bastiaan Jacques <b.jacques@planet.nl>
 Subject: [PATCH 2.6.17-rc1-mm2 1/1] ahci: add support for VIA VT8251
-Date: Thu, 13 Apr 2006 00:19:28 +0200
-Message-ID: <200604130019.28671.b.jacques@planet.nl>
+Date: Thu, 13 Apr 2006 00:25:30 +0200
+Message-ID: <200604130025.30665.b.jacques@planet.nl>
 References: <200604111915.45564.b.jacques@planet.nl>
- <200604122259.05546.b.jacques@planet.nl> <443D7527.6050805@garzik.org>
+ <443D7527.6050805@garzik.org> <200604130019.28671.b.jacques@planet.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp19.wxs.nl ([195.121.247.10]:1001 "EHLO smtp19.wxs.nl")
-	by vger.kernel.org with ESMTP id S932334AbWDLWTV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Apr 2006 18:19:21 -0400
+Received: from smtp18.wxs.nl ([195.121.247.9]:57226 "EHLO smtp18.wxs.nl")
+	by vger.kernel.org with ESMTP id S932355AbWDLWZl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Apr 2006 18:25:41 -0400
 Received: from [192.168.2.10] (ip56538861.direct-adsl.nl [86.83.136.97])
- by smtp19.wxs.nl (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
- with ESMTP id <0IXM001WIRC62M@smtp19.wxs.nl> for linux-ide@vger.kernel.org;
- Thu, 13 Apr 2006 00:19:18 +0200 (CEST)
-In-reply-to: <443D7527.6050805@garzik.org>
+ by smtp18.wxs.nl (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
+ with ESMTP id <0IXM000ARRM875@smtp18.wxs.nl> for linux-ide@vger.kernel.org;
+ Thu, 13 Apr 2006 00:25:20 +0200 (CEST)
+In-reply-to: <200604130019.28671.b.jacques@planet.nl>
 Content-disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
-
+On Thursday 13 April 2006 00:19, Bastiaan Jacques wrote:
+ 
 Adds AHCI support for the VIA VT8251.
 
 Includes a workaround for a hardware bug which requires a Command List
@@ -31,13 +32,15 @@ Override before reset.
 Signed-off-by: Bastiaan Jacques <b.jacques@planet.nl>
 ---
 
+And let's not forget indentation..
+
 --- linux-2.6.17-rc1-mm2.orig/drivers/scsi/ahci.c	2006-04-10 19:10:34.000000000 +0200
-+++ linux-2.6.17-rc1-mm2/drivers/scsi/ahci.c	2006-04-12 23:57:26.000000000 +0200
++++ linux-2.6.17-rc1-mm2/drivers/scsi/ahci.c	2006-04-13 00:22:28.000000000 +0200
 @@ -73,6 +73,7 @@ enum {
  	RX_FIS_D2H_REG		= 0x40,	/* offset of D2H Register FIS data */
  
  	board_ahci		= 0,
-+	board_ahci_vt8251   = 1,
++	board_ahci_vt8251	= 1,
  
  	/* global controller registers */
  	HOST_CAP		= 0x00, /* host capabilities */
