@@ -1,41 +1,55 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH/RFC] ahci: add support for VIA VT8251
-Date: Wed, 12 Apr 2006 09:42:32 +0900
-Message-ID: <20060412004232.GA31115@htj.dyndns.org>
-References: <200604111915.45564.b.jacques@planet.nl>
+Subject: Re: [PATCH 06/13] sata_sil24: implement loss of completion interrupt
+ on PCI-X errta fix
+Date: Wed, 12 Apr 2006 10:13:00 +0900
+Message-ID: <443C541C.3010108@gmail.com>
+References: <1144762339715-git-send-email-htejun@gmail.com> <443BE6F9.8020403@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.180]:57124 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751222AbWDLAmc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 20:42:32 -0400
-Received: by pproxy.gmail.com with SMTP id i49so1546271pye
-        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 17:42:32 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200604111915.45564.b.jacques@planet.nl>
+Received: from zproxy.gmail.com ([64.233.162.193]:26036 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751243AbWDLBNO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2006 21:13:14 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1240541nzf
+        for <linux-ide@vger.kernel.org>; Tue, 11 Apr 2006 18:13:13 -0700 (PDT)
+In-Reply-To: <443BE6F9.8020403@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bastiaan Jacques <b.jacques@planet.nl>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 
-Hello, Bastiaan.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> @@ -738,6 +740,10 @@ static inline void sil24_host_intr(struc
+>>      slot_stat = readl(port + PORT_SLOT_STAT);
+>>      if (!(slot_stat & HOST_SSTAT_ATTN)) {
+>>          struct sil24_port_priv *pp = ap->private_data;
+>> +
+>> +        if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
+>> +            writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
+>> +
+> 
+> 
+> This looks racy.  Since the interrupt is usually level-triggered, 
+> doesn't this introduce the possibility of losing interrupt events?
+> 
 
-On Tue, Apr 11, 2006 at 07:15:45PM +0200, Bastiaan Jacques wrote:
-> +static void ahci_clo(struct ata_port *ap)
-> +{
-> +	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-> +	u32 tmp;
-> +
-> +	tmp = readl(port_mmio + PORT_CMD);
-> +	tmp |= PORT_CMD_CLO;
-> +	writel(tmp, port_mmio + PORT_CMD);
-> +	readl(port_mmio + PORT_CMD); /* flush */
-> +}
+Above code without the WOC flag test is actually equivalent to...
 
-Can you please make ahci_clo() check for HOST_CAP_CLO and return
--EOPNOTSUPP (or whatever) if it's not supported?
+irq_stat = readl(port + PORT_IRQ_STAT);
+if (irq_stat & 0xffff == PORT_IRQ_COMPLETE) {
+	writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
+	/* finish commands */
+	return;
+}
+/* error processing */
 
-Thanks.
+So, no race condition that I can think of.  It's just like any other 
+interrupt clearing.  Read it, clear it, handle it.  If anything happens 
+before the clearing we catch it while handling (in this case, sil24 NCQ 
+support will read outstanding command mask after clearing the 
+interrupt).  if anything happens after the clearing, we'll be called again.
 
 -- 
 tejun
