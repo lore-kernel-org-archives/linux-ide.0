@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 11/16] libata-eh-fw: implement new EH scheduling via timeout
-Date: Thu, 13 Apr 2006 12:36:49 +0900
-Message-ID: <443DC751.8090209@gmail.com>
-References: <1144762974340-git-send-email-htejun@gmail.com> <443D8106.4000607@pobox.com> <443DBA20.9050508@gmail.com> <443DC2E8.8000005@pobox.com>
+Subject: Re: [PATCH 05/15] libata-hp: implement ata_scsi_slave_destroy()
+Date: Thu, 13 Apr 2006 12:46:20 +0900
+Message-ID: <443DC98C.1080203@gmail.com>
+References: <1144764846705-git-send-email-htejun@gmail.com> <11447648471249-git-send-email-htejun@gmail.com> <20060412052742.GA25726@htj.dyndns.org> <443D800F.2070608@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.207]:38487 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964775AbWDMDhE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Apr 2006 23:37:04 -0400
-Received: by xproxy.gmail.com with SMTP id t10so1108133wxc
-        for <linux-ide@vger.kernel.org>; Wed, 12 Apr 2006 20:37:04 -0700 (PDT)
-In-Reply-To: <443DC2E8.8000005@pobox.com>
+Received: from zproxy.gmail.com ([64.233.162.196]:35386 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964777AbWDMDqb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Apr 2006 23:46:31 -0400
+Received: by zproxy.gmail.com with SMTP id o37so1506094nzf
+        for <linux-ide@vger.kernel.org>; Wed, 12 Apr 2006 20:46:30 -0700 (PDT)
+In-Reply-To: <443D800F.2070608@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
@@ -20,51 +20,52 @@ Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> The problem is that the timeout handler doesn't have anyway to 
->> determine whether the timeout is from real timeout or from DMA error, 
->> and the 
-> 
-> Not true at all.  Just read BMDMA status.  Take a look at what 
-> drivers/ide does.
-
-Yeap, what I meant was the current timeout handler implementation 
-doesn't have any way to do that, so later in the previous reply, I 
-talked about ->timeout_autopsy.
-
-> 
->> timeout handler is responsible for transferring the ownership the 
->> failed port to EH.  EH, on entry, must be guaranteed that it owns the 
->> port if it's not frozen.
+>> On Tue, Apr 11, 2006 at 11:14:07PM +0900, Tejun Heo wrote:
+>>> This function is called during sdev removal by SCSI midlayer.  For
+>>> user-initiated removals, this is the only indication we get from SCSI
+>>> midlayer that the sdev is going away.  In such cases, schedule ATA
+>>> detach and invoke EH.  For libata-initiated removal, nothing needs to
+>>> be done.
+>>>
 >>
->> One way around this would be making a new callback, say, 
->> ->timeout_autopsy and let it decide whether the port needs freezing or 
->> not, but it would be an overkill.  The only side effect of being 
->> frozen is that the port will get a softreset to thaw it, which isn't 
->> so bad - I want my controller to get a good spanking in the ass after 
->> sitting idle for 30secs.
+>> User initiated warm unplugging has a race condition.  If user
+>> initiated warm unplug kicks int after ata_scsi_remove_dev() fetched
+>> dev->sdev but before it actually removes the device, the sdev will go
+>> away while ata_scsi_remove_dev() is still trying to remove it.  This
+>> can be solved by doing scsi_device_get() in ata_scsi_remove_dev()
+>> after fetching dev->sdev.
+>>
+>> I'll post the fixed version in the next round.  The #upstream change
+>> breaks all EH/NCQ/hotplug patchsets anyway.  My repo currently
+>> contains the following changes from the posted version.
+>>
+>> * above mentioned sdev removal race fix
+>> * scsi_eh_schedule_* are updated to reflect ->eh_strategy_handler
+>>   relocation
+>> * duplicate .can_queue initialization removed from sil24-NCQ patch
+>>   removed (why doesn't compiler complian about this?)
+>> * updated to use ata_shost_to_port()
+>>
+>> I think above changes shouldn't hinder reviewing process too much.
+>> Though, if you want me to post the updated version, just let me know.
 > 
-> When presented with standard, documented DMA error behavior, a reset is 
-> inappropriate.  Just ACK the DMA error and move on with life.  If 
-> continuous DMA errors occur, reset and/or step down the speed as was 
-> discussed many months ago.
+> Actually, you have so many patches now, it would make the process go 
+> faster to post them in cascading git branches somewhere.
+> 
+> tejun.git#p5    == libata-dev.git#upstream + new EH framework
+> tejun.git#p6    == #p5 + new EH implementation
+> tejun.git#p7    == #p6 + add new NCQ support
+> etc.
+> 
+> That way, if I approve through patchset #7, I can just pull 
+> tejun.git#p7, and get all patchsets through patchset 7.  If some patches 
+> need to be revised, a script should be able to reconstitute these sets 
+> of branches.
+> 
 
-The speeding down part is the same whether the port is frozen or not. 
-The only difference is how EH recovers the port after the error.  Failed 
-devices on a not frozen port are just revalidated while a frozen port 
-gets a reset.
+Yeap, will do.
 
-Here is another method to deal with it as adding ->timeout_autopsy or 
-anything similar is too unattractive.  A new interface, say, 
-ata_eh_thaw_port() can be implemented which thaws the port without 
-resetting it.  Then, in BMDMA autopsy, after determining that a timeout 
-was caused by DMA error, it can thaw the port and adjust qc->err_mask to 
-AC_ERR_HOST_BUS.  How does it sound to you?
-
-> Get the user back up and talking to their disk as fast as possible.
-
-Command timeout is 30 secs (which, I think is a bit too long for ATA 
-disk devices).  If resetting succeeds, it takes less than two seconds. 
-I don't think it will make any difference to the user.
+Thanks for reviewing all these. :)
 
 -- 
 tejun
