@@ -1,47 +1,58 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 11/16] libata-eh-fw: implement new EH scheduling via timeout
-Date: Wed, 12 Apr 2006 23:18:00 -0400
-Message-ID: <443DC2E8.8000005@pobox.com>
-References: <1144762974340-git-send-email-htejun@gmail.com> <443D8106.4000607@pobox.com> <443DBA20.9050508@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.17-rc1-mm2 1/1] ahci: add support for VIA VT8251
+Date: Thu, 13 Apr 2006 12:23:33 +0900
+Message-ID: <443DC435.3020209@gmail.com>
+References: <200604111915.45564.b.jacques@planet.nl> <200604130019.28671.b.jacques@planet.nl> <443D7EEE.3020102@garzik.org> <200604130208.56840.b.jacques@planet.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:28349 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932435AbWDMDSM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Apr 2006 23:18:12 -0400
-In-Reply-To: <443DBA20.9050508@gmail.com>
+Received: from xproxy.gmail.com ([66.249.82.206]:59440 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932436AbWDMDXo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Apr 2006 23:23:44 -0400
+Received: by xproxy.gmail.com with SMTP id t10so1106627wxc
+        for <linux-ide@vger.kernel.org>; Wed, 12 Apr 2006 20:23:43 -0700 (PDT)
+In-Reply-To: <200604130208.56840.b.jacques@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
+To: Bastiaan Jacques <b.jacques@planet.nl>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> The problem is that the timeout handler doesn't have anyway to determine 
-> whether the timeout is from real timeout or from DMA error, and the 
+Hello, Bastiaan.
 
-Not true at all.  Just read BMDMA status.  Take a look at what 
-drivers/ide does.
+Looks good to me.  Please see below.
 
-
-> timeout handler is responsible for transferring the ownership the failed 
-> port to EH.  EH, on entry, must be guaranteed that it owns the port if 
-> it's not frozen.
+Bastiaan Jacques wrote:
+> Adds AHCI support for the VIA VT8251.
 > 
-> One way around this would be making a new callback, say, 
-> ->timeout_autopsy and let it decide whether the port needs freezing or 
-> not, but it would be an overkill.  The only side effect of being frozen 
-> is that the port will get a softreset to thaw it, which isn't so bad - I 
-> want my controller to get a good spanking in the ass after sitting idle 
-> for 30secs.
+> Includes a workaround for a hardware bug which requires a Command List
+> Override before reset.
+> 
+> Signed-off-by: Bastiaan Jacques <b.jacques@planet.nl>
+> Acked-by: Jeff Garzik <jeff@garzik.org>
+> ---
+[--snip--]
+>  static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
+>  {
+> +	if ((ap->flags & AHCI_FLAG_RESET_NEEDS_CLO) &&
+> +	    (ata_busy_wait(ap, ATA_BUSY, 1000) & ATA_BUSY)) {
 
-When presented with standard, documented DMA error behavior, a reset is 
-inappropriate.  Just ACK the DMA error and move on with life.  If 
-continuous DMA errors occur, reset and/or step down the speed as was 
-discussed many months ago.
+I'm kind of uncomfortable with busy sleeping with @cnt at 1000.  That's 
+ >> 10ms of busy waiting.  However, this is a minor issue and even if it 
+gets changed it probably belongs to another patch.
 
-Get the user back up and talking to their disk as fast as possible.
+Hmmm, ata_busy_sleep() would be a bit weird with the 'be patient' 
+message and I always thought the function contained way too much busy 
+waiting.  Processors are blazing fast and context switch is cheap these 
+days.
 
-	Jeff
+Maybe we need to update ata_busy_sleep() so that it ignores tmout_pat if 
+it's zero.  What do you think, Jeff?
 
+> +		/* ATA_BUSY hasn't cleared, so send a CLO */
+> +		ahci_clo(ap);
+> +	}
+> +
 
+-- 
+tejun
