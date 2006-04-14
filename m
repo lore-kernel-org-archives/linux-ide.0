@@ -1,101 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
-Date: Fri, 14 Apr 2006 21:02:09 +0900
-Message-ID: <443F8F41.1060002@gmail.com>
-References: <20060414084914.63147.qmail@web31812.mail.mud.yahoo.com>
+From: Elmar Weber <lists@elmarweber.org>
+Subject: Re: sata_sil: I/O error accessing drive with Sil3114 chipset
+Date: Fri, 14 Apr 2006 15:54:53 +0200
+Message-ID: <443FA9AD.50602@elmarweber.org>
+References: <443DA1C4.3060201@elmarweber.org> <443E915F.8040100@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20060414084914.63147.qmail@web31812.mail.mud.yahoo.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wp060.webpack.hosteurope.de ([80.237.132.67]:8921 "EHLO
+	wp060.webpack.hosteurope.de") by vger.kernel.org with ESMTP
+	id S1750731AbWDNNzP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Apr 2006 09:55:15 -0400
+Received: from [192.168.1.20] (unknown [192.168.1.20])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by server.home (Postfix) with ESMTP id C4E7056FA5
+	for <linux-ide@vger.kernel.org>; Fri, 14 Apr 2006 15:55:07 +0200 (CEST)
+In-Reply-To: <443E915F.8040100@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, Luben.
+Tejun Heo wrote:
+> Can you please post the output of 'lspci -n'?
 
-Luben Tuikov wrote:
-[--snip--]
->> note is that libata might not have sdev to call that function with when 
->> it wants to invoke EH for hotplug.
-> 
-> Let's separate the domains.  You are doing a good thing in separating
-> your SATA code into a "layer", and then you have LLDD which actually drive
-> the HW by which you access the interconnect.  (Sounds familiar? ;-) )
-> 
-> Now enter SCSI (as in SAM).  How can you tell SCSI "do eh for me, but
-> neither a device nor command has failed and I cannot give you either one of them"
-> as you're saying you'd like to do above?  See?  It is a protocol thing!  That is,
-> you want to handle such things in your layer.
-> 
-> But since the device abstraction and the command abstraction is _shared_ with
-> SCSI Core, you have to call "scsi_req_abort_cmd()" and "scsi_req_dev_reset()"
-> in order to request SCSI Core to call you back with that type of request when
-> it feels that is is comfortable in calling you to abort the task or
-> reset the device.
+Sure,
 
-So, what's your suggestion here?  Do you think libata should do such 
-things with its own mechanism?
+--
+server ~ # lspci -n
+00:00.0 0580: 10de:005e (rev a3)
+00:01.0 0601: 10de:0050 (rev a3)
+00:01.1 0c05: 10de:0052 (rev a2)
+00:02.0 0c03: 10de:005a (rev a2)
+00:02.1 0c03: 10de:005b (rev a3)
+00:04.0 0401: 10de:0059 (rev a2)
+00:06.0 0101: 10de:0053 (rev f2)
+00:07.0 0101: 10de:0054 (rev f3)
+00:08.0 0101: 10de:0055 (rev f3)
+00:09.0 0604: 10de:005c (rev a2)
+00:0a.0 0680: 10de:0057 (rev a3)
+00:0b.0 0604: 10de:005d (rev a3)
+00:0c.0 0604: 10de:005d (rev a3)
+00:0d.0 0604: 10de:005d (rev a3)
+00:0e.0 0604: 10de:005d (rev a3)
+00:18.0 0600: 1022:1100
+00:18.1 0600: 1022:1101
+00:18.2 0600: 1022:1102
+00:18.3 0600: 1022:1103
+01:00.0 0300: 10de:0161 (rev a1)
+05:07.0 0200: 10ec:8139 (rev 10)
+05:0a.0 0104: 1095:3114 (rev 02)
+05:0b.0 0c00: 104c:8023
+--
 
->>>> Also, your routine calls more specific eh routines and you should try
->>>> to be more general.
->> Please, elaborate.
-> 
-> "scsi_times_out()"
-> 
->> I think it's good have some infrastructure in SCSI.  e.g. libata can do 
->> everything itself but it's just nice to have SCSI EH infrastructure to 
->> build upon (EH thread, scmd draining & plugging...).
-> 
-> You have to admit, SCSI is a lot more than SATA.  For this reason,
-> deriving an abstraction from your SATA code that would work for SCSI
-> isn't an easy feat.
-> 
-> For example, why do you absolutely have to do anything in your eh_timed_out()
-> callback?  Just atomicly mark your task abstraction as "aborting/aborted" and
-> return EH_NOT_HANDLED so that you can get called back in your eh_strategy with
-> a list of commands that need error recovery (ER, from now on).  This is _all_ that
-> you're going to do in your eh_timed_out() callback.
-> 
-> By also having everything go through eh_timed_out() you can inspect at that instant
-> if the command has completed and if not, mark it as aborted/aborting, else it has
-> completed, give it to SCSI Core to complete it for you.
-> 
-> When your ER strategy gets called with a list of commands to be recovered,
-> it is not necessarily the case that they ended up there because all of them timed
-> out.  But one thing is for sure, they are all marked aborted/aborting and they
-> all went through eh_timed_out() and were not done at that time.
-> 
-> Maybe some of them completed ok, and you'd want to "return" them, but cannot since
-> they were marked "aborted/aborting"... it is this dis-syncrhonization or late-completion,
-> which you can achieve.
-> 
-> Also consider that the "device failed" you can get from any of the commands on the
-> er list when your er strategy gets called.  Pick the first command, take a look at the
-> device, device dead, search the rest of the list for any commands also going to that
-> device and "recover" them and the device, then go to the next command.
-> 
-> Consider, the SATA layer's task/device abstraction is shared with the LLDD and this
-> is why you want to use things like eh_timed_out().  For commands and devices it is
-> most likely the LLDD which will call them and you would want to get notified
-> somehow of this (via the eh_timed_out()).
-> 
-> Also you want ER to always flow in the same direction from the same starting point
-> going to the same ending point.
-> 
-> This is the reason to have scsi_req_abort_cmd() and scsi_req_device_reset(), callable
-> from anywhere by anyone.
+Hope it helps.
 
-Point taken about scsi_req_abort_cmd().  scsi_req_abort_cmd() it is, 
-then.  To proceed from here....
 
-* sort out things about scsi_eh_schedule_port()/scsi_req_dev_reset()
 
-* re-post patch for scsi_req_abort_cmd() and push it through either 
-scsi-misc or libata-dev.  Luben, can you please re-post the patch?
+Thanks & bye,
+Elmar
 
-Thanks.
-
--- 
-tejun
