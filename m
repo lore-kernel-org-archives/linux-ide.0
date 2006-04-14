@@ -1,62 +1,69 @@
-From: Matthieu CASTET <matthieu.castet@sagem.com>
-Subject: =?ISO-8859-1?Q?R=E9f=2E_=3A_Re=3A_libata-pata_works_on_ICH4-M?=
-Date: Fri, 14 Apr 2006 08:45:36 +0200
-Message-ID: <OF0E3A280E.A7782B98-ONC1257150.0024EE7D-C1257150.00252647@sagem.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: [PATCH] Fix a logic error in ahci_init_one()
+Date: Fri, 14 Apr 2006 15:31:21 +0800
+Message-ID: <1144999881.24774.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.sagem.com ([62.160.59.241]:8602 "EHLO mx2.sagem.com")
-	by vger.kernel.org with ESMTP id S965106AbWDNGpo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Apr 2006 02:45:44 -0400
+Received: from mga03.intel.com ([143.182.124.21]:35725 "EHLO
+	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
+	id S1750731AbWDNHmk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Apr 2006 03:42:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>, Gabor Gombas <gombasg@sztaki.hu>, Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-ide@vger.kernel.org, linux-ide-owner@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hi,=20
+Fix an bug in error handling, also variable
+pci_dev_busy has no use, remove it.
 
-last time I check, some hdparm flags work fine with libata hard drive b=
-ut=20
-not with PATA drive.
-
-Matthieu
+Signed-off-by: Zhao Forrest <forrest.zhao@intel.com>
 
 
+---
 
+This patch is against libata-dev.git upstream[1]
 
+[1] 26ec634c31a11a003040e10b4d650495158632fd
 
-Mark Lord <liml@rtr.ca>
+ drivers/scsi/ahci.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-Envoy=E9 par : linux-ide-owner@vger.kernel.org
-14/04/2006 00:20
-Remis le : 14/04/2006 00:21
-
-=20
-        Pour :  Jan Engelhardt <jengelh@linux01.gwdg.de>
-        cc :    Gabor Gombas <gombasg@sztaki.hu>, Alan Cox <alan@lxorgu=
-k.ukuu.org.uk>,=20
-Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>,=20
-linux-ide@vger.kernel.org, Linux Kernel Mailing List=20
-<linux-kernel@vger.kernel.org>, (ccc : Matthieu CASTET/EXT/SAGEM)
-        Objet : Re: libata-pata works on ICH4-M
-
-
-
-=46or now, several hdparm flags work fine with libata SCSI drives.
-
-Eg. hdparm -W1, hdparm I, ..
-
-Sometime in the next month or two, I hope to update hdparm to use SGIO
-where possible/necessary to enable most of the remaining flags to=20
-function.
-
-Cheers
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 1b8429c..8c4ebba 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -1176,7 +1176,7 @@ static int ahci_init_one (struct pci_dev
+ 	unsigned long base;
+ 	void __iomem *mmio_base;
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+-	int have_msi, pci_dev_busy = 0;
++	int have_msi;
+ 	int rc;
+ 
+ 	VPRINTK("ENTER\n");
+@@ -1189,10 +1189,8 @@ static int ahci_init_one (struct pci_dev
+ 		return rc;
+ 
+ 	rc = pci_request_regions(pdev, DRV_NAME);
+-	if (rc) {
+-		pci_dev_busy = 1;
++	if (rc)
+ 		goto err_out;
+-	}
+ 
+ 	if (pci_enable_msi(pdev) == 0)
+ 		have_msi = 1;
+@@ -1269,8 +1267,7 @@ err_out_msi:
+ 		pci_intx(pdev, 0);
+ 	pci_release_regions(pdev);
+ err_out:
+-	if (!pci_dev_busy)
+-		pci_disable_device(pdev);
++	pci_disable_device(pdev);
+ 	return rc;
+ }
+ 
+-- 
+1.2.6
