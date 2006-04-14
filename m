@@ -1,56 +1,40 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: updated new EH and hotplug support are about to be posted...
-Date: Fri, 14 Apr 2006 10:46:35 +0800
-Message-ID: <1144982795.19687.35.camel@localhost.localdomain>
-References: <20060411130849.GA25147@htj.dyndns.org>
+Date: Thu, 13 Apr 2006 23:30:56 -0400
+Message-ID: <443F1770.1040403@pobox.com>
+References: <20060411130849.GA25147@htj.dyndns.org> <1144982795.19687.35.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23069 "EHLO
-	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S1751222AbWDNC4n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Apr 2006 22:56:43 -0400
-In-Reply-To: <20060411130849.GA25147@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:43231 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751242AbWDNDbF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Apr 2006 23:31:05 -0400
+In-Reply-To: <1144982795.19687.35.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, axboe@htj.dyndns.org, Albert Lee <albertcc@tw.ibm.com>, Lukasz Kosewski <lkosewsk@gmail.com>, linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, axboe@htj.dyndns.org, Albert Lee <albertcc@tw.ibm.com>, Lukasz Kosewski <lkosewsk@gmail.com>, linux-ide@vger.kernel.org
 
-On Tue, 2006-04-11 at 22:08 +0900, Tejun Heo wrote:
-> Hello, people.
-> 
-> It's been another looooooong week.  Build number of my ATA work tree,
-> which was created at the end of Feburary, is now over 1040 and all my
-> SATA plugs are worn and unplug easily.  But, hey, hotplug works now.
-> 
-> I'm about to post the following 9 patchsets composed of 97 patches.
-> The first two patchsets have been posted previously but I'll repost
-> them for simplicity's sake.
-> 
-> 1. misc-reset-updates			: repost (3 patches)
-> 2. implement-and-use-ata_wait_register	: repost (5 patches)
-> 3. misc-ata_bus_probe-updates		: take 1 (3 patches)
-> 4. fixes-errata-workaround-and-reset-updates : take 3 (13 patches)
-> 5. new-EH-framework			: take 2 (16 patches)
-> 6. new-EH-implementation		: take 2 (14 patches)
-> 7. add-NCQ-support			: take 3 (15 patches)
-> 8. prep-for-hotplug-support		: take 1 (15 patches)
-> 9. add-hotplug-support			: take 1 (13 patches)
-> 
+zhao, forrest wrote:
+> BTW. Is there a way to check whether SATA controller support
+> hotplug, such as a capability bit in certain register?
 
-Tejun,
+For AHCI, all controllers support hotplug.
 
-Where can I find your git tree, which includes all the above
-patch sets? We're preparing to test SATA hotplug in our lab.
+Most SATA controllers support hotplug, across all vendors.
 
-BTW. Is there a way to check whether SATA controller support
-hotplug, such as a capability bit in certain register?
-Or we have to first enable PHY status changed interrupt, then
-hotplug the SATA disk, then to check if the interrupt is triggered,
-and PHY RDY status changes?
+If you're lucky, silicon has a phy interrupt.  If you're somewhat lucky, 
+silicon has a PhyRdy state interrupt.  If you're stuck with a BMDMA 
+interface with bolted-on SATA PHY registers, hotplug will -probably- work.
 
-I read AHCI 1.1 spec, and didn't find such capability bit.
 
-Thanks,
-Forrest
+> Or we have to first enable PHY status changed interrupt, then
+> hotplug the SATA disk, then to check if the interrupt is triggered,
+> and PHY RDY status changes?
+
+The interrupt is quite helpful, but ultimately optional.
+
+	Jeff
+
+
