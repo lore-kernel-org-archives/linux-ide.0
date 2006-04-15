@@ -1,62 +1,68 @@
-From: Elmar Weber <lists@elmarweber.org>
-Subject: Re: sata_sil: I/O error accessing drive with Sil3114 chipset
-Date: Fri, 14 Apr 2006 15:54:53 +0200
-Message-ID: <443FA9AD.50602@elmarweber.org>
-References: <443DA1C4.3060201@elmarweber.org> <443E915F.8040100@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [patch 04/22] isd200: limit to BLK_DEV_IDE
+Date: Sat, 15 Apr 2006 13:51:03 +0200
+Message-ID: <20060415115103.GD15022@stusta.de>
+References: <20060413230141.330705000@quad.kroah.org> <20060413230714.GE5613@kroah.com> <443F01CC.3080609@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wp060.webpack.hosteurope.de ([80.237.132.67]:8921 "EHLO
-	wp060.webpack.hosteurope.de") by vger.kernel.org with ESMTP
-	id S1750731AbWDNNzP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Apr 2006 09:55:15 -0400
-Received: from [192.168.1.20] (unknown [192.168.1.20])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by server.home (Postfix) with ESMTP id C4E7056FA5
-	for <linux-ide@vger.kernel.org>; Fri, 14 Apr 2006 15:55:07 +0200 (CEST)
-In-Reply-To: <443E915F.8040100@gmail.com>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:60173 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S932498AbWDOLvG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 15 Apr 2006 07:51:06 -0400
+Content-Disposition: inline
+In-Reply-To: <443F01CC.3080609@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Greg KH <gregkh@suse.de>, akpm@osdl.org, linux-kernel@vger.kernel.org, stable@kernel.org, Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, alan@lxorguk.ukuu.org.uk, mdharm-usb@one-eyed-alien.net, usb-storage@lists.one-eyed-alien.net, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Can you please post the output of 'lspci -n'?
+On Thu, Apr 13, 2006 at 09:58:36PM -0400, Jeff Garzik wrote:
+> Greg KH wrote:
+> >-stable review patch.  If anyone has any objections, please let us know.
+> >
+> >------------------
+> >
+> >From: Randy Dunlap <rdunlap@xenotime.net>
+> >
+> >Limit USB_STORAGE_ISD200 to whatever BLK_DEV_IDE and USB_STORAGE
+> >are set to (y, m) since isd200 calls ide_fix_driveid() in the
+> >BLK_DEV_IDE code.
+> >
+> >Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+> >Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> >
+> >---
+> > drivers/usb/storage/Kconfig |    3 ++-
+> > 1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> >--- linux-2.6.16.5.orig/drivers/usb/storage/Kconfig
+> >+++ linux-2.6.16.5/drivers/usb/storage/Kconfig
+> >@@ -48,7 +48,8 @@ config USB_STORAGE_FREECOM
+> > 
+> > config USB_STORAGE_ISD200
+> > 	bool "ISD-200 USB/ATA Bridge support"
+> >-	depends on USB_STORAGE && BLK_DEV_IDE
+> >+	depends on USB_STORAGE
+> >+	depends on BLK_DEV_IDE=y || BLK_DEV_IDE=USB_STORAGE
+> 
+> Wouldn't 'select' be more appropriate for IDE?
 
-Sure,
+Your suggestion sounds like a good idea for 2.6.17, but for -stable I'd 
+prefer this patch.
 
---
-server ~ # lspci -n
-00:00.0 0580: 10de:005e (rev a3)
-00:01.0 0601: 10de:0050 (rev a3)
-00:01.1 0c05: 10de:0052 (rev a2)
-00:02.0 0c03: 10de:005a (rev a2)
-00:02.1 0c03: 10de:005b (rev a3)
-00:04.0 0401: 10de:0059 (rev a2)
-00:06.0 0101: 10de:0053 (rev f2)
-00:07.0 0101: 10de:0054 (rev f3)
-00:08.0 0101: 10de:0055 (rev f3)
-00:09.0 0604: 10de:005c (rev a2)
-00:0a.0 0680: 10de:0057 (rev a3)
-00:0b.0 0604: 10de:005d (rev a3)
-00:0c.0 0604: 10de:005d (rev a3)
-00:0d.0 0604: 10de:005d (rev a3)
-00:0e.0 0604: 10de:005d (rev a3)
-00:18.0 0600: 1022:1100
-00:18.1 0600: 1022:1101
-00:18.2 0600: 1022:1102
-00:18.3 0600: 1022:1103
-01:00.0 0300: 10de:0161 (rev a1)
-05:07.0 0200: 10ec:8139 (rev 10)
-05:0a.0 0104: 1095:3114 (rev 02)
-05:0b.0 0c00: 104c:8023
---
+What bothers me more is that this doesn't seem to be fixed in any way in 
+Linus' tree...
 
-Hope it helps.
+> 	Jeff
 
+cu
+Adrian
 
+-- 
 
-Thanks & bye,
-Elmar
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
