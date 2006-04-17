@@ -1,70 +1,76 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 1/2] scsi: Add scsi_device max_cmd_len (resend)
-Date: Mon, 17 Apr 2006 17:40:53 -0500
-Message-ID: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, brking@us.ibm.com
+Subject: [PATCH 2/2] libata: Use scsi_device max_cmd_len (resend)
+Date: Mon, 17 Apr 2006 17:48:33 -0500
+Message-ID: <44441B41.40206@us.ibm.com>
+References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
+Reply-To: brking@us.ibm.com
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------060009020501020401050307"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:21460 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751367AbWDQWsk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Apr 2006 18:48:40 -0400
+In-Reply-To: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------060009020501020401050307
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
 
-Add a max_cmd_len field to the scsi_device struct
-to allow for per device limits of allowable command
-lengths. This patch was submitted earlier and resulted
-in a bit of discussion regarding whether or not
-CDB length is a limitation of the host or the device.
-For ATA, both the host and the device can limit the
-CDB length. Currently libata reads the IDENTIFY
-PACKET DEVICE data for an ATAPI device and sets
-the max_cmd_len in the scsi host for the maximum
-supported CDB length of all ATA/ATAPI devices attached
-to the same scsi host. This patch allows libata to
-set the max CDB length on a per device basis and
-allows the SAS/SATA HBA to set its own max command
-length in the scsi host template.
+--------------060009020501020401050307
+Content-Type: text/x-patch;
+ name="libata_sd_cdb_len.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="libata_sd_cdb_len.patch"
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
-
- libata-dev-bjking1/drivers/scsi/scsi.c        |    3 ++-
- libata-dev-bjking1/drivers/scsi/scsi_scan.c   |    1 +
- libata-dev-bjking1/include/scsi/scsi_device.h |    1 +
- 3 files changed, 4 insertions(+), 1 deletion(-)
-
-diff -puN include/scsi/scsi_device.h~scsi_device_cdb_len include/scsi/scsi_device.h
---- libata-dev/include/scsi/scsi_device.h~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-+++ libata-dev-bjking1/include/scsi/scsi_device.h	2006-04-17 17:17:50.000000000 -0500
-@@ -72,6 +72,7 @@ struct scsi_device {
- 	unsigned int manufacturer;	/* Manufacturer of device, for using 
- 					 * vendor-specific cmd's */
- 	unsigned sector_size;	/* size in bytes */
-+	unsigned char max_cmd_len;
- 
- 	void *hostdata;		/* available to low-level driver */
- 	char type;
-diff -puN drivers/scsi/scsi_scan.c~scsi_device_cdb_len drivers/scsi/scsi_scan.c
---- libata-dev/drivers/scsi/scsi_scan.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/scsi_scan.c	2006-04-17 17:17:50.000000000 -0500
-@@ -218,6 +218,7 @@ static struct scsi_device *scsi_alloc_sd
- 	sdev->lun = lun;
- 	sdev->channel = starget->channel;
- 	sdev->sdev_state = SDEV_CREATED;
-+	sdev->max_cmd_len = MAX_COMMAND_SIZE;
- 	INIT_LIST_HEAD(&sdev->siblings);
- 	INIT_LIST_HEAD(&sdev->same_target_siblings);
- 	INIT_LIST_HEAD(&sdev->cmd_list);
-diff -puN drivers/scsi/scsi.c~scsi_device_cdb_len drivers/scsi/scsi.c
---- libata-dev/drivers/scsi/scsi.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/scsi.c	2006-04-17 17:17:50.000000000 -0500
-@@ -610,7 +610,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 	 * Before we queue this command, check if the command
- 	 * length exceeds what the host adapter can handle.
- 	 */
--	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
-+	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len ||
-+	    CDB_SIZE(cmd) > cmd->device->max_cmd_len) {
- 		SCSI_LOG_MLQUEUE(3,
- 				printk("queuecommand : command too long.\n"));
- 		cmd->result = (DID_ABORT << 16);
-_
+ClVzZSB0aGUgbmV3bHkgYWRkZWQgbWF4X2NtZF9sZW4gaW4gdGhlIHNjc2lfZGV2aWNlCnN0
+cnVjdCBpbnN0ZWFkIG9mIHRoZSBmaWVsZCBieSB0aGUgc2FtZSBuYW1lIGluCnRoZSBzY3Np
+X2hvc3Qgc3RydWN0LiBUaGlzIGFsbG93cyBmb3IgYmV0dGVyCmdyYW51bGFyaXR5IG9mIGNv
+bnRyb2wgb2YgdGhlIG1heCBhbGxvd2VkIGNvbW1hbmQKbGVuZ3RoIGFuZCBhbGxvd3MgZm9y
+IFNBUy9TQVRBIGhvc3RzIHRvIGltcG9zZSB0aGVpcgpvd24gaG9zdCByZXN0cmljdGlvbnMg
+b24gbWF4IGNvbW1hbmQgbGVuZ3RoLCBpZiBuZWVkZWQuCkl0IGFsc28gc2ltcGxpZmllcyB1
+c2luZyBsaWJhdGEgZm9yIFNBVEEgZGV2aWNlcyB1bmRlcgpTQVMgSEJBcy4KClNpZ25lZC1v
+ZmYtYnk6IEJyaWFuIEtpbmcgPGJya2luZ0B1cy5pYm0uY29tPgotLS0KCiBsaWJhdGEtZGV2
+LWJqa2luZzEvZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMgfCAgIDEwICsrLS0tLS0tLS0K
+IGxpYmF0YS1kZXYtYmpraW5nMS9kcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuYyB8ICAgIDEg
+KwogMiBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCgpk
+aWZmIC1wdU4gZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmN+bGliYXRhX3NkX2NkYl9sZW4g
+ZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMKLS0tIGxpYmF0YS1kZXYvZHJpdmVycy9zY3Np
+L2xpYmF0YS1jb3JlLmN+bGliYXRhX3NkX2NkYl9sZW4JMjAwNi0wNC0xNyAxNzozMDoyMC4w
+MDAwMDAwMDAgLTA1MDAKKysrIGxpYmF0YS1kZXYtYmpraW5nMS9kcml2ZXJzL3Njc2kvbGli
+YXRhLWNvcmUuYwkyMDA2LTA0LTE3IDE3OjMwOjIwLjAwMDAwMDAwMCAtMDUwMApAQCAtMTIy
+NSw3ICsxMjI1LDcgQEAgc3RhdGljIGludCBhdGFfZGV2X2NvbmZpZ3VyZShzdHJ1Y3QgYXRh
+XwogewogCWNvbnN0IHUxNiAqaWQgPSBkZXYtPmlkOwogCXVuc2lnbmVkIGludCB4ZmVyX21h
+c2s7Ci0JaW50IGksIHJjOworCWludCByYzsKIAogCWlmICghYXRhX2Rldl9lbmFibGVkKGRl
+dikpIHsKIAkJRFBSSU5USygiRU5URVIvRVhJVCAoaG9zdCAldSwgZGV2ICV1KSAtLSBub2Rl
+dlxuIiwKQEAgLTEzMjgsMTIgKzEzMjgsNiBAQCBzdGF0aWMgaW50IGF0YV9kZXZfY29uZmln
+dXJlKHN0cnVjdCBhdGFfCiAJCQkgICAgICAgYXAtPmlkLCBkZXYtPmRldm5vLCBhdGFfbW9k
+ZV9zdHJpbmcoeGZlcl9tYXNrKSk7CiAJfQogCi0JYXAtPmhvc3QtPm1heF9jbWRfbGVuID0g
+MDsKLQlmb3IgKGkgPSAwOyBpIDwgQVRBX01BWF9ERVZJQ0VTOyBpKyspCi0JCWFwLT5ob3N0
+LT5tYXhfY21kX2xlbiA9IG1heF90KHVuc2lnbmVkIGludCwKLQkJCQkJICAgICAgYXAtPmhv
+c3QtPm1heF9jbWRfbGVuLAotCQkJCQkgICAgICBhcC0+ZGV2aWNlW2ldLmNkYl9sZW4pOwot
+CiAJLyogbGltaXQgYnJpZGdlIHRyYW5zZmVycyB0byB1ZG1hNSwgMjAwIHNlY3RvcnMgKi8K
+IAlpZiAoYXRhX2Rldl9rbm9iYmxlKGFwLCBkZXYpKSB7CiAJCWlmIChwcmludF9pbmZvKQpA
+QCAtNDU3Myw3ICs0NTY3LDcgQEAgc3RhdGljIHZvaWQgYXRhX2hvc3RfaW5pdChzdHJ1Y3Qg
+YXRhX3BvcgogCWhvc3QtPm1heF9sdW4gPSAxOwogCWhvc3QtPm1heF9jaGFubmVsID0gMTsK
+IAlob3N0LT51bmlxdWVfaWQgPSBhdGFfdW5pcXVlX2lkKys7Ci0JaG9zdC0+bWF4X2NtZF9s
+ZW4gPSAxMjsKKwlob3N0LT5tYXhfY21kX2xlbiA9IEFUQVBJX0NEQl9MRU47CiAKIAlhcC0+
+ZmxhZ3MgPSBBVEFfRkxBR19ESVNBQkxFRDsKIAlhcC0+aWQgPSBob3N0LT51bmlxdWVfaWQ7
+CmRpZmYgLXB1TiBkcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuY35saWJhdGFfc2RfY2RiX2xl
+biBkcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuYwotLS0gbGliYXRhLWRldi9kcml2ZXJzL3Nj
+c2kvbGliYXRhLXNjc2kuY35saWJhdGFfc2RfY2RiX2xlbgkyMDA2LTA0LTE3IDE3OjMwOjIw
+LjAwMDAwMDAwMCAtMDUwMAorKysgbGliYXRhLWRldi1iamtpbmcxL2RyaXZlcnMvc2NzaS9s
+aWJhdGEtc2NzaS5jCTIwMDYtMDQtMTcgMTc6MzA6MjAuMDAwMDAwMDAwIC0wNTAwCkBAIC02
+NzAsNiArNjcwLDcgQEAgc3RhdGljIHZvaWQgYXRhX3Njc2lfZGV2X2NvbmZpZyhzdHJ1Y3Qg
+cwogCQltYXhfc2VjdG9ycyA9IGRldi0+bWF4X3NlY3RvcnM7CiAKIAlibGtfcXVldWVfbWF4
+X3NlY3RvcnMoc2Rldi0+cmVxdWVzdF9xdWV1ZSwgbWF4X3NlY3RvcnMpOworCXNkZXYtPm1h
+eF9jbWRfbGVuID0gZGV2LT5jZGJfbGVuOwogCiAJLyoKIAkgKiBTQVRBIERNQSB0cmFuc2Zl
+cnMgbXVzdCBiZSBtdWx0aXBsZXMgb2YgNCBieXRlLCBzbwpfCg==
+--------------060009020501020401050307--
