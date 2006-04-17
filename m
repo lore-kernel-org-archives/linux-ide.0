@@ -1,44 +1,38 @@
-From: Onis <onion@virasto.com>
-Subject: sata_mv: ata5: Entering mv_eng_timeout
-Date: Mon, 17 Apr 2006 03:43:13 +0300
-Message-ID: <20060417004313.GA27567@virasto.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: A question about right-shift in ahci_port_start()
+Date: Mon, 17 Apr 2006 15:25:53 +0800
+Message-ID: <1145258753.3417.5.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from virasto.com ([212.213.212.50]:40836 "EHLO virasto.com")
-	by vger.kernel.org with ESMTP id S1750896AbWDQAn2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Apr 2006 20:43:28 -0400
-Content-Disposition: inline
+Received: from mga01.intel.com ([192.55.52.88]:34206 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S1750816AbWDQHgY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Apr 2006 03:36:24 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org
 
-Hi!
+Hi, Jeff
 
-I'm getting following kernel messages during "heavy load" (xfs_fsr). It's
-always the same port (ata5). sata_mv seems to get over these errors just
-fine and my raid5 stays ok. Are these messages something to worry about?
+When reading ahci_port_start(), I found the
+following code segments:
 
-dmesg
------
-ata5: Entering mv_eng_timeout
-mmio_base ffffc20000080000 ap ffff81003ea3bc80 qc ffff81003ea3bde8 scsi_cmnd
-ffff81002489e340 &cmnd ffff81002489e3b0
-ata5: no device found (phy stat 00000100)
-ata5: status=0x50 { DriveReady SeekComplete }
-ata5: error=0x01 { AddrMarkNotFound }
-sde: Current: sense key=0x0
-    ASC=0x0 ASCQ=0x0
-    
-System
-------
-* Tyan Thunder S2882 Dual Opteron 240
-* Marvell Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller
-(rev 09) (Supermicro)
-* 8 x Maxtor Maxline III 300GB SATA
-* Debian Sarge AMD64
-* kernel 2.6.17-rc1-git7 + xfs "remount,ro" patch
+.......
+if (hpriv->cap & HOST_CAP_64)
+        writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio +
+PORT_LST_ADDR_HI);
+        writel(pp->cmd_slot_dma & 0xffffffff, port_mmio +
+PORT_LST_ADDR);
+        readl(port_mmio + PORT_LST_ADDR); /* flush */
+......
 
-Please CC, I'm not on the list. Thanks!
+I can't figure out why you use ">>16>>16" instead of
+">>32" for right-shift 32 bits.
 
-- Onion
+Would you please give me some hint?
+
+Thanks,
+Forrest
