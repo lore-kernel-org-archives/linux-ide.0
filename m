@@ -1,35 +1,28 @@
-From: Frido Ferdinand <frido@zolder.org>
-Subject: PIIX libata ?
-Date: Tue, 18 Apr 2006 13:59:05 +0000 (UTC)
-Message-ID: <loom.20060418T155655-644@post.gmane.org>
+From: Bastiaan Jacques <b.jacques@planet.nl>
+Subject: Re: What's in libata-dev.git
+Date: Tue, 18 Apr 2006 17:07:13 +0200
+Message-ID: <200604181707.13730.b.jacques@planet.nl>
+References: <20060418095454.GA454@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:4260 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S932137AbWDROPT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2006 10:15:19 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1FVqys-0003oB-Bg
-	for linux-ide@vger.kernel.org; Tue, 18 Apr 2006 16:15:02 +0200
-Received: from office.isp-services.nl ([212.79.224.10])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 18 Apr 2006 16:15:02 +0200
-Received: from frido by office.isp-services.nl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 18 Apr 2006 16:15:02 +0200
+Received: from smtp19.wxs.nl ([195.121.247.10]:20896 "EHLO smtp19.wxs.nl")
+	by vger.kernel.org with ESMTP id S932266AbWDRPGs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2006 11:06:48 -0400
+Received: from [192.168.2.10] (ip56538861.direct-adsl.nl [86.83.136.97])
+ by smtp19.wxs.nl (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
+ with ESMTP id <0IXX002BQBB9GU@smtp19.wxs.nl> for linux-ide@vger.kernel.org;
+ Tue, 18 Apr 2006 17:06:45 +0200 (CEST)
+In-reply-to: <20060418095454.GA454@havoc.gtf.org>
+Content-disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+Hi Jeff,
 
-How can i see that PIIX is either from libata or the usual IDE drivers. I have
-both enabled in the kernel but not sure which takes presedence, will the drives
-show up as /dev/sda ? disks used are non-sata/normal ide disks.
+Do you intend to merge the "ahci: add support for VIA VT8251" patch?
 
-Regards,
-
-Frido
-
+Bastiaan
