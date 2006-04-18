@@ -1,44 +1,32 @@
-From: "McDonald, Mike-P56995" <Michael.McDonald@gdc4s.com>
-Subject: Promise SATA378 driver fro RHEL4?
-Date: Mon, 17 Apr 2006 18:07:16 -0700
-Message-ID: <EC96F708FFAAEC4CBFD479171F34120801DA95A4@AZ25EXM04.gddsi.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 1/1] ide: Allow disabling of UDMA for Compact Flash devices
+Date: Mon, 17 Apr 2006 23:21:42 -0400
+Message-ID: <44445B46.8040304@rtr.ca>
+References: <b79f23070604171611j784cc9afpd1bc6660cd25eed5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.gdds.com ([63.226.32.21]:4882 "EHLO az25ege01.gdc4s.com")
-	by vger.kernel.org with ESMTP id S932097AbWDRBHc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Apr 2006 21:07:32 -0400
-Content-class: urn:content-classes:message
+Received: from rtr.ca ([64.26.128.89]:46755 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751394AbWDRDVl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Apr 2006 23:21:41 -0400
+In-Reply-To: <b79f23070604171611j784cc9afpd1bc6660cd25eed5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: James Ausmus <james.ausmus@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+James Ausmus wrote:
+>..
+> +config IDE_COMPACT_FLASH_NO_UDMA
+> +       bool "Disable UDMA for Compact Flash Devices"
+> +       help
+> +         This turns off the UDMA capability flag bit for any IDE device
+> +         that identifies as Compact Flash - This is a workaround for
+> +         cheap Compact Flash -> IDE adapters that don't support UDMA
+> +         transfer speeds even if the CF card does.
 
-  One of the guys here ordered a couple of the Alienware 7700 laptops
-that contain the Promise PDC20378 SATA controller (PCI id: 105a 3373).
-It has IDE drives connected to it.
+I dunno.  This might be better done as a module/boot option
+than as a rebuild-your-kernel configuration choice.
 
-  Unfortunately, for reasons beyond my immediate control, we have to run
-RedHat Enterprise Linux 4 on the machines. It does not recognize the
-controller. I know Fedora 4 sort of supports it in non RAID mode. (The
-machines are flakey running this kernel.) Fedora 5 supports the RAID
-mode and seems stable. 
-
-  I've tried backporting the FC5 driver to the RHEL4 kernel buit it
-always hangs right after detecting the second drive. (libata has been
-changed between FC5's 2.6.15 and RHEL4's 2.6.9 making it a non trivial
-job.)
-
-  So, do you know of anyone who has gotten the Promise 378 controller to
-work successfully in RHEL4's 2.6.9 kernel? Or anyone else's 2.6.9
-kernel?
-
-  Thanks,
-
-  Michael McDonald
-  michael.mcdonald@gdc4s.com
-  (480) 441-0548 
+??
