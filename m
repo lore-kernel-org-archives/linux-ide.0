@@ -1,58 +1,35 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 2/2] libata: Use scsi_device max_cmd_len (resend)
-Date: Tue, 18 Apr 2006 09:01:59 -0500
-Message-ID: <4444F157.2010504@us.ibm.com>
-References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com> <44441B41.40206@us.ibm.com> <44441C3D.80906@pobox.com>
-Reply-To: brking@us.ibm.com
+From: Frido Ferdinand <frido@zolder.org>
+Subject: PIIX libata ?
+Date: Tue, 18 Apr 2006 13:59:05 +0000 (UTC)
+Message-ID: <loom.20060418T155655-644@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:49872 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932090AbWDROCH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2006 10:02:07 -0400
-In-Reply-To: <44441C3D.80906@pobox.com>
+Received: from main.gmane.org ([80.91.229.2]:4260 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S932137AbWDROPT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2006 10:15:19 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1FVqys-0003oB-Bg
+	for linux-ide@vger.kernel.org; Tue, 18 Apr 2006 16:15:02 +0200
+Received: from office.isp-services.nl ([212.79.224.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 18 Apr 2006 16:15:02 +0200
+Received: from frido by office.isp-services.nl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 18 Apr 2006 16:15:02 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Brian King wrote:
->> @@ -4573,7 +4567,7 @@ static void ata_host_init(struct ata_por
->>  	host->max_lun = 1;
->>  	host->max_channel = 1;
->>  	host->unique_id = ata_unique_id++;
->> -	host->max_cmd_len = 12;
->> +	host->max_cmd_len = ATAPI_CDB_LEN;
->>  
-> 
-> 
-> Have you audited the code paths to ensure that a CDB of length 15 is 
-> _NEVER_ sent, before ata_scsi_dev_config() is called?
+Hi,
 
-Yes. I don't see any problems. slave_configure is called before any
-upper layer drivers are attached and before anything shows up in sysfs,
-so that limits us to libata initiated commands issued as part of the
-port probe process and scsi core initiated commands issued as part of
-device scanning. All the commands libata issues as part of the port
-probe process are issued through ata_exec_internal, which does not go
-through scsi core, so there is no protection there today. scsi core
-only issues inquiry and report luns commands as part of scanning, both
-of which are not an issue.
+How can i see that PIIX is either from libata or the usual IDE drivers. I have
+both enabled in the kernel but not sure which takes presedence, will the drives
+show up as /dev/sda ? disks used are non-sata/normal ide disks.
 
-> The current code intentionally uses the minimum -- 12 -- and then raises 
-> it if both device and host are capable of more.
+Regards,
 
-Actually, the current code does not allow for an ata host to limit the
-max CDB length. ata_host_init initializes host->max_cmd_len to 12, then 
-ata_dev_configure zeroes out ap->host->max_cmd_len, then sets it to the
-maximum CDB length supported by any of the devices on that host. The obvious
-followup patch to this one would be to change all the users of libata
-to have them initialize scsi_host_template->max_cmd_len and remove that code
-from ata_host_init.
+Frido
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
