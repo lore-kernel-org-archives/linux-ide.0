@@ -1,122 +1,281 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH/RFC] libata: turn on the ATAPI DMADIR support per word
- 62 (revised)
-Date: Tue, 18 Apr 2006 12:34:52 +0800
-Message-ID: <44446C6C.702@tw.ibm.com>
-References: <CF6023AC-C62F-4BA8-A1DA-5CF6100B9608@verizon.net> <44360922.8050801@tw.ibm.com> <44360B05.6050509@garzik.org> <44363D2E.7010700@tw.ibm.com> <4436431C.8070800@tw.ibm.com> <4436A770.70107@garzik.org>
-Reply-To: albertl@mail.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: What's in libata-dev.git
+Date: Tue, 18 Apr 2006 05:54:54 -0400
+Message-ID: <20060418095454.GA454@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:63171 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S932204AbWDREfS
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Apr 2006 00:35:18 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3I4ZAM2002281
-	for <linux-ide@vger.kernel.org>; Tue, 18 Apr 2006 00:35:10 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3I4cVb9163712
-	for <linux-ide@vger.kernel.org>; Mon, 17 Apr 2006 22:38:32 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k3I4Z6Bb029205
-	for <linux-ide@vger.kernel.org>; Mon, 17 Apr 2006 22:35:07 -0600
-In-Reply-To: <4436A770.70107@garzik.org>
+Received: from havoc.gtf.org ([69.61.125.42]:47314 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1750728AbWDRJy6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2006 05:54:58 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Jonathan Benson <airbatica@verizon.net>, Tejun Heo <htejun@gmail.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Doug Maxey <dwm@maxeymade.com>, Brian King <brking@us.ibm.com>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
-> Albert Lee wrote:
-> 
->> Turn on the ATAPI DMADIR support if word 62 indicates it.
->>
->> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
->> ---
->> (Revised to add mwdma/udma mask of word 62 per Jeff's comments.
->> Need more testing once I get the SiI 3811, etc.)
->>
->> ATAPI DMADIR follow-up patch to turn on the DMADIR support automatically
->> by checking identify device word 62. (Thanks for Jeff and Tejun's
->> pointer.)
->>
->> According to Jonathan's test result, SiI 3611 (the current known
->> bridge that
->> requires the ATAPI DMADIR support) doesn't implement word 62. So, the
->> atapi_dmadir parameter is preserved to enable the DMA DIR support
->> manually as
->> work around.
->>
->> Patch against upstream (c2a6585296009379e0f4eff39cdcb108b457ebf2).
->> For your review, thanks.
-> 
-> 
-> I ACK the patch, though like I said, I would like to see this tested
-> first with some compliant devices.
-> 
 
-I've collected/tested most of the PATA-to-SATA bridges, none of them 
-implements the word 62 behavior as defined in ATA-7.
-So, maybe we don't need the word 62 patch at this moment.
-(And I guess few vendor is going to implement it in the future:
-depending on host software for the DMA direction isn't too backward
-compatible with old host software.)
+Junio routinely posts these nice "What's in git.git" messages to the git
+mailing list.  These posts are a useful guide to what's upcoming.
 
-The following are test results:
-(Tested with SiI 3112 SATA adapter + LITEON SOHR-5238S CD-RW drive.)
+Since libata-dev.git contains a number of branches for ongoing
+development projects, I thought a "What's in libata-dev.git" message
+would be useful.
 
-1. SiI 3611:
-   - ATAPI DMA supported (DMADIR needed)
-   - id[62] == 0
-   - IDENTIFY PACKET DEVICE unchanged
 
-2. SiI 3811:
-   There is a jumper on board. When the jumper installed (default),
-   DMADIR is not needed.
-   - ATAPI DMA supported (DMADIR not needed)
-   - id[62] == 0
-   - IDENTIFY PACKET DEVICE unchanged
+------------------------------------------------------------------------
+branch: upstream (pending for 2.6.18)
+parent: master
+------------------------------------------------------------------------
+Albert Lee:
+      libata: convert ATAPI_ENABLE_DMADIR to module parameter
 
-   When the jumper is removed, SiI 3811 behaves like SiI 3611
-   and needs the DMADIR bit for ATAPI DMA to work.
+Jeff Garzik:
+      [libata] kill bogus cut-n-pasted comments in three drivers
+      [libata] bump versions
+      libata: Fix EH merge difference between this branch and upstream.
+      libata: Add helper ata_shost_to_port()
 
-3. Marvell 88i8030:
-   - ATAPI not supported. Device timeout on probe.
+Tejun Heo:
+      libata: fix ata_set_mode() return value
+      libata: make ata_bus_probe() return negative errno on failure
+      libata: separate out ata_spd_string()
+      libata: convert do_probe_reset() to ata_do_reset()
+      libata: implement ata_dev_enabled and disabled()
+      libata: make ata_set_mode() handle no-device case properly
+      libata: reorganize ata_set_mode()
+      libata: don't disable devices from ata_set_mode()
+      libata: preserve SATA SPD setting over hard resets
+      libata: implement ata_dev_absent()
+      libata: implement ap->sata_spd_limit and helpers
+      libata: use SATA speed down in ata_drive_probe_reset()
+      libata: add 5s sleep between resets
+      libata: implement ata_down_xfermask_limit()
+      libata: improve ata_bus_probe()
+      libata: consider disabled devices in ata_dev_xfermask()
+      libata: report device number when PIO fails
+      libata: ata_dev_revalidate() printk update
+      libata: ATA_FLAG_IN_EH is not used, kill it
+      libata: clean up constants
+      libata: rename ATA_FLAG_PORT_DISABLED to ATA_FLAG_DISABLED
+      libata: clear only affected flags during ata_dev_configure()
+      libata: clear ATA_DFLAG_PIO before setting it
+      libata: add ATA_QCFLAG_IO
+      libata: pass qc around intead of ap during PIO
+      libata: always generate sense if qc->err_mask is non-zero
+      libata: don't read TF directly from sense generation functions
+      libata: add @cdb to ata_exec_internal()
+      libata: dec scmd->retries for qcs with zero err_mask
+      libata: separate out libata-eh.c
+      libata: make some libata-core routines extern
+      libata: print SControl in SATA link status info message
+      ahci: do not fail softreset if PHY reports no device
+      libata: set default cbl in probeinit
+      libata: kill @verbose from ata_reset_fn_t
+      libata: make reset methods complain when they fail
+      sata_sil24: fix timeout calculation in sil24_softreset
+      sata_sil24: better error message from softreset
+      libata: implement ata_wait_register()
+      ahci: use ata_wait_register()
+      sata_sil24: use ata_wait_register()
+      libata: disable failed devices only once in ata_bus_probe()
+      libata: cosmetic update to ata_bus_probe()
+      libata: export ata_set_sata_spd()
+      sata_sil24: typo fix
+      sata_sil24: rename PORT_IRQ_SDB_FIS to PORT_IRQ_SDB_NOTIFY
+      sata_sil24: add more constants
+      sata_sil24: consolidate host flags into SIL24_COMMON_FLAGS
+      sata_sil24: implement loss of completion interrupt on PCI-X errta fix
+      sata_sil24: implement sil24_init_port()
+      sata_sil24: put port into known state before softresetting
+      sata_sil24: kill 10ms sleep in softreset
+      sata_sil24: reimplement hardreset
+      sata_sil24: don't do hardreset during driver initialization
+      sata_sil24: fix on-memory structure byteorder
+      sata_sil24: enable 64bit
 
-4. Marvell 88SA8040:
-   - ATAPI DMA supported (DMADIR not needed)
-   - id[62] == 0
-   - IDENTIFY PACKET DEVICE unchanged
 
-5. Marvell 88SA8050:
-   - Not tested
+------------------------------------------------------------------------
+branch: sii-m15w (update Mod15Write blacklist, now that errata is
+		 handled better)
+parent: upstream
+------------------------------------------------------------------------
+Tejun Heo:
+      sata_sil: remove unaffected drives from m15w blacklist
 
-6. Acard ARC770:
-   - ATAPI DMA supported (DMADIR not needed)
-   - id[62] == 0
-   - IDENTIFY PACKET DEVICE mangled to report "no MWDMA support".
-     (UDMA is supported.)
 
-7. JMicron JM20330:
-   - ATAPI DMA supported (DMADIR not needed)
-   - id[62] == 0
-   - IDENTIFY PACKET DEVICE mangled. id[76] == 0x0202 id[78] == 0008.
-     (Don't know why yet. Maybe device signature?)
+------------------------------------------------------------------------
+branch: sii-lbt (improve DMA handling, eliminate 64k legacy limits)
+parent: sii-m15w
+------------------------------------------------------------------------
+Jeff Garzik:
+      [libata sata_sil] Greatly improve DMA handling
 
-Summary:
-  SiI 3611 is currently the only known chip that needs DMADIR.
-Since SiI 3611 doesn't implement the ATA-7 word 62 or mangle identify
-packet device data, it's hard to check the chip and turn on the DMADIR
-support automatically. (Currently the libata DMADIR support can be 
-turned on manually by module parameter.)
 
-To turn on the DMADIR support automatically, maybe we can check whether
-the ATAPI device is bridged (by ata_dev_knobble()). If bridged, we can
-try to issue a ATAPI DMA read command to check if ATAPI DMA works.
-If not work, then try turning on DMADIR or turn off ATAPI DMA.
---
-albert
-     
+------------------------------------------------------------------------
+branch: sii-irq (use sii-specific interrupt handler)
+parent: sii-m15w
+------------------------------------------------------------------------
+Jeff Garzik:
+      [libata sata_sil] improved interrupt handling
+      [libata sata_sil] update for new ata_qc_complete() 1-arg API
+      libata: sata_sil build fix
+
+
+------------------------------------------------------------------------
+branch: promise-sata-pata (support for Promise PATA ports on SATA cards)
+parent: upstream
+------------------------------------------------------------------------
+Erik Benada:
+      [libata sata_promise] support PATA ports on SATA controllers
+
+Jeff Garzik:
+      [libata sata_promise] fix build breakage due to bad merge
+
+
+------------------------------------------------------------------------
+branch: pata-drivers (PATA drivers from Alan and Albert)
+parent: upstream
+------------------------------------------------------------------------
+Alan Cox:
+      Add libata CMD/SI680 driver
+      [libata] Add PATA driver for Compaq Triflex
+      [libata] Add PATA VIA driver.
+      [libata] Add driver for PATA AMD/NVIDIA chips.
+      libata: Update the AMD driver to support the AMD CS5536.
+      libata: Add enablebits support to the triflex driver
+      libata: Add enablebits to via driver
+      [libata] Add new PATA driver pata_opti
+      libata: AMD pata fixes
+      libata: Fix opti pci enable bits as with the AMD bug
+      libata: Fix enable bits for triflex
+      libata: Clean up and fix the VIA PATA libata driver
+      libata: Update TODO list for pata_amd
+      libata: Updates to the MPIIX driver
+
+Albert Lee:
+      [libata] add driver for Promise PATA 2027x
+      libata-dev-2.6: pdc2027x add ata_scsi_ioctl
+      libata-dev-2.6: pdc2027x change comments
+      libata-dev-2.6: pdc2027x move the PLL counter reading code
+      libata-dev-2.6: pdc2027x PLL input clock detection fix
+      libata-dev: Convert pdc2027x from PIO to MMIO
+      libata-dev: pdc2027x use "long" for counter data type
+      libata-dev: pdc2027x ATAPI DMA lost irq problem workaround
+      libata: pata_pdc2027x minor fix
+      libata: convert pata_pdc2027x to the new reset mechanism
+
+Andrew Morton:
+      pata_opti needs PCI
+
+Jeff Garzik:
+      [libata] pata_pdc2027x: update for recent ->host_stop() API changes
+      [libata pata_pdc2027x] add documentation ref in header; trim trailing whitespace
+      [libata pata_sil680] add to Makefile/Kconfig
+      libata: Add makefile rules for pata_via driver.
+      [libata] minor updates to PATA drivers
+      [libata] constify PCI tables in PATA drivers
+      [libata pata_via] fix warning
+      libata: Add Intel MPIIX and "old PIIX" PATA drivers.
+      [libata pata drivers] trim trailing whitespace
+      [libata] remove 'ordered_flush' member from PATA drivers
+      [libata pata] fix lingering old-style qc_issue_prot function declarations
+      [libata pata_pdc2027x] use pci_iomap(), kzalloc() where appropriate
+      [libata] s/ata_dev_present/ata_dev_enabled/ for several PATA drivers
+      [libata pata] update for removal of .eh_strategy_handler from Scsi_Host_Template
+
+
+------------------------------------------------------------------------
+branch: nv-adma (ADMA version of sata_nv)
+parent: upstream
+------------------------------------------------------------------------
+Jeff Garzik:
+      [libata] ADMA version from sata_nv
+      [libata] sata_nv: cleanups
+      [libata] sata_nv: more cleanups
+      [libata] sata_nv: fix ADMA qc_issue prototype for latest libata API
+      [libata sata_nv] update for movement of eh_strategy_handler
+
+
+------------------------------------------------------------------------
+branch: max-sect (increase LBA48 max sectors)
+parent: upstream
+------------------------------------------------------------------------
+Tejun Heo:
+      libata: increase LBA48 max sectors to 65535
+
+
+------------------------------------------------------------------------
+branch: irq-pio (IRQ-driven PIO)
+parent: upstream
+------------------------------------------------------------------------
+Albert Lee:
+      libata: interrupt driven pio for libata-core
+      libata: interrupt driven pio for LLD
+      libata irq-pio: add comments and cleanup
+      libata irq-pio: rename atapi_packet_task() and comments
+      libata irq-pio: simplify if condition in ata_dataout_task()
+      libata irq-pio: cleanup ata_qc_issue_prot()
+      libata: move atapi_send_cdb() and ata_dataout_task()
+      [libata irq-pio] reorganize ata_pio_sector() and __atapi_pio_bytes()
+      [libata irq-pio] reorganize "buf + offset" in ata_pio_sector()
+      [libata irq-pio] use PageHighMem() to optimize the kmap_atomic() usage
+      libata irq-pio: misc fixes
+      libata irq-pio: merge the ata_dataout_task workqueue with ata_pio_task workqueue
+      libata irq-pio: eliminate unnecessary queuing in ata_pio_first_block()
+      libata irq-pio: add read/write multiple support
+      libata-dev: determine err_mask when error is found
+      libata-dev: filter out noisy ATAPI error messages
+      libata-dev: Fix array index value in ata_rwcmd_protocol()
+      libata-dev: Use new ata_queue_pio_task() for PIO polling task
+      libata-dev: Use new AC_ERR_* flags
+      libata-dev: Minor comment fix
+      libata-dev: recognize WRITE_MULTI_FUA_EXT for r/w multiple
+      libata-dev: Remove trailing whitespaces
+      libata-dev: Fix merge problem with upstream
+      libata-dev: Remove atapi_packet_task()
+      libata-dev: Move out the HSM code from ata_host_intr()
+      libata-dev: Minor fix for ata_hsm_move() to work with ata_host_intr()
+      libata-dev: Let ata_hsm_move() work with both irq-pio and polling pio
+      libata-dev: Convert ata_pio_task() to use the new ata_hsm_move()
+      libata-dev: Cleanup unused enums/functions
+      libata-dev: ata_check_atapi_dma() fix for ATA_FLAG_PIO_POLLING LLDDs
+      libata-dev: Make the the in_wq check as an inline function
+      libata-dev: irq-pio minor fixes (respin)
+      libata-dev: fix the device err check sequence (respin)
+      libata-dev: wait idle after reading the last data block
+      libata-dev: print out information for ATAPI devices with CDB interrupts
+      libata-dev: handle DRQ=1 ERR=1 (revised)
+      libata-dev: irq-pio minor fix
+      libata-dev: irq-pio minor fix 2
+
+Jeff Garzik:
+      [libata irq-pio] build fix
+      [libata pdc_adma] update for removal of ATA_FLAG_NOINTR
+      [libata pdc_adma] fix for new irq-driven PIO code
+      [libata sata_mv] IRQ PIO build fix
+      [libata] irq-pio: fix breakage related to err_mask merge
+      [libata sata_promise] irq_pio: fix merge bug
+      [libata] build fix after merging some pre-packet_task-removal code
+      [libata irq-pio] s/assert/WARN_ON/
+      [libata] build fix after cdb_len move
+      sata_vsc build fix
+      libata: irq-pio build fixes
+      [libata] irq-pio: fix build breakage
+      [libata] irq-pio: Fix merge mistake
+
+
+------------------------------------------------------------------------
+branch: iomap (use lib/iomap in libata)
+parent: git-merge-base iomap master
+------------------------------------------------------------------------
+
+Older work converting libata to use iomap.
+
+
+------------------------------------------------------------------------
+branch: ALL (merge of all useful libata-dev.git branches)
+parent: upstream, sii-m15w, promise-sata-pata, pata-drivers, max-sect
+------------------------------------------------------------------------
+
 
