@@ -1,29 +1,58 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC] Get DMA to work for CD/DVD with pdc202xx_old
-Date: Tue, 18 Apr 2006 15:05:34 +0100
-Message-ID: <1145369135.18736.49.camel@localhost.localdomain>
-References: <BAY105-F111271D2374577E2FBCB9FA3C40@phx.gbl>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 2/2] libata: Use scsi_device max_cmd_len (resend)
+Date: Tue, 18 Apr 2006 09:01:59 -0500
+Message-ID: <4444F157.2010504@us.ibm.com>
+References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com> <44441B41.40206@us.ibm.com> <44441C3D.80906@pobox.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:33209 "EHLO lxorguk.ukuu.org.uk")
-	by vger.kernel.org with ESMTP id S1751031AbWDRN4F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2006 09:56:05 -0400
-In-Reply-To: <BAY105-F111271D2374577E2FBCB9FA3C40@phx.gbl>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:49872 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932090AbWDROCH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2006 10:02:07 -0400
+In-Reply-To: <44441C3D.80906@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tobias Oed <tobiasoed@hotmail.com>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, andre@linux-ide.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Maw, 2006-04-18 at 09:15 -0400, Tobias Oed wrote:
-> +       #if 0
->         if ((drive->media != ide_disk) && (speed < XFER_SW_DMA_0))
->                 return -1;
-> -
-> +       #endif
-> +
+Jeff Garzik wrote:
+> Brian King wrote:
+>> @@ -4573,7 +4567,7 @@ static void ata_host_init(struct ata_por
+>>  	host->max_lun = 1;
+>>  	host->max_channel = 1;
+>>  	host->unique_id = ata_unique_id++;
+>> -	host->max_cmd_len = 12;
+>> +	host->max_cmd_len = ATAPI_CDB_LEN;
+>>  
+> 
+> 
+> Have you audited the code paths to ensure that a CDB of length 15 is 
+> _NEVER_ sent, before ata_scsi_dev_config() is called?
 
-This change looks unrelated to anything you are trying to do. Rest looks
-sane enough
+Yes. I don't see any problems. slave_configure is called before any
+upper layer drivers are attached and before anything shows up in sysfs,
+so that limits us to libata initiated commands issued as part of the
+port probe process and scsi core initiated commands issued as part of
+device scanning. All the commands libata issues as part of the port
+probe process are issued through ata_exec_internal, which does not go
+through scsi core, so there is no protection there today. scsi core
+only issues inquiry and report luns commands as part of scanning, both
+of which are not an issue.
 
+> The current code intentionally uses the minimum -- 12 -- and then raises 
+> it if both device and host are capable of more.
+
+Actually, the current code does not allow for an ata host to limit the
+max CDB length. ata_host_init initializes host->max_cmd_len to 12, then 
+ata_dev_configure zeroes out ap->host->max_cmd_len, then sets it to the
+maximum CDB length supported by any of the devices on that host. The obvious
+followup patch to this one would be to change all the users of libata
+to have them initialize scsi_host_template->max_cmd_len and remove that code
+from ata_host_init.
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
