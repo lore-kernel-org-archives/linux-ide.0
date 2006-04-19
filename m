@@ -1,80 +1,57 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: [PATCH] [SCSI] Introduce scsi_req_abort_cmd (REPOST)
-Date: Wed, 19 Apr 2006 11:59:33 -0700 (PDT)
-Message-ID: <20060419185933.82872.qmail@web31811.mail.mud.yahoo.com>
-Reply-To: ltuikov@yahoo.com
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: PIIX libata ?
+Date: Wed, 19 Apr 2006 12:34:32 -0700
+Message-ID: <20060419123432.949d13bb.rdunlap@xenotime.net>
+References: <31311506.91145440106542.JavaMail.root@willow.ijichi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web31811.mail.mud.yahoo.com ([68.142.207.74]:4188 "HELO
-	web31811.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751161AbWDSS7d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 Apr 2006 14:59:33 -0400
+Received: from xenotime.net ([66.160.160.81]:60090 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751075AbWDSTcH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Apr 2006 15:32:07 -0400
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Wed, 19 Apr 2006 12:32:05 -0700
+In-Reply-To: <31311506.91145440106542.JavaMail.root@willow.ijichi.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
-Cc: Tejun Heo <htejun@gmail.com>
+To: "Dominic ES. Ijichi" <dom@ijichi.org>
+Cc: linux-ide@vger.kernel.org, frido@zolder.org
 
-Introduce scsi_req_abort_cmd(struct scsi_cmnd *).
-This function requests that SCSI Core start recovery for the
-command by deleting the timer and adding the command to the eh
-queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
-implement their own error recovery MAY ignore the timeout event if
-they generated scsi_req_abort_cmd.
+On Wed, 19 Apr 2006 10:48:26 +0100 (BST) Dominic ES. Ijichi wrote:
 
-First post:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=113833937421677&w=2
+> 
+> ----- Randy.Dunlap <rdunlap@xenotime.net> wrote:
+> > On Tue, 18 Apr 2006 13:59:05 +0000 (UTC) Frido Ferdinand wrote:
+> > 
+> > > Hi,
+> > > 
+> > > How can i see that PIIX is either from libata or the usual IDE
+> > drivers. I have
+> > > both enabled in the kernel but not sure which takes presedence, will
+> > the drives
+> > > show up as /dev/sda ? disks used are non-sata/normal ide disks.
+> > 
+> > If both are built into the kernel (=y and not modules), legacy
+> > IDE drivers take precedence since ide/ is ahead of scsi/ in
+> > drivers/Makefile (libata drivers are in scsi/).
+> > 
+> > I have no idea about precedence if you are using initrd or initramfs.
+> > 
+> > And if legacy ide and scsi are both modules, you won't boot...
+> > (without using initrd or initramfs).
+> 
+> if I have both ahci and ata_piix modules in initrd (as is the case in most distros), is there any way of passing a parameter to the kernel to tell it which one i want?  ahci seems to take preference on my ICH6M but the ata_piix module works better.
 
-Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+combined_mode ?  from Documentation/kernel-parameters.txt:
+
+	combined_mode=	[HW] control which driver uses IDE ports in combined
+			mode: legacy IDE driver, libata, or both
+			(in the libata case, libata.atapi_enabled=1 may be
+			useful as well).  Note that using the ide or libata
+			options may affect your device naming (e.g. by
+			changing hdc to sdb).
+			Format: combined (default), ide, or libata
+
 
 ---
-
- drivers/scsi/scsi.c      |   18 ++++++++++++++++++
- include/scsi/scsi_cmnd.h |    1 +
- 2 files changed, 19 insertions(+), 0 deletions(-)
-
-51df19a1669bd502b536178d6c294e68be25ce79
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 245ca99..1af9795 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -721,6 +721,24 @@ void scsi_init_cmd_from_req(struct scsi_
- static DEFINE_PER_CPU(struct list_head, scsi_done_q);
- 
- /**
-+ * scsi_req_abort_cmd -- Request command recovery for the specified command
-+ * cmd: pointer to the SCSI command of interest
-+ *
-+ * This function requests that SCSI Core start recovery for the
-+ * command by deleting the timer and adding the command to the eh
-+ * queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
-+ * implement their own error recovery MAY ignore the timeout event if
-+ * they generated scsi_req_abort_cmd.
-+ */
-+void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
-+{
-+	if (!scsi_delete_timer(cmd))
-+		return;
-+	scsi_times_out(cmd);
-+}
-+EXPORT_SYMBOL(scsi_req_abort_cmd);
-+
-+/**
-  * scsi_done - Enqueue the finished SCSI command into the done queue.
-  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
-  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 7529f43..8b9ad8c 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -151,5 +151,6 @@ extern struct scsi_cmnd *scsi_get_comman
- extern void scsi_put_command(struct scsi_cmnd *);
- extern void scsi_io_completion(struct scsi_cmnd *, unsigned int, unsigned int);
- extern void scsi_finish_command(struct scsi_cmnd *cmd);
-+extern void scsi_req_abort_cmd(struct scsi_cmnd *cmd);
- 
- #endif /* _SCSI_SCSI_CMND_H */
--- 
-1.3.0.ga809
-
+~Randy
