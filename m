@@ -1,71 +1,54 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
-Date: Thu, 20 Apr 2006 12:23:57 -0700 (PDT)
-Message-ID: <20060420192357.26257.qmail@web31814.mail.mud.yahoo.com>
-References: <4446ECCF.7080000@gmail.com>
-Reply-To: ltuikov@yahoo.com
+From: Roger Heflin <rheflin@atipa.com>
+Subject: sata_mv issues with more than 1 disk in FC5 2.6.16-1.2096
+Date: Thu, 20 Apr 2006 15:08:32 -0500
+Message-ID: <4447EA40.9010503@atipa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4446ECCF.7080000@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from EXCHG2003.microtech-ks.com ([24.124.14.122]:64773 "EHLO
+	EXCHG2003.microtech-ks.com") by vger.kernel.org with ESMTP
+	id S1751242AbWDTUIg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Apr 2006 16:08:36 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
---- Tejun Heo <htejun@gmail.com> wrote:
-> Hmmm.. libata isn't SCSI.  It's just hitch-hiking on the back of SCSI at 
-> the moment.  And, being able to invoke EH on the host directly makes 
-> things a lot simpler for libata.  So, what do you think about just 
-> adding shost->host_eh_scheduled, adding a condition to 
-> scsi_error_handler() and export scsi_eh_wakeup()?  The changes will be 
-> like three lines.  And, also, ->host_eh_scheduled can be marked as hack 
-> for libata.  libata can handle the rest.
+Hello,
 
-Hi Tejun,
+I know the FC5 2.6.16-1.2096 is based off of one of the 2.6.16
+stable releases.   I am not sure exactly which one this is based
+on.
 
-I don't mind such a patch.  It is well defined -- all you want is
-process (ER) context to do some hw/proto ER work.  Clearly the architecture
-of libata doesn't allow for protocol/hw work in a process as we'd discussed,
-and so I think such a small patch would be completely ok to make the rest
-of your work go through.
+I have several machines with this controller, the ones with a single
+disks all work correctly using the Marvell controller.
 
-> This may not be the most graceful thing to do but...
-> 
-> 1. SCSI change is minimal
+An identical MB/controller/chassis fails when there are 2 disks
+using software mirroring.  We have tested with 2 separate chassis,
+both exhibit the same failure.
 
-I think this is a good thing, and for clearly understood and well defined
-solutions we want patches to be small.  Your architecural SATA layer work
-can be as big as it needs to be and I think you're doing an excellent
-job -- FWIW, if it hadn't been for your patches, a lot of things would
-be pretty stagnant in libata, SCSI and the block layer.
+Moving the 2 disks to a different built-in sata controller
+(sata_nv) results in the disks and the mirror working
+correctly.
 
-> 2. it's a temporary measure (moving libata out of SCSI is one of the 
-> items on my agenda and if no one else does it I'm gonna give a shot at 
-> it in not-so-distant future.  Once libata is gone of SCSI, the three 
-> lines can be removed.)
+The errors that it returns are:
+ata4: status=0xd0 { Busy }
+ata2: status=0xd0 { Busy }
+And the machine is terribly slow while this error is happening.
+The error appears to be happening when the disks are trying
+to be mounted.
 
-You are a very, very smart person to want to move libata out of SCSI.
-It is very unfortunate, but I clearly understand why you'd want to do
-it.
+We have tested the disk on a couple of different combinations of
+ports and this does not seem to change anything.
 
-> 3. It will take a lot more work to achieve the same thing in libata 
-> proper without the three line change.
-> 
-> Luben, what do you think?
+The single disk machines don't get this error like the 2 disk
+machines, though  they do get this error, every 30 minutes
+or so (probably from  smartd), but this error does not
+appear to be causing issues.
+Apr 19 16:26:19 lab229 kernel: ata1: status=0xd0 { Busy }
+Apr 19 16:26:19 lab229 kernel: ATA: abnormal status 0xD0 on
+     port 0xFFFFC2001012211C
 
-I think it sounds good.
+Any thoughts?
 
-Good luck!
-       Luben
-
-P.S.  Remember what we'd discussed earlier, if you can offload something
-to command ER or device ER, do it!  It will save you a lot of special
-cases, IRQ/process context jungle, and differing paths and races.
-
-Don't you mind that if a command fails, you know that all of them
-queued commands would have to get zapped and that the device would probably
-have to be reset.  Just call scsi_req_abort_cmd() and do that abstraction
-later in process context when it calls your ER routine.
-
+                                 Roger
