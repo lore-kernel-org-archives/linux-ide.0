@@ -1,68 +1,67 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
-Date: Thu, 20 Apr 2006 11:07:11 +0900
-Message-ID: <4446ECCF.7080000@gmail.com>
-References: <20060419184916.22608.qmail@web31809.mail.mud.yahoo.com>
+Subject: Re: sata_sil: write corruption on parallel access of two or more drives on same controller
+Date: Thu, 20 Apr 2006 11:25:27 +0900
+Message-ID: <20060420022527.GA3697@htj.dyndns.org>
+References: <4446BE3C.7050902@priv.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20060419184916.22608.qmail@web31809.mail.mud.yahoo.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wproxy.gmail.com ([64.233.184.224]:9129 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750735AbWDTCZT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Apr 2006 22:25:19 -0400
+Received: by wproxy.gmail.com with SMTP id i2so16391wra
+        for <linux-ide@vger.kernel.org>; Wed, 19 Apr 2006 19:25:18 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <4446BE3C.7050902@priv.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Markus M?ller <mm@priv.de>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Luben Tuikov wrote:
-> Hi Tejun,
+On Thu, Apr 20, 2006 at 12:48:28AM +0200, Markus M?ller wrote:
+> Hi sil_sata.c-Developers,
 > 
-> --- Tejun Heo <htejun@gmail.com> wrote:
->> So, what's your suggestion here?  Do you think libata should do such 
->> things with its own mechanism?
+> I've a problem accessing discs on my SIL 3114 controller: If I write
+> to it and if during this any other access (= read or write) to a disc
+> on same controller occures, there are write errors.
 > 
-> Your instinct is correct.  Anything between I and T, as in I_T, is SDS
-> domain.  That is, SAM doesn't have a _context_ for anything between the I and T.
-> (In SATA's case I_T_L, of course.)
+> The kernel doesn't realise this at all, there is no message about
+> that in dmesg or syslog.
 > 
-> So this is why you shouldn't call SCSI's ER without context, as in "Hey,
-> neither command, nor device is broken, but do some ER for me."  Such work belongs
-> in your SATA Layer, unless either a device or command is involved, as we discussed.
+[--snip--]
+> This problem doesn't occure with this sil controllers and sata
+> hdds on a Neo2 Board with AMD64 from MSI so...
 > 
-> Handle protocol ER in your SATA layer.  Note however that most of your ER could
-> be done on behalf of a command or device, since of course, a device or command(s)
-> end up being affected.  Basically "do as little as possible but no less" technique.
-> 
+> -> Maybe the SIL-Driver isn't useable with the NForce2 Chipset?!
 
-Hello, Luben.
+This sounds like something is going wrong on the host bus.
 
-I see your point regarding SAM.  If this is the consensus among SCSI 
-developers, I guess eh_schedule_host() shouldn't be added.
+> Please inculde me in answers as CC, cause I am currently
+> not on the kernel mailing list.
 
-Hmmm.. libata isn't SCSI.  It's just hitch-hiking on the back of SCSI at 
-the moment.  And, being able to invoke EH on the host directly makes 
-things a lot simpler for libata.  So, what do you think about just 
-adding shost->host_eh_scheduled, adding a condition to 
-scsi_error_handler() and export scsi_eh_wakeup()?  The changes will be 
-like three lines.  And, also, ->host_eh_scheduled can be marked as hack 
-for libata.  libata can handle the rest.
+I used to do the same but you don't have to ask for cc'ing.  It's the
+way things are done here.  People are not supposed to trim cc-list
+unless there are specific reasons.
 
-This may not be the most graceful thing to do but...
+Can you try the following patch?  Be careful, I've only compile-tested
+it.
 
-1. SCSI change is minimal
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 509178c..b785e2b 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4280,6 +4280,13 @@ inline unsigned int ata_host_intr (struc
+ 		/* before we do anything else, clear DMA-Start bit */
+ 		ap->ops->bmdma_stop(qc);
+ 
++		/* check host bus error */
++		if (host_stat & ATA_DMA_ERR) {
++			printk(KERN_ERR "ata%u: BMDMA host bus error\n",
++			       ap->id);
++			qc->err_mask |= AC_ERR_HOST_BUS;
++		}
++
+ 		/* fall through */
+ 
+ 	case ATA_PROT_ATAPI_NODATA:
 
-2. it's a temporary measure (moving libata out of SCSI is one of the 
-items on my agenda and if no one else does it I'm gonna give a shot at 
-it in not-so-distant future.  Once libata is gone of SCSI, the three 
-lines can be removed.)
-
-3. It will take a lot more work to achieve the same thing in libata 
-proper without the three line change.
-
-Luben, what do you think?
-
-James and Jeff, any opinion on this matter?
-
-Thanks.
-
--- 
-tejun
