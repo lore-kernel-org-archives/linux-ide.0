@@ -1,129 +1,61 @@
-From: =?ISO-8859-1?Q?Markus_M=FCller?= <mm@priv.de>
-Subject: Re: sata_sil: write corruption on parallel access of two or more
- drives on same controller
-Date: Thu, 20 Apr 2006 09:07:13 +0200
-Message-ID: <44473321.5010705@priv.de>
-References: <4446BE3C.7050902@priv.de> <20060420022527.GA3697@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 13/14] ahci: convert to new EH
+Date: Thu, 20 Apr 2006 16:11:41 +0900
+Message-ID: <20060420071141.GD25726@htj.dyndns.org>
+References: <114476330353-git-send-email-htejun@gmail.com> <1145512872.3417.47.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.priv.de ([80.237.225.190]:31138 "EHLO mail.priv.de")
-	by vger.kernel.org with ESMTP id S1750715AbWDTHHQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Apr 2006 03:07:16 -0400
-In-Reply-To: <20060420022527.GA3697@htj.dyndns.org>
+Received: from pproxy.gmail.com ([64.233.166.178]:49577 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750735AbWDTHLe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Apr 2006 03:11:34 -0400
+Received: by pproxy.gmail.com with SMTP id i49so97594pye
+        for <linux-ide@vger.kernel.org>; Thu, 20 Apr 2006 00:11:33 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1145512872.3417.47.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 
-Hi Tejun Heo,
-> On Thu, Apr 20, 2006 at 12:48:28AM +0200, Markus M?ller wrote:
->   
->> Hi sil_sata.c-Developers,
->>
->> I've a problem accessing discs on my SIL 3114 controller: If I write
->> to it and if during this any other access (= read or write) to a disc
->> on same controller occures, there are write errors.
->>
->> The kernel doesn't realise this at all, there is no message about
->> that in dmesg or syslog.
->>
->>     
-> [--snip--]
->   
->> This problem doesn't occure with this sil controllers and sata
->> hdds on a Neo2 Board with AMD64 from MSI so...
->>
->> -> Maybe the SIL-Driver isn't useable with the NForce2 Chipset?!
->>     
->
-> This sounds like something is going wrong on the host bus.
->
->   
->> Please inculde me in answers as CC, cause I am currently
->> not on the kernel mailing list.
->>     
->
-> I used to do the same but you don't have to ask for cc'ing.  It's the
-> way things are done here.  People are not supposed to trim cc-list
-> unless there are specific reasons.
->
-> Can you try the following patch?  Be careful, I've only compile-tested
-> it.
->
-> [--snip--]
-The problem does still occure same with the following patch installed. 
-There are still no messages in dmesg.
+On Thu, Apr 20, 2006 at 02:01:12PM +0800, zhao, forrest wrote:
+> 
+> Hi, Tejun
+> 
+> When testing hotplug and reading your patches, I thought an interrupt
+> lost might occur on AHCI in the following case:
+> 
+> 1 system boot up with SATA disk A attached to port 1 and disk B attached
+> to port 2
+> 2 disk B at port 2 is hot-unplugged
+> 3 ata_eh_revive() will execute several round of soft-reset/hard-reset as
+> we observed in dmesg
+> 4 now imagine ata_eh_revive() start to execute the last round of
+> hard-reset, so the code path comes into ata_do_reset(), then into
+> ahci_hardreset()
+> 5 disk B is hot-plugged to port 2, and an interrupt is triggered
+> 6 CPU respond to this interrupt when code path execute between
+> ahci_start_engine(); in ahci_hardreset() and
+> ap->flags &= ~ATA_FLAG_FROZEN; in ata_do_reset();
+> 7 then this interrupt is lost since no EH is scheduled to handle it.
+> 
+> I think invoking ata_eh_schedule_port() in ahci_postreset() can fix
+> the problem, is it right?
 
-What can I further do? Thanks for any help! I have no problem to install 
-futher test patches, my data on raid are all safed, so it doesn't matter 
-what happens at all on this system, as long as it don't work cause of 
-this problem.
+Hello, Forrest.
 
-stacker:/usr/src# diff -u10 linux-2.6.16.9/drivers/scsi/libata-core.c 
-linux-2.6.16.9.new/drivers/scsi/libata-core.c
---- linux-2.6.16.9/drivers/scsi/libata-core.c   2006-04-19 
-08:10:14.000000000 +0200
-+++ linux-2.6.16.9.new/drivers/scsi/libata-core.c       2002-01-22 
-08:47:57.000000000 +0100
-@@ -4051,20 +4051,27 @@
-                host_stat = ap->ops->bmdma_status(ap);
-                VPRINTK("ata%u: host_stat 0x%X\n", ap->id, host_stat);
+Yes, you're right.  The problem is that we cannot tell whether such
+interrupts are due to the reset or some other events.  The goal was to
+make sure existing devices are okay on EH completion.  If new devices
+get connected during EH, we might lose the event, which IMHO is okay.
 
-                /* if it's not our irq... */
-                if (!(host_stat & ATA_DMA_INTR))
-                        goto idle_irq;
+Maybe this can be solved by merging EH and probe into one.  Probing
+and EH revive are pretty similar in the first place.  I'll think about
+that.  But I still think it's okay to lose hotplug interrupt during
+EH.  All the user has to do is simply replug the device or issue
+manual scan.
 
-                /* before we do anything else, clear DMA-Start bit */
-                ap->ops->bmdma_stop(qc);
+Thanks.
 
-+                /* check host bus error */
-+                if (host_stat & ATA_DMA_ERR) {
-+                        printk(KERN_ERR "ata%u: BMDMA host bus error\n",
-+                               ap->id);
-+                       qc->err_mask |= AC_ERR_HOST_BUS;
-+                }
-+
-                /* fall through */
-
-        case ATA_PROT_ATAPI_NODATA:
-        case ATA_PROT_NODATA:
-                /* check altstatus */
-                status = ata_altstatus(ap);
-                if (status & ATA_BUSY)
-                        goto idle_irq;
-
-                /* check main status, clearing INTRQ */
-stacker:/usr/src#
-
-My test was:
-
-stacker:/var/log# badblocks /dev/sda &
-[1] 1249
-stacker:/var/log# badblocks -n /dev/sdb
-123
-382
-576
-616
-1217
-1255
-2645
-3664
-
-Interrupt caught, cleaning up
-stacker:/var/log# dmesg|tail
-ReiserFS: loop0: replayed 15 transactions in 0 seconds
-ReiserFS: loop0: Using r5 hash to sort names
-eth0: Promiscuous mode enabled.
-device eth0 entered promiscuous mode
-eth0: Promiscuous mode enabled.
-eth0: Promiscuous mode enabled.
-eth0: Promiscuous mode enabled.
-br0: port 1(eth0) entering learning state
-br0: topology change detected, propagating
-br0: port 1(eth0) entering forwarding state
-stacker:/var/log#
-
-gReeTings,
-Markus Mueller
+-- 
+tejun
