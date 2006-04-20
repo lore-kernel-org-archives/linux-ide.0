@@ -1,136 +1,129 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: Re: [PATCH 13/14] ahci: convert to new EH
-Date: Thu, 20 Apr 2006 14:01:12 +0800
-Message-ID: <1145512872.3417.47.camel@forrest26.sh.intel.com>
-References: <114476330353-git-send-email-htejun@gmail.com>
+From: =?ISO-8859-1?Q?Markus_M=FCller?= <mm@priv.de>
+Subject: Re: sata_sil: write corruption on parallel access of two or more
+ drives on same controller
+Date: Thu, 20 Apr 2006 09:07:13 +0200
+Message-ID: <44473321.5010705@priv.de>
+References: <4446BE3C.7050902@priv.de> <20060420022527.GA3697@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:44720 "EHLO
-	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S1750878AbWDTGLs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Apr 2006 02:11:48 -0400
-In-Reply-To: <114476330353-git-send-email-htejun@gmail.com>
+Received: from mail.priv.de ([80.237.225.190]:31138 "EHLO mail.priv.de")
+	by vger.kernel.org with ESMTP id S1750715AbWDTHHQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Apr 2006 03:07:16 -0400
+In-Reply-To: <20060420022527.GA3697@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Tue, 2006-04-11 at 22:48 +0900, Tejun Heo wrote:
-> Convert AHCI to new EH.  Unfortunately, ICH7 AHCI reacts badly if IRQ
-> mask is diddled during operation.  So, freezing is implemented by
-> unconditionally clearing interrupt conditions while frozen.
->  
-> -static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
-> +static inline void ahci_host_intr(struct ata_port *ap)
->  {
-> +	struct ahci_port_priv *pp = ap->private_data;
->  	void __iomem *mmio = ap->host_set->mmio_base;
->  	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-> -	u32 status, serr, ci;
-> -
-> -	serr = readl(port_mmio + PORT_SCR_ERR);
-> -	writel(serr, port_mmio + PORT_SCR_ERR);
-> +	u32 status, serror, ci;
-> +	unsigned int eh_flags;
->  
->  	status = readl(port_mmio + PORT_IRQ_STAT);
->  	writel(status, port_mmio + PORT_IRQ_STAT);
->  
-> -	ci = readl(port_mmio + PORT_CMD_ISSUE);
-> -	if (likely((ci & 0x1) == 0)) {
-> -		if (qc) {
-> -			WARN_ON(qc->err_mask);
-> -			ata_qc_complete(qc);
-> -			qc = NULL;
-> -		}
-> +	/* AHCI gets unhappy if IRQ mask is diddled with while the
-> +	 * port is active, so we cannot disable IRQ when freezing.
-> +	 * Clear IRQ conditions and hope screaming IRQs don't happen.
-> +	 */
-> +	if (ap->flags & ATA_FLAG_FROZEN) {
-> +		/* some AHCI errors hang the controller until SError
-> +		 * is cleared.  Store and clear it.
-> +		 */
-> +		serror = scr_read(ap, SCR_ERROR);
-> +		scr_write(ap, SCR_ERROR, serror);
-> +		pp->eh_irq_stat |= status;
-> +		pp->eh_serror |= serror;
-> +		return;
->  	}
->  
-> -	if (status & PORT_IRQ_FATAL) {
-> -		unsigned int err_mask;
-> -		if (status & PORT_IRQ_TF_ERR)
-> -			err_mask = AC_ERR_DEV;
-> -		else if (status & PORT_IRQ_IF_ERR)
-> -			err_mask = AC_ERR_ATA_BUS;
-> -		else
-> -			err_mask = AC_ERR_HOST_BUS;
-> -
-> -		/* command processing has stopped due to error; restart */
-> -		ahci_restart_port(ap, status);
-> -
-> -		if (qc) {
-> -			qc->err_mask |= err_mask;
-> -			ata_qc_complete(qc);
-> +	if (!(status & PORT_IRQ_ERROR)) {
-> +		struct ata_queued_cmd *qc;
-> +
-> +		if ((qc = ata_qc_from_tag(ap, ap->active_tag))) {
-> +			ci = readl(port_mmio + PORT_CMD_ISSUE);
-> +			if ((ci & 0x1) == 0) {
-> +				ata_qc_complete(qc);
-> +				return;
-> +			}
->  		}
-> +
-> +		if (ata_ratelimit())
-> +			printk(KERN_INFO "ata%u: spurious interrupt "
-> +			       "(irq_stat 0x%x active_tag %d)\n",
-> +			       ap->id, status, ap->active_tag);
-> +
-> +		return;
->  	}
->  
-> -	return 1;
-> +	/* Something weird is going on.  Hand over to EH. */
-> +	serror = scr_read(ap, SCR_ERROR);
-> +	scr_write(ap, SCR_ERROR, serror);
-> +
-> +	pp->eh_irq_stat = status;
-> +	pp->eh_serror = serror;
-> +
-> +	eh_flags = ATA_EH_ABORT;
-> +	if (status & PORT_IRQ_FREEZE)
-> +		eh_flags |= ATA_EH_FREEZE;
-> +
-> +	ata_eh_schedule_port(ap, eh_flags);
->  }
+Hi Tejun Heo,
+> On Thu, Apr 20, 2006 at 12:48:28AM +0200, Markus M?ller wrote:
+>   
+>> Hi sil_sata.c-Developers,
+>>
+>> I've a problem accessing discs on my SIL 3114 controller: If I write
+>> to it and if during this any other access (= read or write) to a disc
+>> on same controller occures, there are write errors.
+>>
+>> The kernel doesn't realise this at all, there is no message about
+>> that in dmesg or syslog.
+>>
+>>     
+> [--snip--]
+>   
+>> This problem doesn't occure with this sil controllers and sata
+>> hdds on a Neo2 Board with AMD64 from MSI so...
+>>
+>> -> Maybe the SIL-Driver isn't useable with the NForce2 Chipset?!
+>>     
+>
+> This sounds like something is going wrong on the host bus.
+>
+>   
+>> Please inculde me in answers as CC, cause I am currently
+>> not on the kernel mailing list.
+>>     
+>
+> I used to do the same but you don't have to ask for cc'ing.  It's the
+> way things are done here.  People are not supposed to trim cc-list
+> unless there are specific reasons.
+>
+> Can you try the following patch?  Be careful, I've only compile-tested
+> it.
+>
+> [--snip--]
+The problem does still occure same with the following patch installed. 
+There are still no messages in dmesg.
 
-Hi, Tejun
+What can I further do? Thanks for any help! I have no problem to install 
+futher test patches, my data on raid are all safed, so it doesn't matter 
+what happens at all on this system, as long as it don't work cause of 
+this problem.
 
-When testing hotplug and reading your patches, I thought an interrupt
-lost might occur on AHCI in the following case:
+stacker:/usr/src# diff -u10 linux-2.6.16.9/drivers/scsi/libata-core.c 
+linux-2.6.16.9.new/drivers/scsi/libata-core.c
+--- linux-2.6.16.9/drivers/scsi/libata-core.c   2006-04-19 
+08:10:14.000000000 +0200
++++ linux-2.6.16.9.new/drivers/scsi/libata-core.c       2002-01-22 
+08:47:57.000000000 +0100
+@@ -4051,20 +4051,27 @@
+                host_stat = ap->ops->bmdma_status(ap);
+                VPRINTK("ata%u: host_stat 0x%X\n", ap->id, host_stat);
 
-1 system boot up with SATA disk A attached to port 1 and disk B attached
-to port 2
-2 disk B at port 2 is hot-unplugged
-3 ata_eh_revive() will execute several round of soft-reset/hard-reset as
-we observed in dmesg
-4 now imagine ata_eh_revive() start to execute the last round of
-hard-reset, so the code path comes into ata_do_reset(), then into
-ahci_hardreset()
-5 disk B is hot-plugged to port 2, and an interrupt is triggered
-6 CPU respond to this interrupt when code path execute between
-ahci_start_engine(); in ahci_hardreset() and
-ap->flags &= ~ATA_FLAG_FROZEN; in ata_do_reset();
-7 then this interrupt is lost since no EH is scheduled to handle it.
+                /* if it's not our irq... */
+                if (!(host_stat & ATA_DMA_INTR))
+                        goto idle_irq;
 
-I think invoking ata_eh_schedule_port() in ahci_postreset() can fix
-the problem, is it right?
+                /* before we do anything else, clear DMA-Start bit */
+                ap->ops->bmdma_stop(qc);
 
-Thanks,
-Forrest
++                /* check host bus error */
++                if (host_stat & ATA_DMA_ERR) {
++                        printk(KERN_ERR "ata%u: BMDMA host bus error\n",
++                               ap->id);
++                       qc->err_mask |= AC_ERR_HOST_BUS;
++                }
++
+                /* fall through */
 
+        case ATA_PROT_ATAPI_NODATA:
+        case ATA_PROT_NODATA:
+                /* check altstatus */
+                status = ata_altstatus(ap);
+                if (status & ATA_BUSY)
+                        goto idle_irq;
+
+                /* check main status, clearing INTRQ */
+stacker:/usr/src#
+
+My test was:
+
+stacker:/var/log# badblocks /dev/sda &
+[1] 1249
+stacker:/var/log# badblocks -n /dev/sdb
+123
+382
+576
+616
+1217
+1255
+2645
+3664
+
+Interrupt caught, cleaning up
+stacker:/var/log# dmesg|tail
+ReiserFS: loop0: replayed 15 transactions in 0 seconds
+ReiserFS: loop0: Using r5 hash to sort names
+eth0: Promiscuous mode enabled.
+device eth0 entered promiscuous mode
+eth0: Promiscuous mode enabled.
+eth0: Promiscuous mode enabled.
+eth0: Promiscuous mode enabled.
+br0: port 1(eth0) entering learning state
+br0: topology change detected, propagating
+br0: port 1(eth0) entering forwarding state
+stacker:/var/log#
+
+gReeTings,
+Markus Mueller
