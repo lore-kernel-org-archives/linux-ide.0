@@ -1,54 +1,68 @@
-From: Roger Heflin <rheflin@atipa.com>
-Subject: sata_mv issues with more than 1 disk in FC5 2.6.16-1.2096
-Date: Thu, 20 Apr 2006 15:08:32 -0500
-Message-ID: <4447EA40.9010503@atipa.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Schedule for adding pata to kernel?
+Date: Thu, 20 Apr 2006 18:48:31 -0400
+Message-ID: <44480FBF.6090100@pobox.com>
+References: <1142869095.20050.32.camel@localhost.localdomain> <4422F10B.9080608@bootc.net> <44266499.3070809@t-online.de> <1143393969.2540.5.camel@localhost.localdomain> <b637ec0b0604180444y7828ac5aobb349324f87201c2@mail.gmail.com> <1145361613.18736.44.camel@localhost.localdomain> <20060418121326.GB25726@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from EXCHG2003.microtech-ks.com ([24.124.14.122]:64773 "EHLO
-	EXCHG2003.microtech-ks.com") by vger.kernel.org with ESMTP
-	id S1751242AbWDTUIg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Apr 2006 16:08:36 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:11679 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932097AbWDTWsg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Apr 2006 18:48:36 -0400
+In-Reply-To: <20060418121326.GB25726@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Fabio Comolli <fabio.comolli@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
+Tejun Heo wrote:
+> Hello, all.
+> 
+> [adding Jeff and linux-ide to cc list]
+> 
+> On Tue, Apr 18, 2006 at 01:00:13PM +0100, Alan Cox wrote:
+>> On Maw, 2006-04-18 at 13:44 +0200, Fabio Comolli wrote:
+>>> In case PIIX/ICH driver should not make it in 2.6.17, are you planning
+>>> to release patches for 2.6.17-rc release cycle?
+>> I've been on holiday and am now tied up in other work until the start of
+>> May, at which point Jeff goes off and gets married so there may be some
+>> delay.
+>>
+>> 2.6.17-rc actually has 95% of the stuff needed to drop the PATA drivers
+>> in and I will try to do patches at least versus 2.6.17 final. The -rcs
+>> will depend upon available time and also what gets integrated that
+>> causes additional work (notably Tejun Ho's stuff will make much merge
+> 
+> BTW, my name is Tejun Heo.  Tejun Ho sounds horrible in Korean.
+> 
+>> work, although its work I'm very glad to do as the improvements and
+>> hotplug support are all needed).
+> 
+> I'm currently working on port multiplier support.  My working tree now
+> successfully probes and attaches all devices over the PM and I'm
+> currently trying to get EH and hotplug to work with it nicely.
+> EH/hotplug are being changed to support PM.  Effects on LLDDs are
+> minimal but you can probably save some work by waiting for the next
+> round of patches before porting to new EH.
+> 
+> I think/hope this can be finished in this week and bombard Jeff with
+> patches (updated EH, NCQ, hotplug and PM) before the weekend, so that
+> Jeff can have some time to review and hopefully merge some of it into
+> #upstream before he goes off on honeymoon.  In some convoluted way,
+> the patches will be my marriage gift, heh heh.
+> 
+> Jeff, *BIG* congratulations.  I wish you a great marriage.
 
-I know the FC5 2.6.16-1.2096 is based off of one of the 2.6.16
-stable releases.   I am not sure exactly which one this is based
-on.
+Thanks :)  And thanks for working on this stuff...  As you see, once the 
+EH hurdle is cleared, it is much easier to add new features.  New 
+features will start flooding in, from you and others.
 
-I have several machines with this controller, the ones with a single
-disks all work correctly using the Marvell controller.
+BTW don't forget we want to push Albert's irq-pio branch into upstream 
+sometime soon after your EH work settles.  I would put irq-pio in front 
+of NCQ and PM, particularly.
 
-An identical MB/controller/chassis fails when there are 2 disks
-using software mirroring.  We have tested with 2 separate chassis,
-both exhibit the same failure.
+	Jeff
 
-Moving the 2 disks to a different built-in sata controller
-(sata_nv) results in the disks and the mirror working
-correctly.
 
-The errors that it returns are:
-ata4: status=0xd0 { Busy }
-ata2: status=0xd0 { Busy }
-And the machine is terribly slow while this error is happening.
-The error appears to be happening when the disks are trying
-to be mounted.
 
-We have tested the disk on a couple of different combinations of
-ports and this does not seem to change anything.
-
-The single disk machines don't get this error like the 2 disk
-machines, though  they do get this error, every 30 minutes
-or so (probably from  smartd), but this error does not
-appear to be causing issues.
-Apr 19 16:26:19 lab229 kernel: ata1: status=0xd0 { Busy }
-Apr 19 16:26:19 lab229 kernel: ATA: abnormal status 0xD0 on
-     port 0xFFFFC2001012211C
-
-Any thoughts?
-
-                                 Roger
