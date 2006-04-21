@@ -1,72 +1,58 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: sata_via and SATA DVD drive (PX-712SA)
-Date: Fri, 21 Apr 2006 15:24:30 +0800
-Message-ID: <444888AE.8000706@tw.ibm.com>
-References: <200604202020.22010.r.brandstaedter@gmx.at>
-Reply-To: albertl@mail.com
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: LibPATA code issues / 2.6.16 (previously, 2.6.15.x)
+Date: Fri, 21 Apr 2006 15:14:41 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0604211511120.22768@p34>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com>
+ <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
+ <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>
+ <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
+ <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com>
+ <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>
+ <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca>
+ <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca>
+ <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com>
+ <4405FAAE.3080705@dgreaves.com> <Pine.LNX.4.64.0603050637110.30164@p34>
+ <Pine.LNX.4.64.0603050740500.3116@p34> <440B6CFE.4010503@rtr.ca>
+ <440B76B4.5080502@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:35805 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751256AbWDUHYj
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Apr 2006 03:24:39 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e31.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3L7OYxv031358
-	for <linux-ide@vger.kernel.org>; Fri, 21 Apr 2006 03:24:34 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3L7KqJi085062
-	for <linux-ide@vger.kernel.org>; Fri, 21 Apr 2006 01:20:53 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k3L7OXcX000844
-	for <linux-ide@vger.kernel.org>; Fri, 21 Apr 2006 01:24:34 -0600
-In-Reply-To: <200604202020.22010.r.brandstaedter@gmx.at>
+Received: from lucidpixels.com ([66.45.37.187]:54720 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S1750807AbWDUTO4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Apr 2006 15:14:56 -0400
+In-Reply-To: <440B76B4.5080502@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lkml@rtr.ca>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, Linus Torvalds <torvalds@osdl.org>, smartmontools-support@lists.sourceforge.net
 
-Reinhard Brandst=E4dter wrote:
-> Hi,
->=20
-> since 2.6.12 I try to get a Plextor PX-712SA (SATA DVD-RW) drive to w=
-ork on a=20
-> VIA SATA controller. Without success.
->=20
-> When I load the sata_via module the controller is initialized and two=
- sata=20
-> interfaces are found (ata4 and ata5).
-> Scanning the attached drive fails, and i think the returned code indi=
-cates the=20
-> drive is busy:
->=20
-> ...
-> ata4: command 0xa0 timeout, stat 0xd0 host_stat 0x61
-> ata4: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> ...
->=20
-> The controller seems to lock up (IDE LED is on) after that.
-> I can unload the module and load it again, resulting in a timeout:
->=20
-> ...
-> ata6 is slow to respond, please be patient
-> ata6 failed to respond (30 secs)
-> ...
->=20
-> Attached my dmesg output with the messages of loading the module, unl=
-oading it=20
-> and loading it again. (ata4 & ata5 found, then ata6 & ata7)
->=20
-> I also tried with SCSI debugging but this gives no additional info.
->=20
+Yet a new problem, under 2.6.16, when I fill up the disk, smartmontools 
+reports this:
 
-=46rom the dmesg, PX-712SA looks like a PATA drive bridged to SATA.
-Could you try the atapi_dmadir=3D1 module parameter and check if it hel=
-ps?
-(For older kernels, please #define ATAPI_ENABLE_DMADIR
-in include/linux/libata.h and recompile the kernel.)
---
-albert
+Apr 21 14:24:20 p34 smartd[1443]: Device: /dev/sdc, 1 Currently unreadable
+(pending) sectors
+Apr 21 14:54:20 p34 smartd[1443]: Device: /dev/sdc, 1 Currently unreadable
+(pending) sectors
+Apr 21 14:54:20 p34 smartd[1443]: Device: /dev/sdc, 1 Offline uncorrectable
+sectors
 
+What made it error under 2.6.16?
+
+$ time dd if=/dev/zero of=file.out
+dd: writing to `file.out': No space left on device
+781118873+0 records in
+781118872+0 records out
+399932862464 bytes (400 GB) copied, 8873.06 seconds, 45.1 MB/s
+
+real    147m53.092s
+user    8m1.395s
+sys     42m4.500s
+
+$
+
+Under 2.6.15.x, I did not see this behavior, is this going bad, or?
+
+Thanks,
+
+Justin.
 
