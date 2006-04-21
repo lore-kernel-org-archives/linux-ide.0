@@ -1,46 +1,73 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: LibPATA code issues / 2.6.16 (previously, 2.6.15.x)
-Date: Fri, 21 Apr 2006 12:28:57 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0604211226120.3701@g5.osdl.org>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com>
- <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca>
- <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca>
- <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
- <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com>
- <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>
- <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca>
- <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca>
- <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com>
- <4405FAAE.3080705@dgreaves.com> <Pine.LNX.4.64.0603050637110.30164@p34>
- <Pine.LNX.4.64.0603050740500.3116@p34> <440B6CFE.4010503@rtr.ca>
- <440B76B4.5080502@pobox.com> <Pine.LNX.4.64.0604211511120.22768@p34>
- <44493023.4010109@pobox.com>
+From: Reinhard =?iso-8859-1?q?Brandst=E4dter?= <r.brandstaedter@gmx.at>
+Subject: Re: sata_via and SATA DVD drive (PX-712SA)
+Date: Fri, 21 Apr 2006 23:20:26 +0200
+Message-ID: <200604212320.30854.r.brandstaedter@gmx.at>
+References: <200604202020.22010.r.brandstaedter@gmx.at> <444888AE.8000706@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed;
+  boundary="nextPart1912496.UAJZAtcoLs";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:17052 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932348AbWDUTaf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Apr 2006 15:30:35 -0400
-In-Reply-To: <44493023.4010109@pobox.com>
+Received: from smtp3.noc.eunet-ag.at ([193.154.160.91]:33934 "EHLO
+	smtp3.noc.eunet-ag.at") by vger.kernel.org with ESMTP
+	id S932482AbWDUVUo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Apr 2006 17:20:44 -0400
+Received: from melchior.redchili.dyndns.org (redchili.dyndns.org [193.154.186.156])
+	by smtp3.noc.eunet-ag.at (Postfix) with ESMTP id 6D63034C8F
+	for <linux-ide@vger.kernel.org>; Fri, 21 Apr 2006 23:20:43 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by melchior.redchili.dyndns.org (Postfix) with ESMTP id 02D913DD3
+	for <linux-ide@vger.kernel.org>; Fri, 21 Apr 2006 23:22:58 +0200 (CEST)
+Received: from melchior.redchili.dyndns.org ([127.0.0.1])
+ by localhost (melchior.redchili.dyndns.org [127.0.0.1]) (amavisd-new, port 10024)
+ with LMTP id 30669-10 for <linux-ide@vger.kernel.org>;
+ Fri, 21 Apr 2006 23:22:49 +0200 (CEST)
+Received: from [192.168.1.89] (unknown [192.168.1.89])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by melchior.redchili.dyndns.org (Postfix) with ESMTP id 2E68D3DC9
+	for <linux-ide@vger.kernel.org>; Fri, 21 Apr 2006 23:22:49 +0200 (CEST)
+In-Reply-To: <444888AE.8000706@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Mark Lord <lkml@rtr.ca>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, smartmontools-support@lists.sourceforge.net
+To: linux-ide@vger.kernel.org
 
+--nextPart1912496.UAJZAtcoLs
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+On Friday 21 April 2006 09:24, Albert Lee wrote:
+> From the dmesg, PX-712SA looks like a PATA drive bridged to SATA.
+> Could you try the atapi_dmadir=3D1 module parameter and check if it helps?
+> (For older kernels, please #define ATAPI_ENABLE_DMADIR
+> in include/linux/libata.h and recompile the kernel.)
 
-On Fri, 21 Apr 2006, Jeff Garzik wrote:
-> 
-> You can force the disk to replace the bad sectors by doing a disk-level write:
-> 
-> 	dd if=/dev/zero of=/dev/sda1 bs=4k
+Indeed the PX-712SA is a bridged PATA drive. In the POST message it's even=
+=20
+reported as PX-712A (the ATAPI model).
+I've tried to pass libata.atapi_dmadir=3D1 to the kernel but looking at dme=
+sg=20
+nothing changed (using kernel 2.6.16). I even changed libata.h and defined=
+=20
+ATAPI_ENABLE_DMADIR - same result.
 
-NOTE! Obviously don't do this before you've backed up the disk.  Depending 
-on the filesystem, you might just have overwritten something important, or 
-just your pr0n collection ;)
+What else could I try?
 
-Jeff, please be a little more careful about telling people commands like 
-that. Some people might cut-and-paste the command without realizing what 
-it's doing as a way to "fix" their problem.
+Reinhard
 
-			Linus
+--nextPart1912496.UAJZAtcoLs
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBESUyekeAWQwM7gdsRAk67AJ42dOHu+rtAIiRJUtBEx+4GiwaR+ACfdscS
+7tj8NaDyjKMV1vyIGfojdW0=
+=sNeL
+-----END PGP SIGNATURE-----
+
+--nextPart1912496.UAJZAtcoLs--
