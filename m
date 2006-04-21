@@ -1,51 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata suspend resume ...
-Date: Fri, 21 Apr 2006 17:36:13 -0400
-Message-ID: <4449504D.1040901@garzik.org>
-References: <Pine.LNX.4.64.0604192324040.29606@indiana.corp.fedex.com> <Pine.LNX.4.64.0604191659230.7660@blonde.wat.veritas.com> <20060420134713.GA2360@ucw.cz> <Pine.LNX.4.64.0604211333050.4891@blonde.wat.veritas.com> <20060421163930.GA1648@elf.ucw.cz> <Pine.LNX.4.64.0604212108010.7531@blonde.wat.veritas.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: LibPATA code issues / 2.6.16 (previously, 2.6.15.x)
+Date: Fri, 21 Apr 2006 18:46:36 -0400
+Message-ID: <444960CC.2000009@pobox.com>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F2050B.8020006@dgreaves.com> <Pine.LNX.4.64.0602141211350.10793@p34> <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com> <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com> <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca> <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca> <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com> <4405FAAE.3080705@dgreaves.com> <Pine.LNX.4.64.0603050637110.30164@p34> <Pine.LNX.4.64.0603050740500.3116@p34> <440B6CFE.4010503@rtr.ca> <440B76B4.5080502@pobox.com> <Pine.LNX.4.64.06042115111
+ 20.22768@p34> <44493023.4010109@pobox.com> <Pine.LNX.4.64.0604211226120.3701@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:24772 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964793AbWDUVgg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Apr 2006 17:36:36 -0400
-In-Reply-To: <Pine.LNX.4.64.0604212108010.7531@blonde.wat.veritas.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:35782 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750706AbWDUWq6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Apr 2006 18:46:58 -0400
+In-Reply-To: <Pine.LNX.4.64.0604211226120.3701@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Pavel Machek <pavel@suse.cz>, Arkadiusz Miskiewicz <arekm@maven.pl>, Jeff Chua <jeffchua@silk.corp.fedex.com>, Matt Mackall <mpm@selenic.com>, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Mark Lord <lkml@rtr.ca>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, smartmontools-support@lists.sourceforge.net
 
-Hugh Dickins wrote:
-> --- 2.6.17-rc2/drivers/scsi/libata-core.c	2006-04-19 09:14:11.000000000 +0100
-> +++ linux/drivers/scsi/libata-core.c	2006-04-21 20:55:48.000000000 +0100
-> @@ -4288,6 +4288,7 @@ int ata_device_resume(struct ata_port *a
->  {
->  	if (ap->flags & ATA_FLAG_SUSPENDED) {
->  		ap->flags &= ~ATA_FLAG_SUSPENDED;
-> +		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
->  		ata_set_mode(ap);
->  	}
+Linus Torvalds wrote:
+> 
+> On Fri, 21 Apr 2006, Jeff Garzik wrote:
+>> You can force the disk to replace the bad sectors by doing a disk-level write:
+>>
+>> 	dd if=/dev/zero of=/dev/sda1 bs=4k
+> 
+> NOTE! Obviously don't do this before you've backed up the disk.  Depending 
+> on the filesystem, you might just have overwritten something important, or 
+> just your pr0n collection ;)
+> 
+> Jeff, please be a little more careful about telling people commands like 
+> that. Some people might cut-and-paste the command without realizing what 
+> it's doing as a way to "fix" their problem.
 
-
-This is helpful to narrow down the problem, but its a bit of a layering 
-violation.  In the current code, all functions called by 
-ata_device_{suspend,resume}() are high level functions, which uses 
-ata_qc_issue/ata_qc_complete high level API to address the device.
-
-In contrast, ata_busy_sleep() sticks its hands deep into the host state 
-machine, and gives the tree a good hard shake.  :)  Consider that 
-ata_busy_sleep() doesn't make sense for unusual cases like 
-ATA-over-ethernet (AoE), or other tunnelled ATA transports.
-
-It may very well be that ata_busy_sleep() is the proper solution for 
-your hardware, but it isn't applicable to all hardware.
-
-So you really want an ata_make_sure_bus_is_awake_and_working() called at 
-that location.  ata_busy_sleep()'s purpose is to bring a PATA-like bus 
-to the bus-idle state.  So, when working on suspend/resume, the software 
-needs to have points at which the bus state is controlled/queried/asserted.
+Agreed, though the original poster had already done a 400GB dd from 
+/dev/zero...
 
 	Jeff
+
 
 
