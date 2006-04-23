@@ -1,70 +1,74 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: [FIX] ide-io: increase timeout value to allow for slave wakeup
-Date: Sun, 23 Apr 2006 14:22:31 +0300
-Message-ID: <200604231422.31176.a1426z@gawab.com>
-References: <200604222359.21652.a1426z@gawab.com> <200604230721.54550.a1426z@gawab.com> <20060422214356.0f8afbcb.akpm@osdl.org>
+From: Onis <onion@virasto.com>
+Subject: sata_mv: ataX: no device found (phy stat 00000000)
+Date: Sun, 23 Apr 2006 14:36:57 +0300
+Message-ID: <20060423113657.GA8814@virasto.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="windows-1256"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [212.70.37.24] ([212.70.37.24]:27147 "EHLO raad.intranet")
-	by vger.kernel.org with ESMTP id S1751373AbWDWLYQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Apr 2006 07:24:16 -0400
-In-Reply-To: <20060422214356.0f8afbcb.akpm@osdl.org>
+Received: from virasto.com ([212.213.212.50]:53636 "EHLO virasto.com")
+	by vger.kernel.org with ESMTP id S1751359AbWDWLhA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Apr 2006 07:37:00 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Andrew Morton wrote:
-> Al Boldi <a1426z@gawab.com> wrote:
-> > Andrew Morton wrote:
-> > > Al Boldi <a1426z@gawab.com> wrote:
-> > > > During an STR resume cycle, the ide master disk times-out when there
-> > > > is also a slave present (especially CD).  Increasing the timeout in
-> > > > ide-io from 10,000 to 100,000 fixes this problem.
-> > > >
-> > > > Andrew, do I have to send a patch or can you take care of this
-> > > > one-liner?
-> > >
-> > > Please see the thread "sata suspend resume ..." on this mailing list,
-> > > starting Wed, 19 Apr.  It sounds like the same thing.
-> >
-> > Yes, that's what prompted me to look into ide-io.
-> > So, will the sata fix also fix ide-io?
->
-> Oh.  No.  Please send a patch.
+Hi!
 
---- 16/drivers/ide/ide-io.c.orig	2006-03-31 19:12:11.000000000 +0300
-+++ 16/drivers/ide/ide-io.c	2006-04-23 13:24:15.000000000 +0300
-@@ -932,7 +932,7 @@ static ide_startstop_t start_request (id
- 			printk(KERN_WARNING "%s: bus not ready on wakeup\n", drive->name);
- 		SELECT_DRIVE(drive);
- 		HWIF(drive)->OUTB(8, HWIF(drive)->io_ports[IDE_CONTROL_OFFSET]);
--		rc = ide_wait_not_busy(HWIF(drive), 10000);
-+		rc = ide_wait_not_busy(HWIF(drive), 100000);
- 		if (rc)
- 			printk(KERN_WARNING "%s: drive not ready on wakeup\n", drive->name);
- 	}
+Yesterday I got my sata_mv raid5 array trashed :( Array was not under heavy
+load. Just typical rsync over internet.
 
-Also apply this one to get rid of this message:
+dmesg
+-----
+ata4: no device found (phy stat 00000000)
+ata4: no device found (phy stat 00000000)
+ata4: status=0x7f { DriveReady DeviceFault SeekComplete DataRequest CorrectedError Index Error }
+sd 3:0:0:0: SCSI error: return code = 0x8000002
+sdd: Current: sense key=0x4
+    ASC=0x0 ASCQ=0x0
+end_request: I/O error, dev sdd, sector 375881023
+sd 3:0:0:0: SCSI error: return code = 0x40000
+end_request: I/O error, dev sdd, sector 375881031
+sd 3:0:0:0: SCSI error: return code = 0x40000
+end_request: I/O error, dev sdd, sector 375881039
+sd 3:0:0:0: SCSI error: return code = 0x40000
+end_request: I/O error, dev sdd, sector 375881047
+...
+ata3: no device found (phy stat 00000000)
+ata7: no device found (phy stat 00000000)
+ata7: no device found (phy stat 00000000)
+ata7: status=0x7f { DriveReady DeviceFault SeekComplete DataRequest CorrectedError Index Error }
+sd 6:0:0:0: SCSI error: return code = 0x8000002
+sdg: Current: sense key=0x4
+    ASC=0x0 ASCQ=0x0
+end_request: I/O error, dev sdg, sector 375966783
+raid5: read error not correctable.
+...
+-----
 
-	hdb: set_drive_speed_status: status=0x40 { DriveReady }
-	ide: failed opcode was: unknown
+Also I'm getting these messages during some i/o load (xfs_fsr and md_raid5
+recovery). Are these related?
 
-Maybe someone on the ide list can comment on this first though.
+-----
+ata5: Entering mv_eng_timeout
+mmio_base ffffc20000080000 ap ffff81003ea3bc80 qc ffff81003ea3bde8 scsi_cmnd
+ffff81002489e340 &cmnd ffff81002489e3b0
+ata5: no device found (phy stat 00000100)
+ata5: status=0x50 { DriveReady SeekComplete }
+ata5: error=0x01 { AddrMarkNotFound }
+sde: Current: sense key=0x0
+    ASC=0x0 ASCQ=0x0
+-----
 
---- 16/include/linux/ide.h.orig	2006-03-31 19:12:51.000000000 +0300
-+++ 16/include/linux/ide.h	2006-04-23 13:06:32.000000000 +0300
-@@ -120,7 +120,7 @@ typedef unsigned char	byte;	/* used ever
- #define IDE_BCOUNTL_REG		IDE_LCYL_REG
- #define IDE_BCOUNTH_REG		IDE_HCYL_REG
- 
--#define OK_STAT(stat,good,bad)	(((stat)&((good)|(bad)))==(good))
-+#define OK_STAT(stat,good,bad)	(((stat)&((good)|(bad)))==((stat)&(good)))
- #define BAD_R_STAT		(BUSY_STAT   | ERR_STAT)
- #define BAD_W_STAT		(BAD_R_STAT  | WRERR_STAT)
- #define BAD_STAT		(BAD_R_STAT  | DRQ_STAT)
+System
+------
+* kernel 2.6.17-rc2 + xfs "remount,ro" patch
+* Tyan Thunder S2882 Dual Opteron 240
+* Marvell Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller
+(rev 09) (Supermicro, Firmware 1.0b)
+* 8 x Maxtor Maxline III 300GB SATA
+* Debian Sarge AMD64
+* /var/log/messages: http://virasto.com/sata_mv/messages
+* Kernel .config:  http://virasto.com/sata_mv/2.6.17-rc2-01.conf
 
+- Onion
