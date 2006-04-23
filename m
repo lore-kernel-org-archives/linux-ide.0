@@ -1,74 +1,26 @@
-From: Onis <onion@virasto.com>
-Subject: sata_mv: ataX: no device found (phy stat 00000000)
-Date: Sun, 23 Apr 2006 14:36:57 +0300
-Message-ID: <20060423113657.GA8814@virasto.com>
+From: "Wesley Lim" <wesleylim@gmail.com>
+Subject: Does libata queue SMART commands?
+Date: Sun, 23 Apr 2006 05:29:50 -0700
+Message-ID: <a8b98fc60604230529s7e410a79j3d05f56beb28063a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from virasto.com ([212.213.212.50]:53636 "EHLO virasto.com")
-	by vger.kernel.org with ESMTP id S1751359AbWDWLhA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Apr 2006 07:37:00 -0400
+Received: from wproxy.gmail.com ([64.233.184.229]:50660 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751386AbWDWM3u convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 23 Apr 2006 08:29:50 -0400
+Received: by wproxy.gmail.com with SMTP id i7so889186wra
+        for <linux-ide@vger.kernel.org>; Sun, 23 Apr 2006 05:29:50 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hi!
+Is it now (>2.6.16) safe to issue SMART commands to SATA drives? I
+read an old email about it that it wasn't queued and could cause
+corruption. However, I couldn't find a notice that that issue had been
+resolved. Has it?
 
-Yesterday I got my sata_mv raid5 array trashed :( Array was not under heavy
-load. Just typical rsync over internet.
-
-dmesg
------
-ata4: no device found (phy stat 00000000)
-ata4: no device found (phy stat 00000000)
-ata4: status=0x7f { DriveReady DeviceFault SeekComplete DataRequest CorrectedError Index Error }
-sd 3:0:0:0: SCSI error: return code = 0x8000002
-sdd: Current: sense key=0x4
-    ASC=0x0 ASCQ=0x0
-end_request: I/O error, dev sdd, sector 375881023
-sd 3:0:0:0: SCSI error: return code = 0x40000
-end_request: I/O error, dev sdd, sector 375881031
-sd 3:0:0:0: SCSI error: return code = 0x40000
-end_request: I/O error, dev sdd, sector 375881039
-sd 3:0:0:0: SCSI error: return code = 0x40000
-end_request: I/O error, dev sdd, sector 375881047
-...
-ata3: no device found (phy stat 00000000)
-ata7: no device found (phy stat 00000000)
-ata7: no device found (phy stat 00000000)
-ata7: status=0x7f { DriveReady DeviceFault SeekComplete DataRequest CorrectedError Index Error }
-sd 6:0:0:0: SCSI error: return code = 0x8000002
-sdg: Current: sense key=0x4
-    ASC=0x0 ASCQ=0x0
-end_request: I/O error, dev sdg, sector 375966783
-raid5: read error not correctable.
-...
------
-
-Also I'm getting these messages during some i/o load (xfs_fsr and md_raid5
-recovery). Are these related?
-
------
-ata5: Entering mv_eng_timeout
-mmio_base ffffc20000080000 ap ffff81003ea3bc80 qc ffff81003ea3bde8 scsi_cmnd
-ffff81002489e340 &cmnd ffff81002489e3b0
-ata5: no device found (phy stat 00000100)
-ata5: status=0x50 { DriveReady SeekComplete }
-ata5: error=0x01 { AddrMarkNotFound }
-sde: Current: sense key=0x0
-    ASC=0x0 ASCQ=0x0
------
-
-System
-------
-* kernel 2.6.17-rc2 + xfs "remount,ro" patch
-* Tyan Thunder S2882 Dual Opteron 240
-* Marvell Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller
-(rev 09) (Supermicro, Firmware 1.0b)
-* 8 x Maxtor Maxline III 300GB SATA
-* Debian Sarge AMD64
-* /var/log/messages: http://virasto.com/sata_mv/messages
-* Kernel .config:  http://virasto.com/sata_mv/2.6.17-rc2-01.conf
-
-- Onion
+Thanks,
+Wesley
