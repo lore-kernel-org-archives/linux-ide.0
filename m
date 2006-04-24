@@ -1,46 +1,31 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [FIX] ide-io: increase timeout value to allow for slave wakeup
-Date: Sun, 23 Apr 2006 21:14:12 -0400
-Message-ID: <444C2664.7060803@rtr.ca>
-References: <200604222359.21652.a1426z@gawab.com> <200604230721.54550.a1426z@gawab.com> <20060422214356.0f8afbcb.akpm@osdl.org> <200604231422.31176.a1426z@gawab.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Question about current SATA suspend/resume development status
+Date: Mon, 24 Apr 2006 17:23:14 +0800
+Message-ID: <1145870594.3417.78.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1256; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:42979 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751471AbWDXBOb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Apr 2006 21:14:31 -0400
-In-Reply-To: <200604231422.31176.a1426z@gawab.com>
+Received: from mga01.intel.com ([192.55.52.88]:9561 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S932096AbWDXJeE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Apr 2006 05:34:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Jens Axboe <axboe@suse.de>
+Cc: linux-ide@vger.kernel.org
 
-Al Boldi wrote:
- ..
-> Also apply this one to get rid of this message:
-> 
-> 	hdb: set_drive_speed_status: status=0x40 { DriveReady }
-> 	ide: failed opcode was: unknown
-> 
-> Maybe someone on the ide list can comment on this first though.
-> 
-> --- 16/include/linux/ide.h.orig	2006-03-31 19:12:51.000000000 +0300
-> +++ 16/include/linux/ide.h	2006-04-23 13:06:32.000000000 +0300
-> @@ -120,7 +120,7 @@ typedef unsigned char	byte;	/* used ever
->  #define IDE_BCOUNTL_REG		IDE_LCYL_REG
->  #define IDE_BCOUNTH_REG		IDE_HCYL_REG
->  
-> -#define OK_STAT(stat,good,bad)	(((stat)&((good)|(bad)))==(good))
-> +#define OK_STAT(stat,good,bad)	(((stat)&((good)|(bad)))==((stat)&(good)))
->  #define BAD_R_STAT		(BUSY_STAT   | ERR_STAT)
->  #define BAD_W_STAT		(BAD_R_STAT  | WRERR_STAT)
->  #define BAD_STAT		(BAD_R_STAT  | DRQ_STAT)
-> 
+Hi,
 
-Assuming hdb is a CDROM/optical drive, then this change makes sense for that.
-But I don't think it is a valid (good) change for regular ATA disks.
+It seems that there's no much progress of SATA suspend/resume
+development during the past two months.
 
-A more complex patch is required, one which correctly handles each drive type.
+Hannes's patch for AHCI suspend/resume is still hanging around;
+there's no update for Randy's patch for libata ACPI.
 
-cheers
+I plan to put effort on SATA suspend/resume support. Would you
+SATA guru please give some advice for me to involve in this work
+by the right way and the right direction?
+
+Thanks,
+Forrest
