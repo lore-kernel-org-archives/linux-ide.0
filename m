@@ -1,25 +1,25 @@
 From: Albert Lee <albertcc@tw.ibm.com>
 Subject: Re: sata_via and SATA DVD drive (PX-712SA)
-Date: Mon, 24 Apr 2006 17:48:29 +0800
-Message-ID: <444C9EED.3000306@tw.ibm.com>
+Date: Mon, 24 Apr 2006 18:22:14 +0800
+Message-ID: <444CA6D6.3010403@tw.ibm.com>
 References: <200604202020.22010.r.brandstaedter@gmx.at> <444888AE.8000706@tw.ibm.com> <200604212320.30854.r.brandstaedter@gmx.at>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:6808 "EHLO e32.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1750702AbWDXJsv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Apr 2006 05:48:51 -0400
+Received: from e31.co.us.ibm.com ([32.97.110.149]:4240 "EHLO e31.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750711AbWDXKWR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Apr 2006 06:22:17 -0400
 Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3O9mo77001091
-	for <linux-ide@vger.kernel.org>; Mon, 24 Apr 2006 05:48:50 -0400
+	by e31.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3OAMHMR026072
+	for <linux-ide@vger.kernel.org>; Mon, 24 Apr 2006 06:22:17 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3O9qHGe175212
-	for <linux-ide@vger.kernel.org>; Mon, 24 Apr 2006 03:52:18 -0600
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3OAPiGe178270
+	for <linux-ide@vger.kernel.org>; Mon, 24 Apr 2006 04:25:44 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k3O9mnpD000439
-	for <linux-ide@vger.kernel.org>; Mon, 24 Apr 2006 03:48:50 -0600
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k3OAMGxl019044
+	for <linux-ide@vger.kernel.org>; Mon, 24 Apr 2006 04:22:16 -0600
 In-Reply-To: <200604212320.30854.r.brandstaedter@gmx.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -53,11 +53,11 @@ So, it is not the DMADIR problem...
 According to the Plextor website
 (http://www.plextor.com/English/support/media_712SA.htm),
 the PX-712SA works with VIA SATA only in PIO mode.
-(The website doesn't say why.)
+(The website doesn't say why. It works with other SATA controllers.)
 
 Maybe updating the firmware of PX-712SA can help?
 Otherwise, please try the attached patch to blacklist
-PX-712SX DMA for sata_via.
+PX-712SA DMA for sata_via.
 
 --
 albert
@@ -154,5 +154,4 @@ ev));
  static u32 svia_scr_read (struct ata_port *ap, unsigned int sc_reg)
  {
  	if (sc_reg > SCR_CONTROL)
-
 
