@@ -1,66 +1,38 @@
-From: david green <dgmb1234@virgilio.it>
-Subject: Hello
-Date: Mon, 24 Apr 2006 23:52:06 +0100 (GMT+01:00)
-Message-ID: <10ace1a3bc1.dgmb1234__9317.36420975557$1145919300$gmane$org@virgilio.it>
-Reply-To: dgmb12345@nowzer.com
+From: Stephen <Stephen@panhandle.rr.com>
+Subject: Remodel your house- get the $ you need to do so!
+Date: Tue, 25 Apr 2006 02:36:22 +0200
+Message-ID: <91707C3A.5241577@panhandle.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vsmtp1.tin.it ([212.216.176.141]:29393 "EHLO vsmtp1.tin.it")
-	by vger.kernel.org with ESMTP id S1751369AbWDXWyp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Apr 2006 18:54:45 -0400
+Received: from ALyon-209-1-2-38.w80-11.abo.wanadoo.fr ([80.11.135.38]:1588
+	"HELO ALyon-209-1-2-38.w80-11.abo.wanadoo.fr") by vger.kernel.org
+	with SMTP id S932139AbWDYAeU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Apr 2006 20:34:20 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello
+Dear Home Owner, 
 
-I am the branch manager of Mega Bank Sao Tome & Principe PLC; A 
-few years ago, Mega Bank was very liquid and its shares commanded 
-respect in the Sao Tome & Principe Stock Exchange; Infact, a fast 
-growing and vibrant bank.But its Chairman and Directors siphoned 
-the 
-bank liquid reserves to fund their lavish lifestyles, buying expensive 
-real estate properties all over the world. A top secret memorandum from 
-the Central Bank of Sao Tome & Principe revealed that Mega Bank will be 
-liquidated under the bankruptcy laws of Sao Tome 
-& Principe in May 
-2006.
+Your credit doesn't matter to us! If you OWN real estate 
+and want IMMEDIATE cash to spend ANY way you like, or simply wish 
+to LOWER your monthly payments by a third or more, here are the deals 
+we have TODAY (hurry, these offers will expire TONIGHT) : 
 
-This will allow the chairman and the thieving Directors to 
-escape with their loot! This is because the bankruptcy and insurance 
-laws in Sao Tome & Principe were not designed to protect the 
-shareholders and customers of the Bank; rather, the laws were designed 
-to protect the Owners
-and Directors.
+$488,000.00 as low as 3.67,%  
+$372,000.00 as low as 3.90,%  
+$492,000.00 as low as 3.21,%
+$248,000.00 as low as 3.36,%  
+$198,000.00 as low as 3.55,% 
 
-I have worked over 30 years in 
-Mega Bank and I am entitled to provide a pension for myself
-and my 
-family. Therefore, I have perfected a plan to invest a sum of 
-USD10million abroad. I intend to purchase one or more of the following 
-as a long term investment plan:
+Hurry, when these deals are gone, they are gone! 
+Simply fill out this one-minute form... %_RANDOM_URL
 
-1. Placement in a bank or financial 
-institution.
-2. Purchase of Real Estate properties.
-3. Purchase of 
-Stocks in good performing companies.
-4. Outright purchase of good 
-performing companies.
+Don't worry about approval, your credit will not disqualify you! 
 
-You could be my partner and earn legitimately 
-25% of this money. Are you interested? If so, please reply and forward 
-immediately your contact details including the following to my secure 
-email: dgmb12345@nowzer.com
-
-A. Your complete address.
-B. Your 
-Telephone and fax numbers.
-
-Once I receive your above details, I will 
-commence with the onward transfer of the funds to your country.
-
-Sincerely,
-David Green 
+Sincerely, 
+Stephen
+Approval Manager
 
