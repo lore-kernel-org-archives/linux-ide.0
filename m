@@ -1,42 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCHSET 8/9] prep for hotplug support
-Date: Thu, 27 Apr 2006 05:22:50 -0400
-Message-ID: <44508D6A.3050200@pobox.com>
-References: <11447643813451-git-send-email-htejun@gmail.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: AHCI suspend/resume patch can't work on Napa SDV
+Date: Thu, 27 Apr 2006 17:13:42 +0800
+Message-ID: <1146129222.5197.25.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49059 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964995AbWD0JW4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2006 05:22:56 -0400
-In-Reply-To: <11447643813451-git-send-email-htejun@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:48291 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S965004AbWD0JYW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Apr 2006 05:24:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
+To: hare@suse.com
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello, all.
-> 
-> This is the first take of prep-for-hotplug-support patchset.  As the
-> name suggests, this patchset prepares libata for hotplug support.
-> This patchset contains 15 patches.
-> 
-> #01-02	update sata_sil (hotplug related constants, new interrupt handler)
-> #03-04	misc libata preps
-> #05-12	prepare ata_bus_probe()
-> #13-15	hotplug flags, extra fields, hotplug_wq
+Hi, Hannes
 
-ACK, modulo the minor comments just sent.
+I applied your patch for AHCI suspend/resume to 2.6.16 and
+had a test on our Napa SDV.
 
-Also, in general libata needs a rethink when it comes to workqueues. 
-Sometimes a single thread is more appropriate than the workqueue default 
-of one-thread-per-CPU.  Using workqueues in the default state is quite 
-efficient, but can also given you a huge number of idle threads on a 
-$BIGNUM CPU box.  Workqueues on a 16-CPU box can be pretty insane...
+The test result is that this patch can't work on Napa SDV. In
+particular, when the system tried to resume from S3 state,
+the error message in dmesg is:
 
-	Jeff
+ata1: qc timeout (cmd 0xef)
+ata1: failed to set xfermode, disabled
+ata1: dev 0 configured for UDMA/100
 
+Could you give me some hint why the timeout happened? How to
+resolve this?
 
+I tried "restart port" and "hardreset" in resume function,
+but dev 0 still can't be waken up to life.
 
+Thanks,
+Forrest
