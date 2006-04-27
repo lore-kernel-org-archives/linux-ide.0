@@ -1,37 +1,32 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCHSET 7/9] add NCQ support, take 2
-Date: Thu, 27 Apr 2006 05:11:05 -0400
-Message-ID: <44508AA9.7030702@pobox.com>
-References: <1144763616819-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCHSET 6/9] new EH implementation, take 2
+Date: Thu, 27 Apr 2006 05:16:00 -0400
+Message-ID: <44508BD0.7040401@pobox.com>
+References: <11447633013561-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:17315 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964997AbWD0JLS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2006 05:11:18 -0400
-In-Reply-To: <1144763616819-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:27043 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964998AbWD0JQI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2006 05:16:08 -0400
+In-Reply-To: <11447633013561-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello, again.
-> 
-> This is the second take of add-NCQ-support patchset.  Changes from the
-> last take[L] are...
-> 
-> * ahci autopsy result is used to determine use_log_10h
-> 
-> * sata_sil24 NCQ support added
 
-I've skipped ahead in the review order a bit, to this patchset.  Its 
-fairly straightforward, so I ACK all 15 patches.
+General comment:
 
-I'm worried cruft still remains related to ATA_MAX_QUEUE, but its a 
-vague worry.   ATA_MAX_QUEUE magically changes a bunch of allocations 
-and loops, when changed, and I didn't take the time to audit each use.
+My general feeling as I read these patchsets is that the patches are a 
+bit /too/ split up.
+
+I know its largely a judgement call, but don't be afraid to submit 
+larger patches, particularly for new features like NCQ.  The several 
+patches are highly interdependent, and they are introducing new code, 
+might as well just lump them together.  Following the "one logical 
+change per patch" rule doesn't have to mean "add one new function per patch"
 
 	Jeff
 
