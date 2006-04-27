@@ -1,43 +1,39 @@
-From: Roger Heflin <rheflin@atipa.com>
-Subject: Re: Issues with sata_nv and 2 disks under 2.6.16 and 2.6.17-rc2
-Date: Wed, 26 Apr 2006 09:52:11 -0500
-Message-ID: <444F891B.3050808@atipa.com>
-References: <8E8F647D7835334B985D069AE964A4F7011B260D@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCHSET 7/9] add NCQ support, take 2
+Date: Thu, 27 Apr 2006 05:11:05 -0400
+Message-ID: <44508AA9.7030702@pobox.com>
+References: <1144763616819-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from EXCHG2003.microtech-ks.com ([24.124.14.122]:29705 "EHLO
-	EXCHG2003.microtech-ks.com") by vger.kernel.org with ESMTP
-	id S932463AbWDZOwS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Apr 2006 10:52:18 -0400
-In-Reply-To: <8E8F647D7835334B985D069AE964A4F7011B260D@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:17315 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964997AbWD0JLS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2006 05:11:18 -0400
+In-Reply-To: <1144763616819-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
-Cc: Linux-Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, lkosewsk@gmail.com, linux-ide@vger.kernel.org
 
-Fortier,Vincent [Montreal] wrote:
-> Is your OS installed either sda or sdb?
+Tejun Heo wrote:
+> Hello, again.
 > 
-> Because I get this type of message using a single disk... On which my FC5 stands...
+> This is the second take of add-NCQ-support patchset.  Changes from the
+> last take[L] are...
 > 
-> I'll give it a try tonight and see if I can cause the problem manually but I doubt I'll be able to stop the system from hanging...  Unless my bug is not related.
+> * ahci autopsy result is used to determine use_log_10h
 > 
-> - vin
-> 
->
+> * sata_sil24 NCQ support added
 
-Vin,
+I've skipped ahead in the review order a bit, to this patchset.  Its 
+fairly straightforward, so I ACK all 15 patches.
 
-Please don't top post, many will yell at you on this list for that.
+I'm worried cruft still remains related to ATA_MAX_QUEUE, but its a 
+vague worry.   ATA_MAX_QUEUE magically changes a bunch of allocations 
+and loops, when changed, and I didn't take the time to audit each use.
 
-OS is on sda, nothing is on sdb which is probably why I don't have the
-behavior happening at unexpected times, sdb won't be used except for
-during my test.
+	Jeff
 
-I believe I am seeing similar behavior on sata_mv controllers so
-it might be a more basic problem in libata, and not related to the specific
-sata_nv driver at all.
 
-                                     Roger
+
