@@ -1,95 +1,121 @@
-From: Roger Heflin <rheflin@atipa.com>
-Subject: Re: sata_mv issues with more than 1 disk in FC5 2.6.16-1.2096
-Date: Thu, 27 Apr 2006 10:06:53 -0500
-Message-ID: <4450DE0D.2090807@atipa.com>
-References: <4447EA40.9010503@atipa.com>
+From: jdi@l4x.org
+Subject: sata_sil24 resetting controller...
+Date: Thu, 27 Apr 2006 20:58:14 +0200
+Message-ID: <20060427185813.GB6039@l4x.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from EXCHG2003.microtech-ks.com ([24.124.14.122]:36874 "EHLO
-	EXCHG2003.microtech-ks.com") by vger.kernel.org with ESMTP
-	id S965145AbWD0PGz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Apr 2006 11:06:55 -0400
-In-Reply-To: <4447EA40.9010503@atipa.com>
+Received: from 10.121.9.213.dsl.getacom.de ([213.9.121.10]:27577 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S965014AbWD0S6S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Apr 2006 14:58:18 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Roger Heflin <rheflin@atipa.com>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: jdi@l4x.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Roger Heflin wrote:
-> Hello,
-> 
-> I know the FC5 2.6.16-1.2096 is based off of one of the 2.6.16
-> stable releases.   I am not sure exactly which one this is based
-> on.
-> 
-> I have several machines with this controller, the ones with a single
-> disks all work correctly using the Marvell controller.
-> 
-> An identical MB/controller/chassis fails when there are 2 disks
-> using software mirroring.  We have tested with 2 separate chassis,
-> both exhibit the same failure.
-> 
-> Moving the 2 disks to a different built-in sata controller
-> (sata_nv) results in the disks and the mirror working
-> correctly.
-> 
-> The errors that it returns are:
-> ata4: status=0xd0 { Busy }
-> ata2: status=0xd0 { Busy }
-> And the machine is terribly slow while this error is happening.
-> The error appears to be happening when the disks are trying
-> to be mounted.
-> 
-> We have tested the disk on a couple of different combinations of
-> ports and this does not seem to change anything.
-> 
-> The single disk machines don't get this error like the 2 disk
-> machines, though  they do get this error, every 30 minutes
-> or so (probably from  smartd), but this error does not
-> appear to be causing issues.
-> Apr 19 16:26:19 lab229 kernel: ata1: status=0xd0 { Busy }
-> Apr 19 16:26:19 lab229 kernel: ATA: abnormal status 0xD0 on
->     port 0xFFFFC2001012211C
-> 
-> Any thoughts?
->
+Hello,
+
+I just received a DawiControl DC-4300 SATA-2 RAID card
+(sil3124 based) together with a Western Digital WD3200KS 
+hard drive which should support sata2 and ncq in its
+full glory. Basic read/write tests with dd went ok,
+so I started to reshape my raid5 array. Since the reshape
+started my kernel log gets swamped with the following messages:
+
+[4297871.909000] sata_sil24 ata1: resetting controller...
+[4297871.909000] ata1: status=0x50 { DriveReady SeekComplete }
+[4297871.909000] sdc: Current: sense key=0x0
+[4297871.909000]     ASC=0x0 ASCQ=0x0
+[4297873.266000] ata1: error interrupt on port0
+[4297873.266000]   stat=0x80000001 irq=0xb60002 cmd_err=35 sstatus=0x123
+serror=0x0[4297873.266000] sata_sil24 ata1: resetting controller...
+[4297873.267000] ata1: status=0x50 { DriveReady SeekComplete }
+[4297873.267000] sdc: Current: sense key=0x0
+[4297873.267000]     ASC=0x0 ASCQ=0x0
+
+The time between these events varies from .5s to up to 10s, resync speed is
+pretty bad (6mb/s) but appears(!) to be working.
+This is with vanilla 2.6.17-rc3, sata drivers built into the kernel.
+Find below /proc/interrupts and lspci output. Boot dmesg output was washed
+away by above messages, sorry.
+
+What's the cause of the error, can I ignore it or will it destroy
+my raid eventually? I'm now about 5% through the resync process, with 
+an estimated finish in 1260 minutes.
+
+Thanks,
+
+Jan
 
 
-A follow up, it passes the test with nosmp set, it fails every time
-without nosmp.
+$ lspci -vv -s 03:04.0
+0000:03:04.0 RAID bus controller: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller (rev 01)
+	Subsystem: Silicon Image, Inc.: Unknown device 7124
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping+ SERR- FastB2B-
+	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 32
+	Interrupt: pin A routed to IRQ 22
+	Region 0: Memory at fa800000 (64-bit, non-prefetchable) [size=128]
+	Region 2: Memory at fa000000 (64-bit, non-prefetchable) [size=32K]
+	Region 4: I/O ports at 9400 [size=16]
+	Expansion ROM at fe900000 [disabled] [size=512K]
+	Capabilities: [64] Power Management version 2
+		Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+	Capabilities: [40] PCI-X non-bridge device.
+		Command: DPERE- ERO+ RBC=0 OST=5
+		Status: Bus=3 Dev=4 Func=0 64bit+ 133MHz+ SCD- USC-, DC=simple, DMMRBC=2, DMOST=5, DMCRS=4, RSCEM-
+	Capabilities: [54] Message Signalled Interrupts: 64bit+ Queue=0/0 Enable-
+		Address: 0000000000000000  Data: 0000
 
-acpi_irq_nobalance and noirqbalance and the irqbalance service
-stopped or never started it works better, it takes longer to lock
-up, and after it locks up it appears to come back and work for
-around 30-60 seconds and then starts working again after being
-hung for 30-60 seconds, but eventually it appears to completely
-lock up and not work anymore.   MTBF is around 30 seconds for
-the first event, and it stops working completely after several
-minutes  vs. 1-2 seconds for the irq balancing enabled. The output of
-/proc/interrupts does confirm that the interrupts are not being balanced.
+$ lspci
 
+0000:00:00.0 Host bridge: Intel Corporation E7501 Memory Controller Hub (rev 01)
+0000:00:00.1 ff00: Intel Corporation E7500/E7501 Host RASUM Controller (rev 01)
+0000:00:02.0 PCI bridge: Intel Corporation E7500/E7501 Hub Interface B PCI-to-PCI Bridge (rev 01)
+0000:00:1d.0 USB Controller: Intel Corporation 82801CA/CAM USB (Hub #1) (rev 02)
+0000:00:1d.1 USB Controller: Intel Corporation 82801CA/CAM USB (Hub #2) (rev 02)
+0000:00:1d.2 USB Controller: Intel Corporation 82801CA/CAM USB (Hub #3) (rev 02)
+0000:00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 42)
+0000:00:1f.0 ISA bridge: Intel Corporation 82801CA LPC Interface Controller (rev 02)
+0000:00:1f.1 IDE interface: Intel Corporation 82801CA Ultra ATA Storage Controller (rev 02)
+0000:01:1c.0 PIC: Intel Corporation 82870P2 P64H2 I/OxAPIC (rev 04)
+0000:01:1d.0 PCI bridge: Intel Corporation 82870P2 P64H2 Hub PCI Bridge (rev 04)
+0000:01:1e.0 PIC: Intel Corporation 82870P2 P64H2 I/OxAPIC (rev 04)
+0000:01:1f.0 PCI bridge: Intel Corporation 82870P2 P64H2 Hub PCI Bridge (rev 04)
+0000:02:03.0 Mass storage controller: Promise Technology, Inc. PDC20268 (Ultra100 TX2) (rev 02)
+0000:02:05.0 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
+0000:02:05.1 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
+0000:03:03.0 Ethernet controller: Intel Corporation 82544GC Gigabit Ethernet Controller (LOM) (rev 02)
+0000:03:04.0 RAID bus controller: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller (rev 01)
+0000:04:01.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet Controller (rev 02)
+0000:04:02.0 VGA compatible controller: ATI Technologies Inc Rage XL (rev 27)
+0000:04:03.0 Multimedia video controller: Conexant CX23880/1/2/3 PCI Video and Audio Decoder (rev 05)
+0000:04:03.2 Multimedia controller: Conexant CX23880/1/2/3 PCI Video and Audio Decoder [MPEG Port] (rev 05)
+0000:04:03.4 Multimedia controller: Conexant CX23880/1/2/3 PCI Video and Audio Decoder [IR Port] (rev 05)
 
-To make the failure happen it appears to require several conditions:
-SMP 2 disks or more doing heavy IO.
+$ cat /proc/interrupts
 
-Having the irq's balanced appears to make the problem happen much faster,
-but not having the irq's balanced does not appear to stop the problem.
-
-I have not tested the nosmp option long enough to conclude that it
-is very unlikely to occur in that case.
-
-With "noapic" things seem to be stable and seem to work with both disk
-doing io, and this is with the irq's still being balanced.
-
-When it works the speeds are good in all cases 65MiB/second for the first
-disk, and 130MiB/second when the second disk is added, all tested with dd.
-
-What does noapic fixing the problem say about the cause
-of the underlying issue?
-
-                                      Roger
-
-
-
+           CPU0       CPU1       CPU2       CPU3       
+  0:     585143     480193    1343927    1340601    IO-APIC-edge  timer
+  1:          9          0          1          0    IO-APIC-edge  i8042
+  7:          0          0          0          0    IO-APIC-edge  parport0
+  8:          4          0          0          0    IO-APIC-edge  rtc
+  9:          0          0          0          0   IO-APIC-level  acpi
+ 14:     206162     136159     141145     134456    IO-APIC-edge  ide0
+ 16:    3024021          0          0          0   IO-APIC-level  eth0
+ 17:        139          0      48709          0   IO-APIC-level  eth1
+ 18:          0          0          0          0   IO-APIC-level  uhci_hcd:usb3
+ 19:      83632     396995     247509     324823   IO-APIC-level  ide2, ide3
+ 20:      12682      32985      15646      34963   IO-APIC-level  aic79xx
+ 21:         15          0          0          0   IO-APIC-level  aic79xx
+ 22:     103851     230769     219349     209174   IO-APIC-level  libata
+ 23:          0          0          0          0   IO-APIC-level  uhci_hcd:usb1
+ 24:          0          0          0          0   IO-APIC-level  uhci_hcd:usb2
+ 25:      46521     202715     249695     116146   IO-APIC-level  cx88[0]
+NMI:          0          0          0          0 
+LOC:    3749323    3749326    3749308    3749317 
+ERR:          0
+MIS:          0
