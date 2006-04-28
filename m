@@ -1,89 +1,90 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 resetting controller...
-Date: Fri, 28 Apr 2006 08:52:45 +0900
-Message-ID: <4451594D.5060705@gmail.com>
-References: <20060427185813.GB6039@l4x.org>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len (resend)
+Date: Fri, 28 Apr 2006 09:28:02 -0500
+Message-ID: <44522672.5010607@us.ibm.com>
+References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.183]:56213 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751727AbWD0XwY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2006 19:52:24 -0400
-Received: by pproxy.gmail.com with SMTP id i49so2237711pye
-        for <linux-ide@vger.kernel.org>; Thu, 27 Apr 2006 16:52:24 -0700 (PDT)
-In-Reply-To: <20060427185813.GB6039@l4x.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jdi@l4x.org
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-jdi@l4x.org wrote:
-> Hello,
-> 
-> I just received a DawiControl DC-4300 SATA-2 RAID card
-> (sil3124 based) together with a Western Digital WD3200KS 
-> hard drive which should support sata2 and ncq in its
-> full glory. Basic read/write tests with dd went ok,
-> so I started to reshape my raid5 array. Since the reshape
-> started my kernel log gets swamped with the following messages:
-> 
-> [4297871.909000] sata_sil24 ata1: resetting controller...
-> [4297871.909000] ata1: status=0x50 { DriveReady SeekComplete }
-> [4297871.909000] sdc: Current: sense key=0x0
-> [4297871.909000]     ASC=0x0 ASCQ=0x0
-> [4297873.266000] ata1: error interrupt on port0
-> [4297873.266000]   stat=0x80000001 irq=0xb60002 cmd_err=35 sstatus=0x123
+James,
 
-cmd_err 35 is...
+Any comments on the patch below?
 
-PORT_CERR_XFR_PCIPERR	= 35, /* PSD ecode 11 - PCI prity err during 
-transfer */
+Thanks
 
-> serror=0x0[4297873.266000] sata_sil24 ata1: resetting controller...
-> [4297873.267000] ata1: status=0x50 { DriveReady SeekComplete }
-> [4297873.267000] sdc: Current: sense key=0x0
-> [4297873.267000]     ASC=0x0 ASCQ=0x0
-> 
-> The time between these events varies from .5s to up to 10s, resync speed is
-> pretty bad (6mb/s) but appears(!) to be working.
-> This is with vanilla 2.6.17-rc3, sata drivers built into the kernel.
-> Find below /proc/interrupts and lspci output. Boot dmesg output was washed
-> away by above messages, sorry.
-> 
-> What's the cause of the error, can I ignore it or will it destroy
-> my raid eventually? I'm now about 5% through the resync process, with 
-> an estimated finish in 1260 minutes.
-> 
-> Thanks,
-> 
-> Jan
-> 
-> 
-> $ lspci -vv -s 03:04.0
-> 0000:03:04.0 RAID bus controller: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller (rev 01)
-> 	Subsystem: Silicon Image, Inc.: Unknown device 7124
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping+ SERR- FastB2B-
-> 	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-> 	Latency: 32
-> 	Interrupt: pin A routed to IRQ 22
-> 	Region 0: Memory at fa800000 (64-bit, non-prefetchable) [size=128]
-> 	Region 2: Memory at fa000000 (64-bit, non-prefetchable) [size=32K]
-> 	Region 4: I/O ports at 9400 [size=16]
-> 	Expansion ROM at fe900000 [disabled] [size=512K]
-> 	Capabilities: [64] Power Management version 2
-> 		Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-> 		Status: D0 PME-Enable- DSel=0 DScale=1 PME-
-> 	Capabilities: [40] PCI-X non-bridge device.
-> 		Command: DPERE- ERO+ RBC=0 OST=5
-> 		Status: Bus=3 Dev=4 Func=0 64bit+ 133MHz+ SCD- USC-, DC=simple, DMMRBC=2, DMOST=5, DMCRS=4, RSCEM-
+Brian
 
-So, slow down the PCI-X bus.  It can usually be done from BIOS setup 
-menu.  Does your machine has a riser board which extends or changes 
-orientation of PCI-X bus?  Motherboard vendors describe the bus 
-frequency limit when using riser boards in the manual but sometimes 
-server vendors forget to set them.  Heck, some of them don't even know 
-what that is.
+Brian King wrote:
+> Add a max_cmd_len field to the scsi_device struct
+> to allow for per device limits of allowable command
+> lengths. This patch was submitted earlier and resulted
+> in a bit of discussion regarding whether or not
+> CDB length is a limitation of the host or the device.
+> For ATA, both the host and the device can limit the
+> CDB length. Currently libata reads the IDENTIFY
+> PACKET DEVICE data for an ATAPI device and sets
+> the max_cmd_len in the scsi host for the maximum
+> supported CDB length of all ATA/ATAPI devices attached
+> to the same scsi host. This patch allows libata to
+> set the max CDB length on a per device basis and
+> allows the SAS/SATA HBA to set its own max command
+> length in the scsi host template.
+> 
+> Signed-off-by: Brian King <brking@us.ibm.com>
+> ---
+> 
+>  libata-dev-bjking1/drivers/scsi/scsi.c        |    3 ++-
+>  libata-dev-bjking1/drivers/scsi/scsi_scan.c   |    1 +
+>  libata-dev-bjking1/include/scsi/scsi_device.h |    1 +
+>  3 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff -puN include/scsi/scsi_device.h~scsi_device_cdb_len include/scsi/scsi_device.h
+> --- libata-dev/include/scsi/scsi_device.h~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
+> +++ libata-dev-bjking1/include/scsi/scsi_device.h	2006-04-17 17:17:50.000000000 -0500
+> @@ -72,6 +72,7 @@ struct scsi_device {
+>  	unsigned int manufacturer;	/* Manufacturer of device, for using 
+>  					 * vendor-specific cmd's */
+>  	unsigned sector_size;	/* size in bytes */
+> +	unsigned char max_cmd_len;
+>  
+>  	void *hostdata;		/* available to low-level driver */
+>  	char type;
+> diff -puN drivers/scsi/scsi_scan.c~scsi_device_cdb_len drivers/scsi/scsi_scan.c
+> --- libata-dev/drivers/scsi/scsi_scan.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
+> +++ libata-dev-bjking1/drivers/scsi/scsi_scan.c	2006-04-17 17:17:50.000000000 -0500
+> @@ -218,6 +218,7 @@ static struct scsi_device *scsi_alloc_sd
+>  	sdev->lun = lun;
+>  	sdev->channel = starget->channel;
+>  	sdev->sdev_state = SDEV_CREATED;
+> +	sdev->max_cmd_len = MAX_COMMAND_SIZE;
+>  	INIT_LIST_HEAD(&sdev->siblings);
+>  	INIT_LIST_HEAD(&sdev->same_target_siblings);
+>  	INIT_LIST_HEAD(&sdev->cmd_list);
+> diff -puN drivers/scsi/scsi.c~scsi_device_cdb_len drivers/scsi/scsi.c
+> --- libata-dev/drivers/scsi/scsi.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
+> +++ libata-dev-bjking1/drivers/scsi/scsi.c	2006-04-17 17:17:50.000000000 -0500
+> @@ -610,7 +610,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
+>  	 * Before we queue this command, check if the command
+>  	 * length exceeds what the host adapter can handle.
+>  	 */
+> -	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
+> +	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len ||
+> +	    CDB_SIZE(cmd) > cmd->device->max_cmd_len) {
+>  		SCSI_LOG_MLQUEUE(3,
+>  				printk("queuecommand : command too long.\n"));
+>  		cmd->result = (DID_ABORT << 16);
+> _
+
 
 -- 
-tejun
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
