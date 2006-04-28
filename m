@@ -1,90 +1,93 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len (resend)
-Date: Fri, 28 Apr 2006 09:28:02 -0500
-Message-ID: <44522672.5010607@us.ibm.com>
-References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
-Reply-To: brking@us.ibm.com
+From: "eyck" <eyck@ghost.anime.pl>
+Subject: [PATCH] 2.4.x sata_promis pci_ids update
+Date: Fri, 28 Apr 2006 16:32:19 +0200
+Message-ID: <20060428143219.GD24713@ghost.anime.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Content-Type: multipart/mixed; boundary="oyUTqETQ0mS9luUI"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ghost.anime.pl ([195.242.124.71]:62606 "EHLO srv.nn")
+	by vger.kernel.org with ESMTP id S965208AbWD1OcY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Apr 2006 10:32:24 -0400
+Received: from localhost ([127.0.0.1] ident=eyck)
+	by srv.nn with esmtp (Exim 4.50)
+	id 1FZU17-0005O0-HQ
+	for linux-ide@vger.kernel.org; Fri, 28 Apr 2006 16:32:21 +0200
+Received: from srv.nn ([127.0.0.1])
+	by localhost (srv [81.219.64.71]) (amavisd-new, port 20024)
+	with ESMTP id 16356-08 for <linux-ide@vger.kernel.org>;
+	Fri, 28 Apr 2006 16:32:21 +0200 (CEST)
+Received: from ghost.nn ([10.1.0.30] helo=desktop.nn)
+	by srv.nn with smtp (Exim 4.50)
+	id 1FZU15-0005Nt-Vb
+	for linux-ide@vger.kernel.org; Fri, 28 Apr 2006 16:32:21 +0200
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-James,
-
-Any comments on the patch below?
-
-Thanks
-
-Brian
-
-Brian King wrote:
-> Add a max_cmd_len field to the scsi_device struct
-> to allow for per device limits of allowable command
-> lengths. This patch was submitted earlier and resulted
-> in a bit of discussion regarding whether or not
-> CDB length is a limitation of the host or the device.
-> For ATA, both the host and the device can limit the
-> CDB length. Currently libata reads the IDENTIFY
-> PACKET DEVICE data for an ATAPI device and sets
-> the max_cmd_len in the scsi host for the maximum
-> supported CDB length of all ATA/ATAPI devices attached
-> to the same scsi host. This patch allows libata to
-> set the max CDB length on a per device basis and
-> allows the SAS/SATA HBA to set its own max command
-> length in the scsi host template.
-> 
-> Signed-off-by: Brian King <brking@us.ibm.com>
-> ---
-> 
->  libata-dev-bjking1/drivers/scsi/scsi.c        |    3 ++-
->  libata-dev-bjking1/drivers/scsi/scsi_scan.c   |    1 +
->  libata-dev-bjking1/include/scsi/scsi_device.h |    1 +
->  3 files changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff -puN include/scsi/scsi_device.h~scsi_device_cdb_len include/scsi/scsi_device.h
-> --- libata-dev/include/scsi/scsi_device.h~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-> +++ libata-dev-bjking1/include/scsi/scsi_device.h	2006-04-17 17:17:50.000000000 -0500
-> @@ -72,6 +72,7 @@ struct scsi_device {
->  	unsigned int manufacturer;	/* Manufacturer of device, for using 
->  					 * vendor-specific cmd's */
->  	unsigned sector_size;	/* size in bytes */
-> +	unsigned char max_cmd_len;
->  
->  	void *hostdata;		/* available to low-level driver */
->  	char type;
-> diff -puN drivers/scsi/scsi_scan.c~scsi_device_cdb_len drivers/scsi/scsi_scan.c
-> --- libata-dev/drivers/scsi/scsi_scan.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/scsi_scan.c	2006-04-17 17:17:50.000000000 -0500
-> @@ -218,6 +218,7 @@ static struct scsi_device *scsi_alloc_sd
->  	sdev->lun = lun;
->  	sdev->channel = starget->channel;
->  	sdev->sdev_state = SDEV_CREATED;
-> +	sdev->max_cmd_len = MAX_COMMAND_SIZE;
->  	INIT_LIST_HEAD(&sdev->siblings);
->  	INIT_LIST_HEAD(&sdev->same_target_siblings);
->  	INIT_LIST_HEAD(&sdev->cmd_list);
-> diff -puN drivers/scsi/scsi.c~scsi_device_cdb_len drivers/scsi/scsi.c
-> --- libata-dev/drivers/scsi/scsi.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/scsi.c	2006-04-17 17:17:50.000000000 -0500
-> @@ -610,7 +610,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
->  	 * Before we queue this command, check if the command
->  	 * length exceeds what the host adapter can handle.
->  	 */
-> -	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
-> +	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len ||
-> +	    CDB_SIZE(cmd) > cmd->device->max_cmd_len) {
->  		SCSI_LOG_MLQUEUE(3,
->  				printk("queuecommand : command too long.\n"));
->  		cmd->result = (DID_ABORT << 16);
-> _
+To: linux-ide@vger.kernel.org
 
 
+--oyUTqETQ0mS9luUI
+Content-Type: text/plain; charset=iso-8859-2
+Content-Disposition: inline
+
+Hi, 
+ this little update (taken from 2.6) makes 2.4.32 recognize 'newer' promis
+controllers.
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Key fingerprint = 40D0 9FFB 9939 7320 8294  05E0 BCC7 02C4 75CC 50D9
+ Total Existance Failure
+
+--oyUTqETQ0mS9luUI
+Content-Type: text/plain; charset=iso-8859-2
+Content-Disposition: attachment; filename="012-promis.pci.ids.103.diff"
+
+diff -ruN linux-2.4.32.orig/drivers/scsi/sata_promise.c linux-2.4.32/drivers/scsi/sata_promise.c
+--- linux-2.4.32.orig/drivers/scsi/sata_promise.c	2005-11-16 20:12:54.000000000 +0100
++++ linux-2.4.32/drivers/scsi/sata_promise.c	2006-04-25 19:46:35.000000000 +0200
+@@ -42,6 +42,7 @@
+ #define DRV_NAME	"sata_promise"
+ #define DRV_VERSION	"1.01"
+ 
++// pci device id list from 1.03
+ 
+ enum {
+ 	PDC_PKT_SUBMIT		= 0x40, /* Command packet pointer addr */
+@@ -161,9 +162,12 @@
+ 	},
+ };
+ 
+-static struct pci_device_id pdc_ata_pci_tbl[] = {
++
++static const struct pci_device_id pdc_ata_pci_tbl[] = {
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3371, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
++	{ PCI_VENDOR_ID_PROMISE, 0x3570, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3571, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3373, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+@@ -176,11 +180,17 @@
+ 	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3d75, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
++	{ PCI_VENDOR_ID_PROMISE, 0x3d73, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_2037x },
+ 
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3318, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20319 },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3319, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20319 },
++	{ PCI_VENDOR_ID_PROMISE, 0x3519, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_20319 },
++	{ PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_20319 },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20319 },
+ 
+@@ -190,3 +200,3 @@
+ 	{ }	/* terminate list */
+ };
+ 
+
+
+--oyUTqETQ0mS9luUI--
