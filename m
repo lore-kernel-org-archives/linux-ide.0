@@ -1,137 +1,47 @@
-From: Jan Dittmer <jdi@l4x.org>
-Subject: Re: sata_sil24 resetting controller...
-Date: Sat, 29 Apr 2006 12:06:24 +0200
-Message-ID: <44533AA0.5060002@l4x.org>
-References: <20060427185813.GB6039@l4x.org> <4451594D.5060705@gmail.com> <4452AFAF.3000101@l4x.org> <4452B165.6090905@gmail.com> <445329A0.8020001@vip.cybercity.dk>
+From: Hugh Dickins <hugh@veritas.com>
+Subject: Re: sata suspend resume ...
+Date: Sat, 29 Apr 2006 19:06:51 +0100 (BST)
+Message-ID: <Pine.LNX.4.64.0604291901500.4575@blonde.wat.veritas.com>
+References: <Pine.LNX.4.64.0604192324040.29606@indiana.corp.fedex.com>
+ <Pine.LNX.4.64.0604191659230.7660@blonde.wat.veritas.com> <20060420134713.GA2360@ucw.cz>
+ <Pine.LNX.4.64.0604211333050.4891@blonde.wat.veritas.com>
+ <20060421163930.GA1648@elf.ucw.cz> <Pine.LNX.4.64.0604212108010.7531@blonde.wat.veritas.com>
+ <4449504D.1040901@garzik.org> <Pine.LNX.4.64.0604231343010.2515@blonde.wat.veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 10.121.9.213.dsl.getacom.de ([213.9.121.10]:59101 "EHLO
-	ds666.l4x.org") by vger.kernel.org with ESMTP id S1751859AbWD2KGj
+Received: from silver.veritas.com ([143.127.12.111]:24163 "EHLO
+	silver.veritas.com") by vger.kernel.org with ESMTP id S1750770AbWD2SGy
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Apr 2006 06:06:39 -0400
-In-Reply-To: <445329A0.8020001@vip.cybercity.dk>
+	Sat, 29 Apr 2006 14:06:54 -0400
+Received: from [172.21.56.56]([172.21.56.56]) (2345 bytes) by megami.veritas.com
+	via sendmail with P:esmtp/R:smart_host/T:smtp
+	(sender: <hugh@veritas.com>)
+	id <m1FZtqH-0001s0C@megami.veritas.com>
+	for <linux-ide@vger.kernel.org>; Sat, 29 Apr 2006 11:06:53 -0700 (PDT)
+	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
+In-Reply-To: <Pine.LNX.4.64.0604231343010.2515@blonde.wat.veritas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: mogensv@vip.cybercity.dk
-Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Pavel Machek <pavel@suse.cz>, Arkadiusz Miskiewicz <arekm@maven.pl>, Jeff Chua <jeffchua@silk.corp.fedex.com>, Matt Mackall <mpm@selenic.com>, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Mogens Valentin wrote:
-> Tejun Heo wrote:
->> Jan Dittmer wrote:
->>
->>> Tejun Heo wrote:
->>>
->>>>> serror=0x0[4297873.266000] sata_sil24 ata1: resetting controller...
->>>>> [4297873.267000] ata1: status=0x50 { DriveReady SeekComplete }
->>>>> [4297873.267000] sdc: Current: sense key=0x0
->>>>> [4297873.267000]     ASC=0x0 ASCQ=0x0
->>>>>
->>>>> The time between these events varies from .5s to up to 10s, resync 
->>>>> speed is
->>>>> pretty bad (6mb/s) but appears(!) to be working.
->>>>> This is with vanilla 2.6.17-rc3, sata drivers built into the kernel.
->>>>> Find below /proc/interrupts and lspci output. Boot dmesg output was 
->>>>> washed
->>>>> away by above messages, sorry.
->>>>>
->>>>> What's the cause of the error, can I ignore it or will it destroy
->>>>> my raid eventually? I'm now about 5% through the resync process, 
->>>>> with an estimated finish in 1260 minutes.
->>>>>
->>>>>
->>>>> $ lspci -vv -s 03:04.0
->>>>> 0000:03:04.0 RAID bus controller: Silicon Image, Inc. SiI 3124 PCI-X 
->>>>> Serial ATA Controller (rev 01)
->>>>>     Subsystem: Silicon Image, Inc.: Unknown device 7124
->>>>>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
->>>>> ParErr- Stepping+ SERR- FastB2B-
->>>>>     Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
->>>>> <TAbort- <MAbort- >SERR- <PERR-
->>>>>     Latency: 32
->>>>>     Interrupt: pin A routed to IRQ 22
->>>>>     Region 0: Memory at fa800000 (64-bit, non-prefetchable) [size=128]
->>>>>     Region 2: Memory at fa000000 (64-bit, non-prefetchable) [size=32K]
->>>>>     Region 4: I/O ports at 9400 [size=16]
->>>>>     Expansion ROM at fe900000 [disabled] [size=512K]
->>>>>     Capabilities: [64] Power Management version 2
->>>>>         Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
->>>>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>>>>         Status: D0 PME-Enable- DSel=0 DScale=1 PME-
->>>>>     Capabilities: [40] PCI-X non-bridge device.
->>>>>         Command: DPERE- ERO+ RBC=0 OST=5
->>>>>         Status: Bus=3 Dev=4 Func=0 64bit+ 133MHz+ SCD- USC-, 
->>>>> DC=simple, DMMRBC=2, DMOST=5, DMCRS=4, RSCEM-
->>>> So, slow down the PCI-X bus.  It can usually be done from BIOS setup 
->>>> menu.  Does your machine has a riser board which extends or changes 
->>>> orientation of PCI-X bus?  Motherboard vendors describe the bus 
->>>> frequency limit when using riser boards in the manual but sometimes 
->>>> server vendors forget to set them.  Heck, some of them don't even 
->>>> know what that is.
->>>
->>> Hmm I don't have a riser card and I don't have a setting for the 
->>> frequency,
->>> nor a jumper.
->>> I plugged the card in another slot, next to a 66MHz only card. So now 
->>> I've
->>> it working with 66MHz (checked with lspci), but my drive isn't 
->>> initialized
->>> properly anymore:
->>>
->>> [4294690.486000] libata version 1.20 loaded.
->>> [4294690.486000] sata_sil24 0000:03:04.0: version 0.23
->>> [4294690.486000] ACPI: PCI Interrupt 0000:03:04.0[A] -> GSI 24 (level, 
->>> low) -> IRQ 22
->>> [4294690.487000] ata1: SATA max UDMA/100 cmd 0xF8810000 ctl 0x0 bmdma 
->>> 0x0 irq 22
->>> [4294690.487000] ata2: SATA max UDMA/100 cmd 0xF8812000 ctl 0x0 bmdma 
->>> 0x0 irq 22
->>> [4294690.487000] ata3: SATA max UDMA/100 cmd 0xF8814000 ctl 0x0 bmdma 
->>> 0x0 irq 22
->>> [4294690.487000] ata4: SATA max UDMA/100 cmd 0xF8816000 ctl 0x0 bmdma 
->>> 0x0 irq 22
->>> [4294690.800000] ata1: SATA link up 3.0 Gbps (SStatus 123)
->>> [4294690.801000] ata1: dev 0 cfg 49:5145 82:0000 83:0000 84:0000 
->>> 85:0000 86:0000 87:0000 88:0000
->>> [4294690.801000] ata1: dev 0 ATA-0, max MWDMA2, 16514064 sectors: CHS 
->>> 16383/16/63
->>> [4294690.802000] ata1: dev 0 model number mismatch 'WDC 
->>> WD3200re/sasats_li42S' != ''
->>> [4294690.802000] ata1: dev 0 revalidation failed (errno=-19)
->>> [4294690.802000] ata1: failed to revalidate after set xfermode
->>> [4294690.802000] scsi2 : sata_sil24
->>> [4294691.003000] ata2: SATA link down (SStatus 0)
->>> [4294691.003000] scsi3 : sata_sil24
->>> [4294691.204000] ata3: SATA link down (SStatus 0)
->>> [4294691.204000] scsi4 : sata_sil24
->>> [4294691.405000] ata4: SATA link down (SStatus 0)
->>> [4294691.405000] scsi5 : sata_sil24
->>>
->>> Can this still be a pci bus problem? I get the same error on every 
->>> reboot.
->> Hmmm.. max MWDMA2?  Something is very off with your configuration.  Can 
->> you try the card in another box or on a regular PCI slot?
+On Sun, 23 Apr 2006, Hugh Dickins wrote:
+> On Fri, 21 Apr 2006, Jeff Garzik wrote:
 > 
-> Since moving the card to another slot changes the behaviour/problem, I'm 
-> thinking it might be a mobo implementation problem with slots 
-> interacting WRT IRQ, like in the older PCI-IRQ problem days.
+> > So you really want an ata_make_sure_bus_is_awake_and_working() called at that
+> > location.  ata_busy_sleep()'s purpose is to bring a PATA-like bus to the
+> > bus-idle state.  So, when working on suspend/resume, the software needs to
+> > have points at which the bus state is controlled/queried/asserted.
 > 
-> You might try shifting that card and other cards in various slots and 
-> dump the IRQ table for each combination. Maybe simply take out any other 
-> cards you can live without while trying out the various slots.
+> As you can see from my questions, I haven't a clue around here.  So for
+> now I'll just have to keep that ata_busy_sleep with the patches I apply
+> to my kernel, until someone with a clue makes it redundant.  And it is
+> now there in the LKML archives for those who find it useful.
 
-I shifted the sata card into a 66MHz, 32bit PCI slot now and the
-problems went away. Just for the record, this is an Asus PU-DLS
-mainboard with E7501 chipset. Now I can dd from all devices without
-any error messages, giving me about 360mb/s continuous throughput for
-6 devices which isn't that bad I suppose.
-The card gets assigned irq 22 in both configurations but in the
-latter the irq is shared with the on-board usb-uhci controller
-which somehow seems to work better...
+I'm glad to report that my ata_busy_sleep is already unnecessary in
+2.6.17-rc2-mm1 (and probably in at least -rc1-mm3 before it): unlike in
+2.6.17-rc3, T43p resumes reliably from RAM with unpatched libata-core.c.
+Something has gone seriously right!  Thanks...
 
-Thanks for all your help,
-
-Jan
-
-
+Hugh
