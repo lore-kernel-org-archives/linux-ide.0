@@ -1,7 +1,7 @@
-From: "Dr. Denis Martin" <dmartin7s@verizon.net>
-Subject: xewobisixe
-Date: Mon, 1 May 2006 19:30:51 +0000 (UTC)
-Message-ID: <000301c66c8d$0000624a$468fa8c0@zehec>
+From: "Dr. Denis Martin" <dmartin567vpi@verizon.net>
+Subject: jewacave
+Date: Tue, 2 May 2006 11:38:49 +0000 (UTC)
+Message-ID: <000401c66ea6$000040c2$2af5240a@zewuk>
 Mime-Version: 1.0
 Content-Type: text/plain;
         format=flowed;
@@ -9,14 +9,14 @@ Content-Type: text/plain;
         reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [60.216.79.34] ([60.216.79.34]:7434 "HELO verizon.net")
-	by vger.kernel.org with SMTP id S932202AbWEATai (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 May 2006 15:30:38 -0400
-Date: Mon, 1 May 2006 03:35:57 0800
+Received: from [221.15.47.203] ([221.15.47.203]:63756 "HELO verizon.net")
+	by vger.kernel.org with SMTP id S964782AbWEBLie (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 May 2006 07:38:34 -0400
+Date: Wed, 3 May 2006 19:41:57 0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Would u want your pharmaceuticals online ? http://eastme.com/
+Do u require prefilled pharmaceuticals online ? http://faxou.com/
 
 
