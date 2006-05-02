@@ -1,15 +1,16 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH][RFT] Fix HPT37x timing tables
-Date: Wed, 03 May 2006 01:55:52 +0400
-Message-ID: <4457D568.6090001@ru.mvista.com>
+Subject: [PATCH][RFT] Fix HPT3xx hotswap support
+Date: Wed, 03 May 2006 02:14:42 +0400
+Message-ID: <4457D9D2.30206@ru.mvista.com>
 References: <444B3BDE.1030106@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------060201070604090707050609"
+ boundary="------------090500070209040901080500"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:3534 "HELO mail.dev.rtsoft.ru")
-	by vger.kernel.org with SMTP id S964987AbWEBV5H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 May 2006 17:57:07 -0400
+Received: from rtsoft2.corbina.net ([85.21.88.2]:56782 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S964825AbWEBWPs
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 May 2006 18:15:48 -0400
 In-Reply-To: <444B3BDE.1030106@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -17,258 +18,208 @@ To: Andrew Morton <akpm@osdl.org>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 This is a multi-part message in MIME format.
---------------060201070604090707050609
+--------------090500070209040901080500
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
 Hello.
 
-    Fix/remove bad/unused timing tables: HPT370/A 66 MHz tables weren't really
-needed (the chips are not UltraATA/133 capable and shouldn't support 66 MHz
-PCI) and had many modes over- and underclocked, HPT372 33 MHz table was in
-fact for 66 MHz and 50 MHz table missed UltraDMA mode 6, HPT374 33 MHz table
-was really for 50 MHz... (Actually, HPT370/A 33 MHz tables also have issues.
-e.g. HPT370 has PIO modes 0/1 overlocked.)
-    There's also no need in the separate HPT374 tables because HPT372 timings
-should be the same (and those tables has UltraDMA mode 6 which HPT374 supports
-depending on HPT374_ALLOW_ATA133_6 #define)...
-    Have been tested and works fine on HPT370 and 371N...
+    Fix the broken hotswap code: on HPT37x it caused RESET- to glitch  when
+tristating the bus (the MISC control 3/6 and soft control 2 need to be
+written to in the certain order), and for HPT36x the obsolete
+HDIO_TRISTATE_HWIF ioctl() handler was called instead which treated the state
+argument wrong. Also, get rid of the soft control reg. 1 wtite to enable IDE
+interrupt -- this is done in init_hpt37x() already...
+    Have been tested on HPT370 and 371N. Should apply on top of the HPT37x
+timing table fix.
 
 MBR, Sergei
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 
-
-
---------------060201070604090707050609
+--------------090500070209040901080500
 Content-Type: text/plain;
- name="HPT37x-fix-timing-tables.patch"
+ name="HPT3xx-fix-hotswap.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="HPT37x-fix-timing-tables.patch"
+ filename="HPT3xx-fix-hotswap.patch"
 
 Index: linus/drivers/ide/pci/hpt366.c
 ===================================================================
 --- linus.orig/drivers/ide/pci/hpt366.c
 +++ linus/drivers/ide/pci/hpt366.c
-@@ -67,6 +67,10 @@
-  * - add support for HPT302N and HPT371N clocking (the same as for HPT372N)
-  * - HPT371/N are single channel chips, so avoid touching the primary channel
-  *   which exists only virtually (there's no pins for it)
-+ * - fix/remove bad/unused timing tables: HPT370/A  66 MHz tables weren't really
-+ *   needed and had many modes over- and  underclocked,  HPT372 33 MHz table was
-+ *   for 66 MHz and 50 MHz table missed UltraDMA mode 6, HPT374 33 MHz table was
-+ *   really for 50 MHz; switch to using HPT372 tables for HPT374...
+@@ -71,6 +71,8 @@
+  *   needed and had many modes over- and  underclocked,  HPT372 33 MHz table was
+  *   for 66 MHz and 50 MHz table missed UltraDMA mode 6, HPT374 33 MHz table was
+  *   really for 50 MHz; switch to using HPT372 tables for HPT374...
++ * - fix the hotswap code:  it caused RESET- to glitch when tristating the bus,
++ *   and for HPT36x the obsolete HDIO_TRISTATE_HWIF handler was called instead
   *		<source@mvista.com>
   *
   */
-@@ -265,26 +269,6 @@ static struct chipset_bus_clock_list_ent
- 	{	0,		0x06514e57	}
- };
+@@ -954,101 +956,68 @@ static void hpt3xxn_rw_disk(ide_drive_t 
+ 	hpt3xxn_set_clock(hwif, wantclock);
+ }
  
--static struct chipset_bus_clock_list_entry sixty_six_base_hpt370[] = {
--	{	XFER_UDMA_5,	0x14846231	},
--	{	XFER_UDMA_4,	0x14886231	},
--	{	XFER_UDMA_3,	0x148c6231	},
--	{	XFER_UDMA_2,	0x148c6231	},
--	{	XFER_UDMA_1,	0x14906231	},
--	{	XFER_UDMA_0,	0x14986231	},
+-/*
+- * Since SUN Cobalt is attempting to do this operation, I should disclose
+- * this has been a long time ago Thu Jul 27 16:40:57 2000 was the patch date
+- * HOTSWAP ATA Infrastructure.
+- */
 -
--	{	XFER_MW_DMA_2,	0x26514e21	},
--	{	XFER_MW_DMA_1,	0x26514e33	},
--	{	XFER_MW_DMA_0,	0x26514e97	},
+-static void hpt3xx_reset (ide_drive_t *drive)
+-{
+-}
 -
--	{	XFER_PIO_4,	0x06514e21	},
--	{	XFER_PIO_3,	0x06514e22	},
--	{	XFER_PIO_2,	0x06514e33	},
--	{	XFER_PIO_1,	0x06914e43	},
--	{	XFER_PIO_0,	0x06914e57	},
--	{	0,		0x06514e57	}
--};
+-static int hpt3xx_tristate (ide_drive_t * drive, int state)
+-{
+-	ide_hwif_t *hwif	= HWIF(drive);
+-	struct pci_dev *dev	= hwif->pci_dev;
+-	u8 reg59h = 0, reset	= (hwif->channel) ? 0x80 : 0x40;
+-	u8 regXXh = 0, state_reg= (hwif->channel) ? 0x57 : 0x53;
 -
- /* these are the current (4 sep 2001) timings from highpoint */
- static struct chipset_bus_clock_list_entry thirty_three_base_hpt370a[] = {
- 	{	XFER_UDMA_5,	0x12446231	},
-@@ -306,27 +290,6 @@ static struct chipset_bus_clock_list_ent
- 	{	0,		0x06814ea7	}
- };
- 
--/* 2x 33MHz timings */
--static struct chipset_bus_clock_list_entry sixty_six_base_hpt370a[] = {
--	{	XFER_UDMA_5,	0x1488e673	},
--	{	XFER_UDMA_4,	0x1488e673	},
--	{	XFER_UDMA_3,	0x1498e673	},
--	{	XFER_UDMA_2,	0x1490e673	},
--	{	XFER_UDMA_1,	0x1498e677	},
--	{	XFER_UDMA_0,	0x14a0e73f	},
+-	pci_read_config_byte(dev, 0x59, &reg59h);
+-	pci_read_config_byte(dev, state_reg, &regXXh);
 -
--	{	XFER_MW_DMA_2,	0x2480fa73	},
--	{	XFER_MW_DMA_1,	0x2480fa77	}, 
--	{	XFER_MW_DMA_0,	0x2480fb3f	},
+-	if (state) {
+-		(void) ide_do_reset(drive);
+-		pci_write_config_byte(dev, state_reg, regXXh|0x80);
+-		pci_write_config_byte(dev, 0x59, reg59h|reset);
+-	} else {
+-		pci_write_config_byte(dev, 0x59, reg59h & ~(reset));
+-		pci_write_config_byte(dev, state_reg, regXXh & ~(0x80));
+-		(void) ide_do_reset(drive);
+-	}
+-	return 0;
+-}
 -
--	{	XFER_PIO_4,	0x0c82be73	},
--	{	XFER_PIO_3,	0x0c82be95	},
--	{	XFER_PIO_2,	0x0c82beb7	},
--	{	XFER_PIO_1,	0x0d02bf37	},
--	{	XFER_PIO_0,	0x0d02bf5f	},
--	{	0,		0x0d02bf5f	}
--};
--
- static struct chipset_bus_clock_list_entry fifty_base_hpt370a[] = {
- 	{	XFER_UDMA_5,	0x12848242	},
- 	{	XFER_UDMA_4,	0x12ac8242	},
-@@ -348,27 +311,28 @@ static struct chipset_bus_clock_list_ent
- };
- 
- static struct chipset_bus_clock_list_entry thirty_three_base_hpt372[] = {
--	{	XFER_UDMA_6,	0x1c81dc62	},
--	{	XFER_UDMA_5,	0x1c6ddc62	},
--	{	XFER_UDMA_4,	0x1c8ddc62	},
--	{	XFER_UDMA_3,	0x1c8edc62	},	/* checkme */
--	{	XFER_UDMA_2,	0x1c91dc62	},
--	{	XFER_UDMA_1,	0x1c9adc62	},	/* checkme */
--	{	XFER_UDMA_0,	0x1c82dc62	},	/* checkme */
--
--	{	XFER_MW_DMA_2,	0x2c829262	},
--	{	XFER_MW_DMA_1,	0x2c829266	},	/* checkme */
--	{	XFER_MW_DMA_0,	0x2c82922e	},	/* checkme */
-+	{	XFER_UDMA_6,	0x12446231	},	/* 0x12646231 ?? */
-+	{	XFER_UDMA_5,	0x12446231	},
-+	{	XFER_UDMA_4,	0x12446231	},
-+	{	XFER_UDMA_3,	0x126c6231	},
-+	{	XFER_UDMA_2,	0x12486231	},
-+	{	XFER_UDMA_1,	0x124c6233	},
-+	{	XFER_UDMA_0,	0x12506297	},
- 
--	{	XFER_PIO_4,	0x0c829c62	},
--	{	XFER_PIO_3,	0x0c829c84	},
--	{	XFER_PIO_2,	0x0c829ca6	},
--	{	XFER_PIO_1,	0x0d029d26	},
--	{	XFER_PIO_0,	0x0d029d5e	},
--	{	0,		0x0d029d5e	}
-+	{	XFER_MW_DMA_2,	0x22406c31	},
-+	{	XFER_MW_DMA_1,	0x22406c33	},
-+	{	XFER_MW_DMA_0,	0x22406c97	},
+ /* 
+- * set/get power state for a drive.
+- * turning the power off does the following things:
+- *   1) soft-reset the drive
+- *   2) tri-states the ide bus
++ * Set/get power state for a drive.
+  *
+- * when we turn things back on, we need to re-initialize things.
++ * When we turn the power back on, we need to re-initialize things.
+  */
+ #define TRISTATE_BIT  0x8000
+-static int hpt370_busproc(ide_drive_t * drive, int state)
 +
-+	{	XFER_PIO_4,	0x06414e31	},
-+	{	XFER_PIO_3,	0x06414e42	},
-+	{	XFER_PIO_2,	0x06414e53	},
-+	{	XFER_PIO_1,	0x06814e93	},
-+	{	XFER_PIO_0,	0x06814ea7	},
-+	{	0,		0x06814ea7	}
- };
++static int hpt3xx_busproc(ide_drive_t *drive, int state)
+ {
+ 	ide_hwif_t *hwif	= drive->hwif;
+ 	struct pci_dev *dev	= hwif->pci_dev;
+-	u8 tristate = 0, resetmask = 0, bus_reg = 0;
+-	u16 tri_reg;
++	u8  tristate, resetmask, bus_reg = 0;
++	u16 tri_reg = 0;
  
- static struct chipset_bus_clock_list_entry fifty_base_hpt372[] = {
-+	{	XFER_UDMA_6,	0x12848242	},
- 	{	XFER_UDMA_5,	0x12848242	},
- 	{	XFER_UDMA_4,	0x12ac8242	},
- 	{	XFER_UDMA_3,	0x128c8242	},
-@@ -390,7 +354,7 @@ static struct chipset_bus_clock_list_ent
+ 	hwif->bus_state = state;
  
- static struct chipset_bus_clock_list_entry sixty_six_base_hpt372[] = {
- 	{	XFER_UDMA_6,	0x1c869c62	},
--	{	XFER_UDMA_5,	0x1cae9c62	},
-+	{	XFER_UDMA_5,	0x1cae9c62	},	/* 0x1c8a9c62 */
- 	{	XFER_UDMA_4,	0x1c8a9c62	},
- 	{	XFER_UDMA_3,	0x1c8e9c62	},
- 	{	XFER_UDMA_2,	0x1c929c62	},
-@@ -409,50 +373,6 @@ static struct chipset_bus_clock_list_ent
- 	{	0,		0x0d029d26	}
- };
- 
--static struct chipset_bus_clock_list_entry thirty_three_base_hpt374[] = {
--	{	XFER_UDMA_6,	0x12808242	},
--	{	XFER_UDMA_5,	0x12848242	},
--	{	XFER_UDMA_4,	0x12ac8242	},
--	{	XFER_UDMA_3,	0x128c8242	},
--	{	XFER_UDMA_2,	0x120c8242	},
--	{	XFER_UDMA_1,	0x12148254	},
--	{	XFER_UDMA_0,	0x121882ea	},
--
--	{	XFER_MW_DMA_2,	0x22808242	},
--	{	XFER_MW_DMA_1,	0x22808254	},
--	{	XFER_MW_DMA_0,	0x228082ea	},
--
--	{	XFER_PIO_4,	0x0a81f442	},
--	{	XFER_PIO_3,	0x0a81f443	},
--	{	XFER_PIO_2,	0x0a81f454	},
--	{	XFER_PIO_1,	0x0ac1f465	},
--	{	XFER_PIO_0,	0x0ac1f48a	},
--	{	0,		0x06814e93	}
--};
--
--/* FIXME: 50MHz timings for HPT374 */
--
--#if 0
--static struct chipset_bus_clock_list_entry sixty_six_base_hpt374[] = {
--	{	XFER_UDMA_6,	0x12406231	},	/* checkme */
--	{	XFER_UDMA_5,	0x12446231	},	/* 0x14846231 */
--	{	XFER_UDMA_4,	0x16814ea7	},	/* 0x14886231 */
--	{	XFER_UDMA_3,	0x16814ea7	},	/* 0x148c6231 */
--	{	XFER_UDMA_2,	0x16814ea7	},	/* 0x148c6231 */
--	{	XFER_UDMA_1,	0x16814ea7	},	/* 0x14906231 */
--	{	XFER_UDMA_0,	0x16814ea7	},	/* 0x14986231 */
--	{	XFER_MW_DMA_2,	0x16814ea7	},	/* 0x26514e21 */
--	{	XFER_MW_DMA_1,	0x16814ea7	},	/* 0x26514e97 */
--	{	XFER_MW_DMA_0,	0x16814ea7	},	/* 0x26514e97 */
--	{	XFER_PIO_4,	0x06814ea7	},	/* 0x06514e21 */
--	{	XFER_PIO_3,	0x06814ea7	},	/* 0x06514e22 */
--	{	XFER_PIO_2,	0x06814ea7	},	/* 0x06514e33 */
--	{	XFER_PIO_1,	0x06814ea7	},	/* 0x06914e43 */
--	{	XFER_PIO_0,	0x06814ea7	},	/* 0x06914e57 */
--	{	0,		0x06814ea7	}
--};
--#endif
--
- #define HPT366_DEBUG_DRIVE_INFO		0
- #define HPT374_ALLOW_ATA133_6		0
- #define HPT371_ALLOW_ATA133_6		0
-@@ -1212,9 +1132,7 @@ static void __devinit hpt37x_clocking(id
- 			pll = F_LOW_PCI_66;
- 	
- 		if (pll == F_LOW_PCI_33) {
--			if (info->revision >= 8)
--				info->speed = thirty_three_base_hpt374;
--			else if (info->revision >= 5)
-+			if (info->revision >= 5)
- 				info->speed = thirty_three_base_hpt372;
- 			else if (info->revision >= 4)
- 				info->speed = thirty_three_base_hpt370a;
-@@ -1224,26 +1142,17 @@ static void __devinit hpt37x_clocking(id
- 		} else if (pll == F_LOW_PCI_40) {
- 			/* Unsupported */
- 		} else if (pll == F_LOW_PCI_50) {
--			if (info->revision >= 8)
--				info->speed = fifty_base_hpt370a;
--			else if (info->revision >= 5)
-+			if (info->revision >= 5)
- 				info->speed = fifty_base_hpt372;
--			else if (info->revision >= 4)
--				info->speed = fifty_base_hpt370a;
- 			else
- 				info->speed = fifty_base_hpt370a;
- 			printk(KERN_DEBUG "HPT37X: using 50MHz PCI clock\n");
- 		} else {
--			if (info->revision >= 8) {
--				printk(KERN_ERR "HPT37x: 66MHz timings are not supported.\n");
--			}
--			else if (info->revision >= 5)
-+			if (info->revision >= 5) {
- 				info->speed = sixty_six_base_hpt372;
--			else if (info->revision >= 4)
--				info->speed = sixty_six_base_hpt370a;
--			else
--				info->speed = sixty_six_base_hpt370;
--			printk(KERN_DEBUG "HPT37X: using 66MHz PCI clock\n");
-+				printk(KERN_DEBUG "HPT37X: using 66MHz PCI clock\n");
-+			} else
-+				printk(KERN_ERR "HPT37x: 66MHz timings not supported.\n");
- 		}
+ 	if (hwif->channel) { 
+ 		/* secondary channel */
+-		tristate = 0x56;
+-		resetmask = 0x80; 
++		tristate  = 0x56;
++		resetmask = 0x80;
+ 	} else { 
+ 		/* primary channel */
+-		tristate = 0x52;
++		tristate  = 0x52;
+ 		resetmask = 0x40;
  	}
  
+-	/* grab status */
++	/* Grab the status. */
+ 	pci_read_config_word(dev, tristate, &tri_reg);
+ 	pci_read_config_byte(dev, 0x59, &bus_reg);
+ 
+-	/* set the state. we don't set it if we don't need to do so.
+-	 * make sure that the drive knows that it has failed if it's off */
++	/*
++	 * Set the state. We don't set it if we don't need to do so.
++	 * Make sure that the drive knows that it has failed if it's off.
++	 */
+ 	switch (state) {
+ 	case BUSSTATE_ON:
+-		hwif->drives[0].failures = 0;
+-		hwif->drives[1].failures = 0;
+-		if ((bus_reg & resetmask) == 0)
++		if (!(bus_reg & resetmask))
+ 			return 0;
+-		tri_reg &= ~TRISTATE_BIT;
+-		bus_reg &= ~resetmask;
+-		break;
++		hwif->drives[0].failures = hwif->drives[1].failures = 0;
++
++		pci_write_config_byte(dev, 0x59, bus_reg & ~resetmask);
++		pci_write_config_word(dev, tristate, tri_reg & ~TRISTATE_BIT);
++		return 0;
+ 	case BUSSTATE_OFF:
+-		hwif->drives[0].failures = hwif->drives[0].max_failures + 1;
+-		hwif->drives[1].failures = hwif->drives[1].max_failures + 1;
+-		if ((tri_reg & TRISTATE_BIT) == 0 && (bus_reg & resetmask))
++		if ((bus_reg & resetmask) && !(tri_reg & TRISTATE_BIT))
+ 			return 0;
+ 		tri_reg &= ~TRISTATE_BIT;
+-		bus_reg |= resetmask;
+ 		break;
+ 	case BUSSTATE_TRISTATE:
+-		hwif->drives[0].failures = hwif->drives[0].max_failures + 1;
+-		hwif->drives[1].failures = hwif->drives[1].max_failures + 1;
+-		if ((tri_reg & TRISTATE_BIT) && (bus_reg & resetmask))
++		if ((bus_reg & resetmask) &&  (tri_reg & TRISTATE_BIT))
+ 			return 0;
+ 		tri_reg |= TRISTATE_BIT;
+-		bus_reg |= resetmask;
+ 		break;
++	default:
++		return -EINVAL;
+ 	}
+-	pci_write_config_byte(dev, 0x59, bus_reg);
+-	pci_write_config_word(dev, tristate, tri_reg);
+ 
++	hwif->drives[0].failures = hwif->drives[0].max_failures + 1;
++	hwif->drives[1].failures = hwif->drives[1].max_failures + 1;
++
++	pci_write_config_word(dev, tristate, tri_reg);
++	pci_write_config_byte(dev, 0x59, bus_reg | resetmask);
+ 	return 0;
+ }
+ 
+@@ -1363,23 +1332,11 @@ static void __devinit init_hwif_hpt366(i
+ 	if (serialize && hwif->mate)
+ 		hwif->serialized = hwif->mate->serialized = 1;
+ 
+-	if (info->revision >= 3) {
+-		u8 reg5ah = 0;
+-			pci_write_config_byte(dev, 0x5a, reg5ah & ~0x10);
+-		/*
+-		 * set up ioctl for power status.
+-		 * note: power affects both
+-		 * drives on each channel
+-		 */
+-		hwif->resetproc	= &hpt3xx_reset;
+-		hwif->busproc	= &hpt370_busproc;
+-	} else if (info->revision >= 2) {
+-		hwif->resetproc	= &hpt3xx_reset;
+-		hwif->busproc	= &hpt3xx_tristate;
+-	} else {
+-		hwif->resetproc = &hpt3xx_reset;
+-		hwif->busproc   = &hpt3xx_tristate;
+-	}
++	/*
++	 * Set up ioctl for power status.
++	 * NOTE:  power affects both drives on each channel.
++	 */
++	hwif->busproc = &hpt3xx_busproc;
+ 
+ 	if (!hwif->dma_base) {
+ 		hwif->drives[0].autotune = 1;
 
 
 
 
---------------060201070604090707050609--
+--------------090500070209040901080500--
