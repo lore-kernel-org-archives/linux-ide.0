@@ -1,62 +1,107 @@
-From: Mark Lord <liml@rtr.ca>
+From: Sander <sander@humilis.net>
 Subject: Re: [PATCH] 2.6.xx: sata_mv: another critical fix
-Date: Wed, 03 May 2006 08:42:21 -0400
-Message-ID: <4458A52D.30100@rtr.ca>
-References: <20060321121354.GB24977@favonius> <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org> <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca> <20060322170959.GA3222@favonius> <4428BCBF.2050000@pobox.com> <20060503121643.GA21882@favonius>
+Date: Wed, 3 May 2006 15:32:39 +0200
+Message-ID: <20060503133239.GA11811@favonius>
+References: <20060321121354.GB24977@favonius> <Pine.LNX.4.64.0603211316580.3622@g5.osdl.org> <20060322090006.GA8462@favonius> <200603220950.11922.lkml@rtr.ca> <20060322170959.GA3222@favonius> <4428BCBF.2050000@pobox.com> <20060503121643.GA21882@favonius> <4458A52D.30100@rtr.ca>
+Reply-To: sander@humilis.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:18143 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S965182AbWECMmX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 May 2006 08:42:23 -0400
-In-Reply-To: <20060503121643.GA21882@favonius>
+Received: from ookhoi.xs4all.nl ([213.84.114.66]:32391 "EHLO
+	favonius.humilis.net") by vger.kernel.org with ESMTP
+	id S1030190AbWECNcl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 May 2006 09:32:41 -0400
+Content-Disposition: inline
+In-Reply-To: <4458A52D.30100@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sander@humilis.net
-Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Mark Lord <mlord@pobox.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: sander@humilis.net, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Mark Lord <mlord@pobox.com>
 
-> I've added two Marvell MV88SX6081 controller (total of three now),
-> removed the bad disks from the system (all I hope), added new ones
-> (total of 12, 300GB Maxtor DiamondMax, connected to the controllers
-> now (each four disks)), and added two 2.5" disks for the OS (connected
-> to the onboard Nvidia).
+Mark Lord wrote (ao):
+> I'm still debugging the chip/driver on the 2.6.16.xx series,
+> and my sata_mv.c code here is behaving well for most testers
+> thus far here. I'm avoiding 2.6.17-* until sata_mv stabilizes
+> on the existing kernels.
 > 
-> I also upgraded to 2.6.17-rc3-mm1, which seemed oke using badblocks, but
-> dd and mdadm give trouble.
-> 
-> First of all, Linux does not always see all disks during boot. Sometimes
-> one or two disks are missing. I haven't checked yet if these are always
-...
-> [  416.910684] ata12: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200000B8120 bmdma 0x0 irq 21
-> [  417.016463] BUG: warning at drivers/scsi/sata_mv.c:1904/__msleep()
-> [  417.053468] 
-> [  417.053469] Call Trace: <IRQ> <ffffffff803e8c33>{__mv_phy_reset+242}
-> [  417.099671]        <ffffffff803e811f>{mv_channel_reset+133} <ffffffff803e9297>{mv_interrupt+568}
-> [  417.152658]        <ffffffff8020ec91>{handle_IRQ_event+41} <ffffffff80282bbf>{__do_IRQ+155}
-> [  417.203033]        <ffffffff8025dd91>{do_IRQ+60} <ffffffff8025be52>{default_idle+0}
-> [  417.249254]        <ffffffff80256178>{ret_from_intr+0} <EOI> <ffffffff80258d00>{thread_return+86}
-> [  417.302853]        <ffffffff8025be7f>{default_idle+45} <ffffffff80243c0f>{cpu_idle+98}
-> [  417.350632]        <ffffffff806e8b74>{start_secondary+1127}
-> [  420.701529] ata5: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e21 87:4663 88:007f
-> [  420.701533] ata5: dev 0 ATA-7, max UDMA/133, 586114704 sectors: LBA48
-...
+> Does the drive probing work for you on older kernels?
 
-> [55973.577770] ata24: translated ATA stat/err 0x50/01 to SCSI SK/ASC/ASCQ 0x3/13/00
-> [55973.622012] ata24: status=0x50 { DriveReady SeekComplete }
-> [55973.654966] ata24: error=0x01 { AddrMarkNotFound }
-> [55973.683740] sata_mv: PCI ERROR; PCI IRQ cause=0x40000100
-...
+Thank you for your reply. I'll try the latest 2.6.16.13 kernel and see
+how that goes.
 
-Hi Sander,
+I'll also try the kernel 2.6.17-rc3 as Andrew asked me to check if the
+"Assertion failed!" message is gone in that release.
 
-I'm still debugging the chip/driver on the 2.6.16.xx series,
-and my sata_mv.c code here is behaving well for most testers
-thus far here.  I'm avoiding 2.6.17-* until sata_mv stabilizes
-on the existing kernels.
+> I'll email you privately and set you up with a better copy of
+> sata_mv.c
 
-Does the drive probing work for you on older kernels?
+Thanks!
 
-I'll email you privately and set you up with a better copy of sata_mv.c
+I believe quite some bits changed in sata between 2.6.16 and 2.6.17-rcX.
+I assume your sata_mv.c will not work at all on anything else than
+2.6.16(.xx) ?
 
-Cheers
+
+Btw, building raid5 over the first eight disks works fine (76% done
+now). Building raid5 over the last four disks fails immediately (drives
+get marked F in /proc/mdstat).
+
+The message "PCI ERROR; PCI IRQ cause=0x40000100" gives no result in
+Google. Could this be a broken or miss-seated controller?
+
+	With kind regards, Sander
+
+
+[61784.672427] md: bind<sdk>
+[61784.688305] md: bind<sdl>
+[61784.708029] md: bind<sdm>
+[61784.723717] md: bind<sdn>
+[61784.744018] raid5: device sdm operational as raid disk 2
+[61784.775951] raid5: device sdl operational as raid disk 1
+[61784.807838] raid5: device sdk operational as raid disk 0
+[61784.840407] raid5: allocated 4262kB for md2
+[61784.865502] raid5: raid level 5 set md2 active with 3 out of 4 devices, algorithm 2
+[61784.911459] RAID5 conf printout:
+[61784.930942]  --- rd:4 wd:3 fd:1
+[61784.949935]  disk 0, o:1, dev:sdk
+[61784.969901]  disk 1, o:1, dev:sdl
+[61784.989904]  disk 2, o:1, dev:sdm
+[61785.051462] RAID5 conf printout:
+[61785.070778]  --- rd:4 wd:3 fd:1
+[61785.089573]  disk 0, o:1, dev:sdk
+[61785.109412]  disk 1, o:1, dev:sdl
+[61785.129250]  disk 2, o:1, dev:sdm
+[61785.149088]  disk 3, o:1, dev:sdn
+[61785.168981] md: syncing RAID array md2
+[61785.191425] md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+[61785.233595] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reconstruction.
+[61785.293964] md: using 128k window, over a total of 293057280 blocks.
+[61788.142322] ata22: translated ATA stat/err 0x50/01 to SCSI SK/ASC/ASCQ 0x3/13/00
+[61788.186559] ata22: status=0x50 { DriveReady SeekComplete }
+[61788.219510] ata22: error=0x01 { AddrMarkNotFound }
+[61788.248283] sata_mv: PCI ERROR; PCI IRQ cause=0x40000100
+[61788.406525] ata23: translated ATA stat/err 0x50/01 to SCSI SK/ASC/ASCQ 0x3/13/00
+[61788.450799] ata23: status=0x50 { DriveReady SeekComplete }
+[61788.483752] ata23: error=0x01 { AddrMarkNotFound }
+[61788.512526] sata_mv: PCI ERROR; PCI IRQ cause=0x40000100
+[61789.169903] ata22: translated ATA stat/err 0x50/01 to SCSI SK/ASC/ASCQ 0x3/13/00
+[61789.214134] ata22: status=0x50 { DriveReady SeekComplete }
+[61789.247088] ata22: error=0x01 { AddrMarkNotFound }
+[61789.901445] ata24: translated ATA stat/err 0x50/01 to SCSI SK/ASC/ASCQ 0x3/13/00
+[61789.945686] ata24: status=0x50 { DriveReady SeekComplete }
+[61789.978638] ata24: error=0x01 { AddrMarkNotFound }
+[61790.007411] sata_mv: PCI ERROR; PCI IRQ cause=0x40000100
+[61790.665135] ata21: translated ATA stat/err 0x50/01 to SCSI SK/ASC/ASCQ 0x3/13/00
+[61790.709387] ata21: status=0x50 { DriveReady SeekComplete }
+[61790.742337] ata21: error=0x01 { AddrMarkNotFound }
+[61791.396897] ata24: translated ATA stat/err 0x50/01 to SCSI SK/ASC/ASCQ 0x3/13/00
+[61791.441145] ata24: status=0x50 { DriveReady SeekComplete }
+[61791.474097] ata24: error=0x01 { AddrMarkNotFound }
+[61791.502871] sata_mv: PCI ERROR; PCI IRQ cause=0x40000100
+
+[cut]
+
+
+-- 
+Humilis IT Services and Solutions
+http://www.humilis.net
