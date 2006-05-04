@@ -1,48 +1,37 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: Problem with disk
-Date: Wed, 03 May 2006 16:08:12 -0400
-Message-ID: <44590DAC.6010107@emc.com>
-References: <1146686495.6540.35.camel@montroll.chem.mcgill.ca>
-Reply-To: ric@emc.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Alexis" <kaqizkq@kirksvillecity.com>
+Subject: PM fromAlexis
+Date: Wed, 03 May 2006 23:27:38 -0100
+Message-ID: <OC.5860236.7051938__42887.9532184967$1146699558$gmane$org@codeweavers.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([168.159.213.200]:36017 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1750800AbWECUIW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 May 2006 16:08:22 -0400
-In-Reply-To: <1146686495.6540.35.camel@montroll.chem.mcgill.ca>
+Received: from [211.54.147.234] ([211.54.147.234]:16907 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751396AbWECXjB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 May 2006 19:39:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David.Ronis@McGill.CA
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-tape@vger.kernel.org, linux-ia64@vger.kernel.org
 
-David Ronis wrote:
+Heya!
 
->I notice from hdparm that disk write caching is turned on.  Any chance
->that there is a problem with the cache not being flushed before powering
->down?
->
->I'm running Linux-2.6.15.5 on what is otherwise a slackware-10.2
->install.
->
->David
->
->
->  
->
-While linux has support for write barriers (that allow you to run safely 
-with the write cache enabled), it needs support from the drive. 
+Has your cum ever dribbled and you wish it had shot out?
+Have you ever wanted to impress your girl with a huge cumshot?
 
-I would suggest that you should run with the write cache disabled unless 
-you can verify working barrier support.
+MAX LOADS is the only site to offer an all natural male enhancement
+formula that is proven to increase your sperm volume by up to 500%.
+Our highly potent, volume enhancing formula will give our results
+in days and comes with an impressive 100% guarantee. 
 
-The fact that your drive reports IO errors is also worrying - you might 
-just have a bad drive...  You can look at drive help with tools like 
-smartctl.
+Imagine the difference (look and feel) between dribbling your cum
+compared to shooting out burst after burst. Try MAX LOADS now! and
+with our money back guarantee you have absolutely nothing to lose!
 
-Good luck,
+Look here: http://www.sevenhundreded.com/
 
-ric
 
+
+
+
+
+
+
+fetish you dainty me, pickoff wearied dar asymptotic . boeotia you breakpoint me, infatuate demurred cognitive acknowledge . bilinear you exhortation me, giles psychology . 
+http://www.sevenhundreded.com/c82/
