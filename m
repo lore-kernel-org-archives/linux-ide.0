@@ -1,143 +1,49 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
+From: Jes Sorensen <jes@sgi.com>
 Subject: Re: [PATCH] Move various PCI IDs to header file
-Date: Thu, 4 May 2006 17:37:22 -0700
-Message-ID: <20060504173722.028c2b24.rdunlap@xenotime.net>
-References: <20060504180614.X88573@chenjesu.americas.sgi.com>
+Date: Fri, 05 May 2006 07:45:52 +0200
+Message-ID: <445AE690.5030700@sgi.com>
+References: <20060504180614.X88573@chenjesu.americas.sgi.com> <20060504173722.028c2b24.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:7349 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1030293AbWEEAe6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 May 2006 20:34:58 -0400
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 4 May 2006 17:34:56 -0700
-In-Reply-To: <20060504180614.X88573@chenjesu.americas.sgi.com>
+Received: from omx1-ext.sgi.com ([192.48.179.11]:39093 "EHLO
+	omx1.americas.sgi.com") by vger.kernel.org with ESMTP
+	id S1750935AbWEEFnX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 May 2006 01:43:23 -0400
+In-Reply-To: <20060504173722.028c2b24.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brent Casavant <bcasavan@sgi.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org, jes@sgi.com, jeremy@sgi.com
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: Brent Casavant <bcasavan@sgi.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org, jeremy@sgi.com
 
-On Thu, 4 May 2006 18:09:45 -0500 (CDT) Brent Casavant wrote:
-
-> Move various QLogic, Vitesse, and Intel storage
-> controller PCI IDs to the main header file.
+Randy.Dunlap wrote:
+> On Thu, 4 May 2006 18:09:45 -0500 (CDT) Brent Casavant wrote:
 > 
-> Signed-off-by: Brent Casavant <bcasavan@sgi.com>
+>> Move various QLogic, Vitesse, and Intel storage
+>> controller PCI IDs to the main header file.
+>>
+>> Signed-off-by: Brent Casavant <bcasavan@sgi.com>
+>>
+>> ---
+>>
+>> As suggested by Andrew Morton and Jes Sorenson.
 > 
-> ---
-> 
-> As suggested by Andrew Morton and Jes Sorenson.
+> as compared to:
+> http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=9b860b8c4bde5949b272968597d1426d53080532
 
-as compared to:
-http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=9b860b8c4bde5949b272968597d1426d53080532
+I guess Andrew and I should be blamed for that. I Andrew suggested
+putting the IDs in the 'right place' and I took the right place as being
+the pci_ids.h file.
 
+Can't say I agree with the recommendation, having them in pci_ids.h is
+nice and clean and it allows one to go look through the list, instead
+they now really become random hex values :( Brent's patch is a perfect
+example of IDs being used in multiple places, ie. the qla1280 driver
+and in the IOC4 driver, so the claim in that Documentation/ file doesn't
+hold water.
 
->  drivers/scsi/qla1280.c  |   24 ------------------------
->  drivers/scsi/sata_vsc.c |   11 ++++++-----
->  include/linux/pci_ids.h |    9 +++++++++
->  3 files changed, 15 insertions(+), 29 deletions(-)
-> 
-> ---
-> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-> index 5a48e55..00662a5 100644
-> --- a/drivers/scsi/qla1280.c
-> +++ b/drivers/scsi/qla1280.c
-> @@ -397,30 +397,6 @@
->  #include "ql1280_fw.h"
->  #include "ql1040_fw.h"
->  
-> -
-> -/*
-> - * Missing PCI ID's
-> - */
-> -#ifndef PCI_DEVICE_ID_QLOGIC_ISP1080
-> -#define PCI_DEVICE_ID_QLOGIC_ISP1080	0x1080
-> -#endif
-> -#ifndef PCI_DEVICE_ID_QLOGIC_ISP1240
-> -#define PCI_DEVICE_ID_QLOGIC_ISP1240	0x1240
-> -#endif
-> -#ifndef PCI_DEVICE_ID_QLOGIC_ISP1280
-> -#define PCI_DEVICE_ID_QLOGIC_ISP1280	0x1280
-> -#endif
-> -#ifndef PCI_DEVICE_ID_QLOGIC_ISP10160
-> -#define PCI_DEVICE_ID_QLOGIC_ISP10160	0x1016
-> -#endif
-> -#ifndef PCI_DEVICE_ID_QLOGIC_ISP12160
-> -#define PCI_DEVICE_ID_QLOGIC_ISP12160	0x1216
-> -#endif
-> -
-> -#ifndef PCI_VENDOR_ID_AMI
-> -#define PCI_VENDOR_ID_AMI               0x101e
-> -#endif
-> -
->  #ifndef BITS_PER_LONG
->  #error "BITS_PER_LONG not defined!"
->  #endif
-> diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
-> index 8a29ce3..27d6587 100644
-> --- a/drivers/scsi/sata_vsc.c
-> +++ b/drivers/scsi/sata_vsc.c
-> @@ -433,13 +433,14 @@ err_out:
->  
->  
->  /*
-> - * 0x1725/0x7174 is the Vitesse VSC-7174
-> - * 0x8086/0x3200 is the Intel 31244, which is supposed to be identical
-> - * compatibility is untested as of yet
-> + * Intel 31244 is supposed to be identical.
-> + * Compatibility is untested as of yet.
->   */
->  static const struct pci_device_id vsc_sata_pci_tbl[] = {
-> -	{ 0x1725, 0x7174, PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
-> -	{ 0x8086, 0x3200, PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
-> +	{ PCI_VENDOR_ID_VITESSE, PCI_DEVICE_ID_VITESSE_VSC7174,
-> +	  PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_GD31244,
-> +	  PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
->  	{ }
->  };
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index d6fe048..c380faf 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -848,7 +848,12 @@
->  
->  
->  #define PCI_VENDOR_ID_QLOGIC		0x1077
-> +#define PCI_DEVICE_ID_QLOGIC_ISP10160	0x1016
->  #define PCI_DEVICE_ID_QLOGIC_ISP1020	0x1020
-> +#define PCI_DEVICE_ID_QLOGIC_ISP1080	0x1080
-> +#define PCI_DEVICE_ID_QLOGIC_ISP12160	0x1216
-> +#define PCI_DEVICE_ID_QLOGIC_ISP1240	0x1240
-> +#define PCI_DEVICE_ID_QLOGIC_ISP1280	0x1280
->  #define PCI_DEVICE_ID_QLOGIC_ISP2100	0x2100
->  #define PCI_DEVICE_ID_QLOGIC_ISP2200	0x2200
->  #define PCI_DEVICE_ID_QLOGIC_ISP2300	0x2300
-> @@ -1957,6 +1962,9 @@
->  #define PCI_VENDOR_ID_NETCELL		0x169c
->  #define PCI_DEVICE_ID_REVOLUTION	0x0044
->  
-> +#define PCI_VENDOR_ID_VITESSE		0x1725
-> +#define PCI_DEVICE_ID_VITESSE_VSC7174	0x7174
-> +
->  #define PCI_VENDOR_ID_LINKSYS		0x1737
->  #define PCI_DEVICE_ID_LINKSYS_EG1064	0x1064
->  
-> @@ -2135,6 +2143,7 @@
->  #define PCI_DEVICE_ID_INTEL_ICH8_4	0x2815
->  #define PCI_DEVICE_ID_INTEL_ICH8_5	0x283e
->  #define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850
-> +#define PCI_DEVICE_ID_INTEL_GD31244	0x3200
->  #define PCI_DEVICE_ID_INTEL_82855PM_HB	0x3340
->  #define PCI_DEVICE_ID_INTEL_82830_HB	0x3575
->  #define PCI_DEVICE_ID_INTEL_82830_CGC	0x3577
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Anyway, if this is the new rule, then I guess it's back to using the
+ugly patch :(
 
-
----
-~Randy
+Jes
