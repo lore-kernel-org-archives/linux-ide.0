@@ -1,68 +1,57 @@
-From: Ric Wheeler <ric@emc.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: Problem with disk
-Date: Sat, 06 May 2006 14:17:07 -0400
-Message-ID: <445CE823.2040203@emc.com>
-References: <Pine.LNX.4.44.0605061304560.5626-100000@coffee.psychology.mcmaster.ca>
+Date: Sat, 6 May 2006 14:34:08 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0605061420340.5626-100000@coffee.psychology.mcmaster.ca>
+References: <445CE823.2040203@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([168.159.213.200]:59789 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1751066AbWEFSQp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 6 May 2006 14:16:45 -0400
-In-Reply-To: <Pine.LNX.4.44.0605061304560.5626-100000@coffee.psychology.mcmaster.ca>
+Received: from sigma957.CIS.McMaster.CA ([130.113.64.83]:50863 "EHLO
+	sigma957.cis.mcmaster.ca") by vger.kernel.org with ESMTP
+	id S1751081AbWEFSeO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 6 May 2006 14:34:14 -0400
+In-Reply-To: <445CE823.2040203@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
+To: Ric Wheeler <ric@emc.com>
 Cc: David.Ronis@McGill.CA, linux-ide@vger.kernel.org
 
+> do on a regular basis) that running with barriers over power fail 
+> testing gets you a solid recovery. Running with write cache on and no 
+> barriers gets you file system corruption.
 
+in short "barriers work".  never doubted!
 
-Mark Hahn wrote:
+> As I said before, the data you 
+> just wrote (or the file system wrote for you) most recently is the same 
+> data that you stand to lose on a powerloss.
 
->>The write cache in modern drives is multiple megabytes - 8 or 16MB is 
->>not uncommon. The chances that you have data that is lost on a power 
->>failure in the write cache is actually quite high...
->>    
->>
->
->but we're not talking about power failures in the middle of peak activity.
->afaikt, drives also never dedicate their whole cache to writeback - they 
->keep plenty available for reads, as well.  it would also be rather surprising
->if the firmware was completely oblivious about limiting the age of
->writebacks; after all always delaying writes until you run out of cache 
->capacity is _not_ a winning strategy (even ignoring safety issues.)
->  
->
+obviously.
+so the question is whether the cache still has dirty writeback when the power
+drops due to normal poweroff.  I'd consider it a bug in the laptop bios to
+let this happen, but that's not going to make the affected user happy...
 
-If you have drives/hardware to test on, you can easily verify (which we 
-do on a regular basis) that running with barriers over power fail 
-testing gets you a solid recovery. Running with write cache on and no 
-barriers gets you file system corruption. As I said before, the data you 
-just wrote (or the file system wrote for you) most recently is the same 
-data that you stand to lose on a powerloss.
+> If there is a hole in the sequence, dropping to standby could be the 
+> source of issues...
 
->during a normal shutdown, can you think of some reason the drive would have 
->LOTS of outstanding writes?  that's the real point.  depending on kernel
->version, linux should be doing a cache-flush command and standby, then
->eventually calling bios poweroff.  it's very possible that this is going 
->wrong (rumors of disks that claim to implement, but ignore cache-flush,
->or perhaps ones that stupidly don't flush on standby, or even bios poweroff
->that happens so fast that the disks isn't done flushing...)  but turning 
->off all writeback is overkill (especially when there's some other obvious 
->sign of distress...)
->
->  
->
-We don't test every make of drive, but the modern drives we do test do 
-honor the cache flush commands. It is important to note that drive 
-firmware is like any other bit of code - it can have bugs so this 
-support does need to be reverified on each drive (and version of 
-firmware) before you can trust high value data ;-)
+I guess it's a matter of how byzantine the bugs are you want to consider.
+for mass-produced devices, I'm reluctant to assume the disk vendor has 
+forgotten to _ever_ flush writeback data, for instance.  and don't forget
+that a bogus drive that entirely forgets writeback may also not really
+turn off write caching when you tell it to!
 
-If there is a hole in the sequence, dropping to standby could be the 
-source of issues...
+I assume that the disk will indeed do writeback if left idle for a little
+while.  on machines where this is a  real problem, I would start out by
+waving relevant chickens like the following to give the best chance of
+shutting down cleanly: 
+	sync
+	blockdev --flushbufs
+	hdparm -W 0
+	sleep 2
+	hdparm -y
+	sleep 5
+	halt -hp
 
-ric
+rather than _always_ suffering the penalty of disabled write cache, 
+especially on a single slow laptop drive...
 
