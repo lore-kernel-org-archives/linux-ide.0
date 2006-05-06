@@ -1,71 +1,44 @@
-From: Leon Woestenberg <leonw@mailcan.com>
-Subject: Re: [smartmontools-support]Re: LibPATA code issues / 2.6.16
-	(previously, 2.6.15.x)
-Date: Sat, 06 May 2006 17:09:12 +0200
-Message-ID: <1146928152.2611.18.camel@dhcppc7>
-References: <Pine.LNX.4.64.0602140439580.3567@p34>
-	 <200602141300.37118.lkml@rtr.ca> <440040B4.8030808@dgreaves.com>
-	 <440083B4.3030307@rtr.ca> <Pine.LNX.4.64.0602251244070.20297@p34>
-	 <4400A1BF.7020109@rtr.ca> <4400B439.8050202@dgreaves.com>
-	 <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com>
-	 <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca>
-	 <4403A84C.6010804@gmail.com> <4403CEA9.4080603@rtr.ca>
-	 <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca>
-	 <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com>
-	 <4405DDEA.7020309@rtr.ca> <4405E42B.9040804@dgreaves.com>
-	 <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com>
-	 <4405FAAE.3080705@dgreaves.com> <Pine.LNX.4.64.0603050637110.30164@p34>
-	 <Pine.LNX.4.64.0603050740500.3116@p34> <440B6CFE.4010503@rtr.ca>
-	 <440B76B4.5080502@pobox.com> <Pine.LNX.4.64.0604211511120.22768@p34>
-	 <44493023.4010109@pobox.com> <Pine.LNX.4.64.0604211226120.3701@g5.osdl.org>
-	 <444960CC.2000009@pobox.com> <Pine.LNX.4.64.0604211704120.3701@g5.osdl.org>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: Problem with disk
+Date: Sat, 6 May 2006 13:11:50 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0605061304560.5626-100000@coffee.psychology.mcmaster.ca>
+References: <445BF302.4050709@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:11200 "EHLO
-	out1.smtp.messagingengine.com") by vger.kernel.org with ESMTP
-	id S1750830AbWEFPJU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 6 May 2006 11:09:20 -0400
-In-Reply-To: <Pine.LNX.4.64.0604211704120.3701@g5.osdl.org>
+Received: from sigma957.CIS.McMaster.CA ([130.113.64.83]:28295 "EHLO
+	sigma957.cis.mcmaster.ca") by vger.kernel.org with ESMTP
+	id S1750991AbWEFRM4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 6 May 2006 13:12:56 -0400
+In-Reply-To: <445BF302.4050709@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, smartmontools-support@lists.sourceforge.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Mark Lord <lkml@rtr.ca>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de
+To: Ric Wheeler <ric@emc.com>
+Cc: David.Ronis@McGill.CA, linux-ide@vger.kernel.org
 
-Hi all,
+> >this is true, but extremely conservative/paranoid.  it makes a lot 
+> >of sense if you're handling banking transactions or if you really
+> >see a lot of abrupt power-offs (yank the battery).  what are the chances
+> >of a drive failing to write dirty blocks when idle, halting?
+> >
+> The write cache in modern drives is multiple megabytes - 8 or 16MB is 
+> not uncommon. The chances that you have data that is lost on a power 
+> failure in the write cache is actually quite high...
 
-On Fri, 2006-04-21 at 17:05 -0700, Linus Torvalds wrote:
-> 
-> On Fri, 21 Apr 2006, Jeff Garzik wrote:
-> 
-> > 
-> > Agreed, though the original poster had already done a 400GB dd from
-> > /dev/zero...
-> 
-> Yes, but to a _file_ on the partition (ie he didn't overwrite any existign 
-> data, just the empty parts of a filesystem).
-> 
-> I realize that it's not enough for the "re-allocate on write" behaviour, 
-> and for that you really _do_ need to re-write the whole disk to get all 
-> the broken blocks reallocated, but my argument was just that we should 
-> make sure to _tell_ people when they are overwriting all their old data ;)
-> 
-I did not realize this before, and asked badblocks maintainer Theodore
-if badblocks /some/file was supported (the man page says no); but of
-course any filesystem can decide to re-allocate blocks for a file.
+but we're not talking about power failures in the middle of peak activity.
+afaikt, drives also never dedicate their whole cache to writeback - they 
+keep plenty available for reads, as well.  it would also be rather surprising
+if the firmware was completely oblivious about limiting the age of
+writebacks; after all always delaying writes until you run out of cache 
+capacity is _not_ a winning strategy (even ignoring safety issues.)
 
-However, for large files where parts may be bad sectors, I am still
-searching for a way to read, then re-write every physical sector
-occupied by the file. 
-
-With the purpose to remap the bad sectors inside large MPEG files (where
-I would rather have a few zeroed holes than a read error in them).
-
-Anyone know such tooling exists? I suspect it has to use filesystem
-specific IOCTL's to query for the blocks involved.
-
-Regards,
-
-Leon
+during a normal shutdown, can you think of some reason the drive would have 
+LOTS of outstanding writes?  that's the real point.  depending on kernel
+version, linux should be doing a cache-flush command and standby, then
+eventually calling bios poweroff.  it's very possible that this is going 
+wrong (rumors of disks that claim to implement, but ignore cache-flush,
+or perhaps ones that stupidly don't flush on standby, or even bios poweroff
+that happens so fast that the disks isn't done flushing...)  but turning 
+off all writeback is overkill (especially when there's some other obvious 
+sign of distress...)
 
