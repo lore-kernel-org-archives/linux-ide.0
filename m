@@ -1,63 +1,70 @@
 From: Moritz Heiber <moe@lunar-linux.org>
 Subject: Re: Issues with AHCI and SATAII using JMD360
-Date: Sun, 7 May 2006 16:52:40 +0200
-Message-ID: <20060507165240.2c949d17.moe@lunar-linux.org>
+Date: Sun, 7 May 2006 17:02:15 +0200
+Message-ID: <20060507170215.b865bdb3.moe@lunar-linux.org>
 References: <20060507043702.052e3f56.moritz-heiber@arcor.de>
-	<445D6298.7090003@gmail.com>
-	<20060507140443.7ae89a68.moe@lunar-linux.org>
-	<445DE5D1.3010203@gmail.com>
-	<20060507151021.2986c766.moe@lunar-linux.org>
-	<445DF4EF.3080509@gmail.com>
+	<445DE490.4010005@vip.cybercity.dk>
 Reply-To: Moritz Heiber <moe@lunar-linux.org>, linux-ide@vger.kernel.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-in-05.arcor-online.net ([151.189.21.45]:35050 "EHLO
-	mail-in-05.arcor-online.net") by vger.kernel.org with ESMTP
-	id S932166AbWEGOwm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 May 2006 10:52:42 -0400
-In-Reply-To: <445DF4EF.3080509@gmail.com>
+Received: from mail-in-03.arcor-online.net ([151.189.21.43]:51432 "EHLO
+	mail-in-03.arcor-online.net") by vger.kernel.org with ESMTP
+	id S932170AbWEGPCR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 May 2006 11:02:17 -0400
+In-Reply-To: <445DE490.4010005@vip.cybercity.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: mogensv@vip.cybercity.dk
 Cc: linux-ide@vger.kernel.org
 
-On Sun, 07 May 2006 22:23:59 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+On Sun, 07 May 2006 14:14:08 +0200
+Mogens Valentin <mogensv@vip.cybercity.dk> wrote:
 
-> The digit in the middle is the SPD limit and 0 means no limit.
-> Hmm... wait, this is a hitachi disk.  Have you tried the feature
-> tool?  Hitachi limits the spd of the harddrive tso 1.5 gbps, probably
-> for compatibility reasons, and allows users to enable it with the
-> feature tool.
-> 
-> http://www.hitachigst.com/hdd/support/download.htm#FeatureTool
+> You could try the config with MS, where AFAIK, it does SATA300 mode.
+> You could try skimming forums on ocworkbench.com for info, as this is 
+> kindof an asian homeforum, with JCM360 being designed by .tw Jmicron.
 
-That did it. Thank you very much Tejun. I promise I'll be looking for
-such a tool next time before I bother any of the kernel related
-mailinglists. My Hitachi is now officially running at 3.0Gbps .. and I
-even managed to enable some of the other features (Accustic Management
-and Power Management).
+No Windows on this computer or anywhere nearby. Besides, I would need
+to buy it beforehand ;-)
 
-As a sidenote: Hitachi also provides bootable CD images. Very
-convenient!
+> Whatever, it may or may not be worth too much trouble. I'm thinking 
+> JCM360 may have an unclear future, since AFAIK the later ULi chipsets 
+> have native SATA 300 support, and nVidia bought ULi, perhaps to
+> produce entry level chipsets (according to press).
+> I was very interested in that same board, due to very good test
+> results and features, but skipped it for the very JCM360 driver issue.
+> Being a dirt cheap board, you could spend on a separate selected SATA 
+> interface (to keep for the next board). The mobo certainly has enough 
+> PCIx slots for that.
 
-> > Given your patch though .. your git-based code looks much simpler. I
-> > wonder if that is a good or a bad thing and wether I should try a
-> > more recent kernel .. (?)
-> 
-> The patch was pulled from libata devel tree.  I was being lazy again
-> and didn't test it on 2.6.16.14.  :p  However, I can assure you
-> libata doesn't play much role in PHY spd configuration.
+As I just wrote to the mailinglist, the Hitachi disk utilities did the
+trick as Hitachi is actually enforcing the 1.5Gbps on the user which
+is totally understandable and even a pretty good default given the
+technical knowledge of most computer users.
+ 
+> What's you overall experience with the board, WRT
+> stability/performance?
 
-Nevermind here, I'm a long term C lover .. so it wasn't all that
-complicated to adjust the patch. Besides, you've been very kind in
-providing a patch at least .. since otherwise I'd have to dig one up
-myself (and I am lazy as well ;-).
+I'm very pleased with it actually. All parts of the motherboard are
+well supported under Linux. Sound, ethernet, chipset .. you name it.
 
-Thanks again.
+The only issue I encountered which I wasn't able to fix out of pure
+laziness and the availability of an 'easy way out' would be the sound.
+Whenever I put a quasi-high load on the ethernet controller (6Mbps or
+more) the onboard soundchip would crumble and stop the work. I could
+reproduce it even .. without pointers to a possible solution though.
+
+Anyway, I "fixed" that by using my old Zoltrix Nightingale PCI card
+(cmipci chip .. pretty good value card .. better than Creative's) and
+disabled the onboard sound. I'm sure the issue can be resolved .. if
+you were to look into it more thoroughly of course.
 
 Regards,
 
 Moritz
+
+PS: As I just recalled .. I wasn't able to get the sensor chip working
+or even gather information about what kind of chip is used on the
+motherboard.
