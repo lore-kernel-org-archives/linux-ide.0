@@ -1,61 +1,24 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: Problem with disk
-Date: Fri, 05 May 2006 20:51:14 -0400
-Message-ID: <445BF302.4050709@emc.com>
-References: <Pine.LNX.4.44.0605051939120.13704-100000@coffee.psychology.mcmaster.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Nelson Fritz" <jijjtbsxbbobl@yahoo.com>
+Subject: Best Watch Today XusM
+Date: Sat, 06 May 2006 20:06:56 -0500
+Message-ID: <LAW49.OE649yfB4mvo289653d5__5089.39191136069$1146903362$gmane$org@motmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([168.159.213.200]:53080 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1751184AbWEFAur (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 May 2006 20:50:47 -0400
-In-Reply-To: <Pine.LNX.4.44.0605051939120.13704-100000@coffee.psychology.mcmaster.ca>
+Received: from [59.38.243.47] ([59.38.243.47]:4365 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751287AbWEFIPp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 May 2006 04:15:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: David.Ronis@McGill.CA, linux-ide@vger.kernel.org
+To: autoanswer@vger.kernel.org
 
 
+Loking for quality W@tches at affordable
+price?
+We have widest range of W@tches at very
+competitive price.
+Perfect for G1ft or for personal we@r ! 
+Money baack guaranteesss...
 
-Mark Hahn wrote:
+http://truereplikas.com
 
->>I would suggest that you should run with the write cache disabled unless 
->>you can verify working barrier support.
->>    
->>
->
->this is true, but extremely conservative/paranoid.  it makes a lot 
->of sense if you're handling banking transactions or if you really
->see a lot of abrupt power-offs (yank the battery).  what are the chances
->of a drive failing to write dirty blocks when idle, halting?
->  
->
-The write cache in modern drives is multiple megabytes - 8 or 16MB is 
-not uncommon. The chances that you have data that is lost on a power 
-failure in the write cache is actually quite high...
 
-I agree that most people should not lose too much sleep over this.
-
->don't get me wrong: write barriers are A Good Thing.  just that Linux 
->survived very nicely for many years before such things were bothered with.
->
->  
->
->>The fact that your drive reports IO errors is also worrying - you might 
->>just have a bad drive...  You can look at drive help with tools like 
->>smartctl.
->>    
->>
->
->IO errors trump any concerns for write barriers - there's no need to 
->even think about barriers or cache settings if the disk is, for instance,
->reporting media errors...
->
->  
->
-Agreed again ;-)
-
-ric
-
+ljls9N
