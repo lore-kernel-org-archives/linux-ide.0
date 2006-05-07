@@ -1,88 +1,63 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problem with disk
-Date: Sun, 07 May 2006 22:41:37 +0900
-Message-ID: <445DF911.1020408@gmail.com>
-References: <Pine.LNX.4.44.0605061420340.5626-100000@coffee.psychology.mcmaster.ca> <445D29A1.5000402@gmail.com> <445DF445.6070803@emc.com>
+From: Moritz Heiber <moe@lunar-linux.org>
+Subject: Re: Issues with AHCI and SATAII using JMD360
+Date: Sun, 7 May 2006 16:52:40 +0200
+Message-ID: <20060507165240.2c949d17.moe@lunar-linux.org>
+References: <20060507043702.052e3f56.moritz-heiber@arcor.de>
+	<445D6298.7090003@gmail.com>
+	<20060507140443.7ae89a68.moe@lunar-linux.org>
+	<445DE5D1.3010203@gmail.com>
+	<20060507151021.2986c766.moe@lunar-linux.org>
+	<445DF4EF.3080509@gmail.com>
+Reply-To: Moritz Heiber <moe@lunar-linux.org>, linux-ide@vger.kernel.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.206]:50652 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932166AbWEGNmL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 May 2006 09:42:11 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so1005280nzn
-        for <linux-ide@vger.kernel.org>; Sun, 07 May 2006 06:42:11 -0700 (PDT)
-In-Reply-To: <445DF445.6070803@emc.com>
+Received: from mail-in-05.arcor-online.net ([151.189.21.45]:35050 "EHLO
+	mail-in-05.arcor-online.net") by vger.kernel.org with ESMTP
+	id S932166AbWEGOwm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 May 2006 10:52:42 -0400
+In-Reply-To: <445DF4EF.3080509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ric@emc.com
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>, David.Ronis@McGill.CA, linux-ide@vger.kernel.org, neilb@suse.de
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Ric Wheeler wrote:
+On Sun, 07 May 2006 22:23:59 +0900
+Tejun Heo <htejun@gmail.com> wrote:
+
+> The digit in the middle is the SPD limit and 0 means no limit.
+> Hmm... wait, this is a hitachi disk.  Have you tried the feature
+> tool?  Hitachi limits the spd of the harddrive tso 1.5 gbps, probably
+> for compatibility reasons, and allows users to enable it with the
+> feature tool.
 > 
+> http://www.hitachigst.com/hdd/support/download.htm#FeatureTool
+
+That did it. Thank you very much Tejun. I promise I'll be looking for
+such a tool next time before I bother any of the kernel related
+mailinglists. My Hitachi is now officially running at 3.0Gbps .. and I
+even managed to enable some of the other features (Accustic Management
+and Power Management).
+
+As a sidenote: Hitachi also provides bootable CD images. Very
+convenient!
+
+> > Given your patch though .. your git-based code looks much simpler. I
+> > wonder if that is a good or a bad thing and wether I should try a
+> > more recent kernel .. (?)
 > 
-> Tejun Heo wrote:
->>
->>
->> Unfortunately, this can result in *massive* destruction of the 
->> filesystem.  I lost my RAID-1 array earlier this year this way.  The 
->> FS code systematically destroyed metadata of the filesystem and, on 
->> the following reboot, fsck did the final blow, I think.  I ended up 
->> with 100+Gbytes of unorganized data and I had to recover data by grep 
->> + bvi.
-> 
-> Were you running with Neil's fixes that make MD devices properly handle 
-> write barrier requests?  Until fairly recently (not sure when this was 
-> fixed), MD devices more or less dropped the barrier requests.
-> 
-> With properly working barriers, any journal file system should get you 
-> back to a consistent state after a power drop (although there are many 
-> less common ways that drives can potentially drop data).
+> The patch was pulled from libata devel tree.  I was being lazy again
+> and didn't test it on 2.6.16.14.  :p  However, I can assure you
+> libata doesn't play much role in PHY spd configuration.
 
-I'm not sure whether the barrier was working or not.  Ummm.. Are you 
-saying that MD is capable of recovering from data drop *during* 
-operation?  ie. the system didn't go out, just the harddrives.  Data is 
-lost no matter what MD does and MD and the filesystem don't have any way 
-to tell which bits made it to the media and which are lost whether 
-barriers are working or not.
+Nevermind here, I'm a long term C lover .. so it wasn't all that
+complicated to adjust the patch. Besides, you've been very kind in
+providing a patch at least .. since otherwise I'd have to dig one up
+myself (and I am lazy as well ;-).
 
-To handle such conditions, device driver should tell upper layer that 
-PHY status has changed (or something weird happened which could lead to 
-data loss) and the fs, in return, perform journal replay while still 
-online.  I'm pretty sure that isn't implemented in the current kernel.
+Thanks again.
 
->>
->> This is an extreme case but it shows turning off writeback has its 
->> advantages.  After the initial stress & panic attack subsided, I tried 
->> to think about how to prevent such catastrophes, but there doesn't 
->> seem to be a good way.  There's no way to tell 1. if the harddrive 
->> actually lost the writeback cache content 2. if so, how much it has 
->> lost.  So, unless the OS halts the system everytime something seems 
->> weird with the disk, turning off writeback cache seems to be the only 
->> solution.
->>
-> 
-> Turning off the writeback cache is definitely the safe and conservative 
-> way to go for mission critical data unless you can be very certain that 
-> your barriers are properly working on the drive & IO stack.  We validate 
-> the cache flush commands with a s-ata analyzer (making sure that we see 
-> them on sync/transaction commits) and that they take a reasonable amount 
-> of time at the drive...
-> 
+Regards,
 
-One thing I'm curious about is how much performance benefit can be 
-obtained from write-back caching.  With NCQ/TCQ, latency is much less of 
-an issue and I don't think scheduling and/or buffering inside the drive 
-would result in significant performance increase when so much is done by 
-the vm and block layer (aside from scheduling of currently queued commands).
-
-Some linux elevators try pretty hard to not mix read and write requests 
-as they mess up statistics (write back cache absorbs write requests very 
-fast then affect following read requests).  So, they basically try to 
-eliminate the effect of write-back caching.
-
-Well, benchmark time, it seems.  :)
-
--- 
-tejun
+Moritz
