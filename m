@@ -1,43 +1,55 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Issues with AHCI and SATAII using JMD360
-Date: Sun, 07 May 2006 21:20:43 +0900
-Message-ID: <445DE61B.5060201@gmail.com>
-References: <20060507043702.052e3f56.moritz-heiber@arcor.de>	<445D6298.7090003@gmail.com> <20060507140443.7ae89a68.moe@lunar-linux.org> <445DE54B.4000609@vip.cybercity.dk>
+From: Ingo Oeser <ioe-lkml@rameria.de>
+Subject: Re: [smartmontools-support]Re: LibPATA code issues / 2.6.16 (previously, 2.6.15.x)
+Date: Sun, 7 May 2006 14:44:46 +0200
+Message-ID: <200605071444.49225.ioe-lkml@rameria.de>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <Pine.LNX.4.64.0604211704120.3701@g5.osdl.org> <1146928152.2611.18.camel@dhcppc7>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.196]:9123 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932133AbWEGMVM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 May 2006 08:21:12 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so997827nzn
-        for <linux-ide@vger.kernel.org>; Sun, 07 May 2006 05:21:12 -0700 (PDT)
-In-Reply-To: <445DE54B.4000609@vip.cybercity.dk>
+Received: from smtprelay01.ispgateway.de ([80.67.18.13]:27024 "EHLO
+	smtprelay01.ispgateway.de") by vger.kernel.org with ESMTP
+	id S932140AbWEGMsK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 May 2006 08:48:10 -0400
+In-Reply-To: <1146928152.2611.18.camel@dhcppc7>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: mogensv@vip.cybercity.dk
-Cc: Moritz Heiber <moe@lunar-linux.org>, linux-ide@vger.kernel.org
+To: Leon Woestenberg <leonw@mailcan.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, smartmontools-support@lists.sourceforge.net, Jeff Garzik <jgarzik@pobox.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Mark Lord <lkml@rtr.ca>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de
 
-Mogens Valentin wrote:
-> Moritz Heiber wrote:
->> On Sun, 07 May 2006 11:59:36 +0900
->> Tejun Heo <htejun@gmail.com> wrote:
->>
->>> More info can be obtained by printing SCR_CONTROL, just print the
->>> result of scr_read(ap, SCR_CONTROL) from
->>> libata.c::sata_print_link_status(), which prints the SStatus value.
->>
->>
->> I'm going to try to follow that lead. There doesn't seem to be any sort
->> of tool or application that runs the exact same test yet, is there?
->> hdparm fails on me.
+On Saturday, 6. May 2006 17:09, Leon Woestenberg wrote:
+> However, for large files where parts may be bad sectors, I am still
+> searching for a way to read, then re-write every physical sector
+> occupied by the file. 
 > 
-> You might want to take a look at Douglas Gilbert's sdparm.
-> 
+> With the purpose to remap the bad sectors inside large MPEG files (where
+> I would rather have a few zeroed holes than a read error in them).
 
-Unfortunately, PHY spd setting is currently not exported to user space 
-in anyway.  So, sdparm won't be of much use for this.
+This much easier to solve in the player software:
+do {
+	ret = read(fd, buffer, size)
+	if (ret > 0) {
+		playbuffer(buffer, ret)
+	} else if (ret < 0) {
+		switch(errno) {
+		case EIO:
+			playbuffer(allzeroesbuffer, size);
+			/* skip over this frame because of disk problems */
+			lseek(fd, size, SEEK_CUR);
+			/* TODO: Handle return or lseek() here */
+		}
+	}
+} while(ret != 0)
 
--- 
-tejun
+> Anyone know such tooling exists? I suspect it has to use filesystem
+> specific IOCTL's to query for the blocks involved.
+
+The (somewhat) portable ioctl() FIBMAP would suffice. 
+That way you find out what blocks are this file is mapped to,
+and could add some of these blocks to the badblock list of e2fsck.
+
+Regards
+
+Ingo Oeser
