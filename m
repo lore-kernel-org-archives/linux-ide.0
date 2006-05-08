@@ -1,39 +1,43 @@
-From: "Shu Lee Wong" <kydeienterprisecoltd@yahoo.com.hk>
-Subject: KYDEI ENTERPRISE (H.K) CO.LTD.
-Date: Mon, 08 May 2006 10:25:13 +0200
-Message-ID: <bbfc0cbb53f025ba7f694d60c79a4bb7__49444.498474668$1147077073$gmane$org@promail4you.at>
-Reply-To: "Shu Lee Wong" <kydei_enterprisecoltd@yahoo.com.hk>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH] Move various PCI IDs to header file
+Date: Mon, 08 May 2006 10:31:59 +0200
+Message-ID: <1147077120.2888.5.camel@laptopd505.fenrus.org>
+References: <20060504180614.X88573@chenjesu.americas.sgi.com>
+	 <20060504173722.028c2b24.rdunlap@xenotime.net> <445AE690.5030700@sgi.com>
+	 <Pine.LNX.4.58.0605050926250.3161@shark.he.net>
+	 <0jkn52lnu505eb26plf5o7buertimg2e6v@4ax.com>  <445EF968.3080903@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 193-80-232-250.ip.osiris.at ([193.80.232.250]:62217 "EHLO
-	mailexchange.oundt.net") by vger.kernel.org with ESMTP
-	id S932187AbWEHIav (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 May 2006 04:30:51 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:48806 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932268AbWEHIcG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 May 2006 04:32:06 -0400
+In-Reply-To: <445EF968.3080903@sgi.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jes Sorensen <jes@sgi.com>
+Cc: Grant Coady <gcoady.lk@gmail.com>, "Randy.Dunlap" <rdunlap@xenotime.net>, Brent Casavant <bcasavan@sgi.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org, jeremy@sgi.com
 
-KYDEI ENTERPRISE (H.K) CO.LTD.
-29-32/F., 30 Queen’s Road Central, Hong Kong,
-HONG KONG.
+On Mon, 2006-05-08 at 09:55 +0200, Jes Sorensen wrote:
+> Grant Coady wrote:
+> > When I worked on pci_ids.h cleanup last year I didn't get a clear 
+> > idea of whether moving all #defines to the one header file was 
+> > desired.  Last I looked there were heaps of them scattered all 
+> > over.  Is there a preferred model for placing these #defines?
+> > 
+> > Grant.
+> 
+> According to the document Randy referenced, the preferred place for
+> *new* defines is to stick them in the local files where they are used.
+> I don't think there is any preference for moving the out of pci_ids.h
+> as it would just cause patch noise for the sake of making noise.
+> 
+> So much for being able to go through the pci_ids.h file to get an idea
+> about whether or not a device may have a chance of being supported :(
 
-Dear Sir/Madam,
- 
-We the management, members and staff of Kydei  Enterprise (H.K)co. ltd, will be very glad if you can represent us in your country as a medium of receiving payments for goods supplied to our customers in North America. We deal in Chinese art and interior design and the global need for our goods has given rise to a significant increase in our customer base world wide. Commission for your services is subject to negotiation upon acceptance of our proposal. In anticipation of your acceptance of our proposal, I am taking the liberty of explaining in detail the requirements and need for your services.
- 
-I am an exporter based in Hong Kong who exports Chinese art and interior design. Due to the growing trend for the need for Chinese arts and interior design in North America and the world in general, there has been an upsurge in my customer base and the need for me to expand my business to meet up with the new responsibility at hand. I assume you understand the need for every business to grow and expand to increase profit. As a result of this development, I have had the need to extend my customer base to North America. However, it is only logical that changes are put in place to meet up with the demands of a speedy intercontinental monetary transaction as time is always a factor in effective business management. To give you a better understanding of what your responsibilities will be as my private payment agent, it is important that you understand some difficulties that I am faced with pr
- esently in receiving funds from clients in North America.
- 
-Firstly, most payments for goods are drawn in checks and it takes approximately two-four weeks for checks from other continents to clear with our local banks. These delays mostly result in our late response to orders and we sometimes loose clients to other suppliers.
- 
-Secondly, we experience high tariffs and foreign exchange charges as funds will have to be converted by our banks to local currencies as they are cleared with our banks and re converted to foreign currency as we place orders for supplies from our international suppliers. As you can see, the back and forth process of currency conversion, results to high charges for foreign exchange thereby resulting to increase in cost of doing business. But with your assistance, funds that are to be used for supplies will be sent directly by you to my supplies there by avoiding the intercontinental banking processing time between Asia and North America.
- 
->From My business experience, I have come to realize that every good business reference starts with a satisfactory performance and I have decided that it is better for us to prove to ourselves how efficient we are. I believe this is better than any recommendation or reference. Good business partnership is bonded firmly by friendship and understanding because we are all unique and different that is why character and understanding cannot be over looked. Because of this factor, I have come to the agreement that any funds received by you on my behalf, entitles you to10% of the total funds for your services as commission. I do hope this is acceptable to you.
- 
-I need you to understand that my requirement of your services is totally legal and there is no reason for you to have any concerns. I personally will not involve myself in any business venture that is not 100% legal and I will not advise you to throw caution to the wind in that regard as well. All I have asked is for your services to initiate a reduction in time and cost of doing business. This will automatically instigate progress that will obviously be beneficial to both parties. I do hope the term of business is acceptable to you. Upon receipt of your acceptance, I will update you on how we may proceed. Please accept my sincerest appreciation for your willingness to render your services and I look forward to your prompt response to my email.
- 
-Thank you.
- 
-SHU LEE WONG.
-KYDEI ENTERPRISE (H.K) CO.LTD.
+that wasn't there ever anyway..
+
+modules.pcimap is more like it anyway
+
