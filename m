@@ -1,40 +1,30 @@
-From: "Dario Oliva" <DOliva@ARCOIDE.COM>
-Subject: Infinite loop on MODE-SENSE with a removable ATAPI sata device on VIA chipset
-Date: Mon, 8 May 2006 09:28:23 -0400
-Message-ID: <E656D53DA4B96C409683999F573A360723E4B4@sbs.ARCO.local>
+From: "Raphael Bossek" <raphael.bossek@gmx.de>
+Subject: PDC40775 (Promise SATA 300 TX2plus): PATA + SATA support simultaneously
+Date: Mon, 8 May 2006 16:08:02 +0200 (MEST)
+Message-ID: <2061.1147097282@www114.gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 67.104.187.164.ptr.us.xo.net ([67.104.187.164]:8949 "EHLO
-	ARCOIDE.COM") by vger.kernel.org with ESMTP id S1751255AbWEHN2Z convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 May 2006 09:28:25 -0400
-Content-class: urn:content-classes:message
+Received: from mail.gmx.net ([213.165.64.20]:42638 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751265AbWEHOID (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 May 2006 10:08:03 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello Mr. Garzik:
+Hi all,
 
-We have a removable, ATAPI, SATA device and we are having the following
-problem with Linux (kernel version 2.6.15.6). The device recieves a MODE
-SENSE command. After receiving this command, it is supposed to receive a
-12-byte packet command, which it recieves. Afterwards there is supposed
-to be an IRQ, and then the data is read from the device. However, in one
-computer we have with a VIA chipset, the device keeps getting zeroes
-without stopping. In other words, it gets the 12-bytes and the continues
-to recive bytes all of which are zero. The device never gets the IRQ,
-therefore it does not respond.
+I'm running 2.6.13rc3 with a older libata.patch with PATA + SATA support
+until now without bit troubles. I now intent to update to linux kernel
+2.6.17rc3git14 but are missing PATA + SATA support simultaneously for the
+current driver.
 
-Any ideas on this?
+Do I missing something or the old functionality was removed ?
 
-Thanks in advance for any help.
- 
- 
- 
-Dario Oliva
-Linux Software Engineer
-Data Protection Solutions
+--
+Raphael Bossek
+
+-- 
+Analog-/ISDN-Nutzer sparen mit GMX SmartSurfer bis zu 70%!
+Kostenlos downloaden: http://www.gmx.net/de/go/smartsurfer
