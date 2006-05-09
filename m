@@ -1,44 +1,38 @@
-From: Nicolas STRANSKY <Nico@stransky.cx>
-Subject: Re: IRQ problem with sata_sil
-Date: Tue, 09 May 2006 07:39:34 +0200
-Message-ID: <e3p9um$nn8$1@sea.gmane.org>
-References: <e3n4ru$ktd$1@sea.gmane.org> <dd43dcfb0605080319t59c8d152lc12f872917d9c8bf@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Alphonse Huddleston" <mibvoilrjlt@on24.com>
+Subject: loads of players online, win big
+Date: Tue, 09 May 2006 00:09:26 -0400
+Message-ID: <263c.volumetric__45628.6762528636$1147206722$gmane$org@dactyl91.tumultuous07.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41160 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S1751394AbWEIFjw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 May 2006 01:39:52 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1FdKwi-00026B-HK
-	for linux-ide@vger.kernel.org; Tue, 09 May 2006 07:39:44 +0200
-Received: from fbx.stransky.cx ([82.67.244.251])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 09 May 2006 07:39:44 +0200
-Received: from Nico by fbx.stransky.cx with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 09 May 2006 07:39:44 +0200
-In-Reply-To: <dd43dcfb0605080319t59c8d152lc12f872917d9c8bf@mail.gmail.com>
+Received: from d107.dial.mels.ru ([62.109.163.107]:25608 "HELO
+	d107.dial.mels.ru") by vger.kernel.org with SMTP id S1751135AbWEIUa5
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 May 2006 16:30:57 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Le 05/08/2006 12:19 PM, Paul M. a =E9crit :
-> I had a similar error with my system's on board SI controller while
-> accessing a 3ware controller at high speeds. Personally I'm probably
-> going to avoid the whole problem and try to boot from the 3ware array=
-=2E
+HiRoller Casino
 
-IMO the two problems are unrelated because here the error appears just
-when inserting the module and because of an IRQ mess, not because of bi=
-g
-file transfers..
+$888 free bonus for new players
+Fast Payouts, fair gaming
+Start earning real money!
+More then 60 interactive games
+Just try it, it`s totally free!
 
---=20
-Nico
-Le signe "oui" est d'un homme qui s'endort ;
-au contraire, le r=E9veil secoue la t=EAte et dit non.
-	-+- =C9mile Chartier, dit Alain (1868-1951) -+-
+Change your life, click that link:
 
+http://nuevedvd.com/d1/total
+
+
+
+
+
+
+
+
+
+
+
+
+
+shan't you amort me, eunice baneberry . fixture you crises me, momentous . 
