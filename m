@@ -1,93 +1,107 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
-Date: Wed, 10 May 2006 10:44:50 +0900
-Message-ID: <44614592.7080301@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Daniel Walker <dwalker@mvista.com>
+Subject: [PATCH -mm] sata_vsc gcc 4.1 warning fix
+Date: Tue, 9 May 2006 19:56:06 -0700
+Message-ID: <200605100256.k4A2u6Hu031761@dwalker1.mvista.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.198]:11419 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751105AbWEJBpV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 May 2006 21:45:21 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so1611869nzn
-        for <linux-ide@vger.kernel.org>; Tue, 09 May 2006 18:45:20 -0700 (PDT)
+Received: from gateway-1237.mvista.com ([63.81.120.158]:52029 "EHLO
+	dwalker1.mvista.com") by vger.kernel.org with ESMTP id S932431AbWEJC40
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 May 2006 22:56:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: akpm@osdl.org
+Cc: jeremy@sgi.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, all.
+Fixes the following warning,
 
-It took a lot longer than I thought, but it's ready now.
+drivers/scsi/sata_vsc.c:152: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:153: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:154: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:155: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:156: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:158: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:159: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:160: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:161: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:162: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:166: warning: passing argument 2 of 'writeb' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c: In function 'vsc_sata_tf_read':
+drivers/scsi/sata_vsc.c:178: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:179: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:180: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:181: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:182: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:183: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c: In function 'vsc_sata_setup_port':
+drivers/scsi/sata_vsc.c:320: warning: passing argument 2 of 'writel' makes pointer from integer without a cast
+drivers/scsi/sata_vsc.c:321: warning: passing argument 2 of 'writel' makes pointer from integer without a cast
 
-http://htj.dyndns.org/git/?p=libata-tj.git
-git://htj.dyndns.org/libata-tj
+Signed-Off-By: Daniel Walker <dwalker@mvista.com>
 
-The git tree contains ~120 commits from #upstream[1] and tagged as follows.
-
-#libata-eh-prep		various prep patches for things to follow
-#libata-eh-fw		new EH framework
-#libata-eh		new EH
-#libata-eh-merge-irq-pio merge irq-pio
-#libata-ncq		NCQ support
-#libata-hp-prep		prep for hotplug
-#libata-hp-LLDD-prep	prep LLDDs for hotplug
-#libata-hp		hotplug
-#libata-link		introduce ata_link
-#libata-pm-prep		prep for Port Multiplier support
-#libata-pm		Port Multiplier support
-
-I'll post above as patchsets later today with descriptions about what 
-has changed since last post.
-
-The following drivers support new features.
-
-ata_piix:		new EH, warmplug
-sata_sil:		new EH, hotplug
-ahci:			new EH, NCQ, hotplug
-sata_sil24:		new EH, NCQ, hotplug, Port Multiplier
-
-The only Port Multiplier I've got is sil4726 and thus it's the only one 
-tested.  I implemented AHCI PM support half-way but then realized I 
-don't have any AHCI controller which supports PM (I have ICH7R).  Is 
-there any AHCI controller which reports PM support?
-
-In general, EH, NCQ and hotplug work great with Port Multiplier. 
-However, there are some hardware issues.
-
-* sil3124/32 don't have SNotification, so if devices with active 
-commands are yanked out.  There's no way to abort the commands directly. 
-  We have to wait till timeout.  Not so great but not so bad either.
-
-* some drives lock up completely if it gets reset while commands are in 
-progress.  Due to PM DMA CS errata, sometimes the controller is forced 
-to reset the whole controller/PM on error detection causing this 
-problem.  Well, nothing much can be done about it and recent drives 
-don't seem to have such problems.
-
-* sil3124 doesn't seem to detect R_ERR on command issue as well as 
-sil3132.  If somethings goes wrong during EH, 3124 tends to timeout 
-rather than quickly fail as 3132 does resulting in much longer recovery 
-time.  However, I think this can be resolved by tuning timeouts used 
-during EH.
-
-* sil3124/32 reacts weirdly on ATAPI CHECK SENSE if the device is 
-attached via PM and commands are active to other devices on the PM.  It 
-seems that PM DMA CS errata doesn't cover all.  Problems occur even if 
-only one other device is active.  This is worked around by executing all 
-ATAPI commands by themselves.  So, if you connect ATAPI device to PM and 
-access it, other devices sharing the PM will suffer.
-
-I complained a lot but, all in all, sil3124/32 + sil4726 work greatly.
-
-Albert, can you please verify that I didn't screw up during irq-pio 
-merge?  It's done in the following two commits.
-
-516fb4d37fa8648d4f7c9358c7dca22758a49c55 (actual merge)
-1bb4c2efb606a5b746997b0ceabbdadbda5d3f26 (followup fixes)
-
-Thanks.
-
--- 
-tejun
+Index: linux-2.6.16/drivers/scsi/sata_vsc.c
+===================================================================
+--- linux-2.6.16.orig/drivers/scsi/sata_vsc.c
++++ linux-2.6.16/drivers/scsi/sata_vsc.c
+@@ -149,21 +149,21 @@ static void vsc_sata_tf_load(struct ata_
+ 		vsc_intr_mask_update(ap, tf->ctl & ATA_NIEN);
+ 	}
+ 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+-		writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
+-		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), ioaddr->nsect_addr);
+-		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), ioaddr->lbal_addr);
+-		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), ioaddr->lbam_addr);
+-		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), ioaddr->lbah_addr);
++		writew(tf->feature | (((u16)tf->hob_feature) << 8), (void *)ioaddr->feature_addr);
++		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), (void *)ioaddr->nsect_addr);
++		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), (void *)ioaddr->lbal_addr);
++		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), (void *)ioaddr->lbam_addr);
++		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), (void *)ioaddr->lbah_addr);
+ 	} else if (is_addr) {
+-		writew(tf->feature, ioaddr->feature_addr);
+-		writew(tf->nsect, ioaddr->nsect_addr);
+-		writew(tf->lbal, ioaddr->lbal_addr);
+-		writew(tf->lbam, ioaddr->lbam_addr);
+-		writew(tf->lbah, ioaddr->lbah_addr);
++		writew(tf->feature, (void *)ioaddr->feature_addr);
++		writew(tf->nsect, (void *)ioaddr->nsect_addr);
++		writew(tf->lbal, (void *)ioaddr->lbal_addr);
++		writew(tf->lbam, (void *)ioaddr->lbam_addr);
++		writew(tf->lbah, (void *)ioaddr->lbah_addr);
+ 	}
+ 
+ 	if (tf->flags & ATA_TFLAG_DEVICE)
+-		writeb(tf->device, ioaddr->device_addr);
++		writeb(tf->device, (void *)ioaddr->device_addr);
+ 
+ 	ata_wait_idle(ap);
+ }
+@@ -175,12 +175,12 @@ static void vsc_sata_tf_read(struct ata_
+ 	u16 nsect, lbal, lbam, lbah, feature;
+ 
+ 	tf->command = ata_check_status(ap);
+-	tf->device = readw(ioaddr->device_addr);
+-	feature = readw(ioaddr->error_addr);
+-	nsect = readw(ioaddr->nsect_addr);
+-	lbal = readw(ioaddr->lbal_addr);
+-	lbam = readw(ioaddr->lbam_addr);
+-	lbah = readw(ioaddr->lbah_addr);
++	tf->device = readw((void *)ioaddr->device_addr);
++	feature = readw((void *)ioaddr->error_addr);
++	nsect = readw((void *)ioaddr->nsect_addr);
++	lbal = readw((void *)ioaddr->lbal_addr);
++	lbam = readw((void *)ioaddr->lbam_addr);
++	lbah = readw((void *)ioaddr->lbah_addr);
+ 
+ 	tf->feature = feature;
+ 	tf->nsect = nsect;
+@@ -317,8 +317,8 @@ static void __devinit vsc_sata_setup_por
+ 	port->ctl_addr		= base + VSC_SATA_TF_CTL_OFFSET;
+ 	port->bmdma_addr	= base + VSC_SATA_DMA_CMD_OFFSET;
+ 	port->scr_addr		= base + VSC_SATA_SCR_STATUS_OFFSET;
+-	writel(0, base + VSC_SATA_UP_DESCRIPTOR_OFFSET);
+-	writel(0, base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
++	writel(0, (void *)(base + VSC_SATA_UP_DESCRIPTOR_OFFSET));
++	writel(0, (void *)(base + VSC_SATA_UP_DATA_BUFFER_OFFSET));
+ }
+ 
+ 
