@@ -1,66 +1,66 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: IRQ problem with sata_sil
-Date: Wed, 10 May 2006 13:36:48 +0900
-Message-ID: <44616DE0.3020008@gmail.com>
-References: <e3n4ru$ktd$1@sea.gmane.org>
+From: Daniel Walker <dwalker@mvista.com>
+Subject: Re: [PATCH -mm] sata_vsc gcc 4.1 warning fix
+Date: Tue, 09 May 2006 21:38:00 -0700
+Message-ID: <1147235880.21536.53.camel@c-67-180-134-207.hsd1.ca.comcast.net>
+References: <200605100256.k4A2u6Hu031761@dwalker1.mvista.com>
+	 <44616A1C.20800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:49317 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S964804AbWEJEgx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 May 2006 00:36:53 -0400
-Received: by py-out-1112.google.com with SMTP id f28so1809458pyf
-        for <linux-ide@vger.kernel.org>; Tue, 09 May 2006 21:36:52 -0700 (PDT)
-In-Reply-To: <e3n4ru$ktd$1@sea.gmane.org>
+Received: from gateway-1237.mvista.com ([63.81.120.158]:45926 "EHLO
+	gateway-1237.mvista.com") by vger.kernel.org with ESMTP
+	id S964815AbWEJEiE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 May 2006 00:38:04 -0400
+In-Reply-To: <44616A1C.20800@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nicolas STRANSKY <Nico@stransky.cx>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: akpm@osdl.org, jeremy@sgi.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Nicolas STRANSKY wrote:
-> Hi all,
+On Wed, 2006-05-10 at 13:20 +0900, Tejun Heo wrote:
+> Daniel Walker wrote:
+> > Fixes the following warning,
+> > 
+> > drivers/scsi/sata_vsc.c:152: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:153: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:154: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:155: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:156: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:158: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:159: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:160: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:161: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:162: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:166: warning: passing argument 2 of 'writeb' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c: In function 'vsc_sata_tf_read':
+> > drivers/scsi/sata_vsc.c:178: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:179: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:180: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:181: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:182: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:183: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c: In function 'vsc_sata_setup_port':
+> > drivers/scsi/sata_vsc.c:320: warning: passing argument 2 of 'writel' makes pointer from integer without a cast
+> > drivers/scsi/sata_vsc.c:321: warning: passing argument 2 of 'writel' makes pointer from integer without a cast
+> > 
+> > Signed-Off-By: Daniel Walker <dwalker@mvista.com>
+> > 
 > 
-> I've encountered a problem when trying to use a SATA card with a Silicon
-> Image SIL 3112 host controller chip. When inserting the module, the
-> kernel made this error:
+> Hello, Daniel.
 > 
+> This fix comes up every so often and I have submitted almost identical 
+> patch several months ago.  Unfortunately, it's not the proper fix and 
+> won't be accepted.  All those read/writeX()'s and in/outX()'s are 
+> scheduled (for a looooong time) to be converted to new unified 
+> ioread/writeX()'s.  Things are in progress (well, or halt) in the #iomap 
+> branch of libata-dev devel tree.  libata needs some updates in host 
+> initialization part for this conversion to complete.
 
-Hello, Nicolas.
+I guess subconsciously I knew as much, but I've seen warning like these
+during compiles for a very very very long time .. Considering how
+trivial it is to silence them I don't see why it shouldn't be accepted .
+The "right" fix should have arrived by now ..
 
-One of the most annoying problem with traditional IDE interface is that 
-the controller doesn't have 'hey! I'm the needy one!' flag.  So, when an 
-IRQ is raised, there is no way whether the controller is actually 
-raising the interrupt or not.  libata (and probably other IDE drivers 
-too) works around this by determining when to expect interrupt and 
-handle the interrupt according to HSM.
+Daniel
 
-Under normal circumstances, this usually works, but every now and then 
-something weird happens and the controller raises IRQ that libata wasn't 
-expecting, resulting in stuck IRQ and Linux IRQ layer saves its ass by 
-disabling the IRQ, which is a good thing; otherwise, the whole system 
-would hang completely.
-
-In your case, the IRQ was in raised state before you loaded the module. 
-  While loading the module, IRQ gets unmasked.  As libata hasn't issued 
-any command yet, it isn't expecting interrupts, so it thinks the 
-interrupt doesn't belong to it.  So, the stuck IRQ and your symptom.
-
-libata is in the way of getting new EH/probing mechanism and the problem 
-will be resolved.  New EH/probing does two things to prevent such things.
-
-* freeze (mask interrupt) the port before requesting IRQ and thaw 
-(unmask) only after the controller and drives are reset and in known 
-good state.
-
-* sil3112 family of controllers (and most of other modern SATA 
-controllers too) actually have the needy flag.  New version of sata_sil 
-will have customized IRQ handler which properly detects and handles 
-unexpected/spurious interrupts.
-
-New EH/probing will probably included in 2.6.18 but I intend to make 
-patches against stable series.  So, if this problem bugs you, stay tuned.
-
--- 
-tejun
