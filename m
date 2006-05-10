@@ -1,54 +1,88 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problem with disk
-Date: Thu, 11 May 2006 07:21:29 +0900
-Message-ID: <44626769.2000601@gmail.com>
-References: <Pine.LNX.4.44.0605061420340.5626-100000@coffee.psychology.mcmaster.ca> <445D29A1.5000402@gmail.com> <445DF445.6070803@emc.com> <445DF911.1020408@gmail.com> <445F56B2.9070300@emc.com>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: ata_piix failure on ich6m
+Date: Thu, 11 May 2006 00:56:51 +0100
+Message-ID: <20060510235650.GA20206@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:8482 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S965044AbWEJWVz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 May 2006 18:21:55 -0400
-Received: by py-out-1112.google.com with SMTP id f28so45192pyf
-        for <linux-ide@vger.kernel.org>; Wed, 10 May 2006 15:21:55 -0700 (PDT)
-In-Reply-To: <445F56B2.9070300@emc.com>
+Received: from cavan.codon.org.uk ([217.147.92.49]:5519 "EHLO
+	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
+	id S965092AbWEJX44 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 May 2006 19:56:56 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>, David.Ronis@McGill.CA, linux-ide@vger.kernel.org, neilb@suse.de
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
 
-Ric Wheeler wrote:
-> I think that MD will do the right thing if the IO terminates with an 
-> error condition.  If the error is silent (and that can happen during a 
-> write), then it clearly cannot recover.
+Hi,
 
-The condition I've described results in silent loss of data.  Depending 
-on type and implementation, LLDD might be able to detect the condition 
-(PHY RDY status changed for SATA), but the event happens after the 
-affected writes are completed successfully.  For example,
+We've got an ich6m system (a Toshiba Portege S100). ata_piix attempts to 
+drive the chipset, but fails - however, it doesn't bail out. As a result 
+it remains bound to the device and ahci isn't loaded.
 
-1. fs issues writes for block #x, #y and then barrier #b.
-2. #x gets written to the write-back cache and completed successfully
-3. power glitch occurs while #y is in progress.  LLDD detects the 
-condition, recovers the drive and retries #y.
-4. #y gets written to the write-back cache and completed successfully
-4. barrier #b gets executed and #y gets written to the media, but #x is 
-lost and nobody knows about it.
+I've attached the lspci output for the chipset. A few things to note 
+are:
 
-I'm worried about the problem because, with libata, hotplug is becoming 
-available to the masses and when average Joe hot plugs a new drive into 
-his machine which has $8 power supply (really, they sell 300w ATX power 
-at 8000 KRW which is about $8), this is going to happen.  I had a pretty 
-decent power supply from a reputable maker but I still got hit by the 
-problem.
+1) The AHCI BAR is set
+2) The SCC register identifies it as an AHCI controller
+3) Bits 2 and 0 of the PCS are set, which the spec claims indicates that 
+the port is to be controlled as an ahci device.
 
-Maybe the correct approach is to establish a warm-plug protocol.  Kernel 
-provides a way to plug IOs and user helper program plugs all IOs until 
-the new device settles.
+So, my question is effectively: why does ata_piix attempt to disable 
+ahci rather than simply letting the ahci driver bind? Points (1) and (2) 
+seem to be checked by the code, but I'm guessing that in the case of (3) 
+it should just return ENODEV and let ahci be run instead. If so, should 
+I code up a patch?
 
-Thanks.
+Dmesg output:
 
+[4294674.890000] ata_piix 0000:00:1f.2: version 1.05
+[4294674.890000] ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, 
+low) -> IRQ 233
+[4294674.890000] PCI: Setting latency timer of device 0000:00:1f.2 to 64
+[4294674.890000] ata1: SATA max UDMA/133 cmd 0xBF28 ctl 0xBF26 bmdma 
+0xBF00 irq 233
+[4294674.890000] ata2: SATA max UDMA/133 cmd 0xBF18 ctl 0xBF16 bmdma 
+0xBF08 irq 233
+[4294674.900000] hda: ATAPI 24X DVD-ROM CD-R/RW drive, 2048kB Cache, 
+UDMA(33)
+[4294674.900000] Uniform CD-ROM driver Revision: 3.20
+[4294674.983000] Probing IDE interface ide1...
+[4294675.056000] ATA: abnormal status 0xFF on port 0xBF2F
+[4294675.056000] ata1: disabling port
+[4294675.057000] scsi0 : ata_piix
+[4294675.223000] ATA: abnormal status 0xFF on port 0xBF1F
+[4294675.223000] ata2: disabling port
+[4294675.224000] scsi1 : ata_piix
+
+lspci output:
+
+0000:00:1f.2 0106: Intel Corporation 82801FBM (ICH6M) SATA Controller
+(rev 03) (prog-if 01)
+ Subsystem: Toshiba America Info Systems: Unknown device 0f00
+ Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 233
+ I/O ports at bf28 [size=8]
+ I/O ports at bf24 [size=4]
+ I/O ports at bf18 [size=8]
+ I/O ports at bf14 [size=4]
+ I/O ports at bf00 [size=16]
+ Memory at cddffc00 (32-bit, non-prefetchable) [size=1K]
+ Capabilities: [70] Power Management version 2
+00: 86 80 53 26 07 00 b0 02 03 01 06 01 00 00 00 00
+10: 29 bf 00 00 25 bf 00 00 19 bf 00 00 15 bf 00 00
+20: 01 bf 00 00 00 fc df cd 00 00 00 00 79 11 00 0f
+30: 00 00 00 00 70 00 00 00 00 00 00 00 0b 02 00 00
+40: 07 23 00 00 00 00 00 00 01 00 01 00 00 00 00 00
+50: 00 00 00 00 10 10 04 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 01 00 02 40 00 00 00 00 00 00 00 00 00 00 00 00
+80: 05 70 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 80 00 15 00 82 01 c0 0a 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 80 0f 04 00 00 00 00 00
 -- 
-tejun
+Matthew Garrett | mjg59@srcf.ucam.org
