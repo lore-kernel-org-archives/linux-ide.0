@@ -1,49 +1,54 @@
 From: Daniel Walker <dwalker@mvista.com>
-Subject: [PATCH -mm] sata_vsc gcc 4.1 warning fix
+Subject: [PATCH -mm] scsi sata_svw gcc 4.1 warning fix
 Date: Tue, 9 May 2006 19:56:06 -0700
-Message-ID: <200605100256.k4A2u6Hu031761@dwalker1.mvista.com>
+Message-ID: <200605100256.k4A2u6Kd031755@dwalker1.mvista.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.158]:52029 "EHLO
-	dwalker1.mvista.com") by vger.kernel.org with ESMTP id S932431AbWEJC40
+Received: from gateway-1237.mvista.com ([63.81.120.158]:56637 "EHLO
+	dwalker1.mvista.com") by vger.kernel.org with ESMTP id S932434AbWEJC4c
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 May 2006 22:56:26 -0400
+	Tue, 9 May 2006 22:56:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: akpm@osdl.org
-Cc: jeremy@sgi.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, benh@kernel.crashing.org, linux-kernel@vger.kernel.org
 
 Fixes the following warning,
 
-drivers/scsi/sata_vsc.c:152: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:153: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:154: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:155: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:156: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:158: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:159: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:160: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:161: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:162: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:166: warning: passing argument 2 of 'writeb' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c: In function 'vsc_sata_tf_read':
-drivers/scsi/sata_vsc.c:178: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:179: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:180: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:181: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:182: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:183: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c: In function 'vsc_sata_setup_port':
-drivers/scsi/sata_vsc.c:320: warning: passing argument 2 of 'writel' makes pointer from integer without a cast
-drivers/scsi/sata_vsc.c:321: warning: passing argument 2 of 'writel' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c: In function 'k2_sata_tf_load':
+drivers/scsi/sata_svw.c:115: warning: passing argument 2 of 'writeb' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:120: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:121: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:122: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:123: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:124: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:126: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:127: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:128: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:129: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:130: warning: passing argument 2 of 'writew' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:134: warning: passing argument 2 of 'writeb' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c: In function 'k2_sata_tf_read':
+drivers/scsi/sata_svw.c:146: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:147: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:148: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:149: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:150: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
+drivers/scsi/sata_svw.c:151: warning: passing argument 1 of 'readw' makes pointer from integer without a cast
 
 Signed-Off-By: Daniel Walker <dwalker@mvista.com>
 
-Index: linux-2.6.16/drivers/scsi/sata_vsc.c
+Index: linux-2.6.16/drivers/scsi/sata_svw.c
 ===================================================================
---- linux-2.6.16.orig/drivers/scsi/sata_vsc.c
-+++ linux-2.6.16/drivers/scsi/sata_vsc.c
-@@ -149,21 +149,21 @@ static void vsc_sata_tf_load(struct ata_
- 		vsc_intr_mask_update(ap, tf->ctl & ATA_NIEN);
+--- linux-2.6.16.orig/drivers/scsi/sata_svw.c
++++ linux-2.6.16/drivers/scsi/sata_svw.c
+@@ -112,26 +112,26 @@ static void k2_sata_tf_load(struct ata_p
+ 	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
+ 
+ 	if (tf->ctl != ap->last_ctl) {
+-		writeb(tf->ctl, ioaddr->ctl_addr);
++		writeb(tf->ctl, (void *)ioaddr->ctl_addr);
+ 		ap->last_ctl = tf->ctl;
+ 		ata_wait_idle(ap);
  	}
  	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
 -		writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
@@ -75,10 +80,10 @@ Index: linux-2.6.16/drivers/scsi/sata_vsc.c
  
  	ata_wait_idle(ap);
  }
-@@ -175,12 +175,12 @@ static void vsc_sata_tf_read(struct ata_
+@@ -143,12 +143,12 @@ static void k2_sata_tf_read(struct ata_p
  	u16 nsect, lbal, lbam, lbah, feature;
  
- 	tf->command = ata_check_status(ap);
+ 	tf->command = k2_stat_check_status(ap);
 -	tf->device = readw(ioaddr->device_addr);
 -	feature = readw(ioaddr->error_addr);
 -	nsect = readw(ioaddr->nsect_addr);
@@ -94,14 +99,3 @@ Index: linux-2.6.16/drivers/scsi/sata_vsc.c
  
  	tf->feature = feature;
  	tf->nsect = nsect;
-@@ -317,8 +317,8 @@ static void __devinit vsc_sata_setup_por
- 	port->ctl_addr		= base + VSC_SATA_TF_CTL_OFFSET;
- 	port->bmdma_addr	= base + VSC_SATA_DMA_CMD_OFFSET;
- 	port->scr_addr		= base + VSC_SATA_SCR_STATUS_OFFSET;
--	writel(0, base + VSC_SATA_UP_DESCRIPTOR_OFFSET);
--	writel(0, base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
-+	writel(0, (void *)(base + VSC_SATA_UP_DESCRIPTOR_OFFSET));
-+	writel(0, (void *)(base + VSC_SATA_UP_DATA_BUFFER_OFFSET));
- }
- 
- 
