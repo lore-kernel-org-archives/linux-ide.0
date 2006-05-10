@@ -1,39 +1,65 @@
-From: "Shem Multinymous" <multinymous@gmail.com>
-Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
-Date: Wed, 10 May 2006 16:37:54 +0300
-Message-ID: <41840b750605100637w2205bf71h6997aee691b3947c@mail.gmail.com>
-References: <44614592.7080301@gmail.com>
+From: "Dario Oliva" <DOliva@ARCOIDE.COM>
+Subject: RE: Infinite loop on MODE-SENSE with a removable ATAPI sata device on VIA chipset
+Date: Wed, 10 May 2006 10:51:10 -0400
+Message-ID: <E656D53DA4B96C409683999F573A360723E553@sbs.ARCO.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:63711 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S964962AbWEJNhz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 May 2006 09:37:55 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so137764wra
-        for <linux-ide@vger.kernel.org>; Wed, 10 May 2006 06:37:54 -0700 (PDT)
-In-Reply-To: <44614592.7080301@gmail.com>
-Content-Disposition: inline
+Received: from 67.104.187.164.ptr.us.xo.net ([67.104.187.164]:7664 "EHLO
+	ARCOIDE.COM") by vger.kernel.org with ESMTP id S1751460AbWEJOvP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 May 2006 10:51:15 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On 5/10/06, Tejun Heo <htejun@gmail.com> wrote:
-> git://htj.dyndns.org/libata-tj
+> -----Original Message-----
+> From: Tejun Heo [mailto:htejun@gmail.com] 
+> Sent: Monday, May 08, 2006 7:13 PM
+> To: Dario Oliva
+> Cc: jgarzik@pobox.com; linux-ide@vger.kernel.org
+> Subject: Re: Infinite loop on MODE-SENSE with a removable ATAPI sata
+device on VIA chipset
+>
+> Dario Oliva wrote:
+>> Hello Mr. Garzik:
+>> 
+>> We have a removable, ATAPI, SATA device and we are having the 
+>> following problem with Linux (kernel version 2.6.15.6). The device 
+>> recieves a MODE SENSE command. After receiving this command, it is 
+>> supposed to receive a 12-byte packet command, which it recieves. 
+>> Afterwards there is supposed to be an IRQ, and then the data is read 
+>> from the device. However, in one computer we have with a VIA chipset,
 
-With this kernel tree, ata_piix warmplug works perfectly with ICH6 on
-ThinkPad T43.
-At long last, I can now switch between the UltraBay DVD drive and
-UltraBay HDD without rebooting!
+>> the device keeps getting zeroes without stopping. In other words, it 
+>> gets the 12-bytes and the continues to recive bytes all of which are 
+>> zero. The device never gets the IRQ, therefore it does not respond.
+>> 
+>> Any ideas on this?
+>> 
+>> Thanks in advance for any help.
+>
+> Please post what kind of ATAPI device you are using and the kernel
+log. 
+>  If possible, please change #undef ATA_DEBUG in include/linux/libata.h
+to #define ATA_DEBUG prior to generate the kernel > log.
+>
+> --
+> tejun
 
-On this machine the command for disabling the port is
-# echo 1 > /sys/class/scsi_device/1\:0\:0\:0/device/delete
-and the command for enabling and re-scanning is
-# echo 0 0 0 >  /sys/class/scsi_host/host1/scan
+Attached are some kernel messeges. I ran dmesg several times and
+appended the output to the attached file, so there may be some
+redudancy. However some of the commands or debug lines do appear to
+repeat themselves. As you requested, I changed "#undef ATA_DEBUG" to
+"#define ATA_DEBUG".
 
-Thanks for the excellent work!
+As far as the device is concerned, is an unreleased product of the
+company I work for. That's why I did not give a name, because we don't
+have an official name yet. But like I said, it is SATA, removalbe ATAPI.
+If you want/need more information let me know.
 
-  Shem
+Dario
