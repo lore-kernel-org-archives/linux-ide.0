@@ -1,58 +1,114 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
 Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
-Date: Wed, 10 May 2006 13:36:36 +0800
-Message-ID: <1147239396.7273.13.camel@forrest26.sh.intel.com>
+Date: Wed, 10 May 2006 09:29:56 +0300
+Message-ID: <5d96567b0605092329m23f950actcc4f1e100bea695a@mail.gmail.com>
 References: <44614592.7080301@gmail.com>
-	 <1147236696.7273.5.camel@forrest26.sh.intel.com>
-	 <44617782.7000302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:40554 "EHLO
-	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S964817AbWEJFrZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 May 2006 01:47:25 -0400
-In-Reply-To: <44617782.7000302@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.176]:65383 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S964833AbWEJG35 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 May 2006 02:29:57 -0400
+Received: by py-out-1112.google.com with SMTP id f28so1832282pyf
+        for <linux-ide@vger.kernel.org>; Tue, 09 May 2006 23:29:56 -0700 (PDT)
+In-Reply-To: <44614592.7080301@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, 2006-05-10 at 14:17 +0900, Tejun Heo wrote:
+tejun hello
+can u estimate what mainstream kernel version ( kernel.org)  would
+contain these commits ?
 
-> Does your ICH7 report 1 for the SMP bit (bit 17 of the CAP register)?
-> Cool.  How come mine doesn't?  :/  Can you tell me the exact name of the
-> product?
-Yes, PMP bit is set. let me post the dmesg output here:
+thank you
+raz.
 
-ahci 0000:00:1f.2: AHCI 0001.0000 32 slots 6 ports ? Gbps 0x3f impl SATA
-mode
-ahci 0000:00:1f.2: flags: 64bit stag led pmp
-ata1: SATA max UDMA/133 cmd 0xFFFFC20000002100 ctl 0x0 bmdma 0x0 irq 201
-ata2: SATA max UDMA/133 cmd 0xFFFFC20000002180 ctl 0x0 bmdma 0x0 irq 201
-ata3: SATA max UDMA/133 cmd 0xFFFFC20000002200 ctl 0x0 bmdma 0x0 irq 201
-ata4: SATA max UDMA/133 cmd 0xFFFFC20000002280 ctl 0x0 bmdma 0x0 irq 201
-ata5: SATA max UDMA/133 cmd 0xFFFFC20000002300 ctl 0x0 bmdma 0x0 irq 201
-ata6: SATA max UDMA/133 cmd 0xFFFFC20000002380 ctl 0x0 bmdma 0x0 irq 201
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003
-88:007f
-ata1: dev 0 ATA-6, max UDMA/133, 234441648 sectors: LBA48 NCQ (depth
-0/32)
-ata1: dev 0 configured for UDMA/133
+On 5/10/06, Tejun Heo <htejun@gmail.com> wrote:
+> Hello, all.
+>
+> It took a lot longer than I thought, but it's ready now.
+>
+> http://htj.dyndns.org/git/?p=libata-tj.git
+> git://htj.dyndns.org/libata-tj
+>
+> The git tree contains ~120 commits from #upstream[1] and tagged as follows.
+>
+> #libata-eh-prep         various prep patches for things to follow
+> #libata-eh-fw           new EH framework
+> #libata-eh              new EH
+> #libata-eh-merge-irq-pio merge irq-pio
+> #libata-ncq             NCQ support
+> #libata-hp-prep         prep for hotplug
+> #libata-hp-LLDD-prep    prep LLDDs for hotplug
+> #libata-hp              hotplug
+> #libata-link            introduce ata_link
+> #libata-pm-prep         prep for Port Multiplier support
+> #libata-pm              Port Multiplier support
+>
+> I'll post above as patchsets later today with descriptions about what
+> has changed since last post.
+>
+> The following drivers support new features.
+>
+> ata_piix:               new EH, warmplug
+> sata_sil:               new EH, hotplug
+> ahci:                   new EH, NCQ, hotplug
+> sata_sil24:             new EH, NCQ, hotplug, Port Multiplier
+>
+> The only Port Multiplier I've got is sil4726 and thus it's the only one
+> tested.  I implemented AHCI PM support half-way but then realized I
+> don't have any AHCI controller which supports PM (I have ICH7R).  Is
+> there any AHCI controller which reports PM support?
+>
+> In general, EH, NCQ and hotplug work great with Port Multiplier.
+> However, there are some hardware issues.
+>
+> * sil3124/32 don't have SNotification, so if devices with active
+> commands are yanked out.  There's no way to abort the commands directly.
+>   We have to wait till timeout.  Not so great but not so bad either.
+>
+> * some drives lock up completely if it gets reset while commands are in
+> progress.  Due to PM DMA CS errata, sometimes the controller is forced
+> to reset the whole controller/PM on error detection causing this
+> problem.  Well, nothing much can be done about it and recent drives
+> don't seem to have such problems.
+>
+> * sil3124 doesn't seem to detect R_ERR on command issue as well as
+> sil3132.  If somethings goes wrong during EH, 3124 tends to timeout
+> rather than quickly fail as 3132 does resulting in much longer recovery
+> time.  However, I think this can be resolved by tuning timeouts used
+> during EH.
+>
+> * sil3124/32 reacts weirdly on ATAPI CHECK SENSE if the device is
+> attached via PM and commands are active to other devices on the PM.  It
+> seems that PM DMA CS errata doesn't cover all.  Problems occur even if
+> only one other device is active.  This is worked around by executing all
+> ATAPI commands by themselves.  So, if you connect ATAPI device to PM and
+> access it, other devices sharing the PM will suffer.
+>
+> I complained a lot but, all in all, sil3124/32 + sil4726 work greatly.
+>
+> Albert, can you please verify that I didn't screw up during irq-pio
+> merge?  It's done in the following two commits.
+>
+> 516fb4d37fa8648d4f7c9358c7dca22758a49c55 (actual merge)
+> 1bb4c2efb606a5b746997b0ceabbdadbda5d3f26 (followup fixes)
+>
+> Thanks.
+>
+> --
+> tejun
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-The platform name is bensley, and the chipset is ESB2 instead of ICH7
-(sorry for my mistake in last mail), the output of lspci is:
 
-00:1f.2 Class 0106: Intel Corporation Enterprise Southbridge SATA
-cc=AHCI (rev 08)
-
-> Zhao, I think I've ironed out all the problems you've reported with the
-> previous revision of hotplug.  If you've got some time, can you please
-> check whether those problems are really gone?
-> 
-Yes, I'm preparing for the next round of test for your updated patches.
-
-Thanks,
-Forrest
+--
+Raz
