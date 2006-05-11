@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/22] libata: use preallocated buffers
-Date: Thu, 11 May 2006 20:59:50 +0900
-Message-ID: <11473487902895-git-send-email-htejun@gmail.com>
+Subject: [PATCH 13/22] libata: implement qc->result_tf
+Date: Thu, 11 May 2006 20:59:51 +0900
+Message-ID: <11473487911193-git-send-email-htejun@gmail.com>
 References: <11473487893774-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.200]:33397 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751586AbWEKMAB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 08:00:01 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so170506nzn
+Received: from py-out-1112.google.com ([64.233.166.182]:4539 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751585AbWEKMAC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 08:00:02 -0400
+Received: by py-out-1112.google.com with SMTP id f28so211152pyf
         for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 05:00:01 -0700 (PDT)
 In-Reply-To: <11473487893774-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,163 +20,179 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-It's not a very good idea to allocate memory during EH.  Use
-statically allocated buffer for dev->id[] and add 512byte buffer
-ap->sector_buf.  This buffer is owned by EH (or probing) and to be
-used as temporary buffer for various purposes (IDENTIFY, NCQ log page
-10h, PM GSCR block).
+Add qc->result_tf and ATA_QCFLAG_RESULT_TF.  This moves the
+responsibility of loading result TF from post-compltion path to qc
+execution path.  qc->result_tf is loaded if explicitly requested or
+the qc failsa.  This allows more efficient completion implementation
+and correct handling of result TF for controllers which don't have
+global TF representation such as sil3124/32.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   32 ++++++++------------------------
- include/linux/libata.h     |    4 +++-
- 2 files changed, 11 insertions(+), 25 deletions(-)
+ drivers/scsi/libata-core.c |    4 ++--
+ drivers/scsi/libata-scsi.c |   18 +++++++-----------
+ include/linux/libata.h     |   16 ++++++++++++++--
+ 3 files changed, 23 insertions(+), 15 deletions(-)
 
-dbdf1ff319e3e4f70ea9582f9db67b613c02ab7e
+46a93ec2cb1124f507e0cad7dcb65794a15af844
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 4c8e602..1806c7c 100644
+index 464fd46..4cb7828 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1099,7 +1099,7 @@ unsigned int ata_pio_need_iordy(const st
-  *	@dev: target device
-  *	@p_class: pointer to class of the target device (may be changed)
-  *	@post_reset: is this read ID post-reset?
-- *	@p_id: read IDENTIFY page (newly allocated)
-+ *	@id: buffer to read IDENTIFY data into
-  *
-  *	Read ID data from the specified device.  ATA_CMD_ID_ATA is
-  *	performed on ATA devices and ATA_CMD_ID_ATAPI on ATAPI
-@@ -1113,12 +1113,11 @@ unsigned int ata_pio_need_iordy(const st
-  *	0 on success, -errno otherwise.
-  */
- static int ata_dev_read_id(struct ata_port *ap, struct ata_device *dev,
--			   unsigned int *p_class, int post_reset, u16 **p_id)
-+			   unsigned int *p_class, int post_reset, u16 *id)
+@@ -955,7 +955,6 @@ void ata_qc_complete_internal(struct ata
  {
- 	unsigned int class = *p_class;
- 	struct ata_taskfile tf;
- 	unsigned int err_mask = 0;
--	u16 *id;
- 	const char *reason;
- 	int rc;
+ 	struct completion *waiting = qc->private_data;
  
-@@ -1126,13 +1125,6 @@ static int ata_dev_read_id(struct ata_po
+-	qc->ap->ops->tf_read(qc->ap, &qc->tf);
+ 	complete(waiting);
+ }
  
- 	ata_dev_select(ap, dev->devno, 1, 1); /* select device 0/1 */
+@@ -997,6 +996,7 @@ unsigned ata_exec_internal(struct ata_po
+ 	qc->tf = *tf;
+ 	if (cdb)
+ 		memcpy(qc->cdb, cdb, ATAPI_CDB_LEN);
++	qc->flags |= ATA_QCFLAG_RESULT_TF;
+ 	qc->dma_dir = dma_dir;
+ 	if (dma_dir != DMA_NONE) {
+ 		ata_sg_init_one(qc, buf, buflen);
+@@ -1034,7 +1034,7 @@ unsigned ata_exec_internal(struct ata_po
+ 	/* finish up */
+ 	spin_lock_irqsave(&ap->host_set->lock, flags);
  
--	id = kmalloc(sizeof(id[0]) * ATA_ID_WORDS, GFP_KERNEL);
--	if (id == NULL) {
--		rc = -ENOMEM;
--		reason = "out of memory";
--		goto err_out;
--	}
+-	*tf = qc->tf;
++	*tf = qc->result_tf;
+ 	err_mask = qc->err_mask;
+ 
+ 	ata_qc_free(qc);
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index b0c83c2..ce90b63 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -537,7 +537,7 @@ void ata_to_sense_error(unsigned id, u8 
+ void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+-	struct ata_taskfile *tf = &qc->tf;
++	struct ata_taskfile *tf = &qc->result_tf;
+ 	unsigned char *sb = cmd->sense_buffer;
+ 	unsigned char *desc = sb + 8;
+ 
+@@ -608,7 +608,7 @@ void ata_gen_ata_desc_sense(struct ata_q
+ void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
+ {
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+-	struct ata_taskfile *tf = &qc->tf;
++	struct ata_taskfile *tf = &qc->result_tf;
+ 	unsigned char *sb = cmd->sense_buffer;
+ 
+ 	memset(sb, 0, SCSI_SENSE_BUFFERSIZE);
+@@ -1199,14 +1199,11 @@ static void ata_scsi_qc_complete(struct 
+ 	 */
+ 	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
+  	    ((cdb[2] & 0x20) || need_sense)) {
+-		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+  		ata_gen_ata_desc_sense(qc);
+ 	} else {
+ 		if (!need_sense) {
+ 			cmd->result = SAM_STAT_GOOD;
+ 		} else {
+-			qc->ap->ops->tf_read(qc->ap, &qc->tf);
 -
-  retry:
- 	ata_tf_init(ap, &tf, dev->devno);
- 
-@@ -1194,13 +1186,12 @@ static int ata_dev_read_id(struct ata_po
+ 			/* TODO: decide which descriptor format to use
+ 			 * for 48b LBA devices and call that here
+ 			 * instead of the fixed desc, which is only
+@@ -1217,10 +1214,8 @@ static void ata_scsi_qc_complete(struct 
+ 		}
  	}
  
- 	*p_class = class;
--	*p_id = id;
+-	if (need_sense) {
+-		/* The ata_gen_..._sense routines fill in tf */
+-		ata_dump_status(qc->ap->id, &qc->tf);
+-	}
++	if (need_sense)
++		ata_dump_status(qc->ap->id, &qc->result_tf);
+ 
+ 	qc->scsidone(cmd);
+ 
+@@ -2004,7 +1999,6 @@ static void atapi_sense_complete(struct 
+ 		 * a sense descriptors, since that's only
+ 		 * correct for ATA, not ATAPI
+ 		 */
+-		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+ 		ata_gen_ata_desc_sense(qc);
+ 	}
+ 
+@@ -2080,7 +2074,6 @@ static void atapi_qc_complete(struct ata
+ 		 * a sense descriptors, since that's only
+ 		 * correct for ATA, not ATAPI
+ 		 */
+-		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+ 		ata_gen_ata_desc_sense(qc);
+ 	} else {
+ 		u8 *scsicmd = cmd->cmnd;
+@@ -2361,6 +2354,9 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 	 */
+ 	qc->nsect = cmd->bufflen / ATA_SECT_SIZE;
+ 
++	/* request result TF */
++	qc->flags |= ATA_QCFLAG_RESULT_TF;
 +
  	return 0;
  
-  err_out:
- 	printk(KERN_WARNING "ata%u: dev %u failed to IDENTIFY (%s)\n",
- 	       ap->id, dev->devno, reason);
--	kfree(id);
- 	return rc;
- }
- 
-@@ -1425,9 +1416,7 @@ static int ata_bus_probe(struct ata_port
- 		if (!ata_dev_enabled(dev))
- 			continue;
- 
--		kfree(dev->id);
--		dev->id = NULL;
--		rc = ata_dev_read_id(ap, dev, &dev->class, 1, &dev->id);
-+		rc = ata_dev_read_id(ap, dev, &dev->class, 1, dev->id);
- 		if (rc)
- 			goto fail;
- 
-@@ -2788,7 +2777,7 @@ int ata_dev_revalidate(struct ata_port *
- 		       int post_reset)
- {
- 	unsigned int class = dev->class;
--	u16 *id = NULL;
-+	u16 *id = (void *)ap->sector_buf;
- 	int rc;
- 
- 	if (!ata_dev_enabled(dev)) {
-@@ -2796,8 +2785,8 @@ int ata_dev_revalidate(struct ata_port *
- 		goto fail;
- 	}
- 
--	/* allocate & read ID data */
--	rc = ata_dev_read_id(ap, dev, &class, post_reset, &id);
-+	/* read ID data */
-+	rc = ata_dev_read_id(ap, dev, &class, post_reset, id);
- 	if (rc)
- 		goto fail;
- 
-@@ -2807,8 +2796,7 @@ int ata_dev_revalidate(struct ata_port *
- 		goto fail;
- 	}
- 
--	kfree(dev->id);
--	dev->id = id;
-+	memcpy(dev->id, id, sizeof(id[0]) * ATA_ID_WORDS);
- 
- 	/* configure device according to the new ID */
- 	rc = ata_dev_configure(ap, dev, 0);
-@@ -2818,7 +2806,6 @@ int ata_dev_revalidate(struct ata_port *
-  fail:
- 	printk(KERN_ERR "ata%u: dev %u revalidation failed (errno=%d)\n",
- 	       ap->id, dev->devno, rc);
--	kfree(id);
- 	return rc;
- }
- 
-@@ -4873,14 +4860,11 @@ void ata_host_set_remove(struct ata_host
- int ata_scsi_release(struct Scsi_Host *host)
- {
- 	struct ata_port *ap = ata_shost_to_port(host);
--	int i;
- 
- 	DPRINTK("ENTER\n");
- 
- 	ap->ops->port_disable(ap);
- 	ata_host_remove(ap, 0);
--	for (i = 0; i < ATA_MAX_DEVICES; i++)
--		kfree(ap->device[i].id);
- 
- 	DPRINTK("EXIT\n");
- 	return 1;
+  invalid_fld:
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9c2d4bb..a117ca2 100644
+index a117ca2..3d15c00 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -360,7 +360,7 @@ struct ata_device {
- 	unsigned long		flags;		/* ATA_DFLAG_xxx */
- 	unsigned int		class;		/* ATA_DEV_xxx */
- 	unsigned int		devno;		/* 0 or 1 */
--	u16			*id;		/* IDENTIFY xxx DEVICE data */
-+	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
- 	u8			pio_mode;
- 	u8			dma_mode;
- 	u8			xfer_mode;
-@@ -425,6 +425,8 @@ struct ata_port {
- 	struct list_head	eh_done_q;
+@@ -162,7 +162,9 @@ enum {
+ 	ATA_QCFLAG_SINGLE	= (1 << 2), /* no s/g, just a single buffer */
+ 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
+ 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
+-	ATA_QCFLAG_EH_SCHEDULED = (1 << 4), /* EH scheduled */
++	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
++
++	ATA_QCFLAG_EH_SCHEDULED = (1 << 16), /* EH scheduled */
+ 
+ 	/* host set flags */
+ 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host_set only */
+@@ -343,7 +345,7 @@ struct ata_queued_cmd {
+ 	struct scatterlist	*__sg;
+ 
+ 	unsigned int		err_mask;
+-
++	struct ata_taskfile	result_tf;
+ 	ata_qc_cb_t		complete_fn;
  
  	void			*private_data;
-+
-+	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
- };
+@@ -824,6 +826,10 @@ static inline void ata_qc_reinit(struct 
+ 	qc->err_mask = 0;
  
- struct ata_port_operations {
+ 	ata_tf_init(qc->ap, &qc->tf, qc->dev->devno);
++
++	/* init result_tf such that it indicates normal completion */
++	qc->result_tf.command = ATA_DRDY;
++	qc->result_tf.feature = 0;
+ }
+ 
+ /**
+@@ -839,9 +845,15 @@ static inline void ata_qc_reinit(struct 
+  */
+ static inline void ata_qc_complete(struct ata_queued_cmd *qc)
+ {
++	struct ata_port *ap = qc->ap;
++
+ 	if (unlikely(qc->flags & ATA_QCFLAG_EH_SCHEDULED))
+ 		return;
+ 
++	/* read result TF if failed or requested */
++	if (qc->err_mask || qc->flags & ATA_QCFLAG_RESULT_TF)
++		ap->ops->tf_read(ap, &qc->result_tf);
++
+ 	__ata_qc_complete(qc);
+ }
+ 
 -- 
 1.2.4
 
