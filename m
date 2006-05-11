@@ -1,72 +1,96 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
-Date: Thu, 11 May 2006 16:07:40 +0900
-Message-ID: <4462E2BC.5070808@gmail.com>
-References: <44614592.7080301@gmail.com> <1147316967.7273.26.camel@forrest26.sh.intel.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: Infinite loop on MODE-SENSE with a removable ATAPI sata device
+ on VIA chipset
+Date: Thu, 11 May 2006 15:20:05 +0800
+Message-ID: <4462E5A5.2010703@tw.ibm.com>
+References: <E656D53DA4B96C409683999F573A360723E553@sbs.ARCO.local>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.207]:64199 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S965184AbWEKHHq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 03:07:46 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so120625nzn
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 00:07:45 -0700 (PDT)
-In-Reply-To: <1147316967.7273.26.camel@forrest26.sh.intel.com>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:19656 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S965187AbWEKHUW
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 03:20:22 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4B7KLHd027493
+	for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 03:20:21 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4B7KIW8188708
+	for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 01:20:21 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4B7KHVV010290
+	for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 01:20:18 -0600
+In-Reply-To: <E656D53DA4B96C409683999F573A360723E553@sbs.ARCO.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Dario Oliva <DOliva@ARCOIDE.COM>
+Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, =?ISO-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
 
-Hi, Zhao.
-
-zhao, forrest wrote:
-> On Wed, 2006-05-10 at 10:44 +0900, Tejun Heo wrote:
->> Hello, all.
-> Tejun,
+Dario Oliva wrote:
+ 
+> Attached are some kernel messeges. I ran dmesg several times and
+> appended the output to the attached file, so there may be some
+> redudancy. However some of the commands or debug lines do appear to
+> repeat themselves. As you requested, I changed "#undef ATA_DEBUG" to
+> "#define ATA_DEBUG".
 > 
-> I have comments about definition of macro ata_link_for_each_dev(dev,
-> link) and struct ata_port{};.
+> As far as the device is concerned, is an unreleased product of the
+> company I work for. That's why I did not give a name, because we don't
+> have an official name yet. But like I said, it is SATA, removalbe ATAPI.
+> If you want/need more information let me know.
 > 
-> In the definition of struct ata_port{}, there's
-> ......
-> struct ata_link link;
-> struct ata_device __dev1;
-> ......
-> 
-> Then macro ata_link_for_each_dev() assumes that the field 'device' in
-> struct ata_link is adjacent to field '__dev1' in struct ata_port.
-> 
-> I think this assumption is not correct in theory. Because the alignment
-> may make these two fields not adjacent in memory.
-> 
-> Although we haven't found the problem so far, it's very dangerous to
-> have such assumption in the code.
 
-Well, I think the technique is pretty widespread w/ flexible array
-member, which is C99 standard and before C99 GCC had zero length array
-for the same purpose.  e.g.
+Is the ATAPI device native SATA or PATA with some bridge chip used?
 
-struct asdf {
-	int nr_entries;
-	void *ar[];
-};
+>From the log, some MODE SENSE did work at first: (So, seems not DMADIR problem.)
 
-struct asdf *p;
+ata_scsi_dump_cdb: CDB (1:0,0,0) 5a 00 3f 00 00 00 00 00 08
+ata_sg_setup: 1 sg elements mapped
+ata_exec_command_pio: ata1: cmd 0xA0
+atapi_packet_task: busy wait
+atapi_packet_task: send cdb
+ata_host_intr: ata1: protocol 7 (dev_stat 0x50)  <= irq received. ATAPI DMA ok
+sda: Write Protect is off
 
-p = kmalloc(sizeof(*p) + nr * sizeof(p->ar[0], GFP_KERNEL);
-if (p)
-	p->nr_entries = nr;
+===============================================================
 
-This works because alignof(outer struct) >= alignof(nested struct).  So,
-we might end up allocating a few extra bytes due to alignment
-requirements but that's perfectly okay.
+Later, irq lost for the following MODE SENSE command:
 
-__dev1 is the same.  It might or might not be allocated right after
-link->dev[0] but it's guaranteed that &link->dev[1] <= &link->__dev1.
-So, no problem there.  I'm pretty sure that this kind of technique is
-used in other parts of the kernel too.
+ata_scsi_dump_cdb: CDB (1:0,0,0) 5a 00 08 00 00 00 00 00 1c
+ata_sg_setup: 1 sg elements mapped
+ata_exec_command_pio: ata1: cmd 0xA0
+atapi_packet_task: busy wait
+atapi_packet_task: send cdb
+ata_scsi_error: ENTER              <= timeout. 
+ata_eng_timeout: ENTER
+ata_qc_timeout: ENTER
+ata1: command 0xa0 timeout, stat 0xd0 host_stat 0x1   <= device is still busy. The old EH doesn't reset the device.
+ata1: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata_qc_timeout: EXIT
+ata_eng_timeout: EXIT
+ata_scsi_error: EXIT
+====================================================================
 
--- 
-tejun
+After the timeout, the device is in BUSY state and can't handle any new commands.
+That's why the "infinite loop" seen. (Tejun's new EH can reset the device and bring
+it back to work.)
+
+Don't know what caused the timeout. From the device status 0xd0, it seems
+the device is waiting for something (maybe data transfer?). It is not irq lost
+because the irq is not yet generated when the device status is still BUSY.
+
+Is it possible to attach a protocol analyzer to the SATA cable
+and check whether the ATAPI DMA data is actually transferred?
+Could you also post the dmesg log with ATA_DEBUG for the working Intel/nVidia
+adapter? Maybe we can find some clue by comparing the problematic 
+MODE SENSE transation of both logs.
+
+I've done minimal testing with my VIA VT6421 + ATAPI but unable to reproduce
+the problem.
+
+Thanks,
+
+Albert
+
