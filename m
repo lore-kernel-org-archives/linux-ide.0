@@ -1,49 +1,158 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 08/13] ata_piix: convert ata_piix to new probing mechanism
-Date: Fri, 12 May 2006 01:13:45 +0900
-Message-ID: <446362B9.7080302@gmail.com>
-References: <11473615273443-git-send-email-htejun@gmail.com>	 <1147363104.26130.49.camel@localhost.localdomain> <41840b750605110908te0b0026l54e559a90854f887@mail.gmail.com>
+From: "Michael Robak" <mrobak@Omneon.com>
+Subject: sata_mv module fails to load properly with 3 Supermicro AOC-SAT2-MV8 cards
+Date: Thu, 11 May 2006 09:14:05 -0700
+Message-ID: <F0E8D0B1F8999D479196DA72521D954A880140@snv-exh1.omneon.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:38775 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030305AbWEKQNw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 12:13:52 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so401788wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:13:51 -0700 (PDT)
-In-Reply-To: <41840b750605110908te0b0026l54e559a90854f887@mail.gmail.com>
+Received: from owa.omneon.com ([12.36.122.13]:63065 "EHLO
+	snv-exh1.omneon.local") by vger.kernel.org with ESMTP
+	id S1030307AbWEKQOH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 May 2006 12:14:07 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shem Multinymous <multinymous@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Shem Multinymous wrote:
-> Hi Alan,
-> 
-> On 5/11/06, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->> On Gwe, 2006-05-12 at 00:32 +0900, Tejun Heo wrote:
->> > Convert ata_piix to new probing mechanism.  Automatic hotplug is not
->> > supported due to hardware limitation (no PHY event interrupt), but
->> > warm plugging works.
->>
->> True for the SATA ports but don't try it on the PATA ones. The PATA side
->> requires the right buffers are present, and also in some situations that
->> IORDY is not in use before the unplug.
-> 
-> I'm not sure what you mean but the successful ThinkPad UltraBay
-> hotplugging which I reported earlier is with PATA DVD and PATA HDD, on
-> ICH6M with ata_piix. I tried it many times, with no problems or
-> unexpected dmesg entries.
-> 
-> As mentioned, it takes an extra ACPI command to electrically turn off 
-> the port.
+Does anyone know of a similar problem or a workaround for this issue?
 
-Yeap, notebooks are special.  Those hotbays are equipped with special 
-power/signal connectors, circuits and switches to prevent things from 
-burning, but, in general, hot plugging/unplugging PATA devices can fry 
-the device and the controller.
+Problem:
+  sata_mv module fails to load properly with 3 Supermicro AOC-SAT2-MV8
+cards
+Description:
+  The systems hangs during the boot process for several minutes about 3
+of 4 times.  If it does succeed in booting, IO through these cards work
+fine.  
 
--- 
-tejun
+
+Configuration:
+
+Fedora core 4 with 2.6.16.1 and 2.6.17-rc3 (both produce the same
+results)
+Motherboard: Supermicro PDSME
+SATA Card: 8-port Supermicro AOC-SAT2-MV8 bios 1.0b (based on Marvell
+Hercules-2 SATA Host Controller)
+24 SATA drives plugged into 3 of these controllers
+
+The last few lines of console output are:
+
+INIT: version 2.85 booting
+Input: AT Translated set 2 Keyboard as /class/input/input0
+	Welcome to Fedora Core
+	Press 'I' to enter interactive setup
+Starting udev                               [  OK  ]
+Initalizing Hardware .....
+
+Other notes:
+
+If all drives aree plugged directly into a SATA card, the system hangs
+indefinately as fedora is trying to initalize hardware.
+
+Plugging 4 of the drives directly into the motherboard makes the system
+is able to boot.  The motherboard SATA controller use the ahci driver.
+The system hangs for several minutes on "Initalizing Hardware ..."  In
+this case, lsmod shows the sata_mv driver loaded however only 4 drives
+show up in /dev.  Reloading the sata_mv module seems to have no effect.
+Since the server boots in this case I'm able to get the dmesg output.
+
+Snippet from dmesg:
+
+sata_mv 0000:02:01.0: version 0.6
+ACPI: PCI Interrupt 0000:02:01.0[A] -> GSI 24 (level, low) -> IRQ 129
+sata_mv 0000:02:01.0: 32 slots 8 ports SCSI mode IRQ via INTx
+ata5: SATA max UDMA/133 cmd 0x0 ctl 0xF8922120 bmdma 0x0 irq 129
+ata6: SATA max UDMA/133 cmd 0x0 ctl 0xF8924120 bmdma 0x0 irq 129
+ata7: SATA max UDMA/133 cmd 0x0 ctl 0xF8926120 bmdma 0x0 irq 129
+ata8: SATA max UDMA/133 cmd 0x0 ctl 0xF8928120 bmdma 0x0 irq 129
+ata9: SATA max UDMA/133 cmd 0x0 ctl 0xF8932120 bmdma 0x0 irq 129
+ata10: SATA max UDMA/133 cmd 0x0 ctl 0xF8934120 bmdma 0x0 irq 129
+ata11: SATA max UDMA/133 cmd 0x0 ctl 0xF8936120 bmdma 0x0 irq 129
+ata12: SATA max UDMA/133 cmd 0x0 ctl 0xF8938120 bmdma 0x0 irq 129
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back SCSI device sda: 976773168
+512-byte hdwr sectors (500108 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ sda: unknown partition table
+sd 0:0:0:0: Attached scsi disk sda
+SCSI device sdb: 976773168 512-byte hdwr sectors (500108 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back SCSI device sdb: 976773168
+512-byte hdwr sectors (500108 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ sdb: unknown partition table
+sd 1:0:0:0: Attached scsi disk sdb
+SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back SCSI device sdc: 976773168
+512-byte hdwr sectors (500108 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back
+ sdc: unknown partition table
+sd 2:0:0:0: Attached scsi disk sdc
+SCSI device sdd: 976773168 512-byte hdwr sectors (500108 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: drive cache: write back SCSI device sdd: 976773168
+512-byte hdwr sectors (500108 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: drive cache: write back
+ sdd: unknown partition table
+sd 3:0:0:0: Attached scsi disk sdd
+ata5: dev 0 cfg 49:2f00 82:7469 83:7f61 84:4163 85:7469 86:3c41 87:4163
+88:407f
+ata5: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
+ata5: qc timeout (cmd 0xef)
+ata5: failed to set xfermode (err_mask=0x4)
+scsi4 : sata_mv
+ata6: dev 0 cfg 49:2f00 82:7469 83:7f61 84:4163 85:7469 86:3c41 87:4163
+88:407f
+ata6: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
+ata6: qc timeout (cmd 0xef)
+ata6: failed to set xfermode (err_mask=0x4)
+scsi5 : sata_mv
+ata7: dev 0 cfg 49:2f00 82:7469 83:7f61 84:4163 85:7469 86:3c41 87:4163
+88:407f
+ata7: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
+ata7: qc timeout (cmd 0xef)
+ata7: failed to set xfermode (err_mask=0x4)
+scsi6 : sata_mv
+ata8: dev 0 cfg 49:2f00 82:7469 83:7f61 84:4163 85:7469 86:3c41 87:4163
+88:407f
+ata8: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
+ata8: qc timeout (cmd 0xef)
+ata8: failed to set xfermode (err_mask=0x4)
+scsi7 : sata_mv
+ata9: dev 0 cfg 49:2f00 82:7469 83:7f61 84:4163 85:7469 86:3c41 87:4163
+88:407f
+ata9: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
+ata9: qc timeout (cmd 0xef)
+ata9: failed to set xfermode (err_mask=0x4)
+scsi8 : sata_mv
+ata10: dev 0 cfg 49:2f00 82:7469 83:7f61 84:4163 85:7469 86:3c41 87:4163
+88:407f
+ata10: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
+ata10: qc timeout (cmd 0xef)
+ata10: failed to set xfermode (err_mask=0x4)
+scsi9 : sata_mv
+ata11: dev 0 cfg 49:2f00 82:7469 83:7f61 84:4163 85:7469 86:3c41 87:4163
+88:407f
+ata11: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
+ata11: qc timeout (cmd 0xef)
+ata11: failed to set xfermode (err_mask=0x4) scsi10 : sata_mv
+ata12: dev 0 cfg 49:2f00 82:7469 83:7f61 84:4163 85:7469 86:3c41 87:4163
+88:407f
+ata12: dev 0 ATA-7, max UDMA/133, 976773168 sectors: LBA48
+ata12: qc timeout (cmd 0xef)
+ata12: failed to set xfermode (err_mask=0x4)
+scsi11 : sata_mv
