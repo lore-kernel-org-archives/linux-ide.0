@@ -1,42 +1,48 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: ata_piix failure on ich6m
-Date: Thu, 11 May 2006 08:45:41 -0700
-Message-ID: <20060511084541.90d4e071.rdunlap@xenotime.net>
-References: <20060510235650.GA20206@srcf.ucam.org>
-	<44629E68.3020302@gmail.com>
-	<20060511081140.GA21594@srcf.ucam.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 08/11] sata_sil: convert to new EH
+Date: Fri, 12 May 2006 00:45:45 +0900
+Message-ID: <44635C29.6080903@gmail.com>
+References: <11473536881889-git-send-email-htejun@gmail.com>	 <1147357322.26130.17.camel@localhost.localdomain>	 <44634CB6.80804@gmail.com> <1147362385.26130.42.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:19377 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1030283AbWEKPnT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 May 2006 11:43:19 -0400
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:43:13 -0700
-In-Reply-To: <20060511081140.GA21594@srcf.ucam.org>
+Received: from wr-out-0506.google.com ([64.233.184.225]:57940 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1030287AbWEKPpw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:45:52 -0400
+Received: by wr-out-0506.google.com with SMTP id i12so395288wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:45:51 -0700 (PDT)
+In-Reply-To: <1147362385.26130.42.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-On Thu, 11 May 2006 09:11:40 +0100 Matthew Garrett wrote:
-
-> On Thu, May 11, 2006 at 11:16:08AM +0900, Tejun Heo wrote:
+Alan Cox wrote:
+> On Iau, 2006-05-11 at 23:39 +0900, Tejun Heo wrote:
+>> I'm not sure what you mean by synchronization.  But, freezing is indeed
+>>  for shutting the chip up.  If the port is frozen, EH doesn't touch
+>> active qcs nor tries to issue new command.  The port is thawed/used only
+>> after the port & device are put into known good state via successful
+>> reset.  Is this what you're talking about?
 > 
-> > I'm not very sure but it might be historical.  ahci got implemented 
-> > after ata_piix and in the meantime ata_piix must have handled all it 
-> > could.  Can you verify whether modifying the code to return -ENODEV work 
-> > for your machine?  If so, that could be the correct solution but I'm a 
-> > bit worried because it could change probing order or fail to enable 
-> > devices it used to.  Maybe we need a hack to return -ENODEV iff ahci is 
-> > there to handle the device.
+> Sort of. I wanted to point out that this can occur
 > 
-> I can verify that just loading ahci before ata_piix is successful, and 
-> udev will load both of them since the PCI IDs match. So just having 
-> ata_piix refuse to bind would solve the problem. Unfortunately I can't 
-> see a way of doing this only if ahci is present if they're modular...
+> 	IRQ is issued on chip
+> 
+> 	->freeze
+> 	returns
+> 
+> 	->intr finally arrives and is serviced
 
-Does the 'combined_mode' kernel parameter help any?
+I see.  As far as EH is concerned, this should be okay.  Once qc
+ownership is transferred, irq handler cannot access the qc
+(ata_qc_from_tag() prevents it) and has no way other than handling it as
+a spurious interrupt or HSM violation.  But, it sounds like it could
+result in screaming IRQ for controllers without IRQ pending bit.  Could
+it?  If so, maybe unconditional irq clearing in ata_interrupt() should
+be resurrected to handle such conditions.
 
----
-~Randy
+-- 
+tejun
