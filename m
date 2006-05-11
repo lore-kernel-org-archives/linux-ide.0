@@ -1,75 +1,134 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/14] libata-hp-prep: add flags and eh_info/context fields for hotplug
-Date: Fri, 12 May 2006 00:02:34 +0900
-Message-ID: <11473597542607-git-send-email-htejun@gmail.com>
+Subject: [PATCH 14/14] libata-hp-prep: implement followup softreset handling
+Date: Fri, 12 May 2006 00:02:35 +0900
+Message-ID: <11473597553871-git-send-email-htejun@gmail.com>
 References: <11473597542442-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:12253 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751822AbWEKPCl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:02:41 -0400
-Received: by py-out-1112.google.com with SMTP id f28so276315pyf
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:40 -0700 (PDT)
+Received: from wr-out-0506.google.com ([64.233.184.232]:65058 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751834AbWEKPCq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:02:46 -0400
+Received: by wr-out-0506.google.com with SMTP id i12so385619wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:46 -0700 (PDT)
 In-Reply-To: <11473597542442-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add hotplug related flags and eh_info/context fields.
+In some cases, hardreset must be followed by SRST.
+
+* some controllers can't classify with hardreset
+* some controllers can't wait for !BSY after hardreset (LLDD should
+  explicitly request followup softreset by returning -EAGAIN)
+* (later) PM needs SRST w/ PMP==15 to operate after hardreset
+
+To handle above cases, this patch implements follow-up softreset.
+After a hardreset, ata_eh_reset() checks whether any of above
+conditions are met and do a follow-up softreset if necessary.
 
 ---
 
- include/linux/libata.h |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-eh.c |   58 +++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 52 insertions(+), 6 deletions(-)
 
-d60dd05d2cfd4a63b7ce869694c3060d2aeab9d8
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 97e25a6..1f6e48e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -130,6 +130,9 @@ enum {
+413da5b8b08f955db5665d06a497ab7170469363
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index ee046c1..9dfaa66 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1284,16 +1284,28 @@ static void ata_eh_report(struct ata_por
+ 	}
+ }
  
- 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
- 
-+	ATA_DFLAG_DETACH	= (1 << 16),
-+	ATA_DFLAG_DETACHED	= (1 << 17),
+-static int ata_eh_reset(struct ata_port *ap,
++static int ata_eh_followup_srst_needed(int rc, int classify,
++				       const unsigned int *classes)
++{
++	if (rc == -EAGAIN)
++		return 1;
++	if (rc != 0)
++		return 0;
++	if (classify && classes[0] == ATA_DEV_UNKNOWN)
++		return 1;
++	return 0;
++}
 +
- 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
- 	ATA_DEV_ATA		= 1,	/* ATA device */
- 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
-@@ -161,6 +164,9 @@ enum {
- 	ATA_FLAG_EH_PENDING	= (1 << 16), /* EH pending */
- 	ATA_FLAG_FROZEN		= (1 << 17), /* port is frozen */
- 	ATA_FLAG_RECOVERED	= (1 << 18), /* recovery action performed */
-+	ATA_FLAG_LOADING	= (1 << 19), /* boot/loading probe */
-+	ATA_FLAG_UNLOADING	= (1 << 20), /* module is unloading */
-+	ATA_FLAG_SCSI_HOTPLUG	= (1 << 21), /* SCSI hotplug scheduled */
++static int ata_eh_reset(struct ata_port *ap, int classify,
+ 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+ 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
+ {
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+-	unsigned int classes[ATA_MAX_DEVICES];
++	unsigned int *classes = ehc->classes;
+ 	int tries = ATA_EH_RESET_TRIES;
+ 	unsigned int action;
+ 	ata_reset_fn_t reset;
+-	int i, rc;
++	int i, did_followup_srst, rc;
  
- 	ATA_FLAG_DISABLED	= (1 << 22), /* port is disabled, ignore it */
- 	ATA_FLAG_SUSPENDED	= (1 << 23), /* port is suspended (power) */
-@@ -435,6 +441,7 @@ struct ata_eh_info {
- 	u32			serror;		/* SError from LLDD */
- 	unsigned int		err_mask;	/* port-wide err_mask */
- 	unsigned int		action;		/* ATA_EH_* action mask */
-+	unsigned int		probe_mask;
- 	char			desc[ATA_EH_DESC_LEN];
- 	int			desc_len;
- };
-@@ -442,7 +449,9 @@ struct ata_eh_info {
- struct ata_eh_context {
- 	struct ata_eh_info	i;
- 	int			tries[ATA_MAX_DEVICES];
-+	unsigned int		classes[ATA_MAX_DEVICES];
- 	unsigned int		flags;		/* ATA_EHC_* */
-+	unsigned int		did_probe_mask;
- };
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine it to determine what kind of
+@@ -1339,10 +1351,44 @@ static int ata_eh_reset(struct ata_port 
  
- struct ata_port {
+ 	rc = ata_do_reset(ap, reset, classes);
+ 
++	did_followup_srst = 0;
++	if (reset == hardreset &&
++	    ata_eh_followup_srst_needed(rc, classify, classes)) {
++		/* okay, let's do follow-up softreset */
++		did_followup_srst = 1;
++		reset = softreset;
++
++		if (!reset) {
++			ata_port_printk(ap, KERN_ERR,
++					"follow-up softreset required "
++					"but no softreset avaliable\n");
++			return -EINVAL;
++		}
++
++		ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
++		rc = ata_do_reset(ap, reset, classes);
++
++		if (rc == 0 && classify &&
++		    classes[0] == ATA_DEV_UNKNOWN) {
++			ata_port_printk(ap, KERN_ERR,
++					"classification failed\n");
++			return -EINVAL;
++		}
++	}
++
+ 	if (rc && --tries) {
++		const char *type;
++
++		if (reset == softreset) {
++			if (did_followup_srst)
++				type = "follow-up soft";
++			else
++				type = "soft";
++		} else
++			type = "hard";
++
+ 		ata_port_printk(ap, KERN_WARNING,
+-				"%sreset failed, retrying in 5 secs\n",
+-				reset == softreset ? "soft" : "hard");
++				"%sreset failed, retrying in 5 secs\n", type);
+ 		ssleep(5);
+ 
+ 		if (reset == hardreset)
+@@ -1460,7 +1506,7 @@ static int ata_eh_recover(struct ata_por
+ 	if (ehc->i.action & ATA_EH_RESET_MASK) {
+ 		ata_eh_freeze_port(ap);
+ 
+-		rc = ata_eh_reset(ap, prereset, softreset, hardreset,
++		rc = ata_eh_reset(ap, 0, prereset, softreset, hardreset,
+ 				  postreset);
+ 		if (rc) {
+ 			ata_port_printk(ap, KERN_ERR,
 -- 
 1.2.4
 
