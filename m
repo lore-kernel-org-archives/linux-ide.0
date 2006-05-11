@@ -1,180 +1,256 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/7] libata-pm-prep: implement qc_defer helpers
+Subject: [PATCH 5/7] libata-pm-prep: implement ops->qc_defer()
 Date: Fri, 12 May 2006 01:37:51 +0900
-Message-ID: <114736547188-git-send-email-htejun@gmail.com>
+Message-ID: <1147365471544-git-send-email-htejun@gmail.com>
 References: <11473654703440-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.237]:50067 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.225]:53139 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030332AbWEKQiD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 12:38:03 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so407147wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:38:02 -0700 (PDT)
+	id S1030329AbWEKQiB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 12:38:01 -0400
+Received: by wr-out-0506.google.com with SMTP id 55so368907wri
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:38:01 -0700 (PDT)
 In-Reply-To: <11473654703440-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement ap->nr_active_links (the number of links with active qcs),
-ap->excl_link (pointer to link which can be used by ->qc_defer and is
-cleared when a qc with ATA_QCFLAG_CLEAR_EXCL completes), and
-ata_link_active().
+Controllers which support PM have various restrictions on which
+combinations of commands are allowed to what number of devices
+concurrently.  This patch implements ops->qc_defer() which determines
+whether a qc can be issued at the moment or should be deferred.
 
-These can be used by ->qc_defer() to implement proper command
-exclusion.  This set of helpers seem enough for both sil24 (ATAPI
-exclusion needed) and cmd-switching PM.
+If the function returns ATA_DEFER_LINK, the qc will be deferred until
+a qc completes on the link.  If ATA_DEFER_PORT, until a qc completes
+on any link.  The defer types are advisory and in general
+ATA_DEFER_LINK can simply be considered as having lower priority than
+ATA_DEFER_PORT.
+
+ops->qc_defer() replaces fixed ata_scmd_need_defer().  For standard
+NCQ/non-NCQ exclusion, ata_std_qc_defer() is implemented.  ahci and
+sata_sil24 are converted to use ata_std_qc_defer().
+
+ops->qc_defer() is heavier than the original mechanism because full qc
+is prepped before determining to defer it, but various information is
+needed to determine defer conditinos and fully translating a qc is the
+only way to supply such information in generic manner.
+
+IMHO, this shouldn't cause any noticeable performance issues as
+
+* for most cases deferring occurs rarely (except for NCQ-aware
+  cmd-switching PM)
+* translation itself isn't that expensive
+* once deferred, the command won't be repeated until another command
+  completes which usually is a very long time cpu-wise.
 
 ---
 
- drivers/scsi/libata-core.c |   22 +++++++++++++++++++---
- drivers/scsi/libata-eh.c   |    5 +++++
- include/linux/libata.h     |    8 ++++++++
- 3 files changed, 32 insertions(+), 3 deletions(-)
+ drivers/scsi/ahci.c        |    1 +
+ drivers/scsi/libata-core.c |   32 ++++++++++++++++++++++++++++
+ drivers/scsi/libata-scsi.c |   50 +++++++++++---------------------------------
+ drivers/scsi/sata_sil24.c  |    1 +
+ include/linux/libata.h     |    6 +++++
+ 5 files changed, 52 insertions(+), 38 deletions(-)
 
-7deb1fc49ea4e26d9f1bc4258094086e0bcb27f2
+6f73e35cbbea07d45cc5fb153d74c273517b5b57
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 526150b..c95309c 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -239,6 +239,7 @@ static const struct ata_port_operations 
+ 
+ 	.tf_read		= ahci_tf_read,
+ 
++	.qc_defer		= ata_std_qc_defer,
+ 	.qc_prep		= ahci_qc_prep,
+ 	.qc_issue		= ahci_qc_issue,
+ 
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 5dd5a28..fb64a0f 100644
+index b9feefb..5dd5a28 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -994,7 +994,6 @@ void ata_qc_complete_internal(struct ata
-  *	LOCKING:
-  *	None.  Should be called with kernel context, might sleep.
-  */
--
- unsigned ata_exec_internal(struct ata_device *dev,
- 			   struct ata_taskfile *tf, const u8 *cdb,
- 			   int dma_dir, void *buf, unsigned int buflen)
-@@ -1005,6 +1004,7 @@ unsigned ata_exec_internal(struct ata_de
- 	struct ata_queued_cmd *qc;
- 	unsigned int tag, preempted_tag;
- 	u32 preempted_sactive, preempted_qc_active;
-+	int preempted_nr_active_links;
- 	DECLARE_COMPLETION(wait);
- 	unsigned long flags;
- 	unsigned int err_mask;
-@@ -1043,9 +1043,11 @@ unsigned ata_exec_internal(struct ata_de
- 	preempted_tag = link->active_tag;
- 	preempted_sactive = link->sactive;
- 	preempted_qc_active = ap->qc_active;
-+	preempted_nr_active_links = ap->nr_active_links;
- 	link->active_tag = ATA_TAG_POISON;
- 	link->sactive = 0;
- 	ap->qc_active = 0;
-+	ap->nr_active_links = 0;
+@@ -3253,6 +3253,37 @@ int ata_check_atapi_dma(struct ata_queue
  
- 	/* prepare & issue qc */
- 	qc->tf = *tf;
-@@ -1112,6 +1114,7 @@ unsigned ata_exec_internal(struct ata_de
- 	link->active_tag = preempted_tag;
- 	link->sactive = preempted_sactive;
- 	ap->qc_active = preempted_qc_active;
-+	ap->nr_active_links = preempted_nr_active_links;
- 
- 	/* XXX - Some LLDDs (sata_mv) disable port on command failure.
- 	 * Until those drivers are fixed, we detect the condition
-@@ -4327,10 +4330,18 @@ void __ata_qc_complete(struct ata_queued
- 		ata_sg_clean(qc);
- 
- 	/* command should be marked inactive atomically with qc completion */
--	if (qc->tf.protocol == ATA_PROT_NCQ)
+ 	return rc;
+ }
++
++/**
++ *	ata_std_qc_defer - Check whether a qc needs to be deferred
++ *	@qc: ATA command in question
++ *
++ *	Non-NCQ commands cannot run with any other command, NCQ or
++ *	not.  As upper layer only knows the queue depth, we are
++ *	responsible for maintaining exclusion.  This function checks
++ *	whether a new command @qc can be issued.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ *
++ *	RETURNS:
++ *	ATA_DEFER_* if deferring is needed, 0 otherwise.
++ */
++int ata_std_qc_defer(struct ata_queued_cmd *qc)
++{
++	struct ata_link *link = qc->dev->link;
++
 +	if (qc->tf.protocol == ATA_PROT_NCQ) {
- 		link->sactive &= ~(1 << qc->tag);
--	else
-+		if (!link->sactive)
-+			ap->nr_active_links--;
++		if (!ata_tag_valid(link->active_tag))
++			return 0;
 +	} else {
- 		link->active_tag = ATA_TAG_POISON;
-+		ap->nr_active_links--;
++		if (!ata_tag_valid(link->active_tag) && !link->sactive)
++			return 0;
 +	}
 +
-+	/* clear exclusive status */
-+	if (unlikely(qc->flags & ATA_QCFLAG_CLEAR_EXCL))
-+		ap->excl_link = NULL;
- 
- 	/* atapi: mark qc as inactive to prevent the interrupt handler
- 	 * from completing the command twice later, before the error handler
-@@ -4503,9 +4514,14 @@ void ata_qc_issue(struct ata_queued_cmd 
- 
- 	if (qc->tf.protocol == ATA_PROT_NCQ) {
- 		WARN_ON(link->sactive & (1 << qc->tag));
-+
-+		if (!link->sactive)
-+			ap->nr_active_links++;
- 		link->sactive |= 1 << qc->tag;
- 	} else {
- 		WARN_ON(link->sactive);
-+
-+		ap->nr_active_links++;
- 		link->active_tag = qc->tag;
- 	}
- 
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 3764e21..ffbd028 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -248,6 +248,7 @@ void ata_scsi_error(struct Scsi_Host *ho
- 		}
- 
- 		ap->flags &= ~ATA_FLAG_EH_PENDING;
-+		ap->excl_link = NULL;	/* don't maintain exclusion over EH */
- 
- 		spin_unlock_irqrestore(hs_lock, flags);
- 
-@@ -1873,6 +1874,10 @@ void ata_eh_finish(struct ata_port *ap)
- 			}
- 		}
- 	}
-+
-+	/* make sure nr_active_links is zero after EH */
-+	WARN_ON(ap->nr_active_links);
-+	ap->nr_active_links = 0;
- }
- 
- static void ata_eh_scsi_handle_link_detach(struct ata_link *link)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a26b6a6..df78f3e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -181,6 +181,7 @@ enum {
- 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
- 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
- 	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
-+	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
- 
- 	ATA_QCFLAG_FAILED	= (1 << 16), /* cmd failed and is owned by EH */
- 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
-@@ -520,12 +521,14 @@ struct ata_port {
- 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
- 	unsigned long		qc_allocated;
- 	unsigned int		qc_active;
-+	int			nr_active_links; /* #links with active qcs */
- 
- 	struct ata_link		link;	/* host default link */
- 	struct ata_device	__dev1;	/* storage for link.device[1] */
- 
- 	int			nr_pm_links;	/* nr of available PM links */
- 	struct ata_link		*pm_link;	/* array of PM links */
-+	struct ata_link		*excl_link;	/* for PM qc exclusion */
- 
- 	struct ata_host_stats	stats;
- 	struct ata_host_set	*host_set;
-@@ -931,6 +934,11 @@ static inline int ata_link_max_devices(c
- 	return 1;
- }
- 
-+static inline int ata_link_active(struct ata_link *link)
-+{
-+	return ata_tag_valid(link->active_tag) || link->sactive;
++	return ATA_DEFER_LINK;
 +}
 +
- static inline struct ata_link *ata_port_first_link(struct ata_port *ap)
+ /**
+  *	ata_qc_prep - Prepare taskfile for submission
+  *	@qc: Metadata associated with taskfile to be prepared
+@@ -5837,6 +5868,7 @@ EXPORT_SYMBOL_GPL(ata_port_start);
+ EXPORT_SYMBOL_GPL(ata_port_stop);
+ EXPORT_SYMBOL_GPL(ata_host_stop);
+ EXPORT_SYMBOL_GPL(ata_interrupt);
++EXPORT_SYMBOL_GPL(ata_std_qc_defer);
+ EXPORT_SYMBOL_GPL(ata_qc_prep);
+ EXPORT_SYMBOL_GPL(ata_noop_qc_prep);
+ EXPORT_SYMBOL_GPL(ata_bmdma_setup);
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 021e4a3..9589013 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1339,39 +1339,6 @@ static void ata_scsi_qc_complete(struct 
+ }
+ 
+ /**
+- *	ata_scmd_need_defer - Check whether we need to defer scmd
+- *	@dev: ATA device to which the command is addressed
+- *	@is_io: Is the command IO (and thus possibly NCQ)?
+- *
+- *	NCQ and non-NCQ commands cannot run together.  As upper layer
+- *	only knows the queue depth, we are responsible for maintaining
+- *	exclusion.  This function checks whether a new command can be
+- *	issued to @dev.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host_set lock)
+- *
+- *	RETURNS:
+- *	1 if deferring is needed, 0 otherwise.
+- */
+-static int ata_scmd_need_defer(struct ata_device *dev, int is_io)
+-{
+-	struct ata_link *link = dev->link;
+-
+-	if (!(dev->flags & ATA_DFLAG_NCQ))
+-		return 0;
+-
+-	if (is_io) {
+-		if (!ata_tag_valid(link->active_tag))
+-			return 0;
+-	} else {
+-		if (!ata_tag_valid(link->active_tag) && !link->sactive)
+-			return 0;
+-	}
+-	return 1;
+-}
+-
+-/**
+  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
+  *	@dev: ATA device to which the command is addressed
+  *	@cmd: SCSI command to execute
+@@ -1402,15 +1369,13 @@ static int ata_scsi_translate(struct ata
+ 			      void (*done)(struct scsi_cmnd *),
+ 			      ata_xlat_func_t xlat_func)
  {
- 	if (ap->nr_pm_links)
++	struct ata_port *ap = dev->link->ap;
+ 	struct ata_queued_cmd *qc;
+ 	u8 *scsicmd = cmd->cmnd;
+-	int is_io = xlat_func == ata_scsi_rw_xlat;
++	int rc;
+ 
+ 	VPRINTK("ENTER\n");
+ 
+-	if (unlikely(ata_scmd_need_defer(dev, is_io)))
+-		goto defer;
+-
+ 	qc = ata_scsi_qc_new(dev, cmd, done);
+ 	if (!qc)
+ 		goto err_mem;
+@@ -1438,6 +1403,11 @@ static int ata_scsi_translate(struct ata
+ 	if (xlat_func(qc, scsicmd))
+ 		goto early_finish;
+ 
++	if (ap->ops->qc_defer) {
++		if ((rc = ap->ops->qc_defer(qc)))
++			goto defer;
++	}
++
+ 	/* select device, send command to hardware */
+ 	ata_qc_issue(qc);
+ 
+@@ -1459,8 +1429,12 @@ err_mem:
+ 	return 0;
+ 
+ defer:
++	ata_qc_free(qc);
+ 	DPRINTK("EXIT - defer\n");
+-	return SCSI_MLQUEUE_DEVICE_BUSY;
++	if (rc == ATA_DEFER_LINK)
++		return SCSI_MLQUEUE_DEVICE_BUSY;
++	else
++		return SCSI_MLQUEUE_HOST_BUSY;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index a952513..e3d13d6 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -380,6 +380,7 @@ static const struct ata_port_operations 
+ 	.check_altstatus	= ata_noop_check_status,
+ 	.dev_select		= ata_noop_dev_select,
+ 
++	.qc_defer		= ata_std_qc_defer,
+ 	.qc_prep		= sil24_qc_prep,
+ 	.qc_issue		= sil24_qc_issue,
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 17a4af4..a26b6a6 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -235,6 +235,10 @@ enum {
+ 	ATA_PORT_PRIMARY	= (1 << 0),
+ 	ATA_PORT_SECONDARY	= (1 << 1),
+ 
++	/* return values for ->qc_defer */
++	ATA_DEFER_LINK		= 1,
++	ATA_DEFER_PORT		= 2,
++
+ 	/* desc_len for ata_eh_info and context */
+ 	ATA_EH_DESC_LEN		= 80,
+ 
+@@ -566,6 +570,7 @@ struct ata_port_operations {
+ 	void (*bmdma_setup) (struct ata_queued_cmd *qc);
+ 	void (*bmdma_start) (struct ata_queued_cmd *qc);
+ 
++	int (*qc_defer) (struct ata_queued_cmd *qc);
+ 	void (*qc_prep) (struct ata_queued_cmd *qc);
+ 	unsigned int (*qc_issue) (struct ata_queued_cmd *qc);
+ 
+@@ -691,6 +696,7 @@ extern int ata_port_start (struct ata_po
+ extern void ata_port_stop (struct ata_port *ap);
+ extern void ata_host_stop (struct ata_host_set *host_set);
+ extern irqreturn_t ata_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
++extern int ata_std_qc_defer(struct ata_queued_cmd *qc);
+ extern void ata_qc_prep(struct ata_queued_cmd *qc);
+ extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
+ extern unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc);
 -- 
 1.2.4
 
