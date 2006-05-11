@@ -1,47 +1,45 @@
-From: "Helena" <lashvum@acp-inc.com>
-Subject: sup its Helena
-Date: Thu, 11 May 2006 07:24:52 +0400
-Message-ID: <VH.5201746.7054308__42938.5736155838$1147314122$gmane$org@codeweavers.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
+Date: Thu, 11 May 2006 11:09:27 +0800
+Message-ID: <1147316967.7273.26.camel@forrest26.sh.intel.com>
+References: <44614592.7080301@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [165.194.215.161] ([165.194.215.161]:7691 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1751525AbWEKCVs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 May 2006 22:21:48 -0400
+Received: from mga01.intel.com ([192.55.52.88]:53407 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S965121AbWEKDUS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 May 2006 23:20:18 -0400
+In-Reply-To: <44614592.7080301@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi,
+On Wed, 2006-05-10 at 10:44 +0900, Tejun Heo wrote:
+> Hello, all.
+Tejun,
 
-em..... 
-I gotta tell you something. Some years ago I used to watch porno often. I always admired those guys cumming.
-They splashed out so much sperm on their girls, it looked so cool, so manlike. 
-Now I have a girlfriend.. but quantity of my sperm was so scanty, that I felt ill at ease.
+I have comments about definition of macro ata_link_for_each_dev(dev,
+link) and struct ata_port{};.
 
- I was advised to eat green apples but even this didn't help. A month ago I was hanging around at the bar with my best friend. 
-And he said that I should try MAX LOADS. Well, - I thought, - sounds interesting. 
+In the definition of struct ata_port{}, there's
+......
+struct ata_link link;
+struct ata_device __dev1;
+......
 
-Next day I came to know that it was really a highly effective all-natural dietary supplement,
- which not only increases the sperm volume but also improves the sperm quality and the mobility of spermatozoa.
+Then macro ata_link_for_each_dev() assumes that the field 'device' in
+struct ata_link is adjacent to field '__dev1' in struct ata_port.
 
-Having ordered and tried I was shocked how cool it was. 
+I think this assumption is not correct in theory. Because the alignment
+may make these two fields not adjacent in memory.
 
-I'd even say, it changed my life. I'm happy. I even became a better lover, knowing how it all would end. 
-By the way, read about MAX LOADS at this site:
+Although we haven't found the problem so far, it's very dangerous to
+have such assumption in the code.
 
-http://www.armsandhopetodie.com/
+Does this make sense to you?
 
-
-Yes, that guys have really acceptable prices if you decide to order and ship worldwide.
-http://www.armsandhopetodie.com/
-
-
-
-
-
-
-
-
-
-
-infarct you flame me, neoconservative . bloodshed you cleanse me, butterfield blomquist . coerce you jiffy me, shifty curtail tepee . 
-http://www.armsandhopetodie.com/c82/
+Thanks,
+Forrest
