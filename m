@@ -1,82 +1,79 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/14] libata-hp-prep: add ata_hotplug_wq
+Subject: [PATCH 05/14] libata-hp-prep: use __ata_scsi_find_dev()
 Date: Fri, 12 May 2006 00:02:35 +0900
-Message-ID: <11473597552841-git-send-email-htejun@gmail.com>
+Message-ID: <11473597551812-git-send-email-htejun@gmail.com>
 References: <11473597542442-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:12253 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751825AbWEKPCq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from wr-out-0506.google.com ([64.233.184.235]:8739 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751832AbWEKPCq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 11 May 2006 11:02:46 -0400
-Received: by py-out-1112.google.com with SMTP id f28so276315pyf
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:46 -0700 (PDT)
+Received: by wr-out-0506.google.com with SMTP id i22so158150wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:45 -0700 (PDT)
 In-Reply-To: <11473597542442-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-It's best to run ATA hotplug from EH but attaching SCSI devices needs
-working EH.  ata_hotplug_wq is used to give SCSI hotplug operations a
-separate context.
+Convert direct sdev -> dev lookup to __ata_scsi_find_dev().
 
 ---
 
- drivers/scsi/libata-core.c |    9 +++++++++
- drivers/scsi/libata.h      |    1 +
- 2 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-scsi.c |   16 ++++++----------
+ 1 files changed, 6 insertions(+), 10 deletions(-)
 
-60b0f9061e9ce6345e549a38d73f4759daae0339
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 6da1005..1f587aa 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -69,6 +69,8 @@ static void ata_dev_xfermask(struct ata_
- static unsigned int ata_unique_id = 1;
- static struct workqueue_struct *ata_wq;
- 
-+struct workqueue_struct *ata_hotplug_wq;
-+
- int atapi_enabled = 1;
- module_param(atapi_enabled, int, 0444);
- MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
-@@ -5588,6 +5590,12 @@ static int __init ata_init(void)
- 	if (!ata_wq)
- 		return -ENOMEM;
- 
-+	ata_hotplug_wq = create_singlethread_workqueue("ata_hotplug");
-+	if (!ata_hotplug_wq) {
-+		destroy_workqueue(ata_wq);
-+		return -ENOMEM;
-+	}
-+
- 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
- 	return 0;
- }
-@@ -5595,6 +5603,7 @@ static int __init ata_init(void)
- static void __exit ata_exit(void)
+3a5723bc1fbb5f4869b6dd5598cbeed7cb58f1e2
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index bb40309..0316bc1 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -399,7 +399,7 @@ void ata_dump_status(unsigned id, struct
+ int ata_scsi_device_resume(struct scsi_device *sdev)
  {
- 	destroy_workqueue(ata_wq);
-+	destroy_workqueue(ata_hotplug_wq);
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+-	struct ata_device *dev = &ap->device[sdev->id];
++	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
+ 
+ 	return ata_device_resume(dev);
  }
+@@ -407,7 +407,7 @@ int ata_scsi_device_resume(struct scsi_d
+ int ata_scsi_device_suspend(struct scsi_device *sdev, pm_message_t state)
+ {
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+-	struct ata_device *dev = &ap->device[sdev->id];
++	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
  
- module_init(ata_init);
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index 134cb4d..ff50442 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -39,6 +39,7 @@ struct ata_scsi_args {
- };
+ 	return ata_device_suspend(dev, state);
+ }
+@@ -713,19 +713,15 @@ static void ata_scsi_dev_config(struct s
  
- /* libata-core.c */
-+extern struct workqueue_struct *ata_hotplug_wq;
- extern int atapi_enabled;
- extern int atapi_dmadir;
- extern int libata_fua;
+ int ata_scsi_slave_config(struct scsi_device *sdev)
+ {
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
++
+ 	ata_scsi_sdev_config(sdev);
+ 
+ 	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
+ 
+-	if (sdev->id < ATA_MAX_DEVICES) {
+-		struct ata_port *ap;
+-		struct ata_device *dev;
+-
+-		ap = ata_shost_to_port(sdev->host);
+-		dev = &ap->device[sdev->id];
+-
++	if (dev)
+ 		ata_scsi_dev_config(sdev, dev);
+-	}
+ 
+ 	return 0;	/* scsi layer doesn't check return value, sigh */
+ }
 -- 
 1.2.4
 
