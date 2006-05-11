@@ -1,66 +1,53 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: Infinite loop on MODE-SENSE with a removable ATAPI sata device
- on VIA chipset
-Date: Thu, 11 May 2006 09:57:09 +0800
-Message-ID: <446299F5.8010008@tw.ibm.com>
-References: <E656D53DA4B96C409683999F573A360723E559@sbs.ARCO.local> <446205DF.3050706@gmail.com> <4462061E.5030007@gmail.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata_piix failure on ich6m
+Date: Thu, 11 May 2006 11:16:08 +0900
+Message-ID: <44629E68.3020302@gmail.com>
+References: <20060510235650.GA20206@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:8913 "EHLO e36.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S965118AbWEKB5a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 May 2006 21:57:30 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e36.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4B1vMpF000873
-	for <linux-ide@vger.kernel.org>; Wed, 10 May 2006 21:57:22 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4B1vLYQ239820
-	for <linux-ide@vger.kernel.org>; Wed, 10 May 2006 19:57:21 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4B1vLHV017177
-	for <linux-ide@vger.kernel.org>; Wed, 10 May 2006 19:57:21 -0600
-In-Reply-To: <4462061E.5030007@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.180]:54976 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751524AbWEKCQO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 May 2006 22:16:14 -0400
+Received: by py-out-1112.google.com with SMTP id f28so90489pyf
+        for <linux-ide@vger.kernel.org>; Wed, 10 May 2006 19:16:13 -0700 (PDT)
+In-Reply-To: <20060510235650.GA20206@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Dario Oliva <DOliva@ARCOIDE.COM>, jgarzik@pobox.com, linux-ide@vger.kernel.org, =?ISO-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
 
-Tejun Heo wrote:
-> Tejun Heo wrote:
+Matthew Garrett wrote:
+> Hi,
 > 
->> Dario Oliva wrote:
->>
->>> Tejun Heo wrote:
->>>
->>>> I asked the model because plexstor list some of their drives as PIO
->>>
->>> only with VIA controllers.  I don't know why.  But
->>>
->>>> VIA + plextor combination seems to have some problems and your problem
->>>
->>> might be a similar one.
->>>
->>>> Have you tried the drive with other controllers?
->>>
->>>
->>> Yes, we have tried other controllers, mainly Intel and nvidia. No
->>> problems with either one. Only the motherboard with the VIA controller
->>> gives the problem.
->>>
->>
->> Seems to be the same problem.  You can force PIO mode by adding your
->> device's ID to ata_dma_list[] in libata-core.c.  It will force PIO mode
+> We've got an ich6m system (a Toshiba Portege S100). ata_piix attempts to 
+> drive the chipset, but fails - however, it doesn't bail out. As a result 
+> it remains bound to the device and ahci isn't loaded.
 > 
+> I've attached the lspci output for the chipset. A few things to note 
+> are:
 > 
-> s/ata_dma_list/ata_dma_blacklist/ of course.
+> 1) The AHCI BAR is set
+> 2) The SCC register identifies it as an AHCI controller
+> 3) Bits 2 and 0 of the PCS are set, which the spec claims indicates that 
+> the port is to be controlled as an ahci device.
+> 
+> So, my question is effectively: why does ata_piix attempt to disable 
+> ahci rather than simply letting the ahci driver bind? Points (1) and (2) 
+> seem to be checked by the code, but I'm guessing that in the case of (3) 
+> it should just return ENODEV and let ahci be run instead. If so, should 
+> I code up a patch?
 > 
 
-I've gotten a VIA VT6421 adapter. Will try to test it with some ATAPI devices
-for this problem.
+I'm not very sure but it might be historical.  ahci got implemented 
+after ata_piix and in the meantime ata_piix must have handled all it 
+could.  Can you verify whether modifying the code to return -ENODEV work 
+for your machine?  If so, that could be the correct solution but I'm a 
+bit worried because it could change probing order or fail to enable 
+devices it used to.  Maybe we need a hack to return -ENODEV iff ahci is 
+there to handle the device.
 
---
-albert
-
-
+-- 
+tejun
