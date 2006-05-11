@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/14] libata-hp-prep: implement ata_dev_init()
+Subject: [PATCH 01/14] libata-hp-prep: add flags and eh_info/context fields for hotplug
 Date: Fri, 12 May 2006 00:02:34 +0900
-Message-ID: <11473597543417-git-send-email-htejun@gmail.com>
+Message-ID: <11473597542607-git-send-email-htejun@gmail.com>
 References: <11473597542442-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.203]:37318 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751816AbWEKPCl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from py-out-1112.google.com ([64.233.166.176]:12253 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751822AbWEKPCl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 11 May 2006 11:02:41 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so222099nzn
+Received: by py-out-1112.google.com with SMTP id f28so276315pyf
         for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:40 -0700 (PDT)
 In-Reply-To: <11473597542442-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,69 +20,56 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Move initialization of struct ata_device into ata_dev_init() in
-preparation for hotplug.  This patch calls ata_dev_init() from
-ata_host_init() and thus makes no functional difference.
+Add hotplug related flags and eh_info/context fields.
 
 ---
 
- drivers/scsi/libata-core.c |   28 ++++++++++++++++++++++------
- 1 files changed, 22 insertions(+), 6 deletions(-)
+ include/linux/libata.h |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-bf81344569d3ceb459fa55121a0d69d9ed52f10e
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 54240db..d307164 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5108,6 +5108,27 @@ static void ata_host_remove(struct ata_p
- }
+d60dd05d2cfd4a63b7ce869694c3060d2aeab9d8
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 97e25a6..1f6e48e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -130,6 +130,9 @@ enum {
  
- /**
-+ *	ata_dev_init - Initialize an ata_device structure
-+ *	@dev: Device structure to initialize
-+ *
-+ *	Initialize @dev in preparation for probing.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+void ata_dev_init(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->ap;
-+
-+	memset((void *)dev, 0, sizeof(*dev));
-+	dev->devno = dev - ap->device;
-+	dev->pio_mask = UINT_MAX;
-+	dev->mwdma_mask = UINT_MAX;
-+	dev->udma_mask = UINT_MAX;
-+	ata_ering_init(&dev->ering, ATA_DEV_ERING_SIZE);
-+}
-+
-+/**
-  *	ata_host_init - Initialize an ata_port structure
-  *	@ap: Structure to initialize
-  *	@host: associated SCSI mid-layer structure
-@@ -5121,7 +5142,6 @@ static void ata_host_remove(struct ata_p
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--
- static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
- 			  struct ata_host_set *host_set,
- 			  const struct ata_probe_ent *ent, unsigned int port_no)
-@@ -5163,11 +5183,7 @@ static void ata_host_init(struct ata_por
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
- 		dev->ap = ap;
--		dev->devno = i;
--		dev->pio_mask = UINT_MAX;
--		dev->mwdma_mask = UINT_MAX;
--		dev->udma_mask = UINT_MAX;
--		ata_ering_init(&dev->ering, ATA_DEV_ERING_SIZE);
-+		ata_dev_init(dev);
- 	}
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
  
- #ifdef ATA_IRQ_TRAP
++	ATA_DFLAG_DETACH	= (1 << 16),
++	ATA_DFLAG_DETACHED	= (1 << 17),
++
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+ 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
+@@ -161,6 +164,9 @@ enum {
+ 	ATA_FLAG_EH_PENDING	= (1 << 16), /* EH pending */
+ 	ATA_FLAG_FROZEN		= (1 << 17), /* port is frozen */
+ 	ATA_FLAG_RECOVERED	= (1 << 18), /* recovery action performed */
++	ATA_FLAG_LOADING	= (1 << 19), /* boot/loading probe */
++	ATA_FLAG_UNLOADING	= (1 << 20), /* module is unloading */
++	ATA_FLAG_SCSI_HOTPLUG	= (1 << 21), /* SCSI hotplug scheduled */
+ 
+ 	ATA_FLAG_DISABLED	= (1 << 22), /* port is disabled, ignore it */
+ 	ATA_FLAG_SUSPENDED	= (1 << 23), /* port is suspended (power) */
+@@ -435,6 +441,7 @@ struct ata_eh_info {
+ 	u32			serror;		/* SError from LLDD */
+ 	unsigned int		err_mask;	/* port-wide err_mask */
+ 	unsigned int		action;		/* ATA_EH_* action mask */
++	unsigned int		probe_mask;
+ 	char			desc[ATA_EH_DESC_LEN];
+ 	int			desc_len;
+ };
+@@ -442,7 +449,9 @@ struct ata_eh_info {
+ struct ata_eh_context {
+ 	struct ata_eh_info	i;
+ 	int			tries[ATA_MAX_DEVICES];
++	unsigned int		classes[ATA_MAX_DEVICES];
+ 	unsigned int		flags;		/* ATA_EHC_* */
++	unsigned int		did_probe_mask;
+ };
+ 
+ struct ata_port {
 -- 
 1.2.4
 
