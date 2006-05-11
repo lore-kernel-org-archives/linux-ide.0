@@ -1,45 +1,31 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] PIIX: fix 82371MX enablebits
-Date: Thu, 11 May 2006 21:27:04 +0100
-Message-ID: <1147379225.26130.81.camel@localhost.localdomain>
-References: <446395A0.20806@ru.mvista.com>
+Subject: Re: [PATCH] PIIX: config_drive_for_dma() cleanup
+Date: Thu, 11 May 2006 21:29:01 +0100
+Message-ID: <1147379342.26130.84.camel@localhost.localdomain>
+References: <44638A4F.2090502@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:20922 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:22714 "EHLO
 	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1750733AbWEKUPF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 16:15:05 -0400
-In-Reply-To: <446395A0.20806@ru.mvista.com>
+	id S1750759AbWEKUQ5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 16:16:57 -0400
+In-Reply-To: <44638A4F.2090502@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, liknux-kernel@vger.kernel.org
 
-On Iau, 2006-05-11 at 23:50 +0400, Sergei Shtylyov wrote:
->      According to the datasheet, Intel 82371MX (MPIIX) actually has only a
-> single IDE channel mapped to the primary or secondary ports depending on the
-> value of the bit 14 of the IDETIM register at PCI config. offset 0x6C (the
-> register at 0x6F which the driver refers to. doesn't exist). So, disguise the
-> controller as dual channel and set enablebits masks/values such that only
-> either primary or secondary channel is detected enabled. Also, preclude the
-> IDE probing code from reading PCI BARs, this controller just doesn't have them
-> (it's not the separate PCI function like the other PCI controllers), it only
-> decodes the legacy addresses.
+On Iau, 2006-05-11 at 23:02 +0400, Sergei Shtylyov wrote:
+> @@ -73,8 +74,6 @@
+>   *	PIIX4	errata #15	- Must not read control registers
+>   * 				  during a PIO transfer
+>   *	440MX   errata #13	- As PIIX4 errata #15
+> - *	ICH2	errata #21	- DMA mode 0 doesn't work right
+> - *	ICH0/1  errata #55	- As ICH2 errata #21
 
-There are lots and lots of other things you need to fix to make MPIIX
-work with that driver. It has only a single timing register for one so
-you must switch timing as you flip drive. Also it is not an IDE class
-device so the PCI native/legacy and simplex stuff is not valid. Finally
-the PIIX driver pokes several registers it doesn't even have.
-
-What else - oh yes the piix driver doesn't even tune the timings, so it
-doesn't work anyway.
-
-
-Thats why drivers/scsi/pata_mpiix is a separate driver. Really if you
-want to try and rescue the old PIIX driver you should split out PIIX3
-and MPIIX into their own drivers.
+NAK. The errata are documented carefully so that people know what the
+problems are. They have not gone away.
 
 
