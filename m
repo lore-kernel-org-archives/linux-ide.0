@@ -1,85 +1,83 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/14] libata-hp-prep: store attached SCSI device
-Date: Fri, 12 May 2006 00:11:59 +0900
-Message-ID: <11473603192788-git-send-email-htejun@gmail.com>
+Subject: [PATCH 11/14] libata-hp-prep: make ops->tf_read() optional
+Date: Fri, 12 May 2006 00:12:00 +0900
+Message-ID: <11473603203529-git-send-email-htejun@gmail.com>
 References: <1147360318920-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:58102 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751854AbWEKPML (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:12:11 -0400
-Received: by py-out-1112.google.com with SMTP id f28so279580pyf
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:11 -0700 (PDT)
+Received: from wr-out-0506.google.com ([64.233.184.230]:54573 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751859AbWEKPMO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:12:14 -0400
+Received: by wr-out-0506.google.com with SMTP id i12so387722wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:14 -0700 (PDT)
 In-Reply-To: <1147360318920-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add device persistent field dev->sdev and store the attached SCSI
-device.  With hotplug, libata needs to know the attached SCSI device
-to offline and detach it, but scsi_device_lookup() cannot be used
-because libata will reuse SCSI ID numbers - dead but not gone devices
-(due to zombie opens, etc...) interfere with the lookup.
-
-dev->sdev doesn't hold reference to the SCSI device.  It's cleared
-when the SCSI device goes away.
+Not all controllers have single TF image and ops->tf_read() is
+inappropriate for them.  Newly implemented hotplug probing will allow
+drivers for such controllers to get rid of ops->tf_read() completely.
+Make ops->tf_read() optional in core layer.
 
 ---
 
- drivers/scsi/libata-scsi.c |   14 ++++++++++----
- include/linux/libata.h     |    1 +
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/scsi/libata-core.c |    8 +++++---
+ drivers/scsi/libata-eh.c   |    3 ++-
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-e04f46cf173e4b7f837ac75400eac20e2dd0d057
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 0316bc1..7827844 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2738,17 +2738,23 @@ void ata_scsi_simulate(struct ata_device
+164a958101ccf3f82b1af1be7dd77d991cd88d65
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 636f044..6d86479 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4429,14 +4429,15 @@ void ata_qc_complete(struct ata_queued_c
+ 		if (unlikely(qc->flags & ATA_QCFLAG_FAILED)) {
+ 			if (!ata_tag_internal(qc->tag)) {
+ 				/* always fill result TF for failed qc */
+-				ap->ops->tf_read(ap, &qc->result_tf);
++				if (ap->ops->tf_read)
++					ap->ops->tf_read(ap, &qc->result_tf);
+ 				ata_qc_schedule_eh(qc);
+ 				return;
+ 			}
+ 		}
  
- void ata_scsi_scan_host(struct ata_port *ap)
- {
--	struct ata_device *dev;
- 	unsigned int i;
+ 		/* read result TF if requested */
+-		if (qc->flags & ATA_QCFLAG_RESULT_TF)
++		if (ap->ops->tf_read && qc->flags & ATA_QCFLAG_RESULT_TF)
+ 			ap->ops->tf_read(ap, &qc->result_tf);
  
- 	if (ap->flags & ATA_FLAG_DISABLED)
- 		return;
+ 		__ata_qc_complete(qc);
+@@ -4445,7 +4446,8 @@ void ata_qc_complete(struct ata_queued_c
+ 			return;
  
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
--		dev = &ap->device[i];
-+		struct ata_device *dev = &ap->device[i];
-+		struct scsi_device *sdev;
+ 		/* read result TF if failed or requested */
+-		if (qc->err_mask || qc->flags & ATA_QCFLAG_RESULT_TF)
++		if (ap->ops->tf_read &&
++		    (qc->err_mask || qc->flags & ATA_QCFLAG_RESULT_TF))
+ 			ap->ops->tf_read(ap, &qc->result_tf);
  
--		if (ata_dev_enabled(dev))
--			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
-+		if (!ata_dev_enabled(dev) || dev->sdev)
-+			continue;
-+
-+		sdev = __scsi_add_device(ap->host, 0, i, 0, NULL);
-+		if (!IS_ERR(sdev)) {
-+			dev->sdev = sdev;
-+			scsi_device_put(sdev);
-+		}
- 	}
- }
+ 		__ata_qc_complete(qc);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index b6268b5..740934b 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -811,7 +811,8 @@ static unsigned int atapi_eh_request_sen
+ 	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 6ab988a..f4a544e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -411,6 +411,7 @@ struct ata_device {
- 	struct ata_port		*ap;
- 	unsigned int		devno;		/* 0 or 1 */
- 	unsigned long		flags;		/* ATA_DFLAG_xxx */
-+	struct scsi_device	*sdev;		/* attached SCSI device */
- 	/* fields above n_sectors are not cleared across device init */
- 	u64			n_sectors;	/* size of device, if ATA */
- 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	/* XXX: why tf_read here? */
+-	ap->ops->tf_read(ap, &tf);
++	if (ap->ops->tf_read)
++		ap->ops->tf_read(ap, &tf);
+ 
+ 	/* fill these in, for the case where they are -not- overwritten */
+ 	sense_buf[0] = 0x70;
 -- 
 1.2.4
 
