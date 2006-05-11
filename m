@@ -1,88 +1,65 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/14] libata-hp-prep: implement ata_dev_init()
-Date: Fri, 12 May 2006 00:11:58 +0900
-Message-ID: <11473603181846-git-send-email-htejun@gmail.com>
+Subject: [PATCH 5/6] sata_sil24: use sata_phy_debounce() in sil24_hardreset()
+Date: Fri, 12 May 2006 00:11:59 +0900
+Message-ID: <11473603191112-git-send-email-htejun@gmail.com>
 References: <1147360318920-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:54573 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751845AbWEKPMF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:12:05 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so387722wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:04 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.201]:44528 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751852AbWEKPML (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:12:11 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so224767nzn
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:11 -0700 (PDT)
 In-Reply-To: <1147360318920-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Move initialization of struct ata_device into ata_dev_init() in
-preparation for hotplug.  This patch calls ata_dev_init() from
-ata_host_init() and thus makes no functional difference.
+Do phy debouncing instead of unconditional wait after DEV_RST.
 
 ---
 
- drivers/scsi/libata-core.c |   28 ++++++++++++++++++++++------
- 1 files changed, 22 insertions(+), 6 deletions(-)
+ drivers/scsi/sata_sil24.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-bf81344569d3ceb459fa55121a0d69d9ed52f10e
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 54240db..d307164 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5108,6 +5108,27 @@ static void ata_host_remove(struct ata_p
- }
+b8c4776dbd446dd2087689d23c1a6ca153abd293
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 629679e..72219fa 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -591,7 +591,7 @@ static int sil24_hardreset(struct ata_po
+ {
+ 	void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
+ 	const char *reason;
+-	int tout_msec;
++	int tout_msec, rc;
+ 	u32 tmp;
  
- /**
-+ *	ata_dev_init - Initialize an ata_device structure
-+ *	@dev: Device structure to initialize
-+ *
-+ *	Initialize @dev in preparation for probing.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+void ata_dev_init(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->ap;
-+
-+	memset((void *)dev, 0, sizeof(*dev));
-+	dev->devno = dev - ap->device;
-+	dev->pio_mask = UINT_MAX;
-+	dev->mwdma_mask = UINT_MAX;
-+	dev->udma_mask = UINT_MAX;
-+	ata_ering_init(&dev->ering, ATA_DEV_ERING_SIZE);
-+}
-+
-+/**
-  *	ata_host_init - Initialize an ata_port structure
-  *	@ap: Structure to initialize
-  *	@host: associated SCSI mid-layer structure
-@@ -5121,7 +5142,6 @@ static void ata_host_remove(struct ata_p
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--
- static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
- 			  struct ata_host_set *host_set,
- 			  const struct ata_probe_ent *ent, unsigned int port_no)
-@@ -5163,11 +5183,7 @@ static void ata_host_init(struct ata_por
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
- 		dev->ap = ap;
--		dev->devno = i;
--		dev->pio_mask = UINT_MAX;
--		dev->mwdma_mask = UINT_MAX;
--		dev->udma_mask = UINT_MAX;
--		ata_ering_init(&dev->ering, ATA_DEV_ERING_SIZE);
-+		ata_dev_init(dev);
- 	}
+ 	/* sil24 does the right thing(tm) without any protection */
+@@ -605,10 +605,15 @@ static int sil24_hardreset(struct ata_po
+ 	tmp = ata_wait_register(port + PORT_CTRL_STAT,
+ 				PORT_CS_DEV_RST, PORT_CS_DEV_RST, 10, tout_msec);
  
- #ifdef ATA_IRQ_TRAP
+-	/* SStatus oscillates between zero and valid status for short
+-	 * duration after DEV_RST, give it time to settle.
++	/* SStatus oscillates between zero and valid status after
++	 * DEV_RST, debounce it.
+ 	 */
+-	msleep(100);
++	rc = sata_phy_debounce(ap, ATA_DEBOUNCE_INTERVAL,
++			       ATA_DEBOUNCE_DURATION, ATA_DEBOUNCE_TIMEOUT);
++	if (rc) {
++		reason = "PHY debouncing failed";
++		goto err;
++	}
+ 
+ 	if (tmp & PORT_CS_DEV_RST) {
+ 		if (ata_port_offline(ap))
 -- 
 1.2.4
 
