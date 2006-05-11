@@ -1,110 +1,78 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/14] libata-hp-prep: implement ap->hw_sata_spd_limit
-Date: Fri, 12 May 2006 00:02:35 +0900
-Message-ID: <1147359755308-git-send-email-htejun@gmail.com>
-References: <11473597542442-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET 06/11] prep for hotplug support, take 2
+Date: Fri, 12 May 2006 00:02:34 +0900
+Message-ID: <11473597542442-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:17373 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751833AbWEKPCq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:02:46 -0400
-Received: by py-out-1112.google.com with SMTP id f28so276359pyf
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:46 -0700 (PDT)
-In-Reply-To: <11473597542442-git-send-email-htejun@gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.232]:65058 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751824AbWEKPCl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:02:41 -0400
+Received: by wr-out-0506.google.com with SMTP id i12so385619wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:40 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Add ap->hw_sata_spd_limit and initialize it once during the boot
-initialization (or driver load initialization).  ap->sata_spd_limit is
-reset to ap->hw_sata_spd_limit on hotplug.  This prevents limits
-introduced by earlier devices from affecting new devices.
+Bang-Ga.
 
----
+This is part of patchset series described in [T].
 
- drivers/scsi/libata-core.c |   21 ++++++++++++---------
- include/linux/libata.h     |    1 +
- 2 files changed, 13 insertions(+), 9 deletions(-)
+This is the second take of prep-for-hotplug-support patchset.  Changes
+from the last take[L] are
 
-658f9435c1ea00f1222bc0090b4bffe41111604f
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 6accef3..6da1005 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2456,17 +2456,9 @@ static int sata_phy_resume(struct ata_po
-  */
- void ata_std_probeinit(struct ata_port *ap)
- {
--	u32 scontrol;
--
- 	/* resume link */
- 	sata_phy_resume(ap);
- 
--	/* init sata_spd_limit to the current value */
--	if (ata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
--		int spd = (scontrol >> 4) & 0xf;
--		ap->sata_spd_limit &= (1 << spd) - 1;
--	}
--
- 	/* wait for device */
- 	if (ata_port_online(ap))
- 		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
-@@ -5121,6 +5113,9 @@ void ata_dev_init(struct ata_device *dev
- 	struct ata_port *ap = dev->ap;
- 	unsigned long flags;
- 
-+	/* SATA spd limit is bound to the first device */
-+	ap->sata_spd_limit = ap->hw_sata_spd_limit;
-+
- 	/* High bits of dev->flags are used to record warm plug
- 	 * requests which occur asynchronously.  Synchronize using
- 	 * host_set lock.
-@@ -5177,7 +5172,7 @@ static void ata_host_init(struct ata_por
- 	ap->udma_mask = ent->udma_mask;
- 	ap->flags |= ent->host_flags;
- 	ap->ops = ent->port_ops;
--	ap->sata_spd_limit = UINT_MAX;
-+	ap->hw_sata_spd_limit = UINT_MAX;
- 	ap->active_tag = ATA_TAG_POISON;
- 	ap->last_ctl = 0xFF;
- 
-@@ -5340,10 +5335,18 @@ int ata_device_add(const struct ata_prob
- 	DPRINTK("probe begin\n");
- 	for (i = 0; i < count; i++) {
- 		struct ata_port *ap;
-+		u32 scontrol;
- 		int rc;
- 
- 		ap = host_set->ports[i];
- 
-+		/* init sata_spd_limit to the current value */
-+		if (ata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
-+			int spd = (scontrol >> 4) & 0xf;
-+			ap->hw_sata_spd_limit &= (1 << spd) - 1;
-+		}
-+		ap->sata_spd_limit = ap->hw_sata_spd_limit;
-+
- 		DPRINTK("ata%u: bus probe begin\n", ap->id);
- 		rc = ata_bus_probe(ap);
- 		DPRINTK("ata%u: bus probe end\n", ap->id);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 99a78cf..6ab988a 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -480,6 +480,7 @@ struct ata_port {
- 	unsigned int		mwdma_mask;
- 	unsigned int		udma_mask;
- 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
-+	unsigned int		hw_sata_spd_limit;
- 	unsigned int		sata_spd_limit;	/* SATA PHY speed limit */
- 
- 	/* record runtime error info, protected by host_set lock */
--- 
-1.2.4
+* dev->flags is used for warm plug and synchronized with host_set
+  lock.  ata_dev_init() is updated to clear non-persistent part of
+  dev->flags while holding host_set lock.
+
+* ap->orig_sata_spd_limit renamed to ap->hw_sata_spd_limit.
+
+* sata_phy_debounce() implemented.  This function will be called
+  before performing EH resets to settle devices instead of blind
+  delay.  sata_phy_debounce() is superset of the wait used in
+  sata_phy_resume() and sata_phy_resume() is converted to use it.
+
+* TF access is made optional.  All probing (including boot probing)
+  will be done via hotplug and hotplug probing is implemented such
+  that ->tf_read/write() isn't necessary, so now drivers like
+  sata_sil24 don't have to fake TF access.  As ->check_[alt]status()
+  was embedded too deep, ata_noop_check_status() is added instead of
+  making those methods optional.  In the long term, those low level
+  methods should be separated from highlevel ops somehow.
+
+* ops->prereset() added.  This function is the counterpart of
+  postreset() and called before a series of resets.  This is quite
+  similar to ->probe_init() except that it's called for all resets.
+  prereset() can determine things like whether it's prepping for boot
+  probing or not, and which reset will be performed by testing
+  ap->flags and ehi.
+
+* Followup-softreset handling implemented.
+
+* hotplug will completely replace ->probe_init/reset().
+
+This patchset is against
+
+  upstream (acc696d93dcf993dec123d69d599979e1456ffec)
+  + [1] prep-for-new-EH patchset
+  + [2] new-EH-framework patchset, take 3
+  + [3] new-EH-implementation patchset, take 3
+  + [4] merge-irq-pio patchset
+  + [5] add-NCQ-support patchset, take 3
+
+--
+tejun
+
+[T] http://article.gmane.org/gmane.linux.ide/9957
+[L] http://article.gmane.org/gmane.linux.ide/9579
+[1] http://article.gmane.org/gmane.linux.ide/9959
+[2] http://article.gmane.org/gmane.linux.ide/9984
+[3] http://article.gmane.org/gmane.linux.ide/9995
+[4] http://article.gmane.org/gmane.linux.ide/10005
+[5] http://article.gmane.org/gmane.linux.ide/10011
 
 
