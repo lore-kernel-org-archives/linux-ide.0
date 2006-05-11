@@ -1,109 +1,85 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/14] libata-hp-prep: implement ap->hw_sata_spd_limit
+Subject: [PATCH 07/14] libata-hp-prep: store attached SCSI device
 Date: Fri, 12 May 2006 00:11:59 +0900
-Message-ID: <11473603191957-git-send-email-htejun@gmail.com>
+Message-ID: <11473603192788-git-send-email-htejun@gmail.com>
 References: <1147360318920-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.231]:46893 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751847AbWEKPMK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:12:10 -0400
-Received: by wr-out-0506.google.com with SMTP id i22so162012wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:09 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.182]:58102 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751854AbWEKPML (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:12:11 -0400
+Received: by py-out-1112.google.com with SMTP id f28so279580pyf
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:11 -0700 (PDT)
 In-Reply-To: <1147360318920-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add ap->hw_sata_spd_limit and initialize it once during the boot
-initialization (or driver load initialization).  ap->sata_spd_limit is
-reset to ap->hw_sata_spd_limit on hotplug.  This prevents limits
-introduced by earlier devices from affecting new devices.
+Add device persistent field dev->sdev and store the attached SCSI
+device.  With hotplug, libata needs to know the attached SCSI device
+to offline and detach it, but scsi_device_lookup() cannot be used
+because libata will reuse SCSI ID numbers - dead but not gone devices
+(due to zombie opens, etc...) interfere with the lookup.
+
+dev->sdev doesn't hold reference to the SCSI device.  It's cleared
+when the SCSI device goes away.
 
 ---
 
- drivers/scsi/libata-core.c |   21 ++++++++++++---------
+ drivers/scsi/libata-scsi.c |   14 ++++++++++----
  include/linux/libata.h     |    1 +
- 2 files changed, 13 insertions(+), 9 deletions(-)
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-658f9435c1ea00f1222bc0090b4bffe41111604f
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 6accef3..6da1005 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2456,17 +2456,9 @@ static int sata_phy_resume(struct ata_po
-  */
- void ata_std_probeinit(struct ata_port *ap)
+e04f46cf173e4b7f837ac75400eac20e2dd0d057
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 0316bc1..7827844 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -2738,17 +2738,23 @@ void ata_scsi_simulate(struct ata_device
+ 
+ void ata_scsi_scan_host(struct ata_port *ap)
  {
--	u32 scontrol;
--
- 	/* resume link */
- 	sata_phy_resume(ap);
+-	struct ata_device *dev;
+ 	unsigned int i;
  
--	/* init sata_spd_limit to the current value */
--	if (ata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
--		int spd = (scontrol >> 4) & 0xf;
--		ap->sata_spd_limit &= (1 << spd) - 1;
--	}
--
- 	/* wait for device */
- 	if (ata_port_online(ap))
- 		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
-@@ -5121,6 +5113,9 @@ void ata_dev_init(struct ata_device *dev
- 	struct ata_port *ap = dev->ap;
- 	unsigned long flags;
+ 	if (ap->flags & ATA_FLAG_DISABLED)
+ 		return;
  
-+	/* SATA spd limit is bound to the first device */
-+	ap->sata_spd_limit = ap->hw_sata_spd_limit;
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->device[i];
++		struct ata_device *dev = &ap->device[i];
++		struct scsi_device *sdev;
+ 
+-		if (ata_dev_enabled(dev))
+-			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
++		if (!ata_dev_enabled(dev) || dev->sdev)
++			continue;
 +
- 	/* High bits of dev->flags are used to record warm plug
- 	 * requests which occur asynchronously.  Synchronize using
- 	 * host_set lock.
-@@ -5177,7 +5172,7 @@ static void ata_host_init(struct ata_por
- 	ap->udma_mask = ent->udma_mask;
- 	ap->flags |= ent->host_flags;
- 	ap->ops = ent->port_ops;
--	ap->sata_spd_limit = UINT_MAX;
-+	ap->hw_sata_spd_limit = UINT_MAX;
- 	ap->active_tag = ATA_TAG_POISON;
- 	ap->last_ctl = 0xFF;
- 
-@@ -5340,10 +5335,18 @@ int ata_device_add(const struct ata_prob
- 	DPRINTK("probe begin\n");
- 	for (i = 0; i < count; i++) {
- 		struct ata_port *ap;
-+		u32 scontrol;
- 		int rc;
- 
- 		ap = host_set->ports[i];
- 
-+		/* init sata_spd_limit to the current value */
-+		if (ata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
-+			int spd = (scontrol >> 4) & 0xf;
-+			ap->hw_sata_spd_limit &= (1 << spd) - 1;
++		sdev = __scsi_add_device(ap->host, 0, i, 0, NULL);
++		if (!IS_ERR(sdev)) {
++			dev->sdev = sdev;
++			scsi_device_put(sdev);
 +		}
-+		ap->sata_spd_limit = ap->hw_sata_spd_limit;
-+
- 		DPRINTK("ata%u: bus probe begin\n", ap->id);
- 		rc = ata_bus_probe(ap);
- 		DPRINTK("ata%u: bus probe end\n", ap->id);
+ 	}
+ }
+ 
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 99a78cf..6ab988a 100644
+index 6ab988a..f4a544e 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -480,6 +480,7 @@ struct ata_port {
- 	unsigned int		mwdma_mask;
- 	unsigned int		udma_mask;
- 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
-+	unsigned int		hw_sata_spd_limit;
- 	unsigned int		sata_spd_limit;	/* SATA PHY speed limit */
- 
- 	/* record runtime error info, protected by host_set lock */
+@@ -411,6 +411,7 @@ struct ata_device {
+ 	struct ata_port		*ap;
+ 	unsigned int		devno;		/* 0 or 1 */
+ 	unsigned long		flags;		/* ATA_DFLAG_xxx */
++	struct scsi_device	*sdev;		/* attached SCSI device */
+ 	/* fields above n_sectors are not cleared across device init */
+ 	u64			n_sectors;	/* size of device, if ATA */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
 -- 
 1.2.4
 
