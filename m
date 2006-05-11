@@ -1,252 +1,207 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/13] libata-hp: implement SCSI part of hotplug
+Subject: [PATCH 08/13] ata_piix: convert ata_piix to new probing mechanism
 Date: Fri, 12 May 2006 00:32:07 +0900
-Message-ID: <1147361527732-git-send-email-htejun@gmail.com>
+Message-ID: <11473615273443-git-send-email-htejun@gmail.com>
 References: <11473615261297-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.239]:65348 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030265AbWEKPcP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:32:15 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so392284wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:32:14 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.177]:41013 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1030260AbWEKPcW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:32:22 -0400
+Received: by py-out-1112.google.com with SMTP id f28so286422pyf
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:32:20 -0700 (PDT)
 In-Reply-To: <11473615261297-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement SCSI part of hotplug.
-
-This must be done in a separate context as SCSI makes use of EH during
-probing.  Unfortunately, SCSI probing fails silently if EH is active.
-ata_eh_scsi_hotplug() does its best to avoid such conditions but,
-theoretically, it may fail to associate SCSI device to newly found ATA
-device; however, the chance is pretty slim and I haven't experienced
-any such event during testing.
-
-Also, device removal synchronization is clumsy resulting in complex
-ata_scsi_remove_dev(), but I think I've got it right and haven't seen
-it malfunction yet.
+Convert ata_piix to new probing mechanism.  Automatic hotplug is not
+supported due to hardware limitation (no PHY event interrupt), but
+warm plugging works.
 
 ---
 
- drivers/scsi/libata-core.c |    1 +
- drivers/scsi/libata-eh.c   |   70 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/libata-scsi.c |   59 +++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata.h      |    2 +
- include/linux/libata.h     |    2 +
- 5 files changed, 132 insertions(+), 2 deletions(-)
+ drivers/scsi/ata_piix.c |   89 +++++++++++++++++------------------------------
+ 1 files changed, 32 insertions(+), 57 deletions(-)
 
-03a1a07f8057e7e79efb56332d1b6c5b20867d0c
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 9acfdc7..f997acf 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5310,6 +5310,7 @@ static void ata_host_init(struct ata_por
- 	ap->last_ctl = 0xFF;
+2823178289c03f9f8ebe3fc9541788a92b830016
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index f2d71e7..47d3fec 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -146,11 +146,10 @@ struct piix_map_db {
  
- 	INIT_WORK(&ap->port_task, NULL, NULL);
-+	INIT_WORK(&ap->hotplug_task, ata_eh_scsi_hotplug, ap);
- 	INIT_LIST_HEAD(&ap->eh_done_q);
+ static int piix_init_one (struct pci_dev *pdev,
+ 				    const struct pci_device_id *ent);
+-
+-static int piix_pata_probe_reset(struct ata_port *ap, unsigned int *classes);
+-static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes);
+ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
+ static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
++static void piix_pata_error_handler(struct ata_port *ap);
++static void piix_sata_error_handler(struct ata_port *ap);
  
- 	/* set cable type */
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 0481abc..c787b91 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -291,9 +291,13 @@ void ata_scsi_error(struct Scsi_Host *ho
- 	/* clean up */
- 	spin_lock_irqsave(hs_lock, flags);
+ static unsigned int in_module_init = 1;
  
-+	if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
-+		queue_work(ata_hotplug_wq, &ap->hotplug_task);
-+
- 	if (ap->flags & ATA_FLAG_RECOVERED)
- 		ata_port_printk(ap, KERN_INFO, "EH complete\n");
--	ap->flags &= ~ATA_FLAG_RECOVERED;
-+
-+	ap->flags &= ~(ATA_FLAG_SCSI_HOTPLUG | ATA_FLAG_RECOVERED);
+@@ -235,8 +234,6 @@ static const struct ata_port_operations 
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
  
- 	spin_unlock_irqrestore(hs_lock, flags);
+-	.probe_reset		= piix_pata_probe_reset,
+-
+ 	.bmdma_setup		= ata_bmdma_setup,
+ 	.bmdma_start		= ata_bmdma_start,
+ 	.bmdma_stop		= ata_bmdma_stop,
+@@ -246,7 +243,7 @@ static const struct ata_port_operations 
  
-@@ -1734,6 +1738,70 @@ static void ata_eh_finish(struct ata_por
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+-	.error_handler		= ata_bmdma_error_handler,
++	.error_handler		= piix_pata_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 
+ 	.irq_handler		= ata_interrupt,
+@@ -266,8 +263,6 @@ static const struct ata_port_operations 
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
+ 
+-	.probe_reset		= piix_sata_probe_reset,
+-
+ 	.bmdma_setup		= ata_bmdma_setup,
+ 	.bmdma_start		= ata_bmdma_start,
+ 	.bmdma_stop		= ata_bmdma_stop,
+@@ -277,7 +272,7 @@ static const struct ata_port_operations 
+ 
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+-	.error_handler		= ata_bmdma_error_handler,
++	.error_handler		= piix_sata_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 
+ 	.irq_handler		= ata_interrupt,
+@@ -462,59 +457,50 @@ cbl40:
  }
  
  /**
-+ *	ata_eh_scsi_hotplug - SCSI part of hotplug
-+ *	@data: Pointer to ATA port to perform SCSI hotplug on
-+ *
-+ *	Perform SCSI part of hotplug.  It's executed from a separate
-+ *	workqueue after EH completes.  This is necessary because SCSI
-+ *	hot plugging requires working EH and hot unplugging is
-+ *	synchronized with hot plugging with a mutex.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ */
-+void ata_eh_scsi_hotplug(void *data)
-+{
-+	struct ata_port *ap = data;
-+	unsigned long timeout;
-+	int i, requeue = 0;
-+
-+	DPRINTK("ENTER\n");
-+
-+	/* SCSI hotplug is requested.  EH might still be running and
-+	 * we wanna scan the bus after EH is complete; otherwise, SCSI
-+	 * scan fails silently.  scsi_block_when_processing_errors()
-+	 * cannot be used because we might not have a sdev to wait on.
-+	 * Poll for !scsi_host_in_recovery() for 2 secs.
-+	 */
-+	timeout = jiffies + 2 * HZ;
-+	do {
-+		if (!scsi_host_in_recovery(ap->host))
-+			break;
-+		msleep(100);
-+	} while (time_before(jiffies, timeout));
-+
-+	if (scsi_host_in_recovery(ap->host))
-+		requeue = 1;
-+
-+	/* unplug detached devices */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+		unsigned long flags;
-+
-+		if (!(dev->flags & ATA_DFLAG_DETACHED))
-+			continue;
-+
-+		spin_lock_irqsave(&ap->host_set->lock, flags);
-+		dev->flags &= ~ATA_DFLAG_DETACHED;
-+		spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+		ata_scsi_remove_dev(dev);
-+	}
-+
-+	/* scan for new ones */
-+	ata_scsi_scan_host(ap);
-+
-+	if (requeue || scsi_host_in_recovery(ap->host)) {
-+		/* we might have scanned while EH is active.  Repeat
-+		 * scan after a sec.
-+		 */
-+		queue_delayed_work(ata_hotplug_wq, &ap->hotplug_task, HZ);
-+	}
-+
-+	DPRINTK("EXIT\n");
-+}
-+
-+/**
-  *	ata_do_eh - do standard error handling
-  *	@ap: host port to handle error for
-  *	@prereset: prereset method (can be NULL)
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index f061c65..e586cb9 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2783,6 +2783,65 @@ int ata_scsi_offline_dev(struct ata_devi
- }
- 
- /**
-+ *	ata_scsi_remove_dev - remove attached SCSI device
-+ *	@dev: ATA device to remove attached SCSI device for
-+ *
-+ *	This function is called from ata_eh_scsi_hotplug() and
-+ *	responsible for removing the SCSI device attached to @dev.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ */
-+void ata_scsi_remove_dev(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->ap;
-+	struct scsi_device *sdev;
-+	unsigned long flags;
-+
-+	/* Alas, we need to grab scan_mutex to ensure SCSI device
-+	 * state doesn't change underneath us and thus
-+	 * scsi_device_get() always succeeds.  The mutex locking can
-+	 * be removed if there is __scsi_device_get() interface which
-+	 * increments reference counts regardless of device state.
-+	 */
-+	mutex_lock(&ap->host->scan_mutex);
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+
-+	/* clearing dev->sdev is protected by host_set lock */
-+	sdev = dev->sdev;
-+	dev->sdev = NULL;
-+
-+	if (sdev) {
-+		/* If user initiated unplug races with us, sdev can go
-+		 * away underneath us after the host_set lock and
-+		 * scan_mutex are released.  Hold onto it.
-+		 */
-+		if (scsi_device_get(sdev) == 0) {
-+			/* The following ensures the attached sdev is
-+			 * offline on return from ata_scsi_offline_dev()
-+			 * regardless it wins or loses the race
-+			 * against this function.
-+			 */
-+			scsi_device_set_state(sdev, SDEV_OFFLINE);
-+		} else {
-+			WARN_ON(1);
-+			sdev = NULL;
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	mutex_unlock(&ap->host->scan_mutex);
-+
-+	if (sdev) {
-+		ata_dev_printk(dev, KERN_INFO, "detaching (SCSI %s)\n",
-+			       sdev->sdev_gendev.bus_id);
-+
-+		scsi_remove_device(sdev);
-+		scsi_device_put(sdev);
-+	}
-+}
-+
-+/**
-  *	ata_schedule_scsi_eh - schedule EH for SCSI host
-  *	@shost:	SCSI host to invoke error handling on.
+- *	piix_pata_probeinit - probeinit for PATA host controller
++ *	piix_pata_prereset - prereset for PATA host controller
+  *	@ap: Target port
   *
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index 03530cc..5088ad2 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -76,6 +76,7 @@ extern struct scsi_transport_template at
+- *	Probeinit including cable detection.
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-static void piix_pata_probeinit(struct ata_port *ap)
+-{
+-	piix_pata_cbl_detect(ap);
+-	ata_std_probeinit(ap);
+-}
+-
+-/**
+- *	piix_pata_probe_reset - Perform reset on PATA port and classify
+- *	@ap: Port to reset
+- *	@classes: Resulting classes of attached devices
+- *
+- *	Reset PATA phy and classify attached devices.
++ *	Prereset including cable detection.
+  *
+  *	LOCKING:
+  *	None (inherited from caller).
+  */
+-static int piix_pata_probe_reset(struct ata_port *ap, unsigned int *classes)
++static int piix_pata_prereset(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
  
- extern void ata_scsi_scan_host(struct ata_port *ap);
- extern int ata_scsi_offline_dev(struct ata_device *dev);
-+extern void ata_scsi_remove_dev(struct ata_device *dev);
- extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
- 			       unsigned int buflen);
+ 	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->hard_port_no])) {
+ 		ata_port_printk(ap, KERN_INFO, "port disabled. ignoring.\n");
+-		return 0;
++		return -ENODEV;
+ 	}
  
-@@ -111,5 +112,6 @@ extern void ata_ering_init(struct ata_er
- extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
- extern void ata_scsi_error(struct Scsi_Host *host);
- extern void ata_qc_schedule_eh(struct ata_queued_cmd *qc);
-+extern void ata_eh_scsi_hotplug(void *data);
+-	return ata_drive_probe_reset(ap, piix_pata_probeinit,
+-				     ata_std_softreset, NULL,
+-				     ata_std_postreset, classes);
++	piix_pata_cbl_detect(ap);
++
++	return ata_std_prereset(ap);
++}
++
++static void piix_pata_error_handler(struct ata_port *ap)
++{
++	ata_bmdma_drive_eh(ap, piix_pata_prereset, ata_std_softreset, NULL,
++			   ata_std_postreset);
+ }
  
- #endif /* __LIBATA_H__ */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 815087f..cbfe8b0 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -512,7 +512,7 @@ struct ata_port {
- 	struct ata_host_set	*host_set;
- 	struct device 		*dev;
+ /**
+- *	piix_sata_probe - Probe PCI device for present SATA devices
+- *	@ap: Port associated with the PCI device we wish to probe
++ *	piix_sata_prereset - prereset for SATA host controller
++ *	@ap: Target port
+  *
+  *	Reads and configures SATA PCI device's PCI config register
+  *	Port Configuration and Status (PCS) to determine port and
+- *	device availability.
++ *	device availability.  Return -ENODEV to skip reset if no
++ *	device is present.
+  *
+  *	LOCKING:
+  *	None (inherited from caller).
+  *
+  *	RETURNS:
+- *	Mask of avaliable devices on the port.
++ *	0 if device is present, -ENODEV otherwise.
+  */
+-static unsigned int piix_sata_probe (struct ata_port *ap)
++static int piix_sata_prereset(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
+ 	const unsigned int *map = ap->host_set->private_data;
+@@ -556,29 +542,18 @@ static unsigned int piix_sata_probe (str
+ 	DPRINTK("ata%u: LEAVE, pcs=0x%x present_mask=0x%x\n",
+ 		ap->id, pcs, present_mask);
  
--	struct work_struct	port_task;
-+	struct work_struct	port_task, hotplug_task;
+-	return present_mask;
+-}
+-
+-/**
+- *	piix_sata_probe_reset - Perform reset on SATA port and classify
+- *	@ap: Port to reset
+- *	@classes: Resulting classes of attached devices
+- *
+- *	Reset SATA phy and classify attached devices.
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes)
+-{
+-	if (!piix_sata_probe(ap)) {
++	if (!present_mask) {
+ 		ata_port_printk(ap, KERN_INFO, "SATA port has no device.\n");
+-		return 0;
++		return -ENODEV;
+ 	}
  
- 	unsigned int		hsm_task_state;
+-	return ata_drive_probe_reset(ap, ata_std_probeinit,
+-				     ata_std_softreset, NULL,
+-				     ata_std_postreset, classes);
++	return ata_std_prereset(ap);
++}
++
++static void piix_sata_error_handler(struct ata_port *ap)
++{
++	ata_bmdma_drive_eh(ap, piix_sata_prereset, ata_std_softreset, NULL,
++			   ata_std_postreset);
+ }
  
+ /**
 -- 
 1.2.4
 
