@@ -1,195 +1,168 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 14/14] libata-link: update hotplug to handle PM links
-Date: Fri, 12 May 2006 01:30:24 +0900
-Message-ID: <11473650243839-git-send-email-htejun@gmail.com>
+Subject: [PATCH 07/14] libata-link: separate out link initialization functions
+Date: Fri, 12 May 2006 01:30:23 +0900
+Message-ID: <11473650232783-git-send-email-htejun@gmail.com>
 References: <11473650221713-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:49436 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1030241AbWEKQam (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 12:30:42 -0400
-Received: by nf-out-0910.google.com with SMTP id g2so145743nfe
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:30:42 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.207]:38964 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751868AbWEKQaf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 12:30:35 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so244957nzn
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:30:35 -0700 (PDT)
 In-Reply-To: <11473650221713-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Update hotplug to handle PM links.  When PM is attached, the PMP
-number corresponds to I of SCSI C:H:I:L.
+Separate out link initialization into ata_link_init() and
+ata_link_init_sata_spd_limit().
 
 ---
 
- drivers/scsi/libata-eh.c   |   43 +++++++++++++++++++++++++--------------
- drivers/scsi/libata-scsi.c |   49 +++++++++++++++++++++++++++++++-------------
- 2 files changed, 62 insertions(+), 30 deletions(-)
+ drivers/scsi/libata-core.c |   83 ++++++++++++++++++++++++++++++++++----------
+ 1 files changed, 65 insertions(+), 18 deletions(-)
 
-314e603ad221c11cea7e123706d8c4c492466ab0
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 24b5dc8..ecfb9c5 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1875,6 +1875,25 @@ static void ata_eh_finish(struct ata_por
- 	}
+b1520dbca5c449c69ccb6eb54a6449801d044b87
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index dd40909..de0f56f 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -65,6 +65,7 @@ static unsigned int ata_dev_init_params(
+ 					u16 heads, u16 sectors);
+ static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
+ static void ata_dev_xfermask(struct ata_device *dev);
++static int ata_link_init_sata_spd_limit(struct ata_link *link);
+ 
+ static unsigned int ata_unique_id = 1;
+ static struct workqueue_struct *ata_wq;
+@@ -5094,6 +5095,68 @@ void ata_dev_init(struct ata_device *dev
  }
  
-+static void ata_eh_scsi_handle_link_detach(struct ata_link *link)
+ /**
++ *	ata_link_init - Initialize an ata_link structure
++ *	@ap: ATA port link is attached to
++ *	@link: Link structure to initialize
++ *	@pmp: Port multiplier port number
++ *
++ *	Initialize @link.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep)
++ */
++static void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp)
 +{
-+	struct ata_port *ap = link->ap;
 +	struct ata_device *dev;
 +
++	/* clear everything except for devices */
++	memset(link, 0, offsetof(struct ata_link, device[0]));
++
++	link->ap = ap;
++	link->pmp = pmp;
++	link->active_tag = ATA_TAG_POISON;
++	link->hw_sata_spd_limit = UINT_MAX;
++
 +	ata_link_for_each_dev(dev, link) {
-+		unsigned long flags;
-+
-+		if (!(dev->flags & ATA_DFLAG_DETACHED))
-+			continue;
-+
-+		spin_lock_irqsave(&ap->host_set->lock, flags);
-+		dev->flags &= ~ATA_DFLAG_DETACHED;
-+		spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+		ata_scsi_remove_dev(dev);
++		dev->link = link;
++		dev->devno = dev - link->device;
++		ata_dev_init(dev);
 +	}
 +}
 +
- /**
-  *	ata_eh_scsi_hotplug - SCSI part of hotplug
-  *	@data: Pointer to ATA port to perform SCSI hotplug on
-@@ -1891,8 +1910,7 @@ void ata_eh_scsi_hotplug(void *data)
++/**
++ *	ata_link_init_sata_spd_limit - Initialize link->sata_spd_limit
++ *	@link: Link to configure sata_spd_limit for
++ *
++ *	Initialize @link->[orig_]sata_spd_limit to the currently
++ *	configured value.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++static int ata_link_init_sata_spd_limit(struct ata_link *link)
++{
++
++	u32 scontrol, spd;
++	int rc;
++
++	rc = ata_scr_read(link, SCR_CONTROL, &scontrol);
++	if (rc)
++		return rc;
++
++	spd = (scontrol >> 4) & 0xf;
++	if (spd)
++		link->hw_sata_spd_limit &= (1 << spd) - 1;
++
++	link->sata_spd_limit = link->hw_sata_spd_limit;
++
++	return 0;
++}
++
++/**
+  *	ata_host_init - Initialize an ata_port structure
+  *	@ap: Structure to initialize
+  *	@host: associated SCSI mid-layer structure
+@@ -5111,8 +5174,6 @@ static void ata_host_init(struct ata_por
+ 			  struct ata_host_set *host_set,
+ 			  const struct ata_probe_ent *ent, unsigned int port_no)
  {
- 	struct ata_port *ap = data;
- 	unsigned long timeout;
--	struct ata_device *dev;
--	int requeue = 0;
-+	int i, requeue = 0;
- 
- 	DPRINTK("ENTER\n");
- 
-@@ -1912,19 +1930,14 @@ void ata_eh_scsi_hotplug(void *data)
- 	if (scsi_host_in_recovery(ap->host))
- 		requeue = 1;
- 
--	/* unplug detached devices */
--	ata_link_for_each_dev(dev, &ap->link) {
--		unsigned long flags;
+-	unsigned int i;
 -
--		if (!(dev->flags & ATA_DFLAG_DETACHED))
--			continue;
+ 	host->max_id = 16;
+ 	host->max_lun = 1;
+ 	host->max_channel = 1;
+@@ -5133,8 +5194,6 @@ static void ata_host_init(struct ata_por
+ 	ap->udma_mask = ent->udma_mask;
+ 	ap->flags |= ent->host_flags;
+ 	ap->ops = ent->port_ops;
+-	ap->link.hw_sata_spd_limit = UINT_MAX;
+-	ap->link.active_tag = ATA_TAG_POISON;
+ 	ap->last_ctl = 0xFF;
+ 
+ 	INIT_WORK(&ap->port_task, NULL, NULL);
+@@ -5146,14 +5205,7 @@ static void ata_host_init(struct ata_por
+ 	if (ap->flags & ATA_FLAG_SATA)
+ 		ap->cbl = ATA_CBL_SATA;
+ 
+-	ap->link.ap = ap;
 -
--		spin_lock_irqsave(&ap->host_set->lock, flags);
--		dev->flags &= ~ATA_DFLAG_DETACHED;
--		spin_unlock_irqrestore(&ap->host_set->lock, flags);
--
--		ata_scsi_remove_dev(dev);
+-	for (i = 0; i < ata_link_max_devices(&ap->link); i++) {
+-		struct ata_device *dev = &ap->link.device[i];
+-		dev->link = &ap->link;
+-		dev->devno = i;
+-		ata_dev_init(dev);
 -	}
-+	/* Unplug detached devices.  We cannot use link iterator here
-+	 * because PM links have to be scanned even if PM is currently
-+	 * not attached.  Iterate manually.
-+	 */
-+	ata_eh_scsi_handle_link_detach(&ap->link);
-+	if (ap->pm_link)
-+		for (i = 0; i < ATA_PM_MAX_PORTS; i++)
-+			ata_eh_scsi_handle_link_detach(&ap->pm_link[i]);
++	ata_link_init(ap, &ap->link, 0);
  
- 	/* scan for new ones */
- 	ata_scsi_scan_host(ap);
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index facde9e..021e4a3 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2347,8 +2347,14 @@ static unsigned int atapi_xlat(struct at
+ #ifdef ATA_IRQ_TRAP
+ 	ap->stats.unhandled_irq = 1;
+@@ -5304,17 +5356,12 @@ int ata_device_add(const struct ata_prob
+ 	DPRINTK("probe begin\n");
+ 	for (i = 0; i < count; i++) {
+ 		struct ata_port *ap;
+-		u32 scontrol;
+ 		int rc;
  
- static struct ata_device * ata_find_dev(struct ata_port *ap, int id)
- {
--	if (likely(id == 0 || (id == 1 && ap->flags & ATA_FLAG_SLAVE_POSS)))
--		return &ap->link.device[id];
-+	if (ap->nr_pm_links == 0) {
-+		if (likely(id < ata_link_max_devices(&ap->link)))
-+			return &ap->link.device[id];
-+	} else {
-+		if (likely(id < ap->nr_pm_links))
-+			return &ap->pm_link[id].device[0];
-+	}
-+
- 	return NULL;
- }
+ 		ap = host_set->ports[i];
  
-@@ -2775,21 +2781,30 @@ void ata_scsi_simulate(struct ata_device
+ 		/* init sata_spd_limit to the current value */
+-		if (ata_scr_read(&ap->link, SCR_CONTROL, &scontrol) == 0) {
+-			int spd = (scontrol >> 4) & 0xf;
+-			ap->link.hw_sata_spd_limit &= (1 << spd) - 1;
+-		}
+-		ap->link.sata_spd_limit = ap->link.hw_sata_spd_limit;
++		ata_link_init_sata_spd_limit(&ap->link);
  
- void ata_scsi_scan_host(struct ata_port *ap)
- {
-+	struct ata_link *link;
- 	struct ata_device *dev;
- 
- 	if (ap->flags & ATA_FLAG_DISABLED)
- 		return;
- 
--	ata_link_for_each_dev(dev, &ap->link) {
--		struct scsi_device *sdev;
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link) {
-+			struct scsi_device *sdev;
-+			int devno;
- 
--		if (!ata_dev_enabled(dev) || dev->sdev)
--			continue;
-+			if (!ata_dev_enabled(dev) || dev->sdev)
-+				continue;
- 
--		sdev = __scsi_add_device(ap->host, 0, dev->devno, 0, NULL);
--		if (!IS_ERR(sdev)) {
--			dev->sdev = sdev;
--			scsi_device_put(sdev);
-+			if (ata_is_host_link(link))
-+				devno = dev->devno;
-+			else
-+				devno = link->pmp;
-+
-+			sdev = __scsi_add_device(ap->host, 0, devno, 0, NULL);
-+			if (!IS_ERR(sdev)) {
-+				dev->sdev = sdev;
-+				scsi_device_put(sdev);
-+			}
- 		}
- 	}
- }
-@@ -2897,6 +2912,7 @@ static int ata_scsi_user_scan(struct Scs
- 			      unsigned int id, unsigned int lun)
- {
- 	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ata_link *link;
- 	unsigned long flags;
- 	int rc = 0;
- 
-@@ -2910,15 +2926,18 @@ static int ata_scsi_user_scan(struct Scs
- 	spin_lock_irqsave(&ap->host_set->lock, flags);
- 
- 	if (id == SCAN_WILD_CARD) {
--		ap->link.eh_info.probe_mask |=
--			(1 << ata_link_max_devices(&ap->link)) - 1;
--		ap->link.eh_info.action |= ATA_EH_SOFTRESET;
-+		ata_port_for_each_link(link, ap) {
-+			link->eh_info.probe_mask |=
-+				(1 << ata_link_max_devices(link)) - 1;
-+			link->eh_info.action |= ATA_EH_SOFTRESET;
-+		}
- 	} else {
- 		struct ata_device *dev = ata_find_dev(ap, id);
- 
- 		if (dev) {
--			ap->link.eh_info.probe_mask |= 1 << dev->devno;
--			ap->link.eh_info.action |= ATA_EH_SOFTRESET;
-+			link = dev->link;
-+			link->eh_info.probe_mask |= 1 << dev->devno;
-+			link->eh_info.action |= ATA_EH_SOFTRESET;
- 		} else
- 			rc = -EINVAL;
- 	}
+ 		rc = scsi_add_host(ap->host, dev);
+ 		if (rc) {
 -- 
 1.2.4
 
