@@ -1,42 +1,60 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: ata_piix resume from S3 on T43P failed
-Date: Thu, 11 May 2006 12:55:55 +0200
-Message-ID: <20060511105555.GK4157@suse.de>
-References: <1147334740.7273.38.camel@forrest26.sh.intel.com> <4462F667.3060504@gmail.com> <4462F767.5070003@gmail.com> <1147340790.7273.47.camel@forrest26.sh.intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: EH/NCQ/hotplug/PM patchsets are about to be posted...
+Date: Thu, 11 May 2006 20:27:21 +0900
+Message-ID: <20060511112721.GA4219@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:4199 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1030206AbWEKKz3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 May 2006 06:55:29 -0400
+Received: from nz-out-0102.google.com ([64.233.162.202]:9125 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751545AbWEKL12 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 07:27:28 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so164708nzn
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 04:27:27 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <1147340790.7273.47.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@suse.de>, Albert Lee <albertcc@tw.ibm.com>, "Zhao, Forrest" <forrest.zhao@intel.com>, efalk@google.com, linux-ide@vger.kernel.org
 
-On Thu, May 11 2006, zhao, forrest wrote:
-> On Thu, 2006-05-11 at 17:35 +0900, Tejun Heo wrote:
-> > Tejun Heo wrote:
-> > Oops, you were talking about ata_piix and I answered about ahci.  Sorry
-> > about that.  :(
-> > 
-> > Can you please post dmesg w/ ATA_DEBUG turne on?  I might have screwed
-> > up while updating suspend/resume functions.
-> > 
-> 
-> Tejun,
-> 
-> The case is very tricky. When ata_piix resumed from S3, dmesg can't be
-> outputted, when I type "dmesg" in console, it prompts:
-> -bash: /bin/dmesg: Input/output error
-> 
-> Is there any other way to collect the log?
+Hello, all.
 
-run dmesg prior to suspending, then it'll be cached and can be run after
-resume even if the disk doesn't want to talk to you.
+I'm about to post the following 11 patchsets composed of 122 patches.
+These contain the same changes as the git tree[1] posted yesterday and
+the git tree is probably much easier to import for testing and
+merging.  These patchsets are mainly to help review process.
 
--- 
-Jens Axboe
+ 1. prep-for-new-EH			: take 1 (22 patches)
+ 2. new-EH-framework			: take 3 (11 patches)
+ 3. new-EH-implementation		: take 3 (11 patches)
+ 4. merge-irq-pio			: take 1 ( 2 patches)
+ 5. add-NCQ-support			: take 3 (12 patches)
+ 6. prep-for-hotplug-support		: take 2 (14 patches)
+ 7. prep-LLDDs-for-hotplug-support	: take 1 ( 6 patches)
+ 8. add-hotplug-support			: take 2 (13 patches)
+ 9. implement-ata_link			: take 1 (14 patches)
+10. prep-for-PM-support			: take 1 ( 7 patches)
+11. add-PM-support			: take 1 (10 patches)
 
+All patchsets are against the current upstream[2] and stacks on the
+prvious ones.
+
+Patchsets have been slightly reorganized from the last post[3].
+
+* new patchsets added inbetween existing ones (pset #1 and #7)
+* SCSI changes are merged into prep-for-new-EH
+* some of patches from new-EH-framework are moved to prep-for-new-EH
+* some of patches from add-hotplug-support are moved to
+  prep-LLDDs-for-hotplug-support
+
+All the patchsets have gone through a lot of changes.  Detailed
+description of the changes will be posted in the head messages of each
+patchset.
+
+Thanks.
+
+--
+tejun
+
+[1] http://article.gmane.org/gmane.linux.ide/9919
+[2] acc696d93dcf993dec123d69d599979e1456ffec
+[3] http://article.gmane.org/gmane.linux.ide/9493 
