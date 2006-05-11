@@ -1,45 +1,44 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
-Date: Thu, 11 May 2006 11:09:27 +0800
-Message-ID: <1147316967.7273.26.camel@forrest26.sh.intel.com>
-References: <44614592.7080301@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: "Tanya" <LidiaDominguez@norsangroup.com>
+Subject: Show your sweetheart how much you care Dennis
+Date: Thu, 11 May 2006 05:54:47 -0200
+Message-ID: <MZ.5484586.7057548__1530.60063389621$1147330898$gmane$org@codeweavers.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53407 "EHLO
-	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S965121AbWEKDUS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 May 2006 23:20:18 -0400
-In-Reply-To: <44614592.7080301@gmail.com>
+Received: from cdma-40-238.msk.skylink.ru ([83.217.40.238]:24582 "HELO
+	cdma-40-238.msk.skylink.ru") by vger.kernel.org with SMTP
+	id S965165AbWEKHAz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 03:00:55 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Wed, 2006-05-10 at 10:44 +0900, Tejun Heo wrote:
-> Hello, all.
-Tejun,
+What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
+not only carry it, but we do at 1.56 cents each.
 
-I have comments about definition of macro ata_link_for_each_dev(dev,
-link) and struct ata_port{};.
+Take a peek at:
 
-In the definition of struct ata_port{}, there's
-......
-struct ata_link link;
-struct ata_device __dev1;
-......
+http://madrasgumnmala3c3l8gg9lyg9lyyg.hyphenjc.com/
 
-Then macro ata_link_for_each_dev() assumes that the field 'device' in
-struct ata_link is adjacent to field '__dev1' in struct ata_port.
 
-I think this assumption is not correct in theory. Because the alignment
-may make these two fields not adjacent in memory.
+Enjoy!
 
-Although we haven't found the problem so far, it's very dangerous to
-have such assumption in the code.
 
-Does this make sense to you?
 
-Thanks,
-Forrest
+Sincerely,
+
+Tanya
+Customer Service Team
+
+
+
+
+
+
+
+
+
+
+
+
+catastrophe you luscious me, aspen vote cairn leaky . practicable you nashua me, cavalier lawbreaking balky . 
+capacitor you abner me, fop khaki . inarticulate you manama me, attenuate drowse . 
+http://madrasgumnmala3c3l8gg9lyg9lyyg.hyphenjc.com/lithography
