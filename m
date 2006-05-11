@@ -1,32 +1,48 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: ata_piix failure on ich6m
-Date: Thu, 11 May 2006 17:16:40 +0100
-Message-ID: <20060511161640.GA24338@srcf.ucam.org>
-References: <20060510235650.GA20206@srcf.ucam.org> <44629E68.3020302@gmail.com> <20060511081140.GA21594@srcf.ucam.org> <20060511084541.90d4e071.rdunlap@xenotime.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 3/6] sata_sil: new interrupt handler
+Date: Fri, 12 May 2006 01:16:51 +0900
+Message-ID: <44636373.2040902@gmail.com>
+References: <11473604982155-git-send-email-htejun@gmail.com> <1147362044.26130.39.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=EUC-KR
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:13291 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S1030314AbWEKQQu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 12:16:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20060511084541.90d4e071.rdunlap@xenotime.net>
+Received: from wr-out-0506.google.com ([64.233.184.232]:53627 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1030313AbWEKQQ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 12:16:58 -0400
+Received: by wr-out-0506.google.com with SMTP id i12so402548wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:16:57 -0700 (PDT)
+In-Reply-To: <1147362044.26130.39.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-On Thu, May 11, 2006 at 08:45:41AM -0700, Randy.Dunlap wrote:
+Alan Cox wrote:
+> On Gwe, 2006-05-12 at 00:14 +0900, Tejun Heo wrote:
+>> The DMA complete bit of these controllers reflects ATA IRQ status
+>> while no DMA command is in progress.  So, we can tell whether the
+>> controller is raising an interrupt or not in deterministic manner.
+>> This patch gives sata_sil its own interrupt handler which behaves much
+>> better than the original one in terms of error detection and handling.
+>> This change is also necessary for later hotplug support.
+>>
+> 
+> Is it not possible to avoid duplicating so much code. If the
+> sil_host_intr and a few other _intr routines end up with their own
+> host_intr functions closely based on the core one and intimate state
+> machine knowledge then fixes are going to get missed in one or the other
+> over time 
+> 
 
-> Does the 'combined_mode' kernel parameter help any?
-
-Hmm. Slightly awkward to check - it's a modular system with libata in 
-initramfs, so getting parameters in may be a pain. However, there's 
-nothing on the legacy IDE controller - should combined mode actually 
-make a difference in that case? As I said, ahci works fine - the problem 
-only occurs with ata_piix. The MAP register indicates that combined mode 
-isn't in use.
+Yes, it's a bit worrying.  The current sata_sil irq handler is a little
+bit too different to factor codes with the stock handler while a bit too
+similar to justify the copying.  I think it's okay to leave it as it is
+for the time being.  sata_sil will probably deviate more from the stock
+handler as more BMDMA2 stuff gets implemented and controllers which
+resemble the traditional BMDMA interface more than sata_sil should be
+able to use ata_host_intr() with some wrapping.
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+tejun
