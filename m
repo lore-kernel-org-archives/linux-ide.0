@@ -1,92 +1,111 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/14] libata-hp-prep: implement ata_noop_check_status()
-Date: Fri, 12 May 2006 00:12:00 +0900
-Message-ID: <11473603201254-git-send-email-htejun@gmail.com>
+Subject: [PATCH 03/14] libata-hp-prep: make some ata_device fields persistent
+Date: Fri, 12 May 2006 00:11:59 +0900
+Message-ID: <11473603182049-git-send-email-htejun@gmail.com>
 References: <1147360318920-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:54061 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751861AbWEKPMP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:12:15 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so387772wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:14 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.182]:13559 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751853AbWEKPML (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:12:11 -0400
+Received: by py-out-1112.google.com with SMTP id f28so279625pyf
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:11 -0700 (PDT)
 In-Reply-To: <1147360318920-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-As with ops->tf_read, ops->check_status() and ops->check_altstatus()
-don't make sense for controllers without single TF image.  As
-->check_status() and ->check_altstatus() are deeply integrated into
-libata core layer, implement ata_noop_check_status() as a temporary
-measure.  This function always returns ATA_DRDY without doing
-anything.
+Lifetimes of some fields span over device plugging/unplugging.  This
+patch moves such persistent fields to the top of ata_device and
+separate them with ATA_DEVICE_CLEAR_OFFSET.  Fields above the offset
+are initialized once during host initializatino while all other fields
+are cleared before hotplugging.  Currently ->ap, devno and part of
+flags are persistent.
 
-In the long term, these IO ops should be made optional and removed
-from top level ata_port_operations such that driver implementing
-high-level behavior don't have to bother with these.
+Note that flags is partially cleared while holding host_set lock.
+This is to synchronize with later warm plug implementation which will
+record hotplug request in dev->flags.
 
 ---
 
- drivers/scsi/libata-core.c |   19 +++++++++++++++++++
- include/linux/libata.h     |    1 +
- 2 files changed, 20 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-core.c |   14 ++++++++++++--
+ include/linux/libata.h     |    8 ++++++--
+ 2 files changed, 18 insertions(+), 4 deletions(-)
 
-f404e622e1961647f77ef0d4bf7869e1e1dec70c
+480d38b7f94a98fe9c9b33db932d94652cfed779
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 6d86479..2500854 100644
+index d307164..6accef3 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -702,6 +702,24 @@ static u64 ata_id_n_sectors(const u16 *i
- }
- 
- /**
-+ *	ata_noop_check_status - Fake device status reg
-+ *	@ap: target port
-+ *
-+ *	This function performs no actual function and always returns
-+ *	ATA_DRDY.
-+ *
-+ *	May be used as the check_status/altstatus() entry in
-+ *	ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	caller.
-+ */
-+u8 ata_noop_check_status(struct ata_port *ap)
-+{
-+	return ATA_DRDY;
-+}
+@@ -5119,9 +5119,18 @@ static void ata_host_remove(struct ata_p
+ void ata_dev_init(struct ata_device *dev)
+ {
+ 	struct ata_port *ap = dev->ap;
++	unsigned long flags;
 +
-+/**
-  *	ata_noop_dev_select - Select device 0/1 on ATA bus
-  *	@ap: ATA channel to manipulate
-  *	@device: ATA device (numbered from zero) to select
-@@ -5768,6 +5786,7 @@ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
- EXPORT_SYMBOL_GPL(ata_tf_load);
- EXPORT_SYMBOL_GPL(ata_tf_read);
- EXPORT_SYMBOL_GPL(ata_noop_dev_select);
-+EXPORT_SYMBOL_GPL(ata_noop_check_status);
- EXPORT_SYMBOL_GPL(ata_std_dev_select);
- EXPORT_SYMBOL_GPL(ata_tf_to_fis);
- EXPORT_SYMBOL_GPL(ata_tf_from_fis);
++	/* High bits of dev->flags are used to record warm plug
++	 * requests which occur asynchronously.  Synchronize using
++	 * host_set lock.
++	 */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	dev->flags &= ~ATA_DFLAG_INIT_MASK;
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 
+-	memset((void *)dev, 0, sizeof(*dev));
+-	dev->devno = dev - ap->device;
++	memset((void *)dev + ATA_DEVICE_CLEAR_OFFSET, 0,
++	       sizeof(*dev) - ATA_DEVICE_CLEAR_OFFSET);
+ 	dev->pio_mask = UINT_MAX;
+ 	dev->mwdma_mask = UINT_MAX;
+ 	dev->udma_mask = UINT_MAX;
+@@ -5183,6 +5192,7 @@ static void ata_host_init(struct ata_por
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 		dev->ap = ap;
++		dev->devno = i;
+ 		ata_dev_init(dev);
+ 	}
+ 
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 5c843a8..ac8e58c 100644
+index 1f6e48e..99a78cf 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -666,6 +666,7 @@ extern void ata_tf_load(struct ata_port 
- extern void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
- extern void ata_tf_to_fis(const struct ata_taskfile *tf, u8 *fis, u8 pmp);
- extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
-+extern u8 ata_noop_check_status(struct ata_port *ap);
- extern void ata_noop_dev_select (struct ata_port *ap, unsigned int device);
- extern void ata_std_dev_select (struct ata_port *ap, unsigned int device);
- extern u8 ata_check_status(struct ata_port *ap);
+@@ -129,6 +129,7 @@ enum {
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+ 
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
++	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
+ 
+ 	ATA_DFLAG_DETACH	= (1 << 16),
+ 	ATA_DFLAG_DETACHED	= (1 << 17),
+@@ -408,10 +409,11 @@ struct ata_ering {
+ 
+ struct ata_device {
+ 	struct ata_port		*ap;
+-	u64			n_sectors;	/* size of device, if ATA */
++	unsigned int		devno;		/* 0 or 1 */
+ 	unsigned long		flags;		/* ATA_DFLAG_xxx */
++	/* fields above n_sectors are not cleared across device init */
++	u64			n_sectors;	/* size of device, if ATA */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+-	unsigned int		devno;		/* 0 or 1 */
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
+ 	u8			dma_mode;
+@@ -436,6 +438,8 @@ struct ata_device {
+ 	DEFINE_ATA_ERING	(ering, ATA_DEV_ERING_SIZE);
+ };
+ 
++#define ATA_DEVICE_CLEAR_OFFSET		offsetof(struct ata_device, n_sectors)
++
+ struct ata_eh_info {
+ 	struct ata_device	*dev;		/* offending device */
+ 	u32			serror;		/* SError from LLDD */
 -- 
 1.2.4
 
