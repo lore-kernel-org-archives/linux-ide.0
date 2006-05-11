@@ -1,36 +1,31 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: ata_piix failure on ich6m
-Date: Thu, 11 May 2006 09:11:40 +0100
-Message-ID: <20060511081140.GA21594@srcf.ucam.org>
-References: <20060510235650.GA20206@srcf.ucam.org> <44629E68.3020302@gmail.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: ata_piix resume from S3 on T43P failed
+Date: Thu, 11 May 2006 16:05:40 +0800
+Message-ID: <1147334740.7273.38.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:55257 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S965206AbWEKILs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 04:11:48 -0400
-Content-Disposition: inline
-In-Reply-To: <44629E68.3020302@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:48685 "EHLO
+	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1030182AbWEKIQm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 04:16:42 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Thu, May 11, 2006 at 11:16:08AM +0900, Tejun Heo wrote:
+Hi, Tejun
 
-> I'm not very sure but it might be historical.  ahci got implemented 
-> after ata_piix and in the meantime ata_piix must have handled all it 
-> could.  Can you verify whether modifying the code to return -ENODEV work 
-> for your machine?  If so, that could be the correct solution but I'm a 
-> bit worried because it could change probing order or fail to enable 
-> devices it used to.  Maybe we need a hack to return -ENODEV iff ahci is 
-> there to handle the device.
+We just tested your git tree on thinkpad T43P laptop, and found that
+after ata_piix resumed from S3, SATA disk can't be read/write anymore.
+But according to the test result of kernel 2.6.16-rc6 on T43P, ata_piix
+can resume from S3 successfully.
 
-I can verify that just loading ahci before ata_piix is successful, and 
-udev will load both of them since the PCI IDs match. So just having 
-ata_piix refuse to bind would solve the problem. Unfortunately I can't 
-see a way of doing this only if ahci is present if they're modular...
+We know that this problem may be not related to your patches, but I
+think you know the libata development status very well, maybe you can
+give us some clue about what happened to ata_piix between 2.6.16-rc6 and
+your git tree.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Thanks,
+Forrest
