@@ -1,149 +1,85 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/11] libata-eh: implement ata_ering
+Subject: [PATCHSET 03/11] new EH implementation, take 3
 Date: Thu, 11 May 2006 22:21:27 +0900
-Message-ID: <11473536871340-git-send-email-htejun@gmail.com>
-References: <11473536873966-git-send-email-htejun@gmail.com>
+Message-ID: <11473536873966-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:48375 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751715AbWEKNVe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 09:21:34 -0400
-Received: by py-out-1112.google.com with SMTP id f28so234245pyf
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 06:21:33 -0700 (PDT)
-In-Reply-To: <11473536873966-git-send-email-htejun@gmail.com>
+Received: from nz-out-0102.google.com ([64.233.162.205]:34485 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751711AbWEKNVd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 09:21:33 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so189303nzn
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 06:21:32 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-ata_ering is a ring buffer which records libata errors - whether a
-command was for normar IO request, err_mask and timestamp.  This will
-be used by EH to determine recovery actions.
+Hello,
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+This is part of patchset series described in [T].
 
----
+This is the third take of new-EH-implementation patchset.  Changes
+from the last take[L] are
 
- drivers/scsi/libata-eh.c |   51 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata.h    |    2 ++
- include/linux/libata.h   |   16 ++++++++++++++
- 3 files changed, 69 insertions(+), 0 deletions(-)
+* (struct ata_eh_info) ap->eh_info and (struct ata_eh_context)
+  ap->eh_context are added.  ehi contains all the information other
+  parts of libata needs to communicate to EH, and ehc contains all the
+  context EH needs to operate.  ehi is protected by host_set lock
+  while ehc is owned by EH.  ehi/ehc act as standardized communication
+  channel between LLDD and EH, and inside EH itself.  This simplifies
+  EH implementation.
 
-4a10a7d433551195a47e1bf77014fdceea66de8b
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 0803231..f6f0557 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -46,6 +46,57 @@
- 
- static void __ata_port_freeze(struct ata_port *ap);
- 
-+void ata_ering_init(struct ata_ering *ering, int size)
-+{
-+	memset(ering, 0, sizeof(*ering) + sizeof(ering->ring[0]) * size);
-+	ering->size = size;
-+}
-+
-+static void ata_ering_record(struct ata_ering *ering, int is_io,
-+			     unsigned int err_mask)
-+{
-+	struct ata_ering_entry *ent;
-+
-+	WARN_ON(!err_mask);
-+
-+	ering->cursor++;
-+	ering->cursor %= ering->size;
-+
-+	ent = &ering->ring[ering->cursor];
-+	ent->is_io = is_io;
-+	ent->err_mask = err_mask;
-+	ent->timestamp = get_jiffies_64();
-+}
-+
-+static struct ata_ering_entry * ata_ering_top(struct ata_ering *ering)
-+{
-+	struct ata_ering_entry *ent = &ering->ring[ering->cursor];
-+	if (!ent->err_mask)
-+		return NULL;
-+	return ent;
-+}
-+
-+static int ata_ering_map(struct ata_ering *ering,
-+			 int (*map_fn)(struct ata_ering_entry *, void *),
-+			 void *arg)
-+{
-+	int idx, rc = 0;
-+	struct ata_ering_entry *ent;
-+
-+	idx = ering->cursor;
-+	do {
-+		ent = &ering->ring[idx];
-+		if (!ent->err_mask)
-+			break;
-+		rc = map_fn(ent, arg);
-+		if (rc)
-+			break;
-+		idx = (idx - 1 + ering->size) % ering->size;
-+	} while (idx != ering->cursor);
-+
-+	return rc;
-+}
-+
- /**
-  *	ata_scsi_timed_out - SCSI layer time out callback
-  *	@cmd: timed out SCSI command
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index e2bbddf..134cb4d 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -62,6 +62,7 @@ extern int ata_check_atapi_dma(struct at
- extern void ata_dev_select(struct ata_port *ap, unsigned int device,
-                            unsigned int wait, unsigned int can_sleep);
- extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
-+extern void ata_dev_init(struct ata_device *dev);
- extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
- 
-@@ -101,6 +102,7 @@ extern void ata_scsi_rbuf_fill(struct at
- extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
- 
- /* libata-eh.c */
-+extern void ata_ering_init(struct ata_ering *ering, int size);
- extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
- extern void ata_scsi_error(struct Scsi_Host *host);
- extern void ata_qc_schedule_eh(struct ata_queued_cmd *qc);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 80c8f0e..ad16d6b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -375,6 +375,22 @@ struct ata_host_stats {
- 	unsigned long		rw_reqbuf;
- };
- 
-+struct ata_ering_entry {
-+	int			is_io;
-+	unsigned int		err_mask;
-+	u64			timestamp;
-+};
-+
-+struct ata_ering {
-+	int			cursor;
-+	int			size;
-+	struct ata_ering_entry	ring[];
-+};
-+
-+#define DEFINE_ATA_ERING(name, size)	\
-+	struct ata_ering	name;	\
-+	struct ata_ering_entry	name_entries[size];
-+
- struct ata_device {
- 	struct ata_port		*ap;
- 	u64			n_sectors;	/* size of device, if ATA */
--- 
-1.2.4
+  ehc contains a struct eh_info and, on entry to EH, ap->eh_info is
+  copied into ap->eh_context and cleared.  This allows LLDD to record
+  exceptions detected during EH to ap->eh_info such that no exception
+  info is lost (combined with ATA_FLAG_EH_PENDING) and EH to access
+  ehc all it wants without bothering about synchronization.
+
+  Another benefit of storing EH context into ap->eh_context is that it
+  can easily be extended to handle multiple links.
+
+* Due to above change, EH code are changed a lot, but basic behavior
+  and function organization isn't changed too much.  One of the most
+  visible change is EH interface.  As the information can be passed
+  easily via ap->eh_info, the interface got simplified.  Currently,
+  the only exported interface is ata_do_eh() and it seems enough for
+  all the converted drivers - ata_piix, sata_sil, ahci and sata_sil24.
+  EH is still done in clearly separated stages, so exporting more
+  isn't difficult if needed.
+
+* ahci and sata_sil24 now analyzes and records errors while handling
+  the error IRQ.  This is more natural way (e.g. PM errors must be
+  dealt with this way) and ehi makes it much easier to do.
+
+* Single failed qc per device assumption is removed.  Multiple or no
+  failed command cases are properly handled.  Also, report format is
+  improved.  In general, EH is much more mature now.
+
+* Frozen port handling in ata_interrupt() dropped.  Jeff was against
+  it and I'm not very sure.
+
+* AHCI PIO setup interrupts for multisector PIO commands don't trigger
+  spurious interrupt wnarning anymore.
+
+* Patches are in bigger lumps.  This applies to all other patchsets
+  too.
+
+This patchset is against
+
+  upstream (acc696d93dcf993dec123d69d599979e1456ffec)
+  + [1] prep-for-new-EH patchset
+  + [2] new-EH-framework patchset, take 3
+
+--
+tejun
+
+[T] http://article.gmane.org/gmane.linux.ide/9957
+[L] http://article.gmane.org/gmane.linux.ide/9540
+[1] http://article.gmane.org/gmane.linux.ide/9959
+[2] http://article.gmane.org/gmane.linux.ide/9984
 
 
