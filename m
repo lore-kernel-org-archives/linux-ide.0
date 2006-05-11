@@ -1,39 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 08/11] sata_sil: convert to new EH
-Date: Thu, 11 May 2006 16:46:25 +0100
-Message-ID: <1147362385.26130.42.camel@localhost.localdomain>
-References: <11473536881889-git-send-email-htejun@gmail.com>
-	 <1147357322.26130.17.camel@localhost.localdomain>
-	 <44634CB6.80804@gmail.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: ata_piix failure on ich6m
+Date: Thu, 11 May 2006 08:45:41 -0700
+Message-ID: <20060511084541.90d4e071.rdunlap@xenotime.net>
+References: <20060510235650.GA20206@srcf.ucam.org>
+	<44629E68.3020302@gmail.com>
+	<20060511081140.GA21594@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:23506 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030264AbWEKPe5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:34:57 -0400
-In-Reply-To: <44634CB6.80804@gmail.com>
+Received: from xenotime.net ([66.160.160.81]:19377 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1030283AbWEKPnT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 May 2006 11:43:19 -0400
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:43:13 -0700
+In-Reply-To: <20060511081140.GA21594@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
 
-On Iau, 2006-05-11 at 23:39 +0900, Tejun Heo wrote:
-> I'm not sure what you mean by synchronization.  But, freezing is indeed
->  for shutting the chip up.  If the port is frozen, EH doesn't touch
-> active qcs nor tries to issue new command.  The port is thawed/used only
-> after the port & device are put into known good state via successful
-> reset.  Is this what you're talking about?
+On Thu, 11 May 2006 09:11:40 +0100 Matthew Garrett wrote:
 
-Sort of. I wanted to point out that this can occur
+> On Thu, May 11, 2006 at 11:16:08AM +0900, Tejun Heo wrote:
+> 
+> > I'm not very sure but it might be historical.  ahci got implemented 
+> > after ata_piix and in the meantime ata_piix must have handled all it 
+> > could.  Can you verify whether modifying the code to return -ENODEV work 
+> > for your machine?  If so, that could be the correct solution but I'm a 
+> > bit worried because it could change probing order or fail to enable 
+> > devices it used to.  Maybe we need a hack to return -ENODEV iff ahci is 
+> > there to handle the device.
+> 
+> I can verify that just loading ahci before ata_piix is successful, and 
+> udev will load both of them since the PCI IDs match. So just having 
+> ata_piix refuse to bind would solve the problem. Unfortunately I can't 
+> see a way of doing this only if ahci is present if they're modular...
 
-	IRQ is issued on chip
+Does the 'combined_mode' kernel parameter help any?
 
-	->freeze
-	returns
-
-	->intr finally arrives and is serviced
-
-Alan
-
+---
+~Randy
