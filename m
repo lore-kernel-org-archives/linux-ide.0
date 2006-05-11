@@ -1,198 +1,124 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/13] libata-hp: implement bootplug
+Subject: [PATCH 01/13] libata-hp: implement ata_eh_detach_dev()
 Date: Fri, 12 May 2006 00:32:07 +0900
-Message-ID: <11473615272605-git-send-email-htejun@gmail.com>
+Message-ID: <11473615273803-git-send-email-htejun@gmail.com>
 References: <11473615261297-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:581 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030270AbWEKPcT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:32:19 -0400
-Received: by wr-out-0506.google.com with SMTP id i28so165347wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:32:19 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.197]:51949 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1030256AbWEKPcO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:32:14 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so230299nzn
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:32:14 -0700 (PDT)
 In-Reply-To: <11473615261297-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement bootplug - boot probing via hotplug path.  While loading,
-ata_host_add() simply schedules probing and invokes EH.  After EH
-completes, ata_host_add() scans and assicates them with SCSI devices.
-EH path is slightly modified to handle this (e.g. no autopsy during
-bootplug).  The SCSI part is left in ata_host_add() because it's
-shared with legacy path and to keep probing order as before (ATA scan
-all ports in host_set then attach all).
+Implement ata_eh_detach_dev().  This function is responsible for
+detaching an ATA device and offlining the associated SCSI device
+atomically so that the detached device is not accessed after ATA
+detach is complete.
 
 ---
 
- drivers/scsi/libata-core.c |   58 +++++++++++++++++++++++++++++++++-----------
- drivers/scsi/libata-eh.c   |   29 +++++++++++++++-------
- 2 files changed, 63 insertions(+), 24 deletions(-)
+ drivers/scsi/libata-eh.c   |   28 ++++++++++++++++++++++++++++
+ drivers/scsi/libata-scsi.c |   24 ++++++++++++++++++++++++
+ drivers/scsi/libata.h      |    1 +
+ 3 files changed, 53 insertions(+), 0 deletions(-)
 
-c47e6b5a71f6126e77c7aa339b4ff366d581f303
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 68e9530..17b1782 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5358,7 +5358,7 @@ static struct ata_port * ata_host_add(co
- 
- 	DPRINTK("ENTER\n");
- 
--	if (!ent->port_ops->probe_reset &&
-+	if (!ent->port_ops->probe_reset && !ent->port_ops->error_handler &&
- 	    !(ent->host_flags & (ATA_FLAG_SATA_RESET | ATA_FLAG_SRST))) {
- 		printk(KERN_ERR "ata%u: no reset mechanism available\n",
- 		       port_no);
-@@ -5386,6 +5386,12 @@ err_out:
- 	return NULL;
+064a05349cac2d33c2810d5455efd0eef396c285
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 9dfaa66..fcbc4a5 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -634,6 +634,34 @@ void ata_eh_qc_retry(struct ata_queued_c
  }
  
-+static int ata_boot_probe_wait(void *dummy)
+ /**
++ *	ata_eh_detach_dev - detach ATA device
++ *	@dev: ATA device to detach
++ *
++ *	Detach @dev.
++ *
++ *	LOCKING:
++ *	None.
++ */
++static void ata_eh_detach_dev(struct ata_device *dev)
 +{
-+	schedule();
++	struct ata_port *ap = dev->ap;
++	unsigned long flags;
++
++	ata_dev_disable(dev);
++
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++
++	dev->flags &= ~ATA_DFLAG_DETACH;
++
++	if (ata_scsi_offline_dev(dev)) {
++		dev->flags |= ATA_DFLAG_DETACHED;
++		ap->flags |= ATA_FLAG_SCSI_HOTPLUG;
++	}
++
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++}
++
++/**
+  *	ata_eh_about_to_do - about to perform eh_action
+  *	@ap: target ATA port
+  *	@action: action about to be performed
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 7827844..f061c65 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -2759,6 +2759,30 @@ void ata_scsi_scan_host(struct ata_port 
+ }
+ 
+ /**
++ *	ata_scsi_offline_dev - offline attached SCSI device
++ *	@dev: ATA device to offline attached SCSI device for
++ *
++ *	This function is called from ata_eh_hotplug() and responsible
++ *	for taking the SCSI device attached to @dev offline.  This
++ *	function is called with host_set lock which protects dev->sdev
++ *	against clearing.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ *
++ *	RETURNS:
++ *	1 if attached SCSI device exists, 0 otherwise.
++ */
++int ata_scsi_offline_dev(struct ata_device *dev)
++{
++	if (dev->sdev) {
++		scsi_device_set_state(dev->sdev, SDEV_OFFLINE);
++		return 1;
++	}
 +	return 0;
 +}
 +
- /**
-  *	ata_device_add - Register hardware device with ATA and SCSI layers
-  *	@ent: Probe information describing hardware device to be registered
-@@ -5404,7 +5410,6 @@ err_out:
-  *	RETURNS:
-  *	Number of ports registered.  Zero on error (no ports registered).
-  */
--
- int ata_device_add(const struct ata_probe_ent *ent)
- {
- 	unsigned int count = 0, i;
-@@ -5481,19 +5486,6 @@ int ata_device_add(const struct ata_prob
- 		}
- 		ap->sata_spd_limit = ap->hw_sata_spd_limit;
++/**
+  *	ata_schedule_scsi_eh - schedule EH for SCSI host
+  *	@shost:	SCSI host to invoke error handling on.
+  *
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index 24dd534..03530cc 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -75,6 +75,7 @@ extern int ata_cmd_ioctl(struct scsi_dev
+ extern struct scsi_transport_template ata_scsi_transport_template;
  
--		DPRINTK("ata%u: bus probe begin\n", ap->id);
--		rc = ata_bus_probe(ap);
--		DPRINTK("ata%u: bus probe end\n", ap->id);
--
--		if (rc) {
--			/* FIXME: do something useful here?
--			 * Current libata behavior will
--			 * tear down everything when
--			 * the module is removed
--			 * or the h/w is unplugged.
--			 */
--		}
--
- 		rc = scsi_add_host(ap->host, dev);
- 		if (rc) {
- 			ata_port_printk(ap, KERN_ERR, "scsi_add_host failed\n");
-@@ -5503,6 +5495,42 @@ int ata_device_add(const struct ata_prob
- 			 * at the very least
- 			 */
- 		}
-+
-+		if (!ap->ops->probe_reset) {
-+			int bit = fls(ATA_FLAG_LOADING) - 1;
-+			unsigned long flags;
-+
-+			ata_port_probe(ap);
-+
-+			spin_lock_irqsave(&ap->host_set->lock, flags);
-+
-+			ap->eh_info.probe_mask = (1 << ATA_MAX_DEVICES) - 1;
-+			ap->eh_info.action |= ATA_EH_SOFTRESET;
-+
-+			set_bit(bit, &ap->flags);
-+			ata_port_schedule_eh(ap);
-+
-+			spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+			wait_on_bit(&ap->flags, bit, ata_boot_probe_wait,
-+				    TASK_UNINTERRUPTIBLE);
-+
-+			while (scsi_host_in_recovery(ap->host))
-+				msleep(10);
-+		} else {
-+			DPRINTK("ata%u: bus probe begin\n", ap->id);
-+			rc = ata_bus_probe(ap);
-+			DPRINTK("ata%u: bus probe end\n", ap->id);
-+
-+			if (rc) {
-+				/* FIXME: do something useful here?
-+				 * Current libata behavior will
-+				 * tear down everything when
-+				 * the module is removed
-+				 * or the h/w is unplugged.
-+				 */
-+			}
-+		}
- 	}
+ extern void ata_scsi_scan_host(struct ata_port *ap);
++extern int ata_scsi_offline_dev(struct ata_device *dev);
+ extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
+ 			       unsigned int buflen);
  
- 	/* probes are done, now scan each port's disk(s) */
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index c787b91..694e063 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -291,11 +291,16 @@ void ata_scsi_error(struct Scsi_Host *ho
- 	/* clean up */
- 	spin_lock_irqsave(hs_lock, flags);
- 
--	if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
--		queue_work(ata_hotplug_wq, &ap->hotplug_task);
--
--	if (ap->flags & ATA_FLAG_RECOVERED)
--		ata_port_printk(ap, KERN_INFO, "EH complete\n");
-+	if (ap->flags & ATA_FLAG_LOADING) {
-+		int bit = fls(ATA_FLAG_LOADING) - 1;
-+		clear_bit(bit, &ap->flags);
-+		wake_up_bit(&ap->flags, bit);
-+	} else {
-+		if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
-+			queue_work(ata_hotplug_wq, &ap->hotplug_task);
-+		if (ap->flags & ATA_FLAG_RECOVERED)
-+			ata_port_printk(ap, KERN_INFO, "EH complete\n");
-+	}
- 
- 	ap->flags &= ~(ATA_FLAG_SCSI_HOTPLUG | ATA_FLAG_RECOVERED);
- 
-@@ -1336,6 +1341,7 @@ static int ata_eh_reset(struct ata_port 
- 	struct ata_eh_context *ehc = &ap->eh_context;
- 	unsigned int *classes = ehc->classes;
- 	int tries = ATA_EH_RESET_TRIES;
-+	int verbose = !(ap->flags & ATA_FLAG_LOADING);
- 	unsigned int action;
- 	ata_reset_fn_t reset;
- 	int i, did_followup_srst, rc;
-@@ -1375,8 +1381,10 @@ static int ata_eh_reset(struct ata_port 
- 	}
- 
-  retry:
--	ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
--			reset == softreset ? "soft" : "hard");
-+	/* shut up during boot probing */
-+	if (verbose)
-+		ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
-+				reset == softreset ? "soft" : "hard");
- 
- 	/* reset */
- 	ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
-@@ -1818,8 +1826,11 @@ void ata_do_eh(struct ata_port *ap, ata_
- 	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 	       ata_postreset_fn_t postreset)
- {
--	ata_eh_autopsy(ap);
--	ata_eh_report(ap);
-+	if (!(ap->flags & ATA_FLAG_LOADING)) {
-+		ata_eh_autopsy(ap);
-+		ata_eh_report(ap);
-+	}
-+
- 	ata_eh_recover(ap, prereset, softreset, hardreset, postreset);
- 	ata_eh_finish(ap);
- }
 -- 
 1.2.4
 
