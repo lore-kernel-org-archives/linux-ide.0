@@ -1,61 +1,182 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] PIIX: fix 82371MX enablebits
-Date: Thu, 11 May 2006 22:20:33 +0100
-Message-ID: <1147382434.26130.95.camel@localhost.localdomain>
-References: <446395A0.20806@ru.mvista.com>
-	 <1147379225.26130.81.camel@localhost.localdomain>
-	 <44639F4C.7040709@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] PIIX/SLC90E66: PIO mode fallback fix
+Date: Fri, 12 May 2006 01:56:55 +0400
+Message-ID: <4463B327.20307@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040800030607080304040302"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34968 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1750786AbWEKVIY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 17:08:24 -0400
-In-Reply-To: <44639F4C.7040709@ru.mvista.com>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:55250 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750755AbWEKV6E
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 17:58:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Gwe, 2006-05-12 at 00:32 +0400, Sergei Shtylyov wrote:
->     Erm, simplex stuff shouldn't be touched at all since the chip is not 
-> DMA-capable. The same should be true about the native/legacy mode...
+This is a multi-part message in MIME format.
+--------------040800030607080304040302
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Native/legacy appplies to PIO too, and predates DMA stuff. Read
-ide_setup_pci_baseregs and you'll see the problem. I hit that with
-pata_mpiix and similar assumptions copied into libata and when I tried
-the piix driver on the laptop I have.
+Hello.
 
-> > Finally the PIIX driver pokes several registers it doesn't even have.
-> 
->     Hm, as I can see, it avoids touching anything at all on MPIIX. This may 
-> rather be said of PIIX -- this chip didn't have SIDETIM register yet, so slave 
-> tuning won't work on it...
+    The fallback to PIO mode in the hwif->dma_check() handler didn't work in
+the Intel PIIX and SMsC SLC90E66 IDE drivers because:
 
-It avoids it for the MPIIX but not the early PIIX chip. And you can do
-slave timing just fine, you need to flip the timings when you flip drive
-which is how pata_mpiix does it and pata_oldpiix.
+  - config_drive_for_dma() called the hwif->speedproc() handler with the wrong
+    mode number (unbiased by XFER_PIO_0) in case of the PIO fallback;
 
->     There's no great need in splitting, just the separate tune_chipset() 
-> functions for PIIX/MPIIX and the rest of the crowd would suffice, IMHO...
+  - hwif->tuneproc() handler doesn't really set the drive's own speed (this
+    is not fixed as yet).
 
-Have fun 8) Having been there and done that already the list of bugs in
-the piix driver is huge. Good to see someone beginning on it. However
-you need more than to skip tuning and you need to reload the timings on
-master/slave switches to get any performance.
+MBR, Sergei
 
-If you want to fight the PIIX driver then other stuff I fixed in
-pata_piix included
-- Touching UDMA registers not found on earlier UDMA chips
-- Setting IORDY on the wrong modes
-- Setting prefetch/postwrite related options on devices it isnt safe for
-(ATAPI shouldn't set PPE0 etc)
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-There's a nice Intel manual on the PIIX/ICH tuning rules separate to the
-chip docs btw, I found it really helpful, dunno if you've already got a
-copy.
 
-Alan
+--------------040800030607080304040302
+Content-Type: text/plain;
+ name="piix-slc90e66-pio-fallback-fix.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="piix-slc90e66-pio-fallback-fix.patch"
 
+Index: linus/drivers/ide/pci/piix.c
+===================================================================
+--- linus.orig/drivers/ide/pci/piix.c
++++ linus/drivers/ide/pci/piix.c
+@@ -1,13 +1,14 @@
+ /*
+- *  linux/drivers/ide/pci/piix.c	Version 0.44	March 20, 2003
++ *  linux/drivers/ide/pci/piix.c	Version 0.45	May 12, 2006
+  *
+  *  Copyright (C) 1998-1999 Andrzej Krzysztofowicz, Author and Maintainer
+  *  Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
+  *  Copyright (C) 2003 Red Hat Inc <alan@redhat.com>
++ *  Copyright (C) 2006 MontaVista Software, Inc. <source@mvista.com>
+  *
+  *  May be copied or modified under the terms of the GNU General Public License
+  *
+- *  PIO mode setting function for Intel chipsets.  
++ *  PIO mode setting function for Intel chipsets.
+  *  For use instead of BIOS settings.
+  *
+  * 40-41
+@@ -25,7 +26,7 @@
+  * sitre = word42 & 0x4000; secondary
+  *
+  * 44 8421|8421    hdd|hdb
+- * 
++ *
+  * 48 8421         hdd|hdc|hdb|hda udma enabled
+  *
+  *    0001         hda
+@@ -364,8 +365,8 @@ static int piix_faulty_dma0(ide_hwif_t *
+  *	@drive: IDE drive to configure
+  *
+  *	Set up a PIIX interface channel for the best available speed.
+- *	We prefer UDMA if it is available and then MWDMA. If DMA is 
+- *	not available we switch to PIO and return 0. 
++ *	We prefer UDMA if it is available and then MWDMA.  If DMA is
++ *	not available we switch to PIO and return 0.
+  */
+  
+ static int piix_config_drive_for_dma (ide_drive_t *drive)
+@@ -376,13 +377,12 @@ static int piix_config_drive_for_dma (id
+ 	if(speed == XFER_MW_DMA_0 && piix_faulty_dma0(HWIF(drive)))
+ 		speed = 0;
+ 
+-	/* If no DMA speed was available or the chipset has DMA bugs
+-	   then disable DMA and use PIO */
+-	   
+-	if (!speed || no_piix_dma) {
+-		u8 tspeed = ide_get_best_pio_mode(drive, 255, 5, NULL);
+-		speed = piix_dma_2_pio(XFER_PIO_0 + tspeed);
+-	}
++	/*
++	 * If no DMA speed was available or the chipset has DMA bugs
++	 * then disable DMA and use PIO
++	 */
++	if (!speed || no_piix_dma)
++		return 0;
+ 
+ 	(void) piix_tune_chipset(drive, speed);
+ 	return ide_dma_enable(drive);
+@@ -405,17 +405,16 @@ static int piix_config_drive_xfer_rate (
+ 
+ 	if ((id->capability & 1) && drive->autodma) {
+ 
+-		if (ide_use_dma(drive)) {
+-			if (piix_config_drive_for_dma(drive))
+-				return hwif->ide_dma_on(drive);
+-		}
++		if (ide_use_dma(drive) && piix_config_drive_for_dma(drive))
++			return hwif->ide_dma_on(drive);
+ 
+ 		goto fast_ata_pio;
+ 
+ 	} else if ((id->capability & 8) || (id->field_valid & 2)) {
+ fast_ata_pio:
+ 		/* Find best PIO mode. */
+-		hwif->tuneproc(drive, 255);
++		(void) hwif->speedproc(drive, XFER_PIO_0 +
++				       ide_get_best_pio_mode(drive, 255, 4, NULL));
+ 		return hwif->ide_dma_off_quietly(drive);
+ 	}
+ 	/* IORDY not supported */
+Index: linus/drivers/ide/pci/slc90e66.c
+===================================================================
+--- linus.orig/drivers/ide/pci/slc90e66.c
++++ linus/drivers/ide/pci/slc90e66.c
+@@ -1,9 +1,10 @@
+ /*
+- *  linux/drivers/ide/pci/slc90e66.c	Version 0.11	September 11, 2002
++ *  linux/drivers/ide/pci/slc90e66.c	Version 0.12	May 12, 2006
+  *
+  *  Copyright (C) 2000-2002 Andre Hedrick <andre@linux-ide.org>
++ *  Copyright (C) 2006 MontaVista Software, Inc. <source@mvista.com>
+  *
+- * This a look-a-like variation of the ICH0 PIIX4 Ultra-66,
++ * This is a look-alike variation of the ICH0 PIIX4 Ultra-66,
+  * but this keeps the ISA-Bridge and slots alive.
+  *
+  */
+@@ -161,10 +162,8 @@ static int slc90e66_config_drive_for_dma
+ {
+ 	u8 speed = ide_dma_speed(drive, slc90e66_ratemask(drive));
+ 
+-	if (!(speed)) {
+-		u8 tspeed = ide_get_best_pio_mode(drive, 255, 5, NULL);
+-		speed = slc90e66_dma_2_pio(XFER_PIO_0 + tspeed);
+-	}
++	if (!speed)
++		return 0;
+ 
+ 	(void) slc90e66_tune_chipset(drive, speed);
+ 	return ide_dma_enable(drive);
+@@ -179,16 +178,15 @@ static int slc90e66_config_drive_xfer_ra
+ 
+ 	if (id && (id->capability & 1) && drive->autodma) {
+ 
+-		if (ide_use_dma(drive)) {
+-			if (slc90e66_config_drive_for_dma(drive))
+-				return hwif->ide_dma_on(drive);
+-		}
++		if (ide_use_dma(drive) && slc90e66_config_drive_for_dma(drive))
++			return hwif->ide_dma_on(drive);
+ 
+ 		goto fast_ata_pio;
+ 
+ 	} else if ((id->capability & 8) || (id->field_valid & 2)) {
+ fast_ata_pio:
+-		hwif->tuneproc(drive, 5);
++		(void) hwif->speedproc(drive, XFER_PIO_0 +
++				       ide_get_best_pio_mode(drive, 255, 4, NULL));
+ 		return hwif->ide_dma_off_quietly(drive);
+ 	}
+ 	/* IORDY not supported */
+
+
+--------------040800030607080304040302--
