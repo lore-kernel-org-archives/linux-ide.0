@@ -1,149 +1,123 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 7/7] libata-pm-prep: add HRST_TO_RESUME and implement resume action helpers
-Date: Fri, 12 May 2006 01:37:51 +0900
-Message-ID: <11473654713185-git-send-email-htejun@gmail.com>
+Subject: [PATCH 1/7] libata-pm-prep: add @new_class to ata_dev_revalidate()
+Date: Fri, 12 May 2006 01:37:50 +0900
+Message-ID: <11473654703989-git-send-email-htejun@gmail.com>
 References: <11473654703440-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.239]:50067 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.237]:50067 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030337AbWEKQiD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 12:38:03 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so407142wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:38:03 -0700 (PDT)
+	id S1030335AbWEKQh5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 12:37:57 -0400
+Received: by wr-out-0506.google.com with SMTP id i12so407147wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:37:56 -0700 (PDT)
 In-Reply-To: <11473654703440-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Some PM needs hardreset to resume link.  Add ATA_LFLAG_HRST_TO_RESUME
-to mark such links and separate out ata_link_resume_action() such that
-the test can be done in one place and, while at it, separate out
-ata_link_init_probe() which sets resume action and probe mask from
-ata_device_add().  These resume/probing related helpers will be used
-by PM.
+Consider newly found class code while revalidating.  PM resetting
+always results in valid class code and issuing PM commands to
+ATA/ATAPI devices isn't a very attractive idea.  Add @new_class to
+ata_dev_revalidate() and check class during revalidation.
 
 ---
 
- drivers/scsi/libata-core.c |    7 +------
- drivers/scsi/libata-eh.c   |    6 +++---
- drivers/scsi/libata-scsi.c |    4 ++--
- include/linux/libata.h     |   17 +++++++++++++++++
- 4 files changed, 23 insertions(+), 11 deletions(-)
+ drivers/scsi/libata-core.c |   20 +++++++++++++++-----
+ drivers/scsi/libata-eh.c   |    2 +-
+ include/linux/libata.h     |    3 ++-
+ 3 files changed, 18 insertions(+), 7 deletions(-)
 
-b23bfeecdddff57fd54e62193ae8b05e88729c63
+e9ad06f7ef8413f1027baad8b64bc860b85fa85e
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index fb64a0f..148d84d 100644
+index 32ea394..71f9ea7 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -5472,14 +5472,9 @@ int ata_device_add(const struct ata_prob
- 			ata_port_probe(ap);
+@@ -2052,7 +2052,7 @@ static int ata_dev_set_mode(struct ata_d
+ 		return -EIO;
+ 	}
  
- 			spin_lock_irqsave(&ap->host_set->lock, flags);
--
--			ap->link.eh_info.probe_mask =
--				(1 << ata_link_max_devices(&ap->link)) - 1;
--			ap->link.eh_info.action |= ATA_EH_SOFTRESET;
--
- 			set_bit(bit, &ap->flags);
-+			ata_link_init_probe(&ap->link);
- 			ata_port_schedule_eh(ap);
--
- 			spin_unlock_irqrestore(&ap->host_set->lock, flags);
+-	rc = ata_dev_revalidate(dev, 0);
++	rc = ata_dev_revalidate(dev, ATA_DEV_UNKNOWN, 0);
+ 	if (rc)
+ 		return rc;
  
- 			wait_on_bit(&ap->flags, bit, ata_boot_probe_wait,
+@@ -2813,6 +2813,7 @@ static int ata_dev_same_device(struct at
+ /**
+  *	ata_dev_revalidate - Revalidate ATA device
+  *	@dev: device to revalidate
++ *	@new_class: new class code
+  *	@post_reset: is this revalidation after reset?
+  *
+  *	Re-read IDENTIFY page and make sure @dev is still attached to
+@@ -2824,9 +2825,9 @@ static int ata_dev_same_device(struct at
+  *	RETURNS:
+  *	0 on success, negative errno otherwise
+  */
+-int ata_dev_revalidate(struct ata_device *dev, int post_reset)
++int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
++		       int post_reset)
+ {
+-	unsigned int class = dev->class;
+ 	u16 *id = (void *)dev->link->ap->sector_buf;
+ 	int rc;
+ 
+@@ -2835,13 +2836,22 @@ int ata_dev_revalidate(struct ata_device
+ 		goto fail;
+ 	}
+ 
++	if (ata_class_enabled(new_class)) {
++		/* sometimes wrong class is reported, let it retry */
++		if (new_class != ATA_DEV_ATA && new_class != ATA_DEV_ATAPI) {
++			rc = -EIO;
++			goto fail;
++		}
++	} else
++		new_class = dev->class;
++
+ 	/* read ID data */
+-	rc = ata_dev_read_id(dev, &class, post_reset, id);
++	rc = ata_dev_read_id(dev, &new_class, post_reset, id);
+ 	if (rc)
+ 		goto fail;
+ 
+ 	/* is the device still there? */
+-	if (!ata_dev_same_device(dev, class, id)) {
++	if (!ata_dev_same_device(dev, new_class, id)) {
+ 		rc = -ENODEV;
+ 		goto fail;
+ 	}
 diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index ffbd028..d62a529 100644
+index ecfb9c5..7abeb11 100644
 --- a/drivers/scsi/libata-eh.c
 +++ b/drivers/scsi/libata-eh.c
-@@ -941,7 +941,7 @@ static void ata_eh_analyze_serror(struct
- 	}
- 	if (serror & (SERR_PHYRDY_CHG | SERR_DEV_XCHG)) {
- 		err_mask |= AC_ERR_ATA_BUS;
--		action |= ATA_EH_HARDRESET;
-+		action |= ata_link_resume_action(link);
- 		ehc->i.probe_mask |= 1;
- 	}
- 
-@@ -1695,7 +1695,7 @@ int ata_eh_recover(struct ata_port *ap, 
- 				ata_eh_detach_dev(dev);
- 				ata_dev_init(dev);
- 				ehc->did_probe_mask |= (1 << dev->devno);
--				ehc->i.action |= ATA_EH_SOFTRESET;
-+				ehc->i.action |= ata_link_resume_action(link);
+@@ -1570,7 +1570,7 @@ static int ata_eh_revalidate_and_attach(
  			}
- 		}
- 	}
-@@ -1805,7 +1805,7 @@ int ata_eh_recover(struct ata_port *ap, 
  
- 			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
- 			ehc->did_probe_mask |= (1 << dev->devno);
--			ehc->i.action |= ATA_EH_SOFTRESET;
-+			ehc->i.action |= ata_link_resume_action(link);
- 		}
- 	} else {
- 		/* soft didn't work?  be haaaaard */
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 9589013..de40b80 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2903,7 +2903,7 @@ static int ata_scsi_user_scan(struct Scs
- 		ata_port_for_each_link(link, ap) {
- 			link->eh_info.probe_mask |=
- 				(1 << ata_link_max_devices(link)) - 1;
--			link->eh_info.action |= ATA_EH_SOFTRESET;
-+			link->eh_info.action |= ata_link_resume_action(link);
- 		}
- 	} else {
- 		struct ata_device *dev = ata_find_dev(ap, id);
-@@ -2911,7 +2911,7 @@ static int ata_scsi_user_scan(struct Scs
- 		if (dev) {
- 			link = dev->link;
- 			link->eh_info.probe_mask |= 1 << dev->devno;
--			link->eh_info.action |= ATA_EH_SOFTRESET;
-+			link->eh_info.action |= ata_link_resume_action(link);
- 		} else
- 			rc = -EINVAL;
- 	}
+ 			ata_eh_about_to_do(link, ATA_EH_REVALIDATE);
+-			rc = ata_dev_revalidate(dev,
++			rc = ata_dev_revalidate(dev, ehc->classes[dev->devno],
+ 						ehc->flags & ATA_EHC_DID_RESET);
+ 			if (rc)
+ 				break;
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index df78f3e..bbfd176 100644
+index 7db9b80..1fec322 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -143,6 +143,9 @@ enum {
- 
- 	ATA_DEV_ERING_SIZE	= 32,	/* record 32 recent errors */
- 
-+	/* struct ata_link flags */
-+	ATA_LFLAG_HRST_TO_RESUME = (1 << 0), /* hardreset needed to resume */
-+
- 	/* struct ata_port flags */
- 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
- 					    /* (doesn't imply presence) */
-@@ -934,6 +937,20 @@ static inline int ata_link_max_devices(c
- 	return 1;
- }
- 
-+static inline unsigned int ata_link_resume_action(struct ata_link *link)
-+{
-+	if (link->flags & ATA_LFLAG_HRST_TO_RESUME)
-+		return ATA_EH_HARDRESET;
-+	return ATA_EH_SOFTRESET;
-+}
-+
-+static inline void ata_link_init_probe(struct ata_link *link)
-+{
-+	link->eh_info.probe_mask = (1 << ata_link_max_devices(link)) - 1;
-+	link->eh_info.action = ata_link_resume_action(link);
-+	link->eh_context.i = link->eh_info;
-+}
-+
- static inline int ata_link_active(struct ata_link *link)
- {
- 	return ata_tag_valid(link->active_tag) || link->sactive;
+@@ -633,7 +633,8 @@ extern int ata_std_prereset(struct ata_l
+ extern int ata_std_softreset(struct ata_link *link, unsigned int *classes);
+ extern int sata_std_hardreset(struct ata_link *link, unsigned int *class);
+ extern void ata_std_postreset(struct ata_link *link, unsigned int *classes);
+-extern int ata_dev_revalidate(struct ata_device *dev, int post_reset);
++extern int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
++			      int post_reset);
+ extern void ata_port_disable(struct ata_port *);
+ extern void ata_std_ports(struct ata_ioports *ioaddr);
+ #ifdef CONFIG_PCI
 -- 
 1.2.4
 
