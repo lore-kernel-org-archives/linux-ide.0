@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 13/22] libata: implement qc->result_tf
-Date: Thu, 11 May 2006 20:59:51 +0900
-Message-ID: <11473487911193-git-send-email-htejun@gmail.com>
+Subject: [PATCH 06/22] libata: kill duplicate prototypes
+Date: Thu, 11 May 2006 20:59:50 +0900
+Message-ID: <11473487901633-git-send-email-htejun@gmail.com>
 References: <11473487893774-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:4539 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751585AbWEKMAC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 08:00:02 -0400
-Received: by py-out-1112.google.com with SMTP id f28so211152pyf
+Received: from nz-out-0102.google.com ([64.233.162.195]:9925 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751584AbWEKMAB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 08:00:01 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so170486nzn
         for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 05:00:01 -0700 (PDT)
 In-Reply-To: <11473487893774-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,179 +20,29 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add qc->result_tf and ATA_QCFLAG_RESULT_TF.  This moves the
-responsibility of loading result TF from post-compltion path to qc
-execution path.  qc->result_tf is loaded if explicitly requested or
-the qc failsa.  This allows more efficient completion implementation
-and correct handling of result TF for controllers which don't have
-global TF representation such as sil3124/32.
+Kill duplicate prototypes for ata_eh_qc_complete/retry() in libata.h.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    4 ++--
- drivers/scsi/libata-scsi.c |   18 +++++++-----------
- include/linux/libata.h     |   16 ++++++++++++++--
- 3 files changed, 23 insertions(+), 15 deletions(-)
+ include/linux/libata.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-46a93ec2cb1124f507e0cad7dcb65794a15af844
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 464fd46..4cb7828 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -955,7 +955,6 @@ void ata_qc_complete_internal(struct ata
- {
- 	struct completion *waiting = qc->private_data;
- 
--	qc->ap->ops->tf_read(qc->ap, &qc->tf);
- 	complete(waiting);
- }
- 
-@@ -997,6 +996,7 @@ unsigned ata_exec_internal(struct ata_po
- 	qc->tf = *tf;
- 	if (cdb)
- 		memcpy(qc->cdb, cdb, ATAPI_CDB_LEN);
-+	qc->flags |= ATA_QCFLAG_RESULT_TF;
- 	qc->dma_dir = dma_dir;
- 	if (dma_dir != DMA_NONE) {
- 		ata_sg_init_one(qc, buf, buflen);
-@@ -1034,7 +1034,7 @@ unsigned ata_exec_internal(struct ata_po
- 	/* finish up */
- 	spin_lock_irqsave(&ap->host_set->lock, flags);
- 
--	*tf = qc->tf;
-+	*tf = qc->result_tf;
- 	err_mask = qc->err_mask;
- 
- 	ata_qc_free(qc);
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index b0c83c2..ce90b63 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -537,7 +537,7 @@ void ata_to_sense_error(unsigned id, u8 
- void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
--	struct ata_taskfile *tf = &qc->tf;
-+	struct ata_taskfile *tf = &qc->result_tf;
- 	unsigned char *sb = cmd->sense_buffer;
- 	unsigned char *desc = sb + 8;
- 
-@@ -608,7 +608,7 @@ void ata_gen_ata_desc_sense(struct ata_q
- void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
--	struct ata_taskfile *tf = &qc->tf;
-+	struct ata_taskfile *tf = &qc->result_tf;
- 	unsigned char *sb = cmd->sense_buffer;
- 
- 	memset(sb, 0, SCSI_SENSE_BUFFERSIZE);
-@@ -1199,14 +1199,11 @@ static void ata_scsi_qc_complete(struct 
- 	 */
- 	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
-  	    ((cdb[2] & 0x20) || need_sense)) {
--		qc->ap->ops->tf_read(qc->ap, &qc->tf);
-  		ata_gen_ata_desc_sense(qc);
- 	} else {
- 		if (!need_sense) {
- 			cmd->result = SAM_STAT_GOOD;
- 		} else {
--			qc->ap->ops->tf_read(qc->ap, &qc->tf);
--
- 			/* TODO: decide which descriptor format to use
- 			 * for 48b LBA devices and call that here
- 			 * instead of the fixed desc, which is only
-@@ -1217,10 +1214,8 @@ static void ata_scsi_qc_complete(struct 
- 		}
- 	}
- 
--	if (need_sense) {
--		/* The ata_gen_..._sense routines fill in tf */
--		ata_dump_status(qc->ap->id, &qc->tf);
--	}
-+	if (need_sense)
-+		ata_dump_status(qc->ap->id, &qc->result_tf);
- 
- 	qc->scsidone(cmd);
- 
-@@ -2004,7 +1999,6 @@ static void atapi_sense_complete(struct 
- 		 * a sense descriptors, since that's only
- 		 * correct for ATA, not ATAPI
- 		 */
--		qc->ap->ops->tf_read(qc->ap, &qc->tf);
- 		ata_gen_ata_desc_sense(qc);
- 	}
- 
-@@ -2080,7 +2074,6 @@ static void atapi_qc_complete(struct ata
- 		 * a sense descriptors, since that's only
- 		 * correct for ATA, not ATAPI
- 		 */
--		qc->ap->ops->tf_read(qc->ap, &qc->tf);
- 		ata_gen_ata_desc_sense(qc);
- 	} else {
- 		u8 *scsicmd = cmd->cmnd;
-@@ -2361,6 +2354,9 @@ ata_scsi_pass_thru(struct ata_queued_cmd
- 	 */
- 	qc->nsect = cmd->bufflen / ATA_SECT_SIZE;
- 
-+	/* request result TF */
-+	qc->flags |= ATA_QCFLAG_RESULT_TF;
-+
- 	return 0;
- 
-  invalid_fld:
+24e675bc2d266ce75ca95663b3e92d97beb8bbaf
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a117ca2..3d15c00 100644
+index d35b1e3..9c2d4bb 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -162,7 +162,9 @@ enum {
- 	ATA_QCFLAG_SINGLE	= (1 << 2), /* no s/g, just a single buffer */
- 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
- 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
--	ATA_QCFLAG_EH_SCHEDULED = (1 << 4), /* EH scheduled */
-+	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
-+
-+	ATA_QCFLAG_EH_SCHEDULED = (1 << 16), /* EH scheduled */
- 
- 	/* host set flags */
- 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host_set only */
-@@ -343,7 +345,7 @@ struct ata_queued_cmd {
- 	struct scatterlist	*__sg;
- 
- 	unsigned int		err_mask;
--
-+	struct ata_taskfile	result_tf;
- 	ata_qc_cb_t		complete_fn;
- 
- 	void			*private_data;
-@@ -824,6 +826,10 @@ static inline void ata_qc_reinit(struct 
- 	qc->err_mask = 0;
- 
- 	ata_tf_init(qc->ap, &qc->tf, qc->dev->devno);
-+
-+	/* init result_tf such that it indicates normal completion */
-+	qc->result_tf.command = ATA_DRDY;
-+	qc->result_tf.feature = 0;
- }
- 
- /**
-@@ -839,9 +845,15 @@ static inline void ata_qc_reinit(struct 
-  */
- static inline void ata_qc_complete(struct ata_queued_cmd *qc)
- {
-+	struct ata_port *ap = qc->ap;
-+
- 	if (unlikely(qc->flags & ATA_QCFLAG_EH_SCHEDULED))
- 		return;
- 
-+	/* read result TF if failed or requested */
-+	if (qc->err_mask || qc->flags & ATA_QCFLAG_RESULT_TF)
-+		ap->ops->tf_read(ap, &qc->result_tf);
-+
- 	__ata_qc_complete(qc);
- }
- 
+@@ -530,8 +530,6 @@ extern void ata_host_set_remove(struct a
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
+ extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
+-extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
+-extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
+ extern int ata_scsi_release(struct Scsi_Host *host);
+ extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
+ extern int ata_scsi_device_resume(struct scsi_device *);
 -- 
 1.2.4
 
