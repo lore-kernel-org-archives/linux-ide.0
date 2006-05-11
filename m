@@ -1,48 +1,31 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 08/11] sata_sil: convert to new EH
-Date: Fri, 12 May 2006 00:45:45 +0900
-Message-ID: <44635C29.6080903@gmail.com>
-References: <11473536881889-git-send-email-htejun@gmail.com>	 <1147357322.26130.17.camel@localhost.localdomain>	 <44634CB6.80804@gmail.com> <1147362385.26130.42.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 08/13] ata_piix: convert ata_piix to new probing
+	mechanism
+Date: Thu, 11 May 2006 16:58:24 +0100
+Message-ID: <1147363104.26130.49.camel@localhost.localdomain>
+References: <11473615273443-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:57940 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030287AbWEKPpw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:45:52 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so395288wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:45:51 -0700 (PDT)
-In-Reply-To: <1147362385.26130.42.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:17296 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1030288AbWEKPqc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:46:32 -0400
+In-Reply-To: <11473615273443-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Tejun Heo <htejun@gmail.com>
 Cc: jgarzik@pobox.com, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Iau, 2006-05-11 at 23:39 +0900, Tejun Heo wrote:
->> I'm not sure what you mean by synchronization.  But, freezing is indeed
->>  for shutting the chip up.  If the port is frozen, EH doesn't touch
->> active qcs nor tries to issue new command.  The port is thawed/used only
->> after the port & device are put into known good state via successful
->> reset.  Is this what you're talking about?
-> 
-> Sort of. I wanted to point out that this can occur
-> 
-> 	IRQ is issued on chip
-> 
-> 	->freeze
-> 	returns
-> 
-> 	->intr finally arrives and is serviced
+On Gwe, 2006-05-12 at 00:32 +0900, Tejun Heo wrote:
+> Convert ata_piix to new probing mechanism.  Automatic hotplug is not
+> supported due to hardware limitation (no PHY event interrupt), but
+> warm plugging works.
 
-I see.  As far as EH is concerned, this should be okay.  Once qc
-ownership is transferred, irq handler cannot access the qc
-(ata_qc_from_tag() prevents it) and has no way other than handling it as
-a spurious interrupt or HSM violation.  But, it sounds like it could
-result in screaming IRQ for controllers without IRQ pending bit.  Could
-it?  If so, maybe unconditional irq clearing in ata_interrupt() should
-be resurrected to handle such conditions.
+True for the SATA ports but don't try it on the PATA ones. The PATA side
+requires the right buffers are present, and also in some situations that
+IORDY is not in use before the unplug.
 
--- 
-tejun
+Alan
+
