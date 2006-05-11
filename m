@@ -1,135 +1,61 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/11] sata_sil: convert to new EH
-Date: Thu, 11 May 2006 22:21:28 +0900
-Message-ID: <11473536881889-git-send-email-htejun@gmail.com>
+Subject: [PATCH 10/11] ahci: add PIOS interim interrupt handling
+Date: Thu, 11 May 2006 22:21:29 +0900
+Message-ID: <11473536891627-git-send-email-htejun@gmail.com>
 References: <11473536873966-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:48375 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751736AbWEKNVj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 09:21:39 -0400
-Received: by py-out-1112.google.com with SMTP id f28so234245pyf
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 06:21:38 -0700 (PDT)
+Received: from wx-out-0102.google.com ([66.249.82.206]:45348 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751734AbWEKNVl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 09:21:41 -0400
+Received: by wx-out-0102.google.com with SMTP id t5so1388wxc
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 06:21:41 -0700 (PDT)
 In-Reply-To: <11473536873966-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Convert sata_sil to new EH.  As these controllers have hardware
-interrupt mask and are known to have screaming interrupts issues, use
-hardware IRQ masking for freezing.  sil_freeze() masks interrupts for
-the port and sil_thaw() unmasks them.  As ports are automatically
-frozen before probing reset, there is no need to initialize interrupt
-masks sil_init_onde().  Remove related code.
-
-Other than freezing, sata_sil uses stock BMDMA EH routines.
+During multiblock PIO, multiple PIOS interrupts are generated before
+qc compltion.  Current code prints unnecessary message for such cases.
+This is exposed when new EH slows down attached device into PIO mode.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil.c |   49 +++++++++++++++++++++++++++++++++--------------
- 1 files changed, 34 insertions(+), 15 deletions(-)
+ drivers/scsi/ahci.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-0eb051e052c5472c8e2abb0ab5caa267f6f72437
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index bfcece1..3e998b7 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -96,6 +96,8 @@ static void sil_dev_config(struct ata_po
- static u32 sil_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void sil_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- static void sil_post_set_mode (struct ata_port *ap);
-+static void sil_freeze(struct ata_port *ap);
-+static void sil_thaw(struct ata_port *ap);
- 
- 
- static const struct pci_device_id sil_pci_tbl[] = {
-@@ -174,7 +176,10 @@ static const struct ata_port_operations 
- 	.bmdma_status		= ata_bmdma_status,
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
--	.eng_timeout		= ata_eng_timeout,
-+	.freeze			= sil_freeze,
-+	.thaw			= sil_thaw,
-+	.error_handler		= ata_bmdma_error_handler,
-+	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
- 	.scr_read		= sil_scr_read,
-@@ -314,6 +319,33 @@ static void sil_scr_write (struct ata_po
- 		writel(val, mmio);
- }
- 
-+static void sil_freeze(struct ata_port *ap)
-+{
-+	void __iomem *mmio_base = ap->host_set->mmio_base;
-+	u32 tmp;
-+
-+	/* plug IRQ */
-+	tmp = readl(mmio_base + SIL_SYSCFG);
-+	tmp |= SIL_MASK_IDE0_INT << ap->port_no;
-+	writel(tmp, mmio_base + SIL_SYSCFG);
-+	readl(mmio_base + SIL_SYSCFG);	/* flush */
-+}
-+
-+static void sil_thaw(struct ata_port *ap)
-+{
-+	void __iomem *mmio_base = ap->host_set->mmio_base;
-+	u32 tmp;
-+
-+	/* clear IRQ */
-+	ata_chk_status(ap);
-+	ap->ops->irq_clear(ap);
-+
-+	/* turn on IRQ */
-+	tmp = readl(mmio_base + SIL_SYSCFG);
-+	tmp &= ~(SIL_MASK_IDE0_INT << ap->port_no);
-+	writel(tmp, mmio_base + SIL_SYSCFG);
-+}
-+
- /**
-  *	sil_dev_config - Apply device/host-specific errata fixups
-  *	@ap: Port containing device to be examined
-@@ -384,7 +416,7 @@ static int sil_init_one (struct pci_dev 
- 	int rc;
- 	unsigned int i;
- 	int pci_dev_busy = 0;
--	u32 tmp, irq_mask;
-+	u32 tmp;
- 	u8 cls;
- 
- 	if (!printed_version++)
-@@ -474,24 +506,11 @@ static int sil_init_one (struct pci_dev 
+ad7facff3665ce6527929ec5b9c6b2a04689010c
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index c2b9c93..680dd5b 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -899,7 +899,18 @@ static void ahci_host_intr(struct ata_po
+ 		}
  	}
  
- 	if (ent->driver_data == sil_3114) {
--		irq_mask = SIL_MASK_4PORT;
--
- 		/* flip the magic "make 4 ports work" bit */
- 		tmp = readl(mmio_base + sil_port[2].bmdma);
- 		if ((tmp & SIL_INTR_STEERING) == 0)
- 			writel(tmp | SIL_INTR_STEERING,
- 			       mmio_base + sil_port[2].bmdma);
--
--	} else {
--		irq_mask = SIL_MASK_2PORT;
--	}
--
--	/* make sure IDE0/1/2/3 interrupts are not masked */
--	tmp = readl(mmio_base + SIL_SYSCFG);
--	if (tmp & irq_mask) {
--		tmp &= ~irq_mask;
--		writel(tmp, mmio_base + SIL_SYSCFG);
--		readl(mmio_base + SIL_SYSCFG);	/* flush */
- 	}
- 
- 	/* mask all SATA phy-related interrupts */
+-	/* spurious interrupt */
++	/* hmmm... a spurious interupt */
++
++	/* ignore interim PIO setup fis interrupts */
++	if (ata_tag_valid(ap->active_tag)) {
++		struct ata_queued_cmd *qc =
++			ata_qc_from_tag(ap, ap->active_tag);
++
++		if (qc && qc->tf.protocol == ATA_PROT_PIO &&
++		    (status & PORT_IRQ_PIOS_FIS))
++			return;
++	}
++
+ 	if (ata_ratelimit())
+ 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
+ 				"(irq_stat 0x%x active_tag %d)\n",
 -- 
 1.2.4
 
