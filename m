@@ -1,39 +1,61 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] PIIX: config_drive_for_dma() cleanup
-Date: Fri, 12 May 2006 00:34:43 +0400
-Message-ID: <44639FE3.9050608@ru.mvista.com>
-References: <44638A4F.2090502@ru.mvista.com> <1147379342.26130.84.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] PIIX: fix 82371MX enablebits
+Date: Thu, 11 May 2006 22:20:33 +0100
+Message-ID: <1147382434.26130.95.camel@localhost.localdomain>
+References: <446395A0.20806@ru.mvista.com>
+	 <1147379225.26130.81.camel@localhost.localdomain>
+	 <44639F4C.7040709@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:36047 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750775AbWEKUfm
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 16:35:42 -0400
-In-Reply-To: <1147379342.26130.84.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34968 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1750786AbWEKVIY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 17:08:24 -0400
+In-Reply-To: <44639F4C.7040709@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, liknux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Gwe, 2006-05-12 at 00:32 +0400, Sergei Shtylyov wrote:
+>     Erm, simplex stuff shouldn't be touched at all since the chip is not 
+> DMA-capable. The same should be true about the native/legacy mode...
 
-Alan Cox wrote:
-> On Iau, 2006-05-11 at 23:02 +0400, Sergei Shtylyov wrote:
+Native/legacy appplies to PIO too, and predates DMA stuff. Read
+ide_setup_pci_baseregs and you'll see the problem. I hit that with
+pata_mpiix and similar assumptions copied into libata and when I tried
+the piix driver on the laptop I have.
 
->>@@ -73,8 +74,6 @@
->>  *	PIIX4	errata #15	- Must not read control registers
->>  * 				  during a PIO transfer
->>  *	440MX   errata #13	- As PIIX4 errata #15
->>- *	ICH2	errata #21	- DMA mode 0 doesn't work right
->>- *	ICH0/1  errata #55	- As ICH2 errata #21
+> > Finally the PIIX driver pokes several registers it doesn't even have.
+> 
+>     Hm, as I can see, it avoids touching anything at all on MPIIX. This may 
+> rather be said of PIIX -- this chip didn't have SIDETIM register yet, so slave 
+> tuning won't work on it...
 
-> NAK. The errata are documented carefully so that people know what the
-> problems are. They have not gone away.
+It avoids it for the MPIIX but not the early PIIX chip. And you can do
+slave timing just fine, you need to flip the timings when you flip drive
+which is how pata_mpiix does it and pata_oldpiix.
 
-    OK. The patch was bad for another reason -- PIO fallback won't work since 
-piix_tune_drive() currently "forgets" to set the drive's own transfer mode. 
-The same goes to SLC90E66 patch. I'll resend...
+>     There's no great need in splitting, just the separate tune_chipset() 
+> functions for PIIX/MPIIX and the rest of the crowd would suffice, IMHO...
 
-MBR, Sergei
+Have fun 8) Having been there and done that already the list of bugs in
+the piix driver is huge. Good to see someone beginning on it. However
+you need more than to skip tuning and you need to reload the timings on
+master/slave switches to get any performance.
+
+If you want to fight the PIIX driver then other stuff I fixed in
+pata_piix included
+- Touching UDMA registers not found on earlier UDMA chips
+- Setting IORDY on the wrong modes
+- Setting prefetch/postwrite related options on devices it isnt safe for
+(ATAPI shouldn't set PPE0 etc)
+
+There's a nice Intel manual on the PIIX/ICH tuning rules separate to the
+chip docs btw, I found it really helpful, dunno if you've already got a
+copy.
+
+Alan
+
