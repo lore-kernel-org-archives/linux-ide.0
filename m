@@ -1,241 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/13] libata-hp: hook warmplug
-Date: Fri, 12 May 2006 00:32:07 +0900
-Message-ID: <11473615272788-git-send-email-htejun@gmail.com>
-References: <11473615261297-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 08/11] sata_sil: convert to new EH
+Date: Thu, 11 May 2006 16:46:25 +0100
+Message-ID: <1147362385.26130.42.camel@localhost.localdomain>
+References: <11473536881889-git-send-email-htejun@gmail.com>
+	 <1147357322.26130.17.camel@localhost.localdomain>
+	 <44634CB6.80804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.239]:65348 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030260AbWEKPcT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:32:19 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so392284wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:32:19 -0700 (PDT)
-In-Reply-To: <11473615261297-git-send-email-htejun@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:23506 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1030264AbWEKPe5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:34:57 -0400
+In-Reply-To: <44634CB6.80804@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-Hook transportt->user_scan() and hostt->slave_destroy().
+On Iau, 2006-05-11 at 23:39 +0900, Tejun Heo wrote:
+> I'm not sure what you mean by synchronization.  But, freezing is indeed
+>  for shutting the chip up.  If the port is frozen, EH doesn't touch
+> active qcs nor tries to issue new command.  The port is thawed/used only
+> after the port & device are put into known good state via successful
+> reset.  Is this what you're talking about?
 
----
+Sort of. I wanted to point out that this can occur
 
- drivers/scsi/ahci.c         |    1 +
- drivers/scsi/ata_piix.c     |    1 +
- drivers/scsi/libata-scsi.c  |    1 +
- drivers/scsi/pdc_adma.c     |    1 +
- drivers/scsi/sata_mv.c      |    1 +
- drivers/scsi/sata_nv.c      |    1 +
- drivers/scsi/sata_promise.c |    1 +
- drivers/scsi/sata_qstor.c   |    1 +
- drivers/scsi/sata_sil.c     |    1 +
- drivers/scsi/sata_sil24.c   |    1 +
- drivers/scsi/sata_sis.c     |    1 +
- drivers/scsi/sata_svw.c     |    1 +
- drivers/scsi/sata_sx4.c     |    1 +
- drivers/scsi/sata_uli.c     |    1 +
- drivers/scsi/sata_via.c     |    1 +
- drivers/scsi/sata_vsc.c     |    1 +
- 16 files changed, 16 insertions(+), 0 deletions(-)
+	IRQ is issued on chip
 
-8da7e7f1680dbf6de49b2d7cdbc2f0d0b02c2608
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index f7b550a..a3189ea 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -226,6 +226,7 @@ static struct scsi_host_template ahci_sh
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= AHCI_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index e3184a7..f2d71e7 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -218,6 +218,7 @@ static struct scsi_host_template piix_sh
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- 	.resume			= ata_scsi_device_resume,
- 	.suspend		= ata_scsi_device_suspend,
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 0afcf28..f5ded5b 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -107,6 +107,7 @@ static const u8 def_control_mpage[CONTRO
- struct scsi_transport_template ata_scsi_transport_template = {
- 	.eh_strategy_handler	= ata_scsi_error,
- 	.eh_timed_out		= ata_scsi_timed_out,
-+	.user_scan		= ata_scsi_user_scan,
- };
- 
- 
-diff --git a/drivers/scsi/pdc_adma.c b/drivers/scsi/pdc_adma.c
-index a341fa8..eb910e4 100644
---- a/drivers/scsi/pdc_adma.c
-+++ b/drivers/scsi/pdc_adma.c
-@@ -152,6 +152,7 @@ static struct scsi_host_template adma_at
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ADMA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
-index 56105a1..4e6388f 100644
---- a/drivers/scsi/sata_mv.c
-+++ b/drivers/scsi/sata_mv.c
-@@ -387,6 +387,7 @@ static struct scsi_host_template mv_sht 
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= MV_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
-index 70c5108..2a840f5 100644
---- a/drivers/scsi/sata_nv.c
-+++ b/drivers/scsi/sata_nv.c
-@@ -210,6 +210,7 @@ static struct scsi_host_template nv_sht 
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
-index bb00043..9c70018 100644
---- a/drivers/scsi/sata_promise.c
-+++ b/drivers/scsi/sata_promise.c
-@@ -121,6 +121,7 @@ static struct scsi_host_template pdc_ata
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
-index 54283e0..3fc1003 100644
---- a/drivers/scsi/sata_qstor.c
-+++ b/drivers/scsi/sata_qstor.c
-@@ -142,6 +142,7 @@ static struct scsi_host_template qs_ata_
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= QS_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index 94fdbf0..5f7867c 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -174,6 +174,7 @@ static struct scsi_host_template sil_sht
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index ef41d5f..8a1b826 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -367,6 +367,7 @@ static struct scsi_host_template sil24_s
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
-index 3097821..8297335 100644
---- a/drivers/scsi/sata_sis.c
-+++ b/drivers/scsi/sata_sis.c
-@@ -96,6 +96,7 @@ static struct scsi_host_template sis_sht
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
-index d5eb537..b2fe0bc 100644
---- a/drivers/scsi/sata_svw.c
-+++ b/drivers/scsi/sata_svw.c
-@@ -299,6 +299,7 @@ static struct scsi_host_template k2_sata
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- #ifdef CONFIG_PPC_OF
- 	.proc_info		= k2_sata_proc_info,
- #endif
-diff --git a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
-index 70a6954..fb69fc2 100644
---- a/drivers/scsi/sata_sx4.c
-+++ b/drivers/scsi/sata_sx4.c
-@@ -191,6 +191,7 @@ static struct scsi_host_template pdc_sat
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
-index 15f81bf..4b4094f 100644
---- a/drivers/scsi/sata_uli.c
-+++ b/drivers/scsi/sata_uli.c
-@@ -90,6 +90,7 @@ static struct scsi_host_template uli_sht
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_via.c b/drivers/scsi/sata_via.c
-index 17aefab..6e3effe 100644
---- a/drivers/scsi/sata_via.c
-+++ b/drivers/scsi/sata_via.c
-@@ -103,6 +103,7 @@ static struct scsi_host_template svia_sh
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
-diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
-index 0372be7..d51c8d6 100644
---- a/drivers/scsi/sata_vsc.c
-+++ b/drivers/scsi/sata_vsc.c
-@@ -279,6 +279,7 @@ static struct scsi_host_template vsc_sat
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
- 
--- 
-1.2.4
+	->freeze
+	returns
 
+	->intr finally arrives and is serviced
+
+Alan
 
