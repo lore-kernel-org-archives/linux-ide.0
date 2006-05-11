@@ -1,90 +1,85 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/11] libata-eh-fw: add flags and operations for new EH
-Date: Thu, 11 May 2006 21:27:23 +0900
-Message-ID: <11473504432606-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/11] libata-eh-fw: implement new EH scheduling from PIO
+Date: Thu, 11 May 2006 21:27:24 +0900
+Message-ID: <1147350444826-git-send-email-htejun@gmail.com>
 References: <11473504433328-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.197]:56748 "EHLO
+Received: from nz-out-0102.google.com ([64.233.162.199]:29322 "EHLO
 	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751641AbWEKM1a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 08:27:30 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so175445nzn
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 05:27:29 -0700 (PDT)
+	id S1751650AbWEKM1e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 08:27:34 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so175443nzn
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 05:27:33 -0700 (PDT)
 In-Reply-To: <11473504433328-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add ATA_FLAG_EH_{PENDING|FROZEN}, ATA_ATA_QCFLAG_{FAILED|SENSE_VALID}
-and ops->freeze, thaw, error_handler, post_internal_cmd() for new EH.
+PIO executes without holding host_set lock, so it cannot be
+synchronized using the same mechanism as interrupt driven execution.
+port_task framework makes sure that EH is not entered until PIO task
+is flushed, so PIO task can be sure the qc in progress won't go away
+underneath it.  One thing it cannot be sure of is whether the qc has
+already been scheduled for EH by another exception condition while
+host_set lock was released.
+
+This patch makes ata_poll_qc-complete() handle such conditions
+properly and make it freeze the port if HSM violation is detected
+during PIO execution.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- include/linux/libata.h |   27 ++++++++++++++++++++-------
- 1 files changed, 20 insertions(+), 7 deletions(-)
+ drivers/scsi/libata-core.c |   23 +++++++++++++++++++----
+ 1 files changed, 19 insertions(+), 4 deletions(-)
 
-7adb784b36e6b4302540a3edb58cddb3ba0a4b83
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 7b54d92..302df2d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -146,13 +146,16 @@ enum {
- 	ATA_FLAG_PIO_LBA48	= (1 << 8), /* Host DMA engine is LBA28 only */
- 	ATA_FLAG_IRQ_MASK	= (1 << 9), /* Mask IRQ in PIO xfers */
+52240d1d208615e461c41a5c297f521a8a892f0d
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 436ff5b..86d6a7d 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -3429,16 +3429,31 @@ skip_map:
+  *	LOCKING:
+  *	None.  (grabs host lock)
+  */
+-
+ void ata_poll_qc_complete(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	unsigned long flags;
  
--	ATA_FLAG_NOINTR		= (1 << 16), /* FIXME: Remove this once
-+	ATA_FLAG_NOINTR		= (1 << 13), /* FIXME: Remove this once
- 					      * proper HSM is in place. */
--	ATA_FLAG_DEBUGMSG	= (1 << 17),
--	ATA_FLAG_FLUSH_PORT_TASK = (1 << 18), /* flush port task */
-+	ATA_FLAG_DEBUGMSG	= (1 << 14),
-+	ATA_FLAG_FLUSH_PORT_TASK = (1 << 15), /* flush port task */
- 
--	ATA_FLAG_DISABLED	= (1 << 19), /* port is disabled, ignore it */
--	ATA_FLAG_SUSPENDED	= (1 << 20), /* port is suspended */
-+	ATA_FLAG_EH_PENDING	= (1 << 16), /* EH pending */
-+	ATA_FLAG_FROZEN		= (1 << 17), /* port is frozen */
+ 	spin_lock_irqsave(&ap->host_set->lock, flags);
+-	ap->flags &= ~ATA_FLAG_NOINTR;
+-	ata_irq_on(ap);
+-	ata_qc_complete(qc);
 +
-+	ATA_FLAG_DISABLED	= (1 << 22), /* port is disabled, ignore it */
-+	ATA_FLAG_SUSPENDED	= (1 << 23), /* port is suspended (power) */
- 
- 	/* bits 24:31 of ap->flags are reserved for LLDD specific flags */
- 
-@@ -164,7 +167,9 @@ enum {
- 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
- 	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
- 
--	ATA_QCFLAG_EH_SCHEDULED = (1 << 16), /* EH scheduled */
-+	ATA_QCFLAG_FAILED	= (1 << 16), /* cmd failed and is owned by EH */
-+	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
-+	ATA_QCFLAG_EH_SCHEDULED = (1 << 18), /* EH scheduled (obsolete) */
- 
- 	/* host set flags */
- 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host_set only */
-@@ -463,7 +468,15 @@ struct ata_port_operations {
- 	void (*qc_prep) (struct ata_queued_cmd *qc);
- 	unsigned int (*qc_issue) (struct ata_queued_cmd *qc);
- 
--	void (*eng_timeout) (struct ata_port *ap);
-+	/* Error handlers.  ->error_handler overrides ->eng_timeout and
-+	 * indicates that new-style EH is in place.
-+	 */
-+	void (*eng_timeout) (struct ata_port *ap); /* obsolete */
++	if (ap->ops->error_handler) {
++		/* EH might have kicked in while host_set lock is released */
++		qc = ata_qc_from_tag(ap, qc->tag);
++		if (qc) {
++			if (!(qc->err_mask & AC_ERR_HSM)) {
++				ap->flags &= ~ATA_FLAG_NOINTR;
++				ata_irq_on(ap);
++				ata_qc_complete(qc);
++			} else
++				ata_port_freeze(ap);
++		}
++	} else {
++		/* old EH */
++		ap->flags &= ~ATA_FLAG_NOINTR;
++		ata_irq_on(ap);
++		ata_qc_complete(qc);
++	}
 +
-+	void (*freeze) (struct ata_port *ap);
-+	void (*thaw) (struct ata_port *ap);
-+	void (*error_handler) (struct ata_port *ap);
-+	void (*post_internal_cmd) (struct ata_queued_cmd *qc);
+ 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ }
  
- 	irqreturn_t (*irq_handler)(int, void *, struct pt_regs *);
- 	void (*irq_clear) (struct ata_port *);
 -- 
 1.2.4
 
