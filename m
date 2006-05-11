@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/6] sata_sil: add new constants in preparation for new interrupt handler
+Subject: [PATCH 4/6] sata_sil24: rename PORT_PRB to PORT_LRAM and add PORT_LRAM_SLOT_SZ
 Date: Fri, 12 May 2006 00:14:58 +0900
-Message-ID: <1147360498195-git-send-email-htejun@gmail.com>
+Message-ID: <11473604982139-git-send-email-htejun@gmail.com>
 References: <11473604983883-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:50952 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.181]:46344 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1030246AbWEKPPE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1030248AbWEKPPE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 11 May 2006 11:15:04 -0400
-Received: by py-out-1112.google.com with SMTP id f28so280895pyf
+Received: by py-out-1112.google.com with SMTP id f28so280898pyf
         for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:15:04 -0700 (PDT)
 In-Reply-To: <11473604983883-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,71 +20,39 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-sata_sil is about to get a brand new interrupt handler.  Add relevant
-constants.
+PORT_PRB is a misnomer as the area also contains other stuff.  Rename
+it to PORT_LRAM and add PORT_LRAM_SLOT_SZ.
 
 ---
 
- drivers/scsi/sata_sil.c |   24 ++++++++++++++++++++----
- 1 files changed, 20 insertions(+), 4 deletions(-)
+ drivers/scsi/sata_sil24.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-3d5ca9ae81dfd7cc0220feb7da6b148dad866c0e
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index 3e998b7..1c0a751 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -54,6 +54,7 @@ enum {
+7b6eafd6c25c22b66aa7dd610099569596606a1c
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 4747047..629679e 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -98,7 +98,9 @@ enum {
+ 	 * (8192 bytes @ +0x0000, +0x2000, +0x4000 and +0x6000 @ BAR2)
  	 */
- 	SIL_FLAG_RERR_ON_DMA_ACT = (1 << 29),
- 	SIL_FLAG_MOD15WRITE	= (1 << 30),
+ 	PORT_REGS_SIZE		= 0x2000,
+-	PORT_PRB		= 0x0000, /* (32 bytes PRB + 16 bytes SGEs * 6) * 31 (3968 bytes) */
 +
- 	SIL_DFL_HOST_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO,
++	PORT_LRAM		= 0x0000, /* 31 LRAM slots and PM regs */
++	PORT_LRAM_SLOT_SZ	= 0x0080, /* 32 bytes PRB + 2 SGE, ACT... */
  
-@@ -84,6 +85,20 @@ enum {
- 	/* BMDMA/BMDMA2 */
- 	SIL_INTR_STEERING	= (1 << 1),
+ 	PORT_PM			= 0x0f80, /* 8 bytes PM * 16 (128 bytes) */
+ 		/* 32 bit regs */
+@@ -1103,7 +1105,7 @@ static int sil24_init_one(struct pci_dev
+ 		void __iomem *port = port_base + i * PORT_REGS_SIZE;
+ 		unsigned long portu = (unsigned long)port;
  
-+	SIL_DMA_ENABLE		= (1 << 0),  /* DMA run switch */
-+	SIL_DMA_RDWR		= (1 << 3),  /* DMA Rd-Wr */
-+	SIL_DMA_SATA_IRQ	= (1 << 4),  /* OR of all SATA IRQs */
-+	SIL_DMA_ACTIVE		= (1 << 16), /* DMA running */
-+	SIL_DMA_ERROR		= (1 << 17), /* PCI bus error */
-+	SIL_DMA_COMPLETE	= (1 << 18), /* cmd complete / IRQ pending */
-+	SIL_DMA_N_SATA_IRQ	= (1 << 6),  /* SATA_IRQ for the next channel */
-+	SIL_DMA_N_ACTIVE	= (1 << 24), /* ACTIVE for the next channel */
-+	SIL_DMA_N_ERROR		= (1 << 25), /* ERROR for the next channel */
-+	SIL_DMA_N_COMPLETE	= (1 << 26), /* COMPLETE for the next channel */
-+
-+	/* SIEN */
-+	SIL_SIEN_N		= (1 << 16), /* triggered by SError.N */
-+
- 	/*
- 	 * Others
- 	 */
-@@ -225,6 +240,7 @@ static const struct {
- 	unsigned long tf;	/* ATA taskfile register block */
- 	unsigned long ctl;	/* ATA control/altstatus register block */
- 	unsigned long bmdma;	/* DMA register block */
-+	unsigned long bmdma2;	/* DMA register block #2 */
- 	unsigned long fifo_cfg;	/* FIFO Valid Byte Count and Control */
- 	unsigned long scr;	/* SATA control register block */
- 	unsigned long sien;	/* SATA Interrupt Enable register */
-@@ -232,10 +248,10 @@ static const struct {
- 	unsigned long sfis_cfg;	/* SATA FIS reception config register */
- } sil_port[] = {
- 	/* port 0 ... */
--	{ 0x80, 0x8A, 0x00, 0x40, 0x100, 0x148, 0xb4, 0x14c },
--	{ 0xC0, 0xCA, 0x08, 0x44, 0x180, 0x1c8, 0xf4, 0x1cc },
--	{ 0x280, 0x28A, 0x200, 0x240, 0x300, 0x348, 0x2b4, 0x34c },
--	{ 0x2C0, 0x2CA, 0x208, 0x244, 0x380, 0x3c8, 0x2f4, 0x3cc },
-+	{ 0x80, 0x8A, 0x00, 0x10, 0x40, 0x100, 0x148, 0xb4, 0x14c },
-+	{ 0xC0, 0xCA, 0x08, 0x18, 0x44, 0x180, 0x1c8, 0xf4, 0x1cc },
-+	{ 0x280, 0x28A, 0x200, 0x210, 0x240, 0x300, 0x348, 0x2b4, 0x34c },
-+	{ 0x2C0, 0x2CA, 0x208, 0x218, 0x244, 0x380, 0x3c8, 0x2f4, 0x3cc },
- 	/* ... port 3 */
- };
+-		probe_ent->port[i].cmd_addr = portu + PORT_PRB;
++		probe_ent->port[i].cmd_addr = portu;
+ 		probe_ent->port[i].scr_addr = portu + PORT_SCONTROL;
  
+ 		ata_std_ports(&probe_ent->port[i]);
 -- 
 1.2.4
 
