@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/14] libata-hp-prep: update ata_scsi_find_dev() and friends
-Date: Fri, 12 May 2006 00:02:34 +0900
-Message-ID: <1147359754709-git-send-email-htejun@gmail.com>
+Subject: [PATCH 09/14] libata-hp-prep: make probing related functions global
+Date: Fri, 12 May 2006 00:02:35 +0900
+Message-ID: <11473597551374-git-send-email-htejun@gmail.com>
 References: <11473597542442-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -10,97 +10,64 @@ Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from nz-out-0102.google.com ([64.233.162.203]:37318 "EHLO
 	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751825AbWEKPCl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:02:41 -0400
+	id S1751829AbWEKPCp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:02:45 -0400
 Received: by nz-out-0102.google.com with SMTP id 13so222099nzn
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:41 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:45 -0700 (PDT)
 In-Reply-To: <11473597542442-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out ata_find_dev() and __ata_scsi_find_dev() from
-ata_scsi_find_dev().  ata_find_dev() checks ATA_FLAG_SLAVE_POSS for
-id==1 case, so all three functions return NULL if id==1 is specified
-for !SLAVE_POSS port.  These will be used by later hotplug
-implementation.
+Hotplug will be implemented in libata-eh.c.  Make ata_dev_read_id()
+and ata_dev_configure() global.
 
 ---
 
- drivers/scsi/libata-scsi.c |   40 +++++++++++++++++++++++++---------------
- 1 files changed, 25 insertions(+), 15 deletions(-)
+ drivers/scsi/libata-core.c |    6 +++---
+ drivers/scsi/libata.h      |    3 +++
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-9ac5a3ff896cfe11b51d5e781f2b4e2137b10142
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 996058a..bb40309 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -52,8 +52,12 @@
- #define SECTOR_SIZE	512
- 
- typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc, const u8 *scsicmd);
--static struct ata_device *
--ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev);
-+
-+static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
-+					const struct scsi_device *scsidev);
-+static struct ata_device * ata_scsi_find_dev(struct ata_port *ap,
-+					    const struct scsi_device *scsidev);
-+
- 
- #define RW_RECOVERY_MPAGE 0x1
- #define RW_RECOVERY_MPAGE_LEN 12
-@@ -2308,6 +2312,23 @@ static unsigned int atapi_xlat(struct at
- 	return 0;
- }
- 
-+static struct ata_device * ata_find_dev(struct ata_port *ap, int id)
-+{
-+	if (likely(id == 0 || (id == 1 && ap->flags & ATA_FLAG_SLAVE_POSS)))
-+		return &ap->device[id];
-+	return NULL;
-+}
-+
-+static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
-+					const struct scsi_device *scsidev)
-+{
-+	/* skip commands not addressed to targets we simulate */
-+	if (unlikely(scsidev->channel || scsidev->lun))
-+		return NULL;
-+
-+	return ata_find_dev(ap, scsidev->id);
-+}
-+
- /**
-  *	ata_scsi_find_dev - lookup ata_device from scsi_cmnd
-  *	@ap: ATA port to which the device is attached
-@@ -2324,23 +2345,12 @@ static unsigned int atapi_xlat(struct at
+8d89cdee6d673f4e1915b3ec587dafec44456942
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 1f587aa..1861373 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1164,8 +1164,8 @@ unsigned int ata_pio_need_iordy(const st
   *	RETURNS:
-  *	Associated ATA device, or %NULL if not found.
+  *	0 on success, -errno otherwise.
   */
--
- static struct ata_device *
- ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev)
+-static int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+-			   int post_reset, u16 *id)
++int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
++		    int post_reset, u16 *id)
  {
--	struct ata_device *dev;
--
--	/* skip commands not addressed to targets we simulate */
--	if (likely(scsidev->id < ATA_MAX_DEVICES))
--		dev = &ap->device[scsidev->id];
--	else
--		return NULL;
--
--	if (unlikely((scsidev->channel != 0) ||
--		     (scsidev->lun != 0)))
--		return NULL;
-+	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
- 
--	if (unlikely(!ata_dev_enabled(dev)))
-+	if (unlikely(!dev || !ata_dev_enabled(dev)))
- 		return NULL;
- 
- 	if (!atapi_enabled || (ap->flags & ATA_FLAG_NO_ATAPI)) {
+ 	struct ata_port *ap = dev->ap;
+ 	unsigned int class = *p_class;
+@@ -1289,7 +1289,7 @@ static void ata_dev_config_ncq(struct at
+  *	RETURNS:
+  *	0 on success, -errno otherwise
+  */
+-static int ata_dev_configure(struct ata_device *dev, int print_info)
++int ata_dev_configure(struct ata_device *dev, int print_info)
+ {
+ 	struct ata_port *ap = dev->ap;
+ 	const u16 *id = dev->id;
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index ff50442..24dd534 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -50,6 +50,9 @@ extern void ata_port_flush_task(struct a
+ extern unsigned ata_exec_internal(struct ata_device *dev,
+ 				  struct ata_taskfile *tf, const u8 *cdb,
+ 				  int dma_dir, void *buf, unsigned int buflen);
++extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
++			   int post_reset, u16 *id);
++extern int ata_dev_configure(struct ata_device *dev, int print_info);
+ extern int ata_down_sata_spd_limit(struct ata_port *ap);
+ extern int ata_set_sata_spd_needed(struct ata_port *ap);
+ extern int ata_down_xfermask_limit(struct ata_device *dev, int force_pio0);
 -- 
 1.2.4
 
