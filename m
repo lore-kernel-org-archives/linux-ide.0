@@ -1,59 +1,59 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 4/6] sata_sil24: rename PORT_PRB to PORT_LRAM and add PORT_LRAM_SLOT_SZ
+Subject: [PATCHSET 07/11] prep LLDDs for hotplug support, take 1 (REPOST)
 Date: Fri, 12 May 2006 00:14:58 +0900
-Message-ID: <11473604982139-git-send-email-htejun@gmail.com>
-References: <11473604983883-git-send-email-htejun@gmail.com>
+Message-ID: <11473604983883-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:46344 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1030248AbWEKPPE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from wr-out-0506.google.com ([64.233.184.227]:62512 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1030245AbWEKPPE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 11 May 2006 11:15:04 -0400
-Received: by py-out-1112.google.com with SMTP id f28so280898pyf
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:15:04 -0700 (PDT)
-In-Reply-To: <11473604983883-git-send-email-htejun@gmail.com>
+Received: by wr-out-0506.google.com with SMTP id i12so388403wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:15:03 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-PORT_PRB is a misnomer as the area also contains other stuff.  Rename
-it to PORT_LRAM and add PORT_LRAM_SLOT_SZ.
+Hairu.
 
----
+This is part of patchset series described in [T].
 
- drivers/scsi/sata_sil24.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+This is the first take of prep-LLDDs-for-hotplug-support patchset.
+Some of patches in this patchset are from the first take of
+add-hotplug-support patchset.
 
-7b6eafd6c25c22b66aa7dd610099569596606a1c
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 4747047..629679e 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -98,7 +98,9 @@ enum {
- 	 * (8192 bytes @ +0x0000, +0x2000, +0x4000 and +0x6000 @ BAR2)
- 	 */
- 	PORT_REGS_SIZE		= 0x2000,
--	PORT_PRB		= 0x0000, /* (32 bytes PRB + 16 bytes SGEs * 6) * 31 (3968 bytes) */
-+
-+	PORT_LRAM		= 0x0000, /* 31 LRAM slots and PM regs */
-+	PORT_LRAM_SLOT_SZ	= 0x0080, /* 32 bytes PRB + 2 SGE, ACT... */
- 
- 	PORT_PM			= 0x0f80, /* 8 bytes PM * 16 (128 bytes) */
- 		/* 32 bit regs */
-@@ -1103,7 +1105,7 @@ static int sil24_init_one(struct pci_dev
- 		void __iomem *port = port_base + i * PORT_REGS_SIZE;
- 		unsigned long portu = (unsigned long)port;
- 
--		probe_ent->port[i].cmd_addr = portu + PORT_PRB;
-+		probe_ent->port[i].cmd_addr = portu;
- 		probe_ent->port[i].scr_addr = portu + PORT_SCONTROL;
- 
- 		ata_std_ports(&probe_ent->port[i]);
--- 
-1.2.4
+Things worth noting are
+
+* Simply exporting ata_hsm_move() and calling the function with
+  appropriate status is good enough for driving HSM for LLDDs
+  implementing their own irq handlers.  sata_sil's new irq handler
+  now uses it.
+
+* TF faking is removed from sata_sil24.
+
+This patchset is against
+
+  upstream (acc696d93dcf993dec123d69d599979e1456ffec)
+  + [1] prep-for-new-EH patchset
+  + [2] new-EH-framework patchset, take 3
+  + [3] new-EH-implementation patchset, take 3
+  + [4] merge-irq-pio patchset
+  + [5] add-NCQ-support patchset, take 3
+  + [6] prep for hotplug support, take 2
+
+--
+tejun
+
+[T] http://article.gmane.org/gmane.linux.ide/9957
+[1] http://article.gmane.org/gmane.linux.ide/9959
+[2] http://article.gmane.org/gmane.linux.ide/9984
+[3] http://article.gmane.org/gmane.linux.ide/9995
+[4] http://article.gmane.org/gmane.linux.ide/10005
+[5] http://article.gmane.org/gmane.linux.ide/10011
+[6] http://article.gmane.org/gmane.linux.ide/10028
 
 
