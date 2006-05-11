@@ -1,70 +1,67 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/10] sata_sil24: separate out sil24_do_softreset()
-Date: Fri, 12 May 2006 01:43:43 +0900
-Message-ID: <1147365823906-git-send-email-htejun@gmail.com>
-References: <11473658222012-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET 11/11] implement PM support
+Date: Fri, 12 May 2006 01:43:42 +0900
+Message-ID: <11473658222012-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:21914 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.236]:17050 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030348AbWEKQnz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 12:43:55 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so408534wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:43:55 -0700 (PDT)
-In-Reply-To: <11473658222012-git-send-email-htejun@gmail.com>
+	id S1030340AbWEKQns (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 12:43:48 -0400
+Received: by wr-out-0506.google.com with SMTP id 55so370074wri
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 09:43:48 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Separate out sil24_do_softreset() which takes @pmp as its last
-argument.  This will be used to implement sil24_pm_softreset().
+Hello, all.  This is the last one, finally.
 
----
+This is part of patchset series described in [T].
 
- drivers/scsi/sata_sil24.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+This is the first take of implement-PM-support patchset.  This
+patchset contains 10 patches and implements PM support.
 
-201f4cac006ca715aafa794a2f7020cbc40086ca
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 34f2e67..75b04e2 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -562,7 +562,8 @@ static int sil24_exec_polled_cmd(struct 
- 	return rc;
- }
- 
--static int sil24_softreset(struct ata_link *link, unsigned int *class)
-+static int sil24_do_softreset(struct ata_link *link, unsigned int *class,
-+			      int pmp)
- {
- 	struct ata_port *ap = link->ap;
- 	struct ata_taskfile tf;
-@@ -585,7 +586,7 @@ static int sil24_softreset(struct ata_li
- 
- 	/* do SRST */
- 	ata_tf_init(link->device, &tf);	/* doesn't really matter */
--	rc = sil24_exec_polled_cmd(ap, PRB_CTRL_SRST, &tf, 0, 0,
-+	rc = sil24_exec_polled_cmd(ap, PRB_CTRL_SRST, &tf, pmp, 0,
- 				   ATA_TMOUT_BOOT / HZ * 1000);
- 	if (rc == -EBUSY) {
- 		reason = "timeout";
-@@ -610,6 +611,11 @@ static int sil24_softreset(struct ata_li
- 	return -EIO;
- }
- 
-+static int sil24_softreset(struct ata_link *link, unsigned int *class)
-+{
-+	return sil24_do_softreset(link, class, 0);
-+}
-+
- static int sil24_hardreset(struct ata_link *link, unsigned int *class)
- {
- 	struct ata_port *ap = link->ap;
--- 
-1.2.4
+#01-04: implement libata PM support
+#05-10: implement sata_sil24 PM support
+
+At the moment, only sata_sil24 supports PM and sil4726 is the only
+tested PM.  But expanding the supported controllers and PMs shouldn't
+be difficult once more hardwares become available.  More info can be
+found in the git tree posting [T].
+
+This patchset is against
+
+  upstream (acc696d93dcf993dec123d69d599979e1456ffec)
+  + [1] prep-for-new-EH patchset
+  + [2] new-EH-framework patchset, take 3
+  + [3] new-EH-implementation patchset, take 3
+  + [4] merge-irq-pio patchset
+  + [5] add-NCQ-support patchset, take 3
+  + [6] prep-for-hotplug support, take 2
+  + [7] prep-LLDDs-for-hotplug-support, take 1
+  + [8] add-hotplug-support, take 2
+  + [9] implement-ata_link, take 1
+  + [10] prep-for-PM-support, take 1
+
+Thanks.  Good night.
+
+--
+tejun
+
+[T] http://article.gmane.org/gmane.linux.ide/9957
+[1] http://article.gmane.org/gmane.linux.ide/9959
+[2] http://article.gmane.org/gmane.linux.ide/9984
+[3] http://article.gmane.org/gmane.linux.ide/9995
+[4] http://article.gmane.org/gmane.linux.ide/10005
+[5] http://article.gmane.org/gmane.linux.ide/10011
+[6] http://article.gmane.org/gmane.linux.ide/10028
+[7] http://article.gmane.org/gmane.linux.ide/10063
+[8] http://article.gmane.org/gmane.linux.ide/10073
+[9] http://article.gmane.org/gmane.linux.ide/10106
+[10] http://article.gmane.org/gmane.linux.ide/10112
 
 
