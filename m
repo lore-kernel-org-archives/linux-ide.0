@@ -1,58 +1,111 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/11] libata-eh-fw: clear SError in ata_std_postreset()
+Subject: [PATCH 04/11] libata-eh-fw: update ata_qc_from_tag() to enforce normal/EH qc ownership
 Date: Thu, 11 May 2006 21:27:23 +0900
-Message-ID: <1147350443202-git-send-email-htejun@gmail.com>
+Message-ID: <11473504432295-git-send-email-htejun@gmail.com>
 References: <11473504433328-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.199]:29322 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751640AbWEKM13 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 08:27:29 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so175443nzn
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 05:27:29 -0700 (PDT)
+Received: from wr-out-0506.google.com ([64.233.184.227]:62689 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751646AbWEKM1a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 08:27:30 -0400
+Received: by wr-out-0506.google.com with SMTP id i28so117281wra
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 05:27:30 -0700 (PDT)
 In-Reply-To: <11473504433328-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Clear SError in ata_std_postreset().  This is to clear SError bits
-which get set during reset.
+New EH framework has clear distinction about who owns a qc.  Every qc
+starts owned by normal execution path - PIO, interrupt or whatever.
+When an exception condition occurs which affects the qc, the qc gets
+scheduled for EH.  Note that some events (say, link lost and regained,
+command timeout) may schedule qc's which are not directly related but
+could have been affected for EH too.  Scheduling for EH is atomic
+w.r.t. ap->host_set->lock and once schedule for EH, normal execution
+path is not allowed to access the qc in whatever way.  (PIO
+synchronization acts a bit different and will be dealt with later)
+
+This patch make ata_qc_from_tag() check whether a qc is active and
+owned by normal path before returning it.  If conditions don't match,
+NULL is returned and thus access to the qc is denied.
+__ata_qc_from_tag() is the original ata_qc_from_tag() and is used by
+libata core/EH layers to access inactive/failed qc's.
+
+This change is applied only if the associated LLDD implements new EH
+as indicated by non-NULL ->error_handler
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-core.c |    4 ++--
+ include/linux/libata.h     |   19 +++++++++++++++++--
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-033e89c7ccb4ba7ae815e6b3c2b65e5b0a8e0ce4
+6d50afcc7b9166668faffbdf0b644eeadbb3ed71
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 126adef..554cf8a 100644
+index 3de1750..76df36d 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -2527,11 +2527,17 @@ int sata_std_hardreset(struct ata_port *
-  */
- void ata_std_postreset(struct ata_port *ap, unsigned int *classes)
+@@ -1001,7 +1001,7 @@ unsigned ata_exec_internal(struct ata_de
+ 
+ 	if (test_and_set_bit(tag, &ap->qactive))
+ 		BUG();
+-	qc = ata_qc_from_tag(ap, tag);
++	qc = __ata_qc_from_tag(ap, tag);
+ 
+ 	qc->tag = tag;
+ 	qc->scsicmd = NULL;
+@@ -4041,7 +4041,7 @@ static struct ata_queued_cmd *ata_qc_new
+ 	/* the last tag is reserved for internal command. */
+ 	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
+ 		if (!test_and_set_bit(i, &ap->qactive)) {
+-			qc = ata_qc_from_tag(ap, i);
++			qc = __ata_qc_from_tag(ap, i);
+ 			break;
+ 		}
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 2b384e8..3d6942a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -832,14 +832,29 @@ static inline void ata_qc_set_polling(st
+ 	qc->tf.ctl |= ATA_NIEN;
+ }
+ 
+-static inline struct ata_queued_cmd *ata_qc_from_tag (struct ata_port *ap,
+-						      unsigned int tag)
++static inline struct ata_queued_cmd *__ata_qc_from_tag(struct ata_port *ap,
++						       unsigned int tag)
  {
-+	u32 serror;
-+
- 	DPRINTK("ENTER\n");
+ 	if (likely(ata_tag_valid(tag)))
+ 		return &ap->qcmd[tag];
+ 	return NULL;
+ }
  
- 	/* print link status */
- 	sata_print_link_status(ap);
- 
-+	/* clear SError */
-+	if (ata_scr_read(ap, SCR_ERROR, &serror) == 0)
-+		ata_scr_write(ap, SCR_ERROR, serror);
++static inline struct ata_queued_cmd *ata_qc_from_tag(struct ata_port *ap,
++						     unsigned int tag)
++{
++	struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
 +
- 	/* re-enable interrupts */
- 	if (ap->ioaddr.ctl_addr)	/* FIXME: hack. create a hook instead */
- 		ata_irq_on(ap);
++	if (unlikely(!qc) || !ap->ops->error_handler)
++		return qc;
++
++	if ((qc->flags & (ATA_QCFLAG_ACTIVE |
++			  ATA_QCFLAG_FAILED)) == ATA_QCFLAG_ACTIVE)
++		return qc;
++
++	return NULL;
++}
++
+ static inline void ata_tf_init(struct ata_device *dev, struct ata_taskfile *tf)
+ {
+ 	memset(tf, 0, sizeof(*tf));
 -- 
 1.2.4
 
