@@ -1,65 +1,73 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/6] sata_sil24: use sata_phy_debounce() in sil24_hardreset()
+Subject: [PATCH 09/14] libata-hp-prep: make probing related functions global
 Date: Fri, 12 May 2006 00:11:59 +0900
-Message-ID: <11473603191112-git-send-email-htejun@gmail.com>
+Message-ID: <11473603193866-git-send-email-htejun@gmail.com>
 References: <1147360318920-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.201]:44528 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751852AbWEKPML (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:12:11 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so224767nzn
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:11 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.182]:58102 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751849AbWEKPMO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:12:14 -0400
+Received: by py-out-1112.google.com with SMTP id f28so279580pyf
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:12:13 -0700 (PDT)
 In-Reply-To: <1147360318920-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Do phy debouncing instead of unconditional wait after DEV_RST.
+Hotplug will be implemented in libata-eh.c.  Make ata_dev_read_id()
+and ata_dev_configure() global.
 
 ---
 
- drivers/scsi/sata_sil24.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/libata-core.c |    6 +++---
+ drivers/scsi/libata.h      |    3 +++
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-b8c4776dbd446dd2087689d23c1a6ca153abd293
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 629679e..72219fa 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -591,7 +591,7 @@ static int sil24_hardreset(struct ata_po
+8d89cdee6d673f4e1915b3ec587dafec44456942
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 1f587aa..1861373 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -1164,8 +1164,8 @@ unsigned int ata_pio_need_iordy(const st
+  *	RETURNS:
+  *	0 on success, -errno otherwise.
+  */
+-static int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+-			   int post_reset, u16 *id)
++int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
++		    int post_reset, u16 *id)
  {
- 	void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
- 	const char *reason;
--	int tout_msec;
-+	int tout_msec, rc;
- 	u32 tmp;
- 
- 	/* sil24 does the right thing(tm) without any protection */
-@@ -605,10 +605,15 @@ static int sil24_hardreset(struct ata_po
- 	tmp = ata_wait_register(port + PORT_CTRL_STAT,
- 				PORT_CS_DEV_RST, PORT_CS_DEV_RST, 10, tout_msec);
- 
--	/* SStatus oscillates between zero and valid status for short
--	 * duration after DEV_RST, give it time to settle.
-+	/* SStatus oscillates between zero and valid status after
-+	 * DEV_RST, debounce it.
- 	 */
--	msleep(100);
-+	rc = sata_phy_debounce(ap, ATA_DEBOUNCE_INTERVAL,
-+			       ATA_DEBOUNCE_DURATION, ATA_DEBOUNCE_TIMEOUT);
-+	if (rc) {
-+		reason = "PHY debouncing failed";
-+		goto err;
-+	}
- 
- 	if (tmp & PORT_CS_DEV_RST) {
- 		if (ata_port_offline(ap))
+ 	struct ata_port *ap = dev->ap;
+ 	unsigned int class = *p_class;
+@@ -1289,7 +1289,7 @@ static void ata_dev_config_ncq(struct at
+  *	RETURNS:
+  *	0 on success, -errno otherwise
+  */
+-static int ata_dev_configure(struct ata_device *dev, int print_info)
++int ata_dev_configure(struct ata_device *dev, int print_info)
+ {
+ 	struct ata_port *ap = dev->ap;
+ 	const u16 *id = dev->id;
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index ff50442..24dd534 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -50,6 +50,9 @@ extern void ata_port_flush_task(struct a
+ extern unsigned ata_exec_internal(struct ata_device *dev,
+ 				  struct ata_taskfile *tf, const u8 *cdb,
+ 				  int dma_dir, void *buf, unsigned int buflen);
++extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
++			   int post_reset, u16 *id);
++extern int ata_dev_configure(struct ata_device *dev, int print_info);
+ extern int ata_down_sata_spd_limit(struct ata_port *ap);
+ extern int ata_set_sata_spd_needed(struct ata_port *ap);
+ extern int ata_down_xfermask_limit(struct ata_device *dev, int force_pio0);
 -- 
 1.2.4
 
