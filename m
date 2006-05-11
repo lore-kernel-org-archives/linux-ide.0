@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 14/14] libata-hp-prep: implement followup softreset handling
+Subject: [PATCH 06/14] libata-hp-prep: implement ap->hw_sata_spd_limit
 Date: Fri, 12 May 2006 00:02:35 +0900
-Message-ID: <11473597553871-git-send-email-htejun@gmail.com>
+Message-ID: <1147359755308-git-send-email-htejun@gmail.com>
 References: <11473597542442-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:65058 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751834AbWEKPCq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from py-out-1112.google.com ([64.233.166.179]:17373 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751833AbWEKPCq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 11 May 2006 11:02:46 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so385619wra
+Received: by py-out-1112.google.com with SMTP id f28so276359pyf
         for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:46 -0700 (PDT)
 In-Reply-To: <11473597542442-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,115 +20,90 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-In some cases, hardreset must be followed by SRST.
-
-* some controllers can't classify with hardreset
-* some controllers can't wait for !BSY after hardreset (LLDD should
-  explicitly request followup softreset by returning -EAGAIN)
-* (later) PM needs SRST w/ PMP==15 to operate after hardreset
-
-To handle above cases, this patch implements follow-up softreset.
-After a hardreset, ata_eh_reset() checks whether any of above
-conditions are met and do a follow-up softreset if necessary.
+Add ap->hw_sata_spd_limit and initialize it once during the boot
+initialization (or driver load initialization).  ap->sata_spd_limit is
+reset to ap->hw_sata_spd_limit on hotplug.  This prevents limits
+introduced by earlier devices from affecting new devices.
 
 ---
 
- drivers/scsi/libata-eh.c |   58 +++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 52 insertions(+), 6 deletions(-)
+ drivers/scsi/libata-core.c |   21 ++++++++++++---------
+ include/linux/libata.h     |    1 +
+ 2 files changed, 13 insertions(+), 9 deletions(-)
 
-413da5b8b08f955db5665d06a497ab7170469363
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index ee046c1..9dfaa66 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1284,16 +1284,28 @@ static void ata_eh_report(struct ata_por
- 	}
- }
- 
--static int ata_eh_reset(struct ata_port *ap,
-+static int ata_eh_followup_srst_needed(int rc, int classify,
-+				       const unsigned int *classes)
-+{
-+	if (rc == -EAGAIN)
-+		return 1;
-+	if (rc != 0)
-+		return 0;
-+	if (classify && classes[0] == ATA_DEV_UNKNOWN)
-+		return 1;
-+	return 0;
-+}
-+
-+static int ata_eh_reset(struct ata_port *ap, int classify,
- 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
- 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
+658f9435c1ea00f1222bc0090b4bffe41111604f
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 6accef3..6da1005 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2456,17 +2456,9 @@ static int sata_phy_resume(struct ata_po
+  */
+ void ata_std_probeinit(struct ata_port *ap)
  {
- 	struct ata_eh_context *ehc = &ap->eh_context;
--	unsigned int classes[ATA_MAX_DEVICES];
-+	unsigned int *classes = ehc->classes;
- 	int tries = ATA_EH_RESET_TRIES;
- 	unsigned int action;
- 	ata_reset_fn_t reset;
--	int i, rc;
-+	int i, did_followup_srst, rc;
+-	u32 scontrol;
+-
+ 	/* resume link */
+ 	sata_phy_resume(ap);
  
- 	/* Determine which reset to use and record in ehc->i.action.
- 	 * prereset() may examine it to determine what kind of
-@@ -1339,10 +1351,44 @@ static int ata_eh_reset(struct ata_port 
+-	/* init sata_spd_limit to the current value */
+-	if (ata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
+-		int spd = (scontrol >> 4) & 0xf;
+-		ap->sata_spd_limit &= (1 << spd) - 1;
+-	}
+-
+ 	/* wait for device */
+ 	if (ata_port_online(ap))
+ 		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
+@@ -5121,6 +5113,9 @@ void ata_dev_init(struct ata_device *dev
+ 	struct ata_port *ap = dev->ap;
+ 	unsigned long flags;
  
- 	rc = ata_do_reset(ap, reset, classes);
- 
-+	did_followup_srst = 0;
-+	if (reset == hardreset &&
-+	    ata_eh_followup_srst_needed(rc, classify, classes)) {
-+		/* okay, let's do follow-up softreset */
-+		did_followup_srst = 1;
-+		reset = softreset;
++	/* SATA spd limit is bound to the first device */
++	ap->sata_spd_limit = ap->hw_sata_spd_limit;
 +
-+		if (!reset) {
-+			ata_port_printk(ap, KERN_ERR,
-+					"follow-up softreset required "
-+					"but no softreset avaliable\n");
-+			return -EINVAL;
+ 	/* High bits of dev->flags are used to record warm plug
+ 	 * requests which occur asynchronously.  Synchronize using
+ 	 * host_set lock.
+@@ -5177,7 +5172,7 @@ static void ata_host_init(struct ata_por
+ 	ap->udma_mask = ent->udma_mask;
+ 	ap->flags |= ent->host_flags;
+ 	ap->ops = ent->port_ops;
+-	ap->sata_spd_limit = UINT_MAX;
++	ap->hw_sata_spd_limit = UINT_MAX;
+ 	ap->active_tag = ATA_TAG_POISON;
+ 	ap->last_ctl = 0xFF;
+ 
+@@ -5340,10 +5335,18 @@ int ata_device_add(const struct ata_prob
+ 	DPRINTK("probe begin\n");
+ 	for (i = 0; i < count; i++) {
+ 		struct ata_port *ap;
++		u32 scontrol;
+ 		int rc;
+ 
+ 		ap = host_set->ports[i];
+ 
++		/* init sata_spd_limit to the current value */
++		if (ata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
++			int spd = (scontrol >> 4) & 0xf;
++			ap->hw_sata_spd_limit &= (1 << spd) - 1;
 +		}
++		ap->sata_spd_limit = ap->hw_sata_spd_limit;
 +
-+		ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
-+		rc = ata_do_reset(ap, reset, classes);
-+
-+		if (rc == 0 && classify &&
-+		    classes[0] == ATA_DEV_UNKNOWN) {
-+			ata_port_printk(ap, KERN_ERR,
-+					"classification failed\n");
-+			return -EINVAL;
-+		}
-+	}
-+
- 	if (rc && --tries) {
-+		const char *type;
-+
-+		if (reset == softreset) {
-+			if (did_followup_srst)
-+				type = "follow-up soft";
-+			else
-+				type = "soft";
-+		} else
-+			type = "hard";
-+
- 		ata_port_printk(ap, KERN_WARNING,
--				"%sreset failed, retrying in 5 secs\n",
--				reset == softreset ? "soft" : "hard");
-+				"%sreset failed, retrying in 5 secs\n", type);
- 		ssleep(5);
+ 		DPRINTK("ata%u: bus probe begin\n", ap->id);
+ 		rc = ata_bus_probe(ap);
+ 		DPRINTK("ata%u: bus probe end\n", ap->id);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 99a78cf..6ab988a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -480,6 +480,7 @@ struct ata_port {
+ 	unsigned int		mwdma_mask;
+ 	unsigned int		udma_mask;
+ 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
++	unsigned int		hw_sata_spd_limit;
+ 	unsigned int		sata_spd_limit;	/* SATA PHY speed limit */
  
- 		if (reset == hardreset)
-@@ -1460,7 +1506,7 @@ static int ata_eh_recover(struct ata_por
- 	if (ehc->i.action & ATA_EH_RESET_MASK) {
- 		ata_eh_freeze_port(ap);
- 
--		rc = ata_eh_reset(ap, prereset, softreset, hardreset,
-+		rc = ata_eh_reset(ap, 0, prereset, softreset, hardreset,
- 				  postreset);
- 		if (rc) {
- 			ata_port_printk(ap, KERN_ERR,
+ 	/* record runtime error info, protected by host_set lock */
 -- 
 1.2.4
 
