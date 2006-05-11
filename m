@@ -1,33 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: ata_piix resume from S3 on T43P failed
-Date: Thu, 11 May 2006 19:39:02 +0900
-Message-ID: <44631446.1060401@gmail.com>
-References: <1147334740.7273.38.camel@forrest26.sh.intel.com>	 <4462F667.3060504@gmail.com>  <4462F767.5070003@gmail.com> <1147340790.7273.47.camel@forrest26.sh.intel.com>
+Date: Thu, 11 May 2006 12:55:55 +0200
+Message-ID: <20060511105555.GK4157@suse.de>
+References: <1147334740.7273.38.camel@forrest26.sh.intel.com> <4462F667.3060504@gmail.com> <4462F767.5070003@gmail.com> <1147340790.7273.47.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:8316 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030219AbWEKKjH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 06:39:07 -0400
-Received: by wr-out-0506.google.com with SMTP id i28so101132wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 03:39:07 -0700 (PDT)
+Received: from ns.virtualhost.dk ([195.184.98.160]:4199 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1030206AbWEKKz3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 May 2006 06:55:29 -0400
+Content-Disposition: inline
 In-Reply-To: <1147340790.7273.47.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-zhao, forrest wrote:
+On Thu, May 11 2006, zhao, forrest wrote:
 > On Thu, 2006-05-11 at 17:35 +0900, Tejun Heo wrote:
->> Tejun Heo wrote:
->> Oops, you were talking about ata_piix and I answered about ahci.  Sorry
->> about that.  :(
->>
->> Can you please post dmesg w/ ATA_DEBUG turne on?  I might have screwed
->> up while updating suspend/resume functions.
->>
+> > Tejun Heo wrote:
+> > Oops, you were talking about ata_piix and I answered about ahci.  Sorry
+> > about that.  :(
+> > 
+> > Can you please post dmesg w/ ATA_DEBUG turne on?  I might have screwed
+> > up while updating suspend/resume functions.
+> > 
 > 
 > Tejun,
 > 
@@ -36,12 +33,10 @@ zhao, forrest wrote:
 > -bash: /bin/dmesg: Input/output error
 > 
 > Is there any other way to collect the log?
-> 
 
-Ahh.... right.  Unfortunately, I don't have much experience with
-suspending/resuming and don't really know what to do.  Can you try the
-current #upstream and see how that works?  So that we can see whether
-the EH changes caused the problem?
+run dmesg prior to suspending, then it'll be cached and can be run after
+resume even if the disk doesn't want to talk to you.
 
 -- 
-tejun
+Jens Axboe
+
