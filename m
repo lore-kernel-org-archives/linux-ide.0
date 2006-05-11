@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/14] libata-hp-prep: use __ata_scsi_find_dev()
+Subject: [PATCH 12/14] libata-hp-prep: implement ata_noop_check_status()
 Date: Fri, 12 May 2006 00:02:35 +0900
-Message-ID: <11473597551812-git-send-email-htejun@gmail.com>
+Message-ID: <11473597551321-git-send-email-htejun@gmail.com>
 References: <11473597542442-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:8739 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751832AbWEKPCq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:02:46 -0400
-Received: by wr-out-0506.google.com with SMTP id i22so158150wra
+Received: from py-out-1112.google.com ([64.233.166.176]:12253 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751827AbWEKPCp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:02:45 -0400
+Received: by py-out-1112.google.com with SMTP id f28so276315pyf
         for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:02:45 -0700 (PDT)
 In-Reply-To: <11473597542442-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,60 +20,73 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Convert direct sdev -> dev lookup to __ata_scsi_find_dev().
+As with ops->tf_read, ops->check_status() and ops->check_altstatus()
+don't make sense for controllers without single TF image.  As
+->check_status() and ->check_altstatus() are deeply integrated into
+libata core layer, implement ata_noop_check_status() as a temporary
+measure.  This function always returns ATA_DRDY without doing
+anything.
+
+In the long term, these IO ops should be made optional and removed
+from top level ata_port_operations such that driver implementing
+high-level behavior don't have to bother with these.
 
 ---
 
- drivers/scsi/libata-scsi.c |   16 ++++++----------
- 1 files changed, 6 insertions(+), 10 deletions(-)
+ drivers/scsi/libata-core.c |   19 +++++++++++++++++++
+ include/linux/libata.h     |    1 +
+ 2 files changed, 20 insertions(+), 0 deletions(-)
 
-3a5723bc1fbb5f4869b6dd5598cbeed7cb58f1e2
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index bb40309..0316bc1 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -399,7 +399,7 @@ void ata_dump_status(unsigned id, struct
- int ata_scsi_device_resume(struct scsi_device *sdev)
- {
- 	struct ata_port *ap = ata_shost_to_port(sdev->host);
--	struct ata_device *dev = &ap->device[sdev->id];
-+	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
- 
- 	return ata_device_resume(dev);
+f404e622e1961647f77ef0d4bf7869e1e1dec70c
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 6d86479..2500854 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -702,6 +702,24 @@ static u64 ata_id_n_sectors(const u16 *i
  }
-@@ -407,7 +407,7 @@ int ata_scsi_device_resume(struct scsi_d
- int ata_scsi_device_suspend(struct scsi_device *sdev, pm_message_t state)
- {
- 	struct ata_port *ap = ata_shost_to_port(sdev->host);
--	struct ata_device *dev = &ap->device[sdev->id];
-+	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
  
- 	return ata_device_suspend(dev, state);
- }
-@@ -713,19 +713,15 @@ static void ata_scsi_dev_config(struct s
- 
- int ata_scsi_slave_config(struct scsi_device *sdev)
- {
-+	struct ata_port *ap = ata_shost_to_port(sdev->host);
-+	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
+ /**
++ *	ata_noop_check_status - Fake device status reg
++ *	@ap: target port
++ *
++ *	This function performs no actual function and always returns
++ *	ATA_DRDY.
++ *
++ *	May be used as the check_status/altstatus() entry in
++ *	ata_port_operations.
++ *
++ *	LOCKING:
++ *	caller.
++ */
++u8 ata_noop_check_status(struct ata_port *ap)
++{
++	return ATA_DRDY;
++}
 +
- 	ata_scsi_sdev_config(sdev);
- 
- 	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
- 
--	if (sdev->id < ATA_MAX_DEVICES) {
--		struct ata_port *ap;
--		struct ata_device *dev;
--
--		ap = ata_shost_to_port(sdev->host);
--		dev = &ap->device[sdev->id];
--
-+	if (dev)
- 		ata_scsi_dev_config(sdev, dev);
--	}
- 
- 	return 0;	/* scsi layer doesn't check return value, sigh */
- }
++/**
+  *	ata_noop_dev_select - Select device 0/1 on ATA bus
+  *	@ap: ATA channel to manipulate
+  *	@device: ATA device (numbered from zero) to select
+@@ -5768,6 +5786,7 @@ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
+ EXPORT_SYMBOL_GPL(ata_tf_load);
+ EXPORT_SYMBOL_GPL(ata_tf_read);
+ EXPORT_SYMBOL_GPL(ata_noop_dev_select);
++EXPORT_SYMBOL_GPL(ata_noop_check_status);
+ EXPORT_SYMBOL_GPL(ata_std_dev_select);
+ EXPORT_SYMBOL_GPL(ata_tf_to_fis);
+ EXPORT_SYMBOL_GPL(ata_tf_from_fis);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 5c843a8..ac8e58c 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -666,6 +666,7 @@ extern void ata_tf_load(struct ata_port 
+ extern void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ extern void ata_tf_to_fis(const struct ata_taskfile *tf, u8 *fis, u8 pmp);
+ extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
++extern u8 ata_noop_check_status(struct ata_port *ap);
+ extern void ata_noop_dev_select (struct ata_port *ap, unsigned int device);
+ extern void ata_std_dev_select (struct ata_port *ap, unsigned int device);
+ extern u8 ata_check_status(struct ata_port *ap);
 -- 
 1.2.4
 
