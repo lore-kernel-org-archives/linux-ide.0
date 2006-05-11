@@ -1,59 +1,66 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET 07/11] prep LLDDs for hotplug support, take 1 (REPOST)
+Subject: [PATCH 5/6] sata_sil24: use sata_phy_debounce() in sil24_hardreset()
 Date: Fri, 12 May 2006 00:14:58 +0900
-Message-ID: <11473604983883-git-send-email-htejun@gmail.com>
+Message-ID: <11473604983253-git-send-email-htejun@gmail.com>
+References: <11473604983883-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.227]:62512 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030245AbWEKPPE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 11:15:04 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so388403wra
-        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:15:03 -0700 (PDT)
-In-Reply-To: 
+Received: from nz-out-0102.google.com ([64.233.162.192]:23982 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1030249AbWEKPPI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 May 2006 11:15:08 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so225605nzn
+        for <linux-ide@vger.kernel.org>; Thu, 11 May 2006 08:15:08 -0700 (PDT)
+In-Reply-To: <11473604983883-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hairu.
+Do phy debouncing instead of unconditional wait after DEV_RST.
 
-This is part of patchset series described in [T].
+---
 
-This is the first take of prep-LLDDs-for-hotplug-support patchset.
-Some of patches in this patchset are from the first take of
-add-hotplug-support patchset.
+ drivers/scsi/sata_sil24.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-Things worth noting are
-
-* Simply exporting ata_hsm_move() and calling the function with
-  appropriate status is good enough for driving HSM for LLDDs
-  implementing their own irq handlers.  sata_sil's new irq handler
-  now uses it.
-
-* TF faking is removed from sata_sil24.
-
-This patchset is against
-
-  upstream (acc696d93dcf993dec123d69d599979e1456ffec)
-  + [1] prep-for-new-EH patchset
-  + [2] new-EH-framework patchset, take 3
-  + [3] new-EH-implementation patchset, take 3
-  + [4] merge-irq-pio patchset
-  + [5] add-NCQ-support patchset, take 3
-  + [6] prep for hotplug support, take 2
-
---
-tejun
-
-[T] http://article.gmane.org/gmane.linux.ide/9957
-[1] http://article.gmane.org/gmane.linux.ide/9959
-[2] http://article.gmane.org/gmane.linux.ide/9984
-[3] http://article.gmane.org/gmane.linux.ide/9995
-[4] http://article.gmane.org/gmane.linux.ide/10005
-[5] http://article.gmane.org/gmane.linux.ide/10011
-[6] http://article.gmane.org/gmane.linux.ide/10028
+b8c4776dbd446dd2087689d23c1a6ca153abd293
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 629679e..72219fa 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -591,7 +591,7 @@ static int sil24_hardreset(struct ata_po
+ {
+ 	void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
+ 	const char *reason;
+-	int tout_msec;
++	int tout_msec, rc;
+ 	u32 tmp;
+ 
+ 	/* sil24 does the right thing(tm) without any protection */
+@@ -605,10 +605,15 @@ static int sil24_hardreset(struct ata_po
+ 	tmp = ata_wait_register(port + PORT_CTRL_STAT,
+ 				PORT_CS_DEV_RST, PORT_CS_DEV_RST, 10, tout_msec);
+ 
+-	/* SStatus oscillates between zero and valid status for short
+-	 * duration after DEV_RST, give it time to settle.
++	/* SStatus oscillates between zero and valid status after
++	 * DEV_RST, debounce it.
+ 	 */
+-	msleep(100);
++	rc = sata_phy_debounce(ap, ATA_DEBOUNCE_INTERVAL,
++			       ATA_DEBOUNCE_DURATION, ATA_DEBOUNCE_TIMEOUT);
++	if (rc) {
++		reason = "PHY debouncing failed";
++		goto err;
++	}
+ 
+ 	if (tmp & PORT_CS_DEV_RST) {
+ 		if (ata_port_offline(ap))
+-- 
+1.2.4
 
 
