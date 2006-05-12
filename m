@@ -1,149 +1,32 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] ide_dma_speed() fixes
-Date: Fri, 12 May 2006 06:36:56 +0400
-Message-ID: <4463F4C8.9080608@ru.mvista.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: ata_piix resume from S3 on T43P failed
+Date: Fri, 12 May 2006 13:02:39 +0800
+Message-ID: <1147410159.7273.52.camel@forrest26.sh.intel.com>
+References: <1147334740.7273.38.camel@forrest26.sh.intel.com>
+	 <4462F667.3060504@gmail.com>  <4462F767.5070003@gmail.com>
+	 <1147340790.7273.47.camel@forrest26.sh.intel.com>
+	 <44631446.1060401@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020309060805090308040407"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:38110 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750867AbWELCh7
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 May 2006 22:37:59 -0400
+Received: from mga02.intel.com ([134.134.136.20]:46674 "EHLO
+	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1750912AbWELFN2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 May 2006 01:13:28 -0400
+In-Reply-To: <44631446.1060401@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020309060805090308040407
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Thu, 2006-05-11 at 19:39 +0900, Tejun Heo wrote:
+> Can you try the
+> current #upstream and see how that works?  So that we can see whether
+> the EH changes caused the problem?
+I tried the #upstream, the ata_piix of which can't resume from S3 on T43P either.
+So the code changes between 2.6.16-rc6 and #upstream caused the problem.
+I'll post the dmesg in the following mails.
 
-Hello.
-
-    ide_dma_speed() fails to actually honor the IDE drivers' mode support 
-masks) because of the bogus checks -- thus, selecting the DMA transfer mode 
-that the driver explicitly refuses to support is possible. Additionally, there 
-is no check for validity of the UltraDMA mode data in the drive ID, and the 
-function is misdocumented.
-
-MBR, Sergei
-
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-
---------------020309060805090308040407
-Content-Type: text/plain;
- name="ide_dma_speed-fix.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ide_dma_speed-fix.patch"
-
-Index: linus/drivers/ide/ide-lib.c
-===================================================================
---- linus.orig/drivers/ide/ide-lib.c
-+++ linus/drivers/ide/ide-lib.c
-@@ -72,66 +72,65 @@ EXPORT_SYMBOL(ide_xfer_verbose);
- /**
-  *	ide_dma_speed	-	compute DMA speed
-  *	@drive: drive
-- *	@mode; intended mode
-+ *	@mode:	modes available
-  *
-  *	Checks the drive capabilities and returns the speed to use
-- *	for the transfer. Returns -1 if the requested mode is unknown
-- *	(eg PIO)
-+ *	for the DMA transfer.  Returns 0 if the drive is incapable
-+ *	of DMA transfers.
-  */
-  
- u8 ide_dma_speed(ide_drive_t *drive, u8 mode)
- {
- 	struct hd_driveid *id   = drive->id;
- 	ide_hwif_t *hwif	= HWIF(drive);
-+	u8 ultra_mask, mwdma_mask, swdma_mask;
- 	u8 speed = 0;
- 
- 	if (drive->media != ide_disk && hwif->atapi_dma == 0)
- 		return 0;
- 
--	switch(mode) {
--		case 0x04:
--			if ((id->dma_ultra & 0x0040) &&
--			    (id->dma_ultra & hwif->ultra_mask))
-+	/* Capable of UltraDMA modes? */
-+	if (id->field_valid & 4)
-+		ultra_mask = id->dma_ultra & hwif->ultra_mask;
-+	else
-+		mode = 0;	/* fallback to MW/SW DMA if no UltraDMA */
-+
-+	switch (mode) {
-+		case 4:
-+			if (ultra_mask & 0x40)
- 				{ speed = XFER_UDMA_6; break; }
--		case 0x03:
--			if ((id->dma_ultra & 0x0020) &&
--			    (id->dma_ultra & hwif->ultra_mask))
-+		case 3:
-+			if (ultra_mask & 0x20)
- 				{ speed = XFER_UDMA_5; break; }
--		case 0x02:
--			if ((id->dma_ultra & 0x0010) &&
--			    (id->dma_ultra & hwif->ultra_mask))
-+		case 2:
-+			if (ultra_mask & 0x10)
- 				{ speed = XFER_UDMA_4; break; }
--			if ((id->dma_ultra & 0x0008) &&
--			    (id->dma_ultra & hwif->ultra_mask))
-+			if (ultra_mask & 0x08)
- 				{ speed = XFER_UDMA_3; break; }
--		case 0x01:
--			if ((id->dma_ultra & 0x0004) &&
--			    (id->dma_ultra & hwif->ultra_mask))
-+		case 1:
-+			if (ultra_mask & 0x04)
- 				{ speed = XFER_UDMA_2; break; }
--			if ((id->dma_ultra & 0x0002) &&
--			    (id->dma_ultra & hwif->ultra_mask))
-+			if (ultra_mask & 0x02)
- 				{ speed = XFER_UDMA_1; break; }
--			if ((id->dma_ultra & 0x0001) &&
--			    (id->dma_ultra & hwif->ultra_mask))
-+			if (ultra_mask & 0x01)
- 				{ speed = XFER_UDMA_0; break; }
--		case 0x00:
--			if ((id->dma_mword & 0x0004) &&
--			    (id->dma_mword & hwif->mwdma_mask))
-+		case 0:
-+			mwdma_mask = id->dma_mword & hwif->mwdma_mask;
-+
-+			if (mwdma_mask & 0x04)
- 				{ speed = XFER_MW_DMA_2; break; }
--			if ((id->dma_mword & 0x0002) &&
--			    (id->dma_mword & hwif->mwdma_mask))
-+			if (mwdma_mask & 0x02)
- 				{ speed = XFER_MW_DMA_1; break; }
--			if ((id->dma_mword & 0x0001) &&
--			    (id->dma_mword & hwif->mwdma_mask))
-+			if (mwdma_mask & 0x01)
- 				{ speed = XFER_MW_DMA_0; break; }
--			if ((id->dma_1word & 0x0004) &&
--			    (id->dma_1word & hwif->swdma_mask))
-+
-+			swdma_mask = id->dma_1word & hwif->swdma_mask;
-+
-+			if (swdma_mask & 0x04)
- 				{ speed = XFER_SW_DMA_2; break; }
--			if ((id->dma_1word & 0x0002) &&
--			    (id->dma_1word & hwif->swdma_mask))
-+			if (swdma_mask & 0x02)
- 				{ speed = XFER_SW_DMA_1; break; }
--			if ((id->dma_1word & 0x0001) &&
--			    (id->dma_1word & hwif->swdma_mask))
-+			if (swdma_mask & 0x01)
- 				{ speed = XFER_SW_DMA_0; break; }
- 	}
- 
-
---------------020309060805090308040407--
+Thanks,
+Forrest
