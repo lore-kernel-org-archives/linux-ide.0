@@ -1,39 +1,49 @@
-From: Thomas Glanzmann <sithglan@stud.uni-erlangen.de>
-Subject: [PATCH] Add PCI ID for the Intel IDE Controller which is in the Intel Mac Minis shipped in first quarter 2006
-Date: Fri, 12 May 2006 10:00:41 +0200
-Message-ID: <20060512080041.GC7120@cip.informatik.uni-erlangen.de>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: ata_piix resume from S3 on T43P failed
+Date: Fri, 12 May 2006 12:17:14 +0200
+Message-ID: <20060512101713.GN4157@suse.de>
+References: <1147334740.7273.38.camel@forrest26.sh.intel.com> <4462F667.3060504@gmail.com> <4462F767.5070003@gmail.com> <1147340790.7273.47.camel@forrest26.sh.intel.com> <20060511105555.GK4157@suse.de> <1147413106.7273.70.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from faui03.informatik.uni-erlangen.de ([131.188.30.103]:21478 "EHLO
-	faui03.informatik.uni-erlangen.de") by vger.kernel.org with ESMTP
-	id S1751066AbWELIAo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 May 2006 04:00:44 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:26474 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751136AbWELKQo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 May 2006 06:16:44 -0400
 Content-Disposition: inline
+In-Reply-To: <1147413106.7273.70.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Signed-off-by: Thomas Glanzmann <sithglan@stud.uni-erlangen.de>
+On Fri, May 12 2006, zhao, forrest wrote:
+> On Thu, 2006-05-11 at 12:55 +0200, Jens Axboe wrote:
+> > run dmesg prior to suspending, then it'll be cached and can be run after
+> > resume even if the disk doesn't want to talk to you.
+> > 
+> 
+> Don't know why the mails with attached files were not sent to mailing
+> list, so I put them at
+> http://www.infradead.org/~forrest/suspend-resume-dmesg/
 
----
+The key is the 0xef timeout, then the device is offlined and you see a
+lot of io errors due to that.
 
- drivers/scsi/ata_piix.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Try this:
 
-43413e721732100d165d004e34da6a74ad5c9fe6
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index 6dc8814..e1c2ecc 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -159,6 +159,7 @@ #ifdef ATA_ENABLE_PATA
- 	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix4_pata },
- 	{ 0x8086, 0x24db, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_pata },
- 	{ 0x8086, 0x25a2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_pata },
-+	{ 0x8086, 0x27df, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_pata },
- #endif
- 
- 	/* NOTE: The following PCI ids must be kept in sync with the
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index bd14720..f120839 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4288,6 +4288,7 @@ int ata_device_resume(struct ata_port *a
+ {
+ 	if (ap->flags & ATA_FLAG_SUSPENDED) {
+ 		ap->flags &= ~ATA_FLAG_SUSPENDED;
++		mdelay(2000);
+ 		ata_set_mode(ap);
+ 	}
+ 	if (!ata_dev_present(dev))
+
 -- 
-1.3.2.g639c
+Jens Axboe
+
