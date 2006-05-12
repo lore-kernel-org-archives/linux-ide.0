@@ -1,58 +1,63 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata_piix resume from S3 on T43P failed
-Date: Fri, 12 May 2006 19:56:16 +0900
-Message-ID: <446469D0.30703@gmail.com>
-References: <1147334740.7273.38.camel@forrest26.sh.intel.com> <4462F667.3060504@gmail.com> <4462F767.5070003@gmail.com> <1147340790.7273.47.camel@forrest26.sh.intel.com> <20060511105555.GK4157@suse.de> <1147413106.7273.70.camel@forrest26.sh.intel.com> <20060512101713.GN4157@suse.de>
+Subject: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against stable kernel
+Date: Fri, 12 May 2006 22:24:37 +0900
+Message-ID: <20060512132437.GB4219@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:42175 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751192AbWELK4W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 May 2006 06:56:22 -0400
-Received: by py-out-1112.google.com with SMTP id x31so762016pye
-        for <linux-ide@vger.kernel.org>; Fri, 12 May 2006 03:56:21 -0700 (PDT)
-In-Reply-To: <20060512101713.GN4157@suse.de>
+Received: from nz-out-0102.google.com ([64.233.162.202]:6134 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751288AbWELNYm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 May 2006 09:24:42 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so463155nzn
+        for <linux-ide@vger.kernel.org>; Fri, 12 May 2006 06:24:41 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: "zhao, forrest" <forrest.zhao@intel.com>, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, Zhao, Jens.
+Hello, all.
 
-Jens Axboe wrote:
-> On Fri, May 12 2006, zhao, forrest wrote:
->> On Thu, 2006-05-11 at 12:55 +0200, Jens Axboe wrote:
->>> run dmesg prior to suspending, then it'll be cached and can be run after
->>> resume even if the disk doesn't want to talk to you.
->>>
->> Don't know why the mails with attached files were not sent to mailing
->> list, so I put them at
->> http://www.infradead.org/~forrest/suspend-resume-dmesg/
-> 
-> The key is the 0xef timeout, then the device is offlined and you see a
-> lot of io errors due to that.
-> 
-> Try this:
-> 
-> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-> index bd14720..f120839 100644
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -4288,6 +4288,7 @@ int ata_device_resume(struct ata_port *a
->  {
->  	if (ap->flags & ATA_FLAG_SUSPENDED) {
->  		ap->flags &= ~ATA_FLAG_SUSPENDED;
-> +		mdelay(2000);
->  		ata_set_mode(ap);
->  	}
->  	if (!ata_dev_present(dev))
-> 
+Lately libata has been going through a lot of changes and even more
+are around the corner.  I've been working on error handling and
+advanced SATA features for quite sometime now, and, finally, patches
+have been finalized and submitted for review a few days ago.
 
-If Jens' suggestion doesn't work, can you post the same log with the 
-working kernel?  In #upstream, that part of code hasn't changed much, so 
-I'm curious what makes the other kernel work.
+2.6.18 is the target for mainline merge.  As there is quite some time
+between now and 2.6.18, I have made patches to update the current
+stable kernel to support the new features so that they can receive
+wider testing and interested people don't have to wait too long.  I
+intend to maintain these patches through 2.6.16 and 17 until the
+mainline merge happens.
+
+Added new features are
+
+* New error handling
+* IRQ driven PIO (from Albert Lee)
+* SATA NCQ support
+* Hotplug support
+* Port Multiplier support
+
+The following drivers support new features.
+
+ata_piix:	new EH, irq-pio, warmplug (hardware restriction)
+sata_sil:	new EH, irq-pio, hotplug
+ahci:		new EH, irq-pio, NCQ, hotplug
+sata_sil24:	new EH, irq-pio, NCQ, hotplug, Port Multiplier
+
+More info can be found at the following URL.
+
+ http://home-tj.org/wiki/index.php/Libata-tj-stable
+
+Patches against v2.6.16.16 is avaialbe at the following URL.
+
+ http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.16.16-20060512.tar.bz2
+
+Please read README carefully before testing the patches.  Keep in mind
+that these are still quite experimental and not ready for production
+use.
+
+Thanks.
 
 -- 
 tejun
