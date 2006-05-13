@@ -1,38 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
-Date: Sat, 13 May 2006 00:09:59 -0400
-Message-ID: <44655C17.6000601@pobox.com>
-References: <44614592.7080301@gmail.com> <446536C5.80503@pobox.com> <44653807.3030101@gmail.com> <44655496.9030402@pobox.com> <44655986.3060007@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
+ stable kernel
+Date: Sat, 13 May 2006 00:12:09 -0400
+Message-ID: <44655C99.5050609@garzik.org>
+References: <200605121534.k4CFYodu020885@harpo.it.uu.se> <446515F0.7070702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:20450 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932322AbWEMEKP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 00:10:15 -0400
-In-Reply-To: <44655986.3060007@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:23266 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932321AbWEMEMO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 00:12:14 -0400
+In-Reply-To: <446515F0.7070702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Tejun Heo wrote:
-> That cmd-switching PM support is what AHCI SPM bit indicates.  As of 
-> v1.1, AHCI doesn't define FIS-switching PM support yet.
+> Mikael Pettersson wrote:
+>> On Fri, 12 May 2006 22:24:37 +0900, Tejun Heo wrote:
+>>> The following drivers support new features.
+>>>
+>>> ata_piix:	new EH, irq-pio, warmplug (hardware restriction)
+>>> sata_sil:	new EH, irq-pio, hotplug
+>>> ahci:		new EH, irq-pio, NCQ, hotplug
+>>> sata_sil24:	new EH, irq-pio, NCQ, hotplug, Port Multiplier
+>> If you were to add new EH and NCQ support to sata_promise,
+>> then I'd test it on my News server.
+>>
+> 
+> I have a promise card and played with it a little bit but I don't have
+> access to hardware doc.  So...
 
-Right you are; see, told you my brain was frazzled.
+I have Promise NCQ info, just waiting for the chance to use it :)
 
-
-> Which is understandable considering AHCI doesn't construct FISes itself. 
->  I don't think PM requires more hardware support than being capable for 
-> setting PMP in the FISes, which AHCI certainly can (standing down on 
-> collision for SDB notify aside).  I can give it a shot but it clearly 
-> violates the spec, and even if it works, we would need to print big fat 
-> warning message while attaching PM.
-
-Setting the PMP field during FIS construction would work, I should 
-think, for outgoing FIS's.  Not sure how incoming FISs would behave.
+Plus I have a nagging suspicion that the SATA II cards have a few
+differences from the SATA I cards that have yet to be coded into
+sata_promise.c.
 
 	Jeff
+
 
 
