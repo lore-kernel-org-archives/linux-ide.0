@@ -1,46 +1,47 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: ata_piix resume from S3 on T43P failed
-Date: Sat, 13 May 2006 00:19:12 -0400
-Message-ID: <44655E40.2090004@garzik.org>
-References: <1147334740.7273.38.camel@forrest26.sh.intel.com> <4462F667.3060504@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
+Date: Sat, 13 May 2006 13:19:50 +0900
+Message-ID: <44655E66.4020304@gmail.com>
+References: <44614592.7080301@gmail.com> <446536C5.80503@pobox.com> <44653807.3030101@gmail.com> <44655496.9030402@pobox.com> <44655986.3060007@gmail.com> <44655C17.6000601@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36066 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932203AbWEMETP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 00:19:15 -0400
-In-Reply-To: <4462F667.3060504@gmail.com>
+Received: from nz-out-0102.google.com ([64.233.162.202]:22484 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750752AbWEMET5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 May 2006 00:19:57 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so610126nzn
+        for <linux-ide@vger.kernel.org>; Fri, 12 May 2006 21:19:56 -0700 (PDT)
+In-Reply-To: <44655C17.6000601@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "zhao, forrest" <forrest.zhao@intel.com>, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> zhao, forrest wrote:
->> Hi, Tejun
->>
->> We just tested your git tree on thinkpad T43P laptop, and found that
->> after ata_piix resumed from S3, SATA disk can't be read/write anymore.
->> But according to the test result of kernel 2.6.16-rc6 on T43P, ata_piix
->> can resume from S3 successfully.
->>
->> We know that this problem may be not related to your patches, but I
->> think you know the libata development status very well, maybe you can
->> give us some clue about what happened to ata_piix between 2.6.16-rc6 and
->> your git tree.
->>
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> That cmd-switching PM support is what AHCI SPM bit indicates.  As of 
+>> v1.1, AHCI doesn't define FIS-switching PM support yet.
 > 
-> Hello, Zhao.
+> Right you are; see, told you my brain was frazzled.
 > 
-> I haven't really followed AHCI suspend/resume stuff but AFAICT it never
-> made to #upstream.  I don't know whether it was included in -rc# or not.
->  But it sounds like it did.
+> 
+>> Which is understandable considering AHCI doesn't construct FISes 
+>> itself.  I don't think PM requires more hardware support than being 
+>> capable for setting PMP in the FISes, which AHCI certainly can 
+>> (standing down on collision for SDB notify aside).  I can give it a 
+>> shot but it clearly violates the spec, and even if it works, we would 
+>> need to print big fat warning message while attaching PM.
+> 
+> Setting the PMP field during FIS construction would work, I should 
+> think, for outgoing FIS's.  Not sure how incoming FISs would behave.
+> 
 
-Hannes @ SuSE posted an AHCI suspend/resume patch that needs to go in.
-Unfortunately AHCI is a high rate of churn, so it's still in my
-'Pending' folder :/
+I think the incoming part will work too.  All it has to do is ignoring 
+it.  SDB notify can also implemented using Unknown FIS interrupt and FIS 
+reception area.  I'll give it a shot.  After all, working with big fat 
+warning is a lot better than not working, and a LOT of AHCIs are out there.
 
-	Jeff
-
-
+-- 
+tejun
