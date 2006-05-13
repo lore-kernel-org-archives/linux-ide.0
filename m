@@ -1,56 +1,71 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ata_piix failure on ich6m
-Date: Fri, 12 May 2006 23:42:34 -0400
-Message-ID: <446555AA.9000603@pobox.com>
-References: <20060510235650.GA20206@srcf.ucam.org> <44629E68.3020302@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
+Date: Sat, 13 May 2006 12:59:02 +0900
+Message-ID: <44655986.3060007@gmail.com>
+References: <44614592.7080301@gmail.com> <446536C5.80503@pobox.com> <44653807.3030101@gmail.com> <44655496.9030402@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37089 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932174AbWEMDml (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 May 2006 23:42:41 -0400
-In-Reply-To: <44629E68.3020302@gmail.com>
+Received: from nz-out-0102.google.com ([64.233.162.207]:59920 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932318AbWEMD7J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 May 2006 23:59:09 -0400
+Received: by nz-out-0102.google.com with SMTP id 13so607921nzn
+        for <linux-ide@vger.kernel.org>; Fri, 12 May 2006 20:59:08 -0700 (PDT)
+In-Reply-To: <44655496.9030402@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Matthew Garrett wrote:
->> Hi,
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Jeff Garzik wrote:
+>>> Tejun Heo wrote:
+>>>> tested.  I implemented AHCI PM support half-way but then realized =
+I=20
+>>>> don't have any AHCI controller which supports PM (I have ICH7R).  =
+Is=20
+>>>> there any AHCI controller which reports PM support?
+>>>
+>>> You can always use SCR-based PM support...
+>>>
 >>
->> We've got an ich6m system (a Toshiba Portege S100). ata_piix attempts 
->> to drive the chipset, but fails - however, it doesn't bail out. As a 
->> result it remains bound to the device and ahci isn't loaded.
->>
->> I've attached the lspci output for the chipset. A few things to note are:
->>
->> 1) The AHCI BAR is set
->> 2) The SCC register identifies it as an AHCI controller
->> 3) Bits 2 and 0 of the PCS are set, which the spec claims indicates 
->> that the port is to be controlled as an ahci device.
->>
->> So, my question is effectively: why does ata_piix attempt to disable 
->> ahci rather than simply letting the ahci driver bind? Points (1) and 
->> (2) seem to be checked by the code, but I'm guessing that in the case 
->> of (3) it should just return ENODEV and let ahci be run instead. If 
->> so, should I code up a patch?
->>
-> 
-> I'm not very sure but it might be historical.  ahci got implemented 
-> after ata_piix and in the meantime ata_piix must have handled all it 
-> could.  Can you verify whether modifying the code to return -ENODEV work 
-> for your machine?  If so, that could be the correct solution but I'm a 
-> bit worried because it could change probing order or fail to enable 
-> devices it used to.  Maybe we need a hack to return -ENODEV iff ahci is 
-> there to handle the device.
+>> Can you elaborate a bit?
+>=20
+> Sections A.1 and 6.1 of the PM spec.  You set the PMP field of the=20
+> SControl register.  This has obvious parallelism limitations, which i=
+s=20
+> why "hardware context switching support" aka native PM support is=20
+> greatly preferred.
+>=20
 
-It's definitely historical.  I'm pretty frazzled now so I don't 
-remember.  It may be that on ICH6, AHCI mode does not cause the PCI IDs 
-to change, so driver load order winds up dictating what gets used.
+That cmd-switching PM support is what AHCI SPM bit indicates.  As of=20
+v1.1, AHCI doesn't define FIS-switching PM support yet.
 
-	Jeff
+Supports Port Multiplier (SPM): Indicates whether the HBA can support a=
+=20
+Port Multiplier. When set, a Port Multiplier using command-based=20
+switching is supported. When cleared to =910=92, a Port Multiplier is n=
+ot=20
+supported, and a Port Multiplier may not be attached to this HBA.
 
+And. the SControl section says...
 
+19:16 RO 0h  Port Multiplier Port (PMP): This field is not used by AHCI=
+=2E
 
+Which is understandable considering AHCI doesn't construct FISes itself=
+=2E=20
+  I don't think PM requires more hardware support than being capable fo=
+r=20
+setting PMP in the FISes, which AHCI certainly can (standing down on=20
+collision for SDB notify aside).  I can give it a shot but it clearly=20
+violates the spec, and even if it works, we would need to print big fat=
+=20
+warning message while attaching PM.
+
+--=20
+tejun
