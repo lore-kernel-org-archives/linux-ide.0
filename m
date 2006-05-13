@@ -1,43 +1,54 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
  stable kernel
-Date: Sat, 13 May 2006 00:12:09 -0400
-Message-ID: <44655C99.5050609@garzik.org>
-References: <200605121534.k4CFYodu020885@harpo.it.uu.se> <446515F0.7070702@gmail.com>
+Date: Sat, 13 May 2006 00:13:39 -0400
+Message-ID: <44655CF3.5010101@garzik.org>
+References: <20060512132437.GB4219@htj.dyndns.org> <20060512122116.152fbe80.rdunlap@xenotime.net> <4464E079.1070307@stesmi.com> <446505F8.7020909@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:23266 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932321AbWEMEMO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 00:12:14 -0400
-In-Reply-To: <446515F0.7070702@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:26338 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932323AbWEMENn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 00:13:43 -0400
+In-Reply-To: <446505F8.7020909@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Stefan Smietanowski <stesmi@stesmi.com>, "Randy.Dunlap" <rdunlap@xenotime.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> Mikael Pettersson wrote:
->> On Fri, 12 May 2006 22:24:37 +0900, Tejun Heo wrote:
->>> The following drivers support new features.
+> Stefan Smietanowski wrote:
+>> Randy.Dunlap wrote:
+>>>> * New error handling
+>>>> * IRQ driven PIO (from Albert Lee)
+>>>> * SATA NCQ support
+>>>> * Hotplug support
+>>>> * Port Multiplier support
 >>>
->>> ata_piix:	new EH, irq-pio, warmplug (hardware restriction)
->>> sata_sil:	new EH, irq-pio, hotplug
->>> ahci:		new EH, irq-pio, NCQ, hotplug
->>> sata_sil24:	new EH, irq-pio, NCQ, hotplug, Port Multiplier
->> If you were to add new EH and NCQ support to sata_promise,
->> then I'd test it on my News server.
+>>> BTW, we often use PM to mean Power Management.
+>>> Could we find a different acronym for Port Multiplier support,
+>>> such as PMS or PX or PXS?
+>>
+>> Ok, maybe not PMS ?
+>>
+>> Can you imagine a bug report from someone that "has problem with PMS"?
+>> :)
 >>
 > 
-> I have a promise card and played with it a little bit but I don't have
-> access to hardware doc.  So...
+> Would be fun though.  :)
+> 
+> I thought about using another acronym for port multiplier too.  But the 
+> spec uses that acronym all over the place, PM, PMP (Port Multiplier 
+> Portnumber), which reminds me of USB full/high speed fiasco.
+> 
+> Urghh... I thought we could use power for power management inside libata 
+> but that might be a bad idea.  So, PMS?
 
-I have Promise NCQ info, just waiting for the chance to use it :)
+PMS is fine.  I encouraged the use of "UFO" for "UDP Fragmentation 
+Offload" in network driver land, and it stuck.
 
-Plus I have a nagging suspicion that the SATA II cards have a few
-differences from the SATA I cards that have yet to be coded into
-sata_promise.c.
+This is Linux, we like to have fun around here :)
 
 	Jeff
 
