@@ -1,22 +1,76 @@
-From: "Dr. David Frankson" <dfrankson1r@verizon.net>
-Subject: gaqyhmolono
-Date: Sat, 13 May 2006 20:47:40 +0000 (UTC)
-Message-ID: <000101c676ce$000052db$fa4d460a@qyfiwibo>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 01/22] SCSI: Introduce scsi_req_abort_cmd (REPOST)
+Date: Sat, 13 May 2006 17:21:49 -0400
+Message-ID: <44664DED.4000501@pobox.com>
+References: <11473487901100-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        format=flowed;
-        charset="iso-8859-1";
-        reply-type=original
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [218.201.65.169] ([218.201.65.169]:14605 "HELO verizon.net")
-	by vger.kernel.org with SMTP id S1751231AbWEMUrP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 16:47:15 -0400
-Date: Sun, 14 May 2006 04:47:11 0800
+Received: from srv5.dvmed.net ([207.36.208.214]:1926 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751357AbWEMVWC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 17:22:02 -0400
+In-Reply-To: <11473487901100-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-You want to get these pharmaceuticals online ? http://www.caun.net/
+Tejun Heo wrote:
+> Introduce scsi_req_abort_cmd(struct scsi_cmnd *).
+> This function requests that SCSI Core start recovery for the
+> command by deleting the timer and adding the command to the eh
+> queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
+> implement their own error recovery MAY ignore the timeout event if
+> they generated scsi_req_abort_cmd.
+
+ACK...
+
+
+> 2dcc69f8559ce963d637e881ca168afd91ee2478
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 73994e2..dae4f08 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -720,6 +720,24 @@ void scsi_init_cmd_from_req(struct scsi_
+>  static DEFINE_PER_CPU(struct list_head, scsi_done_q);
+>  
+>  /**
+> + * scsi_req_abort_cmd -- Request command recovery for the specified command
+> + * cmd: pointer to the SCSI command of interest
+> + *
+> + * This function requests that SCSI Core start recovery for the
+> + * command by deleting the timer and adding the command to the eh
+> + * queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
+> + * implement their own error recovery MAY ignore the timeout event if
+> + * they generated scsi_req_abort_cmd.
+> + */
+> +void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
+> +{
+> +	if (!scsi_delete_timer(cmd))
+> +		return;
+> +	scsi_times_out(cmd);
+> +}
+> +EXPORT_SYMBOL(scsi_req_abort_cmd);
+> +
+> +/**
+>   * scsi_done - Enqueue the finished SCSI command into the done queue.
+>   * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
+>   * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
+> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+> index 1ace1b9..88c6c4d 100644
+> --- a/include/scsi/scsi_cmnd.h
+> +++ b/include/scsi/scsi_cmnd.h
+> @@ -151,5 +151,6 @@ extern struct scsi_cmnd *scsi_get_comman
+>  extern void scsi_put_command(struct scsi_cmnd *);
+>  extern void scsi_io_completion(struct scsi_cmnd *, unsigned int, unsigned int);
+>  extern void scsi_finish_command(struct scsi_cmnd *cmd);
+> +extern void scsi_req_abort_cmd(struct scsi_cmnd *cmd);
+>  
+>  #endif /* _SCSI_SCSI_CMND_H */
+
+Patch quoted in its entirety, since this copy wasn't CC'd to linux-scsi.
+
+	Jeff
 
 
