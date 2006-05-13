@@ -1,70 +1,59 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: Problem with disk
-Date: Sat, 13 May 2006 15:31:57 -0400
-Message-ID: <4466342D.3030905@emc.com>
-References: <Pine.LNX.4.44.0605061420340.5626-100000@coffee.psychology.mcmaster.ca> <445D29A1.5000402@gmail.com> <445DF445.6070803@emc.com> <445DF911.1020408@gmail.com> <445F56B2.9070300@emc.com> <44626769.2000601@gmail.com>
+From: Matthieu CASTET <castet.matthieu@free.fr>
+Subject: libata : ata_dev_set_mode failed
+Date: Sat, 13 May 2006 22:03:39 +0200
+Message-ID: <pan.2006.05.13.20.03.38.622157@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([168.159.213.200]:37812 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1750706AbWEMTcB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 May 2006 15:32:01 -0400
-In-Reply-To: <44626769.2000601@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:37779 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S1750736AbWEMUPF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 16:15:05 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Ff0Vy-0001zA-HH
+	for linux-ide@vger.kernel.org; Sat, 13 May 2006 22:15:02 +0200
+Received: from cac94-1-81-57-151-96.fbx.proxad.net ([81.57.151.96])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 13 May 2006 22:15:02 +0200
+Received: from castet.matthieu by cac94-1-81-57-151-96.fbx.proxad.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 13 May 2006 22:15:02 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>, David.Ronis@McGill.CA, linux-ide@vger.kernel.org, neilb@suse.de
+To: linux-ide@vger.kernel.org
+
+Hi,
+
+when using the pata driver for a via vt8235, the ata_dev_set_mode function
+failed for one my ATAPI drive ( ata4: failed to set xfermode
+(err_mask=0x4) ). This error doesn't happen if I put the drive on another
+controller.
+
+Using the old ide stack, there is a similar problem if I change the
+xfermode with hdparm : there is an interrupt lost.
+The interrupt is lost when calling ide_wait_cmd from ide_cmd_ioctl
+(drivers/ide/ide-taskfile.c).
+But there no problem in the ide initialisation, because
+ide_cmd_ioctl (and ide_wait_cmd) isn't called in this case, but
+ide_config_drive_speed is directly called.
+
+In drivers/ide/ide-iops.c, ide_config_drive_speed have a comment
+saying they can't use ide_wait_cmd because it could cause "lost interrupt"
+[1]. Does the issue described in this comment are solved in libata or it
+is the problem I am seeing with my drive ?
 
 
+Matthieu
 
-Tejun Heo wrote:
+PS : my drive accept ide_wait_cmd or ata_dev_set_mode after I insert a CD
+and doesn't wait to much (10-20 seconds).
 
-> Ric Wheeler wrote:
->
->> I think that MD will do the right thing if the IO terminates with an 
->> error condition.  If the error is silent (and that can happen during 
->> a write), then it clearly cannot recover.
->
->
-> The condition I've described results in silent loss of data.  
-> Depending on type and implementation, LLDD might be able to detect the 
-> condition (PHY RDY status changed for SATA), but the event happens 
-> after the affected writes are completed successfully.  For example,
->
-> 1. fs issues writes for block #x, #y and then barrier #b.
-> 2. #x gets written to the write-back cache and completed successfully
-> 3. power glitch occurs while #y is in progress.  LLDD detects the 
-> condition, recovers the drive and retries #y.
-> 4. #y gets written to the write-back cache and completed successfully
-> 4. barrier #b gets executed and #y gets written to the media, but #x 
-> is lost and nobody knows about it.
+[1]
+	/*
+         * Don't use ide_wait_cmd here - it will
+         * attempt to set_geometry and recalibrate,
+         * but for some reason these don't work at
+         * this point (lost interrupt).
+         */
 
-The promise that you get from the barrier is pretty simple - after a 
-successful one, all IO's that have been submitted before then are on 
-platter if the barrier works.
-
-In your example, if you mean power glitch as in power loss, x will be 
-lost (and probably lots of other write cache state), but the application 
-should expect it (or add extra barriers)....
-
->
-> I'm worried about the problem because, with libata, hotplug is 
-> becoming available to the masses and when average Joe hot plugs a new 
-> drive into his machine which has $8 power supply (really, they sell 
-> 300w ATX power at 8000 KRW which is about $8), this is going to 
-> happen.  I had a pretty decent power supply from a reputable maker but 
-> I still got hit by the problem.
-
-Not sure that I understand exactly how a glitch (as opposed to a full 
-loss) would cause x to get lost - the drive firmware should track the 
-fact that x was in the write cache and not destaged to platter.
-
->
-> Maybe the correct approach is to establish a warm-plug protocol.  
-> Kernel provides a way to plug IOs and user helper program plugs all 
-> IOs until the new device settles.
->
-> Thanks.
->
