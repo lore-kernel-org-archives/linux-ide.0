@@ -1,39 +1,26 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCHSET 04/11] merge irq-pio
-Date: Sat, 13 May 2006 18:11:12 -0400
-Message-ID: <44665980.1020308@pobox.com>
-References: <11473544041507-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH 01/11] libata-eh: add ATA and libata flags for new EH
+Date: Sat, 13 May 2006 18:15:13 -0400
+Message-ID: <44665A71.5090800@pobox.com>
+References: <1147353687598-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:27271 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932358AbWEMWLW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 18:11:22 -0400
-In-Reply-To: <11473544041507-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:36487 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932363AbWEMWPV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 18:15:21 -0400
+In-Reply-To: <1147353687598-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com
-Cc: axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> Howdy,
+> Add ATA and libata flags to be used by new EH.
 > 
-> This is part of patchset series described in [T].
-> 
-> This patchset contains merge of irq-pio branch.  This patchset is
-> composed of two patches - the first one is the merge and the second
-> one contains follow-up fixes.
-> 
-> THIS PATCHSET IS FOR REVIEW ONLY.  Please pull from the git tree
-> described in [T] for proper credit attribution and merge history.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-I of course ACK this patchset.
-
-I'm highly interested in "it works" feedback from Albert and Alan <hint 
-hint>... :)
-
-	Jeff
-
+ACK
 
 
