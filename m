@@ -1,40 +1,80 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Stefan Smietanowski <stesmi@stesmi.com>
 Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
  stable kernel
-Date: Sat, 13 May 2006 08:10:40 +0900
-Message-ID: <446515F0.7070702@gmail.com>
-References: <200605121534.k4CFYodu020885@harpo.it.uu.se>
+Date: Sat, 13 May 2006 02:20:29 +0200
+Message-ID: <4465264D.6050608@stesmi.com>
+References: <20060512132437.GB4219@htj.dyndns.org> <20060512122116.152fbe80.rdunlap@xenotime.net> <4464E079.1070307@stesmi.com> <446505F8.7020909@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-ripemd160;
+ protocol="application/pgp-signature";
+ boundary="------------enig99880D32CE1408EF418A3B78"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.207]:38040 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751194AbWELXKr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 May 2006 19:10:47 -0400
-Received: by nz-out-0102.google.com with SMTP id r28so531046nza
-        for <linux-ide@vger.kernel.org>; Fri, 12 May 2006 16:10:47 -0700 (PDT)
-In-Reply-To: <200605121534.k4CFYodu020885@harpo.it.uu.se>
+Received: from mxfep02.bredband.com ([195.54.107.73]:50121 "EHLO
+	mxfep02.bredband.com") by vger.kernel.org with ESMTP
+	id S932224AbWEMAUe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 May 2006 20:20:34 -0400
+In-Reply-To: <446505F8.7020909@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> On Fri, 12 May 2006 22:24:37 +0900, Tejun Heo wrote:
->> The following drivers support new features.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig99880D32CE1408EF418A3B78
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+Tejun Heo wrote:
+> Stefan Smietanowski wrote:
+> 
+>> Randy.Dunlap wrote:
 >>
->> ata_piix:	new EH, irq-pio, warmplug (hardware restriction)
->> sata_sil:	new EH, irq-pio, hotplug
->> ahci:		new EH, irq-pio, NCQ, hotplug
->> sata_sil24:	new EH, irq-pio, NCQ, hotplug, Port Multiplier
+>>>> * New error handling
+>>>> * IRQ driven PIO (from Albert Lee)
+>>>> * SATA NCQ support
+>>>> * Hotplug support
+>>>> * Port Multiplier support
+>>>
+>>>
+>>> BTW, we often use PM to mean Power Management.
+>>> Could we find a different acronym for Port Multiplier support,
+>>> such as PMS or PX or PXS?
+>>
+>>
+>> Ok, maybe not PMS ?
+>>
+>> Can you imagine a bug report from someone that "has problem with PMS"?
+>> :)
+>>
 > 
-> If you were to add new EH and NCQ support to sata_promise,
-> then I'd test it on my News server.
+> Would be fun though.  :)
 > 
+> I thought about using another acronym for port multiplier too.  But the
+> spec uses that acronym all over the place, PM, PMP (Port Multiplier
+> Portnumber), which reminds me of USB full/high speed fiasco.
+> 
+> Urghh... I thought we could use power for power management inside libata
+> but that might be a bad idea.  So, PMS?
 
-I have a promise card and played with it a little bit but I don't have
-access to hardware doc.  So...
+Actually, pmup?
 
--- 
-tejun
+Sort of describes what it is at the same time. (Alot easier to figure
+out what pmup is than what pms is (in a computer :))
+
+// Stefan
+
+--------------enig99880D32CE1408EF418A3B78
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
+
+iD8DBQFEZSZQBrn2kJu9P78RA+cDAJ4ob4lUFb+voZAKhaMmnCapEweyxQCbBN80
+q0Lhk+bDVNG4OhiscWX9BkE=
+=MaWS
+-----END PGP SIGNATURE-----
+
+--------------enig99880D32CE1408EF418A3B78--
