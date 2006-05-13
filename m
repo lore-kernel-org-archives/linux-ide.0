@@ -1,64 +1,43 @@
-From: Matthew Frost <artusemrys@sbcglobal.net>
-Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
- stable kernel
-Date: Fri, 12 May 2006 20:38:35 -0500
-Message-ID: <4465389B.3070606@sbcglobal.net>
-References: <20060512132437.GB4219@htj.dyndns.org> <20060512122116.152fbe80.rdunlap@xenotime.net> <4464E079.1070307@stesmi.com> <446505F8.7020909@gmail.com> <4465264D.6050608@stesmi.com>
-Reply-To: artusemrys@sbcglobal.net
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
+Date: Fri, 12 May 2006 23:37:58 -0400
+Message-ID: <44655496.9030402@pobox.com>
+References: <44614592.7080301@gmail.com> <446536C5.80503@pobox.com> <44653807.3030101@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp112.sbc.mail.mud.yahoo.com ([68.142.198.211]:21601 "HELO
-	smtp112.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751315AbWEMBhc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 May 2006 21:37:32 -0400
-In-Reply-To: <4465264D.6050608@stesmi.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:26337 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751127AbWEMDiL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 May 2006 23:38:11 -0400
+In-Reply-To: <44653807.3030101@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Smietanowski <stesmi@stesmi.com>
-Cc: Tejun Heo <htejun@gmail.com>, "Randy.Dunlap" <rdunlap@xenotime.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Stefan Smietanowski wrote:
-> Tejun Heo wrote:
->> Stefan Smietanowski wrote:
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> Tejun Heo wrote:
+>>> tested.  I implemented AHCI PM support half-way but then realized I 
+>>> don't have any AHCI controller which supports PM (I have ICH7R).  Is 
+>>> there any AHCI controller which reports PM support?
 >>
->>> Randy.Dunlap wrote:
->>>
->>>>> * New error handling
->>>>> * IRQ driven PIO (from Albert Lee)
->>>>> * SATA NCQ support
->>>>> * Hotplug support
->>>>> * Port Multiplier support
->>>>
->>>> BTW, we often use PM to mean Power Management.
->>>> Could we find a different acronym for Port Multiplier support,
->>>> such as PMS or PX or PXS?
->>>
->>> Ok, maybe not PMS ?
->>>
->>> Can you imagine a bug report from someone that "has problem with PMS"?
->>> :)
->>>
->> Would be fun though.  :)
+>> You can always use SCR-based PM support...
 >>
->> I thought about using another acronym for port multiplier too.  But the
->> spec uses that acronym all over the place, PM, PMP (Port Multiplier
->> Portnumber), which reminds me of USB full/high speed fiasco.
->>
->> Urghh... I thought we could use power for power management inside libata
->> but that might be a bad idea.  So, PMS?
 > 
-> Actually, pmup?
-> 
-> Sort of describes what it is at the same time. (Alot easier to figure
-> out what pmup is than what pms is (in a computer :))
-> 
+> Can you elaborate a bit?
 
-Or PMUL?  MUL is in common usage for the arithmetic multiply sense; 
-wouldn't it make sense in the Port Multiplier sense?  Would it get too 
-confused with FPMUL?  Too much like an arithmetic operator?
+Sections A.1 and 6.1 of the PM spec.  You set the PMP field of the 
+SControl register.  This has obvious parallelism limitations, which is 
+why "hardware context switching support" aka native PM support is 
+greatly preferred.
 
-> // Stefan
 
-Matt
+> @ welcome back.
+
+Thanks!  :)
+
+	Jeff, learning to type with a ring on the finger
+
+
