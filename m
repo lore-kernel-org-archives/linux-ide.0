@@ -1,56 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
- stable kernel
-Date: Sat, 13 May 2006 00:13:39 -0400
-Message-ID: <44655CF3.5010101@garzik.org>
-References: <20060512132437.GB4219@htj.dyndns.org> <20060512122116.152fbe80.rdunlap@xenotime.net> <4464E079.1070307@stesmi.com> <446505F8.7020909@gmail.com>
+Subject: Re: ata_piix resume from S3 on T43P failed
+Date: Sat, 13 May 2006 00:19:12 -0400
+Message-ID: <44655E40.2090004@garzik.org>
+References: <1147334740.7273.38.camel@forrest26.sh.intel.com> <4462F667.3060504@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:26338 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932323AbWEMENn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 00:13:43 -0400
-In-Reply-To: <446505F8.7020909@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:36066 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932203AbWEMETP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 00:19:15 -0400
+In-Reply-To: <4462F667.3060504@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Stefan Smietanowski <stesmi@stesmi.com>, "Randy.Dunlap" <rdunlap@xenotime.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
 Tejun Heo wrote:
-> Stefan Smietanowski wrote:
->> Randy.Dunlap wrote:
->>>> * New error handling
->>>> * IRQ driven PIO (from Albert Lee)
->>>> * SATA NCQ support
->>>> * Hotplug support
->>>> * Port Multiplier support
->>>
->>> BTW, we often use PM to mean Power Management.
->>> Could we find a different acronym for Port Multiplier support,
->>> such as PMS or PX or PXS?
+> zhao, forrest wrote:
+>> Hi, Tejun
 >>
->> Ok, maybe not PMS ?
+>> We just tested your git tree on thinkpad T43P laptop, and found that
+>> after ata_piix resumed from S3, SATA disk can't be read/write anymore.
+>> But according to the test result of kernel 2.6.16-rc6 on T43P, ata_piix
+>> can resume from S3 successfully.
 >>
->> Can you imagine a bug report from someone that "has problem with PMS"?
->> :)
+>> We know that this problem may be not related to your patches, but I
+>> think you know the libata development status very well, maybe you can
+>> give us some clue about what happened to ata_piix between 2.6.16-rc6 and
+>> your git tree.
 >>
 > 
-> Would be fun though.  :)
+> Hello, Zhao.
 > 
-> I thought about using another acronym for port multiplier too.  But the 
-> spec uses that acronym all over the place, PM, PMP (Port Multiplier 
-> Portnumber), which reminds me of USB full/high speed fiasco.
-> 
-> Urghh... I thought we could use power for power management inside libata 
-> but that might be a bad idea.  So, PMS?
+> I haven't really followed AHCI suspend/resume stuff but AFAICT it never
+> made to #upstream.  I don't know whether it was included in -rc# or not.
+>  But it sounds like it did.
 
-PMS is fine.  I encouraged the use of "UFO" for "UDP Fragmentation 
-Offload" in network driver land, and it stuck.
-
-This is Linux, we like to have fun around here :)
+Hannes @ SuSE posted an AHCI suspend/resume patch that needs to go in.
+Unfortunately AHCI is a high rate of churn, so it's still in my
+'Pending' folder :/
 
 	Jeff
-
 
 
