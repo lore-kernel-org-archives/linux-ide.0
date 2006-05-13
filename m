@@ -1,37 +1,21 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET 08/11] add hotplug support, take 2
-Date: Sat, 13 May 2006 21:56:59 +0900
-Message-ID: <4465D79B.6080404@gmail.com>
-References: <11473615261297-git-send-email-htejun@gmail.com>
+From: "Guadalupe" <sbdrpp@market-web.co.za>
+Subject: my chance
+Date: Sat, 13 May 2006 21:08:14 +0600
+Message-ID: <C67690D9.006BB04@market-web.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:6063 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S932416AbWEMM5H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 May 2006 08:57:07 -0400
-Received: by wr-out-0506.google.com with SMTP id i32so533653wra
-        for <linux-ide@vger.kernel.org>; Sat, 13 May 2006 05:57:06 -0700 (PDT)
-In-Reply-To: <11473615261297-git-send-email-htejun@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-admin-owner@vger.kernel.org>
+Sender: linux-admin-owner@vger.kernel.org
+To: linux-admin@vger.kernel.org, linux-diald@vger.kernel.org, linux-serial@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ia64-request@vger.kernel.org, davem@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hi.
-> 
-> This is part of patchset series described in [T].
-> 
-> This is the second take of add-hotplug-support patchset.  Changes from
-> the last take[L] are
-> 
+Do not ignore me please,
+I found your email somewhere andb now decided to write you.
+I am coming to your place in few weeks and thought we 
+can meeat each other. Let me know if you do not mind.
+I am a nice pretty girl. Don't reply to this email. a
+Email me direclty at ye@datetodayy.com
 
-One problem found here.  On hotplugs where power is applied at the same 
-time, prereset() doesn't wait enough and the first reset often fails 
-causing unnecessary delays.  I have fixed this in my repository by 
-debouncing for 5 secs in prereset before probing resets.
 
--- 
-tejun
