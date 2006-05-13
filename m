@@ -1,52 +1,65 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 16/22] libata: implement new SCR handling and port on/offline
- functions
-Date: Sun, 14 May 2006 08:18:51 +0900
-Message-ID: <4466695B.4050204@gmail.com>
-References: <1147348791300-git-send-email-htejun@gmail.com> <44665314.4040805@pobox.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: gentoo-2.6.15-r1 - Kernel oops when removing then reinstalling
+	DVD drive into Pismo mediabay
+Date: Sun, 14 May 2006 09:21:32 +1000
+Message-ID: <1147562493.21291.11.camel@localhost.localdomain>
+References: <20060512210937.70edf87b@zetagundam>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.239]:21048 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S964797AbWEMXS6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 May 2006 19:18:58 -0400
-Received: by wr-out-0506.google.com with SMTP id i23so585447wra
-        for <linux-ide@vger.kernel.org>; Sat, 13 May 2006 16:18:58 -0700 (PDT)
-In-Reply-To: <44665314.4040805@pobox.com>
+Received: from gate.crashing.org ([63.228.1.57]:56486 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S964794AbWEMXVr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 19:21:47 -0400
+In-Reply-To: <20060512210937.70edf87b@zetagundam>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Jordan Herring <silverpower@bellsouth.net>
+Cc: linuxppc-dev@ozlabs.org, list linux-ide <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Implement ata_scr_{valid|read|write|write_flush}() and
->> ata_port_{online|offline}().  These functions replace
->> scr_{read|write}() and sata_dev_present().
->>
->> Major difference between between the new SCR functions and the old
->> ones is that the new ones have a way to signal error to the caller.
->> This makes handling SCR-available and SCR-unavailable cases in the
->> same path easier.  Also, it eases later PM implementation where SCR
->> access can fail due to various reasons.
->>
->> ata_port_{online|offline}() functions return 1 only when they are
->> affirmitive of the condition.  e.g.  if SCR is unaccessible or
->> presence cannot be determined for other reasons, these functions
->> return 0.  So, ata_port_online() != !ata_port_offline().  This
->> distinction is useful in many exception handling cases.
+On Fri, 2006-05-12 at 21:09 -0400, Jordan Herring wrote:
+> This is using the 2.6.15 kernel with the Gentoo patches. The 2.6.16
+> kernel also exhibits this behavior.
+
+Looks like something broke/changed in the IDE code that cause it to blow
+when the media-bay re-registers the interface. I'll need to dig in that
+code, it's not trivial. Will let you know.
+
+> Mar  4 08:48:50 zetagundam mediabay0: switching to 3
+> Mar  4 08:48:50 zetagundam mediabay0: powering up
+> Mar  4 08:48:50 zetagundam mediabay0: enabling (kind:3)
+> Mar  4 08:48:50 zetagundam mediabay0: waiting reset (kind:3)
+> Mar  4 08:48:51 zetagundam mediabay0: waiting IDE reset (kind:3)
+> Mar  4 08:48:52 zetagundam mediabay0: waiting IDE ready (kind:3)
+> Mar  4 08:48:52 zetagundam mediabay 0, registering IDE...
+> Mar  4 08:48:52 zetagundam Probing IDE interface ide2...
+> Mar  4 08:48:52 zetagundam hde: MATSHITADVD-ROM SR-8173, ATAPI CD/DVD-ROM drive 
+> Mar  4 08:48:52 zetagundam Oops: kernel access of bad area, sig: 11 [#1] 
+> Mar  4 08:48:52 zetagundam NIP: C010EF6C LR: C010E1F4 SP: CFEE5EB0 REGS: cfee5e00 TRAP: 0300    Not tainted 
+> Mar  4 08:48:52 zetagundam MSR: 00009032 EE: 1 PR: 0 FP: 0 ME: 1 IR/DR: 11
+> Mar  4 08:48:52 zetagundam DAR: 220000A2, DSISR: 40000000 
+> Mar  4 08:48:52 zetagundam TASK = cfe387f0[721] 'media-bay' THREAD: cfee4000
+> Mar  4 08:48:52 zetagundam Last syscall: -1 
+> Mar  4 08:48:52 zetagundam GPR00: C016BC14 CFEE5EB0 CFE387F0 220000A2 C0373D50 C016BD14 C0373D4C 00000000 
+> Mar  4 08:48:52 zetagundam GPR08: C02DAC53 FFFFFFFF 00004000 C0373DC0 82004088 00000000 00000000 00000000 
+> Mar  4 08:48:52 zetagundam GPR16: 00000000 00000000 00000000 00000000 00230000 00000000 00000000 00009032 
+> Mar  4 08:48:52 zetagundam GPR24: C0310000 00000014 00000000 FFFFFFEA C0373768 C0373D4C C0373D18 2200008A 
+> Mar  4 08:48:52 zetagundam NIP [c010ef6c] kref_get+0x0/0x24 
+> Mar  4 08:48:52 zetagundam LR [c010e1f4] kobject_get+0x20/0x38 
+> Mar  4 08:48:52 zetagundam Call trace:
+> Mar  4 08:48:52 zetagundam [c016bc14] get_device+0x20/0x38 
+> Mar  4 08:48:52 zetagundam [c016bde4] device_add+0x48/0x170 
+> Mar  4 08:48:52 zetagundam [c019663c] probe_hwif+0x600/0x780 
+> Mar  4 08:48:52 zetagundam [c0197374] probe_hwif_init_with_fixup+0x1c/0xac 
+> Mar  4 08:48:52 zetagundam [c018f688] ide_register_hw_with_fixup+0x198/0x1dc 
+> Mar  4 08:48:52 zetagundam [c0184e24] media_bay_step+0x3b0/0x54c 
+> Mar  4 08:48:52 zetagundam [c0185054] media_bay_task+0x94/0xf8 
+> Mar  4 08:48:52 zetagundam [c00069bc] kernel_thread+0x44/0x60
 > 
-> If its SATA-specific, it should have a "sata_" not "ata_" prefix.
-> 
+> Basically, what happens is that if I pull the drive and then reinsert
+> it (doesn't matter how long) it immediately does this and the keyboard
+> seizes up. If I ssh in and kill the process that was on that console,
+> the kernel will continue to run, if I recall correctly. (Of course,
+> being a laptop, this is rather impractical most of the time.) Usually
+> when this happens, the drive is *not* mounted at all.
 
-I thought about it but the 'S' in SCR stands for Serial ATA and we also 
-need to rename all PM functions to sata_pmp_xxx() - SCR and PMP are 
-already SATA specific.  Do you think that's the way to go?
-
-For ata_port_on/offline(), I think it's better to leave them alone for 
-hotpluggable IDE hotbays with presence detection.
-
--- 
-tejun
