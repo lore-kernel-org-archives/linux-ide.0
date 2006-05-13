@@ -1,80 +1,28 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
-Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
- stable kernel
-Date: Sat, 13 May 2006 02:20:29 +0200
-Message-ID: <4465264D.6050608@stesmi.com>
-References: <20060512132437.GB4219@htj.dyndns.org> <20060512122116.152fbe80.rdunlap@xenotime.net> <4464E079.1070307@stesmi.com> <446505F8.7020909@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [ANNOUNCE] libata EH/NCQ/hotplug/PM git tree
+Date: Fri, 12 May 2006 21:30:45 -0400
+Message-ID: <446536C5.80503@pobox.com>
+References: <44614592.7080301@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-ripemd160;
- protocol="application/pgp-signature";
- boundary="------------enig99880D32CE1408EF418A3B78"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxfep02.bredband.com ([195.54.107.73]:50121 "EHLO
-	mxfep02.bredband.com") by vger.kernel.org with ESMTP
-	id S932224AbWEMAUe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 May 2006 20:20:34 -0400
-In-Reply-To: <446505F8.7020909@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:26847 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751288AbWEMBbE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 May 2006 21:31:04 -0400
+In-Reply-To: <44614592.7080301@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig99880D32CE1408EF418A3B78
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, Edward Falk <efalk@google.com>, Carlos Pardo <Carlos.Pardo@siliconimage.com>, Raymond Liu <Raymond.Liu@siliconimage.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 Tejun Heo wrote:
-> Stefan Smietanowski wrote:
-> 
->> Randy.Dunlap wrote:
->>
->>>> * New error handling
->>>> * IRQ driven PIO (from Albert Lee)
->>>> * SATA NCQ support
->>>> * Hotplug support
->>>> * Port Multiplier support
->>>
->>>
->>> BTW, we often use PM to mean Power Management.
->>> Could we find a different acronym for Port Multiplier support,
->>> such as PMS or PX or PXS?
->>
->>
->> Ok, maybe not PMS ?
->>
->> Can you imagine a bug report from someone that "has problem with PMS"?
->> :)
->>
-> 
-> Would be fun though.  :)
-> 
-> I thought about using another acronym for port multiplier too.  But the
-> spec uses that acronym all over the place, PM, PMP (Port Multiplier
-> Portnumber), which reminds me of USB full/high speed fiasco.
-> 
-> Urghh... I thought we could use power for power management inside libata
-> but that might be a bad idea.  So, PMS?
+> tested.  I implemented AHCI PM support half-way but then realized I 
+> don't have any AHCI controller which supports PM (I have ICH7R).  Is 
+> there any AHCI controller which reports PM support?
 
-Actually, pmup?
+You can always use SCR-based PM support...
 
-Sort of describes what it is at the same time. (Alot easier to figure
-out what pmup is than what pms is (in a computer :))
+	Jeff
 
-// Stefan
 
---------------enig99880D32CE1408EF418A3B78
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
-
-iD8DBQFEZSZQBrn2kJu9P78RA+cDAJ4ob4lUFb+voZAKhaMmnCapEweyxQCbBN80
-q0Lhk+bDVNG4OhiscWX9BkE=
-=MaWS
------END PGP SIGNATURE-----
-
---------------enig99880D32CE1408EF418A3B78--
