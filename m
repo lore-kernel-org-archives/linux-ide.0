@@ -1,38 +1,22 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 01/22] SCSI: Introduce scsi_req_abort_cmd (REPOST)
-Date: Sat, 13 May 2006 22:12:36 -0400
-Message-ID: <44669214.7070309@pobox.com>
-References: <20060514020833.88076.qmail@web31813.mail.mud.yahoo.com>
+From: "Dr. David Frankson" <dfrankson4cs@verizon.net>
+Subject: zeboxgapovow
+Date: Sun, 14 May 2006 07:14:08 +0000 (UTC)
+Message-ID: <000001c67724$00009eaa$f14aa8c0@sifon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+        format=flowed;
+        charset="iso-8859-1";
+        reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60557 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932344AbWENCM4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 22:12:56 -0400
-In-Reply-To: <20060514020833.88076.qmail@web31813.mail.mud.yahoo.com>
+Received: from [221.136.247.20] ([221.136.247.20]:3850 "HELO verizon.net")
+	by vger.kernel.org with SMTP id S1751352AbWENHN6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 May 2006 03:13:58 -0400
+Date: Sun, 14 May 2006 15:04:13 0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Luben Tuikov wrote:
-> --- Jeff Garzik <jgarzik@pobox.com> wrote:
-> 
->> Luben Tuikov wrote:
->>> Now that's the patch in its entirety, Jeff.
->>>
->>>      Luben
->>
->> hehe, thanks Dad :)
-> 
-> It is not very nice to chop off the patch email which GIT generated,
-> and then claim, as you did, that that was the whole thing, when
-> it clearly it was not.
-
-Clearly, its a conspiracy.  No one ever makes mistakes.
-
-	Jeff
-
+If u would like cheap healthcare medication online http://dbue.net/
 
 
