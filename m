@@ -1,55 +1,66 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET 06/11] prep for hotplug support, take 2
-Date: Sun, 14 May 2006 09:07:33 +0900
-Message-ID: <446674C5.7010800@gmail.com>
-References: <11473597542442-git-send-email-htejun@gmail.com> <4466655A.6030200@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
+Date: Sat, 13 May 2006 21:05:13 -0400
+Message-ID: <44668249.9000004@pobox.com>
+References: <11473536871340-git-send-email-htejun@gmail.com> <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.194]:42157 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964820AbWENAHj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 May 2006 20:07:39 -0400
-Received: by wx-out-0102.google.com with SMTP id i29so346448wxd
-        for <linux-ide@vger.kernel.org>; Sat, 13 May 2006 17:07:38 -0700 (PDT)
-In-Reply-To: <4466655A.6030200@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:60811 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932397AbWENBFX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 21:05:23 -0400
+In-Reply-To: <44666D98.1000503@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> At this point, I run out of steam.
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> Tejun Heo wrote:
+>>> +struct ata_ering {
+>>> +    int            cursor;
+>>> +    int            size;
+>>> +    struct ata_ering_entry    ring[];
+>>> +};
+>>> +
+>>> +#define DEFINE_ATA_ERING(name, size)    \
+>>> +    struct ata_ering    name;    \
+>>> +    struct ata_ering_entry    name_entries[size];
+>>
+>> ACK, but this is creeping dangerously close to C abuse :)
+>>
+>> This sort of code will confuse debuggers and source checkers.
+>>
 > 
-> After the minor changes are committed, I could pull <= patchset #5 into 
-> #upstream immediately.
+> Well, as ering is currently used in only one place and it will stay in 
+> libata in the future, it might be better to remove the macro and shove 
+> the allocation into where it's used; however, I prefer the macro because 
+> it's safer and I don't use any debuggers or source checkers.
+> 
+> Linux source has lots of cpp macros like above and IMHO the above 
+> doesn't even rank among C abuses.  lxr and sparse would be fine.
 
-Great.  Once I get your responses and sorts out AHCI EH, I'll make new 
-git branch you can pull from.  I can't wait to push those to #upstream. 
-  Managing 120 stacked patches was a nightmare.  If I change something 
-early in the series, even a simple/silly stuff, it causes a lot of 
-rejects in later patches.
+I doubt you'll find another example of this at all.  The reason why its 
+abuse is that the declaration and use are subtlely different.  In the 
+above, the C compiler is free to insert padding between 'name' and 
+'name_entries'.
 
-> The upcoming ata_link patchset looks quite nice; that is definitely the 
-> direction I want to go.
+Other counterpoints:
 
-Great.
+* Its important to support other people's use of debuggers and source 
+checkers.
 
-> I've already given hotplug plenty of thought (i.e. general design 
-> principles I like), so reviewing HP-related patchset should not take 
-> very long.  I'll need to refresh my PM-related design thoughts a bit 
-> before diving into that patchset, so that might take several days to get 
-> to.
+* I disagree that the macro is safer, simply because we are having this 
+conversation :)  An allocation is easier to understand and less prone to 
+subtle breakage.
 
-I'm still working on power applied together case because ahci is failing 
-the first reset in a lot of cases.  Waiting for several secs before 
-hotplug reset solved the problem for sata_sil and sata_sil24 but ahci's 
-problem seems to be a different one - it doesn't seem to update TF for 
-the first FIS after hotplug reset.  However, those changes are minor and 
-wouldn't affect reviewing process, I think.
+This is the trap of the 0-element array:  its handy for avoiding an 
+additional allocation, but if you look all over the kernel at its real 
+world uses (including SCSI and libata), you'll see a hodgepodge of ugly 
+casting, varied approaches, and yet similar bug patterns.
 
-Thanks for reviewing and good night. :)
+	Jeff
 
--- 
-tejun
+
