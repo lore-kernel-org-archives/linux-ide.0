@@ -1,96 +1,89 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 16/22] libata: implement new SCR handling and port on/offline
- functions
-Date: Sun, 14 May 2006 10:29:33 +0900
-Message-ID: <446687FD.8070406@gmail.com>
-References: <1147348791300-git-send-email-htejun@gmail.com> <44665314.4040805@pobox.com> <4466695B.4050204@gmail.com> <44668399.2060101@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
+Date: Sat, 13 May 2006 21:32:56 -0400
+Message-ID: <446688C8.6020001@pobox.com>
+References: <11473536871340-git-send-email-htejun@gmail.com> <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com> <44668249.9000004@pobox.com> <446685D1.4030607@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.200]:28375 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750706AbWENB3j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 May 2006 21:29:39 -0400
-Received: by wx-out-0102.google.com with SMTP id i29so351668wxd
-        for <linux-ide@vger.kernel.org>; Sat, 13 May 2006 18:29:39 -0700 (PDT)
-In-Reply-To: <44668399.2060101@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:34444 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750736AbWENBdK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2006 21:33:10 -0400
+In-Reply-To: <446685D1.4030607@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Jeff Garzik wrote:
->>> Tejun Heo wrote:
->>>> Implement ata_scr_{valid|read|write|write_flush}() and
->>>> ata_port_{online|offline}().  These functions replace
->>>> scr_{read|write}() and sata_dev_present().
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> Tejun Heo wrote:
+>>> Jeff Garzik wrote:
+>>>> Tejun Heo wrote:
+>>>>> +struct ata_ering {
+>>>>> +    int            cursor;
+>>>>> +    int            size;
+>>>>> +    struct ata_ering_entry    ring[];
+>>>>> +};
+>>>>> +
+>>>>> +#define DEFINE_ATA_ERING(name, size)    \
+>>>>> +    struct ata_ering    name;    \
+>>>>> +    struct ata_ering_entry    name_entries[size];
 >>>>
->>>> Major difference between between the new SCR functions and the old
->>>> ones is that the new ones have a way to signal error to the caller.
->>>> This makes handling SCR-available and SCR-unavailable cases in the
->>>> same path easier.  Also, it eases later PM implementation where SCR
->>>> access can fail due to various reasons.
+>>>> ACK, but this is creeping dangerously close to C abuse :)
 >>>>
->>>> ata_port_{online|offline}() functions return 1 only when they are
->>>> affirmitive of the condition.  e.g.  if SCR is unaccessible or
->>>> presence cannot be determined for other reasons, these functions
->>>> return 0.  So, ata_port_online() != !ata_port_offline().  This
->>>> distinction is useful in many exception handling cases.
+>>>> This sort of code will confuse debuggers and source checkers.
+>>>>
 >>>
->>> If its SATA-specific, it should have a "sata_" not "ata_" prefix.
+>>> Well, as ering is currently used in only one place and it will stay 
+>>> in libata in the future, it might be better to remove the macro and 
+>>> shove the allocation into where it's used; however, I prefer the 
+>>> macro because it's safer and I don't use any debuggers or source 
+>>> checkers.
 >>>
+>>> Linux source has lots of cpp macros like above and IMHO the above 
+>>> doesn't even rank among C abuses.  lxr and sparse would be fine.
 >>
->> I thought about it but the 'S' in SCR stands for Serial ATA and we 
->> also need to rename all PM functions to sata_pmp_xxx() - SCR and PMP 
->> are already SATA specific.  Do you think that's the way to go?
+>> I doubt you'll find another example of this at all.  The reason why 
+>> its abuse is that the declaration and use are subtlely different.  In 
+>> the above, the C compiler is free to insert padding between 'name' and 
+>> 'name_entries'.
 >>
->> For ata_port_on/offline(), I think it's better to leave them alone for 
->> hotpluggable IDE hotbays with presence detection.
+>> Other counterpoints:
+>>
+>> * Its important to support other people's use of debuggers and source 
+>> checkers.
 > 
-> Yeah, I feel pretty strongly about the sata_ prefix, even for 
-> port_on/offline.  The implementation is purely SATA specific.
+> Agreed.
 > 
-> Should that ever change for sata_port_on/offline, it then becomes 
-> trivial to create a ->port_on/offline hook, and update all SATA drivers 
-> to pass sata_port_on/offline to it.  IOW, I think its unlikely that 
-> these functions, as implemented and used, will morph in the future from
+>> * I disagree that the macro is safer, simply because we are having 
+>> this conversation :)  An allocation is easier to understand and less 
+>> prone to subtle breakage.
+>>
+>> This is the trap of the 0-element array:  its handy for avoiding an 
+>> additional allocation, but if you look all over the kernel at its real 
+>> world uses (including SCSI and libata), you'll see a hodgepodge of 
+>> ugly casting, varied approaches, and yet similar bug patterns.
 > 
->     sata-port-on
+> With your comment about padding above, I'm a bit confused.  No matter 
+> whether we put the name_entries in the macro or in struct ata_device, 
+> the compiler is free to insert padding inbetween.  That's how 
+> zero/flexible-length array is supposed to be used.  The only thing 
+> guaranteed is that there will be enough space to store the array 
+> members.  Accessing the storage area directly will result in disaster. I 
+> consider it one another convention to learn about the great C.
 > 
-> to
+> The alternatives here are...
 > 
->     if (sata)
->         sata-port-on
->     else if (hotpluggable PATA bays)
->         bay-on
+> * leave it as it is
+> * shove ering_entry allocation into ering (fixed size is ATM)
+> * shove ering_entry allocation into ata_device
 
-I'm more concerned with where it's used rather than how it's 
-implemented.  The ata_port_on/offline(), which gets morphed into 
-ata_link_on/offline() with ata_link introduction, is used throughout 
-libata core layer which covers both PATA and SATA.  And I've been 
-careful such that no on/off info cases are handled properly without ugly 
-sata/pata test in each location.
+I would just declare that all erings have 32 entries, and revisit the 
+issue if/when pain appears.  Hardcode 32, and make things easy.
 
-So, my suggestion is to keep ata_port_on/offline() interface as they 
-are.  If you're uncomfortable with putting SATA only implementation into 
-ata_port_on/offline(), I can separate out sata_port_on/offline() and put 
-sata/pata test into ata_port_on/offline().  But, if we simply rename 
-them, we'll have to put sata/pata tests where those functions are used, 
-which is ugly.
+	Jeff
 
-> Its much more likely we will create two separate functions for the 
-> separate functionality.  Thus, your ata_port_on will always be SATA 
-> specific, and deserving of the spiffy sata_ prefix.  And hey, we want to 
-> emphasize its SATA because SATA is cooler than PATA, too.
 
-So, the current ata_port_on/off functions can be considered as including 
-both PATA and SATA implementation, where SATA implementation got 
-collapsed into it because PATA implementation is trivial.
 
-I agree with you about other functions.  SATA, cool, good.
-
--- 
-tejun
