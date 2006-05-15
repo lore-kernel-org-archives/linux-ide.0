@@ -1,52 +1,40 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git-patches] EH, irq-pio merge and NCQ patches
-Date: Mon, 15 May 2006 21:11:13 +0900
-Message-ID: <44686FE1.5020804@gmail.com>
-References: <20060515120808.GA23124@htj.dyndns.org>
+From: "saeed bishara" <saeed.bishara@gmail.com>
+Subject: Re: question about boot time drive initialization
+Date: Mon, 15 May 2006 16:08:32 +0300
+Message-ID: <c70ff3ad0605150608h60d69592uadb0abd7ee2eaf62@mail.gmail.com>
+References: <4466DE81.2040006@gmail.com>
+	 <311601c90605140929s5fe919efk69c59bd5f61fee7d@mail.gmail.com>
+	 <4467DE65.7000701@gmail.com>
+	 <c70ff3ad0605150338j2f9aef2j40ced2c7e95594ed@mail.gmail.com>
+	 <4468611E.1000907@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:2867 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.236]:15728 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751214AbWEOMLT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 08:11:19 -0400
-Received: by wr-out-0506.google.com with SMTP id i28so808041wra
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 05:11:18 -0700 (PDT)
-In-Reply-To: <20060515120808.GA23124@htj.dyndns.org>
+	id S932398AbWEONIc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 09:08:32 -0400
+Received: by wr-out-0506.google.com with SMTP id i32so844031wra
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 06:08:32 -0700 (PDT)
+In-Reply-To: <4468611E.1000907@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Eric D. Mudama" <edmudama@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Hello, Jeff.
-> 
-> This is the updated git-patches of previously posted five
-> patchsets[1].  Changes are
-> 
-> * SCSI-implement-host_eh_scheduled patch updated as discussed.
-> 
-> * A new patch, which renames ata_down_sata_spd_limit() and friends to
->   sata_*(), is added to prep patchset.
-> 
-> * ata_scr_*() renamed to sata_scr_*()
-> 
-> * ehc->flags has been moved to ehi->flags so that it can also be used
->   to pass flags from IRQ handler to EH.
-> 
-> * Spurious ata_dev_init() prototype killed from ering patch.
-> 
-> * ata_ering is changed to include #ATA_ERING_SIZE predefined ering
->   entries.  As this makes add-dev-ering patch trivial, the patch is
->   collapsed into implement-ering.
-> 
-> * sata_sil EH now directly calls ata_bmdma_irq_clear() instead of
->   calling ops->irq_clear().
+> Hmmm.. weird.  That's not what I'm seeing.  AHCI reports command issue
+> failure if something goes wrong while transmitting D2H fis for a command
+you mean H2D, don't you?
 
-I forgot one.
+> (probably when it sees R_ERR).  If I issue SRST shortly after power-on,
+> AHCI fails SRST due to command issue failure.  So, it seems that the
+> device rejects SRST before it transmits the first FIS34.
 
-* AHCI now has proper IRQ-mask manipulating freeze/thaw().
-
--- 
-tejun
+there is also the possiblity that the AHCI doesn't issue the FIS34 as
+long as the BSY bit in the Status shadow register is set. so it's not
+the disk fault. I have taken a look at the AHCI spec, and found that
+you need to use the Commnad List Override (CLO) feature in order to
+send FIS while BSY is set. do you use that ?
