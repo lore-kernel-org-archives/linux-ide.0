@@ -1,43 +1,29 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: question about boot time drive initialization
-Date: Mon, 15 May 2006 22:52:36 +0900
-Message-ID: <446887A4.1060904@gmail.com>
-References: <4466DE81.2040006@gmail.com>	 <311601c90605140929s5fe919efk69c59bd5f61fee7d@mail.gmail.com>	 <4467DE65.7000701@gmail.com>	 <c70ff3ad0605150338j2f9aef2j40ced2c7e95594ed@mail.gmail.com>	 <4468611E.1000907@gmail.com> <c70ff3ad0605150608h60d69592uadb0abd7ee2eaf62@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide_dma_speed() fixes
+Date: Mon, 15 May 2006 15:08:55 +0100
+Message-ID: <1147702135.26686.19.camel@localhost.localdomain>
+References: <4463F4C8.9080608@ru.mvista.com>
+	 <20060514050548.5399e3f4.akpm@osdl.org>  <446885BE.4090404@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.204]:46780 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964907AbWEONwm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 09:52:42 -0400
-Received: by nz-out-0102.google.com with SMTP id l8so29045nzf
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 06:52:41 -0700 (PDT)
-In-Reply-To: <c70ff3ad0605150608h60d69592uadb0abd7ee2eaf62@mail.gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41698 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932423AbWEON40
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 09:56:26 -0400
+In-Reply-To: <446885BE.4090404@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: saeed bishara <saeed.bishara@gmail.com>
-Cc: "Eric D. Mudama" <edmudama@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Andrew Morton <akpm@osdl.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-saeed bishara wrote:
->> Hmmm.. weird.  That's not what I'm seeing.  AHCI reports command issue
->> failure if something goes wrong while transmitting D2H fis for a command
-> you mean H2D, don't you?
+On Llu, 2006-05-15 at 17:44 +0400, Sergei Shtylyov wrote:
+>     That's what gcc thinks. The code is 100% correct -- it will never reach 
+> the switch statement with mode > 0 (in which case ultra_mask isn't used) and 
+> ultra_mask unitialized. I may add an explicit initializer in the declaration 
+> if you like...
 
-Yeap.
+Please leave the warning, this was discussed recently in other threads
+and hiding warnings is very dangerous.
 
->> (probably when it sees R_ERR).  If I issue SRST shortly after power-on,
->> AHCI fails SRST due to command issue failure.  So, it seems that the
->> device rejects SRST before it transmits the first FIS34.
-> 
-> there is also the possiblity that the AHCI doesn't issue the FIS34 as
-> long as the BSY bit in the Status shadow register is set. so it's not
-> the disk fault. I have taken a look at the AHCI spec, and found that
-> you need to use the Commnad List Override (CLO) feature in order to
-> send FIS while BSY is set. do you use that ?
-
-AHCI driver does CLO if necessary before issuing SRST, so I don't think 
-CLO is the issue here.
-
--- 
-tejun
