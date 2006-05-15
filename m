@@ -1,35 +1,32 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
-Date: Mon, 15 May 2006 23:00:49 +0900
-Message-ID: <44688991.8010407@gmail.com>
-References: <11473536871340-git-send-email-htejun@gmail.com>	 <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com>	 <44668249.9000004@pobox.com> <446685D1.4030607@gmail.com>	 <446688C8.6020001@pobox.com> <1147700193.26686.7.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
+	stable kernel
+Date: Mon, 15 May 2006 15:25:59 +0100
+Message-ID: <1147703159.26686.33.camel@localhost.localdomain>
+References: <20060512132437.GB4219@htj.dyndns.org>
+	 <20060512122116.152fbe80.rdunlap@xenotime.net>
+	 <4464E079.1070307@stesmi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.203]:40158 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964916AbWEOOBA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 10:01:00 -0400
-Received: by nz-out-0102.google.com with SMTP id 18so101810nzp
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 07:01:00 -0700 (PDT)
-In-Reply-To: <1147700193.26686.7.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:36487 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964935AbWEOONS
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 10:13:18 -0400
+In-Reply-To: <4464E079.1070307@stesmi.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Stefan Smietanowski <stesmi@stesmi.com>
+Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Sad, 2006-05-13 at 21:32 -0400, Jeff Garzik wrote:
->> I would just declare that all erings have 32 entries, and revisit the 
->> issue if/when pain appears.  Hardcode 32, and make things easy.
+On Gwe, 2006-05-12 at 21:22 +0200, Stefan Smietanowski wrote:
+> Ok, maybe not PMS ?
 > 
-> Do we even need the ering. If you classify the error when it occurs it
-> seems all you need is a couple of 32bit words and to set bits and
-> shift ?
-> 
+> Can you imagine a bug report from someone that "has problem with PMS"?
+> :)
 
-Hmmm.. yeah, that sounds good.  Jeff, what do you think?
+We've had a driver for the pms card for many years and nobody over the
+age of about 18 has afaik found it amusing.
 
--- 
-tejun
+Alan
