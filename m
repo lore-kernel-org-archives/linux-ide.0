@@ -1,44 +1,31 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Assorted bugs in the PIIX drivers
-Date: Mon, 15 May 2006 19:12:20 +0400
-Message-ID: <44689A54.4020307@ru.mvista.com>
-References: <1132929808.3298.18.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide_dma_speed() fixes
+Date: Mon, 15 May 2006 16:27:04 +0100
+Message-ID: <1147706824.26686.66.camel@localhost.localdomain>
+References: <4463F4C8.9080608@ru.mvista.com>
+	 <20060514050548.5399e3f4.akpm@osdl.org> <446885BE.4090404@ru.mvista.com>
+	 <20060515080053.296c4c55.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:5076 "HELO mail.dev.rtsoft.ru")
-	by vger.kernel.org with SMTP id S964969AbWEOPNV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 11:13:21 -0400
-In-Reply-To: <1132929808.3298.18.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964975AbWEOPO3@vger.kernel.org>
+In-Reply-To: <20060515080053.296c4c55.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Llu, 2006-05-15 at 08:00 -0700, Andrew Morton wrote:
+>  
+>  	/* Capable of UltraDMA modes? */
+> -	if (id->field_valid & 4)
+> -		ultra_mask = id->dma_ultra & hwif->ultra_mask;
+> -	else
+> +	ultra_mask = id->dma_ultra & hwif->ultra_mask;
+> +
+> +	if (!(id->field_valid & 4))
+>  		mode = 0;	/* fallback to MW/SW DMA if no UltraDMA */
+>  
 
-Alan Cox wrote:
-> I finally got all the documents rounded up to try and redo Jgarzik's
-> PIIX driver a bit more completely (I'm short MPIIX if anyone has it ?)
->
-> I then started reading the docs and the code and noticing a couple of
-> problems
-
-> 1.	We set IE1 on PIO0-2 which the docs say is for PIO3+
-
-    For PIO2+ actually, according to Intel's PRM (29860004.pdf), and it's said
-to have no effect in the lower modes. This is actually not very correct since
-when one issues Set Transfer Mode ATA command with the value (8 + PIOn), this
-means select PIO _flow control_ mode n, so -IORDY is assumed to be in use.
-
-> I'm also not clear if the "no MWDMA0" list has been updated correctly
-> for the newer chipsets.
-
-    What is/was the point for keeping MW DMA 0 support anyway? On PIIX, it's
-greatly slowed down (600 vs 480 ns cycle) and was never "offically" supported
-by Intel.
-
-MBR, Sergei
-
-
+Looks fine to me, id-> is always the full 512 bytes of data so its safe
+to do that.
