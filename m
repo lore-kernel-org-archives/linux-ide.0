@@ -1,55 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [git-patches] EH, irq-pio merge and NCQ patches
-Date: Mon, 15 May 2006 11:39:20 -0400
-Message-ID: <4468A0A8.2070300@pobox.com>
-References: <20060515120808.GA23124@htj.dyndns.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Assorted bugs in the PIIX drivers
+Date: Mon, 15 May 2006 16:59:43 +0100
+Message-ID: <1147708783.26686.69.camel@localhost.localdomain>
+References: <1132929808.3298.18.camel@localhost.localdomain>
+	 <44689A54.4020307@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:1471 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751489AbWEOPjX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 11:39:23 -0400
-In-Reply-To: <20060515120808.GA23124@htj.dyndns.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52158 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751500AbWEOPrE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 11:47:04 -0400
+In-Reply-To: <44689A54.4020307@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> I didn't add DMA engine stopping to ata_bmdma_freeze() in this series.
-> When BMDMA engine is turned off, all status bits go too.  However, the
-> status is used by BMDMA EH to report and to recognize host bus error
-> reprsented as timeout.
+On Llu, 2006-05-15 at 19:12 +0400, Sergei Shtylyov wrote:
+>     For PIO2+ actually, according to Intel's PRM (29860004.pdf), and it's said
+> to have no effect in the lower modes. This is actually not very correct since
+> when one issues Set Transfer Mode ATA command with the value (8 + PIOn), this
+> means select PIO _flow control_ mode n, so -IORDY is assumed to be in use.
+
+PIO2 depends on the drive (there is a drive parameter telling you the
+highest timing clock you can do with/without IORDY
+
+> > I'm also not clear if the "no MWDMA0" list has been updated correctly
+> > for the newer chipsets.
 > 
-> To make all of them work, the BMDMA status needs to be stored in
-> ata_bmdma_freeze() and used in EH, which is currently a bit difficult
-> to implement for generic BMDMA.  I think we can resolve this later.
+>     What is/was the point for keeping MW DMA 0 support anyway? On PIIX, it's
+> greatly slowed down (600 vs 480 ns cycle) and was never "offically" supported
+> by Intel.
 
-Agree re storing BMDMA status.  The very next operation needs to be 
-DMA-stop, though.  Otherwise shadow register block isn't accessible. 
-And you must still check BMDMA status -after- stopping DMA, too (that 
-doesn't invalidate your logic quoted above, of course).
+Some old old drives only do MWDMA0. The Intel docs I have here don't
+describe it in any way as "unsupported", merely broken on some ICH
+variants.
 
-
-> The series can be browsed at the following URL.
-> 
-> 	http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=for-jeff
-> 
-> If you're satisfied with the updates, please pull from.
-> 
-> 	git://htj.dyndns.org/libata-tj for-jeff
-
-Pulled into #upstream and other branches, and pushed to kernel.org. 
-Please check and make sure everything looks OK, after kernel.org 
-finishes mirroring to the outside world.
-
-Thanks.
-
-BTW, it would be nice if you would start with branch #sii-irq when you 
-are updating the sata_sil interrupt handling path.  And eventually we 
-want to push #sii-lbt too.
-
-	Jeff
-
+Alan
 
