@@ -1,31 +1,47 @@
-From: Mark Lord <liml@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [RFT] major libata update
-Date: Mon, 15 May 2006 15:33:11 -0400
-Message-ID: <4468D777.6080408@rtr.ca>
-References: <20060515170006.GA29555@havoc.gtf.org> <20060515101831.0e38d131.akpm@osdl.org> <4468C33F.7070905@garzik.org>
+Date: Mon, 15 May 2006 16:45:25 -0400
+Message-ID: <4468E865.3070601@garzik.org>
+References: <20060515170006.GA29555@havoc.gtf.org> <20060515101831.0e38d131.akpm@osdl.org> <4468C33F.7070905@garzik.org> <200605152106.08239.arekm@maven.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:47553 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751494AbWEOTdM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 15:33:12 -0400
-In-Reply-To: <4468C33F.7070905@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:6348 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751505AbWEOUpc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 16:45:32 -0400
+In-Reply-To: <200605152106.08239.arekm@maven.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
+To: Arkadiusz Miskiewicz <arekm@maven.pl>
 Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-Jeff Garzik wrote:
-> Andrew Morton wrote:
-..
->> http://bugzilla.kernel.org/show_bug.cgi?id=5586
+Arkadiusz Miskiewicz wrote:
+> On Monday 15 May 2006 20:06, Jeff Garzik wrote:
 > 
-> sata_mv still considered highly experimental, as noted in Kconfig.  Bugs 
-> deferred to Mark Lord.
-..
-I think that particular bug has gone away with my internal sata_mv.c version.
-I'm updating it for release on top of Jeff/Tejun's patch set, and will likely
-backport the bugfixes to 2.6.16.xx as well.  Timeline, this week or next.
+>>> http://bugzilla.kernel.org/show_bug.cgi?id=6260
+>> waiting on SATA ACPI merge.
+> Is this really a case?
+> 
+> The one (layering breaking; discussed already) patch cures the problem and 
+> nothing sata acpi related is needed, so something else is problematic here I 
+> guess.
+> 
+> --- 2.6.17-rc2/drivers/scsi/libata-core.c       2006-04-19 09:14:11.000000000 
+> +0100 
+> +++ linux/drivers/scsi/libata-core.c    2006-04-21 20:55:48.000000000 +0100 
+> @@ -4288,6 +4288,7 @@ int ata_device_resume(struct ata_port *a 
+>  { 
+>         if (ap->flags & ATA_FLAG_SUSPENDED) { 
+>                 ap->flags &= ~ATA_FLAG_SUSPENDED; 
+> +               ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT); 
+>                 ata_set_mode(ap); 
 
-Cheers 
+This libata update should address issues that the above patch also 
+addresses.  It will be interesting to hear feedback in the coming days 
+on what issues remain after this big lump.
+
+	Jeff
+
+
+
