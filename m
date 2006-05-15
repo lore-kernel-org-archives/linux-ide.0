@@ -1,48 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 06/11] libata-eh: implement BMDMA EH
-Date: Mon, 15 May 2006 15:43:46 +0100
-Message-ID: <1147704226.26686.43.camel@localhost.localdomain>
-References: <1147353687173-git-send-email-htejun@gmail.com>
-	 <44665BEE.5020903@pobox.com>  <44666EA8.6050201@gmail.com>
-	 <1147700280.26686.9.camel@localhost.localdomain>
-	 <4468894E.6000004@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: 2.6.15-rc1: IDE: fix potential data corruption with SL82C105
+ interfaces
+Date: Mon, 15 May 2006 18:32:16 +0400
+Message-ID: <446890F0.3020408@ru.mvista.com>
+References: <20051112165548.GB28987@flint.arm.linux.org.uk> <1131818615.18258.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:26246 "EHLO lxorguk.ukuu.org.uk")
-	by vger.kernel.org with ESMTP id S964903AbWEOOc3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 10:32:29 -0400
-In-Reply-To: <4468894E.6000004@gmail.com>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:6342 "HELO mail.dev.rtsoft.ru")
+	by vger.kernel.org with SMTP id S964907AbWEOOdU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 10:33:20 -0400
+In-Reply-To: <1131818615.18258.6.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Russell King <rmk+lkml@arm.linux.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Llu, 2006-05-15 at 22:59 +0900, Tejun Heo wrote:
-> I see.  But even with the shared IRQ, unconditionally clearing IRQ for
-> short duration wouldn't cause much problem, would it?
+Hello.
 
-Clearing in what sense. If you just clear it then you may well just get
-another one. If you ack it on the hardware then you need to recover
-anything that may be lost before the next IRQ.
+Alan Cox wrote:
+ > On Sad, 2005-11-12 at 16:55 +0000, Russell King wrote:
+ >
+ >>We must _never_ _ever_ on pain of death enable IDE DMA on SL82C105
+ >>chipsets where the southbridge revision is <= 5, otherwise data
+ >>corruption will occur.
 
-Wouldn't think its a big problem with BMDMA at all. If a given channel
-interrupts us then we know what state it is in and we also know there
-are no other outstanding commands even possible on the device. Since you
-freeze the device not the channel (at least if I read the code right for
-native mode paths) this ought to be fine. Legacy mode you freeze the
-channel but there is a per channel IRQ (and the per channel host needs
-fixing anyway).
+ > If you are fixing this driver also set ->serialize = 1; before someone
+ > with dual channel device gets burned.
 
-The same need to clean up is true btw of PIO. Several controllers have
-errata if you read a control register during a PIO transfer so you must
-halt the PIO block transfer first. Intel PIIX4/440MX have this problem.
+    Heh, this driver also tries to cache the single PCI register per-channel 
+like hpt366.c... This buglet concerns using fast PIO timings and is probably 
+harmless though but needs to be fixed -- I'll send a patch soon...
+    I wonder what is otherwise wrong with using 2 channels concurrently?
 
-> @ Out of curiosity, how old does a controller have to be to not have the
-> ctl shadow register?
-
-You'll find controllers today that don't appear to have one (eg cf
-flash)
-
-
+MBR, Sergei
