@@ -1,44 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
-Date: Mon, 15 May 2006 14:22:03 -0400
-Message-ID: <4468C6CB.5090504@pobox.com>
-References: <11473536871340-git-send-email-htejun@gmail.com>	 <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com>	 <44668249.9000004@pobox.com> <446685D1.4030607@gmail.com>	 <446688C8.6020001@pobox.com>	 <1147700193.26686.7.camel@localhost.localdomain>	 <44688991.8010407@gmail.com>  <44688F69.8030002@gmail.com>	 <1147704657.26686.49.camel@localhost.localdomain>	 <446896D0.7060309@gmail.com> <1147706380.26686.59.camel@localhost.localdomain> <44689BFA.2020705@gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [RFT] major libata update
+Date: Mon, 15 May 2006 11:27:38 -0700
+Message-ID: <20060515112738.5df30c19.akpm@osdl.org>
+References: <20060515170006.GA29555@havoc.gtf.org>
+	<20060515101831.0e38d131.akpm@osdl.org>
+	<4468C530.6080409@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53188 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965100AbWEOSWN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 14:22:13 -0400
-In-Reply-To: <44689BFA.2020705@gmail.com>
+Received: from smtp.osdl.org ([65.172.181.4]:10881 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964892AbWEOSZb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 14:25:31 -0400
+In-Reply-To: <4468C530.6080409@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-Tejun Heo wrote:
-> Alan Cox wrote:
->>> little bit more complex (it has more moving parts) and it would be
->>> difficult to define/tune speed down or any other error handling (say,
->>> turning off NCQ) criteria.  But, I might be planning too much.
->> The log problem is that you can get 32 errors very fast (doesn't take
->> much with multiple outstanding commands)
+Jeff Garzik <jeff@garzik.org> wrote:
+>
+> Andrew Morton wrote:
+> > I'd be a little concerned with that merge plan at this time - we have a lot
+> > of sata bug reports banked up and afaict a pretty low fixup rate.  Then
+> > again, these patches might fix some of those bugs...
+> > 
+> > I guess if we can get it all in early (which is only a couple of weeks
+> > away!) and you and Tejun will have time set aside to work on problems then
+> > OK.  But....
 > 
-> The current EH implementation records one error per EH run.  It just
-> combines all failed commands and record it as single entry.  As each EH
-> run usually takes at least several seconds, 32 slots should give several
-> minutes worth of history even if things are pretty bad.
 > 
->> so you have to choose which
->> info to throw away - the history or the detail in the commands 
+> As you can see from the list just sent, the improved error handling will 
+> give libata much greater ability to diagnose "controller is being weird" 
+> type situations, which is a lot of what the relevant bug reports need.
 > 
-> Yeap.  And I also agree that ering is pretty inefficient way to spend
-> 512 bytes of memory.
+> After reviewing those bug reports, I see a couple oopses -- caused by 
+> BUG()-style code, and fixed in this update -- and one data corruption 
+> which persists on Sil 311x on rare motherboards.  The rest are either 
+> addressed with the improved error handling, or are ATAPI + VIA AFAICS.
+> 
 
-Overall its not a huge issue.  As long as we aren't constantly
-allocating and freeing that 512 bytes...
+ok, thanks.
 
-	Jeff
-
-
-
+Next -mm I'll suck up the libata changes, drop a pile of the hairier stuff
+and I'll ask each originator to test that patchset.
