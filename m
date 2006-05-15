@@ -1,53 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Wakko Warner <wakko@animx.eu.org>
 Subject: Re: [RFT] major libata update
-Date: Mon, 15 May 2006 19:00:45 -0400
-Message-ID: <4469081D.7080608@garzik.org>
-References: <20060515170006.GA29555@havoc.gtf.org> <20060515230256.GB4699@animx.eu.org>
+Date: Mon, 15 May 2006 19:13:04 -0400
+Message-ID: <20060515231304.GC4699@animx.eu.org>
+References: <20060515170006.GA29555@havoc.gtf.org> <20060515230256.GB4699@animx.eu.org> <4469081D.7080608@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45777 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750726AbWEOXAr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 19:00:47 -0400
-In-Reply-To: <20060515230256.GB4699@animx.eu.org>
+Received: from animx.eu.org ([216.98.75.249]:13978 "EHLO animx.eu.org")
+	by vger.kernel.org with ESMTP id S1750734AbWEOXHn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 19:07:43 -0400
+Content-Disposition: inline
+In-Reply-To: <4469081D.7080608@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Wakko Warner wrote:
-> Jeff Garzik wrote:
->> After much development and review, I merged a massive pile of libata
->> patches from Tejun Heo and Albert Lee.  This update contains the
->> following major libata
->>
->> CHANGES:
->> * Rewritten error handling. This is a major piece of work, even
->>   though it will be rarely seen.  The new libata EH provides the
->>   foundation for not only improved error handling, but also new features
->>   such as device hotplug or command queueing. (Tejun Heo)
->>
->> * PIO-based I/O is now IRQ-driven by default, rather than polled
->>   in a kernel thread.  The polling path will continue to exist for
->>   controllers that need it, and other special cases. (Albert Lee)
->>
->> * Core support for command queueing (Jens Axboe, Tejun Heo)
->>
->> * Support for NCQ-style command queueing (Jens Axboe, Tejun Heo)
->>
->> * Increase max-sectors dramatically, for LBA48 devices (Tejun Heo?)
->>
->> * Other minor changes, from myself and others.
+Jeff Garzik wrote:
+> Wakko Warner wrote:
+> >How about PATA?  Specifically intel's IDE chip.  I have a machine that I 
+> >can
+> >blow the hard drive away if I want to.
 > 
-> How about PATA?  Specifically intel's IDE chip.  I have a machine that I can
-> blow the hard drive away if I want to.
+> Always helpful.  ata_piix should support Intel PATA controllers, modulo 
+> some bugs that Alan is fixing / has fixed.  If your PCI ID isn't listed, 
+> you will have to add it, and an associated info entry.  Again, take a 
+> look at Alan's libata PATA patches for guidance.
 
-Always helpful.  ata_piix should support Intel PATA controllers, modulo 
-some bugs that Alan is fixing / has fixed.  If your PCI ID isn't listed, 
-you will have to add it, and an associated info entry.  Again, take a 
-look at Alan's libata PATA patches for guidance.
+Do I need his patches as well?  If so, where do I retrieve them?  I lost the
+url for it.
 
-	Jeff
-
-
-
+-- 
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
