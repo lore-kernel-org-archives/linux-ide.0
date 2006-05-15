@@ -1,38 +1,35 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 06/11] libata-eh: implement BMDMA EH
-Date: Mon, 15 May 2006 22:59:42 +0900
-Message-ID: <4468894E.6000004@gmail.com>
-References: <1147353687173-git-send-email-htejun@gmail.com>	 <44665BEE.5020903@pobox.com>  <44666EA8.6050201@gmail.com> <1147700280.26686.9.camel@localhost.localdomain>
+Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
+Date: Mon, 15 May 2006 23:00:49 +0900
+Message-ID: <44688991.8010407@gmail.com>
+References: <11473536871340-git-send-email-htejun@gmail.com>	 <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com>	 <44668249.9000004@pobox.com> <446685D1.4030607@gmail.com>	 <446688C8.6020001@pobox.com> <1147700193.26686.7.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.231]:19887 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S964915AbWEON7u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 09:59:50 -0400
-Received: by wr-out-0506.google.com with SMTP id i12so1107462wra
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 06:59:50 -0700 (PDT)
-In-Reply-To: <1147700280.26686.9.camel@localhost.localdomain>
+Received: from nz-out-0102.google.com ([64.233.162.203]:40158 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964916AbWEOOBA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 10:01:00 -0400
+Received: by nz-out-0102.google.com with SMTP id 18so101810nzp
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 07:01:00 -0700 (PDT)
+In-Reply-To: <1147700193.26686.7.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Jeff Garzik <jgarzik@pobox.com>, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
 Alan Cox wrote:
-> On Sul, 2006-05-14 at 08:41 +0900, Tejun Heo wrote: 
->> else is lost.  Also, please note that most traditional IDE controllers 
->> tend to have their own IRQ.
+> On Sad, 2006-05-13 at 21:32 -0400, Jeff Garzik wrote:
+>> I would just declare that all erings have 32 entries, and revisit the 
+>> issue if/when pain appears.  Hardcode 32, and make things easy.
 > 
-> Not really. You normally have one IRQ per controller for any plug in
-> card and that is quite often shared.
+> Do we even need the ering. If you classify the error when it occurs it
+> seems all you need is a couple of 32bit words and to set bits and
+> shift ?
 > 
 
-I see.  But even with the shared IRQ, unconditionally clearing IRQ for
-short duration wouldn't cause much problem, would it?
-
-@ Out of curiosity, how old does a controller have to be to not have the
-ctl shadow register?
+Hmmm.. yeah, that sounds good.  Jeff, what do you think?
 
 -- 
 tejun
