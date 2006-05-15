@@ -1,40 +1,30 @@
-From: "saeed bishara" <saeed.bishara@gmail.com>
-Subject: Re: question about boot time drive initialization
-Date: Mon, 15 May 2006 16:08:32 +0300
-Message-ID: <c70ff3ad0605150608h60d69592uadb0abd7ee2eaf62@mail.gmail.com>
-References: <4466DE81.2040006@gmail.com>
-	 <311601c90605140929s5fe919efk69c59bd5f61fee7d@mail.gmail.com>
-	 <4467DE65.7000701@gmail.com>
-	 <c70ff3ad0605150338j2f9aef2j40ced2c7e95594ed@mail.gmail.com>
-	 <4468611E.1000907@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
+Date: Mon, 15 May 2006 14:36:33 +0100
+Message-ID: <1147700193.26686.7.camel@localhost.localdomain>
+References: <11473536871340-git-send-email-htejun@gmail.com>
+	 <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com>
+	 <44668249.9000004@pobox.com> <446685D1.4030607@gmail.com>
+	 <446688C8.6020001@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.236]:15728 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S932398AbWEONIc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 09:08:32 -0400
-Received: by wr-out-0506.google.com with SMTP id i32so844031wra
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 06:08:32 -0700 (PDT)
-In-Reply-To: <4468611E.1000907@gmail.com>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60308 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964843AbWEON0Y
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 09:26:24 -0400
+In-Reply-To: <446688C8.6020001@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Eric D. Mudama" <edmudama@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-> Hmmm.. weird.  That's not what I'm seeing.  AHCI reports command issue
-> failure if something goes wrong while transmitting D2H fis for a command
-you mean H2D, don't you?
+On Sad, 2006-05-13 at 21:32 -0400, Jeff Garzik wrote:
+> I would just declare that all erings have 32 entries, and revisit the 
+> issue if/when pain appears.  Hardcode 32, and make things easy.
 
-> (probably when it sees R_ERR).  If I issue SRST shortly after power-on,
-> AHCI fails SRST due to command issue failure.  So, it seems that the
-> device rejects SRST before it transmits the first FIS34.
+Do we even need the ering. If you classify the error when it occurs it
+seems all you need is a couple of 32bit words and to set bits and
+shift ?
 
-there is also the possiblity that the AHCI doesn't issue the FIS34 as
-long as the BSY bit in the Status shadow register is set. so it's not
-the disk fault. I have taken a look at the AHCI spec, and found that
-you need to use the Commnad List Override (CLO) feature in order to
-send FIS while BSY is set. do you use that ?
