@@ -1,34 +1,42 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: 2.6.15-rc1: IDE: fix potential data corruption with SL82C105 interfaces
-Date: Mon, 15 May 2006 18:10:29 +0100
-Message-ID: <20060515171029.GA28140@flint.arm.linux.org.uk>
-References: <20051112165548.GB28987@flint.arm.linux.org.uk> <1131818615.18258.6.camel@localhost.localdomain> <446890F0.3020408@ru.mvista.com> <1147706716.26686.64.camel@localhost.localdomain> <4468A6E2.5060305@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFT] major libata update
+Date: Mon, 15 May 2006 13:13:30 -0400
+Message-ID: <4468B6BA.3080405@garzik.org>
+References: <20060515170006.GA29555@havoc.gtf.org> <1147713568.26686.79.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:54286 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S964985AbWEORKg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 13:10:36 -0400
-Content-Disposition: inline
-In-Reply-To: <4468A6E2.5060305@ru.mvista.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:4290 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964991AbWEORNd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 13:13:33 -0400
+In-Reply-To: <1147713568.26686.79.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
 
-On Mon, May 15, 2006 at 08:05:54PM +0400, Sergei Shtylyov wrote:
-> >The caching is one bug, the
-> >fact the reset hits both channels is the other I know about.
+Alan Cox wrote:
+> On Llu, 2006-05-15 at 13:00 -0400, Jeff Garzik wrote:
+>> * PIO-based I/O is now IRQ-driven by default, rather than polled
+>>   in a kernel thread.  The polling path will continue to exist for
+>>   controllers that need it, and other special cases. (Albert Lee)
 > 
->    Ah, that register 0x7E reset? Strangely, W83C55[34]F datasheets don't 
->    even mention it. :-/
+> How will this be selected ? Passing ->irq = 0 ?
 
-They don't - it's an undocumented register as far as the data sheets go,
-but if you're lucky enough to have the chip errata, you'll be told to
-use it explicitly to work around bugs.
+It is selected at runtime by passing a polling flag to ata_taskfile.
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+That flag, in turn can be set by anything -- driver flags (for 
+controllers that always require polling), user variable requested at 
+runtime, whatever.
+
+
+> For ata_piix given you've destabilized it a bit would now be a good time
+> to submit the patches to fix the timing, register scribble and incorrect
+> ATAPI caching ?
+
+Sure.
+
+	Jeff
+
+
