@@ -1,57 +1,53 @@
-From: "Avuton Olrich" <avuton@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [RFT] major libata update
-Date: Mon, 15 May 2006 16:30:26 -0700
-Message-ID: <3aa654a40605151630j53822ba1nbb1a2e3847a78025@mail.gmail.com>
-References: <20060515170006.GA29555@havoc.gtf.org>
+Date: Tue, 16 May 2006 08:32:33 +0900
+Message-ID: <44690F91.2070206@gmail.com>
+References: <20060515170006.GA29555@havoc.gtf.org> <20060515182919.GA16070@irc.pl> <4468CBC7.2030900@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:44886 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1750768AbWEOXa2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 19:30:28 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so172154nfa
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 16:30:26 -0700 (PDT)
-In-Reply-To: <20060515170006.GA29555@havoc.gtf.org>
-Content-Disposition: inline
+Received: from wx-out-0102.google.com ([66.249.82.197]:51467 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750775AbWEOXci (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 19:32:38 -0400
+Received: by wx-out-0102.google.com with SMTP id t16so641382wxc
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 16:32:38 -0700 (PDT)
+In-Reply-To: <4468CBC7.2030900@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-On 5/15/06, Jeff Garzik <jeff@garzik.org> wrote:
-> * sata_sil and ata_piix also need healthy re-testing of all basic
-> functionality.
+Jeff Garzik wrote:
+> Tomasz Torcz wrote:
+>> On Mon, May 15, 2006 at 01:00:06PM -0400, Jeff Garzik wrote:
+>>> After much development and review, I merged a massive pile of libata
+>>> patches from Tejun Heo and Albert Lee.  This update contains the
+>>> following major libata
+>>
+>>   Any plans to merge http://home-tj.org/wiki/index.php/Sil_m15w ? Or
+>> maybe it's merged already?
+>>   Seagate firmware update seems to be available only for OEMs, so this
+>> quirk is pretty helpful for end users.
+> 
+> Its a question of staging.  This still lives in the 'sii-m15w' branch of 
+> libata-dev.git, but if we throw too many _classes_ of changes into the 
+> same big lump, then it becomes much more difficult to discern which 
+> changes caused which failures.
+> 
+> Since sata_sil has seen several changes, and since the sii-m15w problems 
+> are so difficult to diagnose properly, its easier to separate that out.
 
-I'm testing it right now, but with 2.6.17-rc4-git2 I was getting:
+Are you planning on merging sil_m15w workaround?
 
-May 15 15:42:57 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
-May 15 15:42:57 shapeshifter ata2: translated ATA stat/err 0x58/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-May 15 15:42:57 shapeshifter ata2: status=0x58 { DriveReady
-SeekComplete DataRequest }
-May 15 15:42:57 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
-May 15 15:42:57 shapeshifter sda: Current: sense key=0xb
-May 15 15:42:57 shapeshifter ASC=0x47 ASCQ=0x0
-May 15 15:42:57 shapeshifter end_request: I/O error, dev sda, sector 974708575
+FYI, from the first time it was submitted (last summer) till 2.6.16, it 
+took very little effort to maintain it.  The current big update would 
+necessitate some changes to it but I don't think it will be too much 
+work.  My experience says m15w doesn't add too much maintenance overhead.
 
-(sector varies)
+Also, what's the merge plan for hotplug/PM?  Together into 2.6.18?  Or 
+are we looking further down?
 
-After large ssh transfers. I moved to 2.6.17-rc4-git2 because
-2.6.16.16 was doing the same. This is a new 500gb sata2 drive on
-sata_sil so I guess this could be hardware, but I wanted to make sure
-before I go returning this thing. After this obviously I have to sysrq
-sync, ro and reboot. This also causes(?) a NETDEV WATCHDOG: eth2:
-transmit timed out, sometimes this ata timeout doesn't yet occur and I
-just get the netdev watchdog. This has not yet happened with the new
-patch, though I'm only 1 hr into testing with it.
-
-
-If you want to take a peek at my config:
-http://olricha.homelinux.net:8080/ss.config
 -- 
-avuton
---
- Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+tejun
