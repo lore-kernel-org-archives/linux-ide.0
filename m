@@ -1,43 +1,29 @@
-From: Sven-Haegar Koch <haegar@sdinet.de>
-Subject: Re: SATA status report updated
-Date: Mon, 15 May 2006 19:07:07 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0605151901060.25784@mercury.sdinet.de>
-References: <44689C39.70902@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFT] major libata update
+Date: Mon, 15 May 2006 18:19:27 +0100
+Message-ID: <1147713568.26686.79.camel@localhost.localdomain>
+References: <20060515170006.GA29555@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mercury.sdinet.de ([193.103.161.30]:1433 "EHLO
-	mercury.sdinet.de") by vger.kernel.org with ESMTP id S964981AbWEORHI
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60066 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964983AbWEORHN
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 13:07:08 -0400
-In-Reply-To: <44689C39.70902@garzik.org>
+	Mon, 15 May 2006 13:07:13 -0400
+In-Reply-To: <20060515170006.GA29555@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
 
-On Mon, 15 May 2006, Jeff Garzik wrote:
+On Llu, 2006-05-15 at 13:00 -0400, Jeff Garzik wrote:
+> * PIO-based I/O is now IRQ-driven by default, rather than polled
+>   in a kernel thread.  The polling path will continue to exist for
+>   controllers that need it, and other special cases. (Albert Lee)
 
-> I've updated the http://linux-ata.org/ status pages with the recent work by 
-> Tejun Heo and others.
+How will this be selected ? Passing ->irq = 0 ?
 
-Thanks for your list, but I'm missing the SATA chipset that our Asus-Boxes 
-got:
-
-0000:00:14.1 IDE interface: ATI Technologies Inc ATI Dual Channel Bus 
-Master PCI IDE Controller
-(PCI-ID 1002:4349)
-
-Or is this something different like an IDE chipset with included SATA 
-bridges or so?
-
-It is supported through the atiixp ide driver, but only really slow 
-(10mb/s) - the same disks attached to an Intel SATA port give 30-40mb/s.
-
-c'ya
-sven
-
--- 
-
-The Internet treats censorship as a routing problem, and routes around it.
-(John Gilmore on http://www.cygnus.com/~gnu/)
+For ata_piix given you've destabilized it a bit would now be a good time
+to submit the patches to fix the timing, register scribble and incorrect
+ATAPI caching ?
