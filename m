@@ -1,35 +1,57 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: "Avuton Olrich" <avuton@gmail.com>
 Subject: Re: [RFT] major libata update
-Date: Tue, 16 May 2006 00:40:51 +0100
-Message-ID: <1147736451.26686.227.camel@localhost.localdomain>
+Date: Mon, 15 May 2006 16:30:26 -0700
+Message-ID: <3aa654a40605151630j53822ba1nbb1a2e3847a78025@mail.gmail.com>
 References: <20060515170006.GA29555@havoc.gtf.org>
-	 <20060515230256.GB4699@animx.eu.org>  <4469081D.7080608@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46771 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1750757AbWEOX2D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 19:28:03 -0400
-In-Reply-To: <4469081D.7080608@garzik.org>
+Received: from nf-out-0910.google.com ([64.233.182.186]:44886 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1750768AbWEOXa2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 19:30:28 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so172154nfa
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 16:30:26 -0700 (PDT)
+In-Reply-To: <20060515170006.GA29555@havoc.gtf.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
 
-On Llu, 2006-05-15 at 19:00 -0400, Jeff Garzik wrote:
-> Always helpful.  ata_piix should support Intel PATA controllers, modulo 
-> some bugs that Alan is fixing / has fixed.  If your PCI ID isn't listed, 
-> you will have to add it, and an associated info entry.  Again, take a 
-> look at Alan's libata PATA patches for guidance.
+On 5/15/06, Jeff Garzik <jeff@garzik.org> wrote:
+> * sata_sil and ata_piix also need healthy re-testing of all basic
+> functionality.
 
-Without the patches I've got everything non ATAPI should work (ATAPI
-will I think 99% work) and anything that is ICH or later (UDMA66 or
-higher) should behave correctly.
+I'm testing it right now, but with 2.6.17-rc4-git2 I was getting:
 
-PIIX/MPIIX won't work with it, and UDMA33 chips may work providing the
-scribbles to the wrong register happen to be harmless.
+May 15 15:42:57 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
+May 15 15:42:57 shapeshifter ata2: translated ATA stat/err 0x58/00 to
+SCSI SK/ASC/ASCQ 0xb/47/00
+May 15 15:42:57 shapeshifter ata2: status=0x58 { DriveReady
+SeekComplete DataRequest }
+May 15 15:42:57 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
+May 15 15:42:57 shapeshifter sda: Current: sense key=0xb
+May 15 15:42:57 shapeshifter ASC=0x47 ASCQ=0x0
+May 15 15:42:57 shapeshifter end_request: I/O error, dev sda, sector 974708575
 
-Alan
+(sector varies)
 
+After large ssh transfers. I moved to 2.6.17-rc4-git2 because
+2.6.16.16 was doing the same. This is a new 500gb sata2 drive on
+sata_sil so I guess this could be hardware, but I wanted to make sure
+before I go returning this thing. After this obviously I have to sysrq
+sync, ro and reboot. This also causes(?) a NETDEV WATCHDOG: eth2:
+transmit timed out, sometimes this ata timeout doesn't yet occur and I
+just get the netdev watchdog. This has not yet happened with the new
+patch, though I'm only 1 hr into testing with it.
+
+
+If you want to take a peek at my config:
+http://olricha.homelinux.net:8080/ss.config
+-- 
+avuton
+--
+ Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
