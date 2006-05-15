@@ -1,36 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.15-rc1: IDE: fix potential data corruption with SL82C105
-	interfaces
-Date: Mon, 15 May 2006 16:25:16 +0100
-Message-ID: <1147706716.26686.64.camel@localhost.localdomain>
-References: <20051112165548.GB28987@flint.arm.linux.org.uk>
-	 <1131818615.18258.6.camel@localhost.localdomain>
-	 <446890F0.3020408@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: Assorted bugs in the PIIX drivers
+Date: Mon, 15 May 2006 19:12:20 +0400
+Message-ID: <44689A54.4020307@ru.mvista.com>
+References: <1132929808.3298.18.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58830 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964967AbWEOPMu
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 11:12:50 -0400
-In-Reply-To: <446890F0.3020408@ru.mvista.com>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:5076 "HELO mail.dev.rtsoft.ru")
+	by vger.kernel.org with SMTP id S964969AbWEOPNV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 11:13:21 -0400
+In-Reply-To: <1132929808.3298.18.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Russell King <rmk+lkml@arm.linux.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Llu, 2006-05-15 at 18:32 +0400, Sergei Shtylyov wrote:
->     Heh, this driver also tries to cache the single PCI register per-channel 
-> like hpt366.c... This buglet concerns using fast PIO timings and is probably 
-> harmless though but needs to be fixed -- I'll send a patch soon...
->     I wonder what is otherwise wrong with using 2 channels concurrently?
+Hello.
 
-I've not got any dual channel devices to test, and in fact I couldn't
-find anyone with dual channel stuff at all. The caching is one bug, the
-fact the reset hits both channels is the other I know about.
+Alan Cox wrote:
+> I finally got all the documents rounded up to try and redo Jgarzik's
+> PIIX driver a bit more completely (I'm short MPIIX if anyone has it ?)
+>
+> I then started reading the docs and the code and noticing a couple of
+> problems
 
-Otherwise the libata driver is fairly similar although the timing is
-pre-computed from the documentation for the DMA modes.
+> 1.	We set IE1 on PIO0-2 which the docs say is for PIO3+
 
-Alan
+    For PIO2+ actually, according to Intel's PRM (29860004.pdf), and it's said
+to have no effect in the lower modes. This is actually not very correct since
+when one issues Set Transfer Mode ATA command with the value (8 + PIOn), this
+means select PIO _flow control_ mode n, so -IORDY is assumed to be in use.
+
+> I'm also not clear if the "no MWDMA0" list has been updated correctly
+> for the newer chipsets.
+
+    What is/was the point for keeping MW DMA 0 support anyway? On PIIX, it's
+greatly slowed down (600 vs 480 ns cycle) and was never "offically" supported
+by Intel.
+
+MBR, Sergei
+
+
