@@ -1,40 +1,29 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [RFT] major libata update
-Date: Mon, 15 May 2006 14:43:19 -0400
-Message-ID: <4468CBC7.2030900@garzik.org>
-References: <20060515170006.GA29555@havoc.gtf.org> <20060515182919.GA16070@irc.pl>
+Date: Mon, 15 May 2006 14:44:07 -0400
+Message-ID: <4468CBF7.7080102@garzik.org>
+References: <20060515170006.GA29555@havoc.gtf.org>	<20060515101831.0e38d131.akpm@osdl.org>	<4468C530.6080409@garzik.org> <20060515112738.5df30c19.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43205 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750723AbWEOSnX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 14:43:23 -0400
-In-Reply-To: <20060515182919.GA16070@irc.pl>
+Received: from srv5.dvmed.net ([207.36.208.214]:47045 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751403AbWEOSoJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 14:44:09 -0400
+In-Reply-To: <20060515112738.5df30c19.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-Tomasz Torcz wrote:
-> On Mon, May 15, 2006 at 01:00:06PM -0400, Jeff Garzik wrote:
->> After much development and review, I merged a massive pile of libata
->> patches from Tejun Heo and Albert Lee.  This update contains the
->> following major libata
+Andrew Morton wrote:
+> ok, thanks.
 > 
->   Any plans to merge http://home-tj.org/wiki/index.php/Sil_m15w ? Or
-> maybe it's merged already?
->   Seagate firmware update seems to be available only for OEMs, so this
-> quirk is pretty helpful for end users.
+> Next -mm I'll suck up the libata changes, drop a pile of the hairier stuff
+> and I'll ask each originator to test that patchset.
 
-Its a question of staging.  This still lives in the 'sii-m15w' branch of 
-libata-dev.git, but if we throw too many _classes_ of changes into the 
-same big lump, then it becomes much more difficult to discern which 
-changes caused which failures.
-
-Since sata_sil has seen several changes, and since the sii-m15w problems 
-are so difficult to diagnose properly, its easier to separate that out.
+Cool.  FWIW this stuff can be found in libata-dev.git#ALL as usual.
 
 	Jeff
-
 
 
