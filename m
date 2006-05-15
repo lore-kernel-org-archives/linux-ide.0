@@ -1,114 +1,185 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [RFT] major libata update
-Date: Mon, 15 May 2006 10:18:31 -0700
-Message-ID: <20060515101831.0e38d131.akpm@osdl.org>
-References: <20060515170006.GA29555@havoc.gtf.org>
+Date: Mon, 15 May 2006 14:06:55 -0400
+Message-ID: <4468C33F.7070905@garzik.org>
+References: <20060515170006.GA29555@havoc.gtf.org> <20060515101831.0e38d131.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:36057 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964999AbWEORVt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 13:21:49 -0400
-In-Reply-To: <20060515170006.GA29555@havoc.gtf.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:49091 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965066AbWEOSHB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 14:07:01 -0400
+In-Reply-To: <20060515101831.0e38d131.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
+To: Andrew Morton <akpm@osdl.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-Jeff Garzik <jeff@garzik.org> wrote:
->
-> 
-> After much development and review, I merged a massive pile of libata
-> patches from Tejun Heo and Albert Lee.  This update contains the
-> following major libata
-> 
-> CHANGES:
-> * Rewritten error handling. This is a major piece of work, even
->   though it will be rarely seen.  The new libata EH provides the
->   foundation for not only improved error handling, but also new features
->   such as device hotplug or command queueing. (Tejun Heo)
-> 
-> * PIO-based I/O is now IRQ-driven by default, rather than polled
->   in a kernel thread.  The polling path will continue to exist for
->   controllers that need it, and other special cases. (Albert Lee)
-> 
-> * Core support for command queueing (Jens Axboe, Tejun Heo)
-> 
-> * Support for NCQ-style command queueing (Jens Axboe, Tejun Heo)
-> 
-> * Increase max-sectors dramatically, for LBA48 devices (Tejun Heo?)
-> 
-> * Other minor changes, from myself and others.
-> 
-> IMPACT:
-> * If all goes well, this update should improve error handling,
->   solve several outstanding, difficult-to-solve bugs, and provide a good
->   foundation for adding some nifty features in the future.
-> 
-> TESTING:
-> * Although most drivers by count received few operational changes, the
-> common probe path was updated, so all drivers need fresh "yes, it sees
-> all my disks" regression testing.
-> 
-> * ahci and sata_sil24 were touched a lot, and so need additional
-> testing.
-> 
-> * sata_sil and ata_piix also need healthy re-testing of all basic
-> functionality.
+Andrew Morton wrote:
 
-Lots of goodies.
+We watch the bug reports, but try to get an overall picture rather than 
+being good about updating each bugzilla tracker promptly :/  The 
+tracking is quite useful though.
 
-> FEEDBACK:
-> * Please CC linux-ide@vger.kernel.org on all emails and bug reports.
-> 
-> MERGE STATUS:
-> * Barring major problems in testing, will submit during 2.6.18 merge window.
 
-I'd be a little concerned with that merge plan at this time - we have a lot
-of sata bug reports banked up and afaict a pretty low fixup rate.  Then
-again, these patches might fix some of those bugs...
+> http://bugzilla.kernel.org/show_bug.cgi?id=4920
 
-I guess if we can get it all in early (which is only a couple of weeks
-away!) and you and Tejun will have time set aside to work on problems then
-OK.  But....
+not us
 
-http://bugzilla.kernel.org/show_bug.cgi?id=4920
-http://bugzilla.kernel.org/show_bug.cgi?id=5533
-http://bugzilla.kernel.org/show_bug.cgi?id=5586
-http://bugzilla.kernel.org/show_bug.cgi?id=5589
-http://bugzilla.kernel.org/show_bug.cgi?id=5798
-http://bugzilla.kernel.org/show_bug.cgi?id=5863
-http://bugzilla.kernel.org/show_bug.cgi?id=4968
-http://bugzilla.kernel.org/show_bug.cgi?id=5047
-http://bugzilla.kernel.org/show_bug.cgi?id=5905
-http://bugzilla.kernel.org/show_bug.cgi?id=5596
-http://bugzilla.kernel.org/show_bug.cgi?id=5654
-http://bugzilla.kernel.org/show_bug.cgi?id=5664
-http://bugzilla.kernel.org/show_bug.cgi?id=5700
-http://bugzilla.kernel.org/show_bug.cgi?id=5709
-http://bugzilla.kernel.org/show_bug.cgi?id=5721
-http://bugzilla.kernel.org/show_bug.cgi?id=5722
-http://bugzilla.kernel.org/show_bug.cgi?id=5922
-http://bugzilla.kernel.org/show_bug.cgi?id=5789
-http://bugzilla.kernel.org/show_bug.cgi?id=5931
-http://bugzilla.kernel.org/show_bug.cgi?id=5969
-http://bugzilla.kernel.org/show_bug.cgi?id=5948
-http://bugzilla.kernel.org/show_bug.cgi?id=5987
-http://bugzilla.kernel.org/show_bug.cgi?id=5995
-http://bugzilla.kernel.org/show_bug.cgi?id=6173
-http://bugzilla.kernel.org/show_bug.cgi?id=6207
-http://bugzilla.kernel.org/show_bug.cgi?id=6240
-http://bugzilla.kernel.org/show_bug.cgi?id=6253
-http://bugzilla.kernel.org/show_bug.cgi?id=6260
-http://bugzilla.kernel.org/show_bug.cgi?id=6272
-http://bugzilla.kernel.org/show_bug.cgi?id=6283
-http://bugzilla.kernel.org/show_bug.cgi?id=6311
-http://bugzilla.kernel.org/show_bug.cgi?id=6317
-http://bugzilla.kernel.org/show_bug.cgi?id=6346
-http://bugzilla.kernel.org/show_bug.cgi?id=6470
-http://bugzilla.kernel.org/show_bug.cgi?id=6056
-http://bugzilla.kernel.org/show_bug.cgi?id=6494
-http://bugzilla.kernel.org/show_bug.cgi?id=6516
-http://bugzilla.kernel.org/show_bug.cgi?id=6521
+> http://bugzilla.kernel.org/show_bug.cgi?id=5533
+
+addressed here
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5586
+
+sata_mv still considered highly experimental, as noted in Kconfig.  Bugs 
+deferred to Mark Lord.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5589
+
+funny looking backtrace, according to you
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5798
+
+worth looking into
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5863
+
+worth looking into, also worth testing with big update.
+
+probable cause, the most recent ata_piix map value stuff.
+
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=4968
+
+big update should help diagnose.  might need 'nv-adma' branch to fix.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5047
+
+big update should help.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5905
+
+big update should help, or at least help diagnose.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5596
+
+ditto sata_mv info above.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5654
+
+big update should help.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5664
+
+should forward to NVIDIA for help debugging.  nv-adma branch may help 
+diagnose.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5700
+
+big update should help
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5709
+
+trivial patch submission
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5721
+
+dont care
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5722
+
+maybe a bug, probably weird drive or media, worth looking into
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5922
+
+should be using ahci driver
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5789
+
+include in the "atapi + via problems" bucket; bucket should be looked 
+into... some people it works great, others not.  may need 
+motherboard-specific (southbridge) tuning.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5931
+
+big update will help
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5969
+
+probably just needs PCI IDs
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5948
+
+not libata?
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5987
+
+not libata
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=5995
+
+big update + upcoming hotplug will fix.  until then, don't expect 
+unplugging a drive to DTRT.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6173
+
+need NVIDIA help.  maybe nv-adma branch will help diagnose.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6207
+
+ditto
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6240
+
+investigate.  big update will help diagnose.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6253
+
+big update should fix.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6260
+
+waiting on SATA ACPI merge.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6272
+
+big update should fix.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6283
+
+investigate.  big update will help.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6311
+
+big update should fix.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6317
+
+big update may fix.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6346
+
+not libata?
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6470
+
+new hardware, needs driver.
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6056
+
+bounce to NV
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6494
+
+waiting on SATA ACPI
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6516
+
+investigate, low priority
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=6521
+
+big update should fix
 
