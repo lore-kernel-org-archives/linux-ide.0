@@ -1,46 +1,23 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [RFT] major libata update
-Date: Mon, 15 May 2006 11:27:38 -0700
-Message-ID: <20060515112738.5df30c19.akpm@osdl.org>
+Date: Mon, 15 May 2006 19:37:56 +0100
+Message-ID: <1147718277.26686.89.camel@localhost.localdomain>
 References: <20060515170006.GA29555@havoc.gtf.org>
-	<20060515101831.0e38d131.akpm@osdl.org>
-	<4468C530.6080409@garzik.org>
+	 <20060515101831.0e38d131.akpm@osdl.org>  <4468C530.6080409@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:10881 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964892AbWEOSZb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 14:25:31 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965116AbWEOSZl@vger.kernel.org>
 In-Reply-To: <4468C530.6080409@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+List-Id: linux-ide@vger.kernel.org
 
-Jeff Garzik <jeff@garzik.org> wrote:
->
-> Andrew Morton wrote:
-> > I'd be a little concerned with that merge plan at this time - we have a lot
-> > of sata bug reports banked up and afaict a pretty low fixup rate.  Then
-> > again, these patches might fix some of those bugs...
-> > 
-> > I guess if we can get it all in early (which is only a couple of weeks
-> > away!) and you and Tejun will have time set aside to work on problems then
-> > OK.  But....
-> 
-> 
-> As you can see from the list just sent, the improved error handling will 
-> give libata much greater ability to diagnose "controller is being weird" 
-> type situations, which is a lot of what the relevant bug reports need.
-> 
-> After reviewing those bug reports, I see a couple oopses -- caused by 
-> BUG()-style code, and fixed in this update -- and one data corruption 
+On Llu, 2006-05-15 at 14:15 -0400, Jeff Garzik wrote:
 > which persists on Sil 311x on rare motherboards.  The rest are either 
 > addressed with the improved error handling, or are ATAPI + VIA AFAICS.
-> 
 
-ok, thanks.
-
-Next -mm I'll suck up the libata changes, drop a pile of the hairier stuff
-and I'll ask each originator to test that patchset.
+ATAPI + VIA to that pattern is also showing up on pata_via cases as
+well, but only on via so far. Its as if there is a case where the IRQ of
+the first command is lost sometimes.
