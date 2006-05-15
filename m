@@ -1,58 +1,74 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
-Date: Mon, 15 May 2006 23:57:20 +0900
-Message-ID: <446896D0.7060309@gmail.com>
-References: <11473536871340-git-send-email-htejun@gmail.com>	 <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com>	 <44668249.9000004@pobox.com> <446685D1.4030607@gmail.com>	 <446688C8.6020001@pobox.com>	 <1147700193.26686.7.camel@localhost.localdomain>	 <44688991.8010407@gmail.com>  <44688F69.8030002@gmail.com> <1147704657.26686.49.camel@localhost.localdomain>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH] ide_dma_speed() fixes
+Date: Mon, 15 May 2006 08:00:53 -0700
+Message-ID: <20060515080053.296c4c55.akpm@osdl.org>
+References: <4463F4C8.9080608@ru.mvista.com>
+	<20060514050548.5399e3f4.akpm@osdl.org>
+	<446885BE.4090404@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.192]:3560 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751444AbWEOO51 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 10:57:27 -0400
-Received: by nz-out-0102.google.com with SMTP id 18so117421nzp
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 07:57:26 -0700 (PDT)
-In-Reply-To: <1147704657.26686.49.camel@localhost.localdomain>
+Received: from smtp.osdl.org ([65.172.181.4]:55466 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751471AbWEOPER (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 11:04:17 -0400
+In-Reply-To: <446885BE.4090404@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
-> On Llu, 2006-05-15 at 23:25 +0900, Tejun Heo wrote:
->> I was too quick to response.  ering keeps track of timestamps of each
->> error and the criteria for speeding down is something like "3 class 1
->> errors during last 15mins", so bitmaps doesn't cut it.
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+>
+> Hello.
 > 
-> Sounds like it does
+> Andrew Morton wrote:
 > 
+> >>    ide_dma_speed() fails to actually honor the IDE drivers' mode support 
+> >> masks) because of the bogus checks -- thus, selecting the DMA transfer mode 
+> >> that the driver explicitly refuses to support is possible. Additionally, there 
+> >> is no check for validity of the UltraDMA mode data in the drive ID, and the 
+> >> function is misdocumented.
 > 
-> 	log_class_1_error(dev)
-> 	{
-> 		if((dev->class1 & 3) < 3) {
-> 			dev->class1++;
-> 			dev->class1sum++;
-> 		} else {
-> 			/* 3 this minute alone */
-> 			it_happened_now_case();
-> 		}
-> 	}
+> > drivers/ide/ide-lib.c: In function `ide_dma_speed':
+> > drivers/ide/ide-lib.c:86: warning: `ultra_mask' might be used uninitialized in this function
 > 
-> 	class_1_each_minute(dev)
-> 	{
-> 		dev->class1sum -= (dev->class1 >> 30);
-> 		dev->class1 <<= 2;
-> 	}
+> > Looks like a real bug to me - it depends up on the values of `mode' and
+> > id->field_value.
 > 
+> > Anyway, I'll drop it, please review and fix.  I assume that warning was
+> > occurring for you as well - please spend more time over these things. 
+> > Especially when working on IDE, where bugs are slow to show themselves and
+> > have particularly bad consequences.
+> 
+>     That's what gcc thinks. The code is 100% correct -- it will never reach 
+> the switch statement with mode > 0 (in which case ultra_mask isn't used) and 
+> ultra_mask unitialized.
 
-Yeap, of course, it does with periodic shifting.  The 3 in this minute
-testing looks neat.
+hm, OK.
 
-I don't know.  I'm still a bit hesitant because the thing becomes a
-little bit more complex (it has more moving parts) and it would be
-difficult to define/tune speed down or any other error handling (say,
-turning off NCQ) criteria.  But, I might be planning too much.
+> I may add an explicit initializer in the declaration if you like...
 
--- 
-tejun
+Opinions vary.  I think that's less bad than spitting a warning at all
+developers for all time.
+
+But we can redo things like below and save a little code in the process. 
+Look OK?
+
+--- devel/drivers/ide/ide-lib.c~ide_dma_speed-fixes-warning-fix	2006-05-15 07:56:28.000000000 -0700
++++ devel-akpm/drivers/ide/ide-lib.c	2006-05-15 08:00:12.000000000 -0700
+@@ -90,9 +90,9 @@ u8 ide_dma_speed(ide_drive_t *drive, u8 
+ 		return 0;
+ 
+ 	/* Capable of UltraDMA modes? */
+-	if (id->field_valid & 4)
+-		ultra_mask = id->dma_ultra & hwif->ultra_mask;
+-	else
++	ultra_mask = id->dma_ultra & hwif->ultra_mask;
++
++	if (!(id->field_valid & 4))
+ 		mode = 0;	/* fallback to MW/SW DMA if no UltraDMA */
+ 
+ 	switch (mode) {
+_
+
