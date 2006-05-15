@@ -1,35 +1,65 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: [RFT] major libata update
-Date: Mon, 15 May 2006 19:13:04 -0400
-Message-ID: <20060515231304.GC4699@animx.eu.org>
-References: <20060515170006.GA29555@havoc.gtf.org> <20060515230256.GB4699@animx.eu.org> <4469081D.7080608@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata-tj and SMART
+Date: Tue, 16 May 2006 08:13:19 +0900
+Message-ID: <44690B0F.90200@gmail.com>
+References: <e4b02t$e9b$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from animx.eu.org ([216.98.75.249]:13978 "EHLO animx.eu.org")
-	by vger.kernel.org with ESMTP id S1750734AbWEOXHn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 19:07:43 -0400
-Content-Disposition: inline
-In-Reply-To: <4469081D.7080608@garzik.org>
+Received: from wr-out-0506.google.com ([64.233.184.232]:20348 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1750742AbWEOXNX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 19:13:23 -0400
+Received: by wr-out-0506.google.com with SMTP id i28so957235wra
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 16:13:22 -0700 (PDT)
+In-Reply-To: <e4b02t$e9b$1@sea.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Nicolas STRANSKY <Nico@stransky.cx>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Wakko Warner wrote:
-> >How about PATA?  Specifically intel's IDE chip.  I have a machine that I 
-> >can
-> >blow the hard drive away if I want to.
+Nicolas STRANSKY wrote:
+> Hi,
 > 
-> Always helpful.  ata_piix should support Intel PATA controllers, modulo 
-> some bugs that Alan is fixing / has fixed.  If your PCI ID isn't listed, 
-> you will have to add it, and an associated info entry.  Again, take a 
-> look at Alan's libata PATA patches for guidance.
+> I've been using libata-tj for a couple of days and for now it's working
+> without problem, my SI-3112 is finally working :) Thanks !
 
-Do I need his patches as well?  If so, where do I retrieve them?  I lost the
-url for it.
+How does it work w/o libata-tj?
+
+> I've noticed these errors while trying to issue some SMART commands to
+> the SATA drive :
+> 
+>> May 16 00:28:33 aneto kernel: ata3: soft resetting port
+>> May 16 00:28:33 aneto kernel: ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>> May 16 00:28:33 aneto kernel: ata3.00: configured for UDMA/100
+>> May 16 00:28:33 aneto kernel: ata3: EH complete
+>> May 16 00:28:33 aneto kernel: ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x1 frozen
+>> May 16 00:28:33 aneto kernel: ata3.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x51 err 0x4 (HSM violation)
+>> May 16 00:28:33 aneto kernel: ata3.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+>> May 16 00:28:33 aneto kernel: ata3.00: revalidation failed (errno=-5)
+>> May 16 00:28:33 aneto kernel: ata3: failed to recover some devices, retrying in 5 secs
+>> May 16 00:28:39 aneto kernel: ata3: soft resetting port
+>> May 16 00:28:39 aneto kernel: ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>> May 16 00:28:39 aneto kernel: ata3.00: configured for UDMA/100
+>> May 16 00:28:39 aneto kernel: ata3: EH complete
+
+Your drive/controller causes HSM violation probably while executing a 
+SMART command (maybe during PIO-in during READ DATA?, maybe we need to 
+dump feature, too).  Can you try 'smartctl -d ata -a /dev/sdx' and 
+report the result and how the kernel acts during that command?
+
+Also, you've triggered a bug.  It should try SRST after HSM violation 
+not revalidation.  I had that code.  I must have dropped it somewhere. 
+Thanks for finding the bug.  :)
+
+> smartd then entered in a "D" state for some time.
+
+smartd is probably waiting for libata EH.
+
+> Please feel free to ask for any relevant additional information...
+
+Can you post full boot dmesg?
 
 -- 
- Lab tests show that use of micro$oft causes cancer in lab animals
- Got Gas???
+tejun
