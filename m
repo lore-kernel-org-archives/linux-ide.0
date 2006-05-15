@@ -1,56 +1,66 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Assorted bugs in the PIIX drivers
-Date: Mon, 15 May 2006 22:26:39 +0400
-Message-ID: <4468C7DF.7090603@ru.mvista.com>
-References: <1132929808.3298.18.camel@localhost.localdomain>	 <44689A54.4020307@ru.mvista.com> <1147708783.26686.69.camel@localhost.localdomain>
+From: Tomasz Torcz <zdzichu@irc.pl>
+Subject: Re: [RFT] major libata update
+Date: Mon, 15 May 2006 20:29:19 +0200
+Message-ID: <20060515182919.GA16070@irc.pl>
+References: <20060515170006.GA29555@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Nq2Wo0NMKNjxTN9z"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:6820 "HELO mail.dev.rtsoft.ru")
-	by vger.kernel.org with SMTP id S965132AbWEOS1t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 14:27:49 -0400
-In-Reply-To: <1147708783.26686.69.camel@localhost.localdomain>
+Received: from nsm.pl ([195.34.211.229]:15894 "EHLO nsm.pl")
+	by vger.kernel.org with ESMTP id S965134AbWEOS33 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 14:29:29 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by nsm.pl (Postfix) with ESMTP id 3F4572CAA11
+	for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 20:27:56 +0200 (CEST)
+Received: from nsm.pl ([195.34.211.229])
+ by localhost (nsm.pl [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 16542-09 for <linux-ide@vger.kernel.org>;
+ Mon, 15 May 2006 20:27:56 +0200 (CEST)
+Received: from matthew.ogrody.nsm.pl (matthew.ogrody.nsm.pl [192.168.173.98])
+	by nsm.pl (Postfix) with SMTP id 9BD3B2CAA12
+	for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 20:27:50 +0200 (CEST)
+Content-Disposition: inline
+In-Reply-To: <20060515170006.GA29555@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
 
-Alan Cox wrote:
+--Nq2Wo0NMKNjxTN9z
+Content-Type: text/plain; charset=iso-8859-2
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> On Llu, 2006-05-15 at 19:12 +0400, Sergei Shtylyov wrote:
+On Mon, May 15, 2006 at 01:00:06PM -0400, Jeff Garzik wrote:
+>=20
+> After much development and review, I merged a massive pile of libata
+> patches from Tejun Heo and Albert Lee.  This update contains the
+> following major libata
 
->>    For PIO2+ actually, according to Intel's PRM (29860004.pdf), and it's said
->> to have no effect in the lower modes. This is actually not very correct since
->> when one issues Set Transfer Mode ATA command with the value (8 + PIOn), this
->> means select PIO _flow control_ mode n, so -IORDY is assumed to be in use.
+  Any plans to merge http://home-tj.org/wiki/index.php/Sil_m15w ? Or
+maybe it's merged already?
+  Seagate firmware update seems to be available only for OEMs, so this
+quirk is pretty helpful for end users.
 
-> PIO2 depends on the drive (there is a drive parameter telling you the
-> highest timing clock you can do with/without IORDY
-
-    Yes. But when you're setting any _explicit_ PIO mode with Set Features
-command, you're tell the drive to use -IORDY at the same time.
-
->>> I'm also not clear if the "no MWDMA0" list has been updated correctly
->>> for the newer chipsets.
-
->>    What is/was the point for keeping MW DMA 0 support anyway? On PIIX, it's
->> greatly slowed down (600 vs 480 ns cycle) and was never "offically" supported
->> by Intel.
-
-> Some old old drives only do MWDMA0. The Intel docs I have here don't
-> describe it in any way as "unsupported",
-
-    They just don't describe it, period. :-)
-
-> merely broken on some ICH variants.
-
-    ICH errata #55: "Note that DMA Mode-0 is an unsupported mode of the ICH."
-
-> Alan
-
-MBR, Sergei
+--=20
+Tomasz Torcz                        To co nierealne - tutaj jest normalne.
+zdzichu@irc.-nie.spam-.pl          Ziomale na =BFycie maj=B1 tu patenty spe=
+cjalne.
 
 
+--Nq2Wo0NMKNjxTN9z
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
+Comment: gpg --search-keys Tomasz Torcz
+
+iD8DBQFEaMh/ThhlKowQALQRAkZhAKD3+4CJUCeLYrBKV4cZ6JfD+MmldgCfbhug
+R25WIGNd+ZZvvriFJVZQ5Ws=
+=9PJN
+-----END PGP SIGNATURE-----
+
+--Nq2Wo0NMKNjxTN9z--
