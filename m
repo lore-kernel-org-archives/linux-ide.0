@@ -1,74 +1,35 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] ide_dma_speed() fixes
-Date: Mon, 15 May 2006 08:00:53 -0700
-Message-ID: <20060515080053.296c4c55.akpm@osdl.org>
-References: <4463F4C8.9080608@ru.mvista.com>
-	<20060514050548.5399e3f4.akpm@osdl.org>
-	<446885BE.4090404@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
+Date: Mon, 15 May 2006 16:19:40 +0100
+Message-ID: <1147706380.26686.59.camel@localhost.localdomain>
+References: <11473536871340-git-send-email-htejun@gmail.com>
+	 <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com>
+	 <44668249.9000004@pobox.com> <446685D1.4030607@gmail.com>
+	 <446688C8.6020001@pobox.com>
+	 <1147700193.26686.7.camel@localhost.localdomain>
+	 <44688991.8010407@gmail.com>  <44688F69.8030002@gmail.com>
+	 <1147704657.26686.49.camel@localhost.localdomain>
+	 <446896D0.7060309@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:55466 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751471AbWEOPER (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 11:04:17 -0400
-In-Reply-To: <446885BE.4090404@ru.mvista.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57829 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964956AbWEOPIU
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 11:08:20 -0400
+In-Reply-To: <446896D0.7060309@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
->
-> Hello.
-> 
-> Andrew Morton wrote:
-> 
-> >>    ide_dma_speed() fails to actually honor the IDE drivers' mode support 
-> >> masks) because of the bogus checks -- thus, selecting the DMA transfer mode 
-> >> that the driver explicitly refuses to support is possible. Additionally, there 
-> >> is no check for validity of the UltraDMA mode data in the drive ID, and the 
-> >> function is misdocumented.
-> 
-> > drivers/ide/ide-lib.c: In function `ide_dma_speed':
-> > drivers/ide/ide-lib.c:86: warning: `ultra_mask' might be used uninitialized in this function
-> 
-> > Looks like a real bug to me - it depends up on the values of `mode' and
-> > id->field_value.
-> 
-> > Anyway, I'll drop it, please review and fix.  I assume that warning was
-> > occurring for you as well - please spend more time over these things. 
-> > Especially when working on IDE, where bugs are slow to show themselves and
-> > have particularly bad consequences.
-> 
->     That's what gcc thinks. The code is 100% correct -- it will never reach 
-> the switch statement with mode > 0 (in which case ultra_mask isn't used) and 
-> ultra_mask unitialized.
+> little bit more complex (it has more moving parts) and it would be
+> difficult to define/tune speed down or any other error handling (say,
+> turning off NCQ) criteria.  But, I might be planning too much.
 
-hm, OK.
+The log problem is that you can get 32 errors very fast (doesn't take
+much with multiple outstanding commands) so you have to choose which
+info to throw away - the history or the detail in the commands 
 
-> I may add an explicit initializer in the declaration if you like...
-
-Opinions vary.  I think that's less bad than spitting a warning at all
-developers for all time.
-
-But we can redo things like below and save a little code in the process. 
-Look OK?
-
---- devel/drivers/ide/ide-lib.c~ide_dma_speed-fixes-warning-fix	2006-05-15 07:56:28.000000000 -0700
-+++ devel-akpm/drivers/ide/ide-lib.c	2006-05-15 08:00:12.000000000 -0700
-@@ -90,9 +90,9 @@ u8 ide_dma_speed(ide_drive_t *drive, u8 
- 		return 0;
- 
- 	/* Capable of UltraDMA modes? */
--	if (id->field_valid & 4)
--		ultra_mask = id->dma_ultra & hwif->ultra_mask;
--	else
-+	ultra_mask = id->dma_ultra & hwif->ultra_mask;
-+
-+	if (!(id->field_valid & 4))
- 		mode = 0;	/* fallback to MW/SW DMA if no UltraDMA */
- 
- 	switch (mode) {
-_
 
