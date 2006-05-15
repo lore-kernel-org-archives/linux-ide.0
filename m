@@ -1,51 +1,58 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [BUGREPORT 1/3] Kernel Oops with HPT372A IDE controller
-Date: Mon, 15 May 2006 18:54:05 +0400
-Message-ID: <4468960D.2090004@ru.mvista.com>
-References: <200605142110.53348.it21@arcor.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 02/11] libata-eh: implement ata_ering
+Date: Mon, 15 May 2006 23:57:20 +0900
+Message-ID: <446896D0.7060309@gmail.com>
+References: <11473536871340-git-send-email-htejun@gmail.com>	 <44665AAB.7000806@pobox.com> <44666D98.1000503@gmail.com>	 <44668249.9000004@pobox.com> <446685D1.4030607@gmail.com>	 <446688C8.6020001@pobox.com>	 <1147700193.26686.7.camel@localhost.localdomain>	 <44688991.8010407@gmail.com>  <44688F69.8030002@gmail.com> <1147704657.26686.49.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:57293 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750976AbWEOOzO
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 10:55:14 -0400
-In-Reply-To: <200605142110.53348.it21@arcor.de>
+Received: from nz-out-0102.google.com ([64.233.162.192]:3560 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751444AbWEOO51 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 10:57:27 -0400
+Received: by nz-out-0102.google.com with SMTP id 18so117421nzp
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 07:57:26 -0700 (PDT)
+In-Reply-To: <1147704657.26686.49.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 101551.753@compuserve.com
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-Hello.
-
-Foli Ayivoh wrote:
-> Kernel Oops with HighPoint RocketRAID ATA133 aka HPT372A/N since kernel 2.6
-> Now tested with kernel 2.6.17-rc4
+Alan Cox wrote:
+> On Llu, 2006-05-15 at 23:25 +0900, Tejun Heo wrote:
+>> I was too quick to response.  ering keeps track of timestamps of each
+>> error and the criteria for speeding down is something like "3 class 1
+>> errors during last 15mins", so bitmaps doesn't cut it.
 > 
-> Kernel is on bootable CD-ROM
-> Modules are loaded from initrd
+> Sounds like it does
 > 
-> This is what I copied from screen:
 > 
-> Loading hpt366
-> [17179578.396000] HPT372A: IDE controller at PCI slot 0000:01:0a.0
-> [17179578.400000] ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
-> [17179578.404000] ACPI: PCI Interrupt 0000:01:0a.0[A] -> Link [APC1] -> GSI 16 (level, high) -> IRQ 18
-> [17179578.408000] HPT372A: chipset revision 2
-> [17179578.412000] HPT372A: 100% native mode on irq 18
-> [17179578.416000] hpt: HPT372N detected, using 372N timing.
-> [17179578.420000] FREQ: 125 PLL: 45
-> [17179579.536000] No Clock Stabilization!!!
-> [17179579.540000] hpt: no known IDE timings, disabling DMA
-> [17179579.544000] hpt: HPT372N detected, using 372N timing.
-> [17179579.548000] FREQ: 156 PLL: 66
-> [17179579.664000] No Clock Stabilization!!!
+> 	log_class_1_error(dev)
+> 	{
+> 		if((dev->class1 & 3) < 3) {
+> 			dev->class1++;
+> 			dev->class1sum++;
+> 		} else {
+> 			/* 3 this minute alone */
+> 			it_happened_now_case();
+> 		}
+> 	}
+> 
+> 	class_1_each_minute(dev)
+> 	{
+> 		dev->class1sum -= (dev->class1 >> 30);
+> 		dev->class1 <<= 2;
+> 	}
+> 
 
-    Please try my latest patches. This one should fix this (and oops should be
-gone):
+Yeap, of course, it does with periodic shifting.  The 3 in this minute
+testing looks neat.
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=114677223914159&w=2
+I don't know.  I'm still a bit hesitant because the thing becomes a
+little bit more complex (it has more moving parts) and it would be
+difficult to define/tune speed down or any other error handling (say,
+turning off NCQ) criteria.  But, I might be planning too much.
 
-MBR, Sergei
-
+-- 
+tejun
