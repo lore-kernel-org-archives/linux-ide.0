@@ -1,43 +1,48 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Wakko Warner <wakko@animx.eu.org>
 Subject: Re: [RFT] major libata update
-Date: Tue, 16 May 2006 07:52:48 +0900
-Message-ID: <44690640.2000407@gmail.com>
-References: <20060515170006.GA29555@havoc.gtf.org> <20060515101831.0e38d131.akpm@osdl.org> <4468C33F.7070905@garzik.org> <4468D777.6080408@rtr.ca>
+Date: Mon, 15 May 2006 19:02:56 -0400
+Message-ID: <20060515230256.GB4699@animx.eu.org>
+References: <20060515170006.GA29555@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.237]:55913 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1750714AbWEOWwx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 18:52:53 -0400
-Received: by wr-out-0506.google.com with SMTP id i32so992058wra
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 15:52:52 -0700 (PDT)
-In-Reply-To: <4468D777.6080408@rtr.ca>
+Received: from animx.eu.org ([216.98.75.249]:7903 "EHLO animx.eu.org")
+	by vger.kernel.org with ESMTP id S1750721AbWEOW5d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 18:57:33 -0400
+Content-Disposition: inline
+In-Reply-To: <20060515170006.GA29555@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->> Andrew Morton wrote:
-> ..
->>> http://bugzilla.kernel.org/show_bug.cgi?id=5586
->>
->> sata_mv still considered highly experimental, as noted in Kconfig.  
->> Bugs deferred to Mark Lord.
-> ..
-> I think that particular bug has gone away with my internal sata_mv.c 
-> version.
-> I'm updating it for release on top of Jeff/Tejun's patch set, and will 
-> likely
-> backport the bugfixes to 2.6.16.xx as well.  Timeline, this week or next.
+Jeff Garzik wrote:
+> 
+> After much development and review, I merged a massive pile of libata
+> patches from Tejun Heo and Albert Lee.  This update contains the
+> following major libata
+> 
+> CHANGES:
+> * Rewritten error handling. This is a major piece of work, even
+>   though it will be rarely seen.  The new libata EH provides the
+>   foundation for not only improved error handling, but also new features
+>   such as device hotplug or command queueing. (Tejun Heo)
+> 
+> * PIO-based I/O is now IRQ-driven by default, rather than polled
+>   in a kernel thread.  The polling path will continue to exist for
+>   controllers that need it, and other special cases. (Albert Lee)
+> 
+> * Core support for command queueing (Jens Axboe, Tejun Heo)
+> 
+> * Support for NCQ-style command queueing (Jens Axboe, Tejun Heo)
+> 
+> * Increase max-sectors dramatically, for LBA48 devices (Tejun Heo?)
+> 
+> * Other minor changes, from myself and others.
 
-The hotplug patches will change probing once more.  So, I recommend 
-staying with legacy ->phy_reset mechanism for the time being unless you 
-are using ->probe_reset() already.  However, converting from 
-->probe_reset() to hotplug should be very easy.
+How about PATA?  Specifically intel's IDE chip.  I have a machine that I can
+blow the hard drive away if I want to.
 
 -- 
-tejun
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
