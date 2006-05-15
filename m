@@ -1,257 +1,86 @@
-From: Foli Ayivoh <it21@arcor.de>
-Subject: [BUGREPORT 3/3] Kernel Oops with HPT372A IDE controller
-Date: Sun, 14 May 2006 21:11:42 +0200
-Message-ID: <200605142111.42329.it21@arcor.de>
-Reply-To: 101551.753@compuserve.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: question about boot time drive initialization
+Date: Mon, 15 May 2006 10:50:29 +0900
+Message-ID: <4467DE65.7000701@gmail.com>
+References: <4466DE81.2040006@gmail.com> <311601c90605140929s5fe919efk69c59bd5f61fee7d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-in-09.arcor-online.net ([151.189.21.49]:53997 "EHLO
-	mail-in-09.arcor-online.net") by vger.kernel.org with ESMTP
-	id S1751581AbWENTKo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 14 May 2006 15:10:44 -0400
-Received: from mail-in-06-z2.arcor-online.net (mail-in-06-z2.arcor-online.net [151.189.8.18])
-	by mail-in-09.arcor-online.net (Postfix) with ESMTP id 7054426D6FB
-	for <linux-ide@vger.kernel.org>; Sun, 14 May 2006 21:10:42 +0200 (CEST)
-Received: from mail-in-05.arcor-online.net (mail-in-05.arcor-online.net [151.189.21.45])
-	by mail-in-06-z2.arcor-online.net (Postfix) with ESMTP id 5E24319E27B
-	for <linux-ide@vger.kernel.org>; Sun, 14 May 2006 21:10:42 +0200 (CEST)
-Received: from drx-3 (dslb-084-058-180-134.pools.arcor-ip.net [84.58.180.134])
-	(Authenticated sender: it21@arcor.de)
-	by mail-in-05.arcor-online.net (Postfix) with ESMTP id A11EF13E57D
-	for <linux-ide@vger.kernel.org>; Sun, 14 May 2006 21:10:41 +0200 (CEST)
-Content-Disposition: inline
+Received: from wx-out-0102.google.com ([66.249.82.198]:37072 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751383AbWEOBuf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 14 May 2006 21:50:35 -0400
+Received: by wx-out-0102.google.com with SMTP id i28so21674wxd
+        for <linux-ide@vger.kernel.org>; Sun, 14 May 2006 18:50:35 -0700 (PDT)
+In-Reply-To: <311601c90605140929s5fe919efk69c59bd5f61fee7d@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Eric D. Mudama" <edmudama@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This is lspci -vvv from ubuntu 5 distro bootable CD-ROM with kernel 2.6.12-9-386
+[CC'ing jeff and linux-ide, hope you don't mind]
 
-0000:00:00.0 Host bridge: nVidia Corporation nForce2 AGP (different version?) (rev c1)
-	Subsystem: Asustek Computer, Inc.: Unknown device 80ac
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0
-	Region 0: Memory at e0000000 (32-bit, prefetchable) [size=128M]
-	Capabilities: <available only to root>
+Hello, Eric D. Mudama.
 
-0000:00:00.1 RAM memory: nVidia Corporation nForce2 Memory Controller 1 (rev c1)
-	Subsystem: Asustek Computer, Inc.: Unknown device 80ac
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+Eric D. Mudama wrote:
+> Immediately following POR (power on reset) it takes our hardware a few
+> milliseconds to initialize and test our own hardware.  Near the end of
+> that window, our drive will respond to COMRESET with a COMINIT.
+> 
+> The FIS34 won't be generated until after the drive has spun up
+> successfully and loaded it's code from the media.  This is expected to
+> take anywhere from 3-7 seconds for desktop drives with 1-4 platters.
+> Notebooks spin up significantly faster.
 
-0000:00:00.2 RAM memory: nVidia Corporation nForce2 Memory Controller 4 (rev c1)
-	Subsystem: Asustek Computer, Inc.: Unknown device 80ac
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+I see.
 
-0000:00:00.3 RAM memory: nVidia Corporation nForce2 Memory Controller 3 (rev c1)
-	Subsystem: Asustek Computer, Inc.: Unknown device 80ac
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> Is power always active in this infrastructure, and will the host
+> respond to COMINIT with either a COMRESET or a COMWAKE?  If so, I'd
+> just wait for the FIS34.  If you don't see a FIS34 within say 10
+> seconds, I'd hit the drive with a COMRESET.
 
-0000:00:00.4 RAM memory: nVidia Corporation nForce2 Memory Controller 2 (rev c1)
-	Subsystem: Asustek Computer, Inc.: Unknown device 80ac
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+The problem I'm having is that not all controllers can catch the initial 
+FIS34 reliably after hotplugging.  sil3112/4 family seems to always 
+catch the FIS thus reliably clearing ATA_BUSY (they seem to set ATA_BUSY 
+automatically when PHY status changes then clears it on the reception of 
+ATA_BUSY).
 
-0000:00:00.5 RAM memory: nVidia Corporation nForce2 Memory Controller 5 (rev c1)
-	Subsystem: Asustek Computer, Inc.: Unknown device 80ac
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+But for more complex controllers, it's not always the case.  sil3124/32 
+actually doesn't have single TF image.  TF images are tied to commands. 
+  No command, no TF regs.  So, the controller doesn't provide indication 
+for the first FIS.  Fortunately, issuing SRST makes the controller wait 
+for ATA_BUSY reliably.  I don't know whether the controller waits for 
+!ATA_BUSY before issuing SRST (unlikely), or the drive handles SRST 
+okay, or the controller simply ignores R_ERR on SRST issue and thinks 
+SRST completed when it actually receives the first FIS34.
 
-0000:00:01.0 ISA bridge: nVidia Corporation nForce2 ISA Bridge (rev a4)
-	Subsystem: Asustek Computer, Inc. A7N8X Mainboard
-	Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0
-	Capabilities: <available only to root>
+ATM, AHCI seems a little bit worse.  Unlike sil3124/32, it can wait for 
+the first FIS34 but it fails more often than not.  The drives are 
+transmitting FIS34 (thus 3112/4 works) but AHCI sometimes choose to 
+ignore it (nothing appears in the FIS reception area) and eventually 
+times out.  Adding delays here and there seems to make things work but 
+it seems like a lousy solution.  Argghhh...
 
-0000:00:01.1 SMBus: nVidia Corporation nForce2 SMBus (MCP) (rev a2)
-	Subsystem: Asustek Computer, Inc.: Unknown device 0c11
-	Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Interrupt: pin A routed to IRQ 9
-	Region 0: I/O ports at dc00 [size=32]
-	Capabilities: <available only to root>
+This problem becomes more evident with PM.  PM spec omits the 'waiting 
+for the first FIS34' part in the initialization sequence because 
+controllers might not be able to handle the FIS.  Actually, when a new 
+device gets plugged the port's X bit is turned on and all FIS 
+transmissions are blocked.  So, there's no way for the host controller 
+to tell whether the device is ready for command or not and has no other 
+way than issuing SRST blindly after resuming the link.
 
-0000:00:02.0 USB Controller: nVidia Corporation nForce2 USB Controller (rev a4) (prog-if 10 [OHCI])
-	Subsystem: Asustek Computer, Inc. A7N8X Mainboard
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0 (750ns min, 250ns max)
-	Interrupt: pin A routed to IRQ 22
-	Region 0: Memory at ed087000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: <available only to root>
+On EH case (transient link failure), this is okay as the drive can 
+handle the SRST okay, but it seems to cause problems on hotplug case. 
+What happens is the controller issues SRST before the drive transmits 
+the first FIS34.  As said above, this is the spec-sanctioned enumeration 
+sequence.
 
-0000:00:02.1 USB Controller: nVidia Corporation nForce2 USB Controller (rev a4) (prog-if 10 [OHCI])
-	Subsystem: Asustek Computer, Inc. A7N8X Mainboard
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0 (750ns min, 250ns max)
-	Interrupt: pin B routed to IRQ 21
-	Region 0: Memory at ed082000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: <available only to root>
+I'm getting a lot of timeouts on the first reset after hotplug and still 
+diddling with delays.  Any thoughts on how this should be solved?  Can 
+drives handle SRST before it enters idle state after POR?
 
-0000:00:02.2 USB Controller: nVidia Corporation nForce2 USB Controller (rev a4) (prog-if 20 [EHCI])
-	Subsystem: Asustek Computer, Inc. A7N8X Mainboard
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0 (750ns min, 250ns max)
-	Interrupt: pin C routed to IRQ 20
-	Region 0: Memory at ed083000 (32-bit, non-prefetchable) [size=256]
-	Capabilities: <available only to root>
+Thanks a lot and you're right on spot.
 
-0000:00:04.0 Ethernet controller: nVidia Corporation nForce2 Ethernet Controller (rev a1)
-	Subsystem: Asustek Computer, Inc. A7N8X Mainboard onboard nForce2 Ethernet
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0 (250ns min, 5000ns max)
-	Interrupt: pin A routed to IRQ 21
-	Region 0: Memory at ed086000 (32-bit, non-prefetchable) [size=4K]
-	Region 1: I/O ports at e000 [size=8]
-	Capabilities: <available only to root>
-
-0000:00:05.0 Multimedia audio controller: nVidia Corporation nForce MultiMedia audio [Via VT82C686B] (rev a2)
-	Subsystem: Asustek Computer, Inc.: Unknown device 0c11
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0 (250ns min, 3000ns max)
-	Interrupt: pin A routed to IRQ 12
-	Region 0: Memory at ed000000 (32-bit, non-prefetchable) [size=512K]
-	Capabilities: <available only to root>
-
-0000:00:06.0 Multimedia audio controller: nVidia Corporation nForce2 AC97 Audio Controler (MCP) (rev a1)
-	Subsystem: Asustek Computer, Inc.: Unknown device 8095
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0 (500ns min, 1250ns max)
-	Interrupt: pin A routed to IRQ 20
-	Region 0: I/O ports at e400 [size=256]
-	Region 1: I/O ports at d000 [size=128]
-	Region 2: Memory at ed080000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: <available only to root>
-
-0000:00:08.0 PCI bridge: nVidia Corporation nForce2 External PCI Bridge (rev a3) (prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=32
-	I/O behind bridge: 00007000-0000afff
-	Memory behind bridge: eb000000-ecffffff
-	Prefetchable memory behind bridge: fff00000-000fffff
-	BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-
-0000:00:09.0 IDE interface: nVidia Corporation nForce2 IDE (rev a2) (prog-if 8a [Master SecP PriP])
-	Subsystem: Asustek Computer, Inc.: Unknown device 0c11
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0 (750ns min, 250ns max)
-	Region 4: I/O ports at f000 [size=16]
-	Capabilities: <available only to root>
-
-0000:00:0d.0 FireWire (IEEE 1394): nVidia Corporation nForce2 FireWire (IEEE 1394) Controller (rev a3) (prog-if 10 [OHCI])
-	Subsystem: Asustek Computer, Inc.: Unknown device 809a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0 (750ns min, 250ns max)
-	Interrupt: pin A routed to IRQ 22
-	Region 0: Memory at ed084000 (32-bit, non-prefetchable) [size=2K]
-	Region 1: Memory at ed085000 (32-bit, non-prefetchable) [size=64]
-	Capabilities: <available only to root>
-
-0000:00:1e.0 PCI bridge: nVidia Corporation nForce2 AGP (rev c1) (prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32
-	Bus: primary=00, secondary=03, subordinate=03, sec-latency=32
-	I/O behind bridge: 0000c000-0000cfff
-	Memory behind bridge: e9000000-eaffffff
-	Prefetchable memory behind bridge: c0000000-dfffffff
-	BridgeCtl: Parity- SERR+ NoISA- VGA+ MAbort- >Reset- FastB2B-
-
-0000:01:04.0 Ethernet controller: Marvell Technology Group Ltd. Yukon Gigabit Ethernet 10/100/1000Base-T Adapter (rev 13)
-	Subsystem: Asustek Computer, Inc.: Unknown device 811a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32 (5750ns min, 7750ns max), Cache Line Size: 0x08 (32 bytes)
-	Interrupt: pin A routed to IRQ 17
-	Region 0: Memory at ec000000 (32-bit, non-prefetchable) [size=16K]
-	Region 1: I/O ports at 7000 [size=256]
-	Capabilities: <available only to root>
-
-0000:01:08.0 Multimedia audio controller: Creative Labs SB Audigy (rev 04)
-	Subsystem: Creative Labs: Unknown device 2001
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32 (500ns min, 5000ns max)
-	Interrupt: pin A routed to IRQ 18
-	Region 0: I/O ports at 7400 [size=64]
-	Capabilities: <available only to root>
-
-0000:01:08.1 Input device controller: Creative Labs SB Audigy MIDI/Game port (rev 04)
-	Subsystem: Creative Labs SB Audigy MIDI/Game Port
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32
-	Region 0: I/O ports at 7800 [size=8]
-	Capabilities: <available only to root>
-
-0000:01:08.2 FireWire (IEEE 1394): Creative Labs SB Audigy FireWire Port (rev 04) (prog-if 10 [OHCI])
-	Subsystem: Creative Labs SB Audigy FireWire Port
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32 (500ns min, 1000ns max), Cache Line Size: 0x08 (32 bytes)
-	Interrupt: pin B routed to IRQ 19
-	Region 0: Memory at ec008000 (32-bit, non-prefetchable) [size=2K]
-	Region 1: Memory at ec004000 (32-bit, non-prefetchable) [size=16K]
-	Capabilities: <available only to root>
-
-0000:01:0a.0 RAID bus controller: Triones Technologies, Inc. HPT372A (rev 02)
-	Subsystem: Triones Technologies, Inc.: Unknown device 0001
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 120 (2000ns min, 2000ns max)
-	Interrupt: pin A routed to IRQ 16
-	Region 0: I/O ports at 7c00 [size=8]
-	Region 1: I/O ports at 8000 [size=4]
-	Region 2: I/O ports at 8400 [size=8]
-	Region 3: I/O ports at 8800 [size=4]
-	Region 4: I/O ports at 8c00 [size=256]
-	Capabilities: <available only to root>
-
-0000:01:0b.0 RAID bus controller: Silicon Image, Inc. (formerly CMD Technology Inc) SiI 3112 [SATALink/SATARaid] Serial ATA Controller (rev 02)
-	Subsystem: Silicon Image, Inc. (formerly CMD Technology Inc) Asus A7N8X
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 0x08 (32 bytes)
-	Interrupt: pin A routed to IRQ 18
-	Region 0: I/O ports at 9000 [size=8]
-	Region 1: I/O ports at 9400 [size=4]
-	Region 2: I/O ports at 9800 [size=8]
-	Region 3: I/O ports at 9c00 [size=4]
-	Region 4: I/O ports at a000 [size=16]
-	Region 5: Memory at ec009000 (32-bit, non-prefetchable) [size=512]
-	Capabilities: <available only to root>
-
-0000:03:00.0 VGA compatible controller: ATI Technologies Inc RV350 AR [Radeon 9600] (prog-if 00 [VGA])
-	Subsystem: PC Partner Limited: Unknown device 7c19
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32 (2000ns min), Cache Line Size: 0x08 (32 bytes)
-	Interrupt: pin A routed to IRQ 11
-	Region 0: Memory at c0000000 (32-bit, prefetchable) [size=256M]
-	Region 1: I/O ports at c000 [size=256]
-	Region 2: Memory at ea000000 (32-bit, non-prefetchable) [size=64K]
-	Capabilities: <available only to root>
-
-0000:03:00.1 Display controller: ATI Technologies Inc RV350 AR [Radeon 9600] (Secondary)
-	Subsystem: PC Partner Limited: Unknown device 7c18
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Region 0: Memory at d0000000 (32-bit, prefetchable) [disabled] [size=256M]
-	Region 1: Memory at ea010000 (32-bit, non-prefetchable) [disabled] [size=64K]
-	Capabilities: <available only to root>
-
+-- 
+tejun
