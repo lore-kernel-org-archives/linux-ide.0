@@ -1,49 +1,54 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [RFT] major libata update
-Date: Tue, 16 May 2006 07:57:36 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0605160755170.3866@g5.osdl.org>
-References: <20060515170006.GA29555@havoc.gtf.org>
- <3aa654a40605151630j53822ba1nbb1a2e3847a78025@mail.gmail.com>
- <446914C7.1030702@garzik.org>  <3aa654a40605152036h40fa1cd0x8edd81431c1bd22d@mail.gmail.com>
-  <44694C4F.3000008@garzik.org> <3aa654a40605152133x516581f9w62c7cb7709864fb0@mail.gmail.com>
+From: Michael Schierl <schierlm@gmx.de>
+Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
+ stable kernel
+Date: Tue, 16 May 2006 17:14:18 +0200
+Message-ID: <4469EC4A.30908@gmx.de>
+References: <20060512132437.GB4219@htj.dyndns.org> <e4coc8$onk$1@sea.gmane.org> <4469E8CF.9030506@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:16033 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750792AbWEPO5p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 10:57:45 -0400
-In-Reply-To: <3aa654a40605152133x516581f9w62c7cb7709864fb0@mail.gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:25511 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932080AbWEPPOU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 11:14:20 -0400
+In-Reply-To: <4469E8CF.9030506@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Avuton Olrich <avuton@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-
-On Mon, 15 May 2006, Avuton Olrich wrote:
-> On 5/15/06, Jeff Garzik <jeff@garzik.org> wrote:
->
-> > Can you configure your interrupts so that ethernet and SATA are not on
-> > the same irq?
+Jeff Garzik schrieb:
+> Michael Schierl wrote:
 > 
-> Sorry, need a little hand holding here. I'm unsure how to do such a
-> thing, and can't really google that.
+>> On Fri, 12 May 2006 22:24:37 +0900, Tejun Heo wrote:
+>>
+>>> ahci:        new EH, irq-pio, NCQ, hotplug
+>>
+>> Should suspend-to-RAM work now on AHCI?
+> 
+> It probably still needs Hannes' AHCI patch, and possibly the SATA ACPI
+> patches too.
 
-Before you do that, try this patch (that I suggested to Neil Brown in a 
-totally unrelated thread) just for fun.
+hmm. ok. Hannes' patch was the one in http://lkml.org/lkml/2006/3/6/47 ?
 
-		Linus
+I never found a kernel where I could apply that one and still compile
+without errors :(
 
-----
-diff --git a/arch/i386/pci/irq.c b/arch/i386/pci/irq.c
-index 06dab00..49b9fea 100644
---- a/arch/i386/pci/irq.c
-+++ b/arch/i386/pci/irq.c
-@@ -880,6 +880,7 @@ static int pcibios_lookup_irq(struct pci
- 	((!(pci_probe & PCI_USE_PIRQ_MASK)) || ((1 << irq) & mask)) ) {
- 		DBG(" -> got IRQ %d\n", irq);
- 		msg = "Found";
-+		eisa_set_level_irq(irq);
- 	} else if (newirq && r->set && (dev->class >> 8) != PCI_CLASS_DISPLAY_VGA) {
- 		DBG(" -> assigning IRQ %d", newirq);
- 		if (r->set(pirq_router_dev, dev, pirq, newirq)) {
+I am no C guru, so I had no success to fix this patch without even
+knowing where to apply against... (and I don't know anything about
+kernel programming or even ACHI low-level programming).
+
+Is there a newer version available of that patch somewhere?
+
+And - what SATA ACPI patches?
+
+I have quite alot of patches related to sata and/or acpi (collected from
+different mailing lists) here on hard disk but don't know which ones are
+broken, outdated, etc. Most only apply on a 2.6.15 or 2.6.14-rc kernel...
+
+If more recent patches are only available via git, I'd need some good
+GIT tutorial first...
+
+TIA, and sorry for stealing your time,
+
+Michael
