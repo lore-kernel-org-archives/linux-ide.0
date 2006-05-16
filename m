@@ -1,33 +1,34 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
- stable kernel
-Date: Tue, 16 May 2006 10:59:27 -0400
-Message-ID: <4469E8CF.9030506@garzik.org>
-References: <20060512132437.GB4219@htj.dyndns.org> <e4coc8$onk$1@sea.gmane.org>
+Subject: Re: [RFT] major libata update
+Date: Tue, 16 May 2006 11:02:48 -0400
+Message-ID: <4469E998.9060303@garzik.org>
+References: <20060515170006.GA29555@havoc.gtf.org>	 <3aa654a40605151630j53822ba1nbb1a2e3847a78025@mail.gmail.com>	 <446914C7.1030702@garzik.org>	 <3aa654a40605152036h40fa1cd0x8edd81431c1bd22d@mail.gmail.com>	 <44694C4F.3000008@garzik.org> <3aa654a40605152133x516581f9w62c7cb7709864fb0@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:14720 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751191AbWEPO7a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 10:59:30 -0400
-In-Reply-To: <e4coc8$onk$1@sea.gmane.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:25216 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751202AbWEPPCv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 11:02:51 -0400
+In-Reply-To: <3aa654a40605152133x516581f9w62c7cb7709864fb0@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: schierlm@gmx.de
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Avuton Olrich <avuton@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
 
-Michael Schierl wrote:
-
-> On Fri, 12 May 2006 22:24:37 +0900, Tejun Heo wrote:
+Avuton Olrich wrote:
+> On 5/15/06, Jeff Garzik <jeff@garzik.org> wrote:
 > 
->> ahci:		new EH, irq-pio, NCQ, hotplug
 > 
-> Should suspend-to-RAM work now on AHCI?
+>> Can you configure your interrupts so that ethernet and SATA are not on
+>> the same irq?
+> 
+> Sorry, need a little hand holding here. I'm unsure how to do such a
+> thing, and can't really google that.
 
-It probably still needs Hannes' AHCI patch, and possibly the SATA ACPI 
-patches too.
+It will be in your BIOS setup somewhere.  Hopefully.
 
 	Jeff
+
 
 
