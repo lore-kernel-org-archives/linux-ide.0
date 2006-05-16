@@ -1,88 +1,29 @@
-From: "Nick Warne" <nick.warne@gmail.com>
-Subject: Re: Make number of IDE interfaces configurable
-Date: Tue, 16 May 2006 20:13:37 +0100
-Message-ID: <7c3341450605161213vc23ee70r6d9809c1bafdbc17@mail.gmail.com>
-References: <20060512222952.GQ6616@waste.org> <20060516160250.GE5677@stusta.de>
-	 <20060516162934.GR24227@waste.org> <20060516164011.GH5677@stusta.de>
-Reply-To: nick@linicks.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 20:58:36 +0100
+Message-ID: <20060516195836.GA3807@infradead.org>
+References: <4468B596.9090508@garzik.org> <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F906.7040602@gmail.com> <1147796999.3505.42.camel@mulgrave.il.steeleye.com> <446A0053.5070203@gmail.com> <1147798226.3505.56.camel@mulgrave.il.steeleye.com> <446A06C7.5050609@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.227]:60517 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1750754AbWEPTNj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 15:13:39 -0400
-Received: by wr-out-0506.google.com with SMTP id i3so46684wra
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 12:13:37 -0700 (PDT)
-In-Reply-To: <20060516164011.GH5677@stusta.de>
+Received: from pentafluge.infradead.org ([213.146.154.40]:14732 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751017AbWEPT6k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 15:58:40 -0400
 Content-Disposition: inline
+In-Reply-To: <446A06C7.5050609@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Matt Mackall <mpm@selenic.com>, akpm@osdl.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-I submitted a patch ages ago similar (but differnet ;-) ) to this:
+On Wed, May 17, 2006 at 02:07:19AM +0900, Tejun Heo wrote:
+> > Yes, but in scsi_priv.h, please ... I can actually think of another use
+> > for it in terms of getting the SG reset handler to work properly.
+> 
+> Okay, will do in scsi_priv.h
 
-http://lkml.org/lkml/2005/6/25/69
+Things used by the transport classes traditionally weren't in scsi_priv.h,
+that was for scsi_mod internals only.  Should we changed that?  I'd rather
+have another header for semi-volatile APIs transport classes use.
 
-I couldn't/don't see why I get six ide probes when I know I have only
-2 IDE interfaces - I thought it would be better to stick to default
-_unless_ the kernel builder knew otherwise and specified the amount.
-
-Alan Cox didn't like it as it introduces more config unnecessary config options.
-
-But it would be nice though if this could be included with that enhancement too.
-
-Nick
-
-On 16/05/06, Adrian Bunk <bunk@stusta.de> wrote:
-> On Tue, May 16, 2006 at 11:29:34AM -0500, Matt Mackall wrote:
-> > On Tue, May 16, 2006 at 06:02:50PM +0200, Adrian Bunk wrote:
-> > > On Fri, May 12, 2006 at 05:29:52PM -0500, Matt Mackall wrote:
-> > > >...
-> > > > --- 2.6.orig/include/linux/ide.h	2006-05-11 15:07:32.000000000 -0500
-> > > > +++ 2.6/include/linux/ide.h	2006-05-12 14:01:53.000000000 -0500
-> > > > @@ -252,7 +252,8 @@ static inline void ide_std_init_ports(hw
-> > > >
-> > > >  #include <asm/ide.h>
-> > > >
-> > > > -#ifndef MAX_HWIFS
-> > > > +#if !defined(MAX_HWIFS) || defined(CONFIG_EMBEDDED)
-> > > > +#undef MAX_HWIFS
-> > > >  #define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
-> > > >  #endif
-> > >
-> > > Why do you need this?
-> >
-> > Doesn't work without it?
-> >
-> > Most platforms define MAX_HWIFS.
->
-> OK, now I got it.
->
-> Setting this value is sometimes done in heder files and sometimes
-> done in the Kconfig file.
->
-> That is extremely ugly.
->
-> Bart, would you accept a patch to set in in the Kconfig file on all
-> architectures?
->
-> cu
-> Adrian
->
-> --
->
->        "Is there not promise of rain?" Ling Tan asked suddenly out
->         of the darkness. There had been need of rain for many days.
->        "Only a promise," Lao Er said.
->                                        Pearl S. Buck - Dragon Seed
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
