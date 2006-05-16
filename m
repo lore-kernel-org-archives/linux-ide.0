@@ -1,57 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 01:39:47 +0900
-Message-ID: <446A0053.5070203@gmail.com>
-References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F906.7040602@gmail.com> <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [PATCH] Make number of IDE interfaces configurable
+Date: Tue, 16 May 2006 18:40:11 +0200
+Message-ID: <20060516164011.GH5677@stusta.de>
+References: <20060512222952.GQ6616@waste.org> <20060516160250.GE5677@stusta.de> <20060516162934.GR24227@waste.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.238]:41382 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S932131AbWEPQkC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 12:40:02 -0400
-Received: by wr-out-0506.google.com with SMTP id 71so23120wri
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 09:40:01 -0700 (PDT)
-In-Reply-To: <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:44550 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S932134AbWEPQkN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 12:40:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20060516162934.GR24227@waste.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: Matt Mackall <mpm@selenic.com>
+Cc: akpm@osdl.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2006-05-17 at 01:08 +0900, Tejun Heo wrote:
->> It's handled the same way shost->host_failed is handled.
->> scsi_device_unbusy() wakes it up when the condition is met.
+On Tue, May 16, 2006 at 11:29:34AM -0500, Matt Mackall wrote:
+> On Tue, May 16, 2006 at 06:02:50PM +0200, Adrian Bunk wrote:
+> > On Fri, May 12, 2006 at 05:29:52PM -0500, Matt Mackall wrote:
+> > >...
+> > > --- 2.6.orig/include/linux/ide.h	2006-05-11 15:07:32.000000000 -0500
+> > > +++ 2.6/include/linux/ide.h	2006-05-12 14:01:53.000000000 -0500
+> > > @@ -252,7 +252,8 @@ static inline void ide_std_init_ports(hw
+> > >  
+> > >  #include <asm/ide.h>
+> > >  
+> > > -#ifndef MAX_HWIFS
+> > > +#if !defined(MAX_HWIFS) || defined(CONFIG_EMBEDDED)
+> > > +#undef MAX_HWIFS
+> > >  #define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
+> > >  #endif
+> > 
+> > Why do you need this?
 > 
-> That's the piece I hadn't spotted, yet ... thanks.  That will do it.
+> Doesn't work without it?
 > 
-> could you move ata_schedule_scsi_eh to scsi_error (with the appropriate
-> API rename).  That way the SCSI state model changes aren't in libata
-> (and no-one else who wants to use this has to open code the
-> ata_schedule_scsi_eh API).
-> 
+> Most platforms define MAX_HWIFS.
 
-I certainly can, and it was done that way first time around.  Please
-note the following discussion.
+OK, now I got it.
 
-http://thread.gmane.org/gmane.linux.scsi/23853/focus=9760
+Setting this value is sometimes done in heder files and sometimes 
+done in the Kconfig file.
 
-Luben objected the interface made public because SCSI host is not
-supposed to know about exception conditions which are not associated
-with ITL nor ITLQ nexus.  Thus, I made it a temporary measure only for
-libata, which is planned to move out.
+That is extremely ugly.
 
-So, SCSI contains only the necessary bits required to implement the
-feature and libata open-codes the rest.  As it's not an exported
-interface, no other SCSI driver is supposed to use it and the SCSI
-modifications can be easily removed after libata moves out.
+Bart, would you accept a patch to set in in the Kconfig file on all 
+architectures?
 
-As long as libata can do EH not associated with scmd or device, I'm okay
-either way and think it's your call.  So, considering the above
-discussion, do you want it to be a generic SCSI interface?
-
-Thanks.
+cu
+Adrian
 
 -- 
-tejun
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
