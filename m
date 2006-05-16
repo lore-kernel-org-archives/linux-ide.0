@@ -1,136 +1,45 @@
-From: "Avuton Olrich" <avuton@gmail.com>
-Subject: Re: [RFT] major libata update
-Date: Mon, 15 May 2006 17:08:20 -0700
-Message-ID: <3aa654a40605151708q2dc053c8h4778569042e3f7a3@mail.gmail.com>
-References: <20060515170006.GA29555@havoc.gtf.org>
-	 <3aa654a40605151630j53822ba1nbb1a2e3847a78025@mail.gmail.com>
-	 <446914C7.1030702@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Promise TX4 + SiI 3726 : only one disk visible
+Date: Tue, 16 May 2006 09:18:05 +0900
+Message-ID: <44691A3D.4040804@gmail.com>
+References: <6EB652BF05BEE44FA2A29B23F3A71528045B3857@UBIMAIL1.ubisoft.org>	 <44690D90.2030208@gmail.com> <44691172.8040402@pobox.com>	 <446915AB.8000205@garzik.org> <89d273ba0605151712q7d6ab748q52ab321d45848a53@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
+Content-Type: text/plain; charset=UTF-8;
 	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:31394 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1750855AbWEPAIW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2006 20:08:22 -0400
-Received: by nf-out-0910.google.com with SMTP id o63so206602nfa
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 17:08:20 -0700 (PDT)
-In-Reply-To: <446914C7.1030702@garzik.org>
-Content-Disposition: inline
+Received: from wx-out-0102.google.com ([66.249.82.203]:61560 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750872AbWEPASK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 20:18:10 -0400
+Received: by wx-out-0102.google.com with SMTP id t16so646394wxc
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 17:18:09 -0700 (PDT)
+In-Reply-To: <89d273ba0605151712q7d6ab748q52ab321d45848a53@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
+To: =?UTF-8?B?SsOpcsO0bWUgVlVBUkFORA==?= <jerome.vuarand@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Jerome Vuarand <jerome.vuarand@ubisoft.com>, linux-ide@vger.kernel.org
 
-On 5/15/06, Jeff Garzik <jeff@garzik.org> wrote:
-> Avuton Olrich wrote:
-> > On 5/15/06, Jeff Garzik <jeff@garzik.org> wrote:
-> >> * sata_sil and ata_piix also need healthy re-testing of all basic
-> >> functionality.
-> >
-> > I'm testing it right now, but with 2.6.17-rc4-git2 I was getting:
->
-> Testing what?  sata_sil?  Please provide full dmesg, there's a lot of
-> missing information.
+J=C3=A9r=C3=B4me VUARAND wrote:
+> Thanks a lot for the quick answers. Sorry to have misread tejun's
+> readme, I tought there was some abstraction layer between SATA
+> protocol and SATAII extensions, so I didn't even suppose there could
+> be a need for controller specific code to support port multiplier. I
+> was clearly wrong.
 
-sata_sil, sorry, I thought I provided a good subset of the timeout message:
+Yeap, there is a layer, but it still needs low level support.
 
-May 15 15:41:27 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
-May 15 15:41:27 shapeshifter ata2: translated ATA stat/err 0x58/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-May 15 15:41:27 shapeshifter ata2: status=0x58 { DriveReady
-SeekComplete DataRequest }
-May 15 15:41:27 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
-May 15 15:41:27 shapeshifter sda: Current: sense key=0xb
-May 15 15:41:27 shapeshifter ASC=0x47 ASCQ=0x0
-May 15 15:41:27 shapeshifter end_request: I/O error, dev sda, sector 974708551
-May 15 15:41:57 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
-May 15 15:41:57 shapeshifter ata2: translated ATA stat/err 0x58/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-May 15 15:41:57 shapeshifter ata2: status=0x58 { DriveReady
-SeekComplete DataRequest }
-May 15 15:41:57 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
-May 15 15:41:57 shapeshifter sda: Current: sense key=0xb
-May 15 15:41:57 shapeshifter ASC=0x47 ASCQ=0x0
-May 15 15:41:57 shapeshifter end_request: I/O error, dev sda, sector 974708559
-May 15 15:42:27 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
-May 15 15:42:27 shapeshifter ata2: translated ATA stat/err 0x58/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-May 15 15:42:27 shapeshifter ata2: status=0x58 { DriveReady
-SeekComplete DataRequest }
-May 15 15:42:27 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
-May 15 15:42:27 shapeshifter sda: Current: sense key=0xb
-May 15 15:42:27 shapeshifter ASC=0x47 ASCQ=0x0
-May 15 15:42:27 shapeshifter end_request: I/O error, dev sda, sector 974708567
-May 15 15:42:57 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
-May 15 15:42:57 shapeshifter ata2: translated ATA stat/err 0x58/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-May 15 15:42:57 shapeshifter ata2: status=0x58 { DriveReady
-SeekComplete DataRequest }
-May 15 15:42:57 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
-May 15 15:42:57 shapeshifter sda: Current: sense key=0xb
-May 15 15:42:57 shapeshifter ASC=0x47 ASCQ=0x0
-May 15 15:42:57 shapeshifter end_request: I/O error, dev sda, sector 974708575
-May 15 15:43:27 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
-May 15 15:43:27 shapeshifter ata2: translated ATA stat/err 0x58/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-May 15 15:43:27 shapeshifter ata2: status=0x58 { DriveReady
-SeekComplete DataRequest }
-May 15 15:43:27 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
-May 15 15:43:27 shapeshifter sda: Current: sense key=0xb
-May 15 15:43:27 shapeshifter ASC=0x47 ASCQ=0x0
-May 15 15:43:27 shapeshifter end_request: I/O error, dev sda, sector 974708583
-May 15 15:43:57 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
-May 15 15:43:57 shapeshifter ata2: translated ATA stat/err 0x58/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-May 15 15:43:57 shapeshifter ata2: status=0x58 { DriveReady
-SeekComplete DataRequest }
-May 15 15:43:57 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
-May 15 15:43:57 shapeshifter sda: Current: sense key=0xb
-May 15 15:43:57 shapeshifter ASC=0x47 ASCQ=0x0
-May 15 15:43:57 shapeshifter end_request: I/O error, dev sda, sector 974708591
-May 15 15:44:02 shapeshifter SysRq : Emergency Sync
-May 15 15:44:02 shapeshifter Emergency Sync complete
-May 15 15:44:27 shapeshifter ata2: command 0x25 timeout, stat 0x58 host_stat 0x1
-May 15 15:44:27 shapeshifter ata2: translated ATA stat/err 0x58/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-May 15 15:44:27 shapeshifter ata2: status=0x58 { DriveReady
-SeekComplete DataRequest }
-May 15 15:44:27 shapeshifter sd 1:0:0:0: SCSI error: return code = 0x8000002
-May 15 15:44:27 shapeshifter sda: Current: sense key=0xb
-May 15 15:44:27 shapeshifter ASC=0x47 ASCQ=0x0
-May 15 15:44:27 shapeshifter end_request: I/O error, dev sda, sector 974708599
-May 15 15:44:35 shapeshifter NETDEV WATCHDOG: eth2: transmit timed out
+> So to be clear, there is not yet any support for my configuration
+> (sata_promise+SiI3726) in any of your code branches ? If not which on=
+e
+> should I start from to try to add the support myself (I never
+> programmed anything in the kernel, so it would just be a newbie try) =
+?
 
-> > After large ssh transfers. I moved to 2.6.17-rc4-git2 because
-> > 2.6.16.16 was doing the same. This is a new 500gb sata2 drive on
-> > sata_sil so I guess this could be hardware, but I wanted to make sure
-> > before I go returning this thing. After this obviously I have to sysrq
-> > sync, ro and reboot. This also causes(?) a NETDEV WATCHDOG: eth2:
-> > transmit timed out, sometimes this ata timeout doesn't yet occur and I
-> > just get the netdev watchdog. This has not yet happened with the new
-> > patch, though I'm only 1 hr into testing with it.
->
-> Yes, its entirely possible that the new patch will address this.  Please
-> do keep us posted.
->
-> Thanks,
->
->         Jeff
+No, not yet.  You can try but the biggest obstacle would be lack of=20
+document.  If you can access the doc, it shouldn't be too difficult, I=20
+guess.  You can analyze how sata_sil24 has been changed and update=20
+sata_promise similarly.
 
-OK, upon further testing I believe the patch helps out tremendously, I
-don't get the timeout message (yet), though I still get a netdev
-watchdog. I've gotten this with two different ethernet ports/drivers
-so I believe this not to be due to the ethernet driver.
-
-Sample dmesg output:
-NETDEV WATCHDOG: eth2: transmit timed out
-
-The time that it actually takes to happen is variable, though it
-hasn't happened to me in under 20 minutes yet.
-
--- 
-avuton
---
- Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+--=20
+tejun
