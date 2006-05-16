@@ -1,68 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: enforce default EH actions
-Date: Tue, 16 May 2006 12:58:24 +0900
-Message-ID: <20060516035824.GB23124@htj.dyndns.org>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: ata_piix resume from S3 on T43P failed
+Date: Tue, 16 May 2006 11:56:34 +0800
+Message-ID: <1147751795.7273.80.camel@forrest26.sh.intel.com>
+References: <1147334740.7273.38.camel@forrest26.sh.intel.com>
+	 <4462F667.3060504@gmail.com> <4462F767.5070003@gmail.com>
+	 <1147340790.7273.47.camel@forrest26.sh.intel.com>
+	 <20060511105555.GK4157@suse.de>
+	 <1147413106.7273.70.camel@forrest26.sh.intel.com>
+	 <20060512101713.GN4157@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.196]:13133 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751249AbWEPD63 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 23:58:29 -0400
-Received: by nz-out-0102.google.com with SMTP id v1so6531nzb
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 20:58:28 -0700 (PDT)
-Content-Disposition: inline
+Received: from mga02.intel.com ([134.134.136.20]:57443 "EHLO
+	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751256AbWEPEHu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 00:07:50 -0400
+In-Reply-To: <20060512101713.GN4157@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-LLDDs rely on libata that certain EH actions are automatically taken
-on some errors.  If the port is frozen or one or more qc's have failed
-with HSM violation or timeout, softreset is enforced (LLDD can ask for
-storonger EH action at will).  If any other error condition exists,
-libata EH always revalidates.
+On Fri, 2006-05-12 at 12:17 +0200, Jens Axboe wrote:
+> The key is the 0xef timeout, then the device is offlined and you see a
+> lot of io errors due to that.
+> 
+> Try this:
+> 
+> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+> index bd14720..f120839 100644
+> --- a/drivers/scsi/libata-core.c
+> +++ b/drivers/scsi/libata-core.c
+> @@ -4288,6 +4288,7 @@ int ata_device_resume(struct ata_port *a
+>  {
+>  	if (ap->flags & ATA_FLAG_SUSPENDED) {
+>  		ap->flags &= ~ATA_FLAG_SUSPENDED;
+> +		mdelay(2000);
+>  		ata_set_mode(ap);
+>  	}
+>  	if (!ata_dev_present(dev))
+> 
 
-This behavior existed in earlier revisions of new EH but lost during
-development process.  This patch restores it.
+Jens,
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Yes! The patch works. But I'm wondering why ata_piix driver in kernel
+2.6.16-rc6 works without mdelay(2000); in ata_device_resume()?
 
----
-
- drivers/scsi/libata-eh.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
-
-caec4356c4f88f476e6b5ee26dba07be70c3fd17
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 7244caf..750e734 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1169,9 +1169,6 @@ static void ata_eh_autopsy(struct ata_po
- 		/* inherit upper level err_mask */
- 		qc->err_mask |= ehc->i.err_mask;
- 
--		if (qc->err_mask & AC_ERR_TIMEOUT)
--			action |= ATA_EH_SOFTRESET;
--
- 		/* analyze TF */
- 		action |= ata_eh_analyze_tf(qc, &qc->result_tf);
- 
-@@ -1201,9 +1198,14 @@ static void ata_eh_autopsy(struct ata_po
- 	if (failed_dev)
- 		action |= ata_eh_speed_down(failed_dev, is_io, all_err_mask);
- 
--	if (all_err_mask)
-+	/* enforce default EH actions */
-+	if (ap->flags & ATA_FLAG_FROZEN ||
-+	    all_err_mask & (AC_ERR_HSM | AC_ERR_TIMEOUT))
-+		action |= ATA_EH_SOFTRESET;
-+	else if (all_err_mask)
- 		action |= ATA_EH_REVALIDATE;
- 
-+	/* record autopsy result */
- 	ehc->i.dev = failed_dev;
- 	ehc->i.action = action;
- 
--- 
-1.3.2
-
+Thanks,
+Forrest
