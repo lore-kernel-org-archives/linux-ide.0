@@ -1,40 +1,62 @@
-From: =?ISO-8859-15?Q?Martin_Ammerm=FCller?=
-	<martin.ammermueller@bnro.de>
-Subject: [FYI] Update on sata_sil problem with timeouts (was: Re: [sata_sil]Random
- timeout error (data loss))
-Date: Tue, 16 May 2006 18:07:39 +0200
-Message-ID: <4469F8CB.7040706@bnro.de>
-References: <443E6B81.5090004@bnro.de> <443E916F.1040203@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 12:12:43 -0400
+Message-ID: <4469F9FB.7020807@garzik.org>
+References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout02.sul.t-online.com ([194.25.134.17]:17298 "EHLO
-	mailout02.sul.t-online.com") by vger.kernel.org with ESMTP
-	id S1751841AbWEPQIq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 12:08:46 -0400
-In-Reply-To: <443E916F.1040203@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:52099 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751849AbWEPQMq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 12:12:46 -0400
+In-Reply-To: <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+James Bottomley wrote:
+> On Tue, 2006-05-16 at 11:41 -0400, Jeff Garzik wrote:
+>> I can't see a case _in libata operation_ where a set of circumstances 
+>> arises that causes missed wakeups, can you elaborate?
+> 
+> This is scsi_eh_wakeup():
+> 
+> void scsi_eh_wakeup(struct Scsi_Host *shost)
+> {
+> 	if (shost->host_busy == shost->host_failed) {
+> 		wake_up_process(shost->ehandler);
+> 
+> so if you try a wakeup with no failed commands and the host still busy,
+> nothing happens.
 
-I tested 2.6.17-rc4-mm1 and 2.6.17-rc4 in the last days and got similar
-error messages (command timeout & translated ATA stat/err).
+Clearly.  And where in the code do you see that this condition will strike?
 
-I used 5 simultaneously started instances of bonnie++ for testing.
+If we are talking about impossible runtime conditions, then the 
+objection is academic.
 
-Best Regards,
-Martin Ammerm=FCller
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+>>> move the prototype out of scsi_priv.h ... it should only be used by
+>>> transport classes, anyway.
+>> We're talking about all ->eh_strategy_handler() users, which is a valid 
+>> EH API for an LLDD to choose.  Granted libata is really the only one 
+>> right now.
+> 
+> We're busy revoking the LLDD driver, so in future it will be transport
+> classes only.
+> 
+>> Long term, ->eh_strategy_handler and transport classes are block layer 
+>> not SCSI level anyway, so scsi_priv.h is clearly inappropriate.
+> 
+> That can be sorted out if someone actually gets around to moving error
+> handling to the block level.  In the meantime, it's SCSI that we're
+> discussing.
 
-iD8DBQFEafjLituPSWPX2AIRAoutAJsGiYeXbjRHLHoKHwU1OrNFi9ACVgCeOOgE
-=46L/vfEQvIDBdRiqlv1nekbc=3D
-=3DIo7D
------END PGP SIGNATURE-----
+Its an API-which-only-libata-uses that we're discussing.  And because 
+its moving to the block layer, its also a 
+temporary-API-which-only-libata-uses.
+
+	Jeff
+
+
