@@ -1,273 +1,88 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [RFT] major libata update
-Date: Tue, 16 May 2006 14:29:53 -0400
-Message-ID: <446A1A21.80501@emc.com>
-References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com>
-Reply-To: ric@emc.com
+From: "Nick Warne" <nick.warne@gmail.com>
+Subject: Re: Make number of IDE interfaces configurable
+Date: Tue, 16 May 2006 20:13:37 +0100
+Message-ID: <7c3341450605161213vc23ee70r6d9809c1bafdbc17@mail.gmail.com>
+References: <20060512222952.GQ6616@waste.org> <20060516160250.GE5677@stusta.de>
+	 <20060516162934.GR24227@waste.org> <20060516164011.GH5677@stusta.de>
+Reply-To: nick@linicks.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080008040402070506080000"
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([168.159.213.200]:26520 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S932502AbWEPSa3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 14:30:29 -0400
-In-Reply-To: <4469EEC0.4060907@gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.227]:60517 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1750754AbWEPTNj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 15:13:39 -0400
+Received: by wr-out-0506.google.com with SMTP id i3so46684wra
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 12:13:37 -0700 (PDT)
+In-Reply-To: <20060516164011.GH5677@stusta.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Matt Mackall <mpm@selenic.com>, akpm@osdl.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------080008040402070506080000
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+I submitted a patch ages ago similar (but differnet ;-) ) to this:
 
-Tejun Heo wrote:
+http://lkml.org/lkml/2005/6/25/69
 
-> J
+I couldn't/don't see why I get six ide probes when I know I have only
+2 IDE interfaces - I thought it would be better to stick to default
+_unless_ the kernel builder knew otherwise and specified the amount.
+
+Alan Cox didn't like it as it introduces more config unnecessary config options.
+
+But it would be nice though if this could be included with that enhancement too.
+
+Nick
+
+On 16/05/06, Adrian Bunk <bunk@stusta.de> wrote:
+> On Tue, May 16, 2006 at 11:29:34AM -0500, Matt Mackall wrote:
+> > On Tue, May 16, 2006 at 06:02:50PM +0200, Adrian Bunk wrote:
+> > > On Fri, May 12, 2006 at 05:29:52PM -0500, Matt Mackall wrote:
+> > > >...
+> > > > --- 2.6.orig/include/linux/ide.h	2006-05-11 15:07:32.000000000 -0500
+> > > > +++ 2.6/include/linux/ide.h	2006-05-12 14:01:53.000000000 -0500
+> > > > @@ -252,7 +252,8 @@ static inline void ide_std_init_ports(hw
+> > > >
+> > > >  #include <asm/ide.h>
+> > > >
+> > > > -#ifndef MAX_HWIFS
+> > > > +#if !defined(MAX_HWIFS) || defined(CONFIG_EMBEDDED)
+> > > > +#undef MAX_HWIFS
+> > > >  #define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
+> > > >  #endif
+> > >
+> > > Why do you need this?
+> >
+> > Doesn't work without it?
+> >
+> > Most platforms define MAX_HWIFS.
 >
->>
->> Definitely new behavior.  In each case you have irq_stat == 0x8, 
->> which indicates a Set Device Bits FIS has been received.
->>
+> OK, now I got it.
 >
-> Yeap, new behavior.  Though, one thing to note is that the original 
-> ahci_host_intr() never bothered to report spurious interrupt.  It 
-> always returned 1 telling ahci_interrupt() that the interrupt is 
-> handled.  But as this is SDB instead of D2H, my guess is that the 
-> drive is sending spurious NCQ completions with no new command completed.
+> Setting this value is sometimes done in heder files and sometimes
+> done in the Kconfig file.
 >
-> Hmm.. Can you try the attached patch and report what the kernel says?
+> That is extremely ugly.
 >
-> The message reminds me of several things...
+> Bart, would you accept a patch to set in in the Kconfig file on all
+> architectures?
 >
-> * can we make tags int and use -1 for invalid tag?  ATA_TAG_POISON 
-> looks horrible when printed.
+> cu
+> Adrian
 >
-> * it would be nice to have some framework to determine whether the 
-> controller is receiving too many consecutive spurious interrupts.  
-> Say, 32 irqs in a row without intervening valid interrupts is a good 
-> reason to be suspicious about stuck IRQ.  Freezing & resetting will 
-> resolve the situation in most cases.
+> --
 >
-> * With NCQ, some drives generate spurious D2H FISes with I bit set as 
-> if it were executing non-NCQ commands.  So, regardless of controller, 
-> we're likely to see similar problems (but sil24 does all the protocol 
-> handling and ignores such FISes by itself).  This can be combined with 
-> the above freeze on too many spurious, I guess.
-
-Here is the result of running with your patch applied (on a set of nodes):
-
-c001n01: 0: [  OK  ]
-ata3: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 
-0x2000000f)
-ata3: spurious SDB FIS 004040a1:10000000 ap->qc_active=2000000f 
-qc_active=2000000f
-ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0xfffc0)
-ata1: spurious SDB FIS 004040a1:00000020 ap->qc_active=000fffc0 
-qc_active=000fffc0
-ata2: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 
-0x7fffff3f)
-ata2: spurious SDB FIS 004040a1:00000080 ap->qc_active=7fffff3f 
-qc_active=7fffff3f
-ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 
-0x7fffff9f)
-ata1: spurious SDB FIS 004040a1:00000040 ap->qc_active=7fffff9f 
-qc_active=7fffff9f
-c001n03: 0: [  OK  ]
-ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 
-0x7ffe7fff)
-ata1: spurious SDB FIS 004040a1:00010000 ap->qc_active=7ffe7fff 
-qc_active=7ffe7fff
-c001n04: 0: [  OK  ]
-ata3: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x31)
-ata3: spurious SDB FIS 004040a1:00000008 ap->qc_active=00000031 
-qc_active=00000031
-ata3: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 
-0x7fff800f)
-ata3: spurious SDB FIS 004040a1:00004000 ap->qc_active=7fff800f 
-qc_active=7fff800f
-c001n06: 1: [ FAIL ]
-c001n07: 0: [  OK  ]
-ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 
-0x7ffffcff)
-ata1: spurious SDB FIS 004040a1:00000200 ap->qc_active=7ffffcff 
-qc_active=7ffffcff
-c001n08: 0: [  OK  ]
-ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 
-0x4fffffff)
-ata1: spurious SDB FIS 004040a1:20000000 ap->qc_active=4fffffff 
-qc_active=4fffffff
-
-
-Attached is one (pretty uninteresting) whole log,
-
-ric
-
-
-
-
-
-
-
-
---------------080008040402070506080000
-Content-Type: text/plain;
- name="messages"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="messages"
-
-May 16 16:27:10 centera exiting on signal 15
-May 16 16:28:55 centera syslogd 1.4.1: restart.
-May 16 16:28:55 centera xinetd[5605]: xinetd Version 2.3.13 started with libwrap loadavg options compiled in.
-May 16 16:28:55 centera xinetd[5605]: Started working: 1 available service
-May 16 16:29:00 centera kernel: klogd 1.4.1, log source = /proc/kmsg started.
-May 16 16:29:00 centera kernel: 
-May 16 16:29:00 centera kernel: program smartctl is using a deprecated SCSI ioctl, please convert it to SG_IO
-May 16 16:29:00 centera last message repeated 47 times
-May 16 16:29:00 centera kernel: ReiserFS: sdb9: found reiserfs format "3.6" with standard journal
-May 16 16:29:00 centera kernel: ReiserFS: sdb9: using journaled data mode
-May 16 16:29:00 centera kernel: ReiserFS: sdb9: journal params: device sdb9, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:29:00 centera kernel: ReiserFS: sdb9: checking transaction log (sdb9)
-May 16 16:29:00 centera kernel: ReiserFS: sdb9: Using r5 hash to sort names
-May 16 16:29:00 centera kernel: ReiserFS: sdd9: found reiserfs format "3.6" with standard journal
-May 16 16:29:00 centera kernel: ReiserFS: sdd9: using journaled data mode
-May 16 16:29:00 centera kernel: ReiserFS: sdd9: journal params: device sdd9, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:29:00 centera kernel: ReiserFS: sdd9: checking transaction log (sdd9)
-May 16 16:29:00 centera kernel: ReiserFS: sdd9: Using r5 hash to sort names
-May 16 16:29:00 centera kernel: Adding 1004052k swap on /dev/cstardm9.  Priority:1 extents:1 across:1004052k
-May 16 16:29:00 centera kernel: Adding 1004052k swap on /dev/cstardo9.  Priority:1 extents:1 across:1004052k
-May 16 16:29:00 centera kernel: e1000: eth2: e1000_watchdog_task: NIC Link is Up 1000 Mbps Full Duplex
-May 16 16:29:00 centera kernel: e1000: eth2: e1000_set_tso: TSO is Enabled
-May 16 16:29:00 centera kernel: microcode: CPU0 updated from revision 0x9 to 0x12, date = 11222004 
-May 16 16:29:00 centera kernel: e1000: eth2: e1000_watchdog_task: NIC Link is Up 1000 Mbps Full Duplex
-May 16 16:29:00 centera kernel: e1000: eth0: e1000_set_tso: TSO is Enabled
-May 16 16:29:01 centera kernel: e1000: eth0: e1000_watchdog_task: NIC Link is Up 1000 Mbps Full Duplex
-May 16 16:29:08 centera kernel: e1000: eth1: e1000_watchdog_task: NIC Link is Up 1000 Mbps Full Duplex
-May 16 16:29:08 centera kernel: NET: Registered protocol family 17
-May 16 16:29:11 centera kernel: device eth0 entered promiscuous mode
-May 16 16:29:16 centera kernel: device eth0 left promiscuous mode
-May 16 16:29:16 centera kernel: e1000: eth1: e1000_set_tso: TSO is Enabled
-May 16 16:29:19 centera kernel: e1000: eth1: e1000_watchdog_task: NIC Link is Up 1000 Mbps Full Duplex
-May 16 16:29:30 centera ntpd[5859]: ntpd 4.1.1@1.786 Sat Sep 27 05:48:59 UTC 2003 (1)
-May 16 16:29:30 centera ntpd[5859]: precision = 8 usec
-May 16 16:29:30 centera ntpd[5859]: kernel time discipline status 0040
-May 16 16:29:30 centera ntpd[5859]: Can't open /var/lib/ntp/var/run/ntp/ntpd.pid: No such file or directory
-May 16 16:29:30 centera ntpd[5859]: frequency initialized 2.597 from /etc/ntp/drift
-May 16 16:30:01 centera kernel: program smartctl is using a deprecated SCSI ioctl, please convert it to SG_IO
-May 16 16:30:01 centera last message repeated 47 times
-May 16 16:30:01 centera kernel: ReiserFS: sdb10: found reiserfs format "3.6" with standard journal
-May 16 16:30:01 centera kernel: ReiserFS: sdc10: found reiserfs format "3.6" with standard journal
-May 16 16:30:01 centera kernel: ReiserFS: sdd10: found reiserfs format "3.6" with standard journal
-May 16 16:30:01 centera kernel: ReiserFS: sda10: found reiserfs format "3.6" with standard journal
-May 16 16:30:03 centera kernel: ReiserFS: sdd10: using ordered data mode
-May 16 16:30:03 centera kernel: ReiserFS: sdd10: journal params: device sdd10, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:03 centera kernel: ReiserFS: sdd10: checking transaction log (sdd10)
-May 16 16:30:03 centera kernel: ReiserFS: sdd10: Using r5 hash to sort names
-May 16 16:30:03 centera kernel: ReiserFS: sda10: using ordered data mode
-May 16 16:30:04 centera kernel: ReiserFS: sda10: journal params: device sda10, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:04 centera kernel: ReiserFS: sda10: checking transaction log (sda10)
-May 16 16:30:04 centera kernel: ReiserFS: sda10: Using r5 hash to sort names
-May 16 16:30:04 centera kernel: ReiserFS: sdb10: using ordered data mode
-May 16 16:30:04 centera kernel: ReiserFS: sdb10: journal params: device sdb10, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:04 centera kernel: ReiserFS: sdb10: checking transaction log (sdb10)
-May 16 16:30:04 centera kernel: ReiserFS: sdb10: Using r5 hash to sort names
-May 16 16:30:04 centera kernel: ReiserFS: sdc10: using ordered data mode
-May 16 16:30:04 centera kernel: ReiserFS: sdc10: journal params: device sdc10, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:04 centera kernel: ReiserFS: sdc10: checking transaction log (sdc10)
-May 16 16:30:04 centera kernel: ReiserFS: sdc10: Using r5 hash to sort names
-May 16 16:30:04 centera kernel: ReiserFS: sda11: found reiserfs format "3.6" with standard journal
-May 16 16:30:04 centera kernel: ReiserFS: sdb11: found reiserfs format "3.6" with standard journal
-May 16 16:30:04 centera kernel: ReiserFS: sdc11: found reiserfs format "3.6" with standard journal
-May 16 16:30:04 centera kernel: ReiserFS: sdd11: found reiserfs format "3.6" with standard journal
-May 16 16:30:06 centera kernel: ReiserFS: sda11: using ordered data mode
-May 16 16:30:06 centera kernel: ReiserFS: sda11: journal params: device sda11, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:06 centera kernel: ReiserFS: sda11: checking transaction log (sda11)
-May 16 16:30:06 centera kernel: ReiserFS: sdc11: using ordered data mode
-May 16 16:30:06 centera kernel: ReiserFS: sda11: Using r5 hash to sort names
-May 16 16:30:06 centera kernel: ReiserFS: sdc11: journal params: device sdc11, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:06 centera kernel: ReiserFS: sdc11: checking transaction log (sdc11)
-May 16 16:30:06 centera kernel: ReiserFS: sdb11: using ordered data mode
-May 16 16:30:06 centera kernel: ReiserFS: sdc11: Using r5 hash to sort names
-May 16 16:30:06 centera kernel: ReiserFS: sdb11: journal params: device sdb11, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:06 centera kernel: ReiserFS: sdb11: checking transaction log (sdb11)
-May 16 16:30:06 centera kernel: ReiserFS: sdb11: Using r5 hash to sort names
-May 16 16:30:06 centera kernel: ReiserFS: sdd11: using ordered data mode
-May 16 16:30:06 centera kernel: ReiserFS: sdd11: journal params: device sdd11, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:06 centera kernel: ReiserFS: sdd11: checking transaction log (sdd11)
-May 16 16:30:07 centera kernel: ReiserFS: sdc12: found reiserfs format "3.6" with standard journal
-May 16 16:30:07 centera kernel: ReiserFS: sdb12: found reiserfs format "3.6" with standard journal
-May 16 16:30:07 centera kernel: ReiserFS: sda12: found reiserfs format "3.6" with standard journal
-May 16 16:30:07 centera kernel: ReiserFS: sdd11: Using r5 hash to sort names
-May 16 16:30:09 centera kernel: ReiserFS: sda12: using ordered data mode
-May 16 16:30:09 centera kernel: ReiserFS: sda12: journal params: device sda12, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:09 centera kernel: ReiserFS: sda12: checking transaction log (sda12)
-May 16 16:30:09 centera kernel: ReiserFS: sda12: Using r5 hash to sort names
-May 16 16:30:09 centera kernel: ReiserFS: sdb12: using ordered data mode
-May 16 16:30:09 centera kernel: ReiserFS: sdb12: journal params: device sdb12, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:09 centera kernel: ReiserFS: sdb12: checking transaction log (sdb12)
-May 16 16:30:09 centera kernel: ReiserFS: sdc12: using ordered data mode
-May 16 16:30:09 centera kernel: ReiserFS: sdc12: journal params: device sdc12, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:09 centera kernel: ReiserFS: sdc12: checking transaction log (sdc12)
-May 16 16:30:09 centera kernel: ReiserFS: sdb12: Using r5 hash to sort names
-May 16 16:30:09 centera kernel: ReiserFS: sdc12: Using r5 hash to sort names
-May 16 16:30:09 centera kernel: ReiserFS: sdd12: found reiserfs format "3.6" with standard journal
-May 16 16:30:09 centera kernel: ReiserFS: sda13: found reiserfs format "3.6" with standard journal
-May 16 16:30:09 centera kernel: ReiserFS: sdc13: found reiserfs format "3.6" with standard journal
-May 16 16:30:09 centera kernel: ReiserFS: sdb13: found reiserfs format "3.6" with standard journal
-May 16 16:30:11 centera kernel: ReiserFS: sdd12: using ordered data mode
-May 16 16:30:11 centera kernel: ReiserFS: sdd12: journal params: device sdd12, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:11 centera kernel: ReiserFS: sdd12: checking transaction log (sdd12)
-May 16 16:30:11 centera kernel: ReiserFS: sdd12: Using r5 hash to sort names
-May 16 16:30:11 centera kernel: ReiserFS: sdb13: using ordered data mode
-May 16 16:30:12 centera kernel: ReiserFS: sdb13: journal params: device sdb13, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:12 centera kernel: ReiserFS: sdb13: checking transaction log (sdb13)
-May 16 16:30:12 centera kernel: ReiserFS: sdb13: Using r5 hash to sort names
-May 16 16:30:12 centera kernel: ReiserFS: sda13: using ordered data mode
-May 16 16:30:12 centera kernel: ReiserFS: sda13: journal params: device sda13, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:12 centera kernel: ReiserFS: sda13: checking transaction log (sda13)
-May 16 16:30:12 centera kernel: ReiserFS: sda13: Using r5 hash to sort names
-May 16 16:30:12 centera kernel: ReiserFS: sdc13: using ordered data mode
-May 16 16:30:12 centera kernel: ReiserFS: sdc13: journal params: device sdc13, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:12 centera kernel: ReiserFS: sdc13: checking transaction log (sdc13)
-May 16 16:30:12 centera kernel: ReiserFS: sdc13: Using r5 hash to sort names
-May 16 16:30:12 centera kernel: ReiserFS: sdd13: found reiserfs format "3.6" with standard journal
-May 16 16:30:12 centera kernel: ReiserFS: sdb14: found reiserfs format "3.6" with standard journal
-May 16 16:30:12 centera kernel: ReiserFS: sda14: found reiserfs format "3.6" with standard journal
-May 16 16:30:12 centera kernel: ReiserFS: sdc14: found reiserfs format "3.6" with standard journal
-May 16 16:30:15 centera kernel: ReiserFS: sdb14: using ordered data mode
-May 16 16:30:15 centera kernel: ReiserFS: sdd13: using ordered data mode
-May 16 16:30:15 centera kernel: ReiserFS: sdd13: journal params: device sdd13, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:15 centera kernel: ReiserFS: sdd13: checking transaction log (sdd13)
-May 16 16:30:15 centera kernel: ReiserFS: sdb14: journal params: device sdb14, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:15 centera kernel: ReiserFS: sdb14: checking transaction log (sdb14)
-May 16 16:30:15 centera kernel: ReiserFS: sdd13: Using r5 hash to sort names
-May 16 16:30:15 centera kernel: ReiserFS: sdb14: Using r5 hash to sort names
-May 16 16:30:15 centera kernel: ReiserFS: sda14: using ordered data mode
-May 16 16:30:15 centera kernel: ReiserFS: sda14: journal params: device sda14, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:15 centera kernel: ReiserFS: sda14: checking transaction log (sda14)
-May 16 16:30:15 centera kernel: ReiserFS: sda14: Using r5 hash to sort names
-May 16 16:30:15 centera kernel: ReiserFS: sdc14: using ordered data mode
-May 16 16:30:15 centera kernel: ReiserFS: sdc14: journal params: device sdc14, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:15 centera kernel: ReiserFS: sdc14: checking transaction log (sdc14)
-May 16 16:30:15 centera kernel: ReiserFS: sdc14: Using r5 hash to sort names
-May 16 16:30:15 centera kernel: ReiserFS: sdd14: found reiserfs format "3.6" with standard journal
-May 16 16:30:17 centera kernel: ReiserFS: sdd14: using ordered data mode
-May 16 16:30:17 centera kernel: ReiserFS: sdd14: journal params: device sdd14, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-May 16 16:30:17 centera kernel: ReiserFS: sdd14: checking transaction log (sdd14)
-May 16 16:30:17 centera kernel: ReiserFS: sdd14: Using r5 hash to sort names
-May 16 17:00:02 centera run-crons[19634]: logrotate returned 1
-May 16 17:16:57 centera kernel: ata3: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x2000000f)
-May 16 17:16:57 centera kernel: ata3: spurious SDB FIS 004040a1:10000000 ap->qc_active=2000000f qc_active=2000000f
-May 16 17:21:36 centera kernel: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0xfffc0)
-May 16 17:21:36 centera kernel: ata1: spurious SDB FIS 004040a1:00000020 ap->qc_active=000fffc0 qc_active=000fffc0
-May 16 17:38:45 centera kernel: ata2: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x7fffff3f)
-May 16 17:38:45 centera kernel: ata2: spurious SDB FIS 004040a1:00000080 ap->qc_active=7fffff3f qc_active=7fffff3f
-May 16 17:59:52 centera kernel: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x7fffff9f)
-May 16 17:59:52 centera kernel: ata1: spurious SDB FIS 004040a1:00000040 ap->qc_active=7fffff9f qc_active=7fffff9f
-May 16 18:00:04 centera run-crons[10734]: logrotate returned 1
-May 16 19:00:02 centera run-crons[5306]: logrotate returned 1
-
---------------080008040402070506080000--
+>        "Is there not promise of rain?" Ling Tan asked suddenly out
+>         of the darkness. There had been need of rain for many days.
+>        "Only a promise," Lao Er said.
+>                                        Pearl S. Buck - Dragon Seed
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
