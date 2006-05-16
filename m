@@ -1,76 +1,46 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Tue, 16 May 2006 14:32:31 -0700 (PDT)
-Message-ID: <20060516213231.33093.qmail@web31805.mail.mud.yahoo.com>
-References: <1147797042.3505.44.camel@mulgrave.il.steeleye.com>
-Reply-To: ltuikov@yahoo.com
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: [RFT] major libata update
+Date: Tue, 16 May 2006 17:41:53 -0400
+Message-ID: <446A4721.3030506@emc.com>
+References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:57428 "HELO
-	web31805.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S932098AbWEPVcc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 17:32:32 -0400
-In-Reply-To: <1147797042.3505.44.camel@mulgrave.il.steeleye.com>
+Received: from mexforward.lss.emc.com ([168.159.213.200]:58986 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S932187AbWEPVmV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 17:42:21 -0400
+In-Reply-To: <446A1A21.80501@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: ric@emc.com
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Tue, 2006-05-16 at 12:06 -0400, Jeff Garzik wrote:
-> > Sigh.  They clearly do not have the same effect, because the above code 
-> > guarantees that a timeout is forced, regardless of whether the timer has 
-> > fired or not.  That in turn guarantees that the timeout callback 
-> > (->eh_timed_out) is called, and the cmd is in a very specific state.
-> 
-> the API claims to be forcibly aborting a command, which is *not* a
-> timeout  ... trying to pretend to the midlayer that it is is the wrong
 
-It doesn't matter.
+One other note, it seems like this patch set has broken the write 
+barrier support - is that a side effect of enabling NCQ still?
 
-> processing model.  You may choose to call this API because of a class
+I see messages that claim flush barriers are enabled:
 
-No, it is not the "wrong processng model".
+[root@c001n01 root]# mount -o 
+barrier=flush,rw,noatime,nodiratime,data=ordered,notail /dev/sda10 /mnt/1
+May 16 22:21:56 centera kernel: ReiserFS: sda10: found reiserfs format 
+"3.6" with standard journal
+[root@c001n01 root]# May 16 22:21:58 centera kernel: ReiserFS: sda10: 
+using ordered data mode
+May 16 22:21:58 centera kernel: reiserfs: using flush barriers
+May 16 22:21:58 centera kernel: ReiserFS: sda10: journal params: device 
+sda10, size 8192, journal first block 18, max trans len 1024, max batch 
+900, max commit age 30, max trans age 30
+May 16 22:21:58 centera kernel: ReiserFS: sda10: checking transaction 
+log (sda10)
+May 16 22:21:58 centera kernel: ReiserFS: sda10: Using r5 hash to sort names
 
-> internal timeout, but you don't need the callback notification that it
-> is a timeout in this case, you already know it is.
+But when I test with my synchronous write load, I am going at 6 times 
+the normal rate (i.e., the rate I see with barriers disabled) ;-)
 
-Then if you already know that it is, you MAY decide to ignore the event.
-It wouldn't matter to you now would it.  Take a look at the GIT description:
+ric
 
-  Introduce scsi_req_abort_cmd(struct scsi_cmnd *).
-  This function requests that SCSI Core start recovery for the
-  command by deleting the timer and adding the command to the eh
-  queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
-  implement their own error recovery MAY ignore the timeout event if
-  they generated scsi_req_abort_cmd.
-
-This function solves a myriad of issues, one of which is the atomic
-marking of a command aborted by the transports when they've defined
-BOTH the timeout callback and the error recovery callback to have complete
-and consistent error recovery.
-
-Also it doesn't matter that it is NOT a timeout as far as SCSI Core is
-concerned.  Why?  Because proper status would be returned at Error Recover
-time.  I.e. by the TMFs being called as part of ER.
-
-    Luben
-
-> 
-> > Completion-or-timeout has none of these attributes.
-> > 
-> > Any alternative is forced to deal with two very different command, and 
-> > EH, states...  to achieve the same eventual result.  Thus, the code 
-> > presented is the one of least complexity, AFAICS.
-> 
-> James
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
