@@ -1,92 +1,68 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFT] major libata update
-Date: Tue, 16 May 2006 12:55:51 +0900
-Message-ID: <44694D47.4090204@gmail.com>
-References: <20060515170006.GA29555@havoc.gtf.org>	 <3aa654a40605151630j53822ba1nbb1a2e3847a78025@mail.gmail.com>	 <446914C7.1030702@garzik.org> <3aa654a40605152036h40fa1cd0x8edd81431c1bd22d@mail.gmail.com>
+Subject: [PATCH] libata: enforce default EH actions
+Date: Tue, 16 May 2006 12:58:24 +0900
+Message-ID: <20060516035824.GB23124@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:28279 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751245AbWEPDz5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 23:55:57 -0400
-Received: by wr-out-0506.google.com with SMTP id i22so1382490wra
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 20:55:56 -0700 (PDT)
-In-Reply-To: <3aa654a40605152036h40fa1cd0x8edd81431c1bd22d@mail.gmail.com>
+Received: from nz-out-0102.google.com ([64.233.162.196]:13133 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751249AbWEPD63 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 23:58:29 -0400
+Received: by nz-out-0102.google.com with SMTP id v1so6531nzb
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 20:58:28 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Avuton Olrich <avuton@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Avuton Olrich wrote:
-[--snip--]
-> ata1.00: tag 0 cmd 0x25 Emask 0x4 stat 0x40 err 0x0 (timeout)
-> ata1: soft resetting port
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata1.00: configured for UDMA/25
-> ata1: EH complete
-> NETDEV WATCHDOG: eth2: transmit timed out
-> ata1.00: limiting speed to UDMA/16
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x3 frozen
-> ata1.00: (BMDMA stat 0x1)
-> ata1.00: tag 0 cmd 0x25 Emask 0x4 stat 0x40 err 0x0 (timeout)
-> ata1: soft resetting port
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata1.00: configured for UDMA/16
-> ata1: EH complete
-> ata1.00: limiting speed to PIO4
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x3 frozen
-> ata1.00: (BMDMA stat 0x1)
-> ata1.00: tag 0 cmd 0x25 Emask 0x4 stat 0x40 err 0x0 (timeout)
-> ata1: soft resetting port
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata1.00: configured for PIO4
-> ata1: EH complete
+LLDDs rely on libata that certain EH actions are automatically taken
+on some errors.  If the port is frozen or one or more qc's have failed
+with HSM violation or timeout, softreset is enforced (LLDD can ask for
+storonger EH action at will).  If any other error condition exists,
+libata EH always revalidates.
 
-Are those timeouts back-to-back?  Can you post dmesg w/ timestamp 
-(either turn on kernel message timestamping or simply post relevant part 
-from /var/log/kern.log).  The drive thinks the command is complete.  You 
-might be losing interrupts (you might want to diddle with acpi/irq 
-routing stuff) or it could be some other hardware problem.
+This behavior existed in earlier revisions of new EH but lost during
+development process.  This patch restores it.
 
-Does the drive + controller work okay on Windows?  I know people don't 
-like this question so much but it's a great way to isolate hardware 
-problems as they use completely different driver stack.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-And, as show above, currently implemented speed down is way to 
-simplistic.  We need a better speed-down sequence, but I guess that can 
-wait for a bit.
+---
 
-> NETDEV WATCHDOG: eth0: transmit timed out
-> eth0: transmit timed out, tx_status 00 status e000.
->  diagnostics: net 0cc0 media 8080 dma 000000a0 fifo 8800
->  Flags; bus-master 1, dirty 18790(6) current 18806(6)
->  Transmit list 37e3c5c0 vs. f7e3c5c0.
->  0: @f7e3c200  length 8000002a status 0000002a
->  1: @f7e3c2a0  length 8000002a status 0000002a
->  2: @f7e3c340  length 8000002a status 0000002a
->  3: @f7e3c3e0  length 8000002a status 0000002a
->  4: @f7e3c480  length 8000002a status 8000002a
->  5: @f7e3c520  length 8000002a status 8000002a
->  6: @f7e3c5c0  length 8000005f status 0000005f
->  7: @f7e3c660  length 8000005f status 0000005f
->  8: @f7e3c700  length 8000002a status 0000002a
->  9: @f7e3c7a0  length 8000002a status 0000002a
->  10: @f7e3c840  length 8000002a status 0000002a
->  11: @f7e3c8e0  length 8000002a status 0000002a
->  12: @f7e3c980  length 8000002a status 0000002a
->  13: @f7e3ca20  length 8000002a status 0000002a
->  14: @f7e3cac0  length 8000002a status 0000002a
->  15: @f7e3cb60  length 8000002a status 0000002a
-> eth0: Resetting the Tx ring pointer.
-> NETDEV WATCHDOG: eth0: transmit timed out
+ drivers/scsi/libata-eh.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Increased transmit timeout is probably because the CPU is locked up 
-performing PIOs.  I worry about this.  With irq-pio, the system stutters 
-much more.  It might be better to perform the actual PIO part from a 
-workqueue.  But then there are controllers which can't stand when CPU 
-leaves it unattended while PIO is in progress...
-
+caec4356c4f88f476e6b5ee26dba07be70c3fd17
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 7244caf..750e734 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1169,9 +1169,6 @@ static void ata_eh_autopsy(struct ata_po
+ 		/* inherit upper level err_mask */
+ 		qc->err_mask |= ehc->i.err_mask;
+ 
+-		if (qc->err_mask & AC_ERR_TIMEOUT)
+-			action |= ATA_EH_SOFTRESET;
+-
+ 		/* analyze TF */
+ 		action |= ata_eh_analyze_tf(qc, &qc->result_tf);
+ 
+@@ -1201,9 +1198,14 @@ static void ata_eh_autopsy(struct ata_po
+ 	if (failed_dev)
+ 		action |= ata_eh_speed_down(failed_dev, is_io, all_err_mask);
+ 
+-	if (all_err_mask)
++	/* enforce default EH actions */
++	if (ap->flags & ATA_FLAG_FROZEN ||
++	    all_err_mask & (AC_ERR_HSM | AC_ERR_TIMEOUT))
++		action |= ATA_EH_SOFTRESET;
++	else if (all_err_mask)
+ 		action |= ATA_EH_REVALIDATE;
+ 
++	/* record autopsy result */
+ 	ehc->i.dev = failed_dev;
+ 	ehc->i.action = action;
+ 
 -- 
-tejun
+1.3.2
+
