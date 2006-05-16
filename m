@@ -1,61 +1,23 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: ASUS A8V Deluxe, x86_64
-Date: Tue, 16 May 2006 10:32:10 -0400
-Message-ID: <4469E26A.50108@garzik.org>
-References: <8E8F647D7835334B985D069AE964A4F702463F@ECQCMTLMAIL1.quebec.int.ec.gc.ca> <4469C024.3030506@gmail.com>
+From: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
+Subject: RE: ASUS A8V Deluxe, x86_64
+Date: Tue, 16 May 2006 10:43:07 -0400
+Message-ID: <8E8F647D7835334B985D069AE964A4F7028FDC0C@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751152AbWEPOcS@vger.kernel.org>
-In-Reply-To: <4469C024.3030506@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>, Andi Kleen <ak@suse.de>, Marko Macek <Marko.Macek@gmx.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fwstl1-1.wul.qc.ec.gc.ca ([205.211.132.24]:42481 "EHLO
+	ecstlaurent8.quebec.int.ec.gc.ca") by vger.kernel.org with ESMTP
+	id S1750725AbWEPOnI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 10:43:08 -0400
+content-class: urn:content-classes:message
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, albertl@mail.com
+Cc: Andi Kleen <ak@suse.de>, Marko Macek <Marko.Macek@gmx.net>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, =?iso-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
 
-Tejun Heo wrote:
-> Fortier,Vincent [Montreal] wrote:
->>>> Now I'm having an ASUS A8V Deluxe.... and sadly a lot of problems:
->>>>
->>>> - My SATA Controller make my Linux crash when connecting a Plextor 
->>>> 716SA CD-DVD-R (http://bugzilla.kernel.org/show_bug.cgi?id=5533)
->>
->>> Patch:
->>>
->> http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.17-rc4-
->> git2-libata1.patch.bz2
->>> (diff'd against 2.6.17-rc4-git2, but should apply to most recent
->> 2.6.17-rcX[-gitY] kernels)
->>
->> I gave a try at the latest ata patches announced yesterday by Jeff and
->> it completelly solved my SATA ATAPI bug.. I even been able to burn my
->> first DVD using my Plextor 716SA on my Linux!!!  Really nice and much
->> anticipated work!  Thnx a lot!
->>
->> I have already marked bug 5533 as resolved and I'll wait until inclusion
->> into 2.6.18 to close it.  I've also marked bug 6317 has closed since
->> that did not occur since around rc2 or rc3 of 2.6.17.
->>
-> 
-> Jeff, do you know what fixed this one?  I've been following the bug and 
-> thought it was one of those via-ATAPI-have-no-idea bugs.  How come the 
-> update fix this one?  Have I missed something?
+> Fortier, can you please post full boot dmesg?
 
-No idea :)
+Sure.. Tonight when I`ll come back home.
 
-Though this update should solve several classes of longstanding bugs.
-
-* irq-pio is much friendlier to the controller, and should eliminate 
-several screaming interrupt problems, particularly on sata_sil.
-
-* The better EH should allow recovery from problems we couldn't recover 
-from before.
-
-* The removal of assert()s (or, removal of conditions that caused 
-asserts) that triggered in earlier kernels will also eliminate the 
-associated forced oopsen.
-
-But in the via+ATAPI case, the only thing I can think of is that VIA 
-AHCI support is included in the update.  Other than that... <shrug>
-
-	Jeff
+BTW, you can use vincent instead :)
