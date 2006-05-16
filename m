@@ -1,45 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Promise TX4 + SiI 3726 : only one disk visible
-Date: Tue, 16 May 2006 09:18:05 +0900
-Message-ID: <44691A3D.4040804@gmail.com>
-References: <6EB652BF05BEE44FA2A29B23F3A71528045B3857@UBIMAIL1.ubisoft.org>	 <44690D90.2030208@gmail.com> <44691172.8040402@pobox.com>	 <446915AB.8000205@garzik.org> <89d273ba0605151712q7d6ab748q52ab321d45848a53@mail.gmail.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: ata_piix resume from S3 on T43P failed
+Date: Tue, 16 May 2006 09:58:27 +0800
+Message-ID: <1147744707.7273.76.camel@forrest26.sh.intel.com>
+References: <1147334740.7273.38.camel@forrest26.sh.intel.com>
+	 <4462F667.3060504@gmail.com>  <44655E40.2090004@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.203]:61560 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750872AbWEPASK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 May 2006 20:18:10 -0400
-Received: by wx-out-0102.google.com with SMTP id t16so646394wxc
-        for <linux-ide@vger.kernel.org>; Mon, 15 May 2006 17:18:09 -0700 (PDT)
-In-Reply-To: <89d273ba0605151712q7d6ab748q52ab321d45848a53@mail.gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:42604 "EHLO
+	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
+	id S1751028AbWEPCKJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 May 2006 22:10:09 -0400
+In-Reply-To: <44655E40.2090004@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?SsOpcsO0bWUgVlVBUkFORA==?= <jerome.vuarand@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Jerome Vuarand <jerome.vuarand@ubisoft.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-J=C3=A9r=C3=B4me VUARAND wrote:
-> Thanks a lot for the quick answers. Sorry to have misread tejun's
-> readme, I tought there was some abstraction layer between SATA
-> protocol and SATAII extensions, so I didn't even suppose there could
-> be a need for controller specific code to support port multiplier. I
-> was clearly wrong.
+On Sat, 2006-05-13 at 00:19 -0400, Jeff Garzik wrote:
+> Hannes @ SuSE posted an AHCI suspend/resume patch that needs to go in.
+> Unfortunately AHCI is a high rate of churn, so it's still in my
+> 'Pending' folder :/
+> 
+> 	Jeff
 
-Yeap, there is a layer, but it still needs low level support.
+Jeff,
 
-> So to be clear, there is not yet any support for my configuration
-> (sata_promise+SiI3726) in any of your code branches ? If not which on=
-e
-> should I start from to try to add the support myself (I never
-> programmed anything in the kernel, so it would just be a newbie try) =
-?
+According to our test, Hannes's patch can't work on our NAPA sdv, I have
+reported the problem on 27th, April. The mail archive is at:
+http://marc.theaimsgroup.com/?l=linux-ide&m=114612987014369&w=2
 
-No, not yet.  You can try but the biggest obstacle would be lack of=20
-document.  If you can access the doc, it shouldn't be too difficult, I=20
-guess.  You can analyze how sata_sil24 has been changed and update=20
-sata_promise similarly.
+And I ported a patch from OpenSUSE to #upstream and posted patch on
+30th,April, the mail archive is at:
+http://marc.theaimsgroup.com/?l=linux-ide&m=114637600401411&w=2
 
---=20
-tejun
+Will this ported patch be in your pending list?
+
+Thanks,
+Forrest
