@@ -1,61 +1,53 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [PATCH] Make number of IDE interfaces configurable
-Date: Tue, 16 May 2006 18:40:11 +0200
-Message-ID: <20060516164011.GH5677@stusta.de>
-References: <20060512222952.GQ6616@waste.org> <20060516160250.GE5677@stusta.de> <20060516162934.GR24227@waste.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 11:50:26 -0500
+Message-ID: <1147798226.3505.56.camel@mulgrave.il.steeleye.com>
+References: <4468B596.9090508@garzik.org>
+	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
+	 <4469F2B2.703@garzik.org>
+	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
+	 <4469F906.7040602@gmail.com>
+	 <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
+	 <446A0053.5070203@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:44550 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S932134AbWEPQkN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 12:40:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20060516162934.GR24227@waste.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <446A0053.5070203@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Matt Mackall <mpm@selenic.com>
-Cc: akpm@osdl.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, May 16, 2006 at 11:29:34AM -0500, Matt Mackall wrote:
-> On Tue, May 16, 2006 at 06:02:50PM +0200, Adrian Bunk wrote:
-> > On Fri, May 12, 2006 at 05:29:52PM -0500, Matt Mackall wrote:
-> > >...
-> > > --- 2.6.orig/include/linux/ide.h	2006-05-11 15:07:32.000000000 -0500
-> > > +++ 2.6/include/linux/ide.h	2006-05-12 14:01:53.000000000 -0500
-> > > @@ -252,7 +252,8 @@ static inline void ide_std_init_ports(hw
-> > >  
-> > >  #include <asm/ide.h>
-> > >  
-> > > -#ifndef MAX_HWIFS
-> > > +#if !defined(MAX_HWIFS) || defined(CONFIG_EMBEDDED)
-> > > +#undef MAX_HWIFS
-> > >  #define MAX_HWIFS	CONFIG_IDE_MAX_HWIFS
-> > >  #endif
-> > 
-> > Why do you need this?
+On Wed, 2006-05-17 at 01:39 +0900, Tejun Heo wrote:
+> I certainly can, and it was done that way first time around.  Please
+> note the following discussion.
 > 
-> Doesn't work without it?
+> http://thread.gmane.org/gmane.linux.scsi/23853/focus=9760
 > 
-> Most platforms define MAX_HWIFS.
+> Luben objected the interface made public because SCSI host is not
+> supposed to know about exception conditions which are not associated
+> with ITL nor ITLQ nexus.  Thus, I made it a temporary measure only for
+> libata, which is planned to move out.
 
-OK, now I got it.
+His objection is still valid.  However, as the balance of evils, I
+think, if you have to do this, it's better to contain it in a way where
+it's obvious what's being done.  Plus you don't want someone to modify
+the host state model and suddenly find libata doesn't work anymore
+because they failed to spot that it needed to change as well ...
 
-Setting this value is sometimes done in heder files and sometimes 
-done in the Kconfig file.
+> So, SCSI contains only the necessary bits required to implement the
+> feature and libata open-codes the rest.  As it's not an exported
+> interface, no other SCSI driver is supposed to use it and the SCSI
+> modifications can be easily removed after libata moves out.
+> 
+> As long as libata can do EH not associated with scmd or device, I'm okay
+> either way and think it's your call.  So, considering the above
+> discussion, do you want it to be a generic SCSI interface?
 
-That is extremely ugly.
+Yes, but in scsi_priv.h, please ... I can actually think of another use
+for it in terms of getting the SG reset handler to work properly.
 
-Bart, would you accept a patch to set in in the Kconfig file on all 
-architectures?
+James
 
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
