@@ -1,37 +1,59 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ASUS A8V Deluxe, x86_64
-Date: Wed, 17 May 2006 00:40:37 +0900
-Message-ID: <4469F275.6070804@gmail.com>
-References: <8E8F647D7835334B985D069AE964A4F7028FDC0C@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 11:41:38 -0400
+Message-ID: <4469F2B2.703@garzik.org>
+References: <4468B596.9090508@garzik.org> <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:34037 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751241AbWEPPkq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 11:40:46 -0400
-Received: by py-out-1112.google.com with SMTP id b36so1268pyb
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 08:40:46 -0700 (PDT)
-In-Reply-To: <8E8F647D7835334B985D069AE964A4F7028FDC0C@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
-Cc: albertl@mail.com, Andi Kleen <ak@suse.de>, Marko Macek <Marko.Macek@gmx.net>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, =?ISO-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
 
-Fortier,Vincent [Montreal] wrote:
->> Fortier, can you please post full boot dmesg?
-> 
-> Sure.. Tonight when I`ll come back home.
-> 
-> BTW, you can use vincent instead :)
-> 
+(CC's restored)
 
-Yeap, Vincent.  :-)
+James Bottomley wrote:
+> 1) your host_eh_scheduled logic looks wrong.  It seems to me that you
+> can miss the wakeup if the host is busy?  I also don't see a need to
 
-As bisecting patches is painful, let's postpone it until it can't be 
-anymore.  If the boot log doesn't show much, I think I can insert codes 
-disabling some of the new features such that full bisecting isn't necessary.
+I can't see a case _in libata operation_ where a set of circumstances 
+arises that causes missed wakeups, can you elaborate?
 
--- 
-tejun
+
+> move the prototype out of scsi_priv.h ... it should only be used by
+> transport classes, anyway.
+
+We're talking about all ->eh_strategy_handler() users, which is a valid 
+EH API for an LLDD to choose.  Granted libata is really the only one 
+right now.
+
+Long term, ->eh_strategy_handler and transport classes are block layer 
+not SCSI level anyway, so scsi_priv.h is clearly inappropriate.
+
+
+> 2) This scsi_req_abort_cmd() is fundamentally the wrong logic.
+> Everything else is communicated back as a result code from the command
+> in done().  This should be no different ... A status return of
+> DID_FAILED which scsi_decide_disposition() always translates to FAILED
+> would seem to do exactly what you want without all the overhead.
+
+Inigo sez[1]:  I do not think "fundamentally wrong" means what you think 
+it means.
+
+You miss the fact that the timer may have already fired, in which 
+completing a command gets you...... not a damned thing.  scsi_done() 
+will simply return, if the timeout has fired.  This has always been an 
+annoying problem to work around.
+
+scsi_req_abort_cmd() may perhaps be misnamed, but it GUARANTEES a set of 
+operations which libata EH wants.  Certainly, if we can guarantee this 
+set of conditions another way, we are open to any alternate path.
+
+	Jeff
+
+
+[1] from one of my favorite movies.  search 
+http://us.imdb.com/title/tt0093779/quotes for "INCONCEIVABLE"
