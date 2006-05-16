@@ -1,78 +1,71 @@
-From: "Raphael Bossek" <raphael.bossek@gmx.de>
-Subject: How to debug CompactFlash card fails on PATA port of an SATA
- controller ?
-Date: Tue, 16 May 2006 10:11:21 +0200
-Message-ID: <20060516081121.78840@gmx.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata-tj and SMART
+Date: Tue, 16 May 2006 17:11:38 +0900
+Message-ID: <4469893A.10901@gmail.com>
+References: <e4b02t$e9b$1@sea.gmane.org> <44690B0F.90200@gmail.com> <e4bvsb$s9m$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:22760 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751671AbWEPILX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 04:11:23 -0400
+Received: from wx-out-0102.google.com ([66.249.82.206]:23676 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751674AbWEPILo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 04:11:44 -0400
+Received: by wx-out-0102.google.com with SMTP id t16so694574wxc
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 01:11:43 -0700 (PDT)
+In-Reply-To: <e4bvsb$s9m$1@sea.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Nicolas STRANSKY <Nico@stransky.cx>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+Nicolas STRANSKY wrote:
+> Le 05/16/2006 01:13 AM, Tejun Heo a =E9crit :
+>=20
+> Hi,
+>=20
+>>> I've been using libata-tj for a couple of days and for now it's wor=
+king
+>>> without problem, my SI-3112 is finally working :) Thanks !
+>> How does it work w/o libata-tj?
+>=20
+> smartctl and smartd used to work fine. But I was using a different
+> controler (Promise PDC20376).
+>=20
+>> Your drive/controller causes HSM violation probably while executing =
+a
+>> SMART command (maybe during PIO-in during READ DATA?, maybe we need =
+to
+>> dump feature, too).  Can you try 'smartctl -d ata -a /dev/sdx' and
+>> report the result and how the kernel acts during that command?
+>=20
+> You can find attached the result of the smartctl. It went fine and th=
+ere
+> was no kernel message associated. But if I try to reproduce smartd
+> command, then "smartctl -d ata -a -o on -S on /dev/sda" causes the sa=
+me
+> error I showed in the first post, and smartctl fails with this error:
+> Error SMART Enable Auto-save failed: I/O error
+> Smartctl: SMART Enable Attribute Autosave Failed.
 
-I get the PATA interface of my Promise PDC40775 (SATA 300 TX2plus) working.
-But now I run into trouble while connecting a SimpleTech CompactFlash card
-SLCF512J2U-F (512MB). This are are the messages from log:
+Hmmm.. That measn SMART ENABLE/DISABLE ATTRIBUTE AUTOSAVE command fails=
+=2E=20
+  But weirdly it fails with DRQ (ready for data) bit set, thus=20
+triggering HSM violation.  My guess is the drive doesn't support that=20
+command and when it aborts, it sends funky status.  I think you can=20
+safely ignore the error or remove -S on from smartd configuration.
 
-sata_promise 0000:00:0a.0: version 1.04
-ACPI: PCI Interrupt 0000:00:0a.0[A] -> GSI 17 (level, low) -> IRQ 217       
-sata_promise PATA port found
-ata9: SATA max UDMA/133 cmd 0xBE9D0200 ctl 0xBE9D0238 bmdma 0x0 irq 217
-ata10: SATA max UDMA/133 cmd 0xBE9D0280 ctl 0xBE9D02B8 bmdma 0x0 irq 217
-sata_promiseDisabling SATA for third port
-ata11: PATA max UDMA/133 cmd 0xBE9D0300 ctl 0xBE9D0338 bmdma 0x0 irq 217
-ata9: SATA link down (SStatus 0)
-scsi8 : sata_promise
-ata10: SATA link down (SStatus 0)
-scsi9 : sata_promise
-ata11: dev 0 cfg 49:0300 82:7068 83:4004 84:4000 85:7068 86:0004 87:4000 88:0000
-ata11: dev 0 ATA-0, max MWDMA2, 1000944 sectors: LBA
-ata11: dev 0 configured for MWDMA2
-scsi10 : sata_promise
-  Vendor: ATA       Model: STI Flash 7.3.0   Rev: 06/1
-  Type:   Direct-Access                      ANSI SCSI revision: 05 
-SCSI device sdb: 1000944 512-byte hdwr sectors (512 MB) 
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 1000944 512-byte hdwr sectors (512 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
- sdb:<3>ata11: command timeout
-ata11: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata11: status=0xff { Busy }
-sd 10:0:0:0: SCSI error: return code = 0x8000002
-sdb: Current: sense key: Aborted Command
-    Additional sense: Scsi parity error
-Info fld=0xfffffff
-end_request: I/O error, dev sdb, sector 0
-Buffer I/O error on device sdb, logical block 0
-ata11: command timeout
-ata11: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata11: status=0xff { Busy }
-sd 10:0:0:0: SCSI error: return code = 0x8000002
-sdb: Current: sense key: Aborted Command
-    Additional sense: Scsi parity error
-Info fld=0xfffffff
-end_request: I/O error, dev sdb, sector 0
-Buffer I/O error on device sdb, logical block 0
- unable to read partition table
-sd 10:0:0:0: Attached scsi disk sdb
+If you've got some time though, I'd like to see what's really going on.=
+=20
+  Can you modify #undef ATA_DEBUT to #define ATA_DEBUG in=20
+include/linux/libata.h and post the kernel messages after issuing above=
+=20
+command?  Be warned that it will produce a LOT of messages while bootin=
+g=20
+if you're using SATA disks for your system, and it can considerably slo=
+w=20
+down booting.
 
-How can I identify the real problem for this device ?
-
---
-Raphael Bossek
--- 
-
-
-Bis zu 70% Ihrer Onlinekosten sparen: GMX SmartSurfer!
-      Kostenlos downloaden: http://www.gmx.net/de/go/smartsurfer
-    
+--=20
+tejun
