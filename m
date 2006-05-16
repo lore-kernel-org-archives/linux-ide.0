@@ -1,39 +1,76 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Tue, 16 May 2006 16:28:55 -0500
-Message-ID: <1147814935.3505.88.camel@mulgrave.il.steeleye.com>
-References: <4468B596.9090508@garzik.org>
-	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
-	 <4469F2B2.703@garzik.org>
-	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
-	 <4469F906.7040602@gmail.com>
-	 <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
-	 <446A0053.5070203@gmail.com>
-	 <1147798226.3505.56.camel@mulgrave.il.steeleye.com>
-	 <446A06C7.5050609@gmail.com>  <20060516195836.GA3807@infradead.org>
+Date: Tue, 16 May 2006 14:32:31 -0700 (PDT)
+Message-ID: <20060516213231.33093.qmail@web31805.mail.mud.yahoo.com>
+References: <1147797042.3505.44.camel@mulgrave.il.steeleye.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:43153 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932071AbWEPV3O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 17:29:14 -0400
-In-Reply-To: <20060516195836.GA3807@infradead.org>
+Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:57428 "HELO
+	web31805.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S932098AbWEPVcc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 17:32:32 -0400
+In-Reply-To: <1147797042.3505.44.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-On Tue, 2006-05-16 at 20:58 +0100, Christoph Hellwig wrote:
-> Things used by the transport classes traditionally weren't in scsi_priv.h,
-> that was for scsi_mod internals only.  Should we changed that?  I'd rather
-> have another header for semi-volatile APIs transport classes use.
+--- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> On Tue, 2006-05-16 at 12:06 -0400, Jeff Garzik wrote:
+> > Sigh.  They clearly do not have the same effect, because the above code 
+> > guarantees that a timeout is forced, regardless of whether the timer has 
+> > fired or not.  That in turn guarantees that the timeout callback 
+> > (->eh_timed_out) is called, and the cmd is in a very specific state.
+> 
+> the API claims to be forcibly aborting a command, which is *not* a
+> timeout  ... trying to pretend to the midlayer that it is is the wrong
 
-well ... OK we don't necessarily have a header for SCSI APIs exported
-exclusively to transport classes.  how about
-drivers/scsi/scsi_transport_api.h?
+It doesn't matter.
 
-James
+> processing model.  You may choose to call this API because of a class
 
+No, it is not the "wrong processng model".
+
+> internal timeout, but you don't need the callback notification that it
+> is a timeout in this case, you already know it is.
+
+Then if you already know that it is, you MAY decide to ignore the event.
+It wouldn't matter to you now would it.  Take a look at the GIT description:
+
+  Introduce scsi_req_abort_cmd(struct scsi_cmnd *).
+  This function requests that SCSI Core start recovery for the
+  command by deleting the timer and adding the command to the eh
+  queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
+  implement their own error recovery MAY ignore the timeout event if
+  they generated scsi_req_abort_cmd.
+
+This function solves a myriad of issues, one of which is the atomic
+marking of a command aborted by the transports when they've defined
+BOTH the timeout callback and the error recovery callback to have complete
+and consistent error recovery.
+
+Also it doesn't matter that it is NOT a timeout as far as SCSI Core is
+concerned.  Why?  Because proper status would be returned at Error Recover
+time.  I.e. by the TMFs being called as part of ER.
+
+    Luben
+
+> 
+> > Completion-or-timeout has none of these attributes.
+> > 
+> > Any alternative is forced to deal with two very different command, and 
+> > EH, states...  to achieve the same eventual result.  Thus, the code 
+> > presented is the one of least complexity, AFAICS.
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
