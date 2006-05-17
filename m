@@ -1,81 +1,28 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 19:55:42 +0200
-Message-ID: <20060517175541.GT4197@suse.de>
-References: <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com> <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de> <446B3BE0.8040806@garzik.org> <1147881002.3463.23.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: [RFT] major libata update
+Date: Wed, 17 May 2006 16:45:10 -0400
+Message-ID: <446B8B56.1010508@emc.com>
+References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6ECD.7080104@garzik.org> <446A734A.6020504@gmail.com> <446A7504.9000201@gmail.com> <446A88DF.5060705@emc.com> <446A7E4A.1080003@gmail.com> <446A9F13.4020907@emc.com> <446AAA33.5010800@gmail.com>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:28776 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750823AbWEQRyx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2006 13:54:53 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
+Received: from mexforward.lss.emc.com ([168.159.213.200]:53131 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S1751103AbWEQUqA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 May 2006 16:46:00 -0400
+In-Reply-To: <446AAA33.5010800@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
 
-On Wed, May 17 2006, Linus Torvalds wrote:
-> 
-> 
-> On Wed, 17 May 2006, James Bottomley wrote:
-> > 
-> > This is one of the questions.  Currently block has no concept of "host".
-> 
-> That's good. 
-> 
-> I don't understand why you'd ever _want_ a concept of "host". The whole 
-> concept is broken and unnecessary. At no point should you even need to map 
-> from request to host, but if you do, you don't need to introduce any 
-> generic "host" notion, you can do it easily per-queue.
 
-Maybe "host" is the wrong word, but there is some usefulness to look at
-dependencies of queues.
+One other area that I would be interested in helping to test is the 
+hotplug support (for ahci or Marvell when Mark adds it to sata_mv). 
 
-> > All it knows about are queues (which may be per host or per device
-> > depending on the implementation).  Do we need to introduce the concept
-> > of something like queue grouping (a sort of lightweight infrastructure
-> > that could be used by the underlying transport to implement a host
-> > concept without introducing hosts at the block layer)?
-> 
-> We already have it. Each queue has its lock pointer. If you want to have a 
-> "host" notion, you do it by just setting the queue lock to point to the 
-> host lock (since if they are dependent, you'd _better_ share the lock 
-> between the queues anyway), and then you do
-> 
->   struct myhost_struct *queue_host(struct request_queue *queue)
->   {
-> 	return container_of(queue->queue_lock, myhost_struct, host_lock);
->   }
-> 
-> and there are no changes necessary to the queue layer.
+Any pending patches based on Jeff's update for hotplug ;-) ?
 
-That gets you the "parent" structure (or "host") for the queues, but it
-doesn't help you with managing them. One issue could be a shared tag
-queue - we already solved that by sharing the tag map between the
-queues, but that still allows on queue to deplete more entries that it
-should be allowed to. And so on.
-
-> You can do it other ways too: the "struct kobject" in the queue obviously 
-> contains a pointer to the parent of the queue, and that might well be your 
-> "host" object. Again, exact same deal, except now you'd use
-> 
-> 	container_of(queue->kobj.parent, myhost_struct, host_kobject);
-> 
-> instead. Entirely up to you.
-> 
-> The whole fixation with "host" in the SCSI layer is a bug, I think. What 
-> does it matter, really? And when do you actually have a "request_queue" 
-> entry without already knowing which controller it is connected to (ie why 
-> do you even need that mapping)?
-
-Some devices need serialization between them, and the only way to
-achieve that currently is by sharing a queue. But that fails eg at the
-io scheduler level - and other places also assume a 1:1 mapping between
-queues and devices. And this you cannot do generically right now, and
-it's one thing I would like to handle.
-
--- 
-Jens Axboe
+ric
 
