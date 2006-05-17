@@ -1,53 +1,160 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: A question about NCQ
-Date: Wed, 17 May 2006 11:37:44 +0900
-Message-ID: <446A8C78.2000607@gmail.com>
-References: <1147773689.7273.88.camel@forrest26.sh.intel.com>	 <4469AE21.6000304@gmail.com> <1147832470.7273.112.camel@forrest26.sh.intel.com>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: [RFT] major libata update
+Date: Tue, 16 May 2006 23:57:07 -0400
+Message-ID: <446A9F13.4020907@emc.com>
+References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6ECD.7080104@garzik.org> <446A734A.6020504@gmail.com> <446A7504.9000201@gmail.com> <446A88DF.5060705@emc.com> <446A7E4A.1080003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060105020202000500020002"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.227]:10270 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751156AbWEQChu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 22:37:50 -0400
-Received: by wr-out-0506.google.com with SMTP id i3so119396wra
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 19:37:49 -0700 (PDT)
-In-Reply-To: <1147832470.7273.112.camel@forrest26.sh.intel.com>
+Received: from mexforward.lss.emc.com ([168.159.213.200]:50647 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S1751187AbWEQC5T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 22:57:19 -0400
+In-Reply-To: <446A7E4A.1080003@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
 
-zhao, forrest wrote:
-> On Tue, 2006-05-16 at 19:49 +0900, Tejun Heo wrote:
->> I don't know the workload of iozone.  But NCQ shines when there are many
->> concurrent IOs in progress.  A good real world example would be busy
->> file-serving web server.  It generally helps if there are multiple IO
->> requests.  If iozone is single-threaded (IO-wise), try to run multiple
->> copies of them and compare the results.
+This is a multi-part message in MIME format.
+--------------060105020202000500020002
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+Tejun Heo wrote:
+
+> Ric Wheeler wrote:
+>
 >>
->> Also, you need to pay attention to IO schedule in use, IIRC as and cfq
->> are heavily optimized for single-queued devices and might not show the
->> best performance depending on workload.  For functionality test, I
->> usually use deadline.  It's simpler and usually doesn't get in the way,
->> which, BTW, may or may not translate into better performance.
+>> (Trying to keep up ;-))
 >>
-> Tejun,
-> 
-> I run iozone with 8 concurrent threads. From my understanding, NCQ
-> should at least provide the same throughput as non-NCQ. But the attached
-> test result showed that NCQ has the lower throughput compared with non-
-> NCQ.
-> 
-> The io scheduler is anticipatory.
-> The kernel without NCQ is 2.6.16-rc6, the kernel with NCQ is #upstream.
-> 
-> The current problem is that I don't know where the bottleneck is, block
-> I/O layer, SCSI layer, device driver layer or hardware problem......
+>> Is there still value in testing your last patch?
+>>
+>
+> The result should be the same, so it's not really necessary.  But, 
+> just in case, sticking that patch when you test the barrier would be 
+> nice so that things can be verified again.
 
-AFAIK, anticipatory doesn't interact very well with queued devices.  Can
-you try with deadline?
+I applied both patches and rebooted - many minutes later & 94MB of log 
+file, I ran my synchronous file write test (the last 200 lines of the 
+log file is attached). Is more useful?
 
--- 
-tejun
+>
+> Thanks for testing.
+>
+thanks for the code - this is great!
+
+ric
+
+
+--------------060105020202000500020002
+Content-Type: text/plain;
+ name="messages_tail"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="messages_tail"
+
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO d08998c0 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed3553c0->dfe2bd28
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2bd28 (bar)
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO f18ffa00 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO f18ff300 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO d0899600 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO d08998c0 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [start_ordered           ]: ed3551c8 -> dfe2b1b8,dfe2b260,dfe2b308 infl=0
+May 17 03:30:54 centera kernel: [start_ordered           ]: f18ff4c0 0 3357330 8 8 1 1 dfdd9000
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO f18ff4c0 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed3551c8->dfe2b260
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2b260 (bar)
+May 17 03:30:54 centera kernel: [start_ordered           ]: ed355ba0 -> dfe2b550,dfe2b5f8,dfe2b6a0 infl=0
+May 17 03:30:54 centera kernel: [start_ordered           ]: f18ffcc0 0 3357330 8 8 1 1 dff0b000
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO f18ffcc0 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed355ba0->dfe2b5f8
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2b5f8 (bar)
+May 17 03:30:54 centera kernel: [start_ordered           ]: ed341318 -> dfe2b8e8,dfe2b990,dfe2ba38 infl=0
+May 17 03:30:54 centera kernel: [start_ordered           ]: e413bf00 0 3357330 8 8 1 1 f7b57000
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO e413bf00 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed341318->dfe2b990
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2b990 (bar)
+May 17 03:30:54 centera kernel: [start_ordered           ]: ed3553c0 -> dfe2bc80,dfe2bd28,dfe2bdd0 infl=0
+May 17 03:30:54 centera kernel: [start_ordered           ]: d08993c0 0 3357330 8 8 1 1 df937000
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO d08993c0 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed3553c0->dfe2bd28
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2bd28 (bar)
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO f18ff4c0 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO f18ffcc0 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO e413bf00 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO d08993c0 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [start_ordered           ]: ed3553c0 -> dfe2b1b8,dfe2b260,dfe2b308 infl=0
+May 17 03:30:54 centera kernel: [start_ordered           ]: e413bf00 0 3357330 8 8 1 1 dfdd9000
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO e413bf00 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed3553c0->dfe2b260
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2b260 (bar)
+May 17 03:30:54 centera kernel: [start_ordered           ]: ed341318 -> dfe2b550,dfe2b5f8,dfe2b6a0 infl=0
+May 17 03:30:54 centera kernel: [start_ordered           ]: f18ffcc0 0 3357330 8 8 1 1 dff0b000
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO f18ffcc0 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed341318->dfe2b5f8
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2b5f8 (bar)
+May 17 03:30:54 centera kernel: [start_ordered           ]: ed355ba0 -> dfe2b8e8,dfe2b990,dfe2ba38 infl=0
+May 17 03:30:54 centera kernel: [start_ordered           ]: f18ff4c0 0 3357330 8 8 1 1 f7b57000
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO f18ff4c0 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed355ba0->dfe2b990
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2b990 (bar)
+May 17 03:30:54 centera kernel: [start_ordered           ]: ed3551c8 -> dfe2bc80,dfe2bd28,dfe2bdd0 infl=0
+May 17 03:30:54 centera kernel: [start_ordered           ]: d0899800 0 3357330 8 8 1 1 df937000
+May 17 03:30:54 centera kernel: [start_ordered           ]: BIO d0899800 3357330 4096
+May 17 03:30:54 centera kernel: [start_ordered           ]: ordered=1 in_flight=0
+May 17 03:30:54 centera kernel: [blk_do_ordered          ]: start_ordered ed3551c8->dfe2bd28
+May 17 03:30:54 centera kernel: [elv_next_request        ]: dfe2bd28 (bar)
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO e413bf00 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO f18ffcc0 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO f18ff4c0 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+May 17 03:30:54 centera kernel: [ordered_bio_endio       ]: q->orderr=0 error=0
+May 17 03:30:54 centera kernel: [flush_dry_bio_endio     ]: BIO d0899800 3357330 4096
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: ordseq=17 seq=08 orderr=0 error=0
+May 17 03:30:54 centera kernel: [blk_ordered_complete_seq]: sequence complete
+
+--------------060105020202000500020002--
