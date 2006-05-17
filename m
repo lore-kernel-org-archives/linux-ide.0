@@ -1,59 +1,36 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [RFT] major libata update
-Date: Tue, 16 May 2006 22:22:23 -0400
-Message-ID: <446A88DF.5060705@emc.com>
-References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6ECD.7080104@garzik.org> <446A734A.6020504@gmail.com> <446A7504.9000201@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH, RFC] ahci: update interrupt path
+Date: Wed, 17 May 2006 10:25:17 +0900
+Message-ID: <446A7B7D.1030606@gmail.com>
+References: <20060517005752.GA14045@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([168.159.213.200]:21438 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S932410AbWEQBWO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 21:22:14 -0400
-In-Reply-To: <446A7504.9000201@gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.228]:41682 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751065AbWEQBZX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 21:25:23 -0400
+Received: by wr-out-0506.google.com with SMTP id i3so108036wra
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 18:25:22 -0700 (PDT)
+In-Reply-To: <20060517005752.GA14045@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
+Jeff Garzik wrote:
+> Patch against current #upstream.  Not yet committed.
+> 
+> Changes:
+> * Drop PORT_IRQ_SG_DONE from IRQ mask.
+> * Drop spurious interrupt code.
+> * Add two events to hotplug event list; in theory, 
+>   debounce should sort it all out.
+> * Catch two other unhandled exceptions (overflow, bad PMP)
 
+Can you hold on this for a bit please?  I'm not very sure about the 
+spurious part yet.
 
-Tejun Heo wrote:
-
-> Tejun Heo wrote:
->
->> Jeff Garzik wrote:
->>
->>> Actually, looking even more at the code, I think the entire 
->>> "spurious interrupt" code block is bogus.
->>>
->>> The device is free to send D2H or SDB FIS to clear Status bits, as 
->>> well as SDB FIS's to update SActive.  The ata_qc_complete_multiple() 
->>> call will do the right thing, even if there is no work to do.
->>
->>
->> Yes, they are, but...
->>
->> * Please note that SActive update via SDB FIS is edge-triggered.  It 
->> doesn't send the whole image of the register.  The SActive bits in 
->> SDB FIS indicate W1C (this is inevitable because controller and 
->> device cannot be in full synchronization regarding SActive).  So, 
->> they have can have dangerous side effects.
->>
->> * Those spurious FISes are actively setting the I bit requesting 
->> interrupt explicitly.  Those are not innocent status update FISes.  
->> And the spec state machines don't allow D2H FISes during NCQ command 
->> phase.  I seem to recollect it's actually forbidden explicitly but 
->> currently cannot find where.  I'll keep looking.
->
->
-> Oops, strike out the part about D2H not allowed.  It certainly is 
-> allowed to clear BSY.  Sorry.
-
-(Trying to keep up ;-))
-
-Is there still value in testing your last patch?
-
-ric
-
+-- 
+tejun
