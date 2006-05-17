@@ -1,49 +1,103 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFT] major libata update
-Date: Thu, 18 May 2006 06:50:31 +0900
-Message-ID: <446B9AA7.4000305@gmail.com>
-References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6ECD.7080104@garzik.org> <446A734A.6020504@gmail.com> <446A7504.9000201@gmail.com> <446A88DF.5060705@emc.com> <446A7E4A.1080003@gmail.com> <446A9F13.4020907@emc.com> <446AAA33.5010800@gmail.com> <446B8F25.3040907@pobox.com> <446B8FC6.5040009@garzik.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Wed, 17 May 2006 17:52:58 -0400
+Message-ID: <446B9B3A.2070403@torque.net>
+References: <4468B596.9090508@garzik.org>  <1147789098.3505.19.camel@mulgrave.il.steeleye.com>  <4469F2B2.703@garzik.org>  <1147794708.3505.30.camel@mulgrave.il.steeleye.com>  <4469F9FB.7020807@garzik.org>  <1147797507.3505.52.camel@mulgrave.il.steeleye.com>  <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de>  <446B3BE0.8040806@garzik.org> <1147881002.3463.23.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:9045 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751143AbWEQVuf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 May 2006 17:50:35 -0400
-Received: by py-out-1112.google.com with SMTP id z59so396689pyg
-        for <linux-ide@vger.kernel.org>; Wed, 17 May 2006 14:50:34 -0700 (PDT)
-In-Reply-To: <446B8FC6.5040009@garzik.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:53733 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751159AbWEQVxW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 May 2006 17:53:22 -0400
+In-Reply-To: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <mlord@pobox.com>, Ric Wheeler <ric@emc.com>, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Tejun Heo wrote:
->> ..
->>> sd forces disk revalidation (and thus ordered reconfiguration) if you 
->>> change cache mode via /sys/class/scsi_disk/X\:0\:0\:0/cache_type.
->>
->> That's not implemented for libata --> the emulation in libata-scsi
->> rejects any attempt at a MODE_SELECT command, which is what the sysfs
->> attr triggers.
-
-I see.  I was just grepping for revalidation call.  It seems we're stuck 
-then.
-
->> Wasn't there a patch to implement MODE_SELECT in libata once upon a time?
+Linus Torvalds wrote:
 > 
-> A couple iterations from Douglas Gilbert, probably in linux-scsi 
-> archives...
+> On Wed, 17 May 2006, James Bottomley wrote:
 > 
-> BTW, libata needs to trap IDENTIFY*DEVICE and update its cached copy of 
-> the identify page, whenever MODE SELECT or another independent entity 
-> issues IDENTIFY*DEVICE.
+>>This is one of the questions.  Currently block has no concept of "host".
+> 
+> 
+> That's good. 
+> 
+> I don't understand why you'd ever _want_ a concept of "host". The whole 
+> concept is broken and unnecessary. At no point should you even need to map 
+> from request to host, but if you do, you don't need to introduce any 
+> generic "host" notion, you can do it easily per-queue.
+> 
+> 
+>>All it knows about are queues (which may be per host or per device
+>>depending on the implementation).  Do we need to introduce the concept
+>>of something like queue grouping (a sort of lightweight infrastructure
+>>that could be used by the underlying transport to implement a host
+>>concept without introducing hosts at the block layer)?
+> 
+> 
+> We already have it. Each queue has its lock pointer. If you want to have a 
+> "host" notion, you do it by just setting the queue lock to point to the 
+> host lock (since if they are dependent, you'd _better_ share the lock 
+> between the queues anyway), and then you do
+> 
+>   struct myhost_struct *queue_host(struct request_queue *queue)
+>   {
+> 	return container_of(queue->queue_lock, myhost_struct, host_lock);
+>   }
+> 
+> and there are no changes necessary to the queue layer.
+> 
+> You can do it other ways too: the "struct kobject" in the queue obviously 
+> contains a pointer to the parent of the queue, and that might well be your 
+> "host" object. Again, exact same deal, except now you'd use
+> 
+> 	container_of(queue->kobj.parent, myhost_struct, host_kobject);
+> 
+> instead. Entirely up to you.
+> 
+> The whole fixation with "host" in the SCSI layer is a bug, I think. What 
+> does it matter, really? And when do you actually have a "request_queue" 
+> entry without already knowing which controller it is connected to (ie why 
+> do you even need that mapping)?
 
-Right.  Also, we need to snoop some passthrough commands and 
-revalidate/reconfigure when configuration is explicitly changed.
+I'll bite.
 
--- 
-tejun
+>From the perspective of a pass through, any pass
+through, the host is all I want. I'm happy to
+completely forget about devices as they are
+loosely defined at the moment. I view a
+host (port) and a network interface as (almost)
+the same thing. Carrying on with the analogy,
+I view a device as an IP address.
+
+Currently linux has a storage device for each
+unique instance of this tuple:
+   <host_port, target_port, lu_name>
+So if a dual ported disk is fully connected to three
+HBAs (hosts) on the same machine then the OS should
+show six different devices for the same disk.
+Just knowing the wwn of a device (i.e. lu_name)
+is not sufficient for error processing, hot plug
+processing, etc.
+
+There is also a natural hierarchy of errors (seen
+from the OS). Fatal errors associated with the host
+(e.g. it is hot unplugged) make starting or ongoing
+error recovery at a lower level (i.e. target or lu)
+futile.
+
+The linux block layer still shares the quaint
+Unix idea of foreseeing errors so it can
+disallow requests. This is in the hope that error
+processing associated with responses (or lack of
+them) will be simplified.
+
+Doug Gilbert
+
+
+
