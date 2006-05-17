@@ -1,35 +1,102 @@
-From: Matthieu CASTET <matthieu.castet@sagem.com>
-Subject: Re: [RFT] major libata update
-Date: Wed, 17 May 2006 09:35:38 +0200
-Message-ID: <OFED10B103.942F56FA-ONC1257171.0028EEA3-C1257171.0029B954@sagem.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Wed, 17 May 2006 09:37:02 +0200
+Message-ID: <20060517073701.GE4197@suse.de>
+References: <4468B596.9090508@garzik.org> <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com> <446A048B.6040703@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.sagem.com ([62.160.59.65]:38365 "EHLO mx1.sagem.com")
-	by vger.kernel.org with ESMTP id S1750974AbWEQHfo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2006 03:35:44 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:53531 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932168AbWEQHgT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2006 03:36:19 -0400
+Content-Disposition: inline
+In-Reply-To: <446A048B.6040703@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-ide-owner@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-On Llu, 2006-05-15 at 14:15 -0400, Jeff Garzik wrote:
-> > which persists on Sil 311x on rare motherboards.  The rest are either 
-> > addressed with the improved error handling, or are ATAPI + VIA AFAICS.
+On Tue, May 16 2006, Jeff Garzik wrote:
+> James Bottomley wrote:
+> >On Tue, 2006-05-16 at 12:12 -0400, Jeff Garzik wrote:
+> >>Its an API-which-only-libata-uses that we're discussing.  And because 
+> >>its moving to the block layer, its also a 
+> >>temporary-API-which-only-libata-uses.
+> >
+> >OK ... this may be the root of the problem.  I really would like libata
+> >to migrate to being block only ... especially as PATA looks to be trying
+> >to follow you into the SCSI subsystem.  However, this has been the
+> >statement for the past two years (at least), and really, few
+> >enhancements have been made to block that you need to make good on this.
+> >I think one of the things we'll try to find time to do at the storage
+> >summit is to take a hard look at block to see exactly what has to be
+> >added to make libata solely dependent upon it.
+> 
+> 100% agreed...
 
-> ATAPI + VIA to that pattern is also showing up on pata_via cases as
-> well, but only on via so far. Its as if there is a case where the IRQ of
-> the first command is lost sometimes.
-I investigated further the problem. For my pata case the interrupt go 
-through idle_irq in ata_host_intr.
-If I put a printk before ata_host_intr in ata_interrupt there no problem.
+Ditto! I'd be more than willing to implement some of these features (and
+already started to, the per command timeout for instance), but I was
+starting to write off libata moving to block as a silly pipe dream in
+all honesty... But if momentum is picking up behind this move, then I'll
+all for it.
 
-I bet "altstatus" or "main status" return ATA_BUSY and are not cleared 
-enough fast by the hardware.
+> The general list, off the top of my head:
+> 
+> * objects: storage message, storage device, storage host, and the 
+> requisite interconnections
 
-I will try others tests this evening.
+Storage message -> request. The rq-cmd-type branch of the block repo has
+most/some of that done. For an explicit storage device + host, I have no
+plans to expland on what we have.
 
+> * queuecommand-style API
 
-Matthieu
+That's a style issue, rather than a required item. You can roll that on
+top of the current api by just doing a:
 
+int queuecommand_helper(request_queue_t *q, struct request *rq)
+{
+        /* issue request */
+        ...
+        return OK/DEFER/REJECT/WHATEVER
+}
+
+blk_queuecommand_helper(request_queue_t *q, queue_command_fn *fn)
+{
+        struct request *rq;
+        int ret;
+
+        do {
+                rq = elv_next_request(q);
+                if (!rq)
+                        break;
+
+                ret = fn(q, rq);
+                if (ret == OK)
+                        continue;
+
+                /* handle replugging/killing/whatever */
+        } while (1);
+}
+
+if you really wanted.
+
+> * EH thread(s)
+> * timers, for command timeouts
+
+Agree, we can abstract out the grunt handling of timeouts and the
+context required in the block layer.
+
+> * SCSI-style MLqueue and state stuff, i.e. ability to return "device 
+> busy", "host busy", "retry this command", ...
+
+Comes with the blk_queuecommand_helper() type setup from above.
+
+> And once libata is happy at the block layer, move SCSI to using this 
+> stuff too :)
+
+Definitely.
+
+-- 
+Jens Axboe
 
