@@ -1,92 +1,129 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [RFT] major libata update
-Date: Tue, 16 May 2006 19:05:07 -0700
-Message-ID: <20060516190507.35c1260f.akpm@osdl.org>
-References: <20060515170006.GA29555@havoc.gtf.org>
+Date: Tue, 16 May 2006 22:26:27 -0400
+Message-ID: <446A89D3.60002@garzik.org>
+References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6E6F.8010201@gmail.com> <446A7794.80909@garzik.org> <446A7BF6.3090103@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:30363 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750811AbWEQCIn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 22:08:43 -0400
-In-Reply-To: <20060515170006.GA29555@havoc.gtf.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:26015 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751130AbWEQC0c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 22:26:32 -0400
+In-Reply-To: <446A7BF6.3090103@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: ric@emc.com, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
 
-Jeff Garzik <jeff@garzik.org> wrote:
->
->  	git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> Tejun Heo wrote:
+>>> Jeff Garzik wrote:
+>>>> Jeff Garzik wrote:
+>>>>> Tejun Heo wrote:
+>>>>>> Hmmm.. The drive is issuing SDB FIS which completes already 
+>>>>>> completed tags.  This could be dangerous.  Depending on timing, it 
+>>>>>> might end up finishing a command which occupied the slot which 
+>>>>>> hasn't been processed yet.  If a drive does this, NCQ shouldn't be 
+>>>>>> enabled for it.  Can you post full boot dmesg?
+>>>>>
+>>>>> I'm not sure the data supports that conclusion?  PORT_IRQ_SDB_FIS 
+>>>>> is quite normal and expected during NCQ operation, if that 
+>>>>> interrupt is enabled.  Just normal SDB:Entry and SDB:SetIntr states.
+>>>>
+>>>> Strike that last part:  PORT_IRQ_SDB_FIS will appear, as with other 
+>>>> status bits, even if the enable bit is not set.
+>>>>
+>>>> So, you'll see that whenever you get an SDB FIS during normal 
+>>>> operation.
+>>>
+>>> The problem is with the second dword.  Here are some of spurious SDB 
+>>> FISes Ric's AHCI was receiving.
+>>>
+>>> 004040a1:10000000
+>>> 004040a1:00000020
+>>> 004040a1:00000080
+>>>
+>>> If the second dword were all zero, it's simply SDB FIS turning on IRQ 
+>>> (bit 14 of the first dword) and there's nothing to worry about. 
+>>> However, all those spurious SDBs have one bit set in the second dword 
+>>> - meaning the SDB completes the corresponding tag, but the tag isn't 
+>>> active when those SDBs are received.
+>>>
+>>> This is okay as long as the controller thinks the tags are unoccupied 
+>>> when those SDBs are received, but it's not something which can be 
+>>> guaranteed.  NCQ command synchronization depends on devices not 
+>>> completing the same commands more than once.
+>>>
+>>> The duplicate completions might be okay if the drive guarantees it 
+>>> doesn't send it if it loses to command issuance.  e.g.
+>>>
+>>> 1. drive sends completion for tag x
+>>> 2. drive shortly schedules another completion for tag x (spurious)
+>>> 3. ahci/driver complete tag x
+>>> 4. ahci/driver issues tag x
+>>> 5. drive receives command for tag x before sending the spurious 
+>>> completion and determines not to send the spurious completion. (not 
+>>> very likely)
+>>>
+>>> If above is true, the drive might be okay, but nobody can guarantee 
+>>> how  various controllers react.  It depends on how controllers manage 
+>>> SActive (when to turn bits on).  At any rate, it's dangerous IMHO.
+>>
+>> If the silicon is screwing up SActive bits, then we have bigger 
+>> problems than spurious interrupts.
+>>
+>> So, the typical policy of Internet servers applies here:  "be liberal 
+>> in what you accept."  For smart controllers like AHCI, we will simply 
+>> set the desired IRQ mask, then happily receive and ack events anytime 
+>> the controller decides to raise them.  If the controller decides to 
+>> send us a no-op, don't worry about it.  This is particularly true when 
+>> we turn on Command Coalescing, where we'll have a run of work 
+>> initiated [sometimes] by an internal timer, rather than an actual FIS 
+>> reception.
+> 
+> I wish I could explain it better.  This is a clear protocol violation 
+> from the drive.  Depending on specific implementation of the drive and 
+> the controller, it can result in completion of command which is not 
+> processed yet (data corruption!).
 
-This adds a minute and a half to my bootup times :(
+A spurious SDB FIS updating SActive is bad news, yes.  But with a busy 
+AHCI controller, perhaps sharing PCI interrupts, I think there is 
+distinct potential to be flagged as a spurious interrupt, when not.
+
+But I'm taking a higher level view than that, from two angles:
+
+1) I think its a waste of time to even worry about this.  We should just 
+program AHCI to spec, and  let the controller and devices talk to each 
+other as they will.  If there are spurious completions, that should show 
+up elsewhere via tag poisoning and/or tag rotation.  Or data corruption, 
+if nothing else.  We'll know, even without the potentially-questionable 
+spurious interrupt detection code.
+
+2) Given the factors mentioned above -- shared irq and busy 
+multi-controller controller -- highly asynchronous conditions combine to 
+create a higher probability of seeing events arrive while you're 
+processing other events.  Overall, I feel that trying to accurately 
+account for everything going on in silicon leads to madness and 
+complexity :)  Just hand things to silicon, and trust that it either 
+accurately accounts SDB FISs, or will be quite obviously broken under 
+stress.
 
 
-[   43.275044] SCSI subsystem initialized
-[   43.335092] libata version 1.30 loaded.
-[   43.336142] ata_piix 0000:00:1f.2: version 1.10
-[   43.336146] ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
-[   43.426691] ACPI (acpi_bus-0191): Device is not power manageable [20060310]
-[   43.559872] ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 19 (level, low) -> IRQ 19
-[   43.681530] PCI: Setting latency timer of device 0000:00:1f.2 to 64
-[   43.681564] ata1: SATA max UDMA/133 cmd 0x2148 ctl 0x217E bmdma 0x2110 irq 19
-[   43.777123] ata2: SATA max UDMA/133 cmd 0x2140 ctl 0x217A bmdma 0x2118 irq 19
-[   44.123919] ata1.00: cfg 49:2f00 82:346b 83:7fe9 84:4773 85:3469 86:3c01 87:4763 88:407f
-[   44.123924] ata1.00: ATA-7, max UDMA/133, 321672960 sectors: LBA48 NCQ (depth 0/32)
-[   44.216325] ata1.00: configured for UDMA/133
-[   44.267296] scsi0 : ata_piix
-[   44.301660] PM: Adding info for No Bus:host0
-[   44.719422] ata2.00: cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:101f
-[   44.719425] ata2.00: ATAPI, max UDMA/66
-[   44.765263] ata2.00: applying bridge limits
-[   74.928836] ata2.01: qc timeout (cmd 0xa1)
-[   74.977811] ata2.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-[   75.468853] ata2.00: cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:101f
-[   75.468856] ata2.00: ATAPI, max UDMA/66
-[   75.514678] ata2.00: applying bridge limits
-[  105.674130] ata2.01: qc timeout (cmd 0xa1)
-[  105.723044] ata2.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-[  106.210113] ata2.00: cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:101f
-[  106.210117] ata2.00: ATAPI, max UDMA/66
-[  106.255906] ata2.00: applying bridge limits
-[  136.415532] ata2.01: qc timeout (cmd 0xa1)
-[  136.464452] ata2.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-[  136.537214] ata2.01: limiting speed to PIO0
-[  136.587141] ata2.01: disabled
-[  137.039723] ata2.00: cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:101f
-[  137.039726] ata2.00: ATAPI, max UDMA/66
-[  137.085492] ata2.00: applying bridge limits
-[  137.292543] ata2.00: configured for UDMA/66
-[  137.342488] scsi1 : ata_piix
-[  137.376847] PM: Adding info for No Bus:host1
-[  137.376892] PM: Adding info for No Bus:target0:0:0
-[  137.376948]   Vendor: ATA       Model: HDT722516DLA380   Rev: V43O
-[  137.453962]   Type:   Direct-Access                      ANSI SCSI revision: 05
-[  137.541468] PM: Adding info for scsi:0:0:0:0
-[  137.541547] SCSI device sda: 321672960 512-byte hdwr sectors (164697 MB)
-[  137.621598] sda: Write Protect is off
-[  137.665289] sda: Mode Sense: 00 3a 00 00
-[  137.665306] SCSI device sda: drive cache: write back
-[  137.724592] SCSI device sda: 321672960 512-byte hdwr sectors (164697 MB)
-[  137.804697] sda: Write Protect is off
-[  137.848386] sda: Mode Sense: 00 3a 00 00
-[  137.848398] SCSI device sda: drive cache: write back
-[  137.907659]  sda: sda1 sda2 sda3
-[  137.957184] sd 0:0:0:0: Attached scsi disk sda
-[  138.010252] PM: Adding info for No Bus:target1:0:0
-[  138.010869]   Vendor: PLEXTOR   Model: DVDR   PX-716A    Rev: 1.09
-[  138.087949]   Type:   CD-ROM                             ANSI SCSI revision: 05
-[  138.175466] PM: Adding info for scsi:1:0:0:0
-[  138.175531] ata_piix 0000:00:1f.5: MAP [ P0 P2 P1 P3 ]
-[  138.237446] ACPI (acpi_bus-0191): Device is not power manageable [20060310]
-[  138.320799] ACPI: PCI Interrupt 0000:00:1f.5[A] -> GSI 19 (level, low) -> IRQ 19
-[  138.409254] PCI: Setting latency timer of device 0000:00:1f.5 to 64
-[  138.409276] ata3: SATA max UDMA/133 cmd 0x2138 ctl 0x2176 bmdma 0x20F0 irq 19
-[  138.494586] ata4: SATA max UDMA/133 cmd 0x2130 ctl 0x2172 bmdma 0x20F8 irq 19
-[  139.899612] scsi2 : ata_piix
-[  139.933979] PM: Adding info for No Bus:host2
-[  141.251424] scsi3 : ata_piix
-[  141.285781] PM: Adding info for No Bus:host3
-[  141.366280] EXT3-fs: INFO: recovery required on readonly filesystem.
+>> Side note:  remember that !BSY denotes that the device may accept 
+>> another [NCQ] command (something AHCI doesn't appear to check...).  
+>> The device is free within NCQ rules to give itself some breathing 
+>> room, and not indicate its ready for new commands immediately.
+>>
+>> Currently it appears to be a bug in ahci that we do not check for 
+>> !BSY, but simply assume the device is ready if queue is not full.
+> 
+> AFAIK, unless we do CLO explicitly, AHCI takes care of BSY waiting, NCQ 
+> or not.
+
+True, indeed.
+
+	Jeff
+
 
