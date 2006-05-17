@@ -1,37 +1,47 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: ata_piix resume from S3 on T43P failed
-Date: Wed, 17 May 2006 15:02:33 +0200
-Message-ID: <20060517130233.GN4197@suse.de>
-References: <1147334740.7273.38.camel@forrest26.sh.intel.com> <4462F667.3060504@gmail.com> <4462F767.5070003@gmail.com> <1147340790.7273.47.camel@forrest26.sh.intel.com> <20060511105555.GK4157@suse.de> <1147413106.7273.70.camel@forrest26.sh.intel.com> <20060512101713.GN4157@suse.de> <1147751795.7273.80.camel@forrest26.sh.intel.com> <20060517110328.GM4197@suse.de> <446B1D76.6010303@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Adrian" <qdrzqjogjcbe@ge-design.com>
+Subject: you wont believe Adrian
+Date: Wed, 17 May 2006 17:00:46 +0200
+Message-ID: <PR.5372576.7050148__18716.4064067931$1147874871$gmane$org@codeweavers.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:14167 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932240AbWEQNBv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2006 09:01:51 -0400
-Content-Disposition: inline
-In-Reply-To: <446B1D76.6010303@garzik.org>
+Received: from zeus2.kernel.org ([204.152.191.36]:48825 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S932560AbWEQOHW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2006 10:07:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-tape@vger.kernel.org, linux-ia64@vger.kernel.org
 
-On Wed, May 17 2006, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >I think Hugh traced it down to a unrelated timer change. The above
-> >really wants to wait for BUSY clear, perhaps the best solution would be
-> >to have piix device its own ata_piix_device_resume() that first waits
-> >for BUSY clear, then calls ata_device_resume().
-> 
-> Close...  all devices should wait for libata to signal that the bus is 
-> ready to be talked to.  For some that's waiting for BSY to clear, for 
-> others that's checking the SATA bus.
+Hi,
 
-Ok, I meant for the ata_piix case. Same should apply to others, right?
-Do whatever you need to do to make sure the hardware is ready, then call
-the generic ata_device_resume() helper to handle the libata side of
-things.
+em..... 
+I gotta tell you something. Some years ago I used to watch porno often. I always admired those guys cumming.
+They splashed out so much sperm on their girls, it looked so cool, so manlike. 
+Now I have a girlfriend.. but quantity of my sperm was so scanty, that I felt ill at ease.
 
--- 
-Jens Axboe
+ I was advised to eat green apples but even this didn't help. A month ago I was hanging around at the bar with my best friend. 
+And he said that I should try MAX LOADS. Well, - I thought, - sounds interesting. 
 
+Next day I came to know that it was really a highly effective all-natural dietary supplement,
+ which not only increases the sperm volume but also improves the sperm quality and the mobility of spermatozoa.
+
+Having ordered and tried I was shocked how cool it was. 
+
+I'd even say, it changed my life. I'm happy. I even became a better lover, knowing how it all would end. 
+By the way, read about MAX LOADS at this site:
+
+http://www.drinkandcrosshis.com/
+
+
+Yes, that guys have really acceptable prices if you decide to order and ship worldwide.
+http://www.drinkandcrosshis.com/
+
+
+
+
+
+
+
+
+
+
+calligraph you loom me, borealis metabole conifer dominate . esther you blackbird me, wax exxon collegiate mastiff . beguile you peer me, twill . 
+http://www.drinkandcrosshis.com/c82/
