@@ -1,49 +1,110 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFT] major libata update
-Date: Wed, 17 May 2006 09:57:40 +0900
-Message-ID: <446A7504.9000201@gmail.com>
-References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6ECD.7080104@garzik.org> <446A734A.6020504@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH, RFC] ahci: update interrupt path
+Date: Tue, 16 May 2006 20:57:52 -0400
+Message-ID: <20060517005752.GA14045@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:64698 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751016AbWEQA5u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 20:57:50 -0400
-Received: by wr-out-0506.google.com with SMTP id i3so103413wra
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 17:57:49 -0700 (PDT)
-In-Reply-To: <446A734A.6020504@gmail.com>
+Received: from havoc.gtf.org ([69.61.125.42]:18614 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751020AbWEQA5x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 20:57:53 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, ric@emc.com, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
+To: linux-ide@vger.kernel.org
+Cc: htejun@gmail.com
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Actually, looking even more at the code, I think the entire "spurious 
->> interrupt" code block is bogus.
->>
->> The device is free to send D2H or SDB FIS to clear Status bits, as 
->> well as SDB FIS's to update SActive.  The ata_qc_complete_multiple() 
->> call will do the right thing, even if there is no work to do.
-> 
-> Yes, they are, but...
-> 
-> * Please note that SActive update via SDB FIS is edge-triggered.  It 
-> doesn't send the whole image of the register.  The SActive bits in SDB 
-> FIS indicate W1C (this is inevitable because controller and device 
-> cannot be in full synchronization regarding SActive).  So, they have can 
-> have dangerous side effects.
-> 
-> * Those spurious FISes are actively setting the I bit requesting 
-> interrupt explicitly.  Those are not innocent status update FISes.  And 
-> the spec state machines don't allow D2H FISes during NCQ command phase. 
->  I seem to recollect it's actually forbidden explicitly but currently 
-> cannot find where.  I'll keep looking.
 
-Oops, strike out the part about D2H not allowed.  It certainly is 
-allowed to clear BSY.  Sorry.
+Patch against current #upstream.  Not yet committed.
 
--- 
-tejun
+Changes:
+* Drop PORT_IRQ_SG_DONE from IRQ mask.
+* Drop spurious interrupt code.
+* Add two events to hotplug event list; in theory, 
+  debounce should sort it all out.
+* Catch two other unhandled exceptions (overflow, bad PMP)
+
+
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 45fd71d..2a52a3d 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -140,9 +140,13 @@ enum {
+ 	PORT_IRQ_ERROR		= PORT_IRQ_FREEZE |
+ 				  PORT_IRQ_TF_ERR |
+ 				  PORT_IRQ_HBUS_DATA_ERR,
+-	DEF_PORT_IRQ		= PORT_IRQ_ERROR | PORT_IRQ_SG_DONE |
++	DEF_PORT_IRQ		= PORT_IRQ_ERROR |
+ 				  PORT_IRQ_SDB_FIS | PORT_IRQ_DMAS_FIS |
+ 				  PORT_IRQ_PIOS_FIS | PORT_IRQ_D2H_REG_FIS,
++	PORT_IRQ_PLUG_EV	= PORT_IRQ_COLD_PRES | PORT_IRQ_PHYRDY |
++				  PORT_IRQ_DEV_ILCK | PORT_IRQ_CONNECT,
++	PORT_IRQ_ALL_EV		= PORT_IRQ_ERROR | PORT_IRQ_PLUG_EV |
++				  PORT_IRQ_OVERFLOW | PORT_IRQ_BAD_PMP,
+ 
+ 	/* PORT_CMD bits */
+ 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+@@ -837,11 +841,24 @@ static void ahci_error_intr(struct ata_p
+ 		ata_ehi_push_desc(ehi, ", interface fatal error");
+ 	}
+ 
+-	if (irq_stat & (PORT_IRQ_CONNECT | PORT_IRQ_PHYRDY)) {
++	if (irq_stat & PORT_IRQ_OVERFLOW) {
++		err_mask |= AC_ERR_DEV;
++		err_mask |= AC_ERR_ATA_BUS;
++		action |= ATA_EH_SOFTRESET;
++		ata_ehi_push_desc(ehi, ", PRD overflow");
++	}
++
++	if (irq_stat & PORT_IRQ_BAD_PMP) {
++		err_mask |= AC_ERR_ATA_BUS;
++		action |= ATA_EH_SOFTRESET;
++		ata_ehi_push_desc(ehi, ", unexpected PMP");
++	}
++
++	if (irq_stat & PORT_IRQ_PLUG_EV) {
+ 		err_mask |= AC_ERR_ATA_BUS;
+ 		action |= ATA_EH_SOFTRESET;
+ 		ata_ehi_push_desc(ehi, ", %s", irq_stat & PORT_IRQ_CONNECT ?
+-			"connection status changed" : "PHY RDY changed");
++			"connection status changed" : "PHY RDY/etc. changed");
+ 	}
+ 
+ 	if (irq_stat & PORT_IRQ_UNK_FIS) {
+@@ -880,7 +897,7 @@ static void ahci_host_intr(struct ata_po
+ 	status = readl(port_mmio + PORT_IRQ_STAT);
+ 	writel(status, port_mmio + PORT_IRQ_STAT);
+ 
+-	if (unlikely(status & PORT_IRQ_ERROR)) {
++	if (unlikely(status & PORT_IRQ_ALL_EV)) {
+ 		ahci_error_intr(ap, status);
+ 		return;
+ 	}
+@@ -899,27 +916,6 @@ static void ahci_host_intr(struct ata_po
+ 		ata_port_freeze(ap);
+ 		return;
+ 	}
+-
+-	/* hmmm... a spurious interupt */
+-
+-	/* some devices send D2H reg with I bit set during NCQ command phase */
+-	if (ap->sactive && status & PORT_IRQ_D2H_REG_FIS)
+-		return;
+-
+-	/* ignore interim PIO setup fis interrupts */
+-	if (ata_tag_valid(ap->active_tag)) {
+-		struct ata_queued_cmd *qc =
+-			ata_qc_from_tag(ap, ap->active_tag);
+-
+-		if (qc && qc->tf.protocol == ATA_PROT_PIO &&
+-		    (status & PORT_IRQ_PIOS_FIS))
+-			return;
+-	}
+-
+-	if (ata_ratelimit())
+-		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
+-				"(irq_stat 0x%x active_tag %d sactive 0x%x)\n",
+-				status, ap->active_tag, ap->sactive);
+ }
+ 
+ static void ahci_irq_clear(struct ata_port *ap)
