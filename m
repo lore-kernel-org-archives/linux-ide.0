@@ -1,99 +1,116 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 10/22] libata: use preallocated buffers
-Date: Wed, 17 May 2006 13:34:35 +0800
-Message-ID: <446AB5EB.5050603@tw.ibm.com>
-References: <11473487902895-git-send-email-htejun@gmail.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFT] major libata update
+Date: Wed, 17 May 2006 15:35:04 +0900
+Message-ID: <446AC418.4070704@gmail.com>
+References: <20060515170006.GA29555@havoc.gtf.org>	<20060516190507.35c1260f.akpm@osdl.org>	<446AAB3C.6050303@gmail.com> <20060516215610.2b822c00.akpm@osdl.org> <446AB12C.10001@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:57506 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S932141AbWEQFeg
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 May 2006 01:34:36 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4H5YZA7027145
-	for <linux-ide@vger.kernel.org>; Wed, 17 May 2006 01:34:35 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4H5YZKh248638
-	for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 23:34:35 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4H5YYeb023781
-	for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 23:34:35 -0600
-In-Reply-To: <11473487902895-git-send-email-htejun@gmail.com>
+Received: from wx-out-0102.google.com ([66.249.82.192]:11065 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932436AbWEQGfM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 May 2006 02:35:12 -0400
+Received: by wx-out-0102.google.com with SMTP id s6so114361wxc
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 23:35:11 -0700 (PDT)
+In-Reply-To: <446AB12C.10001@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
 Tejun Heo wrote:
-> It's not a very good idea to allocate memory during EH.  Use
-> statically allocated buffer for dev->id[] and add 512byte buffer
-> ap->sector_buf.  This buffer is owned by EH (or probing) and to be
-> used as temporary buffer for various purposes (IDENTIFY, NCQ log page
-> 10h, PM GSCR block).
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> <snip>
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 9c2d4bb..a117ca2 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -360,7 +360,7 @@ struct ata_device {
->  	unsigned long		flags;		/* ATA_DFLAG_xxx */
->  	unsigned int		class;		/* ATA_DEV_xxx */
->  	unsigned int		devno;		/* 0 or 1 */
-> -	u16			*id;		/* IDENTIFY xxx DEVICE data */
-> +	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
->  	u8			pio_mode;
->  	u8			dma_mode;
->  	u8			xfer_mode;
-> @@ -425,6 +425,8 @@ struct ata_port {
->  	struct list_head	eh_done_q;
->  
->  	void			*private_data;
-> +
-> +	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
->  };
->  
->  struct ata_port_operations {
+> Andrew Morton wrote:
+>> No.  In fact, it doesn't even work with the 2.6.17-rc4-mm1 lineup plus 
+>> the
+>> latest git-libata-all.  It needs this tweak:
+>>
+>> --- devel/drivers/scsi/ata_piix.c~2.6.17-rc4-mm1-ich8-fix    
+>> 2006-05-16 18:36:12.000000000 -0700
+>> +++ devel-akpm/drivers/scsi/ata_piix.c    2006-05-16 
+>> 18:36:12.000000000 -0700
+>> @@ -542,6 +542,14 @@ static unsigned int piix_sata_probe (str
+>>          port = map[base + i];
+>>          if (port < 0)
+>>              continue;
+>> +        if (ap->flags & PIIX_FLAG_AHCI) {
+>> +            /* FIXME: Port status of AHCI controllers
+>> +             * should be accessed in AHCI memory space.  */
+>> +            if (pcs & 1 << port)
+>> +                present_mask |= 1 << i;
+>> +            else
+>> +                pcs &= ~(1 << port);
+>> +        }
+>>          if (ap->flags & PIIX_FLAG_IGNORE_PCS || pcs & 1 << (4 + port))
+>>              present_mask |= 1 << i;
+>>          else
 
-Reorder ata_host_set->private_data and ata_port->private_data.
+The above patch doesn't do anything.  The only effect it has is setting 
+present_mask according to enabled bits instead of present bits.  I think 
+this patch might have helped with probing before the MAP tables for 
+ICH6/7 are fixed.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
-Just a minor fix.
-Maybe we can make the ->private_data the last one for easier allocation.
+I've done further testing.
 
---- upstream/include/linux/libata.h	2006-05-16 11:08:54.000000000 +0800
-+++ upstream1/include/linux/libata.h	2006-05-17 13:25:24.000000000 +0800
-@@ -330,12 +330,12 @@ struct ata_host_set {
- 	unsigned long		irq;
- 	void __iomem		*mmio_base;
- 	unsigned int		n_ports;
--	void			*private_data;
- 	const struct ata_port_operations *ops;
- 	unsigned long		flags;
- 	int			simplex_claimed;	/* Keep seperate in case we
- 							   ever need to do this locked */
- 	struct ata_port *	ports[0];
-+	void			*private_data;
- };
- 
- struct ata_queued_cmd {
-@@ -492,9 +492,8 @@ struct ata_port {
- 	u32			msg_enable;
- 	struct list_head	eh_done_q;
- 
--	void			*private_data;
--
- 	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
-+	void			*private_data;
- };
- 
- struct ata_port_operations {
+* Symptom
 
+ata_piix tries to probe non-existing slave device resulting in timeouts 
+during boot probing.  This problem is aggravated by new probing updates 
+as it retries two more times before giving up.
 
+* Test results
 
+PATA never has any problem with device detection via signature.  Only 
+SATA is affected and interestingly only ATAPI device.  The following is 
+the test result on my machine (ICH7R + PX716SA).
+
+   1. combined mode : MAP [IDE IDE P1 P3]
+
+	P1		P3
+	-----------------------------
+	PX716-SA	empty		P3 ghosted as ATAPI device
+	empty		PX716-SA	okay
+	PX716-SA	HDD		okay
+	HDD		PX716-SA	okay
+
+   2. SATA-only mode : MAP [P0 P2 P1 P3]
+
+	P0		P2
+	-----------------------------
+	PX716-SA	empty		P2 ghosted as ATAPI device
+	empty		PX716-SA	okay
+	PX716-SA	HDD		okay
+	HDD		PX716-SA	okay
+
+	P1		P3
+	-----------------------------
+	Identical to #1.
+
+To sum up, it happens when the master slot is occupied by an ATAPI 
+device and the corresponding slave slot is empty.  The slave slot 
+reports ATAPI signature (probably duplicated from the master) and passes 
+all legacy presence test thus resulting in timeout on IDENTIFY.
+
+In all above cases, the PCS register reported correct presence masks.
+
+* Proposed solution
+
+It seems that the only solution is to make use of the PCS presence bits 
+somehow.  It is know that 6300ESB family of controllers have flaky 
+presence bits (ata_piix marks them with PIIX_FLAG_IGNORE_PCS), but I 
+couldn't find any document/errata for PCS bits for any other 
+controllers.  So, we can use PCS for all !PIIX_FLAG_IGNORE_PCS 
+controllers or take a conservative approach and make use of it only on 
+cases where ghosting problem is reported (ICH7 and 8, I guess.  Can 
+anyone test 6?).
+
+Please note that we already use some use of the PCS value when probing 
+SATA port.  If its value is zero, we skip the port.  It's done this way 
+mainly due to historical reasons - until recently ata_piix didn't have 
+MAP tables to map PM/PS/SM/SS to specific ports thus used the PCS values 
+in rougher form.
+
+Jeff, what do you think?
+
+-- 
+tejun
