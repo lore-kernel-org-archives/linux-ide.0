@@ -1,43 +1,50 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFT] major libata update
-Date: Wed, 17 May 2006 18:13:51 -0400
-Message-ID: <446BA01F.4020202@garzik.org>
-References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6ECD.7080104@garzik.org> <446A734A.6020504@gmail.com> <446A7504.9000201@gmail.com> <446A88DF.5060705@emc.com> <446A7E4A.1080003@gmail.com> <446A9F13.4020907@emc.com> <446AAA33.5010800@gmail.com> <446B8F25.3040907@pobox.com> <446B8FC6.5040009@garzik.org> <446B9AA7.4000305@gmail.com> <446B9C1A.1060106@rtr.ca> <446B9D16.3010302@garzik.org> <446B9DA7.6060400@rtr.ca>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Wed, 17 May 2006 18:12:45 -0400
+Message-ID: <446B9FDD.7030800@garzik.org>
+References: <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com> <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de> <446B3BE0.8040806@garzik.org> <1147881002.3463.23.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org> <20060517175541.GT4197@suse.de> <Pine.LNX.4.64.0605171455050.10823@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:22219 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751283AbWEQWNz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2006 18:13:55 -0400
-In-Reply-To: <446B9DA7.6060400@rtr.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:17867 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751258AbWEQWMu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2006 18:12:50 -0400
+In-Reply-To: <Pine.LNX.4.64.0605171455050.10823@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->>
->>> Once the sysfs attr's actually work, I'll probably re-do my hdparm
->>> stuff to detect use them when available, avoiding the need for libata
->>> to snoop passthrough commands.  But Jeff may (or not) want to snoop 
->>> anyway.
->>
->> We _have_ to snoop some commands, like SET FEATURES - XFER MODE.
->>
->> Its just a given... you gotta either maintain cached state, or you 
->> gotta notice when its stale.
+Linus Torvalds wrote:
+> On Wed, 17 May 2006, Jens Axboe wrote:
+>> Some devices need serialization between them, and the only way to
+>> achieve that currently is by sharing a queue.
 > 
-> Ah then, I suppose libata might as well snoop the write-cache on/off
-> (SET FEATURES) command as well.  We need some kind of API or something
-> to avoid the nasty layering violation that my hack uses.. I wonder if
-> we can just do a revalidate disk or something?
+> Hmm? No. We share the queue for some things, but the most _common_ example 
+> of a device that needs serialization between queues is IDE, and we don't 
+> share queues there. We have independent queues, they just end up sharing 
+> certain infrastructure (tags and locking).
 
-Either way.  Revalidation falls under the "notice when its stale" 
-category above, certainly a viable solution.
+Strongly agreed.
+
+Note that libata uses independent queues, but serializes access to them. 
+  This is the sort of "group of queues" infrastructure I find helpful.
+
+
+> But they _are_ independent, and you can have different elevators, 
+> different merging rules, and even different request functions for the 
+> different queues - even if they also have some things they share.
+
+Yep.
+
+
+> And yes, you can see an ATA host as a host in the SCSI sense, but I wanted 
+
+Actually libata presents one Scsi_Host per SATA port on each controller, 
+FWIW :)  So the Scsi_Host notion WRT queues _is_ limiting, which is the 
+reason why I refer to "group of queues".
 
 	Jeff
-
 
 
