@@ -1,74 +1,80 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 15:04:51 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0605171455050.10823@g5.osdl.org>
-References: <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
- <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
- <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com>
- <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de>
- <446B3BE0.8040806@garzik.org> <1147881002.3463.23.camel@mulgrave.il.steeleye.com>
- <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org> <20060517175541.GT4197@suse.de>
+Date: Wed, 17 May 2006 18:08:23 -0400
+Message-ID: <446B9ED7.5050204@garzik.org>
+References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F9FB.7020807@garzik.org>	 <1147797507.3505.52.camel@mulgrave.il.steeleye.com>	 <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de>	 <446B3BE0.8040806@garzik.org>	 <1147881002.3463.23.camel@mulgrave.il.steeleye.com>	 <446B4CAA.1030409@garzik.org> <1147888381.3463.49.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20060517175541.GT4197@suse.de>
+In-Reply-To: <1147888381.3463.49.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-ide@vger.kernel.org
 
+James Bottomley wrote:
+> On Wed, 2006-05-17 at 12:17 -0400, Jeff Garzik wrote:
+>> Yes, and not only that...  you must describe the queue pipeline too. 
+>> i.e. N logical devices can be bottlenecked behind a bridge (expander, 
+>> port multiplier, tunnel) of queue depth Q, which may in turn be behind 
+>> another bottleneck.  :)
+> 
+> Well ... no, I'm not convinced of this.  Block is currently a nice, fast
+> abstraction.  It's designed to manage storage infrastructure and provide
+> helpers to implementation.  The question is how much more common
+> infrastructure do we need to slim down all of our storage stacks.  I.e.
+> block provides the building blocks to allow the storage implementation
+> to do what it wants, but it doesn't necessarily provide the full
+> implementation.
+
+My central thesis is that
+* SCSI provides a generic _storage driver_ infrastructure, encapsulating 
+many common idioms generic to SCSI and non-SCSI hardware alike.
+* Any such storage driver infrastructure, outside of SCSI, should impose 
+no burdens on existing block drivers.
+
+Call such storage driver infrastructure "libstorage" if you will.
 
 
-On Wed, 17 May 2006, Jens Axboe wrote:
->
-> That gets you the "parent" structure (or "host") for the queues, but it
-> doesn't help you with managing them. One issue could be a shared tag
-> queue - we already solved that by sharing the tag map between the
-> queues, but that still allows on queue to deplete more entries that it
-> should be allowed to. And so on.
+>> But overall, libata and SAS controllers are forced to deal with the 
+>> reality of the situation:  they all wind up either using, or recreating 
+>> from scratch, objects for host/device/bus/etc. in order to sanely allow 
+>> all the infrastructure to interoperate.
+> 
+> but that doesn't go for all storage ... look at the way usb and firewire
+> implement host in SCSI at the moment.
 
-Right. But all of this is very much dependent on the actual hardware. It 
-makes no sense to have a "generic host" kind of structure like SCSI has, 
-except for historical reasons.
+Let's just stop using the word host, its too confusing for all involved 
+:)  I'm well aware of this, look at how libata uses Scsi_Host too...
 
-It makes sense to make _individual_ design issues be able to share some 
-resource(s) between queues, and that's exactly what we do. We have the 
-notion of having a shared lock (which makes sense because while the queues 
-might be otherwise independent, they may go through a shared hw 
-interface), and as you point out, we can also share the tags for exactly 
-the same reason.
 
-But in _no_ case is is valid to think that a shared resource would somehow 
-mean anything more being shared. There simply is no "host" level sharing. 
-It's very much -not- an all-or-nothing thing. It's a "some hardware may 
-share some stuff, and it very much depends on the hw which parts it might 
-end up sharing between the queues.
+>> You'll all note that struct Scsi_Host and struct scsi_cmnd have very 
+>> little to do with SCSI.  Its almost all infrastructure and driver 
+>> management.  That's the _useful_ stuff that libata uses SCSI for.
+> 
+> Some is driver management, others are SCSI specific.  We'll never get
 
-So what I was objecting to was introducing the overlying "host" notion 
-that SCSI has. I don't think it makes any sense from any generic 
-standpoint, and I wanted to point out that _if_ you have a "all or 
-nothing" shared model like SCSI has, you can use any of the fields that we 
-_can_ share (eg the lock field) as a way to tie that one field together 
-with all the other fields.
+Agreed, though IMO I claim that "a lot" is driver management.
 
-But it would be wrong to see that as anything but a special case.
 
-> Some devices need serialization between them, and the only way to
-> achieve that currently is by sharing a queue.
+> away from the need for Scsi_Host and scsi_cmnd, but we can make sure
+> they contain only truly SCSI specific pieces.  scsi_cmnd is the closest
+> since it pretty much has a one to one mapping with a block request.
 
-Hmm? No. We share the queue for some things, but the most _common_ example 
-of a device that needs serialization between queues is IDE, and we don't 
-share queues there. We have independent queues, they just end up sharing 
-certain infrastructure (tags and locking).
+Agreed.
 
-But they _are_ independent, and you can have different elevators, 
-different merging rules, and even different request functions for the 
-different queues - even if they also have some things they share.
 
-And yes, you can see an ATA host as a host in the SCSI sense, but I wanted 
-to point out that you don't _need_ to see it that way, and indeed, the 
-requests queues don't. The fact that a driver can then _use_ the request 
-queues as if there was a "host" is fine. But we should not _enforce_ such 
-a totally broken and limited model on the queues.
+>> Thus, moving libata to the block layer entails either 
+>> s/Scsi_Host/Storage_Host/g or a highly similar infrastructure, to 
+>> achieve the same gains.
+> 
+> I'm not sure.  Block is currently nicely lightweight.  A large number of
+> implementations have no use for a host concept ... I don't think we
+> should be forcing it on them.
 
-		Linus
+Like I said above, think "libstorage".  I think block as-is, too.
+
+	Jeff
+
+
