@@ -1,16 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [BUGREPORT 1/3] Kernel Oops with HPT372A IDE controller
-Date: Wed, 17 May 2006 18:36:39 +0400
-Message-ID: <446B34F7.60000@ru.mvista.com>
-References: <200605142110.53348.it21@arcor.de> <4468960D.2090004@ru.mvista.com> <200605170059.45455.it21@arcor.de>
+Subject: Re: [BUGREPORT 3/3] Kernel Oops with HPT372A IDE controller
+Date: Wed, 17 May 2006 18:41:29 +0400
+Message-ID: <446B3619.9090909@ru.mvista.com>
+References: <200605142111.42329.it21@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:715 "HELO mail.dev.rtsoft.ru")
-	by vger.kernel.org with SMTP id S932570AbWEQOhp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2006 10:37:45 -0400
-In-Reply-To: <200605170059.45455.it21@arcor.de>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:12493 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S932505AbWEQOma
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 May 2006 10:42:30 -0400
+In-Reply-To: <200605142111.42329.it21@arcor.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: 101551.753@compuserve.com
@@ -20,58 +21,31 @@ Hello.
 
 Foli Ayivoh wrote:
 
->>>Kernel Oops with HighPoint RocketRAID ATA133 aka HPT372A/N since kernel 2.6
->>>Now tested with kernel 2.6.17-rc4
+> This is lspci -vvv from ubuntu 5 distro bootable CD-ROM with kernel 2.6.12-9-386
 
->>>Kernel is on bootable CD-ROM
->>>Modules are loaded from initrd
+> 0000:01:08.0 Multimedia audio controller: Creative Labs SB Audigy (rev 04)
+> 	Subsystem: Creative Labs: Unknown device 2001
+> 	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
 
->>>This is what I copied from screen:
+    Looks like the PCI bus in question was running at 33 MHz...
 
->>>Loading hpt366
->>>[17179578.396000] HPT372A: IDE controller at PCI slot 0000:01:0a.0
->>>[17179578.400000] ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
->>>[17179578.404000] ACPI: PCI Interrupt 0000:01:0a.0[A] -> Link [APC1] -> GSI 16 (level, high) -> IRQ 18
->>>[17179578.408000] HPT372A: chipset revision 2
->>>[17179578.412000] HPT372A: 100% native mode on irq 18
->>>[17179578.416000] hpt: HPT372N detected, using 372N timing.
->>>[17179578.420000] FREQ: 125 PLL: 45
->>>[17179579.536000] No Clock Stabilization!!!
->>>[17179579.540000] hpt: no known IDE timings, disabling DMA
->>>[17179579.544000] hpt: HPT372N detected, using 372N timing.
->>>[17179579.548000] FREQ: 156 PLL: 66
->>>[17179579.664000] No Clock Stabilization!!!
+> 0000:01:0a.0 RAID bus controller: Triones Technologies, Inc. HPT372A (rev 02)
+> 	Subsystem: Triones Technologies, Inc.: Unknown device 0001
+> 	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> 	Latency: 120 (2000ns min, 2000ns max)
+> 	Interrupt: pin A routed to IRQ 16
+> 	Region 0: I/O ports at 7c00 [size=8]
+> 	Region 1: I/O ports at 8000 [size=4]
+> 	Region 2: I/O ports at 8400 [size=8]
+> 	Region 3: I/O ports at 8800 [size=4]
+> 	Region 4: I/O ports at 8c00 [size=256]
+> 	Capabilities: <available only to root>
 
->>    Please try my latest patches. This one should fix this (and oops should be
->>gone):
-
->>http://marc.theaimsgroup.com/?l=linux-ide&m=114677223914159&w=2
-
-> all patches applied, but I still get Kernel Oops :-(
-
-> some smal difference here:
-
->   HPT372A: IDE controller at PCI slot 0000:01:0a.0
->   ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
->   ACPI: PCI Interrupt 0000:01:0a.0[A] -> Link [APC1] -> GSI 16 (level, high) -> IRQ 18
->   HPT372A: chipset revision 2
->   HPT372A: 100% native mode on irq 18
-> + HPT37X: no clock data saved by BIOS
-> + HPT3xxN detected, FREQ: 124, PLL: 45
-> + HPT37xN unknown bus timing [48 4].
-
-    Hm, the BIOS seems to behave nastier than expected -- looks like it
-reprograms DPLL but doesn't save the initial f_CNT (needed to determine the
-PCI clock). Well, I know that it always sets DPLL to 50 MHz, no matter what's
-the chip, so will try to work around this... :-/
-
-> but the rest is the same ...
-
-    This (otherwise incorrect) patch should eliminate the oops on HPT372:
-
-http://www.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.17-rc1/2.6.17-rc1-mm2/broken-out/hpt366-fix-segfault-during-init.patch
-
-    The clocking however will remain invalid...
+    Please send me the results of running 'lspci -xxx -s 1:a' as root; disable 
+the driver and rebuild/boot the kernel without it before doing this, so that I 
+can see what the regs look like as the BIOS leaves them, untainted by the 
+driver...
 
 MBR, Sergei
-
