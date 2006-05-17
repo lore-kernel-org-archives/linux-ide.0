@@ -1,41 +1,35 @@
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Subject: Re: [RFT] major libata update
-Date: Thu, 18 May 2006 00:25:43 +0900
-Message-ID: <87ves44qrs.fsf@duaron.myhome.or.jp>
-References: <20060515170006.GA29555@havoc.gtf.org>
-	<3aa654a40605151630j53822ba1nbb1a2e3847a78025@mail.gmail.com>
-	<446914C7.1030702@garzik.org>
-	<3aa654a40605152036h40fa1cd0x8edd81431c1bd22d@mail.gmail.com>
-	<44694C4F.3000008@garzik.org>
-	<3aa654a40605152133x516581f9w62c7cb7709864fb0@mail.gmail.com>
-	<Pine.LNX.4.64.0605160755170.3866@g5.osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Wed, 17 May 2006 10:50:01 -0500
+Message-ID: <1147881002.3463.23.camel@mulgrave.il.steeleye.com>
+References: <4468B596.9090508@garzik.org>
+	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
+	 <4469F2B2.703@garzik.org>
+	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
+	 <4469F9FB.7020807@garzik.org>
+	 <1147797507.3505.52.camel@mulgrave.il.steeleye.com>
+	 <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de>
+	 <446B3BE0.8040806@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750702AbWEQPZw@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0605160755170.3866@g5.osdl.org> (Linus Torvalds's message of "Tue, 16 May 2006 07:57:36 -0700 (PDT)")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Avuton Olrich <avuton@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <446B3BE0.8040806@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-ide@vger.kernel.org
 
-Linus Torvalds <torvalds@osdl.org> writes:
+On Wed, 2006-05-17 at 11:06 -0400, Jeff Garzik wrote:
+> storage device and storage host are key objects included in the 
 
-> On Mon, 15 May 2006, Avuton Olrich wrote:
->
-> diff --git a/arch/i386/pci/irq.c b/arch/i386/pci/irq.c
-> index 06dab00..49b9fea 100644
-> --- a/arch/i386/pci/irq.c
-> +++ b/arch/i386/pci/irq.c
-> @@ -880,6 +880,7 @@ static int pcibios_lookup_irq(struct pci
->  	((!(pci_probe & PCI_USE_PIRQ_MASK)) || ((1 << irq) & mask)) ) {
->  		DBG(" -> got IRQ %d\n", irq);
->  		msg = "Found";
-> +		eisa_set_level_irq(irq);
->  	} else if (newirq && r->set && (dev->class >> 8) != PCI_CLASS_DISPLAY_VGA) {
->  		DBG(" -> assigning IRQ %d", newirq);
->  		if (r->set(pirq_router_dev, dev, pirq, newirq)) {
+This is one of the questions.  Currently block has no concept of "host".
+All it knows about are queues (which may be per host or per device
+depending on the implementation).  Do we need to introduce the concept
+of something like queue grouping (a sort of lightweight infrastructure
+that could be used by the underlying transport to implement a host
+concept without introducing hosts at the block layer)?
 
-I like it. I'd like to put this type stuff (fixes setting of 8259,
-APIC, chipset, etc.) into pci...
--- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+James
+
+
