@@ -1,129 +1,156 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFT] major libata update
-Date: Tue, 16 May 2006 22:26:27 -0400
-Message-ID: <446A89D3.60002@garzik.org>
-References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6E6F.8010201@gmail.com> <446A7794.80909@garzik.org> <446A7BF6.3090103@gmail.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: A question about NCQ
+Date: Wed, 17 May 2006 10:21:10 +0800
+Message-ID: <1147832470.7273.112.camel@forrest26.sh.intel.com>
+References: <1147773689.7273.88.camel@forrest26.sh.intel.com>
+	 <4469AE21.6000304@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-QdDcmGQxOM6P4FNhojV+"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:26015 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751130AbWEQC0c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2006 22:26:32 -0400
-In-Reply-To: <446A7BF6.3090103@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:546 "EHLO
+	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
+	id S1751134AbWEQCc2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 22:32:28 -0400
+In-Reply-To: <4469AE21.6000304@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: ric@emc.com, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Jeff Garzik wrote:
->>>> Jeff Garzik wrote:
->>>>> Tejun Heo wrote:
->>>>>> Hmmm.. The drive is issuing SDB FIS which completes already 
->>>>>> completed tags.  This could be dangerous.  Depending on timing, it 
->>>>>> might end up finishing a command which occupied the slot which 
->>>>>> hasn't been processed yet.  If a drive does this, NCQ shouldn't be 
->>>>>> enabled for it.  Can you post full boot dmesg?
->>>>>
->>>>> I'm not sure the data supports that conclusion?  PORT_IRQ_SDB_FIS 
->>>>> is quite normal and expected during NCQ operation, if that 
->>>>> interrupt is enabled.  Just normal SDB:Entry and SDB:SetIntr states.
->>>>
->>>> Strike that last part:  PORT_IRQ_SDB_FIS will appear, as with other 
->>>> status bits, even if the enable bit is not set.
->>>>
->>>> So, you'll see that whenever you get an SDB FIS during normal 
->>>> operation.
->>>
->>> The problem is with the second dword.  Here are some of spurious SDB 
->>> FISes Ric's AHCI was receiving.
->>>
->>> 004040a1:10000000
->>> 004040a1:00000020
->>> 004040a1:00000080
->>>
->>> If the second dword were all zero, it's simply SDB FIS turning on IRQ 
->>> (bit 14 of the first dword) and there's nothing to worry about. 
->>> However, all those spurious SDBs have one bit set in the second dword 
->>> - meaning the SDB completes the corresponding tag, but the tag isn't 
->>> active when those SDBs are received.
->>>
->>> This is okay as long as the controller thinks the tags are unoccupied 
->>> when those SDBs are received, but it's not something which can be 
->>> guaranteed.  NCQ command synchronization depends on devices not 
->>> completing the same commands more than once.
->>>
->>> The duplicate completions might be okay if the drive guarantees it 
->>> doesn't send it if it loses to command issuance.  e.g.
->>>
->>> 1. drive sends completion for tag x
->>> 2. drive shortly schedules another completion for tag x (spurious)
->>> 3. ahci/driver complete tag x
->>> 4. ahci/driver issues tag x
->>> 5. drive receives command for tag x before sending the spurious 
->>> completion and determines not to send the spurious completion. (not 
->>> very likely)
->>>
->>> If above is true, the drive might be okay, but nobody can guarantee 
->>> how  various controllers react.  It depends on how controllers manage 
->>> SActive (when to turn bits on).  At any rate, it's dangerous IMHO.
->>
->> If the silicon is screwing up SActive bits, then we have bigger 
->> problems than spurious interrupts.
->>
->> So, the typical policy of Internet servers applies here:  "be liberal 
->> in what you accept."  For smart controllers like AHCI, we will simply 
->> set the desired IRQ mask, then happily receive and ack events anytime 
->> the controller decides to raise them.  If the controller decides to 
->> send us a no-op, don't worry about it.  This is particularly true when 
->> we turn on Command Coalescing, where we'll have a run of work 
->> initiated [sometimes] by an internal timer, rather than an actual FIS 
->> reception.
+
+--=-QdDcmGQxOM6P4FNhojV+
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+On Tue, 2006-05-16 at 19:49 +0900, Tejun Heo wrote:
+> I don't know the workload of iozone.  But NCQ shines when there are many
+> concurrent IOs in progress.  A good real world example would be busy
+> file-serving web server.  It generally helps if there are multiple IO
+> requests.  If iozone is single-threaded (IO-wise), try to run multiple
+> copies of them and compare the results.
 > 
-> I wish I could explain it better.  This is a clear protocol violation 
-> from the drive.  Depending on specific implementation of the drive and 
-> the controller, it can result in completion of command which is not 
-> processed yet (data corruption!).
-
-A spurious SDB FIS updating SActive is bad news, yes.  But with a busy 
-AHCI controller, perhaps sharing PCI interrupts, I think there is 
-distinct potential to be flagged as a spurious interrupt, when not.
-
-But I'm taking a higher level view than that, from two angles:
-
-1) I think its a waste of time to even worry about this.  We should just 
-program AHCI to spec, and  let the controller and devices talk to each 
-other as they will.  If there are spurious completions, that should show 
-up elsewhere via tag poisoning and/or tag rotation.  Or data corruption, 
-if nothing else.  We'll know, even without the potentially-questionable 
-spurious interrupt detection code.
-
-2) Given the factors mentioned above -- shared irq and busy 
-multi-controller controller -- highly asynchronous conditions combine to 
-create a higher probability of seeing events arrive while you're 
-processing other events.  Overall, I feel that trying to accurately 
-account for everything going on in silicon leads to madness and 
-complexity :)  Just hand things to silicon, and trust that it either 
-accurately accounts SDB FISs, or will be quite obviously broken under 
-stress.
-
-
->> Side note:  remember that !BSY denotes that the device may accept 
->> another [NCQ] command (something AHCI doesn't appear to check...).  
->> The device is free within NCQ rules to give itself some breathing 
->> room, and not indicate its ready for new commands immediately.
->>
->> Currently it appears to be a bug in ahci that we do not check for 
->> !BSY, but simply assume the device is ready if queue is not full.
+> Also, you need to pay attention to IO schedule in use, IIRC as and cfq
+> are heavily optimized for single-queued devices and might not show the
+> best performance depending on workload.  For functionality test, I
+> usually use deadline.  It's simpler and usually doesn't get in the way,
+> which, BTW, may or may not translate into better performance.
 > 
-> AFAIK, unless we do CLO explicitly, AHCI takes care of BSY waiting, NCQ 
-> or not.
+Tejun,
 
-True, indeed.
+I run iozone with 8 concurrent threads. From my understanding, NCQ
+should at least provide the same throughput as non-NCQ. But the attached
+test result showed that NCQ has the lower throughput compared with non-
+NCQ.
 
-	Jeff
+The io scheduler is anticipatory.
+The kernel without NCQ is 2.6.16-rc6, the kernel with NCQ is #upstream.
+
+The current problem is that I don't know where the bottleneck is, block
+I/O layer, SCSI layer, device driver layer or hardware problem......
+
+Thanks,
+Forrest
+
+--=-QdDcmGQxOM6P4FNhojV+
+Content-Disposition: attachment; filename=testresult.dio.8thread.NCQ
+Content-Type: text/plain; name=testresult.dio.8thread.NCQ; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+	Iozone: Performance Test of File I/O
+	        Version $Revision: 3.263 $
+		Compiled for 32 bit mode.
+		Build: linux 
+
+	Contributors:William Norcott, Don Capps, Isom Crawford, Kirby Collins
+	             Al Slater, Scott Rhine, Mike Wisner, Ken Goss
+	             Steve Landherr, Brad Smith, Mark Kelly, Dr. Alain CYR,
+	             Randy Dunlap, Mark Montague, Dan Million, 
+	             Jean-Marc Zucconi, Jeff Blomberg,
+	             Erik Habbinga, Kris Strecker, Walter Wong.
+
+	Run began: Wed May 17 10:06:21 2006
+
+	File size set to 2000 KB
+	Record Size 1 KB
+	O_DIRECT feature enabled
+	Command line used: ./iozone -l 8 -u 8 -F hello1.data hello2.data hello3.data hello4.data hello5.data hello6.data hello7.data hello8.data -i 0 -s 2000 -r 1 -I
+	Output is in Kbytes/sec
+	Time Resolution = 0.000001 seconds.
+	Processor cache size set to 1024 Kbytes.
+	Processor cache line size set to 32 bytes.
+	File stride size set to 17 * record size.
+	Min process = 8 
+	Max process = 8 
+	Throughput test with 8 processes
+	Each process writes a 2000 Kbyte file in 1 Kbyte records
+
+	Children see throughput for  8 initial writers 	=    1862.25 KB/sec
+	Parent sees throughput for  8 initial writers 	=     753.66 KB/sec
+	Min throughput per process 			=       4.11 KB/sec 
+	Max throughput per process 			=     588.33 KB/sec
+	Avg throughput per process 			=     232.78 KB/sec
+	Min xfer 					=      14.00 KB
+
+	Children see throughput for  8 rewriters 	=    1582.49 KB/sec
+	Parent sees throughput for  8 rewriters 	=    1576.26 KB/sec
+	Min throughput per process 			=       2.49 KB/sec 
+	Max throughput per process 			=     384.88 KB/sec
+	Avg throughput per process 			=     197.81 KB/sec
+	Min xfer 					=      13.00 KB
 
 
+
+iozone test complete.
+
+--=-QdDcmGQxOM6P4FNhojV+
+Content-Disposition: attachment; filename=testresult.dio.8thread.nonNCQ
+Content-Type: text/plain; name=testresult.dio.8thread.nonNCQ; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+	Iozone: Performance Test of File I/O
+	        Version $Revision: 3.263 $
+		Compiled for 32 bit mode.
+		Build: linux 
+
+	Contributors:William Norcott, Don Capps, Isom Crawford, Kirby Collins
+	             Al Slater, Scott Rhine, Mike Wisner, Ken Goss
+	             Steve Landherr, Brad Smith, Mark Kelly, Dr. Alain CYR,
+	             Randy Dunlap, Mark Montague, Dan Million, 
+	             Jean-Marc Zucconi, Jeff Blomberg,
+	             Erik Habbinga, Kris Strecker, Walter Wong.
+
+	Run began: Wed May 17 10:01:50 2006
+
+	File size set to 2000 KB
+	Record Size 1 KB
+	O_DIRECT feature enabled
+	Command line used: ./iozone -l 8 -u 8 -F hello1.data hello2.data hello3.data hello4.data hello5.data hello6.data hello7.data hello8.data -i 0 -s 2000 -r 1 -I
+	Output is in Kbytes/sec
+	Time Resolution = 0.000001 seconds.
+	Processor cache size set to 1024 Kbytes.
+	Processor cache line size set to 32 bytes.
+	File stride size set to 17 * record size.
+	Min process = 8 
+	Max process = 8 
+	Throughput test with 8 processes
+	Each process writes a 2000 Kbyte file in 1 Kbyte records
+
+	Children see throughput for  8 initial writers 	=    2263.96 KB/sec
+	Parent sees throughput for  8 initial writers 	=     640.26 KB/sec
+	Min throughput per process 			=       2.93 KB/sec 
+	Max throughput per process 			=     985.75 KB/sec
+	Avg throughput per process 			=     283.00 KB/sec
+	Min xfer 					=       6.00 KB
+
+	Children see throughput for  8 rewriters 	=    2656.53 KB/sec
+	Parent sees throughput for  8 rewriters 	=    2602.82 KB/sec
+	Min throughput per process 			=       3.80 KB/sec 
+	Max throughput per process 			=    1923.40 KB/sec
+	Avg throughput per process 			=     332.07 KB/sec
+	Min xfer 					=       4.00 KB
+
+
+
+iozone test complete.
+
+--=-QdDcmGQxOM6P4FNhojV+--
