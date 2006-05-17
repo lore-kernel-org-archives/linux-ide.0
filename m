@@ -1,36 +1,60 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFT] major libata update
-Date: Wed, 17 May 2006 10:37:14 +0900
-Message-ID: <446A7E4A.1080003@gmail.com>
-References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6ECD.7080104@garzik.org> <446A734A.6020504@gmail.com> <446A7504.9000201@gmail.com> <446A88DF.5060705@emc.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
+	stable kernel
+Date: Wed, 17 May 2006 09:28:59 +0800
+Message-ID: <1147829339.7273.97.camel@forrest26.sh.intel.com>
+References: <20060512132437.GB4219@htj.dyndns.org>
+	 <e4coc8$onk$1@sea.gmane.org> <4469E8CF.9030506@garzik.org>
+	 <4469EC4A.30908@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.236]:24541 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751076AbWEQBhV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 May 2006 21:37:21 -0400
-Received: by wr-out-0506.google.com with SMTP id 70so400684wra
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2006 18:37:20 -0700 (PDT)
-In-Reply-To: <446A88DF.5060705@emc.com>
+Received: from mga02.intel.com ([134.134.136.20]:60522 "EHLO
+	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751084AbWEQBj7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 May 2006 21:39:59 -0400
+In-Reply-To: <4469EC4A.30908@gmx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
+To: Michael Schierl <schierlm@gmx.de>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ric Wheeler wrote:
+On Tue, 2006-05-16 at 17:14 +0200, Michael Schierl wrote:
+> hmm. ok. Hannes' patch was the one in http://lkml.org/lkml/2006/3/6/47 ?
 > 
-> (Trying to keep up ;-))
+> I never found a kernel where I could apply that one and still compile
+> without errors :(
 > 
-> Is there still value in testing your last patch?
+> I am no C guru, so I had no success to fix this patch without even
+> knowing where to apply against... (and I don't know anything about
+> kernel programming or even ACHI low-level programming).
 > 
+> Is there a newer version available of that patch somewhere?
+> 
+> And - what SATA ACPI patches?
+> 
+> I have quite alot of patches related to sata and/or acpi (collected from
+> different mailing lists) here on hard disk but don't know which ones are
+> broken, outdated, etc. Most only apply on a 2.6.15 or 2.6.14-rc kernel...
+> 
+> If more recent patches are only available via git, I'd need some good
+> GIT tutorial first...
+> 
+> TIA, and sorry for stealing your time,
+> 
+> Michael
+Michael,
 
-The result should be the same, so it's not really necessary.  But, just 
-in case, sticking that patch when you test the barrier would be nice so 
-that things can be verified again.
+I ported a patch from OpenSUSE for AHCI suspend/resume. You may find the
+patch at:
+http://marc.theaimsgroup.com/?l=linux-ide&m=114774543416039&w=2
 
-Thanks for testing.
+Jeff,
+If Michael have a successful AHCI suspend/resume with this patch, I'm
+glad to port the patch to current libata-dev #upstream for the second
+time to push it into stock kernel. How do you think?
 
--- 
-tejun
+Thanks,
+Forrest
+
