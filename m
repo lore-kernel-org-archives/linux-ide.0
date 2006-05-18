@@ -1,111 +1,80 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: ASUS A8V Deluxe, x86_64
-Date: Thu, 18 May 2006 13:28:26 +0800
-Message-ID: <446C05FA.5020106@tw.ibm.com>
-References: <8E8F647D7835334B985D069AE964A4F7028FDC15@ECQCMTLMAIL1.quebec.int.ec.gc.ca> <446BEA2E.3030100@gmail.com>
-Reply-To: albertl@mail.com
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: RE: [PATCH/2.6.17-rc4 10/10]  bugs fix for marvell SATA on powerp
+	c pl atform
+Date: Thu, 18 May 2006 17:02:14 +1000
+Message-ID: <1147935734.17679.93.camel@localhost.localdomain>
+References: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:64223 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750778AbWERF2j
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 May 2006 01:28:39 -0400
-In-Reply-To: <446BEA2E.3030100@gmail.com>
+Received: from gate.crashing.org ([63.228.1.57]:61570 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1751286AbWERHCd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 03:02:33 -0400
+In-Reply-To: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
-Cc: albertl@mail.com, Andi Kleen <ak@suse.de>, Marko Macek <Marko.Macek@gmx.net>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, =?ISO-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
+To: Zang Roy-r61911 <tie-fei.zang@freescale.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>, Alexandre.Bounine@tundra.com, Yang Xin-Xin-r48390 <Xin-Xin.Yang@freescale.com>, Kumar Gala <galak@kernel.crashing.org>
 
-Tejun Heo wrote:
-> Fortier,Vincent [Montreal] wrote:
-> 
->> scsi0 : sata_via
->> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->> ata2.00: cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000
->> 88:001f
->> ata2.00: ATAPI, max UDMA/66
->> ata2.00: applying bridge limits
->> ata2.00: configured for UDMA/66
-> 
-> [--snip--]
-> 
->> sd 0:0:0:0: Attached scsi disk sda
->>   Vendor: PLEXTOR   Model: DVDR   PX-716A    Rev: 1.09
->>   Type:   CD-ROM                             ANSI SCSI revision: 05
-> 
-> 
-> Above and the detailed log too indicate that everything went smooth the
-> first time around.  Albert, do you have any ideas?  Could it be
-> something related to irq-pio?
-> 
+On Thu, 2006-05-18 at 12:03 +0800, Zang Roy-r61911 wrote:
+> -----Original Message-----
+> From: Kumar Gala [mailto:galak@kernel.crashing.org]
+> Sent: 2006=E5=B9=B45=E6=9C=8817=E6=97=A5 21:28
+> To: Zang Roy-r61911
+> Cc: Paul Mackerras; linuxppc-dev list; Alexandre.Bounine@tundra.com; =
+Yang Xin-Xin-r48390
+> Subject: Re: [PATCH/2.6.17-rc4 10/10] bugs fix for marvell SATA on po=
+werpc pl atform
 
-I've checked Vincent't dmesg for 2.6.17-rc0 again.
-(http://bugzilla.kernel.org/show_bug.cgi?id=5533)
-(http://bugzilla.kernel.org/attachment.cgi?id=7700&action=view)
+Copying here the comments I already made so Jeff gets them...
 
-It seems DMA commands are also affected by this problem, not PIO unique.
+> @@ -1032,6 +1032,9 @@ static inline void mv_crqb_pack_cmd(u16=20
+>  {
+>       *cmdw =3D data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
+>               (last ? CRQB_CMD_LAST : 0);
+> +#ifdef CONFIG_PPC
+> +     *cmdw =3D cpu_to_le16(*cmdw);
+> +#endif
+>  }
 
-ata2: command 0xa0 timeout, stat 0xd0 host_stat 0x1  <==== Device busy. DMA on going.
-ata2: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-sr0: scsi-1 drive
-sr 1:0:0:0: Attached scsi CD-ROM sr0
-ata2 is slow to respond, please be patient
-ata2 failed to respond (30 secs)
-BUG: warning at drivers/scsi/libata-core.c:3303/ata_pio_complete()
+Why an ifdef here ? The cpu_to_le16 should probably be unconditional.
+And even if for some weird reason you wanted to ifdef it, why PPC ? and
+what about other BE architectures ?
+=20
+>  /**
+> @@ -1567,13 +1570,18 @@ static void mv5_read_preamp(struct mv_ho
+>  static void mv5_enable_leds(struct mv_host_priv *hpriv, void __iomem
+*mmio)
+>  {
+>       u32 tmp;
+> -
+> +#ifndef CONFIG_PPC
+>       writel(0, mmio + MV_GPIO_PORT_CTL);
+> +#endif
 
-Call Trace: <ffffffff88031bd0>{:libata:ata_pio_task+1398}
-       <ffffffff810298cf>{__wake_up+56} <ffffffff81219b3a>{_spin_unlock_irqrestore+11}
-       <ffffffff8803165a>{:libata:ata_pio_task+0} <ffffffff8103f2ed>{run_workqueue+159}
-       <ffffffff8103fcd0>{worker_thread+0} <ffffffff8104265f>{keventd_create_kthread+0}
-       <ffffffff8103fdd9>{worker_thread+265} <ffffffff8102880b>{default_wake_function+0}
-       <ffffffff8104265f>{keventd_create_kthread+0} <ffffffff8104265f>{keventd_create_kthread+0}
-       <ffffffff81042964>{kthread+212} <ffffffff8100a7a6>{child_rip+8}
-       <ffffffff8104265f>{keventd_create_kthread+0} <ffffffff81218504>{thread_return+0}
-       <ffffffff81042890>{kthread+0} <ffffffff8100a79e>{child_rip+0}
-ata2: command 0xa0 timeout, stat 0xd0 host_stat 0x0       <==== Device busy, PIO.
-ata2: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+You'll have to do better here too... I don't wee why when compiled on
+PPC, this driver should "magically" not clear those bits... At the very
+least, you should test the machine type if you want to do something
+specific to your platform, but first, you'll have to convince Jeff why
+this change has to be done in the first place and if there is a better
+way to handle it.
 
-=> It looks like the device is waiting for something.
+>       /* FIXME: handle MV_HP_ERRATA_50XXB2 errata */
+> =20
+>       tmp =3D readl(mmio + MV_PCI_EXP_ROM_BAR_CTL);
+> +#ifdef CONFIG_PPC
+> +     tmp &=3D ~(1 << 0);
+> +#else       =20
+>       tmp |=3D ~(1 << 0);
+> +#endif
+>       writel(tmp, mmio + MV_PCI_EXP_ROM_BAR_CTL);
+>  }
 
-After comparing the code of 2.6.17-rc4 and current libata upstream, maybe "flush" is the fix:
-The CDB was sent to the ATAPI device by PIO, but not flushed to device.
-So, the device was busy waiting for the CDB to arrive.
+Looks to me like the initial code was bogus, thus the #ifdef shouldn't
+be necessary neither, and even if it was, an ifdef CONFIG_PPC would be
+the wrong approach for what I think should be ovious enough reasons...
 
-Hi Vincent,
-  Could you please try 2.6.17-rc4, both with and without the attached patch,
-to see if the flush works. Thanks.
-
---
-albert
-
---- linux-2.6.17-rc4/drivers/scsi/libata-core.c	2006-05-18 12:59:23.000000000 +0800
-+++ linux-2.6.17-rc4-mod/drivers/scsi/libata-core.c	2006-05-18 13:04:11.000000000 +0800
-@@ -3638,6 +3638,8 @@ static void ata_pio_block(struct ata_por
- 
- 		ata_pio_sector(qc);
- 	}
-+
-+	ata_altstatus(ap); /* flush */
- }
- 
- static void ata_pio_error(struct ata_port *ap)
-@@ -3754,11 +3756,14 @@ static void atapi_packet_task(void *_dat
- 		spin_lock_irqsave(&ap->host_set->lock, flags);
- 		ap->flags &= ~ATA_FLAG_NOINTR;
- 		ata_data_xfer(ap, qc->cdb, qc->dev->cdb_len, 1);
-+		ata_altstatus(ap); /* flush */
-+
- 		if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
- 			ap->ops->bmdma_start(qc);	/* initiate bmdma */
- 		spin_unlock_irqrestore(&ap->host_set->lock, flags);
- 	} else {
- 		ata_data_xfer(ap, qc->cdb, qc->dev->cdb_len, 1);
-+		ata_altstatus(ap); /* flush */
- 
- 		/* PIO commands are handled by polling */
- 		ap->hsm_task_state = HSM_ST;
-
+Ben.
 
 
