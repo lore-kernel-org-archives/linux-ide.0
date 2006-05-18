@@ -1,65 +1,99 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 1/1] libata: use qc->result_tf for temp taskfile  storage
-Date: Thu, 18 May 2006 17:51:10 +0800
-Message-ID: <446C438E.8020708@tw.ibm.com>
-References: <11473487911193-git-send-email-htejun@gmail.com> <446C20A4.7020204@tw.ibm.com> <446C21CF.3020900@gmail.com> <446C27FD.1000400@tw.ibm.com> <446C2C03.2010300@gmail.com>
+Subject: Re: [PATCH 08/11] libata-eh-fw: implement new EH scheduling from
+ PIO
+Date: Thu, 18 May 2006 18:42:48 +0800
+Message-ID: <446C4FA8.5020105@tw.ibm.com>
+References: <1147350444826-git-send-email-htejun@gmail.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:21961 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750778AbWERJvN
+Received: from e35.co.us.ibm.com ([32.97.110.153]:54167 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750984AbWERKmt
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 May 2006 05:51:13 -0400
+	Thu, 18 May 2006 06:42:49 -0400
 Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4I9pC7u030816
-	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 05:51:12 -0400
+	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4IAgnY0001840
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 06:42:49 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4I9pCRI273582
-	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 03:51:12 -0600
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4IAgnRI269758
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 04:42:49 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4I9pBhc004628
-	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 03:51:12 -0600
-In-Reply-To: <446C2C03.2010300@gmail.com>
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4IAgmgC029838
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 04:42:49 -0600
+In-Reply-To: <1147350444826-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-Use qc->result_tf for temp taskfile storage.
+Tejun Heo wrote:
+> PIO executes without holding host_set lock, so it cannot be
+> synchronized using the same mechanism as interrupt driven execution.
+> port_task framework makes sure that EH is not entered until PIO task
+> is flushed, so PIO task can be sure the qc in progress won't go away
+> underneath it.  One thing it cannot be sure of is whether the qc has
+> already been scheduled for EH by another exception condition while
+> host_set lock was released.
+> 
+> This patch makes ata_poll_qc-complete() handle such conditions
+> properly and make it freeze the port if HSM violation is detected
+> during PIO execution.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> ---
+> 
+>  drivers/scsi/libata-core.c |   23 +++++++++++++++++++----
+>  1 files changed, 19 insertions(+), 4 deletions(-)
+> 
+> 52240d1d208615e461c41a5c297f521a8a892f0d
+> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+> index 436ff5b..86d6a7d 100644
+> --- a/drivers/scsi/libata-core.c
+> +++ b/drivers/scsi/libata-core.c
+> @@ -3429,16 +3429,31 @@ skip_map:
+>   *	LOCKING:
+>   *	None.  (grabs host lock)
+>   */
+> -
+>  void ata_poll_qc_complete(struct ata_queued_cmd *qc)
+>  {
+>  	struct ata_port *ap = qc->ap;
+>  	unsigned long flags;
+>  
+>  	spin_lock_irqsave(&ap->host_set->lock, flags);
+> -	ap->flags &= ~ATA_FLAG_NOINTR;
+> -	ata_irq_on(ap);
+> -	ata_qc_complete(qc);
+> +
+> +	if (ap->ops->error_handler) {
+> +		/* EH might have kicked in while host_set lock is released */
+> +		qc = ata_qc_from_tag(ap, qc->tag);
+> +		if (qc) {
+> +			if (!(qc->err_mask & AC_ERR_HSM)) {
+> +				ap->flags &= ~ATA_FLAG_NOINTR;
+> +				ata_irq_on(ap);
+> +				ata_qc_complete(qc);
+> +			} else
+> +				ata_port_freeze(ap);
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
-Hopefully this can both preserve command TF and
-doesn't increase kernel stack usage.
-
-Patch against the upstream branch of libata-dev.
-
---- upstream0/drivers/scsi/libata-core.c	2006-05-16 11:08:49.000000000 +0800
-+++ upstream3/drivers/scsi/libata-core.c	2006-05-18 17:42:49.000000000 +0800
-@@ -3862,10 +3862,16 @@ static void atapi_pio_bytes(struct ata_q
- 	unsigned int ireason, bc_lo, bc_hi, bytes;
- 	int i_write, do_write = (qc->tf.flags & ATA_TFLAG_WRITE) ? 1 : 0;
- 
--	ap->ops->tf_read(ap, &qc->tf);
--	ireason = qc->tf.nsect;
--	bc_lo = qc->tf.lbam;
--	bc_hi = qc->tf.lbah;
-+	/* Abuse qc->result_tf for temp storage of intermediate TF
-+	 * here to save some kernel stack usage.
-+	 * For normal completion, qc->result_tf is not relevant. For
-+	 * error, qc->result_tf is later overwritten by ata_qc_complete().
-+	 * So, the correctness of qc->result_tf is not affected.
-+	 */
-+	ap->ops->tf_read(ap, &qc->result_tf);
-+	ireason = qc->result_tf.nsect;
-+	bc_lo = qc->result_tf.lbam;
-+	bc_hi = qc->result_tf.lbah;
- 	bytes = (bc_hi << 8) | bc_lo;
- 
- 	/* shall be cleared to zero, indicating xfer of data */
+I don't quite understand here. For the AC_ERR_HSM error, how does the
+EH get triggered after ata_port_freeze()? Do we wait until time out?
 
 
+
+> +		}
+> +	} else {
+> +		/* old EH */
+> +		ap->flags &= ~ATA_FLAG_NOINTR;
+> +		ata_irq_on(ap);
+> +		ata_qc_complete(qc);
+> +	}
+> +
+>  	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+>  }
+>  
 
 
