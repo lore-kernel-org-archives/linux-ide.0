@@ -1,80 +1,192 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: RE: [PATCH/2.6.17-rc4 10/10]  bugs fix for marvell SATA on powerp
-	c pl atform
-Date: Thu, 18 May 2006 17:02:14 +1000
-Message-ID: <1147935734.17679.93.camel@localhost.localdomain>
-References: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH 13/22] libata: implement qc->result_tf
+Date: Thu, 18 May 2006 15:10:29 +0800
+Message-ID: <446C1DE5.5080000@tw.ibm.com>
+References: <11473487911193-git-send-email-htejun@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:61570 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1751286AbWERHCd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 03:02:33 -0400
-In-Reply-To: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:57813 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751306AbWERHKz
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 May 2006 03:10:55 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4I7AWt5010854
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 03:10:32 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4I7AWRI250682
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 01:10:32 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4I7AVWR030375
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 01:10:32 -0600
+In-Reply-To: <11473487911193-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zang Roy-r61911 <tie-fei.zang@freescale.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>, Alexandre.Bounine@tundra.com, Yang Xin-Xin-r48390 <Xin-Xin.Yang@freescale.com>, Kumar Gala <galak@kernel.crashing.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-On Thu, 2006-05-18 at 12:03 +0800, Zang Roy-r61911 wrote:
-> -----Original Message-----
-> From: Kumar Gala [mailto:galak@kernel.crashing.org]
-> Sent: 2006=E5=B9=B45=E6=9C=8817=E6=97=A5 21:28
-> To: Zang Roy-r61911
-> Cc: Paul Mackerras; linuxppc-dev list; Alexandre.Bounine@tundra.com; =
-Yang Xin-Xin-r48390
-> Subject: Re: [PATCH/2.6.17-rc4 10/10] bugs fix for marvell SATA on po=
-werpc pl atform
-
-Copying here the comments I already made so Jeff gets them...
-
-> @@ -1032,6 +1032,9 @@ static inline void mv_crqb_pack_cmd(u16=20
+Tejun Heo wrote:
+> Add qc->result_tf and ATA_QCFLAG_RESULT_TF.  This moves the
+> responsibility of loading result TF from post-compltion path to qc
+> execution path.  qc->result_tf is loaded if explicitly requested or
+> the qc failsa.  This allows more efficient completion implementation
+> and correct handling of result TF for controllers which don't have
+> global TF representation such as sil3124/32.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> ---
+> 
+>  drivers/scsi/libata-core.c |    4 ++--
+>  drivers/scsi/libata-scsi.c |   18 +++++++-----------
+>  include/linux/libata.h     |   16 ++++++++++++++--
+>  3 files changed, 23 insertions(+), 15 deletions(-)
+> 
+> 46a93ec2cb1124f507e0cad7dcb65794a15af844
+> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+> index 464fd46..4cb7828 100644
+> --- a/drivers/scsi/libata-core.c
+> +++ b/drivers/scsi/libata-core.c
+> @@ -955,7 +955,6 @@ void ata_qc_complete_internal(struct ata
 >  {
->       *cmdw =3D data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
->               (last ? CRQB_CMD_LAST : 0);
-> +#ifdef CONFIG_PPC
-> +     *cmdw =3D cpu_to_le16(*cmdw);
-> +#endif
+>  	struct completion *waiting = qc->private_data;
+>  
+> -	qc->ap->ops->tf_read(qc->ap, &qc->tf);
+>  	complete(waiting);
 >  }
-
-Why an ifdef here ? The cpu_to_le16 should probably be unconditional.
-And even if for some weird reason you wanted to ifdef it, why PPC ? and
-what about other BE architectures ?
-=20
->  /**
-> @@ -1567,13 +1570,18 @@ static void mv5_read_preamp(struct mv_ho
->  static void mv5_enable_leds(struct mv_host_priv *hpriv, void __iomem
-*mmio)
+>  
+> @@ -997,6 +996,7 @@ unsigned ata_exec_internal(struct ata_po
+>  	qc->tf = *tf;
+>  	if (cdb)
+>  		memcpy(qc->cdb, cdb, ATAPI_CDB_LEN);
+> +	qc->flags |= ATA_QCFLAG_RESULT_TF;
+>  	qc->dma_dir = dma_dir;
+>  	if (dma_dir != DMA_NONE) {
+>  		ata_sg_init_one(qc, buf, buflen);
+> @@ -1034,7 +1034,7 @@ unsigned ata_exec_internal(struct ata_po
+>  	/* finish up */
+>  	spin_lock_irqsave(&ap->host_set->lock, flags);
+>  
+> -	*tf = qc->tf;
+> +	*tf = qc->result_tf;
+>  	err_mask = qc->err_mask;
+>  
+>  	ata_qc_free(qc);
+> diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+> index b0c83c2..ce90b63 100644
+> --- a/drivers/scsi/libata-scsi.c
+> +++ b/drivers/scsi/libata-scsi.c
+> @@ -537,7 +537,7 @@ void ata_to_sense_error(unsigned id, u8 
+>  void ata_gen_ata_desc_sense(struct ata_queued_cmd *qc)
 >  {
->       u32 tmp;
+>  	struct scsi_cmnd *cmd = qc->scsicmd;
+> -	struct ata_taskfile *tf = &qc->tf;
+> +	struct ata_taskfile *tf = &qc->result_tf;
+>  	unsigned char *sb = cmd->sense_buffer;
+>  	unsigned char *desc = sb + 8;
+>  
+> @@ -608,7 +608,7 @@ void ata_gen_ata_desc_sense(struct ata_q
+>  void ata_gen_fixed_sense(struct ata_queued_cmd *qc)
+>  {
+>  	struct scsi_cmnd *cmd = qc->scsicmd;
+> -	struct ata_taskfile *tf = &qc->tf;
+> +	struct ata_taskfile *tf = &qc->result_tf;
+>  	unsigned char *sb = cmd->sense_buffer;
+>  
+>  	memset(sb, 0, SCSI_SENSE_BUFFERSIZE);
+> @@ -1199,14 +1199,11 @@ static void ata_scsi_qc_complete(struct 
+>  	 */
+>  	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
+>   	    ((cdb[2] & 0x20) || need_sense)) {
+> -		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+>   		ata_gen_ata_desc_sense(qc);
+>  	} else {
+>  		if (!need_sense) {
+>  			cmd->result = SAM_STAT_GOOD;
+>  		} else {
+> -			qc->ap->ops->tf_read(qc->ap, &qc->tf);
 > -
-> +#ifndef CONFIG_PPC
->       writel(0, mmio + MV_GPIO_PORT_CTL);
-> +#endif
+>  			/* TODO: decide which descriptor format to use
+>  			 * for 48b LBA devices and call that here
+>  			 * instead of the fixed desc, which is only
+> @@ -1217,10 +1214,8 @@ static void ata_scsi_qc_complete(struct 
+>  		}
+>  	}
+>  
+> -	if (need_sense) {
+> -		/* The ata_gen_..._sense routines fill in tf */
+> -		ata_dump_status(qc->ap->id, &qc->tf);
+> -	}
+> +	if (need_sense)
+> +		ata_dump_status(qc->ap->id, &qc->result_tf);
+>  
+>  	qc->scsidone(cmd);
+>  
+> @@ -2004,7 +1999,6 @@ static void atapi_sense_complete(struct 
+>  		 * a sense descriptors, since that's only
+>  		 * correct for ATA, not ATAPI
+>  		 */
+> -		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+>  		ata_gen_ata_desc_sense(qc);
+>  	}
+>  
+> @@ -2080,7 +2074,6 @@ static void atapi_qc_complete(struct ata
+>  		 * a sense descriptors, since that's only
+>  		 * correct for ATA, not ATAPI
+>  		 */
+> -		qc->ap->ops->tf_read(qc->ap, &qc->tf);
+>  		ata_gen_ata_desc_sense(qc);
+>  	} else {
+>  		u8 *scsicmd = cmd->cmnd;
+> @@ -2361,6 +2354,9 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+>  	 */
+>  	qc->nsect = cmd->bufflen / ATA_SECT_SIZE;
+>  
+> +	/* request result TF */
+> +	qc->flags |= ATA_QCFLAG_RESULT_TF;
+> +
+>  	return 0;
+>  
+>   invalid_fld:
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index a117ca2..3d15c00 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -162,7 +162,9 @@ enum {
+>  	ATA_QCFLAG_SINGLE	= (1 << 2), /* no s/g, just a single buffer */
+>  	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
+>  	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
+> -	ATA_QCFLAG_EH_SCHEDULED = (1 << 4), /* EH scheduled */
+> +	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
+> +
+> +	ATA_QCFLAG_EH_SCHEDULED = (1 << 16), /* EH scheduled */
+>  
+>  	/* host set flags */
+>  	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host_set only */
+> @@ -343,7 +345,7 @@ struct ata_queued_cmd {
+>  	struct scatterlist	*__sg;
+>  
+>  	unsigned int		err_mask;
+> -
+> +	struct ata_taskfile	result_tf;
+>  	ata_qc_cb_t		complete_fn;
+>  
+>  	void			*private_data;
+> @@ -824,6 +826,10 @@ static inline void ata_qc_reinit(struct 
+>  	qc->err_mask = 0;
+>  
+>  	ata_tf_init(qc->ap, &qc->tf, qc->dev->devno);
+> +
+> +	/* init result_tf such that it indicates normal completion */
+> +	qc->result_tf.command = ATA_DRDY;
 
-You'll have to do better here too... I don't wee why when compiled on
-PPC, this driver should "magically" not clear those bits... At the very
-least, you should test the machine type if you want to do something
-specific to your platform, but first, you'll have to convince Jeff why
-this change has to be done in the first place and if there is a better
-way to handle it.
+Normally 0x50 is seen with normal completion, not 0x40.
+Do we really have to fake qc->result_tf here? Maybe just keep it zero or garbage
+is good enough: if err_mask == 0 and ATA_QCFLAG_RESULT_TF is not set, qc->result_tf
+shouldn't be used anyway.
 
->       /* FIXME: handle MV_HP_ERRATA_50XXB2 errata */
-> =20
->       tmp =3D readl(mmio + MV_PCI_EXP_ROM_BAR_CTL);
-> +#ifdef CONFIG_PPC
-> +     tmp &=3D ~(1 << 0);
-> +#else       =20
->       tmp |=3D ~(1 << 0);
-> +#endif
->       writel(tmp, mmio + MV_PCI_EXP_ROM_BAR_CTL);
->  }
-
-Looks to me like the initial code was bogus, thus the #ifdef shouldn't
-be necessary neither, and even if it was, an ifdef CONFIG_PPC would be
-the wrong approach for what I think should be ovious enough reasons...
-
-Ben.
-
+--
+albert
 
