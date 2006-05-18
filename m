@@ -1,99 +1,50 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 08/11] libata-eh-fw: implement new EH scheduling from
- PIO
-Date: Thu, 18 May 2006 18:42:48 +0800
-Message-ID: <446C4FA8.5020105@tw.ibm.com>
-References: <1147350444826-git-send-email-htejun@gmail.com>
-Reply-To: albertl@mail.com
+From: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
+Subject: RE: ASUS A8V Deluxe, x86_64
+Date: Thu, 18 May 2006 06:57:22 -0400
+Message-ID: <8E8F647D7835334B985D069AE964A4F7024643@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:54167 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750984AbWERKmt
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 May 2006 06:42:49 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4IAgnY0001840
-	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 06:42:49 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4IAgnRI269758
-	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 04:42:49 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4IAgmgC029838
-	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 04:42:49 -0600
-In-Reply-To: <1147350444826-git-send-email-htejun@gmail.com>
+Received: from fwstl1-1.wul.qc.ec.gc.ca ([205.211.132.24]:61795 "EHLO
+	ecstlaurent8.quebec.int.ec.gc.ca") by vger.kernel.org with ESMTP
+	id S1751227AbWERK5Y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 06:57:24 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: albertl@mail.com, Tejun Heo <htejun@gmail.com>
+Cc: Andi Kleen <ak@suse.de>, Marko Macek <Marko.Macek@gmx.net>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, =?iso-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
 
-Tejun Heo wrote:
-> PIO executes without holding host_set lock, so it cannot be
-> synchronized using the same mechanism as interrupt driven execution.
-> port_task framework makes sure that EH is not entered until PIO task
-> is flushed, so PIO task can be sure the qc in progress won't go away
-> underneath it.  One thing it cannot be sure of is whether the qc has
-> already been scheduled for EH by another exception condition while
-> host_set lock was released.
+> >> sd 0:0:0:0: Attached scsi disk sda
+> >>   Vendor: PLEXTOR   Model: DVDR   PX-716A    Rev: 1.09
+> >>   Type:   CD-ROM                             ANSI SCSI revision: 05
+> > 
+> > Above and the detailed log too indicate that everything went smooth 
+> > the first time around.  Albert, do you have any ideas?  Could it be 
+> > something related to irq-pio?
+
+You cannot image how happy I was :)
+
+ 
+> I've checked Vincent't dmesg for 2.6.17-rc0 again.
+> (http://bugzilla.kernel.org/show_bug.cgi?id=5533)
+> (http://bugzilla.kernel.org/attachment.cgi?id=7700&action=view)
 > 
-> This patch makes ata_poll_qc-complete() handle such conditions
-> properly and make it freeze the port if HSM violation is detected
-> during PIO execution.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> ---
-> 
->  drivers/scsi/libata-core.c |   23 +++++++++++++++++++----
->  1 files changed, 19 insertions(+), 4 deletions(-)
-> 
-> 52240d1d208615e461c41a5c297f521a8a892f0d
-> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-> index 436ff5b..86d6a7d 100644
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -3429,16 +3429,31 @@ skip_map:
->   *	LOCKING:
->   *	None.  (grabs host lock)
->   */
-> -
->  void ata_poll_qc_complete(struct ata_queued_cmd *qc)
->  {
->  	struct ata_port *ap = qc->ap;
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(&ap->host_set->lock, flags);
-> -	ap->flags &= ~ATA_FLAG_NOINTR;
-> -	ata_irq_on(ap);
-> -	ata_qc_complete(qc);
-> +
-> +	if (ap->ops->error_handler) {
-> +		/* EH might have kicked in while host_set lock is released */
-> +		qc = ata_qc_from_tag(ap, qc->tag);
-> +		if (qc) {
-> +			if (!(qc->err_mask & AC_ERR_HSM)) {
-> +				ap->flags &= ~ATA_FLAG_NOINTR;
-> +				ata_irq_on(ap);
-> +				ata_qc_complete(qc);
-> +			} else
-> +				ata_port_freeze(ap);
+> It seems DMA commands are also affected by this problem, not 
+> PIO unique.
 
-I don't quite understand here. For the AC_ERR_HSM error, how does the
-EH get triggered after ata_port_freeze()? Do we wait until time out?
+> After comparing the code of 2.6.17-rc4 and current libata 
+> upstream, maybe "flush" is the fix:
+> The CDB was sent to the ATAPI device by PIO, but not flushed 
+> to device.
+> So, the device was busy waiting for the CDB to arrive.
+ 
+> Hi Vincent,
+>   Could you please try 2.6.17-rc4, both with and without the 
+> attached patch, to see if the flush works. Thanks.
 
+On a pure 2.6.17-rc4 without upstream libata patches I presume?  Sure I will tonight.
+I'll forward this patch to my home email address and come back to you.
 
-
-> +		}
-> +	} else {
-> +		/* old EH */
-> +		ap->flags &= ~ATA_FLAG_NOINTR;
-> +		ata_irq_on(ap);
-> +		ata_qc_complete(qc);
-> +	}
-> +
->  	spin_unlock_irqrestore(&ap->host_set->lock, flags);
->  }
->  
-
-
+- vin
