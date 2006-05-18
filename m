@@ -1,63 +1,77 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [RFT] major libata update
-Date: Thu, 18 May 2006 15:37:22 +0200
-Message-ID: <20060518133722.GQ4197@suse.de>
-References: <446AAA33.5010800@gmail.com> <446B8F25.3040907@pobox.com> <446B8FC6.5040009@garzik.org> <446B9AA7.4000305@gmail.com> <446B9C1A.1060106@rtr.ca> <446BEB11.4030703@emc.com> <446BE97A.2080303@gmail.com> <446C6163.7010002@emc.com> <446C6DF7.6030202@pobox.com> <446C751A.20000@emc.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH/2.6.17-rc4 10/10]  bugs fix for marvell SATA on powerp
+ c pl atform
+Date: Thu, 18 May 2006 11:26:17 -0400
+Message-ID: <446C9219.4080300@pobox.com>
+References: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net> <1147935734.17679.93.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:18734 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751034AbWERNhm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 09:37:42 -0400
-Content-Disposition: inline
-In-Reply-To: <446C751A.20000@emc.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:54402 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751366AbWERP0X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 11:26:23 -0400
+In-Reply-To: <1147935734.17679.93.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: Mark Lord <mlord@pobox.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Zang Roy-r61911 <tie-fei.zang@freescale.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>, Alexandre.Bounine@tundra.com, Yang Xin-Xin-r48390 <Xin-Xin.Yang@freescale.com>, Kumar Gala <galak@kernel.crashing.org>
 
-On Thu, May 18 2006, Ric Wheeler wrote:
-> 
-> Mark Lord wrote:
-> >>
-> >>A different discussion is what we should do or log when we detect this 
-> >>- i.e., write cache enabled and barrier ops not supported (disable 
-> >>write cache?  log a scarier message? ignore it?).  Today's behavior is 
-> >>probably what most home users want (run as fast as I can, absolute 
-> >>data integrity over power failures not a big deal) but not the right 
-> >>behavior for critical data (i.e., forget performance, make sure my 
-> >>data is always safe ). 
-> >
-> >Yes, 99.99% of Linux users would really complain like mad
-> >if the *kernel* took over the *policy* decision of disabling
-> >write-caching.  The long-term kernel rule has always been,
-> >leave *policy* to user-space.
-> >
-> >Cheers
-> 
-> Agreed - I think that only challenge is for us to make sure that the 
-> messages in the upstream kernel are informative enough to let people know 
-> what this means and some level of their exposure.
-> 
-> Maybe the "enterprise" distro install programs would want to treat write 
-> barrier like we do support for 3D video card acceleration with a good 
->  overview & let the user configure the system as best suits their needs.  I 
-> think that it is still quite difficult to get right today for most casual 
-> users...
+Benjamin Herrenschmidt wrote:
+> On Thu, 2006-05-18 at 12:03 +0800, Zang Roy-r61911 wrote:
+>> -----Original Message-----
+>> From: Kumar Gala [mailto:galak@kernel.crashing.org]
+>> Sent: 2006=E5=B9=B45=E6=9C=8817=E6=97=A5 21:28
+>> To: Zang Roy-r61911
+>> Cc: Paul Mackerras; linuxppc-dev list; Alexandre.Bounine@tundra.com;=
+ Yang Xin-Xin-r48390
+>> Subject: Re: [PATCH/2.6.17-rc4 10/10] bugs fix for marvell SATA on p=
+owerpc pl atform
+>=20
+> Copying here the comments I already made so Jeff gets them...
+>=20
+>> @@ -1032,6 +1032,9 @@ static inline void mv_crqb_pack_cmd(u16=20
+>>  {
+>>       *cmdw =3D data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
+>>               (last ? CRQB_CMD_LAST : 0);
+>> +#ifdef CONFIG_PPC
+>> +     *cmdw =3D cpu_to_le16(*cmdw);
+>> +#endif
+>>  }
+>=20
+> Why an ifdef here ? The cpu_to_le16 should probably be unconditional.
+> And even if for some weird reason you wanted to ifdef it, why PPC ? a=
+nd
+> what about other BE architectures ?
+> =20
+>>  /**
+>> @@ -1567,13 +1570,18 @@ static void mv5_read_preamp(struct mv_ho
+>>  static void mv5_enable_leds(struct mv_host_priv *hpriv, void __iome=
+m
+> *mmio)
+>>  {
+>>       u32 tmp;
+>> -
+>> +#ifndef CONFIG_PPC
+>>       writel(0, mmio + MV_GPIO_PORT_CTL);
+>> +#endif
+>=20
+> You'll have to do better here too... I don't wee why when compiled on
+> PPC, this driver should "magically" not clear those bits... At the ve=
+ry
+> least, you should test the machine type if you want to do something
+> specific to your platform, but first, you'll have to convince Jeff wh=
+y
+> this change has to be done in the first place and if there is a bette=
+r
+> way to handle it.
 
-Yep certainly something needs to be done, it's currently far too
-unlikely that:
+Correct...  it does seem some bugs were found, but #ifdef powerpc is=20
+certainly out of the question.  We want the driver to work without=20
+ifdefs on all platforms.
 
-a) the user even sees the barrier message from the file system, telling
-   them that the fs turned it off
+	Jeff
 
-and
 
-b) he/she knows the implications of such a message.
-
-This is data integrity after all, we probably should be a little more
-careful.
-
--- 
-Jens Axboe
 
