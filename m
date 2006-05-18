@@ -1,75 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH/2.6.17-rc4 10/10]  bugs fix for marvell SATA on powerp
- c pl atform
-Date: Thu, 18 May 2006 11:26:17 -0400
-Message-ID: <446C9219.4080300@pobox.com>
-References: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net> <1147935734.17679.93.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
+ stable kernel
+Date: Thu, 18 May 2006 11:27:38 -0400
+Message-ID: <446C926A.7020404@garzik.org>
+References: <20060512132437.GB4219@htj.dyndns.org>	 <e4coc8$onk$1@sea.gmane.org> <4469E8CF.9030506@garzik.org>	 <4469EC4A.30908@gmx.de> <1147829339.7273.97.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54402 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751366AbWERP0X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 11:26:23 -0400
-In-Reply-To: <1147935734.17679.93.camel@localhost.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:62850 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932066AbWERP1o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 11:27:44 -0400
+In-Reply-To: <1147829339.7273.97.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Zang Roy-r61911 <tie-fei.zang@freescale.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>, Alexandre.Bounine@tundra.com, Yang Xin-Xin-r48390 <Xin-Xin.Yang@freescale.com>, Kumar Gala <galak@kernel.crashing.org>
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: Michael Schierl <schierlm@gmx.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Benjamin Herrenschmidt wrote:
-> On Thu, 2006-05-18 at 12:03 +0800, Zang Roy-r61911 wrote:
->> -----Original Message-----
->> From: Kumar Gala [mailto:galak@kernel.crashing.org]
->> Sent: 2006=E5=B9=B45=E6=9C=8817=E6=97=A5 21:28
->> To: Zang Roy-r61911
->> Cc: Paul Mackerras; linuxppc-dev list; Alexandre.Bounine@tundra.com;=
- Yang Xin-Xin-r48390
->> Subject: Re: [PATCH/2.6.17-rc4 10/10] bugs fix for marvell SATA on p=
-owerpc pl atform
->=20
-> Copying here the comments I already made so Jeff gets them...
->=20
->> @@ -1032,6 +1032,9 @@ static inline void mv_crqb_pack_cmd(u16=20
->>  {
->>       *cmdw =3D data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
->>               (last ? CRQB_CMD_LAST : 0);
->> +#ifdef CONFIG_PPC
->> +     *cmdw =3D cpu_to_le16(*cmdw);
->> +#endif
->>  }
->=20
-> Why an ifdef here ? The cpu_to_le16 should probably be unconditional.
-> And even if for some weird reason you wanted to ifdef it, why PPC ? a=
-nd
-> what about other BE architectures ?
-> =20
->>  /**
->> @@ -1567,13 +1570,18 @@ static void mv5_read_preamp(struct mv_ho
->>  static void mv5_enable_leds(struct mv_host_priv *hpriv, void __iome=
-m
-> *mmio)
->>  {
->>       u32 tmp;
->> -
->> +#ifndef CONFIG_PPC
->>       writel(0, mmio + MV_GPIO_PORT_CTL);
->> +#endif
->=20
-> You'll have to do better here too... I don't wee why when compiled on
-> PPC, this driver should "magically" not clear those bits... At the ve=
-ry
-> least, you should test the machine type if you want to do something
-> specific to your platform, but first, you'll have to convince Jeff wh=
-y
-> this change has to be done in the first place and if there is a bette=
-r
-> way to handle it.
+zhao, forrest wrote:
+> On Tue, 2006-05-16 at 17:14 +0200, Michael Schierl wrote:
+>> hmm. ok. Hannes' patch was the one in http://lkml.org/lkml/2006/3/6/47 ?
+>>
+>> I never found a kernel where I could apply that one and still compile
+>> without errors :(
+>>
+>> I am no C guru, so I had no success to fix this patch without even
+>> knowing where to apply against... (and I don't know anything about
+>> kernel programming or even ACHI low-level programming).
+>>
+>> Is there a newer version available of that patch somewhere?
+>>
+>> And - what SATA ACPI patches?
+>>
+>> I have quite alot of patches related to sata and/or acpi (collected from
+>> different mailing lists) here on hard disk but don't know which ones are
+>> broken, outdated, etc. Most only apply on a 2.6.15 or 2.6.14-rc kernel...
+>>
+>> If more recent patches are only available via git, I'd need some good
+>> GIT tutorial first...
+>>
+>> TIA, and sorry for stealing your time,
+>>
+>> Michael
+> Michael,
+> 
+> I ported a patch from OpenSUSE for AHCI suspend/resume. You may find the
+> patch at:
+> http://marc.theaimsgroup.com/?l=linux-ide&m=114774543416039&w=2
+> 
+> Jeff,
+> If Michael have a successful AHCI suspend/resume with this patch, I'm
+> glad to port the patch to current libata-dev #upstream for the second
+> time to push it into stock kernel. How do you think?
 
-Correct...  it does seem some bugs were found, but #ifdef powerpc is=20
-certainly out of the question.  We want the driver to work without=20
-ifdefs on all platforms.
+All reasonable patches accepted...
 
 	Jeff
 
