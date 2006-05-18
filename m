@@ -1,35 +1,43 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: About the naming of ata_drive_probe_reset()
-Date: Thu, 18 May 2006 11:00:32 +0800
-Message-ID: <446BE350.5000504@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Wed, 17 May 2006 20:04:55 -0700 (PDT)
+Message-ID: <20060518030455.62177.qmail@web31814.mail.mud.yahoo.com>
+References: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:61133 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750718AbWERDAe
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 May 2006 23:00:34 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4I30TX5003350
-	for <linux-ide@vger.kernel.org>; Wed, 17 May 2006 23:00:29 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4I30TBl192384
-	for <linux-ide@vger.kernel.org>; Wed, 17 May 2006 21:00:29 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4I30TeP024627
-	for <linux-ide@vger.kernel.org>; Wed, 17 May 2006 21:00:29 -0600
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Hi Tejun,
+--- Linus Torvalds <torvalds@osdl.org> wrote:
+> On Wed, 17 May 2006, James Bottomley wrote:
+> > 
+> > This is one of the questions.  Currently block has no concept of "host".
+> 
+> That's good. 
+> 
+> I don't understand why you'd ever _want_ a concept of "host". The whole 
+> concept is broken and unnecessary. At no point should you even need to map 
+> from request to host, but if you do, you don't need to introduce any 
+> generic "host" notion, you can do it easily per-queue.
 
-The ata_drive_probe_reset() is not drive-specific. 
-Actually what got reset is the port. (I guess the "drive" doesn't mean device here.)
-Maybe something like ata_port_probe_reset() or ata_do_probe_reset() is less ambiguous?
+You are correct.  The concept of "host" should NOT be exported to
+higher than PCI/SCSI* level.
 
--- albert
+* See below.
+
+> The whole fixation with "host" in the SCSI layer is a bug, I think. What 
+> does it matter, really? And when do you actually have a "request_queue" 
+> entry without already knowing which controller it is connected to (ie why 
+> do you even need that mapping)?
+
+Not quite, the concept of a "host" is needed as it is the "host" which
+provides "SCSI ports" to the "SCSI domain".
+
+     Luben
 
