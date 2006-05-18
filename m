@@ -1,122 +1,143 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [PATCH/2.6.17-rc4 10/10]  bugs fix for marvell SATA on powerp
- c pl atform
-Date: Thu, 18 May 2006 08:01:34 -0400
-Message-ID: <446C621E.9060502@emc.com>
-References: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [RFT] major libata update
+Date: Thu, 18 May 2006 19:24:07 +0800
+Message-ID: <446C5957.9040404@tw.ibm.com>
+References: <20060515170006.GA29555@havoc.gtf.org>	<20060516190507.35c1260f.akpm@osdl.org>	<446AAB3C.6050303@gmail.com> <20060516215610.2b822c00.akpm@osdl.org> <446AB12C.10001@gmail.com> <446AC418.4070704@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([168.159.213.200]:38767 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1751252AbWERLBy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 May 2006 07:01:54 -0400
-In-Reply-To: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:23724 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750713AbWERLYN
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 May 2006 07:24:13 -0400
+In-Reply-To: <446AC418.4070704@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zang Roy-r61911 <tie-fei.zang@freescale.com>, Mark Lord <mlord@pobox.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>, Alexandre.Bounine@tundra.com, Yang Xin-Xin-r48390 <Xin-Xin.Yang@freescale.com>, Kumar Gala <galak@kernel.crashing.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andrew Morton <akpm@osdl.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-Mark Lord has been actively working on the sata_mv driver recently,
-
-ric
-
-
-Zang Roy-r61911 wrote:
-
->-----Original Message-----
->From: Kumar Gala [mailto:galak@kernel.crashing.org]
->Sent: 2006=E5=B9=B45=E6=9C=8817=E6=97=A5 21:28
->To: Zang Roy-r61911
->Cc: Paul Mackerras; linuxppc-dev list; Alexandre.Bounine@tundra.com; Y=
-ang Xin-Xin-r48390
->Subject: Re: [PATCH/2.6.17-rc4 10/10] bugs fix for marvell SATA on pow=
-erpc pl atform
->
->
->
->On May 17, 2006, at 5:14 AM, Zang Roy-r61911 wrote:
->
-> =20
->
->>Fix Marvell SATA driver bugs on PowerPC platform:
->>SATA device can't work for the problem on little-endian mode.
->>U-Boot can't find SATA device after kernel reboots.
+Tejun Heo wrote:
+> Tejun Heo wrote:
+> 
+>> Andrew Morton wrote:
 >>
->>Signed-off-by: Hongjun cheng	<hong-jun.chen@reescale.com>
->>Signed-off-by: Roy Zang		<tie-fei.zang@freescale.com>
->>
->>   =20
->>
->>>From nobody Mon Sep 17 00:00:00 2001
->>>     =20
+>>> No.  In fact, it doesn't even work with the 2.6.17-rc4-mm1 lineup
+>>> plus the
+>>> latest git-libata-all.  It needs this tweak:
 >>>
->>From: roy zang <tie-fei.zang@freescale.com>
->>Date: Tue May 16 15:25:23 2006 +0800
->>Subject: [PATCH] Fix bugs on powerpc platform for mv sata driver
->>   =20
->>
->
->This needs to go to Jeff Garzik as SATA driver maintainer.
->
->- kumar
->
-> =20
->
->> drivers/scsi/sata_mv.c |   10 +++++++++-
->> 1 files changed, 9 insertions(+), 1 deletions(-)
->>
->>d82ac19d259f8487a31105eaf844a93cbd9008e8
->>diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
->>index d5fdcb9..4166422 100644
->>--- a/drivers/scsi/sata_mv.c
->>+++ b/drivers/scsi/sata_mv.c
->>@@ -1032,6 +1032,9 @@ static inline void mv_crqb_pack_cmd(u16
->> {
->> 	*cmdw =3D data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
->> 		(last ? CRQB_CMD_LAST : 0);
->>+#ifdef CONFIG_PPC
->>+	*cmdw =3D cpu_to_le16(*cmdw);
->>+#endif
->> }
->>
->> /**
->>@@ -1567,13 +1570,18 @@ static void mv5_read_preamp(struct mv_ho
->> static void mv5_enable_leds(struct mv_host_priv *hpriv, void =20
->>__iomem *mmio)
->> {
->> 	u32 tmp;
->>-
->>+#ifndef CONFIG_PPC
->> 	writel(0, mmio + MV_GPIO_PORT_CTL);
->>+#endif
->>
->> 	/* FIXME: handle MV_HP_ERRATA_50XXB2 errata */
->>
->> 	tmp =3D readl(mmio + MV_PCI_EXP_ROM_BAR_CTL);
->>+#ifdef CONFIG_PPC
->>+	tmp &=3D ~(1 << 0);
->>+#else=09
->> 	tmp |=3D ~(1 << 0);
->>+#endif
->> 	writel(tmp, mmio + MV_PCI_EXP_ROM_BAR_CTL);
->> }
->>
->>--=20
->>1.3.0
->>_______________________________________________
->>Linuxppc-dev mailing list
->>Linuxppc-dev@ozlabs.org
->>https://ozlabs.org/mailman/listinfo/linuxppc-dev
->>   =20
->>
->-
->To unsubscribe from this list: send the line "unsubscribe linux-kernel=
-" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
-> =20
->
+>>> --- devel/drivers/scsi/ata_piix.c~2.6.17-rc4-mm1-ich8-fix   
+>>> 2006-05-16 18:36:12.000000000 -0700
+>>> +++ devel-akpm/drivers/scsi/ata_piix.c    2006-05-16
+>>> 18:36:12.000000000 -0700
+>>> @@ -542,6 +542,14 @@ static unsigned int piix_sata_probe (str
+>>>          port = map[base + i];
+>>>          if (port < 0)
+>>>              continue;
+>>> +        if (ap->flags & PIIX_FLAG_AHCI) {
+>>> +            /* FIXME: Port status of AHCI controllers
+>>> +             * should be accessed in AHCI memory space.  */
+>>> +            if (pcs & 1 << port)
+>>> +                present_mask |= 1 << i;
+>>> +            else
+>>> +                pcs &= ~(1 << port);
+>>> +        }
+>>>          if (ap->flags & PIIX_FLAG_IGNORE_PCS || pcs & 1 << (4 + port))
+>>>              present_mask |= 1 << i;
+>>>          else
+> 
+> 
+> The above patch doesn't do anything.  The only effect it has is setting
+> present_mask according to enabled bits instead of present bits.  I think
+> this patch might have helped with probing before the MAP tables for
+> ICH6/7 are fixed.
+> 
+> I've done further testing.
+> 
+> * Symptom
+> 
+> ata_piix tries to probe non-existing slave device resulting in timeouts
+> during boot probing.  This problem is aggravated by new probing updates
+> as it retries two more times before giving up.
+> 
+> * Test results
+> 
+> PATA never has any problem with device detection via signature.  Only
+> SATA is affected and interestingly only ATAPI device.  The following is
+> the test result on my machine (ICH7R + PX716SA).
+> 
+>   1. combined mode : MAP [IDE IDE P1 P3]
+> 
+>     P1        P3
+>     -----------------------------
+>     PX716-SA    empty        P3 ghosted as ATAPI device
+>     empty        PX716-SA    okay
+>     PX716-SA    HDD        okay
+>     HDD        PX716-SA    okay
+> 
+>   2. SATA-only mode : MAP [P0 P2 P1 P3]
+> 
+>     P0        P2
+>     -----------------------------
+>     PX716-SA    empty        P2 ghosted as ATAPI device
+>     empty        PX716-SA    okay
+>     PX716-SA    HDD        okay
+>     HDD        PX716-SA    okay
+> 
+>     P1        P3
+>     -----------------------------
+>     Identical to #1.
+> 
+> To sum up, it happens when the master slot is occupied by an ATAPI
+> device and the corresponding slave slot is empty.  The slave slot
+> reports ATAPI signature (probably duplicated from the master) and passes
+> all legacy presence test thus resulting in timeout on IDENTIFY.
+> 
+
+This problem was seen with PATA Promise 20275 adapter + IBM DVD-RAM drive.
+Single master device configuration, no slave device.
+The master device acts as slave and creates a phantom slave device.
+(http://marc.theaimsgroup.com/?l=linux-ide&m=113151315602979&w=2)
+
+The problem was later fixed by Tejun's ata_exec_internal() patch:
+(http://marc.theaimsgroup.com/?l=linux-ide&m=113455450809405&w=2)
+After the patch, the phantom device is finally detected by ata_dev_identify().
+
+Libata uses polling PIO for IDENTIFY DEVICE before this major update.
+The polling PIO finds something wrong when it reads a 0x00 device status.
+So, the phantom device is detected quite quickly.
+
+With irq-driven PIO, maybe the phantom device is only detected after time-out.
+So it takes longer (30 secs) to detect the phantom device.
+
+No good idea how to fix this. Maybe read more registers to see whether the
+phantom device can be detected early before the IDENTIFY DEVICE.
+
+--
+albert
+
+
+> In all above cases, the PCS register reported correct presence masks.
+> 
+> * Proposed solution
+> 
+> It seems that the only solution is to make use of the PCS presence bits
+> somehow.  It is know that 6300ESB family of controllers have flaky
+> presence bits (ata_piix marks them with PIIX_FLAG_IGNORE_PCS), but I
+> couldn't find any document/errata for PCS bits for any other
+> controllers.  So, we can use PCS for all !PIIX_FLAG_IGNORE_PCS
+> controllers or take a conservative approach and make use of it only on
+> cases where ghosting problem is reported (ICH7 and 8, I guess.  Can
+> anyone test 6?).
+> 
+> Please note that we already use some use of the PCS value when probing
+> SATA port.  If its value is zero, we skip the port.  It's done this way
+> mainly due to historical reasons - until recently ata_piix didn't have
+> MAP tables to map PM/PS/SM/SS to specific ports thus used the PCS values
+> in rougher form.
+> 
+> Jeff, what do you think?
+> 
+
+
