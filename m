@@ -1,63 +1,39 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Thu, 18 May 2006 09:21:35 +0200
-Message-ID: <20060518072134.GX4197@suse.de>
-References: <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com> <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de> <446B3BE0.8040806@garzik.org> <20060517173729.GS4197@suse.de> <446B9C88.4030005@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 13/22] libata: implement qc->result_tf
+Date: Thu, 18 May 2006 16:22:06 +0900
+Message-ID: <446C209E.7060907@gmail.com>
+References: <11473487911193-git-send-email-htejun@gmail.com> <446C1DE5.5080000@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:52813 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750721AbWERHU7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 03:20:59 -0400
-Content-Disposition: inline
-In-Reply-To: <446B9C88.4030005@garzik.org>
+Received: from wx-out-0102.google.com ([66.249.82.193]:56131 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750825AbWERHWO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 May 2006 03:22:14 -0400
+Received: by wx-out-0102.google.com with SMTP id s6so301297wxc
+        for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 00:22:13 -0700 (PDT)
+In-Reply-To: <446C1DE5.5080000@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: albertl@mail.com
+Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
 
-On Wed, May 17 2006, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >I think we have a different opinion on what 'optional' is then - because
-> >things can certainly work just fine the way they current do. And it's
-> >faster, too.
-> >
-> >>infrastructure, you inevitably wind up with the following code pattern:
-> >>
-> >>	infrastructure code
-> >>	send fully prepared request to hardware
-> >>	infrastructure code
-> >
-> >But yes, you can make the code nicer for _some_ things with a
-> >->queueone() type setup.
-> 
-> That ->queueone() maps the closest to what most hardware appears to 
-> want: "attempt to push request onto an async hardware queue".
-> 
-> It also enables additional entry points for returning 'device busy' or 
-> (in SCSI lingo) 'host busy'.  The ability to signal and handle random 
-> transient conditions like that when hardware resources disappear is easy 
-> to overlook, but its really powerful.
+Albert Lee wrote:
+> Normally 0x50 is seen with normal completion, not 0x40.
 
-'queue a request' is certainly how most hardware works. The fact is that
-->queueone() doesn't enable _anything_ that you cannot already do. In
-fact it takes information _away_ from you, since you can no longer peek
-at the queue and see if there's one more there for you to issue. The
-only selling point for ->queueone() is that it makes it more logical to
-structure the code layout for handling the issue.
+I'm okay either way.  One of my drives reports 0x40 for normal status, 
+so it's where 0x40 came from.
 
-Which is why I never added this helper. From the block layer
-perspective, the driver can only really tell you three things:
+> Do we really have to fake qc->result_tf here? Maybe just keep it zero or garbage
+> is good enough: if err_mask == 0 and ATA_QCFLAG_RESULT_TF is not set, qc->result_tf
+> shouldn't be used anyway.
 
-- request issued, give me another one
-- request not issued, transient error (meaning, call me with this
-  request again in the future).
-- request not issued, permanent error. kill this request.
-
-A ->queueone() setup deals with returning the right issue error code, a
-->queuemany() setup deals with calling the right function for the
-condition.
+Hmmm... Right.  I thought libata SCSI completion path checks TF status 
+unconditionally and added the code.  Maybe I was confused.  I cannot 
+find the offending part now.  Hmmm... I seem to recollect I met a 
+spurious error due to garbage inside qc->result_tf and added the code to 
+initialize it.  I'll keep looking.
 
 -- 
-Jens Axboe
-
+tejun
