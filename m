@@ -1,30 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Thu, 18 May 2006 12:27:48 +0900
-Message-ID: <446BE9B4.60605@gmail.com>
-References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F906.7040602@gmail.com>	 <1147796999.3505.42.camel@mulgrave.il.steeleye.com>	 <446A0053.5070203@gmail.com>	 <1147798226.3505.56.camel@mulgrave.il.steeleye.com>	 <446A06C7.5050609@gmail.com>  <20060516195836.GA3807@infradead.org> <1147814935.3505.88.camel@mulgrave.il.steeleye.com>
+Subject: Re: ASUS A8V Deluxe, x86_64
+Date: Thu, 18 May 2006 12:29:50 +0900
+Message-ID: <446BEA2E.3030100@gmail.com>
+References: <8E8F647D7835334B985D069AE964A4F7028FDC15@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1147814935.3505.88.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.184]:47787 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751206AbWERDaA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 May 2006 23:30:00 -0400
+Received: by nf-out-0910.google.com with SMTP id d4so280426nfe
+        for <linux-ide@vger.kernel.org>; Wed, 17 May 2006 20:29:59 -0700 (PDT)
+In-Reply-To: <8E8F647D7835334B985D069AE964A4F7028FDC15@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
+Cc: albertl@mail.com, Andi Kleen <ak@suse.de>, Marko Macek <Marko.Macek@gmx.net>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, =?ISO-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
 
-James Bottomley wrote:
-> On Tue, 2006-05-16 at 20:58 +0100, Christoph Hellwig wrote:
->> Things used by the transport classes traditionally weren't in scsi_priv.h,
->> that was for scsi_mod internals only.  Should we changed that?  I'd rather
->> have another header for semi-volatile APIs transport classes use.
-> 
-> well ... OK we don't necessarily have a header for SCSI APIs exported
-> exclusively to transport classes.  how about
-> drivers/scsi/scsi_transport_api.h?
-> 
+Fortier,Vincent [Montreal] wrote:
+> scsi0 : sata_via
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:001f
+> ata2.00: ATAPI, max UDMA/66
+> ata2.00: applying bridge limits
+> ata2.00: configured for UDMA/66
+[--snip--]
+> sd 0:0:0:0: Attached scsi disk sda
+>   Vendor: PLEXTOR   Model: DVDR   PX-716A    Rev: 1.09
+>   Type:   CD-ROM                             ANSI SCSI revision: 05
 
-Are we agreed on this?  A new header file drivers/scsi/scsi_transport_api.h?
+Above and the detailed log too indicate that everything went smooth the 
+first time around.  Albert, do you have any ideas?  Could it be 
+something related to irq-pio?
 
 -- 
 tejun
