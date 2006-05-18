@@ -1,43 +1,42 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 20:04:55 -0700 (PDT)
-Message-ID: <20060518030455.62177.qmail@web31814.mail.mud.yahoo.com>
-References: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
-Reply-To: ltuikov@yahoo.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: About the naming of ata_drive_probe_reset()
+Date: Thu, 18 May 2006 12:24:05 +0900
+Message-ID: <446BE8D5.5010404@gmail.com>
+References: <446BE350.5000504@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:53961 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1750854AbWERDYO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 May 2006 23:24:14 -0400
+Received: by ug-out-1314.google.com with SMTP id a2so387973ugf
+        for <linux-ide@vger.kernel.org>; Wed, 17 May 2006 20:24:12 -0700 (PDT)
+In-Reply-To: <446BE350.5000504@tw.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
 
---- Linus Torvalds <torvalds@osdl.org> wrote:
-> On Wed, 17 May 2006, James Bottomley wrote:
-> > 
-> > This is one of the questions.  Currently block has no concept of "host".
+Albert Lee wrote:
+> Hi Tejun,
 > 
-> That's good. 
-> 
-> I don't understand why you'd ever _want_ a concept of "host". The whole 
-> concept is broken and unnecessary. At no point should you even need to map 
-> from request to host, but if you do, you don't need to introduce any 
-> generic "host" notion, you can do it easily per-queue.
+> The ata_drive_probe_reset() is not drive-specific. 
+> Actually what got reset is the port. (I guess the "drive" doesn't mean device here.)
+> Maybe something like ata_port_probe_reset() or ata_do_probe_reset() is less ambiguous?
 
-You are correct.  The concept of "host" should NOT be exported to
-higher than PCI/SCSI* level.
+The 'drive' is actually a verb.  The function drives (verb) probe_reset 
+  (object) using the given methods.  Maybe a bad naming.  Anyways, the 
+whole probe_reset stuff is gonna be removed with the hotplug patchset, 
+so I think it can be left as it is until then.
 
-* See below.
+However, I also used the ata_drive_*() naming convention else where, 
+like ata_bmdma_drive_eh().  We may need to rename them.  I still want to 
+signify that the function isn't actually a callback but something that 
+can be used to drive a callback.  I like 'drive' but as you have pointed 
+out it can be confused with hard 'drive'.  Maybe ata_steer_*()?  Any 
+other ideas?
 
-> The whole fixation with "host" in the SCSI layer is a bug, I think. What 
-> does it matter, really? And when do you actually have a "request_queue" 
-> entry without already knowing which controller it is connected to (ie why 
-> do you even need that mapping)?
-
-Not quite, the concept of a "host" is needed as it is the "host" which
-provides "SCSI ports" to the "SCSI domain".
-
-     Luben
-
+-- 
+tejun
