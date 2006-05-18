@@ -1,58 +1,46 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] libata-core: fix current kernel-doc warnings
-Date: Thu, 18 May 2006 10:50:18 -0700
-Message-ID: <20060518105018.4696f8c5.rdunlap@xenotime.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH/2.6.17-rc4 10/10]  bugs fix for marvell SATA on powerp
+ c pl atform
+Date: Thu, 18 May 2006 16:50:46 -0400
+Message-ID: <446CDE26.8090504@rtr.ca>
+References: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net> <1147935734.17679.93.camel@localhost.localdomain> <446C9219.4080300@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:41429 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932075AbWERRrw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 13:47:52 -0400
-Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 10:47:49 -0700
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751398AbWERUuu@vger.kernel.org>
+In-Reply-To: <446C9219.4080300@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Zang Roy-r61911 <tie-fei.zang@freescale.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>, Alexandre.Bounine@tundra.com, Yang Xin-Xin-r48390 <Xin-Xin.Yang@freescale.com>, Kumar Gala <galak@kernel.crashing.org>
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: jgarzik <jgarzik@pobox.com>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+Jeff Garzik wrote:
+> Benjamin Herrenschmidt wrote:
+>> On Thu, 2006-05-18 at 12:03 +0800, Zang Roy-r61911 wrote:
+..
+>>> @@ -1567,13 +1570,18 @@ static void mv5_read_preamp(struct mv_ho
+>>>  static void mv5_enable_leds(struct mv_host_priv *hpriv, void __iomem
+>> *mmio)
+>>>  {
+>>>       u32 tmp;
+>>> -
+>>> +#ifndef CONFIG_PPC
+>>>       writel(0, mmio + MV_GPIO_PORT_CTL);
+>>> +#endif
+>>
+>> You'll have to do better here too... I don't wee why when compiled on
+>> PPC, this driver should "magically" not clear those bits... At the very
+>> least, you should test the machine type if you want to do something
+>> specific to your platform, but first, you'll have to convince Jeff why
+>> this change has to be done in the first place and if there is a better
+>> way to handle it.
+> 
+> Correct...  it does seem some bugs were found, but #ifdef powerpc is 
+> certainly out of the question.  We want the driver to work without 
+> ifdefs on all platforms.
 
-Fix all current kernel-doc warnings.
+Yup.  I have a powerpc platform here with PCI-X, and a PCI-X Marvell card
+to try in it.  So I'll pick up these changes and try to integrate them a
+little more nicely in my internal updated driver, and then pass it on to Jeff.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/libata-core.c |    6 ++++++
- 1 files changed, 6 insertions(+)
-
---- linux-2617-rc4g6.orig/drivers/scsi/libata-core.c
-+++ linux-2617-rc4g6/drivers/scsi/libata-core.c
-@@ -864,6 +864,9 @@ static unsigned int ata_id_xfermask(cons
- /**
-  *	ata_port_queue_task - Queue port_task
-  *	@ap: The ata_port to queue port_task for
-+ *	@fn: workqueue function to be scheduled
-+ *	@data: data value to pass to workqueue function
-+ *	@delay: delay time for workqueue function
-  *
-  *	Schedule @fn(@data) for execution after @delay jiffies using
-  *	port_task.  There is one port_task per port and it's the
-@@ -2739,6 +2742,8 @@ static unsigned int ata_dev_set_xfermode
-  *	ata_dev_init_params - Issue INIT DEV PARAMS command
-  *	@ap: Port associated with device @dev
-  *	@dev: Device to which command will be sent
-+ *	@heads: Number of heads (taskfile parameter)
-+ *	@sectors: Number of sectors (taskfile parameter)
-  *
-  *	LOCKING:
-  *	Kernel thread context (may sleep)
-@@ -4302,6 +4307,7 @@ int ata_device_resume(struct ata_port *a
-  *	ata_device_suspend - prepare a device for suspend
-  *	@ap: port the device is connected to
-  *	@dev: the device to suspend
-+ *	@state: target power management state
-  *
-  *	Flush the cache on the drive, if appropriate, then issue a
-  *	standbynow command.
-
-
----
+Cheers
