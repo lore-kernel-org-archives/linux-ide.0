@@ -1,83 +1,94 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata-tj and SMART
-Date: Thu, 18 May 2006 13:00:07 +0900
-Message-ID: <446BF147.4040904@gmail.com>
-References: <e4b02t$e9b$1@sea.gmane.org> <44690B0F.90200@gmail.com> <e4bvsb$s9m$1@sea.gmane.org> <4469893A.10901@gmail.com> <e4g3or$jbm$1@sea.gmane.org>
+From: Zang Roy-r61911 <tie-fei.zang@freescale.com>
+Subject: RE: [PATCH/2.6.17-rc4 10/10]  bugs fix for marvell SATA on powerp
+	c pl atform
+Date: Thu, 18 May 2006 12:03:50 +0800
+Message-ID: <9FCDBA58F226D911B202000BDBAD46730626DE6E@zch01exm40.ap.freescale.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:13546 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1750803AbWEREAQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 May 2006 00:00:16 -0400
-Received: by ug-out-1314.google.com with SMTP id a2so393352ugf
-        for <linux-ide@vger.kernel.org>; Wed, 17 May 2006 21:00:14 -0700 (PDT)
-In-Reply-To: <e4g3or$jbm$1@sea.gmane.org>
+Received: from az33egw02.freescale.net ([192.88.158.103]:44786 "EHLO
+	az33egw02.freescale.net") by vger.kernel.org with ESMTP
+	id S1750807AbWEREDz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 May 2006 00:03:55 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nicolas STRANSKY <Nico@stransky.cx>
-Cc: linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>, Alexandre.Bounine@tundra.com, Yang Xin-Xin-r48390 <Xin-Xin.Yang@freescale.com>, Kumar Gala <galak@kernel.crashing.org>
 
-Nicolas STRANSKY wrote:
-> Le 05/16/2006 10:11 AM, Tejun Heo a =E9crit :
->=20
-> Hi,
->=20
->> If you've got some time though, I'd like to see what's really going =
-on.
->>  Can you modify #undef ATA_DEBUT to #define ATA_DEBUG in
->> include/linux/libata.h and post the kernel messages after issuing ab=
-ove
->> command?  Be warned that it will produce a LOT of messages while boo=
-ting
->> if you're using SATA disks for your system, and it can considerably =
-slow
->> down booting.
->=20
-> Here it is.
-> I first did a "smartctl -d ata -a -o on /dev/sda" and then a "smartct=
-l
-> -d ata -a -S on /dev/sda" which are the two commands triggering error=
-s
-> on this drive with you patch.
->=20
-> BTW the system is running very well with your patch apart from this
-> smartctl problem.
 
-[CC'ing Albert Lee].
+-----Original Message-----
+=46rom: Kumar Gala [mailto:galak@kernel.crashing.org]
+Sent: 2006=E5=B9=B45=E6=9C=8817=E6=97=A5 21:28
+To: Zang Roy-r61911
+Cc: Paul Mackerras; linuxppc-dev list; Alexandre.Bounine@tundra.com; Ya=
+ng Xin-Xin-r48390
+Subject: Re: [PATCH/2.6.17-rc4 10/10] bugs fix for marvell SATA on powe=
+rpc pl atform
 
-Hello, Albert.
 
-Nicolas reported that when smartd starts kernel complains about HSM=20
-violation and full EH kicks in (reset and all that), which it didn't=20
-used to before the recent libata changes.  Upon further examination the=
-=20
-offending part seems to be the HSM_ST handling code of ata_hsm_move().
 
-	/* ATA PIO protocol */
-	if (unlikely((status & ATA_DRQ) =3D=3D 0)) {
-		/* handle BSY=3D0, DRQ=3D0 as error */
-		qc->err_mask |=3D AC_ERR_HSM;
-		ap->hsm_task_state =3D HSM_ST_ERR;
-		goto fsm_start;
-	}
+On May 17, 2006, at 5:14 AM, Zang Roy-r61911 wrote:
 
-The above is the first test done on entrance to HSM_ST for non-ATAPI=20
-devices.  On startup, smartd issues some obsolete commands (feat: 0xd1=20
-and 0xdb) which use PIO data-in protocol, some drives don't implement=20
-the obsolete command and aborts them (stat: 0x51 err: 0x4), which is th=
-e=20
-correct behavior if the drive doesn't implement specific command.=20
-However, the above code triggers and the error is handled as HSM=20
-violation not device abortion.
+> Fix Marvell SATA driver bugs on PowerPC platform:
+> SATA device can't work for the problem on little-endian mode.
+> U-Boot can't find SATA device after kernel reboots.
+>
+> Signed-off-by: Hongjun cheng	<hong-jun.chen@reescale.com>
+> Signed-off-by: Roy Zang		<tie-fei.zang@freescale.com>
+>
+>> From nobody Mon Sep 17 00:00:00 2001
+> From: roy zang <tie-fei.zang@freescale.com>
+> Date: Tue May 16 15:25:23 2006 +0800
+> Subject: [PATCH] Fix bugs on powerpc platform for mv sata driver
 
-It seems that HSM_ST needs to handle !DRQ && ERR case before the first=20
-iteration (or maybe it should be pushed into HSM_ST_FIRST?).  Does my=20
-analysis make sense?
+This needs to go to Jeff Garzik as SATA driver maintainer.
 
-Thanks.
+- kumar
 
---=20
-tejun
+>
+>  drivers/scsi/sata_mv.c |   10 +++++++++-
+>  1 files changed, 9 insertions(+), 1 deletions(-)
+>
+> d82ac19d259f8487a31105eaf844a93cbd9008e8
+> diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
+> index d5fdcb9..4166422 100644
+> --- a/drivers/scsi/sata_mv.c
+> +++ b/drivers/scsi/sata_mv.c
+> @@ -1032,6 +1032,9 @@ static inline void mv_crqb_pack_cmd(u16
+>  {
+>  	*cmdw =3D data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
+>  		(last ? CRQB_CMD_LAST : 0);
+> +#ifdef CONFIG_PPC
+> +	*cmdw =3D cpu_to_le16(*cmdw);
+> +#endif
+>  }
+>
+>  /**
+> @@ -1567,13 +1570,18 @@ static void mv5_read_preamp(struct mv_ho
+>  static void mv5_enable_leds(struct mv_host_priv *hpriv, void =20
+> __iomem *mmio)
+>  {
+>  	u32 tmp;
+> -
+> +#ifndef CONFIG_PPC
+>  	writel(0, mmio + MV_GPIO_PORT_CTL);
+> +#endif
+>
+>  	/* FIXME: handle MV_HP_ERRATA_50XXB2 errata */
+>
+>  	tmp =3D readl(mmio + MV_PCI_EXP_ROM_BAR_CTL);
+> +#ifdef CONFIG_PPC
+> +	tmp &=3D ~(1 << 0);
+> +#else=09
+>  	tmp |=3D ~(1 << 0);
+> +#endif
+>  	writel(tmp, mmio + MV_PCI_EXP_ROM_BAR_CTL);
+>  }
+>
+> --=20
+> 1.3.0
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@ozlabs.org
+> https://ozlabs.org/mailman/listinfo/linuxppc-dev
