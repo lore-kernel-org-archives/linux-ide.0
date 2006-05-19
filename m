@@ -1,69 +1,81 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET 01/03] prep for hotplug support, take 3
-Date: Fri, 19 May 2006 06:16:29 -0700 (PDT)
-Message-ID: <11480445833568-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/14] libata-hp-prep: add ata_hotplug_wq
+Date: Fri, 19 May 2006 06:16:39 -0700 (PDT)
+Message-ID: <11480445843556-git-send-email-htejun@gmail.com>
+References: <11480445833568-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.193]:49900 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751331AbWESNQ3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 09:16:29 -0400
-Received: by nz-out-0102.google.com with SMTP id 8so626374nzo
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:29 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.178]:19937 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932251AbWESNQk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 09:16:40 -0400
+Received: by py-out-1112.google.com with SMTP id z59so920074pyg
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:40 -0700 (PDT)
+In-Reply-To: <11480445833568-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello,
+It's best to run ATA hotplug from EH but attaching SCSI devices needs
+working EH.  ata_hotplug_wq is used to give SCSI hotplug operations a
+separate context.
 
-This is This is part of patchset series described in [T].
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-This is the third take of prep-for-hotplug-support patchset.  Changes
-from the last take[L] are
+---
 
-* sata_phy_debounce() now takes const array of three ulongs for timing
-  parameters.  This makes it easy to define and export different
-  predefined timing parameters and to pass timing parameter through
-  other functions.  sata_phy_resume() is changed to take timing
-  parameters and pass it to sata_phy_debounce() intead of crude
-  boolean @quick.
+ drivers/scsi/libata-core.c |    9 +++++++++
+ drivers/scsi/libata.h      |    1 +
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-* Three predefined parameters are provided - sata_deb_timing_boot,
-  sata_deb_timing_eh and sata_deb_timing_before_fsrst.  These
-  predefined parameters are used in the new hotplug framework and
-  don't have to be long enough to cover all the cases.  The goal is to
-  cover most cases in reasonable amount of time.  If timeout occurs,
-  libata will give it more time and then retry.
-
-* prereset() framework has been updated such that prereset() can tell
-  EH what reset mechanism to use or to skip reset completely.  This
-  way, HRST_TO_RESUME handling is confined into prereset() and device
-  detection from prereset() is handled cleanly.
-
-* ata_std_prereset() has been updated to handle different behaviors
-  controllers show on hotplug.  Some controllers can wait for the
-  first FIS34, some can only after COMRESET, others just can't.  These
-  are controlled by two flags - ATA_FLAG_HRST_TO_RESUME and
-  ATA_FLAG_CANT_WAIT_FIS34.  Note that those two flags describe PHY
-  property.  They will move out to ata_link later.
-
-  If necessary, ata_std_prereset() waits for spinup until hotplug
-  event timestamp + spinup wait time (currently 8s).  This mechanism
-  will allow later PMP support to avoid excessive amount of waiting.
-
-This patchset is against
-
-  upstream (8d4ee71ff6de5255ebfdf44fb83419d27bd06368)
-  + enforce-default-EH-actions patch [1]
-  + scsi_implement_eh-patch [2]
-
-Thanks.
-
---
-tejun
-
-[T] http://article.gmane.org/gmane.linux.ide/10530
-[L] http://article.gmane.org/gmane.linux.ide/10073
-[1] http://article.gmane.org/gmane.linux.ide/10317
-[2] http://article.gmane.org/gmane.linux.ide/10529
+5b942048c7f14c12bd0807da3cfbb2fa09925e1f
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 9e10b79..fba5514 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -69,6 +69,8 @@ static void ata_dev_xfermask(struct ata_
+ static unsigned int ata_unique_id = 1;
+ static struct workqueue_struct *ata_wq;
+ 
++struct workqueue_struct *ata_hotplug_wq;
++
+ int atapi_enabled = 1;
+ module_param(atapi_enabled, int, 0444);
+ MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+@@ -5588,6 +5590,12 @@ static int __init ata_init(void)
+ 	if (!ata_wq)
+ 		return -ENOMEM;
+ 
++	ata_hotplug_wq = create_singlethread_workqueue("ata_hotplug");
++	if (!ata_hotplug_wq) {
++		destroy_workqueue(ata_wq);
++		return -ENOMEM;
++	}
++
+ 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
+ 	return 0;
+ }
+@@ -5595,6 +5603,7 @@ static int __init ata_init(void)
+ static void __exit ata_exit(void)
+ {
+ 	destroy_workqueue(ata_wq);
++	destroy_workqueue(ata_hotplug_wq);
+ }
+ 
+ module_init(ata_init);
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index d46c552..4a67675 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -39,6 +39,7 @@ struct ata_scsi_args {
+ };
+ 
+ /* libata-core.c */
++extern struct workqueue_struct *ata_hotplug_wq;
+ extern int atapi_enabled;
+ extern int atapi_dmadir;
+ extern int libata_fua;
+-- 
+1.3.2
 
