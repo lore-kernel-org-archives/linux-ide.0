@@ -1,250 +1,171 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/13] libata-hp: implement SCSI part of hotplug
+Subject: [PATCH 07/13] libata-hp: implement unload-unplug
 Date: Sat, 20 May 2006 00:48:27 +0900
-Message-ID: <1148053707416-git-send-email-htejun@gmail.com>
+Message-ID: <11480537073074-git-send-email-htejun@gmail.com>
 References: <11480537063293-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:1649 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932391AbWESPsf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 11:48:35 -0400
-Received: by py-out-1112.google.com with SMTP id z59so966321pyg
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 08:48:34 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.203]:1421 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932398AbWESPsk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 11:48:40 -0400
+Received: by nz-out-0102.google.com with SMTP id 8so665139nzo
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 08:48:39 -0700 (PDT)
 In-Reply-To: <11480537063293-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement SCSI part of hotplug.
-
-This must be done in a separate context as SCSI makes use of EH during
-probing.  Unfortunately, SCSI probing fails silently if EH is active.
-ata_eh_scsi_hotplug() does its best to avoid such conditions but,
-theoretically, it may fail to associate SCSI device to newly found ATA
-device; however, the chance is very slim and I haven't experienced any
-such event during testing.
-
-Device removal synchronization is somewhat complex but I think I've
-got it right and haven't seen it malfunction.
+Implement unload unplug - driver unloading / PCI removal via hot
+unplug path.  This is done by ata_port_detach() which requests detach
+of all devices, schedules EH and wait for it to complete.  EH path is
+slightly modified to handle this (e.g. force zero eh_info during
+unloading).  With this patch, EH and unloading are properly
+synchronized and unloading should be safe under any circumstances.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    1 +
- drivers/scsi/libata-eh.c   |   70 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/libata-scsi.c |   59 +++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata.h      |    2 +
- include/linux/libata.h     |    2 +
- 5 files changed, 132 insertions(+), 2 deletions(-)
+ drivers/scsi/ahci.c        |    1 +
+ drivers/scsi/libata-core.c |   47 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libata-eh.c   |    7 ++++---
+ include/linux/libata.h     |    1 +
+ 4 files changed, 53 insertions(+), 3 deletions(-)
 
-6a1cd6180ac9e13e29446378bd15245c4c7efd5d
+894a291fa186a541ef3eb74d01f0947fb40ad97e
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index afb3805..98fffca 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -1396,6 +1396,7 @@ static void ahci_remove_one (struct pci_
+ 	for (i = 0; i < host_set->n_ports; i++) {
+ 		ap = host_set->ports[i];
+ 
++		ata_port_detach(ap);
+ 		scsi_remove_host(ap->host);
+ 	}
+ 
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 1809f98..7600b5f 100644
+index e79d70f..7d5dd9a 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -5347,6 +5347,7 @@ static void ata_host_init(struct ata_por
- 	ap->last_ctl = 0xFF;
- 
- 	INIT_WORK(&ap->port_task, NULL, NULL);
-+	INIT_WORK(&ap->hotplug_task, ata_eh_scsi_hotplug, ap);
- 	INIT_LIST_HEAD(&ap->eh_done_q);
- 
- 	/* set cable type */
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index fff93d9..0ab7d52 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -286,9 +286,13 @@ void ata_scsi_error(struct Scsi_Host *ho
- 	/* clean up */
- 	spin_lock_irqsave(hs_lock, flags);
- 
-+	if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
-+		queue_work(ata_hotplug_wq, &ap->hotplug_task);
-+
- 	if (ap->flags & ATA_FLAG_RECOVERED)
- 		ata_port_printk(ap, KERN_INFO, "EH complete\n");
--	ap->flags &= ~ATA_FLAG_RECOVERED;
-+
-+	ap->flags &= ~(ATA_FLAG_SCSI_HOTPLUG | ATA_FLAG_RECOVERED);
- 
- 	spin_unlock_irqrestore(hs_lock, flags);
- 
-@@ -1736,6 +1740,70 @@ static void ata_eh_finish(struct ata_por
+@@ -5595,6 +5595,51 @@ err_free_ret:
  }
  
  /**
-+ *	ata_eh_scsi_hotplug - SCSI part of hotplug
-+ *	@data: Pointer to ATA port to perform SCSI hotplug on
++ *	ata_port_detach - Detach ATA port in prepration of device removal
++ *	@ap: ATA port to be detached
 + *
-+ *	Perform SCSI part of hotplug.  It's executed from a separate
-+ *	workqueue after EH completes.  This is necessary because SCSI
-+ *	hot plugging requires working EH and hot unplugging is
-+ *	synchronized with hot plugging with a mutex.
++ *	Detach all ATA devices and associated SCSI devices.  @ap is
++ *	guaranteed to be quiescent on return from this function.
 + *
 + *	LOCKING:
 + *	Kernel thread context (may sleep).
 + */
-+void ata_eh_scsi_hotplug(void *data)
++void ata_port_detach(struct ata_port *ap)
 +{
-+	struct ata_port *ap = data;
-+	unsigned long timeout;
-+	int i, requeue = 0;
-+
-+	DPRINTK("ENTER\n");
-+
-+	/* SCSI hotplug is requested.  EH might still be running and
-+	 * we wanna scan the bus after EH is complete; otherwise, SCSI
-+	 * scan fails silently.  scsi_block_when_processing_errors()
-+	 * cannot be used because we might not have a sdev to wait on.
-+	 * Poll for !scsi_host_in_recovery() for 2 secs.
-+	 */
-+	timeout = jiffies + 2 * HZ;
-+	do {
-+		if (!scsi_host_in_recovery(ap->host))
-+			break;
-+		msleep(100);
-+	} while (time_before(jiffies, timeout));
-+
-+	if (scsi_host_in_recovery(ap->host))
-+		requeue = 1;
-+
-+	/* unplug detached devices */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+		unsigned long flags;
-+
-+		if (!(dev->flags & ATA_DFLAG_DETACHED))
-+			continue;
-+
-+		spin_lock_irqsave(&ap->host_set->lock, flags);
-+		dev->flags &= ~ATA_DFLAG_DETACHED;
-+		spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+		ata_scsi_remove_dev(dev);
-+	}
-+
-+	/* scan for new ones */
-+	ata_scsi_scan_host(ap);
-+
-+	if (requeue || scsi_host_in_recovery(ap->host)) {
-+		/* we might have scanned while EH is active.  Repeat
-+		 * scan after a sec.
-+		 */
-+		queue_delayed_work(ata_hotplug_wq, &ap->hotplug_task, HZ);
-+	}
-+
-+	DPRINTK("EXIT\n");
-+}
-+
-+/**
-  *	ata_do_eh - do standard error handling
-  *	@ap: host port to handle error for
-  *	@prereset: prereset method (can be NULL)
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 5f46b11..5a9c08a 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2781,3 +2781,62 @@ int ata_scsi_offline_dev(struct ata_devi
- 	}
- 	return 0;
- }
-+
-+/**
-+ *	ata_scsi_remove_dev - remove attached SCSI device
-+ *	@dev: ATA device to remove attached SCSI device for
-+ *
-+ *	This function is called from ata_eh_scsi_hotplug() and
-+ *	responsible for removing the SCSI device attached to @dev.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ */
-+void ata_scsi_remove_dev(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->ap;
-+	struct scsi_device *sdev;
 +	unsigned long flags;
++	int i;
 +
-+	/* Alas, we need to grab scan_mutex to ensure SCSI device
-+	 * state doesn't change underneath us and thus
-+	 * scsi_device_get() always succeeds.  The mutex locking can
-+	 * be removed if there is __scsi_device_get() interface which
-+	 * increments reference counts regardless of device state.
-+	 */
-+	mutex_lock(&ap->host->scan_mutex);
++	if (!ap->ops->error_handler)
++		return;
++
++	/* tell EH to self-destruct */
 +	spin_lock_irqsave(&ap->host_set->lock, flags);
 +
-+	/* clearing dev->sdev is protected by host_set lock */
-+	sdev = dev->sdev;
-+	dev->sdev = NULL;
++	ap->flags |= ATA_FLAG_UNLOADING;
++	for (i = 0; i < ATA_MAX_DEVICES; i++)
++		ap->device[i].flags |= ATA_DFLAG_DETACH;
 +
-+	if (sdev) {
-+		/* If user initiated unplug races with us, sdev can go
-+		 * away underneath us after the host_set lock and
-+		 * scan_mutex are released.  Hold onto it.
-+		 */
-+		if (scsi_device_get(sdev) == 0) {
-+			/* The following ensures the attached sdev is
-+			 * offline on return from ata_scsi_offline_dev()
-+			 * regardless it wins or loses the race
-+			 * against this function.
-+			 */
-+			scsi_device_set_state(sdev, SDEV_OFFLINE);
-+		} else {
-+			WARN_ON(1);
-+			sdev = NULL;
-+		}
-+	}
++	ata_port_schedule_eh(ap);
 +
 +	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+	mutex_unlock(&ap->host->scan_mutex);
 +
-+	if (sdev) {
-+		ata_dev_printk(dev, KERN_INFO, "detaching (SCSI %s)\n",
-+			       sdev->sdev_gendev.bus_id);
++	/* wait for EH */
++	while (scsi_host_in_recovery(ap->host))
++		msleep(100);
 +
-+		scsi_remove_device(sdev);
-+		scsi_device_put(sdev);
-+	}
++	/* Flush hotplug task.  The sequence is similar to
++	 * ata_port_flush_task().  ATA_FLAG_UNLOADING prevents further
++	 * queueing of hotplug_task.
++	 */
++	flush_workqueue(ata_hotplug_wq);
++	cancel_delayed_work(&ap->hotplug_task);
++	flush_workqueue(ata_hotplug_wq);
++
++	/* freeze the port */
++	ata_eh_freeze_port(ap);
 +}
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index c8a3350..0176c40 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -76,6 +76,7 @@ extern struct scsi_transport_template at
++
++/**
+  *	ata_host_set_remove - PCI layer callback for device removal
+  *	@host_set: ATA host set that was removed
+  *
+@@ -5612,6 +5657,7 @@ void ata_host_set_remove(struct ata_host
  
- extern void ata_scsi_scan_host(struct ata_port *ap);
- extern int ata_scsi_offline_dev(struct ata_device *dev);
-+extern void ata_scsi_remove_dev(struct ata_device *dev);
- extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
- 			       unsigned int buflen);
+ 	for (i = 0; i < host_set->n_ports; i++) {
+ 		ap = host_set->ports[i];
++		ata_port_detach(ap);
+ 		scsi_remove_host(ap->host);
+ 	}
  
-@@ -110,5 +111,6 @@ extern void ata_schedule_scsi_eh(struct 
- extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
- extern void ata_scsi_error(struct Scsi_Host *host);
- extern void ata_qc_schedule_eh(struct ata_queued_cmd *qc);
-+extern void ata_eh_scsi_hotplug(void *data);
+@@ -5886,6 +5932,7 @@ EXPORT_SYMBOL_GPL(sata_deb_timing_before
+ EXPORT_SYMBOL_GPL(ata_std_bios_param);
+ EXPORT_SYMBOL_GPL(ata_std_ports);
+ EXPORT_SYMBOL_GPL(ata_device_add);
++EXPORT_SYMBOL_GPL(ata_port_detach);
+ EXPORT_SYMBOL_GPL(ata_host_set_remove);
+ EXPORT_SYMBOL_GPL(ata_sg_init);
+ EXPORT_SYMBOL_GPL(ata_sg_init_one);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 5b9aff2..4357465 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -234,7 +234,8 @@ void ata_scsi_error(struct Scsi_Host *ho
+ 		spin_lock_irqsave(hs_lock, flags);
  
- #endif /* __LIBATA_H__ */
+ 		memset(&ap->eh_context, 0, sizeof(ap->eh_context));
+-		ap->eh_context.i = ap->eh_info;
++		if (!(ap->flags & ATA_FLAG_UNLOADING))
++			ap->eh_context.i = ap->eh_info;
+ 		memset(&ap->eh_info, 0, sizeof(ap->eh_info));
+ 
+ 		ap->flags &= ~ATA_FLAG_EH_PENDING;
+@@ -290,7 +291,7 @@ void ata_scsi_error(struct Scsi_Host *ho
+ 		int bit = fls(ATA_FLAG_LOADING) - 1;
+ 		clear_bit(bit, &ap->flags);
+ 		wake_up_bit(&ap->flags, bit);
+-	} else {
++	} else if (!(ap->flags & ATA_FLAG_UNLOADING)) {
+ 		if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
+ 			queue_work(ata_hotplug_wq, &ap->hotplug_task);
+ 		if (ap->flags & ATA_FLAG_RECOVERED)
+@@ -1828,7 +1829,7 @@ void ata_do_eh(struct ata_port *ap, ata_
+ 	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+ 	       ata_postreset_fn_t postreset)
+ {
+-	if (!(ap->flags & ATA_FLAG_LOADING)) {
++	if (!(ap->flags & (ATA_FLAG_LOADING | ATA_FLAG_UNLOADING))) {
+ 		ata_eh_autopsy(ap);
+ 		ata_eh_report(ap);
+ 	}
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index df1cf91..4e7c839 100644
+index cc67c96..7090837 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -518,7 +518,7 @@ struct ata_port {
- 	struct ata_host_set	*host_set;
- 	struct device 		*dev;
- 
--	struct work_struct	port_task;
-+	struct work_struct	port_task, hotplug_task;
- 
- 	unsigned int		hsm_task_state;
- 
+@@ -643,6 +643,7 @@ extern int ata_pci_device_resume(struct 
+ extern int ata_pci_clear_simplex(struct pci_dev *pdev);
+ #endif /* CONFIG_PCI */
+ extern int ata_device_add(const struct ata_probe_ent *ent);
++extern void ata_port_detach(struct ata_port *ap);
+ extern void ata_host_set_remove(struct ata_host_set *host_set);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
 -- 
 1.3.2
 
