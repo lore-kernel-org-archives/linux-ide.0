@@ -1,81 +1,82 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/14] libata-hp-prep: add ata_hotplug_wq
+Subject: [PATCH 11/14] libata-hp-prep: make ops->tf_read() optional
 Date: Fri, 19 May 2006 06:06:40 -0700 (PDT)
-Message-ID: <11480439893127-git-send-email-htejun@gmail.com>
-References: <11480439892010-git-send-email-htejun@gmail.com>
+Message-ID: <11480439893100-git-send-email-htejun@gmail.com>
+References: <11480439891036-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:30921 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.180]:28105 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751285AbWESNGl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1751294AbWESNGl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 19 May 2006 09:06:41 -0400
-Received: by py-out-1112.google.com with SMTP id z59so917410pyg
+Received: by py-out-1112.google.com with SMTP id z59so917371pyg
         for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:06:41 -0700 (PDT)
-In-Reply-To: <11480439892010-git-send-email-htejun@gmail.com>
+In-Reply-To: <11480439891036-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-It's best to run ATA hotplug from EH but attaching SCSI devices needs
-working EH.  ata_hotplug_wq is used to give SCSI hotplug operations a
-separate context.
+Not all controllers have single TF image and ops->tf_read() is
+inappropriate for them.  Newly implemented hotplug probing will allow
+drivers for such controllers to get rid of ops->tf_read() completely.
+Make ops->tf_read() optional in core layer.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    9 +++++++++
- drivers/scsi/libata.h      |    1 +
- 2 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-core.c |    8 +++++---
+ drivers/scsi/libata-eh.c   |    3 ++-
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-5b942048c7f14c12bd0807da3cfbb2fa09925e1f
+b27b1cc97dad12a344d60a184e94dff40c4ed15b
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 9e10b79..fba5514 100644
+index 8f18ced..9a4124e 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -69,6 +69,8 @@ static void ata_dev_xfermask(struct ata_
- static unsigned int ata_unique_id = 1;
- static struct workqueue_struct *ata_wq;
+@@ -4428,14 +4428,15 @@ void ata_qc_complete(struct ata_queued_c
+ 		if (unlikely(qc->flags & ATA_QCFLAG_FAILED)) {
+ 			if (!ata_tag_internal(qc->tag)) {
+ 				/* always fill result TF for failed qc */
+-				ap->ops->tf_read(ap, &qc->result_tf);
++				if (ap->ops->tf_read)
++					ap->ops->tf_read(ap, &qc->result_tf);
+ 				ata_qc_schedule_eh(qc);
+ 				return;
+ 			}
+ 		}
  
-+struct workqueue_struct *ata_hotplug_wq;
-+
- int atapi_enabled = 1;
- module_param(atapi_enabled, int, 0444);
- MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
-@@ -5588,6 +5590,12 @@ static int __init ata_init(void)
- 	if (!ata_wq)
- 		return -ENOMEM;
+ 		/* read result TF if requested */
+-		if (qc->flags & ATA_QCFLAG_RESULT_TF)
++		if (ap->ops->tf_read && qc->flags & ATA_QCFLAG_RESULT_TF)
+ 			ap->ops->tf_read(ap, &qc->result_tf);
  
-+	ata_hotplug_wq = create_singlethread_workqueue("ata_hotplug");
-+	if (!ata_hotplug_wq) {
-+		destroy_workqueue(ata_wq);
-+		return -ENOMEM;
-+	}
-+
- 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
- 	return 0;
- }
-@@ -5595,6 +5603,7 @@ static int __init ata_init(void)
- static void __exit ata_exit(void)
- {
- 	destroy_workqueue(ata_wq);
-+	destroy_workqueue(ata_hotplug_wq);
- }
+ 		__ata_qc_complete(qc);
+@@ -4444,7 +4445,8 @@ void ata_qc_complete(struct ata_queued_c
+ 			return;
  
- module_init(ata_init);
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index d46c552..4a67675 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -39,6 +39,7 @@ struct ata_scsi_args {
- };
+ 		/* read result TF if failed or requested */
+-		if (qc->err_mask || qc->flags & ATA_QCFLAG_RESULT_TF)
++		if (ap->ops->tf_read &&
++		    (qc->err_mask || qc->flags & ATA_QCFLAG_RESULT_TF))
+ 			ap->ops->tf_read(ap, &qc->result_tf);
  
- /* libata-core.c */
-+extern struct workqueue_struct *ata_hotplug_wq;
- extern int atapi_enabled;
- extern int atapi_dmadir;
- extern int libata_fua;
+ 		__ata_qc_complete(qc);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 71b45ad..7cbb311 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -806,7 +806,8 @@ static unsigned int atapi_eh_request_sen
+ 	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
+ 
+ 	/* XXX: why tf_read here? */
+-	ap->ops->tf_read(ap, &tf);
++	if (ap->ops->tf_read)
++		ap->ops->tf_read(ap, &tf);
+ 
+ 	/* fill these in, for the case where they are -not- overwritten */
+ 	sense_buf[0] = 0x70;
 -- 
 1.3.2
 
