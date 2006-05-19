@@ -1,44 +1,63 @@
-From: Thomas Renninger <trenn@suse.de>
-Subject: Re: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
-Date: Fri, 19 May 2006 15:44:17 +0200
-Message-ID: <1148046258.9319.441.camel@queen.suse.de>
-References: <E1FHa8k-00015b-M5@approximate.corpus.cam.ac.uk>
-Reply-To: trenn@suse.de
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 01/14] libata-hp-prep: add flags and eh_info/context fields
+ for hotplug
+Date: Fri, 19 May 2006 10:58:58 -0400
+Message-ID: <446DDD32.30702@pobox.com>
+References: <11480445833575-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <E1FHa8k-00015b-M5@approximate.corpus.cam.ac.uk>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Cc: "Yu, Luming" <luming.yu@intel.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>, Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:16294 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932323AbWESO7P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 May 2006 10:59:15 -0400
+In-Reply-To: <11480445833575-git-send-email-htejun@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-On Fri, 2006-03-10 at 00:26 -0500, Sanjoy Mahajan wrote:
-> [Re: bugme #5989, head no longer hanging in shame]
+Tejun Heo wrote:
+> Add hotplug related flags and eh_info/context fields.
 > 
-> From: "Yu, Luming" <luming.yu@intel.com>
-> > I suggest you to retest, and post dmesg with UN-modified BIOS.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
-> I'm now running/testing an unmodified DSDT with 2.6.16-rc5.  For a while
-> I had no S3 hangs, but I just noticed them again.  The error is the same
-> as with the modified DSDT (with slightly different offsets):
+> ---
 > 
-> exregion-0185 [36] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFFC0
-> exregion-0185 [36] ex_system_memory_space: system_memory 1 (32 width) Address=0000000023FDFFC0
-> exregion-0290 [36] ex_system_io_space_han: system_iO 1 (8 width) Address=00000000000000B2
+>  include/linux/libata.h |   19 ++++++++++++++++++-
+>  1 files changed, 18 insertions(+), 1 deletions(-)
 > 
-> repeated endlessly.
+> 95c2d43950709c541509bbedd692e984dc67b474
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 2803ab8..3fb6dc3 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -131,6 +131,9 @@ enum {
+>  
+>  	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
+>  
+> +	ATA_DFLAG_DETACH	= (1 << 16),
+> +	ATA_DFLAG_DETACHED	= (1 << 17),
+> +
+>  	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+>  	ATA_DEV_ATA		= 1,	/* ATA device */
+>  	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
+> @@ -153,6 +156,9 @@ enum {
+>  	ATA_FLAG_PIO_POLLING	= (1 << 10), /* use polling PIO if LLD
+>  					      * doesn't handle PIO interrupts */
+>  	ATA_FLAG_NCQ		= (1 << 11), /* host supports NCQ */
+> +	ATA_FLAG_HRST_TO_RESUME	= (1 << 12), /* hardreset to resume phy */
+> +	ATA_FLAG_CANT_WAIT_FIS34 = (1 << 13), /* can't wait for the first D2H
+> +					       * Register FIS clearing BSY */
 
-This sounds like the problem Daniel had on his Samsung P35 recently.
-He could fix it by getting rid of some asus_unhide_smbus stuff or the
-otherway around, adding asus_unhide_smbus quirks in the S3 resume code.
+FIS34 is an awful name.  I hereby ban it from libata :)
 
-This thread was recently posted on lkml:
-Re: [patch] smbus unhiding kills thermal management
+Also those names are getting long.  Consider shortening CANT_WAIT, 
+perhaps to NOWAIT.  And perhaps s/HRST_TO_RESUME/HRST_RESUMES/.
 
-Here are some more details, for me that sounds related...:
-https://bugzilla.novell.com/show_bug.cgi?id=173420
+ACK everything else in this patch.
 
-     Thomas
+	Jeff
+
+
 
