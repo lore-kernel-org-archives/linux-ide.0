@@ -1,78 +1,84 @@
-From: "martin schneebacher" <martin.schneebacher@gmail.com>
-Subject: (unknown)
-Date: Fri, 19 May 2006 11:28:39 +0200
-Message-ID: <e30fb88b0605190228u76a14b9h94a8c32f9c7e5058@mail.gmail.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [RFT] major libata update
+Date: Fri, 19 May 2006 18:37:01 +0800
+Message-ID: <446D9FCD.5050907@tw.ibm.com>
+References: <20060515170006.GA29555@havoc.gtf.org>	<20060516190507.35c1260f.akpm@osdl.org>	<446AAB3C.6050303@gmail.com> <20060516215610.2b822c00.akpm@osdl.org> <446AB12C.10001@gmail.com> <446AC418.4070704@gmail.com> <446C5957.9040404@tw.ibm.com> <446C5B83.9000305@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:54190 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751271AbWESJ2l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 05:28:41 -0400
-Received: by nf-out-0910.google.com with SMTP id o63so29645nfa
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 02:28:39 -0700 (PDT)
-Subject: 
-Content-Disposition: inline
+Received: from e32.co.us.ibm.com ([32.97.110.150]:14499 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S932256AbWESKhJ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 06:37:09 -0400
+In-Reply-To: <446C5B83.9000305@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: albertl@mail.com, Andrew Morton <akpm@osdl.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org, Doug Maxey <dwm@maxeymade.com>
 
-hi all.
+Tejun Heo wrote:
+> Albert Lee wrote:
+> 
+>>> To sum up, it happens when the master slot is occupied by an ATAPI
+>>> device and the corresponding slave slot is empty.  The slave slot
+>>> reports ATAPI signature (probably duplicated from the master) and passes
+>>> all legacy presence test thus resulting in timeout on IDENTIFY.
+>>>
+>>
+>> This problem was seen with PATA Promise 20275 adapter + IBM DVD-RAM
+>> drive.
+>> Single master device configuration, no slave device.
+>> The master device acts as slave and creates a phantom slave device.
+>> (http://marc.theaimsgroup.com/?l=linux-ide&m=113151315602979&w=2)
+>>
+>> The problem was later fixed by Tejun's ata_exec_internal() patch:
+>> (http://marc.theaimsgroup.com/?l=linux-ide&m=113455450809405&w=2)
+>> After the patch, the phantom device is finally detected by
+>> ata_dev_identify().
+>>
+>> Libata uses polling PIO for IDENTIFY DEVICE before this major update.
+>> The polling PIO finds something wrong when it reads a 0x00 device status.
+>> So, the phantom device is detected quite quickly.
+>>
+>> With irq-driven PIO, maybe the phantom device is only detected after
+>> time-out.
+>> So it takes longer (30 secs) to detect the phantom device.
+>>
+>> No good idea how to fix this. Maybe read more registers to see whether
+>> the
+>> phantom device can be detected early before the IDENTIFY DEVICE.
+>>
+> 
+> Does the Promise controller show the ghosting problem again with the
+> recent updates?  ata_piix can be fixed by using PCS present bits.  I
+> don't know about Promise though.
+> 
 
-since 2.6.17-rc2 (maybe rc1 too) the resume from standby doesn't work
-anymore. the system hangs for a while, then it comes back but the sata
-drive doesn't work. i have to turn the power off and restart the
-computer. i don't know how to debug it, maybe you could give me a hint
-if it's necessary.
+Checked the Promise 20275 manual, no device present bits.
 
-actual kernel: 2.6.17-rc4
-bootoptions:  libata.atapi_enabled=1 vga=791 quiet pci=assign-busses
+It seems we still need IDENTIFY DEVICE to identify the phantom slave.
+The IDE code uses polling for IDENTIFY DEVICE. (libata did the same.)
+Maybe we can also use polling for IDENTIFY DEVICE?
 
-lspci:
-0000:00:00.0 Host bridge: Intel Corporation Mobile 915GM/PM/GMS/910GML
-Express Processor to DRAM Controller (rev 03)
-0000:00:01.0 PCI bridge: Intel Corporation Mobile 915GM/PM Express PCI
-Express Root Port (rev 03)
-0000:00:1c.0 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
-Family) PCI Express Port 1 (rev 04)
-0000:00: 1d.0 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB UHCI #1 (rev 04)
-0000:00:1d.1 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB UHCI #2 (rev 04)
-0000:00:1d.2 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB UHCI #3 (rev 04)
-0000:00:1d.3 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB UHCI #4 (rev 04)
-0000:00:1d.7 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB2 EHCI Controller (rev 04)
-0000:00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev d4)
-0000:00:1e.2 Multimedia audio controller: Intel Corporation
-82801FB/FBM/FR/FW/FRW (ICH6 Family) AC'97 Audio Controller (rev 04)
-0000:00: 1e.3 Modem: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
-Family) AC'97 Modem Controller (rev 04)
-0000:00:1f.0 ISA bridge: Intel Corporation 82801FBM (ICH6M) LPC
-Interface Bridge (rev 04)
-0000:00:1f.2 IDE interface: Intel Corporation 82801FBM (ICH6M) SATA
-Controller (rev 04)
-0000:00:1f.3 SMBus: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
-Family) SMBus Controller (rev 04)
-0000:01:00.0 VGA compatible controller: nVidia Corporation NV43
-[GeForce Go 6600] (rev a2)
-0000:03:05.0 Ethernet controller: Atheros Communications, Inc. AR5212
-802.11abg NIC (rev 01)
-0000:03:07.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
-RTL-8169 Gigabit Ethernet (rev 10)
-0000:03:09.0 CardBus bridge: Texas Instruments PCIxx21/x515 Cardbus Controller
-0000:03:09.2 FireWire (IEEE 1394): Texas Instruments OHCI Compliant
-IEEE 1394 Host Controller
-0000:03:09.3 Mass storage controller: Texas Instruments PCIxx21
-Integrated FlashMedia Controller
-0000:03:09.4 0805: Texas Instruments PCI6411, PCI6421, PCI6611,
-PCI6621, PCI7411, PCI7421, PCI7611, PCI7621 Secure Digital (SD)
-Controller
+Could you try the attached patch to see if polling helps
+to reduce the boot time? Thanks.
 
-hdd:
-hitachi travelstar  HTS541080G9SA00
+--
+albert
+(Need some time to find the specific IBM DVD-RAM drive for bug verification...)
 
-bye...masc.
+--- upstream0/drivers/scsi/libata-core.c	2006-05-16 11:08:49.000000000 +0800
++++ 300_phantom_device/drivers/scsi/libata-core.c	2006-05-19 17:37:23.000000000 +0800
+@@ -1194,6 +1194,9 @@ static int ata_dev_read_id(struct ata_de
+ 
+ 	tf.protocol = ATA_PROT_PIO;
+ 
++	/* Use polling for early detection of phantom device 1 */
++	tf.flags |= ATA_TFLAG_POLLING;
++
+ 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+ 				     id, sizeof(id[0]) * ATA_ID_WORDS);
+ 	if (err_mask) {
+
