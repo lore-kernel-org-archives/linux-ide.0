@@ -1,175 +1,117 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/13] libata-hp: implement warmplug
+Subject: [PATCH 09/13] sata_sil: convert to new probing mechanism and add hotplug support
 Date: Sat, 20 May 2006 00:48:27 +0900
-Message-ID: <11480537071122-git-send-email-htejun@gmail.com>
+Message-ID: <11480537073457-git-send-email-htejun@gmail.com>
 References: <11480537063293-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:45478 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.234]:62374 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S932371AbWESPse (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 11:48:34 -0400
-Received: by wr-out-0506.google.com with SMTP id i30so674774wra
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 08:48:33 -0700 (PDT)
+	id S932396AbWESPsk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 11:48:40 -0400
+Received: by wr-out-0506.google.com with SMTP id 68so959492wra
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 08:48:39 -0700 (PDT)
 In-Reply-To: <11480537063293-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement warmplug.  User-initiated unplug can be detected by
-hostt->slave_destroy() and plug by transportt->user_scan().  This
-patch only implements the two callbacks.  The next function will hook
-them.
+Convert to new probing mechanism and add hotplug support by enabling
+SATA IRQ for SError.N, marking ehi for hotplug and scheduling EH on
+SATA IRQs.
+
+Sil3112/3512/3114 family of controllers use COMRESET as TF clearing
+point and can reliably wait for FIS34 after COMRESET whether the FIS
+is the first FIS34 after POR or in response to the COMRESET.  Thus,
+setting ATA_FLAG_HRST_TO_RESUME is enough for device detection after
+hotplug.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    1 
- drivers/scsi/libata-scsi.c |   89 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h     |    1 
- 3 files changed, 91 insertions(+), 0 deletions(-)
+ drivers/scsi/sata_sil.c |   21 +++++++++++++--------
+ 1 files changed, 13 insertions(+), 8 deletions(-)
 
-3cdb294a9eb1de1372387163ca93f0798b171e4e
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 7600b5f..48b570c 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5916,6 +5916,7 @@ EXPORT_SYMBOL_GPL(ata_port_queue_task);
- EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
- EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
- EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
-+EXPORT_SYMBOL_GPL(ata_scsi_slave_destroy);
- EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
- EXPORT_SYMBOL_GPL(ata_scsi_release);
- EXPORT_SYMBOL_GPL(ata_host_intr);
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 5a9c08a..0415fd2 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -57,6 +57,8 @@ static struct ata_device * __ata_scsi_fi
- 					const struct scsi_device *scsidev);
- static struct ata_device * ata_scsi_find_dev(struct ata_port *ap,
- 					    const struct scsi_device *scsidev);
-+static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
-+			      unsigned int id, unsigned int lun);
+a5ad0f182f2fb6b60a6ac93a25da973759812594
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index 96fbeb6..3a9a949 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -56,7 +56,7 @@ enum {
+ 	SIL_FLAG_MOD15WRITE	= (1 << 30),
  
+ 	SIL_DFL_HOST_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_MMIO,
++				  ATA_FLAG_MMIO | ATA_FLAG_HRST_TO_RESUME,
  
- #define RW_RECOVERY_MPAGE 0x1
-@@ -727,6 +729,40 @@ int ata_scsi_slave_config(struct scsi_de
- }
+ 	/*
+ 	 * Controller IDs
+@@ -186,7 +186,6 @@ static const struct ata_port_operations 
+ 	.check_status		= ata_check_status,
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
+-	.probe_reset		= ata_std_probe_reset,
+ 	.post_set_mode		= sil_post_set_mode,
+ 	.bmdma_setup            = ata_bmdma_setup,
+ 	.bmdma_start            = ata_bmdma_start,
+@@ -343,6 +342,11 @@ static void sil_host_intr(struct ata_por
+ 	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
+ 	u8 status;
  
- /**
-+ *	ata_scsi_slave_destroy - SCSI device is about to be destroyed
-+ *	@sdev: SCSI device to be destroyed
-+ *
-+ *	@sdev is about to be destroyed for hot/warm unplugging.  If
-+ *	this unplugging was initiated by libata as indicated by NULL
-+ *	dev->sdev, this function doesn't have to do anything.
-+ *	Otherwise, SCSI layer initiated warm-unplug is in progress.
-+ *	Clear dev->sdev, schedule the device for ATA detach and invoke
-+ *	EH.
-+ *
-+ *	LOCKING:
-+ *	Defined by SCSI layer.  We don't really care.
-+ */
-+void ata_scsi_slave_destroy(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = ata_shost_to_port(sdev->host);
-+	unsigned long flags;
-+	struct ata_device *dev;
-+
-+	if (!ap->ops->error_handler)
-+		return;
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	dev = __ata_scsi_find_dev(ap, sdev);
-+	if (dev && dev->sdev) {
-+		/* SCSI device already in CANCEL state, no need to offline it */
-+		dev->sdev = NULL;
-+		dev->flags |= ATA_DFLAG_DETACH;
-+		ata_port_schedule_eh(ap);
++	if (unlikely(bmdma2 & SIL_DMA_SATA_IRQ)) {
++		ata_ehi_hotplugged(&ap->eh_info);
++		goto freeze;
 +	}
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+}
 +
-+/**
-  *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
-  *	@sdev: SCSI device to configure queue depth for
-  *	@queue_depth: new queue depth
-@@ -2840,3 +2876,56 @@ void ata_scsi_remove_dev(struct ata_devi
- 		scsi_device_put(sdev);
+ 	if (unlikely(!qc || qc->tf.ctl & ATA_NIEN))
+ 		goto freeze;
+ 
+@@ -416,7 +420,7 @@ static irqreturn_t sil_interrupt(int irq
+ 		if (unlikely(!ap || ap->flags & ATA_FLAG_DISABLED))
+ 			continue;
+ 
+-		if (!(bmdma2 & SIL_DMA_COMPLETE))
++		if (!(bmdma2 & (SIL_DMA_COMPLETE | SIL_DMA_SATA_IRQ)))
+ 			continue;
+ 
+ 		sil_host_intr(ap, bmdma2);
+@@ -433,6 +437,9 @@ static void sil_freeze(struct ata_port *
+ 	void __iomem *mmio_base = ap->host_set->mmio_base;
+ 	u32 tmp;
+ 
++	/* global IRQ mask doesn't block SATA IRQ, turn off explicitly */
++	writel(0, mmio_base + sil_port[ap->port_no].sien);
++
+ 	/* plug IRQ */
+ 	tmp = readl(mmio_base + SIL_SYSCFG);
+ 	tmp |= SIL_MASK_IDE0_INT << ap->port_no;
+@@ -449,6 +456,9 @@ static void sil_thaw(struct ata_port *ap
+ 	ata_chk_status(ap);
+ 	ata_bmdma_irq_clear(ap);
+ 
++	/* turn on SATA IRQ */
++	writel(SIL_SIEN_N, mmio_base + sil_port[ap->port_no].sien);
++
+ 	/* turn on IRQ */
+ 	tmp = readl(mmio_base + SIL_SYSCFG);
+ 	tmp &= ~(SIL_MASK_IDE0_INT << ap->port_no);
+@@ -622,11 +632,6 @@ static int sil_init_one (struct pci_dev 
+ 			       mmio_base + sil_port[2].bmdma);
  	}
- }
-+
-+/**
-+ *	ata_scsi_user_scan - indication for user-initiated bus scan
-+ *	@shost: SCSI host to scan
-+ *	@channel: Channel to scan
-+ *	@id: ID to scan
-+ *	@lun: LUN to scan
-+ *
-+ *	This function is called when user explicitly requests bus
-+ *	scan.  Set probe pending flag and invoke EH.
-+ *
-+ *	LOCKING:
-+ *	SCSI layer (we don't care)
-+ *
-+ *	RETURNS:
-+ *	Zero.
-+ */
-+static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
-+			      unsigned int id, unsigned int lun)
-+{
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	unsigned long flags;
-+	int rc = 0;
-+
-+	if (!ap->ops->error_handler)
-+		return -EOPNOTSUPP;
-+
-+	if ((channel != SCAN_WILD_CARD && channel != 0) ||
-+	    (lun != SCAN_WILD_CARD && lun != 0))
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+
-+	if (id == SCAN_WILD_CARD) {
-+		ap->eh_info.probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
-+		ap->eh_info.action |= ATA_EH_SOFTRESET;
-+	} else {
-+		struct ata_device *dev = ata_find_dev(ap, id);
-+
-+		if (dev) {
-+			ap->eh_info.probe_mask |= 1 << dev->devno;
-+			ap->eh_info.action |= ATA_EH_SOFTRESET;
-+		} else
-+			rc = -EINVAL;
-+	}
-+
-+	if (rc == 0)
-+		ata_port_schedule_eh(ap);
-+
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+	return rc;
-+}
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 4e7c839..cc67c96 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -723,6 +723,7 @@ extern int ata_std_bios_param(struct scs
- 			      struct block_device *bdev,
- 			      sector_t capacity, int geom[]);
- extern int ata_scsi_slave_config(struct scsi_device *sdev);
-+extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
- 				       int queue_depth);
- extern struct ata_device *ata_dev_pair(struct ata_device *adev);
+ 
+-	/* mask all SATA phy-related interrupts */
+-	/* TODO: unmask bit 6 (SError N bit) for hotplug */
+-	for (i = 0; i < probe_ent->n_ports; i++)
+-		writel(0, mmio_base + sil_port[i].sien);
+-
+ 	pci_set_master(pdev);
+ 
+ 	/* FIXME: check ata_device_add return value */
 -- 
 1.3.2
 
