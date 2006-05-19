@@ -1,75 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 01/14] libata-hp-prep: add flags and eh_info/context fields
- for hotplug
-Date: Fri, 19 May 2006 11:28:29 -0400
-Message-ID: <446DE41D.5000202@pobox.com>
-References: <11480445833575-git-send-email-htejun@gmail.com> <446DDD32.30702@pobox.com> <446DE189.8080307@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCHSET 02/03] prep LLDDs for hotplug support, take 2
+Date: Sat, 20 May 2006 00:38:10 +0900
+Message-ID: <11480530901755-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:22951 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932348AbWESP3D (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 May 2006 11:29:03 -0400
-In-Reply-To: <446DE189.8080307@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.182]:13143 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932352AbWESPiR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 11:38:17 -0400
+Received: by py-out-1112.google.com with SMTP id z59so963255pyg
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 08:38:16 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Add hotplug related flags and eh_info/context fields.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>>
->>> ---
->>>
->>>  include/linux/libata.h |   19 ++++++++++++++++++-
->>>  1 files changed, 18 insertions(+), 1 deletions(-)
->>>
->>> 95c2d43950709c541509bbedd692e984dc67b474
->>> diff --git a/include/linux/libata.h b/include/linux/libata.h
->>> index 2803ab8..3fb6dc3 100644
->>> --- a/include/linux/libata.h
->>> +++ b/include/linux/libata.h
->>> @@ -131,6 +131,9 @@ enum {
->>>  
->>>      ATA_DFLAG_PIO        = (1 << 8), /* device currently in PIO mode */
->>>  
->>> +    ATA_DFLAG_DETACH    = (1 << 16),
->>> +    ATA_DFLAG_DETACHED    = (1 << 17),
->>> +
->>>      ATA_DEV_UNKNOWN        = 0,    /* unknown device */
->>>      ATA_DEV_ATA        = 1,    /* ATA device */
->>>      ATA_DEV_ATA_UNSUP    = 2,    /* ATA device (unsupported) */
->>> @@ -153,6 +156,9 @@ enum {
->>>      ATA_FLAG_PIO_POLLING    = (1 << 10), /* use polling PIO if LLD
->>>                            * doesn't handle PIO interrupts */
->>>      ATA_FLAG_NCQ        = (1 << 11), /* host supports NCQ */
->>> +    ATA_FLAG_HRST_TO_RESUME    = (1 << 12), /* hardreset to resume 
->>> phy */
->>> +    ATA_FLAG_CANT_WAIT_FIS34 = (1 << 13), /* can't wait for the 
->>> first D2H
->>> +                           * Register FIS clearing BSY */
->>
->> FIS34 is an awful name.  I hereby ban it from libata :)
->>
->> Also those names are getting long.  Consider shortening CANT_WAIT, 
->> perhaps to NOWAIT.  And perhaps s/HRST_TO_RESUME/HRST_RESUMES/.
->>
->> ACK everything else in this patch.
-> 
-> Yeah I hate FIS34 too.  Can you suggest a name which can also signify 
-> that the wait is for hotplug probing?  ATA_FLAG_CANT_WAIT_HP?
+Hello,
 
-I wouldn't mention hotplug probing, because feels more like an 
-implementation detail/requirement, rather than low-level ATA.  Something 
-that would be more clear to a libata newbie might be ATA_FLAG_SKIP_D2H_BSY.
+This is This is part of patchset series described in [T].
 
-For general 'FIS34' substitutions, I would suggestion 'D2H' or 'D2HREG'.
+This is the second take of prep-LLDDs-for-hotplug-support patchset.
+Not much has changed since the last take[L].  Note that making TF
+access optional has been nacked, so sata_sil24 might have to retain TF
+caching.
 
-	Jeff
+This patchset is against
+
+  upstream (8d4ee71ff6de5255ebfdf44fb83419d27bd06368)
+  + enforce-default-EH-actions patch [1]
+  + scsi_implement_eh-patch [2]
+  + prep-for-hotplug-support patchset [3]
+
+Thanks.
+
+--
+tejun
+
+[T] http://article.gmane.org/gmane.linux.ide/10530
+[L] http://article.gmane.org/gmane.linux.ide/10063
+[1] http://article.gmane.org/gmane.linux.ide/10317
+[2] http://article.gmane.org/gmane.linux.ide/10529
+[3] http://article.gmane.org/gmane.linux.ide/10546
 
 
