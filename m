@@ -1,88 +1,145 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFT] major libata update
-Date: Fri, 19 May 2006 11:16:34 +0900
-Message-ID: <446D2A82.8060706@gmail.com>
-References: <20060515170006.GA29555@havoc.gtf.org> <20060516190507.35c1260f.akpm@osdl.org> <446AAB3C.6050303@gmail.com> <20060516215610.2b822c00.akpm@osdl.org> <446AB12C.10001@gmail.com> <446AC418.4070704@gmail.com> <20060518160758.5911e4b7.akpm@osdl.org> <20060519011400.GA10058@htj.dyndns.org> <446D281B.2060605@garzik.org>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 1/1] libata: Fix the HSM error_mask mapping (was: Re: libata-tj
+ and SMART)
+Date: Fri, 19 May 2006 11:43:04 +0800
+Message-ID: <446D3EC8.5070109@tw.ibm.com>
+References: <e4b02t$e9b$1@sea.gmane.org> <44690B0F.90200@gmail.com> <e4bvsb$s9m$1@sea.gmane.org> <4469893A.10901@gmail.com> <e4g3or$jbm$1@sea.gmane.org> <446BF147.4040904@gmail.com> <446C98CA.50008@garzik.org>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:31046 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932186AbWESCQm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 May 2006 22:16:42 -0400
-Received: by py-out-1112.google.com with SMTP id z59so790258pyg
-        for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 19:16:42 -0700 (PDT)
-In-Reply-To: <446D281B.2060605@garzik.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:11694 "EHLO
+	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S932177AbWESDnL
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 May 2006 23:43:11 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e36.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4J3h9nd015827
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 23:43:09 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4J3h9lD153672
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 21:43:09 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4J3h8Ac022893
+	for <linux-ide@vger.kernel.org>; Thu, 18 May 2006 21:43:09 -0600
+In-Reply-To: <446C98CA.50008@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
+Cc: Tejun Heo <htejun@gmail.com>, Nicolas STRANSKY <Nico@stransky.cx>, linux-ide@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> On Thu, May 18, 2006 at 04:07:58PM -0700, Andrew Morton wrote:
->>> Yes it does.  I dropped it and got
->>>
->>> SCSI subsystem initialized
->>> ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
->>> ACPI (acpi_bus-0191): Device is not power manageable [20060310]
->>> ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 19 (level, low) -> IRQ 19
->>> ata1: SATA max UDMA/133 cmd 0x2148 ctl 0x217E bmdma 0x2110 irq 19
->>> ata2: SATA max UDMA/133 cmd 0x2140 ctl 0x217A bmdma 0x2118 irq 19
->>> ata1: SATA port has no device.
->>>
->>> Then I undropped it and got
->>>
->>> SCSI subsystem initialized
->>> ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
->>> ACPI (acpi_bus-0191): Device is not power manageable [20060310]
->>> ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 19 (level, low) -> IRQ 19
->>> ata1: SATA max UDMA/133 cmd 0x2148 ctl 0x217E bmdma 0x2110 irq 19
->>> ata2: SATA max UDMA/133 cmd 0x2140 ctl 0x217A bmdma 0x2118 irq 19
->>> ata1.00: ATA-7, max UDMA/133, 321672960 sectors: LBA48 NCQ (depth 0/32)
->>> ata1.00: configured for UDMA/133
->>> scsi0 : ata_piix
->>>
->>> and a computer which boots.
->>>
->>> Look closer, please ;)
->>
->> Hello, Andrew.
->>
->> I see.  It seems that you're reporting two separate problems - your
->> PCS register doesn't report presence properly && the TF registers
->> report ghost device if the first device is ATAPI.  I can reproduce the
->> second here, but AFAIK the only controller which had problem with PCS
->> persence bits was ESB6300 until now.
->>
->> Can you post the result of 'lspci -n' and ata_piix boot probing
->> messages with the following patch applied?  It would be helpful if you
->> tell us how devices are actually connected.  Also, where did the patch
->> come from?  With what comment?
 > 
-> At this point it may be relevant to note that Intel tells me that PCS 
-> has changed on -every- chip.  So, ICH8 PCS register behaves differently 
-> from ICH7 and prior.
+>> It seems that HSM_ST needs to handle !DRQ && ERR case before the first
+>> iteration (or maybe it should be pushed into HSM_ST_FIRST?).  Does my
+>> analysis make sense?
+> 
+> 
+> Agreed, though we should check for ERR on ATAPI path first, too, IMO.
+> 
 
-Yeah, the PCS bit is sad to look at.  From ICH6, the docs say that the 
-AHCI SStatus should be used for presence detection but that cannot be 
-done without AHCI BAR mapped.
+Fix the HSM error_mask mapping.
 
-ICH7 (or 6 was it?) added a window register into AHCI area, which 
-weirdly cannot be used without actually enabling AHCI BAR - what's the 
-point?  My suspicion is that they designed it to work without AHCI BAR 
-enabled but maybe some revisions screwed up and ICH7 still had PCS 
-presence bits working, so the weird result.
+Changes:
+- Better mapping in ac_err_mask()
+- In HSM_ST_FIRST ans HSM_ST state, check ATA_ERR|ATA_DF and map it to AC_ERR_DEV instead of AC_ERR_HSM.
+- In HSM_ST_FIRST and HSM_ST state, map DRQ=1 ERR=1 to AC_ERR_HSM.
+- For PIO data in and DRQ=1 ERR=1, add check after the junk data block is read.
 
-I don't have ICH8 docs but, again, my guess is that they've got the 
-window register correct this time and determined to screw PCS presence 
-bits.  All these suspicions and guesses need verification, but if my 
-guesses are right, the solution would be...
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+---
+The device might stop the HSM by BSY=0 DRQ=1 ERR=1 when it finds something wrong.
+Map this condition to AC_ERR_DEV for accuracy.
+This should fix the problem of SMART reported by Nicolas.
+(patch against upstream branch.)
+For your review, thanks.
 
-* leave anything order than ICH6 as it is now
-* trust PCS presence bits for ICH6/7
-* use AHCI window register to access SStatus on ICH8
+--- upstream0/include/linux/libata.h	2006-05-16 11:08:54.000000000 +0800
++++ 201_hsm_error/include/linux/libata.h	2006-05-19 11:33:01.000000000 +0800
+@@ -1062,7 +1062,7 @@ static inline int ata_try_flush_cache(co
+ 
+ static inline unsigned int ac_err_mask(u8 status)
+ {
+-	if (status & ATA_BUSY)
++	if (status & (ATA_BUSY | ATA_DRQ))
+ 		return AC_ERR_HSM;
+ 	if (status & (ATA_ERR | ATA_DF))
+ 		return AC_ERR_DEV;
+--- upstream0/drivers/scsi/libata-core.c	2006-05-16 11:08:49.000000000 +0800
++++ 201_hsm_error/drivers/scsi/libata-core.c	2006-05-19 11:41:26.000000000 +0800
+@@ -4006,9 +4006,15 @@ fsm_start:
+ 		poll_next = (qc->tf.flags & ATA_TFLAG_POLLING);
+ 
+ 		/* check device status */
+-		if (unlikely((status & (ATA_BUSY | ATA_DRQ)) != ATA_DRQ)) {
+-			/* Wrong status. Let EH handle this */
+-			qc->err_mask |= AC_ERR_HSM;
++		if (unlikely((status & ATA_DRQ) == 0)) {
++			/* handle BSY=0, DRQ=0 as error */
++			if (likely(status & (ATA_ERR | ATA_DF)))
++				/* device stops HSM for abort/error */
++				qc->err_mask |= AC_ERR_DEV;
++			else
++				/* HSM violation. Let EH handle this */
++				qc->err_mask |= AC_ERR_HSM;
++
+ 			ap->hsm_task_state = HSM_ST_ERR;
+ 			goto fsm_start;
+ 		}
+@@ -4022,7 +4028,7 @@ fsm_start:
+ 		if (unlikely(status & (ATA_ERR | ATA_DF))) {
+ 			printk(KERN_WARNING "ata%d: DRQ=1 with device error, dev_stat 0x%X\n",
+ 			       ap->id, status);
+-			qc->err_mask |= AC_ERR_DEV;
++			qc->err_mask |= AC_ERR_HSM;
+ 			ap->hsm_task_state = HSM_ST_ERR;
+ 			goto fsm_start;
+ 		}
+@@ -4064,7 +4070,9 @@ fsm_start:
+ 		if (qc->tf.protocol == ATA_PROT_ATAPI) {
+ 			/* ATAPI PIO protocol */
+ 			if ((status & ATA_DRQ) == 0) {
+-				/* no more data to transfer */
++				/* No more data to transfer or device error.
++				 * Device error will be tagged in HSM_ST_LAST.
++				 */
+ 				ap->hsm_task_state = HSM_ST_LAST;
+ 				goto fsm_start;
+ 			}
+@@ -4078,7 +4086,7 @@ fsm_start:
+ 			if (unlikely(status & (ATA_ERR | ATA_DF))) {
+ 				printk(KERN_WARNING "ata%d: DRQ=1 with device error, dev_stat 0x%X\n",
+ 				       ap->id, status);
+-				qc->err_mask |= AC_ERR_DEV;
++				qc->err_mask |= AC_ERR_HSM;
+ 				ap->hsm_task_state = HSM_ST_ERR;
+ 				goto fsm_start;
+ 			}
+@@ -4093,7 +4101,13 @@ fsm_start:
+ 			/* ATA PIO protocol */
+ 			if (unlikely((status & ATA_DRQ) == 0)) {
+ 				/* handle BSY=0, DRQ=0 as error */
+-				qc->err_mask |= AC_ERR_HSM;
++				if (likely(status & (ATA_ERR | ATA_DF)))
++					/* device stops HSM for abort/error */
++					qc->err_mask |= AC_ERR_DEV;
++				else
++					/* HSM violation. Let EH handle this */
++					qc->err_mask |= AC_ERR_HSM;
++
+ 				ap->hsm_task_state = HSM_ST_ERR;
+ 				goto fsm_start;
+ 			}
+@@ -4118,6 +4132,9 @@ fsm_start:
+ 					status = ata_wait_idle(ap);
+ 				}
+ 
++				if (status & (ATA_BUSY | ATA_DRQ))
++					qc->err_mask |= AC_ERR_HSM;
++
+ 				/* ata_pio_sectors() might change the
+ 				 * state to HSM_ST_LAST. so, the state
+ 				 * is changed after ata_pio_sectors().
 
--- 
-tejun
+
