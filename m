@@ -1,122 +1,102 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 08/11] libata-eh-fw: implement new EH scheduling from
- PIO
-Date: Fri, 19 May 2006 15:31:11 +0800
-Message-ID: <446D743F.10601@tw.ibm.com>
-References: <1147350444826-git-send-email-htejun@gmail.com> <446C4FA8.5020105@tw.ibm.com> <446C5F4A.3030307@gmail.com>
-Reply-To: albertl@mail.com
+From: Andy Shaw <ashaw@seberg.co.uk>
+Subject: Re: [BUGREPORT 1/3] Kernel Oops with HPT372A IDE controller
+Date: Fri, 19 May 2006 8:36:03 +0100
+Message-ID: <cadb0abbb3dd59f2fe9583e019508ef2@localhost>
+References: <446CEB72.30302@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:32148 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751143AbWESHbT
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 03:31:19 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4J7VIqX015768
-	for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 03:31:18 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4J7VIan125976
-	for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 01:31:18 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4J7VHED005588
-	for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 01:31:18 -0600
-In-Reply-To: <446C5F4A.3030307@gmail.com>
+Received: from smtp.bulldogdsl.com ([212.158.248.8]:51718 "EHLO
+	mcr-smtp-002.bulldogdsl.com") by vger.kernel.org with ESMTP
+	id S932107AbWESHfs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 03:35:48 -0400
+In-Reply-To: <446CEB72.30302@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertl@mail.com, jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: 101551.753@compuserve.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Tejun Heo wrote:
-> Albert Lee wrote:
+
+
+On Fri, 19 May 2006 01:47:30 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> Hello, I wrote:
 > 
->> Tejun Heo wrote:
->>
->>> PIO executes without holding host_set lock, so it cannot be
->>> synchronized using the same mechanism as interrupt driven execution.
->>> port_task framework makes sure that EH is not entered until PIO task
->>> is flushed, so PIO task can be sure the qc in progress won't go away
->>> underneath it.  One thing it cannot be sure of is whether the qc has
->>> already been scheduled for EH by another exception condition while
->>> host_set lock was released.
->>>
->>> This patch makes ata_poll_qc-complete() handle such conditions
->>> properly and make it freeze the port if HSM violation is detected
->>> during PIO execution.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>>
->>> ---
->>>
->>>  drivers/scsi/libata-core.c |   23 +++++++++++++++++++----
->>>  1 files changed, 19 insertions(+), 4 deletions(-)
->>>
->>> 52240d1d208615e461c41a5c297f521a8a892f0d
->>> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
->>> index 436ff5b..86d6a7d 100644
->>> --- a/drivers/scsi/libata-core.c
->>> +++ b/drivers/scsi/libata-core.c
->>> @@ -3429,16 +3429,31 @@ skip_map:
->>>   *    LOCKING:
->>>   *    None.  (grabs host lock)
->>>   */
->>> -
->>>  void ata_poll_qc_complete(struct ata_queued_cmd *qc)
->>>  {
->>>      struct ata_port *ap = qc->ap;
->>>      unsigned long flags;
->>>  
->>>      spin_lock_irqsave(&ap->host_set->lock, flags);
->>> -    ap->flags &= ~ATA_FLAG_NOINTR;
->>> -    ata_irq_on(ap);
->>> -    ata_qc_complete(qc);
->>> +
->>> +    if (ap->ops->error_handler) {
->>> +        /* EH might have kicked in while host_set lock is released */
->>> +        qc = ata_qc_from_tag(ap, qc->tag);
->>> +        if (qc) {
->>> +            if (!(qc->err_mask & AC_ERR_HSM)) {
->>> +                ap->flags &= ~ATA_FLAG_NOINTR;
->>> +                ata_irq_on(ap);
->>> +                ata_qc_complete(qc);
->>> +            } else
->>> +                ata_port_freeze(ap);
->>
->>
->> I don't quite understand here. For the AC_ERR_HSM error, how does the
->> EH get triggered after ata_port_freeze()? Do we wait until time out?
->>
+>>>>> Kernel Oops with HighPoint RocketRAID ATA133 aka HPT372A/N since
+>>>>> kernel 2.6
+>>>>> Now tested with kernel 2.6.17-rc4
 > 
-> /**
->  *    ata_port_freeze - abort & freeze port
->  *    @ap: ATA port to freeze
->  *
->  *    Abort and freeze @ap.
->         ^^^^^^
->  *
->  *    LOCKING:
->  *    spin_lock_irqsave(host_set lock)
->  *
->  *    RETURNS:
->  *    Number of aborted commands.
->  */
-> int ata_port_freeze(struct ata_port *ap)
-> {
->     int nr_aborted;
+>>>>> Kernel is on bootable CD-ROM
+>>>>> Modules are loaded from initrd
 > 
->     WARN_ON(!ap->ops->error_handler);
+>>>>> This is what I copied from screen:
 > 
->     nr_aborted = ata_port_abort(ap);
->                      ^^^^^^^^^^^^^^^^^^^
->     __ata_port_freeze(ap);
+>>>>> Loading hpt366
+>>>>> [17179578.396000] HPT372A: IDE controller at PCI slot 0000:01:0a.0
+>>>>> [17179578.400000] ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
+>>>>> [17179578.404000] ACPI: PCI Interrupt 0000:01:0a.0[A] -> Link [APC1]
+>>>>> -> GSI 16 (level, high) -> IRQ 18
+>>>>> [17179578.408000] HPT372A: chipset revision 2
+>>>>> [17179578.412000] HPT372A: 100% native mode on irq 18
+>>>>> [17179578.416000] hpt: HPT372N detected, using 372N timing.
+>>>>> [17179578.420000] FREQ: 125 PLL: 45
+>>>>> [17179579.536000] No Clock Stabilization!!!
+>>>>> [17179579.540000] hpt: no known IDE timings, disabling DMA
+>>>>> [17179579.544000] hpt: HPT372N detected, using 372N timing.
+>>>>> [17179579.548000] FREQ: 156 PLL: 66
+>>>>> [17179579.664000] No Clock Stabilization!!!
 > 
->     return nr_aborted;
-> }
+>>>>    Please try my latest patches. This one should fix this (and oops
+>>>> should be gone):
+> 
+>>>> http://marc.theaimsgroup.com/?l=linux-ide&m=114677223914159&w=2
+> 
+>>> all patches applied, but I still get Kernel Oops :-(
+> 
+>>> some smal difference here:
+> 
+>>>   HPT372A: IDE controller at PCI slot 0000:01:0a.0
+>>>   ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
+>>>   ACPI: PCI Interrupt 0000:01:0a.0[A] -> Link [APC1] -> GSI 16 (level,
+>>> high) -> IRQ 18
+>>>   HPT372A: chipset revision 2
+>>>   HPT372A: 100% native mode on irq 18
+>>> + HPT37X: no clock data saved by BIOS
+>>> + HPT3xxN detected, FREQ: 124, PLL: 45
+>>> + HPT37xN unknown bus timing [48 4].
+> 
+>>    Hm, the BIOS seems to behave nastier than expected -- looks like it
+>> reprograms DPLL but doesn't save the initial f_CNT (needed to determine
+> the
+>> PCI clock). Well, I know that it always sets DPLL to 50 MHz, no matter
+>> what's the chip, so will try to work around this... :-/
+> 
+>     OTOH, there might be another reason to that: the BIOS saves f_CNT but
+> the
+> register it uses for this isn't mapped to the PCI config. space, only to
+> the
+> I/O space (it's undocumented, after all). Andy Shaw's report seems to
+> confirm
+> this -- his RAID BIOS seems to be modern enough to save the f_CNT but the
+> driver probably fails to read it (I don't have the full boot log yet).
+>     So, try the attached patch please. Foli, if this won't help, can you
+> tell
+> what version your HighPoint BIOS is?
+> 
+> MBR, Sergei
+> 
 > 
 
-Ah, I see. ata_port_freeze() is more than freeze. It does recovery, too.
-Thanks for the pointer.
+Sergei,
 
--- albert
+I can confirm that after applying your most recent patches my HighPoint card works. I have four disks attached to the two HPT IDE sockets and all four disks are picked up. I haven't been able to confirm whether DMA is supported yet but will update as soon as I get the chance.
+
+For anyone interested these patches have been applied to kernel 2.6.17-rc4-mm1. The lspci entry for the card looks like:
+
+0000:03:01.0 RAID bus controller: Triones Technologies, Inc. HPT372A/372N (rev 02)
+
+Many thanks for your efforts.
+
+Rgds
+Andy 
 
