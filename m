@@ -1,72 +1,98 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/14] libata-hp-prep: make probing related functions global
-Date: Fri, 19 May 2006 06:16:37 -0700 (PDT)
-Message-ID: <11480445843412-git-send-email-htejun@gmail.com>
+Subject: [PATCH 02/14] libata-hp-prep: implement ata_dev_init()
+Date: Fri, 19 May 2006 06:16:33 -0700 (PDT)
+Message-ID: <1148044584401-git-send-email-htejun@gmail.com>
 References: <11480445833568-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.206]:23324 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932230AbWESNQi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 09:16:38 -0400
-Received: by nz-out-0102.google.com with SMTP id 8so626378nzo
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:38 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.180]:4321 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932226AbWESNQe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 09:16:34 -0400
+Received: by py-out-1112.google.com with SMTP id z59so920071pyg
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:34 -0700 (PDT)
 In-Reply-To: <11480445833568-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Hotplug will be implemented in libata-eh.c.  Make ata_dev_read_id()
-and ata_dev_configure() global.
+Move initialization of struct ata_device into ata_dev_init() in
+preparation for hotplug.  This patch calls ata_dev_init() from
+ata_host_init() and thus makes no functional difference.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    6 +++---
- drivers/scsi/libata.h      |    3 +++
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/libata-core.c |   26 +++++++++++++++++++++-----
+ drivers/scsi/libata.h      |    1 +
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-03952258155acd6310ace4caaeb320df06cd7874
+1b2521bc48b11f2b347d5c3b7cf7ee26c9bdc380
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index fba5514..8b25cb5 100644
+index 9051b68..f239324 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1164,8 +1164,8 @@ unsigned int ata_pio_need_iordy(const st
-  *	RETURNS:
-  *	0 on success, -errno otherwise.
+@@ -5109,6 +5109,26 @@ static void ata_host_remove(struct ata_p
+ }
+ 
+ /**
++ *	ata_dev_init - Initialize an ata_device structure
++ *	@dev: Device structure to initialize
++ *
++ *	Initialize @dev in preparation for probing.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++void ata_dev_init(struct ata_device *dev)
++{
++	struct ata_port *ap = dev->ap;
++
++	memset((void *)dev, 0, sizeof(*dev));
++	dev->devno = dev - ap->device;
++	dev->pio_mask = UINT_MAX;
++	dev->mwdma_mask = UINT_MAX;
++	dev->udma_mask = UINT_MAX;
++}
++
++/**
+  *	ata_host_init - Initialize an ata_port structure
+  *	@ap: Structure to initialize
+  *	@host: associated SCSI mid-layer structure
+@@ -5122,7 +5142,6 @@ static void ata_host_remove(struct ata_p
+  *	LOCKING:
+  *	Inherited from caller.
   */
--static int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
--			   int post_reset, u16 *id)
-+int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
-+		    int post_reset, u16 *id)
- {
- 	struct ata_port *ap = dev->ap;
- 	unsigned int class = *p_class;
-@@ -1289,7 +1289,7 @@ static void ata_dev_config_ncq(struct at
-  *	RETURNS:
-  *	0 on success, -errno otherwise
-  */
--static int ata_dev_configure(struct ata_device *dev, int print_info)
-+int ata_dev_configure(struct ata_device *dev, int print_info)
- {
- 	struct ata_port *ap = dev->ap;
- 	const u16 *id = dev->id;
+-
+ static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
+ 			  struct ata_host_set *host_set,
+ 			  const struct ata_probe_ent *ent, unsigned int port_no)
+@@ -5164,10 +5183,7 @@ static void ata_host_init(struct ata_por
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 		dev->ap = ap;
+-		dev->devno = i;
+-		dev->pio_mask = UINT_MAX;
+-		dev->mwdma_mask = UINT_MAX;
+-		dev->udma_mask = UINT_MAX;
++		ata_dev_init(dev);
+ 	}
+ 
+ #ifdef ATA_IRQ_TRAP
 diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index 4a67675..d728fd5 100644
+index b76ad7d..d46c552 100644
 --- a/drivers/scsi/libata.h
 +++ b/drivers/scsi/libata.h
-@@ -50,6 +50,9 @@ extern void ata_port_flush_task(struct a
- extern unsigned ata_exec_internal(struct ata_device *dev,
- 				  struct ata_taskfile *tf, const u8 *cdb,
- 				  int dma_dir, void *buf, unsigned int buflen);
-+extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
-+			   int post_reset, u16 *id);
-+extern int ata_dev_configure(struct ata_device *dev, int print_info);
- extern int sata_down_spd_limit(struct ata_port *ap);
- extern int sata_set_spd_needed(struct ata_port *ap);
- extern int ata_down_xfermask_limit(struct ata_device *dev, int force_pio0);
+@@ -62,6 +62,7 @@ extern int ata_check_atapi_dma(struct at
+ extern void ata_dev_select(struct ata_port *ap, unsigned int device,
+                            unsigned int wait, unsigned int can_sleep);
+ extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
++extern void ata_dev_init(struct ata_device *dev);
+ extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
+ extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
+ 
 -- 
 1.3.2
 
