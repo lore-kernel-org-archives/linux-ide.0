@@ -1,102 +1,78 @@
-From: Andy Shaw <ashaw@seberg.co.uk>
-Subject: Re: [BUGREPORT 1/3] Kernel Oops with HPT372A IDE controller
-Date: Fri, 19 May 2006 8:36:03 +0100
-Message-ID: <cadb0abbb3dd59f2fe9583e019508ef2@localhost>
-References: <446CEB72.30302@ru.mvista.com>
+From: "martin schneebacher" <martin.schneebacher@gmail.com>
+Subject: (unknown)
+Date: Fri, 19 May 2006 11:28:39 +0200
+Message-ID: <e30fb88b0605190228u76a14b9h94a8c32f9c7e5058@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.bulldogdsl.com ([212.158.248.8]:51718 "EHLO
-	mcr-smtp-002.bulldogdsl.com") by vger.kernel.org with ESMTP
-	id S932107AbWESHfs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 03:35:48 -0400
-In-Reply-To: <446CEB72.30302@ru.mvista.com>
+Received: from nf-out-0910.google.com ([64.233.182.189]:54190 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751271AbWESJ2l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 05:28:41 -0400
+Received: by nf-out-0910.google.com with SMTP id o63so29645nfa
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 02:28:39 -0700 (PDT)
+Subject: 
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: 101551.753@compuserve.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
+hi all.
 
+since 2.6.17-rc2 (maybe rc1 too) the resume from standby doesn't work
+anymore. the system hangs for a while, then it comes back but the sata
+drive doesn't work. i have to turn the power off and restart the
+computer. i don't know how to debug it, maybe you could give me a hint
+if it's necessary.
 
-On Fri, 19 May 2006 01:47:30 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> Hello, I wrote:
-> 
->>>>> Kernel Oops with HighPoint RocketRAID ATA133 aka HPT372A/N since
->>>>> kernel 2.6
->>>>> Now tested with kernel 2.6.17-rc4
-> 
->>>>> Kernel is on bootable CD-ROM
->>>>> Modules are loaded from initrd
-> 
->>>>> This is what I copied from screen:
-> 
->>>>> Loading hpt366
->>>>> [17179578.396000] HPT372A: IDE controller at PCI slot 0000:01:0a.0
->>>>> [17179578.400000] ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
->>>>> [17179578.404000] ACPI: PCI Interrupt 0000:01:0a.0[A] -> Link [APC1]
->>>>> -> GSI 16 (level, high) -> IRQ 18
->>>>> [17179578.408000] HPT372A: chipset revision 2
->>>>> [17179578.412000] HPT372A: 100% native mode on irq 18
->>>>> [17179578.416000] hpt: HPT372N detected, using 372N timing.
->>>>> [17179578.420000] FREQ: 125 PLL: 45
->>>>> [17179579.536000] No Clock Stabilization!!!
->>>>> [17179579.540000] hpt: no known IDE timings, disabling DMA
->>>>> [17179579.544000] hpt: HPT372N detected, using 372N timing.
->>>>> [17179579.548000] FREQ: 156 PLL: 66
->>>>> [17179579.664000] No Clock Stabilization!!!
-> 
->>>>    Please try my latest patches. This one should fix this (and oops
->>>> should be gone):
-> 
->>>> http://marc.theaimsgroup.com/?l=linux-ide&m=114677223914159&w=2
-> 
->>> all patches applied, but I still get Kernel Oops :-(
-> 
->>> some smal difference here:
-> 
->>>   HPT372A: IDE controller at PCI slot 0000:01:0a.0
->>>   ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
->>>   ACPI: PCI Interrupt 0000:01:0a.0[A] -> Link [APC1] -> GSI 16 (level,
->>> high) -> IRQ 18
->>>   HPT372A: chipset revision 2
->>>   HPT372A: 100% native mode on irq 18
->>> + HPT37X: no clock data saved by BIOS
->>> + HPT3xxN detected, FREQ: 124, PLL: 45
->>> + HPT37xN unknown bus timing [48 4].
-> 
->>    Hm, the BIOS seems to behave nastier than expected -- looks like it
->> reprograms DPLL but doesn't save the initial f_CNT (needed to determine
-> the
->> PCI clock). Well, I know that it always sets DPLL to 50 MHz, no matter
->> what's the chip, so will try to work around this... :-/
-> 
->     OTOH, there might be another reason to that: the BIOS saves f_CNT but
-> the
-> register it uses for this isn't mapped to the PCI config. space, only to
-> the
-> I/O space (it's undocumented, after all). Andy Shaw's report seems to
-> confirm
-> this -- his RAID BIOS seems to be modern enough to save the f_CNT but the
-> driver probably fails to read it (I don't have the full boot log yet).
->     So, try the attached patch please. Foli, if this won't help, can you
-> tell
-> what version your HighPoint BIOS is?
-> 
-> MBR, Sergei
-> 
-> 
+actual kernel: 2.6.17-rc4
+bootoptions:  libata.atapi_enabled=1 vga=791 quiet pci=assign-busses
 
-Sergei,
+lspci:
+0000:00:00.0 Host bridge: Intel Corporation Mobile 915GM/PM/GMS/910GML
+Express Processor to DRAM Controller (rev 03)
+0000:00:01.0 PCI bridge: Intel Corporation Mobile 915GM/PM Express PCI
+Express Root Port (rev 03)
+0000:00:1c.0 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
+Family) PCI Express Port 1 (rev 04)
+0000:00: 1d.0 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB UHCI #1 (rev 04)
+0000:00:1d.1 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB UHCI #2 (rev 04)
+0000:00:1d.2 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB UHCI #3 (rev 04)
+0000:00:1d.3 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB UHCI #4 (rev 04)
+0000:00:1d.7 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB2 EHCI Controller (rev 04)
+0000:00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev d4)
+0000:00:1e.2 Multimedia audio controller: Intel Corporation
+82801FB/FBM/FR/FW/FRW (ICH6 Family) AC'97 Audio Controller (rev 04)
+0000:00: 1e.3 Modem: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
+Family) AC'97 Modem Controller (rev 04)
+0000:00:1f.0 ISA bridge: Intel Corporation 82801FBM (ICH6M) LPC
+Interface Bridge (rev 04)
+0000:00:1f.2 IDE interface: Intel Corporation 82801FBM (ICH6M) SATA
+Controller (rev 04)
+0000:00:1f.3 SMBus: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
+Family) SMBus Controller (rev 04)
+0000:01:00.0 VGA compatible controller: nVidia Corporation NV43
+[GeForce Go 6600] (rev a2)
+0000:03:05.0 Ethernet controller: Atheros Communications, Inc. AR5212
+802.11abg NIC (rev 01)
+0000:03:07.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+RTL-8169 Gigabit Ethernet (rev 10)
+0000:03:09.0 CardBus bridge: Texas Instruments PCIxx21/x515 Cardbus Controller
+0000:03:09.2 FireWire (IEEE 1394): Texas Instruments OHCI Compliant
+IEEE 1394 Host Controller
+0000:03:09.3 Mass storage controller: Texas Instruments PCIxx21
+Integrated FlashMedia Controller
+0000:03:09.4 0805: Texas Instruments PCI6411, PCI6421, PCI6611,
+PCI6621, PCI7411, PCI7421, PCI7611, PCI7621 Secure Digital (SD)
+Controller
 
-I can confirm that after applying your most recent patches my HighPoint card works. I have four disks attached to the two HPT IDE sockets and all four disks are picked up. I haven't been able to confirm whether DMA is supported yet but will update as soon as I get the chance.
+hdd:
+hitachi travelstar  HTS541080G9SA00
 
-For anyone interested these patches have been applied to kernel 2.6.17-rc4-mm1. The lspci entry for the card looks like:
-
-0000:03:01.0 RAID bus controller: Triones Technologies, Inc. HPT372A/372N (rev 02)
-
-Many thanks for your efforts.
-
-Rgds
-Andy 
-
+bye...masc.
