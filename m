@@ -1,91 +1,133 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/14] libata-hp-prep: implement ata_noop_check_status()
+Subject: [PATCH 14/14] libata-hp-prep: implement followup softreset handling
 Date: Fri, 19 May 2006 06:06:41 -0700 (PDT)
-Message-ID: <1148043989542-git-send-email-htejun@gmail.com>
-References: <11480439893100-git-send-email-htejun@gmail.com>
+Message-ID: <11480439892925-git-send-email-htejun@gmail.com>
+References: <11480439891385-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:18121 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.179]:30921 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751325AbWESNGm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S932138AbWESNGm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 19 May 2006 09:06:42 -0400
-Received: by py-out-1112.google.com with SMTP id z59so917368pyg
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:06:41 -0700 (PDT)
-In-Reply-To: <11480439893100-git-send-email-htejun@gmail.com>
+Received: by py-out-1112.google.com with SMTP id z59so917410pyg
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:06:42 -0700 (PDT)
+In-Reply-To: <11480439891385-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-As with ops->tf_read, ops->check_status() and ops->check_altstatus()
-don't make sense for controllers without single TF image.  As
-->check_status() and ->check_altstatus() are deeply integrated into
-libata core layer, implement ata_noop_check_status() as a temporary
-measure.  This function always returns ATA_DRDY without doing
-anything.
+In some cases, hardreset must be followed by SRST.
 
-In the long term, these IO ops should be made optional and removed
-from top level ata_port_operations such that driver implementing
-high-level behavior don't have to bother with these.
+* some controllers can't classify with hardreset
+* some controllers can't wait for !BSY after hardreset (LLDD should
+  explicitly request followup softreset by returning -EAGAIN)
+* (later) PM needs SRST w/ PMP==15 to operate after hardreset
+
+To handle above cases, this patch implements follow-up softreset.
+After a hardreset, ata_eh_reset() checks whether any of above
+conditions are met and do a follow-up softreset if necessary.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   19 +++++++++++++++++++
- include/linux/libata.h     |    1 +
- 2 files changed, 20 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-eh.c |   58 +++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 52 insertions(+), 6 deletions(-)
 
-89c675e09ffd6c3cdf7cc656152f6a1ea03533f0
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 9a4124e..72eef00 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -707,6 +707,24 @@ static u64 ata_id_n_sectors(const u16 *i
+ce8c79e15ae26381f0e32b532a594c2f86037065
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 4ec50d4..c76fab0 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1281,16 +1281,28 @@ static void ata_eh_report(struct ata_por
+ 	}
  }
  
- /**
-+ *	ata_noop_check_status - Fake device status reg
-+ *	@ap: target port
-+ *
-+ *	This function performs no actual function and always returns
-+ *	ATA_DRDY.
-+ *
-+ *	May be used as the check_status/altstatus() entry in
-+ *	ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	caller.
-+ */
-+u8 ata_noop_check_status(struct ata_port *ap)
+-static int ata_eh_reset(struct ata_port *ap,
++static int ata_eh_followup_srst_needed(int rc, int classify,
++				       const unsigned int *classes)
 +{
-+	return ATA_DRDY;
++	if (rc == -EAGAIN)
++		return 1;
++	if (rc != 0)
++		return 0;
++	if (classify && classes[0] == ATA_DEV_UNKNOWN)
++		return 1;
++	return 0;
 +}
 +
-+/**
-  *	ata_noop_dev_select - Select device 0/1 on ATA bus
-  *	@ap: ATA channel to manipulate
-  *	@device: ATA device (numbered from zero) to select
-@@ -5769,6 +5787,7 @@ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
- EXPORT_SYMBOL_GPL(ata_tf_load);
- EXPORT_SYMBOL_GPL(ata_tf_read);
- EXPORT_SYMBOL_GPL(ata_noop_dev_select);
-+EXPORT_SYMBOL_GPL(ata_noop_check_status);
- EXPORT_SYMBOL_GPL(ata_std_dev_select);
- EXPORT_SYMBOL_GPL(ata_tf_to_fis);
- EXPORT_SYMBOL_GPL(ata_tf_from_fis);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3d7c3e3..35f6d3b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -665,6 +665,7 @@ extern void ata_tf_load(struct ata_port 
- extern void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
- extern void ata_tf_to_fis(const struct ata_taskfile *tf, u8 *fis, u8 pmp);
- extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
-+extern u8 ata_noop_check_status(struct ata_port *ap);
- extern void ata_noop_dev_select (struct ata_port *ap, unsigned int device);
- extern void ata_std_dev_select (struct ata_port *ap, unsigned int device);
- extern u8 ata_check_status(struct ata_port *ap);
++static int ata_eh_reset(struct ata_port *ap, int classify,
+ 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+ 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
+ {
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+-	unsigned int classes[ATA_MAX_DEVICES];
++	unsigned int *classes = ehc->classes;
+ 	int tries = ATA_EH_RESET_TRIES;
+ 	unsigned int action;
+ 	ata_reset_fn_t reset;
+-	int i, rc;
++	int i, did_followup_srst, rc;
+ 
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine and modify it.
+@@ -1344,10 +1356,44 @@ static int ata_eh_reset(struct ata_port 
+ 
+ 	rc = ata_do_reset(ap, reset, classes);
+ 
++	did_followup_srst = 0;
++	if (reset == hardreset &&
++	    ata_eh_followup_srst_needed(rc, classify, classes)) {
++		/* okay, let's do follow-up softreset */
++		did_followup_srst = 1;
++		reset = softreset;
++
++		if (!reset) {
++			ata_port_printk(ap, KERN_ERR,
++					"follow-up softreset required "
++					"but no softreset avaliable\n");
++			return -EINVAL;
++		}
++
++		ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
++		rc = ata_do_reset(ap, reset, classes);
++
++		if (rc == 0 && classify &&
++		    classes[0] == ATA_DEV_UNKNOWN) {
++			ata_port_printk(ap, KERN_ERR,
++					"classification failed\n");
++			return -EINVAL;
++		}
++	}
++
+ 	if (rc && --tries) {
++		const char *type;
++
++		if (reset == softreset) {
++			if (did_followup_srst)
++				type = "follow-up soft";
++			else
++				type = "soft";
++		} else
++			type = "hard";
++
+ 		ata_port_printk(ap, KERN_WARNING,
+-				"%sreset failed, retrying in 5 secs\n",
+-				reset == softreset ? "soft" : "hard");
++				"%sreset failed, retrying in 5 secs\n", type);
+ 		ssleep(5);
+ 
+ 		if (reset == hardreset)
+@@ -1465,7 +1511,7 @@ static int ata_eh_recover(struct ata_por
+ 	if (ehc->i.action & ATA_EH_RESET_MASK) {
+ 		ata_eh_freeze_port(ap);
+ 
+-		rc = ata_eh_reset(ap, prereset, softreset, hardreset,
++		rc = ata_eh_reset(ap, 0, prereset, softreset, hardreset,
+ 				  postreset);
+ 		if (rc) {
+ 			ata_port_printk(ap, KERN_ERR,
 -- 
 1.3.2
 
