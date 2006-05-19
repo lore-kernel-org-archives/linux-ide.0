@@ -1,64 +1,98 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git-patch] fixes & updated hotplug
-Date: Fri, 19 May 2006 21:33:20 +0900
-Message-ID: <20060519123320.GD10058@htj.dyndns.org>
-References: <20060519122748.GC10058@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 02/14] libata-hp-prep: implement ata_dev_init()
+Date: Fri, 19 May 2006 06:06:34 -0700 (PDT)
+Message-ID: <11480439883935-git-send-email-htejun@gmail.com>
+References: <11480439884097-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:33661 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932296AbWESMd1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 08:33:27 -0400
-Received: by py-out-1112.google.com with SMTP id z59so907794pyg
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 05:33:26 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20060519122748.GC10058@htj.dyndns.org>
+Received: from nz-out-0102.google.com ([64.233.162.198]:41012 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751113AbWESNGf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 09:06:35 -0400
+Received: by nz-out-0102.google.com with SMTP id 8so624359nzo
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:06:34 -0700 (PDT)
+In-Reply-To: <11480439884097-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, mlord@pobox.com, Albert Lee <albertcc@tw.ibm.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@suse.de>, "Zhao, Forrest" <forrest.zhao@intel.com>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-[Sorry, forgot to cc linux-ide]
+Move initialization of struct ata_device into ata_dev_init() in
+preparation for hotplug.  This patch calls ata_dev_init() from
+ata_host_init() and thus makes no functional difference.
 
-Hello,
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Currently, the following two updates are pending.
+---
 
-* enforce default EH actions fix [1]
-* scsi_implement_eh() patch [2]
+ drivers/scsi/libata-core.c |   26 +++++++++++++++++++++-----
+ drivers/scsi/libata.h      |    1 +
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-And, the following three patchsets are about to be posted
-
-1. prep-for-hotplug-support		: take 3 (14 patches)
-2. prep-LLDDs-for-hotplug-support	: take 2 ( 6 patches)
-3. add-hotplug-support			: take 3 (13 patches)
-
-The overall structure of hotplug hasn't been changed.  The biggest
-update is how controllers handle device detection after hotplug event.
-Previously, libata hotplug often failed the first attempt to detect a
-newly plugged device resulting in reset failure or timeout causing
-unnecessary delay.  With this update, libata can detect most devices
-on the first try.
-
-Head message of each patchset will contain detailed changelog.
-
-All of above changes can be accessed via the following git tree.
-
-  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=for-jeff
-  git://htj.dyndns.org/libata-tj for-jeff
-
-The git tree is tagged as follows.
-
-  fj-fixes		: contains two pending patches
-  fj-hp-prep		: prep-for-hotplug-support patchset
-  fj-hp-LLDD-prep	: prep-LLDDs-for-hotplug-support patchset
-  fj-hp			: add-hotplug-support patchset
-
-Thanks.
-
+1b2521bc48b11f2b347d5c3b7cf7ee26c9bdc380
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 9051b68..f239324 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5109,6 +5109,26 @@ static void ata_host_remove(struct ata_p
+ }
+ 
+ /**
++ *	ata_dev_init - Initialize an ata_device structure
++ *	@dev: Device structure to initialize
++ *
++ *	Initialize @dev in preparation for probing.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++void ata_dev_init(struct ata_device *dev)
++{
++	struct ata_port *ap = dev->ap;
++
++	memset((void *)dev, 0, sizeof(*dev));
++	dev->devno = dev - ap->device;
++	dev->pio_mask = UINT_MAX;
++	dev->mwdma_mask = UINT_MAX;
++	dev->udma_mask = UINT_MAX;
++}
++
++/**
+  *	ata_host_init - Initialize an ata_port structure
+  *	@ap: Structure to initialize
+  *	@host: associated SCSI mid-layer structure
+@@ -5122,7 +5142,6 @@ static void ata_host_remove(struct ata_p
+  *	LOCKING:
+  *	Inherited from caller.
+  */
+-
+ static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
+ 			  struct ata_host_set *host_set,
+ 			  const struct ata_probe_ent *ent, unsigned int port_no)
+@@ -5164,10 +5183,7 @@ static void ata_host_init(struct ata_por
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 		dev->ap = ap;
+-		dev->devno = i;
+-		dev->pio_mask = UINT_MAX;
+-		dev->mwdma_mask = UINT_MAX;
+-		dev->udma_mask = UINT_MAX;
++		ata_dev_init(dev);
+ 	}
+ 
+ #ifdef ATA_IRQ_TRAP
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index b76ad7d..d46c552 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -62,6 +62,7 @@ extern int ata_check_atapi_dma(struct at
+ extern void ata_dev_select(struct ata_port *ap, unsigned int device,
+                            unsigned int wait, unsigned int can_sleep);
+ extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
++extern void ata_dev_init(struct ata_device *dev);
+ extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
+ extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
+ 
 -- 
-tejun
+1.3.2
 
-[1] http://article.gmane.org/gmane.linux.ide/10317
-[2] http://article.gmane.org/gmane.linux.ide/10529
