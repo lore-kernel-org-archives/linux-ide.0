@@ -1,133 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 14/14] libata-hp-prep: implement followup softreset handling
-Date: Fri, 19 May 2006 06:16:41 -0700 (PDT)
-Message-ID: <11480445851340-git-send-email-htejun@gmail.com>
-References: <11480445833568-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:19937 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932249AbWESNQm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 09:16:42 -0400
-Received: by py-out-1112.google.com with SMTP id z59so920074pyg
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:42 -0700 (PDT)
-In-Reply-To: <11480445833568-git-send-email-htejun@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Thomas Renninger <trenn@suse.de>
+Subject: Re: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
+Date: Fri, 19 May 2006 15:44:17 +0200
+Message-ID: <1148046258.9319.441.camel@queen.suse.de>
+References: <E1FHa8k-00015b-M5@approximate.corpus.cam.ac.uk>
+Reply-To: trenn@suse.de
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <E1FHa8k-00015b-M5@approximate.corpus.cam.ac.uk>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+Cc: "Yu, Luming" <luming.yu@intel.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>, Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
 
-In some cases, hardreset must be followed by SRST.
+On Fri, 2006-03-10 at 00:26 -0500, Sanjoy Mahajan wrote:
+> [Re: bugme #5989, head no longer hanging in shame]
+> 
+> From: "Yu, Luming" <luming.yu@intel.com>
+> > I suggest you to retest, and post dmesg with UN-modified BIOS.
+> 
+> I'm now running/testing an unmodified DSDT with 2.6.16-rc5.  For a while
+> I had no S3 hangs, but I just noticed them again.  The error is the same
+> as with the modified DSDT (with slightly different offsets):
+> 
+> exregion-0185 [36] ex_system_memory_space: system_memory 0 (32 width) Address=0000000023FDFFC0
+> exregion-0185 [36] ex_system_memory_space: system_memory 1 (32 width) Address=0000000023FDFFC0
+> exregion-0290 [36] ex_system_io_space_han: system_iO 1 (8 width) Address=00000000000000B2
+> 
+> repeated endlessly.
 
-* some controllers can't classify with hardreset
-* some controllers can't wait for !BSY after hardreset (LLDD should
-  explicitly request followup softreset by returning -EAGAIN)
-* (later) PM needs SRST w/ PMP==15 to operate after hardreset
+This sounds like the problem Daniel had on his Samsung P35 recently.
+He could fix it by getting rid of some asus_unhide_smbus stuff or the
+otherway around, adding asus_unhide_smbus quirks in the S3 resume code.
 
-To handle above cases, this patch implements follow-up softreset.
-After a hardreset, ata_eh_reset() checks whether any of above
-conditions are met and do a follow-up softreset if necessary.
+This thread was recently posted on lkml:
+Re: [patch] smbus unhiding kills thermal management
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Here are some more details, for me that sounds related...:
+https://bugzilla.novell.com/show_bug.cgi?id=173420
 
----
-
- drivers/scsi/libata-eh.c |   58 +++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 52 insertions(+), 6 deletions(-)
-
-ce8c79e15ae26381f0e32b532a594c2f86037065
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 4ec50d4..c76fab0 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1281,16 +1281,28 @@ static void ata_eh_report(struct ata_por
- 	}
- }
- 
--static int ata_eh_reset(struct ata_port *ap,
-+static int ata_eh_followup_srst_needed(int rc, int classify,
-+				       const unsigned int *classes)
-+{
-+	if (rc == -EAGAIN)
-+		return 1;
-+	if (rc != 0)
-+		return 0;
-+	if (classify && classes[0] == ATA_DEV_UNKNOWN)
-+		return 1;
-+	return 0;
-+}
-+
-+static int ata_eh_reset(struct ata_port *ap, int classify,
- 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
- 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
- {
- 	struct ata_eh_context *ehc = &ap->eh_context;
--	unsigned int classes[ATA_MAX_DEVICES];
-+	unsigned int *classes = ehc->classes;
- 	int tries = ATA_EH_RESET_TRIES;
- 	unsigned int action;
- 	ata_reset_fn_t reset;
--	int i, rc;
-+	int i, did_followup_srst, rc;
- 
- 	/* Determine which reset to use and record in ehc->i.action.
- 	 * prereset() may examine and modify it.
-@@ -1344,10 +1356,44 @@ static int ata_eh_reset(struct ata_port 
- 
- 	rc = ata_do_reset(ap, reset, classes);
- 
-+	did_followup_srst = 0;
-+	if (reset == hardreset &&
-+	    ata_eh_followup_srst_needed(rc, classify, classes)) {
-+		/* okay, let's do follow-up softreset */
-+		did_followup_srst = 1;
-+		reset = softreset;
-+
-+		if (!reset) {
-+			ata_port_printk(ap, KERN_ERR,
-+					"follow-up softreset required "
-+					"but no softreset avaliable\n");
-+			return -EINVAL;
-+		}
-+
-+		ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
-+		rc = ata_do_reset(ap, reset, classes);
-+
-+		if (rc == 0 && classify &&
-+		    classes[0] == ATA_DEV_UNKNOWN) {
-+			ata_port_printk(ap, KERN_ERR,
-+					"classification failed\n");
-+			return -EINVAL;
-+		}
-+	}
-+
- 	if (rc && --tries) {
-+		const char *type;
-+
-+		if (reset == softreset) {
-+			if (did_followup_srst)
-+				type = "follow-up soft";
-+			else
-+				type = "soft";
-+		} else
-+			type = "hard";
-+
- 		ata_port_printk(ap, KERN_WARNING,
--				"%sreset failed, retrying in 5 secs\n",
--				reset == softreset ? "soft" : "hard");
-+				"%sreset failed, retrying in 5 secs\n", type);
- 		ssleep(5);
- 
- 		if (reset == hardreset)
-@@ -1465,7 +1511,7 @@ static int ata_eh_recover(struct ata_por
- 	if (ehc->i.action & ATA_EH_RESET_MASK) {
- 		ata_eh_freeze_port(ap);
- 
--		rc = ata_eh_reset(ap, prereset, softreset, hardreset,
-+		rc = ata_eh_reset(ap, 0, prereset, softreset, hardreset,
- 				  postreset);
- 		if (rc) {
- 			ata_port_printk(ap, KERN_ERR,
--- 
-1.3.2
+     Thomas
 
