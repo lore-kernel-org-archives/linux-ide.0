@@ -1,223 +1,91 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/14] libata-hp-prep: implement sata_phy_debounce()
-Date: Fri, 19 May 2006 06:16:41 -0700 (PDT)
-Message-ID: <11480445841146-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/14] libata-hp-prep: implement ata_noop_check_status()
+Date: Fri, 19 May 2006 06:16:38 -0700 (PDT)
+Message-ID: <11480445851733-git-send-email-htejun@gmail.com>
 References: <11480445833568-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:4321 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932303AbWESNQm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 09:16:42 -0400
-Received: by py-out-1112.google.com with SMTP id z59so920071pyg
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:42 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.206]:23324 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932273AbWESNQj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 09:16:39 -0400
+Received: by nz-out-0102.google.com with SMTP id 8so626378nzo
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:39 -0700 (PDT)
 In-Reply-To: <11480445833568-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-With hotplug, PHY always needs to be debounced before a reset as any
-reset might find new devices.  Extract PHY waiting code from
-sata_phy_resume() and extend it to include SStatus debouncing.  Note
-that sata_phy_debounce() is superset of what used to be done inside
-sata_phy_resume().
+As with ops->tf_read, ops->check_status() and ops->check_altstatus()
+don't make sense for controllers without single TF image.  As
+->check_status() and ->check_altstatus() are deeply integrated into
+libata core layer, implement ata_noop_check_status() as a temporary
+measure.  This function always returns ATA_DRDY without doing
+anything.
 
-Three default debounce timing parameters are defined to be used by
-hot/boot plug.  As resume failure during probing will be properly
-handled as errors, timeout doesn't have to be long as before.
-probeinit() uses the same timeout to retain the original behavior.
+In the long term, these IO ops should be made optional and removed
+from top level ata_port_operations such that driver implementing
+high-level behavior don't have to bother with these.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |  104 ++++++++++++++++++++++++++++++++++++++------
- include/linux/libata.h     |    6 +++
- 2 files changed, 95 insertions(+), 15 deletions(-)
+ drivers/scsi/libata-core.c |   19 +++++++++++++++++++
+ include/linux/libata.h     |    1 +
+ 2 files changed, 20 insertions(+), 0 deletions(-)
 
-fab1e57199f37d383773923278bc9ada10a3c60b
+89c675e09ffd6c3cdf7cc656152f6a1ea03533f0
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 8b25cb5..8f18ced 100644
+index 9a4124e..72eef00 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -61,6 +61,11 @@ #include <asm/byteorder.h>
- 
- #include "libata.h"
- 
-+/* debounce timing parameters in msecs { interval, duration, timeout } */
-+const unsigned long sata_deb_timing_boot[]		= {   5,  100, 2000 };
-+const unsigned long sata_deb_timing_eh[]		= {  25,  500, 2000 };
-+const unsigned long sata_deb_timing_before_fsrst[]	= { 100, 2000, 5000 };
-+
- static unsigned int ata_dev_init_params(struct ata_device *dev,
- 					u16 heads, u16 sectors);
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
-@@ -2418,10 +2423,81 @@ err_out:
- 	DPRINTK("EXIT\n");
- }
- 
--static int sata_phy_resume(struct ata_port *ap)
-+/**
-+ *	sata_phy_debounce - debounce SATA phy status
-+ *	@ap: ATA port to debounce SATA phy status for
-+ *	@params: timing parameters { interval, duratinon, timeout } in msec
-+ *
-+ *	Make sure SStatus of @ap reaches stable state, determined by
-+ *	holding the same value where DET is not 1 for @duration polled
-+ *	every @interval, before @timeout.  Timeout constraints the
-+ *	beginning of the stable state.  Because, after hot unplugging,
-+ *	DET gets stuck at 1 on some controllers, this functions waits
-+ *	until timeout then returns 0 if DET is stable at 1.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno on failure.
-+ */
-+int sata_phy_debounce(struct ata_port *ap, const unsigned long *params)
- {
--	unsigned long timeout = jiffies + (HZ * 5);
--	u32 scontrol, sstatus;
-+	unsigned long interval_msec = params[0];
-+	unsigned long duration = params[1] * HZ / 1000;
-+	unsigned long timeout = jiffies + params[2] * HZ / 1000;
-+	unsigned long last_jiffies;
-+	u32 last, cur;
-+	int rc;
-+
-+	if ((rc = sata_scr_read(ap, SCR_STATUS, &cur)))
-+		return rc;
-+	cur &= 0xf;
-+
-+	last = cur;
-+	last_jiffies = jiffies;
-+
-+	while (1) {
-+		msleep(interval_msec);
-+		if ((rc = sata_scr_read(ap, SCR_STATUS, &cur)))
-+			return rc;
-+		cur &= 0xf;
-+
-+		/* DET stable? */
-+		if (cur == last) {
-+			if (cur == 1 && time_before(jiffies, timeout))
-+				continue;
-+			if (time_after(jiffies, last_jiffies + duration))
-+				return 0;
-+			continue;
-+		}
-+
-+		/* unstable, start over */
-+		last = cur;
-+		last_jiffies = jiffies;
-+
-+		/* check timeout */
-+		if (time_after(jiffies, timeout))
-+			return -EBUSY;
-+	}
-+}
-+
-+/**
-+ *	sata_phy_resume - resume SATA phy
-+ *	@ap: ATA port to resume SATA phy for
-+ *	@params: timing parameters { interval, duratinon, timeout } in msec
-+ *
-+ *	Resume SATA phy of @ap and debounce it.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno on failure.
-+ */
-+int sata_phy_resume(struct ata_port *ap, const unsigned long *params)
-+{
-+	u32 scontrol;
- 	int rc;
- 
- 	if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
-@@ -2432,16 +2508,7 @@ static int sata_phy_resume(struct ata_po
- 	if ((rc = sata_scr_write(ap, SCR_CONTROL, scontrol)))
- 		return rc;
- 
--	/* Wait for phy to become ready, if necessary. */
--	do {
--		msleep(200);
--		if ((rc = sata_scr_read(ap, SCR_STATUS, &sstatus)))
--			return rc;
--		if ((sstatus & 0xf) != 1)
--			return 0;
--	} while (time_before(jiffies, timeout));
--
--	return -EBUSY;
-+	return sata_phy_debounce(ap, params);
+@@ -707,6 +707,24 @@ static u64 ata_id_n_sectors(const u16 *i
  }
  
  /**
-@@ -2459,8 +2526,10 @@ static int sata_phy_resume(struct ata_po
-  */
- void ata_std_probeinit(struct ata_port *ap)
- {
-+	static const unsigned long deb_timing[] = { 5, 100, 5000 };
++ *	ata_noop_check_status - Fake device status reg
++ *	@ap: target port
++ *
++ *	This function performs no actual function and always returns
++ *	ATA_DRDY.
++ *
++ *	May be used as the check_status/altstatus() entry in
++ *	ata_port_operations.
++ *
++ *	LOCKING:
++ *	caller.
++ */
++u8 ata_noop_check_status(struct ata_port *ap)
++{
++	return ATA_DRDY;
++}
 +
- 	/* resume link */
--	sata_phy_resume(ap);
-+	sata_phy_resume(ap, deb_timing);
- 
- 	/* wait for device */
- 	if (ata_port_online(ap))
-@@ -2576,7 +2645,7 @@ int sata_std_hardreset(struct ata_port *
- 	msleep(1);
- 
- 	/* bring phy back */
--	sata_phy_resume(ap);
-+	sata_phy_resume(ap, sata_deb_timing_eh);
- 
- 	/* TODO: phy layer with polling, timeouts, etc. */
- 	if (ata_port_offline(ap)) {
-@@ -5683,6 +5752,9 @@ u32 ata_wait_register(void __iomem *reg,
-  * Do not depend on ABI/API stability.
-  */
- 
-+EXPORT_SYMBOL_GPL(sata_deb_timing_boot);
-+EXPORT_SYMBOL_GPL(sata_deb_timing_eh);
-+EXPORT_SYMBOL_GPL(sata_deb_timing_before_fsrst);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
- EXPORT_SYMBOL_GPL(ata_std_ports);
- EXPORT_SYMBOL_GPL(ata_device_add);
-@@ -5719,6 +5791,8 @@ EXPORT_SYMBOL_GPL(ata_bmdma_error_handle
- EXPORT_SYMBOL_GPL(ata_bmdma_post_internal_cmd);
- EXPORT_SYMBOL_GPL(ata_port_probe);
- EXPORT_SYMBOL_GPL(sata_set_spd);
-+EXPORT_SYMBOL_GPL(sata_phy_debounce);
-+EXPORT_SYMBOL_GPL(sata_phy_resume);
- EXPORT_SYMBOL_GPL(sata_phy_reset);
- EXPORT_SYMBOL_GPL(__sata_phy_reset);
- EXPORT_SYMBOL_GPL(ata_bus_reset);
++/**
+  *	ata_noop_dev_select - Select device 0/1 on ATA bus
+  *	@ap: ATA channel to manipulate
+  *	@device: ATA device (numbered from zero) to select
+@@ -5769,6 +5787,7 @@ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
+ EXPORT_SYMBOL_GPL(ata_tf_load);
+ EXPORT_SYMBOL_GPL(ata_tf_read);
+ EXPORT_SYMBOL_GPL(ata_noop_dev_select);
++EXPORT_SYMBOL_GPL(ata_noop_check_status);
+ EXPORT_SYMBOL_GPL(ata_std_dev_select);
+ EXPORT_SYMBOL_GPL(ata_tf_to_fis);
+ EXPORT_SYMBOL_GPL(ata_tf_from_fis);
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index dbc9602..3d7c3e3 100644
+index 3d7c3e3..35f6d3b 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -601,11 +601,17 @@ struct ata_timing {
- 
- #define FIT(v,vmin,vmax)	max_t(short,min_t(short,v,vmax),vmin)
- 
-+extern const unsigned long sata_deb_timing_boot[];
-+extern const unsigned long sata_deb_timing_eh[];
-+extern const unsigned long sata_deb_timing_before_fsrst[];
-+
- extern void ata_port_probe(struct ata_port *);
- extern void __sata_phy_reset(struct ata_port *ap);
- extern void sata_phy_reset(struct ata_port *ap);
- extern void ata_bus_reset(struct ata_port *ap);
- extern int sata_set_spd(struct ata_port *ap);
-+extern int sata_phy_debounce(struct ata_port *ap, const unsigned long *param);
-+extern int sata_phy_resume(struct ata_port *ap, const unsigned long *param);
- extern int ata_drive_probe_reset(struct ata_port *ap,
- 			ata_probeinit_fn_t probeinit,
- 			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+@@ -665,6 +665,7 @@ extern void ata_tf_load(struct ata_port 
+ extern void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ extern void ata_tf_to_fis(const struct ata_taskfile *tf, u8 *fis, u8 pmp);
+ extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
++extern u8 ata_noop_check_status(struct ata_port *ap);
+ extern void ata_noop_dev_select (struct ata_port *ap, unsigned int device);
+ extern void ata_std_dev_select (struct ata_port *ap, unsigned int device);
+ extern u8 ata_check_status(struct ata_port *ap);
 -- 
 1.3.2
 
