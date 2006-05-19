@@ -1,129 +1,175 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 13/13] libata-hp: move ata_do_reset() to libata-eh.c
-Date: Sat, 20 May 2006 00:48:28 +0900
-Message-ID: <11480537082648-git-send-email-htejun@gmail.com>
+Subject: [PATCH 04/13] libata-hp: implement warmplug
+Date: Sat, 20 May 2006 00:48:27 +0900
+Message-ID: <11480537071122-git-send-email-htejun@gmail.com>
 References: <11480537063293-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:42918 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.225]:45478 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S932394AbWESPsk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 11:48:40 -0400
-Received: by wr-out-0506.google.com with SMTP id 50so180509wri
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 08:48:40 -0700 (PDT)
+	id S932371AbWESPse (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 11:48:34 -0400
+Received: by wr-out-0506.google.com with SMTP id i30so674774wra
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 08:48:33 -0700 (PDT)
 In-Reply-To: <11480537063293-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-With ops->probe_init() gone, no user is left in libata-core.c.  Move
-ata_do_reset() to libata-eh.c and make it static.
+Implement warmplug.  User-initiated unplug can be detected by
+hostt->slave_destroy() and plug by transportt->user_scan().  This
+patch only implements the two callbacks.  The next function will hook
+them.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   28 ----------------------------
- drivers/scsi/libata-eh.c   |   28 ++++++++++++++++++++++++++++
- drivers/scsi/libata.h      |    2 --
- 3 files changed, 28 insertions(+), 30 deletions(-)
+ drivers/scsi/libata-core.c |    1 
+ drivers/scsi/libata-scsi.c |   89 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h     |    1 
+ 3 files changed, 91 insertions(+), 0 deletions(-)
 
-8e2c3e2ccff15e2d111a3b3f21acd9f864672b4e
+3cdb294a9eb1de1372387163ca93f0798b171e4e
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 6b9586c..350df1d 100644
+index 7600b5f..48b570c 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -2783,34 +2783,6 @@ void ata_std_postreset(struct ata_port *
- 	DPRINTK("EXIT\n");
+@@ -5916,6 +5916,7 @@ EXPORT_SYMBOL_GPL(ata_port_queue_task);
+ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
+ EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
+ EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
++EXPORT_SYMBOL_GPL(ata_scsi_slave_destroy);
+ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+ EXPORT_SYMBOL_GPL(ata_scsi_release);
+ EXPORT_SYMBOL_GPL(ata_host_intr);
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 5a9c08a..0415fd2 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -57,6 +57,8 @@ static struct ata_device * __ata_scsi_fi
+ 					const struct scsi_device *scsidev);
+ static struct ata_device * ata_scsi_find_dev(struct ata_port *ap,
+ 					    const struct scsi_device *scsidev);
++static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
++			      unsigned int id, unsigned int lun);
+ 
+ 
+ #define RW_RECOVERY_MPAGE 0x1
+@@ -727,6 +729,40 @@ int ata_scsi_slave_config(struct scsi_de
  }
  
--int ata_do_reset(struct ata_port *ap, ata_reset_fn_t reset,
--		 unsigned int *classes)
--{
--	int i, rc;
--
--	for (i = 0; i < ATA_MAX_DEVICES; i++)
--		classes[i] = ATA_DEV_UNKNOWN;
--
--	rc = reset(ap, classes);
--	if (rc)
--		return rc;
--
--	/* If any class isn't ATA_DEV_UNKNOWN, consider classification
--	 * is complete and convert all ATA_DEV_UNKNOWN to
--	 * ATA_DEV_NONE.
--	 */
--	for (i = 0; i < ATA_MAX_DEVICES; i++)
--		if (classes[i] != ATA_DEV_UNKNOWN)
--			break;
--
--	if (i < ATA_MAX_DEVICES)
--		for (i = 0; i < ATA_MAX_DEVICES; i++)
--			if (classes[i] == ATA_DEV_UNKNOWN)
--				classes[i] = ATA_DEV_NONE;
--
--	return 0;
--}
--
  /**
-  *	ata_dev_same_device - Determine whether new ID matches configured device
-  *	@dev: device to compare against
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 4357465..b1ac851 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1317,6 +1317,34 @@ static void ata_eh_report(struct ata_por
- 	}
- }
- 
-+static int ata_do_reset(struct ata_port *ap, ata_reset_fn_t reset,
-+			unsigned int *classes)
++ *	ata_scsi_slave_destroy - SCSI device is about to be destroyed
++ *	@sdev: SCSI device to be destroyed
++ *
++ *	@sdev is about to be destroyed for hot/warm unplugging.  If
++ *	this unplugging was initiated by libata as indicated by NULL
++ *	dev->sdev, this function doesn't have to do anything.
++ *	Otherwise, SCSI layer initiated warm-unplug is in progress.
++ *	Clear dev->sdev, schedule the device for ATA detach and invoke
++ *	EH.
++ *
++ *	LOCKING:
++ *	Defined by SCSI layer.  We don't really care.
++ */
++void ata_scsi_slave_destroy(struct scsi_device *sdev)
 +{
-+	int i, rc;
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	unsigned long flags;
++	struct ata_device *dev;
 +
-+	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+		classes[i] = ATA_DEV_UNKNOWN;
++	if (!ap->ops->error_handler)
++		return;
 +
-+	rc = reset(ap, classes);
-+	if (rc)
-+		return rc;
-+
-+	/* If any class isn't ATA_DEV_UNKNOWN, consider classification
-+	 * is complete and convert all ATA_DEV_UNKNOWN to
-+	 * ATA_DEV_NONE.
-+	 */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+		if (classes[i] != ATA_DEV_UNKNOWN)
-+			break;
-+
-+	if (i < ATA_MAX_DEVICES)
-+		for (i = 0; i < ATA_MAX_DEVICES; i++)
-+			if (classes[i] == ATA_DEV_UNKNOWN)
-+				classes[i] = ATA_DEV_NONE;
-+
-+	return 0;
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	dev = __ata_scsi_find_dev(ap, sdev);
++	if (dev && dev->sdev) {
++		/* SCSI device already in CANCEL state, no need to offline it */
++		dev->sdev = NULL;
++		dev->flags |= ATA_DFLAG_DETACH;
++		ata_port_schedule_eh(ap);
++	}
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
 +}
 +
- static int ata_eh_followup_srst_needed(int rc, int classify,
- 				       const unsigned int *classes)
- {
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index 0176c40..a954500 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -57,8 +57,6 @@ extern int sata_down_spd_limit(struct at
- extern int sata_set_spd_needed(struct ata_port *ap);
- extern int ata_down_xfermask_limit(struct ata_device *dev, int force_pio0);
- extern int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev);
--extern int ata_do_reset(struct ata_port *ap, ata_reset_fn_t reset,
--			unsigned int *classes);
- extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern void ata_qc_issue(struct ata_queued_cmd *qc);
- extern void __ata_qc_complete(struct ata_queued_cmd *qc);
++/**
+  *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
+  *	@sdev: SCSI device to configure queue depth for
+  *	@queue_depth: new queue depth
+@@ -2840,3 +2876,56 @@ void ata_scsi_remove_dev(struct ata_devi
+ 		scsi_device_put(sdev);
+ 	}
+ }
++
++/**
++ *	ata_scsi_user_scan - indication for user-initiated bus scan
++ *	@shost: SCSI host to scan
++ *	@channel: Channel to scan
++ *	@id: ID to scan
++ *	@lun: LUN to scan
++ *
++ *	This function is called when user explicitly requests bus
++ *	scan.  Set probe pending flag and invoke EH.
++ *
++ *	LOCKING:
++ *	SCSI layer (we don't care)
++ *
++ *	RETURNS:
++ *	Zero.
++ */
++static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
++			      unsigned int id, unsigned int lun)
++{
++	struct ata_port *ap = ata_shost_to_port(shost);
++	unsigned long flags;
++	int rc = 0;
++
++	if (!ap->ops->error_handler)
++		return -EOPNOTSUPP;
++
++	if ((channel != SCAN_WILD_CARD && channel != 0) ||
++	    (lun != SCAN_WILD_CARD && lun != 0))
++		return -EINVAL;
++
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++
++	if (id == SCAN_WILD_CARD) {
++		ap->eh_info.probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
++		ap->eh_info.action |= ATA_EH_SOFTRESET;
++	} else {
++		struct ata_device *dev = ata_find_dev(ap, id);
++
++		if (dev) {
++			ap->eh_info.probe_mask |= 1 << dev->devno;
++			ap->eh_info.action |= ATA_EH_SOFTRESET;
++		} else
++			rc = -EINVAL;
++	}
++
++	if (rc == 0)
++		ata_port_schedule_eh(ap);
++
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++	return rc;
++}
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 4e7c839..cc67c96 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -723,6 +723,7 @@ extern int ata_std_bios_param(struct scs
+ 			      struct block_device *bdev,
+ 			      sector_t capacity, int geom[]);
+ extern int ata_scsi_slave_config(struct scsi_device *sdev);
++extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+ extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+ 				       int queue_depth);
+ extern struct ata_device *ata_dev_pair(struct ata_device *adev);
 -- 
 1.3.2
 
