@@ -1,105 +1,110 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/14] libata-hp-prep: update ata_scsi_find_dev() and friends
-Date: Fri, 19 May 2006 06:16:33 -0700 (PDT)
-Message-ID: <11480445841836-git-send-email-htejun@gmail.com>
+Subject: [PATCH 03/14] libata-hp-prep: make some ata_device fields persistent
+Date: Fri, 19 May 2006 06:16:29 -0700 (PDT)
+Message-ID: <1148044584487-git-send-email-htejun@gmail.com>
 References: <11480445833568-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:19937 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932216AbWESNQe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 May 2006 09:16:34 -0400
-Received: by py-out-1112.google.com with SMTP id z59so920074pyg
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:33 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.206]:23324 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751332AbWESNQa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 May 2006 09:16:30 -0400
+Received: by nz-out-0102.google.com with SMTP id 8so626378nzo
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:30 -0700 (PDT)
 In-Reply-To: <11480445833568-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out ata_find_dev() and __ata_scsi_find_dev() from
-ata_scsi_find_dev().  ata_find_dev() checks ATA_FLAG_SLAVE_POSS for
-id==1 case, so all three functions return NULL if id==1 is specified
-for !SLAVE_POSS port.  These will be used by later hotplug
-implementation.
+Lifetimes of some fields span over device plugging/unplugging.  This
+patch moves such persistent fields to the top of ata_device and
+separate them with ATA_DEVICE_CLEAR_OFFSET.  Fields above the offset
+are initialized once during host initializatino while all other fields
+are cleared before hotplugging.  Currently ->ap, devno and part of
+flags are persistent.
+
+Note that flags is partially cleared while holding host_set lock.
+This is to synchronize with later warm plug implementation which will
+record hotplug request in dev->flags.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |   40 +++++++++++++++++++++++++---------------
- 1 files changed, 25 insertions(+), 15 deletions(-)
+ drivers/scsi/libata-core.c |   14 ++++++++++++--
+ include/linux/libata.h     |    8 ++++++--
+ 2 files changed, 18 insertions(+), 4 deletions(-)
 
-9677c34d81dee7f9564be0a7e2b037c7e0d6ca52
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 2007b4b..1b2ac23 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -52,8 +52,12 @@ #include "libata.h"
- #define SECTOR_SIZE	512
- 
- typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc, const u8 *scsicmd);
--static struct ata_device *
--ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev);
-+
-+static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
-+					const struct scsi_device *scsidev);
-+static struct ata_device * ata_scsi_find_dev(struct ata_port *ap,
-+					    const struct scsi_device *scsidev);
-+
- 
- #define RW_RECOVERY_MPAGE 0x1
- #define RW_RECOVERY_MPAGE_LEN 12
-@@ -2308,6 +2312,23 @@ static unsigned int atapi_xlat(struct at
- 	return 0;
- }
- 
-+static struct ata_device * ata_find_dev(struct ata_port *ap, int id)
-+{
-+	if (likely(id == 0 || (id == 1 && ap->flags & ATA_FLAG_SLAVE_POSS)))
-+		return &ap->device[id];
-+	return NULL;
-+}
-+
-+static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
-+					const struct scsi_device *scsidev)
-+{
-+	/* skip commands not addressed to targets we simulate */
-+	if (unlikely(scsidev->channel || scsidev->lun))
-+		return NULL;
-+
-+	return ata_find_dev(ap, scsidev->id);
-+}
-+
- /**
-  *	ata_scsi_find_dev - lookup ata_device from scsi_cmnd
-  *	@ap: ATA port to which the device is attached
-@@ -2324,23 +2345,12 @@ static unsigned int atapi_xlat(struct at
-  *	RETURNS:
-  *	Associated ATA device, or %NULL if not found.
-  */
--
- static struct ata_device *
- ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev)
+2a6927015b1d7a4c1de409c527331ebf9755d613
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index f239324..ccdb867 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5120,9 +5120,18 @@ static void ata_host_remove(struct ata_p
+ void ata_dev_init(struct ata_device *dev)
  {
--	struct ata_device *dev;
--
--	/* skip commands not addressed to targets we simulate */
--	if (likely(scsidev->id < ATA_MAX_DEVICES))
--		dev = &ap->device[scsidev->id];
--	else
--		return NULL;
--
--	if (unlikely((scsidev->channel != 0) ||
--		     (scsidev->lun != 0)))
--		return NULL;
-+	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
+ 	struct ata_port *ap = dev->ap;
++	unsigned long flags;
++
++	/* High bits of dev->flags are used to record warm plug
++	 * requests which occur asynchronously.  Synchronize using
++	 * host_set lock.
++	 */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	dev->flags &= ~ATA_DFLAG_INIT_MASK;
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
  
--	if (unlikely(!ata_dev_enabled(dev)))
-+	if (unlikely(!dev || !ata_dev_enabled(dev)))
- 		return NULL;
+-	memset((void *)dev, 0, sizeof(*dev));
+-	dev->devno = dev - ap->device;
++	memset((void *)dev + ATA_DEVICE_CLEAR_OFFSET, 0,
++	       sizeof(*dev) - ATA_DEVICE_CLEAR_OFFSET);
+ 	dev->pio_mask = UINT_MAX;
+ 	dev->mwdma_mask = UINT_MAX;
+ 	dev->udma_mask = UINT_MAX;
+@@ -5183,6 +5192,7 @@ static void ata_host_init(struct ata_por
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 		dev->ap = ap;
++		dev->devno = i;
+ 		ata_dev_init(dev);
+ 	}
  
- 	if (!atapi_enabled || (ap->flags & ATA_FLAG_NO_ATAPI)) {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 3fb6dc3..99808c5 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -130,6 +130,7 @@ enum {
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+ 
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
++	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
+ 
+ 	ATA_DFLAG_DETACH	= (1 << 16),
+ 	ATA_DFLAG_DETACHED	= (1 << 17),
+@@ -410,10 +411,11 @@ struct ata_ering {
+ 
+ struct ata_device {
+ 	struct ata_port		*ap;
+-	u64			n_sectors;	/* size of device, if ATA */
++	unsigned int		devno;		/* 0 or 1 */
+ 	unsigned long		flags;		/* ATA_DFLAG_xxx */
++	/* fields above n_sectors are not cleared across device init */
++	u64			n_sectors;	/* size of device, if ATA */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+-	unsigned int		devno;		/* 0 or 1 */
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
+ 	u8			dma_mode;
+@@ -439,6 +441,8 @@ struct ata_device {
+ 	struct ata_ering	ering;
+ };
+ 
++#define ATA_DEVICE_CLEAR_OFFSET		offsetof(struct ata_device, n_sectors)
++
+ struct ata_eh_info {
+ 	struct ata_device	*dev;		/* offending device */
+ 	u32			serror;		/* SError from LLDD */
 -- 
 1.3.2
 
