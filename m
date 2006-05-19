@@ -1,91 +1,82 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/14] libata-hp-prep: implement ata_noop_check_status()
+Subject: [PATCH 11/14] libata-hp-prep: make ops->tf_read() optional
 Date: Fri, 19 May 2006 06:16:38 -0700 (PDT)
-Message-ID: <11480445851733-git-send-email-htejun@gmail.com>
+Message-ID: <11480445844029-git-send-email-htejun@gmail.com>
 References: <11480445833568-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.206]:23324 "EHLO
+Received: from nz-out-0102.google.com ([64.233.162.193]:49900 "EHLO
 	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932273AbWESNQj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S932249AbWESNQj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 19 May 2006 09:16:39 -0400
-Received: by nz-out-0102.google.com with SMTP id 8so626378nzo
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:39 -0700 (PDT)
+Received: by nz-out-0102.google.com with SMTP id 8so626374nzo
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2006 06:16:38 -0700 (PDT)
 In-Reply-To: <11480445833568-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-As with ops->tf_read, ops->check_status() and ops->check_altstatus()
-don't make sense for controllers without single TF image.  As
-->check_status() and ->check_altstatus() are deeply integrated into
-libata core layer, implement ata_noop_check_status() as a temporary
-measure.  This function always returns ATA_DRDY without doing
-anything.
-
-In the long term, these IO ops should be made optional and removed
-from top level ata_port_operations such that driver implementing
-high-level behavior don't have to bother with these.
+Not all controllers have single TF image and ops->tf_read() is
+inappropriate for them.  Newly implemented hotplug probing will allow
+drivers for such controllers to get rid of ops->tf_read() completely.
+Make ops->tf_read() optional in core layer.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   19 +++++++++++++++++++
- include/linux/libata.h     |    1 +
- 2 files changed, 20 insertions(+), 0 deletions(-)
+ drivers/scsi/libata-core.c |    8 +++++---
+ drivers/scsi/libata-eh.c   |    3 ++-
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-89c675e09ffd6c3cdf7cc656152f6a1ea03533f0
+b27b1cc97dad12a344d60a184e94dff40c4ed15b
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 9a4124e..72eef00 100644
+index 8f18ced..9a4124e 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -707,6 +707,24 @@ static u64 ata_id_n_sectors(const u16 *i
- }
+@@ -4428,14 +4428,15 @@ void ata_qc_complete(struct ata_queued_c
+ 		if (unlikely(qc->flags & ATA_QCFLAG_FAILED)) {
+ 			if (!ata_tag_internal(qc->tag)) {
+ 				/* always fill result TF for failed qc */
+-				ap->ops->tf_read(ap, &qc->result_tf);
++				if (ap->ops->tf_read)
++					ap->ops->tf_read(ap, &qc->result_tf);
+ 				ata_qc_schedule_eh(qc);
+ 				return;
+ 			}
+ 		}
  
- /**
-+ *	ata_noop_check_status - Fake device status reg
-+ *	@ap: target port
-+ *
-+ *	This function performs no actual function and always returns
-+ *	ATA_DRDY.
-+ *
-+ *	May be used as the check_status/altstatus() entry in
-+ *	ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	caller.
-+ */
-+u8 ata_noop_check_status(struct ata_port *ap)
-+{
-+	return ATA_DRDY;
-+}
-+
-+/**
-  *	ata_noop_dev_select - Select device 0/1 on ATA bus
-  *	@ap: ATA channel to manipulate
-  *	@device: ATA device (numbered from zero) to select
-@@ -5769,6 +5787,7 @@ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
- EXPORT_SYMBOL_GPL(ata_tf_load);
- EXPORT_SYMBOL_GPL(ata_tf_read);
- EXPORT_SYMBOL_GPL(ata_noop_dev_select);
-+EXPORT_SYMBOL_GPL(ata_noop_check_status);
- EXPORT_SYMBOL_GPL(ata_std_dev_select);
- EXPORT_SYMBOL_GPL(ata_tf_to_fis);
- EXPORT_SYMBOL_GPL(ata_tf_from_fis);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3d7c3e3..35f6d3b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -665,6 +665,7 @@ extern void ata_tf_load(struct ata_port 
- extern void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
- extern void ata_tf_to_fis(const struct ata_taskfile *tf, u8 *fis, u8 pmp);
- extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
-+extern u8 ata_noop_check_status(struct ata_port *ap);
- extern void ata_noop_dev_select (struct ata_port *ap, unsigned int device);
- extern void ata_std_dev_select (struct ata_port *ap, unsigned int device);
- extern u8 ata_check_status(struct ata_port *ap);
+ 		/* read result TF if requested */
+-		if (qc->flags & ATA_QCFLAG_RESULT_TF)
++		if (ap->ops->tf_read && qc->flags & ATA_QCFLAG_RESULT_TF)
+ 			ap->ops->tf_read(ap, &qc->result_tf);
+ 
+ 		__ata_qc_complete(qc);
+@@ -4444,7 +4445,8 @@ void ata_qc_complete(struct ata_queued_c
+ 			return;
+ 
+ 		/* read result TF if failed or requested */
+-		if (qc->err_mask || qc->flags & ATA_QCFLAG_RESULT_TF)
++		if (ap->ops->tf_read &&
++		    (qc->err_mask || qc->flags & ATA_QCFLAG_RESULT_TF))
+ 			ap->ops->tf_read(ap, &qc->result_tf);
+ 
+ 		__ata_qc_complete(qc);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 71b45ad..7cbb311 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -806,7 +806,8 @@ static unsigned int atapi_eh_request_sen
+ 	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
+ 
+ 	/* XXX: why tf_read here? */
+-	ap->ops->tf_read(ap, &tf);
++	if (ap->ops->tf_read)
++		ap->ops->tf_read(ap, &tf);
+ 
+ 	/* fill these in, for the case where they are -not- overwritten */
+ 	sense_buf[0] = 0x70;
 -- 
 1.3.2
 
