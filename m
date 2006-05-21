@@ -1,91 +1,48 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH] sata_mv: endian annotations
-Date: Sun, 21 May 2006 15:51:16 +0400
-Message-ID: <20060521115116.GG7930@mipter.zuzino.mipt.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Emanuel" <xszxkumhbi@faxexpert.com>
+Subject: you wont believe Emanuel
+Date: Sun, 21 May 2006 19:33:18 +0600
+Message-ID: <QQ.5326886.7059488__22265.7892307781$1148215302$gmane$org@codeweavers.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:631 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751505AbWEULwO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 21 May 2006 07:52:14 -0400
-Received: by nf-out-0910.google.com with SMTP id c31so283848nfb
-        for <linux-ide@vger.kernel.org>; Sun, 21 May 2006 04:52:12 -0700 (PDT)
-Content-Disposition: inline
+Received: from zeus1.kernel.org ([204.152.191.4]:20121 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751558AbWEUMlM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 May 2006 08:41:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: postmaster@vger.kernel.org
+Cc: linux-kernel-owner@vger.kernel.org, linux-ppp@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, linux-tape@vger.kernel.org
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
----
+Hi,
 
- drivers/scsi/sata_mv.c |   28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+em..... 
+I gotta tell you something. Some years ago I used to watch porno often. I always admired those guys cumming.
+They splashed out so much sperm on their girls, it looked so cool, so manlike. 
+Now I have a girlfriend.. but quantity of my sperm was so scanty, that I felt ill at ease.
 
---- a/drivers/scsi/sata_mv.c
-+++ b/drivers/scsi/sata_mv.c
-@@ -272,32 +272,32 @@ enum chip_type {
- 
- /* Command ReQuest Block: 32B */
- struct mv_crqb {
--	u32			sg_addr;
--	u32			sg_addr_hi;
--	u16			ctrl_flags;
--	u16			ata_cmd[11];
-+	__le32			sg_addr;
-+	__le32			sg_addr_hi;
-+	__le16			ctrl_flags;
-+	__le16			ata_cmd[11];
- };
- 
- struct mv_crqb_iie {
--	u32			addr;
--	u32			addr_hi;
--	u32			flags;
-+	__le32			addr;
-+	__le32			addr_hi;
-+	__le32			flags;
- 	u32			len;
--	u32			ata_cmd[4];
-+	__le32			ata_cmd[4];
- };
- 
- /* Command ResPonse Block: 8B */
- struct mv_crpb {
- 	u16			id;
--	u16			flags;
-+	__le16			flags;
- 	u32			tmstmp;
- };
- 
- /* EDMA Physical Region Descriptor (ePRD); A.K.A. SG */
- struct mv_sg {
--	u32			addr;
--	u32			flags_size;
--	u32			addr_hi;
-+	__le32			addr;
-+	__le32			flags_size;
-+	__le32			addr_hi;
- 	u32			reserved;
- };
- 
-@@ -1028,7 +1028,7 @@ static inline unsigned mv_inc_q_index(un
- 	return (index + 1) & MV_MAX_Q_DEPTH_MASK;
- }
- 
--static inline void mv_crqb_pack_cmd(u16 *cmdw, u8 data, u8 addr, unsigned last)
-+static inline void mv_crqb_pack_cmd(__le16 *cmdw, u8 data, u8 addr, unsigned last)
- {
- 	u16 tmp = data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
- 		(last ? CRQB_CMD_LAST : 0);
-@@ -1051,7 +1051,7 @@ static void mv_qc_prep(struct ata_queued
- {
- 	struct ata_port *ap = qc->ap;
- 	struct mv_port_priv *pp = ap->private_data;
--	u16 *cw;
-+	__le16 *cw;
- 	struct ata_taskfile *tf;
- 	u16 flags = 0;
- 	unsigned in_index;
+ I was advised to eat green apples but even this didn't help. A month ago I was hanging around at the bar with my best friend. 
+And he said that I should try MAX LOADS. Well, - I thought, - sounds interesting. 
 
+Next day I came to know that it was really a highly effective all-natural dietary supplement,
+ which not only increases the sperm volume but also improves the sperm quality and the mobility of spermatozoa.
+
+Having ordered and tried I was shocked how cool it was. 
+
+I'd even say, it changed my life. I'm happy. I even became a better lover, knowing how it all would end. 
+By the way, read about MAX LOADS at this site:
+
+http://www.weallcreatethis.com/
+
+
+Yes, that guys have really acceptable prices if you decide to order and ship worldwide.
+http://www.weallcreatethis.com/
+
+
+
+
+
+
+
+
+
+
+dawson you cauldron me, empower . twigging you bernini me, fever doctrine edict shantung . 
+http://www.weallcreatethis.com/c82/
