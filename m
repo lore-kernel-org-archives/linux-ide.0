@@ -1,32 +1,91 @@
-From: Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
-Subject: Re: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
-Date: Sun, 21 May 2006 02:40:18 +0200
-Message-ID: <446FB6F2.7040803@gmx.net>
-References: <E1FhbYy-0005jL-00@skye.ra.phy.cam.ac.uk>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] sata_mv: endian annotations
+Date: Sun, 21 May 2006 15:51:16 +0400
+Message-ID: <20060521115116.GG7930@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <E1FhbYy-0005jL-00@skye.ra.phy.cam.ac.uk>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Cc: trenn@suse.de, "Yu, Luming" <luming.yu@intel.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.189]:631 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751505AbWEULwO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 21 May 2006 07:52:14 -0400
+Received: by nf-out-0910.google.com with SMTP id c31so283848nfb
+        for <linux-ide@vger.kernel.org>; Sun, 21 May 2006 04:52:12 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-Sanjoy Mahajan wrote:
-> That seems likely, thanks for the pointer: Besides the ACPI sleep
-> hangs, this machine (TP 600X) has fan troubles upon S3 resume.  The
-> problems don't do harm (the damn fan keeps turning on when it
-> shouldn't), but that's probably chance.  Various patches that I tested
-> for S3 resume hangs reversed this fan behavior, making the fan refuse
-> to turn on when it should have.  The same problem happened after
-> resume from swsusp (bugzilla #5000).
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
 
-Please try kernel 2.6.16.17 (just released). It has the SMBus fix which
-may fix resume and fan behaviour.
+ drivers/scsi/sata_mv.c |   28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
+--- a/drivers/scsi/sata_mv.c
++++ b/drivers/scsi/sata_mv.c
+@@ -272,32 +272,32 @@ enum chip_type {
+ 
+ /* Command ReQuest Block: 32B */
+ struct mv_crqb {
+-	u32			sg_addr;
+-	u32			sg_addr_hi;
+-	u16			ctrl_flags;
+-	u16			ata_cmd[11];
++	__le32			sg_addr;
++	__le32			sg_addr_hi;
++	__le16			ctrl_flags;
++	__le16			ata_cmd[11];
+ };
+ 
+ struct mv_crqb_iie {
+-	u32			addr;
+-	u32			addr_hi;
+-	u32			flags;
++	__le32			addr;
++	__le32			addr_hi;
++	__le32			flags;
+ 	u32			len;
+-	u32			ata_cmd[4];
++	__le32			ata_cmd[4];
+ };
+ 
+ /* Command ResPonse Block: 8B */
+ struct mv_crpb {
+ 	u16			id;
+-	u16			flags;
++	__le16			flags;
+ 	u32			tmstmp;
+ };
+ 
+ /* EDMA Physical Region Descriptor (ePRD); A.K.A. SG */
+ struct mv_sg {
+-	u32			addr;
+-	u32			flags_size;
+-	u32			addr_hi;
++	__le32			addr;
++	__le32			flags_size;
++	__le32			addr_hi;
+ 	u32			reserved;
+ };
+ 
+@@ -1028,7 +1028,7 @@ static inline unsigned mv_inc_q_index(un
+ 	return (index + 1) & MV_MAX_Q_DEPTH_MASK;
+ }
+ 
+-static inline void mv_crqb_pack_cmd(u16 *cmdw, u8 data, u8 addr, unsigned last)
++static inline void mv_crqb_pack_cmd(__le16 *cmdw, u8 data, u8 addr, unsigned last)
+ {
+ 	u16 tmp = data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
+ 		(last ? CRQB_CMD_LAST : 0);
+@@ -1051,7 +1051,7 @@ static void mv_qc_prep(struct ata_queued
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct mv_port_priv *pp = ap->private_data;
+-	u16 *cw;
++	__le16 *cw;
+ 	struct ata_taskfile *tf;
+ 	u16 flags = 0;
+ 	unsigned in_index;
 
-Regards,
-Carl-Daniel
--- 
-http://www.hailfinger.org/
