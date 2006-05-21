@@ -1,48 +1,65 @@
-From: "Emanuel" <xszxkumhbi@faxexpert.com>
-Subject: you wont believe Emanuel
-Date: Sun, 21 May 2006 19:33:18 +0600
-Message-ID: <QQ.5326886.7059488__22265.7892307781$1148215302$gmane$org@codeweavers.com>
+From: "Michael Sterrett -Mr. Bones.-" <msterret@coat.com>
+Subject: Re: [RFT] major libata update
+Date: Sun, 21 May 2006 19:51:27 -0400 (EDT)
+Message-ID: <Pine.LNX.4.61.0605211937540.5021@rutrow.coat.com>
+References: <20060515170006.GA29555@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:20121 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751558AbWEUMlM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 May 2006 08:41:12 -0400
+Received: from coat.coat.com ([164.153.10.15]:28844 "EHLO coat.coat.com")
+	by vger.kernel.org with ESMTP id S964947AbWEUXve (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 May 2006 19:51:34 -0400
+In-Reply-To: <20060515170006.GA29555@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: postmaster@vger.kernel.org
-Cc: linux-kernel-owner@vger.kernel.org, linux-ppp@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, linux-tape@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+Was having trouble getting a new Seagate drive to show up at all with
+2.6.16.* so I went ahead and stepped up to .17_rc4 with this patch.
+Still no go.  It looks like it's not even seeing the drive at all.
+I hope I'm just missing something obvious.
 
-em..... 
-I gotta tell you something. Some years ago I used to watch porno often. I always admired those guys cumming.
-They splashed out so much sperm on their girls, it looked so cool, so manlike. 
-Now I have a girlfriend.. but quantity of my sperm was so scanty, that I felt ill at ease.
+dmesg after boot at:
 
- I was advised to eat green apples but even this didn't help. A month ago I was hanging around at the bar with my best friend. 
-And he said that I should try MAX LOADS. Well, - I thought, - sounds interesting. 
+http://dev.gentoo.org/~mr_bones_/
 
-Next day I came to know that it was really a highly effective all-natural dietary supplement,
- which not only increases the sperm volume but also improves the sperm quality and the mobility of spermatozoa.
+There's one with routeirq and one without.  The config file is there as
+well as 2.6.17-rc4-dot-config.gz (from /proc/config.gz). lspci -v output is
+in lspci-dash-v.  You can see that system is really (ab)using the pci bus.
 
-Having ordered and tried I was shocked how cool it was. 
+This is the drive:
+http://www.newegg.com/Product/Product.asp?Item=N82E16822148131
 
-I'd even say, it changed my life. I'm happy. I even became a better lover, knowing how it all would end. 
-By the way, read about MAX LOADS at this site:
+I don't think it's in sil_blacklist but I don't think it's even getting
+that far.  Any tips on what to try next would be great.
 
-http://www.weallcreatethis.com/
+Michael Sterrett
+   -Mr. Bones.-
+michael.sterrett@coat.com
 
+On Mon, 15 May 2006, Jeff Garzik wrote:
 
-Yes, that guys have really acceptable prices if you decide to order and ship worldwide.
-http://www.weallcreatethis.com/
+>
+> After much development and review, I merged a massive pile of libata
+> patches from Tejun Heo and Albert Lee.  This update contains the
+> following major libata
 
+<chop>
 
+> * sata_sil and ata_piix also need healthy re-testing of all basic
+> functionality.
+>
+> FEEDBACK:
+> * Please CC linux-ide@vger.kernel.org on all emails and bug reports.
+>
+> MERGE STATUS:
+> * Barring major problems in testing, will submit during 2.6.18 merge window.
+>
+>
+> Patch:
+> http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.17-rc4-git2-libata1.patch.bz2
+> (diff'd against 2.6.17-rc4-git2, but should apply to most recent
+> 2.6.17-rcX[-gitY] kernels)
 
-
-
-
-
-
-
-
-dawson you cauldron me, empower . twigging you bernini me, fever doctrine edict shantung . 
-http://www.weallcreatethis.com/c82/
+<chop>
