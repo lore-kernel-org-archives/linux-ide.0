@@ -1,52 +1,72 @@
-From: "Katelyn Bond" <mgtgoriy@intdec.com>
-Subject: Vacheron Constantin
-Date: Sun, 21 May 2006 00:49:28 +0300
-Message-ID: <333c.downey__42781.0426954695$1148158270$gmane$org@fin20.cyclades55.net>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:48846 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751482AbWETUux (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 May 2006 16:50:53 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+Subject: Re: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
+Date: Sun, 21 May 2006 01:12:52 +0100
+Message-ID: <E1FhbYy-0005jL-00@skye.ra.phy.cam.ac.uk>
+References: <1148046258.9319.441.camel@queen.suse.de>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: Your message of "Fri, 19 May 2006 15:44:17 +0200."
+             <1148046258.9319.441.camel@queen.suse.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: trenn@suse.de
+Cc: "Yu, Luming" <luming.yu@intel.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>, Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-tape@vger.kernel.org, linux-ia64@vger.kernel.org
 
+> This sounds like the problem Daniel had on his Samsung P35 recently.
+> He could fix it by getting rid of some asus_unhide_smbus stuff or the
+> otherway around, adding asus_unhide_smbus quirks in the S3 resume code.
+> 
+> This thread was recently posted on lkml:
+> Re: [patch] smbus unhiding kills thermal management
+> 
 
-Visit our Online Store: http://051.zoeyhasafever.com
- FOR 
- * Geniune Swiss Replicas 
- * Wholesale Prices (Save upto 200%) 
- * Same Day Shipping (World Wide) 
- * His & Hers Watches 
- * 25% Discount off our normal price of $245.99 
- * Best Seller Gift Watches 
- * Watches with "Bling"! 
+That seems likely, thanks for the pointer: Besides the ACPI sleep
+hangs, this machine (TP 600X) has fan troubles upon S3 resume.  The
+problems don't do harm (the damn fan keeps turning on when it
+shouldn't), but that's probably chance.  Various patches that I tested
+for S3 resume hangs reversed this fan behavior, making the fan refuse
+to turn on when it should have.  The same problem happened after
+resume from swsusp (bugzilla #5000).
 
+> https://bugzilla.novell.com/show_bug.cgi?id=173420
 
- A limited time offer  Buy 2 or more watches from 
- ANY category or brands and save 25% on all watch.
+>From Comment #30 at the above url: "The Linux ACPI code seems to
+actively prevent the fan from running and that worries me."
 
+I saw that as well, and found the following recipe would work around
+the problem:
 
-Visit us: http://051.zoeyhasafever.com
+1. Set the trip point to, say, 70 C -- well above the actual
+   temperature.
 
+2. Then set the trip to anything reasonable that's under the current
+   temperature (27 C always works).  Now the fan turns on, and behaves
+   fine from then.
 
+My explanation is that, before step 1, the fan is off but the OS
+thinks it's on.  So the dialogue goes something like:
 
+Hardware (from EC or BIOS?): Ack, I'm overheating, turn on the fan now!
+OS: There, there, take it easy.  I've checked bit fields in my
+     memory, and the fan is on.  So I don't have to do anything.
+Hardware: Ack, ...
+OS: There, there, ...
+[Hence the 100% kacpid CPU usage]
 
+Based on this explanation, I added a resume method to the fan driver.
+It would turn on the fan and mark it as on.  So then the internal OS
+state matched the actual state.  The fix didn't work for at least one
+reason: ACPI drivers didn't have suspend/resume methods (though now
+there are test patches to add those methods).
 
+Another fix, probably worth doing anyway, is to turn on the fan if the
+BIOS asks for it, whether or not the OS thinks it's on.  The chance of
+the two pieces of information getting out of synch, and the hardware
+damage it can cause, is enough to make it worthwhile.  The reverse
+case can try to optimize (if BIOS asks to shut off the fan, shut it
+off only if OS thinks it's on).  That creates no danger: just extra
+fan noise if the fan is on but the OS thinks it's off.
 
+-Sanjoy
 
-
-
-
-
-
-
-
-
-
-
-
-
-contour you evelyn me, provision intersperse . compass you bridgehead me, gaze bruise sonny newspaperman . 
-condemnate you bounce me, newspapermen benson trouble awash . desicate you fairy me, dalzell . 
-http://www.zoeyhasafever.com/rm/
+`Never underestimate the evil of which men of power are capable.'
+         --Bertrand Russell, _War Crimes in Vietnam_, chapter 1.
