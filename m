@@ -1,43 +1,110 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: pdc20575 and driver 1.04
-Date: Mon, 22 May 2006 03:10:43 -0400
-Message-ID: <447163F3.6070307@pobox.com>
-References: <200605191815.44099.viet@mandriva.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFT] major libata update
+Date: Mon, 22 May 2006 03:19:19 -0400
+Message-ID: <447165F7.1070905@garzik.org>
+References: <20060515170006.GA29555@havoc.gtf.org> <4469B93E.6010201@emc.com> <4469E0DB.1040709@garzik.org> <4469EEC0.4060907@gmail.com> <446A1A21.80501@emc.com> <446A63F6.5030706@gmail.com> <446A6615.6050701@garzik.org> <446A678E.8030403@garzik.org> <446A6E6F.8010201@gmail.com> <446A7794.80909@garzik.org> <446A7BF6.3090103@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:64391 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932555AbWEVHKq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2006 03:10:46 -0400
-In-Reply-To: <200605191815.44099.viet@mandriva.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:12680 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932579AbWEVHTX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2006 03:19:23 -0400
+In-Reply-To: <446A7BF6.3090103@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: viet@mandriva.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: ric@emc.com, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Jens Axboe <axboe@suse.de>
 
-viet@mandriva.com wrote:
-> Hi Jeff,
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> Tejun Heo wrote:
+>>> Jeff Garzik wrote:
+>>>> Jeff Garzik wrote:
+>>>>> Tejun Heo wrote:
+>>>>>> Hmmm.. The drive is issuing SDB FIS which completes already 
+>>>>>> completed tags.  This could be dangerous.  Depending on timing, it 
+>>>>>> might end up finishing a command which occupied the slot which 
+>>>>>> hasn't been processed yet.  If a drive does this, NCQ shouldn't be 
+>>>>>> enabled for it.  Can you post full boot dmesg?
+>>>>>
+>>>>> I'm not sure the data supports that conclusion?  PORT_IRQ_SDB_FIS 
+>>>>> is quite normal and expected during NCQ operation, if that 
+>>>>> interrupt is enabled.  Just normal SDB:Entry and SDB:SetIntr states.
+>>>>
+>>>> Strike that last part:  PORT_IRQ_SDB_FIS will appear, as with other 
+>>>> status bits, even if the enable bit is not set.
+>>>>
+>>>> So, you'll see that whenever you get an SDB FIS during normal 
+>>>> operation.
+>>>
+>>> The problem is with the second dword.  Here are some of spurious SDB 
+>>> FISes Ric's AHCI was receiving.
+>>>
+>>> 004040a1:10000000
+>>> 004040a1:00000020
+>>> 004040a1:00000080
+>>>
+>>> If the second dword were all zero, it's simply SDB FIS turning on IRQ 
+>>> (bit 14 of the first dword) and there's nothing to worry about. 
+>>> However, all those spurious SDBs have one bit set in the second dword 
+>>> - meaning the SDB completes the corresponding tag, but the tag isn't 
+>>> active when those SDBs are received.
+>>>
+>>> This is okay as long as the controller thinks the tags are unoccupied 
+>>> when those SDBs are received, but it's not something which can be 
+>>> guaranteed.  NCQ command synchronization depends on devices not 
+>>> completing the same commands more than once.
+>>>
+>>> The duplicate completions might be okay if the drive guarantees it 
+>>> doesn't send it if it loses to command issuance.  e.g.
+>>>
+>>> 1. drive sends completion for tag x
+>>> 2. drive shortly schedules another completion for tag x (spurious)
+>>> 3. ahci/driver complete tag x
+>>> 4. ahci/driver issues tag x
+>>> 5. drive receives command for tag x before sending the spurious 
+>>> completion and determines not to send the spurious completion. (not 
+>>> very likely)
+>>>
+>>> If above is true, the drive might be okay, but nobody can guarantee 
+>>> how  various controllers react.  It depends on how controllers manage 
+>>> SActive (when to turn bits on).  At any rate, it's dangerous IMHO.
+>>
+>> If the silicon is screwing up SActive bits, then we have bigger 
+>> problems than spurious interrupts.
+>>
+>> So, the typical policy of Internet servers applies here:  "be liberal 
+>> in what you accept."  For smart controllers like AHCI, we will simply 
+>> set the desired IRQ mask, then happily receive and ack events anytime 
+>> the controller decides to raise them.  If the controller decides to 
+>> send us a no-op, don't worry about it.  This is particularly true when 
+>> we turn on Command Coalescing, where we'll have a run of work 
+>> initiated [sometimes] by an internal timer, rather than an actual FIS 
+>> reception.
 > 
-> We've briefly met at Deauville while you were working with mandriva
-> I hope everything is fine with you - I myself have just been laid off, just about six years after joining mandrake ...
-> 
-> Anyway, back to business.
-> I have a Promise sataII TX2+ cards, with a pdc 20575.
-> 
-> I have just tried stock 2.6.17-rc4 and applied 2.6.17-rc4-git2-libata1.patch.bz2
-> I am only detecting the two sata lines.
-> the motherboard is smp, and has pdc20265 onboard. there are 4 drives attached to the TX2+ (two sata, two pata)
-> 
-> If I am not mistaken, driver version 1.04 is the latest one you have ?
+> I wish I could explain it better.  This is a clear protocol violation 
+> from the drive.  Depending on specific implementation of the drive and 
+> the controller, it can result in completion of command which is not 
+> processed yet (data corruption!).
 
-Promise PATA-on-SATA-cards support lives in 
-libata-dev.git#promise-sata-pata, until someone cleans it up.
+I quite understand the implications.  My argument comes from a different 
+angle:  I don't feel we should be adding tons of code that essentially 
+validates the silicon.  There are plenty of chances for the hardware to 
+fuck up in a way that corrupts data, and is also difficult to detect. 
+Pre-production BIOS have even done silly things like turn off data 
+verification (checksum) by default.  Talk about subtle corruption...
 
-This is not found in 2.6.17-rc4 nor 2.6.17-rc4-git2-libata1.  It is 
-found in Andrew Morton's -mm tree, though.
+So I feel the best path is to use the hardware programming sequences 
+described in the spec, because that's what the chip designers and Q/A 
+engineers validate with (read: the Windows driver).
+
+Once we have deployed drivers with the standard programming sequences, 
+_then_ we can consider looking into proper spurious interrupt 
+accounting.  The current AHCI interrupt accounting stuff is not nearly 
+as accurate as it should be, which implies that the code simply should 
+not exist at the present time.
 
 	Jeff
-
 
 
