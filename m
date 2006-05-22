@@ -1,52 +1,35 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: libata/sas patches
-Date: Mon, 22 May 2006 14:18:25 -0500
-Message-ID: <44720E81.8020609@us.ibm.com>
-References: <4471CC15.8000102@us.ibm.com> <4471F34F.2040600@garzik.org>
-Reply-To: brking@us.ibm.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ICH8 and SATA
+Date: Tue, 23 May 2006 07:04:33 +0900
+Message-ID: <44723571.1090500@gmail.com>
+References: <447169C8.9060708@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:48516 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751139AbWEVTSh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2006 15:18:37 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4MJIZbL007827
-	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 15:18:35 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4MJIamQ089080
-	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 15:18:36 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4MJIZ19030636
-	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 15:18:35 -0400
-In-Reply-To: <4471F34F.2040600@garzik.org>
+Received: from nz-out-0102.google.com ([64.233.162.197]:25551 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751223AbWEVWEe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 May 2006 18:04:34 -0400
+Received: by nz-out-0102.google.com with SMTP id 8so1407929nzo
+        for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 15:04:34 -0700 (PDT)
+In-Reply-To: <447169C8.9060708@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 Jeff Garzik wrote:
-> Brian King wrote:
->> I just uploaded my updated libata patchset to support attaching
->> SATA devices to SAS HBAs. It's only lightly tested at this point.
->> I still need to give it another review myself and make sure
->> I'm happy with all the error cases, but the base function
->> is working for me, so I figured I'd post the link. I'll
->> hopefully submit the code to the list soon.
->>
->> http://prdownloads.sourceforge.net/iprdd/ipr-sata.tgz?download
+> BTW, Intel sez:
 > 
-> Are you gonna be at the storage summit?  They are going to discuss 
-> SAS/SATA integration there.
+> "FYI, I added PIIX_FLAG_IGNORE_PCS and was able to boot on ICH8."
 > 
-> I won't be there, alas...
 
-Yes. I will be there. Too bad you can't make it.
+Yeap, that should achieve about the same effect as the experimental 
+patch Andrew posted; also, about the same phantom bug.
 
-Brian
+I don't think the phantom device problem is caused by missing 
+dev_select.  We have enough dev_select() during classification.
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+tejun
