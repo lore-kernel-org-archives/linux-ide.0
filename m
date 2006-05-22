@@ -1,94 +1,30 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: TR: ASUS A8V Deluxe, x86_64
-Date: Mon, 22 May 2006 11:32:36 +0800
-Message-ID: <447130D4.1020008@tw.ibm.com>
-References: <8E8F647D7835334B985D069AE964A4F7028FDC29@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
-Reply-To: albertl@mail.com
+From: "Michael Sterrett -Mr. Bones.-" <msterret@coat.com>
+Subject: Re: [RFT] major libata update
+Date: Sun, 21 May 2006 23:42:32 -0400 (EDT)
+Message-ID: <Pine.LNX.4.61.0605212341180.5021@rutrow.coat.com>
+References: <20060515170006.GA29555@havoc.gtf.org>
+ <Pine.LNX.4.61.0605211937540.5021@rutrow.coat.com> <44712507.3040609@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:43395 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750829AbWEVDcp
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 21 May 2006 23:32:45 -0400
-In-Reply-To: <8E8F647D7835334B985D069AE964A4F7028FDC29@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
+Received: from coat.coat.com ([164.153.10.15]:56514 "EHLO coat.coat.com")
+	by vger.kernel.org with ESMTP id S1751114AbWEVDmj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 May 2006 23:42:39 -0400
+In-Reply-To: <44712507.3040609@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
-Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, Andi Kleen <ak@suse.de>, Marko Macek <Marko.Macek@gmx.net>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, =?ISO-8859-1?Q?Reinhard_Brandst=E4dter?= <r.brandstaedter@gmx.at>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Fortier,Vincent [Montreal] wrote:
->>Tejun Heo wrote:
->>
->>>Fortier,Vincent [Montreal] wrote:
->>>
->>>>scsi0 : sata_via
->>>>ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>>ata2.00: cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 
->>>>87:0000 88:001f
->>>>ata2.00: ATAPI, max UDMA/66
->>>>ata2.00: applying bridge limits
->>>>ata2.00: configured for UDMA/66
->>>
->>>[--snip--]
->>>
->>>
->>>>sd 0:0:0:0: Attached scsi disk sda
->>>>  Vendor: PLEXTOR   Model: DVDR   PX-716A    Rev: 1.09
->>>>  Type:   CD-ROM                             ANSI SCSI revision: 05
->>>
->>>Above and the detailed log too indicate that everything went smooth 
->>>the first time around.  Albert, do you have any ideas?  Could it be 
->>>something related to irq-pio?
-> 
-> 
->>I've checked Vincent't dmesg for 2.6.17-rc0 again.
->>(http://bugzilla.kernel.org/show_bug.cgi?id=5533)
->>(http://bugzilla.kernel.org/attachment.cgi?id=7700&action=view)
-> 
-> 
->>It seems DMA commands are also affected by this problem, not PIO unique.
-> 
-> 
->>ata2: command 0xa0 timeout, stat 0xd0 host_stat 0x1  <==== Device 
->>busy. DMA on going. ata2: translated ATA stat/err 0xd0/00 to SCSI 
->>SK/ASC/ASCQ 0xb/47/00 sr0: scsi-1 drive sr 1:0:0:0: Attached scsi 
->>CD-ROM sr0
->>ata2 is slow to respond, please be patient
->>ata2 failed to respond (30 secs)
->>BUG: warning at drivers/scsi/libata-core.c:3303/ata_pio_complete()
->>
->>Call Trace: <ffffffff88031bd0>{:libata:ata_pio_task+1398}
->>
->>=> It looks like the device is waiting for something.
->>
->>After comparing the code of 2.6.17-rc4 and current libata upstream, 
->>maybe "flush" is the fix: The CDB was sent to the ATAPI device by PIO, 
->>but not flushed to device. So, the device was busy waiting for the CDB to arrive.
->>
->>Hi Vincent,
->>  Could you please try 2.6.17-rc4, both with and without the attached 
->>patch, to see if the flush works. Thanks.
-> 
-> 
-> You where absolutely right on it Albert..  I've attached all the logs.
-> 
-> Maybie this patch should be sent to the 2.6.17 tree?
-> 
-> The only thing I've found curious is when using cdrecord -scanbus... With the patch or with the main patchset it only shows my plextor and stop showing my dvd reader and my yamaha cdr?  Although they both get discovered by k3b?  It probably has nothing to do with this.
-> 
-> If you'd like me to test anything else just ask!
-> 
-> - vin
-> 
+On Mon, 22 May 2006, Tejun Heo wrote:
 
-Thanks for the test. Will submit the pio flush patch to Jeff for review.
+> At the first glance, it seems like a faulty drive.  Have you tried the drive 
+> on different hardware?  Has it ever worked?
 
-For the cdrecord -scanbus problem, I saw similar problem before
-when fiber channel device added/removed. Don't know why. Looks more
-like cdrecord problem.
+No, I don't have any other SATA hardware to try it with.  It is a new
+drive so I suppose it's possible it's just DOA.  I'll see if I can work
+out a way to try it on a friend's hardware or something.
 
---
-albert
-
+Michael Sterrett
+   -Mr. Bones.-
+michael.sterrett@coat.com
