@@ -1,70 +1,52 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Re: pdc20575 and driver 1.04
-Date: Mon, 22 May 2006 11:29:19 -0700
-Message-ID: <20060522182919.GB22881@ipom.com>
-References: <44718312.9090900@ipom.com> <4471F099.4060109@pobox.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: libata/sas patches
+Date: Mon, 22 May 2006 14:18:25 -0500
+Message-ID: <44720E81.8020609@us.ibm.com>
+References: <4471CC15.8000102@us.ibm.com> <4471F34F.2040600@garzik.org>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DKU6Jbt7q3WqK7+M"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpe-24-24-245-191.socal.res.rr.com ([24.24.245.191]:45366 "EHLO
-	alt") by vger.kernel.org with ESMTP id S1751123AbWEVS3Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2006 14:29:24 -0400
-Content-Disposition: inline
-In-Reply-To: <4471F099.4060109@pobox.com>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:48516 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751139AbWEVTSh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2006 15:18:37 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e1.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4MJIZbL007827
+	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 15:18:35 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4MJIamQ089080
+	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 15:18:36 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4MJIZ19030636
+	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 15:18:35 -0400
+In-Reply-To: <4471F34F.2040600@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: viet@mandriva.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
+Jeff Garzik wrote:
+> Brian King wrote:
+>> I just uploaded my updated libata patchset to support attaching
+>> SATA devices to SAS HBAs. It's only lightly tested at this point.
+>> I still need to give it another review myself and make sure
+>> I'm happy with all the error cases, but the base function
+>> is working for me, so I figured I'd post the link. I'll
+>> hopefully submit the code to the list soon.
+>>
+>> http://prdownloads.sourceforge.net/iprdd/ipr-sata.tgz?download
+> 
+> Are you gonna be at the storage summit?  They are going to discuss 
+> SAS/SATA integration there.
+> 
+> I won't be there, alas...
 
---DKU6Jbt7q3WqK7+M
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes. I will be there. Too bad you can't make it.
 
-On Mon, May 22, 2006 at 01:10:49PM -0400, Jeff Garzik wrote:
-> >Did you remove that support from the libata patches at
-> >http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/ ?
-> >
-> >2.6.15-libata1.patch added Promise PATA-on-SATA for my PC20378 (see my
-> >email from earlier today)...
-> >
-> >In fact, back on 09/09/05, Matt (Reuther?) pointed me to your patches
-> >(and CC'd the list) for exactly that reason:
-> >http://marc.theaimsgroup.com/?l=3Dlinux-ide&m=3D112629381132249&w=3D2
-> >
-> >I'm confused...
->=20
-> Just simply that 2.6.17-rc4-git2-libata1 patch didn't include "other=20
-> stuff", unlike the other patches.
+Brian
 
-OK - so some patches that were in older *-libata1.patch's are not in
-2.6.17-rc4-git2-libata1.patch. Got it.
-
-Thanks for the clarification.
-
---=20
-Phil Dibowitz                             phil@ipom.com
-Freeware and Technical Pages              Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
-
-"They that can give up essential liberty to obtain a little temporary
-safety deserve neither liberty nor safety."
- - Benjamin Franklin, 1759
-
-
---DKU6Jbt7q3WqK7+M
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (GNU/Linux)
-
-iD8DBQFEcgL/N5XoxaHnMrsRAsqMAJsET3Rpr7ys1AA3qHtgR47kYKPYeACgkvC+
-xB/SNrHlNDE2B9wgU4JwjK4=
-=Iim9
------END PGP SIGNATURE-----
-
---DKU6Jbt7q3WqK7+M--
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
