@@ -1,64 +1,55 @@
-From: Zang Roy-r61911 <tie-fei.zang@freescale.com>
-Subject: RE: [PATCH 6/7] sata_mv: endian fix
-Date: Mon, 22 May 2006 14:28:57 +0800
-Message-ID: <9FCDBA58F226D911B202000BDBAD467306382E46@zch01exm40.ap.freescale.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2/7] sata_mv: deal with interrupt coalescing interrupts
+Date: Mon, 22 May 2006 02:35:07 -0400
+Message-ID: <44715B9B.6010208@pobox.com>
+References: <11480537082648-git-send-email-htejun@gmail.com> <446DEE92.50102@pobox.com> <200605191614.00023.liml@rtr.ca> <200605191624.56928.liml@rtr.ca> <446E9BE1.3060700@pobox.com> <446F160C.40204@rtr.ca> <446F1883.9090601@pobox.com> <446F2138.9060406@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:670 "EHLO
-	az33egw02.freescale.net") by vger.kernel.org with ESMTP
-	id S932499AbWEVG3D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 May 2006 02:29:03 -0400
-Received: from az33smr02.freescale.net (az33smr02.freescale.net [10.64.34.200])
-	by az33egw02.freescale.net (8.12.11/az33egw02) with ESMTP id k4M6jELF006688
-	for <linux-ide@vger.kernel.org>; Sun, 21 May 2006 23:45:14 -0700 (MST)
-Received: from zch01exm40.ap.freescale.net (zch01exm40.ap.freescale.net [10.192.130.11])
-	by az33smr02.freescale.net (8.13.1/8.13.0) with ESMTP id k4M6T0Aa010921
-	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 01:29:02 -0500 (CDT)
+Received: from srv5.dvmed.net ([207.36.208.214]:14215 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932503AbWEVGfK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2006 02:35:10 -0400
+In-Reply-To: <446F2138.9060406@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org
 
-> Zang Roy-r61911 wrote:
-> >> This fixes a byte-swap issue on PPC, found by Zang Roy-r61911
-> >> on the powerpc platform.  His original patch also had some other
-> >> platform-specific changes in #ifdef's, but I'm not sure yet how to
-> >> incorporate them.  Look for another patch for those (soon).
-> >>
-> >> Signed-off-by: Mark Lord <liml@rtr.ca>
-> >>
-> >> ---
-> >> --- linux/drivers/scsi/sata_mv.c	2006-05-19 
-> >> 15:44:11.000000000 -0400
-> >> +++ linux/drivers/scsi/sata_mv.c	2006-05-19 
-> >> 15:58:21.000000000 -0400
-> >> @@ -1030,8 +1030,9 @@
-> >>  
-> >>  static inline void mv_crqb_pack_cmd(u16 *cmdw, u8 data, u8 
-> >> addr, unsigned last)
-> >>  {
-> >> -	*cmdw = data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
-> >> +	u16 tmp = data | (addr << CRQB_CMD_ADDR_SHIFT) | CRQB_CMD_CS |
-> >>  		(last ? CRQB_CMD_LAST : 0);
-> >> +	*cmdw = cpu_to_le16(tmp);
-> >>  }
-> >>  
-> >>  /**
-> >>
-> > 
-> > 
-> > Does this patch will affect other platform except powerpc?
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>>
+>> Unless you have a _lot_ of ports active at the same time, irq 
+>> coalescing can increase latency.
 > 
-> This patch affects all platforms (as it should).  Most Linux code is 
-> intentionally written in a cross-platform, portable manner 
-> without ifdefs.
+> I agree, which is why I haven't actually turned it on yet.
+> But a runtime sysfs attr for it should allow us to benchmark
+> things, and see if it really helps or not under various loads.
 > 
-> 	Jeff
+>> Ideally, for this, AHCI, and any other SATA controller that does 
+>> coalescing, we have a runtime dynamic trigger that turns on coalescing 
+>> when interrupt traffic exceeds a runtime limit.
 > 
-> 
-> 
-I can see it work on powerpc platform, while does it work for other 
-platform such as i386?
-Roy
+> Yeah, if coalescing turns out to be a win under hight load,
+> then a generic strategy like that would be a great feature.
+
+It should definitely be a win.  Every irq raised by the system, even 
+with MSI, has a fixed overhead, with spinlocks being taken along the way 
+or disable/enable_irq() deep in the system irq handler code.  Its a 
+measurable CPU usage win reducing that overhead, if nothing else.
+
+I've already "been there, done that" in the networking area, which 
+benefits from hardware (coalescing) and software (polling) interrupt 
+mitigation.  Hardware miti mitigates interrupts on a per-hardware basis, 
+but doesn't have any inherent overall-system-load feedback mechanisms. 
+Software miti takes into account overall system load, but can be 
+somewhat dumb at times (can add overhead at low loads).  However, "high 
+load" in networking easily means 10x or 100x the number of interrupts 
+per second.  Networking also processes data in smaller chunks (== more 
+interrupt events).  SATA is catching up though, at 3.0Gbps+ and 8-port 
+cards.
+
+	Jeff
+
+
+
