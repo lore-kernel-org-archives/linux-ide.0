@@ -1,88 +1,62 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Re: pdc20575 and driver 1.04
-Date: Mon, 22 May 2006 02:23:30 -0700
-Message-ID: <44718312.9090900@ipom.com>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
+Date: Mon, 22 May 2006 11:55:31 +0200
+Message-ID: <20060522095531.GC25624@elf.ucw.cz>
+References: <1148046258.9319.441.camel@queen.suse.de> <E1FhbYy-0005jL-00@skye.ra.phy.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigC73E66144FF5188ECBFDE293"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.ipom.com ([209.40.128.125]:27874 "EHLO
-	uberhacker.sage-inc.com") by vger.kernel.org with ESMTP
-	id S1750714AbWEVJXy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 May 2006 05:23:54 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <E1FhbYy-0005jL-00@skye.ra.phy.cam.ac.uk>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+Cc: trenn@suse.de, "Yu, Luming" <luming.yu@intel.com>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>, Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: viet@mandriva.com, linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigC73E66144FF5188ECBFDE293
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Hi!
 
-jgarzik@pobox.com wrote:
-> viet@mandriva.com wrote:
-> > Hi Jeff,
-> >
-> > We've briefly met at Deauville while you were working with mandriva
-> > I hope everything is fine with you - I myself have just been laid
-> off, just about \
-> > six years after joining mandrake ...
-> > Anyway, back to business.
-> > I have a Promise sataII TX2+ cards, with a pdc 20575.
-> >
-> > I have just tried stock 2.6.17-rc4 and applied
-> > 2.6.17-rc4-git2-libata1.patch.bz2
-> > I am only detecting the two sata lines.
-> > the motherboard is smp, and has pdc20265 onboard. there are 4 drives
-> attached to \
-> > the TX2+ (two sata, two pata)
-> > If I am not mistaken, driver version 1.04 is the latest one you have =
-> ?
->
-> Promise PATA-on-SATA-cards support lives in
-> libata-dev.git#promise-sata-pata, until someone cleans it up.
->
-> This is not found in 2.6.17-rc4 nor 2.6.17-rc4-git2-libata1.  It is
-> found in Andrew Morton's -mm tree, though.
+> > https://bugzilla.novell.com/show_bug.cgi?id=173420
+> 
+> >From Comment #30 at the above url: "The Linux ACPI code seems to
+> actively prevent the fan from running and that worries me."
+> 
+> I saw that as well, and found the following recipe would work around
+> the problem:
+> 
+> 1. Set the trip point to, say, 70 C -- well above the actual
+>    temperature.
+> 
+> 2. Then set the trip to anything reasonable that's under the current
+>    temperature (27 C always works).  Now the fan turns on, and behaves
+>    fine from then.
+> 
+> My explanation is that, before step 1, the fan is off but the OS
+> thinks it's on.  So the dialogue goes something like:
+> 
+> Hardware (from EC or BIOS?): Ack, I'm overheating, turn on the fan now!
+> OS: There, there, take it easy.  I've checked bit fields in my
+>      memory, and the fan is on.  So I don't have to do anything.
+> Hardware: Ack, ...
+> OS: There, there, ...
+> [Hence the 100% kacpid CPU usage]
+> 
+> Based on this explanation, I added a resume method to the fan driver.
+> It would turn on the fan and mark it as on.  So then the internal OS
+> state matched the actual state.  The fix didn't work for at least one
+> reason: ACPI drivers didn't have suspend/resume methods (though now
+> there are test patches to add those methods).
 
-It's not in 2.6.17-rc4-git2-libata1?
+Can you redo your patches with those methods?
 
-Did you remove that support from the libata patches at
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/ ?
+> Another fix, probably worth doing anyway, is to turn on the fan if the
+> BIOS asks for it, whether or not the OS thinks it's on.  The chance of
+> the two pieces of information getting out of synch, and the hardware
+> damage it can cause, is enough to make it worthwhile.  The reverse
 
-2.6.15-libata1.patch added Promise PATA-on-SATA for my PC20378 (see my
-email from earlier today)...
-
-In fact, back on 09/09/05, Matt (Reuther?) pointed me to your patches
-(and CC'd the list) for exactly that reason:
-http://marc.theaimsgroup.com/?l=3Dlinux-ide&m=3D112629381132249&w=3D2
-
-I'm confused...
---=20
-Phil Dibowitz                             phil@ipom.com
-Freeware and Technical Pages              Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
-
-"Be who you are and say what you feel, because those who mind don't
-matter and those who matter don't mind."
- - Dr. Seuss
-
-
-
---------------enigC73E66144FF5188ECBFDE293
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFEcYMSN5XoxaHnMrsRAm1xAKCcLl3k30cdHcXMdZBPlm0xRllKpwCffo8x
-819HMTP5TfjDHNhvjf+9gUY=
-=2uWf
------END PGP SIGNATURE-----
-
---------------enigC73E66144FF5188ECBFDE293--
+There should be 0% hardware damage chance. Fan failure means overheats
+mean emergency power cutoff. I even tested it with paper into fan
+blades several times. It mostly works.
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
