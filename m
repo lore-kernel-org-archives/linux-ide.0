@@ -1,51 +1,41 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: merge irq-pio
-Date: Tue, 23 May 2006 16:09:39 -0400
-Message-ID: <44736C03.8050104@pobox.com>
-References: <11473544042174-git-send-email-htejun@gmail.com> <4472DE75.6010507@tw.ibm.com>
+Subject: Re: ICH8 ATA mode on 2.4
+Date: Tue, 23 May 2006 16:55:23 -0400
+Message-ID: <447376BB.6050805@pobox.com>
+References: <D80BC16BC8FCD744B8D4B7BA4F5B13B001474257@ausx3mps313.aus.amer.dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41931 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751223AbWEWUJz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2006 16:09:55 -0400
-In-Reply-To: <4472DE75.6010507@tw.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:19918 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932198AbWEWUz0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2006 16:55:26 -0400
+In-Reply-To: <D80BC16BC8FCD744B8D4B7BA4F5B13B001474257@ausx3mps313.aus.amer.dell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+To: Bryan_Kemp@Dell.com
+Cc: linux-ide@vger.kernel.org
 
-Albert Lee wrote:
->> diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
->> index 9646c39..0372be7 100644
->> --- a/drivers/scsi/sata_vsc.c
->> +++ b/drivers/scsi/sata_vsc.c
->> @@ -221,14 +221,21 @@ static irqreturn_t vsc_sata_interrupt (i
->>  
->>  			ap = host_set->ports[i];
->>  
->> -			if (ap && !(ap->flags &
->> -				    (ATA_FLAG_DISABLED|ATA_FLAG_NOINTR))) {
->> +			if (is_vsc_sata_int_err(i, int_status)) {
->> +				u32 err_status;
->> +				printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
->> +				err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
->> +				vsc_sata_scr_write(ap, SCR_ERROR, err_status);
->> +				handled++;
->> +			}
->> +
->> +			if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
->>  				struct ata_queued_cmd *qc;
->>  
-> 
-> The if(is_vsc_sata_int_err(i, int_status)) { } block is not irq-pio related.
-> Maybe it is from somewhere else?
+Bryan_Kemp@Dell.com wrote:
+> Jeff,
+> Hi, my name is Bryan and I develop a small linux based OS used in 
+> manufacturing here at Dell. I have some new systems based on the ICH8 
 
-It is from the merge I did with upstream, which conflicted in this area. 
-  Is it not correct somehow, or just unexpected?
+Neat!
 
-Your 'minor fix' patch is now in my Pending folder.
+
+> Chipset that I need to support with the 2.4 kernel. I had noticed the 
+> 2820, 2825 and 2828 pci information is in the 2.6.17-rc4 kernel source. 
+> Are you planning on adding that support back to the 2.4 code base?
+
+Unfortunately not.  For the purposes of libata, and also for the 2.4.x 
+kernel series in general, it is in strict maintenance mode, with only 
+severe bug fixes being addressed.
+
+If you, or others, wanted to backport the current libata to 2.4.x, you 
+would certainly have my blessing.  I just don't have time for 2.4.x at 
+all, particularly as recent libata changes have made the backport more 
+difficult than it was in the past.
 
 	Jeff
 
