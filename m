@@ -1,100 +1,88 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 1/1] libata: use polling pio for identify device
-Date: Tue, 23 May 2006 10:27:24 +0800
-Message-ID: <4472730C.3090800@tw.ibm.com>
-References: <20060515170006.GA29555@havoc.gtf.org>	<20060516190507.35c1260f.akpm@osdl.org>	<446AAB3C.6050303@gmail.com> <20060516215610.2b822c00.akpm@osdl.org> <446AB12C.10001@gmail.com> <446AC418.4070704@gmail.com> <446C5957.9040404@tw.ibm.com> <446C5B83.9000305@gmail.com> <446D9FCD.5050907@tw.ibm.com> <446DA604.8040207@gmail.com> <4471354C.5090201@tw.ibm.com> <44715907.7060602@pobox.com>
-Reply-To: albertl@mail.com
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: [PATCH 1/1] 2.4.32 Fix memory leak in ide-probe
+Date: Mon, 22 May 2006 21:47:25 -0700 (PDT)
+Message-ID: <Pine.LNX.4.10.10605222145180.32622-200000@master.linux-ide.org>
+References: <200605221132.15134.npollitt@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; BOUNDARY="1430320608-327355726-1148359644=:32622"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:42385 "EHLO
-	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751259AbWEWC1Z
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 May 2006 22:27:25 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e36.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4N2RONS022245
-	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 22:27:24 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4N2ROXb267412
-	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 20:27:24 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4N2RNKK008064
-	for <linux-ide@vger.kernel.org>; Mon, 22 May 2006 20:27:24 -0600
-In-Reply-To: <44715907.7060602@pobox.com>
+Received: from astound-64-85-224-252.ca.astound.net ([64.85.224.252]:29706
+	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S1751251AbWEWE5c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 May 2006 00:57:32 -0400
+In-Reply-To: <200605221132.15134.npollitt@mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+To: Nick Pollitt <npollitt@mvista.com>, linux-ide@vger.kernel.org
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Andrew Morton <akpm@osdl.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
 
-Jeff Garzik wrote:
-> Albert Lee wrote:
-> 
->> Use polling pio for identify device.
->> This can save some time to detect the phantom device 1 during boot.
->>
->> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
->> ---
->> For the phantom slave device (found with some IBM DVD-RAM drive and
->> Intel ICHx chip), irq-pio has to wait 30 seconds timeout to detect them.
->>
->> Use polling pio can detect the phantom slave quicker. (Verified ok by
->> Tejun.)
->>
->> Patch again the current upstream branch
->> (b74ba22f030eb7ab88f7d8954ad18ecc0ac5ce3c).
->> For your review, thanks.
->>
->> --- upstream/drivers/scsi/libata-core.c    2006-05-22
->> 10:04:12.000000000 +0800
->> +++ polling_identify/drivers/scsi/libata-core.c    2006-05-22
->> 11:07:02.000000000 +0800
->> @@ -1196,6 +1196,8 @@ static int ata_dev_read_id(struct ata_de
->>      }
->>  
->>      tf.protocol = ATA_PROT_PIO;
->> +    /* Use polling for early detection of phantom dev 1 */
->> +    tf.flags |= ATA_TFLAG_POLLING;
-> 
-> 
-> Sorry I didn't jump into the thread earlier.  I'm trying out this new
-> no-work-on-weekends thing, which is a change from my usual
-> working-7-days-a-week thing.  :)
-> 
-> NAK.  The above change is going backwards from the direction we took by
-> merging irq-pio, and it reintroduces problems that irq-pio solved.
-> Additionally, for irq problems unrelated to libata (we will continue to
-> see such problems FOREVER), this simply shifts the I-notice-a-problem
-> moment from IDENTIFY DEVICE to SET FEATURES, or perhaps the first READ
-> or WRITE.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-Currently if the device fails to IDENTIFY DEVICE, new EH will retry
-for 3 times and offline it. So, the faulty/phantom device won't
-cause trouble to SET FEATURES and normal operation of libata.
+--1430320608-327355726-1148359644=:32622
+Content-Type: text/plain; charset=us-ascii
 
-(The impact is, 90 seconds boot time for irq-pio and 15 seconds
-boot time for polling-pio to IDENTIFY DEVICE and EH recovery.)
 
+Nick,
+
+If it works please forward the results and other information to everyone
+
+Cheers,
+
+Andre Hedrick
+LAD Storage Consulting Group
+
+On Mon, 22 May 2006, Nick Pollitt wrote:
+
+> Andre,  I found this memory leak running a bash loop calling cardctl to insert 
+> and eject a single PCMCIA card continuously.  Over time the slab-32 and slab-64
+> caches had consumed all system memory.  The memory was full of the IDE
+> settings allocated in ide_add_generic_settings.  
 > 
-> SATA is inherently event driven (read: irq-driven), and PATA has
-> traditionally been irq-driven in the Linux drivers/ide code.  Using
-> polling for solving this specific problem just isn't enough
-> justification.  We should be able to fix this elsewhere.  Take a look at
-> the drivers/ide "bang at the door w/ IDENTIFY" probing method.  We took
-> a different approach (device signature, etc.) but its still a useful
-> working case to examine.
-
-Agree. We need better way to identify the phantom slave.
-Will check if any clue we can use, before banging the door by IDENTIFY.
-
---
-albert
-
+> It appears that ide_add_generic_settings is getting called for interfaces that
+> aren't present, and there are never any calls to free up those resources.  The
+> check for the presence of the interface was removed in 2.4.19, and this patch
+> rolls back to the previous behavior.
 > 
-> As an aside, phantom devices make me think that somewhere we might be
-> getting device-select wrong, or accidentally skipping it entirely.
+> If this looks OK I'd like to ask Marcello to include in the next 2.4 rev.
 > 
->     Jeff
+> Thank you,
+> Nick
 > 
 
 
+--1430320608-327355726-1148359644=:32622
+Content-Type: text/plain; charset=us-ascii; name="ide-memleak-2432.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <Pine.LNX.4.10.10605222147240.32622@master.linux-ide.org>
+Content-Description: 
+Content-Disposition: attachment; filename="ide-memleak-2432.patch"
+
+ZGlmZiAtWCBkb250ZGlmZiAtTnVycCBsaW51eC0yLjQuMzItb3JpZy9kcml2
+ZXJzL2lkZS9pZGUtcHJvYmUuYyBsaW51eC0yLjQuMzIvZHJpdmVycy9pZGUv
+aWRlLXByb2JlLmMNCi0tLSBsaW51eC0yLjQuMzItb3JpZy9kcml2ZXJzL2lk
+ZS9pZGUtcHJvYmUuYwkyMDA0LTA0LTE0IDA2OjA1OjI5LjAwMDAwMDAwMCAt
+MDcwMA0KKysrIGxpbnV4LTIuNC4zMi9kcml2ZXJzL2lkZS9pZGUtcHJvYmUu
+YwkyMDA2LTA1LTIyIDEwOjU5OjU0LjQ5NDgxMDQxMiAtMDcwMA0KQEAgLTEy
+NDEsMTUgKzEyNDEsMTUgQEAgc3RhdGljIHZvaWQgaW5pdF9nZW5kaXNrIChp
+ZGVfaHdpZl90ICpodw0KIAlhZGRfZ2VuZGlzayhnZCk7DQogDQogCWZvciAo
+dW5pdCA9IDA7IHVuaXQgPCB1bml0czsgKyt1bml0KSB7DQotCQljaGFyIG5h
+bWVbNjRdOw0KLQkJaWRlX2FkZF9nZW5lcmljX3NldHRpbmdzKGh3aWYtPmRy
+aXZlcyArIHVuaXQpOw0KLS8vCQlod2lmLT5kcml2ZXNbdW5pdF0uZG4gPSAo
+KGh3aWYtPmNoYW5uZWwgPyAyIDogMCkgKyB1bml0KTsNCi0JCXNwcmludGYg
+KG5hbWUsICJob3N0JWQvYnVzJWQvdGFyZ2V0JWQvbHVuJWQiLA0KLQkJCSho
+d2lmLT5jaGFubmVsICYmIGh3aWYtPm1hdGUpID8NCi0JCQlod2lmLT5tYXRl
+LT5pbmRleCA6IGh3aWYtPmluZGV4LA0KLQkJCWh3aWYtPmNoYW5uZWwsIHVu
+aXQsIGh3aWYtPmRyaXZlc1t1bml0XS5sdW4pOw0KLQkJaWYgKGh3aWYtPmRy
+aXZlc1t1bml0XS5wcmVzZW50KQ0KKwkJaWYgKGh3aWYtPmRyaXZlc1t1bml0
+XS5wcmVzZW50KSB7DQorCQkJY2hhciBuYW1lWzY0XTsNCisJCQlpZGVfYWRk
+X2dlbmVyaWNfc2V0dGluZ3MoaHdpZi0+ZHJpdmVzICsgdW5pdCk7DQorCQkJ
+c3ByaW50ZiAobmFtZSwgImhvc3QlZC9idXMlZC90YXJnZXQlZC9sdW4lZCIs
+DQorCQkJCShod2lmLT5jaGFubmVsICYmIGh3aWYtPm1hdGUpID8NCisJCQkJ
+aHdpZi0+bWF0ZS0+aW5kZXggOiBod2lmLT5pbmRleCwNCisJCQkJaHdpZi0+
+Y2hhbm5lbCwgdW5pdCwgaHdpZi0+ZHJpdmVzW3VuaXRdLmx1bik7DQogCQkJ
+aHdpZi0+ZHJpdmVzW3VuaXRdLmRlID0gZGV2ZnNfbWtfZGlyKGlkZV9kZXZm
+c19oYW5kbGUsIG5hbWUsIE5VTEwpOw0KKwkJfQ0KIAl9DQogCXJldHVybjsN
+CiANCg==
+--1430320608-327355726-1148359644=:32622--
