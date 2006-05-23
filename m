@@ -1,82 +1,74 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 11/14] libata-hp-prep: make ops->tf_read() optional
-Date: Tue, 23 May 2006 09:04:18 -0700
-Message-ID: <44733282.1010509@gmail.com>
-References: <11480445844029-git-send-email-htejun@gmail.com> <446DE034.6030103@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 3/6] sata_sil: new interrupt handler
+Date: Tue, 23 May 2006 18:04:03 -0400
+Message-ID: <447386D3.5060109@pobox.com>
+References: <11480530904130-git-send-email-htejun@gmail.com> <446DE85B.2090809@pobox.com> <44732150.7020804@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.196]:56034 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932418AbWEWVzr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 May 2006 17:55:47 -0400
-Received: by nz-out-0102.google.com with SMTP id 8so1673597nzo
-        for <linux-ide@vger.kernel.org>; Tue, 23 May 2006 14:55:47 -0700 (PDT)
-In-Reply-To: <446DE034.6030103@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:55506 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932433AbWEWWER (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2006 18:04:17 -0400
+In-Reply-To: <44732150.7020804@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Not all controllers have single TF image and ops->tf_read() is
->> inappropriate for them.  Newly implemented hotplug probing will allow
->> drivers for such controllers to get rid of ops->tf_read() completely.
->> Make ops->tf_read() optional in core layer.
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>>> +    /* ack bmdma irq events */
+>>> +    ap->ops->irq_clear(ap);
 >>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> Don't use hook in LLDD
 > 
-> NAK.
+> Okay.
 > 
-> At the present time, the controller model expects to be able to obtain 
-> correct values from the shadow registers.  For FIS-based controllers, 
-> this may imply that the driver needs to maintain an accurate shadow 
-> register image, if the chip doesn't automatically supply one.
+>>> +    spin_lock_irqsave(&host_set->lock, flags);
+>>> +
+>>> +    for (i = 0; i < host_set->n_ports; i++) {
+>>> +        struct ata_port *ap = host_set->ports[i];
+>>> +        u32 bmdma2 = readl(mmio_base + sil_port[ap->port_no].bmdma2);
+>>> +
+>>> +        if (unlikely(!ap || ap->flags & ATA_FLAG_DISABLED))
+>>> +            continue;
+>>> +
+>>> +        if (!(bmdma2 & SIL_DMA_COMPLETE))
+>>> +            continue;
+>>> +
+>>> +        sil_host_intr(ap, bmdma2);
+>>> +        handled = 1;
+>>> +    }
+>>> +
+>>> +    spin_unlock_irqrestore(&host_set->lock, flags);
+>>
+>> NAK, unconditionally use spin_lock() and spin_unlock() on this hardware.
 > 
-> I think this is a quite reasonable expectation, given that ATA continues 
-> to have specifically defined shadow register outputs, and even in the 
-> face of NCQ, we have defined states where the shadow registers are 
-> available.
-> 
-> On this basis, attempts to make ->check_status() optional are also NAK'd.
+> Can you explain more on this?  We almost never use those in libata and I 
+> don't see what's different for sata_sil.
 
-The reasons why I did this are...
+er, huh?  _Most_ libata drivers use spin_lock().
 
-* For controllers which don't maintain shadow register image, the cached 
-value gets out of sync easily and cause malfunction.  In some cases, the 
-only way is to fake safe values.
+The only case where spin_lock_irqsave() should be used is when you are 
+dealing with multiple independent interrupts, i.e. the legacy case of 
+irqs 14/15.
 
-* With generic TF access, LLDs cannot determine when TF will be accessed 
-and why.  It must try to keep TF as up-to-date as possible.  e.g. sil24 
-skips TF loading after a qc completion, this makes the cached TF go out 
-of sync, which can easily cause problems depending on the previous 
-cached value and how it will be used later.
+Thus, the core uses the safe-in-all-cases version, and drivers that 
+implement their own interrupt handler can implement the better version.
 
-* With PM, on both AHCI and sil24, each port's TF image must be 
-cached/faked.  I think this would be true for many controllers.
+[jgarzik@pretzel linux-2.6]$ grep -wl spin_lock drivers/scsi/ahci.c 
+drivers/scsi/pdc_adma.c drivers/scsi/sata_*.c
+drivers/scsi/ahci.c
+drivers/scsi/pdc_adma.c
+drivers/scsi/sata_mv.c
+drivers/scsi/sata_promise.c
+drivers/scsi/sata_qstor.c
+drivers/scsi/sata_sil24.c
+drivers/scsi/sata_sx4.c
+drivers/scsi/sata_vsc.c
 
-* libata is heading toward high-level ops.  At least, that's the plan. 
-With high-level qc_issue/complete interface, there's no reason for 
-libata-core layer to access TF directly.
+	Jeff
 
-Currently, for FIS-based controllers, the only places where libata-core 
-layer accesses TF are...
 
-* waiting for !BSY.  This is often broken (cache TF gets out of sync, 
-uncleared previous FIS value...)
-
-* loading qc->result_tf when ATA_QCFLAG_RESULT_TF is set or the qc 
-failed.  As noted above, I think it's best done in LLD completion routine.
-
-I'll drop this and related patches from hotplug series, but I really 
-don't want to cache/fake TFs for all ports of PM.  The cached values 
-wouldn't be accurate, sometimes values will have to be faked to bypass 
-TF accesses, and all those should be implemented in LLDs.
-
-Thanks.
-
--- 
-tejun
 
