@@ -1,52 +1,52 @@
-From: "Yu, Luming" <luming.yu@intel.com>
-Subject: RE: 2.6.16-rc5: known regressions [TP 600X S3, vanilla DSDT]
-Date: Tue, 23 May 2006 21:29:36 +0800
-Message-ID: <554C5F4C5BA7384EB2B412FD46A3BAD11206E3@pdsmsx411.ccr.corp.intel.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: merge irq-pio
+Date: Tue, 23 May 2006 16:09:39 -0400
+Message-ID: <44736C03.8050104@pobox.com>
+References: <11473544042174-git-send-email-htejun@gmail.com> <4472DE75.6010507@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61606 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932209AbWEWN3o convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2006 09:29:44 -0400
-Content-class: urn:content-classes:message
+Received: from srv5.dvmed.net ([207.36.208.214]:41931 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751223AbWEWUJz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2006 16:09:55 -0400
+In-Reply-To: <4472DE75.6010507@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: trenn@suse.de, Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Tom Seeley <redhat@tomseeley.co.uk>, Dave Jones <davej@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, michael@mihu.de, mchehab@infradead.org, v4l-dvb-maintainer@linuxtv.org, video4linux-list@redhat.com, Brian Marete <bgmarete@gmail.com>, Ryan Phillips <rphillips@gentoo.org>, gregkh@suse.de, linux-usb-devel@lists.sourceforge.net, "Brown, Len" <len.brown@intel.com>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Randy Dunlap <rdunlap@xenotime.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Pavlik Vojtech <vojtech@suse.cz>, linux-input@atrey.karlin.mff.cuni.cz, Meelis Roos <mroos@linux.ee>, Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
+To: albertl@mail.com
+Cc: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+
+Albert Lee wrote:
+>> diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+>> index 9646c39..0372be7 100644
+>> --- a/drivers/scsi/sata_vsc.c
+>> +++ b/drivers/scsi/sata_vsc.c
+>> @@ -221,14 +221,21 @@ static irqreturn_t vsc_sata_interrupt (i
+>>  
+>>  			ap = host_set->ports[i];
+>>  
+>> -			if (ap && !(ap->flags &
+>> -				    (ATA_FLAG_DISABLED|ATA_FLAG_NOINTR))) {
+>> +			if (is_vsc_sata_int_err(i, int_status)) {
+>> +				u32 err_status;
+>> +				printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
+>> +				err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
+>> +				vsc_sata_scr_write(ap, SCR_ERROR, err_status);
+>> +				handled++;
+>> +			}
+>> +
+>> +			if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
+>>  				struct ata_queued_cmd *qc;
+>>  
+> 
+> The if(is_vsc_sata_int_err(i, int_status)) { } block is not irq-pio related.
+> Maybe it is from somewhere else?
+
+It is from the merge I did with upstream, which conflicted in this area. 
+  Is it not correct somehow, or just unexpected?
+
+Your 'minor fix' patch is now in my Pending folder.
+
+	Jeff
 
 
->> exregion-0185 [36] ex_system_memory_space: system_memory 0 
->(32 width) Address=0000000023FDFFC0
->> exregion-0185 [36] ex_system_memory_space: system_memory 1 
->(32 width) Address=0000000023FDFFC0
->> exregion-0290 [36] ex_system_io_space_han: system_iO 1 (8 
->width) Address=00000000000000B2
->> 
->> repeated endlessly.
-
-Hmm.. interesting.  This looks like same error with TP600X.
-
->
->This sounds like the problem Daniel had on his Samsung P35 recently.
->He could fix it by getting rid of some asus_unhide_smbus stuff or the
->otherway around, adding asus_unhide_smbus quirks in the S3 resume code.
->
->This thread was recently posted on lkml:
->Re: [patch] smbus unhiding kills thermal management
->
->Here are some more details, for me that sounds related...:
->https://bugzilla.novell.com/show_bug.cgi?id=173420
->
-
-But this Samsung P35 don't have _GLK. So, I think TP 600x has
-a different problem with Samsung P35.
-
-Actually, Sanjoy has a workaround to solve TP 600X S3 issue.
-What we need to do is to come up with a clean patch. 
-It is on to-do list. 
-
-Thanks,
-Luming
