@@ -1,51 +1,51 @@
-From: Steven Scholz <steven.scholz@imc-berlin.de>
-Subject: Re: Problems with 1GB SimpleTech CF Card
-Date: Wed, 24 May 2006 16:03:45 +0200
-Message-ID: <447467C1.9060505@imc-berlin.de>
-References: <447436B3.4090906@imc-berlin.de> <44746566.6040601@rtr.ca>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: hotplug works, but newly plug not
+Date: Wed, 24 May 2006 11:25:16 -0400
+Message-ID: <1148484316.26093.72.camel@localhost.localdomain>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:57095 "EHLO
-	mail.imc-berlin.de") by vger.kernel.org with ESMTP id S932600AbWEXODt
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 May 2006 10:03:49 -0400
-Received: from mailserver.berlin.imc-berlin.de (mailserver.berlin.imc-berlin.de [10.0.0.19])
-	by mail.imc-berlin.de (Postfix) with ESMTP id CCFA82F023
-	for <linux-ide@vger.kernel.org>; Wed, 24 May 2006 16:03:48 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id C03C41E20EE
-	for <linux-ide@vger.kernel.org>; Wed, 24 May 2006 16:03:48 +0200 (CEST)
-Received: from [10.0.2.10] (scholz.berlin.imc-berlin.de [10.0.2.10])
-	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id E61A41213E
-	for <linux-ide@vger.kernel.org>; Wed, 24 May 2006 16:03:47 +0200 (CEST)
-In-Reply-To: <44746566.6040601@rtr.ca>
+Received: from orca.ele.uri.edu ([131.128.51.63]:43485 "EHLO orca.ele.uri.edu")
+	by vger.kernel.org with ESMTP id S932642AbWEXPZX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 May 2006 11:25:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide-list <linux-ide@vger.kernel.org>
 
-Mark,
+Hi All
 
->> When doing "mke2fs /dev/hda1" after 30 seconds I get
->>
->>     hda: irq timeout: status=0xd0 { Busy }
->>     ide: failed opcode was: unknown
->>     ide0: reset: master: error (0x00?)
-> 
-> Mmmm.. No idea, but one thing to try is "hdparm -W0" on the card,
-> and see if that makes any difference.
+I use the libata patch from
+http://home-tj.org/wiki/index.php/Libata-tj-stable with my supermicro MB
+( ICH7R chip). The AHCI works as desired in most of the time.
 
-No. It does not make any difference. Thanks.
+If I have disk(s) plugged in during boot. Then after boot, I kept unplug
+and plug many times and it works fine.
 
-BTW:
-a) Windows does its famous Blue Screen when accessing the card. So it looks
-like this special CF card is broken.
-b) I got a new one today. SLCF1GBJ-F. Same revision (7.0.0) and same
-firmware (05/03/04) and same geometry. Only that this one reports "fixed"
-and not "removable". But this can NOT be the reason for one working and the
-other not working! (I hardcoded the config->id value ...)
+but i noticed that if I have the disk(s) unplugged during boot, then
+after boot, I plug the disk and nothing shows. if I try to do rescan by
+run the rescan lun script, i saw these from dmesg.
+
+Anything clue ? Thanks!
+
+Ming
+
+---------------------------------------
+ata4: soft resetting port
+ata4: SATA link down (SStatus 0 SControl 0)
+ata4: EH complete
+ata3: soft resetting port
+ata3: SATA link down (SStatus 0 SControl 0)
+ata3: EH complete
+ata4: soft resetting port
+ata4: SATA link down (SStatus 0 SControl 0)
+ata4: EH complete
+ata3: soft resetting port
+ata3: SATA link down (SStatus 0 SControl 0)
+ata3: EH complete
+ata4: soft resetting port
+ata4: SATA link down (SStatus 0 SControl 0)
+ata4: EH complete
 
 
---
-Steven
