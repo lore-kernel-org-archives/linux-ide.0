@@ -1,31 +1,43 @@
-From: Raphael Bossek <raphael.bossek@gmx.de>
-Subject: Problems with 1GB SimpleTech CF Card
-Date: Wed, 24 May 2006 14:28:24 +0200
-Message-ID: <20060524122824.178730@gmx.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Problems with 1GB SimpleTech CF Card
+Date: Wed, 24 May 2006 09:53:42 -0400
+Message-ID: <44746566.6040601@rtr.ca>
+References: <447436B3.4090906@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:41172 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932700AbWEXM2Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 May 2006 08:28:25 -0400
+Received: from rtr.ca ([64.26.128.89]:3483 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932748AbWEXNxo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 May 2006 09:53:44 -0400
+In-Reply-To: <447436B3.4090906@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Steven Scholz <steven.scholz@imc-berlin.de>
 Cc: linux-ide@vger.kernel.org
 
-Hi Steven,
+Steven Scholz wrote:
+> Hi all,
+> 
+> I get repeatable erros when accessing a 1GB SimpleTech CF Flash Card (SLCF1GBJ).
+..
+> ~ # hdparm -i /dev/hda
+> Model=STI Flash 7.0.0, FwRev=05/03/04, SerialNo=STI J107004201112846
+>  Config={ HardSect NotMFM Removeable DTR>10Mbs nonMagnetic }
+>  RawCHS=2006/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+>  BuffType=unknown, BuffSize=0kB, MaxMultSect=1, MultSect=off
+>  CurCHS=2006/16/63, CurSects=2022048, LBA=yes, LBAsects=2022048
+>  IORDY=no, tPIO={min:120,w/IORDY:120}
+>  PIO modes:  pio0 pio1 pio2 pio3 pio4
+>  AdvancedPM=no WriteCache=enabled
+> 
+> When doing "mke2fs /dev/hda1" after 30 seconds I get
+> 
+> 	hda: irq timeout: status=0xd0 { Busy }
+> 	ide: failed opcode was: unknown
+> 	ide0: reset: master: error (0x00?)
 
-I'm also fighting with SimpleTech CF but we are using the 512MB card SLCF512J2u-F.
+Mmmm.. No idea, but one thing to try is "hdparm -W0" on the card,
+and see if that makes any difference.
 
-Please refer to my last email describing the problem:
-http://marc.theaimsgroup.com/?l=linux-ide&m=114776709317709&w=2
-
---
-Raphael Bossek
--- 
-
-
-Bis zu 70% Ihrer Onlinekosten sparen: GMX SmartSurfer!
-      Kostenlos downloaden: http://www.gmx.net/de/go/smartsurfer
-    
+Cheers
