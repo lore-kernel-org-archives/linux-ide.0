@@ -1,38 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 13/14] libata-hp-prep: add prereset() method and
-	implement ata_std_prereset()
-Date: Tue, 23 May 2006 23:29:32 +0100
-Message-ID: <1148423372.25255.130.camel@localhost.localdomain>
-References: <11480445853715-git-send-email-htejun@gmail.com>
-	 <446DE24E.4070501@pobox.com>  <44731FD4.6050008@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Wed, 24 May 2006 03:05:05 -0400
+Message-ID: <20060524070505.GA11218@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:26763 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932198AbWEWWQw
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 May 2006 18:16:52 -0400
-In-Reply-To: <44731FD4.6050008@gmail.com>
+Received: from havoc.gtf.org ([69.61.125.42]:42895 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S932625AbWEXHFF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 May 2006 03:05:05 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, mlord@pobox.com, albertcc@tw.ibm.com, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
-
-On Maw, 2006-05-23 at 07:44 -0700, Tejun Heo wrote:
-> Waiting for spinup is common operation for both PATA and SATA although I 
-> don't know how many PATA controllers support hotplug.
-
-Most do, but few vendors ship the required extra buffers for many of the
-chips. Unfortunately it means we have to add code for lots of chips each
-with few hot/warmplug users 8(
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-> ata_port_offline() applies to both PATA and SATA.  It's just that the 
-> current implmentation always returns 0 for PATA.  Well, I don't know. 
-> Maybe we should rename all those to sata_*() and rename them again when 
-> actual PATA support is implemented.
-> 
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-What is ata_port_offline() intended to do ?
+to receive the following updates:
 
+ drivers/scsi/libata-core.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+Albert Lee:
+      libata: add pio flush for via atapi (was: Re: TR: ASUS A8V Deluxe, x86_64)
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 823dfa7..fa476e7 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -3643,6 +3643,8 @@ static void ata_pio_block(struct ata_por
+ 
+ 		ata_pio_sector(qc);
+ 	}
++
++	ata_altstatus(ap); /* flush */
+ }
+ 
+ static void ata_pio_error(struct ata_port *ap)
+@@ -3759,11 +3761,14 @@ static void atapi_packet_task(void *_dat
+ 		spin_lock_irqsave(&ap->host_set->lock, flags);
+ 		ap->flags &= ~ATA_FLAG_NOINTR;
+ 		ata_data_xfer(ap, qc->cdb, qc->dev->cdb_len, 1);
++		ata_altstatus(ap); /* flush */
++
+ 		if (qc->tf.protocol == ATA_PROT_ATAPI_DMA)
+ 			ap->ops->bmdma_start(qc);	/* initiate bmdma */
+ 		spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 	} else {
+ 		ata_data_xfer(ap, qc->cdb, qc->dev->cdb_len, 1);
++		ata_altstatus(ap); /* flush */
+ 
+ 		/* PIO commands are handled by polling */
+ 		ap->hsm_task_state = HSM_ST;
