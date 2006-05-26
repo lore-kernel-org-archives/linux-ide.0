@@ -1,47 +1,57 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SiI3124 + SiI3726 pm
-Date: Thu, 25 May 2006 13:54:44 -0700
-Message-ID: <44761994.2050303@gmail.com>
-References: <89d273ba0605242046x3d19dd06h74885048f229d519@mail.gmail.com>	 <89d273ba0605242202l354ec106w22bccf649e5e1dfc@mail.gmail.com>	 <44753B78.4090802@gmail.com> <c70ff3ad0605251329m34af33bfj3ace5d5f9b32af38@mail.gmail.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: 2.6.17-rc4 + libata-pata Oops while reloading pata_amd module
+Date: Fri, 26 May 2006 13:39:06 +0800
+Message-ID: <4476947A.3020003@tw.ibm.com>
+References: <20060524165006.GC12022@harddisk-recovery.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:13996 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1030413AbWEYUy6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 May 2006 16:54:58 -0400
-Received: by ug-out-1314.google.com with SMTP id a2so2343907ugf
-        for <linux-ide@vger.kernel.org>; Thu, 25 May 2006 13:54:56 -0700 (PDT)
-In-Reply-To: <c70ff3ad0605251329m34af33bfj3ace5d5f9b32af38@mail.gmail.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:36027 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030476AbWEZFjQ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 May 2006 01:39:16 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4Q5dFed010218
+	for <linux-ide@vger.kernel.org>; Fri, 26 May 2006 01:39:15 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4Q5dFCM186250
+	for <linux-ide@vger.kernel.org>; Thu, 25 May 2006 23:39:15 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4Q5dEDu028252
+	for <linux-ide@vger.kernel.org>; Thu, 25 May 2006 23:39:15 -0600
+In-Reply-To: <20060524165006.GC12022@harddisk-recovery.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: saeed bishara <saeed.bishara@gmail.com>
-Cc: =?ISO-8859-1?Q?J=E9r=F4me_VUARAND?= <jerome.vuarand@gmail.com>, linux-ide@vger.kernel.org
+To: Erik Mouw <erik@harddisk-recovery.com>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, rene.herman@keyaccess.nl, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@maxeymade.com>
 
-saeed bishara wrote:
-> Hi,
->       I think the 6th port is for the SEMB(Sata Enclosure Management
-> Bridge) device, this device reportssignature with lbam=0x3c and lbah
-> 0xc3, but the linux classifies it as a disk:
+Erik Mouw wrote:
+> Hi Alan,
 > 
->  if (((tf->lbam == 0) && (tf->lbah == 0)) ||
->  ((tf->lbam == 0x3c) && (tf->lbah == 0xc3))) {
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> DPRINTK("found ATA device by sig\n");
-> return ATA_DEV_ATA;
+> I got this Oops while reloading the pata_amd module:
 > 
-> Can you print the signature of the device on that port?
-> Anyway, the 0x3C, 0xC3 signature should be classifies as a SEMB device
-> and not a disk according to the SATA standard.
+<snip>
+> 
+> The machine is an Asus A7M266-D dual Athlon board with only a single
+> CPU installed running Debian stable on NFS root.
+> 
+> How to recreate:
+> 
+> - Fully modular scsi and libata, root on NFS
+> - rmmod pata_amd
+> - modprobe pata_amd
+> 
+> Works with any drive I've tried.
+> 
+> 
 
-I haven't actually checked that signature but that's probably the same 
-class code mix up described for PM in the classification function.  For 
-the time being, libata is just ignoring the extra port.  It probably 
-should be exported as a SCSI device without HLD attached (/dev/sgX 
-only).  I'll try that once hotplug stuff settles.
+Hi Erik,
 
-Thanks.
+Unicorn Chang (on cc list) is working on a patch for this problem.
+Will submit the patch later.
 
--- 
-tejun
+--
+albert
+
