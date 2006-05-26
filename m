@@ -1,64 +1,32 @@
-From: Sven Luther <sven.luther@wanadoo.fr>
-Subject: Re: [PATCH/2.6.17-rc4 10/10] bugs fix for marvell SATA on powerp c pl
-	atform
-Date: Fri, 26 May 2006 18:25:23 +0200
-Message-ID: <20060526162523.GA13104@powerlinux.fr>
-References: <446C9219.4080300@pobox.com> <446CDE26.8090504@rtr.ca>
-	<20060526083931.GA23938@powerlinux.fr> <4476E964.90509@rtr.ca>
-	<20060526114245.GA32330@powerlinux.fr>
-	<44770065.8070907@rtr.ca> <20060526141535.GA7084@powerlinux.fr>
-	<447722FF.9020202@rtr.ca> <20060526160156.GA11778@powerlinux.fr>
-	<44772B10.7040300@rtr.ca>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] Add ata_piix's own resume function
+Date: Sat, 27 May 2006 01:05:34 +0200
+Message-ID: <20060526230534.GA3640@suse.de>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:11631 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751677AbWEZXFx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 May 2006 19:05:53 -0400
 Content-Disposition: inline
-In-Reply-To: <44772B10.7040300@rtr.ca>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alexandre.Bounine@tundra.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev list <linuxppc-dev@ozlabs.org>, Paul Mackerras <paulus@samba.org>, Yang Xin-Xin-r48390 <Xin-Xin.Yang@freescale.com>, Jeff Garzik <jgarzik@pobox.com>
+In-Reply-To: <1148634262.2310.7.camel@forrest26.sh.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Fri, May 26, 2006 at 12:21:36PM -0400, Mark Lord wrote:
-> Sven Luther wrote:
-> >On Fri, May 26, 2006 at 11:47:11AM -0400, Mark Lord wrote:
-> >
-> >>Meanwhile, I just booted 2.6.17-rc5-git1 (latest kernel.org) on my Mac G3
-> >>box here, and sata_mv seems to be behaving for me (thus far).
-> >
-> >Mmm, this is a G3, while i have a G4. The G4 does some I/O reordering, 
-> >which
-> >we don't have with a G3, so this may be the cause. 
-> 
-> MMmm.. is your G4 using a 64-bit kernel, or a 32-bit kernel?
+On Fri, May 26 2006, zhao, forrest wrote:
+> For ata_piix resume operation, it first waits for BUSY bit clear,
+> then calls ata_device_resume().
 
-Ah, no, the G4 is a 32bit processor.
+This has the problem that it introduces scsi specific knowledge into
+ata_piix, something that is both a violation and a problem because we
+are moving libata away from scsi. I think the best way to currently do
+this is to introduce a ata_port_ops hook (pre_resume()?) that waits for
+busy clear and gets called in ata_device_resume is probably the way to
+go.
 
-> The driver is a complete unknown (for me, at least) on 64-bit systems,
-> as I don't have one (of any processor type) here yet.
+-- 
+Jens Axboe
 
-I have an Xserve G5, which is a 64bit powerpc machine, and i could try it in
-it. I need to get the fans to a usable level first though, as it sounds like
-an airplan, and is sitting right beside my desk.
-
-> >Do you have a mac version of the board, with a forth/OF bios in it ? Or a
-> >normal PC card, which is thus uninitialized ? 
-> 
-> The board claims to be "mac" compatible, so it probably has an OF bios on 
-> it, but I have not verified this yet.
-
-Yes, probably. This could mean that the board gets initialized for you, but
-not for me.
-
-Friendly,
-
-Sven Luther
