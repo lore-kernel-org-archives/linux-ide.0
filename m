@@ -1,64 +1,45 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 1/1] libata: add back ->data_xfer to ata_piix.c
-Date: Fri, 26 May 2006 13:49:18 +0800
-Message-ID: <447696DE.5090604@tw.ibm.com>
+Subject: [PATCH/RFC 0/2] libata: legacy mode fixes
+Date: Fri, 26 May 2006 13:58:54 +0800
+Message-ID: <4476991E.5060506@tw.ibm.com>
+References: <20060524165006.GC12022@harddisk-recovery.com> <4476947A.3020003@tw.ibm.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:16847 "EHLO
-	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030481AbWEZFtQ
+Received: from e34.co.us.ibm.com ([32.97.110.152]:49127 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030484AbWEZF6y
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 May 2006 01:49:16 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e36.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4Q5nFrA014945
-	for <linux-ide@vger.kernel.org>; Fri, 26 May 2006 01:49:15 -0400
+	Fri, 26 May 2006 01:58:54 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4Q5wrHf013807
+	for <linux-ide@vger.kernel.org>; Fri, 26 May 2006 01:58:53 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4Q5nFjP237554
-	for <linux-ide@vger.kernel.org>; Thu, 25 May 2006 23:49:15 -0600
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4Q5wrCM184396
+	for <linux-ide@vger.kernel.org>; Thu, 25 May 2006 23:58:53 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4Q5nFlR005662
-	for <linux-ide@vger.kernel.org>; Thu, 25 May 2006 23:49:15 -0600
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4Q5wqA3014496
+	for <linux-ide@vger.kernel.org>; Thu, 25 May 2006 23:58:53 -0600
+In-Reply-To: <4476947A.3020003@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE Linux <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+Cc: Erik Mouw <erik@harddisk-recovery.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, rene.herman@keyaccess.nl, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>
 
-Add back ->data_xfer and ->mode_filter to ata_piix.c.
+Dear all,
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
-The ->data_xfer and ->mode_filter hooks of ata_piix.c are left out when
-Alan's patches are merged. Add them back.
+Description:
+This is the revised patch by Unicorn and I for legacy mode fix.
 
-Patch against upstream branch of libata-dev
+patch 1/2: make both legacy ports share one host_set.
+patch 2/2: remove the unused ap->hard_port_no.
+
+Patch against the upstream branch of libata-dev tree 
 (957d2df1801865eb1e63864bc63b970aa9c460ba).
 
---- upstream0/drivers/scsi/ata_piix.c	2006-05-25 10:45:21.000000000 +0800
-+++ 0_piix/drivers/scsi/ata_piix.c	2006-05-26 13:23:55.000000000 +0800
-@@ -228,6 +228,7 @@ static const struct ata_port_operations 
- 	.port_disable		= ata_port_disable,
- 	.set_piomode		= piix_set_piomode,
- 	.set_dmamode		= piix_set_dmamode,
-+	.mode_filter		= ata_pci_default_filter,
- 
- 	.tf_load		= ata_tf_load,
- 	.tf_read		= ata_tf_read,
-@@ -243,6 +244,7 @@ static const struct ata_port_operations 
- 	.bmdma_status		= ata_bmdma_status,
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
-+	.data_xfer		= ata_pio_data_xfer,
- 
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
-@@ -274,6 +276,7 @@ static const struct ata_port_operations 
- 	.bmdma_status		= ata_bmdma_status,
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
-+	.data_xfer		= ata_pio_data_xfer,
- 
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
+For your review, thanks.
+
+Unicorn Chang
+Albert Lee
 
