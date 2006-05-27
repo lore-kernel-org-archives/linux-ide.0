@@ -1,53 +1,25 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
      fails: libata issue
-Date: Sat, 27 May 2006 18:13:50 -0400
-Message-ID: <4478CF1E.8020304@garzik.org>
+Date: Sat, 27 May 2006 18:15:27 -0400
+Message-ID: <4478CF7F.2080303@rtr.ca>
 References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org> <4478CD4E.4000506@rtr.ca> <20060527221131.GA364@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54419 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964996AbWE0WN4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 18:13:56 -0400
+Received: from rtr.ca ([64.26.128.89]:18587 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S964999AbWE0WP3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 18:15:29 -0400
 In-Reply-To: <20060527221131.GA364@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
-Cc: Mark Lord <liml@rtr.ca>, Linus Torvalds <torvalds@osdl.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
 Jens Axboe wrote:
 > On Sat, May 27 2006, Mark Lord wrote:
->> Linus Torvalds wrote:
->>> On Sat, 27 May 2006, Jens Axboe wrote:
->>>>> hardware, since the current suspend resumes to silicon defaults rather 
->>>>> than BIOS defaults (and ata_piix doesn't have a controller reset).
->>>> Definitely, and we need to cover a lot more controllers than just piix
->>>> and ahci. Being the selfish bastard that I am, I didn't care much about
->>>> other devices...
->>>>
->>>> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
->>>> index fa476e7..28878f4 100644
->>>> --- a/drivers/scsi/libata-core.c
->>>> +++ b/drivers/scsi/libata-core.c
->>>> @@ -4297,6 +4297,7 @@ static int ata_start_drive(struct ata_po
->>>> int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
->>>> {
->>>> 	if (ap->flags & ATA_FLAG_SUSPENDED) {
->>>> +		ata_busy_wait(ap, ATA_BUSY, 200000);
->>> Btw, it might not be enough to wait for ATA_BUSY to clear.
->>>
->>> I think you should wait for ATA_DRDY to be set too.
->>>
->>> What does it say if you change that "ata_busy_wait()" to
->>>
->>> 	u8 status = ata_wait_idle(ap);
->>> 	if (!ata_ok(status))
->>> 		printk("ATA status %02x\n", status);
->> I got rid of the 500msec delay (not needed on my machine anyway),
->> and then added the above code *in front of* the ata_busy_wait().
->>
+>
 >> Resume worked, with this output:
 >>
 >> May 27 18:03:33 localhost kernel: ATA status 80
@@ -61,10 +33,13 @@ Jens Axboe wrote:
 > Works for me too, I changed the delay to match the 200000 above just to
 > be on the safe side.
 
-Well a status of 0x80 isn't good, noted above, indicates BSY is still 
-asserted.....
 
-	Jeff
+But what was the kernel output for the status value?
 
+It's important here --> the printk() probably introduced enough delay
+to compensate for the removal of your other delay.
 
+You did remove the other delay, right?
+
+Cheers
 
