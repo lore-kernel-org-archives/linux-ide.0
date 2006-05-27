@@ -1,43 +1,46 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH alt4 v2] libata resume fixes
-Date: Sat, 27 May 2006 16:41:21 -0400
-Message-ID: <4478B971.3060409@rtr.ca>
-References: <20060527195847.GA28334@havoc.gtf.org> <20060527201024.GA29015@havoc.gtf.org> <4478B312.5040901@garzik.org> <4478B611.2030201@rtr.ca> <4478B743.2050006@garzik.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: jgarzik and max-sectors: out of memory
+Date: Sat, 27 May 2006 22:43:41 +0200
+Message-ID: <200605272243.41832.axboe@suse.de>
+References: <4478AA6C.5070305@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:52142 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S964938AbWE0UlU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 16:41:20 -0400
-In-Reply-To: <4478B743.2050006@garzik.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:35926 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S964959AbWE0Upz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 16:45:55 -0400
+In-Reply-To: <4478AA6C.5070305@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: torvalds@osdl.org, linux-ide@vger.kernel.org
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Hannes Reinecke <hare@suse.de>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
-..
-> Yay!  I'm familiar with the 0xD0 status on ata_piix, so this is really 
-> good progress.
-> 
-> 
->> Other than that, it's still dead -- disk I/O not working.
->>
->> Can this patch be combined with Linus's one-liner
->> and still work on your machine?
-> 
-> Does alt4v2 plus Linus's patch work on your machine?  (I'm guessing "no")
+On Saturday 27 May 2006 21:37, Jeff Garzik wrote:
+> ATA_MAX_SECTORS is 200, rather than than 256 like it should be.  I seem
+> to recall that this was due to libata being incomplete in some area, but
+> I've tried in vain for a year to remember where the alleged
+> incompleteness was, to no avail.  So, my brain is out of memory :)
+>
+> Further -- someone with a long ATA memory correct me -- I think that we
+> can increase ATA_MAX_PRD beyond 256.  Most DMA engines should just keep
+> chugging along, provided that we continue to respect the 64k IDE DMA
+> boundaries.
 
-I haven't tried it here yet.
+The PRD count is much less of a problem.
 
-One other thing:  you patches keep adding a "pata" pci_device_resume handler.
+> So, I propose that we rename ATA_MAX_SECTORS to ATA_LBA28_SECTORS, and
+> change its value to 256, and see what happens.  People have reported
+> that that worked for them, so let's subject it to a wide test.  If
+> people are extremely paranoid, we could increase it to 255, and then in
+> the next kernel version, bump it from 255 to 256.
+>
+> Then we can look at increasing ATA_MAX_PRD, if that's feasible for PATA
+> hardware.
 
-My disk is SATA, or at least libata thinks it is SATA.
-Just in case that makes any difference here.
+Yep lets please do that, I don't think libata ever had any problems with 256 
+sectors other than perhaps a worry that it would break "something" :-)
 
-(it really is PATA, but seems to have a SATA bridge
-between it and the ICH6M SATA port).
-
-Cheers
+Jens
