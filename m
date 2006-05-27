@@ -1,93 +1,57 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
     fails: libata issue
-Date: Sat, 27 May 2006 17:50:39 -0400
-Message-ID: <4478C9AF.30405@garzik.org>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271426030.5623@g5.osdl.org>
+Date: Sat, 27 May 2006 14:50:41 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com>
+ <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org>
+ <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org>
+ <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org>
+ <20060527212011.GA31551@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:62098 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964942AbWE0Vup (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:50:45 -0400
-In-Reply-To: <Pine.LNX.4.64.0605271426030.5623@g5.osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:60819 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964964AbWE0Vu7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:50:59 -0400
+In-Reply-To: <20060527212011.GA31551@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Linus Torvalds wrote:
+
+
+On Sat, 27 May 2006, Jens Axboe wrote:
+> > hardware, since the current suspend resumes to silicon defaults rather 
+> > than BIOS defaults (and ata_piix doesn't have a controller reset).
 > 
-> On Sat, 27 May 2006, Jens Axboe wrote:
->> @@ -4846,6 +4847,7 @@ int ata_pci_device_suspend(struct pci_de
->>  
->>  int ata_pci_device_resume(struct pci_dev *pdev)
->>  {
->> +	msleep(500);
->>  	pci_set_power_state(pdev, PCI_D0);
+> Definitely, and we need to cover a lot more controllers than just piix
+> and ahci. Being the selfish bastard that I am, I didn't care much about
+> other devices...
 > 
-> That's just insane. Why would we need a delay before going to D0? 
-> Especially a long one like half a second? 
-> 
-> There's something else going on here, and that delay must be just hiding 
-> the real issue.
+> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+> index fa476e7..28878f4 100644
+> --- a/drivers/scsi/libata-core.c
+> +++ b/drivers/scsi/libata-core.c
+> @@ -4297,6 +4297,7 @@ static int ata_start_drive(struct ata_po
+>  int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
+>  {
+>  	if (ap->flags & ATA_FLAG_SUSPENDED) {
+> +		ata_busy_wait(ap, ATA_BUSY, 200000);
 
-It is.  But I thought you wanted something that works?  :)
+Btw, it might not be enough to wait for ATA_BUSY to clear.
 
-Your patch + Jens' patch [with the delay MOVED to the end] would get my 
-ACK for 2.6.17, and we already have infrastructure queued for 2.6.18 to 
-do a better job of kicking the controller and bus.
+I think you should wait for ATA_DRDY to be set too.
 
+What does it say if you change that "ata_busy_wait()" to
 
-> Looking at ata_device_resume(), I think the whole thing is pretty broken.
-> 
-> Just as an example, it calls "ata_set_mode()", but that sounds pretty damn 
-> broken, and it should probably do
-> 
-> 	if (ap->ops->set_mode)
-> 		ap->ops->set_mode(ap);
-> 	else
-> 		ata_set_mode(ap);
+	u8 status = ata_wait_idle(ap);
+	if (!ata_ok(status))
+		printk("ATA status %02x\n", status);
 
-Correct.
+instead? That should print out the status (unless it works, which it 
+apparently won't do for you without the msleep), and maybe give us some 
+clues about what the f* is going on with the device status thing.
 
-Furthermore, we probably need to issue IDLE IMMEDIATE command ("wake 
-up") before SET FEATURES - XFER MODE.
-
-
-> like ata_bus_probe() does. Similarly, why shouldn't it do the 
-> probe_reset/phy_reset that is also done in ata_bus_probe()? If it was 
-
-It should, most definitely.  Otherwise we skip initializing the 
-controller and phy (a key objection of mine all along).
-
-
-> required in ata_bus_probe(), it sounds like it would damn well be required 
-> at resume time too - from a hw perspective, there should really be _no_ 
-> difference between the initial bootup, and a resume event. The hardware is 
-> in the same state.
-
-Correct, correct, correct :)
-
-
-> (From a _software_ perspective, it's different, of course - one does 
-> discovery, while the other might instead try to see if the state _matches_ 
-> what it already knows. But the point is that coming back from power-off 
-> after a resume should really not be any different than coming back from 
-> power-off after a bootup)
-
-Key difference:  we have no BIOS to give us sane hardware state, so the 
-controller is in a different state from bootup.
-
-Lacking controller init (you mention this above), we basically have raw 
-silicon defaults.
-
-We are really debugging from scratch here, and there's a lot of work to do.
-
-Just apply the delay patch for 2.6.17, Mr. Get-It-Working ;-)  Else dive 
-into the big can of worms and give us time to fix it right...
-
-	Jeff
-
-
+		Linus
