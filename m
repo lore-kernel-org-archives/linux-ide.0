@@ -1,80 +1,53 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH alt4] libata resume fixes
-Date: Sat, 27 May 2006 15:58:47 -0400
-Message-ID: <20060527195847.GA28334@havoc.gtf.org>
+Subject: Re: [PATCH alt2] libata resume fixes
+Date: Sat, 27 May 2006 15:58:43 -0400
+Message-ID: <4478AF73.4070007@garzik.org>
+References: <20060527191323.GA26671@havoc.gtf.org> <4478A6C5.2040201@rtr.ca> <4478A74F.8070008@garzik.org> <4478A855.2070104@rtr.ca> <4478A898.6050005@garzik.org> <4478AC00.1020208@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:45252 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S964924AbWE0T6s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 15:58:48 -0400
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:25999 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964929AbWE0T6q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 15:58:46 -0400
+In-Reply-To: <4478AC00.1020208@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: torvalds@osdl.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, torvalds@osdl.org, axboe@suse.de
+
+Mark Lord wrote:
+> Okay, here's the syslog.  Find the lines that begin with ">>>>>  ",
+> and you'll see ata_pci_device_resume followed by two 
+> ata_scsi_device_resume.
+
+Thanks.
 
 
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index 6dc8814..949d496 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -201,7 +201,7 @@ static struct pci_driver piix_pci_driver
- 	.probe			= piix_init_one,
- 	.remove			= ata_pci_remove_one,
- 	.suspend		= ata_pci_device_suspend,
--	.resume			= ata_pci_device_resume,
-+	.resume			= pata_pci_device_resume,
- };
- 
- static struct scsi_host_template piix_sht = {
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index fa476e7..1d3a6d4 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4852,6 +4852,25 @@ int ata_pci_device_resume(struct pci_dev
- 	pci_set_master(pdev);
- 	return 0;
- }
-+
-+int pata_pci_device_resume(struct pci_dev *pdev)
-+{
-+	struct device *dev = pci_dev_to_dev(pdev);
-+	struct ata_host_set *host_set = dev_get_drvdata(dev);
-+	struct ata_port *ap;
-+	int i;
-+
-+	ata_pci_device_resume(pdev);
-+
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		ap = host_set->ports[i];
-+		if (ata_bus_probe(ap))
-+			printk(KERN_ERR "ata%u: failed to resume\n", ap->id);
-+	}
-+
-+	return 0;
-+}
-+
- #endif /* CONFIG_PCI */
- 
- 
-@@ -4970,6 +4989,7 @@ EXPORT_SYMBOL_GPL(ata_pci_init_one);
- EXPORT_SYMBOL_GPL(ata_pci_remove_one);
- EXPORT_SYMBOL_GPL(ata_pci_device_suspend);
- EXPORT_SYMBOL_GPL(ata_pci_device_resume);
-+EXPORT_SYMBOL_GPL(pata_pci_device_resume);
- EXPORT_SYMBOL_GPL(ata_pci_default_filter);
- EXPORT_SYMBOL_GPL(ata_pci_clear_simplex);
- #endif /* CONFIG_PCI */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b80d2e7..cad531a 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -516,6 +516,7 @@ extern int ata_pci_init_one (struct pci_
- extern void ata_pci_remove_one (struct pci_dev *pdev);
- extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
- extern int ata_pci_device_resume(struct pci_dev *pdev);
-+extern int pata_pci_device_resume(struct pci_dev *pdev);
- extern int ata_pci_clear_simplex(struct pci_dev *pdev);
- #endif /* CONFIG_PCI */
- extern int ata_device_add(const struct ata_probe_ent *ent);
+> One thought about Linus's one-liner (and the original patch),
+> is that two seconds may be too short --> I'd suggest a 10-second
+> timeout there for notebook drive spin-up.  Or one could be very
+> paranoid and use the standard ATA 31-second timeout.
+> 
+> I wonder if your faster 64-bit machine had that problem?
+> (two seconds not long enough, whereas my 32-bit machine is slower
+> gettting to that point, so two-seconds is then enough?).
+
+Well, there's a udelay() in there to guarantee the timing, and 64-bit 
+machine is definitely newer and faster, so I doubt that would explain 
+the hardlock I see.  I'll test a longer ata_busy_wait() anyway, just to 
+be sure.
+
+Overall we _really really_ need to do full controller init.  I'm 
+honestly surprised the delay hack works, because the resume skips ALL of 
+the controller init in piix_sata_probe().  Since the Linus patch doesn't 
+touch PCS at all, it is _luck_ that the controller silicon gives you a 
+useful value when it goes to PCI D0 state.
+
+I posted a version that does full bus probe as "[PATCH alt4] libata 
+resume fixes" just now.
+
+	Jeff
+
+
+
