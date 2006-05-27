@@ -1,38 +1,46 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)     fails: libata issue
-Date: Sat, 27 May 2006 23:25:36 +0200
-Message-ID: <20060527212536.GA31752@suse.de>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <4478C36E.8080107@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH alt4 v3] libata resume fixes
+Date: Sat, 27 May 2006 17:25:48 -0400
+Message-ID: <4478C3DC.1040907@garzik.org>
+References: <20060527195847.GA28334@havoc.gtf.org> <20060527205213.GA30686@havoc.gtf.org> <4478BD18.6010908@rtr.ca> <4478C08B.60308@garzik.org> <4478C15E.5030500@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:36357 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S964996AbWE0VZq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:25:46 -0400
-Content-Disposition: inline
-In-Reply-To: <4478C36E.8080107@rtr.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:13970 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964997AbWE0VZx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:25:53 -0400
+In-Reply-To: <4478C15E.5030500@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@osdl.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
 
-On Sat, May 27 2006, Mark Lord wrote:
-> Jens Axboe wrote:
-> ..
-> >ata_busy_wait() is _not_ enough for me, what seems to be happening is
-> >that prematurely decides that BSY is cleared while it just hasn't been
-> >asserted yet.
-> ..
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> Mark Lord wrote:
+>>
+>>> The ACPI patches have indeed been working here for over a year now,
+>>> on all kernels up to 2.6.15 --> not needed for 2.6.16.
+>>
+>> Long term they are definitely needed, if only for the case where a 
+>> drive password has been set in BIOS.  Otherwise when you resume, you 
+>> won't be able to talk to your disk.  Additionally the preferences 
+>> (such drive acoustic settings) aren't reprogrammed, but that is of 
+>> lesser importance.
+>>
+>> On laptops, the ACPI tables sometimes also hold special 
+>> vendor-specific taskfiles to work around device-specific or 
+>> drive-firmware-specific problems.
 > 
-> Ahh.. at last, something that even makes sense!
+> Agreed, 100%.
 > 
-> This whole thing has seemed very fiddly and timing dependent,
-> and this discovery (above) explains it a bit.
+> So why aren't they in yet?  ;)
 
-Yep, it should also make the 'better' fixes work I think, but I have no
-real time to test that right now. I think what exposed the timing
-problem is the part that Hugh originally uncovered.
+Hey, I'm ready for them...
 
--- 
-Jens Axboe
+Now that Tejun's EH work is done, the floodgates are open...
+
+	Jeff
+
 
