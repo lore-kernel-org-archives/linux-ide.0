@@ -1,36 +1,45 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH alt4 v3] libata resume fixes
-Date: Sat, 27 May 2006 17:15:10 -0400
-Message-ID: <4478C15E.5030500@rtr.ca>
-References: <20060527195847.GA28334@havoc.gtf.org> <20060527205213.GA30686@havoc.gtf.org> <4478BD18.6010908@rtr.ca> <4478C08B.60308@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
+   fails: libata issue
+Date: Sat, 27 May 2006 17:17:17 -0400
+Message-ID: <4478C1DD.2030204@garzik.org>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:16781 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S964985AbWE0VPM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:15:12 -0400
-In-Reply-To: <4478C08B.60308@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:61329 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964980AbWE0VRX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:17:23 -0400
+In-Reply-To: <20060527211157.GA31275@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, torvalds@osdl.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->
->> The ACPI patches have indeed been working here for over a year now,
->> on all kernels up to 2.6.15 --> not needed for 2.6.16.
+Jens Axboe wrote:
+> On Sat, May 27 2006, Jeff Garzik wrote:
+>> Jens Axboe wrote:
+>>> This is fine with me, Jeff originally complained it was a layering 
+>>> violation. Unless he really objects, I'd say go for that for 2.6.17 - well 
+>>> actually moving it inside the ATA_FLAG_SUSPENDED case is clearly better.
+>> It breaks 2.6.1[89] stuff, but whatever.  Go ahead and apply Linus's 
+>> patch.  I'll pick up the pieces post 2.6.17.
 > 
-> Long term they are definitely needed, if only for the case where a drive 
-> password has been set in BIOS.  Otherwise when you resume, you won't be 
-> able to talk to your disk.  Additionally the preferences (such drive 
-> acoustic settings) aren't reprogrammed, but that is of lesser importance.
-> 
-> On laptops, the ACPI tables sometimes also hold special vendor-specific 
-> taskfiles to work around device-specific or drive-firmware-specific 
-> problems.
+> Linus' patch doesn't work for me, seems I still need a little delay
+> before waiting for BSY clear. I'm testing a small additional hack to the
+> pci resume function.
 
-Agreed, 100%.
+If it works better for people, just doing an msleep() or mdelay() in 
+device suspend would be better than polling BSY.
 
-So why aren't they in yet?  ;)
+A delay at least works for FIS-based controllers and PMs...
+
+Post 2.6.17, a lot of work needs to go into actually re-initing the 
+hardware, since the current suspend resumes to silicon defaults rather 
+than BIOS defaults (and ata_piix doesn't have a controller reset).
+
+	Jeff
+
+
+
