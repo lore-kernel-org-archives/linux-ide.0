@@ -1,68 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
- fails: libata issue
-Date: Sat, 27 May 2006 15:15:31 -0400
-Message-ID: <4478A553.6020001@garzik.org>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <Pine.LNX.4.64.0605262028460.5623@g5.osdl.org> <4477CEF5.9000908@garzik.org> <200605271423.40037.liml@rtr.ca> <4478A066.8090808@garzik.org> <4478A3A8.1030209@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH alt2] libata resume fixes
+Date: Sat, 27 May 2006 15:21:41 -0400
+Message-ID: <4478A6C5.2040201@rtr.ca>
+References: <20060527191323.GA26671@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33934 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964942AbWE0TPk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 15:15:40 -0400
-In-Reply-To: <4478A3A8.1030209@rtr.ca>
+Received: from rtr.ca ([64.26.128.89]:20913 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S964937AbWE0TVk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 15:21:40 -0400
+In-Reply-To: <20060527191323.GA26671@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Linus Torvalds <torvalds@osdl.org>, Jens Axboe <axboe@suse.de>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, torvalds@osdl.org, axboe@suse.de
 
-Mark Lord wrote:
-> Same as in my original posting:
->> On resume from RAM, after a 30-second-ish timeout, the screen comes on
->> but the hard disk is NOT accessible.  "dmesg" in an already-open window
->> shows this (typed in from handwritten notes):
->>
->> sd 0:0:0:0: SCSI error: return code = 0x40000
->> end_request: I/O error, /dev/sda, sector nnnnnnn
->> sd 0:0:0:0: SCSI error: return code = 0x40000
->> end_request: I/O error, /dev/sda, sector nnnnnnn
->> sd 0:0:0:0: SCSI error: return code = 0x40000
->> end_request: I/O error, /dev/sda, sector nnnnnnn
->> sd 0:0:0:0: SCSI error: return code = 0x40000
->> end_request: I/O error, /dev/sda, sector nnnnnnn
->> sd 0:0:0:0: SCSI error: return code = 0x40000
->> end_request: I/O error, /dev/sda, sector nnnnnnn
->> sd 0:0:0:0: SCSI error: return code = 0x40000
->> end_request: I/O error, /dev/sda, sector nnnnnnn
->> sd 0:0:0:0: SCSI error: return code = 0x40000
->> end_request: I/O error, /dev/sda, sector nnnnnnn
+Jeff Garzik wrote:
+...
+> +
+> +int pata_pci_device_resume(struct pci_dev *pdev)
+> +{
+> +	struct device *dev = pci_dev_to_dev(pdev);
+> +	struct ata_host_set *host_set = dev_get_drvdata(dev);
+> +	struct ata_port *ap;
+> +	u8 status;
+> +	int i;
+> +
+> +	ata_pci_device_resume(pdev);
+> +
+> +	mdelay(400);
+> +
+> +	for (i = 0; i < host_set->n_ports; i++) {
+> +		ap = host_set->ports[i];
+> +
+> +		status = ata_busy_wait(ap, ATA_BUSY, 200000);
+> +		if (status & ATA_BUSY)
+> +			printk(KERN_ERR "ata%u: failed to resume\n", ap->id);
+> +	}
+> +
+> +	return 0;
+...
 
-what is in dmesg _before_ that, though?
+Okay, back again after two reboots.  Same failure mode as all of the others.
+System freezes for a 30-second timeout with no LCD-backlight on,
+then comes up without functioning hard drive access.  An immediate reboot
+is necessary to do anything.
 
+Linus's one-liner works perfectly, though.
 
-> Also from the original posting:
->> My ata_piix based Notebook (Dell i9300) suspends/resumes perfectly 
->> (RAM or disk)
->> with 2.6.16.xx kernels, but fails resume on 2.6.17-rc5-git1 (the first 
->> 2.6.17-*
->> I've attempted on this machine). 
-> 
-> It did NOT work any prior unpatched kernels before 2.6.16.xx.
-
-Thanks.
-
-
-> Fix your mailer, please.  Meanwhile, I'll try to extract the patch
-> and apply it, but for informational purposes only.
-> Linus's one-liner has us all beat.
-
-I resent it inline.  Stupid Thunderbird, its never done that before. 
-Sorry about that.
-
-If mine works, it is preferred, because that's what we need for 2.6.18+.
-
-	Jeff
-
-
-
+Cheers
