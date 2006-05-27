@@ -1,68 +1,53 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM) fails:  libata issue
-Date: Sat, 27 May 2006 08:20:51 +0200
-Message-ID: <20060527062051.GA23315@suse.de>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <20060526230534.GA3640@suse.de> <4477C60E.1070106@rtr.ca>
+Subject: Re: [PATCH] Add ata_piix's own resume function
+Date: Sat, 27 May 2006 08:21:59 +0200
+Message-ID: <20060527062159.GB23315@suse.de>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <20060526230534.GA3640@suse.de> <44778F2A.7070708@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:53272 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750740AbWE0GVI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 02:21:08 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:31513 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1750979AbWE0GWF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 02:22:05 -0400
 Content-Disposition: inline
-In-Reply-To: <4477C60E.1070106@rtr.ca>
+In-Reply-To: <44778F2A.7070708@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: "zhao, forrest" <forrest.zhao@intel.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Fri, May 26 2006, Mark Lord wrote:
-> Mark Lord wrote:
-> >Mark Lord wrote:
-> >>My ata_piix based Notebook (Dell i9300) suspends/resumes perfectly (RAM 
-> >>or disk)
-> >>with 2.6.16.xx kernels, but fails resume on 2.6.17-rc5-git1 (the first 
-> >>2.6.17-*
-> >>I've attempted on this machine).
-> >>
-> >>On resume from RAM, after a 30-second-ish timeout, the screen comes on
-> >>but the hard disk is NOT accessible.  "dmesg" in an already-open window
-> >>shows this (typed in from handwritten notes):
-> >>
-> >>sd 0:0:0:0: SCSI error: return code = 0x40000
-> >>end_request: I/O error, /dev/sda, sector nnnnnnn
-> >...
+On Fri, May 26 2006, Jeff Garzik wrote:
+> Jens Axboe wrote:
+> >On Fri, May 26 2006, zhao, forrest wrote:
+> >>For ata_piix resume operation, it first waits for BUSY bit clear,
+> >>then calls ata_device_resume().
 > >
-> >Ahh.. the fix for this was posted earlier today by Forrest Zhao.
-> ..
-> >Here is a modified version of Forrest's original patch, for 
-> >2.6.17-rc5-git1.
-> >It seems to have fixed the resume issue on my machine here,
-> >so that things are now working as they were in the unpatched 2.6.16 
-> >kernels.
-> 
-> >Jens Axboe wrote:
 > >This has the problem that it introduces scsi specific knowledge into
 > >ata_piix, something that is both a violation and a problem because we
 > >are moving libata away from scsi. I think the best way to currently do
 > >this is to introduce a ata_port_ops hook (pre_resume()?) that waits for
-> >busy clear and gets called in ata_device_resume is probably the way to go.
+> >busy clear and gets called in ata_device_resume is probably the way to
+> >go.
 > 
-> Well, this problem has been with us all for a year now,
-> and at this point it impacts practically *every* new "centrino"
-> notebook out there.
+> ata_device_resume() is fine as-is.  Modifying it to resurrect the bus is 
+> a gross layering violation.  Resume must be done in this order:
 > 
-> We have a very simple workaround (previous post) that addresses it
-> for 2.6.17, and it's about damn time it got fixed.
+> 	controller -> bus -> device
 > 
-> If there's a better solution for *2.6.17*, then *please* post it.
-> Otherwise, we have a fix.  Maybe Linus or Andrew should just apply it?
+> Thus, the bus must be resurrected and brought to a known HSM state (bus 
+> idle), and then ata_device_resume() will work just fine.
+> 
+> The proper solution is to modify the pci_driver::resume code path, to 
+> resurrect not only the HBA but also the ATA bus.  Currently we have 
+> ata_pci_device_{suspend,resume}, whose contents is wholly generic to any 
+> random PCI device.
+> 
+> I would suggest creating pata_pci_device_resume(), which calls 
+> ata_pci_device_resume(), and then waits for BSY to clear.
 
-Don't get me wrong, I could not agree more. I rely on suspend/resume all
-the time, and the fact that we didn't get this fully working _in kernel_
-years ago is really embarassing. So I fully want the ata_piix busy clear
-patch to be in 2.6.17, my objection was merely that shoving scsi
-knowledge into ata_piix is not the way to do it.
+I thought about that, and I don't agree. Waiting for the BSY to clear is
+not a pci property, at best I'd consider that even worse than defining a
+scsi resume function in ata_piix.
 
 -- 
 Jens Axboe
