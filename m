@@ -1,31 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] HPT3xx: switch to using pci_find_slot()
-Date: Sun, 28 May 2006 03:01:10 +0400
-Message-ID: <4478DA36.90408@ru.mvista.com>
-References: <444B3BDE.1030106@ru.mvista.com> <4457DC97.3010807@ru.mvista.com> <445A5A1B.60903@ru.mvista.com> <446A55D6.90507@ru.mvista.com> <446ED8A3.6030702@ru.mvista.com> <4478CD3D.6010409@ru.mvista.com> <4478D889.506@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
+      fails: libata issue
+Date: Sat, 27 May 2006 19:03:12 -0400
+Message-ID: <4478DAB0.5090200@garzik.org>
+References: <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org> <4478CD4E.4000506@rtr.ca> <20060527221131.GA364@suse.de> <Pine.LNX.4.64.0605271519250.5623@g5.osdl.org> <20060527223523.GD364@suse.de> <4478D82E.4030704@garzik.org> <4478D90D.4080901@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:34794 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S965002AbWE0XCG
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 May 2006 19:02:06 -0400
-In-Reply-To: <4478D889.506@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:2454 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965010AbWE0XDS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 19:03:18 -0400
+In-Reply-To: <4478D90D.4080901@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>, Andrew Morton <akpm@osdl.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jens Axboe <axboe@suse.de>, Linus Torvalds <torvalds@osdl.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Hello.
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> Jens Axboe wrote:
+>>> index b80d2e7..80fb1f9 100644
+>>> --- a/include/linux/libata.h
+>>> +++ b/include/linux/libata.h
+>>> @@ -742,7 +742,7 @@ static inline u8 ata_busy_wait(struct at
+>>>  
+>>>  static inline u8 ata_wait_idle(struct ata_port *ap)
+>>>  {
+>>> -    u8 status = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+>>> +    u8 status = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 200000);
+>>
+>>
+>> Ouch.  That will slow down boot for a lot of otherwise-untouched users, 
+> 
+> Really?  If a drive claims to be BUSY, then it shouldn't accept a new 
+> command.
+> 
+> But yes, this may be a bit too mainline to risk at this point,
+> given controller quirks and the like that may be spoofing the status.
 
-Jiri Slaby wrote:
-> Sergei Shtylyov napsal(a):
+All the other patches only affected ata_piix users using suspend, which 
+is a very small subset.  That's why we could be cavalier about the 
+delay.  Plus, I would expect resume to require a higher-than-normal delay.
 
->>   Switch to using pci_find_slot() to get to the function 1 of HPT36x/374
+In contrast, the above patch affects most users, on all platforms. 
+Cases which would previously error out in 10ms now take much longer to 
+error out.  Slows boot, slows multi-path, and other fun stuff.
 
-> Better to use pci_get_slot()+pci_dev_put(), i. e. refcounting.
+	Jeff
 
-    Indeed. I'll recast.
 
-WBR, Sergei
+
