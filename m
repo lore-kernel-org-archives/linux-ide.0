@@ -1,48 +1,32 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
-     fails: libata issue
-Date: Sat, 27 May 2006 17:51:35 -0400
-Message-ID: <4478C9E7.4000709@garzik.org>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <4478C39A.9060302@garzik.org> <20060527213333.GA32007@suse.de> <4478C5FE.1090306@garzik.org> <4478C694.90004@rtr.ca>
+    fails: libata issue
+Date: Sat, 27 May 2006 17:53:30 -0400
+Message-ID: <4478CA5A.4000100@garzik.org>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:3987 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964968AbWE0Vvl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:51:41 -0400
-In-Reply-To: <4478C694.90004@rtr.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:9363 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964971AbWE0Vxe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:53:34 -0400
+In-Reply-To: <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jens Axboe <axboe@suse.de>, Linus Torvalds <torvalds@osdl.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->> Jens Axboe wrote:
->>> On Sat, May 27 2006, Jeff Garzik wrote:
->>>>> +    msleep(500);
->>>>>     pci_set_power_state(pdev, PCI_D0);
->>>>>     pci_restore_state(pdev);
->>>>>     pci_enable_device(pdev);
->>>> Does it work if you move msleep() below pci_restore_state()?
->>>> "    "     "    "      below pci_enable_device()?
->>>
->>> Placement makes no difference here, it works after pci_enable_device()
->>> as well. What matters is the delay coming before the ata_busy_wait().
->>> You could just stuff it in front of that, if you wanted.
->>
->> That would increase the wait needlessly, since it would be then done 
->> per-device, even though the devices spin up in parallel on ata_piix.
-> 
-> Okay, so 2/3 of use have working machines again now.
-> 
-> How is your beast doing with this tweak, Jeff?
+Linus Torvalds wrote:
+> 	u8 status = ata_wait_idle(ap);
 
-I think my beast needs full controller init, the new patch still 
-hardlocks.  Ignore it for 2.6.17 I think...
+Vastly decreased wait probably won't work, since we had to increase the 
+wait otherwise.
+
+> 	if (!ata_ok(status))
+
+Correct (re DRQ etc.).
 
 	Jeff
-
 
 
