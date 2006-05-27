@@ -1,53 +1,55 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH/RFC 0/2] libata: legacy mode fixes
-Date: Fri, 26 May 2006 20:02:10 -0400
-Message-ID: <44779702.5070407@pobox.com>
-References: <20060524165006.GC12022@harddisk-recovery.com> <4476947A.3020003@tw.ibm.com> <4476991E.5060506@tw.ibm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
+Date: Fri, 26 May 2006 20:15:01 -0400
+Message-ID: <44779A05.4010209@garzik.org>
+References: <1148547763.23979.15.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60128 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751148AbWE0ACU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 May 2006 20:02:20 -0400
-In-Reply-To: <4476991E.5060506@tw.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:5089 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750955AbWE0APG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 May 2006 20:15:06 -0400
+In-Reply-To: <1148547763.23979.15.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Erik Mouw <erik@harddisk-recovery.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, rene.herman@keyaccess.nl, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@maxeymade.com>, Tejun Heo <htejun@gmail.com>
+To: "zhao, forrest" <forrest.zhao@intel.com>, htejun@gmail.com
+Cc: liml@rtr.ca, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> Dear all,
+zhao, forrest wrote:
+> Hi, all
 > 
-> Description:
-> This is the revised patch by Unicorn and I for legacy mode fix.
+> This patch makes libata "Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE
+> command" and clean the things up(e.g. revalidate and rescan). 
 > 
-> patch 1/2: make both legacy ports share one host_set.
-> patch 2/2: remove the unused ap->hard_port_no.
+> Here is the processing path:
+> 
+> 1 in ata_scsi_qc_complete(), if we find that a "SET FEATURES - WRITE CACHE
+> ENABLE/DISABLE" command is executed successfully, we schedule the according
+> port to do revalidation
+> 2 in ata_dev_revalidate(), if we find that the "write cahce enable bit" was
+> changed, set port flags in order to schedule scsi_rescan_device() later in
+> ata_scsi_error()
+> 3 in ata_scsi_error(), if ATA_FLAG_SCSI_RESCAN is set for ap->flags, we
+> queue the ata_scsi_dev_rescan() to work_queue "ata_scsi_wq"
+> 4 at last, scsi_rescan_device() is invoked, so the current state of "write
+> cahce enable bit" is propogated to SCSI layer.
 
-Unfortunately, NAK.
+I agree with the concept, and agree that the SCSI layer must be notified 
+when the ATA write cache type changes.  However, I NAK the patch for the 
+following reasons:
 
-While it would be nice to eventually share one host_set, your patch 
-demonstrates the hacks that must be added to the hot path, to deal with 
-two separate interrupt handlers trying to share the same host_set.
+1) Tejun's revalidate should trigger scsi_rescan_device(), as your patch 
+indicates.  But that's pretty much all that needs to be done.
 
-Additionally, neither this email nor the two patches describes the 
-problem you are trying to fix, and how these changes fix that problem.
+2) Thus, a new bit (ATA_FLAG_SCSI_RESCAN) and a new workqueue are 
+unnecessary.
 
-The correct solution, long term, is
-1) move the irq registration (request_irq, free_irq) out of 
-ata_device_add().  The current design was convenient initially, but I 
-have known since I wrote the code that it was insufficient, long term.
+3) While the following test is correct,
++	if ((dev->id[85] & (1 << 5)) != (id[85] & (1 << 5)))
++		dev->ap->flags |= ATA_FLAG_SCSI_RESCAN;
 
-The best solution is to give each LLDD the ability to register an 
-interrupt handler in a manner best suited to the hardware.  Consider, 
-for example, how poorly the current design will work on PCI MSI-X hardware.
+there is no pressing need to avoid unnecessary rescans, during revalidation.
 
-2) For legacy mode hardware, one should pass struct ata_port* to 
-request_irq(), rather then struct ata_host_set*.  Thus in the legacy ATA 
-interrupt handler, obtain the host_set via ap->host_set.
-
-	Jeff
-
-
+4) Using [__]scsi_add_device() is a regression from using scsi_scan_target()
 
