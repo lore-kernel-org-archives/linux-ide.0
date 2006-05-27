@@ -1,46 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH alt4 v3] libata resume fixes
-Date: Sat, 27 May 2006 17:21:13 -0400
-Message-ID: <4478C2C9.3030703@garzik.org>
-References: <20060527195847.GA28334@havoc.gtf.org> <20060527205213.GA30686@havoc.gtf.org> <4478BD18.6010908@rtr.ca> <4478C0A1.4050003@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
+    fails: libata issue
+Date: Sat, 27 May 2006 17:23:58 -0400
+Message-ID: <4478C36E.8080107@rtr.ca>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:2450 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964989AbWE0VVP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:21:15 -0400
-In-Reply-To: <4478C0A1.4050003@rtr.ca>
+Received: from rtr.ca ([64.26.128.89]:37316 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S964994AbWE0VX5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:23:57 -0400
+In-Reply-To: <20060527212011.GA31551@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, torvalds@osdl.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@osdl.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> The alt4_v3 patch from Jeff also still fails here.
-> 
-> The screen stays off for 30 seconds, then comes on,
-> but the error-recovery attempts do NOT appear in the syslog
-> as they did with the alt4_v2 patch.  The disk LED is still
-> stuck on, and the syslog shows only this, from early on:
-> 
-> qc timeout (cmd 0xe1)
-> do_simple_cmd: ata command failed: 4
+Jens Axboe wrote:
+..
+> ata_busy_wait() is _not_ enough for me, what seems to be happening is
+> that prematurely decides that BSY is cleared while it just hasn't been
+> asserted yet.
+..
 
-0xE1 is IDLE IMMEDIATE, so it looks like it is making progress.
+Ahh.. at last, something that even makes sense!
 
-This makes me realize that ata_bus_probe() won't get the job done alone, 
-we must do:
+This whole thing has seemed very fiddly and timing dependent,
+and this discovery (above) explains it a bit.
 
-* host init
-* phy init
-* idle immediate
-* the rest of bus probe
+Rebooting to try it here now..
 
-Good, good data points here...
-
-	Jeff
-
-
-
-
+Cheers
