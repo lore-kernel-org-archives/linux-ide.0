@@ -1,29 +1,25 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
-  fails: libata issue
-Date: Sat, 27 May 2006 16:58:08 -0400
-Message-ID: <4478BD60.40806@garzik.org>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH alt4 v2] libata resume fixes
+Date: Sat, 27 May 2006 17:00:45 -0400
+Message-ID: <4478BDFD.60209@rtr.ca>
+References: <20060527195847.GA28334@havoc.gtf.org> <20060527201024.GA29015@havoc.gtf.org> <4478B312.5040901@garzik.org> <4478B611.2030201@rtr.ca> <4478B743.2050006@garzik.org> <4478B971.3060409@rtr.ca> <4478BD09.5010309@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:12689 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964966AbWE0U6Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 16:58:16 -0400
-In-Reply-To: <200605272245.30108.axboe@suse.de>
+Received: from rtr.ca ([64.26.128.89]:26858 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S964967AbWE0VAn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:00:43 -0400
+In-Reply-To: <4478BD09.5010309@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: torvalds@osdl.org, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> This is fine with me, Jeff originally complained it was a layering violation. 
-> Unless he really objects, I'd say go for that for 2.6.17 - well actually 
-> moving it inside the ATA_FLAG_SUSPENDED case is clearly better.
+Jeff Garzik wrote:
+>
+> As mentioned elsewhere, Linus's patch falls over when we start resuming 
+> controllers with real SATA phy registers, so that would be a separate 
+> sata_pci_device_resume() function.
 
-It breaks 2.6.1[89] stuff, but whatever.  Go ahead and apply Linus's 
-patch.  I'll pick up the pieces post 2.6.17.
-
-	Jeff
-
+But does it fall over any worse than we already do with the stock kernel?
