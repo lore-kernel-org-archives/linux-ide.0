@@ -1,45 +1,54 @@
-From: Mark Lord <liml@rtr.ca>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
-     fails: libata issue
-Date: Sat, 27 May 2006 18:15:27 -0400
-Message-ID: <4478CF7F.2080303@rtr.ca>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org> <4478CD4E.4000506@rtr.ca> <20060527221131.GA364@suse.de>
+    fails: libata issue
+Date: Sat, 27 May 2006 15:14:23 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605271509320.5623@g5.osdl.org>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com>
+ <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org>
+ <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org>
+ <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org>
+ <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org>
+ <4478CA5A.4000100@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:18587 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S964999AbWE0WP3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 18:15:29 -0400
-In-Reply-To: <20060527221131.GA364@suse.de>
+Received: from smtp.osdl.org ([65.172.181.4]:5784 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965000AbWE0WQi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 18:16:38 -0400
+In-Reply-To: <4478CA5A.4000100@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> On Sat, May 27 2006, Mark Lord wrote:
+
+
+On Sat, 27 May 2006, Jeff Garzik wrote:
 >
->> Resume worked, with this output:
->>
->> May 27 18:03:33 localhost kernel: ATA status 80
->> May 27 18:03:33 localhost kernel: ata1: dev 0 configured for UDMA/100
->> May 27 18:03:33 localhost kernel: ATA status 00
->> May 27 18:03:33 localhost kernel: ata2: dev 0 configured for UDMA/33
->>
->> Note that the second set are for the DVD-RW drive,
->> which (being ATAPI) doesn't assert ATA_DRDY.
+> Linus Torvalds wrote:
+> > 	u8 status = ata_wait_idle(ap);
 > 
-> Works for me too, I changed the delay to match the 200000 above just to
-> be on the safe side.
+> Vastly decreased wait probably won't work, since we had to increase the wait
+> otherwise.
+> 
+> > 	if (!ata_ok(status))
+> 
+> Correct (re DRQ etc.).
 
+I actually just want to see what the bits are here.
 
-But what was the kernel output for the status value?
+In other words, we already have a good solution for Mark's problem. I 
+don't think the suggested solution on top of that for Jens is any good, 
+and I'd like to see what bits are set for Jens here.
 
-It's important here --> the printk() probably introduced enough delay
-to compensate for the removal of your other delay.
+So I _expect_ (or rather, hope) it to fail for his setup. 
 
-You did remove the other delay, right?
+Jens doesn't seem to have the ATA_BUSY bit set, because if he did, then 
+the ata_busy_wait() thing should basically have done the wait for him. 
 
-Cheers
+That's why I did the wait-idle() + ata_ok() check. It should all work 
+beautifully on machines that didn't have trouble before - but it should 
+hopefully print out something interesting for machines that are potential 
+trouble-spots.
 
+			Linus
