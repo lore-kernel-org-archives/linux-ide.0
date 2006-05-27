@@ -1,47 +1,98 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: jgarzik and max-sectors: out of memory
-Date: Sat, 27 May 2006 16:02:06 -0400
-Message-ID: <4478B03E.9060202@garzik.org>
-References: <4478AA6C.5070305@garzik.org> <4478AD4B.5090404@rtr.ca>
+Subject: [PATCH alt4 v2] libata resume fixes
+Date: Sat, 27 May 2006 16:10:24 -0400
+Message-ID: <20060527201024.GA29015@havoc.gtf.org>
+References: <20060527195847.GA28334@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35983 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964931AbWE0UCK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 16:02:10 -0400
-In-Reply-To: <4478AD4B.5090404@rtr.ca>
+Received: from havoc.gtf.org ([69.61.125.42]:5061 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S964938AbWE0UKZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 16:10:25 -0400
+Content-Disposition: inline
+In-Reply-To: <20060527195847.GA28334@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@suse.de>, Hannes Reinecke <hare@suse.de>
-
-Mark Lord wrote:
-> Jeff Garzik wrote:
-> ..
->> Further -- someone with a long ATA memory correct me -- I think that 
->> we can increase ATA_MAX_PRD beyond 256.  Most DMA engines should just 
->> keep chugging along, provided that we continue to respect the 64k IDE 
->> DMA boundaries.
-> 
-> MAX_PRD used to be equal to MAX_SECTORS, as that's the worst case scenario.
-
-Not for lba48, which has a larger max-sectors but is still clamped to 
-the same 256 PRD entries...
+To: linux-ide@vger.kernel.org
+Cc: liml@rtr.ca, torvalds@osdl.org
 
 
-> The only real gotcha I remember from the original IDE driver,
-> was that some (very few) controllers were buggy with handing
-> of a sector_count of zero (256), so setting the limit to a slightly
-> lower value prevented that from ever being a problem.
-
-Yeah, a couple of Alan's PATA drivers are fixed at 255.
+This fixes a bug in alt4 v1, by eliminating the second ata_set_mode()
+call, found in ata_device_resume().
 
 
-> That was in the days before the block layer could limit the segment count.
-
-Ahhhhh, useful to know.
-
-	Jeff
-
-
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index 6dc8814..949d496 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -201,7 +201,7 @@ static struct pci_driver piix_pci_driver
+ 	.probe			= piix_init_one,
+ 	.remove			= ata_pci_remove_one,
+ 	.suspend		= ata_pci_device_suspend,
+-	.resume			= ata_pci_device_resume,
++	.resume			= pata_pci_device_resume,
+ };
+ 
+ static struct scsi_host_template piix_sht = {
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index fa476e7..ddc2a71 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4296,10 +4296,8 @@ static int ata_start_drive(struct ata_po
+  */
+ int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
+ {
+-	if (ap->flags & ATA_FLAG_SUSPENDED) {
++	if (ap->flags & ATA_FLAG_SUSPENDED)
+ 		ap->flags &= ~ATA_FLAG_SUSPENDED;
+-		ata_set_mode(ap);
+-	}
+ 	if (!ata_dev_present(dev))
+ 		return 0;
+ 	if (dev->class == ATA_DEV_ATA)
+@@ -4852,6 +4850,25 @@ int ata_pci_device_resume(struct pci_dev
+ 	pci_set_master(pdev);
+ 	return 0;
+ }
++
++int pata_pci_device_resume(struct pci_dev *pdev)
++{
++	struct device *dev = pci_dev_to_dev(pdev);
++	struct ata_host_set *host_set = dev_get_drvdata(dev);
++	struct ata_port *ap;
++	int i;
++
++	ata_pci_device_resume(pdev);
++
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++		if (ata_bus_probe(ap))
++			printk(KERN_ERR "ata%u: failed to resume\n", ap->id);
++	}
++
++	return 0;
++}
++
+ #endif /* CONFIG_PCI */
+ 
+ 
+@@ -4970,6 +4987,7 @@ EXPORT_SYMBOL_GPL(ata_pci_init_one);
+ EXPORT_SYMBOL_GPL(ata_pci_remove_one);
+ EXPORT_SYMBOL_GPL(ata_pci_device_suspend);
+ EXPORT_SYMBOL_GPL(ata_pci_device_resume);
++EXPORT_SYMBOL_GPL(pata_pci_device_resume);
+ EXPORT_SYMBOL_GPL(ata_pci_default_filter);
+ EXPORT_SYMBOL_GPL(ata_pci_clear_simplex);
+ #endif /* CONFIG_PCI */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b80d2e7..cad531a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -516,6 +516,7 @@ extern int ata_pci_init_one (struct pci_
+ extern void ata_pci_remove_one (struct pci_dev *pdev);
+ extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
+ extern int ata_pci_device_resume(struct pci_dev *pdev);
++extern int pata_pci_device_resume(struct pci_dev *pdev);
+ extern int ata_pci_clear_simplex(struct pci_dev *pdev);
+ #endif /* CONFIG_PCI */
+ extern int ata_device_add(const struct ata_probe_ent *ent);
