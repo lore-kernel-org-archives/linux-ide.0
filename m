@@ -1,44 +1,51 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM) fails:
-  libata issue
-Date: Sat, 27 May 2006 14:46:17 -0400
-Message-ID: <44789E79.4060005@rtr.ca>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <20060526230534.GA3640@suse.de> <4477C60E.1070106@rtr.ca> <Pine.LNX.4.64.0605262028460.5623@g5.osdl.org> <20060527062950.GC23315@suse.de>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
+ fails: libata issue
+Date: Sat, 27 May 2006 11:47:39 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com>
+ <Pine.LNX.4.64.0605262028460.5623@g5.osdl.org> <4477CEF5.9000908@garzik.org>
+ <200605271423.40037.liml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:6103 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S964931AbWE0SqT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 14:46:19 -0400
-In-Reply-To: <20060527062950.GC23315@suse.de>
+Received: from smtp.osdl.org ([65.172.181.4]:47325 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964932AbWE0Srx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 14:47:53 -0400
+In-Reply-To: <200605271423.40037.liml@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, "zhao, forrest" <forrest.zhao@intel.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Jens Axboe <axboe@suse.de>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-..
-> There was no real discussion on this issue yet. I think we all agree
-> that the functionality of the patch (waiting for BSY clear on resume) is
-> the right thing to do. This posted patch moved SCSI stuff into ata_piix,
-> which isn't really very nice. Jeff wants to do it from the pci resume,
-> which just seems wrong to me since it's a device (disk) condition not a
-> "host" condition. FWIW, here's what I had in mind as suggested in the
-> original reply. Not tested at all for functionality, but it compiles.
+
+
+On Sat, 27 May 2006, Mark Lord wrote:
 > 
-> diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-> index 6dc8814..103afc3 100644
-> --- a/drivers/scsi/ata_piix.c
-> +++ b/drivers/scsi/ata_piix.c
-> @@ -151,6 +151,7 @@ static int piix_pata_probe_reset(struct 
->  static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes);
-...
+> The original "bad layering" patch still works perfectly in it's place.
+> Repeated below for Linus's benefit.
 
-That patch, like Jeff's, does nothing (good) on my system.
-It still pauses for a longish timeout on resume, and then fails
-with a zillion "read errors", and leaves the drive inaccessible.
+Why isn't the right fix the minimal one?
 
-I'm will y'all on the poor layering, but non-functionality is worse.
+What's the layering violation in just having ATA resume make sure it's not 
+ATA_BUSY? 
 
-Cheers
+Why are you guys fighting over this?
+
+And why the hell is Mark's patch not being accepted if it fixes something, 
+and the alternate patches do not?
+
+		Linus
+---
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index fa476e7..0ef4cf4 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4296,6 +4296,7 @@ static int ata_start_drive(struct ata_po
+  */
+ int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
+ {
++	ata_busy_wait(ap, ATA_BUSY, 200000);
+ 	if (ap->flags & ATA_FLAG_SUSPENDED) {
+ 		ap->flags &= ~ATA_FLAG_SUSPENDED;
+ 		ata_set_mode(ap);
