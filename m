@@ -1,92 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] libata resume improvements
-Date: Sat, 27 May 2006 01:55:33 -0400
-Message-ID: <20060527055533.GA5159@havoc.gtf.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM) fails:  libata issue
+Date: Sat, 27 May 2006 08:20:51 +0200
+Message-ID: <20060527062051.GA23315@suse.de>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <20060526230534.GA3640@suse.de> <4477C60E.1070106@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:53421 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1751416AbWE0Fze (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 01:55:34 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:53272 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1750740AbWE0GVI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 02:21:08 -0400
 Content-Disposition: inline
+In-Reply-To: <4477C60E.1070106@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>
 
+On Fri, May 26 2006, Mark Lord wrote:
+> Mark Lord wrote:
+> >Mark Lord wrote:
+> >>My ata_piix based Notebook (Dell i9300) suspends/resumes perfectly (RAM 
+> >>or disk)
+> >>with 2.6.16.xx kernels, but fails resume on 2.6.17-rc5-git1 (the first 
+> >>2.6.17-*
+> >>I've attempted on this machine).
+> >>
+> >>On resume from RAM, after a 30-second-ish timeout, the screen comes on
+> >>but the hard disk is NOT accessible.  "dmesg" in an already-open window
+> >>shows this (typed in from handwritten notes):
+> >>
+> >>sd 0:0:0:0: SCSI error: return code = 0x40000
+> >>end_request: I/O error, /dev/sda, sector nnnnnnn
+> >...
+> >
+> >Ahh.. the fix for this was posted earlier today by Forrest Zhao.
+> ..
+> >Here is a modified version of Forrest's original patch, for 
+> >2.6.17-rc5-git1.
+> >It seems to have fixed the resume issue on my machine here,
+> >so that things are now working as they were in the unpatched 2.6.16 
+> >kernels.
+> 
+> >Jens Axboe wrote:
+> >This has the problem that it introduces scsi specific knowledge into
+> >ata_piix, something that is both a violation and a problem because we
+> >are moving libata away from scsi. I think the best way to currently do
+> >this is to introduce a ata_port_ops hook (pre_resume()?) that waits for
+> >busy clear and gets called in ata_device_resume is probably the way to go.
+> 
+> Well, this problem has been with us all for a year now,
+> and at this point it impacts practically *every* new "centrino"
+> notebook out there.
+> 
+> We have a very simple workaround (previous post) that addresses it
+> for 2.6.17, and it's about damn time it got fixed.
+> 
+> If there's a better solution for *2.6.17*, then *please* post it.
+> Otherwise, we have a fix.  Maybe Linus or Andrew should just apply it?
 
-This is an example of how one might make sure the ATA bus reaches
-bus-idle, before attempting to talk to it.
+Don't get me wrong, I could not agree more. I rely on suspend/resume all
+the time, and the fact that we didn't get this fully working _in kernel_
+years ago is really embarassing. So I fully want the ata_piix busy clear
+patch to be in 2.6.17, my objection was merely that shoving scsi
+knowledge into ata_piix is not the way to do it.
 
-It compiles, but is completely untested...
+-- 
+Jens Axboe
 
-Other resume improvements should work at the pci_driver::resume level as
-this does, _not_ the SCSI->ATA->resume device level.
-
-
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index 6dc8814..949d496 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -201,7 +201,7 @@ static struct pci_driver piix_pci_driver
- 	.probe			= piix_init_one,
- 	.remove			= ata_pci_remove_one,
- 	.suspend		= ata_pci_device_suspend,
--	.resume			= ata_pci_device_resume,
-+	.resume			= pata_pci_device_resume,
- };
- 
- static struct scsi_host_template piix_sht = {
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index fa476e7..fe42a75 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4852,6 +4852,28 @@ int ata_pci_device_resume(struct pci_dev
- 	pci_set_master(pdev);
- 	return 0;
- }
-+
-+int pata_pci_device_resume(struct pci_dev *pdev)
-+{
-+	struct device *dev = pci_dev_to_dev(pdev);
-+	struct ata_host_set *host_set = dev_get_drvdata(dev);
-+	struct ata_port *ap;
-+	int i;
-+
-+	ata_pci_device_resume(pdev);
-+
-+	msleep(400);
-+
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		ap = host_set->ports[i];
-+
-+		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT))
-+			printk(KERN_ERR "ata%u: failed to resume\n", ap->id);
-+	}
-+
-+	return 0;
-+}
-+
- #endif /* CONFIG_PCI */
- 
- 
-@@ -4970,6 +4992,7 @@ EXPORT_SYMBOL_GPL(ata_pci_init_one);
- EXPORT_SYMBOL_GPL(ata_pci_remove_one);
- EXPORT_SYMBOL_GPL(ata_pci_device_suspend);
- EXPORT_SYMBOL_GPL(ata_pci_device_resume);
-+EXPORT_SYMBOL_GPL(pata_pci_device_resume);
- EXPORT_SYMBOL_GPL(ata_pci_default_filter);
- EXPORT_SYMBOL_GPL(ata_pci_clear_simplex);
- #endif /* CONFIG_PCI */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b80d2e7..cad531a 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -516,6 +516,7 @@ extern int ata_pci_init_one (struct pci_
- extern void ata_pci_remove_one (struct pci_dev *pdev);
- extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
- extern int ata_pci_device_resume(struct pci_dev *pdev);
-+extern int pata_pci_device_resume(struct pci_dev *pdev);
- extern int ata_pci_clear_simplex(struct pci_dev *pdev);
- #endif /* CONFIG_PCI */
- extern int ata_device_add(const struct ata_probe_ent *ent);
