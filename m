@@ -1,73 +1,67 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM) fails:
  libata issue
-Date: Fri, 26 May 2006 23:35:32 -0400
-Message-ID: <4477C904.7060508@garzik.org>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <20060526230534.GA3640@suse.de> <4477C60E.1070106@rtr.ca>
+Date: Fri, 26 May 2006 23:41:53 -0400
+Message-ID: <4477CA81.5080107@garzik.org>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <20060526230534.GA3640@suse.de> <4477C60E.1070106@rtr.ca> <Pine.LNX.4.64.0605262028460.5623@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:27878 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751783AbWE0Dfk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 May 2006 23:35:40 -0400
-In-Reply-To: <4477C60E.1070106@rtr.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:37862 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751785AbWE0Dl6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 May 2006 23:41:58 -0400
+In-Reply-To: <Pine.LNX.4.64.0605262028460.5623@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jens Axboe <axboe@suse.de>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Mark Lord <liml@rtr.ca>, Jens Axboe <axboe@suse.de>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Mark Lord wrote:
->> Mark Lord wrote:
->>> My ata_piix based Notebook (Dell i9300) suspends/resumes perfectly 
->>> (RAM or disk)
->>> with 2.6.16.xx kernels, but fails resume on 2.6.17-rc5-git1 (the 
->>> first 2.6.17-*
->>> I've attempted on this machine).
->>>
->>> On resume from RAM, after a 30-second-ish timeout, the screen comes on
->>> but the hard disk is NOT accessible.  "dmesg" in an already-open window
->>> shows this (typed in from handwritten notes):
->>>
->>> sd 0:0:0:0: SCSI error: return code = 0x40000
->>> end_request: I/O error, /dev/sda, sector nnnnnnn
->> ...
+Linus Torvalds wrote:
+> 
+> On Fri, 26 May 2006, Mark Lord wrote:
+>> Well, this problem has been with us all for a year now,
+>> and at this point it impacts practically *every* new "centrino"
+>> notebook out there.
 >>
->> Ahh.. the fix for this was posted earlier today by Forrest Zhao.
-> ..
->> Here is a modified version of Forrest's original patch, for 
->> 2.6.17-rc5-git1.
->> It seems to have fixed the resume issue on my machine here,
->> so that things are now working as they were in the unpatched 2.6.16 
->> kernels.
+>> We have a very simple workaround (previous post) that addresses it
+>> for 2.6.17, and it's about damn time it got fixed.
+>>
+>> If there's a better solution for *2.6.17*, then *please* post it.
+>> Otherwise, we have a fix.  Maybe Linus or Andrew should just apply it?
 > 
->> Jens Axboe wrote:
->> This has the problem that it introduces scsi specific knowledge into
->> ata_piix, something that is both a violation and a problem because we
->> are moving libata away from scsi. I think the best way to currently do
->> this is to introduce a ata_port_ops hook (pre_resume()?) that waits for
->> busy clear and gets called in ata_device_resume is probably the way to 
->> go.
+> I'm definitely in the "at some point, protesting a patch that works 
+> becomes an untenably position to take, no matter _how_ ugly the patch is" 
+> camp.
 > 
-> Well, this problem has been with us all for a year now,
-> and at this point it impacts practically *every* new "centrino"
-> notebook out there.
+> If the people who complain that it is ugly cannot come up with an 
+> alternate solution that works and isn't ugly, at some point the "ugly" 
+> complaint just becomes totally pointless. 
 > 
-> We have a very simple workaround (previous post) that addresses it
-> for 2.6.17, and it's about damn time it got fixed.
-> 
-> If there's a better solution for *2.6.17*, then *please* post it.
-> Otherwise, we have a fix.  Maybe Linus or Andrew should just apply it?
+> Of course, I'm not on linux-ide, and I didn't see this particular 
+> discussion from the start (or even the alledged simple workaround in the 
+> "previous post"), but can people please fill me in? And if the choice is 
+> not between "ugly" vs "pretty", but between "ugly" vs "nonworking", I 
+> think we know what the answer should be.
 
-Having been around for a year+, there is no reason to rush a really bad 
-fix into the kernel.
+Mark is just a slacker, like the rest of us ;-)
 
-Especially since I told you guys the proper place to put basically the 
-exact same fix.  You probably could have created the proper fix in the 
-time it took to get annoyed at my email, and type the reply...
+The solution, described in [1], is basically "move the delay from <here> 
+to <there>."
+
+The current code does
+	resume PCI device
+	kick the ATA device
+when it should do
+	resume PCI device
+	bring up the ATA bus
+	kick the ATA device
+
+Regards,
 
 	Jeff
 
+
+[1] http://marc.theaimsgroup.com/?l=linux-ide&m=114868613527204&w=2
 
 
