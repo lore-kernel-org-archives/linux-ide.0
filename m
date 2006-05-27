@@ -1,60 +1,62 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
     fails: libata issue
-Date: Sat, 27 May 2006 14:57:40 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0605271453490.5623@g5.osdl.org>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com>
- <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org>
- <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org>
- <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org>
- <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271426030.5623@g5.osdl.org>
- <4478C9AF.30405@garzik.org>
+Date: Sat, 27 May 2006 18:06:06 -0400
+Message-ID: <4478CD4E.4000506@rtr.ca>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:40085 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964980AbWE0V54 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 17:57:56 -0400
-In-Reply-To: <4478C9AF.30405@garzik.org>
+Received: from rtr.ca ([64.26.128.89]:22917 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S964988AbWE0WGI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 18:06:08 -0400
+In-Reply-To: <Pine.LNX.4.64.0605271444200.5623@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jeff@garzik.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-
-
-On Sat, 27 May 2006, Jeff Garzik wrote:
+Linus Torvalds wrote:
 > 
-> It is.  But I thought you wanted something that works?  :)
-
-I want something that can be _understood_ to work, and that clearly 
-doesn't have any downsides.
-
-Waiting for the target to not be BUSY at resume is such an obviously 
-understandable thing that it's not even funny.
-
-In contrast, having an unconditional half-second delay for each SATA port 
-is not obvious at all, and has potentially huge downsides for totally 
-unrelated users. 
-
-> Your patch + Jens' patch [with the delay MOVED to the end] would get my ACK
-> for 2.6.17, and we already have infrastructure queued for 2.6.18 to do a
-> better job of kicking the controller and bus.
-
-No way am I adding a random half-second wait. One _millisecond_ or 
-something similar clearly won't impact anybody else. But half a second for 
-a condition that people don't even understand?
-
-> > discovery, while the other might instead try to see if the state _matches_
-> > what it already knows. But the point is that coming back from power-off
-> > after a resume should really not be any different than coming back from
-> > power-off after a bootup)
+> On Sat, 27 May 2006, Jens Axboe wrote:
+>>> hardware, since the current suspend resumes to silicon defaults rather 
+>>> than BIOS defaults (and ata_piix doesn't have a controller reset).
+>> Definitely, and we need to cover a lot more controllers than just piix
+>> and ahci. Being the selfish bastard that I am, I didn't care much about
+>> other devices...
+>>
+>> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+>> index fa476e7..28878f4 100644
+>> --- a/drivers/scsi/libata-core.c
+>> +++ b/drivers/scsi/libata-core.c
+>> @@ -4297,6 +4297,7 @@ static int ata_start_drive(struct ata_po
+>>  int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
+>>  {
+>>  	if (ap->flags & ATA_FLAG_SUSPENDED) {
+>> +		ata_busy_wait(ap, ATA_BUSY, 200000);
 > 
-> Key difference:  we have no BIOS to give us sane hardware state, so the
-> controller is in a different state from bootup.
+> Btw, it might not be enough to wait for ATA_BUSY to clear.
+> 
+> I think you should wait for ATA_DRDY to be set too.
+> 
+> What does it say if you change that "ata_busy_wait()" to
+> 
+> 	u8 status = ata_wait_idle(ap);
+> 	if (!ata_ok(status))
+> 		printk("ATA status %02x\n", status);
 
-Note that that is true sometimes on other platforms too, even at bootup. 
-Maybe we've not had that issue with SATA, but we've definitely had it with 
-just about any other hw config.
+I got rid of the 500msec delay (not needed on my machine anyway),
+and then added the above code *in front of* the ata_busy_wait().
 
-		Linus
+Resume worked, with this output:
+
+May 27 18:03:33 localhost kernel: ATA status 80
+May 27 18:03:33 localhost kernel: ata1: dev 0 configured for UDMA/100
+May 27 18:03:33 localhost kernel: ATA status 00
+May 27 18:03:33 localhost kernel: ata2: dev 0 configured for UDMA/33
+
+Note that the second set are for the DVD-RW drive,
+which (being ATAPI) doesn't assert ATA_DRDY.
+
+Cheers
