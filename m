@@ -1,139 +1,79 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] HPT3xx: switch to using pci_find_slot()
-Date: Sun, 28 May 2006 02:05:49 +0400
-Message-ID: <4478CD3D.6010409@ru.mvista.com>
-References: <444B3BDE.1030106@ru.mvista.com> <4457DC97.3010807@ru.mvista.com> <445A5A1B.60903@ru.mvista.com> <446A55D6.90507@ru.mvista.com> <446ED8A3.6030702@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
+    fails: libata issue
+Date: Sat, 27 May 2006 18:11:29 -0400
+Message-ID: <4478CE91.60104@garzik.org>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de> <4478BD60.40806@garzik.org> <20060527211157.GA31275@suse.de> <4478C1DD.2030204@garzik.org> <20060527212011.GA31551@suse.de> <Pine.LNX.4.64.0605271426030.5623@g5.osdl.org> <4478C9AF.30405@garzik.org> <Pine.LNX.4.64.0605271453490.5623@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050207070602000204000104"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:12007 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S964984AbWE0WGx
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 May 2006 18:06:53 -0400
-In-Reply-To: <446ED8A3.6030702@ru.mvista.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:45971 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964995AbWE0WLi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 18:11:38 -0400
+In-Reply-To: <Pine.LNX.4.64.0605271453490.5623@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050207070602000204000104
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Linus Torvalds wrote:
+> 
+> On Sat, 27 May 2006, Jeff Garzik wrote:
+>> It is.  But I thought you wanted something that works?  :)
+> 
+> I want something that can be _understood_ to work, and that clearly 
+> doesn't have any downsides.
+> 
+> Waiting for the target to not be BUSY at resume is such an obviously 
+> understandable thing that it's not even funny.
 
-    Switch to using pci_find_slot() to get to the function 1 of HPT36x/374
-chips -- there's no need for the driver itself to walk the list of the PCI 
-devices, and it also forgets to check the bus number of the device found.
+s/target/bus/, agreed.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Remember there might be two devices attached (master/slave), so for the 
+master/slave case we will wait for BSY twice, both times with the master 
+selected.
 
 
---------------050207070602000204000104
-Content-Type: text/plain;
- name="HPT3xx-use-pci_find_slot.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="HPT3xx-use-pci_find_slot.patch"
+> In contrast, having an unconditional half-second delay for each SATA port 
+> is not obvious at all, and has potentially huge downsides for totally 
+> unrelated users. 
 
-Index: linus/drivers/ide/pci/hpt366.c
-===================================================================
---- linus.orig/drivers/ide/pci/hpt366.c
-+++ linus/drivers/ide/pci/hpt366.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/hpt366.c		Version 0.44	May 20, 2006
-+ * linux/drivers/ide/pci/hpt366.c		Version 0.45	May 21, 2006
-  *
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-@@ -79,6 +79,7 @@
-  * - prefix the driver startup messages with the real chip name
-  * - claim the extra 240 bytes of I/O space for all chips
-  * - optimize the rate masking/filtering and the drive list lookup code
-+ * - use pci_find_slot() to get to the function 1 of HPT36x/374
-  *		<source@mvista.com>
-  *
-  */
-@@ -1412,24 +1413,20 @@ static void __devinit init_iops_hpt366(i
- 
- static int __devinit init_setup_hpt374(struct pci_dev *dev, ide_pci_device_t *d)
- {
--	struct pci_dev *findev = NULL;
-+	struct pci_dev *dev2;
- 
- 	if (PCI_FUNC(dev->devfn) & 1)
- 		return -ENODEV;
- 
--	while ((findev = pci_find_device(PCI_ANY_ID, PCI_ANY_ID, findev)) != NULL) {
--		if ((findev->vendor == dev->vendor) &&
--		    (findev->device == dev->device) &&
--		    ((findev->devfn - dev->devfn) == 1) &&
--		    (PCI_FUNC(findev->devfn) & 1)) {
--			if (findev->irq != dev->irq) {
--				/* FIXME: we need a core pci_set_interrupt() */
--				findev->irq = dev->irq;
--				printk(KERN_WARNING "%s: pci-config space interrupt "
--					"fixed.\n", d->name);
--			}
--			return ide_setup_pci_devices(dev, findev, d);
-+	dev2 = pci_find_slot(dev->bus->number, dev->devfn + 1);
-+	if (dev2 != NULL) {
-+		if (dev2->irq != dev->irq) {
-+			/* FIXME: we need a core pci_set_interrupt() */
-+			dev2->irq = dev->irq;
-+			printk(KERN_WARNING "%s: pci-config space interrupt "
-+			       "fixed.\n", d->name);
- 		}
-+		return ide_setup_pci_devices(dev, dev2, d);
- 	}
- 	return ide_setup_pci_device(dev, d);
- }
-@@ -1487,8 +1484,8 @@ static int __devinit init_setup_hpt302(s
- 
- static int __devinit init_setup_hpt366(struct pci_dev *dev, ide_pci_device_t *d)
- {
--	struct pci_dev *findev = NULL;
--	u8 rev = 0, pin1 = 0, pin2 = 0;
-+	struct pci_dev *dev2;
-+	u8 rev = 0;
- 	static char   *chipset_names[] = { "HPT366", "HPT366",  "HPT368",
- 					   "HPT370", "HPT370A", "HPT372",
- 					   "HPT372N" };
-@@ -1508,21 +1505,18 @@ static int __devinit init_setup_hpt366(s
- 
- 	d->channels = 1;
- 
--	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin1);
--	while ((findev = pci_find_device(PCI_ANY_ID, PCI_ANY_ID, findev)) != NULL) {
--		if ((findev->vendor == dev->vendor) &&
--		    (findev->device == dev->device) &&
--		    ((findev->devfn - dev->devfn) == 1) &&
--		    (PCI_FUNC(findev->devfn) & 1)) {
--			pci_read_config_byte(findev, PCI_INTERRUPT_PIN, &pin2);
--			if ((pin1 != pin2) && (dev->irq == findev->irq)) {
--				d->bootable = ON_BOARD;
--				printk("%s: onboard version of chipset, "
--					"pin1=%d pin2=%d\n", d->name,
--					pin1, pin2);
--			}
--			return ide_setup_pci_devices(dev, findev, d);
-+	dev2 = pci_find_slot(dev->bus->number, dev->devfn + 1);
-+	if (dev2 != NULL) {
-+	  	u8 pin1 = 0, pin2 = 0;
-+
-+		pci_read_config_byte(dev,  PCI_INTERRUPT_PIN, &pin1);
-+		pci_read_config_byte(dev2, PCI_INTERRUPT_PIN, &pin2);
-+		if (pin1 != pin2 && dev->irq == dev2->irq) {
-+			d->bootable = ON_BOARD;
-+			printk("%s: onboard version of chipset, pin1=%d pin2=%d\n",
-+			       d->name, pin1, pin2);
- 		}
-+		return ide_setup_pci_devices(dev, dev2, d);
- 	}
- init_single:
- 	return ide_setup_pci_device(dev, d);
+Incorrect:  half-second for each _controller_.
+
+And the only users affected by the delay are ata_piix users doing resume.
+
+Side note -- do you notice that the suspend is really hardcoded for 
+ata_piix and Intel laptops at the moment?  Note ata_set_mode() versus 
+->set_mode(), complete lack of controller re-init, etc.
+
+
+>> Your patch + Jens' patch [with the delay MOVED to the end] would get my ACK
+>> for 2.6.17, and we already have infrastructure queued for 2.6.18 to do a
+>> better job of kicking the controller and bus.
+> 
+> No way am I adding a random half-second wait. One _millisecond_ or 
+> something similar clearly won't impact anybody else. But half a second for 
+> a condition that people don't even understand?
+
+Normally I would agree, but the delay would be immediately removed for 
+2.6.18.  libata-dev.git#upstream has reorganized the probe code to 
+better support this case as well as hotplug.  And in general #upstream 
+recovers from errors A LOT better.
+
+So AFAICS there are three paths to success:
+
+1) Apply Jens' patch for 2.6.17, then undo it in 2.6.18 when #upstream 
+is merged.
+
+2) Copy a bunch of code into pci_driver::resume and more into 
+ata_device_resume(), to do controller and phy init.  And then remove the 
+copied code in 2.6.18 when #upstream is merged.
+
+3) Pull #upstream now, and give us another -rc to fix things.
+
+	Jeff
 
 
 
---------------050207070602000204000104--
+
