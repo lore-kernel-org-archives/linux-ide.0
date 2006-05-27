@@ -1,41 +1,29 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH alt4 v3] libata resume fixes
-Date: Sat, 27 May 2006 16:56:56 -0400
-Message-ID: <4478BD18.6010908@rtr.ca>
-References: <20060527195847.GA28334@havoc.gtf.org> <20060527205213.GA30686@havoc.gtf.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
+  fails: libata issue
+Date: Sat, 27 May 2006 16:58:08 -0400
+Message-ID: <4478BD60.40806@garzik.org>
+References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <200605271423.40037.liml@rtr.ca> <Pine.LNX.4.64.0605271144430.5623@g5.osdl.org> <200605272245.30108.axboe@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3743 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S964931AbWE0U4z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 16:56:55 -0400
-In-Reply-To: <20060527205213.GA30686@havoc.gtf.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:12689 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964966AbWE0U6Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 16:58:16 -0400
+In-Reply-To: <200605272245.30108.axboe@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, torvalds@osdl.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, Mark Lord <liml@rtr.ca>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-I tried merging Linus's one-liner in front of alt4_v2,
-and the screen came back right away (instead of stalling 30seconds),
-and then the alt4_v2 code killed the interface as before.  :)
+Jens Axboe wrote:
+> This is fine with me, Jeff originally complained it was a layering violation. 
+> Unless he really objects, I'd say go for that for 2.6.17 - well actually 
+> moving it inside the ATA_FLAG_SUSPENDED case is clearly better.
 
-Jeff Garzik wrote:
-> Here's alt4 v3.  Having the host_stat == 0x1 was suspicious.
-> After digging through the hardware manual, it might be a good idea to
-> configure BMDMA registers properly, in case that was done by BIOS but
-> not by D3->D0 silicon reset values.
+It breaks 2.6.1[89] stuff, but whatever.  Go ahead and apply Linus's 
+patch.  I'll pick up the pieces post 2.6.17.
 
-I'll try that.  But does it make sense that Linus's one-liner
-would also work, if this was really the problem?  (dunno, just asking)
+	Jeff
 
-> One core problem with all of libata suspend/resume is that
-> * we boot from a configuration set up by BIOS
-> * but going D3->D0, we simply get silicon defaults
-> 
-> Randy Dunlap's ACPI patches will probably help a bit.
-
-The ACPI patches have indeed been working here for over a year now,
-on all kernels up to 2.6.15 --> not needed for 2.6.16.
-
-Cheers
