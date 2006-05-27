@@ -1,80 +1,85 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] Re: 2.6.17-rc5-git1: regression: resume from suspend(RAM)
- fails: libata issue
-Date: Sat, 27 May 2006 15:08:24 -0400
-Message-ID: <4478A3A8.1030209@rtr.ca>
-References: <1148634262.2310.7.camel@forrest26.sh.intel.com> <Pine.LNX.4.64.0605262028460.5623@g5.osdl.org> <4477CEF5.9000908@garzik.org> <200605271423.40037.liml@rtr.ca> <4478A066.8090808@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH alt2] libata resume fixes
+Date: Sat, 27 May 2006 15:13:23 -0400
+Message-ID: <20060527191323.GA26671@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:31457 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S964938AbWE0TI0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 15:08:26 -0400
-In-Reply-To: <4478A066.8090808@garzik.org>
+Received: from havoc.gtf.org ([69.61.125.42]:63938 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S964941AbWE0TNZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2006 15:13:25 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linus Torvalds <torvalds@osdl.org>, Jens Axboe <axboe@suse.de>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
-
-Jeff Garzik wrote:
->
-Jeff Garzik wrote:
->..
-> Output please?  Did you get any failed-to-resume messages?
-
-Same as in my original posting:
-> On resume from RAM, after a 30-second-ish timeout, the screen comes on
-> but the hard disk is NOT accessible.  "dmesg" in an already-open window
-> shows this (typed in from handwritten notes):
-> 
-> sd 0:0:0:0: SCSI error: return code = 0x40000
-> end_request: I/O error, /dev/sda, sector nnnnnnn
-> sd 0:0:0:0: SCSI error: return code = 0x40000
-> end_request: I/O error, /dev/sda, sector nnnnnnn
-> sd 0:0:0:0: SCSI error: return code = 0x40000
-> end_request: I/O error, /dev/sda, sector nnnnnnn
-> sd 0:0:0:0: SCSI error: return code = 0x40000
-> end_request: I/O error, /dev/sda, sector nnnnnnn
-> sd 0:0:0:0: SCSI error: return code = 0x40000
-> end_request: I/O error, /dev/sda, sector nnnnnnn
-> sd 0:0:0:0: SCSI error: return code = 0x40000
-> end_request: I/O error, /dev/sda, sector nnnnnnn
-> sd 0:0:0:0: SCSI error: return code = 0x40000
-> end_request: I/O error, /dev/sda, sector nnnnnnn
-> 
-> (the nnnnnnn was actually a real number, different on each message). 
+To: linux-ide@vger.kernel.org
+Cc: liml@rtr.ca, torvalds@osdl.org, axboe@suse.de
 
 
-..
-> Since this is claimed to be a regression, what was the last upstream 
-> kernel version that worked for you?  2.6.16.x?
-..
-Also from the original posting:
-> My ata_piix based Notebook (Dell i9300) suspends/resumes perfectly (RAM or disk)
-> with 2.6.16.xx kernels, but fails resume on 2.6.17-rc5-git1 (the first 2.6.17-*
-> I've attempted on this machine). 
-
-It did NOT work any prior unpatched kernels before 2.6.16.xx.
-
-> Finally, if you could test the updated patch I posted, and/or the one 
-> that is attached, that would be preferred.
-
-> --------------030508080204070708000504
-> Content-Type: text/plain;
->  name="patch"
-> Content-Transfer-Encoding: base64
-> Content-Disposition: inline;
->  filename="patch"
-> 
-> ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9hdGFfcGlpeC5jIGIvZHJpdmVycy9zY3NpL2F0
-> YV9waWl4LmMKaW5kZXggNmRjODgxNC4uOTQ5ZDQ5NiAxMDA2NDQKLS0tIGEvZHJpdmVycy9z
-> Y3NpL2F0YV9waWl4LmMKKysrIGIvZHJpdmVycy9zY3NpL2F0YV9waWl4LmMKQEAgLTIwMSw3
-...
-
-Fix your mailer, please.  Meanwhile, I'll try to extract the patch
-and apply it, but for informational purposes only.
-Linus's one-liner has us all beat.
-
-Cheers
-
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index 6dc8814..949d496 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -201,7 +201,7 @@ static struct pci_driver piix_pci_driver
+ 	.probe			= piix_init_one,
+ 	.remove			= ata_pci_remove_one,
+ 	.suspend		= ata_pci_device_suspend,
+-	.resume			= ata_pci_device_resume,
++	.resume			= pata_pci_device_resume,
+ };
+ 
+ static struct scsi_host_template piix_sht = {
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index fa476e7..5b7ab7b 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4852,6 +4852,30 @@ int ata_pci_device_resume(struct pci_dev
+ 	pci_set_master(pdev);
+ 	return 0;
+ }
++
++int pata_pci_device_resume(struct pci_dev *pdev)
++{
++	struct device *dev = pci_dev_to_dev(pdev);
++	struct ata_host_set *host_set = dev_get_drvdata(dev);
++	struct ata_port *ap;
++	u8 status;
++	int i;
++
++	ata_pci_device_resume(pdev);
++
++	mdelay(400);
++
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++
++		status = ata_busy_wait(ap, ATA_BUSY, 200000);
++		if (status & ATA_BUSY)
++			printk(KERN_ERR "ata%u: failed to resume\n", ap->id);
++	}
++
++	return 0;
++}
++
+ #endif /* CONFIG_PCI */
+ 
+ 
+@@ -4970,6 +4994,7 @@ EXPORT_SYMBOL_GPL(ata_pci_init_one);
+ EXPORT_SYMBOL_GPL(ata_pci_remove_one);
+ EXPORT_SYMBOL_GPL(ata_pci_device_suspend);
+ EXPORT_SYMBOL_GPL(ata_pci_device_resume);
++EXPORT_SYMBOL_GPL(pata_pci_device_resume);
+ EXPORT_SYMBOL_GPL(ata_pci_default_filter);
+ EXPORT_SYMBOL_GPL(ata_pci_clear_simplex);
+ #endif /* CONFIG_PCI */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b80d2e7..cad531a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -516,6 +516,7 @@ extern int ata_pci_init_one (struct pci_
+ extern void ata_pci_remove_one (struct pci_dev *pdev);
+ extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
+ extern int ata_pci_device_resume(struct pci_dev *pdev);
++extern int pata_pci_device_resume(struct pci_dev *pdev);
+ extern int ata_pci_clear_simplex(struct pci_dev *pdev);
+ #endif /* CONFIG_PCI */
+ extern int ata_device_add(const struct ata_probe_ent *ent);
