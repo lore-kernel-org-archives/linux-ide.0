@@ -1,32 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] 2.6.17-rc5: the latest consensus libata resume fix
-Date: Sun, 28 May 2006 16:27:43 -0400
-Message-ID: <447A07BF.8080903@rtr.ca>
-References: <200605272245.30108.axboe@suse.de> <Pine.LNX.4.64.0605271716030.5623@g5.osdl.org> <4478F681.8050607@garzik.org> <200605281128.00532.liml@rtr.ca> <20060528171424.GA12982@suse.de> <4479F487.5080507@garzik.org> <4479F76D.40506@rtr.ca> <447A03CC.50300@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata resume fix
+Date: Sun, 28 May 2006 16:34:19 -0400
+Message-ID: <20060528203419.GA15087@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:56250 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1750890AbWE1U1p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 May 2006 16:27:45 -0400
-In-Reply-To: <447A03CC.50300@garzik.org>
+Received: from havoc.gtf.org ([69.61.125.42]:51586 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1750907AbWE1UeV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 May 2006 16:34:21 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jens Axboe <axboe@suse.de>, Linus Torvalds <torvalds@osdl.org>, "zhao, forrest" <forrest.zhao@intel.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Jeff Garzik wrote:
->>> Does your box work without ATA_DRQ?
->>
->> Without ATA_DRQ, we're back to the original Linus one-liner,
->> which Jens said did NOT work for him on Saturday.
-> 
-> Indeed, but nowhere in the ATA Status printks did I ever see the DRQ bit 
-> asserted.  It was all 80/50/50.
 
-So true, so true.
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-Welcome to my (ex-)world!
+to receive the following updates:
+
+ drivers/scsi/libata-core.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+Mark Lord:
+      the latest consensus libata resume fix
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index fa476e7..b046ffa 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4297,6 +4297,7 @@ static int ata_start_drive(struct ata_po
+ int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
+ {
+ 	if (ap->flags & ATA_FLAG_SUSPENDED) {
++		ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 200000);
+ 		ap->flags &= ~ATA_FLAG_SUSPENDED;
+ 		ata_set_mode(ap);
+ 	}
