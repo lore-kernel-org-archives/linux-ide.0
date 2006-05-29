@@ -1,53 +1,61 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET 02/03] prep LLDDs for hotplug support, take 3
-Date: Mon, 29 May 2006 15:34:41 +0900
-Message-ID: <11488844811684-git-send-email-htejun@gmail.com>
+Subject: [PATCH 4/5] sata_sil24: rename PORT_PRB to PORT_LRAM and add PORT_LRAM_SLOT_SZ
+Date: Mon, 29 May 2006 15:34:42 +0900
+Message-ID: <1148884482152-git-send-email-htejun@gmail.com>
+References: <11488844811684-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.239]:53437 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751270AbWE2Ges (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 02:34:48 -0400
-Received: by wr-out-0506.google.com with SMTP id i7so818693wra
-        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:34:47 -0700 (PDT)
-In-Reply-To: 
+Received: from nz-out-0102.google.com ([64.233.162.199]:18548 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751276AbWE2Get (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 02:34:49 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so476605nze
+        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:34:49 -0700 (PDT)
+In-Reply-To: <11488844811684-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello,
+PORT_PRB is a misnomer as the area also contains other stuff.  Rename
+it to PORT_LRAM and add PORT_LRAM_SLOT_SZ.
 
-This is This is part of patchset series described in [T].
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-This is the third take of prep-LLDDs-for-hotplug-support patchset.
-Changes from the last take[L] are.
+---
 
-* TF access is mandatory, sata_sil24()-tf-optional patch has been
-  dropped.  sil24_hardreset() update is separated into
-  update-sil24_hardreset() patch.
+ drivers/scsi/sata_sil24.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-* sata_sil now calls ata_bmdma_irq_clear() directly instead of calling
-  ops->irq_clear()
-
-* sil_interrupt() now uses spin_lock/unlock_irq()
-
-This patchset is against
-
-  upstream (ef2824073fba9def3cf122e89cc485f66dd71f70)
-  + [1] set-PIO-0-after-successful-EH-reset
-  + [2] prep-for-hotplug-support patchset
-
-Thanks.
-
---
-tejun
-
-[T] http://article.gmane.org/gmane.linux.ide/10891
-[L] http://article.gmane.org/gmane.linux.ide/10573
-[1] http://article.gmane.org/gmane.linux.ide/10890
-[2] http://article.gmane.org/gmane.linux.ide/10892
+11848689bbd06985a0ae2417f659eb4ea0f37e47
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 26d7c54..a39e8d0 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -98,7 +98,9 @@ enum {
+ 	 * (8192 bytes @ +0x0000, +0x2000, +0x4000 and +0x6000 @ BAR2)
+ 	 */
+ 	PORT_REGS_SIZE		= 0x2000,
+-	PORT_PRB		= 0x0000, /* (32 bytes PRB + 16 bytes SGEs * 6) * 31 (3968 bytes) */
++
++	PORT_LRAM		= 0x0000, /* 31 LRAM slots and PM regs */
++	PORT_LRAM_SLOT_SZ	= 0x0080, /* 32 bytes PRB + 2 SGE, ACT... */
+ 
+ 	PORT_PM			= 0x0f80, /* 8 bytes PM * 16 (128 bytes) */
+ 		/* 32 bit regs */
+@@ -1103,7 +1105,7 @@ static int sil24_init_one(struct pci_dev
+ 		void __iomem *port = port_base + i * PORT_REGS_SIZE;
+ 		unsigned long portu = (unsigned long)port;
+ 
+-		probe_ent->port[i].cmd_addr = portu + PORT_PRB;
++		probe_ent->port[i].cmd_addr = portu;
+ 		probe_ent->port[i].scr_addr = portu + PORT_SCONTROL;
+ 
+ 		ata_std_ports(&probe_ent->port[i]);
+-- 
+1.3.2
 
 
