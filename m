@@ -1,113 +1,200 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 11/13] sata_sil24: convert to new probing mechanism and add hotplug support
+Subject: [PATCH 06/13] libata-hp: implement bootplug
 Date: Mon, 29 May 2006 15:38:56 +0900
-Message-ID: <11488847362278-git-send-email-htejun@gmail.com>
+Message-ID: <11488847361536-git-send-email-htejun@gmail.com>
 References: <11488847352050-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:33370 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751304AbWE2GjQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 02:39:16 -0400
-Received: by py-out-1112.google.com with SMTP id e30so302085pya
-        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:39:15 -0700 (PDT)
+Received: from wx-out-0102.google.com ([66.249.82.196]:272 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751303AbWE2GjP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 02:39:15 -0400
+Received: by wx-out-0102.google.com with SMTP id h27so299180wxd
+        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:39:14 -0700 (PDT)
 In-Reply-To: <11488847352050-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Convert to new probing mechanism and add hotplug support by enabling
-PORT_IRQ_PHYRDY_CHG, marking ehi for hotplug and scheduling EH on
-PORT_IRQ_PHYRDY_CHG or PORT_IRQ_DEV_XCHG.
-
-Sil3124/32 family of controllers don't have any mechanism to wait for
-the first FIS34 after hotplug, so ATA_FLAG_CANT_WAIT_FIS34 is used.
+Implement bootplug - boot probing via hotplug path.  While loading,
+ata_host_add() simply schedules probing and invokes EH.  After EH
+completes, ata_host_add() scans and assicates them with SCSI devices.
+EH path is slightly modified to handle this (e.g. no autopsy during
+bootplug).  The SCSI part is left in ata_host_add() because it's
+shared with legacy path and to keep probing order as before (ATA scan
+all ports in host_set then attach all).
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil24.c |   27 ++++++++-------------------
- 1 files changed, 8 insertions(+), 19 deletions(-)
+ drivers/scsi/libata-core.c |   58 +++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/libata-eh.c   |   29 +++++++++++++++-------
+ 2 files changed, 63 insertions(+), 24 deletions(-)
 
-cea49da1f8d8278d477d8b82fc6ae0a4f195faae
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index d4ca6d6..97e9339 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -159,7 +159,8 @@ enum {
- 	PORT_IRQ_SDB_NOTIFY	= (1 << 11), /* SDB notify received */
+fe25a0b404d5a3f12fe68201e719e6b7d75ada66
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 96b0ffe..f45e04f 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5413,7 +5413,7 @@ static struct ata_port * ata_host_add(co
  
- 	DEF_PORT_IRQ		= PORT_IRQ_COMPLETE | PORT_IRQ_ERROR |
--				  PORT_IRQ_DEV_XCHG | PORT_IRQ_UNK_FIS,
-+				  PORT_IRQ_PHYRDY_CHG | PORT_IRQ_DEV_XCHG |
-+				  PORT_IRQ_UNK_FIS,
+ 	DPRINTK("ENTER\n");
  
- 	/* bits[27:16] are unmasked (raw) */
- 	PORT_IRQ_RAW_SHIFT	= 16,
-@@ -228,7 +229,7 @@ enum {
- 	/* host flags */
- 	SIL24_COMMON_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
--				  ATA_FLAG_NCQ,
-+				  ATA_FLAG_NCQ | ATA_FLAG_SKIP_D2H_BSY,
- 	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
- 
- 	IRQ_STAT_4PORTS		= 0xf,
-@@ -325,7 +326,6 @@ static u8 sil24_check_status(struct ata_
- static u32 sil24_scr_read(struct ata_port *ap, unsigned sc_reg);
- static void sil24_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val);
- static void sil24_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
--static int sil24_probe_reset(struct ata_port *ap, unsigned int *classes);
- static void sil24_qc_prep(struct ata_queued_cmd *qc);
- static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc);
- static void sil24_irq_clear(struct ata_port *ap);
-@@ -385,8 +385,6 @@ static const struct ata_port_operations 
- 
- 	.tf_read		= sil24_tf_read,
- 
--	.probe_reset		= sil24_probe_reset,
--
- 	.qc_prep		= sil24_qc_prep,
- 	.qc_issue		= sil24_qc_issue,
- 
-@@ -635,13 +633,6 @@ static int sil24_hardreset(struct ata_po
- 	return -EIO;
+-	if (!ent->port_ops->probe_reset &&
++	if (!ent->port_ops->probe_reset && !ent->port_ops->error_handler &&
+ 	    !(ent->host_flags & (ATA_FLAG_SATA_RESET | ATA_FLAG_SRST))) {
+ 		printk(KERN_ERR "ata%u: no reset mechanism available\n",
+ 		       port_no);
+@@ -5441,6 +5441,12 @@ err_out:
+ 	return NULL;
  }
  
--static int sil24_probe_reset(struct ata_port *ap, unsigned int *classes)
--{
--	return ata_drive_probe_reset(ap, ata_std_probeinit,
--				     sil24_softreset, sil24_hardreset,
--				     ata_std_postreset, classes);
--}
++static int ata_boot_probe_wait(void *dummy)
++{
++	schedule();
++	return 0;
++}
++
+ /**
+  *	ata_device_add - Register hardware device with ATA and SCSI layers
+  *	@ent: Probe information describing hardware device to be registered
+@@ -5459,7 +5465,6 @@ err_out:
+  *	RETURNS:
+  *	Number of ports registered.  Zero on error (no ports registered).
+  */
 -
- static inline void sil24_fill_sg(struct ata_queued_cmd *qc,
- 				 struct sil24_sge *sge)
+ int ata_device_add(const struct ata_probe_ent *ent)
  {
-@@ -772,13 +763,11 @@ static void sil24_error_intr(struct ata_
+ 	unsigned int count = 0, i;
+@@ -5536,19 +5541,6 @@ int ata_device_add(const struct ata_prob
+ 		}
+ 		ap->sata_spd_limit = ap->hw_sata_spd_limit;
  
- 	ata_ehi_push_desc(ehi, "irq_stat 0x%08x", irq_stat);
- 
--	if (irq_stat & PORT_IRQ_DEV_XCHG) {
--		ehi->err_mask |= AC_ERR_ATA_BUS;
--		/* sil24 doesn't recover very well from phy
--		 * disconnection with a softreset.  Force hardreset.
--		 */
--		ehi->action |= ATA_EH_HARDRESET;
--		ata_ehi_push_desc(ehi, ", device_exchanged");
-+	if (irq_stat & (PORT_IRQ_PHYRDY_CHG | PORT_IRQ_DEV_XCHG)) {
-+		ata_ehi_hotplugged(ehi);
-+		ata_ehi_push_desc(ehi, ", %s",
-+			       irq_stat & PORT_IRQ_PHYRDY_CHG ?
-+			       "PHY RDY changed" : "device exchanged");
- 		freeze = 1;
+-		DPRINTK("ata%u: bus probe begin\n", ap->id);
+-		rc = ata_bus_probe(ap);
+-		DPRINTK("ata%u: bus probe end\n", ap->id);
+-
+-		if (rc) {
+-			/* FIXME: do something useful here?
+-			 * Current libata behavior will
+-			 * tear down everything when
+-			 * the module is removed
+-			 * or the h/w is unplugged.
+-			 */
+-		}
+-
+ 		rc = scsi_add_host(ap->host, dev);
+ 		if (rc) {
+ 			ata_port_printk(ap, KERN_ERR, "scsi_add_host failed\n");
+@@ -5558,6 +5550,42 @@ int ata_device_add(const struct ata_prob
+ 			 * at the very least
+ 			 */
+ 		}
++
++		if (!ap->ops->probe_reset) {
++			int bit = fls(ATA_FLAG_LOADING) - 1;
++			unsigned long flags;
++
++			ata_port_probe(ap);
++
++			spin_lock_irqsave(&ap->host_set->lock, flags);
++
++			ap->eh_info.probe_mask = (1 << ATA_MAX_DEVICES) - 1;
++			ap->eh_info.action |= ATA_EH_SOFTRESET;
++
++			set_bit(bit, &ap->flags);
++			ata_port_schedule_eh(ap);
++
++			spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++			wait_on_bit(&ap->flags, bit, ata_boot_probe_wait,
++				    TASK_UNINTERRUPTIBLE);
++
++			while (scsi_host_in_recovery(ap->host))
++				msleep(10);
++		} else {
++			DPRINTK("ata%u: bus probe begin\n", ap->id);
++			rc = ata_bus_probe(ap);
++			DPRINTK("ata%u: bus probe end\n", ap->id);
++
++			if (rc) {
++				/* FIXME: do something useful here?
++				 * Current libata behavior will
++				 * tear down everything when
++				 * the module is removed
++				 * or the h/w is unplugged.
++				 */
++			}
++		}
  	}
  
+ 	/* probes are done, now scan each port's disk(s) */
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index b37575b..7b5cb02 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -286,11 +286,16 @@ void ata_scsi_error(struct Scsi_Host *ho
+ 	/* clean up */
+ 	spin_lock_irqsave(hs_lock, flags);
+ 
+-	if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
+-		queue_work(ata_scsi_wq, &ap->hotplug_task);
+-
+-	if (ap->flags & ATA_FLAG_RECOVERED)
+-		ata_port_printk(ap, KERN_INFO, "EH complete\n");
++	if (ap->flags & ATA_FLAG_LOADING) {
++		int bit = fls(ATA_FLAG_LOADING) - 1;
++		clear_bit(bit, &ap->flags);
++		wake_up_bit(&ap->flags, bit);
++	} else {
++		if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
++			queue_work(ata_scsi_wq, &ap->hotplug_task);
++		if (ap->flags & ATA_FLAG_RECOVERED)
++			ata_port_printk(ap, KERN_INFO, "EH complete\n");
++	}
+ 
+ 	ap->flags &= ~(ATA_FLAG_SCSI_HOTPLUG | ATA_FLAG_RECOVERED);
+ 
+@@ -1329,6 +1334,7 @@ static int ata_eh_reset(struct ata_port 
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+ 	unsigned int *classes = ehc->classes;
+ 	int tries = ATA_EH_RESET_TRIES;
++	int verbose = !(ap->flags & ATA_FLAG_LOADING);
+ 	unsigned int action;
+ 	ata_reset_fn_t reset;
+ 	int i, did_followup_srst, rc;
+@@ -1376,8 +1382,10 @@ static int ata_eh_reset(struct ata_port 
+ 	}
+ 
+  retry:
+-	ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
+-			reset == softreset ? "soft" : "hard");
++	/* shut up during boot probing */
++	if (verbose)
++		ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
++				reset == softreset ? "soft" : "hard");
+ 
+ 	/* reset */
+ 	ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
+@@ -1761,8 +1769,11 @@ void ata_do_eh(struct ata_port *ap, ata_
+ 	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+ 	       ata_postreset_fn_t postreset)
+ {
+-	ata_eh_autopsy(ap);
+-	ata_eh_report(ap);
++	if (!(ap->flags & ATA_FLAG_LOADING)) {
++		ata_eh_autopsy(ap);
++		ata_eh_report(ap);
++	}
++
+ 	ata_eh_recover(ap, prereset, softreset, hardreset, postreset);
+ 	ata_eh_finish(ap);
+ }
 -- 
 1.3.2
 
