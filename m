@@ -1,53 +1,55 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [git-patch] new round of hotplug patchsets
-Date: Mon, 29 May 2006 14:54:47 +0900
-Message-ID: <20060529055447.GA30639@htj.dyndns.org>
+Subject: [PATCHSET 01/03] prep for hotplug support, take 4
+Date: Mon, 29 May 2006 15:25:57 +0900
+Message-ID: <11488839571850-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.202]:18133 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751211AbWE2Fyx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 01:54:53 -0400
-Received: by nz-out-0102.google.com with SMTP id s18so471627nze
-        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 22:54:53 -0700 (PDT)
-Content-Disposition: inline
+Received: from wr-out-0506.google.com ([64.233.184.225]:19384 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751239AbWE2G0E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 02:26:04 -0400
+Received: by wr-out-0506.google.com with SMTP id i7so817676wra
+        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:26:03 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <mlord@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>, Jens Axboe <axboe@suse.de>, "Zhao, Forrest" <forrest.zhao@intel.com>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Hello, all.
+Hello,
 
-Currently, the following fix patch is pending
+This is This is part of patchset series described in [T].
 
-set-PIO-0-after-successful-EH-reset[1]
+This is the fourth take of prep-for-hotplug-support patchset.  Changes
+from the last take[L] are.
 
-And, new round of hotplug patchsets are about to be posted.  All
-patches are against the current upstream[2] + the above set-PIO0[1]
-patch.
+* ATA_FLAG_CANT_WAIT_FIS34 renamed to ATA_FLAG_SKIP_D2H_BSY
 
-1. prep-for-hotplug-support		: take 4 (12 patches)
-2. prep-LLDDs-for-hotplug-support	: take 3 ( 5 patches)
-3. add-hotplug-support			: take 4 (13 patches)
+* make-ops->tf_read()-optional patch killed
 
-All patches are available as git tree.  Detailed changelog is attached
-at the head messages of patchsets.
+* implement-ata_noop_check_status() patch killed
 
-http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=for-jeff
-git://htj.dyndns.org/libata-tj for-jeff
+* better comments for ATA_DEVICE_CLEAR_OFFSET
 
-The git tree is tagged as follows.  (don't forget to prefix git
-address with 'tag')
+* ata_hotplug_wq renamed to ata_scsi_wq
 
-  fj-fixes		: contains set-PIO0 fix patch
-  fj-hp-prep		: prep-for-hotplug-support patchset
-  fj-hp-LLDD-prep	: prep-LLDDs-for-hotplug-support patchset
-  fj-hp			: add-hotplug-support patchset
+* wrap calls to sata_*() from ata_*() under 'if (ap->cbl == SATA)'
+  condition
+
+This patchset is against
+
+  upstream (ef2824073fba9def3cf122e89cc485f66dd71f70)
+  + [1] set-PIO-0-after-successful-EH-reset
 
 Thanks.
 
--- 
+--
 tejun
 
+[T] http://article.gmane.org/gmane.linux.ide/10891
+[L] http://article.gmane.org/gmane.linux.ide/10546
 [1] http://article.gmane.org/gmane.linux.ide/10890
-[2] ef2824073fba9def3cf122e89cc485f66dd71f70
+
+
