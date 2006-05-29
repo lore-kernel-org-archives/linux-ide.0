@@ -1,201 +1,130 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/13] libata-hp: implement bootplug
-Date: Mon, 29 May 2006 15:38:56 +0900
-Message-ID: <11488847361536-git-send-email-htejun@gmail.com>
-References: <11488847352050-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: [PATCH] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
+Date: Mon, 29 May 2006 14:35:15 +0800
+Message-ID: <1148884515.3466.12.camel@forrest26.sh.intel.com>
+References: <1148547763.23979.15.camel@forrest26.sh.intel.com>
+	 <44779A05.4010209@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.196]:272 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751303AbWE2GjP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 02:39:15 -0400
-Received: by wx-out-0102.google.com with SMTP id h27so299180wxd
-        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:39:14 -0700 (PDT)
-In-Reply-To: <11488847352050-git-send-email-htejun@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:41865 "EHLO
+	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751244AbWE2Gqv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 02:46:51 -0400
+In-Reply-To: <44779A05.4010209@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: htejun@gmail.com, liml@rtr.ca, linux-ide@vger.kernel.org
 
-Implement bootplug - boot probing via hotplug path.  While loading,
-ata_host_add() simply schedules probing and invokes EH.  After EH
-completes, ata_host_add() scans and assicates them with SCSI devices.
-EH path is slightly modified to handle this (e.g. no autopsy during
-bootplug).  The SCSI part is left in ata_host_add() because it's
-shared with legacy path and to keep probing order as before (ATA scan
-all ports in host_set then attach all).
+On Fri, 2006-05-26 at 20:15 -0400, Jeff Garzik wrote:
+> I agree with the concept, and agree that the SCSI layer must be notified 
+> when the ATA write cache type changes.  However, I NAK the patch for the 
+> following reasons:
+> 
+> 1) Tejun's revalidate should trigger scsi_rescan_device(), as your patch 
+> indicates.  But that's pretty much all that needs to be done.
+> 
+> 2) Thus, a new bit (ATA_FLAG_SCSI_RESCAN) and a new workqueue are 
+> unnecessary.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Doing scsi_rescan_device() in SCSI EH thread caused my machine with 1
+logical CPU to hang(it stopped responding, user can't login locally or
+remotely, and it can only respond to "ping".)
+So I think scsi_rescan_device() is prohibited from being invoked in SCSI
+EH thread. This is the reason why I introduced another work_queue to do
+scsi_rescan_device().
 
----
+The following patch is again current #upstream and can reproduce the
+problem.
 
- drivers/scsi/libata-core.c |   58 +++++++++++++++++++++++++++++++++-----------
- drivers/scsi/libata-eh.c   |   29 +++++++++++++++-------
- 2 files changed, 63 insertions(+), 24 deletions(-)
+After the kernel with this patch boots up, "hdparm -W 0 /dev/sd*" can
+trigger the system to hang.
 
-fe25a0b404d5a3f12fe68201e719e6b7d75ada66
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 96b0ffe..f45e04f 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5413,7 +5413,7 @@ static struct ata_port * ata_host_add(co
- 
- 	DPRINTK("ENTER\n");
- 
--	if (!ent->port_ops->probe_reset &&
-+	if (!ent->port_ops->probe_reset && !ent->port_ops->error_handler &&
- 	    !(ent->host_flags & (ATA_FLAG_SATA_RESET | ATA_FLAG_SRST))) {
- 		printk(KERN_ERR "ata%u: no reset mechanism available\n",
- 		       port_no);
-@@ -5441,6 +5441,12 @@ err_out:
- 	return NULL;
- }
- 
-+static int ata_boot_probe_wait(void *dummy)
-+{
-+	schedule();
-+	return 0;
-+}
-+
- /**
-  *	ata_device_add - Register hardware device with ATA and SCSI layers
-  *	@ent: Probe information describing hardware device to be registered
-@@ -5459,7 +5465,6 @@ err_out:
-  *	RETURNS:
-  *	Number of ports registered.  Zero on error (no ports registered).
-  */
--
- int ata_device_add(const struct ata_probe_ent *ent)
- {
- 	unsigned int count = 0, i;
-@@ -5536,19 +5541,6 @@ int ata_device_add(const struct ata_prob
- 		}
- 		ap->sata_spd_limit = ap->hw_sata_spd_limit;
- 
--		DPRINTK("ata%u: bus probe begin\n", ap->id);
--		rc = ata_bus_probe(ap);
--		DPRINTK("ata%u: bus probe end\n", ap->id);
--
--		if (rc) {
--			/* FIXME: do something useful here?
--			 * Current libata behavior will
--			 * tear down everything when
--			 * the module is removed
--			 * or the h/w is unplugged.
--			 */
--		}
--
- 		rc = scsi_add_host(ap->host, dev);
- 		if (rc) {
- 			ata_port_printk(ap, KERN_ERR, "scsi_add_host failed\n");
-@@ -5558,6 +5550,42 @@ int ata_device_add(const struct ata_prob
- 			 * at the very least
- 			 */
- 		}
-+
-+		if (!ap->ops->probe_reset) {
-+			int bit = fls(ATA_FLAG_LOADING) - 1;
-+			unsigned long flags;
-+
-+			ata_port_probe(ap);
-+
-+			spin_lock_irqsave(&ap->host_set->lock, flags);
-+
-+			ap->eh_info.probe_mask = (1 << ATA_MAX_DEVICES) - 1;
-+			ap->eh_info.action |= ATA_EH_SOFTRESET;
-+
-+			set_bit(bit, &ap->flags);
-+			ata_port_schedule_eh(ap);
-+
-+			spin_unlock_irqrestore(&ap->host_set->lock, flags);
-+
-+			wait_on_bit(&ap->flags, bit, ata_boot_probe_wait,
-+				    TASK_UNINTERRUPTIBLE);
-+
-+			while (scsi_host_in_recovery(ap->host))
-+				msleep(10);
-+		} else {
-+			DPRINTK("ata%u: bus probe begin\n", ap->id);
-+			rc = ata_bus_probe(ap);
-+			DPRINTK("ata%u: bus probe end\n", ap->id);
-+
-+			if (rc) {
-+				/* FIXME: do something useful here?
-+				 * Current libata behavior will
-+				 * tear down everything when
-+				 * the module is removed
-+				 * or the h/w is unplugged.
-+				 */
-+			}
-+		}
- 	}
- 
- 	/* probes are done, now scan each port's disk(s) */
+Thanks,
+Forrest
+
 diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index b37575b..7b5cb02 100644
+index 71b45ad..d833b36 100644
 --- a/drivers/scsi/libata-eh.c
 +++ b/drivers/scsi/libata-eh.c
-@@ -286,11 +286,16 @@ void ata_scsi_error(struct Scsi_Host *ho
- 	/* clean up */
- 	spin_lock_irqsave(hs_lock, flags);
+@@ -1356,6 +1356,8 @@ static int ata_eh_revalidate(struct ata_
+ 			if (rc)
+ 				break;
  
--	if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
--		queue_work(ata_scsi_wq, &ap->hotplug_task);
--
--	if (ap->flags & ATA_FLAG_RECOVERED)
--		ata_port_printk(ap, KERN_INFO, "EH complete\n");
-+	if (ap->flags & ATA_FLAG_LOADING) {
-+		int bit = fls(ATA_FLAG_LOADING) - 1;
-+		clear_bit(bit, &ap->flags);
-+		wake_up_bit(&ap->flags, bit);
-+	} else {
-+		if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
-+			queue_work(ata_scsi_wq, &ap->hotplug_task);
-+		if (ap->flags & ATA_FLAG_RECOVERED)
-+			ata_port_printk(ap, KERN_INFO, "EH complete\n");
-+	}
- 
- 	ap->flags &= ~(ATA_FLAG_SCSI_HOTPLUG | ATA_FLAG_RECOVERED);
- 
-@@ -1329,6 +1334,7 @@ static int ata_eh_reset(struct ata_port 
- 	struct ata_eh_context *ehc = &ap->eh_context;
- 	unsigned int *classes = ehc->classes;
- 	int tries = ATA_EH_RESET_TRIES;
-+	int verbose = !(ap->flags & ATA_FLAG_LOADING);
- 	unsigned int action;
- 	ata_reset_fn_t reset;
- 	int i, did_followup_srst, rc;
-@@ -1376,8 +1382,10 @@ static int ata_eh_reset(struct ata_port 
++			scsi_rescan_device(&(dev->sdev->sdev_gendev));
++
+ 			ehc->i.action &= ~ATA_EH_REVALIDATE;
+ 		}
  	}
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 9e5cb9f..0838e9b 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1269,6 +1269,19 @@ static void ata_scsi_qc_complete(struct 
+ 	u8 *cdb = cmd->cmnd;
+  	int need_sense = (qc->err_mask != 0);
  
-  retry:
--	ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
--			reset == softreset ? "soft" : "hard");
-+	/* shut up during boot probing */
-+	if (verbose)
-+		ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
-+				reset == softreset ? "soft" : "hard");
- 
- 	/* reset */
- 	ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
-@@ -1761,8 +1769,11 @@ void ata_do_eh(struct ata_port *ap, ata_
- 	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 	       ata_postreset_fn_t postreset)
- {
--	ata_eh_autopsy(ap);
--	ata_eh_report(ap);
-+	if (!(ap->flags & ATA_FLAG_LOADING)) {
-+		ata_eh_autopsy(ap);
-+		ata_eh_report(ap);
++	/* We snoop the SET_FEATURES - Write Cache ON/OFF command, and
++	 * schedule EH_REVALIDATE operation to update the IDENTIFY DEVICE
++	 * cache
++	 */
++	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
++	    (!(cdb[2] & 0x20)) && (qc->tf.command == ATA_CMD_SET_FEATURES) &&
++	    ((qc->tf.feature == SETFEATURES_WC_ON) ||
++	     (qc->tf.feature == SETFEATURES_WC_OFF))) {
++		qc->ap->eh_info.action = ATA_EH_REVALIDATE;
++		ata_port_schedule_eh(qc->ap);
 +	}
 +
- 	ata_eh_recover(ap, prereset, softreset, hardreset, postreset);
- 	ata_eh_finish(ap);
++
+ 	/* For ATA pass thru (SAT) commands, generate a sense block if
+ 	 * user mandated it or if there's an error.  Note that if we
+ 	 * generate because the user forced us to, a check condition
+@@ -2744,9 +2757,17 @@ void ata_scsi_scan_host(struct ata_port 
+ 		return;
+ 
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		struct scsi_device *sdev;
+ 		dev = &ap->device[i];
+ 
+-		if (ata_dev_enabled(dev))
+-			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
++		if (!ata_dev_enabled(dev) || dev->sdev)
++			continue;
++		sdev = __scsi_add_device(ap->host, 0, i, 0, NULL);
++		if(!IS_ERR(sdev)){
++			dev->sdev = sdev;
++			scsi_device_put(sdev);
++		}
+ 	}
  }
--- 
-1.3.2
-
-
++
++
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index c494e1c..3671af8 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -181,6 +181,9 @@ enum {
+ 	XFER_PIO_0		= 0x08,
+ 	XFER_PIO_SLOW		= 0x00,
+ 
++	SETFEATURES_WC_ON	= 0x02, /* Enable write cache */
++	SETFEATURES_WC_OFF	= 0x82, /* Disable write cache */
++
+ 	/* ATAPI stuff */
+ 	ATAPI_PKT_DMA		= (1 << 0),
+ 	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b0ee1c1..79ea9a5 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -402,6 +402,7 @@ struct ata_device {
+ 	unsigned long		flags;		/* ATA_DFLAG_xxx */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	unsigned int		devno;		/* 0 or 1 */
++	struct scsi_device	*sdev;
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
+ 	u8			dma_mode;
