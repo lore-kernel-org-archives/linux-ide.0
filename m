@@ -1,53 +1,92 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: Re: [PATCH 07/12] libata-hp-prep: store attached SCSI device
-Date: Mon, 29 May 2006 16:45:44 +0800
-Message-ID: <1148892344.3466.19.camel@forrest26.sh.intel.com>
-References: <11488839582227-git-send-email-htejun@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
+Date: Mon, 29 May 2006 18:08:11 +0900
+Message-ID: <447AB9FB.6020706@gmail.com>
+References: <1148547763.23979.15.camel@forrest26.sh.intel.com> <44779A05.4010209@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:22587 "EHLO
-	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S1750767AbWE2I50 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 04:57:26 -0400
-In-Reply-To: <11488839582227-git-send-email-htejun@gmail.com>
+Received: from wx-out-0102.google.com ([66.249.82.206]:34348 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750787AbWE2JIS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 05:08:18 -0400
+Received: by wx-out-0102.google.com with SMTP id h27so312033wxd
+        for <linux-ide@vger.kernel.org>; Mon, 29 May 2006 02:08:17 -0700 (PDT)
+In-Reply-To: <44779A05.4010209@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, liml@rtr.ca, linux-ide@vger.kernel.org
 
-On Mon, 2006-05-29 at 15:25 +0900, Tejun Heo wrote:
-> @@ -2743,16 +2743,22 @@ void ata_scsi_simulate(struct ata_device
->  
->  void ata_scsi_scan_host(struct ata_port *ap)
->  {
-> -	struct ata_device *dev;
->  	unsigned int i;
->  
->  	if (ap->flags & ATA_FLAG_DISABLED)
->  		return;
->  
->  	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-> -		dev = &ap->device[i];
-> +		struct ata_device *dev = &ap->device[i];
-> +		struct scsi_device *sdev;
-> +
-> +		if (!ata_dev_enabled(dev) || dev->sdev)
-> +			continue;
->  
-> -		if (ata_dev_enabled(dev))
-> -			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
-> +		sdev = __scsi_add_device(ap->host, 0, i, 0, NULL);
-Is it better to use macro scsi_add_device() than invoking
-__scsi_add_device() directly here? I know this is only a trivial change.
+Jeff Garzik wrote:
+> zhao, forrest wrote:
+>> Hi, all
+>>
+>> This patch makes libata "Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE
+>> command" and clean the things up(e.g. revalidate and rescan).
+>> Here is the processing path:
+>>
+>> 1 in ata_scsi_qc_complete(), if we find that a "SET FEATURES - WRITE 
+>> CACHE
+>> ENABLE/DISABLE" command is executed successfully, we schedule the 
+>> according
+>> port to do revalidation
+>> 2 in ata_dev_revalidate(), if we find that the "write cahce enable 
+>> bit" was
+>> changed, set port flags in order to schedule scsi_rescan_device() 
+>> later in
+>> ata_scsi_error()
+>> 3 in ata_scsi_error(), if ATA_FLAG_SCSI_RESCAN is set for ap->flags, we
+>> queue the ata_scsi_dev_rescan() to work_queue "ata_scsi_wq"
+>> 4 at last, scsi_rescan_device() is invoked, so the current state of 
+>> "write
+>> cahce enable bit" is propogated to SCSI layer.
+> 
+> I agree with the concept, and agree that the SCSI layer must be notified 
+> when the ATA write cache type changes.  However, I NAK the patch for the 
+> following reasons:
+> 
+> 1) Tejun's revalidate should trigger scsi_rescan_device(), as your patch 
+> indicates.  But that's pretty much all that needs to be done.
+> 
+> 2) Thus, a new bit (ATA_FLAG_SCSI_RESCAN) and a new workqueue are 
+> unnecessary.
 
-> +		if (!IS_ERR(sdev)) {
-> +			dev->sdev = sdev;
-> +			scsi_device_put(sdev);
-> +		}
->  	}
->  }
+SCSI rescan is done by issuing commands using scsi_execute_req().  The 
+commands are supposed to be processed via normal SCSI command execution 
+path which is blocked during EH is in progress, so we need to rescan in 
+separate context.
 
-Thanks,
-Forrest
+> 3) While the following test is correct,
+> +    if ((dev->id[85] & (1 << 5)) != (id[85] & (1 << 5)))
+> +        dev->ap->flags |= ATA_FLAG_SCSI_RESCAN;
+> 
+> there is no pressing need to avoid unnecessary rescans, during 
+> revalidation.
+
+Agreed.  Just rescan unconditionally.
+
+> 4) Using [__]scsi_add_device() is a regression from using 
+> scsi_scan_target()
+
+I think it's taken from the hotplug patch store-attached-SCSI-device[1]. 
+  Using [__]scsi_add_device() seems to be the only way to reliably 
+obtain the attached sdev.
+
+More notes...
+
+* I've renamed ata_hotplug_wq to ata_scsi_wq in hotplug patches.  I 
+think rescan can use this wq instead of creating its own.
+
+* When snooping for SETFEATURES in ata_scsi_qc_complete(), why check 
+cdb[0] for ATA_16/12?  Isn't simply checking tf.command enough?
+
+* There's a race window between ATA revalidation and SCSI rescan.  We 
+can plug this hole by deferring commands till rescan is complete.  But I 
+doubt it would be worth the trouble.
+
+-- 
+tejun
+
+[1] http://article.gmane.org/gmane.linux.ide/10898
