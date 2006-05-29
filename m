@@ -1,117 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/12] libata-hp-prep: make some ata_device fields persistent
-Date: Mon, 29 May 2006 15:25:58 +0900
-Message-ID: <11488839582400-git-send-email-htejun@gmail.com>
-References: <11488839571850-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET 02/03] prep LLDDs for hotplug support, take 3
+Date: Mon, 29 May 2006 15:34:41 +0900
+Message-ID: <11488844811684-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.234]:63672 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.239]:53437 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751256AbWE2G05 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 02:26:57 -0400
-Received: by wr-out-0506.google.com with SMTP id i7so817769wra
-        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:26:56 -0700 (PDT)
-In-Reply-To: <11488839571850-git-send-email-htejun@gmail.com>
+	id S1751270AbWE2Ges (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 02:34:48 -0400
+Received: by wr-out-0506.google.com with SMTP id i7so818693wra
+        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:34:47 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Lifetimes of some fields span over device plugging/unplugging.  This
-patch moves such persistent fields to the top of ata_device and
-separate them with ATA_DEVICE_CLEAR_OFFSET.  Fields above the offset
-are initialized once during host initializatino while all other fields
-are cleared before hotplugging.  Currently ->ap, devno and part of
-flags are persistent.
+Hello,
 
-Note that flags is partially cleared while holding host_set lock.
-This is to synchronize with later warm plug implementation which will
-record hotplug request in dev->flags.
+This is This is part of patchset series described in [T].
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+This is the third take of prep-LLDDs-for-hotplug-support patchset.
+Changes from the last take[L] are.
 
----
+* TF access is mandatory, sata_sil24()-tf-optional patch has been
+  dropped.  sil24_hardreset() update is separated into
+  update-sil24_hardreset() patch.
 
- drivers/scsi/libata-core.c |   14 ++++++++++++--
- include/linux/libata.h     |   11 +++++++++--
- 2 files changed, 21 insertions(+), 4 deletions(-)
+* sata_sil now calls ata_bmdma_irq_clear() directly instead of calling
+  ops->irq_clear()
 
-a615dbf0ff4deac11925b7be6916caed19a66f3e
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 84afb59..fc9989d 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5153,9 +5153,18 @@ static void ata_host_remove(struct ata_p
- void ata_dev_init(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->ap;
-+	unsigned long flags;
-+
-+	/* High bits of dev->flags are used to record warm plug
-+	 * requests which occur asynchronously.  Synchronize using
-+	 * host_set lock.
-+	 */
-+	spin_lock_irqsave(&ap->host_set->lock, flags);
-+	dev->flags &= ~ATA_DFLAG_INIT_MASK;
-+	spin_unlock_irqrestore(&ap->host_set->lock, flags);
- 
--	memset((void *)dev, 0, sizeof(*dev));
--	dev->devno = dev - ap->device;
-+	memset((void *)dev + ATA_DEVICE_CLEAR_OFFSET, 0,
-+	       sizeof(*dev) - ATA_DEVICE_CLEAR_OFFSET);
- 	dev->pio_mask = UINT_MAX;
- 	dev->mwdma_mask = UINT_MAX;
- 	dev->udma_mask = UINT_MAX;
-@@ -5217,6 +5226,7 @@ static void ata_host_init(struct ata_por
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
- 		dev->ap = ap;
-+		dev->devno = i;
- 		ata_dev_init(dev);
- 	}
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 4f67c43..20c6aa1 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -130,6 +130,7 @@ enum {
- 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
- 
- 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
-+	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
- 
- 	ATA_DFLAG_DETACH	= (1 << 16),
- 	ATA_DFLAG_DETACHED	= (1 << 17),
-@@ -409,10 +410,11 @@ struct ata_ering {
- 
- struct ata_device {
- 	struct ata_port		*ap;
--	u64			n_sectors;	/* size of device, if ATA */
-+	unsigned int		devno;		/* 0 or 1 */
- 	unsigned long		flags;		/* ATA_DFLAG_xxx */
-+	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
-+	u64			n_sectors;	/* size of device, if ATA */
- 	unsigned int		class;		/* ATA_DEV_xxx */
--	unsigned int		devno;		/* 0 or 1 */
- 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
- 	u8			pio_mode;
- 	u8			dma_mode;
-@@ -438,6 +440,11 @@ struct ata_device {
- 	struct ata_ering	ering;
- };
- 
-+/* Offset into struct ata_device.  Fields above it are maintained
-+ * acress device init.  Fields below are zeroed.
-+ */
-+#define ATA_DEVICE_CLEAR_OFFSET		offsetof(struct ata_device, n_sectors)
-+
- struct ata_eh_info {
- 	struct ata_device	*dev;		/* offending device */
- 	u32			serror;		/* SError from LLDD */
--- 
-1.3.2
+* sil_interrupt() now uses spin_lock/unlock_irq()
+
+This patchset is against
+
+  upstream (ef2824073fba9def3cf122e89cc485f66dd71f70)
+  + [1] set-PIO-0-after-successful-EH-reset
+  + [2] prep-for-hotplug-support patchset
+
+Thanks.
+
+--
+tejun
+
+[T] http://article.gmane.org/gmane.linux.ide/10891
+[L] http://article.gmane.org/gmane.linux.ide/10573
+[1] http://article.gmane.org/gmane.linux.ide/10890
+[2] http://article.gmane.org/gmane.linux.ide/10892
 
 
