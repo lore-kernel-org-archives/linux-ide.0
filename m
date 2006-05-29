@@ -1,33 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] HPT3xx: switch to using pci_get_slot()
-Date: Mon, 29 May 2006 18:26:50 +0400
-Message-ID: <447B04AA.5050804@ru.mvista.com>
-References: <444B3BDE.1030106@ru.mvista.com> <4457DC97.3010807@ru.mvista.com> <445A5A1B.60903@ru.mvista.com> <446A55D6.90507@ru.mvista.com> <446ED8A3.6030702@ru.mvista.com> <4478CD3D.6010409@ru.mvista.com> <4478E104.7040200@ru.mvista.com> <4479AAB8.9010509@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: =?ISO-8859-1?Q?Ask_Bj=F8rn_Hansen?= <ask@develooper.com>
+Subject: Re: sata_mv with Adaptec AIC-8130/Marvell 88SX6041 ("Badness in __msleep")
+Date: Mon, 29 May 2006 12:51:34 -0700
+Message-ID: <23F9027D-7161-43A5-A2FE-1F355F79C53A@develooper.com>
+References: <5D6C23F5-B03E-4C3D-8BC6-A009E51122D8@develooper.com> <447A614B.3050603@rtr.ca>
+Mime-Version: 1.0 (Apple Message framework v750)
+Content-Type: text/plain; charset=ISO-8859-1;
+	delsp=yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:5076 "HELO mail.dev.rtsoft.ru")
-	by vger.kernel.org with SMTP id S1750904AbWE2O1w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 May 2006 10:27:52 -0400
-In-Reply-To: <4479AAB8.9010509@gmail.com>
+Received: from x8.develooper.com ([216.52.237.208]:56533 "EHLO
+	x8.develooper.com") by vger.kernel.org with ESMTP id S1751254AbWE2Tvg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 15:51:36 -0400
+In-Reply-To: <447A614B.3050603@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
 
-Jiri Slaby wrote:
+On May 28, 2006, at 7:49 PM, Mark Lord wrote:
 
->>   Switch to using pci_get_slot() to get to the function 1 of HPT36x/374
->>chips -- there's no need for the driver itself to walk the list of the
->>PCI devices, and it also forgets to check the bus number of the device
->>found.
+> Ask Bj=F8rn Hansen wrote:
+>> Hi everyone,
+>> I have a box with a Adaptec AIC-8130/Marvell 88SX6041 chip =20
+>> integrated.  I am using the latest FC5 kernel (~2.6.16.1) with the =20
+>> sata_mv 0.5 driver (which is the same as in 2.6.16.18).   The arch =20
+>> is x86_64 (dual Opteron something).
+>
+> The current 2.6.16.xx sata_mv drivers is known buggy.
+> Don't rely on it for anything important.
+>
+> The attached patch is an untested backport of the latest sata_mv,
+> which should be more reliable than what you've been using.
+[...]
 
-> It's better, but you missed to call pci_dev_put() in some __exit function.
+Thanks!
 
-    If you knew the PCI IDE drivers better, you'd know there's simply no 
-__exit functions in them. ;-)
+I built a new set of kernel rpms and put them in my kickstart tree.  =20
+It will be a few days before I get to where the box is, but I will =20
+try it then and report back.
 
-WBR, Sergei
+
+  - ask
+
+--=20
+http://askask.com/  - http://develooper.com/
+
+
