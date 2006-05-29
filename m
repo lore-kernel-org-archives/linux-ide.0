@@ -1,76 +1,59 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH alt4 v3] libata resume fixes
-Date: Mon, 29 May 2006 01:25:25 -0400
-Message-ID: <447A85C5.90202@garzik.org>
-References: <20060527195847.GA28334@havoc.gtf.org>	 <20060527205213.GA30686@havoc.gtf.org> <4478BD18.6010908@rtr.ca>	 <4478C0A1.4050003@rtr.ca>  <4478C2C9.3030703@garzik.org> <1148874794.2310.21.camel@forrest26.sh.intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: set PIO-0 after successful EH reset
+Date: Mon, 29 May 2006 14:50:06 +0900
+Message-ID: <20060529055006.GA30852@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48318 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751191AbWE2FZa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 May 2006 01:25:30 -0400
-In-Reply-To: <1148874794.2310.21.camel@forrest26.sh.intel.com>
+Received: from py-out-1112.google.com ([64.233.166.182]:16 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751209AbWE2FuM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 01:50:12 -0400
+Received: by py-out-1112.google.com with SMTP id e30so292740pya
+        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 22:50:11 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, torvalds@osdl.org, Jens Axboe <axboe@suse.de>
+To: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-zhao, forrest wrote:
-> On Sat, 2006-05-27 at 17:21 -0400, Jeff Garzik wrote:
->> o_simple_cmd: ata command failed: 4
->>
->> 0xE1 is IDLE IMMEDIATE, so it looks like it is making progress.
->>
->> This makes me realize that ata_bus_probe() won't get the job done
->> alone, 
->> we must do:
->>
->> * host init
->> * phy init
->> * idle immediate
->> * the rest of bus probe
->>
->> Good, good data points here...
-> 
-> Jeff,
-> 
-> This observation is very valuable. I'll write the patch for this
-> together with the AHCI suspend/resume support for 2.6.1[8/9] soon.
+Set ata_device->pio_mode to XFER_PIO_0 after a successful reset.  This
+is to keep EH resets consistent with probe resets as updated by the
+commit b6079ca409bf88c248992e96510dd6f610f7ed89.  Note that, with
+soon-to-follow hotplug update, EH resets will include probe resets.
 
-Thanks for your continued work on AHCI.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-BTW, you/Hannes' AHCI suspend/resume patch needs to be split up into 
-multiple steps, for easier reviewing and applying.  Something like:
-* update ahci_{start,stop}_engine, and update all it users
-* split out start/stop FIS RX into separate functions, no code flow changes
-* use ahci_{start,stop}_fis_rx in appropriate places
-* add suspend/resume support
+---
 
-The current AHCI suspend/resume patch does a lot more than just add 
-suspend/resume... it modifies the current AHCI probe code and 
-operational code in several areas.  We need to be able to evaluate these 
-changes outside the context of suspend/resume, because the changes 
-affect more than just suspend/resume.
+ drivers/scsi/libata-eh.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-The analogy I use [stolen from Al Viro] is mathematic, for illustrating 
-a progression of patches:  when working a mathematical proof, you supply 
-the progression leading to the answer, in addition to the answer itself.
-
-
-> BTW. Have we achieved consensus that the bus resume operation should be
-> done in [s/p]ata_pci_device_resume() in 2.6.1[8/9]?
-
-Its pretty much a requirement for FIS-based controllers and Port 
-Multipliers.  Since the bus is not an independent object from the device 
-model perspective, we must manage it as part of the controller (which 
-indeed it is -- a wire and phy managed by the controller hardware).
-
-Long term, I hope that we will have a device model with proper 
-dependencies.  That means an object for the bus in addition to objects 
-for controller and device.  Once that happens, we can do not only proper 
-suspend/resume, but also runtime power management.
-
-	Jeff
-
-
+8bdb768ad75508fcc0e26ed15723700e40b9f619
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 71b45ad..b88f492 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1287,7 +1287,7 @@ static int ata_eh_reset(struct ata_port 
+ 	unsigned int classes[ATA_MAX_DEVICES];
+ 	int tries = ATA_EH_RESET_TRIES;
+ 	ata_reset_fn_t reset;
+-	int rc;
++	int i, rc;
+ 
+ 	if (softreset && (!hardreset || (!sata_set_spd_needed(ap) &&
+ 					 !(ehc->i.action & ATA_EH_HARDRESET))))
+@@ -1319,6 +1319,12 @@ static int ata_eh_reset(struct ata_port 
+ 	}
+ 
+ 	if (rc == 0) {
++		/* After the reset, the device state is PIO 0 and the
++		 * controller state is undefined.  Record the mode.
++		 */
++		for (i = 0; i < ATA_MAX_DEVICES; i++)
++			ap->device[i].pio_mode = XFER_PIO_0;
++
+ 		if (postreset)
+ 			postreset(ap, classes);
+ 
+-- 
+1.3.2
