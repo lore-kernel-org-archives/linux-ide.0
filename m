@@ -1,53 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 07/12] libata-hp-prep: store attached SCSI device
-Date: Mon, 29 May 2006 18:14:01 +0900
-Message-ID: <447ABB59.4000209@gmail.com>
-References: <11488839582227-git-send-email-htejun@gmail.com> <1148892344.3466.19.camel@forrest26.sh.intel.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
+Date: Mon, 29 May 2006 05:20:16 -0400
+Message-ID: <447ABCD0.2060305@garzik.org>
+References: <1148547763.23979.15.camel@forrest26.sh.intel.com> <44779A05.4010209@garzik.org> <447AB9FB.6020706@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.237]:13109 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1750791AbWE2JOI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 05:14:08 -0400
-Received: by wr-out-0506.google.com with SMTP id i7so838256wra
-        for <linux-ide@vger.kernel.org>; Mon, 29 May 2006 02:14:07 -0700 (PDT)
-In-Reply-To: <1148892344.3466.19.camel@forrest26.sh.intel.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:43205 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750798AbWE2JUU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 May 2006 05:20:20 -0400
+In-Reply-To: <447AB9FB.6020706@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, liml@rtr.ca, linux-ide@vger.kernel.org
 
-zhao, forrest wrote:
-> On Mon, 2006-05-29 at 15:25 +0900, Tejun Heo wrote:
->> @@ -2743,16 +2743,22 @@ void ata_scsi_simulate(struct ata_device
->>  
->>  void ata_scsi_scan_host(struct ata_port *ap)
->>  {
->> -	struct ata_device *dev;
->>  	unsigned int i;
->>  
->>  	if (ap->flags & ATA_FLAG_DISABLED)
->>  		return;
->>  
->>  	for (i = 0; i < ATA_MAX_DEVICES; i++) {
->> -		dev = &ap->device[i];
->> +		struct ata_device *dev = &ap->device[i];
->> +		struct scsi_device *sdev;
->> +
->> +		if (!ata_dev_enabled(dev) || dev->sdev)
->> +			continue;
->>  
->> -		if (ata_dev_enabled(dev))
->> -			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
->> +		sdev = __scsi_add_device(ap->host, 0, i, 0, NULL);
-> Is it better to use macro scsi_add_device() than invoking
-> __scsi_add_device() directly here? I know this is only a trivial change.
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> 4) Using [__]scsi_add_device() is a regression from using 
+>> scsi_scan_target()
+> 
+> I think it's taken from the hotplug patch store-attached-SCSI-device[1]. 
+>  Using [__]scsi_add_device() seems to be the only way to reliably obtain 
+> the attached sdev.
 
-Again, could be.  The change is mostly cosmetic.  I like the current
-form because it explicitly signifies that libata doesn't hold reference
-to sdev.
 
--- 
-tejun
+We want to continue to use scsi_scan_target(), because that's the 
+preferred model.  In SCSI-land, the target is what receives RPC calls 
+(ATA commands, for us), which are then dispatched internally to one of 
+$N logical units (LU) according to the logical unit number (LUN).
+
+In libata, of course, there is only one logical unit attached to the 
+target, LUN 0.
+
+Regardless, using [__]scsi_add_device() is a regression, because libata 
+handles the transport layer completely -- and importantly -- handles all 
+addressing.  scsi_add_device() is specifically for H/C/I/L, i.e. SPI 
+(parallel SCSI) addressing.
+
+Eventually SCSI will reach a point where HCIL is not the only addressing 
+method.  SAS disks, for example, are addressed via a LUN's WWN.  SCSI 
+fibre channel addresses LUNs via WWN as well.  Once SCSI core does not 
+exclusively use HCIL addressing, libata will reap the benefits of using 
+the proper scsi_target model.
+
+	Jeff
+
+
+
