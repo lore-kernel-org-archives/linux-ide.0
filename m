@@ -1,101 +1,136 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/12] libata-hp-prep: implement ata_dev_init()
-Date: Mon, 29 May 2006 15:25:57 +0900
-Message-ID: <11488839573884-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/12] libata-hp-prep: implement followup softreset handling
+Date: Mon, 29 May 2006 15:25:58 +0900
+Message-ID: <11488839582516-git-send-email-htejun@gmail.com>
 References: <11488839571850-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.202]:58383 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751246AbWE2G0X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 02:26:23 -0400
-Received: by wx-out-0102.google.com with SMTP id h27so298148wxd
-        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:26:23 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.176]:34630 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751254AbWE2G03 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 02:26:29 -0400
+Received: by py-out-1112.google.com with SMTP id i75so362526pye
+        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:26:29 -0700 (PDT)
 In-Reply-To: <11488839571850-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Move initialization of struct ata_device into ata_dev_init() in
-preparation for hotplug.  This patch calls ata_dev_init() from
-ata_host_init() and thus makes no functional difference.
+In some cases, hardreset must be followed by SRST.
+
+* some controllers can't classify with hardreset
+* some controllers can't wait for !BSY after hardreset (LLDD should
+  explicitly request followup softreset by returning -EAGAIN)
+* (later) PM needs SRST w/ PMP==15 to operate after hardreset
+
+To handle above cases, this patch implements follow-up softreset.
+After a hardreset, ata_eh_reset() checks whether any of above
+conditions are met and do a follow-up softreset if necessary.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   26 +++++++++++++++++++++-----
- drivers/scsi/libata.h      |    1 +
- 2 files changed, 22 insertions(+), 5 deletions(-)
+ drivers/scsi/libata-eh.c |   58 +++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 52 insertions(+), 6 deletions(-)
 
-1b63513233c45c44f359191b2e854e090f404e69
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 11df827..84afb59 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5142,6 +5142,26 @@ static void ata_host_remove(struct ata_p
+a92b5a9913a41dbf5ef816da38b015a4319b54ea
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index ab2c640..4189bb4 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1280,16 +1280,28 @@ static void ata_eh_report(struct ata_por
+ 	}
  }
  
- /**
-+ *	ata_dev_init - Initialize an ata_device structure
-+ *	@dev: Device structure to initialize
-+ *
-+ *	Initialize @dev in preparation for probing.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+void ata_dev_init(struct ata_device *dev)
+-static int ata_eh_reset(struct ata_port *ap,
++static int ata_eh_followup_srst_needed(int rc, int classify,
++				       const unsigned int *classes)
 +{
-+	struct ata_port *ap = dev->ap;
-+
-+	memset((void *)dev, 0, sizeof(*dev));
-+	dev->devno = dev - ap->device;
-+	dev->pio_mask = UINT_MAX;
-+	dev->mwdma_mask = UINT_MAX;
-+	dev->udma_mask = UINT_MAX;
++	if (rc == -EAGAIN)
++		return 1;
++	if (rc != 0)
++		return 0;
++	if (classify && classes[0] == ATA_DEV_UNKNOWN)
++		return 1;
++	return 0;
 +}
 +
-+/**
-  *	ata_host_init - Initialize an ata_port structure
-  *	@ap: Structure to initialize
-  *	@host: associated SCSI mid-layer structure
-@@ -5155,7 +5175,6 @@ static void ata_host_remove(struct ata_p
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--
- static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
- 			  struct ata_host_set *host_set,
- 			  const struct ata_probe_ent *ent, unsigned int port_no)
-@@ -5198,10 +5217,7 @@ static void ata_host_init(struct ata_por
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
- 		dev->ap = ap;
--		dev->devno = i;
--		dev->pio_mask = UINT_MAX;
--		dev->mwdma_mask = UINT_MAX;
--		dev->udma_mask = UINT_MAX;
-+		ata_dev_init(dev);
- 	}
++static int ata_eh_reset(struct ata_port *ap, int classify,
+ 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+ 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
+ {
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+-	unsigned int classes[ATA_MAX_DEVICES];
++	unsigned int *classes = ehc->classes;
+ 	int tries = ATA_EH_RESET_TRIES;
+ 	unsigned int action;
+ 	ata_reset_fn_t reset;
+-	int i, rc;
++	int i, did_followup_srst, rc;
  
- #ifdef ATA_IRQ_TRAP
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index b76ad7d..d46c552 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -62,6 +62,7 @@ extern int ata_check_atapi_dma(struct at
- extern void ata_dev_select(struct ata_port *ap, unsigned int device,
-                            unsigned int wait, unsigned int can_sleep);
- extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
-+extern void ata_dev_init(struct ata_device *dev);
- extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine and modify it.
+@@ -1343,10 +1355,44 @@ static int ata_eh_reset(struct ata_port 
  
+ 	rc = ata_do_reset(ap, reset, classes);
+ 
++	did_followup_srst = 0;
++	if (reset == hardreset &&
++	    ata_eh_followup_srst_needed(rc, classify, classes)) {
++		/* okay, let's do follow-up softreset */
++		did_followup_srst = 1;
++		reset = softreset;
++
++		if (!reset) {
++			ata_port_printk(ap, KERN_ERR,
++					"follow-up softreset required "
++					"but no softreset avaliable\n");
++			return -EINVAL;
++		}
++
++		ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
++		rc = ata_do_reset(ap, reset, classes);
++
++		if (rc == 0 && classify &&
++		    classes[0] == ATA_DEV_UNKNOWN) {
++			ata_port_printk(ap, KERN_ERR,
++					"classification failed\n");
++			return -EINVAL;
++		}
++	}
++
+ 	if (rc && --tries) {
++		const char *type;
++
++		if (reset == softreset) {
++			if (did_followup_srst)
++				type = "follow-up soft";
++			else
++				type = "soft";
++		} else
++			type = "hard";
++
+ 		ata_port_printk(ap, KERN_WARNING,
+-				"%sreset failed, retrying in 5 secs\n",
+-				reset == softreset ? "soft" : "hard");
++				"%sreset failed, retrying in 5 secs\n", type);
+ 		ssleep(5);
+ 
+ 		if (reset == hardreset)
+@@ -1470,7 +1516,7 @@ static int ata_eh_recover(struct ata_por
+ 	if (ehc->i.action & ATA_EH_RESET_MASK) {
+ 		ata_eh_freeze_port(ap);
+ 
+-		rc = ata_eh_reset(ap, prereset, softreset, hardreset,
++		rc = ata_eh_reset(ap, 0, prereset, softreset, hardreset,
+ 				  postreset);
+ 		if (rc) {
+ 			ata_port_printk(ap, KERN_ERR,
 -- 
 1.3.2
 
