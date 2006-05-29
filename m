@@ -1,45 +1,76 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata debugging: set initial dbg value
-Date: Mon, 29 May 2006 01:10:11 -0400
-Message-ID: <447A8233.2090409@pobox.com>
-References: <20060529045302.GA4680@zmei.tnic>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH alt4 v3] libata resume fixes
+Date: Mon, 29 May 2006 01:25:25 -0400
+Message-ID: <447A85C5.90202@garzik.org>
+References: <20060527195847.GA28334@havoc.gtf.org>	 <20060527205213.GA30686@havoc.gtf.org> <4478BD18.6010908@rtr.ca>	 <4478C0A1.4050003@rtr.ca>  <4478C2C9.3030703@garzik.org> <1148874794.2310.21.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:27838 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751181AbWE2FKO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 May 2006 01:10:14 -0400
-In-Reply-To: <20060529045302.GA4680@zmei.tnic>
+Received: from srv5.dvmed.net ([207.36.208.214]:48318 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751191AbWE2FZa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 May 2006 01:25:30 -0400
+In-Reply-To: <1148874794.2310.21.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bbpetkov@yahoo.de>
-Cc: linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, torvalds@osdl.org, Jens Axboe <axboe@suse.de>
 
-Borislav Petkov wrote:
-> This patch sets the prerequisites for the new debugging scheme that more or
-> less resembles Donald Becker's net driver example. This one liner doesn't
-> change any functionality beside setting the appropriate debug level for the
-> msg_enable control in the ata_port struct, which will be later used by the 
-> ata_msg_* macros to control the amount of debug information sent to printk.
+zhao, forrest wrote:
+> On Sat, 2006-05-27 at 17:21 -0400, Jeff Garzik wrote:
+>> o_simple_cmd: ata command failed: 4
+>>
+>> 0xE1 is IDLE IMMEDIATE, so it looks like it is making progress.
+>>
+>> This makes me realize that ata_bus_probe() won't get the job done
+>> alone, 
+>> we must do:
+>>
+>> * host init
+>> * phy init
+>> * idle immediate
+>> * the rest of bus probe
+>>
+>> Good, good data points here...
 > 
-> Signed-off-by: <petkov@uni-muenster.de>
+> Jeff,
 > 
-> 
-> --- drivers/scsi/libata-core.c.orig	2006-05-28 10:09:48.000000000 +0200
-> +++ drivers/scsi/libata-core.c	2006-05-28 10:10:19.000000000 +0200
+> This observation is very valuable. I'll write the patch for this
+> together with the AHCI suspend/resume support for 2.6.1[8/9] soon.
 
-Applied, though I had to apply it manually for two reasons:
+Thanks for your continued work on AHCI.
 
-1) Patch not properly rooted.  Patch should be applyable with
-	patch -sp1 < patch
-which means that you need another directory in front of the filename in 
-the diff, i.e.
-	--- linux/drivers/scsi/libata-core.c
-	+++ linux-new/drivers/scsi/libata-core.c
+BTW, you/Hannes' AHCI suspend/resume patch needs to be split up into 
+multiple steps, for easier reviewing and applying.  Something like:
+* update ahci_{start,stop}_engine, and update all it users
+* split out start/stop FIS RX into separate functions, no code flow changes
+* use ahci_{start,stop}_fis_rx in appropriate places
+* add suspend/resume support
 
-2) git-applymbox refused to apply the patch, with a "failed to apply" 
-reason.  Possibly this was due to my hand-editing of the lines describe 
-in #1 above, but also its possible that you did not diff properly 
-against libata-dev.git#upstream.  I don't know which.
+The current AHCI suspend/resume patch does a lot more than just add 
+suspend/resume... it modifies the current AHCI probe code and 
+operational code in several areas.  We need to be able to evaluate these 
+changes outside the context of suspend/resume, because the changes 
+affect more than just suspend/resume.
+
+The analogy I use [stolen from Al Viro] is mathematic, for illustrating 
+a progression of patches:  when working a mathematical proof, you supply 
+the progression leading to the answer, in addition to the answer itself.
+
+
+> BTW. Have we achieved consensus that the bus resume operation should be
+> done in [s/p]ata_pci_device_resume() in 2.6.1[8/9]?
+
+Its pretty much a requirement for FIS-based controllers and Port 
+Multipliers.  Since the bus is not an independent object from the device 
+model perspective, we must manage it as part of the controller (which 
+indeed it is -- a wire and phy managed by the controller hardware).
+
+Long term, I hope that we will have a device model with proper 
+dependencies.  That means an object for the bus in addition to objects 
+for controller and device.  Once that happens, we can do not only proper 
+suspend/resume, but also runtime power management.
+
+	Jeff
+
 
