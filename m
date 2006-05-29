@@ -1,84 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/12] libata-hp-prep: add ata_scsi_wq
-Date: Mon, 29 May 2006 15:25:58 +0900
-Message-ID: <1148883958977-git-send-email-htejun@gmail.com>
+Subject: [PATCH 01/12] libata-hp-prep: add flags and eh_info/context fields for hotplug
+Date: Mon, 29 May 2006 15:25:57 +0900
+Message-ID: <11488839572902-git-send-email-htejun@gmail.com>
 References: <11488839571850-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.202]:59921 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751253AbWE2G03 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 May 2006 02:26:29 -0400
-Received: by wx-out-0102.google.com with SMTP id h27so298162wxd
-        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:26:29 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.205]:9699 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751245AbWE2G0X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 May 2006 02:26:23 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so475446nze
+        for <linux-ide@vger.kernel.org>; Sun, 28 May 2006 23:26:22 -0700 (PDT)
 In-Reply-To: <11488839571850-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-It's best to run ATA hotplug from EH but attaching SCSI devices needs
-working EH.  ata_scsi_wq is used to give SCSI hotplug operations a
-separate context.
+Add hotplug related flags and eh_info/context fields.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    9 +++++++++
- drivers/scsi/libata.h      |    1 +
- 2 files changed, 10 insertions(+), 0 deletions(-)
+ include/linux/libata.h |   19 ++++++++++++++++++-
+ 1 files changed, 18 insertions(+), 1 deletions(-)
 
-84fc45de6b3fc32e8310a27dd54fa455a1038e9b
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 83fb9dd..aa1e0a1 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -69,6 +69,8 @@ static void ata_dev_xfermask(struct ata_
- static unsigned int ata_unique_id = 1;
- static struct workqueue_struct *ata_wq;
+5577bff1743157fb00b7499d832dd55c47245e3e
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b0ee1c1..4f67c43 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -131,6 +131,9 @@ enum {
  
-+struct workqueue_struct *ata_scsi_wq;
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
+ 
++	ATA_DFLAG_DETACH	= (1 << 16),
++	ATA_DFLAG_DETACHED	= (1 << 17),
 +
- int atapi_enabled = 1;
- module_param(atapi_enabled, int, 0444);
- MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
-@@ -5622,6 +5624,12 @@ static int __init ata_init(void)
- 	if (!ata_wq)
- 		return -ENOMEM;
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+ 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
+@@ -152,6 +155,9 @@ enum {
+ 	ATA_FLAG_PIO_POLLING	= (1 << 10), /* use polling PIO if LLD
+ 					      * doesn't handle PIO interrupts */
+ 	ATA_FLAG_NCQ		= (1 << 11), /* host supports NCQ */
++	ATA_FLAG_HRST_TO_RESUME	= (1 << 12), /* hardreset to resume phy */
++	ATA_FLAG_SKIP_D2H_BSY	= (1 << 13), /* can't wait for the first D2H
++					      * Register FIS clearing BSY */
  
-+	ata_scsi_wq = create_singlethread_workqueue("ata_scsi");
-+	if (!ata_scsi_wq) {
-+		destroy_workqueue(ata_wq);
-+		return -ENOMEM;
-+	}
+ 	ATA_FLAG_DEBUGMSG	= (1 << 14),
+ 	ATA_FLAG_FLUSH_PORT_TASK = (1 << 15), /* flush port task */
+@@ -159,6 +165,9 @@ enum {
+ 	ATA_FLAG_EH_PENDING	= (1 << 16), /* EH pending */
+ 	ATA_FLAG_FROZEN		= (1 << 17), /* port is frozen */
+ 	ATA_FLAG_RECOVERED	= (1 << 18), /* recovery action performed */
++	ATA_FLAG_LOADING	= (1 << 19), /* boot/loading probe */
++	ATA_FLAG_UNLOADING	= (1 << 20), /* module is unloading */
++	ATA_FLAG_SCSI_HOTPLUG	= (1 << 21), /* SCSI hotplug scheduled */
+ 
+ 	ATA_FLAG_DISABLED	= (1 << 22), /* port is disabled, ignore it */
+ 	ATA_FLAG_SUSPENDED	= (1 << 23), /* port is suspended (power) */
+@@ -240,7 +249,9 @@ enum {
+ 	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
+ 
+ 	/* ata_eh_info->flags */
+-	ATA_EHI_DID_RESET	= (1 << 0), /* already reset this port */
++	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
 +
- 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
- 	return 0;
- }
-@@ -5629,6 +5637,7 @@ static int __init ata_init(void)
- static void __exit ata_exit(void)
- {
- 	destroy_workqueue(ata_wq);
-+	destroy_workqueue(ata_scsi_wq);
- }
++	ATA_EHI_DID_RESET	= (1 << 16), /* already reset this port */
  
- module_init(ata_init);
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index d46c552..d4bb2e4 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -39,6 +39,7 @@ struct ata_scsi_args {
+ 	/* max repeat if error condition is still set after ->error_handler */
+ 	ATA_EH_MAX_REPEAT	= 5,
+@@ -433,6 +444,10 @@ struct ata_eh_info {
+ 	unsigned int		err_mask;	/* port-wide err_mask */
+ 	unsigned int		action;		/* ATA_EH_* action mask */
+ 	unsigned int		flags;		/* ATA_EHI_* flags */
++
++	unsigned long		hotplug_timestamp;
++	unsigned int		probe_mask;
++
+ 	char			desc[ATA_EH_DESC_LEN];
+ 	int			desc_len;
+ };
+@@ -440,6 +455,8 @@ struct ata_eh_info {
+ struct ata_eh_context {
+ 	struct ata_eh_info	i;
+ 	int			tries[ATA_MAX_DEVICES];
++	unsigned int		classes[ATA_MAX_DEVICES];
++	unsigned int		did_probe_mask;
  };
  
- /* libata-core.c */
-+extern struct workqueue_struct *ata_scsi_wq;
- extern int atapi_enabled;
- extern int atapi_dmadir;
- extern int libata_fua;
+ struct ata_port {
 -- 
 1.3.2
 
