@@ -1,30 +1,50 @@
-From: "Nora Wooten" <fhkwqggo@yahoo.com>
-Subject: Better Th@n B@nk Hughes
-Date: Tue, 30 May 2006 12:27:10 -0100
-Message-ID: <68VP87FE.0R24.fhkwqggo__35563.8300454759$1148992592$gmane$org@yahoo.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [git patch] libata resume fix
+Date: Tue, 30 May 2006 09:22:32 -0400
+Message-ID: <447C4718.6090802@rtr.ca>
+References: <20060528203419.GA15087@havoc.gtf.org> <1148938482.5959.27.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 213.171.74.218.broad.sx.zj.dynamic.cndata.com ([218.74.171.213]:14090
-	"HELO 213.171.74.218.broad.sx.zj.dynamic.cndata.com")
-	by vger.kernel.org with SMTP id S1751484AbWE3MgT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 08:36:19 -0400
+Received: from rtr.ca ([64.26.128.89]:45233 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751400AbWE3NWe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 09:22:34 -0400
+In-Reply-To: <1148938482.5959.27.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Benjamin Herrenschmidt wrote:
+> On Sun, 2006-05-28 at 16:34 -0400, Jeff Garzik wrote:
+>> Please pull from 'upstream-fixes' branch of
+>> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>>
+>> to receive the following updates:
+>>
+>>  drivers/scsi/libata-core.c |    1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> Mark Lord:
+>>       the latest consensus libata resume fix
+> 
+> If your devices are coming from poweron-reset then you will have to wait
+> up to 31 seconds :( And yes, I _did_ have such a device at one point.
 
-H0me Equity Loans 
-L0w Rate Refinancing 
+Not in a suspend/resume capable notebook, though.
 
-- Get @pproved fast, 12 Hour confirmation! 
-- Lower your monthly payment 
-- Get extra cash Quick
-- Consolidate high-interest debt 
+I don't know of *any* notebook drives that take longer
+than perhaps five seconds to spin-up and accept commands.
+Such a slow drive wouldn't really be tolerated by end-users,
+which is why they don't exist.
 
-http://97m0rt.com
+But I suppose people will want to suspend/resume bigger machines
+too, in which case a 10000rpm Raptor might need 15 seconds or so.
 
-%EXIT
-Nora Wooten
+We could bump up the existing timeout, I suppose.
 
+Perhaps Jeff could comment on any potential harm in libata
+for going all the way to 3100000 with the timeout?
 
-LClR
-
+Cheers
