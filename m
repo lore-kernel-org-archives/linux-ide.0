@@ -1,53 +1,73 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [git patch] libata resume fix
-Date: Tue, 30 May 2006 07:34:42 +1000
-Message-ID: <1148938482.5959.27.camel@localhost.localdomain>
-References: <20060528203419.GA15087@havoc.gtf.org>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Fwd: [patch 1/1] sgiioc4: use mmio ops instead of port io
+Date: Mon, 29 May 2006 18:32:19 -0700
+Message-ID: <20060530013219.GA604159@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:30944 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1751364AbWE2VfD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 May 2006 17:35:03 -0400
-In-Reply-To: <20060528203419.GA15087@havoc.gtf.org>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:42925 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S932114AbWE3BcW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 May 2006 21:32:22 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@osdl.org, akpm@osdl.org, linux-ide@vger.kernel.org
 
-On Sun, 2006-05-28 at 16:34 -0400, Jeff Garzik wrote:
-> Please pull from 'upstream-fixes' branch of
-> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-> 
-> to receive the following updates:
-> 
->  drivers/scsi/libata-core.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> Mark Lord:
->       the latest consensus libata resume fix
+I sent this a couple of weeks ago to linux-ide, but I didn't see
+any response.  This patch fixes a bug in sgiioc4 where it was using
+the default IDE port I/O operations instead of MMIO.  I don't know
+who's maintaining linux-ide these days, so I'm forwarding directly
+to Linux and Andrew.
 
-If your devices are coming from poweron-reset then you will have to wait
-up to 31 seconds :( And yes, I _did_ have such a device at one point.
+The IDE part of the IOC4 chip uses MMIO to map the chip registers.
+Unfortunately, the sgiioc4 driver uses the default port IO operations,
+which happens to have worked for the past few years.  That's about
+to change, however, thus this change from inX/outX to readX/writeX.
 
-Ben.
+Signed-off-by: jeremy@sgi.com
 
-
-> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-> index fa476e7..b046ffa 100644
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -4297,6 +4297,7 @@ static int ata_start_drive(struct ata_po
->  int ata_device_resume(struct ata_port *ap, struct ata_device *dev)
->  {
->  	if (ap->flags & ATA_FLAG_SUSPENDED) {
-> +		ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 200000);
->  		ap->flags &= ~ATA_FLAG_SUSPENDED;
->  		ata_set_mode(ap);
->  	}
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+--- linux-2.6.17-rc4/drivers/ide/pci/sgiioc4.c	2006-05-11 16:31:53.000000000 -0700
++++ linux-2.6.17-rc4-mod/drivers/ide/pci/sgiioc4.c	2006-05-18 21:56:52.075277540 -0700
+@@ -345,17 +345,17 @@
+ static u8
+ sgiioc4_INB(unsigned long port)
+ {
+-	u8 reg = (u8) inb(port);
++	u8 reg = (u8) readb((void __iomem *) port);
+ 
+ 	if ((port & 0xFFF) == 0x11C) {	/* Status register of IOC4 */
+ 		if (reg & 0x51) {	/* Not busy...check for interrupt */
+ 			unsigned long other_ir = port - 0x110;
+-			unsigned int intr_reg = (u32) inl(other_ir);
++			unsigned int intr_reg = (u32) readl((void __iomem *) other_ir);
+ 
+ 			/* Clear the Interrupt, Error bits on the IOC4 */
+ 			if (intr_reg & 0x03) {
+-				outl(0x03, other_ir);
+-				intr_reg = (u32) inl(other_ir);
++				writel(0x03, (void __iomem *) other_ir);
++				intr_reg = (u32) readl((void __iomem *) other_ir);
+ 			}
+ 		}
+ 	}
+@@ -606,6 +606,12 @@
+ 	hwif->ide_dma_host_off = &sgiioc4_ide_dma_host_off;
+ 	hwif->ide_dma_lostirq = &sgiioc4_ide_dma_lostirq;
+ 	hwif->ide_dma_timeout = &__ide_dma_timeout;
++
++	/*
++	 * The IOC4 uses MMIO rather than Port IO.
++	 * It also needs special workarounds for INB.
++	 */
++	default_hwif_mmiops(hwif);
+ 	hwif->INB = &sgiioc4_INB;
+ }
+ 
+@@ -743,6 +749,6 @@
+ module_init(ioc4_ide_init);
+ module_exit(ioc4_ide_exit);
+ 
+-MODULE_AUTHOR("Aniket Malatpure - Silicon Graphics Inc. (SGI)");
++MODULE_AUTHOR("Aniket Malatpure/Jeremy Higdon");
+ MODULE_DESCRIPTION("IDE PCI driver module for SGI IOC4 Base-IO Card");
+ MODULE_LICENSE("GPL");
