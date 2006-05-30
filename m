@@ -1,42 +1,27 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
-Date: Tue, 30 May 2006 00:57:18 -0400
-Message-ID: <447BD0AE.2080904@garzik.org>
-References: <1148547763.23979.15.camel@forrest26.sh.intel.com> <44779A05.4010209@garzik.org> <447AB9FB.6020706@gmail.com> <447BCCFC.10908@garzik.org> <447BCF0A.7020709@gmail.com>
+Subject: Re: jgarzik and max-sectors: out of memory
+Date: Tue, 30 May 2006 00:58:37 -0400
+Message-ID: <447BD0FD.1000200@garzik.org>
+References: <4478AA6C.5070305@garzik.org> <200605272243.41832.axboe@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:11750 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932144AbWE3E5V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 00:57:21 -0400
-In-Reply-To: <447BCF0A.7020709@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:17126 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750963AbWE3E6k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 00:58:40 -0400
+In-Reply-To: <200605272243.41832.axboe@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "zhao, forrest" <forrest.zhao@intel.com>, liml@rtr.ca, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Hannes Reinecke <hare@suse.de>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> * I've renamed ata_hotplug_wq to ata_scsi_wq in hotplug patches.  I 
->>> think rescan can use this wq instead of creating its own.
->>
->> I think we will use this workqueue even when SCSI is optional, so 
->> ata_scsi_wq may not be the best name, long term.  I ACK'd its 
->> inclusion of course, so not a big deal.
-> 
-> As it seems there will be another round of hotplug patches, I can rename 
-> it without too much trouble.  My candidates are...
-> 
-> ata_aux_wq
-> ata_management_wq / ata_mgmt_wq
-> ata_errands_wq
+Jens Axboe wrote:
+> Yep lets please do that, I don't think libata ever had any problems with 256 
+> sectors other than perhaps a worry that it would break "something" :-)
 
-Another thing to consider is using the kthread API, ignore workqueues, 
-and simply creating "one-shot" threads as needed.
+There were definite bugs in the past with 256 (versus <= 255) sectors...
 
 	Jeff
-
 
 
