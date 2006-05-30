@@ -1,47 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 02/13] libata-hp: implement hotplug
-Date: Tue, 30 May 2006 13:44:21 +0900
-Message-ID: <447BCDA5.2040607@gmail.com>
-References: <1148884735930-git-send-email-htejun@gmail.com> <447BC7A6.2070500@pobox.com>
+Subject: Re: [PATCH] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
+Date: Tue, 30 May 2006 13:50:18 +0900
+Message-ID: <447BCF0A.7020709@gmail.com>
+References: <1148547763.23979.15.camel@forrest26.sh.intel.com> <44779A05.4010209@garzik.org> <447AB9FB.6020706@gmail.com> <447BCCFC.10908@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:54500 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S932135AbWE3Eo2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 May 2006 00:44:28 -0400
-Received: by wr-out-0506.google.com with SMTP id i7so1023551wra
-        for <linux-ide@vger.kernel.org>; Mon, 29 May 2006 21:44:27 -0700 (PDT)
-In-Reply-To: <447BC7A6.2070500@pobox.com>
+Received: from wx-out-0102.google.com ([66.249.82.204]:19467 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932140AbWE3EuZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 May 2006 00:50:25 -0400
+Received: by wx-out-0102.google.com with SMTP id h27so431085wxd
+        for <linux-ide@vger.kernel.org>; Mon, 29 May 2006 21:50:24 -0700 (PDT)
+In-Reply-To: <447BCCFC.10908@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, liml@rtr.ca, linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
-> \> +        } else if (dev->class == ATA_DEV_UNKNOWN &&
->> +               ehc->tries[dev->devno] &&
->> +               ata_class_enabled(ehc->classes[dev->devno])) {
->> +            dev->class = ehc->classes[dev->devno];
->> +
->> +            rc = ata_dev_read_id(dev, &dev->class, 1, dev->id);
->> +            if (rc == 0)
->> +                rc = ata_dev_configure(dev, 1);
->> +
->> +            if (rc) {
->> +                dev->class = ATA_DEV_UNKNOWN;
->> +                break;
->> +            }
+>> * I've renamed ata_hotplug_wq to ata_scsi_wq in hotplug patches.  I 
+>> think rescan can use this wq instead of creating its own.
 > 
-> ACK, with a comment:  It seems like this small snippet of logic appears 
-> in more than one place, and could be made common
-> 
+> I think we will use this workqueue even when SCSI is optional, so 
+> ata_scsi_wq may not be the best name, long term.  I ACK'd its inclusion 
+> of course, so not a big deal.
 
-If you're referring to ata_bus_probe(), it will be removed as soon as 
-all drivers are converted to new EH with a lot of other codes, so I 
-don't think factoring above part is necessary.
+As it seems there will be another round of hotplug patches, I can rename 
+it without too much trouble.  My candidates are...
+
+ata_aux_wq
+ata_management_wq / ata_mgmt_wq
+ata_errands_wq
+
+>> * When snooping for SETFEATURES in ata_scsi_qc_complete(), why check 
+>> cdb[0] for ATA_16/12?  Isn't simply checking tf.command enough?
+> 
+> yes
+> 
+> 
+>> * There's a race window between ATA revalidation and SCSI rescan.  We 
+>> can plug this hole by deferring commands till rescan is complete.  But 
+>> I doubt it would be worth the trouble.
+> 
+> probably, we'll see...  :)
+
+Yeap, let's see.  I think this should fix Ric's cache type / barrier 
+type problem.
 
 -- 
 tejun
