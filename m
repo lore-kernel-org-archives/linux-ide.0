@@ -1,27 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: jgarzik and max-sectors: out of memory
-Date: Tue, 30 May 2006 00:58:37 -0400
-Message-ID: <447BD0FD.1000200@garzik.org>
-References: <4478AA6C.5070305@garzik.org> <200605272243.41832.axboe@suse.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 10/12] libata-hp-prep: implement sata_phy_debounce()
+Date: Tue, 30 May 2006 14:08:42 +0900
+Message-ID: <447BD35A.4080605@gmail.com>
+References: <11488839583691-git-send-email-htejun@gmail.com> <447BC5B9.2070509@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:17126 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750963AbWE3E6k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 00:58:40 -0400
-In-Reply-To: <200605272243.41832.axboe@suse.de>
+Received: from py-out-1112.google.com ([64.233.166.179]:48583 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932069AbWE3FIs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 May 2006 01:08:48 -0400
+Received: by py-out-1112.google.com with SMTP id e30so599371pya
+        for <linux-ide@vger.kernel.org>; Mon, 29 May 2006 22:08:48 -0700 (PDT)
+In-Reply-To: <447BC5B9.2070509@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Hannes Reinecke <hare@suse.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> Yep lets please do that, I don't think libata ever had any problems with 256 
-> sectors other than perhaps a worry that it would break "something" :-)
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> With hotplug, PHY always needs to be debounced before a reset as any
+>> reset might find new devices.  Extract PHY waiting code from
+>> sata_phy_resume() and extend it to include SStatus debouncing.  Note
+>> that sata_phy_debounce() is superset of what used to be done inside
+>> sata_phy_resume().
+>>
+>> Three default debounce timing parameters are defined to be used by
+>> hot/boot plug.  As resume failure during probing will be properly
+>> handled as errors, timeout doesn't have to be long as before.
+>> probeinit() uses the same timeout to retain the original behavior.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>
+> NAK, changes behavior.  We want to preserve the old order of operations 
+> because some PHYs (sata_via and sata_mv come to mind) are a bit 
+> sensitive to being pounded immediately after wakeup.
 
-There were definite bugs in the past with 256 (versus <= 255) sectors...
+The following is what the original sata_phy_resume() did
 
-	Jeff
+1. read SControl
+2. write SControl (wake)
+3. msleep(200)
+4. read SStatus
+5. if condition not met, goto #3
 
+The new code does...
 
+1. read SControl
+2. write SControl (wake)
+3. read SStatus
+4. msleep(interval_msec)
+5. read SStatus
+6. if condition not met, goto #4
+
+How about putting msleep(200) before calling sata_phy_debounce() from 
+sata_phy_resume().  This will add msleep(200) between #2 and #3 and the 
+only difference left would be the duration of interval_msec in #4 which 
+is 5ms during boot, 25ms during EH.  The wait is in the millisecs range 
+and it's difficult to imagine the change would cause any problem.
+
+-- 
+tejun
