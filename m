@@ -1,41 +1,53 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
-Date: Tue, 30 May 2006 00:41:32 -0400
-Message-ID: <447BCCFC.10908@garzik.org>
-References: <1148547763.23979.15.camel@forrest26.sh.intel.com> <44779A05.4010209@garzik.org> <447AB9FB.6020706@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 06/13] libata-hp: implement bootplug
+Date: Tue, 30 May 2006 00:43:05 -0400
+Message-ID: <447BCD59.8040909@pobox.com>
+References: <11488847361536-git-send-email-htejun@gmail.com> <447BC8AC.4060501@pobox.com> <447BCA46.4000607@gmail.com> <447BCB67.40405@pobox.com> <447BCCC1.9070108@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35557 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932125AbWE3Elg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 00:41:36 -0400
-In-Reply-To: <447AB9FB.6020706@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:42469 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932130AbWE3EnS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 00:43:18 -0400
+In-Reply-To: <447BCCC1.9070108@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: "zhao, forrest" <forrest.zhao@intel.com>, liml@rtr.ca, linux-ide@vger.kernel.org
+Cc: mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> * I've renamed ata_hotplug_wq to ata_scsi_wq in hotplug patches.  I 
-> think rescan can use this wq instead of creating its own.
+> Jeff Garzik wrote:
+>> Tejun Heo wrote:
+>>> Jeff Garzik wrote:
+>>>> Tejun Heo wrote:
+>>>>> +static int ata_boot_probe_wait(void *dummy)
+>>>>> +{
+>>>>> +    schedule();
+>>>>
+>>>> schedule_timeout(1) is preferred
+>>>
+>>> Can you elaborate?  AFAICS, the function is entered in 
+>>> TASK_UNINTERRUPTIBLE state.  No busy looping there.  It's called from 
+>>> wait_on_bit() which takes care of sleep/wakeup conditions.
+>>
+>> Well, the purpose is to _wait, and so schedule_timeout() is more 
+>> appropriate than schedule().  I also that an unconditional schedule() 
+>> is a bit unfriendly if there is nothing useful to schedule at the moment.
+> 
+> Hmmm... I'm not very sure whether using schedule_timeout() inside 
+> wait_on_bit() is allowed or not.  I think it should work but I don't 
+> think it's supposed to be used that way.
 
-I think we will use this workqueue even when SCSI is optional, so 
-ata_scsi_wq may not be the best name, long term.  I ACK'd its inclusion 
-of course, so not a big deal.
+If schedule() can work, so can schedule_timeout()
 
 
-> * When snooping for SETFEATURES in ata_scsi_qc_complete(), why check 
-> cdb[0] for ATA_16/12?  Isn't simply checking tf.command enough?
+> Actually, I'm thinking about dropping the wait_on_bit() and implement 
+> generic helper to wait for EH completion as it's done in more than one 
+> places (during boot probing and unload unplugging and suspend/resume in 
+> future).  It probably will use completion.  Would that be better?
 
-yes
-
-
-> * There's a race window between ATA revalidation and SCSI rescan.  We 
-> can plug this hole by deferring commands till rescan is complete.  But I 
-> doubt it would be worth the trouble.
-
-probably, we'll see...  :)
+Sure, that's what completions are for :)
 
 	Jeff
 
