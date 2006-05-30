@@ -1,50 +1,67 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: Re: [PATCH] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
-Date: Tue, 30 May 2006 13:08:29 +0800
-Message-ID: <1148965709.3466.37.camel@forrest26.sh.intel.com>
-References: <1148547763.23979.15.camel@forrest26.sh.intel.com>
-	 <44779A05.4010209@garzik.org> <447AB9FB.6020706@gmail.com>
-	 <447BCCFC.10908@garzik.org> <447BCF0A.7020709@gmail.com>
-	 <447BD0AE.2080904@garzik.org>  <447BD3E0.4010002@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 10/12] libata-hp-prep: implement sata_phy_debounce()
+Date: Tue, 30 May 2006 01:23:13 -0400
+Message-ID: <447BD6C1.6090201@pobox.com>
+References: <11488839583691-git-send-email-htejun@gmail.com> <447BC5B9.2070509@pobox.com> <447BD35A.4080605@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:829 "EHLO
-	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S932075AbWE3FUD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 May 2006 01:20:03 -0400
-In-Reply-To: <447BD3E0.4010002@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:63974 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932122AbWE3FXg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 01:23:36 -0400
+In-Reply-To: <447BD35A.4080605@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, liml@rtr.ca, linux-ide@vger.kernel.org
+Cc: mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-On Tue, 2006-05-30 at 14:10 +0900, Tejun Heo wrote:
+Tejun Heo wrote:
 > Jeff Garzik wrote:
-> > Tejun Heo wrote:
-> >> Jeff Garzik wrote:
-> >>> Tejun Heo wrote:
-> >>>> * I've renamed ata_hotplug_wq to ata_scsi_wq in hotplug patches.  I 
-> >>>> think rescan can use this wq instead of creating its own.
-> >>>
-> >>> I think we will use this workqueue even when SCSI is optional, so 
-> >>> ata_scsi_wq may not be the best name, long term.  I ACK'd its 
-> >>> inclusion of course, so not a big deal.
-> >>
-> >> As it seems there will be another round of hotplug patches, I can 
-> >> rename it without too much trouble.  My candidates are...
-> >>
-> >> ata_aux_wq
-> >> ata_management_wq / ata_mgmt_wq
-> >> ata_errands_wq
-> > 
-> > Another thing to consider is using the kthread API, ignore workqueues, 
-> > and simply creating "one-shot" threads as needed.
+>> Tejun Heo wrote:
+>>> With hotplug, PHY always needs to be debounced before a reset as any
+>>> reset might find new devices.  Extract PHY waiting code from
+>>> sata_phy_resume() and extend it to include SStatus debouncing.  Note
+>>> that sata_phy_debounce() is superset of what used to be done inside
+>>> sata_phy_resume().
+>>>
+>>> Three default debounce timing parameters are defined to be used by
+>>> hot/boot plug.  As resume failure during probing will be properly
+>>> handled as errors, timeout doesn't have to be long as before.
+>>> probeinit() uses the same timeout to retain the original behavior.
+>>>
+>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>
+>> NAK, changes behavior.  We want to preserve the old order of 
+>> operations because some PHYs (sata_via and sata_mv come to mind) are a 
+>> bit sensitive to being pounded immediately after wakeup.
 > 
-> It wouldn't work for SCSI hotplug.  It depends on that there is only one 
-> thread running the thing, so I think wq is the better choice.  Any 
-> suggestion on naming?
+> The following is what the original sata_phy_resume() did
+> 
+> 1. read SControl
+> 2. write SControl (wake)
+> 3. msleep(200)
+> 4. read SStatus
+> 5. if condition not met, goto #3
+> 
+> The new code does...
+> 
+> 1. read SControl
+> 2. write SControl (wake)
+> 3. read SStatus
+> 4. msleep(interval_msec)
+> 5. read SStatus
+> 6. if condition not met, goto #4
+> 
+> How about putting msleep(200) before calling sata_phy_debounce() from 
+> sata_phy_resume().  This will add msleep(200) between #2 and #3 and the 
+> only difference left would be the duration of interval_msec in #4 which 
+> is 5ms during boot, 25ms during EH.  The wait is in the millisecs range 
+> and it's difficult to imagine the change would cause any problem.
 
-ata_misc_wq?
-ata_sweep_wq?
+As long as the delay following #2 remains, I'm happy...
+
+	Jeff
+
+
+
