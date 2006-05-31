@@ -1,41 +1,59 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [git patch] libata resume fix
-Date: Wed, 31 May 2006 16:56:45 +1000
-Message-ID: <1149058605.766.45.camel@localhost.localdomain>
-References: <20060528203419.GA15087@havoc.gtf.org>
-	 <1148938482.5959.27.camel@localhost.localdomain> <447C4718.6090802@rtr.ca>
-	 <Pine.LNX.4.64.0605301122340.5623@g5.osdl.org>
-	 <1149028674.9986.71.camel@localhost.localdomain>
-	 <20060531064730.GG29535@suse.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH v2] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
+Date: Wed, 31 May 2006 19:09:13 +0900
+Message-ID: <447D6B49.5020103@gmail.com>
+References: <1148980614.3466.52.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:59787 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S964847AbWEaG5R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 May 2006 02:57:17 -0400
-In-Reply-To: <20060531064730.GG29535@suse.de>
+Received: from py-out-1112.google.com ([64.233.166.183]:23260 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S964935AbWEaKJU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 06:09:20 -0400
+Received: by py-out-1112.google.com with SMTP id e30so1018193pya
+        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 03:09:19 -0700 (PDT)
+In-Reply-To: <1148980614.3466.52.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: jeff@garzik.org, liml@rtr.ca, ric@emc.com, linux-ide@vger.kernel.org
 
+Hello, Zhao.
 
-> In reality it probably doesn't matter much, since everything will be
-> stalled until the queue is unfrozen anyways. Unless of course you have
-> several slow-to-resume devices so you would at least get some overlap.
-> But it would be nicer from a design view point.
+zhao, forrest wrote:
+[--snip--]
+> diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+> index 9e5cb9f..810f42e 100644
+> --- a/drivers/scsi/libata-scsi.c
+> +++ b/drivers/scsi/libata-scsi.c
+> @@ -1269,6 +1269,17 @@ static void ata_scsi_qc_complete(struct 
+>  	u8 *cdb = cmd->cmnd;
+>   	int need_sense = (qc->err_mask != 0);
+>  
+> +	/* We snoop the SET_FEATURES - Write Cache ON/OFF command, and
+> +	 * schedule EH_REVALIDATE operation to update the IDENTIFY DEVICE
+> +	 * cache
+> +	 */
+> +	if ((!(cdb[2] & 0x20)) && (qc->tf.command == ATA_CMD_SET_FEATURES) &&
 
-In practice, it would be nice because most of X would restore while you
-wait, it generally doesn't need the disk to do so unless you are heavy
-on swap (or used suspend-to-disk :), that's one example among others...
+!(cdb[2] & 0x20) seems out of place, and revalidation should be
+scheduled only when the qc is completing successfully.  ie. !need_sense,
+but if used that way the variable name doesn't make much sense.  IMHO,
+renaming it to something like failed would be better.
 
-At least letting other drivers restore in parallel, will improve things,
-even if actual running of userland programs might still be stalled until
-the disk kicks back in. But the whole experience of waking up the
-machine will be improved from a black text screen waiting for the drive
-to spin up ... :)
+> +	    ((qc->tf.feature == SETFEATURES_WC_ON) ||
+> +	     (qc->tf.feature == SETFEATURES_WC_OFF))) {
+> +		qc->ap->eh_info.action = ATA_EH_REVALIDATE;
 
-Ben.
+Please do action |= ATA_EH_REVALIDATE.  Also, above schedules
+revalidation for both devices for a PATA port.  Currently, there is no
+way to specify which device is offending from qc completion path.  I'll
+submit a patch to allow it.  After the patch, please add
+qc->ap->eh_info.dev = qc->dev such that only the affected device is
+revalidated.
 
+Thanks.
 
+-- 
+tejun
