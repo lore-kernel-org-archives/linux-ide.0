@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 11/12] libata-hp-prep: add prereset() method and implement ata_std_prereset()
+Subject: [PATCH 12/12] libata-hp-prep: implement followup softreset handling
 Date: Wed, 31 May 2006 20:05:42 +0900
-Message-ID: <1149073542825-git-send-email-htejun@gmail.com>
+Message-ID: <1149073542274-git-send-email-htejun@gmail.com>
 References: <1149073540186-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:33644 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S964966AbWEaLFz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from wr-out-0506.google.com ([64.233.184.233]:9439 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S964967AbWEaLFz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Wed, 31 May 2006 07:05:55 -0400
-Received: by py-out-1112.google.com with SMTP id e30so1033920pya
+Received: by wr-out-0506.google.com with SMTP id 37so216588wra
         for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:55 -0700 (PDT)
 In-Reply-To: <1149073540186-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,415 +20,117 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-With hotplug, every reset might be a probing reset and thus something
-similar to probe_init() is needed.  prereset() method is called before
-a series of resets to a port and is the counterpart of postreset().
-prereset() can tell EH to use different type of reset or skip reset by
-modifying ehc->i.action.
+In some cases, hardreset must be followed by SRST.
 
-This patch also implements ata_std_prereset().  Most controllers
-should be able to use this function directly or with some wrapping.
-After hotplug, different controllers need different actions to resume
-the PHY and detect the newly attached device.  Controllers can be
-categorized as follows.
+* some controllers can't classify with hardreset
+* some controllers can't wait for !BSY after hardreset (LLDD should
+  explicitly request followup softreset by returning -EAGAIN)
+* (later) PM needs SRST w/ PMP==15 to operate after hardreset
 
-* Controllers which can wait for the first D2H FIS after hotplug.
-  Note that if the waiting is implemented by polling TF status, there
-  needs to be a way to set BSY on PHY status change.  It can be
-  implemented by hardware or with the help of the driver.
-
-* Controllers which can wait for the first D2H FIS after sending
-  COMRESET.  These controllers need to issue COMRESET to wait for the
-  first FIS.  Note that the received D2H FIS could be the first D2H
-  FIS after POR (power-on-reset) or D2H FIS in response to the
-  COMRESET.  Some controllers use COMRESET as TF status
-  synchronization point and clear TF automatically (sata_sil).
-
-* Controllers which cannot wait for the first D2H FIS reliably.
-  Blindly issuing SRST to spinning-up device often results in command
-  issue failure or timeout, causing extended delay.  For these
-  controllers, ata_std_prereset() explicitly waits ATA_SPINUP_WAIT
-  (currently 8s) to give newly attached device time to spin up, then
-  issues reset.  Note that failing to getting ready in ATA_SPINUP_WAIT
-  is not critical.  libata will retry.  So, the timeout needs to be
-  long enough to spin up most devices.
-
-LLDDs can tell ata_std_prereset() which of above action is needed with
-ATA_FLAG_HRST_TO_RESUME and ATA_FLAG_SKIP_D2H_BSY flags.  These flags
-are PHY-specific property and will be moved to ata_link later.
-
-While at it, this patch unifies function typedef's such that they all
-have named arguments.
+To handle above cases, this patch implements follow-up softreset.
+After a hardreset, ata_eh_reset() checks whether any of above
+conditions are met and do a follow-up softreset if necessary.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/ahci.c         |    3 +-
- drivers/scsi/libata-bmdma.c |   11 ++++--
- drivers/scsi/libata-core.c  |   85 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-eh.c    |   60 ++++++++++++++++++++++++++----
- drivers/scsi/sata_sil24.c   |    3 +-
- include/linux/libata.h      |   24 +++++++++---
- 6 files changed, 165 insertions(+), 21 deletions(-)
+ drivers/scsi/libata-eh.c |   58 +++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 52 insertions(+), 6 deletions(-)
 
-f5914a461eb9703773226a0813f6ffcae10c0861
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 45fd71d..8493b02 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -1026,7 +1026,8 @@ static void ahci_error_handler(struct at
+664faf09a05d74085c0b31e2c621d7647322325b
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 0e66f14..8ecb842 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1318,16 +1318,28 @@ static void ata_eh_report(struct ata_por
  	}
- 
- 	/* perform recovery */
--	ata_do_eh(ap, ahci_softreset, ahci_hardreset, ahci_postreset);
-+	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_hardreset,
-+		  ahci_postreset);
  }
  
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
-diff --git a/drivers/scsi/libata-bmdma.c b/drivers/scsi/libata-bmdma.c
-index 6d30d2c..4bc0537 100644
---- a/drivers/scsi/libata-bmdma.c
-+++ b/drivers/scsi/libata-bmdma.c
-@@ -695,6 +695,7 @@ void ata_bmdma_thaw(struct ata_port *ap)
- /**
-  *	ata_bmdma_drive_eh - Perform EH with given methods for BMDMA controller
-  *	@ap: port to handle error for
-+ *	@prereset: prereset method (can be NULL)
-  *	@softreset: softreset method (can be NULL)
-  *	@hardreset: hardreset method (can be NULL)
-  *	@postreset: postreset method (can be NULL)
-@@ -710,8 +711,9 @@ void ata_bmdma_thaw(struct ata_port *ap)
-  *	LOCKING:
-  *	Kernel thread context (may sleep)
-  */
--void ata_bmdma_drive_eh(struct ata_port *ap, ata_reset_fn_t softreset,
--			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
-+void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
-+			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
-+			ata_postreset_fn_t postreset)
- {
- 	struct ata_host_set *host_set = ap->host_set;
- 	struct ata_eh_context *ehc = &ap->eh_context;
-@@ -759,7 +761,7 @@ void ata_bmdma_drive_eh(struct ata_port 
- 		ata_eh_thaw_port(ap);
- 
- 	/* PIO and DMA engines have been stopped, perform recovery */
--	ata_do_eh(ap, softreset, hardreset, postreset);
-+	ata_do_eh(ap, prereset, softreset, hardreset, postreset);
- }
- 
- /**
-@@ -779,7 +781,8 @@ void ata_bmdma_error_handler(struct ata_
- 	if (sata_scr_valid(ap))
- 		hardreset = sata_std_hardreset;
- 
--	ata_bmdma_drive_eh(ap, ata_std_softreset, hardreset, ata_std_postreset);
-+	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, hardreset,
-+			   ata_std_postreset);
- }
- 
- /**
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 4823ece..2531a70 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2525,6 +2525,90 @@ int sata_phy_resume(struct ata_port *ap,
- 	return sata_phy_debounce(ap, params);
- }
- 
-+static void ata_wait_spinup(struct ata_port *ap)
+-static int ata_eh_reset(struct ata_port *ap,
++static int ata_eh_followup_srst_needed(int rc, int classify,
++				       const unsigned int *classes)
 +{
-+	struct ata_eh_context *ehc = &ap->eh_context;
-+	unsigned long end, secs;
-+	int rc;
-+
-+	/* first, debounce phy if SATA */
-+	if (ap->cbl == ATA_CBL_SATA) {
-+		rc = sata_phy_debounce(ap, sata_deb_timing_eh);
-+
-+		/* if debounced successfully and offline, no need to wait */
-+		if ((rc == 0 || rc == -EOPNOTSUPP) && ata_port_offline(ap))
-+			return;
-+	}
-+
-+	/* okay, let's give the drive time to spin up */
-+	end = ehc->i.hotplug_timestamp + ATA_SPINUP_WAIT * HZ / 1000;
-+	secs = ((end - jiffies) + HZ - 1) / HZ;
-+
-+	if (time_after(jiffies, end))
-+		return;
-+
-+	if (secs > 5)
-+		ata_port_printk(ap, KERN_INFO, "waiting for device to spin up "
-+				"(%lu secs)\n", secs);
-+
-+	schedule_timeout_uninterruptible(end - jiffies);
-+}
-+
-+/**
-+ *	ata_std_prereset - prepare for reset
-+ *	@ap: ATA port to be reset
-+ *
-+ *	@ap is about to be reset.  Initialize it.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int ata_std_prereset(struct ata_port *ap)
-+{
-+	struct ata_eh_context *ehc = &ap->eh_context;
-+	const unsigned long *timing;
-+	int rc;
-+
-+	/* hotplug? */
-+	if (ehc->i.flags & ATA_EHI_HOTPLUGGED) {
-+		if (ap->flags & ATA_FLAG_HRST_TO_RESUME)
-+			ehc->i.action |= ATA_EH_HARDRESET;
-+		if (ap->flags & ATA_FLAG_SKIP_D2H_BSY)
-+			ata_wait_spinup(ap);
-+	}
-+
-+	/* if we're about to do hardreset, nothing more to do */
-+	if (ehc->i.action & ATA_EH_HARDRESET)
++	if (rc == -EAGAIN)
++		return 1;
++	if (rc != 0)
 +		return 0;
-+
-+	/* if SATA, resume phy */
-+	if (ap->cbl == ATA_CBL_SATA) {
-+		if (ap->flags & ATA_FLAG_LOADING)
-+			timing = sata_deb_timing_boot;
-+		else
-+			timing = sata_deb_timing_eh;
-+
-+		rc = sata_phy_resume(ap, timing);
-+		if (rc && rc != -EOPNOTSUPP) {
-+			/* phy resume failed */
-+			ata_port_printk(ap, KERN_WARNING, "failed to resume "
-+					"link for reset (errno=%d)\n", rc);
-+			return rc;
-+		}
-+	}
-+
-+	/* Wait for !BSY if the controller can wait for the first D2H
-+	 * Reg FIS and we don't know that no device is attached.
-+	 */
-+	if (!(ap->flags & ATA_FLAG_SKIP_D2H_BSY) && !ata_port_offline(ap))
-+		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
-+
++	if (classify && classes[0] == ATA_DEV_UNKNOWN)
++		return 1;
 +	return 0;
 +}
 +
- /**
-  *	ata_std_probeinit - initialize probing
-  *	@ap: port to be probed
-@@ -5840,6 +5924,7 @@ EXPORT_SYMBOL_GPL(sata_phy_reset);
- EXPORT_SYMBOL_GPL(__sata_phy_reset);
- EXPORT_SYMBOL_GPL(ata_bus_reset);
- EXPORT_SYMBOL_GPL(ata_std_probeinit);
-+EXPORT_SYMBOL_GPL(ata_std_prereset);
- EXPORT_SYMBOL_GPL(ata_std_softreset);
- EXPORT_SYMBOL_GPL(sata_std_hardreset);
- EXPORT_SYMBOL_GPL(ata_std_postreset);
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 9173d8f..0e66f14 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1318,20 +1318,58 @@ static void ata_eh_report(struct ata_por
- 	}
- }
- 
--static int ata_eh_reset(struct ata_port *ap, ata_reset_fn_t softreset,
-+static int ata_eh_reset(struct ata_port *ap,
-+			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
++static int ata_eh_reset(struct ata_port *ap, int classify,
+ 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
  			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
  {
  	struct ata_eh_context *ehc = &ap->eh_context;
- 	unsigned int classes[ATA_MAX_DEVICES];
+-	unsigned int classes[ATA_MAX_DEVICES];
++	unsigned int *classes = ehc->classes;
  	int tries = ATA_EH_RESET_TRIES;
-+	unsigned int action;
+ 	unsigned int action;
  	ata_reset_fn_t reset;
- 	int i, rc;
+-	int i, rc;
++	int i, did_followup_srst, rc;
  
-+	/* Determine which reset to use and record in ehc->i.action.
-+	 * prereset() may examine and modify it.
-+	 */
-+	action = ehc->i.action;
-+	ehc->i.action &= ~ATA_EH_RESET_MASK;
- 	if (softreset && (!hardreset || (!sata_set_spd_needed(ap) &&
--					 !(ehc->i.action & ATA_EH_HARDRESET))))
--		reset = softreset;
-+					 !(action & ATA_EH_HARDRESET))))
-+		ehc->i.action |= ATA_EH_SOFTRESET;
- 	else
-+		ehc->i.action |= ATA_EH_HARDRESET;
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine and modify it.
+@@ -1381,10 +1393,44 @@ static int ata_eh_reset(struct ata_port 
+ 
+ 	rc = ata_do_reset(ap, reset, classes);
+ 
++	did_followup_srst = 0;
++	if (reset == hardreset &&
++	    ata_eh_followup_srst_needed(rc, classify, classes)) {
++		/* okay, let's do follow-up softreset */
++		did_followup_srst = 1;
++		reset = softreset;
 +
-+	if (prereset) {
-+		rc = prereset(ap);
-+		if (rc) {
++		if (!reset) {
 +			ata_port_printk(ap, KERN_ERR,
-+					"prereset failed (errno=%d)\n", rc);
-+			return rc;
++					"follow-up softreset required "
++					"but no softreset avaliable\n");
++			return -EINVAL;
++		}
++
++		ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
++		rc = ata_do_reset(ap, reset, classes);
++
++		if (rc == 0 && classify &&
++		    classes[0] == ATA_DEV_UNKNOWN) {
++			ata_port_printk(ap, KERN_ERR,
++					"classification failed\n");
++			return -EINVAL;
 +		}
 +	}
 +
-+	/* prereset() might have modified ehc->i.action */
-+	if (ehc->i.action & ATA_EH_HARDRESET)
- 		reset = hardreset;
-+	else if (ehc->i.action & ATA_EH_SOFTRESET)
-+		reset = softreset;
-+	else {
-+		/* prereset told us not to reset, bang classes and return */
-+		for (i = 0; i < ATA_MAX_DEVICES; i++)
-+			classes[i] = ATA_DEV_NONE;
-+		return 0;
-+	}
+ 	if (rc && --tries) {
++		const char *type;
 +
-+	/* did prereset() screw up?  if so, fix up to avoid oopsing */
-+	if (!reset) {
-+		ata_port_printk(ap, KERN_ERR, "BUG: prereset() requested "
-+				"invalid reset type\n");
-+		if (softreset)
-+			reset = softreset;
-+		else
-+			reset = hardreset;
-+	}
++		if (reset == softreset) {
++			if (did_followup_srst)
++				type = "follow-up soft";
++			else
++				type = "soft";
++		} else
++			type = "hard";
++
+ 		ata_port_printk(ap, KERN_WARNING,
+-				"%sreset failed, retrying in 5 secs\n",
+-				reset == softreset ? "soft" : "hard");
++				"%sreset failed, retrying in 5 secs\n", type);
+ 		ssleep(5);
  
-  retry:
- 	ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
-@@ -1424,6 +1462,7 @@ static int ata_port_nr_enabled(struct at
- /**
-  *	ata_eh_recover - recover host port after error
-  *	@ap: host port to recover
-+ *	@prereset: prereset method (can be NULL)
-  *	@softreset: softreset method (can be NULL)
-  *	@hardreset: hardreset method (can be NULL)
-  *	@postreset: postreset method (can be NULL)
-@@ -1440,8 +1479,8 @@ static int ata_port_nr_enabled(struct at
-  *	RETURNS:
-  *	0 on success, -errno on failure.
-  */
--static int ata_eh_recover(struct ata_port *ap, ata_reset_fn_t softreset,
--			  ata_reset_fn_t hardreset,
-+static int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
-+			  ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 			  ata_postreset_fn_t postreset)
- {
- 	struct ata_eh_context *ehc = &ap->eh_context;
-@@ -1469,7 +1508,8 @@ static int ata_eh_recover(struct ata_por
+ 		if (reset == hardreset)
+@@ -1508,7 +1554,7 @@ static int ata_eh_recover(struct ata_por
  	if (ehc->i.action & ATA_EH_RESET_MASK) {
  		ata_eh_freeze_port(ap);
  
--		rc = ata_eh_reset(ap, softreset, hardreset, postreset);
-+		rc = ata_eh_reset(ap, prereset, softreset, hardreset,
-+				  postreset);
+-		rc = ata_eh_reset(ap, prereset, softreset, hardreset,
++		rc = ata_eh_reset(ap, 0, prereset, softreset, hardreset,
+ 				  postreset);
  		if (rc) {
  			ata_port_printk(ap, KERN_ERR,
- 					"reset failed, giving up\n");
-@@ -1586,6 +1626,7 @@ static void ata_eh_finish(struct ata_por
- /**
-  *	ata_do_eh - do standard error handling
-  *	@ap: host port to handle error for
-+ *	@prereset: prereset method (can be NULL)
-  *	@softreset: softreset method (can be NULL)
-  *	@hardreset: hardreset method (can be NULL)
-  *	@postreset: postreset method (can be NULL)
-@@ -1595,11 +1636,12 @@ static void ata_eh_finish(struct ata_por
-  *	LOCKING:
-  *	Kernel thread context (may sleep).
-  */
--void ata_do_eh(struct ata_port *ap, ata_reset_fn_t softreset,
--	       ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
-+void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
-+	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
-+	       ata_postreset_fn_t postreset)
- {
- 	ata_eh_autopsy(ap);
- 	ata_eh_report(ap);
--	ata_eh_recover(ap, softreset, hardreset, postreset);
-+	ata_eh_recover(ap, prereset, softreset, hardreset, postreset);
- 	ata_eh_finish(ap);
- }
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 4c76f05..26d7c54 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -912,7 +912,8 @@ static void sil24_error_handler(struct a
- 	}
- 
- 	/* perform recovery */
--	ata_do_eh(ap, sil24_softreset, sil24_hardreset, ata_std_postreset);
-+	ata_do_eh(ap, ata_std_prereset, sil24_softreset, sil24_hardreset,
-+		  ata_std_postreset);
- }
- 
- static void sil24_post_internal_cmd(struct ata_queued_cmd *qc)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 1c167f7..fe5f539 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -262,6 +262,15 @@ enum {
- 	ATA_PROBE_MAX_TRIES	= 3,
- 	ATA_EH_RESET_TRIES	= 3,
- 	ATA_EH_DEV_TRIES	= 3,
-+
-+	/* Drive spinup time (time from power-on to the first D2H FIS)
-+	 * in msecs - 8s currently.  Failing to get ready in this time
-+	 * isn't critical.  It will result in reset failure for
-+	 * controllers which can't wait for the first D2H FIS.  libata
-+	 * will retry, so it just has to be long enough to spin up
-+	 * most devices.
-+	 */
-+	ATA_SPINUP_WAIT		= 8000,
- };
- 
- enum hsm_task_states {
-@@ -294,9 +303,10 @@ struct ata_queued_cmd;
- 
- /* typedefs */
- typedef void (*ata_qc_cb_t) (struct ata_queued_cmd *qc);
--typedef void (*ata_probeinit_fn_t)(struct ata_port *);
--typedef int (*ata_reset_fn_t)(struct ata_port *, unsigned int *);
--typedef void (*ata_postreset_fn_t)(struct ata_port *ap, unsigned int *);
-+typedef void (*ata_probeinit_fn_t)(struct ata_port *ap);
-+typedef int (*ata_prereset_fn_t)(struct ata_port *ap);
-+typedef int (*ata_reset_fn_t)(struct ata_port *ap, unsigned int *classes);
-+typedef void (*ata_postreset_fn_t)(struct ata_port *ap, unsigned int *classes);
- 
- struct ata_ioports {
- 	unsigned long		cmd_addr;
-@@ -623,6 +633,7 @@ extern int ata_drive_probe_reset(struct 
- 			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 			ata_postreset_fn_t postreset, unsigned int *classes);
- extern void ata_std_probeinit(struct ata_port *ap);
-+extern int ata_std_prereset(struct ata_port *ap);
- extern int ata_std_softreset(struct ata_port *ap, unsigned int *classes);
- extern int sata_std_hardreset(struct ata_port *ap, unsigned int *class);
- extern void ata_std_postreset(struct ata_port *ap, unsigned int *classes);
-@@ -706,7 +717,7 @@ extern u8   ata_bmdma_status(struct ata_
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
- extern void ata_bmdma_freeze(struct ata_port *ap);
- extern void ata_bmdma_thaw(struct ata_port *ap);
--extern void ata_bmdma_drive_eh(struct ata_port *ap,
-+extern void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			       ata_reset_fn_t softreset,
- 			       ata_reset_fn_t hardreset,
- 			       ata_postreset_fn_t postreset);
-@@ -784,8 +795,9 @@ extern void ata_eh_thaw_port(struct ata_
- extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
- extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
- 
--extern void ata_do_eh(struct ata_port *ap, ata_reset_fn_t softreset,
--		      ata_reset_fn_t hardreset, ata_postreset_fn_t postreset);
-+extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
-+		      ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
-+		      ata_postreset_fn_t postreset);
- 
- /*
-  * printk helpers
 -- 
 1.3.2
 
