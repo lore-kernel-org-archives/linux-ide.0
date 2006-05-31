@@ -1,242 +1,206 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/13] libata-hp: hook warmplug
+Subject: [PATCH 07/13] libata-hp: update unload-unplug
 Date: Wed, 31 May 2006 20:25:45 +0900
-Message-ID: <11490747451524-git-send-email-htejun@gmail.com>
+Message-ID: <11490747451246-git-send-email-htejun@gmail.com>
 References: <11490747443727-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:46486 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S964999AbWEaLZ4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 May 2006 07:25:56 -0400
-Received: by py-out-1112.google.com with SMTP id e30so1039473pya
-        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:25:56 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.205]:47256 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964994AbWEaLZ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 07:25:58 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so8510nze
+        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:25:57 -0700 (PDT)
 In-Reply-To: <11490747443727-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Hook transportt->user_scan() and hostt->slave_destroy().
+Update unload unplug - driver unloading / PCI removal.  This is done
+by ata_port_detach() which short-circuits EH, disables all devices and
+freezes the port.  With this patch, EH and unloading/unplugging are
+properly synchronized.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/ahci.c         |    1 +
- drivers/scsi/ata_piix.c     |    1 +
- drivers/scsi/libata-scsi.c  |    1 +
- drivers/scsi/pdc_adma.c     |    1 +
- drivers/scsi/sata_mv.c      |    1 +
- drivers/scsi/sata_nv.c      |    1 +
- drivers/scsi/sata_promise.c |    1 +
- drivers/scsi/sata_qstor.c   |    1 +
- drivers/scsi/sata_sil.c     |    1 +
- drivers/scsi/sata_sil24.c   |    1 +
- drivers/scsi/sata_sis.c     |    1 +
- drivers/scsi/sata_svw.c     |    1 +
- drivers/scsi/sata_sx4.c     |    1 +
- drivers/scsi/sata_uli.c     |    1 +
- drivers/scsi/sata_via.c     |    1 +
- drivers/scsi/sata_vsc.c     |    1 +
- 16 files changed, 16 insertions(+), 0 deletions(-)
+ drivers/scsi/ahci.c        |   10 ++-----
+ drivers/scsi/libata-core.c |   67 ++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/libata-eh.c   |    8 ++++-
+ include/linux/libata.h     |    1 +
+ 4 files changed, 71 insertions(+), 15 deletions(-)
 
-ccf68c3405fca11386004674377d951b9b18e756
+720ba12620ee09dce269adf4ad50958adac7bb54
 diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 8493b02..afb3805 100644
+index afb3805..60f455b 100644
 --- a/drivers/scsi/ahci.c
 +++ b/drivers/scsi/ahci.c
-@@ -228,6 +228,7 @@ static struct scsi_host_template ahci_sh
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= AHCI_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+@@ -1389,21 +1389,17 @@ static void ahci_remove_one (struct pci_
+ 	struct device *dev = pci_dev_to_dev(pdev);
+ 	struct ata_host_set *host_set = dev_get_drvdata(dev);
+ 	struct ahci_host_priv *hpriv = host_set->private_data;
+-	struct ata_port *ap;
+ 	unsigned int i;
+ 	int have_msi;
  
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index ad41dfd..54c2e52 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -219,6 +219,7 @@ static struct scsi_host_template piix_sh
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- 	.resume			= ata_scsi_device_resume,
- 	.suspend		= ata_scsi_device_suspend,
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 7c1ac58..5f90d8e 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -107,6 +107,7 @@ static const u8 def_control_mpage[CONTRO
- struct scsi_transport_template ata_scsi_transport_template = {
- 	.eh_strategy_handler	= ata_scsi_error,
- 	.eh_timed_out		= ata_scsi_timed_out,
-+	.user_scan		= ata_scsi_user_scan,
- };
+-	for (i = 0; i < host_set->n_ports; i++) {
+-		ap = host_set->ports[i];
+-
+-		scsi_remove_host(ap->host);
+-	}
++	for (i = 0; i < host_set->n_ports; i++)
++		ata_port_detach(host_set->ports[i]);
  
+ 	have_msi = hpriv->flags & AHCI_FLAG_MSI;
+ 	free_irq(host_set->irq, host_set);
  
-diff --git a/drivers/scsi/pdc_adma.c b/drivers/scsi/pdc_adma.c
-index a341fa8..eb910e4 100644
---- a/drivers/scsi/pdc_adma.c
-+++ b/drivers/scsi/pdc_adma.c
-@@ -152,6 +152,7 @@ static struct scsi_host_template adma_at
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ADMA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ 	for (i = 0; i < host_set->n_ports; i++) {
+-		ap = host_set->ports[i];
++		struct ata_port *ap = host_set->ports[i];
  
-diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
-index 624983c..634bab1 100644
---- a/drivers/scsi/sata_mv.c
-+++ b/drivers/scsi/sata_mv.c
-@@ -390,6 +390,7 @@ static struct scsi_host_template mv_sht 
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= MV_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ 		ata_scsi_release(ap->host);
+ 		scsi_host_put(ap->host);
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index a42877e..01f2c59 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5610,6 +5610,63 @@ err_free_ret:
+ }
  
-diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
-index d93513e..9055124 100644
---- a/drivers/scsi/sata_nv.c
-+++ b/drivers/scsi/sata_nv.c
-@@ -216,6 +216,7 @@ static struct scsi_host_template nv_sht 
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ /**
++ *	ata_port_detach - Detach ATA port in prepration of device removal
++ *	@ap: ATA port to be detached
++ *
++ *	Detach all ATA devices and the associated SCSI devices of @ap;
++ *	then, remove the associated SCSI host.  @ap is guaranteed to
++ *	be quiescent on return from this function.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ */
++void ata_port_detach(struct ata_port *ap)
++{
++	unsigned long flags;
++	int i;
++
++	if (!ap->ops->error_handler)
++		return;
++
++	/* tell EH we're leaving & flush EH */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	ap->flags |= ATA_FLAG_UNLOADING;
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++	ata_port_wait_eh(ap);
++
++	/* EH is now guaranteed to see UNLOADING, so no new device
++	 * will be attached.  Disable all existing devices.
++	 */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++
++	for (i = 0; i < ATA_MAX_DEVICES; i++)
++		ata_dev_disable(&ap->device[i]);
++
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++	/* Final freeze & EH.  All in-flight commands are aborted.  EH
++	 * will be skipped and retrials will be terminated with bad
++	 * target.
++	 */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	ata_port_freeze(ap);	/* won't be thawed */
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++	ata_port_wait_eh(ap);
++
++	/* Flush hotplug task.  The sequence is similar to
++	 * ata_port_flush_task().
++	 */
++	flush_workqueue(ata_aux_wq);
++	cancel_delayed_work(&ap->hotplug_task);
++	flush_workqueue(ata_aux_wq);
++
++	/* remove the associated SCSI host */
++	scsi_remove_host(ap->host);
++}
++
++/**
+  *	ata_host_set_remove - PCI layer callback for device removal
+  *	@host_set: ATA host set that was removed
+  *
+@@ -5622,18 +5679,15 @@ err_free_ret:
  
-diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
-index 0111159..b2b6ed5 100644
---- a/drivers/scsi/sata_promise.c
-+++ b/drivers/scsi/sata_promise.c
-@@ -121,6 +121,7 @@ static struct scsi_host_template pdc_ata
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ void ata_host_set_remove(struct ata_host_set *host_set)
+ {
+-	struct ata_port *ap;
+ 	unsigned int i;
  
-diff --git a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
-index 68737ca..98ddc25 100644
---- a/drivers/scsi/sata_qstor.c
-+++ b/drivers/scsi/sata_qstor.c
-@@ -142,6 +142,7 @@ static struct scsi_host_template qs_ata_
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= QS_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+-	for (i = 0; i < host_set->n_ports; i++) {
+-		ap = host_set->ports[i];
+-		scsi_remove_host(ap->host);
+-	}
++	for (i = 0; i < host_set->n_ports; i++)
++		ata_port_detach(host_set->ports[i]);
  
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index 03c1d1b..7d43cd3 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -174,6 +174,7 @@ static struct scsi_host_template sil_sht
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ 	free_irq(host_set->irq, host_set);
  
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 4a83090..d4ca6d6 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -370,6 +370,7 @@ static struct scsi_host_template sil24_s
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ 	for (i = 0; i < host_set->n_ports; i++) {
+-		ap = host_set->ports[i];
++		struct ata_port *ap = host_set->ports[i];
  
-diff --git a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
-index 82a07bf..a07e6e5 100644
---- a/drivers/scsi/sata_sis.c
-+++ b/drivers/scsi/sata_sis.c
-@@ -96,6 +96,7 @@ static struct scsi_host_template sis_sht
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ 		ata_scsi_release(ap->host);
  
-diff --git a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
-index 7a4703b..d9b5168 100644
---- a/drivers/scsi/sata_svw.c
-+++ b/drivers/scsi/sata_svw.c
-@@ -299,6 +299,7 @@ static struct scsi_host_template k2_sata
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- #ifdef CONFIG_PPC_OF
- 	.proc_info		= k2_sata_proc_info,
- #endif
-diff --git a/drivers/scsi/sata_sx4.c b/drivers/scsi/sata_sx4.c
-index c4db6bf..7f86441 100644
---- a/drivers/scsi/sata_sx4.c
-+++ b/drivers/scsi/sata_sx4.c
-@@ -191,6 +191,7 @@ static struct scsi_host_template pdc_sat
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+@@ -5901,6 +5955,7 @@ EXPORT_SYMBOL_GPL(sata_deb_timing_before
+ EXPORT_SYMBOL_GPL(ata_std_bios_param);
+ EXPORT_SYMBOL_GPL(ata_std_ports);
+ EXPORT_SYMBOL_GPL(ata_device_add);
++EXPORT_SYMBOL_GPL(ata_port_detach);
+ EXPORT_SYMBOL_GPL(ata_host_set_remove);
+ EXPORT_SYMBOL_GPL(ata_sg_init);
+ EXPORT_SYMBOL_GPL(ata_sg_init_one);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 70c132b..30a83a5 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -46,6 +46,7 @@ #include <linux/libata.h>
+ #include "libata.h"
  
-diff --git a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
-index 7fae3e0..e69ba22 100644
---- a/drivers/scsi/sata_uli.c
-+++ b/drivers/scsi/sata_uli.c
-@@ -90,6 +90,7 @@ static struct scsi_host_template uli_sht
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ static void __ata_port_freeze(struct ata_port *ap);
++static void ata_eh_finish(struct ata_port *ap);
  
-diff --git a/drivers/scsi/sata_via.c b/drivers/scsi/sata_via.c
-index 1c9e2f3..c6975c5 100644
---- a/drivers/scsi/sata_via.c
-+++ b/drivers/scsi/sata_via.c
-@@ -103,6 +103,7 @@ static struct scsi_host_template svia_sh
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ static void ata_ering_record(struct ata_ering *ering, int is_io,
+ 			     unsigned int err_mask)
+@@ -242,8 +243,11 @@ void ata_scsi_error(struct Scsi_Host *ho
  
-diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
-index 438e7c6..22ca7b8 100644
---- a/drivers/scsi/sata_vsc.c
-+++ b/drivers/scsi/sata_vsc.c
-@@ -279,6 +279,7 @@ static struct scsi_host_template vsc_sat
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ 		spin_unlock_irqrestore(hs_lock, flags);
  
+-		/* invoke EH */
+-		ap->ops->error_handler(ap);
++		/* invoke EH.  if unloading, just finish failed qcs */
++		if (!(ap->flags & ATA_FLAG_UNLOADING))
++			ap->ops->error_handler(ap);
++		else
++			ata_eh_finish(ap);
+ 
+ 		/* Exception might have happend after ->error_handler
+ 		 * recovered the port but before this point.  Repeat
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 74786c3..f11ba27 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -649,6 +649,7 @@ extern int ata_pci_device_resume(struct 
+ extern int ata_pci_clear_simplex(struct pci_dev *pdev);
+ #endif /* CONFIG_PCI */
+ extern int ata_device_add(const struct ata_probe_ent *ent);
++extern void ata_port_detach(struct ata_port *ap);
+ extern void ata_host_set_remove(struct ata_host_set *host_set);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
 -- 
 1.3.2
 
