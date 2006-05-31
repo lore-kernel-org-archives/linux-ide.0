@@ -1,100 +1,116 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/12] libata-hp-prep: add flags and eh_info/context fields for hotplug
+Subject: [PATCH 03/12] libata-hp-prep: make some ata_device fields persistent
 Date: Wed, 31 May 2006 20:05:41 +0900
-Message-ID: <1149073541623-git-send-email-htejun@gmail.com>
+Message-ID: <11490735411294-git-send-email-htejun@gmail.com>
 References: <1149073540186-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.200]:49050 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964969AbWEaLFu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 May 2006 07:05:50 -0400
-Received: by nz-out-0102.google.com with SMTP id s18so5533nze
-        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:49 -0700 (PDT)
+Received: from wr-out-0506.google.com ([64.233.184.233]:9439 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S964963AbWEaLFs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 07:05:48 -0400
+Received: by wr-out-0506.google.com with SMTP id 37so216588wra
+        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:48 -0700 (PDT)
 In-Reply-To: <1149073540186-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add hotplug related flags and eh_info/context fields.
+Lifetimes of some fields span over device plugging/unplugging.  This
+patch moves such persistent fields to the top of ata_device and
+separate them with ATA_DEVICE_CLEAR_OFFSET.  Fields above the offset
+are initialized once during host initializatino while all other fields
+are cleared before hotplugging.  Currently ->ap, devno and part of
+flags are persistent.
+
+Note that flags is partially cleared while holding host_set lock.
+This is to synchronize with later warm plug implementation which will
+record hotplug request in dev->flags.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- include/linux/libata.h |   19 ++++++++++++++++++-
- 1 files changed, 18 insertions(+), 1 deletions(-)
+ drivers/scsi/libata-core.c |   14 ++++++++++++--
+ include/linux/libata.h     |   11 +++++++++--
+ 2 files changed, 21 insertions(+), 4 deletions(-)
 
-abdda7331d469fa965167365f011d05e226008fb
+72fa4b742b327bd1b07985d79a61c61dbd9fd4e6
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 8fda822..a07ab77 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5153,9 +5153,18 @@ static void ata_host_remove(struct ata_p
+ void ata_dev_init(struct ata_device *dev)
+ {
+ 	struct ata_port *ap = dev->ap;
++	unsigned long flags;
++
++	/* High bits of dev->flags are used to record warm plug
++	 * requests which occur asynchronously.  Synchronize using
++	 * host_set lock.
++	 */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	dev->flags &= ~ATA_DFLAG_INIT_MASK;
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 
+-	memset((void *)dev, 0, sizeof(*dev));
+-	dev->devno = dev - ap->device;
++	memset((void *)dev + ATA_DEVICE_CLEAR_OFFSET, 0,
++	       sizeof(*dev) - ATA_DEVICE_CLEAR_OFFSET);
+ 	dev->pio_mask = UINT_MAX;
+ 	dev->mwdma_mask = UINT_MAX;
+ 	dev->udma_mask = UINT_MAX;
+@@ -5218,6 +5227,7 @@ static void ata_host_init(struct ata_por
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 		dev->ap = ap;
++		dev->devno = i;
+ 		ata_dev_init(dev);
+ 	}
+ 
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2eb5828..d4a668c 100644
+index d4a668c..aa14eda 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -131,6 +131,9 @@ enum {
+@@ -130,6 +130,7 @@ enum {
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
  
  	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
++	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
  
-+	ATA_DFLAG_DETACH	= (1 << 16),
-+	ATA_DFLAG_DETACHED	= (1 << 17),
-+
- 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
- 	ATA_DEV_ATA		= 1,	/* ATA device */
- 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
-@@ -152,6 +155,9 @@ enum {
- 	ATA_FLAG_PIO_POLLING	= (1 << 9), /* use polling PIO if LLD
- 					     * doesn't handle PIO interrupts */
- 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
-+	ATA_FLAG_HRST_TO_RESUME	= (1 << 11), /* hardreset to resume phy */
-+	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
-+					      * Register FIS clearing BSY */
+ 	ATA_DFLAG_DETACH	= (1 << 16),
+ 	ATA_DFLAG_DETACHED	= (1 << 17),
+@@ -410,10 +411,11 @@ struct ata_ering {
  
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
- 	ATA_FLAG_FLUSH_PORT_TASK = (1 << 14), /* flush port task */
-@@ -160,6 +166,9 @@ enum {
- 	ATA_FLAG_EH_IN_PROGRESS	= (1 << 16), /* EH in progress */
- 	ATA_FLAG_FROZEN		= (1 << 17), /* port is frozen */
- 	ATA_FLAG_RECOVERED	= (1 << 18), /* recovery action performed */
-+	ATA_FLAG_LOADING	= (1 << 19), /* boot/loading probe */
-+	ATA_FLAG_UNLOADING	= (1 << 20), /* module is unloading */
-+	ATA_FLAG_SCSI_HOTPLUG	= (1 << 21), /* SCSI hotplug scheduled */
- 
- 	ATA_FLAG_DISABLED	= (1 << 22), /* port is disabled, ignore it */
- 	ATA_FLAG_SUSPENDED	= (1 << 23), /* port is suspended (power) */
-@@ -241,7 +250,9 @@ enum {
- 	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
- 
- 	/* ata_eh_info->flags */
--	ATA_EHI_DID_RESET	= (1 << 0), /* already reset this port */
-+	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
-+
-+	ATA_EHI_DID_RESET	= (1 << 16), /* already reset this port */
- 
- 	/* max repeat if error condition is still set after ->error_handler */
- 	ATA_EH_MAX_REPEAT	= 5,
-@@ -434,6 +445,10 @@ struct ata_eh_info {
- 	unsigned int		err_mask;	/* port-wide err_mask */
- 	unsigned int		action;		/* ATA_EH_* action mask */
- 	unsigned int		flags;		/* ATA_EHI_* flags */
-+
-+	unsigned long		hotplug_timestamp;
-+	unsigned int		probe_mask;
-+
- 	char			desc[ATA_EH_DESC_LEN];
- 	int			desc_len;
- };
-@@ -441,6 +456,8 @@ struct ata_eh_info {
- struct ata_eh_context {
- 	struct ata_eh_info	i;
- 	int			tries[ATA_MAX_DEVICES];
-+	unsigned int		classes[ATA_MAX_DEVICES];
-+	unsigned int		did_probe_mask;
+ struct ata_device {
+ 	struct ata_port		*ap;
+-	u64			n_sectors;	/* size of device, if ATA */
++	unsigned int		devno;		/* 0 or 1 */
+ 	unsigned long		flags;		/* ATA_DFLAG_xxx */
++	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
++	u64			n_sectors;	/* size of device, if ATA */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+-	unsigned int		devno;		/* 0 or 1 */
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
+ 	u8			dma_mode;
+@@ -439,6 +441,11 @@ struct ata_device {
+ 	struct ata_ering	ering;
  };
  
- struct ata_port {
++/* Offset into struct ata_device.  Fields above it are maintained
++ * acress device init.  Fields below are zeroed.
++ */
++#define ATA_DEVICE_CLEAR_OFFSET		offsetof(struct ata_device, n_sectors)
++
+ struct ata_eh_info {
+ 	struct ata_device	*dev;		/* offending device */
+ 	u32			serror;		/* SError from LLDD */
 -- 
 1.3.2
 
