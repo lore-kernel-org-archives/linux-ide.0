@@ -1,136 +1,84 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/12] libata-hp-prep: implement followup softreset handling
+Subject: [PATCH 08/12] libata-hp-prep: add ata_aux_wq
 Date: Wed, 31 May 2006 20:05:42 +0900
-Message-ID: <1149073542274-git-send-email-htejun@gmail.com>
+Message-ID: <1149073542956-git-send-email-htejun@gmail.com>
 References: <1149073540186-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:9439 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S964967AbWEaLFz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 May 2006 07:05:55 -0400
-Received: by wr-out-0506.google.com with SMTP id 37so216588wra
-        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:55 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.200]:49050 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964975AbWEaLF4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 07:05:56 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so5533nze
+        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:56 -0700 (PDT)
 In-Reply-To: <1149073540186-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-In some cases, hardreset must be followed by SRST.
-
-* some controllers can't classify with hardreset
-* some controllers can't wait for !BSY after hardreset (LLDD should
-  explicitly request followup softreset by returning -EAGAIN)
-* (later) PM needs SRST w/ PMP==15 to operate after hardreset
-
-To handle above cases, this patch implements follow-up softreset.
-After a hardreset, ata_eh_reset() checks whether any of above
-conditions are met and do a follow-up softreset if necessary.
+It's best to run ATA hotplug from EH but attaching SCSI devices needs
+working EH.  ata_aux_wq is used to give SCSI hotplug operations a
+separate context.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-eh.c |   58 +++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 52 insertions(+), 6 deletions(-)
+ drivers/scsi/libata-core.c |    9 +++++++++
+ drivers/scsi/libata.h      |    1 +
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-664faf09a05d74085c0b31e2c621d7647322325b
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 0e66f14..8ecb842 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1318,16 +1318,28 @@ static void ata_eh_report(struct ata_por
- 	}
- }
+453b07accb47c5b54aa2f156ebffac63c543027b
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index b1a02fd..04921cf 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -69,6 +69,8 @@ static void ata_dev_xfermask(struct ata_
+ static unsigned int ata_unique_id = 1;
+ static struct workqueue_struct *ata_wq;
  
--static int ata_eh_reset(struct ata_port *ap,
-+static int ata_eh_followup_srst_needed(int rc, int classify,
-+				       const unsigned int *classes)
-+{
-+	if (rc == -EAGAIN)
-+		return 1;
-+	if (rc != 0)
-+		return 0;
-+	if (classify && classes[0] == ATA_DEV_UNKNOWN)
-+		return 1;
-+	return 0;
-+}
++struct workqueue_struct *ata_aux_wq;
 +
-+static int ata_eh_reset(struct ata_port *ap, int classify,
- 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
- 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
- {
- 	struct ata_eh_context *ehc = &ap->eh_context;
--	unsigned int classes[ATA_MAX_DEVICES];
-+	unsigned int *classes = ehc->classes;
- 	int tries = ATA_EH_RESET_TRIES;
- 	unsigned int action;
- 	ata_reset_fn_t reset;
--	int i, rc;
-+	int i, did_followup_srst, rc;
+ int atapi_enabled = 1;
+ module_param(atapi_enabled, int, 0444);
+ MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+@@ -5623,6 +5625,12 @@ static int __init ata_init(void)
+ 	if (!ata_wq)
+ 		return -ENOMEM;
  
- 	/* Determine which reset to use and record in ehc->i.action.
- 	 * prereset() may examine and modify it.
-@@ -1381,10 +1393,44 @@ static int ata_eh_reset(struct ata_port 
- 
- 	rc = ata_do_reset(ap, reset, classes);
- 
-+	did_followup_srst = 0;
-+	if (reset == hardreset &&
-+	    ata_eh_followup_srst_needed(rc, classify, classes)) {
-+		/* okay, let's do follow-up softreset */
-+		did_followup_srst = 1;
-+		reset = softreset;
-+
-+		if (!reset) {
-+			ata_port_printk(ap, KERN_ERR,
-+					"follow-up softreset required "
-+					"but no softreset avaliable\n");
-+			return -EINVAL;
-+		}
-+
-+		ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
-+		rc = ata_do_reset(ap, reset, classes);
-+
-+		if (rc == 0 && classify &&
-+		    classes[0] == ATA_DEV_UNKNOWN) {
-+			ata_port_printk(ap, KERN_ERR,
-+					"classification failed\n");
-+			return -EINVAL;
-+		}
++	ata_aux_wq = create_singlethread_workqueue("ata_aux");
++	if (!ata_aux_wq) {
++		destroy_workqueue(ata_wq);
++		return -ENOMEM;
 +	}
 +
- 	if (rc && --tries) {
-+		const char *type;
-+
-+		if (reset == softreset) {
-+			if (did_followup_srst)
-+				type = "follow-up soft";
-+			else
-+				type = "soft";
-+		} else
-+			type = "hard";
-+
- 		ata_port_printk(ap, KERN_WARNING,
--				"%sreset failed, retrying in 5 secs\n",
--				reset == softreset ? "soft" : "hard");
-+				"%sreset failed, retrying in 5 secs\n", type);
- 		ssleep(5);
+ 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
+ 	return 0;
+ }
+@@ -5630,6 +5638,7 @@ static int __init ata_init(void)
+ static void __exit ata_exit(void)
+ {
+ 	destroy_workqueue(ata_wq);
++	destroy_workqueue(ata_aux_wq);
+ }
  
- 		if (reset == hardreset)
-@@ -1508,7 +1554,7 @@ static int ata_eh_recover(struct ata_por
- 	if (ehc->i.action & ATA_EH_RESET_MASK) {
- 		ata_eh_freeze_port(ap);
+ module_init(ata_init);
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index c2b1c91..4458fd9 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -39,6 +39,7 @@ struct ata_scsi_args {
+ };
  
--		rc = ata_eh_reset(ap, prereset, softreset, hardreset,
-+		rc = ata_eh_reset(ap, 0, prereset, softreset, hardreset,
- 				  postreset);
- 		if (rc) {
- 			ata_port_printk(ap, KERN_ERR,
+ /* libata-core.c */
++extern struct workqueue_struct *ata_aux_wq;
+ extern int atapi_enabled;
+ extern int atapi_dmadir;
+ extern int libata_fua;
 -- 
 1.3.2
 
