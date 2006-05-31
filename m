@@ -1,24 +1,32 @@
-From: "Leah" <mmylgsnlrgvn@kolumbus.fi>
-Subject: your chance
-Date: Thu, 01 Jun 2006 02:48:10 +1000
-Message-ID: <8C979FC0.BC2C48C@kolumbus.fi>
-Reply-To: "Leah" <mmylgsnlrgvn@kolumbus.fi>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [ANNOUNCE] Samsung harddisk contact point
+Date: Wed, 31 May 2006 11:56:13 +0900
+Message-ID: <447D05CD.7020609@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [220.230.218.175] ([220.230.218.175]:47622 "HELO kolumbus.fi")
-	by vger.kernel.org with SMTP id S964828AbWEaAbA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2006 20:31:00 -0400
+Received: from wr-out-0506.google.com ([64.233.184.230]:10627 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751577AbWEaC4T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 May 2006 22:56:19 -0400
+Received: by wr-out-0506.google.com with SMTP id 37so141860wra
+        for <linux-ide@vger.kernel.org>; Tue, 30 May 2006 19:56:18 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Albert Lee <albertcc@tw.ibm.com>, Mark Lord <mlord@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, allopen@chol.com, ksoonson@gmail.com
 
-Dear friend,
-I found your picture on one of the websites, can we talk to 
-each other? I might be coming to your bplace in few weeks.
-This would be a great opportunity to meet eaacah other.
-Btw, Ia am a womanb. I aam 25. Drop meb a line at ww@freemailserv.com
+Hello, all.
 
+I'm happy to announce contact point availability for Samsung harddisks. 
+  Please contact the following address for Samsung hdd related firmware 
+problems / etc.
 
+JinWan Jeon <allopen@chol.com>
+
+A lot of thanks for SoonSon Kwon of KLDP for establishing the contact 
+point and JinWan Jeon for offering the support.
+
+-- 
+tejun
