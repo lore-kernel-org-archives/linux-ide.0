@@ -1,111 +1,81 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/12] libata-hp-prep: implement ap->hw_sata_spd_limit
+Subject: [PATCH 05/12] libata-hp-prep: use __ata_scsi_find_dev()
 Date: Wed, 31 May 2006 20:05:41 +0900
-Message-ID: <11490735413749-git-send-email-htejun@gmail.com>
+Message-ID: <11490735413472-git-send-email-htejun@gmail.com>
 References: <1149073540186-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:9183 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S964969AbWEaLFy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 May 2006 07:05:54 -0400
-Received: by wr-out-0506.google.com with SMTP id 37so216587wra
-        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:54 -0700 (PDT)
+Received: from wx-out-0102.google.com ([66.249.82.200]:61098 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964966AbWEaLFx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 07:05:53 -0400
+Received: by wx-out-0102.google.com with SMTP id h27so3457wxd
+        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:53 -0700 (PDT)
 In-Reply-To: <1149073540186-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add ap->hw_sata_spd_limit and initialize it once during the boot
-initialization (or driver load initialization).  ap->sata_spd_limit is
-reset to ap->hw_sata_spd_limit on hotplug.  This prevents spd limits
-introduced by earlier devices from affecting new devices.
+Convert direct sdev -> dev lookup to __ata_scsi_find_dev().
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   21 ++++++++++++---------
- include/linux/libata.h     |    1 +
- 2 files changed, 13 insertions(+), 9 deletions(-)
+ drivers/scsi/libata-scsi.c |   16 ++++++----------
+ 1 files changed, 6 insertions(+), 10 deletions(-)
 
-5a04bf4befa8bffa012eedc3a0903c158b9131a9
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index a07ab77..b1a02fd 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2466,17 +2466,9 @@ static int sata_phy_resume(struct ata_po
-  */
- void ata_std_probeinit(struct ata_port *ap)
+315343637b988ac32d730a6a9f7bf5866838bcb0
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index b45b8b3..0509076 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -399,7 +399,7 @@ void ata_dump_status(unsigned id, struct
+ int ata_scsi_device_resume(struct scsi_device *sdev)
  {
--	u32 scontrol;
--
- 	/* resume link */
- 	sata_phy_resume(ap);
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+-	struct ata_device *dev = &ap->device[sdev->id];
++	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
  
--	/* init sata_spd_limit to the current value */
--	if (sata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
--		int spd = (scontrol >> 4) & 0xf;
--		ap->sata_spd_limit &= (1 << spd) - 1;
+ 	return ata_device_resume(dev);
+ }
+@@ -407,7 +407,7 @@ int ata_scsi_device_resume(struct scsi_d
+ int ata_scsi_device_suspend(struct scsi_device *sdev, pm_message_t state)
+ {
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+-	struct ata_device *dev = &ap->device[sdev->id];
++	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
+ 
+ 	return ata_device_suspend(dev, state);
+ }
+@@ -713,19 +713,15 @@ static void ata_scsi_dev_config(struct s
+ 
+ int ata_scsi_slave_config(struct scsi_device *sdev)
+ {
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
++
+ 	ata_scsi_sdev_config(sdev);
+ 
+ 	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
+ 
+-	if (sdev->id < ATA_MAX_DEVICES) {
+-		struct ata_port *ap;
+-		struct ata_device *dev;
+-
+-		ap = ata_shost_to_port(sdev->host);
+-		dev = &ap->device[sdev->id];
+-
++	if (dev)
+ 		ata_scsi_dev_config(sdev, dev);
 -	}
--
- 	/* wait for device */
- 	if (ata_port_online(ap))
- 		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
-@@ -5155,6 +5147,9 @@ void ata_dev_init(struct ata_device *dev
- 	struct ata_port *ap = dev->ap;
- 	unsigned long flags;
  
-+	/* SATA spd limit is bound to the first device */
-+	ap->sata_spd_limit = ap->hw_sata_spd_limit;
-+
- 	/* High bits of dev->flags are used to record warm plug
- 	 * requests which occur asynchronously.  Synchronize using
- 	 * host_set lock.
-@@ -5210,7 +5205,7 @@ static void ata_host_init(struct ata_por
- 	ap->udma_mask = ent->udma_mask;
- 	ap->flags |= ent->host_flags;
- 	ap->ops = ent->port_ops;
--	ap->sata_spd_limit = UINT_MAX;
-+	ap->hw_sata_spd_limit = UINT_MAX;
- 	ap->active_tag = ATA_TAG_POISON;
- 	ap->last_ctl = 0xFF;
- 	ap->msg_enable = ATA_MSG_DRV;
-@@ -5375,10 +5370,18 @@ int ata_device_add(const struct ata_prob
- 	DPRINTK("probe begin\n");
- 	for (i = 0; i < count; i++) {
- 		struct ata_port *ap;
-+		u32 scontrol;
- 		int rc;
- 
- 		ap = host_set->ports[i];
- 
-+		/* init sata_spd_limit to the current value */
-+		if (sata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
-+			int spd = (scontrol >> 4) & 0xf;
-+			ap->hw_sata_spd_limit &= (1 << spd) - 1;
-+		}
-+		ap->sata_spd_limit = ap->hw_sata_spd_limit;
-+
- 		DPRINTK("ata%u: bus probe begin\n", ap->id);
- 		rc = ata_bus_probe(ap);
- 		DPRINTK("ata%u: bus probe end\n", ap->id);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index aa14eda..10dc235 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -489,6 +489,7 @@ struct ata_port {
- 	unsigned int		mwdma_mask;
- 	unsigned int		udma_mask;
- 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
-+	unsigned int		hw_sata_spd_limit;
- 	unsigned int		sata_spd_limit;	/* SATA PHY speed limit */
- 
- 	/* record runtime error info, protected by host_set lock */
+ 	return 0;	/* scsi layer doesn't check return value, sigh */
+ }
 -- 
 1.3.2
 
