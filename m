@@ -1,68 +1,79 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [git patch] libata resume fix
-Date: Wed, 31 May 2006 18:01:18 -0400
-Message-ID: <447E122E.3000105@tmr.com>
-References: <20060528203419.GA15087@havoc.gtf.org> <1148938482.5959.27.camel@localhost.localdomain> <447C4718.6090802@rtr.ca> <Pine.LNX.4.64.0605301122340.5623@g5.osdl.org>
+From: Velu Erwan <erwan@seanodes.com>
+Subject: Re: [PATCH] Re: ATIIXP and libata
+Date: Thu, 01 Jun 2006 00:00:25 +0200
+Message-ID: <447E11F9.1030804@seanodes.com>
+References: <20051105152756.86796.qmail@web86805.mail.ukl.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:43698 "EHLO pixels.tmr.com")
-	by vger.kernel.org with ESMTP id S965192AbWEaV7k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 May 2006 17:59:40 -0400
-In-Reply-To: <Pine.LNX.4.64.0605301122340.5623@g5.osdl.org>
+Received: from seanodes.co.fr.clara.net ([212.43.220.11]:51842 "EHLO
+	seanodes.co.fr.clara.net") by vger.kernel.org with ESMTP
+	id S965196AbWEaWA3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 18:00:29 -0400
+In-Reply-To: <20051105152756.86796.qmail@web86805.mail.ukl.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Bruno Harbulot <bruno_harbulot@yahoo.co.uk>, linux-ide@vger.kernel.org
 
-Linus Torvalds wrote:
-> 
-> On Tue, 30 May 2006, Mark Lord wrote:
->> Not in a suspend/resume capable notebook, though.
->>
->> I don't know of *any* notebook drives that take longer
->> than perhaps five seconds to spin-up and accept commands.
->> Such a slow drive wouldn't really be tolerated by end-users,
->> which is why they don't exist.
-> 
-> Indeed. In fact, I'd be surprised to see it in a desktop too.
-> 
-> At least at one point, in order to get a M$ hw qualification (whatever 
-> it's called - but every single hw manufacturer wants it, because some 
-> vendors won't use your hardware if you don't have it), a laptop needed to 
-> boot up in less than 30 seconds or something.
-> 
-> And that wasn't the disk spin-up time. That was the time until the Windows 
-> desktop was visible.
-> 
-> Desktops could do a bit longer, and I think servers didn't have any time 
-> limits, but the point is that selling a disk that takes a long time to 
-> start working is actually not that easy. 
-> 
-> The market that has accepted slow bootup times is historically the server 
-> market (don't ask me why - you'd think that with five-nines uptime 
-> guarantees you'd want fast bootup), and so you'll find large SCSI disks in 
-> particular with long spin-up times. In the laptop and desktop space I'd be 
-> very surprised to see anythign longer than a few seconds.
+Bruno Harbulot a =E9crit :
 
-The trade-off is that if I have a 15k rpm SCSI drive, it would take a 
-lot of design changes to make it spin up quickly, and improve a function 
-which is usually done on a server once every MTBF when replacing the 
-failed unit.
+>I had a closer look at the problem, and I've written the patch for
+>ide-iops.c attached to this message. I wasn't sure about using
+>hw_config or ata_id_is_sata to read word 93.
+>Should other checks be performed? I'm not sure whether there should be
+>a test similar to "(ap->cbl =3D=3D ATA_CBL_SATA)" mentionned in the pa=
+tch
+>posted on this list in "[PATCH] libata ATA vs SATA detection and
+>workaround." on 30/09/04.
+> =20
+>
+Bartlomiej, I've tried the latest 2.6.17-rc5 and the atiixp still=20
+doesn't works out of the shelf.
+Bruno's patch sounds to integrate the remarks you made about my crappy=20
+initial patch but it is not integrated.
+I've applied it, and uncommenting its ata_id_is_sata() call.
+On my ATIIXP (pundit-R), my performances are good ~55MB/sec. Without=20
+this patch I'm sticked at 14MB/sec.
 
-I think the majority of very large or very fast drives are in systems 
-which don't (deliberately) power cycles often, in rooms where heat is an 
-issue. And to spin up quickly take a larger power supply... 30 sec is 
-fine with most users.
+It is possible to apply that patch upstream to fix this issue ?
+This patch applies to 2.6.17-rc5.
 
-Couldn't find a spin-up time for the new Seagate 750GB drive, but the 
-seek sure is fast!
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-   Obscure bug of 2004: BASH BUFFER OVERFLOW - if bash is being run by a
-normal user and is setuid root, with the "vi" line edit mode selected,
-and the character set is "big5," an off-by-one errors occurs during
-wildcard (glob) expansion.
-
+--- linux-2.6.17-rc5.20mdk/drivers/ide/ide-iops.c.old    2006-03-20=20
+06:53:29.000000000 +0100
++++ linux-2.6.17-rc5.20mdk/drivers/ide/ide-iops.c    2006-05-31=20
+23:51:53.000000000 +0200
+@@ -1,6 +1,10 @@
+ /*
++ * linux/drivers/ide/ide-iops.c    Version 0.38    Nov 05, 2005
+  * linux/drivers/ide/ide-iops.c    Version 0.37    Mar 05, 2003
+  *
++ *  Version 0.38        80pin cable detection for SATA drive
++ *                  (bruno_harbulot@yahoo.co.uk)
++ *=20
+  *  Copyright (C) 2000-2002    Andre Hedrick <andre@linux-ide.org>
+  *  Copyright (C) 2003        Red Hat <alan@redhat.com>
+  *
+@@ -24,6 +28,7 @@
+ #include <linux/hdreg.h>
+ #include <linux/ide.h>
+ #include <linux/bitops.h>
++#include <linux/ata.h>
+=20
+ #include <asm/byteorder.h>
+ #include <asm/irq.h>
+@@ -595,6 +600,12 @@
+  */
+ u8 eighty_ninty_three (ide_drive_t *drive)
+ {
++    /* On SATA drives, word 93 (i.e. hw_config) should be 0.
++     * This can be tested with the hw_config or this: */
++    if (ata_id_is_sata((u16*)(drive->id)))
++        return 1;
++    if (drive->id->hw_config =3D=3D 0)
++        return 1;
+     if(HWIF(drive)->udma_four =3D=3D 0)
+         return 0;
+     if (!(drive->id->hw_config & 0x6000))
