@@ -1,209 +1,117 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/13] ata_piix: convert ata_piix to new probing mechanism
+Subject: [PATCH 09/13] sata_sil: convert to new probing mechanism and add hotplug support
 Date: Wed, 31 May 2006 20:25:45 +0900
-Message-ID: <11490747456-git-send-email-htejun@gmail.com>
+Message-ID: <11490747453405-git-send-email-htejun@gmail.com>
 References: <11490747443727-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.193]:52880 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964998AbWEaLZ4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 May 2006 07:25:56 -0400
-Received: by wx-out-0102.google.com with SMTP id h27so5387wxd
-        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:25:56 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.205]:47256 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S965004AbWEaLZ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 07:25:58 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so8510nze
+        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:25:58 -0700 (PDT)
 In-Reply-To: <11490747443727-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Convert ata_piix to new probing mechanism.  Automatic hotplug is not
-supported due to hardware limitation (no PHY event interrupt), but
-warm plugging works.
+Convert to new probing mechanism and add hotplug support by enabling
+SATA IRQ for SError.N, marking ehi for hotplug and scheduling EH on
+SATA IRQs.
+
+Sil3112/3512/3114 family of controllers use COMRESET as TF clearing
+point and can reliably wait for D2H FIS after COMRESET whether the FIS
+is the first D2H FIS after POR or in response to the COMRESET.  Thus,
+setting ATA_FLAG_HRST_TO_RESUME is enough for device detection after
+hotplug.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/ata_piix.c |   87 +++++++++++++++++------------------------------
- 1 files changed, 32 insertions(+), 55 deletions(-)
+ drivers/scsi/sata_sil.c |   21 +++++++++++++--------
+ 1 files changed, 13 insertions(+), 8 deletions(-)
 
-ccc4672aff1861a9c80ed9e8ec11dc304b31d307
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index 54c2e52..521b718 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -146,11 +146,10 @@ struct piix_map_db {
+e573890b00426189e1e223967a2c46fb758bf06e
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index 7d43cd3..0898cbe 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -56,7 +56,7 @@ enum {
+ 	SIL_FLAG_MOD15WRITE	= (1 << 30),
  
- static int piix_init_one (struct pci_dev *pdev,
- 				    const struct pci_device_id *ent);
--
--static int piix_pata_probe_reset(struct ata_port *ap, unsigned int *classes);
--static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes);
- static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
- static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
-+static void piix_pata_error_handler(struct ata_port *ap);
-+static void piix_sata_error_handler(struct ata_port *ap);
+ 	SIL_DFL_HOST_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_MMIO,
++				  ATA_FLAG_MMIO | ATA_FLAG_HRST_TO_RESUME,
  
- static unsigned int in_module_init = 1;
- 
-@@ -237,8 +236,6 @@ static const struct ata_port_operations 
+ 	/*
+ 	 * Controller IDs
+@@ -186,7 +186,6 @@ static const struct ata_port_operations 
+ 	.check_status		= ata_check_status,
  	.exec_command		= ata_exec_command,
  	.dev_select		= ata_std_dev_select,
+-	.probe_reset		= ata_std_probe_reset,
+ 	.post_set_mode		= sil_post_set_mode,
+ 	.bmdma_setup            = ata_bmdma_setup,
+ 	.bmdma_start            = ata_bmdma_start,
+@@ -344,6 +343,11 @@ static void sil_host_intr(struct ata_por
+ 	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
+ 	u8 status;
  
--	.probe_reset		= piix_pata_probe_reset,
--
- 	.bmdma_setup		= ata_bmdma_setup,
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
-@@ -249,7 +246,7 @@ static const struct ata_port_operations 
++	if (unlikely(bmdma2 & SIL_DMA_SATA_IRQ)) {
++		ata_ehi_hotplugged(&ap->eh_info);
++		goto freeze;
++	}
++
+ 	if (unlikely(!qc || qc->tf.ctl & ATA_NIEN))
+ 		goto freeze;
  
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
-+	.error_handler		= piix_pata_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+@@ -415,7 +419,7 @@ static irqreturn_t sil_interrupt(int irq
+ 		if (unlikely(!ap || ap->flags & ATA_FLAG_DISABLED))
+ 			continue;
  
- 	.irq_handler		= ata_interrupt,
-@@ -269,8 +266,6 @@ static const struct ata_port_operations 
- 	.exec_command		= ata_exec_command,
- 	.dev_select		= ata_std_dev_select,
+-		if (!(bmdma2 & SIL_DMA_COMPLETE))
++		if (!(bmdma2 & (SIL_DMA_COMPLETE | SIL_DMA_SATA_IRQ)))
+ 			continue;
  
--	.probe_reset		= piix_sata_probe_reset,
--
- 	.bmdma_setup		= ata_bmdma_setup,
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
-@@ -281,7 +276,7 @@ static const struct ata_port_operations 
+ 		sil_host_intr(ap, bmdma2);
+@@ -432,6 +436,9 @@ static void sil_freeze(struct ata_port *
+ 	void __iomem *mmio_base = ap->host_set->mmio_base;
+ 	u32 tmp;
  
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
-+	.error_handler		= piix_sata_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	/* global IRQ mask doesn't block SATA IRQ, turn off explicitly */
++	writel(0, mmio_base + sil_port[ap->port_no].sien);
++
+ 	/* plug IRQ */
+ 	tmp = readl(mmio_base + SIL_SYSCFG);
+ 	tmp |= SIL_MASK_IDE0_INT << ap->port_no;
+@@ -448,6 +455,9 @@ static void sil_thaw(struct ata_port *ap
+ 	ata_chk_status(ap);
+ 	ata_bmdma_irq_clear(ap);
  
- 	.irq_handler		= ata_interrupt,
-@@ -466,59 +461,51 @@ cbl40:
- }
- 
- /**
-- *	piix_pata_probeinit - probeinit for PATA host controller
-+ *	piix_pata_prereset - prereset for PATA host controller
-  *	@ap: Target port
-  *
-- *	Probeinit including cable detection.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--static void piix_pata_probeinit(struct ata_port *ap)
--{
--	piix_pata_cbl_detect(ap);
--	ata_std_probeinit(ap);
--}
--
--/**
-- *	piix_pata_probe_reset - Perform reset on PATA port and classify
-- *	@ap: Port to reset
-- *	@classes: Resulting classes of attached devices
-- *
-- *	Reset PATA phy and classify attached devices.
-+ *	Prereset including cable detection.
-  *
-  *	LOCKING:
-  *	None (inherited from caller).
-  */
--static int piix_pata_probe_reset(struct ata_port *ap, unsigned int *classes)
-+static int piix_pata_prereset(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
- 
- 	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->hard_port_no])) {
- 		ata_port_printk(ap, KERN_INFO, "port disabled. ignoring.\n");
-+		ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
- 		return 0;
++	/* turn on SATA IRQ */
++	writel(SIL_SIEN_N, mmio_base + sil_port[ap->port_no].sien);
++
+ 	/* turn on IRQ */
+ 	tmp = readl(mmio_base + SIL_SYSCFG);
+ 	tmp &= ~(SIL_MASK_IDE0_INT << ap->port_no);
+@@ -621,11 +631,6 @@ static int sil_init_one (struct pci_dev 
+ 			       mmio_base + sil_port[2].bmdma);
  	}
  
--	return ata_drive_probe_reset(ap, piix_pata_probeinit,
--				     ata_std_softreset, NULL,
--				     ata_std_postreset, classes);
-+	piix_pata_cbl_detect(ap);
-+
-+	return ata_std_prereset(ap);
-+}
-+
-+static void piix_pata_error_handler(struct ata_port *ap)
-+{
-+	ata_bmdma_drive_eh(ap, piix_pata_prereset, ata_std_softreset, NULL,
-+			   ata_std_postreset);
- }
- 
- /**
-- *	piix_sata_probe - Probe PCI device for present SATA devices
-- *	@ap: Port associated with the PCI device we wish to probe
-+ *	piix_sata_prereset - prereset for SATA host controller
-+ *	@ap: Target port
-  *
-  *	Reads and configures SATA PCI device's PCI config register
-  *	Port Configuration and Status (PCS) to determine port and
-- *	device availability.
-+ *	device availability.  Return -ENODEV to skip reset if no
-+ *	device is present.
-  *
-  *	LOCKING:
-  *	None (inherited from caller).
-  *
-  *	RETURNS:
-- *	Mask of avaliable devices on the port.
-+ *	0 if device is present, -ENODEV otherwise.
-  */
--static unsigned int piix_sata_probe (struct ata_port *ap)
-+static int piix_sata_prereset(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
- 	const unsigned int *map = ap->host_set->private_data;
-@@ -560,29 +547,19 @@ static unsigned int piix_sata_probe (str
- 	DPRINTK("ata%u: LEAVE, pcs=0x%x present_mask=0x%x\n",
- 		ap->id, pcs, present_mask);
- 
--	return present_mask;
--}
+-	/* mask all SATA phy-related interrupts */
+-	/* TODO: unmask bit 6 (SError N bit) for hotplug */
+-	for (i = 0; i < probe_ent->n_ports; i++)
+-		writel(0, mmio_base + sil_port[i].sien);
 -
--/**
-- *	piix_sata_probe_reset - Perform reset on SATA port and classify
-- *	@ap: Port to reset
-- *	@classes: Resulting classes of attached devices
-- *
-- *	Reset SATA phy and classify attached devices.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--static int piix_sata_probe_reset(struct ata_port *ap, unsigned int *classes)
--{
--	if (!piix_sata_probe(ap)) {
-+	if (!present_mask) {
- 		ata_port_printk(ap, KERN_INFO, "SATA port has no device.\n");
-+		ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
- 		return 0;
- 	}
+ 	pci_set_master(pdev);
  
--	return ata_drive_probe_reset(ap, ata_std_probeinit,
--				     ata_std_softreset, NULL,
--				     ata_std_postreset, classes);
-+	return ata_std_prereset(ap);
-+}
-+
-+static void piix_sata_error_handler(struct ata_port *ap)
-+{
-+	ata_bmdma_drive_eh(ap, piix_sata_prereset, ata_std_softreset, NULL,
-+			   ata_std_postreset);
- }
- 
- /**
+ 	/* FIXME: check ata_device_add return value */
 -- 
 1.3.2
 
