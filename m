@@ -1,122 +1,182 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Resend: libata, promise card, raid autodetect
-Date: Tue, 30 May 2006 21:42:47 -0700
-Message-ID: <447D1EC7.5000900@ipom.com>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: [PATCH 1/n] libata-core.c conversion to new debugging scheme, part 1 (25% done)
+Date: Wed, 31 May 2006 07:46:33 +0200
+Message-ID: <20060531054633.GA4875@zmei.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.ipom.com ([209.40.128.125]:30375 "EHLO
-	uberhacker.sage-inc.com") by vger.kernel.org with ESMTP
-	id S1751681AbWEaEmu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 May 2006 00:42:50 -0400
-Received: from [10.1.1.2] (cpe-24-24-245-191.socal.res.rr.com [24.24.245.191])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by uberhacker.sage-inc.com (Postfix) with ESMTP id 3CF8B1BBBB
-	for <linux-ide@vger.kernel.org>; Tue, 30 May 2006 23:43:00 -0500 (CDT)
+Received: from smtp101.plus.mail.re2.yahoo.com ([206.190.53.26]:55197 "HELO
+	smtp101.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S932488AbWEaFrm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 01:47:42 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com
 
-One more shot - anyone at all have any input on this?
+This patch converts the first 25% of libata-core.c to the new debugging scheme.
 
-My original message and question follows:
+Signed-off-by: <petkov@uni-muenster.de>
 
--------- Original Message --------
-Subject: libata, promise card, raid autodetect
-Date: Sun, 21 May 2006 23:50:39 -0700
-From: Phil Dibowitz <phil@ipom.com>
-To: linux-ide@vger.kernel.org
 
-Problem: RAID auto-detect on my promise PC20378 doesn't seem to work -
-but works with other controllers.
+--- libata-dev/drivers/scsi/libata-core.c.orig	2006-05-30 22:02:51.000000000 +0200
++++ libata-dev/drivers/scsi/libata-core.c	2006-05-31 07:37:44.000000000 +0200
+@@ -411,7 +411,7 @@ static const char *sata_spd_string(unsig
+ 
+ void ata_dev_disable(struct ata_device *dev)
+ {
+-	if (ata_dev_enabled(dev)) {
++	if (ata_dev_enabled(dev) && ata_msg_drv(dev->ap)) {
+ 		ata_dev_printk(dev, KERN_WARNING, "disabled\n");
+ 		dev->class++;
+ 	}
+@@ -770,8 +770,12 @@ void ata_std_dev_select (struct ata_port
+ void ata_dev_select(struct ata_port *ap, unsigned int device,
+ 			   unsigned int wait, unsigned int can_sleep)
+ {
+-	VPRINTK("ENTER, ata%u: device %u, wait %u\n",
+-		ap->id, device, wait);
++	if (ata_msg_probe(ap)) {
++		struct ata_device *dev = container_of(&ap, struct ata_device, ap);
++		ata_dev_printk(dev, KERN_INFO, "ata_dev_select: ENTER, ata%u: "
++				"device %u, wait %u\n",
++				ap->id, device, wait);
++	}
+ 
+ 	if (wait)
+ 		ata_wait_idle(ap);
+@@ -1297,18 +1301,21 @@ static int ata_dev_configure(struct ata_
+ 	unsigned int xfer_mask;
+ 	int i, rc;
+ 
+-	if (!ata_dev_enabled(dev)) {
+-		DPRINTK("ENTER/EXIT (host %u, dev %u) -- nodev\n",
+-			ap->id, dev->devno);
++	if (!ata_dev_enabled(dev) && ata_msg_info(ap)) {
++		ata_dev_printk(dev, KERN_INFO, "%s: ENTER/EXIT (host %u, dev %u) -- nodev\n",
++			__FUNCTION__, ap->id, dev->devno);
+ 		return 0;
+ 	}
+ 
+-	DPRINTK("ENTER, host %u, dev %u\n", ap->id, dev->devno);
++	if (ata_msg_probe(ap))
++		ata_dev_printk(dev, KERN_DEBUG, "%s: ENTER, host %u, dev %u\n", 
++			__FUNCTION__, ap->id, dev->devno);
+ 
+ 	/* print device capabilities */
+-	if (print_info)
+-		ata_dev_printk(dev, KERN_DEBUG, "cfg 49:%04x 82:%04x 83:%04x "
++	if (ata_msg_probe(ap))
++		ata_dev_printk(dev, KERN_DEBUG, "%s: cfg 49:%04x 82:%04x 83:%04x "
+ 			       "84:%04x 85:%04x 86:%04x 87:%04x 88:%04x\n",
++			       __FUNCTION__,
+ 			       id[49], id[82], id[83], id[84],
+ 			       id[85], id[86], id[87], id[88]);
+ 
+@@ -1328,7 +1335,8 @@ static int ata_dev_configure(struct ata_
+ 	/* find max transfer mode; for printk only */
+ 	xfer_mask = ata_id_xfermask(id);
+ 
+-	ata_dump_id(id);
++	if (ata_msg_probe(ap))
++		ata_dump_id(id);
+ 
+ 	/* ATA-specific feature tests */
+ 	if (dev->class == ATA_DEV_ATA) {
+@@ -1349,7 +1357,7 @@ static int ata_dev_configure(struct ata_
+ 			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
+ 
+ 			/* print device info to dmesg */
+-			if (print_info)
++			if (ata_msg_info(ap))
+ 				ata_dev_printk(dev, KERN_INFO, "ATA-%d, "
+ 					"max %s, %Lu sectors: %s %s\n",
+ 					ata_id_major_version(id),
+@@ -1372,7 +1380,7 @@ static int ata_dev_configure(struct ata_
+ 			}
+ 
+ 			/* print device info to dmesg */
+-			if (print_info)
++			if (ata_msg_info(ap))
+ 				ata_dev_printk(dev, KERN_INFO, "ATA-%d, "
+ 					"max %s, %Lu sectors: CHS %u/%u/%u\n",
+ 					ata_id_major_version(id),
+@@ -1383,7 +1391,8 @@ static int ata_dev_configure(struct ata_
+ 
+ 		if (dev->id[59] & 0x100) {
+ 			dev->multi_count = dev->id[59] & 0xff;
+-			DPRINTK("ata%u: dev %u multi count %u\n",
++			if (ata_msg_info(ap))
++				ata_dev_printk(dev, KERN_INFO, "ata%u: dev %u multi count %u\n",
+ 				ap->id, dev->devno, dev->multi_count);
+ 		}
+ 
+@@ -1396,8 +1405,9 @@ static int ata_dev_configure(struct ata_
+ 
+ 		rc = atapi_cdb_len(id);
+ 		if ((rc < 12) || (rc > ATAPI_CDB_LEN)) {
+-			ata_dev_printk(dev, KERN_WARNING,
+-				       "unsupported CDB len\n");
++			if (ata_msg_warn(ap))
++				ata_dev_printk(dev, KERN_WARNING, 
++					"unsupported CDB len\n");
+ 			rc = -EINVAL;
+ 			goto err_out_nosup;
+ 		}
+@@ -1409,7 +1419,7 @@ static int ata_dev_configure(struct ata_
+ 		}
+ 
+ 		/* print device info to dmesg */
+-		if (print_info)
++		if (ata_msg_info(ap))
+ 			ata_dev_printk(dev, KERN_INFO, "ATAPI, max %s%s\n",
+ 				       ata_mode_string(xfer_mask),
+ 				       cdb_intr_string);
+@@ -1423,7 +1433,7 @@ static int ata_dev_configure(struct ata_
+ 
+ 	/* limit bridge transfers to udma5, 200 sectors */
+ 	if (ata_dev_knobble(dev)) {
+-		if (print_info)
++		if (ata_msg_info(ap))
+ 			ata_dev_printk(dev, KERN_INFO,
+ 				       "applying bridge limits\n");
+ 		dev->udma_mask &= ATA_UDMA5;
+@@ -1433,11 +1443,15 @@ static int ata_dev_configure(struct ata_
+ 	if (ap->ops->dev_config)
+ 		ap->ops->dev_config(ap, dev);
+ 
+-	DPRINTK("EXIT, drv_stat = 0x%x\n", ata_chk_status(ap));
++	if (ata_msg_probe(ap))
++		ata_dev_printk(dev, KERN_DEBUG, "%s: EXIT, drv_stat = 0x%x\n",
++			__FUNCTION__, ata_chk_status(ap));
+ 	return 0;
+ 
+ err_out_nosup:
+-	DPRINTK("EXIT, err\n");
++	if (ata_msg_probe(ap))
++		ata_dev_printk(dev, KERN_DEBUG, 
++				"%s: EXIT, err\n", __FUNCTION__);
+ 	return rc;
+ }
+ 
+@@ -1478,8 +1492,9 @@ static int ata_bus_probe(struct ata_port
+ 	if (ap->ops->probe_reset) {
+ 		rc = ap->ops->probe_reset(ap, classes);
+ 		if (rc) {
+-			ata_port_printk(ap, KERN_ERR,
+-					"reset failed (errno=%d)\n", rc);
++			if (ata_msg_err(ap))
++				ata_port_printk(ap, KERN_ERR, 
++						"reset failed (errno=%d)\n", rc);
+ 			return rc;
+ 		}
+ 	} else {
 
-Note: I'm using the pata-on-sata stuff, and it works great!
+	
 
-First of all - thanks to Mark Hahn for emailing me off list and helping
-me out a bit.
-
-I think it's time to bring this back to the list. It seems that, at
-least in my configuration, kernel raid auto-detection runs before the
-kernel has detected partitions on the SATA Promise driver (note: pata
-chain on the SATA controller).
-
-Dmesg showing this below.
-
-I have a RAID-1 array between partitions on a disk on a 82801EB/ER
-(ICH5/ICH5R) IDE Controller and my SATA Promise PDC20378 controller.
-
-I have all the required parts BUILT IN to the kernel (kernel config below).
-
-My 82801EB/ER (ICH5/ICH5R) IDE Controller seems to be run by the general
-IDE layer - I have no particular drivers enabled.
-
-My Promise PDC20378 is controlled by CONFIG_SCSI_SATA_PROMISE with the
-libata1.patch from Jeff in order to support the PATA part of the
-controller. Again, built in, NOT a module.
-
-RAID1 support is also built in.
-
-What happens is:
-
-Recongize ICH5/ICH5R
-Initialize partitions on ICH5/ICH5R
-Recognize PDC20378
-Raid auto-detect
-Recognize partitions on PDC20378
-
-Dmesg:
-http://www.phildev.net/dmesg.txt
-
-Kernel Config:
-http://www.phildev.net/config-2.6.15.6rider-smp
-
-lspci:
-[phil@rider ~]$ lspci
-0000:00:00.0 Host bridge: Intel Corporation 82865G/PE/P DRAM
-Controller/Host-Hub Interface (rev 02)
-0000:00:01.0 PCI bridge: Intel Corporation 82865G/PE/P PCI to AGP
-Controller (rev 02)
-0000:00:1d.0 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R)
-USB UHCI Controller #1 (rev 02)
-0000:00:1d.1 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R)
-USB UHCI Controller #2 (rev 02)
-0000:00:1d.2 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R)
-USB UHCI Controller #3 (rev 02)
-0000:00:1d.3 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R)
-USB UHCI Controller #4 (rev 02)
-0000:00:1d.7 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R)
-USB2 EHCI Controller (rev 02)
-0000:00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev c2)
-0000:00:1f.0 ISA bridge: Intel Corporation 82801EB/ER (ICH5/ICH5R) LPC
-Interface Bridge (rev 02)
-0000:00:1f.1 IDE interface: Intel Corporation 82801EB/ER (ICH5/ICH5R)
-IDE Controller (rev 02)
-0000:00:1f.3 SMBus: Intel Corporation 82801EB/ER (ICH5/ICH5R) SMBus
-Controller (rev 02)
-0000:00:1f.5 Multimedia audio controller: Intel Corporation 82801EB/ER
-(ICH5/ICH5R) AC'97 Audio Controller (rev 02)
-0000:01:00.0 VGA compatible controller: nVidia Corporation NV36.2
-[GeForce FX 5700] (rev a1)
-0000:02:03.0 FireWire (IEEE 1394): VIA Technologies, Inc. IEEE 1394 Host
-Controller (rev 80)
-0000:02:04.0 RAID bus controller: Promise Technology, Inc. PDC20378
-(FastTrak 378/SATA 378) (rev 02)
-0000:02:05.0 Ethernet controller: Marvell Technology Group Ltd. 88E8001
-Gigabit Ethernet Controller (rev 13)
-
-Kernel is a kernel.org 2.6.15 with SMP support and Jeff's libata1.patch.
-
-Any help would be greatly appreciated. I'm happy to try patches, provide
-any details I've left out, etc.
-
--- 
-Phil Dibowitz                             phil@ipom.com
-Freeware and Technical Pages              Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
-
-"Be who you are and say what you feel, because those who mind don't
-matter and those who matter don't mind."
- - Dr. Seuss
+	
+		
+___________________________________________________________ 
+Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier anmelden: http://mail.yahoo.de
 
