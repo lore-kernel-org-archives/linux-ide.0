@@ -1,106 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/12] libata-hp-prep: update ata_scsi_find_dev() and friends
+Subject: [PATCH 01/12] libata-hp-prep: add flags and eh_info/context fields for hotplug
 Date: Wed, 31 May 2006 20:05:41 +0900
-Message-ID: <11490735413076-git-send-email-htejun@gmail.com>
+Message-ID: <1149073541623-git-send-email-htejun@gmail.com>
 References: <1149073540186-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:9183 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S964935AbWEaLFs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 May 2006 07:05:48 -0400
-Received: by wr-out-0506.google.com with SMTP id 37so216587wra
-        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:47 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.200]:49050 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964969AbWEaLFu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 May 2006 07:05:50 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so5533nze
+        for <linux-ide@vger.kernel.org>; Wed, 31 May 2006 04:05:49 -0700 (PDT)
 In-Reply-To: <1149073540186-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out ata_find_dev() and __ata_scsi_find_dev() from
-ata_scsi_find_dev().  These will be used by later hotplug
-implementation.
+Add hotplug related flags and eh_info/context fields.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-scsi.c |   40 +++++++++++++++++++++++++---------------
- 1 files changed, 25 insertions(+), 15 deletions(-)
+ include/linux/libata.h |   19 ++++++++++++++++++-
+ 1 files changed, 18 insertions(+), 1 deletions(-)
 
-ab5b3a5b2d887ce63f8c6a7fcb9f5c07ca4b4d43
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 9e5cb9f..b45b8b3 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -52,8 +52,12 @@ #include "libata.h"
- #define SECTOR_SIZE	512
+abdda7331d469fa965167365f011d05e226008fb
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 2eb5828..d4a668c 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -131,6 +131,9 @@ enum {
  
- typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc, const u8 *scsicmd);
--static struct ata_device *
--ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev);
-+
-+static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
-+					const struct scsi_device *scsidev);
-+static struct ata_device * ata_scsi_find_dev(struct ata_port *ap,
-+					    const struct scsi_device *scsidev);
-+
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
  
- #define RW_RECOVERY_MPAGE 0x1
- #define RW_RECOVERY_MPAGE_LEN 12
-@@ -2308,6 +2312,23 @@ static unsigned int atapi_xlat(struct at
- 	return 0;
- }
- 
-+static struct ata_device * ata_find_dev(struct ata_port *ap, int id)
-+{
-+	if (likely(id < ATA_MAX_DEVICES))
-+		return &ap->device[id];
-+	return NULL;
-+}
++	ATA_DFLAG_DETACH	= (1 << 16),
++	ATA_DFLAG_DETACHED	= (1 << 17),
 +
-+static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
-+					const struct scsi_device *scsidev)
-+{
-+	/* skip commands not addressed to targets we simulate */
-+	if (unlikely(scsidev->channel || scsidev->lun))
-+		return NULL;
-+
-+	return ata_find_dev(ap, scsidev->id);
-+}
-+
- /**
-  *	ata_scsi_find_dev - lookup ata_device from scsi_cmnd
-  *	@ap: ATA port to which the device is attached
-@@ -2324,23 +2345,12 @@ static unsigned int atapi_xlat(struct at
-  *	RETURNS:
-  *	Associated ATA device, or %NULL if not found.
-  */
--
- static struct ata_device *
- ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev)
- {
--	struct ata_device *dev;
--
--	/* skip commands not addressed to targets we simulate */
--	if (likely(scsidev->id < ATA_MAX_DEVICES))
--		dev = &ap->device[scsidev->id];
--	else
--		return NULL;
--
--	if (unlikely((scsidev->channel != 0) ||
--		     (scsidev->lun != 0)))
--		return NULL;
-+	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+ 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
+@@ -152,6 +155,9 @@ enum {
+ 	ATA_FLAG_PIO_POLLING	= (1 << 9), /* use polling PIO if LLD
+ 					     * doesn't handle PIO interrupts */
+ 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
++	ATA_FLAG_HRST_TO_RESUME	= (1 << 11), /* hardreset to resume phy */
++	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
++					      * Register FIS clearing BSY */
  
--	if (unlikely(!ata_dev_enabled(dev)))
-+	if (unlikely(!dev || !ata_dev_enabled(dev)))
- 		return NULL;
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
+ 	ATA_FLAG_FLUSH_PORT_TASK = (1 << 14), /* flush port task */
+@@ -160,6 +166,9 @@ enum {
+ 	ATA_FLAG_EH_IN_PROGRESS	= (1 << 16), /* EH in progress */
+ 	ATA_FLAG_FROZEN		= (1 << 17), /* port is frozen */
+ 	ATA_FLAG_RECOVERED	= (1 << 18), /* recovery action performed */
++	ATA_FLAG_LOADING	= (1 << 19), /* boot/loading probe */
++	ATA_FLAG_UNLOADING	= (1 << 20), /* module is unloading */
++	ATA_FLAG_SCSI_HOTPLUG	= (1 << 21), /* SCSI hotplug scheduled */
  
- 	if (!atapi_enabled || (ap->flags & ATA_FLAG_NO_ATAPI)) {
+ 	ATA_FLAG_DISABLED	= (1 << 22), /* port is disabled, ignore it */
+ 	ATA_FLAG_SUSPENDED	= (1 << 23), /* port is suspended (power) */
+@@ -241,7 +250,9 @@ enum {
+ 	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
+ 
+ 	/* ata_eh_info->flags */
+-	ATA_EHI_DID_RESET	= (1 << 0), /* already reset this port */
++	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
++
++	ATA_EHI_DID_RESET	= (1 << 16), /* already reset this port */
+ 
+ 	/* max repeat if error condition is still set after ->error_handler */
+ 	ATA_EH_MAX_REPEAT	= 5,
+@@ -434,6 +445,10 @@ struct ata_eh_info {
+ 	unsigned int		err_mask;	/* port-wide err_mask */
+ 	unsigned int		action;		/* ATA_EH_* action mask */
+ 	unsigned int		flags;		/* ATA_EHI_* flags */
++
++	unsigned long		hotplug_timestamp;
++	unsigned int		probe_mask;
++
+ 	char			desc[ATA_EH_DESC_LEN];
+ 	int			desc_len;
+ };
+@@ -441,6 +456,8 @@ struct ata_eh_info {
+ struct ata_eh_context {
+ 	struct ata_eh_info	i;
+ 	int			tries[ATA_MAX_DEVICES];
++	unsigned int		classes[ATA_MAX_DEVICES];
++	unsigned int		did_probe_mask;
+ };
+ 
+ struct ata_port {
 -- 
 1.3.2
 
