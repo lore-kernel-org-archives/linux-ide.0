@@ -1,79 +1,74 @@
-From: Velu Erwan <erwan@seanodes.com>
-Subject: Re: [PATCH] Re: ATIIXP and libata
-Date: Thu, 01 Jun 2006 00:00:25 +0200
-Message-ID: <447E11F9.1030804@seanodes.com>
-References: <20051105152756.86796.qmail@web86805.mail.ukl.yahoo.com>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: [PATCH 1/n] libata-core.c conversion to new debugging scheme, part 1 (25% done)
+Date: Thu, 1 Jun 2006 07:38:49 +0200
+Message-ID: <20060601053849.GB8523@gollum.tnic>
+References: <20060531054633.GA4875@zmei.tnic> <20060531063957.GD14179@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from seanodes.co.fr.clara.net ([212.43.220.11]:51842 "EHLO
-	seanodes.co.fr.clara.net") by vger.kernel.org with ESMTP
-	id S965196AbWEaWA3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 May 2006 18:00:29 -0400
-In-Reply-To: <20051105152756.86796.qmail@web86805.mail.ukl.yahoo.com>
+Received: from smtp104.plus.mail.re2.yahoo.com ([206.190.53.29]:44686 "HELO
+	smtp104.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S1751672AbWFAFix (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Jun 2006 01:38:53 -0400
+Content-Disposition: inline
+In-Reply-To: <20060531063957.GD14179@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Bruno Harbulot <bruno_harbulot@yahoo.co.uk>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Bruno Harbulot a =E9crit :
+On Wed, May 31, 2006 at 02:39:57AM -0400, Jeff Garzik wrote:
+> On Wed, May 31, 2006 at 07:46:33AM +0200, Borislav Petkov wrote:
+> > This patch converts the first 25% of libata-core.c to the new debugging scheme.
+> > 
+> > Signed-off-by: <petkov@uni-muenster.de>
+> 
+> Looks good at first glance, though I'll hold off on apply until I return
+> from the Red Hat Summit in Nashville.
+> 
+> It made me remember another point, though:  in order to avoid
+> regressions, after applying your patch, I would think that you would
+> want to create a patch which did something like
+> 
+> #ifndef ATA_VERBOSE_DEBUG
+> 	ap->msg_enable = xxx
+> #else ATA_DEBUG
+> 	ap->msg_enable = yyy
+> #else
+> 	ap->msg_enable = ...
+> #endif
 
->I had a closer look at the problem, and I've written the patch for
->ide-iops.c attached to this message. I wasn't sure about using
->hw_config or ata_id_is_sata to read word 93.
->Should other checks be performed? I'm not sure whether there should be
->a test similar to "(ap->cbl =3D=3D ATA_CBL_SATA)" mentionned in the pa=
-tch
->posted on this list in "[PATCH] libata ATA vs SATA detection and
->workaround." on 30/09/04.
-> =20
->
-Bartlomiej, I've tried the latest 2.6.17-rc5 and the atiixp still=20
-doesn't works out of the shelf.
-Bruno's patch sounds to integrate the remarks you made about my crappy=20
-initial patch but it is not integrated.
-I've applied it, and uncommenting its ata_id_is_sata() call.
-On my ATIIXP (pundit-R), my performances are good ~55MB/sec. Without=20
-this patch I'm sticked at 14MB/sec.
+Ok, i was thinking something along the lines of the following; for better
+granularity we might add more ATA_XXX defines or let the user subsequently
+adjust dbg level through sysfs...? (The patch applies on top of the one i sent you
+before.)
 
-It is possible to apply that patch upstream to fix this issue ?
-This patch applies to 2.6.17-rc5.
+Adjust initial debugging levels through preprocessor defines.
 
---- linux-2.6.17-rc5.20mdk/drivers/ide/ide-iops.c.old    2006-03-20=20
-06:53:29.000000000 +0100
-+++ linux-2.6.17-rc5.20mdk/drivers/ide/ide-iops.c    2006-05-31=20
-23:51:53.000000000 +0200
-@@ -1,6 +1,10 @@
- /*
-+ * linux/drivers/ide/ide-iops.c    Version 0.38    Nov 05, 2005
-  * linux/drivers/ide/ide-iops.c    Version 0.37    Mar 05, 2003
-  *
-+ *  Version 0.38        80pin cable detection for SATA drive
-+ *                  (bruno_harbulot@yahoo.co.uk)
-+ *=20
-  *  Copyright (C) 2000-2002    Andre Hedrick <andre@linux-ide.org>
-  *  Copyright (C) 2003        Red Hat <alan@redhat.com>
-  *
-@@ -24,6 +28,7 @@
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/bitops.h>
-+#include <linux/ata.h>
-=20
- #include <asm/byteorder.h>
- #include <asm/irq.h>
-@@ -595,6 +600,12 @@
-  */
- u8 eighty_ninty_three (ide_drive_t *drive)
- {
-+    /* On SATA drives, word 93 (i.e. hw_config) should be 0.
-+     * This can be tested with the hw_config or this: */
-+    if (ata_id_is_sata((u16*)(drive->id)))
-+        return 1;
-+    if (drive->id->hw_config =3D=3D 0)
-+        return 1;
-     if(HWIF(drive)->udma_four =3D=3D 0)
-         return 0;
-     if (!(drive->id->hw_config & 0x6000))
+Signed-off-by: <petkov@uni-muenster.de>
+
+ 
+--- libata-dev/drivers/scsi/libata-core.c.orig1	2006-06-01 07:02:42.000000000 +0200
++++ libata-dev/drivers/scsi/libata-core.c	2006-06-01 07:32:44.000000000 +0200
+@@ -5200,7 +5200,15 @@ static void ata_host_init(struct ata_por
+ 	ap->sata_spd_limit = UINT_MAX;
+ 	ap->active_tag = ATA_TAG_POISON;
+ 	ap->last_ctl = 0xFF;
+-	ap->msg_enable = ATA_MSG_DRV;
++
++#if defined(ATA_VERBOSE_DEBUG)
++	/* turn on all debugging levels */
++	ap->msg_enable = 0x00FF;
++#elif defined(ATA_DEBUG)
++	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_CTL | ATA_MSG_WARN | ATA_MSG_ERR;
++#else 
++	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_ERR;
++#endif
+ 
+ 	INIT_WORK(&ap->port_task, NULL, NULL);
+ 	INIT_LIST_HEAD(&ap->eh_done_q);
+
+		
+___________________________________________________________ 
+Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
+
