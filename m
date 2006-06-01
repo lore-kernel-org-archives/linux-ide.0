@@ -1,36 +1,37 @@
-From: "Abel French" <fungihwwhz@citydirectory.com>
-Subject: Fwd: warning
-Date: Fri, 2 Jun 2006 00:36:46 +0000
-Message-ID: <1b4801c685dc$a1197fa0$0201a8c0@ORGRKSRE5SP9EX>
+From: Doug Maxey <dwm@austin.ibm.com>
+Subject: Re: Controlling PATA access speeds
+Date: Thu, 01 Jun 2006 16:21:58 -0500
+Message-ID: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
+References: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-     format=flowed;
-     charset="iso-8859-1";
-     reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 61.195.43.87.eo.eaccess.ne.jp ([61.195.43.87]:64516 "EHLO
-	ORGRKSRE5SP9EX.citydirectory.com") by vger.kernel.org with ESMTP
-	id S1750732AbWFBAdL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Jun 2006 20:33:11 -0400
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:1422 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751024AbWFBAxM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jun 2006 20:53:12 -0400
+In-reply-to: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: John Treubig <jtreubig@hotmail.com>
+Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Life Should be Full of Luxuries....
 
-http://newgunforsalejoke.com/
+On Thu, 01 Jun 2006 15:35:23 CDT, "John Treubig" wrote:
+>Jeff,
+>
+>You bring up a good point in the fact that I believe your refering to 
+>detecting 80 wire vs. 40 wire.  We've not tried to use this to our 
+>advantage, but it could have some merrit.  What does the driver do if it 
+>encounters a 40 wire cable and the drive says it's capable of DMA5?
+>
 
-Yet, only a handful of people can afford the finest products, the luxuries of the elite.
-But, here at "Luxury Replica" we are committed to bringing you the finest products, at prices incomparably lower.
-All of the top designer brands for Watches, Ties, Handbags and even Mont Blanc.
+The presence of a 40 wire cable limits the device to UDMA2 - 33mhz.  
+See the ATA6 or later on t13.org.
 
-http://newgunforsalejoke.com/
+JS20 blades are lackinging the strapping to indicate the devices hanging 
+off the amd8111 are on the equivalent of 80 wire - 4 inch trace on mb.
+In the JS20 case, a quirk will be necessary to run at speeds higher than UDMA2.
 
-The finest of products, at the lowest of prices, only a click away:
+++doug
 
-http://blessthathomepleasee.com/
-
-Regards,
-Abel French
 
