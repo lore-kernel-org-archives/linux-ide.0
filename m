@@ -1,54 +1,32 @@
-From: "John Treubig" <jtreubig@hotmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: Controlling PATA access speeds
-Date: Thu, 01 Jun 2006 15:35:23 -0500
-Message-ID: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl>
-References: <20060601185244.GH5869@havoc.gtf.org>
+Date: Fri, 02 Jun 2006 02:01:03 +0400
+Message-ID: <447F639F.6030609@ru.mvista.com>
+References: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20060601185244.GH5869@havoc.gtf.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:29389 "HELO
+	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750756AbWFAWCK
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Jun 2006 18:02:10 -0400
+In-Reply-To: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Jeff,
-
-You bring up a good point in the fact that I believe your refering to 
-detecting 80 wire vs. 40 wire.  We've not tried to use this to our 
-advantage, but it could have some merrit.  What does the driver do if it 
-encounters a 40 wire cable and the drive says it's capable of DMA5?
-
-Best wishes,
-John
-
-
-From: Jeff Garzik <jeff@garzik.org>
 To: John Treubig <jtreubig@hotmail.com>
-CC: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: Controlling PATA access speeds
-Date: Thu, 1 Jun 2006 14:52:44 -0400
+Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Jun 01, 2006 at 12:25:45PM -0500, John Treubig wrote:
- > We are currently using Promise Ultra133 TX2 (PDC20269 chip; pata_pdc2027x
- > driver, kernel version 2.6.15) to test and access PATA drives.   If my
- > understanding is correct, during boot, a drive is queryied to determine
- > it's maximum access speed and the driver sets the access speed to be no
- > higher than the drive can handle.  This is not speed testing the drive, 
-but
- > just the drive firmware reporting it's maximum designed transfer rate.  
-Due
- > to design constraints of the cabling to the drives, we need to force the
- > access speed lower than what the Drive reponds.  Is there a mechanism to
- > tell the driver/LibATA to set the access speed to go no higher than a 
-value
- > I supply? This can be a static setting that is set at boot, as it does 
-not
- >  need to be a dynamic setting.
+Hello.
 
-The driver includes code to do cable detect.  Is this insufficient for
-some reason?
+John Treubig wrote:
+> Jeff,
+> 
+> You bring up a good point in the fact that I believe your refering to 
+> detecting 80 wire vs. 40 wire.  We've not tried to use this to our 
+> advantage, but it could have some merrit.  What does the driver do if it 
+> encounters a 40 wire cable and the drive says it's capable of DMA5?
 
-	Jeff
+    Obviously, it limits the speped to UDMA2.
 
-
+MBR, Sergei
