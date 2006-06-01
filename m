@@ -1,29 +1,32 @@
-From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: Re: [PATCH 1/n] libata-core.c conversion to new debugging scheme, part 1 (25% done)
-Date: Thu, 1 Jun 2006 08:44:03 +0200
-Message-ID: <20060601064402.GA12505@gollum.tnic>
-References: <20060531054633.GA4875@zmei.tnic> <20060531063957.GD14179@havoc.gtf.org> <20060601053849.GB8523@gollum.tnic> <447E849B.8020208@gmail.com>
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Controlling PATA access speeds
+Date: Thu, 01 Jun 2006 12:25:45 -0500
+Message-ID: <BAY113-F9629AB1FA5713C03D4F42DF900@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp109.plus.mail.re2.yahoo.com ([206.190.53.34]:51292 "HELO
-	smtp109.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S1750707AbWFAGoJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Jun 2006 02:44:09 -0400
-Content-Disposition: inline
-In-Reply-To: <447E849B.8020208@gmail.com>
+Received: from bay113-f9.bay113.hotmail.com ([65.54.168.19]:38908 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S965129AbWFARZu
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Jun 2006 13:25:50 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-> Some constants probably need to be adjusted a bit though.
-I couldn't agree more, I'll think of some mapping later on and post it here.
+We are currently using Promise Ultra133 TX2 (PDC20269 chip; pata_pdc2027x 
+driver, kernel version 2.6.15) to test and access PATA drives.   If my 
+understanding is correct, during boot, a drive is queryied to determine it's 
+maximum access speed and the driver sets the access speed to be no higher 
+than the drive can handle.  This is not speed testing the drive, but just 
+the drive firmware reporting it's maximum designed transfer rate.  Due to 
+design constraints of the cabling to the drives, we need to force the access 
+speed lower than what the Drive reponds.  Is there a mechanism to tell the 
+driver/LibATA to set the access speed to go no higher than a value I supply? 
+  This can be a static setting that is set at boot, as it does not need to 
+be a dynamic setting.
 
-Regards,
-	Boris.
+Best wishes,
+John Treubig
+VT Miltope Corporation
 
-		
-___________________________________________________________ 
-Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
 
