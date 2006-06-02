@@ -1,47 +1,27 @@
-From: "Janos Haar" <djani22@netcenter.hu>
-Subject: random reboot problem #2
-Date: Fri, 2 Jun 2006 12:00:47 +0200
-Message-ID: <039401c6862b$6e1d7da0$1800a8c0@dcccs>
+From: "Bibian" <romanov@2sun.ru>
+Subject: chin-chin from Biana
+Date: Fri, 02 Jun 2006 16:43:29 +0300
+Message-ID: <001a01c6864a$79743a80$210f000a@80.87.85.90>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.dynamicweb.hu ([195.228.155.139]:25819 "EHLO dynamicweb.hu")
-	by vger.kernel.org with ESMTP id S1751368AbWFBKBK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 06:01:10 -0400
-Received: from dcccs (53d8296a.adsl.enternet.hu [83.216.41.106])
-	by dynamicweb.hu (8.13.5/8.12.8) with SMTP id k529vTvx009383
-	for <linux-ide@vger.kernel.org>; Fri, 2 Jun 2006 11:57:29 +0200
+Received: from [80.87.85.90] ([80.87.85.90]:35335 "EHLO 80.87.85.90")
+	by vger.kernel.org with ESMTP id S932085AbWFBNmw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 09:42:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Stefan <linux-ia64-request@vger.kernel.org>
 
-(Sorry, for repost, but i wasnt on list, and i have some news!)
+Greeting.	
 
-Hello, list,
+I am a lovely and lonely Lady who is looking for the man who will make me happy and whom I want to feel like in paradise with!
+If you want to be my beautiful Hero who will save me from this loneliness find me 
+http://www.rbNbqPVdDm4CU1uH.i-am-waiting4love.net/
+and wake me up with a warm kiss.
 
-I have a random reboot problem, and  i have a  suspicion, there is a bug in
-libata somewhere.
+a rivederci,
+Bibian
 
-I use 4 disk node, each node have 12x300GB Maxtor hdd. (4xIDE + 4xSATA).
-All my 48 disk reports clean smart.
-
-But 2 of my node randomly reboots, and have a context to disk usage.
-(Network, and all others are checked.)
-
-The entire hw are replaced, and known to be good, except the 4 group of
-hdds.
-
-How can i help to debug / check this?
-
-The netconsole, and remote log did not helps.
-
-But, on serial console, i can cach this message during reboot:
-
-"ata2: translated ATA stat/err 0x51/40 to SCSI SK/ASC/ASCQ 0x3/11/04
-ata2: status=0x51 { DriveReady SeekComplete Error"
-
-Cheers,
-Janos
 
