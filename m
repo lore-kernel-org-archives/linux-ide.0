@@ -1,41 +1,29 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
+From: Jeremy Fitzhardinge <jeremy@goop.org>
 Subject: Re: State of resume for AHCI?
-Date: Fri, 02 Jun 2006 09:02:45 +0800
-Message-ID: <1149210165.13451.4.camel@forrest26.sh.intel.com>
-References: <447F23C2.8030802@goop.org> <447F3250.5070101@rtr.ca>
-	 <20060601183904.GR4400@suse.de>  <447F4BC2.8060808@goop.org>
+Date: Thu, 01 Jun 2006 20:39:24 -0700
+Message-ID: <447FB2EC.7050701@goop.org>
+References: <447F23C2.8030802@goop.org> <447F3250.5070101@rtr.ca>	 <20060601183904.GR4400@suse.de>  <447F4BC2.8060808@goop.org> <1149210165.13451.4.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31083 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751059AbWFBBPV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Jun 2006 21:15:21 -0400
-In-Reply-To: <447F4BC2.8060808@goop.org>
+Received: from gw.goop.org ([64.81.55.164]:63434 "EHLO mail.goop.org")
+	by vger.kernel.org with ESMTP id S1751240AbWFBDj2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jun 2006 23:39:28 -0400
+In-Reply-To: <1149210165.13451.4.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Fitzhardinge <jeremy@goop.org>
+To: "zhao, forrest" <forrest.zhao@intel.com>
 Cc: Jens Axboe <axboe@suse.de>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
 
-On Thu, 2006-06-01 at 13:19 -0700, Jeremy Fitzhardinge wrote:
-> Jens Axboe wrote:
-> > It's a lot more complicated than that, I'm afraid. ahci doesn't even
-> > have the resume/suspend methods defined, plus it needs more work than
-> > piix on resume.
-> >   
-> Hannes Reinecke's patch implements those functions, basically by 
-> factoring out the shutdown and init code and calling them at 
-> suspend/resume time as well.
-> 
-> Is that correct/sufficient?  Or should something else be happening?
+zhao, forrest wrote:
+> According to our test of Hannes's patch, it's not sufficient to support
+> AHCI suspend/resume.
+>   
+Yes.  I merged it into mm2, and it didn't make any difference.
+> Now I'm writing a patch to try to provide complete support for AHCI
+> suspend/resume and will send out patch soon, hopefully by the end of
+> today.
+Great, looking forward to it.
 
-According to our test of Hannes's patch, it's not sufficient to support
-AHCI suspend/resume.
-
-Now I'm writing a patch to try to provide complete support for AHCI
-suspend/resume and will send out patch soon, hopefully by the end of
-today.
-
-Thanks,
-Forrest
+    J
