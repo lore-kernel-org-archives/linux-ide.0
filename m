@@ -1,35 +1,29 @@
-From: Doug Maxey <dwm@austin.ibm.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: Controlling PATA access speeds
-Date: Fri, 02 Jun 2006 16:10:54 -0500
-Message-ID: <200606022110.k52LAsV7022096@falcon10.austin.ibm.com>
+Date: Fri, 02 Jun 2006 18:33:06 -0400
+Message-ID: <4480BCA2.1050707@rtr.ca>
 References: <BAY113-F20C5E81293FCD88D28597DDF910@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:46766 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750926AbWFBVLF
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jun 2006 17:11:05 -0400
-In-reply-to: <BAY113-F20C5E81293FCD88D28597DDF910@phx.gbl> 
+Received: from rtr.ca ([64.26.128.89]:22415 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932584AbWFBWdG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 18:33:06 -0400
+In-Reply-To: <BAY113-F20C5E81293FCD88D28597DDF910@phx.gbl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: John Treubig <jtreubig@hotmail.com>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: dwm@austin.ibm.com, jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
+John Treubig wrote:
+> Because of my setup, I have had to pull pin 34 (PDIAG) high at the 
+> Promise to make the Promise think I have a 40 pin cable.  At boot, the 
+> Promise thinks I have a 40 wire cable installed and gives me a warning, 
+> yet when I run my program that measures transfer rate in Linux, I still 
+> see the same data rates as with an 80 wire cable (pin 34 shorted). 
 
-On Fri, 02 Jun 2006 15:37:51 CDT, "John Treubig" wrote:
->Because of my setup, I have had to pull pin 34 (PDIAG) high at the Promise 
->to make the Promise think I have a 40 pin cable.  At boot, the Promise 
->thinks I have a 40 wire cable installed and gives me a warning, yet when I 
->run my program that measures transfer rate in Linux, I still see the same 
->data rates as with an 80 wire cable (pin 34 shorted).  Is there any other 
->item that I'm missing besides having Pin 34 pulled high?  Does the drive's 
->echoing that it is UDMA5 capable have anything to do with it?  Is the fact 
->that I'm not carrying pin 34 all the way to the drive causing my problem?
->
+What data rate is that?  If it's less than 25MB/sec (or so),
+then the udma mode won't make much of a difference either way.
 
-What type of drive do you have?  A 2.5 laptop type?  26 meg/sec is 
-about what you will see. :-/
-
-++doug
-
+Cheers
