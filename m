@@ -1,22 +1,27 @@
-From: Jens Axboe <axboe@suse.de>
+From: "zhao, forrest" <forrest.zhao@intel.com>
 Subject: Re: State of resume for AHCI?
-Date: Fri, 2 Jun 2006 08:52:06 +0200
-Message-ID: <20060602065206.GV4400@suse.de>
-References: <447F23C2.8030802@goop.org> <447F3250.5070101@rtr.ca> <20060601183904.GR4400@suse.de> <447F4BC2.8060808@goop.org> <20060602060323.GS4400@suse.de> <1149228204.13451.8.camel@forrest26.sh.intel.com> <20060602064148.GT4400@suse.de> <447FDE2E.5010401@suse.de>
+Date: Fri, 02 Jun 2006 14:49:04 +0800
+Message-ID: <1149230944.13451.11.camel@forrest26.sh.intel.com>
+References: <447F23C2.8030802@goop.org> <447F3250.5070101@rtr.ca>
+	 <20060601183904.GR4400@suse.de> <447F4BC2.8060808@goop.org>
+	 <20060602060323.GS4400@suse.de>
+	 <1149228204.13451.8.camel@forrest26.sh.intel.com>
+	 <20060602064148.GT4400@suse.de>  <447FDE2E.5010401@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:26436 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751223AbWFBGt6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 02:49:58 -0400
-Content-Disposition: inline
+Received: from mga01.intel.com ([192.55.52.88]:50723 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S1751231AbWFBHBG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jun 2006 03:01:06 -0400
 In-Reply-To: <447FDE2E.5010401@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: "zhao, forrest" <forrest.zhao@intel.com>, Jeremy Fitzhardinge <jeremy@goop.org>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Jens Axboe <axboe@suse.de>, Jeremy Fitzhardinge <jeremy@goop.org>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Fri, Jun 02 2006, Hannes Reinecke wrote:
+On Fri, 2006-06-02 at 08:43 +0200, Hannes Reinecke wrote:
 > Jens Axboe wrote:
 > > On Fri, Jun 02 2006, zhao, forrest wrote:
 > >> On Fri, 2006-06-02 at 08:03 +0200, Jens Axboe wrote:
@@ -45,10 +50,11 @@ On Fri, Jun 02 2006, Hannes Reinecke wrote:
 > community as Jeff indicated he would only accept patches against
 > libata-dev. And as I didn't have time to port them yet I didn't feel the
 > need to do so.
+> 
+> Forrest, please drop me a mail if I can be of further assistance.
 
-Understandable, I hope you will have some time to push it for 2.6.18
-though.
+I almost finished porting a patch from OpenSUSE, will send it out in an
+hour, please help review it :)
 
--- 
-Jens Axboe
-
+Thanks,
+Forrest
