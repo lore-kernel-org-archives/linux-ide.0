@@ -1,167 +1,260 @@
 From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 5/6] Update the users of new added functions
-Date: Fri, 02 Jun 2006 15:45:57 +0800
-Message-ID: <1149234357.13451.58.camel@forrest26.sh.intel.com>
+Subject: [PATCH 6/6] Implement the AHCI suspend/resume
+Date: Fri, 02 Jun 2006 15:46:19 +0800
+Message-ID: <1149234379.13451.59.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:33039 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751213AbWFBH5q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jun 2006 03:57:46 -0400
+Received: from mga03.intel.com ([143.182.124.21]:65419 "EHLO
+	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
+	id S1751286AbWFBH6C (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jun 2006 03:58:02 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, hare@suse.de, axboe@suse.de, htejun@gmail.com, jeremy@goop.org, lkml@rtr.ca
 Cc: linux-ide@vger.kernel.org
 
-Update the users of ahci_start_engine(), ahci_stop_engine(),
-ahci_port_standby(), ahci_port_spinup() and ahci_port_suspend().
+This patch implements the AHCI suspend/resume.
+It puts the port suspend/resume operations in 
+ahci_pci_device_suspend/resume(), which is in conformance with
+Jeff's idea of host<->bus<->device suspend/resume sequence.
 
 
 Signed-off-by: Forrest Zhao <forrest.zhao@intel.com>
 
 ---
 
- drivers/scsi/ahci.c |   76 +++++++++++++++++++++------------------------------
- 1 files changed, 32 insertions(+), 44 deletions(-)
+ drivers/scsi/ahci.c |  157 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 156 insertions(+), 1 deletions(-)
 
-7124ce975902b06891a6057ccc166305217082c0
+a68fb19b6f0d03d4052d02f1288ccb3e5902c50e
 diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 1d9c158..8928170 100644
+index 8928170..b2c94ed 100644
 --- a/drivers/scsi/ahci.c
 +++ b/drivers/scsi/ahci.c
-@@ -417,20 +417,20 @@ static int ahci_port_start(struct ata_po
+@@ -188,6 +188,7 @@ struct ahci_host_priv {
+ 	unsigned long		flags;
+ 	u32			cap;	/* cache of HOST_CAP register */
+ 	u32			port_map; /* cache of HOST_PORTS_IMPL reg */
++	u32			dev_map; /* connected devices */
+ };
  
- 	ap->private_data = pp;
+ struct ahci_port_priv {
+@@ -217,6 +218,8 @@ static void ahci_port_stop(struct ata_po
+ static int ahci_port_standby(void __iomem *port_mmio, u32 cap);
+ static int ahci_port_spinup(void __iomem *port_mmio, u32 cap);
+ static int ahci_port_suspend(struct ata_port *ap, pm_message_t state);
++static int ahci_port_resume(struct ata_port *ap);
++static void ahci_port_disable(struct ata_port *ap);
+ static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+ static u8 ahci_check_status(struct ata_port *ap);
+@@ -224,6 +227,8 @@ static void ahci_freeze(struct ata_port 
+ static void ahci_thaw(struct ata_port *ap);
+ static void ahci_error_handler(struct ata_port *ap);
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
++static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
++static int ahci_pci_device_resume(struct pci_dev *pdev);
+ static void ahci_remove_one (struct pci_dev *pdev);
  
--	if (hpriv->cap & HOST_CAP_64)
--		writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio + PORT_LST_ADDR_HI);
--	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
--	readl(port_mmio + PORT_LST_ADDR); /* flush */
--
--	if (hpriv->cap & HOST_CAP_64)
--		writel((pp->rx_fis_dma >> 16) >> 16, port_mmio + PORT_FIS_ADDR_HI);
--	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
--	readl(port_mmio + PORT_FIS_ADDR); /* flush */
-+	/*
-+	 * Driver is setup; initialize the HBA
-+	 */
-+	ahci_start_fis_rx(port_mmio, pp, hpriv);
+ static struct scsi_host_template ahci_sht = {
+@@ -242,10 +247,12 @@ static struct scsi_host_template ahci_sh
+ 	.dma_boundary		= AHCI_DMA_BOUNDARY,
+ 	.slave_configure	= ata_scsi_slave_config,
+ 	.bios_param		= ata_std_bios_param,
++	.resume			= ata_scsi_device_resume,
++	.suspend		= ata_scsi_device_suspend,
+ };
  
--	writel(PORT_CMD_ICC_ACTIVE | PORT_CMD_FIS_RX |
--	       PORT_CMD_POWER_ON | PORT_CMD_SPIN_UP |
--	       PORT_CMD_START, port_mmio + PORT_CMD);
--	readl(port_mmio + PORT_CMD); /* flush */
-+	rc = ahci_port_spinup(port_mmio, hpriv->cap);
-+	if (rc) 
-+		ata_port_printk(ap, KERN_WARNING,
-+				"Could not spinup port (%d)\n", rc);
-+
-+	rc = ahci_start_engine(port_mmio); 
-+	if (rc) 
-+		ata_port_printk(ap, KERN_WARNING, "Could not start DMA engine"
-+			        "of port (%d)\n", rc);
+ static const struct ata_port_operations ahci_ops = {
+-	.port_disable		= ata_port_disable,
++	.port_disable		= ahci_port_disable,
  
- 	return 0;
- }
-@@ -439,19 +439,8 @@ static void ahci_port_stop(struct ata_po
- {
- 	struct device *dev = ap->host_set->dev;
- 	struct ahci_port_priv *pp = ap->private_data;
--	void __iomem *mmio = ap->host_set->mmio_base;
--	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
--	u32 tmp;
+ 	.check_status		= ahci_check_status,
+ 	.check_altstatus	= ahci_check_status,
+@@ -346,6 +353,8 @@ static struct pci_driver ahci_pci_driver
+ 	.id_table		= ahci_pci_tbl,
+ 	.probe			= ahci_init_one,
+ 	.remove			= ahci_remove_one,
++	.suspend		= ahci_pci_device_suspend,
++	.resume			= ahci_pci_device_resume,
+ };
  
--	tmp = readl(port_mmio + PORT_CMD);
--	tmp &= ~(PORT_CMD_START | PORT_CMD_FIS_RX);
--	writel(tmp, port_mmio + PORT_CMD);
--	readl(port_mmio + PORT_CMD); /* flush */
--
--	/* spec says 500 msecs for each PORT_CMD_{START,FIS_RX} bit, so
--	 * this is slightly incorrect.
--	 */
--	msleep(500);
-+	ahci_port_suspend(ap, PMSG_SUSPEND);
- 
- 	ap->private_data = NULL;
- 	dma_free_coherent(dev, AHCI_PORT_PRIV_DMA_SZ,
-@@ -846,7 +835,7 @@ static int ahci_softreset(struct ata_por
- 	}
- 
- 	/* prepare for SRST (AHCI-1.1 10.4.1) */
--	rc = ahci_stop_engine(ap);
-+	rc = ahci_stop_engine(port_mmio);
- 	if (rc) {
- 		reason = "failed to stop engine";
- 		goto fail_restart;
-@@ -867,7 +856,7 @@ static int ahci_softreset(struct ata_por
- 	}
- 
- 	/* restart engine */
--	ahci_start_engine(ap);
-+	ahci_start_engine(port_mmio);
- 
- 	ata_tf_init(ap->device, &tf);
- 	fis = pp->cmd_tbl;
-@@ -926,7 +915,7 @@ static int ahci_softreset(struct ata_por
- 	return 0;
- 
-  fail_restart:
--	ahci_start_engine(ap);
-+	ahci_start_engine(port_mmio);
-  fail:
- 	ata_port_printk(ap, KERN_ERR, "softreset failed (%s)\n", reason);
+
+@@ -482,6 +491,81 @@ static int ahci_port_suspend(struct ata_
  	return rc;
-@@ -934,13 +923,15 @@ static int ahci_softreset(struct ata_por
+ }
  
- static int ahci_hardreset(struct ata_port *ap, unsigned int *class)
- {
++static int ahci_port_resume(struct ata_port *ap)
++{
 +	void __iomem *mmio = ap->host_set->mmio_base;
 +	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
- 
--	ahci_stop_engine(ap);
-+	ahci_stop_engine(port_mmio);
- 	rc = sata_std_hardreset(ap, class);
--	ahci_start_engine(ap);
-+	ahci_start_engine(port_mmio);
- 
- 	if (rc == 0 && ata_port_online(ap))
- 		*class = ahci_dev_classify(ap);
-@@ -1407,20 +1398,17 @@ static int ahci_host_init(struct ata_pro
- 				(unsigned long) mmio, i);
- 
- 		/* make sure port is not active */
--		tmp = readl(port_mmio + PORT_CMD);
--		VPRINTK("PORT_CMD 0x%x\n", tmp);
--		if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
--			   PORT_CMD_FIS_RX | PORT_CMD_START)) {
--			tmp &= ~(PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
--				 PORT_CMD_FIS_RX | PORT_CMD_START);
--			writel(tmp, port_mmio + PORT_CMD);
--			readl(port_mmio + PORT_CMD); /* flush */
--
--			/* spec says 500 msecs for each bit, so
--			 * this is slightly incorrect.
--			 */
--			msleep(500);
--		}
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
++	struct ahci_port_priv *pp = ap->private_data;
++	int rc;
++	u32 tmp;
 +
-+		rc = ahci_stop_engine(port_mmio);
++	/*
++	 * Enable FIS reception
++	 */
++	ahci_start_fis_rx(port_mmio, pp, hpriv);
++
++	rc = ahci_port_spinup(port_mmio, hpriv->cap);
++	if (rc)
++		ata_port_printk(ap, KERN_WARNING, "Could not spinup device"
++				" (%d)\n", rc);
++
++	/*
++	 * Clear error status
++	 */
++	tmp = readl(port_mmio + PORT_SCR_ERR);
++	writel(tmp, port_mmio + PORT_SCR_ERR);
++	/*
++	 * Clear interrupt status
++	 */
++	tmp = readl(mmio + HOST_CTL);
++	if (!(tmp & HOST_IRQ_EN)) {
++		u32 irq_stat;
++
++		/* ack any pending irq events for this port */
++		irq_stat = readl(port_mmio + PORT_IRQ_STAT);
++		if (irq_stat)
++			writel(irq_stat, port_mmio + PORT_IRQ_STAT);
++
++		/* set irq mask (enables interrupts) */
++		writel(DEF_PORT_IRQ, port_mmio + PORT_IRQ_MASK);
++
++		if ((hpriv->dev_map >> (ap->port_no + 1)) == 0) {
++			/*
++			 * Enable interrupts if this was the last port
++			 */
++			ata_port_printk(ap, KERN_INFO, "Enable interrupts\n");
++
++			irq_stat = readl(mmio + HOST_IRQ_STAT);
++			if (irq_stat)
++				writel(irq_stat, mmio + HOST_IRQ_STAT);
++
++			tmp |= HOST_IRQ_EN;
++			writel(tmp, mmio + HOST_CTL);
++			(void) readl(mmio + HOST_CTL);
++		}
++	}
++
++	/*
++	 * Enable DMA
++	 */
++	rc = ahci_start_engine(port_mmio);
++	if (rc)
++		ata_port_printk(ap, KERN_WARNING, "Can't start DMA engine"
++				" (%d)\n", rc);
++
++	return rc;
++}
++
++static void ahci_port_disable(struct ata_port *ap)
++{
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
++
++	ata_port_disable(ap);
++
++	hpriv->dev_map &= ~(1 << ap->port_no);
++}
++
+ static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
+ {
+ 	unsigned int sc_reg;
+@@ -945,6 +1029,7 @@ static int ahci_hardreset(struct ata_por
+ static void ahci_postreset(struct ata_port *ap, unsigned int *class)
+ {
+ 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
+ 	u32 new_tmp, tmp;
+ 
+ 	ata_std_postreset(ap, class);
+@@ -959,6 +1044,75 @@ static void ahci_postreset(struct ata_po
+ 		writel(new_tmp, port_mmio + PORT_CMD);
+ 		readl(port_mmio + PORT_CMD); /* flush */
+ 	}
++
++	if (*class != ATA_DEV_NONE)
++		hpriv->dev_map |= (1 << ap->port_no);
++}
++
++int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++	struct device *dev = pci_dev_to_dev(pdev);
++	struct ata_host_set *host_set = dev_get_drvdata(dev);
++	void __iomem *mmio = host_set->mmio_base;
++	int rc, i;
++	u32 tmp;
++	struct ata_port *ap;
++
++	/* First suspend all ports */
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++
++		rc = ahci_port_suspend(ap, state);
 +		if (rc)
-+			printk(KERN_WARNING "ata%u: DMA engine busy (%d)\n",
-+			       i, rc);
++			return rc;
++	}
 +
-+		rc = ahci_stop_fis_rx(port_mmio);
++	/*
++	 * AHCI spec rev1.1 section 8.3.3:
++	 * Software must disable interrupts prior to
++	 * requesting a transition of the HBA to
++	 * D3 state.
++	 */
++	tmp = readl(mmio + HOST_CTL);
++	tmp &= ~HOST_IRQ_EN;
++	writel(tmp, mmio + HOST_CTL);
++	tmp = readl(mmio + HOST_CTL); /* flush */
++
++	return ata_pci_device_suspend(pdev, state);
++}
++
++int ahci_pci_device_resume(struct pci_dev *pdev)
++{
++	struct device *dev = pci_dev_to_dev(pdev);
++	struct ata_host_set *host_set = dev_get_drvdata(dev);
++	void __iomem *mmio = host_set->mmio_base;
++	u32 tmp;
++	struct ata_port *ap;
++	int rc = 0, i;
++
++	/*
++	 * Enabling AHCI mode
++	 */
++	tmp = readl(mmio + HOST_CTL);
++	if (!(tmp & HOST_AHCI_EN)) {
++		tmp |= HOST_AHCI_EN;
++		writel(tmp, mmio + HOST_CTL);
++		tmp = readl(mmio + HOST_CTL);
++	}
++
++	rc = ata_pci_device_resume(pdev);
++	if (rc)
++		return rc;
++
++	/* Resume all ports */
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++		rc = ahci_port_resume(ap);
 +		if (rc)
-+			printk(KERN_WARNING "ata%u: FIS RX not stopped (%d)\n",
-+			       i, rc);
++			break;
++	}
 +
++	return rc;
+ }
  
- 		writel(PORT_CMD_SPIN_UP, port_mmio + PORT_CMD);
+ static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes)
+@@ -1353,6 +1507,7 @@ static int ahci_host_init(struct ata_pro
  
+ 	hpriv->cap = readl(mmio + HOST_CAP);
+ 	hpriv->port_map = readl(mmio + HOST_PORTS_IMPL);
++	hpriv->dev_map = 0;
+ 	probe_ent->n_ports = (hpriv->cap & 0x1f) + 1;
+ 
+ 	VPRINTK("cap 0x%x  port_map 0x%x  n_ports %d\n",
 -- 
 1.2.6
