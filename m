@@ -1,40 +1,47 @@
-From: "Janos Haar" <djani22@netcenter.hu>
-Subject: random reboot problem.
-Date: Fri, 2 Jun 2006 10:24:09 +0200
-Message-ID: <017101c6861d$ef4f19f0$1800a8c0@dcccs>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 6/6] Implement the AHCI suspend/resume
+Date: Fri, 02 Jun 2006 17:34:23 +0900
+Message-ID: <447FF80F.7030905@gmail.com>
+References: <1149234379.13451.59.camel@forrest26.sh.intel.com> <447FF50E.4060609@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-2"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.dynamicweb.hu ([195.228.155.139]:26011 "EHLO dynamicweb.hu")
-	by vger.kernel.org with ESMTP id S1751320AbWFBIYe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 04:24:34 -0400
-Received: from dcccs (53d8296a.adsl.enternet.hu [83.216.41.106])
-	by dynamicweb.hu (8.13.5/8.12.8) with SMTP id k528KpmA002441
-	for <linux-ide@vger.kernel.org>; Fri, 2 Jun 2006 10:20:52 +0200
+Received: from nz-out-0102.google.com ([64.233.162.199]:61092 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751331AbWFBIe3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jun 2006 04:34:29 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so475692nze
+        for <linux-ide@vger.kernel.org>; Fri, 02 Jun 2006 01:34:29 -0700 (PDT)
+In-Reply-To: <447FF50E.4060609@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, jeff@garzik.org, axboe@suse.de, jeremy@goop.org, lkml@rtr.ca, linux-ide@vger.kernel.org
 
-Hello, list,
+Hannes Reinecke wrote:
+> zhao, forrest wrote:
+>> This patch implements the AHCI suspend/resume.
+>> It puts the port suspend/resume operations in 
+>> ahci_pci_device_suspend/resume(), which is in conformance with
+>> Jeff's idea of host<->bus<->device suspend/resume sequence.
+>>
+>>
+>> Signed-off-by: Forrest Zhao <forrest.zhao@intel.com>
+>>
+> There is one quirky bit in here: we have to enable interrupts for the
+> _adapter_ after all _devices_ have been re-initialized.
+> This breaks the host<->bus<->device initialization sequence.
+> Is there any chance libata can add some hooks for that sort of thing?
+> The current approach (using a device map and run the host initialisation
+> after the last device is done) is a bit hackish.
+> I'd rather like to see the upper layers being able to deal with such
+> devices. But until then:
+> 
 
-I have a random reboot problem, and  i have a  suspicion, there is a bug in
-libata somewhere.
+Working on it.  After quite some number of saying 'oh.. it's gonna be 
+ready in a week' and then taking more than a month, I've pretty much 
+given up specifying due date.  But, I'm on it.  :)
 
-I use 4 disk node, each node have 12x300GB Maxtor hdd. (4xIDE + 4xSATA).
-All my 48 disk reports clean smart.
-
-But 2 of my node randomly reboots, and have a context to disk usage.
-(Network, and all others are checked.)
-
-The entire hw are replaced, and known to be good, except the 4 group of
-hdds.
-
-How can i help to debug / check this?
-
-The netconsole, and remote log did not helps.
-
-Cheers,
-Janos
-
+-- 
+tejun
