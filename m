@@ -1,48 +1,25 @@
-From: "John Treubig" <jtreubig@hotmail.com>
-Subject: Re: Controlling PATA access speeds
-Date: Fri, 02 Jun 2006 10:31:15 -0500
-Message-ID: <BAY113-F26703295C8881F7AA93A79DF910@phx.gbl>
-References: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dwm@austin.ibm.com
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+From: "Aurelio Pugh" <yjtbdwgznlwj@msn.com>
+Subject: Best Pharmacy Today Gw2aw
+Date: Fri, 02 Jun 2006 16:00:24 -0400
+Message-ID: <68HC87FE.0K24.yjtbdwgznlwj__30752.8366837234$1149275495$gmane$org@msn.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [125.176.102.28] ([125.176.102.28]:60677 "HELO 5483EEC0")
+	by vger.kernel.org with SMTP id S932141AbWFBTKB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 15:10:01 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-The 40 wire detect (forcing the host to DMA2) is a good start.  I am 
-researching the implications to our setup.  Thanks for the help
-
-Best wishes,
-John
+To: autoanswer@vger.kernel.org
 
 
-From: Doug Maxey <dwm@austin.ibm.com>
-To: "John Treubig" <jtreubig@hotmail.com>
-CC: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: Controlling PATA access speeds
-Date: Thu, 01 Jun 2006 16:21:58 -0500
+
+The most complete Phar macy Online
+We carry all major medds at bargain price
+Viggra, Ci ialis, VaIium, Xa naax
+Phantermiine, Ulltraam and etc...
+SatiisfactIon Gua ranteeed
+
+http://discountofthecenturies.net/?wid=3D102
 
 
-On Thu, 01 Jun 2006 15:35:23 CDT, "John Treubig" wrote:
- >Jeff,
- >
- >You bring up a good point in the fact that I believe your refering to
- >detecting 80 wire vs. 40 wire.  We've not tried to use this to our
- >advantage, but it could have some merrit.  What does the driver do if it
- >encounters a 40 wire cable and the drive says it's capable of DMA5?
- >
-
-The presence of a 40 wire cable limits the device to UDMA2 - 33mhz.
-See the ATA6 or later on t13.org.
-
-JS20 blades are lackinging the strapping to indicate the devices hanging
-off the amd8111 are on the equivalent of 80 wire - 4 inch trace on mb.
-In the JS20 case, a quirk will be necessary to run at speeds higher than 
-UDMA2.
-
-++doug
-
+30
 
