@@ -1,122 +1,31 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 1/6] The definition of ahci_start_engine() and
-	ahci_stop_engine()
-Date: Fri, 02 Jun 2006 15:49:59 +0800
-Message-ID: <1149234599.13451.63.camel@forrest26.sh.intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/6] The definition of ahci_start_fis_rx() and	ahci_stop_fis_rx()
+Date: Fri, 02 Jun 2006 10:08:40 +0200
+Message-ID: <447FF208.40408@suse.de>
+References: <1149234295.13451.54.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54333 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751297AbWFBID0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jun 2006 04:03:26 -0400
+Received: from cantor.suse.de ([195.135.220.2]:56546 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1751152AbWFBIIm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 04:08:42 -0400
+In-Reply-To: <1149234295.13451.54.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, hare@suse.de, axboe@suse.de, htejun@gmail.com, jeremy@goop.org, lkml@rtr.ca
-Cc: linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: jeff@garzik.org, axboe@suse.de, htejun@gmail.com, jeremy@goop.org, lkml@rtr.ca, linux-ide@vger.kernel.org
 
-1 Make ahci_start_engine() and ahci_stop_engine more consistent with AHCI
- spec 1.1
-2 Change their input parameter from ap to port_mmio
-
-
-Signed-off-by: Forrest Zhao <forrest.zhao@intel.com>
-
-
----
-
- drivers/scsi/ahci.c |   51 +++++++++++++++++++++++++++++++++++++++++++++------
- 1 files changed, 45 insertions(+), 6 deletions(-)
-
-9ba56ff63c5f01f0a7280f15189c952f2fd7f2a1
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 45fd71d..d2b35c4 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -200,6 +200,8 @@ static void ahci_scr_write (struct ata_p
- static int ahci_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
- static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
-+static int ahci_start_engine(void __iomem *port_mmio);
-+static int ahci_stop_engine(void __iomem *port_mmio);
- static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes);
- static void ahci_irq_clear(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
-@@ -482,14 +484,18 @@ static void ahci_scr_write (struct ata_p
- 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
- }
- 
--static int ahci_stop_engine(struct ata_port *ap)
-+static int ahci_stop_engine(void __iomem *port_mmio)
- {
--	void __iomem *mmio = ap->host_set->mmio_base;
--	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
- 	int work;
- 	u32 tmp;
- 
- 	tmp = readl(port_mmio + PORT_CMD);
-+
-+	/* Check if the HBA is idle */
-+	if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) == 0)
-+		return 0;
-+
-+	/* Setting HBA to idle */
- 	tmp &= ~PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
- 
-@@ -507,16 +513,49 @@ static int ahci_stop_engine(struct ata_p
- 	return -EIO;
- }
- 
--static void ahci_start_engine(struct ata_port *ap)
-+static int ahci_start_engine(void __iomem *port_mmio)
- {
--	void __iomem *mmio = ap->host_set->mmio_base;
--	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
- 	u32 tmp;
-+	int work = 1000;
- 
-+	/*
-+	 * Get current status
-+	 */
- 	tmp = readl(port_mmio + PORT_CMD);
-+
-+	/*
-+	 * AHCI rev 1.1 section 10.3.1:
-+	 * Software shall not set PxCMD.ST to '1' until it verifies
-+	 * that PxCMD.CR is '0' and has set PxCMD.FRE to '1'
-+	 */
-+	if ((tmp & PORT_CMD_FIS_RX) == 0)
-+		return -EPERM;
-+
-+	/*
-+	 * wait for engine to become idle.
-+	 */
-+	while (work-- > 0) {
-+		tmp = readl(port_mmio + PORT_CMD);
-+		if ((tmp & PORT_CMD_LIST_ON) == 0)
-+			break;
-+		udelay(10);
-+	}
-+
-+	if (!work) {
-+		/*
-+		 * We need to do a port reset / HBA reset here
-+		 */
-+		return -EBUSY;
-+	}
-+
-+	/*
-+	 * Start DMA
-+	 */
- 	tmp |= PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
- 	readl(port_mmio + PORT_CMD); /* flush */
-+
-+	return 0;
- }
- 
- static unsigned int ahci_dev_classify(struct ata_port *ap)
--- 
-1.2.6
+zhao, forrest wrote:
+> Put the "start/stop FIS RX" operation into ahci_start_fis_rx() and
+>  ahci_stop_fis_rx().
+>=20
+>=20
+> Signed-off-by: Forrest Zhao <forrest.zhao@intel.com>
+>=20
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
