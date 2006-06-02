@@ -1,37 +1,41 @@
-From: Doug Maxey <dwm@austin.ibm.com>
-Subject: Re: Controlling PATA access speeds
-Date: Thu, 01 Jun 2006 16:21:58 -0500
-Message-ID: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
-References: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: State of resume for AHCI?
+Date: Fri, 02 Jun 2006 09:02:45 +0800
+Message-ID: <1149210165.13451.4.camel@forrest26.sh.intel.com>
+References: <447F23C2.8030802@goop.org> <447F3250.5070101@rtr.ca>
+	 <20060601183904.GR4400@suse.de>  <447F4BC2.8060808@goop.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:1422 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751024AbWFBAxM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jun 2006 20:53:12 -0400
-In-reply-to: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl> 
+Received: from mga02.intel.com ([134.134.136.20]:31083 "EHLO
+	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751059AbWFBBPV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Jun 2006 21:15:21 -0400
+In-Reply-To: <447F4BC2.8060808@goop.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: Jens Axboe <axboe@suse.de>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
 
+On Thu, 2006-06-01 at 13:19 -0700, Jeremy Fitzhardinge wrote:
+> Jens Axboe wrote:
+> > It's a lot more complicated than that, I'm afraid. ahci doesn't even
+> > have the resume/suspend methods defined, plus it needs more work than
+> > piix on resume.
+> >   
+> Hannes Reinecke's patch implements those functions, basically by 
+> factoring out the shutdown and init code and calling them at 
+> suspend/resume time as well.
+> 
+> Is that correct/sufficient?  Or should something else be happening?
 
-On Thu, 01 Jun 2006 15:35:23 CDT, "John Treubig" wrote:
->Jeff,
->
->You bring up a good point in the fact that I believe your refering to 
->detecting 80 wire vs. 40 wire.  We've not tried to use this to our 
->advantage, but it could have some merrit.  What does the driver do if it 
->encounters a 40 wire cable and the drive says it's capable of DMA5?
->
+According to our test of Hannes's patch, it's not sufficient to support
+AHCI suspend/resume.
 
-The presence of a 40 wire cable limits the device to UDMA2 - 33mhz.  
-See the ATA6 or later on t13.org.
+Now I'm writing a patch to try to provide complete support for AHCI
+suspend/resume and will send out patch soon, hopefully by the end of
+today.
 
-JS20 blades are lackinging the strapping to indicate the devices hanging 
-off the amd8111 are on the equivalent of 80 wire - 4 inch trace on mb.
-In the JS20 case, a quirk will be necessary to run at speeds higher than UDMA2.
-
-++doug
-
-
+Thanks,
+Forrest
