@@ -1,43 +1,48 @@
-From: KENT ANDERSON <ken.anderson@laposte.net>
-Subject: EMPLOYMENT MAIL
-Date: Fri, 02 Jun 2006 09:00:33 -0600
-Message-ID: <E1FmB8b-0004ZC-0x@server.thevenusserver.com>
-Reply-To: ken.anderson@laposte.net
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Re: Controlling PATA access speeds
+Date: Fri, 02 Jun 2006 10:31:15 -0500
+Message-ID: <BAY113-F26703295C8881F7AA93A79DF910@phx.gbl>
+References: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 13-120-13-69.cust.propagation.net ([69.13.120.13]:37257 "EHLO
-	server.thevenusserver.com") by vger.kernel.org with ESMTP
-	id S932160AbWFBPAd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jun 2006 11:00:33 -0400
-Received: from apache by server.thevenusserver.com with local (Exim 4.42)
-	id 1FmB8b-0004ZC-0x
-	for linux-ide@vger.kernel.org; Fri, 02 Jun 2006 09:00:33 -0600
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: dwm@austin.ibm.com
+Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
->From The Desk of:
+The 40 wire detect (forcing the host to DMA2) is a good start.  I am 
+researching the implications to our setup.  Thanks for the help
 
-Kent Anderson PhD
-L. G. A. (Woodworking Machinery) Ltd,
-1 Rutland Court,EH3 8EY,
-London.
+Best wishes,
+John
 
 
-Dear Sir/Madam,
+From: Doug Maxey <dwm@austin.ibm.com>
+To: "John Treubig" <jtreubig@hotmail.com>
+CC: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: Controlling PATA access speeds
+Date: Thu, 01 Jun 2006 16:21:58 -0500
 
-We will be very glad if you can be our representative in your country 
-and earn 10% of every payment made through you to us.
 
-For more information, contact us through email. Note that you shall not 
-be liable to make any upfront payment.
+On Thu, 01 Jun 2006 15:35:23 CDT, "John Treubig" wrote:
+ >Jeff,
+ >
+ >You bring up a good point in the fact that I believe your refering to
+ >detecting 80 wire vs. 40 wire.  We've not tried to use this to our
+ >advantage, but it could have some merrit.  What does the driver do if it
+ >encounters a 40 wire cable and the drive says it's capable of DMA5?
+ >
 
-Thanks in advance.
+The presence of a 40 wire cable limits the device to UDMA2 - 33mhz.
+See the ATA6 or later on t13.org.
 
-Kind Regards,
-Kent Anderson (CEO)
+JS20 blades are lackinging the strapping to indicate the devices hanging
+off the amd8111 are on the equivalent of 80 wire - 4 inch trace on mb.
+In the JS20 case, a quirk will be necessary to run at speeds higher than 
+UDMA2.
 
+++doug
 
 
