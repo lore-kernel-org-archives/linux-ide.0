@@ -1,59 +1,47 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: Re: [PATCH 2/6] The definition of ahci_start_fis_rx() and  
-	ahci_stop_fis_rx()
-Date: Fri, 02 Jun 2006 17:21:58 +0800
-Message-ID: <1149240118.29552.13.camel@forrest26.sh.intel.com>
-References: <1149234295.13451.54.camel@forrest26.sh.intel.com>
-	 <20060602091544.GA4400@suse.de>
-	 <1149239367.29552.9.camel@forrest26.sh.intel.com>
-	 <20060602092626.GE4400@suse.de>
+From: "Janos Haar" <djani22@netcenter.hu>
+Subject: random reboot problem #2
+Date: Fri, 2 Jun 2006 12:00:47 +0200
+Message-ID: <039401c6862b$6e1d7da0$1800a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31095 "EHLO
-	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S1751356AbWFBJe2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jun 2006 05:34:28 -0400
-In-Reply-To: <20060602092626.GE4400@suse.de>
+Received: from ns.dynamicweb.hu ([195.228.155.139]:25819 "EHLO dynamicweb.hu")
+	by vger.kernel.org with ESMTP id S1751368AbWFBKBK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 06:01:10 -0400
+Received: from dcccs (53d8296a.adsl.enternet.hu [83.216.41.106])
+	by dynamicweb.hu (8.13.5/8.12.8) with SMTP id k529vTvx009383
+	for <linux-ide@vger.kernel.org>; Fri, 2 Jun 2006 11:57:29 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: jeff@garzik.org, hare@suse.de, htejun@gmail.com, jeremy@goop.org, lkml@rtr.ca, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 2006-06-02 at 11:26 +0200, Jens Axboe wrote:
-> On Fri, Jun 02 2006, zhao, forrest wrote:
-> > On Fri, 2006-06-02 at 11:15 +0200, Jens Axboe wrote:
-> > > On Fri, Jun 02 2006, zhao, forrest wrote:
-> > > > +	/*
-> > > > +	 * Disable FIS reception
-> > > > +	 *
-> > > > +	 * AHCI Rev 1.1 Section 10.1.2:
-> > > > +	 * If PxCMD.FRE is set to '1', software should clear it
-> > > > +	 * to '0' and wait at least 500 milliseconds for PxCMD.FR
-> > > > +	 * to return '0' when read. If PxCMD.FR does not clear
-> > > > +	 * '0' correctly, then software may attempt a port reset
-> > > > +	 * of a full HBA reset to recover.
-> > > > +	 */
-> > > > +	tmp &= ~(PORT_CMD_FIS_RX);
-> > > > +	writel(tmp, port_mmio + PORT_CMD);
-> > > > +
-> > > > +	mdelay(500);
-> > > > +	work = 1000;
-> > > 
-> > > The spec states that you should wait up to 500msec for this condition to
-> > > happen, not wait 500msec before looking at it! So please rework this
-> > > bit, a half second potentially wasted busy loop is quite nasty.
-> > 
-> > The spec says If PxCMD.FRE is set to '1', software should clear it to
-> > '0' and wait *at least* 500 milliseconds for PxCMD.FR to return '0' when
-> > read.
-> > 
-> > It's "at least", not "up to".
-> 
-> That still doesn't make the code right. So make it wait 1 seconds max,
-> but don't delay 500msec at the beginning. That's my problem.
+(Sorry, for repost, but i wasnt on list, and i have some news!)
 
-OK. I'll fix it after we collect all comments from mailing list :)
+Hello, list,
 
-Forrest
+I have a random reboot problem, and  i have a  suspicion, there is a bug in
+libata somewhere.
+
+I use 4 disk node, each node have 12x300GB Maxtor hdd. (4xIDE + 4xSATA).
+All my 48 disk reports clean smart.
+
+But 2 of my node randomly reboots, and have a context to disk usage.
+(Network, and all others are checked.)
+
+The entire hw are replaced, and known to be good, except the 4 group of
+hdds.
+
+How can i help to debug / check this?
+
+The netconsole, and remote log did not helps.
+
+But, on serial console, i can cach this message during reboot:
+
+"ata2: translated ATA stat/err 0x51/40 to SCSI SK/ASC/ASCQ 0x3/11/04
+ata2: status=0x51 { DriveReady SeekComplete Error"
+
+Cheers,
+Janos
+
