@@ -1,32 +1,36 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Controlling PATA access speeds
-Date: Fri, 02 Jun 2006 02:01:03 +0400
-Message-ID: <447F639F.6030609@ru.mvista.com>
-References: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl>
+From: "Abel French" <fungihwwhz@citydirectory.com>
+Subject: Fwd: warning
+Date: Fri, 2 Jun 2006 00:36:46 +0000
+Message-ID: <1b4801c685dc$a1197fa0$0201a8c0@ORGRKSRE5SP9EX>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+     format=flowed;
+     charset="iso-8859-1";
+     reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:29389 "HELO
-	mail.dev.rtsoft.ru") by vger.kernel.org with SMTP id S1750756AbWFAWCK
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Jun 2006 18:02:10 -0400
-In-Reply-To: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl>
+Received: from 61.195.43.87.eo.eaccess.ne.jp ([61.195.43.87]:64516 "EHLO
+	ORGRKSRE5SP9EX.citydirectory.com") by vger.kernel.org with ESMTP
+	id S1750732AbWFBAdL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Jun 2006 20:33:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+Life Should be Full of Luxuries....
 
-John Treubig wrote:
-> Jeff,
-> 
-> You bring up a good point in the fact that I believe your refering to 
-> detecting 80 wire vs. 40 wire.  We've not tried to use this to our 
-> advantage, but it could have some merrit.  What does the driver do if it 
-> encounters a 40 wire cable and the drive says it's capable of DMA5?
+http://newgunforsalejoke.com/
 
-    Obviously, it limits the speped to UDMA2.
+Yet, only a handful of people can afford the finest products, the luxuries of the elite.
+But, here at "Luxury Replica" we are committed to bringing you the finest products, at prices incomparably lower.
+All of the top designer brands for Watches, Ties, Handbags and even Mont Blanc.
 
-MBR, Sergei
+http://newgunforsalejoke.com/
+
+The finest of products, at the lowest of prices, only a click away:
+
+http://blessthathomepleasee.com/
+
+Regards,
+Abel French
+
