@@ -1,98 +1,111 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 2.6.16.16] sata_sil24: SII3124 sata driver endian
- problem
-Date: Fri, 2 Jun 2006 16:30:35 -0700
-Message-ID: <20060602163035.05ab7c71.akpm@osdl.org>
-References: <DCEAAC0833DD314AB0B58112AD99B93B0189DDFF@ismail.innsys.innovsys.com>
-	<DCEAAC0833DD314AB0B58112AD99B93B0189DE08@ismail.innsys.innovsys.com>
+Subject: Re: Oops when creating software RAID device (2.6.16.14).
+Date: Fri, 2 Jun 2006 16:33:50 -0700
+Message-ID: <20060602163350.04066047.akpm@osdl.org>
+References: <20060602233544.11d46664@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:710 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751515AbWFBX1n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 19:27:43 -0400
-In-Reply-To: <DCEAAC0833DD314AB0B58112AD99B93B0189DE08@ismail.innsys.innovsys.com>
+Received: from smtp.osdl.org ([65.172.181.4]:38342 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751525AbWFBXau (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 19:30:50 -0400
+In-Reply-To: <20060602233544.11d46664@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rune Torgersen <runet@innovsys.com>
-Cc: jgarzik@pobox.com, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Tom Wirschell <lkml@wirschell.nl>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-"Rune Torgersen" <runet@innovsys.com> wrote:
+Tom Wirschell <lkml@wirschell.nl> wrote:
 >
-> > -----Original Message-----
-> > From: Rune Torgersen
-> > Sent: Thursday, June 01, 2006 16:10
-> > To: linuxppc-dev@ozlabs.org
-> > Subject: SII3124-2
-> > 
-> > Has anybody been successful in getting a SII3124-2 based SATA 
-> > controller
-> > to work under PPC?
-> > 
-> > I have a eval board that I tried on two different freescale boards (a
-> > MPC8266ADS board and a MPC8560ADS board).
-> > Kernel 2.6.16.16.
-> > 
-> > Here is the relevant output from the kernel.
-> > 
-> > ata1: SATA max UDMA/100 cmd 0xD1010000 ctl 0x0 bmdma 0x0 irq 115
-> > ata2: SATA max UDMA/100 cmd 0xD1012000 ctl 0x0 bmdma 0x0 irq 115
-> > ata3: SATA max UDMA/100 cmd 0xD1014000 ctl 0x0 bmdma 0x0 irq 115
-> > ata4: SATA max UDMA/100 cmd 0xD1016000 ctl 0x0 bmdma 0x0 irq 115
-> > ata1: SATA link down (SStatus 0)
-> > scsi0 : sata_sil24
-> > ata2: SATA link up 3.0 Gbps (SStatus 123)
-> > sata_sil24 ata2: SRST failed, disabling port
-> > scsi1 : sata_sil24
-> > ata3: SATA link down (SStatus 0)
-> > scsi2 : sata_sil24
-> > ata4: SATA link down (SStatus 0)
-> > scsi3 : sata_sil24
-> > 
-> > I added debug output to see the content of the Command Error register.
-> > It is set to 26 which according to the datasheet for the 3124-1 (I am
-> > running a -2), is PLDCMDERRORMASTERABORT, "A PCI Master Abort occurred
-> > while the SiI3124 was fetching a Port Request Block (PRB) from host
-> > memory."
+> I'm trying to set up a Linux software RAID over 12 disks. As mdadm is
+> creating the array it appears that a drive is flaking out (if anybody
+> can provide a layman's explanation for what is being complained about,
+> I'd very much appreciate it). Now, since this is a RAID device I would
+> expect the md driver to simply discard this device, add the remainder
+> and leave me with a degraded array. No such luck, though.
 > 
-> There is an endian issue in the sil24 driver. 
-> The follwing pathc seems to fix it for me. (it is also attached in case
-> the mailer borks it for me)
+> Full log: http://www.wirschell.nl/boot.log
+> Relevant section with oops:
+
+ata_pio_task() oopsed.  Added linux-ide to CC.
+
+ISTR others hitting this recently.
+
+> ATA: abnormal status 0x58 on port 0xF88A211C
+> ata7: PIO error
+> ATA: abnormal status 0x58 on port 0xF88A211C
+> ata7: translated ATA stat/err 0x58/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+> ata7: status=0x58 { DriveReady SeekComplete DataRequest }
+> ATA: abnormal status 0x58 on port 0xF88A211C
+> ATA: abnormal status 0x58 on port 0xF88A211C
+> ATA: abnormal status 0x58 on port 0xF88A211C
+> ATA: abnormal status 0x58 on port 0xF88A211C
+> ata7: Entering mv_eng_timeout
+> mmio_base f8880000 ap dfe942a4 qc dfe94770 scsi_cmnd f7741080 &cmnd
+> f77410c4 ata7: status=0x50 { DriveReady SeekComplete }
+> ata7: error=0x01 { AddrMarkNotFound }
+> sdc: Current: sense key=0x0
+>     ASC=0x0 ASCQ=0x0
+> Assertion failed! qc !=
+> NULL,drivers/scsi/libata-core.c,ata_pio_poll,line=3017 Assertion
+> failed! qc != NULL,drivers/scsi/libata-core.c,ata_pio_block,line=3474
+> Unable to handle kernel NULL pointer dereference at virtual address
+> 00000014 printing eip: c02e47b7
+> *pde = 00000000
+> Oops: 0000 [#1]
+> SMP
+> Modules linked in: raid5 md_mod xor e1000 intel_agp agpgart
+> CPU:    0
+> EIP:    0060:[<c02e47b7>]    Not tainted VLI
+> EFLAGS: 00010246   (2.6.16.14 #1)
+> EIP is at ata_pio_task+0xf2/0x6a1
+> eax: 00000053   ebx: 00000050   ecx: 00000010   edx: 00000050
+> esi: 00000002   edi: 00000000   ebp: 00000212   esp: c1a8df34
+> ds: 007b   es: 007b   ss: 0068
+> Process ata/0 (pid: 389, threadinfo=c1a8c000 task=dff1c580)
+> Stack: <0>00000000 dff1c6a8 dff1c580 c0424100 c1807560 c7562b80
+> 0098966b 00000000 dfe94850 dfe94850 dfe94854 dfd84c40 00000212 c0125ff4
+> dfe942a4 c02e46c5 dfe942a4 dfd84c4c dfd84c40 dfd84c54 c01260bb c012619b
+> 00000001 00000000 Call Trace:
+>  [<c0125ff4>] run_workqueue+0x78/0xb6
+>  [<c02e46c5>] ata_pio_task+0x0/0x6a1
+>  [<c01260bb>] worker_thread+0x0/0x111
+>  [<c012619b>] worker_thread+0xe0/0x111
+>  [<c01152a3>] default_wake_function+0x0/0x15
+>  [<c0128bcb>] kthread+0xa5/0xd2
+>  [<c0128b26>] kthread+0x0/0xd2
+>  [<c0100bf5>] kernel_thread_helper+0x5/0xb
+> Code: 56 e3 ff 83 c4 14 0f b6 d3 f6 c2 21 74 1a 83 8f 8c 00 00 00 02 8b
+> 54 24 38 c7 82 dc 05 00 00 07 00 00 00 e9 18 ff ff ff 8d 4f 10 <8a> 41
+> 04 83 e8 05 3c 02 0f 87 c0 01 00 00 80 e2 08 75 13 8b 4c <3>md: invalid
+> raid superblock magic on sdc2 md: sdc2 has invalid sb, not importing!
+> md: md_import_device returned -22
 > 
-> Signed-off-by: Rune Torgersen <runet@innovsys.com>
+> Interestingly enough, this problem is entirely reproducable, however so
+> far each time a different disk was being complained about. Is there
+> something I should know about the WD200JB drives?
 > 
-> Index: linux-innsys-2.6.16.16/drivers/scsi/sata_sil24.c
-> ===================================================================
-> --- linux-innsys-2.6.16.16/drivers/scsi/sata_sil24.c	(revision 101)
-> +++ linux-innsys-2.6.16.16/drivers/scsi/sata_sil24.c	(working copy)
-> @@ -446,7 +446,7 @@
->  	 */
->  	msleep(10);
->  
-> -	prb->ctrl = PRB_CTRL_SRST;
-> +	prb->ctrl = cpu_to_le16(PRB_CTRL_SRST);
->  	prb->fis[1] = 0; /* no PM yet */
->  
->  	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
-> @@ -537,9 +537,9 @@
->  
->  		if (qc->tf.protocol != ATA_PROT_ATAPI_NODATA) {
->  			if (qc->tf.flags & ATA_TFLAG_WRITE)
-> -				prb->ctrl = PRB_CTRL_PACKET_WRITE;
-> +				prb->ctrl =
-> cpu_to_le16(PRB_CTRL_PACKET_WRITE);
->  			else
-> -				prb->ctrl = PRB_CTRL_PACKET_READ;
-> +				prb->ctrl =
-> cpu_to_le16(PRB_CTRL_PACKET_READ);
->  		} else
->  			prb->ctrl = 0;
->  
-
-This bug has been fixed in the current libata development tree.
-
-This bug is present in 2.6.16 and is present in 2.6.17-rc.  Probably we
-should merge Rune's above patch into Linus's tree and into 2.6.16.x.
-
-Jeff ack?
+> Hardware this is happening on:
+>  Intel P4 3.0GHz CPU
+>  ASUS PSCH-L Mobo (E7210 + 6300ESB)
+>  Promise FastTrak S150 TX4 onboard, unused.
+>  SuperMicro AOC-SAT2-MV8 SATA controller card (Marvell 88SX6081 chip)
+>  2x Western Digital WD2000JB 200 GB PATA drives
+>  9x Western Digital WD2000JD 200 GB SATA drives
+> 
+> If anybody has any insights at so what I can or should do now to
+> resolve this issue, I'm all ears.
+> 
+> I'm not subscribed to LKML, so please CC me in any replies.
+> 
+> Thank you.
+> 
+> Kind regards,
+> 
+> Tom Wirschell
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
