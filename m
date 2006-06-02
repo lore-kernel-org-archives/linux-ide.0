@@ -1,35 +1,54 @@
-From: Jeremy Fitzhardinge <jeremy@goop.org>
-Subject: Re: [PATCH 0/6] AHCI suspend/resume support
-Date: Fri, 02 Jun 2006 11:23:41 -0700
-Message-ID: <4480822D.6050300@goop.org>
-References: <1149233973.13451.51.camel@forrest26.sh.intel.com>
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Re: Controlling PATA access speeds
+Date: Fri, 02 Jun 2006 15:37:51 -0500
+Message-ID: <BAY113-F20C5E81293FCD88D28597DDF910@phx.gbl>
+References: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw.goop.org ([64.81.55.164]:48822 "EHLO mail.goop.org")
-	by vger.kernel.org with ESMTP id S932569AbWFBUai (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 16:30:38 -0400
-In-Reply-To: <1149233973.13451.51.camel@forrest26.sh.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: dwm@austin.ibm.com
+Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: jeff@garzik.org, hare@suse.de, axboe@suse.de, htejun@gmail.com, lkml@rtr.ca, linux-ide@vger.kernel.org
 
-zhao, forrest wrote:
-> Your comments and bug report are welcome.
+Because of my setup, I have had to pull pin 34 (PDIAG) high at the Promise 
+to make the Promise think I have a 40 pin cable.  At boot, the Promise 
+thinks I have a 40 wire cable installed and gives me a warning, yet when I 
+run my program that measures transfer rate in Linux, I still see the same 
+data rates as with an 80 wire cable (pin 34 shorted).  Is there any other 
+item that I'm missing besides having Pin 34 pulled high?  Does the drive's 
+echoing that it is UDMA5 capable have anything to do with it?  Is the fact 
+that I'm not carrying pin 34 all the way to the drive causing my problem?
 
-Thanks, these patches work well for me.  Certainly I can do at least one 
-suspend-resume cycle, which is a big improvement. The second suspend 
-fails, but I think this is a separate issue unrelated to scsi/sata/ahci.
+Best wishes,
+John
 
-One other problem is a total machine lockup, which so far has only 
-happened while in X, so I couldn't see any console messages.  Again, 
-this might have nothing to do with storage; I'll let you know if 
-anything relevant turns up.
 
-In short: good work!
+From: Doug Maxey <dwm@austin.ibm.com>
+To: "John Treubig" <jtreubig@hotmail.com>
+CC: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: Controlling PATA access speeds
+Date: Thu, 01 Jun 2006 16:21:58 -0500
 
-Thanks,
-    J
+
+On Thu, 01 Jun 2006 15:35:23 CDT, "John Treubig" wrote:
+ >Jeff,
+ >
+ >You bring up a good point in the fact that I believe your refering to
+ >detecting 80 wire vs. 40 wire.  We've not tried to use this to our
+ >advantage, but it could have some merrit.  What does the driver do if it
+ >encounters a 40 wire cable and the drive says it's capable of DMA5?
+ >
+
+The presence of a 40 wire cable limits the device to UDMA2 - 33mhz.
+See the ATA6 or later on t13.org.
+
+JS20 blades are lackinging the strapping to indicate the devices hanging
+off the amd8111 are on the equivalent of 80 wire - 4 inch trace on mb.
+In the JS20 case, a quirk will be necessary to run at speeds higher than 
+UDMA2.
+
+++doug
+
 
