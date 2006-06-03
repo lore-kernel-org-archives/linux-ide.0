@@ -1,111 +1,31 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Oops when creating software RAID device (2.6.16.14).
-Date: Fri, 2 Jun 2006 16:33:50 -0700
-Message-ID: <20060602163350.04066047.akpm@osdl.org>
-References: <20060602233544.11d46664@localhost>
+From: "CARTHERINE APEPE" <mrsapepe@walla.com>
+Subject: VERY IMPORTANT
+Date: Sat, 3 Jun 2006 02:29:56 +0100
+Message-ID: <!&!7E53B7C1c3858_419b8_4480F425@walla.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:38342 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751525AbWFBXau (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jun 2006 19:30:50 -0400
-In-Reply-To: <20060602233544.11d46664@localhost>
+Received: from myw-stp-196-37-192-96.sentechsa.net ([196.37.192.96]:48653 "EHLO
+	acer-684c9a655d") by vger.kernel.org with ESMTP id S932566AbWFCBbF
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jun 2006 21:31:05 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tom Wirschell <lkml@wirschell.nl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Tom Wirschell <lkml@wirschell.nl> wrote:
->
-> I'm trying to set up a Linux software RAID over 12 disks. As mdadm is
-> creating the array it appears that a drive is flaking out (if anybody
-> can provide a layman's explanation for what is being complained about,
-> I'd very much appreciate it). Now, since this is a RAID device I would
-> expect the md driver to simply discard this device, add the remainder
-> and leave me with a degraded array. No such luck, though.
-> 
-> Full log: http://www.wirschell.nl/boot.log
-> Relevant section with oops:
+34 FOURWAYS CROSSING
+FORUWAYS, JOHANNESBURG
+SOUTH AFRICA
+TEL: +27-724340319 
 
-ata_pio_task() oopsed.  Added linux-ide to CC.
+I do recognize the surprise this urgent but confidential letter will bring to you especially as it came from a stranger, but rest assured that it came with the best of intentions. I am Mrs. Catherine Apepe, from the Diamond-rich district of Sierra Leone and my late husband was the former Special adviser to the ousted Head of State of Sierra Leone, Major Johnny Paul Koroma. I got your email address from a friend who works at the International Chamber of Commerce here in South Africa.
+During the war between our forces led by the Ex-Head of State, Major Johnny Paul Koroma and the West African Allied Forces (ECOMOG), my country relied heavily on the foreign earnings generated from diamond trade. This money was personally kept by the then President Major Johnny Paul Koroma since our banking system had collapsed during the war. However, as the war progressed, it became apparent that we were going to loose the war to the superior and better armed West African Allied Forces (ECOMOG). At this point, my Husband Mr. Luis Apepe starched away the sum US$30,000,000.00 in a security and storage company here in South Africa for safekeeping and to avoid being traced. Unfortunately on his return to Sierra Leone he was murdered.
+Right now my son and I are in South Africa to claim this money and we need a trustworthy individual or company that can help us proved the important instruments that we will need in transferring and receiving the fund abroad for purpose of investment, if you are willing to assist we will offer you 30% of the total sum.
+God bless you as we wait for your immediate response, please do include your telephone number, you can also call me or my son or email me, mrpepe@walla.com Mr. Peter Apepe on +27 724340319  
+Regards,
+Mrs. Catherine. Apepe
 
-ISTR others hitting this recently.
 
-> ATA: abnormal status 0x58 on port 0xF88A211C
-> ata7: PIO error
-> ATA: abnormal status 0x58 on port 0xF88A211C
-> ata7: translated ATA stat/err 0x58/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-> ata7: status=0x58 { DriveReady SeekComplete DataRequest }
-> ATA: abnormal status 0x58 on port 0xF88A211C
-> ATA: abnormal status 0x58 on port 0xF88A211C
-> ATA: abnormal status 0x58 on port 0xF88A211C
-> ATA: abnormal status 0x58 on port 0xF88A211C
-> ata7: Entering mv_eng_timeout
-> mmio_base f8880000 ap dfe942a4 qc dfe94770 scsi_cmnd f7741080 &cmnd
-> f77410c4 ata7: status=0x50 { DriveReady SeekComplete }
-> ata7: error=0x01 { AddrMarkNotFound }
-> sdc: Current: sense key=0x0
->     ASC=0x0 ASCQ=0x0
-> Assertion failed! qc !=
-> NULL,drivers/scsi/libata-core.c,ata_pio_poll,line=3017 Assertion
-> failed! qc != NULL,drivers/scsi/libata-core.c,ata_pio_block,line=3474
-> Unable to handle kernel NULL pointer dereference at virtual address
-> 00000014 printing eip: c02e47b7
-> *pde = 00000000
-> Oops: 0000 [#1]
-> SMP
-> Modules linked in: raid5 md_mod xor e1000 intel_agp agpgart
-> CPU:    0
-> EIP:    0060:[<c02e47b7>]    Not tainted VLI
-> EFLAGS: 00010246   (2.6.16.14 #1)
-> EIP is at ata_pio_task+0xf2/0x6a1
-> eax: 00000053   ebx: 00000050   ecx: 00000010   edx: 00000050
-> esi: 00000002   edi: 00000000   ebp: 00000212   esp: c1a8df34
-> ds: 007b   es: 007b   ss: 0068
-> Process ata/0 (pid: 389, threadinfo=c1a8c000 task=dff1c580)
-> Stack: <0>00000000 dff1c6a8 dff1c580 c0424100 c1807560 c7562b80
-> 0098966b 00000000 dfe94850 dfe94850 dfe94854 dfd84c40 00000212 c0125ff4
-> dfe942a4 c02e46c5 dfe942a4 dfd84c4c dfd84c40 dfd84c54 c01260bb c012619b
-> 00000001 00000000 Call Trace:
->  [<c0125ff4>] run_workqueue+0x78/0xb6
->  [<c02e46c5>] ata_pio_task+0x0/0x6a1
->  [<c01260bb>] worker_thread+0x0/0x111
->  [<c012619b>] worker_thread+0xe0/0x111
->  [<c01152a3>] default_wake_function+0x0/0x15
->  [<c0128bcb>] kthread+0xa5/0xd2
->  [<c0128b26>] kthread+0x0/0xd2
->  [<c0100bf5>] kernel_thread_helper+0x5/0xb
-> Code: 56 e3 ff 83 c4 14 0f b6 d3 f6 c2 21 74 1a 83 8f 8c 00 00 00 02 8b
-> 54 24 38 c7 82 dc 05 00 00 07 00 00 00 e9 18 ff ff ff 8d 4f 10 <8a> 41
-> 04 83 e8 05 3c 02 0f 87 c0 01 00 00 80 e2 08 75 13 8b 4c <3>md: invalid
-> raid superblock magic on sdc2 md: sdc2 has invalid sb, not importing!
-> md: md_import_device returned -22
-> 
-> Interestingly enough, this problem is entirely reproducable, however so
-> far each time a different disk was being complained about. Is there
-> something I should know about the WD200JB drives?
-> 
-> Hardware this is happening on:
->  Intel P4 3.0GHz CPU
->  ASUS PSCH-L Mobo (E7210 + 6300ESB)
->  Promise FastTrak S150 TX4 onboard, unused.
->  SuperMicro AOC-SAT2-MV8 SATA controller card (Marvell 88SX6081 chip)
->  2x Western Digital WD2000JB 200 GB PATA drives
->  9x Western Digital WD2000JD 200 GB SATA drives
-> 
-> If anybody has any insights at so what I can or should do now to
-> resolve this issue, I'm all ears.
-> 
-> I'm not subscribed to LKML, so please CC me in any replies.
-> 
-> Thank you.
-> 
-> Kind regards,
-> 
-> Tom Wirschell
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+
