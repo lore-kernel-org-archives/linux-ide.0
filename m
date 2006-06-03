@@ -1,43 +1,29 @@
-From: Tom Wirschell <lkml@wirschell.nl>
-Subject: Re: Oops when creating software RAID device (2.6.16.14).
-Date: Sat, 3 Jun 2006 20:03:25 +0200
-Message-ID: <20060603200325.6bdf5c6e@localhost>
-References: <20060602233544.11d46664@localhost>
-	<20060602163350.04066047.akpm@osdl.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2/6] The definition of ahci_start_fis_rx() and ahci_stop_fis_rx()
+Date: Sat, 3 Jun 2006 15:10:09 -0400
+Message-ID: <20060603191009.GA27742@havoc.gtf.org>
+References: <1149234295.13451.54.camel@forrest26.sh.intel.com> <20060603125120.GB25958@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from basillia.speedxs.net ([83.98.255.13]:451 "EHLO
-	basillia.speedxs.net") by vger.kernel.org with ESMTP
-	id S1751746AbWFCSDa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Jun 2006 14:03:30 -0400
-In-Reply-To: <20060602163350.04066047.akpm@osdl.org>
+Received: from havoc.gtf.org ([69.61.125.42]:15813 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751773AbWFCTQ4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Jun 2006 15:16:56 -0400
+Content-Disposition: inline
+In-Reply-To: <20060603125120.GB25958@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, hare@suse.de, axboe@suse.de, jeremy@goop.org, lkml@rtr.ca, linux-ide@vger.kernel.org
 
-On 02 Jun 2006, Andrew Morton wrote:
-> 
-> ata_pio_task() oopsed.  Added linux-ide to CC.
-> 
-> ISTR others hitting this recently.
+On Sat, Jun 03, 2006 at 09:51:20PM +0900, Tejun Heo wrote:
+> Please convert to ata_wait_register().  Also, I share Jens' opinion.
+> The way I read the spec is that the timeout should be at least 500ms
+> not that we have to wait 500ms before polling for !FIS_ON.
 
-I upgraded to 2.6.17-rc5-mm2 and dispite a small BUG being reported at
-boot by the Marvell SATA driver I was able to create the array and use
-it. I'm still testing this setup, but so far it seems to work nicely.
+Correct.
 
-I'll send the maintainer of the Marvell SATA driver the BUG message.
+	Jeff
 
-Thanks again.
 
-Kind regards,
-
-Tom Wirschell
-I'm not subscribed to LKML or linux-ide, so please CC me in any replies.
--- 
-A small child once asked me why people cant be nicer and just love one
-another. I pondered this for but a moment and I then, of course, ate
-the small child. He was very tangy and did NOT taste like chicken.
-	- Lenore 2 -
+P.S. FWIW I'm still travelling.  Have email, but no merges until June 8.
