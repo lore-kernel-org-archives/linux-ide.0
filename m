@@ -1,31 +1,107 @@
-From: "CARTHERINE APEPE" <mrsapepe@walla.com>
-Subject: VERY IMPORTANT
-Date: Sat, 3 Jun 2006 02:29:56 +0100
-Message-ID: <!&!7E53B7C1c3858_419b8_4480F425@walla.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+From: =?ISO-8859-1?Q?Ask_Bj=F8rn_Hansen?= <ask@develooper.com>
+Subject: Re: sata_mv with Adaptec AIC-8130/Marvell 88SX6041 ("Badness in __msleep")
+Date: Fri, 2 Jun 2006 18:42:08 -0700
+Message-ID: <EA69B14D-2874-48EA-BF67-0A96DE690FA6@develooper.com>
+References: <5D6C23F5-B03E-4C3D-8BC6-A009E51122D8@develooper.com> <447A614B.3050603@rtr.ca>
+Mime-Version: 1.0 (Apple Message framework v750)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from myw-stp-196-37-192-96.sentechsa.net ([196.37.192.96]:48653 "EHLO
-	acer-684c9a655d") by vger.kernel.org with ESMTP id S932566AbWFCBbF
+Received: from x8.develooper.com ([216.52.237.208]:40156 "EHLO
+	x8.develooper.com") by vger.kernel.org with ESMTP id S932573AbWFCBmD
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jun 2006 21:31:05 -0400
+	Fri, 2 Jun 2006 21:42:03 -0400
+In-Reply-To: <447A614B.3050603@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-34 FOURWAYS CROSSING
-FORUWAYS, JOHANNESBURG
-SOUTH AFRICA
-TEL: +27-724340319 
 
-I do recognize the surprise this urgent but confidential letter will bring to you especially as it came from a stranger, but rest assured that it came with the best of intentions. I am Mrs. Catherine Apepe, from the Diamond-rich district of Sierra Leone and my late husband was the former Special adviser to the ousted Head of State of Sierra Leone, Major Johnny Paul Koroma. I got your email address from a friend who works at the International Chamber of Commerce here in South Africa.
-During the war between our forces led by the Ex-Head of State, Major Johnny Paul Koroma and the West African Allied Forces (ECOMOG), my country relied heavily on the foreign earnings generated from diamond trade. This money was personally kept by the then President Major Johnny Paul Koroma since our banking system had collapsed during the war. However, as the war progressed, it became apparent that we were going to loose the war to the superior and better armed West African Allied Forces (ECOMOG). At this point, my Husband Mr. Luis Apepe starched away the sum US$30,000,000.00 in a security and storage company here in South Africa for safekeeping and to avoid being traced. Unfortunately on his return to Sierra Leone he was murdered.
-Right now my son and I are in South Africa to claim this money and we need a trustworthy individual or company that can help us proved the important instruments that we will need in transferring and receiving the fund abroad for purpose of investment, if you are willing to assist we will offer you 30% of the total sum.
-God bless you as we wait for your immediate response, please do include your telephone number, you can also call me or my son or email me, mrpepe@walla.com Mr. Peter Apepe on +27 724340319  
-Regards,
-Mrs. Catherine. Apepe
+On May 28, 2006, at 19:49, Mark Lord wrote:
 
+> The attached patch [0.7-backport] is an untested backport of the  
+> latest sata_mv,
+> which should be more reliable than what you've been using. [0.5]
+
+It works most of the time (where the 0.5 didn't work most of the  
+time), but I still see the "Badness in __msleep" occasionally (and it  
+only detects one of the disks then).    However, the Adaptec BIOS is  
+only seeing one of the disks sometimes, so maybe there's something  
+wrong with the hardware.  The BIOS did detect both drives in the boot  
+that gave the output below though.
+
+  - ask
+
+libata version 1.20 loaded.
+sata_mv 0000:03:03.0: version 0.7-backport
+GSI 16 sharing vector 0xA9 and IRQ 16
+ACPI: PCI Interrupt 0000:03:03.0[A] -> GSI 42 (level, low) -> IRQ 16
+sata_mv 0000:03:03.0: Applying B2 workarounds to unknown rev
+sata_mv 0000:03:03.0: 32 slots 4 ports unknown mode IRQ via INTx
+ata1: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200000A2120 bmdma 0x0 irq 16
+ata2: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200000A4120 bmdma 0x0 irq 16
+ata3: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200000A6120 bmdma 0x0 irq 16
+ata4: SATA max UDMA/133 cmd 0x0 ctl 0xFFFFC200000A8120 bmdma 0x0 irq 16
+Badness in __msleep at drivers/scsi/sata_mv.c:1922 (Not tainted)
+
+Call Trace: <IRQ> <ffffffff8805769a>{:sata_mv:__mv_phy_reset+276}
+        <ffffffff8805724d>{:sata_mv:mv_channel_reset+143}  
+<ffffffff88058e9d>{:sata_mv:mv_interrupt+570}
+        <ffffffff8015a0cc>{handle_IRQ_event+41} <ffffffff8015a199> 
+{__do_IRQ+156}
+        <ffffffff8010ce01>{do_IRQ+59} <ffffffff8010ad3e>{ret_from_intr 
++0} <EOI>
+        <ffffffff80338ac3>{thread_return+0} <ffffffff8803e00f> 
+{:libata:ata_check_status+15}
+        <ffffffff88057880>{:sata_mv:__mv_phy_reset+762}  
+<ffffffff88058c63>{:sata_mv:mv_interrupt+0}
+        <ffffffff8015a55b>{request_irq+139} <ffffffff8804188b> 
+{:libata:ata_device_add+835}
+        <ffffffff802d068d>{pci_conf1_read+184} <ffffffff802d068d> 
+{pci_conf1_read+184}
+        <ffffffff88058c01>{:sata_mv:mv_init_one+1637}  
+<ffffffff8020c250>{pci_device_probe+256}
+        <ffffffff8026c979>{driver_probe_device+82} <ffffffff8026cad4> 
+{__driver_attach+142}
+        <ffffffff8026ca46>{__driver_attach+0} <ffffffff8026c378> 
+{bus_for_each_dev+67}
+        <ffffffff8026bfe7>{bus_add_driver+118} <ffffffff8020c496> 
+{__pci_register_driver+142}
+        <ffffffff80156e37>{stop_machine_run+58} <ffffffff8014d0c4> 
+{sys_init_module+278}
+        <ffffffff8010a7ba>{system_call+126}
+ata1: dev 0 cfg 49:2f00 82:746b 83:7f61 84:4023 85:7469 86:3c41  
+87:4023 88:407f
+ata1: dev 0 ATA-7, max UDMA/133, 781422768 sectors: LBA48
+ata1: dev 0 configured for UDMA/133
+scsi0 : sata_mv
+input: ImPS/2 Generic Wheel Mouse as /class/input/input1
+ata2: no device found (phy stat 00000000)
+scsi1 : sata_mv
+ata3: no device found (phy stat 00000000)
+scsi2 : sata_mv
+ata4: no device found (phy stat 00000000)
+scsi3 : sata_mv
+   Vendor: ATA       Model: WDC WD4000YR-01P  Rev: 01.0
+   Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 781422768 512-byte hdwr sectors (400088 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 781422768 512-byte hdwr sectors (400088 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+sda: sda1 sda2 sda3 < sda5 >
+sd 0:0:0:0: Attached scsi disk sda
+md: raid1 personality registered for level 1
+device-mapper: 4.5.0-ioctl (2005-10-04) initialised: dm-devel@redhat.com
+md: Autodetecting RAID arrays.
+
+
+
+-- 
+http://www.askbjoernhansen.com/
 
 
