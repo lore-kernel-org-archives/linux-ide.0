@@ -1,58 +1,98 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv with Adaptec AIC-8130/Marvell 88SX6041 ("Badness in __msleep")
-Date: Fri, 2 Jun 2006 22:45:49 -0400
-Message-ID: <200606022245.49637.liml@rtr.ca>
-References: <5D6C23F5-B03E-4C3D-8BC6-A009E51122D8@develooper.com> <447A614B.3050603@rtr.ca> <EA69B14D-2874-48EA-BF67-0A96DE690FA6@develooper.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/6] The definition of ahci_start_engine() and ahci_stop_engine()
+Date: Sat, 3 Jun 2006 21:46:48 +0900
+Message-ID: <20060603124648.GA25958@htj.dyndns.org>
+References: <1149234599.13451.63.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:38024 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751078AbWFCCpw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jun 2006 22:45:52 -0400
-In-Reply-To: <EA69B14D-2874-48EA-BF67-0A96DE690FA6@develooper.com>
+Received: from wr-out-0506.google.com ([64.233.184.232]:22685 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1750827AbWFCMq6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Jun 2006 08:46:58 -0400
+Received: by wr-out-0506.google.com with SMTP id i22so668961wra
+        for <linux-ide@vger.kernel.org>; Sat, 03 Jun 2006 05:46:57 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <1149234599.13451.63.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ask =?iso-8859-1?q?Bj=F8rn_Hansen?= <ask@develooper.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: jeff@garzik.org, hare@suse.de, axboe@suse.de, jeremy@goop.org, lkml@rtr.ca, linux-ide@vger.kernel.org
 
-On Friday 02 June 2006 21:42, Ask Bj=F8rn Hansen wrote:
->=20
-> On May 28, 2006, at 19:49, Mark Lord wrote:
->=20
-> > The attached patch [0.7-backport] is an untested backport of the =20
-> > latest sata_mv,
-> > which should be more reliable than what you've been using. [0.5]
->=20
-> It works most of the time (where the 0.5 didn't work most of the =20
-> time), but I still see the "Badness in __msleep" occasionally (and it=
- =20
-> only detects one of the disks then).    However, the Adaptec BIOS is =
-=20
-> only seeing one of the disks sometimes, so maybe there's something =20
-> wrong with the hardware.  The BIOS did detect both drives in the boot=
- =20
-> that gave the output below though.
+On Fri, Jun 02, 2006 at 03:49:59PM +0800, zhao, forrest wrote:
+> -static int ahci_stop_engine(struct ata_port *ap)
+> +static int ahci_stop_engine(void __iomem *port_mmio)
+>  {
+> -	void __iomem *mmio = ap->host_set->mmio_base;
+> -	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+>  	int work;
+>  	u32 tmp;
+>  
+>  	tmp = readl(port_mmio + PORT_CMD);
+> +
+> +	/* Check if the HBA is idle */
+> +	if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) == 0)
+> +		return 0;
 
-Weird.  I cannot make sense of that traceback.  What CPU is this kernel=
- built for?
+I'm not really sure whether this short circuiting is necessary.  I
+think blindly turning the bit off is simpler and more robust.
 
-And does this patch (below) make the "Badness" go away?
+> +
+> +	/* Setting HBA to idle */
+>  	tmp &= ~PORT_CMD_START;
+>  	writel(tmp, port_mmio + PORT_CMD);
+>  
+> @@ -507,16 +513,49 @@ static int ahci_stop_engine(struct ata_p
+>  	return -EIO;
+>  }
+>  
+> -static void ahci_start_engine(struct ata_port *ap)
+> +static int ahci_start_engine(void __iomem *port_mmio)
+>  {
+> -	void __iomem *mmio = ap->host_set->mmio_base;
+> -	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+>  	u32 tmp;
+> +	int work = 1000;
+>  
+> +	/*
+> +	 * Get current status
+> +	 */
+>  	tmp = readl(port_mmio + PORT_CMD);
+> +
+> +	/*
+> +	 * AHCI rev 1.1 section 10.3.1:
+> +	 * Software shall not set PxCMD.ST to '1' until it verifies
+> +	 * that PxCMD.CR is '0' and has set PxCMD.FRE to '1'
+> +	 */
+> +	if ((tmp & PORT_CMD_FIS_RX) == 0)
+> +		return -EPERM;
 
-Cheers
+Here, again, I don't think this type of checking is necessary.  If the
+controller is behaving correctly, above condition should be guaranteed
+by driver control flow.  If the controller is acting weird, the driver
+probably had chance to detect above condition earlier (when turning
+off the engine) and determined to ignore it.
 
----
---- linux/drivers/scsi/sata_mv.c.16-backport	2006-05-26 09:15:22.000000=
-000 -0400
-+++ linux/drivers/scsi/sata_mv.c	2006-06-02 22:39:07.000000000 -0400
-@@ -2022,7 +2022,7 @@
-=20
- static void mv_phy_reset(struct ata_port *ap)
- {
--	__mv_phy_reset(ap, 1);
-+	__mv_phy_reset(ap, 0);
- }
-=20
- /**
+> +
+> +	/*
+> +	 * wait for engine to become idle.
+> +	 */
+> +	while (work-- > 0) {
+> +		tmp = readl(port_mmio + PORT_CMD);
+> +		if ((tmp & PORT_CMD_LIST_ON) == 0)
+> +			break;
+> +		udelay(10);
+> +	}
+> +
+> +	if (!work) {
+> +		/*
+> +		 * We need to do a port reset / HBA reset here
+> +		 */
+> +		return -EBUSY;
+> +	}
+
+Please convert above to ata_wait_register().  It would be nice if you
+can convert ahci_stop_engine(), too.
+
+-- 
+tejun
