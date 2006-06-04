@@ -1,64 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.16.16] sata_sil24: SII3124 sata driver endian problem
-Date: Mon, 05 Jun 2006 05:24:29 +0900
-Message-ID: <4483417D.8060109@gmail.com>
-References: <DCEAAC0833DD314AB0B58112AD99B93B0189DDFF@ismail.innsys.innovsys.com> <DCEAAC0833DD314AB0B58112AD99B93B0189DE08@ismail.innsys.innovsys.com> <20060602163035.05ab7c71.akpm@osdl.org> <20060604161124.GA7587@martell.zuzino.mipt.ru>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH 4/5] SCSI: add cpu cache flushes after kmapping and
+ modifying a page
+Date: Sun, 4 Jun 2006 22:24:44 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0606042151070.24306@poirot.grange>
+References: <1149392479501-git-send-email-htejun@gmail.com>
+ <11493924803460-git-send-email-htejun@gmail.com> <20060604082035.GB29696@infradead.org>
+ <4482A436.8000703@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.207]:39267 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932073AbWFDUYl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Jun 2006 16:24:41 -0400
-Received: by nz-out-0102.google.com with SMTP id s18so1029195nze
-        for <linux-ide@vger.kernel.org>; Sun, 04 Jun 2006 13:24:40 -0700 (PDT)
-In-Reply-To: <20060604161124.GA7587@martell.zuzino.mipt.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4482A436.8000703@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, rmk@arm.linux.org.uk, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, Rune Torgersen <runet@innovsys.com>, jgarzik@pobox.com, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alexey Dobriyan wrote:
-> Are there some other fields that should be marked?
+On Sun, 4 Jun 2006, Tejun Heo wrote:
 
-Yeap, prot and rx_cnt of sil24_prb should also be marked __le.  Also, 
-all fields of sil24_port_multiplier
-
-Thanks.
-
-> [PATCH] sata_sil24: endian annotations
+> Christoph Hellwig wrote:
+> > On Sun, Jun 04, 2006 at 12:41:20PM +0900, Tejun Heo wrote:
+> > >  			local_irq_save(flags);
+> > >  			buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
+> > >  			memcpy(buf, tw_dev->generic_buffer_virt[request_id],
+> > > sg->length);
+> > > +			flush_kernel_dcache_page(kmap_atomic_to_page(buf -
+> > > sg->offset));
+> > >  			kunmap_atomic(buf - sg->offset, KM_IRQ0);
+> > >  			local_irq_restore(flags);
+> > 
+> > all these should switch to scsi_kmap_atomic_sg which should do the
+> > flush_kernel_dcache_page call for you.
+> > 
 > 
-> Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-> ---
-> 
->  drivers/scsi/sata_sil24.c |   14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> --- a/drivers/scsi/sata_sil24.c
-> +++ b/drivers/scsi/sata_sil24.c
-> @@ -37,7 +37,7 @@
->   * Port request block (PRB) 32 bytes
->   */
->  struct sil24_prb {
-> -	u16	ctrl;
-> +	__le16	ctrl;
->  	u16	prot;
->  	u32	rx_cnt;
->  	u8	fis[6 * 4];
-> @@ -47,9 +47,9 @@ struct sil24_prb {
->   * Scatter gather entry (SGE) 16 bytes
->   */
->  struct sil24_sge {
-> -	u64	addr;
-> -	u32	cnt;
-> -	u32	flags;
-> +	__le64	addr;
-> +	__le32	cnt;
-> +	__le32	flags;
->  };
->  
->  /*
+> This is not specific to scsi or block.  This is a common problem for all kmap
+> users.  As I wrote in the other mail, I think this should be mandated at the
+> kmap/kunmap() interface.
 
--- 
-tejun
+Right. As I wrote scsi_k(un)map_atomic_sg I did mention that they, 
+probably, should go to a higher layer as they were not scsi-specific, but 
+as I didn't have a good idea of where exactly to put them, I called them
+scsi_* and put in scsi_lib.c. Suggestions for a better place and namespace 
+for them very welcome. Or just feel free to move / rename them as you see 
+appropriate. See, e.g., 
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112345886816099&w=2 and the 
+related thread from August last year for possible other potential users of 
+this API.
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
