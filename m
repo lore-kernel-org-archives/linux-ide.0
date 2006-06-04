@@ -1,59 +1,54 @@
 From: Russell King <rmk+lkml@arm.linux.org.uk>
 Subject: Re: [PATCHSET] block: fix PIO cache coherency bug, take 2
-Date: Sun, 4 Jun 2006 21:44:44 +0100
-Message-ID: <20060604204444.GF4484@flint.arm.linux.org.uk>
-References: <1149392479501-git-send-email-htejun@gmail.com>
+Date: Sun, 4 Jun 2006 23:23:48 +0100
+Message-ID: <20060604222347.GG4484@flint.arm.linux.org.uk>
+References: <1149392479501-git-send-email-htejun@gmail.com> <20060604204444.GF4484@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1149392479501-git-send-email-htejun@gmail.com>
+In-Reply-To: <20060604204444.GF4484@flint.arm.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Sun, Jun 04, 2006 at 12:41:19PM +0900, Tejun Heo wrote:
-> Russell, can you please verify arm's flush_kernel_dcache_page()?
+On Sun, Jun 04, 2006 at 09:44:44PM +0100, Russell King wrote:
+> On Sun, Jun 04, 2006 at 12:41:19PM +0900, Tejun Heo wrote:
+> > Russell, can you please verify arm's flush_kernel_dcache_page()?
+> 
+> That should be fine from a theoretical standpoint
 
-That should be fine from a theoretical standpoint, but I can't say much
-more than that - I have _great_ difficulty in reproducing the problem
-with IDE and as such I consider myself out of the game of testing for
-this problem:
+I'll add to this statement that the cache flushing on ARM is only
+ever required when the page ends up in userspace - if we're reading
+a page into the page cache to throw it out via NFS or sendfile then
+the cache flush is a complete waste of time.
 
-| Date:   Fri, 13 Jan 2006 22:02:15 +0000
-| From:   Russell King <rmk+lkml@arm.linux.org.uk>
-| To:     Tejun Heo <htejun@gmail.com>
-| Subject: Re: [PATCHSET] block: fix PIO cache coherency bug
-|
-| On Sat, Jan 14, 2006 at 12:24:16AM +0900, Tejun Heo wrote:
-| > Russell, can you please test whether this fixes the bug on arm?  If
-| > this fixes the bug and people agree with the approach, I'll follow up
-| > with patches for yet unconverted drivers and documentation update.
-|
-| Unfortunately, as I previously explained, I'm not able to test this.
-| The reason is that in order to reproduce the bug, you need a system
-| with a VIVT write-back write-allocate cache.
-|
-| Unfortunately, the few systems I have which have such a cache do not
-| have IDE, SCSI nor SATA (not even PCMCIA.)  I suggest contacting the
-| folk who reported the bug in the first instance.
+Why is this?  Well, if the data has been written to the kernel mapping
+by the CPU, it may be contained in the cache lines corresponding to
+that mapping.  When that memory is passed to a network interface to
+send, the network interface either reads data from the kernel mapping
+via PIO (in which case it reads the data from the cache), or it
+performs DMA.  In the case of DMA, the DMA API handles the cache
+coherency issues with respect to dirty data in the kernel mapping.
 
-You need to approach other members of the ARM community to test these
-patches.  Unfortunately I don't have a list of who has found the problem
-and who is in a state to be able to reproduce it - since most members
-are embedded engineers, they tend to move on to other projects quite
-rapidly.
+Moreover, there's the problem of read-ahead.  When data is read from
+a block device, more data than that which is required is usually read
+in case it's required a short time later.  If the data is not required,
+it is thrown away during an eviction cycle.  However, any cache flushing
+that you've performed for uses "other than kernel space" is then a waste
+of resources - the only time that such handling is needed is when the
+data is actually used for these other uses - which in the case of ARM
+means userspace.
 
-What I suggest is that we just throw _something_ which looks right into
-the kernel and see what happens.  I can't see any other possible way to
-proceed, _especially_ as we've had 6 months of very little progress on
-this issue.
+Given the above, I believe that the method being proposed will be
+_far_ too expensive, maybe to the point where (eg) disabling read-
+ahead _entirely_ on ARM makes the system overall more efficient.
 
-> I tried to implement flush_anon_page() too but didn't know what to do
-> with anon_vma object.
-
-I'm not sure what this is about...
+In this respect, I continue to believe that the way ARM (in principle)
+does flush_dcache_page() is what is required here - if the page has
+not been mapped into userspace, it merely marks the page as containing
+dirty cache lines, and the resulting cache maintainence will only
+happen when (and if) the page really does get mapped into userspace.
 
 -- 
 Russell King
