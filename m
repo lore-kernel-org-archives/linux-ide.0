@@ -1,31 +1,42 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: [PATCH] swsusp: allow drivers to determine between write-resume and actual wakeup
-Date: Mon, 5 Jun 2006 15:17:52 +0200
-Message-ID: <20060605131752.GE2132@elf.ucw.cz>
-References: <20060605091131.GE8106@htj.dyndns.org> <20060605092342.GI5540@elf.ucw.cz> <44841AA0.4060404@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCHSET] block: fix PIO cache coherency bug, take 2
+Date: Mon, 05 Jun 2006 08:43:52 -0500
+Message-ID: <1149515032.3489.4.camel@mulgrave.il.steeleye.com>
+References: <1149392479501-git-send-email-htejun@gmail.com>
+	 <20060604204444.GF4484@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:26038 "EHLO amd.ucw.cz")
-	by vger.kernel.org with ESMTP id S1751089AbWFENSn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jun 2006 09:18:43 -0400
-Content-Disposition: inline
-In-Reply-To: <44841AA0.4060404@gmail.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:61589 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751113AbWFENou (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Jun 2006 09:44:50 -0400
+In-Reply-To: <20060604204444.GF4484@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <axboe@suse.de>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Po 05-06-06 20:50:56, Tejun Heo wrote:
-> Pavel Machek wrote:
-> >If you want to know if you RESUME was after normal FREEZE or if it is
-> >after reboot, there's better patch floating around to do that.
+On Sun, 2006-06-04 at 21:44 +0100, Russell King wrote:
+> > I tried to implement flush_anon_page() too but didn't know what to
+> do
+> > with anon_vma object.
 > 
-> Yeap, this is what I'm interested in.  Care to give me a pointer?
+> I'm not sure what this is about...
 
-David Brownell had a patch to do that. I forwarded you my reply to
-that mail...
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+This was for fuse on parisc.  It should have no bearing on the current
+IDE problem.  What it's trying to solve is the fact that
+flush_dcache_page() doesn't necessarily flush anonymous pages (because
+of the way the mappings list works).  However, in order to make an
+anonymous page in user space visible via the kernel address, we have to
+have it flushed (this is what fuse does to transfer data into pages).
+So this API was introduced into the right places to permit that to
+happen.   Most VIPT architectures are CAM based, so flush_dcache_page()
+actually sweeps up all the anon pages as well.  However, if the
+implementation (like parisc's) has to loop over page_mapping(page) then
+it will likely need to implement flush_anon_page() for fuse to work.
+
+James
+
+
