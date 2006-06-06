@@ -1,38 +1,38 @@
-From: Fabian Knittel <fabian.knittel@avona.com>
-Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
- SATA 300 TX4
-Date: Tue, 06 Jun 2006 19:27:17 +0200
-Message-ID: <4485BAF5.9060507@avona.com>
-References: <43FFAE3D.7010002@physics.harvard.edu> <44000036.7070403@eyal.emu.id.au> <011f01c639f9$8dc86bc0$3d64880a@speedy> <442DB29D.1010102@avona.com> <447CB9B4.50700@physics.harvard.edu>
+From: Kristen Accardi <kristen.c.accardi@intel.com>
+Subject: hotplugging ide devices on a dock station
+Date: Tue, 06 Jun 2006 16:11:31 -0700
+Message-ID: <1149635492.13089.67.camel@whizzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lenk.info ([217.160.183.176]:61126 "EHLO mail.lenk.info")
-	by vger.kernel.org with ESMTP id S1750735AbWFFRbW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jun 2006 13:31:22 -0400
-In-Reply-To: <447CB9B4.50700@physics.harvard.edu>
+Received: from mga01.intel.com ([192.55.52.88]:8321 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S1751297AbWFFXA2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Jun 2006 19:00:28 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Milan Kupcevic <milan@physics.harvard.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Eyal Lebedinsky <eyal@eyal.emu.id.au>, Stan Seibert <volsung@mailsnare.net>, linux-ide@vger.kernel.org, Christiaan den Besten <chris@scorpion.nl>
+To: linux-ide@vger.kernel.org
 
-Milan Kupcevic wrote:
-> Please respond with this data:
-> 
-> - Your Promise SATA controller retail name
-> - Chip label (PDCxxxxx)
-> - PCI vendor and device code as you can get with "lspci -n"
-> - Say if the controler has the new or the old wiring
+Hello,
+I've been working on getting docking/undocking to work and have written
+an acpi driver which handles dock/undock events and successfully
+hotplugs devices which either a) have another acpi driver or b) are on
+the PCI bus or c) are usb devices.  I would like to be able to allow IDE
+devices that are on dock stations to be discovered after a dock, and
+gracefully removed after undock.  IDE controllers that are PCI devices
+are hotadded without issues, but right now devices do not seem to be.  I
+know from reading the archives of this list that there has been some
+effort in enabling hotplug for SATA?  Is there some method that I should
+be using to tell the ide subsystem to rescan for new devices?  I have
+built in a method that other drivers can use to be notified of dock
+events, and have also built in a way for other drivers to register
+hotplug routines that can be called after a dock event.  Right now the
+pci hotplug driver acpiphp utilizes these functions to do the hotplug
+activities for pci based devices that are on the dock station, and I'd
+like to either figure out a way to do something similar for the ide
+devices, or else use a way that you have designed to indicate that a new
+device should be scanned for.  
 
-We only have one card and it matches one of yours:
-
-  Retail name: SATAII150 TX4
-  Chip label: PDC40518  SATAII150
-  Vendor-Device number: 105a:3d18 (rev 02)
-  Wiring: NEW
-
-Greetings, Fabian
--- 
-avona media GbR      | Neureuter Str. 5-7   | D-76185 Karlsruhe
-fon +49 721 53169901 | fax +49 721 53169904 | www.avona.com
+Thanks for any advice you can give, 
+Kristen
