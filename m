@@ -1,43 +1,38 @@
-From: Kristen Accardi <kristen.c.accardi@intel.com>
-Subject: Re: 2.6.17-rc5-mm3: oops when ejecting dock
-Date: Tue, 06 Jun 2006 08:50:48 -0700
-Message-ID: <1149609048.13089.8.camel@whizzy>
-References: <4483EB38.30609@goop.org> <1149554579.6006.10.camel@whizzy>
-	 <4484D244.3010905@goop.org>
+From: Fabian Knittel <fabian.knittel@avona.com>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+ SATA 300 TX4
+Date: Tue, 06 Jun 2006 19:27:17 +0200
+Message-ID: <4485BAF5.9060507@avona.com>
+References: <43FFAE3D.7010002@physics.harvard.edu> <44000036.7070403@eyal.emu.id.au> <011f01c639f9$8dc86bc0$3d64880a@speedy> <442DB29D.1010102@avona.com> <447CB9B4.50700@physics.harvard.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29742 "EHLO
-	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S1751313AbWFFPnI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Jun 2006 11:43:08 -0400
-In-Reply-To: <4484D244.3010905@goop.org>
+Received: from mail.lenk.info ([217.160.183.176]:61126 "EHLO mail.lenk.info")
+	by vger.kernel.org with ESMTP id S1750735AbWFFRbW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jun 2006 13:31:22 -0400
+In-Reply-To: <447CB9B4.50700@physics.harvard.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: linux-acpi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Milan Kupcevic <milan@physics.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Eyal Lebedinsky <eyal@eyal.emu.id.au>, Stan Seibert <volsung@mailsnare.net>, linux-ide@vger.kernel.org, Christiaan den Besten <chris@scorpion.nl>
 
-On Mon, 2006-06-05 at 17:54 -0700, Jeremy Fitzhardinge wrote:
-> Kristen Accardi wrote:
-> > I was able to reproduce this issue on an x40 - I found a bug in the
-> > code, however, when I fixed that bug I seem to have uncovered another
-> > one.  I'll send you a patch hopefully in the next day or so.
-> >   
-> Great, looking forward to it.  Do you know if this will properly 
-> disconnect the optical drive, or does that need some more ata/ide support?
+Milan Kupcevic wrote:
+> Please respond with this data:
 > 
-> Thanks,
->     J
+> - Your Promise SATA controller retail name
+> - Chip label (PDCxxxxx)
+> - PCI vendor and device code as you can get with "lspci -n"
+> - Say if the controler has the new or the old wiring
 
-I don't know - this is something I am trying to look into, but don't
-really have the equipment to test right now.  ASAIK, minimally you will
-need to have the very latest libata stuff that includes some kind of
-hotplug capability (I've copied the linux-ide list in case they can
-answer this question).  I don't know if this is actually in -mm or in
-some separate tree.  I'd like to work with you on making this work if
-you are willing - hopefully it will "Just Work", but if not perhaps we
-can figure out what needs to be done.
+We only have one card and it matches one of yours:
 
-Thanks,
-Kristen
+  Retail name: SATAII150 TX4
+  Chip label: PDC40518  SATAII150
+  Vendor-Device number: 105a:3d18 (rev 02)
+  Wiring: NEW
+
+Greetings, Fabian
+-- 
+avona media GbR      | Neureuter Str. 5-7   | D-76185 Karlsruhe
+fon +49 721 53169901 | fax +49 721 53169904 | www.avona.com
