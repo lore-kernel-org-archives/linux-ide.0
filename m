@@ -1,126 +1,36 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 2/6] The definition of ahci_start_fis_rx() and
-	ahci_stop_fis_rx()
-Date: Tue, 06 Jun 2006 18:16:11 +0800
-Message-ID: <1149588971.29552.56.camel@forrest26.sh.intel.com>
+From: "Karyn Weir" <replenishxuese@yubanet.com>
+Subject: Fwd: answer
+Date: Tue, 6 Jun 2006 10:40:21 +0000
+Message-ID: <004401c68955$9c956620$2909a8c0@teacher>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+     format=flowed;
+     charset="iso-8859-1";
+     reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:651 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1750886AbWFFKdO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Jun 2006 06:33:14 -0400
+Received: from [221.192.196.154] ([221.192.196.154]:32262 "EHLO
+	teacher.yubanet.com") by vger.kernel.org with ESMTP
+	id S1751022AbWFFKmF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Jun 2006 06:42:05 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, hare@suse.de, axboe@suse.de, htejun@gmail.com, jeremy@goop.org, lkml@rtr.ca
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Put the "start/stop FIS RX" operation into ahci_start_fis_rx() and
- ahci_stop_fis_rx().
+Life Should be Full of Luxuries....
 
-Signed-off-by: Forrest Zhao <forrest.zhaot@intel.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Jens Axboe <axboe@suse.de>
+http://newgunforsalejoke.com/
 
----
+Yet, only a handful of people can afford the finest products, the luxuries of the elite.
+But, here at "Luxury Replica" we are committed to bringing you the finest products, at prices incomparably lower.
+All of the top designer brands for Watches, Ties, Handbags and even Mont Blanc.
 
- drivers/scsi/ahci.c |   75 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+http://newgunforsalejoke.com/
 
-8098bbd92f7eacf5c40c01feb71fe88b88cb5745
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index be2cba8..2ad26cd 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -202,6 +202,10 @@ static unsigned int ahci_qc_issue(struct
- static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
- static int ahci_start_engine(void __iomem *port_mmio);
- static int ahci_stop_engine(void __iomem *port_mmio);
-+static void ahci_start_fis_rx(void __iomem *port_mmio,
-+			     struct ahci_port_priv *pp,
-+			     struct ahci_host_priv *hpriv);
-+static int ahci_stop_fis_rx(void __iomem *port_mmio);
- static int ahci_probe_reset(struct ata_port *ap, unsigned int *classes);
- static void ahci_irq_clear(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
-@@ -544,6 +548,77 @@ static int ahci_start_engine(void __iome
- 	return 0;
- }
- 
-+static int ahci_stop_fis_rx(void __iomem *port_mmio)
-+{
-+	u32 tmp;
-+
-+	/*
-+	 * Get current status
-+	 */
-+	tmp = readl(port_mmio + PORT_CMD);
-+
-+	/* Check if FIS RX is already disabled */
-+	if ((tmp & PORT_CMD_FIS_RX) == 0)
-+		return 0;
-+
-+	/*
-+	 * AHCI Rev 1.1 section 10.3.2
-+	 * Software shall not clear PxCMD.FRE while
-+	 * PxCMD.ST or PxCMD.CR is set to '1'
-+	 */
-+	if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_START)) {
-+		return -EPERM;
-+	}
-+
-+	/*
-+	 * Disable FIS reception
-+	 *
-+	 * AHCI Rev 1.1 Section 10.1.2:
-+	 * If PxCMD.FRE is set to '1', software should clear it
-+	 * to '0' and wait at least 500 milliseconds for PxCMD.FR
-+	 * to return '0' when read. If PxCMD.FR does not clear
-+	 * '0' correctly, then software may attempt a port reset
-+	 * of a full HBA reset to recover.
-+	 */
-+	tmp &= ~(PORT_CMD_FIS_RX);
-+	writel(tmp, port_mmio + PORT_CMD);
-+
-+	tmp = ata_wait_register(port_mmio + PORT_CMD, PORT_CMD_FIS_ON,
-+				PORT_CMD_FIS_ON, 1, 1000);
-+	if(tmp & PORT_CMD_FIS_ON)
-+		return -EBUSY;
-+
-+	return 0;
-+}
-+
-+static void ahci_start_fis_rx(void __iomem *port_mmio,
-+                             struct ahci_port_priv *pp,
-+                             struct ahci_host_priv *hpriv)
-+{
-+	u32 tmp;
-+
-+	/*
-+	 * Set FIS registers
-+	 */
-+	if (hpriv->cap & HOST_CAP_64)
-+		writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio + PORT_LST_ADDR_HI);
-+	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
-+	readl(port_mmio + PORT_LST_ADDR); /* flush */
-+
-+	if (hpriv->cap & HOST_CAP_64)
-+		writel((pp->rx_fis_dma >> 16) >> 16, port_mmio + PORT_FIS_ADDR_HI);
-+	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
-+	readl(port_mmio + PORT_FIS_ADDR); /* flush */
-+
-+	/*
-+	 * Enable FIS reception
-+	 */
-+	tmp = readl(port_mmio + PORT_CMD);
-+	tmp |= PORT_CMD_FIS_RX;
-+	writel(tmp, port_mmio + PORT_CMD);
-+	readl(port_mmio + PORT_CMD); /* flush */
-+}
-+
- static unsigned int ahci_dev_classify(struct ata_port *ap)
- {
- 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
--- 
-1.2.6
+The finest of products, at the lowest of prices, only a click away:
+
+http://blessthathomepleasee.com/
+
+Regards,
+Karyn Weir
+
