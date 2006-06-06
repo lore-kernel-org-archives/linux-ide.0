@@ -1,36 +1,29 @@
-From: "Karyn Weir" <replenishxuese@yubanet.com>
-Subject: Fwd: answer
-Date: Tue, 6 Jun 2006 10:40:21 +0000
-Message-ID: <004401c68955$9c956620$2909a8c0@teacher>
-Mime-Version: 1.0
-Content-Type: text/plain;
-     format=flowed;
-     charset="iso-8859-1";
-     reply-type=original
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [221.192.196.154] ([221.192.196.154]:32262 "EHLO
-	teacher.yubanet.com") by vger.kernel.org with ESMTP
-	id S1751022AbWFFKmF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Jun 2006 06:42:05 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Miklos Szeredi <miklos@szeredi.hu>
+Subject: Re: [PATCHSET] block: fix PIO cache coherency bug, take 2
+Date: Tue, 06 Jun 2006 13:00:08 +0200
+Message-ID: <E1FnZI8-0003u0-00@dorka.pomaz.szeredi.hu>
+References: <1149392479501-git-send-email-htejun@gmail.com>
+	 <20060604204444.GF4484@flint.arm.linux.org.uk> <1149515032.3489.4.camel@mulgrave.il.steeleye.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-reply-to: <1149515032.3489.4.camel@mulgrave.il.steeleye.com> (message from
+	James Bottomley on Mon, 05 Jun 2006 08:43:52 -0500)
+Sender: linux-scsi-owner@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: rmk+lkml@arm.linux.org.uk, htejun@gmail.com, axboe@suse.de, davem@redhat.com, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, g.liakhovetski@gmx.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Life Should be Full of Luxuries....
+> > > I tried to implement flush_anon_page() too but didn't know what to
+> > do
+> > > with anon_vma object.
+> > 
+> > I'm not sure what this is about...
+> 
+> This was for fuse on parisc.
 
-http://newgunforsalejoke.com/
+I have reports that this effects some ARM architectures as well.
 
-Yet, only a handful of people can afford the finest products, the luxuries of the elite.
-But, here at "Luxury Replica" we are committed to bringing you the finest products, at prices incomparably lower.
-All of the top designer brands for Watches, Ties, Handbags and even Mont Blanc.
+And direct I/O over NFS and a couple other things which also use the
+get_user_pages() mechanism will also not work properly without
+flush_anon_page().
 
-http://newgunforsalejoke.com/
-
-The finest of products, at the lowest of prices, only a click away:
-
-http://blessthathomepleasee.com/
-
-Regards,
-Karyn Weir
-
+Miklos
