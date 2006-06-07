@@ -1,40 +1,39 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: 2.6.17-rc5-mm3: oops when ejecting dock
-Date: Wed, 7 Jun 2006 12:42:53 +0100
-Message-ID: <20060607114253.GA15531@srcf.ucam.org>
-References: <4483EB38.30609@goop.org> <1149554579.6006.10.camel@whizzy> <4484D244.3010905@goop.org> <1149634494.13089.53.camel@whizzy> <44861109.7090502@goop.org> <1149639412.13089.85.camel@whizzy>
+From: Natasha R <mckay@yahoo.com>
+Subject: Trabajo!
+Date: Wed, 07 Jun 2006 09:26:59 -0400
+Message-ID: <5885387638.20060607092659@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:62173 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S1750998AbWFGLnH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Jun 2006 07:43:07 -0400
-Content-Disposition: inline
-In-Reply-To: <1149639412.13089.85.camel@whizzy>
+Received: from 64-60-11-117.cust.telepacific.net ([64.60.11.117]:8206 "HELO
+	149386952") by vger.kernel.org with SMTP id S932249AbWFGPFq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jun 2006 11:05:46 -0400
+Received: from yahoo.com (147025728 [147828808])
+	by 64-60-11-117.cust.telepacific.net (Qmailv1) with ESMTP id 071646AAC9
+	for <linux-ide@vger.kernel.org>; Wed, 07 Jun 2006 09:26:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Accardi <kristen.c.accardi@intel.com>
-Cc: Jeremy Fitzhardinge <jeremy@goop.org>, linux-acpi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Linux <linux-ide@vger.kernel.org>
 
-On Tue, Jun 06, 2006 at 05:16:52PM -0700, Kristen Accardi wrote:
+Hola,
 
-> Using the eject file won't help for a couple of other reasons besides
-> just the name change.  First, it requires that the device be present at
-> boot.  Second, AFAIK it just calls the device's _EJ0 method, which I
-> don't think is really the only thing that is needed here.  I think we
-> also need a generic way to do this without using the ibm driver.  You
-> could scan the acpi namespace for IDE controllers based on checking for
-> some methods that are used only in IDE or SATA devices and write a acpi
-> driver to handle insert/remove events, but it seems like for device
-> hotplug though you'd still somehow need to rescan from ide.  To me it
-> seems unwise to do anything outside the ide subsystem other than notify
-> of an event and call some handler or something.
+Nosotros la compania internacional financiera.
+Ofrecemos el trabajo solamente para los habitantes DE ESPANA.
 
-Does ejecting/docking not generate an IDE bus rescan notification? I've 
-got hacky code to support that for SATA hardware, but it's not currently 
-usable for PATA. Once the PATA libata code has settled down a little, 
-I'll look into that.
+Nuestras exigencias son muy simples:
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+- Debeis tener solamente 2-3 horas del tiempo libre por la manana!
+- Debeis tener o abrir la cuenta en el banco!
+- Debeis ser 18+.
+
+Ganareis 150-600 Euros por dia.
+
+Escriban por favor a nuestro e-mail para ulterior de las instrucciones:
+TRABAJAR@INBOX.COM
+
+
+--
+Un saludo,
+N.
+
