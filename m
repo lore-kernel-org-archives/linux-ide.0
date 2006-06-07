@@ -1,85 +1,48 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 3/6] libata: Add ata_scsi_dev_disabled
-Date: Wed, 07 Jun 2006 11:25:46 -0500
-Message-ID: <200606071625.k57GPkOR024072@d03av02.boulder.ibm.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 2.6.17-rc6] sata_mv: grab host lock inside eng_timeout
+Date: Wed, 7 Jun 2006 12:53:29 -0400
+Message-ID: <200606071253.29745.liml@rtr.ca>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:36524 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S932320AbWFGQhX
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Jun 2006 12:37:23 -0400
+Received: from rtr.ca ([64.26.128.89]:31127 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932329AbWFGQxh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jun 2006 12:53:37 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+To: linux-ide@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 
+Bug fix:  mv_eng_timeout() calls mv_err_intr() without first grabbing the host lock,
+which can lead to all sorts of interesting scenarios.
 
-Separate out parts of ata_scsi_find_dev to be reused in
-future SAS/SATA patches.
+This whole error-handling portion of sata_mv is nasty (and will get fixed for
+the new EH stuff), but for now this patch will help keep it on life-support.
 
-Signed-off-by: Brian King <brking@us.ibm.com>
+Signed-off-by:  Mark Lord <liml@rtr.ca>
 ---
 
- libata-dev-bjking1/drivers/scsi/libata-scsi.c |   41 +++++++++++++++++++-------
- 1 files changed, 31 insertions(+), 10 deletions(-)
-
-diff -puN drivers/scsi/libata-scsi.c~libata_scsi_enabled drivers/scsi/libata-scsi.c
---- libata-dev/drivers/scsi/libata-scsi.c~libata_scsi_enabled	2006-06-06 08:55:41.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-06-06 08:55:41.000000000 -0500
-@@ -2309,6 +2309,36 @@ static unsigned int atapi_xlat(struct at
- }
+--- linux/drivers/scsi/sata_mv.c.orig	2006-06-07 12:30:08.000000000 -0400
++++ linux/drivers/scsi/sata_mv.c	2006-06-07 12:30:55.000000000 -0400
+@@ -2035,6 +2035,7 @@
+ static void mv_eng_timeout(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc;
++	unsigned long flags;
  
- /**
-+ *	ata_scsi_dev_enabled - determine if device is enabled
-+ *	@dev: ATA device
-+ *
-+ *	Determine if commands should be sent to the specified device.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	0 if commands are not allowed / 1 if commands are allowed
-+ */
-+
-+static int ata_scsi_dev_enabled(struct ata_device *dev)
-+{
-+	if (unlikely(!ata_dev_enabled(dev)))
-+		return 0;
-+
-+	if (!atapi_enabled || (dev->ap->flags & ATA_FLAG_NO_ATAPI)) {
-+		if (unlikely(dev->class == ATA_DEV_ATAPI)) {
-+			ata_dev_printk(dev, KERN_WARNING,
-+				       "WARNING: ATAPI is %s, device ignored.\n",
-+				       atapi_enabled ? "not supported with this driver" : "disabled");
-+			return 0;
-+		}
-+	}
-+
-+	return 1;
-+}
-+
-+/**
-  *	ata_scsi_find_dev - lookup ata_device from scsi_cmnd
-  *	@ap: ATA port to which the device is attached
-  *	@scsidev: SCSI device from which we derive the ATA device
-@@ -2340,18 +2370,9 @@ ata_scsi_find_dev(struct ata_port *ap, c
- 		     (scsidev->lun != 0)))
- 		return NULL;
+ 	printk(KERN_ERR "ata%u: Entering mv_eng_timeout\n",ap->id);
+ 	DPRINTK("All regs @ start of eng_timeout\n");
+@@ -2046,8 +2047,10 @@
+ 	       ap->host_set->mmio_base, ap, qc, qc->scsicmd,
+ 	       &qc->scsicmd->cmnd);
  
--	if (unlikely(!ata_dev_enabled(dev)))
-+	if (unlikely(!ata_scsi_dev_enabled(dev)))
- 		return NULL;
++	spin_lock_irqsave(&ap->host_set->lock, flags);
+ 	mv_err_intr(ap, 0);
+ 	mv_stop_and_reset(ap);
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
  
--	if (!atapi_enabled || (ap->flags & ATA_FLAG_NO_ATAPI)) {
--		if (unlikely(dev->class == ATA_DEV_ATAPI)) {
--			ata_dev_printk(dev, KERN_WARNING,
--				"WARNING: ATAPI is %s, device ignored.\n",
--				atapi_enabled ? "not supported with this driver" : "disabled");
--			return NULL;
--		}
--	}
--
- 	return dev;
- }
- 
-_
+ 	WARN_ON(!(qc->flags & ATA_QCFLAG_ACTIVE));
+ 	if (qc->flags & ATA_QCFLAG_ACTIVE) {
