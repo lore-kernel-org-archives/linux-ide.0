@@ -1,39 +1,39 @@
-From: Natasha R <mckay@yahoo.com>
-Subject: Trabajo!
-Date: Wed, 07 Jun 2006 09:26:59 -0400
-Message-ID: <5885387638.20060607092659@yahoo.com>
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 0/6] libata: Support SATA attached via SAS
+Date: Wed, 07 Jun 2006 11:24:29 -0500
+Message-ID: <4486FDBD.9030200@us.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 64-60-11-117.cust.telepacific.net ([64.60.11.117]:8206 "HELO
-	149386952") by vger.kernel.org with SMTP id S932249AbWFGPFq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jun 2006 11:05:46 -0400
-Received: from yahoo.com (147025728 [147828808])
-	by 64-60-11-117.cust.telepacific.net (Qmailv1) with ESMTP id 071646AAC9
-	for <linux-ide@vger.kernel.org>; Wed, 07 Jun 2006 09:26:59 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 List-Id: linux-ide@vger.kernel.org
-To: Linux <linux-ide@vger.kernel.org>
 
-Hola,
+Jeff,
 
-Nosotros la compania internacional financiera.
-Ofrecemos el trabajo solamente para los habitantes DE ESPANA.
+Here is a refresh of my patchset to allow SAS HBAs to use libata to
+control attached SATA devices. It should apply cleanly to #upstream.
 
-Nuestras exigencias son muy simples:
+James,
 
-- Debeis tener solamente 2-3 horas del tiempo libre por la manana!
-- Debeis tener o abrir la cuenta en el banco!
-- Debeis ser 18+.
+After our discussion at the storage summit I think I have
+a better idea what you are looking for with a SATA transport class.
+Unfortunately, the problem I am facing is that I am dealing with a
+firmware stack (ipr) which does not expose the physical transport
+to the host. The ipr firmware does all the device discovery and reports
+a configuration table describing the attached devices, but does not
+export any physical topology information. At some point in the future
+I hope to be able to extract this information from the ipr firmware
+stack and convert ipr to be able to utilize the sas/sata transport class,
+but, unfortunately, the firmware interfaces to accomplish this
+aren't available at this time.
 
-Ganareis 150-600 Euros por dia.
+Brian
 
-Escriban por favor a nuestro e-mail para ulterior de las instrucciones:
-TRABAJAR@INBOX.COM
-
-
---
-Un saludo,
-N.
-
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
