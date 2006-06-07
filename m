@@ -1,73 +1,32 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 0/6] libata: Support SATA attached via SAS
-Date: Wed, 07 Jun 2006 12:56:47 -0500
-Message-ID: <4487135F.3050908@us.ibm.com>
-References: <4486FDBD.9030200@us.ibm.com> <4487084E.7090307@torque.net>
-Reply-To: brking@us.ibm.com
+From: "Malissa Deutsch" <e01xjr@legislators.com>
+Subject: [STCK REPORT] Very prompt service and great prices on pills attained abject abreaction
+Date: Thu, 08 Jun 2006 03:04:38 +0800
+Message-ID: <sasvhm1x2yw8j6y@legislators.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4487084E.7090307@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: jgarzik@pobox.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [219.152.91.28] ([219.152.91.28]:11535 "HELO legislators.com")
+	by vger.kernel.org with SMTP id S932376AbWFGTFS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jun 2006 15:05:18 -0400
+Received: from [192.168.1.9] ([219.152.91.28]) by legislators.com (Sendmail 8.7.2) with ESMTP (SSL) id IYT42365 for <linux-ide@vger.kernel.org>; Thu, 08 Jun 2006 03:04:38 +0800
+Content-return: allowed
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Brian King wrote:
->> Jeff,
->>
->> Here is a refresh of my patchset to allow SAS HBAs to use libata to
->> control attached SATA devices. It should apply cleanly to #upstream.
->>
->> James,
->>
->> After our discussion at the storage summit I think I have
->> a better idea what you are looking for with a SATA transport class.
->> Unfortunately, the problem I am facing is that I am dealing with a
->> firmware stack (ipr) which does not expose the physical transport
->> to the host. The ipr firmware does all the device discovery and reports
->> a configuration table describing the attached devices, but does not
->> export any physical topology information. At some point in the future
->> I hope to be able to extract this information from the ipr firmware
->> stack and convert ipr to be able to utilize the sas/sata transport class,
->> but, unfortunately, the firmware interfaces to accomplish this
->> aren't available at this time.
-> 
-> Brian,
-> Does that mean that it doesn't have an SMP pass through?
-> SMP and the SAS addresses attached to the phys on the HBA
-> is enough to do discovery in the user space.
+We are providing an online solution to finding and receiving prescription medications from the comfort of your own home, you will be able to save money, save time, save yourself from worry, and most of all, save your life!
 
-Doug,
-
-That is correct. There is no SMP passthru interface. The interface I
-am working with basically gives me some very basic information
-regarding all attached end devices (which does not include SMP devices).
-The information I get for each device includes: 
-
-1. The LUN's SAS address
-2. The type of device to aid in HLDD attachment. This could be either
-   a SAS device, a SATA device, or a RAID logical device.
-3. A bus/target/lun tuple which can be used to map into SPI if the
-   host dd wants to. 
-
-If you look in drivers/scsi/ipr.h at struct ipr_config_table_entry,
-that might give you a better idea as to what I get back for each
-device.
-
-In a future firmware release I should have the firmware interfaces
-I need to be able to extract both adapter SAS/SATA phy information
-and SAS expander information such that I can move ipr to fit
-into the sas transport model. Unfortunately, I don't have this
-today.
+Everything is done on-line and Safe..
 
 
-Brian
+Visit The Site Now
+pharmasteches.com
 
+Sincerely,
+Malissa Deutsch
+pharmasteches.com customer service
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+nwopfrevcf mZzWnCzfkEYqJtwNRPSFNWEppHzlze
+
+loathing baking hypophyseal drift imposed cemented Formica balking Fatima influentially darning galenite drug bridgeheads blackbody Beograd immediately devises Punic incident Gloria almanac's loathing confessions darning enshroud girders inquisitive Atreus grassland
