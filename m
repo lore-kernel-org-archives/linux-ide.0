@@ -1,27 +1,23 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 13/13] libata-hp: move ata_do_reset() to libata-eh.c
-Date: Thu, 08 Jun 2006 16:58:22 -0400
-Message-ID: <44888F6E.10005@pobox.com>
-References: <11490747461666-git-send-email-htejun@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: ICH8 docs available publicly
+Date: Thu, 08 Jun 2006 18:19:38 -0400
+Message-ID: <4488A27A.3060401@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:4314 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965016AbWFHU6d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jun 2006 16:58:33 -0400
-In-Reply-To: <11490747461666-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:56539 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965025AbWFHWTl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jun 2006 18:19:41 -0400
+Received: from cpe-065-190-194-075.nc.res.rr.com ([65.190.194.75] helo=[10.10.10.99])
+	by mail.dvmed.net with esmtpsa (Exim 4.60 #1 (Red Hat Linux))
+	id 1FoSqp-0000Mz-DT
+	for linux-ide@vger.kernel.org; Thu, 08 Jun 2006 22:19:40 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: mlord@pobox.com, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> With ops->probe_init() gone, no user is left in libata-core.c.  Move
-> ata_do_reset() to libata-eh.c and make it static.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+Thanks to Jason Gaston @ Intel for pointing out this brand new posting:
 
-ACK 4-13
-
+http://intel.com/design/chipsets/datashts/313056.htm
 
