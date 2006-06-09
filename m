@@ -1,45 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [RFC] ATA host-protected area (HPA) device mapper?
-Date: Thu, 08 Jun 2006 23:43:36 -0400
-Message-ID: <4488EE68.9000605@garzik.org>
-References: <1149751860.29552.79.camel@forrest26.sh.intel.com>	 <44883BAE.7070406@pobox.com> <1149820043.5721.7.camel@forrest26.sh.intel.com> <4488E6F6.10306@pobox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFC] AHCI Command Completion Coalescing(CCC) proposal
+Date: Fri, 09 Jun 2006 12:47:48 +0900
+Message-ID: <4488EF64.9070602@gmail.com>
+References: <1149751860.29552.79.camel@forrest26.sh.intel.com>	 <44883BAE.7070406@pobox.com> <1149820043.5721.7.camel@forrest26.sh.intel.com> <4488EB4A.4050501@pobox.com> <4488EE69.7050907@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55524 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751378AbWFIDnk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jun 2006 23:43:40 -0400
-In-Reply-To: <4488E6F6.10306@pobox.com>
+Received: from py-out-1112.google.com ([64.233.166.176]:46479 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S965119AbWFIDry (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Jun 2006 23:47:54 -0400
+Received: by py-out-1112.google.com with SMTP id c39so713416pyd
+        for <linux-ide@vger.kernel.org>; Thu, 08 Jun 2006 20:47:54 -0700 (PDT)
+In-Reply-To: <4488EE69.7050907@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: "zhao, forrest" <forrest.zhao@intel.com>, htejun@gmail.com, randy_dunlap <rdunlap@xenotime.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, linux-ide@vger.kernel.org
 
-As I just mentioned on linux-ide in another email:
-libata should -- like drivers/ide -- call the ATA "set max" command to 
-fully address the hard drive, including the special "host-protected 
-area" (HPA).  We should do this because the Linux standard is to export 
-the raw hardware directly, making 100% of the hardware capability 
-available to the user (and, in this case, Linux-based BIOS and recovery 
-tools).
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+> 
+>> I'm still not sure I follow you?
+>>
+>> When AHCI runs out of commands to execute, it transitions from H:Idle 
+>> to Ccc:SetIS.
+>>
+>> IMPORTANT NOTE:  In order for CCC to be effective on AHCI, ahci.c and 
+>> libata (and sata_sil24) must be updated to support queuing a list of 
+>> non-NCQ commands onto the controller, and recovering from errors in 
+>> the case where a command list full of non-NCQ commands is present.
+> 
+> I thought about it but am not really sure whether it's worth the 
+> trouble.  We'll be saving on inter-command latency and interrupt 
+> handling which is great but not so sure how noticeable the improvement 
+> would be.  NCQ is already all around.  How about doing CCC only during 
+> NCQ command phase?
+> 
+> Hmmm... maybe those SSDs would benefit from CCC during non-NCQ commands 
+> though if they don't support NCQ, which they don't really need.
+> 
 
-However, there are rare bug reports and general paranoia related to 
-presenting 100% of the ATA hard drive "native" space, rather than the 
-possibly-smaller space that the BIOS chose to present to the user.
+If we're gonna do it.  EH needs only a few changes probably during 
+autopsy and report.  Fixing up command issue path and implementing 
+command exclusion (NCQ vs. non-NCQ, sil24 does it in hardware, ahci 
+doesn't) will be a bit complex though.
 
-My thinking is that [someone] should create an optional, ATA-specific 
-device mapper module.  This module would layer on top of an ATA block 
-device, and present two block devices:  the BIOS-presented space, and 
-the HPA.
-
-Such a module would make it trivial for users to ensure that partition 
-tables and RAID metadata formats know what the BIOS (rather than 
-underlying hard drive) considers to be end-of-disk.
-
-Comments?  Questions?  Am I completely insane?  ;-)
-
-	Jeff
-
-
-
+-- 
+tejun
