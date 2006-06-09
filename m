@@ -1,86 +1,64 @@
-From: Etienne Lorrain <etienne_lorrain@yahoo.fr>
-Subject: Re: [RFC] ATA host-protected area (HPA) device mapper?
-Date: Fri, 9 Jun 2006 22:41:47 +0200 (CEST)
-Message-ID: <20060609204147.61760.qmail@web26912.mail.ukl.yahoo.com>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Re: Another project for you... :)
+Date: Fri, 9 Jun 2006 18:29:33 -0400
+Message-ID: <87f94c370606091529q2cb2a197v96ef95c3e4b55643@mail.gmail.com>
+References: <1149751860.29552.79.camel@forrest26.sh.intel.com>
+	 <44883BAE.7070406@pobox.com>
+	 <1149820043.5721.7.camel@forrest26.sh.intel.com>
+	 <4488E6F6.10306@pobox.com>
+	 <1149822824.5721.16.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web26912.mail.ukl.yahoo.com ([217.146.177.79]:2927 "HELO
-	web26912.mail.ukl.yahoo.com") by vger.kernel.org with SMTP
-	id S965156AbWFIUls (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Jun 2006 16:41:48 -0400
+Received: from wx-out-0102.google.com ([66.249.82.193]:51475 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751412AbWFIW3e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Jun 2006 18:29:34 -0400
+Received: by wx-out-0102.google.com with SMTP id h28so568204wxd
+        for <linux-ide@vger.kernel.org>; Fri, 09 Jun 2006 15:29:34 -0700 (PDT)
+In-Reply-To: <1149822824.5721.16.camel@forrest26.sh.intel.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, linux-ide@vger.kernel.org, randy_dunlap <rdunlap@xenotime.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
---- XXXXXXXX wrote:
-> It tends to be preferred around here to implement hardware features s=
-o=20
-> that hardware actually works, rather than to implement spec and blame=
-=20
-> the hardware for failing to work to the spec.
+> > Also, a feature Alan requests on occasion:  Call the ATA "set max"
+> > command to fully address the hard drive, including HPA.  The Linux
+> > standard is to export the raw hardware directly, making 100% of the
+> > hardware capability available to the user (and, in this case,
+> > Linux-based BIOS and recovery tools).
+>
+> I'll first study what this means, then start to work on it.
+>
+> Best wishes,
+> Forrest
 
- Well, the IDE hardware works, and conform to the ATA specs.
- Gujin is using those ATA command for quite a long time.
- I just have a problem with SATA chipset not being ATA1-7 compatible.
+The below relates to PATA and HPA (Host Protected Area), but I assume
+it would be relevant to SATA as well.
 
->  If, as you say, most BIOS=20
-> don't obey the spec, then implementing a spec that bears little=20
-> resemblance to actual behavior only helps the small number of=20
-> spec-compliant implementations.
+====
+This has been discussed before in the archives.  I think the desired
+behavior was to have the Linux Kernel look for HPAs by default and to
+open the drive up to the full size via "set max" on boot, but to have
+a boot parameter to disable this behavior if desired.
 
-  The main problem for BIOS manufacturer is the keyboard mapping
- recognition to enter the password. And there is no real point
- in freezing the password system of a locked drive.
-  Gujin try to solve most of those problems, but because it is
- located on the hard disk itself limit the choice - it would be
- so nice to have a big enough BIOS FLASH and put Gujin there.
- Second best choice is having two hard disks (compact flash as
- first HD with compact flash <-> IDE adapter).
+FYI: There is a userland tool called setmax floating around.  (I can
+find if you're interested.)  The userland tool works fine for LBA28
+drives, but does not have LBA48 support.  That may get to be an issue,
+but at least from my perspective, I have not yet seen any 128+ GiB
+drives with HPAs setup.  I do occasionally see smaller drives with
+HPAs.
 
-> >   The complete ATA specification is describing a register interface=
- since ATA1,
-> >  SATA chipsets should be software compatible, even if they add comm=
-ands/interfaces:
-> > http://www.sata-io.org/interopfaq.asp    say:
-> >     Are there any known interoperability issues with SATA?
-> >     One of the primary requirements of the SATA 1.0 specification w=
-as to
-> >     maintain backward compatibility with existing operating system =
-drivers
-> >     to eliminate incompatibility issues.
-> >=20
->=20
-> Again with the "The spec says it works this way, so I can do it this=20
-> way."  I realize that you can be perfectly, legally, safe implementin=
-g=20
-> specified behavior, but it leaves you doing what you are doing here,=20
-> which is blaming the hardware for not living up to the specification.=
-=20
+FYI2: I do computer forensics and make dd images of drives routinely.
+As part of the process I double check if a HPA is present or not.  I
+typically use the userland setmax tool to open it up if the linux
+kernel failed to do so on bootup for some reason.  (I've only seen
+that a few times so far.)
 
-  Well the ATA specs are quite old, Gujin still work with the BIOS hard=
- disk
- so still act as a bootloader, but it can not protecting you against a
- 1 milisecond attack setting password.
- By the way the SATA specs are not free.
-
-> It is generally the choice in the linux kernel to make the hardware=20
-> work, and ignore the specification where it is irrelevant to actual=20
-> functionality.  Read up on the SAS Transport Layer.
-
-  Oh yes, Gujin has some strange code to make things work at the end,
- look for ATAPI stuff - I can and do ignore the specs to make the softw=
-are
- work on real hardware.
-
-  Cheers,
-  Etienne.
-
-
-
-__________________________________________________
-Do You Yahoo!?
-En finir avec le spam? Yahoo! Mail vous offre la meilleure protection p=
-ossible contre les messages non sollicit=E9s=20
-http://mail.yahoo.fr Yahoo! Mail=20
+Greg
+-- 
+Greg Freemyer
+The Norcross Group
+Forensics for the 21st Century
