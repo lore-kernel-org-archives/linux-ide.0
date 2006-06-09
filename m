@@ -1,64 +1,36 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Another project for you... :)
-Date: Fri, 9 Jun 2006 18:29:33 -0400
-Message-ID: <87f94c370606091529q2cb2a197v96ef95c3e4b55643@mail.gmail.com>
+Date: Sat, 10 Jun 2006 00:44:46 +0100
+Message-ID: <1149896686.22124.96.camel@localhost.localdomain>
 References: <1149751860.29552.79.camel@forrest26.sh.intel.com>
 	 <44883BAE.7070406@pobox.com>
-	 <1149820043.5721.7.camel@forrest26.sh.intel.com>
-	 <4488E6F6.10306@pobox.com>
+	 <1149820043.5721.7.camel@forrest26.sh.intel.com> <4488E6F6.10306@pobox.com>
 	 <1149822824.5721.16.camel@forrest26.sh.intel.com>
+	 <87f94c370606091529q2cb2a197v96ef95c3e4b55643@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.193]:51475 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751412AbWFIW3e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Jun 2006 18:29:34 -0400
-Received: by wx-out-0102.google.com with SMTP id h28so568204wxd
-        for <linux-ide@vger.kernel.org>; Fri, 09 Jun 2006 15:29:34 -0700 (PDT)
-In-Reply-To: <1149822824.5721.16.camel@forrest26.sh.intel.com>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:472 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932581AbWFIX3i
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Jun 2006 19:29:38 -0400
+In-Reply-To: <87f94c370606091529q2cb2a197v96ef95c3e4b55643@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, linux-ide@vger.kernel.org, randy_dunlap <rdunlap@xenotime.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, linux-ide@vger.kernel.org, randy_dunlap <rdunlap@xenotime.net>
 
-> > Also, a feature Alan requests on occasion:  Call the ATA "set max"
-> > command to fully address the hard drive, including HPA.  The Linux
-> > standard is to export the raw hardware directly, making 100% of the
-> > hardware capability available to the user (and, in this case,
-> > Linux-based BIOS and recovery tools).
->
-> I'll first study what this means, then start to work on it.
->
-> Best wishes,
-> Forrest
+Ar Gwe, 2006-06-09 am 18:29 -0400, ysgrifennodd Greg Freemyer:
+> behavior was to have the Linux Kernel look for HPAs by default and to
+> open the drive up to the full size via "set max" on boot, but to have
+> a boot parameter to disable this behavior if desired.
 
-The below relates to PATA and HPA (Host Protected Area), but I assume
-it would be relevant to SATA as well.
+It doesn't really work very well, even less so when you hit SATA and
+have hot plug disks. HPA on which disks, inserted when.
 
-====
-This has been discussed before in the archives.  I think the desired
-behavior was to have the Linux Kernel look for HPAs by default and to
-open the drive up to the full size via "set max" on boot, but to have
-a boot parameter to disable this behavior if desired.
+Thus it needs, as Jeff says, to be cleanly exposed dynamically at
+runtime.
 
-FYI: There is a userland tool called setmax floating around.  (I can
-find if you're interested.)  The userland tool works fine for LBA28
-drives, but does not have LBA48 support.  That may get to be an issue,
-but at least from my perspective, I have not yet seen any 128+ GiB
-drives with HPAs setup.  I do occasionally see smaller drives with
-HPAs.
+Alan
 
-FYI2: I do computer forensics and make dd images of drives routinely.
-As part of the process I double check if a HPA is present or not.  I
-typically use the userland setmax tool to open it up if the linux
-kernel failed to do so on bootup for some reason.  (I've only seen
-that a few times so far.)
-
-Greg
--- 
-Greg Freemyer
-The Norcross Group
-Forensics for the 21st Century
