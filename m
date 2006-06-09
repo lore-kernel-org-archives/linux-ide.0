@@ -1,51 +1,44 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: Re: Another project for you...  :)
-Date: Fri, 09 Jun 2006 11:13:44 +0800
-Message-ID: <1149822824.5721.16.camel@forrest26.sh.intel.com>
-References: <1149751860.29552.79.camel@forrest26.sh.intel.com>
-	 <44883BAE.7070406@pobox.com>
-	 <1149820043.5721.7.camel@forrest26.sh.intel.com> <4488E6F6.10306@pobox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFC] AHCI Command Completion Coalescing(CCC) proposal
+Date: Fri, 09 Jun 2006 12:43:37 +0900
+Message-ID: <4488EE69.7050907@gmail.com>
+References: <1149751860.29552.79.camel@forrest26.sh.intel.com>	 <44883BAE.7070406@pobox.com> <1149820043.5721.7.camel@forrest26.sh.intel.com> <4488EB4A.4050501@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:41535 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751327AbWFIDbt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Jun 2006 23:31:49 -0400
-In-Reply-To: <4488E6F6.10306@pobox.com>
+Received: from py-out-1112.google.com ([64.233.166.183]:14727 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751381AbWFIDnn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Jun 2006 23:43:43 -0400
+Received: by py-out-1112.google.com with SMTP id t32so716013pyc
+        for <linux-ide@vger.kernel.org>; Thu, 08 Jun 2006 20:43:43 -0700 (PDT)
+In-Reply-To: <4488EB4A.4050501@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org, randy_dunlap <rdunlap@xenotime.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, linux-ide@vger.kernel.org
 
-On Thu, 2006-06-08 at 23:11 -0400, Jeff Garzik wrote:
-> Forrest,
+Jeff Garzik wrote:
+
+> I'm still not sure I follow you?
 > 
-> BTW, if you are looking for useful libata projects, it would really be 
-> nice to resurrect Randy Dunlap's SATA ACPI patches, update those for the 
-> current libata-dev.git#upstream, and get those in.
+> When AHCI runs out of commands to execute, it transitions from H:Idle to 
+> Ccc:SetIS.
 > 
-> libata needs to execute the SATA taskfiles passed to us from ACPI BIOS 
-> tables, in order to properly set up the hard drive in a way the user 
-> expects (hard drive password, acoustic settings, etc.).  There should be 
-> a module option that allows the user to skip this step, and preserve 
-> current behavior.
+> IMPORTANT NOTE:  In order for CCC to be effective on AHCI, ahci.c and 
+> libata (and sata_sil24) must be updated to support queuing a list of 
+> non-NCQ commands onto the controller, and recovering from errors in the 
+> case where a command list full of non-NCQ commands is present.
 
-OK. I'll work on Randy's SATA ACPI patches first, then CCC.
+I thought about it but am not really sure whether it's worth the 
+trouble.  We'll be saving on inter-command latency and interrupt 
+handling which is great but not so sure how noticeable the improvement 
+would be.  NCQ is already all around.  How about doing CCC only during 
+NCQ command phase?
 
-> Also, a feature Alan requests on occasion:  Call the ATA "set max" 
-> command to fully address the hard drive, including HPA.  The Linux 
-> standard is to export the raw hardware directly, making 100% of the 
-> hardware capability available to the user (and, in this case, 
-> Linux-based BIOS and recovery tools).
+Hmmm... maybe those SSDs would benefit from CCC during non-NCQ commands 
+though if they don't support NCQ, which they don't really need.
 
-I'll first study what this means, then start to work on it.
-
-Jeff and Tejun,
-
-Thank you very much for helping me get involved in libata development.
-I'm very happy to make contribution to open source project :)
-
-Best wishes,
-Forrest
+-- 
+tejun
