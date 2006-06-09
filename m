@@ -1,76 +1,123 @@
-From: "Bill Rugolsky Jr." <bill@rugolsky.com>
-Subject: Re: [PATCH][INCOMPLETE] sata_nv: merge ADMA support
-Date: Fri, 9 Jun 2006 11:32:12 -0400
-Message-ID: <20060609153212.GA28830@ti64.telemetry-investments.com>
-References: <20060317232339.GA5674@ti64.telemetry-investments.com> <20060319232317.GA25578@ti64.telemetry-investments.com> <441F56AD.8020001@garzik.org> <200603262014.35466.lkml@lpbproductions.com> <20060327160845.GG9411@ti64.telemetry-investments.com> <b263e5900606071509o3b06c7a4y84aae7802a5aece2@mail.gmail.com>
+From: Etienne Lorrain <etienne_lorrain@yahoo.fr>
+Subject: RE : Re: [RFC] ATA host-protected area (HPA) device mapper?
+Date: Fri, 9 Jun 2006 17:55:50 +0200 (CEST)
+Message-ID: <20060609155550.69188.qmail@web26907.mail.ukl.yahoo.com>
+References: <44898A52.2010008@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 209-166-240-202.cust.walrus.com ([209.166.240.202]:28066 "EHLO
-	mail1.telemetry-investments.com") by vger.kernel.org with ESMTP
-	id S1030211AbWFIPcW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Jun 2006 11:32:22 -0400
-Content-Disposition: inline
-In-Reply-To: <b263e5900606071509o3b06c7a4y84aae7802a5aece2@mail.gmail.com>
+Received: from web26907.mail.ukl.yahoo.com ([217.146.176.96]:31067 "HELO
+	web26907.mail.ukl.yahoo.com") by vger.kernel.org with SMTP
+	id S1030249AbWFIPzw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Jun 2006 11:55:52 -0400
+In-Reply-To: <44898A52.2010008@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Carpenter <error27.lkml@gmail.com>
-Cc: Matt Heler <lkml@lpbproductions.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Jun 07, 2006 at 03:09:31PM -0700, Dan Carpenter wrote:
-> Bill Rugolsky Jr. <bill@rugolsky.com> wrote:
-> >Here is an incomplete attempt to get the sata_nv ADMA code working.
-> >
-> >I made another pass through my merge of the sata_nv driver to fix and
-> >clean up a few things.  I've only made the minimal changes necessary
-> >to get it into a testable state; methinks it could do with a lot of
-> >refactoring and cleanup, instead of all the "if (host->...host_type == 
-> >ADMA)" tests.
-> >
-> 
-> Did you ever figure this out?
-> 
-> It looks like you're mixing two completely seperate bugs.  The ata
-> timeouts and the lost ticks messages.
-> 
-> >BIOS Information
-> >        Vendor: Phoenix Technologies Ltd.
-> >        Version: 2004Q3
-> >        Release Date: 10/12/2005
-> >
-> 
-> This is causing the sata failures:
-> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=190856
-> Downgrade to match your other system (version 1.01).  That will fix
-> the ata timeouts at least.
+--- Jeff Garzik wrote:
+> >   Your hard disk is a lot more powerfull than what you think, only =
+very old
+>=20
+> No, it's not.  I am well aware of what's in the ATA spec.
+>
+> >  hard disks only have ATA set max command. Nowadays, you can not on=
+ly set the
+>=20
+> Not true.
 
-Interesting; I still have one such machine set aside for testing purposes,
-so I can give that a try; in my limited testing, ADMA didn't exhibit the
-same long latencies.
+  If you want more info without reading the spec, here is some more:
+http://www.heise.de/ct/english/05/08/172/
 
-I'm just rolling up a 2.6.17 kernel patchset, so I'll pull in Jeff's
-sata_nv branch and give it a try; the patch queue is long though, so
-it will probably be sometime next week.
+> >  Gujin also do the absolutely needed setup of the IDE hard disk whi=
+ch is to freeze
+> >  the password system _and_ the config system of all the IDE hard di=
+sks present, so
+> >  that no virus can put a random password and send you an E-mail wit=
+h the address
+> >  where to send the money to get the password to unlock the hard dis=
+k and so access
+> >  again your data. Again, freezing means no more modifiable until ne=
+xt power cycle,
+> >  so IMO it is the job of the bootloader to setup the hard disk, bef=
+ore running
+> >  anything like Linux, a commercial OS, a bootable CDROM...
+>=20
+> This is totally broken, and I am going to strongly recommend that no =
+one=20
+> use this software.
 
-> I'm still interested in the lost ticks messages though...
+  But that is the recommended way to do in the ATA specification, since=
+ ATA4:
 
-My workaround has been to just use John Stultz's new timekeeping
-code (actually the variant in Thomas Gleixner's hrtimers rollup --
-http://tglx.de/projects/hrtimers/).  Our PostgreSQL servers now maintain
-sub-millisecond NTP offsets, whereas previously they would drift 100+ms away,
-lose sync, and require an NTP restart every day or so.
+http://www.t13.org/project/d1153r18-ATA-ATAPI-4.pdf
+and read "6.10 Security Mode feature set" around page 30 / page 46.
+Pay attentiong to the last sentense of "6.10.4 Frozen mode".
 
-John wrote the other day:
+  And some BIOS correctly implement it - most BIOS don't.
 
-   With the current code in -mm I can run a test app that disables
-   interrupts for 2 seconds at a time over and over and I'm still keeping
-   synched w/ an NTP server within 30 microseconds.
+> It is the OS responsibility to do this.  As a simple example, when th=
+e=20
+> libata ACPI patches are merged (soon), libata will send BIOS-specifie=
+d=20
+> taskfiles to the device -- including the hard drive password, if any.=
+=20
+> Then it will freeze the settings.
 
-The patches in -mm are set to be merged in 2.6.18-rc1, so I have no qualms
-about including them in my internal 2.6.17 patchset.
+  Which setting are you talking about: freezing the HPA, the configurat=
+ion
+ or the password - that is different ATA commands.
+ Gujin can run a kernel (or some other software) without freezing each =
+of
+ them independantly but the user has to explicitely request it - and sh=
+ould
+ not try to boot a random CDROM with the password unfrozen.
 
-Kudos to John, Thomas, Ingo, and others who have worked on the new
-timekeeping code.  This is yet another area where work on the -rt kernel
-benefits everyone in a measurable way.
+> Gujin's behavior will prevent the user from accessing their data, if=20
+> they have protected it via BIOS.
 
-	-Bill
+  Some BIOS have support for password, but Gujin is not using BIOS
+ services for "protection" because BIOS is not providing such services
+ with a documented interface.
+
+> >  Gujin is assuming that your hard disk are accessible by the docume=
+nted ATA ide
+> >  system, and some (or all?) IDE SATA interface have (volumtary?) br=
+oken
+> >  implementation: they are not IDE register compatible.
+>=20
+> More evidence that Gujin is completely broken.
+>=20
+> Host controller programming interfaces have _always_ been variable.  =
+PCI=20
+> IDE standard was never a requirement for all host controllers, indeed=
+=20
+> such a requirement would be stupid, and widely ignored.
+>=20
+> Modern SATA controllers are all FIS-based, and are not (and should no=
+t=20
+> be) limited by the legacy IDE register programming interface.
+
+  The complete ATA specification is describing a register interface sin=
+ce ATA1,
+ SATA chipsets should be software compatible, even if they add commands=
+/interfaces:
+http://www.sata-io.org/interopfaq.asp    say:
+    Are there any known interoperability issues with SATA?
+    One of the primary requirements of the SATA 1.0 specification was t=
+o
+    maintain backward compatibility with existing operating system driv=
+ers
+    to eliminate incompatibility issues.
+
+
+  Etienne.
+
+
+__________________________________________________
+Do You Yahoo!?
+En finir avec le spam? Yahoo! Mail vous offre la meilleure protection p=
+ossible contre les messages non sollicit=E9s=20
+http://mail.yahoo.fr Yahoo! Mail=20
