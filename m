@@ -1,48 +1,40 @@
 From: Jens Axboe <axboe@suse.de>
 Subject: Re: [RFC] AHCI Command Completion Coalescing(CCC) proposal
-Date: Fri, 9 Jun 2006 13:49:19 +0200
-Message-ID: <20060609114918.GG31913@suse.de>
-References: <1149751860.29552.79.camel@forrest26.sh.intel.com> <44883BAE.7070406@pobox.com> <1149820043.5721.7.camel@forrest26.sh.intel.com> <4488EB4A.4050501@pobox.com> <4488EE69.7050907@gmail.com>
+Date: Fri, 9 Jun 2006 13:49:16 +0200
+Message-ID: <20060609114916.GF31913@suse.de>
+References: <1149751860.29552.79.camel@forrest26.sh.intel.com> <44883BAE.7070406@pobox.com> <1149820043.5721.7.camel@forrest26.sh.intel.com> <4488EB4A.4050501@pobox.com> <4488EE69.7050907@gmail.com> <4488EF64.9070602@gmail.com> <1149825065.5721.22.camel@forrest26.sh.intel.com> <44890602.90002@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:17181 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S965240AbWFILtM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jun 2006 07:49:12 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:4638 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S965241AbWFILtg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jun 2006 07:49:36 -0400
 Content-Disposition: inline
-In-Reply-To: <4488EE69.7050907@gmail.com>
+In-Reply-To: <44890602.90002@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "zhao, forrest" <forrest.zhao@intel.com>, linux-ide@vger.kernel.org
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
 On Fri, Jun 09 2006, Tejun Heo wrote:
-> Jeff Garzik wrote:
-> 
-> >I'm still not sure I follow you?
+> zhao, forrest wrote:
+> >On Fri, 2006-06-09 at 12:47 +0900, Tejun Heo wrote:
+> >>If we're gonna do it.  EH needs only a few changes probably during 
+> >>autopsy and report.  Fixing up command issue path and implementing 
+> >>command exclusion (NCQ vs. non-NCQ, sil24 does it in hardware, ahci 
+> >>doesn't) will be a bit complex though.
 > >
-> >When AHCI runs out of commands to execute, it transitions from H:Idle to 
-> >Ccc:SetIS.
-> >
-> >IMPORTANT NOTE:  In order for CCC to be effective on AHCI, ahci.c and 
-> >libata (and sata_sil24) must be updated to support queuing a list of 
-> >non-NCQ commands onto the controller, and recovering from errors in the 
-> >case where a command list full of non-NCQ commands is present.
+> >Would you please elaborate on command exclusion? Why NCQ commands need
+> >to be excluded from non-NCQ commands?
 > 
-> I thought about it but am not really sure whether it's worth the 
-> trouble.  We'll be saving on inter-command latency and interrupt 
-> handling which is great but not so sure how noticeable the improvement 
-> would be.  NCQ is already all around.  How about doing CCC only during 
-> NCQ command phase?
+> AHCI spec rev 1.1, sect 1.7.  The last paragraph says.
+> 
+> "This multiple-use of the command list is achieved by the HBA only 
+> moving its command list pointer when the BSY, DRQ, and ERR bits are 
+> cleared by the device. System software is responsible to ensure that 
+> queued and non-queued commands are not mixed in the command list."
 
-Fully agree, doing CCC on non-ncq sounds like a very silly thing to do.
-Ugly complexity for very little (and questionable) gain.
-
-I'm not a big fan of CCC in generel, to me it seems to have bigger
-potential to cause you latency than save you interrupt processing time.
-I'm not saying there aren't cases where CCC would be a win, but I see a
-lot more cases where it definitely wont be. And it's a classic case of
-having to implement policy, so it's surely get it wrong here and there.
+This, btw, was also the case with the legacy TCQ.
 
 -- 
 Jens Axboe
