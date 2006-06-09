@@ -1,39 +1,33 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 02/02] libata: implement ata_eh_wait()
-Date: Thu, 08 Jun 2006 23:58:01 -0400
-Message-ID: <4488F1C9.7090303@pobox.com>
-References: <20060531101932.GA8106@htj.dyndns.org> <20060531102005.GB8106@htj.dyndns.org> <44888D59.9010000@pobox.com> <4488F0C9.7040002@gmail.com>
+From: Jeremy Fitzhardinge <jeremy@goop.org>
+Subject: Re: 2.6.17-rc5-mm3: oops when ejecting dock
+Date: Thu, 08 Jun 2006 18:15:34 -0700
+Message-ID: <4488CBB6.6040003@goop.org>
+References: <4483EB38.30609@goop.org> <1149554579.6006.10.camel@whizzy>	 <4484D244.3010905@goop.org> <1149634494.13089.53.camel@whizzy>	 <44861109.7090502@goop.org> <1149639412.13089.85.camel@whizzy>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38117 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965134AbWFID6D (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jun 2006 23:58:03 -0400
-In-Reply-To: <4488F0C9.7040002@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1149639412.13089.85.camel@whizzy>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Kristen Accardi <kristen.c.accardi@intel.com>
+Cc: linux-acpi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> +    spin_lock_irqsave(&ap->host_set->lock, flags);
->>> +
->>> +    while (ap->flags & (ATA_FLAG_EH_PENDING | 
->>> ATA_FLAG_EH_IN_PROGRESS)) {
->>> +        prepare_to_wait(&ap->eh_wait_q, &wait, TASK_UNINTERRUPTIBLE);
->>> +        spin_unlock_irqrestore(&ap->host_set->lock, flags);
->>> +        schedule();
->>> +        spin_lock_irqsave(&ap->host_set->lock, flags);
+Kristen Accardi wrote:
+> To me it
+> seems unwise to do anything outside the ide subsystem other than notify
+> of an event and call some handler or something.
+Sounds reasonable to me.
 
-DUH.  Ignore my objection, I read the code incorrectly, thinking it was 
-just a simple polling delay, when obviously it is not.
+I presume what happens (or should happen?) is that pressing the "want to 
+undock" button would send an event to acpid to unmount any filesystems, 
+etc, and then once that had finishes you can pull the latch lever to 
+actually disconnect the dock. Does that work at present?
 
-ACK.
+I guess actually pulling the dock would cause PCI hot unplug events if 
+there were actual PCI devices behind it.  I don't think the X60 dock 
+does though.
 
-	Jeff
-
+    J
 
 
