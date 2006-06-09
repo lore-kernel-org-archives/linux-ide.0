@@ -1,33 +1,34 @@
-From: Jeremy Fitzhardinge <jeremy@goop.org>
-Subject: Re: 2.6.17-rc5-mm3: oops when ejecting dock
-Date: Thu, 08 Jun 2006 18:15:34 -0700
-Message-ID: <4488CBB6.6040003@goop.org>
-References: <4483EB38.30609@goop.org> <1149554579.6006.10.camel@whizzy>	 <4484D244.3010905@goop.org> <1149634494.13089.53.camel@whizzy>	 <44861109.7090502@goop.org> <1149639412.13089.85.camel@whizzy>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: [RFC] AHCI Command Completion Coalescing(CCC) proposal
+Date: Fri, 09 Jun 2006 11:51:05 +0800
+Message-ID: <1149825065.5721.22.camel@forrest26.sh.intel.com>
+References: <1149751860.29552.79.camel@forrest26.sh.intel.com>
+	 <44883BAE.7070406@pobox.com>
+	 <1149820043.5721.7.camel@forrest26.sh.intel.com>
+	 <4488EB4A.4050501@pobox.com> <4488EE69.7050907@gmail.com>
+	 <4488EF64.9070602@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1149639412.13089.85.camel@whizzy>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Kristen Accardi <kristen.c.accardi@intel.com>
-Cc: linux-acpi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:40469 "EHLO
+	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
+	id S965145AbWFIEIA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Jun 2006 00:08:00 -0400
+In-Reply-To: <4488EF64.9070602@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Kristen Accardi wrote:
-> To me it
-> seems unwise to do anything outside the ide subsystem other than notify
-> of an event and call some handler or something.
-Sounds reasonable to me.
+On Fri, 2006-06-09 at 12:47 +0900, Tejun Heo wrote:
+> If we're gonna do it.  EH needs only a few changes probably during 
+> autopsy and report.  Fixing up command issue path and implementing 
+> command exclusion (NCQ vs. non-NCQ, sil24 does it in hardware, ahci 
+> doesn't) will be a bit complex though.
 
-I presume what happens (or should happen?) is that pressing the "want to 
-undock" button would send an event to acpid to unmount any filesystems, 
-etc, and then once that had finishes you can pull the latch lever to 
-actually disconnect the dock. Does that work at present?
+Would you please elaborate on command exclusion? Why NCQ commands need
+to be excluded from non-NCQ commands?
 
-I guess actually pulling the dock would cause PCI hot unplug events if 
-there were actual PCI devices behind it.  I don't think the X60 dock 
-does though.
-
-    J
-
-
+Thanks,
+Forrest
