@@ -1,100 +1,44 @@
-From: Etienne Lorrain <etienne_lorrain@yahoo.fr>
-Subject: Re: [RFC] ATA host-protected area (HPA) device mapper?
-Date: Sat, 10 Jun 2006 13:56:36 +0200 (CEST)
-Message-ID: <20060610115636.57029.qmail@web26907.mail.ukl.yahoo.com>
-References: <1149873734.22124.40.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [2.6.17-rc6-mm1] Oops during sata_promise init
+Date: Sat, 10 Jun 2006 13:03:16 -0400
+Message-ID: <448AFB54.3080006@garzik.org>
+References: <Pine.LNX.4.61.0606101715440.3135@cinatas.ath.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web26907.mail.ukl.yahoo.com ([217.146.176.96]:56214 "HELO
-	web26907.mail.ukl.yahoo.com") by vger.kernel.org with SMTP
-	id S1751012AbWFJL4h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jun 2006 07:56:37 -0400
-In-Reply-To: <1149873734.22124.40.camel@localhost.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:63678 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932455AbWFJRDU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jun 2006 13:03:20 -0400
+In-Reply-To: <Pine.LNX.4.61.0606101715440.3135@cinatas.ath.cx>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: prx <root@cinatas.ath.cx>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Alan wrote:
-> Don't see how your HPA code protects versus password locking however.=
- If
-> I hack the OS I write a new boot block which locks the disk then rebo=
-ot
-> into it. By the time you go for your floppy its too late.
-> If thats not the case I'm most interested how you set it up to avoid =
-this.
+prx wrote:
+> Hi,
+> 
+> sorry for my late answer.
+> 
+> The hardware which Oopses due to the third (PATA) channel is:
+> 02:0b.0 Mass storage controller: Promise Technology, Inc.
+> PDC20575 (SATAII150 TX2plus) (rev 02)
+> 
+> I know it's the PATA chan which fails because i commented the
+> part discovering the third channel out, giving me a working
+> system :)
 
- I was a bit too quick to answer this one yesterday.
- Basically, you want to protect against an attack replacing the bootloa=
-der,
- whatever happens later is bad anyway.
- The only way to get that is if the bootloader cannot be overwritten,
- preferably even by root, at the time of the attack.
- You have to know that whatever put Gujin in memory is independant of h=
-ow
- it will probe the disks, partitions and files.
+OK, thanks.
 
- The simple solution is: you never boot from the hard disk, but from a
- physically write protected device (write protected floppy, non writeab=
-le
- CD or CDRW in a non writing CDROM drive, USB thumb drive with a physic=
-al
- write protect switch). It may be interresting to be able to enable
- writing to the boot device at setup (for instance to select a kernel
- to "autoboot" after few seconds or set up the keyboard language and
- the default kernel command line), Gujin can itself save few data in
- its second 512 bytes sector if write is enabled, but that is not
- 100 % needed because the installer "instboot" can set all those
- parameter in file "boot.bcd" for CDROM install.
- Note that, if you are using a "write once" CDROM, you should take care
- of not enabling an attacker to add a session with a new El-torito
- boot sector.
+So it sounds like either #upstream broke #promise-sata-pata, or simply a 
+bug got introduced into the only-used-in-mm-trees version of sata_promise.c.
 
- The complex solution is described in the ATA standard T13 D1367,
- Protect Area Run Time Interface Extension Services, skip to "4 Overvie=
-w",
- and depends on the hard drive supporting the "Address Offset Reserved =
-Area Boot",
- only IBM drives seem to have such a support.
- Basically, at boot, the LBA is offseted by a constant and you boot thi=
-s
- "minidisk" with its own MBR. You can then send a command to the HD
- to stop this offset, and protect your "minidisk" by the HPA or by
- reducing the visible size of the disk (latter hurts the BIOS).
- The real MBR is never executed, the executed MBR is write protected
- even by root at the time of the attack, and if you boot with a DOS flo=
-ppy
- you will see a small hard disk with the really used MBR.
- Gujin is designed to produce a complete disk mapping with FAT12/16
- filesystem (no partition like a floppy) to be able to handle such a bo=
-ot,
- but I did not finish to support it, mainly because the only IBM drive
- I have is my main one, and because my hobby time is limited (I am not
- working in the PC industry). It should not be difficult to support
- that completely, the details are how to upgrade Gujin, how to behave
- with non booted but present disks...
+I will look into it, but since Promise PATA-on-SATA support is still 
+highly experimental, I can't promise an immediate response.  This isn't 
+something that is in 2.6.17-rc, or even something going into 2.6.18.
 
- If you are using one of these two solutions, an attacker will have to
- take control of the system before Gujin is executed - so the only
- attack is either the main BIOS FLASH (check that you have a jumper
- to write protect it physically) and other PCI/AGP BIOS (video BIOS,
- network BIOS) which may be present on FLASH and may be overwritten.
- Modifying the firmware of the HD may be another attack path.
+	Jeff
 
- All this remember me the software write protection of 5 1/4 inch flopp=
-y...
- Also, never try to test IDE passwords at 2:00 in the morning, even for
- a quick test, you may type a random password and get a 160GB brick.
- Someone knows the master password of Maxtor 4G160J8 code GAK819K0
- drive S/N G80CNBME FG08A - I promise not to repeat it!
 
- Cheers,
- Etienne.
 
-__________________________________________________
-Do You Yahoo!?
-En finir avec le spam? Yahoo! Mail vous offre la meilleure protection p=
-ossible contre les messages non sollicit=E9s=20
-http://mail.yahoo.fr Yahoo! Mail=20
