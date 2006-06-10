@@ -1,178 +1,100 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Power down DVD drive on Sony Vaio VGN-TX27GP
-Date: Sat, 10 Jun 2006 12:19:55 +0400
-Message-ID: <448A80AB.9020304@wasp.net.au>
+From: Etienne Lorrain <etienne_lorrain@yahoo.fr>
+Subject: Re: [RFC] ATA host-protected area (HPA) device mapper?
+Date: Sat, 10 Jun 2006 13:56:36 +0200 (CEST)
+Message-ID: <20060610115636.57029.qmail@web26907.mail.ukl.yahoo.com>
+References: <1149873734.22124.40.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:21927 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S1030359AbWFJIUJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jun 2006 04:20:09 -0400
+Received: from web26907.mail.ukl.yahoo.com ([217.146.176.96]:56214 "HELO
+	web26907.mail.ukl.yahoo.com") by vger.kernel.org with SMTP
+	id S1751012AbWFJL4h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jun 2006 07:56:37 -0400
+In-Reply-To: <1149873734.22124.40.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
 
-G'day all,
+Alan wrote:
+> Don't see how your HPA code protects versus password locking however.=
+ If
+> I hack the OS I write a new boot block which locks the disk then rebo=
+ot
+> into it. By the time you go for your floppy its too late.
+> If thats not the case I'm most interested how you set it up to avoid =
+this.
 
-I've got a shiny new toy to play with..
+ I was a bit too quick to answer this one yesterday.
+ Basically, you want to protect against an attack replacing the bootloa=
+der,
+ whatever happens later is bad anyway.
+ The only way to get that is if the bootloader cannot be overwritten,
+ preferably even by root, at the time of the attack.
+ You have to know that whatever put Gujin in memory is independant of h=
+ow
+ it will probe the disks, partitions and files.
 
-After much fiddling I've figured out how to use ACPI disconnect the power to the optical drive (to 
-buy me some more disconnected battery time).
+ The simple solution is: you never boot from the hard disk, but from a
+ physically write protected device (write protected floppy, non writeab=
+le
+ CD or CDRW in a non writing CDROM drive, USB thumb drive with a physic=
+al
+ write protect switch). It may be interresting to be able to enable
+ writing to the boot device at setup (for instance to select a kernel
+ to "autoboot" after few seconds or set up the keyboard language and
+ the default kernel command line), Gujin can itself save few data in
+ its second 512 bytes sector if write is enabled, but that is not
+ 100 % needed because the installer "instboot" can set all those
+ parameter in file "boot.bcd" for CDROM install.
+ Note that, if you are using a "write once" CDROM, you should take care
+ of not enabling an attacker to add a session with a new El-torito
+ boot sector.
 
-Problem being once I power it down if anything tries to access it, it all goes bad and those process 
-lock up in the "D" state. I then have to reboot the machine to recover (suspend/resume does not do 
-the trick).
+ The complex solution is described in the ATA standard T13 D1367,
+ Protect Area Run Time Interface Extension Services, skip to "4 Overvie=
+w",
+ and depends on the hard drive supporting the "Address Offset Reserved =
+Area Boot",
+ only IBM drives seem to have such a support.
+ Basically, at boot, the LBA is offseted by a constant and you boot thi=
+s
+ "minidisk" with its own MBR. You can then send a command to the HD
+ to stop this offset, and protect your "minidisk" by the HPA or by
+ reducing the visible size of the disk (latter hurts the BIOS).
+ The real MBR is never executed, the executed MBR is write protected
+ even by root at the time of the attack, and if you boot with a DOS flo=
+ppy
+ you will see a small hard disk with the really used MBR.
+ Gujin is designed to produce a complete disk mapping with FAT12/16
+ filesystem (no partition like a floppy) to be able to handle such a bo=
+ot,
+ but I did not finish to support it, mainly because the only IBM drive
+ I have is my main one, and because my hobby time is limited (I am not
+ working in the PC industry). It should not be difficult to support
+ that completely, the details are how to upgrade Gujin, how to behave
+ with non booted but present disks...
 
-I'm wondering if there is a way to de-register/re-register the optical drive, or force a hardware 
-rescan or similar to get the drive back up..
+ If you are using one of these two solutions, an attacker will have to
+ take control of the system before Gujin is executed - so the only
+ attack is either the main BIOS FLASH (check that you have a jumper
+ to write protect it physically) and other PCI/AGP BIOS (video BIOS,
+ network BIOS) which may be present on FLASH and may be overwritten.
+ Modifying the firmware of the HD may be another attack path.
 
-It's no biggie if it can't be done I guess (tho windows can do it), but from the measurements I've 
-made it looks like it will buy me 15-20 minutes extra runtime on the standard 6 hour battery.
+ All this remember me the software write protection of 5 1/4 inch flopp=
+y...
+ Also, never try to test IDE passwords at 2:00 in the morning, even for
+ a quick test, you may type a random password and get a 160GB brick.
+ Someone knows the master password of Maxtor 4G160J8 code GAK819K0
+ drive S/N G80CNBME FG08A - I promise not to repeat it!
 
-I can see an option in hdparm to register/de-register entire interfaces, but have not managed to 
-spot a way to do it with a single drive on an interface..
+ Cheers,
+ Etienne.
 
-
-brad@bklaptop2:~$ lspci
-0000:00:00.0 Host bridge: Intel Corporation Mobile 915GM/PM/GMS/910GML Express Processor to DRAM 
-Controller (rev 03)
-0000:00:02.0 VGA compatible controller: Intel Corporation Mobile 915GM/GMS/910GML Express Graphics 
-Controller (rev 03)
-0000:00:02.1 Display controller: Intel Corporation Mobile 915GM/GMS/910GML Express Graphics 
-Controller (rev 03)
-0000:00:1b.0 0403: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) High Definition Audio 
-Controller (rev 03)
-0000:00:1d.0 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #1 (rev 03)
-0000:00:1d.1 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #2 (rev 03)
-0000:00:1d.2 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #3 (rev 03)
-0000:00:1d.3 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #4 (rev 03)
-0000:00:1d.7 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB2 EHCI 
-Controller (rev 03)
-0000:00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev d3)
-0000:00:1f.0 ISA bridge: Intel Corporation 82801FBM (ICH6M) LPC Interface Bridge (rev 03)
-0000:00:1f.1 IDE interface: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) IDE Controller 
-(rev 03)
-0000:00:1f.3 SMBus: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) SMBus Controller (rev 03)
-0000:06:05.0 CardBus bridge: Texas Instruments PCIxx21/x515 Cardbus Controller
-0000:06:05.2 FireWire (IEEE 1394): Texas Instruments OHCI Compliant IEEE 1394 Host Controller
-0000:06:05.3 Mass storage controller: Texas Instruments PCIxx21 Integrated FlashMedia Controller
-0000:06:08.0 Ethernet controller: Intel Corporation 82562EM/EX/GX - PRO/100 VM (LOM) Ethernet 
-Controller Mobile (rev 03)
-0000:06:0b.0 Network controller: Intel Corporation PRO/Wireless 2200BG (rev 05)
-
-brad@bklaptop2:~$ sudo hdparm -I /dev/hda /dev/hdb
-
-/dev/hda:
-
-ATA device, with non-removable media
-         Model Number:       TOSHIBA MK6006GAH
-         Serial Number:      367Q4970T
-         Firmware Revision:  BZ002A
-Standards:
-         Supported: 6 5 4 3
-         Likely used: 6
-Configuration:
-         Logical         max     current
-         cylinders       16383   65535
-         heads           16      1
-         sectors/track   63      63
-         --
-         CHS current addressable sectors:    4128705
-         LBA    user addressable sectors:  117210240
-         LBA48  user addressable sectors:  117210240
-         device size with M = 1024*1024:       57231 MBytes
-         device size with M = 1000*1000:       60011 MBytes (60 GB)
-Capabilities:
-         LBA, IORDY(can be disabled)
-         Queue depth: 1
-         Standby timer values: spec'd by Standard, no device specific minimum
-         R/W multiple sector transfer: Max = 16  Current = ?
-         Advanced power management level: unknown setting (0x0080)
-         DMA: sdma0 sdma1 sdma2 mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
-              Cycle time: min=120ns recommended=120ns
-         PIO: pio0 pio1 pio2 pio3 pio4
-              Cycle time: no flow control=120ns  IORDY flow control=120ns
-Commands/features:
-         Enabled Supported:
-            *    NOP cmd
-            *    READ BUFFER cmd
-            *    WRITE BUFFER cmd
-            *    Host Protected Area feature set
-            *    Look-ahead
-            *    Write cache
-            *    Power Management feature set
-                 Security Mode feature set
-            *    SMART feature set
-            *    FLUSH CACHE EXT command
-            *    Mandatory FLUSH CACHE command
-            *    Device Configuration Overlay feature set
-            *    48-bit Address feature set
-            *    SET MAX security extension
-            *    Advanced Power Management feature set
-            *    DOWNLOAD MICROCODE cmd
-            *    General Purpose Logging feature set
-            *    SMART self-test
-            *    SMART error logging
-Security:
-         Master password revision code = 65534
-                 supported
-         not     enabled
-         not     locked
-                 frozen
-         not     expired: security count
-         not     supported: enhanced erase
-         74min for SECURITY ERASE UNIT.
-HW reset results:
-         CBLID- above Vih
-         Device num = 0 determined by the jumper
-Checksum: correct
-
-/dev/hdb:
-
-ATAPI CD-ROM, with removable media
-         Model Number:       MATSHITAUJ-832D
-         Serial Number:
-         Firmware Revision:  1.61
-Standards:
-         Likely used CD-ROM ATAPI-1
-Configuration:
-         DRQ response: 50us.
-         Packet size: 12 bytes
-Capabilities:
-         LBA, IORDY(can be disabled)
-         DMA: sdma0 sdma1 sdma2 mdma0 mdma1 mdma2 udma0 udma1 *udma2
-              Cycle time: min=120ns recommended=120ns
-         PIO: pio0 pio1 pio2 pio3 pio4
-              Cycle time: no flow control=240ns  IORDY flow control=120ns
-HW reset results:
-         CBLID- below Vih
-         Device num = 1
-
-
-May 26 08:45:57 localhost kernel: [4294668.055000] ICH6: IDE controller at PCI slot 0000:00:1f.1
-May 26 08:45:57 localhost kernel: [4294668.055000] ACPI: PCI Interrupt 0000:00:1f.1[B] -> GSI 18 
-(level, low) -> IRQ 17
-May 26 08:45:57 localhost kernel: [4294668.055000] ICH6: chipset revision 3
-May 26 08:45:57 localhost kernel: [4294668.055000] ICH6: not 100%% native mode: will probe irqs later
-May 26 08:45:57 localhost kernel: [4294668.055000]     ide0: BM-DMA at 0x1810-0x1817, BIOS settings: 
-hda:DMA, hdb:DMA
-May 26 08:45:57 localhost kernel: [4294668.055000] Probing IDE interface ide0...
-May 26 08:45:57 localhost kernel: [4294668.319000] hda: TOSHIBA MK6006GAH, ATA DISK drive
-May 26 08:45:57 localhost kernel: [4294669.033000] hdb: MATSHITAUJ-832D, ATAPI CD/DVD-ROM drive
-May 26 08:45:57 localhost kernel: [4294669.084000] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-May 26 08:45:57 localhost kernel: [4294669.084000] hda: max request size: 512KiB
-May 26 08:45:57 localhost kernel: [4294669.109000] hda: 117210240 sectors (60011 MB), 
-CHS=16383/255/63, UDMA(100)
-May 26 08:45:57 localhost kernel: [4294669.109000] hda: cache flushes supported
-May 26 08:45:57 localhost kernel: [4294669.109000]  hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 >
-May 26 08:45:57 localhost kernel: [4294669.175000] hdb: ATAPI 24X DVD-ROM DVD-R CD-R/RW drive, 
-2048kB Cache, UDMA(33)
-May 26 08:45:57 localhost kernel: [4294669.175000] Uniform CD-ROM driver Revision: 3.20
-
-Regards,
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+__________________________________________________
+Do You Yahoo!?
+En finir avec le spam? Yahoo! Mail vous offre la meilleure protection p=
+ossible contre les messages non sollicit=E9s=20
+http://mail.yahoo.fr Yahoo! Mail=20
