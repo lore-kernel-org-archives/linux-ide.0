@@ -1,62 +1,45 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.16 (previously, 2.6.15.x)
-Date: Sun, 11 Jun 2006 07:13:38 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0606110712350.3276@p34.internal.lan>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <440083B4.3030307@rtr.ca>
- <Pine.LNX.4.64.0602251244070.20297@p34> <4400A1BF.7020109@rtr.ca>
- <4400B439.8050202@dgreaves.com> <4401122A.3010908@rtr.ca> <44017B4B.3030900@dgreaves.com>
- <4401B560.40702@rtr.ca> <4403704E.4090109@rtr.ca> <4403A84C.6010804@gmail.com>
- <4403CEA9.4080603@rtr.ca> <44042863.2050703@dgreaves.com> <44046CE6.60803@rtr.ca>
- <44046D86.7050809@pobox.com> <4405DCAF.6030500@dgreaves.com> <4405DDEA.7020309@rtr.ca>
- <4405E42B.9040804@dgreaves.com> <4405E83D.9000906@rtr.ca> <4405EC94.2030202@dgreaves.com>
- <4405FAAE.3080705@dgreaves.com> <Pine.LNX.4.64.0603050637110.30164@p34>
- <Pine.LNX.4.64.0603050740500.3116@p34> <440B6CFE.4010503@rtr.ca>
- <440B76B4.5080502@pobox.com> <Pine.LNX.4.64.0604211511120.22768@p34>
- <44493023.4010109@pobox.com> <Pine.LNX.4.64.0604211226120.3701@g5.osdl.org>
- <444960CC.2000009@pobox.com> <Pine.LNX.4.64.0604211704120.3701@g5.osdl.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [git-patch] hotplug fix patches added
+Date: Sun, 11 Jun 2006 09:35:26 -0400
+Message-ID: <448C1C1E.7080109@pobox.com>
+References: <448B7FFD.9050507@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:56485 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1750775AbWFKLNj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jun 2006 07:13:39 -0400
-In-Reply-To: <Pine.LNX.4.64.0604211704120.3701@g5.osdl.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:39899 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751277AbWFKNf3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jun 2006 09:35:29 -0400
+In-Reply-To: <448B7FFD.9050507@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lkml@rtr.ca>, David Greaves <david@dgreaves.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, axboe@suse.de, smartmontools-support@lists.sourceforge.net
+To: Tejun Heo <htejun@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-[4597362.011000] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
-0xb/00/00
-[4597362.011000] ata3: status=0x51 { DriveReady SeekComplete Error }
-[4597362.011000] ata3: error=0x04 { DriveStatusError }
+Tejun Heo wrote:
+> Hello,
+> 
+> Two hotplug fix patches have been added to libata-tj #for-jeff.
+> 
+> * libata: add missing finish_wait() call in ata_port_wait_eh()
+> * libata: cosmetic change in struct ata_port
+> 
+> The following two patches have been dropped as it hasn't been acked yet.
+> 
+> * ata_piix: fix ghost device probing by honoring PCS present bits[1]
 
-Now under 2.6.16.20. (was doing an rsync from 1 drive (IDE) -> to this 
-SATA) drive.
-
-The SATA drive AFAIK does not have any issues, no bad sectors/etc, still 
-the same drive as before, but this is the new one from the previous RMA.
-
-Just FYI.
+Seems vaguely OK to me...
 
 
-On Fri, 21 Apr 2006, Linus Torvalds wrote:
+> * libata: add ata_port->private_flags[2]
 
->
->
-> On Fri, 21 Apr 2006, Jeff Garzik wrote:
->
->>
->> Agreed, though the original poster had already done a 400GB dd from
->> /dev/zero...
->
-> Yes, but to a _file_ on the partition (ie he didn't overwrite any existign
-> data, just the empty parts of a filesystem).
->
-> I realize that it's not enough for the "re-allocate on write" behaviour,
-> and for that you really _do_ need to re-write the whole disk to get all
-> the broken blocks reallocated, but my argument was just that we should
-> make sure to _tell_ people when they are overwriting all their old data ;)
->
-> 		Linus
->
+What's the justification for this?  Running out of room in flags?
+
+If we are going to do this, I would move any such flags to the 
+LLDD-allocated hpriv structure completely.  I wouldn't add hpriv_flags 
+to struct ata_port.
+
+	Jeff
+
+
+
