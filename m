@@ -1,44 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [2.6.17-rc6-mm1] Oops during sata_promise init
-Date: Sat, 10 Jun 2006 13:03:16 -0400
-Message-ID: <448AFB54.3080006@garzik.org>
-References: <Pine.LNX.4.61.0606101715440.3135@cinatas.ath.cx>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [git-patch] hotplug fix patches added
+Date: Sun, 11 Jun 2006 11:29:17 +0900
+Message-ID: <448B7FFD.9050507@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:63678 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932455AbWFJRDU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jun 2006 13:03:20 -0400
-In-Reply-To: <Pine.LNX.4.61.0606101715440.3135@cinatas.ath.cx>
+Received: from py-out-1112.google.com ([64.233.166.183]:25243 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932469AbWFKC3X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jun 2006 22:29:23 -0400
+Received: by py-out-1112.google.com with SMTP id x31so1339312pye
+        for <linux-ide@vger.kernel.org>; Sat, 10 Jun 2006 19:29:22 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: prx <root@cinatas.ath.cx>
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-prx wrote:
-> Hi,
-> 
-> sorry for my late answer.
-> 
-> The hardware which Oopses due to the third (PATA) channel is:
-> 02:0b.0 Mass storage controller: Promise Technology, Inc.
-> PDC20575 (SATAII150 TX2plus) (rev 02)
-> 
-> I know it's the PATA chan which fails because i commented the
-> part discovering the third channel out, giving me a working
-> system :)
+Hello,
 
-OK, thanks.
+Two hotplug fix patches have been added to libata-tj #for-jeff.
 
-So it sounds like either #upstream broke #promise-sata-pata, or simply a 
-bug got introduced into the only-used-in-mm-trees version of sata_promise.c.
+* libata: add missing finish_wait() call in ata_port_wait_eh()
+* libata: cosmetic change in struct ata_port
 
-I will look into it, but since Promise PATA-on-SATA support is still 
-highly experimental, I can't promise an immediate response.  This isn't 
-something that is in 2.6.17-rc, or even something going into 2.6.18.
+The following two patches have been dropped as it hasn't been acked yet.
 
-	Jeff
+* ata_piix: fix ghost device probing by honoring PCS present bits[1]
+* libata: add ata_port->private_flags[2]
 
+libata-tj #for-jeff is available at the following URL
 
+http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=for-jeff
+git://htj.dyndns.org/libata-tj for-jeff
 
+The tree is tagged with the followings
+
+fj-misc
+fj-hp-prep
+fj-hp-LLDD-prep
+fj-hp
+fj-hp-fixes
+
+Thanks.
+
+-- 
+tejun
+
+[1] http://article.gmane.org/gmane.linux.ide/10937
+[2] http://article.gmane.org/gmane.linux.ide/11177
