@@ -1,30 +1,31 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [ANN] libata "chilled" for 2.6.18
-Date: Sun, 11 Jun 2006 10:14:47 -0400
-Message-ID: <448C2557.1000403@garzik.org>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [RFC] ATA host-protected area (HPA) device mapper?
+Date: Sun, 11 Jun 2006 17:48:39 +0200
+Message-ID: <1150040920.3131.74.camel@laptopd505.fenrus.org>
+References: <20060610115636.57029.qmail@web26907.mail.ukl.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33244 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750943AbWFKOOt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jun 2006 10:14:49 -0400
+Received: from vbn.0050556.lodgenet.net ([216.142.194.234]:28584 "EHLO
+	vbn.0050556.lodgenet.net") by vger.kernel.org with ESMTP
+	id S1751279AbWFKPss (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 11 Jun 2006 11:48:48 -0400
+In-Reply-To: <20060610115636.57029.qmail@web26907.mail.ukl.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Etienne Lorrain <etienne_lorrain@yahoo.fr>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
 
 
-I won't use the word "frozen", so "chilled" is nearer the mark.  I just 
-pulled Tejun's hotplug work into libata-dev.git#upstream (and thus 
-#ALL).  This should be the last major API/probe-path/etc. disturbance 
-until 2.6.18, and so, would be a good testing point.  Regenerate all 
-your libata patches that broke :)
+>  The simple solution is: you never boot from the hard disk, but from a
+>  physically write protected device (write protected floppy, non writeable
+>  CD or CDRW in a non writing CDROM drive, USB thumb drive with a physical
+>  write protect switch).
 
-After merging some non-Tejun patches -- yes, others, I haven't forgotten 
-you -- I'll post a full changelog and a patch that users can easily test.
 
-	Jeff
+that's not totally fool proof either; after all an attacker can adjust
+the nvram to change the boot device order.
 
 
 
