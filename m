@@ -1,49 +1,34 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v5] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
-Date: Sun, 11 Jun 2006 23:53:23 -0400
-Message-ID: <448CE533.1090607@pobox.com>
-References: <1150081562.5721.26.camel@forrest26.sh.intel.com>
+From: Jim Paris <jim@jtan.com>
+Subject: Re: libata-tj-stable success report, with minor patch
+Date: Mon, 12 Jun 2006 00:06:08 -0400
+Message-ID: <20060612040608.GA32353@jim.sh>
+References: <20060612022358.GA29164@jim.sh> <448CE1E9.5000502@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:8321 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750809AbWFLDxZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jun 2006 23:53:25 -0400
-In-Reply-To: <1150081562.5721.26.camel@forrest26.sh.intel.com>
+Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:28308 "EHLO neurosis.jim.sh")
+	by vger.kernel.org with ESMTP id S1750758AbWFLEGL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 00:06:11 -0400
+Content-Disposition: inline
+In-Reply-To: <448CE1E9.5000502@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-zhao, forrest wrote:
-> OK. I ported it to latest #upstream
-> 
-> Signed-off-by: Zhao, Forrest <forrest.zhao@intel.com>
+> Hmmm... sil3726 and 4726 report different number of ports depending on 
+> configuration.  I'll try to get it right in the next round.
 
-Patch content looks OK, but
+Sounds good to me, thanks again.  Let me know if there's anything I
+can help test.
 
-1) "OK. I ported it to latest #upstream" is not a good description :)  I 
-use the git-applymbox script to apply the patch, and the full technical 
-patch description is copied from your email's message body directly into 
-the Linux kernel changelog.
+> That is a pretty cool enclosure you have there.  How's the
+> performance?
 
-The appropriate place for comments like "OK. I ported it to latest 
-#upstream" is following the "---" description terminator line.  See 
-Tejun's patches for an example :)
+Haven't used it much yet, but it seems decent.  "hdparm -t" gives
+80MB/s on the RAID6 array across all disks.  Each disk reads at 60MB/s
+alone, and reading from all 12 simultaneously gets 6 MB/s on each of
+the ten multiplexed disks and 30 MB/s on each of the last two disks.
+The card is in a normal PCI slot so that's probably maxing out my bus.
 
-
-2) Both git-applymbox(1) and patch(1) fail to apply the patch:
-
-
-[jgarzik@pretzel libata-dev]$ git-applymbox /g/tmp/mbox ~/info/signoff.txt
-1 patch(es) to process.
-
-Applying 'Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command'
-
-fatal: corrupt patch at line 84
-
-
-[jgarzik@pretzel libata-dev]$ patch -sp1 < /g/tmp/mbox
-patch: **** malformed patch at line 144: *args,
-
+-jim
