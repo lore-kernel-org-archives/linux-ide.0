@@ -1,45 +1,48 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: add host_set->next for legacy two host_sets case,
- take #2
-Date: Mon, 12 Jun 2006 09:35:59 -0400
-Message-ID: <448D6DBF.9010604@pobox.com>
-References: <20060612051727.GD9166@htj.dyndns.org> <448D0FF9.1080605@pobox.com> <20060612101419.GB5751@htj.dyndns.org>
+Subject: Re: [PATCH] sata_sil: update device hotplug handling, take #2
+Date: Mon, 12 Jun 2006 09:38:41 -0400
+Message-ID: <448D6E61.1060704@pobox.com>
+References: <20060612051822.GE9166@htj.dyndns.org> <448D04C5.9030603@pobox.com> <448D1AD7.3000807@gmail.com> <20060612094555.GA5751@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47762 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751968AbWFLNgD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 09:36:03 -0400
-In-Reply-To: <20060612101419.GB5751@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:61586 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751972AbWFLNio (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 09:38:44 -0400
+In-Reply-To: <20060612094555.GA5751@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
+Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> For a legacy ATA controller, libata registers two separate host sets.
-> There was no connection between the two hosts making it impossible to
-> traverse all ports related to the controller.  This patch adds
-> host_set->next which points to the second host_set and makes
-> ata_host_set_remove() remove all associated host_sets and ports.
+> SIEN on some 3112 controllers doesn't mask SATA IRQ properly.  IRQ
+> stays asserted even after SIEN is masked and IRQ is acked.  Also, even
+> while frozen, any SATA PHY event including hardreset raises SATA IRQ.
+> Clearing SError seems to be the only way to deassert SATA IRQ.
 > 
-> * On device removal, all ports hanging off the device are properly
->   detached.  Prior to this patch, ports on the first host_set weren't
->   detached casuing oops on driver unloading.
+> This patch makes sil_host_intr() clear SError on SATA IRQs and ignore
+> SATA IRQs reported while frozen so that hardreset doesn't trigger
+> hotplug event (which ends up hardresetting again).
 > 
-> * On device removal, both host_sets are properly freed
-> 
-> This will also be used by new power management code to suspend and
-> resume all ports of a controller.  host_set/port representation will
-> be improved to handle legacy controllers better and this host_set
-> linking will go away with it.
+> In such cases, the port still gets re-frozen to minimize the danger of
+> screaming interrupts.  This results in one nil EH repeat on
+> controllers with broken SIEN but other than that does no harm.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> ---
+> 
+> Here's the revised version.  The PCMCIA 3112 controller simply cannot
+> mask SATA IRQs w/ SIEN.  I've tested it w/ discrete 3112 and 3114
+> cards and the PCMCIA one.  All work fine with this patch applied.
 
-Same objection as before:  ata_host_set_remove() should only remove 
-_one_ host_set.  Therefore, that function is ignorant of the linked 
-list, and the caller is the one that is forced to manage the list.
+Applied.
+
+Note that it is helpful to read the FreeBSD 311x driver, to see what 
+error handling they use.  It seems like they reset the chip much more 
+frequently than we do.
 
 	Jeff
 
