@@ -1,42 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: add host_set->next for legacy two host_sets case,
- take #3
-Date: Mon, 12 Jun 2006 10:24:10 -0400
-Message-ID: <448D790A.4070308@pobox.com>
-References: <20060612051727.GD9166@htj.dyndns.org> <448D0FF9.1080605@pobox.com> <20060612101419.GB5751@htj.dyndns.org> <448D6DBF.9010604@pobox.com> <20060612140538.GA3892@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata fix
+Date: Mon, 12 Jun 2006 10:26:44 -0400
+Message-ID: <20060612142644.GA10368@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35732 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1752013AbWFLOYO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 10:24:14 -0400
-In-Reply-To: <20060612140538.GA3892@htj.dyndns.org>
+Received: from havoc.gtf.org ([69.61.125.42]:7594 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1752013AbWFLO2m (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 10:28:42 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
-
-Tejun Heo wrote:
-> For a legacy ATA controller, libata registers two separate host sets.
-> There was no connection between the two hosts making it impossible to
-> traverse all ports related to the controller.  This patch adds
-> host_set->next which points to the second host_set and makes
-> ata_pci_remove_one() remove all associated host_sets.
-> 
-> * On device removal, all ports hanging off the device are properly
->   detached.  Prior to this patch, ports on the first host_set weren't
->   detached casuing oops on driver unloading.
-> 
-> * On device removal, both host_sets are properly freed
-> 
-> This will also be used by new power management code to suspend and
-> resume all ports of a controller.  host_set/port representation will
-> be improved to handle legacy controllers better and this host_set
-> linking will go away with it.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-
-applied
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+
+to receive the following updates:
+
+ drivers/scsi/sata_mv.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+Mark Lord:
+      sata_mv: grab host lock inside eng_timeout
+
+diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
+index 9b8bca1..f16f92a 100644
+--- a/drivers/scsi/sata_mv.c
++++ b/drivers/scsi/sata_mv.c
+@@ -2035,6 +2035,7 @@ static void mv_phy_reset(struct ata_port
+ static void mv_eng_timeout(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc;
++	unsigned long flags;
+ 
+ 	printk(KERN_ERR "ata%u: Entering mv_eng_timeout\n",ap->id);
+ 	DPRINTK("All regs @ start of eng_timeout\n");
+@@ -2046,8 +2047,10 @@ static void mv_eng_timeout(struct ata_po
+ 	       ap->host_set->mmio_base, ap, qc, qc->scsicmd,
+ 	       &qc->scsicmd->cmnd);
+ 
++	spin_lock_irqsave(&ap->host_set->lock, flags);
+ 	mv_err_intr(ap, 0);
+ 	mv_stop_and_reset(ap);
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
+ 
+ 	WARN_ON(!(qc->flags & ATA_QCFLAG_ACTIVE));
+ 	if (qc->flags & ATA_QCFLAG_ACTIVE) {
