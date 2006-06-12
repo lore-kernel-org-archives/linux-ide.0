@@ -1,83 +1,73 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] sata_sil: update device hotplug handling
-Date: Mon, 12 Jun 2006 16:42:15 +0900
-Message-ID: <448D1AD7.3000807@gmail.com>
-References: <20060612051822.GE9166@htj.dyndns.org> <448D04C5.9030603@pobox.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: AHCI suspend/resume patch can't work with latest #upstream
+Date: Mon, 12 Jun 2006 17:17:54 +0800
+Message-ID: <1150103874.7132.13.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:60307 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1750809AbWFLHmV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jun 2006 03:42:21 -0400
-Received: by py-out-1112.google.com with SMTP id x31so1603477pye
-        for <linux-ide@vger.kernel.org>; Mon, 12 Jun 2006 00:42:21 -0700 (PDT)
-In-Reply-To: <448D04C5.9030603@pobox.com>
+Received: from mga01.intel.com ([192.55.52.88]:11449 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S1751347AbWFLJaJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jun 2006 05:30:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Some flavors of 3112 cannot mask SATA_IRQ reliably and ends up
->> scheduling hotplug event during hardreset.
->=20
-> Can you give more detail?  This sounds like a software bug?  I don't =
-see=20
-> SError clearing the pre-patched code path, the lack of which may crea=
-te=20
-> the conditions you describe.
+Hi, Tejun
 
-This is from a sil3112 PCMCIA card.
+Let me describe the problem step by step:
 
-# lspci -nvvv -s 07:00
-0000:07:00.0 0180: 1095:3112 (rev 02)
-         Subsystem: 1095:3112
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-=20
-ParErr- Stepping- SERR- FastB2B-
-         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=3Dmedium=20
- >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-         Latency: 64
-         Interrupt: pin A routed to IRQ 10
-         Region 0: I/O ports at 2410 [size=3D8]
-         Region 1: I/O ports at 2420 [size=3D4]
-         Region 2: I/O ports at 2418 [size=3D8]
-         Region 3: I/O ports at 2424 [size=3D4]
-         Region 4: I/O ports at 2400 [size=3D16]
-         Region 5: Memory at 34000000 (32-bit, non-prefetchable) [size=3D=
-512]
-         Expansion ROM at 30000000 [disabled] [size=3D512K]
-         Capabilities: [60] Power Management version 2
-                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=3D0mA=20
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 PME-Enable- DSel=3D0 DScale=3D2 PME-
+1 AHCI suspend/resume patch can work very well with #upstream
+[ef2824073fba9def3cf122e89cc485f66dd71f70], we call this kernel1
 
-I have sil3114 and sil3112 PCI cards and both don't need SError clearin=
-g=20
-to stop raising SATA IRQs.  Masking & acking are enough.  They never=20
-raise the interrupt again until unmasked.  Which is the correct behavio=
-r=20
-considering the following description about SATA IRQs in the datasheet.
+2 AHCI suspend/resume patch can't work with #upstream
+[1049cb478783c74ca8c99ef70e7d2bf920b9335b], AHCI suspend/resume patch
+can be easily applied to current #upstream with only some hunk offset,
+no logic modification is needed; we call this kernel2
 
-"N =96 This bit enables an interrupt upon the assertion of the N bit in=
-=20
-the DIAG field of the SError register"
+3 The following are related log messages from failed AHCI suspend/resume
+of kernel2:
+......
 
-On this PCMCIA card, SATA IRQ mask doesn't seem to work.  Hardreset=20
-causes SATA IRQs and thus rescheduling of hotplug event - eventually=20
-libata gives up on it.  It seems like this PCMCIA controller continues=20
-to raise SATA IRQ as long as corresponding SError bits are set.  Callin=
-g=20
-ata_bmdma_irq_clear() makes it slow and gives cpu more time to proceed.
+ata1: exception Emask 0x52 SAct 0x0 SErr 0xffffffff action 0x2 frozen
+ata1: (irq_stat 0x00400000, PHY RDY changed)
+Intel machine check architecture supported.
+Intel machine check reporting enabled on CPU#0.
+Back to C!
+......
+ACPI: PCI Interrupt 0000:00:1f.1[A] -> Link [LNKC] -> GSI 5 (level, low)
+-> IRQ5
+ata1: hard resetting port
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> Link [LNKD] -> GSI 11 (level,
+low) -> IRQ 11
+......
+ata1.00: failed to set xfermode (err_mask=0x40)
+ata1.00: disabled
+Restarting tasks... done
+e1000: eth0: e1000_watchdog_task: NIC Link is Up 100 Mbps Full Duplex
+e1000: eth0: e1000_watchdog_task: 10/100 speed: disabling TSO
+input: AT Translated Set 2 keyboard as /class/input/input1
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1: EH complete
 
-Hmmm... On further testing, clearing SError does a much better job.  Th=
-e=20
-controller still raises spurious interrupts but only a few times.  Will=
-=20
-re-spin the patch w/ SError clearing.
+>From above log, we observed that during suspend a PHYRDY interrupt is
+generated, then EH followed. This is reproducible. From AHCI spec1.1, I
+don't find any information that specify "a PHYRDY should follow a
+software-initiated power state transition".
 
---=20
-tejun
+4 Then I comment out the power transition code(in ahci_port_standby())
+of kernel2, this way AHCI suspend/resume can succeed. And no PHYRDY is
+generated.
+
+5 Suspend/resume of kernel1 can always succeed with the power transition
+code in. No PHYRDY is generated.
+
+6 So I suspend the pre-condition of suspend in kernel1 and kernel2 is
+different, but I don't know how to dig deeper from here.......
+
+Do you have any ideas about this problem?
+
+Thanks,
+Forrest
