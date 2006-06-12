@@ -1,42 +1,47 @@
-From: "Adeline Dean" <AdelineDean@0451.com>
-Subject: Your money, open-armedly
-Date: Mon, 12 Jun 2006 19:55:22 +0000 (UTC)
-Message-ID: <87812354.20060612195517@0451.com>
-Reply-To: "Adeline Dean" <AdelineDean@0451.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 6/6] libata: Check per device max cdb length for SAS
+Date: Mon, 12 Jun 2006 14:54:51 -0500
+Message-ID: <200606121954.k5CJsqQI032124@d01av02.pok.ibm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from R233f.r.pppool.de ([89.54.35.63]:16655 "EHLO koch")
-	by vger.kernel.org with ESMTP id S932182AbWFLTzM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 15:55:12 -0400
-Date: Mon, 12 Jun 2006 19:55:17 -0060
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:35489 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932178AbWFLTyy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 15:54:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
 
-Even if you have no erectin problems SOFT CIAzLIS 
-would help you to make BETTER SE  X MORE OFTEN!
-and to bring  unimagnable plesure to her.
 
-Just disolve half a pil under your tongue 
-and get ready for action in 15 minutes. 
+Since libata does not own any scsi_host struct for
+SAS attached SATA devices, libata cannot rely on scsi
+core checking the max_cmd_len. This patch adds additional
+checking into the SAS queuecommand path to prevent
+too large of a cdb from being issued to an ATA or ATAPI device.
 
-The tests showed that the majority of men 
-after taking this medic ation were able to have 
-PERFECT ER ECTI ON during 36 hours!
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
 
-VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
+ libata-dev-bjking1/drivers/scsi/libata-scsi.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-http://efwjul.muffsoap.net/?18966314
-
-==========
-the fishing boats were specks in the flat blue water, Breakfast Flock  was
-     "Here," he said. "From a grateful humanity.
-try again ..."
-     "Oh no," I said.  "This  is no  picnic  with ladies.  What if something
-is for them disgrace and it is dishonor.
-you Swedish dolt."
-
-     "The fact of the Visitation itself."
-know my opinion of the incomparable Godi Muller?"
+diff -puN drivers/scsi/libata-scsi.c~libata_sas_cdb_len drivers/scsi/libata-scsi.c
+--- libata-dev/drivers/scsi/libata-scsi.c~libata_sas_cdb_len	2006-06-12 14:19:39.000000000 -0500
++++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-06-12 14:20:34.000000000 -0500
+@@ -3206,9 +3206,13 @@ int ata_sas_queuecmd(struct scsi_cmnd *c
+ {
+ 	ata_scsi_dump_cdb(ap, cmd);
+ 
+-	if (likely(ata_scsi_dev_enabled(ap->device)))
+-		__ata_scsi_queuecmd(cmd, done, ap->device);
+-	else {
++	if (likely(ata_scsi_dev_enabled(ap->device))) {
++		if (unlikely(cmd->cmd_len > ap->device->cdb_len)) {
++			cmd->result = (DID_ABORT << 16);
++			done(cmd);
++		} else
++			__ata_scsi_queuecmd(cmd, done, ap->device);
++	} else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+ 		done(cmd);
+ 	}
+_
