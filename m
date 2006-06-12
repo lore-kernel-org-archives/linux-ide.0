@@ -1,43 +1,31 @@
-From: Trilobit <trilo@gmx.net>
-Subject: kernel module sata_via
-Date: Mon, 12 Jun 2006 18:17:21 +0200
-Message-ID: <20060612181721.64fd46b2@jvc>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 06/10] libata: implement new Power Management framework
+Date: Mon, 12 Jun 2006 17:34:58 +0100
+Message-ID: <1150130098.25462.10.camel@localhost.localdomain>
+References: <11501274293403-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:53665 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1752121AbWFLQQc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 12:16:32 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:31912 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751172AbWFLQUn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jun 2006 12:20:43 -0400
+In-Reply-To: <11501274293403-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Hi,
+Ar Maw, 2006-06-13 am 00:50 +0900, ysgrifennodd Tejun Heo:
+> Suspend is performed parallely on all ports of a host_set and resume
+> is done parallely in background to decrease the time necessary before
+> responding to user.
 
-I'd like to hotplug sata hardisks on a running Linux system.
-This works with unloading and then reloading the sata_via module.
-But therefore the kernel needs the option module unloading, which I decide to be unsafe for a server.
+Do we need a disk count here - some large disk setups rely on the fact
+drives don't all spin up at once to avoid overloading the PSU ?
 
-So my question: is it possible to get the module to rescan the sata bus now and then?
-It would be apropriate to trigger the update process externalywith cron or so.
-(I thought of something like sending the signal HUP to a process, so it rereads his config,
-but only HUP would be send to thes ata_via kernel module, something like that)
+Something like four disk spinups at a time ought to avoid biting anyone
+too badly and would mean normal users saw a parallel spinup.
 
-The next thing is: when sata_via is started and there is no harddisk connected to the sata host, this host isn't known to the system.
-Only unloading/loading the module with a hardisk connected to this host resolves this.
-So is there an module parameter which forces the detection of hosts even if no harddisk is connected to it?
-Maybe the some scsi-probe utilities might work to solve my first problem.
-
-Or maybe there is some entirely other solution to make hotplug of sata harddisks work with my VIA-SATA controller?
-
-I need hotplug for an Linux-Raid-server  system.
-
-
-kernel used to test this is (for now) the 2.6.12.2 from kernel.org
-distribution is the actual Debian stable.
-sata controller is the: VIA VT6420 sata raid controller
-on an Asus A7V880 motherboard
-
-thx for advice 
-Mario
+Alan
