@@ -1,58 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH v5] Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command
-Date: Mon, 12 Jun 2006 12:50:53 +0900
-Message-ID: <448CE49D.10004@gmail.com>
+Date: Sun, 11 Jun 2006 23:53:23 -0400
+Message-ID: <448CE533.1090607@pobox.com>
 References: <1150081562.5721.26.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:24046 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751250AbWFLDu7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 11 Jun 2006 23:50:59 -0400
-Received: by py-out-1112.google.com with SMTP id x31so1559103pye
-        for <linux-ide@vger.kernel.org>; Sun, 11 Jun 2006 20:50:58 -0700 (PDT)
+Received: from srv5.dvmed.net ([207.36.208.214]:8321 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750809AbWFLDxZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jun 2006 23:53:25 -0400
 In-Reply-To: <1150081562.5721.26.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 zhao, forrest wrote:
 > OK. I ported it to latest #upstream
 > 
 > Signed-off-by: Zhao, Forrest <forrest.zhao@intel.com>
-> 
 
-The patch looks good to me, but can you repost it with proper header 
-message?  If Jeff applies your patch w/ git-applymbox, "OK. I ported it 
-to latest #upstream" will end up as the commit message body, which isn't 
-so descriptive.  Please write what the patch does above Signed-off-by. 
-You can write 'ported to latest #upstream' kind of message below 
-Signed-off-by separated w/ '---'.  For example.
+Patch content looks OK, but
+
+1) "OK. I ported it to latest #upstream" is not a good description :)  I 
+use the git-applymbox script to apply the patch, and the full technical 
+patch description is copied from your email's message body directly into 
+the Linux kernel changelog.
+
+The appropriate place for comments like "OK. I ported it to latest 
+#upstream" is following the "---" description terminator line.  See 
+Tejun's patches for an example :)
 
 
-Subject: [PATCH] libata: Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE 
-command (v5)
+2) Both git-applymbox(1) and patch(1) fail to apply the patch:
 
-[Explain what the patch does.]
 
-Signed-off-by: [....]
+[jgarzik@pretzel libata-dev]$ git-applymbox /g/tmp/mbox ~/info/signoff.txt
+1 patch(es) to process.
 
----
+Applying 'Snoop SET FEATURES - WRITE CACHE ENABLE/DISABLE command'
 
-OK. I ported it to latest #upstream
+fatal: corrupt patch at line 84
 
-[If the patch touches a lot of files, including diffstat -p1 result here 
-would be nice.]
 
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 11df827..7efe991 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -69,6 +69,8 @@ static void ata_dev_xfermask(struct ata_
-....
+[jgarzik@pretzel libata-dev]$ patch -sp1 < /g/tmp/mbox
+patch: **** malformed patch at line 144: *args,
 
--- 
-tejun
