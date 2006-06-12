@@ -1,289 +1,155 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 5/6] libata: Add support for SATA attachment to SAS adapters
-Date: Mon, 12 Jun 2006 14:54:44 -0500
-Message-ID: <200606121954.k5CJsjdf031808@d01av02.pok.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+Subject: Fwd: 2.6.16-rc6-mm2
+Date: Mon, 12 Jun 2006 22:48:57 +0200
+Message-ID: <6bffcb0e0606121348j52dafe1bo623c7a2be3e8c60b@mail.gmail.com>
+References: <20060609214024.2f7dd72c.akpm@osdl.org>
+	 <1150136394.28414.23.camel@dyn9047017100.beaverton.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.232]:11016 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1750793AbWFLUs6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jun 2006 16:48:58 -0400
+Received: by wr-out-0506.google.com with SMTP id 58so26264wri
+        for <linux-ide@vger.kernel.org>; Mon, 12 Jun 2006 13:48:58 -0700 (PDT)
+In-Reply-To: <1150136394.28414.23.camel@dyn9047017100.beaverton.ibm.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: andre@linux-ide.org
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+
+Hi,
+
+Looks like an IDE problem.
+
+---------- Forwarded message ----------
+From: Badari Pulavarty <pbadari@gmail.com>
+Date: 12-Jun-2006 20:19
+Subject: Re: 2.6.16-rc6-mm2
+To: Andrew Morton <akpm@osdl.org>
+Cc: lkml <linux-kernel@vger.kernel.org>
 
 
-The following patch enhances libata to allow SAS device drivers
-to utilize libata to talk to SATA devices. It introduces some
-new APIs which allow libata to be used without allocating a
-virtual scsi host.
+On Fri, 2006-06-09 at 21:40 -0700, Andrew Morton wrote:
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.17-rc6/2.6.17-rc6-mm2/
+>
+>
 
-New APIs:
+Not sure, if its reported earlier .. paniced on my ppc64 machine.
 
-ata_sas_port_alloc - Allocate an ata_port 
-ata_sas_port_init - Initialize an ata_port (probe device, etc)
-ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
-ata_sas_slave_configure - configure scsi device
-ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
+Thanks,
+Badari
 
-These new APIs can be used either directly by a SAS LLDD or could be used
-by the SAS transport class. 
+Memory: 1852532k/1900544k available (5428k kernel code, 47336k reserved,
+1508k data, 859k bss, 240k init)
+Security Framework v1.0.0 initialized
+SELinux:  Disabled at boot.
+Mount-cache hash table entries: 256
+Processor 1 found.
+Processor 2 found.
+Processor 3 found.
+Brought up 4 CPUs
+migration_cost=3,0
+checking if image is initramfs... it is
+Freeing initrd memory: 1320k freed
+NET: Registered protocol family 16
+IOMMU table initialized, virtual merging disabled
+SCSI subsystem initialized
+NET: Registered protocol family 2
+IP route cache hash table entries: 65536 (order: 7, 524288 bytes)
+TCP established hash table entries: 262144 (order: 10, 4194304 bytes)
+TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
+TCP: Hash tables configured (established 262144 bind 65536)
+TCP reno registered
+audit: initializing netlink socket (disabled)
+audit(1150133249.344:1): initialized
+Total HugeTLB memory allocated, 0
+VFS: Disk quotas dquot_6.5.1
+Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+JFS: nTxBlock = 8192, nTxLock = 65536
+SGI XFS with ACLs, security attributes, realtime, large block/inode
+numbers, no debug enabled
+Initializing Cryptographic API
+io scheduler noop registered
+io scheduler anticipatory registered
+io scheduler deadline registered
+io scheduler cfq registered (default)
+pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
+rpaphp: Slot [0001:00:02.4](PCI location=U787E.001.AAA3015-P2-C1) registered
+rpaphp: Slot [0001:00:02.2](PCI location=U787E.001.AAA3015-P2-C2) registered
+rpaphp: Slot [0001:00:02.6](PCI location=U787E.001.AAA3015-P2-C3) registered
+Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing disabled
+isa bounce pool size: 16 pages
+Floppy drive(s): fd0 is 2.88M
+RAMDISK driver initialized: 16 RAM disks of 123456K size 1024 blocksize
+loop: loaded (max 8 devices)
+Intel(R) PRO/1000 Network Driver - version 7.0.38-k4-NAPI
+Copyright (c) 1999-2006 Intel Corporation.
+e1000: 0000:c0:01.0: e1000_probe: (PCI-X:133MHz:64-bit) 00:0d:60:de:a9:d6
+e1000: eth0: e1000_probe: Intel(R) PRO/1000 Network Connection
+e1000: 0000:c0:01.1: e1000_probe: (PCI-X:133MHz:64-bit) 00:0d:60:de:a9:d7
+e1000: eth1: e1000_probe: Intel(R) PRO/1000 Network Connection
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+PDC20275: IDE controller at PCI slot 0000:cc:01.0
+PDC20275: chipset revision 1
+PDC20275: 100% native mode on irq 134
+    ide2: BM-DMA at 0xdec00-0xdec07<3>PDC20275: -- Error, unable to
+allocate DMA table.
+Unable to handle kernel paging request for data at address 0xd000080000000000
+Faulting instruction address: 0xc000000000347b70
+Oops: Kernel access of bad area, sig: 7 [#1]
+SMP NR_CPUS=128
+Modules linked in:
+NIP: C000000000347B70 LR: C00000000033E0B8 CTR: C000000000347B5C
+REGS: c000000002667610 TRAP: 0300   Not tainted  (2.6.17-rc6-mm2-autokern1)
+MSR: 8000000000009032 <EE,ME,IR,DR>  CR: 24004028  XER: 00000006
+DAR: D000080000000000, DSISR: 0000000042000000
+TASK = c00000000265a800[1] 'idle' THREAD: c000000002664000 CPU: 1
+GPR00: C000000000347B5C C000000002667890 C0000000006C8938 000000000000000B
+GPR04: 0000000000000000 C0000000006ABBD8 C0000000006ABAE8 C0000000006ABBA8
+GPR08: C0000000006ABBC0 D000080000000000 0000000000000000 0000000000000000
+GPR12: 0000000000004000 C000000000570080 0000000000000000 0000000000000000
+GPR16: 0000000000000000 0000000000000086 0000000000000000 C000000002667BE0
+GPR20: C000000002514800 0000000000000000 C0000000005E97B8 0000000000000000
+GPR24: C000000002514800 C0000000005E97B8 C0000000007AD480 C000000002667A22
+GPR28: C0000000006ABB90 C0000000007AD480 C000000000604768 C0000000007AD480
+NIP [C000000000347B70] .ide_outb+0x14/0x2c
+LR [C00000000033E0B8] .pdcnew_new_cable_detect+0x3c/0x78
+Call Trace:
+[C000000002667890] [C000000002667930] 0xc000000002667930 (unreliable)
+[C000000002667920] [C00000000033E19C] .init_hwif_pdc202new+0xa8/0x118
+[C0000000026679B0] [C000000000350984] .ide_pci_setup_ports+0x7e8/0x870
+[C000000002667AB0] [C000000000350E94] .do_ide_setup_pci_device+0x488/0x4b8
+[C000000002667B70] [C00000000035100C] .ide_setup_pci_device+0x2c/0xc4
+[C000000002667C10] [C00000000033E39C] .init_setup_pdcnew+0x10/0x24
+[C000000002667C90] [C00000000033E258] .pdc202new_init_one+0x4c/0x64
+[C000000002667D10] [C000000000532198] .ide_scan_pcidev+0x7c/0xd8
+[C000000002667DA0] [C000000000532228] .ide_scan_pcibus+0x34/0x130
+[C000000002667E20] [C0000000005320EC] .ide_init+0x78/0xa8
+[C000000002667EB0] [C000000000009480] .init+0x1fc/0x3b0
+[C000000002667F90] [C0000000000239C4] .kernel_thread+0x4c/0x68
+Instruction dump:
+eb61ffd8 eb81ffe0 eba1ffe8 ebc1fff0 ebe1fff8 7c0803a6 4e800020 fbc1fff0
+ebc2cc00 e93e8000 60000000 e9290000 <7c6449ae> 7c0004ac 60000000 60000000
+-- 0:conmux-control -- time-stamp -- Jun/12/06 10:30:58 --
+-- 0:conmux-control -- time-stamp -- Jun/12/06 10:46:41 --
+(bot:conmon-payload) disconnected
 
-Possible usage for a SAS LLDD would be:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
 
-scsi_scan_host
-	target_alloc
-		ata_sas_port_alloc
-	slave_alloc
-		ata_sas_port_init
-	slave_configure
-		ata_sas_slave_configure
+Regards,
+Michal
 
-Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
-
-Device teardown would occur with:
-
-slave_destroy
-	port_disable
-target_destroy
-	ata_sas_port_destroy
-
-Acked-by: Jeff Garzik <jgarzik@pobox.com>
-
-Signed-off-by: Brian King <brking@us.ibm.com>
----
-
- libata-dev-bjking1/drivers/scsi/libata-core.c |    4 
- libata-dev-bjking1/drivers/scsi/libata-scsi.c |  165 ++++++++++++++++++++++++++
- libata-dev-bjking1/drivers/scsi/libata.h      |    2 
- libata-dev-bjking1/include/linux/libata.h     |    9 +
- 4 files changed, 178 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/libata-scsi.c~libata_sas drivers/scsi/libata-scsi.c
---- libata-dev/drivers/scsi/libata-scsi.c~libata_sas	2006-06-12 14:42:00.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-06-12 14:42:00.000000000 -0500
-@@ -3050,3 +3050,168 @@ void ata_scsi_dev_rescan(void *data)
- 			scsi_rescan_device(&(dev->sdev->sdev_gendev));
- 	}
- }
-+
-+/**
-+ *	ata_sas_port_alloc - Allocate port for a SAS attached SATA device
-+ *	@pdev: PCI device that the scsi device is attached to
-+ *	@port_info: Information from low-level host driver
-+ *	@host: SCSI host that the scsi device is attached to
-+ *
-+ *	LOCKING:
-+ *	PCI/etc. bus probe sem.
-+ *
-+ *	RETURNS:
-+ *	ata_port pointer on success / NULL on failure.
-+ */
-+
-+struct ata_port *ata_sas_port_alloc(struct pci_dev *pdev,
-+				    struct ata_port_info *port_info,
-+				    struct Scsi_Host *host)
-+{
-+	struct ata_port *ap = kzalloc(sizeof(*ap), GFP_KERNEL);
-+	int i;
-+
-+	if (!ap)
-+		return NULL;
-+
-+	ap->dev = &pdev->dev;
-+	ap->id = ata_unique_id++;
-+	ap->lock = host->host_lock;
-+	ap->ops = port_info->port_ops;
-+	ap->flags = port_info->host_flags | ATA_FLAG_DISABLED;
-+	ap->pio_mask = port_info->pio_mask;
-+	ap->mwdma_mask = port_info->mwdma_mask;
-+	ap->udma_mask = port_info->udma_mask;
-+	ap->cbl = ATA_CBL_SATA;
-+	ap->sata_spd_limit = UINT_MAX;
-+	ap->active_tag = ATA_TAG_POISON;
-+	ap->last_ctl = 0xFF;
-+	INIT_WORK(&ap->port_task, NULL, NULL);
-+	INIT_WORK(&ap->hotplug_task, ata_scsi_hotplug, ap);
-+	INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan, ap);
-+	INIT_LIST_HEAD(&ap->eh_done_q);
-+	init_waitqueue_head(&ap->eh_wait_q);
-+
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+		dev->ap = ap;
-+		dev->devno = i;
-+		ata_dev_init(dev);
-+	}
-+
-+	return ap;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
-+
-+/**
-+ *	ata_sas_port_start - Set port up for dma.
-+ *	@ap: Port to initialize
-+ *
-+ *	Called just after data structures for each port are
-+ *	initialized.  Allocates DMA pad.
-+ *
-+ *	May be used as the port_start() entry in ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+int ata_sas_port_start(struct ata_port *ap)
-+{
-+	return ata_pad_alloc(ap, ap->dev);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_start);
-+
-+/**
-+ *	ata_port_stop - Undo ata_sas_port_start()
-+ *	@ap: Port to shut down
-+ *
-+ *	Frees the DMA pad.
-+ *
-+ *	May be used as the port_stop() entry in ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+
-+void ata_sas_port_stop(struct ata_port *ap)
-+{
-+	ata_pad_free(ap, ap->dev);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_stop);
-+
-+/**
-+ *	ata_sas_port_init - Initialize a SATA device
-+ *	@ap: SATA port to initialize
-+ *
-+ *	LOCKING:
-+ *	PCI/etc. bus probe sem.
-+ *
-+ *	RETURNS:
-+ *	Zero on success, non-zero on error.
-+ */
-+
-+int ata_sas_port_init(struct ata_port *ap)
-+{
-+	int rc = ap->ops->port_start(ap);
-+
-+	if (!rc)
-+		rc = ata_bus_probe(ap);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_init);
-+
-+/**
-+ *	ata_sas_port_destroy - Destroy a SATA port allocated by ata_sas_port_alloc
-+ *	@ap: SATA port to destroy
-+ *
-+ */
-+
-+void ata_sas_port_destroy(struct ata_port *ap)
-+{
-+	ap->ops->port_stop(ap);
-+	kfree(ap);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_destroy);
-+
-+/**
-+ *	ata_sas_slave_configure - Default slave_config routine for libata devices
-+ *	@sdev: SCSI device to configure
-+ *	@ap: ATA port to which SCSI device is attached
-+ *
-+ *	RETURNS:
-+ *	Zero.
-+ */
-+
-+int ata_sas_slave_configure(struct scsi_device *sdev, struct ata_port *ap)
-+{
-+	ata_scsi_sdev_config(sdev);
-+	ata_scsi_dev_config(sdev, ap->device);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_slave_configure);
-+
-+/**
-+ *	ata_sas_queuecmd - Issue SCSI cdb to libata-managed device
-+ *	@cmd: SCSI command to be sent
-+ *	@done: Completion function, called when command is complete
-+ *	@ap:	ATA port to which the command is being sent
-+ *
-+ *	RETURNS:
-+ *	Zero.
-+ */
-+
-+int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
-+		     struct ata_port *ap)
-+{
-+	ata_scsi_dump_cdb(ap, cmd);
-+
-+	if (likely(ata_scsi_dev_enabled(ap->device)))
-+		__ata_scsi_queuecmd(cmd, done, ap->device);
-+	else {
-+		cmd->result = (DID_BAD_TARGET << 16);
-+		done(cmd);
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
-diff -puN drivers/scsi/libata.h~libata_sas drivers/scsi/libata.h
---- libata-dev/drivers/scsi/libata.h~libata_sas	2006-06-12 14:42:00.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata.h	2006-06-12 14:42:00.000000000 -0500
-@@ -43,6 +43,7 @@ extern struct workqueue_struct *ata_aux_
- extern int atapi_enabled;
- extern int atapi_dmadir;
- extern int libata_fua;
-+extern unsigned int ata_unique_id;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
- extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
- extern void ata_dev_disable(struct ata_device *dev);
-@@ -105,6 +106,7 @@ extern void ata_scsi_rbuf_fill(struct at
-                                            u8 *rbuf, unsigned int buflen));
- extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
- extern void ata_scsi_dev_rescan(void *data);
-+extern int ata_bus_probe(struct ata_port *ap);
- 
- /* libata-eh.c */
- extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
-diff -puN include/linux/libata.h~libata_sas include/linux/libata.h
---- libata-dev/include/linux/libata.h~libata_sas	2006-06-12 14:42:00.000000000 -0500
-+++ libata-dev-bjking1/include/linux/libata.h	2006-06-12 14:42:00.000000000 -0500
-@@ -652,6 +652,15 @@ extern int ata_scsi_detect(struct scsi_h
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
- extern int ata_scsi_release(struct Scsi_Host *host);
-+extern void ata_sas_port_destroy(struct ata_port *);
-+extern struct ata_port *ata_sas_port_alloc(struct pci_dev *,
-+					   struct ata_port_info *, struct Scsi_Host *);
-+extern int ata_sas_port_init(struct ata_port *);
-+extern int ata_sas_port_start(struct ata_port *ap);
-+extern void ata_sas_port_stop(struct ata_port *ap);
-+extern int ata_sas_slave_configure(struct scsi_device *, struct ata_port *);
-+extern int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
-+			    struct ata_port *ap);
- extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
- extern int sata_scr_valid(struct ata_port *ap);
- extern int sata_scr_read(struct ata_port *ap, int reg, u32 *val);
-diff -puN drivers/scsi/libata-core.c~libata_sas drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_sas	2006-06-12 14:42:00.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-12 14:42:00.000000000 -0500
-@@ -71,7 +71,7 @@ static unsigned int ata_dev_init_params(
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
- static void ata_dev_xfermask(struct ata_device *dev);
- 
--static unsigned int ata_unique_id = 1;
-+unsigned int ata_unique_id = 1;
- static struct workqueue_struct *ata_wq;
- 
- struct workqueue_struct *ata_aux_wq;
-@@ -1467,7 +1467,7 @@ err_out_nosup:
-  *	Zero on success, negative errno otherwise.
-  */
- 
--static int ata_bus_probe(struct ata_port *ap)
-+int ata_bus_probe(struct ata_port *ap)
- {
- 	unsigned int classes[ATA_MAX_DEVICES];
- 	int tries[ATA_MAX_DEVICES];
-_
+-- 
+Michal K. K. Piotrowski
+LTG - Linux Testers Group
+(http://www.stardust.webpages.pl/ltg/wiki/)
