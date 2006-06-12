@@ -1,43 +1,65 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git-patch] hotplug fix patches added
-Date: Mon, 12 Jun 2006 22:46:21 +0900
-Message-ID: <448D702D.5010507@gmail.com>
-References: <448B7FFD.9050507@gmail.com> <448C1C1E.7080109@pobox.com> <448C1FA7.6030305@gmail.com> <448D6F09.3080609@pobox.com>
+Subject: [PATCH] libata: fix oops caused rescanning NULL sdev
+Date: Mon, 12 Jun 2006 22:51:14 +0900
+Message-ID: <20060612135114.GC5751@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:57055 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751956AbWFLNq1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jun 2006 09:46:27 -0400
-Received: by py-out-1112.google.com with SMTP id x31so1693947pye
-        for <linux-ide@vger.kernel.org>; Mon, 12 Jun 2006 06:46:27 -0700 (PDT)
-In-Reply-To: <448D6F09.3080609@pobox.com>
+Received: from nz-out-0102.google.com ([64.233.162.202]:9912 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751982AbWFLNvY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jun 2006 09:51:24 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so1635196nze
+        for <linux-ide@vger.kernel.org>; Mon, 12 Jun 2006 06:51:23 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>, "Zhao, Forrest" <forrest.zhao@intel.com>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
->> Several drivers only need flags.  IMHO, having to allocate hpriv just 
->> for flags is a bit annoying.  I also thought about separating 
->> capability flags and dynamic flags but couldn't think of proper field 
->> name. ap->dyn_flags?  Also, it would be easy to screw up and test the 
->> wrong field.  Another sucky option was using u64 for flags.
-> 
-> I tend to think that most drivers fall into two categories:
-> 
-> * bmdma (PCI IDE-like) drivers
-> * drivers which already do their own hpriv allocation and management
-> 
-> Therefore, I would be OK with adding a bmdma_flags member, to be used 
-> only by bmdma drivers [and eventually separated from the high level 
-> libata API, as discussed].  Otherwise, I would go ahead and add code to 
-> allocate an hpriv structure in the driver.
+Depending on timing, ata_scsi_dev_rescan() might encounter a device
+which is enabled but not yet attached to sdev.  On such cases, the
+original code caused oops.  This patch makes ata_scsi_dev_rescan()
+rescan only device which are attached to sdevs.
 
-Okay, bmdma_flags then.  I'll reserve lower 16 bits for generic bmdma 
-flags and allow LLDDs to use upper 16 bits.
+While at it, properly indent leading comment and add description about
+how it's synchronized with sdev attach/detach.
 
--- 
-tejun
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index 45a49be..32c1df6 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -3005,14 +3005,16 @@ static int ata_scsi_user_scan(struct Scs
+ }
+ 
+ /**
+- *      ata_scsi_dev_rescan - initiate scsi_rescan_device()
+- *      @data: Pointer to ATA port to perform scsi_rescan_device()
++ *	ata_scsi_dev_rescan - initiate scsi_rescan_device()
++ *	@data: Pointer to ATA port to perform scsi_rescan_device()
+  *
+- *      After ATA pass thru (SAT) commands are executed successfully,
+- *      libata need to propagate the changes to SCSI layer.
++ *	After ATA pass thru (SAT) commands are executed successfully,
++ *	libata need to propagate the changes to SCSI layer.  This
++ *	function must be executed from ata_aux_wq such that sdev
++ *	attach/detach don't race with rescan.
+  *
+- *      LOCKING:
+- *      Kernel thread context (may sleep).
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
+  */
+ void ata_scsi_dev_rescan(void *data)
+ {
+@@ -3023,8 +3025,7 @@ void ata_scsi_dev_rescan(void *data)
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		dev = &ap->device[i];
+ 
+-		if (ata_dev_enabled(dev))
++		if (ata_dev_enabled(dev) && dev->sdev)
+ 			scsi_rescan_device(&(dev->sdev->sdev_gendev));
+ 	}
+ }
+-
