@@ -1,82 +1,74 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] new Power Management for libata
-Date: Tue, 13 Jun 2006 00:50:28 +0900
-Message-ID: <11501274284082-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/10] sata_sil: add suspend/sleep support
+Date: Tue, 13 Jun 2006 00:50:29 +0900
+Message-ID: <11501274291922-git-send-email-htejun@gmail.com>
+References: <11501274284082-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.203]:2386 "EHLO
+Received: from nz-out-0102.google.com ([64.233.162.196]:56440 "EHLO
 	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1752079AbWFLPuf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jun 2006 11:50:35 -0400
-Received: by nz-out-0102.google.com with SMTP id s18so1663632nze
-        for <linux-ide@vger.kernel.org>; Mon, 12 Jun 2006 08:50:35 -0700 (PDT)
-In-Reply-To: 
+	id S1752079AbWFLPuj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jun 2006 11:50:39 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so1663627nze
+        for <linux-ide@vger.kernel.org>; Mon, 12 Jun 2006 08:50:39 -0700 (PDT)
+In-Reply-To: <11501274284082-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+Add suspend/sleep support.
 
-This patchset implements new Power Management for libata.  Currently,
-only controller-wide suspend and resume are supported.  No per-device
-power management yet.  Both memsleep and disksleep work on supported
-controllers.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-All PM operations are performed by EH and thus fully synchronized w/
-EH.  Suspend/resume operations should be safe under all circumstances
-as long as libata is concerned.  Attaching/detaching/exchanging
-devices while sleeping is allowed and handled correctly.
+---
 
-ata_piix, sata_sil and sata_sil24 are updated to use new PM.  PM is
-tested on the following machines.
+ drivers/scsi/sata_sil.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-* ASUS P5LD2: sky2 disabled as it oopses on PM
-
-	O ICH7R in piix mode (advanced/compatible)
-	O sil3112 PCI card
-	O sil3114 PCI card
-	O sil3124 PCI-x card on PCI slot
-	X sil3132 failed probably due to PCI-e PM problem
-
-* Fujitsu lifebook P7120: enabled ATA_ENABLE_PATA and added entry for
-  0x266f in ata_piix pci table.  Net console makes resume from
-  memsleep fail.
-
-	O ICH6M in piix mode
-	O sil3112 PCMCIA card
-
-This patchset contains 10 patches.
-
-#01-04	prep for new PM
-#05-06	implement new PM
-#07-10	update LLDs
-
-This patchset is against
-
-     upstream (aeb2ecd6096182cc080d37679080c0f088dcd4a4)
-     + [1] kill-ATA_FLAG_SRST patch
-     + [2] shift-ATA_FLAG_-bits patch
-
-Jens, Mark, can you guys please test if this patch works on your
-notebooks?  Note that AHCI isn't updated yet.
-
-Zhao, can you port your AHCI PM stuff over this?  This should solve
-the problem you talked about in the other mail.  Recent changes update
-ahci such that it listens to more PHY events for hotplug and that
-causes EH to kick in after resuming.  The original PM implementation
-didn't synchronize w/ EH and thus caused problems.
-
-This patchset is for review only.
-
-Thanks.
-
---
-tejun
-
-[1] http://marc.theaimsgroup.com/?l=linux-ide&m=115012501502940&w=2
-[2] http://marc.theaimsgroup.com/?l=linux-ide&m=115012349728574&w=2
+cfac09b587dd3913ebf3f75766a57559e75de672
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index 4bff260..bb63db2 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -107,6 +107,7 @@ enum {
+ };
+ 
+ static int sil_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
++static int sil_pci_device_resume(struct pci_dev *pdev);
+ static void sil_dev_config(struct ata_port *ap, struct ata_device *dev);
+ static u32 sil_scr_read (struct ata_port *ap, unsigned int sc_reg);
+ static void sil_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+@@ -158,6 +159,8 @@ static struct pci_driver sil_pci_driver 
+ 	.id_table		= sil_pci_tbl,
+ 	.probe			= sil_init_one,
+ 	.remove			= ata_pci_remove_one,
++	.suspend		= ata_pci_device_suspend,
++	.resume			= sil_pci_device_resume,
+ };
+ 
+ static struct scsi_host_template sil_sht = {
+@@ -660,6 +663,16 @@ err_out:
+ 	return rc;
+ }
+ 
++static int sil_pci_device_resume(struct pci_dev *pdev)
++{
++	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
++
++	sil_init_controller(pdev, host_set->n_ports, host_set->ports[0]->flags,
++			    host_set->mmio_base);
++
++	return ata_pci_device_resume(pdev);
++}
++
+ static int __init sil_init(void)
+ {
+ 	return pci_module_init(&sil_pci_driver);
+-- 
+1.3.2
 
 
