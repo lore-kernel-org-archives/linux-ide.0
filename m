@@ -1,25 +1,29 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [git-patch] 6 misc patches just posted
-Date: Mon, 12 Jun 2006 14:24:12 +0900
-Message-ID: <20060612052412.GG9166@htj.dyndns.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_sil: update device hotplug handling
+Date: Mon, 12 Jun 2006 02:08:05 -0400
+Message-ID: <448D04C5.9030603@pobox.com>
+References: <20060612051822.GE9166@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.197]:24726 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750843AbWFLFYr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jun 2006 01:24:47 -0400
-Received: by nz-out-0102.google.com with SMTP id s18so1554157nze
-        for <linux-ide@vger.kernel.org>; Sun, 11 Jun 2006 22:24:47 -0700 (PDT)
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:10630 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750854AbWFLGII (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 02:08:08 -0400
+In-Reply-To: <20060612051822.GE9166@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-6 misc patches just posted are available in the following git tree.
+Tejun Heo wrote:
+> Some flavors of 3112 cannot mask SATA_IRQ reliably and ends up
+> scheduling hotplug event during hardreset.
 
-http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=for-jeff-misc
-git://htj.dyndns.org/libata-tj for-jeff-misc
+Can you give more detail?  This sounds like a software bug?  I don't see 
+SError clearing the pre-patched code path, the lack of which may create 
+the conditions you describe.
 
--- 
-tejun
+	Jeff
+
+
