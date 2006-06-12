@@ -1,69 +1,42 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 3/6] libata: Add ata_host_flags
-Date: Mon, 12 Jun 2006 14:54:25 -0500
-Message-ID: <200606121954.k5CJsPX5018967@d01av04.pok.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+From: "Adeline Dean" <AdelineDean@0451.com>
+Subject: Your money, open-armedly
+Date: Mon, 12 Jun 2006 19:55:22 +0000 (UTC)
+Message-ID: <87812354.20060612195517@0451.com>
+Reply-To: "Adeline Dean" <AdelineDean@0451.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from R233f.r.pppool.de ([89.54.35.63]:16655 "EHLO koch")
+	by vger.kernel.org with ESMTP id S932182AbWFLTzM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 15:55:12 -0400
+Date: Mon, 12 Jun 2006 19:55:17 -0060
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+Even if you have no erectin problems SOFT CIAzLIS 
+would help you to make BETTER SE  X MORE OFTEN!
+and to bring  unimagnable plesure to her.
 
-Since SATA devices attached to SAS HBAs will not have
-a host_set, add a helper function to retrieve the host_set
-flags which can check for the existence of a host_set.
+Just disolve half a pil under your tongue 
+and get ready for action in 15 minutes. 
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
+The tests showed that the majority of men 
+after taking this medic ation were able to have 
+PERFECT ER ECTI ON during 36 hours!
 
- libata-dev-bjking1/drivers/scsi/libata-core.c |    7 +++----
- libata-dev-bjking1/include/linux/libata.h     |    7 +++++++
- 2 files changed, 10 insertions(+), 4 deletions(-)
+VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
 
-diff -puN drivers/scsi/libata-core.c~libata_sas_no_simplex drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_sas_no_simplex	2006-06-12 11:23:57.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-12 11:23:57.000000000 -0500
-@@ -2160,7 +2160,7 @@ int ata_set_mode(struct ata_port *ap, st
- 	/* Record simplex status. If we selected DMA then the other
- 	 * host channels are not permitted to do so.
- 	 */
--	if (used_dma && (ap->host_set->flags & ATA_HOST_SIMPLEX))
-+	if (used_dma && (ata_host_flags(ap) & ATA_HOST_SIMPLEX))
- 		ap->host_set->simplex_claimed = 1;
- 
- 	/* step5: chip specific finalisation */
-@@ -2980,7 +2980,6 @@ static int ata_dma_blacklisted(const str
- static void ata_dev_xfermask(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->ap;
--	struct ata_host_set *hs = ap->host_set;
- 	unsigned long xfer_mask;
- 	int i;
- 
-@@ -3018,8 +3017,8 @@ static void ata_dev_xfermask(struct ata_
- 		ata_dev_printk(dev, KERN_WARNING,
- 			       "device is on DMA blacklist, disabling DMA\n");
- 
--	if (hs->flags & ATA_HOST_SIMPLEX) {
--		if (hs->simplex_claimed)
-+	if (ata_host_flags(ap) & ATA_HOST_SIMPLEX) {
-+		if (ap->host_set->simplex_claimed)
- 			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
- 	}
- 
-diff -puN include/linux/libata.h~libata_sas_no_simplex include/linux/libata.h
---- libata-dev/include/linux/libata.h~libata_sas_no_simplex	2006-06-12 11:23:57.000000000 -0500
-+++ libata-dev-bjking1/include/linux/libata.h	2006-06-12 11:23:57.000000000 -0500
-@@ -1161,4 +1161,11 @@ static inline struct ata_port *ata_shost
- 	return (struct ata_port *) &host->hostdata[0];
- }
- 
-+static inline unsigned int ata_host_flags(struct ata_port *ap)
-+{
-+	if (ap->host_set)
-+		return ap->host_set->flags;
-+	return 0;
-+}
-+
- #endif /* __LINUX_LIBATA_H__ */
-_
+http://efwjul.muffsoap.net/?18966314
+
+==========
+the fishing boats were specks in the flat blue water, Breakfast Flock  was
+     "Here," he said. "From a grateful humanity.
+try again ..."
+     "Oh no," I said.  "This  is no  picnic  with ladies.  What if something
+is for them disgrace and it is dishonor.
+you Swedish dolt."
+
+     "The fact of the Visitation itself."
+know my opinion of the incomparable Godi Muller?"
