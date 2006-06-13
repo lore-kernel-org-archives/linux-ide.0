@@ -1,17 +1,16 @@
-From: "Grant Cummings" <GrantCummings@mail.ru>
-Subject: Hi, mythico-romantic
-Date: Mon, 12 Jun 2006 23:38:38 +0000 (UTC)
-Message-ID: <834201969.20060612233822@mail.ru>
-Reply-To: "Grant Cummings" <GrantCummings@mail.ru>
+From: "Aisha Guzman" <AishaGuzman@1-coupon.com>
+Subject: Hi, ninety-six
+Date: Tue, 13 Jun 2006 01:33:08 +0000 (UTC)
+Message-ID: <692977000.20060613013257@1-coupon.com>
+Reply-To: "Aisha Guzman" <AishaGuzman@1-coupon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 24-176-186-15.static.reno.nv.charter.com ([24.176.186.15]:32526
-	"EHLO Shannon") by vger.kernel.org with ESMTP id S932465AbWFLXiV
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jun 2006 19:38:21 -0400
-Date: Mon, 12 Jun 2006 23:38:22 +0480
+Received: from zeus2.kernel.org ([204.152.191.36]:56555 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S932735AbWFMBc4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2006 21:32:56 -0400
+Date: Tue, 13 Jun 2006 01:32:57 +0180
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -26,21 +25,21 @@ And your FREE Bonuses will be INSTANTLY added to your acount!
 
 Try us, inhere: 
 
-http://48LU26.erprost.com/d1/today
+http://R4QUIV.erprost.com/d1/today
 
 ==========
-a double star for a sun."
-comfortable, without binding  any where, and  you didn't  sweat  in it. In a
-a gull who asked only a chance to see truth for himself.
-competitiveness;  and  the  ravening  thirst  for  new  and   more  terrible
-understand. He led me by the  elbow  into his little office, sat me down  at
+     "No, Jonathan, there is no such place. Heaven is not a place, and  it
+longer human.
+just a hundredth, of what he knew here, how  much  more  life  would  have
+the highly vulnerable but steadfastly courageous Royal Tank Units."
+     "What the hell do you think you're doing, mister?"
 ==
-expected to  survive. Keeping  that in mind, however, the  discerning reader
-imagination? It would be nice to  have a smoke now  and sit for a spell  and
-     "I'm ready " he said at last.
+startled him so much that he faltered and stumbled in the air.
+     "OK,"  I  said, "we had  our  fun,  now  let's  go. Watch  closely. I'm
+and the lights twinkling on the water, throwing out  little  beacon-trails
 ==
-then got bored and went off some  place more exciting. Meanwhile the captain
-     From a thousand feet, flapping his wings as  hard  as  he  could,  he
-for him smack into  the middle, so  that he could enjoy his concentrate.  It
+     I  pulled  off my special  suit, threw it on the floor--let the bastard
+the thirtieth  anniversary of the Visitation.  Dr  Pilman, would you care to
+     "Don't rush," I said. "No hurry. Less dust."
 
 
