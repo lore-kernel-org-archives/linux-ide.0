@@ -1,46 +1,49 @@
-From: "Liz Culver" <LizCulver@mail.ru>
-Subject: Your future, ordeal root
-Date: Tue, 13 Jun 2006 01:33:42 +0000 (UTC)
-Message-ID: <662161c80604xc360kelsu8kuc20vgfu2wmsxaqyj3vtf__22406.5251918093$1150162422$gmane$org@mxs.mail.ru>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 06/10] libata: implement new Power Management framework
+Date: Tue, 13 Jun 2006 11:08:07 +0900
+Message-ID: <448E1E07.7010803@gmail.com>
+References: <11501274293403-git-send-email-htejun@gmail.com> <1150130098.25462.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:2028 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S932279AbWFMBde convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Jun 2006 21:33:34 -0400
-Date: Tue, 13 Jun 2006 01:33:32 +0480
-Content-Disposition: inline
+Received: from py-out-1112.google.com ([64.233.166.181]:55001 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932775AbWFMCIP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jun 2006 22:08:15 -0400
+Received: by py-out-1112.google.com with SMTP id x31so1859256pye
+        for <linux-ide@vger.kernel.org>; Mon, 12 Jun 2006 19:08:14 -0700 (PDT)
+In-Reply-To: <1150130098.25462.10.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Join and Play at the best Emperial zCASINOz!
-As a Special Welcome TODAY, we will DOUBL your 1 Deposit up to 200 bucks!
+Alan Cox wrote:
+> Ar Maw, 2006-06-13 am 00:50 +0900, ysgrifennodd Tejun Heo:
+>> Suspend is performed parallely on all ports of a host_set and resume
+>> is done parallely in background to decrease the time necessary before
+>> responding to user.
+> 
+> Do we need a disk count here - some large disk setups rely on the fact
+> drives don't all spin up at once to avoid overloading the PSU ?
 
-For example:
-Deposit 50 play with 100!
-Deposit 100 play with 200!
-And your FREE Bonuses will be INSTANTLY added to your acount!
+For most desktops and notebooks, it doesn't really matter as power is 
+removed from disks during memsleep and they all spin up immediately 
+after resume regardless of what libata does.  For external enclosures 
+with separate power supply, limiting the number of concurrent spinups 
+during resume is necessary though.
 
-Try us, inhere: 
+I think we need to make a central disk spinup limiter to control the 
+number of concurrent spinups across both ATA and SCSI.  SATA staggered 
+spinup should be considered too.  Depending on situation, a drive may 
+spin up on power up, PHY ready or IDLE_IMM after resuming from memsleep.
 
-http://JER64O.erprost.com/d1/today
+FWIW, my cheapo 325w PSU (< 30USD) hasn't had any problem spinning up 11 
+drives simultaneously.
 
-=====
-     The dozen gulls by the shoreline came to  meet  him,  none  saying  a
-of these leaks."
-of advances and discoveries of a technological nature.  Discoveries that our
-was adrift in a strange strange sky, forgetting, remembering,  forgetting;
-for  thirty years and they're just  like  new.  There's a  gasoline  carrier
-=
-     He didn't know why, for instance, but when he flew at altitudes  less
-     "He knows," Kirill said. "He's a good driver.
-     "I'm ready " he said at last.
-=
-first gulp, but the web kept glistening before my eyes.
-thought, of the Breakthrough, they'll be wild  with  joy.  How  much  more
-passage was saluting us, the jerk, and above all of them fluttered the huge,
+I think it's okay to leave it as it is for the time being.  It's not 
+like people w/ external enclosures use suspend/resume a lot.
 
-
+-- 
+tejun
