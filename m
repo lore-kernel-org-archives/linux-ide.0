@@ -1,166 +1,287 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/7] sata_nv: implement new EH
-Date: Wed, 14 Jun 2006 06:31:04 +0900
-Message-ID: <11502342643505-git-send-email-htejun@gmail.com>
+Subject: [PATCH 1/7] sata_nv: kill not-working hotplug code
+Date: Wed, 14 Jun 2006 06:31:03 +0900
+Message-ID: <11502342633722-git-send-email-htejun@gmail.com>
 References: <11502342632913-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:15545 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.182]:50617 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932321AbWFMVbA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Jun 2006 17:31:00 -0400
-Received: by py-out-1112.google.com with SMTP id i49so160763pye
-        for <linux-ide@vger.kernel.org>; Tue, 13 Jun 2006 14:31:00 -0700 (PDT)
+	id S932277AbWFMVaz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Jun 2006 17:30:55 -0400
+Received: by py-out-1112.google.com with SMTP id x31so73102pye
+        for <linux-ide@vger.kernel.org>; Tue, 13 Jun 2006 14:30:54 -0700 (PDT)
 In-Reply-To: <11502342632913-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement new EH.  freeze/thaw are performed by manipulating irq
-enable on supported controllers.  On controllers which don't have irq
-registers, stock BMDMA routines are used.
-
-As SATA phy reset on some controllers fails to report proper device
-signature, this patch defines nv_hardreset() which performs standard
-SATA phy reset but doesn't perform classification.
+sata_nv contained hotplug code which is mainly for demonstrating how
+hotplug event is handled.  This patch kills the demo code in
+prepration for real hotplug implementation.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_nv.c |   78 +++++++++++++++++++++++++++++++++++++++---------
- 1 files changed, 64 insertions(+), 14 deletions(-)
+ drivers/scsi/sata_nv.c |  172 +-----------------------------------------------
+ 1 files changed, 2 insertions(+), 170 deletions(-)
 
-da96be7f2eec90ebd3944b8106e4b351a7f311d8
+8af8345ccc9e9a5aaad6f02a835e0e187b57de94
 diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
-index f1218e5..b041c13 100644
+index 9055124..716581e 100644
 --- a/drivers/scsi/sata_nv.c
 +++ b/drivers/scsi/sata_nv.c
-@@ -68,6 +68,9 @@ enum {
+@@ -64,12 +64,6 @@ enum {
+ 	NV_INT_STATUS_SDEV_PM		= 0x20,
+ 	NV_INT_STATUS_SDEV_ADDED	= 0x40,
+ 	NV_INT_STATUS_SDEV_REMOVED	= 0x80,
+-	NV_INT_STATUS_PDEV_HOTPLUG	= (NV_INT_STATUS_PDEV_ADDED |
+-					   NV_INT_STATUS_PDEV_REMOVED),
+-	NV_INT_STATUS_SDEV_HOTPLUG	= (NV_INT_STATUS_SDEV_ADDED |
+-					   NV_INT_STATUS_SDEV_REMOVED),
+-	NV_INT_STATUS_HOTPLUG		= (NV_INT_STATUS_PDEV_HOTPLUG |
+-					   NV_INT_STATUS_SDEV_HOTPLUG),
  
- 	NV_INT_PORT_SHIFT		= 4,	/* each port occupies 4 bits */
+ 	NV_INT_ENABLE			= 0x11,
+ 	NV_INT_ENABLE_CK804		= 0x441,
+@@ -81,12 +75,6 @@ enum {
+ 	NV_INT_ENABLE_SDEV_PM		= 0x20,
+ 	NV_INT_ENABLE_SDEV_ADDED	= 0x40,
+ 	NV_INT_ENABLE_SDEV_REMOVED	= 0x80,
+-	NV_INT_ENABLE_PDEV_HOTPLUG	= (NV_INT_ENABLE_PDEV_ADDED |
+-					   NV_INT_ENABLE_PDEV_REMOVED),
+-	NV_INT_ENABLE_SDEV_HOTPLUG	= (NV_INT_ENABLE_SDEV_ADDED |
+-					   NV_INT_ENABLE_SDEV_REMOVED),
+-	NV_INT_ENABLE_HOTPLUG		= (NV_INT_ENABLE_PDEV_HOTPLUG |
+-					   NV_INT_ENABLE_SDEV_HOTPLUG),
  
-+	NV_INT_ALL			= 0x0f,
-+	NV_INT_MASK			= NV_INT_DEV,
-+
- 	/* INT_CONFIG */
  	NV_INT_CONFIG			= 0x12,
  	NV_INT_CONFIG_METHD		= 0x01, // 0 = INT, 1 = SMI
-@@ -90,6 +93,9 @@ static void ck804_clr_irq_status(struct 
- static int nv_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
- static irqreturn_t nv_interrupt (int irq, void *dev_instance,
- 				 struct pt_regs *regs);
-+static void nv_freeze (struct ata_port *ap);
-+static void nv_thaw (struct ata_port *ap);
-+static void nv_error_handler (struct ata_port *ap);
+@@ -102,12 +90,6 @@ static irqreturn_t nv_interrupt (int irq
  static u32 nv_scr_read (struct ata_port *ap, unsigned int sc_reg);
  static void nv_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
  static void nv_host_stop (struct ata_host_set *host_set);
-@@ -207,14 +213,16 @@ static const struct ata_port_operations 
- 	.exec_command		= ata_exec_command,
- 	.check_status		= ata_check_status,
- 	.dev_select		= ata_std_dev_select,
--	.phy_reset		= sata_phy_reset,
- 	.bmdma_setup		= ata_bmdma_setup,
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
--	.eng_timeout		= ata_eng_timeout,
-+	.freeze			= nv_freeze,
-+	.thaw			= nv_thaw,
-+	.error_handler		= nv_error_handler,
-+	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.data_xfer		= ata_pio_data_xfer,
- 	.irq_handler		= nv_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-@@ -225,20 +233,9 @@ static const struct ata_port_operations 
- 	.host_stop		= nv_host_stop,
+-static void nv_enable_hotplug(struct ata_probe_ent *probe_ent);
+-static void nv_disable_hotplug(struct ata_host_set *host_set);
+-static int nv_check_hotplug(struct ata_host_set *host_set);
+-static void nv_enable_hotplug_ck804(struct ata_probe_ent *probe_ent);
+-static void nv_disable_hotplug_ck804(struct ata_host_set *host_set);
+-static int nv_check_hotplug_ck804(struct ata_host_set *host_set);
+ 
+ enum nv_host_type
+ {
+@@ -158,34 +140,19 @@ static const struct pci_device_id nv_pci
+ struct nv_host_desc
+ {
+ 	enum nv_host_type	host_type;
+-	void			(*enable_hotplug)(struct ata_probe_ent *probe_ent);
+-	void			(*disable_hotplug)(struct ata_host_set *host_set);
+-	int			(*check_hotplug)(struct ata_host_set *host_set);
+-
+ };
+ static struct nv_host_desc nv_device_tbl[] = {
+ 	{
+ 		.host_type	= GENERIC,
+-		.enable_hotplug	= NULL,
+-		.disable_hotplug= NULL,
+-		.check_hotplug	= NULL,
+ 	},
+ 	{
+ 		.host_type	= NFORCE2,
+-		.enable_hotplug	= nv_enable_hotplug,
+-		.disable_hotplug= nv_disable_hotplug,
+-		.check_hotplug	= nv_check_hotplug,
+ 	},
+ 	{
+ 		.host_type	= NFORCE3,
+-		.enable_hotplug	= nv_enable_hotplug,
+-		.disable_hotplug= nv_disable_hotplug,
+-		.check_hotplug	= nv_check_hotplug,
+ 	},
+-	{	.host_type	= CK804,
+-		.enable_hotplug	= nv_enable_hotplug_ck804,
+-		.disable_hotplug= nv_disable_hotplug_ck804,
+-		.check_hotplug	= nv_check_hotplug_ck804,
++	{
++		.host_type	= CK804,
+ 	},
  };
  
--/* FIXME: The hardware provides the necessary SATA PHY controls
-- * to support ATA_FLAG_SATA_RESET.  However, it is currently
-- * necessary to disable that flag, to solve misdetection problems.
-- * See http://bugme.osdl.org/show_bug.cgi?id=3352 for more info.
-- *
-- * This problem really needs to be investigated further.  But in the
-- * meantime, we avoid ATA_FLAG_SATA_RESET to get people working.
-- */
- static struct ata_port_info nv_port_info = {
- 	.sht		= &nv_sht,
--	.host_flags	= ATA_FLAG_SATA |
--			  /* ATA_FLAG_SATA_RESET | */
--			  ATA_FLAG_SRST |
--			  ATA_FLAG_NO_LEGACY,
-+	.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
- 	.pio_mask	= NV_PIO_MASK,
- 	.mwdma_mask	= NV_MWDMA_MASK,
- 	.udma_mask	= NV_UDMA_MASK,
-@@ -350,6 +347,59 @@ static irqreturn_t nv_interrupt (int irq
+@@ -275,7 +242,6 @@ static irqreturn_t nv_interrupt (int irq
+ 				 struct pt_regs *regs)
+ {
+ 	struct ata_host_set *host_set = dev_instance;
+-	struct nv_host *host = host_set->private_data;
+ 	unsigned int i;
+ 	unsigned int handled = 0;
+ 	unsigned long flags;
+@@ -301,9 +267,6 @@ static irqreturn_t nv_interrupt (int irq
+ 
+ 	}
+ 
+-	if (host->host_desc->check_hotplug)
+-		handled += host->host_desc->check_hotplug(host_set);
+-
+ 	spin_unlock_irqrestore(&host_set->lock, flags);
+ 
  	return IRQ_RETVAL(handled);
+@@ -329,10 +292,6 @@ static void nv_host_stop (struct ata_hos
+ {
+ 	struct nv_host *host = host_set->private_data;
+ 
+-	// Disable hotplug event interrupts.
+-	if (host->host_desc->disable_hotplug)
+-		host->host_desc->disable_hotplug(host_set);
+-
+ 	kfree(host);
+ 
+ 	ata_pci_host_stop(host_set);
+@@ -409,10 +368,6 @@ static int nv_init_one (struct pci_dev *
+ 	if (rc != NV_PORTS)
+ 		goto err_out_iounmap;
+ 
+-	// Enable hotplug event interrupts.
+-	if (host->host_desc->enable_hotplug)
+-		host->host_desc->enable_hotplug(probe_ent);
+-
+ 	kfree(probe_ent);
+ 
+ 	return 0;
+@@ -432,129 +387,6 @@ err_out:
+ 	return rc;
  }
  
-+static void nv_freeze (struct ata_port *ap)
-+{
-+	struct ata_host_set *host_set = ap->host_set;
-+	struct nv_host_desc *host_desc = host_set->private_data;
-+	int shift = ap->port_no * NV_INT_PORT_SHIFT;
-+	u8 mask;
-+
-+	if (!host_desc->get_irq_mask) {
-+		ata_bmdma_freeze(ap);
-+		return;
-+	}
-+
-+	mask = host_desc->get_irq_mask(host_set);
-+	mask &= ~(NV_INT_ALL << shift);
-+	host_desc->set_irq_mask(host_set, mask);
-+}
-+
-+static void nv_thaw (struct ata_port *ap)
-+{
-+	struct ata_host_set *host_set = ap->host_set;
-+	struct nv_host_desc *host_desc = host_set->private_data;
-+	int shift = ap->port_no * NV_INT_PORT_SHIFT;
-+	u8 mask;
-+
-+	if (!host_desc->get_irq_mask) {
-+		ata_bmdma_thaw(ap);
-+		return;
-+	}
-+
-+	host_desc->clr_irq_status(host_set);
-+
-+	mask = host_desc->get_irq_mask(host_set);
-+	mask |= (NV_INT_MASK << shift);
-+	host_desc->set_irq_mask(host_set, mask);
-+}
-+
-+static int nv_hardreset (struct ata_port *ap, unsigned int *class)
-+{
-+	unsigned int dummy;
-+
-+	/* SATA hardreset fails to retrieve proper device signature on
-+	 * some controllers.  Don't classify on hardreset.  For more
-+	 * info, see http://bugme.osdl.org/show_bug.cgi?id=3352
-+	 */
-+	return sata_std_hardreset(ap, &dummy);
-+}
-+
-+static void nv_error_handler (struct ata_port *ap)
-+{
-+	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
-+			   nv_hardreset, ata_std_postreset);
-+}
-+
- static u32 nv_scr_read (struct ata_port *ap, unsigned int sc_reg)
+-static void nv_enable_hotplug(struct ata_probe_ent *probe_ent)
+-{
+-	u8 intr_mask;
+-
+-	outb(NV_INT_STATUS_HOTPLUG,
+-		probe_ent->port[0].scr_addr + NV_INT_STATUS);
+-
+-	intr_mask = inb(probe_ent->port[0].scr_addr + NV_INT_ENABLE);
+-	intr_mask |= NV_INT_ENABLE_HOTPLUG;
+-
+-	outb(intr_mask, probe_ent->port[0].scr_addr + NV_INT_ENABLE);
+-}
+-
+-static void nv_disable_hotplug(struct ata_host_set *host_set)
+-{
+-	u8 intr_mask;
+-
+-	intr_mask = inb(host_set->ports[0]->ioaddr.scr_addr + NV_INT_ENABLE);
+-
+-	intr_mask &= ~(NV_INT_ENABLE_HOTPLUG);
+-
+-	outb(intr_mask, host_set->ports[0]->ioaddr.scr_addr + NV_INT_ENABLE);
+-}
+-
+-static int nv_check_hotplug(struct ata_host_set *host_set)
+-{
+-	u8 intr_status;
+-
+-	intr_status = inb(host_set->ports[0]->ioaddr.scr_addr + NV_INT_STATUS);
+-
+-	// Clear interrupt status.
+-	outb(0xff, host_set->ports[0]->ioaddr.scr_addr + NV_INT_STATUS);
+-
+-	if (intr_status & NV_INT_STATUS_HOTPLUG) {
+-		if (intr_status & NV_INT_STATUS_PDEV_ADDED)
+-			printk(KERN_WARNING "nv_sata: "
+-				"Primary device added\n");
+-
+-		if (intr_status & NV_INT_STATUS_PDEV_REMOVED)
+-			printk(KERN_WARNING "nv_sata: "
+-				"Primary device removed\n");
+-
+-		if (intr_status & NV_INT_STATUS_SDEV_ADDED)
+-			printk(KERN_WARNING "nv_sata: "
+-				"Secondary device added\n");
+-
+-		if (intr_status & NV_INT_STATUS_SDEV_REMOVED)
+-			printk(KERN_WARNING "nv_sata: "
+-				"Secondary device removed\n");
+-
+-		return 1;
+-	}
+-
+-	return 0;
+-}
+-
+-static void nv_enable_hotplug_ck804(struct ata_probe_ent *probe_ent)
+-{
+-	struct pci_dev *pdev = to_pci_dev(probe_ent->dev);
+-	u8 intr_mask;
+-	u8 regval;
+-
+-	pci_read_config_byte(pdev, NV_MCP_SATA_CFG_20, &regval);
+-	regval |= NV_MCP_SATA_CFG_20_SATA_SPACE_EN;
+-	pci_write_config_byte(pdev, NV_MCP_SATA_CFG_20, regval);
+-
+-	writeb(NV_INT_STATUS_HOTPLUG, probe_ent->mmio_base + NV_INT_STATUS_CK804);
+-
+-	intr_mask = readb(probe_ent->mmio_base + NV_INT_ENABLE_CK804);
+-	intr_mask |= NV_INT_ENABLE_HOTPLUG;
+-
+-	writeb(intr_mask, probe_ent->mmio_base + NV_INT_ENABLE_CK804);
+-}
+-
+-static void nv_disable_hotplug_ck804(struct ata_host_set *host_set)
+-{
+-	struct pci_dev *pdev = to_pci_dev(host_set->dev);
+-	u8 intr_mask;
+-	u8 regval;
+-
+-	intr_mask = readb(host_set->mmio_base + NV_INT_ENABLE_CK804);
+-
+-	intr_mask &= ~(NV_INT_ENABLE_HOTPLUG);
+-
+-	writeb(intr_mask, host_set->mmio_base + NV_INT_ENABLE_CK804);
+-
+-	pci_read_config_byte(pdev, NV_MCP_SATA_CFG_20, &regval);
+-	regval &= ~NV_MCP_SATA_CFG_20_SATA_SPACE_EN;
+-	pci_write_config_byte(pdev, NV_MCP_SATA_CFG_20, regval);
+-}
+-
+-static int nv_check_hotplug_ck804(struct ata_host_set *host_set)
+-{
+-	u8 intr_status;
+-
+-	intr_status = readb(host_set->mmio_base + NV_INT_STATUS_CK804);
+-
+-	// Clear interrupt status.
+-	writeb(0xff, host_set->mmio_base + NV_INT_STATUS_CK804);
+-
+-	if (intr_status & NV_INT_STATUS_HOTPLUG) {
+-		if (intr_status & NV_INT_STATUS_PDEV_ADDED)
+-			printk(KERN_WARNING "nv_sata: "
+-				"Primary device added\n");
+-
+-		if (intr_status & NV_INT_STATUS_PDEV_REMOVED)
+-			printk(KERN_WARNING "nv_sata: "
+-				"Primary device removed\n");
+-
+-		if (intr_status & NV_INT_STATUS_SDEV_ADDED)
+-			printk(KERN_WARNING "nv_sata: "
+-				"Secondary device added\n");
+-
+-		if (intr_status & NV_INT_STATUS_SDEV_REMOVED)
+-			printk(KERN_WARNING "nv_sata: "
+-				"Secondary device removed\n");
+-
+-		return 1;
+-	}
+-
+-	return 0;
+-}
+-
+ static int __init nv_init(void)
  {
- 	if (sc_reg > SCR_CONTROL)
+ 	return pci_module_init(&nv_pci_driver);
 -- 
 1.3.2
 
