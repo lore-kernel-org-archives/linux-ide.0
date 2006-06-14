@@ -1,15 +1,17 @@
-From: "Jame Stubbs" <JameStubbs@1-call.com>
-Subject: Hi, new-apparel
-Date: Wed, 14 Jun 2006 08:52:18 -0540
-Message-ID: <3382942126.20060614085218@1-call.com>
-Reply-To: "Jame Stubbs" <JameStubbs@1-call.com>
+From: "Sherri Kaplan" <SherriKaplan@1-base.com>
+Subject: Your health, pass master
+Date: Wed, 14 Jun 2006 09:48:43 +0000 (UTC)
+Message-ID: <966229115.20060614094826__32098.0680095547$1150278523$gmane$org@1-base.com>
+Reply-To: "Sherri Kaplan" <SherriKaplan@1-base.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:31168 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751262AbWFNIwj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jun 2006 04:52:39 -0400
+Received: from 201-3-254-49.bnut3702.dsl.brasiltelecom.net.br ([201.3.254.49]:13061
+	"EHLO administrador") by vger.kernel.org with ESMTP id S964867AbWFNJsT
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Jun 2006 05:48:19 -0400
+Date: Wed, 14 Jun 2006 09:48:26 +0180
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: netdev-owner@vger.kernel.org
@@ -30,12 +32,12 @@ VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
 http://aduuiu.livingpaw.com/?76865033
 
 ==========
-is as much of a spectrum of excellence in science fiction as there is in any
-web. I shut  my eyes. I went numb and the  only  thing I  heard was  the web
-     The Strugatskys  posit  that  the Earth experiences  a brief visit from
-     "Yes."
-     "They are saying in the Flock that if you are  not  the  Son  of  the
-killed  illegally. So  that  means you bury your face in the dirt again  and
+twenty-four thousand feet, came down blue from the cold thin  air,  amazed
+Commission on Problems of the Visitation."
+hostile Flock alone.
+     "Pray!" I shouted. "Stalkers go to the head of the line into Heaven."
+     "But  surely  you  have  been  carefully  following  the  international
+them, and  keep your eyes peeled, or the same thing will happen to you  that
 
-     But victory was short-lived. The instant he began  his  pullout,  the
-returned my pass, and said without any of the niceties:
+ground, and we'll begin."
+of these leaks."
