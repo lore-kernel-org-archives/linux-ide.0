@@ -1,41 +1,49 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: Another project for you...  :)
-Date: Wed, 14 Jun 2006 08:19:19 -0700
-Message-ID: <20060614081919.f2652c0e.rdunlap@xenotime.net>
-References: <1149751860.29552.79.camel@forrest26.sh.intel.com>
-	<44883BAE.7070406@pobox.com>
-	<1149820043.5721.7.camel@forrest26.sh.intel.com>
-	<4488E6F6.10306@pobox.com>
-	<1150272114.7132.58.camel@forrest26.sh.intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: convert several bmdma-style controllers to new
+ EH, take #2
+Date: Thu, 15 Jun 2006 00:44:49 +0900
+Message-ID: <44902EF1.7030503@gmail.com>
+References: <20060613115131.GA17964@htj.dyndns.org> <20060613214313.GA10142@htj.dyndns.org> <448F5BD2.6060905@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:30890 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S965000AbWFNPQf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jun 2006 11:16:35 -0400
-Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-ide@vger.kernel.org>; Wed, 14 Jun 2006 08:16:31 -0700
-In-Reply-To: <1150272114.7132.58.camel@forrest26.sh.intel.com>
+Received: from nz-out-0102.google.com ([64.233.162.195]:27454 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S965011AbWFNPo4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Jun 2006 11:44:56 -0400
+Received: by nz-out-0102.google.com with SMTP id s18so214545nze
+        for <linux-ide@vger.kernel.org>; Wed, 14 Jun 2006 08:44:55 -0700 (PDT)
+In-Reply-To: <448F5BD2.6060905@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: jgarzik@pobox.com, htejun@gmail.com, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 14 Jun 2006 16:01:54 +0800 zhao, forrest wrote:
-
-> On Thu, 2006-06-08 at 23:11 -0400, Jeff Garzik wrote:
-> > Forrest,
-> > 
-> > BTW, if you are looking for useful libata projects, it would really be 
-> > nice to resurrect Randy Dunlap's SATA ACPI patches, update those for the 
-> > current libata-dev.git#upstream, and get those in.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Convert sata_sis, svw, uli and vsc drivers to new EH.  All the drivers
+>> used to specify ATA_FLAG_SATA_RESET to tell libata to use SATA
+>> hardreset instead of SRST.
+>>
+>> This patch preserves the behavior by defining private error handler
+>> for each driver which only supports SATA hardreset.  It is likely that
+>> all these controllers support SRST and can simply use the stock bmdma
+>> EH.  The private EH methods will be removed after each driver is
+>> tested w/ the stock bmdma EH.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
-> Randy,
+> Too cautious :)  I don't want to add the duplicate code, and then just 
+> remove it later when things are they are supposed to work.
 > 
-> Could you confirm if your latest SATA-ACPI patch is at this URL?
-> http://www.xenotime.net/linux/SATA/2.6.16-rc4/libata-rollup-2616-rc4.patch
+> Just make sure your changes will either (a) work or (b) fail in an 
+> obvious way :)
+> 
+> Then call for testers...
 
-Yes, correct.
+Cool, I like that.  For get this and the via patch.  Will post braver 
+version tomorrow.  :)
 
----
-~Randy
+-- 
+tejun
