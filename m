@@ -1,35 +1,41 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: Re: Another project for you...  :)
-Date: Wed, 14 Jun 2006 16:01:54 +0800
-Message-ID: <1150272114.7132.58.camel@forrest26.sh.intel.com>
-References: <1149751860.29552.79.camel@forrest26.sh.intel.com>
-	 <44883BAE.7070406@pobox.com>
-	 <1149820043.5721.7.camel@forrest26.sh.intel.com> <4488E6F6.10306@pobox.com>
+From: "Jame Stubbs" <JameStubbs@1-call.com>
+Subject: Hi, new-apparel
+Date: Wed, 14 Jun 2006 08:52:18 -0540
+Message-ID: <3382942126.20060614085218@1-call.com>
+Reply-To: "Jame Stubbs" <JameStubbs@1-call.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7042 "EHLO
-	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S1750932AbWFNISk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Jun 2006 04:18:40 -0400
-In-Reply-To: <4488E6F6.10306@pobox.com>
+Received: from zeus2.kernel.org ([204.152.191.36]:31168 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1751262AbWFNIwj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jun 2006 04:52:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: randy_dunlap <rdunlap@xenotime.net>
-Cc: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: netdev-owner@vger.kernel.org
 
-On Thu, 2006-06-08 at 23:11 -0400, Jeff Garzik wrote:
-> Forrest,
-> 
-> BTW, if you are looking for useful libata projects, it would really be 
-> nice to resurrect Randy Dunlap's SATA ACPI patches, update those for the 
-> current libata-dev.git#upstream, and get those in.
+Even if you have no erectin problems SOFT CIAzLIS 
+would help you to make BETTER SE  X MORE OFTEN!
+and to bring  unimagnable plesure to her.
 
-Randy,
+Just disolve half a pil under your tongue 
+and get ready for action in 15 minutes. 
 
-Could you confirm if your latest SATA-ACPI patch is at this URL?
-http://www.xenotime.net/linux/SATA/2.6.16-rc4/libata-rollup-2616-rc4.patch
+The tests showed that the majority of men 
+after taking this medic ation were able to have 
+PERFECT ER ECTI ON during 36 hours!
 
-Thanks,
-Forrest
+VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
+
+http://aduuiu.livingpaw.com/?76865033
+
+==========
+is as much of a spectrum of excellence in science fiction as there is in any
+web. I shut  my eyes. I went numb and the  only  thing I  heard was  the web
+     The Strugatskys  posit  that  the Earth experiences  a brief visit from
+     "Yes."
+     "They are saying in the Flock that if you are  not  the  Son  of  the
+killed  illegally. So  that  means you bury your face in the dirt again  and
+
+     But victory was short-lived. The instant he began  his  pullout,  the
+returned my pass, and said without any of the niceties:
