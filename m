@@ -1,66 +1,121 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] new Power Management for libata
-Date: Wed, 14 Jun 2006 22:46:13 +0900
-Message-ID: <44901325.7050902@gmail.com>
-References: <11501274284082-git-send-email-htejun@gmail.com> <448F659A.5010606@pobox.com>
+Subject: Re: [PATCH 4/7] sata_nv: implement irq manipulation methods
+Date: Wed, 14 Jun 2006 22:47:13 +0900
+Message-ID: <44901361.1040301@gmail.com>
+References: <11502342644086-git-send-email-htejun@gmail.com> <448F5FC6.60807@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:58630 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.182]:23561 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S964930AbWFNNqk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Jun 2006 09:46:40 -0400
-Received: by py-out-1112.google.com with SMTP id i49so362212pye
-        for <linux-ide@vger.kernel.org>; Wed, 14 Jun 2006 06:46:40 -0700 (PDT)
-In-Reply-To: <448F659A.5010606@pobox.com>
+	id S964929AbWFNNrU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Jun 2006 09:47:20 -0400
+Received: by py-out-1112.google.com with SMTP id i49so362445pye
+        for <linux-ide@vger.kernel.org>; Wed, 14 Jun 2006 06:47:20 -0700 (PDT)
+In-Reply-To: <448F5FC6.60807@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> Hello, all.
+>> Add four irq manipulation callbacks to nv_host_desc and implement
+>> those methods for nf2/3 and ck804.  These methods will be used by new
+>> irq_handler, EH and hotplug support.
 >>
->> This patchset implements new Power Management for libata.  Currently,
->> only controller-wide suspend and resume are supported.  No per-device
->> power management yet.  Both memsleep and disksleep work on supported
->> controllers.
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>
+>> ---
+>>
+>>  drivers/scsi/sata_nv.c |   87 
+>> ++++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 87 insertions(+), 0 deletions(-)
+>>
+>> d47f98a5ada7fb993f659f4ba1eb496457122455
+>> diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+>> index f370044..93e74aa 100644
+>> --- a/drivers/scsi/sata_nv.c
+>> +++ b/drivers/scsi/sata_nv.c
+>> @@ -77,6 +77,16 @@ enum {
+>>      NV_MCP_SATA_CFG_20_SATA_SPACE_EN = 0x04,
+>>  };
+>>  
+>> +static u8 nf2_get_irq_mask(struct ata_host_set *host_set);
+>> +static void nf2_set_irq_mask(struct ata_host_set *host_set, u8 mask);
+>> +static u8 nf2_get_irq_status(struct ata_host_set *host_set);
+>> +static void nf2_clr_irq_status(struct ata_host_set *host_set);
+>> +
+>> +static u8 ck804_get_irq_mask(struct ata_host_set *host_set);
+>> +static void ck804_set_irq_mask(struct ata_host_set *host_set, u8 mask);
+>> +static u8 ck804_get_irq_status(struct ata_host_set *host_set);
+>> +static void ck804_clr_irq_status(struct ata_host_set *host_set);
+>> +
+>>  static int nv_init_one (struct pci_dev *pdev, const struct 
+>> pci_device_id *ent);
+>>  static irqreturn_t nv_interrupt (int irq, void *dev_instance,
+>>                   struct pt_regs *regs);
+>> @@ -133,6 +143,10 @@ static const struct pci_device_id nv_pci
+>>  struct nv_host_desc
+>>  {
+>>      enum nv_host_type    host_type;
+>> +    u8   (*get_irq_mask) (struct ata_host_set *host_set);
+>> +    void (*set_irq_mask) (struct ata_host_set *host_set, u8 mask);
+>> +    u8   (*get_irq_status) (struct ata_host_set *host_set);
+>> +    void (*clr_irq_status) (struct ata_host_set *host_set);
 > 
-> I suppose this is just an RFC?
-
-Well, not really.
-
-> We don't want to lose to SCSI device suspend, so merging that would be a 
-> regression AFAICS?  While we're still married to the SCSI layer, we need 
-> to do suspend through sd.c and similar paths.
+> NAK this train of thought.  We don't need new mini-API hooks like this, 
+> when you could just implement nf2_xxx() and ck804_xxx() hooks at a 
+> higher level.  Rather than growing "stealth nf2 checks" like this:
 > 
-> I also wonder if any developers or users make use of the ability to 
-> suspend/resume individual pieces of hardware, as is (somewhat) supported 
-> in ata_piix in 2.6.17-rcX.
+> +static void nv_freeze (struct ata_port *ap)
+> +{
+> +    struct ata_host_set *host_set = ap->host_set;
+> +    struct nv_host_desc *host_desc = host_set->private_data;
+> +    int shift = ap->port_no * NV_INT_PORT_SHIFT;
+> +    u8 mask;
+> +
+> +    if (!host_desc->get_irq_mask) {
+> +        ata_bmdma_freeze(ap);
+> +        return;
+> +    }
+> 
+> you should implement nf2_freeze() and nv_freeze() separately (or 
+> nf2_freeze and ck804_freeze, whatever).
+> 
+> Another example of adding a test, where adding a hook would be better:
+> 
+>  static void nv_host_stop (struct ata_host_set *host_set)
+>  {
+> +    struct nv_host_desc *host_desc = host_set->private_data;
+> +
+> +    /* disable SATA space for CK804 */
+> +    if (host_desc->host_type == CK804) {
+> +        struct pci_dev *pdev = to_pci_dev(host_set->dev);
+> +        u8 regval;
+> +
+> +        pci_read_config_byte(pdev, NV_MCP_SATA_CFG_20, &regval);
+> +        regval &= ~NV_MCP_SATA_CFG_20_SATA_SPACE_EN;
+> +        pci_write_config_byte(pdev, NV_MCP_SATA_CFG_20, regval);
+> +    }
+> 
+> Thoughout _every_ single patch, one sees old-vs-ck804 differences.  Your 
+> patches highlight these differences with every single irq_stat_valid 
+> test, for example.
+> 
+> I think it is better for testing a long term maintainability if your 
+> patches create separate hooks for old and ck804 hardware.  I think 
+> you'll find that it makes implementing EH and hotplug stuff much easier, 
+> and it will aid the integration of ADMA support down the road.  A first 
+> step is probably splitting the interrupt handler into nv_xxx and 
+> ck804_xxx versions, then proceeding your 7-patch set, keeping in mind 
+> the "hook preferred over 'if'" model.
 
-At first I thought about implementing that and asked Pavel about how to 
-discern between partial PM and system-wide PM so that libata can do 
-things bus-wide on system-wide PM event.  Pavel's response was...
+Yeap, implemented that way at first but code was much more compact this 
+way, so...  I'll revert to original implementation.
 
-"> And, one more things.  As written in the first mail, for libata, it
- > > would be nice to know if a device suspend is due to runtime PM event
- > > (per-device) or system wide suspend.  What do you think about this? 
-  If
- > > you agree, what method do you recommend to determine that?
-
-Currently, runtime pm is unsupported/broken; so any request can be
-thought as system pm.
-								Pavel"
-
-So, I determined to ignore per-device PM for the time being.  I think I 
-can still implement it but I'm a bit skeptical about its usefulness.  I 
-personally haven't seen any user of partial power management using sysfs 
-interface.  IIRC, dynamic power management on IDE disks from userspace 
-is done by issuing STANDBY using raw command interface.
-
-What do you think?
+Thanks.
 
 -- 
 tejun
