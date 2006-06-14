@@ -1,119 +1,97 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 4/7] sata_nv: implement irq manipulation methods
-Date: Wed, 14 Jun 2006 22:47:13 +0900
-Message-ID: <44901361.1040301@gmail.com>
-References: <11502342644086-git-send-email-htejun@gmail.com> <448F5FC6.60807@pobox.com>
+Subject: Re: [PATCH 05/10] libata: implement new EH action ATA_EH_SPINUP
+Date: Thu, 15 Jun 2006 00:02:41 +0900
+Message-ID: <44902511.2040102@gmail.com>
+References: <11501274283970-git-send-email-htejun@gmail.com> <448F63F3.5010909@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:23561 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S964929AbWFNNrU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Jun 2006 09:47:20 -0400
-Received: by py-out-1112.google.com with SMTP id i49so362445pye
-        for <linux-ide@vger.kernel.org>; Wed, 14 Jun 2006 06:47:20 -0700 (PDT)
-In-Reply-To: <448F5FC6.60807@pobox.com>
+Received: from wr-out-0506.google.com ([64.233.184.229]:47023 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751288AbWFNPCt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Jun 2006 11:02:49 -0400
+Received: by wr-out-0506.google.com with SMTP id i7so155993wra
+        for <linux-ide@vger.kernel.org>; Wed, 14 Jun 2006 08:02:48 -0700 (PDT)
+In-Reply-To: <448F63F3.5010909@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+Cc: lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> Add four irq manipulation callbacks to nv_host_desc and implement
->> those methods for nf2/3 and ck804.  These methods will be used by new
->> irq_handler, EH and hotplug support.
+>> Implement new EH action ATA_EH_SPINUP.  This will be used by new PM
+>> implementation.
 >>
 >> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>
->> ---
->>
->>  drivers/scsi/sata_nv.c |   87 
->> ++++++++++++++++++++++++++++++++++++++++++++++++
->>  1 files changed, 87 insertions(+), 0 deletions(-)
->>
->> d47f98a5ada7fb993f659f4ba1eb496457122455
->> diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
->> index f370044..93e74aa 100644
->> --- a/drivers/scsi/sata_nv.c
->> +++ b/drivers/scsi/sata_nv.c
->> @@ -77,6 +77,16 @@ enum {
->>      NV_MCP_SATA_CFG_20_SATA_SPACE_EN = 0x04,
->>  };
->>  
->> +static u8 nf2_get_irq_mask(struct ata_host_set *host_set);
->> +static void nf2_set_irq_mask(struct ata_host_set *host_set, u8 mask);
->> +static u8 nf2_get_irq_status(struct ata_host_set *host_set);
->> +static void nf2_clr_irq_status(struct ata_host_set *host_set);
->> +
->> +static u8 ck804_get_irq_mask(struct ata_host_set *host_set);
->> +static void ck804_set_irq_mask(struct ata_host_set *host_set, u8 mask);
->> +static u8 ck804_get_irq_status(struct ata_host_set *host_set);
->> +static void ck804_clr_irq_status(struct ata_host_set *host_set);
->> +
->>  static int nv_init_one (struct pci_dev *pdev, const struct 
->> pci_device_id *ent);
->>  static irqreturn_t nv_interrupt (int irq, void *dev_instance,
->>                   struct pt_regs *regs);
->> @@ -133,6 +143,10 @@ static const struct pci_device_id nv_pci
->>  struct nv_host_desc
->>  {
->>      enum nv_host_type    host_type;
->> +    u8   (*get_irq_mask) (struct ata_host_set *host_set);
->> +    void (*set_irq_mask) (struct ata_host_set *host_set, u8 mask);
->> +    u8   (*get_irq_status) (struct ata_host_set *host_set);
->> +    void (*clr_irq_status) (struct ata_host_set *host_set);
 > 
-> NAK this train of thought.  We don't need new mini-API hooks like this, 
-> when you could just implement nf2_xxx() and ck804_xxx() hooks at a 
-> higher level.  Rather than growing "stealth nf2 checks" like this:
+> This patch further reinforces something I've been thinking about, as I 
+> watch the EH grow:  these EH actions really should be separated into 
+> small, discrete operations.  Then the EH "driver" will push discrete 
+> operations onto an execution stack.
 > 
-> +static void nv_freeze (struct ata_port *ap)
-> +{
-> +    struct ata_host_set *host_set = ap->host_set;
-> +    struct nv_host_desc *host_desc = host_set->private_data;
-> +    int shift = ap->port_no * NV_INT_PORT_SHIFT;
-> +    u8 mask;
-> +
-> +    if (!host_desc->get_irq_mask) {
-> +        ata_bmdma_freeze(ap);
-> +        return;
-> +    }
+> It's always getting tough to follow ata_eh_recover() and ata_eh_reset() 
+> 's code through multiple iterations of recovery.  This patch 
+> (ata_eh_spinup) also illustrates how difficult it would be if the 
+> ordering of these operations ever needed to change.
 > 
-> you should implement nf2_freeze() and nv_freeze() separately (or 
-> nf2_freeze and ck804_freeze, whatever).
+> So, I'm not NAK'ing the patch, just throwing out a 'caution' sign.  :)
 > 
-> Another example of adding a test, where adding a hook would be better:
+> I've often thought something along the lines of a list of tasks 
+> ("eh_op_list"), for when a port is frozen and doing EH:
+>     ata_eh_freeze()
+>     ata_eh_push(ap, EH_OP_RESET_BUS, ...)
+>     ata_eh_push(ap, EH_OP_SPINUP, ...)
+>     ata_eh_push(ap, EH_OP_CONFIGURE, ...)
+>     ata_eh_push(ap, EH_OP_SET_MODE, ...)
+>     ata_eh_run()
+>     ata_eh_thaw()
 > 
->  static void nv_host_stop (struct ata_host_set *host_set)
->  {
-> +    struct nv_host_desc *host_desc = host_set->private_data;
-> +
-> +    /* disable SATA space for CK804 */
-> +    if (host_desc->host_type == CK804) {
-> +        struct pci_dev *pdev = to_pci_dev(host_set->dev);
-> +        u8 regval;
-> +
-> +        pci_read_config_byte(pdev, NV_MCP_SATA_CFG_20, &regval);
-> +        regval &= ~NV_MCP_SATA_CFG_20_SATA_SPACE_EN;
-> +        pci_write_config_byte(pdev, NV_MCP_SATA_CFG_20, regval);
-> +    }
-> 
-> Thoughout _every_ single patch, one sees old-vs-ck804 differences.  Your 
-> patches highlight these differences with every single irq_stat_valid 
-> test, for example.
-> 
-> I think it is better for testing a long term maintainability if your 
-> patches create separate hooks for old and ck804 hardware.  I think 
-> you'll find that it makes implementing EH and hotplug stuff much easier, 
-> and it will aid the integration of ADMA support down the road.  A first 
-> step is probably splitting the interrupt handler into nv_xxx and 
-> ck804_xxx versions, then proceeding your 7-patch set, keeping in mind 
-> the "hook preferred over 'if'" model.
+> would be nice.  A discrete operation would handle its own discrete 
+> operation, prepend and append other operations to eh_op_list, or 
+> optionally cause the engine to fail, and return immediately.
 
-Yeap, implemented that way at first but code was much more compact this 
-way, so...  I'll revert to original implementation.
+At first, I thought many different controllers would use different EH 
+drive routines, so I put all EH operations in separate functions and 
+grouped them into several larger steps - currently autopsy, report, 
+recover and finish.
+
+In earlier implementation, sil24 and ahci actually had to implement 
+their own drive routine calling those ops and doing private things 
+in-between, but as EH implementation matures all those are handled by 
+feeding proper information into the core EH.  I'm looking at other 
+drivers to convert them to new EH but haven't found any driver which the 
+current standard EH can't handle.  Although I haven't looked at all 
+drivers yet and some of them may indeed need such specialized 
+implementation.
+
+I think it boils down to the fact that the core EH is more about ATA 
+devices than it's about controllers.  Controllers vary from one another 
+but ATA/ATAPI devices are the same old ATA/ATAPI devices whatever the 
+controller is.  So, as long as LLD has a way to feed enough information 
+to core EH about the state of the attached device && core EH's 
+controller interface (freeze, thaw & resets) fits the controller to 
+acceptable degree, core EH doesn't have to be different across different 
+LLDs.
+
+IMHO, it's best to keep single unified implementation until it begins to 
+pick up many special cases to deal with specific LLDs.  I think we're 
+still in the safe regarding that.  If we pass that point, I think we 
+should start by implementing private drive routines in LLDs before 
+making core EH programmable.  After several such tries, the requirements 
+for programmable EH would be much clearer and we would be able to do 
+much better job of implementing something which is flexible enough but 
+still as simple as possible.
+
+To sum up...
+
+* Until now, unified EH seems good enough.  In fact, not a single driver 
+needs to go further than calling ata_do_eh() w/ proper callbacks.
+
+* I agree that it would be nice to have programmable EH, but let's do it 
+when it's actually needed.  It seems that early implementation of 
+complex infrastructure seldom ends up in something pleasant to look at.
 
 Thanks.
 
