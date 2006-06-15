@@ -1,38 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SATA: Marvell 88SE6141 support?
-Date: Thu, 15 Jun 2006 11:25:50 -0400
-Message-ID: <44917BFE.1070604@garzik.org>
-References: <A6F7DE24-36C7-4FDB-AB2A-2C63478F0D0A@smarttech.com> <44916C5B.5000402@rtr.ca>
+From: "Galechka" <avtozap@aaanet.ru>
+Subject: Re[3]:How are you,
+Date: Thu, 15 Jun 2006 21:24:11 +0300
+Message-ID: <002a01c690a8$e2c36700$a21a000a@Bhilo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:20353 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030672AbWFOPZ6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jun 2006 11:25:58 -0400
-In-Reply-To: <44916C5B.5000402@rtr.ca>
+Received: from 201-1-54-245.dsl.telesp.net.br ([201.1.54.245]:15630 "EHLO
+	201-1-54-245.dsl.telesp.net.br") by vger.kernel.org with ESMTP
+	id S1030952AbWFOSXc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jun 2006 14:23:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Gord Peters <GordPeters@smarttech.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ia64-owner <linux-ia64-owner@vger.kernel.org>
 
-Mark Lord wrote:
-> Gord Peters wrote:
->> Hi,
->>
->> I was just wondering what the status of development is in regard to 
->> support for the Marvell 88SE6141 (ie. mv61xx) SATA-II controller is?  
->> This particular controller is included on the Asus P5WD2-E Premium 
->> motherboard.
-> 
-> First I've heard of it.  Can you find docs for it?
-> If so, post a link to them, and we'll have a look to see what is 
-> different from the 60xx series.
+Hello my Dear Stranger!
 
-I would be willing to bet that it's either GEN-IIE or something that 
-sata_mv doesn't cover at all (like AHCI).
+I'm a very young and energetic lady! I have very positive attitude to life and people. I do enjoy new experience life can offer me: to see new interesting places, to meet new people.
+I do try to enjoy every moment of life and accept everything the way it comes without complaining.
+Though my life seems to be quite enjoyable there's one important thing missing. It's LOVE!
+Without my beloved one, my soul mate, my King my life is not completed.
+I wish i coud find him very soon so that we could share together every momement of the life-time romance! 
+What about you? Could you be my King? If answer is "yes" - you can find more about me 
+http://hSb9TFp.im-waiting-4you.net/
 
-	Jeff
+Yourth faithfully....
 
+Galechka
 
 
