@@ -1,32 +1,43 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SATA: Marvell 88SE6141 support?
-Date: Thu, 15 Jun 2006 17:33:53 -0400
-Message-ID: <4491D241.3040506@garzik.org>
-References: <A6F7DE24-36C7-4FDB-AB2A-2C63478F0D0A@smarttech.com> <44916C5B.5000402@rtr.ca> <44917BFE.1070604@garzik.org> <4491A90E.8010702@rtr.ca> <5351048D-59BA-4348-BB35-BDFFD3622BE8@smarttech.com>
+From: "Meagan Goodwin" <MeaganGoodwin@0451.com>
+Subject: Order status, party emblem
+Date: Fri, 16 Jun 2006 01:02:35 +0000 (UTC)
+Message-ID: <7205847290.20050616010210__46366.1617519849$1150419755$gmane$org@0451.com>
+Reply-To: "Meagan Goodwin" <MeaganGoodwin@0451.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39055 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1031440AbWFOVd5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jun 2006 17:33:57 -0400
-In-Reply-To: <5351048D-59BA-4348-BB35-BDFFD3622BE8@smarttech.com>
+Received: from fw-itatim.mma.com.br ([201.30.110.107]:59642 "EHLO
+	fw-itatim.mma.com.br") by vger.kernel.org with ESMTP
+	id S1750888AbWFPBCT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jun 2006 21:02:19 -0400
+Date: Thu, 16 Jun 2005 01:02:10 +0180
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gord Peters <GordPeters@smarttech.com>
-Cc: Mark Lord <lkml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-msdos@vger.kernel.org
 
-Gord Peters wrote:
-> At first I thought that only the Marvell SATA ports could be used for a 
-> RAID (based on how they're labeled in the manual), but now I see that 
-> either set of SATA ports can be used for RAID.  So I may be able to set 
-> my RAID up using the ICH7R based ports until the Marvell chip is 
-> supported.  Am I correct to believe that the Intel ICH7R chip is 
-> supported in 2.6.16?
+Even if you have no erectin problems SOFT CIAzLIS 
+would help you to make BETTER SE  X MORE OFTEN!
+and to bring  unimagnable plesure to her.
 
+Just disolve half a pil under your tongue 
+and get ready for action in 15 minutes. 
 
-Neither are hardware RAID.  It's usually better to just use OS RAID.
+The tests showed that the majority of men 
+after taking this medic ation were able to have 
+PERFECT ER ECTI ON during 36 hours!
 
-	Jeff
+VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
 
+http://kigmrd.tonelime.com/?67865151
 
+==========
+dead-slow stand-up landing on the sand. Then as though this sort of  thing
+searchlights and  machine guns, the toads. And of course, the cops  had blue
+But with a difference. Here were gulls who thought as he thought, For each
+Nope. I  must have imagined it.  His back  was clean. The rivulets  of sweat
+left is Here. Overcome time, and all we have  left  is  Now.  And  in  the
+     "Hey,  you stalker! Come on out of there! There's a scent of the  green
+
+some unknown reason it was named after me."
+gave him his  little  present:  we're off  into  the  Zone. He  even stopped
