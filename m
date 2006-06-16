@@ -1,42 +1,28 @@
-From: "Louis Belanger" <LouisBelanger@0451.com>
-Subject: Your cash, nation-state
-Date: Fri, 16 Jun 2006 07:35:45 -0420
-Message-ID: <662161c80604f1sn5r87adkcvjjvfbpg041aj13sa9vp__29171.5172389106$1150443900$gmane$org@mail.0451.com>
+From: "William" <WilliamAllison@publicist.com>
+Subject: Enjoy the newest But without any  =?ISO-8859-1?Q?=20results=85?= Revel in
+Date: Fri, 16 Jun 2006 13:34:03 +0300
+Message-ID: <81615621985138.5457D81C71__8891.77935100651$1150454092$gmane$org@339FN>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [222.252.70.112] ([222.252.70.112]:10760 "EHLO mail.0451.com")
-	by vger.kernel.org with ESMTP id S1751138AbWFPHon convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Jun 2006 03:44:43 -0400
-Content-Disposition: inline
+Received: from dsl.dynamic85996586.ttnet.net.tr ([85.99.65.86]:17161 "EHLO
+	xm9h2i41.doco0e.verizon.net") by vger.kernel.org with ESMTP
+	id S1751243AbWFPKeg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Jun 2006 06:34:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Even if you have no erectin problems SOFT CIAzLIS 
-would help you to make BETTER SE  X MORE OFTEN!
-and to bring  unimagnable plesure to her.
+Dear user.
 
-Just disolve half a pil under your tongue 
-and get ready for action in 15 minutes. 
+Make other men envy you and girls worship you Most efficient products for men 
 
-The tests showed that the majority of men 
-after taking this medic ation were able to have 
-PERFECT ER ECTI ON during 36 hours!
+Enjoy secure ordering, lowest possible prices and almost instant shipment.
+ These brands keep thousands and thousands of their customers pleased worldwide
+ Come in: http://www.diomedeacb.com
 
-VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
+ Come on in and get it all very cheap!
 
-http://heneii.revenueout.com/?70865050
 
-=====
-hour above stall. The two radiant birds slowed with him, smoothly,  locked
-     So  we  made  it to the end of  the street and the  turn nice and easy.
-and happy, determined to go still higher tomorrow.
-at it and rejoiced in silence.  It led us to the garage door better than any
-swift wind. Yet he felt guiltless,  breaking  the  promises  he  had  made
-understanding, I guess. Then I calmly explained it to him.
-
-     As the days went past, Jonathan found himself thinking time and again
-headquarters. They're  all well-built healthy fellows. They don't have to go
