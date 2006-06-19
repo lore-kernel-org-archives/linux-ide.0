@@ -1,46 +1,33 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] Re: ATIIXP and libata
-Date: Mon, 19 Jun 2006 10:27:18 -0700
-Message-ID: <20060619102718.678b3170.rdunlap@xenotime.net>
-References: <20051105152756.86796.qmail@web86805.mail.ukl.yahoo.com>
-	<447E11F9.1030804@seanodes.com>
-	<20060612153231.a7e60b4a.rdunlap@xenotime.net>
-	<44965C80.9050503@seanodes.com>
+From: "Ilia Sotnikov" <hostcc@gmail.com>
+Subject: Status of SAS ability to attach SATA devices
+Date: Mon, 19 Jun 2006 20:47:07 +0300
+Message-ID: <6ac07bf90606191047o131ec37eq6e1bcaf6205ea8ea@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:54503 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932459AbWFSRYc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jun 2006 13:24:32 -0400
-Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-ide@vger.kernel.org>; Mon, 19 Jun 2006 10:24:30 -0700
-In-Reply-To: <44965C80.9050503@seanodes.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, James.Bottomley@steeleye.com
 List-Id: linux-ide@vger.kernel.org
-To: Velu Erwan <erwan@seanodes.com>
-Cc: bzolnier@gmail.com, bruno_harbulot@yahoo.co.uk, linux-ide@vger.kernel.org, akpm@osdl.org
 
-On Mon, 19 Jun 2006 10:12:48 +0200 Velu Erwan wrote:
+Hardware: IBM 206m, AIC 9405 SAS/SATA controller, 2 SATA drives.
 
-> Randy.Dunlap a =E9crit :
-> > Where's Bart lately ??
-> Looks like he doesn't seems to be around this times...
->=20
-> Is it possible to apply the patch we were discussing without its=20
-> presence ? The bug and a possible fix has been reported many months a=
-go,=20
-> it could be nice to apply it since it's tested and working.
+Having read several threads about SAS ability to attach SATA devices
+(what's needed in my case), I found that this is work-in-progress.
 
-Well, some maintainer has to apply the patch and then cause it
-to be merged upstream into mainline.
+Also during the investigation I've found that there are exist several
+GIT trees with different SAS / AIC94xx versions: maintained by James
+Bottomley, Jeff Garzik and Luben Tuikov.
 
-We can probably get the patch merged into -mm, but it's not
-clear if that would help you.  At least it might give the patch
-more testing/exposure.
+I've tried all three of above mentioned versions - PHYs are discovered
+correctly (as far as I can tell) but no disk devices are registered.
+According to comments in sources that's predictable.
 
-If Bart is missing, we'll need to do something about that.
-or did he check out with anyone?
+Questions are:
+- what tree is recommended to work on;
+- how could I help (if could) to improve the situation.
 
----
-~Randy
+Thanks in advance,
+-- 
+ Ilia Sotnikov
