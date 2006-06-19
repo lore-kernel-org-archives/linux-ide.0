@@ -1,240 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: implement per-dev EH action mask eh_info->dev_action[]
-Date: Mon, 19 Jun 2006 18:27:23 +0900
-Message-ID: <20060619092723.GF11755@htj.dyndns.org>
+From: Niccolo Rigacci <niccolo@rigacci.org>
+Subject: Re: Sometimes ata_piix fails to detect second SATA disk
+Date: Mon, 19 Jun 2006 12:28:48 +0200
+Message-ID: <20060619102848.GB17376@rigacci.org>
+References: <20060618140650.GA17986@rigacci.org> <44960EF6.4090205@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:6630 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751282AbWFSJ1X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jun 2006 05:27:23 -0400
-Received: by py-out-1112.google.com with SMTP id i49so1207084pye
-        for <linux-ide@vger.kernel.org>; Mon, 19 Jun 2006 02:27:23 -0700 (PDT)
+Received: from host50-109-static.38-88-b.business.telecomitalia.it ([88.38.109.50]:13504
+	"EHLO paros.rigacci.org") by vger.kernel.org with ESMTP
+	id S932368AbWFSK2y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jun 2006 06:28:54 -0400
 Content-Disposition: inline
+In-Reply-To: <44960EF6.4090205@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
 
-Currently, the only per-dev EH action is REVALIDATE.  EH used to
-exploit ehi->dev to do selective revalidation on a ATA bus.  However,
-this is a bit hacky and makes it impossible to request selective
-revalidation from outside of EH or add another per-dev EH action.
+On Mon, Jun 19, 2006 at 11:41:58AM +0900, Tejun Heo wrote:
+> Niccolo Rigacci wrote:
+> >I'm trying to debug a strange problem on an IBM xSeries 206m 
+> >where I installed a Debian Testing with a self-compiled Linux 
+> >kernel 2.6.15.
+> 
+> Can you try just released 2.6.17?  ata_piix probing received some 
+> updates during 2.6.16 devel cycle and some fixes during .17.
 
-This patch adds per-dev EH action mask eh_info->dev_action[] and
-update EH to use this field for REVALIDATE.  Note that per-dev actions
-can still be specified at port-level and it has the same effect of
-specifying the action for all devices on the port.
+I started to test 2.6.17 vanilla last night, it seems to resolve 
+the problem.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+I will post a new message in a day or two to confirm that the 
+problem is fixed.
 
----
+Thanks for the great work to the kernel guys. Sorry for bothering 
+you before testing the latest version, I can't believe how much 
+work is done in just two minor releases!
 
-Jeff, this change cleans up revalidation handling a bit and allows
-later addition of per-dev ATA_EH_SPINUP EH action which is necessary
-to implement per-dev PM.
+I hope my mail will remains for people googling on this problem.
 
- drivers/scsi/libata-eh.c |   85 +++++++++++++++++++++++++++++++++++++---------
- include/linux/libata.h   |    2 +
- 2 files changed, 71 insertions(+), 16 deletions(-)
-
-0917067a65ebaf251abf7701189bb9b1c1ef192a
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 531a4e1..70b6239 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -706,9 +706,35 @@ static void ata_eh_detach_dev(struct ata
- 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
- }
- 
-+static void ata_eh_clear_action(struct ata_device *dev,
-+				struct ata_eh_info *ehi, unsigned int action)
-+{
-+	int i;
-+
-+	if (!dev) {
-+		ehi->action &= ~action;
-+		for (i = 0; i < ATA_MAX_DEVICES; i++)
-+			ehi->dev_action[i] &= ~action;
-+	} else {
-+		/* doesn't make sense for port-wide EH actions */
-+		WARN_ON(!(action & ATA_EH_PERDEV_MASK));
-+
-+		/* break ehi->action into ehi->dev_action */
-+		if (ehi->action & action) {
-+			for (i = 0; i < ATA_MAX_DEVICES; i++)
-+				ehi->dev_action[i] |= ehi->action & action;
-+			ehi->action &= ~action;
-+		}
-+
-+		/* turn off the specified per-dev action */
-+		ehi->dev_action[dev->devno] &= ~action;
-+	}
-+}
-+
- /**
-  *	ata_eh_about_to_do - about to perform eh_action
-  *	@ap: target ATA port
-+ *	@dev: target ATA dev for per-dev action (can be NULL)
-  *	@action: action about to be performed
-  *
-  *	Called just before performing EH actions to clear related bits
-@@ -718,17 +744,36 @@ static void ata_eh_detach_dev(struct ata
-  *	LOCKING:
-  *	None.
-  */
--static void ata_eh_about_to_do(struct ata_port *ap, unsigned int action)
-+static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
-+			       unsigned int action)
- {
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&ap->host_set->lock, flags);
--	ap->eh_info.action &= ~action;
-+	ata_eh_clear_action(dev, &ap->eh_info, action);
- 	ap->flags |= ATA_FLAG_RECOVERED;
- 	spin_unlock_irqrestore(&ap->host_set->lock, flags);
- }
- 
- /**
-+ *	ata_eh_done - EH action complete
-+ *	@ap: target ATA port
-+ *	@dev: target ATA dev for per-dev action (can be NULL)
-+ *	@action: action just completed
-+ *
-+ *	Called right after performing EH actions to clear related bits
-+ *	in @ap->eh_context.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
-+			unsigned int action)
-+{
-+	ata_eh_clear_action(dev, &ap->eh_context.i, action);
-+}
-+
-+/**
-  *	ata_err_string - convert err_mask to descriptive string
-  *	@err_mask: error mask to convert to string
-  *
-@@ -1271,10 +1316,6 @@ static void ata_eh_autopsy(struct ata_po
- 			is_io = 1;
- 	}
- 
--	/* speed down iff command was in progress */
--	if (failed_dev)
--		action |= ata_eh_speed_down(failed_dev, is_io, all_err_mask);
--
- 	/* enforce default EH actions */
- 	if (ap->flags & ATA_FLAG_FROZEN ||
- 	    all_err_mask & (AC_ERR_HSM | AC_ERR_TIMEOUT))
-@@ -1282,6 +1323,17 @@ static void ata_eh_autopsy(struct ata_po
- 	else if (all_err_mask)
- 		action |= ATA_EH_REVALIDATE;
- 
-+	/* if we have offending qcs and the associated failed device */
-+	if (failed_dev) {
-+		/* speed down */
-+		action |= ata_eh_speed_down(failed_dev, is_io, all_err_mask);
-+
-+		/* perform per-dev EH action only on the offending device */
-+		ehc->i.dev_action[failed_dev->devno] |=
-+			action & ATA_EH_PERDEV_MASK;
-+		action &= ~ATA_EH_PERDEV_MASK;
-+	}
-+
- 	/* record autopsy result */
- 	ehc->i.dev = failed_dev;
- 	ehc->i.action = action;
-@@ -1457,7 +1509,7 @@ static int ata_eh_reset(struct ata_port 
- 				reset == softreset ? "soft" : "hard");
- 
- 	/* reset */
--	ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
-+	ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
- 	ehc->i.flags |= ATA_EHI_DID_RESET;
- 
- 	rc = ata_do_reset(ap, reset, classes);
-@@ -1476,7 +1528,7 @@ static int ata_eh_reset(struct ata_port 
- 			return -EINVAL;
- 		}
- 
--		ata_eh_about_to_do(ap, ATA_EH_RESET_MASK);
-+		ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
- 		rc = ata_do_reset(ap, reset, classes);
- 
- 		if (rc == 0 && classify &&
-@@ -1520,8 +1572,7 @@ static int ata_eh_reset(struct ata_port 
- 			postreset(ap, classes);
- 
- 		/* reset successful, schedule revalidation */
--		ehc->i.dev = NULL;
--		ehc->i.action &= ~ATA_EH_RESET_MASK;
-+		ata_eh_done(ap, NULL, ATA_EH_RESET_MASK);
- 		ehc->i.action |= ATA_EH_REVALIDATE;
- 	}
- 
-@@ -1539,21 +1590,25 @@ static int ata_eh_revalidate_and_attach(
- 	DPRINTK("ENTER\n");
- 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		unsigned int action;
-+
- 		dev = &ap->device[i];
-+		action = ehc->i.action | ehc->i.dev_action[dev->devno];
- 
--		if (ehc->i.action & ATA_EH_REVALIDATE && ata_dev_enabled(dev) &&
--		    (!ehc->i.dev || ehc->i.dev == dev)) {
-+		if (action & ATA_EH_REVALIDATE && ata_dev_enabled(dev)) {
- 			if (ata_port_offline(ap)) {
- 				rc = -EIO;
- 				break;
- 			}
- 
--			ata_eh_about_to_do(ap, ATA_EH_REVALIDATE);
-+			ata_eh_about_to_do(ap, dev, ATA_EH_REVALIDATE);
- 			rc = ata_dev_revalidate(dev,
- 					ehc->i.flags & ATA_EHI_DID_RESET);
- 			if (rc)
- 				break;
- 
-+			ata_eh_done(ap, dev, ATA_EH_REVALIDATE);
-+
- 			/* schedule the scsi_rescan_device() here */
- 			queue_work(ata_aux_wq, &(ap->scsi_rescan_task));
- 		} else if (dev->class == ATA_DEV_UNKNOWN &&
-@@ -1576,9 +1631,7 @@ static int ata_eh_revalidate_and_attach(
- 		}
- 	}
- 
--	if (rc == 0)
--		ehc->i.action &= ~ATA_EH_REVALIDATE;
--	else
-+	if (rc)
- 		*r_failed_dev = dev;
- 
- 	DPRINTK("EXIT\n");
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f03b866..6b3c3af 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -249,6 +249,7 @@ enum {
- 	ATA_EH_HARDRESET	= (1 << 2),
- 
- 	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
-+	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
- 
- 	/* ata_eh_info->flags */
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
-@@ -462,6 +463,7 @@ struct ata_eh_info {
- 	u32			serror;		/* SError from LLDD */
- 	unsigned int		err_mask;	/* port-wide err_mask */
- 	unsigned int		action;		/* ATA_EH_* action mask */
-+	unsigned int		dev_action[ATA_MAX_DEVICES]; /* dev EH action */
- 	unsigned int		flags;		/* ATA_EHI_* flags */
- 
- 	unsigned long		hotplug_timestamp;
 -- 
-1.3.2
+Niccolo Rigacci
+Firenze - Italy
 
+Iraq, missione di pace: 38475 morti - www.iraqbodycount.net
