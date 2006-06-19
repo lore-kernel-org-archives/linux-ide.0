@@ -1,44 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Seagate SATA 3GB/s drive connected to via vt8251 using	ahci	module
-Date: Tue, 20 Jun 2006 02:18:19 +0900
-Message-ID: <4496DC5B.6040100@gmail.com>
-References: <1149787827.4180.8.camel@anja> <44890ACA.5070504@gmail.com>	 <1150108974.4020.3.camel@anja> <448D474E.6020706@gmail.com>	 <1150111457.4060.2.camel@anja>  <20060618025632.GE11755@htj.dyndns.org> <1150737053.4220.7.camel@anja>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH] Re: ATIIXP and libata
+Date: Mon, 19 Jun 2006 10:27:18 -0700
+Message-ID: <20060619102718.678b3170.rdunlap@xenotime.net>
+References: <20051105152756.86796.qmail@web86805.mail.ukl.yahoo.com>
+	<447E11F9.1030804@seanodes.com>
+	<20060612153231.a7e60b4a.rdunlap@xenotime.net>
+	<44965C80.9050503@seanodes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0102.google.com ([72.14.214.193]:57359 "EHLO
-	hu-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964811AbWFSRSZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jun 2006 13:18:25 -0400
-Received: by hu-out-0102.google.com with SMTP id 34so515545hui
-        for <linux-ide@vger.kernel.org>; Mon, 19 Jun 2006 10:18:23 -0700 (PDT)
-In-Reply-To: <1150737053.4220.7.camel@anja>
+Received: from xenotime.net ([66.160.160.81]:54503 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S932459AbWFSRYc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jun 2006 13:24:32 -0400
+Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-ide@vger.kernel.org>; Mon, 19 Jun 2006 10:24:30 -0700
+In-Reply-To: <44965C80.9050503@seanodes.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: aalderd.boac@wanadoo.nl
-Cc: linux-ide@vger.kernel.org
+To: Velu Erwan <erwan@seanodes.com>
+Cc: bzolnier@gmail.com, bruno_harbulot@yahoo.co.uk, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Aalderd Bouwman wrote:
-> Hm, I only have seen spurious interrupts when I have executed fdisk:
-> 
-> Now doing fdisk /dev/sda or mke2fs /dev/sda1: 
-> Kernel log:
-> Jun  8 18:52:19 server ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x2)
+On Mon, 19 Jun 2006 10:12:48 +0200 Velu Erwan wrote:
 
-Can you double check the patch is actually applied.  irq_stat 0x8 is 
-PORT_IRQ_SDB_FIS and if the patch were applied, it should have printed a 
-message starting with 'spurious SDB FIS...'
+> Randy.Dunlap a =E9crit :
+> > Where's Bart lately ??
+> Looks like he doesn't seems to be around this times...
+>=20
+> Is it possible to apply the patch we were discussing without its=20
+> presence ? The bug and a possible fix has been reported many months a=
+go,=20
+> it could be nice to apply it since it's tested and working.
 
-> Jun  8 18:53:09 server ata1.00: qc timeout (cmd 0x2f)
-> Jun  8 18:53:09 server ata1: failed to read log page 10h (errno=-5)
-> Jun  8 18:53:09 server ata1.00: exception Emask 0x1 SAct 0x7fffffff SErr 0x0 action 0x2 frozen
-> Jun  8 18:53:09 server ata1.00: (irq_stat 0x40000000)
-> 
-> Now I am unable to do fdisk because the drive is taken offline:
+Well, some maintainer has to apply the patch and then cause it
+to be merged upstream into mainline.
 
-The patch only adds some debug messages such that the problem can be 
-analyzed better - it doesn't fix anything.
+We can probably get the patch merged into -mm, but it's not
+clear if that would help you.  At least it might give the patch
+more testing/exposure.
 
--- 
-tejun
+If Bart is missing, we'll need to do something about that.
+or did he check out with anyone?
+
+---
+~Randy
