@@ -1,44 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_via: convert to new EH, take #3
-Date: Tue, 20 Jun 2006 05:16:44 -0400
-Message-ID: <4497BCFC.7040109@pobox.com>
-References: <20060613115155.GB17964@htj.dyndns.org> <20060613214609.GB10142@htj.dyndns.org> <20060616061353.GD10142@htj.dyndns.org>
+From: Kirill Smelkov <kirr@mns.spb.ru>
+Subject: [PATCH] ide: disable dma for transcend CF
+Date: Tue, 20 Jun 2006 14:52:36 +0400
+Message-ID: <200606201452.37905.kirr@mns.spb.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="koi8-r"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:62408 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965086AbWFTJQr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jun 2006 05:16:47 -0400
-In-Reply-To: <20060616061353.GD10142@htj.dyndns.org>
+Received: from mail.mnsspb.ru ([84.204.75.2]:47234 "EHLO mail.mnsspb.ru")
+	by vger.kernel.org with ESMTP id S932561AbWFTKww (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jun 2006 06:52:52 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Convert sata_via to new EH.  vt6420 used ATA_FLAG_SRST while vt6421
-> used ATA_FLAG_SATA_RESET.  This difference seems to be an accident
-> rather than intended.  This patch makes both flavors use
-> ata_bmdma_error_handler() which makes use of both SRST and SATA
-> hardreset.  This behavior change is intended and if it breaks
-> anything, it should be very easy to spot.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+NB: bart/ide-2.6.git seems to be unmaintained,  so I'm sending this directly to -mm
 
-Applied.  Addressing the "rather than intended" comment above, the 
-history is actually this:
+I have a CF card which identifies itself as model=TRANSCEND rev=200508011
+The card id labeled as TS512MCF80
 
-Throughout libata, I have always preferred SATA PHY reset to SRST. 
-SATA_RESET didn't work well on one VTxxxx chip, while it did work on 
-another.  Thus, the driver reflected what worked.
+hdparm -i /dev/hdci  reports:
+...
+DMA modes:  mdma0 mdma1 *mdma2
 
-While we may need to disable COMRESET completely on vt6420 (look for 
-sata_via bug reports here!), I would prefer to shove both chips down the 
-EH path that you have presented.  If that doesn't work, we'll take 
-further action from here.
+IDE controller:
+IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
 
-	Jeff
+
+but if dma is turned on i get a lot of errors::
+
+    hdc: dma_timer_epiry: dma_status == 0x21
+    hdc: DMA timeout error
+    hdc: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
+    ide: failed opcode was: unknown
+    ...
+
+
+So blacklist this CF model.
+
+Signed-off-by: Kirill Smelkov <kirr@mns.spb.ru>
+
+Index: linux-2.6.17/drivers/ide/ide-dma.c
+===================================================================
+--- linux-2.6.17.orig/drivers/ide/ide-dma.c	2006-06-18 05:49:35.000000000 +0400
++++ linux-2.6.17/drivers/ide/ide-dma.c	2006-06-20 11:37:30.000000000 +0400
+@@ -129,6 +129,7 @@
+ 	{ "SanDisk SDP3B-64"	,	"ALL"		},
+ 	{ "ATAPI CD-ROM DRIVE 40X MAXIMUM",	"ALL"		},
+ 	{ "_NEC DV5800A",               "ALL"           },  
++	{ "TRANSCEND"		,	"20050811"	},
+ 	{ NULL			,	NULL		}
+ 
+ };
 
 
 
