@@ -1,47 +1,111 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Seagate SATA 3GB/s drive connected to via vt8251 using ahci module
-Date: Wed, 21 Jun 2006 00:37:32 +0900
-Message-ID: <4498163C.90601@gmail.com>
-References: <1149787827.4180.8.camel@anja> <1150745738.4302.1.camel@anja> <20060620023312.GA1250@htj.dyndns.org> <200606201721.26291.boac@wanadoo.nl>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: LibPATA/ATA Errors Continue - Will there be a fix for this?
+Date: Tue, 20 Jun 2006 16:45:04 +0100
+Message-ID: <44981800.2000807@dgreaves.com>
+References: <Pine.LNX.4.64.0606200808250.5851@p34.internal.lan> <4497F1C7.2070007@rtr.ca> <449804EA.8030908@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:47352 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751326AbWFTPhb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Jun 2006 11:37:31 -0400
-Received: by py-out-1112.google.com with SMTP id i49so1668240pye
-        for <linux-ide@vger.kernel.org>; Tue, 20 Jun 2006 08:37:30 -0700 (PDT)
-In-Reply-To: <200606201721.26291.boac@wanadoo.nl>
+Received: from s2.ukfsn.org ([217.158.120.143]:10113 "EHLO mail.ukfsn.org")
+	by vger.kernel.org with ESMTP id S1751337AbWFTPpH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jun 2006 11:45:07 -0400
+In-Reply-To: <449804EA.8030908@dgreaves.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: boac@wanadoo.nl
-Cc: linux-ide@vger.kernel.org, b.jacques@planet.nl
+To: Mark Lord <liml@rtr.ca>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-[CC'ing Bastiaan Jacques. Hi!]
+[Some email archaeology later]
 
-Aalderd Bouwman wrote:
-> Copy 5gig data and compare it 4 times with success :-)
-> 
-> Unmount and remove driver:
-> Jun 20 17:06:30 ACPI: PCI interrupt for device 0000:00:0f.0 disabled
-> 
-> As you can see it works.
-> Now I will check the hotplug functionality and if you have a patch for maybe 
-> better NCQ usage I want to test him for you.
+Back in March I was running 2.6.16 (with the opcode patch) and I sent an
+email with the following info:
 
-Do you happen to have a different drive which can do NCQ?  Preferably, 
-one from another vendor?  AFAICS, the ahci driver is doing NCQ as the 
-AHCI spec specifies and all ICH controllers seem to be quite happy with 
-it.  I wanna know whether the problem is from the specific combination 
-of the controller and the drive or the via controller needs a different 
-programming sequence for NCQ in general.  Does the Windows driver do NCQ?
+dmesg:
+ata1: translated op=0x28 cmd=0x25 ATA stat/err 0x51/04 to SCSI
+SK/ASC/ASCQ 0xb/00/00
+ata1: status=0x51 { DriveReady SeekComplete Error }
+ata1: error=0x04 { DriveStatusError }
 
-Bastiaan, do you know whether we need to do things differently to use 
-NCQ on vt8251?
+Does that help with the diagnosis?
 
-Thanks.
+Also see my emails: SMART on SATA reporting errors?
+  http://marc.theaimsgroup.com/?l=linux-ide&m=113933732903205&w=2
+
+I did reply but got no response so I assumed I was just so far off base
+that I was being ignored :)
+
+David
+
+David Greaves wrote:
+> Mark Lord wrote:
+>   
+>> MMm.. probably "barrier" commands that the drive doesn't like.
+>> Pity those messages don't also dump the failed opcode.
+>>     
+> For me:
+> smartctl -data -o on /dev/sda
+> produces this on 2.6.17-rc5
+>
+> (I thought the opcode patch went into 2.6.17...)
+>
+> ata1: PIO error
+> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+> ata1: status=0x51 { DriveReady SeekComplete Error }
+> ata1: error=0x04 { DriveStatusError }
+> ata1: PIO error
+> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+> ata1: status=0x51 { DriveReady SeekComplete Error }
+> ata1: error=0x04 { DriveStatusError }
+> ata1: PIO error
+> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+> ata1: status=0x51 { DriveReady SeekComplete Error }
+> ata1: error=0x04 { DriveStatusError }
+> ata1: PIO error
+> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+> ata1: status=0x51 { DriveReady SeekComplete Error }
+> ata1: error=0x04 { DriveStatusError }
+> ata1: PIO error
+> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+> ata1: status=0x51 { DriveReady SeekComplete Error }
+> ata1: error=0x04 { DriveStatusError }
+> ata1: PIO error
+> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+> ata1: status=0x51 { DriveReady SeekComplete Error }
+> ata1: error=0x04 { DriveStatusError }
+>
+> David
+>
+>   
+>>> Jun 20 03:14:20 p34 kernel: [4339456.678000] ata3: status=0x51 {
+>>> DriveReady SeekComplete Error }
+>>> Jun 20 03:14:20 p34 kernel: [4339456.678000] ata3: error=0x04 {
+>>> DriveStatusError }
+>>> Jun 20 03:20:27 p34 kernel: [4339823.900000] ata3: status=0x51 {
+>>> DriveReady SeekComplete Error }
+>>> Jun 20 03:20:27 p34 kernel: [4339823.900000] ata3: error=0x04 {
+>>> DriveStatusError }
+>>> Jun 20 03:36:44 p34 kernel: [4340801.772000] ata3: no sense
+>>> translation for status: 0x51
+>>> Jun 20 03:36:44 p34 kernel: [4340801.772000] ata3: status=0x51 {
+>>> DriveReady SeekComplete Error }
+>>> Jun 20 03:41:04 p34 kernel: [4341061.844000] ata3: no sense
+>>> translation for status: 0x51
+>>> Jun 20 03:41:04 p34 kernel: [4341061.844000] ata3: status=0x51 {
+>>> DriveReady SeekComplete Error }
+>>> Jun 20 03:46:27 p34 kernel: [4341384.974000] ata3: no sense
+>>> translation for status: 0x51
+>>> Jun 20 03:46:27 p34 kernel: [4341384.974000] ata3: status=0x51 {
+>>> DriveReady SeekComplete Error }
+>>>       
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
+
 
 -- 
-tejun
+
