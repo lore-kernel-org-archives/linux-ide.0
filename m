@@ -1,41 +1,29 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: convert several bmdma-style controllers to new
- EH, take #3
-Date: Tue, 20 Jun 2006 05:13:50 -0400
-Message-ID: <4497BC4E.1070509@pobox.com>
-References: <20060613115131.GA17964@htj.dyndns.org> <20060613214313.GA10142@htj.dyndns.org> <448F5BD2.6060905@pobox.com> <20060616060018.GC10142@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/6] sata_nv: kill not-working hotplug code
+Date: Tue, 20 Jun 2006 18:14:05 +0900
+Message-ID: <4497BC5D.80701@gmail.com>
+References: <11505269952304-git-send-email-htejun@gmail.com> <4497BB42.4070008@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51656 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965086AbWFTJNx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jun 2006 05:13:53 -0400
-In-Reply-To: <20060616060018.GC10142@htj.dyndns.org>
+Received: from nz-out-0102.google.com ([64.233.162.207]:32271 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S965225AbWFTJOD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Jun 2006 05:14:03 -0400
+Received: by nz-out-0102.google.com with SMTP id 18so1186915nzp
+        for <linux-ide@vger.kernel.org>; Tue, 20 Jun 2006 02:14:02 -0700 (PDT)
+In-Reply-To: <4497BB42.4070008@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Convert sata_sis, svw, uli and vsc drivers to new EH.  All the drivers
-> used to specify ATA_FLAG_SATA_RESET to tell libata to use SATA
-> hardreset instead of SRST.  This patch makes all the converted drivers
-> use the standard bmdma error handler which uses both SRST and SATA
-> hardreset.
-> 
-> All the controllers should be able to perform SRST but still needs
-> verification.  If some of the controllers can't do SRST, it will be
-> very easy to spot as it will show up during boot probing.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+Jeff Garzik wrote:
+> applied 1-6, then applied a cset to s/spin_lock_irqsave/spin_lock/
 
-Applied, let's see how testing works out...
+Thanks.  I'm too accustomed to irqsave/restore.  I'll try to remember 
+next time.  :-p
 
-I can test sata_svw easily, and sata_vsc with some effort.  I might have 
-ULi or SiS motherboards around too, unsure.
-
-	Jeff
-
-
-
+-- 
+tejun
