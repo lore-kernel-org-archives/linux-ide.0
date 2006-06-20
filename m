@@ -1,115 +1,48 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA/ATA Errors Continue - Will there be a fix for this?
-Date: Tue, 20 Jun 2006 11:46:50 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0606201146430.2601@p34.internal.lan>
-References: <Pine.LNX.4.64.0606200808250.5851@p34.internal.lan>
- <4497F1C7.2070007@rtr.ca> <449804EA.8030908@dgreaves.com> <44981800.2000807@dgreaves.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH] Re: ATIIXP and libata
+Date: Tue, 20 Jun 2006 09:57:30 -0700
+Message-ID: <20060620095730.8ec9b618.rdunlap@xenotime.net>
+References: <20051105152756.86796.qmail@web86805.mail.ukl.yahoo.com>
+	<447E11F9.1030804@seanodes.com>
+	<20060612153231.a7e60b4a.rdunlap@xenotime.net>
+	<44965C80.9050503@seanodes.com>
+	<20060619102718.678b3170.rdunlap@xenotime.net>
+	<4497B86E.9090104@seanodes.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:54410 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1751349AbWFTPqv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jun 2006 11:46:51 -0400
-In-Reply-To: <44981800.2000807@dgreaves.com>
+Received: from xenotime.net ([66.160.160.81]:18916 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751408AbWFTQyp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Jun 2006 12:54:45 -0400
+Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 20 Jun 2006 09:54:42 -0700
+In-Reply-To: <4497B86E.9090104@seanodes.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Velu Erwan <erwan@seanodes.com>
+Cc: bzolnier@gmail.com, bruno_harbulot@yahoo.co.uk, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Dave, what is the make/model of the drives you get errors with by the way?
+On Tue, 20 Jun 2006 10:57:18 +0200 Velu Erwan wrote:
 
-On Tue, 20 Jun 2006, David Greaves wrote:
+> Randy.Dunlap a =E9crit :
+> [..]
+> > We can probably get the patch merged into -mm, but it's not
+> > clear if that would help you.  At least it might give the patch
+> > more testing/exposure.
+>=20
+> This could be a first step to check if this patch works fine for more=
+=20
+> than us (3 people which have tested it successfully).
+>=20
+> If this step is successfull (maybe 1 month or 2 without a bug), what=20
+> could make it then merged upstream ?
 
-> [Some email archaeology later]
->
-> Back in March I was running 2.6.16 (with the opcode patch) and I sent an
-> email with the following info:
->
-> dmesg:
-> ata1: translated op=0x28 cmd=0x25 ATA stat/err 0x51/04 to SCSI
-> SK/ASC/ASCQ 0xb/00/00
-> ata1: status=0x51 { DriveReady SeekComplete Error }
-> ata1: error=0x04 { DriveStatusError }
->
-> Does that help with the diagnosis?
->
-> Also see my emails: SMART on SATA reporting errors?
->  http://marc.theaimsgroup.com/?l=linux-ide&m=113933732903205&w=2
->
-> I did reply but got no response so I assumed I was just so far off base
-> that I was being ignored :)
->
-> David
->
-> David Greaves wrote:
->> Mark Lord wrote:
->>
->>> MMm.. probably "barrier" commands that the drive doesn't like.
->>> Pity those messages don't also dump the failed opcode.
->>>
->> For me:
->> smartctl -data -o on /dev/sda
->> produces this on 2.6.17-rc5
->>
->> (I thought the opcode patch went into 2.6.17...)
->>
->> ata1: PIO error
->> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata1: status=0x51 { DriveReady SeekComplete Error }
->> ata1: error=0x04 { DriveStatusError }
->> ata1: PIO error
->> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata1: status=0x51 { DriveReady SeekComplete Error }
->> ata1: error=0x04 { DriveStatusError }
->> ata1: PIO error
->> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata1: status=0x51 { DriveReady SeekComplete Error }
->> ata1: error=0x04 { DriveStatusError }
->> ata1: PIO error
->> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata1: status=0x51 { DriveReady SeekComplete Error }
->> ata1: error=0x04 { DriveStatusError }
->> ata1: PIO error
->> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata1: status=0x51 { DriveReady SeekComplete Error }
->> ata1: error=0x04 { DriveStatusError }
->> ata1: PIO error
->> ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->> ata1: status=0x51 { DriveReady SeekComplete Error }
->> ata1: error=0x04 { DriveStatusError }
->>
->> David
->>
->>
->>>> Jun 20 03:14:20 p34 kernel: [4339456.678000] ata3: status=0x51 {
->>>> DriveReady SeekComplete Error }
->>>> Jun 20 03:14:20 p34 kernel: [4339456.678000] ata3: error=0x04 {
->>>> DriveStatusError }
->>>> Jun 20 03:20:27 p34 kernel: [4339823.900000] ata3: status=0x51 {
->>>> DriveReady SeekComplete Error }
->>>> Jun 20 03:20:27 p34 kernel: [4339823.900000] ata3: error=0x04 {
->>>> DriveStatusError }
->>>> Jun 20 03:36:44 p34 kernel: [4340801.772000] ata3: no sense
->>>> translation for status: 0x51
->>>> Jun 20 03:36:44 p34 kernel: [4340801.772000] ata3: status=0x51 {
->>>> DriveReady SeekComplete Error }
->>>> Jun 20 03:41:04 p34 kernel: [4341061.844000] ata3: no sense
->>>> translation for status: 0x51
->>>> Jun 20 03:41:04 p34 kernel: [4341061.844000] ata3: status=0x51 {
->>>> DriveReady SeekComplete Error }
->>>> Jun 20 03:46:27 p34 kernel: [4341384.974000] ata3: no sense
->>>> translation for status: 0x51
->>>> Jun 20 03:46:27 p34 kernel: [4341384.974000] ata3: status=0x51 {
->>>> DriveReady SeekComplete Error }
->>>>
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
-> -- 
->
+I suggest that you send the patch (probably Bruno's patch)
+to Andrew (akpm@osdl.org) and copy Bart and linux-ide mailing list
+on it.  Andrew will likely include it in his -mm patchset.
+However, if it causes a problem, he will probably drop it like
+a hot potato.
+
+---
+~Randy
