@@ -1,33 +1,46 @@
-From: Matthew Garrett <mgarrett@chiark.greenend.org.uk>
-Subject: Re: [PATCH] ide: disable dma for transcend CF
-Date: Tue, 20 Jun 2006 12:29:29 +0100
-Message-ID: <E1FseQD-0001Tn-00@chiark.greenend.org.uk>
-References: <200606201452.37905.kirr@mns.spb.ru>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: LibPATA/ATA Errors Continue - Will there be a fix for this?
+Date: Tue, 20 Jun 2006 08:17:49 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0606200808250.5851@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chiark.greenend.org.uk ([193.201.200.170]:53448 "EHLO
-	chiark.greenend.org.uk") by vger.kernel.org with ESMTP
-	id S932586AbWFTL3r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Jun 2006 07:29:47 -0400
-In-Reply-To: <200606201452.37905.kirr@mns.spb.ru>
+Received: from lucidpixels.com ([66.45.37.187]:26793 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S932618AbWFTMRu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Jun 2006 08:17:50 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kirill Smelkov <kirr@mns.spb.ru>
-Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, Mark Lord <lkml@rtr.ca>
 
-Kirill Smelkov <kirr@mns.spb.ru> wrote:
+Jeff,
 
-> but if dma is turned on i get a lot of errors::
-> 
->     hdc: dma_timer_epiry: dma_status == 0x21
->     hdc: DMA timeout error
->     hdc: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
->     ide: failed opcode was: unknown
+I've done many RSYNCs to this disk (writing is what makes these errors 
+seem to occur) and I have MD5's the files on both sides, they are OK on 
+each side.
 
-Are you sure that your CF adapter has the DMA lines hooked up? See 
-http://lkml.org/lkml/2006/5/23/198 for instance - IIRC, the kernel has 
-no way of telling whether the failure is because the card supports DMA 
-and the adapter doesn't, or whether the card is lying. If it's the 
-former, the card shouldn't be blacklisted.
+Should someone comment this code out that produces the printk()'s as these 
+are useless information as there is no problem with the disk?
 
--- 
-Matthew Garrett | mjg59-chiark.mail.linux-rutgers.kernel@srcf.ucam.org
+Jun 20 03:14:20 p34 kernel: [4339456.678000] ata3: status=0x51 { 
+DriveReady SeekComplete Error }
+Jun 20 03:14:20 p34 kernel: [4339456.678000] ata3: error=0x04 { 
+DriveStatusError }
+Jun 20 03:20:27 p34 kernel: [4339823.900000] ata3: status=0x51 { 
+DriveReady SeekComplete Error }
+Jun 20 03:20:27 p34 kernel: [4339823.900000] ata3: error=0x04 { 
+DriveStatusError }
+Jun 20 03:36:44 p34 kernel: [4340801.772000] ata3: no sense translation 
+for status: 0x51
+Jun 20 03:36:44 p34 kernel: [4340801.772000] ata3: status=0x51 { 
+DriveReady SeekComplete Error }
+Jun 20 03:41:04 p34 kernel: [4341061.844000] ata3: no sense translation 
+for status: 0x51
+Jun 20 03:41:04 p34 kernel: [4341061.844000] ata3: status=0x51 { 
+DriveReady SeekComplete Error }
+Jun 20 03:46:27 p34 kernel: [4341384.974000] ata3: no sense translation 
+for status: 0x51
+Jun 20 03:46:27 p34 kernel: [4341384.974000] ata3: status=0x51 { 
+DriveReady SeekComplete Error }
+
+Justin.
