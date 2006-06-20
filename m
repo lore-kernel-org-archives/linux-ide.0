@@ -1,44 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: implement per-dev EH action mask	eh_info->dev_action[]
-Date: Tue, 20 Jun 2006 17:08:32 +0900
-Message-ID: <4497AD00.6000703@gmail.com>
-References: <20060619092723.GF11755@htj.dyndns.org> <1150786964.7132.117.camel@forrest26.sh.intel.com>
+From: Velu Erwan <erwan@seanodes.com>
+Subject: Re: [PATCH] Re: ATIIXP and libata
+Date: Tue, 20 Jun 2006 10:57:18 +0200
+Message-ID: <4497B86E.9090104@seanodes.com>
+References: <20051105152756.86796.qmail@web86805.mail.ukl.yahoo.com>	<447E11F9.1030804@seanodes.com>	<20060612153231.a7e60b4a.rdunlap@xenotime.net>	<44965C80.9050503@seanodes.com> <20060619102718.678b3170.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.196]:32077 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964991AbWFTIIb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Jun 2006 04:08:31 -0400
-Received: by nz-out-0102.google.com with SMTP id s18so1941335nze
-        for <linux-ide@vger.kernel.org>; Tue, 20 Jun 2006 01:08:30 -0700 (PDT)
-In-Reply-To: <1150786964.7132.117.camel@forrest26.sh.intel.com>
+Received: from seanodes.co.fr.clara.net ([212.43.220.11]:40673 "EHLO
+	seanodes.co.fr.clara.net") by vger.kernel.org with ESMTP
+	id S1030186AbWFTI5V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Jun 2006 04:57:21 -0400
+In-Reply-To: <20060619102718.678b3170.rdunlap@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: bzolnier@gmail.com, bruno_harbulot@yahoo.co.uk, linux-ide@vger.kernel.org, akpm@osdl.org
 
-zhao, forrest wrote:
-> On Mon, 2006-06-19 at 18:27 +0900, Tejun Heo wrote:
->> Note that per-dev actions
->> can still be specified at port-level and it has the same effect of
->> specifying the action for all devices on the port.
->>
-> 
-> Why not use eh_info->action for port-level only, and eh_info->dev_action
-> [] for device-level only?
->>From my understanding, this clear separation can at least make code easy
-> to read.
+Randy.Dunlap a =E9crit :
+[..]
+> We can probably get the patch merged into -mm, but it's not
+> clear if that would help you.  At least it might give the patch
+> more testing/exposure.
 
-The distinction between port-wide (later it becomes link-wide) and 
-device-wide EH operations is meaningful only for PATA devices.  For a 
-SATA LLD, device-wide operations is port-wide operation and using 
-different fields doesn't make much sense.
+This could be a first step to check if this patch works fine for more=20
+than us (3 people which have tested it successfully).
 
-So, I chose to put a bit more complexity where those per-dev actions are 
-implemented while allowing LLDs and other parts of EH not to distinguish 
-between those two unless it specifically wants to.
+If this step is successfull (maybe 1 month or 2 without a bug), what=20
+could make it then merged upstream ?
 
--- 
-tejun
+Thx for your help Randy,
+Erwan
