@@ -1,79 +1,49 @@
-From: Nicolas STRANSKY <Nico@stransky.cx>
-Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and PM patches against
- stable kernel
-Date: Wed, 21 Jun 2006 23:18:56 +0200
-Message-ID: <e7cd40$lpk$1@sea.gmane.org>
-References: <20060512132437.GB4219@htj.dyndns.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] drivers/ide/legacy/ide-cs.c: make 2 functions static
+Date: Wed, 21 Jun 2006 23:57:29 +0200
+Message-ID: <20060621215729.GL9111@stusta.de>
+References: <20060621034857.35cfe36f.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:44514 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S1751153AbWFUVTO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2006 17:19:14 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1FtA6Q-0007PF-0T
-	for linux-ide@vger.kernel.org; Wed, 21 Jun 2006 23:19:10 +0200
-Received: from fbx.stransky.cx ([82.67.244.251])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 21 Jun 2006 23:19:10 +0200
-Received: from Nico by fbx.stransky.cx with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 21 Jun 2006 23:19:10 +0200
-In-Reply-To: <20060512132437.GB4219@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030321AbWFUV5d@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060621034857.35cfe36f.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Thomas Kleffel <tk@maintech.de>, Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-kernel@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Le 05/12/2006 03:24 PM, Tejun Heo a =E9crit :
-> Hello, all.
->=20
-> Lately libata has been going through a lot of changes and even more
-> are around the corner.  I've been working on error handling and
-> advanced SATA features for quite sometime now, and, finally, patches
-> have been finalized and submitted for review a few days ago.
->=20
-> 2.6.18 is the target for mainline merge.  As there is quite some time
-> between now and 2.6.18, I have made patches to update the current
-> stable kernel to support the new features so that they can receive
-> wider testing and interested people don't have to wait too long.  I
-> intend to maintain these patches through 2.6.16 and 17 until the
-> mainline merge happens.
->=20
-> Added new features are
->=20
-> * New error handling
-> * IRQ driven PIO (from Albert Lee)
-> * SATA NCQ support
-> * Hotplug support
-> * Port Multiplier support
->=20
-> The following drivers support new features.
->=20
-> ata_piix:	new EH, irq-pio, warmplug (hardware restriction)
-> sata_sil:	new EH, irq-pio, hotplug
-> ahci:		new EH, irq-pio, NCQ, hotplug
-> sata_sil24:	new EH, irq-pio, NCQ, hotplug, Port Multiplier
->=20
-> More info can be found at the following URL.
->=20
->  http://home-tj.org/wiki/index.php/Libata-tj-stable
+On Wed, Jun 21, 2006 at 03:48:57AM -0700, Andrew Morton wrote:
+>...
+> Changes since 2.6.17-rc6-mm2:
+>...
+>  git-pcmcia.patch
+>...
+>  git trees
+>...
 
-Hi,
+This patch makes two needlessly global functions static.
+ 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-I've been using this patch for 2.6.16 for a month now, and it really
-works very well. As 2.6.17 is now released, is there going to be a
-"libata-tj" for this kernel as well ?
-BTW, what is the status of sata_sil new code merge with mainline ? Is i=
-t
-still expected to be in 2.6.18 ?
+---
 
-Thanks,
---=20
-Nico
-S'assure-t-on sur l'alliance
-Qu'a faite la n=E9cessit=E9 ?
-	-+- Jean de La Fontaine (1621-1695),
-	    Le Chat et le Rat (Fables VIII.22) -+-
+ drivers/ide/legacy/ide-cs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+--- linux-2.6.17-mm1-full/drivers/ide/legacy/ide-cs.c.old	2006-06-21 22:54:20.000000000 +0200
++++ linux-2.6.17-mm1-full/drivers/ide/legacy/ide-cs.c	2006-06-21 22:54:37.000000000 +0200
+@@ -170,11 +170,11 @@
+         return ide_register_hw_with_fixup(&hw, NULL, ide_undecoded_slave);
+ }
+ 
+-void outb_io(unsigned char value, unsigned long port) {
++static void outb_io(unsigned char value, unsigned long port) {
+ 	outb(value, port);
+ }
+ 
+-void outb_mem(unsigned char value, unsigned long port) {
++static void outb_mem(unsigned char value, unsigned long port) {
+ 	writeb(value, (void __iomem *) port);
+ }
+ 
