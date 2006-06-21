@@ -1,62 +1,75 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ahci: disable NCQ support on vt8251
-Date: Wed, 21 Jun 2006 23:12:48 +0900
-Message-ID: <20060621141248.GA22805@htj.dyndns.org>
-References: <1149787827.4180.8.camel@anja> <200606201721.26291.boac@wanadoo.nl> <4498163C.90601@gmail.com> <200606202131.12654.b.jacques@planet.nl>
+From: Tom Wirschell <Tom@Wirschell.nl>
+Subject: Re: BUG() with MV88SX6081 and other problems
+Date: Wed, 21 Jun 2006 17:32:10 +0200
+Message-ID: <20060621173210.6a7b3a83@localhost>
+References: <20060617191703.45e6f348@localhost>
+	<87f94c370606201053l55f85236kf7f3c1177c49a576@mail.gmail.com>
+	<4498C544.7080907@rtr.ca>
+	<20060621090734.5c237bad@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:11720 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1750991AbWFUOMo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Jun 2006 10:12:44 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so186266wra
-        for <linux-ide@vger.kernel.org>; Wed, 21 Jun 2006 07:12:43 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200606202131.12654.b.jacques@planet.nl>
+Received: from basillia.speedxs.net ([83.98.255.13]:1408 "EHLO
+	basillia.speedxs.net") by vger.kernel.org with ESMTP
+	id S932191AbWFUPcN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Jun 2006 11:32:13 -0400
+In-Reply-To: <20060621090734.5c237bad@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: boac@wanadoo.nl, b.jacques@planet.nl, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Mark Lord <liml@rtr.ca>, Greg Freemyer <greg.freemyer@gmail.com>
 
-vt8251 chokes on NCQ commands.  Two different disks from different
-vendors are showing the same symptom and it seems that the windows
-driver from via doesn't support NCQ either.  Disable NCQ support on
-this controller for the time being.
+On 21 Jun 2006, Tom Wirschell wrote:
+> 
+> I'm running my standard test now. I'll post the trace once it goes
+> down.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Aalderd Bouwman <boac@wanadoo.nl>
-Cc: Bastiaan Jacques <b.jacques@planet.nl>
----
+And that one looks like this:
 
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index e261b37..8208546 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -164,6 +164,7 @@ enum {
- 
- 	/* ap->flags bits */
- 	AHCI_FLAG_RESET_NEEDS_CLO	= (1 << 24),
-+	AHCI_FLAG_NO_NCQ		= (1 << 25),
- };
- 
- struct ahci_cmd_hdr {
-@@ -277,7 +278,7 @@ static const struct ata_port_info ahci_p
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
- 				  ATA_FLAG_SKIP_D2H_BSY |
--				  AHCI_FLAG_RESET_NEEDS_CLO,
-+				  AHCI_FLAG_RESET_NEEDS_CLO | AHCI_FLAG_NO_NCQ,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
-@@ -1362,7 +1363,8 @@ static int ahci_init_one (struct pci_dev
- 	if (rc)
- 		goto err_out_hpriv;
- 
--	if (hpriv->cap & HOST_CAP_NCQ)
-+	if (!(probe_ent->host_flags & AHCI_FLAG_NO_NCQ) &&
-+	    (hpriv->cap & HOST_CAP_NCQ))
- 		probe_ent->host_flags |= ATA_FLAG_NCQ;
- 
- 	ahci_print_info(probe_ent);
+md: unbind<sdi2>
+md: export_rdev(sdi2)
+BUG: warning at fs/block_dev.c:1109/__blkdev_put()
+ [<c0103316>] show_trace_log_lvl+0x11d/0x137
+ [<c01039f7>] show_trace+0x12/0x14
+ [<c0103b17>] dump_stack+0x19/0x1b
+ [<c015f136>] __blkdev_put+0x174/0x1b7
+ [<c015f186>] blkdev_put_partition+0xd/0xf
+ [<c028cb80>] unlock_rdev+0x23/0x4c
+ [<c028cc1c>] export_rdev+0x73/0x81
+ [<c028cccb>] kick_rdev_from_array+0x12/0x15
+ [<c028ccf4>] export_array+0x26/0x95
+ [<c028e96c>] do_md_stop+0x1e3/0x2f8
+ [<c0292c60>] md_ioctl+0x6cb/0x17a0
+ [<c02016a6>] blkdev_driver_ioctl+0x55/0x5e
+ [<c020196d>] blkdev_ioctl+0x2be/0x7c1
+ [<c015ea84>] block_ioctl+0x1b/0x21
+ [<c0168652>] do_ioctl+0x22/0x71
+ [<c01686f6>] vfs_ioctl+0x55/0x28e
+ [<c0168962>] sys_ioctl+0x33/0x51
+ [<c02f8b6f>] syscall_call+0x7/0xb
+ [<b7e7a904>] 0xb7e7a904
+BUG: warning at fs/block_dev.c:1128/__blkdev_put()
+ [<c0103316>] show_trace_log_lvl+0x11d/0x137
+ [<c01039f7>] show_trace+0x12/0x14
+ [<c0103b17>] dump_stack+0x19/0x1b
+ [<c015f174>] __blkdev_put+0x1b2/0x1b7
+ [<c015f186>] blkdev_put_partition+0xd/0xf
+ [<c028cb80>] unlock_rdev+0x23/0x4c
+ [<c028cc1c>] export_rdev+0x73/0x81
+ [<c028cccb>] kick_rdev_from_array+0x12/0x15
+ [<c028ccf4>] export_array+0x26/0x95
+ [<c028e96c>] do_md_stop+0x1e3/0x2f8
+ [<c0292c60>] md_ioctl+0x6cb/0x17a0
+ [<c02016a6>] blkdev_driver_ioctl+0x55/0x5e
+ [<c020196d>] blkdev_ioctl+0x2be/0x7c1
+ [<c015ea84>] block_ioctl+0x1b/0x21
+ [<c0168652>] do_ioctl+0x22/0x71
+ [<c01686f6>] vfs_ioctl+0x55/0x28e
+ [<c0168962>] sys_ioctl+0x33/0x51
+ [<c02f8b6f>] syscall_call+0x7/0xb
+ [<b7e7a904>] 0xb7e7a904
+
+Kind regards,
+
+Tom Wirschell
