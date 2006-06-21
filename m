@@ -1,34 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.17-rc6-mm2 VIA PATA fails on some ATAPI drives
-Date: Wed, 21 Jun 2006 12:42:05 +0100
-Message-ID: <1150890125.15275.50.camel@localhost.localdomain>
-References: <4495A3E6.6010405@free.fr>
+Subject: Re: [PATCH] ide: fix revision comparison in ide_in_drive_list
+Date: Wed, 21 Jun 2006 12:44:42 +0100
+Message-ID: <1150890282.15275.54.camel@localhost.localdomain>
+References: <200606201452.33925.kirr@mns.spb.ru>
+	 <20060620151950.21ad94d6.akpm@osdl.org>
+	 <1150845122.15275.8.camel@localhost.localdomain>
+	 <200606211017.28987.kirr@mns.spb.ru>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60346 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932067AbWFUL0x
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Jun 2006 07:26:53 -0400
-In-Reply-To: <4495A3E6.6010405@free.fr>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:4737 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751504AbWFUL3l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Jun 2006 07:29:41 -0400
+In-Reply-To: <200606211017.28987.kirr@mns.spb.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: matthieu castet <castet.matthieu@free.fr>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Kirill Smelkov <kirr@mns.spb.ru>
+Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ar Sul, 2006-06-18 am 21:05 +0200, ysgrifennodd matthieu castet:
-> I make a patch that seem to make work the drive. It is attached as 
-> pata-via-atapi.I don't know if is the correct thing to do.
+Ar Mer, 2006-06-21 am 10:17 +0400, ysgrifennodd Kirill Smelkov:
+> id->model="TRANSCEND",
+> id->fw_rev="20050811TRANSCEND"
+> 
+> note the trailing in id->fw_rev,
 
-To be honest I am still very confused about this one as well. It isn't
-just occurring with the CDR-6S48 either, a few other reports look as if
-they are the same kind of problem.
+These are not null terminated strings in the ident block. So if you
+merely print them or test against them you'll break on 8 char long
+firmware names. They may also be space rather than \0 padded if shorter
 
-I didn't spot anything in the ATAPI spec but I need to go back over it
-in case I missed something here. Similarly I can find nothing in the VIA
-docs to explain the occurence.
-
-I don't see anything fundamentally wrong with the patch, I'd just like
-to understand better the real reasons behind it.
+Alan
 
