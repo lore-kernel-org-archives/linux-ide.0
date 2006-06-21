@@ -1,47 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH -mm 2/6] cpu_relax(): ide_wait_stat()
-Date: Wed, 21 Jun 2006 23:19:41 +0100
-Message-ID: <1150928381.15275.136.camel@localhost.localdomain>
-References: <20060621205942.GB22516@rhlx01.fht-esslingen.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] make drivers/scsi/pata_pcmcia.c:pcmcia_remove_one() static
+Date: Thu, 22 Jun 2006 01:20:12 +0200
+Message-ID: <20060621232012.GT9111@stusta.de>
+References: <20060621034857.35cfe36f.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:27010 "EHLO lxorguk.ukuu.org.uk")
-	by vger.kernel.org with ESMTP id S1030326AbWFUWEV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2006 18:04:21 -0400
-In-Reply-To: <20060621205942.GB22516@rhlx01.fht-esslingen.de>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:39179 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1030462AbWFUXUN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Jun 2006 19:20:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20060621034857.35cfe36f.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Mohr <andi@rhlx01.fht-esslingen.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, alan@redhat.com
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Ar Mer, 2006-06-21 am 22:59 +0200, ysgrifennodd Andreas Mohr:
-> Add cpu_relax() to drivers/ide/ide-iops.c/ide_wait_stat().
+On Wed, Jun 21, 2006 at 03:48:57AM -0700, Andrew Morton wrote:
+>...
+> Changes since 2.6.17-rc6-mm2:
+>...
+>  git-libata-all.patch
+>...
+>  git trees
+>...
 
-You don't need cpu_relax() when the loop contains a reference to
-external memory busses. The CPU will stall on the inb() anyway, and when
-this occurs processors with multiple-threads will do the right thing
-implicitly. If you could look at the instruction stream it would look
-something like
+This patch makes a needlessly global function static.
 
-dec count
-jump out if zero
-inb
-read request to the bus
-[stall]
-then to the PCI bridge
-[stall]
-then eventually to the device
-[Huge mindbogglingly relativley long period of time stalled]
-answer finally arrives back over the PCI bus
-compare
-...
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-
-Same comment for floppy. Rest look ok
-
-Perhaps this needs documenting however.
-
-Alan
+--- linux-2.6.17-mm1-full/drivers/scsi/pata_pcmcia.c.old	2006-06-22 00:43:23.000000000 +0200
++++ linux-2.6.17-mm1-full/drivers/scsi/pata_pcmcia.c	2006-06-22 00:43:33.000000000 +0200
+@@ -294,7 +294,7 @@
+  *	cleanup. Also called on module unload for any active devices.
+  */
+ 
+-void pcmcia_remove_one(struct pcmcia_device *pdev)
++static void pcmcia_remove_one(struct pcmcia_device *pdev)
+ {
+ 	struct ata_pcmcia_info *info = pdev->priv;
+ 	struct device *dev = &pdev->dev;
 
