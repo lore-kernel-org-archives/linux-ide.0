@@ -1,125 +1,52 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [Ubuntu PATCH] add some NVIDIA chipset IDs
-Date: Tue, 20 Jun 2006 22:32:45 -0700
-Message-ID: <4498D9FD.6040900@oracle.com>
+From: Kirill Smelkov <kirr@mns.spb.ru>
+Subject: Re: [PATCH] ide: fix revision comparison in ide_in_drive_list
+Date: Wed, 21 Jun 2006 10:17:27 +0400
+Message-ID: <200606211017.28987.kirr@mns.spb.ru>
+References: <200606201452.33925.kirr@mns.spb.ru> <20060620151950.21ad94d6.akpm@osdl.org> <1150845122.15275.8.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="koi8-r"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:63591 "EHLO
-	agminet01.oracle.com") by vger.kernel.org with ESMTP
-	id S1751096AbWFUFbj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Jun 2006 01:31:39 -0400
+Received: from mail.mnsspb.ru ([84.204.75.2]:46219 "EHLO mail.mnsspb.ru")
+	by vger.kernel.org with ESMTP id S1751187AbWFUGQ0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2006 02:16:26 -0400
+In-Reply-To: <1150845122.15275.8.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Add some nVidia chipset ID's support.
+21 Jun 2006 03:12, Alan Cox wrote:
+> Ar Maw, 2006-06-20 am 15:19 -0700, ysgrifennodd Andrew Morton:
+> > hm.  This seems...  rather serious.  I assume that in most cases, the
+> > firmware rev which we have in the table (eg "24.09P07") is a full-string
+> > match for the string which the drive returned.
+> 
+> They are full matches as far as I can see so it should be ok, plus the
+> DMA blacklist is mostly hardware that went out ten or more years ago.
+> Even if it did mis-trigger we'd be blacklisting extra firmware revs of
+> iffy hardware so that isn't do worrying.
 
-http://www.kernel.org/git/?p=linux/kernel/git/bcollins/ubuntu-dapper.git;a=commitdiff;h=b407680553280f9999a20706d5ab2a3be65312c1;hp=ce4cb48010ab2cca537432b5ccb47d4b1fb489e5
+No, they are *not* full matches.
 
-Snagged from lkml.
+My case:
+CF model="TRANSCEND", revision="20050811" as reported by "hdparm -I" and bios,
 
+but
 
----
- drivers/ide/pci/amd74xx.c |    7 +++++--
- drivers/scsi/ahci.c       |   12 ++++++++++++
- drivers/scsi/sata_nv.c    |   11 ++++++++---
- include/linux/pci_ids.h   |    9 +++++++++
- 4 files changed, 34 insertions(+), 5 deletions(-)
+id->model="TRANSCEND",
+id->fw_rev="20050811TRANSCEND"
 
---- linux-2617-pv.orig/drivers/ide/pci/amd74xx.c
-+++ linux-2617-pv/drivers/ide/pci/amd74xx.c
-@@ -74,6 +74,7 @@ static struct amd_ide_chip {
- 	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE,	0x50, AMD_UDMA_133 },
- 	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,	0x50, AMD_UDMA_133 },
- 	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE,	0x50, AMD_UDMA_133 },
-+	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE,	0x50, AMD_UDMA_133 },
- 	{ PCI_DEVICE_ID_AMD_CS5536_IDE,			0x40, AMD_UDMA_100 },
- 	{ 0 }
- };
-@@ -488,7 +489,8 @@ static ide_pci_device_t amd74xx_chipsets
- 	/* 14 */ DECLARE_NV_DEV("NFORCE-MCP04"),
- 	/* 15 */ DECLARE_NV_DEV("NFORCE-MCP51"),
- 	/* 16 */ DECLARE_NV_DEV("NFORCE-MCP55"),
--	/* 17 */ DECLARE_AMD_DEV("AMD5536"),
-+	/* 17 */ DECLARE_NV_DEV("NFORCE-MCP65"),
-+	/* 18 */ DECLARE_AMD_DEV("AMD5536"),
- };
- 
- static int __devinit amd74xx_probe(struct pci_dev *dev, const struct pci_device_id *id)
-@@ -525,7 +527,8 @@ static struct pci_device_id amd74xx_pci_
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14 },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 15 },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 16 },
--	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE,		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 17 },
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 17 },
-+	{ PCI_VENDOR_ID_AMD,    PCI_DEVICE_ID_AMD_CS5536_IDE,           PCI_ANY_ID, PCI_ANY_ID, 0, 0, 18 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, amd74xx_pci_tbl);
---- linux-2617-pv.orig/drivers/scsi/sata_nv.c
-+++ linux-2617-pv/drivers/scsi/sata_nv.c
-@@ -140,12 +140,17 @@ static const struct pci_device_id nv_pci
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA,
-+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA2,
-+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA3,
-+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA4,
-+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 		PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, GENERIC },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
--		PCI_ANY_ID, PCI_ANY_ID,
--		PCI_CLASS_STORAGE_RAID<<8, 0xffff00, GENERIC },
- 	{ 0, } /* terminate list */
- };
- 
---- linux-2617-pv.orig/drivers/scsi/ahci.c
-+++ linux-2617-pv/drivers/scsi/ahci.c
-@@ -296,6 +296,18 @@ static const struct pci_device_id ahci_p
- 	  board_ahci }, /* ATI SB600 non-raid */
- 	{ PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_ahci }, /* ATI SB600 raid */
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI,
-+	  PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_ahci }, /* MCP65 */
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI2,
-+	  PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_ahci }, /* MCP65 */
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI3,
-+	  PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+		board_ahci }, /* MCP65 */
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI4,
-+	  PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_ahci }, /* MCP65 */
- 	{ }	/* terminate list */
- };
- 
---- linux-2617-pv.orig/include/linux/pci_ids.h
-+++ linux-2617-pv/include/linux/pci_ids.h
-@@ -1182,6 +1182,15 @@
- #define PCI_DEVICE_ID_NVIDIA_QUADRO_FX_1100         0x034E
- #define PCI_DEVICE_ID_NVIDIA_NVENET_14              0x0372
- #define PCI_DEVICE_ID_NVIDIA_NVENET_15              0x0373
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE       0x0448
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI      0x044C
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI2     0x044D
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI3     0x044E
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI4     0x044F
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA      0x045C
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA2     0x045D
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA3     0x045E
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA4     0x045F
- 
- #define PCI_VENDOR_ID_IMS		0x10e0
- #define PCI_DEVICE_ID_IMS_TT128		0x9128
+note the trailing in id->fw_rev,
 
+So lets look at ide_in_drive_list -- it should try to detect blacklisted revision,
+so it looks for substr device_table->id_firmware in id->fw_rev.
 
+NB: I don't know what causes id->fw_rev to be bogus (?), but maybe the right fix
+NB: is to correct its initialization. Some person with IDE background should clarify this. 
+
+-- 
+	Kirill
 
