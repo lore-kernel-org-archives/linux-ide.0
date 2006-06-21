@@ -1,49 +1,47 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [-mm patch] drivers/ide/legacy/ide-cs.c: make 2 functions static
-Date: Wed, 21 Jun 2006 23:57:29 +0200
-Message-ID: <20060621215729.GL9111@stusta.de>
-References: <20060621034857.35cfe36f.akpm@osdl.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH -mm 2/6] cpu_relax(): ide_wait_stat()
+Date: Wed, 21 Jun 2006 23:19:41 +0100
+Message-ID: <1150928381.15275.136.camel@localhost.localdomain>
+References: <20060621205942.GB22516@rhlx01.fht-esslingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030321AbWFUV5d@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060621034857.35cfe36f.akpm@osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Thomas Kleffel <tk@maintech.de>, Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-kernel@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [81.2.110.250] ([81.2.110.250]:27010 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S1030326AbWFUWEV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2006 18:04:21 -0400
+In-Reply-To: <20060621205942.GB22516@rhlx01.fht-esslingen.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andreas Mohr <andi@rhlx01.fht-esslingen.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jun 21, 2006 at 03:48:57AM -0700, Andrew Morton wrote:
->...
-> Changes since 2.6.17-rc6-mm2:
->...
->  git-pcmcia.patch
->...
->  git trees
->...
+Ar Mer, 2006-06-21 am 22:59 +0200, ysgrifennodd Andreas Mohr:
+> Add cpu_relax() to drivers/ide/ide-iops.c/ide_wait_stat().
 
-This patch makes two needlessly global functions static.
- 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+You don't need cpu_relax() when the loop contains a reference to
+external memory busses. The CPU will stall on the inb() anyway, and when
+this occurs processors with multiple-threads will do the right thing
+implicitly. If you could look at the instruction stream it would look
+something like
 
----
+dec count
+jump out if zero
+inb
+read request to the bus
+[stall]
+then to the PCI bridge
+[stall]
+then eventually to the device
+[Huge mindbogglingly relativley long period of time stalled]
+answer finally arrives back over the PCI bus
+compare
+...
 
- drivers/ide/legacy/ide-cs.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- linux-2.6.17-mm1-full/drivers/ide/legacy/ide-cs.c.old	2006-06-21 22:54:20.000000000 +0200
-+++ linux-2.6.17-mm1-full/drivers/ide/legacy/ide-cs.c	2006-06-21 22:54:37.000000000 +0200
-@@ -170,11 +170,11 @@
-         return ide_register_hw_with_fixup(&hw, NULL, ide_undecoded_slave);
- }
- 
--void outb_io(unsigned char value, unsigned long port) {
-+static void outb_io(unsigned char value, unsigned long port) {
- 	outb(value, port);
- }
- 
--void outb_mem(unsigned char value, unsigned long port) {
-+static void outb_mem(unsigned char value, unsigned long port) {
- 	writeb(value, (void __iomem *) port);
- }
- 
+Same comment for floppy. Rest look ok
+
+Perhaps this needs documenting however.
+
+Alan
+
