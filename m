@@ -1,132 +1,125 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: BUG() with MV88SX6081 and other problems
-Date: Wed, 21 Jun 2006 00:04:20 -0400
-Message-ID: <4498C544.7080907@rtr.ca>
-References: <20060617191703.45e6f348@localhost> <87f94c370606201053l55f85236kf7f3c1177c49a576@mail.gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [Ubuntu PATCH] add some NVIDIA chipset IDs
+Date: Tue, 20 Jun 2006 22:32:45 -0700
+Message-ID: <4498D9FD.6040900@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:9104 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1751978AbWFUEEV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2006 00:04:21 -0400
-In-Reply-To: <87f94c370606201053l55f85236kf7f3c1177c49a576@mail.gmail.com>
+Received: from agminet01.oracle.com ([141.146.126.228]:63591 "EHLO
+	agminet01.oracle.com") by vger.kernel.org with ESMTP
+	id S1751096AbWFUFbj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Jun 2006 01:31:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Tom Wirschell <linux-ide@wirschell.nl>, linux-ide@vger.kernel.org
+To: akpm <akpm@osdl.org>, jgarzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Greg Freemyer wrote:
-> Mark,
-> 
-> Can you give an update of where the Marvell driver stands
-> "experimental" vs. functional and if BUG() calls like below are still
-> expected in 2.6.17 release?
-> 
-> Thanks
-> Greg
-> 
-> On 6/17/06, Tom Wirschell <linux-ide@wirschell.nl> wrote:
->> I'm using the 2.6.17-rc6-mm2 kernel on a system with the following
->> components:
->> Asus PSCH-L Mobo (e7210+6300ESB)
->> Intel P4 3.0GHz, HT enabled
->> SuperMicro AOC-SAT2-MV8 (MV88SX6081)
->> Antec TruePower II 550Watt power supply
->> 2x Western Digital Caviar SE 2000JB (PATA)
->> 9x Western Digital Caviar 2000JD (SATA)
->> APC Back-UPS CS 650
->>
->> I've got an issue with this config when running in RAID mode, but I'll
->> get to that in a bit. First off, when I boot up, the Marvell chip spits
->> out the following BUG:
->>
->> sata_mv 0000:02:02.0: version 0.7
->> sata_mv 0000:02:02.0: 32 slots 8 ports SCSI mode IRQ via INTx
->> ata3: SATA max UDMA/133 cmd 0x0 ctl 0xF88A2120 bmdma 0x0 irq 24
->> ata4: SATA max UDMA/133 cmd 0x0 ctl 0xF88A4120 bmdma 0x0 irq 24
->> ata5: SATA max UDMA/133 cmd 0x0 ctl 0xF88A6120 bmdma 0x0 irq 24
->> ata6: SATA max UDMA/133 cmd 0x0 ctl 0xF88A8120 bmdma 0x0 irq 24
->> ata7: SATA max UDMA/133 cmd 0x0 ctl 0xF88B2120 bmdma 0x0 irq 24
->> ata8: SATA max UDMA/133 cmd 0x0 ctl 0xF88B4120 bmdma 0x0 irq 24
->> ata9: SATA max UDMA/133 cmd 0x0 ctl 0xF88B6120 bmdma 0x0 irq 24
->> ata10: SATA max UDMA/133 cmd 0x0 ctl 0xF88B8120 bmdma 0x0 irq 24
->> ata3: no device found (phy stat 00000000)
->> scsi2 : sata_mv
->> BUG: warning at drivers/scsi/sata_mv.c:1921/__msleep()
->>  [<c02587a2>] __mv_phy_reset+0x3b1/0x3b6
->>  [<c0259266>] mv_scr_write+0xe/0x40
->>  [<c0258861>] mv_err_intr+0x80/0xa7
->>  [<c02590bb>] mv_interrupt+0x2d8/0x3e0
->>  [<c0135af8>] handle_IRQ_event+0x2e/0x5a
->>  [<c0136b85>] handle_fasteoi_irq+0x61/0x9e
->>  [<c0136b24>] handle_fasteoi_irq+0x0/0x9e
->>  [<c0104a16>] do_IRQ+0x55/0x81
->>  =======================
->>  [<c0102ce6>] common_interrupt+0x1a/0x20
->>  [<c01017f7>] mwait_idle+0x29/0x42
->>  [<c01017b9>] cpu_idle+0x5e/0x73
->>  [<c039271a>] start_kernel+0x2ff/0x375
->>  [<c03921bc>] unknown_bootoption+0x0/0x25f
-..
+Add some nVidia chipset ID's support.
 
-The sata_mv driver is still marked as EXPERIMENTAL in the kernel config,
-but I believe it should be darned close to production-usable.
+http://www.kernel.org/git/?p=linux/kernel/git/bcollins/ubuntu-dapper.git;a=commitdiff;h=b407680553280f9999a20706d5ab2a3be65312c1;hp=ce4cb48010ab2cca537432b5ccb47d4b1fb489e5
 
-I really don't understand the traceback above -- that's not a possible
-calling sequence in the source code.  You do have frame-pointers
-enabled in the kernel .config, right?  Weird.
+Snagged from lkml.
 
->> ata10: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
->> ata10: status=0xd0 { Busy }
->> ata10: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
->> ata10: status=0xd0 { Busy }
->> BUG: warning at drivers/scsi/sata_mv.c:1233/mv_qc_issue()
->>  [<c0258db3>] mv_qc_issue+0xf3/0x123
->>  [<c024fa39>] ata_qc_issue+0xa9/0x4f3
->>  [<c02549d2>] ata_scsi_rw_xlat+0x247/0x3af
->>  [<c0242b73>] scsi_done+0x0/0x16
->>  [<c0253aeb>] ata_scsi_translate+0x6e/0x122
->>  [<c0254420>] ata_scsi_queuecmd+0x56/0x126
->>  [<c025478b>] ata_scsi_rw_xlat+0x0/0x3af
->>  [<c0242b73>] scsi_done+0x0/0x16
->>  [<c0243491>] scsi_dispatch_cmd+0x169/0x310
->>  [<c0248694>] scsi_request_fn+0x1bf/0x350
->>  [<c01fd71c>] blk_run_queue+0x58/0x70
->>  [<c0247ca3>] scsi_queue_insert+0x6d/0xa6
->>  [<c01fe0fe>] blk_done_softirq+0x54/0x61
->>  [<c011e24d>] __do_softirq+0x75/0xdc
->>  [<c0104a95>] do_softirq+0x53/0x9e
->>  =======================
->>  [<c0136b24>] handle_fasteoi_irq+0x0/0x9e
->>  [<c0104a1d>] do_IRQ+0x5c/0x81
->>  [<c0102ce6>] common_interrupt+0x1a/0x20
->>  [<c02e007b>] xfrm_sk_policy_lookup+0x1ba/0x34d
->> BUG: warning at drivers/scsi/sata_mv.c:649/mv_start_dma()
->>  [<c0258dde>] mv_qc_issue+0x11e/0x123
->>  [<c024fa39>] ata_qc_issue+0xa9/0x4f3
->>  [<c02549d2>] ata_scsi_rw_xlat+0x247/0x3af
->>  [<c0242b73>] scsi_done+0x0/0x16
->>  [<c0253aeb>] ata_scsi_translate+0x6e/0x122
->>  [<c0254420>] ata_scsi_queuecmd+0x56/0x126
->>  [<c025478b>] ata_scsi_rw_xlat+0x0/0x3af
->>  [<c0242b73>] scsi_done+0x0/0x16
->>  [<c0243491>] scsi_dispatch_cmd+0x169/0x310
->>  [<c0248694>] scsi_request_fn+0x1bf/0x350
->>  [<c01fd71c>] blk_run_queue+0x58/0x70
->>  [<c0247ca3>] scsi_queue_insert+0x6d/0xa6
->>  [<c01fe0fe>] blk_done_softirq+0x54/0x61
->>  [<c011e24d>] __do_softirq+0x75/0xdc
->>  [<c0104a95>] do_softirq+0x53/0x9e
->>  =======================
->>  [<c0136b24>] handle_fasteoi_irq+0x0/0x9e
->>  [<c0104a1d>] do_IRQ+0x5c/0x81
->>  [<c0102ce6>] common_interrupt+0x1a/0x20
->>  [<c02e007b>] xfrm_sk_policy_lookup+0x1ba/0x34d
 
-Another really messed up traceback.  Can you turn on a few
-more kernel options to make this readable, please?
-Like CONFIG_FRAME_POINTER=y and CONFIG_UNWIND_INFO=y
-and anything else that looks good .  :)
+---
+ drivers/ide/pci/amd74xx.c |    7 +++++--
+ drivers/scsi/ahci.c       |   12 ++++++++++++
+ drivers/scsi/sata_nv.c    |   11 ++++++++---
+ include/linux/pci_ids.h   |    9 +++++++++
+ 4 files changed, 34 insertions(+), 5 deletions(-)
 
-Thanks
+--- linux-2617-pv.orig/drivers/ide/pci/amd74xx.c
++++ linux-2617-pv/drivers/ide/pci/amd74xx.c
+@@ -74,6 +74,7 @@ static struct amd_ide_chip {
+ 	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE,	0x50, AMD_UDMA_133 },
+ 	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,	0x50, AMD_UDMA_133 },
+ 	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE,	0x50, AMD_UDMA_133 },
++	{ PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE,	0x50, AMD_UDMA_133 },
+ 	{ PCI_DEVICE_ID_AMD_CS5536_IDE,			0x40, AMD_UDMA_100 },
+ 	{ 0 }
+ };
+@@ -488,7 +489,8 @@ static ide_pci_device_t amd74xx_chipsets
+ 	/* 14 */ DECLARE_NV_DEV("NFORCE-MCP04"),
+ 	/* 15 */ DECLARE_NV_DEV("NFORCE-MCP51"),
+ 	/* 16 */ DECLARE_NV_DEV("NFORCE-MCP55"),
+-	/* 17 */ DECLARE_AMD_DEV("AMD5536"),
++	/* 17 */ DECLARE_NV_DEV("NFORCE-MCP65"),
++	/* 18 */ DECLARE_AMD_DEV("AMD5536"),
+ };
+ 
+ static int __devinit amd74xx_probe(struct pci_dev *dev, const struct pci_device_id *id)
+@@ -525,7 +527,8 @@ static struct pci_device_id amd74xx_pci_
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14 },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 15 },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 16 },
+-	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE,		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 17 },
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 17 },
++	{ PCI_VENDOR_ID_AMD,    PCI_DEVICE_ID_AMD_CS5536_IDE,           PCI_ANY_ID, PCI_ANY_ID, 0, 0, 18 },
+ 	{ 0, },
+ };
+ MODULE_DEVICE_TABLE(pci, amd74xx_pci_tbl);
+--- linux-2617-pv.orig/drivers/scsi/sata_nv.c
++++ linux-2617-pv/drivers/scsi/sata_nv.c
+@@ -140,12 +140,17 @@ static const struct pci_device_id nv_pci
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA,
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA2,
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA3,
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA4,
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, GENERIC },
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 		PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, GENERIC },
+-	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+-		PCI_ANY_ID, PCI_ANY_ID,
+-		PCI_CLASS_STORAGE_RAID<<8, 0xffff00, GENERIC },
+ 	{ 0, } /* terminate list */
+ };
+ 
+--- linux-2617-pv.orig/drivers/scsi/ahci.c
++++ linux-2617-pv/drivers/scsi/ahci.c
+@@ -296,6 +296,18 @@ static const struct pci_device_id ahci_p
+ 	  board_ahci }, /* ATI SB600 non-raid */
+ 	{ PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_ahci }, /* ATI SB600 raid */
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI,
++	  PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* MCP65 */
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI2,
++	  PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* MCP65 */
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI3,
++	  PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++		board_ahci }, /* MCP65 */
++	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI4,
++	  PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* MCP65 */
+ 	{ }	/* terminate list */
+ };
+ 
+--- linux-2617-pv.orig/include/linux/pci_ids.h
++++ linux-2617-pv/include/linux/pci_ids.h
+@@ -1182,6 +1182,15 @@
+ #define PCI_DEVICE_ID_NVIDIA_QUADRO_FX_1100         0x034E
+ #define PCI_DEVICE_ID_NVIDIA_NVENET_14              0x0372
+ #define PCI_DEVICE_ID_NVIDIA_NVENET_15              0x0373
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE       0x0448
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI      0x044C
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI2     0x044D
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI3     0x044E
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_AHCI4     0x044F
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA      0x045C
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA2     0x045D
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA3     0x045E
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA4     0x045F
+ 
+ #define PCI_VENDOR_ID_IMS		0x10e0
+ #define PCI_DEVICE_ID_IMS_TT128		0x9128
+
+
+
