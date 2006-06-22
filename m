@@ -1,221 +1,116 @@
-From: Aalderd Bouwman <boac@wanadoo.nl>
-Subject: Re: Hotplug drives on vt8251 with ahci module
-Date: Thu, 22 Jun 2006 15:00:25 +0200
-Message-ID: <200606221500.25056.boac@wanadoo.nl>
-References: <200606210942.33578.boac@wanadoo.nl> <44995139.30808@gmail.com>
-Reply-To: boac@wanadoo.nl
+From: Martin Hicks <mort@bork.org>
+Subject: sata_vsc problems with libata-dev.git#upstream
+Date: Thu, 22 Jun 2006 11:20:57 -0400
+Message-ID: <20060622152057.GE2949@bork.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp04.wanadoo.nl ([194.134.35.144]:57622 "EHLO
-	smtp04.wanadoo.nl") by vger.kernel.org with ESMTP id S1030205AbWFVNA1
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Jun 2006 09:00:27 -0400
-In-Reply-To: <44995139.30808@gmail.com>
+Received: from galileo.bork.org ([134.117.69.57]:43413 "EHLO galileo.bork.org")
+	by vger.kernel.org with ESMTP id S1751448AbWFVPU7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jun 2006 11:20:59 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by galileo.bork.org (Postfix) with ESMTP id 0D4834175
+	for <linux-ide@vger.kernel.org>; Thu, 22 Jun 2006 11:20:58 -0400 (EDT)
+Received: from galileo.bork.org ([127.0.0.1])
+	by localhost (galileo.bork.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 10787-04 for <linux-ide@vger.kernel.org>;
+	Thu, 22 Jun 2006 11:20:57 -0400 (EDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-The same turn on/off action with rmmod ahci will work properly I think:
-(I have test that action 3 times)
 
-ahci 0000:00:0f.0: version 1.3
-ACPI: PCI Interrupt 0000:00:0f.0[B] -> Link [LNKB] -> GSI 10 (level, low) -> 
-IRQ 10
-ahci 0000:00:0f.0: AHCI 0001.0000 32 slots 4 ports 3 Gbps 0xf impl SATA mode
-ahci 0000:00:0f.0: flags: 64bit ncq pm led clo pmp pio slum part
-ata13: SATA max UDMA/133 cmd 0xE0486D00 ctl 0x0 bmdma 0x0 irq 10
-ata14: SATA max UDMA/133 cmd 0xE0486D80 ctl 0x0 bmdma 0x0 irq 10
-ata15: SATA max UDMA/133 cmd 0xE0486E00 ctl 0x0 bmdma 0x0 irq 10
-ata16: SATA max UDMA/133 cmd 0xE0486E80 ctl 0x0 bmdma 0x0 irq 10
-scsi12 : ahci
-ata13: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata13.00: cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 88:407f
-ata13.00: ATA-7, max UDMA/133, 156301488 sectors: LBA48 NCQ (depth 0/32)
-ata13.00: configured for UDMA/133
-scsi13 : ahci
-ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata14.00: cfg 49:2f00 82:7c6b 83:7b09 84:4003 85:7c69 86:3a01 87:4003 88:007f
-ata14.00: ATA-7, max UDMA/133, 160086528 sectors: LBA
-ata14.00: configured for UDMA/133
-scsi14 : ahci
-ata15: SATA link down (SStatus 0 SControl 300)
-scsi15 : ahci
-ata16: SATA link down (SStatus 0 SControl 300)
-  Vendor: ATA       Model: ST3808110AS       Rev: 3.AA
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
-sd 12:0:0:0: Attached scsi disk sda
-sd 12:0:0:0: Attached scsi generic sg0 type 0
-  Vendor: ATA       Model: Maxtor 6Y080M0    Rev: YAR5
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdb: 160086528 512-byte hdwr sectors (81964 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 160086528 512-byte hdwr sectors (81964 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
- sdb: sdb1 sdb2
-sd 13:0:0:0: Attached scsi disk sdb
-sd 13:0:0:0: Attached scsi generic sg1 type 0
-ata13: exception Emask 0x10 SAct 0x0 SErr 0x1b0000 action 0x2 frozen
-ata13: (irq_stat 0x04400000, PHY RDY changed)
-ata14: exception Emask 0x10 SAct 0x0 SErr 0x30000 action 0x2 frozen
-ata14: (irq_stat 0x04400000, PHY RDY changed)
-ata13: soft resetting port
-ata13: SATA link down (SStatus 1 SControl 300)
-ata13: failed to recover some devices, retrying in 5 secs
-ata14: soft resetting port
-ata14: SATA link down (SStatus 1 SControl 300)
-ata14: failed to recover some devices, retrying in 5 secs
-ata13: hard resetting port
-ata13: SATA link down (SStatus 0 SControl 300)
-ata13: failed to recover some devices, retrying in 5 secs
-ata14: hard resetting port
-ata14: SATA link down (SStatus 0 SControl 300)
-ata14: failed to recover some devices, retrying in 5 secs
-ata13: hard resetting port
-ata13: SATA link down (SStatus 0 SControl 300)
-ata13.00: disabled
-ata13: EH complete
-ata13.00: detaching (SCSI 12:0:0:0)
-ata14: hard resetting port
-ata14: SATA link down (SStatus 0 SControl 300)
-ata14.00: disabled
-ata14: EH complete
-ata14.00: detaching (SCSI 13:0:0:0)
-ata13: exception Emask 0x10 SAct 0x0 SErr 0x4070000 action 0x2 frozen
-ata13: (irq_stat 0x00400040, connection status changed)
-ata13: waiting for device to spin up (8 secs)
-ata14: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
-ata14: (irq_stat 0x00000040, connection status changed)
-ata14: waiting for device to spin up (8 secs)
-ata13: soft resetting port
-ata13: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata13.00: cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 88:407f
-ata13.00: ATA-7, max UDMA/133, 156301488 sectors: LBA48 NCQ (depth 0/32)
-ata13.00: configured for UDMA/133
-ata13: EH complete
-  Vendor: ATA       Model: ST3808110AS       Rev: 3.AA
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
-sd 12:0:0:0: Attached scsi disk sda
-sd 12:0:0:0: Attached scsi generic sg0 type 0
-ata13.00: disabled
-ata14: soft resetting port
-ata14: port is slow to respond, please be patient
-ata14: port failed to respond (30 secs)
-ata14: softreset failed (device not ready)
-ata14: softreset failed, retrying in 5 secs
-ata14: hard resetting port
-ata14: port is slow to respond, please be patient
-ata14: port failed to respond (30 secs)
-ata14: COMRESET failed (device not ready)
-ata14: hardreset failed, retrying in 5 secs
-ata14: hard resetting port
-ata14: port is slow to respond, please be patient
-ata14: port failed to respond (30 secs)
-ata14: COMRESET failed (device not ready)
-ata14: reset failed, giving up
-ata14: EH complete
-ACPI: PCI interrupt for device 0000:00:0f.0 disabled
+Hi,
 
-As you see the disconnect of a drive is detected.
-Is the message: 'failed to recover some devices' correct?
-This message apears twice.
+I wanted to see if I could get device hotplug working with the
+intel31244 (sata_vsc driver).  This machine boots fine with 2.6.16, but
+with the #upstream branch from git I get the following crash.
 
-Aalderd Bouwman.
+This is a ppc440gx board.  Any pointing in the right direction would be
+appreciated.  With 2.6.16 it seems to do the ata_pio_sector data read
+just fine and detect the device.
 
-On Wednesday 21 June 2006 16:01, Tejun Heo wrote:
-> Aalderd Bouwman wrote:
-> > Hello,
-> >
-> > When I load module ahci when a drive is 'online' the drive is can be used
-> > normal. When I disconnect the drive EH doesn't recognize that action.
-> > When I reconnect the driver posts the following kernel-message:
->
-> I'm getting to dislike this via controller.  Again, the controller seems
-> to lock up completely on hotplug events.  It might be that the current
-> ahci's EH behavior just doesn't fit the via controller as the controller
-> seems to lock up similarly in both NCQ and this case.  Maybe it doesn't
-> like engine restart sequence (which, BTW, are all done in accordance to
-> the AHCI spec).
->
-> > Here I disconnect both drives connected to the controller.
-> > After the second/third port-reset I also do rmmod ahci:
->
-> [--snip--]
->
-> > Jun 21 09:15:18 server BUG: unable to handle kernel NULL pointer
-> > dereference at virtual address 00000010
-> > Jun 21 09:15:18 server printing eip:
-> > Jun 21 09:15:18 server e04926cc
-> > Jun 21 09:15:18 server *pde = 00000000
-> > Jun 21 09:15:18 server Oops: 0000 [#1]
-> > Jun 21 09:15:18 server last sysfs file: /block/sdb/sdb2/dev
-> > Jun 21 09:15:18 server Modules linked in: ahci libata cls_u32 sch_htb
-> > xt_tcpudp iptable_filter iptable_nat ip_tables x_tables ip_nat_irc
-> > ip_conntrack_irc ip_nat_ftp ip_nat ip_conntrack_ftp w83627ehf i2c_isa
-> > i2c_core 3c59x
-> > Jun 21 09:15:18 server CPU:    0
-> > Jun 21 09:15:18 server EIP:    0060:[<e04926cc>]    Not tainted VLI
-> > Jun 21 09:15:18 server EFLAGS: 00010246   (2.6.17-rc5-mm2 #2)
-> > Jun 21 09:15:18 server EIP is at ahci_tf_read+0xa/0x19 [ahci]
-> > Jun 21 09:15:18 server eax: 00000000   ebx: e049382f   ecx: de36c29c  
-> > edx: 00000000
-> > Jun 21 09:15:18 server esi: de36c29c   edi: 00000000   ebp: e0488d00  
-> > esp: de43ce84
-> > Jun 21 09:15:18 server ds: 007b   es: 007b   ss: 0068
-> > Jun 21 09:15:18 server Process scsi_eh_8 (pid: 15546, threadinfo=de43c000
-> > task=c66ed550)
-> > Jun 21 09:15:18 server Stack: e0492455 de36c29c de43ce94 00000000
-> > 0000000a de36c380 00000246 00000046
-> > Jun 21 09:15:18 server fffffecc 0000001a de43cecc c0110a49 de43cefc
-> > de36c380 de36c29c de36c29c
-> > Jun 21 09:15:18 server e04aa50e de36c29c de43cefc e04923f1 e04b0de3
-> > de36c29c e04923f1 de43cefc
-> > Jun 21 09:15:18 server Call Trace:
-> > Jun 21 09:15:18 server <e0492455> ahci_softreset+0x64/0x1d1 [ahci] 
-> > <c0110a49> __wake_up+0x14/0x1e
-> > Jun 21 09:15:18 server <e04aa50e> ata_do_reset+0x1b/0x4d [libata] 
-> > <e04923f1> ahci_softreset+0x0/0x1d1 [ahci]
-> > Jun 21 09:15:18 server <e04b0de3> ata_eh_reset+0x78/0xff [libata] 
-> > <e04923f1>
->
-> But, this is a driver bug.  I tried pretty hard to prevent this from
-> happening.  Apparently, I screwed up.  If it's not too much trouble, can
-> you please try libata-dev #upstream and see how it works with similar
-> unloading scenario.  I'll try to reproduce it here but I wanna know for
-> sure that the latest devel tree has the same issue.
->
-> Even if you're not familiar w/ git, accessing libata-dev #upstream is
-> actually quite simple.
->
-> 1. install git (on debian, just install git-core package)
-> 2. $ git-clone git://git.kernel.org/pub/scm/linux/kernel/\
->     git/jgarzik/libata-dev.git libata-dev
-> 3. $ cd libata-dev
-> 4. $ git-checkout -f upstream
-> 5. copy over your .config and build.
+thanks,
+mh
+
+ata_device_add: ENTER
+ata_host_add: ENTER
+ata_port_start: prd alloc, virt ff102000, dma 5d4000
+ata1: SATA max UDMA/133 cmd 0xD106A200 ctl 0xD106A229 bmdma 0xD106A270 irq 27
+__ata_port_freeze: ata1 port frozen
+ata_host_add: ENTER
+ata_port_start: prd alloc, virt ff104000, dma 499000
+ata2: SATA max UDMA/133 cmd 0xD106A400 ctl 0xD106A429 bmdma 0xD106A470 irq 27
+__ata_port_freeze: ata2 port frozen
+ata_host_add: ENTER
+ata_port_start: prd alloc, virt ff106000, dma 6db000
+ata3: SATA max UDMA/133 cmd 0xD106A600 ctl 0xD106A629 bmdma 0xD106A670 irq 27
+__ata_port_freeze: ata3 port frozen
+ata_host_add: ENTER
+ata_port_start: prd alloc, virt ff108000, dma 614000
+ata4: SATA max UDMA/133 cmd 0xD106A800 ctl 0xD106A829 bmdma 0xD106A870 irq 27
+__ata_port_freeze: ata4 port frozen
+ata_device_add: probe begin
+scsi0 : sata_vsc
+ata_port_schedule_eh: port EH scheduled
+ata_scsi_error: ENTER
+ata_port_flush_task: ENTER
+ata_port_flush_task: flush #1
+ata_port_flush_task: flush #2
+ata_port_flush_task: EXIT
+ata_eh_recover: ENTER
+__ata_port_freeze: ata1 port frozen
+ata_std_softreset: ENTER
+ata_std_softreset: about to softreset, devmask=1
+ata_bus_softreset: ata1: bus reset via SRST
+ata_dev_classify: found ATA device by sig
+ata_std_softreset: EXIT, classes[0]=1 [1]=0
+ata_std_postreset: ENTER
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata_std_postreset: EXIT
+ata_eh_thaw_port: ata1 port thawed
+ata_eh_revalidate_and_attach: ENTER
+ata_dev_read_id: ENTER, host 1, dev 0
+ata_exec_command_mmio: ata1: cmd 0xEC
+ata_hsm_move: ata1: protocol 2 task_state 2 (dev_stat 0x58)
+ata_pio_sector: data read
+Machine check in kernel mode.
+Data Read PLB Error
+PLB0: BEAR=0x000000000f059200 ACR=  0x9b000000 BESR= 0x0c000000
+POB0: BEAR=0x00000008a6bd7ce2 BESR0=0x00000000 BESR1=0x00000000
+OPB0: BEAR=0x0000000000000000 BSTAT=0x00000000
+Oops: machine check, sig: 7 [#1]
+NIP: C0004010 LR: C01B17AC CTR: 00000100
+REGS: c0309f50 TRAP: 0202   Not tainted  (2.6.17-g2a827025-dirty)
+MSR: 00029000 <EE,ME>  CR: 44002422  XER: 00000000
+TASK = c02ab740[0] 'swapper' THREAD: c02ec000
+GPR00: D106A200 C02EDD90 C02AB740 CF059200 C047442E 00000000 00000000 C02ACF6C
+GPR08: 00000000 00000100 00000000 C0310000 24008422 30000000 07FF5500 00000000
+GPR16: 00000001 C0280000 C0260000 00000000 07FEFD1C 00000000 00000002 C0260000
+GPR24: 00000058 C0310000 00000000 C047429C C0310000 C0474430 C047429C 00000200
+NIP [C0004010] __ide_mm_insw+0x14/0x24
+LR [C01B17AC] ata_pio_data_xfer+0x88/0xf0
+Call Trace:
+[C02EDD90] [C0310000] 0xc0310000 (unreliable)
+[C02EDDB0] [C01B1920] ata_pio_sector+0xd8/0x154
+[C02EDDE0] [C01B2318] ata_hsm_move+0x1ac/0x7ac
+[C02EDE30] [C01B4364] ata_host_intr+0xb8/0x148
+[C02EDE50] [C01BE00C] vsc_sata_interrupt+0x1d0/0x1ec
+[C02EDE80] [C0038764] handle_IRQ_event+0x5c/0xc4
+[C02EDEA0] [C00388BC] __do_IRQ+0xf0/0x17c
+[C02EDEC0] [C0006EB8] do_IRQ+0x48/0x8c
+[C02EDEE0] [C0002240] ret_from_except+0x0/0x18
+[C02EDFA0] [C0009A54] cpu_idle+0xdc/0xe0
+[C02EDFC0] [C0001048] rest_init+0x28/0x38
+[C02EDFD0] [C02EE664] start_kernel+0x17c/0x1a8
+[C02EDFF0] [C00001E8] skpinv+0x190/0x1cc
+Instruction dump:
+3884fffc 4c810020 84a40004 7ca01d2c 7c0006ac 4200fff4 4e800020 2c050000
+7ca903a6 3884fffe 4c810020 a0a30000 <7c0006ac> b4a40002 4200fff4 4e800020
+Kernel panic - not syncing: Attempted to kill the idle task!
+ <0>Rebooting in 180 seconds..
+
+
+-- 
+Martin Hicks || mort@bork.org || PGP/GnuPG: 0x4C7F2BEE
