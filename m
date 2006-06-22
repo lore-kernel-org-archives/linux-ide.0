@@ -1,54 +1,40 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [-mm patch] make drivers/scsi/pata_pcmcia.c:pcmcia_remove_one() static
-Date: Thu, 22 Jun 2006 06:50:52 -0400
-Message-ID: <20060622105052.GB14243@devserv.devel.redhat.com>
-References: <20060621034857.35cfe36f.akpm@osdl.org> <20060621232012.GT9111@stusta.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Hotplug drives on vt8251 with ahci module
+Date: Thu, 22 Jun 2006 08:16:42 -0400
+Message-ID: <449A8A2A.2070102@rtr.ca>
+References: <200606210942.33578.boac@wanadoo.nl> <44995139.30808@gmail.com> <200606220916.18020.boac@wanadoo.nl> <449A47EA.90601@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60322 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1751424AbWFVKwh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jun 2006 06:52:37 -0400
-Content-Disposition: inline
-In-Reply-To: <20060621232012.GT9111@stusta.de>
+Received: from rtr.ca ([64.26.128.89]:27868 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1030628AbWFVMQp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jun 2006 08:16:45 -0400
+In-Reply-To: <449A47EA.90601@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, alan@redhat.com, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: boac@wanadoo.nl, linux-ide@vger.kernel.org
 
-On Thu, Jun 22, 2006 at 01:20:12AM +0200, Adrian Bunk wrote:
-> On Wed, Jun 21, 2006 at 03:48:57AM -0700, Andrew Morton wrote:
-> >...
-> > Changes since 2.6.17-rc6-mm2:
-> >...
-> >  git-libata-all.patch
-> >...
-> >  git trees
-> >...
+Tejun Heo wrote:
+>
+> About the disabling on hardreset failure...  Maybe there is some room 
+> for improvement - e.g. leave PHY status interrupts alive if it's not 
+> causing interrupt storm, but I'm not sure whether the benefits would 
+> outweigh the cost.
 > 
-> This patch makes a needlessly global function static.
+> Leaving the port frozen (disabled & interrupts plugged) is a safety 
+> measure libata implements.  The driver isn't sure in what state the 
+> controller and the attached device are in as they are not responding 
+> even to the 'hard' reset, so it assumes the worst and shuns the port.
 > 
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> As I wrote above, you can ask libata to retry by explicitly telling 
+> libata to rescan the bus.  I thought that should be enough when I was 
 
-Acked-by: Alan Cox <alan@redhat.com>
+MMm.. sounds like libata should do that periodic polling,
+rather than relying on the end-user to do it.  Right?  :)
 
-> 
-> --- linux-2.6.17-mm1-full/drivers/scsi/pata_pcmcia.c.old	2006-06-22 00:43:23.000000000 +0200
-> +++ linux-2.6.17-mm1-full/drivers/scsi/pata_pcmcia.c	2006-06-22 00:43:33.000000000 +0200
-> @@ -294,7 +294,7 @@
->   *	cleanup. Also called on module unload for any active devices.
->   */
->  
-> -void pcmcia_remove_one(struct pcmcia_device *pdev)
-> +static void pcmcia_remove_one(struct pcmcia_device *pdev)
->  {
->  	struct ata_pcmcia_info *info = pdev->priv;
->  	struct device *dev = &pdev->dev;
+So the best of both approaches from above:  mask the interrupts
+and leave them off, but periodically poll for phy status changes.
 
--- 
---
-	In Ximian did mad Miguel a mighty mail client decree
-	Where Nat the crazy hacker ran
-	Through sourcecode measureless to man
-	And never coredump free
-
+??
