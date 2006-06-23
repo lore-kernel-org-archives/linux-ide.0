@@ -1,46 +1,32 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 0/3]ACPI support for SATA/PATA
-Date: Fri, 23 Jun 2006 14:39:19 +0800
-Message-ID: <1151044759.7132.153.camel@forrest26.sh.intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Hotplug drives on vt8251 with ahci module
+Date: Fri, 23 Jun 2006 17:12:28 +0900
+Message-ID: <449BA26C.7050009@gmail.com>
+References: <200606210942.33578.boac@wanadoo.nl> <44995139.30808@gmail.com> <200606221500.25056.boac@wanadoo.nl> <449B6583.1090303@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56940 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932895AbWFWHG2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Jun 2006 03:06:28 -0400
+Received: from py-out-1112.google.com ([64.233.166.178]:49031 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932931AbWFWIMS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Jun 2006 04:12:18 -0400
+Received: by py-out-1112.google.com with SMTP id z74so650504pyg
+        for <linux-ide@vger.kernel.org>; Fri, 23 Jun 2006 01:12:18 -0700 (PDT)
+In-Reply-To: <449B6583.1090303@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, rdunlap@xenotime.net, htejun@gmail.com
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Aalderd Bouwman <aalderd.boac@wanadoo.nl>
 
-Hello, all
+Tejun Heo wrote:
+[--snip--]
+> Bastiaan, I'm shooting in the dark, so please don't hesitate to step in.
 
-In ACPI spec 3.0, section 9.9 defines 4 objects for PATA/SATA:
+Bastiaan, it also seems that AHCI_FLAG_RESET_NEEDS_CLO workaround is not 
+necessary anymore after hotplug changes which added 
+ATA_FLAG_SKIP_D2H_BSY.  Can you please verify this?
 
-_GTM and _STM are PATA-only objects, which are used to get/set PATA
-timing information(i.e. PIO and DMA speed);
-_SDD is SATA-only object, which is used to inform the platform of the
-type of device attached to a port;
-_GTF is for both PATA and SATA, which is used to return ATA task file
-needed to re-init the drive
+Thanks.
 
-In this patch set, 
-ata_acpi_get_timing() is for getting PATA timing information;
-ata_acpi_push_timing() is for setting PATA timing information;
-ata_acpi_push_id() is for operating on _SDD;
-ata_acpi_exec_tfs() is for getting ATA task file from _GTF and executing
-them for a given drive
-
-NOTE: ata_acpi_get_timing() and ata_acpi_push_timing() are channel
-(port)-level operations, which have more suitable invocation place in
-Tejun's upcoming PM patch. So I would not bother to reference(invoke)
-them in this version of patches and will send out updated patches after
-Tejun's PM patch is merged into #upstream.
-
-Randy,
-I'll add your sign-off line after you review the patch.
-
-Thanks,
-Forrest
+-- 
+tejun
