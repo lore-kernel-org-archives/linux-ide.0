@@ -1,70 +1,59 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/1] libata: minor patch for ATA_DFLAG_PIO
-Date: Thu, 22 Jun 2006 23:14:56 -0400
-Message-ID: <449B5CB0.7050208@pobox.com>
-References: <4497EB88.8030903@tw.ibm.com>
+Subject: Re: [PATCH 2.6.16-rc5 1/2] ahci: add another JMicron pci id
+Date: Thu, 22 Jun 2006 23:19:57 -0400
+Message-ID: <449B5DDD.2090007@pobox.com>
+References: <OF133C6180.50F304D2-ON4825718F.0009B817-4825718F.000B5E73@jmicron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------080901060405090003070305"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46982 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751139AbWFWDPD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jun 2006 23:15:03 -0400
-In-Reply-To: <4497EB88.8030903@tw.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:64646 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751169AbWFWDUA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jun 2006 23:20:00 -0400
+In-Reply-To: <OF133C6180.50F304D2-ON4825718F.0009B817-4825718F.000B5E73@jmicron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Tejun Heo <htejun@gmail.com>, Doug Maxey <dwm@bebe.enoyolf.org>, Linux IDE <linux-ide@vger.kernel.org>, Unicorn Chang <uchang@tw.ibm.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: justin@jmicron.com
+Cc: linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> Problem:
->  - With 2.6.17, some PIO-only devices are given DMA commands.
-> 
-> Changes:
->  - Do not clear the ATA_DFLAG_PIO flag in ata_dev_configure().
-> 
-> Original patch by Tejun.
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> 
-> --
-> The patch is done by Tejun and already in libata-dev upstream.
-> Maybe we also need this for 2.6.17.
-> 
-> For your review, thanks.
-> 
-> albert
-> 
-> diff -Nrup linux-2.6.17-0/drivers/scsi/libata-core.c linux-2.6.17-1/drivers/scsi/libata-core.c
-> --- linux-2.6.17-0/drivers/scsi/libata-core.c	2006-06-18 09:49:35.000000000 +0800
-> +++ linux-2.6.17-1/drivers/scsi/libata-core.c	2006-06-20 16:56:14.000000000 +0800
-> @@ -1229,7 +1229,7 @@ static int ata_dev_configure(struct ata_
->  		       id[84], id[85], id[86], id[87], id[88]);
->  
->  	/* initialize to-be-configured parameters */
-> -	dev->flags = 0;
-> +	dev->flags &= ~ATA_DFLAG_CFG_MASK;
->  	dev->max_sectors = 0;
->  	dev->cdb_len = 0;
->  	dev->n_sectors = 0;
-> diff -Nrup linux-2.6.17-0/include/linux/libata.h linux-2.6.17-1/include/linux/libata.h
-> --- linux-2.6.17-0/include/linux/libata.h	2006-06-18 09:49:35.000000000 +0800
-> +++ linux-2.6.17-1/include/linux/libata.h	2006-06-20 16:55:41.000000000 +0800
-> @@ -120,9 +120,12 @@ enum {
->  	ATA_SHT_USE_CLUSTERING	= 1,
->  
->  	/* struct ata_device stuff */
-> -	ATA_DFLAG_LBA48		= (1 << 0), /* device supports LBA48 */
-> -	ATA_DFLAG_PIO		= (1 << 1), /* device currently in PIO mode */
-> -	ATA_DFLAG_LBA		= (1 << 2), /* device supports LBA */
-> +	ATA_DFLAG_LBA		= (1 << 0), /* device supports LBA */
-> +	ATA_DFLAG_LBA48		= (1 << 1), /* device supports LBA48 */
-> +
-> +	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
-> +
-> +	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
+This is a multi-part message in MIME format.
+--------------080901060405090003070305
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-ACK for 2.6.17, if you would like to send it to stable@kernel.org...
+Just to speed things along, I applied the attached patch...
 
 	Jeff
 
 
+
+
+--------------080901060405090003070305
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+8fa29b23d9e0ef976dc578aab98297d4f24f70da
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 82ecdef..df779ba 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -320,8 +320,14 @@ static const struct pci_device_id ahci_p
+ 	/* JMicron */
+ 	{ 0x197b, 0x2360, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_ahci }, /* JMicron JMB360 */
++	{ 0x197b, 0x2361, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* JMicron JMB361 */
+ 	{ 0x197b, 0x2363, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_ahci }, /* JMicron JMB363 */
++	{ 0x197b, 0x2365, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* JMicron JMB365 */
++	{ 0x197b, 0x2366, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* JMicron JMB366 */
+ 
+ 	/* ATI */
+ 	{ PCI_VENDOR_ID_ATI, 0x4380, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+
+--------------080901060405090003070305--
