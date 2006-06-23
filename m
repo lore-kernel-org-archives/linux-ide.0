@@ -1,233 +1,121 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Hotplug drives on vt8251 with ahci module
-Date: Fri, 23 Jun 2006 12:52:35 +0900
-Message-ID: <449B6583.1090303@gmail.com>
-References: <200606210942.33578.boac@wanadoo.nl> <44995139.30808@gmail.com> <200606221500.25056.boac@wanadoo.nl>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: [PATCH 1/3] Makefile/Kconfig/doc/definition of noacpi
+Date: Fri, 23 Jun 2006 14:39:34 +0800
+Message-ID: <1151044774.7132.154.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040200090103070907080706"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.202]:59702 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751233AbWFWDw0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Jun 2006 23:52:26 -0400
-Received: by nz-out-0102.google.com with SMTP id l1so666004nzf
-        for <linux-ide@vger.kernel.org>; Thu, 22 Jun 2006 20:52:25 -0700 (PDT)
-In-Reply-To: <200606221500.25056.boac@wanadoo.nl>
+Received: from mga01.intel.com ([192.55.52.88]:34884 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S932884AbWFWGwO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Jun 2006 02:52:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, boac@wanadoo.nl
+To: jgarzik@pobox.com, rdunlap@xenotime.net, htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040200090103070907080706
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+This patch updated the Makefile, Kconfig, kernel-parameters.txt, and added
+definition of noacpi.
 
-[CC'ing Bastiaan Jacques]
 
-Hello, Aalderd.
+Signed-off-by: Zhao Forrest <forrest.zhao@intel.com>
 
-Aalderd Bouwman wrote:
-> The same turn on/off action with rmmod ahci will work properly I think:
-> (I have test that action 3 times)
+---
 
-Great.
+ Documentation/kernel-parameters.txt |    5 +++++
+ drivers/scsi/Kconfig                |   13 +++++++++++++
+ drivers/scsi/Makefile               |    1 +
+ drivers/scsi/libata-core.c          |    4 ++++
+ drivers/scsi/libata.h               |    1 +
+ 5 files changed, 24 insertions(+), 0 deletions(-)
 
-> As you see the disconnect of a drive is detected.
-> Is the message: 'failed to recover some devices' correct?
-> This message apears twice.
-
-AFAICS, libata EH is behaving as expected.  The problem, again, is that 
-more often than not, the via controller seems to lock up after certain 
-events.  In the message you just posted, ata14 fails to recover after 
-power-on.
-
-Hmmm.. Looking at the log, it occurs to me that it might be because the 
-controller can't receive D2H FIS after hardreset.  Can you try the 
-attached patch?
-
-Bastiaan, I'm shooting in the dark, so please don't hesitate to step in.
-
--- 
-tejun
-
---------------040200090103070907080706
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index e261b37..fe12927 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -164,6 +164,7 @@ enum {
+aeb16f3e54806143a6a790a918b969ae60d2eeb1
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index b3a6187..770bc86 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -49,6 +49,7 @@ parameter is applicable:
+ 	ISAPNP	ISA PnP code is enabled.
+ 	ISDN	Appropriate ISDN support is enabled.
+ 	JOY	Appropriate joystick support is enabled.
++	LIBATA  Libata driver is enabled.
+ 	LP	Printer support is enabled.
+ 	LOOP	Loopback device support is enabled.
+ 	M68k	M68k architecture is enabled.
+@@ -1001,6 +1002,10 @@ running once the system is up.
+ 			emulation library even if a 387 maths coprocessor
+ 			is present.
  
- 	/* ap->flags bits */
- 	AHCI_FLAG_RESET_NEEDS_CLO	= (1 << 24),
-+	AHCI_FLAG_NO_HRST_D2H_FIS	= (1 << 25),
- };
++	noacpi		[LIBATA] Disables use of ACPI in libata suspend/resume
++			when set.
++			Format: <int>
++
+ 	noalign		[KNL,ARM]
  
- struct ahci_cmd_hdr {
-@@ -277,7 +278,8 @@ static const struct ata_port_info ahci_p
- 		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
- 				  ATA_FLAG_SKIP_D2H_BSY |
--				  AHCI_FLAG_RESET_NEEDS_CLO,
-+				  AHCI_FLAG_RESET_NEEDS_CLO |
-+				  AHCI_FLAG_NO_HRST_D2H_FIS,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
-@@ -703,14 +705,18 @@ static int ahci_hardreset(struct ata_por
- 	tf.command = 0xff;
- 	ata_tf_to_fis(&tf, d2h_fis, 0);
+ 	noapic		[SMP,APIC] Tells the kernel to not make use of any
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index a480a37..f71c4e3 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -609,6 +609,19 @@ config SCSI_SATA_INTEL_COMBINED
+ 	depends on IDE=y && !BLK_DEV_IDE_SATA && (SCSI_SATA_AHCI || SCSI_ATA_PIIX)
+ 	default y
  
--	rc = sata_std_hardreset(ap, class);
--
--	ahci_start_engine(ap);
-+	if (!(ap->flags & AHCI_FLAG_NO_HRST_D2H_FIS)) {
-+		rc = sata_std_hardreset(ap, class);
-+		ahci_start_engine(ap);
++config SCSI_SATA_ACPI
++	bool
++	depends on SCSI_SATA && ACPI && PCI
++	default y
++	help
++	  This option adds support for SATA-related ACPI objects.
++	  These ACPI objects add the ability to retrieve taskfiles
++	  from the ACPI BIOS and write them to the disk controller.
++	  These objects may be related to performance, security,
++	  power management, or other areas.
++	  You can disable this at kernel boot time by using the
++	  option 'libata.noacpi'.
++
+ config SCSI_BUSLOGIC
+ 	tristate "BusLogic SCSI support"
+ 	depends on (PCI || ISA || MCA) && SCSI && ISA_DMA_API
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 669ff6b..c1a5f71 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -165,6 +165,7 @@ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-
+ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
+ libata-objs	:= libata-core.o libata-scsi.o libata-bmdma.o libata-eh.o
++libata-$(CONFIG_SCSI_SATA_ACPI) += libata-acpi.o
+ oktagon_esp_mod-objs	:= oktagon_esp.o oktagon_io.o
  
--	if (rc == 0 && ata_port_online(ap))
--		*class = ahci_dev_classify(ap);
--	if (*class == ATA_DEV_UNKNOWN)
--		*class = ATA_DEV_NONE;
-+		if (rc == 0 && ata_port_online(ap))
-+			*class = ahci_dev_classify(ap);
-+		if (*class == ATA_DEV_UNKNOWN)
-+			*class = ATA_DEV_NONE;
-+	} else {
-+		rc = sata_do_hardreset(ap);
-+		ahci_start_engine(ap);
-+	}
- 
- 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
- 	return rc;
+ # Files generated that shall be removed upon make clean
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 89c3fbe..9d6ed7e 100644
+index 89c3fbe..a11b674 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -2517,6 +2517,46 @@ int sata_phy_resume(struct ata_port *ap,
- 	return sata_phy_debounce(ap, params);
- }
+@@ -88,6 +88,10 @@ int libata_fua = 0;
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
  
-+int sata_do_hardreset(struct ata_port *ap)
-+{
-+	u32 scontrol;
-+	int rc;
++int noacpi = 0;
++module_param(noacpi, int, 0444);
++MODULE_PARM_DESC(noacpi, "Disables use of ACPI in suspend/resume when set");
 +
-+	if (sata_set_spd_needed(ap)) {
-+		/* SATA spec says nothing about how to reconfigure
-+		 * spd.  To be on the safe side, turn off phy during
-+		 * reconfiguration.  This works for at least ICH7 AHCI
-+		 * and Sil3124.
-+		 */
-+		if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
-+			return rc;
-+
-+		scontrol = (scontrol & 0x0f0) | 0x302;
-+
-+		if ((rc = sata_scr_write(ap, SCR_CONTROL, scontrol)))
-+			return rc;
-+
-+		sata_set_spd(ap);
-+	}
-+
-+	/* issue phy wake/reset */
-+	if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
-+		return rc;
-+
-+	scontrol = (scontrol & 0x0f0) | 0x301;
-+
-+	if ((rc = sata_scr_write_flush(ap, SCR_CONTROL, scontrol)))
-+		return rc;
-+
-+	/* Couldn't find anything in SATA I/II specs, but AHCI-1.1
-+	 * 10.4.2 says at least 1 ms.
-+	 */
-+	msleep(1);
-+
-+	/* bring phy back */
-+	return sata_phy_resume(ap, sata_deb_timing_eh);
-+}
-+
- static void ata_wait_spinup(struct ata_port *ap)
- {
- 	struct ata_eh_context *ehc = &ap->eh_context;
-@@ -2670,44 +2710,16 @@ int ata_std_softreset(struct ata_port *a
-  */
- int sata_std_hardreset(struct ata_port *ap, unsigned int *class)
- {
--	u32 scontrol;
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
- 
--	if (sata_set_spd_needed(ap)) {
--		/* SATA spec says nothing about how to reconfigure
--		 * spd.  To be on the safe side, turn off phy during
--		 * reconfiguration.  This works for at least ICH7 AHCI
--		 * and Sil3124.
--		 */
--		if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
--			return rc;
--
--		scontrol = (scontrol & 0x0f0) | 0x302;
--
--		if ((rc = sata_scr_write(ap, SCR_CONTROL, scontrol)))
--			return rc;
--
--		sata_set_spd(ap);
--	}
--
--	/* issue phy wake/reset */
--	if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
--		return rc;
--
--	scontrol = (scontrol & 0x0f0) | 0x301;
--
--	if ((rc = sata_scr_write_flush(ap, SCR_CONTROL, scontrol)))
-+	/* reset the phy */
-+	rc = sata_do_hardreset(ap);
-+	if (rc) {
-+		ata_port_printk(ap, KERN_ERR, "COMRESET failed (%d)\n", rc);
- 		return rc;
--
--	/* Couldn't find anything in SATA I/II specs, but AHCI-1.1
--	 * 10.4.2 says at least 1 ms.
--	 */
--	msleep(1);
--
--	/* bring phy back */
--	sata_phy_resume(ap, sata_deb_timing_eh);
-+	}
- 
- 	/* TODO: phy layer with polling, timeouts, etc. */
- 	if (ata_port_offline(ap)) {
-@@ -5833,6 +5845,7 @@ EXPORT_SYMBOL_GPL(sata_phy_resume);
- EXPORT_SYMBOL_GPL(sata_phy_reset);
- EXPORT_SYMBOL_GPL(__sata_phy_reset);
- EXPORT_SYMBOL_GPL(ata_bus_reset);
-+EXPORT_SYMBOL_GPL(sata_do_hardreset);
- EXPORT_SYMBOL_GPL(ata_std_prereset);
- EXPORT_SYMBOL_GPL(ata_std_softreset);
- EXPORT_SYMBOL_GPL(sata_std_hardreset);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 6b3c3af..533ed44 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -631,6 +631,7 @@ extern void ata_bus_reset(struct ata_por
- extern int sata_set_spd(struct ata_port *ap);
- extern int sata_phy_debounce(struct ata_port *ap, const unsigned long *param);
- extern int sata_phy_resume(struct ata_port *ap, const unsigned long *param);
-+extern int sata_do_hardreset(struct ata_port *ap);
- extern int ata_std_prereset(struct ata_port *ap);
- extern int ata_std_softreset(struct ata_port *ap, unsigned int *classes);
- extern int sata_std_hardreset(struct ata_port *ap, unsigned int *class);
-diff --git a/patches/series b/patches/series
-index 9415c25..84b70e4 100644
-
---------------040200090103070907080706--
+ MODULE_AUTHOR("Jeff Garzik");
+ MODULE_DESCRIPTION("Library module for ATA devices");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+index bdd4888..ca31bcb 100644
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -43,6 +43,7 @@ extern struct workqueue_struct *ata_aux_
+ extern int atapi_enabled;
+ extern int atapi_dmadir;
+ extern int libata_fua;
++extern int noacpi;
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
+ extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
+ extern void ata_dev_disable(struct ata_device *dev);
+-- 
+1.2.6
