@@ -1,72 +1,64 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] [PATCHSET] new Power Management for libata, take 2
+Subject: [PATCH 02/15] libata: implement and use ata_deh_dev_action()
 Date: Sat, 24 Jun 2006 20:30:18 +0900
-Message-ID: <11511486183271-git-send-email-htejun@gmail.com>
+Message-ID: <11511486183049-git-send-email-htejun@gmail.com>
+References: <11511486183271-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.200]:50821 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1752217AbWFXLaI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jun 2006 07:30:08 -0400
-Received: by nz-out-0102.google.com with SMTP id z31so964564nzd
-        for <linux-ide@vger.kernel.org>; Sat, 24 Jun 2006 04:30:07 -0700 (PDT)
-In-Reply-To: 
+Received: from py-out-1112.google.com ([64.233.166.177]:48166 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1752223AbWFXLaJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Jun 2006 07:30:09 -0400
+Received: by py-out-1112.google.com with SMTP id t32so931812pyc
+        for <linux-ide@vger.kernel.org>; Sat, 24 Jun 2006 04:30:08 -0700 (PDT)
+In-Reply-To: <11511486183271-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+Implement and use ata_eh_dev_action() which returns EH action mask for
+a device.
 
-This is the second take of new-power-management patchset.  Changes
-from the last take[1] are...
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-* Per-dev PM is now supported.  Now generic device PM layer drives
-  whole PM sequence and libata port-wide PM does much less.
+---
 
-* Suspend is now sequential - ie. harddrives hanging off a controller
-  are spinned down one after another.  Spinning down is pretty fast
-  and this doesn't make much difference.
+ drivers/scsi/libata-eh.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-* Resume is still done asynchronously but it also uses generic PM to
-  drive it.
-
-* sata_sil and sata_sil24 are fixed to perform PCI resume before
-  reinitializing the controller.
-
-This patchset contains 15 patches.
-
-#01-07 : preparation patches, misc updates & fixes
-#08-11 : new core PM implementation
-#12-15 : convert LLDs to use new PM
-
-As before, ata_piix, sata_sil and sata_sil24 are converted.  Both mem
-and disk sleeps are tested and verifed to work on the following
-configurations.
-
-* On P5LD2 + latest BIOS
-  - onboard ICH7R in ata_piix mode
-  - sil3112 PCI card
-  - sil3114 PCI card
-  - sil3124 PCI-x card on a PCI slot
-  - sil3132 PCI-e card
-
-* On Fujitsu lifebook P7120 (+ PATA enabled + patch for PCI ID)
-  - onboard ICH6M in ata_piix mode
-  - sil3112 PCMCIA card
-
-As in the last take, most of PM operations are performed by EH and
-fully synchronized with all other operations.  Putting to sleep and
-waking up should be safe under any circumstances as far as libata is
-concerned.
-
-Thanks.
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.ide/11336
+0b207dfe1d875f76363c79dbd0b4111f2cbd53f8
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 126be36..c7e6298 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -93,6 +93,13 @@ static int ata_ering_map(struct ata_erin
+ 	return rc;
+ }
+ 
++static unsigned int ata_eh_dev_action(struct ata_device *dev)
++{
++	struct ata_eh_context *ehc = &dev->ap->eh_context;
++
++	return ehc->i.action | ehc->i.dev_action[dev->devno];
++}
++
+ static void ata_eh_clear_action(struct ata_device *dev,
+ 				struct ata_eh_info *ehi, unsigned int action)
+ {
+@@ -1592,7 +1599,7 @@ static int ata_eh_revalidate_and_attach(
+ 		unsigned int action;
+ 
+ 		dev = &ap->device[i];
+-		action = ehc->i.action | ehc->i.dev_action[dev->devno];
++		action = ata_eh_dev_action(dev);
+ 
+ 		if (action & ATA_EH_REVALIDATE && ata_dev_enabled(dev)) {
+ 			if (ata_port_offline(ap)) {
+-- 
+1.3.2
 
 
