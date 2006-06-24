@@ -1,116 +1,99 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/15] libata: move ata_flush_cache() from libata-core.c to libata-eh.c
+Subject: [PATCH 15/15] sata_sil24: add suspend/sleep support
 Date: Sat, 24 Jun 2006 20:30:20 +0900
-Message-ID: <11511486203054-git-send-email-htejun@gmail.com>
+Message-ID: <1151148620574-git-send-email-htejun@gmail.com>
 References: <11511486183271-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.198]:19846 "EHLO
+Received: from nz-out-0102.google.com ([64.233.162.201]:40067 "EHLO
 	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S933044AbWFXLaO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jun 2006 07:30:14 -0400
-Received: by nz-out-0102.google.com with SMTP id o37so445543nzf
-        for <linux-ide@vger.kernel.org>; Sat, 24 Jun 2006 04:30:13 -0700 (PDT)
+	id S933063AbWFXLaT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Jun 2006 07:30:19 -0400
+Received: by nz-out-0102.google.com with SMTP id z31so964563nzd
+        for <linux-ide@vger.kernel.org>; Sat, 24 Jun 2006 04:30:18 -0700 (PDT)
 In-Reply-To: <11511486183271-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-With recent PM reimplementation, there's no user left in
-libata-core.c.  Move the function to libata-eh.c and make it static.
+Add suspend/sleep support.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   22 ----------------------
- drivers/scsi/libata-eh.c   |   22 ++++++++++++++++++++++
- drivers/scsi/libata.h      |    1 -
- 3 files changed, 22 insertions(+), 23 deletions(-)
+ drivers/scsi/sata_sil24.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
-31f414d15d2994866853e48ee4d9c94d7dd21a59
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 5e9108e..1aa8a03 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4974,28 +4974,6 @@ int ata_port_offline(struct ata_port *ap
- 	return 0;
- }
+19356e72ec5b323cda9af3b8183400f096f78ba4
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 7726e6e..49f992f 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -92,6 +92,7 @@ enum {
+ 	HOST_CTRL_STOP		= (1 << 18), /* latched PCI STOP */
+ 	HOST_CTRL_DEVSEL	= (1 << 19), /* latched PCI DEVSEL */
+ 	HOST_CTRL_REQ64		= (1 << 20), /* latched PCI REQ64 */
++	HOST_CTRL_GLOBAL_RST	= (1 << 31), /* global reset */
  
--int ata_flush_cache(struct ata_device *dev)
--{
--	unsigned int err_mask;
--	u8 cmd;
--
--	if (!ata_try_flush_cache(dev))
--		return 0;
--
--	if (ata_id_has_flush_ext(dev->id))
--		cmd = ATA_CMD_FLUSH_EXT;
--	else
--		cmd = ATA_CMD_FLUSH;
--
--	err_mask = ata_do_simple_cmd(dev, cmd);
--	if (err_mask) {
--		ata_dev_printk(dev, KERN_ERR, "failed to flush cache\n");
--		return -EIO;
--	}
--
--	return 0;
--}
--
- /**
-  *	ata_port_start - Set port up for dma.
-  *	@ap: Port to initialize
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index f05334a..1c2b48c 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1653,6 +1653,28 @@ static int ata_eh_revalidate_and_attach(
+ 	/*
+ 	 * Port registers
+@@ -338,6 +339,7 @@ static int sil24_port_start(struct ata_p
+ static void sil24_port_stop(struct ata_port *ap);
+ static void sil24_host_stop(struct ata_host_set *host_set);
+ static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
++static int sil24_pci_device_resume(struct pci_dev *pdev);
+ 
+ static const struct pci_device_id sil24_pci_tbl[] = {
+ 	{ 0x1095, 0x3124, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3124 },
+@@ -353,6 +355,8 @@ static struct pci_driver sil24_pci_drive
+ 	.id_table		= sil24_pci_tbl,
+ 	.probe			= sil24_init_one,
+ 	.remove			= ata_pci_remove_one, /* safe? */
++	.suspend		= ata_pci_device_suspend,
++	.resume			= sil24_pci_device_resume,
+ };
+ 
+ static struct scsi_host_template sil24_sht = {
+@@ -372,6 +376,8 @@ static struct scsi_host_template sil24_s
+ 	.slave_configure	= ata_scsi_slave_config,
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
++	.suspend		= ata_scsi_device_suspend,
++	.resume			= ata_scsi_device_resume,
+ };
+ 
+ static const struct ata_port_operations sil24_ops = {
+@@ -1179,6 +1185,25 @@ static int sil24_init_one(struct pci_dev
  	return rc;
  }
  
-+static int ata_flush_cache(struct ata_device *dev)
++static int sil24_pci_device_resume(struct pci_dev *pdev)
 +{
-+	unsigned int err_mask;
-+	u8 cmd;
++	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
++	struct sil24_host_priv *hpriv = host_set->private_data;
 +
-+	if (!ata_try_flush_cache(dev))
-+		return 0;
++	ata_pci_device_do_resume(pdev);
 +
-+	if (ata_id_has_flush_ext(dev->id))
-+		cmd = ATA_CMD_FLUSH_EXT;
-+	else
-+		cmd = ATA_CMD_FLUSH;
++	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND)
++		writel(HOST_CTRL_GLOBAL_RST, hpriv->host_base + HOST_CTRL);
 +
-+	err_mask = ata_do_simple_cmd(dev, cmd);
-+	if (err_mask) {
-+		ata_dev_printk(dev, KERN_ERR, "failed to flush cache\n");
-+		return -EIO;
-+	}
++	sil24_init_controller(pdev, host_set->n_ports,
++			      host_set->ports[0]->flags,
++			      hpriv->host_base, hpriv->port_base);
++
++	ata_host_set_resume(host_set);
 +
 +	return 0;
 +}
 +
- /**
-  *	ata_eh_suspend - handle suspend EH action
-  *	@ap: target host port
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index 16ce23a..539b0b5 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -65,7 +65,6 @@ extern int ata_check_atapi_dma(struct at
- extern void ata_dev_select(struct ata_port *ap, unsigned int device,
-                            unsigned int wait, unsigned int can_sleep);
- extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
--extern int ata_flush_cache(struct ata_device *dev);
- extern void ata_dev_init(struct ata_device *dev);
- extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
+ static int __init sil24_init(void)
+ {
+ 	return pci_module_init(&sil24_pci_driver);
 -- 
 1.3.2
 
