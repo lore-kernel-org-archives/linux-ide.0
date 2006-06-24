@@ -1,107 +1,98 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 6745] New: kernel hangs when trying to read
- atip wiith cdrecord
-Date: Sat, 24 Jun 2006 14:47:39 -0700
-Message-ID: <20060624144739.78bde590.akpm@osdl.org>
-References: <200606242036.k5OKaSvp031813@fire-2.osdl.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: + via-pata-controller-xfer-fixes.patch added to -mm tree
+Date: Sat, 24 Jun 2006 18:36:56 -0400
+Message-ID: <449DBE88.5020809@garzik.org>
+References: <200606242214.k5OMEHCU005963@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:50406 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751101AbWFXVrl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jun 2006 17:47:41 -0400
-In-Reply-To: <200606242036.k5OKaSvp031813@fire-2.osdl.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:51932 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751142AbWFXWhE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jun 2006 18:37:04 -0400
+In-Reply-To: <200606242214.k5OMEHCU005963@shell0.pdx.osdl.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: akpm@osdl.org, alan@lxorguk.ukuu.org.uk, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: castet.matthieu@free.fr, B.Zolnierkiewicz@elka.pw.edu.pl, htejun@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Sat, 24 Jun 2006 13:36:28 -0700
-bugme-daemon@bugzilla.kernel.org wrote:
+akpm@osdl.org wrote:
+> The patch titled
+> 
+>      VIA PATA controller xfer fixes
+> 
+> has been added to the -mm tree.  Its filename is
+> 
+>      via-pata-controller-xfer-fixes.patch
+> 
+> See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
+> out what to do about this
+> 
+> ------------------------------------------------------
+> Subject: VIA PATA controller xfer fixes
+> From: matthieu castet <castet.matthieu@free.fr>
+> 
+> 
+> On via controller(vt8235) and pata via, some ATAPI devices (CDR-6S48) fail
+> in the xfer mode initialisation.  This make the boot slow and the drive
+> unsuable.
+> 
+> It seems the interrupt for xfer mode is done before the drive is ready, so
+> the current libata code skip the interrupt.  But no new interrupt is done
+> by the controller, so the xfer mode fails.
+> 
+> A quirk is to wait for 10 us (by step of 1 us) and see if the device
+> becomes ready in the case of SETFEATURES_XFER feature.  The problem seems
+> pata_via only, so the quirk is put in the pata_via interrupt handler as
+> Tejun Heo request.
+> 
+> It won't affect working devices, as we don't wait if the device is already
+> ready.  It will adds an extra ata_altstatus in order to avoid to duplicate
+> ata_host_intr, but only in the case of SETFEATURES_XFER (with should happen
+> only few times).
+> 
+> Sorry for the lack of changelog in my previous mail, I tought the old
+> changelog + move it in pata via interrupt was enought.  And sorry again, I
+> sent you a bad patch (I forgot a quitl refresh).
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=6745
-> 
->            Summary: kernel hangs when trying to read atip wiith cdrecord
->     Kernel Version: 2.6.16.1
->             Status: NEW
->           Severity: normal
->              Owner: bzolnier@gmail.com
->          Submitter: lohmaier@gmx.de
-> 
-> 
-> Most recent kernel where this bug did not occur: 2.6.16.1 (yes, the same version
-> - it works with my dvd-burner, but not with my cd-burner), the 2.4 series worked
-> with both, but there I have been using ide-scsi)
-> Distribution: Mandriva 9.0 based
-> Hardware Environment:
-> cdrom: Cyberdrive CW058D - master on 2nd IDE
-> dvd: Pioneer 106D slave on prim. IDE
-> MB: elitegroup k7sem with sis chipset (SIS 5513)
-> Software Environment:
-> cdrtools 2.01.01a10
-> 
-> Problem Description:
-> When trying to use cdrecord with the cdburner, the kernel hangs (not completely,
-> only for cd-burning) and the system has to be rebooted. Even retrieving the
-> atip-information of a disc fails.
-> It fails only with the cd-recorder, not with the DVD-Burner. But when I tried
-> with the cdrecorder, burning with the dvd-burner won't work either until the
-> machine is rebooted.
-> 
-> Steps to reproduce:
-> I simply try to use "cdrecord dev=ATAPI:1,0,0 -atip" as root.
-> # cdrecord dev=ATAPI:1,0,0 -atip
-> Cdrecord-ProDVD-Clone 2.01.01a09 (i686-pc-linux-gnu) Copyright (C) 1995-2006
-> J&#65533;rg Schilling
-> cdrecord: Warning: Running on Linux-2.6.16.1
-> cdrecord: There are unsettled issues with Linux-2.5 and newer.
-> cdrecord: If you have unexpected problems, please try Linux-2.4 or Solaris.
-> scsidev: 'ATAPI:1,0,0'
-> devname: 'ATAPI'
-> scsibus: 1 target: 0 lun: 0
-> Warning: Using ATA Packet interface.
-> Warning: The related Linux kernel interface code seems to be unmaintained.
-> Warning: There is absolutely NO DMA, operations thus are slow.
-> Using libscg version 'schily-0.8'.
-> Device type    : Removable CD-ROM
-> Version        : 0
-> Response Format: 1
-> Vendor_info    : 'CyberDrv'
-> Identifikation : 'CW058D CD-R/RW  '
-> Revision       : '160D'
-> Device seems to be: Generic mmc CD-RW.
-> Using generic SCSI-3/mmc   CD-R/CD-RW driver (mmc_cdr).
-> Driver flags   : MMC-2 SWABAUDIO BURNFREE
-> Supported modes: TAO PACKET SAO SAO/R96P SAO/R96R RAW/R16 RAW/R96P
-> RAW/R96R
-> ----here it hangs and never returns---
-> 
-> If I run cdrecord with -V (i.e. scsi verbose), it reads:
-> [...]
-> Executing 'mode select g1' command on Bus 1 Target 0, Lun 0 timeout 40s
-> CDB:  55 10 00 00 00 00 00 00 3C 00
-> cmd finished after 0.002s timeout 40s
-> 
-> Executing 'get_configuration' command on Bus 1 Target 0, Lun 0 timeout 40s
-> CDB:  46 02 00 37 00 00 00 00 10 00
-> cmd finished after 0.000s timeout 40s
-> 
-> Executing 'read buffer' command on Bus 1 Target 0, Lun 0 timeout 40s
-> CDB:  3C 00 00 00 00 00 00 00 04 00
-> cmd finished after 0.000s timeout 40s
-> 
-> Executing 'read buffer' command on Bus 1 Target 0, Lun 0 timeout 40s
-> CDB:  3C 00 00 00 00 00 00 FC 00 00
-> 
-> So the kernel doesn't timeout/return for some reason.
-> You can find the full log here:
-> http://muenchen-surf.de/lohmaier/cdrecord_atip_log
-> 
-> If that information is not enough to handle the process, please tell me what
-> else you need. Thank you.
-> 
+Data point #1:
 
-We seem to have an awful lot of these "CD burner doesn't work but it did in
-2.4" reports.
+Here I quote from drivers/ide generic code ide_config_drive_speed() in 
+ide-iops.c:
 
-Does anyone have the vaguest inklink of how we broke it?
+    /*
+     * Allow status to settle, then read it again.
+     * A few rare drives vastly violate the 400ns spec here,
+     * so we'll wait up to 10usec for a "good" status
+     * rather than expensively fail things immediately.
+     * This fix courtesy of Matthew Faupel & Niccolo Rigacci.
+     */
+    for (i = 0; i < 10; i++) {
+            udelay(1);
+            if (OK_STAT((stat = hwif->INB(IDE_STATUS_REG)),
+			  DRIVE_READY, BUSY_STAT|DRQ_STAT|ERR_STAT)) {
+                    error = 0;
+                    break;
+            }
+    }
+
+And there is similar logic in ide_wait_stat().  wait_drive_not_busy() in 
+ide-taskfile.c waits for up to 1 ms.
+
+
+Data point #2:
+
+libata was originally based on the "highly correct" (or one version 
+thereof) programming sequences found in Hale Landis's free ATADRVR 
+(http://www.ata-atapi.com/).  Hale's ATADRVR, which was MS-DOS based and 
+not threaded or asynchronous at all, did the following after every 
+command execution (sent taskfile to hardware):
+
+	if (device is ATAPI)
+		sleep(150 ms)
+
+
+Overall, I've no clue what to do on older PATA hardware, so my 
+"insightful" suggestions are largely (a) follow drivers/ide code and/or 
+(b) listen to any old fogies with deep historical knowledge.
+
