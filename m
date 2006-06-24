@@ -1,28 +1,19 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git-patch] new Power Management for libata, take 2
-Date: Sat, 24 Jun 2006 20:36:05 +0900
-Message-ID: <449D23A5.3020504@gmail.com>
-References: <11511486183271-git-send-email-htejun@gmail.com>
+From: "Matos" <Matosdeed@earthlink.net>
+Subject: FWD: Hot and new  You crave to shoot like a film  =?ISO-8859-1?Q?=20star=85?=
+Date: Sat, 24 Jun 2006 13:48:46 +0200
+Message-ID: <96769778409811.6EC0D8F4E1@M07GHK>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.192]:52231 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S933057AbWFXLgK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jun 2006 07:36:10 -0400
-Received: by nz-out-0102.google.com with SMTP id z31so965339nzd
-        for <linux-ide@vger.kernel.org>; Sat, 24 Jun 2006 04:36:10 -0700 (PDT)
-In-Reply-To: <11511486183271-git-send-email-htejun@gmail.com>
+Received: from mna75-1-87-90-15-195.dsl.club-internet.fr ([87.90.15.195]:6414
+	"EHLO LARI.ra3ud9.org") by vger.kernel.org with ESMTP
+	id S933387AbWFXLsp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Jun 2006 07:48:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: linux-kernel-owner@vger.kernel.org
 
-This patchset is also available at the following git tree.
+Hi Look, now it’s possible with this stuff Enjoy multi-orgasms using this powerful thing I am sure it was Come in: http://ihlmail/gal/ms Don’t trust me? Do you wish to increase your volume by up to 500%?
 
-http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=new-pm
-git://htj.dyndns.org/libata-tj new-pm
-
--- 
-tejun
