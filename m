@@ -1,72 +1,28 @@
-From: Britney <Britney@partlycloudy.com>
-Subject: Oferta de trabajo para usted
-Date: Fri, 25 Jan 2002 16:08:54 +0100
-Message-ID: <DF7DF58A.4559659@partlycloudy.com>
+From: "Ginger Holder" <tl.com.br@citius.getresponse.com>
+Subject: top quality brand watches
+Date: Sat, 24 Jun 2006 15:16:27 +0000 (UTC)
+Message-ID: <30368678.20060624151621__25771.0487036549$1151162187$gmane$org@citius.getresponse.com>
+Reply-To: "Ginger Holder" <tl.com.br@citius.getresponse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dyv64.neoplus.adsl.tpnet.pl ([83.22.133.64]:7689 "HELO
-	huhmail.com") by vger.kernel.org with SMTP id S1750743AbWFXOIM
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jun 2006 10:08:12 -0400
+Received: from zeus1.kernel.org ([204.152.191.4]:56494 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1752267AbWFXPQL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jun 2006 11:16:11 -0400
+Date: Sat, 24 Jun 2006 15:16:21 -0060
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-8086@vger.kernel.org
 
-Hola!.
+Get the Finest Watch Replicas!
 
-Este correo electr=C3=B3nico le muestra una oferta de trabajo, que podr=
-=C3=ADa ser interesante a usted.
+We only sell premium watches. There's no battery in these replicas just like the real ones since they charge themselves as you move. The second hand moves JUST like the real ones, too. These original watches sell in stores for thousands of dollars. We sell them for much less. 
 
-Gerente financiero situado en su pa=C3=ADs! Trabajo en Internet con bue=
-n sueldo!
-GoldLeader Inc. busca a personas en=C3=A9rgicas y responsables para com=
-pletar el
-puesto de encargado de deudores de media jornada.
-Como encargado de deudores, usted ser=C3=A1 el responsable de procesar =
-y facilitar
-las transferencias de fondos iniciadas por nuestros clientes bajo la su=
-pervisi=C3=B3n del gerente regional.
+- Replicated to the Smallest Detail
+- 98% Perfectly Accurate Markings 
+- Signature Green Sticker w/ Serial Number on Watch Back
+- Magnified Quickset Date
+- Includes all Proper Markings
 
- Ofrecemos:
-
-- Ventajas buenas (m=C3=A1s de 1000 $ por semana);
-
-- Contrato legal;
-
- Se precisa puntualidad, capacidades directivas y responsabilidad.
-
-Usted tambi=C3=A9n recibir=C3=A1 instrucciones detalladas para acciones
-subsecuentes de nuestro gerente, con informaci=C3=B3n sobre como recibi=
-r/transferir el dinero.
-
-=20
-1. Ser capaz de comprobar su correo electr=C3=B3nico varias veces por d=
-=C3=ADa
-
-2. Ser capaz de responder a correos electr=C3=B3nico inmediatamente
-
-3. Ser capaz de trabajar horas extra si es necesario
-
-4. Ser responsable y trabajador
-
-5. Hablar ingles
-
-6. Tener m=C3=A1s de 21 a=C3=B1os;
-
-7. Deber=C3=ADa tener una cuenta bancaria personal
-
-Para informaci=C3=B3n adicionales y preguntas sobre el puesto de trabaj=
-o,
-por favor env=C3=ADe sus datos de contacto a  career@goldleader.biz
-
-NO SON VENTAS!!! NO SON LLAMADAS!!!
-USTED NO NECESITA DINERO PARA COMENZAR!!!
-=20
-Gracias por su atencion.
-Con respeto,
-Departamento de personal Goldleader Inc.
-http://www.goldleader.biz
-
+Visit us: www.fasts-hopping.com 
