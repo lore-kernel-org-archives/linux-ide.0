@@ -1,173 +1,144 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 14/15] sata_sil24: separate out sil24_init_controller()
+Subject: [PATCH 12/15] sata_sil: separate out sil_init_controller()
 Date: Sat, 24 Jun 2006 20:30:20 +0900
-Message-ID: <11511486203434-git-send-email-htejun@gmail.com>
+Message-ID: <11511486203801-git-send-email-htejun@gmail.com>
 References: <11511486183271-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:60455 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.180]:27944 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S933045AbWFXLaP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jun 2006 07:30:15 -0400
-Received: by py-out-1112.google.com with SMTP id t32so931832pyc
-        for <linux-ide@vger.kernel.org>; Sat, 24 Jun 2006 04:30:14 -0700 (PDT)
+	id S933050AbWFXLaQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Jun 2006 07:30:16 -0400
+Received: by py-out-1112.google.com with SMTP id t32so931835pyc
+        for <linux-ide@vger.kernel.org>; Sat, 24 Jun 2006 04:30:16 -0700 (PDT)
 In-Reply-To: <11511486183271-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out controller initialization from sil24_init_one() into
-sil24_init_controller().  This will be used by resume.
+Separate out controller initialization from sil_init_one() into
+sil_init_controller().  This will be used by resume.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil24.c |  107 ++++++++++++++++++++++++++-------------------
- 1 files changed, 62 insertions(+), 45 deletions(-)
+ drivers/scsi/sata_sil.c |   86 ++++++++++++++++++++++++++---------------------
+ 1 files changed, 48 insertions(+), 38 deletions(-)
 
-6f284e7faf0222cd0187f5518ac18d8a53019530
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index c8b477c..7726e6e 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -988,6 +988,64 @@ static void sil24_host_stop(struct ata_h
- 	kfree(hpriv);
+a8e0d30d07481375e455c83a4f55c05ccc6ffc2e
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index bc9f918..5c78fe8 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -544,6 +544,52 @@ static void sil_dev_config(struct ata_po
+ 	}
  }
  
-+static void sil24_init_controller(struct pci_dev *pdev, int n_ports,
-+				  unsigned long host_flags,
-+				  void __iomem *host_base,
-+				  void __iomem *port_base)
++static void sil_init_controller(struct pci_dev *pdev,
++				int n_ports, unsigned long host_flags,
++				void __iomem *mmio_base)
 +{
++	u8 cls;
 +	u32 tmp;
 +	int i;
 +
-+	/* GPIO off */
-+	writel(0, host_base + HOST_FLASH_CMD);
++	/* Initialize FIFO PCI bus arbitration */
++	cls = sil_get_device_cache_line(pdev);
++	if (cls) {
++		cls >>= 3;
++		cls++;  /* cls = (line_size/8)+1 */
++		for (i = 0; i < n_ports; i++)
++			writew(cls << 8 | cls,
++			       mmio_base + sil_port[i].fifo_cfg);
++	} else
++		dev_printk(KERN_WARNING, &pdev->dev,
++			   "cache line size not set.  Driver may not function\n");
 +
-+	/* clear global reset & mask interrupts during initialization */
-+	writel(0, host_base + HOST_CTRL);
++	/* Apply R_ERR on DMA activate FIS errata workaround */
++	if (host_flags & SIL_FLAG_RERR_ON_DMA_ACT) {
++		int cnt;
 +
-+	/* init ports */
-+	for (i = 0; i < n_ports; i++) {
-+		void __iomem *port = port_base + i * PORT_REGS_SIZE;
-+
-+		/* Initial PHY setting */
-+		writel(0x20c, port + PORT_PHY_CFG);
-+
-+		/* Clear port RST */
-+		tmp = readl(port + PORT_CTRL_STAT);
-+		if (tmp & PORT_CS_PORT_RST) {
-+			writel(PORT_CS_PORT_RST, port + PORT_CTRL_CLR);
-+			tmp = ata_wait_register(port + PORT_CTRL_STAT,
-+						PORT_CS_PORT_RST,
-+						PORT_CS_PORT_RST, 10, 100);
-+			if (tmp & PORT_CS_PORT_RST)
-+				dev_printk(KERN_ERR, &pdev->dev,
-+				           "failed to clear port RST\n");
++		for (i = 0, cnt = 0; i < n_ports; i++) {
++			tmp = readl(mmio_base + sil_port[i].sfis_cfg);
++			if ((tmp & 0x3) != 0x01)
++				continue;
++			if (!cnt)
++				dev_printk(KERN_INFO, &pdev->dev,
++					   "Applying R_ERR on DMA activate "
++					   "FIS errata fix\n");
++			writel(tmp & ~0x3, mmio_base + sil_port[i].sfis_cfg);
++			cnt++;
 +		}
-+
-+		/* Configure IRQ WoC */
-+		if (host_flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
-+		else
-+			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
-+
-+		/* Zero error counters. */
-+		writel(0x8000, port + PORT_DECODE_ERR_THRESH);
-+		writel(0x8000, port + PORT_CRC_ERR_THRESH);
-+		writel(0x8000, port + PORT_HSHK_ERR_THRESH);
-+		writel(0x0000, port + PORT_DECODE_ERR_CNT);
-+		writel(0x0000, port + PORT_CRC_ERR_CNT);
-+		writel(0x0000, port + PORT_HSHK_ERR_CNT);
-+
-+		/* Always use 64bit activation */
-+		writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
-+
-+		/* Clear port multiplier enable and resume bits */
-+		writel(PORT_CS_PM_EN | PORT_CS_RESUME, port + PORT_CTRL_CLR);
 +	}
 +
-+	/* Turn on interrupts */
-+	writel(IRQ_STAT_4PORTS, host_base + HOST_CTRL);
++	if (n_ports == 4) {
++		/* flip the magic "make 4 ports work" bit */
++		tmp = readl(mmio_base + sil_port[2].bmdma);
++		if ((tmp & SIL_INTR_STEERING) == 0)
++			writel(tmp | SIL_INTR_STEERING,
++			       mmio_base + sil_port[2].bmdma);
++	}
 +}
 +
- static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ static int sil_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
  {
- 	static int printed_version = 0;
-@@ -1076,9 +1134,6 @@ static int sil24_init_one(struct pci_dev
- 		}
- 	}
+ 	static int printed_version;
+@@ -553,8 +599,6 @@ static int sil_init_one (struct pci_dev 
+ 	int rc;
+ 	unsigned int i;
+ 	int pci_dev_busy = 0;
+-	u32 tmp;
+-	u8 cls;
  
--	/* GPIO off */
--	writel(0, host_base + HOST_FLASH_CMD);
--
- 	/* Apply workaround for completion IRQ loss on PCI-X errata */
- 	if (probe_ent->host_flags & SIL24_FLAG_PCIX_IRQ_WOC) {
- 		tmp = readl(host_base + HOST_CTRL);
-@@ -1090,56 +1145,18 @@ static int sil24_init_one(struct pci_dev
- 			probe_ent->host_flags &= ~SIL24_FLAG_PCIX_IRQ_WOC;
- 	}
- 
--	/* clear global reset & mask interrupts during initialization */
--	writel(0, host_base + HOST_CTRL);
--
- 	for (i = 0; i < probe_ent->n_ports; i++) {
--		void __iomem *port = port_base + i * PORT_REGS_SIZE;
--		unsigned long portu = (unsigned long)port;
-+		unsigned long portu =
-+			(unsigned long)port_base + i * PORT_REGS_SIZE;
- 
- 		probe_ent->port[i].cmd_addr = portu;
- 		probe_ent->port[i].scr_addr = portu + PORT_SCONTROL;
- 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
+@@ -613,42 +657,8 @@ static int sil_init_one (struct pci_dev 
  		ata_std_ports(&probe_ent->port[i]);
--
--		/* Initial PHY setting */
--		writel(0x20c, port + PORT_PHY_CFG);
--
--		/* Clear port RST */
--		tmp = readl(port + PORT_CTRL_STAT);
--		if (tmp & PORT_CS_PORT_RST) {
--			writel(PORT_CS_PORT_RST, port + PORT_CTRL_CLR);
--			tmp = ata_wait_register(port + PORT_CTRL_STAT,
--						PORT_CS_PORT_RST,
--						PORT_CS_PORT_RST, 10, 100);
--			if (tmp & PORT_CS_PORT_RST)
--				dev_printk(KERN_ERR, &pdev->dev,
--				           "failed to clear port RST\n");
--		}
--
--		/* Configure IRQ WoC */
--		if (probe_ent->host_flags & SIL24_FLAG_PCIX_IRQ_WOC)
--			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
--		else
--			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
--
--		/* Zero error counters. */
--		writel(0x8000, port + PORT_DECODE_ERR_THRESH);
--		writel(0x8000, port + PORT_CRC_ERR_THRESH);
--		writel(0x8000, port + PORT_HSHK_ERR_THRESH);
--		writel(0x0000, port + PORT_DECODE_ERR_CNT);
--		writel(0x0000, port + PORT_CRC_ERR_CNT);
--		writel(0x0000, port + PORT_HSHK_ERR_CNT);
--
--		/* Always use 64bit activation */
--		writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
--
--		/* Clear port multiplier enable and resume bits */
--		writel(PORT_CS_PM_EN | PORT_CS_RESUME, port + PORT_CTRL_CLR);
  	}
  
--	/* Turn on interrupts */
--	writel(IRQ_STAT_4PORTS, host_base + HOST_CTRL);
-+	sil24_init_controller(pdev, probe_ent->n_ports, probe_ent->host_flags,
-+			      host_base, port_base);
+-	/* Initialize FIFO PCI bus arbitration */
+-	cls = sil_get_device_cache_line(pdev);
+-	if (cls) {
+-		cls >>= 3;
+-		cls++;  /* cls = (line_size/8)+1 */
+-		for (i = 0; i < probe_ent->n_ports; i++)
+-			writew(cls << 8 | cls,
+-			       mmio_base + sil_port[i].fifo_cfg);
+-	} else
+-		dev_printk(KERN_WARNING, &pdev->dev,
+-			   "cache line size not set.  Driver may not function\n");
+-
+-	/* Apply R_ERR on DMA activate FIS errata workaround */
+-	if (probe_ent->host_flags & SIL_FLAG_RERR_ON_DMA_ACT) {
+-		int cnt;
+-
+-		for (i = 0, cnt = 0; i < probe_ent->n_ports; i++) {
+-			tmp = readl(mmio_base + sil_port[i].sfis_cfg);
+-			if ((tmp & 0x3) != 0x01)
+-				continue;
+-			if (!cnt)
+-				dev_printk(KERN_INFO, &pdev->dev,
+-					   "Applying R_ERR on DMA activate "
+-					   "FIS errata fix\n");
+-			writel(tmp & ~0x3, mmio_base + sil_port[i].sfis_cfg);
+-			cnt++;
+-		}
+-	}
+-
+-	if (ent->driver_data == sil_3114) {
+-		/* flip the magic "make 4 ports work" bit */
+-		tmp = readl(mmio_base + sil_port[2].bmdma);
+-		if ((tmp & SIL_INTR_STEERING) == 0)
+-			writel(tmp | SIL_INTR_STEERING,
+-			       mmio_base + sil_port[2].bmdma);
+-	}
++	sil_init_controller(pdev, probe_ent->n_ports, probe_ent->host_flags,
++			    mmio_base);
  
  	pci_set_master(pdev);
  
