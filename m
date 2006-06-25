@@ -1,34 +1,40 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 6745] New: kernel hangs when trying to read
- atip wiith cdrecord
-Date: Sun, 25 Jun 2006 04:37:02 -0700
-Message-ID: <20060625043702.e7e2d20f.akpm@osdl.org>
-References: <200606242036.k5OKaSvp031813@fire-2.osdl.org>
-	<20060624144739.78bde590.akpm@osdl.org>
-	<1151233643.4940.13.camel@laptopd505.fenrus.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and Power Management
+ patches against v2.6.17
+Date: Sun, 25 Jun 2006 20:44:14 +0900
+Message-ID: <449E770E.4010102@gmail.com>
+References: <20060625073003.GA21435@htj.dyndns.org> <449E73C1.4050604@tomt.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:23471 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932380AbWFYLhJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jun 2006 07:37:09 -0400
-In-Reply-To: <1151233643.4940.13.camel@laptopd505.fenrus.org>
+Received: from nz-out-0102.google.com ([64.233.162.196]:11690 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932388AbWFYLoU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jun 2006 07:44:20 -0400
+Received: by nz-out-0102.google.com with SMTP id z31so1110901nzd
+        for <linux-ide@vger.kernel.org>; Sun, 25 Jun 2006 04:44:19 -0700 (PDT)
+In-Reply-To: <449E73C1.4050604@tomt.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Christian Lohmaier <lohmaier@gmx.de>
+To: Andre Tomt <andre@tomt.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, 25 Jun 2006 13:07:23 +0200
-Arjan van de Ven <arjan@infradead.org> wrote:
-
-> On Sat, 2006-06-24 at 14:47 -0700, Andrew Morton wrote:
-> > > I simply try to use "cdrecord dev=ATAPI:1,0,0 -atip" as root.
+Andre Tomt wrote:
+> Tejun Heo wrote:
+>> Hello, all.
+>>
+>> libata-tj-stable patches against v2.6.17 and v2.6.17.1 are available.
 > 
-> 
-> one issue is that it's a lot better to use --dev=/dev/hda (or whatever
-> your cdrom device is.. usually even /dev/cdrom or /dev/cdwriter will
-> work, depends on your distro)... that is what most people use and that
-> is the interface that's actively supported and debugged...
+> It appears drivers/scsi/libata-eh.c isn't getting built in the 2.6.17 
+> patch, seems to be missing in drivers/scsi/Makefile:
 
-cc added.
+Yeap, right.  My bad.  I forgot to do 'quilt add' the Makefile.  The 
+updated tarball is at
+
+http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.17-20060625-1.tar.bz2
+
+Sorry about the trouble.
+
+-- 
+tejun
