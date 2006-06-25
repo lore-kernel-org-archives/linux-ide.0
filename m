@@ -1,27 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: + via-pata-controller-xfer-fixes.patch added to -mm tree
-Date: Sun, 25 Jun 2006 00:17:31 +0100
-Message-ID: <1151191051.8676.44.camel@localhost.localdomain>
-References: <200606242214.k5OMEHCU005963@shell0.pdx.osdl.net>
-	 <449DBE88.5020809@garzik.org>
+From: "Mr. Alfaro" <xbbxotci@digitalmaila.com>
+Subject: new msg for Morgan
+Date: Sat, 24 Jun 2006 19:29:42 -0600 (PDT)
+Message-ID: <R753J64PL65PNPIS9N49__22898.2213688598$1151195402$gmane$org@y.muslimmarriagejunction.com>
+Reply-To: "Mr. Alfaro" <xbbxotci@digitalmaila.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:14755 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964870AbWFXXCV
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Jun 2006 19:02:21 -0400
-In-Reply-To: <449DBE88.5020809@garzik.org>
+Received: from 0-134.rdm.ru ([85.192.0.134]:31755 "HELO 0-134.rdm.ru")
+	by vger.kernel.org with SMTP id S1751286AbWFYA3r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jun 2006 20:29:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: akpm@osdl.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, castet.matthieu@free.fr, B.Zolnierkiewicz@elka.pw.edu.pl, htejun@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-serial@vger.kernel.org, linux-raid@vger.kernel.org, linux-ia64@vger.kernel.org, linux-tape@vger.kernel.org, linux-net@vger.kernel.org, linux-ide@vger.kernel.org, ultralinux@vger.kernel.org, linux-kernel-owner@vger.kernel.org
 
-SETFEATURES_XFER stuff is magic anyway because some controllers snoop.
-Also of course like the old IDE we send some rather iffy PIO requests
-and that might have something to do with the problem of course.
+FABULOUS REPLICAS - AMAZING PRICES
 
-I've got two reports that look similar and are from ALi controllers so
-trying the 10uS version might be worth doing, at least for PATA
+Handbags • Jewelry • Pens • Watches • Neckties • Clutches • and More
 
+All our products are made with the finest leather and silks, and come
+with certificate, tags and all the extras, just as you would find in a 
+boutique. Extreme care is taken to pay special attention to detail. 
+
+You will be immediately surprised by the craftsmanship and strength of 
+our fine, high-quality luxury items, whether it be a watch, handbag, or tie.
+
+Visit Now to See our Current Specials! 
+
+http://051.deedlsonwheelss.com
+
+
+
+
+
+
+
+bulb flat
+http://051.deedlsonwheelss.com/rm
