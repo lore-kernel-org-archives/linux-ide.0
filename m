@@ -1,43 +1,30 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: [Bugme-new] [Bug 6745] New: kernel hangs when trying to read
- atip wiith cdrecord
-Date: Sun, 25 Jun 2006 13:05:59 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0606251304450.28911@yvahk01.tjqt.qr>
+	atip wiith cdrecord
+Date: Sun, 25 Jun 2006 13:07:23 +0200
+Message-ID: <1151233643.4940.13.camel@laptopd505.fenrus.org>
 References: <200606242036.k5OKaSvp031813@fire-2.osdl.org>
- <20060624144739.78bde590.akpm@osdl.org>
+	 <20060624144739.78bde590.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from linux01.gwdg.de ([134.76.13.21]:9656 "EHLO linux01.gwdg.de")
-	by vger.kernel.org with ESMTP id S932353AbWFYLGK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jun 2006 07:06:10 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:41884 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932357AbWFYLHZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jun 2006 07:07:25 -0400
 In-Reply-To: <20060624144739.78bde590.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
->>            Summary: kernel hangs when trying to read atip wiith cdrecord
->>     Kernel Version: 2.6.16.1
-
->> Most recent kernel where this bug did not occur: 2.6.16.1 (yes, the 
->> same version - it works with my dvd-burner, but not with my cd-burner), 
->> the 2.4 series worked with both, but there I have been using ide-scsi)
-
-Can you try a newer version and/or (or both) with an original cdrecord (if 
-not already done so) or cdrecord-prodvd?
-
->> Distribution: Mandriva 9.0 based
-
->> cdrtools 2.01.01a10
-
->> Steps to reproduce:
->> I simply try to use "cdrecord dev=ATAPI:1,0,0 -atip" as root.
->> # cdrecord dev=ATAPI:1,0,0 -atip
-
-Try -dev=/dev/hdX
+On Sat, 2006-06-24 at 14:47 -0700, Andrew Morton wrote:
+> > I simply try to use "cdrecord dev=ATAPI:1,0,0 -atip" as root.
 
 
+one issue is that it's a lot better to use --dev=/dev/hda (or whatever
+your cdrom device is.. usually even /dev/cdrom or /dev/cdwriter will
+work, depends on your distro)... that is what most people use and that
+is the interface that's actively supported and debugged...
 
-Jan Engelhardt
--- 
