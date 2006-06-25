@@ -1,34 +1,102 @@
-From: Udo van den Heuvel <udovdh@xs4all.nl>
-Subject: 2.6.17 on VIA SP8000 sata: via_sata timeout (cmd 0xef)
-Date: Sun, 25 Jun 2006 17:30:47 +0200
-Message-ID: <449EAC27.2080404@xs4all.nl>
+From: Christian Lohmaier <cloph@openoffice.org>
+Subject: Re: [Bugme-new] [Bug 6745] New: kernel hangs when trying to read atip wiith cdrecord
+Date: Sun, 25 Jun 2006 21:00:48 +0200
+Message-ID: <20060625190048.GA5784@bm617259.muenchen.org>
+References: <200606242036.k5OKaSvp031813@fire-2.osdl.org> <20060624144739.78bde590.akpm@osdl.org> <Pine.LNX.4.61.0606251304450.28911@yvahk01.tjqt.qr> <20060625043622.e42c7254.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-vbr16.xs4all.nl ([194.109.24.36]:28179 "EHLO
-	smtp-vbr16.xs4all.nl") by vger.kernel.org with ESMTP
-	id S1751439AbWFYPaw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Jun 2006 11:30:52 -0400
+Received: from mail-out.m-online.net ([212.18.0.9]:54450 "EHLO
+	mail-out.m-online.net") by vger.kernel.org with ESMTP
+	id S932438AbWFYTAN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jun 2006 15:00:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20060625043622.e42c7254.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Christian Lohmaier <lohmaier@gmx.de>
 
-Hello Jeff and others,
+Hi *, thanks for cc'ing me,
 
-While 2.6.16.2 runs quite OK on my VIA SP8000 Epia system, 2.6.17 gives
-(with the same config where possible) a sata problem on bootup, it gives
-a via_sata timeout(cmd 0xef). (the letters were small to make the stuff
-not scroll off the TV)
-Immediately rebooting into 2.6.16.2 gives a nice clean bootup.
+On Sun, Jun 25, 2006 at 04:36:22AM -0700, Andrew Morton wrote:
+> On Sun, 25 Jun 2006 13:05:59 +0200 (MEST)
+> Jan Engelhardt <jengelh@linux01.gwdg.de> wrote:
+>=20
+> > >>            Summary: kernel hangs when trying to read atip wiith =
+cdrecord
+> > >>     Kernel Version: 2.6.16.1
+> >=20
+> > >> Most recent kernel where this bug did not occur: 2.6.16.1 (yes, =
+the=20
+> > >> same version - it works with my dvd-burner, but not with my cd-b=
+urner),=20
+> > >> the 2.4 series worked with both, but there I have been using ide=
+-scsi)
+> >=20
+> > Can you try a newer version and/or (or both) with an original cdrec=
+ord (if=20
+> > not already done so) or cdrecord-prodvd?
 
-The drive is a SAMSUNG HD160JJ. Hardware has not changed and the .config
-for the kernel compile was not modified except for version differences.
+I tried with 2.6.17.1, but the problem remains (I use original cdrecord=
+)
 
-Did I miss something? Is my hardware starting te get picky about linux
-kernel version numbers? Or getting defective?
-Any ideas?
+Since I have a relatively old glibc I cannot use the newer versions of
+cdrecord-prodvd, but cdrecord-prodvd-2.01b31-i686-pc-linux-gnu sometime=
+s
+works. I did work sometimes, but even when it wors and prints the atip =
+-
+compared to using my dvd-recorder it takes ages to print the results.
 
-Kind regards,
-Udo
+But now that I tried to double-check, it hung as well. It printed one
+additional line after the supported modes, namely:
+Drive buf size : 1806336 =3D 1764 KB
+
+But then hangs. (full output see below)
+=20
+> > [...]
+> > Try -dev=3D/dev/hdX
+
+That did not make a difference either, apart from the slightly differen=
+t
+warning message at the beginning.
+
+# cdrecord-prodvd-2.01b31-i686-pc-linux-gnu -v dev=3DATAPI:1,0,0 -atip
+Cdrecord-ProDVD-Clone 2.01b31 (i686-pc-linux-gnu) Copyright (C) 1995-20=
+04 J=EF=BF=BDrg Schilling
+Unlocked features:
+Limited  features:
+TOC Type: 1 =3D CD-ROM
+scsidev: 'ATAPI:1,0,0'
+devname: 'ATAPI'
+scsibus: 1 target: 0 lun: 0
+Warning: Using ATA Packet interface.
+Warning: The related Linux kernel interface code seems to be unmaintain=
+ed.
+Warning: There is absolutely NO DMA, operations thus are slow.
+Using libscg version 'schily-0.8'.
+SCSI buffer size: 64512
+atapi: 1
+Device type    : Removable CD-ROM
+Version        : 0
+Response Format: 1
+Vendor_info    : 'CyberDrv'
+Identifikation : 'CW058D CD-R/RW  '
+Revision       : '160D'
+Device seems to be: Generic mmc CD-RW.
+Current: Removable Disk
+Profile: CD-RW
+Profile: CD-R
+Profile: CD-ROM
+Profile: Removable Disk (current)
+Using generic SCSI-3/mmc   CD-R/CD-RW driver (mmc_cdr).
+Driver flags   : MMC-2 SWABAUDIO BURNFREE
+Supported modes: TAO PACKET SAO SAO/R96P SAO/R96R RAW/R16 RAW/R96P RAW/=
+R96R
+Drive buf size : 1806336 =3D 1764 KB
+
+ciao
+Christian
+--=20
+NP: Limp Bizkit - Re-entry
