@@ -1,50 +1,46 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and Power Management
- patches against v2.6.17
-Date: Sun, 25 Jun 2006 13:30:09 +0200
-Message-ID: <449E73C1.4050604@tomt.net>
-References: <20060625073003.GA21435@htj.dyndns.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bugme-new] [Bug 6745] New: kernel hangs when trying to read
+ atip wiith cdrecord
+Date: Sun, 25 Jun 2006 04:36:22 -0700
+Message-ID: <20060625043622.e42c7254.akpm@osdl.org>
+References: <200606242036.k5OKaSvp031813@fire-2.osdl.org>
+	<20060624144739.78bde590.akpm@osdl.org>
+	<Pine.LNX.4.61.0606251304450.28911@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1.skjellin.no ([80.239.42.67]:4826 "EHLO mx1.skjellin.no")
-	by vger.kernel.org with ESMTP id S932374AbWFYLaC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jun 2006 07:30:02 -0400
-In-Reply-To: <20060625073003.GA21435@htj.dyndns.org>
+Received: from smtp.osdl.org ([65.172.181.4]:16559 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932379AbWFYLge (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jun 2006 07:36:34 -0400
+In-Reply-To: <Pine.LNX.4.61.0606251304450.28911@yvahk01.tjqt.qr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Christian Lohmaier <lohmaier@gmx.de>
 
-Tejun Heo wrote:
-> Hello, all.
+On Sun, 25 Jun 2006 13:05:59 +0200 (MEST)
+Jan Engelhardt <jengelh@linux01.gwdg.de> wrote:
+
+> >>            Summary: kernel hangs when trying to read atip wiith cdrecord
+> >>     Kernel Version: 2.6.16.1
 > 
-> libata-tj-stable patches against v2.6.17 and v2.6.17.1 are available.
+> >> Most recent kernel where this bug did not occur: 2.6.16.1 (yes, the 
+> >> same version - it works with my dvd-burner, but not with my cd-burner), 
+> >> the 2.4 series worked with both, but there I have been using ide-scsi)
+> 
+> Can you try a newer version and/or (or both) with an original cdrecord (if 
+> not already done so) or cdrecord-prodvd?
+> 
+> >> Distribution: Mandriva 9.0 based
+> 
+> >> cdrtools 2.01.01a10
+> 
+> >> Steps to reproduce:
+> >> I simply try to use "cdrecord dev=ATAPI:1,0,0 -atip" as root.
+> >> # cdrecord dev=ATAPI:1,0,0 -atip
+> 
+> Try -dev=/dev/hdX
+> 
 
-It appears drivers/scsi/libata-eh.c isn't getting built in the 2.6.17 
-patch, seems to be missing in drivers/scsi/Makefile:
-
-> if [ -r System.map -a -x /sbin/depmod ]; then /sbin/depmod -ae -F System.map -b /build/kernel/linux-2.6.17/debian/linux-image-2.6.17-1-vs-exp -r 2.6.17-1-vs-exp; fi
-> WARNING: /build/kernel/linux-2.6.17/debian/linux-image-2.6.17-1-vs-exp/lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/libata.ko needs unknown symbol ata_scsi_timed_out
-> WARNING: /build/kernel/linux-2.6.17/debian/linux-image-2.6.17-1-vs-exp/lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/libata.ko needs unknown symbol ata_qc_schedule_eh
-> WARNING: /build/kernel/linux-2.6.17/debian/linux-image-2.6.17-1-vs-exp/lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/libata.ko needs unknown symbol ata_scsi_error
-> WARNING: /build/kernel/linux-2.6.17/debian/linux-image-2.6.17-1-vs-exp/lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/libata.ko needs unknown symbol ata_port_wait_eh
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_vsc.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_via.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_uli.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_sx4.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_svw.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_sis.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_sil24.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_sil.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_qstor.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_promise.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_nv.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/sata_mv.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/pdc_adma.ko ignored, due to loop
-> WARNING: Loop detected: /build/kernel/linux-2.6.17/debian/linux-image-2.6.17-1-vs-exp/lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/libata.ko which needs libata.ko again!
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/libata.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/ata_piix.ko ignored, due to loop
-> WARNING: Module /lib/modules/2.6.17-1-vs-exp/kernel/drivers/scsi/ahci.ko ignored, due to loop
-> make[1]: Leaving directory `/build/kernel/linux-2.6.17/build/linux-image-2.6.17-1-vs-exp'
+[added Christian (the bug reporter) to cc]
