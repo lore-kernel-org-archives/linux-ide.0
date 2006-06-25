@@ -1,50 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [ANNOUNCE] libata: new EH, NCQ, hotplug and Power Management
- patches against v2.6.17
-Date: Sun, 25 Jun 2006 22:48:44 +0900
-Message-ID: <449E943C.4050706@gmail.com>
-References: <20060625073003.GA21435@htj.dyndns.org> <449E73C1.4050604@tomt.net> <449E770E.4010102@gmail.com> <449E935E.4090006@tomt.net>
+From: Udo van den Heuvel <udovdh@xs4all.nl>
+Subject: 2.6.17 on VIA SP8000 sata: via_sata timeout (cmd 0xef)
+Date: Sun, 25 Jun 2006 17:30:47 +0200
+Message-ID: <449EAC27.2080404@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:62725 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1750955AbWFYNsr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Jun 2006 09:48:47 -0400
-Received: by py-out-1112.google.com with SMTP id t32so1183482pyc
-        for <linux-ide@vger.kernel.org>; Sun, 25 Jun 2006 06:48:46 -0700 (PDT)
-In-Reply-To: <449E935E.4090006@tomt.net>
+Received: from smtp-vbr16.xs4all.nl ([194.109.24.36]:28179 "EHLO
+	smtp-vbr16.xs4all.nl") by vger.kernel.org with ESMTP
+	id S1751439AbWFYPaw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jun 2006 11:30:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Andre Tomt wrote:
-> Tejun Heo wrote:
->> Andre Tomt wrote:
->>> Tejun Heo wrote:
->>>> Hello, all.
->>>>
->>>> libata-tj-stable patches against v2.6.17 and v2.6.17.1 are available.
->>>
->>> It appears drivers/scsi/libata-eh.c isn't getting built in the 2.6.17 
->>> patch, seems to be missing in drivers/scsi/Makefile:
->>
->> Yeap, right.  My bad.  I forgot to do 'quilt add' the Makefile.  The 
->> updated tarball is at
->>
->> http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.17-20060625-1.tar.bz2 
-> 
-> 
-> Seems to work great so far, only knit is that the kernel log does not 
-> print it out the NCQ bits as indicated in the README. queue_depth in 
-> sysfs do show proper values however, just a backport issue I guess.
+Hello Jeff and others,
 
-It's actually a hiccup introduced by recent selective msg-enable in 
-#upstream.  It will be resolved soon.
+While 2.6.16.2 runs quite OK on my VIA SP8000 Epia system, 2.6.17 gives
+(with the same config where possible) a sata problem on bootup, it gives
+a via_sata timeout(cmd 0xef). (the letters were small to make the stuff
+not scroll off the TV)
+Immediately rebooting into 2.6.16.2 gives a nice clean bootup.
 
-Thanks.
+The drive is a SAMSUNG HD160JJ. Hardware has not changed and the .config
+for the kernel compile was not modified except for version differences.
 
--- 
-tejun
+Did I miss something? Is my hardware starting te get picky about linux
+kernel version numbers? Or getting defective?
+Any ideas?
+
+Kind regards,
+Udo
