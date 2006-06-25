@@ -1,31 +1,55 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: More information on ATI IXP failure in git9
-Date: Sun, 25 Jun 2006 19:23:26 -0400
-Message-ID: <449F1AEE.700@pobox.com>
-References: <200606252359.27671.ak@suse.de>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [-mm patch] make drivers/scsi/pata_it821x.c:it821x_passthru_dev_select() static
+Date: Sun, 25 Jun 2006 19:27:28 -0400
+Message-ID: <20060625232728.GA20345@devserv.devel.redhat.com>
+References: <20060624061914.202fbfb5.akpm@osdl.org> <20060625231324.GK23314@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:63124 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965655AbWFYXXb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jun 2006 19:23:31 -0400
-In-Reply-To: <200606252359.27671.ak@suse.de>
+Received: from mx1.redhat.com ([66.187.233.31]:4488 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1751149AbWFYX2i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jun 2006 19:28:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20060625231324.GK23314@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
-Cc: Andi Kleen <ak@suse.de>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, alan@redhat.com, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Andi created a patch at my suggestion:
-http://one.firstfloor.org/~andi/sil-debug
+On Mon, Jun 26, 2006 at 01:13:24AM +0200, Adrian Bunk wrote:
+> On Sat, Jun 24, 2006 at 06:19:14AM -0700, Andrew Morton wrote:
+> >...
+> > Changes since 2.6.17-mm1:
+> >...
+> >  git-libata-all.patch
+> >...
+> >  git trees
+> >...
+> 
+> This patch makes the needlessly global it821x_passthru_dev_select() 
+> static.
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-and that got him mounting the device, but the EH was still giving him 
-much pain:
-http://one.firstfloor.org/~andi/sata-error-loop
+Acked-by: Alan Cox <alan@redhat.com>
 
-It looks like some condition isn't getting ack'd...
+> 
+> --- linux-2.6.17-mm2-full/drivers/scsi/pata_it821x.c.old	2006-06-25 22:52:11.000000000 +0200
+> +++ linux-2.6.17-mm2-full/drivers/scsi/pata_it821x.c	2006-06-25 22:52:52.000000000 +0200
+> @@ -411,7 +411,8 @@
+>   *	Device selection hook. If neccessary perform clock switching
+>   */
+>   
+> -void it821x_passthru_dev_select(struct ata_port *ap, unsigned int device)
+> +static void it821x_passthru_dev_select(struct ata_port *ap,
+> +				       unsigned int device)
+>  {
+>  	struct it821x_dev *itdev = ap->private_data;
+>  	if (itdev && device != itdev->last_device) {
 
-	Jeff
-
-
-
+-- 
+	"Some people are like Slinkies...
+	Not really good for anything,
+	but they still bring a smile to your face
+	when you push them down a flight of stairs."
+			-- Gordon Wolfe.
