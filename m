@@ -1,35 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 11/15] libata: reimplement controller-wide PM
-Date: Mon, 26 Jun 2006 15:53:36 +0900
-Message-ID: <449F8470.3060308@gmail.com>
-References: <11511486203395-git-send-email-htejun@gmail.com> <1151303807.7132.162.camel@forrest26.sh.intel.com>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: [PATCHSET] [PATCHSET] new Power Management for libata, take 2
+Date: Mon, 26 Jun 2006 14:42:59 +0800
+Message-ID: <1151304179.7132.169.camel@forrest26.sh.intel.com>
+References: <11511486183271-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.201]:15714 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750948AbWFZGxX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jun 2006 02:53:23 -0400
-Received: by nz-out-0102.google.com with SMTP id o37so729327nzf
-        for <linux-ide@vger.kernel.org>; Sun, 25 Jun 2006 23:53:22 -0700 (PDT)
-In-Reply-To: <1151303807.7132.162.camel@forrest26.sh.intel.com>
+Received: from mga02.intel.com ([134.134.136.20]:60943 "EHLO
+	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751186AbWFZGzl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Jun 2006 02:55:41 -0400
+In-Reply-To: <11511486183271-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-zhao, forrest wrote:
-ort_schedule_eh(ap); need to be invoked in order to schedule EH,
-> right?
+On Sat, 2006-06-24 at 20:30 +0900, Tejun Heo wrote:
+> Hello, all.
+> 
+> This is the second take of new-power-management patchset.  Changes
+> from the last take[1] are...
+> 
+> * Per-dev PM is now supported.  Now generic device PM layer drives
+>   whole PM sequence and libata port-wide PM does much less.
+> 
 
-Right.
+Hello, Tejun
 
- > But ata_port_schedule_eh(ap) is not called in ata_host_set_suspend().
+It seems that port-level PM callbacks are removed in this patch set :(
+So if the author of other types of SATA controllers need to do port-
+level PM operations, they need to first add the callbacks by themselves,
+right?
+Does it make sense to add port-wide PM callbacks in this patch set?
 
-Because ata_host_set_suspend() doesn't need to invoke EH.  It just needs 
-to make sure that EH sees ATA_FLAG_SUSPENDED which is achieved by 
-flushing EH after setting SUSPENDED.
-
--- 
-tejun
+Thanks,
+Forrest
