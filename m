@@ -1,36 +1,65 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: Re: [PATCHSET] [PATCHSET] new Power Management for libata, take 2
-Date: Mon, 26 Jun 2006 15:09:52 +0800
-Message-ID: <1151305792.7132.184.camel@forrest26.sh.intel.com>
-References: <11511486183271-git-send-email-htejun@gmail.com>
-	 <1151304179.7132.169.camel@forrest26.sh.intel.com>
-	 <449F8597.7090605@gmail.com>
-	 <1151304561.7132.173.camel@forrest26.sh.intel.com>
-	 <449F88A9.30109@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 0/3]ACPI support for SATA/PATA
+Date: Mon, 26 Jun 2006 03:26:14 -0400
+Message-ID: <449F8C16.70308@pobox.com>
+References: <1151044759.7132.153.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12637 "EHLO
-	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S932301AbWFZHWj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jun 2006 03:22:39 -0400
-In-Reply-To: <449F88A9.30109@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:45474 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932301AbWFZH0U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jun 2006 03:26:20 -0400
+In-Reply-To: <1151044759.7132.153.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: rdunlap@xenotime.net, htejun@gmail.com, linux-ide@vger.kernel.org
 
-On Mon, 2006-06-26 at 16:11 +0900, Tejun Heo wrote:
-> Will do after this whole thing get reviewed.  I don't know much about 
-> ACPI but don't we need to do it regardless of LLDs?  If so, I think it 
-> might be better to hook those directly into ata_eh_suspend/resume(). 
+zhao, forrest wrote:
+> Hello, all
+> 
+> In ACPI spec 3.0, section 9.9 defines 4 objects for PATA/SATA:
+> 
+> _GTM and _STM are PATA-only objects, which are used to get/set PATA
+> timing information(i.e. PIO and DMA speed);
+> _SDD is SATA-only object, which is used to inform the platform of the
+> type of device attached to a port;
+> _GTF is for both PATA and SATA, which is used to return ATA task file
+> needed to re-init the drive
+> 
+> In this patch set, 
+> ata_acpi_get_timing() is for getting PATA timing information;
+> ata_acpi_push_timing() is for setting PATA timing information;
+> ata_acpi_push_id() is for operating on _SDD;
+> ata_acpi_exec_tfs() is for getting ATA task file from _GTF and executing
+> them for a given drive
+> 
+> NOTE: ata_acpi_get_timing() and ata_acpi_push_timing() are channel
+> (port)-level operations, which have more suitable invocation place in
+> Tejun's upcoming PM patch. So I would not bother to reference(invoke)
+> them in this version of patches and will send out updated patches after
+> Tejun's PM patch is merged into #upstream.
 
-in ata_eh_suspend/resume(), all operations are device-level. We need a
-port-level function inside ata_eh_suspend/resume(), and inside this
-port-level function both generic port-level operations and LLD specific
-port-level callbacks are called.
+This is a great starting point for rejuvinating the SATA ACPI support, 
+thanks!
 
-Thanks,
-Forrest
+I would request that you create two patches for this support:
+
+Patch #1:  Adds everything needed to make SATA ACPI work...  Makefile, 
+noacpi flag, core code, etc.
+
+Patch #2:  Dependent on patch #1.  Adds everything needed to make PATA 
+ACPI work.
+
+And overall, I want to reinforce a principle used for Linux patches: 
+applying 1-N patches for any given patchset should always produce a 
+compileable (and _hopefully_ working) piece of code.  Patches are 
+separated into _logical_ changes, much like the steps in a calculus proof.
+
+Regards,
+
+	Jeff
+
+
 
