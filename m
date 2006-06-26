@@ -1,55 +1,109 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [-mm patch] make drivers/scsi/pata_it821x.c:it821x_passthru_dev_select() static
-Date: Sun, 25 Jun 2006 19:27:28 -0400
-Message-ID: <20060625232728.GA20345@devserv.devel.redhat.com>
-References: <20060624061914.202fbfb5.akpm@osdl.org> <20060625231324.GK23314@stusta.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: More information on ATI IXP failure in git9
+Date: Mon, 26 Jun 2006 11:10:11 +0900
+Message-ID: <20060626021011.GB21435@htj.dyndns.org>
+References: <200606252359.27671.ak@suse.de> <449F1AEE.700@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:4488 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1751149AbWFYX2i (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jun 2006 19:28:38 -0400
+Received: from py-out-1112.google.com ([64.233.166.181]:3224 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S965000AbWFZCJ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jun 2006 22:09:58 -0400
+Received: by py-out-1112.google.com with SMTP id t32so1300682pyc
+        for <linux-ide@vger.kernel.org>; Sun, 25 Jun 2006 19:09:57 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20060625231324.GK23314@stusta.de>
+In-Reply-To: <449F1AEE.700@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, alan@redhat.com, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Andi Kleen <ak@suse.de>
 
-On Mon, Jun 26, 2006 at 01:13:24AM +0200, Adrian Bunk wrote:
-> On Sat, Jun 24, 2006 at 06:19:14AM -0700, Andrew Morton wrote:
-> >...
-> > Changes since 2.6.17-mm1:
-> >...
-> >  git-libata-all.patch
-> >...
-> >  git trees
-> >...
+On Sun, Jun 25, 2006 at 07:23:26PM -0400, Jeff Garzik wrote:
+> Andi created a patch at my suggestion:
+> http://one.firstfloor.org/~andi/sil-debug
 > 
-> This patch makes the needlessly global it821x_passthru_dev_select() 
-> static.
+> and that got him mounting the device, but the EH was still giving him 
+> much pain:
+> http://one.firstfloor.org/~andi/sata-error-loop
 > 
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> It looks like some condition isn't getting ack'd...
 
-Acked-by: Alan Cox <alan@redhat.com>
+Weird.  To me, it almost seems like BMDMA2 is lying about whether it
+generated interrupt or not.  e.g. It's sharing IRQ w/ another device,
+but when the other device raises interrupt, BMDMA2 says it generated
+the IRQ.
 
-> 
-> --- linux-2.6.17-mm2-full/drivers/scsi/pata_it821x.c.old	2006-06-25 22:52:11.000000000 +0200
-> +++ linux-2.6.17-mm2-full/drivers/scsi/pata_it821x.c	2006-06-25 22:52:52.000000000 +0200
-> @@ -411,7 +411,8 @@
->   *	Device selection hook. If neccessary perform clock switching
->   */
->   
-> -void it821x_passthru_dev_select(struct ata_port *ap, unsigned int device)
-> +static void it821x_passthru_dev_select(struct ata_port *ap,
-> +				       unsigned int device)
->  {
->  	struct it821x_dev *itdev = ap->private_data;
->  	if (itdev && device != itdev->last_device) {
+Once frozen, new EH does pretty good job of clearing status and the
+interrupts seem too sporadic to be unacked IRQ.
 
--- 
-	"Some people are like Slinkies...
-	Not really good for anything,
-	but they still bring a smile to your face
-	when you push them down a flight of stairs."
-			-- Gordon Wolfe.
+Andi, can you pleaes try the following patch?  It makes sata_sil print
+more data on errors and disables SATA PHY IRQ.
+
+Thanks.
+
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index bc9f918..cd96891 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -341,8 +341,11 @@ static void sil_scr_write (struct ata_po
+ static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
+ {
+ 	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
++	u32 bmdma;
+ 	u8 status;
+ 
++	bmdma = readl(ap->host_set->mmio_base + sil_port[ap->port_no].bmdma);
++
+ 	if (unlikely(bmdma2 & SIL_DMA_SATA_IRQ)) {
+ 		u32 serror;
+ 
+@@ -363,11 +366,18 @@ static void sil_host_intr(struct ata_por
+ 			ap->eh_info.serror |= serror;
+ 		}
+ 
++		ata_port_printk(ap, KERN_ERR,
++				"SIL freeze 1, bmdma=%x bmdma2=%x serr=%x\n",
++				bmdma, bmdma2, serror);
+ 		goto freeze;
+ 	}
+ 
+-	if (unlikely(!qc || qc->tf.ctl & ATA_NIEN))
++	if (unlikely(!qc || qc->tf.ctl & ATA_NIEN)) {
++		ata_port_printk(ap, KERN_ERR,
++				"SIL freeze 2, bmdma=%x bmdma2=%x\n",
++				bmdma, bmdma2);
+ 		goto freeze;
++	}
+ 
+ 	/* Check whether we are expecting interrupt in this state */
+ 	switch (ap->hsm_task_state) {
+@@ -398,13 +408,18 @@ static void sil_host_intr(struct ata_por
+ 	case HSM_ST:
+ 		break;
+ 	default:
++		ata_port_printk(ap, KERN_ERR, "SIL hsm 1, bmdma=%x bmdma2=%x\n",
++				bmdma, bmdma2);
+ 		goto err_hsm;
+ 	}
+ 
+ 	/* check main status, clearing INTRQ */
+ 	status = ata_chk_status(ap);
+-	if (unlikely(status & ATA_BUSY))
++	if (unlikely(status & ATA_BUSY)) {
++		ata_port_printk(ap, KERN_ERR, "SIL hsm 2, bmdma=%x bmdma2=%x\n",
++				bmdma, bmdma2);
+ 		goto err_hsm;
++	}
+ 
+ 	/* ack bmdma irq events */
+ 	ata_bmdma_irq_clear(ap);
+@@ -475,7 +490,7 @@ static void sil_thaw(struct ata_port *ap
+ 	ata_bmdma_irq_clear(ap);
+ 
+ 	/* turn on SATA IRQ */
+-	writel(SIL_SIEN_N, mmio_base + sil_port[ap->port_no].sien);
++	/*writel(SIL_SIEN_N, mmio_base + sil_port[ap->port_no].sien);*/
+ 
+ 	/* turn on IRQ */
+ 	tmp = readl(mmio_base + SIL_SYSCFG);
