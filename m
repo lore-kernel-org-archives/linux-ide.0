@@ -1,65 +1,100 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 0/3]ACPI support for SATA/PATA
-Date: Mon, 26 Jun 2006 03:26:14 -0400
-Message-ID: <449F8C16.70308@pobox.com>
-References: <1151044759.7132.153.camel@forrest26.sh.intel.com>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: regarding ata_msg_*()
+Date: Mon, 26 Jun 2006 09:41:32 +0200
+Message-ID: <20060626074132.GA10695@gollum.tnic>
+References: <449E7FB9.4080305@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45474 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932301AbWFZH0U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jun 2006 03:26:20 -0400
-In-Reply-To: <1151044759.7132.153.camel@forrest26.sh.intel.com>
+Received: from smtp103.plus.mail.re2.yahoo.com ([206.190.53.28]:956 "HELO
+	smtp103.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S1751041AbWFZHlg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Jun 2006 03:41:36 -0400
+Content-Disposition: inline
+In-Reply-To: <449E7FB9.4080305@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: rdunlap@xenotime.net, htejun@gmail.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-zhao, forrest wrote:
-> Hello, all
+On Sun, Jun 25, 2006 at 09:21:13PM +0900, Tejun Heo wrote:
+
+Morning,
+ 
+> 	ATA_MSG_DRV	= 0x0001,
+> 	ATA_MSG_INFO	= 0x0002,
+> 	ATA_MSG_PROBE	= 0x0004,
+> 	ATA_MSG_WARN	= 0x0008,
+> 	ATA_MSG_MALLOC	= 0x0010,
+> 	ATA_MSG_CTL	= 0x0020,
+> 	ATA_MSG_INTR	= 0x0040,
+> 	ATA_MSG_ERR	= 0x0080,
 > 
-> In ACPI spec 3.0, section 9.9 defines 4 objects for PATA/SATA:
+> * I have no idea what CTL means or why DRV is used in ata_dev_disable().
 > 
-> _GTM and _STM are PATA-only objects, which are used to get/set PATA
-> timing information(i.e. PIO and DMA speed);
-> _SDD is SATA-only object, which is used to inform the platform of the
-> type of device attached to a port;
-> _GTF is for both PATA and SATA, which is used to return ATA task file
-> needed to re-init the drive
+> * By default, ATA_MSG_INFO is turned off, which means 
+> ata_dev_configure() doesn't print anything about newly detected and 
+> configured device, which isn't good (BTW, why is @print_info completely 
+> ignored in that function?  It's needed.  We don't want to print those 
+> messages when we're just revalidating devices.)  Unfortunately, if I 
+> enable ATA_MSG_INFO, I enable some of function ENTER/EXIT messages, too. 
+>  Bah...
+
+These all are different debugging levels which I proposed leaning on D. Becker's
+mail, see linux-ide archives from 25 Aug 2005. I agree that the debugging levels
+are somewhat "off-course" but this was not the main concern when sending the
+patches. Instead, we aimed first at the complete conversion to the new scheme 
+and then reajusting dbbg levels, so this is that...
+ 
+> * In ata_dev_read_id(), ENTER message is CTL, what is CTL?  What makes 
+In this mail it says also what CTL means and since nobody opposed to that I went
+on preparing the patches.
+> ata_port_flush_task() and ata_dev_read_id() share CTL?  And, why are 
+> flush#2/EXIT messages CTL while ENTER/flush#1 are left as DPRINTK?
+My bad, it seems I've missed those, but there are some cases like
+ata_dev_classify(), for ex., where you simply
+don't have an access to ata_dev or ata_port struct in order to issue a message
+according to the msg_enable status so I left those out for further discussion
+concerning replacement.
+
+> All of the above problems are introduced during single sweep conversion 
+> over libata-core.c.  It might be that it simply was a bad sweep, but 
+> with the current ambiguous definitions, I don't think things will be any 
+> better when different people try to use those message types on various LLDs.
 > 
-> In this patch set, 
-> ata_acpi_get_timing() is for getting PATA timing information;
-> ata_acpi_push_timing() is for setting PATA timing information;
-> ata_acpi_push_id() is for operating on _SDD;
-> ata_acpi_exec_tfs() is for getting ATA task file from _GTF and executing
-> them for a given drive
+> So, please make things *much* simpler.  I think it's overly elaborate to 
+> categorize normal (non-debug) messages by message types.  In my 
+> experience, such categorization usually ends up mis-categorization - you 
+> know, "Is this PROBE or CTL? who cares? make it INFO.  Is INFO debug or 
+> normal message?  WTF..."
 > 
-> NOTE: ata_acpi_get_timing() and ata_acpi_push_timing() are channel
-> (port)-level operations, which have more suitable invocation place in
-> Tejun's upcoming PM patch. So I would not bother to reference(invoke)
-> them in this version of patches and will send out updated patches after
-> Tejun's PM patch is merged into #upstream.
+> IMHO, it's enough to have non-debug messages categorized by verbosity - 
+> CRIT, ERR, WARN and INFO and all of them enabled by default.  This also 
+> forces developers to suppress the urge to be whiny and refine their 
+> messages.  Maybe we can add one more level below INFO for 
+> slightly-verbose but not quite debug, but I think we're better off 
+> without it.
+> 
+> For debug messages, we probably need some categorization to separate LLD 
+> message from core messages and suppress command issue/completion debug 
+> messages unless strictly necessary, etc...  But, those categories MUST 
+> be made by necessities (e.g. issue/completion messages suffocates other 
+> messages, so they need separate slot.) not by some logical 
+> out-of-the-blue categorization.  Otherwise, we end up with categories 
+> which may be obvious to some but not so to others and things will get messy.
 
-This is a great starting point for rejuvinating the SATA ACPI support, 
-thanks!
-
-I would request that you create two patches for this support:
-
-Patch #1:  Adds everything needed to make SATA ACPI work...  Makefile, 
-noacpi flag, core code, etc.
-
-Patch #2:  Dependent on patch #1.  Adds everything needed to make PATA 
-ACPI work.
-
-And overall, I want to reinforce a principle used for Linux patches: 
-applying 1-N patches for any given patchset should always produce a 
-compileable (and _hopefully_ working) piece of code.  Patches are 
-separated into _logical_ changes, much like the steps in a calculus proof.
+I guess you're right about the laziness/carelessness (no insinuations
+ whatsoever :)) factor with developers but I still 
+think it is a good thing to have different debugging levels for different
+message semantics and messages origin like interrupts, mem allocation, hardware probing,
+etc. I think, though, it would be better to have the debugging scheme running
+first and then rehash and reconfigure which debugging levels are appropriate and
+enough for libata-dev...
 
 Regards,
+    Boris.
 
-	Jeff
-
-
+		
+___________________________________________________________ 
+Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
 
