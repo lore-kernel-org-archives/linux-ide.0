@@ -1,63 +1,91 @@
-From: Auke Kok <sofar@foo-projects.org>
-Subject: [PATCH] ata_piix: add ICH6/7/8 to Kconfig
-Date: Mon, 26 Jun 2006 07:51:28 -0700
-Message-ID: <449FF470.8080605@foo-projects.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [RFC: 2.6 patch] drivers/ide/: possible cleanups
+Date: Mon, 26 Jun 2006 18:26:44 +0200
+Message-ID: <20060626162644.GU23314@stusta.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090105050308030302080404"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:40350 "EHLO
-	fmsmga101.fm.intel.com") by vger.kernel.org with ESMTP
-	id S1750728AbWFZOwN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jun 2006 10:52:13 -0400
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:59402 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1750762AbWFZQ0p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Jun 2006 12:26:45 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: B.Zolnierkiewicz@elka.pw.edu.pl
 Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090105050308030302080404
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+This patch contains the following possible clenups:
+- setup-pci.c: #if 0 the unused ide_pci_unregister_driver()
+- ide.c: remove the unused EXPORT_SYMBOL(ide_register_hw)
+- ide-dma.c: remove the unused EXPORT_SYMBOL_GPL(ide_in_drive_list)
 
-
-
-Ata_piix's Kconfig entry still refers only to ICH5, while it supports ICH6
-through 8. This creates confusion with people who are looking to see
-if their newer SATA enabled motherboards are supported. The
-following patch makes this clear.
-
-Signed-off-by: Auke Kok <auke-jan.h.kok@intel.com>
-
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
 ---
-This patch is against:
-      linus-2.6.git/d384ea691fe4ea8c2dd5b9b8d9042eb181776f18
 
----
-  drivers/scsi/Kconfig |    2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
+This patch was already sent on:
+- 27 Apr 2006
+- 19 Apr 2006
+- 11 Apr 2006
 
+ drivers/ide/ide-dma.c   |    2 --
+ drivers/ide/ide.c       |    2 --
+ drivers/ide/setup-pci.c |    4 +++-
+ include/linux/ide.h     |    1 -
+ 4 files changed, 3 insertions(+), 6 deletions(-)
 
---------------090105050308030302080404
-Content-Type: text/x-patch;
- name="ata_piix_kconfig_help.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ata_piix_kconfig_help.patch"
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index a480a37..98b1da8 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -501,7 +501,7 @@ config SCSI_ATA_PIIX
- 	tristate "Intel PIIX/ICH SATA support"
- 	depends on SCSI_SATA && PCI
- 	help
--	  This option enables support for ICH5 Serial ATA.
-+	  This option enables support for ICH5/6/7/8 Serial ATA.
- 	  If PATA support was enabled previously, this enables
- 	  support for select Intel PIIX/ICH PATA host controllers.
+--- linux-2.6.17-rc1-mm2-full/include/linux/ide.h.old	2006-04-10 22:46:27.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/include/linux/ide.h	2006-04-10 22:46:36.000000000 +0200
+@@ -1188,7 +1188,6 @@
+ extern void ide_scan_pcibus(int scan_direction) __init;
+ extern int __ide_pci_register_driver(struct pci_driver *driver, struct module *owner);
+ #define ide_pci_register_driver(d) __ide_pci_register_driver(d, THIS_MODULE)
+-extern void ide_pci_unregister_driver(struct pci_driver *driver);
+ void ide_pci_setup_ports(struct pci_dev *, struct ide_pci_device_s *, int, ata_index_t *);
+ extern void ide_setup_pci_noise (struct pci_dev *dev, struct ide_pci_device_s *d);
  
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/ide.c.old	2006-04-10 22:43:31.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/ide.c	2006-04-10 22:43:41.000000000 +0200
+@@ -826,8 +826,6 @@
+ 	return ide_register_hw_with_fixup(hw, hwifp, NULL);
+ }
+ 
+-EXPORT_SYMBOL(ide_register_hw);
+-
+ /*
+  *	Locks for IDE setting functionality
+  */
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/ide-dma.c.old	2006-04-10 22:44:21.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/ide-dma.c	2006-04-10 22:44:28.000000000 +0200
+@@ -152,8 +152,6 @@
+ 	return 0;
+ }
+ 
+-EXPORT_SYMBOL_GPL(ide_in_drive_list);
+-
+ /**
+  *	ide_dma_intr	-	IDE DMA interrupt handler
+  *	@drive: the drive the interrupt is for
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/setup-pci.c.old	2006-04-10 22:46:46.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/setup-pci.c	2006-04-10 22:47:03.000000000 +0200
+@@ -807,7 +807,8 @@
+  *	Unregister a currently installed IDE driver. Returns are the same
+  *	as for pci_unregister_driver
+  */
+- 
++
++#if 0
+ void ide_pci_unregister_driver(struct pci_driver *driver)
+ {
+ 	if(!pre_init)
+@@ -817,6 +818,7 @@
+ }
+ 
+ EXPORT_SYMBOL_GPL(ide_pci_unregister_driver);
++#endif  /*  0  */
+ 
+ /**
+  *	ide_scan_pcidev		-	find an IDE driver for a device
 
---------------090105050308030302080404--
+
