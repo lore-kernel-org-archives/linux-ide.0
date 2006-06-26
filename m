@@ -1,61 +1,120 @@
-From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: Re: regarding ata_msg_*()
-Date: Mon, 26 Jun 2006 10:34:59 +0200
-Message-ID: <20060626083459.GA13039@gollum.tnic>
-References: <449E7FB9.4080305@gmail.com> <20060626074132.GA10695@gollum.tnic> <449F9427.1080806@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: More information on ATI IXP failure in git9
+Date: Mon, 26 Jun 2006 17:40:24 +0900
+Message-ID: <449F9D78.7070503@gmail.com>
+References: <200606252359.27671.ak@suse.de> <449F1AEE.700@pobox.com> <20060626021011.GB21435@htj.dyndns.org> <200606260818.46672.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------060708020804020604040600"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp101.plus.mail.re2.yahoo.com ([206.190.53.26]:62836 "HELO
-	smtp101.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S964930AbWFZIfD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Jun 2006 04:35:03 -0400
-Content-Disposition: inline
-In-Reply-To: <449F9427.1080806@gmail.com>
+Received: from nz-out-0102.google.com ([64.233.162.207]:24185 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964931AbWFZIkZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Jun 2006 04:40:25 -0400
+Received: by nz-out-0102.google.com with SMTP id o37so745843nzf
+        for <linux-ide@vger.kernel.org>; Mon, 26 Jun 2006 01:40:25 -0700 (PDT)
+In-Reply-To: <200606260818.46672.ak@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Andi Kleen <ak@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Mon, Jun 26, 2006 at 05:00:39PM +0900, Tejun Heo wrote:
+This is a multi-part message in MIME format.
+--------------060708020804020604040600
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Tejun,
+Hello, Andi.
 
-<snip>
-> My suggestion is to keep the current (pre-msg_enable) model for the 
-> first conversion and categorize debug messages further after that.  So, 
-> message categories will be...
-> 
-> ATA_MSG_ERR
-> ATA_MSG_WARN
-> ATA_MSG_INFO
-> -------------> all above are enabled by default
-> ATA_MSG_DEBUG
-> ATA_MSG_VDEBUG
-> 
-> Then, you have 1-to-1 mapping w/ the existing messages.  You can simply 
-> incorporate message enabled tests into ata_*_printk() functions and the 
-> conversion would be trivial.
->
-> After that's complete, we can diversify ATA_MSG_DEBUG and ATA_MSG_VDEBUG 
-> by separating out chatty ones out.  e.g. you can separate out SG 
-> mapping/unmapping (including padding) debug messages, which produce 
-> massive amount of logs when enabled, into ATA_MSG_SG or something. 
-> After several such separations, debug messages should be quite 
-> manageable && the categories wouldn't be too elaborate.
+Andi Kleen wrote:
+> Still doesn't work with it - see http://one.firstfloor.org/~andi/sata3.jpg
 
-Yes, this sounds logical, I like it, it really fits libata more but at the time
-I made that msg classification I kinda wanted to stick closely to Becker's
-initial implementation :). But you're perfectly right, this is the way to go so
-I'll do that after reading what the others have to say. However, as I said
-before, IMHO it would be of higher priority now to convert to this new scheme
-and changing the dbg levels later would be trivial once we got all of libata
-done.
+* SATA_IRQ bit is stuck (on all other sil controllers, this gets cleared 
+when SError is cleared)
 
-Regards,
-    Boris.
+* whenever interrupt occurs (from itself or from any other ones sharing 
+the IRQ), irq handler sees SATA_IRQ bit set and thus thinks it just 
+received phy status changed IRQ.
 
-		
-___________________________________________________________ 
-Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
+* phy status change aborts the active command, so no command gets completed.
 
+I'm attaching two patches.  The first one tries to clear SATA_IRQ by 
+writing 1 to it in thaw() assuming the bit is implemented as W1C (which 
+BTW is out of spec).  The second one kills SATA_IRQ handling completely. 
+  I wish the first one works but if not I'll update the second one such 
+that it applies only to ATI IXP.
+
+Thanks.
+
+-- 
+tejun
+
+--------------060708020804020604040600
+Content-Type: text/plain;
+ name="patch0"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch0"
+
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index bc9f918..fca5333 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -474,6 +474,9 @@ static void sil_thaw(struct ata_port *ap
+ 	ata_chk_status(ap);
+ 	ata_bmdma_irq_clear(ap);
+ 
++	/* SATA_IRQ has to be cleared manually on some controllers */
++	writel(SIL_DMA_SATA_IRQ, mmio_base + sil_port[ap->port_no].bmdma2);
++
+ 	/* turn on SATA IRQ */
+ 	writel(SIL_SIEN_N, mmio_base + sil_port[ap->port_no].sien);
+ 
+
+--------------060708020804020604040600
+Content-Type: text/plain;
+ name="patch1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch1"
+
+diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
+index bc9f918..024ce28 100644
+--- a/drivers/scsi/sata_sil.c
++++ b/drivers/scsi/sata_sil.c
+@@ -343,6 +343,7 @@ static void sil_host_intr(struct ata_por
+ 	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
+ 	u8 status;
+ 
++#if 0
+ 	if (unlikely(bmdma2 & SIL_DMA_SATA_IRQ)) {
+ 		u32 serror;
+ 
+@@ -365,6 +366,7 @@ static void sil_host_intr(struct ata_por
+ 
+ 		goto freeze;
+ 	}
++#endif
+ 
+ 	if (unlikely(!qc || qc->tf.ctl & ATA_NIEN))
+ 		goto freeze;
+@@ -438,7 +440,7 @@ static irqreturn_t sil_interrupt(int irq
+ 			continue;
+ 
+ 		if (bmdma2 == 0xffffffff ||
+-		    !(bmdma2 & (SIL_DMA_COMPLETE | SIL_DMA_SATA_IRQ)))
++		    !(bmdma2 & (SIL_DMA_COMPLETE/* | SIL_DMA_SATA_IRQ*/)))
+ 			continue;
+ 
+ 		sil_host_intr(ap, bmdma2);
+@@ -475,7 +477,7 @@ static void sil_thaw(struct ata_port *ap
+ 	ata_bmdma_irq_clear(ap);
+ 
+ 	/* turn on SATA IRQ */
+-	writel(SIL_SIEN_N, mmio_base + sil_port[ap->port_no].sien);
++	/*writel(SIL_SIEN_N, mmio_base + sil_port[ap->port_no].sien);*/
+ 
+ 	/* turn on IRQ */
+ 	tmp = readl(mmio_base + SIL_SYSCFG);
+
+--------------060708020804020604040600--
