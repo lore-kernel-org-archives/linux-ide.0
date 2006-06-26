@@ -1,62 +1,30 @@
-From: Brian King <brking@us.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH 4/6] libata: Add ata_host_flags
-Date: Mon, 26 Jun 2006 13:56:21 -0500
-Message-ID: <44A02DD5.1030405@us.ibm.com>
-References: <200606071625.k57GPrit014721@d01av01.pok.ibm.com> <448CDEF3.1000703@pobox.com> <448DB360.8010504@us.ibm.com>
-Reply-To: brking@us.ibm.com
+Date: Mon, 26 Jun 2006 21:54:26 +0100
+Message-ID: <1151355266.27147.78.camel@localhost.localdomain>
+References: <200606071625.k57GPrit014721@d01av01.pok.ibm.com>
+	 <448CDEF3.1000703@pobox.com> <448DB360.8010504@us.ibm.com>
+	 <44A02DD5.1030405@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:33179 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932658AbWFZS4Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jun 2006 14:56:25 -0400
-In-Reply-To: <448DB360.8010504@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <44A02DD5.1030405@us.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 To: brking@us.ibm.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Brian King wrote:
-> Jeff Garzik wrote:
->> Brian King wrote:
->>> Since SATA devices attached to SAS HBAs will not have
->>> a host_set, add a helper function to retrieve the host_set
->>> flags which can check for the existence of a host_set.
->>>
->>> Signed-off-by: Brian King <brking@us.ibm.com>
->>> ---
->>>
->>>  libata-dev-bjking1/drivers/scsi/libata-core.c |    7 +++----
->>>  libata-dev-bjking1/include/linux/libata.h     |    7 +++++++
->>>  2 files changed, 10 insertions(+), 4 deletions(-)
->>>
->>> diff -puN drivers/scsi/libata-core.c~libata_sas_no_simplex drivers/scsi/libata-core.c
->>> --- libata-dev/drivers/scsi/libata-core.c~libata_sas_no_simplex	2006-06-06 08:55:43.000000000 -0500
->>> +++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-06 08:55:43.000000000 -0500
->>> @@ -2161,7 +2161,7 @@ int ata_set_mode(struct ata_port *ap, st
->>>  	/* Record simplex status. If we selected DMA then the other
->>>  	 * host channels are not permitted to do so.
->>>  	 */
->>> -	if (used_dma && (ap->host_set->flags & ATA_HOST_SIMPLEX))
->>> +	if (used_dma && (ata_host_flags(ap) & ATA_HOST_SIMPLEX))
->> I'm not sure I like this one.  Will have to think a bit more on this -- 
->> there might be a need for ipr to carry some cross-port libata state.
+Ar Llu, 2006-06-26 am 13:56 -0500, ysgrifennodd Brian King:
+> Jeff, any further thoughts about this? I had been trying to avoid having
+> any host_set type of data for the SAS usage of libata in part due to
+> not seeing a need and also due to a comment Bartlomiej made a while back:
 > 
-> I can't think of any need at this point. Would it be reasonable to go ahead
-> with this change and add in the support for a cross-port libata state
-> if and when such a need comes along? 
+> http://marc.theaimsgroup.com/?l=linux-ide&m=112842136431977&w=2
 
-Jeff, any further thoughts about this? I had been trying to avoid having
-any host_set type of data for the SAS usage of libata in part due to
-not seeing a need and also due to a comment Bartlomiej made a while back:
+Well if anything we seem to be going the other way, in order to get
+things like Simplex working with legacy mode the legacy setup needs the
+two ports on the same host_set with differing IRQ/ports.
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=112842136431977&w=2
+Alan
 
-
-Brian
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
