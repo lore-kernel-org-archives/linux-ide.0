@@ -1,34 +1,42 @@
-From: Udo van den Heuvel <udovdh@xs4all.nl>
-Subject: 2.6.17 on VIA SP8000 sata: via_sata timeout (cmd 0xef) (retry)
-Date: Wed, 28 Jun 2006 19:40:54 +0200
-Message-ID: <44A2BF26.8090608@xs4all.nl>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH-stable] ahci: skip SRST for offline port
+Date: Thu, 29 Jun 2006 04:10:10 +0900
+Message-ID: <20060628191010.GC21435@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-vbr4.xs4all.nl ([194.109.24.24]:7948 "EHLO
-	smtp-vbr4.xs4all.nl") by vger.kernel.org with ESMTP
-	id S1751499AbWF1Rk6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jun 2006 13:40:58 -0400
+Received: from wr-out-0506.google.com ([64.233.184.239]:9515 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751013AbWF1TJu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jun 2006 15:09:50 -0400
+Received: by wr-out-0506.google.com with SMTP id i24so452495wra
+        for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 12:09:50 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hello Jeff and others,
+Skip SRST if phy is offline.  It has been in libata-dev#upstream for
+quite some time but somehow didn't make into 2.6.17.
 
-While 2.6.16.2 runs quite OK on my VIA SP8000 Epia system, 2.6.17 gives
-(with the same config where possible) a sata problem on bootup, it gives
-a via_sata timeout(cmd 0xef). (the letters were small to make the stuff
-not scroll off the TV)
-Immediately rebooting into 2.6.16.2 gives a nice clean bootup.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Jeff, after review, please forward to -stable.  Thanks.
 
-The drive is a SAMSUNG HD160JJ. Hardware has not changed and the .config
-for the kernel compile was not modified except for version differences.
-
-Did I miss something? Is my hardware starting te get picky about linux
-kernel version numbers? Or getting defective?
-Any ideas?
-
-Kind regards,
-Udo
-
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index b4f8fb1..1b01c4d 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -548,6 +548,12 @@ static int ahci_softreset(struct ata_por
+ 
+ 	DPRINTK("ENTER\n");
+ 
++	if (!sata_dev_present(ap)) {
++		*class = ATA_DEV_NONE;
++		DPRINTK("EXIT, link offline\n");
++		return 0;
++	}
++
+ 	/* prepare for SRST (AHCI-1.1 10.4.1) */
+ 	rc = ahci_stop_engine(ap);
+ 	if (rc) {
