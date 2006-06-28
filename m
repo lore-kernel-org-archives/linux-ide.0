@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/8] sata_sil: add suspend/sleep support
+Subject: [PATCH 8/8] sata_sil24: add suspend/sleep support
 Date: Wed, 28 Jun 2006 15:23:06 +0900
-Message-ID: <11514757862619-git-send-email-htejun@gmail.com>
+Message-ID: <1151475786850-git-send-email-htejun@gmail.com>
 References: <11514757842728-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -10,10 +10,10 @@ Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from wr-out-0506.google.com ([64.233.184.235]:14514 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030459AbWF1GWx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jun 2006 02:22:53 -0400
+	id S1030448AbWF1GWw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jun 2006 02:22:52 -0400
 Received: by wr-out-0506.google.com with SMTP id i24so346493wra
-        for <linux-ide@vger.kernel.org>; Tue, 27 Jun 2006 23:22:53 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Tue, 27 Jun 2006 23:22:52 -0700 (PDT)
 In-Reply-To: <11514757842728-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -26,32 +26,40 @@ Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+ drivers/scsi/sata_sil24.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
-0d50db138ae1cfbfb6e6ce67ce58a0e9215117ac
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index 04f2cfe..e943fa8 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -109,6 +109,7 @@ enum {
- };
+995017f5cca97018e0b11c7a0ec27791c71c837e
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 2e1dc19..8e3deca 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -92,6 +92,7 @@ enum {
+ 	HOST_CTRL_STOP		= (1 << 18), /* latched PCI STOP */
+ 	HOST_CTRL_DEVSEL	= (1 << 19), /* latched PCI DEVSEL */
+ 	HOST_CTRL_REQ64		= (1 << 20), /* latched PCI REQ64 */
++	HOST_CTRL_GLOBAL_RST	= (1 << 31), /* global reset */
  
- static int sil_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
-+static int sil_pci_device_resume(struct pci_dev *pdev);
- static void sil_dev_config(struct ata_port *ap, struct ata_device *dev);
- static u32 sil_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void sil_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
-@@ -160,6 +161,8 @@ static struct pci_driver sil_pci_driver 
- 	.id_table		= sil_pci_tbl,
- 	.probe			= sil_init_one,
- 	.remove			= ata_pci_remove_one,
+ 	/*
+ 	 * Port registers
+@@ -338,6 +339,7 @@ static int sil24_port_start(struct ata_p
+ static void sil24_port_stop(struct ata_port *ap);
+ static void sil24_host_stop(struct ata_host_set *host_set);
+ static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
++static int sil24_pci_device_resume(struct pci_dev *pdev);
+ 
+ static const struct pci_device_id sil24_pci_tbl[] = {
+ 	{ 0x1095, 0x3124, PCI_ANY_ID, PCI_ANY_ID, 0, 0, BID_SIL3124 },
+@@ -353,6 +355,8 @@ static struct pci_driver sil24_pci_drive
+ 	.id_table		= sil24_pci_tbl,
+ 	.probe			= sil24_init_one,
+ 	.remove			= ata_pci_remove_one, /* safe? */
 +	.suspend		= ata_pci_device_suspend,
-+	.resume			= sil_pci_device_resume,
++	.resume			= sil24_pci_device_resume,
  };
  
- static struct scsi_host_template sil_sht = {
-@@ -178,6 +181,8 @@ static struct scsi_host_template sil_sht
+ static struct scsi_host_template sil24_sht = {
+@@ -372,6 +376,8 @@ static struct scsi_host_template sil24_s
  	.slave_configure	= ata_scsi_slave_config,
  	.slave_destroy		= ata_scsi_slave_destroy,
  	.bios_param		= ata_std_bios_param,
@@ -59,26 +67,33 @@ index 04f2cfe..e943fa8 100644
 +	.resume			= ata_scsi_device_resume,
  };
  
- static const struct ata_port_operations sil_ops = {
-@@ -695,6 +700,18 @@ err_out:
+ static const struct ata_port_operations sil24_ops = {
+@@ -1179,6 +1185,25 @@ static int sil24_init_one(struct pci_dev
  	return rc;
  }
  
-+static int sil_pci_device_resume(struct pci_dev *pdev)
++static int sil24_pci_device_resume(struct pci_dev *pdev)
 +{
 +	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
++	struct sil24_host_priv *hpriv = host_set->private_data;
 +
 +	ata_pci_device_do_resume(pdev);
-+	sil_init_controller(pdev, host_set->n_ports, host_set->ports[0]->flags,
-+			    host_set->mmio_base);
++
++	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND)
++		writel(HOST_CTRL_GLOBAL_RST, hpriv->host_base + HOST_CTRL);
++
++	sil24_init_controller(pdev, host_set->n_ports,
++			      host_set->ports[0]->flags,
++			      hpriv->host_base, hpriv->port_base);
++
 +	ata_host_set_resume(host_set);
 +
 +	return 0;
 +}
 +
- static int __init sil_init(void)
+ static int __init sil24_init(void)
  {
- 	return pci_module_init(&sil_pci_driver);
+ 	return pci_module_init(&sil24_pci_driver);
 -- 
 1.3.2
 
