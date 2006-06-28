@@ -1,84 +1,69 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata new EH issue - ATAPI device error not properly reported
-Date: Wed, 28 Jun 2006 19:27:22 +0900
-Message-ID: <44A2598A.6040001@gmail.com>
-References: <44A23D76.30307@tw.ibm.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH] libata: add host_set->next for legacy two host_sets case,
+ take #3
+Date: Wed, 28 Jun 2006 18:27:05 +0800
+Message-ID: <44A25979.3020709@tw.ibm.com>
+References: <20060612051727.GD9166@htj.dyndns.org> <448D0FF9.1080605@pobox.com> <20060612101419.GB5751@htj.dyndns.org> <448D6DBF.9010604@pobox.com> <20060612140538.GA3892@htj.dyndns.org>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.199]:7181 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932504AbWF1K1D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jun 2006 06:27:03 -0400
-Received: by wx-out-0102.google.com with SMTP id t5so933602wxc
-        for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 03:27:03 -0700 (PDT)
-In-Reply-To: <44A23D76.30307@tw.ibm.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:53482 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S932504AbWF1K1N
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jun 2006 06:27:13 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k5SARC0j006148
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 06:27:12 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k5SAQeIr312282
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 04:26:40 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k5SARBgd018046
+	for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 04:27:12 -0600
+In-Reply-To: <20060612140538.GA3892@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Unicorn Chang <uchang@tw.ibm.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Doug Maxey <dwm@bebe.enoyolf.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Brian King <brking@us.ibm.com>, Doug Maxey <dwm@bebe.enoyolf.org>, Unicorn Chang <uchang@tw.ibm.com>
 
-Hello, Albert.
-
-Albert Lee wrote:
-> Hi Tejun,
+Tejun Heo wrote:
+> For a legacy ATA controller, libata registers two separate host sets.
+> There was no connection between the two hosts making it impossible to
+> traverse all ports related to the controller.  This patch adds
+> host_set->next which points to the second host_set and makes
+> ata_pci_remove_one() remove all associated host_sets.
 > 
-> Unicorn is doing some test with the current upstream branch and something
-> looks strange in the log.
+> * On device removal, all ports hanging off the device are properly
+>   detached.  Prior to this patch, ports on the first host_set weren't
+>   detached casuing oops on driver unloading.
 > 
-> With the new EH, when the ATAPI device reports dev_status 0x51,
-> the err_mask is reported as 0x0. This does not look right.
-> Maybe we should report AC_ERR_DEV error back to the upper layers?
-> (Test log attached for your review.)
->
-[--snip--]
-> Jun 27 18:10:57 xlinux19 kernel: atapi_qc_complete: ENTER, err_mask 0x0  <== Doesn't look right. Should report error.
+> * On device removal, both host_sets are properly freed
+> 
+> This will also be used by new power management code to suspend and
+> resume all ports of a controller.  
 
-The following code block follows the above VPRINTK.
 
-	/* handle completion from new EH */
-	if (unlikely(qc->ap->ops->error_handler &&
-		     (err_mask || qc->flags & ATA_QCFLAG_SENSE_VALID))){
+> host_set/port representation will
+> be improved to handle legacy controllers better and this host_set
+> linking will go away with it.
+> 
 
-		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID)) {
-			/* FIXME: not quite right; we don't want the
-			 * translation of taskfile registers into a
-			 * sense descriptors, since that's only
-			 * correct for ATA, not ATAPI
-			 */
-			ata_gen_ata_desc_sense(qc);
-		}
+Hi Tejun,
 
-		qc->scsicmd->result = SAM_STAT_CHECK_CONDITION;
-		qc->scsidone(cmd);
-		ata_qc_free(qc);
-		return;
-	}
+Hmm, the current patch looks more like a temporary solution. The legacy mode
+ATA_HOST_SIMPLEX host_set->flags could be assigned to both legacy ports.
+In the long term, have one host_set for both legacy ports
+instead of two host_sets for both legacy ports can fix the problem.
 
-As EH set ATA_QCFLAG_SENSE_VALID after reading sense data the above if 
-block is executed thus reporting upper layer CHECK_CONDITION.  Overall, 
-the control flow on ATAPI CC is like the following.
+A patch was submitted by Unicorn, but it looks not good/elegant enough. :(
+It will be nice if you have plan for furthur legacy two host_sets case fixes...
 
-1. ATAPI CC occurs
+Thanks,
 
-2. AC_ERR_DEV set and EH invoked
+Albert
 
-3. EH requests sense.  sense is stored in the sense buffer and 
-AC_ERR_DEV is cleared.
 
-4. EH completes the qc and triggers above code block in atapi_qc_complete().
-
-The logic behind clearing AC_ERR_DEV after reading sense data is that 
-ATAPI CC doesn't always indicate device error.  It can indicate 
-anything.  By clearing AC_ERR_DEV after sense data is read, libata EH 
-considers the error condition is cleared and doesn't perform further 
-action on the device.  If the sense data indicates actual error, upper 
-layers will probably deal with it (sr driver or userland application).
-
-It might be useful to interpret some of sense data and handle things 
-like transmission error in libata EH, but I don't know.  ATAPI errors 
-always have been handled by upper layers.
-
--- 
-tejun
