@@ -1,229 +1,130 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/2] ata_piix: add host_set private structure
-Date: Thu, 29 Jun 2006 01:58:28 +0900
-Message-ID: <20060628165828.GD23844@htj.dyndns.org>
+Subject: [PATCH] ata_piix: implement cached PCS and apply it to ICH5
+Date: Thu, 29 Jun 2006 01:58:53 +0900
+Message-ID: <20060628165853.GE23844@htj.dyndns.org>
+References: <20060628165828.GD23844@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:2139 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751453AbWF1Q6N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jun 2006 12:58:13 -0400
-Received: by nf-out-0910.google.com with SMTP id h2so784052nfe
-        for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 09:58:11 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.197]:36284 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751453AbWF1Q6e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jun 2006 12:58:34 -0400
+Received: by nz-out-0102.google.com with SMTP id z31so94882nzd
+        for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 09:58:33 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <20060628165828.GD23844@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Add host_set private structure piix_host_priv.  Currently the only
-field is ->map which used to be stored directly at
-host_set->private_data.  This change allows more host_set private
-fields to be added.
+Some ICH5s (bug#6724) clear PCS while devices on the first port are
+being probed.  This happens whether PCS itself is written to or not
+during probe_init.  This patch implements cached PCS - PCS value is
+cached during driver init and probing uses the cached value - and
+apply it to ICH5.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
-And the same patches against #upstream.  Thanks.
+ drivers/scsi/ata_piix.c |   43 +++++++++++++++++++++++++++----------------
+ 1 files changed, 27 insertions(+), 16 deletions(-)
 
- drivers/scsi/ata_piix.c |   56 ++++++++++++++++++++++++++++++++++-------------
- 1 files changed, 40 insertions(+), 16 deletions(-)
-
-25aba001520a631616fc0f8025f1bf4c8323bf38
+41e6b6fe4bb03941017439726422cca9d7c59e7e
 diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index 94b1261..bf41dd3 100644
+index bf41dd3..cbb3293 100644
 --- a/drivers/scsi/ata_piix.c
 +++ b/drivers/scsi/ata_piix.c
-@@ -144,8 +144,13 @@ struct piix_map_db {
- 	const int map[][4];
+@@ -101,6 +101,7 @@ enum {
+ 	ICH5_PCS		= 0x92,	/* port control and status */
+ 	PIIX_SCC		= 0x0A, /* sub-class code register */
+ 
++	PIIX_FLAG_CACHED_PCS	= (1 << 24), /* cache PCS on driver init */
+ 	PIIX_FLAG_IGNORE_PCS	= (1 << 25), /* ignore PCS present bits */
+ 	PIIX_FLAG_SCR		= (1 << 26), /* SCR available */
+ 	PIIX_FLAG_AHCI		= (1 << 27), /* AHCI possible */
+@@ -146,6 +147,7 @@ struct piix_map_db {
+ 
+ struct piix_host_priv {
+ 	const int *map;
++	u8 cached_pcs;
  };
  
-+struct piix_host_priv {
-+	const int *map;
-+};
-+
  static int piix_init_one (struct pci_dev *pdev,
- 				    const struct pci_device_id *ent);
-+static void piix_host_stop(struct ata_host_set *host_set);
- static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
- static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
- static void piix_pata_error_handler(struct ata_port *ap);
-@@ -254,7 +259,7 @@ static const struct ata_port_operations 
- 
- 	.port_start		= ata_port_start,
- 	.port_stop		= ata_port_stop,
--	.host_stop		= ata_host_stop,
-+	.host_stop		= piix_host_stop,
- };
- 
- static const struct ata_port_operations piix_sata_ops = {
-@@ -284,10 +289,10 @@ static const struct ata_port_operations 
- 
- 	.port_start		= ata_port_start,
- 	.port_stop		= ata_port_stop,
--	.host_stop		= ata_host_stop,
-+	.host_stop		= piix_host_stop,
- };
- 
--static struct piix_map_db ich5_map_db = {
-+static const struct piix_map_db ich5_map_db = {
- 	.mask = 0x7,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP  */
-@@ -302,7 +307,7 @@ static struct piix_map_db ich5_map_db = 
- 	},
- };
- 
--static struct piix_map_db ich6_map_db = {
-+static const struct piix_map_db ich6_map_db = {
- 	.mask = 0x3,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
-@@ -313,7 +318,7 @@ static struct piix_map_db ich6_map_db = 
- 	},
- };
- 
--static struct piix_map_db ich6m_map_db = {
-+static const struct piix_map_db ich6m_map_db = {
- 	.mask = 0x3,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
-@@ -324,6 +329,14 @@ static struct piix_map_db ich6m_map_db =
- 	},
- };
- 
-+static const struct piix_map_db *piix_map_db_table[] = {
-+	[ich5_sata]		= &ich5_map_db,
-+	[esb_sata]		= &ich5_map_db,
-+	[ich6_sata]		= &ich6_map_db,
-+	[ich6_sata_ahci]	= &ich6_map_db,
-+	[ich6m_sata_ahci]	= &ich6m_map_db,
-+};
-+
- static struct ata_port_info piix_port_info[] = {
- 	/* piix4_pata */
+@@ -370,7 +372,7 @@ #endif
  	{
-@@ -362,7 +375,6 @@ #endif
+ 		.sht		= &piix_sht,
+ 		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED |
+-				  PIIX_FLAG_CHECKINTR,
++				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_CACHED_PCS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
  		.mwdma_mask	= 0x07, /* mwdma0-2 */
  		.udma_mask	= 0x7f,	/* udma0-6 */
- 		.port_ops	= &piix_sata_ops,
--		.private_data	= &ich5_map_db,
- 	},
- 
- 	/* i6300esb_sata */
-@@ -374,7 +386,6 @@ #endif
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
- 		.port_ops	= &piix_sata_ops,
--		.private_data	= &ich5_map_db,
- 	},
- 
- 	/* ich6_sata */
-@@ -386,7 +397,6 @@ #endif
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
- 		.port_ops	= &piix_sata_ops,
--		.private_data	= &ich6_map_db,
- 	},
- 
- 	/* ich6_sata_ahci */
-@@ -399,7 +409,6 @@ #endif
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
- 		.port_ops	= &piix_sata_ops,
--		.private_data	= &ich6_map_db,
- 	},
- 
- 	/* ich6m_sata_ahci */
-@@ -412,7 +421,6 @@ #endif
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
- 		.port_ops	= &piix_sata_ops,
--		.private_data	= &ich6m_map_db,
- 	},
- };
- 
-@@ -508,7 +516,8 @@ static void piix_pata_error_handler(stru
- static int piix_sata_prereset(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
--	const unsigned int *map = ap->host_set->private_data;
-+	struct piix_host_priv *hpriv = ap->host_set->private_data;
-+	const unsigned int *map = hpriv->map;
- 	int base = 2 * ap->hard_port_no;
- 	unsigned int present_mask = 0;
+@@ -523,21 +525,27 @@ static int piix_sata_prereset(struct ata
  	int port, i;
-@@ -762,9 +771,10 @@ static int __devinit piix_check_450nx_er
- }
+ 	u8 pcs;
  
- static void __devinit piix_init_sata_map(struct pci_dev *pdev,
--					 struct ata_port_info *pinfo)
-+					 struct ata_port_info *pinfo,
-+					 const struct piix_map_db *map_db)
- {
--	struct piix_map_db *map_db = pinfo[0].private_data;
-+	struct piix_host_priv *hpriv = pinfo[0].private_data;
- 	const unsigned int *map;
- 	int i, invalid_map = 0;
- 	u8 map_value;
-@@ -805,8 +815,7 @@ static void __devinit piix_init_sata_map
- 		dev_printk(KERN_ERR, &pdev->dev,
- 			   "invalid MAP value %u\n", map_value);
- 
--	pinfo[0].private_data = (void *)map;
--	pinfo[1].private_data = (void *)map;
-+	hpriv->map = map;
- }
- 
- /**
-@@ -829,6 +838,7 @@ static int piix_init_one (struct pci_dev
- 	static int printed_version;
- 	struct ata_port_info port_info[2];
- 	struct ata_port_info *ppinfo[2] = { &port_info[0], &port_info[1] };
-+	struct piix_host_priv *hpriv;
- 	unsigned long host_flags;
- 
- 	if (!printed_version++)
-@@ -839,8 +849,14 @@ static int piix_init_one (struct pci_dev
- 	if (!in_module_init)
- 		return -ENODEV;
- 
-+	hpriv = kzalloc(sizeof(*hpriv), GFP_KERNEL);
-+	if (!hpriv)
-+		return -ENOMEM;
+-	pci_read_config_byte(pdev, ICH5_PCS, &pcs);
+-	DPRINTK("ata%u: ENTER, pcs=0x%x base=%d\n", ap->id, pcs, base);
+-
+-	/* enable all ports on this ap and wait for them to settle */
+-	for (i = 0; i < 2; i++) {
+-		port = map[base + i];
+-		if (port >= 0)
+-			pcs |= 1 << port;
+-	}
++	if (ap->flags & PIIX_FLAG_CACHED_PCS) {
++		pcs = hpriv->cached_pcs;
++		DPRINTK("ata%u: ENTER, cached_pcs=0x%x base=%d\n",
++			ap->id, pcs, base);
++	} else {
++		pci_read_config_byte(pdev, ICH5_PCS, &pcs);
++		DPRINTK("ata%u: ENTER, pcs=0x%x base=%d\n", ap->id, pcs, base);
 +
- 	port_info[0] = piix_port_info[ent->driver_data];
- 	port_info[1] = piix_port_info[ent->driver_data];
-+	port_info[0].private_data = hpriv;
-+	port_info[1].private_data = hpriv;
++		/* enable all ports on this ap and wait for them to settle */
++		for (i = 0; i < 2; i++) {
++			port = map[base + i];
++			if (port >= 0)
++				pcs |= 1 << port;
++		}
  
- 	host_flags = port_info[0].host_flags;
+-	pci_write_config_byte(pdev, ICH5_PCS, pcs);
+-	msleep(100);
++		pci_write_config_byte(pdev, ICH5_PCS, pcs);
++		msleep(100);
  
-@@ -856,7 +872,8 @@ static int piix_init_one (struct pci_dev
+-	/* let's see which devices are present */
+-	pci_read_config_byte(pdev, ICH5_PCS, &pcs);
++		/* let's see which devices are present */
++		pci_read_config_byte(pdev, ICH5_PCS, &pcs);
++	}
+ 
+ 	for (i = 0; i < 2; i++) {
+ 		port = map[base + i];
+@@ -550,7 +558,7 @@ static int piix_sata_prereset(struct ata
+ 	}
+ 
+ 	/* disable offline ports on non-AHCI controllers */
+-	if (!(ap->flags & PIIX_FLAG_AHCI))
++	if (!(ap->flags & (PIIX_FLAG_AHCI | PIIX_FLAG_CACHED_PCS)))
+ 		pci_write_config_byte(pdev, ICH5_PCS, pcs);
+ 
+ 	DPRINTK("ata%u: LEAVE, pcs=0x%x present_mask=0x%x\n",
+@@ -871,9 +879,12 @@ static int piix_init_one (struct pci_dev
+ 	}
  
  	/* Initialize SATA map */
- 	if (host_flags & ATA_FLAG_SATA)
--		piix_init_sata_map(pdev, port_info);
-+		piix_init_sata_map(pdev, port_info,
-+				   piix_map_db_table[ent->driver_data]);
+-	if (host_flags & ATA_FLAG_SATA)
++	if (host_flags & ATA_FLAG_SATA) {
+ 		piix_init_sata_map(pdev, port_info,
+ 				   piix_map_db_table[ent->driver_data]);
++		if (host_flags & PIIX_FLAG_CACHED_PCS)
++			pci_read_config_byte(pdev, ICH5_PCS, &hpriv->cached_pcs);
++	}
  
  	/* On ICH5, some BIOSen disable the interrupt using the
  	 * PCI_COMMAND_INTX_DISABLE bit added in PCI 2.3.
-@@ -879,6 +896,13 @@ static int piix_init_one (struct pci_dev
- 	return ata_pci_init_one(pdev, ppinfo, 2);
- }
- 
-+static void piix_host_stop(struct ata_host_set *host_set)
-+{
-+	if (host_set->next == NULL)
-+		kfree(host_set->private_data);
-+	ata_host_stop(host_set);
-+}
-+
- static int __init piix_init(void)
- {
- 	int rc;
 -- 
 1.3.2
 
