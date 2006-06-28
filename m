@@ -1,111 +1,84 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: libata new EH issue - ATAPI device error not properly reported
-Date: Wed, 28 Jun 2006 16:27:34 +0800
-Message-ID: <44A23D76.30307@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata new EH issue - ATAPI device error not properly reported
+Date: Wed, 28 Jun 2006 19:27:22 +0900
+Message-ID: <44A2598A.6040001@gmail.com>
+References: <44A23D76.30307@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:41898 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1161083AbWF1I1l
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jun 2006 04:27:41 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k5S8Rfuv003723
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 04:27:41 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k5S8RvLk186472
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 02:27:57 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k5S8RdlZ007505
-	for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 02:27:40 -0600
+Received: from wx-out-0102.google.com ([66.249.82.199]:7181 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932504AbWF1K1D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jun 2006 06:27:03 -0400
+Received: by wx-out-0102.google.com with SMTP id t5so933602wxc
+        for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 03:27:03 -0700 (PDT)
+In-Reply-To: <44A23D76.30307@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: albertl@mail.com
 Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Unicorn Chang <uchang@tw.ibm.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Doug Maxey <dwm@bebe.enoyolf.org>
 
-Hi Tejun,
+Hello, Albert.
 
-Unicorn is doing some test with the current upstream branch and something
-looks strange in the log.
+Albert Lee wrote:
+> Hi Tejun,
+> 
+> Unicorn is doing some test with the current upstream branch and something
+> looks strange in the log.
+> 
+> With the new EH, when the ATAPI device reports dev_status 0x51,
+> the err_mask is reported as 0x0. This does not look right.
+> Maybe we should report AC_ERR_DEV error back to the upper layers?
+> (Test log attached for your review.)
+>
+[--snip--]
+> Jun 27 18:10:57 xlinux19 kernel: atapi_qc_complete: ENTER, err_mask 0x0  <== Doesn't look right. Should report error.
 
-With the new EH, when the ATAPI device reports dev_status 0x51,
-the err_mask is reported as 0x0. This does not look right.
-Maybe we should report AC_ERR_DEV error back to the upper layers?
-(Test log attached for your review.)
+The following code block follows the above VPRINTK.
 
---
-albert
+	/* handle completion from new EH */
+	if (unlikely(qc->ap->ops->error_handler &&
+		     (err_mask || qc->flags & ATA_QCFLAG_SENSE_VALID))){
 
-============================================================================================
-(Test log with new EH.
-Error transaction with 0x51 dev_status)
+		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID)) {
+			/* FIXME: not quite right; we don't want the
+			 * translation of taskfile registers into a
+			 * sense descriptors, since that's only
+			 * correct for ATA, not ATAPI
+			 */
+			ata_gen_ata_desc_sense(qc);
+		}
 
-Jun 27 18:10:57 xlinux19 kernel: ata_scsi_dump_cdb: CDB (3:0,0,0) 1e 00 00 00 01 00 00 00 00
-Jun 27 18:10:57 xlinux19 kernel: ata_scsi_translate: ENTER
-Jun 27 18:10:57 xlinux19 kernel: ata3: ata_dev_select: ENTER, ata3: device 0, wait 1
-Jun 27 18:10:57 xlinux19 kernel: ata_tf_load_pio: feat 0x0 nsect 0x0 lba 0x0 0x0 0x20
-Jun 27 18:10:57 xlinux19 kernel: ata_tf_load_pio: device 0xA0
-Jun 27 18:10:57 xlinux19 kernel: ata_exec_command_pio: ata3: cmd 0xA0
-Jun 27 18:10:57 xlinux19 kernel: ata_scsi_translate: EXIT
-Jun 27 18:10:57 xlinux19 kernel: ata_host_intr: ata3: protocol 6 task_state 5
-Jun 27 18:10:57 xlinux19 kernel: ata_hsm_move: ata3: protocol 6 task_state 5 (dev_stat 0x58)
-Jun 27 18:10:57 xlinux19 kernel: atapi_send_cdb: send cdb
-Jun 27 18:10:57 xlinux19 kernel: ata_host_intr: ata3: protocol 6 task_state 3
-Jun 27 18:10:57 xlinux19 kernel: ata_hsm_move: ata3: protocol 6 task_state 3 (dev_stat 0x51) <== device cannot do it
-Jun 27 18:10:57 xlinux19 kernel: ata_hsm_move: ata3: protocol 6 task_state 4 (dev_stat 0x51) 
-Jun 27 18:10:57 xlinux19 kernel: ata_scsi_timed_out: ENTER
-Jun 27 18:10:57 xlinux19 kernel: ata_scsi_timed_out: EXIT, ret=0
-Jun 27 18:10:57 xlinux19 kernel: ata_scsi_error: ENTER
-Jun 27 18:10:57 xlinux19 kernel: ata_port_flush_task: ENTER
-Jun 27 18:10:57 xlinux19 kernel: ata_port_flush_task: flush #1
-Jun 27 18:10:57 xlinux19 kernel: ata_eh_autopsy: ENTER
-Jun 27 18:10:57 xlinux19 kernel: atapi_eh_request_sense: ATAPI request sense
-Jun 27 18:10:57 xlinux19 kernel: ata3: ata_dev_select: ENTER, ata3: device 0, wait 1
-Jun 27 18:10:57 xlinux19 kernel: ata_tf_load_pio: feat 0x64 nsect 0x3 lba 0x0 0x0 0x20
-Jun 27 18:10:57 xlinux19 kernel: ata_tf_load_pio: device 0xA0
-Jun 27 18:10:57 xlinux19 kernel: ata_exec_command_pio: ata3: cmd 0xA0
-Jun 27 18:10:57 xlinux19 kernel: ata_host_intr: ata3: protocol 5 task_state 5
-Jun 27 18:10:57 xlinux19 kernel: ata_hsm_move: ata3: protocol 5 task_state 5 (dev_stat 0x58)
-Jun 27 18:10:57 xlinux19 kernel: atapi_send_cdb: send cdb
-Jun 27 18:10:57 xlinux19 kernel: ata_host_intr: ata3: protocol 5 task_state 2
-Jun 27 18:10:57 xlinux19 kernel: ata_hsm_move: ata3: protocol 5 task_state 2 (dev_stat 0x58)
-Jun 27 18:10:57 xlinux19 kernel: atapi_pio_bytes: ata3: xfering 18 bytes
-Jun 27 18:10:57 xlinux19 kernel: __atapi_pio_bytes: data read
-Jun 27 18:10:57 xlinux19 kernel: ata_host_intr: ata3: protocol 5 task_state 2
-Jun 27 18:10:57 xlinux19 kernel: ata_hsm_move: ata3: protocol 5 task_state 2 (dev_stat 0x50)
-Jun 27 18:10:57 xlinux19 kernel: ata_hsm_move: ata3: protocol 5 task_state 3 (dev_stat 0x50)
-Jun 27 18:10:57 xlinux19 kernel: ata_hsm_move: ata3: dev 0 command complete, drv_stat 0x50
-Jun 27 18:10:57 xlinux19 kernel: ata_port_flush_task: ENTER
-Jun 27 18:10:57 xlinux19 kernel: ata_port_flush_task: flush #1
-Jun 27 18:10:57 xlinux19 kernel: ata_eh_autopsy: EXIT
-Jun 27 18:10:57 xlinux19 kernel: ata_eh_recover: ENTER
-Jun 27 18:10:57 xlinux19 kernel: ata_eh_revalidate_and_attach: ENTER
-Jun 27 18:10:57 xlinux19 kernel: ata_eh_revalidate_and_attach: EXIT
-Jun 27 18:10:57 xlinux19 kernel: ata_eh_recover: EXIT, rc=0
-Jun 27 18:10:57 xlinux19 kernel: atapi_qc_complete: ENTER, err_mask 0x0  <== Doesn't look right. Should report error.
-Jun 27 18:10:57 xlinux19 kernel: ata_scsi_error: EXIT
+		qc->scsicmd->result = SAM_STAT_CHECK_CONDITION;
+		qc->scsidone(cmd);
+		ata_qc_free(qc);
+		return;
+	}
 
-===============================================================================================
-(Test log with new EH.
-Normal transaction.)
+As EH set ATA_QCFLAG_SENSE_VALID after reading sense data the above if 
+block is executed thus reporting upper layer CHECK_CONDITION.  Overall, 
+the control flow on ATAPI CC is like the following.
 
-Jun 27 18:11:02 xlinux19 kernel: ata_scsi_dump_cdb: CDB (3:0,0,0) 1e 00 00 00 01 00 00 00 00
-Jun 27 18:11:02 xlinux19 kernel: ata_scsi_translate: ENTER
-Jun 27 18:11:02 xlinux19 kernel: ata3: ata_dev_select: ENTER, ata3: device 0, wait 1
-Jun 27 18:11:02 xlinux19 kernel: ata_tf_load_pio: feat 0x0 nsect 0x0 lba 0x0 0x0 0x20
-Jun 27 18:11:02 xlinux19 kernel: ata_tf_load_pio: device 0xA0
-Jun 27 18:11:02 xlinux19 kernel: ata_exec_command_pio: ata3: cmd 0xA0
-Jun 27 18:11:02 xlinux19 kernel: ata_scsi_translate: EXIT
-Jun 27 18:11:02 xlinux19 kernel: ata_host_intr: ata3: protocol 6 task_state 5
-Jun 27 18:11:02 xlinux19 kernel: ata_hsm_move: ata3: protocol 6 task_state 5 (dev_stat 0x58)
-Jun 27 18:11:02 xlinux19 kernel: atapi_send_cdb: send cdb
-Jun 27 18:11:02 xlinux19 kernel: ata_host_intr: ata3: protocol 6 task_state 3
-Jun 27 18:11:02 xlinux19 kernel: ata_hsm_move: ata3: protocol 6 task_state 3 (dev_stat 0x50)
-Jun 27 18:11:02 xlinux19 kernel: ata_hsm_move: ata3: dev 0 command complete, drv_stat 0x50
-Jun 27 18:11:02 xlinux19 kernel: atapi_qc_complete: ENTER, err_mask 0x0    <== Everything is fine.
+1. ATAPI CC occurs
 
+2. AC_ERR_DEV set and EH invoked
 
+3. EH requests sense.  sense is stored in the sense buffer and 
+AC_ERR_DEV is cleared.
+
+4. EH completes the qc and triggers above code block in atapi_qc_complete().
+
+The logic behind clearing AC_ERR_DEV after reading sense data is that 
+ATAPI CC doesn't always indicate device error.  It can indicate 
+anything.  By clearing AC_ERR_DEV after sense data is read, libata EH 
+considers the error condition is cleared and doesn't perform further 
+action on the device.  If the sense data indicates actual error, upper 
+layers will probably deal with it (sr driver or userland application).
+
+It might be useful to interpret some of sense data and handle things 
+like transmission error in libata EH, but I don't know.  ATAPI errors 
+always have been handled by upper layers.
+
+-- 
+tejun
