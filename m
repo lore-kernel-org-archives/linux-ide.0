@@ -1,52 +1,62 @@
-From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: Re: [PATCH] libata-core.c: restore configuration boot messages in ata_dev_configure()
-Date: Wed, 28 Jun 2006 08:45:14 +0200
-Message-ID: <20060628064514.GA11983@gollum.tnic>
-References: <20060627073335.GA6237@zmei.tnic> <44A123B6.20000@gmail.com> <20060627131259.GA24191@gollum.tnic> <44A132D6.9010408@gmail.com> <44A133B2.2090306@gmail.com>
+From: Jochen Heuer <jogi-kernel@planetzork.ping.de>
+Subject: Re: Bug or HW? ata1: command timeout, stat 0x50 host_stat 0x4
+Date: Wed, 28 Jun 2006 10:09:12 +0200
+Message-ID: <20060628080912.GA18463@planetzork.ping.de>
+References: <20060627184320.GA16782@planetzork.ping.de> <44A222CB.1080300@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp101.plus.mail.re2.yahoo.com ([206.190.53.26]:27551 "HELO
-	smtp101.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S1423191AbWF1GpS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jun 2006 02:45:18 -0400
+Received: from lilly.ping.de ([83.97.42.2]:5895 "HELO lilly.ping.de")
+	by vger.kernel.org with SMTP id S1423216AbWF1IOo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Jun 2006 04:14:44 -0400
 Content-Disposition: inline
-In-Reply-To: <44A133B2.2090306@gmail.com>
+In-Reply-To: <44A222CB.1080300@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Borislav Petkov <bbpetkov@yahoo.de>, linux IDE ML <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Jun 27, 2006 at 10:33:38PM +0900, Tejun Heo wrote:
-> Tejun Heo wrote:
-> >Actually, how about...
-> >
-> >enum {
-> >    ATA_MSG_ERR,
-> >    ATA_MSG_WARNING,
-> >    ...
-> >};
-> >
-> >const char *__ata_msg_lvs[] = {
-> >    [ATA_MSG_ERR]        = KERN_ERR,
-> >    [ATA_MSG_WARNING]    = KERN_WARNING,
-> >    ...
-> >};
-> >
-> >#define ata_port_printk(ap, lv, fmt, args...) do { \
-> >    if (unlikely((ap)->msg_enable & (1 << (lv))))
-> >        printk(__ata_msg_lvs[lv]"ata%u: "fmt, (ap)->id , #args);
+Hi Tejun,
+
+> >ata1: command 0xca timeout, stat 0x50 host_stat 0x4
+> >ata1: status=0x50 { DriveReady SeekComplete }
+> >ata1: command 0xea timeout, stat 0x50 host_stat 0x0
+> >ata1: status=0x50 { DriveReady SeekComplete }
 > 
-> Oops,
-> 	printk("%sata%u: "fmt, __ata_msg_lvs[lv], (ap)->id, #args);
-Oops, forget it, the coffee hasn't entered my brain yet so things like that might
-    happen, __ata_msg_lvs[lv] is a char array, so the second one _is_ correct.
+> The original error is probably a hardware problem.
 
-Regards,
-    Boris.
+ok, I will try to get this disc replaced after some testing ...
 
+> >I had hoped 2.6.17 would fix this since I seem to remember some fixes for
+> >libata with similar error messages. But at least on my system it did not.
+> 
+> Can you apply the following patch and see what happens?
 
-		
-___________________________________________________________ 
-Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
+Patch is installed and system is running:
 
+libata version 1.30 loaded.
+sata_via 0000:00:0f.0: version 1.2
+ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20 (level, low) -> IRQ 18
+sata_via 0000:00:0f.0: routed to hard irq line 10
+ata1: SATA max UDMA/133 cmd 0xC000 ctl 0xB802 bmdma 0xA800 irq 18
+ata2: SATA max UDMA/133 cmd 0xB400 ctl 0xB002 bmdma 0xA808 irq 18
+scsi0 : sata_via
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata1.00: configured for UDMA/133
+scsi1 : sata_via
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata2.00: configured for UDMA/133
+  Vendor: ATA       Model: SAMSUNG SP2504C   Rev: VT10
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: ST3200822AS       Rev: 3.01
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+
+I will monitor this for a some time. And thanks for the quick response!
+
+   Jochen
+
+-- 
+
+Well, yeah ... I suppose there's no point in getting greedy, is there?
+
+    << Calvin & Hobbes >>
