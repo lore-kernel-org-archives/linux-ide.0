@@ -1,26 +1,37 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [git patches] libata update
-Date: Tue, 27 Jun 2006 18:23:56 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0606271823220.3927@g5.osdl.org>
-References: <20060627012405.GA2666@havoc.gtf.org>
+Date: Tue, 27 Jun 2006 21:34:47 -0400
+Message-ID: <44A1DCB7.30806@garzik.org>
+References: <20060627012405.GA2666@havoc.gtf.org> <Pine.LNX.4.64.0606271823220.3927@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932669AbWF1BYE@vger.kernel.org>
-In-Reply-To: <20060627012405.GA2666@havoc.gtf.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:43174 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932681AbWF1Bet (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jun 2006 21:34:49 -0400
+In-Reply-To: <Pine.LNX.4.64.0606271823220.3927@g5.osdl.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-
-On Mon, 26 Jun 2006, Jeff Garzik wrote:
+Linus Torvalds wrote:
 > 
-> Please pull from 'upstream-linus' branch of
-> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> On Mon, 26 Jun 2006, Jeff Garzik wrote:
+>> Please pull from 'upstream-linus' branch of
+>> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> 
+> I get a "Already up-to-date".
+> 
+> Did you perhaps forget to push?
 
-I get a "Already up-to-date".
+Apparently I had pushed everything except the "bookmark" (the new 
+upstream-linus branch head).
 
-Did you perhaps forget to push?
+It should be there now...
 
-		Linus
+	Jeff
+
+
+
