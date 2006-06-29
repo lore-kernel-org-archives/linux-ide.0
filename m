@@ -1,37 +1,129 @@
 From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 0/6] AHCI suspend/resume support --take3
-Date: Thu, 29 Jun 2006 16:18:06 +0800
-Message-ID: <1151569086.7132.220.camel@forrest26.sh.intel.com>
+Subject: [PATCH 1/6]The definition of ahci_start_engine() and
+	ahci_stop_engine()
+Date: Thu, 29 Jun 2006 16:18:47 +0800
+Message-ID: <1151569127.7132.222.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:46176 "EHLO
+Received: from mga03.intel.com ([143.182.124.21]:22339 "EHLO
 	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S1751799AbWF2IcX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jun 2006 04:32:23 -0400
+	id S1751800AbWF2Icx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jun 2006 04:32:53 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, axboe@suse.de
 Cc: linux-ide@vger.kernel.org
 
-Hi, all
+1 Make ahci_start_engine() and ahci_stop_engine more consistent with AHCI
+ spec 1.1
+2 Change their input parameter from ap to port_mmio
 
-This is the take 3 of AHCI suspend/resume patches.
+Signed-off-by: Forrest Zhao <forrest.zhaot@intel.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Jens Axboe <axboe@suse.de>
 
-The patch is against #upstream[
-2154cfa6ba560401d25f6cc083fe3fb996cbb571] + Tejun's Power Management
-patch(available at
-http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=new-pm).
 
-Although Tejun's PM patch may change as he mentioned in another mail,
-such change is minor and will not impact the logic of AHCI suspend/
-resume. So I re-send the patch in order to get test feedback and review
-comments earlier.
+---
 
-Compared with last version, all the changes are in [PATCH 6/6]. In
-particular, I made changes to the sixth patch to integrate it with
-Tejun's PM patch.
+ drivers/scsi/ahci.c |   57 +++++++++++++++++++++++++++++++++++++--------------
+ 1 files changed, 41 insertions(+), 16 deletions(-)
 
-Thanks,
-Forrest
+ca41463c59af1b90149c42101696b47d96c41d11
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index f059467..0ff8be1 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -205,6 +205,8 @@ static irqreturn_t ahci_interrupt (int i
+ static void ahci_irq_clear(struct ata_port *ap);
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
++static int ahci_start_engine(void __iomem *port_mmio);
++static int ahci_stop_engine(void __iomem *port_mmio);
+ static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+ static u8 ahci_check_status(struct ata_port *ap);
+@@ -508,41 +510,64 @@ static void ahci_scr_write (struct ata_p
+ 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
+ 
+-static int ahci_stop_engine(struct ata_port *ap)
++static int ahci_stop_engine(void __iomem *port_mmio)
+ {
+-	void __iomem *mmio = ap->host_set->mmio_base;
+-	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+-	int work;
+ 	u32 tmp;
+ 
+ 	tmp = readl(port_mmio + PORT_CMD);
++
++	/* Check if the HBA is idle */
++	if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) == 0)
++		return 0;
++
++	/* Setting HBA to idle */
+ 	tmp &= ~PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 
+-	/* wait for engine to stop.  TODO: this could be
++	/* wait for engine to stop. This could be
+ 	 * as long as 500 msec
+ 	 */
+-	work = 1000;
+-	while (work-- > 0) {
+-		tmp = readl(port_mmio + PORT_CMD);
+-		if ((tmp & PORT_CMD_LIST_ON) == 0)
+-			return 0;
+-		udelay(10);
+-	}
++	tmp = ata_wait_register(port_mmio + PORT_CMD,
++			        PORT_CMD_LIST_ON, PORT_CMD_LIST_ON, 1, 500);
++	if(tmp & PORT_CMD_LIST_ON)
++		return -EIO;
+ 
+-	return -EIO;
++	return 0;
+ }
+ 
+-static void ahci_start_engine(struct ata_port *ap)
++static int ahci_start_engine(void __iomem *port_mmio)
+ {
+-	void __iomem *mmio = ap->host_set->mmio_base;
+-	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+ 	u32 tmp;
+ 
++	/*
++	 * Get current status
++	 */
+ 	tmp = readl(port_mmio + PORT_CMD);
++
++	/*
++	 * AHCI rev 1.1 section 10.3.1:
++	 * Software shall not set PxCMD.ST to '1' until it verifies
++	 * that PxCMD.CR is '0' and has set PxCMD.FRE to '1'
++	 */
++	if ((tmp & PORT_CMD_FIS_RX) == 0)
++		return -EPERM;
++
++	/*
++	 * wait for engine to become idle.
++	 */
++	tmp = ata_wait_register(port_mmio + PORT_CMD,
++				PORT_CMD_LIST_ON, PORT_CMD_LIST_ON, 1,500);
++	if(tmp & PORT_CMD_LIST_ON)
++		return -EBUSY;
++
++	/*
++	 * Start DMA
++	 */
+ 	tmp |= PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 	readl(port_mmio + PORT_CMD); /* flush */
++
++	return 0;
+ }
+ 
+ static unsigned int ahci_dev_classify(struct ata_port *ap)
+-- 
+1.2.6
