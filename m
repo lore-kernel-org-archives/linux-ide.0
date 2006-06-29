@@ -1,42 +1,33 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH-stable] ahci: skip SRST for offline port
-Date: Thu, 29 Jun 2006 04:10:10 +0900
-Message-ID: <20060628191010.GC21435@htj.dyndns.org>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 4/4] libata: Check per device max cdb length for SAS -
+ drop
+Date: Wed, 28 Jun 2006 23:53:21 -0500
+Message-ID: <44A35CC1.1030407@us.ibm.com>
+References: <200606281330.k5SDUrOv021506@d03av04.boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.239]:9515 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751013AbWF1TJu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jun 2006 15:09:50 -0400
-Received: by wr-out-0506.google.com with SMTP id i24so452495wra
-        for <linux-ide@vger.kernel.org>; Wed, 28 Jun 2006 12:09:50 -0700 (PDT)
-Content-Disposition: inline
+Received: from e32.co.us.ibm.com ([32.97.110.150]:52642 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750886AbWF2E4k
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jun 2006 00:56:40 -0400
+In-Reply-To: <200606281330.k5SDUrOv021506@d03av04.boulder.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Skip SRST if phy is offline.  It has been in libata-dev#upstream for
-quite some time but somehow didn't make into 2.6.17.
+Brian King wrote:
+> Since libata does not own any scsi_host struct for
+> SAS attached SATA devices, libata cannot rely on scsi
+> core checking the max_cmd_len. This patch adds additional
+> checking into the SAS queuecommand path to prevent
+> too large of a cdb from being issued to an ATA or ATAPI device.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-Jeff, after review, please forward to -stable.  Thanks.
+I'd like to drop this patch from the series. This patch would end up
+preventing ATA passthrough from working to ATA/ATAPI devices that
+support < 16 byte CDBs.
 
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index b4f8fb1..1b01c4d 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -548,6 +548,12 @@ static int ahci_softreset(struct ata_por
- 
- 	DPRINTK("ENTER\n");
- 
-+	if (!sata_dev_present(ap)) {
-+		*class = ATA_DEV_NONE;
-+		DPRINTK("EXIT, link offline\n");
-+		return 0;
-+	}
-+
- 	/* prepare for SRST (AHCI-1.1 10.4.1) */
- 	rc = ahci_stop_engine(ap);
- 	if (rc) {
+
+Brian
