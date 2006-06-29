@@ -1,58 +1,59 @@
-From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: Re: [PATCH 2/9] ahci.c conversion
-Date: Thu, 29 Jun 2006 19:00:47 +0200
-Message-ID: <20060629170047.GA20246@gollum.tnic>
-References: <20060629160938.GC23122@zmei.tnic> <44A40019.1090905@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET] libata dbg scheme conversion, take 1
+Date: Fri, 30 Jun 2006 02:03:11 +0900
+Message-ID: <44A407CF.4000508@gmail.com>
+References: <20060629160912.GA23122@zmei.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp102.plus.mail.re2.yahoo.com ([206.190.53.27]:29041 "HELO
-	smtp102.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S1750986AbWF2RAv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jun 2006 13:00:51 -0400
-Content-Disposition: inline
-In-Reply-To: <44A40019.1090905@gmail.com>
+Received: from nz-out-0102.google.com ([64.233.162.199]:54884 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750971AbWF2RCv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jun 2006 13:02:51 -0400
+Received: by nz-out-0102.google.com with SMTP id i11so198036nzi
+        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2006 10:02:50 -0700 (PDT)
+In-Reply-To: <20060629160912.GA23122@zmei.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Borislav Petkov <bbpetkov@yahoo.de>
 Cc: linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Fri, Jun 30, 2006 at 01:30:17AM +0900, Tejun Heo wrote:
-> >--- libata-dev/drivers/scsi/ahci.c.orig	2006-06-28 
-> >09:13:10.000000000 +0200
-> >+++ libata-dev/drivers/scsi/ahci.c	2006-06-29 17:29:06.000000000 +0200
-> >@@ -617,10 +617,10 @@ static int ahci_softreset(struct ata_por
-> > 	u8 *fis;
-> > 	int rc;
-> > 
-> >-	DPRINTK("ENTER\n");
-> >+	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
-> > 
-> > 	if (ata_port_offline(ap)) {
-> >-		DPRINTK("PHY reports no device\n");
-> >+		ata_port_printk(ap, ATA_MSG_CMD, "PHY reports no device\n");
+Borislav Petkov wrote:
+> This patchset converts the relevant pieces of libata to the new debugging
+> scheme. Additionally, it adjusts the message level scheme to one appropriate for
+> libata. 
 > 
-> Not really CMD, I think it should be ATA_MSG_DEBUG.
-We already have VDEBUG, do we ATA_MSG_DEBUG too, and if so, what is going to be
-the difference between VDEBUG and DEBUG? Pending what we have decided here, I'm
-gonna correct all other cases with DEBUG.
-> 
-> <--snip-->
-> > 	if (ata_ratelimit())
-> >-		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
-> >+		ata_port_printk(ap, ATA_MSG_DRV, "spurious interrupt "
-> > 				"(irq_stat 0x%x active_tag %d sactive 
-> > 				0x%x)\n",
-> > 				status, ap->active_tag, ap->sactive);
-> 
-> I don't really understand why it should be DRV not INFO.  Is this to 
-> discern between core and LLD messages?
-right, this should be INFO.
+> There are still places which use the old debugging macros but they have to be
+> dealt with on a case by case basis due to the functionality of the debugging
+> macros. Although most of the levels should be appropriately mapped, there might
+> still be some message level "skew" which can be dealt with in a later course.
 
-Regards,
-    Boris.
+Hello,
 
-		
-___________________________________________________________ 
-Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
+I think this patchset is looking good generally.  Please consider the 
+following.
 
+* Don't make currently visible-by-default messages invisible-by-default 
+or vice-versa.
+
+* Don't mix visiable-by-default messages with debug messages.  e.g. It 
+seems you made ATA_MSG_INFO debug category and put EH messages and some 
+debug messages into it.  This is not good.  EH messages should be 
+visible to user by default && enabling it shouldn't turn on debug 
+messages with it.
+
+* Please create ATA_MSG_DEBUG category and put 
+important-but-not-too-frequent debug messages into it.  e.g. The current 
+patch puts all debug messages during probe into CMD.  Turning on CMD 
+will generate a *lot* of messages and qc issues messages are sometimes 
+very uninteresting.  OTOH, probing messages are generally low-volume but 
+more interesting.  So, it should be possible to slect them separately. 
+Just put not-too-frequent messages into DEBUG.
+
+* To me, DRV/INFO distinction doesn't seem to be clear.
+
+Thanks for the good work.  :)
+
+-- 
+tejun
