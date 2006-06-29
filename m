@@ -1,87 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 5/9] libata-eh.c conversion
-Date: Fri, 30 Jun 2006 01:56:17 +0900
-Message-ID: <44A40631.5070200@gmail.com>
-References: <20060629161008.GF23122@zmei.tnic>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: [PATCH 2/9] ahci.c conversion
+Date: Thu, 29 Jun 2006 19:00:47 +0200
+Message-ID: <20060629170047.GA20246@gollum.tnic>
+References: <20060629160938.GC23122@zmei.tnic> <44A40019.1090905@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:60527 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1750969AbWF2Qz4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jun 2006 12:55:56 -0400
-Received: by wr-out-0506.google.com with SMTP id i21so112616wra
-        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2006 09:55:55 -0700 (PDT)
-In-Reply-To: <20060629161008.GF23122@zmei.tnic>
+Received: from smtp102.plus.mail.re2.yahoo.com ([206.190.53.27]:29041 "HELO
+	smtp102.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S1750986AbWF2RAv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jun 2006 13:00:51 -0400
+Content-Disposition: inline
+In-Reply-To: <44A40019.1090905@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bbpetkov@yahoo.de>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Hi!
+On Fri, Jun 30, 2006 at 01:30:17AM +0900, Tejun Heo wrote:
+> >--- libata-dev/drivers/scsi/ahci.c.orig	2006-06-28 
+> >09:13:10.000000000 +0200
+> >+++ libata-dev/drivers/scsi/ahci.c	2006-06-29 17:29:06.000000000 +0200
+> >@@ -617,10 +617,10 @@ static int ahci_softreset(struct ata_por
+> > 	u8 *fis;
+> > 	int rc;
+> > 
+> >-	DPRINTK("ENTER\n");
+> >+	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
+> > 
+> > 	if (ata_port_offline(ap)) {
+> >-		DPRINTK("PHY reports no device\n");
+> >+		ata_port_printk(ap, ATA_MSG_CMD, "PHY reports no device\n");
+> 
+> Not really CMD, I think it should be ATA_MSG_DEBUG.
+We already have VDEBUG, do we ATA_MSG_DEBUG too, and if so, what is going to be
+the difference between VDEBUG and DEBUG? Pending what we have decided here, I'm
+gonna correct all other cases with DEBUG.
+> 
+> <--snip-->
+> > 	if (ata_ratelimit())
+> >-		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
+> >+		ata_port_printk(ap, ATA_MSG_DRV, "spurious interrupt "
+> > 				"(irq_stat 0x%x active_tag %d sactive 
+> > 				0x%x)\n",
+> > 				status, ap->active_tag, ap->sactive);
+> 
+> I don't really understand why it should be DRV not INFO.  Is this to 
+> discern between core and LLD messages?
+right, this should be INFO.
 
-Borislav Petkov wrote:
-> @@ -516,7 +518,7 @@ void ata_port_schedule_eh(struct ata_por
->  	ap->flags |= ATA_FLAG_EH_PENDING;
->  	scsi_schedule_eh(ap->host);
->  
-> -	DPRINTK("port EH scheduled\n");
-> +	ata_port_printk(ap, ATA_MSG_INFO, "port EH scheduled\n");
+Regards,
+    Boris.
 
-DEBUG
+		
+___________________________________________________________ 
+Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
 
->  }
->  
->  /**
-> @@ -580,7 +582,7 @@ static void __ata_port_freeze(struct ata
->  
->  	ap->flags |= ATA_FLAG_FROZEN;
->  
-> -	DPRINTK("ata%u port frozen\n", ap->id);
-> +	ata_port_printk(ap, ATA_MSG_INFO, "ata%u port frozen\n", ap->id);
-
-DEBUG
-
->  }
->  
->  /**
-> @@ -653,7 +655,7 @@ void ata_eh_thaw_port(struct ata_port *a
->  
->  	spin_unlock_irqrestore(ap->lock, flags);
->  
-> -	DPRINTK("ata%u port thawed\n", ap->id);
-> +	ata_port_printk(ap, ATA_MSG_INFO, "ata%u port thawed\n", ap->id);
-
-DEBUG
-
->  }
->  
->  static void ata_eh_scsidone(struct scsi_cmnd *scmd)
-> @@ -839,7 +841,7 @@ static unsigned int ata_read_log_page(st
->  	struct ata_taskfile tf;
->  	unsigned int err_mask;
->  
-> -	DPRINTK("read log page - page %d\n", page);
-> +	ata_dev_printk(dev, ATA_MSG_INFO, "read log page - page %d\n", page);
-
-DEBUG
-
->  
->  	ata_tf_init(dev, &tf);
->  	tf.command = ATA_CMD_READ_LOG_EXT;
-> @@ -931,7 +934,7 @@ static unsigned int atapi_eh_request_sen
->  	struct ata_taskfile tf;
->  	u8 cdb[ATAPI_CDB_LEN];
->  
-> -	DPRINTK("ATAPI request sense\n");
-> +	ata_port_printk(ap, ATA_MSG_INFO, "ATAPI request sense\n");
-
-DEBUG
-
->  
->  	ata_tf_init(dev, &tf);
->  
-
--- 
-tejun
