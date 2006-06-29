@@ -1,59 +1,106 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] libata dbg scheme conversion, take 1
-Date: Fri, 30 Jun 2006 02:03:11 +0900
-Message-ID: <44A407CF.4000508@gmail.com>
-References: <20060629160912.GA23122@zmei.tnic>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: [PATCH 4/9] libata-core.c conversion
+Date: Thu, 29 Jun 2006 19:07:27 +0200
+Message-ID: <20060629170727.GB20246@gollum.tnic>
+References: <20060629161001.GE23122@zmei.tnic> <44A40502.3040509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.199]:54884 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750971AbWF2RCv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jun 2006 13:02:51 -0400
-Received: by nz-out-0102.google.com with SMTP id i11so198036nzi
-        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2006 10:02:50 -0700 (PDT)
-In-Reply-To: <20060629160912.GA23122@zmei.tnic>
+Received: from smtp108.plus.mail.re2.yahoo.com ([206.190.53.33]:3512 "HELO
+	smtp108.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S1751013AbWF2RHa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jun 2006 13:07:30 -0400
+Content-Disposition: inline
+In-Reply-To: <44A40502.3040509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bbpetkov@yahoo.de>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Borislav Petkov wrote:
-> This patchset converts the relevant pieces of libata to the new debugging
-> scheme. Additionally, it adjusts the message level scheme to one appropriate for
-> libata. 
+On Fri, Jun 30, 2006 at 01:51:14AM +0900, Tejun Heo wrote:
+> Borislav Petkov wrote:
+> >@@ -1341,20 +1341,18 @@ int ata_dev_configure(struct ata_device 
+> > 	unsigned int xfer_mask;
+> > 	int i, rc;
+> > 
+> >-	if (!ata_dev_enabled(dev) && ata_msg_info(ap)) {
+> >-		ata_dev_printk(dev, KERN_INFO,
+> >+	if (!ata_dev_enabled(dev)) {
+> >+		ata_dev_printk(dev, ATA_MSG_INFO,
+> > 			       "%s: ENTER/EXIT (host %u, dev %u) -- nodev\n",
+> > 			       __FUNCTION__, ap->id, dev->devno);
+> > 		return 0;
 > 
-> There are still places which use the old debugging macros but they have to be
-> dealt with on a case by case basis due to the functionality of the debugging
-> macros. Although most of the levels should be appropriately mapped, there might
-> still be some message level "skew" which can be dealt with in a later course.
+> ATA_MSG_TRACE.
+yep.
 
-Hello,
+<snip>
+> >@@ -1399,8 +1396,8 @@ int ata_dev_configure(struct ata_device 
+> > 			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
+> > 
+> > 			/* print device info to dmesg */
+> >-			if (ata_msg_info(ap))
+> >-				ata_dev_printk(dev, KERN_INFO, "ATA-%d, "
+> >+			if (print_info)
+> >+				ata_dev_printk(dev, ATA_MSG_DRV, "ATA-%d, "
+> > 					"max %s, %Lu sectors: %s %s\n",
+> > 					ata_id_major_version(id),
+> > 					ata_mode_string(xfer_mask),
+> 
+> Hmmm.. not INFO?
+yep, INFO.
 
-I think this patchset is looking good generally.  Please consider the 
-following.
+<snip>
+> >@@ -3456,7 +3466,8 @@ static int ata_sg_setup(struct ata_queue
+> > 	struct scatterlist *lsg = &sg[qc->n_elem - 1];
+> > 	int n_elem, pre_n_elem, dir, trim_sg = 0;
+> > 
+> >-	VPRINTK("ENTER, ata%u\n", ap->id);
+> >+	ata_port_printk(ap, ATA_MSG_SG, "%s: ENTER, ata%u\n", 
+> >+			__FUNCTION__, ap->id);
+> 
+> TRACE???  Not sure.
+although, this is SG-specific (ata_sg_setup) , so which one?
+> > 	WARN_ON(!(qc->flags & ATA_QCFLAG_SG));
+> > 
+> > 	/* we must lengthen transfers to end on a 32-bit boundary */
+> >@@ -3681,7 +3695,9 @@ static void ata_pio_sector(struct ata_qu
+> > 	page = nth_page(page, (offset >> PAGE_SHIFT));
+> > 	offset %= PAGE_SIZE;
+> > 
+> >-	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : 
+> >"read");
+> >+	ata_port_printk(ap, ATA_MSG_CMD, "%s: data %s\n", 
+> >+			__FUNCTION__,
+> >+			qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+> 
+> Yeap, this is CMD.  :-)
+Yei!
 
-* Don't make currently visible-by-default messages invisible-by-default 
-or vice-versa.
+<snip>
+> >@@ -5241,7 +5272,7 @@ static void ata_host_init(struct ata_por
+> > 	/* turn on all debugging levels */
+> > 	ap->msg_enable = 0x00FF;
+> > #elif defined(ATA_DEBUG)
+> >-	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_CTL | 
+> >ATA_MSG_WARN | ATA_MSG_ERR;
+> >+	ap->msg_enable = ATA_MSG_VDEBUG | ATA_MSG_INFO | ATA_MSG_DRV | 
+> >ATA_MSG_WARN | ATA_MSG_ERR;
+> 
+> I think it should be ATA_MSG_DEBUG | ATA_MSG_DRV | ATA_MSG_INFO | 
+> ATA_MSG_WARN | ATA_MSG_ERR.
+> 
+> > #else
+> > 	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_ERR | ATA_MSG_WARN;
+> 
+> ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_WARN | ATA_MSG_ERR
+This is the default level, are you sure INFO belongs here since it is for
+EH/feats etc?
 
-* Don't mix visiable-by-default messages with debug messages.  e.g. It 
-seems you made ATA_MSG_INFO debug category and put EH messages and some 
-debug messages into it.  This is not good.  EH messages should be 
-visible to user by default && enabling it shouldn't turn on debug 
-messages with it.
+Regards,
+    Boris.
 
-* Please create ATA_MSG_DEBUG category and put 
-important-but-not-too-frequent debug messages into it.  e.g. The current 
-patch puts all debug messages during probe into CMD.  Turning on CMD 
-will generate a *lot* of messages and qc issues messages are sometimes 
-very uninteresting.  OTOH, probing messages are generally low-volume but 
-more interesting.  So, it should be possible to slect them separately. 
-Just put not-too-frequent messages into DEBUG.
+		
+___________________________________________________________ 
+Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
 
-* To me, DRV/INFO distinction doesn't seem to be clear.
-
-Thanks for the good work.  :)
-
--- 
-tejun
