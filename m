@@ -1,57 +1,61 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
+From: Martin Hicks <mort@bork.org>
 Subject: Re: [DOC] SATA status report updated
-Date: Thu, 29 Jun 2006 10:41:34 -0400
-Message-ID: <87f94c370606290741v45e63336n30df5fdc6a5c2bac@mail.gmail.com>
+Date: Thu, 29 Jun 2006 10:46:57 -0400
+Message-ID: <20060629144656.GE16658@bork.org>
 References: <44A0B50F.40404@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lrZ03NoBR/3+SXJZ"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:23174 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1750708AbWF2Olg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jun 2006 10:41:36 -0400
-Received: by nf-out-0910.google.com with SMTP id l35so82051nfa
-        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2006 07:41:34 -0700 (PDT)
-In-Reply-To: <44A0B50F.40404@garzik.org>
+Received: from galileo.bork.org ([134.117.69.57]:31182 "EHLO galileo.bork.org")
+	by vger.kernel.org with ESMTP id S1750732AbWF2Oq6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jun 2006 10:46:58 -0400
 Content-Disposition: inline
+In-Reply-To: <44A0B50F.40404@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 6/27/06, Jeff Garzik <jeff@garzik.org> wrote:
+
+--lrZ03NoBR/3+SXJZ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+
+On Tue, Jun 27, 2006 at 12:33:19AM -0400, Jeff Garzik wrote:
 > Updated the SATA status report(s) found at
->
->         http://linux-ata.org/
->
-> In particular, I created a matrix of drivers and features, to give
+>=20
+> 	http://linux-ata.org/
+>=20
+> In particular, I created a matrix of drivers and features, to give=20
 > people an idea of fine-grained driver status:
->
->         http://linux-ata.org/driver-status.html#matrix
->
+>=20
+> 	http://linux-ata.org/driver-status.html#matrix
+>=20
 > As always, comments, questions, and additions are welcome.
->
->         Jeff
-Jeff / Tejun,
 
-Great work.  If the feedback about reversion issues continues to be as
-minimal as it currently is it appears you appear to have rolled out a
-great enhancement with minimal errors introduced.  I expect to be
-using sata/e-sata much more extensively now that this new EH process
-is in place.
+You mention that the Intel 31244 docs are likely available.  They are:
 
-Any practical experience about which PCI controllers and/or enclosures
-would be best to get if I wanted to use e-Sata and the
-hotplug/warmplug logic?
+http://www.intel.com/design/storage/manuals/273603.htm
 
-I have about 20 computers I would like to be able to plug e-Sata
-drives into so I could move the drives around as needed.
+mh
 
-The computers will be a mix of Linux (2.6.18+) and Windows 2K/XP/2003.
+--=20
+Martin Hicks || mort@bork.org || PGP/GnuPG: 0x4C7F2BEE
 
-Greg
--- 
-Greg Freemyer
-The Norcross Group
-Forensics for the 21st Century
+--lrZ03NoBR/3+SXJZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFEo+fg0ZUZrUx/K+4RAn50AKDagVnw2d5cAFHvVBTltpigvsExgwCeN5bX
+IHb7ocLWc4s5+cSOi+tGuHY=
+=BSPB
+-----END PGP SIGNATURE-----
+
+--lrZ03NoBR/3+SXJZ--
