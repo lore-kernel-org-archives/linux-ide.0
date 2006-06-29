@@ -1,73 +1,101 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 8/9] sata_sil24.c conversion
-Date: Thu, 29 Jun 2006 18:10:31 +0200
-Message-ID: <20060629161031.GI23122@zmei.tnic>
+Subject: [PATCH 7/9] sata_promise.c conversion
+Date: Thu, 29 Jun 2006 18:10:27 +0200
+Message-ID: <20060629161027.GH23122@zmei.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp106.plus.mail.re2.yahoo.com ([206.190.53.31]:55433 "HELO
-	smtp106.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S1750860AbWF2QLU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jun 2006 12:11:20 -0400
+Received: from smtp102.plus.mail.re2.yahoo.com ([206.190.53.27]:27051 "HELO
+	smtp102.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S1750841AbWF2QLV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jun 2006 12:11:21 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide <linux-ide@vger.kernel.org>
 Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
 
-Convert the sata-sil24.c to the new scheme.
+Convert the sata-promise.c to the new scheme.
 
 Signed-off-by: <petkov@math.uni-muenster.de>
 
---- libata-dev/drivers/scsi/sata_sil24.c.orig	2006-06-29 16:43:10.000000000 +0200
-+++ libata-dev/drivers/scsi/sata_sil24.c	2006-06-29 16:52:28.000000000 +0200
-@@ -535,10 +535,12 @@ static int sil24_softreset(struct ata_po
- 	u32 mask, irq_stat;
- 	const char *reason;
+--- libata-dev/drivers/scsi/sata_promise.c.orig	2006-06-29 16:36:14.000000000 +0200
++++ libata-dev/drivers/scsi/sata_promise.c	2006-06-29 16:50:36.000000000 +0200
+@@ -408,9 +408,10 @@ static void pdc_sata_scr_write (struct a
+ static void pdc_qc_prep(struct ata_queued_cmd *qc)
+ {
+ 	struct pdc_port_priv *pp = qc->ap->private_data;
++	struct ata_port *ap = qc->ap;
+ 	unsigned int i;
+ 
+-	VPRINTK("ENTER\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
+ 
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+@@ -441,7 +442,7 @@ static void pdc_eng_timeout(struct ata_p
+ 	struct ata_queued_cmd *qc;
+ 	unsigned long flags;
  
 -	DPRINTK("ENTER\n");
 +	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
  
- 	if (ata_port_offline(ap)) {
--		DPRINTK("PHY reports no device\n");
-+		ata_port_printk(ap, ATA_MSG_VDEBUG, 
-+				"%s: PHY reports no device\n",
-+				__FUNCTION__);
- 		*class = ATA_DEV_NONE;
- 		goto out;
+ 	spin_lock_irqsave(&host_set->lock, flags);
+ 
+@@ -450,7 +451,7 @@ static void pdc_eng_timeout(struct ata_p
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+ 	case ATA_PROT_NODATA:
+-		ata_port_printk(ap, KERN_ERR, "command timeout\n");
++		ata_port_printk(ap, ATA_MSG_ERR, "command timeout\n");
+ 		drv_stat = ata_wait_idle(ap);
+ 		qc->err_mask |= __ac_err_mask(drv_stat);
+ 		break;
+@@ -458,7 +459,7 @@ static void pdc_eng_timeout(struct ata_p
+ 	default:
+ 		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+ 
+-		ata_port_printk(ap, KERN_ERR,
++		ata_port_printk(ap, ATA_MSG_ERR,
+ 				"unknown timeout, cmd 0x%x stat 0x%x\n",
+ 				qc->tf.command, drv_stat);
+ 
+@@ -468,7 +469,7 @@ static void pdc_eng_timeout(struct ata_p
+ 
+ 	spin_unlock_irqrestore(&host_set->lock, flags);
+ 	ata_eh_qc_complete(qc);
+-	DPRINTK("EXIT\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT\n", __FUNCTION__);
+ }
+ 
+ static inline unsigned int pdc_host_intr( struct ata_port *ap,
+@@ -539,14 +540,15 @@ static irqreturn_t pdc_interrupt (int ir
+ 	mask &= 0xffff;		/* only 16 tags possible */
+ 	if (!mask) {
+ 		VPRINTK("QUICK EXIT 3\n");
++		return IRQ_NONE;
+ 		goto done_irq;
  	}
-@@ -578,11 +580,11 @@ static int sil24_softreset(struct ata_po
- 		*class = ATA_DEV_NONE;
  
-  out:
--	DPRINTK("EXIT, class=%u\n", *class);
-+	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT, class=%u\n", __FUNCTION__, *class);
- 	return 0;
+ 	writel(mask, mmio_base + PDC_INT_SEQMASK);
  
-  err:
--	ata_port_printk(ap, KERN_ERR, "softreset failed (%s)\n", reason);
-+	ata_port_printk(ap, ATA_MSG_ERR, "softreset failed (%s)\n", reason);
- 	return -EIO;
- }
+ 	for (i = 0; i < host_set->n_ports; i++) {
+-		VPRINTK("port %u\n", i);
+ 		ap = host_set->ports[i];
++		ata_port_printk(ap, ATA_MSG_CMD, "port %u\n", i);
+ 		tmp = mask & (1 << (i + 1));
+ 		if (tmp && ap &&
+ 		    !(ap->flags & ATA_FLAG_DISABLED)) {
+@@ -572,7 +574,8 @@ static inline void pdc_packet_start(stru
+ 	unsigned int port_no = ap->port_no;
+ 	u8 seq = (u8) (port_no + 1);
  
-@@ -629,7 +631,7 @@ static int sil24_hardreset(struct ata_po
- 	return -EAGAIN;
+-	VPRINTK("ENTER, ap %p\n", ap);
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER, ap %p\n", 
++			__FUNCTION__, ap);
  
-  err:
--	ata_port_printk(ap, KERN_ERR, "hardreset failed (%s)\n", reason);
-+	ata_port_printk(ap, ATA_MSG_ERR, "hardreset failed (%s)\n", reason);
- 	return -EIO;
- }
- 
-@@ -854,7 +856,7 @@ static inline void sil24_host_intr(struc
- 	}
- 
- 	if (ata_ratelimit())
--		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
-+		ata_port_printk(ap, ATA_MSG_INFO, "spurious interrupt "
- 			"(slot_stat 0x%x active_tag %d sactive 0x%x)\n",
- 			slot_stat, ap->active_tag, ap->sactive);
- }
+ 	writel(0x00000001, ap->host_set->mmio_base + (seq * 4));
+ 	readl(ap->host_set->mmio_base + (seq * 4));	/* flush */
 
 	
 
