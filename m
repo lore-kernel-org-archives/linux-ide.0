@@ -1,58 +1,57 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: 2.6.17 on VIA SP8000 sata: via_sata timeout (cmd 0xef) (retry)
-Date: Thu, 29 Jun 2006 13:41:41 +0400
-Message-ID: <20060629134141.221c59b3.vsu@altlinux.ru>
-References: <44A2BF26.8090608@xs4all.nl>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Re: [DOC] SATA status report updated
+Date: Thu, 29 Jun 2006 10:41:34 -0400
+Message-ID: <87f94c370606290741v45e63336n30df5fdc6a5c2bac@mail.gmail.com>
+References: <44A0B50F.40404@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Thu__29_Jun_2006_13_41_41_+0400_hl3aL9HdjKMkqPaT"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mivlgu.ru ([81.18.140.87]:60832 "EHLO mail.mivlgu.ru")
-	by vger.kernel.org with ESMTP id S932865AbWF2Jlp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jun 2006 05:41:45 -0400
-In-Reply-To: <44A2BF26.8090608@xs4all.nl>
+Received: from nf-out-0910.google.com ([64.233.182.191]:23174 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1750708AbWF2Olg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jun 2006 10:41:36 -0400
+Received: by nf-out-0910.google.com with SMTP id l35so82051nfa
+        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2006 07:41:34 -0700 (PDT)
+In-Reply-To: <44A0B50F.40404@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Udo van den Heuvel <udovdh@xs4all.nl>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
---Signature=_Thu__29_Jun_2006_13_41_41_+0400_hl3aL9HdjKMkqPaT
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 6/27/06, Jeff Garzik <jeff@garzik.org> wrote:
+> Updated the SATA status report(s) found at
+>
+>         http://linux-ata.org/
+>
+> In particular, I created a matrix of drivers and features, to give
+> people an idea of fine-grained driver status:
+>
+>         http://linux-ata.org/driver-status.html#matrix
+>
+> As always, comments, questions, and additions are welcome.
+>
+>         Jeff
+Jeff / Tejun,
 
-On Wed, 28 Jun 2006 19:40:54 +0200 Udo van den Heuvel wrote:
+Great work.  If the feedback about reversion issues continues to be as
+minimal as it currently is it appears you appear to have rolled out a
+great enhancement with minimal errors introduced.  I expect to be
+using sata/e-sata much more extensively now that this new EH process
+is in place.
 
-> While 2.6.16.2 runs quite OK on my VIA SP8000 Epia system, 2.6.17 gives
-> (with the same config where possible) a sata problem on bootup, it gives
-> a via_sata timeout(cmd 0xef). (the letters were small to make the stuff
-> not scroll off the TV)
-> Immediately rebooting into 2.6.16.2 gives a nice clean bootup.
+Any practical experience about which PCI controllers and/or enclosures
+would be best to get if I wanted to use e-Sata and the
+hotplug/warmplug logic?
 
-For some reason I suspect that VIA IRQ quirk again...
+I have about 20 computers I would like to be able to plug e-Sata
+drives into so I could move the drives around as needed.
 
-Can you try to revert these patches from 2.6.17:
+The computers will be a mix of Linux (2.6.18+) and Windows 2K/XP/2003.
 
-http://kernel.org/git/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dcomm=
-itdiff_plain;h=3Da7b862f663d81858531dfccc0537bc9d8a2a4121
-
-http://kernel.org/git/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dcomm=
-itdiff_plain;h=3D75cf7456dd87335f574dcd53c4ae616a2ad71a11
-
-Alternatively, you may try 2.6.16.17 - if it breaks in the same way, and
-2.6.16.16 works, this is most likely that VIA IRQ problem (and reverting
-the same patches from 2.6.16.17 should fix it).
-
---Signature=_Thu__29_Jun_2006_13_41_41_+0400_hl3aL9HdjKMkqPaT
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.9.17 (GNU/Linux)
-
-iD8DBQFEo6BXW82GfkQfsqIRAuOGAJ9p5sIjEbGQb5o/BGveVdq+moi61wCdF4ij
-K3mMlDdpVLyZjWW21VFYYnc=
-=DwGv
------END PGP SIGNATURE-----
-
---Signature=_Thu__29_Jun_2006_13_41_41_+0400_hl3aL9HdjKMkqPaT--
+Greg
+-- 
+Greg Freemyer
+The Norcross Group
+Forensics for the 21st Century
