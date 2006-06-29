@@ -1,135 +1,94 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 1/9] libata: change debugging macros/adjust dbg levels
-Date: Thu, 29 Jun 2006 18:09:27 +0200
-Message-ID: <20060629160926.GB23122@zmei.tnic>
+Subject: [PATCH 3/9] ata_piix.c conversion
+Date: Thu, 29 Jun 2006 18:09:52 +0200
+Message-ID: <20060629160952.GD23122@zmei.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp104.plus.mail.re2.yahoo.com ([206.190.53.29]:58705 "HELO
-	smtp104.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S1750822AbWF2QLS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jun 2006 12:11:18 -0400
+Received: from smtp105.plus.mail.re2.yahoo.com ([206.190.53.30]:177 "HELO
+	smtp105.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S1750841AbWF2QLQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Jun 2006 12:11:16 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide <linux-ide@vger.kernel.org>
 Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
 
-change debugging macros ata_(port|dev)_printk and adjust debugging levels
+This converts the relevant places of ata_piix.c to the new scheme.
 
 Signed-off-by: <petkov@math.uni-muenster.de>
 
-
---- libata-dev/include/linux/libata.h	2006-06-29 17:17:50.000000000 +0200
-+++ libata-dev/include/linux/libata.h.new	2006-06-28 17:23:30.000000000 +0200
-@@ -67,24 +67,26 @@
- #define HAVE_LIBATA_MSG 1
+--- libata-dev/drivers/scsi/ata_piix.c.orig	2006-06-28 09:28:59.000000000 +0200
++++ libata-dev/drivers/scsi/ata_piix.c	2006-06-29 17:34:55.000000000 +0200
+@@ -474,7 +474,7 @@ static int piix_pata_prereset(struct ata
+ 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
  
- enum {
--	ATA_MSG_DRV	= 0x0001,
--	ATA_MSG_INFO	= 0x0002,
--	ATA_MSG_PROBE	= 0x0004,
--	ATA_MSG_WARN	= 0x0008,
--	ATA_MSG_MALLOC	= 0x0010,
--	ATA_MSG_CTL	= 0x0020,
--	ATA_MSG_INTR	= 0x0040,
--	ATA_MSG_ERR	= 0x0080,
--};
--
--#define ata_msg_drv(p)    ((p)->msg_enable & ATA_MSG_DRV)
--#define ata_msg_info(p)   ((p)->msg_enable & ATA_MSG_INFO)
--#define ata_msg_probe(p)  ((p)->msg_enable & ATA_MSG_PROBE)
--#define ata_msg_warn(p)   ((p)->msg_enable & ATA_MSG_WARN)
--#define ata_msg_malloc(p) ((p)->msg_enable & ATA_MSG_MALLOC)
--#define ata_msg_ctl(p)    ((p)->msg_enable & ATA_MSG_CTL)
--#define ata_msg_intr(p)   ((p)->msg_enable & ATA_MSG_INTR)
--#define ata_msg_err(p)    ((p)->msg_enable & ATA_MSG_ERR)
-+	ATA_MSG_ERR	= 0x0001,
-+	ATA_MSG_WARN	= 0x0002,
-+	ATA_MSG_DRV	= 0x0004,
-+	ATA_MSG_INFO	= 0x0008, /* revalidation messages, EH progress */
-+	ATA_MSG_VDEBUG	= 0x0010, /* verbose hot path */
-+	ATA_MSG_CMD	= 0x0020, /* issue / completion */
-+	ATA_MSG_SG	= 0x0040, /* SG map/unmap handling */
-+	ATA_MSG_TRACE	= 0x0080, /* function tracing, e.g. enter/exit */
-+};
-+
-+const char *__ata_msg_lvs[] = {
-+	[ATA_MSG_ERR]	 = KERN_ERR,
-+	[ATA_MSG_WARN]	 = KERN_WARNING,
-+	[ATA_MSG_DRV]	 = KERN_INFO,
-+	[ATA_MSG_INFO]	 = KERN_INFO,
-+	[ATA_MSG_VDEBUG] = KERN_DEBUG,
-+	[ATA_MSG_CMD]	 = KERN_DEBUG,
-+	[ATA_MSG_SG]	 = KERN_DEBUG,
-+	[ATA_MSG_TRACE]	 = KERN_DEBUG
-+};
- 
- static inline u32 ata_msg_init(int dval, int default_msg_enable_bits)
- {
-@@ -805,11 +807,16 @@ extern void ata_do_eh(struct ata_port *a
- /*
-  * printk helpers
-  */
--#define ata_port_printk(ap, lv, fmt, args...) \
--	printk(lv"ata%u: "fmt, (ap)->id , ##args)
-+#define ata_port_printk(ap, lv, fmt, args...) do { \
-+	if (unlikely((ap)->msg_enable & (0xFF & (lv)))) \
-+		printk("%sata%u: "fmt, __ata_msg_lvs[lv], (ap)->id , ##args); \
-+} while (0)
- 
--#define ata_dev_printk(dev, lv, fmt, args...) \
--	printk(lv"ata%u.%02u: "fmt, (dev)->ap->id, (dev)->devno , ##args)
-+#define ata_dev_printk(dev, lv, fmt, args...) do { \
-+	if (unlikely((dev->ap)->msg_enable & (0xFF & (lv)))) \
-+		printk("%sata%u.%02u: "fmt, __ata_msg_lvs[lv], \
-+				(dev)->ap->id, (dev)->devno , ##args); \
-+} while (0)
- 
- /*
-  * ata_eh_info helpers
-@@ -997,9 +1004,8 @@ static inline u8 ata_wait_idle(struct at
- 
- 	if (status & (ATA_BUSY | ATA_DRQ)) {
- 		unsigned long l = ap->ioaddr.status_addr;
--		if (ata_msg_warn(ap))
--			printk(KERN_WARNING "ATA: abnormal status 0x%X on port 0x%lX\n",
--				status, l);
-+		ata_port_printk(ap, ATA_MSG_WARN, 
-+			"ATA: abnormal status 0x%X on port 0x%lX\n", status, l);
+ 	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->hard_port_no])) {
+-		ata_port_printk(ap, KERN_INFO, "port disabled. ignoring.\n");
++		ata_port_printk(ap, ATA_MSG_DRV, "port disabled. ignoring.\n");
+ 		ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
+ 		return 0;
  	}
+@@ -515,7 +515,8 @@ static int piix_sata_prereset(struct ata
+ 	u8 pcs;
  
- 	return status;
-@@ -1109,8 +1115,7 @@ static inline u8 ata_irq_ack(struct ata_
+ 	pci_read_config_byte(pdev, ICH5_PCS, &pcs);
+-	DPRINTK("ata%u: ENTER, pcs=0x%x base=%d\n", ap->id, pcs, base);
++	ata_port_printk(ap, ATA_MSG_CMD, 
++			"ata%u: ENTER, pcs=0x%x base=%d\n", ap->id, pcs, base);
  
- 	status = ata_busy_wait(ap, bits, 1000);
- 	if (status & bits)
--		if (ata_msg_err(ap))
--			printk(KERN_ERR "abnormal status 0x%X\n", status);
-+		ata_port_printk(ap, ATA_MSG_ERR, "abnormal status 0x%X\n", status);
+ 	/* enable all ports on this ap and wait for them to settle */
+ 	for (i = 0; i < 2; i++) {
+@@ -544,11 +545,11 @@ static int piix_sata_prereset(struct ata
+ 	if (!(ap->flags & PIIX_FLAG_AHCI))
+ 		pci_write_config_byte(pdev, ICH5_PCS, pcs);
  
- 	/* get controller status; clear intr, err bits */
- 	if (ap->flags & ATA_FLAG_MMIO) {
-@@ -1128,10 +1133,10 @@ static inline u8 ata_irq_ack(struct ata_
- 		post_stat = inb(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
+-	DPRINTK("ata%u: LEAVE, pcs=0x%x present_mask=0x%x\n",
++	ata_port_printk(ap, ATA_MSG_CMD, "ata%u: LEAVE, pcs=0x%x present_mask=0x%x\n",
+ 		ap->id, pcs, present_mask);
+ 
+ 	if (!present_mask) {
+-		ata_port_printk(ap, KERN_INFO, "SATA port has no device.\n");
++		ata_port_printk(ap, ATA_MSG_DRV, "SATA port has no device.\n");
+ 		ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
+ 		return 0;
  	}
+@@ -642,7 +643,7 @@ static void piix_set_dmamode (struct ata
+ 	u8			reg48, reg54, reg55;
  
--	if (ata_msg_intr(ap))
--		printk(KERN_INFO "%s: irq ack: host_stat 0x%X, new host_stat 0x%X, drv_stat 0x%X\n",
--			__FUNCTION__,
--			host_stat, post_stat, status);
-+	ata_port_printk(ap, ATA_MSG_VDEBUG, 
-+			"%s: irq ack: host_stat 0x%X, new host_stat 0x%X,"
-+			"drv_stat 0x%X\n",
-+			__FUNCTION__, host_stat, post_stat, status);
+ 	pci_read_config_word(dev, maslave, &reg4042);
+-	DPRINTK("reg4042 = 0x%04x\n", reg4042);
++	ata_port_printk(ap, ATA_MSG_CMD, "reg4042 = 0x%04x\n", reg4042);
+ 	sitre = (reg4042 & 0x4000) ? 1 : 0;
+ 	pci_read_config_byte(dev, 0x48, &reg48);
+ 	pci_read_config_word(dev, 0x4a, &reg4a);
+@@ -741,7 +742,8 @@ static int __devinit piix_check_450nx_er
+ 	u8 rev;
+ 	int no_piix_dma = 0;
  
- 	return status;
+-	while((pdev = pci_get_device(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82454NX, pdev)) != NULL)
++	while((pdev = pci_get_device(PCI_VENDOR_ID_INTEL, 
++				PCI_DEVICE_ID_INTEL_82454NX, pdev)) != NULL)
+ 	{
+ 		/* Look for 450NX PXB. Check for problem configurations
+ 		   A PCI quirk checks bit 6 already */
+@@ -755,9 +757,11 @@ static int __devinit piix_check_450nx_er
+ 			no_piix_dma = 2;
+ 	}
+ 	if (no_piix_dma)
+-		dev_printk(KERN_WARNING, &ata_dev->dev, "450NX errata present, disabling IDE DMA.\n");
++		dev_printk(KERN_WARNING, &ata_dev->dev, 
++				"450NX errata present, disabling IDE DMA.\n");
+ 	if (no_piix_dma == 2)
+-		dev_printk(KERN_WARNING, &ata_dev->dev, "A BIOS update may resolve this.\n");
++		dev_printk(KERN_WARNING, &ata_dev->dev, 
++				"A BIOS update may resolve this.\n");
+ 	return no_piix_dma;
  }
+ 
 
-	
-
-	
 		
 ___________________________________________________________ 
-Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier anmelden: http://mail.yahoo.de
+Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
 
