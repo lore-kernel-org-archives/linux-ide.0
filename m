@@ -1,13 +1,13 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 9/9] sata_sx4.c conversion
-Date: Thu, 29 Jun 2006 18:10:34 +0200
-Message-ID: <20060629161034.GJ23122@zmei.tnic>
+Subject: [PATCH 5/9] libata-eh.c conversion
+Date: Thu, 29 Jun 2006 18:10:08 +0200
+Message-ID: <20060629161008.GF23122@zmei.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp102.plus.mail.re2.yahoo.com ([206.190.53.27]:27819 "HELO
-	smtp102.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S1750880AbWF2QLW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from smtp106.plus.mail.re2.yahoo.com ([206.190.53.31]:57993 "HELO
+	smtp106.plus.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S1750878AbWF2QLW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 29 Jun 2006 12:11:22 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
@@ -15,221 +15,372 @@ List-Id: linux-ide@vger.kernel.org
 To: linux-ide <linux-ide@vger.kernel.org>
 Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
 
-Convert the sata-sx4.c to the new scheme.
+Convert the libata-eh.c to the new scheme.
 
 Signed-off-by: <petkov@math.uni-muenster.de>
 
---- libata-dev/drivers/scsi/sata_sx4.c.orig	2006-06-29 16:52:41.000000000 +0200
-+++ libata-dev/drivers/scsi/sata_sx4.c	2006-06-29 17:14:36.000000000 +0200
-@@ -462,7 +462,8 @@ static void pdc20621_dma_prep(struct ata
+--- libata-dev/drivers/scsi/libata-eh.c.orig	2006-06-28 20:06:21.000000000 +0200
++++ libata-dev/drivers/scsi/libata-eh.c	2006-06-29 17:38:16.000000000 +0200
+@@ -152,7 +152,7 @@ enum scsi_eh_timer_return ata_scsi_timed
+ 	struct ata_queued_cmd *qc;
+ 	enum scsi_eh_timer_return ret;
  
- 	WARN_ON(!(qc->flags & ATA_QCFLAG_DMAMAP));
- 
--	VPRINTK("ata%u: ENTER\n", ap->id);
-+	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ata%u: ENTER\n", 
-+			__FUNCTION__, ap->id);
- 
- 	/* hard-code chip #0 */
- 	mmio += PDC_CHIP0_OFS;
-@@ -507,7 +508,9 @@ static void pdc20621_dma_prep(struct ata
- 
- 	readl(dimm_mmio);	/* MMIO PCI posting flush */
- 
--	VPRINTK("ata pkt buf ofs %u, prd size %u, mmio copied\n", i, sgt_len);
-+	ata_port_printk(ap, ATA_MSG_CMD, 
-+			"ata pkt buf ofs %u, prd size %u, mmio copied\n", 
-+			i, sgt_len);
- }
- 
- static void pdc20621_nodata_prep(struct ata_queued_cmd *qc)
-@@ -520,7 +523,8 @@ static void pdc20621_nodata_prep(struct 
- 	unsigned int portno = ap->port_no;
- 	unsigned int i;
- 
--	VPRINTK("ata%u: ENTER\n", ap->id);
-+	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ata%u: ENTER\n", 
-+			__FUNCTION__, ap->id);
- 
- 	/* hard-code chip #0 */
- 	mmio += PDC_CHIP0_OFS;
-@@ -543,7 +547,8 @@ static void pdc20621_nodata_prep(struct 
- 
- 	readl(dimm_mmio);	/* MMIO PCI posting flush */
- 
--	VPRINTK("ata pkt buf ofs %u, mmio copied\n", i);
-+	ata_port_printk(ap, ATA_MSG_CMD, 
-+			"ata pkt buf ofs %u, mmio copied\n", i);
- }
- 
- static void pdc20621_qc_prep(struct ata_queued_cmd *qc)
-@@ -626,10 +631,14 @@ static void pdc20621_dump_hdma(struct at
- 	dimm_mmio += (port_no * PDC_DIMM_WINDOW_STEP);
- 	dimm_mmio += PDC_DIMM_HOST_PKT;
- 
--	printk(KERN_ERR "HDMA[0] == 0x%08X\n", readl(dimm_mmio));
--	printk(KERN_ERR "HDMA[1] == 0x%08X\n", readl(dimm_mmio + 4));
--	printk(KERN_ERR "HDMA[2] == 0x%08X\n", readl(dimm_mmio + 8));
--	printk(KERN_ERR "HDMA[3] == 0x%08X\n", readl(dimm_mmio + 12));
-+	ata_port_printk(ap, ATA_MSG_ERR "HDMA[0] == 0x%08X\n", 
-+			readl(dimm_mmio));
-+	ata_port_printk(ap, ATA_MSG_ERR "HDMA[1] == 0x%08X\n", 
-+			readl(dimm_mmio + 4));
-+	ata_port_printk(ap, ATA_MSG_ERR "HDMA[2] == 0x%08X\n", 
-+			readl(dimm_mmio + 8));
-+	ata_port_printk(ap, ATA_MSG_ERR "HDMA[3] == 0x%08X\n", 
-+			readl(dimm_mmio + 12));
- }
- #else
- static inline void pdc20621_dump_hdma(struct ata_queued_cmd *qc) { }
-@@ -648,7 +657,8 @@ static void pdc20621_packet_start(struct
- 	/* hard-code chip #0 */
- 	mmio += PDC_CHIP0_OFS;
- 
--	VPRINTK("ata%u: ENTER\n", ap->id);
-+	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ata%u: ENTER\n", 
-+			__FUNCTION__, ap->id);
- 
- 	wmb();			/* flush PRD, pkt writes */
- 
-@@ -660,10 +670,11 @@ static void pdc20621_packet_start(struct
- 
- 		pdc20621_dump_hdma(qc);
- 		pdc20621_push_hdma(qc, seq, port_ofs + PDC_DIMM_HOST_PKT);
--		VPRINTK("queued ofs 0x%x (%u), seq %u\n",
--			port_ofs + PDC_DIMM_HOST_PKT,
--			port_ofs + PDC_DIMM_HOST_PKT,
--			seq);
-+		ata_port_printk(ap, ATA_MSG_CMD, 
-+				"queued ofs 0x%x (%u), seq %u\n",
-+				port_ofs + PDC_DIMM_HOST_PKT,
-+				port_ofs + PDC_DIMM_HOST_PKT,
-+				seq);
- 	} else {
- 		writel(0x00000001, mmio + PDC_20621_SEQCTL + (seq * 4));
- 		readl(mmio + PDC_20621_SEQCTL + (seq * 4));	/* flush */
-@@ -671,10 +682,11 @@ static void pdc20621_packet_start(struct
- 		writel(port_ofs + PDC_DIMM_ATA_PKT,
- 		       (void __iomem *) ap->ioaddr.cmd_addr + PDC_PKT_SUBMIT);
- 		readl((void __iomem *) ap->ioaddr.cmd_addr + PDC_PKT_SUBMIT);
--		VPRINTK("submitted ofs 0x%x (%u), seq %u\n",
--			port_ofs + PDC_DIMM_ATA_PKT,
--			port_ofs + PDC_DIMM_ATA_PKT,
--			seq);
-+		ata_port_printk(ap, ATA_MSG_CMD, 
-+				"submitted ofs 0x%x (%u), seq %u\n",
-+				port_ofs + PDC_DIMM_ATA_PKT,
-+				port_ofs + PDC_DIMM_ATA_PKT,
-+				seq);
- 	}
- }
- 
-@@ -708,15 +720,17 @@ static inline unsigned int pdc20621_host
- 	u8 status;
- 	unsigned int handled = 0;
- 
--	VPRINTK("ENTER\n");
+-	DPRINTK("ENTER\n");
 +	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
  
- 	if ((qc->tf.protocol == ATA_PROT_DMA) &&	/* read */
- 	    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
+ 	if (ap->ops->error_handler) {
+ 		ret = EH_NOT_HANDLED;
+@@ -171,7 +171,8 @@ enum scsi_eh_timer_return ata_scsi_timed
+ 	spin_unlock_irqrestore(ap->lock, flags);
  
- 		/* step two - DMA from DIMM to host */
- 		if (doing_hdma) {
--			VPRINTK("ata%u: read hdma, 0x%x 0x%x\n", ap->id,
--				readl(mmio + 0x104), readl(mmio + PDC_HDMA_CTLSTAT));
-+			ata_port_printk(ap, ATA_MSG_CMD, 
-+					"ata%u: read hdma, 0x%x 0x%x\n", ap->id,
-+					readl(mmio + 0x104), 
-+					readl(mmio + PDC_HDMA_CTLSTAT));
- 			/* get drive status; clear intr; complete txn */
- 			qc->err_mask |= ac_err_mask(ata_wait_idle(ap));
- 			ata_qc_complete(qc);
-@@ -726,8 +740,10 @@ static inline unsigned int pdc20621_host
- 		/* step one - exec ATA command */
- 		else {
- 			u8 seq = (u8) (port_no + 1 + 4);
--			VPRINTK("ata%u: read ata, 0x%x 0x%x\n", ap->id,
--				readl(mmio + 0x104), readl(mmio + PDC_HDMA_CTLSTAT));
-+			ata_port_printk(ap, ATA_MSG_CMD, 
-+					"ata%u: read ata, 0x%x 0x%x\n", 
-+					ap->id,	readl(mmio + 0x104), 
-+					readl(mmio + PDC_HDMA_CTLSTAT));
+  out:
+-	DPRINTK("EXIT, ret=%d\n", ret);
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT, ret=%d\n", 
++			__FUNCTION__, ret);
+ 	return ret;
+ }
  
- 			/* submit hdma pkt */
- 			pdc20621_dump_hdma(qc);
-@@ -741,8 +757,10 @@ static inline unsigned int pdc20621_host
- 		/* step one - DMA from host to DIMM */
- 		if (doing_hdma) {
- 			u8 seq = (u8) (port_no + 1);
--			VPRINTK("ata%u: write hdma, 0x%x 0x%x\n", ap->id,
--				readl(mmio + 0x104), readl(mmio + PDC_HDMA_CTLSTAT));
-+			ata_port_printk(ap, ATA_MSG_CMD, 
-+					"ata%u: write hdma, 0x%x 0x%x\n", 
-+					ap->id,	readl(mmio + 0x104), 
-+					readl(mmio + PDC_HDMA_CTLSTAT));
- 
- 			/* submit ata pkt */
- 			writel(0x00000001, mmio + PDC_20621_SEQCTL + (seq * 4));
-@@ -754,8 +772,10 @@ static inline unsigned int pdc20621_host
- 
- 		/* step two - execute ATA command */
- 		else {
--			VPRINTK("ata%u: write ata, 0x%x 0x%x\n", ap->id,
--				readl(mmio + 0x104), readl(mmio + PDC_HDMA_CTLSTAT));
-+			ata_port_printk(ap, ATA_MSG_CMD, 
-+					"ata%u: write ata, 0x%x 0x%x\n", 
-+					ap->id,	readl(mmio + 0x104), 
-+					readl(mmio + PDC_HDMA_CTLSTAT));
- 			/* get drive status; clear intr; complete txn */
- 			qc->err_mask |= ac_err_mask(ata_wait_idle(ap));
- 			ata_qc_complete(qc);
-@@ -767,7 +787,8 @@ static inline unsigned int pdc20621_host
- 	} else if (qc->tf.protocol == ATA_PROT_NODATA) {
- 
- 		status = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
--		DPRINTK("BUS_NODATA (drv_stat 0x%X)\n", status);
-+		ata_port_printk(ap, ATA_MSG_CMD, 
-+				"BUS_NODATA (drv_stat 0x%X)\n", status);
- 		qc->err_mask |= ac_err_mask(status);
- 		ata_qc_complete(qc);
- 		handled = 1;
-@@ -861,7 +882,7 @@ static void pdc_eng_timeout(struct ata_p
- 	struct ata_queued_cmd *qc;
+@@ -194,7 +195,7 @@ void ata_scsi_error(struct Scsi_Host *ho
+ 	int i, repeat_cnt = ATA_EH_MAX_REPEAT;
  	unsigned long flags;
  
 -	DPRINTK("ENTER\n");
 +	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
  
- 	spin_lock_irqsave(&host_set->lock, flags);
+ 	/* synchronize with port task */
+ 	ata_port_flush_task(ap);
+@@ -289,13 +290,13 @@ void ata_scsi_error(struct Scsi_Host *ho
  
-@@ -870,14 +891,14 @@ static void pdc_eng_timeout(struct ata_p
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_DMA:
- 	case ATA_PROT_NODATA:
--		ata_port_printk(ap, KERN_ERR, "command timeout\n");
-+		ata_port_printk(ap, ATA_MSG_ERR, "command timeout\n");
- 		qc->err_mask |= __ac_err_mask(ata_wait_idle(ap));
- 		break;
+ 		if (ap->flags & ATA_FLAG_EH_PENDING) {
+ 			if (--repeat_cnt) {
+-				ata_port_printk(ap, KERN_INFO,
++				ata_port_printk(ap, ATA_MSG_INFO,
+ 					"EH pending after completion, "
+ 					"repeating EH (cnt=%d)\n", repeat_cnt);
+ 				spin_unlock_irqrestore(ap_lock, flags);
+ 				goto repeat;
+ 			}
+-			ata_port_printk(ap, KERN_ERR, "EH pending after %d "
++			ata_port_printk(ap, ATA_MSG_ERR, "EH pending after %d "
+ 					"tries, giving up\n", ATA_EH_MAX_REPEAT);
+ 		}
  
- 	default:
- 		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+@@ -329,7 +330,7 @@ void ata_scsi_error(struct Scsi_Host *ho
+ 		if (ap->flags & ATA_FLAG_SCSI_HOTPLUG)
+ 			queue_work(ata_aux_wq, &ap->hotplug_task);
+ 		if (ap->flags & ATA_FLAG_RECOVERED)
+-			ata_port_printk(ap, KERN_INFO, "EH complete\n");
++			ata_port_printk(ap, ATA_MSG_INFO, "EH complete\n");
+ 	}
  
--		ata_port_printk(ap, KERN_ERR,
-+		ata_port_printk(ap, ATA_MSG_ERR,
- 				"unknown timeout, cmd 0x%x stat 0x%x\n",
- 				qc->tf.command, drv_stat);
+ 	ap->flags &= ~(ATA_FLAG_SCSI_HOTPLUG | ATA_FLAG_RECOVERED);
+@@ -340,7 +341,7 @@ void ata_scsi_error(struct Scsi_Host *ho
  
-@@ -887,7 +908,7 @@ static void pdc_eng_timeout(struct ata_p
+ 	spin_unlock_irqrestore(ap_lock, flags);
  
- 	spin_unlock_irqrestore(&host_set->lock, flags);
- 	ata_eh_qc_complete(qc);
 -	DPRINTK("EXIT\n");
 +	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT\n", __FUNCTION__);
  }
  
- static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf)
+ /**
+@@ -403,7 +404,7 @@ static void ata_qc_timeout(struct ata_qu
+ 	u8 host_stat = 0, drv_stat;
+ 	unsigned long flags;
+ 
+-	DPRINTK("ENTER\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
+ 
+ 	ap->hsm_task_state = HSM_ST_IDLE;
+ 
+@@ -427,7 +428,7 @@ static void ata_qc_timeout(struct ata_qu
+ 		/* ack bmdma irq events */
+ 		ap->ops->irq_clear(ap);
+ 
+-		ata_dev_printk(qc->dev, KERN_ERR, "command 0x%x timeout, "
++		ata_dev_printk(qc->dev, ATA_MSG_ERR, "command 0x%x timeout, "
+ 			       "stat 0x%x host_stat 0x%x\n",
+ 			       qc->tf.command, drv_stat, host_stat);
+ 
+@@ -440,7 +441,7 @@ static void ata_qc_timeout(struct ata_qu
+ 
+ 	ata_eh_qc_complete(qc);
+ 
+-	DPRINTK("EXIT\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT\n", __FUNCTION__);
+ }
+ 
+ /**
+@@ -465,11 +466,12 @@ static void ata_qc_timeout(struct ata_qu
+  */
+ void ata_eng_timeout(struct ata_port *ap)
+ {
+-	DPRINTK("ENTER\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
++
+ 
+ 	ata_qc_timeout(ata_qc_from_tag(ap, ap->active_tag));
+ 
+-	DPRINTK("EXIT\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT\n", __FUNCTION__);
+ }
+ 
+ /**
+@@ -516,7 +518,7 @@ void ata_port_schedule_eh(struct ata_por
+ 	ap->flags |= ATA_FLAG_EH_PENDING;
+ 	scsi_schedule_eh(ap->host);
+ 
+-	DPRINTK("port EH scheduled\n");
++	ata_port_printk(ap, ATA_MSG_INFO, "port EH scheduled\n");
+ }
+ 
+ /**
+@@ -580,7 +582,7 @@ static void __ata_port_freeze(struct ata
+ 
+ 	ap->flags |= ATA_FLAG_FROZEN;
+ 
+-	DPRINTK("ata%u port frozen\n", ap->id);
++	ata_port_printk(ap, ATA_MSG_INFO, "ata%u port frozen\n", ap->id);
+ }
+ 
+ /**
+@@ -653,7 +655,7 @@ void ata_eh_thaw_port(struct ata_port *a
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+-	DPRINTK("ata%u port thawed\n", ap->id);
++	ata_port_printk(ap, ATA_MSG_INFO, "ata%u port thawed\n", ap->id);
+ }
+ 
+ static void ata_eh_scsidone(struct scsi_cmnd *scmd)
+@@ -839,7 +841,7 @@ static unsigned int ata_read_log_page(st
+ 	struct ata_taskfile tf;
+ 	unsigned int err_mask;
+ 
+-	DPRINTK("read log page - page %d\n", page);
++	ata_dev_printk(dev, ATA_MSG_INFO, "read log page - page %d\n", page);
+ 
+ 	ata_tf_init(dev, &tf);
+ 	tf.command = ATA_CMD_READ_LOG_EXT;
+@@ -852,7 +854,8 @@ static unsigned int ata_read_log_page(st
+ 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+ 				     buf, sectors * ATA_SECT_SIZE);
+ 
+-	DPRINTK("EXIT, err_mask=%x\n", err_mask);
++	ata_dev_printk(dev, ATA_MSG_TRACE, "%s: EXIT, err_mask=%x\n", 
++			__FUNCTION__, err_mask);
+ 	return err_mask;
+ }
+ 
+@@ -887,7 +890,7 @@ static int ata_eh_read_log_10h(struct at
+ 	for (i = 0; i < ATA_SECT_SIZE; i++)
+ 		csum += buf[i];
+ 	if (csum)
+-		ata_dev_printk(dev, KERN_WARNING,
++		ata_dev_printk(dev, ATA_MSG_WARN,
+ 			       "invalid checksum 0x%x on log page 10h\n", csum);
+ 
+ 	if (buf[0] & 0x80)
+@@ -931,7 +934,7 @@ static unsigned int atapi_eh_request_sen
+ 	struct ata_taskfile tf;
+ 	u8 cdb[ATAPI_CDB_LEN];
+ 
+-	DPRINTK("ATAPI request sense\n");
++	ata_port_printk(ap, ATA_MSG_INFO, "ATAPI request sense\n");
+ 
+ 	ata_tf_init(dev, &tf);
+ 
+@@ -1048,13 +1051,13 @@ static void ata_eh_analyze_ncq_error(str
+ 	/* okay, this error is ours */
+ 	rc = ata_eh_read_log_10h(dev, &tag, &tf);
+ 	if (rc) {
+-		ata_port_printk(ap, KERN_ERR, "failed to read log page 10h "
++		ata_port_printk(ap, ATA_MSG_ERR, "failed to read log page 10h "
+ 				"(errno=%d)\n", rc);
+ 		return;
+ 	}
+ 
+ 	if (!(ap->sactive & (1 << tag))) {
+-		ata_port_printk(ap, KERN_ERR, "log page 10h reported "
++		ata_port_printk(ap, ATA_MSG_ERR, "log page 10h reported "
+ 				"inactive tag %d\n", tag);
+ 		return;
+ 	}
+@@ -1247,7 +1250,7 @@ static int ata_eh_speed_down(struct ata_
+ 	if (ata_down_xfermask_limit(dev, 0) == 0)
+ 		return ATA_EH_SOFTRESET;
+ 
+-	ata_dev_printk(dev, KERN_ERR,
++	ata_dev_printk(dev, ATA_MSG_ERR,
+ 		       "speed down requested but no transfer mode left\n");
+ 	return 0;
+ }
+@@ -1273,7 +1276,8 @@ static void ata_eh_autopsy(struct ata_po
+ 	u32 serror;
+ 	int rc;
+ 
+-	DPRINTK("ENTER\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
++
+ 
+ 	/* obtain and analyze SError */
+ 	rc = sata_scr_read(ap, SCR_ERROR, &serror);
+@@ -1348,7 +1352,7 @@ static void ata_eh_autopsy(struct ata_po
+ 	ehc->i.dev = failed_dev;
+ 	ehc->i.action = action;
+ 
+-	DPRINTK("EXIT\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT\n", __FUNCTION__);
+ }
+ 
+ /**
+@@ -1389,19 +1393,19 @@ static void ata_eh_report(struct ata_por
+ 		frozen = " frozen";
+ 
+ 	if (ehc->i.dev) {
+-		ata_dev_printk(ehc->i.dev, KERN_ERR, "exception Emask 0x%x "
++		ata_dev_printk(ehc->i.dev, ATA_MSG_ERR, "exception Emask 0x%x "
+ 			       "SAct 0x%x SErr 0x%x action 0x%x%s\n",
+ 			       ehc->i.err_mask, ap->sactive, ehc->i.serror,
+ 			       ehc->i.action, frozen);
+ 		if (desc)
+-			ata_dev_printk(ehc->i.dev, KERN_ERR, "(%s)\n", desc);
++			ata_dev_printk(ehc->i.dev, ATA_MSG_ERR, "(%s)\n", desc);
+ 	} else {
+-		ata_port_printk(ap, KERN_ERR, "exception Emask 0x%x "
++		ata_port_printk(ap, ATA_MSG_ERR, "exception Emask 0x%x "
+ 				"SAct 0x%x SErr 0x%x action 0x%x%s\n",
+ 				ehc->i.err_mask, ap->sactive, ehc->i.serror,
+ 				ehc->i.action, frozen);
+ 		if (desc)
+-			ata_port_printk(ap, KERN_ERR, "(%s)\n", desc);
++			ata_port_printk(ap, ATA_MSG_ERR, "(%s)\n", desc);
+ 	}
+ 
+ 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+@@ -1410,7 +1414,7 @@ static void ata_eh_report(struct ata_por
+ 		if (!(qc->flags & ATA_QCFLAG_FAILED) || !qc->err_mask)
+ 			continue;
+ 
+-		ata_dev_printk(qc->dev, KERN_ERR, "tag %d cmd 0x%x "
++		ata_dev_printk(qc->dev, ATA_MSG_ERR, "tag %d cmd 0x%x "
+ 			       "Emask 0x%x stat 0x%x err 0x%x (%s)\n",
+ 			       qc->tag, qc->tf.command, qc->err_mask,
+ 			       qc->result_tf.command, qc->result_tf.feature,
+@@ -1484,7 +1488,7 @@ static int ata_eh_reset(struct ata_port 
+ 	if (prereset) {
+ 		rc = prereset(ap);
+ 		if (rc) {
+-			ata_port_printk(ap, KERN_ERR,
++			ata_port_printk(ap, ATA_MSG_ERR,
+ 					"prereset failed (errno=%d)\n", rc);
+ 			return rc;
+ 		}
+@@ -1504,7 +1508,7 @@ static int ata_eh_reset(struct ata_port 
+ 
+ 	/* did prereset() screw up?  if so, fix up to avoid oopsing */
+ 	if (!reset) {
+-		ata_port_printk(ap, KERN_ERR, "BUG: prereset() requested "
++		ata_port_printk(ap, ATA_MSG_ERR, "BUG: prereset() requested "
+ 				"invalid reset type\n");
+ 		if (softreset)
+ 			reset = softreset;
+@@ -1515,7 +1519,7 @@ static int ata_eh_reset(struct ata_port 
+  retry:
+ 	/* shut up during boot probing */
+ 	if (verbose)
+-		ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
++		ata_port_printk(ap, ATA_MSG_INFO, "%s resetting port\n",
+ 				reset == softreset ? "soft" : "hard");
+ 
+ 	/* reset */
+@@ -1532,7 +1536,7 @@ static int ata_eh_reset(struct ata_port 
+ 		reset = softreset;
+ 
+ 		if (!reset) {
+-			ata_port_printk(ap, KERN_ERR,
++			ata_port_printk(ap, ATA_MSG_ERR,
+ 					"follow-up softreset required "
+ 					"but no softreset avaliable\n");
+ 			return -EINVAL;
+@@ -1543,7 +1547,7 @@ static int ata_eh_reset(struct ata_port 
+ 
+ 		if (rc == 0 && classify &&
+ 		    classes[0] == ATA_DEV_UNKNOWN) {
+-			ata_port_printk(ap, KERN_ERR,
++			ata_port_printk(ap, ATA_MSG_ERR,
+ 					"classification failed\n");
+ 			return -EINVAL;
+ 		}
+@@ -1560,7 +1564,7 @@ static int ata_eh_reset(struct ata_port 
+ 		} else
+ 			type = "hard";
+ 
+-		ata_port_printk(ap, KERN_WARNING,
++		ata_port_printk(ap, ATA_MSG_WARN,
+ 				"%sreset failed, retrying in 5 secs\n", type);
+ 		ssleep(5);
+ 
+@@ -1597,7 +1601,8 @@ static int ata_eh_revalidate_and_attach(
+ 	unsigned long flags;
+ 	int i, rc = 0;
+ 
+-	DPRINTK("ENTER\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
++
+ 
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		unsigned int action;
+@@ -1644,7 +1649,7 @@ static int ata_eh_revalidate_and_attach(
+ 	if (rc)
+ 		*r_failed_dev = dev;
+ 
+-	DPRINTK("EXIT\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT\n", __FUNCTION__);
+ 	return rc;
+ }
+ 
+@@ -1717,7 +1722,8 @@ static int ata_eh_recover(struct ata_por
+ 	struct ata_device *dev;
+ 	int down_xfermask, i, rc;
+ 
+-	DPRINTK("ENTER\n");
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: ENTER\n", __FUNCTION__);
++
+ 
+ 	/* prep for recovery */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+@@ -1761,7 +1767,7 @@ static int ata_eh_recover(struct ata_por
+ 		rc = ata_eh_reset(ap, ata_port_nr_vacant(ap), prereset,
+ 				  softreset, hardreset, postreset);
+ 		if (rc) {
+-			ata_port_printk(ap, KERN_ERR,
++			ata_port_printk(ap, ATA_MSG_ERR,
+ 					"reset failed, giving up\n");
+ 			goto out;
+ 		}
+@@ -1829,7 +1835,7 @@ static int ata_eh_recover(struct ata_por
+ 	}
+ 
+ 	if (ata_port_nr_enabled(ap)) {
+-		ata_port_printk(ap, KERN_WARNING, "failed to recover some "
++		ata_port_printk(ap, ATA_MSG_WARN, "failed to recover some "
+ 				"devices, retrying in 5 secs\n");
+ 		ssleep(5);
+ 	} else {
+@@ -1845,7 +1851,7 @@ static int ata_eh_recover(struct ata_por
+ 			ata_dev_disable(&ap->device[i]);
+ 	}
+ 
+-	DPRINTK("EXIT, rc=%d\n", rc);
++	ata_port_printk(ap, ATA_MSG_TRACE, "%s: EXIT, rc=%d\n", __FUNCTION__, rc);
+ 	return rc;
+ }
+ 
 
+	
+
+	
 		
 ___________________________________________________________ 
-Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
+Gesendet von Yahoo! Mail - Jetzt mit 1GB Speicher kostenlos - Hier anmelden: http://mail.yahoo.de
 
