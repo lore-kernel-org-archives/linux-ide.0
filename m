@@ -1,210 +1,58 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 6/6] Implement the AHCI suspend/resume
-Date: Thu, 29 Jun 2006 16:21:10 +0800
-Message-ID: <1151569270.7132.227.camel@forrest26.sh.intel.com>
+From: Sergey Vlasov <vsu@altlinux.ru>
+Subject: Re: 2.6.17 on VIA SP8000 sata: via_sata timeout (cmd 0xef) (retry)
+Date: Thu, 29 Jun 2006 13:41:41 +0400
+Message-ID: <20060629134141.221c59b3.vsu@altlinux.ru>
+References: <44A2BF26.8090608@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__29_Jun_2006_13_41_41_+0400_hl3aL9HdjKMkqPaT"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:32149 "EHLO
-	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S1750851AbWF2Iew (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Jun 2006 04:34:52 -0400
+Received: from mivlgu.ru ([81.18.140.87]:60832 "EHLO mail.mivlgu.ru")
+	by vger.kernel.org with ESMTP id S932865AbWF2Jlp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jun 2006 05:41:45 -0400
+In-Reply-To: <44A2BF26.8090608@xs4all.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, axboe@suse.de
-Cc: linux-ide@vger.kernel.org
+To: Udo van den Heuvel <udovdh@xs4all.nl>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-This patch implements the AHCI suspend/resume.
-It integrates the suspend/resume operations with Power Management
-framework.
+--Signature=_Thu__29_Jun_2006_13_41_41_+0400_hl3aL9HdjKMkqPaT
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Forrest Zhao <forrest.zhaot@intel.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Jens Axboe <axboe@suse.de>
+On Wed, 28 Jun 2006 19:40:54 +0200 Udo van den Heuvel wrote:
 
+> While 2.6.16.2 runs quite OK on my VIA SP8000 Epia system, 2.6.17 gives
+> (with the same config where possible) a sata problem on bootup, it gives
+> a via_sata timeout(cmd 0xef). (the letters were small to make the stuff
+> not scroll off the TV)
+> Immediately rebooting into 2.6.16.2 gives a nice clean bootup.
 
----
+For some reason I suspect that VIA IRQ quirk again...
 
- drivers/scsi/ahci.c |  127 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 127 insertions(+), 0 deletions(-)
+Can you try to revert these patches from 2.6.17:
 
-ff254029d59b7cd674e3ad1f4709791b80838218
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 7bf9b6d..f7d9596 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -221,9 +221,12 @@ static void ahci_freeze(struct ata_port 
- static void ahci_thaw(struct ata_port *ap);
- static void ahci_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
-+static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
-+static int ahci_pci_device_resume(struct pci_dev *pdev);
- static int ahci_port_standby(void __iomem *port_mmio, u32 cap);
- static int ahci_port_spinup(void __iomem *port_mmio, u32 cap);
- static int ahci_port_suspend(struct ata_port *ap, pm_message_t state);
-+static int ahci_port_resume(struct ata_port *ap);
- static void ahci_remove_one (struct pci_dev *pdev);
- 
- static struct scsi_host_template ahci_sht = {
-@@ -243,6 +246,8 @@ static struct scsi_host_template ahci_sh
- 	.slave_configure	= ata_scsi_slave_config,
- 	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
-+	.resume			= ata_scsi_device_resume,
-+	.suspend		= ata_scsi_device_suspend,
- };
- 
- static const struct ata_port_operations ahci_ops = {
-@@ -271,6 +276,8 @@ static const struct ata_port_operations 
- 
- 	.port_start		= ahci_port_start,
- 	.port_stop		= ahci_port_stop,
-+
-+	.port_suspend		= ahci_port_suspend,
- };
- 
- static const struct ata_port_info ahci_port_info[] = {
-@@ -371,6 +378,8 @@ static struct pci_driver ahci_pci_driver
- 	.id_table		= ahci_pci_tbl,
- 	.probe			= ahci_init_one,
- 	.remove			= ahci_remove_one,
-+	.suspend		= ahci_pci_device_suspend,
-+	.resume			= ahci_pci_device_resume,
- };
- 
+http://kernel.org/git/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dcomm=
+itdiff_plain;h=3Da7b862f663d81858531dfccc0537bc9d8a2a4121
 
-@@ -507,6 +516,57 @@ static int ahci_port_suspend(struct ata_
- 	return rc;
- }
- 
-+static int ahci_port_resume(struct ata_port *ap)
-+{
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	struct ahci_host_priv *hpriv = ap->host_set->private_data;
-+	struct ahci_port_priv *pp = ap->private_data;
-+	int rc;
-+	u32 tmp;
-+
-+	/*
-+	 * Enable FIS reception
-+	 */
-+	ahci_start_fis_rx(port_mmio, pp, hpriv);
-+
-+	rc = ahci_port_spinup(port_mmio, hpriv->cap);
-+	if (rc)
-+		ata_port_printk(ap, KERN_WARNING, "Could not spinup device"
-+				" (%d)\n", rc);
-+
-+	/*
-+	 * Clear error status
-+	 */
-+	tmp = readl(port_mmio + PORT_SCR_ERR);
-+	writel(tmp, port_mmio + PORT_SCR_ERR);
-+	/*
-+	 * Clear interrupt status
-+	 */
-+	tmp = readl(mmio + HOST_CTL);
-+	if (!(tmp & HOST_IRQ_EN)) {
-+		u32 irq_stat;
-+
-+		/* ack any pending irq events for this port */
-+		irq_stat = readl(port_mmio + PORT_IRQ_STAT);
-+		if (irq_stat)
-+			writel(irq_stat, port_mmio + PORT_IRQ_STAT);
-+
-+		/* set irq mask (enables interrupts) */
-+		writel(DEF_PORT_IRQ, port_mmio + PORT_IRQ_MASK);
-+	}
-+
-+	/*
-+	 * Enable DMA
-+	 */
-+	rc = ahci_start_engine(port_mmio);
-+	if (rc)
-+		ata_port_printk(ap, KERN_WARNING, "Can't start DMA engine"
-+				" (%d)\n", rc);
-+
-+	return rc;
-+}
-+
- static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
- {
- 	unsigned int sc_reg;
-@@ -1022,6 +1082,73 @@ static unsigned int ahci_fill_sg(struct 
- 	return n_sg;
- }
- 
-+int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
-+{
-+	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
-+	void __iomem *mmio = host_set->mmio_base;
-+	u32 tmp;
-+	int rc = 0;
-+
-+	/* First suspend all ports */
-+	rc = ata_host_set_suspend(host_set, state);
-+	if (rc) return rc;
-+
-+	/*
-+	 * AHCI spec rev1.1 section 8.3.3:
-+	 * Software must disable interrupts prior to
-+	 * requesting a transition of the HBA to
-+	 * D3 state.
-+	 */
-+	tmp = readl(mmio + HOST_CTL);
-+	tmp &= ~HOST_IRQ_EN;
-+	writel(tmp, mmio + HOST_CTL);
-+	tmp = readl(mmio + HOST_CTL); /* flush */
-+
-+	ata_pci_device_do_suspend(pdev, state);
-+
-+	return 0;
-+}
-+
-+int ahci_pci_device_resume(struct pci_dev *pdev)
-+{
-+	struct device *dev = pci_dev_to_dev(pdev);
-+	struct ata_host_set *host_set = dev_get_drvdata(dev);
-+	void __iomem *mmio = host_set->mmio_base;
-+	struct ata_port *ap;
-+	u32 i, tmp, irq_stat;
-+
-+	tmp = readl(mmio + HOST_CTL);
-+	if (!(tmp & HOST_AHCI_EN)) {
-+		tmp |= HOST_AHCI_EN;
-+		writel(tmp, mmio + HOST_CTL);
-+		tmp = readl(mmio + HOST_CTL);
-+	}
-+
-+	ata_pci_device_do_resume(pdev);
-+
-+	/* Resume all ports */
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		ap = host_set->ports[i];
-+		ahci_port_resume(ap);
-+	}
-+
-+	/*
-+	 * Clear interrupt status and enable interrupt
-+	 */
-+	if (!(tmp & HOST_IRQ_EN)) {
-+		irq_stat = readl(mmio + HOST_IRQ_STAT);
-+		if (irq_stat)
-+			writel(irq_stat, mmio + HOST_IRQ_STAT);
-+		tmp |= HOST_IRQ_EN;
-+		writel(tmp, mmio + HOST_CTL);
-+		tmp = readl(mmio + HOST_CTL);
-+	}
-+
-+	ata_host_set_resume(host_set);
-+
-+	return 0;
-+}
-+
- static void ahci_qc_prep(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
--- 
-1.2.6
+http://kernel.org/git/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dcomm=
+itdiff_plain;h=3D75cf7456dd87335f574dcd53c4ae616a2ad71a11
+
+Alternatively, you may try 2.6.16.17 - if it breaks in the same way, and
+2.6.16.16 works, this is most likely that VIA IRQ problem (and reverting
+the same patches from 2.6.16.17 should fix it).
+
+--Signature=_Thu__29_Jun_2006_13_41_41_+0400_hl3aL9HdjKMkqPaT
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.9.17 (GNU/Linux)
+
+iD8DBQFEo6BXW82GfkQfsqIRAuOGAJ9p5sIjEbGQb5o/BGveVdq+moi61wCdF4ij
+K3mMlDdpVLyZjWW21VFYYnc=
+=DwGv
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__29_Jun_2006_13_41_41_+0400_hl3aL9HdjKMkqPaT--
