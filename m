@@ -1,31 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: + via-pata-controller-xfer-fixes.patch added to -mm tree
-Date: Fri, 30 Jun 2006 11:03:23 +0100
-Message-ID: <1151661803.31392.1.camel@localhost.localdomain>
-References: <200606242214.k5OMEHCU005963@shell0.pdx.osdl.net>
-	 <449DBE88.5020809@garzik.org> <449DBFFD.2010700@garzik.org>
-	 <449E5445.60008@free.fr>  <44A4CE21.30009@tw.ibm.com>
+From: Andreas Mohr <andi@rhlx01.fht-esslingen.de>
+Subject: [PATCH -mm] ide_end_drive_cmd(): avoid instruction pipeline stall
+Date: Fri, 30 Jun 2006 18:13:51 +0200
+Message-ID: <20060630161351.GA17434@rhlx01.fht-esslingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:4252 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932231AbWF3JsR
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:48:17 -0400
-In-Reply-To: <44A4CE21.30009@tw.ibm.com>
+Received: from rhlx01.fht-esslingen.de ([129.143.116.10]:14741 "EHLO
+	rhlx01.fht-esslingen.de") by vger.kernel.org with ESMTP
+	id S1751797AbWF3QNw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Jun 2006 12:13:52 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: matthieu castet <castet.matthieu@free.fr>, Jeff Garzik <jeff@garzik.org>, akpm@osdl.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, B.Zolnierkiewicz@elka.pw.edu.pl, htejun@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@maxeymade.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>
 
-Ar Gwe, 2006-06-30 am 15:09 +0800, ysgrifennodd Albert Lee:
-> If it is the problem of the specific ATAPI device, all controllers
-> should be affected, not only VIA. So, strange not seeing the problem on
-> Promise.
-
-That may be because of the way the chips handle buffering of interrupt
-delivery and readahead/writebehind. I have two traces on the ALi
-chipsets that look like the delayed response problem.
+Use an independently-formatted "unsigned int" for data instead of a
+restrictive "u16" to avoid instruction fetch pipeline stalls
+probably caused by the byte calculations later.
 
 
+ide_end_drive_cmd() uses an u16 variable for the result of an INW()
+which it then does some byte masking operations on.
+On my P3/700, this results in a highly visible IFU_MEM_STALL oprofile blip
+when doing a simple "load 30 larger GUI apps in parallel" benchmark
+(which takes about 1:30 or so, BTW):
+The ide_end_drive_cmd() IFU_MEM_STALL amounts to 0.59% of all IFU_MEM_STALL
+events during the profiling, with this opcode line amounting to > 95%
+IFU_MEM_STALL within the function itself.
+
+Replacing the u16 by an architecture-independently formatted unsigned int
+to ease the byte-masking operations:
+
+	/* no u16 here: caused severe IFU_MEM_STALL! */
+	unsigned int data                               = hwif->INW(IDE_DATA_REG);
+	args->tfRegister[IDE_DATA_OFFSET]       = (data) & 0xFF;
+	args->hobRegister[IDE_DATA_OFFSET]      = (data >> 8) & 0xFF;
+
+completely puts ide_end_drive_cmd() off the IFU_MEM_STALL radar during
+repeated profiling attempts (after a fresh reboot with the modified kernel),
+as opposed to having been the *top* oprofile trace item before.
+
+I suppose that this is something like a textbook example of why it's
+sometimes not beneficial to not use native-sized (i.e., 32bit) variables,
+right?
+
+Run-tested on 2.6.17-mm4.
+
+Signed-off-by: Andreas Mohr <andi@lisas.de>
+
+
+diff -urN linux-2.6.17-mm4.orig/drivers/ide/ide-io.c linux-2.6.17-mm4.my/drivers/ide/ide-io.c
+--- linux-2.6.17-mm4.orig/drivers/ide/ide-io.c	2006-06-29 11:57:12.000000000 +0200
++++ linux-2.6.17-mm4.my/drivers/ide/ide-io.c	2006-06-30 11:54:12.000000000 +0200
+@@ -397,7 +397,8 @@
+ 			
+ 		if (args) {
+ 			if (args->tf_in_flags.b.data) {
+-				u16 data				= hwif->INW(IDE_DATA_REG);
++				/* no u16 here: caused severe IFU_MEM_STALL! */
++				unsigned int data				= hwif->INW(IDE_DATA_REG);
+ 				args->tfRegister[IDE_DATA_OFFSET]	= (data) & 0xFF;
+ 				args->hobRegister[IDE_DATA_OFFSET]	= (data >> 8) & 0xFF;
+ 			}
