@@ -1,94 +1,37 @@
-From: Albert Lee <albertcc@tw.ibm.com>
+From: castet.matthieu@free.fr
 Subject: Re: + via-pata-controller-xfer-fixes.patch added to -mm tree
-Date: Fri, 30 Jun 2006 15:09:21 +0800
-Message-ID: <44A4CE21.30009@tw.ibm.com>
-References: <200606242214.k5OMEHCU005963@shell0.pdx.osdl.net> <449DBE88.5020809@garzik.org> <449DBFFD.2010700@garzik.org> <449E5445.60008@free.fr>
-Reply-To: albertl@mail.com
+Date: Fri, 30 Jun 2006 09:55:34 +0200
+Message-ID: <1151654134.44a4d8f6dc320@imp5-g19.free.fr>
+References: <200606242214.k5OMEHCU005963@shell0.pdx.osdl.net> <449DBE88.5020809@garzik.org> <449DBFFD.2010700@garzik.org> <449E5445.60008@free.fr> <44A4CE21.30009@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:47020 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S932083AbWF3HJq
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Jun 2006 03:09:46 -0400
-In-Reply-To: <449E5445.60008@free.fr>
+Received: from smtp5-g19.free.fr ([212.27.42.35]:46045 "EHLO smtp5-g19.free.fr")
+	by vger.kernel.org with ESMTP id S1751408AbWF3Hzj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jun 2006 03:55:39 -0400
+In-Reply-To: <44A4CE21.30009@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: matthieu castet <castet.matthieu@free.fr>
+To: albertl@mail.com, Albert Lee <albertcc@tw.ibm.com>
 Cc: Jeff Garzik <jeff@garzik.org>, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, B.Zolnierkiewicz@elka.pw.edu.pl, htejun@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@maxeymade.com>
-
-matthieu castet wrote:
-> Jeff Garzik wrote:
-> 
->> Data point #3 (or #0...):
->>
->> This appears to be a _device_ that sends its interrupt early.
 
 Hi,
 
-I've tested the 4KUS CDR-6S48 drive + Promise pdc20275 controller
-with current libata upstream (to be 2.6.18. I guess current upstream doesn't
-have the via-pata-controller-xfer-fixes.patch). However, cannot reproduce
-the early interrupt problem on my machine.
+Selon Albert Lee <albertcc@tw.ibm.com>:
 
->>
->> If that is the case, the device may appear on any controller, not just
->> VIA, and we would have to handle it globally via a device special-case
->> in libata-core.
->>
-> 
-> For the record, the cdrom writer that need this quirk on pata via, works
-> on pata sil680.
-> But 3 microsecond is very short, and the problem could be hidden by the
-> controller, or other stuffs.
-> 
-> 
-
-If it is the problem of the specific ATAPI device, all controllers
-should be affected, not only VIA. So, strange not seeing the problem on
-Promise.
-
-Could you please test the current libata-upstream tree and
-turn on ATA_DEBUG and ATA_VERBOSE_DEBUG in include/linux/libata.h.
-
-If possible, could you also submit the libata log related to the
-early/lost irq.
-
-(Heard about the ATAPI early interrupt problem, but never had chance to see
-how libata behaves with such device. Really curious about this problem.)
-
-Thanks,
-
-Albert
----
-boot dmesg of the CDR-6S48 on my box.
-xfer mode set to UDMA/33 without problem.
-
-pata_pdc2027x 0000:02:05.0: version 0.74-ac3
-ACPI: PCI Interrupt 0000:02:05.0[A] -> Link [LNK1] -> GSI 10 (level, low) -> IRQ 10
-pata_pdc2027x 0000:02:05.0: PLL input clock 16740 kHz
-ata3: PATA max UDMA/133 cmd 0xE09E17C0 ctl 0xE09E1FDA bmdma 0xE09E1000 irq 10
-ata4: PATA max UDMA/133 cmd 0xE09E15C0 ctl 0xE09E1DDA bmdma 0xE09E1008 irq 10
-scsi2 : pata_pdc2027x
-ata3.00: configured for UDMA/33
-ata3.01: configured for UDMA/33
-scsi3 : pata_pdc2027x
-ata4.00: configured for UDMA/33
-  Vendor: LITE-ON   Model: CD-RW SOHR-5238S  Rev: 4S07
-  Type:   CD-ROM                             ANSI SCSI revision: 05
-  Vendor: HL-DT-ST  Model: DVDRAM GSA-4163B  Rev: A101
-  Type:   CD-ROM                             ANSI SCSI revision: 05
-  Vendor: CD-RW     Model: CDR-6S48          Rev: 2SG1
-  Type:   CD-ROM                             ANSI SCSI revision: 05
-sr0: scsi3-mmc drive: 93x/52x writer cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-sr 2:0:0:0: Attached scsi CD-ROM sr0
-sr1: scsi3-mmc drive: 40x/40x writer dvd-ram cd/rw xa/form2 cdda tray
-sr 2:0:1:0: Attached scsi CD-ROM sr1
-sr2: scsi3-mmc drive: 48x/48x writer cd/rw xa/form2 cdda tray
-sr 3:0:0:0: Attached scsi CD-ROM sr2
+>
+> Could you please test the current libata-upstream tree and
+> turn on ATA_DEBUG and ATA_VERBOSE_DEBUG in include/linux/libata.h.
+>
+Is there a easy way to get libata-upstream tree ?
+Do I need to install git for that or there are some snapshots somewhere ?
 
 
+> If possible, could you also submit the libata log related to the
+> early/lost irq.
+Where are this infos ?
 
+IRRC, libata counts lost irq, but display only a message each 1000 losts irq.
 
+Matthieu
