@@ -1,65 +1,90 @@
-From: Andreas Mohr <andi@rhlx01.fht-esslingen.de>
-Subject: [PATCH -mm] ide_end_drive_cmd(): avoid instruction pipeline stall
-Date: Fri, 30 Jun 2006 18:13:51 +0200
-Message-ID: <20060630161351.GA17434@rhlx01.fht-esslingen.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/2] libata: make both legacy ports share one host_set
+ , take #2
+Date: Fri, 30 Jun 2006 12:15:28 -0400
+Message-ID: <44A54E20.9050401@pobox.com>
+References: <44977C93.7090001@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=Big5
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rhlx01.fht-esslingen.de ([129.143.116.10]:14741 "EHLO
-	rhlx01.fht-esslingen.de") by vger.kernel.org with ESMTP
-	id S1751797AbWF3QNw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Jun 2006 12:13:52 -0400
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:45754 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932767AbWF3QPe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jun 2006 12:15:34 -0400
+In-Reply-To: <44977C93.7090001@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>
+To: Unicorn Chang <uchang@tw.ibm.com>
+Cc: linux-ide@vger.kernel.org, "Tejun Heo ]" <htejun@gmail.com>
 
-Use an independently-formatted "unsigned int" for data instead of a
-restrictive "u16" to avoid instruction fetch pipeline stalls
-probably caused by the byte calculations later.
+Unicorn Chang wrote:
+> @@ -5336,11 +5383,21 @@ int ata_device_add(const struct ata_prob
+>  				ap->ioaddr.cmd_addr,
+>  				ap->ioaddr.ctl_addr,
+>  				ap->ioaddr.bmdma_addr,
+> -				ent->irq);
+> +				irq);
+>  
+>  		ata_chk_status(ap);
+>  		host_set->ops->irq_clear(ap);
+>  		ata_eh_freeze_port(ap);	/* freeze port before requesting IRQ */
+> +
+> +		if (ap->ioaddr.irq){
+> +			/* obtain nonshared per-port irq */
+> +			rc = request_irq(irq, ent->port_ops->irq_handler, 0, DRV_NAME, ap);
+> +			if (rc) {
+> +				dev_printk(KERN_ERR, dev, "irq %lu request failed: %d\n",
+> +						irq, rc);
+> +				goto err_out;
+> +			}
+> +		}
+>  		count++;
+>  	}
+>  
+> @@ -5348,12 +5405,14 @@ int ata_device_add(const struct ata_prob
+>  		goto err_free_ret;
+>  
+>  	/* obtain irq, that is shared between channels */
+> -	rc = request_irq(ent->irq, ent->port_ops->irq_handler, ent->irq_flags,
+> -			 DRV_NAME, host_set);
+> -	if (rc) {
+> -		dev_printk(KERN_ERR, dev, "irq %lu request failed: %d\n",
+> -			   ent->irq, rc);
+> -		goto err_out;
+> +	if (ent->irq){
+> +		rc = request_irq(ent->irq, ent->port_ops->irq_handler, ent->irq_flags,
+> +				 DRV_NAME, host_set);
+> +		if (rc) {
+> +			dev_printk(KERN_ERR, dev, "irq %lu request failed: %d\n",
+> +				   ent->irq, rc);
+> +			goto err_out;
+> +		}
+>  	}
 
 
-ide_end_drive_cmd() uses an u16 variable for the result of an INW()
-which it then does some byte masking operations on.
-On my P3/700, this results in a highly visible IFU_MEM_STALL oprofile blip
-when doing a simple "load 30 larger GUI apps in parallel" benchmark
-(which takes about 1:30 or so, BTW):
-The ide_end_drive_cmd() IFU_MEM_STALL amounts to 0.59% of all IFU_MEM_STALL
-events during the profiling, with this opcode line amounting to > 95%
-IFU_MEM_STALL within the function itself.
+I'm sorry, but any patch that adds additional request_irq() calls to
+libata in this manner will be NAK'd.
 
-Replacing the u16 by an architecture-independently formatted unsigned int
-to ease the byte-masking operations:
+The current location of request_irq() inside libata is a design mistake
+on my part, and this sort of change compounds that mistake.
 
-	/* no u16 here: caused severe IFU_MEM_STALL! */
-	unsigned int data                               = hwif->INW(IDE_DATA_REG);
-	args->tfRegister[IDE_DATA_OFFSET]       = (data) & 0xFF;
-	args->hobRegister[IDE_DATA_OFFSET]      = (data >> 8) & 0xFF;
+An improved control flow, which moves request_irq() from libata-core to
+LLDD, might be:
 
-completely puts ide_end_drive_cmd() off the IFU_MEM_STALL radar during
-repeated profiling attempts (after a fresh reboot with the modified kernel),
-as opposed to having been the *top* oprofile trace item before.
+* LLDD initializes the host controller, in driver.c (as it does today)
+* LLDD, perhaps via bmdma helpers, makes certain that no pending
+interrupt conditions exist (many LLDDs do this today)
+* LLDD, perhaps via bmdma helpers, calls request_irq()
+	- problem: need to pass it a useful pointer
+	  -> move drivers to familiar model where LLDD allocs
+	     host_set and ports, does <stuff>, then
+	     registers host_set/ports with system
+* LLDD proceeds to register itself with libata core
 
-I suppose that this is something like a textbook example of why it's
-sometimes not beneficial to not use native-sized (i.e., 32bit) variables,
-right?
+Overall, the current libata request_irq() design restricts us from doing
+a better job with legacy ports (your case), and also prevents doing
+advanced stuff with MSI-X and other approaching technologies.
 
-Run-tested on 2.6.17-mm4.
-
-Signed-off-by: Andreas Mohr <andi@lisas.de>
+	Jeff
 
 
-diff -urN linux-2.6.17-mm4.orig/drivers/ide/ide-io.c linux-2.6.17-mm4.my/drivers/ide/ide-io.c
---- linux-2.6.17-mm4.orig/drivers/ide/ide-io.c	2006-06-29 11:57:12.000000000 +0200
-+++ linux-2.6.17-mm4.my/drivers/ide/ide-io.c	2006-06-30 11:54:12.000000000 +0200
-@@ -397,7 +397,8 @@
- 			
- 		if (args) {
- 			if (args->tf_in_flags.b.data) {
--				u16 data				= hwif->INW(IDE_DATA_REG);
-+				/* no u16 here: caused severe IFU_MEM_STALL! */
-+				unsigned int data				= hwif->INW(IDE_DATA_REG);
- 				args->tfRegister[IDE_DATA_OFFSET]	= (data) & 0xFF;
- 				args->hobRegister[IDE_DATA_OFFSET]	= (data >> 8) & 0xFF;
- 			}
