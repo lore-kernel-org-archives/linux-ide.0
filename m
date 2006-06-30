@@ -1,14 +1,14 @@
 From: Greg KH <greg@kroah.com>
 Subject: Re: long boot delay for SATA cdrom on current 2.6.17-git
-Date: Thu, 29 Jun 2006 22:10:47 -0700
-Message-ID: <20060630051047.GA8150@kroah.com>
+Date: Thu, 29 Jun 2006 22:20:22 -0700
+Message-ID: <20060630052021.GA4722@kroah.com>
 References: <20060630025341.GA4675@kroah.com> <20060630044912.GA2592@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:28564 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S1750971AbWF3FMv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jun 2006 01:12:51 -0400
+Received: from mail.kroah.org ([69.55.234.183]:152 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S1751007AbWF3FUp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jun 2006 01:20:45 -0400
 Content-Disposition: inline
 In-Reply-To: <20060630044912.GA2592@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,18 +18,6 @@ Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
 On Fri, Jun 30, 2006 at 01:49:12PM +0900, Tejun Heo wrote:
 > On Thu, Jun 29, 2006 at 07:53:41PM -0700, Greg KH wrote:
-> > With Linus's current -git tree (like 2.6.17-git13), it takes a long time
-> > to boot my laptop.  Turns out the SATA cdrom discovery process is taking
-> > up many seconds.
-> 
-> Was any previous version okay?  No timeout messages on boot?
-
-2.6.17 and previous was just fine, no timeout messages that I remember
-(definatly no slowdown on boot.)
-
-I can do a git bisect tomorrow to try to narrow it down to the single
-changeset if you want me to.
-
 > > This laptop does not have a SATA hard drive, only a SATA cdrom drive.
 > > I've included the boot log below and trimmed it after the delay
 > > happened, as I doubt anything after it would be relevant.
@@ -43,8 +31,9 @@ changeset if you want me to.
 > 
 > Please try the following patch.
 
-Ok, will do.
+Yeah, that worked great, no timeout issues anymore!  Do you want to see
+the boot log again from this?
 
-thanks,
+Thanks for the quick response.
 
 greg k-h
