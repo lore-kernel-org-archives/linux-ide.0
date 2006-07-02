@@ -1,70 +1,55 @@
 From: Albert Lee <albertcc@tw.ibm.com>
 Subject: Re: + via-pata-controller-xfer-fixes.patch added to -mm tree
-Date: Sun, 02 Jul 2006 21:59:23 +0800
-Message-ID: <44A7D13B.5020608@tw.ibm.com>
-References: <200606242214.k5OMEHCU005963@shell0.pdx.osdl.net>	 <449DBE88.5020809@garzik.org> <449DBFFD.2010700@garzik.org>	 <449E5445.60008@free.fr>  <44A4CE21.30009@tw.ibm.com> <1151661803.31392.1.camel@localhost.localdomain>
+Date: Sun, 02 Jul 2006 22:17:21 +0800
+Message-ID: <44A7D571.8030504@tw.ibm.com>
+References: <200606242214.k5OMEHCU005963@shell0.pdx.osdl.net> <449DBE88.5020809@garzik.org> <449DBFFD.2010700@garzik.org> <449E5445.60008@free.fr> <44A4CE21.30009@tw.ibm.com> <1151654134.44a4d8f6dc320@imp5-g19.free.fr> <44A4E01D.8020604@tw.ibm.com> <44A78599.9060405@free.fr> <44A7A0C8.80108@free.fr> <44A7C00A.7040001@tw.ibm.com> <44A7C4E5.6020202@free.fr>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:37792 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750724AbWGBN7h
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Jul 2006 09:59:37 -0400
-In-Reply-To: <1151661803.31392.1.camel@localhost.localdomain>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:7909 "EHLO e36.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751085AbWGBOR1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Jul 2006 10:17:27 -0400
+In-Reply-To: <44A7C4E5.6020202@free.fr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, matthieu castet <castet.matthieu@free.fr>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, akpm@osdl.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, B.Zolnierkiewicz@elka.pw.edu.pl, htejun@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@maxeymade.com>
+To: matthieu castet <castet.matthieu@free.fr>
+Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, B.Zolnierkiewicz@elka.pw.edu.pl, htejun@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@maxeymade.com>
 
-Alan Cox wrote:
-> Ar Gwe, 2006-06-30 am 15:09 +0800, ysgrifennodd Albert Lee:
+matthieu castet wrote:
+> Hi,
 > 
->>If it is the problem of the specific ATAPI device, all controllers
->>should be affected, not only VIA. So, strange not seeing the problem on
->>Promise.
+> Albert Lee wrote:
+> 
+>> Hi Matthieu,
+>>
+>> Thanks for the log. But could you please keep the VPRINTK() in the
+>> entrance of ata_host_intr()
+> 
+> If I do that, everything works correctly : the printk should take more
+> than 3 us, and the altsatus is not busy when we read it.
+> Here is the log without moving the printk :
+> http://castet.matthieu.free.fr/tmp/ata_log.orig
+
+Hmm, the Uncertainty principle also applies to kernel debugging. :)
+
+> 
+> The only thing I could do is to move the printk between altstatus and
+> status check and add one in idle_irq.
+> 
+> Will it be usefull for you ?
 > 
 > 
-> That may be because of the way the chips handle buffering of interrupt
-> delivery and readahead/writebehind. I have two traces on the ALi
-> chipsets that look like the delayed response problem.
-> 
+> Matthieu.
 > 
 > 
 
-Understood. Thanks for the explanation. Checked Matthieu's log, and yes
-it does look like early interrupt. Matthieu's Sil680 has no such problem.
-Also the problem is not reproducible with the same CD-RW drive on my
-Promise 20275 chip. So, the explanation makes sense.
+>From your previous log, the timeout transacation is clearly logged
+and it does look like early irq. Can compare/see both timeout and normal
+behaviors of libata from both logs. So, the logs are good enough.
 
-BTW, even for VIA, the early irq problem occur on 'set features - xfer mode'
-but IDENTIFY works ok. Just curious, does the ALi chip have the same
-symptom? i.e. Besides the 'set features' command, are there any other
-commands affected by the early irq problem? Say, any other PIO non-data
-commands?
+Thanks and appreciates for the logs, :)
 
---
-albert
-
-(The relevant part from Matthieu's log.)
-
-ata_dev_set_xfermode: set features - xfer mode
-ata4: ata_dev_select: ENTER, ata4: device 1, wait 1
-ata_tf_load_pio: feat 0x3 nsect 0x42 lba 0x0 0x0 0x0
-ata_tf_load_pio: device 0xB0
-ata_exec_command_pio: ata4: cmd 0xEF
-ata_host_intr: ata4: protocol 1 task_state 3  <=== early irq
-ata_port_flush_task: ENTER
-ata_port_flush_task: flush #1
-ata4: ata_port_flush_task: flush #2
-ata4: ata_port_flush_task: EXIT
-__ata_port_freeze: ata4 port frozen
-ata4.01: qc timeout (cmd 0xef)
-ata_dev_set_xfermode: EXIT, err_mask=4
-ata4.01: failed to set xfermode (err_mask=0x4)
-ata4.01: limiting speed to UDMA/25
-ata4: failed to recover some devices, retrying in 5 secs
-__ata_port_freeze: ata4 port frozen
-
+Albert
 
