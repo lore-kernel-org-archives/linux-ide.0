@@ -1,37 +1,31 @@
-From: "Geraldine" <mdlcvcvwllwn@truebritney.com>
-Subject: pens lip
-Date: Sun, 02 Jul 2006 15:02:40 -0600 (UYT)
-Message-ID: <44376918.2293953112933.JavaMail.name__8542.61446879736$1151870579$gmane$org@wj-hy02>
-Reply-To: "Geraldine" <mdlcvcvwllwn@truebritney.com>
+From: "Mark" <Markchosen@earthlink.net>
+Subject: Rock hard manhood, multiple explosions and several times more semen volume
+Date: Sun, 2 Jul 2006 19:38:04 -0400
+Message-ID: <61293787420503.AA3BC0CDF7@H3V4TV>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="ISO-8859-15"
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [85.206.69.31] ([85.206.69.31]:35601 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1750701AbWGBUCp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Jul 2006 16:02:45 -0400
+Received: from cpe-65-29-108-63.twmi.res.rr.com ([65.29.108.63]:6156 "EHLO
+	HEIHACHI.rgko0uo.net") by vger.kernel.org with ESMTP
+	id S1750770AbWGBXiZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Jul 2006 19:38:25 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-AMAZING QUALITY REPLICAS - MADE TO LAST A LIFETIME
-
-Pens • Watches • Handbags • Jewelry • Neckties • Clutches
-
-All our products are guaranteed to be free from manufacturer's defects,
-and are made with extreme care and attention to detail. You will be pleasantly
-surprised by the craftsmanship and strength of every product we carry.
-
-Visit Now to See our Current Specials!
-
-http://051.bankfrgrost.com
+Dear customer.
 
 
 
+Impress your girl with prolonged hardness, plentiful explosions and increased duration
+Enhanced male power and unlimited prowess with your girl The best products for the winning guys
 
 
+ http://www.syllabhd.com
 
 
+Absence makes the heart grow fonder. The early bird may get the worm, but the second mouse gets the cheese. Even in laughter the heart may ache, and joy may end in grief 
+ He Is Rich Enough That Wants Nothing
 
-
-seat skirt
-http://051.bankfrgrost.com/rm
