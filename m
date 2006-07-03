@@ -1,161 +1,149 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/11] libata: clean up debounce parameters and improve parameter selection
+Subject: [PATCH 03/11] libata: implement ATA_EHI_NO_AUTOPSY and QUIET
 Date: Mon, 3 Jul 2006 16:07:26 +0900
-Message-ID: <11519104461358-git-send-email-htejun@gmail.com>
+Message-ID: <11519104461920-git-send-email-htejun@gmail.com>
 References: <11519104451998-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:16620 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1750922AbWGCHGu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Jul 2006 03:06:50 -0400
-Received: by wr-out-0506.google.com with SMTP id 71so571501wri
-        for <linux-ide@vger.kernel.org>; Mon, 03 Jul 2006 00:06:50 -0700 (PDT)
+Received: from wx-out-0102.google.com ([66.249.82.193]:59460 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751039AbWGCHGv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Jul 2006 03:06:51 -0400
+Received: by wx-out-0102.google.com with SMTP id t10so500111wxc
+        for <linux-ide@vger.kernel.org>; Mon, 03 Jul 2006 00:06:51 -0700 (PDT)
 In-Reply-To: <11519104451998-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-The names of predefined debounce timing parameters didn't exactly
-match their usages.  Rename to more generic names and implement param
-selection helper sata_ehc_deb_timing() which uses EHI_HOTPLUGGED to
-select params.
-
-Combined with the previous EHI_RESUME_LINK differentiation, this makes
-parameter selection accurate.  e.g. user scan resumes link but normal
-deb param is used instead of hotplug param.
+Implement ATA_EHI_NO_AUTOPSY and QUIET.  These used to be implied by
+ATA_PFLAG_LOADING, but new power management and PMP support need to
+use these separately.  e.g. Suspend/resume operations shouldn't print
+full EH messages and resume shouldn't be recorded as an error.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   25 +++++++++++--------------
- drivers/scsi/sata_sil24.c  |    2 +-
- include/linux/libata.h     |   15 ++++++++++++---
- 3 files changed, 24 insertions(+), 18 deletions(-)
+ drivers/scsi/libata-core.c |    6 ++++--
+ drivers/scsi/libata-eh.c   |   31 +++++++++++++++++--------------
+ include/linux/libata.h     |    2 ++
+ 3 files changed, 23 insertions(+), 16 deletions(-)
 
-c392a0ecdc783060afead43fef27bb8a939c02d3
+64088c397150035e6d20cee81d83b00f82909bb5
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 3d6e41b..988f385 100644
+index 988f385..5364be0 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -62,9 +62,9 @@ #include <asm/byteorder.h>
- #include "libata.h"
+@@ -5439,6 +5439,7 @@ int ata_device_add(const struct ata_prob
+ 		}
  
- /* debounce timing parameters in msecs { interval, duration, timeout } */
--const unsigned long sata_deb_timing_boot[]		= {   5,  100, 2000 };
--const unsigned long sata_deb_timing_eh[]		= {  25,  500, 2000 };
--const unsigned long sata_deb_timing_before_fsrst[]	= { 100, 2000, 5000 };
-+const unsigned long sata_deb_timing_normal[]		= {   5,  100, 2000 };
-+const unsigned long sata_deb_timing_hotplug[]		= {  25,  500, 2000 };
-+const unsigned long sata_deb_timing_long[]		= { 100, 2000, 5000 };
+ 		if (ap->ops->error_handler) {
++			struct ata_eh_info *ehi = &ap->eh_info;
+ 			unsigned long flags;
  
- static unsigned int ata_dev_init_params(struct ata_device *dev,
- 					u16 heads, u16 sectors);
-@@ -2580,7 +2580,7 @@ static void ata_wait_spinup(struct ata_p
+ 			ata_port_probe(ap);
+@@ -5446,8 +5447,9 @@ int ata_device_add(const struct ata_prob
+ 			/* kick EH for boot probing */
+ 			spin_lock_irqsave(ap->lock, flags);
  
- 	/* first, debounce phy if SATA */
- 	if (ap->cbl == ATA_CBL_SATA) {
--		rc = sata_phy_debounce(ap, sata_deb_timing_eh);
-+		rc = sata_phy_debounce(ap, sata_deb_timing_hotplug);
+-			ap->eh_info.probe_mask = (1 << ATA_MAX_DEVICES) - 1;
+-			ap->eh_info.action |= ATA_EH_SOFTRESET;
++			ehi->probe_mask = (1 << ATA_MAX_DEVICES) - 1;
++			ehi->action |= ATA_EH_SOFTRESET;
++			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
  
- 		/* if debounced successfully and offline, no need to wait */
- 		if ((rc == 0 || rc == -EOPNOTSUPP) && ata_port_offline(ap))
-@@ -2616,7 +2616,7 @@ static void ata_wait_spinup(struct ata_p
- int ata_std_prereset(struct ata_port *ap)
- {
+ 			ap->pflags |= ATA_PFLAG_LOADING;
+ 			ata_port_schedule_eh(ap);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index d19666c..1e9e73d 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -322,14 +322,13 @@ void ata_scsi_error(struct Scsi_Host *ho
+ 	/* clean up */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+-	if (ap->pflags & ATA_PFLAG_LOADING) {
++	if (ap->pflags & ATA_PFLAG_LOADING)
+ 		ap->pflags &= ~ATA_PFLAG_LOADING;
+-	} else {
+-		if (ap->pflags & ATA_PFLAG_SCSI_HOTPLUG)
+-			queue_work(ata_aux_wq, &ap->hotplug_task);
+-		if (ap->pflags & ATA_PFLAG_RECOVERED)
+-			ata_port_printk(ap, KERN_INFO, "EH complete\n");
+-	}
++	else if (ap->pflags & ATA_PFLAG_SCSI_HOTPLUG)
++		queue_work(ata_aux_wq, &ap->hotplug_task);
++
++	if (ap->pflags & ATA_PFLAG_RECOVERED)
++		ata_port_printk(ap, KERN_INFO, "EH complete\n");
+ 
+ 	ap->pflags &= ~(ATA_PFLAG_SCSI_HOTPLUG | ATA_PFLAG_RECOVERED);
+ 
+@@ -759,8 +758,12 @@ static void ata_eh_about_to_do(struct at
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
++
+ 	ata_eh_clear_action(dev, &ap->eh_info, action);
+-	ap->pflags |= ATA_PFLAG_RECOVERED;
++
++	if (!(ap->eh_context.i.flags & ATA_EHI_QUIET))
++		ap->pflags |= ATA_PFLAG_RECOVERED;
++
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ }
+ 
+@@ -1274,6 +1277,9 @@ static void ata_eh_autopsy(struct ata_po
+ 
+ 	DPRINTK("ENTER\n");
+ 
++	if (ehc->i.flags & ATA_EHI_NO_AUTOPSY)
++		return;
++
+ 	/* obtain and analyze SError */
+ 	rc = sata_scr_read(ap, SCR_ERROR, &serror);
+ 	if (rc == 0) {
+@@ -1464,7 +1470,7 @@ static int ata_eh_reset(struct ata_port 
  	struct ata_eh_context *ehc = &ap->eh_context;
--	const unsigned long *timing;
-+	const unsigned long *timing = sata_ehc_deb_timing(ehc);
- 	int rc;
- 
- 	/* handle link resume & hotplug spinup */
-@@ -2634,11 +2634,6 @@ int ata_std_prereset(struct ata_port *ap
- 
- 	/* if SATA, resume phy */
- 	if (ap->cbl == ATA_CBL_SATA) {
--		if (ap->pflags & ATA_PFLAG_LOADING)
--			timing = sata_deb_timing_boot;
--		else
--			timing = sata_deb_timing_eh;
--
- 		rc = sata_phy_resume(ap, timing);
- 		if (rc && rc != -EOPNOTSUPP) {
- 			/* phy resume failed */
-@@ -2726,6 +2721,8 @@ int ata_std_softreset(struct ata_port *a
-  */
- int sata_std_hardreset(struct ata_port *ap, unsigned int *class)
+ 	unsigned int *classes = ehc->classes;
+ 	int tries = ATA_EH_RESET_TRIES;
+-	int verbose = !(ap->pflags & ATA_PFLAG_LOADING);
++	int verbose = !(ehc->i.flags & ATA_EHI_QUIET);
+ 	unsigned int action;
+ 	ata_reset_fn_t reset;
+ 	int i, did_followup_srst, rc;
+@@ -1907,11 +1913,8 @@ void ata_do_eh(struct ata_port *ap, ata_
+ 	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+ 	       ata_postreset_fn_t postreset)
  {
-+	struct ata_eh_context *ehc = &ap->eh_context;
-+	const unsigned long *timing = sata_ehc_deb_timing(ehc);
- 	u32 scontrol;
- 	int rc;
- 
-@@ -2763,7 +2760,7 @@ int sata_std_hardreset(struct ata_port *
- 	msleep(1);
- 
- 	/* bring phy back */
--	sata_phy_resume(ap, sata_deb_timing_eh);
-+	sata_phy_resume(ap, timing);
- 
- 	/* TODO: phy layer with polling, timeouts, etc. */
- 	if (ata_port_offline(ap)) {
-@@ -5844,9 +5841,9 @@ u32 ata_wait_register(void __iomem *reg,
-  * Do not depend on ABI/API stability.
-  */
- 
--EXPORT_SYMBOL_GPL(sata_deb_timing_boot);
--EXPORT_SYMBOL_GPL(sata_deb_timing_eh);
--EXPORT_SYMBOL_GPL(sata_deb_timing_before_fsrst);
-+EXPORT_SYMBOL_GPL(sata_deb_timing_normal);
-+EXPORT_SYMBOL_GPL(sata_deb_timing_hotplug);
-+EXPORT_SYMBOL_GPL(sata_deb_timing_long);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
- EXPORT_SYMBOL_GPL(ata_std_ports);
- EXPORT_SYMBOL_GPL(ata_device_add);
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index b5f8fa9..fa3268d 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -607,7 +607,7 @@ static int sil24_hardreset(struct ata_po
- 	/* SStatus oscillates between zero and valid status after
- 	 * DEV_RST, debounce it.
- 	 */
--	rc = sata_phy_debounce(ap, sata_deb_timing_before_fsrst);
-+	rc = sata_phy_debounce(ap, sata_deb_timing_long);
- 	if (rc) {
- 		reason = "PHY debouncing failed";
- 		goto err;
+-	if (!(ap->pflags & ATA_PFLAG_LOADING)) {
+-		ata_eh_autopsy(ap);
+-		ata_eh_report(ap);
+-	}
+-
++	ata_eh_autopsy(ap);
++	ata_eh_report(ap);
+ 	ata_eh_recover(ap, prereset, softreset, hardreset, postreset);
+ 	ata_eh_finish(ap);
+ }
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 4d4ed2c..2f7bbfc 100644
+index 2f7bbfc..36938ae 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -629,9 +629,18 @@ struct ata_timing {
+@@ -260,6 +260,8 @@ enum {
+ 	/* ata_eh_info->flags */
+ 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
+ 	ATA_EHI_RESUME_LINK	= (1 << 1),  /* need to resume link */
++	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
++	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
  
- #define FIT(v,vmin,vmax)	max_t(short,min_t(short,v,vmax),vmin)
+ 	ATA_EHI_DID_RESET	= (1 << 16), /* already reset this port */
  
--extern const unsigned long sata_deb_timing_boot[];
--extern const unsigned long sata_deb_timing_eh[];
--extern const unsigned long sata_deb_timing_before_fsrst[];
-+extern const unsigned long sata_deb_timing_normal[];
-+extern const unsigned long sata_deb_timing_hotplug[];
-+extern const unsigned long sata_deb_timing_long[];
-+
-+static inline const unsigned long *
-+sata_ehc_deb_timing(struct ata_eh_context *ehc)
-+{
-+	if (ehc->i.flags & ATA_EHI_HOTPLUGGED)
-+		return sata_deb_timing_hotplug;
-+	else
-+		return sata_deb_timing_normal;
-+}
- 
- extern void ata_port_probe(struct ata_port *);
- extern void __sata_phy_reset(struct ata_port *ap);
 -- 
 1.3.2
 
