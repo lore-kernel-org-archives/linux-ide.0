@@ -1,176 +1,343 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/11] sata_sil24: separate out sil24_init_controller()
-Date: Mon, 3 Jul 2006 16:07:27 +0900
-Message-ID: <1151910447886-git-send-email-htejun@gmail.com>
+Subject: [PATCH 05/11] libata: implement PM EH actions
+Date: Mon, 3 Jul 2006 16:07:26 +0900
+Message-ID: <11519104462505-git-send-email-htejun@gmail.com>
 References: <11519104451998-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:16620 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.228]:16876 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751140AbWGCHG6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Jul 2006 03:06:58 -0400
-Received: by wr-out-0506.google.com with SMTP id 71so571501wri
-        for <linux-ide@vger.kernel.org>; Mon, 03 Jul 2006 00:06:58 -0700 (PDT)
+	id S1751120AbWGCHG4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Jul 2006 03:06:56 -0400
+Received: by wr-out-0506.google.com with SMTP id 71so571500wri
+        for <linux-ide@vger.kernel.org>; Mon, 03 Jul 2006 00:06:56 -0700 (PDT)
 In-Reply-To: <11519104451998-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out controller initialization from sil24_init_one() into
-sil24_init_controller().  This will be used by resume.
+Implement two PM per-dev EH actions - ATA_EH_SUSPEND and
+ATA_EH_RESUME.  Each action puts the target device into suspended mode
+and resumes from it respectively.
+
+Once a device is put to suspended mode, no EH operations other than
+RESUME is allowed on the device.  The device will stay suspended till
+it gets resumed and thus reset and revalidated.  To implement this, a
+new device state helper - ata_dev_ready() - is implemented and used in
+EH action implementations to make them operate only on attached &
+running devices.
+
+If all possible devices on a port are suspended, reset is skipped too.
+This prevents spurious events including hotplug events from disrupting
+suspended devices.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/sata_sil24.c |  107 ++++++++++++++++++++++++++-------------------
- 1 files changed, 62 insertions(+), 45 deletions(-)
+ drivers/scsi/libata-core.c |    5 +
+ drivers/scsi/libata-eh.c   |  185 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h     |   12 +++
+ 3 files changed, 198 insertions(+), 4 deletions(-)
 
-efd4e54c03974c6c924c3123b612f589b51ab9b1
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index fa3268d..16565e2 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -988,6 +988,64 @@ static void sil24_host_stop(struct ata_h
- 	kfree(hpriv);
+f84525e6a5fa6f79bd150cb7c382dc2e43857ecd
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 5364be0..7b21803 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2138,7 +2138,7 @@ int ata_set_mode(struct ata_port *ap, st
+ 		 * return error code and failing device on failure.
+ 		 */
+ 		for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-			if (ata_dev_enabled(&ap->device[i])) {
++			if (ata_dev_ready(&ap->device[i])) {
+ 				ap->ops->set_mode(ap);
+ 				break;
+ 			}
+@@ -2204,7 +2204,8 @@ int ata_set_mode(struct ata_port *ap, st
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		dev = &ap->device[i];
+ 
+-		if (!ata_dev_enabled(dev))
++		/* don't udpate suspended devices' xfer mode */
++		if (!ata_dev_ready(dev))
+ 			continue;
+ 
+ 		rc = ata_dev_set_mode(dev);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 1e9e73d..b9df49a 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1610,7 +1610,7 @@ static int ata_eh_revalidate_and_attach(
+ 		dev = &ap->device[i];
+ 		action = ata_eh_dev_action(dev);
+ 
+-		if (action & ATA_EH_REVALIDATE && ata_dev_enabled(dev)) {
++		if (action & ATA_EH_REVALIDATE && ata_dev_ready(dev)) {
+ 			if (ata_port_offline(ap)) {
+ 				rc = -EIO;
+ 				break;
+@@ -1653,6 +1653,164 @@ static int ata_eh_revalidate_and_attach(
+ 	return rc;
  }
  
-+static void sil24_init_controller(struct pci_dev *pdev, int n_ports,
-+				  unsigned long host_flags,
-+				  void __iomem *host_base,
-+				  void __iomem *port_base)
++/**
++ *	ata_eh_suspend - handle suspend EH action
++ *	@ap: target host port
++ *	@r_failed_dev: result parameter to indicate failing device
++ *
++ *	Handle suspend EH action.  Disk devices are spinned down and
++ *	other types of devices are just marked suspended.  Once
++ *	suspended, no EH action to the device is allowed until it is
++ *	resumed.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise
++ */
++static int ata_eh_suspend(struct ata_port *ap, struct ata_device **r_failed_dev)
 +{
-+	u32 tmp;
-+	int i;
++	struct ata_device *dev;
++	int i, rc = 0;
 +
-+	/* GPIO off */
-+	writel(0, host_base + HOST_FLASH_CMD);
++	DPRINTK("ENTER\n");
 +
-+	/* clear global reset & mask interrupts during initialization */
-+	writel(0, host_base + HOST_CTRL);
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		unsigned long flags;
++		unsigned int action, err_mask;
 +
-+	/* init ports */
-+	for (i = 0; i < n_ports; i++) {
-+		void __iomem *port = port_base + i * PORT_REGS_SIZE;
++		dev = &ap->device[i];
++		action = ata_eh_dev_action(dev);
 +
-+		/* Initial PHY setting */
-+		writel(0x20c, port + PORT_PHY_CFG);
++		if (!ata_dev_enabled(dev) || !(action & ATA_EH_SUSPEND))
++			continue;
 +
-+		/* Clear port RST */
-+		tmp = readl(port + PORT_CTRL_STAT);
-+		if (tmp & PORT_CS_PORT_RST) {
-+			writel(PORT_CS_PORT_RST, port + PORT_CTRL_CLR);
-+			tmp = ata_wait_register(port + PORT_CTRL_STAT,
-+						PORT_CS_PORT_RST,
-+						PORT_CS_PORT_RST, 10, 100);
-+			if (tmp & PORT_CS_PORT_RST)
-+				dev_printk(KERN_ERR, &pdev->dev,
-+				           "failed to clear port RST\n");
++		WARN_ON(dev->flags & ATA_DFLAG_SUSPENDED);
++
++		ata_eh_about_to_do(ap, dev, ATA_EH_SUSPEND);
++
++		if (dev->class == ATA_DEV_ATA && !(action & ATA_EH_PM_FREEZE)) {
++			/* flush cache */
++			rc = ata_flush_cache(dev);
++			if (rc)
++				break;
++
++			/* spin down */
++			err_mask = ata_do_simple_cmd(dev, ATA_CMD_STANDBYNOW1);
++			if (err_mask) {
++				ata_dev_printk(dev, KERN_ERR, "failed to "
++					       "spin down (err_mask=0x%x)\n",
++					       err_mask);
++				rc = -EIO;
++				break;
++			}
 +		}
 +
-+		/* Configure IRQ WoC */
-+		if (host_flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
-+		else
-+			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
++		spin_lock_irqsave(ap->lock, flags);
++		dev->flags |= ATA_DFLAG_SUSPENDED;
++		spin_unlock_irqrestore(ap->lock, flags);
 +
-+		/* Zero error counters. */
-+		writel(0x8000, port + PORT_DECODE_ERR_THRESH);
-+		writel(0x8000, port + PORT_CRC_ERR_THRESH);
-+		writel(0x8000, port + PORT_HSHK_ERR_THRESH);
-+		writel(0x0000, port + PORT_DECODE_ERR_CNT);
-+		writel(0x0000, port + PORT_CRC_ERR_CNT);
-+		writel(0x0000, port + PORT_HSHK_ERR_CNT);
-+
-+		/* Always use 64bit activation */
-+		writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
-+
-+		/* Clear port multiplier enable and resume bits */
-+		writel(PORT_CS_PM_EN | PORT_CS_RESUME, port + PORT_CTRL_CLR);
++		ata_eh_done(ap, dev, ATA_EH_SUSPEND);
 +	}
 +
-+	/* Turn on interrupts */
-+	writel(IRQ_STAT_4PORTS, host_base + HOST_CTRL);
++	if (rc)
++		*r_failed_dev = dev;
++
++	DPRINTK("EXIT\n");
++	return 0;
 +}
 +
- static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
++/**
++ *	ata_eh_prep_resume - prep for resume EH action
++ *	@ap: target host port
++ *
++ *	Clear SUSPENDED in preparation for scheduled resume actions.
++ *	This allows other parts of EH to access the devices being
++ *	resumed.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ */
++static void ata_eh_prep_resume(struct ata_port *ap)
++{
++	struct ata_device *dev;
++	unsigned long flags;
++	int i;
++
++	DPRINTK("ENTER\n");
++
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		unsigned int action;
++
++		dev = &ap->device[i];
++		action = ata_eh_dev_action(dev);
++
++		if (!ata_dev_enabled(dev) || !(action & ATA_EH_RESUME))
++			continue;
++
++		spin_lock_irqsave(ap->lock, flags);
++		dev->flags &= ~ATA_DFLAG_SUSPENDED;
++		spin_unlock_irqrestore(ap->lock, flags);
++	}
++
++	DPRINTK("EXIT\n");
++}
++
++/**
++ *	ata_eh_resume - handle resume EH action
++ *	@ap: target host port
++ *	@r_failed_dev: result parameter to indicate failing device
++ *
++ *	Handle resume EH action.  Target devices are already reset and
++ *	revalidated.  Spinning up is the only operation left.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise
++ */
++static int ata_eh_resume(struct ata_port *ap, struct ata_device **r_failed_dev)
++{
++	struct ata_device *dev;
++	int i, rc = 0;
++
++	DPRINTK("ENTER\n");
++
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		unsigned int action, err_mask;
++
++		dev = &ap->device[i];
++		action = ata_eh_dev_action(dev);
++
++		if (!ata_dev_enabled(dev) || !(action & ATA_EH_RESUME))
++			continue;
++
++		ata_eh_about_to_do(ap, dev, ATA_EH_RESUME);
++
++		if (dev->class == ATA_DEV_ATA && !(action & ATA_EH_PM_FREEZE)) {
++			err_mask = ata_do_simple_cmd(dev,
++						     ATA_CMD_IDLEIMMEDIATE);
++			if (err_mask) {
++				ata_dev_printk(dev, KERN_ERR, "failed to "
++					       "spin up (err_mask=0x%x)\n",
++					       err_mask);
++				rc = -EIO;
++				break;
++			}
++		}
++
++		ata_eh_done(ap, dev, ATA_EH_RESUME);
++	}
++
++	if (rc)
++		*r_failed_dev = dev;
++
++	DPRINTK("EXIT\n");
++	return 0;
++}
++
+ static int ata_port_nr_enabled(struct ata_port *ap)
  {
- 	static int printed_version = 0;
-@@ -1076,9 +1134,6 @@ static int sil24_init_one(struct pci_dev
+ 	int i, cnt = 0;
+@@ -1678,6 +1836,18 @@ static int ata_eh_skip_recovery(struct a
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+ 	int i;
+ 
++	/* skip if all possible devices are suspended */
++	for (i = 0; i < ata_port_max_devices(ap); i++) {
++		struct ata_device *dev = &ap->device[i];
++
++		if (ata_dev_absent(dev) || ata_dev_ready(dev))
++			break;
++	}
++
++	if (i == ata_port_max_devices(ap))
++		return 1;
++
++	/* always thaw frozen port and recover failed devices */
+ 	if (ap->pflags & ATA_PFLAG_FROZEN || ata_port_nr_enabled(ap))
+ 		return 0;
+ 
+@@ -1752,6 +1922,9 @@ static int ata_eh_recover(struct ata_por
+ 	if (ap->pflags & ATA_PFLAG_UNLOADING)
+ 		goto out;
+ 
++	/* prep for resume */
++	ata_eh_prep_resume(ap);
++
+ 	/* skip EH if possible. */
+ 	if (ata_eh_skip_recovery(ap))
+ 		ehc->i.action = 0;
+@@ -1779,6 +1952,11 @@ static int ata_eh_recover(struct ata_por
+ 	if (rc)
+ 		goto dev_fail;
+ 
++	/* resume devices */
++	rc = ata_eh_resume(ap, &dev);
++	if (rc)
++		goto dev_fail;
++
+ 	/* configure transfer mode if the port has been reset */
+ 	if (ehc->i.flags & ATA_EHI_DID_RESET) {
+ 		rc = ata_set_mode(ap, &dev);
+@@ -1788,6 +1966,11 @@ static int ata_eh_recover(struct ata_por
  		}
  	}
  
--	/* GPIO off */
--	writel(0, host_base + HOST_FLASH_CMD);
--
- 	/* Apply workaround for completion IRQ loss on PCI-X errata */
- 	if (probe_ent->host_flags & SIL24_FLAG_PCIX_IRQ_WOC) {
- 		tmp = readl(host_base + HOST_CTRL);
-@@ -1090,56 +1145,18 @@ static int sil24_init_one(struct pci_dev
- 			probe_ent->host_flags &= ~SIL24_FLAG_PCIX_IRQ_WOC;
- 	}
++	/* suspend devices */
++	rc = ata_eh_suspend(ap, &dev);
++	if (rc)
++		goto dev_fail;
++
+ 	goto out;
  
--	/* clear global reset & mask interrupts during initialization */
--	writel(0, host_base + HOST_CTRL);
--
- 	for (i = 0; i < probe_ent->n_ports; i++) {
--		void __iomem *port = port_base + i * PORT_REGS_SIZE;
--		unsigned long portu = (unsigned long)port;
-+		unsigned long portu =
-+			(unsigned long)port_base + i * PORT_REGS_SIZE;
+  dev_fail:
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 2aa1398..363c750 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -131,6 +131,7 @@ enum {
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
  
- 		probe_ent->port[i].cmd_addr = portu;
- 		probe_ent->port[i].scr_addr = portu + PORT_SCONTROL;
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
++	ATA_DFLAG_SUSPENDED	= (1 << 9), /* device suspended */
+ 	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
  
- 		ata_std_ports(&probe_ent->port[i]);
--
--		/* Initial PHY setting */
--		writel(0x20c, port + PORT_PHY_CFG);
--
--		/* Clear port RST */
--		tmp = readl(port + PORT_CTRL_STAT);
--		if (tmp & PORT_CS_PORT_RST) {
--			writel(PORT_CS_PORT_RST, port + PORT_CTRL_CLR);
--			tmp = ata_wait_register(port + PORT_CTRL_STAT,
--						PORT_CS_PORT_RST,
--						PORT_CS_PORT_RST, 10, 100);
--			if (tmp & PORT_CS_PORT_RST)
--				dev_printk(KERN_ERR, &pdev->dev,
--				           "failed to clear port RST\n");
--		}
--
--		/* Configure IRQ WoC */
--		if (probe_ent->host_flags & SIL24_FLAG_PCIX_IRQ_WOC)
--			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
--		else
--			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
--
--		/* Zero error counters. */
--		writel(0x8000, port + PORT_DECODE_ERR_THRESH);
--		writel(0x8000, port + PORT_CRC_ERR_THRESH);
--		writel(0x8000, port + PORT_HSHK_ERR_THRESH);
--		writel(0x0000, port + PORT_DECODE_ERR_CNT);
--		writel(0x0000, port + PORT_CRC_ERR_CNT);
--		writel(0x0000, port + PORT_HSHK_ERR_CNT);
--
--		/* Always use 64bit activation */
--		writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
--
--		/* Clear port multiplier enable and resume bits */
--		writel(PORT_CS_PM_EN | PORT_CS_RESUME, port + PORT_CTRL_CLR);
- 	}
+ 	ATA_DFLAG_DETACH	= (1 << 16),
+@@ -253,9 +254,13 @@ enum {
+ 	ATA_EH_REVALIDATE	= (1 << 0),
+ 	ATA_EH_SOFTRESET	= (1 << 1),
+ 	ATA_EH_HARDRESET	= (1 << 2),
++	ATA_EH_SUSPEND		= (1 << 3),
++	ATA_EH_RESUME		= (1 << 4),
++	ATA_EH_PM_FREEZE	= (1 << 5),
  
--	/* Turn on interrupts */
--	writel(IRQ_STAT_4PORTS, host_base + HOST_CTRL);
-+	sil24_init_controller(pdev, probe_ent->n_ports, probe_ent->host_flags,
-+			      host_base, port_base);
+ 	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
+-	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
++	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_SUSPEND |
++				  ATA_EH_RESUME | ATA_EH_PM_FREEZE,
  
- 	pci_set_master(pdev);
+ 	/* ata_eh_info->flags */
+ 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
+@@ -944,6 +949,11 @@ static inline unsigned int ata_dev_absen
+ 	return ata_class_absent(dev->class);
+ }
  
++static inline unsigned int ata_dev_ready(const struct ata_device *dev)
++{
++	return ata_dev_enabled(dev) && !(dev->flags & ATA_DFLAG_SUSPENDED);
++}
++
+ /*
+  * port helpers
+  */
 -- 
 1.3.2
 
