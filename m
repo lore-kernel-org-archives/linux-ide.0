@@ -1,16 +1,16 @@
 From: alan@lxorguk.ukuu.org.uk
-Subject: [PATCH 06/24] Sort out MC65 compile for now
+Subject: [PATCH 05/24] pata_ali: Revisions below 0x20 need CD config poking too
 Date: Tue, 4 Jul 2006 18:14:32 +0000 (UTC)
-Message-ID: <11520361123190-git-send-email-alan@lxorguk.ukuu.org.uk>
-References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036109145-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036109888-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361102106-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036111326-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361121401-git-send-email-alan@lxorguk.ukuu.org.uk>
+Message-ID: <11520361121401-git-send-email-alan@lxorguk.ukuu.org.uk>
+References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036109145-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036109888-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361102106-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036111326-git-send-email-alan@lxorguk.ukuu.org.uk>
 Reply-To: alan@lxorguk.ukuu.org.uk
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43662 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45454 "EHLO
 	hraefn.swansea.linux.org.uk") by vger.kernel.org with ESMTP
-	id S932299AbWGDSOP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jul 2006 14:14:15 -0400
-Date: Maw, 04 Gor 2006 19:01:30 +0100
-In-Reply-To: <11520361121401-git-send-email-alan@lxorguk.ukuu.org.uk>
+	id S932302AbWGDSOS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Jul 2006 14:14:18 -0400
+Date: Maw, 04 Gor 2006 19:01:29 +0100
+In-Reply-To: <1152036111326-git-send-email-alan@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com
@@ -23,22 +23,40 @@ Signed-off-by: Alan Cox <alan@redhat.com>
 
 ---
 
- drivers/scsi/pata_amd.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/scsi/pata_ali.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-1f5d15d9442ff8aabda8e77f1446287e668987a2
-diff --git a/drivers/scsi/pata_amd.c b/drivers/scsi/pata_amd.c
-index d208581..c9e87d0 100644
---- a/drivers/scsi/pata_amd.c
-+++ b/drivers/scsi/pata_amd.c
-@@ -675,7 +675,6 @@ static const struct pci_device_id amd[] 
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8 },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8 },
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8 },
- 	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE,		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 9 },
- 	{ 0, },
- };
+4592b74f2e12f8da82f18f2ee073907398daaac1
+diff --git a/drivers/scsi/pata_ali.c b/drivers/scsi/pata_ali.c
+index eacc13b..91f00c7 100644
+--- a/drivers/scsi/pata_ali.c
++++ b/drivers/scsi/pata_ali.c
+@@ -34,7 +34,7 @@
+ #include <linux/dmi.h>
+ 
+ #define DRV_NAME "pata_ali"
+-#define DRV_VERSION "0.6.3"
++#define DRV_VERSION "0.6.4"
+ 
+ /*
+  *	Cable special cases
+@@ -283,6 +283,7 @@ static void ali_set_dmamode(struct ata_p
+ 	struct ata_device *pair = ata_dev_pair(adev);
+ 	struct ata_timing t;
+ 	unsigned long T =  1000000000 / 33333;	/* PCI clock based */
++	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
+ 
+ 
+ 	if (adev->class == ATA_DEV_ATA)
+@@ -627,7 +628,7 @@ static int ali_init_one(struct pci_dev *
+ 		 * via 0x54/55.
+ 		 */
+ 		pci_read_config_byte(pdev, 0x53, &tmp);
+-		if (rev == 0x20)
++		if (rev <= 0x20)
+ 			tmp &= ~0x02;
+ 		if (rev == 0xc7)
+ 			tmp |= 0x03;
 -- 
 1.2.GIT
 
