@@ -1,114 +1,102 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/3] libata: add hp-poll support to controllers with hotplug interrutps
+Subject: [RFT][PATCHSET] hotplug polling
 Date: Tue, 4 Jul 2006 23:16:17 +0900
-Message-ID: <11520225772128-git-send-email-htejun@gmail.com>
-References: <11520225771424-git-send-email-htejun@gmail.com>
+Message-ID: <11520225771424-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:20829 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932256AbWGDOPl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jul 2006 10:15:41 -0400
-Received: by py-out-1112.google.com with SMTP id t32so1859047pyc
-        for <linux-ide@vger.kernel.org>; Tue, 04 Jul 2006 07:15:40 -0700 (PDT)
-In-Reply-To: <11520225771424-git-send-email-htejun@gmail.com>
+Received: from wx-out-0102.google.com ([66.249.82.200]:50392 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932254AbWGDOPm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Jul 2006 10:15:42 -0400
+Received: by wx-out-0102.google.com with SMTP id i28so654870wxd
+        for <linux-ide@vger.kernel.org>; Tue, 04 Jul 2006 07:15:41 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, htejun@gmail.com
 
-This patch adds hp-poll support to the following drivers.
+Hello, all.
+
+This is the first take of hotplug polling patchset.  As the name
+implies, this patchset implements hotplug by polling.
+
+libata core layer implements hp-poll infrastructure.  It interacts
+with LLDs with three callbacks - hp_poll_activate(),
+hp_poll_deactivate() and hp_poll().  libata core layer is responsible
+for activating and deactivating at the right time, invoking the poll
+callback periodically while activated, and generate hotplug event when
+poll callback indicates something has happened.
+
+hp-poll is used for the following cases.
+
+* To detect hotplug events on frozen ports after reset fails such that
+  replacing or replugging the failing device make libata automatically
+  retry the port.
+
+* To detect hotplug events on LLDs without hotplug interrupt.
+
+The following drivers are converted to use hp-poll on failed ports.
 
 * ahci
-* sata_nv (nf2 and c804 only)
+* sata_nv (nf2 and ck804 only) [untested]
 * sata_sil
 * sata_sil24
 
-All the above controllers are capable of hotplug-by-interrupt and
-hp-poll will be used only for watching disabled ports.
+The following drivers are converted to use hp-poll for hotplug
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+* sata_nv (generic) [untested]
+* sata_sis [untested]
+* sata_svw [untested]
+* sata_uli [untested]
+* sata_via
+* sata_vsc [untested]
 
----
+There are three variants of sata_std_poll() - regular, port-exclusive
+and host_set-exclusive.  port-exclusive skips polling if command is in
+progress to the port.  host_set-exclusive skips polling if one or more
+commands are in progress to any port in the host_set.  This is because
+some controllers lock up if SCR regs are accessed while command is in
+progress.
 
- drivers/scsi/ahci.c       |    4 +++-
- drivers/scsi/sata_nv.c    |    4 ++++
- drivers/scsi/sata_sil.c   |    2 ++
- drivers/scsi/sata_sil24.c |    3 +++
- 4 files changed, 12 insertions(+), 1 deletions(-)
+Well, the port-exclusive case is dumb but understandable; however,
+sata_via (vt8237) takes it to the next level and may lock up if any
+available port in the host_set is active when a SCR reg is accessed,
+so it needs host_set-exclusive version.  It took me two days of
+boredom to figure out that things can be made THAT dumb.  Their new
+AHCI controller also seems to require host_set-wide EH ops to recover
+from errors.  Well, I guess they consider requiring host_set-wide ops
+a feature or something.  :-( Note that this means that the current
+libata EH may lock up the whole machine on vt8237 if EH occurs at a
+bad time.
 
-15decf1370fe778e6df39cb8944cf5568e46b5b5
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 54f01b2..a404ec0 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -253,10 +253,12 @@ static const struct ata_port_operations 
- 
- 	.freeze			= ahci_freeze,
- 	.thaw			= ahci_thaw,
--
- 	.error_handler		= ahci_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
- 
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
-+
- 	.port_start		= ahci_port_start,
- 	.port_stop		= ahci_port_stop,
- };
-diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
-index 5cc42c6..79b0550 100644
---- a/drivers/scsi/sata_nv.c
-+++ b/drivers/scsi/sata_nv.c
-@@ -217,6 +217,8 @@ static const struct ata_port_operations 
- 	.thaw			= nv_nf2_thaw,
- 	.error_handler		= nv_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
- 	.data_xfer		= ata_pio_data_xfer,
- 	.irq_handler		= nv_nf2_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-@@ -244,6 +246,8 @@ static const struct ata_port_operations 
- 	.thaw			= nv_ck804_thaw,
- 	.error_handler		= nv_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
- 	.data_xfer		= ata_pio_data_xfer,
- 	.irq_handler		= nv_ck804_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-diff --git a/drivers/scsi/sata_sil.c b/drivers/scsi/sata_sil.c
-index 9f2a48a..01abe09 100644
---- a/drivers/scsi/sata_sil.c
-+++ b/drivers/scsi/sata_sil.c
-@@ -205,6 +205,8 @@ static const struct ata_port_operations 
- 	.thaw			= sil_thaw,
- 	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
- 	.irq_handler		= sil_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
- 	.scr_read		= sil_scr_read,
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index b8e590d..0904088 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -405,6 +405,9 @@ static const struct ata_port_operations 
- 	.error_handler		= sil24_error_handler,
- 	.post_internal_cmd	= sil24_post_internal_cmd,
- 
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
-+
- 	.port_start		= sil24_port_start,
- 	.port_stop		= sil24_port_stop,
- 	.host_stop		= sil24_host_stop,
--- 
-1.3.2
+Currently, all 'untested' LLDs are using the regular version and some
+of them might need to use a dumber version.  So, we need some testing
+here.
+
+This patchset is against
+
+  upstream (2154cfa6ba560401d25f6cc083fe3fb996cbb571)
+  + add-ap-pflags [1]
+  + fix-ehc_i_action-setting-in-ata_eh_autopsy [2]
+  + cosmetic-replace-ap_lock [3]
+  + new PM patchset [4]
+
+This patchset is also available in the following git tree.
+
+  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=hp-poll
+  git://htj.dyndns.org/libata-tj hp-poll
+
+Thanks.
+
+--
+tejun
+
+[1] http://article.gmane.org/gmane.linux.ide/11717
+[2] http://article.gmane.org/gmane.linux.ide/11801
+[3] http://article.gmane.org/gmane.linux.ide/11802
+[4] http://article.gmane.org/gmane.linux.ide/11816
 
 
