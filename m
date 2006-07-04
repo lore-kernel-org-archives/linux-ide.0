@@ -1,49 +1,38 @@
-From: alan@lxorguk.ukuu.org.uk
-Subject: [PATCH 04/24] pata_pcmcia: Make drivers/scsi/pata_pcmcia.c:pcmcia_remove_one() static
-Date: Tue, 4 Jul 2006 18:17:36 +0000 (UTC)
-Message-ID: <1152036111326-git-send-email-alan@lxorguk.ukuu.org.uk>
-References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036109145-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036109888-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361102106-git-send-email-alan@lxorguk.ukuu.org.uk>
-Reply-To: alan@lxorguk.ukuu.org.uk
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFT][PATCHSET] hotplug polling
+Date: Wed, 05 Jul 2006 05:28:01 +0900
+Message-ID: <44AACF51.7070204@gmail.com>
+References: <11520225771424-git-send-email-htejun@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59278 "EHLO
-	hraefn.swansea.linux.org.uk") by vger.kernel.org with ESMTP
-	id S932325AbWGDSRC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jul 2006 14:17:02 -0400
-Date: Maw, 04 Gor 2006 19:01:28 +0100
-In-Reply-To: <11520361102106-git-send-email-alan@lxorguk.ukuu.org.uk>
+Received: from py-out-1112.google.com ([64.233.166.177]:27093 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932379AbWGDU1g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Jul 2006 16:27:36 -0400
+Received: by py-out-1112.google.com with SMTP id t32so1959121pyc
+        for <linux-ide@vger.kernel.org>; Tue, 04 Jul 2006 13:27:36 -0700 (PDT)
+In-Reply-To: <11520225771424-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, root <root@hraefn.swansea.linux.org.uk>, Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@redhat.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-From: root <root@hraefn.swansea.linux.org.uk>
+Tejun Heo wrote:
+> Well, the port-exclusive case is dumb but understandable; however,
+> sata_via (vt8237) takes it to the next level and may lock up if any
+> available port in the host_set is active when a SCR reg is accessed,
+> so it needs host_set-exclusive version.  It took me two days of
+> boredom to figure out that things can be made THAT dumb.  Their new
+> AHCI controller also seems to require host_set-wide EH ops to recover
+> from errors.  Well, I guess they consider requiring host_set-wide ops
+> a feature or something.  :-( Note that this means that the current
+> libata EH may lock up the whole machine on vt8237 if EH occurs at a
+> bad time.
 
-This patch makes a needlessly global function static.
+Update: vt8237 failed to survive over-night test.  It died even with 
+host_set-wide exclusion.  I'm dropping hp-poll support from sata_via.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
-Signed-off-by: Alan Cox <alan@redhat.com>
-
-
----
-
- drivers/scsi/pata_pcmcia.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-fac48280be51547d8841b24d72c48be5eb434769
-diff --git a/drivers/scsi/pata_pcmcia.c b/drivers/scsi/pata_pcmcia.c
-index b078e64..9f630d7 100644
---- a/drivers/scsi/pata_pcmcia.c
-+++ b/drivers/scsi/pata_pcmcia.c
-@@ -294,7 +294,7 @@ out1:
-  *	cleanup. Also called on module unload for any active devices.
-  */
- 
--void pcmcia_remove_one(struct pcmcia_device *pdev)
-+static void pcmcia_remove_one(struct pcmcia_device *pdev)
- {
- 	struct ata_pcmcia_info *info = pdev->priv;
- 	struct device *dev = &pdev->dev;
 -- 
-1.2.GIT
-
+tejun
