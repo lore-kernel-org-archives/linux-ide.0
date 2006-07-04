@@ -1,46 +1,23 @@
-From: Jeremy Kerr <jk@ozlabs.org>
-Subject: [PATCH 18/20] [powerpc,sata_svw] Constify & voidify get_property()
-Date: Tue,  4 Jul 2006 16:47:17 +1000 (EST)
-Message-ID: <17341.1869364374$1151996037@news.gmane.org>
+From: "Ramon" <Ramon.Castillo@earthlink.net>
+Subject: Hottest new offer It is possible today with excellent formula
+Date: Tue, 4 Jul 2006 11:47:32 +0200
+Message-ID: <16469991686745.D6318015F1__43154.9185341739$1152006446$gmane$org@ZJCIGV5N>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: linuxppc-dev@ozlabs.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cm-85-152-216-50.telecable.es ([85.152.216.50]:60684 "EHLO
+	MORTIMER") by vger.kernel.org with ESMTP id S932189AbWGDJrA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jul 2006 05:47:00 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel-owner@vger.kernel.org
 
-Now that get_property() returns a void *, there's no need to cast its
-return value. Also, treat the return value as const, so we can
-constify get_property later.
+How are you bro ? 
 
-sata_svw changes
 
-Signed-off-by: Jeremy Kerr <jk@ozlabs.org>
----
+ Prolong  your ssex. You have small peniis? Add 3 inches in lenght! Come on in: http://abirtes.com/gal/ms 
 
- sata_svw.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Red sky at night shepherds delight,red sky in the morning,shepherds warning When in doubt, do nothing Things can only get better No one grows old by living; only by losing interest in living Fine words butter no parsnips 
 
-Index: linux-2.6/drivers/scsi/sata_svw.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/sata_svw.c
-+++ linux-2.6/drivers/scsi/sata_svw.c
-@@ -268,7 +268,7 @@ static int k2_sata_proc_info(struct Scsi
- 	/* Match it to a port node */
- 	index = (ap == ap->host_set->ports[0]) ? 0 : 1;
- 	for (np = np->child; np != NULL; np = np->sibling) {
--		u32 *reg = (u32 *)get_property(np, "reg", NULL);
-+		const u32 *reg = get_property(np, "reg", NULL);
- 		if (!reg)
- 			continue;
- 		if (index == *reg)
