@@ -1,38 +1,40 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFT][PATCHSET] hotplug polling
-Date: Wed, 05 Jul 2006 05:28:01 +0900
-Message-ID: <44AACF51.7070204@gmail.com>
-References: <11520225771424-git-send-email-htejun@gmail.com>
+From: Jochen Heuer <jogi-kernel@planetzork.ping.de>
+Subject: Re: Bug or HW? ata1: command timeout, stat 0x50 host_stat 0x4
+Date: Wed, 5 Jul 2006 00:24:51 +0200
+Message-ID: <20060704222451.GA6041@planetzork.ping.de>
+References: <20060702000706.GA11103@planetzork.ping.de> <44AA89CF.7000404@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:27093 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932379AbWGDU1g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jul 2006 16:27:36 -0400
-Received: by py-out-1112.google.com with SMTP id t32so1959121pyc
-        for <linux-ide@vger.kernel.org>; Tue, 04 Jul 2006 13:27:36 -0700 (PDT)
-In-Reply-To: <11520225771424-git-send-email-htejun@gmail.com>
+Received: from lilly.ping.de ([83.97.42.2]:44037 "HELO lilly.ping.de")
+	by vger.kernel.org with SMTP id S932252AbWGDW3p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jul 2006 18:29:45 -0400
+Content-Disposition: inline
+In-Reply-To: <44AA89CF.7000404@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Well, the port-exclusive case is dumb but understandable; however,
-> sata_via (vt8237) takes it to the next level and may lock up if any
-> available port in the host_set is active when a SCR reg is accessed,
-> so it needs host_set-exclusive version.  It took me two days of
-> boredom to figure out that things can be made THAT dumb.  Their new
-> AHCI controller also seems to require host_set-wide EH ops to recover
-> from errors.  Well, I guess they consider requiring host_set-wide ops
-> a feature or something.  :-( Note that this means that the current
-> libata EH may lock up the whole machine on vt8237 if EH occurs at a
-> bad time.
+On Tue, Jul 04, 2006 at 11:31:27AM -0400, Mark Lord wrote:
+> Jochen Heuer wrote:
+> >On Wed, Jun 28, 2006 at 10:09:12AM +0200, Jochen Heuer wrote:
+> ..
+> >also not increasing ... Are there any known issues in this area with SMP
+> >kernels?
+> 
+> Mmm.. there was another thread in lkml about the A8V, where somebody
+> reported that turning *off* CONFIG_PREEMPT results in much more stable
+> libata operation for some users.
 
-Update: vt8237 failed to survive over-night test.  It died even with 
-host_set-wide exclusion.  I'm dropping hp-poll support from sata_via.
+Ok, I will test this! And thanks for the info.
+
+Best regards,
+
+   Jochen
 
 -- 
-tejun
+
+Well, yeah ... I suppose there's no point in getting greedy, is there?
+
+    << Calvin & Hobbes >>
