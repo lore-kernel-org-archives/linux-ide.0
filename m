@@ -1,37 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: PATCH: Move IDE to unmaintained, drop reference to old git tree
-Date: Tue, 04 Jul 2006 12:59:32 +0100
-Message-ID: <1152014372.28597.39.camel@localhost.localdomain>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH 0/6] AHCI suspend/resume support --take3
+Date: Tue, 4 Jul 2006 14:41:33 +0200
+Message-ID: <20060704124132.GB4075@suse.de>
+References: <1151569086.7132.220.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:6850 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932216AbWGDLmr
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Jul 2006 07:42:47 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:29724 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932246AbWGDMj0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jul 2006 08:39:26 -0400
+Content-Disposition: inline
+In-Reply-To: <1151569086.7132.220.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, linux-ide@vger.kernel.org
 
-Bart's git IDE tree ends at 2.6.15-rc5 and he doesn't appear to have
-posted anything since April 7th.
+On Thu, Jun 29 2006, zhao, forrest wrote:
+> Hi, all
+> 
+> This is the take 3 of AHCI suspend/resume patches.
+> 
+> The patch is against #upstream[
+> 2154cfa6ba560401d25f6cc083fe3fb996cbb571] + Tejun's Power Management
+> patch(available at
+> http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=new-pm).
+> 
+> Although Tejun's PM patch may change as he mentioned in another mail,
+> such change is minor and will not impact the logic of AHCI suspend/
+> resume. So I re-send the patch in order to get test feedback and review
+> comments earlier.
+> 
+> Compared with last version, all the changes are in [PATCH 6/6]. In
+> particular, I made changes to the sixth patch to integrate it with
+> Tejun's PM patch.
 
-Cc'd in case he's still around or someone knows where he is or has
-gone ?
+It's not working for me, I get -EBUSY errors on resume from both
+ahci_port_spinup() and ahci_start_engine() and things just hang from
+there.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
-
---- linux.vanilla-2.6.17/MAINTAINERS	2006-06-19 17:29:44.000000000 +0100
-+++ linux-2.6.17/MAINTAINERS	2006-07-04 12:23:06.244268008 +0100
-@@ -1286,8 +1286,7 @@
- M:	B.Zolnierkiewicz@elka.pw.edu.pl
- L:	linux-kernel@vger.kernel.org
- L:	linux-ide@vger.kernel.org
--T:	git kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git
--S:	Maintained
-+S:	Unmaintained
- 
- IDE/ATAPI CDROM DRIVER
- P:	Jens Axboe
+-- 
+Jens Axboe
 
