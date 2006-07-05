@@ -1,38 +1,42 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 0/6] AHCI suspend/resume support --take3
-Date: Wed, 5 Jul 2006 08:49:43 +0200
-Message-ID: <20060705064943.GA14372@suse.de>
-References: <1151569086.7132.220.camel@forrest26.sh.intel.com> <20060704124132.GB4075@suse.de> <1152067511.7132.233.camel@forrest26.sh.intel.com>
+From: "Galina S." <gsdm@aaanet.ru>
+Subject: Re[4]:hey from Galya
+Date: Wed, 05 Jul 2006 12:39:37 +0300
+Message-ID: <006d01c6a016$e8143180$6526000a@dial-ppp188-40.pppcal.vsnl.net.in>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:10580 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751151AbWGEGrr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jul 2006 02:47:47 -0400
-Content-Disposition: inline
-In-Reply-To: <1152067511.7132.233.camel@forrest26.sh.intel.com>
+Received: from dial-ppp188-40.pppcal.vsnl.net.in ([219.65.188.40]:13317 "EHLO
+	dial-ppp188-40.pppcal.vsnl.net.in") by vger.kernel.org with ESMTP
+	id S932421AbWGEJi5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Jul 2006 05:38:57 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, linux-ide@vger.kernel.org
+To: linux-ia64-owner <linux-ia64-owner@vger.kernel.org>
 
-On Wed, Jul 05 2006, zhao, forrest wrote:
-> On Tue, 2006-07-04 at 14:41 +0200, Jens Axboe wrote:
-> > It's not working for me, I get -EBUSY errors on resume from both
-> > ahci_port_spinup() and ahci_start_engine() and things just hang from
-> > there.
-> 
-> I know that it's not easy to capture dmesg log when SATA resume
-> operation failed. So I posted the dmesg log during AHCI suspend/resume
-> on my development machine to
-> http://www.infradead.org/~forrest/suspend-resume-dmesg/dmesg
-> 
-> Would you please tell me the difference between your dmesg log and mine?
-> That would be helpful for me to root-cause the bug.
+Ave :)	
 
-I will try and dump the ahci/libata messages on resume, just by writing
-them down (there aren't that many).
+I think we had correspondence a long time ago if it was not you I am sorry.
+If it was I could not answer you because my Mozilla mail manager was down for a 
+long time and I could not fix it only with my friend's help I got the emails 
+address out for me ..:)
+I hope it was whom we were corresponded with you are still interested, as I am, 
+though I realize much time has passed since then...
+I really don't know where to start ....
+Maybe you could tell me a little about yourself since I lost our early letters, 
+your appearance,age , hobbies, and are you still in the search?
+If it was you I wrote to and you are interested to get to know me better, I have 
+a profile at :
+http://www.foryou-mydestiny.com/
 
--- 
-Jens Axboe
+Don't really know what else to say for now I hope this is the right address
+
+Let me know if you are interested, And I hope
+you won't run when you see my picture :-)
+
+see you later
+
+Galina S.
+
 
