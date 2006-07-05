@@ -1,90 +1,166 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [RFT][PATCHSET] hotplug polling, take 2
+Subject: [PATCH 3/3] libata: add hp-poll support to controllers without hotplug interrupts
 Date: Wed, 5 Jul 2006 15:06:18 +0900
-Message-ID: <11520795783649-git-send-email-htejun@gmail.com>
+Message-ID: <11520795783299-git-send-email-htejun@gmail.com>
+References: <11520795783649-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:9602 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.234]:14210 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1750743AbWGEGFh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1750983AbWGEGFh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Wed, 5 Jul 2006 02:05:37 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so871234wra
+Received: by wr-out-0506.google.com with SMTP id 69so871236wra
         for <linux-ide@vger.kernel.org>; Tue, 04 Jul 2006 23:05:36 -0700 (PDT)
-In-Reply-To: 
+In-Reply-To: <11520795783649-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+This patch adds hp-poll support to the following drivers.
 
-This is the second take of hotplug polling patchset.  As the name
-implies, this patchset implements hotplug by polling.  Changes from
-the last take[1] are.
+* sata_nv (generic)
+* sata_sis
+* sata_svw
+* sata_uli
+* sata_via
+* sata_vsc
 
-* vt8237 randomly locks up on SCR access and hp-poll support is
-  dropped.
+All the above drivers currently don't support hotplug interrupts (H/W
+restrictions or lack of doc/effort) and all hotplug operations should
+be done via hp-poll; thus, ATA_FLAG_HP_POLLING is set for these
+drivers.
 
-* port/host_set-excl std callbacks are removed.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-libata core layer implements hp-poll infrastructure.  It interacts
-with LLDs with three callbacks - hp_poll_activate(),
-hp_poll_deactivate() and hp_poll().  libata core layer is responsible
-for activating and deactivating at the right time, invoking the poll
-callback periodically while activated, and generate hotplug event when
-poll callback indicates something has happened.
+---
 
-hp-poll is used for the following cases.
+ drivers/scsi/sata_nv.c  |    5 ++++-
+ drivers/scsi/sata_sis.c |    5 ++++-
+ drivers/scsi/sata_svw.c |    4 +++-
+ drivers/scsi/sata_uli.c |    6 +++++-
+ drivers/scsi/sata_vsc.c |    4 +++-
+ 5 files changed, 19 insertions(+), 5 deletions(-)
 
-* To detect hotplug events on frozen ports after reset fails such that
-  replacing or replugging the failing device make libata automatically
-  retry the port.
-
-* To detect hotplug events on LLDs without hotplug interrupt.
-
-The following drivers are converted to use hp-poll on failed ports.
-
-* ahci
-* sata_nv (nf2 and ck804 only) [untested]
-* sata_sil
-* sata_sil24
-
-The following drivers are converted to use hp-poll for hotplug
-
-* sata_nv (generic) [untested]
-* sata_sis [untested]
-* sata_svw [untested]
-* sata_uli [untested]
-* sata_via [SCR access broken, not supported]
-* sata_vsc [untested]
-
-vt8237 randomly locks up on SCR access and thus support is dropped.
-And all other untested drivers need testing.
-
-This patchset is against
-
-  upstream (2154cfa6ba560401d25f6cc083fe3fb996cbb571)
-  + add-ap-pflags [2]
-  + fix-ehc_i_action-setting-in-ata_eh_autopsy [3]
-  + cosmetic-replace-ap_lock [4]
-  + new PM patchset [5]
-
-This patchset is also available in the following git tree.
-
-  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=hp-poll
-  git://htj.dyndns.org/libata-tj hp-poll
-
-Thanks.
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.ide/11827
-[2] http://article.gmane.org/gmane.linux.ide/11717
-[3] http://article.gmane.org/gmane.linux.ide/11801
-[4] http://article.gmane.org/gmane.linux.ide/11802
-[5] http://article.gmane.org/gmane.linux.ide/11816
+b544ce25c0e1f5b2a5307d77942d4d6dc9d88cfe
+diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+index 79b0550..01f25f6 100644
+--- a/drivers/scsi/sata_nv.c
++++ b/drivers/scsi/sata_nv.c
+@@ -190,6 +190,8 @@ static const struct ata_port_operations 
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= nv_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
+ 	.data_xfer		= ata_pio_data_xfer,
+ 	.irq_handler		= nv_generic_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+@@ -262,7 +264,8 @@ static struct ata_port_info nv_port_info
+ 	/* generic */
+ 	{
+ 		.sht		= &nv_sht,
+-		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++				  ATA_FLAG_HP_POLLING,
+ 		.pio_mask	= NV_PIO_MASK,
+ 		.mwdma_mask	= NV_MWDMA_MASK,
+ 		.udma_mask	= NV_UDMA_MASK,
+diff --git a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
+index 809d337..24df9ee 100644
+--- a/drivers/scsi/sata_sis.c
++++ b/drivers/scsi/sata_sis.c
+@@ -118,6 +118,8 @@ static const struct ata_port_operations 
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.scr_read		= sis_scr_read,
+@@ -129,7 +131,8 @@ static const struct ata_port_operations 
+ 
+ static struct ata_port_info sis_port_info = {
+ 	.sht		= &sis_sht,
+-	.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++	.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++			  ATA_FLAG_HP_POLLING,
+ 	.pio_mask	= 0x1f,
+ 	.mwdma_mask	= 0x7,
+ 	.udma_mask	= 0x7f,
+diff --git a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
+index 7566c2c..769ba92 100644
+--- a/drivers/scsi/sata_svw.c
++++ b/drivers/scsi/sata_svw.c
+@@ -325,6 +325,8 @@ static const struct ata_port_operations 
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.scr_read		= k2_sata_scr_read,
+@@ -425,7 +427,7 @@ static int k2_sata_init_one (struct pci_
+ 
+ 	probe_ent->sht = &k2_sata_sht;
+ 	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				ATA_FLAG_MMIO;
++				ATA_FLAG_MMIO | ATA_FLAG_HP_POLLING;
+ 	probe_ent->port_ops = &k2_sata_ops;
+ 	probe_ent->n_ports = 4;
+ 	probe_ent->irq = pdev->irq;
+diff --git a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
+index 64f3c1a..e7bbd80 100644
+--- a/drivers/scsi/sata_uli.c
++++ b/drivers/scsi/sata_uli.c
+@@ -116,6 +116,9 @@ static const struct ata_port_operations 
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
++
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 
+@@ -129,7 +132,8 @@ static const struct ata_port_operations 
+ 
+ static struct ata_port_info uli_port_info = {
+ 	.sht            = &uli_sht,
+-	.host_flags     = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++	.host_flags     = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++			  ATA_FLAG_HP_POLLING,
+ 	.pio_mask       = 0x1f,		/* pio0-4 */
+ 	.udma_mask      = 0x7f,		/* udma0-6 */
+ 	.port_ops       = &uli_ops,
+diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+index 616fd96..b00df9a 100644
+--- a/drivers/scsi/sata_vsc.c
++++ b/drivers/scsi/sata_vsc.c
+@@ -302,6 +302,8 @@ static const struct ata_port_operations 
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
+ 	.irq_handler		= vsc_sata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.scr_read		= vsc_sata_scr_read,
+@@ -396,7 +398,7 @@ static int __devinit vsc_sata_init_one (
+ 
+ 	probe_ent->sht = &vsc_sata_sht;
+ 	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				ATA_FLAG_MMIO;
++				ATA_FLAG_MMIO | ATA_FLAG_HP_POLLING;
+ 	probe_ent->port_ops = &vsc_sata_ops;
+ 	probe_ent->n_ports = 4;
+ 	probe_ent->irq = pdev->irq;
+-- 
+1.3.2
 
 
