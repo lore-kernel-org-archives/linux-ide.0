@@ -1,31 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PATA updates (rebased)
-Date: Wed, 05 Jul 2006 17:15:32 +0100
-Message-ID: <1152116132.3602.2.camel@localhost.localdomain>
-References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk>
-	 <20060705124429.GD16682@harddisk-recovery.com>
+From: Martin Hicks <mort@bork.org>
+Subject: [PATCH] libata:  PHY reset requires writing 0x4 to SControl
+Date: Wed, 5 Jul 2006 15:06:13 -0400
+Message-ID: <20060705190613.GD16658@bork.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33956 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964804AbWGEP7c
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Jul 2006 11:59:32 -0400
-In-Reply-To: <20060705124429.GD16682@harddisk-recovery.com>
+Received: from galileo.bork.org ([134.117.69.57]:15492 "EHLO galileo.bork.org")
+	by vger.kernel.org with ESMTP id S964962AbWGETGO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jul 2006 15:06:14 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: jgarzik@pobox.com, akpm@osdl.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Ar Mer, 2006-07-05 am 14:44 +0200, ysgrifennodd Erik Mouw:
-> On Tue, Jul 04, 2006 at 06:15:43PM +0000, alan@lxorguk.ukuu.org.uk wrote:
-> > PATA updates rebased onto latest tree
-> 
-> Against which latest tree exactly?
 
-libata-dev:#pata-drivers
+Hi,
 
-I did look at shifting it to 2.6.17 but the pata driver changes suck in
-the new eh which sucks in post 2.6.17 scsi bits
+Reading the Intel VSC and AHCI it seems like writing 0x302 is incorrect.
+The only valid values are 4, 1 and 0.  Writing 4 disables the
+PHY.
+
+Signed-off-by: Martin Hicks <mort@bork.org>
+
+---
+
+ drivers/scsi/libata-core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+99377743755ef015100ab52fd79ee950a783141b
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 6c66877..577fbcc 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -2705,7 +2705,7 @@ int sata_std_hardreset(struct ata_port *
+ 		if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
+ 			return rc;
+ 
+-		scontrol = (scontrol & 0x0f0) | 0x302;
++		scontrol = (scontrol & 0x0f0) | 0x304;
+ 
+ 		if ((rc = sata_scr_write(ap, SCR_CONTROL, scontrol)))
+ 			return rc;
+-- 
+1.3.2
 
