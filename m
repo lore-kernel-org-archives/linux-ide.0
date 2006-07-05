@@ -1,50 +1,65 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Via IDE Bus Master controller IRQ number?
-Date: Wed, 05 Jul 2006 18:29:34 +0400
-Message-ID: <44ABCCCE.1010005@ru.mvista.com>
-References: <2f9b85b70607041831kaccea64o8d1a4b2309ce03d0@mail.gmail.com>
+From: Brent Casavant <bcasavan@sgi.com>
+Subject: Re: [PATCH] PCI: Move various PCI IDs to header file
+Date: Wed, 5 Jul 2006 10:55:37 -0500 (CDT)
+Message-ID: <20060705104039.E93671@pkunk.americas.sgi.com>
+References: <200606222300.k5MN0uPW000741@hera.kernel.org> <449B440B.7010407@garzik.org>
+Reply-To: Brent Casavant <bcasavan@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:32204 "EHLO imap.sh.mvista.com")
-	by vger.kernel.org with ESMTP id S964887AbWGEOal (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jul 2006 10:30:41 -0400
-In-Reply-To: <2f9b85b70607041831kaccea64o8d1a4b2309ce03d0@mail.gmail.com>
+Received: from omx1-ext.sgi.com ([192.48.179.11]:35999 "EHLO
+	omx1.americas.sgi.com") by vger.kernel.org with ESMTP
+	id S964800AbWGEPzv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Jul 2006 11:55:51 -0400
+In-Reply-To: <449B440B.7010407@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yan Luo <zaizailuo@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Greg KH <gregkh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-Yan Luo wrote:
-> Hello,
+Jeff,
+
+I apologize for the incredibly late reply.  Your objection of course
+came up mere hours after I left on a vacation of nearly two weeks.
+
+I also apologize for failing to CC linux-ide.  I did, however,
+originally CC the author of the Vitesse VSC driver (Jeremy Higdon).
+
+The patch was submitted precisely because the PCI device ID was no
+longer going to be single-use.  In fact, shortly after the message
+you posted below, Andrew posted the following (which has been queued
+up for a month or so):
+
+	[patch 187/200] SGI IOC4: Detect IO card variant
+
+In short, due to the unusual card design of the SGI IO10 card, and
+the need to differentiate it from the SGI PCI-RT card, I was left
+with no reasonable option other than to look for the existence of
+the Vitesse device at a known PCI bus location.  As such I needed
+to re-use the PCI ID of the Vitesse part, thereby making it dual-use
+and qualifying it for assignment of a PCI_DEVICE_ID_xxx constant.
+
+I did perhaps overstep by also creating a PCI_DEVICE_ID_xxx constant
+for the purportedly identical Intel part.  Am I allowed a third apology
+within a single email?
+
+Brent
+
+On Thu, 22 Jun 2006, Jeff Garzik wrote:
+
+> WTF?  This is a REGRESSION from the repeatedly expressed desire -- clear
+> throughout libata -- that single-use PCI device IDs should not ever receive
+> PCI_DEVICE_ID_xxx constants.
 > 
-> I have a question on enabling DMA access to IDE hard disk using VIA
-> vt82c686 chipset. My platform is a single board computer AAEON
-> PCM-6892 (VIA C3 CPU, via vt82c686b chipset). I am working on a
-> IDE-DMA port to RTEMS.
+> I'm going to queue up a revert patch for this silliness.
+> 
+> Next time, please let the relevant maintainer(s) know when you are touching
+> their driver, so they have a chance to filter out the crap.
+> 
+> This was -never- sent to me or linux-ide, or otherwise brought to the
+> attention of the maintainers.
 
-> I am trying to find which irq number the IDE bus master controller
-> (part of the vt82c686 chipset) uses. I read out PCI_INTERRUPT_PIN and
-> PCI_INTERRUPT_LINE from its PCI configuration space. The
-> PCI_INTERRUPT_PIN is found to be '0', and PCI_INTERRUPT_LINE as 'FF'. Does
-> it mean this controller does not support interrupt? If so, who do I
-> tell if the DMA transfer finishes??
-
-    It just means that it supports the "legacy" interrupts, i. e. IRQ14 for 
-primary and IRQ15 for the scondary channel. This should be indicated by the 
-bits 0 and 2 of its programming interface register in the PCI config. space 
-being set to zero.
-
-> The experiment I did is to send ATA_COMMAND_READ_DMA to IDE0 command
-> register (I/O address  0x1F7) and then write '1' to the last bit of
-> IDE BM controller's command register (first register in the BM IDE I/O
-> space) to start DMA transfer. But the DMA transfer hangs the system. I
-> have installed an interrupt handler for IRQ 14, which seems not
-> triggered.
-
-    Have you also set up the PRD list and written its address to the 
-corresponding BM IDE register?
-
-> Please advise.
-
-WBR, Sergei
+-- 
+Brent Casavant                          All music is folk music.  I ain't
+bcasavan@sgi.com                        never heard a horse sing a song.
+Silicon Graphics, Inc.                    -- Louis Armstrong
