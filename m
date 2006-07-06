@@ -1,24 +1,25 @@
-From: "Ricky Mcelroy" <QVRNFRVUEEWZPC@msn.com>
-Subject: You Need This Linux-ia64
-Date: Thu, 06 Jul 2006 21:18:12 +0500
-Message-ID: <LAW30.OE649yfB4mvo781353d5@motmail.com>
+From: "Quinton Sheets" <ucavhzai@hotmail.com>
+Subject: World's Best Tiffany Store
+Date: Thu, 06 Jul 2006 14:47:27 -0200
+Message-ID: <CFE5.9A5.3065498B8C@mopalinux.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 12-207-137-212.client.mchsi.com ([12.207.137.212]:15118 "HELO
-	42B8F620") by vger.kernel.org with SMTP id S1030331AbWGFPVO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jul 2006 11:21:14 -0400
+Received: from [208.192.69.162] ([208.192.69.162]:34057 "HELO 5D51F58")
+	by vger.kernel.org with SMTP id S1030352AbWGFPvX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jul 2006 11:51:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64@vger.kernel.org
+To: autoanswer@vger.kernel.org
 
 
-The most complete Phar. macy Online
-We carry all major medds at bargain price
-Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
+Perfect Gift for your spouse and family
 
-http://holysaleness.com/?wid=3D102
+- Luxury Watches, Handbags and Mont Blanc accs.
+- Finest quality assured
+- 101% like original
 
+You Name It, We have It
+all at 8o-% Price Reduction
 
-fO
+Surprise her today
+http://043.newmkediashowerz.com
 
