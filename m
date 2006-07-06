@@ -1,50 +1,73 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Thu, 6 Jul 2006 19:08:05 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607061906550.5107@p34.internal.lan>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <43F1EE4A.3050107@rtr.ca>
- <43F58D29.3040608@pobox.com> <200602170959.40286.lkml@rtr.ca>
- <20060218204340.GA2984@favonius> <43F794D8.7000406@rtr.ca>
- <20060219071414.GA31299@favonius> <43F88F30.1070208@rtr.ca>
- <20060219171651.GA8986@favonius>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: libata EH appears to be NFG up to 2.6.17 (at least).
+Date: Thu, 06 Jul 2006 19:22:17 -0400
+Message-ID: <44AD9B29.9090508@emc.com>
+References: <44AD749C.1070208@rtr.ca> <44AD76CA.40100@pobox.com> <44AD77D5.90905@rtr.ca> <200607061724.13448.liml@rtr.ca> <44AD8A25.7020006@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:27570 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1751039AbWGFXIG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jul 2006 19:08:06 -0400
-In-Reply-To: <20060219171651.GA8986@favonius>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:44857 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S1751035AbWGFXWx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Jul 2006 19:22:53 -0400
+In-Reply-To: <44AD8A25.7020006@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sander <sander@humilis.net>
-Cc: Mark Lord <lkml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-Look at this:
 
->From smartctl, look at the correspondence:
-199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   Always 
--       4
 
-[4301946.802000] ata4: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
-0xb/00/00
-[4301946.802000] ata4: status=0x51 { DriveReady SeekComplete Error }
-[4301946.802000] ata4: error=0x04 { DriveStatusError }
-[4302380.482000] ata4: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
-0xb/00/00
-[4302380.482000] ata4: status=0x51 { DriveReady SeekComplete Error }
-[4302380.482000] ata4: error=0x04 { DriveStatusError }
-[4302493.664000] ata4: no sense translation for status: 0x51
-[4302493.664000] ata4: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 
-0xb/00/00
-[4302493.664000] ata4: status=0x51 { DriveReady SeekComplete Error }
-[4302863.673000] ata4: no sense translation for status: 0x51
-[4302863.673000] ata4: translated ATA stat/err 0x51/00 to SCSI SK/ASC/ASCQ 
-0xb/00/00
-[4302863.673000] ata4: status=0x51 { DriveReady SeekComplete Error }
+Jeff Garzik wrote:
 
-different drive, different cable, same controller, but second port
+> Mark Lord wrote:
+>
+>> Enable libata-scsi to report correct sense data on errors.
+>>
+>> Signed-off-by:  Mark Lord <mlord@pobox.com>
+>> ---
+>> --- linux/drivers/scsi/libata-scsi.c.orig    2006-07-06 
+>> 17:09:54.000000000 -0400
+>> +++ linux/drivers/scsi/libata-scsi.c    2006-07-06 17:17:43.000000000 
+>> -0400
+>> @@ -667,6 +667,13 @@
+>>      qc->ap->ops->tf_read(qc->ap, tf);
+>>  
+>>      /*
+>> +     * Restore the error bit, which got cleared when the
+>> +     * interrupt handler first read the ata_status.
+>> +     */
+>> +    if (qc->err_mask & AC_ERR_DEV)
+>> +        tf->command |= ATA_ERR;
+>> +
+>> +    /*
+>>       * Use ata_to_sense_error() to map status register bits
+>
+>
+>
+> Again it's an LLDD issue.  Your answer of "all LLDDs" sounds a bit 
+> suspicious.
+>
+> AC_ERR_DEV should not be set unless (a) some code noticed that ATA_ERR 
+> was already present in the Status register, or (b) some code set 
+> AC_ERR_DEV for some reason other than ATA_ERR presence.  Both of those 
+> factors depend heavily on LLDD behavior.
+>
+> ANYWAY, your above patch is not wrong, but it begs the question of 
+> where the problem REALLY lies.  Which LLDD sets AC_ERR_DEV when 
+> ATA_ERR is not present?
+>
+>     Jeff
+>
+>
+I believe that Mark was testing this on an ahci (ich6r) based box.
 
-So that Stat/err = UDMA_CRC_Error_Count!
+A quick (and inexpert) look at ahci.c in 2.6.17 shows that 
+ahci_host_intr()  does set AC_ERR_DEV - I did not see in my quick look 
+where ATA_ERR was set.
 
-Not sure if we can fix what is causing it (in Linux) but just FYI.
+Tejun's updated EH code changed the code path pretty substantially.
+
+ric
 
