@@ -1,21 +1,21 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 01/11] libata: implement ATA_EHI_RESUME_LINK
-Date: Wed, 05 Jul 2006 22:16:39 -0400
-Message-ID: <44AC7287.1010002@pobox.com>
-References: <11519104463685-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH] libata-core.c: restore configuration boot messages in
+ ata_dev_configure(), v2
+Date: Wed, 05 Jul 2006 22:17:59 -0400
+Message-ID: <44AC72D7.2060504@pobox.com>
+References: <20060627125125.GA14997@zmei.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:931 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965131AbWGFCQr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jul 2006 22:16:47 -0400
-In-Reply-To: <11519104463685-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:7587 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965132AbWGFCSB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jul 2006 22:18:01 -0400
+In-Reply-To: <20060627125125.GA14997@zmei.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Borislav Petkov <bbpetkov@yahoo.de>
+Cc: linux IDE ML <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-applied patches 1-11
-
+applied
 
