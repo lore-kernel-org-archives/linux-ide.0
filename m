@@ -1,79 +1,29 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Fri, 7 Jul 2006 10:35:47 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607071035310.5153@p34.internal.lan>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <200607070908.44751.liml@rtr.ca>
- <Pine.LNX.4.64.0607070923130.4099@p34.internal.lan> <200607070943.17957.liml@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: PATA updates (rebased)
+Date: Fri, 07 Jul 2006 12:07:32 -0400
+Message-ID: <44AE86C4.4000301@pobox.com>
+References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:32732 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S932114AbWGGOfs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2006 10:35:48 -0400
-In-Reply-To: <200607070943.17957.liml@rtr.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:15591 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932142AbWGGQHg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2006 12:07:36 -0400
+In-Reply-To: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Sander <sander@humilis.net>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: alan@lxorguk.ukuu.org.uk
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
+alan@lxorguk.ukuu.org.uk wrote:
+> PATA updates rebased onto latest tree
+> 
+> Adds full support for Jmicron controllers including the PATA port which means
+> you can finally install Linux on a system with the CD on a PATA jmicron port.
+> 
+> Turns on per device speed setting
 
+Merged patches 1-6, 8-10 so far.
 
-On Fri, 7 Jul 2006, Mark Lord wrote:
-
-> Justin Piszcz wrote:
->>
->> had to change
->>
->> KERN_WARN -> KERN_WARNING
->>
->> then more errors
->
-> Eh?  After fixing the KERN_WARN -> KERN_WARNING part,
-> the patch compiles / links cleanly here on 2.6.17.
-> (fixed copy below).   Still untested, though.
->
->> do you know who wrote the original patch?
->
-> I did.
->
-> Cheers
->
-> --- linux/drivers/scsi/libata-scsi.c.orig	2006-06-19 10:37:03.000000000 -0400
-> +++ linux/drivers/scsi/libata-scsi.c	2006-07-07 09:06:57.000000000 -0400
-> @@ -542,6 +542,7 @@
-> 	struct ata_taskfile *tf = &qc->tf;
-> 	unsigned char *sb = cmd->sense_buffer;
-> 	unsigned char *desc = sb + 8;
-> +	unsigned char ata_op = tf->command;
->
-> 	memset(sb, 0, SCSI_SENSE_BUFFERSIZE);
->
-> @@ -558,6 +559,7 @@
-> 	 * onto sense key, asc & ascq.
-> 	 */
-> 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
-> +		printk(KERN_WARNING "ata_gen_ata_desc_sense: failed ata_op=0x%02x\n", ata_op);
-> 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
-> 				   &sb[1], &sb[2], &sb[3]);
-> 		sb[1] &= 0x0f;
->
-
-Mark!! It did it again, here you go:
-
-==> /p34/var/log/messages <==
-Jul  7 10:26:06 p34 kernel: [4296869.461000] ata4: status=0x53 { 
-DriveReady SeekComplete Index Error }
-Jul  7 10:26:06 p34 kernel: [4296869.461000] ata4: error=0x04 { 
-DriveStatusError }
-==> /p34/var/log/kern.log <==
-Jul  7 10:26:06 p34 kernel: [4296869.461000] ata4: translated ATA stat/err 
-0x53/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-Jul  7 10:26:06 p34 kernel: [4296869.461000] ata4: status=0x53 { 
-DriveReady SeekComplete Index Error }
-Jul  7 10:26:06 p34 kernel: [4296869.461000] ata4: error=0x04 { 
-DriveStatusError }
-
-Does this help?
-
-Can we eliminate the cause of these errors now?
 
