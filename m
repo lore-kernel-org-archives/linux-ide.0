@@ -1,34 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 14/24] it821x: Fix the ATAPI autodma setup
-Date: Fri, 07 Jul 2006 12:26:26 -0400
-Message-ID: <44AE8B32.9000707@pobox.com>
-References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036109145-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036109888-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361102106-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036111326-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361121401-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361123190-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036113264-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361141196-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361153194-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361162763-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361161279-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361173710-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361183634-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036119810-git-send-email-alan@lxorguk.ukuu.org.uk>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: libATA  PATA status report, new patch
+Date: Fri, 7 Jul 2006 12:29:38 -0400
+Message-ID: <20060707162938.GA6103@animx.eu.org>
+References: <1139244412.10437.32.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60391 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932195AbWGGQ03 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2006 12:26:29 -0400
-In-Reply-To: <1152036119810-git-send-email-alan@lxorguk.ukuu.org.uk>
+Received: from animx.eu.org ([216.98.75.249]:30622 "EHLO animx.eu.org")
+	by vger.kernel.org with ESMTP id S932203AbWGGQ3i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2006 12:29:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1139244412.10437.32.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, root <root@hraefn.swansea.linux.org.uk>, Alan Cox <alan@redhat.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-alan@lxorguk.ukuu.org.uk wrote:
-> From: root <root@hraefn.swansea.linux.org.uk>
+Alan Cox wrote:
+> With the exception of HPA and serialize support its now pretty close to
+> a straight replacement for drivers/ide on x86 systems (and boxes using
+> PCI devices only). There is other stuff that wants improving still like
+> error recovery on CRC, but its getting close.
 > 
-> Don't assume atapi dma is defaulted to on.
+> Please remember that functionality equivalence, and much cleaner code
+> doesn't mean less bugs yet, there is a *lot* of testing and hammering on
+> the code needed before it is production ready for switching.
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> 	http://zeniv.linux.org.uk/~alan/IDE
+> 
+> for 2.6.16-rc2 patches.
 
-I'm not tricked that easily ;-) ;-)
+I wanted to try this today on 2.6.17 but there is no patch for that version
+and the patch for 2.6.17-rc4 doesn't apply cleanly.  Do you have a newer
+patch for this or do I just need to use the ole shoe horn?
 
-I will bitbucket drivers/ide patches...  that's a rabbit hole I do not 
-wish to go down...  :)
-
-	Jeff
-
-
-
+-- 
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
