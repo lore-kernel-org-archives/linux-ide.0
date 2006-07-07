@@ -1,7 +1,7 @@
 From: Andrew Morton <akpm@osdl.org>
 Subject: Re: [PATCH 22/24] jmicron: Jmicron multifunction setup
-Date: Fri, 7 Jul 2006 12:43:59 -0700
-Message-ID: <20060707124359.670e84c6.akpm@osdl.org>
+Date: Fri, 7 Jul 2006 12:45:35 -0700
+Message-ID: <20060707124535.0654e8b1.akpm@osdl.org>
 References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk>
 	<11520361141196-git-send-email-alan@lxorguk.ukuu.org.uk>
 	<11520361153194-git-send-email-alan@lxorguk.ukuu.org.uk>
@@ -23,9 +23,9 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:55251 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932205AbWGGTos (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2006 15:44:48 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:10708 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932286AbWGGTpu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2006 15:45:50 -0400
 In-Reply-To: <44AE8D08.9070407@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -37,7 +37,9 @@ Jeff Garzik <jgarzik@pobox.com> wrote:
 
 > ACK patches 19-22
 
-You wouldn't _believe_ how much grief this causes.  I cannot, with any
-reliability, identify what patches 19-22 actually are.
+I found them!
 
-Please, ack 'em individually?
+pata-jmicron-it-works-better-if-you-get-the-file-name-right.patch
+pata-jmicron-further-clean-up.patch
+pata-ata_jmicro-fix-an-escapee.patch
+pata-jmicron-jmicron-multifunction-setup.patch
