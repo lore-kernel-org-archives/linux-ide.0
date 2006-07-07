@@ -1,20 +1,17 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: LibPATA code issues / 2.6.15.4
-Date: Fri, 7 Jul 2006 09:48:13 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607070948001.5849@p34.internal.lan>
+Date: Fri, 7 Jul 2006 10:01:13 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0607071000380.2978@p34.internal.lan>
 References: <Pine.LNX.4.64.0602140439580.3567@p34> <200607070908.44751.liml@rtr.ca>
  <Pine.LNX.4.64.0607070923130.4099@p34.internal.lan> <200607070943.17957.liml@rtr.ca>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:4772 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1750992AbWGGNsO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2006 09:48:14 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750777AbWGGOBQ@vger.kernel.org>
 In-Reply-To: <200607070943.17957.liml@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
 Cc: Sander <sander@humilis.net>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
 
 
@@ -58,5 +55,11 @@ On Fri, 7 Jul 2006, Mark Lord wrote:
 > 		sb[1] &= 0x0f;
 >
 
-Applied patch, rebooting, waiting to get the error again.
+Mark,
 
+I've set a disk faulty in my SW RAID5 and rebuilding it now, note, in the 
+past two rebuilds I have done (in exact same manner & disk) I've gotten 
+3-4 of these or so, so if I do not get them this time, that will be 
+extremely odd.
+
+Justin.
