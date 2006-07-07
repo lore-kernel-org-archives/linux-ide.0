@@ -1,22 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 22/24] jmicron: Jmicron multifunction setup
-Date: Fri, 07 Jul 2006 12:34:16 -0400
-Message-ID: <44AE8D08.9070407@pobox.com>
-References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036113264-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361141196-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361153194-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361162763-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361161279-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361173710-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361183634-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036119810-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361203144-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361212843-git-send-email-alan@lxorguk.ukuu.org.uk> <1152036122125! 0-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361233826-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361232889-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361243147-git-send-email-alan@lxorguk.ukuu.org.uk> <11520361254139-git-send-email-ala
- n@lxorguk.ukuu.org.uk> <11520361251284-git-send-email-alan@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 11/24] jmicron: Add quirks to force the device into a
+	sane mode
+Date: Fri, 07 Jul 2006 17:51:21 +0100
+Message-ID: <1152291082.20883.34.camel@localhost.localdomain>
+References: <1152036108346-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <1152036109145-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <1152036109888-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <11520361102106-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <1152036111326-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <11520361121401-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <11520361123190-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <1152036113264-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <11520361141196-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <11520361153194-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <11520361162763-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <11520361161279-git-send-email-alan@lxorguk.ukuu.org.uk>
+	 <44AE8A83.8070704@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:22760 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932209AbWGGQeV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2006 12:34:21 -0400
-In-Reply-To: <11520361251284-git-send-email-alan@lxorguk.ukuu.org.uk>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:61856 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932214AbWGGQfJ
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Jul 2006 12:35:09 -0400
+In-Reply-To: <44AE8A83.8070704@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: akpm@osdl.org, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>
 
-ACK patches 19-22
+Ar Gwe, 2006-07-07 am 12:23 -0400, ysgrifennodd Jeff Garzik:
+> > +MODULE_DESCRIPTION("SCSI low-level driver for Netcell PATA RAID");
+> 
+> obviously wrong :)
 
+Alread fixed by the end of the jmicron diffs in the queue.
 
