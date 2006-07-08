@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/6] libata-pmp-prep: separate out sata_link_hardreset()
+Subject: [PATCH 6/6] libata-pmp-prep: implement qc_defer helpers
 Date: Sat, 8 Jul 2006 14:51:18 +0900
-Message-ID: <1152337878787-git-send-email-htejun@gmail.com>
+Message-ID: <1152337878547-git-send-email-htejun@gmail.com>
 References: <11523378773934-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -10,149 +10,165 @@ Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from wr-out-0506.google.com ([64.233.184.224]:10098 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S964781AbWGHFu0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jul 2006 01:50:26 -0400
+	id S964781AbWGHFua (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jul 2006 01:50:30 -0400
 Received: by wr-out-0506.google.com with SMTP id 36so1484429wra
-        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:50:25 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:50:30 -0700 (PDT)
 In-Reply-To: <11523378773934-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out sata_link_hardreset() from sata_std_hardreset().  This
-will be used by PMP.
+Implement ap->nr_active_links (the number of links with active qcs),
+ap->excl_link (pointer to link which can be used by ->qc_defer and is
+cleared when a qc with ATA_QCFLAG_CLEAR_EXCL completes), and
+ata_link_active().
+
+These can be used by ->qc_defer() to implement proper command
+exclusion.  This set of helpers seem enough for both sil24 (ATAPI
+exclusion needed) and cmd-switching PMP.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   57 ++++++++++++++++++++++++++++++++++----------
- drivers/scsi/libata.h      |    2 ++
- 2 files changed, 46 insertions(+), 13 deletions(-)
+ drivers/scsi/libata-core.c |   21 +++++++++++++++++++--
+ drivers/scsi/libata-eh.c   |    5 +++++
+ include/linux/libata.h     |    8 ++++++++
+ 3 files changed, 32 insertions(+), 2 deletions(-)
 
-9a955b32a2ec11df498d7e2dc3005a29a554a6e7
+e8c076ff470980da565d0c41bd95c9a1538ab561
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index bb12e16..4d09167 100644
+index f9644db..346130c 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -2719,11 +2719,11 @@ int ata_std_softreset(struct ata_link *l
+@@ -1004,6 +1004,7 @@ unsigned ata_exec_internal(struct ata_de
+ 	struct ata_queued_cmd *qc;
+ 	unsigned int tag, preempted_tag;
+ 	u32 preempted_sactive, preempted_qc_active;
++	int preempted_nr_active_links;
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 	unsigned long flags;
+ 	unsigned int err_mask;
+@@ -1042,9 +1043,11 @@ unsigned ata_exec_internal(struct ata_de
+ 	preempted_tag = link->active_tag;
+ 	preempted_sactive = link->sactive;
+ 	preempted_qc_active = ap->qc_active;
++	preempted_nr_active_links = ap->nr_active_links;
+ 	link->active_tag = ATA_TAG_POISON;
+ 	link->sactive = 0;
+ 	ap->qc_active = 0;
++	ap->nr_active_links = 0;
+ 
+ 	/* prepare & issue qc */
+ 	qc->tf = *tf;
+@@ -1114,6 +1117,7 @@ unsigned ata_exec_internal(struct ata_de
+ 	link->active_tag = preempted_tag;
+ 	link->sactive = preempted_sactive;
+ 	ap->qc_active = preempted_qc_active;
++	ap->nr_active_links = preempted_nr_active_links;
+ 
+ 	/* XXX - Some LLDDs (sata_mv) disable port on command failure.
+ 	 * Until those drivers are fixed, we detect the condition
+@@ -4520,10 +4524,18 @@ void __ata_qc_complete(struct ata_queued
+ 		ata_sg_clean(qc);
+ 
+ 	/* command should be marked inactive atomically with qc completion */
+-	if (qc->tf.protocol == ATA_PROT_NCQ)
++	if (qc->tf.protocol == ATA_PROT_NCQ) {
+ 		link->sactive &= ~(1 << qc->tag);
+-	else
++		if (!link->sactive)
++			ap->nr_active_links--;
++	} else {
+ 		link->active_tag = ATA_TAG_POISON;
++		ap->nr_active_links--;
++	}
++
++	/* clear exclusive status */
++	if (unlikely(qc->flags & ATA_QCFLAG_CLEAR_EXCL))
++		ap->excl_link = NULL;
+ 
+ 	/* atapi: mark qc as inactive to prevent the interrupt handler
+ 	 * from completing the command twice later, before the error handler
+@@ -4694,9 +4706,14 @@ void ata_qc_issue(struct ata_queued_cmd 
+ 
+ 	if (qc->tf.protocol == ATA_PROT_NCQ) {
+ 		WARN_ON(link->sactive & (1 << qc->tag));
++
++		if (!link->sactive)
++			ap->nr_active_links++;
+ 		link->sactive |= 1 << qc->tag;
+ 	} else {
+ 		WARN_ON(link->sactive);
++
++		ap->nr_active_links++;
+ 		link->active_tag = qc->tag;
+ 	}
+ 
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index e6fd54a..122226b 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -293,6 +293,7 @@ void ata_scsi_error(struct Scsi_Host *ho
+ 
+ 		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
+ 		ap->pflags &= ~ATA_PFLAG_EH_PENDING;
++		ap->excl_link = NULL;	/* don't maintain exclusion over EH */
+ 
+ 		spin_unlock_irqrestore(ap->lock, flags);
+ 
+@@ -2225,6 +2226,10 @@ void ata_eh_finish(struct ata_port *ap)
+ 			}
+ 		}
+ 	}
++
++	/* make sure nr_active_links is zero after EH */
++	WARN_ON(ap->nr_active_links);
++	ap->nr_active_links = 0;
  }
  
  /**
-- *	sata_std_hardreset - reset host port via SATA phy reset
-+ *	sata_link_hardreset - reset link via SATA phy reset
-  *	@link: link to reset
-- *	@class: resulting class of attached device
-+ *	@timing: timing parameters { interval, duratinon, timeout } in msec
-  *
-- *	SATA phy-reset host port using DET bits of SControl register.
-+ *	SATA phy-reset @link using DET bits of SControl register.
-  *
-  *	LOCKING:
-  *	Kernel thread context (may sleep)
-@@ -2731,12 +2731,10 @@ int ata_std_softreset(struct ata_link *l
-  *	RETURNS:
-  *	0 on success, -errno otherwise.
-  */
--int sata_std_hardreset(struct ata_link *link, unsigned int *class)
-+int sata_link_hardreset(struct ata_link *link, const unsigned long *timing)
- {
--	struct ata_port *ap = link->ap;
--	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
- 	u32 scontrol;
--	int rc;
-+	int rc = 0;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 8a4adce..dea1e5f 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -192,6 +192,7 @@ enum {
+ 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
+ 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
+ 	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
++	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
  
- 	DPRINTK("ENTER\n");
+ 	ATA_QCFLAG_FAILED	= (1 << 16), /* cmd failed and is owned by EH */
+ 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
+@@ -549,12 +550,14 @@ struct ata_port {
+ 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
+ 	unsigned long		qc_allocated;
+ 	unsigned int		qc_active;
++	int			nr_active_links; /* #links with active qcs */
  
-@@ -2747,24 +2745,24 @@ int sata_std_hardreset(struct ata_link *
- 		 * and Sil3124.
- 		 */
- 		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
--			return rc;
-+			goto out;
+ 	struct ata_link		link;	/* host default link */
+ 	struct ata_device	__dev1;	/* storage for link.device[1] */
  
- 		scontrol = (scontrol & 0x0f0) | 0x302;
+ 	int			nr_pmp_links;	/* nr of available PMP links */
+ 	struct ata_link		*pmp_link;	/* array of PMP links */
++	struct ata_link		*excl_link;	/* for PMP qc exclusion */
  
- 		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
--			return rc;
-+			goto out;
+ 	struct ata_host_stats	stats;
+ 	struct ata_host_set	*host_set;
+@@ -1022,6 +1025,11 @@ static inline int ata_link_max_devices(c
+ 	return 1;
+ }
  
- 		sata_set_spd(link);
- 	}
- 
- 	/* issue phy wake/reset */
- 	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
--		return rc;
-+		goto out;
- 
- 	scontrol = (scontrol & 0x0f0) | 0x301;
- 
- 	if ((rc = sata_scr_write_flush(link, SCR_CONTROL, scontrol)))
--		return rc;
-+		goto out;
- 
- 	/* Couldn't find anything in SATA I/II specs, but AHCI-1.1
- 	 * 10.4.2 says at least 1 ms.
-@@ -2772,9 +2770,42 @@ int sata_std_hardreset(struct ata_link *
- 	msleep(1);
- 
- 	/* bring phy back */
--	sata_link_resume(link, timing);
-+	rc = sata_link_resume(link, timing);
-+ out:
-+	DPRINTK("EXIT, rc=%d\n", rc);
-+	return rc;
++static inline int ata_link_active(struct ata_link *link)
++{
++	return ata_tag_valid(link->active_tag) || link->sactive;
 +}
 +
-+/**
-+ *	sata_std_hardreset - reset host port via SATA phy reset
-+ *	@link: link to reset
-+ *	@class: resulting class of attached device
-+ *
-+ *	SATA phy-reset host port using DET bits of SControl register,
-+ *	wait for !BSY and classify the attached device.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int sata_std_hardreset(struct ata_link *link, unsigned int *class)
-+{
-+	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
-+	struct ata_port *ap = link->ap;
-+	int rc;
-+
-+	DPRINTK("ENTER\n");
-+
-+	/* do hardreset */
-+	rc = sata_link_hardreset(link, timing);
-+	if (rc) {
-+		ata_link_printk(link, KERN_ERR,
-+				"COMRESET failed (errno=%d)\n", rc);
-+		return rc;
-+	}
- 
--	/* TODO: phy layer with polling, timeouts, etc. */
- 	if (ata_link_offline(link)) {
- 		*class = ATA_DEV_NONE;
- 		DPRINTK("EXIT, link offline\n");
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index e610894..7017b9d 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -55,6 +55,8 @@ extern int ata_dev_read_id(struct ata_de
- 			   int post_reset, u16 *id);
- extern int ata_dev_configure(struct ata_device *dev, int print_info);
- extern void sata_print_link_status(struct ata_link *link);
-+extern int sata_link_hardreset(struct ata_link *link,
-+			       const unsigned long *timing);
- extern int sata_down_spd_limit(struct ata_link *link);
- extern int sata_set_spd_needed(struct ata_link *link);
- extern int ata_down_xfermask_limit(struct ata_device *dev, int force_pio0);
+ static inline struct ata_link *ata_port_first_link(struct ata_port *ap)
+ {
+ 	if (ap->nr_pmp_links)
 -- 
 1.3.2
 
