@@ -1,45 +1,60 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [ANNOUNCE] new revision of PMP support patchsets are about to be posted
-Date: Sat, 8 Jul 2006 20:21:10 +0900
-Message-ID: <20060708112110.GD2592@htj.dyndns.org>
-References: <20060708053517.GB2592@htj.dyndns.org>
+Subject: [ANNOUNCE] libata-tj-stable against v2.6.17.4 available
+Date: Sat, 8 Jul 2006 21:32:42 +0900
+Message-ID: <20060708123242.GE2592@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.199]:36542 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964784AbWGHLUU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jul 2006 07:20:20 -0400
-Received: by nz-out-0102.google.com with SMTP id z3so1163032nzf
-        for <linux-ide@vger.kernel.org>; Sat, 08 Jul 2006 04:20:19 -0700 (PDT)
+Received: from hu-out-0102.google.com ([72.14.214.195]:7486 "EHLO
+	hu-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964812AbWGHMbu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jul 2006 08:31:50 -0400
+Received: by hu-out-0102.google.com with SMTP id 23so1804897huc
+        for <linux-ide@vger.kernel.org>; Sat, 08 Jul 2006 05:31:49 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20060708053517.GB2592@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The patchsets have been rebased after autopsy-fix patch and two minor
-bugs are fixed.
+Hello, all.
 
-* ENABLE_LINK became EH action and doesn't repetitively enable devices
-  which are disabled after hotplug event.
+libata-tj-stable patches against v2.6.17.4 are available.
 
-* sil24_read_tf() is fixed to handle ATA_TAG_INTERNAL properly.  This
-  fixes NCQ and ATAPI CC handling.
+* Hotplug-by-polling added
+* Port Multiplier support added back (sil3726 support added)
 
-Git trees are updated but patchsets won't be reposted as changes are
-minor.
+The patches add the following features to v2.6.17.4.
 
-Patchsets are available in the following git trees.
+* New error handling
+* IRQ driven PIO (from Albert Lee)
+* SATA NCQ support
+* Hotplug support
+* New PM (Power Management)
+* Hotplug-by-poll
+* Port Multiplier support
 
-  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=link
-  git://htj.dyndns.org/libata-tj link
+The following drivers support new features.
 
-  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=pmp-prep
-  git://htj.dyndns.org/libata-tj pmp-prep
+ahci:		new EH, irq-pio, hotplug, NCQ
+ata_piix:	new EH, irq-pio, warmplug (HW restriction), PM
+sata_nv:	new EH, irq-pio, hotplug
+sata_sil:	new EH, irq-pio, hotplug, PM
+sata_sil24:	new EH, irq-pio, hotplug, PM, NCQ, PMP
+sata_sis:	new EH, irq-pio, hotplug-poll, EXPERIMENTAL
+sata_svw:	new EH, irq-pio, hotplug-poll, EXPERIMENTAL
+sata_uli:	new EH, irq-pio, hotplug-poll, EXPERIMENTAL
+sata_via:	new EH, irq-pio, warmplug, EXPERIMENTAL
+sata_vsc:	new EH, irq-pio, hotplug-poll, EXPERIMENTAL
 
-  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=pmp
-  git://htj.dyndns.org/libata-tj pmp
+More info can be found at the following URL.
+
+ http://home-tj.org/wiki/index.php/Libata-tj-stable
+
+Patches against v2.6.17.4 are avaialbe at the following URL.
+
+ http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.17.4-20060708.tar.bz2
+
+Please read README carefully before trying the patches.
 
 Thanks.
 
