@@ -1,117 +1,73 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 17/17] libata-link: update Power Management to handle PMP links
-Date: Sat, 8 Jul 2006 14:45:38 +0900
-Message-ID: <1152337538606-git-send-email-htejun@gmail.com>
+Subject: [PATCH 13/17] libata-link: update ata_scsi_error() to handle PMP links
+Date: Sat, 8 Jul 2006 14:45:37 +0900
+Message-ID: <1152337537362-git-send-email-htejun@gmail.com>
 References: <11523375353473-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.202]:975 "EHLO
+Received: from wx-out-0102.google.com ([66.249.82.195]:11714 "EHLO
 	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964781AbWGHFox (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jul 2006 01:44:53 -0400
-Received: by wx-out-0102.google.com with SMTP id t10so1205853wxc
-        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:44:53 -0700 (PDT)
+	id S964786AbWGHFoy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jul 2006 01:44:54 -0400
+Received: by wx-out-0102.google.com with SMTP id t10so1205846wxc
+        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:44:54 -0700 (PDT)
 In-Reply-To: <11523375353473-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Update Power Management to consider PMP links.
+Update ata_scsi_error() to handle PMP links.  As error conditions can
+occur on both host and PMP links, __ata_port_for_each_link() is used.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   20 +++++++++++++-------
- drivers/scsi/libata-eh.c   |   16 ++++++++++------
- 2 files changed, 23 insertions(+), 13 deletions(-)
+ drivers/scsi/libata-eh.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-e65868d12527ea6e764aed3b996d103df352dac1
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 4088498..a887522 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5106,6 +5106,7 @@ static int ata_host_set_request_pm(struc
- 
- 	for (i = 0; i < host_set->n_ports; i++) {
- 		struct ata_port *ap = host_set->ports[i];
-+		struct ata_link *link;
- 
- 		/* Previous resume operation might still be in
- 		 * progress.  Wait for PM_PENDING to clear.
-@@ -5125,8 +5126,10 @@ static int ata_host_set_request_pm(struc
- 		}
- 
- 		ap->pflags |= ATA_PFLAG_PM_PENDING;
--		ap->link.eh_info.action |= action;
--		ap->link.eh_info.flags |= ehi_flags;
-+		__ata_port_for_each_link(link, ap) {
-+			link->eh_info.action |= action;
-+			link->eh_info.flags |= ehi_flags;
-+		}
- 
- 		ata_port_schedule_eh(ap);
- 
-@@ -5173,15 +5176,18 @@ int ata_host_set_suspend(struct ata_host
- 	 */
- 	for (i = 0; i < host_set->n_ports; i++) {
- 		struct ata_port *ap = host_set->ports[i];
-+		struct ata_link *link;
- 		struct ata_device *dev;
- 
--		ata_link_for_each_dev(dev, &ap->link) {
--			if (ata_dev_ready(dev)) {
--				ata_port_printk(ap, KERN_WARNING,
-+		ata_port_for_each_link(link, ap) {
-+			ata_link_for_each_dev(dev, link) {
-+				if (ata_dev_ready(dev)) {
-+					ata_port_printk(ap, KERN_WARNING,
- 						"suspend failed, device %d "
- 						"still active\n", dev->devno);
--				rc = -EBUSY;
--				goto fail;
-+					rc = -EBUSY;
-+					goto fail;
-+				}
- 			}
- 		}
- 	}
+b01c2d5a1be5b7b11edc375ac8477cf58993be00
 diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 1805769..076badd 100644
+index 7b4a7d8..6c473af 100644
 --- a/drivers/scsi/libata-eh.c
 +++ b/drivers/scsi/libata-eh.c
-@@ -2356,17 +2356,21 @@ static void ata_eh_handle_port_resume(st
- 	/* give devices time to request EH */
- 	timeout = jiffies + HZ; /* 1s max */
- 	while (1) {
+@@ -278,15 +278,19 @@ void ata_scsi_error(struct Scsi_Host *ho
+  repeat:
+ 	/* invoke error handler */
+ 	if (ap->ops->error_handler) {
 +		struct ata_link *link;
- 		struct ata_device *dev;
++
+ 		/* process port resume request */
+ 		ata_eh_handle_port_resume(ap);
  
--		ata_link_for_each_dev(dev, &ap->link) {
--			unsigned int action = ata_eh_dev_action(dev);
-+		ata_port_for_each_link(link, ap) {
-+			ata_link_for_each_dev(dev, link) {
-+				unsigned int action = ata_eh_dev_action(dev);
+ 		/* fetch & clear EH info */
+ 		spin_lock_irqsave(ap->lock, flags);
  
--			if ((dev->flags & ATA_DFLAG_SUSPENDED) &&
--			    !(action & ATA_EH_RESUME))
--				break;
-+				if ((dev->flags & ATA_DFLAG_SUSPENDED) &&
-+				    !(action & ATA_EH_RESUME))
-+					goto out_of_loop;
-+			}
+-		memset(&ap->link.eh_context, 0, sizeof(ap->link.eh_context));
+-		ap->link.eh_context.i = ap->link.eh_info;
+-		memset(&ap->link.eh_info, 0, sizeof(ap->link.eh_info));
++		__ata_port_for_each_link(link, ap) {
++			memset(&link->eh_context, 0, sizeof(link->eh_context));
++			link->eh_context.i = link->eh_info;
++			memset(&link->eh_info, 0, sizeof(link->eh_info));
++		}
+ 
+ 		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
+ 		ap->pflags &= ~ATA_PFLAG_EH_PENDING;
+@@ -321,7 +325,8 @@ void ata_scsi_error(struct Scsi_Host *ho
  		}
-+	out_of_loop:
  
--		if (dev == NULL || time_after(jiffies, timeout))
-+		if (link == NULL || time_after(jiffies, timeout))
- 			break;
- 		msleep(10);
- 	}
+ 		/* this run is complete, make sure EH info is clear */
+-		memset(&ap->link.eh_info, 0, sizeof(ap->link.eh_info));
++		__ata_port_for_each_link(link, ap)
++			memset(&link->eh_info, 0, sizeof(link->eh_info));
+ 
+ 		/* Clear host_eh_scheduled while holding ap->lock such
+ 		 * that if exception occurs after this point but
 -- 
 1.3.2
 
