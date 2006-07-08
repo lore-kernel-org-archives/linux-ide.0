@@ -1,625 +1,1026 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/17] libata-link: linkify config/EH related functions
+Subject: [PATCH 05/17] libata-link: linkify PHY-related functions
 Date: Sat, 8 Jul 2006 14:45:36 +0900
-Message-ID: <11523375362574-git-send-email-htejun@gmail.com>
+Message-ID: <11523375363357-git-send-email-htejun@gmail.com>
 References: <11523375353473-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:41839 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.227]:42863 "EHLO
 	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S932518AbWGHFot (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jul 2006 01:44:49 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so1484119wra
-        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:44:49 -0700 (PDT)
+	id S964776AbWGHFow (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jul 2006 01:44:52 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so1484118wra
+        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:44:51 -0700 (PDT)
 In-Reply-To: <11523375353473-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Make the following functions deal with ata_link instead of ata_port.
+Make the following PHY-related functions to deal with ata_link instead
+of ata_port.
 
-* ata_set_mode()
-* ata_eh_autopsy() and related functions
-* ata_eh_report() and related functions
-* suspend/resume related functions
-* ata_eh_recover() and related functions
+* sata_print_link_status()
+* sata_down_spd_limit()
+* ata_set_sata_spd_limit() and friends
+* sata_link_debounce/resume()
+* sata_scr_valid/read/write/write_flush()
+* ata_link_on/offline()
+
+This patch introduces no behavior change.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |    8 +-
- drivers/scsi/libata-eh.c   |  161 +++++++++++++++++++++++---------------------
- drivers/scsi/libata.h      |    3 +
- 3 files changed, 91 insertions(+), 81 deletions(-)
+ drivers/scsi/ahci.c         |    6 +
+ drivers/scsi/libata-bmdma.c |    2 
+ drivers/scsi/libata-core.c  |  229 +++++++++++++++++++++++--------------------
+ drivers/scsi/libata-eh.c    |   24 ++---
+ drivers/scsi/libata.h       |    4 -
+ drivers/scsi/sata_mv.c      |   14 +--
+ drivers/scsi/sata_sil24.c   |   10 +-
+ include/linux/libata.h      |   19 ++--
+ 8 files changed, 164 insertions(+), 144 deletions(-)
 
-9f6869b65ed5dc741ca33747d34c7ebb3186e495
+e547f513500d9d4e27c46afa390647f4a9f21a22
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index e3ec344..d105cd1 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -621,7 +621,7 @@ static int ahci_softreset(struct ata_por
+ 
+ 	DPRINTK("ENTER\n");
+ 
+-	if (ata_port_offline(ap)) {
++	if (ata_link_offline(&ap->link)) {
+ 		DPRINTK("PHY reports no device\n");
+ 		*class = ATA_DEV_NONE;
+ 		return 0;
+@@ -695,7 +695,7 @@ static int ahci_softreset(struct ata_por
+ 	msleep(150);
+ 
+ 	*class = ATA_DEV_NONE;
+-	if (ata_port_online(ap)) {
++	if (ata_link_online(&ap->link)) {
+ 		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
+ 			rc = -EIO;
+ 			reason = "device not ready";
+@@ -734,7 +734,7 @@ static int ahci_hardreset(struct ata_por
+ 
+ 	ahci_start_engine(ap);
+ 
+-	if (rc == 0 && ata_port_online(ap))
++	if (rc == 0 && ata_link_online(&ap->link))
+ 		*class = ahci_dev_classify(ap);
+ 	if (*class == ATA_DEV_UNKNOWN)
+ 		*class = ATA_DEV_NONE;
+diff --git a/drivers/scsi/libata-bmdma.c b/drivers/scsi/libata-bmdma.c
+index c931a26..ba6db93 100644
+--- a/drivers/scsi/libata-bmdma.c
++++ b/drivers/scsi/libata-bmdma.c
+@@ -776,7 +776,7 @@ void ata_bmdma_error_handler(struct ata_
+ 	ata_reset_fn_t hardreset;
+ 
+ 	hardreset = NULL;
+-	if (sata_scr_valid(ap))
++	if (sata_scr_valid(&ap->link))
+ 		hardreset = sata_std_hardreset;
+ 
+ 	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, hardreset,
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 9f6b905..e8170e5 100644
+index 0dcd2ec..2326843 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1584,7 +1584,7 @@ static int ata_bus_probe(struct ata_port
- 	}
- 
- 	/* configure transfer mode */
--	rc = ata_set_mode(ap, &dev);
-+	rc = ata_set_mode(&ap->link, &dev);
- 	if (rc) {
- 		down_xfermask = 1;
- 		goto fail;
-@@ -2122,7 +2122,7 @@ static int ata_dev_set_mode(struct ata_d
- 
- /**
-  *	ata_set_mode - Program timings and issue SET FEATURES - XFER
-- *	@ap: port on which timings will be programmed
-+ *	@link: link on which timings will be programmed
-  *	@r_failed_dev: out paramter for failed device
-  *
-  *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
-@@ -2135,9 +2135,9 @@ static int ata_dev_set_mode(struct ata_d
-  *	RETURNS:
-  *	0 on success, negative errno otherwise
-  */
--int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
-+int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
- {
--	struct ata_link *link = &ap->link;
-+	struct ata_port *ap = link->ap;
- 	struct ata_device *dev;
- 	int rc = 0, used_dma = 0, found = 0;
- 
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 5475e2f..d574486 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1002,7 +1002,7 @@ static unsigned int atapi_eh_request_sen
+@@ -1607,7 +1607,7 @@ static int ata_bus_probe(struct ata_port
+ 		tries[dev->devno] = 0;
+ 		break;
+ 	case -EIO:
+-		sata_down_spd_limit(ap);
++		sata_down_spd_limit(&ap->link);
+ 		/* fall through */
+ 	default:
+ 		tries[dev->devno]--;
+@@ -1642,28 +1642,28 @@ void ata_port_probe(struct ata_port *ap)
  
  /**
-  *	ata_eh_analyze_serror - analyze SError for a failed port
-- *	@ap: ATA port to analyze SError for
-+ *	@link: ATA link to analyze SError for
+  *	sata_print_link_status - Print SATA link status
+- *	@ap: SATA port to printk link status about
++ *	@link: SATA link to printk link status about
   *
-  *	Analyze SError if available and further determine cause of
-  *	failure.
-@@ -1010,9 +1010,9 @@ static unsigned int atapi_eh_request_sen
-  *	LOCKING:
-  *	None.
-  */
--static void ata_eh_analyze_serror(struct ata_port *ap)
-+static void ata_eh_analyze_serror(struct ata_link *link)
- {
--	struct ata_eh_context *ehc = &ap->link.eh_context;
-+	struct ata_eh_context *ehc = &link->eh_context;
- 	u32 serror = ehc->i.serror;
- 	unsigned int err_mask = 0, action = 0;
- 
-@@ -1042,7 +1042,7 @@ static void ata_eh_analyze_serror(struct
- 
- /**
-  *	ata_eh_analyze_ncq_error - analyze NCQ error
-- *	@ap: ATA port to analyze NCQ error for
-+ *	@link: ATA link to analyze NCQ error for
-  *
-  *	Read log page 10h, determine the offending qc and acquire
-  *	error status TF.  For NCQ device errors, all LLDDs have to do
-@@ -1052,10 +1052,11 @@ static void ata_eh_analyze_serror(struct
-  *	LOCKING:
-  *	Kernel thread context (may sleep).
-  */
--static void ata_eh_analyze_ncq_error(struct ata_port *ap)
-+static void ata_eh_analyze_ncq_error(struct ata_link *link)
- {
--	struct ata_eh_context *ehc = &ap->link.eh_context;
--	struct ata_device *dev = ap->link.device;
-+	struct ata_port *ap = link->ap;
-+	struct ata_eh_context *ehc = &link->eh_context;
-+	struct ata_device *dev = link->device;
- 	struct ata_queued_cmd *qc;
- 	struct ata_taskfile tf;
- 	int tag, rc;
-@@ -1065,7 +1066,7 @@ static void ata_eh_analyze_ncq_error(str
- 		return;
- 
- 	/* is it NCQ device error? */
--	if (!ap->link.sactive || !(ehc->i.err_mask & AC_ERR_DEV))
-+	if (!link->sactive || !(ehc->i.err_mask & AC_ERR_DEV))
- 		return;
- 
- 	/* has LLDD analyzed already? */
-@@ -1082,13 +1083,13 @@ static void ata_eh_analyze_ncq_error(str
- 	/* okay, this error is ours */
- 	rc = ata_eh_read_log_10h(dev, &tag, &tf);
- 	if (rc) {
--		ata_port_printk(ap, KERN_ERR, "failed to read log page 10h "
-+		ata_link_printk(link, KERN_ERR, "failed to read log page 10h "
- 				"(errno=%d)\n", rc);
- 		return;
- 	}
- 
--	if (!(ap->link.sactive & (1 << tag))) {
--		ata_port_printk(ap, KERN_ERR, "log page 10h reported "
-+	if (!(link->sactive & (1 << tag))) {
-+		ata_link_printk(link, KERN_ERR, "log page 10h reported "
- 				"inactive tag %d\n", tag);
- 		return;
- 	}
-@@ -1288,18 +1289,18 @@ static int ata_eh_speed_down(struct ata_
- 
- /**
-  *	ata_eh_autopsy - analyze error and determine recovery action
-- *	@ap: ATA port to perform autopsy on
-+ *	@link: ATA link to perform autopsy on
-  *
-- *	Analyze why @ap failed and determine which recovery action is
-- *	needed.  This function also sets more detailed AC_ERR_* values
-- *	and fills sense data for ATAPI CHECK SENSE.
-+ *	Analyze why @link failed and determine which recovery actions
-+ *	are needed.  This function also sets more detailed AC_ERR_*
-+ *	values and fills sense data for ATAPI CHECK SENSE.
-  *
-  *	LOCKING:
-  *	Kernel thread context (may sleep).
-  */
--static void ata_eh_autopsy(struct ata_port *ap)
-+static void ata_eh_autopsy(struct ata_link *link)
- {
--	struct ata_link *link = &ap->link;
-+	struct ata_port *ap = link->ap;
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	unsigned int action = ehc->i.action;
- 	struct ata_device *failed_dev = NULL;
-@@ -1317,12 +1318,12 @@ static void ata_eh_autopsy(struct ata_po
- 	rc = sata_scr_read(link, SCR_ERROR, &serror);
- 	if (rc == 0) {
- 		ehc->i.serror |= serror;
--		ata_eh_analyze_serror(ap);
-+		ata_eh_analyze_serror(link);
- 	} else if (rc != -EOPNOTSUPP)
- 		action |= ATA_EH_HARDRESET;
- 
- 	/* analyze NCQ failure */
--	ata_eh_analyze_ncq_error(ap);
-+	ata_eh_analyze_ncq_error(link);
- 
- 	/* any real error trumps AC_ERR_OTHER */
- 	if (ehc->i.err_mask & ~AC_ERR_OTHER)
-@@ -1333,7 +1334,7 @@ static void ata_eh_autopsy(struct ata_po
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
- 
--		if (!(qc->flags & ATA_QCFLAG_FAILED))
-+		if (!(qc->flags & ATA_QCFLAG_FAILED) || qc->dev->link != link)
- 			continue;
- 
- 		/* inherit upper level err_mask */
-@@ -1391,16 +1392,17 @@ static void ata_eh_autopsy(struct ata_po
- 
- /**
-  *	ata_eh_report - report error handling to user
-- *	@ap: ATA port EH is going on
-+ *	@link: ATA link EH is going on
-  *
-  *	Report EH to user.
+  *	This function prints link speed and status of a SATA link.
   *
   *	LOCKING:
   *	None.
   */
--static void ata_eh_report(struct ata_port *ap)
-+static void ata_eh_report(struct ata_link *link)
+-static void sata_print_link_status(struct ata_port *ap)
++static void sata_print_link_status(struct ata_link *link)
  {
--	struct ata_eh_context *ehc = &ap->link.eh_context;
-+	struct ata_port *ap = link->ap;
-+	struct ata_eh_context *ehc = &link->eh_context;
- 	const char *frozen, *desc;
- 	int tag, nr_failed = 0;
+ 	u32 sstatus, scontrol, tmp;
  
-@@ -1411,7 +1413,7 @@ static void ata_eh_report(struct ata_por
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
+-	if (sata_scr_read(ap, SCR_STATUS, &sstatus))
++	if (sata_scr_read(link, SCR_STATUS, &sstatus))
+ 		return;
+-	sata_scr_read(ap, SCR_CONTROL, &scontrol);
++	sata_scr_read(link, SCR_CONTROL, &scontrol);
  
--		if (!(qc->flags & ATA_QCFLAG_FAILED))
-+		if (!(qc->flags & ATA_QCFLAG_FAILED) || qc->dev->link != link)
- 			continue;
- 		if (qc->flags & ATA_QCFLAG_SENSE_VALID && !qc->err_mask)
- 			continue;
-@@ -1429,23 +1431,24 @@ static void ata_eh_report(struct ata_por
- 	if (ehc->i.dev) {
- 		ata_dev_printk(ehc->i.dev, KERN_ERR, "exception Emask 0x%x "
- 			       "SAct 0x%x SErr 0x%x action 0x%x%s\n",
--			       ehc->i.err_mask, ap->link.sactive,
-+			       ehc->i.err_mask, link->sactive,
- 			       ehc->i.serror, ehc->i.action, frozen);
- 		if (desc)
- 			ata_dev_printk(ehc->i.dev, KERN_ERR, "(%s)\n", desc);
+-	if (ata_port_online(ap)) {
++	if (ata_link_online(link)) {
+ 		tmp = (sstatus >> 4) & 0xf;
+-		ata_port_printk(ap, KERN_INFO,
++		ata_link_printk(link, KERN_INFO,
+ 				"SATA link up %s (SStatus %X SControl %X)\n",
+ 				sata_spd_string(tmp), sstatus, scontrol);
  	} else {
--		ata_port_printk(ap, KERN_ERR, "exception Emask 0x%x "
-+		ata_link_printk(link, KERN_ERR, "exception Emask 0x%x "
- 				"SAct 0x%x SErr 0x%x action 0x%x%s\n",
--				ehc->i.err_mask, ap->link.sactive,
-+				ehc->i.err_mask, link->sactive,
- 				ehc->i.serror, ehc->i.action, frozen);
- 		if (desc)
--			ata_port_printk(ap, KERN_ERR, "(%s)\n", desc);
-+			ata_link_printk(link, KERN_ERR, "(%s)\n", desc);
+-		ata_port_printk(ap, KERN_INFO,
++		ata_link_printk(link, KERN_INFO,
+ 				"SATA link down (SStatus %X SControl %X)\n",
+ 				sstatus, scontrol);
  	}
- 
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
- 
--		if (!(qc->flags & ATA_QCFLAG_FAILED) || !qc->err_mask)
-+		if (!(qc->flags & ATA_QCFLAG_FAILED) ||
-+		    qc->dev->link != link || !qc->err_mask)
- 			continue;
- 
- 		ata_dev_printk(qc->dev, KERN_ERR, "tag %d cmd 0x%x "
-@@ -1631,17 +1634,18 @@ static int ata_eh_reset(struct ata_link 
- 	return rc;
- }
- 
--static int ata_eh_revalidate_and_attach(struct ata_port *ap,
-+static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 					struct ata_device **r_failed_dev)
+@@ -1683,32 +1683,33 @@ static void sata_print_link_status(struc
+  */
+ void __sata_phy_reset(struct ata_port *ap)
  {
--	struct ata_eh_context *ehc = &ap->link.eh_context;
-+	struct ata_port *ap = link->ap;
-+	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_device *dev;
- 	unsigned long flags;
- 	int rc = 0;
+-	u32 sstatus;
++	struct ata_link *link = &ap->link;
+ 	unsigned long timeout = jiffies + (HZ * 5);
++	u32 sstatus;
  
- 	DPRINTK("ENTER\n");
+ 	if (ap->flags & ATA_FLAG_SATA_RESET) {
+ 		/* issue phy wake/reset */
+-		sata_scr_write_flush(ap, SCR_CONTROL, 0x301);
++		sata_scr_write_flush(link, SCR_CONTROL, 0x301);
+ 		/* Couldn't find anything in SATA I/II specs, but
+ 		 * AHCI-1.1 10.4.2 says at least 1 ms. */
+ 		mdelay(1);
+ 	}
+ 	/* phy wake/clear reset */
+-	sata_scr_write_flush(ap, SCR_CONTROL, 0x300);
++	sata_scr_write_flush(link, SCR_CONTROL, 0x300);
  
--	ata_link_for_each_dev(dev, &ap->link) {
-+	ata_link_for_each_dev(dev, link) {
- 		unsigned int action = ata_eh_dev_action(dev);
+ 	/* wait for phy to become ready, if necessary */
+ 	do {
+ 		msleep(200);
+-		sata_scr_read(ap, SCR_STATUS, &sstatus);
++		sata_scr_read(link, SCR_STATUS, &sstatus);
+ 		if ((sstatus & 0xf) != 1)
+ 			break;
+ 	} while (time_before(jiffies, timeout));
  
- 		if (action & ATA_EH_REVALIDATE && ata_dev_ready(dev)) {
-@@ -1650,13 +1654,13 @@ static int ata_eh_revalidate_and_attach(
- 				break;
- 			}
+ 	/* print link status */
+-	sata_print_link_status(ap);
++	sata_print_link_status(link);
  
--			ata_eh_about_to_do(&ap->link, dev, ATA_EH_REVALIDATE);
-+			ata_eh_about_to_do(link, dev, ATA_EH_REVALIDATE);
- 			rc = ata_dev_revalidate(dev,
- 					ehc->i.flags & ATA_EHI_DID_RESET);
- 			if (rc)
- 				break;
- 
--			ata_eh_done(&ap->link, dev, ATA_EH_REVALIDATE);
-+			ata_eh_done(link, dev, ATA_EH_REVALIDATE);
- 
- 			/* schedule the scsi_rescan_device() here */
- 			queue_work(ata_aux_wq, &(ap->scsi_rescan_task));
-@@ -1689,7 +1693,7 @@ static int ata_eh_revalidate_and_attach(
+ 	/* TODO: phy layer with polling, timeouts, etc. */
+-	if (!ata_port_offline(ap))
++	if (!ata_link_offline(link))
+ 		ata_port_probe(ap);
+ 	else
+ 		ata_port_disable(ap);
+@@ -1782,9 +1783,9 @@ void ata_port_disable(struct ata_port *a
  
  /**
-  *	ata_eh_suspend - handle suspend EH action
-- *	@ap: target host port
-+ *	@link: target link
-  *	@r_failed_dev: result parameter to indicate failing device
+  *	sata_down_spd_limit - adjust SATA spd limit downward
+- *	@ap: Port to adjust SATA spd limit for
++ *	@link: Link to adjust SATA spd limit for
   *
-  *	Handle suspend EH action.  Disk devices are spinned down and
-@@ -1703,14 +1707,16 @@ static int ata_eh_revalidate_and_attach(
+- *	Adjust SATA spd limit of @ap downward.  Note that this
++ *	Adjust SATA spd limit of @link downward.  Note that this
+  *	function only adjusts the limit.  The change must be applied
+  *	using sata_set_spd().
+  *
+@@ -1794,16 +1795,16 @@ void ata_port_disable(struct ata_port *a
   *	RETURNS:
-  *	0 on success, -errno otherwise
+  *	0 on success, negative errno on failure
   */
--static int ata_eh_suspend(struct ata_port *ap, struct ata_device **r_failed_dev)
-+static int ata_eh_suspend(struct ata_link *link,
-+			  struct ata_device **r_failed_dev)
+-int sata_down_spd_limit(struct ata_port *ap)
++int sata_down_spd_limit(struct ata_link *link)
  {
-+	struct ata_port *ap = link->ap;
- 	struct ata_device *dev;
- 	int rc = 0;
+ 	u32 sstatus, spd, mask;
+ 	int rc, highbit;
  
- 	DPRINTK("ENTER\n");
- 
--	ata_link_for_each_dev(dev, &ap->link) {
-+	ata_link_for_each_dev(dev, link) {
- 		unsigned int action = ata_eh_dev_action(dev);
- 		unsigned int err_mask;
- 		unsigned long flags;
-@@ -1720,7 +1726,7 @@ static int ata_eh_suspend(struct ata_por
- 
- 		WARN_ON(dev->flags & ATA_DFLAG_SUSPENDED);
- 
--		ata_eh_about_to_do(&ap->link, dev, ATA_EH_SUSPEND);
-+		ata_eh_about_to_do(link, dev, ATA_EH_SUSPEND);
- 
- 		if (dev->class == ATA_DEV_ATA && !(action & ATA_EH_PM_FREEZE)) {
- 			/* flush cache */
-@@ -1743,7 +1749,7 @@ static int ata_eh_suspend(struct ata_por
- 		dev->flags |= ATA_DFLAG_SUSPENDED;
- 		spin_unlock_irqrestore(ap->lock, flags);
- 
--		ata_eh_done(&ap->link, dev, ATA_EH_SUSPEND);
-+		ata_eh_done(link, dev, ATA_EH_SUSPEND);
- 	}
- 
+-	rc = sata_scr_read(ap, SCR_STATUS, &sstatus);
++	rc = sata_scr_read(link, SCR_STATUS, &sstatus);
  	if (rc)
-@@ -1755,7 +1761,7 @@ static int ata_eh_suspend(struct ata_por
+ 		return rc;
  
- /**
-  *	ata_eh_prep_resume - prep for resume EH action
-- *	@ap: target host port
-+ *	@link: target link
-  *
-  *	Clear SUSPENDED in preparation for scheduled resume actions.
-  *	This allows other parts of EH to access the devices being
-@@ -1764,14 +1770,15 @@ static int ata_eh_suspend(struct ata_por
-  *	LOCKING:
-  *	Kernel thread context (may sleep).
-  */
--static void ata_eh_prep_resume(struct ata_port *ap)
-+static void ata_eh_prep_resume(struct ata_link *link)
- {
-+	struct ata_port *ap = link->ap;
- 	struct ata_device *dev;
- 	unsigned long flags;
+-	mask = ap->link.sata_spd_limit;
++	mask = link->sata_spd_limit;
+ 	if (mask <= 1)
+ 		return -EINVAL;
+ 	highbit = fls(mask) - 1;
+@@ -1817,22 +1818,22 @@ int sata_down_spd_limit(struct ata_port 
+ 	if (!mask)
+ 		return -EINVAL;
  
- 	DPRINTK("ENTER\n");
+-	ap->link.sata_spd_limit = mask;
++	link->sata_spd_limit = mask;
  
--	ata_link_for_each_dev(dev, &ap->link) {
-+	ata_link_for_each_dev(dev, link) {
- 		unsigned int action = ata_eh_dev_action(dev);
+-	ata_port_printk(ap, KERN_WARNING, "limiting SATA link speed to %s\n",
++	ata_link_printk(link, KERN_WARNING, "limiting SATA link speed to %s\n",
+ 			sata_spd_string(fls(mask)));
  
- 		if (!ata_dev_enabled(dev) || !(action & ATA_EH_RESUME))
-@@ -1787,7 +1794,7 @@ static void ata_eh_prep_resume(struct at
- 
- /**
-  *	ata_eh_resume - handle resume EH action
-- *	@ap: target host port
-+ *	@link: target link
-  *	@r_failed_dev: result parameter to indicate failing device
-  *
-  *	Handle resume EH action.  Target devices are already reset and
-@@ -1799,21 +1806,22 @@ static void ata_eh_prep_resume(struct at
-  *	RETURNS:
-  *	0 on success, -errno otherwise
-  */
--static int ata_eh_resume(struct ata_port *ap, struct ata_device **r_failed_dev)
-+static int ata_eh_resume(struct ata_link *link,
-+			 struct ata_device **r_failed_dev)
- {
- 	struct ata_device *dev;
- 	int rc = 0;
- 
- 	DPRINTK("ENTER\n");
- 
--	ata_link_for_each_dev(dev, &ap->link) {
-+	ata_link_for_each_dev(dev, link) {
- 		unsigned int action = ata_eh_dev_action(dev);
- 		unsigned int err_mask;
- 
- 		if (!ata_dev_enabled(dev) || !(action & ATA_EH_RESUME))
- 			continue;
- 
--		ata_eh_about_to_do(&ap->link, dev, ATA_EH_RESUME);
-+		ata_eh_about_to_do(link, dev, ATA_EH_RESUME);
- 
- 		if (dev->class == ATA_DEV_ATA && !(action & ATA_EH_PM_FREEZE)) {
- 			err_mask = ata_do_simple_cmd(dev,
-@@ -1827,7 +1835,7 @@ static int ata_eh_resume(struct ata_port
- 			}
- 		}
- 
--		ata_eh_done(&ap->link, dev, ATA_EH_RESUME);
-+		ata_eh_done(link, dev, ATA_EH_RESUME);
- 	}
- 
- 	if (rc)
-@@ -1837,35 +1845,35 @@ static int ata_eh_resume(struct ata_port
  	return 0;
  }
  
--static int ata_port_nr_enabled(struct ata_port *ap)
-+static int ata_link_nr_enabled(struct ata_link *link)
+-static int __sata_set_spd_needed(struct ata_port *ap, u32 *scontrol)
++static int __sata_set_spd_needed(struct ata_link *link, u32 *scontrol)
  {
- 	struct ata_device *dev;
- 	int cnt = 0;
+ 	u32 spd, limit;
  
--	ata_link_for_each_dev(dev, &ap->link)
-+	ata_link_for_each_dev(dev, link)
- 		if (ata_dev_enabled(dev))
- 			cnt++;
- 	return cnt;
- }
+-	if (ap->link.sata_spd_limit == UINT_MAX)
++	if (link->sata_spd_limit == UINT_MAX)
+ 		limit = 0;
+ 	else
+-		limit = fls(ap->link.sata_spd_limit);
++		limit = fls(link->sata_spd_limit);
  
--static int ata_port_nr_vacant(struct ata_port *ap)
-+static int ata_link_nr_vacant(struct ata_link *link)
+ 	spd = (*scontrol >> 4) & 0xf;
+ 	*scontrol = (*scontrol & ~0xf0) | ((limit & 0xf) << 4);
+@@ -1842,10 +1843,10 @@ static int __sata_set_spd_needed(struct 
+ 
+ /**
+  *	sata_set_spd_needed - is SATA spd configuration needed
+- *	@ap: Port in question
++ *	@link: Link in question
+  *
+  *	Test whether the spd limit in SControl matches
+- *	@ap->link.sata_spd_limit.  This function is used to determine
++ *	@link->sata_spd_limit.  This function is used to determine
+  *	whether hardreset is necessary to apply SATA spd
+  *	configuration.
+  *
+@@ -1855,21 +1856,21 @@ static int __sata_set_spd_needed(struct 
+  *	RETURNS:
+  *	1 if SATA spd configuration is needed, 0 otherwise.
+  */
+-int sata_set_spd_needed(struct ata_port *ap)
++int sata_set_spd_needed(struct ata_link *link)
  {
- 	struct ata_device *dev;
- 	int cnt = 0;
+ 	u32 scontrol;
  
--	ata_link_for_each_dev(dev, &ap->link)
-+	ata_link_for_each_dev(dev, link)
- 		if (dev->class == ATA_DEV_UNKNOWN)
- 			cnt++;
- 	return cnt;
- }
- 
--static int ata_eh_skip_recovery(struct ata_port *ap)
-+static int ata_eh_skip_recovery(struct ata_link *link)
- {
--	struct ata_eh_context *ehc = &ap->link.eh_context;
-+	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_device *dev;
- 
- 	/* skip if all possible devices are suspended */
--	ata_link_for_each_dev(dev, &ap->link) {
-+	ata_link_for_each_dev(dev, link) {
- 		if (ata_dev_absent(dev) || ata_dev_ready(dev))
- 			break;
- 	}
-@@ -1874,11 +1882,11 @@ static int ata_eh_skip_recovery(struct a
- 		return 1;
- 
- 	/* always thaw frozen port and recover failed devices */
--	if (ap->pflags & ATA_PFLAG_FROZEN || ata_port_nr_enabled(ap))
-+	if (link->ap->pflags & ATA_PFLAG_FROZEN || ata_link_nr_enabled(link))
+-	if (sata_scr_read(ap, SCR_CONTROL, &scontrol))
++	if (sata_scr_read(link, SCR_CONTROL, &scontrol))
  		return 0;
  
- 	/* skip if class codes for all vacant slots are ATA_DEV_NONE */
--	ata_link_for_each_dev(dev, &ap->link) {
-+	ata_link_for_each_dev(dev, link) {
- 		if (dev->class == ATA_DEV_UNKNOWN &&
- 		    ehc->classes[dev->devno] != ATA_DEV_NONE)
- 			return 0;
-@@ -1890,8 +1898,8 @@ static int ata_eh_skip_recovery(struct a
- static void ata_eh_handle_dev_fail(struct ata_device *dev, int err,
- 				   int down_xfermask)
+-	return __sata_set_spd_needed(ap, &scontrol);
++	return __sata_set_spd_needed(link, &scontrol);
+ }
+ 
+ /**
+  *	sata_set_spd - set SATA spd according to spd limit
+- *	@ap: Port to set SATA spd for
++ *	@link: Link to set SATA spd for
+  *
+- *	Set SATA spd of @ap according to sata_spd_limit.
++ *	Set SATA spd of @link according to sata_spd_limit.
+  *
+  *	LOCKING:
+  *	Inherited from caller.
+@@ -1878,18 +1879,18 @@ int sata_set_spd_needed(struct ata_port 
+  *	0 if spd doesn't need to be changed, 1 if spd has been
+  *	changed.  Negative errno if SCR registers are inaccessible.
+  */
+-int sata_set_spd(struct ata_port *ap)
++int sata_set_spd(struct ata_link *link)
  {
--	struct ata_port *ap = dev->link->ap;
--	struct ata_eh_context *ehc = &dev->link->eh_context;
-+	struct ata_link *link = dev->link;
-+	struct ata_eh_context *ehc = &link->eh_context;
+ 	u32 scontrol;
+ 	int rc;
  
- 	switch (err) {
- 	case -ENODEV:
-@@ -1901,7 +1909,7 @@ static void ata_eh_handle_dev_fail(struc
- 		ehc->tries[dev->devno] = 0;
- 		break;
- 	case -EIO:
--		sata_down_spd_limit(&ap->link);
-+		sata_down_spd_limit(link);
- 	default:
- 		ehc->tries[dev->devno]--;
- 		if (down_xfermask &&
-@@ -1914,7 +1922,7 @@ static void ata_eh_handle_dev_fail(struc
- 		ata_dev_disable(dev);
+-	if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
++	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
+ 		return rc;
  
- 		/* detach if offline */
--		if (ata_link_offline(&ap->link))
-+		if (ata_link_offline(link))
- 			ata_eh_detach_dev(dev);
+-	if (!__sata_set_spd_needed(ap, &scontrol))
++	if (!__sata_set_spd_needed(link, &scontrol))
+ 		return 0;
  
- 		/* probe if requested */
-@@ -1961,14 +1969,15 @@ static int ata_eh_recover(struct ata_por
- 			  ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 			  ata_postreset_fn_t postreset)
+-	if ((rc = sata_scr_write(ap, SCR_CONTROL, scontrol)))
++	if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
+ 		return rc;
+ 
+ 	return 1;
+@@ -2483,11 +2484,11 @@ err_out:
+ }
+ 
+ /**
+- *	sata_phy_debounce - debounce SATA phy status
+- *	@ap: ATA port to debounce SATA phy status for
++ *	sata_link_debounce - debounce SATA phy status
++ *	@link: ATA link to debounce SATA phy status for
+  *	@params: timing parameters { interval, duratinon, timeout } in msec
+  *
+- *	Make sure SStatus of @ap reaches stable state, determined by
++ *	Make sure SStatus of @link reaches stable state, determined by
+  *	holding the same value where DET is not 1 for @duration polled
+  *	every @interval, before @timeout.  Timeout constraints the
+  *	beginning of the stable state.  Because, after hot unplugging,
+@@ -2500,7 +2501,7 @@ err_out:
+  *	RETURNS:
+  *	0 on success, -errno on failure.
+  */
+-int sata_phy_debounce(struct ata_port *ap, const unsigned long *params)
++int sata_link_debounce(struct ata_link *link, const unsigned long *params)
+ {
+ 	unsigned long interval_msec = params[0];
+ 	unsigned long duration = params[1] * HZ / 1000;
+@@ -2509,7 +2510,7 @@ int sata_phy_debounce(struct ata_port *a
+ 	u32 last, cur;
+ 	int rc;
+ 
+-	if ((rc = sata_scr_read(ap, SCR_STATUS, &cur)))
++	if ((rc = sata_scr_read(link, SCR_STATUS, &cur)))
+ 		return rc;
+ 	cur &= 0xf;
+ 
+@@ -2518,7 +2519,7 @@ int sata_phy_debounce(struct ata_port *a
+ 
+ 	while (1) {
+ 		msleep(interval_msec);
+-		if ((rc = sata_scr_read(ap, SCR_STATUS, &cur)))
++		if ((rc = sata_scr_read(link, SCR_STATUS, &cur)))
+ 			return rc;
+ 		cur &= 0xf;
+ 
+@@ -2542,11 +2543,11 @@ int sata_phy_debounce(struct ata_port *a
+ }
+ 
+ /**
+- *	sata_phy_resume - resume SATA phy
+- *	@ap: ATA port to resume SATA phy for
++ *	sata_link_resume - resume SATA link
++ *	@link: ATA link to resume SATA
+  *	@params: timing parameters { interval, duratinon, timeout } in msec
+  *
+- *	Resume SATA phy of @ap and debounce it.
++ *	Resume SATA phy @link and debounce it.
+  *
+  *	LOCKING:
+  *	Kernel thread context (may sleep)
+@@ -2554,17 +2555,17 @@ int sata_phy_debounce(struct ata_port *a
+  *	RETURNS:
+  *	0 on success, -errno on failure.
+  */
+-int sata_phy_resume(struct ata_port *ap, const unsigned long *params)
++int sata_link_resume(struct ata_link *link, const unsigned long *params)
+ {
+ 	u32 scontrol;
+ 	int rc;
+ 
+-	if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
++	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
+ 		return rc;
+ 
+ 	scontrol = (scontrol & 0x0f0) | 0x300;
+ 
+-	if ((rc = sata_scr_write(ap, SCR_CONTROL, scontrol)))
++	if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
+ 		return rc;
+ 
+ 	/* Some PHYs react badly if SStatus is pounded immediately
+@@ -2572,7 +2573,7 @@ int sata_phy_resume(struct ata_port *ap,
+ 	 */
+ 	msleep(200);
+ 
+-	return sata_phy_debounce(ap, params);
++	return sata_link_debounce(link, params);
+ }
+ 
+ static void ata_wait_spinup(struct ata_port *ap)
+@@ -2583,10 +2584,11 @@ static void ata_wait_spinup(struct ata_p
+ 
+ 	/* first, debounce phy if SATA */
+ 	if (ap->cbl == ATA_CBL_SATA) {
+-		rc = sata_phy_debounce(ap, sata_deb_timing_hotplug);
++		rc = sata_link_debounce(&ap->link, sata_deb_timing_hotplug);
+ 
+ 		/* if debounced successfully and offline, no need to wait */
+-		if ((rc == 0 || rc == -EOPNOTSUPP) && ata_port_offline(ap))
++		if ((rc == 0 || rc == -EOPNOTSUPP) &&
++		    ata_link_offline(&ap->link))
+ 			return;
+ 	}
+ 
+@@ -2618,7 +2620,8 @@ static void ata_wait_spinup(struct ata_p
+  */
+ int ata_std_prereset(struct ata_port *ap)
  {
 -	struct ata_eh_context *ehc = &ap->link.eh_context;
 +	struct ata_link *link = &ap->link;
 +	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_device *dev;
- 	int down_xfermask, rc;
+ 	const unsigned long *timing = sata_ehc_deb_timing(ehc);
+ 	int rc;
+ 
+@@ -2635,9 +2638,9 @@ int ata_std_prereset(struct ata_port *ap
+ 	if (ehc->i.action & ATA_EH_HARDRESET)
+ 		return 0;
+ 
+-	/* if SATA, resume phy */
++	/* if SATA, resume link */
+ 	if (ap->cbl == ATA_CBL_SATA) {
+-		rc = sata_phy_resume(ap, timing);
++		rc = sata_link_resume(link, timing);
+ 		if (rc && rc != -EOPNOTSUPP) {
+ 			/* phy resume failed */
+ 			ata_port_printk(ap, KERN_WARNING, "failed to resume "
+@@ -2649,7 +2652,7 @@ int ata_std_prereset(struct ata_port *ap
+ 	/* Wait for !BSY if the controller can wait for the first D2H
+ 	 * Reg FIS and we don't know that no device is attached.
+ 	 */
+-	if (!(ap->flags & ATA_FLAG_SKIP_D2H_BSY) && !ata_port_offline(ap))
++	if (!(ap->flags & ATA_FLAG_SKIP_D2H_BSY) && !ata_link_offline(link))
+ 		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
+ 
+ 	return 0;
+@@ -2670,13 +2673,14 @@ int ata_std_prereset(struct ata_port *ap
+  */
+ int ata_std_softreset(struct ata_port *ap, unsigned int *classes)
+ {
++	struct ata_link *link = &ap->link;
+ 	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
+ 	unsigned int devmask = 0, err_mask;
+ 	u8 err;
  
  	DPRINTK("ENTER\n");
  
- 	/* prep for recovery */
--	ata_link_for_each_dev(dev, &ap->link) {
-+	ata_link_for_each_dev(dev, link) {
- 		ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
- 
- 		/* process hotplug request */
-@@ -1994,23 +2003,23 @@ static int ata_eh_recover(struct ata_por
+-	if (ata_port_offline(ap)) {
++	if (ata_link_offline(link)) {
+ 		classes[0] = ATA_DEV_NONE;
  		goto out;
- 
- 	/* prep for resume */
--	ata_eh_prep_resume(ap);
-+	ata_eh_prep_resume(link);
- 
- 	/* skip EH if possible. */
--	if (ata_eh_skip_recovery(ap))
-+	if (ata_eh_skip_recovery(link))
- 		ehc->i.action = 0;
- 
--	ata_link_for_each_dev(dev, &ap->link)
-+	ata_link_for_each_dev(dev, link)
- 		ehc->classes[dev->devno] = ATA_DEV_UNKNOWN;
- 
- 	/* reset */
- 	if (ehc->i.action & ATA_EH_RESET_MASK) {
- 		ata_eh_freeze_port(ap);
- 
--		rc = ata_eh_reset(&ap->link, ata_port_nr_vacant(ap), prereset,
-+		rc = ata_eh_reset(link, ata_link_nr_vacant(link), prereset,
- 				  softreset, hardreset, postreset);
- 		if (rc) {
--			ata_port_printk(ap, KERN_ERR,
-+			ata_link_printk(link, KERN_ERR,
- 					"reset failed, giving up\n");
- 			goto out;
- 		}
-@@ -2019,18 +2028,18 @@ static int ata_eh_recover(struct ata_por
  	}
- 
- 	/* revalidate existing devices and attach new ones */
--	rc = ata_eh_revalidate_and_attach(ap, &dev);
-+	rc = ata_eh_revalidate_and_attach(link, &dev);
- 	if (rc)
- 		goto dev_fail;
- 
- 	/* resume devices */
--	rc = ata_eh_resume(ap, &dev);
-+	rc = ata_eh_resume(link, &dev);
- 	if (rc)
- 		goto dev_fail;
- 
- 	/* configure transfer mode if the port has been reset */
- 	if (ehc->i.flags & ATA_EHI_DID_RESET) {
--		rc = ata_set_mode(ap, &dev);
-+		rc = ata_set_mode(link, &dev);
- 		if (rc) {
- 			down_xfermask = 1;
- 			goto dev_fail;
-@@ -2038,7 +2047,7 @@ static int ata_eh_recover(struct ata_por
- 	}
- 
- 	/* suspend devices */
--	rc = ata_eh_suspend(ap, &dev);
-+	rc = ata_eh_suspend(link, &dev);
- 	if (rc)
- 		goto dev_fail;
- 
-@@ -2047,8 +2056,8 @@ static int ata_eh_recover(struct ata_por
-  dev_fail:
- 	ata_eh_handle_dev_fail(dev, rc, down_xfermask);
- 
--	if (ata_port_nr_enabled(ap)) {
--		ata_port_printk(ap, KERN_WARNING, "failed to recover some "
-+	if (ata_link_nr_enabled(link)) {
-+		ata_link_printk(link, KERN_WARNING, "failed to recover some "
- 				"devices, retrying in 5 secs\n");
- 		ssleep(5);
- 	} else {
-@@ -2063,7 +2072,7 @@ static int ata_eh_recover(struct ata_por
- 		/* recovery failed, activate hp-poll */
- 		ata_hp_poll_activate(ap);
- 
--		ata_link_for_each_dev(dev, &ap->link);
-+		ata_link_for_each_dev(dev, link);
- 			ata_dev_disable(dev);
- 	}
- 
-@@ -2130,8 +2139,8 @@ void ata_do_eh(struct ata_port *ap, ata_
- 	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 	       ata_postreset_fn_t postreset)
+@@ -2724,37 +2728,37 @@ int ata_std_softreset(struct ata_port *a
+  */
+ int sata_std_hardreset(struct ata_port *ap, unsigned int *class)
  {
--	ata_eh_autopsy(ap);
--	ata_eh_report(ap);
-+	ata_eh_autopsy(&ap->link);
-+	ata_eh_report(&ap->link);
- 	ata_eh_recover(ap, prereset, softreset, hardreset, postreset);
- 	ata_eh_finish(ap);
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
+-	const unsigned long *timing = sata_ehc_deb_timing(ehc);
++	struct ata_link *link = &ap->link;
++	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
+ 	u32 scontrol;
+ 	int rc;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+-	if (sata_set_spd_needed(ap)) {
++	if (sata_set_spd_needed(link)) {
+ 		/* SATA spec says nothing about how to reconfigure
+ 		 * spd.  To be on the safe side, turn off phy during
+ 		 * reconfiguration.  This works for at least ICH7 AHCI
+ 		 * and Sil3124.
+ 		 */
+-		if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
++		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
+ 			return rc;
+ 
+ 		scontrol = (scontrol & 0x0f0) | 0x302;
+ 
+-		if ((rc = sata_scr_write(ap, SCR_CONTROL, scontrol)))
++		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
+ 			return rc;
+ 
+-		sata_set_spd(ap);
++		sata_set_spd(link);
+ 	}
+ 
+ 	/* issue phy wake/reset */
+-	if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
++	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
+ 		return rc;
+ 
+ 	scontrol = (scontrol & 0x0f0) | 0x301;
+ 
+-	if ((rc = sata_scr_write_flush(ap, SCR_CONTROL, scontrol)))
++	if ((rc = sata_scr_write_flush(link, SCR_CONTROL, scontrol)))
+ 		return rc;
+ 
+ 	/* Couldn't find anything in SATA I/II specs, but AHCI-1.1
+@@ -2763,10 +2767,10 @@ int sata_std_hardreset(struct ata_port *
+ 	msleep(1);
+ 
+ 	/* bring phy back */
+-	sata_phy_resume(ap, timing);
++	sata_link_resume(link, timing);
+ 
+ 	/* TODO: phy layer with polling, timeouts, etc. */
+-	if (ata_port_offline(ap)) {
++	if (ata_link_offline(link)) {
+ 		*class = ATA_DEV_NONE;
+ 		DPRINTK("EXIT, link offline\n");
+ 		return 0;
+@@ -2800,16 +2804,17 @@ int sata_std_hardreset(struct ata_port *
+  */
+ void ata_std_postreset(struct ata_port *ap, unsigned int *classes)
+ {
++	struct ata_link *link = &ap->link;
+ 	u32 serror;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+ 	/* print link status */
+-	sata_print_link_status(ap);
++	sata_print_link_status(link);
+ 
+ 	/* clear SError */
+-	if (sata_scr_read(ap, SCR_ERROR, &serror) == 0)
+-		sata_scr_write(ap, SCR_ERROR, serror);
++	if (sata_scr_read(link, SCR_ERROR, &serror) == 0)
++		sata_scr_write(link, SCR_ERROR, serror);
+ 
+ 	/* re-enable interrupts */
+ 	if (!ap->ops->error_handler) {
+@@ -2852,12 +2857,13 @@ void ata_std_postreset(struct ata_port *
+  */
+ void sata_std_hp_poll_activate(struct ata_port *ap)
+ {
++	struct ata_link *link = &ap->link;
+ 	u32 serror;
+ 
+-	sata_scr_read(ap, SCR_ERROR, &serror);
++	sata_scr_read(link, SCR_ERROR, &serror);
+ 	serror &= SERR_PHYRDY_CHG | SERR_DEV_XCHG;
+ 	if (serror)
+-		sata_scr_write(ap, SCR_ERROR, serror);
++		sata_scr_write(link, SCR_ERROR, serror);
+ 
+ 	ap->hp_poll_data = 0;
  }
+@@ -2879,10 +2885,11 @@ void sata_std_hp_poll_activate(struct at
+ int sata_std_hp_poll(struct ata_port *ap)
+ {
+ 	unsigned long state = (unsigned long)ap->hp_poll_data;
++	struct ata_link *link = &ap->link;
+ 	u32 serror;
+ 	int rc = 0;
+ 
+-	sata_scr_read(ap, SCR_ERROR, &serror);
++	sata_scr_read(link, SCR_ERROR, &serror);
+ 	serror &= SERR_PHYRDY_CHG | SERR_DEV_XCHG;
+ 
+ 	switch (state) {
+@@ -2893,7 +2900,7 @@ int sata_std_hp_poll(struct ata_port *ap
+ 			 * hotplug event till hotplug event stays
+ 			 * quiescent for one full polling interval.
+ 			 */
+-			sata_scr_write(ap, SCR_ERROR, serror);
++			sata_scr_write(link, SCR_ERROR, serror);
+ 			state = 1;
+ 		}
+ 		break;
+@@ -2902,7 +2909,7 @@ int sata_std_hp_poll(struct ata_port *ap
+ 		if (!serror)
+ 			rc = 1;
+ 		else
+-			sata_scr_write(ap, SCR_ERROR, serror);
++			sata_scr_write(link, SCR_ERROR, serror);
+ 		break;
+ 	}
+ 
+@@ -4916,9 +4923,9 @@ irqreturn_t ata_interrupt (int irq, void
+ 
+ /**
+  *	sata_scr_valid - test whether SCRs are accessible
+- *	@ap: ATA port to test SCR accessibility for
++ *	@link: ATA link to test SCR accessibility for
+  *
+- *	Test whether SCRs are accessible for @ap.
++ *	Test whether SCRs are accessible for @link.
+  *
+  *	LOCKING:
+  *	None.
+@@ -4926,18 +4933,20 @@ irqreturn_t ata_interrupt (int irq, void
+  *	RETURNS:
+  *	1 if SCRs are accessible, 0 otherwise.
+  */
+-int sata_scr_valid(struct ata_port *ap)
++int sata_scr_valid(struct ata_link *link)
+ {
++	struct ata_port *ap = link->ap;
++
+ 	return ap->cbl == ATA_CBL_SATA && ap->ops->scr_read;
+ }
+ 
+ /**
+  *	sata_scr_read - read SCR register of the specified port
+- *	@ap: ATA port to read SCR for
++ *	@link: ATA link to read SCR for
+  *	@reg: SCR to read
+  *	@val: Place to store read value
+  *
+- *	Read SCR register @reg of @ap into *@val.  This function is
++ *	Read SCR register @reg of @link into *@val.  This function is
+  *	guaranteed to succeed if the cable type of the port is SATA
+  *	and the port implements ->scr_read.
+  *
+@@ -4947,9 +4956,11 @@ int sata_scr_valid(struct ata_port *ap)
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+-int sata_scr_read(struct ata_port *ap, int reg, u32 *val)
++int sata_scr_read(struct ata_link *link, int reg, u32 *val)
+ {
+-	if (sata_scr_valid(ap)) {
++	struct ata_port *ap = link->ap;
++
++	if (sata_scr_valid(link)) {
+ 		*val = ap->ops->scr_read(ap, reg);
+ 		return 0;
+ 	}
+@@ -4958,11 +4969,11 @@ int sata_scr_read(struct ata_port *ap, i
+ 
+ /**
+  *	sata_scr_write - write SCR register of the specified port
+- *	@ap: ATA port to write SCR for
++ *	@link: ATA link to write SCR for
+  *	@reg: SCR to write
+  *	@val: value to write
+  *
+- *	Write @val to SCR register @reg of @ap.  This function is
++ *	Write @val to SCR register @reg of @link.  This function is
+  *	guaranteed to succeed if the cable type of the port is SATA
+  *	and the port implements ->scr_read.
+  *
+@@ -4972,9 +4983,11 @@ int sata_scr_read(struct ata_port *ap, i
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+-int sata_scr_write(struct ata_port *ap, int reg, u32 val)
++int sata_scr_write(struct ata_link *link, int reg, u32 val)
+ {
+-	if (sata_scr_valid(ap)) {
++	struct ata_port *ap = link->ap;
++
++	if (sata_scr_valid(link)) {
+ 		ap->ops->scr_write(ap, reg, val);
+ 		return 0;
+ 	}
+@@ -4983,7 +4996,7 @@ int sata_scr_write(struct ata_port *ap, 
+ 
+ /**
+  *	sata_scr_write_flush - write SCR register of the specified port and flush
+- *	@ap: ATA port to write SCR for
++ *	@link: ATA link to write SCR for
+  *	@reg: SCR to write
+  *	@val: value to write
+  *
+@@ -4996,9 +5009,11 @@ int sata_scr_write(struct ata_port *ap, 
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+-int sata_scr_write_flush(struct ata_port *ap, int reg, u32 val)
++int sata_scr_write_flush(struct ata_link *link, int reg, u32 val)
+ {
+-	if (sata_scr_valid(ap)) {
++	struct ata_port *ap = link->ap;
++
++	if (sata_scr_valid(link)) {
+ 		ap->ops->scr_write(ap, reg, val);
+ 		ap->ops->scr_read(ap, reg);
+ 		return 0;
+@@ -5007,12 +5022,12 @@ int sata_scr_write_flush(struct ata_port
+ }
+ 
+ /**
+- *	ata_port_online - test whether the given port is online
+- *	@ap: ATA port to test
++ *	ata_link_online - test whether the given link is online
++ *	@link: ATA link to test
+  *
+- *	Test whether @ap is online.  Note that this function returns 0
+- *	if online status of @ap cannot be obtained, so
+- *	ata_port_online(ap) != !ata_port_offline(ap).
++ *	Test whether @link is online.  Note that this function returns
++ *	0 if online status of @link cannot be obtained, so
++ *	ata_link_online(link) != !ata_link_offline(link).
+  *
+  *	LOCKING:
+  *	None.
+@@ -5020,22 +5035,23 @@ int sata_scr_write_flush(struct ata_port
+  *	RETURNS:
+  *	1 if the port online status is available and online.
+  */
+-int ata_port_online(struct ata_port *ap)
++int ata_link_online(struct ata_link *link)
+ {
+ 	u32 sstatus;
+ 
+-	if (!sata_scr_read(ap, SCR_STATUS, &sstatus) && (sstatus & 0xf) == 0x3)
++	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0 &&
++	    (sstatus & 0xf) == 0x3)
+ 		return 1;
+ 	return 0;
+ }
+ 
+ /**
+- *	ata_port_offline - test whether the given port is offline
+- *	@ap: ATA port to test
++ *	ata_link_offline - test whether the given link is offline
++ *	@link: ATA link to test
+  *
+- *	Test whether @ap is offline.  Note that this function returns
+- *	0 if offline status of @ap cannot be obtained, so
+- *	ata_port_online(ap) != !ata_port_offline(ap).
++ *	Test whether @link is offline.  Note that this function
++ *	returns 0 if offline status of @link cannot be obtained, so
++ *	ata_link_online(link) != !ata_link_offline(link).
+  *
+  *	LOCKING:
+  *	None.
+@@ -5043,11 +5059,12 @@ int ata_port_online(struct ata_port *ap)
+  *	RETURNS:
+  *	1 if the port offline status is available and offline.
+  */
+-int ata_port_offline(struct ata_port *ap)
++int ata_link_offline(struct ata_link *link)
+ {
+ 	u32 sstatus;
+ 
+-	if (!sata_scr_read(ap, SCR_STATUS, &sstatus) && (sstatus & 0xf) != 0x3)
++	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0 &&
++	    (sstatus & 0xf) != 0x3)
+ 		return 1;
+ 	return 0;
+ }
+@@ -5533,7 +5550,7 @@ int ata_device_add(const struct ata_prob
+ 		ap = host_set->ports[i];
+ 
+ 		/* init sata_spd_limit to the current value */
+-		if (sata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
++		if (sata_scr_read(&ap->link, SCR_CONTROL, &scontrol) == 0) {
+ 			int spd = (scontrol >> 4) & 0xf;
+ 			ap->link.hw_sata_spd_limit &= (1 << spd) - 1;
+ 		}
+@@ -6043,8 +6060,8 @@ EXPORT_SYMBOL_GPL(ata_bmdma_error_handle
+ EXPORT_SYMBOL_GPL(ata_bmdma_post_internal_cmd);
+ EXPORT_SYMBOL_GPL(ata_port_probe);
+ EXPORT_SYMBOL_GPL(sata_set_spd);
+-EXPORT_SYMBOL_GPL(sata_phy_debounce);
+-EXPORT_SYMBOL_GPL(sata_phy_resume);
++EXPORT_SYMBOL_GPL(sata_link_debounce);
++EXPORT_SYMBOL_GPL(sata_link_resume);
+ EXPORT_SYMBOL_GPL(sata_phy_reset);
+ EXPORT_SYMBOL_GPL(__sata_phy_reset);
+ EXPORT_SYMBOL_GPL(ata_bus_reset);
+@@ -6073,8 +6090,8 @@ EXPORT_SYMBOL_GPL(sata_scr_valid);
+ EXPORT_SYMBOL_GPL(sata_scr_read);
+ EXPORT_SYMBOL_GPL(sata_scr_write);
+ EXPORT_SYMBOL_GPL(sata_scr_write_flush);
+-EXPORT_SYMBOL_GPL(ata_port_online);
+-EXPORT_SYMBOL_GPL(ata_port_offline);
++EXPORT_SYMBOL_GPL(ata_link_online);
++EXPORT_SYMBOL_GPL(ata_link_offline);
+ EXPORT_SYMBOL_GPL(ata_host_set_suspend);
+ EXPORT_SYMBOL_GPL(ata_host_set_resume);
+ EXPORT_SYMBOL_GPL(ata_id_string);
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index fb6e3f8..22ca9a2 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1273,7 +1273,7 @@ static int ata_eh_speed_down(struct ata_
+ 		return 0;
+ 
+ 	/* speed down SATA link speed if possible */
+-	if (sata_down_spd_limit(dev->link->ap) == 0)
++	if (sata_down_spd_limit(dev->link) == 0)
+ 		return ATA_EH_HARDRESET;
+ 
+ 	/* lower transfer mode */
+@@ -1298,7 +1298,8 @@ static int ata_eh_speed_down(struct ata_
+  */
+ static void ata_eh_autopsy(struct ata_port *ap)
+ {
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
++	struct ata_link *link = &ap->link;
++	struct ata_eh_context *ehc = &link->eh_context;
+ 	unsigned int action = ehc->i.action;
+ 	struct ata_device *failed_dev = NULL;
+ 	unsigned int all_err_mask = 0;
+@@ -1312,7 +1313,7 @@ static void ata_eh_autopsy(struct ata_po
+ 		return;
+ 
+ 	/* obtain and analyze SError */
+-	rc = sata_scr_read(ap, SCR_ERROR, &serror);
++	rc = sata_scr_read(link, SCR_ERROR, &serror);
+ 	if (rc == 0) {
+ 		ehc->i.serror |= serror;
+ 		ata_eh_analyze_serror(ap);
+@@ -1501,7 +1502,8 @@ static int ata_eh_reset(struct ata_port 
+ 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+ 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
+ {
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
++	struct ata_link *link = &ap->link;
++	struct ata_eh_context *ehc = &link->eh_context;
+ 	unsigned int *classes = ehc->classes;
+ 	int tries = ATA_EH_RESET_TRIES;
+ 	int verbose = !(ehc->i.flags & ATA_EHI_QUIET);
+@@ -1515,7 +1517,7 @@ static int ata_eh_reset(struct ata_port 
+ 	 */
+ 	action = ehc->i.action;
+ 	ehc->i.action &= ~ATA_EH_RESET_MASK;
+-	if (softreset && (!hardreset || (!sata_set_spd_needed(ap) &&
++	if (softreset && (!hardreset || (!sata_set_spd_needed(link) &&
+ 					 !(action & ATA_EH_HARDRESET))))
+ 		ehc->i.action |= ATA_EH_SOFTRESET;
+ 	else
+@@ -1537,7 +1539,7 @@ static int ata_eh_reset(struct ata_port 
+ 		reset = softreset;
+ 	else {
+ 		/* prereset told us not to reset, bang classes and return */
+-		ata_link_for_each_dev(dev, &ap->link)
++		ata_link_for_each_dev(dev, link)
+ 			classes[dev->devno] = ATA_DEV_NONE;
+ 		return 0;
+ 	}
+@@ -1605,7 +1607,7 @@ static int ata_eh_reset(struct ata_port 
+ 		ssleep(5);
+ 
+ 		if (reset == hardreset)
+-			sata_down_spd_limit(ap);
++			sata_down_spd_limit(link);
+ 		if (hardreset)
+ 			reset = hardreset;
+ 		goto retry;
+@@ -1615,7 +1617,7 @@ static int ata_eh_reset(struct ata_port 
+ 		/* After the reset, the device state is PIO 0 and the
+ 		 * controller state is undefined.  Record the mode.
+ 		 */
+-		ata_link_for_each_dev(dev, &ap->link)
++		ata_link_for_each_dev(dev, link)
+ 			dev->pio_mode = XFER_PIO_0;
+ 
+ 		if (postreset)
+@@ -1643,7 +1645,7 @@ static int ata_eh_revalidate_and_attach(
+ 		unsigned int action = ata_eh_dev_action(dev);
+ 
+ 		if (action & ATA_EH_REVALIDATE && ata_dev_ready(dev)) {
+-			if (ata_port_offline(ap)) {
++			if (ata_link_offline(dev->link)) {
+ 				rc = -EIO;
+ 				break;
+ 			}
+@@ -1899,7 +1901,7 @@ static void ata_eh_handle_dev_fail(struc
+ 		ehc->tries[dev->devno] = 0;
+ 		break;
+ 	case -EIO:
+-		sata_down_spd_limit(ap);
++		sata_down_spd_limit(&ap->link);
+ 	default:
+ 		ehc->tries[dev->devno]--;
+ 		if (down_xfermask &&
+@@ -1912,7 +1914,7 @@ static void ata_eh_handle_dev_fail(struc
+ 		ata_dev_disable(dev);
+ 
+ 		/* detach if offline */
+-		if (ata_port_offline(ap))
++		if (ata_link_offline(&ap->link))
+ 			ata_eh_detach_dev(dev);
+ 
+ 		/* probe if requested */
 diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index 69b9b0e..c544d88 100644
+index 3171dde..69b9b0e 100644
 --- a/drivers/scsi/libata.h
 +++ b/drivers/scsi/libata.h
-@@ -57,7 +57,8 @@ extern int ata_dev_configure(struct ata_
- extern int sata_down_spd_limit(struct ata_link *link);
- extern int sata_set_spd_needed(struct ata_link *link);
+@@ -54,8 +54,8 @@ extern unsigned int ata_do_simple_cmd(st
+ extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+ 			   int post_reset, u16 *id);
+ extern int ata_dev_configure(struct ata_device *dev, int print_info);
+-extern int sata_down_spd_limit(struct ata_port *ap);
+-extern int sata_set_spd_needed(struct ata_port *ap);
++extern int sata_down_spd_limit(struct ata_link *link);
++extern int sata_set_spd_needed(struct ata_link *link);
  extern int ata_down_xfermask_limit(struct ata_device *dev, int force_pio0);
--extern int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev);
-+extern int ata_set_mode(struct ata_link *link,
-+			struct ata_device **r_failed_dev);
+ extern int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev);
  extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern void ata_qc_issue(struct ata_queued_cmd *qc);
- extern void __ata_qc_complete(struct ata_queued_cmd *qc);
+diff --git a/drivers/scsi/sata_mv.c b/drivers/scsi/sata_mv.c
+index 8c4d9be..608be65 100644
+--- a/drivers/scsi/sata_mv.c
++++ b/drivers/scsi/sata_mv.c
+@@ -1310,8 +1310,8 @@ static void mv_err_intr(struct ata_port 
+ 	edma_err_cause = readl(port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+ 
+ 	if (EDMA_ERR_SERR & edma_err_cause) {
+-		sata_scr_read(ap, SCR_ERROR, &serr);
+-		sata_scr_write_flush(ap, SCR_ERROR, serr);
++		sata_scr_read(&ap->link, SCR_ERROR, &serr);
++		sata_scr_write_flush(&ap->link, SCR_ERROR, serr);
+ 	}
+ 	if (EDMA_ERR_SELF_DIS & edma_err_cause) {
+ 		struct mv_port_priv *pp	= ap->private_data;
+@@ -1952,15 +1952,15 @@ static void __mv_phy_reset(struct ata_po
+ 
+ 	/* Issue COMRESET via SControl */
+ comreset_retry:
+-	sata_scr_write_flush(ap, SCR_CONTROL, 0x301);
++	sata_scr_write_flush(&ap->link, SCR_CONTROL, 0x301);
+ 	__msleep(1, can_sleep);
+ 
+-	sata_scr_write_flush(ap, SCR_CONTROL, 0x300);
++	sata_scr_write_flush(&ap->link, SCR_CONTROL, 0x300);
+ 	__msleep(20, can_sleep);
+ 
+ 	timeout = jiffies + msecs_to_jiffies(200);
+ 	do {
+-		sata_scr_read(ap, SCR_STATUS, &sstatus);
++		sata_scr_read(&ap->link, SCR_STATUS, &sstatus);
+ 		sstatus &= 0x3;
+ 		if ((sstatus == 3) || (sstatus == 0))
+ 			break;
+@@ -1978,10 +1978,10 @@ comreset_retry:
+ 		"SCtrl 0x%08x\n", mv_scr_read(ap, SCR_STATUS),
+ 		mv_scr_read(ap, SCR_ERROR), mv_scr_read(ap, SCR_CONTROL));
+ 
+-	if (ata_port_online(ap)) {
++	if (ata_link_online(&ap->link)) {
+ 		ata_port_probe(ap);
+ 	} else {
+-		sata_scr_read(ap, SCR_STATUS, &sstatus);
++		sata_scr_read(&ap->link, SCR_STATUS, &sstatus);
+ 		ata_port_printk(ap, KERN_INFO,
+ 				"no device found (phy stat %08x)\n", sstatus);
+ 		ata_port_disable(ap);
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 298c1d8..be98dc3 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -546,7 +546,7 @@ static int sil24_softreset(struct ata_po
+ 
+ 	DPRINTK("ENTER\n");
+ 
+-	if (ata_port_offline(ap)) {
++	if (ata_link_offline(&ap->link)) {
+ 		DPRINTK("PHY reports no device\n");
+ 		*class = ATA_DEV_NONE;
+ 		goto out;
+@@ -603,10 +603,10 @@ static int sil24_hardreset(struct ata_po
+ 	u32 tmp;
+ 
+ 	/* sil24 does the right thing(tm) without any protection */
+-	sata_set_spd(ap);
++	sata_set_spd(&ap->link);
+ 
+ 	tout_msec = 100;
+-	if (ata_port_online(ap))
++	if (ata_link_online(&ap->link))
+ 		tout_msec = 5000;
+ 
+ 	writel(PORT_CS_DEV_RST, port + PORT_CTRL_STAT);
+@@ -616,14 +616,14 @@ static int sil24_hardreset(struct ata_po
+ 	/* SStatus oscillates between zero and valid status after
+ 	 * DEV_RST, debounce it.
+ 	 */
+-	rc = sata_phy_debounce(ap, sata_deb_timing_long);
++	rc = sata_link_debounce(&ap->link, sata_deb_timing_long);
+ 	if (rc) {
+ 		reason = "PHY debouncing failed";
+ 		goto err;
+ 	}
+ 
+ 	if (tmp & PORT_CS_DEV_RST) {
+-		if (ata_port_offline(ap))
++		if (ata_link_offline(&ap->link))
+ 			return 0;
+ 		reason = "link not ready";
+ 		goto err;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 990a555..8dfafc6 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -676,9 +676,10 @@ extern void ata_port_probe(struct ata_po
+ extern void __sata_phy_reset(struct ata_port *ap);
+ extern void sata_phy_reset(struct ata_port *ap);
+ extern void ata_bus_reset(struct ata_port *ap);
+-extern int sata_set_spd(struct ata_port *ap);
+-extern int sata_phy_debounce(struct ata_port *ap, const unsigned long *param);
+-extern int sata_phy_resume(struct ata_port *ap, const unsigned long *param);
++extern int sata_set_spd(struct ata_link *link);
++extern int sata_link_debounce(struct ata_link *link,
++			      const unsigned long *params);
++extern int sata_link_resume(struct ata_link *link, const unsigned long *params);
+ extern int ata_std_prereset(struct ata_port *ap);
+ extern int ata_std_softreset(struct ata_port *ap, unsigned int *classes);
+ extern int sata_std_hardreset(struct ata_port *ap, unsigned int *class);
+@@ -706,12 +707,12 @@ extern int ata_scsi_ioctl(struct scsi_de
+ extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
+ extern int ata_scsi_release(struct Scsi_Host *host);
+ extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
+-extern int sata_scr_valid(struct ata_port *ap);
+-extern int sata_scr_read(struct ata_port *ap, int reg, u32 *val);
+-extern int sata_scr_write(struct ata_port *ap, int reg, u32 val);
+-extern int sata_scr_write_flush(struct ata_port *ap, int reg, u32 val);
+-extern int ata_port_online(struct ata_port *ap);
+-extern int ata_port_offline(struct ata_port *ap);
++extern int sata_scr_valid(struct ata_link *link);
++extern int sata_scr_read(struct ata_link *link, int reg, u32 *val);
++extern int sata_scr_write(struct ata_link *link, int reg, u32 val);
++extern int sata_scr_write_flush(struct ata_link *link, int reg, u32 val);
++extern int ata_link_online(struct ata_link *link);
++extern int ata_link_offline(struct ata_link *link);
+ extern int ata_scsi_device_resume(struct scsi_device *);
+ extern int ata_scsi_device_suspend(struct scsi_device *, pm_message_t state);
+ extern int ata_host_set_suspend(struct ata_host_set *host_set,
 -- 
 1.3.2
 
