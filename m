@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 15/17] libata-link: update EH to deal with PMP links
+Subject: [PATCH 17/17] libata-link: update Power Management to handle PMP links
 Date: Sat, 8 Jul 2006 14:45:38 +0900
-Message-ID: <11523375383806-git-send-email-htejun@gmail.com>
+Message-ID: <1152337538606-git-send-email-htejun@gmail.com>
 References: <11523375353473-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.195]:11714 "EHLO
+Received: from wx-out-0102.google.com ([66.249.82.202]:975 "EHLO
 	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964779AbWGHFox (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S964781AbWGHFox (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Sat, 8 Jul 2006 01:44:53 -0400
-Received: by wx-out-0102.google.com with SMTP id t10so1205846wxc
+Received: by wx-out-0102.google.com with SMTP id t10so1205853wxc
         for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:44:53 -0700 (PDT)
 In-Reply-To: <11523375353473-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,390 +20,98 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Update ata_eh_autopsy(), ata_eh_report() and ata_eh_recover() to deal
-with PMP links.  ata_eh_autopsy() and ata_eh_report() updates are
-straightforward.  They just repeat the same operation over all
-configured links.
-
-ata_eh_recover() update is more complex as it first processes all
-resets and then performs the rest.  This is necessary as thawing with
-some links in unknown state can be dangerous.  ehi->action is cleared
-on successful recovery of a link to avoid repeating recovery due to
-failures in other links.
-
-ata_eh_recover() iterates over only PMP links if PMP is attached, and,
-on failure, the failing link is returned in @failed_link instead of
-disabling devices directly.  These are to integrate ata_eh_recover()
-into PMP EH later.
+Update Power Management to consider PMP links.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-eh.c |  248 ++++++++++++++++++++++++++++++++--------------
- 1 files changed, 170 insertions(+), 78 deletions(-)
+ drivers/scsi/libata-core.c |   20 +++++++++++++-------
+ drivers/scsi/libata-eh.c   |   16 ++++++++++------
+ 2 files changed, 23 insertions(+), 13 deletions(-)
 
-fe716b0b5e94af07f10f1d07397c5e7ebf4d4e5b
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 6c473af..1805769 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1315,8 +1315,8 @@ static int ata_eh_speed_down(struct ata_
- }
+e65868d12527ea6e764aed3b996d103df352dac1
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 4088498..a887522 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5106,6 +5106,7 @@ static int ata_host_set_request_pm(struc
  
- /**
-- *	ata_eh_autopsy - analyze error and determine recovery action
-- *	@link: ATA link to perform autopsy on
-+ *	ata_eh_link_autopsy - analyze error and determine recovery action
-+ *	@link: host link to perform autopsy on
-  *
-  *	Analyze why @link failed and determine which recovery actions
-  *	are needed.  This function also sets more detailed AC_ERR_*
-@@ -1325,7 +1325,7 @@ static int ata_eh_speed_down(struct ata_
-  *	LOCKING:
-  *	Kernel thread context (may sleep).
-  */
--static void ata_eh_autopsy(struct ata_link *link)
-+static void ata_eh_link_autopsy(struct ata_link *link)
- {
- 	struct ata_port *ap = link->ap;
- 	struct ata_eh_context *ehc = &link->eh_context;
-@@ -1418,7 +1418,25 @@ static void ata_eh_autopsy(struct ata_li
- }
+ 	for (i = 0; i < host_set->n_ports; i++) {
+ 		struct ata_port *ap = host_set->ports[i];
++		struct ata_link *link;
  
- /**
-- *	ata_eh_report - report error handling to user
-+ *	ata_eh_autopsy - analyze error and determine recovery action
-+ *	@ap: host port to perform autopsy on
-+ *
-+ *	Analyze all links of @ap and determine why they failed and
-+ *	which recovery actions are needed.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ */
-+static void ata_eh_autopsy(struct ata_port *ap)
-+{
-+	struct ata_link *link;
-+
-+	__ata_port_for_each_link(link, ap)
-+		ata_eh_link_autopsy(link);
-+}
-+
-+/**
-+ *	ata_eh_link_report - report error handling to user
-  *	@link: ATA link EH is going on
-  *
-  *	Report EH to user.
-@@ -1426,7 +1444,7 @@ static void ata_eh_autopsy(struct ata_li
-  *	LOCKING:
-  *	None.
-  */
--static void ata_eh_report(struct ata_link *link)
-+static void ata_eh_link_report(struct ata_link *link)
- {
- 	struct ata_port *ap = link->ap;
- 	struct ata_eh_context *ehc = &link->eh_context;
-@@ -1486,6 +1504,23 @@ static void ata_eh_report(struct ata_lin
- 	}
- }
- 
-+/**
-+ *	ata_eh_report - report error handling to user
-+ *	@ap: ATA port to report EH about
-+ *
-+ *	Report EH to user.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+static void ata_eh_report(struct ata_port *ap)
-+{
-+	struct ata_link *link;
-+
-+	__ata_port_for_each_link(link, ap)
-+		ata_eh_link_report(link);
-+}
-+
- static int ata_do_reset(struct ata_link *link, ata_reset_fn_t reset,
- 			unsigned int *classes)
- {
-@@ -1883,6 +1918,17 @@ static int ata_link_nr_enabled(struct at
- 	return cnt;
- }
- 
-+static int ata_port_nr_enabled(struct ata_port *ap)
-+{
-+	struct ata_link *link;
-+	int cnt = 0;
-+
-+	ata_port_for_each_link(link, ap)
-+		cnt += ata_link_nr_enabled(link);
-+
-+	return cnt;
-+}
-+
- static int ata_link_nr_vacant(struct ata_link *link)
- {
- 	struct ata_device *dev;
-@@ -1978,12 +2024,13 @@ static void ata_eh_handle_dev_fail(struc
-  *	@softreset: softreset method (can be NULL)
-  *	@hardreset: hardreset method (can be NULL)
-  *	@postreset: postreset method (can be NULL)
-+ *	@r_failed_link: out parameter for failed link
-  *
-  *	This is the alpha and omega, eum and yang, heart and soul of
-  *	libata exception handling.  On entry, actions required to
-- *	recover the port and hotplug requests are recorded in
-- *	eh_context.  This function executes all the operations with
-- *	appropriate retrials and fallbacks to resurrect failed
-+ *	recover each link and hotplug requests are recorded in the
-+ *	link's eh_context.  This function executes all the operations
-+ *	with appropriate retrials and fallbacks to resurrect failed
-  *	devices, detach goners and greet newcomers.
-  *
-  *	LOCKING:
-@@ -1994,115 +2041,147 @@ static void ata_eh_handle_dev_fail(struc
-  */
- static int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			  ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
--			  ata_postreset_fn_t postreset)
-+			  ata_postreset_fn_t postreset,
-+			  struct ata_link **r_failed_link)
- {
--	struct ata_link *link = &ap->link;
--	struct ata_eh_context *ehc = &link->eh_context;
-+	struct ata_link *link;
- 	struct ata_device *dev;
--	int down_xfermask, rc;
-+	int nr_failed_devs;
-+	int reset, rc;
- 
- 	DPRINTK("ENTER\n");
- 
- 	/* prep for recovery */
--	ata_link_for_each_dev(dev, link) {
--		ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
-+	ata_port_for_each_link(link, ap) {
-+		struct ata_eh_context *ehc = &link->eh_context;
- 
--		/* process hotplug request */
--		if (dev->flags & ATA_DFLAG_DETACH)
--			ata_eh_detach_dev(dev);
-+		ata_link_for_each_dev(dev, link) {
-+			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
- 
--		if (!ata_dev_enabled(dev) &&
--		    ((ehc->i.probe_mask & (1 << dev->devno)) &&
--		     !(ehc->did_probe_mask & (1 << dev->devno)))) {
--			ata_eh_detach_dev(dev);
--			ata_dev_init(dev);
--			ehc->did_probe_mask |= (1 << dev->devno);
--			ehc->i.action |= ATA_EH_SOFTRESET;
-+			/* process hotplug request */
-+			if (dev->flags & ATA_DFLAG_DETACH)
-+				ata_eh_detach_dev(dev);
-+
-+			if (!ata_dev_enabled(dev) &&
-+			    (ehc->i.probe_mask & (1 << dev->devno) &&
-+			     !(ehc->did_probe_mask & (1 << dev->devno)))) {
-+				ata_eh_detach_dev(dev);
-+				ata_dev_init(dev);
-+				ehc->did_probe_mask |= (1 << dev->devno);
-+				ehc->i.action |= ATA_EH_SOFTRESET;
-+			}
- 		}
- 	}
- 
-  retry:
--	down_xfermask = 0;
- 	rc = 0;
-+	nr_failed_devs = 0;
-+	reset = 0;
- 
- 	/* if UNLOADING, finish immediately */
- 	if (ap->pflags & ATA_PFLAG_UNLOADING)
- 		goto out;
- 
--	/* prep for resume */
--	ata_eh_prep_resume(link);
-+	/* prep for EH */
-+	ata_port_for_each_link(link, ap) {
-+		struct ata_eh_context *ehc = &link->eh_context;
- 
--	/* skip EH if possible. */
--	if (ata_eh_skip_recovery(link))
--		ehc->i.action = 0;
-+		/* prep for resume */
-+		ata_eh_prep_resume(link);
- 
--	ata_link_for_each_dev(dev, link)
--		ehc->classes[dev->devno] = ATA_DEV_UNKNOWN;
-+		/* skip EH if possible. */
-+		if (ata_eh_skip_recovery(link))
-+			ehc->i.action = 0;
-+
-+		/* do we need to reset? */
-+		if (ehc->i.action & ATA_EH_RESET_MASK)
-+			reset = 1;
-+
-+		ata_link_for_each_dev(dev, link)
-+			ehc->classes[dev->devno] = ATA_DEV_UNKNOWN;
-+	}
- 
- 	/* reset */
--	if (ehc->i.action & ATA_EH_RESET_MASK) {
-+	if (reset) {
- 		ata_eh_freeze_port(ap);
- 
--		rc = ata_eh_reset(link, ata_link_nr_vacant(link), prereset,
--				  softreset, hardreset, postreset);
--		if (rc) {
--			ata_link_printk(link, KERN_ERR,
--					"reset failed, giving up\n");
--			goto out;
-+		ata_port_for_each_link(link, ap) {
-+			struct ata_eh_context *ehc = &link->eh_context;
-+
-+			if (!(ehc->i.action & ATA_EH_RESET_MASK))
-+				continue;
-+
-+			rc = ata_eh_reset(link, ata_link_nr_vacant(link),
-+					  prereset, softreset, hardreset,
-+					  postreset);
-+			if (rc) {
-+				ata_link_printk(link, KERN_ERR,
-+						"reset failed, giving up\n");
-+				goto out;
-+			}
+ 		/* Previous resume operation might still be in
+ 		 * progress.  Wait for PM_PENDING to clear.
+@@ -5125,8 +5126,10 @@ static int ata_host_set_request_pm(struc
  		}
  
- 		ata_eh_thaw_port(ap);
- 	}
- 
--	/* revalidate existing devices and attach new ones */
--	rc = ata_eh_revalidate_and_attach(link, &dev);
--	if (rc)
--		goto dev_fail;
-+	/* the rest */
-+	ata_port_for_each_link(link, ap) {
-+		struct ata_eh_context *ehc = &link->eh_context;
-+		int down_xfermask = 0;
- 
--	/* resume devices */
--	rc = ata_eh_resume(link, &dev);
--	if (rc)
--		goto dev_fail;
-+		/* revalidate existing devices and attach new ones */
-+		rc = ata_eh_revalidate_and_attach(link, &dev);
-+		if (rc)
-+			goto dev_fail;
- 
--	/* configure transfer mode if the port has been reset */
--	if (ehc->i.flags & ATA_EHI_DID_RESET) {
--		rc = ata_set_mode(link, &dev);
--		if (rc) {
--			down_xfermask = 1;
-+		/* resume devices */
-+		rc = ata_eh_resume(link, &dev);
-+		if (rc)
- 			goto dev_fail;
-+
-+		/* configure transfer mode if the port has been reset */
-+		if (ehc->i.flags & ATA_EHI_DID_RESET) {
-+			rc = ata_set_mode(link, &dev);
-+			if (rc) {
-+				down_xfermask = 1;
-+				goto dev_fail;
-+			}
- 		}
--	}
- 
--	/* suspend devices */
--	rc = ata_eh_suspend(link, &dev);
--	if (rc)
--		goto dev_fail;
-+		/* suspend devices */
-+		rc = ata_eh_suspend(link, &dev);
-+		if (rc)
-+			goto dev_fail;
- 
--	goto out;
-+		/* this link is okay now */
-+		ehc->i.flags &= ~ATA_EHI_DID_RESET;
-+		continue;
- 
-- dev_fail:
--	ata_eh_handle_dev_fail(dev, rc, down_xfermask);
-+	dev_fail:
-+		ata_eh_handle_dev_fail(dev, rc, down_xfermask);
-+		nr_failed_devs++;
- 
--	if (ata_link_nr_enabled(link)) {
--		ata_link_printk(link, KERN_WARNING, "failed to recover some "
--				"devices, retrying in 5 secs\n");
--		ssleep(5);
--	} else {
--		/* no device left, repeat fast */
--		msleep(500);
-+		if (ap->pflags & ATA_PFLAG_FROZEN)
-+			break;
- 	}
- 
--	goto retry;
--
-- out:
--	if (rc) {
--		/* recovery failed, activate hp-poll */
--		ata_hp_poll_activate(ap);
-+	if (nr_failed_devs) {
-+		if (ata_port_nr_enabled(ap)) {
-+			ata_port_printk(ap, KERN_WARNING, "failed to recover "
-+					"some devices, retrying in 5 secs\n");
-+			ssleep(5);
-+		} else {
-+			/* no device left, repeat fast */
-+			msleep(500);
+ 		ap->pflags |= ATA_PFLAG_PM_PENDING;
+-		ap->link.eh_info.action |= action;
+-		ap->link.eh_info.flags |= ehi_flags;
++		__ata_port_for_each_link(link, ap) {
++			link->eh_info.action |= action;
++			link->eh_info.flags |= ehi_flags;
 +		}
  
--		ata_link_for_each_dev(dev, link);
--			ata_dev_disable(dev);
-+		goto retry;
+ 		ata_port_schedule_eh(ap);
+ 
+@@ -5173,15 +5176,18 @@ int ata_host_set_suspend(struct ata_host
+ 	 */
+ 	for (i = 0; i < host_set->n_ports; i++) {
+ 		struct ata_port *ap = host_set->ports[i];
++		struct ata_link *link;
+ 		struct ata_device *dev;
+ 
+-		ata_link_for_each_dev(dev, &ap->link) {
+-			if (ata_dev_ready(dev)) {
+-				ata_port_printk(ap, KERN_WARNING,
++		ata_port_for_each_link(link, ap) {
++			ata_link_for_each_dev(dev, link) {
++				if (ata_dev_ready(dev)) {
++					ata_port_printk(ap, KERN_WARNING,
+ 						"suspend failed, device %d "
+ 						"still active\n", dev->devno);
+-				rc = -EBUSY;
+-				goto fail;
++					rc = -EBUSY;
++					goto fail;
++				}
+ 			}
+ 		}
  	}
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 1805769..076badd 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -2356,17 +2356,21 @@ static void ata_eh_handle_port_resume(st
+ 	/* give devices time to request EH */
+ 	timeout = jiffies + HZ; /* 1s max */
+ 	while (1) {
++		struct ata_link *link;
+ 		struct ata_device *dev;
  
-+ out:
-+	if (rc && r_failed_link)
-+		*r_failed_link = link;
-+
- 	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
- }
-@@ -2166,9 +2245,22 @@ void ata_do_eh(struct ata_port *ap, ata_
- 	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 	       ata_postreset_fn_t postreset)
- {
--	ata_eh_autopsy(&ap->link);
--	ata_eh_report(&ap->link);
--	ata_eh_recover(ap, prereset, softreset, hardreset, postreset);
-+	struct ata_device *dev;
-+	int rc;
-+
-+	ata_eh_autopsy(ap);
-+	ata_eh_report(ap);
-+
-+	rc = ata_eh_recover(ap, prereset, softreset, hardreset, postreset,
-+			    NULL);
-+	if (rc) {
-+		/* recovery failed, activate hp-poll */
-+		ata_hp_poll_activate(ap);
-+
-+		ata_link_for_each_dev(dev, &ap->link)
-+			ata_dev_disable(dev);
-+	}
-+
- 	ata_eh_finish(ap);
- }
+-		ata_link_for_each_dev(dev, &ap->link) {
+-			unsigned int action = ata_eh_dev_action(dev);
++		ata_port_for_each_link(link, ap) {
++			ata_link_for_each_dev(dev, link) {
++				unsigned int action = ata_eh_dev_action(dev);
  
+-			if ((dev->flags & ATA_DFLAG_SUSPENDED) &&
+-			    !(action & ATA_EH_RESUME))
+-				break;
++				if ((dev->flags & ATA_DFLAG_SUSPENDED) &&
++				    !(action & ATA_EH_RESUME))
++					goto out_of_loop;
++			}
+ 		}
++	out_of_loop:
+ 
+-		if (dev == NULL || time_after(jiffies, timeout))
++		if (link == NULL || time_after(jiffies, timeout))
+ 			break;
+ 		msleep(10);
+ 	}
 -- 
 1.3.2
 
