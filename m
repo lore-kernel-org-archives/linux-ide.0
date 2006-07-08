@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/12] libata-pmp: implement ATA_LFLAG_DISABLED
+Subject: [PATCH 01/12] libata-pmp: add PMP related constants, fields, ops and update helpers
 Date: Sat, 8 Jul 2006 14:58:07 +0900
-Message-ID: <11523382872631-git-send-email-htejun@gmail.com>
+Message-ID: <1152338287794-git-send-email-htejun@gmail.com>
 References: <11523382873130-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:20631 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S964800AbWGHF5Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from wx-out-0102.google.com ([66.249.82.205]:45040 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964790AbWGHF5Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Sat, 8 Jul 2006 01:57:16 -0400
-Received: by py-out-1112.google.com with SMTP id 57so368623pya
+Received: by wx-out-0102.google.com with SMTP id t10so1206439wxc
         for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:57:15 -0700 (PDT)
 In-Reply-To: <11523382873130-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,151 +20,121 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement ATA_LFLAG_DISABLED.  The flag indicates the link is disabled
-due to EH recovery failure.  While a link is disabled, no EH action is
-taken on the link and suspend/resume become noop too.  For host port,
-this doesn't introduce any behavior change other than not invoking
-hotplug sequence on failed ports on resume and this behavior change is
-intended.
-
-This will be used by PMP links to manage failed links.
+Add PMP related constants, fields and ops.  Also, update
+ata_class_enabled/disabled() such that PMP classes are considered.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-eh.c   |   26 +++++++++++++++++++++++++-
- drivers/scsi/libata-scsi.c |   10 ++++++----
- include/linux/libata.h     |   13 +++++++++----
- 3 files changed, 40 insertions(+), 9 deletions(-)
+ include/linux/libata.h |   33 +++++++++++++++++++++++++++++----
+ 1 files changed, 29 insertions(+), 4 deletions(-)
 
-5505907a9aab2d5f22760ce6b367b01f99980991
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index 0a6f17e..0125c18 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -1042,6 +1042,7 @@ static void ata_eh_analyze_serror(struct
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	u32 serror = ehc->i.serror;
- 	unsigned int err_mask = 0, action = 0;
-+	u32 hotplug_mask;
- 
- 	if (serror & SERR_PERSISTENT) {
- 		err_mask |= AC_ERR_ATA_BUS;
-@@ -1060,7 +1061,22 @@ static void ata_eh_analyze_serror(struct
- 		err_mask |= AC_ERR_SYSTEM;
- 		action |= ATA_EH_SOFTRESET;
- 	}
--	if (serror & (SERR_PHYRDY_CHG | SERR_DEV_XCHG))
-+
-+	/* Determine whether a hotplug event has occurred.  Both
-+	 * SError.N/X are considered hotplug events for enabled links.
-+	 * For disabled host links, hp-poll is responsible for hotplug
-+	 * event detection and thus both N/X bits are ignored.  For
-+	 * disabled PMP links, only N bit is considered as X bit is
-+	 * left at 1 for link plugging.
-+	 */
-+	hotplug_mask = 0;
-+
-+	if (!(link->flags & ATA_LFLAG_DISABLED))
-+		hotplug_mask = SERR_PHYRDY_CHG | SERR_DEV_XCHG;
-+	else if (!ata_is_host_link(link))
-+		hotplug_mask = SERR_PHYRDY_CHG;
-+
-+	if (serror & hotplug_mask)
- 		ata_ehi_hotplugged(&ehc->i);
- 
- 	ehc->i.err_mask |= err_mask;
-@@ -1948,6 +1964,10 @@ static int ata_eh_skip_recovery(struct a
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_device *dev;
- 
-+	/* skip disabled links */
-+	if (link->flags & ATA_LFLAG_DISABLED)
-+		return 1;
-+
- 	/* skip if all possible devices are suspended */
- 	ata_link_for_each_dev(dev, link) {
- 		if (ata_dev_absent(dev) || ata_dev_ready(dev))
-@@ -2058,6 +2078,10 @@ int ata_eh_recover(struct ata_port *ap, 
- 	ata_port_for_each_link(link, ap) {
- 		struct ata_eh_context *ehc = &link->eh_context;
- 
-+		/* re-enable link? */
-+		if (ehc->i.flags & ATA_EHI_ENABLE_LINK)
-+			link->flags &= ~ATA_LFLAG_DISABLED;
-+
- 		ata_link_for_each_dev(dev, link) {
- 			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
- 
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index d446a86..f756acd 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -431,9 +431,10 @@ int ata_scsi_device_suspend(struct scsi_
- 		spin_lock_irqsave(ap->lock, flags);
- 	}
- 
--	/* if @sdev is already detached, nothing to do */
-+	/* if @sdev is already detached or link is disabled, nothing to do */
- 	if (sdev->sdev_state == SDEV_OFFLINE ||
--	    sdev->sdev_state == SDEV_CANCEL || sdev->sdev_state == SDEV_DEL)
-+	    sdev->sdev_state == SDEV_CANCEL || sdev->sdev_state == SDEV_DEL ||
-+	    (dev->link->flags & ATA_LFLAG_DISABLED))
- 		goto out_unlock;
- 
- 	/* request suspend */
-@@ -494,9 +495,10 @@ int ata_scsi_device_resume(struct scsi_d
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 
--	/* if @sdev is already detached, nothing to do */
-+	/* if @sdev is already detached or link is disabled, nothing to do */
- 	if (sdev->sdev_state == SDEV_OFFLINE ||
--	    sdev->sdev_state == SDEV_CANCEL || sdev->sdev_state == SDEV_DEL)
-+	    sdev->sdev_state == SDEV_CANCEL || sdev->sdev_state == SDEV_DEL ||
-+	    (dev->link->flags & ATA_LFLAG_DISABLED))
- 		goto out_unlock;
- 
- 	/* request resume */
+5ec84546db9b2cc5da979d3543f3939beeca1aca
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index dce5ab8..906225c 100644
+index dea1e5f..dce5ab8 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -147,6 +147,9 @@ enum {
- 	ATA_DEV_PMP_UNSUP	= 6,	/* SATA port multiplier (unsupported) */
- 	ATA_DEV_NONE		= 7,	/* no device */
+@@ -128,6 +128,7 @@ enum {
+ 	ATA_DFLAG_LBA48		= (1 << 1), /* device supports LBA48 */
+ 	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
+ 	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
++	ATA_DFLAG_PMP_HRST_TO_RESUME = (1 << 4), /* requires hardreset */
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
  
-+	/* struct ata_link flags */
-+	ATA_LFLAG_DISABLED	= (1 << 0), /* this link is disabled (PMP) */
-+
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device currently in PIO mode */
+@@ -142,7 +143,9 @@ enum {
+ 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
+ 	ATA_DEV_ATAPI		= 3,	/* ATAPI device */
+ 	ATA_DEV_ATAPI_UNSUP	= 4,	/* ATAPI device (unsupported) */
+-	ATA_DEV_NONE		= 5,	/* no device */
++	ATA_DEV_PMP		= 5,	/* SATA port multiplier */
++	ATA_DEV_PMP_UNSUP	= 6,	/* SATA port multiplier (unsupported) */
++	ATA_DEV_NONE		= 7,	/* no device */
+ 
  	/* struct ata_port flags */
  	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
- 					    /* (doesn't imply presence) */
-@@ -276,9 +279,10 @@ enum {
+@@ -163,6 +166,8 @@ enum {
+ 					      * Register FIS clearing BSY */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
+ 	ATA_FLAG_HP_POLLING	= (1 << 14), /* hotplug by polling */
++	ATA_FLAG_PMP		= (1 << 14),
++	ATA_FLAG_SDB_NOTIFY	= (1 << 15),
  
- 	/* ata_eh_info->flags */
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
--	ATA_EHI_RESUME_LINK	= (1 << 1),  /* need to resume link */
--	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
--	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
-+	ATA_EHI_ENABLE_LINK	= (1 << 1),  /* enable disabled link */
-+	ATA_EHI_RESUME_LINK	= (1 << 2),  /* need to resume link */
-+	ATA_EHI_NO_AUTOPSY	= (1 << 3),  /* no autopsy */
-+	ATA_EHI_QUIET		= (1 << 4),  /* be quiet */
+ 	/* The following flag belongs to ap->pflags but is kept in
+ 	 * ap->flags because it's referenced in many LLDs and will be
+@@ -284,6 +289,9 @@ enum {
+ 	ATA_PROBE_MAX_TRIES	= 3,
+ 	ATA_EH_RESET_TRIES	= 3,
+ 	ATA_EH_DEV_TRIES	= 3,
++	ATA_EH_PMP_TRIES	= 5,
++	ATA_EH_PMP_RESET_TRIES	= 2,
++	ATA_EH_PMP_LINK_TRIES	= 2,
  
- 	ATA_EHI_DID_RESET	= (1 << 16), /* already reset this port */
+ 	/* Drive spinup time (time from power-on to the first D2H FIS)
+ 	 * in msecs - 8s currently.  Failing to get ready in this time
+@@ -293,6 +301,8 @@ enum {
+ 	 * most devices.
+ 	 */
+ 	ATA_SPINUP_WAIT		= 8000,
++
++	SATA_PMP_SCR_TIMEOUT	= 500,
+ };
  
-@@ -932,7 +936,8 @@ static inline void __ata_ehi_hotplugged(
- 	if (ehi->flags & ATA_EHI_HOTPLUGGED)
- 		return;
+ enum hsm_task_states {
+@@ -450,7 +460,12 @@ struct ata_device {
+ 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
+ 	u64			n_sectors;	/* size of device, if ATA */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+-	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
++
++	union {
++		u16		id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
++		u32		gscr[SATA_PMP_GSCR_DWORDS]; /* PMP GSCR block */
++	};
++
+ 	u8			pio_mode;
+ 	u8			dma_mode;
+ 	u8			xfer_mode;
+@@ -509,6 +524,8 @@ struct ata_link {
+ 	unsigned int		active_tag;	/* active tag on this link */
+ 	u32			sactive;	/* active NCQ commands */
  
--	ehi->flags |= ATA_EHI_HOTPLUGGED | ATA_EHI_RESUME_LINK;
-+	ehi->flags |=
-+		ATA_EHI_HOTPLUGGED | ATA_EHI_ENABLE_LINK | ATA_EHI_RESUME_LINK;
- 	ehi->hotplug_timestamp = jiffies;
++	unsigned int		flags;		/* ATA_LFLAG_xxx */
++
+ 	unsigned int		hw_sata_spd_limit;
+ 	unsigned int		sata_spd_limit;
  
- 	ehi->action |= ATA_EH_SOFTRESET;
+@@ -617,6 +634,12 @@ struct ata_port_operations {
+ 	void (*qc_prep) (struct ata_queued_cmd *qc);
+ 	unsigned int (*qc_issue) (struct ata_queued_cmd *qc);
+ 
++	/* port multiplier */
++	void (*pmp_attach) (struct ata_port *ap);
++	void (*pmp_detach) (struct ata_port *ap);
++	int (*pmp_read) (struct ata_device *dev, int pmp, int reg, u32 *r_val);
++	int (*pmp_write) (struct ata_device *dev, int pmp, int reg, u32 val);
++
+ 	/* Error handlers.  ->error_handler overrides ->eng_timeout and
+ 	 * indicates that new-style EH is in place.
+ 	 */
+@@ -977,12 +1000,14 @@ static inline unsigned int ata_tag_inter
+  */
+ static inline unsigned int ata_class_enabled(unsigned int class)
+ {
+-	return class == ATA_DEV_ATA || class == ATA_DEV_ATAPI;
++	return class == ATA_DEV_ATA || class == ATA_DEV_ATAPI ||
++		class == ATA_DEV_PMP;
+ }
+ 
+ static inline unsigned int ata_class_disabled(unsigned int class)
+ {
+-	return class == ATA_DEV_ATA_UNSUP || class == ATA_DEV_ATAPI_UNSUP;
++	return class == ATA_DEV_ATA_UNSUP || class == ATA_DEV_ATAPI_UNSUP ||
++		class == ATA_DEV_PMP_UNSUP;
+ }
+ 
+ static inline unsigned int ata_class_absent(unsigned int class)
 -- 
 1.3.2
 
