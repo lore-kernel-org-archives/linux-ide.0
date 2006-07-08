@@ -1,174 +1,73 @@
-From: Sven Riedel <sr@gimp.org>
-Subject: SATA command timeouts
-Date: Sat, 8 Jul 2006 15:00:37 +0200
-Message-ID: <20060708130037.GA22725@localnet>
-Reply-To: sr@gimp.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: long boot delay for SATA cdrom on current 2.6.17-git
+Date: Sun, 09 Jul 2006 00:19:25 +0900
+Message-ID: <44AFCCFD.8050708@gmail.com>
+References: <20060630025341.GA4675@kroah.com> <20060630044912.GA2592@htj.dyndns.org> <20060630052021.GA4722@kroah.com> <20060630052633.GF23844@htj.dyndns.org> <20060630221052.GA4196@kroah.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="xHFwDpU9dbj6ez1V"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kamp-dsl.de ([195.62.99.42]:51593 "HELO
-	mailout.kamp-dsl.de") by vger.kernel.org with SMTP id S964810AbWGHNAl
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jul 2006 09:00:41 -0400
-Received: from dsl-mail.kamp.net (mail.kamp-dsl.de [195.62.99.42])
-	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with SMTP
-	id 110C4E39B530-0
-	for <linux-ide@vger.kernel.org>; Sat, 8 Jul 2006 13:00:40 +0000
-Received: from mx01.kamp-dsl.de (mail.kamp-dsl.de [195.62.99.42])
-	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with ESMTP
-	id 110C4E39B4D7-0
-	for <linux-ide@vger.kernel.org>; Sat, 8 Jul 2006 13:00:40 +0000
-Received: from mail.localnet (turing.localnet [192.168.13.1])
-	by mx (Postfix) with ESMTP id 9CE4A1F85A
-	for <linux-ide@vger.kernel.org>; Sat,  8 Jul 2006 13:00:38 +0000 (UTC)
-Content-Disposition: inline
+Received: from wr-out-0506.google.com ([64.233.184.228]:53130 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S964861AbWGHPSd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jul 2006 11:18:33 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so1517398wra
+        for <linux-ide@vger.kernel.org>; Sat, 08 Jul 2006 08:18:33 -0700 (PDT)
+In-Reply-To: <20060630221052.GA4196@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
+Greg KH wrote:
 
---xHFwDpU9dbj6ez1V
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+> Sure, here's the logs for when I boot 2.6.17 with your patch:
+[--snip--]
+> [4294672.044000] ata_piix 0000:00:1f.2: version 1.05
+> [4294672.044000] ata_piix 0000:00:1f.2: MAP [ P0 P2 XX XX ]
+> [4294672.048000] ata_piix 0000:00:1f.2: invalid MAP value 0
+> [4294672.052000] ata_pci_init_one: ENTER
+> [4294672.055000] ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 18
+> [4294672.059000] PCI: Setting latency timer of device 0000:00:1f.2 to 64
+> [4294672.059000] ata_device_add: ENTER
+> [4294672.063000] ata_host_add: ENTER
+> [4294672.067000] ata_port_start: prd alloc, virt f7e55000, dma 37e55000
+> [4294672.070000] ata1: SATA max UDMA/133 cmd 0x1498 ctl 0x140E bmdma 0x1480 irq 18
+> [4294672.074000] ata_host_add: ENTER
+> [4294672.078000] ata_port_start: prd alloc, virt f7cfb000, dma 37cfb000
+> [4294672.081000] ata2: SATA max UDMA/133 cmd 0x1490 ctl 0x140A bmdma 0x1488 irq 18
+> [4294672.085000] ata_device_add: probe begin
+> [4294672.089000] ata_device_add: ata1: bus probe begin
+> [4294672.093000] piix_sata_probe: ata1: ENTER, pcs=0x11 base=0
+> [4294672.198000] piix_sata_probe: ata1: LEAVE, pcs=0x11 present_mask=0x1
+> [4294672.201000] ata_std_softreset: ENTER ata1
+> [4294672.205000] ata_std_softreset: about to softreset, devmask=3
+> [4294672.209000] ata_bus_softreset: ata1: bus reset via SRST
+> [4294672.364000] ata_dev_classify: found ATAPI device by sig
+> [4294672.367000] ata_dev_classify: found ATAPI device by sig
+> [4294672.371000] ata_std_softreset: EXIT, classes[0]=3 [1]=3
+> [4294672.375000] ata_std_postreset: ENTER
+> [4294672.378000] ata_std_postreset: EXIT
+> [4294672.382000] ata_dev_read_id: ENTER, host 1, dev 0
+> [4294672.537000] ata_exec_command_pio: ata1: cmd 0xA1
+> [4294672.543000] ata_pio_sector: data read
+> [4294672.546000] ata_dev_configure: ENTER, host 1, dev 0
+> [4294672.550000] ata1: dev 0 cfg 49:0f00 82:0000 83:0000 84:0000 85:0000 86:0000 87:0000 88:0407
+> [4294672.550000] ata_dump_id: 49==0x0f00  53==0x0006  63==0x0007  64==0x0003  75==0x0000  
+> [4294672.553000] ata_dump_id: 80==0x0078  81==0x0000  82==0x0000  83==0x0000  84==0x0000  
+> [4294672.557000] ata_dump_id: 88==0x0407  93==0x4000
+> [4294672.560000] ata1: dev 0 ATAPI, max UDMA/33
+> [4294672.563000] ata1(0): applying bridge limits
+> [4294672.566000] ata_dev_configure: EXIT, drv_stat = 0x50
+> [4294672.569000] ata_dev_read_id: ENTER, host 1, dev 1
+> [4294672.723000] ata_exec_command_pio: ata1: cmd 0xA1
+> [4294672.726000] ata1: PIO error
+> [4294672.729000] ata1: dev 1 failed to IDENTIFY (I/O error)
 
-Hi,
-I hooked up new SATA disks to a machine yesterday and set up a software raid.
-After copying roughly 25 GB of data onto the array all attached drives
-reported command timeouts and wouldn't recover. Only a reboot would help. 
-I tried the same again, this time the drives would timeout after 60 GB of data
-written. I exchanged the CPU, but the same thing occurs. 
+Ah.. I see.  IRQ-driven PIO times out while polling PIO detects it right 
+away.
 
-I'm currently in the process of testing the drives singly by writing 150GB of
-data onto them and seeing if they will timeout singly (so far I had one
-success and one complete system hang - even the CPU fan stopped spinning). My
-next test will be doing write-heavy operations on all four drives
-simulaneously, but without gathering them into a raid array.
-
-Used hardware:
-- 4 WD 400GB SATA RE2 drives
-- Promise SATA300 TX4 controller
-
-All of this was first running kernel 2.6.16.14, then after upgrading to 
-2.6.17.4.
-
-dmesg output is attached.
-
-Is there anything else I can test to debug this problem?
-
-Regs,
-Sven
-
+Thanks.  I'll push the fix to Jeff.
 
 -- 
-Sven Riedel                      sr@gimp.org
-
---xHFwDpU9dbj6ez1V
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=dmesg_timeout
-
-Jul  7 22:26:05 planck kernel: ata1: status=0x50 { DriveReady SeekComplete }
-Jul  7 22:26:05 planck kernel: sda: Current: sense key=0x0
-Jul  7 22:26:05 planck kernel:     ASC=0x0 ASCQ=0x0
-Jul  7 22:26:05 planck kernel: ata3: status=0x50 { DriveReady SeekComplete }
-Jul  7 22:26:05 planck kernel: sdc: Current: sense key=0x0
-Jul  7 22:26:05 planck kernel:     ASC=0x0 ASCQ=0x0
-Jul  7 22:26:05 planck kernel: ata2: status=0x50 { DriveReady SeekComplete }
-Jul  7 22:26:05 planck kernel: sdb: Current: sense key=0x0
-Jul  7 22:26:05 planck kernel:     ASC=0x0 ASCQ=0x0
-Jul  7 22:26:35 planck kernel: ata1: status=0x50 { DriveReady SeekComplete }
-Jul  7 22:26:35 planck kernel: sda: Current: sense key=0x0
-Jul  7 22:26:35 planck kernel:     ASC=0x0 ASCQ=0x0
-Jul  7 22:26:35 planck kernel: ata4: status=0x50 { DriveReady SeekComplete }
-Jul  7 22:26:35 planck kernel: sdd: Current: sense key=0x0
-Jul  7 22:26:35 planck kernel:     ASC=0x0 ASCQ=0x0 
-Jul  7 22:26:35 planck kernel: ata3: status=0x50 { DriveReady SeekComplete }
-Jul  7 22:26:35 planck kernel: sdc: Current: sense key=0x0
-Jul  7 22:26:35 planck kernel:     ASC=0x0 ASCQ=0x0
-
-
---xHFwDpU9dbj6ez1V
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=dmesg_boot
-
-Jul  7 20:40:39 planck kernel: SCSI subsystem initialized
-Jul  7 20:40:40 planck kernel: ACPI: PCI Interrupt 0000:00:0a.0[A] -> GSI 18 (le
-vel, low) -> IRQ 201
-Jul  7 20:40:40 planck kernel: ata1: SATA max UDMA/133 cmd 0xF8A80200 ctl 0xF8A8
-0238 bmdma 0x0 irq 201
-Jul  7 20:40:40 planck kernel: ata2: SATA max UDMA/133 cmd 0xF8A80280 ctl 0xF8A8
-02B8 bmdma 0x0 irq 201
-Jul  7 20:40:40 planck kernel: ata3: SATA max UDMA/133 cmd 0xF8A80300 ctl 0xF8A8
-0338 bmdma 0x0 irq 201
-Jul  7 20:40:40 planck kernel: ata4: SATA max UDMA/133 cmd 0xF8A80380 ctl 0xF8A8
-03B8 bmdma 0x0 irq 201
-Jul  7 20:40:40 planck kernel: ata1: SATA link up 1.5 Gbps (SStatus 113)
-Jul  7 20:40:40 planck kernel: ata1: dev 0 ATA-7, max UDMA/133, 781422768 sector
-s: LBA48
-Jul  7 20:40:40 planck kernel: ata1: dev 0 configured for UDMA/133
-Jul  7 20:40:40 planck kernel: scsi0 : sata_promise
-Jul  7 20:40:40 planck kernel: ata2: SATA link up 1.5 Gbps (SStatus 113)
-Jul  7 20:40:40 planck kernel: ata2: dev 0 ATA-7, max UDMA/133, 781422768 sector
-s: LBA48
-Jul  7 20:40:40 planck kernel: ata2: dev 0 configured for UDMA/133
-Jul  7 20:40:40 planck kernel: scsi1 : sata_promise
-Jul  7 20:40:41 planck kernel: ata3: SATA link up 1.5 Gbps (SStatus 113)
-Jul  7 20:40:41 planck kernel: ata3: dev 0 ATA-7, max UDMA/133, 781422768 sector
-s: LBA48
-Jul  7 20:40:41 planck kernel: ata3: dev 0 configured for UDMA/133
-Jul  7 20:40:41 planck kernel: scsi2 : sata_promise
-Jul  7 20:40:41 planck kernel: ata4: SATA link up 1.5 Gbps (SStatus 113)
-Jul  7 20:40:41 planck kernel: ata4: dev 0 ATA-7, max UDMA/133, 781422768 sector
-s: LBA48
-Jul  7 20:40:41 planck kernel: ata4: dev 0 configured for UDMA/133
-Jul  7 20:40:41 planck kernel: scsi3 : sata_promise
-Jul  7 20:40:41 planck kernel:   Vendor: ATA       Model: WDC WD4000YR-01P  Rev:
- 01.0
-Jul  7 20:40:41 planck kernel:   Type:   Direct-Access                      ANSI
- SCSI revision: 05
-Jul  7 20:40:41 planck kernel:   Vendor: ATA       Model: WDC WD4000YR-01P  Rev:
- 01.0
-Jul  7 20:40:41 planck kernel:   Type:   Direct-Access                      ANSI
- SCSI revision: 05
-Jul  7 20:40:41 planck kernel:   Vendor: ATA       Model: WDC WD4000YR-01P  Rev:
- 01.0
-Jul  7 20:40:41 planck kernel:   Type:   Direct-Access                      ANSI
- SCSI revision: 05
-Jul  7 20:40:41 planck kernel:   Vendor: ATA       Model: WDC WD4000YR-01P  Rev:
- 01.0
-Jul  7 20:40:41 planck kernel:   Type:   Direct-Access                      ANSI
- SCSI revision: 05
-Jul  7 20:40:42 planck kernel: SCSI device sda: 781422768 512-byte hdwr sectors 
-(400088 MB)
-Jul  7 20:40:42 planck kernel: sda: Write Protect is off
-Jul  7 20:40:42 planck kernel: SCSI device sda: drive cache: write back
-Jul  7 20:40:42 planck kernel: SCSI device sda: 781422768 512-byte hdwr sectors 
-(400088 MB)
-Jul  7 20:40:42 planck kernel: sda: Write Protect is off
-Jul  7 20:40:42 planck kernel: SCSI device sda: drive cache: write back
-Jul  7 20:40:42 planck kernel:  sda: unknown partition table
-Jul  7 20:40:42 planck kernel: sd 0:0:0:0: Attached scsi disk sda
-Jul  7 20:40:42 planck kernel: SCSI device sdb: 781422768 512-byte hdwr sectors 
-(400088 MB)
-Jul  7 20:40:42 planck kernel: sdb: Write Protect is off
-Jul  7 20:40:42 planck kernel: SCSI device sdb: drive cache: write back
-Jul  7 20:40:42 planck kernel: SCSI device sdb: 781422768 512-byte hdwr sectors 
-(400088 MB)
-Jul  7 20:40:42 planck kernel: sdb: Write Protect is off
-Jul  7 20:40:42 planck kernel: SCSI device sdb: drive cache: write back
-Jul  7 20:40:42 planck kernel:  sdb: unknown partition table
-Jul  7 20:40:42 planck kernel: sd 1:0:0:0: Attached scsi disk sdb
-Jul  7 20:40:42 planck kernel: SCSI device sdc: 781422768 512-byte hdwr sectors 
-(400088 MB)
-Jul  7 20:40:42 planck kernel: sdc: Write Protect is off
-Jul  7 20:40:42 planck kernel: SCSI device sdc: drive cache: write back
-Jul  7 20:40:42 planck kernel: SCSI device sdc: 781422768 512-byte hdwr sectors 
-(400088 MB)
-Jul  7 20:40:42 planck kernel: sdc: Write Protect is off
-Jul  7 20:40:42 planck kernel: SCSI device sdc: drive cache: write back
-Jul  7 20:40:42 planck kernel:  sdc: unknown partition table
-Jul  7 20:40:42 planck kernel: sd 2:0:0:0: Attached scsi disk sdc
-Jul  7 20:40:42 planck kernel: SCSI device sdd: 781422768 512-byte hdwr sectors 
-(400088 MB)
-
-
---xHFwDpU9dbj6ez1V--
+tejun
