@@ -1,174 +1,157 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/6] libata-pmp-prep: implement qc_defer helpers
+Subject: [PATCH 4/6] libata-pmp-prep: add @is_cmd to ata_tf_to_fis()
 Date: Sat, 8 Jul 2006 14:51:18 +0900
-Message-ID: <1152337878547-git-send-email-htejun@gmail.com>
+Message-ID: <11523378784120-git-send-email-htejun@gmail.com>
 References: <11523378773934-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:10098 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S964781AbWGHFua (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jul 2006 01:50:30 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so1484429wra
-        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:50:30 -0700 (PDT)
+Received: from wx-out-0102.google.com ([66.249.82.193]:62072 "EHLO
+	wx-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S964782AbWGHFu0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jul 2006 01:50:26 -0400
+Received: by wx-out-0102.google.com with SMTP id t10so1206133wxc
+        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2006 22:50:26 -0700 (PDT)
 In-Reply-To: <11523378773934-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement ap->nr_active_links (the number of links with active qcs),
-ap->excl_link (pointer to link which can be used by ->qc_defer and is
-cleared when a qc with ATA_QCFLAG_CLEAR_EXCL completes), and
-ata_link_active().
-
-These can be used by ->qc_defer() to implement proper command
-exclusion.  This set of helpers seem enough for both sil24 (ATAPI
-exclusion needed) and cmd-switching PMP.
+Add @is_cmd to ata_tf_to_fis().  This controls bit 7 of the second
+byte which tells the device whether this H2D FIS is for a command or
+not.  This cleans up ahci a bit and will be used by PMP.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   21 +++++++++++++++++++--
- drivers/scsi/libata-eh.c   |    5 +++++
- include/linux/libata.h     |    8 ++++++++
- 3 files changed, 32 insertions(+), 2 deletions(-)
+ drivers/scsi/ahci.c        |   10 ++++------
+ drivers/scsi/libata-core.c |   14 ++++++++------
+ drivers/scsi/sata_qstor.c  |    2 +-
+ drivers/scsi/sata_sil24.c  |    2 +-
+ include/linux/libata.h     |    3 ++-
+ 5 files changed, 16 insertions(+), 15 deletions(-)
 
-e8c076ff470980da565d0c41bd95c9a1538ab561
+ce524d81b263d170c5c14c90467ac284d5f06252
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index f41db5d..9f2f66a 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -662,8 +662,7 @@ static int ahci_softreset(struct ata_lin
+ 			   cmd_fis_len | AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY);
+ 
+ 	tf.ctl |= ATA_SRST;
+-	ata_tf_to_fis(&tf, fis, 0);
+-	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
++	ata_tf_to_fis(&tf, 0, 0, fis);
+ 
+ 	writel(1, port_mmio + PORT_CMD_ISSUE);
+ 
+@@ -681,8 +680,7 @@ static int ahci_softreset(struct ata_lin
+ 	ahci_fill_cmd_slot(pp, 0, cmd_fis_len);
+ 
+ 	tf.ctl &= ~ATA_SRST;
+-	ata_tf_to_fis(&tf, fis, 0);
+-	fis[1] &= ~(1 << 7);	/* turn off Command FIS bit */
++	ata_tf_to_fis(&tf, 0, 0, fis);
+ 
+ 	writel(1, port_mmio + PORT_CMD_ISSUE);
+ 	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
+@@ -732,7 +730,7 @@ static int ahci_hardreset(struct ata_lin
+ 	/* clear D2H reception area to properly wait for D2H FIS */
+ 	ata_tf_init(link->device, &tf);
+ 	tf.command = 0xff;
+-	ata_tf_to_fis(&tf, d2h_fis, 0);
++	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+ 
+ 	rc = sata_std_hardreset(link, class);
+ 
+@@ -825,7 +823,7 @@ static void ahci_qc_prep(struct ata_queu
+ 	 */
+ 	cmd_tbl = pp->cmd_tbl + qc->tag * AHCI_CMD_TBL_SZ;
+ 
+-	ata_tf_to_fis(&qc->tf, cmd_tbl, 0);
++	ata_tf_to_fis(&qc->tf, 0, 1, cmd_tbl);
+ 	if (is_atapi) {
+ 		memset(cmd_tbl + AHCI_CMD_TBL_CDB, 0, 32);
+ 		memcpy(cmd_tbl + AHCI_CMD_TBL_CDB, qc->cdb, qc->dev->cdb_len);
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index f9644db..346130c 100644
+index 4d09167..38ddeff 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -1004,6 +1004,7 @@ unsigned ata_exec_internal(struct ata_de
- 	struct ata_queued_cmd *qc;
- 	unsigned int tag, preempted_tag;
- 	u32 preempted_sactive, preempted_qc_active;
-+	int preempted_nr_active_links;
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	unsigned long flags;
- 	unsigned int err_mask;
-@@ -1042,9 +1043,11 @@ unsigned ata_exec_internal(struct ata_de
- 	preempted_tag = link->active_tag;
- 	preempted_sactive = link->sactive;
- 	preempted_qc_active = ap->qc_active;
-+	preempted_nr_active_links = ap->nr_active_links;
- 	link->active_tag = ATA_TAG_POISON;
- 	link->sactive = 0;
- 	ap->qc_active = 0;
-+	ap->nr_active_links = 0;
- 
- 	/* prepare & issue qc */
- 	qc->tf = *tf;
-@@ -1114,6 +1117,7 @@ unsigned ata_exec_internal(struct ata_de
- 	link->active_tag = preempted_tag;
- 	link->sactive = preempted_sactive;
- 	ap->qc_active = preempted_qc_active;
-+	ap->nr_active_links = preempted_nr_active_links;
- 
- 	/* XXX - Some LLDDs (sata_mv) disable port on command failure.
- 	 * Until those drivers are fixed, we detect the condition
-@@ -4520,10 +4524,18 @@ void __ata_qc_complete(struct ata_queued
- 		ata_sg_clean(qc);
- 
- 	/* command should be marked inactive atomically with qc completion */
--	if (qc->tf.protocol == ATA_PROT_NCQ)
-+	if (qc->tf.protocol == ATA_PROT_NCQ) {
- 		link->sactive &= ~(1 << qc->tag);
--	else
-+		if (!link->sactive)
-+			ap->nr_active_links--;
-+	} else {
- 		link->active_tag = ATA_TAG_POISON;
-+		ap->nr_active_links--;
-+	}
+@@ -100,8 +100,9 @@ MODULE_VERSION(DRV_VERSION);
+ /**
+  *	ata_tf_to_fis - Convert ATA taskfile to SATA FIS structure
+  *	@tf: Taskfile to convert
+- *	@fis: Buffer into which data will output
+  *	@pmp: Port multiplier port
++ *	@is_cmd: This FIS is for command
++ *	@fis: Buffer into which data will output
+  *
+  *	Converts a standard ATA taskfile to a Serial ATA
+  *	FIS structure (Register - Host to Device).
+@@ -109,12 +110,13 @@ MODULE_VERSION(DRV_VERSION);
+  *	LOCKING:
+  *	Inherited from caller.
+  */
+-
+-void ata_tf_to_fis(const struct ata_taskfile *tf, u8 *fis, u8 pmp)
++void ata_tf_to_fis(const struct ata_taskfile *tf, u8 pmp, int is_cmd, u8 *fis)
+ {
+-	fis[0] = 0x27;	/* Register - Host to Device FIS */
+-	fis[1] = (pmp & 0xf) | (1 << 7); /* Port multiplier number,
+-					    bit 7 indicates Command FIS */
++	fis[0] = 0x27;			/* Register - Host to Device FIS */
++	fis[1] = pmp & 0xf;		/* Port multiplier number*/
++	if (is_cmd)
++		fis[1] |= (1 << 7);	/* bit 7 indicates Command FIS */
 +
-+	/* clear exclusive status */
-+	if (unlikely(qc->flags & ATA_QCFLAG_CLEAR_EXCL))
-+		ap->excl_link = NULL;
+ 	fis[2] = tf->command;
+ 	fis[3] = tf->feature;
  
- 	/* atapi: mark qc as inactive to prevent the interrupt handler
- 	 * from completing the command twice later, before the error handler
-@@ -4694,9 +4706,14 @@ void ata_qc_issue(struct ata_queued_cmd 
+diff --git a/drivers/scsi/sata_qstor.c b/drivers/scsi/sata_qstor.c
+index e047890..fca2013 100644
+--- a/drivers/scsi/sata_qstor.c
++++ b/drivers/scsi/sata_qstor.c
+@@ -336,7 +336,7 @@ static void qs_qc_prep(struct ata_queued
+ 	buf[28] = dflags;
  
- 	if (qc->tf.protocol == ATA_PROT_NCQ) {
- 		WARN_ON(link->sactive & (1 << qc->tag));
-+
-+		if (!link->sactive)
-+			ap->nr_active_links++;
- 		link->sactive |= 1 << qc->tag;
- 	} else {
- 		WARN_ON(link->sactive);
-+
-+		ap->nr_active_links++;
- 		link->active_tag = qc->tag;
- 	}
- 
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index e6fd54a..122226b 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -293,6 +293,7 @@ void ata_scsi_error(struct Scsi_Host *ho
- 
- 		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
- 		ap->pflags &= ~ATA_PFLAG_EH_PENDING;
-+		ap->excl_link = NULL;	/* don't maintain exclusion over EH */
- 
- 		spin_unlock_irqrestore(ap->lock, flags);
- 
-@@ -2225,6 +2226,10 @@ void ata_eh_finish(struct ata_port *ap)
- 			}
- 		}
- 	}
-+
-+	/* make sure nr_active_links is zero after EH */
-+	WARN_ON(ap->nr_active_links);
-+	ap->nr_active_links = 0;
+ 	/* frame information structure (FIS) */
+-	ata_tf_to_fis(&qc->tf, &buf[32], 0);
++	ata_tf_to_fis(&qc->tf, 0, 1, &buf[32]);
  }
  
- /**
+ static inline void qs_packet_start(struct ata_queued_cmd *qc)
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index b2b8d13..b1ae88d 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -706,7 +706,7 @@ static void sil24_qc_prep(struct ata_que
+ 	}
+ 
+ 	prb->ctrl = cpu_to_le16(ctrl);
+-	ata_tf_to_fis(&qc->tf, prb->fis, 0);
++	ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, prb->fis);
+ 
+ 	if (qc->flags & ATA_QCFLAG_DMAMAP)
+ 		sil24_fill_sg(qc, sge);
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 8a4adce..dea1e5f 100644
+index d65bb05..f46b215 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -192,6 +192,7 @@ enum {
- 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
- 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
- 	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
-+	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
- 
- 	ATA_QCFLAG_FAILED	= (1 << 16), /* cmd failed and is owned by EH */
- 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
-@@ -549,12 +550,14 @@ struct ata_port {
- 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
- 	unsigned long		qc_allocated;
- 	unsigned int		qc_active;
-+	int			nr_active_links; /* #links with active qcs */
- 
- 	struct ata_link		link;	/* host default link */
- 	struct ata_device	__dev1;	/* storage for link.device[1] */
- 
- 	int			nr_pmp_links;	/* nr of available PMP links */
- 	struct ata_link		*pmp_link;	/* array of PMP links */
-+	struct ata_link		*excl_link;	/* for PMP qc exclusion */
- 
- 	struct ata_host_stats	stats;
- 	struct ata_host_set	*host_set;
-@@ -1022,6 +1025,11 @@ static inline int ata_link_max_devices(c
- 	return 1;
- }
- 
-+static inline int ata_link_active(struct ata_link *link)
-+{
-+	return ata_tag_valid(link->active_tag) || link->sactive;
-+}
-+
- static inline struct ata_link *ata_port_first_link(struct ata_port *ap)
- {
- 	if (ap->nr_pmp_links)
+@@ -741,7 +741,8 @@ extern u32 ata_wait_register(void __iome
+  */
+ extern void ata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf);
+ extern void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+-extern void ata_tf_to_fis(const struct ata_taskfile *tf, u8 *fis, u8 pmp);
++extern void ata_tf_to_fis(const struct ata_taskfile *tf,
++			  u8 pmp, int is_cmd, u8 *fis);
+ extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
+ extern void ata_noop_dev_select (struct ata_port *ap, unsigned int device);
+ extern void ata_std_dev_select (struct ata_port *ap, unsigned int device);
 -- 
 1.3.2
 
