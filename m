@@ -1,199 +1,57 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [RFT][PATCH] ata_piix: implement proper PCS handling for ICH8
-Date: Sun, 9 Jul 2006 01:23:33 +0900
-Message-ID: <20060708162333.GF2592@htj.dyndns.org>
+Subject: Re: sata_sil via and seagate
+Date: Sun, 09 Jul 2006 01:46:06 +0900
+Message-ID: <44AFE14E.9000600@gmail.com>
+References: <20060705212835.GA28904@lemming.cita.utoronto.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0102.google.com ([66.249.82.201]:53922 "EHLO
-	wx-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964873AbWGHQWl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jul 2006 12:22:41 -0400
-Received: by wx-out-0102.google.com with SMTP id t10so1240213wxc
-        for <linux-ide@vger.kernel.org>; Sat, 08 Jul 2006 09:22:41 -0700 (PDT)
-Content-Disposition: inline
+Received: from py-out-1112.google.com ([64.233.166.182]:52044 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S964885AbWGHQpO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jul 2006 12:45:14 -0400
+Received: by py-out-1112.google.com with SMTP id 57so477657pya
+        for <linux-ide@vger.kernel.org>; Sat, 08 Jul 2006 09:45:14 -0700 (PDT)
+In-Reply-To: <20060705212835.GA28904@lemming.cita.utoronto.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Robin Humble <rjh@cita.utoronto.ca>
+Cc: linux-ide@vger.kernel.org
 
-ICH8 uses different shift for present bits in PCS and MAP.MV is
-reserved (SATA only).  Add map_db.present_shift and add proper MAP
-handling for ICH8.
+Robin Humble wrote:
+> sata_sil 0000:00:0a.0: version 0.9
+> ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 4
+> PCI: setting IRQ 4 as level-triggered
+> ACPI: PCI Interrupt 0000:00:0a.0[A] -> Link [LNKC] -> GSI 4 (level, low) -> IRQ 4
+> ata1: SATA max UDMA/100 cmd 0xE8832080 ctl 0xE883208A bmdma 0xE8832000 irq 4
+> ata2: SATA max UDMA/100 cmd 0xE88320C0 ctl 0xE88320CA bmdma 0xE8832008 irq 4
+> ata1: SATA link up 1.5 Gbps (SStatus 113)
+> irq 4: nobody cared (try booting with the "irqpoll" option)
+>  <c013579a> __report_bad_irq+0x36/0x7d  <c0135962> note_interrupt+0x181/0x1b3
+>  <c013533a> handle_IRQ_event+0x23/0x4c  <c01353d0> __do_IRQ+0x6d/0x95
+>  <c0104b1f> do_IRQ+0x36/0x4e 
+>  =======================
+>  <c0103416> common_interrupt+0x1a/0x20  <c011d182> __do_softirq+0x2c/0x7f
+>  <c0104b6f> do_softirq+0x38/0x41 
+>  =======================
+>  <c0104b2f> do_IRQ+0x46/0x4e  <c0103416> common_interrupt+0x1a/0x20
+>  <c01dd392> acpi_processor_idle+0x15a/0x32c  <c0101db8> cpu_idle+0x3a/0x4f
+>  <c03c165e> start_kernel+0x2c0/0x2c4  <c03c119d> unknown_bootoption+0x0/0x201
+> handlers:
+> [<e887f29c>] (ata_interrupt+0x0/0x128 [libata])
+> Disabling IRQ #4
+> ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 88:207f
+> ata1: dev 0 ATA-7, max UDMA/133, 625142448 sectors: LBA48
+> ata1: qc timeout (cmd 0xef)
+> ata1: failed to set xfermode (err_mask=0x4)
+> scsi0 : sata_sil
+> ata2: SATA link down (SStatus 0)
+> scsi1 : sata_sil
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Can you try libata-tj-stable patch?
 
----
+http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.17.4-20060708.tar.bz2
 
-This patch is against
-
-  upstream (309bade002e9226781c2d7a015340d0089e399b5)
-  + [1] ata_piix-add_host_set-private-structure
-  + [2] ata_piix-implement-cached-PCS
-
-I don't have a ICH8, so this is only compile-tested.  I think ICH8
-uses [P0 P2 P1 P3] for 4 ports device and [P0 NA P1 NA] for 2 ports as
-ICH6/7 does, but the spec doesn't say anything about this, so it needs
-testing.  Thanks.
-
-[1] http://article.gmane.org/gmane.linux.ide/11721
-[2] http://article.gmane.org/gmane.linux.ide/11722
-
- drivers/scsi/ata_piix.c |   67 ++++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 60 insertions(+), 7 deletions(-)
-
-95c3dfd6ab6153497166ee107cfcd9e47f5e938d
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index cbb3293..f81f293 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -127,6 +127,8 @@ enum {
- 	ich6_sata		= 4,
- 	ich6_sata_ahci		= 5,
- 	ich6m_sata_ahci		= 6,
-+	ich8_4p			= 7,
-+	ich8_2p			= 8,
- 
- 	/* constants for mapping table */
- 	P0			= 0,  /* port 0 */
-@@ -142,11 +144,13 @@ enum {
- 
- struct piix_map_db {
- 	const u32 mask;
-+	const int present_shift;
- 	const int map[][4];
- };
- 
- struct piix_host_priv {
- 	const int *map;
-+	int present_shift;
- 	u8 cached_pcs;
- };
- 
-@@ -192,12 +196,12 @@ #endif
- 	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata_ahci },
- 	/* Enterprise Southbridge 2 (where's the datasheet?) */
- 	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
--	/* SATA Controller 1 IDE (ICH8, no datasheet yet) */
--	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
--	/* SATA Controller 2 IDE (ICH8, ditto) */
--	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
--	/* Mobile SATA Controller IDE (ICH8M, ditto) */
--	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata_ahci },
-+	/* SATA Controller 1 IDE (ICH8) */
-+	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_4p },
-+	/* SATA Controller 2 IDE (ICH8) */
-+	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2p },
-+	/* Mobile SATA Controller IDE (ICH8M) */
-+	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2p },
- 
- 	{ }	/* terminate list */
- };
-@@ -296,6 +300,7 @@ static const struct ata_port_operations 
- 
- static const struct piix_map_db ich5_map_db = {
- 	.mask = 0x7,
-+	.present_shift = 4,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP  */
- 		{  P0,  NA,  P1,  NA }, /* 000b */
-@@ -311,6 +316,7 @@ static const struct piix_map_db ich5_map
- 
- static const struct piix_map_db ich6_map_db = {
- 	.mask = 0x3,
-+	.present_shift = 4,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
- 		{  P0,  P2,  P1,  P3 }, /* 00b */
-@@ -322,6 +328,7 @@ static const struct piix_map_db ich6_map
- 
- static const struct piix_map_db ich6m_map_db = {
- 	.mask = 0x3,
-+	.present_shift = 4,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
- 		{  P0,  P2,  RV,  RV }, /* 00b */
-@@ -331,12 +338,32 @@ static const struct piix_map_db ich6m_ma
- 	},
- };
- 
-+static const struct piix_map_db ich8_4p_map_db = {
-+	.mask = 0x0,
-+	.present_shift = 8,
-+	.map = {
-+		/* PM   PS   SM   SS       MAP */
-+		{  P0,  P2,  P1,  P3 }, /*  0b */
-+	},
-+};
-+
-+static const struct piix_map_db ich8_2p_map_db = {
-+	.mask = 0x0,
-+	.present_shift = 8,
-+	.map = {
-+		/* PM   PS   SM   SS       MAP */
-+		{  P0,  NA,  P1,  NA }, /*  0b */
-+	},
-+};
-+
- static const struct piix_map_db *piix_map_db_table[] = {
- 	[ich5_sata]		= &ich5_map_db,
- 	[esb_sata]		= &ich5_map_db,
- 	[ich6_sata]		= &ich6_map_db,
- 	[ich6_sata_ahci]	= &ich6_map_db,
- 	[ich6m_sata_ahci]	= &ich6m_map_db,
-+	[ich8_4p]		= &ich8_4p_map_db,
-+	[ich8_2p]		= &ich8_2p_map_db,
- };
- 
- static struct ata_port_info piix_port_info[] = {
-@@ -424,6 +451,30 @@ #endif
- 		.udma_mask	= 0x7f,	/* udma0-6 */
- 		.port_ops	= &piix_sata_ops,
- 	},
-+
-+	/* ich8_4p */
-+	{
-+		.sht		= &piix_sht,
-+		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED_ICH6 |
-+				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_SCR |
-+				  PIIX_FLAG_AHCI,
-+		.pio_mask	= 0x1f,	/* pio0-4 */
-+		.mwdma_mask	= 0x07, /* mwdma0-2 */
-+		.udma_mask	= 0x7f,	/* udma0-6 */
-+		.port_ops	= &piix_sata_ops,
-+	},
-+
-+	/* ich8_2p */
-+	{
-+		.sht		= &piix_sht,
-+		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED_ICH6 |
-+				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_SCR |
-+				  PIIX_FLAG_AHCI,
-+		.pio_mask	= 0x1f,	/* pio0-4 */
-+		.mwdma_mask	= 0x07, /* mwdma0-2 */
-+		.udma_mask	= 0x7f,	/* udma0-6 */
-+		.port_ops	= &piix_sata_ops,
-+	},
- };
- 
- static struct pci_bits piix_enable_bits[] = {
-@@ -551,7 +602,8 @@ static int piix_sata_prereset(struct ata
- 		port = map[base + i];
- 		if (port < 0)
- 			continue;
--		if (ap->flags & PIIX_FLAG_IGNORE_PCS || pcs & 1 << (4 + port))
-+		if ((ap->flags & PIIX_FLAG_IGNORE_PCS) ||
-+		    (pcs & 1 << (hpriv->present_shift + port)))
- 			present_mask |= 1 << i;
- 		else
- 			pcs &= ~(1 << port);
-@@ -824,6 +876,7 @@ static void __devinit piix_init_sata_map
- 			   "invalid MAP value %u\n", map_value);
- 
- 	hpriv->map = map;
-+	hpriv->present_shift = map_db->present_shift;
- }
- 
- /**
 -- 
-1.3.2
-
+tejun
