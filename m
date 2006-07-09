@@ -1,40 +1,72 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.18-rc1-mm1
-Date: Sun, 09 Jul 2006 12:29:10 -0400
-Message-ID: <44B12ED6.10000@garzik.org>
-References: <20060709021106.9310d4d1.akpm@osdl.org>	 <44B0E6E6.6070904@reub.net>  <20060709052252.8c95202a.akpm@osdl.org> <1152449805.27368.57.camel@localhost.localdomain>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: LibPATA code issues / 2.6.15.4
+Date: Sun, 9 Jul 2006 13:27:21 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0607091327160.23992@p34.internal.lan>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <44AEB3CA.8080606@pobox.com>
+ <Pine.LNX.4.64.0607071520160.2643@p34.internal.lan> <200607091224.31451.liml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:185 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751323AbWGIQ30 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Jul 2006 12:29:26 -0400
-In-Reply-To: <1152449805.27368.57.camel@localhost.localdomain>
+Received: from lucidpixels.com ([66.45.37.187]:35476 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S964880AbWGIR1X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Jul 2006 13:27:23 -0400
+In-Reply-To: <200607091224.31451.liml@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andrew Morton <akpm@osdl.org>, Reuben Farrelly <reuben-lkml@reub.net>, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, rdunlap@xenotime.net, greg@kroah.com, john stultz <johnstul@us.ibm.com>, Andi Kleen <ak@muc.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-Alan Cox wrote:
-> The old drivers/ide code uses much longer delays than the spec for some
-> ATAPI commands, and it looks as if there is a good reason for doing
-> so ...
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Sander <sander@humilis.net>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 
-FWIW, the code that ATADRVR (http://www.ata-atapi.com/) uses to issue 
-commands does something like
 
-	write Command register to start command
-	if (device == ATAPI)			# i.e. not ATA
-		delay(150 msec)
-	pound Status / AltStatus, kick DMA engine, whatever else
+On Sun, 9 Jul 2006, Mark Lord wrote:
 
-ATADRVR is open code (for an MS-DOS-level driver), and really worth a 
-read.  Between ATADRVR and drivers/ide, you get a pretty good idea about 
-what __field experience__ has shown is needed for ATAPI devices.
+> Mmm.. there are two main paths into those messages,
+> and my current patch only caught one of them.
+>
+> Here's a reworked version that catches the ata_op on both paths.
+> Maybe this will dump out the info we need to diagnose Justin's system.
+>
+> Compiles & links fine on 2.6.17, but not tested.
+>
+> Cheers
+>
+> --- linux/drivers/scsi/libata-scsi.c.orig	2006-06-23 13:38:37.000000000 -0400
+> +++ linux/drivers/scsi/libata-scsi.c	2006-07-09 12:19:52.000000000 -0400
+> @@ -542,6 +542,7 @@
+> 	struct ata_taskfile *tf = &qc->tf;
+> 	unsigned char *sb = cmd->sense_buffer;
+> 	unsigned char *desc = sb + 8;
+> +	unsigned char ata_op = tf->command;
+>
+> 	memset(sb, 0, SCSI_SENSE_BUFFERSIZE);
+>
+> @@ -558,6 +559,7 @@
+> 	 * onto sense key, asc & ascq.
+> 	 */
+> 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
+> +		printk(KERN_WARNING "ata_gen_ata_desc_sense: failed ata_op=0x%02x\n", ata_op);
+> 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
+> 				   &sb[1], &sb[2], &sb[3]);
+> 		sb[1] &= 0x0f;
+> @@ -617,6 +619,7 @@
+> 	struct scsi_cmnd *cmd = qc->scsicmd;
+> 	struct ata_taskfile *tf = &qc->tf;
+> 	unsigned char *sb = cmd->sense_buffer;
+> +	unsigned char ata_op = tf->command;
+>
+> 	memset(sb, 0, SCSI_SENSE_BUFFERSIZE);
+>
+> @@ -633,6 +636,7 @@
+> 	 * onto sense key, asc & ascq.
+> 	 */
+> 	if (tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
+> +		printk(KERN_WARNING "ata_gen_fixed_sense: failed ata_op=0x%02x\n", ata_op);
+> 		ata_to_sense_error(qc->ap->id, tf->command, tf->feature,
+> 				   &sb[2], &sb[12], &sb[13]);
+> 		sb[2] &= 0x0f;
+>
 
-	Jeff
+Thanks Mark!
 
-
+Applying now.
 
