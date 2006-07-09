@@ -1,52 +1,93 @@
-From: David Lloyd <dmlloyd@flurg.com>
-Subject: Re: Alan's PATA patch vs. Gentoo-ized sata_promise
-Date: Sat, 8 Jul 2006 21:00:49 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0607082059590.8571@ultros>
-References: <Pine.LNX.4.64.0607081230350.9190@ultros>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [RFC: 2.6 patch] drivers/ide/: possible cleanups
+Date: Sun, 9 Jul 2006 11:03:21 +0200
+Message-ID: <20060709090320.GD13938@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound1.mail.tds.net ([216.170.230.91]:5843 "EHLO
-	outbound1.mail.tds.net") by vger.kernel.org with ESMTP
-	id S1161042AbWGICAx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jul 2006 22:00:53 -0400
-Received: from outaamta02.mail.tds.net (outaamta02.mail.tds.net [216.170.230.32])
-	by outbound1.mail.tds.net (8.13.6/8.13.4) with ESMTP id k6920q0R015339
-	for <linux-ide@vger.kernel.org>; Sat, 8 Jul 2006 21:00:52 -0500
-Received: from localhost ([216.165.189.42]) by outaamta02.mail.tds.net
-          with ESMTP
-          id <20060709020051.IPWU22195.outaamta02.mail.tds.net@localhost>
-          for <linux-ide@vger.kernel.org>; Sat, 8 Jul 2006 21:00:51 -0500
-In-Reply-To: <Pine.LNX.4.64.0607081230350.9190@ultros>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:47627 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S932312AbWGIJDW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Jul 2006 05:03:22 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 8 Jul 2006, David Lloyd wrote:
+This patch contains the following possible clenups:
+- setup-pci.c: #if 0 the unused ide_pci_unregister_driver()
+- ide.c: remove the unused EXPORT_SYMBOL(ide_register_hw)
+- ide-dma.c: remove the unused EXPORT_SYMBOL_GPL(ide_in_drive_list)
 
-> I have a gentoo 2.6.16 kernel (which includes the changes to support 
-> pata+sata in promise_sata), and I applied alan's pata patch over it.
->
-> Initial results are great, except for one problem: the sata_promise 
-> controller acts as if it is no longer DMA-capable, reporting the 
-> following on detection:
->
-> sata_promise PATA port found
-> ata1: SATA max PIO4 cmd 0xF8804200 ctl 0xF8804238 bmdma 0x0 irq 16
-> ata2: SATA max PIO4 cmd 0xF8804280 ctl 0xF88042B8 bmdma 0x0 irq 16
-> ata3: PATA max PIO4 cmd 0xF8804300 ctl 0xF8804338 bmdma 0x0 irq 16
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Ok, figured out where the PIO thing was coming from at least.  On 
-(roughly) line 4703 there's a chunk of code like this:
+---
 
-    /* Tidy up if we have no bus master base
-       Not sure this is the right spot to do it */
-    if (ap->ioaddr.bmdma_addr == 0) {
-            ap->udma_mask = 0;
-            ap->mwdma_mask = 0;
-    }
+This patch was already sent on:
+- 26 Jun 2006
+- 27 Apr 2006
+- 19 Apr 2006
+- 11 Apr 2006
 
-This bit of code ate my DMA.  I commented out the udma_mask one and 
-everything works great.
+ drivers/ide/ide-dma.c   |    2 --
+ drivers/ide/ide.c       |    2 --
+ drivers/ide/setup-pci.c |    4 +++-
+ include/linux/ide.h     |    1 -
+ 4 files changed, 3 insertions(+), 6 deletions(-)
 
-- DML
+--- linux-2.6.17-rc1-mm2-full/include/linux/ide.h.old	2006-04-10 22:46:27.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/include/linux/ide.h	2006-04-10 22:46:36.000000000 +0200
+@@ -1188,7 +1188,6 @@
+ extern void ide_scan_pcibus(int scan_direction) __init;
+ extern int __ide_pci_register_driver(struct pci_driver *driver, struct module *owner);
+ #define ide_pci_register_driver(d) __ide_pci_register_driver(d, THIS_MODULE)
+-extern void ide_pci_unregister_driver(struct pci_driver *driver);
+ void ide_pci_setup_ports(struct pci_dev *, struct ide_pci_device_s *, int, ata_index_t *);
+ extern void ide_setup_pci_noise (struct pci_dev *dev, struct ide_pci_device_s *d);
+ 
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/ide.c.old	2006-04-10 22:43:31.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/ide.c	2006-04-10 22:43:41.000000000 +0200
+@@ -826,8 +826,6 @@
+ 	return ide_register_hw_with_fixup(hw, hwifp, NULL);
+ }
+ 
+-EXPORT_SYMBOL(ide_register_hw);
+-
+ /*
+  *	Locks for IDE setting functionality
+  */
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/ide-dma.c.old	2006-04-10 22:44:21.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/ide-dma.c	2006-04-10 22:44:28.000000000 +0200
+@@ -152,8 +152,6 @@
+ 	return 0;
+ }
+ 
+-EXPORT_SYMBOL_GPL(ide_in_drive_list);
+-
+ /**
+  *	ide_dma_intr	-	IDE DMA interrupt handler
+  *	@drive: the drive the interrupt is for
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/setup-pci.c.old	2006-04-10 22:46:46.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/setup-pci.c	2006-04-10 22:47:03.000000000 +0200
+@@ -807,7 +807,8 @@
+  *	Unregister a currently installed IDE driver. Returns are the same
+  *	as for pci_unregister_driver
+  */
+- 
++
++#if 0
+ void ide_pci_unregister_driver(struct pci_driver *driver)
+ {
+ 	if(!pre_init)
+@@ -817,6 +818,7 @@
+ }
+ 
+ EXPORT_SYMBOL_GPL(ide_pci_unregister_driver);
++#endif  /*  0  */
+ 
+ /**
+  *	ide_scan_pcidev		-	find an IDE driver for a device
+
+
+
