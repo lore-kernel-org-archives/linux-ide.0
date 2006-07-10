@@ -1,53 +1,60 @@
-From: Robin Humble <rjh@cita.utoronto.ca>
-Subject: Re: sata_sil via and seagate
-Date: Mon, 10 Jul 2006 04:30:47 -0400
-Message-ID: <20060710083046.GA23220@lemming.cita.utoronto.ca>
-References: <20060705212835.GA28904@lemming.cita.utoronto.ca> <44AFE14E.9000600@gmail.com>
+From: Sven Riedel <sr@gimp.org>
+Subject: Re: SATA command timeouts
+Date: Mon, 10 Jul 2006 13:25:51 +0200
+Message-ID: <20060710112551.GB14003@localnet>
+References: <20060708130037.GA22725@localnet>
+Reply-To: sr@gimp.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from quail.cita.utoronto.ca ([128.100.76.6]:45520 "EHLO
-	quail.cita.utoronto.ca") by vger.kernel.org with ESMTP
-	id S1751358AbWGJIar (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Jul 2006 04:30:47 -0400
-Received: from cita.utoronto.ca (lemming.cita.utoronto.ca [128.100.76.53])
-	by quail.cita.utoronto.ca (8.13.1/8.13.1) with ESMTP id k6A8Ulm0030965
-	for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 04:30:47 -0400
-Received: from lemming.cita.utoronto.ca (localhost [127.0.0.1])
-	by cita.utoronto.ca (8.13.6/8.12.8) with ESMTP id k6A8Ul1c023280
-	for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 04:30:47 -0400
-Received: (from rjh@localhost)
-	by lemming.cita.utoronto.ca (8.13.6/8.13.6/Submit) id k6A8UlFc023279
-	for linux-ide@vger.kernel.org; Mon, 10 Jul 2006 04:30:47 -0400
+Received: from mail.kamp-dsl.de ([195.62.99.42]:58552 "HELO
+	mailout.kamp-dsl.de") by vger.kernel.org with SMTP id S1751320AbWGJLZy
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Jul 2006 07:25:54 -0400
+Received: from dsl-mail.kamp.net (mail.kamp-dsl.de [195.62.99.42])
+	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with SMTP
+	id 110C582FA64C-0
+	for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 11:25:53 +0000
+Received: from mx01.kamp-dsl.de (mail.kamp-dsl.de [195.62.99.42])
+	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with ESMTP
+	id 110C582FA5DF-0
+	for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 11:25:53 +0000
+Received: from mail.localnet (turing.localnet [192.168.13.1])
+	by mx (Postfix) with ESMTP id AE59B1F864
+	for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 11:25:54 +0000 (UTC)
 Content-Disposition: inline
-In-Reply-To: <44AFE14E.9000600@gmail.com>
+In-Reply-To: <20060708130037.GA22725@localnet>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Sun, Jul 09, 2006 at 01:46:06AM +0900, Tejun Heo wrote:
->Robin Humble wrote:
->>irq 4: nobody cared (try booting with the "irqpoll" option)
->> <c013579a> __report_bad_irq+0x36/0x7d  <c0135962> 
-...
->>ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4023 85:3469 86:3c01 87:4023 88:207f
->>ata1: dev 0 ATA-7, max UDMA/133, 625142448 sectors: LBA48
->>ata1: qc timeout (cmd 0xef)
->>ata1: failed to set xfermode (err_mask=0x4)
->>scsi0 : sata_sil
->>ata2: SATA link down (SStatus 0)
->>scsi1 : sata_sil
->Can you try libata-tj-stable patch?
->http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.17.4-20060708.tar.bz2
+On Sat, Jul 08, 2006 at 03:00:37PM +0200, Sven Riedel wrote:
+> Hi,
+> I hooked up new SATA disks to a machine yesterday and set up a software raid.
+> After copying roughly 25 GB of data onto the array all attached drives
+> reported command timeouts and wouldn't recover. Only a reboot would help. 
+> I tried the same again, this time the drives would timeout after 60 GB of data
+> written. I exchanged the CPU, but the same thing occurs. 
 
-yup - that works fine. thanks! another happy test marmot :-)
+Well, seems the second CPU was defunct. After switching back to the first CPU
+the hard system crashes stopped occurring.
 
-I tried it with the new 320G seagate 7200.10 drive (55MB/s writes,
-68MB/s reads with bonnie++), and also with an old seagate 7200.7, and
-a 500G maxtor diamondmax 11 (which didn't work before).
-none require the irqpoll boot option and all seem to work fine.
 
-many thanks to all involved.
+> My
+> next test will be doing write-heavy operations on all four drives
+> simulaneously, but without gathering them into a raid array.
 
-cheers,
-robin
+Well, it looks like the problem can be reproduced most reliably only when all
+four drives are under load. It happens even sooner when they are gathered into
+a raid array (I only tested level 5 - could be that the background "rebuild"
+after creation is adding additional load which triggers the problem sooner).
+
+Just to rule out an insufficient power supply, I hooked the drives up to a
+completely independent PSU and the drives still all suddenly trigger a
+command-timeout after a while.
+
+Regs,
+Sven
+
+-- 
+Sven Riedel                      sr@gimp.org
