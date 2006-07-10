@@ -1,307 +1,132 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: PATCH (1 of 2): Jmicron driver
-Date: Mon, 10 Jul 2006 18:02:15 +0100
-Message-ID: <1152550935.27368.158.camel@localhost.localdomain>
+Subject: PATCH: (2 of 2) Jmicron driver plumbing and quirk
+Date: Mon, 10 Jul 2006 18:06:26 +0100
+Message-ID: <1152551186.27368.164.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:11231 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35038 "EHLO
 	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1422634AbWGJQok (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Jul 2006 12:44:40 -0400
+	id S1422692AbWGJQtB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Jul 2006 12:49:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Slightly reworked as per Jeff requests, folded into a single patch set
-as per Andrew's request.
-
-This first patch adds the Jmicron driver itself. The second patch then
-plumbs it in and adds the PCI quirks. The needed AHCI fixes have already
-been merged up by Jeff.
+At set up time we need to switch the chip to multifunction mode so that
+our PCI layer handles the transition correctly. In multi-function mode
+it provides an AHCI controller for SATA and an SFF type controller for
+PATA ports. In "as booted" mode it provides the ports folded onto a
+single SFF type function. The jmicron driver supports both modes while
+the quirk is set up to always force it into multi-function mode as per
+recommendations of chip vendor. The exception is the 368 which is PATA
+only and has no AHCI port. That is not handled by the quirk but is
+picked up directly by the Jmicron driver.
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
+ # On branch refs/heads/alan
+
 ---
 
- drivers/scsi/ata_jmicron.c |  266 ++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 266 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/ata_jmicron.c
+ drivers/pci/quirks.c  |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/Kconfig  |    8 ++++++++
+ drivers/scsi/Makefile |    1 +
+ 3 files changed, 58 insertions(+), 0 deletions(-)
 
-d1821d8bd9aa29f27f07b4133df12fb239a6ad74
-diff --git a/drivers/scsi/ata_jmicron.c b/drivers/scsi/ata_jmicron.c
-new file mode 100644
-index 0000000..85a7ffc
---- /dev/null
-+++ b/drivers/scsi/ata_jmicron.c
-@@ -0,0 +1,266 @@
+76ebb7caa7039c3145b521f71d50ec47697b6dca
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d1d7333..924b252 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1174,6 +1174,55 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SI,	PCI_DEVICE_ID_SI_963,		quirk_sis_96x_smbus );
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SI,	PCI_DEVICE_ID_SI_LPC,		quirk_sis_96x_smbus );
+ 
++#if defined(CONFIG_SCSI_SATA) || defined(CONFIG_SCSI_SATA_MODULE)
++
 +/*
-+ *    ata_jmicron.c - JMicron ATA driver for non AHCI mode. This drives the
-+ *			PATA port of the controller. The SATA ports are
-+ *			driven by AHCI in the usual configuration although
-+ *			this driver can handle other setups if we need it.
-+ *
-+ *	(c) 2006 Red Hat  <alan@redhat.com>
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/init.h>
-+#include <linux/blkdev.h>
-+#include <linux/delay.h>
-+#include <linux/device.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/libata.h>
-+#include <linux/ata.h>
-+
-+#define DRV_NAME	"ata_jmicron"
-+#define DRV_VERSION	"0.1.1"
-+
-+typedef enum {
-+	PORT_PATA0 = 0,
-+	PORT_PATA1 = 1,
-+	PORT_SATA = 2,
-+} port_type;
-+
-+/**
-+ *	jmicron_pre_reset	-	check for 40/80 pin
-+ *	@ap: Port
-+ *
-+ *	Perform the PATA port setup we need. 
-+ 
-+ *	On the Jmicron 361/363 there is a single PATA port that can be mapped
-+ *	either as primary or secondary (or neither). We don't do any policy
-+ *	and setup here. We assume that has been done by init_one and the
-+ *	BIOS.
++ *	If we are using libata we can drive this chip proeprly but must
++ *	do this early on to make the additional device appear during
++ *	the PCI scanning.
 + */
 + 
-+static int jmicron_pre_reset(struct ata_port *ap)
++static void __devinit quirk_jmicron_dualfn(struct pci_dev *pdev)
 +{
-+	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
-+	u32 control;
-+	u32 control5;
-+	int port_mask = 1<< (4 * ap->hard_port_no);
-+	int port = ap->hard_port_no;
-+	port_type port_map[2];
++	u32 conf;
++	u8 hdr;
 +
-+	/* Check if our port is enabled */
-+	pci_read_config_dword(pdev, 0x40, &control);
-+	if ((control & port_mask) == 0)
-+		return 0;
-+
-+	/* There are two basic mappings. One has the two SATA ports merged
-+	   as master/slave and the secondary as PATA, the other has only the 
-+	   SATA port mapped */
-+	if (control & (1 << 23)) {
-+		port_map[0] = PORT_SATA;
-+		port_map[1] = PORT_PATA0;
-+	} else {
-+		port_map[0] = PORT_SATA;
-+		port_map[1] = PORT_SATA;
-+	}
-+
-+	/* The 365/366 may have this bit set to map the second PATA port
-+	   as the internal primary channel */	
-+	pci_read_config_dword(pdev, 0x80, &control5);
-+	if (control5 & (1<<24))
-+		port_map[0] = PORT_PATA1;
-+
-+	/* The two ports may then be logically swapped by the firmware */
-+	if (control & (1 << 22))
-+		port = port ^ 1;
++	/* Only poke fn 0 */	
++	if (PCI_FUNC(pdev->devfn))
++		return;
 +		
-+	/*
-+	 *	Now we know which physical port we are talking about we can
-+	 *	actually do our cable checking etc. Thankfully we don't need
-+	 *	to do the plumbing for other cases.
-+	 */
-+	switch (port_map[port])
-+	{	
-+	case PORT_PATA0:
-+		if (control & (1 << 5))
-+			return 0;
-+		if (control & (1 << 3))	/* 40/80 pin primary */
-+			ap->cbl = ATA_CBL_PATA40;
-+		else	
-+			ap->cbl = ATA_CBL_PATA80;
-+		break;
-+	case PORT_PATA1:
-+		/* Bit 21 is set if the port is enabled */
-+		if ((control5 & (1 << 21)) == 0)
-+			return 0;
-+		if (control5 & (1 << 19))	/* 40/80 pin secondary */
-+			ap->cbl = ATA_CBL_PATA40;
-+		else	
-+			ap->cbl = ATA_CBL_PATA80;
-+		break;
-+	case PORT_SATA:	
-+		ap->cbl = ATA_CBL_SATA;
-+		break;
-+	}		
-+	return ata_std_prereset(ap);
-+}
-+
-+/**
-+ *	jmicron_error_handler - Setup and error handler
-+ *	@ap: Port to handle
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void jmicron_error_handler(struct ata_port *ap)
-+{
-+	return ata_bmdma_drive_eh(ap, jmicron_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
-+}
-+
-+/* No PIO or DMA methods needed for this device */
-+
-+static struct scsi_host_template jmicron_sht = {
-+	.module			= THIS_MODULE,
-+	.name			= DRV_NAME,
-+	.ioctl			= ata_scsi_ioctl,
-+	.queuecommand		= ata_scsi_queuecmd,
-+	.can_queue		= ATA_DEF_QUEUE,
-+	.this_id		= ATA_SHT_THIS_ID,
-+	.sg_tablesize		= LIBATA_MAX_PRD,
-+	/* Special handling needed if you have sector or LBA48 limits */
-+	.max_sectors		= ATA_MAX_SECTORS,
-+	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
-+	.emulated		= ATA_SHT_EMULATED,
-+	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-+	.proc_name		= DRV_NAME,
-+	.dma_boundary		= ATA_DMA_BOUNDARY,
-+	.slave_configure	= ata_scsi_slave_config,
-+	/* Use standard CHS mapping rules */
-+	.bios_param		= ata_std_bios_param,
-+};
-+
-+static const struct ata_port_operations jmicron_ops = {
-+	.port_disable		= ata_port_disable,
-+
-+	/* Task file is PCI ATA format, use helpers */
-+	.tf_load		= ata_tf_load,
-+	.tf_read		= ata_tf_read,
-+	.check_status		= ata_check_status,
-+	.exec_command		= ata_exec_command,
-+	.dev_select		= ata_std_dev_select,
-+
-+	.freeze			= ata_bmdma_freeze,
-+	.thaw			= ata_bmdma_thaw,
-+	.error_handler		= jmicron_error_handler,
-+	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+
-+	/* BMDMA handling is PCI ATA format, use helpers */
-+	.bmdma_setup		= ata_bmdma_setup,
-+	.bmdma_start		= ata_bmdma_start,
-+	.bmdma_stop		= ata_bmdma_stop,
-+	.bmdma_status		= ata_bmdma_status,
-+	.qc_prep		= ata_qc_prep,
-+	.qc_issue		= ata_qc_issue_prot,
-+	.data_xfer		= ata_pio_data_xfer,
-+
-+	/* Timeout handling. Special recovery hooks here */
-+	.eng_timeout		= ata_eng_timeout,
-+	.irq_handler		= ata_interrupt,
-+	.irq_clear		= ata_bmdma_irq_clear,
-+
-+	/* Generic PATA PCI ATA helpers */
-+	.port_start		= ata_port_start,
-+	.port_stop		= ata_port_stop,
-+	.host_stop		= ata_host_stop,
-+};
-+
-+
-+/**
-+ *	jmicron_init_one - Register Jmicron ATA PCI device with kernel services
-+ *	@pdev: PCI device to register
-+ *	@ent: Entry in jmicron_pci_tbl matching with @pdev
-+ *
-+ *	Called from kernel PCI layer.
-+ *
-+ *	LOCKING:
-+ *	Inherited from PCI layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	Zero on success, or -ERRNO value.
-+ */
-+
-+static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
-+{
-+	static struct ata_port_info info = {
-+		.sht		= &jmicron_sht,
-+		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+
-+		.pio_mask	= 0x1f,
-+		.mwdma_mask	= 0x07,
-+		.udma_mask 	= 0x3f,
-+
-+		.port_ops	= &jmicron_ops,
-+	};
-+	struct ata_port_info *port_info[2] = { &info, &info };
-+	
-+	u32 reg;
-+
-+	if (id->driver_data != 368) {
-+		/* Put the controller into AHCI mode in case the AHCI driver
-+		   has not yet been loaded. This can be done with either
-+		   function present */
-+		   
-+		/* FIXME: We may want a way to override this in future */
-+		pci_write_config_byte(pdev, 0x41, 0xa1);
++	switch(pdev->device) {
++		case PCI_DEVICE_ID_JMICRON_JMB365:
++		case PCI_DEVICE_ID_JMICRON_JMB366:
++			/* Redirect IDE second PATA port to the right spot */
++			pci_read_config_dword(pdev, 0x80, &conf);
++			conf |= (1 << 24);
++			/* Fall through */
++			pci_write_config_dword(pdev, 0x80, conf);
++		case PCI_DEVICE_ID_JMICRON_JMB361:
++		case PCI_DEVICE_ID_JMICRON_JMB363:
++			pci_read_config_dword(pdev, 0x40, &conf);
++			/* Enable dual function mode, AHCI on fn 0, IDE fn1 */
++			/* Set the class codes correctly and then direct IDE 0 */
++			conf &= ~0x000F0200;	/* Clear bit 9 and 16-19 */
++			conf |=  0x00C20002;	/* Set bit 1, 17, 22, 23 */
++			pci_write_config_dword(pdev, 0x40, conf);
++			
++			/* Reconfigure so that the PCI scanner discovers the
++			   device is now multifunction */
++			   
++			pci_read_config_byte(pdev, PCI_HEADER_TYPE, &hdr);
++			pdev->hdr_type = hdr & 0x7f;
++			pdev->multifunction = !!(hdr & 0x80);
++			
++			break;
 +	}
-+
-+	/* PATA controller is fn 1, AHCI is fn 0 */
-+	if (PCI_FUNC(pdev->devfn) != 1)
-+		return -ENODEV;
-+		
-+	if ( id->driver_data == 365 || id->driver_data == 366) {
-+		/* The 365/66 have two PATA channels, redirect the second */
-+		pci_read_config_dword(pdev, 0x80, &reg);
-+		reg |= (1 << 24);	/* IDE1 to PATA IDE secondary */
-+		pci_write_config_dword(pdev, 0x80, reg);
-+	}
-+
-+	return ata_pci_init_one(pdev, port_info, 2);
 +}
 +
-+static const struct pci_device_id jmicron_pci_tbl[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361), 361},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB363), 363},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB365), 365},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB366), 366},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB368), 368},
-+	{ }	/* terminate list */
-+};
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, quirk_jmicron_dualfn);
 +
-+static struct pci_driver jmicron_pci_driver = {
-+	.name			= DRV_NAME,
-+	.id_table		= jmicron_pci_tbl,
-+	.probe			= jmicron_init_one,
-+	.remove			= ata_pci_remove_one,
-+};
++#endif
 +
-+static int __init jmicron_init(void)
-+{
-+	return pci_register_driver(&jmicron_pci_driver);
-+}
+ #ifdef CONFIG_X86_IO_APIC
+ static void __init quirk_alder_ioapic(struct pci_dev *pdev)
+ {
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index a6d3808..2bebb4a 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -641,6 +641,14 @@ config SCSI_PATA_IT821X
+ 
+ 	  If unsure, say N.
+ 
++config SCSI_ATA_JMICRON
++	tristate "JMicron non-AHCI support (Experimental)"
++	depends on SCSI_SATA && PCI && EXPERIMENTAL
++	help
++	  This option enables support for Jmicron ATA controllers
++	  ports running in non-AHCI mode. Where possible you should
++	  set the configuration for AHCI to get better performance
 +
-+static void __exit jmicron_exit(void)
-+{
-+	pci_unregister_driver(&jmicron_pci_driver);
-+}
-+
-+module_init(jmicron_init);
-+module_exit(jmicron_exit);
-+
-+MODULE_AUTHOR("Alan Cox");
-+MODULE_DESCRIPTION("SCSI low-level driver for Jmicron PATA ports");
-+MODULE_LICENSE("GPL");
-+MODULE_DEVICE_TABLE(pci, jmicron_pci_tbl);
-+MODULE_VERSION(DRV_VERSION);
-+
+ config SCSI_PATA_LEGACY
+ 	tristate "Legacy ISA PATA support (Experimental)"
+ 	depends on SCSI_SATA && PCI && EXPERIMENTAL
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 56f6c7c..56bccbc 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -140,6 +140,7 @@ obj-$(CONFIG_SCSI_PATA_HPT3X3)	+= libata
+ obj-$(CONFIG_SCSI_PATA_ISAPNP)	+= libata.o pata_isapnp.o
+ obj-$(CONFIG_SCSI_PATA_IT8172)	+= libata.o pata_it8172.o
+ obj-$(CONFIG_SCSI_PATA_IT821X)	+= libata.o pata_it821x.o
++obj-$(CONFIG_SCSI_ATA_JMICRON)	+= libata.o ata_jmicron.o
+ obj-$(CONFIG_SCSI_PATA_NETCELL)	+= libata.o pata_netcell.o
+ obj-$(CONFIG_SCSI_PATA_NS87410)	+= libata.o pata_ns87410.o
+ obj-$(CONFIG_SCSI_PATA_OPTI)	+= libata.o pata_opti.o
 -- 
 1.2.GIT
 
