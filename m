@@ -1,129 +1,94 @@
 From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 2/6] The definition of ahci_start_fis_rx() and
-	ahci_stop_fis_rx()
-Date: Mon, 10 Jul 2006 11:35:09 +0800
-Message-ID: <1152502510.7132.267.camel@forrest26.sh.intel.com>
+Subject: [PATCH 4/6] The definition of ahci_port_suspend()
+Date: Mon, 10 Jul 2006 11:35:20 +0800
+Message-ID: <1152502520.7132.269.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:33204 "EHLO
-	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S1161328AbWGJDsa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 9 Jul 2006 23:48:30 -0400
+Received: from mga03.intel.com ([143.182.124.21]:55648 "EHLO
+	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
+	id S1161327AbWGJDsl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Jul 2006 23:48:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, axboe@suse.de
 Cc: linux-ide@vger.kernel.org
 
-Put the "start/stop FIS RX" operation into ahci_start_fis_rx() and
- ahci_stop_fis_rx().
+Add the definition of ahci_port_suspend(), which will be used to suspend
+a port.
 
 Signed-off-by: Forrest Zhao <forrest.zhaot@intel.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Jens Axboe <axboe@suse.de>
 
+
 ---
 
- drivers/scsi/ahci.c |   75 ++++++++++++++++++++++++++++++++++++++++++++
-+++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+ drivers/scsi/ahci.c |   35 ++++++++++++++++++++++++++++++++++-
+ 1 files changed, 34 insertions(+), 1 deletions(-)
 
-8098bbd92f7eacf5c40c01feb71fe88b88cb5745
+cc19430967817d0354c92a7b1d1a1cef87cc449f
 diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index be2cba8..2ad26cd 100644
+index 6edc7c8..fc2c879 100644
 --- a/drivers/scsi/ahci.c
 +++ b/drivers/scsi/ahci.c
-@@ -202,6 +202,10 @@ static unsigned int ahci_qc_issue(struct
- static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct
-pt_regs *regs);
- static int ahci_start_engine(void __iomem *port_mmio);
- static int ahci_stop_engine(void __iomem *port_mmio);
-+static void ahci_start_fis_rx(void __iomem *port_mmio,
-+			     struct ahci_port_priv *pp,
-+			     struct ahci_host_priv *hpriv);
-+static int ahci_stop_fis_rx(void __iomem *port_mmio);
- static int ahci_probe_reset(struct ata_port *ap, unsigned int
-*classes);
- static void ahci_irq_clear(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
-@@ -544,6 +548,77 @@ static int ahci_start_engine(void __iome
+@@ -223,6 +223,7 @@ static void ahci_error_handler(struct at
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
+ static int ahci_port_standby(void __iomem *port_mmio, u32 cap);
+ static int ahci_port_spinup(void __iomem *port_mmio, u32 cap);
++static int ahci_port_suspend(struct ata_port *ap, pm_message_t state);
+ static void ahci_remove_one (struct pci_dev *pdev);
+ 
+ static struct scsi_host_template ahci_sht = {
+@@ -459,7 +460,6 @@ static int ahci_port_start(struct ata_po
  	return 0;
  }
  
-+static int ahci_stop_fis_rx(void __iomem *port_mmio)
+-
+ static void ahci_port_stop(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host_set->dev;
+@@ -485,6 +485,39 @@ static void ahci_port_stop(struct ata_po
+ 	kfree(pp);
+ }
+ 
++static int ahci_port_suspend(struct ata_port *ap, pm_message_t state)
 +{
-+	u32 tmp;
++	void __iomem *mmio = ap->host_set->mmio_base;
++	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
++	int rc;
 +
 +	/*
-+	 * Get current status
++	 * Disable DMA
 +	 */
-+	tmp = readl(port_mmio + PORT_CMD);
-+
-+	/* Check if FIS RX is already disabled */
-+	if ((tmp & PORT_CMD_FIS_RX) == 0)
-+		return 0;
-+
-+	/*
-+	 * AHCI Rev 1.1 section 10.3.2
-+	 * Software shall not clear PxCMD.FRE while
-+	 * PxCMD.ST or PxCMD.CR is set to '1'
-+	 */
-+	if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_START)) {
-+		return -EPERM;
++	rc = ahci_stop_engine(port_mmio);
++	if (rc) {
++		ata_port_printk(ap, KERN_WARNING, "DMA engine busy\n");
++		return rc;
 +	}
 +
 +	/*
 +	 * Disable FIS reception
-+	 *
-+	 * AHCI Rev 1.1 Section 10.1.2:
-+	 * If PxCMD.FRE is set to '1', software should clear it
-+	 * to '0' and wait at least 500 milliseconds for PxCMD.FR
-+	 * to return '0' when read. If PxCMD.FR does not clear
-+	 * '0' correctly, then software may attempt a port reset
-+	 * of a full HBA reset to recover.
 +	 */
-+	tmp &= ~(PORT_CMD_FIS_RX);
-+	writel(tmp, port_mmio + PORT_CMD);
-+
-+	tmp = ata_wait_register(port_mmio + PORT_CMD, PORT_CMD_FIS_ON,
-+				PORT_CMD_FIS_ON, 1, 1000);
-+	if(tmp & PORT_CMD_FIS_ON)
-+		return -EBUSY;
-+
-+	return 0;
-+}
-+
-+static void ahci_start_fis_rx(void __iomem *port_mmio,
-+                             struct ahci_port_priv *pp,
-+                             struct ahci_host_priv *hpriv)
-+{
-+	u32 tmp;
++	rc = ahci_stop_fis_rx(port_mmio);
++	if (rc)
++		ata_port_printk(ap, KERN_WARNING, "FIS RX still running"
++				" (%d)\n", rc);
 +
 +	/*
-+	 * Set FIS registers
++	 * Put device into slumber mode
 +	 */
-+	if (hpriv->cap & HOST_CAP_64)
-+		writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio + PORT_LST_ADDR_HI);
-+	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
-+	readl(port_mmio + PORT_LST_ADDR); /* flush */
++	if (!rc && state.event != PM_EVENT_FREEZE)
++		ahci_port_standby(port_mmio, hpriv->cap);
 +
-+	if (hpriv->cap & HOST_CAP_64)
-+		writel((pp->rx_fis_dma >> 16) >> 16, port_mmio + PORT_FIS_ADDR_HI);
-+	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
-+	readl(port_mmio + PORT_FIS_ADDR); /* flush */
-+
-+	/*
-+	 * Enable FIS reception
-+	 */
-+	tmp = readl(port_mmio + PORT_CMD);
-+	tmp |= PORT_CMD_FIS_RX;
-+	writel(tmp, port_mmio + PORT_CMD);
-+	readl(port_mmio + PORT_CMD); /* flush */
++	return rc;
 +}
 +
- static unsigned int ahci_dev_classify(struct ata_port *ap)
+ static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
  {
- 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+ 	unsigned int sc_reg;
 -- 
 1.2.6
+-
