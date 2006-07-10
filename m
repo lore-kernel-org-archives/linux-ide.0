@@ -1,38 +1,62 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [ANNOUNCE] libata-tj-stable against v2.6.17.4 available
-Date: Mon, 10 Jul 2006 23:15:33 +0900
-Message-ID: <44B26105.9080105@gmail.com>
-References: <20060708123242.GE2592@htj.dyndns.org>
+Subject: [PATCH] libata: fix eh_skip_recovery condition
+Date: Mon, 10 Jul 2006 23:18:23 +0900
+Message-ID: <20060710141823.GG2592@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030397AbWGJOOg@vger.kernel.org>
-In-Reply-To: <20060708123242.GE2592@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.238]:26137 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1030389AbWGJOR3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Jul 2006 10:17:29 -0400
+Received: by wr-out-0506.google.com with SMTP id i23so1683395wra
+        for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 07:17:28 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Updated version available.
+* (ata_dev_absent() || ata_dev_ready()) test doesn't indicate
+  SUSPENDED state properly.  Fix it.
 
-* Link resume handling in the previous version was broken causing libata 
-to ignore hotplug event after a link has been hot-unplugged.  Fixed.
+* Link resuming resets shouldn't be skipped.  Don't skip recovery on
+  EHI_RESUME_LINK.  This doesn't matter for host ports as EHI_RESUME
+  always coincides with EHI_HOTPLUGGED which makes attached disabled
+  devices vacant.  However, PMP reset causes non-hotplug link-resuming
+  resets which shouldn't be skipped.
 
-* A few other hotplug related problems are fixed.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-I expect this version to have well-behaving PMP and hotplug support. If 
-anything seems weird, please report.
+---
 
-More info can be found at the following URL.
+ drivers/scsi/libata-eh.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-http://home-tj.org/wiki/index.php/Libata-tj-stable
-
-Updated patches against v2.6.17.4 are at the following URL.
-
-http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.17.4-20060710.tar.bz2 
-
-
-Thanks.
-
+f971658e0eb5636b7ef67cf0d769f6296e44e914
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 640a035..a9dea3d 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -1864,15 +1864,16 @@ static int ata_eh_skip_recovery(struct a
+ 	for (i = 0; i < ata_port_max_devices(ap); i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 
+-		if (ata_dev_absent(dev) || ata_dev_ready(dev))
++		if (!(dev->flags & ATA_DFLAG_SUSPENDED))
+ 			break;
+ 	}
+ 
+ 	if (i == ata_port_max_devices(ap))
+ 		return 1;
+ 
+-	/* always thaw frozen port and recover failed devices */
+-	if (ap->pflags & ATA_PFLAG_FROZEN || ata_port_nr_enabled(ap))
++	/* thaw frozen port, resume link and recover failed devices */
++	if ((ap->pflags & ATA_PFLAG_FROZEN) ||
++	    (ehc->i.flags & ATA_EHI_RESUME_LINK) || ata_port_nr_enabled(ap))
+ 		return 0;
+ 
+ 	/* skip if class codes for all vacant slots are ATA_DEV_NONE */
 -- 
-tejun
+1.3.2
+
