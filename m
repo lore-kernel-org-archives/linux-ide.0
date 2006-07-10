@@ -1,127 +1,38 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Follow up? LibPATA code issues / 2.6.15.4 (found the opcode=0x35)!
-Date: Mon, 10 Jul 2006 09:59:30 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607100958540.3591@p34.internal.lan>
-References: <Pine.LNX.4.64.0602140439580.3567@p34> <44AEB3CA.8080606@pobox.com>
- <Pine.LNX.4.64.0607071520160.2643@p34.internal.lan> <200607091224.31451.liml@rtr.ca>
- <Pine.LNX.4.64.0607091327160.23992@p34.internal.lan>
- <Pine.LNX.4.64.0607091612060.3886@p34.internal.lan>
- <Pine.LNX.4.64.0607091638220.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091645480.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091704250.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091802460.2696@p34.internal.lan>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [ANNOUNCE] libata-tj-stable against v2.6.17.4 available
+Date: Mon, 10 Jul 2006 23:15:33 +0900
+Message-ID: <44B26105.9080105@gmail.com>
+References: <20060708123242.GE2592@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:10127 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1030318AbWGJN7b (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jul 2006 09:59:31 -0400
-In-Reply-To: <Pine.LNX.4.64.0607091802460.2696@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030397AbWGJOOg@vger.kernel.org>
+In-Reply-To: <20060708123242.GE2592@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Sander <sander@humilis.net>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Any follow up now that we have the failed ata-translated op codes?
+Updated version available.
 
-On Sun, 9 Jul 2006, Justin Piszcz wrote:
+* Link resume handling in the previous version was broken causing libata 
+to ignore hotplug event after a link has been hot-unplugged.  Fixed.
 
-> [4294810.556000] ata_gen_ata_desc_sense: failed ata_op=0x51
-> [4294810.556000] ata4: status=0x51 { DriveReady SeekComplete Error }
-> [4294810.556000] ata4: error=0x04 { DriveStatusError }
-> [4295514.668000] ata_gen_fixed_sense: failed ata_op=0x35
-> [4295514.668000] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
-> 0xb/00/00
-> [4295514.668000] ata_gen_ata_desc_sense: failed ata_op=0x51
-> [4295514.668000] ata3: status=0x51 { DriveReady SeekComplete Error }
-> [4295514.668000] ata3: error=0x04 { DriveStatusError }
-> [4297033.649000] ata_gen_fixed_sense: failed ata_op=0xca
-> [4297033.649000] ata4: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
-> 0xb/00/00
-> [4297033.649000] ata_gen_ata_desc_sense: failed ata_op=0x51
-> [4297033.649000] ata4: status=0x51 { DriveReady SeekComplete Error }
-> [4297033.649000] ata4: error=0x04 { DriveStatusError }
-> [4297741.057000] ata_gen_fixed_sense: failed ata_op=0x35
-> [4297741.057000] ata4: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
-> 0xb/00/00
-> [4297741.057000] ata_gen_ata_desc_sense: failed ata_op=0x51
-> [4297741.057000] ata4: status=0x51 { DriveReady SeekComplete Error }
-> [4297741.057000] ata4: error=0x04 { DriveStatusError }
->
-> Also got a 0xca.
->
->
-> On Sun, 9 Jul 2006, Justin Piszcz wrote:
->
->> 
->> 
->> On Sun, 9 Jul 2006, Justin Piszcz wrote:
->> 
->>> 
->>> 
->>> On Sun, 9 Jul 2006, Justin Piszcz wrote:
->>> 
->>>> I made my own patch (following Mark's example) but also added that printk 
->>>> in that function.
->>>> 
->>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata_gen_fixed_sense: failed 
->>>> ata_op=0x35
->>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata4: translated ATA 
->>>> stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
->>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata_gen_ata_desc_sense: 
->>>> failed ata_op=0x51
->>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata4: status=0x51 { 
->>>> DriveReady SeekComplete Error }
->>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata4: error=0x04 { 
->>>> DriveStatusError }
->>>> 
->>>> Now that we have found the ata_op code of 0x35, what does this mean?  Is 
->>>> it generated from a bad FUA/unsupported command from the kernel/SATA 
->>>> driver?
->>>> 
->>>> Justin.
->>>> 
->>>> -
->>>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" 
->>>> in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>> Please read the FAQ at  http://www.tux.org/lkml/
->>>> 
->>> 
->>> In /usr/src/linux/include/linux/ata.h:
->>>
->>>  ATA_CMD_WRITE_EXT = 0x35,
->>> 
->>> Perhaps these drives do not support this command or do not support it 
->>> properly?
->>> 
->>> Any idea, Jeff/Alan?
->>> 
->>> Justin.
->>> 
->>> 
->> 
->> Here are all the errors (when reading/writing heavily):
->> 
->> [4294810.556000] ata_gen_fixed_sense: failed ata_op=0x35
->> [4294810.556000] ata4: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
->> 0xb/00/00
->> [4294810.556000] ata_gen_ata_desc_sense: failed ata_op=0x51
->> [4294810.556000] ata4: status=0x51 { DriveReady SeekComplete Error }
->> [4294810.556000] ata4: error=0x04 { DriveStatusError }
->> [4295514.668000] ata_gen_fixed_sense: failed ata_op=0x35
->> [4295514.668000] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
->> 0xb/00/00
->> [4295514.668000] ata_gen_ata_desc_sense: failed ata_op=0x51
->> [4295514.668000] ata3: status=0x51 { DriveReady SeekComplete Error }
->> [4295514.668000] ata3: error=0x04 { DriveStatusError }
->> 
->> Jeff/Mark, from these errors can we reach a consensus as to the cause of 
->> these errors and how to eliminate the problem?
->> 
->> Thanks,
->> 
->> Justin.
->> 
->
+* A few other hotplug related problems are fixed.
+
+I expect this version to have well-behaving PMP and hotplug support. If 
+anything seems weird, please report.
+
+More info can be found at the following URL.
+
+http://home-tj.org/wiki/index.php/Libata-tj-stable
+
+Updated patches against v2.6.17.4 are at the following URL.
+
+http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.17.4-20060710.tar.bz2 
+
+
+Thanks.
+
+-- 
+tejun
