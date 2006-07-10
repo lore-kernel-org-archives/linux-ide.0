@@ -1,207 +1,112 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 6/6] Implement the AHCI suspend/resume
-Date: Mon, 10 Jul 2006 11:35:54 +0800
-Message-ID: <1152502554.7132.271.camel@forrest26.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Sebastian Kuzminsky <seb@highlab.com>
+Subject: SATA regression 2.6.16.24 -> 2.6.17.4
+Date: Mon, 10 Jul 2006 00:51:06 -0600
+Message-ID: <E1Fzpbm-0002ce-Ij@highlab.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:20616 "EHLO
-	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S1161331AbWGJDtM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 9 Jul 2006 23:49:12 -0400
+Received: from sccrmhc15.comcast.net ([204.127.200.85]:13967 "EHLO
+	sccrmhc15.comcast.net") by vger.kernel.org with ESMTP
+	id S1161351AbWGJGvI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Jul 2006 02:51:08 -0400
+Received: from seb (helo=highlab.com)
+	by highlab.com with local-esmtp (Exim 4.62)
+	(envelope-from <seb@highlab.com>)
+	id 1Fzpbm-0002ce-Ij
+	for linux-ide@vger.kernel.org; Mon, 10 Jul 2006 00:51:06 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, axboe@suse.de
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This patch implements the AHCI suspend/resume.
-It integrates the suspend/resume operations with Power Management
-framework.
+I'm experiencing a problem that looks very similar to bug 5863
+(http://bugzilla.kernel.org/show_bug.cgi?id=5863) - disks that are
+detected with some kernels (and with the BIOS), but not detected with
+other kernels.
 
-Signed-off-by: Forrest Zhao <forrest.zhaot@intel.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Jens Axboe <axboe@suse.de>
+ I've got an Intel D915GEV motherboard with an ICH6 SATA controller.
+It works fine with 2.6.15.1, 2.6.16.{1,16,20,24}, but it doesnt work
+with 2.6.17.4.
+
+With .17.4 the first two disks (on ata12) show up and work, but the last
+two disks (on ata2) are not detected:
+
+libata version 1.20 loaded.
+ata_piix 0000:00:1f.2: version 1.05
+ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 193
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: SATA max UDMA/133 cmd 0xE800 ctl 0xE402 bmdma 0xD800 irq 193
+ata2: SATA max UDMA/133 cmd 0xE000 ctl 0xDC02 bmdma 0xD808 irq 193
+ata1: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4063 85:7c69 86:3e01 87:4063 88:207f
+ata1: dev 0 ATA-7, max UDMA/133, 586114704 sectors: LBA48
+ata1: dev 1 cfg 49:2f00 82:7c6b 83:7f09 84:4063 85:7c69 86:3e01 87:4063 88:207f
+ata1: dev 1 ATA-7, max UDMA/133, 586114704 sectors: LBA48
+ata1: dev 0 configured for UDMA/133
+ata1: dev 1 configured for UDMA/133
+scsi0 : ata_piix
+ata2: SATA port has no device.
+scsi1 : ata_piix
+  Vendor: ATA       Model: Maxtor 6B300S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 6B300S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 586114704 512-byte hdwr sectors (300091 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 586114704 512-byte hdwr sectors (300091 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ sda: unknown partition table
+sd 0:0:0:0: Attached scsi disk sda
+SCSI device sdb: 586114704 512-byte hdwr sectors (300091 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 586114704 512-byte hdwr sectors (300091 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ sdb: unknown partition table
+sd 0:0:1:0: Attached scsi disk sdb
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sd 0:0:1:0: Attached scsi generic sg1 type 0
 
 
----
+I actually had this same problem happen once with .16.16 (it didnt detect
+the ata2 disks, "SATA port has no device").  And I dont really have a
+statistically significant sample here - this is a server and it pretty
+much stays up until it gets a hardware or software upgrade.
 
- drivers/scsi/ahci.c |  129 ++++++++++++++++++++++++++++++++++++++++++++
-+++++++
- 1 files changed, 129 insertions(+), 0 deletions(-)
+I'd appreciate any advice on debugging this or patches to try.  :-)
 
-6fd581dceefd2f40212c468a3e0c7c49c60c0500
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index dc76798..28e1419 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -221,9 +221,12 @@ static void ahci_freeze(struct ata_port 
- static void ahci_thaw(struct ata_port *ap);
- static void ahci_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
-+static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t
-state);
-+static int ahci_pci_device_resume(struct pci_dev *pdev);
- static int ahci_port_standby(void __iomem *port_mmio, u32 cap);
- static int ahci_port_spinup(void __iomem *port_mmio, u32 cap);
- static int ahci_port_suspend(struct ata_port *ap, pm_message_t state);
-+static int ahci_port_resume(struct ata_port *ap);
- static void ahci_remove_one (struct pci_dev *pdev);
- 
- static struct scsi_host_template ahci_sht = {
-@@ -243,6 +246,8 @@ static struct scsi_host_template ahci_sh
- 	.slave_configure	= ata_scsi_slave_config,
- 	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
-+	.resume			= ata_scsi_device_resume,
-+	.suspend		= ata_scsi_device_suspend,
- };
- 
- static const struct ata_port_operations ahci_ops = {
-@@ -371,6 +376,8 @@ static struct pci_driver ahci_pci_driver
- 	.id_table		= ahci_pci_tbl,
- 	.probe			= ahci_init_one,
- 	.remove			= ahci_remove_one,
-+	.suspend		= ahci_pci_device_suspend,
-+	.resume			= ahci_pci_device_resume,
- };
- 
- 
-@@ -507,6 +514,57 @@ static int ahci_port_suspend(struct ata_
- 	return rc;
- }
- 
-+static int ahci_port_resume(struct ata_port *ap)
-+{
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	struct ahci_host_priv *hpriv = ap->host_set->private_data;
-+	struct ahci_port_priv *pp = ap->private_data;
-+	int rc;
-+	u32 tmp;
-+
-+	/*
-+	 * Enable FIS reception
-+	 */
-+	ahci_start_fis_rx(port_mmio, pp, hpriv);
-+
-+	rc = ahci_port_spinup(port_mmio, hpriv->cap);
-+	if (rc)
-+		ata_port_printk(ap, KERN_WARNING, "Could not spinup device"
-+				" (%d)\n", rc);
-+
-+	/*
-+	 * Clear error status
-+	 */
-+	tmp = readl(port_mmio + PORT_SCR_ERR);
-+	writel(tmp, port_mmio + PORT_SCR_ERR);
-+	/*
-+	 * Clear interrupt status
-+	 */
-+	tmp = readl(mmio + HOST_CTL);
-+	if (!(tmp & HOST_IRQ_EN)) {
-+		u32 irq_stat;
-+
-+		/* ack any pending irq events for this port */
-+		irq_stat = readl(port_mmio + PORT_IRQ_STAT);
-+		if (irq_stat)
-+			writel(irq_stat, port_mmio + PORT_IRQ_STAT);
-+
-+		/* set irq mask (enables interrupts) */
-+		writel(DEF_PORT_IRQ, port_mmio + PORT_IRQ_MASK);
-+	}
-+
-+	/*
-+	 * Enable DMA
-+	 */
-+	rc = ahci_start_engine(port_mmio);
-+	if (rc)
-+		ata_port_printk(ap, KERN_WARNING, "Can't start DMA engine"
-+				" (%d)\n", rc);
-+
-+	return rc;
-+}
-+
- static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
- {
- 	unsigned int sc_reg;
-@@ -1022,6 +1080,77 @@ static unsigned int ahci_fill_sg(struct 
- 	return n_sg;
- }
- 
-+int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
-+{
-+	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
-+	void __iomem *mmio = host_set->mmio_base;
-+	u32 tmp;
-+	int i;
-+
-+	/* First suspend all ports */
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		struct ata_port *ap;
-+
-+		ap = host_set->ports[i];
-+		ahci_port_suspend(ap, state);
-+	}
-+
-+	/*
-+	 * AHCI spec rev1.1 section 8.3.3:
-+	 * Software must disable interrupts prior to
-+	 * requesting a transition of the HBA to
-+	 * D3 state.
-+	 */
-+	tmp = readl(mmio + HOST_CTL);
-+	tmp &= ~HOST_IRQ_EN;
-+	writel(tmp, mmio + HOST_CTL);
-+	tmp = readl(mmio + HOST_CTL); /* flush */
-+
-+	ata_pci_device_do_suspend(pdev, state);
-+
-+	return 0;
-+}
-+
-+int ahci_pci_device_resume(struct pci_dev *pdev)
-+{
-+	struct device *dev = pci_dev_to_dev(pdev);
-+	struct ata_host_set *host_set = dev_get_drvdata(dev);
-+	void __iomem *mmio = host_set->mmio_base;
-+	struct ata_port *ap;
-+	u32 i, tmp, irq_stat;
-+
-+	tmp = readl(mmio + HOST_CTL);
-+	if (!(tmp & HOST_AHCI_EN)) {
-+		tmp |= HOST_AHCI_EN;
-+		writel(tmp, mmio + HOST_CTL);
-+		tmp = readl(mmio + HOST_CTL);
-+	}
-+
-+	ata_pci_device_do_resume(pdev);
-+
-+	/* Resume all ports */
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		ap = host_set->ports[i];
-+		ahci_port_resume(ap);
-+	}
-+
-+	/*
-+	 * Clear interrupt status and enable interrupt
-+	 */
-+	if (!(tmp & HOST_IRQ_EN)) {
-+		irq_stat = readl(mmio + HOST_IRQ_STAT);
-+		if (irq_stat)
-+			writel(irq_stat, mmio + HOST_IRQ_STAT);
-+		tmp |= HOST_IRQ_EN;
-+		writel(tmp, mmio + HOST_CTL);
-+		tmp = readl(mmio + HOST_CTL);
-+	}
-+
-+	ata_host_set_resume(host_set);
-+
-+	return 0;
-+}
-+
- static void ahci_qc_prep(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
+
+lspci:
+
+    00:00.0 Host bridge: Intel Corporation 915G/P/GV/GL/PL/910GL Express Memory Controller Hub (rev 04)
+    00:01.0 PCI bridge: Intel Corporation 915G/P/GV/GL/PL/910GL Express PCI Express Root Port (rev 04)
+    00:02.0 VGA compatible controller: Intel Corporation 82915G/GV/910GL Express Chipset Family Graphics Controller (rev 04)
+    00:02.1 Display controller: Intel Corporation 82915G Express Chipset Family Graphics Controller (rev 04)
+    00:1b.0 Audio device: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) High Definition Audio Controller (rev 03)
+    00:1c.0 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) PCI Express Port 1 (rev 03)
+    00:1c.1 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) PCI Express Port 2 (rev 03)
+    00:1c.2 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) PCI Express Port 3 (rev 03)
+    00:1c.3 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) PCI Express Port 4 (rev 03)
+    00:1d.0 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #1 (rev 03)
+    00:1d.1 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #2 (rev 03)
+    00:1d.2 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #3 (rev 03)
+    00:1d.3 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #4 (rev 03)
+    00:1d.7 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB2 EHCI Controller (rev 03)
+    00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev d3)
+    00:1f.0 ISA bridge: Intel Corporation 82801FB/FR (ICH6/ICH6R) LPC Interface Bridge (rev 03)
+    00:1f.1 IDE interface: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) IDE Controller (rev 03)
+    00:1f.2 IDE interface: Intel Corporation 82801FB/FW (ICH6/ICH6W) SATA Controller (rev 03)
+    00:1f.3 SMBus: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) SMBus Controller (rev 03)
+    04:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8050 PCI-E ASF Gigabit Ethernet Controller (rev 17)
+    06:00.0 Ethernet controller: Intel Corporation 82557/8/9 [Ethernet Pro 100] (rev 08)
+    06:02.0 Ethernet controller: Intel Corporation 82557/8/9 [Ethernet Pro 100] (rev 04)
+    06:03.0 Ethernet controller: Atheros Communications, Inc. AR5212 802.11abg NIC (rev 01)
+
+
 -- 
-1.2.6
+Sebastian Kuzminsky        If it isn't running programs and it isn't fusing
+                           atoms, it's just bending space.   -- Ken MacLeod
