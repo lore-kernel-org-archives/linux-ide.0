@@ -1,60 +1,127 @@
-From: Sven Riedel <sr@gimp.org>
-Subject: Re: SATA command timeouts
-Date: Mon, 10 Jul 2006 13:25:51 +0200
-Message-ID: <20060710112551.GB14003@localnet>
-References: <20060708130037.GA22725@localnet>
-Reply-To: sr@gimp.org
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Follow up? LibPATA code issues / 2.6.15.4 (found the opcode=0x35)!
+Date: Mon, 10 Jul 2006 09:59:30 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0607100958540.3591@p34.internal.lan>
+References: <Pine.LNX.4.64.0602140439580.3567@p34> <44AEB3CA.8080606@pobox.com>
+ <Pine.LNX.4.64.0607071520160.2643@p34.internal.lan> <200607091224.31451.liml@rtr.ca>
+ <Pine.LNX.4.64.0607091327160.23992@p34.internal.lan>
+ <Pine.LNX.4.64.0607091612060.3886@p34.internal.lan>
+ <Pine.LNX.4.64.0607091638220.2696@p34.internal.lan>
+ <Pine.LNX.4.64.0607091645480.2696@p34.internal.lan>
+ <Pine.LNX.4.64.0607091704250.2696@p34.internal.lan>
+ <Pine.LNX.4.64.0607091802460.2696@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kamp-dsl.de ([195.62.99.42]:58552 "HELO
-	mailout.kamp-dsl.de") by vger.kernel.org with SMTP id S1751320AbWGJLZy
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Jul 2006 07:25:54 -0400
-Received: from dsl-mail.kamp.net (mail.kamp-dsl.de [195.62.99.42])
-	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with SMTP
-	id 110C582FA64C-0
-	for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 11:25:53 +0000
-Received: from mx01.kamp-dsl.de (mail.kamp-dsl.de [195.62.99.42])
-	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with ESMTP
-	id 110C582FA5DF-0
-	for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 11:25:53 +0000
-Received: from mail.localnet (turing.localnet [192.168.13.1])
-	by mx (Postfix) with ESMTP id AE59B1F864
-	for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2006 11:25:54 +0000 (UTC)
-Content-Disposition: inline
-In-Reply-To: <20060708130037.GA22725@localnet>
+Received: from lucidpixels.com ([66.45.37.187]:10127 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S1030318AbWGJN7b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jul 2006 09:59:31 -0400
+In-Reply-To: <Pine.LNX.4.64.0607091802460.2696@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Sander <sander@humilis.net>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Sat, Jul 08, 2006 at 03:00:37PM +0200, Sven Riedel wrote:
-> Hi,
-> I hooked up new SATA disks to a machine yesterday and set up a software raid.
-> After copying roughly 25 GB of data onto the array all attached drives
-> reported command timeouts and wouldn't recover. Only a reboot would help. 
-> I tried the same again, this time the drives would timeout after 60 GB of data
-> written. I exchanged the CPU, but the same thing occurs. 
+Any follow up now that we have the failed ata-translated op codes?
 
-Well, seems the second CPU was defunct. After switching back to the first CPU
-the hard system crashes stopped occurring.
+On Sun, 9 Jul 2006, Justin Piszcz wrote:
 
-
-> My
-> next test will be doing write-heavy operations on all four drives
-> simulaneously, but without gathering them into a raid array.
-
-Well, it looks like the problem can be reproduced most reliably only when all
-four drives are under load. It happens even sooner when they are gathered into
-a raid array (I only tested level 5 - could be that the background "rebuild"
-after creation is adding additional load which triggers the problem sooner).
-
-Just to rule out an insufficient power supply, I hooked the drives up to a
-completely independent PSU and the drives still all suddenly trigger a
-command-timeout after a while.
-
-Regs,
-Sven
-
--- 
-Sven Riedel                      sr@gimp.org
+> [4294810.556000] ata_gen_ata_desc_sense: failed ata_op=0x51
+> [4294810.556000] ata4: status=0x51 { DriveReady SeekComplete Error }
+> [4294810.556000] ata4: error=0x04 { DriveStatusError }
+> [4295514.668000] ata_gen_fixed_sense: failed ata_op=0x35
+> [4295514.668000] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
+> 0xb/00/00
+> [4295514.668000] ata_gen_ata_desc_sense: failed ata_op=0x51
+> [4295514.668000] ata3: status=0x51 { DriveReady SeekComplete Error }
+> [4295514.668000] ata3: error=0x04 { DriveStatusError }
+> [4297033.649000] ata_gen_fixed_sense: failed ata_op=0xca
+> [4297033.649000] ata4: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
+> 0xb/00/00
+> [4297033.649000] ata_gen_ata_desc_sense: failed ata_op=0x51
+> [4297033.649000] ata4: status=0x51 { DriveReady SeekComplete Error }
+> [4297033.649000] ata4: error=0x04 { DriveStatusError }
+> [4297741.057000] ata_gen_fixed_sense: failed ata_op=0x35
+> [4297741.057000] ata4: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
+> 0xb/00/00
+> [4297741.057000] ata_gen_ata_desc_sense: failed ata_op=0x51
+> [4297741.057000] ata4: status=0x51 { DriveReady SeekComplete Error }
+> [4297741.057000] ata4: error=0x04 { DriveStatusError }
+>
+> Also got a 0xca.
+>
+>
+> On Sun, 9 Jul 2006, Justin Piszcz wrote:
+>
+>> 
+>> 
+>> On Sun, 9 Jul 2006, Justin Piszcz wrote:
+>> 
+>>> 
+>>> 
+>>> On Sun, 9 Jul 2006, Justin Piszcz wrote:
+>>> 
+>>>> I made my own patch (following Mark's example) but also added that printk 
+>>>> in that function.
+>>>> 
+>>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata_gen_fixed_sense: failed 
+>>>> ata_op=0x35
+>>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata4: translated ATA 
+>>>> stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+>>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata_gen_ata_desc_sense: 
+>>>> failed ata_op=0x51
+>>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata4: status=0x51 { 
+>>>> DriveReady SeekComplete Error }
+>>>> Jul  9 16:37:52 p34 kernel: [4294810.556000] ata4: error=0x04 { 
+>>>> DriveStatusError }
+>>>> 
+>>>> Now that we have found the ata_op code of 0x35, what does this mean?  Is 
+>>>> it generated from a bad FUA/unsupported command from the kernel/SATA 
+>>>> driver?
+>>>> 
+>>>> Justin.
+>>>> 
+>>>> -
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" 
+>>>> in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>> Please read the FAQ at  http://www.tux.org/lkml/
+>>>> 
+>>> 
+>>> In /usr/src/linux/include/linux/ata.h:
+>>>
+>>>  ATA_CMD_WRITE_EXT = 0x35,
+>>> 
+>>> Perhaps these drives do not support this command or do not support it 
+>>> properly?
+>>> 
+>>> Any idea, Jeff/Alan?
+>>> 
+>>> Justin.
+>>> 
+>>> 
+>> 
+>> Here are all the errors (when reading/writing heavily):
+>> 
+>> [4294810.556000] ata_gen_fixed_sense: failed ata_op=0x35
+>> [4294810.556000] ata4: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
+>> 0xb/00/00
+>> [4294810.556000] ata_gen_ata_desc_sense: failed ata_op=0x51
+>> [4294810.556000] ata4: status=0x51 { DriveReady SeekComplete Error }
+>> [4294810.556000] ata4: error=0x04 { DriveStatusError }
+>> [4295514.668000] ata_gen_fixed_sense: failed ata_op=0x35
+>> [4295514.668000] ata3: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 
+>> 0xb/00/00
+>> [4295514.668000] ata_gen_ata_desc_sense: failed ata_op=0x51
+>> [4295514.668000] ata3: status=0x51 { DriveReady SeekComplete Error }
+>> [4295514.668000] ata3: error=0x04 { DriveStatusError }
+>> 
+>> Jeff/Mark, from these errors can we reach a consensus as to the cause of 
+>> these errors and how to eliminate the problem?
+>> 
+>> Thanks,
+>> 
+>> Justin.
+>> 
+>
