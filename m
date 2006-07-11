@@ -1,31 +1,35 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [2.6 patch] drivers/ide/: cleanups
-Date: Tue, 11 Jul 2006 16:33:24 +0200
-Message-ID: <1152628404.3128.68.camel@laptopd505.fenrus.org>
-References: <20060711141637.GS13938@stusta.de> <44B3B61B.4010206@tls.msk.ru>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: PATCH: Fixes for PIIX driver
+Date: Tue, 11 Jul 2006 18:37:01 +0400
+Message-ID: <44B3B78D.50809@wasp.net.au>
+References: <1152550469.27368.150.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:60872 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750870AbWGKOeL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Jul 2006 10:34:11 -0400
-In-Reply-To: <44B3B61B.4010206@tls.msk.ru>
+Received: from wasp.net.au ([203.190.192.17]:49131 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S1750851AbWGKOhC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jul 2006 10:37:02 -0400
+In-Reply-To: <1152550469.27368.150.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, akpm@osdl.org
 
-On Tue, 2006-07-11 at 18:30 +0400, Michael Tokarev wrote:
-> Adrian Bunk wrote:
-> > This patch contains the following clenups:
-> > - setup-pci.c: #if 0 the unused ide_pci_unregister_driver()
+Alan Cox wrote:
+> A couple of cases were mishandled by the PIIX driver because of wrong
+> entries in tables. This caused some ICH chips to select UDMA33 not the
+> correct higher UDMA speed. It could also cause the original ICH to
+> select a mode the controller didn't support and then fail on boot. 
 > 
-> Hmm.  So, ide drivers will be unloadable forever, without
-> a chance to fix it someday? ;)
 
-that's why it's #if 0... so that if someone goes in to fix it he only
-has to remove the if 0 line...
+Works for me, and 2.6.18-rc1-mm1 + this patch is the 1st setup that enables fully functioning s2ram 
+on my Sony Vaio VGN-TX27GP. (In fact, a vanilla 2.6.18-rc1 + the libata patches from -mm + this 
+patch works a treat).
 
-
+Ta! :)
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
