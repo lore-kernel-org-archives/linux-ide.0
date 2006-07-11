@@ -1,39 +1,87 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: LibPATA code issues / 2.6.17.3 (What is the next step?)
-Date: Tue, 11 Jul 2006 09:28:51 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607110926150.858@p34.internal.lan>
-References: <Pine.LNX.4.64.0602140439580.3567@p34>  <44AEB3CA.8080606@pobox.com>
-  <Pine.LNX.4.64.0607071520160.2643@p34.internal.lan>  <200607091224.31451.liml@rtr.ca>
-  <Pine.LNX.4.64.0607091327160.23992@p34.internal.lan>
- <Pine.LNX.4.64.0607091612060.3886@p34.internal.lan>
- <Pine.LNX.4.64.0607091638220.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091645480.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091704250.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091802460.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607100958540.3591@p34.internal.lan>
- <1152545639.27368.137.camel@localhost.localdomain>
- <Pine.LNX.4.64.0607101145030.3591@p34.internal.lan>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/ide/: cleanups
+Date: Tue, 11 Jul 2006 16:16:37 +0200
+Message-ID: <20060711141637.GS13938@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:48821 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1750760AbWGKN25 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jul 2006 09:28:57 -0400
-In-Reply-To: <Pine.LNX.4.64.0607101145030.3591@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750830AbWGKOQs@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Sander <sander@humilis.net>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Alan/Jeff/Mark,
+This patch contains the following clenups:
+- setup-pci.c: #if 0 the unused ide_pci_unregister_driver()
+- ide.c: remove the unused EXPORT_SYMBOL(ide_register_hw)
+- ide-dma.c: remove the unused EXPORT_SYMBOL_GPL(ide_in_drive_list)
 
-Is there anything else I can do to further troubleshoot this problem now 
-that we have the failed opcode(s)?  Again, there is never any corruption 
-on these drives, so it is more of an annoyance than anything else.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Other people also have this problem with these drives if you search Google 
-but I am not sure they are aware of where to report their errors/problems.
+---
 
-opcode=0x35 & opcode=0xca
+This patch was already sent on:
+- 9 Jul 2006
+- 26 Jun 2006
+- 27 Apr 2006
+- 19 Apr 2006
+- 11 Apr 2006
 
-Justin.
+ drivers/ide/ide-dma.c   |    2 --
+ drivers/ide/ide.c       |    2 --
+ drivers/ide/setup-pci.c |    4 +++-
+ include/linux/ide.h     |    1 -
+ 4 files changed, 3 insertions(+), 6 deletions(-)
+
+--- linux-2.6.17-rc1-mm2-full/include/linux/ide.h.old	2006-04-10 22:46:27.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/include/linux/ide.h	2006-04-10 22:46:36.000000000 +0200
+@@ -1188,7 +1188,6 @@
+ extern void ide_scan_pcibus(int scan_direction) __init;
+ extern int __ide_pci_register_driver(struct pci_driver *driver, struct module *owner);
+ #define ide_pci_register_driver(d) __ide_pci_register_driver(d, THIS_MODULE)
+-extern void ide_pci_unregister_driver(struct pci_driver *driver);
+ void ide_pci_setup_ports(struct pci_dev *, struct ide_pci_device_s *, int, ata_index_t *);
+ extern void ide_setup_pci_noise (struct pci_dev *dev, struct ide_pci_device_s *d);
+ 
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/ide.c.old	2006-04-10 22:43:31.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/ide.c	2006-04-10 22:43:41.000000000 +0200
+@@ -826,8 +826,6 @@
+ 	return ide_register_hw_with_fixup(hw, hwifp, NULL);
+ }
+ 
+-EXPORT_SYMBOL(ide_register_hw);
+-
+ /*
+  *	Locks for IDE setting functionality
+  */
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/ide-dma.c.old	2006-04-10 22:44:21.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/ide-dma.c	2006-04-10 22:44:28.000000000 +0200
+@@ -152,8 +152,6 @@
+ 	return 0;
+ }
+ 
+-EXPORT_SYMBOL_GPL(ide_in_drive_list);
+-
+ /**
+  *	ide_dma_intr	-	IDE DMA interrupt handler
+  *	@drive: the drive the interrupt is for
+--- linux-2.6.17-rc1-mm2-full/drivers/ide/setup-pci.c.old	2006-04-10 22:46:46.000000000 +0200
++++ linux-2.6.17-rc1-mm2-full/drivers/ide/setup-pci.c	2006-04-10 22:47:03.000000000 +0200
+@@ -807,7 +807,8 @@
+  *	Unregister a currently installed IDE driver. Returns are the same
+  *	as for pci_unregister_driver
+  */
+- 
++
++#if 0
+ void ide_pci_unregister_driver(struct pci_driver *driver)
+ {
+ 	if(!pre_init)
+@@ -817,6 +818,7 @@
+ }
+ 
+ EXPORT_SYMBOL_GPL(ide_pci_unregister_driver);
++#endif  /*  0  */
+ 
+ /**
+  *	ide_scan_pcidev		-	find an IDE driver for a device
