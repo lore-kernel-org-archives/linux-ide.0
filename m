@@ -1,25 +1,24 @@
 From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 1/6]The definition of ahci_start_engine() and
-	ahci_stop_engine()
-Date: Tue, 11 Jul 2006 14:37:35 +0800
-Message-ID: <1152599855.7132.292.camel@forrest26.sh.intel.com>
+Subject: [PATCH 3/6] The definition of ahci_port_standby() and
+	ahci_port_spinup()
+Date: Tue, 11 Jul 2006 14:38:32 +0800
+Message-ID: <1152599912.7132.296.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47922 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S965051AbWGKGuy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Jul 2006 02:50:54 -0400
+Received: from mga03.intel.com ([143.182.124.21]:4924 "EHLO
+	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
+	id S965225AbWGKGxJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Jul 2006 02:53:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, axboe@suse.de
 Cc: linux-ide@vger.kernel.org
 
-1 Make ahci_start_engine() and ahci_stop_engine more consistent with
-AHCI
- spec 1.1
-2 Change their input parameter from ap to port_mmio
+Put port power management and staggered-spinup related operations during
+the power state transition into ahci_port_standby() and ahci_port_spinup
+().
 
 Signed-off-by: Forrest Zhao <forrest.zhaot@intel.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
@@ -28,105 +27,142 @@ Signed-off-by: Jens Axboe <axboe@suse.de>
 
 ---
 
- drivers/scsi/ahci.c |   57 ++++++++++++++++++++++++++++++++++++
-+--------------
- 1 files changed, 41 insertions(+), 16 deletions(-)
+ drivers/scsi/ahci.c |   98 ++++++++++++++++++++++++++++++++++++++++++++
++++++++
+ 1 files changed, 98 insertions(+), 0 deletions(-)
 
-ca41463c59af1b90149c42101696b47d96c41d11
+7cd1ccaf6bee8363d7fb0d24f0d109f5d7003080
 diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index f059467..0ff8be1 100644
+index f4dd60c..6edc7c8 100644
 --- a/drivers/scsi/ahci.c
 +++ b/drivers/scsi/ahci.c
-@@ -205,6 +205,8 @@ static irqreturn_t ahci_interrupt (int i
- static void ahci_irq_clear(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
- static void ahci_port_stop(struct ata_port *ap);
-+static int ahci_start_engine(void __iomem *port_mmio);
-+static int ahci_stop_engine(void __iomem *port_mmio);
- static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
- static void ahci_qc_prep(struct ata_queued_cmd *qc);
- static u8 ahci_check_status(struct ata_port *ap);
-@@ -508,41 +510,64 @@ static void ahci_scr_write (struct ata_p
- 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+@@ -92,7 +92,9 @@ enum {
+ 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
+ 
+ 	/* HOST_CAP bits */
++	HOST_CAP_SSC		= (1 << 14), /* Slumber capable */
+ 	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
++	HOST_CAP_SSS		= (1 << 27), /* Staggered Spin-up */
+ 	HOST_CAP_NCQ		= (1 << 30), /* Native Command Queueing */
+ 	HOST_CAP_64		= (1 << 31), /* PCI DAC (64-bit DMA) support */
+ 
+@@ -155,6 +157,7 @@ enum {
+ 	PORT_CMD_SPIN_UP	= (1 << 1), /* Spin up device */
+ 	PORT_CMD_START		= (1 << 0), /* Enable port DMA engine */
+ 
++	PORT_CMD_ICC_MASK	= (0xf << 28), /* i/f ICC state mask */
+ 	PORT_CMD_ICC_ACTIVE	= (0x1 << 28), /* Put i/f in active state */
+ 	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
+ 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
+@@ -218,6 +221,8 @@ static void ahci_freeze(struct ata_port 
+ static void ahci_thaw(struct ata_port *ap);
+ static void ahci_error_handler(struct ata_port *ap);
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
++static int ahci_port_standby(void __iomem *port_mmio, u32 cap);
++static int ahci_port_spinup(void __iomem *port_mmio, u32 cap);
+ static void ahci_remove_one (struct pci_dev *pdev);
+ 
+ static struct scsi_host_template ahci_sht = {
+@@ -645,6 +650,99 @@ static void ahci_start_fis_rx(void __iom
+ 	readl(port_mmio + PORT_CMD); /* flush */
  }
  
--static int ahci_stop_engine(struct ata_port *ap)
-+static int ahci_stop_engine(void __iomem *port_mmio)
- {
--	void __iomem *mmio = ap->host_set->mmio_base;
--	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
--	int work;
- 	u32 tmp;
- 
- 	tmp = readl(port_mmio + PORT_CMD);
++static int ahci_port_standby(void __iomem *port_mmio, u32 cap)
++{
++	u32 tmp, scontrol, sstatus;
 +
-+	/* Check if the HBA is idle */
-+	if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) == 0)
-+		return 0;
++	tmp = readl(port_mmio + PORT_CMD);
++	/*
++	 * AHCI Rev1.1 Section 5.3.2.3:
++	 * Software is only allowed to program the PxCMD.FRE,
++	 * PxCMD.POD, PxSCTL.DET, and PxCMD.SUD register bits
++	 * when PxCMD.ST is set to '0'
++	 */
++	if (tmp & PORT_CMD_START)
++		return -EBUSY;
 +
-+	/* Setting HBA to idle */
- 	tmp &= ~PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
- 
--	/* wait for engine to stop.  TODO: this could be
-+	/* wait for engine to stop. This could be
- 	 * as long as 500 msec
- 	 */
--	work = 1000;
--	while (work-- > 0) {
--		tmp = readl(port_mmio + PORT_CMD);
--		if ((tmp & PORT_CMD_LIST_ON) == 0)
--			return 0;
--		udelay(10);
--	}
-+	tmp = ata_wait_register(port_mmio + PORT_CMD,
-+			        PORT_CMD_LIST_ON, PORT_CMD_LIST_ON, 1, 500);
-+	if(tmp & PORT_CMD_LIST_ON)
-+		return -EIO;
- 
--	return -EIO;
++	if (cap & HOST_CAP_SSC) {
++		/*
++		 * Enable transitions to slumber mode
++		 */
++		scontrol = readl(port_mmio + PORT_SCR_CTL);
++		if ((scontrol & 0x0f00) > 0x100) {
++			scontrol &= ~0xf00;
++			writel(scontrol, port_mmio + PORT_SCR_CTL);
++		}
++		/*
++		 * Put device into slumber mode
++		 */
++		tmp |= PORT_CMD_ICC_SLUMBER;
++		writel(tmp, port_mmio + PORT_CMD);
++		tmp = readl(port_mmio + PORT_CMD);
++
++		/*
++		 * Actually, we should wait for the device to
++		 * enter slumber mode by checking
++		 * sstatus & 0xf00 == 6
++		 */
++		sstatus = readl(port_mmio + PORT_SCR_STAT);
++	}
++
++	/*
++	 * Put device into listen mode
++	 */
++	if (cap & HOST_CAP_SSS) {
++		/* 
++		 * first set PxSCTL.DET to 0
++		 */
++		scontrol = readl(port_mmio + PORT_SCR_CTL);
++		scontrol &= ~0xf;
++		writel(scontrol, port_mmio + PORT_SCR_CTL);
++
++		/*
++		 * then set PxCMD.SUD to 0
++		 */
++		tmp = readl(port_mmio + PORT_CMD);
++		tmp &= ~PORT_CMD_SPIN_UP;
++		writel(tmp, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD); /* flush */
++	}
++
 +	return 0;
- }
- 
--static void ahci_start_engine(struct ata_port *ap)
-+static int ahci_start_engine(void __iomem *port_mmio)
- {
--	void __iomem *mmio = ap->host_set->mmio_base;
--	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
- 	u32 tmp;
- 
-+	/*
-+	 * Get current status
-+	 */
- 	tmp = readl(port_mmio + PORT_CMD);
++}
 +
-+	/*
-+	 * AHCI rev 1.1 section 10.3.1:
-+	 * Software shall not set PxCMD.ST to '1' until it verifies
-+	 * that PxCMD.CR is '0' and has set PxCMD.FRE to '1'
-+	 */
-+	if ((tmp & PORT_CMD_FIS_RX) == 0)
-+		return -EPERM;
++static int ahci_port_spinup(void __iomem *port_mmio, u32 cap)
++{
++	u32 tmp;
 +
++	tmp = readl(port_mmio + PORT_CMD);
 +	/*
-+	 * wait for engine to become idle.
++	 * AHCI Rev1.1 Section 5.3.2.3:
++	 * Software is only allowed to program the PxCMD.FRE,
++	 * PxCMD.POD, PxSCTL.DET, and PxCMD.SUD register bits
++	 * when PxCMD.ST is set to '0'
 +	 */
-+	tmp = ata_wait_register(port_mmio + PORT_CMD,
-+				PORT_CMD_LIST_ON, PORT_CMD_LIST_ON, 1,500);
-+	if(tmp & PORT_CMD_LIST_ON)
++	if (tmp & PORT_CMD_START)
 +		return -EBUSY;
 +
 +	/*
-+	 * Start DMA
++	 * Spin up device
 +	 */
- 	tmp |= PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
- 	readl(port_mmio + PORT_CMD); /* flush */
++	if (cap & HOST_CAP_SSS) {
++		tmp |= PORT_CMD_SPIN_UP;
++		writel(tmp, port_mmio + PORT_CMD);
++		tmp = readl(port_mmio + PORT_CMD);
++	}
++
++	if ((tmp & PORT_CMD_ICC_MASK) != PORT_CMD_ICC_ACTIVE) {
++		tmp |= PORT_CMD_ICC_ACTIVE;
++		writel(tmp, port_mmio + PORT_CMD);
++		tmp = readl(port_mmio + PORT_CMD);
++	}
 +
 +	return 0;
- }
- 
++}
++
  static unsigned int ahci_dev_classify(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
 -- 
 1.2.6
 
