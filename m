@@ -1,107 +1,255 @@
-From: John Keller <jpk@sgi.com>
-Subject: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
-Date: Wed, 12 Jul 2006 12:57:14 -0500
-Message-ID: <20060712175714.16943.10799.sendpatchset@attica.americas.sgi.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Errors and resets using sata_promise and libata 1.20
+Date: Wed, 12 Jul 2006 14:04:37 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0607121404280.27343@p34.internal.lan>
+References: <1152725383.23607.5637.camel@girvin.pmc-sierra.bc.ca>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx1-ext.sgi.com ([192.48.179.11]:8066 "EHLO
-	omx1.americas.sgi.com") by vger.kernel.org with ESMTP
-	id S932205AbWGLR5R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 12 Jul 2006 13:57:17 -0400
+Received: from lucidpixels.com ([66.45.37.187]:10428 "EHLO lucidpixels.com")
+	by vger.kernel.org with ESMTP id S932206AbWGLSEj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jul 2006 14:04:39 -0400
+In-Reply-To: <1152725383.23607.5637.camel@girvin.pmc-sierra.bc.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, John Keller <jpk@sgi.com>
+To: Erik Frederiksen <erik_frederiksen@pmc-sierra.com>
+Cc: linux-ide@vger.kernel.org
 
-sgiioc4.c had been recently converted to using mmio ops.
-There are still a few issues to cleanup.
+I also get similar problems.
 
-Signed-off-by: jpk@sgi.com
+Feb 13 20:46:49 p34 kernel: [ 4121.240390] ata3: status=0x51 { DriveReady 
+SeekCo
+mplete Error }
+Feb 13 21:17:06 p34 kernel: [ 5935.732175] ata3: status=0x51 { DriveReady 
+SeekCo
+mplete Error }
+Feb 13 21:42:15 p34 kernel: [ 7443.054619] ata3: status=0x51 { DriveReady 
+SeekCo
+mplete Error }
 
---- linux-2.6.orig/drivers/ide/pci/sgiioc4.c	2006-07-11 11:34:42.135934603 -0500
-+++ linux-2.6/drivers/ide/pci/sgiioc4.c	2006-07-12 09:17:02.316590824 -0500
-@@ -372,7 +372,7 @@ ide_dma_sgiioc4(ide_hwif_t * hwif, unsig
- 	printk(KERN_INFO "%s: BM-DMA at 0x%04lx-0x%04lx\n", hwif->name,
- 	       dma_base, dma_base + num_ports - 1);
- 
--	if (!request_region(dma_base, num_ports, hwif->name)) {
-+	if (!request_mem_region(dma_base, num_ports, hwif->name)) {
- 		printk(KERN_ERR
- 		       "%s(%s) -- ERROR, Addresses 0x%p to 0x%p "
- 		       "ALREADY in use\n",
-@@ -381,7 +381,7 @@ ide_dma_sgiioc4(ide_hwif_t * hwif, unsig
- 		goto dma_alloc_failure;
- 	}
- 
--	hwif->dma_base = dma_base;
-+	hwif->dma_base = (unsigned long) ioremap(dma_base, num_ports);
- 	hwif->dmatable_cpu = pci_alloc_consistent(hwif->pci_dev,
- 					  IOC4_PRD_ENTRIES * IOC4_PRD_BYTES,
- 					  &hwif->dmatable_dma);
-@@ -607,18 +607,14 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
- 	hwif->ide_dma_lostirq = &sgiioc4_ide_dma_lostirq;
- 	hwif->ide_dma_timeout = &__ide_dma_timeout;
- 
--	/*
--	 * The IOC4 uses MMIO rather than Port IO.
--	 * It also needs special workarounds for INB.
--	 */
--	default_hwif_mmiops(hwif);
- 	hwif->INB = &sgiioc4_INB;
- }
- 
- static int __devinit
- sgiioc4_ide_setup_pci_device(struct pci_dev *dev, ide_pci_device_t * d)
- {
--	unsigned long base, ctl, dma_base, irqport;
-+	unsigned long ctl, dma_base, irqport;
-+	unsigned long bar0, cmd_base, cmd_phys_base, virt_base;
- 	ide_hwif_t *hwif;
- 	int h;
- 
-@@ -636,23 +632,27 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 	}
- 
- 	/*  Get the CmdBlk and CtrlBlk Base Registers */
--	base = pci_resource_start(dev, 0) + IOC4_CMD_OFFSET;
--	ctl = pci_resource_start(dev, 0) + IOC4_CTRL_OFFSET;
--	irqport = pci_resource_start(dev, 0) + IOC4_INTR_OFFSET;
-+	bar0 = pci_resource_start(dev, 0);
-+	virt_base = (unsigned long) ioremap(bar0, pci_resource_len(dev, 0));
-+	cmd_base = virt_base + IOC4_CMD_OFFSET;
-+	ctl = virt_base + IOC4_CTRL_OFFSET;
-+	irqport = virt_base + IOC4_INTR_OFFSET;
- 	dma_base = pci_resource_start(dev, 0) + IOC4_DMA_OFFSET;
- 
--	if (!request_region(base, IOC4_CMD_CTL_BLK_SIZE, hwif->name)) {
-+	cmd_phys_base = bar0 + IOC4_CMD_OFFSET;
-+	if (!request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
-+	    hwif->name)) {
- 		printk(KERN_ERR
--			"%s : %s -- ERROR, Port Addresses "
-+			"%s : %s -- ERROR, Addresses "
- 			"0x%p to 0x%p ALREADY in use\n",
--		       __FUNCTION__, hwif->name, (void *) base,
--		       (void *) base + IOC4_CMD_CTL_BLK_SIZE);
-+		       __FUNCTION__, hwif->name, (void *) cmd_phys_base,
-+		       (void *) cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
- 		return -ENOMEM;
- 	}
- 
--	if (hwif->io_ports[IDE_DATA_OFFSET] != base) {
-+	if (hwif->io_ports[IDE_DATA_OFFSET] != cmd_base) {
- 		/* Initialize the IO registers */
--		sgiioc4_init_hwif_ports(&hwif->hw, base, ctl, irqport);
-+		sgiioc4_init_hwif_ports(&hwif->hw, cmd_base, ctl, irqport);
- 		memcpy(hwif->io_ports, hwif->hw.io_ports,
- 		       sizeof (hwif->io_ports));
- 		hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
-@@ -665,6 +665,9 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 	hwif->cds = (struct ide_pci_device_s *) d;
- 	hwif->gendev.parent = &dev->dev;/* setup proper ancestral information */
- 
-+	/* The IOC4 uses MMIO rather than Port IO. */
-+	default_hwif_mmiops(hwif);
-+
- 	/* Initializing chipset IRQ Registers */
- 	hwif->OUTL(0x03, irqport + IOC4_INTR_SET * 4);
- 
+
+Nobody knows yet.
+
+
+On Wed, 12 Jul 2006, Erik Frederiksen wrote:
+
+> Hi everyone.  Quite regularly I get these messages popping up when I'm
+> rebuilding a raid5.
+>
+> ata2: status=0x50 { DriveReady SeekComplete }
+> sdb: Current: sense key=0x0
+>    ASC=0x0 ASCQ=0x0
+>
+> I'm using a Promise TX4 150 controller with 4 HDs, making a raid5 with
+> 40GB partitions.  In the dmesg below, I only received 2 errors, but with
+> larger partitions in the array, it can be up to about 10 or 12.
+>
+> After poking through the source a bit, it looks like bit 19 has been set
+> in the global control register and a reset is being performed.  If the
+> error is being cleared properly (I noticed there's no checking for
+> this), should this message be printed?  I did some checksums on a raid
+> before and after a rebuild, and even after a whole host of messages it
+> doesn't look like the data was affected at all.
+>
+> Is this a matter of shutting up a superfluous message, or is something
+> more sinister going on here?  Please let me know if you need more
+> information.
+>
+> Erik Frederiksen
+> Firmware Design Engineer Co-op
+> PMC-Sierra Saskatoon
+>
+> --
+>
+> C Driver v1.07
+> Serial: 8250/16550 driver $Revision: 1.4 $ 4 ports, IRQ sharing disabled
+> ttyS0 at MMIO 0xc0000000 (irq = 0) is a 16550A
+> ttyS1 at MMIO 0xc0000030 (irq = 0) is a 16550A
+> io scheduler noop registered
+> io scheduler anticipatory registered
+> io scheduler deadline registered
+> io scheduler cfq registered
+> loop: loaded (max 8 devices)
+> PMC-Sierra MSP85x0 10/100/1000 Ethernet Driver
+> Device Id : 206014,  Version : 0
+> (88E1011): port 0 with MAC address 00:e0:04:00:02:aa
+> Rx NAPI supported, Tx Coalescing ON
+> (88E1011): port 1 with MAC address 00:e0:04:00:02:ab
+> Rx NAPI supported, Tx Coalescing ON
+> libata version 1.20 loaded.
+> sata_promise 0000:00:02.0: version 1.04
+> ata1: SATA max UDMA/133 cmd 0xC001E200 ctl 0xC001E238 bmdma 0x0 irq 11
+> ata2: SATA max UDMA/133 cmd 0xC001E280 ctl 0xC001E2B8 bmdma 0x0 irq 11
+> ata3: SATA max UDMA/133 cmd 0xC001E300 ctl 0xC001E338 bmdma 0x0 irq 11
+> ata4: SATA max UDMA/133 cmd 0xC001E380 ctl 0xC001E3B8 bmdma 0x0 irq 11
+> ata1: SATA link up 1.5 Gbps (SStatus 113)
+> ata1: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023
+> 88:00ff
+> ata1: dev 0 ATA-7, max UDMA7, 156301488 sectors: LBA48
+> ata1: dev 0 configured for UDMA/133
+> scsi0 : sata_promise
+> ata2: SATA link up 1.5 Gbps (SStatus 113)
+> ata2: dev 0 cfg 49:2f00 82:7c6b 83:7b09 84:4003 85:7c69 86:3a01 87:4003
+> 88:007f
+> ata2: dev 0 ATA-7, max UDMA/133, 160086528 sectors: LBA
+> ata2: dev 0 configured for UDMA/133
+> scsi1 : sata_promise
+> ata3: SATA link up 1.5 Gbps (SStatus 113)
+> ata3: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023
+> 88:00ff
+> ata3: dev 0 ATA-7, max UDMA7, 156301488 sectors: LBA48
+> ata3: dev 0 configured for UDMA/133
+> scsi2 : sata_promise
+> ata4: SATA link up 1.5 Gbps (SStatus 113)
+> ata4: dev 0 cfg 49:2f00 82:7c6b 83:7b09 84:4003 85:7c69 86:3a01 87:4003
+> 88:007f
+> ata4: dev 0 ATA-7, max UDMA/133, 160086528 sectors: LBA
+> ata4: dev 0 configured for UDMA/133
+> scsi3 : sata_promise
+>  Vendor: ATA       Model: SAMSUNG HD080HJ   Rev: ZH10
+>  Type:   Direct-Access                      ANSI SCSI revision: 05
+>  Vendor: ATA       Model: Maxtor 6Y080M0    Rev: YAR5
+>  Type:   Direct-Access                      ANSI SCSI revision: 05
+>  Vendor: ATA       Model: SAMSUNG HD080HJ   Rev: ZH10
+>  Type:   Direct-Access                      ANSI SCSI revision: 05
+>  Vendor: ATA       Model: Maxtor 6Y080M0    Rev: YAR5
+>  Type:   Direct-Access                      ANSI SCSI revision: 05
+> gd->devfs_name [scsi/host0/bus0/target0/lun0] gd->disk_name[sda]
+> SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+> SCSI device sda: drive cache: write back
+> SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+> SCSI device sda: drive cache: write back
+> sda: sda1 sda2
+> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+> gd->devfs_name [scsi/host1/bus0/target0/lun0] gd->disk_name[sdb]
+> SCSI device sdb: 160086528 512-byte hdwr sectors (81964 MB)
+> SCSI device sdb: drive cache: write back
+> SCSI device sdb: 160086528 512-byte hdwr sectors (81964 MB)
+> SCSI device sdb: drive cache: write back
+> sdb: sdb1 sdb2
+> Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
+> gd->devfs_name [scsi/host2/bus0/target0/lun0] gd->disk_name[sdc]
+> SCSI device sdc: 156301488 512-byte hdwr sectors (80026 MB)
+> SCSI device sdc: drive cache: write back
+> SCSI device sdc: 156301488 512-byte hdwr sectors (80026 MB)
+> SCSI device sdc: drive cache: write back
+> sdc: sdc1
+> Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
+> gd->devfs_name [scsi/host3/bus0/target0/lun0] gd->disk_name[sdd]
+> SCSI device sdd: 160086528 512-byte hdwr sectors (81964 MB)
+> SCSI device sdd: drive cache: write back
+> SCSI device sdd: 160086528 512-byte hdwr sectors (81964 MB)
+> SCSI device sdd: drive cache: write back
+> sdd: sdd1
+> Attached scsi disk sdd at scsi3, channel 0, id 0, lun 0
+> Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+> Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
+> Attached scsi generic sg2 at scsi2, channel 0, id 0, lun 0,  type 0
+> Attached scsi generic sg3 at scsi3, channel 0, id 0, lun 0,  type 0
+> physmap flash device: 800000 at fc800000
+> phys_mapped_flash: Found 1 x16 devices at 0x0 in 8-bit bank
+> Amd/Fujitsu Extended Query Table at 0x0040
+> phys_mapped_flash: CFI does not contain boot bank location. Assuming
+> top.
+> number of CFI chips: 1
+> cfi_cmdset_0002: Disabling erase-suspend-program due to code brokenness.
+> RedBoot partition parsing not available
+> ohci_hcd: 2005 April 22 USB 1.1 'Open' Host Controller (OHCI) Driver
+> (PCI)
+> usbcore: registered new driver usblp
+> drivers/usb/class/usblp.c: v0.13: USB Printer Device Class driver
+> Initializing USB Mass Storage driver...
+> usbcore: registered new driver usb-storage
+> USB Mass Storage support registered.
+> usbcore: registered new driver hiddev
+> usbcore: registered new driver usbhid
+> drivers/usb/input/hid-core.c: v2.6:USB HID core driver
+> i2c /dev entries driver
+> md: linear personality registered as nr 1
+> md: raid0 personality registered as nr 2
+> md: raid1 personality registered as nr 3
+> md: raid10 personality registered as nr 9
+> md: raid5 personality registered as nr 4
+> raid5: measuring checksumming speed
+>   8regs     :   528.000 MB/sec
+>   8regs_prefetch:   512.000 MB/sec
+>   32regs    :  1032.000 MB/sec
+>   32regs_prefetch:   968.000 MB/sec
+> raid5: using function: 32regs (1032.000 MB/sec)
+> md: md driver 0.90.2 MAX_MD_DEVS=256, MD_SB_DISKS=27
+> md: bitmap version 3.39
+> device-mapper: 4.4.0-ioctl (2005-01-12) initialised: dm-devel@redhat.com
+> NET: Registered protocol family 2
+> IP route cache hash table entries: 4096 (order: 2, 16384 bytes)
+> TCP established hash table entries: 16384 (order: 4, 65536 bytes)
+> TCP bind hash table entries: 16384 (order: 4, 65536 bytes)
+> TCP: Hash tables configured (established 16384 bind 16384)
+> TCP reno registered
+> ip_tables: (C) 2000-2002 Netfilter core team
+> TCP bic registered
+> NET: Registered protocol family 1
+> NET: Registered protocol family 17
+> 802.1Q VLAN Support v1.8 Ben Greear <greearb@candelatech.com>
+> All bugs added by David S. Miller <davem@redhat.com>
+> Assigned IRQ 5 to port 1
+> IP-Config: Complete:
+>      device=eth1, addr=192.168.183.59, mask=255.255.255.0,
+> gw=255.255.255.255,
+>     host=192.168.183.59, domain=, nis-domain=(none),
+>     bootserver=192.168.183.102, rootserver=192.168.183.102, rootpath=
+> md: Autodetecting RAID arrays.
+> md: autorun ...
+> md: ... autorun DONE.
+> Looking up port of RPC 100003/2 on 192.168.183.102
+> Looking up port of RPC 100005/1 on 192.168.183.102
+> VFS: Mounted root (nfs filesystem) readonly.
+> Freeing unused kernel memory: 140k freed
+> md: bind<sda1>
+> md: bind<sdb1>
+> md: bind<sdc1>
+> md: bind<sdd1>
+> raid5: device sdc1 operational as raid disk 2
+> raid5: device sdb1 operational as raid disk 1
+> raid5: device sda1 operational as raid disk 0
+> raid5: allocated 4195kB for md0
+> raid5: raid level 5 set md0 active with 3 out of 4 devices, algorithm 2
+> RAID5 conf printout:
+> --- rd:4 wd:3 fd:1
+> disk 0, o:1, dev:sda1
+> disk 1, o:1, dev:sdb1
+> disk 2, o:1, dev:sdc1
+> RAID5 conf printout:
+> --- rd:4 wd:3 fd:1
+> disk 0, o:1, dev:sda1
+> disk 1, o:1, dev:sdb1
+> disk 2, o:1, dev:sdc1
+> disk 3, o:1, dev:sdd1
+> md: syncing RAID array md0
+> md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+> md: using maximum available idle IO bandwidth (but not more than 200000
+> KB/sec) for reconstruction.
+> md: using 128k window, over a total of 39061952 blocks.
+> ata2: 19
+> ata2: status=0x50 { DriveReady SeekComplete }
+> sdb: Current: sense key=0x0
+>    ASC=0x0 ASCQ=0x0
+> Info fld=0x116bcce
+> ata2: 19
+> ata2: status=0x50 { DriveReady SeekComplete }
+> sdb: Current: sense key=0x0
+>    ASC=0x0 ASCQ=0x0
+> Info fld=0x2c22e96
+> md: md0: sync done.
+> RAID5 conf printout:
+> --- rd:4 wd:4 fd:0
+> disk 0, o:1, dev:sda1
+> disk 1, o:1, dev:sdb1
+> disk 2, o:1, dev:sdc1
+> disk 3, o:1, dev:sdd1
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
