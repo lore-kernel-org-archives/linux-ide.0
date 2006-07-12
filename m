@@ -1,62 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 0/6] AHCI suspend/resume support --take4
-Date: Wed, 12 Jul 2006 13:42:54 -0400
-Message-ID: <44B5349E.3070802@pobox.com>
-References: <1152599802.7132.290.camel@forrest26.sh.intel.com>
+From: "Bianca" <hottestbiz@netcitycn.com>
+Subject: See/Listen what CNN,Fox News,ABC says..
+Date: Wed, 12 Jul 2006 17:47:08 +0000 (UTC)
+Message-ID: <200607121745.k6CHj5U4009498@zeus1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:16595 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750827AbWGLRnB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jul 2006 13:43:01 -0400
-In-Reply-To: <1152599802.7132.290.camel@forrest26.sh.intel.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:55493 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932188AbWGLRpW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jul 2006 13:45:22 -0400
+Received: from NovhManilyn (210.213.141.165.pldt.net [210.213.141.165] (may be forged))
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k6CHj5U4009498
+	for <linux-ide@vger.kernel.org>; Wed, 12 Jul 2006 17:45:20 GMT
+Date: Fri, 14 Jul 2006 02:48:42
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: htejun@gmail.com, hare@suse.de, axboe@suse.de, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-zhao, forrest wrote:
-> Hi, all
-> 
-> This is resend of the take 4 of AHCI suspend/resume patches.
-> The patch is against libata #upstream.
-> 
-> Compared with last version, all the changes are in [PATCH 6/6]. In
-> particular, I made changes to the sixth patch to integrate it with
-> Tejun's PM patch.
+Hello,
 
-My current, still-pending request for these patches:
+Easy to sell/market product online and offline.
+The hottest product and the greatest bizniz on the net today.
 
-Please split up the patches such that each individual patch -- when 
-applied in succession, creates a compilable, usable driver.  Patch #1 
-must producing a working driver.  Patches #1-2 must produce a working 
-driver.  Patches #1-3 must produce a working driver.  Patches #2-3 
-(without patch #1) need not apply, much less produce a working driver.
+And they have another great product, the D-1280x 
+that launched 4th of July.
 
-As I described in an earlier email, patches are like mathematical 
-proofs:  each step must produce a "complete equation."
+There is absolutely NO COST to pre-enroll and a 
+free website upon pre-enroll.
+Pls Check and hurry;
+     http://www.legitimatebiz.us.tt
 
-For example, patch #1 in this series looks OK -- if only the existing 
-users of ahci_stop_engine() and ahci_start_engine() to work.
-
-As another example, the ACPI patches need to be split up into logical 
-chunks, probably just two patches:
-
-	1) Add support necessary to utilize _SDD, _GTF (SATA)
-	2) Add support necessary to utilize _GTM, _STM (PATA)
-
-or perhaps three patches:
-
-	1) _GTF support, basic ACPI support
-	2) SATA support (_SDD, other SATA details)
-	3) PATA support (_GTM, _STM, other PATA details)
-
-Overall, your code changes are looking good, but are not split up in a 
-usable manner.
-
-Regards,
-
-	Jeff
+Thank You and regards
+Bianca(PowerCharge Inc)
 
 
+
+====================================================
+To not receive emails from me again, 
+please reply and put "Delete" in the subject. 
+
+Thanks.
