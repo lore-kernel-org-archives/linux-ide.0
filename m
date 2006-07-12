@@ -1,81 +1,114 @@
-From: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Subject: RE: + sata-add-pci-id.patch added to -mm tree
-Date: Wed, 12 Jul 2006 11:04:07 -0700
-Message-ID: <39B20DF628532344BC7A2692CB6AEE070C11B4@orsmsx420.amr.corp.intel.com>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
+Date: Wed, 12 Jul 2006 12:52:48 -0700
+Message-ID: <20060712195248.GB740565@sgi.com>
+References: <20060712175714.16943.10799.sendpatchset@attica.americas.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:3588 "EHLO
-	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S932295AbWGLSNL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jul 2006 14:13:11 -0400
-Content-class: urn:content-classes:message
+Received: from omx2-ext.sgi.com ([192.48.171.19]:31954 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1750814AbWGLTwv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jul 2006 15:52:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20060712175714.16943.10799.sendpatchset@attica.americas.sgi.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, akpm@osdl.org
-Cc: helms.adam@gmail.com, htejun@gmail.com, linux-ide@vger.kernel.org
+To: John Keller <jpk@sgi.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I agree with Jeff on this and do not want to see 0x27c0 in the AHCI
-driver as with this DID the controller is in IDE mode.
+On Wed, Jul 12, 2006 at 12:57:14PM -0500, John Keller wrote:
+> sgiioc4.c had been recently converted to using mmio ops.
+> There are still a few issues to cleanup.
+> 
+> Signed-off-by: jpk@sgi.com
+Signed-off-by: jeremy@sgi.com
 
-Note:  82801GB(ICH7) does not support AHCI mode.  If you have this SKU,
-you will not see AHCI available in the BIOS.  You need to have an
-82801GR(ICH7R) or an 82801GH(ICH7DH) for AHCI mode.  All three of these
-SKU's share the same IDE mode DID.
-
-Thanks,
-
-Jason
-
-
-
->-----Original Message-----
->From: Jeff Garzik [mailto:jeff@garzik.org]
->Sent: Wednesday, July 12, 2006 10:47 AM
->To: akpm@osdl.org; Gaston, Jason D
->Cc: helms.adam@gmail.com; htejun@gmail.com; linux-ide@vger.kernel.org
->Subject: Re: + sata-add-pci-id.patch added to -mm tree
->
->akpm@osdl.org wrote:
->> Subject: SATA: Add PCI-ID
->> From: "Adam Helms" <helms.adam@gmail.com>
->>
->> Makes the AHCI driver detect the PCI ID 8086:27c0 (IDE interface:
-Intel
->> Corporation 82801GB/GR/GH (ICH7 Family) Serial ATA Storage Controller
-IDE
->> (rev 01)) as an AHCI chipset.
->>
->> 8086:27c0 also works with ata_piix but it's much slower.  8086:27c0
-is
->> shipped with - among others - new HP Proliant servers.
->
->> diff -puN drivers/scsi/ahci.c~sata-add-pci-id drivers/scsi/ahci.c
->> --- a/drivers/scsi/ahci.c~sata-add-pci-id
->> +++ a/drivers/scsi/ahci.c
->> @@ -291,6 +291,8 @@ static const struct pci_device_id ahci_p
->>  	  board_ahci }, /* ICH6 */
->>  	{ PCI_VENDOR_ID_INTEL, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->>  	  board_ahci }, /* ICH6M */
->> +	{ PCI_VENDOR_ID_INTEL, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->> +	  board_ahci }, /* ICH7 */
->>  	{ PCI_VENDOR_ID_INTEL, 0x27c1, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->>  	  board_ahci }, /* ICH7 */
->>  	{ PCI_VENDOR_ID_INTEL, 0x27c5, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->
->This patch needs discussing with Intel.
->
->0x27c0 was intentionally omitted, because it is only supposed to show
-up
->when the device is configured into IDE mode.
->
->If the user (read: BIOS) has chosen to configure the device in AHCI
->mode, it should show up as a different PCI ID, which ahci.c already
->contains.
->
->I'm inclined to NAK the patch, since things appear to be working as
->expected.
->
->	Jeff
+> 
+> --- linux-2.6.orig/drivers/ide/pci/sgiioc4.c	2006-07-11 11:34:42.135934603 -0500
+> +++ linux-2.6/drivers/ide/pci/sgiioc4.c	2006-07-12 09:17:02.316590824 -0500
+> @@ -372,7 +372,7 @@ ide_dma_sgiioc4(ide_hwif_t * hwif, unsig
+>  	printk(KERN_INFO "%s: BM-DMA at 0x%04lx-0x%04lx\n", hwif->name,
+>  	       dma_base, dma_base + num_ports - 1);
+>  
+> -	if (!request_region(dma_base, num_ports, hwif->name)) {
+> +	if (!request_mem_region(dma_base, num_ports, hwif->name)) {
+>  		printk(KERN_ERR
+>  		       "%s(%s) -- ERROR, Addresses 0x%p to 0x%p "
+>  		       "ALREADY in use\n",
+> @@ -381,7 +381,7 @@ ide_dma_sgiioc4(ide_hwif_t * hwif, unsig
+>  		goto dma_alloc_failure;
+>  	}
+>  
+> -	hwif->dma_base = dma_base;
+> +	hwif->dma_base = (unsigned long) ioremap(dma_base, num_ports);
+>  	hwif->dmatable_cpu = pci_alloc_consistent(hwif->pci_dev,
+>  					  IOC4_PRD_ENTRIES * IOC4_PRD_BYTES,
+>  					  &hwif->dmatable_dma);
+> @@ -607,18 +607,14 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
+>  	hwif->ide_dma_lostirq = &sgiioc4_ide_dma_lostirq;
+>  	hwif->ide_dma_timeout = &__ide_dma_timeout;
+>  
+> -	/*
+> -	 * The IOC4 uses MMIO rather than Port IO.
+> -	 * It also needs special workarounds for INB.
+> -	 */
+> -	default_hwif_mmiops(hwif);
+>  	hwif->INB = &sgiioc4_INB;
+>  }
+>  
+>  static int __devinit
+>  sgiioc4_ide_setup_pci_device(struct pci_dev *dev, ide_pci_device_t * d)
+>  {
+> -	unsigned long base, ctl, dma_base, irqport;
+> +	unsigned long ctl, dma_base, irqport;
+> +	unsigned long bar0, cmd_base, cmd_phys_base, virt_base;
+>  	ide_hwif_t *hwif;
+>  	int h;
+>  
+> @@ -636,23 +632,27 @@ sgiioc4_ide_setup_pci_device(struct pci_
+>  	}
+>  
+>  	/*  Get the CmdBlk and CtrlBlk Base Registers */
+> -	base = pci_resource_start(dev, 0) + IOC4_CMD_OFFSET;
+> -	ctl = pci_resource_start(dev, 0) + IOC4_CTRL_OFFSET;
+> -	irqport = pci_resource_start(dev, 0) + IOC4_INTR_OFFSET;
+> +	bar0 = pci_resource_start(dev, 0);
+> +	virt_base = (unsigned long) ioremap(bar0, pci_resource_len(dev, 0));
+> +	cmd_base = virt_base + IOC4_CMD_OFFSET;
+> +	ctl = virt_base + IOC4_CTRL_OFFSET;
+> +	irqport = virt_base + IOC4_INTR_OFFSET;
+>  	dma_base = pci_resource_start(dev, 0) + IOC4_DMA_OFFSET;
+>  
+> -	if (!request_region(base, IOC4_CMD_CTL_BLK_SIZE, hwif->name)) {
+> +	cmd_phys_base = bar0 + IOC4_CMD_OFFSET;
+> +	if (!request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
+> +	    hwif->name)) {
+>  		printk(KERN_ERR
+> -			"%s : %s -- ERROR, Port Addresses "
+> +			"%s : %s -- ERROR, Addresses "
+>  			"0x%p to 0x%p ALREADY in use\n",
+> -		       __FUNCTION__, hwif->name, (void *) base,
+> -		       (void *) base + IOC4_CMD_CTL_BLK_SIZE);
+> +		       __FUNCTION__, hwif->name, (void *) cmd_phys_base,
+> +		       (void *) cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
+>  		return -ENOMEM;
+>  	}
+>  
+> -	if (hwif->io_ports[IDE_DATA_OFFSET] != base) {
+> +	if (hwif->io_ports[IDE_DATA_OFFSET] != cmd_base) {
+>  		/* Initialize the IO registers */
+> -		sgiioc4_init_hwif_ports(&hwif->hw, base, ctl, irqport);
+> +		sgiioc4_init_hwif_ports(&hwif->hw, cmd_base, ctl, irqport);
+>  		memcpy(hwif->io_ports, hwif->hw.io_ports,
+>  		       sizeof (hwif->io_ports));
+>  		hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
+> @@ -665,6 +665,9 @@ sgiioc4_ide_setup_pci_device(struct pci_
+>  	hwif->cds = (struct ide_pci_device_s *) d;
+>  	hwif->gendev.parent = &dev->dev;/* setup proper ancestral information */
+>  
+> +	/* The IOC4 uses MMIO rather than Port IO. */
+> +	default_hwif_mmiops(hwif);
+> +
+>  	/* Initializing chipset IRQ Registers */
+>  	hwif->OUTL(0x03, irqport + IOC4_INTR_SET * 4);
+>  
