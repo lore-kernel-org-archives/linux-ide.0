@@ -1,91 +1,47 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
-Date: Wed, 12 Jul 2006 16:36:21 -0400
-Message-ID: <44B55D45.9000708@garzik.org>
-References: <20060712175714.16943.10799.sendpatchset@attica.americas.sgi.com> <20060712195248.GB740565@sgi.com>
+From: Ellis <linux@paranor.org.uk>
+Subject: Re: Problem with SiI 3112 SATA Controller/Driver ?
+Date: Wed, 12 Jul 2006 23:04:06 +0100
+Message-ID: <44B571D6.9070504@paranor.org.uk>
+References: <44B41C25.6030209@paranor.org.uk> <44B51F77.5080607@gmail.com>
+Reply-To: linux@paranor.org.uk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59864 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751183AbWGLUgY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jul 2006 16:36:24 -0400
-In-Reply-To: <20060712195248.GB740565@sgi.com>
+Received: from hermes.hosts.co.uk ([212.84.175.24]:28835 "EHLO
+	hermes.hosts.co.uk") by vger.kernel.org with ESMTP id S932456AbWGLWAU
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Jul 2006 18:00:20 -0400
+In-Reply-To: <44B51F77.5080607@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>, John Keller <jpk@sgi.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Jeremy Higdon wrote:
->> @@ -381,7 +381,7 @@ ide_dma_sgiioc4(ide_hwif_t * hwif, unsig
->>  		goto dma_alloc_failure;
->>  	}
->>  
->> -	hwif->dma_base = dma_base;
->> +	hwif->dma_base = (unsigned long) ioremap(dma_base, num_ports);
->>  	hwif->dmatable_cpu = pci_alloc_consistent(hwif->pci_dev,
->>  					  IOC4_PRD_ENTRIES * IOC4_PRD_BYTES,
->>  					  &hwif->dmatable_dma);
+Tejun Heo wrote:
+> 
+> Can you try the following patch?
+> 
 
-adding a bug:  must check for NULL ioremap return value
+Patched, re-compiled kernel, and it works fine (on my machine anyway) 
+... WOOT! WOOT! Thanks a bunch!!
 
+I'm planning on leaving the patch installed in spite of the warning in 
+the readme file :^P - so I'll keep you posted if there are any problems.
 
->> @@ -607,18 +607,14 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
->>  	hwif->ide_dma_lostirq = &sgiioc4_ide_dma_lostirq;
->>  	hwif->ide_dma_timeout = &__ide_dma_timeout;
->>  
->> -	/*
->> -	 * The IOC4 uses MMIO rather than Port IO.
->> -	 * It also needs special workarounds for INB.
->> -	 */
->> -	default_hwif_mmiops(hwif);
->>  	hwif->INB = &sgiioc4_INB;
->>  }
->>  
->>  static int __devinit
->>  sgiioc4_ide_setup_pci_device(struct pci_dev *dev, ide_pci_device_t * d)
->>  {
->> -	unsigned long base, ctl, dma_base, irqport;
->> +	unsigned long ctl, dma_base, irqport;
->> +	unsigned long bar0, cmd_base, cmd_phys_base, virt_base;
+As an aside, the boot process appears crisper with less time 
+interrogating the hdd hardware ... might be my eagerness in seeing it 
+working though. All detected OK too. The disk has been formatted several 
+times without "hanging" the tty.
 
-New code should use 'void __iomem *' for ioremap return values, wherever 
-possible.
+If I can ever help please drop a line as a few machines (sacrificial 
+lambs) here if testing to be done.
 
 
->>  	ide_hwif_t *hwif;
->>  	int h;
->>  
->> @@ -636,23 +632,27 @@ sgiioc4_ide_setup_pci_device(struct pci_
->>  	}
->>  
->>  	/*  Get the CmdBlk and CtrlBlk Base Registers */
->> -	base = pci_resource_start(dev, 0) + IOC4_CMD_OFFSET;
->> -	ctl = pci_resource_start(dev, 0) + IOC4_CTRL_OFFSET;
->> -	irqport = pci_resource_start(dev, 0) + IOC4_INTR_OFFSET;
->> +	bar0 = pci_resource_start(dev, 0);
->> +	virt_base = (unsigned long) ioremap(bar0, pci_resource_len(dev, 0));
->> +	cmd_base = virt_base + IOC4_CMD_OFFSET;
->> +	ctl = virt_base + IOC4_CTRL_OFFSET;
->> +	irqport = virt_base + IOC4_INTR_OFFSET;
->>  	dma_base = pci_resource_start(dev, 0) + IOC4_DMA_OFFSET;
+-- 
+Thanks and regards
+Ellis
 
-ditto:  new bug here too
-
-
->> -	if (!request_region(base, IOC4_CMD_CTL_BLK_SIZE, hwif->name)) {
->> +	cmd_phys_base = bar0 + IOC4_CMD_OFFSET;
->> +	if (!request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
->> +	    hwif->name)) {
->>  		printk(KERN_ERR
->> -			"%s : %s -- ERROR, Port Addresses "
->> +			"%s : %s -- ERROR, Addresses "
->>  			"0x%p to 0x%p ALREADY in use\n",
->> -		       __FUNCTION__, hwif->name, (void *) base,
->> -		       (void *) base + IOC4_CMD_CTL_BLK_SIZE);
->> +		       __FUNCTION__, hwif->name, (void *) cmd_phys_base,
->> +		       (void *) cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
-
-If 'void __iomem *' were used, no casts would be needed here
+Ellis Skinazi - mailto: linux@paranor.org.uk
 
 
