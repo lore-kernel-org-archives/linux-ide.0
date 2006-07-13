@@ -1,289 +1,108 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 2/2] libata: Add support for SATA attachment to SAS adapters
-Date: Thu, 13 Jul 2006 08:35:49 -0500
-Message-ID: <200607131335.k6DDZpMD004925@d03av03.boulder.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+From: John Keller <jpk@sgi.com>
+Subject: Re: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
+Date: Thu, 13 Jul 2006 08:54:36 -0500 (CDT)
+Message-ID: <200607131354.k6DDsaqe064559@fcbayern.americas.sgi.com>
+References: <44B55D45.9000708@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from omx1-ext.sgi.com ([192.48.179.11]:59327 "EHLO
+	omx1.americas.sgi.com") by vger.kernel.org with ESMTP
+	id S1751053AbWGMNyq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Jul 2006 09:54:46 -0400
+In-Reply-To: <44B55D45.9000708@garzik.org> from "Jeff Garzik" at Jul 12, 2006 04:36:21 PM
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jeremy Higdon <jeremy@sgi.com>, John Keller <jpk@sgi.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+> 
+> Jeremy Higdon wrote:
+> >> @@ -381,7 +381,7 @@ ide_dma_sgiioc4(ide_hwif_t * hwif, unsig
+> >>  		goto dma_alloc_failure;
+> >>  	}
+> >>  
+> >> -	hwif->dma_base = dma_base;
+> >> +	hwif->dma_base = (unsigned long) ioremap(dma_base, num_ports);
+> >>  	hwif->dmatable_cpu = pci_alloc_consistent(hwif->pci_dev,
+> >>  					  IOC4_PRD_ENTRIES * IOC4_PRD_BYTES,
+> >>  					  &hwif->dmatable_dma);
+> 
+> adding a bug:  must check for NULL ioremap return value
+
+Shall do.
 
 
-The following patch enhances libata to allow SAS device drivers
-to utilize libata to talk to SATA devices. It introduces some
-new APIs which allow libata to be used without allocating a
-virtual scsi host.
+> 
+> 
+> >> @@ -607,18 +607,14 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
+> >>  	hwif->ide_dma_lostirq = &sgiioc4_ide_dma_lostirq;
+> >>  	hwif->ide_dma_timeout = &__ide_dma_timeout;
+> >>  
+> >> -	/*
+> >> -	 * The IOC4 uses MMIO rather than Port IO.
+> >> -	 * It also needs special workarounds for INB.
+> >> -	 */
+> >> -	default_hwif_mmiops(hwif);
+> >>  	hwif->INB = &sgiioc4_INB;
+> >>  }
+> >>  
+> >>  static int __devinit
+> >>  sgiioc4_ide_setup_pci_device(struct pci_dev *dev, ide_pci_device_t * d)
+> >>  {
+> >> -	unsigned long base, ctl, dma_base, irqport;
+> >> +	unsigned long ctl, dma_base, irqport;
+> >> +	unsigned long bar0, cmd_base, cmd_phys_base, virt_base;
+> 
+> New code should use 'void __iomem *' for ioremap return values, wherever 
+> possible.
 
-New APIs:
+OK.
 
-ata_sas_port_alloc - Allocate an ata_port 
-ata_sas_port_init - Initialize an ata_port (probe device, etc)
-ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
-ata_sas_slave_configure - configure scsi device
-ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
 
-These new APIs can be used either directly by a SAS LLDD or could be used
-by the SAS transport class. 
+> 
+> 
+> >>  	ide_hwif_t *hwif;
+> >>  	int h;
+> >>  
+> >> @@ -636,23 +632,27 @@ sgiioc4_ide_setup_pci_device(struct pci_
+> >>  	}
+> >>  
+> >>  	/*  Get the CmdBlk and CtrlBlk Base Registers */
+> >> -	base = pci_resource_start(dev, 0) + IOC4_CMD_OFFSET;
+> >> -	ctl = pci_resource_start(dev, 0) + IOC4_CTRL_OFFSET;
+> >> -	irqport = pci_resource_start(dev, 0) + IOC4_INTR_OFFSET;
+> >> +	bar0 = pci_resource_start(dev, 0);
+> >> +	virt_base = (unsigned long) ioremap(bar0, pci_resource_len(dev, 0));
+> >> +	cmd_base = virt_base + IOC4_CMD_OFFSET;
+> >> +	ctl = virt_base + IOC4_CTRL_OFFSET;
+> >> +	irqport = virt_base + IOC4_INTR_OFFSET;
+> >>  	dma_base = pci_resource_start(dev, 0) + IOC4_DMA_OFFSET;
+> 
+> ditto:  new bug here too
 
-Possible usage for a SAS LLDD would be:
+I'll add the check.
 
-scsi_scan_host
-	target_alloc
-		ata_sas_port_alloc
-	slave_alloc
-		ata_sas_port_init
-	slave_configure
-		ata_sas_slave_configure
 
-Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
+> 
+> 
+> >> -	if (!request_region(base, IOC4_CMD_CTL_BLK_SIZE, hwif->name)) {
+> >> +	cmd_phys_base = bar0 + IOC4_CMD_OFFSET;
+> >> +	if (!request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
+> >> +	    hwif->name)) {
+> >>  		printk(KERN_ERR
+> >> -			"%s : %s -- ERROR, Port Addresses "
+> >> +			"%s : %s -- ERROR, Addresses "
+> >>  			"0x%p to 0x%p ALREADY in use\n",
+> >> -		       __FUNCTION__, hwif->name, (void *) base,
+> >> -		       (void *) base + IOC4_CMD_CTL_BLK_SIZE);
+> >> +		       __FUNCTION__, hwif->name, (void *) cmd_phys_base,
+> >> +		       (void *) cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
+> 
+> If 'void __iomem *' were used, no casts would be needed here
 
-Device teardown would occur with:
+So, 'void __iomem *' should also be used for physical (non-mapped)
+addresses, as in this case?
 
-slave_destroy
-	port_disable
-target_destroy
-	ata_sas_port_destroy
-
-Acked-by: Jeff Garzik <jgarzik@pobox.com>
-Signed-off-by: Brian King <brking@us.ibm.com>
----
-
- drivers/scsi/libata-core.c |    4 -
- drivers/scsi/libata-scsi.c |  166 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata.h      |    2 
- include/linux/libata.h     |    9 ++
- 4 files changed, 179 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/libata-scsi.c~libata_sas drivers/scsi/libata-scsi.c
---- libata-dev/drivers/scsi/libata-scsi.c~libata_sas	2006-07-09 13:07:22.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-07-09 13:07:22.000000000 -0500
-@@ -3158,3 +3158,169 @@ void ata_scsi_dev_rescan(void *data)
- 			scsi_rescan_device(&(dev->sdev->sdev_gendev));
- 	}
- }
-+
-+/**
-+ *	ata_sas_port_alloc - Allocate port for a SAS attached SATA device
-+ *	@pdev: PCI device that the scsi device is attached to
-+ *	@port_info: Information from low-level host driver
-+ *	@host: SCSI host that the scsi device is attached to
-+ *
-+ *	LOCKING:
-+ *	PCI/etc. bus probe sem.
-+ *
-+ *	RETURNS:
-+ *	ata_port pointer on success / NULL on failure.
-+ */
-+
-+struct ata_port *ata_sas_port_alloc(struct ata_host_set *host_set,
-+				    struct ata_port_info *port_info,
-+				    struct Scsi_Host *host)
-+{
-+	struct ata_port *ap = kzalloc(sizeof(*ap), GFP_KERNEL);
-+	int i;
-+
-+	if (!ap)
-+		return NULL;
-+
-+	ap->dev = host_set->dev;
-+	ap->host_set = host_set;
-+	ap->id = ata_unique_id++;
-+	ap->lock = host->host_lock;
-+	ap->ops = port_info->port_ops;
-+	ap->flags = port_info->host_flags | ATA_FLAG_DISABLED;
-+	ap->pio_mask = port_info->pio_mask;
-+	ap->mwdma_mask = port_info->mwdma_mask;
-+	ap->udma_mask = port_info->udma_mask;
-+	ap->cbl = ATA_CBL_SATA;
-+	ap->sata_spd_limit = UINT_MAX;
-+	ap->active_tag = ATA_TAG_POISON;
-+	ap->last_ctl = 0xFF;
-+	INIT_WORK(&ap->port_task, NULL, NULL);
-+	INIT_WORK(&ap->hotplug_task, ata_scsi_hotplug, ap);
-+	INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan, ap);
-+	INIT_LIST_HEAD(&ap->eh_done_q);
-+	init_waitqueue_head(&ap->eh_wait_q);
-+
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+		dev->ap = ap;
-+		dev->devno = i;
-+		ata_dev_init(dev);
-+	}
-+
-+	return ap;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
-+
-+/**
-+ *	ata_sas_port_start - Set port up for dma.
-+ *	@ap: Port to initialize
-+ *
-+ *	Called just after data structures for each port are
-+ *	initialized.  Allocates DMA pad.
-+ *
-+ *	May be used as the port_start() entry in ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+int ata_sas_port_start(struct ata_port *ap)
-+{
-+	return ata_pad_alloc(ap, ap->dev);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_start);
-+
-+/**
-+ *	ata_port_stop - Undo ata_sas_port_start()
-+ *	@ap: Port to shut down
-+ *
-+ *	Frees the DMA pad.
-+ *
-+ *	May be used as the port_stop() entry in ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+
-+void ata_sas_port_stop(struct ata_port *ap)
-+{
-+	ata_pad_free(ap, ap->dev);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_stop);
-+
-+/**
-+ *	ata_sas_port_init - Initialize a SATA device
-+ *	@ap: SATA port to initialize
-+ *
-+ *	LOCKING:
-+ *	PCI/etc. bus probe sem.
-+ *
-+ *	RETURNS:
-+ *	Zero on success, non-zero on error.
-+ */
-+
-+int ata_sas_port_init(struct ata_port *ap)
-+{
-+	int rc = ap->ops->port_start(ap);
-+
-+	if (!rc)
-+		rc = ata_bus_probe(ap);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_init);
-+
-+/**
-+ *	ata_sas_port_destroy - Destroy a SATA port allocated by ata_sas_port_alloc
-+ *	@ap: SATA port to destroy
-+ *
-+ */
-+
-+void ata_sas_port_destroy(struct ata_port *ap)
-+{
-+	ap->ops->port_stop(ap);
-+	kfree(ap);
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_port_destroy);
-+
-+/**
-+ *	ata_sas_slave_configure - Default slave_config routine for libata devices
-+ *	@sdev: SCSI device to configure
-+ *	@ap: ATA port to which SCSI device is attached
-+ *
-+ *	RETURNS:
-+ *	Zero.
-+ */
-+
-+int ata_sas_slave_configure(struct scsi_device *sdev, struct ata_port *ap)
-+{
-+	ata_scsi_sdev_config(sdev);
-+	ata_scsi_dev_config(sdev, ap->device);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_slave_configure);
-+
-+/**
-+ *	ata_sas_queuecmd - Issue SCSI cdb to libata-managed device
-+ *	@cmd: SCSI command to be sent
-+ *	@done: Completion function, called when command is complete
-+ *	@ap:	ATA port to which the command is being sent
-+ *
-+ *	RETURNS:
-+ *	Zero.
-+ */
-+
-+int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
-+		     struct ata_port *ap)
-+{
-+	ata_scsi_dump_cdb(ap, cmd);
-+
-+	if (likely(ata_scsi_dev_enabled(ap->device)))
-+		__ata_scsi_queuecmd(cmd, done, ap->device);
-+	else {
-+		cmd->result = (DID_BAD_TARGET << 16);
-+		done(cmd);
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
-diff -puN drivers/scsi/libata.h~libata_sas drivers/scsi/libata.h
---- libata-dev/drivers/scsi/libata.h~libata_sas	2006-07-09 13:07:22.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata.h	2006-07-09 13:07:22.000000000 -0500
-@@ -43,6 +43,7 @@ extern struct workqueue_struct *ata_aux_
- extern int atapi_enabled;
- extern int atapi_dmadir;
- extern int libata_fua;
-+extern unsigned int ata_unique_id;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
- extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
- extern void ata_dev_disable(struct ata_device *dev);
-@@ -107,6 +108,7 @@ extern void ata_scsi_rbuf_fill(struct at
-                                            u8 *rbuf, unsigned int buflen));
- extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
- extern void ata_scsi_dev_rescan(void *data);
-+extern int ata_bus_probe(struct ata_port *ap);
- 
- /* libata-eh.c */
- extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
-diff -puN include/linux/libata.h~libata_sas include/linux/libata.h
---- libata-dev/include/linux/libata.h~libata_sas	2006-07-09 13:07:22.000000000 -0500
-+++ libata-dev-bjking1/include/linux/libata.h	2006-07-09 13:07:22.000000000 -0500
-@@ -689,6 +689,15 @@ extern int ata_scsi_detect(struct scsi_h
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
- extern int ata_scsi_release(struct Scsi_Host *host);
-+extern void ata_sas_port_destroy(struct ata_port *);
-+extern struct ata_port *ata_sas_port_alloc(struct ata_host_set *,
-+					   struct ata_port_info *, struct Scsi_Host *);
-+extern int ata_sas_port_init(struct ata_port *);
-+extern int ata_sas_port_start(struct ata_port *ap);
-+extern void ata_sas_port_stop(struct ata_port *ap);
-+extern int ata_sas_slave_configure(struct scsi_device *, struct ata_port *);
-+extern int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
-+			    struct ata_port *ap);
- extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
- extern int sata_scr_valid(struct ata_port *ap);
- extern int sata_scr_read(struct ata_port *ap, int reg, u32 *val);
-diff -puN drivers/scsi/libata-core.c~libata_sas drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_sas	2006-07-09 13:07:22.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-07-09 13:07:22.000000000 -0500
-@@ -70,7 +70,7 @@ static unsigned int ata_dev_init_params(
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
- static void ata_dev_xfermask(struct ata_device *dev);
- 
--static unsigned int ata_unique_id = 1;
-+unsigned int ata_unique_id = 1;
- static struct workqueue_struct *ata_wq;
- 
- struct workqueue_struct *ata_aux_wq;
-@@ -1528,7 +1528,7 @@ err_out_nosup:
-  *	Zero on success, negative errno otherwise.
-  */
- 
--static int ata_bus_probe(struct ata_port *ap)
-+int ata_bus_probe(struct ata_port *ap)
- {
- 	unsigned int classes[ATA_MAX_DEVICES];
- 	int tries[ATA_MAX_DEVICES];
-_
+John
