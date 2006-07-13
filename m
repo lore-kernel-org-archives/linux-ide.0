@@ -1,42 +1,31 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
-Date: Thu, 13 Jul 2006 10:45:40 -0400
-Message-ID: <44B65C94.6040100@garzik.org>
-References: <200607131354.k6DDsaqe064559@fcbayern.americas.sgi.com>
+From: Crazy AMD K7 <100megabit@mail.ru>
+Subject: Promise PDC20575 chip doesn't see PATA discs :(((
+Date: Fri, 14 Jul 2006 02:28:40 +0400
+Message-ID: <12613232096.20060714022840@mail.ru>
+Reply-To: Crazy AMD K7 <100megabit@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:4235 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751558AbWGMOpn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Jul 2006 10:45:43 -0400
-In-Reply-To: <200607131354.k6DDsaqe064559@fcbayern.americas.sgi.com>
+Received: from customers.imt.ru ([212.16.0.33]:41487 "HELO smtp.direct.ru")
+	by vger.kernel.org with SMTP id S1030435AbWGMW1E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Jul 2006 18:27:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Keller <jpk@sgi.com>
-Cc: Jeremy Higdon <jeremy@sgi.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-John Keller wrote:
->>>> -	if (!request_region(base, IOC4_CMD_CTL_BLK_SIZE, hwif->name)) {
->>>> +	cmd_phys_base = bar0 + IOC4_CMD_OFFSET;
->>>> +	if (!request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
->>>> +	    hwif->name)) {
->>>>  		printk(KERN_ERR
->>>> -			"%s : %s -- ERROR, Port Addresses "
->>>> +			"%s : %s -- ERROR, Addresses "
->>>>  			"0x%p to 0x%p ALREADY in use\n",
->>>> -		       __FUNCTION__, hwif->name, (void *) base,
->>>> -		       (void *) base + IOC4_CMD_CTL_BLK_SIZE);
->>>> +		       __FUNCTION__, hwif->name, (void *) cmd_phys_base,
->>>> +		       (void *) cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
->> If 'void __iomem *' were used, no casts would be needed here
-> 
-> So, 'void __iomem *' should also be used for physical (non-mapped)
-> addresses, as in this case?
+Hi, can you help me to solve the prombem: Promise PDC20575 chip
+comtroller doesn't see PATA discs :(((
+During controller boot(before Linux,GRUB,etc) is shows SATA and PATA
+discs, but in Linux it shows only SATA disks.
+Option:
+[*] Support for SATA (deprecated; conflicts with libata SATA driver)
+is enabled.
+kernel 2.4.32
+If any more information is needed - no problem.
 
-
-Ooops, no, just cookies returned from ioremap() and ioremap_nocache().
-
-	Jeff
+Thank you,
+Pasha
 
 
