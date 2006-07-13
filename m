@@ -1,39 +1,48 @@
-From: Brent Casavant <bcasavan@sgi.com>
-Subject: Re: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
-Date: Wed, 12 Jul 2006 18:11:18 -0500 (CDT)
-Message-ID: <20060712180643.N27752@pkunk.americas.sgi.com>
-References: <20060712175714.16943.10799.sendpatchset@attica.americas.sgi.com>
-Reply-To: Brent Casavant <bcasavan@sgi.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Ejecting removable disk causes a flood of ALLOW_MEDIUM_REMOVAL
+Date: Thu, 13 Jul 2006 12:07:51 +0800
+Message-ID: <44B5C717.40300@tw.ibm.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:51074 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1751414AbWGLXLU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jul 2006 19:11:20 -0400
-In-Reply-To: <20060712175714.16943.10799.sendpatchset@attica.americas.sgi.com>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:43934 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S932192AbWGMEIE
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Jul 2006 00:08:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Keller <jpk@sgi.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Jeff Tranter <tranter@pobox.com>, linux-scsi@vger.kernel.org, Linux IDE <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@enoyolf.org>, Gary Hade <garyhade@us.ibm.com>
 
-On Wed, 12 Jul 2006, John Keller wrote:
+Hi Doug,
 
-> sgiioc4.c had been recently converted to using mmio ops.
-> There are still a few issues to cleanup.
+A problem related to SG_IO.
+When testing the 2.6.18-rc1 libata, a flood of ALLOW_MEDIUM_REMOVAL is seen
+after ejecting a removable disk drive:
 
-An issue I noticed the other day is that we really should be turning
-on CONFIG_IDEPCI_SHARE_IRQ whenever CONFIG_BLK_DEV_SGIIOC4 is selected.
-The IOC4 IDE part shares a PCI interrupt with the other IOC4 devices
-(serial, external interrupts), so it is effectively always sharing an
-IRQ.
+http://bugzilla.kernel.org/show_bug.cgi?id=6799
 
-I just haven't created the patch yet, and will be out of the office
-until next Tuesday.  You might want to consider fixing this side-issue
-as well as long as you're touching the IOC4 IDE code.
+The interaction to trigger the problem is below:
+1. The "eject" utility, using SG_IO, issues ALLOW_MEDIUM_REMOVAL twice to unlock the disk of the device.
+2. The disk of the physical device is now unlocked, however, sdev->locked is still 1, inconsistent with the physical device status.
+3. The "eject" utility ejects the disk by START_STOP_UNIT.
+4. Someone issues TEST_UNIT_READY. The device is not ready since no disk inside. ATAPI check condition returned.
+5. 2.6.18-rc1 libata EH triggered in SCSI EH context to request sense.
+6. scsi_restart_operations(), seeing sdev->locked == 1, tries to lock the door.
+7. Lock failed since no disk inside. ATAPI check condition returned.
+8. 2.6.18 libata EH triggered in SCSI EH context. Goto 5 and loop forever until the disk is inserted again.
 
-Brent
+It looks more like eject/scsi problem. (Libata 2.6.17 EH is not affected by the problem 
+because the request sense is done when qc is completed, not in the SCSI EH context.)
 
--- 
-Brent Casavant                          All music is folk music.  I ain't
-bcasavan@sgi.com                        never heard a horse sing a song.
-Silicon Graphics, Inc.                    -- Louis Armstrong
+Maybe adding a filter to the SCSI SG IO layer to
+ - Check incoming SCSI commands
+ - Whenever ALLOW_MEDIUM_REMOVAL is seen, update the sdev->locked to make the 
+   kernel data structure consistent with the physical device status
+can fix the problem?
+
+--
+albert
+
