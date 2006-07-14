@@ -1,42 +1,28 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [BUG] sata_promise unaligned PCI accesses on sparc64
-Date: Fri, 14 Jul 2006 01:52:34 +0200 (MEST)
-Message-ID: <200607132352.k6DNqYJJ005697@harpo.it.uu.se>
+From: "Olivia" <Oliviab's@deliveryman.com>
+Subject: Rock hard manhood, multiple explosions and several times more semen volume
+Date: Fri, 14 Jul 2006 10:22:07 +0800
+Message-ID: <42004460100115.1477CF2630__7962.48704796216$1152843846$gmane$org@6SBNY>
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:34278 "EHLO aun.it.uu.se")
-	by vger.kernel.org with ESMTP id S1161053AbWGMXwk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Jul 2006 19:52:40 -0400
+Received: from [58.62.45.87] ([58.62.45.87]:33040 "EHLO
+	9tl5ai3.ouihr.adelphia.net") by vger.kernel.org with ESMTP
+	id S1161210AbWGNCX3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Jul 2006 22:23:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-After installing a Promise SATA300 TX2 PLUS PCI card
-in a sparc64 (Ultra5) machine, the kernel complains
-about three unaligned accesses during boot:
+Good day,
 
-Kernel unaligned access at TPC[55c050] pdc_host_init+0x84/0xe8
-Kernel unaligned access at TPC[55c074] pdc_host_init+0xa8/0xe8
-Kernel unaligned access at TPC[55c094] pdc_host_init+0xc8/0xe8
+Rock hard manhood, multiple explosions and several times more semen volume
+Enhanced male power and unlimited prowess with your girl The best products for the winning guys
+ http://www.icicledid.com
 
-Those unaligned accesses are the reads from and write to
-PDC_TBG_MODE in sata_promise.c:pdc_host_init():
 
-	/* reduce TBG clock to 133 Mhz. */
-	tmp = readl(mmio + PDC_TBG_MODE);
-	tmp &= ~0x30000; /* clear bit 17, 16*/
-	tmp |= 0x10000;  /* set bit 17:16 = 0:1 */
-	writel(tmp, mmio + PDC_TBG_MODE);
+For by means of a whorish woman a man is brought to a piece of bread: and the adultress will hunt for the precious life. Too much sit down ah bruck trousers. Love many, trust few, but always paddle your own canoe
+ Nah because dog ah play with yuh he nah bite yuh. Every Soldier has the Baton of a Field Marshal in his Knapsack
 
-	readl(mmio + PDC_TBG_MODE);	/* flush */
 
-Looking into this I found two strange facts:
-- PDC_TBG_MODE is at offset 0x41, which clearly can never
-  be 32-bit aligned.
-- The 4-byte range for PDC_TBG_MODE intersects both
-  PDC_INT_SEQMASK and PDC_FLASH_CTL.
-
-Admittedly I know very little about PCI device programming,
-but this doesn't look right.
-
-/Mikael
