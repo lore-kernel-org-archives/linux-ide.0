@@ -1,101 +1,44 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: LibPATA code issues / 2.6.17.3 (What is the next step?)
-Date: Fri, 14 Jul 2006 16:33:44 +0100
-Message-ID: <44B7B958.9030703@dgreaves.com>
-References: <Pine.LNX.4.64.0602140439580.3567@p34>  <44AEB3CA.8080606@pobox.com>  <Pine.LNX.4.64.0607071520160.2643@p34.internal.lan>  <200607091224.31451.liml@rtr.ca>  <Pine.LNX.4.64.0607091327160.23992@p34.internal.lan>  <Pine.LNX.4.64.0607091612060.3886@p34.internal.lan>  <Pine.LNX.4.64.0607091638220.2696@p34.internal.lan>  <Pine.LNX.4.64.0607091645480.2696@p34.internal.lan>  <Pine.LNX.4.64.0607091704250.2696@p34.internal.lan>  <Pine.LNX.4.64.0607091802460.2696@p34.internal.lan>  <Pine.LNX.4.64.0607100958540.3591@p34.internal.lan>  <1152545639.27368.137.camel@localhost.localdomain>  <Pine.LNX.4.64.0607101145030.3591@p34.internal.lan>  <Pine.LNX.4.64.0607110926150.858@p34.internal.lan> <1152634324.18028.21.camel@localhost.localdomain> <44B57373.2030907@dgreaves.com> <Pine.LNX.4.64.0607121828290.11285@p34.internal.lan>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] drivers/ide/: cleanups
+Date: Fri, 14 Jul 2006 18:33:10 +0200
+Message-ID: <20060714163310.GA18427@stusta.de>
+References: <20060711141637.GS13938@stusta.de> <1152873806.23037.73.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:30593 "EHLO mail.ukfsn.org")
-	by vger.kernel.org with ESMTP id S1161122AbWGNPdw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jul 2006 11:33:52 -0400
-In-Reply-To: <Pine.LNX.4.64.0607121828290.11285@p34.internal.lan>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:32262 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1161250AbWGNQdN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Jul 2006 12:33:13 -0400
+Content-Disposition: inline
+In-Reply-To: <1152873806.23037.73.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Sander <sander@humilis.net>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, htejun@gmail.com
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Justin Piszcz wrote:
-> On Wed, 12 Jul 2006, David Greaves wrote:
+On Fri, Jul 14, 2006 at 08:43:26PM +1000, Benjamin Herrenschmidt wrote:
+> On Tue, 2006-07-11 at 16:16 +0200, Adrian Bunk wrote:
+> > This patch contains the following clenups:
+> > - setup-pci.c: #if 0 the unused ide_pci_unregister_driver()
+> > - ide.c: remove the unused EXPORT_SYMBOL(ide_register_hw)
 > 
->> Alan Cox wrote:
->>> Ar Maw, 2006-07-11 am 09:28 -0400, ysgrifennodd Justin Piszcz:
->>>> Alan/Jeff/Mark,
->>>>
->>>> Is there anything else I can do to further troubleshoot this problem
->>>> now
->>>> that we have the failed opcode(s)?  Again, there is never any
->>>> corruption
->>>> on these drives, so it is more of an annoyance than anything else.
->>>
->>> Nothing strikes me so far other than the data not making sense. Possibly
->>> it will become clearer later if/when we see other examples.
->>
->> For me it's SMART related.
->>
->> smartctl -data -o on /dev/sda reliably gets a similar message.
->> Justin - does this smartctl command trigger a message for you?
->>
->> I've been mailing on and off since January-ish.
->> (http://marc.theaimsgroup.com/?l=linux-ide&w=2&r=7&s=libpata&q=b)
->>
->> Back in March I was running 2.6.16 (with a different version of Mark's
->> opcode patch) and I sent an email with the following info:
->>
-> Unfortunately not, the correct patch you need is attached to get the
-> ata_op code, against 2.6.17.3.
+> Unused ? The PowerMac media-bay code uses it. It's not yet module-able
+> but I haven't given up on it just yet :)
 
-[mutter, mutter, getting a teeny bit fed up with applying the same
-diagnostic patch (thanks Mark) and reporting this and getting no real
-feedback (apart from Erik - ta - who was off base, it doesn't appear to
-be BIOS and here's the pair of commands :) ... Ok, added Tejun to the
-list since he's been doing EH for libata and this is some kind of E that
-needs better H]
+It's even used by drivers/ide/arm/bast-ide.c that can be modular (which 
+I missed). -mm therefore contains the updated version I sent later in 
+this thread that does no longer contain this unexport.
 
-2.6.17.3 with op-code patch
+> Ben.
 
-smartctl -data --smart=on /dev/sda
-no dmesg output
-smartctl -data -o on /dev/sda
-dmesg:
-ata1: PIO error
-ata_gen_ata_desc_sense: failed ata_op=0xb0
-ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata_gen_ata_desc_sense: failed ata_op=0x51
-ata1: status=0x51 { DriveReady SeekComplete Error }
-ata1: error=0x04 { DriveStatusError }
-ata1: PIO error
-ata_gen_ata_desc_sense: failed ata_op=0xb0
-ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata_gen_ata_desc_sense: failed ata_op=0x51
-ata1: status=0x51 { DriveReady SeekComplete Error }
-ata1: error=0x04 { DriveStatusError }
-ata1: PIO error
-ata_gen_ata_desc_sense: failed ata_op=0xb0
-ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata_gen_ata_desc_sense: failed ata_op=0x51
-ata1: status=0x51 { DriveReady SeekComplete Error }
-ata1: error=0x04 { DriveStatusError }
-ata1: PIO error
-ata_gen_ata_desc_sense: failed ata_op=0xb0
-ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata_gen_ata_desc_sense: failed ata_op=0x51
-ata1: status=0x51 { DriveReady SeekComplete Error }
-ata1: error=0x04 { DriveStatusError }
-ata1: PIO error
-ata_gen_ata_desc_sense: failed ata_op=0xb0
-ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata_gen_ata_desc_sense: failed ata_op=0x51
-ata1: status=0x51 { DriveReady SeekComplete Error }
-ata1: error=0x04 { DriveStatusError }
-ata1: PIO error
-ata_gen_ata_desc_sense: failed ata_op=0xb0
-ata1: translated ATA stat/err 0x51/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata_gen_ata_desc_sense: failed ata_op=0x51
-ata1: status=0x51 { DriveReady SeekComplete Error }
-ata1: error=0x04 { DriveStatusError }
-
-David
+cu
+Adrian
 
 -- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
