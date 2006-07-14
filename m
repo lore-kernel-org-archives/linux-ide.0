@@ -1,26 +1,28 @@
-From: "Lori Noble" <kzwanulkod@yahoo.com>
-Subject: Gift for Yuor Family
-Date: Sat, 15 Jul 2006 01:00:19 +0400
-Message-ID: <68JK87FE.0R24.kzwanulkod__24837.2892187492$1152907410$gmane$org@yahoo.com>
+From: "Duncan Dubois" <wacdzvnpha@yahoo.com>
+Subject: We SelIs all Medss xUS6mV
+Date: Fri, 14 Jul 2006 22:01:38 +0100
+Message-ID: <9A527EE3.7684.2115C2D5__30901.903511449$1152907751$gmane$org@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 201-0-13-199.dsl.telesp.net.br ([201.0.13.199]:41738 "HELO
-	57C8EF10") by vger.kernel.org with SMTP id S1422737AbWGNUDV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jul 2006 16:03:21 -0400
+Received: from 201-255-210-205.mrse.com.ar ([201.255.210.205]:60937 "HELO
+	4DEE8C68") by vger.kernel.org with SMTP id S1422754AbWGNUIt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jul 2006 16:08:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64@vger.kernel.org
+To: autoanswer@vger.kernel.org, linux-assembly@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-gcc@vger.kernel.org, linux-hams@vger.kernel.org, linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org
 
 
 
-Perfect Gift for your spouse and family
 
-- Luxury Watches, Handbags and Mont Blanc accs.
-- Finest quality assured
-- 101% like original
+The most complete Phar macy Online
+We carry all major medds at bargain price
+Viggra, Ci ialis, VaIium, Xa naax
+Phantermiine, Ulltraam and etc...
+SatiisfactIon Gua ranteeed
 
-You Name It, We have It
-all at 8o-% Price Reduction
+http://salesohsales.com/?wid=3D102
 
-Be a real man today
-http://043.planfetaryconecction.com
+
+IeZ
 
