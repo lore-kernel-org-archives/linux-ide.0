@@ -1,44 +1,43 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6 patch] drivers/ide/: cleanups
-Date: Fri, 14 Jul 2006 18:33:10 +0200
-Message-ID: <20060714163310.GA18427@stusta.de>
-References: <20060711141637.GS13938@stusta.de> <1152873806.23037.73.camel@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Follow up? LibPATA code issues / 2.6.15.4 (found the opcode=0x35)!
+Date: Fri, 14 Jul 2006 13:14:31 -0400
+Message-ID: <44B7D0F7.6000302@rtr.ca>
+References: <Pine.LNX.4.64.0602140439580.3567@p34>  <44AEB3CA.8080606@pobox.com>  <Pine.LNX.4.64.0607071520160.2643@p34.internal.lan>  <200607091224.31451.liml@rtr.ca>  <Pine.LNX.4.64.0607091327160.23992@p34.internal.lan>  <Pine.LNX.4.64.0607091612060.3886@p34.internal.lan>  <Pine.LNX.4.64.0607091638220.2696@p34.internal.lan>  <Pine.LNX.4.64.0607091645480.2696@p34.internal.lan>  <Pine.LNX.4.64.0607091704250.2696@p34.internal.lan>  <Pine.LNX.4.64.0607091802460.2696@p34.internal.lan>  <Pine.LNX.4.64.0607100958540.3591@p34.internal.lan> <1152545639.27368.137.camel@localhost.localdomain> <Pine.LNX.4.64.0607101145030.3591@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:32262 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1161250AbWGNQdN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Jul 2006 12:33:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1152873806.23037.73.camel@localhost.localdomain>
+Received: from rtr.ca ([64.26.128.89]:65211 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1161274AbWGNROd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jul 2006 13:14:33 -0400
+In-Reply-To: <Pine.LNX.4.64.0607101145030.3591@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Andrew Morton <akpm@osdl.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Sander <sander@humilis.net>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, Jul 14, 2006 at 08:43:26PM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2006-07-11 at 16:16 +0200, Adrian Bunk wrote:
-> > This patch contains the following clenups:
-> > - setup-pci.c: #if 0 the unused ide_pci_unregister_driver()
-> > - ide.c: remove the unused EXPORT_SYMBOL(ide_register_hw)
-> 
-> Unused ? The PowerMac media-bay code uses it. It's not yet module-able
-> but I haven't given up on it just yet :)
+>Jeff/Mark, from these errors can we reach a consensus as to the cause
+>of these errors and how to eliminate the problem? 
 
-It's even used by drivers/ide/arm/bast-ide.c that can be modular (which 
-I missed). -mm therefore contains the updated version I sent later in 
-this thread that does no longer contain this unexport.
+It is up to the current subsystem maintainer to help investigate this
+and come up with a solution, in cooperation with eager testers such
+as yourself.  I gave away my kernel subsystem maintainer's duties about
+seven years ago, because it just takes too much time to do it really well.
 
-> Ben.
+In this case, I'm proving a tiny amount of help, simply because I don't
+see anyone else even trying, and there is obviously something wrong here.
 
-cu
-Adrian
+Now.. your hacked version of my simple patch is incorrect.  It is frequently
+dumping out ata_op=0x51, which is obviously the ATA status value not the
+original ATA command byte.
 
--- 
+But ignoring that, we also see some valid output from where it does trip
+the code from my original patches:  ata_op=0x35.
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+So, the drive is rejecting an LBA48 WRITE operation, which should happen
+only if the drive does not have LBA48 support.  Now, I know you posted all
+of this nice info months ago, but let's see it again now, for the exact
+drive that is generating that specific message.  We need to see the output
+from "hdparm --Istdout /dev/sdX" for that drive.
 
+Thanks
