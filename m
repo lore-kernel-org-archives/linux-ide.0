@@ -1,28 +1,27 @@
-From: "Olivia" <Oliviab's@deliveryman.com>
-Subject: Rock hard manhood, multiple explosions and several times more semen volume
-Date: Fri, 14 Jul 2006 10:22:07 +0800
-Message-ID: <42004460100115.1477CF2630__7962.48704796216$1152843846$gmane$org@6SBNY>
+From: "Judy" <Judycarbonic@publicist.com>
+Subject: Most quality products for anyone who wants to become a champion in bed
+Date: Fri, 14 Jul 2006 11:28:26 +0900
+Message-ID: <90410390887099.E8425737E3@F9ETI5R>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [58.62.45.87] ([58.62.45.87]:33040 "EHLO
-	9tl5ai3.ouihr.adelphia.net") by vger.kernel.org with ESMTP
-	id S1161210AbWGNCX3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Jul 2006 22:23:29 -0400
+Received: from [210.127.219.124] ([210.127.219.124]:34825 "EHLO
+	nocec.weg3a6.aol.com") by vger.kernel.org with ESMTP
+	id S1161216AbWGNC3E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Jul 2006 22:29:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-kernel-owner@vger.kernel.org
 
-Good day,
+Good day to you Sir!
 
-Rock hard manhood, multiple explosions and several times more semen volume
 Enhanced male power and unlimited prowess with your girl The best products for the winning guys
- http://www.icicledid.com
+Make other men envy you and girls worship you Most efficient products for men
+ http://www.entirelyjb.com
 
-
-For by means of a whorish woman a man is brought to a piece of bread: and the adultress will hunt for the precious life. Too much sit down ah bruck trousers. Love many, trust few, but always paddle your own canoe
- Nah because dog ah play with yuh he nah bite yuh. Every Soldier has the Baton of a Field Marshal in his Knapsack
+When Mumma dead family done. Better to light a candle than to curse the darkness Keep your eyes on the stars, and your feet on the ground  Go to heaven for the climate and hell for the company 
+ Don't byte off more than you can view..
 
 
