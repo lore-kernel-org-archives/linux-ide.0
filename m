@@ -1,49 +1,51 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: LibPATA code issues / 2.6.17.3 (What is the next step?)
-Date: Fri, 14 Jul 2006 13:18:32 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607141318040.1687@p34.internal.lan>
-References: <Pine.LNX.4.64.0602140439580.3567@p34>  <44AEB3CA.8080606@pobox.com>
-  <Pine.LNX.4.64.0607071520160.2643@p34.internal.lan>  <200607091224.31451.liml@rtr.ca>
-  <Pine.LNX.4.64.0607091327160.23992@p34.internal.lan>
- <Pine.LNX.4.64.0607091612060.3886@p34.internal.lan>
- <Pine.LNX.4.64.0607091638220.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091645480.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091704250.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607091802460.2696@p34.internal.lan>
- <Pine.LNX.4.64.0607100958540.3591@p34.internal.lan>
- <1152545639.27368.137.camel@localhost.localdomain>
- <Pine.LNX.4.64.0607101145030.3591@p34.internal.lan>
- <Pine.LNX.4.64.0607110926150.858@p34.internal.lan> <44B7D168.2080304@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Errors and resets using sata_promise and libata 1.20
+Date: Fri, 14 Jul 2006 13:31:16 -0400
+Message-ID: <44B7D4E4.4000607@rtr.ca>
+References: <1152725383.23607.5637.camel@girvin.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:1242 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S1422648AbWGNRSd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jul 2006 13:18:33 -0400
-In-Reply-To: <44B7D168.2080304@rtr.ca>
+Received: from rtr.ca ([64.26.128.89]:48575 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1422666AbWGNRbR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jul 2006 13:31:17 -0400
+In-Reply-To: <1152725383.23607.5637.camel@girvin.pmc-sierra.bc.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Sander <sander@humilis.net>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Erik Frederiksen <erik_frederiksen@pmc-sierra.com>
+Cc: linux-ide@vger.kernel.org
 
-They are Western Digital 400* drives.
+Erik Frederiksen wrote:
+> Hi everyone.  Quite regularly I get these messages popping up when I'm
+> rebuilding a raid5.
+> 
+> ata2: status=0x50 { DriveReady SeekComplete }
+> sdb: Current: sense key=0x0
+>     ASC=0x0 ASCQ=0x0
+..
+> Is this a matter of shutting up a superfluous message, or is something
+> more sinister going on here?
 
-[4294678.049000]   Vendor: ATA       Model: WDC WD4000KD-00N  Rev: 01.0
-[4294678.050000]   Vendor: ATA       Model: WDC WD4000KD-00N  Rev: 01.0
+It is a bug in how libata (prior to 2.6.18, at least) handles errors.
+The interrupt handler reads the ATA status (0x51) with the ERR bit set,
+and signals that something went wrong.
 
-On a SiL controller, it also happens when they are on a promise controller 
-too.
+Then the LLD in some cases resets the channel to clear the controller
+state machine, but this also clears the ERR bit, giving status 0x50
+(I believe there to be other paths to the same result as well, but have
+not yet had time to investigate further).
+
+Then later in handling of the same failed command, the libata-scsi layer
+finally has to report the error upstream, but by now it only sees 0x50
+and has no idea what went wrong.
+
+And people like you and I get very confused by the bogus error mis-report.
+
+Dunno (yet) if 2.6.18 has the same bugs.
+
+Cheers
 
 
-On Fri, 14 Jul 2006, Mark Lord wrote:
 
-> Justin Piszcz wrote:
->> 
->> opcode=0x35 & opcode=0xca
->
-> Those are non-DMA WRITE opcodes.  Using PIO for I/O is pretty rare these 
-> days,
-> so I'm betting that this is not a hard disk device -- compactflash?
->
-> -ml
->
+
