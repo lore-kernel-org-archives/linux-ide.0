@@ -1,44 +1,44 @@
-From: Mark Lord <liml@rtr.ca>
+From: Sven Riedel <sr@gimp.org>
 Subject: Re: Errors and resets using sata_promise and libata 1.20
-Date: Sat, 15 Jul 2006 09:08:38 -0400
-Message-ID: <44B8E8D6.8020903@rtr.ca>
-References: <1152725383.23607.5637.camel@girvin.pmc-sierra.bc.ca> <44B7D4E4.4000607@rtr.ca> <20060715065001.GA11832@localnet>
+Date: Sat, 15 Jul 2006 15:20:13 +0200
+Message-ID: <20060715132012.GA18761@localnet>
+References: <1152725383.23607.5637.camel@girvin.pmc-sierra.bc.ca> <44B7D4E4.4000607@rtr.ca> <20060715065001.GA11832@localnet> <44B8E8D6.8020903@rtr.ca>
+Reply-To: sr@gimp.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3507 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1161281AbWGONIk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Jul 2006 09:08:40 -0400
-In-Reply-To: <20060715065001.GA11832@localnet>
+Received: from mail.kamp-dsl.de ([195.62.99.42]:13538 "HELO
+	mailout.kamp-dsl.de") by vger.kernel.org with SMTP id S1946035AbWGONUR
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 15 Jul 2006 09:20:17 -0400
+Received: from dsl-mail.kamp.net (mail.kamp-dsl.de [195.62.99.42])
+	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with SMTP
+	id 110C72582ABB-0
+	for <linux-ide@vger.kernel.org>; Sat, 15 Jul 2006 13:20:16 +0000
+Received: from mx01.kamp-dsl.de (mail.kamp-dsl.de [195.62.99.42])
+	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with ESMTP
+	id 110C72582A1D-0
+	for <linux-ide@vger.kernel.org>; Sat, 15 Jul 2006 13:20:15 +0000
+Content-Disposition: inline
+In-Reply-To: <44B8E8D6.8020903@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sr@gimp.org
-Cc: Erik Frederiksen <erik_frederiksen@pmc-sierra.com>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: sr@gimp.org, linux-ide@vger.kernel.org
 
-Sven Riedel wrote:
-> On Fri, Jul 14, 2006 at 01:31:16PM -0400, Mark Lord wrote:
->>> ata2: status=0x50 { DriveReady SeekComplete }
->>> sdb: Current: sense key=0x0
->>>    ASC=0x0 ASCQ=0x0
->> [...]
->> Then the LLD in some cases resets the channel to clear the controller
->> state machine, but this also clears the ERR bit, giving status 0x50
->> (I believe there to be other paths to the same result as well, but have
->> not yet had time to investigate further).
->>
->> Then later in handling of the same failed command, the libata-scsi layer
->> finally has to report the error upstream, but by now it only sees 0x50
->> and has no idea what went wrong.
+> >Is there a patch somewhere that didn't make it into the kernel yet, that we
+> >can try?
 > 
-> Is there a patch somewhere that didn't make it into the kernel yet, that we
-> can try?
+> No.  And it's quite unfortunate, as this bug prevents proper error handling
+> by the SCSI layer, since libata doesn't accurately report what problem it 
+> saw.
+> 
 
-No.  And it's quite unfortunate, as this bug prevents proper error handling
-by the SCSI layer, since libata doesn't accurately report what problem it saw.
+Ok. Well, since I can duplicate the exact same error here consistently, I'll
+grab 2.6.18rc1 and report back if I can reproduce the error there or not.
 
-The 2.6.18 libata EH is reputedly much improved, but may still have the same
-bug (LLD reads/discards status, requiring libata-core to re-read it again after
-it may have changed).
+Regs,
+Sven
 
-Cheers
+-- 
+Sven Riedel                      sr@gimp.org
