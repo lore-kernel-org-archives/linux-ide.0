@@ -1,35 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata:  PHY reset requires writing 0x4 to SControl
-Date: Sun, 16 Jul 2006 12:27:26 +0900
-Message-ID: <44B9B21E.70900@gmail.com>
-References: <20060705190613.GD16658@bork.org>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: tighten ATA kconfig dependancies
+Date: Sun, 16 Jul 2006 07:58:57 +0200
+Message-ID: <20060716055857.GA29733@mars.ravnborg.org>
+References: <6yL2J-7rR-1@gated-at.bofh.it> <6yLco-7DB-1@gated-at.bofh.it> <E1G1p1y-0000ZU-Io@be1.lrz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.202]:59085 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S964850AbWGPD0K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Jul 2006 23:26:10 -0400
-Received: by nz-out-0102.google.com with SMTP id x7so312429nzc
-        for <linux-ide@vger.kernel.org>; Sat, 15 Jul 2006 20:26:09 -0700 (PDT)
-In-Reply-To: <20060705190613.GD16658@bork.org>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:33242 "EHLO pasmtp.tele.dk")
+	by vger.kernel.org with ESMTP id S1750739AbWGPF64 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Jul 2006 01:58:56 -0400
+Content-Disposition: inline
+In-Reply-To: <E1G1p1y-0000ZU-Io@be1.lrz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Hicks <mort@bork.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: 7eggert@gmx.de
+Cc: Arjan van de Ven <arjan@infradead.org>, Dave Jones <davej@redhat.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Martin Hicks wrote:
-> Hi,
+On Sat, Jul 15, 2006 at 08:38:01PM +0200, Bodo Eggert wrote:
+> >> A lot of prehistoric junk shows up on x86-64 configs.
+> > 
+> > ... but in general it helps compile testing if you're hacking stuff;
+> > if your hacking IDE on x86-64 you now have to compile 32 bit as well to
+> > see if you didn't break the compile for these as well
+> > 
+> > So please don't do this, just disable them in your config...
 > 
-> Reading the Intel VSC and AHCI it seems like writing 0x302 is incorrect.
-> The only valid values are 4, 1 and 0.  Writing 4 disables the
-> PHY.
-> 
-> Signed-off-by: Martin Hicks <mort@bork.org>
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+> If you want to compile test these drivers, just revert the patch or edit
+> the .config.
+Editing .config will not do the trick. kconfig will make sure the kernel
+is build with a valid config so they will get turned off.
 
-Thanks for spotting this.
+A cross compile toolchain is the only real soluion. Otherwise we would
+soon end up with far to many drivers selectable for x84-64.
 
--- 
-tejun
+	Sam
