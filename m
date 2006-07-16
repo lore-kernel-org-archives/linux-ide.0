@@ -1,71 +1,53 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: tighten ATA kconfig dependancies
-Date: Sun, 16 Jul 2006 11:13:33 +0200
-Message-ID: <20060716091332.GW3633@stusta.de>
-References: <20060715053418.GA5557@redhat.com> <1152942548.3114.4.camel@laptopd505.fenrus.org> <20060715063827.GA24579@mars.ravnborg.org> <1152945956.3114.6.camel@laptopd505.fenrus.org> <20060715102825.GR3633@stusta.de> <1152961003.3114.15.camel@laptopd505.fenrus.org>
+From: Sven Riedel <sr@gimp.org>
+Subject: Re: Errors and resets using sata_promise and libata 1.20
+Date: Sun, 16 Jul 2006 09:13:38 +0200
+Message-ID: <20060716071338.GA12932@localnet>
+References: <1152725383.23607.5637.camel@girvin.pmc-sierra.bc.ca> <44B7D4E4.4000607@rtr.ca> <20060715065001.GA11832@localnet> <44B8E8D6.8020903@rtr.ca> <20060715132012.GA18761@localnet> <87f94c370607150631g6f91d6fav511cdd8411b39af5@mail.gmail.com>
+Reply-To: sr@gimp.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:61969 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1750789AbWGPJNq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Jul 2006 05:13:46 -0400
+Received: from mail.kamp-dsl.de ([195.62.99.42]:60310 "HELO
+	mailout.kamp-dsl.de") by vger.kernel.org with SMTP id S1750710AbWGPRqA
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Jul 2006 13:46:00 -0400
+Received: from dsl-mail.kamp.net (mail.kamp-dsl.de [195.62.99.42])
+	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with SMTP
+	id 110C7871CBF1-0
+	for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 17:45:59 +0000
+Received: from mx01.kamp-dsl.de (mail.kamp-dsl.de [195.62.99.42])
+	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with ESMTP
+	id 110C7871CB79-0
+	for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 17:45:58 +0000
 Content-Disposition: inline
-In-Reply-To: <1152961003.3114.15.camel@laptopd505.fenrus.org>
+In-Reply-To: <87f94c370607150631g6f91d6fav511cdd8411b39af5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Sam Ravnborg <sam@ravnborg.org>, Dave Jones <davej@redhat.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: sr@gimp.org, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-On Sat, Jul 15, 2006 at 12:56:43PM +0200, Arjan van de Ven wrote:
+On Sat, Jul 15, 2006 at 09:31:01AM -0400, Greg Freemyer wrote:
+> On 7/15/06, Sven Riedel <sr@gimp.org> wrote:
+> >Ok. Well, since I can duplicate the exact same error here consistently, 
+> >I'll
+> >grab 2.6.18rc1 and report back if I can reproduce the error there or not.
+> >
+> If you don't want to try the whole 2.6.18.rc1 kernel, the new EH is
+> available as a big patch for 2.6.17
 > 
-> > > the point is that it doesn't fall out naturally, and thus things get
-> > > needlessly missed.
-> > 
-> > It seems the main question is:
-> > Is the kernel configuration mainly designed for users or for developers?
-> > 
-> > For users, showing drivers for hardware that is not present on their 
-> > platform only causes confusion.
-> 
-> well Aunt Tilly gets confused by all hardware that is not present on her
-> machine; she has no idea what a platform is. By that reasoning, we
-> should make kconfig hide all non-present hardware.
-> 
-> Also I think there is no difference in confusion between showing 10 or
-> 15 IDE chipsets. Either the user knows what he has (and then it doesn't
-> matter) or those 10 are too much already.
 
-It's not about Aunt Tilly, it's about an average systems administrator 
-compiling his own kernel.
+Well, I got the 2.6.18rc1 kernel and found that I could copy three times the
+amount of data onto the array without triggering the error message. So it
+looks like that bug got squashed.
 
-And there are already too many options visible, and the result are real 
-world problems - I've seen it too often that someone didn't compile the 
-support for his IDE chipset into the kernel. And this specific patch is 
-only a small part of the general issue.
+OTOH, reading more than a few megabytes from an LVM logical volume crashed the
+computer so hard, it didn't even have time to throw out a kernel panic (I
+don't have a serial console, so I don't know about that. And I realize LVM
+stuff is a different mailinglist, just a heads up for people who want to grab
+the rc1 tree and run with it - try the patch instead).
 
-The situation was different if only developers and distributions would 
-compile kernels, but that's not what's happening in the real world. 
-Kernel developers are only a tiny minority amongst the people 
-configuring and compiling their own kernel.
-
-And if the "compile coverage" point was meant seriously, we'd also need 
-some dummy #define's for getting all currently BROKEN_ON_SMP options 
-compiling with CONFIG_SMP=y since in my experience they are getting
-nearly zero compile coverage since it seems the "compile coverage" crowd 
-only blindly runs allmdconfig/allyesconfig.
-
-I'm often reporting and sometimes fixing compile errors, but that's OK.
-Compile errors are really obvious errors (compared to e.g. runtime 
-corruptions), and therefore not a real problem.
-
-cu
-Adrian
+Regs,
+Sven
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Sven Riedel                      sr@gimp.org
