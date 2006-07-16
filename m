@@ -1,53 +1,61 @@
-From: Sven Riedel <sr@gimp.org>
-Subject: Re: Errors and resets using sata_promise and libata 1.20
-Date: Sun, 16 Jul 2006 09:13:38 +0200
-Message-ID: <20060716071338.GA12932@localnet>
-References: <1152725383.23607.5637.camel@girvin.pmc-sierra.bc.ca> <44B7D4E4.4000607@rtr.ca> <20060715065001.GA11832@localnet> <44B8E8D6.8020903@rtr.ca> <20060715132012.GA18761@localnet> <87f94c370607150631g6f91d6fav511cdd8411b39af5@mail.gmail.com>
-Reply-To: sr@gimp.org
+From: "Randy Dunlap" <rdunlap@xenotime.net>
+Subject: Re: tighten ATA kconfig dependancies
+Date: Sun, 16 Jul 2006 11:14:22 -0700
+Message-ID: <1153073662.7604@shark.he.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kamp-dsl.de ([195.62.99.42]:60310 "HELO
-	mailout.kamp-dsl.de") by vger.kernel.org with SMTP id S1750710AbWGPRqA
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Jul 2006 13:46:00 -0400
-Received: from dsl-mail.kamp.net (mail.kamp-dsl.de [195.62.99.42])
-	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with SMTP
-	id 110C7871CBF1-0
-	for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 17:45:59 +0000
-Received: from mx01.kamp-dsl.de (mail.kamp-dsl.de [195.62.99.42])
-	by sponts.dsl-backup.kamp.de (SPONTS v6.3.6) with ESMTP
-	id 110C7871CB79-0
-	for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 17:45:58 +0000
-Content-Disposition: inline
-In-Reply-To: <87f94c370607150631g6f91d6fav511cdd8411b39af5@mail.gmail.com>
+Received: from xenotime.net ([66.160.160.81]:37799 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751139AbWGPSOY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Jul 2006 14:14:24 -0400
+Received: from shark.he.net ([127.0.0.9]) by xenotime.net for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 11:14:22 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: sr@gimp.org, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>, Arjan van de Ven <arjan@infradead.org>, Sam Ravnborg <sam@ravnborg.org>, Dave Jones <davej@redhat.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-On Sat, Jul 15, 2006 at 09:31:01AM -0400, Greg Freemyer wrote:
-> On 7/15/06, Sven Riedel <sr@gimp.org> wrote:
-> >Ok. Well, since I can duplicate the exact same error here consistently, 
-> >I'll
-> >grab 2.6.18rc1 and report back if I can reproduce the error there or not.
-> >
-> If you don't want to try the whole 2.6.18.rc1 kernel, the new EH is
-> available as a big patch for 2.6.17
+
+
+> On Sat, Jul 15, 2006 at 08:45:56AM +0200, Arjan van de Ven wrote:
+> > On Sat, 2006-07-15 at 08:38 +0200, Sam Ravnborg wrote:
+> > > On Sat, Jul 15, 2006 at 07:49:08AM +0200, Arjan van de Ven wrote:
+> > > > On Sat, 2006-07-15 at 01:34 -0400, Dave Jones wrote:
+> > > > > A lot of prehistoric junk shows up on x86-64 configs.
+> > > > 
+> > > > 
+> > > > ... but in general it helps compile testing if you're hacking stuff;
+> > > > if your hacking IDE on x86-64 you now have to compile 32 bit as
+well to
+> > > > see if you didn't break the compile for these as well
+> > > > 
+> > > > So please don't do this, just disable them in your config...
+> > > 
+> > > An i686 cross compile chain seems to be the natural choice here
+> > 
+> > the point is that it doesn't fall out naturally, and thus things get
+> > needlessly missed.
 > 
+> It seems the main question is:
+> Is the kernel configuration mainly designed for users or for developers?
+> 
+> For users, showing drivers for hardware that is not present on their 
+> platform only causes confusion.
+> 
+> Only developers who want to do compile tests could benefit from 
+> compiling such drivers.
+> 
+> IMHO the kernel configuration is mainly designed for users.
 
-Well, I got the 2.6.18rc1 kernel and found that I could copy three times the
-amount of data onto the array without triggering the error message. So it
-looks like that bug got squashed.
+or at least should be.
 
-OTOH, reading more than a few megabytes from an LVM logical volume crashed the
-computer so hard, it didn't even have time to throw out a kernel panic (I
-don't have a serial console, so I don't know about that. And I realize LVM
-stuff is a different mailinglist, just a heads up for people who want to grab
-the rc1 tree and run with it - try the patch instead).
+> We could do some kind of (X86_32 || DEVELOPER_COMPILE_TEST).
 
-Regs,
-Sven
+Let's not complicate it more.
 
--- 
-Sven Riedel                      sr@gimp.org
+> Or simply disable this driver on other platforms - these are only 
+> compile errors and amongst all possible problems in the kernel compile 
+> errors are amongst my least worries (obvious error, usually quickly 
+> fixed after the first bug report).
+
+
+---
+~Randy
