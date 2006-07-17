@@ -1,159 +1,98 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 11/12] ahci: implement link powersave
-Date: Mon, 17 Jul 2006 15:52:32 +0900
-Message-ID: <11531191523232-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/12] sata_sil24: implement link powersave
+Date: Mon, 17 Jul 2006 15:52:33 +0900
+Message-ID: <11531191523313-git-send-email-htejun@gmail.com>
 References: <11531191512028-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:20072 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.176]:23400 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932337AbWGQGvy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S932338AbWGQGvy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Mon, 17 Jul 2006 02:51:54 -0400
-Received: by py-out-1112.google.com with SMTP id x31so3883137pye
-        for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 23:51:20 -0700 (PDT)
+Received: by py-out-1112.google.com with SMTP id x31so3883142pye
+        for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 23:51:21 -0700 (PDT)
 In-Reply-To: <11531191512028-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement link powersave.  AHCI can initiate transition to powersave
-mode but doesn't use standard SControl SPM field.  It uses ICC field
-in PORT_CMD register.  As PHY RDY changed interrupt can trigger during
-dynamic link powersave, it needs to be turned off while dynamic
-powersave is active.  All other can be taken care of by standard
-helpers.
+Implement link powersave.  sata_sil24 is mostly compliant with the
+standard and standard methods can do everything other than plugging
+PHY RDY changed IRQ.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/ahci.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 66 insertions(+), 0 deletions(-)
+ drivers/scsi/sata_sil24.c |   22 +++++++++++++++++++++-
+ 1 files changed, 21 insertions(+), 1 deletions(-)
 
-14143d016b88395ffcec7be07ffa99d652a3353d
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 77e7202..b5fe19a 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -92,6 +92,8 @@ enum {
- 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
+600172dbafec31447eaee86ca91a3aa8370fbc47
+diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
+index 2e0f4a4..0b5c3f1 100644
+--- a/drivers/scsi/sata_sil24.c
++++ b/drivers/scsi/sata_sil24.c
+@@ -230,7 +230,8 @@ enum {
+ 	/* host flags */
+ 	SIL24_COMMON_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-				  ATA_FLAG_NCQ | ATA_FLAG_SKIP_D2H_BSY,
++				  ATA_FLAG_NCQ | ATA_FLAG_SKIP_D2H_BSY |
++				  ATA_FLAG_HIPS | ATA_FLAG_DIPS,
+ 	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
  
- 	/* HOST_CAP bits */
-+	HOST_CAP_PARTIAL	= (1 << 13), /* Partial state support */
-+	HOST_CAP_SLUMBER	= (1 << 14), /* Slumber state support */
- 	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
- 	HOST_CAP_NCQ		= (1 << 30), /* Native Command Queueing */
- 	HOST_CAP_64		= (1 << 31), /* PCI DAC (64-bit DMA) support */
-@@ -158,6 +160,7 @@ enum {
- 	PORT_CMD_ICC_ACTIVE	= (0x1 << 28), /* Put i/f in active state */
- 	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
- 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
-+	PORT_CMD_ICC_MASK	= (0xf << 28),
+ 	IRQ_STAT_4PORTS		= 0xf,
+@@ -335,6 +336,7 @@ static void sil24_freeze(struct ata_port
+ static void sil24_thaw(struct ata_port *ap);
+ static void sil24_error_handler(struct ata_port *ap);
+ static void sil24_post_internal_cmd(struct ata_queued_cmd *qc);
++static void sil24_set_powersave(struct ata_port *ap, int ps_state);
+ static int sil24_port_start(struct ata_port *ap);
+ static void sil24_port_stop(struct ata_port *ap);
+ static void sil24_host_stop(struct ata_host_set *host_set);
+@@ -405,6 +407,8 @@ static const struct ata_port_operations 
+ 	.error_handler		= sil24_error_handler,
+ 	.post_internal_cmd	= sil24_post_internal_cmd,
  
- 	/* hpriv->flags bits */
- 	AHCI_FLAG_MSI		= (1 << 0),
-@@ -212,6 +215,7 @@ static void ahci_freeze(struct ata_port 
- static void ahci_thaw(struct ata_port *ap);
- static void ahci_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
-+static void ahci_set_powersave(struct ata_port *ap, int ps_state);
- static void ahci_remove_one (struct pci_dev *pdev);
- 
- static struct scsi_host_template ahci_sht = {
-@@ -257,6 +261,8 @@ static const struct ata_port_operations 
- 	.error_handler		= ahci_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
- 
-+	.set_powersave		= ahci_set_powersave,
++	.set_powersave		= sil24_set_powersave,
 +
- 	.port_start		= ahci_port_start,
- 	.port_stop		= ahci_port_stop,
- };
-@@ -913,6 +919,9 @@ static void ahci_host_intr(struct ata_po
- 	status = readl(port_mmio + PORT_IRQ_STAT);
- 	writel(status, port_mmio + PORT_IRQ_STAT);
+ 	.port_start		= sil24_port_start,
+ 	.port_stop		= sil24_port_stop,
+ 	.host_stop		= sil24_host_stop,
+@@ -764,6 +768,10 @@ static void sil24_error_intr(struct ata_
+ 	irq_stat = readl(port + PORT_IRQ_STAT);
+ 	writel(irq_stat, port + PORT_IRQ_STAT);
  
++	/* ignore PHYRDY_CHG during dynamic powersave */
 +	if (ata_ps_dynamic(ap->ps_state))
-+		status &= ~PORT_IRQ_PHYRDY;
++		irq_stat &= ~PORT_IRQ_PHYRDY_CHG;
 +
- 	if (unlikely(status & PORT_IRQ_ERROR)) {
- 		ahci_error_intr(ap, status);
- 		return;
-@@ -1077,6 +1086,60 @@ static void ahci_post_internal_cmd(struc
- 	}
+ 	/* first, analyze and record host port events */
+ 	ata_ehi_clear_desc(ehi);
+ 
+@@ -928,6 +936,18 @@ static void sil24_post_internal_cmd(stru
+ 		sil24_init_port(ap);
  }
  
-+static void ahci_update_sctl_spm(struct ata_port *ap, u8 sctl_spm,
-+				 int may_push_sctl)
++static void sil24_set_powersave(struct ata_port *ap, int ps_state)
 +{
-+	static const u32 icc_map[] = {
-+		[0x1]	= PORT_CMD_ICC_PARTIAL,
-+		[0x2]	= PORT_CMD_ICC_SLUMBER,
-+		[0x4]	= PORT_CMD_ICC_ACTIVE,
-+	};
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	u32 tmp;
-+
-+	tmp = readl(port_mmio + PORT_CMD);
-+
-+	/* proceed only if idle */
-+	if (!(tmp & PORT_CMD_ICC_MASK))
-+		writel(tmp | icc_map[sctl_spm], port_mmio + PORT_CMD);
-+}
-+
-+static unsigned long ahci_hips_timer_fn(struct ata_port *ap, int seq)
-+{
-+	u8 sctl_ipm = ata_scontrol_field(ap->scontrol, ATA_SCTL_IPM);
-+
-+	return sata_do_hips_timer_fn(ap, seq, sctl_ipm, ahci_update_sctl_spm);
-+}
-+
-+static void ahci_set_powersave(struct ata_port *ap, int ps_state)
-+{
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	struct ahci_host_priv *hpriv = ap->host_set->private_data;
-+	u8 sctl_ipm;
-+
-+	/* determine IPM */
-+	sctl_ipm = 0x3;
-+	if (hpriv->cap & HOST_CAP_PARTIAL)
-+		sctl_ipm &= ~0x1;
-+	if (hpriv->cap & HOST_CAP_SLUMBER)
-+		sctl_ipm &= ~0x2;
++	void __iomem *port = (void __iomem *)ap->ioaddr.cmd_addr;
 +
 +	/* turn off SError.N IRQ if entering dynamic powersave mode */
 +	if (ata_ps_dynamic(ps_state))
-+		writel(DEF_PORT_IRQ & ~PORT_IRQ_PHYRDY,
-+		       port_mmio + PORT_IRQ_MASK);
++		writel(PORT_IRQ_PHYRDY_CHG, port + PORT_IRQ_ENABLE_CLR);
 +
-+	/* do standard SATA set_powersave */
-+	if (ata_ps_dynamic(ps_state) == ATA_PS_HIPS) {
-+		ap->ps_timer_fn = ahci_hips_timer_fn;
-+		sata_determine_hips_params(ap, &sctl_ipm);
-+	}
-+
-+	sata_do_set_powersave(ap, ps_state, sctl_ipm, ahci_update_sctl_spm);
++	/* everything else can be done with standard SCR registers */
++	sata_std_set_powersave(ap, ps_state);
 +}
 +
- static void ahci_setup_port(struct ata_ioports *port, unsigned long base,
- 			    unsigned int port_idx)
+ static inline void sil24_cblk_free(struct sil24_port_priv *pp, struct device *dev)
  {
-@@ -1398,6 +1461,9 @@ static int ahci_init_one (struct pci_dev
- 	    (hpriv->cap & HOST_CAP_NCQ))
- 		probe_ent->host_flags |= ATA_FLAG_NCQ;
- 
-+	if (hpriv->cap & (HOST_CAP_PARTIAL | HOST_CAP_SLUMBER))
-+		probe_ent->host_flags |= ATA_FLAG_HIPS | ATA_FLAG_DIPS;
-+
- 	ahci_print_info(probe_ent);
- 
- 	/* FIXME: check ata_device_add return value */
+ 	const size_t cb_size = sizeof(*pp->cmd_block) * SIL24_MAX_CMDS;
 -- 
 1.3.2
 
