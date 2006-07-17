@@ -1,152 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Status of HPT372A driver?
-Date: Mon, 17 Jul 2006 23:06:38 +0400
-Message-ID: <44BBDFBE.10800@ru.mvista.com>
-References: <20060717142705.GS1485@earth.li> <44BBC75A.2000800@ru.mvista.com> <20060717182633.GX1485@earth.li>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751151AbWGQTHw@vger.kernel.org>
-In-Reply-To: <20060717182633.GX1485@earth.li>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: libata pata_pdc2027x success on sparc64
+Date: Tue, 18 Jul 2006 01:58:34 +0200 (MEST)
+Message-ID: <200607172358.k6HNwYhF002052@harpo.it.uu.se>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751244AbWGQX7B@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jonathan McDowell <noodles@earth.li>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: alan@redhat.com
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello.
+Alan & Albert,
 
-Jonathan McDowell wrote:
+I just tried the patch-2.6.17-ide1.gz libata PATA patch
+on a sparc64 box in which I had put an Ultra133TX2 PCI
+card (pdc20269) and an old 80GB IBM Deskstar disk. The
+results were excellent: did lots of I/O with no kernel
+errors, and I got about 45MB/s read speed at udma5.
 
->>Jonathan McDowell wrote:
+(A minor nit: the patch kit doesn't have a config option
+for pata_pdc2027x, so I had to hack one in. See below.)
 
->>>I recently acquired a HighPoint RocketRaid 1520 SATA controller (I know,
->>>I know, bad choice but I just need something to tide me over until I can
->>>upgrade to a motherboard with AHCI love). This presents as a HPT372A:
+In contrast, the old IDE pdc202xx_new driver had lots
+of problems with CRC errors causing it to disable DMA.
+I wasn't able to manually tune it above udma3 without
+getting more errors. This isn't sparc64-specific: I've
+had similar negative experience with the old IDE Promise
+drivers in a PowerMac.
 
->>>00:09.0 RAID bus controller: Triones Technologies, Inc. HPT372A/372N (rev 
->>>01)
->>>00:09.0 0104: 1103:0005 (rev 01)
+/Mikael
 
->>   Sigh, I had no chance to test the driver on this chip myself... And I 
->>   also haven't tried the driver on SATA drives at all... :-/
-
-> :(
-
-> I've had a try with libata and Alan Cox's 2.6.17-ide1 patch (I'd
-> previously tried this and had issues, which turned out to be a faulty
-> drive I think). This seems to get better results (sda is the same drive
-> as was hde earlier):
-
-    I wouldn't be so sure about the faulty drive. ;-)
-    However, I haven't looked at the Alan's recent libata driver yet. 
-Unfortunately, I've been severely distracted from IDE stuff for the last 
-couple months... :-/
-
-> /dev/sda:
->  Timing cached reads:   1084 MB in  2.01 seconds = 540.41 MB/sec
->  Timing buffered disk reads:  166 MB in  3.00 seconds =  55.25 MB/sec
-
-> I imagine this is due to:
-
-> libata version 1.20 loaded.
-> pata_hpt37x: BIOS has not set timing clocks.
-> hpt37x: HPT372A: Bus clock 33MHz.
-> ata1: PATA max UDMA/133 cmd 0xA000 ctl 0xA402 bmdma 0xB000 irq 11
-> ata2: PATA max UDMA/133 cmd 0xA800 ctl 0xAC02 bmdma 0xB008 irq 11
-> ata1: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023 88:407f
-> ata1: dev 0 ATA-7, max UDMA/133, 488397168 sectors: LBA48
-> Find mode for 12 reports C829C62
-> Find mode for DMA 70 reports 1C81DC62
-> ata1: dev 0 configured for UDMA/133
-
-> ie it's configuring for UDMA/133 as expected.
-
-    Well, my version of driver should have UDMA133 working faster than the 
-original driver due to the switch to 66 MHz DPLL clocking... And it looks like 
-pata_hpt37x driver is still using the PCI clock, so should be slower too.
-
-> The hpt366 driver was stable (I copied 100+G of data with cp/rsync and
-> it was fine); I've only been running this one (marked "Raving Lunatic"
-
-    It may be not as bad. :-)
-
-> in the Kconfig) for 5 minutes, so I'll see how it goes. I'm happy to try
-> out anything you might want for the hpt366 driver though.
-
-   It looks like this is not the driver problem so far, read on...
-
->>>The 2.6.17 hpt366.c driver is at version 0.36. I also found your patches
->>>to l-k earlier this year, but I'm not sure whether I got them all as I
->>>had some rejects; I ended up with a version 1.00 driver as at:
-
->>   Some patch was recast, maybe this was the reason...
-
->>>http://the.earth.li/~noodles/hpt366.c
-
->>   I'm surprised that this has even compiled! It has check_in_drive_lists() 
->>defined twice...
-
-> No, it has it once (unused) - the used instance is check_in_drive_list()
-
->>>Is there somewhere I can get your latest work without having to try to
->>>pick the right patches from the l-k archives?
-
->>   You may find the summary patch in the -mm tree
-
-> Right, I found this shortly after I sent my first mail, but it's not a
-> lot different from what I'm running AFAICT (changes from min to min_t
-> and the removal of the unused check_in_drive_lists).
-
-    Ah, I forgot that I renamed it. :-)
-
->>   Output of hdparm -iI /dev/hde would also be helpful.
-
-> /dev/hde:
-
->  Model=WDC WD2500KS-00MJB0, FwRev=02.01C03, SerialNo=WD-WCANK3255074
->  Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGapReq }
->  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=50
->  BuffType=unknown, BuffSize=16384kB, MaxMultSect=16, MultSect=16
->  CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
->  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
->  PIO modes:  pio0 pio3 pio4
->  DMA modes:  mdma0 mdma1 mdma2
->  UDMA modes: udma0 udma1 *udma2
- >
->  AdvancedPM=no WriteCache=enabled
->  Drive conforms to: Unspecified:  ATA/ATAPI-1 ATA/ATAPI-2 ATA/ATAPI-3 ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATAPI-6 ATA/ATAPI-7
-> 
->  * signifies the current active mode
-
-    And the shortened UDMA mode list signifies 40c cable...
-
-> Capabilities:
->         LBA, IORDY(can be disabled)
->         Standby timer values: spec'd by Standard, with device specific minimum
->         R/W multiple sector transfer: Max = 16  Current = 16
->         Recommended acoustic management value: 128, current value: 254
->         DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 udma3 udma4 udma5 udma6
-
-    Now this is UDMA133 capable drive. Well, I know it's actually capable of 
-300 MiB/s . :-)
-
-> Security:
->         Master password revision code = 65534
->                 supported
->         not     enabled
->         not     locked
->         not     frozen
->         not     expired: security count
->         not     supported: enhanced erase
-> Checksum: correct
-
-    No "HW reset results" -- SATA drives don't have valid word 93 as it seems, 
-and so the eighty_ninty_three() returns 0 meaning that the device reports 40c 
-PATA cable.
-    I think you need to try this 2.6.18-rc1 patch from Alan:
-
-http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1a1276e7b6cba549553285f74e87f702bfff6fac
-
-> J.
-
-WBR, Sergei
+--- linux-2.6.17/drivers/scsi/Kconfig.~1~	2006-07-17 23:30:25.000000000 +0200
++++ linux-2.6.17/drivers/scsi/Kconfig	2006-07-17 23:39:25.000000000 +0200
+@@ -843,6 +843,10 @@ config SCSI_PATA_PDC_OLD
+ 
+ 	  If unsure, say N.
+ 
++config SCSI_PATA_PDC_NEW
++	tristate "Newer Promise PATA controller support (Raving Lunatic)"
++	depends on SCSI_SATA && PCI && EXPERIMENTAL
++
+ config SCSI_PATA_QDI
+ 	tristate "QDI VLB PATA support"
+ 	depends on SCSI_SATA
+--- linux-2.6.17/drivers/scsi/Makefile.~1~	2006-07-17 23:30:25.000000000 +0200
++++ linux-2.6.17/drivers/scsi/Makefile	2006-07-17 23:40:06.000000000 +0200
+@@ -161,6 +161,7 @@ obj-$(CONFIG_SCSI_PATA_OPTI)	+= libata.o
+ obj-$(CONFIG_SCSI_PATA_OPTIDMA)	+= libata.o pata_optidma.o
+ obj-$(CONFIG_SCSI_PATA_PCMCIA)	+= libata.o pata_pcmcia.o
+ obj-$(CONFIG_SCSI_PATA_PDC_OLD)	+= libata.o pata_pdc202xx_old.o
++obj-$(CONFIG_SCSI_PATA_PDC_NEW)	+= libata.o pata_pdc2027x.o
+ obj-$(CONFIG_SCSI_PATA_QDI)	+= libata.o pata_qdi.o
+ obj-$(CONFIG_SCSI_PATA_RADISYS)	+= libata.o pata_radisys.o
+ obj-$(CONFIG_SCSI_PATA_RZ1000)	+= libata.o pata_rz1000.o
