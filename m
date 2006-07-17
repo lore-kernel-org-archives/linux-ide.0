@@ -1,293 +1,165 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/12] libata: implement powersave timer
-Date: Mon, 17 Jul 2006 15:52:32 +0900
-Message-ID: <11531191522801-git-send-email-htejun@gmail.com>
-References: <11531191512028-git-send-email-htejun@gmail.com>
+Subject: [PATCH 3/3] libata: add hp-poll support to controllers without hotplug interrupts
+Date: Mon, 17 Jul 2006 16:00:49 +0900
+Message-ID: <11531196492681-git-send-email-htejun@gmail.com>
+References: <11531196483920-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:65383 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932340AbWGQGvz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Jul 2006 02:51:55 -0400
-Received: by py-out-1112.google.com with SMTP id x31so3883143pye
-        for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 23:51:21 -0700 (PDT)
-In-Reply-To: <11531191512028-git-send-email-htejun@gmail.com>
+Received: from nz-out-0102.google.com ([64.233.162.197]:31080 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932363AbWGQG7b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Jul 2006 02:59:31 -0400
+Received: by nz-out-0102.google.com with SMTP id x7so399152nzc
+        for <linux-ide@vger.kernel.org>; Sun, 16 Jul 2006 23:59:31 -0700 (PDT)
+In-Reply-To: <11531196483920-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement powersave timer.  It is primarily for OS-driven HIPS
-implementation but can be used for any other PS purpose LLD sees fit.
-During normal operation, PS timer is automatically started with
-timeout ap->ps_timeout on port idle and stopped when the port becomes
-busy.  The timer is also stopped while EH.
+This patch adds hp-poll support to the following drivers.
 
-To minimize overhead and allow easy implementation of expected
-operation model, ata_ps_timer_worker() is used as timer callback which
-invokes LLD supplied ap->ps_timer_fn() if condition meets and also
-helps implementing sequenced multi-step operation.
+* sata_nv (generic)
+* sata_sis
+* sata_svw
+* sata_uli
+* sata_via
+* sata_vsc
+
+All the above drivers currently don't support hotplug interrupts (H/W
+restrictions or lack of doc/effort) and all hotplug operations should
+be done via hp-poll; thus, ATA_FLAG_HP_POLLING is set for these
+drivers.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   90 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/libata-eh.c   |   19 +++++++++
- drivers/scsi/libata.h      |    1 
- include/linux/libata.h     |    8 ++++
- 4 files changed, 116 insertions(+), 2 deletions(-)
+ drivers/scsi/sata_nv.c  |    5 ++++-
+ drivers/scsi/sata_sis.c |    5 ++++-
+ drivers/scsi/sata_svw.c |    4 +++-
+ drivers/scsi/sata_uli.c |    6 +++++-
+ drivers/scsi/sata_vsc.c |    4 +++-
+ 5 files changed, 19 insertions(+), 5 deletions(-)
 
-aa69e4ca8379e6db85e133f8e25bba00961201c7
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index b968b44..1658cd1 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -4425,13 +4425,15 @@ void ata_qc_complete(struct ata_queued_c
- 	 * taken care of.
- 	 */
- 	if (ap->ops->error_handler) {
-+		int internal = ata_tag_internal(qc->tag);
-+
- 		WARN_ON(ap->pflags & ATA_PFLAG_FROZEN);
+3a5e2866b5e69d113c1a7740969b9847ed41b545
+diff --git a/drivers/scsi/sata_nv.c b/drivers/scsi/sata_nv.c
+index cdf3b65..7bd9305 100644
+--- a/drivers/scsi/sata_nv.c
++++ b/drivers/scsi/sata_nv.c
+@@ -189,6 +189,8 @@ static const struct ata_port_operations 
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= nv_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
+ 	.data_xfer		= ata_pio_data_xfer,
+ 	.irq_handler		= nv_generic_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+@@ -261,7 +263,8 @@ static struct ata_port_info nv_port_info
+ 	/* generic */
+ 	{
+ 		.sht		= &nv_sht,
+-		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++		.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++				  ATA_FLAG_HP_POLLING,
+ 		.pio_mask	= NV_PIO_MASK,
+ 		.mwdma_mask	= NV_MWDMA_MASK,
+ 		.udma_mask	= NV_UDMA_MASK,
+diff --git a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
+index ee6b5df..3b4bc5a 100644
+--- a/drivers/scsi/sata_sis.c
++++ b/drivers/scsi/sata_sis.c
+@@ -117,6 +117,8 @@ static const struct ata_port_operations 
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.scr_read		= sis_scr_read,
+@@ -128,7 +130,8 @@ static const struct ata_port_operations 
  
- 		if (unlikely(qc->err_mask))
- 			qc->flags |= ATA_QCFLAG_FAILED;
+ static struct ata_port_info sis_port_info = {
+ 	.sht		= &sis_sht,
+-	.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++	.host_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++			  ATA_FLAG_HP_POLLING,
+ 	.pio_mask	= 0x1f,
+ 	.mwdma_mask	= 0x7,
+ 	.udma_mask	= 0x7f,
+diff --git a/drivers/scsi/sata_svw.c b/drivers/scsi/sata_svw.c
+index 7d08580..9a446ad 100644
+--- a/drivers/scsi/sata_svw.c
++++ b/drivers/scsi/sata_svw.c
+@@ -324,6 +324,8 @@ static const struct ata_port_operations 
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.scr_read		= k2_sata_scr_read,
+@@ -424,7 +426,7 @@ static int k2_sata_init_one (struct pci_
  
- 		if (unlikely(qc->flags & ATA_QCFLAG_FAILED)) {
--			if (!ata_tag_internal(qc->tag)) {
-+			if (!internal) {
- 				/* always fill result TF for failed qc */
- 				ap->ops->tf_read(ap, &qc->result_tf);
- 				ata_qc_schedule_eh(qc);
-@@ -4444,6 +4446,13 @@ void ata_qc_complete(struct ata_queued_c
- 			ap->ops->tf_read(ap, &qc->result_tf);
+ 	probe_ent->sht = &k2_sata_sht;
+ 	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				ATA_FLAG_MMIO;
++				ATA_FLAG_MMIO | ATA_FLAG_HP_POLLING;
+ 	probe_ent->port_ops = &k2_sata_ops;
+ 	probe_ent->n_ports = 4;
+ 	probe_ent->irq = pdev->irq;
+diff --git a/drivers/scsi/sata_uli.c b/drivers/scsi/sata_uli.c
+index 33cdb48..d3ab9ed 100644
+--- a/drivers/scsi/sata_uli.c
++++ b/drivers/scsi/sata_uli.c
+@@ -115,6 +115,9 @@ static const struct ata_port_operations 
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
  
- 		__ata_qc_complete(qc);
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
 +
-+		/* update PS timer */
-+		if ((ap->pflags & ATA_PFLAG_PS_TIMER) &&
-+		    !ap->qc_active && !internal) {
-+			ap->ps_seq = 0;
-+			mod_timer(&ap->ps_timer, jiffies + ap->ps_timeout);
-+		}
- 	} else {
- 		if (qc->flags & ATA_QCFLAG_EH_SCHEDULED)
- 			return;
-@@ -4551,6 +4560,9 @@ void ata_qc_issue(struct ata_queued_cmd 
- 	 */
- 	WARN_ON(ap->ops->error_handler && ata_tag_valid(ap->active_tag));
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
  
-+	if (ap->pflags & ATA_PFLAG_PS_TIMER)
-+		del_timer(&ap->ps_timer);
-+
- 	if (qc->tf.protocol == ATA_PROT_NCQ) {
- 		WARN_ON(ap->sactive & (1 << qc->tag));
- 		ap->sactive |= 1 << qc->tag;
-@@ -5207,6 +5219,77 @@ void ata_host_set_resume(struct ata_host
- }
+@@ -128,7 +131,8 @@ static const struct ata_port_operations 
  
- /**
-+ *	ata_kill_ps_timer - kill powersave timer
-+ *	@ap: ATA port of interest
-+ *
-+ *	Kill powersave timer.  On return from this function, powersave
-+ *	timer is guaranteed to be not pending && not running.
-+ *
-+ *	LOCKING:
-+ *	None (must be called from EH context).
-+ */
-+void ata_kill_ps_timer(struct ata_port *ap)
-+{
-+	unsigned long flags;
-+	int rc;
-+
-+	if (ap->pflags & ATA_PFLAG_PS_TIMER) {
-+		do {
-+			spin_lock_irqsave(ap->lock, flags);
-+			rc = try_to_del_timer_sync(&ap->ps_timer);
-+			ap->pflags &= ~ATA_PFLAG_PS_TIMER;
-+			spin_unlock_irqrestore(ap->lock, flags);
-+			cpu_relax();
-+		} while (rc < 0);
-+
-+		ap->ps_timer_fn = NULL;
-+		ap->ps_timeout = 0;
-+	} else
-+		BUG_ON(timer_pending(&ap->ps_timer));
-+}
-+
-+/**
-+ *	ata_ps_timer_worker - powersave timer worker
-+ *	@arg: ATA port of interest
-+ *
-+ *	This function is called when ap->ps_timer expires.  If the
-+ *	condition is right, it calls ap->ps_timer_fn() with the
-+ *	current sequence number.
-+ *
-+ *	libata automatically arms and cancels PS timer on port idle
-+ *	and command issue respectively.  libata also initializes
-+ *	sequence number to zero when it arms PS timer because of port
-+ *	idle.
-+ *
-+ *	ap->ps_timer_fn() can request requeue of PS timer by returning
-+ *	non-zero value which will be used as timeout.  Each requeue
-+ *	increments PS sequence number by one.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+static void ata_ps_timer_worker(unsigned long arg)
-+{
-+	struct ata_port *ap = (void *)arg;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+
-+	if (!ap->qc_active && !timer_pending(&ap->ps_timer)) {
-+		unsigned long next_timeout;
-+
-+		next_timeout = ap->ps_timer_fn(ap, ap->ps_seq);
-+		if (next_timeout) {
-+			ap->ps_seq++;
-+			ap->ps_timer.expires = jiffies + next_timeout;
-+			add_timer(&ap->ps_timer);
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(ap->lock, flags);
-+}
-+
-+/**
-  *	ata_port_start - Set port up for dma.
-  *	@ap: Port to initialize
-  *
-@@ -5439,6 +5522,7 @@ #endif
- 	INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan, ap);
- 	INIT_LIST_HEAD(&ap->eh_done_q);
- 	init_waitqueue_head(&ap->eh_wait_q);
-+	setup_timer(&ap->ps_timer, ata_ps_timer_worker, (unsigned long)ap);
+ static struct ata_port_info uli_port_info = {
+ 	.sht            = &uli_sht,
+-	.host_flags     = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++	.host_flags     = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++			  ATA_FLAG_HP_POLLING,
+ 	.pio_mask       = 0x1f,		/* pio0-4 */
+ 	.udma_mask      = 0x7f,		/* udma0-6 */
+ 	.port_ops       = &uli_ops,
+diff --git a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+index ad37871..d7da4c2 100644
+--- a/drivers/scsi/sata_vsc.c
++++ b/drivers/scsi/sata_vsc.c
+@@ -302,6 +302,8 @@ static const struct ata_port_operations 
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.hp_poll_activate	= sata_std_hp_poll_activate,
++	.hp_poll		= sata_std_hp_poll,
+ 	.irq_handler		= vsc_sata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.scr_read		= vsc_sata_scr_read,
+@@ -396,7 +398,7 @@ static int __devinit vsc_sata_init_one (
  
- 	/* set cable type */
- 	ap->cbl = ATA_CBL_NONE;
-@@ -5749,7 +5833,9 @@ void ata_port_detach(struct ata_port *ap
- 	cancel_delayed_work(&ap->hotplug_task);
- 	flush_workqueue(ata_aux_wq);
- 
--	/* turn it off */
-+	/* kill PS timer and power off */
-+	ata_kill_ps_timer(ap);
-+
- 	if (ap->ops->set_powersave)
- 		ap->ops->set_powersave(ap, ATA_PS_STATIC);
- 
-diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
-index d5126b7..b19eaae 100644
---- a/drivers/scsi/libata-eh.c
-+++ b/drivers/scsi/libata-eh.c
-@@ -261,6 +261,9 @@ void ata_scsi_error(struct Scsi_Host *ho
- 	} else
- 		spin_unlock_wait(ap->lock);
- 
-+	/* kill powersave timer before beginning EH */
-+	ata_kill_ps_timer(ap);
-+
-  repeat:
- 	/* invoke error handler */
- 	if (ap->ops->error_handler) {
-@@ -340,6 +343,14 @@ void ata_scsi_error(struct Scsi_Host *ho
- 
- 	ap->pflags &= ~(ATA_PFLAG_SCSI_HOTPLUG | ATA_PFLAG_RECOVERED);
- 
-+	/* start PS timer if requested */
-+	if (ap->pflags & ATA_PFLAG_PS_TIMER) {
-+		BUG_ON(!ap->ps_timer_fn || !ap->ps_timeout);
-+		ap->ps_seq = 0;
-+		ap->ps_timer.expires = jiffies + ap->ps_timeout;
-+		add_timer(&ap->ps_timer);
-+	}
-+
- 	/* tell wait_eh that we're done */
- 	ap->pflags &= ~ATA_PFLAG_EH_IN_PROGRESS;
- 	wake_up_all(&ap->eh_wait_q);
-@@ -1876,11 +1887,13 @@ static int ata_eh_set_powersave(struct a
- 	void (*set_ps)(struct ata_port *, int) = ap->ops->set_powersave;
- 	int ps_state, ps_static, ps_dynamic;
- 	int dev_dips, dev_hips, i;
-+	unsigned long flags;
- 
- 	/* power up for recovery */
- 	if (r_failed_dev == NULL) {
- 		if (ap->ps_state && set_ps)
- 			set_ps(ap, ATA_PS_NONE);
-+		WARN_ON(ap->flags & ATA_PFLAG_PS_TIMER);
- 		return 0;
- 	}
- 
-@@ -1929,9 +1942,15 @@ static int ata_eh_set_powersave(struct a
- 
- 		err_mask = ata_dev_set_dips(dev, is_dips);
- 		if (err_mask) {
-+			spin_lock_irqsave(ap->lock, flags);
-+			ap->pflags &= ~ATA_PFLAG_PS_TIMER;
-+			spin_unlock_irqrestore(ap->lock, flags);
-+
- 			if (ps_state && set_ps)
- 				set_ps(ap, ATA_PS_NONE);
-+
- 			*r_failed_dev = dev;
-+
- 			return -EIO;
- 		}
- 	}
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index ce44e06..9e44f56 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -74,6 +74,7 @@ extern void ata_dev_select(struct ata_po
-                            unsigned int wait, unsigned int can_sleep);
- extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
- extern int ata_flush_cache(struct ata_device *dev);
-+extern void ata_kill_ps_timer(struct ata_port *ap);
- extern void ata_dev_init(struct ata_device *dev);
- extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b3f56c5..0881814 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -185,6 +185,7 @@ enum {
- 	ATA_PFLAG_FLUSH_PORT_TASK = (1 << 16), /* flush port task */
- 	ATA_PFLAG_SUSPENDED	= (1 << 17), /* port is suspended (power) */
- 	ATA_PFLAG_PM_PENDING	= (1 << 18), /* PM operation pending */
-+	ATA_PFLAG_PS_TIMER	= (1 << 19), /* PS timer active */
- 
- 	/* struct ata_queued_cmd flags */
- 	ATA_QCFLAG_ACTIVE	= (1 << 0), /* cmd not yet ack'd to scsi lyer */
-@@ -335,6 +336,7 @@ typedef void (*ata_qc_cb_t) (struct ata_
- typedef int (*ata_prereset_fn_t)(struct ata_port *ap);
- typedef int (*ata_reset_fn_t)(struct ata_port *ap, unsigned int *classes);
- typedef void (*ata_postreset_fn_t)(struct ata_port *ap, unsigned int *classes);
-+typedef unsigned long (*ata_ps_timer_fn_t)(struct ata_port *ap, int seq);
- 
- struct ata_ioports {
- 	unsigned long		cmd_addr;
-@@ -568,6 +570,12 @@ struct ata_port {
- 	/* powersave (dynamic link power management) */
- 	int			target_ps_state;
- 	int			ps_state;
-+	/* powersave timer, protected by ap->lock */
-+	ata_ps_timer_fn_t	ps_timer_fn;	/* initialized by LLD */
-+	unsigned long		ps_timeout;	/* ditto */
-+
-+	int			ps_seq;		/* managed by libata */
-+	struct timer_list	ps_timer;	/* ditto */
- 
- 	/* power management (host suspend and resume) */
- 	pm_message_t		pm_mesg;
+ 	probe_ent->sht = &vsc_sata_sht;
+ 	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				ATA_FLAG_MMIO;
++				ATA_FLAG_MMIO | ATA_FLAG_HP_POLLING;
+ 	probe_ent->port_ops = &vsc_sata_ops;
+ 	probe_ent->n_ports = 4;
+ 	probe_ent->irq = pdev->irq;
 -- 
 1.3.2
 
