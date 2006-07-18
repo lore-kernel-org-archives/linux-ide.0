@@ -1,47 +1,40 @@
-From: Jonathan McDowell <noodles@earth.li>
-Subject: Re: Status of HPT372A driver?
-Date: Tue, 18 Jul 2006 13:02:17 +0100
-Message-ID: <20060718120217.GF1485@earth.li>
-References: <20060717142705.GS1485@earth.li> <44BBC75A.2000800@ru.mvista.com> <20060717182633.GX1485@earth.li> <44BBDFBE.10800@ru.mvista.com>
+From: Vojtech Pavlik <vojtech@suse.cz>
+Subject: Re: [linux-pm] amd74xx crashes when resuming from STR
+Date: Tue, 18 Jul 2006 15:39:20 +0200
+Message-ID: <20060718133920.GA4106@suse.cz>
+References: <20060715210518.GA3263@opus.vpn-dev.reflex> <19700101003716.GA3558@ucw.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from the.earth.li ([193.201.200.66]:56807 "EHLO the.earth.li")
-	by vger.kernel.org with ESMTP id S1751327AbWGRMCT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2006 08:02:19 -0400
+Received: from styx.suse.cz ([82.119.242.94]:44499 "EHLO mail.suse.cz")
+	by vger.kernel.org with ESMTP id S932208AbWGRNjX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2006 09:39:23 -0400
 Content-Disposition: inline
-In-Reply-To: <44BBDFBE.10800@ru.mvista.com>
+In-Reply-To: <19700101003716.GA3558@ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: Jason Lunz <lunz@falooley.org>, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org
 
-On Mon, Jul 17, 2006 at 11:06:38PM +0400, Sergei Shtylyov wrote:
-> >I've had a try with libata and Alan Cox's 2.6.17-ide1 patch (I'd
-> >previously tried this and had issues, which turned out to be a faulty
-> >drive I think). This seems to get better results (sda is the same drive
-> >as was hde earlier):
+On Thu, Jan 01, 1970 at 12:37:16AM +0000, Pavel Machek wrote:
+> Hi!
 > 
->    I wouldn't be so sure about the faulty drive. ;-)
-
-No, the drive was definitely faulty - I ran the Western Digital test
-tool on it and it indicated the drive should be returned for a
-replacement.
+> > On my laptop, suspend-to-ram works for all drivers with the exception of
+> > the amd74xx ide driver. And even then, it only has problems when
+> > accessing a UDMA hard drive. I know this because the system can use STR
+> > reliably when booted from a livecd, so long as nothing accesses the hard
+> > disk.
+> 
+> I guess you need to ask on linux-ide mainling lists?
+> 
+> Ahha, you are cross-posting there, already.
+> 
+> What happens if you rmmod amd74xx and insmod it after resume?
  
->    No "HW reset results" -- SATA drives don't have valid word 93 as it 
->    seems, and so the eighty_ninty_three() returns 0 meaning that the device 
-> reports 40c PATA cable.
->    I think you need to try this 2.6.18-rc1 patch from Alan:
-> 
-> http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1a1276e7b6cba549553285f74e87f702bfff6fac
-
-Result! I've applied that patch and now get UDMA(133) reported and
-speeds of 45MB/s+, so much better. Thanks!
-
-J.
+amd74xx relies on the BIOS to have set up a significant part of the
+controller correctly. This likely isn't true after S3 resume. It might
+be necessary to save & restore the whole PCI config space of the device.
 
 -- 
-                                            jid: noodles@jabber.earth.li
-"Then P=NP, and the world is a happier
-                                            place." -- Steve Cameron
-in a complexity tute.
+Vojtech Pavlik
+Director SuSE Labs
