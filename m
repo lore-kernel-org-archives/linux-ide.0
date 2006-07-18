@@ -1,40 +1,43 @@
-From: Vojtech Pavlik <vojtech@suse.cz>
-Subject: Re: [linux-pm] amd74xx crashes when resuming from STR
-Date: Tue, 18 Jul 2006 15:39:20 +0200
-Message-ID: <20060718133920.GA4106@suse.cz>
-References: <20060715210518.GA3263@opus.vpn-dev.reflex> <19700101003716.GA3558@ucw.cz>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: libata pata_pdc2027x success on sparc64
+Date: Tue, 18 Jul 2006 22:07:44 +0400
+Message-ID: <44BD2370.8090506@ru.mvista.com>
+References: <200607172358.k6HNwYhF002052@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:44499 "EHLO mail.suse.cz")
-	by vger.kernel.org with ESMTP id S932208AbWGRNjX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2006 09:39:23 -0400
-Content-Disposition: inline
-In-Reply-To: <19700101003716.GA3558@ucw.cz>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932335AbWGRSJG@vger.kernel.org>
+In-Reply-To: <200607172358.k6HNwYhF002052@harpo.it.uu.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: Jason Lunz <lunz@falooley.org>, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org
 
-On Thu, Jan 01, 1970 at 12:37:16AM +0000, Pavel Machek wrote:
-> Hi!
-> 
-> > On my laptop, suspend-to-ram works for all drivers with the exception of
-> > the amd74xx ide driver. And even then, it only has problems when
-> > accessing a UDMA hard drive. I know this because the system can use STR
-> > reliably when booted from a livecd, so long as nothing accesses the hard
-> > disk.
-> 
-> I guess you need to ask on linux-ide mainling lists?
-> 
-> Ahha, you are cross-posting there, already.
-> 
-> What happens if you rmmod amd74xx and insmod it after resume?
- 
-amd74xx relies on the BIOS to have set up a significant part of the
-controller correctly. This likely isn't true after S3 resume. It might
-be necessary to save & restore the whole PCI config space of the device.
+Hello.
 
--- 
-Vojtech Pavlik
-Director SuSE Labs
+Mikael Pettersson wrote:
+
+> In contrast, the old IDE pdc202xx_new driver had lots
+> of problems with CRC errors causing it to disable DMA.
+
+    Hm, from my experience it usually falls back to UltraDMA/44 and then the 
+thing startrt working...
+
+> I wasn't able to manually tune it above udma3 without
+> getting more errors. This isn't sparc64-specific: I've
+> had similar negative experience with the old IDE Promise
+> drivers in a PowerMac.
+
+    This happens because the "old" driver misses the PLL calibration code.
+    You may want to try these Albert's patches:
+
+http://marc.theaimsgroup.com/?t=110992452800002&r=1&w=2
+http://marc.theaimsgroup.com/?t=110992471500002&r=1&w=2
+http://marc.theaimsgroup.com/?t=110992490100002&r=1&w=2
+http://marc.theaimsgroup.com/?t=111019238400003&r=1&w=2
+
+    It looks like they were never considered for accepting into the kernel
+while they succesfully solve this issue. Maybe Albert could try pushing them 
+into -mm tree once more?
+
+WBR, Sergei
