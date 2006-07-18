@@ -1,43 +1,59 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: libata pata_pdc2027x success on sparc64
-Date: Tue, 18 Jul 2006 22:07:44 +0400
-Message-ID: <44BD2370.8090506@ru.mvista.com>
-References: <200607172358.k6HNwYhF002052@harpo.it.uu.se>
+From: "John Adams" <jadamsxx@tiscali.cz>
+Subject: urgent reply fast
+Date: Tue, 18 Jul 2006 14:44:31 -0700
+Message-ID: <447B57AC000554DA@galantos.tiscali.cz>
+Reply-To: j_adamsxx@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932335AbWGRSJG@vger.kernel.org>
-In-Reply-To: <200607172358.k6HNwYhF002052@harpo.it.uu.se>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@redhat.com
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from galantos.tiscali.cz ([213.235.135.71]:15780 "EHLO
+	mail71.tiscali.cz") by vger.kernel.org with ESMTP id S932073AbWGRVoz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Jul 2006 17:44:55 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello.
+=46rom: Mr John Adams
+Chief Executive Officer=20
+Allied Plantation Company Limited.UK=20
+(Import And Export)=20
+Phone:+44-702-4027-481
+United kingdom.
+Dear Sir/Madam,
+I am Mr John Adams,we are a group of business men who deal on raw mater=
+ials
 
-Mikael Pettersson wrote:
+and export intoEurope/America.We are searching for a representatives wh=
+o
+can=20
+help us establish a medium of getting to our clients in America/Europe =
+as
 
-> In contrast, the old IDE pdc202xx_new driver had lots
-> of problems with CRC errors causing it to disable DMA.
+well as making payments through you to us.
+If you are interested in transacting business with us we will be very=20
+glad.There will be no financial obligation required from you in this=20
+transaction.You will be recieving up to two to three payment per month.
+Please contact us via email: for more information.Subject to your=20
+satisfaction you will be given the opportunity to negotiate your mode o=
+f
 
-    Hm, from my experience it usually falls back to UltraDMA/44 and then the 
-thing startrt working...
+which we will pay for your services as our representative in=20
+Europe/America.
+Please if you are interested forward to us your phone/fax number and yo=
+ur
 
-> I wasn't able to manually tune it above udma3 without
-> getting more errors. This isn't sparc64-specific: I've
-> had similar negative experience with the old IDE Promise
-> drivers in a PowerMac.
+full contact addresses.
+Best Regards,=20
+Mr John Adams.=20
+CEO
 
-    This happens because the "old" driver misses the PLL calibration code.
-    You may want to try these Albert's patches:
 
-http://marc.theaimsgroup.com/?t=110992452800002&r=1&w=2
-http://marc.theaimsgroup.com/?t=110992471500002&r=1&w=2
-http://marc.theaimsgroup.com/?t=110992490100002&r=1&w=2
-http://marc.theaimsgroup.com/?t=111019238400003&r=1&w=2
+______________________________________
+Nejlevn=ECj=B9=ED ADSL na trhu. Ji=BE od 333 K=E8 za m=ECs=EDc.        =
+              =20
+                                                      http://adsl.tisca=
+li.cz
 
-    It looks like they were never considered for accepting into the kernel
-while they succesfully solve this issue. Maybe Albert could try pushing them 
-into -mm tree once more?
 
-WBR, Sergei
+
