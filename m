@@ -1,46 +1,37 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Test feedback 2.6.17.4+libata-tj-stable (EH, hotplug)
-Date: Tue, 18 Jul 2006 11:21:19 +1000
-Message-ID: <17596.14223.843247.572486@cse.unsw.edu.au>
-References: <bb145bd20607101439n475b1771g1c754af31911288@mail.gmail.com>
-	<44B31260.5030409@gmail.com>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: [linux-pm] amd74xx crashes when resuming from STR
+Date: Tue, 18 Jul 2006 04:34:45 +0000 (UTC)
+Message-ID: <19700101003716.GA3558__9011.55568794838$1153197285$gmane$org@ucw.cz>
+References: <20060715210518.GA3263@opus.vpn-dev.reflex>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:39078 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1751288AbWGRBV4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jul 2006 21:21:56 -0400
-In-Reply-To: message from Tejun Heo on Tuesday July 11
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:19891 "EHLO
+	atrey.karlin.mff.cuni.cz") by vger.kernel.org with ESMTP
+	id S1751221AbWGREec (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Jul 2006 00:34:32 -0400
+Date: Thu, 1 Jan 1970 00:37:16 +0000
+Content-Disposition: inline
+In-Reply-To: <20060715210518.GA3263@opus.vpn-dev.reflex>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Christian Pernegger <pernegger@gmail.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: Jason Lunz <lunz@falooley.org>
+Cc: vojtech@suse.cz, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org
 
-On Tuesday July 11, htejun@gmail.com wrote:
-> Christian Pernegger wrote:
-> > The fact that the disk had changed minor numbers after it was plugged
-> > back in bugs me a bit. (was sdc before, sde after). Additionally udev
-> > removed the sdc device file, so I had to manually recreate it to be
-> > able to remove the 'faulty' disk from its md array.
-> 
-> That's because md is stilling holding onto sdc in failed mode.  A 
-> hotplug script which checks whether a removed device is in md array and 
-> if so removes it from the array will solve the problem.  Not sure 
-> whether that would be the correct approach though.
+Hi!
 
-Checking whether the to-be-removed device is in an md array or in use
-in any other way first definitely sounds like the right approach to
-me.
+> On my laptop, suspend-to-ram works for all drivers with the exception of
+> the amd74xx ide driver. And even then, it only has problems when
+> accessing a UDMA hard drive. I know this because the system can use STR
+> reliably when booted from a livecd, so long as nothing accesses the hard
+> disk.
 
-Exactly what to do if the device is in use is somewhat less obvious.
-If the array is completely quiescent then you don't necessarily want
-to fail/remove the device from the array....
+I guess you need to ask on linux-ide mainling lists?
 
-I think the best approach would be to have plug-ins that are called if
-an unplugged device is in use, and if it is still in use after those
-calls, then don't delete the device.  Maybe it would also be good if
-hotplug was told when a device was no longer in use so it could remove
-the /dev entry then....
+Ahha, you are cross-posting there, already.
 
-NeilBrown
+What happens if you rmmod amd74xx and insmod it after resume?
+							Pavel
+
+-- 
+Thanks for all the (sleeping) penguins.
