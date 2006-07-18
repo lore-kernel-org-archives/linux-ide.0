@@ -1,53 +1,19 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: libata pata_pdc2027x success on sparc64
-Date: Tue, 18 Jul 2006 01:58:34 +0200 (MEST)
-Message-ID: <200607172358.k6HNwYhF002052@harpo.it.uu.se>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751244AbWGQX7B@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: alan@redhat.com
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Little" <Littlebroke@optician.com>
+Subject: You cumm right after penetration!
+Date: Tue, 18 Jul 2006 08:36:08 +0800
+Message-ID: <76943482363634.86C8E9C899__26732.3990389288$1153183478$gmane$org@40IPWQA>
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 128.230.178.60.broad.nb.zj.dynamic.cndata.com ([60.178.230.128]:36262
+	"EHLO WINXP-SP2.holoh9u.com") by vger.kernel.org with ESMTP
+	id S1751299AbWGRAhS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Jul 2006 20:37:18 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Alan & Albert,
+Dear member. Studies show this is the most common disorder affecting millions of men - and women, too! Choose Extra-Time for a reliable comprehensive method that really cures you. Just how many times you were embarrassed when your bed marathon ended a couple of minutes after its start? Just take a look: http://dimpert.com/dll/get/ Give her the beautiful romantic evening full of love that she has been waiting for.
 
-I just tried the patch-2.6.17-ide1.gz libata PATA patch
-on a sparc64 box in which I had put an Ultra133TX2 PCI
-card (pdc20269) and an old 80GB IBM Deskstar disk. The
-results were excellent: did lots of I/O with no kernel
-errors, and I got about 45MB/s read speed at udma5.
-
-(A minor nit: the patch kit doesn't have a config option
-for pata_pdc2027x, so I had to hack one in. See below.)
-
-In contrast, the old IDE pdc202xx_new driver had lots
-of problems with CRC errors causing it to disable DMA.
-I wasn't able to manually tune it above udma3 without
-getting more errors. This isn't sparc64-specific: I've
-had similar negative experience with the old IDE Promise
-drivers in a PowerMac.
-
-/Mikael
-
---- linux-2.6.17/drivers/scsi/Kconfig.~1~	2006-07-17 23:30:25.000000000 +0200
-+++ linux-2.6.17/drivers/scsi/Kconfig	2006-07-17 23:39:25.000000000 +0200
-@@ -843,6 +843,10 @@ config SCSI_PATA_PDC_OLD
- 
- 	  If unsure, say N.
- 
-+config SCSI_PATA_PDC_NEW
-+	tristate "Newer Promise PATA controller support (Raving Lunatic)"
-+	depends on SCSI_SATA && PCI && EXPERIMENTAL
-+
- config SCSI_PATA_QDI
- 	tristate "QDI VLB PATA support"
- 	depends on SCSI_SATA
---- linux-2.6.17/drivers/scsi/Makefile.~1~	2006-07-17 23:30:25.000000000 +0200
-+++ linux-2.6.17/drivers/scsi/Makefile	2006-07-17 23:40:06.000000000 +0200
-@@ -161,6 +161,7 @@ obj-$(CONFIG_SCSI_PATA_OPTI)	+= libata.o
- obj-$(CONFIG_SCSI_PATA_OPTIDMA)	+= libata.o pata_optidma.o
- obj-$(CONFIG_SCSI_PATA_PCMCIA)	+= libata.o pata_pcmcia.o
- obj-$(CONFIG_SCSI_PATA_PDC_OLD)	+= libata.o pata_pdc202xx_old.o
-+obj-$(CONFIG_SCSI_PATA_PDC_NEW)	+= libata.o pata_pdc2027x.o
- obj-$(CONFIG_SCSI_PATA_QDI)	+= libata.o pata_qdi.o
- obj-$(CONFIG_SCSI_PATA_RADISYS)	+= libata.o pata_radisys.o
- obj-$(CONFIG_SCSI_PATA_RZ1000)	+= libata.o pata_rz1000.o
