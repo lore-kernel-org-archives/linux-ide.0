@@ -1,20 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: fix eh_skip_recovery condition
-Date: Wed, 19 Jul 2006 14:07:12 -0400
-Message-ID: <44BE74D0.4040500@pobox.com>
-References: <20060710141823.GG2592@htj.dyndns.org>
+From: Timothy <John@panhandle.rr.com>
+Subject: salario digno
+Date: Wed, 19 Jul 2006 21:47:46 +0200
+Message-ID: <D65E114B.5152518@panhandle.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:5510 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932542AbWGSSHO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2006 14:07:14 -0400
-In-Reply-To: <20060710141823.GG2592@htj.dyndns.org>
+Received: from 84.95.67.132.cable.012.net.il ([84.95.67.132]:37393 "HELO
+	panhandle.rr.com") by vger.kernel.org with SMTP id S1030212AbWGSSsq
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 19 Jul 2006 14:48:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-applied to #upstream-fixes
+ Necesita ganancias extra?
+
+Nuevas oportunidades para Usted - hoy!
+
+Getting Assisted le invita a cooperar.
+
+
+Es responsable y ordenado
+
+Tiene de 18 a 60 anos de edad
+
+Es residente de Espana (preferiblemente)
+
+Tiene tiempo libre (2-4 horas al dia)
+
+
+Es su oporunidad:
+
+Ningun riesgo financiero!
+
+Contactenos, su trabajo le esta esperando!
+
+Para comsideracion inmediata y confidencial, por favor, envie su info a apply@getassisted.biz
+
 
