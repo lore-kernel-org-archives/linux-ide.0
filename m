@@ -1,50 +1,152 @@
-From: "Brittany Springer" <BrittanySpringer@mail.ru>
-Subject: Success, worse-taught
-Date: Wed, 19 Jul 2006 02:55:03 +0000 (UTC)
-Message-ID: <2210166662.20060719025601@mail.ru>
-Reply-To: "Brittany Springer" <BrittanySpringer@mail.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: John Keller <jpk@sgi.com>
+Subject: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
+Date: Wed, 19 Jul 2006 10:31:55 -0500
+Message-ID: <20060719153155.30856.2479.sendpatchset@attica.americas.sgi.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:42654 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S932473AbWGSCyx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2006 22:54:53 -0400
-Date: Wed, 19 Jul 2006 02:56:01 -0480
+Received: from omx1-ext.sgi.com ([192.48.179.11]:9957 "EHLO
+	omx1.americas.sgi.com") by vger.kernel.org with ESMTP
+	id S1030183AbWGSPb4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 19 Jul 2006 11:31:56 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64-request@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, John Keller <jpk@sgi.com>
 
-Your cre dit doesn't matter to us! If you OWN real est ate
-and want IMMEDIATEN cash to spend ANY way you like, or simply wish 
-to LOWER your monthly paym ents by a third or more, here are the dea ls
-we have TODAY (hurry, these ofers will expre TONIGHT):
+Resend #2 changes include:
 
-$488,000.00 at a 3.67,% fixed-rateN
-$372,000.00 at a 3.90,% variable-rate4
-$492,000.00 at a 3.21,% interest-onlyD
-$248,000.00 at a 3.36,% fixed-rateZ
-$198,000.00 at a 3.55,% variable-rateM
+- use 'void __iomem *' for ioremap() return values,
+  and handle error cases.
 
-Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
+sgiioc4.c had been recently converted to using mmio ops.
+There are still a few issues to cleanup.
 
-Don't worry about approval, your cre dit will not disqualify you! 
-
-http://GKU5MRQ.jokip.com
+Signed-off-by: jpk@sgi.com
 
 
-
-and it squeaked distinctly, turning in the light breeze. The mange must have
-the soup and started on the pork and beans, and then he could creep out into
-
-and bottle  of catsup were  ready  for him. Wait until he had slurped up all
-Look at the piece he's carrying in his back pocket. Nah, I doubt it. Buzzard
-gummed his mouth, making it  hard to breathe. Gulping for  air, Redrick tore
-
-remember Kirill, that sainted man, his swift, sure movements, his laugh, his
-engineer he had drowned in vitriol that day.
-it, that he  wanted to go up to  it, to touch it, pat  it, and suddenly  the
-followed. Out of  the  corner  of his  eye  he could see Arthur's  face, his
-
-only  thing he lived for in the last few months  was  the hope of a miracle.
-been left behind,  littering up  the Zone  like all  the empties, bracelets,
+Index: linux-2.6/drivers/ide/pci/sgiioc4.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/sgiioc4.c	2006-07-17 08:53:58.107664466 -0500
++++ linux-2.6/drivers/ide/pci/sgiioc4.c	2006-07-17 09:03:40.402118344 -0500
+@@ -367,12 +367,13 @@ sgiioc4_INB(unsigned long port)
+ static void __devinit
+ ide_dma_sgiioc4(ide_hwif_t * hwif, unsigned long dma_base)
+ {
++	void __iomem *virt_dma_base;
+ 	int num_ports = sizeof (ioc4_dma_regs_t);
+ 
+ 	printk(KERN_INFO "%s: BM-DMA at 0x%04lx-0x%04lx\n", hwif->name,
+ 	       dma_base, dma_base + num_ports - 1);
+ 
+-	if (!request_region(dma_base, num_ports, hwif->name)) {
++	if (!request_mem_region(dma_base, num_ports, hwif->name)) {
+ 		printk(KERN_ERR
+ 		       "%s(%s) -- ERROR, Addresses 0x%p to 0x%p "
+ 		       "ALREADY in use\n",
+@@ -381,13 +382,21 @@ ide_dma_sgiioc4(ide_hwif_t * hwif, unsig
+ 		goto dma_alloc_failure;
+ 	}
+ 
+-	hwif->dma_base = dma_base;
++	virt_dma_base = ioremap(dma_base, num_ports);
++	if (virt_dma_base == NULL) {
++		printk(KERN_ERR
++		       "%s(%s) -- ERROR, Unable to map addresses 0x%lx to 0x%lx\n",
++		       __FUNCTION__, hwif->name, dma_base, dma_base + num_ports - 1);
++		goto dma_remap_failure;
++	}
++	hwif->dma_base = (unsigned long) virt_dma_base;
++
+ 	hwif->dmatable_cpu = pci_alloc_consistent(hwif->pci_dev,
+ 					  IOC4_PRD_ENTRIES * IOC4_PRD_BYTES,
+ 					  &hwif->dmatable_dma);
+ 
+ 	if (!hwif->dmatable_cpu)
+-		goto dma_alloc_failure;
++		goto dma_remap_failure;
+ 
+ 	hwif->sg_max_nents = IOC4_PRD_ENTRIES;
+ 
+@@ -411,6 +420,9 @@ dma_base2alloc_failure:
+ 	printk(KERN_INFO
+ 	       "Changing from DMA to PIO mode for Drive %s\n", hwif->name);
+ 
++dma_remap_failure:
++	release_mem_region(dma_base, num_ports);
++
+ dma_alloc_failure:
+ 	/* Disable DMA because we couldnot allocate any DMA maps */
+ 	hwif->autodma = 0;
+@@ -607,18 +619,15 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
+ 	hwif->ide_dma_lostirq = &sgiioc4_ide_dma_lostirq;
+ 	hwif->ide_dma_timeout = &__ide_dma_timeout;
+ 
+-	/*
+-	 * The IOC4 uses MMIO rather than Port IO.
+-	 * It also needs special workarounds for INB.
+-	 */
+-	default_hwif_mmiops(hwif);
+ 	hwif->INB = &sgiioc4_INB;
+ }
+ 
+ static int __devinit
+ sgiioc4_ide_setup_pci_device(struct pci_dev *dev, ide_pci_device_t * d)
+ {
+-	unsigned long base, ctl, dma_base, irqport;
++	unsigned long cmd_base, dma_base, irqport;
++	unsigned long bar0, cmd_phys_base, ctl;
++	void __iomem *virt_base;
+ 	ide_hwif_t *hwif;
+ 	int h;
+ 
+@@ -636,23 +645,32 @@ sgiioc4_ide_setup_pci_device(struct pci_
+ 	}
+ 
+ 	/*  Get the CmdBlk and CtrlBlk Base Registers */
+-	base = pci_resource_start(dev, 0) + IOC4_CMD_OFFSET;
+-	ctl = pci_resource_start(dev, 0) + IOC4_CTRL_OFFSET;
+-	irqport = pci_resource_start(dev, 0) + IOC4_INTR_OFFSET;
++	bar0 = pci_resource_start(dev, 0);
++	virt_base = ioremap(bar0, pci_resource_len(dev, 0));
++	if (virt_base == NULL) {
++		printk(KERN_ERR "%s: Unable to remap BAR 0 address: 0x%lx\n",
++			d->name, bar0);
++		return -ENOMEM;
++	}
++	cmd_base = (unsigned long) virt_base + IOC4_CMD_OFFSET;
++	ctl = (unsigned long) virt_base + IOC4_CTRL_OFFSET;
++	irqport = (unsigned long) virt_base + IOC4_INTR_OFFSET;
+ 	dma_base = pci_resource_start(dev, 0) + IOC4_DMA_OFFSET;
+ 
+-	if (!request_region(base, IOC4_CMD_CTL_BLK_SIZE, hwif->name)) {
++	cmd_phys_base = bar0 + IOC4_CMD_OFFSET;
++	if (!request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
++	    hwif->name)) {
+ 		printk(KERN_ERR
+-			"%s : %s -- ERROR, Port Addresses "
++			"%s : %s -- ERROR, Addresses "
+ 			"0x%p to 0x%p ALREADY in use\n",
+-		       __FUNCTION__, hwif->name, (void *) base,
+-		       (void *) base + IOC4_CMD_CTL_BLK_SIZE);
++		       __FUNCTION__, hwif->name, (void *) cmd_phys_base,
++		       (void *) cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
+ 		return -ENOMEM;
+ 	}
+ 
+-	if (hwif->io_ports[IDE_DATA_OFFSET] != base) {
++	if (hwif->io_ports[IDE_DATA_OFFSET] != cmd_base) {
+ 		/* Initialize the IO registers */
+-		sgiioc4_init_hwif_ports(&hwif->hw, base, ctl, irqport);
++		sgiioc4_init_hwif_ports(&hwif->hw, cmd_base, ctl, irqport);
+ 		memcpy(hwif->io_ports, hwif->hw.io_ports,
+ 		       sizeof (hwif->io_ports));
+ 		hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
+@@ -665,6 +683,9 @@ sgiioc4_ide_setup_pci_device(struct pci_
+ 	hwif->cds = (struct ide_pci_device_s *) d;
+ 	hwif->gendev.parent = &dev->dev;/* setup proper ancestral information */
+ 
++	/* The IOC4 uses MMIO rather than Port IO. */
++	default_hwif_mmiops(hwif);
++
+ 	/* Initializing chipset IRQ Registers */
+ 	hwif->OUTL(0x03, irqport + IOC4_INTR_SET * 4);
+ 
