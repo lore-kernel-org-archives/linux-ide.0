@@ -1,109 +1,76 @@
-From: Philipp Wagner <mail@philipp-wagner.com>
-Subject: Hotplug with sata_nv
-Date: Wed, 19 Jul 2006 22:51:51 +0200
-Message-ID: <44BE9B67.7020901@philipp-wagner.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/3] libata: implement hotplug by polling
+Date: Wed, 19 Jul 2006 16:57:32 -0400
+Message-ID: <44BE9CBC.2000601@pobox.com>
+References: <11531196481023-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.planet-school.de ([194.116.187.6]:32952 "EHLO
-	turbohermes.planet-school.de") by vger.kernel.org with ESMTP
-	id S1030306AbWGSUvy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 Jul 2006 16:51:54 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:10637 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030309AbWGSU5n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2006 16:57:43 -0400
+In-Reply-To: <11531196481023-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Tejun Heo wrote:
+> This patch implements hotplug by polling - hp-poll.  It is used for
+> 
+> * hotplug event detection on controllers which don't provide PHY
+>   status changed interrupt.
+> 
+> * hotplug event detection on disabled ports after reset failure.
+>   libata used to leave such ports in frozen state to protect the
+>   system from malfunctioning controller/device.  With hp-poll, hotplug
+>   events no such ports are watched safely by polling, such that
+>   removing/replacing the malfunctioning device triggers EH retry on
+>   the port.
+> 
+> There are three port ops for hp-poll - hp_poll_activate, hp_poll,
+> hp_poll_deactivate.  Only hp_poll is mandatory for hp-poll to work.
+> This patch also implements SATA standard polling callbacks which poll
+> SError.N/X bits - sata_std_hp_poll_activate() and sata_std_hp_poll().
+> 
+> By default, hp-poll is enabled only on disabled ports.  If a LLD
+> doesn't support hotplug interrupts but can poll for hotplug events, it
+> should indicate it by setting ATA_FLAG_HP_POLLING which tells libata
+> to turn on hp-poll by default.
+> 
+> Putting port into any static powersave mode or setting
+> libata.hotplug_polling_interval to zero disables hp-poll.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Hey,
-I've just tested the new hotplug features of libata and unfortunately,
-it didn't work out as expected.
+NAK, there is no reason why a global poll list is needed.  Simply having 
+a struct workqueue in each schedule-able entity implicitly creates such 
+a list.  But regardless, this is another example of adding 
+cross-controller synchronization, where none is needed.
 
-My environment here is a Tyan Tomcat K8E (S2865) mainboard with nVIDIA
-nForce4 Ultra chipset, which includes my SATA II controller. It is built
-into a server chassis featuring two SATA II (Seagate ST3500630AS, 500GB)
-hard drives with hotplug backplanes.  Operating system is Fedora Core 5.
-I set up a RAID 1 environment, both drives contain several partitions
-which are mirrored.
-I tried two kernel versions, both with the same result:
-2.6.18-rc2 and 2.6.17.5 with the libata-tj-2.6.17.4-20060710 patch
+If the worker fired per-host_set, then you could use an ata_port dynamic 
+flag to indicate the poll-active ports, for the ata_hp_poll_worker() loop.
 
-When I remove one drive, I get the following messages into
-/var/log/messages:
+If the worker fires per-port, then no loop or mutex is needed at all. 
+You could simply call the hp_poll hook.
 
-Jul 19 21:59:08 srv1 kernel: ata2: exception Emask 0x10 SAct 0x0 SErr
-0x1810000 action 0x2 frozen
-Jul 19 21:59:08 srv1 kernel: ata2: soft resetting port
-Jul 19 21:59:08 srv1 kernel: ata2: SATA link down (SStatus 0 SControl 300)
-Jul 19 21:59:08 srv1 kernel: ata2: failed to recover some devices,
-retrying in 5 secs
-Jul 19 21:59:13 srv1 kernel: ata2: hard resetting port
-Jul 19 21:59:14 srv1 kernel: ata2: SATA link down (SStatus 0 SControl 300)
-Jul 19 21:59:14 srv1 kernel: ata2: failed to recover some devices,
-retrying in 5 secs
-Jul 19 21:59:19 srv1 kernel: ata2: hard resetting port
-Jul 19 21:59:20 srv1 kernel: ata2: SATA link down (SStatus 0 SControl 300)
-Jul 19 21:59:20 srv1 kernel: ata2.00: disabled
-Jul 19 21:59:20 srv1 kernel: ata2: EH pending after completion,
-repeating EH (cnt=4)
-Jul 19 21:59:20 srv1 kernel: ata2: EH complete
 
-The files /dev/sdb* are removed and the RAID says it has been degraded,
-which is perfectly ok.
+> @@ -633,6 +637,10 @@ struct ata_port_operations {
+>  	void (*error_handler) (struct ata_port *ap);
+>  	void (*post_internal_cmd) (struct ata_queued_cmd *qc);
+>  
+> +	void (*hp_poll_activate) (struct ata_port *ap);
+> +	void (*hp_poll_deactivate) (struct ata_port *ap);
+> +	int (*hp_poll) (struct ata_port *ap);
+> +
+>  	irqreturn_t (*irq_handler)(int, void *, struct pt_regs *);
+>  	void (*irq_clear) (struct ata_port *);
+>  
 
-Now I re-insert the drive and get the following messages into
-/var/log/messages:
+All new hooks require at least a one-two sentence description in the 
+DocBook docs, telling driver writers how to use them.
 
-Jul 19 22:00:11 srv1 kernel: ata2: exception Emask 0x10 SAct 0x0 SErr
-0x50000 action 0x2 frozen
-Jul 19 22:00:19 srv1 kernel: ata2: port is slow to respond, please be
-patient
-Jul 19 22:00:42 srv1 kernel: ata2: port failed to respond (30 secs)
-Jul 19 22:00:42 srv1 kernel: ata2: soft resetting port
-Jul 19 22:00:49 srv1 kernel: ata2: port is slow to respond, please be
-patient
-Jul 19 22:01:12 srv1 kernel: ata2: port failed to respond (30 secs)
-Jul 19 22:01:12 srv1 kernel: ata2: SATA link up 1.5 Gbps (SStatus 113
-SControl 300)
-Jul 19 22:01:12 srv1 kernel: ata2: EH pending after completion,
-repeating EH (cnt=4)
-Jul 19 22:01:12 srv1 kernel: ata2: EH complete
+	Jeff
 
-To me this looks like everything went ok and the drive should be
-available again. But unfortunately, this is not the case.
-The /dev/sdb* files are not created again, nor did I find a way to
-create them (udevstart e.g. didn't do nothing). Only a reboot gave me
-the device files back. I also disabled SELinux, but the problems still
-perexisted.
 
-Now I do not know where the problem comes from, udev, libata or
-something totally else? Also for the RAID, shouldn't be the md module
-notice automatically that the drive is added again and begin to
-reconstruct the data?
-
-I don't know which information may be most important to you, so I put a
-copy of three files online:
-
-The kernel configuration I used:
-http://philipp-wagner.com/temp/sata/kernel-config
-
-The relevant part of /var/log/messages:
-http://philipp-wagner.com/temp/sata/messages
-
-The output of the `dmesg` command:
-http://philipp-wagner.com/temp/sata/dmesg
-
-Thanks already for your help,
-
-Philipp
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iD8DBQFEvptmn9gADIbesF4RAiZjAJ47qIp/y8R9qQXuorGiEU7Dm2+GngCgsDdw
-6sT0FaN4DhoCKW35PhO2PvI=
-=mRx2
------END PGP SIGNATURE-----
