@@ -1,57 +1,35 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 5/6] libata-pmp-prep: implement ops->qc_defer()
-Date: Wed, 19 Jul 2006 16:32:10 -0400
-Message-ID: <44BE96CA.30008@pobox.com>
-References: <11523378783771-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH 01/12] libata-pmp: add PMP related constants, fields,
+ ops and update helpers
+Date: Wed, 19 Jul 2006 16:34:50 -0400
+Message-ID: <44BE976A.1060709@pobox.com>
+References: <1152338287794-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:63627 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030280AbWGSUcP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2006 16:32:15 -0400
-In-Reply-To: <11523378783771-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:4492 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030287AbWGSUe6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2006 16:34:58 -0400
+In-Reply-To: <1152338287794-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> Controllers which support PMP have various restrictions on which
-> combinations of commands are allowed to what number of devices
-> concurrently.  This patch implements ops->qc_defer() which determines
-> whether a qc can be issued at the moment or should be deferred.
-> 
-> If the function returns ATA_DEFER_LINK, the qc will be deferred until
-> a qc completes on the link.  If ATA_DEFER_PORT, until a qc completes
-> on any link.  The defer conditions are advisory and in general
-> ATA_DEFER_LINK can be considered as lower priority deferring than
-> ATA_DEFER_PORT.
-> 
-> ops->qc_defer() replaces fixed ata_scmd_need_defer().  For standard
-> NCQ/non-NCQ exclusion, ata_std_qc_defer() is implemented.  ahci and
-> sata_sil24 are converted to use ata_std_qc_defer().
-> 
-> ops->qc_defer() is heavier than the original mechanism because full qc
-> is prepped before determining to defer it, but various information is
-> needed to determine defer conditinos and fully translating a qc is the
-> only way to supply such information in generic manner.
-> 
-> IMHO, this shouldn't cause any noticeable performance issues as
-> 
-> * for most cases deferring occurs rarely (except for NCQ-aware
->   cmd-switching PMP)
-> * translation itself isn't that expensive
-> * once deferred the command won't be repeated until another command
->   completes which usually is a very long time cpu-wise.
+> Add PMP related constants, fields and ops.  Also, update
+> ata_class_enabled/disabled() such that PMP classes are considered.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-ACK patches 1-4.
+FWIW:
 
-For this patch (#5), I would much rather prefer to update ->qc_issue() 
-or ->qc_prep() to return a DEFER return value.  That matches more 
-closely other APIs in Linux.
+As I noted on IRC, for generic ATA and SATA constants (i.e. stuff 
+mentioned in a specification somewhere), feel free to add these to an 
+easy-to-merge "tj-easy" branch.
+
+Newer SATA constants are just as welcome as new ATA constants.
 
 	Jeff
 
