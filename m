@@ -1,21 +1,66 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/3] libata: add hp-poll support to controllers without
- hotplug interrupts
-Date: Wed, 19 Jul 2006 16:57:49 -0400
-Message-ID: <44BE9CCD.7080007@pobox.com>
-References: <11531196492681-git-send-email-htejun@gmail.com>
+From: Brent Casavant <bcasavan@sgi.com>
+Subject: [PATCH] sgiioc4: Always share IRQ
+Date: Wed, 19 Jul 2006 17:30:53 -0500 (CDT)
+Message-ID: <20060719172618.N56117@pkunk.americas.sgi.com>
+Reply-To: Brent Casavant <bcasavan@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:15245 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030311AbWGSU5y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2006 16:57:54 -0400
-In-Reply-To: <11531196492681-git-send-email-htejun@gmail.com>
+Received: from omx1-ext.sgi.com ([192.48.179.11]:29930 "EHLO
+	omx1.americas.sgi.com") by vger.kernel.org with ESMTP
+	id S932551AbWGSWa6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 19 Jul 2006 18:30:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>, Jes Sorensen <jes@sgi.com>, tony.luck@intel.com
 
-ACK patches 2-3
+The SGI IOC4 IDE device always shares an interrupt with other devices
+which are part of IOC4.  As such, IDEPCI_SHARE_IRQ should always be
+enabled when BLK_DEV_SGIIOC4 is enabled.
 
+Signed-off-by: Brent Casavant <bcasavan@sgi.com>
+---
+ arch/ia64/configs/sn2_defconfig |    2 +-
+ arch/ia64/defconfig             |    2 +-
+ drivers/ide/Kconfig             |    1 +
+ 3 files changed, 3 insertions(+), 2 deletions(-)
+---
+diff --git a/arch/ia64/configs/sn2_defconfig b/arch/ia64/configs/sn2_defconfig
+index 9ea3539..0f14a82 100644
+--- a/arch/ia64/configs/sn2_defconfig
++++ b/arch/ia64/configs/sn2_defconfig
+@@ -363,7 +363,7 @@ # IDE chipset support/bugfixes
+ #
+ CONFIG_IDE_GENERIC=y
+ CONFIG_BLK_DEV_IDEPCI=y
+-# CONFIG_IDEPCI_SHARE_IRQ is not set
++CONFIG_IDEPCI_SHARE_IRQ=y
+ # CONFIG_BLK_DEV_OFFBOARD is not set
+ # CONFIG_BLK_DEV_GENERIC is not set
+ # CONFIG_BLK_DEV_OPTI621 is not set
+diff --git a/arch/ia64/defconfig b/arch/ia64/defconfig
+index 6cba55d..9001b3f 100644
+--- a/arch/ia64/defconfig
++++ b/arch/ia64/defconfig
+@@ -366,7 +366,7 @@ #
+ # CONFIG_IDE_GENERIC is not set
+ # CONFIG_BLK_DEV_IDEPNP is not set
+ CONFIG_BLK_DEV_IDEPCI=y
+-# CONFIG_IDEPCI_SHARE_IRQ is not set
++CONFIG_IDEPCI_SHARE_IRQ=y
+ # CONFIG_BLK_DEV_OFFBOARD is not set
+ CONFIG_BLK_DEV_GENERIC=y
+ # CONFIG_BLK_DEV_OPTI621 is not set
+diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
+index d1266fe..556958e 100644
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -682,6 +682,7 @@ config BLK_DEV_SVWKS
+ config BLK_DEV_SGIIOC4
+ 	tristate "Silicon Graphics IOC4 chipset ATA/ATAPI support"
+ 	depends on (IA64_SGI_SN2 || IA64_GENERIC) && SGI_IOC4
++	select IDEPCI_SHARE_IRQ
+ 	help
+ 	  This driver adds PIO & MultiMode DMA-2 support for the SGI IOC4
+ 	  chipset, which has one channel and can support two devices.
