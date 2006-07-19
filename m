@@ -1,41 +1,27 @@
-From: Douglas <Jeffrey@panhandle.rr.com>
-Subject: ingreso digno
-Date: Wed, 19 Jul 2006 14:50:08 -0400
-Message-ID: <A0C5EF22.8161225@panhandle.rr.com>
+From: "Inez" <InezLyles@writeme.com>
+Subject: Latest stuff I am sure it was Delight
+Date: Wed, 19 Jul 2006 20:51:38 +0200
+Message-ID: <91339982147419.C5F0FA1A73__13926.1869401254$1153335171$gmane$org@B2D8IC85>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pool-70-19-106-250.ny325.east.verizon.net ([70.19.106.250]:50630
-	"HELO pool-70-23-110-126.ny325.east.verizon.net") by vger.kernel.org
-	with SMTP id S1030220AbWGSSuJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2006 14:50:09 -0400
+Received: from pD9E58990.dip0.t-ipconnect.de ([217.229.137.144]:54514 "EHLO
+	VK38") by vger.kernel.org with ESMTP id S1030252AbWGSSw3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2006 14:52:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
- Necesita ganancias extra?
+Hello Sir,
+Boost your manhood to astonishing levels Everything a real man would ever need. 
 
-Nuevas oportunidades para Usted - hoy!
+Get everything you need delivered to your door low-cost and fast.
 
-Getting Assisted le invita a cooperar.
+ Most trusted brands of the world, join the thousands of happy customers
 
-
-Es responsable y ordenado
-
-Tiene de 18 a 60 anos de edad
-
-Es residente de Espana (preferiblemente)
-
-Tiene tiempo libre (2-4 horas al dia)
-
-
-Es su oporunidad:
-
-Ningun riesgo financiero!
-
-Contactenos, su trabajo le esta esperando!
-
-Para comsideracion inmediata y confidencial, por favor, envie su info a apply@getassisted.biz
+ See our shop: http://www.hanchbi.com 
+ We thank you for being our customer!
 
 
