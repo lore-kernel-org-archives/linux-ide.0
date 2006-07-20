@@ -1,24 +1,23 @@
 From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 2/5] ahci: definition of ahci_port_standby() and
-	ahci_port_spinup()
-Date: Thu, 20 Jul 2006 13:21:18 +0800
-Message-ID: <1153372878.7132.357.camel@forrest26.sh.intel.com>
+Subject: [PATCH 1/5] ahci: definition of ahci_start_fis_rx() and
+	ahci_stop_fis_rx()
+Date: Thu, 20 Jul 2006 13:21:01 +0800
+Message-ID: <1153372862.7132.356.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:61631 "EHLO
-	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S1030252AbWGTFkW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Jul 2006 01:40:22 -0400
+Received: from mga02.intel.com ([134.134.136.20]:20127 "EHLO
+	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1030253AbWGTFmg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Jul 2006 01:42:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, axboe@suse.de
 Cc: linux-ide@vger.kernel.org
 
-Put port power management and staggered-spinup related operations during
-the power state transition into ahci_port_standby() and ahci_port_spinup
-().
+Put the "start/stop FIS RX" operation into ahci_start_fis_rx() and
+ ahci_stop_fis_rx().
 
 
 Signed-off-by: Forrest Zhao <forrest.zhao@intel.com>
@@ -28,143 +27,102 @@ Signed-off-by: Jens Axboe <axboe@suse.de>
 
 ---
 
- drivers/scsi/ahci.c |   98 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ahci.c |   75 ++++++++++++++++++++++++++++++++++++++++++++
 +++++++
- 1 files changed, 98 insertions(+), 0 deletions(-)
+ 1 files changed, 75 insertions(+), 0 deletions(-)
 
-9ea9213fa3b37b84727d2ab1d911a84f8e205412
+e8b302fd248ec99f6c4cf99c468b467f585e7818
 diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 5bed7c3..f4386c5 100644
+index f1516ca..5bed7c3 100644
 --- a/drivers/scsi/ahci.c
 +++ b/drivers/scsi/ahci.c
-@@ -92,7 +92,9 @@ enum {
-        HOST_AHCI_EN            = (1 << 31), /* AHCI enabled */
- 
-        /* HOST_CAP bits */
-+       HOST_CAP_SSC            = (1 << 14), /* Slumber capable */
-        HOST_CAP_CLO            = (1 << 24), /* Command List Override
-support */
-+       HOST_CAP_SSS            = (1 << 27), /* Staggered Spin-up */
-        HOST_CAP_NCQ            = (1 << 30), /* Native Command Queueing
-*/
-        HOST_CAP_64             = (1 << 31), /* PCI DAC (64-bit DMA)
-support */
- 
-@@ -155,6 +157,7 @@ enum {
-        PORT_CMD_SPIN_UP        = (1 << 1), /* Spin up device */
-        PORT_CMD_START          = (1 << 0), /* Enable port DMA engine */
- 
-+       PORT_CMD_ICC_MASK       = (0xf << 28), /* i/f ICC state mask */
-        PORT_CMD_ICC_ACTIVE     = (0x1 << 28), /* Put i/f in active
-state */
-        PORT_CMD_ICC_PARTIAL    = (0x2 << 28), /* Put i/f in partial
-state */
-        PORT_CMD_ICC_SLUMBER    = (0x6 << 28), /* Put i/f in slumber
-state */
-@@ -218,6 +221,8 @@ static void ahci_freeze(struct ata_port 
- static void ahci_thaw(struct ata_port *ap);
- static void ahci_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
-+static int ahci_port_standby(void __iomem *port_mmio, u32 cap);
-+static int ahci_port_spinup(void __iomem *port_mmio, u32 cap);
- static void ahci_remove_one (struct pci_dev *pdev);
- 
- static struct scsi_host_template ahci_sht = {
-@@ -645,6 +650,99 @@ static void ahci_start_fis_rx(void __iom
-        readl(port_mmio + PORT_CMD); /* flush */
+@@ -207,6 +207,10 @@ static int ahci_port_start(struct ata_po
+ static void ahci_port_stop(struct ata_port *ap);
+ static int ahci_start_engine(void __iomem *port_mmio);
+ static int ahci_stop_engine(void __iomem *port_mmio);
++static void ahci_start_fis_rx(void __iomem *port_mmio,
++                             struct ahci_port_priv *pp,
++                             struct ahci_host_priv *hpriv);
++static int ahci_stop_fis_rx(void __iomem *port_mmio);
+ static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+ static u8 ahci_check_status(struct ata_port *ap);
+@@ -570,6 +574,77 @@ static int ahci_start_engine(void __iome
+        return 0;
  }
  
-+static int ahci_port_standby(void __iomem *port_mmio, u32 cap)
++static int ahci_stop_fis_rx(void __iomem *port_mmio)
 +{
-+       u32 tmp, scontrol, sstatus;
++       u32 tmp;
 +
++       /*
++        * Get current status
++        */
 +       tmp = readl(port_mmio + PORT_CMD);
++
++       /* Check if FIS RX is already disabled */
++       if ((tmp & PORT_CMD_FIS_RX) == 0)
++               return 0;
++
 +       /*
-+        * AHCI Rev1.1 Section 5.3.2.3:
-+        * Software is only allowed to program the PxCMD.FRE,
-+        * PxCMD.POD, PxSCTL.DET, and PxCMD.SUD register bits
-+        * when PxCMD.ST is set to '0'
++        * AHCI Rev 1.1 section 10.3.2
++        * Software shall not clear PxCMD.FRE while
++        * PxCMD.ST or PxCMD.CR is set to '1'
 +        */
-+       if (tmp & PORT_CMD_START)
++       if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_START)) {
++               return -EPERM;
++       }
++
++       /*
++        * Disable FIS reception
++        *
++        * AHCI Rev 1.1 Section 10.1.2:
++        * If PxCMD.FRE is set to '1', software should clear it
++        * to '0' and wait at least 500 milliseconds for PxCMD.FR
++        * to return '0' when read. If PxCMD.FR does not clear
++        * '0' correctly, then software may attempt a port reset
++        * of a full HBA reset to recover.
++        */
++       tmp &= ~(PORT_CMD_FIS_RX);
++       writel(tmp, port_mmio + PORT_CMD);
++
++       tmp = ata_wait_register(port_mmio + PORT_CMD, PORT_CMD_FIS_ON,
++                               PORT_CMD_FIS_ON, 1, 1000);
++       if(tmp & PORT_CMD_FIS_ON)
 +               return -EBUSY;
-+
-+       if (cap & HOST_CAP_SSC) {
-+               /*
-+                * Enable transitions to slumber mode
-+                */
-+               scontrol = readl(port_mmio + PORT_SCR_CTL);
-+               if ((scontrol & 0x0f00) > 0x100) {
-+                       scontrol &= ~0xf00;
-+                       writel(scontrol, port_mmio + PORT_SCR_CTL);
-+               }
-+               /*
-+                * Put device into slumber mode
-+                */
-+               tmp |= PORT_CMD_ICC_SLUMBER;
-+               writel(tmp, port_mmio + PORT_CMD);
-+               tmp = readl(port_mmio + PORT_CMD);
-+
-+               /*
-+                * Actually, we should wait for the device to
-+                * enter slumber mode by checking
-+                * sstatus & 0xf00 == 6
-+                */
-+               sstatus = readl(port_mmio + PORT_SCR_STAT);
-+       }
-+
-+       /*
-+        * Put device into listen mode
-+        */
-+       if (cap & HOST_CAP_SSS) {
-+               /* 
-+                * first set PxSCTL.DET to 0
-+                */
-+               scontrol = readl(port_mmio + PORT_SCR_CTL);
-+               scontrol &= ~0xf;
-+               writel(scontrol, port_mmio + PORT_SCR_CTL);
-+
-+               /*
-+                * then set PxCMD.SUD to 0
-+                */
-+               tmp = readl(port_mmio + PORT_CMD);
-+               tmp &= ~PORT_CMD_SPIN_UP;
-+               writel(tmp, port_mmio + PORT_CMD);
-+               readl(port_mmio + PORT_CMD); /* flush */
-+       }
 +
 +       return 0;
 +}
 +
-+static int ahci_port_spinup(void __iomem *port_mmio, u32 cap)
++static void ahci_start_fis_rx(void __iomem *port_mmio,
++                             struct ahci_port_priv *pp,
++                             struct ahci_host_priv *hpriv)
 +{
 +       u32 tmp;
 +
++       /*
++        * Set FIS registers
++        */
++       if (hpriv->cap & HOST_CAP_64)
++               writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio +
+PORT_LST_ADDR_HI);
++       writel(pp->cmd_slot_dma & 0xffffffff, port_mmio +
+PORT_LST_ADDR);
++       readl(port_mmio + PORT_LST_ADDR); /* flush */
++
++       if (hpriv->cap & HOST_CAP_64)
++               writel((pp->rx_fis_dma >> 16) >> 16, port_mmio +
+PORT_FIS_ADDR_HI);
++       writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
++       readl(port_mmio + PORT_FIS_ADDR); /* flush */
++
++       /*
++        * Enable FIS reception
++        */
 +       tmp = readl(port_mmio + PORT_CMD);
-+       /*
-+        * AHCI Rev1.1 Section 5.3.2.3:
-+        * Software is only allowed to program the PxCMD.FRE,
-+        * PxCMD.POD, PxSCTL.DET, and PxCMD.SUD register bits
-+        * when PxCMD.ST is set to '0'
-+        */
-+       if (tmp & PORT_CMD_START)
-+               return -EBUSY;
-+
-+       /*
-+        * Spin up device
-+        */
-+       if (cap & HOST_CAP_SSS) {
-+               tmp |= PORT_CMD_SPIN_UP;
-+               writel(tmp, port_mmio + PORT_CMD);
-+               tmp = readl(port_mmio + PORT_CMD);
-+       }
-+
-+       if ((tmp & PORT_CMD_ICC_MASK) != PORT_CMD_ICC_ACTIVE) {
-+               tmp |= PORT_CMD_ICC_ACTIVE;
-+               writel(tmp, port_mmio + PORT_CMD);
-+               tmp = readl(port_mmio + PORT_CMD);
-+       }
-+
-+       return 0;
++       tmp |= PORT_CMD_FIS_RX;
++       writel(tmp, port_mmio + PORT_CMD);
++       readl(port_mmio + PORT_CMD); /* flush */
 +}
 +
  static unsigned int ahci_dev_classify(struct ata_port *ap)
