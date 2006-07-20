@@ -1,23 +1,23 @@
 From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 3/5] ahci: definition of ahci_port_suspend()
-Date: Thu, 20 Jul 2006 13:21:24 +0800
-Message-ID: <1153372884.7132.358.camel@forrest26.sh.intel.com>
+Subject: [PATCH 4/5] ahci: update new users of new added functions
+Date: Thu, 20 Jul 2006 13:21:32 +0800
+Message-ID: <1153372892.7132.359.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:18948 "EHLO
 	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
-	id S932570AbWGTFff (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Jul 2006 01:35:35 -0400
+	id S932567AbWGTFfb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Jul 2006 01:35:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, htejun@gmail.com, hare@suse.de, axboe@suse.de
 Cc: linux-ide@vger.kernel.org
 
-1 Add the definition of ahci_port_suspend(), which will be used to
-suspend a port.
-2 Use ahci_port_suspend() in ahci_port_stop().
+1 Use ahci_start_fis_rx(), ahci_port_spinup(), ahci_start_engine() in
+ahci_port_start()
+2 Use ahci_stop_engine(), ahci_stop_fis_rx() in ahci_host_init()
 
 
 Signed-off-by: Forrest Zhao <forrest.zhao@intel.com>
@@ -27,88 +27,85 @@ Signed-off-by: Jens Axboe <axboe@suse.de>
 
 ---
 
- drivers/scsi/ahci.c |   48 ++++++++++++++++++++++++++++++++++
-+-------------
- 1 files changed, 35 insertions(+), 13 deletions(-)
+ drivers/scsi/ahci.c |   50 ++++++++++++++++++++++
++---------------------------
+ 1 files changed, 23 insertions(+), 27 deletions(-)
 
-1c970ab5651cfd20ee1ce69d54bcda1a39af9e42
+9c57dea5678c608c5257ad2e6a363c52fd563ca8
 diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index f4386c5..50d0183 100644
+index 50d0183..5e04ef4 100644
 --- a/drivers/scsi/ahci.c
 +++ b/drivers/scsi/ahci.c
-@@ -223,6 +223,7 @@ static void ahci_error_handler(struct at
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
- static int ahci_port_standby(void __iomem *port_mmio, u32 cap);
- static int ahci_port_spinup(void __iomem *port_mmio, u32 cap);
-+static int ahci_port_suspend(struct ata_port *ap, pm_message_t state);
- static void ahci_remove_one (struct pci_dev *pdev);
+@@ -442,20 +442,20 @@ static int ahci_port_start(struct ata_po
  
- static struct scsi_host_template ahci_sht = {
-@@ -459,24 +460,12 @@ static int ahci_port_start(struct ata_po
+        ap->private_data = pp;
+ 
+-       if (hpriv->cap & HOST_CAP_64)
+-               writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio +
+PORT_LST_ADDR_HI);
+-       writel(pp->cmd_slot_dma & 0xffffffff, port_mmio +
+PORT_LST_ADDR);
+-       readl(port_mmio + PORT_LST_ADDR); /* flush */
+-
+-       if (hpriv->cap & HOST_CAP_64)
+-               writel((pp->rx_fis_dma >> 16) >> 16, port_mmio +
+PORT_FIS_ADDR_HI);
+-       writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
+-       readl(port_mmio + PORT_FIS_ADDR); /* flush */
++       /*
++        * Driver is setup; initialize the HBA
++        */
++       ahci_start_fis_rx(port_mmio, pp, hpriv);
+ 
+-       writel(PORT_CMD_ICC_ACTIVE | PORT_CMD_FIS_RX |
+-              PORT_CMD_POWER_ON | PORT_CMD_SPIN_UP |
+-              PORT_CMD_START, port_mmio + PORT_CMD);
+-       readl(port_mmio + PORT_CMD); /* flush */
++       rc = ahci_port_spinup(port_mmio, hpriv->cap);
++       if (rc) 
++               ata_port_printk(ap, KERN_WARNING,
++                               "Could not spinup port (%d)\n", rc);
++
++       rc = ahci_start_engine(port_mmio); 
++       if (rc) 
++               ata_port_printk(ap, KERN_WARNING, "Could not start DMA
+engine"
++                               "of port (%d)\n", rc);
+ 
         return 0;
  }
+@@ -1411,20 +1411,16 @@ static int ahci_host_init(struct ata_pro
+                                (unsigned long) mmio, i);
  
+                /* make sure port is not active */
+-               tmp = readl(port_mmio + PORT_CMD);
+-               VPRINTK("PORT_CMD 0x%x\n", tmp);
+-               if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
+-                          PORT_CMD_FIS_RX | PORT_CMD_START)) {
+-                       tmp &= ~(PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
+-                                PORT_CMD_FIS_RX | PORT_CMD_START);
+-                       writel(tmp, port_mmio + PORT_CMD);
+-                       readl(port_mmio + PORT_CMD); /* flush */
 -
- static void ahci_port_stop(struct ata_port *ap)
- {
-        struct device *dev = ap->host_set->dev;
-        struct ahci_port_priv *pp = ap->private_data;
--       void __iomem *mmio = ap->host_set->mmio_base;
--       void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
--       u32 tmp;
+-                       /* spec says 500 msecs for each bit, so
+-                        * this is slightly incorrect.
+-                        */
+-                       msleep(500);
+-               }
++
++               rc = ahci_stop_engine(port_mmio);
++               if (rc)
++                       printk(KERN_WARNING "ata%u: DMA engine busy (%d)
+\n",
++                              i, rc);
++
++               rc = ahci_stop_fis_rx(port_mmio);
++               if (rc)
++                       printk(KERN_WARNING "ata%u: FIS RX not stopped
+(%d)\n",
++                              i, rc);
  
--       tmp = readl(port_mmio + PORT_CMD);
--       tmp &= ~(PORT_CMD_START | PORT_CMD_FIS_RX);
--       writel(tmp, port_mmio + PORT_CMD);
--       readl(port_mmio + PORT_CMD); /* flush */
--
--       /* spec says 500 msecs for each PORT_CMD_{START,FIS_RX} bit, so
--        * this is slightly incorrect.
--        */
--       msleep(500);
-+       ahci_port_suspend(ap, PMSG_SUSPEND);
+                writel(PORT_CMD_SPIN_UP, port_mmio + PORT_CMD);
  
-        ap->private_data = NULL;
-        dma_free_coherent(dev, AHCI_PORT_PRIV_DMA_SZ,
-@@ -485,6 +474,39 @@ static void ahci_port_stop(struct ata_po
-        kfree(pp);
- }
- 
-+static int ahci_port_suspend(struct ata_port *ap, pm_message_t state)
-+{
-+       void __iomem *mmio = ap->host_set->mmio_base;
-+       void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+       struct ahci_host_priv *hpriv = ap->host_set->private_data;
-+       int rc;
-+
-+       /*
-+        * Disable DMA
-+        */
-+       rc = ahci_stop_engine(port_mmio);
-+       if (rc) {
-+               ata_port_printk(ap, KERN_WARNING, "DMA engine busy\n");
-+               return rc;
-+       }
-+
-+       /*
-+        * Disable FIS reception
-+        */
-+       rc = ahci_stop_fis_rx(port_mmio);
-+       if (rc)
-+               ata_port_printk(ap, KERN_WARNING, "FIS RX still running"
-+                               " (%d)\n", rc);
-+
-+       /*
-+        * Put device into slumber mode
-+        */
-+       if (!rc && state.event != PM_EVENT_FREEZE)
-+               ahci_port_standby(port_mmio, hpriv->cap);
-+
-+       return rc;
-+}
-+
- static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
- {
-        unsigned int sc_reg;
 -- 
 1.2.6
