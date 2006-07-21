@@ -1,39 +1,25 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
-Date: Fri, 21 Jul 2006 06:16:42 -0700
-Message-ID: <20060721061642.923c7052.akpm@osdl.org>
-References: <20060719153155.30856.2479.sendpatchset@attica.americas.sgi.com>
-	<20060720051929.GB763333@sgi.com>
+From: "Gay" <Gay.Delgado@earthlink.net>
+Subject: Fresh stuff Buy it now  =?ISO-8859-1?Q?=20=96?= and this night will be the best in your life
+Date: Fri, 21 Jul 2006 22:55:55 +0800
+Message-ID: <97287813691596.D00601E97A@P5AJXU>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+        charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:55780 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750705AbWGUNRK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jul 2006 09:17:10 -0400
-In-Reply-To: <20060720051929.GB763333@sgi.com>
+Received: from 59-112-128-158.dynamic.hinet.net ([59.112.128.158]:25874 "EHLO
+	LINUX-7Z0V1AM7I") by vger.kernel.org with ESMTP id S1750789AbWGUO4y
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Jul 2006 10:56:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: jpk@sgi.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 
-On Wed, 19 Jul 2006 22:19:29 -0700
-Jeremy Higdon <jeremy@sgi.com> wrote:
+Hi, 
 
-> On Wed, Jul 19, 2006 at 10:31:55AM -0500, John Keller wrote:
-> > Resend #2 changes include:
-> > 
-> > - use 'void __iomem *' for ioremap() return values,
-> >   and handle error cases.
-> > 
-> > sgiioc4.c had been recently converted to using mmio ops.
-> > There are still a few issues to cleanup.
-> > 
-> > Signed-off-by: jpk@sgi.com
-> Signed-off-by: jeremy@sgi.com
 
-hrm.  I think we're owed a couple of iounmap()s, please.  One in the
-ide_dma_sgiioc4() error path and one in the takedown path.
+ Prolong your ssex. You  have small peniis? Now you may increase it! Come on in: http://www.ollyert.com/gal/ms/ 
 
-Maybe that was one of the "few issues to cleanup", but it's a pretty simple
-one.
+
+ Water that has been begged for does not quench the thirst A penny saved is a penny earned, and All work and no play makes Jack a dull boy. Never trouble trouble till trouble troubles you An idle mind is.. the best way to relax. Every cross has its inscriptions But whoso committeth adultery with a woman lacketh understanding: he that doeth it destroyeth his own soul.
+
