@@ -1,26 +1,39 @@
-From: "Costa" <Costaares@cliffhanger.com>
-Subject: Fatblaster is an all natural herbal formulated thermogenic weight loss supplement.
-Date: Fri, 21 Jul 2006 12:07:17 +0200
-Message-ID: <64380407391846.E0BB881733__25987.2668226764$1153476470$gmane$org@2WX3>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 1/1] - sgiioc4: fixup use of mmio ops
+Date: Fri, 21 Jul 2006 06:16:42 -0700
+Message-ID: <20060721061642.923c7052.akpm@osdl.org>
+References: <20060719153155.30856.2479.sendpatchset@attica.americas.sgi.com>
+	<20060720051929.GB763333@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from AClermont-Ferrand-157-1-1-47.w83-205.abo.wanadoo.fr ([83.205.8.47]:54545
-	"EHLO o3uh7mo.xcibh3.aol.com") by vger.kernel.org with ESMTP
-	id S1161027AbWGUKHR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Jul 2006 06:07:17 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:55780 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750705AbWGUNRK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jul 2006 09:17:10 -0400
+In-Reply-To: <20060720051929.GB763333@sgi.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel-owner@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: jpk@sgi.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-How are u? 
+On Wed, 19 Jul 2006 22:19:29 -0700
+Jeremy Higdon <jeremy@sgi.com> wrote:
 
- Our laboratory uses only the highest quality ingredients and manufacturing procedures to produce the finest and most effective formula.  With every order guaranteed, you have nothing to lose! (except weight) Fatblaster remains a top seller among competitive brands, making it the #1 choice for those seeking safe and effective weight loss solution. Find what you need here: http://yeltren.com/gal/fb/ 
+> On Wed, Jul 19, 2006 at 10:31:55AM -0500, John Keller wrote:
+> > Resend #2 changes include:
+> > 
+> > - use 'void __iomem *' for ioremap() return values,
+> >   and handle error cases.
+> > 
+> > sgiioc4.c had been recently converted to using mmio ops.
+> > There are still a few issues to cleanup.
+> > 
+> > Signed-off-by: jpk@sgi.com
+> Signed-off-by: jeremy@sgi.com
 
- One, one dutty build dam. Count your blessings There's no place like home.
+hrm.  I think we're owed a couple of iounmap()s, please.  One in the
+ide_dma_sgiioc4() error path and one in the takedown path.
 
-
- After dinner rest a while, after supper walk a mile  You can have too much of a good thing It will all come out in the wash The grass is always greener on the other side of the fence
-
+Maybe that was one of the "few issues to cleanup", but it's a pretty simple
+one.
