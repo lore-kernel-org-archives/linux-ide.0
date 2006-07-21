@@ -1,340 +1,699 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 2/2] libata: Add support for SATA attachment to SAS adapters
-Date: Thu, 20 Jul 2006 09:17:29 -0500
-Message-ID: <44BF9079.4040009@us.ibm.com>
-References: <200607131335.k6DDZpMD004925@d03av03.boulder.ibm.com>
+From: Pavel Machek <pavel@suse.cz>
+Subject: AHCI suspend/resume on thinkpad x60
+Date: Fri, 21 Jul 2006 02:58:55 +0200
+Message-ID: <20060721005855.GB1889@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:46283 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030306AbWGTOWe
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Jul 2006 10:22:34 -0400
-In-Reply-To: <200607131335.k6DDZpMD004925@d03av03.boulder.ibm.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:19632 "EHLO
+	atrey.karlin.mff.cuni.cz") by vger.kernel.org with ESMTP
+	id S1030347AbWGTP7p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Jul 2006 11:59:45 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: forrest.zhao@intel.com, axboe@suse.de, linux-ide@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>
 
-Jeff,
+Hi!
 
-Do you have any comments on my latest patches? What can I do to
-help get this support merged into libata?
+I applied patch from Forrest Zhao, and suspend/resume to disk/RAM now
+works for me on thinkpad x60. I had to do some hand-tuning; this is
+version against recent vanilla-git. Thanks for the patch! (I think
+this is on its way to mainline, anyway, so this is just FYI).
+								Pavel
+
+This is the take 5 of AHCI suspend/resume patches.
+The patch is against libata #upstream.
+
+Signed-off-by: Forrest Zhao <forrest.zhao@intel.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Jens Axboe <axboe@suse.de>
+Signed-off-by: Pavel Machek <pavel@suse.cz>
+
+---
+commit f15f82c3a5709f4ffc81c884a000f86c5b103508
+tree 6e92d57e3c3b36fcf1bf0d415203a5ed445f7cab
+parent 6414eba4f65ded35f3a8f2d61261d1134e292506
+author <pavel@amd.ucw.cz> Fri, 21 Jul 2006 02:29:01 +0200
+committer <pavel@amd.ucw.cz> Fri, 21 Jul 2006 02:29:01 +0200
+
+ drivers/scsi/ahci.c |  480 ++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 415 insertions(+), 65 deletions(-)
+
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 77e7202..7c1b43d 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -92,7 +92,9 @@ enum {
+ 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
+ 
+ 	/* HOST_CAP bits */
++	HOST_CAP_SSC		= (1 << 14), /* Slumber capable */
+ 	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
++	HOST_CAP_SSS		= (1 << 27), /* Staggered Spin-up */
+ 	HOST_CAP_NCQ		= (1 << 30), /* Native Command Queueing */
+ 	HOST_CAP_64		= (1 << 31), /* PCI DAC (64-bit DMA) support */
+ 
+@@ -155,6 +157,7 @@ enum {
+ 	PORT_CMD_SPIN_UP	= (1 << 1), /* Spin up device */
+ 	PORT_CMD_START		= (1 << 0), /* Enable port DMA engine */
+ 
++	PORT_CMD_ICC_MASK	= (0xf << 28), /* i/f ICC state mask */
+ 	PORT_CMD_ICC_ACTIVE	= (0x1 << 28), /* Put i/f in active state */
+ 	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
+ 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
+@@ -205,6 +208,12 @@ static irqreturn_t ahci_interrupt (int i
+ static void ahci_irq_clear(struct ata_port *ap);
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
++static int ahci_start_engine(void __iomem *port_mmio);
++static int ahci_stop_engine(void __iomem *port_mmio);
++static void ahci_start_fis_rx(void __iomem *port_mmio,
++			      struct ahci_port_priv *pp,
++			      struct ahci_host_priv *hpriv);
++static int ahci_stop_fis_rx(void __iomem *port_mmio);
+ static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+ static u8 ahci_check_status(struct ata_port *ap);
+@@ -212,6 +221,12 @@ static void ahci_freeze(struct ata_port 
+ static void ahci_thaw(struct ata_port *ap);
+ static void ahci_error_handler(struct ata_port *ap);
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
++static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
++static int ahci_pci_device_resume(struct pci_dev *pdev);
++static int ahci_port_standby(void __iomem *port_mmio, u32 cap);
++static int ahci_port_spinup(void __iomem *port_mmio, u32 cap);
++static int ahci_port_suspend(struct ata_port *ap, pm_message_t state);
++static int ahci_port_resume(struct ata_port *ap);
+ static void ahci_remove_one (struct pci_dev *pdev);
+ 
+ static struct scsi_host_template ahci_sht = {
+@@ -231,6 +246,8 @@ static struct scsi_host_template ahci_sh
+ 	.slave_configure	= ata_scsi_slave_config,
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
++	.resume			= ata_scsi_device_resume,
++	.suspend		= ata_scsi_device_suspend,
+ };
+ 
+ static const struct ata_port_operations ahci_ops = {
+@@ -359,6 +376,8 @@ static struct pci_driver ahci_pci_driver
+ 	.id_table		= ahci_pci_tbl,
+ 	.probe			= ahci_init_one,
+ 	.remove			= ahci_remove_one,
++	.suspend		= ahci_pci_device_suspend,
++	.resume			= ahci_pci_device_resume,
+ };
+ 
+ 
+@@ -430,42 +449,30 @@ static int ahci_port_start(struct ata_po
+ 
+ 	ap->private_data = pp;
+ 
+-	if (hpriv->cap & HOST_CAP_64)
+-		writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio + PORT_LST_ADDR_HI);
+-	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
+-	readl(port_mmio + PORT_LST_ADDR); /* flush */
+-
+-	if (hpriv->cap & HOST_CAP_64)
+-		writel((pp->rx_fis_dma >> 16) >> 16, port_mmio + PORT_FIS_ADDR_HI);
+-	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
+-	readl(port_mmio + PORT_FIS_ADDR); /* flush */
++	/*
++	 * Driver is setup; initialize the HBA
++	 */
++	ahci_start_fis_rx(port_mmio, pp, hpriv);
+ 
+-	writel(PORT_CMD_ICC_ACTIVE | PORT_CMD_FIS_RX |
+-	       PORT_CMD_POWER_ON | PORT_CMD_SPIN_UP |
+-	       PORT_CMD_START, port_mmio + PORT_CMD);
+-	readl(port_mmio + PORT_CMD); /* flush */
++	rc = ahci_port_spinup(port_mmio, hpriv->cap);
++	if (rc) 
++		ata_port_printk(ap, KERN_WARNING,
++				"Could not spinup port (%d)\n", rc);
++
++	rc = ahci_start_engine(port_mmio); 
++	if (rc) 
++		ata_port_printk(ap, KERN_WARNING, "Could not start DMA engine"
++			        "of port (%d)\n", rc);
+ 
+ 	return 0;
+ }
+ 
+-
+ static void ahci_port_stop(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host_set->dev;
+ 	struct ahci_port_priv *pp = ap->private_data;
+-	void __iomem *mmio = ap->host_set->mmio_base;
+-	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+-	u32 tmp;
+ 
+-	tmp = readl(port_mmio + PORT_CMD);
+-	tmp &= ~(PORT_CMD_START | PORT_CMD_FIS_RX);
+-	writel(tmp, port_mmio + PORT_CMD);
+-	readl(port_mmio + PORT_CMD); /* flush */
+-
+-	/* spec says 500 msecs for each PORT_CMD_{START,FIS_RX} bit, so
+-	 * this is slightly incorrect.
+-	 */
+-	msleep(500);
++	ahci_port_suspend(ap, PMSG_SUSPEND);
+ 
+ 	ap->private_data = NULL;
+ 	dma_free_coherent(dev, AHCI_PORT_PRIV_DMA_SZ,
+@@ -474,6 +481,90 @@ static void ahci_port_stop(struct ata_po
+ 	kfree(pp);
+ }
+ 
++static int ahci_port_suspend(struct ata_port *ap, pm_message_t state)
++{
++	void __iomem *mmio = ap->host_set->mmio_base;
++	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
++	int rc;
++
++	/*
++	 * Disable DMA
++	 */
++	rc = ahci_stop_engine(port_mmio);
++	if (rc) {
++		ata_port_printk(ap, KERN_WARNING, "DMA engine busy\n");
++		return rc;
++	}
++
++	/*
++	 * Disable FIS reception
++	 */
++	rc = ahci_stop_fis_rx(port_mmio);
++	if (rc)
++		ata_port_printk(ap, KERN_WARNING, "FIS RX still running"
++				" (%d)\n", rc);
++
++	/*
++	 * Put device into slumber mode
++	 */
++	if (!rc && state.event != PM_EVENT_FREEZE)
++		ahci_port_standby(port_mmio, hpriv->cap);
++
++	return rc;
++}
++
++static int ahci_port_resume(struct ata_port *ap)
++{
++	void __iomem *mmio = ap->host_set->mmio_base;
++	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
++	struct ahci_host_priv *hpriv = ap->host_set->private_data;
++	struct ahci_port_priv *pp = ap->private_data;
++	int rc;
++	u32 tmp;
++
++	/*
++	 * Enable FIS reception
++	 */
++	ahci_start_fis_rx(port_mmio, pp, hpriv);
++
++	rc = ahci_port_spinup(port_mmio, hpriv->cap);
++	if (rc)
++		ata_port_printk(ap, KERN_WARNING, "Could not spinup device"
++				" (%d)\n", rc);
++
++	/*
++	 * Clear error status
++	 */
++	tmp = readl(port_mmio + PORT_SCR_ERR);
++	writel(tmp, port_mmio + PORT_SCR_ERR);
++	/*
++	 * Clear interrupt status
++	 */
++	tmp = readl(mmio + HOST_CTL);
++	if (!(tmp & HOST_IRQ_EN)) {
++		u32 irq_stat;
++
++		/* ack any pending irq events for this port */
++		irq_stat = readl(port_mmio + PORT_IRQ_STAT);
++		if (irq_stat)
++			writel(irq_stat, port_mmio + PORT_IRQ_STAT);
++
++		/* set irq mask (enables interrupts) */
++		writel(DEF_PORT_IRQ, port_mmio + PORT_IRQ_MASK);
++	}
++
++	/*
++	 * Enable DMA
++	 */
++	rc = ahci_start_engine(port_mmio);
++	if (rc)
++		ata_port_printk(ap, KERN_WARNING, "Can't start DMA engine"
++				" (%d)\n", rc);
++
++	return rc;
++}
++
+ static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
+ {
+ 	unsigned int sc_reg;
+@@ -508,41 +599,228 @@ static void ahci_scr_write (struct ata_p
+ 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
+ 
+-static int ahci_stop_engine(struct ata_port *ap)
++static int ahci_stop_engine(void __iomem *port_mmio)
+ {
+-	void __iomem *mmio = ap->host_set->mmio_base;
+-	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+-	int work;
+ 	u32 tmp;
+ 
+ 	tmp = readl(port_mmio + PORT_CMD);
++
++	/* Check if the HBA is idle */
++	if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) == 0)
++		return 0;
++
++	/* Setting HBA to idle */
+ 	tmp &= ~PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 
+-	/* wait for engine to stop.  TODO: this could be
++	/* wait for engine to stop. This could be
+ 	 * as long as 500 msec
+ 	 */
+-	work = 1000;
+-	while (work-- > 0) {
+-		tmp = readl(port_mmio + PORT_CMD);
+-		if ((tmp & PORT_CMD_LIST_ON) == 0)
+-			return 0;
+-		udelay(10);
+-	}
++	tmp = ata_wait_register(port_mmio + PORT_CMD,
++			        PORT_CMD_LIST_ON, PORT_CMD_LIST_ON, 1, 500);
++	if(tmp & PORT_CMD_LIST_ON)
++		return -EIO;
+ 
+-	return -EIO;
++	return 0;
+ }
+ 
+-static void ahci_start_engine(struct ata_port *ap)
++static int ahci_start_engine(void __iomem *port_mmio)
+ {
+-	void __iomem *mmio = ap->host_set->mmio_base;
+-	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+ 	u32 tmp;
+ 
++	/*
++	 * Get current status
++	 */
+ 	tmp = readl(port_mmio + PORT_CMD);
++
++	/*
++	 * AHCI rev 1.1 section 10.3.1:
++	 * Software shall not set PxCMD.ST to '1' until it verifies
++	 * that PxCMD.CR is '0' and has set PxCMD.FRE to '1'
++	 */
++	if ((tmp & PORT_CMD_FIS_RX) == 0)
++		return -EPERM;
++
++	/*
++	 * wait for engine to become idle.
++	 */
++	tmp = ata_wait_register(port_mmio + PORT_CMD,
++				PORT_CMD_LIST_ON, PORT_CMD_LIST_ON, 1,500);
++	if(tmp & PORT_CMD_LIST_ON)
++		return -EBUSY;
++
++	/*
++	 * Start DMA
++	 */
+ 	tmp |= PORT_CMD_START;
+ 	writel(tmp, port_mmio + PORT_CMD);
+ 	readl(port_mmio + PORT_CMD); /* flush */
++
++	return 0;
++}
++
++static int ahci_stop_fis_rx(void __iomem *port_mmio)
++{
++	u32 tmp;
++
++	/*
++	 * Get current status
++	 */
++	tmp = readl(port_mmio + PORT_CMD);
++
++	/* Check if FIS RX is already disabled */
++	if ((tmp & PORT_CMD_FIS_RX) == 0)
++		return 0;
++
++	/*
++	 * AHCI Rev 1.1 section 10.3.2
++	 * Software shall not clear PxCMD.FRE while
++	 * PxCMD.ST or PxCMD.CR is set to '1'
++	 */
++	if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_START)) {
++		return -EPERM;
++	}
++
++	/*
++	 * Disable FIS reception
++	 *
++	 * AHCI Rev 1.1 Section 10.1.2:
++	 * If PxCMD.FRE is set to '1', software should clear it
++	 * to '0' and wait at least 500 milliseconds for PxCMD.FR
++	 * to return '0' when read. If PxCMD.FR does not clear
++	 * '0' correctly, then software may attempt a port reset
++	 * of a full HBA reset to recover.
++	 */
++	tmp &= ~(PORT_CMD_FIS_RX);
++	writel(tmp, port_mmio + PORT_CMD);
++
++	tmp = ata_wait_register(port_mmio + PORT_CMD, PORT_CMD_FIS_ON,
++				PORT_CMD_FIS_ON, 1, 1000);
++	if(tmp & PORT_CMD_FIS_ON)
++		return -EBUSY;
++
++	return 0;
++}
++
++static void ahci_start_fis_rx(void __iomem *port_mmio,
++                             struct ahci_port_priv *pp,
++                             struct ahci_host_priv *hpriv)
++{
++	u32 tmp;
++
++	/*
++	 * Set FIS registers
++	 */
++	if (hpriv->cap & HOST_CAP_64)
++		writel((pp->cmd_slot_dma >> 16) >> 16, port_mmio + PORT_LST_ADDR_HI);
++	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
++	readl(port_mmio + PORT_LST_ADDR); /* flush */
++
++	if (hpriv->cap & HOST_CAP_64)
++		writel((pp->rx_fis_dma >> 16) >> 16, port_mmio + PORT_FIS_ADDR_HI);
++	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
++	readl(port_mmio + PORT_FIS_ADDR); /* flush */
++
++	/*
++	 * Enable FIS reception
++	 */
++	tmp = readl(port_mmio + PORT_CMD);
++	tmp |= PORT_CMD_FIS_RX;
++	writel(tmp, port_mmio + PORT_CMD);
++	readl(port_mmio + PORT_CMD); /* flush */
++}
++
++static int ahci_port_standby(void __iomem *port_mmio, u32 cap)
++{
++	u32 tmp, scontrol, sstatus;
++
++	tmp = readl(port_mmio + PORT_CMD);
++	/*
++	 * AHCI Rev1.1 Section 5.3.2.3:
++	 * Software is only allowed to program the PxCMD.FRE,
++	 * PxCMD.POD, PxSCTL.DET, and PxCMD.SUD register bits
++	 * when PxCMD.ST is set to '0'
++	 */
++	if (tmp & PORT_CMD_START)
++		return -EBUSY;
++
++	if (cap & HOST_CAP_SSC) {
++		/*
++		 * Enable transitions to slumber mode
++		 */
++		scontrol = readl(port_mmio + PORT_SCR_CTL);
++		if ((scontrol & 0x0f00) > 0x100) {
++			scontrol &= ~0xf00;
++			writel(scontrol, port_mmio + PORT_SCR_CTL);
++		}
++		/*
++		 * Put device into slumber mode
++		 */
++		tmp |= PORT_CMD_ICC_SLUMBER;
++		writel(tmp, port_mmio + PORT_CMD);
++		tmp = readl(port_mmio + PORT_CMD);
++
++		/*
++		 * Actually, we should wait for the device to
++		 * enter slumber mode by checking
++		 * sstatus & 0xf00 == 6
++		 */
++		sstatus = readl(port_mmio + PORT_SCR_STAT);
++	}
++
++	/*
++	 * Put device into listen mode
++	 */
++	if (cap & HOST_CAP_SSS) {
++		/* 
++		 * first set PxSCTL.DET to 0
++		 */
++		scontrol = readl(port_mmio + PORT_SCR_CTL);
++		scontrol &= ~0xf;
++		writel(scontrol, port_mmio + PORT_SCR_CTL);
++
++		/*
++		 * then set PxCMD.SUD to 0
++		 */
++		tmp = readl(port_mmio + PORT_CMD);
++		tmp &= ~PORT_CMD_SPIN_UP;
++		writel(tmp, port_mmio + PORT_CMD);
++		readl(port_mmio + PORT_CMD); /* flush */
++	}
++
++	return 0;
++}
++
++static int ahci_port_spinup(void __iomem *port_mmio, u32 cap)
++{
++	u32 tmp;
++
++	tmp = readl(port_mmio + PORT_CMD);
++	/*
++	 * AHCI Rev1.1 Section 5.3.2.3:
++	 * Software is only allowed to program the PxCMD.FRE,
++	 * PxCMD.POD, PxSCTL.DET, and PxCMD.SUD register bits
++	 * when PxCMD.ST is set to '0'
++	 */
++	if (tmp & PORT_CMD_START)
++		return -EBUSY;
++
++	/*
++	 * Spin up device
++	 */
++	if (cap & HOST_CAP_SSS) {
++		tmp |= PORT_CMD_SPIN_UP;
++		writel(tmp, port_mmio + PORT_CMD);
++		tmp = readl(port_mmio + PORT_CMD);
++	}
++
++	if ((tmp & PORT_CMD_ICC_MASK) != PORT_CMD_ICC_ACTIVE) {
++		tmp |= PORT_CMD_ICC_ACTIVE;
++		writel(tmp, port_mmio + PORT_CMD);
++		tmp = readl(port_mmio + PORT_CMD);
++	}
++
++	return 0;
+ }
+ 
+ static unsigned int ahci_dev_classify(struct ata_port *ap)
+@@ -626,7 +904,7 @@ static int ahci_softreset(struct ata_por
+ 	}
+ 
+ 	/* prepare for SRST (AHCI-1.1 10.4.1) */
+-	rc = ahci_stop_engine(ap);
++	rc = ahci_stop_engine(port_mmio);
+ 	if (rc) {
+ 		reason = "failed to stop engine";
+ 		goto fail_restart;
+@@ -647,7 +925,7 @@ static int ahci_softreset(struct ata_por
+ 	}
+ 
+ 	/* restart engine */
+-	ahci_start_engine(ap);
++	ahci_start_engine(port_mmio);
+ 
+ 	ata_tf_init(ap->device, &tf);
+ 	fis = pp->cmd_tbl;
+@@ -706,7 +984,7 @@ static int ahci_softreset(struct ata_por
+ 	return 0;
+ 
+  fail_restart:
+-	ahci_start_engine(ap);
++	ahci_start_engine(port_mmio);
+  fail:
+ 	ata_port_printk(ap, KERN_ERR, "softreset failed (%s)\n", reason);
+ 	return rc;
+@@ -717,11 +995,13 @@ static int ahci_hardreset(struct ata_por
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+ 	struct ata_taskfile tf;
++	void __iomem *mmio = ap->host_set->mmio_base;
++	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+ 	int rc;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+-	ahci_stop_engine(ap);
++	ahci_stop_engine(port_mmio);
+ 
+ 	/* clear D2H reception area to properly wait for D2H FIS */
+ 	ata_tf_init(ap->device, &tf);
+@@ -730,7 +1010,7 @@ static int ahci_hardreset(struct ata_por
+ 
+ 	rc = sata_std_hardreset(ap, class);
+ 
+-	ahci_start_engine(ap);
++	ahci_start_engine(port_mmio);
+ 
+ 	if (rc == 0 && ata_port_online(ap))
+ 		*class = ahci_dev_classify(ap);
+@@ -802,6 +1082,75 @@ static unsigned int ahci_fill_sg(struct 
+ 	return n_sg;
+ }
+ 
++int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
++	void __iomem *mmio = host_set->mmio_base;
++	u32 tmp;
++	int i;
++
++	/* First suspend all ports */
++	for (i = 0; i < host_set->n_ports; i++) {
++		struct ata_port *ap;
++
++		ap = host_set->ports[i];
++		ahci_port_suspend(ap, state);
++	}
++
++	/*
++	 * AHCI spec rev1.1 section 8.3.3:
++	 * Software must disable interrupts prior to
++	 * requesting a transition of the HBA to
++	 * D3 state.
++	 */
++	tmp = readl(mmio + HOST_CTL);
++	tmp &= ~HOST_IRQ_EN;
++	writel(tmp, mmio + HOST_CTL);
++	tmp = readl(mmio + HOST_CTL); /* flush */
++
++	ata_pci_device_do_suspend(pdev, state);
++
++	return 0;
++}
++
++int ahci_pci_device_resume(struct pci_dev *pdev)
++{
++	struct device *dev = pci_dev_to_dev(pdev);
++	struct ata_host_set *host_set = dev_get_drvdata(dev);
++	void __iomem *mmio = host_set->mmio_base;
++	struct ata_port *ap;
++	u32 i, tmp, irq_stat;
++
++	tmp = readl(mmio + HOST_CTL);
++	if (!(tmp & HOST_AHCI_EN)) {
++		tmp |= HOST_AHCI_EN;
++		writel(tmp, mmio + HOST_CTL);
++		tmp = readl(mmio + HOST_CTL);
++	}
++
++	ata_pci_device_do_resume(pdev);
++
++	/* Resume all ports */
++	for (i = 0; i < host_set->n_ports; i++) {
++		ap = host_set->ports[i];
++		ahci_port_resume(ap);
++	}
++
++	/*
++	 * Clear interrupt status and enable interrupt
++	 */
++	if (!(tmp & HOST_IRQ_EN)) {
++		irq_stat = readl(mmio + HOST_IRQ_STAT);
++		if (irq_stat)
++			writel(irq_stat, mmio + HOST_IRQ_STAT);
++		tmp |= HOST_IRQ_EN;
++		writel(tmp, mmio + HOST_CTL);
++		tmp = readl(mmio + HOST_CTL);
++	}
++
++	return 0;
++}
++
+ static void ahci_qc_prep(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+@@ -1052,10 +1401,13 @@ static void ahci_thaw(struct ata_port *a
+ 
+ static void ahci_error_handler(struct ata_port *ap)
+ {
++	void __iomem *mmio = ap->host_set->mmio_base;
++	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
++
+ 	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
+ 		/* restart engine */
+-		ahci_stop_engine(ap);
+-		ahci_start_engine(ap);
++		ahci_stop_engine(port_mmio);
++		ahci_start_engine(port_mmio);
+ 	}
+ 
+ 	/* perform recovery */
+@@ -1066,14 +1418,16 @@ static void ahci_error_handler(struct at
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
++	void __iomem *mmio = ap->host_set->mmio_base;
++	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+ 
+ 	if (qc->flags & ATA_QCFLAG_FAILED)
+ 		qc->err_mask |= AC_ERR_OTHER;
+ 
+ 	if (qc->err_mask) {
+ 		/* make DMA engine forget about the failed command */
+-		ahci_stop_engine(ap);
+-		ahci_start_engine(ap);
++		ahci_stop_engine(port_mmio);
++		ahci_start_engine(port_mmio);
+ 	}
+ }
+ 
+@@ -1184,20 +1538,16 @@ static int ahci_host_init(struct ata_pro
+ 				(unsigned long) mmio, i);
+ 
+ 		/* make sure port is not active */
+-		tmp = readl(port_mmio + PORT_CMD);
+-		VPRINTK("PORT_CMD 0x%x\n", tmp);
+-		if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
+-			   PORT_CMD_FIS_RX | PORT_CMD_START)) {
+-			tmp &= ~(PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
+-				 PORT_CMD_FIS_RX | PORT_CMD_START);
+-			writel(tmp, port_mmio + PORT_CMD);
+-			readl(port_mmio + PORT_CMD); /* flush */
+-
+-			/* spec says 500 msecs for each bit, so
+-			 * this is slightly incorrect.
+-			 */
+-			msleep(500);
+-		}
++
++		rc = ahci_stop_engine(port_mmio);
++		if (rc)
++			printk(KERN_WARNING "ata%u: DMA engine busy (%d)\n",
++			       i, rc);
++
++		rc = ahci_stop_fis_rx(port_mmio);
++		if (rc)
++			printk(KERN_WARNING "ata%u: FIS RX not stopped (%d)\n",
++			       i, rc);
+ 
+ 		writel(PORT_CMD_SPIN_UP, port_mmio + PORT_CMD);
+ 
 
 
-Here are some test results for the patchset:
-
-1. sg3utils test to SATA/ATAPI device
-   * Perform the following sg3utils commands to a SATA device:
-       o sg_get_config
-       o sginfo
-       o sg_inq
-       o sg_readcap
-2. SATA error injection
-   * Use sg_reset to initiate a PHY reset to a SATA device and verify
-     the host recovers.
-   * Use sysfs to reset the ipr adapter. This will cause the SATA device
-     to receive an out of band PHY reset. Use sg_inq to issue an INQUIRY
-     to the device. Verify error handling gets invoked and the system
-     recovers.
-3. stress_cd / internal CD/DVD exerciser (run for > 12 hours)
-4. SLAB_DEBUG
-   * Run with memory tainting enabled.
-5. SATA add/remove device
-   * Use sysfs to delete a SATA device from SCSI core, which will also
-     cause the associated ATA port to get deleted.
-   * Use sysfs to rescan for the SATA device. Verify the SATA device
-     shows up again.
-   * Verify no unexpected errors are logged.
-6. SATA queue_depth
-   * Use sysfs and attempt to change the queue depth of a SATA device.
-   * Verify the queue depth stays at 1.
-
-I would be happy to run any additional testcases.
-
-Thanks,
-
-Brian
-
-
-Brian King wrote:
-> The following patch enhances libata to allow SAS device drivers
-> to utilize libata to talk to SATA devices. It introduces some
-> new APIs which allow libata to be used without allocating a
-> virtual scsi host.
-> 
-> New APIs:
-> 
-> ata_sas_port_alloc - Allocate an ata_port 
-> ata_sas_port_init - Initialize an ata_port (probe device, etc)
-> ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
-> ata_sas_slave_configure - configure scsi device
-> ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
-> 
-> These new APIs can be used either directly by a SAS LLDD or could be used
-> by the SAS transport class. 
-> 
-> Possible usage for a SAS LLDD would be:
-> 
-> scsi_scan_host
-> 	target_alloc
-> 		ata_sas_port_alloc
-> 	slave_alloc
-> 		ata_sas_port_init
-> 	slave_configure
-> 		ata_sas_slave_configure
-> 
-> Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
-> 
-> Device teardown would occur with:
-> 
-> slave_destroy
-> 	port_disable
-> target_destroy
-> 	ata_sas_port_destroy
-> 
-> Acked-by: Jeff Garzik <jgarzik@pobox.com>
-> Signed-off-by: Brian King <brking@us.ibm.com>
-> ---
-> 
->  drivers/scsi/libata-core.c |    4 -
->  drivers/scsi/libata-scsi.c |  166 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/libata.h      |    2 
->  include/linux/libata.h     |    9 ++
->  4 files changed, 179 insertions(+), 2 deletions(-)
-> 
-> diff -puN drivers/scsi/libata-scsi.c~libata_sas drivers/scsi/libata-scsi.c
-> --- libata-dev/drivers/scsi/libata-scsi.c~libata_sas	2006-07-09 13:07:22.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-07-09 13:07:22.000000000 -0500
-> @@ -3158,3 +3158,169 @@ void ata_scsi_dev_rescan(void *data)
->  			scsi_rescan_device(&(dev->sdev->sdev_gendev));
->  	}
->  }
-> +
-> +/**
-> + *	ata_sas_port_alloc - Allocate port for a SAS attached SATA device
-> + *	@pdev: PCI device that the scsi device is attached to
-> + *	@port_info: Information from low-level host driver
-> + *	@host: SCSI host that the scsi device is attached to
-> + *
-> + *	LOCKING:
-> + *	PCI/etc. bus probe sem.
-> + *
-> + *	RETURNS:
-> + *	ata_port pointer on success / NULL on failure.
-> + */
-> +
-> +struct ata_port *ata_sas_port_alloc(struct ata_host_set *host_set,
-> +				    struct ata_port_info *port_info,
-> +				    struct Scsi_Host *host)
-> +{
-> +	struct ata_port *ap = kzalloc(sizeof(*ap), GFP_KERNEL);
-> +	int i;
-> +
-> +	if (!ap)
-> +		return NULL;
-> +
-> +	ap->dev = host_set->dev;
-> +	ap->host_set = host_set;
-> +	ap->id = ata_unique_id++;
-> +	ap->lock = host->host_lock;
-> +	ap->ops = port_info->port_ops;
-> +	ap->flags = port_info->host_flags | ATA_FLAG_DISABLED;
-> +	ap->pio_mask = port_info->pio_mask;
-> +	ap->mwdma_mask = port_info->mwdma_mask;
-> +	ap->udma_mask = port_info->udma_mask;
-> +	ap->cbl = ATA_CBL_SATA;
-> +	ap->sata_spd_limit = UINT_MAX;
-> +	ap->active_tag = ATA_TAG_POISON;
-> +	ap->last_ctl = 0xFF;
-> +	INIT_WORK(&ap->port_task, NULL, NULL);
-> +	INIT_WORK(&ap->hotplug_task, ata_scsi_hotplug, ap);
-> +	INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan, ap);
-> +	INIT_LIST_HEAD(&ap->eh_done_q);
-> +	init_waitqueue_head(&ap->eh_wait_q);
-> +
-> +	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-> +		struct ata_device *dev = &ap->device[i];
-> +		dev->ap = ap;
-> +		dev->devno = i;
-> +		ata_dev_init(dev);
-> +	}
-> +
-> +	return ap;
-> +}
-> +EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
-> +
-> +/**
-> + *	ata_sas_port_start - Set port up for dma.
-> + *	@ap: Port to initialize
-> + *
-> + *	Called just after data structures for each port are
-> + *	initialized.  Allocates DMA pad.
-> + *
-> + *	May be used as the port_start() entry in ata_port_operations.
-> + *
-> + *	LOCKING:
-> + *	Inherited from caller.
-> + */
-> +int ata_sas_port_start(struct ata_port *ap)
-> +{
-> +	return ata_pad_alloc(ap, ap->dev);
-> +}
-> +EXPORT_SYMBOL_GPL(ata_sas_port_start);
-> +
-> +/**
-> + *	ata_port_stop - Undo ata_sas_port_start()
-> + *	@ap: Port to shut down
-> + *
-> + *	Frees the DMA pad.
-> + *
-> + *	May be used as the port_stop() entry in ata_port_operations.
-> + *
-> + *	LOCKING:
-> + *	Inherited from caller.
-> + */
-> +
-> +void ata_sas_port_stop(struct ata_port *ap)
-> +{
-> +	ata_pad_free(ap, ap->dev);
-> +}
-> +EXPORT_SYMBOL_GPL(ata_sas_port_stop);
-> +
-> +/**
-> + *	ata_sas_port_init - Initialize a SATA device
-> + *	@ap: SATA port to initialize
-> + *
-> + *	LOCKING:
-> + *	PCI/etc. bus probe sem.
-> + *
-> + *	RETURNS:
-> + *	Zero on success, non-zero on error.
-> + */
-> +
-> +int ata_sas_port_init(struct ata_port *ap)
-> +{
-> +	int rc = ap->ops->port_start(ap);
-> +
-> +	if (!rc)
-> +		rc = ata_bus_probe(ap);
-> +
-> +	return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(ata_sas_port_init);
-> +
-> +/**
-> + *	ata_sas_port_destroy - Destroy a SATA port allocated by ata_sas_port_alloc
-> + *	@ap: SATA port to destroy
-> + *
-> + */
-> +
-> +void ata_sas_port_destroy(struct ata_port *ap)
-> +{
-> +	ap->ops->port_stop(ap);
-> +	kfree(ap);
-> +}
-> +EXPORT_SYMBOL_GPL(ata_sas_port_destroy);
-> +
-> +/**
-> + *	ata_sas_slave_configure - Default slave_config routine for libata devices
-> + *	@sdev: SCSI device to configure
-> + *	@ap: ATA port to which SCSI device is attached
-> + *
-> + *	RETURNS:
-> + *	Zero.
-> + */
-> +
-> +int ata_sas_slave_configure(struct scsi_device *sdev, struct ata_port *ap)
-> +{
-> +	ata_scsi_sdev_config(sdev);
-> +	ata_scsi_dev_config(sdev, ap->device);
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(ata_sas_slave_configure);
-> +
-> +/**
-> + *	ata_sas_queuecmd - Issue SCSI cdb to libata-managed device
-> + *	@cmd: SCSI command to be sent
-> + *	@done: Completion function, called when command is complete
-> + *	@ap:	ATA port to which the command is being sent
-> + *
-> + *	RETURNS:
-> + *	Zero.
-> + */
-> +
-> +int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
-> +		     struct ata_port *ap)
-> +{
-> +	ata_scsi_dump_cdb(ap, cmd);
-> +
-> +	if (likely(ata_scsi_dev_enabled(ap->device)))
-> +		__ata_scsi_queuecmd(cmd, done, ap->device);
-> +	else {
-> +		cmd->result = (DID_BAD_TARGET << 16);
-> +		done(cmd);
-> +	}
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
-> diff -puN drivers/scsi/libata.h~libata_sas drivers/scsi/libata.h
-> --- libata-dev/drivers/scsi/libata.h~libata_sas	2006-07-09 13:07:22.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/libata.h	2006-07-09 13:07:22.000000000 -0500
-> @@ -43,6 +43,7 @@ extern struct workqueue_struct *ata_aux_
->  extern int atapi_enabled;
->  extern int atapi_dmadir;
->  extern int libata_fua;
-> +extern unsigned int ata_unique_id;
->  extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
->  extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
->  extern void ata_dev_disable(struct ata_device *dev);
-> @@ -107,6 +108,7 @@ extern void ata_scsi_rbuf_fill(struct at
->                                             u8 *rbuf, unsigned int buflen));
->  extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
->  extern void ata_scsi_dev_rescan(void *data);
-> +extern int ata_bus_probe(struct ata_port *ap);
->  
->  /* libata-eh.c */
->  extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
-> diff -puN include/linux/libata.h~libata_sas include/linux/libata.h
-> --- libata-dev/include/linux/libata.h~libata_sas	2006-07-09 13:07:22.000000000 -0500
-> +++ libata-dev-bjking1/include/linux/libata.h	2006-07-09 13:07:22.000000000 -0500
-> @@ -689,6 +689,15 @@ extern int ata_scsi_detect(struct scsi_h
->  extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
->  extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
->  extern int ata_scsi_release(struct Scsi_Host *host);
-> +extern void ata_sas_port_destroy(struct ata_port *);
-> +extern struct ata_port *ata_sas_port_alloc(struct ata_host_set *,
-> +					   struct ata_port_info *, struct Scsi_Host *);
-> +extern int ata_sas_port_init(struct ata_port *);
-> +extern int ata_sas_port_start(struct ata_port *ap);
-> +extern void ata_sas_port_stop(struct ata_port *ap);
-> +extern int ata_sas_slave_configure(struct scsi_device *, struct ata_port *);
-> +extern int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
-> +			    struct ata_port *ap);
->  extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
->  extern int sata_scr_valid(struct ata_port *ap);
->  extern int sata_scr_read(struct ata_port *ap, int reg, u32 *val);
-> diff -puN drivers/scsi/libata-core.c~libata_sas drivers/scsi/libata-core.c
-> --- libata-dev/drivers/scsi/libata-core.c~libata_sas	2006-07-09 13:07:22.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-07-09 13:07:22.000000000 -0500
-> @@ -70,7 +70,7 @@ static unsigned int ata_dev_init_params(
->  static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
->  static void ata_dev_xfermask(struct ata_device *dev);
->  
-> -static unsigned int ata_unique_id = 1;
-> +unsigned int ata_unique_id = 1;
->  static struct workqueue_struct *ata_wq;
->  
->  struct workqueue_struct *ata_aux_wq;
-> @@ -1528,7 +1528,7 @@ err_out_nosup:
->   *	Zero on success, negative errno otherwise.
->   */
->  
-> -static int ata_bus_probe(struct ata_port *ap)
-> +int ata_bus_probe(struct ata_port *ap)
->  {
->  	unsigned int classes[ATA_MAX_DEVICES];
->  	int tries[ATA_MAX_DEVICES];
-> _
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
