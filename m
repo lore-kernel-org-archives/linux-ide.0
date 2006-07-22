@@ -1,64 +1,18 @@
-From: Brent Casavant <bcasavan@sgi.com>
-Subject: [PATCH] sgiioc4: Always share IRQ
-Date: Fri, 21 Jul 2006 10:39:36 -0500 (CDT)
-Message-ID: <20060721103558.F65223@pkunk.americas.sgi.com>
-Reply-To: Brent Casavant <bcasavan@sgi.com>
+From: "Pratt" <Prattcopious@pediatrician.com>
+Subject: Just use it and your life will be changed!
+Date: Sat, 22 Jul 2006 09:36:36 +0200
+Message-ID: <42859497647216.1EE4EE8CC8__2835.53821868754$1153553875$gmane$org@CR4JA4>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ia64-owner@vger.kernel.org>
-Sender: linux-ia64-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:54417 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751307AbWGVHhW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Jul 2006 03:37:22 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-msdos@vger.kernel.org
 
-The SGI IOC4 IDE device always shares an interrupt with other devices
-which are part of IOC4.  As such, IDEPCI_SHARE_IRQ should always be
-enabled when BLK_DEV_SGIIOC4 is enabled.
+Good day to you bro! Younger and older males face this difficulty. Whatever your age, you have the answer. Extra-Time is the thing that puts you in complete control over the situation. Is not again the phrase you hear too often in bed with your partner? Take a look: {EX_DO
 
-Signed-off-by: Brent Casavant <bcasavan@sgi.com>
----
-Resending for inclusion in -mm.
-
- arch/ia64/configs/sn2_defconfig |    2 +-
- arch/ia64/defconfig             |    2 +-
- drivers/ide/Kconfig             |    1 +
- 3 files changed, 3 insertions(+), 2 deletions(-)
----
-diff --git a/arch/ia64/configs/sn2_defconfig b/arch/ia64/configs/sn2_defconfig
-index 9ea3539..0f14a82 100644
---- a/arch/ia64/configs/sn2_defconfig
-+++ b/arch/ia64/configs/sn2_defconfig
-@@ -363,7 +363,7 @@ # IDE chipset support/bugfixes
- #
- CONFIG_IDE_GENERIC=y
- CONFIG_BLK_DEV_IDEPCI=y
--# CONFIG_IDEPCI_SHARE_IRQ is not set
-+CONFIG_IDEPCI_SHARE_IRQ=y
- # CONFIG_BLK_DEV_OFFBOARD is not set
- # CONFIG_BLK_DEV_GENERIC is not set
- # CONFIG_BLK_DEV_OPTI621 is not set
-diff --git a/arch/ia64/defconfig b/arch/ia64/defconfig
-index 6cba55d..9001b3f 100644
---- a/arch/ia64/defconfig
-+++ b/arch/ia64/defconfig
-@@ -366,7 +366,7 @@ #
- # CONFIG_IDE_GENERIC is not set
- # CONFIG_BLK_DEV_IDEPNP is not set
- CONFIG_BLK_DEV_IDEPCI=y
--# CONFIG_IDEPCI_SHARE_IRQ is not set
-+CONFIG_IDEPCI_SHARE_IRQ=y
- # CONFIG_BLK_DEV_OFFBOARD is not set
- CONFIG_BLK_DEV_GENERIC=y
- # CONFIG_BLK_DEV_OPTI621 is not set
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index d1266fe..556958e 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -682,6 +682,7 @@ config BLK_DEV_SVWKS
- config BLK_DEV_SGIIOC4
- 	tristate "Silicon Graphics IOC4 chipset ATA/ATAPI support"
- 	depends on (IA64_SGI_SN2 || IA64_GENERIC) && SGI_IOC4
-+	select IDEPCI_SHARE_IRQ
- 	help
- 	  This driver adds PIO & MultiMode DMA-2 support for the SGI IOC4
- 	  chipset, which has one channel and can support two devices.
