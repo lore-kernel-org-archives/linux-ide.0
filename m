@@ -1,18 +1,25 @@
-From: "Pratt" <Prattcopious@pediatrician.com>
-Subject: Just use it and your life will be changed!
-Date: Sat, 22 Jul 2006 09:36:36 +0200
-Message-ID: <42859497647216.1EE4EE8CC8__2835.53821868754$1153553875$gmane$org@CR4JA4>
+From: Casino Green Table <burlap@eurosport.com>
+Subject: Juega Ruleta contra Croupiers en Vivo en Green Table!
+Date: Sat, 22 Jul 2006 12:12:50 +0000 (UTC)
+Message-ID: <5390345144.32491947862518@myway.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:54417 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751307AbWGVHhW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Jul 2006 03:37:22 -0400
+Received: from [200.149.157.55] ([200.149.157.55]:34061 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751305AbWGVMMn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Jul 2006 08:12:43 -0400
+Date: Sun, 23 Jul 2006 16:01:17 +0300
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-msdos@vger.kernel.org
+To: linux-kernel-owner@vger.kernel.org
 
-Good day to you bro! Younger and older males face this difficulty. Whatever your age, you have the answer. Extra-Time is the thing that puts you in complete control over the situation. Is not again the phrase you hear too often in bed with your partner? Take a look: {EX_DO
+Juega Ruleta contra Croupiers en Vivo en Green Table!
 
+Una experiencia unica en tu ordenador, jugando como en un Casino Real.
+
+Los mismos juegos, la misma emocion, mejores chances.
+
+Juega Ahora!
+
+http://your-casino.info
