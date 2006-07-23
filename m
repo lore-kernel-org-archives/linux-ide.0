@@ -1,18 +1,54 @@
-From: "Meier" <Meierbryant@soon.com>
-Subject: The success is guaranteed with this perfect tab!
-Date: Sun, 23 Jul 2006 18:52:39 -0200
-Message-ID: <87893741287329.E1204FFB1D@WYJ8N>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Private driver support emails should be avoided.
+Date: Sun, 23 Jul 2006 18:05:58 -0400
+Message-ID: <44C3F2C6.5010001@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [201.47.16.199] ([201.47.16.199]:25356 "EHLO CASA.irju.net")
-	by vger.kernel.org with ESMTP id S1751354AbWGWVxE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Jul 2006 17:53:04 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Netdev List <netdev@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Dear member, Cope with this forever and watch other men in helpless distress. Extra-Time is ready to contribute to your durability, confidence and happiness. Lack control over your squirting? Partner unhappy with the time you last in bed? Enter here:  http://florexx.com/gall/get/ Keep her satisfied tonight and any night in the future. She'll love it!
+
+Just a reminder to folks out there...  Don't send private driver support 
+emails.
+
+I receive a lot of email.  A lot.  Not as much as Linus or Andrew 
+probably, but still sizable.  And quite regularly, I will receive a 
+private email asking for help on a SATA or net driver problem.  The 
+poster will include various details on their problem, and ask for help 
+debugging the problem.  While the email will indeed be skimmed -- 
+looking at a mass of bug reports, one can better detect patterns -- the 
+people seeking support privately will almost NEVER RECEIVE A RESPONSE.
+
+Unless there is a security issue (email security@kernel.org), posters 
+should ALWAYS email their report(s) to one or more mailing lists.
+
+Private email
+* is not archived publicly
+* is not Google-able
+* restricts the sharing of knowledge
+* prevents other users from responding to your email
+
+Feel free to CC me on problems you think should warrant my attention.  A 
+carbon copy is acceptable to almost all regular kernel contributors.
+
+
+As another tip, if a kernel bug or annoyance persists, people are 
+encouraged to maintain wiki and web pages describing the behavior, and 
+discussed problem history.  Maintaining "SATA sucks on ThinkPad" style 
+web pages is always a good way to shame kernel hackers into action ;-) 
+Maintaining such web pages is a good way for a group of affected users 
+to pool common information, and suggested workarounds.
+
+Ensuring the freshness of bugzilla.kernel.org information is also a 
+great way for non-kernel hackers to help out.  Sometimes a bug is only 
+solved after a pattern emerges from a group of problem reports.  Even 
+"me too!" bugzilla reports are helpful...  if they are followed by 
+highly detailed hardware and kernel information.
+
+	Jeff
+
+
 
