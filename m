@@ -1,45 +1,47 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] Make sure we scan SWARM IDE interface for devices
-Date: Mon, 24 Jul 2006 20:26:47 +0400
-Message-ID: <44C4F4C7.3070601@ru.mvista.com>
-References: <20060720210449.GA5447@deprecation.cyrius.com>
+From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
+Subject: [PATCH] avoid releasing twice the same region on ide_release_iomio_dma()
+Date: Mon, 24 Jul 2006 16:30:31 -0300
+Message-ID: <20060724193031.GA18463@cathedrallabs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:59460 "EHLO
-	imap.sh.mvista.com") by vger.kernel.org with ESMTP id S1751301AbWGXQ2F
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Jul 2006 12:28:05 -0400
-In-Reply-To: <20060720210449.GA5447@deprecation.cyrius.com>
+Received: from tinc.cathedrallabs.org ([72.9.252.66]:34486 "EHLO
+	tinc.cathedrallabs.org") by vger.kernel.org with ESMTP
+	id S1751334AbWGXTai (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Jul 2006 15:30:38 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+In ide_release_iomio_dma() it's possible to release twice
+hwif->dma_base if hwif->dma_base2 is not null and never releasing
+hwif->dma_base2:
+int ide_release_iomio_dma (ide_hwif_t *hwif)
+{
+        if ((hwif->dma_extra) && (hwif->channel == 0))
+                release_region((hwif->dma_base + 16), hwif->dma_extra);
+        release_region(hwif->dma_base, 8);
+        if (hwif->dma_base2)
+                release_region(hwif->dma_base, 8);
+                                     ^^^^^^^^^
+        return 1;
+}
+This patch fixes this typo.
 
-Martin Michlmayr wrote:
-> From: Peter Horton <pdh@colonel-panic.org>
+Signed-off-by: Aristeu S. Rozanski F. <aris@cathedrallabs.org>
 
-> [PATCH] Make sure we scan SWARM IDE interface for devices
-
-> Signed-off-by: Peter Horton <pdh@colonel-panic.org>
-> Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
-> 
-> 
-> --- linux.git.orig/drivers/ide/mips/swarm.c	2006-01-23 22:48:58.000000000 +0000
-> +++ linux.git/drivers/ide/mips/swarm.c	2006-01-24 08:32:45.000000000 +0000
-> @@ -127,6 +127,7 @@
->  	memcpy(hwif->io_ports, hwif->hw.io_ports, sizeof(hwif->io_ports));
->  	hwif->irq = hwif->hw.irq;
->  
-> +	probe_hwif_init(hwif);
->  	dev_set_drvdata(dev, hwif);
->  
->  	return 0;
-
-    I think this should go right to Andrew Morton now...
-
-WBR, Sergei
+Index: ppc-2.6/drivers/ide/ide-dma.c
+===================================================================
+--- ppc-2.6.orig/drivers/ide/ide-dma.c	2006-07-24 12:25:20.000000000 -0300
++++ ppc-2.6/drivers/ide/ide-dma.c	2006-07-24 12:26:26.000000000 -0300
+@@ -802,7 +802,7 @@
+ 		release_region((hwif->dma_base + 16), hwif->dma_extra);
+ 	release_region(hwif->dma_base, 8);
+ 	if (hwif->dma_base2)
+-		release_region(hwif->dma_base, 8);
++		release_region(hwif->dma_base2, 8);
+ 	return 1;
+ }
+ 
 
