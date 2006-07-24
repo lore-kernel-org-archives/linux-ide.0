@@ -1,58 +1,66 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 03/12] libata-pmp: implement ATA_LFLAG_DISABLED
-Date: Mon, 24 Jul 2006 15:52:42 +0900
-Message-ID: <44C46E3A.8070109@gmail.com>
-References: <11523382872631-git-send-email-htejun@gmail.com> <44BE97B0.9030809@pobox.com>
+Subject: Re: [PATCHSET] libata: implement runtime link powersave
+Date: Mon, 24 Jul 2006 16:33:26 +0900
+Message-ID: <44C477C6.6070402@gmail.com>
+References: <11531191512028-git-send-email-htejun@gmail.com> <44BE8A25.9060804@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:43546 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.176]:37659 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751213AbWGXJ4k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Jul 2006 05:56:40 -0400
-Received: by py-out-1112.google.com with SMTP id t32so2506056pyc
-        for <linux-ide@vger.kernel.org>; Mon, 24 Jul 2006 02:56:07 -0700 (PDT)
-In-Reply-To: <44BE97B0.9030809@pobox.com>
+	id S932098AbWGXJ4p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Jul 2006 05:56:45 -0400
+Received: by py-out-1112.google.com with SMTP id t32so2506083pyc
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jul 2006 02:56:11 -0700 (PDT)
+In-Reply-To: <44BE8A25.9060804@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> Implement ATA_LFLAG_DISABLED.  The flag indicates the link is 
->> disabled due to EH recovery failure.  While a link is disabled, no 
->> EH action is taken on the link and suspend/resume become noop too. 
->> For host port, this doesn't introduce any behavior change other 
->> than not invoking hotplug sequence on failed ports on resume and 
->> this behavior change is intended.
+>> Hello, all.
+>>
+>> This is the first take of powersave patchset.  It implements runtime
+>> link-level power management.  To avoid confusion with regular
+>> device/controller power management (suspend/resume), it's callsed
+>> powersave.  It primarily implements partial/slumber/phy-off power
+>> states SATA standard specifies but if LLD has different way of
+>> implementing link powersave, it's allowed to.  Both host-initiated and
+>> device-initiated operations are supported.
+>>
+>> This patchset contains the following patches.
+>>
+>> #01-07    : misc fixes/preps for powersave
+>> #08-10    : implements core powersave infrastructure
+>> #11-12    : implement powersave feature for ahci and sata_sil24
+>>
+>> Powersave can be configured at boot time or while running by writing
+>> to kernel module parameter /sys/module/libata/parameters/powersave.
+>> The following powersave modes are supported.
+>>
+>> * none        : no powersave, link is powered up all the time
+>> * HIPS        : host-initiated powersave
+>> * DIPS        : device-initiated powersave
+>> * static    : no powersave on occupied link, power off empty link
+>> * HIPS/static    : HIPS on occupied link, power off empty link
+>> * DIPS/static    : DIPS on occupied link, power off empty link
+>>
+>> For more information, please read head messages of individual patches.
+>>
+>> All supported modes are tested on ICH7R AHCI, ICH6M AHCI, SiI3124,
+>> SiI3132.  Unfortunately SiI3112/4 family controllers don't support
+>> HIPS and choke on DIPS and thus dropped from supported list.
 > 
-> why?
-> 
-> libata should notice new devices, when resuming.
+> Any chance you tried ata_piix static PS, using PCS register?  :)
 
-It will do so on links which are operating normally.  ATA_LFLAG_DISABLED 
-is set only when libata EH fails to recover the link (link hardreset 
-failure) which takes quite some retries and is more severe than device 
-recovery failure.  This is the red marking screaming "stay away from 
-this link!".  For example, let's say a notebook has a broken SATA link 
-to drive bay and EH failed it.  Without the above behavior, libata EH 
-will try to recover the link on every resume which is both inconvenient 
-and incorrect.
-
-The thing is that resume from sleep is a link-resuming operation but not
-a hotplug event, just as PMP slave link resets following host link reset
-are link-resuming but not hotplugging.  IOW, resume doesn't positively
-indicate that the attached device could have been changed.
-
-libata EH doesn't need hotplug events to do hotplugging.  If it detects 
-such events during EH, it will perform the needed operations, but there 
-are things which are appropriate only when hotplug event is positively 
-indicated like detaching disabled (failed) devices or re-enabling failed 
-links.
+No, but I think both static and dynamic powersave can be implemented 
+nicely on ICH8s as SCRs can be accessed on those controllers without 
+mapping AHCI BAR.  Hmm.. yeah, STATIC powersave mode can be done with 
+PCS although I'm pretty scared to mess with PCS at this point.  :(
 
 -- 
 tejun
-
 
