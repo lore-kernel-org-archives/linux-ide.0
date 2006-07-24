@@ -1,87 +1,86 @@
-From: Martin =?ISO-8859-1?Q?Ammerm=FCller?= <tenco@gmx.de>
-Subject: Re: [sata_sil] kernel 2.6.17(-mm2) test - timeout issue
-Date: Mon, 24 Jul 2006 10:21:10 +0200
-Message-ID: <1153729271.3860.14.camel@localhost>
-References: <1151182247.5566.18.camel@localhost>
-	 <449DFDC4.5050207@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 03/17] libata-link: introduce ata_link
+Date: Mon, 24 Jul 2006 15:19:27 +0900
+Message-ID: <44C4666F.10801@gmail.com>
+References: <11523375354124-git-send-email-htejun@gmail.com> <44BE9591.5050201@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3bsmk53shdGA50EhufTu"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.21]:15046 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1750719AbWGXIVK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jul 2006 04:21:10 -0400
-In-Reply-To: <449DFDC4.5050207@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.177]:27161 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751145AbWGXJ4j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Jul 2006 05:56:39 -0400
+Received: by py-out-1112.google.com with SMTP id t32so2506047pyc
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jul 2006 02:56:05 -0700 (PDT)
+In-Reply-To: <44BE9591.5050201@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> @@ -496,6 +496,23 @@ struct ata_eh_context {
+>>      unsigned int        did_probe_mask;
+>>  };
+>>  
+>> +struct ata_link {
+>> +    struct ata_port        *ap;
+>> +
+>> +    unsigned int        active_tag;    /* active tag on this link */
+>> +    u32            sactive;    /* active NCQ commands */
+>> +
+>> +    unsigned int        hw_sata_spd_limit;
+>> +    unsigned int        sata_spd_limit;
+>> +
+>> +    /* record runtime error info, protected by host_set lock */
+>> +    struct ata_eh_info    eh_info;
+>> +    /* EH context */
+>> +    struct ata_eh_context    eh_context;
+>> +
+>> +    struct ata_device    device[1];
+>> +};
+>> +
+>>  struct ata_port {
+>>      struct Scsi_Host    *host;    /* our co-allocated scsi host */
+>>      const struct ata_port_operations *ops;
+>> @@ -520,22 +537,13 @@ struct ata_port {
+>>      unsigned int        mwdma_mask;
+>>      unsigned int        udma_mask;
+>>      unsigned int        cbl;    /* cable type; ATA_CBL_xxx */
+>> -    unsigned int        hw_sata_spd_limit;
+>> -    unsigned int        sata_spd_limit;    /* SATA PHY speed limit */
+>> -
+>> -    /* record runtime error info, protected by host_set lock */
+>> -    struct ata_eh_info    eh_info;
+>> -    /* EH context owned by EH */
+>> -    struct ata_eh_context    eh_context;
+>> -
+>> -    struct ata_device    device[ATA_MAX_DEVICES];
+>>  
+>>      struct ata_queued_cmd    qcmd[ATA_MAX_QUEUE];
+>>      unsigned long        qc_allocated;
+>>      unsigned int        qc_active;
+>>  
+>> -    unsigned int        active_tag;
+>> -    u32            sactive;
+>> +    struct ata_link        link;    /* host default link */
+>> +    struct ata_device    __dev1;    /* storage for link.device[1] */
+> 
+> This storage mess for link.device[] is NAK'd.
+> 
+> This patch overall looks good, but it should really be entirely an 
+> equivalent-transformation patch, one that is easy to review and prove 
+> correct.
+> 
+> As such, this patch should move 'struct ata_device 
+> device[ATA_MAX_DEVICES]' into struct ata_link, rather than the strange 
+> arrangement you have above.  If you want to do something unusual like 
+> this, it's better to do it in a separate patch.
 
---=-3bsmk53shdGA50EhufTu
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Okay, will separate out __dev1 thing.
 
-Am Sonntag, den 25.06.2006, 12:06 +0900 schrieb Tejun Heo:
-> Failed commands are retried several times, so no data was lost in your=20
-> case.  If data gets lost, you'll see more error messages from higher=20
-> layers (SCSI, FS).
-
-With high disk I/O and a 2.6.18-rc1 kernel i get these errors (depending
-upon the work i do, up to several times a day):
-
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x400000 action 0x2 frozen
-ata1.00: (BMDMA stat 0x20)
-ata1.00: tag 0 cmd 0xc8 Emask 0x2 stat 0x58 err 0x0 (HSM violation)
-ata1: soft resetting port
-ata1: port is slow to respond, please be patient
-ata1: port failed to respond (30 secs)
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ATA: abnormal status 0xD8 on port 0xDCA18087
-ATA: abnormal status 0xD8 on port 0xDCA18087
-ATA: abnormal status 0xD8 on port 0xDCA18087
-ATA: abnormal status 0xD8 on port 0xDCA18087
-ATA: abnormal status 0xD8 on port 0xDCA18087
-ata1.00: qc timeout (cmd 0xec)
-ata1.00: failed to IDENTIFY (I/O error, err_mask=3D0x4)
-ata1.00: revalidation failed (errno=3D-5)
-ata1: failed to recover some devices, retrying in 5 secs
-ata1: hard resetting port
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: configured for UDMA/100
-ata1: EH complete
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-
-> Anyways, if your harddisk is doing this regularly,=20
-> your hardware is faulty.  Maybe the connection between the controller=20
-> and the disk is the problem or the disk itself.
-
-I did not get those errors with Windows XP and i am not the only one who
-has problems running this particular laptop model with a linux kernel.
-Ok, to be honest, there's actually only one person i know of which
-bothered enough about exactly the same errors to send me an e-mail (he
-discovered at least one of my messages to this list). But in my
-experience there are almost always others getting the same error, but
-which remain silent.
-
-Anyway, i will try to probe the device with smartmontools.
-
-Regards,
-Martin Ammerm=C3=BCller
-
---=-3bsmk53shdGA50EhufTu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: Dies ist ein digital signierter Nachrichtenteil
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-
-iD8DBQBExIL2FjFZ/qjkvZARAnVKAJ9dFMOaRDXsWl27GNmC2BIFYoT3qACfRC4X
-iJTdkL5j5vmySdhUx0Nc52U=
-=8IQp
------END PGP SIGNATURE-----
-
---=-3bsmk53shdGA50EhufTu--
+-- 
+tejun
 
