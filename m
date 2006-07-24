@@ -1,125 +1,87 @@
-From: Jason Lunz <lunz@falooley.org>
-Subject: [patch, rft] amd74xx: implement suspend-to-ram
-Date: Sun, 23 Jul 2006 20:53:41 -0400
-Message-ID: <20060724005340.GA4073@opus.vpn-dev.reflex>
-References: <20060715210518.GA3263@opus.vpn-dev.reflex> <19700101003716.GA3558@ucw.cz> <20060718133920.GA4106@suse.cz>
+From: Martin =?ISO-8859-1?Q?Ammerm=FCller?= <tenco@gmx.de>
+Subject: Re: [sata_sil] kernel 2.6.17(-mm2) test - timeout issue
+Date: Mon, 24 Jul 2006 10:21:10 +0200
+Message-ID: <1153729271.3860.14.camel@localhost>
+References: <1151182247.5566.18.camel@localhost>
+	 <449DFDC4.5050207@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3bsmk53shdGA50EhufTu"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.reflexsecurity.com ([72.54.64.74]:27538 "EHLO
-	crown.reflexsecurity.com") by vger.kernel.org with ESMTP
-	id S1751382AbWGXAxk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 23 Jul 2006 20:53:40 -0400
-Content-Disposition: inline
-In-Reply-To: <20060718133920.GA4106@suse.cz>
+Received: from mail.gmx.de ([213.165.64.21]:15046 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1750719AbWGXIVK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jul 2006 04:21:10 -0400
+In-Reply-To: <449DFDC4.5050207@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vojtech Pavlik <vojtech@suse.cz>
-Cc: Pavel Machek <pavel@suse.cz>, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
 
-The amd74xx driver needs to reprogram each drive's PIO timings as well
-as the DMA timings on resume from s2ram.  Otherwise, my
-nforce3-150-based laptop hangs hard when ide_start_power_step() calls
-drive->hwif->ide_dma_check(drive).
+--=-3bsmk53shdGA50EhufTu
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Suspend/resume from ram now works with the disk and the cdrom under
-load, both with and without DMA enabled.
+Am Sonntag, den 25.06.2006, 12:06 +0900 schrieb Tejun Heo:
+> Failed commands are retried several times, so no data was lost in your=20
+> case.  If data gets lost, you'll see more error messages from higher=20
+> layers (SCSI, FS).
 
-Signed-off-by: Jason Lunz <lunz@falooley.org>
----
+With high disk I/O and a 2.6.18-rc1 kernel i get these errors (depending
+upon the work i do, up to several times a day):
 
-I'm hardcoding a maximum of 2 ide channels, but other aspects of this
-driver (like the amd_80w global) are already doing that.
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x400000 action 0x2 frozen
+ata1.00: (BMDMA stat 0x20)
+ata1.00: tag 0 cmd 0xc8 Emask 0x2 stat 0x58 err 0x0 (HSM violation)
+ata1: soft resetting port
+ata1: port is slow to respond, please be patient
+ata1: port failed to respond (30 secs)
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ATA: abnormal status 0xD8 on port 0xDCA18087
+ATA: abnormal status 0xD8 on port 0xDCA18087
+ATA: abnormal status 0xD8 on port 0xDCA18087
+ATA: abnormal status 0xD8 on port 0xDCA18087
+ATA: abnormal status 0xD8 on port 0xDCA18087
+ata1.00: qc timeout (cmd 0xec)
+ata1.00: failed to IDENTIFY (I/O error, err_mask=3D0x4)
+ata1.00: revalidation failed (errno=3D-5)
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: hard resetting port
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: configured for UDMA/100
+ata1: EH complete
+SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
 
-DMA is re-enabled on resume even if it wasn't on at suspend, but that
-doesn't look unusual in drivers/ide/pci.
+> Anyways, if your harddisk is doing this regularly,=20
+> your hardware is faulty.  Maybe the connection between the controller=20
+> and the disk is the problem or the disk itself.
 
- drivers/ide/pci/amd74xx.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+I did not get those errors with Windows XP and i am not the only one who
+has problems running this particular laptop model with a linux kernel.
+Ok, to be honest, there's actually only one person i know of which
+bothered enough about exactly the same errors to send me an e-mail (he
+discovered at least one of my messages to this list). But in my
+experience there are almost always others getting the same error, but
+which remain silent.
 
-Index: linux-2.6.18-rc2-git1/drivers/ide/pci/amd74xx.c
-===================================================================
---- linux-2.6.18-rc2-git1.orig/drivers/ide/pci/amd74xx.c
-+++ linux-2.6.18-rc2-git1/drivers/ide/pci/amd74xx.c
-@@ -83,6 +83,8 @@
- static ide_pci_device_t *amd_chipset;
- static unsigned int amd_80w;
- static unsigned int amd_clock;
-+#define AMD_MAX_CHANNELS	(2)
-+static ide_hwif_t *amd_hwifs[AMD_MAX_CHANNELS];
- 
- static char *amd_dma[] = { "MWDMA16", "UDMA33", "UDMA66", "UDMA100", "UDMA133" };
- static unsigned char amd_cyc2udma[] = { 6, 6, 5, 4, 0, 1, 1, 2, 2, 3, 3, 3, 3, 3, 3, 7 };
-@@ -416,6 +418,8 @@
- {
- 	int i;
- 
-+	amd_hwifs[hwif->channel] = hwif;
-+
- 	if (hwif->irq == 0) /* 0 is bogus but will do for now */
- 		hwif->irq = pci_get_legacy_ide_irq(hwif->pci_dev, hwif->channel);
- 
-@@ -494,6 +498,53 @@
- 	/* 19 */ DECLARE_AMD_DEV("AMD5536"),
- };
- 
-+static int amd74xx_suspend(struct pci_dev *dev, pm_message_t state)
-+{
-+	pci_save_state(dev);
-+
-+	// PM_EVENT_SUSPEND means s2ram. otherwise, the disk behind this device
-+	// might hold the s2disk image, and we can't disable the disk
-+	// controller until we've used it to write that out.
-+	if(state.event == PM_EVENT_SUSPEND) {
-+		pci_disable_device(dev);
-+		pci_set_power_state(dev, pci_choose_state(dev, state));
-+	}
-+	return 0;
-+}
-+
-+static int amd74xx_resume(struct pci_dev *dev)
-+{
-+	int retval = 0;
-+	int i;
-+
-+	pci_set_power_state(dev, PCI_D0);
-+	retval = pci_enable_device(dev);
-+	pci_restore_state(dev);
-+
-+	for (i = 0; i < AMD_MAX_CHANNELS; i++) {
-+		int d;
-+
-+		if (!amd_hwifs[i])
-+			continue;
-+
-+		for (d = 0; d < MAX_DRIVES; ++d) {
-+			ide_drive_t *drive = &amd_hwifs[i]->drives[d];
-+			if (drive->present && !__ide_dma_bad_drive(drive)) {
-+				/* this is the primary reason this driver needs
-+				 * a suspend()/resume() implementation at all.
-+				 * Calling amd74xx_ide_dma_check() without also
-+				 * calling amd74xx_tune_drive() hangs my
-+				 * nforce3-150 system.  ide-disk.c will do just
-+				 * that later if we're resuming from s2ram. */
-+				amd_hwifs[i]->tuneproc(drive, 255);
-+				amd_hwifs[i]->ide_dma_check(drive);
-+			}
-+		}
-+	}
-+
-+	return retval;
-+}
-+
- static int __devinit amd74xx_probe(struct pci_dev *dev, const struct pci_device_id *id)
- {
- 	amd_chipset = amd74xx_chipsets + id->driver_data;
-@@ -539,6 +590,8 @@
- 	.name		= "AMD_IDE",
- 	.id_table	= amd74xx_pci_tbl,
- 	.probe		= amd74xx_probe,
-+	.suspend	= amd74xx_suspend,
-+	.resume		= amd74xx_resume,
- };
- 
- static int amd74xx_ide_init(void)
+Anyway, i will try to probe the device with smartmontools.
+
+Regards,
+Martin Ammerm=C3=BCller
+
+--=-3bsmk53shdGA50EhufTu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Dies ist ein digital signierter Nachrichtenteil
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+
+iD8DBQBExIL2FjFZ/qjkvZARAnVKAJ9dFMOaRDXsWl27GNmC2BIFYoT3qACfRC4X
+iJTdkL5j5vmySdhUx0Nc52U=
+=8IQp
+-----END PGP SIGNATURE-----
+
+--=-3bsmk53shdGA50EhufTu--
+
