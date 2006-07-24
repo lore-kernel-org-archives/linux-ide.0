@@ -1,58 +1,82 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/3] libata: implement hotplug by polling
-Date: Mon, 24 Jul 2006 16:06:37 +0900
-Message-ID: <44C4717D.6080700@gmail.com>
-References: <11531196481023-git-send-email-htejun@gmail.com> <44BE9CBC.2000601@pobox.com>
+Subject: Re: [PATCH 09/12] libata: implement powersave timer
+Date: Mon, 24 Jul 2006 16:27:30 +0900
+Message-ID: <44C47662.4010203@gmail.com>
+References: <11531191522801-git-send-email-htejun@gmail.com> <44BE8C85.2080008@pobox.com> <20060719202243.GA5445@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:61978 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.176]:65049 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751217AbWGXJ4k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Jul 2006 05:56:40 -0400
-Received: by py-out-1112.google.com with SMTP id t32so2506058pyc
-        for <linux-ide@vger.kernel.org>; Mon, 24 Jul 2006 02:56:07 -0700 (PDT)
-In-Reply-To: <44BE9CBC.2000601@pobox.com>
+	id S1751131AbWGXJ42 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Jul 2006 05:56:28 -0400
+Received: by py-out-1112.google.com with SMTP id t32so2506095pyc
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jul 2006 02:56:14 -0700 (PDT)
+In-Reply-To: <20060719202243.GA5445@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, axboe@suse.de, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> NAK, there is no reason why a global poll list is needed.  Simply having 
-> a struct workqueue in each schedule-able entity implicitly creates such 
-> a list.  But regardless, this is another example of adding 
-> cross-controller synchronization, where none is needed.
+Jens Axboe wrote:
+> On Wed, Jul 19 2006, Jeff Garzik wrote:
+>> Tejun Heo wrote:
+>>> Implement powersave timer.  It is primarily for OS-driven HIPS
+>>> implementation but can be used for any other PS purpose LLD sees fit.
+>>> During normal operation, PS timer is automatically started with
+>>> timeout ap->ps_timeout on port idle and stopped when the port becomes
+>>> busy.  The timer is also stopped while EH.
+>>>
+>>> To minimize overhead and allow easy implementation of expected
+>>> operation model, ata_ps_timer_worker() is used as timer callback which
+>>> invokes LLD supplied ap->ps_timer_fn() if condition meets and also
+>>> helps implementing sequenced multi-step operation.
+>>>
+>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> This makes me wonder what Jens thinks about having a device idle timer 
+>> and callback at the block level?  At the very least, this feels like it 
+>> should be implemented in the SCSI layer, or somewhere other than libata.
 > 
-> If the worker fired per-host_set, then you could use an ata_port dynamic 
-> flag to indicate the poll-active ports, for the ata_hp_poll_worker() loop.
+> Since this will be used only when the device is idle, we can reuse the
+> unplug timer and get it pretty much for free. So I think that's a good
+> idea.
 > 
-> If the worker fires per-port, then no loop or mutex is needed at all. 
-> You could simply call the hp_poll hook.
 
-It was basically an optimization to reduce storage usage and spread all 
-polling operations at least by polling interval even when there are many 
-ports to poll.  Cross-port synchronization aside, it's very simple too. 
-  Hmm... I don't think it makes much difference either way though.  I'll 
-convert to per-port workqueue + timer.
+Hello, Jeff, Jens.
 
->> @@ -633,6 +637,10 @@ struct ata_port_operations {
->>      void (*error_handler) (struct ata_port *ap);
->>      void (*post_internal_cmd) (struct ata_queued_cmd *qc);
->>  
->> +    void (*hp_poll_activate) (struct ata_port *ap);
->> +    void (*hp_poll_deactivate) (struct ata_port *ap);
->> +    int (*hp_poll) (struct ata_port *ap);
->> +
->>      irqreturn_t (*irq_handler)(int, void *, struct pt_regs *);
->>      void (*irq_clear) (struct ata_port *);
->>  
-> 
-> All new hooks require at least a one-two sentence description in the 
-> DocBook docs, telling driver writers how to use them.
+I agree that the unplug timer can be reused here but I'm not very sure 
+about what the high level semantics would be.  This timer tracks link 
+idleness and also used to drive link power down sequence.  e.g. For 
+host-initiated partial/slumber powersave, the timer will be used like 
+the following.
 
-Will do.
+1. Timer for partial PS armed when the link becomes idle (100ms by 
+default).  The 'link' abstraction doesn't exist at the block layer yet, 
+so this one is already problematic.  I'm thinking of using link-wide 
+idleness to implement powersave on ata_piix (ICH8 can access SCRs 
+without enabling AHCI address space, hooray!) and possibly PMP.  As 
+ICH8s will end up on notebooks, supporting ata_piix is important.
+
+2. On timer expiration, the PS handler is invoked and transits the link 
+to partial power state.  As the link also supports slumber mode, it 
+re-arms the timer w/ 3s timeout.
+
+3. On timer expiration, the PS handler wakes up the link because SATA 
+link cannot transit directly from partial to slumber.  As waking up 
+takes time (1ms max by spec), the timer is rearmed (5ms).
+
+4. On timer expiration, the link is put to slumber mode.
+
+In addition, whenever there is any event on the link, the timer is 
+reset.  Timer activation and canceling are tightly integrated into 
+libata core layer to reduce overhead.
+
+This is very SATA specific and I don't think pushing this to upper layer 
+is a good idea.  Link powersave is closely related to transport topology 
+and way too low level to be at block layer, IMHO.
+
+Thanks.
 
 -- 
 tejun
