@@ -1,82 +1,63 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 09/12] libata: implement powersave timer
-Date: Mon, 24 Jul 2006 16:27:30 +0900
-Message-ID: <44C47662.4010203@gmail.com>
-References: <11531191522801-git-send-email-htejun@gmail.com> <44BE8C85.2080008@pobox.com> <20060719202243.GA5445@suse.de>
+Subject: Re: [PATCH 5/6] libata-pmp-prep: implement ops->qc_defer()
+Date: Mon, 24 Jul 2006 15:21:11 +0900
+Message-ID: <44C466D7.5000900@gmail.com>
+References: <11523378783771-git-send-email-htejun@gmail.com> <44BE96CA.30008@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:65049 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.183]:13594 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751131AbWGXJ42 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Jul 2006 05:56:28 -0400
-Received: by py-out-1112.google.com with SMTP id t32so2506095pyc
-        for <linux-ide@vger.kernel.org>; Mon, 24 Jul 2006 02:56:14 -0700 (PDT)
-In-Reply-To: <20060719202243.GA5445@suse.de>
+	id S1751164AbWGXJ4k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Jul 2006 05:56:40 -0400
+Received: by py-out-1112.google.com with SMTP id t32so2506052pyc
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jul 2006 02:56:06 -0700 (PDT)
+In-Reply-To: <44BE96CA.30008@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: alan@lxorguk.ukuu.org.uk, lkml@rtr.ca, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> On Wed, Jul 19 2006, Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Implement powersave timer.  It is primarily for OS-driven HIPS
->>> implementation but can be used for any other PS purpose LLD sees fit.
->>> During normal operation, PS timer is automatically started with
->>> timeout ap->ps_timeout on port idle and stopped when the port becomes
->>> busy.  The timer is also stopped while EH.
->>>
->>> To minimize overhead and allow easy implementation of expected
->>> operation model, ata_ps_timer_worker() is used as timer callback which
->>> invokes LLD supplied ap->ps_timer_fn() if condition meets and also
->>> helps implementing sequenced multi-step operation.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> This makes me wonder what Jens thinks about having a device idle timer 
->> and callback at the block level?  At the very least, this feels like it 
->> should be implemented in the SCSI layer, or somewhere other than libata.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Controllers which support PMP have various restrictions on which
+>> combinations of commands are allowed to what number of devices
+>> concurrently.  This patch implements ops->qc_defer() which determines
+>> whether a qc can be issued at the moment or should be deferred.
+>>
+>> If the function returns ATA_DEFER_LINK, the qc will be deferred until
+>> a qc completes on the link.  If ATA_DEFER_PORT, until a qc completes
+>> on any link.  The defer conditions are advisory and in general
+>> ATA_DEFER_LINK can be considered as lower priority deferring than
+>> ATA_DEFER_PORT.
+>>
+>> ops->qc_defer() replaces fixed ata_scmd_need_defer().  For standard
+>> NCQ/non-NCQ exclusion, ata_std_qc_defer() is implemented.  ahci and
+>> sata_sil24 are converted to use ata_std_qc_defer().
+>>
+>> ops->qc_defer() is heavier than the original mechanism because full qc
+>> is prepped before determining to defer it, but various information is
+>> needed to determine defer conditinos and fully translating a qc is the
+>> only way to supply such information in generic manner.
+>>
+>> IMHO, this shouldn't cause any noticeable performance issues as
+>>
+>> * for most cases deferring occurs rarely (except for NCQ-aware
+>>   cmd-switching PMP)
+>> * translation itself isn't that expensive
+>> * once deferred the command won't be repeated until another command
+>>   completes which usually is a very long time cpu-wise.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
-> Since this will be used only when the device is idle, we can reuse the
-> unplug timer and get it pretty much for free. So I think that's a good
-> idea.
+> ACK patches 1-4.
 > 
+> For this patch (#5), I would much rather prefer to update ->qc_issue() 
+> or ->qc_prep() to return a DEFER return value.  That matches more 
+> closely other APIs in Linux.
 
-Hello, Jeff, Jens.
-
-I agree that the unplug timer can be reused here but I'm not very sure 
-about what the high level semantics would be.  This timer tracks link 
-idleness and also used to drive link power down sequence.  e.g. For 
-host-initiated partial/slumber powersave, the timer will be used like 
-the following.
-
-1. Timer for partial PS armed when the link becomes idle (100ms by 
-default).  The 'link' abstraction doesn't exist at the block layer yet, 
-so this one is already problematic.  I'm thinking of using link-wide 
-idleness to implement powersave on ata_piix (ICH8 can access SCRs 
-without enabling AHCI address space, hooray!) and possibly PMP.  As 
-ICH8s will end up on notebooks, supporting ata_piix is important.
-
-2. On timer expiration, the PS handler is invoked and transits the link 
-to partial power state.  As the link also supports slumber mode, it 
-re-arms the timer w/ 3s timeout.
-
-3. On timer expiration, the PS handler wakes up the link because SATA 
-link cannot transit directly from partial to slumber.  As waking up 
-takes time (1ms max by spec), the timer is rearmed (5ms).
-
-4. On timer expiration, the link is put to slumber mode.
-
-In addition, whenever there is any event on the link, the timer is 
-reset.  Timer activation and canceling are tightly integrated into 
-libata core layer to reduce overhead.
-
-This is very SATA specific and I don't think pushing this to upper layer 
-is a good idea.  Link powersave is closely related to transport topology 
-and way too low level to be at block layer, IMHO.
-
-Thanks.
+Will do.
 
 -- 
 tejun
