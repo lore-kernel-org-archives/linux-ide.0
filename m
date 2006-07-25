@@ -1,38 +1,28 @@
-From: "Steve Brown" <sbrown25@gmail.com>
-Subject: PCI ID addition to sata_promise.c
-Date: Tue, 25 Jul 2006 13:17:58 -0500
-Message-ID: <1f4ef0970607251117i116b8466ma42a6d27c117196e@mail.gmail.com>
+From: "Beal" <chalkycircumcision@cheerful.com>
+Subject: With every order guaranteed, you have nothing to lose! (except weight)
+Date: Tue, 25 Jul 2006 17:58:40 -0400
+Message-ID: <98479044996964.94D543C13F__26005.4771010347$1153864748$gmane$org@S9JTDGUP>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:59217 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S964801AbWGYSR7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jul 2006 14:17:59 -0400
-Received: by ug-out-1314.google.com with SMTP id m3so2816712ugc
-        for <linux-ide@vger.kernel.org>; Tue, 25 Jul 2006 11:17:58 -0700 (PDT)
-Content-Disposition: inline
+Received: from cpe-69-204-205-148.stny.res.rr.com ([69.204.205.148]:15884 "EHLO
+	DENNIS-0JSN9Z77.uzhi.net") by vger.kernel.org with ESMTP
+	id S1030223AbWGYV6l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Jul 2006 17:58:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: linux-ide@vger.kernel.org
 
-I just bought a Promise FastTrack TX2300 SATAII RAID Controler and had
-some problems getting it working.  I found that the driver did not
-recognize the card b/c the PCI ID was not listed in the source.  Below
-is a patch to add the PCI ID to the driver so hopefully others won't
-have this problem in the future.  Patch if you like, discard if you
-don't.  Just trying to make the world a little easier for the next
-guy.
+Hi, 
 
---- sata_promise.c.orig 2006-07-25 12:59:44.000000000 -0500
-+++ sata_promise.c      2006-07-25 13:00:29.000000000 -0500
-@@ -267,6 +267,9 @@
 
-        { PCI_VENDOR_ID_PROMISE, 0x3570, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-          board_20771 },
-+       { PCI_VENDOR_ID_PROMISE, 0x3577, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+         board_20771 },
-+
-        { }     /* terminate list */
- };
+ Fatblaster is an all natural herbal formulated thermogenic weight loss supplement.  This means you can still eat all the burgers, pizza you want without and gains in weight, infact you will lose weight. One is by reducing food intake or food absorption and the other is by enhancing energy expenditure.  Enter: http://klopinta.com/gall/fb/ 
+
+
+ Never judge by appearences God could not be everywhere and therefore he made mothers  He shall die without instruction; and in the greatness of his folly he shall go astray. Cast in thy lot among us; let us all have one purse.
+
+
+ Excess of ceremony shows want of breeding  Pain is temporary, victory is forever 
+
