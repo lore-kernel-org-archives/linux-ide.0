@@ -1,56 +1,55 @@
-From: "Shelly Hollis" <232hercule@we-help-u.biz>
-Subject: Oportunidad unica. mas informacion
-Date: Tue, 25 Jul 2006 01:40:38 -0700
-Message-ID: <200607250840.k6P8efZW003066@zeus1.kernel.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] avoid releasing twice the same region on ide_release_iomio_dma()
+Date: Tue, 25 Jul 2006 16:22:08 +0400
+Message-ID: <44C60CF0.8030008@ru.mvista.com>
+References: <20060724193031.GA18463@cathedrallabs.org>	 <44C5264D.4040609@ru.mvista.com> <87f94c370607241423g71bd17f9tb3b2e4fcf0cbeb5d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:399 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932212AbWGYIk7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jul 2006 04:40:59 -0400
+Received: from homer.mvista.com ([63.81.120.155]:37208 "EHLO
+	imap.sh.mvista.com") by vger.kernel.org with ESMTP id S1751158AbWGYMXV
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Jul 2006 08:23:21 -0400
+In-Reply-To: <87f94c370607241423g71bd17f9tb3b2e4fcf0cbeb5d@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>, linux-ide@vger.kernel.org
 
-Es usted una persona responsable y esta buscando un trabajo de medio ti=
-empo  muy bien pagado?=20
+Hello.
 
-=20
-Somos una compania familiar especializados en varias operaciones con an=
-tiguedades y joyeria Antigua, somos =93Tollis Ltd=94 , y estamos buscan=
-do gente honesta y responsable para que se nos una..  =20
+Greg Freemyer wrote:
 
-=20
-No te pierdas esta oportunidad =96 somos exactamente lo que estas busca=
-ndo!
-Ganaras mas de EUR 1500 por mes,  utilizando solo 3-4 horas de tu tiemp=
-o. Es real con nosotros!.=20
-=20
+>>     dma_base2 should go away altogether -- this is the IDE 
+>> maintainer's opinion:
 
+>> http://marc.theaimsgroup.com/?l=linux-ide&m=114345699807546&w=2
 
-Nosotros no hacemos conversacion de venta que requiera que pagues cargo=
-s de inscripcion o inscribirte a una lista de correo. No queremos que i=
-nviertas dinero. Este trabajo requiere solo un monto limitado de tu tie=
-mpo.. =20
-=20
+>>     I have posted this patch doing this back in March:
 
-Te pagaremos en la primera semana de trabajo  =20
-=20
-No requerimos ninguna experiencia ni habilidad especial. Trabajaras com=
-o un contratado independiente desde tu hogar.=20
- =20
+>> http://marc.theaimsgroup.com/?l=linux-ide&m=114357441529834&w=2
 
-Si estas interesado, por  favor sientete libre de pedir informacion adi=
-cional y las provisiones generales.  =20
-=20
-Escribenos ahora, te responderemos al instante.=20
-Por favor responde a este mail: support@t-antiquesupport.com
+>> and it was in the -mm tree for some months but has been removed 
+>> recently -- I still need to coordinate it with SGI.
 
+> IDE is officially un-maintained as of a couple weeks ago.  (And since
+> April in reality).
 
+> http://marc.theaimsgroup.com/?l=linux-ide&m=115201353310421&w=2
 
+> That is likely why your patch disappeared.
 
-amazon=20
-consult angora=20
-diatomic
+    It didn't disappear. It was conflicting with one of Alan's patches and 
+needed consent from SGI folks.
+
+> Further Alan Cox and Jeff
+> Garzik are trying to replace the whole IDE subsystem with a libata-ide
+> subsystem, so IIRC major patches to IDE are being bit-bucketed.
+
+    Not if you send them to Andrew Morton. :-)
+
+> Greg
+
+WBR, Sergei
 
