@@ -1,33 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [Fwd: - ide-remove-dma_base2-field-form-ide_hwif_t.patch
-	removed from -mm tree]
-Date: Tue, 25 Jul 2006 19:25:49 +0100
-Message-ID: <1153851949.4725.6.camel@localhost>
-References: <44C52CCE.7070204@ru.mvista.com>
+From: "Steve Brown" <sbrown25@gmail.com>
+Subject: PCI ID addition to sata_promise.c
+Date: Tue, 25 Jul 2006 13:17:58 -0500
+Message-ID: <1f4ef0970607251117i116b8466ma42a6d27c117196e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57312 "EHLO
-	out.lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1750743AbWGYRYX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jul 2006 13:24:23 -0400
-In-Reply-To: <44C52CCE.7070204@ru.mvista.com>
+Received: from ug-out-1314.google.com ([66.249.92.170]:59217 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S964801AbWGYSR7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Jul 2006 14:17:59 -0400
+Received: by ug-out-1314.google.com with SMTP id m3so2816712ugc
+        for <linux-ide@vger.kernel.org>; Tue, 25 Jul 2006 11:17:58 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeremy Higdon <jeremy@sgi.com>, Jes Sorensen <jes@sgi.com>, Brent Casavant <bcasavan@sgi.com>, jpk@sgi.com, Andrew Morton <akpm@osdl.org>, Linux IDE <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Maw, 2006-07-25 at 00:25 +0400, Sergei Shtylyov wrote:
-> Hello.
-> 
->     Alan and Andrew wanted me to coordinate the change with SGI before 
-> recasting this patch because the sgiioc4.c is the only real user of the
-> 'dma_base2' field which the IDE maintaner wanted me to remove. The use of
-> this field in this driver doesn't seem necessary or even well grounded -- 
-> hwif_data seem to fit the task better... Will you ACK this change?
+I just bought a Promise FastTrack TX2300 SATAII RAID Controler and had
+some problems getting it working.  I found that the driver did not
+recognize the card b/c the PCI ID was not listed in the source.  Below
+is a patch to add the PCI ID to the driver so hopefully others won't
+have this problem in the future.  Patch if you like, discard if you
+don't.  Just trying to make the world a little easier for the next
+guy.
 
-The change looks good to me. 
+--- sata_promise.c.orig 2006-07-25 12:59:44.000000000 -0500
++++ sata_promise.c      2006-07-25 13:00:29.000000000 -0500
+@@ -267,6 +267,9 @@
 
-Alan
-
+        { PCI_VENDOR_ID_PROMISE, 0x3570, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+          board_20771 },
++       { PCI_VENDOR_ID_PROMISE, 0x3577, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++         board_20771 },
++
+        { }     /* terminate list */
+ };
