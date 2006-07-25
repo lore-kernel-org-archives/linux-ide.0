@@ -1,50 +1,27 @@
-From: George Philip <infogep200671@terra.com.mx>
-Subject: RE:Partnerhip Investment
-Date: Tue, 25 Jul 2006 01:19:57 +0200
-Message-ID: <200607242319.k6ONJMS8022292@zeus1.kernel.org>
-Reply-To: inf0gep@hotmail.com
+From: "Xiong" <Xiongbiaxial@journalist.com>
+Subject: This allows you to loose weight naturally, without starving diet programs or excessive workouts.
+Date: Tue, 25 Jul 2006 10:54:38 +0300
+Message-ID: <16722089451133.C5C0AA013C@YWZAT>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="3258877c-96b8-405e-bee9-70e3f7487c5d"
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:46520 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932323AbWGXXT7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jul 2006 19:19:59 -0400
-Received: from terra1350.com (rkvn-ip-nas-1-p294.telkom-ipnet.co.za [155.239.105.38])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k6ONJMS8022292
-	for <linux-ide@vger.kernel.org>; Mon, 24 Jul 2006 23:19:55 GMT
+Received: from [85.107.97.190] ([85.107.97.190]:2568 "EHLO qot3.eotown.aol.com")
+	by vger.kernel.org with ESMTP id S1751507AbWGYHyz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jul 2006 03:54:55 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
+Dear user. 
 
-This is a multi-part message in MIME format
 
---3258877c-96b8-405e-bee9-70e3f7487c5d
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
+ One is by reducing food intake or food absorption and the other is by enhancing energy expenditure.  Fatblaster is an all natural herbal formulated thermogenic weight loss supplement.  This means you can still eat all the burgers, pizza you want without and gains in weight, infact you will lose weight. See our offer: http://yeltren.com/gal/fb/ 
 
-Dear Sir/Madam;
-I am Mr.George Philips, the Director of Operations Asset forfeiture unit. I =
-request your co-operation in this confidential transaction of cash money =
-amounting to the sum of Thirty-two Million Dollars. $32,000.000.00.
-I and my colleague secured this fund during the course of our duty in the =
-case of Six Hundred-Million Dollars Diamond DiepSloot Mining Rackets. Our =
-duty covers many financial activities. Due to our sensitive position and =
-civil code of conduct, which does not allow us to own or operate foreign bank =
-accounts and many other things, we seek your cooperation in this deal to =
-externalize this fund.
-We will provide you with the necessary logistics for this project if you are =
-interested in this deal, please reply to my personal mailbox: =
-inf0gep@hotmail.com, I will give you all the documentations including details =
-for a hitch free transaction. I want to assure/guarantee you that this deal =
-has been structured for a hitch free and successful transaction without any =
-risk. The fund is untraceable by any persons or Government. This 
-transaction will be structured with legal documentation to cover the fund; =
-met with all international regulations regarding fund transfer.
-Finally, I will give you a quarter of the total sum as your commission for =
-your corporation. While I waits for your reply along with your telephone 
-number.
-Yours sincerely.
-George Philips  
---3258877c-96b8-405e-bee9-70e3f7487c5d--
+
+ A rolling stone gathers no moss. Beautiful is not what is beautiful, but what one likes 
+
+
+ If they say, Come with us, let us lay wait for blood, let us lurk privily for the innocent without cause. Fruit out of season, sorrow out of reason Its a wise child that knows its own father When the student is ready, the master will appear 
 
