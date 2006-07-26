@@ -1,181 +1,134 @@
-From: "zhao, forrest" <forrest.zhao@intel.com>
-Subject: [PATCH 2/2] libata: implement setting _SDD
-Date: Wed, 26 Jul 2006 15:37:05 +0800
-Message-ID: <1153899440.4957.62.camel@forrest26.sh.intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: cosmetic changes to PM functions
+Date: Wed, 26 Jul 2006 16:58:33 +0900
+Message-ID: <20060726075833.GA6371@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:33804 "EHLO
-	orsmga101-1.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1030275AbWGZHt1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Jul 2006 03:49:27 -0400
+Received: from py-out-1112.google.com ([64.233.166.179]:61652 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S964790AbWGZH6k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Jul 2006 03:58:40 -0400
+Received: by py-out-1112.google.com with SMTP id t32so3377979pyc
+        for <linux-ide@vger.kernel.org>; Wed, 26 Jul 2006 00:58:40 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, rdunlap@xenotime.net, htejun@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-1 implement ata_acpi_push_id(), which is used to set _SDD
-2 invoke ata_acpi_push_id() in ata_dev_configure()
+Unify pm_message_t argument to the new-style @mesg.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Signed-off-by: Zhao Forrest <forrest.zhao@intel.com>
-
-
----
-
- drivers/scsi/libata-acpi.c |   97 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libata-core.c |    8 ++++
- drivers/scsi/libata.h      |    5 ++
- 3 files changed, 110 insertions(+), 0 deletions(-)
-
-a52b4e04c0b9467f0993ed4c367fcd575e6a936f
-diff --git a/drivers/scsi/libata-acpi.c b/drivers/scsi/libata-acpi.c
-index cf7eeb1..d0b7c44 100644
---- a/drivers/scsi/libata-acpi.c
-+++ b/drivers/scsi/libata-acpi.c
-@@ -652,3 +652,100 @@ int ata_acpi_exec_tfs(struct ata_port *a
+Index: work/drivers/scsi/libata-core.c
+===================================================================
+--- work.orig/drivers/scsi/libata-core.c	2006-07-26 16:32:30.000000000 +0900
++++ work/drivers/scsi/libata-core.c	2006-07-26 16:34:36.000000000 +0900
+@@ -5767,11 +5767,11 @@ int pci_test_config_bits(struct pci_dev 
+ 	return (tmp == bits->val) ? 1 : 0;
  }
- EXPORT_SYMBOL_GPL(ata_acpi_exec_tfs);
  
-+/**
-+ * ata_acpi_push_id - send Identify data to a drive
-+ * @ap: the ata_port for the drive
-+ * @ix: drive index
-+ *
-+ * _SDD ACPI object:  for SATA mode only.
-+ * Must be after Identify (Packet) Device -- uses its data.
-+ */
-+int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
-+{
-+	acpi_handle			handle;
-+	acpi_integer			pcidevfn;
-+	int				err = -ENODEV;
-+	struct device			*dev = ap->host_set->dev;
-+	struct ata_device		*atadev = &ap->device[ix];
-+	u32				dev_adr;
-+	acpi_status			status;
-+	struct acpi_object_list		input;
-+	union acpi_object 		in_params[1];
-+
-+	if (noacpi)
-+		return 0;
-+
-+	if (!(ap->flags & ATA_FLAG_SATA)) {
-+		printk(KERN_DEBUG "%s: skipping for PATA mode\n",
-+			__FUNCTION__);
-+		return 0;
-+	}
-+
-+	if (ata_msg_probe(ap))
-+		printk(KERN_DEBUG
-+			"%s: ap->id: %d, ix = %d, port#: %d, hard_port#: %d\n",
-+			__FUNCTION__, ap->id, ix,
-+			ap->port_no, ap->hard_port_no);
-+
-+	/* Don't continue if not a SATA device. */
-+	if (!ata_id_is_sata(atadev->id)) {
-+		if (ata_msg_probe(ap))
-+			printk(KERN_DEBUG "%s: ata_id_is_sata is False\n",
-+				__FUNCTION__);
-+		goto out;
-+	}
-+
-+	/* Don't continue if device has no _ADR method.
-+	 * _SDD is intended for known motherboard devices. */
-+	err = sata_get_dev_handle(dev, &handle, &pcidevfn);
-+	if (err < 0) {
-+		if (ata_msg_probe(ap))
-+			printk(KERN_DEBUG
-+				"%s: sata_get_dev_handle failed (%d\n",
-+				__FUNCTION__, err);
-+		goto out;
-+	}
-+
-+	/* Get this drive's _ADR info. if not already known. */
-+	if (!atadev->obj_handle) {
-+		dev_adr = SATA_ADR_RSVD;
-+		err = get_sata_adr(dev, handle, pcidevfn, ix, ap, atadev,
-+				&dev_adr);
-+		if (err < 0 || dev_adr == SATA_ADR_RSVD ||
-+		    !atadev->obj_handle) {
-+			if (ata_msg_probe(ap))
-+				printk(KERN_DEBUG "%s: get_sata_adr failed: "
-+					"err=%d, dev_adr=%u, obj_handle=0x%p\n",
-+					__FUNCTION__, err, dev_adr,
-+					atadev->obj_handle);
-+			goto out;
-+		}
-+	}
-+
-+	/* Give the drive Identify data to the drive via the _SDD method */
-+	/* _SDD: set up input parameters */
-+	input.count = 1;
-+	input.pointer = in_params;
-+	in_params[0].type = ACPI_TYPE_BUFFER;
-+	in_params[0].buffer.length = sizeof(atadev->id);
-+	in_params[0].buffer.pointer = (u8 *)atadev->id;
-+	/* Output buffer: _SDD has no output */
-+
-+	/* It's OK for _SDD to be missing too. */
-+	swap_buf_le16(atadev->id, ATA_ID_WORDS);
-+	status = acpi_evaluate_object(atadev->obj_handle, "_SDD", &input, NULL);
-+	swap_buf_le16(atadev->id, ATA_ID_WORDS);
-+
-+	err = ACPI_FAILURE(status) ? -EIO : 0;
-+	if (err < 0) {
-+		if (ata_msg_probe(ap))
-+			printk(KERN_DEBUG
-+				"ata%u(%u): %s _SDD error: status = 0x%x\n",
-+				ap->id, ap->device->devno,
-+				__FUNCTION__, status);
-+	}
-+out:
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(ata_acpi_push_id);
-+
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index cd4cf97..1c60369 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -1505,6 +1505,14 @@ int ata_dev_configure(struct ata_device 
- 	if (ap->ops->dev_config)
- 		ap->ops->dev_config(ap, dev);
- 
-+	/* set _SDD */
-+	rc = ata_acpi_push_id(ap, dev->devno);
-+	if (rc) {
-+		ata_dev_printk(dev, KERN_WARNING, "failed to set _SDD(%d)\n",
-+				rc);
-+		goto err_out_nosup;
-+	}
-+
- 	if (ata_msg_probe(ap))
- 		ata_dev_printk(dev, KERN_DEBUG, "%s: EXIT, drv_stat = 0x%x\n",
- 			__FUNCTION__, ata_chk_status(ap));
-diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
-index d9743e0..62bb568 100644
---- a/drivers/scsi/libata.h
-+++ b/drivers/scsi/libata.h
-@@ -123,6 +123,7 @@ extern int do_drive_get_GTF(struct ata_p
- extern int do_drive_set_taskfiles(struct ata_port *ap, struct ata_device *atadev,
- 			unsigned int gtf_length, unsigned long gtf_address);
- extern int ata_acpi_exec_tfs(struct ata_port *ap);
-+extern int ata_acpi_push_id(struct ata_port *ap, unsigned int ix);
- #else
- static inline int do_drive_get_GTF(struct ata_port *ap, int ix,
- 			unsigned int *gtf_length, unsigned long *gtf_address,
-@@ -140,6 +141,10 @@ static inline int ata_acpi_exec_tfs(stru
+-void ata_pci_device_do_suspend(struct pci_dev *pdev, pm_message_t state)
++void ata_pci_device_do_suspend(struct pci_dev *pdev, pm_message_t mesg)
  {
+ 	pci_save_state(pdev);
+ 
+-	if (state.event == PM_EVENT_SUSPEND) {
++	if (mesg.event == PM_EVENT_SUSPEND) {
+ 		pci_disable_device(pdev);
+ 		pci_set_power_state(pdev, PCI_D3hot);
+ 	}
+@@ -5785,24 +5785,24 @@ void ata_pci_device_do_resume(struct pci
+ 	pci_set_master(pdev);
+ }
+ 
+-int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state)
++int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
+ {
+ 	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
+ 	int rc = 0;
+ 
+-	rc = ata_host_set_suspend(host_set, state);
++	rc = ata_host_set_suspend(host_set, mesg);
+ 	if (rc)
+ 		return rc;
+ 
+ 	if (host_set->next) {
+-		rc = ata_host_set_suspend(host_set->next, state);
++		rc = ata_host_set_suspend(host_set->next, mesg);
+ 		if (rc) {
+ 			ata_host_set_resume(host_set);
+ 			return rc;
+ 		}
+ 	}
+ 
+-	ata_pci_device_do_suspend(pdev, state);
++	ata_pci_device_do_suspend(pdev, mesg);
+ 
  	return 0;
  }
-+static inline int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
-+{
-+	return 0;
-+}
- #endif
+Index: work/drivers/scsi/libata-scsi.c
+===================================================================
+--- work.orig/drivers/scsi/libata-scsi.c	2006-07-26 16:32:30.000000000 +0900
++++ work/drivers/scsi/libata-scsi.c	2006-07-26 16:33:55.000000000 +0900
+@@ -400,7 +400,7 @@ void ata_dump_status(unsigned id, struct
+ /**
+  *	ata_scsi_device_suspend - suspend ATA device associated with sdev
+  *	@sdev: the SCSI device to suspend
+- *	@state: target power management state
++ *	@mesg: target power management message
+  *
+  *	Request suspend EH action on the ATA device associated with
+  *	@sdev and wait for the operation to complete.
+@@ -411,7 +411,7 @@ void ata_dump_status(unsigned id, struct
+  *	RETURNS:
+  *	0 on success, -errno otherwise.
+  */
+-int ata_scsi_device_suspend(struct scsi_device *sdev, pm_message_t state)
++int ata_scsi_device_suspend(struct scsi_device *sdev, pm_message_t mesg)
+ {
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+ 	struct ata_device *dev = ata_scsi_find_dev(ap, sdev);
+@@ -438,7 +438,7 @@ int ata_scsi_device_suspend(struct scsi_
  
- #endif /* __LIBATA_H__ */
--- 
-1.2.6
+ 	/* request suspend */
+ 	action = ATA_EH_SUSPEND;
+-	if (state.event != PM_EVENT_SUSPEND)
++	if (mesg.event != PM_EVENT_SUSPEND)
+ 		action |= ATA_EH_PM_FREEZE;
+ 	ap->eh_info.dev_action[dev->devno] |= action;
+ 	ap->eh_info.flags |= ATA_EHI_QUIET;
+@@ -463,7 +463,7 @@ int ata_scsi_device_suspend(struct scsi_
+ 	spin_unlock_irqrestore(ap->lock, flags);
+  out:
+ 	if (rc == 0)
+-		sdev->sdev_gendev.power.power_state = state;
++		sdev->sdev_gendev.power.power_state = mesg;
+ 	return rc;
+ }
+ 
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h	2006-07-26 16:32:31.000000000 +0900
++++ work/include/linux/libata.h	2006-07-26 16:32:50.000000000 +0900
+@@ -676,9 +676,9 @@ extern void ata_std_ports(struct ata_iop
+ extern int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
+ 			     unsigned int n_ports);
+ extern void ata_pci_remove_one (struct pci_dev *pdev);
+-extern void ata_pci_device_do_suspend(struct pci_dev *pdev, pm_message_t state);
++extern void ata_pci_device_do_suspend(struct pci_dev *pdev, pm_message_t mesg);
+ extern void ata_pci_device_do_resume(struct pci_dev *pdev);
+-extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t state);
++extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
+ extern int ata_pci_device_resume(struct pci_dev *pdev);
+ extern int ata_pci_clear_simplex(struct pci_dev *pdev);
+ #endif /* CONFIG_PCI */
+@@ -697,7 +697,7 @@ extern int sata_scr_write_flush(struct a
+ extern int ata_port_online(struct ata_port *ap);
+ extern int ata_port_offline(struct ata_port *ap);
+ extern int ata_scsi_device_resume(struct scsi_device *);
+-extern int ata_scsi_device_suspend(struct scsi_device *, pm_message_t state);
++extern int ata_scsi_device_suspend(struct scsi_device *, pm_message_t mesg);
+ extern int ata_host_set_suspend(struct ata_host_set *host_set,
+ 				pm_message_t mesg);
+ extern void ata_host_set_resume(struct ata_host_set *host_set);
