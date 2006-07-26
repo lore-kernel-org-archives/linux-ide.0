@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/6] ahci: implement Power Management support
+Subject: [PATCH 5/6] ahci: separate out ahci_reset_controller() and ahci_init_controller()
 Date: Wed, 26 Jul 2006 15:59:26 +0900
-Message-ID: <11538971661674-git-send-email-htejun@gmail.com>
+Message-ID: <11538971662313-git-send-email-htejun@gmail.com>
 References: <11538971651205-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:46947 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1030445AbWGZG7f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from nz-out-0102.google.com ([64.233.162.196]:43183 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1030446AbWGZG7f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Wed, 26 Jul 2006 02:59:35 -0400
-Received: by py-out-1112.google.com with SMTP id t32so3362778pyc
+Received: by nz-out-0102.google.com with SMTP id l1so625692nzf
         for <linux-ide@vger.kernel.org>; Tue, 25 Jul 2006 23:59:35 -0700 (PDT)
 In-Reply-To: <11538971651205-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,142 +20,219 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>, Zhao@htj.dyndns.org, Forrest <forrest.zhao@intel.com>
 
-Implement power management support.
-
-Original implementation is from Zhao, Forrest <forrest.zhao@intel.com>
+Separate out ahci_reset_controller() and ahci_init_controller() from
+ata_host_init().  These will be used by PM callbacks.  This patch
+doesn't introduce any behavior change.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Zhao, Forrest <forrest.zhao@intel.com>
 
 ---
 
- drivers/scsi/ahci.c |   84 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 84 insertions(+), 0 deletions(-)
+ drivers/scsi/ahci.c |  171 ++++++++++++++++++++++++++++-----------------------
+ 1 files changed, 94 insertions(+), 77 deletions(-)
 
-4513d4761b48bca3025af0832d517f6b913061f9
+b2e525899eb80c1433cc21af33430574e15c4d94
 diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index a9e0c5f..909a4dc 100644
+index fb71fa7..a9e0c5f 100644
 --- a/drivers/scsi/ahci.c
 +++ b/drivers/scsi/ahci.c
-@@ -215,6 +215,10 @@ static void ahci_freeze(struct ata_port 
- static void ahci_thaw(struct ata_port *ap);
- static void ahci_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
-+static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg);
-+static int ahci_port_resume(struct ata_port *ap);
-+static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
-+static int ahci_pci_device_resume(struct pci_dev *pdev);
- static void ahci_remove_one (struct pci_dev *pdev);
- 
- static struct scsi_host_template ahci_sht = {
-@@ -234,6 +238,8 @@ static struct scsi_host_template ahci_sh
- 	.slave_configure	= ata_scsi_slave_config,
- 	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
-+	.suspend		= ata_scsi_device_suspend,
-+	.resume			= ata_scsi_device_resume,
- };
- 
- static const struct ata_port_operations ahci_ops = {
-@@ -260,6 +266,9 @@ static const struct ata_port_operations 
- 	.error_handler		= ahci_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
- 
-+	.port_suspend		= ahci_port_suspend,
-+	.port_resume		= ahci_port_resume,
-+
- 	.port_start		= ahci_port_start,
- 	.port_stop		= ahci_port_stop,
- };
-@@ -361,6 +370,8 @@ static struct pci_driver ahci_pci_driver
- 	.name			= DRV_NAME,
- 	.id_table		= ahci_pci_tbl,
- 	.probe			= ahci_init_one,
-+	.suspend		= ahci_pci_device_suspend,
-+	.resume			= ahci_pci_device_resume,
- 	.remove			= ahci_remove_one,
- };
- 
-@@ -1199,6 +1210,79 @@ static void ahci_post_internal_cmd(struc
- 	}
+@@ -572,6 +572,94 @@ static int ahci_deinit_port(void __iomem
+ 	return 0;
  }
  
-+static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg)
++static int ahci_reset_controller(void __iomem *mmio, struct pci_dev *pdev)
 +{
-+	struct ahci_host_priv *hpriv = ap->host_set->private_data;
-+	struct ahci_port_priv *pp = ap->private_data;
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+	const char *emsg = NULL;
-+	int rc;
++	u32 cap_save, tmp;
 +
-+	rc = ahci_deinit_port(port_mmio, hpriv->cap, &emsg);
-+	if (rc) {
-+		ata_port_printk(ap, KERN_ERR, "%s (%d)\n", emsg, rc);
-+		ahci_init_port(port_mmio, hpriv->cap,
-+			       pp->cmd_slot_dma, pp->rx_fis_dma);
-+	}
++	cap_save = readl(mmio + HOST_CAP);
++	cap_save &= ( (1<<28) | (1<<17) );
++	cap_save |= (1 << 27);
 +
-+	return rc;
-+}
-+
-+static int ahci_port_resume(struct ata_port *ap)
-+{
-+	struct ahci_port_priv *pp = ap->private_data;
-+	struct ahci_host_priv *hpriv = ap->host_set->private_data;
-+	void __iomem *mmio = ap->host_set->mmio_base;
-+	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
-+
-+	ahci_init_port(port_mmio, hpriv->cap, pp->cmd_slot_dma, pp->rx_fis_dma);
-+
-+	return 0;
-+}
-+
-+static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
-+{
-+	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
-+	void __iomem *mmio = host_set->mmio_base;
-+	u32 ctl;
-+
-+	if (mesg.event == PM_EVENT_SUSPEND) {
-+		/* AHCI spec rev1.1 section 8.3.3:
-+		 * Software must disable interrupts prior to requesting a
-+		 * transition of the HBA to D3 state.
-+		 */
-+		ctl = readl(mmio + HOST_CTL);
-+		ctl &= ~HOST_IRQ_EN;
-+		writel(ctl, mmio + HOST_CTL);
++	/* global controller reset */
++	tmp = readl(mmio + HOST_CTL);
++	if ((tmp & HOST_RESET) == 0) {
++		writel(tmp | HOST_RESET, mmio + HOST_CTL);
 +		readl(mmio + HOST_CTL); /* flush */
 +	}
 +
-+	return ata_pci_device_suspend(pdev, mesg);
-+}
++	/* reset must complete within 1 second, or
++	 * the hardware should be considered fried.
++	 */
++	ssleep(1);
 +
-+static int ahci_pci_device_resume(struct pci_dev *pdev)
-+{
-+	struct ata_host_set *host_set = dev_get_drvdata(&pdev->dev);
-+	struct ahci_host_priv *hpriv = host_set->private_data;
-+	void __iomem *mmio = host_set->mmio_base;
-+	int rc;
-+
-+	ata_pci_device_do_resume(pdev);
-+
-+	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
-+		rc = ahci_reset_controller(mmio, pdev);
-+		if (rc)
-+			return rc;
-+
-+		ahci_init_controller(mmio, pdev, host_set->n_ports, hpriv->cap);
++	tmp = readl(mmio + HOST_CTL);
++	if (tmp & HOST_RESET) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "controller reset failed (0x%x)\n", tmp);
++		return -EIO;
 +	}
 +
-+	ata_host_set_resume(host_set);
++	writel(HOST_AHCI_EN, mmio + HOST_CTL);
++	(void) readl(mmio + HOST_CTL);	/* flush */
++	writel(cap_save, mmio + HOST_CAP);
++	writel(0xf, mmio + HOST_PORTS_IMPL);
++	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
++
++	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
++		u16 tmp16;
++
++		/* configure PCS */
++		pci_read_config_word(pdev, 0x92, &tmp16);
++		tmp16 |= 0xf;
++		pci_write_config_word(pdev, 0x92, tmp16);
++	}
 +
 +	return 0;
 +}
 +
- static int ahci_port_start(struct ata_port *ap)
++static void ahci_init_controller(void __iomem *mmio, struct pci_dev *pdev,
++				 int n_ports, u32 cap)
++{
++	int i, rc;
++	u32 tmp;
++
++	for (i = 0; i < n_ports; i++) {
++		void __iomem *port_mmio = ahci_port_base(mmio, i);
++		const char *emsg = NULL;
++
++#if 0 /* BIOSen initialize this incorrectly */
++		if (!(hpriv->port_map & (1 << i)))
++			continue;
++#endif
++
++		/* make sure port is not active */
++		rc = ahci_deinit_port(port_mmio, cap, &emsg);
++		if (rc)
++			dev_printk(KERN_WARNING, &pdev->dev,
++				   "%s (%d)\n", emsg, rc);
++
++		/* clear SError */
++		tmp = readl(port_mmio + PORT_SCR_ERR);
++		VPRINTK("PORT_SCR_ERR 0x%x\n", tmp);
++		writel(tmp, port_mmio + PORT_SCR_ERR);
++
++		/* clear & turn off port IRQ */
++		tmp = readl(port_mmio + PORT_IRQ_STAT);
++		VPRINTK("PORT_IRQ_STAT 0x%x\n", tmp);
++		if (tmp)
++			writel(tmp, port_mmio + PORT_IRQ_STAT);
++
++		writel(1 << i, mmio + HOST_IRQ_STAT);
++		writel(0, port_mmio + PORT_IRQ_MASK);
++	}
++
++	tmp = readl(mmio + HOST_CTL);
++	VPRINTK("HOST_CTL 0x%x\n", tmp);
++	writel(tmp | HOST_IRQ_EN, mmio + HOST_CTL);
++	tmp = readl(mmio + HOST_CTL);
++	VPRINTK("HOST_CTL 0x%x\n", tmp);
++}
++
+ static unsigned int ahci_dev_classify(struct ata_port *ap)
  {
- 	struct device *dev = ap->host_set->dev;
+ 	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+@@ -1215,47 +1303,12 @@ static int ahci_host_init(struct ata_pro
+ 	struct ahci_host_priv *hpriv = probe_ent->private_data;
+ 	struct pci_dev *pdev = to_pci_dev(probe_ent->dev);
+ 	void __iomem *mmio = probe_ent->mmio_base;
+-	u32 tmp, cap_save;
+ 	unsigned int i, using_dac;
+ 	int rc;
+-	void __iomem *port_mmio;
+-
+-	cap_save = readl(mmio + HOST_CAP);
+-	cap_save &= ( (1<<28) | (1<<17) );
+-	cap_save |= (1 << 27);
+-
+-	/* global controller reset */
+-	tmp = readl(mmio + HOST_CTL);
+-	if ((tmp & HOST_RESET) == 0) {
+-		writel(tmp | HOST_RESET, mmio + HOST_CTL);
+-		readl(mmio + HOST_CTL); /* flush */
+-	}
+-
+-	/* reset must complete within 1 second, or
+-	 * the hardware should be considered fried.
+-	 */
+-	ssleep(1);
+-
+-	tmp = readl(mmio + HOST_CTL);
+-	if (tmp & HOST_RESET) {
+-		dev_printk(KERN_ERR, &pdev->dev,
+-			   "controller reset failed (0x%x)\n", tmp);
+-		return -EIO;
+-	}
+ 
+-	writel(HOST_AHCI_EN, mmio + HOST_CTL);
+-	(void) readl(mmio + HOST_CTL);	/* flush */
+-	writel(cap_save, mmio + HOST_CAP);
+-	writel(0xf, mmio + HOST_PORTS_IMPL);
+-	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
+-
+-	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+-		u16 tmp16;
+-
+-		pci_read_config_word(pdev, 0x92, &tmp16);
+-		tmp16 |= 0xf;
+-		pci_write_config_word(pdev, 0x92, tmp16);
+-	}
++	rc = ahci_reset_controller(mmio, pdev);
++	if (rc)
++		return rc;
+ 
+ 	hpriv->cap = readl(mmio + HOST_CAP);
+ 	hpriv->port_map = readl(mmio + HOST_PORTS_IMPL);
+@@ -1291,46 +1344,10 @@ static int ahci_host_init(struct ata_pro
+ 		}
+ 	}
+ 
+-	for (i = 0; i < probe_ent->n_ports; i++) {
+-		const char *emsg = NULL;
+-
+-#if 0 /* BIOSen initialize this incorrectly */
+-		if (!(hpriv->port_map & (1 << i)))
+-			continue;
+-#endif
++	for (i = 0; i < probe_ent->n_ports; i++)
++		ahci_setup_port(&probe_ent->port[i], (unsigned long) mmio, i);
+ 
+-		port_mmio = ahci_port_base(mmio, i);
+-		VPRINTK("mmio %p  port_mmio %p\n", mmio, port_mmio);
+-
+-		ahci_setup_port(&probe_ent->port[i],
+-				(unsigned long) mmio, i);
+-
+-		/* make sure port is not active */
+-		rc = ahci_deinit_port(port_mmio, hpriv->cap, &emsg);
+-		if (rc)
+-			dev_printk(KERN_WARNING, &pdev->dev,
+-				   "%s (%d)\n", emsg, rc);
+-
+-		/* clear SError */
+-		tmp = readl(port_mmio + PORT_SCR_ERR);
+-		VPRINTK("PORT_SCR_ERR 0x%x\n", tmp);
+-		writel(tmp, port_mmio + PORT_SCR_ERR);
+-
+-		/* clear & turn off port IRQ */
+-		tmp = readl(port_mmio + PORT_IRQ_STAT);
+-		VPRINTK("PORT_IRQ_STAT 0x%x\n", tmp);
+-		if (tmp)
+-			writel(tmp, port_mmio + PORT_IRQ_STAT);
+-
+-		writel(1 << i, mmio + HOST_IRQ_STAT);
+-		writel(0, port_mmio + PORT_IRQ_MASK);
+-	}
+-
+-	tmp = readl(mmio + HOST_CTL);
+-	VPRINTK("HOST_CTL 0x%x\n", tmp);
+-	writel(tmp | HOST_IRQ_EN, mmio + HOST_CTL);
+-	tmp = readl(mmio + HOST_CTL);
+-	VPRINTK("HOST_CTL 0x%x\n", tmp);
++	ahci_init_controller(mmio, pdev, probe_ent->n_ports, hpriv->cap);
+ 
+ 	pci_set_master(pdev);
+ 
 -- 
 1.3.2
 
