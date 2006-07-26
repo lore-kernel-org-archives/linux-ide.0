@@ -1,50 +1,133 @@
-From: "Ed Mcwilliams" <EdMcwilliams@1000114.com>
-Subject: Better Life, well-directed
-Date: Wed, 26 Jul 2006 01:23:51 -0120
-Message-ID: <662161c80604m8i8x6bhaz8tq0mtqo72w4gobdag1w6c__9298.77953972227$1153877059$gmane$org@mx.sina.net>
+From: Jason Lunz <lunz@falooley.org>
+Subject: [patch v2] amd74xx: fix hang on resume from ram
+Date: Tue, 25 Jul 2006 22:45:29 -0400
+Message-ID: <20060726024529.GB4829@opus.vpn-dev.reflex>
+References: <20060715210518.GA3263@opus.vpn-dev.reflex> <20060724005340.GA4073@opus.vpn-dev.reflex> <20060725230955.GB7220@elf.ucw.cz> <200607251727.12678.david-b@pacbell.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:65508 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1030324AbWGZBX7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jul 2006 21:23:59 -0400
+Received: from smtp.reflexsecurity.com ([72.54.64.74]:22414 "EHLO
+	crown.reflexsecurity.com") by vger.kernel.org with ESMTP
+	id S1030367AbWGZCpZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Jul 2006 22:45:25 -0400
 Content-Disposition: inline
+In-Reply-To: <200607251727.12678.david-b@pacbell.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-laptop@vger.kernel.org
-
-Your cre dit doesn't matter to us! If you OWN real est ate
-and want IMMEDIATEG cash to spend ANY way you like, or simply wish 
-to LOWER your monthly paym ents by a third or more, here are the dea ls
-we have TODAY (hurry, these ofers will expre TONIGHT):
-
-$488,000.00 at a 3.67,% fixed-rateA
-$372,000.00 at a 3.90,% variable-rateB
-$492,000.00 at a 3.21,% interest-only9
-$248,000.00 at a 3.36,% fixed-rate0
-$198,000.00 at a 3.55,% variable-rateY
-
-Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
-
-Don't worry about approval, your cre dit will not disqualify you! 
-
-http://PCUP9S5.doolies.net
+To: David Brownell <david-b@pacbell.net>
+Cc: linux-pm@lists.osdl.org, Pavel Machek <pavel@suse.cz>, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
 
 
+The amd74xx driver needs to reprogram each drive's PIO timings as well
+as the DMA timings on resume from s2ram.  Otherwise, my
+nforce3-150-based laptop hangs hard when ide_start_power_step() calls
+drive->hwif->ide_dma_check(drive).
 
-wrinkled up. He was afraid of pain,  was  he?  Shove you and your  pain!  He
-hurt. His nose was swollen, but his brews and lashes, strangely enough, were
+Suspend/resume from ram now works with the disk and the cdrom under
+load, both with and without DMA enabled.
 
-human being, I saved my  minesweeper. My master key. Back there in the heat,
-     "Guta!" he  shouted. "Are you going  to  starve  us much  longer? She's
-Redrick  stopped  next   to  him.  The  track  dipped  noticeably  here  and
+Signed-off-by: Jason Lunz <lunz@falooley.org>
+---
 
-from ear to ear, waved, and said in the direction of the moulage:
-     "Do you have a handkerchief or something? I want to wrap it up."
-man in a  completely natural manner. Redrick impatiently clinked  his  glass
-thousand  at  the  end of the  road. I  can work  up a sweat  for that. Five
+I've incorporated improvements helpfully suggested by David Brownell and
+Pavel Machek.
 
-lips under the thin mustache.
-angrily, listening to the wisecracks, waiting for Ernest--young  then and in
+I'm hardcoding a maximum of 2 ide channels, but other aspects of this
+driver (like the amd_80w global) are already doing that.
+
+DMA is re-enabled on resume even if it wasn't on at suspend, but that
+doesn't look unusual in drivers/ide/pci.
+
+ drivers/ide/pci/amd74xx.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 58 insertions(+)
+
+Index: linux-2.6.18-rc2-git1/drivers/ide/pci/amd74xx.c
+===================================================================
+--- linux-2.6.18-rc2-git1.orig/drivers/ide/pci/amd74xx.c
++++ linux-2.6.18-rc2-git1/drivers/ide/pci/amd74xx.c
+@@ -83,6 +83,8 @@
+ static ide_pci_device_t *amd_chipset;
+ static unsigned int amd_80w;
+ static unsigned int amd_clock;
++#define AMD_MAX_CHANNELS	(2)
++static ide_hwif_t *amd_hwifs[AMD_MAX_CHANNELS];
+ 
+ static char *amd_dma[] = { "MWDMA16", "UDMA33", "UDMA66", "UDMA100", "UDMA133" };
+ static unsigned char amd_cyc2udma[] = { 6, 6, 5, 4, 0, 1, 1, 2, 2, 3, 3, 3, 3, 3, 3, 7 };
+@@ -416,6 +418,8 @@
+ {
+ 	int i;
+ 
++	amd_hwifs[hwif->channel] = hwif;
++
+ 	if (hwif->irq == 0) /* 0 is bogus but will do for now */
+ 		hwif->irq = pci_get_legacy_ide_irq(hwif->pci_dev, hwif->channel);
+ 
+@@ -494,6 +498,58 @@
+ 	/* 19 */ DECLARE_AMD_DEV("AMD5536"),
+ };
+ 
++#ifdef	CONFIG_PM
++
++static int amd74xx_suspend(struct pci_dev *dev, pm_message_t state)
++{
++	pci_save_state(dev);
++
++	if (state.event == PM_EVENT_SUSPEND) {
++		pci_disable_device(dev);
++		pci_set_power_state(dev, PCI_D3hot);
++	}
++	return 0;
++}
++
++static int amd74xx_resume(struct pci_dev *dev)
++{
++	int retval = 0;
++	int i;
++
++	pci_set_power_state(dev, PCI_D0);
++	retval = pci_enable_device(dev);
++	pci_restore_state(dev);
++
++	for (i = 0; i < AMD_MAX_CHANNELS; i++) {
++		int d;
++
++		if (!amd_hwifs[i])
++			continue;
++
++		for (d = 0; d < MAX_DRIVES; ++d) {
++			ide_drive_t *drive = &amd_hwifs[i]->drives[d];
++			if (drive->present && !__ide_dma_bad_drive(drive)) {
++				/* this is the primary reason this driver needs
++				 * a suspend()/resume() implementation at all.
++				 * Calling amd74xx_ide_dma_check() without also
++				 * calling amd74xx_tune_drive() hangs my
++				 * nforce3-150 system.  ide-io.c will do just
++				 * that later if we're resuming from s2ram.
++				 */
++				amd_hwifs[i]->tuneproc(drive, 255);
++				amd_hwifs[i]->ide_dma_check(drive);
++			}
++		}
++	}
++
++	return retval;
++}
++
++#else	/* !CONFIG_PM */
++#define amd74xx_suspend
++#define amd74xx_resume
++#endif	/* !CONFIG_PM */
++
+ static int __devinit amd74xx_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ {
+ 	amd_chipset = amd74xx_chipsets + id->driver_data;
+@@ -539,6 +595,8 @@
+ 	.name		= "AMD_IDE",
+ 	.id_table	= amd74xx_pci_tbl,
+ 	.probe		= amd74xx_probe,
++	.suspend	= amd74xx_suspend,
++	.resume		= amd74xx_resume,
+ };
+ 
+ static int amd74xx_ide_init(void)
