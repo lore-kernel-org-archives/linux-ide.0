@@ -1,38 +1,39 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: [linux-pm] [patch, rft] amd74xx: implement suspend-to-ram
-Date: Wed, 26 Jul 2006 11:02:04 +0200
-Message-ID: <20060726090204.GC1905@elf.ucw.cz>
-References: <20060715210518.GA3263@opus.vpn-dev.reflex> <20060724005340.GA4073@opus.vpn-dev.reflex> <20060725230955.GB7220@elf.ucw.cz> <200607251727.12678.david-b@pacbell.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 0/2]ACPI support for SATA/PATA
+Date: Wed, 26 Jul 2006 11:14:32 -0400
+Message-ID: <44C786D8.5060801@rtr.ca>
+References: <1153899345.4957.59.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:45023 "EHLO amd.ucw.cz")
-	by vger.kernel.org with ESMTP id S1030446AbWGZJCR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jul 2006 05:02:17 -0400
-Content-Disposition: inline
-In-Reply-To: <200607251727.12678.david-b@pacbell.net>
+Received: from rtr.ca ([64.26.128.89]:58021 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1750833AbWGZPOf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jul 2006 11:14:35 -0400
+In-Reply-To: <1153899345.4957.59.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: linux-pm@lists.osdl.org, Jason Lunz <lunz@falooley.org>, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: jgarzik@pobox.com, rdunlap@xenotime.net, htejun@gmail.com, linux-ide@vger.kernel.org
 
-Hi!
-
-> > and please don't do this. Suspend-to-disk will call 
-> > amd74xx_resume when it needs to talk to the disk.
+zhao, forrest wrote:
+> Hello, all
 > 
-> I don't understand the rest of this comment.  That code looks
-> correct (other than calling the goofy/broken pci_choose_state thing);
-> PM_EVENT_FREEZE and PM_EVENT_PRETHAW should not disable the device.
+> In ACPI spec 3.0, section 9.9 defines 4 objects for PATA/SATA:
+> 
+> _GTF is for both PATA and SATA, which is used to return ATA task file
+> needed to re-init the drive;
+> _SDD is SATA-only object, which is used to inform the platform of the
+> type of device attached to a port;
+> _GTM and _STM are PATA-only objects, which are used to get/set PATA
+> timing information(i.e. PIO and DMA speed).
 
-Well, I'd prefer PM_EVENT_FREEZE and PM_EVENT_SUSPEND to be the same
-code (i.e. remove the if() and just do 
+It seems to be quite common for ICH*M notebooks to use the SATA ports
+to attach PATA drives with PATA->SATA bridge chips in the middle.
 
-> > > +		pci_disable_device(dev);
-> > > +		pci_set_power_state(dev, pci_choose_state(dev, state));
+In this case, one would expect the _GTM and _STM objects to be necessary,
+even though Linux thinks it's a SATA situation.
 
-unconditionaly). It should also work, and not really be slower.
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Do the patches take this into account?
+
+Cheers
