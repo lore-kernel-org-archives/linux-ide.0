@@ -1,50 +1,50 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: Re: [linux-pm] [patch, rft] amd74xx: implement suspend-to-ram
-Date: Tue, 25 Jul 2006 17:27:11 -0700
-Message-ID: <200607251727.12678.david-b@pacbell.net>
-References: <20060715210518.GA3263@opus.vpn-dev.reflex> <20060724005340.GA4073@opus.vpn-dev.reflex> <20060725230955.GB7220@elf.ucw.cz>
+From: "Ed Mcwilliams" <EdMcwilliams@1000114.com>
+Subject: Better Life, well-directed
+Date: Wed, 26 Jul 2006 01:23:51 -0120
+Message-ID: <662161c80604m8i8x6bhaz8tq0mtqo72w4gobdag1w6c__9298.77953972227$1153877059$gmane$org@mx.sina.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp109.sbc.mail.mud.yahoo.com ([68.142.198.208]:43605 "HELO
-	smtp109.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S932509AbWGZA1P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jul 2006 20:27:15 -0400
-In-Reply-To: <20060725230955.GB7220@elf.ucw.cz>
+Received: from zeus2.kernel.org ([204.152.191.36]:65508 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1030324AbWGZBX7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Jul 2006 21:23:59 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-pm@lists.osdl.org
-Cc: Pavel Machek <pavel@suse.cz>, Jason Lunz <lunz@falooley.org>, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
+To: linux-laptop@vger.kernel.org
 
-On Tuesday 25 July 2006 4:09 pm, Pavel Machek wrote:
+Your cre dit doesn't matter to us! If you OWN real est ate
+and want IMMEDIATEG cash to spend ANY way you like, or simply wish 
+to LOWER your monthly paym ents by a third or more, here are the dea ls
+we have TODAY (hurry, these ofers will expre TONIGHT):
 
-> 
-> > +	if(state.event == PM_EVENT_SUSPEND) {
-> 
-> "if (". Ouch 
+$488,000.00 at a 3.67,% fixed-rateA
+$372,000.00 at a 3.90,% variable-rateB
+$492,000.00 at a 3.21,% interest-only9
+$248,000.00 at a 3.36,% fixed-rate0
+$198,000.00 at a 3.55,% variable-rateY
 
-He already got that feedback, along with the fact that PM_EVENT_SUSPEND
-gets called in _all_ suspend sequences not just "standby" and STR.  That
-comment just needs to be removed.  :)
+Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
 
+Don't worry about approval, your cre dit will not disqualify you! 
 
-> and please don't do this. Suspend-to-disk will call 
-> amd74xx_resume when it needs to talk to the disk.
-
-I don't understand the rest of this comment.  That code looks
-correct (other than calling the goofy/broken pci_choose_state thing);
-PM_EVENT_FREEZE and PM_EVENT_PRETHAW should not disable the device.
-
-So what "this" are you suggesting he not do ... and why?  
+http://PCUP9S5.doolies.net
 
 
-> > +		pci_disable_device(dev);
-> > +		pci_set_power_state(dev, pci_choose_state(dev, state));
-> > +	}
-> > +	return 0;
-> > +}
-> 
-> 
+
+wrinkled up. He was afraid of pain,  was  he?  Shove you and your  pain!  He
+hurt. His nose was swollen, but his brews and lashes, strangely enough, were
+
+human being, I saved my  minesweeper. My master key. Back there in the heat,
+     "Guta!" he  shouted. "Are you going  to  starve  us much  longer? She's
+Redrick  stopped  next   to  him.  The  track  dipped  noticeably  here  and
+
+from ear to ear, waved, and said in the direction of the moulage:
+     "Do you have a handkerchief or something? I want to wrap it up."
+man in a  completely natural manner. Redrick impatiently clinked  his  glass
+thousand  at  the  end of the  road. I  can work  up a sweat  for that. Five
+
+lips under the thin mustache.
+angrily, listening to the wisecracks, waiting for Ernest--young  then and in
