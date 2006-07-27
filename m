@@ -1,45 +1,41 @@
-From: "Caro" <gayana@1system.ru>
-Subject: Re[4]:Hi my Dear!
-Date: Thu, 27 Jul 2006 00:49:58 +0300
-Message-ID: <001d01c6b0fd$6d15d680$eb18000a@tceQ>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [linux-pm] [patch, rft] amd74xx: implement suspend-to-ram
+Date: Wed, 26 Jul 2006 17:29:33 -0700
+Message-ID: <200607261729.35098.david-b@pacbell.net>
+References: <20060715210518.GA3263@opus.vpn-dev.reflex> <200607251727.12678.david-b@pacbell.net> <20060726090204.GC1905@elf.ucw.cz>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="windows-1251"
-Content-Transfer-Encoding: 8bit
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from client-201.240.236.156.speedy.net.pe ([201.240.236.156]:2571
-	"EHLO client-201.240.236.156.speedy.net.pe") by vger.kernel.org
-	with ESMTP id S1751787AbWGZVtm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jul 2006 17:49:42 -0400
+Received: from smtp113.sbc.mail.mud.yahoo.com ([68.142.198.212]:5566 "HELO
+	smtp113.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1751842AbWG0BNE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Jul 2006 21:13:04 -0400
+In-Reply-To: <20060726090204.GC1905@elf.ucw.cz>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64 <linux-ia64@vger.kernel.org>
+To: Pavel Machek <pavel@suse.cz>
+Cc: linux-pm@lists.osdl.org, Jason Lunz <lunz@falooley.org>, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
 
-Hallo	
+On Wednesday 26 July 2006 2:02 am, Pavel Machek wrote:
+> Hi!
+> 
+> > > and please don't do this. Suspend-to-disk will call 
+> > > amd74xx_resume when it needs to talk to the disk.
+> > 
+> > I don't understand the rest of this comment.  That code looks
+> > correct (other than calling the goofy/broken pci_choose_state thing);
+> > PM_EVENT_FREEZE and PM_EVENT_PRETHAW should not disable the device.
+> 
+> Well, I'd prefer PM_EVENT_FREEZE and PM_EVENT_SUSPEND to be the same
+> code (i.e. remove the if() and just do 
+> 
+> > > > +		pci_disable_device(dev);
+> > > > +		pci_set_power_state(dev, pci_choose_state(dev, state));
+> 
+> unconditionaly). It should also work, and not really be slower.
 
-I want to start my first letter from a question: "Is it possible to be happy without LOVE?"
-I think that you will agree with me if the answer will be "NO WAY". Love is the most beautiful and exciting thing
-that may happen between man and woman! It inspires us only for doing positive things towards each other.
-One very famous writer said: "The beauty will rescue the world" i agree with his words but still i would add :
-" LOVE and Beauty will rescure the world". 
-I hope you agree with me that Love is a big notion.
-There's love to  God, to Mother, to a child to the country where you were born, and there's love that joins a man
-and woman for all their life. That is the LOVE i'm looking for! And i'm seeking for the man who is also eager to have
-this life long adventure full of surprises and new experience we can share together! Will you join me for this trip?
-I do realise that it should be very difficult to say "Yes" from the first letter having no idea about me.
-That's why i just offer to get to know each other better though correspondence that will help us to reveal many things
-about each other whether we mach perfectly or not. In addition you can look at my pictures and read some info about me here
-http://dating-foryou.com/passion/
-I hope you'll like what you see and read there.
-Well closing my first letter to you i just want to thank you for reading it and i really hope that you'll share
-my point of view on what i said above. I do really hope that you'll answer me soon.
-
-a rivederci...
-
-Caro
-
-If you think that you were subscribed by mistake for this mail
-delivery or if your email has been added without your permission,
-please, visit http://dating-foryou.com/passion/ and unsubscribe from our mails.
-
+Oh, I see.  But wouldn't that cause FREEZE to spin down the drives?
 
