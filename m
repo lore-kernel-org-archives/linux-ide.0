@@ -1,31 +1,28 @@
-From: "Nigel" <deerskinchristian@earthling.net>
-Subject: New and hot Rock hard manhood, multiple explosions and several times more semen volume
-Date: Thu, 27 Jul 2006 14:27:19 -0200
-Message-ID: <68012096306662.66953741E9__44230.2935560749$1154021338$gmane$org@9YATEXB>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: PATCH: Add full Compact Flash support to libata
+Date: Thu, 27 Jul 2006 13:41:57 -0400
+Message-ID: <44C8FAE5.1000400@rtr.ca>
+References: <1154016810.13509.61.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:64965 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751878AbWG0R2V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jul 2006 13:28:21 -0400
+Received: from rtr.ca ([64.26.128.89]:53189 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1750961AbWG0Rl7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jul 2006 13:41:59 -0400
+In-Reply-To: <1154016810.13509.61.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Hello,
- Impress your girl with prolonged hardness, plentiful explosions and increased durationImpress your girl with prolonged hardness, plentiful explosions and increased duration
+Alan Cox wrote:
+> This is mostly interesting from the embedded end of the universe
+> where people use the CFA high speed non UDMA modes more. Some generic
+> controllers can do PIO5 and friends, that will follow later on.
 
-Have more success with women and impress them with your power and stamina in bed
+Cool.  Do you have one to test with?
 
+If so, please send/post the output of "hdparm --Istdout" from such a device.
 
- Take a look: http://www.cressetnn.com
-
-Nigel Rankin
-
-
-
-One volunteer is worth ten pressed men Better to be lowly in spirit and among the oppressed than to share plunder with the proudLive and let live A friend is not so soon gotten as lost.
-Love is blind.
-
+Thanks!
