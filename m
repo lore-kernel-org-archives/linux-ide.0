@@ -1,41 +1,50 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: Re: [linux-pm] [patch, rft] amd74xx: implement suspend-to-ram
-Date: Wed, 26 Jul 2006 17:29:33 -0700
-Message-ID: <200607261729.35098.david-b@pacbell.net>
-References: <20060715210518.GA3263@opus.vpn-dev.reflex> <200607251727.12678.david-b@pacbell.net> <20060726090204.GC1905@elf.ucw.cz>
+From: "zhao, forrest" <forrest.zhao@intel.com>
+Subject: Re: [PATCH 0/2]ACPI support for SATA/PATA
+Date: Thu, 27 Jul 2006 09:44:57 +0800
+Message-ID: <1153964697.4957.67.camel@forrest26.sh.intel.com>
+References: <1153899345.4957.59.camel@forrest26.sh.intel.com>
+	 <44C786D8.5060801@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp113.sbc.mail.mud.yahoo.com ([68.142.198.212]:5566 "HELO
-	smtp113.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751842AbWG0BNE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Jul 2006 21:13:04 -0400
-In-Reply-To: <20060726090204.GC1905@elf.ucw.cz>
-Content-Disposition: inline
+Received: from mga01.intel.com ([192.55.52.88]:56230 "EHLO
+	fmsmga101-1.fm.intel.com") by vger.kernel.org with ESMTP
+	id S1751856AbWG0B53 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Jul 2006 21:57:29 -0400
+In-Reply-To: <44C786D8.5060801@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: linux-pm@lists.osdl.org, Jason Lunz <lunz@falooley.org>, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
+To: Mark Lord <liml@rtr.ca>
+Cc: jgarzik@pobox.com, rdunlap@xenotime.net, htejun@gmail.com, linux-ide@vger.kernel.org
 
-On Wednesday 26 July 2006 2:02 am, Pavel Machek wrote:
-> Hi!
-> 
-> > > and please don't do this. Suspend-to-disk will call 
-> > > amd74xx_resume when it needs to talk to the disk.
+On Wed, 2006-07-26 at 11:14 -0400, Mark Lord wrote:
+> zhao, forrest wrote:
+> > Hello, all
 > > 
-> > I don't understand the rest of this comment.  That code looks
-> > correct (other than calling the goofy/broken pci_choose_state thing);
-> > PM_EVENT_FREEZE and PM_EVENT_PRETHAW should not disable the device.
+> > In ACPI spec 3.0, section 9.9 defines 4 objects for PATA/SATA:
+> > 
+> > _GTF is for both PATA and SATA, which is used to return ATA task file
+> > needed to re-init the drive;
+> > _SDD is SATA-only object, which is used to inform the platform of the
+> > type of device attached to a port;
+> > _GTM and _STM are PATA-only objects, which are used to get/set PATA
+> > timing information(i.e. PIO and DMA speed).
 > 
-> Well, I'd prefer PM_EVENT_FREEZE and PM_EVENT_SUSPEND to be the same
-> code (i.e. remove the if() and just do 
+> It seems to be quite common for ICH*M notebooks to use the SATA ports
+> to attach PATA drives with PATA->SATA bridge chips in the middle.
 > 
-> > > > +		pci_disable_device(dev);
-> > > > +		pci_set_power_state(dev, pci_choose_state(dev, state));
+> In this case, one would expect the _GTM and _STM objects to be necessary,
+> even though Linux thinks it's a SATA situation.
 > 
-> unconditionaly). It should also work, and not really be slower.
 
-Oh, I see.  But wouldn't that cause FREEZE to spin down the drives?
+Hi Mark,
 
+I re-read the section 9.9 of ACPI spec 3.0, but didn't find any
+description about how to deal with "PATA->SATA bridge". Is this version
+of APCI spec outdated?
+Would you please point me to spec(or document), which has the
+description of how to deal with "PATA->SATA bridge"?
+
+Thanks,
+Forrest
