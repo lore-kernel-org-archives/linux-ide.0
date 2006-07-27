@@ -1,49 +1,28 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 0/2]ACPI support for SATA/PATA
-Date: Thu, 27 Jul 2006 14:03:48 -0400
-Message-ID: <44C90004.4030400@rtr.ca>
-References: <1153899345.4957.59.camel@forrest26.sh.intel.com>	 <44C786D8.5060801@rtr.ca> <1153964697.4957.67.camel@forrest26.sh.intel.com>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [patch v3] amd74xx: fix hang on resume from ram
+Date: Thu, 27 Jul 2006 13:35:07 -0700
+Message-ID: <200607271335.08245.david-b@pacbell.net>
+References: <20060715210518.GA3263@opus.vpn-dev.reflex> <200607251727.12678.david-b@pacbell.net> <20060726031446.GD4829@opus.vpn-dev.reflex>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:21913 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1750984AbWG0SDu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jul 2006 14:03:50 -0400
-In-Reply-To: <1153964697.4957.67.camel@forrest26.sh.intel.com>
+Received: from smtp108.sbc.mail.mud.yahoo.com ([68.142.198.207]:34915 "HELO
+	smtp108.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1750755AbWG0Ugh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Jul 2006 16:36:37 -0400
+In-Reply-To: <20060726031446.GD4829@opus.vpn-dev.reflex>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "zhao, forrest" <forrest.zhao@intel.com>
-Cc: jgarzik@pobox.com, rdunlap@xenotime.net, htejun@gmail.com, linux-ide@vger.kernel.org
+To: Jason Lunz <lunz@falooley.org>
+Cc: linux-pm@lists.osdl.org, Pavel Machek <pavel@suse.cz>, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
 
-zhao, forrest wrote:
-> On Wed, 2006-07-26 at 11:14 -0400, Mark Lord wrote:
->> zhao, forrest wrote:
->>> Hello, all
->>>
->>> In ACPI spec 3.0, section 9.9 defines 4 objects for PATA/SATA:
->>>
->>> _GTF is for both PATA and SATA, which is used to return ATA task file
->>> needed to re-init the drive;
->>> _SDD is SATA-only object, which is used to inform the platform of the
->>> type of device attached to a port;
->>> _GTM and _STM are PATA-only objects, which are used to get/set PATA
->>> timing information(i.e. PIO and DMA speed).
->> It seems to be quite common for ICH*M notebooks to use the SATA ports
->> to attach PATA drives with PATA->SATA bridge chips in the middle.
->>
->> In this case, one would expect the _GTM and _STM objects to be necessary,
->> even though Linux thinks it's a SATA situation.
->>
-> 
-> Hi Mark,
-> 
-> I re-read the section 9.9 of ACPI spec 3.0, but didn't find any
-> description about how to deal with "PATA->SATA bridge". Is this version
-> of APCI spec outdated?
-> Would you please point me to spec(or document), which has the
-> description of how to deal with "PATA->SATA bridge"?
+Your v3 patch worked for me on an NF3 system, modulo video issues
+I've yet to track down.  It looks like that was otherwise the "last"
+bug blocking S3 from working on that box.
 
-I don't have any documents, just machines that implement it.
+I can't say the same for an NF2 system, unfortunately.  :(
 
-Cheers
+- Dave
