@@ -1,43 +1,84 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [linux-pm] [patch, rft] amd74xx: implement suspend-to-ram
-Date: Fri, 28 Jul 2006 11:15:01 +0200
-Message-ID: <200607281115.01362.rjw@sisk.pl>
-References: <20060715210518.GA3263@opus.vpn-dev.reflex> <20060727224311.GA4104@knob.reflex> <20060727225153.GG3797@elf.ucw.cz>
+From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
+Subject: [2.6.18-rc2-mm1] libata ate one PATA channel
+Date: Fri, 28 Jul 2006 13:45:50 +0200
+Message-ID: <20060728134550.030a0eb8@werewolf.auna.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:1507 "EHLO ogre.sisk.pl")
-	by vger.kernel.org with ESMTP id S932599AbWG1JPk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jul 2006 05:15:40 -0400
-In-Reply-To: <20060727225153.GG3797@elf.ucw.cz>
-Content-Disposition: inline
+Received: from smtp.ono.com ([62.42.230.12]:63349 "EHLO resmta03.ono.com")
+	by vger.kernel.org with ESMTP id S1751079AbWG1Lpw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jul 2006 07:45:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-pm@lists.osdl.org
-Cc: Pavel Machek <pavel@suse.cz>, Jason Lunz <lunz@falooley.org>, David Brownell <david-b@pacbell.net>, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
+To: "Linux-Kernel, " <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Friday 28 July 2006 00:51, Pavel Machek wrote:
-> On Thu 2006-07-27 18:43:12, Jason Lunz wrote:
-> > On Thu, Jul 27, 2006 at 10:49:39PM +0200, Pavel Machek wrote:
-> > > > Oh, I see.  But wouldn't that cause FREEZE to spin down the drives?
-> > > 
-> > > I do not think so. If it will, I'm obviously wrong and original
-> > > version is okay.
-> > 
-> > I think it's the ide bus shutdown methods that do power management on
-> > the drives. But here we're talking about the pci ide controller.
-> > 
-> > At any rate, not having the if() means my machine freezes during the
-> > suspend phase of STD.
-> 
-> I'd still like to understand why it freezes (it should not), but I
-> guess you have my ACK on that patch.
+Hi...
 
-So I guess it needs to be forwarded to Andrew.  Should I?
+I've been out for more than a week. Just went to try -rc2-mm1 and
+it ate one ide channel...
 
-It helps to resume my box from RAM, btw.  Now only the graphics doesn't
-wake up.
+This was -rc1-mm2:
+libata version 2.00 loaded.
+ata_piix 0000:00:1f.1: version 2.00ac6
+ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:1f.1 to 64
+ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
+scsi0 : ata_piix
+ata1.00: ATAPI, max UDMA/33
+ata1.01: ATAPI, max MWDMA0, CDB intr
+ata1.00: configured for PIO3
+ata1.01: configured for PIO3
+  Vendor: HL-DT-ST  Model: DVDRAM GSA-4120B  Rev: A111
+  Type:   CD-ROM                             ANSI SCSI revision: 05
+  Vendor: IOMEGA    Model: ZIP 250           Rev: 51.G
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xF008 irq 15
+scsi1 : ata_piix
+ata2.00: ATA-6, max UDMA/100, 234441648 sectors: LBA48
+ata2.00: ata2: dev 0 multi count 16
+ata2.01: ATAPI, max UDMA/33
+ata2.00: configured for UDMA/33
+ata2.01: configured for UDMA/33
+  Vendor: ATA       Model: ST3120022A        Rev: 3.06
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: TOSHIBA   Model: DVD-ROM SD-M1712  Rev: 1004
+  Type:   CD-ROM                             ANSI SCSI revision: 05
+ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ]
+ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata3: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xD000 irq 16
+ata4: SATA max UDMA/133 cmd 0xC800 ctl 0xCC02 bmdma 0xD008 irq 16
 
-Rafael
+
+This is -rc2-mm1, a PATA channel is missing...
+
+libata version 2.00 loaded.
+ata_piix 0000:00:1f.1: version 2.00ac6
+ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:1f.1 to 64
+ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
+scsi0 : ata_piix
+ata1.00: ATAPI, max UDMA/33 
+ata1.01: ATAPI, max MWDMA0, CDB intr
+ata1.00: configured for UDMA/33
+ata1.01: configured for PIO3
+  Vendor: HL-DT-ST  Model: DVDRAM GSA-4120B  Rev: A111 
+  Type:   CD-ROM                             ANSI SCSI revision: 05
+  Vendor: IOMEGA    Model: ZIP 250           Rev: 51.G 
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ] 
+ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata2: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xD000 irq 16
+ata3: SATA max UDMA/133 cmd 0xC800 ctl 0xCC02 bmdma 0xD008 irq 16
+
+Any idea ?
+Any more info needed ?
+TIA
+
+--
+J.A. Magallon <jamagallon()ono!com>     \               Software is like sex:
+                                         \         It's better when it's free
+Mandriva Linux release 2007.0 (Cooker) for i586
+Linux 2.6.17-jam04 (gcc 4.1.1 20060518 (prerelease)) #2 SMP PREEMPT Mon
