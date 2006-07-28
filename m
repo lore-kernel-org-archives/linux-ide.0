@@ -1,37 +1,38 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: [linux-pm] [patch, rft] amd74xx: implement suspend-to-ram
-Date: Fri, 28 Jul 2006 00:51:53 +0200
-Message-ID: <20060727225153.GG3797@elf.ucw.cz>
-References: <20060715210518.GA3263@opus.vpn-dev.reflex> <200607251727.12678.david-b@pacbell.net> <20060726090204.GC1905@elf.ucw.cz> <200607261729.35098.david-b@pacbell.net> <20060727204939.GA3797@elf.ucw.cz> <20060727224311.GA4104@knob.reflex>
+From: Roman Medina-Heigl Hernandez <roman@rs-labs.com>
+Subject: Possible fake host protected area (hpa) detected in ide drive causing
+ SectorIdNotFound
+Date: Fri, 28 Jul 2006 05:38:35 +0200
+Message-ID: <44C986BB.3030006@rs-labs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:15557 "EHLO amd.ucw.cz")
-	by vger.kernel.org with ESMTP id S1751403AbWG0WwG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jul 2006 18:52:06 -0400
-Content-Disposition: inline
-In-Reply-To: <20060727224311.GA4104@knob.reflex>
+Received: from mta.hosting-seguridad.com ([207.150.162.14]:1453 "EHLO
+	mta.hosting-seguridad.com") by vger.kernel.org with ESMTP
+	id S1751796AbWG1Dip (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Jul 2006 23:38:45 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mta.hosting-seguridad.com (Postfix) with ESMTP id 0973C602A6
+	for <linux-ide@vger.kernel.org>; Fri, 28 Jul 2006 05:38:46 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mta.hosting-seguridad.com (Postfix) with ESMTP id CBE7060270
+	for <linux-ide@vger.kernel.org>; Fri, 28 Jul 2006 05:38:44 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Lunz <lunz@falooley.org>
-Cc: David Brownell <david-b@pacbell.net>, linux-pm@lists.osdl.org, linux-ide@vger.kernel.org, Vojtech Pavlik <vojtech@suse.cz>
+To: linux-ide@vger.kernel.org
 
-On Thu 2006-07-27 18:43:12, Jason Lunz wrote:
-> On Thu, Jul 27, 2006 at 10:49:39PM +0200, Pavel Machek wrote:
-> > > Oh, I see.  But wouldn't that cause FREEZE to spin down the drives?
-> > 
-> > I do not think so. If it will, I'm obviously wrong and original
-> > version is okay.
-> 
-> I think it's the ide bus shutdown methods that do power management on
-> the drives. But here we're talking about the pci ide controller.
-> 
-> At any rate, not having the if() means my machine freezes during the
-> suspend phase of STD.
+Please, read full description of the bug at:
+https://launchpad.net/bugs/26119
 
-I'd still like to understand why it freezes (it should not), but I
-guess you have my ACK on that patch.
-								Pavel
+(fully reproducible -at least- with ST340823A disks)
+
+The bug tracker is Ubuntu's but I had the same problem with Fedora.
+
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
+Saludos,
+-Roman
+
+PGP Fingerprint:
+09BB EFCD 21ED 4E79 25FB  29E1 E47F 8A7D EAD5 6742
+[Key ID: 0xEAD56742. Available at KeyServ]
