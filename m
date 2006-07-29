@@ -1,349 +1,243 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 2/2] libata: Add support for SATA attachment to SAS adapters
-Date: Fri, 28 Jul 2006 09:01:04 -0500
-Message-ID: <44CA18A0.1000803@us.ibm.com>
-References: <200607131335.k6DDZpMD004925@d03av03.boulder.ibm.com> <44BF9079.4040009@us.ibm.com>
-Reply-To: brking@us.ibm.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Sat, 29 Jul 2006 01:41:12 -0400
+Message-ID: <20060729054112.GA32497@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:36570 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1161158AbWG1OBH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jul 2006 10:01:07 -0400
-In-Reply-To: <44BF9079.4040009@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422637AbWG2Fls@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-
-Ping
-
-Brian King wrote:
-> Jeff,
-> 
-> Do you have any comments on my latest patches? What can I do to
-> help get this support merged into libata?
-> 
-> 
-> Here are some test results for the patchset:
-> 
-> 1. sg3utils test to SATA/ATAPI device
->    * Perform the following sg3utils commands to a SATA device:
->        o sg_get_config
->        o sginfo
->        o sg_inq
->        o sg_readcap
-> 2. SATA error injection
->    * Use sg_reset to initiate a PHY reset to a SATA device and verify
->      the host recovers.
->    * Use sysfs to reset the ipr adapter. This will cause the SATA device
->      to receive an out of band PHY reset. Use sg_inq to issue an INQUIRY
->      to the device. Verify error handling gets invoked and the system
->      recovers.
-> 3. stress_cd / internal CD/DVD exerciser (run for > 12 hours)
-> 4. SLAB_DEBUG
->    * Run with memory tainting enabled.
-> 5. SATA add/remove device
->    * Use sysfs to delete a SATA device from SCSI core, which will also
->      cause the associated ATA port to get deleted.
->    * Use sysfs to rescan for the SATA device. Verify the SATA device
->      shows up again.
->    * Verify no unexpected errors are logged.
-> 6. SATA queue_depth
->    * Use sysfs and attempt to change the queue depth of a SATA device.
->    * Verify the queue depth stays at 1.
-> 
-> I would be happy to run any additional testcases.
-> 
-> Thanks,
-> 
-> Brian
-> 
-> 
-> Brian King wrote:
->> The following patch enhances libata to allow SAS device drivers
->> to utilize libata to talk to SATA devices. It introduces some
->> new APIs which allow libata to be used without allocating a
->> virtual scsi host.
->>
->> New APIs:
->>
->> ata_sas_port_alloc - Allocate an ata_port 
->> ata_sas_port_init - Initialize an ata_port (probe device, etc)
->> ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
->> ata_sas_slave_configure - configure scsi device
->> ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
->>
->> These new APIs can be used either directly by a SAS LLDD or could be used
->> by the SAS transport class. 
->>
->> Possible usage for a SAS LLDD would be:
->>
->> scsi_scan_host
->> 	target_alloc
->> 		ata_sas_port_alloc
->> 	slave_alloc
->> 		ata_sas_port_init
->> 	slave_configure
->> 		ata_sas_slave_configure
->>
->> Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
->>
->> Device teardown would occur with:
->>
->> slave_destroy
->> 	port_disable
->> target_destroy
->> 	ata_sas_port_destroy
->>
->> Acked-by: Jeff Garzik <jgarzik@pobox.com>
->> Signed-off-by: Brian King <brking@us.ibm.com>
->> ---
->>
->>  drivers/scsi/libata-core.c |    4 -
->>  drivers/scsi/libata-scsi.c |  166 +++++++++++++++++++++++++++++++++++++++++++++
->>  drivers/scsi/libata.h      |    2 
->>  include/linux/libata.h     |    9 ++
->>  4 files changed, 179 insertions(+), 2 deletions(-)
->>
->> diff -puN drivers/scsi/libata-scsi.c~libata_sas drivers/scsi/libata-scsi.c
->> --- libata-dev/drivers/scsi/libata-scsi.c~libata_sas	2006-07-09 13:07:22.000000000 -0500
->> +++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-07-09 13:07:22.000000000 -0500
->> @@ -3158,3 +3158,169 @@ void ata_scsi_dev_rescan(void *data)
->>  			scsi_rescan_device(&(dev->sdev->sdev_gendev));
->>  	}
->>  }
->> +
->> +/**
->> + *	ata_sas_port_alloc - Allocate port for a SAS attached SATA device
->> + *	@pdev: PCI device that the scsi device is attached to
->> + *	@port_info: Information from low-level host driver
->> + *	@host: SCSI host that the scsi device is attached to
->> + *
->> + *	LOCKING:
->> + *	PCI/etc. bus probe sem.
->> + *
->> + *	RETURNS:
->> + *	ata_port pointer on success / NULL on failure.
->> + */
->> +
->> +struct ata_port *ata_sas_port_alloc(struct ata_host_set *host_set,
->> +				    struct ata_port_info *port_info,
->> +				    struct Scsi_Host *host)
->> +{
->> +	struct ata_port *ap = kzalloc(sizeof(*ap), GFP_KERNEL);
->> +	int i;
->> +
->> +	if (!ap)
->> +		return NULL;
->> +
->> +	ap->dev = host_set->dev;
->> +	ap->host_set = host_set;
->> +	ap->id = ata_unique_id++;
->> +	ap->lock = host->host_lock;
->> +	ap->ops = port_info->port_ops;
->> +	ap->flags = port_info->host_flags | ATA_FLAG_DISABLED;
->> +	ap->pio_mask = port_info->pio_mask;
->> +	ap->mwdma_mask = port_info->mwdma_mask;
->> +	ap->udma_mask = port_info->udma_mask;
->> +	ap->cbl = ATA_CBL_SATA;
->> +	ap->sata_spd_limit = UINT_MAX;
->> +	ap->active_tag = ATA_TAG_POISON;
->> +	ap->last_ctl = 0xFF;
->> +	INIT_WORK(&ap->port_task, NULL, NULL);
->> +	INIT_WORK(&ap->hotplug_task, ata_scsi_hotplug, ap);
->> +	INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan, ap);
->> +	INIT_LIST_HEAD(&ap->eh_done_q);
->> +	init_waitqueue_head(&ap->eh_wait_q);
->> +
->> +	for (i = 0; i < ATA_MAX_DEVICES; i++) {
->> +		struct ata_device *dev = &ap->device[i];
->> +		dev->ap = ap;
->> +		dev->devno = i;
->> +		ata_dev_init(dev);
->> +	}
->> +
->> +	return ap;
->> +}
->> +EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
->> +
->> +/**
->> + *	ata_sas_port_start - Set port up for dma.
->> + *	@ap: Port to initialize
->> + *
->> + *	Called just after data structures for each port are
->> + *	initialized.  Allocates DMA pad.
->> + *
->> + *	May be used as the port_start() entry in ata_port_operations.
->> + *
->> + *	LOCKING:
->> + *	Inherited from caller.
->> + */
->> +int ata_sas_port_start(struct ata_port *ap)
->> +{
->> +	return ata_pad_alloc(ap, ap->dev);
->> +}
->> +EXPORT_SYMBOL_GPL(ata_sas_port_start);
->> +
->> +/**
->> + *	ata_port_stop - Undo ata_sas_port_start()
->> + *	@ap: Port to shut down
->> + *
->> + *	Frees the DMA pad.
->> + *
->> + *	May be used as the port_stop() entry in ata_port_operations.
->> + *
->> + *	LOCKING:
->> + *	Inherited from caller.
->> + */
->> +
->> +void ata_sas_port_stop(struct ata_port *ap)
->> +{
->> +	ata_pad_free(ap, ap->dev);
->> +}
->> +EXPORT_SYMBOL_GPL(ata_sas_port_stop);
->> +
->> +/**
->> + *	ata_sas_port_init - Initialize a SATA device
->> + *	@ap: SATA port to initialize
->> + *
->> + *	LOCKING:
->> + *	PCI/etc. bus probe sem.
->> + *
->> + *	RETURNS:
->> + *	Zero on success, non-zero on error.
->> + */
->> +
->> +int ata_sas_port_init(struct ata_port *ap)
->> +{
->> +	int rc = ap->ops->port_start(ap);
->> +
->> +	if (!rc)
->> +		rc = ata_bus_probe(ap);
->> +
->> +	return rc;
->> +}
->> +EXPORT_SYMBOL_GPL(ata_sas_port_init);
->> +
->> +/**
->> + *	ata_sas_port_destroy - Destroy a SATA port allocated by ata_sas_port_alloc
->> + *	@ap: SATA port to destroy
->> + *
->> + */
->> +
->> +void ata_sas_port_destroy(struct ata_port *ap)
->> +{
->> +	ap->ops->port_stop(ap);
->> +	kfree(ap);
->> +}
->> +EXPORT_SYMBOL_GPL(ata_sas_port_destroy);
->> +
->> +/**
->> + *	ata_sas_slave_configure - Default slave_config routine for libata devices
->> + *	@sdev: SCSI device to configure
->> + *	@ap: ATA port to which SCSI device is attached
->> + *
->> + *	RETURNS:
->> + *	Zero.
->> + */
->> +
->> +int ata_sas_slave_configure(struct scsi_device *sdev, struct ata_port *ap)
->> +{
->> +	ata_scsi_sdev_config(sdev);
->> +	ata_scsi_dev_config(sdev, ap->device);
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(ata_sas_slave_configure);
->> +
->> +/**
->> + *	ata_sas_queuecmd - Issue SCSI cdb to libata-managed device
->> + *	@cmd: SCSI command to be sent
->> + *	@done: Completion function, called when command is complete
->> + *	@ap:	ATA port to which the command is being sent
->> + *
->> + *	RETURNS:
->> + *	Zero.
->> + */
->> +
->> +int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
->> +		     struct ata_port *ap)
->> +{
->> +	ata_scsi_dump_cdb(ap, cmd);
->> +
->> +	if (likely(ata_scsi_dev_enabled(ap->device)))
->> +		__ata_scsi_queuecmd(cmd, done, ap->device);
->> +	else {
->> +		cmd->result = (DID_BAD_TARGET << 16);
->> +		done(cmd);
->> +	}
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
->> diff -puN drivers/scsi/libata.h~libata_sas drivers/scsi/libata.h
->> --- libata-dev/drivers/scsi/libata.h~libata_sas	2006-07-09 13:07:22.000000000 -0500
->> +++ libata-dev-bjking1/drivers/scsi/libata.h	2006-07-09 13:07:22.000000000 -0500
->> @@ -43,6 +43,7 @@ extern struct workqueue_struct *ata_aux_
->>  extern int atapi_enabled;
->>  extern int atapi_dmadir;
->>  extern int libata_fua;
->> +extern unsigned int ata_unique_id;
->>  extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
->>  extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
->>  extern void ata_dev_disable(struct ata_device *dev);
->> @@ -107,6 +108,7 @@ extern void ata_scsi_rbuf_fill(struct at
->>                                             u8 *rbuf, unsigned int buflen));
->>  extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
->>  extern void ata_scsi_dev_rescan(void *data);
->> +extern int ata_bus_probe(struct ata_port *ap);
->>  
->>  /* libata-eh.c */
->>  extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
->> diff -puN include/linux/libata.h~libata_sas include/linux/libata.h
->> --- libata-dev/include/linux/libata.h~libata_sas	2006-07-09 13:07:22.000000000 -0500
->> +++ libata-dev-bjking1/include/linux/libata.h	2006-07-09 13:07:22.000000000 -0500
->> @@ -689,6 +689,15 @@ extern int ata_scsi_detect(struct scsi_h
->>  extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
->>  extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
->>  extern int ata_scsi_release(struct Scsi_Host *host);
->> +extern void ata_sas_port_destroy(struct ata_port *);
->> +extern struct ata_port *ata_sas_port_alloc(struct ata_host_set *,
->> +					   struct ata_port_info *, struct Scsi_Host *);
->> +extern int ata_sas_port_init(struct ata_port *);
->> +extern int ata_sas_port_start(struct ata_port *ap);
->> +extern void ata_sas_port_stop(struct ata_port *ap);
->> +extern int ata_sas_slave_configure(struct scsi_device *, struct ata_port *);
->> +extern int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
->> +			    struct ata_port *ap);
->>  extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
->>  extern int sata_scr_valid(struct ata_port *ap);
->>  extern int sata_scr_read(struct ata_port *ap, int reg, u32 *val);
->> diff -puN drivers/scsi/libata-core.c~libata_sas drivers/scsi/libata-core.c
->> --- libata-dev/drivers/scsi/libata-core.c~libata_sas	2006-07-09 13:07:22.000000000 -0500
->> +++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-07-09 13:07:22.000000000 -0500
->> @@ -70,7 +70,7 @@ static unsigned int ata_dev_init_params(
->>  static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
->>  static void ata_dev_xfermask(struct ata_device *dev);
->>  
->> -static unsigned int ata_unique_id = 1;
->> +unsigned int ata_unique_id = 1;
->>  static struct workqueue_struct *ata_wq;
->>  
->>  struct workqueue_struct *ata_aux_wq;
->> @@ -1528,7 +1528,7 @@ err_out_nosup:
->>   *	Zero on success, negative errno otherwise.
->>   */
->>  
->> -static int ata_bus_probe(struct ata_port *ap)
->> +int ata_bus_probe(struct ata_port *ap)
->>  {
->>  	unsigned int classes[ATA_MAX_DEVICES];
->>  	int tries[ATA_MAX_DEVICES];
->> _
-> 
 
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ drivers/scsi/libata-eh.c    |   69 ++++++++++++++++++++++++++++----------------
+ drivers/scsi/sata_promise.c |    7 ++++
+ include/linux/libata.h      |    4 +-
+ 3 files changed, 54 insertions(+), 26 deletions(-)
+
+Jeff Garzik:
+      [libata] sata_promise: comment out duplicate PCI ID
+
+Tejun Heo:
+      libata: fix autopsy ehc->i.action and ehc->i.dev handling
+      libata: fix eh_skip_recovery condition
+      libata: improve EH action and EHI flag handling
+
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 4b6aa30..29f5934 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -764,12 +764,27 @@ static void ata_eh_about_to_do(struct at
+ 			       unsigned int action)
+ {
+ 	unsigned long flags;
++	struct ata_eh_info *ehi = &ap->eh_info;
++	struct ata_eh_context *ehc = &ap->eh_context;
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+-	ata_eh_clear_action(dev, &ap->eh_info, action);
++	/* Reset is represented by combination of actions and EHI
++	 * flags.  Suck in all related bits before clearing eh_info to
++	 * avoid losing requested action.
++	 */
++	if (action & ATA_EH_RESET_MASK) {
++		ehc->i.action |= ehi->action & ATA_EH_RESET_MASK;
++		ehc->i.flags |= ehi->flags & ATA_EHI_RESET_MODIFIER_MASK;
++
++		/* make sure all reset actions are cleared & clear EHI flags */
++		action |= ATA_EH_RESET_MASK;
++		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
++	}
++
++	ata_eh_clear_action(dev, ehi, action);
+ 
+-	if (!(ap->eh_context.i.flags & ATA_EHI_QUIET))
++	if (!(ehc->i.flags & ATA_EHI_QUIET))
+ 		ap->pflags |= ATA_PFLAG_RECOVERED;
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
+@@ -790,6 +805,12 @@ static void ata_eh_about_to_do(struct at
+ static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
+ 			unsigned int action)
+ {
++	/* if reset is complete, clear all reset actions & reset modifier */
++	if (action & ATA_EH_RESET_MASK) {
++		action |= ATA_EH_RESET_MASK;
++		ap->eh_context.i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
++	}
++
+ 	ata_eh_clear_action(dev, &ap->eh_context.i, action);
+ }
+ 
+@@ -1276,8 +1297,6 @@ static int ata_eh_speed_down(struct ata_
+ static void ata_eh_autopsy(struct ata_port *ap)
+ {
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+-	unsigned int action = ehc->i.action;
+-	struct ata_device *failed_dev = NULL;
+ 	unsigned int all_err_mask = 0;
+ 	int tag, is_io = 0;
+ 	u32 serror;
+@@ -1294,7 +1313,7 @@ static void ata_eh_autopsy(struct ata_po
+ 		ehc->i.serror |= serror;
+ 		ata_eh_analyze_serror(ap);
+ 	} else if (rc != -EOPNOTSUPP)
+-		action |= ATA_EH_HARDRESET;
++		ehc->i.action |= ATA_EH_HARDRESET;
+ 
+ 	/* analyze NCQ failure */
+ 	ata_eh_analyze_ncq_error(ap);
+@@ -1315,7 +1334,7 @@ static void ata_eh_autopsy(struct ata_po
+ 		qc->err_mask |= ehc->i.err_mask;
+ 
+ 		/* analyze TF */
+-		action |= ata_eh_analyze_tf(qc, &qc->result_tf);
++		ehc->i.action |= ata_eh_analyze_tf(qc, &qc->result_tf);
+ 
+ 		/* DEV errors are probably spurious in case of ATA_BUS error */
+ 		if (qc->err_mask & AC_ERR_ATA_BUS)
+@@ -1329,11 +1348,11 @@ static void ata_eh_autopsy(struct ata_po
+ 		/* SENSE_VALID trumps dev/unknown error and revalidation */
+ 		if (qc->flags & ATA_QCFLAG_SENSE_VALID) {
+ 			qc->err_mask &= ~(AC_ERR_DEV | AC_ERR_OTHER);
+-			action &= ~ATA_EH_REVALIDATE;
++			ehc->i.action &= ~ATA_EH_REVALIDATE;
+ 		}
+ 
+ 		/* accumulate error info */
+-		failed_dev = qc->dev;
++		ehc->i.dev = qc->dev;
+ 		all_err_mask |= qc->err_mask;
+ 		if (qc->flags & ATA_QCFLAG_IO)
+ 			is_io = 1;
+@@ -1342,25 +1361,22 @@ static void ata_eh_autopsy(struct ata_po
+ 	/* enforce default EH actions */
+ 	if (ap->pflags & ATA_PFLAG_FROZEN ||
+ 	    all_err_mask & (AC_ERR_HSM | AC_ERR_TIMEOUT))
+-		action |= ATA_EH_SOFTRESET;
++		ehc->i.action |= ATA_EH_SOFTRESET;
+ 	else if (all_err_mask)
+-		action |= ATA_EH_REVALIDATE;
++		ehc->i.action |= ATA_EH_REVALIDATE;
+ 
+ 	/* if we have offending qcs and the associated failed device */
+-	if (failed_dev) {
++	if (ehc->i.dev) {
+ 		/* speed down */
+-		action |= ata_eh_speed_down(failed_dev, is_io, all_err_mask);
++		ehc->i.action |= ata_eh_speed_down(ehc->i.dev, is_io,
++						   all_err_mask);
+ 
+ 		/* perform per-dev EH action only on the offending device */
+-		ehc->i.dev_action[failed_dev->devno] |=
+-			action & ATA_EH_PERDEV_MASK;
+-		action &= ~ATA_EH_PERDEV_MASK;
++		ehc->i.dev_action[ehc->i.dev->devno] |=
++			ehc->i.action & ATA_EH_PERDEV_MASK;
++		ehc->i.action &= ~ATA_EH_PERDEV_MASK;
+ 	}
+ 
+-	/* record autopsy result */
+-	ehc->i.dev = failed_dev;
+-	ehc->i.action |= action;
+-
+ 	DPRINTK("EXIT\n");
+ }
+ 
+@@ -1483,6 +1499,9 @@ static int ata_eh_reset(struct ata_port 
+ 	ata_reset_fn_t reset;
+ 	int i, did_followup_srst, rc;
+ 
++	/* about to reset */
++	ata_eh_about_to_do(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
++
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine and modify it.
+ 	 */
+@@ -1531,8 +1550,7 @@ static int ata_eh_reset(struct ata_port 
+ 		ata_port_printk(ap, KERN_INFO, "%s resetting port\n",
+ 				reset == softreset ? "soft" : "hard");
+ 
+-	/* reset */
+-	ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
++	/* mark that this EH session started with reset */
+ 	ehc->i.flags |= ATA_EHI_DID_RESET;
+ 
+ 	rc = ata_do_reset(ap, reset, classes);
+@@ -1595,7 +1613,7 @@ static int ata_eh_reset(struct ata_port 
+ 			postreset(ap, classes);
+ 
+ 		/* reset successful, schedule revalidation */
+-		ata_eh_done(ap, NULL, ATA_EH_RESET_MASK);
++		ata_eh_done(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+ 		ehc->i.action |= ATA_EH_REVALIDATE;
+ 	}
+ 
+@@ -1848,15 +1866,16 @@ static int ata_eh_skip_recovery(struct a
+ 	for (i = 0; i < ata_port_max_devices(ap); i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 
+-		if (ata_dev_absent(dev) || ata_dev_ready(dev))
++		if (!(dev->flags & ATA_DFLAG_SUSPENDED))
+ 			break;
+ 	}
+ 
+ 	if (i == ata_port_max_devices(ap))
+ 		return 1;
+ 
+-	/* always thaw frozen port and recover failed devices */
+-	if (ap->pflags & ATA_PFLAG_FROZEN || ata_port_nr_enabled(ap))
++	/* thaw frozen port, resume link and recover failed devices */
++	if ((ap->pflags & ATA_PFLAG_FROZEN) ||
++	    (ehc->i.flags & ATA_EHI_RESUME_LINK) || ata_port_nr_enabled(ap))
+ 		return 0;
+ 
+ 	/* skip if class codes for all vacant slots are ATA_DEV_NONE */
+diff --git a/drivers/scsi/sata_promise.c b/drivers/scsi/sata_promise.c
+index 64631bd..4776f4e 100644
+--- a/drivers/scsi/sata_promise.c
++++ b/drivers/scsi/sata_promise.c
+@@ -269,8 +269,15 @@ static const struct pci_device_id pdc_at
+ 	{ PCI_VENDOR_ID_PROMISE, 0x6629, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20619 },
+ 
++/* TODO: remove all associated board_20771 code, as it completely
++ * duplicates board_2037x code, unless reason for separation can be
++ * divined.
++ */
++#if 0
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3570, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20771 },
++#endif
++
+ 	{ }	/* terminate list */
+ };
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 6cc497a..66c3100 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -265,12 +265,14 @@ enum {
+ 
+ 	/* ata_eh_info->flags */
+ 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
+-	ATA_EHI_RESUME_LINK	= (1 << 1),  /* need to resume link */
++	ATA_EHI_RESUME_LINK	= (1 << 1),  /* resume link (reset modifier) */
+ 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
+ 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
+ 
+ 	ATA_EHI_DID_RESET	= (1 << 16), /* already reset this port */
+ 
++	ATA_EHI_RESET_MODIFIER_MASK = ATA_EHI_RESUME_LINK,
++
+ 	/* max repeat if error condition is still set after ->error_handler */
+ 	ATA_EH_MAX_REPEAT	= 5,
+ 
