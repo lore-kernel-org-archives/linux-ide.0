@@ -1,160 +1,114 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [2.6.18-rc2-mm1] libata ate one PATA channel
-Date: Mon, 31 Jul 2006 04:53:57 +0900
-Message-ID: <44CD0E55.4020206@gmail.com>
-References: <20060728134550.030a0eb8@werewolf.auna.net>
+Subject: Re: [sata_sil] kernel 2.6.17(-mm2) test - timeout issue
+Date: Mon, 31 Jul 2006 05:22:42 +0900
+Message-ID: <44CD1512.1060802@gmail.com>
+References: <1151182247.5566.18.camel@localhost>	 <449DFDC4.5050207@gmail.com> <1153729271.3860.14.camel@localhost>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------000805050705030801010902"
+ boundary="------------050802000107030701040404"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.198]:45478 "EHLO
+Received: from nz-out-0102.google.com ([64.233.162.192]:32776 "EHLO
 	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932458AbWG3Txy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 30 Jul 2006 15:53:54 -0400
-Received: by nz-out-0102.google.com with SMTP id i11so119771nzi
-        for <linux-ide@vger.kernel.org>; Sun, 30 Jul 2006 12:53:50 -0700 (PDT)
-In-Reply-To: <20060728134550.030a0eb8@werewolf.auna.net>
+	id S1750917AbWG3UWf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 30 Jul 2006 16:22:35 -0400
+Received: by nz-out-0102.google.com with SMTP id i11so121227nzi
+        for <linux-ide@vger.kernel.org>; Sun, 30 Jul 2006 13:22:34 -0700 (PDT)
+In-Reply-To: <1153729271.3860.14.camel@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?=22J=2EA=2E_Magall=F3n=22?= <jamagallon@ono.com>
-Cc: "Linux-Kernel, " <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: =?UTF-8?B?TWFydGluIEFtbWVybcO8bGxlcg==?= <tenco@gmx.de>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
 This is a multi-part message in MIME format.
---------------000805050705030801010902
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+--------------050802000107030701040404
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-J.A. Magallón wrote:
-> Hi...
+Martin AmmermÃ¼ller wrote:
+> With high disk I/O and a 2.6.18-rc1 kernel i get these errors (depending
+> upon the work i do, up to several times a day):
 > 
-> I've been out for more than a week. Just went to try -rc2-mm1 and
-> it ate one ide channel...
-> 
-> This was -rc1-mm2:
-> libata version 2.00 loaded.
-> ata_piix 0000:00:1f.1: version 2.00ac6
-> ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 16
-> PCI: Setting latency timer of device 0000:00:1f.1 to 64
-> ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
-> scsi0 : ata_piix
-> ata1.00: ATAPI, max UDMA/33
-> ata1.01: ATAPI, max MWDMA0, CDB intr
-> ata1.00: configured for PIO3
-> ata1.01: configured for PIO3
->   Vendor: HL-DT-ST  Model: DVDRAM GSA-4120B  Rev: A111
->   Type:   CD-ROM                             ANSI SCSI revision: 05
->   Vendor: IOMEGA    Model: ZIP 250           Rev: 51.G
->   Type:   Direct-Access                      ANSI SCSI revision: 05
-> ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xF008 irq 15
-> scsi1 : ata_piix
-> ata2.00: ATA-6, max UDMA/100, 234441648 sectors: LBA48
-> ata2.00: ata2: dev 0 multi count 16
-> ata2.01: ATAPI, max UDMA/33
-> ata2.00: configured for UDMA/33
-> ata2.01: configured for UDMA/33
->   Vendor: ATA       Model: ST3120022A        Rev: 3.06
->   Type:   Direct-Access                      ANSI SCSI revision: 05
->   Vendor: TOSHIBA   Model: DVD-ROM SD-M1712  Rev: 1004
->   Type:   CD-ROM                             ANSI SCSI revision: 05
-> ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ]
-> ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 16
-> PCI: Setting latency timer of device 0000:00:1f.2 to 64
-> ata3: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xD000 irq 16
-> ata4: SATA max UDMA/133 cmd 0xC800 ctl 0xCC02 bmdma 0xD008 irq 16
-> 
-> 
-> This is -rc2-mm1, a PATA channel is missing...
-> 
-> libata version 2.00 loaded.
-> ata_piix 0000:00:1f.1: version 2.00ac6
-> ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 16
-> PCI: Setting latency timer of device 0000:00:1f.1 to 64
-> ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
-> scsi0 : ata_piix
-> ata1.00: ATAPI, max UDMA/33 
-> ata1.01: ATAPI, max MWDMA0, CDB intr
-> ata1.00: configured for UDMA/33
-> ata1.01: configured for PIO3
->   Vendor: HL-DT-ST  Model: DVDRAM GSA-4120B  Rev: A111 
->   Type:   CD-ROM                             ANSI SCSI revision: 05
->   Vendor: IOMEGA    Model: ZIP 250           Rev: 51.G 
->   Type:   Direct-Access                      ANSI SCSI revision: 05
-> ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ] 
-> ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 16
-> PCI: Setting latency timer of device 0000:00:1f.2 to 64
-> ata2: SATA max UDMA/133 cmd 0xC000 ctl 0xC402 bmdma 0xD000 irq 16
-> ata3: SATA max UDMA/133 cmd 0xC800 ctl 0xCC02 bmdma 0xD008 irq 16
-> 
-> Any idea ?
-> Any more info needed ?
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x400000 action 0x2 frozen
+> ata1.00: (BMDMA stat 0x20)
+> ata1.00: tag 0 cmd 0xc8 Emask 0x2 stat 0x58 err 0x0 (HSM violation)
 
-lspci -n please.  Also, can you report what the kernel says with the 
-attached patch applied?
+Hmm... Interesting.  It gets HSM violation first.
 
-Thanks.
+> ata1: soft resetting port
+> ata1: port is slow to respond, please be patient
+> ata1: port failed to respond (30 secs)
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ATA: abnormal status 0xD8 on port 0xDCA18087
+> ATA: abnormal status 0xD8 on port 0xDCA18087
+> ATA: abnormal status 0xD8 on port 0xDCA18087
+> ATA: abnormal status 0xD8 on port 0xDCA18087
+> ATA: abnormal status 0xD8 on port 0xDCA18087
+> ata1.00: qc timeout (cmd 0xec)
+> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata1.00: revalidation failed (errno=-5)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: hard resetting port
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: configured for UDMA/100
+> ata1: EH complete
+
+Then two timeouts while recovering.
+
+> SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 00 3a 00 00
+> SCSI device sda: drive cache: write back
+> 
+>> Anyways, if your harddisk is doing this regularly, 
+>> your hardware is faulty.  Maybe the connection between the controller 
+>> and the disk is the problem or the disk itself.
+> 
+> I did not get those errors with Windows XP and i am not the only one who
+> has problems running this particular laptop model with a linux kernel.
+> Ok, to be honest, there's actually only one person i know of which
+> bothered enough about exactly the same errors to send me an e-mail (he
+> discovered at least one of my messages to this list). But in my
+> experience there are almost always others getting the same error, but
+> which remain silent.
+
+It might be that the drive is quirky and raises interrupts prematurely 
+sometimes.  Depending on how the driver performs recovery, the effect 
+can be hidden from user.  Can you try the attached patch and see how the 
+kernel acts?
 
 -- 
 tejun
 
---------------000805050705030801010902
+--------------050802000107030701040404
 Content-Type: text/plain;
  name="patch"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Content-Disposition: inline;
  filename="patch"
 
-diff --git a/drivers/scsi/libata-bmdma.c b/drivers/scsi/libata-bmdma.c
-index 9ce221f..9397f0b 100644
---- a/drivers/scsi/libata-bmdma.c
-+++ b/drivers/scsi/libata-bmdma.c
-@@ -1070,6 +1070,10 @@ int ata_pci_init_one (struct pci_dev *pd
- 		goto err_out_regions;
- 	}
- 
-+	dev_printk(KERN_INFO, &pdev->dev,
-+		   "XXX: legacy_mode=%x probe_ent=%p probe_ent2=%p\n",
-+		   legacy_mode, probe_ent, probe_ent2);
-+
- 	pci_set_master(pdev);
- 
- 	/* FIXME: check ata_device_add return */
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 66feebd..9756ee6 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5401,8 +5401,11 @@ int ata_device_add(const struct ata_prob
- 	/* alloc a container for our list of ATA ports (buses) */
- 	host_set = kzalloc(sizeof(struct ata_host_set) +
- 			   (ent->n_ports * sizeof(void *)), GFP_KERNEL);
--	if (!host_set)
-+	if (!host_set) {
-+		printk(KERN_ERR "ata_device_add() alloc failed, n_ports=%d\n",
-+		       ent->n_ports);
- 		return 0;
-+	}
- 	spin_lock_init(&host_set->lock);
- 
- 	host_set->dev = dev;
-@@ -5419,8 +5422,10 @@ int ata_device_add(const struct ata_prob
- 		unsigned long xfer_mode_mask;
- 
- 		ap = ata_host_add(ent, host_set, i);
--		if (!ap)
-+		if (!ap) {
-+			printk(KERN_ERR "ata_host_add() failed\n");
- 			goto err_out;
-+		}
- 
- 		host_set->ports[i] = ap;
- 		xfer_mode_mask =(ap->udma_mask << ATA_SHIFT_UDMA) |
-@@ -5537,7 +5542,7 @@ err_out:
- 	}
- err_free_ret:
- 	kfree(host_set);
--	VPRINTK("EXIT, returning 0\n");
-+	printk(KERN_ERR "ata_device_add() ERROR, returning 0\n");
- 	return 0;
- }
- 
-
---------------000805050705030801010902--
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zYXRhX3NpbC5jIGIvZHJpdmVycy9zY3NpL3Nh
+dGFfc2lsLmMKaW5kZXggZDBhODUwNy4uNjYzMzczOCAxMDA2NDQKLS0tIGEvZHJpdmVycy9z
+Y3NpL3NhdGFfc2lsLmMKKysrIGIvZHJpdmVycy9zY3NpL3NhdGFfc2lsLmMKQEAgLTM4MCwx
+MSArMzgwLDE0IEBAIHN0YXRpYyB2b2lkIHNpbF9ob3N0X2ludHIoc3RydWN0IGF0YV9wb3IK
+IAkJCWFwLT5laF9pbmZvLnNlcnJvciB8PSBzZXJyb3I7CiAJCX0KIAorCQlhdGFfcG9ydF9w
+cmludGsoYXAsIEtFUk5fRVJSLCAiWFhYOiBTQVRBX0lSUSBzZXJyb3I9JXhcbiIsIHNlcnJv
+cik7CiAJCWdvdG8gZnJlZXplOwogCX0KIAotCWlmICh1bmxpa2VseSghcWMgfHwgcWMtPnRm
+LmN0bCAmIEFUQV9OSUVOKSkKKwlpZiAodW5saWtlbHkoIXFjIHx8IHFjLT50Zi5jdGwgJiBB
+VEFfTklFTikpIHsKKwkJYXRhX3BvcnRfcHJpbnRrKGFwLCBLRVJOX0VSUiwgIlhYWDogcWM9
+JXAgY3RsPSV4XG4iLCBxYywgcWMgPyBxYy0+dGYuY3RsIDogMCk7CiAJCWdvdG8gZnJlZXpl
+OworCX0KIAogCS8qIENoZWNrIHdoZXRoZXIgd2UgYXJlIGV4cGVjdGluZyBpbnRlcnJ1cHQg
+aW4gdGhpcyBzdGF0ZSAqLwogCXN3aXRjaCAoYXAtPmhzbV90YXNrX3N0YXRlKSB7CkBAIC00
+MTUsMTMgKzQxOCwxNyBAQCBzdGF0aWMgdm9pZCBzaWxfaG9zdF9pbnRyKHN0cnVjdCBhdGFf
+cG9yCiAJY2FzZSBIU01fU1Q6CiAJCWJyZWFrOwogCWRlZmF1bHQ6CisJCWF0YV9wb3J0X3By
+aW50ayhhcCwgS0VSTl9FUlIsICJYWFg6IEhTTT0lZFxuIiwgYXAtPmhzbV90YXNrX3N0YXRl
+KTsKIAkJZ290byBlcnJfaHNtOwogCX0KIAogCS8qIGNoZWNrIG1haW4gc3RhdHVzLCBjbGVh
+cmluZyBJTlRSUSAqLwogCXN0YXR1cyA9IGF0YV9jaGtfc3RhdHVzKGFwKTsKLQlpZiAodW5s
+aWtlbHkoc3RhdHVzICYgQVRBX0JVU1kpKQorCWlmICh1bmxpa2VseShzdGF0dXMgJiBBVEFf
+QlVTWSkpIHsKKwkJYXRhX3BvcnRfcHJpbnRrKGFwLCBLRVJOX0VSUiwgIlhYWDogQlVTWSBz
+dGF0dXM9JXhcbiIsCisJCQkJc3RhdHVzKTsKIAkJZ290byBlcnJfaHNtOworCX0KIAogCS8q
+IGFjayBibWRtYSBpcnEgZXZlbnRzICovCiAJYXRhX2JtZG1hX2lycV9jbGVhcihhcCk7CkBA
+IC00MzQsNiArNDQxLDcgQEAgc3RhdGljIHZvaWQgc2lsX2hvc3RfaW50cihzdHJ1Y3QgYXRh
+X3BvcgogIGVycl9oc206CiAJcWMtPmVycl9tYXNrIHw9IEFDX0VSUl9IU007CiAgZnJlZXpl
+OgorCWFwLT5laF9pbmZvLmFjdGlvbiB8PSBBVEFfRUhfSEFSRFJFU0VUOwogCWF0YV9wb3J0
+X2ZyZWV6ZShhcCk7CiB9CiAK
+--------------050802000107030701040404--
