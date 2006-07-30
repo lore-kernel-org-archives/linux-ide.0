@@ -1,41 +1,37 @@
-From: "Lawrence Jones" <LawrenceJones@0451.com>
-Subject: Your money, pearl-fishery
-Date: Sun, 30 Jul 2006 05:59:17 -0420
-Message-ID: <347757897.20060730055917@0451.com>
-Reply-To: "Lawrence Jones" <LawrenceJones@0451.com>
+From: Ronan <mr_platelet+m601@fastmail.fm>
+Subject: please add support for the VT8251
+Date: Sun, 30 Jul 2006 19:52:51 +0100
+Message-ID: <20060730185251.GA6954@ns.raidoneeyaikaep.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:16300 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751146AbWG3F7S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Jul 2006 01:59:18 -0400
+Received: from mail14.svc.cra.dublin.eircom.net ([159.134.118.30]:29230 "HELO
+	mail14.svc.cra.dublin.eircom.net") by vger.kernel.org with SMTP
+	id S932168AbWG3SwZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 30 Jul 2006 14:52:25 -0400
+Received: by ns.raidoneeyaikaep.com with local (Exim)
+	id 1G7GPD-0001oG-LS
+	for linux-ide@vger.kernel.org; Sun, 30 Jul 2006 19:52:51 +0100
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-laptop@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Even if you have no erectin problems SOFT CIAPLIS 
-would help you to make BETTER SESX MORE OFTEN!
-and to bring  unimagnable plesure to her.
+Hi.
 
-Just disolve half a pil under your tongue 
-and get ready for action in 15 minutes. 
+I don't like to badger open-source developers, but an email from Jeff
+Garzik (archived at [1]) suggests that it may be worth doing so in my
+particular situation.
 
-The tests showed that the majority of men 
-after taking this medic ation were able to have 
-PERFECT ERHECTION during 36 hours!
+  [1] http://marc.theaimsgroup.com/?l=linux-ide&m=114290600200440&w=2
 
-VISIT US, AND GET OUR SPECIAL 70% DISCGOUNT OFER!
+My situation is this: I recently purchased a PC which contains a VIA
+VT8251 southbridge.  As far as I can see, this is not currently supported
+by Linux, so it seems that (as I have insufficient knowledge to write
+the code myself) I have no option but to wait until it is.  Therefore,
+I would like to request that the Linux IDE developers implement support
+for this chipset.
 
-http://gaujeu.keessite.com/?83169377
+Regards,
 
-==========
-all, yet curious about this strange new idea of  flight  for  the  joy  of
-comfortable, without binding  any where, and  you didn't  sweat  in it. In a
-Part Two
-my empty was right there, two steps from the canisters. I should have stolen
-bumbling, with self-serving,  self-saving distortions of logic and  of truth
-nearer to Heaven."
-
-but  I simply could not force myself to believe the hysterical reports about
-     "No," I said. "Let's wait a sec. Put it down first."
+Ronan.
