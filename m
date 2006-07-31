@@ -1,42 +1,34 @@
-From: "Chi Benton" <ChiBenton@1-tek.com>
-Subject: Your cash, orra man
-Date: Mon, 31 Jul 2006 00:24:50 +0000 (UTC)
-Message-ID: <4469423946.20060731002417@1-tek.com>
-Reply-To: "Chi Benton" <ChiBenton@1-tek.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [2.6.18-rc2-mm1] libata: DMA speed too slow for cdrecord
+Date: Mon, 31 Jul 2006 12:09:01 +0100
+Message-ID: <1154344141.7230.18.camel@localhost.localdomain>
+References: <20060729235431.322ea6d3@werewolf.auna.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:29408 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S932102AbWGaAYh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Jul 2006 20:24:37 -0400
-Date: Mon, 31 Jul 2006 00:24:17 0000
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45982 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751513AbWGaKuB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jul 2006 06:50:01 -0400
+In-Reply-To: <20060729235431.322ea6d3@werewolf.auna.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-msdos@vger.kernel.org
+To: "J.A. =?ISO-8859-1?Q?Magall=F3n?=" <jamagallon@ono.com>
+Cc: "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Even if you have no erectin problems SOFT CIAJLIS 
-would help you to make BETTER SEBX MORE OFTEN!
-and to bring  unimagnable plesure to her.
+Ar Sad, 2006-07-29 am 23:54 +0200, ysgrifennodd J.A. Magall=C3=B3n:
+> ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
 
-Just disolve half a pil under your tongue 
-and get ready for action in 15 minutes. 
+Chip configuration reports OK
+> scsi0 : ata_piix
+> ata1.00: ATAPI, max UDMA/33
+> ata1.01: ATAPI, max MWDMA0, CDB intr
+> ata1.00: configured for PIO3
+> ata1.01: configured for PIO3
 
-The tests showed that the majority of men 
-after taking this medic ation were able to have 
-PERFECT ER7ECTION during 36 hours!
+Your tree appears to have the old speed setting code in it not the new
+speed setting code. As a result of this it tries to set both to MWDMA0
+which isn't available on the ICH chips and so falls back to PIO3.
 
-VISIT US, AND GET OUR SPECIAL 70% DISC3OUNT OFER!
 
-http://alupai.baaswinery.com/?35963050
-
-==========
-struggling gamely at his left. Then the whole formation rolled  slowly  to
-     Yes, I could live on that kind of money. If I could get two months' pay
-kindness lessons, and the more he worked to know the nature of  love,  the
-gleaming  in  the sun.  Its blue filling  sifted  cloudily  in slow  streams
-should be no limits.
-     "How is he telling them?"
-
-understand."
-you....
