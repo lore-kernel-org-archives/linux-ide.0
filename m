@@ -1,34 +1,84 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [2.6.18-rc2-mm1] libata: DMA speed too slow for cdrecord
-Date: Mon, 31 Jul 2006 12:09:01 +0100
-Message-ID: <1154344141.7230.18.camel@localhost.localdomain>
-References: <20060729235431.322ea6d3@werewolf.auna.net>
+From: Deyan Chepishev <dchepishev@yahoo.com>
+Subject: Re: raid1 sata_promise initialization order problem
+Date: Mon, 31 Jul 2006 05:45:33 -0700 (PDT)
+Message-ID: <20060731124533.93066.qmail@web34207.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45982 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751513AbWGaKuB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jul 2006 06:50:01 -0400
-In-Reply-To: <20060729235431.322ea6d3@werewolf.auna.net>
+Received: from web34207.mail.mud.yahoo.com ([66.163.178.122]:23191 "HELO
+	web34207.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1030181AbWGaMpd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Jul 2006 08:45:33 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "J.A. =?ISO-8859-1?Q?Magall=F3n?=" <jamagallon@ono.com>
-Cc: "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Ar Sad, 2006-07-29 am 23:54 +0200, ysgrifennodd J.A. Magall=C3=B3n:
-> ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
+Hi again,
+Please forget my previous email. I think i found where
+the problem is. Sorry my mistake.
 
-Chip configuration reports OK
-> scsi0 : ata_piix
-> ata1.00: ATAPI, max UDMA/33
-> ata1.01: ATAPI, max MWDMA0, CDB intr
-> ata1.00: configured for PIO3
-> ata1.01: configured for PIO3
+Thank you for writing this driver.
 
-Your tree appears to have the old speed setting code in it not the new
-speed setting code. As a result of this it tries to set both to MWDMA0
-which isn't available on the ICH chips and so falls back to PIO3.
+Sorry once again.
+
+--- Deyan Chepishev <dchepishev@yahoo.com> wrote:
+
+> Hi,
+> 
+> Sorry if I am writing to the wrong people, but I
+> took
+> them from the sources.
+> 
+> Here Is the problem I experience:
+> 
+> I have server HP Proliant ML 150 G2 equipped with
+> SATA
+> Promise TX4 SATA300 controller.
+> Linux root partition is on software raid1
+> Linux is CentOS 4.3
+> 
+> I downloaded kernel 2.6.17.7
+> When I compile in the kernel both drivers
+> sata_promise
+> and raid1, create appropriate initrd and reboot. The
+> system is unable to boot and kernel panics with last
+> messages something like:
+> switching root
+> unable to mount root 
+> and so on.
+> 
+> If I compile raid1 as module and create the
+> corresponding initrd the system is booting just
+> fine.
+> 
+> This leads me to the conclusion that when compiled
+> in
+> raid1 driver is initialized before the sata_promise
+> driver and is unable to see the mirror devices
+> simply
+> because they dont exist yet.
+> 
+> When I use kernel 2.6.14.6 the whole thing is
+> working
+> just fine with both drivers compiled in the kernel.
+> 
+> Do you think there is some way to tell the kernel
+> which driver to initialize first ?
+> 
+> Thanks in advance and sorry for bugging you with my
+> problems
+> 
+> __________________________________________________
+> Do You Yahoo!?
+> Tired of spam?  Yahoo! Mail has the best spam
+> protection around 
+> http://mail.yahoo.com 
+> 
 
 
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
