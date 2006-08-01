@@ -1,58 +1,37 @@
-From: Unicorn Chang <uchang@tw.ibm.com>
-Subject: [PATCH] ahci: skip protocol test altogether in spurious interrupt
- code
-Date: Tue, 01 Aug 2006 12:18:07 +0800
-Message-ID: <44CED5FF.6090701@tw.ibm.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [2.6.18-rc2-mm1] libata ate one PATA channel
+Date: Mon, 31 Jul 2006 23:22:43 -0700
+Message-ID: <20060731232243.65468eec.akpm@osdl.org>
+References: <20060728134550.030a0eb8@werewolf.auna.net>
+	<44CD0E55.4020206@gmail.com>
+	<20060731172452.76a1b6bd@werewolf.auna.net>
+	<44CE2908.8080502@gmail.com>
+	<1154363489.7230.61.camel@localhost.localdomain>
+	<20060731165011.GA6659@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Big5
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:56994 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1160996AbWHAERv
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Aug 2006 00:17:51 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k714HoMp008657
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Tue, 1 Aug 2006 00:17:50 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k714HoeV304966
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Mon, 31 Jul 2006 22:17:50 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k714HnCk015264
-	for <linux-ide@vger.kernel.org>; Mon, 31 Jul 2006 22:17:49 -0600
+Received: from smtp.osdl.org ([65.172.181.4]:22172 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1161153AbWHAGYR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Aug 2006 02:24:17 -0400
+In-Reply-To: <20060731165011.GA6659@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, jamagallon@ono.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
+On Tue, 1 Aug 2006 01:50:11 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Skip protocol test altogether in spurious interrupt code. If PIOS is received
-when it shouldn't, ahci will raise protocol violation.
+> > It'll be easier just to work outside the -mm tree with all this
+> > continued in/out random breakage if people are just going to say "drop
+> > xyz patch" rather than actually specifying *what is actually wrong* and
+> > getting me to fix the merge (Tejun that last one sentence is a hint ;))
+> 
+> Okay, took the hint.  Magallon, can you please try the following
+> patch?
 
-Signed-off-by: Unicorn Chang <uchang@tw.ibm.com>
----
-
-Patch for kernel bug 6826 - GoVault spurious interrupts
-(http://bugzilla.kernel.org/show_bug.cgi?id=6826)
-
---- linux-2.6.18-rc2/drivers/scsi/ahci.c.orig	2006-07-24 14:40:41.000000000 -0700
-+++ linux-2.6.18-rc2/drivers/scsi/ahci.c	2006-07-31 10:49:30.000000000 -0700
-@@ -940,14 +940,8 @@ static void ahci_host_intr(struct ata_po
- 		return;
- 
- 	/* ignore interim PIO setup fis interrupts */
--	if (ata_tag_valid(ap->active_tag)) {
--		struct ata_queued_cmd *qc =
--			ata_qc_from_tag(ap, ap->active_tag);
--
--		if (qc && qc->tf.protocol == ATA_PROT_PIO &&
--		    (status & PORT_IRQ_PIOS_FIS))
--			return;
--	}
-+	if (ata_tag_valid(ap->active_tag) && (status & PORT_IRQ_PIOS_FIS)) 
-+		return;
- 
- 	if (ata_ratelimit())
- 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
+Gee that's a big scary patch.  Is it considered ready for -mm?  (bearing in
+mind -mm's exacting quality standards (heh, I kill me)).
 
