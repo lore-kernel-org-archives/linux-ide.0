@@ -1,103 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/11] [libata] some function renaming
-Date: Wed, 2 Aug 2006 05:11:49 +0900
-Message-ID: <11544631092784-git-send-email-htejun@gmail.com>
+Subject: [PATCH 10/11] libata: replace ap->hard_port_no with ap->port_no
+Date: Wed, 2 Aug 2006 05:11:50 +0900
+Message-ID: <1154463110130-git-send-email-htejun@gmail.com>
 References: <11544631081793-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:2909 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S932548AbWHAULz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Aug 2006 16:11:55 -0400
-Received: by ug-out-1314.google.com with SMTP id m3so1473626ugc
-        for <linux-ide@vger.kernel.org>; Tue, 01 Aug 2006 13:11:54 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.182]:40950 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932605AbWHAUMC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Aug 2006 16:12:02 -0400
+Received: by py-out-1112.google.com with SMTP id t32so1324111pyc
+        for <linux-ide@vger.kernel.org>; Tue, 01 Aug 2006 13:12:02 -0700 (PDT)
 In-Reply-To: <11544631081793-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.ukjgarzik@pobox.com, akpm@osdl.org, davej@redhat.com, linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>
 
-s/ata_host_add/ata_port_add/
-s/ata_host_init/ata_port_init/
+Replace ap->hard_port_no with ap->port_no.
 
-libata naming got stuck in the middle of a Great Renaming:
-
-	ata_host -> ata_port
-	ata_host_set -> ata_host
-
-To eliminate confusion, let's just give up for now, and simply ensure
-that things are internally consistent.
-
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/ata_piix.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-dd8e6d7b6e5070c28359ed41bd876e2051672aff
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 66feebd..1cc12d4 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5240,7 +5240,7 @@ void ata_dev_init(struct ata_device *dev
- }
+1ca7e026372e14ae0b7aa47dea46cf4e55649fc1
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index dfdf4a7..99ed16c 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -487,7 +487,7 @@ static void piix_pata_cbl_detect(struct 
+ 		goto cbl40;
  
- /**
-- *	ata_host_init - Initialize an ata_port structure
-+ *	ata_port_init - Initialize an ata_port structure
-  *	@ap: Structure to initialize
-  *	@host: associated SCSI mid-layer structure
-  *	@host_set: Collection of hosts to which @ap belongs
-@@ -5253,7 +5253,7 @@ void ata_dev_init(struct ata_device *dev
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
-+static void ata_port_init(struct ata_port *ap, struct Scsi_Host *host,
- 			  struct ata_host_set *host_set,
- 			  const struct ata_probe_ent *ent, unsigned int port_no)
+ 	/* check BIOS cable detect results */
+-	mask = ap->hard_port_no == 0 ? PIIX_80C_PRI : PIIX_80C_SEC;
++	mask = ap->port_no == 0 ? PIIX_80C_PRI : PIIX_80C_SEC;
+ 	pci_read_config_byte(pdev, PIIX_IOCFG, &tmp);
+ 	if ((tmp & mask) == 0)
+ 		goto cbl40;
+@@ -513,7 +513,7 @@ static int piix_pata_prereset(struct ata
  {
-@@ -5320,7 +5320,7 @@ #endif
- }
+ 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
  
- /**
-- *	ata_host_add - Attach low-level ATA driver to system
-+ *	ata_port_add - Attach low-level ATA driver to system
-  *	@ent: Information provided by low-level driver
-  *	@host_set: Collections of ports to which we add
-  *	@port_no: Port number associated with this host
-@@ -5334,7 +5334,7 @@ #endif
-  *	New ata_port on success, for NULL on error.
-  */
- 
--static struct ata_port * ata_host_add(const struct ata_probe_ent *ent,
-+static struct ata_port * ata_port_add(const struct ata_probe_ent *ent,
- 				      struct ata_host_set *host_set,
- 				      unsigned int port_no)
+-	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->hard_port_no])) {
++	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->port_no])) {
+ 		ata_port_printk(ap, KERN_INFO, "port disabled. ignoring.\n");
+ 		ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
+ 		return 0;
+@@ -550,7 +550,7 @@ static int piix_sata_prereset(struct ata
+ 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
+ 	struct piix_host_priv *hpriv = ap->host_set->private_data;
+ 	const unsigned int *map = hpriv->map;
+-	int base = 2 * ap->hard_port_no;
++	int base = 2 * ap->port_no;
+ 	unsigned int present = 0;
+ 	int port, i;
+ 	u16 pcs;
+@@ -601,7 +601,7 @@ static void piix_set_piomode (struct ata
+ 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	struct pci_dev *dev	= to_pci_dev(ap->host_set->dev);
+ 	unsigned int is_slave	= (adev->devno != 0);
+-	unsigned int master_port= ap->hard_port_no ? 0x42 : 0x40;
++	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+ 	u16 master_data;
+ 	u8 slave_data;
+@@ -619,10 +619,10 @@ static void piix_set_piomode (struct ata
+ 		/* enable PPE, IE and TIME */
+ 		master_data |= 0x0070;
+ 		pci_read_config_byte(dev, slave_port, &slave_data);
+-		slave_data &= (ap->hard_port_no ? 0x0f : 0xf0);
++		slave_data &= (ap->port_no ? 0x0f : 0xf0);
+ 		slave_data |=
+ 			(timings[pio][0] << 2) |
+-			(timings[pio][1] << (ap->hard_port_no ? 4 : 0));
++			(timings[pio][1] << (ap->port_no ? 4 : 0));
+ 	} else {
+ 		master_data &= 0xccf8;
+ 		/* enable PPE, IE and TIME */
+@@ -652,9 +652,9 @@ static void piix_set_dmamode (struct ata
  {
-@@ -5359,7 +5359,7 @@ static struct ata_port * ata_host_add(co
- 
- 	ap = ata_shost_to_port(host);
- 
--	ata_host_init(ap, host, host_set, ent, port_no);
-+	ata_port_init(ap, host, host_set, ent, port_no);
- 
- 	rc = ap->ops->port_start(ap);
- 	if (rc)
-@@ -5418,7 +5418,7 @@ int ata_device_add(const struct ata_prob
- 		struct ata_port *ap;
- 		unsigned long xfer_mode_mask;
- 
--		ap = ata_host_add(ent, host_set, i);
-+		ap = ata_port_add(ent, host_set, i);
- 		if (!ap)
- 			goto err_out;
- 
+ 	unsigned int udma	= adev->dma_mode; /* FIXME: MWDMA too */
+ 	struct pci_dev *dev	= to_pci_dev(ap->host_set->dev);
+-	u8 maslave		= ap->hard_port_no ? 0x42 : 0x40;
++	u8 maslave		= ap->port_no ? 0x42 : 0x40;
+ 	u8 speed		= udma;
+-	unsigned int drive_dn	= (ap->hard_port_no ? 2 : 0) + adev->devno;
++	unsigned int drive_dn	= (ap->port_no ? 2 : 0) + adev->devno;
+ 	int a_speed		= 3 << (drive_dn * 4);
+ 	int u_flag		= 1 << drive_dn;
+ 	int v_flag		= 0x01 << drive_dn;
 -- 
 1.3.2
 
