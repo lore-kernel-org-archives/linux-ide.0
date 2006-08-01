@@ -1,100 +1,107 @@
-From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
-Subject: [2.6.18-rc2-mm1] pata_via fails
-Date: Wed, 2 Aug 2006 01:04:15 +0200
-Message-ID: <20060802010415.2bebc5fc@werewolf.auna.net>
+From: Sergio Monteiro Basto <sergio@sergiomb.no-ip.org>
+Subject: Re: [2.6.18-rc2-mm1] pata_via fails
+Date: Wed, 02 Aug 2006 00:18:27 +0100
+Message-ID: <1154474307.3819.5.camel@localhost.portugal>
+References: <20060802010415.2bebc5fc@werewolf.auna.net>
+Reply-To: sergio@sergiomb.no-ip.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-IgKN0St56ANi0jei9eMM"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ono.com ([62.42.230.12]:20365 "EHLO resmta04.ono.com")
-	by vger.kernel.org with ESMTP id S1750730AbWHAXER (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Aug 2006 19:04:17 -0400
+Received: from smtp3.netcabo.pt ([212.113.174.30]:17930 "EHLO
+	exch01smtp12.hdi.tvcabo") by vger.kernel.org with ESMTP
+	id S1750723AbWHAXSg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Aug 2006 19:18:36 -0400
+In-Reply-To: <20060802010415.2bebc5fc@werewolf.auna.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Linux-Kernel, " <linux-kernel@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org
-
-Yes, generic subject ;)
-
-After solving the problems with ICH, one other stays. One box has a
-VIA controller (in fact, this is a ApolloPro 266 chipset motherboard):
-
-nada:~# lspci
-00:00.0 Host bridge: VIA Technologies, Inc. VT8633 [Apollo Pro266] (rev 01)
-00:01.0 PCI bridge: VIA Technologies, Inc. VT8633 [Apollo Pro266 AGP]
-00:07.0 RAID bus controller: Promise Technology, Inc. PDC20319 (FastTrak S150 TX4) (rev 02)
-00:08.0 RAID bus controller: Promise Technology, Inc. PDC20319 (FastTrak S150 TX4) (rev 02)
-00:0a.0 SCSI storage controller: Adaptec AIC-7892B U160/m (rev 02)
-00:0b.0 Multimedia audio controller: Ensoniq 5880 AudioPCI (rev 02)
-00:0c.0 RAID bus controller: Promise Technology, Inc. PDC20267 (FastTrak100/Ultra100) (rev 02)
-00:0d.0 Ethernet controller: Intel Corporation 82557/8/9 [Ethernet Pro 100] (rev 08)
-00:11.0 ISA bridge: VIA Technologies, Inc. VT8233 PCI to ISA Bridge
-00:11.1 IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
-00:11.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller (rev 1b)
-00:11.3 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller (rev 1b)
-00:11.4 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller (rev 1b)
-01:00.0 VGA compatible controller: nVidia Corporation NV18 [GeForce4 MX 440 AGP 8x] (rev a4)
+To: "J.A. =?ISO-8859-1?Q?Magall=F3n?=" <jamagallon@ono.com>
+Cc: "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
 
-I built -rc2-mm1 with modular support for the VT82Cxxxx both through IDE and
-libata. The only thing hung there is the burner.
+--=-IgKN0St56ANi0jei9eMM
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-When drived through standard IDE, I got this:
+On Wed, 2006-08-02 at 01:04 +0200, J.A. Magall=F3n wrote:
+> Jul 10 15:09:46 nada kernel: PCI: VIA IRQ fixup for 0000:00:11.1, from
+> 255 to 0
+> Any ideas ?
+yes, try this patch
+http://lkml.org/lkml/2006/7/28/99
+As you are using -mm tree use just hunk #1 above
 
-VP_IDE: IDE controller at PCI slot 0000:00:11.1
-PCI: VIA IRQ fixup for 0000:00:11.1, from 255 to 0
-VP_IDE: chipset revision 6
-VP_IDE: not 100% native mode: will probe irqs later
-VP_IDE: VIA vt8233 (rev 00) IDE UDMA100 controller on pci0000:00:11.1
-    ide0: BM-DMA at 0xd800-0xd807, BIOS settings: hda:DMA, hdb:pio
-    ide1: BM-DMA at 0xd808-0xd80f, BIOS settings: hdc:pio, hdd:pio
-Probing IDE interface ide0...
-hda: HL-DT-ST DVDRAM GSA-4040B, ATAPI CD/DVD-ROM drive
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-hda: ATAPI 32X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
-Uniform CD-ROM driver Revision: 3.20
-Probing IDE interface ide1...
+--- linux-2.6.17.i686/drivers/pci/quirks.c.orig	2006-07-28 12:59:04.0000000=
+00 +0100
++++ linux-2.6.17.i686/drivers/pci/quirks.c	2006-07-28 13:26:49.000000000 +0=
+100
+@@ -648,11 +648,17 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_V
+  *
+  * Some of the on-chip devices are actually '586 devices' so they are
+  * listed here.
++ *=20
++ * if flags say that we have working apic(s), we don't need to quirk these
++ * devices
+  */
+ static void quirk_via_irq(struct pci_dev *dev)
+ {
+ 	u8 irq, new_irq;
+=20
++	if ((smp_found_config && !skip_ioapic_setup && nr_ioapics) || cpu_has_api=
+c)
++		return;
++
+ 	new_irq =3D dev->irq & 0xf;
+ 	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
+ 	if (new_irq !=3D irq) {
 
-If I load pata-via, I just wait a lot and get this:
 
-Jul 10 15:09:46 nada kernel: pata_via 0000:00:11.1: version 0.1.13
-Jul 10 15:09:46 nada kernel: PCI: VIA IRQ fixup for 0000:00:11.1, from 255 to 0
-Jul 10 15:09:46 nada kernel: ata9: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xD800 irq 14
-Jul 10 15:09:46 nada kernel: scsi9 : pata_via
-Jul 10 15:09:46 nada kernel: ata9.00: ATAPI, max UDMA/33
-Jul 10 15:10:16 nada kernel: ata9.00: qc timeout (cmd 0xa1)
-Jul 10 15:10:16 nada kernel: ata9.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-Jul 10 15:10:16 nada kernel: ata9.00: revalidation failed (errno=-5)
-Jul 10 15:10:16 nada kernel: ata9.00: limiting speed to UDMA/25
-Jul 10 15:10:16 nada kernel: ata9: failed to recover some devices, retrying in 5 secs
-Jul 10 15:10:51 nada kernel: ata9.00: qc timeout (cmd 0xa1)
-Jul 10 15:10:51 nada kernel: ata9.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-Jul 10 15:10:51 nada kernel: ata9.00: revalidation failed (errno=-5)
-Jul 10 15:10:51 nada kernel: ata9: failed to recover some devices, retrying in 5 secs
-Jul 10 15:11:27 nada kernel: ata9.00: qc timeout (cmd 0xa1)
-Jul 10 15:11:27 nada kernel: ata9.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-Jul 10 15:11:27 nada kernel: ata9.00: revalidation failed (errno=-5)
-Jul 10 15:11:27 nada kernel: ata9.00: disabled
-Jul 10 15:11:27 nada kernel: ata10: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xD808 irq 15
-Jul 10 15:11:27 nada kernel: scsi10 : pata_via
-Jul 10 15:11:34 nada kernel: ata10: port is slow to respond, please be patient
-Jul 10 15:11:57 nada kernel: ata10: port failed to respond (30 secs)
-Jul 10 15:11:57 nada kernel: ata10: SRST failed (status 0xFF)
-Jul 10 15:11:57 nada kernel: ata10: SRST failed (err_mask=0x100)
-Jul 10 15:11:57 nada kernel: ata10: softreset failed, retrying in 5 secs
-Jul 10 15:12:03 nada kernel: ata10: SRST failed (status 0xFF)
-Jul 10 15:12:03 nada kernel: ata10: SRST failed (err_mask=0x100)
-Jul 10 15:12:03 nada kernel: ata10: softreset failed, retrying in 5 secs
-Jul 10 15:12:08 nada kernel: ata10: SRST failed (status 0xFF)
-Jul 10 15:12:08 nada kernel: ata10: SRST failed (err_mask=0x100)
-Jul 10 15:12:08 nada kernel: ata10: reset failed, giving up
+--=20
+S=E9rgio M. B.
 
-Any ideas ?
+--=-IgKN0St56ANi0jei9eMM
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
 
-TIA
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGSTCCAwIw
+ggJroAMCAQICAw/vkjANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
+d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
+YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI4MjIyODU2WhcNMDYxMTI4MjIyODU2WjBLMR8wHQYDVQQD
+ExZUaGF3dGUgRnJlZW1haWwgTWVtYmVyMSgwJgYJKoZIhvcNAQkBFhlzZXJnaW9Ac2VyZ2lvbWIu
+bm8taXAub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApCNuKD3pz8GRKd1q+36r
+m0z7z+TBsbTrVa45UQsEeh9OQGZIASJMH5erC0u6KbKJ+km97RLOdsgSlKG6+5xuzsk+aqU7A0Gp
+kMjzIJT7UH/bbPnIFMQNnWJxluuYq1u+v8iIbfezQy1+SXyAyBv+OC7LnCOiOar/L9AD9zDy2fPX
+EqEDlbO3CJsoaR4Va8sgtoV0NmKnAt7DA0iZ2dmlsw6Qh+4euI+FgZ2WHPBQnfJ7PfSH5GIWl/Nx
+eUqnYpDaJafk/l94nX71UifdPXDMxJJlEOGqV9l4omhNlPmsZ/zrGXgLdBv9JuPjJ9mxhgwZsZbz
+VBc8emB0i3A7E6D6rwIDAQABo1kwVzAOBgNVHQ8BAf8EBAMCBJAwEQYJYIZIAYb4QgEBBAQDAgUg
+MCQGA1UdEQQdMBuBGXNlcmdpb0BzZXJnaW9tYi5uby1pcC5vcmcwDAYDVR0TAQH/BAIwADANBgkq
+hkiG9w0BAQQFAAOBgQBIVheRn3oHTU5rgIFHcBRxkIhOYPQHKk/oX4KakCrDCxp33XAqTG3aIG/v
+dsUT/OuFm5w0GlrUTrPaKYYxxfQ00+3d8y87aX22sUdj8oXJRYiPgQiE6lqu9no8axH6UXCCbKTi
+8383JcxReoXyuP000eUggq3tWr6fE/QmONUARzCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEF
+BQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQIEwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUg
+VG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24g
+U2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMTG1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTEr
+MCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJlZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAw
+MDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3Vs
+dGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWlu
+ZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me
+7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNaLIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r
+1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUqVIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCB
+kTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1UdHwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3Rl
+LmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWlsQ0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAg
+pB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVsMi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPq
+Cy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYfqi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUa
+C4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx
+0x1G/11fZU8xggHvMIIB6wIBATBpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29u
+c3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNz
+dWluZyBDQQIDD++SMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
+SIb3DQEJBTEPFw0wNjA4MDEyMzE4MjRaMCMGCSqGSIb3DQEJBDEWBBSiJFaeG4g3hrbH3P+tufZn
+rYJjRzANBgkqhkiG9w0BAQEFAASCAQCa3DYOM27I/7x9IQUBlvBM6OQUY8N16uVevYu+39VW5ynL
+UR0gX5ivQq+94GjxuqI6UqD8yDsIbVlkAI0hcwPTGLaSNEr0KUzhTYHwlvgFmh7W/FmYQGBKG0qD
+wtQO+MGbAUiuqKwKpjV0r8drkrg9VvwA6Cm2l6dS0gHcJstjVmGqYFSZtivt9/Tq8trJfCgJTVAV
+mpgMfd3MhyhQM47iLTIZtXSjVxMee3+0ywMqsbDNfGcHrRnQ8MS9vRHqO7guIwlFArB4A8c5t3T+
+iZg2G4T1XIHtGMK+SUUIzBiJWwMu1DWQkN17EqGgJWNYxbB1W3JOX483deIVe4kJoeaCAAAAAAAA
 
---
-J.A. Magallon <jamagallon()ono!com>     \               Software is like sex:
-                                         \         It's better when it's free
-Mandriva Linux release 2007.0 (Cooker) for i586
-Linux 2.6.17-jam05 (gcc 4.1.1 20060724 (prerelease) (4.1.1-3mdk)) #2 SMP PREEMPT
+
+
+--=-IgKN0St56ANi0jei9eMM--
