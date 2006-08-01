@@ -1,57 +1,91 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] libata: improve initialization and legacy handling
-Date: Wed, 2 Aug 2006 05:11:48 +0900
-Message-ID: <11544631081793-git-send-email-htejun@gmail.com>
+Subject: [PATCH 03/11] [libata] manually inline ata_host_remove()
+Date: Wed, 2 Aug 2006 05:11:49 +0900
+Message-ID: <1154463109539-git-send-email-htejun@gmail.com>
+References: <11544631081793-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:2384 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S932560AbWHAULz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Aug 2006 16:11:55 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so381332nfa
+Received: from py-out-1112.google.com ([64.233.166.182]:40950 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932534AbWHAULy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Aug 2006 16:11:54 -0400
+Received: by py-out-1112.google.com with SMTP id t32so1324111pyc
         for <linux-ide@vger.kernel.org>; Tue, 01 Aug 2006 13:11:54 -0700 (PDT)
-In-Reply-To: 
+In-Reply-To: <11544631081793-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.ukjgarzik@pobox.com, akpm@osdl.org, davej@redhat.com, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.ukjgarzik@pobox.com, akpm@osdl.org, davej@redhat.com, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-This patchset contains patches from Jeff Garzik, Alan Cox, Dave Jones
-and me to fix/clean up initializaton and legacy handling.  This
-patchset contains the following patches.
+---
 
-#01-05	: assorted fixes & clean ups to initiallization
-#06-07	: kill host_set->next and handle legacy ports in one host_set
-#08-11	: use dummy port for stolen legacy ports and kill hard_port_no
+ drivers/scsi/libata-core.c |   31 ++++++-------------------------
+ 1 files changed, 6 insertions(+), 25 deletions(-)
 
-Tested both combined and native modes with ICH7R.  Everything seems to
-work including stolen port handling.
-
-This patchset is against the current libata-dev #upstream[1] and
-available in the following git tree.
-
-  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=tj-upstream
-  git://htj.dyndns.org/libata-tj tj-upstream
-
-PATA drivers have been updated accordingly and available at
-
-  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=tj-pata-drivers
-  git://htj.dyndns.org/libata-tj tj-pata-drivers
-
-Updated ALL branch is available at
-
-  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=tj-ALL
-  git://htj.dyndns.org/libata-tj tj-ALL
-
-I'll post PATA patch separately for review.
-
-Thanks.
-
---
-tejun
+2807702eafe33dd1783fd39c7137376082521736
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index 1cc12d4..4e06edc 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5185,28 +5185,6 @@ void ata_host_stop (struct ata_host_set 
+ 		iounmap(host_set->mmio_base);
+ }
+ 
+-
+-/**
+- *	ata_host_remove - Unregister SCSI host structure with upper layers
+- *	@ap: Port to unregister
+- *	@do_unregister: 1 if we fully unregister, 0 to just stop the port
+- *
+- *	LOCKING:
+- *	Inherited from caller.
+- */
+-
+-static void ata_host_remove(struct ata_port *ap, unsigned int do_unregister)
+-{
+-	struct Scsi_Host *sh = ap->host;
+-
+-	DPRINTK("ENTER\n");
+-
+-	if (do_unregister)
+-		scsi_remove_host(sh);
+-
+-	ap->ops->port_stop(ap);
+-}
+-
+ /**
+  *	ata_dev_init - Initialize an ata_device structure
+  *	@dev: Device structure to initialize
+@@ -5532,8 +5510,11 @@ int ata_device_add(const struct ata_prob
+ 
+ err_out:
+ 	for (i = 0; i < count; i++) {
+-		ata_host_remove(host_set->ports[i], 1);
+-		scsi_host_put(host_set->ports[i]->host);
++		struct ata_port *ap = host_set->ports[i];
++
++		scsi_remove_host(ap->host);
++		ap->ops->port_stop(ap);
++		scsi_host_put(ap->host);
+ 	}
+ err_free_ret:
+ 	kfree(host_set);
+@@ -5662,7 +5643,7 @@ int ata_scsi_release(struct Scsi_Host *h
+ 	DPRINTK("ENTER\n");
+ 
+ 	ap->ops->port_disable(ap);
+-	ata_host_remove(ap, 0);
++	ap->ops->port_stop(ap);
+ 
+ 	DPRINTK("EXIT\n");
+ 	return 1;
+-- 
+1.3.2
 
 
