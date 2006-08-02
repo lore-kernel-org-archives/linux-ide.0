@@ -1,31 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [2.6.18-rc2-mm1] pata_via fails
-Date: Wed, 02 Aug 2006 00:45:05 +0100
-Message-ID: <1154475905.15540.121.camel@localhost.localdomain>
-References: <20060802010415.2bebc5fc@werewolf.auna.net>
+From: "sam song" <sam_song@usish.com>
+Subject: 31244 PCI Card
+Date: Wed, 2 Aug 2006 09:22:16 +0800
+Message-ID: <001d01c6b5d2$197b7a00$7a39a8c0@usish.com.cn>
+References: <1154445491.18593.111.camel@acme>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:26329 "EHLO lxorguk.ukuu.org.uk")
-	by vger.kernel.org with ESMTP id S1750741AbWHAX0A convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Aug 2006 19:26:00 -0400
-In-Reply-To: <20060802010415.2bebc5fc@werewolf.auna.net>
+Received: from [61.152.162.159] ([61.152.162.159]:50618 "EHLO ms.usish.com")
+	by vger.kernel.org with ESMTP id S1750934AbWHBBU4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Aug 2006 21:20:56 -0400
+Received: from outbound.usish.com (outbound.usish.com [192.168.40.103])
+	by ms.usish.com (8.12.11/8.12.11) with ESMTP id k721GPdb001544
+	for <linux-ide@vger.kernel.org>; Wed, 2 Aug 2006 09:16:25 +0800
+Received: from outbound.usish.com (outbound.usish.com [127.0.0.1])
+	by outbound.usish.com (8.12.11/8.12.11) with ESMTP id k721ICS5012835
+	for <linux-ide@vger.kernel.org>; Wed, 2 Aug 2006 09:18:12 +0800
+Received: from IT0010705 (it-0010705.usish.com.cn [192.168.57.122])
+	(authenticated bits=0)
+	by outbound.usish.com (8.12.11/8.12.11) with ESMTP id k721I3bd012797
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 2 Aug 2006 09:18:07 +0800
+In-Reply-To: <1154445491.18593.111.camel@acme>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "J.A. =?ISO-8859-1?Q?Magall=F3n?=" <jamagallon@ono.com>
-Cc: "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Ar Mer, 2006-08-02 am 01:04 +0200, ysgrifennodd J.A. Magall=C3=B3n:
-> Yes, generic subject ;)
->=20
-> After solving the problems with ICH, one other stays. One box has a
-> VIA controller (in fact, this is a ApolloPro 266 chipset motherboard)=
-:
+Hello,
 
-Known insanity. With some ATAPI devices the VIA delivers the IRQ before
-the response is ready when we do a SET_FEATURES. Still being worked on.
+Does anyone know the info of Intel GD31244 PCI/X SATA card? I searched with
+Google but no luck. I mean to test it on PowerPC 74xx platform for my
+customized design. Is GD31244 suitable?
 
-Alan
+TIA,
+
+Sam
 
