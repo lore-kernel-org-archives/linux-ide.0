@@ -1,39 +1,41 @@
-From: "sam song" <sam_song@usish.com>
-Subject: 31244 PCI Card
-Date: Wed, 2 Aug 2006 09:22:16 +0800
-Message-ID: <001d01c6b5d2$197b7a00$7a39a8c0@usish.com.cn>
-References: <1154445491.18593.111.camel@acme>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Alan's PATA stuff and libata warmplug
+Date: Wed, 02 Aug 2006 08:15:32 +0400
+Message-ID: <44D026E4.1030904@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [61.152.162.159] ([61.152.162.159]:50618 "EHLO ms.usish.com")
-	by vger.kernel.org with ESMTP id S1750934AbWHBBU4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Aug 2006 21:20:56 -0400
-Received: from outbound.usish.com (outbound.usish.com [192.168.40.103])
-	by ms.usish.com (8.12.11/8.12.11) with ESMTP id k721GPdb001544
-	for <linux-ide@vger.kernel.org>; Wed, 2 Aug 2006 09:16:25 +0800
-Received: from outbound.usish.com (outbound.usish.com [127.0.0.1])
-	by outbound.usish.com (8.12.11/8.12.11) with ESMTP id k721ICS5012835
-	for <linux-ide@vger.kernel.org>; Wed, 2 Aug 2006 09:18:12 +0800
-Received: from IT0010705 (it-0010705.usish.com.cn [192.168.57.122])
-	(authenticated bits=0)
-	by outbound.usish.com (8.12.11/8.12.11) with ESMTP id k721I3bd012797
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-ide@vger.kernel.org>; Wed, 2 Aug 2006 09:18:07 +0800
-In-Reply-To: <1154445491.18593.111.camel@acme>
+Received: from wasp.net.au ([203.190.192.17]:41120 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S1751129AbWHBEPg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Aug 2006 00:15:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hello,
+G'day all,
 
-Does anyone know the info of Intel GD31244 PCI/X SATA card? I searched with
-Google but no luck. I mean to test it on PowerPC 74xx platform for my
-customized design. Is GD31244 suitable?
+Just wondering at the long term feasibility of adding warmplug to the PATA portions of libata that 
+are currently sitting in -mm.
 
-TIA,
+My vaio here has the ability to power down the optical drive. The hard disk and optical drive are on 
+the same ATA bus, master/slave.
+When the optical drive goes into error recovery mode, like if it has a scratch on the CD, or I power 
+the drive down, any access to the hard disk locks up until either the error is timed out or the 
+state recovers. So when I power down my optical disk the machine dies as it seems to lock access to 
+the hard disk also.
 
-Sam
+I was wondering if the ability to effectively bring down that particular aspect of the interface 
+might prevent this from occurring so I can use the machine with the optical drive powered off and 
+then bring the interface back up if I re-apply power to the drive.
 
+I've been trying to recover some badly scratched audio cd's lately, and of course that makes the 
+machine unusable as the hard disk just becomes inaccessible while the kernel times out the access to 
+the CD drive. I don't recall this happening with the original ide drivers.
+
+
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
