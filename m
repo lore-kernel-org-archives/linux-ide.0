@@ -1,19 +1,25 @@
-From: "Herbert" <Herbertbelt@moscowmail.com>
-Subject: You ejacculatte within a few minutes of penetration!
-Date: Thu, 3 Aug 2006 00:48:03 +0200
-Message-ID: <99010212947662.18E7FEBDA8@86Z5>
+From: Mourad De Clerck <mourad@aquazul.com>
+Subject: VIA 8237A SATA support patch?
+Date: Thu, 03 Aug 2006 04:51:05 +0200
+Message-ID: <44D16499.9070603@aquazul.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 196.Red-80-33-104.staticIP.rima-tde.net ([80.33.104.196]:17931
-	"EHLO 402.2lun2d.com") by vger.kernel.org with ESMTP
-	id S932308AbWHBWof (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Aug 2006 18:44:35 -0400
+Received: from www.ypu.org ([80.242.208.21]:57787 "EHLO heaven.risen.be")
+	by vger.kernel.org with ESMTP id S932095AbWHCCvH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Aug 2006 22:51:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Dear user. Why don't you tell your girl you're not among all these short-lasting losers? You might have tried other products and failed - the last thing you need is Extra-Time, the no-failure solution. Probably you dreamed about delaying your bed finish hundreds of times. Find what you need here: http://aspento.com/gal/get/ You will envy yourself as you see her eyes burning with adoration.
+Hi,
+
+I hear there was a patch floating around to support the SATA controller
+on the VIA 8237A (pci id 1106:0591) ? If anyone could point me in the
+right direction it would be very much appreciated.
+
+Thank you,
+
+-- Mourad DC
 
