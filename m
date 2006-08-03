@@ -1,49 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fix
-Date: Thu, 3 Aug 2006 17:57:11 -0400
-Message-ID: <20060803215711.GA16229@havoc.gtf.org>
+From: Eric Windisch <eric@grokthis.net>
+Subject: Libata PMP patch /w sil3124... 'device or resource busy'
+Date: Thu, 03 Aug 2006 18:58:16 -0400
+Message-ID: <44D27F88.1070807@grokthis.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:7041 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1030209AbWHCV5M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Aug 2006 17:57:12 -0400
-Content-Disposition: inline
+Received: from marley.grokthis.net ([69.93.78.26]:34255 "EHLO
+	marley.grokthis.net") by vger.kernel.org with ESMTP
+	id S1751275AbWHCW6W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Aug 2006 18:58:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
+I've attempted to use the patch here, against 2.6.17.7 (it patched 
+cleanly)...
+  
+http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.17.4-20060710.tar.bz2
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+While I can partition the disks and see my created partitions, when 
+attempting to use 'mdadm --create' or mkfs.ext3, I get the error:
+"Device or resource busy".
 
-to receive the following updates:
+The disks are not mounted or otherwise being accessed (such as via 
+software raid or lvm).  My hardware is a sil3124 controller, 5 sata 
+drives, and a couple Sil 3726 PMP's (embedded in a Norco 1220 disk array).
 
- drivers/scsi/ahci.c |   10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+I plan to further test against 2.6.18-rc3 and 2.6.17.4 /w patch.
 
-Unicorn Chang:
-      ahci: skip protocol test altogether in spurious interrupt code
+Any initial suggestions before I try the other kernels?
 
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 77e7202..904c25f 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -940,14 +940,8 @@ static void ahci_host_intr(struct ata_po
- 		return;
- 
- 	/* ignore interim PIO setup fis interrupts */
--	if (ata_tag_valid(ap->active_tag)) {
--		struct ata_queued_cmd *qc =
--			ata_qc_from_tag(ap, ap->active_tag);
--
--		if (qc && qc->tf.protocol == ATA_PROT_PIO &&
--		    (status & PORT_IRQ_PIOS_FIS))
--			return;
--	}
-+	if (ata_tag_valid(ap->active_tag) && (status & PORT_IRQ_PIOS_FIS)) 
-+		return;
- 
- 	if (ata_ratelimit())
- 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
+Thank you.
