@@ -1,58 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata-dev#upstream pdc_adma fails IDENTIFY w/ AC_ERR_HSM
-Date: Fri, 04 Aug 2006 23:18:22 +0900
-Message-ID: <44D3572E.6040907@gmail.com>
-References: <44D336EE.5000907@gmail.com> <44D351F9.3070302@rtr.ca>
+From: Jes Sorensen <jes@sgi.com>
+Subject: Re: Private driver support emails should be avoided.
+Date: 04 Aug 2006 10:46:03 -0400
+Message-ID: <yq0hd0sv9sk.fsf@jaguar.mkp.net>
+References: <44C3F2C6.5010001@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:61811 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932359AbWHDOSa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Aug 2006 10:18:30 -0400
-Received: by py-out-1112.google.com with SMTP id t32so324583pyc
-        for <linux-ide@vger.kernel.org>; Fri, 04 Aug 2006 07:18:29 -0700 (PDT)
-In-Reply-To: <44D351F9.3070302@rtr.ca>
+Received: from jaguar.mkp.net ([192.139.46.146]:44983 "EHLO jaguar.mkp.net")
+	by vger.kernel.org with ESMTP id S1161236AbWHDOqE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Aug 2006 10:46:04 -0400
+In-Reply-To: <44C3F2C6.5010001@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Netdev List <netdev@vger.kernel.org>
 
-Mark Lord wrote:
->> I've tested both cards and cables Mark sent me (thanks!), and both 
->> show the same symptom for ATA harddisk and ATAPI cdrom, so this seems 
->> to be a driver issue.  Any ideas?
-> 
-> Well, ATAPI not working is no suprise -- officially that chipset doesn't
-> support ATAPI (on MS Win), but it ought to be workable in PIO mode for us.
+>>>>> "Jeff" == Jeff Garzik <jeff@garzik.org> writes:
 
-IDENTIFY_PACKET_DEVICE fails the same way as IDENTIFY_DEVICE does, so...
+Jeff> Just a reminder to folks out there...  Don't send private driver
+Jeff> support emails.
 
-> But not finding the HD is more of an issue.  I wonder what motherboard/CPU
-> you are trying this on, and has it *ever* worked for you Tejun?
+Jeff> I receive a lot of email.  A lot.  Not as much as Linus or
+Jeff> Andrew probably, but still sizable.  And quite regularly, I will
+Jeff> receive a private email asking for help on a SATA or net driver
+Jeff> problem.  The poster will include various details on their
+Jeff> problem, and ask for help debugging the problem.  While the
+Jeff> email will indeed be skimmed -- looking at a mass of bug
+Jeff> reports, one can better detect patterns -- the people seeking
+Jeff> support privately will almost NEVER RECEIVE A RESPONSE.
 
-This is P5LD2 (ICH7R) w/ P4 celeron.  The kernel was built for i386. 
-This is my first time to actually try these cards.  I'm updating 
-initialization, so I'm doing sweep-test on all the cards I have.  I'll 
-put it into via-c3 and see what happens.  I'll also try older kernel 
-before big libata EH updates.
+Jeff,
 
-> My newish old AMD64 box here seems to have problems with a number
-> of boards, including the pdc_adma ones.  Not sure why, as the exact same
-> kernels work fine with the exact same board/drives in my Intel P4 box.
+Very sane - I get some of it too, though less so these days :)
 
-I have two sil3112s whose BIOSen hang during boot if certain port (not 
-sure which one) is occupied on boot.  It worked fine before on the same 
-machine (again, P5LD2) but it got broken after some point.  As both 
-cards show the same symptom, I'm suspecting system BIOS update is the 
-trigger.  Both cards work fine if booted with no device attached and 
-hotplugged later.
+What about writing this up and sticking it under
+Documentation/Reporting-Bugs or something so there's an easy reference
+to it?
 
-> Something to add to the list of things to look at, I suppose.
-
-As we're talking about pdc_adma, when are you gonna convert it to the 
-new EH?  :-)
-
--- 
-tejun
+Cheers,
+Jes
