@@ -1,68 +1,58 @@
-From: Mark Lord <liml@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: libata-dev#upstream pdc_adma fails IDENTIFY w/ AC_ERR_HSM
-Date: Fri, 04 Aug 2006 09:56:09 -0400
-Message-ID: <44D351F9.3070302@rtr.ca>
-References: <44D336EE.5000907@gmail.com>
+Date: Fri, 04 Aug 2006 23:18:22 +0900
+Message-ID: <44D3572E.6040907@gmail.com>
+References: <44D336EE.5000907@gmail.com> <44D351F9.3070302@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:11139 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1161193AbWHDN4L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Aug 2006 09:56:11 -0400
-In-Reply-To: <44D336EE.5000907@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.182]:61811 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932359AbWHDOSa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Aug 2006 10:18:30 -0400
+Received: by py-out-1112.google.com with SMTP id t32so324583pyc
+        for <linux-ide@vger.kernel.org>; Fri, 04 Aug 2006 07:18:29 -0700 (PDT)
+In-Reply-To: <44D351F9.3070302@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Mark Lord <liml@rtr.ca>
 Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello,
+Mark Lord wrote:
+>> I've tested both cards and cables Mark sent me (thanks!), and both 
+>> show the same symptom for ATA harddisk and ATAPI cdrom, so this seems 
+>> to be a driver issue.  Any ideas?
 > 
-> pdc_adma in libata-dev#upstream fails to IDENTIFY device w/ AC_ERR_HSM.
-> 
-> libata version 2.00 loaded.
-> pdc_adma 0000:01:02.0: version 0.04
-> ACPI: PCI Interrupt 0000:01:02.0[A] -> Link [LNKG] -> GSI 5 (level, low) 
-> -> IRQ 5
-> [ata_device_add      ] ENTER
-> [ata_port_add        ] ENTER
-> [ata_port_start      ] prd alloc, virt f62e1000, dma 362e1000
-> ata1: PATA max UDMA/66 cmd 0xF881AC00 ctl 0xF881AC38 bmdma 0x0 irq 5
-> [ata_port_add        ] ENTER
-> [ata_port_start      ] prd alloc, virt f6304000, dma 36304000
-> ata2: PATA max UDMA/66 cmd 0xF881AC40 ctl 0xF881AC78 bmdma 0x0 irq 5
-> [ata_device_add      ] probe begin
-> scsi0 : pdc_adma
-> [ata_device_add      ] ata1: bus probe begin
-> [ata_bus_reset       ] ENTER, host 1, port 0
-> [ata_bus_softreset   ] ata1: bus reset via SRST
-> [ata_dev_classify    ] found ATA device by sig
-> [ata_dev_classify    ] found ATA device by sig
-> [ata_bus_reset       ] EXIT
-> ata1.00: ata_dev_read_id: ENTER, host 1, dev 0
-> [ata_exec_command_mmio] ata1: cmd 0xEC
-> [adma_intr_mmio      ] ata1: protocol 2 (dev_stat 0x58)
-> [ata_port_flush_task ] ENTER
-> [ata_port_flush_task ] flush #1
-> ata1: ata_port_flush_task: flush #2
-> ata1: ata_port_flush_task: EXIT
-> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x2)
-..
-> I've tested both cards and cables Mark sent me (thanks!), and both show 
-> the same symptom for ATA harddisk and ATAPI cdrom, so this seems to be a 
-> driver issue.  Any ideas?
+> Well, ATAPI not working is no suprise -- officially that chipset doesn't
+> support ATAPI (on MS Win), but it ought to be workable in PIO mode for us.
 
-Well, ATAPI not working is no suprise -- officially that chipset doesn't
-support ATAPI (on MS Win), but it ought to be workable in PIO mode for us.
+IDENTIFY_PACKET_DEVICE fails the same way as IDENTIFY_DEVICE does, so...
 
-But not finding the HD is more of an issue.  I wonder what motherboard/CPU
-you are trying this on, and has it *ever* worked for you Tejun?
+> But not finding the HD is more of an issue.  I wonder what motherboard/CPU
+> you are trying this on, and has it *ever* worked for you Tejun?
 
-My newish old AMD64 box here seems to have problems with a number
-of boards, including the pdc_adma ones.  Not sure why, as the exact same
-kernels work fine with the exact same board/drives in my Intel P4 box.
+This is P5LD2 (ICH7R) w/ P4 celeron.  The kernel was built for i386. 
+This is my first time to actually try these cards.  I'm updating 
+initialization, so I'm doing sweep-test on all the cards I have.  I'll 
+put it into via-c3 and see what happens.  I'll also try older kernel 
+before big libata EH updates.
 
-Something to add to the list of things to look at, I suppose.
+> My newish old AMD64 box here seems to have problems with a number
+> of boards, including the pdc_adma ones.  Not sure why, as the exact same
+> kernels work fine with the exact same board/drives in my Intel P4 box.
 
-Cheers
+I have two sil3112s whose BIOSen hang during boot if certain port (not 
+sure which one) is occupied on boot.  It worked fine before on the same 
+machine (again, P5LD2) but it got broken after some point.  As both 
+cards show the same symptom, I'm suspecting system BIOS update is the 
+trigger.  Both cards work fine if booted with no device attached and 
+hotplugged later.
+
+> Something to add to the list of things to look at, I suppose.
+
+As we're talking about pdc_adma, when are you gonna convert it to the 
+new EH?  :-)
+
+-- 
+tejun
