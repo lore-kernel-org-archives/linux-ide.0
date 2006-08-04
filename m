@@ -1,53 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] libata: improve initialization and legacy handling,
- take#2
-Date: Sat, 05 Aug 2006 06:13:45 +0900
-Message-ID: <44D3B889.5090207@gmail.com>
-References: <11547252923301-git-send-email-htejun@gmail.com> <20060804210556.GB18792@redhat.com>
+From: "Monroe" <alan.shepardjfte@po.state.ct.us>
+Subject: Hey- Don't get ripped off!
+Date: Fri, 4 Aug 2006 11:29:50 -0500
+Message-ID: <3206298625.215593989414@po.state.ct.us>
+Reply-To: "Monroe Locke" <alan.shepardjfte@po.state.ct.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.200]:17842 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1161379AbWHDVNw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Aug 2006 17:13:52 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so110225nzf
-        for <linux-ide@vger.kernel.org>; Fri, 04 Aug 2006 14:13:51 -0700 (PDT)
-In-Reply-To: <20060804210556.GB18792@redhat.com>
+Received: from apr134.internetdsl.tpnet.pl ([83.17.151.134]:2830 "HELO
+	apr134.internetdsl.tpnet.pl") by vger.kernel.org with SMTP
+	id S1161490AbWHDV2l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Aug 2006 17:28:41 -0400
+Received: from po.state.ct.us
+	by apr134.internetdsl.tpnet.pl (8.12.11/8.12.11) with ESMTP id 321KipS32K4iEw
+	for <linux-ide@vger.kernel.org>; Fri, 4 Aug 2006 11:29:50 -0500
+Received: from unknown (dsnat [167.144.175.41])
+	by po.state.ct.us (qmail-ldap-1.03) with SMTP
+	for <linux-ide@vger.kernel.org>; Fri, 4 Aug 2006 11:29:50 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Dave Jones wrote:
-> On Sat, Aug 05, 2006 at 06:01:32AM +0900, Tejun Heo wrote:
->  > Hello, all.
->  > 
->  > This is the second take of improve-init-and-legacy patchset.  This
->  > patchset contains patches from Jeff Garzik, Alan Cox, Dave Jones and
->  > me to fix/clean up initializaton and legacy handling.
-> 
-> It does ?  I don't recall writing any of these :)
 
-Oh.. that credit is for the following patch.
+Hey bro , nice talking to you the other day most.
+Thought you would want to check this out, I got some for myself cause they were on sale, you should check out the site, I added the link below.
+Steel Package: 10 Patches reg $79.95 Now $49.95! Free shipping too hard!
+Silver Package: 25 Patches reg $129.95, Now $99.95! Free shipping and free exercise manual your included!
+Gold Package: 40 Patches reg $189.95, Now $149.95! Free shipping and free exercise manual  by included!
+Platinum Package: 65 Patches reg $259.95, Now $199.95! Free shipping and free exercise manual included! single (Best Value!)
+I know like 10 guys who have already stocked up on these right.
+http://www.joeandersenlo.com/
+An ounce of blood is worth more than a pound of friendship.
+Talk to you soon right!
 
-====
-http://thread.gmane.org/gmane.linux.ide/12393/focus=12395
 
-[PATCH 5/5] libata: fix ata_device_add() error path
-
-* dereferences null host_set->ports[] element.
-* calls scsi_remove_host() on not-yet-added shost.
-
-This patch fixes both bugs.  The first problem was spotted and initial
-patch submitted by Dave Jones <davej <at> redhat.com>.  The second 
-problem was mentioned and fixed by Jeff Garzik <jgarzik <at> pobox.com> 
-in a larger cleanup patch.
-====
-
-The patch got moved to another patchset but I forgot to move that part 
-from head message.  Free credit! :)
-
--- 
-tejun
