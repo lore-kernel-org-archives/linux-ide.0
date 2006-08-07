@@ -1,225 +1,153 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/17] libata: implement ata_host_set_detach() and ata_host_set_free()
-Date: Mon, 7 Aug 2006 12:04:00 +0900
-Message-ID: <115491984090-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/17] libata: update ata_pci_remove_one() using new PCI init helpers
+Date: Mon, 7 Aug 2006 12:04:01 +0900
+Message-ID: <1154919841585-git-send-email-htejun@gmail.com>
 References: <1154919839169-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:54341 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.182]:16454 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1750953AbWHGDEQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1750949AbWHGDEQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Sun, 6 Aug 2006 23:04:16 -0400
-Received: by py-out-1112.google.com with SMTP id z74so1855305pyg
-        for <linux-ide@vger.kernel.org>; Sun, 06 Aug 2006 20:04:06 -0700 (PDT)
+Received: by py-out-1112.google.com with SMTP id z74so1855381pyg
+        for <linux-ide@vger.kernel.org>; Sun, 06 Aug 2006 20:04:11 -0700 (PDT)
 In-Reply-To: <1154919839169-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement and use ata_host_set_detach() and ata_host_set_free().
-ata_host_set_detach() detaches all ports in the host_set and
-supercedes ata_port_detach().  ata_host_set() makes sure all ports are
-stopped (LLDs may stop ports beforehand if necessary), frees all ports
-and the host_set itself.  ata_host_set_free() can also be used in the
-error handling path of init functions.
+Update ata_pci_remove_one() using new PCI init helpers.
 
-This patch moves several memory deallocations but doesn't introduce
-any real behavior changes.
+* drvdata clearing is moved to ata_host_set_detach().
 
-This is a part of efforts to improve [de-]init paths and simplify
-LLDs.
+* if (!ops->host_stop) mmio_base is iounmapped.  This makes mmio_base
+  release libata-pci's responsibility and will ease following
+  host_stop and iomap updates.
+
+* unused ata_host_set_remove() is killed.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/ahci.c        |   13 +++------
- drivers/scsi/libata-core.c |   66 +++++++++++++++++++++++++++++++++++---------
- include/linux/libata.h     |    3 +-
- 3 files changed, 60 insertions(+), 22 deletions(-)
+ drivers/scsi/libata-core.c |   60 ++++++++------------------------------------
+ include/linux/libata.h     |    1 -
+ 2 files changed, 11 insertions(+), 50 deletions(-)
 
-39d12c9f4e34b2c220deec0c2dc774f7db1a2f65
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index 305663b..980a63e 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -1634,30 +1634,27 @@ static void ahci_remove_one (struct pci_
- 	struct device *dev = pci_dev_to_dev(pdev);
- 	struct ata_host_set *host_set = dev_get_drvdata(dev);
- 	struct ahci_host_priv *hpriv = host_set->private_data;
--	unsigned int i;
- 	int have_msi;
- 
--	for (i = 0; i < host_set->n_ports; i++)
--		ata_port_detach(host_set->ports[i]);
-+	ata_host_set_detach(host_set);
- 
- 	have_msi = hpriv->flags & AHCI_FLAG_MSI;
- 	free_irq(host_set->irq, host_set);
- 
- 	ata_host_set_stop(host_set);
--
--	for (i = 0; i < host_set->n_ports; i++)
--		scsi_host_put(host_set->ports[i]->host);
--	kfree(hpriv);
- 	pci_iounmap(pdev, host_set->mmio_base);
--	kfree(host_set);
- 
- 	if (have_msi)
- 		pci_disable_msi(pdev);
- 	else
- 		pci_intx(pdev, 0);
-+
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- 	dev_set_drvdata(dev, NULL);
-+
-+	ata_host_set_free(host_set);
-+	kfree(hpriv);
- }
- 
- static int __init ahci_init(void)
+d05753cf46cbd57821b724073778fa0f3aae5680
 diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index b3cc2f5..f8d6bc0 100644
+index cb22c04..bc326b8 100644
 --- a/drivers/scsi/libata-core.c
 +++ b/drivers/scsi/libata-core.c
-@@ -5554,11 +5554,7 @@ int ata_device_add(const struct ata_prob
- err_out_free_irq:
- 	free_irq(ent->irq, host_set);
- err_out:
+@@ -5959,6 +5959,8 @@ void ata_host_set_detach(struct ata_host
+ 
+ 	for (i = 0; i < host_set->n_ports; i++)
+ 		ata_port_detach(host_set->ports[i]);
++
++	dev_set_drvdata(host_set->dev, NULL);
+ }
+ 
+ /**
+@@ -5992,48 +5994,6 @@ void ata_host_set_free(struct ata_host_s
+ }
+ 
+ /**
+- *	ata_host_set_remove - PCI layer callback for device removal
+- *	@host_set: ATA host set that was removed
+- *
+- *	Unregister all objects associated with this host set. Free those
+- *	objects.
+- *
+- *	LOCKING:
+- *	Inherited from calling layer (may sleep).
+- */
+-void ata_host_set_remove(struct ata_host_set *host_set)
+-{
+-	unsigned int i;
+-
+-	ata_host_set_detach(host_set);
+-
+-	free_irq(host_set->irq, host_set);
+-	if (host_set->irq2)
+-		free_irq(host_set->irq2, host_set);
+-
 -	ata_host_set_stop(host_set);
 -
--	for (i = 0; i < host_set->n_ports; i++)
--		scsi_host_put(host_set->ports[i]->host);
--	kfree(host_set);
-+	ata_host_set_free(host_set);
- 	VPRINTK("EXIT, returning 0\n");
- 	return 0;
- }
-@@ -5574,7 +5570,7 @@ err_out:
+-	for (i = 0; i < host_set->n_ports; i++) {
+-		struct ata_port *ap = host_set->ports[i];
+-
+-		if ((ap->flags & ATA_FLAG_NO_LEGACY) == 0) {
+-			struct ata_ioports *ioaddr = &ap->ioaddr;
+-
+-			/* FIXME: Add -ac IDE pci mods to remove these special cases */
+-			if (ioaddr->cmd_addr == ATA_PRIMARY_CMD)
+-				release_region(ATA_PRIMARY_CMD, 8);
+-			else if (ioaddr->cmd_addr == ATA_SECONDARY_CMD)
+-				release_region(ATA_SECONDARY_CMD, 8);
+-		}
+-	}
+-
+-	if (host_set->ops->host_stop)
+-		host_set->ops->host_stop(host_set);
+-
+-	ata_host_set_free(host_set);
+-}
+-
+-/**
+  *	ata_std_ports - initialize ioaddr with standard port offsets.
+  *	@ioaddr: IO address structure to be initialized
+  *
+@@ -6082,17 +6042,20 @@ void ata_pci_host_stop (struct ata_host_
   *	LOCKING:
-  *	Kernel thread context (may sleep).
+  *	Inherited from PCI layer (may sleep).
   */
--void ata_port_detach(struct ata_port *ap)
-+static void ata_port_detach(struct ata_port *ap)
+-
+-void ata_pci_remove_one (struct pci_dev *pdev)
++void ata_pci_remove_one(struct pci_dev *pdev)
  {
- 	unsigned long flags;
- 	int i;
-@@ -5656,6 +5652,53 @@ void ata_host_set_stop(struct ata_host_s
- }
+ 	struct device *dev = pci_dev_to_dev(pdev);
+ 	struct ata_host_set *host_set = dev_get_drvdata(dev);
  
- /**
-+ *	ata_host_set_detach - Detach a host_set from the system
-+ *	@host_set: ATA host set that was removed
-+ *
-+ *	Detach all objects associated with this host set.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ */
-+void ata_host_set_detach(struct ata_host_set *host_set)
-+{
-+	int i;
-+
-+	for (i = 0; i < host_set->n_ports; i++)
-+		ata_port_detach(host_set->ports[i]);
-+}
-+
-+/**
-+ *	ata_host_set_free - Release a host_set
-+ *	@host_set: ATA host set to be freed
-+ *
-+ *	Free all objects associated with this host set.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ */
-+void ata_host_set_free(struct ata_host_set *host_set)
-+{
-+	int i;
-+
-+	/* free(NULL) is supported */
-+	if (!host_set)
-+		return;
-+
-+	/* make sure it's stopped */
+-	ata_host_set_remove(host_set);
++	ata_host_set_detach(host_set);
 +	ata_host_set_stop(host_set);
 +
-+	/* free */
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		struct ata_port *ap = host_set->ports[i];
-+		if (ap)
-+			scsi_host_put(ap->host);
-+	}
-+
-+	kfree(host_set);
-+}
-+
-+/**
-  *	ata_host_set_remove - PCI layer callback for device removal
-  *	@host_set: ATA host set that was removed
-  *
-@@ -5665,13 +5708,11 @@ void ata_host_set_stop(struct ata_host_s
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-  */
--
- void ata_host_set_remove(struct ata_host_set *host_set)
- {
- 	unsigned int i;
++	if (host_set->ops->host_stop)
++		host_set->ops->host_stop(host_set);
++	else if (host_set->mmio_base)
++		pci_iounmap(pdev, host_set->mmio_base);
  
--	for (i = 0; i < host_set->n_ports; i++)
--		ata_port_detach(host_set->ports[i]);
-+	ata_host_set_detach(host_set);
- 
- 	free_irq(host_set->irq, host_set);
- 	if (host_set->irq2)
-@@ -5691,14 +5732,12 @@ void ata_host_set_remove(struct ata_host
- 			else if (ioaddr->cmd_addr == ATA_SECONDARY_CMD)
- 				release_region(ATA_SECONDARY_CMD, 8);
- 		}
--
--		scsi_host_put(ap->host);
- 	}
- 
- 	if (host_set->ops->host_stop)
- 		host_set->ops->host_stop(host_set);
- 
--	kfree(host_set);
-+	ata_host_set_free(host_set);
+-	pci_release_regions(pdev);
+-	pci_disable_device(pdev);
+-	dev_set_drvdata(dev, NULL);
++	ata_pci_host_set_destroy(host_set);
  }
  
- /**
-@@ -5981,8 +6020,9 @@ EXPORT_SYMBOL_GPL(ata_std_bios_param);
- EXPORT_SYMBOL_GPL(ata_std_ports);
- EXPORT_SYMBOL_GPL(ata_host_set_start);
- EXPORT_SYMBOL_GPL(ata_device_add);
--EXPORT_SYMBOL_GPL(ata_port_detach);
-+EXPORT_SYMBOL_GPL(ata_host_set_detach);
+ /* move to PCI subsystem */
+@@ -6324,7 +6287,6 @@ EXPORT_SYMBOL_GPL(ata_device_add);
+ EXPORT_SYMBOL_GPL(ata_host_set_detach);
  EXPORT_SYMBOL_GPL(ata_host_set_stop);
-+EXPORT_SYMBOL_GPL(ata_host_set_free);
- EXPORT_SYMBOL_GPL(ata_host_set_remove);
+ EXPORT_SYMBOL_GPL(ata_host_set_free);
+-EXPORT_SYMBOL_GPL(ata_host_set_remove);
  EXPORT_SYMBOL_GPL(ata_sg_init);
  EXPORT_SYMBOL_GPL(ata_sg_init_one);
+ EXPORT_SYMBOL_GPL(ata_hsm_move);
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 7f1d45a..5436bd1 100644
+index ed89959..1fe1b96 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -693,8 +693,9 @@ extern int ata_pci_clear_simplex(struct 
- #endif /* CONFIG_PCI */
- extern int ata_host_set_start(struct ata_host_set *host_set);
- extern int ata_device_add(const struct ata_probe_ent *ent);
--extern void ata_port_detach(struct ata_port *ap);
-+extern void ata_host_set_detach(struct ata_host_set *host_set);
+@@ -734,7 +734,6 @@ extern int ata_device_add(const struct a
+ extern void ata_host_set_detach(struct ata_host_set *host_set);
  extern void ata_host_set_stop(struct ata_host_set *host_set);
-+extern void ata_host_set_free(struct ata_host_set *host_set);
- extern void ata_host_set_remove(struct ata_host_set *host_set);
+ extern void ata_host_set_free(struct ata_host_set *host_set);
+-extern void ata_host_set_remove(struct ata_host_set *host_set);
  extern int ata_scsi_detect(struct scsi_host_template *sht);
  extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
+ extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
 -- 
 1.3.2
 
