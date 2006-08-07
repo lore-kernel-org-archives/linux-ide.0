@@ -1,305 +1,225 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/17] libata: implement several LLD init helpers
+Subject: [PATCH 02/17] libata: implement ata_host_set_detach() and ata_host_set_free()
 Date: Mon, 7 Aug 2006 12:04:00 +0900
-Message-ID: <11549198402637-git-send-email-htejun@gmail.com>
+Message-ID: <115491984090-git-send-email-htejun@gmail.com>
 References: <1154919839169-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:7494 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.178]:54341 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1750951AbWHGDEQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1750953AbWHGDEQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Sun, 6 Aug 2006 23:04:16 -0400
-Received: by py-out-1112.google.com with SMTP id z74so1855330pyg
-        for <linux-ide@vger.kernel.org>; Sun, 06 Aug 2006 20:04:07 -0700 (PDT)
+Received: by py-out-1112.google.com with SMTP id z74so1855305pyg
+        for <linux-ide@vger.kernel.org>; Sun, 06 Aug 2006 20:04:06 -0700 (PDT)
 In-Reply-To: <1154919839169-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement the following init helpers.
+Implement and use ata_host_set_detach() and ata_host_set_free().
+ata_host_set_detach() detaches all ports in the host_set and
+supercedes ata_port_detach().  ata_host_set() makes sure all ports are
+stopped (LLDs may stop ports beforehand if necessary), frees all ports
+and the host_set itself.  ata_host_set_free() can also be used in the
+error handling path of init functions.
 
-* ata_host_set_alloc_pinfo():
-	alloc host_set and init with the given port_info.
-* ata_host_set_alloc_pinfo_ar():
-	alloc host_set and init with the given port_info array.
-* ata_host_set_add_ports_pinfo():
-	add ports to host_set and init with the given port_info.
-* ata_host_set_add_ports_pinfo_ar():
-	add ports to host_set and init with the given port_info array.
-* ata_host_set_request_irq():
-	prep host_set for IRQ enabling and request IRQ.
+This patch moves several memory deallocations but doesn't introduce
+any real behavior changes.
 
-These helpers will be used in new LLD init model.
+This is a part of efforts to improve [de-]init paths and simplify
+LLDs.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-core.c |  201 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h     |   17 +++-
- 2 files changed, 215 insertions(+), 3 deletions(-)
+ drivers/scsi/ahci.c        |   13 +++------
+ drivers/scsi/libata-core.c |   66 +++++++++++++++++++++++++++++++++++---------
+ include/linux/libata.h     |    3 +-
+ 3 files changed, 60 insertions(+), 22 deletions(-)
 
-23919795368e0b7ed49f63b7aeb36fc5217c6ec7
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index eccc6bc..78ee73a 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5369,6 +5369,147 @@ int ata_host_set_add_ports(struct ata_ho
- 	return 0;
+39d12c9f4e34b2c220deec0c2dc774f7db1a2f65
+diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+index 305663b..980a63e 100644
+--- a/drivers/scsi/ahci.c
++++ b/drivers/scsi/ahci.c
+@@ -1634,30 +1634,27 @@ static void ahci_remove_one (struct pci_
+ 	struct device *dev = pci_dev_to_dev(pdev);
+ 	struct ata_host_set *host_set = dev_get_drvdata(dev);
+ 	struct ahci_host_priv *hpriv = host_set->private_data;
+-	unsigned int i;
+ 	int have_msi;
+ 
+-	for (i = 0; i < host_set->n_ports; i++)
+-		ata_port_detach(host_set->ports[i]);
++	ata_host_set_detach(host_set);
+ 
+ 	have_msi = hpriv->flags & AHCI_FLAG_MSI;
+ 	free_irq(host_set->irq, host_set);
+ 
+ 	ata_host_set_stop(host_set);
+-
+-	for (i = 0; i < host_set->n_ports; i++)
+-		scsi_host_put(host_set->ports[i]->host);
+-	kfree(hpriv);
+ 	pci_iounmap(pdev, host_set->mmio_base);
+-	kfree(host_set);
+ 
+ 	if (have_msi)
+ 		pci_disable_msi(pdev);
+ 	else
+ 		pci_intx(pdev, 0);
++
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ 	dev_set_drvdata(dev, NULL);
++
++	ata_host_set_free(host_set);
++	kfree(hpriv);
  }
  
-+static void __ata_host_set_init_pinfo(struct ata_host_set *host_set,
-+				      const struct ata_port_info **pinfo,
-+				      int n_ports, int pi_is_ar)
+ static int __init ahci_init(void)
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+index b3cc2f5..f8d6bc0 100644
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -5554,11 +5554,7 @@ int ata_device_add(const struct ata_prob
+ err_out_free_irq:
+ 	free_irq(ent->irq, host_set);
+ err_out:
+-	ata_host_set_stop(host_set);
+-
+-	for (i = 0; i < host_set->n_ports; i++)
+-		scsi_host_put(host_set->ports[i]->host);
+-	kfree(host_set);
++	ata_host_set_free(host_set);
+ 	VPRINTK("EXIT, returning 0\n");
+ 	return 0;
+ }
+@@ -5574,7 +5570,7 @@ err_out:
+  *	LOCKING:
+  *	Kernel thread context (may sleep).
+  */
+-void ata_port_detach(struct ata_port *ap)
++static void ata_port_detach(struct ata_port *ap)
+ {
+ 	unsigned long flags;
+ 	int i;
+@@ -5656,6 +5652,53 @@ void ata_host_set_stop(struct ata_host_s
+ }
+ 
+ /**
++ *	ata_host_set_detach - Detach a host_set from the system
++ *	@host_set: ATA host set that was removed
++ *
++ *	Detach all objects associated with this host set.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ */
++void ata_host_set_detach(struct ata_host_set *host_set)
 +{
 +	int i;
 +
-+	if (host_set->private_data == NULL)
-+		host_set->private_data = pinfo[0]->private_data;
-+	host_set->ops = pinfo[0]->port_ops;
++	for (i = 0; i < host_set->n_ports; i++)
++		ata_port_detach(host_set->ports[i]);
++}
 +
++/**
++ *	ata_host_set_free - Release a host_set
++ *	@host_set: ATA host set to be freed
++ *
++ *	Free all objects associated with this host set.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ */
++void ata_host_set_free(struct ata_host_set *host_set)
++{
++	int i;
++
++	/* free(NULL) is supported */
++	if (!host_set)
++		return;
++
++	/* make sure it's stopped */
++	ata_host_set_stop(host_set);
++
++	/* free */
 +	for (i = 0; i < host_set->n_ports; i++) {
 +		struct ata_port *ap = host_set->ports[i];
-+		const struct ata_port_info *pi;
-+
-+		if (pi_is_ar)
-+			pi = pinfo[i];
-+		else
-+			pi = pinfo[0];
-+
-+		ap->pio_mask = pi->pio_mask;
-+		ap->mwdma_mask = pi->mwdma_mask;
-+		ap->udma_mask = pi->udma_mask;
-+		ap->flags |= pi->host_flags;
-+		ap->ops = pi->port_ops;
-+
-+		WARN_ON(pi->private_data &&
-+			pi->private_data != host_set->private_data);
++		if (ap)
++			scsi_host_put(ap->host);
 +	}
++
++	kfree(host_set);
 +}
 +
 +/**
-+ *	ata_host_set_alloc_pinfo - allocate host_set and init with port_info
-+ *	@dev: generic device this host_set is associated with
-+ *	@pinfo: ATA port_info to initialize host_set with
-+ *	@n_ports: number of ATA ports attached to this host_set
-+ *
-+ *	Allocate ATA host_set and initialize with info from @pi.
-+ *
-+ *	RETURNS:
-+ *	Allocate ATA host_set on success, NULL on failure.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ */
-+struct ata_host_set *
-+ata_host_set_alloc_pinfo(struct device *dev,
-+			 const struct ata_port_info *pinfo, int n_ports)
-+{
-+	struct ata_host_set *host_set;
-+
-+	if (!n_ports)
-+		return NULL;
-+
-+	host_set = ata_host_set_alloc(dev, pinfo->sht, n_ports);
-+	if (host_set)
-+		__ata_host_set_init_pinfo(host_set, &pinfo, n_ports, 0);
-+	return host_set;
-+}
-+
-+/**
-+ *	ata_host_set_alloc_pinfo_ar - alloc host_set and init with port_info ar
-+ *	@dev: generic device this host_set is associated with
-+ *	@pinfo_ar: array of ATA port_info to initialize host_set with
-+ *	@n_ports: number of ATA ports attached to this host_set
-+ *
-+ *	Allocate ATA host_set and initialize with info from @pinfo_ar.
-+ *
-+ *	RETURNS:
-+ *	Allocate ATA host_set on success, NULL on failure.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ */
-+struct ata_host_set *
-+ata_host_set_alloc_pinfo_ar(struct device *dev,
-+			    const struct ata_port_info **pinfo_ar, int n_ports)
-+{
-+	struct ata_host_set *host_set;
-+
-+	if (!n_ports)
-+		return NULL;
-+
-+	host_set = ata_host_set_alloc(dev, pinfo_ar[0]->sht, n_ports);
-+	if (host_set)
-+		__ata_host_set_init_pinfo(host_set, pinfo_ar, n_ports, 1);
-+	return host_set;
-+}
-+
-+/**
-+ *	ata_host_set_add_ports_pinfo - add ports and init with port_info
-+ *	@host_set: target ATA host_set
-+ *	@pinfo: ATA port_info to initialize host_set with
-+ *	@n_ports: number of ATA ports attached to this host_set
-+ *
-+ *	Add @n_ports ports to @host_set and initialize @host_set with
-+ *	info from @pinfo.
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ */
-+int ata_host_set_add_ports_pinfo(struct ata_host_set *host_set,
-+				 const struct ata_port_info *pinfo, int n_ports)
-+{
-+	int rc;
-+
-+	rc = ata_host_set_add_ports(host_set, pinfo->sht, n_ports);
-+	if (rc == 0)
-+		__ata_host_set_init_pinfo(host_set, &pinfo, n_ports, 0);
-+	return rc;
-+}
-+
-+/**
-+ *	ata_host_set_add_ports_pinfo_ar - add ports and init with port_info ar
-+ *	@host_set: target ATA host_set
-+ *	@pinfo_ar: array of ATA port_info to initialize host_set with
-+ *	@n_ports: number of ATA ports attached to this host_set
-+ *
-+ *	Add @n_ports ports to @host_set and initialize @host_set with
-+ *	info from @pinfo_ar.
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ */
-+int ata_host_set_add_ports_pinfo_ar(struct ata_host_set *host_set,
-+				    const struct ata_port_info **pinfo_ar,
-+				    int n_ports)
-+{
-+	int rc;
-+
-+	rc = ata_host_set_add_ports(host_set, pinfo_ar[0]->sht, n_ports);
-+	if (rc == 0)
-+		__ata_host_set_init_pinfo(host_set, pinfo_ar, n_ports, 1);
-+	return rc;
-+}
-+
- /**
-  *	ata_host_set_start - start ports of an ATA host_set
-  *	@host_set: ATA host_set to start ports for
-@@ -5417,6 +5558,61 @@ int ata_host_set_start(struct ata_host_s
+  *	ata_host_set_remove - PCI layer callback for device removal
+  *	@host_set: ATA host set that was removed
+  *
+@@ -5665,13 +5708,11 @@ void ata_host_set_stop(struct ata_host_s
+  *	LOCKING:
+  *	Inherited from calling layer (may sleep).
+  */
+-
+ void ata_host_set_remove(struct ata_host_set *host_set)
+ {
+ 	unsigned int i;
+ 
+-	for (i = 0; i < host_set->n_ports; i++)
+-		ata_port_detach(host_set->ports[i]);
++	ata_host_set_detach(host_set);
+ 
+ 	free_irq(host_set->irq, host_set);
+ 	if (host_set->irq2)
+@@ -5691,14 +5732,12 @@ void ata_host_set_remove(struct ata_host
+ 			else if (ioaddr->cmd_addr == ATA_SECONDARY_CMD)
+ 				release_region(ATA_SECONDARY_CMD, 8);
+ 		}
+-
+-		scsi_host_put(ap->host);
+ 	}
+ 
+ 	if (host_set->ops->host_stop)
+ 		host_set->ops->host_stop(host_set);
+ 
+-	kfree(host_set);
++	ata_host_set_free(host_set);
  }
  
  /**
-+ *	ata_host_set_request_irq - request IRQ helper
-+ *	@host_set: ATA host_set requesting IRQ for
-+ *	@irq: irq to request
-+ *	@handler: irq handler
-+ *	@irq_flags: irq flags
-+ *	@reason: out arg for error message
-+ *
-+ *	Freeze all ports and request IRQ with given parameters.
-+ *	dev_id for the IRQ will be @host_set and devname the name of
-+ *	the associated LLD.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer.
-+ *
-+ *	RETURNS:
-+ *	Return value of request_irq().
-+ */
-+int ata_host_set_request_irq(struct ata_host_set *host_set,
-+			unsigned int irq,
-+			irqreturn_t (*handler)(int, void *, struct pt_regs *),
-+			unsigned long irq_flags, const char **reason)
-+{
-+	const char *drv_name;
-+	int i, rc;
-+
-+	/* make sure ports are started */
-+	rc = ata_host_set_start(host_set);
-+	if (rc) {
-+		*reason = "failed to start host_set";
-+		return rc;
-+	}
-+
-+	/* freeze */
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		struct ata_port *ap = host_set->ports[i];
-+
-+		ata_chk_status(ap);
-+		host_set->ops->irq_clear(ap);
-+		ata_eh_freeze_port(ap);	/* freeze port before requesting IRQ */
-+	}
-+
-+	/* request irq */
-+	drv_name = dev_driver_string(host_set->dev);
-+	if (drv_name[0] == '\0')
-+		drv_name = DRV_NAME;
-+
-+	host_set->irq = irq;
-+
-+	rc = request_irq(irq, handler, irq_flags, drv_name, host_set);
-+	if (rc)
-+		*reason = "failed to request IRQ";
-+	return rc;
-+}
-+
-+/**
-  *	ata_host_set_attach - attach initialized ATA host_set
-  *	@host_set: ATA host_set to attach
-  *
-@@ -6117,7 +6313,12 @@ EXPORT_SYMBOL_GPL(ata_std_bios_param);
+@@ -5981,8 +6020,9 @@ EXPORT_SYMBOL_GPL(ata_std_bios_param);
  EXPORT_SYMBOL_GPL(ata_std_ports);
- EXPORT_SYMBOL_GPL(ata_host_set_alloc);
- EXPORT_SYMBOL_GPL(ata_host_set_add_ports);
-+EXPORT_SYMBOL_GPL(ata_host_set_alloc_pinfo);
-+EXPORT_SYMBOL_GPL(ata_host_set_alloc_pinfo_ar);
-+EXPORT_SYMBOL_GPL(ata_host_set_add_ports_pinfo);
-+EXPORT_SYMBOL_GPL(ata_host_set_add_ports_pinfo_ar);
  EXPORT_SYMBOL_GPL(ata_host_set_start);
-+EXPORT_SYMBOL_GPL(ata_host_set_request_irq);
- EXPORT_SYMBOL_GPL(ata_host_set_attach);
  EXPORT_SYMBOL_GPL(ata_device_add);
- EXPORT_SYMBOL_GPL(ata_host_set_detach);
+-EXPORT_SYMBOL_GPL(ata_port_detach);
++EXPORT_SYMBOL_GPL(ata_host_set_detach);
+ EXPORT_SYMBOL_GPL(ata_host_set_stop);
++EXPORT_SYMBOL_GPL(ata_host_set_free);
+ EXPORT_SYMBOL_GPL(ata_host_set_remove);
+ EXPORT_SYMBOL_GPL(ata_sg_init);
+ EXPORT_SYMBOL_GPL(ata_sg_init_one);
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index fed12ae..91b1fc5 100644
+index 7f1d45a..5436bd1 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -692,10 +692,21 @@ extern int ata_pci_device_resume(struct 
- extern int ata_pci_clear_simplex(struct pci_dev *pdev);
+@@ -693,8 +693,9 @@ extern int ata_pci_clear_simplex(struct 
  #endif /* CONFIG_PCI */
- extern struct ata_host_set *ata_host_set_alloc(struct device *dev,
--					       struct scsi_host_template *sht,
--					       int n_ports);
-+			struct scsi_host_template *sht, int n_ports);
- extern int ata_host_set_add_ports(struct ata_host_set *host_set,
--				  struct scsi_host_template *sht, int n_ports);
-+			struct scsi_host_template *sht, int n_ports);
-+extern struct ata_host_set *ata_host_set_alloc_pinfo(struct device *dev,
-+			const struct ata_port_info *pinfo, int n_ports);
-+extern struct ata_host_set *ata_host_set_alloc_pinfo_ar(struct device *dev,
-+			const struct ata_port_info **pinfo_ar, int n_ports);
-+extern int ata_host_set_add_ports_pinfo(struct ata_host_set *host_set,
-+			const struct ata_port_info *pinfo, int n_ports);
-+extern int ata_host_set_add_ports_pinfo_ar(struct ata_host_set *host_set,
-+			const struct ata_port_info **pinfo_ar, int n_ports);
-+extern int ata_host_set_request_irq(struct ata_host_set *host_set,
-+			unsigned int irq,
-+			irqreturn_t (*handler)(int, void *, struct pt_regs *),
-+			unsigned long irq_flags, const char **reason);
  extern int ata_host_set_start(struct ata_host_set *host_set);
- extern int ata_host_set_attach(struct ata_host_set *host_set);
  extern int ata_device_add(const struct ata_probe_ent *ent);
+-extern void ata_port_detach(struct ata_port *ap);
++extern void ata_host_set_detach(struct ata_host_set *host_set);
+ extern void ata_host_set_stop(struct ata_host_set *host_set);
++extern void ata_host_set_free(struct ata_host_set *host_set);
+ extern void ata_host_set_remove(struct ata_host_set *host_set);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
 -- 
 1.3.2
 
