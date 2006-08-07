@@ -1,61 +1,56 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+From: Jiri Slaby <jirislaby@gmail.com>
 Subject: Re: swsusp regression [Was: 2.6.18-rc3-mm2]
-Date: Mon, 7 Aug 2006 22:47:59 +0200
-Message-ID: <200608072247.59184.rjw@sisk.pl>
-References: <20060806030809.2cfb0b1e.akpm@osdl.org> <44D707B6.20501@gmail.com>
-	<20060807162322.GA17564@knob.reflex>
+Date: Mon, 07 Aug 2006 23:08:59 +0159
+Message-ID: <44D7AC02.7060307@gmail.com>
+References: <20060806030809.2cfb0b1e.akpm@osdl.org> <44D707B6.20501@gmail.com> <20060807162322.GA17564@knob.reflex>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.osdl.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.185]:29487 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S932298AbWHGVJN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Aug 2006 17:09:13 -0400
+Received: by nf-out-0910.google.com with SMTP id p46so588047nfa
+        for <linux-ide@vger.kernel.org>; Mon, 07 Aug 2006 14:09:11 -0700 (PDT)
 In-Reply-To: <20060807162322.GA17564@knob.reflex>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.osdl.org>
-List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.osdl.org
-Errors-To: linux-pm-bounces@lists.osdl.org
-To: Jason Lunz <lunz@gehennom.net>
-Cc: Andrew Morton <akpm@osdl.org>, linux-pm@osdl.org, Jiri Slaby <jirislaby@gmail.com>, andre@linux-ide.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jason Lunz <lunz@gehennom.net>
+Cc: Jiri Slaby <jirislaby@gmail.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, andre@linux-ide.org, pavel@suse.cz, linux-pm@osdl.org, linux-ide@vger.kernel.org
 
-On Monday 07 August 2006 18:23, Jason Lunz wrote:
+Jason Lunz wrote:
 > In gmane.linux.kernel, you wrote:
-> >> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-r=
-c3/2.6.18-rc3-mm2/
-> >
-> > I tried it and guess what :)... swsusp doesn't work :@.
-> >
-> > This time I was able to dump process states with sysrq-t:
-> > http://www.fi.muni.cz/~xslaby/sklad/ide2.gif
-> >
-> > My guess is ide2/2.0 dies (hpt370 driver), since last thing kernel prin=
-ts is =
-
-> > suspending device 2.0
-> =
-
+>>> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc3/2.6.18-rc3-mm2/
+>> I tried it and guess what :)... swsusp doesn't work :@.
+>>
+>> This time I was able to dump process states with sysrq-t:
+>> http://www.fi.muni.cz/~xslaby/sklad/ide2.gif
+>>
+>> My guess is ide2/2.0 dies (hpt370 driver), since last thing kernel prints is 
+>> suspending device 2.0
+> 
 > Does it go away if you revert this?
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc3/=
-2.6.18-rc3-mm2/broken-out/ide-reprogram-disk-pio-timings-on-resume.patch
-> =
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc3/2.6.18-rc3-mm2/broken-out/ide-reprogram-disk-pio-timings-on-resume.patch
+
+No change.
 
 > That should only affect resume, not suspend, but it does mess around
 > with ide power management. Is this maybe happening on the *second*
 > suspend?
-> =
 
-> > -hdc: ATAPI 63X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(33)
-> > +hdc: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
-> =
+Nope, the first one.
 
+>> -hdc: ATAPI 63X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(33)
+>> +hdc: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
+> 
 > This looks suspicious. -mm does have several ide-fix-hpt3xx patches.
 
-I found that git-block.patch broke the suspend for me.  Still have no idea
-what's up with it.
+But hdc is not on the hpt3xx controller.
 
-Rafael
+regards,
+-- 
+<a href="http://www.fi.muni.cz/~xslaby/">Jiri Slaby</a>
+faculty of informatics, masaryk university, brno, cz
+e-mail: jirislaby gmail com, gpg pubkey fingerprint:
+B674 9967 0407 CE62 ACC8  22A0 32CC 55C3 39D4 7A7E
