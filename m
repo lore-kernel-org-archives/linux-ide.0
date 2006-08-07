@@ -1,114 +1,61 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 2/4] libata: Add ata_port_init
-Date: Mon, 07 Aug 2006 14:27:17 -0500
-Message-ID: <200608071927.k77JRIxc020735@d03av02.boulder.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: swsusp regression [Was: 2.6.18-rc3-mm2]
+Date: Mon, 7 Aug 2006 22:47:59 +0200
+Message-ID: <200608072247.59184.rjw@sisk.pl>
+References: <20060806030809.2cfb0b1e.akpm@osdl.org> <44D707B6.20501@gmail.com>
+	<20060807162322.GA17564@knob.reflex>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.osdl.org>
+In-Reply-To: <20060807162322.GA17564@knob.reflex>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.osdl.org>
+List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.osdl.org
+Errors-To: linux-pm-bounces@lists.osdl.org
+To: Jason Lunz <lunz@gehennom.net>
+Cc: Andrew Morton <akpm@osdl.org>, linux-pm@osdl.org, Jiri Slaby <jirislaby@gmail.com>, andre@linux-ide.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
+On Monday 07 August 2006 18:23, Jason Lunz wrote:
+> In gmane.linux.kernel, you wrote:
+> >> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-r=
+c3/2.6.18-rc3-mm2/
+> >
+> > I tried it and guess what :)... swsusp doesn't work :@.
+> >
+> > This time I was able to dump process states with sysrq-t:
+> > http://www.fi.muni.cz/~xslaby/sklad/ide2.gif
+> >
+> > My guess is ide2/2.0 dies (hpt370 driver), since last thing kernel prin=
+ts is =
 
-Separate out the ata_port initialization from ata_host_init
-so that it can be used in future SAS patches.
+> > suspending device 2.0
+> =
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
+> Does it go away if you revert this?
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc3/=
+2.6.18-rc3-mm2/broken-out/ide-reprogram-disk-pio-timings-on-resume.patch
+> =
 
- libata-dev-bjking1/drivers/scsi/libata-core.c |   49 ++++++++++++++++++--------
- libata-dev-bjking1/drivers/scsi/libata.h      |    2 +
- 2 files changed, 36 insertions(+), 15 deletions(-)
+> That should only affect resume, not suspend, but it does mess around
+> with ide power management. Is this maybe happening on the *second*
+> suspend?
+> =
 
-diff -puN drivers/scsi/libata-core.c~libata_port_init drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_port_init	2006-08-07 09:06:37.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-08-07 12:39:34.000000000 -0500
-@@ -5240,35 +5240,25 @@ void ata_dev_init(struct ata_device *dev
- }
- 
- /**
-- *	ata_host_init - Initialize an ata_port structure
-+ *	ata_port_init - Initialize an ata_port structure
-  *	@ap: Structure to initialize
-- *	@host: associated SCSI mid-layer structure
-  *	@host_set: Collection of hosts to which @ap belongs
-  *	@ent: Probe information provided by low-level driver
-  *	@port_no: Port number associated with this ata_port
-  *
-- *	Initialize a new ata_port structure, and its associated
-- *	scsi_host.
-+ *	Initialize a new ata_port structure.
-  *
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
--			  struct ata_host_set *host_set,
--			  const struct ata_probe_ent *ent, unsigned int port_no)
-+void ata_port_init(struct ata_port *ap, struct ata_host_set *host_set,
-+		   const struct ata_probe_ent *ent, unsigned int port_no)
- {
- 	unsigned int i;
- 
--	host->max_id = 16;
--	host->max_lun = 1;
--	host->max_channel = 1;
--	host->unique_id = ata_unique_id++;
--	host->max_cmd_len = 12;
--
- 	ap->lock = &host_set->lock;
- 	ap->flags = ATA_FLAG_DISABLED;
--	ap->id = host->unique_id;
--	ap->host = host;
-+	ap->id = ata_unique_id++;
- 	ap->ctl = ATA_DEVCTL_OBS;
- 	ap->host_set = host_set;
- 	ap->dev = ent->dev;
-@@ -5320,6 +5310,35 @@ static void ata_host_init(struct ata_por
- }
- 
- /**
-+ *	ata_host_init - Initialize an ata_port structure
-+ *	@ap: Structure to initialize
-+ *	@host: associated SCSI mid-layer structure
-+ *	@host_set: Collection of hosts to which @ap belongs
-+ *	@ent: Probe information provided by low-level driver
-+ *	@port_no: Port number associated with this ata_port
-+ *
-+ *	Initialize a new ata_port structure, and its associated
-+ *	scsi_host.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+
-+static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
-+			  struct ata_host_set *host_set,
-+			  const struct ata_probe_ent *ent, unsigned int port_no)
-+{
-+	ata_port_init(ap, host_set, ent, port_no);
-+	ap->host = host;
-+
-+	host->unique_id = ap->id;
-+	host->max_id = 16;
-+	host->max_lun = 1;
-+	host->max_channel = 1;
-+	host->max_cmd_len = 12;
-+}
-+
-+/**
-  *	ata_host_add - Attach low-level ATA driver to system
-  *	@ent: Information provided by low-level driver
-  *	@host_set: Collections of ports to which we add
-diff -puN drivers/scsi/libata.h~libata_port_init drivers/scsi/libata.h
---- libata-dev/drivers/scsi/libata.h~libata_port_init	2006-08-07 09:06:37.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata.h	2006-08-07 12:37:58.000000000 -0500
-@@ -69,6 +69,8 @@ extern int ata_flush_cache(struct ata_de
- extern void ata_dev_init(struct ata_device *dev);
- extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
-+extern void ata_port_init(struct ata_port *ap, struct ata_host_set *host_set,
-+			  const struct ata_probe_ent *ent, unsigned int port_no);
- 
- 
- /* libata-scsi.c */
-_
+> > -hdc: ATAPI 63X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(33)
+> > +hdc: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
+> =
+
+> This looks suspicious. -mm does have several ide-fix-hpt3xx patches.
+
+I found that git-block.patch broke the suspend for me.  Still have no idea
+what's up with it.
+
+Rafael
