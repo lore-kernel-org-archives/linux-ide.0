@@ -1,53 +1,69 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: clear sdev->locked on door lock failure
-Date: Tue, 8 Aug 2006 14:08:59 +0900
-Message-ID: <20060808050859.GB28202@htj.dyndns.org>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: libata-dev#upstream pdc_adma fails IDENTIFY w/ AC_ERR_HSM
+Date: Tue, 08 Aug 2006 14:18:55 +0800
+Message-ID: <44D82CCF.8020705@tw.ibm.com>
+References: <44D336EE.5000907@gmail.com> <44D36823.7020406@pobox.com> <44D37129.9030100@rtr.ca> <44D37519.1020908@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.204]:48465 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750839AbWHHFJH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Aug 2006 01:09:07 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so241221nzf
-        for <linux-ide@vger.kernel.org>; Mon, 07 Aug 2006 22:09:06 -0700 (PDT)
-Content-Disposition: inline
+Received: from e32.co.us.ibm.com ([32.97.110.150]:11188 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751244AbWHHGTa
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Aug 2006 02:19:30 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k786JBAT030619
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-ide@vger.kernel.org>; Tue, 8 Aug 2006 02:19:11 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k786JBsN117484
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Tue, 8 Aug 2006 00:19:11 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k786JALU010363
+	for <linux-ide@vger.kernel.org>; Tue, 8 Aug 2006 00:19:11 -0600
+In-Reply-To: <44D37519.1020908@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: uchang@tw.ibm.com, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, garyhade@us.ibm.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-SCSI EH locks door if sdev->locked is set.  Sometimes door lock
-command fails continuously (e.g. when medium is not present) and as
-libata uses EH to acquire sense data, this easily creates a loop where
-a failed lock door invokes EH and EH issues lock door on completion.
+Tejun Heo wrote:
+> Mark Lord wrote:
+> 
+>>
+>> Is this "IDENTIFY using IRQs rather than polling" a newish feature?
+>> Because I just don't see how it could work with the the existing
+>> adma_intr_mmio routine --> that code is only correct for non-data
+>> commands, and IDENTIFY definitely has data.
+> 
+> 
+> IDENTIFY w/ IRQs came with Albert Lee's irq-pio which was merged into
+> mainline together with new EH.
+> 
 
-This patch clears sdev->locked on door lock failure to break this
-loop.  This problem has been spotted and diagnosed by Unicorn Chang
-<uchang@tw.ibm.com>.
+Oops, pdc_adma.c was overlooked by the irq-pio patch.
+Only HSM_ST_LAST interrupts should be delivered to this LLDD.
+Could you please check if the attached patch helps?
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+--
+albert
 
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 1638e57..f6ddfe6 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2353,6 +2353,19 @@ static void atapi_qc_complete(struct ata
- 			ata_gen_ata_desc_sense(qc);
- 		}
- 
-+		/* SCSI EH automatically locks door if sdev->locked is
-+		 * set.  Sometimes door lock request continues to
-+		 * fail, for example, when no media is present.  This
-+		 * creates a loop - SCSI EH issues door lock which
-+		 * fails and gets invoked again to acquire sense data
-+		 * for the failed command.
-+		 *
-+		 * If door lock fails, always clear sdev->locked to
-+		 * avoid this infinite loop.
-+		 */
-+		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL)
-+			qc->dev->sdev->locked = 0;
-+
- 		qc->scsicmd->result = SAM_STAT_CHECK_CONDITION;
- 		qc->scsidone(cmd);
- 		ata_qc_free(qc);
+(Patch against mainline 2.6.18-rc4.)
+
+--- linux-2.6.18-rc4/drivers/scsi/pdc_adma.c	2006-08-08 14:03:21.000000000 +0800
++++ linux-2.6.18-rc4-adma-poll/drivers/scsi/pdc_adma.c	2006-08-08 14:05:13.000000000 +0800
+@@ -183,7 +183,8 @@ static struct ata_port_info adma_port_in
+ 	{
+ 		.sht		= &adma_ata_sht,
+ 		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
+-				  ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO,
++				  ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO |
++				  ATA_FLAG_PIO_POLLING,
+ 		.pio_mask	= 0x10, /* pio4 */
+ 		.udma_mask	= 0x1f, /* udma0-4 */
+ 		.port_ops	= &adma_ata_ops,
+
+
+
