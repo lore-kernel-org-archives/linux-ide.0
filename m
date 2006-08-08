@@ -1,69 +1,69 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: swsusp regression [Was: 2.6.18-rc3-mm2]
-Date: Tue, 08 Aug 2006 18:40:17 +0159
-Message-ID: <44D8BE88.4080809@gmail.com>
-References: <20060806030809.2cfb0b1e.akpm@osdl.org> <200608081316.00749.rjw@sisk.pl> <20060808111925.GO4025@suse.de> <200608081550.36054.rjw@sisk.pl> <20060808140601.GU31726@suse.de>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH 0/2]ACPI support for SATA/PATA
+Date: Tue, 8 Aug 2006 10:52:15 -0700
+Message-ID: <20060808105215.fee7c26d.rdunlap@xenotime.net>
+References: <1153899345.4957.59.camel@forrest26.sh.intel.com>
+	<44C786D8.5060801@rtr.ca>
+	<1153964697.4957.67.camel@forrest26.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:16012 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S964993AbWHHQk3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Aug 2006 12:40:29 -0400
-Received: by nf-out-0910.google.com with SMTP id q29so225313nfc
-        for <linux-ide@vger.kernel.org>; Tue, 08 Aug 2006 09:40:28 -0700 (PDT)
-In-Reply-To: <20060808140601.GU31726@suse.de>
+Received: from xenotime.net ([66.160.160.81]:61848 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1030207AbWHHRtf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Aug 2006 13:49:35 -0400
+Received: from midway.site ([71.117.253.75]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 8 Aug 2006 10:49:31 -0700
+In-Reply-To: <1153964697.4957.67.camel@forrest26.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jason Lunz <lunz@gehennom.net>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, andre@linux-ide.org, pavel@suse.cz, linux-pm@osdl.org, linux-ide@vger.kernel.org
+To: "zhao, forrest" <forrest.zhao@intel.com>
+Cc: Mark Lord <liml@rtr.ca>, jgarzik@pobox.com, htejun@gmail.com, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> On Tue, Aug 08 2006, Rafael J. Wysocki wrote:
->> On Tuesday 08 August 2006 13:19, Jens Axboe wrote:
->>> On Tue, Aug 08 2006, Rafael J. Wysocki wrote:
->>>> On Tuesday 08 August 2006 13:07, Jens Axboe wrote:
->>>>> On Tue, Aug 08 2006, Jens Axboe wrote:
->>>>>>> Indeed, that looks broken now. That must be what is screwing it up. With
->>>>>> the former patch applied, did cdrom detection still look funny to you?
->>>> Hm, I'm not sure what you mean ...
->>> -hdc: ATAPI 63X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(33)
->>> +hdc: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
->> Ah, that.
->>
->>> But perhaps that wasn't you?
->> No, that wasn't me. :-)
+On Thu, 27 Jul 2006 09:44:57 +0800 zhao, forrest wrote:
 
-It was me and it's OK.
-
->>>>>> I'll concoct a fix for that breakage.
->>>>> Something like this.
->>>> Looks good, I'll give it a try.
->>> Thanks!
->> It fixes this particular issue for me, but your first patch (appended)
->> is also needed to prevent the box from hanging later during the resume
->> (when it tries to save the image).
+> On Wed, 2006-07-26 at 11:14 -0400, Mark Lord wrote:
+> > zhao, forrest wrote:
+> > > Hello, all
+> > > 
+> > > In ACPI spec 3.0, section 9.9 defines 4 objects for PATA/SATA:
+> > > 
+> > > _GTF is for both PATA and SATA, which is used to return ATA task file
+> > > needed to re-init the drive;
+> > > _SDD is SATA-only object, which is used to inform the platform of the
+> > > type of device attached to a port;
+> > > _GTM and _STM are PATA-only objects, which are used to get/set PATA
+> > > timing information(i.e. PIO and DMA speed).
+> > 
+> > It seems to be quite common for ICH*M notebooks to use the SATA ports
+> > to attach PATA drives with PATA->SATA bridge chips in the middle.
+> > 
+> > In this case, one would expect the _GTM and _STM objects to be necessary,
+> > even though Linux thinks it's a SATA situation.
+> > 
 > 
-> Yes certainly, that's a separate bug, sorry if I didn't make that clear.
-> Both fixes are in the block repo now, so next -mm should work fine
-> again.
+> Hi Mark,
+> 
+> I re-read the section 9.9 of ACPI spec 3.0, but didn't find any
+> description about how to deal with "PATA->SATA bridge". Is this version
+> of APCI spec outdated?
+> Would you please point me to spec(or document), which has the
+> description of how to deal with "PATA->SATA bridge"?
 
-And even this is OK.
+(I would have said SATA->PATA bridge. :)
 
-I'm just curious, what
-@@ -387,3 +398,5 @@
-  EXT3 FS on md0, internal journal
-  EXT3-fs: mounted filesystem with ordered data mode.
-  Adding 506036k swap on /dev/hda3.  Priority:-1 extents:1 across:506036k
-+JBD: barrier-based sync failed on hda2 - disabling barriers
-+JBD: barrier-based sync failed on md0 - disabling barriers
+No docs.  When I was at Intel, I asked the (MPG) BIOS people about
+this.  Their reply was something like (IIRC), "You do whatever ACPI
+commands that the host side thinks it is talking to."
+In other words, use SATA commands here.
+However, I had added some code to attempt to handle this,
+although Jens and Alan (and maybe Jeff) all told me that it was
+incorrect:  I attempted to use some flag (e.g., <legacy_mode>,
+but I'm not sure which name exactly) to determine the full
+configuration, but that idea was nack-ed.
 
-means. Another bug?
+Probably the best thing to do is ask them or some other
+(Intel) BIOS people what they think about it and what their
+recommendation is.
 
-thanks,
--- 
-<a href="http://www.fi.muni.cz/~xslaby/">Jiri Slaby</a>
-faculty of informatics, masaryk university, brno, cz
-e-mail: jirislaby gmail com, gpg pubkey fingerprint:
-B674 9967 0407 CE62 ACC8  22A0 32CC 55C3 39D4 7A7E
+---
+~Randy
