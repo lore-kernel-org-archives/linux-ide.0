@@ -1,54 +1,68 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH] libata: Use ATA_FLAG_PIO_POLLING for pdc_adma
-Date: Wed, 09 Aug 2006 18:36:22 +0800
-Message-ID: <44D9BAA6.2050005@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: cached PCS
+Date: Wed, 09 Aug 2006 19:39:07 +0900
+Message-ID: <44D9BB4B.9050602@gmail.com>
+References: <44D97F07.9000301@garzik.org> <44D9AF83.80507@gmail.com> <44D9B43A.9010807@garzik.org> <44D9B4BC.5050707@gmail.com> <44D9B87A.8020507@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:37009 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030670AbWHIKgh
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Aug 2006 06:36:37 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k79AaaBG026255
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Wed, 9 Aug 2006 06:36:36 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k79AaZGL196520
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Wed, 9 Aug 2006 04:36:35 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k79AaZ3H029607
-	for <linux-ide@vger.kernel.org>; Wed, 9 Aug 2006 04:36:35 -0600
+Received: from wx-out-0506.google.com ([66.249.82.231]:44452 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1030667AbWHIKjM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Aug 2006 06:39:12 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so117727wxc
+        for <linux-ide@vger.kernel.org>; Wed, 09 Aug 2006 03:39:11 -0700 (PDT)
+In-Reply-To: <44D9B87A.8020507@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Jeff Garzik wrote:
+>>> Tejun Heo wrote:
+>>>> Jeff Garzik wrote:
+>>>>> can you resurrect your cached PCS patch?
+>>>>>
+>>>>> 2.6.18-rc didn't fix the ghost device and long boot delay problems 
+>>>>> for everybody.
+>>>>
+>>>> The cached PCS patch was to fix device detection failure on some 
+>>>> ICH5s where PCS is cleared while probing the first port.  Remaining 
+>>>> ghost device and long boot delay are fixed by honor-PCS patch.  Do 
+>>>> you want me to resurrect both?
+>>>
+>>> hrm.  Maybe just honor-PCS?
+>>
+>> Yeap, we need to verify whether the less-jealous-PCS-update patch 
+>> cured the ICH5 problem.
+> 
+> If you are talking about the patch currently in 2.6.18-rc, I got several 
+> ACKs that it fixed their problems.
+> 
+> But OTOH, there was also
+> http://marc.theaimsgroup.com/?t=115346292700002&r=1&w=2
 
-pdc_adma was overlooked and broken by the irq-pio patch:
-Only HSM_ST_LAST interrupts should be delivered to this LLDD.
+I was talking about bugzilla bug #6724.
 
-Adding ATA_FLAG_PIO_POLLING to pdc_adma fixes the problem (temporarily),
-before we convert the irq handler of pdc_adma to handle all interrupts.
+http://bugzilla.kernel.org/show_bug.cgi?id=6724
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
-Patch against 2.6.18-rc4 and tested ok by Tejun.
+It was a weird case of ICH5 clearing PCS present bits while the first 
+port is being probed.  The clearing happens during actual probe, that 
+is, the bits look okay till the end of the first prereset() but on entry 
+to prereset() for the second port, enabled bits are gone.  IIRC, 
+bug#6724 is different from all other reports.
 
---- linux-2.6.18-rc4/drivers/scsi/pdc_adma.c	2006-08-08 14:03:21.000000000 +0800
-+++ linux-2.6.18-rc4-adma-poll/drivers/scsi/pdc_adma.c	2006-08-08 14:05:13.000000000 +0800
-@@ -183,7 +183,8 @@ static struct ata_port_info adma_port_in
- 	{
- 		.sht		= &adma_ata_sht,
- 		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
--				  ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO,
-+				  ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO |
-+				  ATA_FLAG_PIO_POLLING,
- 		.pio_mask	= 0x10, /* pio4 */
- 		.udma_mask	= 0x1f, /* udma0-4 */
- 		.port_ops	= &adma_ata_ops,
+I asked the reporter to test 2.6.18-rc4 and see whether the problem is 
+gone with new PCS handling.  I'm a bit skeptical about the result.  If 
+the problem remains with 2.6.18-rc4, we'll need that cached PCS to solve 
+that particular case.
 
+BTW, do you know what Keith Owen's chipset was?
 
+Thanks.
+
+-- 
+tejun
