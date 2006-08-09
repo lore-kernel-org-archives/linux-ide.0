@@ -1,36 +1,43 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 2.6.17] atiixp & ahci: ATI SB600 SATA/IDE support for
- various modes
-Date: Wed, 9 Aug 2006 12:22:40 -0700
-Message-ID: <20060809122240.94bb00f5.akpm@osdl.org>
-References: <B63F95CBF8A45E4293F8825849B30BF41171A6@TORCAEXMB3.atitech.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Wed, 09 Aug 2006 16:16:08 -0400
+Message-ID: <44DA4288.6020806@rtr.ca>
+References: <1155144599.5729.226.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:33226 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751325AbWHITW5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 15:22:57 -0400
-In-Reply-To: <B63F95CBF8A45E4293F8825849B30BF41171A6@TORCAEXMB3.atitech.com>
+Received: from rtr.ca ([64.26.128.89]:63428 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751351AbWHIUQJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 16:16:09 -0400
+In-Reply-To: <1155144599.5729.226.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anatoli Antonovitch <antonovi@ati.com>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, 9 Aug 2006 13:54:06 -0400
-"Anatoli Antonovitch" <antonovi@ati.com> wrote:
-
-> Description
-> 1. Support SB600 SATA legacy IDE (DMA enable).
-> 2. Automatically match the proper driver for different SATA/IDE modes of
-> SB600 SATA controller: ahci for SATA/Native IDE/RAID modes and
-> ATIIXP_IDE for legacy mode.
+Alan Cox wrote:
+> Jeff (rightly) thinks the plan should be discussed publically, so here
+> is the plan
 > 
-> Signed-off-by: Anatoli Antonovitch <antonovi@ati.com>
+> For 2.6.19 to move the libata drivers to drivers/ata
+> Add a subset of the new PATA drivers living in -mm to the base kernel
+> 
+> Many of the new libata drivers are already more stable and functional
+> than the drivers/ide ones. 
+..
+> At this point in time it is premature to discuss or plan the point at
+> which the old IDE layer would go away. That discussion can start at the
+> point where everyone is happy that the new libata based layer is
+> providing better quality and coverage than the old one. Even then there
+> would be no need to hurry.
 
-This patch affects two separate subsystems which have different
-maintainers.  So I split into two and fudged the changelogs - please check
-that I got it right.
+As creator of the ancient IDE subsystem, I agree --> it is time to get
+the next generation code upstream.
 
-Also, the patch was severely wordwrapped.  Please fix the email client for
-next time, thanks.
+This will also allow time for things like "udev" to perhaps think about
+an option to someday provide /dev/hd* symlinks for PATA devices when
+libata is used instead of IDE (?).  That might be a possible migration
+path in the far future.
+
+Cheers! 
