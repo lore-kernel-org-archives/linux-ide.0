@@ -1,25 +1,48 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
- init model
-Date: Wed, 09 Aug 2006 08:54:22 -0400
-Message-ID: <44D9DAFE.8040600@rtr.ca>
-References: <1154919840689-git-send-email-htejun@gmail.com> <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com> <44D98388.8030005@pobox.com>
+Subject: Re: [PATCH] libata: Use ATA_FLAG_PIO_POLLING for pdc_adma
+Date: Wed, 09 Aug 2006 08:59:49 -0400
+Message-ID: <44D9DC45.9090703@rtr.ca>
+References: <44D9BAA6.2050005@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:39055 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1750723AbWHIMyY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 08:54:24 -0400
-In-Reply-To: <44D98388.8030005@pobox.com>
+Received: from rtr.ca ([64.26.128.89]:14990 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1750747AbWHIM7v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 08:59:51 -0400
+In-Reply-To: <44D9BAA6.2050005@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
->Its a bit confusing because "PCI IDE" is often used to refer to the legacy IDE shadow register >interface.  I started to use "bmdma" to describe the interface, but it drives Alan crazy  :) 
+Albert Lee wrote:
+> pdc_adma was overlooked and broken by the irq-pio patch:
+> Only HSM_ST_LAST interrupts should be delivered to this LLDD.
+> 
+> Adding ATA_FLAG_PIO_POLLING to pdc_adma fixes the problem (temporarily),
+> before we convert the irq handler of pdc_adma to handle all interrupts.
+> 
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Signed-off-by: Mark Lord <mlord@pobox.com>
 
-Yes, it would do that, because the official specification for those interfaces
-is the "PCI IDE Controller Specification".  Need a copy?
+Looks good.  Note also that sata_qstor.c uses the same code structure,
+and already does the same thing.
 
-Cheers
+> ---
+> Patch against 2.6.18-rc4 and tested ok by Tejun.
+> 
+> --- linux-2.6.18-rc4/drivers/scsi/pdc_adma.c	2006-08-08 14:03:21.000000000 +0800
+> +++ linux-2.6.18-rc4-adma-poll/drivers/scsi/pdc_adma.c	2006-08-08 14:05:13.000000000 +0800
+> @@ -183,7 +183,8 @@ static struct ata_port_info adma_port_in
+>  	{
+>  		.sht		= &adma_ata_sht,
+>  		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
+> -				  ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO,
+> +				  ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO |
+> +				  ATA_FLAG_PIO_POLLING,
+>  		.pio_mask	= 0x10, /* pio4 */
+>  		.udma_mask	= 0x1f, /* udma0-4 */
+>  		.port_ops	= &adma_ata_ops,
+> 
+
