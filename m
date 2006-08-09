@@ -1,66 +1,38 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: /dev/sd*
-Date: Thu, 10 Aug 2006 00:18:57 +0200
-Message-ID: <20060809221857.GG3691@stusta.de>
-References: <1155144599.5729.226.camel@localhost.localdomain> <20060809212124.GC3691@stusta.de> <1155160903.5729.263.camel@localhost.localdomain>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [git patches] libata fixes
+Date: Wed, 9 Aug 2006 15:45:27 -0700
+Message-ID: <20060809224527.GB17840@kroah.com>
+References: <20060809062514.GA27491@havoc.gtf.org> <20060809184749.GA12941@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:18450 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1751400AbWHIWTB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Aug 2006 18:19:01 -0400
+Received: from mail.suse.de ([195.135.220.2]:24732 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1751417AbWHIWpm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 18:45:42 -0400
 Content-Disposition: inline
-In-Reply-To: <1155160903.5729.263.camel@localhost.localdomain>
+In-Reply-To: <20060809184749.GA12941@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Aug 09, 2006 at 11:01:43PM +0100, Alan Cox wrote:
-> Ar Mer, 2006-08-09 am 23:21 +0200, ysgrifennodd Adrian Bunk:
-> > It might be a bit out of the scope of this thread, but why do some many 
-> > subsystems use the /dev/sd* namespace?
+On Wed, Aug 09, 2006 at 11:47:49AM -0700, Greg KH wrote:
+> On Wed, Aug 09, 2006 at 02:25:14AM -0400, Jeff Garzik wrote:
 > > 
-> > Real SCSI devices use it.
-> > The USB mass storage driver uses it.
+> > Please pull from 'upstream-greg' branch of
+> > master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-greg
 > 
-> USB storage is real SCSI.
-
-Real SCSI for a developer, for a user it's USB.
-
-And things become even more confusing considering that the drive might 
-show up as /dev/sda or /dev/uba depending on the driver used.
-
-> > libata uses it.
-> > 
-> > I'd expext SATA or PATA devices at /dev/hd* or perhaps at /dev/ata* - 
-> > but why are they at /dev/sd*?
+> Applied, thanks.
 > 
-> ATA uses the top half of the scsi stack so ends up using the top layer
-> scsi drivers. Its probably more efficient than writing new driver
-> clones, especially as non disk ATA is also real SCSI (or very close).
+> Hm, should these fixes solve my SATA cdrom driver timeout issue?  I'll
+> go test that, it was still broken in 2.6.18-rc4...
 
-You are talking about kernel<->kernel and kernel<->hardware interfaces.
+Nope, still get the same timeout error at boot time.  This works just
+fine with 2.6.17, and I reported it a while ago.  Any ideas of things I
+can do to work on this getting fixed?
 
-I'm more concerned about the kernel<->userspace interface.
+2.6.18 shouldn't go out with this broken, imo.
 
-> You can use /dev/ata if you want - its just a udev problem ;)
+thanks,
 
-Or by adding some manual links if using a static /dev.
-
-But I'm still not getting the point why the /dev/sd* namespace has to be 
-used.
-
-> Alan
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+greg k-h
