@@ -1,43 +1,25 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] libata: implement to get tf's from _GTF and execute
- them
-Date: Wed, 09 Aug 2006 16:29:19 +0400
-Message-ID: <44D9D51F.9040309@ru.mvista.com>
-References: <1153899372.4957.61.camel@forrest26.sh.intel.com> <20060808121902.2771f60b.rdunlap@xenotime.net> <44D90B2E.1050708@pobox.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
+ init model
+Date: Wed, 09 Aug 2006 08:54:22 -0400
+Message-ID: <44D9DAFE.8040600@rtr.ca>
+References: <1154919840689-git-send-email-htejun@gmail.com> <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com> <44D98388.8030005@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:29152 "EHLO imap.sh.mvista.com")
-	by vger.kernel.org with ESMTP id S1750705AbWHIM2O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 08:28:14 -0400
-In-Reply-To: <44D90B2E.1050708@pobox.com>
+Received: from rtr.ca ([64.26.128.89]:39055 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1750723AbWHIMyY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 08:54:24 -0400
+In-Reply-To: <44D98388.8030005@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: rdunlap@xenotime.net, forrest.zhao@intel.com, htejun@gmail.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Hello.
+>Its a bit confusing because "PCI IDE" is often used to refer to the legacy IDE shadow register >interface.  I started to use "bmdma" to describe the interface, but it drives Alan crazy  :) 
 
-Jeff Garzik wrote:
+Yes, it would do that, because the official specification for those interfaces
+is the "PCI IDE Controller Specification".  Need a copy?
 
->>> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
->>> index 386e5f2..cd4cf97 100644
->>> --- a/drivers/scsi/libata-core.c
->>> +++ b/drivers/scsi/libata-core.c
->>> @@ -91,6 +91,10 @@ static int ata_probe_timeout = ATA_TMOUT
->>>  module_param(ata_probe_timeout, int, 0444);
->>>  MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout 
->>> (seconds)");
-
->>> +int noacpi = 0;
-
->> Drop the "= 0".  It will be init. to 0 anyway.
->> (Yes, I know my patch had that. :)
-
-> Not necessarily true, since it is not static...
-
-    All uninitialized explicitly non-auto variables go into .bss section and 
-get initialized to 0 and 'static' has nothing to do with it, IIRC...
-
-WBR, Sergei
+Cheers
