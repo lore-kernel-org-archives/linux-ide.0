@@ -1,108 +1,77 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
- init model
-Date: Wed, 09 Aug 2006 02:41:12 -0400
-Message-ID: <44D98388.8030005@pobox.com>
-References: <1154919840689-git-send-email-htejun@gmail.com> <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata-dev#upstream pdc_adma fails IDENTIFY w/ AC_ERR_HSM
+Date: Wed, 09 Aug 2006 18:30:51 +0900
+Message-ID: <44D9AB4B.9050107@gmail.com>
+References: <44D336EE.5000907@gmail.com> <44D36823.7020406@pobox.com> <44D37129.9030100@rtr.ca> <44D37519.1020908@gmail.com> <44D82CCF.8020705@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:31907 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030557AbWHIGl0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 02:41:26 -0400
-In-Reply-To: <44D9782A.30405@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.229]:26218 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1030597AbWHIJa7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Aug 2006 05:30:59 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so110397wxc
+        for <linux-ide@vger.kernel.org>; Wed, 09 Aug 2006 02:30:58 -0700 (PDT)
+In-Reply-To: <44D82CCF.8020705@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> This is definitely the wrong direction.
-> 
-> Ouch...  The whole patch?
-> 
->> We don't want to keep crowding knowledge of multiple bus technologies 
->> into the same function.
-> 
-> Do you mean PCI-IDE (legacy/BMDMA), PCI-native and newer controllers 
-> (including MSI stuff)?  Bus-wise they're all PCI.
-
-ata_generic, ISA, VLB, and embedded controllers that use libata are not 
-PCI.  libata-bmdma can drive older non-PCI controllers.
-
-Its a bit confusing because "PCI IDE" is often used to refer to the 
-legacy IDE shadow register interface.  I started to use "bmdma" to 
-describe the interface, but it drives Alan crazy :)
-
-
->> ata_pci_request_irq() and other code above follows the same theme... 
->> but its an unmaintainable direction.
+Albert Lee wrote:
+> Tejun Heo wrote:
+>> Mark Lord wrote:
 >>
->> This sort of stuff needs to be split up, not coalesced.
-> 
-> ata_pci_*() functions are PCI helpers and I wanted to move most of PCI 
-> resource bookkeeping into helpers.  Less clutter in LLDs and less errors.
-
-Putting legacy IDE resource allocation and ultra-modern (MSI) resource 
-allocation in the same function is the wrong direction.
-
-Legacy LLDDs should not be traversing code that has to worry about PCI 
-MSI, and PCI MSI controllers should not be traversing code paths that 
-deal with legacy IDE.
-
-I'm looking forward to having ARM and PowerMac IDE drivers ported to 
-libata soon, and we don't need to be adding special ARM/PPC bus handling 
-stuff to these already-gigantic resource routines.
-
-
->> Another thing to think about:  IMO it makes sense to separate out the 
->> PCI IDE resource handling, because that set of technology is largely 
->> static.
->  >
->> Most newer controllers will only have a few resources, normally MMIO, 
->> and may even support MSI-X (multiple messages for different event 
->> types, rather than a single message for all events like MSI).
+>>> Is this "IDENTIFY using IRQs rather than polling" a newish feature?
+>>> Because I just don't see how it could work with the the existing
+>>> adma_intr_mmio routine --> that code is only correct for non-data
+>>> commands, and IDENTIFY definitely has data.
 >>
->> So, I'd like to see some of this inside libata-bmdma.c to keep the 
->> core free of such nastiness.
+>> IDENTIFY w/ IRQs came with Albert Lee's irq-pio which was merged into
+>> mainline together with new EH.
+>>
 > 
-> I'm having a little bit difficult time following what you're thinking. 
-> Whatever the final interface is, the goals would be similar to what's 
-> listed in the head message of this patchset, and I think 
-> alloc/init/attach model is a good way to achieve that thus killing 
-> probe_ent.  Can you explain in more detail how the interface should look 
-> like?
+> Oops, pdc_adma.c was overlooked by the irq-pio patch.
+> Only HSM_ST_LAST interrupts should be delivered to this LLDD.
+> Could you please check if the attached patch helps?
 
-Killing probe_ent is a good thing, definitely.  Ideally we should have 
-an interface for the LLDD like
+Yay, with your patch pdc_adma detects all devices and works great.
 
-	host_set = alloc_ata()
-	[ fill in host_set ]
-	rc = register_ata()
-	...
-	unregister_ata()
-	free_ata()
+=================================================================
+ACPI: PCI Interrupt Link [LNKG] enabled at IRQ 3
+ACPI: PCI Interrupt 0000:01:02.0[A] -> Link [LNKG] -> GSI 3 (level, low) 
+-> IRQ 3
+ata1: PATA max UDMA/66 cmd 0xF881AC00 ctl 0xF881AC38 bmdma 0x0 irq 3
+ata2: PATA max UDMA/66 cmd 0xF881AC40 ctl 0xF881AC78 bmdma 0x0 irq 3
+scsi0 : pdc_adma
+ata1.01: ATA-4, max UDMA/66, 30064608 sectors: LBA
+ata1.01: ata1: dev 1 multi count 0
+ata1.01: configured for UDMA/66
+scsi1 : pdc_adma
+ata2.01: ATAPI, max MWDMA2
+ata2.01: configured for PIO4
+   Vendor: ATA       Model: WDC WD153AA       Rev: 05.0
+   Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 30064608 512-byte hdwr sectors (15393 MB)
+sda: Write Protect is off
+SCSI device sda: drive cache: write back
+SCSI device sda: 30064608 512-byte hdwr sectors (15393 MB)
+sda: Write Protect is off
+SCSI device sda: drive cache: write back
+  sda: sda1
+sd 0:0:1:0: Attached scsi disk sda
+sd 0:0:1:0: Attached scsi generic sg0 type 0
+   Vendor: LG (KOR)  Model: CD-ROM CRD-8520B  Rev: 1.00
+   Type:   CD-ROM                             ANSI SCSI revision: 05
+sr0: scsi3-mmc drive: 52x/52x cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
+sr 1:0:1:0: Attached scsi generic sg1 type 5
+=================================================================
 
-Additionally, to take into account strange resource allocation stuff, 
-BMDMA drivers should eventually do
+Please send the patch to Jeff with proper header.
 
-	host_set = alloc_bmdma()
-	[ fill in host_set ]
-	rc = register_bmdma()
-	...
-	unregister_bmdma()
-	free_bmdma()
+Thanks.
 
-That keeps all the legacy IDE crap out of the core completely.
-
-Overall, your movement towards killing probe_ent and filling in host_set 
-directly is a good one, as I illustrate above.  But lumping all the 
-resource allocation and irq registration into a few big functions is the 
-wrong direction.  Consider for example an LLDD that supports MSI-X in 
-your design.  That's a good proof of concept.
-
-	Jeff
-
-
+-- 
+tejun
