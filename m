@@ -1,55 +1,57 @@
-From: Mikael Pettersson <mikpe@csd.uu.se>
-Subject: Re: libata pata_pdc2027x success on sparc64
-Date: Wed, 9 Aug 2006 18:15:29 +0200
-Message-ID: <17626.2593.367175.896926@alkaid.it.uu.se>
-References: <200607172358.k6HNwYhF002052@harpo.it.uu.se>
-	<44BD2370.8090506@ru.mvista.com>
-	<44C841B5.40806@tw.ibm.com>
-	<17626.1619.653854.241578@alkaid.it.uu.se>
-	<44DA07D6.9010101@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Merging libata PATA support into the base kernel
+Date: Wed, 09 Aug 2006 18:29:59 +0100
+Message-ID: <1155144599.5729.226.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:63932 "EHLO aun.it.uu.se")
-	by vger.kernel.org with ESMTP id S1751110AbWHIQQO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 12:16:14 -0400
-In-Reply-To: <44DA07D6.9010101@ru.mvista.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34994 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751271AbWHIRJw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Aug 2006 13:09:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Mikael Pettersson <mikpe@csd.uu.se>, albertl@mail.com, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@redhat.com, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@enoyolf.org>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Sergei Shtylyov writes:
- > Hello.
- > 
- > Mikael Pettersson wrote:
- > 
- > >  > The libata version has three improvements compared to the IDE version.
- > >  > 
- > >  > 1. The PLL calibration patches in the above URLs (for IDE)
- > >  > still need more improvement as done in the pdc_read_counter()
- > >  > of the libata version.
- > >  > 
- > >  > 2. The Promise 2027x adapters check the "set features - xfer mode"
- > >  >    and set the timing register automatically. However, the automatically
- > >  >    set values are not correct under 133MHz. Libata has a hook
- > >  >    pdc2027x_post_set_mode() to set the values back by software.
- > >  > 
- > >  > 3. ATAPI DMA is supported (please see pdc2027x_check_atapi_dma()).
- > >  >    Maybe we also need to add this to the IDE version.
- > 
- > > Do you know how large the difference is between the 20267 (old driver)
- > > and the 20269 (new driver) in the areas touched by these patches?
- > 
- >     Immense. They belong to the different families, register compatibe only in 
- > the standard PCI/BM IDE regisrer set -- hence was the driver split.
- > 
- > > Long ago I tried a 20267 PCI card in my PowerMac, and it had the same
- > > issues that the 20269 card had. So I'm interested in porting the
- > > calibration/timing fixes to pdc202xx_old.c.
- > 
- >     They don't apply to this driver at all.  The "older" chip family didn't 
- > have the PLL to calibrate.  It must be some different issue.
+Jeff (rightly) thinks the plan should be discussed publically, so here
+is the plan
 
-OK, in that case let's forget about the 20267. It's not _that_ important :-)
+For 2.6.19 to move the libata drivers to drivers/ata
+Add a subset of the new PATA drivers living in -mm to the base kernel
+
+Many of the new libata drivers are already more stable and functional
+than the drivers/ide ones. 
+
+
+What does this mean for end users selecting the existing IDE layer
+- Zilch, Nada, Nothing
+- No changes in behaviour, no different code paths
+
+For the more adventurous
+- Better SATA/PATA integration
+- Support for some chipsets not supported by drivers/ide
+	(jmicron, newer VIA, mpiix, netcell, efar, etc)
+- Active maintainance and updates
+- Better quality drivers and error handling
+- Inevitably more interesting bugs to find and help fix
+- A chance to knock out any bugs and assumptions with other platforms
+
+The new libata PATA support has some caveats at the moment
+- No support for certain old serialized devices
+- No support for prehistoric CMD640 controllers
+- No support for host-protected-area yet
+- Drives appear as /dev/sda /dev/sr0 etc along with the libata SATA
+devices (and since you can't tell SATA from PATA at times its hard to
+avoid). That means people with some older distros wanting to try it
+might need to change their fstab or rootdev. People not trying it won't
+be affected.
+
+At this point in time it is premature to discuss or plan the point at
+which the old IDE layer would go away. That discussion can start at the
+point where everyone is happy that the new libata based layer is
+providing better quality and coverage than the old one. Even then there
+would be no need to hurry.
+
+Alan
+
