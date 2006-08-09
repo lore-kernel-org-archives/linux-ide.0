@@ -1,42 +1,66 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Adrian Bunk <bunk@stusta.de>
 Subject: Re: /dev/sd*
-Date: Wed, 09 Aug 2006 23:01:43 +0100
-Message-ID: <1155160903.5729.263.camel@localhost.localdomain>
-References: <1155144599.5729.226.camel@localhost.localdomain>
-	 <20060809212124.GC3691@stusta.de>
+Date: Thu, 10 Aug 2006 00:18:57 +0200
+Message-ID: <20060809221857.GG3691@stusta.de>
+References: <1155144599.5729.226.camel@localhost.localdomain> <20060809212124.GC3691@stusta.de> <1155160903.5729.263.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53635 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1750750AbWHIVnl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Aug 2006 17:43:41 -0400
-In-Reply-To: <20060809212124.GC3691@stusta.de>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:18450 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751400AbWHIWTB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Aug 2006 18:19:01 -0400
+Content-Disposition: inline
+In-Reply-To: <1155160903.5729.263.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ar Mer, 2006-08-09 am 23:21 +0200, ysgrifennodd Adrian Bunk:
-> It might be a bit out of the scope of this thread, but why do some many 
-> subsystems use the /dev/sd* namespace?
+On Wed, Aug 09, 2006 at 11:01:43PM +0100, Alan Cox wrote:
+> Ar Mer, 2006-08-09 am 23:21 +0200, ysgrifennodd Adrian Bunk:
+> > It might be a bit out of the scope of this thread, but why do some many 
+> > subsystems use the /dev/sd* namespace?
+> > 
+> > Real SCSI devices use it.
+> > The USB mass storage driver uses it.
 > 
-> Real SCSI devices use it.
-> The USB mass storage driver uses it.
+> USB storage is real SCSI.
 
-USB storage is real SCSI.
+Real SCSI for a developer, for a user it's USB.
 
-> libata uses it.
+And things become even more confusing considering that the drive might 
+show up as /dev/sda or /dev/uba depending on the driver used.
+
+> > libata uses it.
+> > 
+> > I'd expext SATA or PATA devices at /dev/hd* or perhaps at /dev/ata* - 
+> > but why are they at /dev/sd*?
 > 
-> I'd expext SATA or PATA devices at /dev/hd* or perhaps at /dev/ata* - 
-> but why are they at /dev/sd*?
+> ATA uses the top half of the scsi stack so ends up using the top layer
+> scsi drivers. Its probably more efficient than writing new driver
+> clones, especially as non disk ATA is also real SCSI (or very close).
 
-ATA uses the top half of the scsi stack so ends up using the top layer
-scsi drivers. Its probably more efficient than writing new driver
-clones, especially as non disk ATA is also real SCSI (or very close).
+You are talking about kernel<->kernel and kernel<->hardware interfaces.
 
-You can use /dev/ata if you want - its just a udev problem ;)
+I'm more concerned about the kernel<->userspace interface.
 
-Alan
+> You can use /dev/ata if you want - its just a udev problem ;)
+
+Or by adding some manual links if using a static /dev.
+
+But I'm still not getting the point why the /dev/sd* namespace has to be 
+used.
+
+> Alan
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
