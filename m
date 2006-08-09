@@ -1,27 +1,28 @@
-From: Ansgar Knappheide <aknapphe@uos.de>
-Subject: ATAPI support on Promise controllers
-Date: Wed, 09 Aug 2006 13:26:50 +0200
-Message-ID: <44D9C67A.3030802@uos.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: 2.6.18-rc4 Intermittent failures to detect sata disks
+Date: Wed, 09 Aug 2006 07:48:39 -0400
+Message-ID: <44D9CB97.6050407@pobox.com>
+References: <7959.1155008934@kao2.melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sanode11eth0.rz.Uni-Osnabrueck.DE ([131.173.17.151]:14010 "EHLO
-	sanode11.rz.uni-osnabrueck.de") by vger.kernel.org with ESMTP
-	id S1030692AbWHIL0w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Aug 2006 07:26:52 -0400
-Received: from [131.173.12.121] (cip41.informatik.Uni-Osnabrueck.DE [131.173.12.121])
-	by sanode11.rz.uni-osnabrueck.de (8.13.0/8.13.0) with ESMTP id k79BQoXC007720
-	for <linux-ide@vger.kernel.org>; Wed, 9 Aug 2006 13:26:50 +0200
+Received: from srv5.dvmed.net ([207.36.208.214]:33453 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030707AbWHILsm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 07:48:42 -0400
+In-Reply-To: <7959.1155008934@kao2.melbourne.sgi.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE-Kernelliste <linux-ide@vger.kernel.org>
+To: Keith Owens <kaos@ocs.com.au>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-I'm using a Promise Controller PDC40518 (SATAII150 TX4) and got a 
-Samsung DVD-Writer SH163A a few month ago and since then I'mwaiting for 
-ATAPI support on this driver (sata_promise).
-I'm wondering what is missing on this driver, that it defines the 
-NO_ATAPI flag.
+Keith Owens wrote:
+> This problem has been occurring since at least 2.6.18-rc2.  Standard
 
-P.S. I don't have access to the internet, but I'm willing to support 
-developing this driver.
+What was the last kernel that passed your test(s) consistently? 
+2.6.18-rc1?  2.6.17?  Earlier?
+
+	Jeff
+
+
+
