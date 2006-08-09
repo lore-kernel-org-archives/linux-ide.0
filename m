@@ -1,173 +1,108 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Wed, 9 Aug 2006 02:25:14 -0400
-Message-ID: <20060809062514.GA27491@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
+ init model
+Date: Wed, 09 Aug 2006 02:41:12 -0400
+Message-ID: <44D98388.8030005@pobox.com>
+References: <1154919840689-git-send-email-htejun@gmail.com> <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:21657 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1030521AbWHIGZQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 02:25:16 -0400
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:31907 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030557AbWHIGl0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 02:41:26 -0400
+In-Reply-To: <44D9782A.30405@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Greg KH <greg@kroah.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> This is definitely the wrong direction.
+> 
+> Ouch...  The whole patch?
+> 
+>> We don't want to keep crowding knowledge of multiple bus technologies 
+>> into the same function.
+> 
+> Do you mean PCI-IDE (legacy/BMDMA), PCI-native and newer controllers 
+> (including MSI stuff)?  Bus-wise they're all PCI.
+
+ata_generic, ISA, VLB, and embedded controllers that use libata are not 
+PCI.  libata-bmdma can drive older non-PCI controllers.
+
+Its a bit confusing because "PCI IDE" is often used to refer to the 
+legacy IDE shadow register interface.  I started to use "bmdma" to 
+describe the interface, but it drives Alan crazy :)
 
 
-Please pull from 'upstream-greg' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-greg
+>> ata_pci_request_irq() and other code above follows the same theme... 
+>> but its an unmaintainable direction.
+>>
+>> This sort of stuff needs to be split up, not coalesced.
+> 
+> ata_pci_*() functions are PCI helpers and I wanted to move most of PCI 
+> resource bookkeeping into helpers.  Less clutter in LLDs and less errors.
 
-to receive the following updates:
+Putting legacy IDE resource allocation and ultra-modern (MSI) resource 
+allocation in the same function is the wrong direction.
 
- drivers/scsi/ata_piix.c    |    5 +++--
- drivers/scsi/libata-core.c |   34 ++++++++--------------------------
- drivers/scsi/libata-scsi.c |   13 +++++++++++++
- drivers/scsi/sata_sil24.c  |    1 -
- 4 files changed, 24 insertions(+), 29 deletions(-)
+Legacy LLDDs should not be traversing code that has to worry about PCI 
+MSI, and PCI MSI controllers should not be traversing code paths that 
+deal with legacy IDE.
 
-Jeff Garzik:
-      [libata] manually inline ata_host_remove()
+I'm looking forward to having ARM and PowerMac IDE drivers ported to 
+libata soon, and we don't need to be adding special ARM/PPC bus handling 
+stuff to these already-gigantic resource routines.
 
-Keith Owens:
-      Fix compile problem when sata debugging is on
 
-Tejun Heo:
-      libata: fix ata_port_detach() for old EH ports
-      ata_piix: fix host_set private_data intialization
-      sata_sil24: don't set probe_ent->mmio_base
-      libata: fix ata_device_add() error path
-      libata: clear sdev->locked on door lock failure
+>> Another thing to think about:  IMO it makes sense to separate out the 
+>> PCI IDE resource handling, because that set of technology is largely 
+>> static.
+>  >
+>> Most newer controllers will only have a few resources, normally MMIO, 
+>> and may even support MSI-X (multiple messages for different event 
+>> types, rather than a single message for all events like MSI).
+>>
+>> So, I'd like to see some of this inside libata-bmdma.c to keep the 
+>> core free of such nastiness.
+> 
+> I'm having a little bit difficult time following what you're thinking. 
+> Whatever the final interface is, the goals would be similar to what's 
+> listed in the head message of this patchset, and I think 
+> alloc/init/attach model is a good way to achieve that thus killing 
+> probe_ent.  Can you explain in more detail how the interface should look 
+> like?
 
-diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-index 19745a3..5e8afc8 100644
---- a/drivers/scsi/ata_piix.c
-+++ b/drivers/scsi/ata_piix.c
-@@ -567,8 +567,8 @@ static int piix_sata_prereset(struct ata
- 			present = 1;
- 	}
- 
--	DPRINTK("ata%u: LEAVE, pcs=0x%x present_mask=0x%x\n",
--		ap->id, pcs, present_mask);
-+	DPRINTK("ata%u: LEAVE, pcs=0x%x present=0x%x\n",
-+		ap->id, pcs, present);
- 
- 	if (!present) {
- 		ata_port_printk(ap, KERN_INFO, "SATA port has no device.\n");
-@@ -828,6 +828,7 @@ static void __devinit piix_init_sata_map
- 		case IDE:
- 			WARN_ON((i & 1) || map[i + 1] != IDE);
- 			pinfo[i / 2] = piix_port_info[ich5_pata];
-+			pinfo[i / 2].private_data = hpriv;
- 			i++;
- 			printk(" IDE IDE");
- 			break;
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index 386e5f2..16fc2dd 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5185,28 +5185,6 @@ void ata_host_stop (struct ata_host_set 
- 		iounmap(host_set->mmio_base);
- }
- 
--
--/**
-- *	ata_host_remove - Unregister SCSI host structure with upper layers
-- *	@ap: Port to unregister
-- *	@do_unregister: 1 if we fully unregister, 0 to just stop the port
-- *
-- *	LOCKING:
-- *	Inherited from caller.
-- */
--
--static void ata_host_remove(struct ata_port *ap, unsigned int do_unregister)
--{
--	struct Scsi_Host *sh = ap->host;
--
--	DPRINTK("ENTER\n");
--
--	if (do_unregister)
--		scsi_remove_host(sh);
--
--	ap->ops->port_stop(ap);
--}
--
- /**
-  *	ata_dev_init - Initialize an ata_device structure
-  *	@dev: Device structure to initialize
-@@ -5532,8 +5510,11 @@ int ata_device_add(const struct ata_prob
- 
- err_out:
- 	for (i = 0; i < count; i++) {
--		ata_host_remove(host_set->ports[i], 1);
--		scsi_host_put(host_set->ports[i]->host);
-+		struct ata_port *ap = host_set->ports[i];
-+		if (ap) {
-+			ap->ops->port_stop(ap);
-+			scsi_host_put(ap->host);
-+		}
- 	}
- err_free_ret:
- 	kfree(host_set);
-@@ -5558,7 +5539,7 @@ void ata_port_detach(struct ata_port *ap
- 	int i;
- 
- 	if (!ap->ops->error_handler)
--		return;
-+		goto skip_eh;
- 
- 	/* tell EH we're leaving & flush EH */
- 	spin_lock_irqsave(ap->lock, flags);
-@@ -5594,6 +5575,7 @@ void ata_port_detach(struct ata_port *ap
- 	cancel_delayed_work(&ap->hotplug_task);
- 	flush_workqueue(ata_aux_wq);
- 
-+ skip_eh:
- 	/* remove the associated SCSI host */
- 	scsi_remove_host(ap->host);
- }
-@@ -5662,7 +5644,7 @@ int ata_scsi_release(struct Scsi_Host *h
- 	DPRINTK("ENTER\n");
- 
- 	ap->ops->port_disable(ap);
--	ata_host_remove(ap, 0);
-+	ap->ops->port_stop(ap);
- 
- 	DPRINTK("EXIT\n");
- 	return 1;
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index 7ced41e..e92c31d 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -2353,6 +2353,19 @@ static void atapi_qc_complete(struct ata
- 			ata_gen_ata_desc_sense(qc);
- 		}
- 
-+		/* SCSI EH automatically locks door if sdev->locked is
-+		 * set.  Sometimes door lock request continues to
-+		 * fail, for example, when no media is present.  This
-+		 * creates a loop - SCSI EH issues door lock which
-+		 * fails and gets invoked again to acquire sense data
-+		 * for the failed command.
-+		 *
-+		 * If door lock fails, always clear sdev->locked to
-+		 * avoid this infinite loop.
-+		 */
-+		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL)
-+			qc->dev->sdev->locked = 0;
-+
- 		qc->scsicmd->result = SAM_STAT_CHECK_CONDITION;
- 		qc->scsidone(cmd);
- 		ata_qc_free(qc);
-diff --git a/drivers/scsi/sata_sil24.c b/drivers/scsi/sata_sil24.c
-index 2e0f4a4..3f368c7 100644
---- a/drivers/scsi/sata_sil24.c
-+++ b/drivers/scsi/sata_sil24.c
-@@ -1106,7 +1106,6 @@ static int sil24_init_one(struct pci_dev
- 
- 	probe_ent->irq = pdev->irq;
- 	probe_ent->irq_flags = IRQF_SHARED;
--	probe_ent->mmio_base = port_base;
- 	probe_ent->private_data = hpriv;
- 
- 	hpriv->host_base = host_base;
+Killing probe_ent is a good thing, definitely.  Ideally we should have 
+an interface for the LLDD like
+
+	host_set = alloc_ata()
+	[ fill in host_set ]
+	rc = register_ata()
+	...
+	unregister_ata()
+	free_ata()
+
+Additionally, to take into account strange resource allocation stuff, 
+BMDMA drivers should eventually do
+
+	host_set = alloc_bmdma()
+	[ fill in host_set ]
+	rc = register_bmdma()
+	...
+	unregister_bmdma()
+	free_bmdma()
+
+That keeps all the legacy IDE crap out of the core completely.
+
+Overall, your movement towards killing probe_ent and filling in host_set 
+directly is a good one, as I illustrate above.  But lumping all the 
+resource allocation and irq registration into a few big functions is the 
+wrong direction.  Consider for example an LLDD that supports MSI-X in 
+your design.  That's a good proof of concept.
+
+	Jeff
+
+
