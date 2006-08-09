@@ -1,52 +1,71 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: libata pata_pdc2027x success on sparc64
-Date: Wed, 09 Aug 2006 20:05:42 +0400
-Message-ID: <44DA07D6.9010101@ru.mvista.com>
-References: <200607172358.k6HNwYhF002052@harpo.it.uu.se>	<44BD2370.8090506@ru.mvista.com>	<44C841B5.40806@tw.ibm.com> <17626.1619.653854.241578@alkaid.it.uu.se>
+From: Alexander Hans <alex@ahans.de>
+Subject: [PATCH 2.6.18_rc4 1/1] via82cxxx: Add support for 8237A ISA bridge
+Date: Wed, 9 Aug 2006 18:05:51 +0200
+Message-ID: <200608091805.52945.alex@ahans.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1956684.EmtyKidt4V";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:63203 "EHLO imap.sh.mvista.com")
-	by vger.kernel.org with ESMTP id S1751038AbWHIQEg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 12:04:36 -0400
-In-Reply-To: <17626.1619.653854.241578@alkaid.it.uu.se>
+Received: from static-ip-62-75-163-132.inaddr.intergenia.de ([62.75.163.132]:16812
+	"EHLO vs163132.vserver.de") by vger.kernel.org with ESMTP
+	id S1751096AbWHIQI6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Aug 2006 12:08:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@csd.uu.se>
-Cc: albertl@mail.com, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@redhat.com, Unicorn Chang <uchang@tw.ibm.com>, Doug Maxey <dwm@enoyolf.org>
+To: bzolnier@gmail.com
+Cc: vojtech@ucw.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+--nextPart1956684.EmtyKidt4V
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Mikael Pettersson wrote:
+Hello,
 
->  > The libata version has three improvements compared to the IDE version.
->  > 
->  > 1. The PLL calibration patches in the above URLs (for IDE)
->  > still need more improvement as done in the pdc_read_counter()
->  > of the libata version.
->  > 
->  > 2. The Promise 2027x adapters check the "set features - xfer mode"
->  >    and set the timing register automatically. However, the automatically
->  >    set values are not correct under 133MHz. Libata has a hook
->  >    pdc2027x_post_set_mode() to set the values back by software.
->  > 
->  > 3. ATAPI DMA is supported (please see pdc2027x_check_atapi_dma()).
->  >    Maybe we also need to add this to the IDE version.
+Some mainboards (e.g. Asrock 775Dual-VSTA) come with a
+PCI_DEVICE_ID_VIA_82C586_1 IDE controller together with a VIA VT8237A
+southbridge.
 
-> Do you know how large the difference is between the 20267 (old driver)
-> and the 20269 (new driver) in the areas touched by these patches?
+While the corresponding PCI ID is already present in pci_ids.h, the via82cxxx
+driver doesn't know about it yet and disables DMA.
 
-    Immense. They belong to the different families, register compatibe only in 
-the standard PCI/BM IDE regisrer set -- hence was the driver split.
+Signed-off-by: Alexander Hans <alex@ahans.de>
 
-> Long ago I tried a 20267 PCI card in my PowerMac, and it had the same
-> issues that the 20269 card had. So I'm interested in porting the
-> calibration/timing fixes to pdc202xx_old.c.
+--
 
-    They don't apply to this driver at all.  The "older" chip family didn't 
-have the PLL to calibrate.  It must be some different issue.
+--- a/drivers/ide/pci/via82cxxx.c	2006-08-09 17:49:38.000000000 +0200
++++ b/drivers/ide/pci/via82cxxx.c	2006-08-09 17:53:38.578053677 +0200
+@@ -6,7 +6,7 @@
+  *
+  *   vt82c576, vt82c586, vt82c586a, vt82c586b, vt82c596a, vt82c596b,
+  *   vt82c686, vt82c686a, vt82c686b, vt8231, vt8233, vt8233c, vt8233a,
+- *   vt8235, vt8237
++ *   vt8235, vt8237, vt8237a
+  *
+  * Copyright (c) 2000-2002 Vojtech Pavlik
+  *
+@@ -81,6 +81,7 @@
+ 	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
++	{ "vt8237a",	PCI_DEVICE_ID_VIA_8237A,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8235",	PCI_DEVICE_ID_VIA_8235,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8233a",	PCI_DEVICE_ID_VIA_8233A,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8233c",	PCI_DEVICE_ID_VIA_8233C_0,  0x00, 0x2f, VIA_UDMA_100 },
 
-> /Mikael
+--nextPart1956684.EmtyKidt4V
+Content-Type: application/pgp-signature
 
-WBR, Sergei
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.4 (GNU/Linux)
+
+iD8DBQBE2gfgqFtLGM/cY+MRAkSdAKCtzSxXR3W4t0ptJPTY17j9JxzBJACdEes4
+WEHe1lI5UzuSc/zd3j6X/Is=
+=D0cU
+-----END PGP SIGNATURE-----
+
+--nextPart1956684.EmtyKidt4V--
