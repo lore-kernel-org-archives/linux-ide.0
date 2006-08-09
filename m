@@ -1,424 +1,214 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
- init model
-Date: Wed, 09 Aug 2006 01:11:42 -0400
-Message-ID: <44D96E8E.9020801@pobox.com>
-References: <1154919840689-git-send-email-htejun@gmail.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH 1/2] libata: implement to get tf's from _GTF and execute
+ them
+Date: Tue, 8 Aug 2006 22:18:03 -0700
+Message-ID: <20060808221803.162e14e7.rdunlap@xenotime.net>
+References: <1153899372.4957.61.camel@forrest26.sh.intel.com>
+	<44D96744.4030604@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:18335 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964859AbWHIFLx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 01:11:53 -0400
-In-Reply-To: <1154919840689-git-send-email-htejun@gmail.com>
+Received: from xenotime.net ([66.160.160.81]:8581 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S965053AbWHIFPY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 01:15:24 -0400
+Received: from midway.site ([71.117.253.75]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 8 Aug 2006 22:15:19 -0700
+In-Reply-To: <44D96744.4030604@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "zhao, forrest" <forrest.zhao@intel.com>, htejun@gmail.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Implement the following PCI init helpers for new LLD init model.
+On Wed, 09 Aug 2006 00:40:36 -0400 Jeff Garzik wrote:
+
+> zhao, forrest wrote:
+> > 1 update the Makefile, Kconfig, kernel-parameters.txt, and add
+> > definition of noacpi
+> > 2 implement core SATA-ACPI functions
+> > 3 implement the functions for getting tf's from _GTF and executing them
+> > 4 invoke ata_acpi_exec_tfs in appropriate places
+> > 
+> > 
+> > Signed-off-by: Zhao Forrest <forrest.zhao@intel.com>
 > 
-> * ata_pci_host_set_init_native(): init ports for native PCI host_set
-> * ata_pci_legacy_mask(): obtain legacy mask of ATA PCI device
-> * ata_pci_set_dma_mask(): set DMA mask helper
-> * ata_pci_acquire_resources(): acquire generic ATA PCI resources for host_set
-> * ata_pci_request_irq(): prep host_set for IRQ and request IRQ.
-> * ata_pci_release_resources(): release generic ATA PCI resources including IRQs
-> * ata_pci_host_set_destroy(): release associated resources and destroy host_set
+> It sounds like Randy Dunlap already provided most of the necessary feedback.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> My comments will likely echo some of his.
 > 
-> ---
 > 
->  drivers/scsi/libata-bmdma.c |  390 +++++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/libata-core.c  |    7 +
->  include/linux/libata.h      |   36 ++++
->  3 files changed, 431 insertions(+), 2 deletions(-)
+> > diff --git a/drivers/scsi/libata-acpi.c b/drivers/scsi/libata-acpi.c
+> > new file mode 100644
+> > index 0000000..cf7eeb1
+> > --- /dev/null
+> > +++ b/drivers/scsi/libata-acpi.c
+> > @@ -0,0 +1,654 @@
+> > +/*
+> > + * libata-acpi.c
+> > + * Provides ACPI support for PATA/SATA.
+> > + *
+> > + * Copyright (C) 2005 Intel Corp.
+> > + * Copyright (C) 2005 Randy Dunlap
 > 
-> 139908fea67d9fa2c835b1c92e76112ab45e295c
-> diff --git a/drivers/scsi/libata-bmdma.c b/drivers/scsi/libata-bmdma.c
-> index c4cd578..341d9b5 100644
-> --- a/drivers/scsi/libata-bmdma.c
-> +++ b/drivers/scsi/libata-bmdma.c
-> @@ -797,6 +797,396 @@ void ata_bmdma_post_internal_cmd(struct 
->  }
->  
->  #ifdef CONFIG_PCI
-> +static const unsigned long ata_legacy_addr_tbl[][2] = {
-> +	{ ATA_PRIMARY_CMD, ATA_PRIMARY_CTL },
-> +	{ ATA_SECONDARY_CMD, ATA_SECONDARY_CTL}
-> +};
-> +
-> +static void ata_pci_port_init(struct ata_port *ap, unsigned long cmd_addr,
-> +			      unsigned long ctl_addr, unsigned long bmdma_addr)
-> +{
-> +	struct ata_ioports *ioaddr = &ap->ioaddr;
-> +
-> +	ioaddr->cmd_addr = cmd_addr;
-> +	ioaddr->altstatus_addr = ctl_addr;
-> +	ioaddr->ctl_addr = ctl_addr;
-> +
-> +	if (bmdma_addr) {
-> +		if (inb(bmdma_addr + 2) & 0x80)
-> +			ap->host_set->flags |= ATA_HOST_SIMPLEX;
-> +		ioaddr->bmdma_addr = bmdma_addr;
-> +	}
-> +	ata_std_ports(ioaddr);
-> +}
-> +
-> +static void ata_pci_port_init_native(struct ata_port *ap, int port)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
-> +	unsigned long cmd_addr, ctl_addr, bmdma_addr;
-> +
-> +	cmd_addr = pci_resource_start(pdev, port * 2);
-> +	ctl_addr = pci_resource_start(pdev, port * 2 + 1) | ATA_PCI_CTL_OFS;
-> +	bmdma_addr = pci_resource_start(pdev, 4);
-> +	if (bmdma_addr)
-> +		bmdma_addr += port * 8;
-> +
-> +	ata_pci_port_init(ap, cmd_addr, ctl_addr, bmdma_addr);
-> +}
-> +
-> +static void ata_pci_port_init_legacy(struct ata_port *ap, int port)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
-> +	unsigned long cmd_addr, ctl_addr, bmdma_addr;
-> +
-> +	cmd_addr = ata_legacy_addr_tbl[port][0];
-> +	ctl_addr = ata_legacy_addr_tbl[port][1];
-> +	bmdma_addr = pci_resource_start(pdev, 4);
-> +	if (bmdma_addr)
-> +		bmdma_addr += port * 8;
-> +
-> +	ata_pci_port_init(ap, cmd_addr, ctl_addr, bmdma_addr);
-> +}
-> +
-> +/**
-> + *	ata_pci_host_set_init_native - init host_set for native PCI ATA
-> + *	@host_set: target ATA host_set
-> + *
-> + *	Initialize @host_set for native mode PCI ATA.
-> + *
-> + *	LOCKING:
-> + *	Inherited from calling layer (may sleep).
-> + */
-> +void ata_pci_host_set_init_native(struct ata_host_set *host_set)
-> +{
-> +	ata_pci_port_init_native(host_set->ports[0], 0);
-> +	if (host_set->n_ports > 1)
-> +		ata_pci_port_init_native(host_set->ports[1], 1);
-> +}
-> +
-> +/**
-> + *	ata_pci_legacy_mask - obatin legacy mask from PCI IDE device
-> + *	@pdev: target PCI device
-> + *
-> + *	Obtain legacy mask from @pdev.
-> + *
-> + *	LOCKING:
-> + *	None.
-> + *
-> + *	RETURNS:
-> + *	Obtained legacy mask.
-> + */
-> +unsigned int ata_pci_legacy_mask(struct pci_dev *pdev)
-> +{
-> +	unsigned int mask = 0;
-> +	u8 tmp8;
-> +
-> +	if (pdev->class >> 8 != PCI_CLASS_STORAGE_IDE)
-> +		return 0;
-> +
-> +	pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
-> +
-> +	if (!(tmp8 & (1 << 0)))
-> +		mask |= ATA_PORT_PRIMARY;
-> +
-> +	if (!(tmp8 & (1 << 2)))
-> +		mask |= ATA_PORT_SECONDARY;
-> +
-> +	return mask;
-> +}
-> +
-> +static int ata_pci_acquire_legacy(int port, unsigned long *host_set_flags)
-> +{
-> +	unsigned long cmd_addr = ata_legacy_addr_tbl[port][0];
-> +
-> +	if (request_region(cmd_addr, 8, "libata") != NULL)
-> +		*host_set_flags |= ATA_HOST_RES_LEGACY_PRI << port;
-> +	else {
-> +		struct resource *conflict, res;
-> +
-> +		res.start = cmd_addr;
-> +		res.end = cmd_addr + 8 - 1;
-> +		conflict = ____request_resource(&ioport_resource, &res);
-> +
-> +		if (strcmp(conflict->name, "libata")) {
-> +			printk(KERN_WARNING "ata: 0x%0lX IDE port busy\n",
-> +			       cmd_addr);
-> +			*host_set_flags |= ATA_HOST_PCI_DEV_BUSY;
-> +			return -EBUSY;
-> +		}
-> +		printk("ata: 0x%0lX IDE port preallocated\n", cmd_addr);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + *	ata_pci_set_dma_mask - PCI DMA mask set helper
-> + *	@pdev: target PCI device
-> + *	@dma_mask: DMA mask
-> + *	@p_reason: output arg for error message
-> + *
-> + *	Helper to set PCI DMA mask.
-> + *
-> + *	LOCKING:
-> + *	Inherited from calling layer (may sleep).
-> + *
-> + *	RETURNS:
-> + *	0 on success, -errno otherwise.
-> + */
-> +int ata_pci_set_dma_mask(struct pci_dev *pdev, u64 dma_mask,
-> +			 const char **p_reason)
-> +{
-> +	const char *reason;
-> +	int rc = 0;
-> +
-> +	if (dma_mask == DMA_64BIT_MASK) {
-> +		if (pci_set_dma_mask(pdev, DMA_64BIT_MASK) == 0) {
-> +			rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
-> +			if (rc) {
-> +				rc = pci_set_consistent_dma_mask(pdev,
-> +							DMA_32BIT_MASK);
-> +				if (rc) {
-> +					reason = "64-bit DMA enable failed";
-> +					goto err;
-> +				}
-> +			}
-> +		} else {
-> +			rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-> +			if (rc) {
-> +				reason = "32-bit DMA enable failed";
-> +				goto err;
-> +			}
-> +			rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
-> +			if (rc) {
-> +				reason = "32-bit consistent DMA enable failed";
-> +				goto err;
-> +			}
-> +		}
-> +	} else if (dma_mask) {
-> +		reason = "failed to set DMA mask";
-> +		rc = pci_set_dma_mask(pdev, dma_mask);
-> +		if (rc)
-> +			goto err;
-> +		rc = pci_set_consistent_dma_mask(pdev, dma_mask);
-> +		if (rc)
-> +			goto err;
-> +	}
-> +
-> +	return 0;
-> +
-> + err:
-> +	if (p_reason)
-> +		*p_reason = reason;
-> +	return rc;
-> +}
-> +
-> +/**
-> + *	ata_pci_acquire_resources - acquire default PCI resources
-> + *	@host_set: target ATA host_set to acquire PCI resources for
-> + *	@dma_mask: DMA mask
-> + *	@reason: output arg for error message
-> + *
-> + *	Acquire default ATA PCI resources.
-> + *
-> + *	LOCKING:
-> + *	Inherited from calling layer (may sleep).
-> + *
-> + *	RETURNS:
-> + *	0 on success, -errno otherwise.
-> + */
-> +int ata_pci_acquire_resources(struct ata_host_set *host_set, u64 dma_mask,
-> +			      const char **reason)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(host_set->dev);
-> +	int nr_dummy, i, rc;
-> +
-> +	/* acquire generic resources */
-> +
-> +	/* FIXME: Really for ATA it isn't safe because the device may
-> +	 * be multi-purpose and we want to leave it alone if it was
-> +	 * already enabled. Secondly for shared use as Arjan says we
-> +	 * want refcounting
-> +	 *
-> +	 * Checking dev->is_enabled is insufficient as this is not set
-> +	 * at boot for the primary video which is BIOS enabled
-> +         */
-> +	rc = pci_enable_device(pdev);
-> +	if (rc) {
-> +		*reason = "failed to enable PCI device";
-> +		goto err;
-> +	}
-> +
-> +	rc = pci_request_regions(pdev, DRV_NAME);
-> +	if (rc) {
-> +		host_set->flags |= ATA_HOST_PCI_DEV_BUSY;
-> +		*reason = "failed to request PCI regions";
-> +		goto err;
-> +	}
-> +
-> +	host_set->flags |= ATA_HOST_PCI_RES_GEN;
-> +
-> +	/* set DMA mask */
-> +	/* FIXME: If we get no DMA mask we should fall back to PIO */
-> +	rc = ata_pci_set_dma_mask(pdev, dma_mask, reason);
-> +	if (rc)
-> +		goto err;
-> +
-> +	/* Acquire legacy resources.  For legacy ports, host_set must
-> +	 * be popultaed with ports before calling this function.
-> +	 */
-> +	nr_dummy = 0;
-> +	for (i = 0; i < 2; i++) {
-> +		if (!(host_set->flags & (ATA_HOST_LEGACY_PRI << i)))
-> +			continue;
-> +		BUG_ON(i >= host_set->n_ports);
-> +
-> +		if (ata_pci_acquire_legacy(i, &host_set->flags)) {
-> +			host_set->ports[i]->ops = &ata_dummy_port_ops;
-> +			nr_dummy++;
-> +		}
-> +	}
-> +
-> +	if (nr_dummy && nr_dummy == host_set->n_ports) {
-> +		*reason = "no available port";
-> +		rc = -ENODEV;
-> +		goto err;
-> +	}
-> +
-> +	return 0;
-> +
-> + err:
-> +	ata_pci_release_resources(host_set);
-> +	return rc;
-> +}
-> +
-> +/**
-> + *	ata_pci_request_irq - request PCI irq for ATA host_set
-> + *	@host_set: ATA host_set to request PCI irq for
-> + *	@irq_handler: irq_handler
-> + *	@flags: ATA_PCI_IRQ_* flags
-> + *	@reason: output arg for error message
-> + *
-> + *	Request PCI irq for @host_set.
-> + *
-> + *	LOCKING:
-> + *	Inherited from calling layer.
-> + *
-> + *	RETURNS:
-> + *	Return value of request_irq().
-> + */
-> +int ata_pci_request_irq(struct ata_host_set *host_set,
-> +		irqreturn_t (*irq_handler)(int, void *, struct pt_regs *),
-> +		unsigned int flags, const char **reason)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(host_set->dev);
-> +	unsigned int irq_flags = 0;
-> +	int rc;
-> +
-> +	if (flags & ATA_PCI_IRQ_MSI) {
-> +		flags &= ~ATA_PCI_IRQ_INTX;
-> +
-> +		if (pci_enable_msi(pdev) == 0)
-> +			host_set->flags |= ATA_HOST_PCI_RES_MSI;
-> +		else
-> +			flags |= ATA_PCI_IRQ_INTX;
-> +	}
-> +
-> +	if (flags & ATA_PCI_IRQ_INTX) {
-> +		pci_intx(pdev, 1);
-> +		host_set->flags |= ATA_HOST_PCI_RES_INTX;
-> +	}
-> +
-> +	if (!(flags & ATA_PCI_IRQ_EXCL))
-> +		irq_flags |= IRQF_SHARED;
-> +
-> +	rc = ata_host_set_request_irq(host_set, pdev->irq, irq_handler,
-> +				      irq_flags, reason);
-> +	if (rc == 0)
-> +		host_set->flags |= ATA_HOST_PCI_RES_IRQ;
-> +
-> +	return rc;
-> +}
-> +
-> +/**
-> + *	ata_pci_release_resources - release all ATA PCI resources
-> + *	@pdev: target ATA host_set
-> + *
-> + *	Release all ATA PCI resources.
-> + *
-> + *	LOCKING:
-> + *	Inherited from calling layer (may sleep).
-> + */
-> +void ata_pci_release_resources(struct ata_host_set *host_set)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(host_set->dev);
-> +	int i;
-> +
-> +	/* stop all ports */
-> +	ata_host_set_stop(host_set);
-> +
-> +	/* release IRQs */
-> +	if (host_set->flags & ATA_HOST_PCI_RES_IRQ15) {
-> +		free_irq(15, host_set);
-> +		host_set->flags &= ~ATA_HOST_PCI_RES_IRQ15;
-> +	}
-> +
-> +	if (host_set->flags & ATA_HOST_PCI_RES_IRQ14) {
-> +		free_irq(14, host_set);
-> +		host_set->flags &= ~ATA_HOST_PCI_RES_IRQ14;
-> +	}
-> +
-> +	if (host_set->flags & ATA_HOST_PCI_RES_IRQ) {
-> +		free_irq(pdev->irq, host_set);
-> +		host_set->flags &= ~ATA_HOST_PCI_RES_IRQ;
-> +	}
-> +
-> +	if (host_set->flags & ATA_HOST_PCI_RES_INTX) {
-> +		pci_intx(pdev, 0);
-> +		host_set->flags &= ~ATA_HOST_PCI_RES_INTX;
-> +	}
-> +
-> +	if (host_set->flags & ATA_HOST_PCI_RES_MSI) {
-> +		pci_disable_msi(pdev);
-> +		host_set->flags &= ~ATA_HOST_PCI_RES_MSI;
-> +	}
+> optional: consider updating copyright for 2006?
+> 
+> 
+> > +#include <linux/ata.h>
+> > +#include <linux/delay.h>
+> > +#include <linux/device.h>
+> > +#include <linux/errno.h>
+> > +#include <linux/kernel.h>
+> > +#include <acpi/acpi.h>
+> > +#include "scsi.h"
+> > +#include <linux/libata.h>
+> > +#include <linux/pci.h>
+> > +#include "libata.h"
+> > +
+> > +#include <acpi/acpi_bus.h>
+> > +#include <acpi/acnames.h>
+> > +#include <acpi/acnamesp.h>
+> > +#include <acpi/acparser.h>
+> > +#include <acpi/acexcep.h>
+> > +#include <acpi/acmacros.h>
+> > +#include <acpi/actypes.h>
+> > +
+> > +#define SATA_ROOT_PORT(x)	(((x) >> 16) & 0xffff)
+> > +#define SATA_PORT_NUMBER(x)	((x) & 0xffff)	/* or NO_PORT_MULT */
+> > +#define NO_PORT_MULT		0xffff
+> > +#define SATA_ADR_RSVD		0xffffffff
+> > +
+> > +#define REGS_PER_GTF		7
+> > +struct taskfile_array {
+> > +	u8	tfa[REGS_PER_GTF];	/* regs. 0x1f1 - 0x1f7 */
+> > +};
+> > +
+> > +struct GTM_buffer {
+> > +	__u32	PIO_speed0;
+> > +	__u32	DMA_speed0;
+> > +	__u32	PIO_speed1;
+> > +	__u32	DMA_speed1;
+> > +	__u32	GTM_flags;
+> > +};
+> > +
+> > +#define DEBUGGING	1
+> > +/* note: adds function name and KERN_DEBUG */
+> > +#ifdef DEBUGGING
+> > +#define DEBPRINT(fmt, args...)	\
+> > +		printk(KERN_DEBUG "%s: " fmt, __FUNCTION__, ## args)
+> > +#else
+> > +#define DEBPRINT(fmt, args...)	do {} while (0)
+> > +#endif	/* DEBUGGING */
+> 
+> should use normal libata debug/message printing
+> 
+> 
+> > +/**
+> > + * sata_get_dev_handle - finds acpi_handle and PCI device.function
+> > + * @dev: device to locate
+> > + * @handle: returned acpi_handle for @dev
+> > + * @pcidevfn: return PCI device.func for @dev
+> > + *
+> > + * This function is somewhat SATA-specific.  Or at least the
+> > + * IDE and SCSI versions of this function are different,
+> > + * so it's not entirely generic code.
+> > + *
+> > + * Returns 0 on success, <0 on error.
+> > + */
+> > +static int sata_get_dev_handle(struct device *dev, acpi_handle *handle,
+> > +					acpi_integer *pcidevfn)
+> > +{
+> > +	struct pci_dev	*pci_dev;
+> > +	acpi_integer	addr;
+> > +
+> > +	pci_dev = to_pci_dev(dev);	/* NOTE: PCI-specific */
+> > +	/* Please refer to the ACPI spec for the syntax of _ADR. */
+> > +	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+> > +	*pcidevfn = addr;
+> > +	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
+> > +	printk(KERN_DEBUG "%s: SATA dev addr=0x%llx, handle=0x%p\n",
+> > +		__FUNCTION__, (unsigned long long)addr, *handle);
+> 
+> should not unconditionally print out debug info.  KERN_DEBUG messages 
+> still fill the dmesg(1) ring buffer.
+> 
+> 
+> > +	if (!*handle)
+> > +		return -ENODEV;
+> > +	return 0;
+> > +}
+> > +
+> > +/**
+> > + * pata_get_dev_handle - finds acpi_handle and PCI device.function
+> > + * @dev: device to locate
+> > + * @handle: returned acpi_handle for @dev
+> > + * @pcidevfn: return PCI device.func for @dev
+> > + *
+> > + * The PATA and SATA versions of this function are different.
+> > + *
+> > + * Returns 0 on success, <0 on error.
+> > + */
+> > +static int pata_get_dev_handle(struct device *dev, acpi_handle *handle,
+> > +					acpi_integer *pcidevfn)
+> > +{
+> > +	unsigned int domain, bus, devnum, func;
+> > +	acpi_integer addr;
+> > +	acpi_handle dev_handle, parent_handle;
+> > +	int scanned;
+> > +	struct acpi_buffer buffer = {.length = ACPI_ALLOCATE_BUFFER,
+> > +					.pointer = NULL};
+> > +	acpi_status status;
+> > +	struct acpi_device_info	*dinfo = NULL;
+> > +	int ret = -ENODEV;
+> > +
+> > +	printk(KERN_DEBUG "%s: ENTER: dev->bus_id='%s'\n",
+> > +		__FUNCTION__,  dev->bus_id);
+> 
+> ditto
+> 
+> 
+> > +	if ((scanned = sscanf(dev->bus_id, "%x:%x:%x.%x",
+> > +			&domain, &bus, &devnum, &func)) != 4) {
+> > +		printk("sscanf ret. %d\n", scanned);
+> > +		goto err;
+> > +	}
+> > +
+> > +	dev_handle = DEVICE_ACPI_HANDLE(dev);
+> > +	parent_handle = DEVICE_ACPI_HANDLE(dev->parent);
+> > +
+> > +	status = acpi_get_object_info(parent_handle, &buffer);
+> > +	if (ACPI_FAILURE(status)) {
+> > +		printk("get_object_info for parent failed\n");
+> > +		goto err;
+> > +	}
+> > +	dinfo = buffer.pointer;
+> > +	if (dinfo && (dinfo->valid & ACPI_VALID_ADR) &&
+> > +	    dinfo->address == bus) {
+> > +		/* ACPI spec for _ADR for PCI bus: */
+> > +		addr = (acpi_integer)(devnum << 16 | func);
+> > +		*pcidevfn = addr;
+> > +		*handle = dev_handle;
+> > +	} else {
+> > +		printk("get_object_info for parent has wrong "
+> > +			" bus: %llu, should be %d\n",
+> > +			dinfo ? (unsigned long long)dinfo->address : -1ULL,
+> > +			bus);
+> 
+> printk needs improvement.  Add KERN_ERR, and ata_msg_err() test.
+> 
+> 
+> > +		goto err;
+> > +	}
+> > +
+> > +	printk(KERN_DEBUG "%s: dev_handle: 0x%p, parent_handle: 0x%p\n",
+> > +		__FUNCTION__, dev_handle, parent_handle);
+> > +	printk(KERN_DEBUG
+> > +		"%s: for dev=0x%x.%x, addr=0x%llx, parent=0x%p, *handle=0x%p\n",
+> > +		__FUNCTION__, devnum, func, (unsigned long long)addr,
+> > +		dev->parent, *handle);
+> 
+> should not unconditionally print debug info in a production system
 
-This is definitely the wrong direction.
+Agreed.  Lots of these are purely debugging info and should not
+be here long-term.
 
-We don't want to keep crowding knowledge of multiple bus technologies 
-into the same function.
-
-ata_pci_request_irq() and other code above follows the same theme... 
-but its an unmaintainable direction.
-
-This sort of stuff needs to be split up, not coalesced.
-
-Another thing to think about:  IMO it makes sense to separate out the 
-PCI IDE resource handling, because that set of technology is largely static.
-
-Most newer controllers will only have a few resources, normally MMIO, 
-and may even support MSI-X (multiple messages for different event types, 
-rather than a single message for all events like MSI).
-
-So, I'd like to see some of this inside libata-bmdma.c to keep the core 
-free of such nastiness.
-
-	Jeff
-
-
+---
+~Randy
