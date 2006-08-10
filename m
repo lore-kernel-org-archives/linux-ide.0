@@ -1,30 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [SATA] max-sect and sii-m15w branches merged
-Date: Thu, 10 Aug 2006 13:41:30 +0100
-Message-ID: <1155213691.22922.8.camel@localhost.localdomain>
-References: <44DB106C.6090504@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
+ init model
+Date: Thu, 10 Aug 2006 21:22:04 +0900
+Message-ID: <44DB24EC.3040302@gmail.com>
+References: <1154919840689-git-send-email-htejun@gmail.com>	 <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com>	 <44D98388.8030005@pobox.com>	 <1155121214.5729.153.camel@localhost.localdomain>	 <44DADC67.5060707@tw.ibm.com>  <44DADFC9.7010700@pobox.com> <1155213365.22922.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:18581 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751493AbWHJMVn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Aug 2006 08:21:43 -0400
-In-Reply-To: <44DB106C.6090504@garzik.org>
+Received: from nz-out-0102.google.com ([64.233.162.194]:101 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1030291AbWHJMWL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 08:22:11 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so141713nzf
+        for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 05:22:10 -0700 (PDT)
+In-Reply-To: <1155213365.22922.5.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, albertl@mail.com, mlord@pobox.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Ar Iau, 2006-08-10 am 06:54 -0400, ysgrifennodd Jeff Garzik:
-> I just merged the max-sect and sii-m15w branches into the upstream branch.
+Alan Cox wrote:
+> Ar Iau, 2006-08-10 am 03:27 -0400, ysgrifennodd Jeff Garzik:
+>> hehe :)
+>>
+>> Well I am more than willing to rename it, though its a bit low priority.
+>>
+>> What would people prefer?  libata-sff.c ?
 > 
-> This means that the following two changes are queued for 2.6.19:
+> Looking at the non-PCI cases I think it needs a three way split
 > 
-> * increase max sectors from 200 to 256 (for lba28)
-> * better mod15write support for sata_sil
+> - Libata core as it is now basically (no bus specific code at all)
+> - Libata register compatibility stuff (ST506) in a file (no
+> dependancies) [libata-legacy] ??
 
-Great. I'll retest the IT821x once I've got a moment to pull an up to
-date tree.
+As we're using 'legacy' to refer to PCI compatible mode and it's a bit 
+long, how about libata-tf?
 
+> - Libata BMDMA, SFF PCI in a file (dep CONFIG_PCI)  [libata-sff]
+
+-- 
+tejun
