@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 7/9] libata: use dummy port for stolen legacy ports
+Subject: [PATCH 8/9] libata: replace ap->hard_port_no with ap->port_no
 Date: Thu, 10 Aug 2006 17:16:30 +0900
-Message-ID: <11551977901974-git-send-email-htejun@gmail.com>
+Message-ID: <11551977902032-git-send-email-htejun@gmail.com>
 References: <11551977882917-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:27950 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.177]:32301 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751462AbWHJIQj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1751460AbWHJIQj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 10 Aug 2006 04:16:39 -0400
-Received: by py-out-1112.google.com with SMTP id z74so730394pyg
+Received: by py-out-1112.google.com with SMTP id z74so730391pyg
         for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 01:16:38 -0700 (PDT)
 In-Reply-To: <11551977882917-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,103 +20,81 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Use dummy port for stolen legacy ports.  This makes ap->port_no always
-equal ap->hard_port_no.
+Replace ap->hard_port_no with ap->port_no.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 ---
 
- drivers/scsi/libata-bmdma.c |   41 +++++++++++++++++------------------------
- drivers/scsi/libata-core.c  |    2 --
- 2 files changed, 17 insertions(+), 26 deletions(-)
+ drivers/scsi/ata_piix.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-c4b01f1de254820175fe2d02b4cf7c0fab335846
-diff --git a/drivers/scsi/libata-bmdma.c b/drivers/scsi/libata-bmdma.c
-index e694f60..158f62d 100644
---- a/drivers/scsi/libata-bmdma.c
-+++ b/drivers/scsi/libata-bmdma.c
-@@ -872,50 +872,43 @@ static struct ata_probe_ent *ata_pci_ini
- 	struct ata_probe_ent *probe_ent;
- 	unsigned long bmdma = pci_resource_start(pdev, 4);
+2a88d1ac8dca898a7fb602ddd581bf4d2977509d
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index 40ecab5..501755a 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -487,7 +487,7 @@ static void piix_pata_cbl_detect(struct 
+ 		goto cbl40;
  
--	int port_num = 0;
--
- 	probe_ent = ata_probe_ent_alloc(pci_dev_to_dev(pdev), port[0]);
- 	if (!probe_ent)
- 		return NULL;
+ 	/* check BIOS cable detect results */
+-	mask = ap->hard_port_no == 0 ? PIIX_80C_PRI : PIIX_80C_SEC;
++	mask = ap->port_no == 0 ? PIIX_80C_PRI : PIIX_80C_SEC;
+ 	pci_read_config_byte(pdev, PIIX_IOCFG, &tmp);
+ 	if ((tmp & mask) == 0)
+ 		goto cbl40;
+@@ -513,7 +513,7 @@ static int piix_pata_prereset(struct ata
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
  
--	probe_ent->legacy_mode = 1;
--	probe_ent->hard_port_no = 0;
-+	probe_ent->n_ports = 2;
- 	probe_ent->private_data = port[0]->private_data;
- 
- 	if (port_mask & ATA_PORT_PRIMARY) {
- 		probe_ent->irq = 14;
--		probe_ent->port[port_num].cmd_addr = ATA_PRIMARY_CMD;
--		probe_ent->port[port_num].altstatus_addr =
--		probe_ent->port[port_num].ctl_addr = ATA_PRIMARY_CTL;
-+		probe_ent->port[0].cmd_addr = ATA_PRIMARY_CMD;
-+		probe_ent->port[0].altstatus_addr =
-+		probe_ent->port[0].ctl_addr = ATA_PRIMARY_CTL;
- 		if (bmdma) {
- 			probe_ent->port[0].bmdma_addr = bmdma;
- 			if (inb(bmdma + 2) & 0x80)
- 				probe_ent->host_set_flags |= ATA_HOST_SIMPLEX;
- 		}
--		ata_std_ports(&probe_ent->port[port_num]);
--		port_num ++;
--	}
-+		ata_std_ports(&probe_ent->port[0]);
-+	} else
-+		probe_ent->dummy_port_mask |= ATA_PORT_PRIMARY;
-+
- 	if (port_mask & ATA_PORT_SECONDARY) {
--		if (port_num == 1)
-+		if (probe_ent->irq)
- 			probe_ent->irq2 = 15;
--		else {
--			/* Secondary only. IRQ 15 only and "first" port is port 1 */
-+		else
- 			probe_ent->irq = 15;
--			probe_ent->hard_port_no = 1;
--		}
--		probe_ent->port[port_num].cmd_addr = ATA_SECONDARY_CMD;
--		probe_ent->port[port_num].altstatus_addr =
--		probe_ent->port[port_num].ctl_addr = ATA_SECONDARY_CTL;
-+		probe_ent->port[1].cmd_addr = ATA_SECONDARY_CMD;
-+		probe_ent->port[1].altstatus_addr =
-+		probe_ent->port[1].ctl_addr = ATA_SECONDARY_CTL;
- 		if (bmdma) {
--			probe_ent->port[port_num].bmdma_addr = bmdma + 8;
-+			probe_ent->port[1].bmdma_addr = bmdma + 8;
- 			if (inb(bmdma + 10) & 0x80)
- 				probe_ent->host_set_flags |= ATA_HOST_SIMPLEX;
- 		}
--		ata_std_ports(&probe_ent->port[port_num]);
--		port_num ++;
--	}
--
--	probe_ent->n_ports = port_num;
-+		ata_std_ports(&probe_ent->port[1]);
-+	} else
-+		probe_ent->dummy_port_mask |= ATA_PORT_SECONDARY;
- 
- 	return probe_ent;
- }
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index f2e7e2f..2ef86b4 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -5224,8 +5224,6 @@ void ata_port_init(struct ata_port *ap, 
- 	ap->dev = ent->dev;
- 	ap->port_no = port_no;
- 	ap->hard_port_no = port_no;
--	if (ent->legacy_mode)
--		ap->hard_port_no += ent->hard_port_no;
- 	ap->pio_mask = ent->pio_mask;
- 	ap->mwdma_mask = ent->mwdma_mask;
- 	ap->udma_mask = ent->udma_mask;
+-	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->hard_port_no])) {
++	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->port_no])) {
+ 		ata_port_printk(ap, KERN_INFO, "port disabled. ignoring.\n");
+ 		ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
+ 		return 0;
+@@ -550,7 +550,7 @@ static int piix_sata_prereset(struct ata
+ 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
+ 	struct piix_host_priv *hpriv = ap->host_set->private_data;
+ 	const unsigned int *map = hpriv->map;
+-	int base = 2 * ap->hard_port_no;
++	int base = 2 * ap->port_no;
+ 	unsigned int present = 0;
+ 	int port, i;
+ 	u16 pcs;
+@@ -601,7 +601,7 @@ static void piix_set_piomode (struct ata
+ 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	struct pci_dev *dev	= to_pci_dev(ap->host_set->dev);
+ 	unsigned int is_slave	= (adev->devno != 0);
+-	unsigned int master_port= ap->hard_port_no ? 0x42 : 0x40;
++	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+ 	u16 master_data;
+ 	u8 slave_data;
+@@ -619,10 +619,10 @@ static void piix_set_piomode (struct ata
+ 		/* enable PPE, IE and TIME */
+ 		master_data |= 0x0070;
+ 		pci_read_config_byte(dev, slave_port, &slave_data);
+-		slave_data &= (ap->hard_port_no ? 0x0f : 0xf0);
++		slave_data &= (ap->port_no ? 0x0f : 0xf0);
+ 		slave_data |=
+ 			(timings[pio][0] << 2) |
+-			(timings[pio][1] << (ap->hard_port_no ? 4 : 0));
++			(timings[pio][1] << (ap->port_no ? 4 : 0));
+ 	} else {
+ 		master_data &= 0xccf8;
+ 		/* enable PPE, IE and TIME */
+@@ -652,9 +652,9 @@ static void piix_set_dmamode (struct ata
+ {
+ 	unsigned int udma	= adev->dma_mode; /* FIXME: MWDMA too */
+ 	struct pci_dev *dev	= to_pci_dev(ap->host_set->dev);
+-	u8 maslave		= ap->hard_port_no ? 0x42 : 0x40;
++	u8 maslave		= ap->port_no ? 0x42 : 0x40;
+ 	u8 speed		= udma;
+-	unsigned int drive_dn	= (ap->hard_port_no ? 2 : 0) + adev->devno;
++	unsigned int drive_dn	= (ap->port_no ? 2 : 0) + adev->devno;
+ 	int a_speed		= 3 << (drive_dn * 4);
+ 	int u_flag		= 1 << drive_dn;
+ 	int v_flag		= 0x01 << drive_dn;
 -- 
 1.3.2
 
