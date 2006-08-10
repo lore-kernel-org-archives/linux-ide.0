@@ -1,82 +1,80 @@
-From: Reinhard =?iso-8859-1?q?Brandst=E4dter?=
-	<r.brandstaedter@eunet.at>
-Subject: Re: ASUS A8V Deluxe, x86_64
-Date: Thu, 10 Aug 2006 08:46:57 +0200
-Message-ID: <200608100847.00837.r.brandstaedter@eunet.at>
-References: <8E8F647D7835334B985D069AE964A4F702463F@ECQCMTLMAIL1.quebec.int.ec.gc.ca> <4469C024.3030506@gmail.com> <4469CC22.1010500@tw.ibm.com>
-Reply-To: r.brandstaedter@gmx.at
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
+ init model
+Date: Thu, 10 Aug 2006 15:12:39 +0800
+Message-ID: <44DADC67.5060707@tw.ibm.com>
+References: <1154919840689-git-send-email-htejun@gmail.com>	 <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com>	 <44D98388.8030005@pobox.com> <1155121214.5729.153.camel@localhost.localdomain>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1283708.zeDCyhDU1V";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.noc.eunet-ag.at ([193.154.160.117]:51140 "EHLO
-	smtp1.noc.eunet-ag.at") by vger.kernel.org with ESMTP
-	id S1161097AbWHJGrE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Aug 2006 02:47:04 -0400
-Received: from melchior.redchili.dyndns.org (redchili.dyndns.org [193.154.186.156])
-	by smtp1.noc.eunet-ag.at (Postfix) with ESMTP id 5786C34394
-	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 08:47:02 +0200 (CEST)
-Received: from [192.168.1.20] (unknown [192.168.1.20])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by melchior.redchili.dyndns.org (Postfix) with ESMTP id EF1532E7EE
-	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 08:41:33 +0200 (CEST)
-In-Reply-To: <4469CC22.1010500@tw.ibm.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:38045 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751421AbWHJHNb
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 03:13:31 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7A7D1x2001641
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 03:13:28 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k7A7D0UM193982
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 01:13:00 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7A7CxgL012155
+	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 01:13:00 -0600
+In-Reply-To: <1155121214.5729.153.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, mlord@pobox.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
---nextPart1283708.zeDCyhDU1V
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Alan Cox wrote:
+> Ar Mer, 2006-08-09 am 02:41 -0400, ysgrifennodd Jeff Garzik:
+> 
+>>ata_generic, ISA, VLB, and embedded controllers that use libata are not 
+>>PCI.  libata-bmdma can drive older non-PCI controllers.
+>>
+>>Its a bit confusing because "PCI IDE" is often used to refer to the 
+>>legacy IDE shadow register interface.  I started to use "bmdma" to 
+>>describe the interface, but it drives Alan crazy :)
+> 
+> 
+> Properly we have
+> 
+> 	ST506		(register layout for PIO)
+> 	BMDMA		(register layout for dma area/sg tables) [SFF]
+> 	SFF		(full SFF - BAR4, PCI BMDMA)
+> 	ADMA		(also in SFF)
+> 	AHCI
+> 
+> 	+ various weird vendor stuff
+> 
+> 
 
-On Tuesday 16 May 2006 14:57, Albert Lee wrote:
+The first time libata-"bmdma".c was seen, it looked strange to me, too.
 
-> Reinhard has a Plextor PX-712SA + svia.
-> Maybe he can also help to check whether the patch fixes the problem on his
-> box.
+I remember the WD1003/ST-506 adapter on my old i386 PC, which was later replaced by
+an "AT-Bus" IDE controller. The IDE controller is register level compatible
+to the WD1003 ST-506 adapter, with the same legacy PIO address and irq 14.
+(IDE had to be register-level compatible with the old WD1003 interface,
+because the Int 13h code for the WD1003 is in the main PC/AT BIOS, not on the adapter.)
 
-What I finally ended up with was solving the problem on the hardware side:
+At about the 486 VL-bus days, an additional "secondary" port was added, with irq 15.
+In those old 286/386/486 days, the IDE adapters were PIO only.
 
-The Plextor PX-712SA is a normal ATA device wich a IDE:SATA adapter plugged=
- in=20
-at the back. I openend the DVDR Device (2 srews at the back) repoved the=20
-adapter (1 screw) and then u get the normal IDE Interface (with master/slav=
-e=20
-jumpers, audio interface and normal ower plug). You can use this device on =
-an=20
-normal IDE interface then. Works perfect for me, maybe the 716SA Drive is=20
-similar
-This was the only solution that fixed the problem for me, any submitted ker=
-nel=20
-patches didn't work.
+The BM-DMA came at about the time of the Intel Pentium/PCI-bus, with the new BM-DMA registers. 
 
+When libata-bmdma.c is seperated out from libata-core.c, I was wondering why the
+BM-DMA PRD table management codes such as ata_sg_setup() are left in libata-core.c,
+while the old WD1003/ST-506 like logic ata_tf_load(), ata_exec_command() and ata_check_status()
+are moved to the libata-bmdma.c.
 
-Reinhard
+Jeff explained the traditional WD1003 ST-506 registers can be viewed as subset of BM-DMA,
+but I still feel strange to call the old WD1003-like IDE controllers on my 386/486 as "BM-DMA"...
 
-=2D-=20
-Dipl.-Ing. Reinhard Brandstaedter
-Wiener Str. 28                  phone: 0043 650 2419541
-4020 Linz                       icq:   73059068
-Austria                         skype: redchili78
+--
+albert
 
 
-
-
---nextPart1283708.zeDCyhDU1V
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQBE2tZkkeAWQwM7gdsRAp6RAJwLAgYBzo37xhCQFHSxSxiMd+RZsQCaAxxR
-Pnnxlqy4RGJ0UeCZKV/ZI2w=
-=Fcsq
------END PGP SIGNATURE-----
-
---nextPart1283708.zeDCyhDU1V--
