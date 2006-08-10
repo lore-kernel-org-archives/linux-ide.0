@@ -1,49 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: replace pci_module_init() with pci_register_driver()
-Date: Thu, 10 Aug 2006 06:59:16 -0400
-Message-ID: <44DB1184.6000201@pobox.com>
-References: <20060810093359.GD6371@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [SATA] max-sect and sii-m15w branches merged
+Date: Thu, 10 Aug 2006 20:25:56 +0900
+Message-ID: <44DB17C4.2070908@gmail.com>
+References: <44DB106C.6090504@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37339 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1161165AbWHJK7T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 06:59:19 -0400
-In-Reply-To: <20060810093359.GD6371@htj.dyndns.org>
+Received: from nf-out-0910.google.com ([64.233.182.191]:53716 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1161173AbWHJL0R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 07:26:17 -0400
+Received: by nf-out-0910.google.com with SMTP id a4so502332nfc
+        for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 04:26:04 -0700 (PDT)
+In-Reply-To: <44DB106C.6090504@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, proski@gnu.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Tejun Heo wrote:
-> From: Pavel Roskin <proski@gnu.org>
+Jeff Garzik wrote:
+> I just merged the max-sect and sii-m15w branches into the upstream branch.
 > 
-> Replace pci_module_init() with pci_register_driver().
+> This means that the following two changes are queued for 2.6.19:
 > 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> ---
-> 
-> This patch is against
-> 
->  upstream (3f066887595de490c411762ce58a31412b09e939)
->  + improve-init-and-legacy-handling patchset, take #3
->    (http://article.gmane.org/gmane.linux.ide/12556)
-> 
-> And avaliable in the following git tree.
-> 
->   http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=tj-upstream-pci_register_driver
->   git://htj.dyndns.org/libata-tj tj-upstream-pci_register_driver
+> * increase max sectors from 200 to 256 (for lba28)
+> * better mod15write support for sata_sil
 
-pulled
+Are we ready for m15w-iterate-over-large-write patch?  It has been used 
+by many people for quite some time and works great.  If you think we can 
+merge that patch, I'll port it over #upstream.
 
+Thanks.
 
-> #pata-drivers and #ALL are updated accordingly and available at...
-> 
->   http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=tj-pata-drivers-pci_register_driver
->   git://htj.dyndns.org/libata-tj tj-pata-drivers-pci_register_driver
-
-choked on ata_generic and pata_pdc2027x, not pulled
-
+-- 
+tejun
