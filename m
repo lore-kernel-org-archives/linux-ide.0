@@ -1,38 +1,30 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Thu, 10 Aug 2006 14:20:57 +0200
-Message-ID: <20060810122056.GP11829@suse.de>
-References: <1155144599.5729.226.camel@localhost.localdomain> <p733bc5nm5g.fsf@verdi.suse.de> <1155213464.22922.6.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [SATA] max-sect and sii-m15w branches merged
+Date: Thu, 10 Aug 2006 13:41:30 +0100
+Message-ID: <1155213691.22922.8.camel@localhost.localdomain>
+References: <44DB106C.6090504@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:15114 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1751333AbWHJMTj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 08:19:39 -0400
-Content-Disposition: inline
-In-Reply-To: <1155213464.22922.6.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:18581 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751493AbWHJMVn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 08:21:43 -0400
+In-Reply-To: <44DB106C.6090504@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Thu, Aug 10 2006, Alan Cox wrote:
-> Ar Iau, 2006-08-10 am 08:24 +0200, ysgrifennodd Andi Kleen:
-> > Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
-> > > - No support for host-protected-area yet
-> > 
-> > Even the support in the old one for that wasn't complete. It didn't
-> > redo the HPA disabling on resume-from-ram, which made parts of the
-> > disk not accessible anymore after wakeup. So at least on laptops it
-> > always had to be disabled anyways.
+Ar Iau, 2006-08-10 am 06:54 -0400, ysgrifennodd Jeff Garzik:
+> I just merged the max-sect and sii-m15w branches into the upstream branch.
 > 
-> drivers/ide does not support power management yet. Never has. Some
-> people are brave and use it as it is rather than fix it.
+> This means that the following two changes are queued for 2.6.19:
+> 
+> * increase max sectors from 200 to 256 (for lba28)
+> * better mod15write support for sata_sil
 
-You make it sound much worse than it is. Apart for HPA, I'm not aware of
-any setups that require extra treatment. And the amount of reported bugs
-against it are pretty close to zero :-)
-
--- 
-Jens Axboe
+Great. I'll retest the IT821x once I've got a moment to pull an up to
+date tree.
 
