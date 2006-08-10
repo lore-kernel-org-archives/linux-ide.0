@@ -1,43 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
- init model
-Date: Thu, 10 Aug 2006 21:22:04 +0900
-Message-ID: <44DB24EC.3040302@gmail.com>
-References: <1154919840689-git-send-email-htejun@gmail.com>	 <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com>	 <44D98388.8030005@pobox.com>	 <1155121214.5729.153.camel@localhost.localdomain>	 <44DADC67.5060707@tw.ibm.com>  <44DADFC9.7010700@pobox.com> <1155213365.22922.5.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [git patches] libata fixes
+Date: Thu, 10 Aug 2006 08:23:44 -0400
+Message-ID: <44DB2550.6000802@garzik.org>
+References: <20060809062514.GA27491@havoc.gtf.org> <20060809184749.GA12941@kroah.com> <20060809224527.GB17840@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.194]:101 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1030291AbWHJMWL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Aug 2006 08:22:11 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so141713nzf
-        for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 05:22:10 -0700 (PDT)
-In-Reply-To: <1155213365.22922.5.camel@localhost.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:4062 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1161196AbWHJMXr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 08:23:47 -0400
+In-Reply-To: <20060809224527.GB17840@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, albertl@mail.com, mlord@pobox.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Alan Cox wrote:
-> Ar Iau, 2006-08-10 am 03:27 -0400, ysgrifennodd Jeff Garzik:
->> hehe :)
->>
->> Well I am more than willing to rename it, though its a bit low priority.
->>
->> What would people prefer?  libata-sff.c ?
+Greg KH wrote:
+> Nope, still get the same timeout error at boot time.  This works just
+> fine with 2.6.17, and I reported it a while ago.  Any ideas of things I
+> can do to work on this getting fixed?
 > 
-> Looking at the non-PCI cases I think it needs a three way split
-> 
-> - Libata core as it is now basically (no bus specific code at all)
-> - Libata register compatibility stuff (ST506) in a file (no
-> dependancies) [libata-legacy] ??
+> 2.6.18 shouldn't go out with this broken, imo.
 
-As we're using 'legacy' to refer to PCI compatible mode and it's a bit 
-long, how about libata-tf?
+FWIW agreed (as you see from another email)
 
-> - Libata BMDMA, SFF PCI in a file (dep CONFIG_PCI)  [libata-sff]
+	Jeff
 
--- 
-tejun
+
