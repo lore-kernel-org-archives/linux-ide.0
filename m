@@ -1,40 +1,33 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
-	init model
-Date: Thu, 10 Aug 2006 13:36:05 +0100
-Message-ID: <1155213365.22922.5.camel@localhost.localdomain>
-References: <1154919840689-git-send-email-htejun@gmail.com>
-	 <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com>
-	 <44D98388.8030005@pobox.com>
-	 <1155121214.5729.153.camel@localhost.localdomain>
-	 <44DADC67.5060707@tw.ibm.com>  <44DADFC9.7010700@pobox.com>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Thu, 10 Aug 2006 13:37:44 +0100
+Message-ID: <1155213464.22922.6.camel@localhost.localdomain>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+	 <p733bc5nm5g.fsf@verdi.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:16789 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:17045 "EHLO
 	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030517AbWHJMRv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Aug 2006 08:17:51 -0400
-In-Reply-To: <44DADFC9.7010700@pobox.com>
+	id S1030552AbWHJMRz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 08:17:55 -0400
+In-Reply-To: <p733bc5nm5g.fsf@verdi.suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, mlord@pobox.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: Andi Kleen <ak@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ar Iau, 2006-08-10 am 03:27 -0400, ysgrifennodd Jeff Garzik:
-> hehe :)
+Ar Iau, 2006-08-10 am 08:24 +0200, ysgrifennodd Andi Kleen:
+> Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
+> > - No support for host-protected-area yet
 > 
-> Well I am more than willing to rename it, though its a bit low priority.
-> 
-> What would people prefer?  libata-sff.c ?
+> Even the support in the old one for that wasn't complete. It didn't
+> redo the HPA disabling on resume-from-ram, which made parts of the
+> disk not accessible anymore after wakeup. So at least on laptops it
+> always had to be disabled anyways.
 
-Looking at the non-PCI cases I think it needs a three way split
-
-- Libata core as it is now basically (no bus specific code at all)
-- Libata register compatibility stuff (ST506) in a file (no
-dependancies) [libata-legacy] ??
-- Libata BMDMA, SFF PCI in a file (dep CONFIG_PCI)  [libata-sff]
+drivers/ide does not support power management yet. Never has. Some
+people are brave and use it as it is rather than fix it.
 
 Alan
-
