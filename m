@@ -1,36 +1,22 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: libata iomap, PATA, etc.
-Date: Thu, 10 Aug 2006 07:45:20 -0400
-Message-ID: <44DB1C50.6050905@garzik.org>
+Subject: libata moved to drivers/ata
+Date: Thu, 10 Aug 2006 07:58:08 -0400
+Message-ID: <44DB1F50.5040302@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42716 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1161186AbWHJLpX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 07:45:23 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun,
+I just moved all branches of libata-dev.git to drivers/ata.
 
-Since you are poking around in this area, I wanted to remind you of the 
-promise-sata-pata branch.
+Please test and make sure I didn't break anything.
 
-A problem with the current libata API is that probe_ent and related code 
-does not easily permit two -vastly different- port technologies (SATA 
-and PATA, in this case) to be driven by the same hardware. 
-promise-sata-pata branch has not been merged because its solution is 
-highly ugly.
-
-A better solution will emerge when... you guessed it...  probe_ent goes 
-away, and host_set can be initialized directly.  This allows the LLDD to 
-directly configure host_set and associated ata_port structures to its needs.
-
-There are also a few other controllers (SiS, VIA) which have similar 
-SATA+PATA configurations to be supported.
+In particular, the move highlighted where libata and ata-generic were 
+incorrectly using drivers/scsi local headers.  That was fixed too.
 
 	Jeff
 
