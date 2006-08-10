@@ -1,77 +1,23 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCHSET] libata: improve initialization and legacy handling,
- take#3
-Date: Thu, 10 Aug 2006 06:53:19 -0400
-Message-ID: <44DB101F.2080505@pobox.com>
-References: <11551977882917-git-send-email-htejun@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [SATA] max-sect and sii-m15w branches merged
+Date: Thu, 10 Aug 2006 06:54:36 -0400
+Message-ID: <44DB106C.6090504@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:21979 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1161137AbWHJKx0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 06:53:26 -0400
-In-Reply-To: <11551977882917-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:25307 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1161158AbWHJKyj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 06:54:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-Tejun Heo wrote:
-> Hello, all.
-> 
-> This is the third take of improve-init-and-legacy patchset.  This
-> patchset contains patches from Jeff Garzik, Alan Cox and me to
-> fix/clean up initializaton and legacy handling.  Changes from the last
-> take[L] are
-> 
-> * adapted to Brian King's sas port alloc/init stuff (new patch added
->   #01-update-ata_host_init-and-rename-it-to-ata_port_init_shost)
-> 
-> * fix-new-legacy-handling patch merged into rework-legacy-handling as
->   Jeff suggested.
-> 
-> This patchset is against
-> 
->   libata-dev#upstream [U] 
-> 
-> This patchset is available in the following git tree.
-> 
->   http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=tj-upstream
->   git://htj.dyndns.org/libata-tj tj-upstream
+I just merged the max-sect and sii-m15w branches into the upstream branch.
 
-pulled
+This means that the following two changes are queued for 2.6.19:
 
-
-> PATA drivers have been updated accordingly and available at (properly
-> merged)
-> 
->   http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=tj-pata-drivers
->   git://htj.dyndns.org/libata-tj tj-pata-drivers
-
-pulled
-
-
-> Updated ALL branch is available at
-> 
->   http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=tj-ALL
->   git://htj.dyndns.org/libata-tj tj-ALL
-
-FWIW, I usually just update this manually.  The process I used for this 
-email's pulls was
-
-cd /spare/repo/libata-dev
-git checkout upstream
-git pull $url tj-upstream
-git checkout pata-drivers
-git pull . upstream
-git pull $url tj-pata-drivers
-git checkout ALL
-git pull . pata-drivers
-
-Thus, changes are pulled from upstream to downstream branches.
-
-	Jeff
-
-
+* increase max sectors from 200 to 256 (for lba28)
+* better mod15write support for sata_sil
 
