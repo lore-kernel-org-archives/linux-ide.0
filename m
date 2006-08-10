@@ -1,38 +1,46 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [git patches] libata fixes
-Date: Wed, 9 Aug 2006 15:45:27 -0700
-Message-ID: <20060809224527.GB17840@kroah.com>
-References: <20060809062514.GA27491@havoc.gtf.org> <20060809184749.GA12941@kroah.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: /dev/sd*
+Date: Thu, 10 Aug 2006 02:44:51 +0100
+Message-ID: <1155174291.18272.1.camel@localhost.localdomain>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+	 <20060809212124.GC3691@stusta.de>
+	 <1155160903.5729.263.camel@localhost.localdomain>
+	 <20060809221857.GG3691@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:24732 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1751417AbWHIWpm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2006 18:45:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20060809184749.GA12941@kroah.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:64433 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1030548AbWHJBZd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Aug 2006 21:25:33 -0400
+In-Reply-To: <20060809221857.GG3691@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Aug 09, 2006 at 11:47:49AM -0700, Greg KH wrote:
-> On Wed, Aug 09, 2006 at 02:25:14AM -0400, Jeff Garzik wrote:
-> > 
-> > Please pull from 'upstream-greg' branch of
-> > master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-greg
-> 
-> Applied, thanks.
-> 
-> Hm, should these fixes solve my SATA cdrom driver timeout issue?  I'll
-> go test that, it was still broken in 2.6.18-rc4...
+Ar Iau, 2006-08-10 am 00:18 +0200, ysgrifennodd Adrian Bunk:
+> > USB storage is real SCSI.
+> Real SCSI for a developer, for a user it's USB.
 
-Nope, still get the same timeout error at boot time.  This works just
-fine with 2.6.17, and I reported it a while ago.  Any ideas of things I
-can do to work on this getting fixed?
+Define SCSI ?
 
-2.6.18 shouldn't go out with this broken, imo.
+> And things become even more confusing considering that the drive might 
+> show up as /dev/sda or /dev/uba depending on the driver used.
 
-thanks,
+Windows people seem to cope ok with C: being IDE and E: being SCSI ;)
 
-greg k-h
+> I'm more concerned about the kernel<->userspace interface.
+
+Thats a naming policy matter, udev.
+
+> But I'm still not getting the point why the /dev/sd* namespace has to be 
+> used.
+
+Because the block layer approach to major/minor numbers means everything
+using sd (ie everything scsi disk protocol) gets the same device naming
+scheme.
+
+Alan
+
