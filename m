@@ -1,43 +1,57 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Thu, 10 Aug 2006 15:59:46 +0200
-Message-ID: <20060810135945.GV11829@suse.de>
-References: <1155144599.5729.226.camel@localhost.localdomain> <p733bc5nm5g.fsf@verdi.suse.de> <1155213464.22922.6.camel@localhost.localdomain> <20060810122056.GP11829@suse.de> <1155219292.22922.13.camel@localhost.localdomain>
+From: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
+Subject: RE: ASUS A8V Deluxe, x86_64
+Date: Thu, 10 Aug 2006 10:03:27 -0400
+Message-ID: <8E8F647D7835334B985D069AE964A4F7028FDE12@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:11785 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1161273AbWHJN62 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 09:58:28 -0400
-Content-Disposition: inline
-In-Reply-To: <1155219292.22922.13.camel@localhost.localdomain>
+Received: from fwstl1-1.wul.qc.ec.gc.ca ([205.211.132.24]:65506 "EHLO
+	ecqcmtlbh.quebec.int.ec.gc.ca") by vger.kernel.org with ESMTP
+	id S1161291AbWHJODf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 10:03:35 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: r.brandstaedter@gmx.at, albertl@mail.com
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Aug 10 2006, Alan Cox wrote:
-> Ar Iau, 2006-08-10 am 14:20 +0200, ysgrifennodd Jens Axboe:
-> > You make it sound much worse than it is. Apart for HPA, I'm not aware of
-> > any setups that require extra treatment. And the amount of reported bugs
-> > against it are pretty close to zero :-)
-> 
-> There are several variants where you get
+> > >>Reinhard has a Plextor PX-712SA + svia.
+> > >>Maybe he can also help to check whether the patch fixes the
+problem on
+> > >> his box.
+> > >
+> > > What I finally ended up with was solving the problem on the
+hardware
+> > > side:
+> > >
+> > > The Plextor PX-712SA is a normal ATA device wich a IDE:SATA
+adapter
+> > > plugged in at the back. I openend the DVDR Device (2 srews at the
+back)
+> > > repoved the adapter (1 screw) and then u get the normal IDE
+Interface
+> > > (with master/slave jumpers, audio interface and normal ower plug).
+You
+> > > can use this device on an normal IDE interface then. Works perfect
+for
+> > > me, maybe the 716SA Drive is similar
+> > > This was the only solution that fixed the problem for me, any
+submitted
+> > > kernel patches didn't work.
+> >
+> > I'm curious what's the PATA-to-SATA bridge chip used on the Plextor
+> > PX-712SA. (Maybe it is not compatible with the VIA chip.)
+> > Could you please check the IC on the IDE-SATA adapter?
 
-Not very vocal users then, or I missed them.
+I'm also having an ASUS A8V Deluxe, running x86_64 with a 716SA plextor
+drive.
 
-> 	- hangs on resume
-> 	- HPA mishandling
-> 	- CRC errors and usually eventually a hang
+Since 2.6.17 it's been working really well.  I don't think there is an
+PATA-to-SATA interface into it but I can check that out tonight if
+needed.
 
-HPA mishandling is a given, I agree that is a nasty problem and really
-should be fixed. hangs on resume - the hardware, or the kernel talking
-to it? crc errors sounds like bad transfer tuning after resume, but that
-should be pretty identical to the on-boot one.
+Cheers.
 
-The low level drivers/ide drivers aren't well geared for suspend/resume,
-perhaps that is what is causing most of these issues (apart from hpa).
-
--- 
-Jens Axboe
-
+- vin
