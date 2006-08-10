@@ -1,73 +1,49 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: /dev/sd*
-Date: Wed, 9 Aug 2006 21:46:09 -0700
-Message-ID: <20060810044609.GA22802@kroah.com>
-References: <1155144599.5729.226.camel@localhost.localdomain> <20060809212124.GC3691@stusta.de> <1155160903.5729.263.camel@localhost.localdomain> <20060809221857.GG3691@stusta.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: cached PCS
+Date: Thu, 10 Aug 2006 13:50:25 +0900
+Message-ID: <44DABB11.5020707@gmail.com>
+References: <44D97F07.9000301@garzik.org> <44D9AF83.80507@gmail.com> <44D9B43A.9010807@garzik.org> <44D9B4BC.5050707@gmail.com> <44D9B87A.8020507@garzik.org> <44D9BB4B.9050602@gmail.com> <44D9BD06.5080103@garzik.org> <44D9C31B.6000901@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:64210 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1161020AbWHJEqd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 00:46:33 -0400
-Content-Disposition: inline
-In-Reply-To: <20060809221857.GG3691@stusta.de>
+Received: from py-out-1112.google.com ([64.233.166.179]:11663 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1161023AbWHJEuc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 00:50:32 -0400
+Received: by py-out-1112.google.com with SMTP id z74so662040pyg
+        for <linux-ide@vger.kernel.org>; Wed, 09 Aug 2006 21:50:31 -0700 (PDT)
+In-Reply-To: <44D9C31B.6000901@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Keith Owens <kaos@ocs.com.au>, stevenm@umd.edu
 
-On Thu, Aug 10, 2006 at 12:18:57AM +0200, Adrian Bunk wrote:
-> On Wed, Aug 09, 2006 at 11:01:43PM +0100, Alan Cox wrote:
-> > Ar Mer, 2006-08-09 am 23:21 +0200, ysgrifennodd Adrian Bunk:
-> > > It might be a bit out of the scope of this thread, but why do some many 
-> > > subsystems use the /dev/sd* namespace?
-> > > 
-> > > Real SCSI devices use it.
-> > > The USB mass storage driver uses it.
-> > 
-> > USB storage is real SCSI.
+Tejun Heo wrote:
+>> Did you look at some of the other messages?  He provided some debug 
+>> traces in follow-up messages.
 > 
-> Real SCSI for a developer, for a user it's USB.
-
-So?  Users of Linux know to look for their USB storage devices in
-/dev/sd* because of this.
-
-> And things become even more confusing considering that the drive might 
-> show up as /dev/sda or /dev/uba depending on the driver used.
-
-And udev causes this to be moot, as people use the /dev/disk/by-*
-symlinks, which are the same if they use the usb-storage or ub driver.
-
-Same thing will happen for the changes that Alan is going to do (which I
-think is the right thing to have happen.)
-
-> > > libata uses it.
-> > > 
-> > > I'd expext SATA or PATA devices at /dev/hd* or perhaps at /dev/ata* - 
-> > > but why are they at /dev/sd*?
-> > 
-> > ATA uses the top half of the scsi stack so ends up using the top layer
-> > scsi drivers. Its probably more efficient than writing new driver
-> > clones, especially as non disk ATA is also real SCSI (or very close).
+> Yes, I have and I can't think of any other way than ignoring PCS to work 
+> around the problem.  If we set IGNORE_PCS for ich5 sata then we can also 
+> forget about cached PCS which is for ich5 sata.  But, we might see ghost 
+> device detection and accompanying long delays.
 > 
-> You are talking about kernel<->kernel and kernel<->hardware interfaces.
-> 
-> I'm more concerned about the kernel<->userspace interface.
-> 
-> > You can use /dev/ata if you want - its just a udev problem ;)
-> 
-> Or by adding some manual links if using a static /dev.
+> For ich 6/7/8, your recent change and honor-pcs patch should do the job. 
+>  For ICH5, well...  Just set IGNORE_PCS and wait for bug reports?
 
-Sure, but most distros don't have a static /dev anymore.
+[CC'ing Steve (the bug reporter of #6724), Hi!]
 
-> But I'm still not getting the point why the /dev/sd* namespace has to be 
-> used.
+Steve just reported -rc4 doesn't fix the problem && he saw complete 
+misdetection of *all* devices on soft reboots.  I think Steve and Keith 
+are experiencing the same problem here.
 
-Because it has for USB storage devices since the 2.2 kernel.
+PCS enabled bits are cleared at some point and cached PCS works around 
+the problem by caching the bits early but for soft reboots it doesn't do 
+any good.  One interesting thing is that BIOSen seem to recognize the 
+drives fine (right?) on such reboots even though PCS enabled bits would 
+be zero.  FWIW, IGNORE_PCS works fine for Steve.
 
-Ok, 2.3, but then quickly backported to 2.2...  You want to break that
-userspace interface?  :)
+Thanks.
 
-thanks,
-
-greg k-h
+-- 
+tejun
