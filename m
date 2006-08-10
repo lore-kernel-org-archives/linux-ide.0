@@ -1,75 +1,39 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 1/1] libata: Build fix for drivers/scsi users
-Date: Thu, 10 Aug 2006 10:15:59 -0500
-Message-ID: <200608101516.k7AFG0Ov030312@d03av03.boulder.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Thu, 10 Aug 2006 16:54:03 +0100
+Message-ID: <1155225243.24077.1.camel@localhost.localdomain>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+	 <p733bc5nm5g.fsf@verdi.suse.de>
+	 <1155213464.22922.6.camel@localhost.localdomain>
+	 <20060810122056.GP11829@suse.de>
+	 <1155219292.22922.13.camel@localhost.localdomain>
+	 <20060810135945.GV11829@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:1739 "EHLO e33.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1161334AbWHJPQL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 11:16:11 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7AFGB14009007
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 11:16:11 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k7AFG11W268086
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 09:16:01 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7AFG1fC030349
-	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 09:16:01 -0600
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56759 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1161356AbWHJPeR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 11:34:17 -0400
+In-Reply-To: <20060810135945.GV11829@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, brking@us.ibm.com
+To: Jens Axboe <axboe@suse.de>
+Cc: Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+Ar Iau, 2006-08-10 am 15:59 +0200, ysgrifennodd Jens Axboe:
+> On Thu, Aug 10 2006, Alan Cox wrote:
+> HPA mishandling is a given, I agree that is a nasty problem and really
+> should be fixed. hangs on resume - the hardware, or the kernel talking
+
+Hang on resume because we don't do the mode setup right from s2ram.
+Being worked on by someone at last which is great
+
+> to it? crc errors sounds like bad transfer tuning after resume, but that
+> should be pretty identical to the on-boot one.
+
+I *think* this is that the PLLs need resynchronizing after resume from
+ram and we don't do that for some chips
 
 
-When moving libata to drivers/ata, SCSI/SAS drivers were
-broken. Alter the build process for libata to be done in
-a similar manner to how scsi is done today.
-
-Signed-off-by: Brian King <brking@us.ibm.com>
----
-
- libata-dev-bjking1/drivers/ata/Makefile |   31 ++++++++++++++++---------------
- 1 files changed, 16 insertions(+), 15 deletions(-)
-
-diff -puN drivers/ata/Makefile~libata_build_fix drivers/ata/Makefile
---- libata-dev/drivers/ata/Makefile~libata_build_fix	2006-08-10 09:12:15.000000000 -0500
-+++ libata-dev-bjking1/drivers/ata/Makefile	2006-08-10 09:12:15.000000000 -0500
-@@ -1,19 +1,20 @@
-+obj-$(CONFIG_ATA)		+= libata.o
- 
--obj-$(CONFIG_SCSI_SATA_AHCI)	+= libata.o ahci.o
--obj-$(CONFIG_SCSI_SATA_SVW)	+= libata.o sata_svw.o
--obj-$(CONFIG_SCSI_ATA_PIIX)	+= libata.o ata_piix.o
--obj-$(CONFIG_SCSI_SATA_PROMISE)	+= libata.o sata_promise.o
--obj-$(CONFIG_SCSI_SATA_QSTOR)	+= libata.o sata_qstor.o
--obj-$(CONFIG_SCSI_SATA_SIL)	+= libata.o sata_sil.o
--obj-$(CONFIG_SCSI_SATA_SIL24)	+= libata.o sata_sil24.o
--obj-$(CONFIG_SCSI_SATA_VIA)	+= libata.o sata_via.o
--obj-$(CONFIG_SCSI_SATA_VITESSE)	+= libata.o sata_vsc.o
--obj-$(CONFIG_SCSI_SATA_SIS)	+= libata.o sata_sis.o
--obj-$(CONFIG_SCSI_SATA_SX4)	+= libata.o sata_sx4.o
--obj-$(CONFIG_SCSI_SATA_NV)	+= libata.o sata_nv.o
--obj-$(CONFIG_SCSI_SATA_ULI)	+= libata.o sata_uli.o
--obj-$(CONFIG_SCSI_SATA_MV)	+= libata.o sata_mv.o
--obj-$(CONFIG_SCSI_PDC_ADMA)	+= libata.o pdc_adma.o
-+obj-$(CONFIG_SCSI_SATA_AHCI)	+= ahci.o
-+obj-$(CONFIG_SCSI_SATA_SVW)	+= sata_svw.o
-+obj-$(CONFIG_SCSI_ATA_PIIX)	+= ata_piix.o
-+obj-$(CONFIG_SCSI_SATA_PROMISE)	+= sata_promise.o
-+obj-$(CONFIG_SCSI_SATA_QSTOR)	+= sata_qstor.o
-+obj-$(CONFIG_SCSI_SATA_SIL)	+= sata_sil.o
-+obj-$(CONFIG_SCSI_SATA_SIL24)	+= sata_sil24.o
-+obj-$(CONFIG_SCSI_SATA_VIA)	+= sata_via.o
-+obj-$(CONFIG_SCSI_SATA_VITESSE)	+= sata_vsc.o
-+obj-$(CONFIG_SCSI_SATA_SIS)	+= sata_sis.o
-+obj-$(CONFIG_SCSI_SATA_SX4)	+= sata_sx4.o
-+obj-$(CONFIG_SCSI_SATA_NV)	+= sata_nv.o
-+obj-$(CONFIG_SCSI_SATA_ULI)	+= sata_uli.o
-+obj-$(CONFIG_SCSI_SATA_MV)	+= sata_mv.o
-+obj-$(CONFIG_SCSI_PDC_ADMA)	+= pdc_adma.o
- 
- libata-objs	:= libata-core.o libata-scsi.o libata-bmdma.o libata-eh.o
- 
-_
