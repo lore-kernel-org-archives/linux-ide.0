@@ -1,31 +1,27 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: Merging libata PATA support into the base kernel
-Date: Thu, 10 Aug 2006 21:40:36 +0200
-Message-ID: <200608102140.36733.rjw@sisk.pl>
-References: <1155144599.5729.226.camel@localhost.localdomain> <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
+Date: Thu, 10 Aug 2006 21:47:34 +0200
+Message-ID: <20060810194734.GE11829@suse.de>
+References: <1155144599.5729.226.camel@localhost.localdomain> <p733bc5nm5g.fsf@verdi.suse.de> <1155213464.22922.6.camel@localhost.localdomain> <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:59117 "EHLO ogre.sisk.pl")
-	by vger.kernel.org with ESMTP id S1750829AbWHJTli (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 15:41:38 -0400
-In-Reply-To: <20060810190222.GA12818@knob.reflex>
+Received: from brick.kernel.dk ([62.242.22.158]:47677 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1751013AbWHJTqQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 15:46:16 -0400
 Content-Disposition: inline
+In-Reply-To: <20060810190222.GA12818@knob.reflex>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jason Lunz <lunz@falooley.org>
-Cc: Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Pavel Machek <pavel@ucw.cz>, Stefan Seyfried <seife@suse.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thursday 10 August 2006 21:02, Jason Lunz wrote:
+On Thu, Aug 10 2006, Jason Lunz wrote:
 > In gmane.linux.kernel, you wrote:
 > > You make it sound much worse than it is. Apart for HPA, I'm not aware of
 > > any setups that require extra treatment. And the amount of reported bugs
 > > against it are pretty close to zero :-)
-
-No, it's not.
-
+> 
 > *ahem*.
 > 
 > I needed to do this to cure IDE hangs on resume:
@@ -53,11 +49,14 @@ No, it's not.
 > system, after which you can *begin* solving the no-video-on-resume
 > issue.
 
-I agree.  Moreover, the disk-related resume-from-ram problems are the hardest
-ones (the graphics may be handled from the user land to a reasonable extent).
+I'm not on any of the suspend lists, I was merely comparing the
+suspend-others or suspend-libata ration to suspend-ide on linux-kernel,
+and the latter is clearly in the minority. I've used ide suspend quite a
+bit myself, and never had issues with it (or whichever ones I saw
+initially, I fixed). Of course it depends very much on the hardware. I'd
+still say that ide suspend probably supports a much wider range of
+hardware, than does libata suspend.
 
-Actually, I'm looking for someone who'd agree to be Cced on bug reports where
-we suspect the problem may be related to IDE/PATA/SATA . ;-)
+-- 
+Jens Axboe
 
-Greetings,
-Rafael
