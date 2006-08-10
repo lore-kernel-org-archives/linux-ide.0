@@ -1,46 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: /dev/sd*
-Date: Thu, 10 Aug 2006 02:44:51 +0100
-Message-ID: <1155174291.18272.1.camel@localhost.localdomain>
-References: <1155144599.5729.226.camel@localhost.localdomain>
-	 <20060809212124.GC3691@stusta.de>
-	 <1155160903.5729.263.camel@localhost.localdomain>
-	 <20060809221857.GG3691@stusta.de>
+From: Vlad <vladc6@yahoo.com>
+Subject: Re: Freezes: ata1 is slow to respond, please be patient
+Date: Wed, 9 Aug 2006 21:09:04 -0700 (PDT)
+Message-ID: <20060810040904.72989.qmail@web54409.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:64433 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030548AbWHJBZd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Aug 2006 21:25:33 -0400
-In-Reply-To: <20060809221857.GG3691@stusta.de>
+Received: from web54409.mail.yahoo.com ([206.190.49.139]:22660 "HELO
+	web54409.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S1030552AbWHJEJF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 00:09:05 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: chantra@debuntu.org, linux-ide@vger.kernel.org
 
-Ar Iau, 2006-08-10 am 00:18 +0200, ysgrifennodd Adrian Bunk:
-> > USB storage is real SCSI.
-> Real SCSI for a developer, for a user it's USB.
+chantra@debuntu.org said:
+>By the way, lately I tried ubuntu edgy eft and debian edgy, both of
+them
+>use a 2.6.17 kernel.... the kernel did not even boot. I didn't get a
+>kernel panic, the kernel simply hanged on "mounting root filesystem".
 
-Define SCSI ?
+Try turning off DMA while it is booting but _before_ it attempts to
+mount the CD:
+    1) Switch to a console by pressing Esc and then Alt-F3.
+    2) Type 'hdparm -d0 /dev/hdc'
 
-> And things become even more confusing considering that the drive might 
-> show up as /dev/sda or /dev/uba depending on the driver used.
+This workaround allowed me to boot installation CDs in the absense of
+a fix to the problem (see
+http://bugzilla.kernel.org/show_bug.cgi?id=6710 )
 
-Windows people seem to cope ok with C: being IDE and E: being SCSI ;)
+Vlad
 
-> I'm more concerned about the kernel<->userspace interface.
-
-Thats a naming policy matter, udev.
-
-> But I'm still not getting the point why the /dev/sd* namespace has to be 
-> used.
-
-Because the block layer approach to major/minor numbers means everything
-using sd (ie everything scsi disk protocol) gets the same device naming
-scheme.
-
-Alan
-
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
