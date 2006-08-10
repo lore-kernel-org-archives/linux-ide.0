@@ -1,30 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Thu, 10 Aug 2006 02:13:51 -0400
-Message-ID: <44DACE9F.3090909@garzik.org>
-References: <1155144599.5729.226.camel@localhost.localdomain> <44DA4288.6020806@rtr.ca>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: /dev/sd*
+Date: Thu, 10 Aug 2006 08:19:08 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0608100815450.10926@yvahk01.tjqt.qr>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+ <20060809212124.GC3691@stusta.de>  <1155160903.5729.263.camel@localhost.localdomain>
+  <20060809221857.GG3691@stusta.de> <1155174291.18272.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:14801 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1161063AbWHJGN5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 02:13:57 -0400
-In-Reply-To: <44DA4288.6020806@rtr.ca>
+Received: from mailer.gwdg.de ([134.76.10.26]:460 "EHLO mailer.gwdg.de")
+	by vger.kernel.org with ESMTP id S1161067AbWHJGVU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 02:21:20 -0400
+In-Reply-To: <1155174291.18272.1.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-
-Mark Lord wrote:
-> This will also allow time for things like "udev" to perhaps think about
-> an option to someday provide /dev/hd* symlinks for PATA devices when
-> libata is used instead of IDE (?).  That might be a possible migration
-> path in the far future.
-
-Unfortunately a symlink won't work because of compatibility issues. 
-/dev/hd supports more partitions, and a different set of ioctls.
-
-	Jeff
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Adrian Bunk <bunk@stusta.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
+>> And things become even more confusing considering that the drive might 
+>> show up as /dev/sda or /dev/uba depending on the driver used.
+>
+>Windows people seem to cope ok with C: being IDE and E: being SCSI ;)
+
+You can't compare it like that. Actually, drive letters are more like
+bind mounts from "device names" to drive letters. In fact, net drives
+are not IDE or SCSI or USB at all, yet they have a drive letter. So the
+real CDROM for example is, IIRC, sth. like \\Device\Cdrom0 (it's not a
+network path even if it looks like).
+
+
+Jan Engelhardt
+-- 
