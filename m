@@ -1,42 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [SATA] max-sect and sii-m15w branches merged
-Date: Thu, 10 Aug 2006 08:00:44 -0400
-Message-ID: <44DB1FEC.8090101@garzik.org>
-References: <44DB106C.6090504@garzik.org> <44DB17C4.2070908@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 05/17] libata: implement PCI init helpers for new LLD
+	init model
+Date: Thu, 10 Aug 2006 13:36:05 +0100
+Message-ID: <1155213365.22922.5.camel@localhost.localdomain>
+References: <1154919840689-git-send-email-htejun@gmail.com>
+	 <44D96E8E.9020801@pobox.com> <44D9782A.30405@gmail.com>
+	 <44D98388.8030005@pobox.com>
+	 <1155121214.5729.153.camel@localhost.localdomain>
+	 <44DADC67.5060707@tw.ibm.com>  <44DADFC9.7010700@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:2525 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1161192AbWHJMAs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 08:00:48 -0400
-In-Reply-To: <44DB17C4.2070908@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:16789 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1030517AbWHJMRv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Aug 2006 08:17:51 -0400
+In-Reply-To: <44DADFC9.7010700@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, mlord@pobox.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> I just merged the max-sect and sii-m15w branches into the upstream 
->> branch.
->>
->> This means that the following two changes are queued for 2.6.19:
->>
->> * increase max sectors from 200 to 256 (for lba28)
->> * better mod15write support for sata_sil
+Ar Iau, 2006-08-10 am 03:27 -0400, ysgrifennodd Jeff Garzik:
+> hehe :)
 > 
-> Are we ready for m15w-iterate-over-large-write patch?  It has been used 
-> by many people for quite some time and works great.  If you think we can 
-> merge that patch, I'll port it over #upstream.
+> Well I am more than willing to rename it, though its a bit low priority.
+> 
+> What would people prefer?  libata-sff.c ?
 
-I would prefer that be considered after 2.6.19, since sii-m15w will be 
-first appear in 2.6.19.
+Looking at the non-PCI cases I think it needs a three way split
 
-Feel free to send it along, if you wish.  I'll keep it in a separate 
-branch, and make sure it appears in #ALL (and thus Andrew's -mm tree).
+- Libata core as it is now basically (no bus specific code at all)
+- Libata register compatibility stuff (ST506) in a file (no
+dependancies) [libata-legacy] ??
+- Libata BMDMA, SFF PCI in a file (dep CONFIG_PCI)  [libata-sff]
 
-	Jeff
-
-
+Alan
 
