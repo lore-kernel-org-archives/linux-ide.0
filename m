@@ -1,57 +1,75 @@
-From: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
-Subject: RE: ASUS A8V Deluxe, x86_64
-Date: Thu, 10 Aug 2006 10:03:27 -0400
-Message-ID: <8E8F647D7835334B985D069AE964A4F7028FDE12@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 1/1] libata: Build fix for drivers/scsi users
+Date: Thu, 10 Aug 2006 10:15:59 -0500
+Message-ID: <200608101516.k7AFG0Ov030312@d03av03.boulder.ibm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fwstl1-1.wul.qc.ec.gc.ca ([205.211.132.24]:65506 "EHLO
-	ecqcmtlbh.quebec.int.ec.gc.ca") by vger.kernel.org with ESMTP
-	id S1161291AbWHJODf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 10:03:35 -0400
-content-class: urn:content-classes:message
+Received: from e33.co.us.ibm.com ([32.97.110.151]:1739 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1161334AbWHJPQL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2006 11:16:11 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7AFGB14009007
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 11:16:11 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k7AFG11W268086
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 09:16:01 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7AFG1fC030349
+	for <linux-ide@vger.kernel.org>; Thu, 10 Aug 2006 09:16:01 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: r.brandstaedter@gmx.at, albertl@mail.com
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, brking@us.ibm.com
 
-> > >>Reinhard has a Plextor PX-712SA + svia.
-> > >>Maybe he can also help to check whether the patch fixes the
-problem on
-> > >> his box.
-> > >
-> > > What I finally ended up with was solving the problem on the
-hardware
-> > > side:
-> > >
-> > > The Plextor PX-712SA is a normal ATA device wich a IDE:SATA
-adapter
-> > > plugged in at the back. I openend the DVDR Device (2 srews at the
-back)
-> > > repoved the adapter (1 screw) and then u get the normal IDE
-Interface
-> > > (with master/slave jumpers, audio interface and normal ower plug).
-You
-> > > can use this device on an normal IDE interface then. Works perfect
-for
-> > > me, maybe the 716SA Drive is similar
-> > > This was the only solution that fixed the problem for me, any
-submitted
-> > > kernel patches didn't work.
-> >
-> > I'm curious what's the PATA-to-SATA bridge chip used on the Plextor
-> > PX-712SA. (Maybe it is not compatible with the VIA chip.)
-> > Could you please check the IC on the IDE-SATA adapter?
 
-I'm also having an ASUS A8V Deluxe, running x86_64 with a 716SA plextor
-drive.
+When moving libata to drivers/ata, SCSI/SAS drivers were
+broken. Alter the build process for libata to be done in
+a similar manner to how scsi is done today.
 
-Since 2.6.17 it's been working really well.  I don't think there is an
-PATA-to-SATA interface into it but I can check that out tonight if
-needed.
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
 
-Cheers.
+ libata-dev-bjking1/drivers/ata/Makefile |   31 ++++++++++++++++---------------
+ 1 files changed, 16 insertions(+), 15 deletions(-)
 
-- vin
+diff -puN drivers/ata/Makefile~libata_build_fix drivers/ata/Makefile
+--- libata-dev/drivers/ata/Makefile~libata_build_fix	2006-08-10 09:12:15.000000000 -0500
++++ libata-dev-bjking1/drivers/ata/Makefile	2006-08-10 09:12:15.000000000 -0500
+@@ -1,19 +1,20 @@
++obj-$(CONFIG_ATA)		+= libata.o
+ 
+-obj-$(CONFIG_SCSI_SATA_AHCI)	+= libata.o ahci.o
+-obj-$(CONFIG_SCSI_SATA_SVW)	+= libata.o sata_svw.o
+-obj-$(CONFIG_SCSI_ATA_PIIX)	+= libata.o ata_piix.o
+-obj-$(CONFIG_SCSI_SATA_PROMISE)	+= libata.o sata_promise.o
+-obj-$(CONFIG_SCSI_SATA_QSTOR)	+= libata.o sata_qstor.o
+-obj-$(CONFIG_SCSI_SATA_SIL)	+= libata.o sata_sil.o
+-obj-$(CONFIG_SCSI_SATA_SIL24)	+= libata.o sata_sil24.o
+-obj-$(CONFIG_SCSI_SATA_VIA)	+= libata.o sata_via.o
+-obj-$(CONFIG_SCSI_SATA_VITESSE)	+= libata.o sata_vsc.o
+-obj-$(CONFIG_SCSI_SATA_SIS)	+= libata.o sata_sis.o
+-obj-$(CONFIG_SCSI_SATA_SX4)	+= libata.o sata_sx4.o
+-obj-$(CONFIG_SCSI_SATA_NV)	+= libata.o sata_nv.o
+-obj-$(CONFIG_SCSI_SATA_ULI)	+= libata.o sata_uli.o
+-obj-$(CONFIG_SCSI_SATA_MV)	+= libata.o sata_mv.o
+-obj-$(CONFIG_SCSI_PDC_ADMA)	+= libata.o pdc_adma.o
++obj-$(CONFIG_SCSI_SATA_AHCI)	+= ahci.o
++obj-$(CONFIG_SCSI_SATA_SVW)	+= sata_svw.o
++obj-$(CONFIG_SCSI_ATA_PIIX)	+= ata_piix.o
++obj-$(CONFIG_SCSI_SATA_PROMISE)	+= sata_promise.o
++obj-$(CONFIG_SCSI_SATA_QSTOR)	+= sata_qstor.o
++obj-$(CONFIG_SCSI_SATA_SIL)	+= sata_sil.o
++obj-$(CONFIG_SCSI_SATA_SIL24)	+= sata_sil24.o
++obj-$(CONFIG_SCSI_SATA_VIA)	+= sata_via.o
++obj-$(CONFIG_SCSI_SATA_VITESSE)	+= sata_vsc.o
++obj-$(CONFIG_SCSI_SATA_SIS)	+= sata_sis.o
++obj-$(CONFIG_SCSI_SATA_SX4)	+= sata_sx4.o
++obj-$(CONFIG_SCSI_SATA_NV)	+= sata_nv.o
++obj-$(CONFIG_SCSI_SATA_ULI)	+= sata_uli.o
++obj-$(CONFIG_SCSI_SATA_MV)	+= sata_mv.o
++obj-$(CONFIG_SCSI_PDC_ADMA)	+= pdc_adma.o
+ 
+ libata-objs	:= libata-core.o libata-scsi.o libata-bmdma.o libata-eh.o
+ 
+_
