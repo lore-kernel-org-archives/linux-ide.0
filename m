@@ -1,75 +1,28 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Sil 3512 and Seagate ST3802110AS
-Date: Sat, 12 Aug 2006 00:59:57 +0900
-Message-ID: <44DCA97D.2070900@gmail.com>
-References: <455FCE13-2A0E-4BBE-8D1B-45C02C3C1C69@purplevisiontech.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Chi Morrow" <NMDKLHVF@lbcaa.com>
+Subject: Serial Number Information
+Date: Fri, 11 Aug 2006 20:06:41 +0300
+Message-ID: <2962B67C.4581407__49824.8980650262$1155312780$gmane$org@purgation.peternixon.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.206]:3360 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932168AbWHKQAC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Aug 2006 12:00:02 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so300242nzf
-        for <linux-ide@vger.kernel.org>; Fri, 11 Aug 2006 08:59:58 -0700 (PDT)
-In-Reply-To: <455FCE13-2A0E-4BBE-8D1B-45C02C3C1C69@purplevisiontech.com>
+Received: from [222.220.22.180] ([222.220.22.180]:24080 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S932190AbWHKQKd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Aug 2006 12:10:33 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harsha Padmanabha <harsha@purplevisiontech.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: linux-ide@vger.kernel.org
 
-Harsha Padmanabha wrote:
-> I am trying to get sata_sil running on a MPC8349(PPC) board, I runto the 
-> following errors. I cannot upgrade my kernel to the latest one since 
-> most of my changes for MPC8349 to work  are for 2.6.11.
-> 
-> 1) How can i patch the latest release of libata for 2.6.11 without 
-> having to change to 2.6.17
 
-It's difficult.  You'll have to update not only libata but also some 
-SCSI midlayer stuff too.
+C-i-a-l-l-i-s
+Guarantes 36 hours lasting
+Safe to take, no side effectts at all
+Boost and increase cexsual perfoormance
+Haarder Etections and quick recharge
+Proven and certified by experts and doctors
+only $1.56 per t-a-b-s
+Special offer! These prices 
+are valid until 31th of Avgust!
 
-> 2) I have tried SIL 3112 card with the same results
-> 3) I have also tried different hard drives like samsung and WDC
-> 
-> Please let me know what i can do to get this running.
-> sda:<3>ata_scsi_dump_cdb: CDB (2:0,0,0) 28 00 00 00 00 00 00 00 08
-> ata_scsi_translate: ENTER
-> ata_scsi_rw_xlat: ten-byte command
-> ata_sg_setup: ENTER, ata2
-> ata_sg_setup: 1 sg elements mapped
-> ata_fill_sg: PRD[0] = (0x3748000, 0x1000)
-> ata_dev_select: ENTER, ata2: device 0, wait 1
-> ata_tf_load_mmio: hob: feat 0x0 nsect 0x0, lba 0x0 0x0 0x0
-> ata_tf_load_mmio: feat 0x0 nsect 0x8 lba 0x0 0x0 0x0
-> ata_tf_load_mmio: device 0xE0
-> ata_exec_command_mmio: ata2: cmd 0x25
-> ata_scsi_translate: EXIT
-> ata_scsi_error: ENTER
-> ata_eng_timeout: ENTER
-> ata_qc_timeout: ENTER
-> ata2: command 0x25 timeout, stat 0x58 host_stat 0x2
-> ata_sg_clean: unmapping 1 sg elements
-> ata2: status=0x58 { DriveReady SeekComplete DataRequest }
-> SCSI error : <1 0 0 0> return code = 0x8000002
-> sda: Current: sense key: Aborted Command
->     Additional sense: Scsi parity error
-> end_request: I/O error, dev sda, sector 0
-> Buffer I/O error on device sda, logical block 0
-> ata_qc_complete: EXIT
-> ata_qc_timeout: EXIT
-> ata_eng_timeout: EXIT
-> ata_scsi_error: EXIT
+Clisk here: http://dialfive.info
 
-Your first DMA command failed.  IIRC, there was one errata fix which 
-fixes a possible controller lock up problem on 3512 and 3114 but it only 
-happens under relatively heavy IO and 3112 isn't affected, so I don't 
-think you're experiencing that.
 
-At the first glance, your hw seems to have a problem w/ PCI bus 
-mastering.  Does any other device live on the same bus - a NIC maybe? 
-If so, can it do DMA okay?
-
--- 
-tejun
+anne montmartre bogota arrest oblate eloquent eyepiece antelope
+doorkeeper chromosome chunk inauspicious allow bibliophile centrifugate stoneware
