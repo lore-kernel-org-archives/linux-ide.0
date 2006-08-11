@@ -1,34 +1,75 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Fri, 11 Aug 2006 11:48:36 -0400
-Message-ID: <44DCA6D4.7090304@rtr.ca>
-References: <1155144599.5729.226.camel@localhost.localdomain> <p733bc5nm5g.fsf@verdi.suse.de> <1155213464.22922.6.camel@localhost.localdomain> <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex> <20060810194734.GE11829@suse.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Sil 3512 and Seagate ST3802110AS
+Date: Sat, 12 Aug 2006 00:59:57 +0900
+Message-ID: <44DCA97D.2070900@gmail.com>
+References: <455FCE13-2A0E-4BBE-8D1B-45C02C3C1C69@purplevisiontech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:9447 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S932156AbWHKPsm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Aug 2006 11:48:42 -0400
-In-Reply-To: <20060810194734.GE11829@suse.de>
+Received: from nz-out-0102.google.com ([64.233.162.206]:3360 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932168AbWHKQAC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Aug 2006 12:00:02 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so300242nzf
+        for <linux-ide@vger.kernel.org>; Fri, 11 Aug 2006 08:59:58 -0700 (PDT)
+In-Reply-To: <455FCE13-2A0E-4BBE-8D1B-45C02C3C1C69@purplevisiontech.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Jason Lunz <lunz@falooley.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Harsha Padmanabha <harsha@purplevisiontech.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Jens Axboe wrote:
->
-> I'm not on any of the suspend lists, I was merely comparing the
-> suspend-others or suspend-libata ration to suspend-ide on linux-kernel,
-> and the latter is clearly in the minority. I've used ide suspend quite a
-> bit myself, and never had issues with it (or whichever ones I saw
-> initially, I fixed). Of course it depends very much on the hardware. I'd
-> still say that ide suspend probably supports a much wider range of
-> hardware, than does libata suspend.
+Harsha Padmanabha wrote:
+> I am trying to get sata_sil running on a MPC8349(PPC) board, I runto the 
+> following errors. I cannot upgrade my kernel to the latest one since 
+> most of my changes for MPC8349 to work  are for 2.6.11.
+> 
+> 1) How can i patch the latest release of libata for 2.6.11 without 
+> having to change to 2.6.17
 
-Of my various notebooks over the years that used drivers/ide,
-all of them work/worked perfectly with suspend/resume to RAM.
+It's difficult.  You'll have to update not only libata but also some 
+SCSI midlayer stuff too.
 
-Just luck, perhaps.
+> 2) I have tried SIL 3112 card with the same results
+> 3) I have also tried different hard drives like samsung and WDC
+> 
+> Please let me know what i can do to get this running.
+> sda:<3>ata_scsi_dump_cdb: CDB (2:0,0,0) 28 00 00 00 00 00 00 00 08
+> ata_scsi_translate: ENTER
+> ata_scsi_rw_xlat: ten-byte command
+> ata_sg_setup: ENTER, ata2
+> ata_sg_setup: 1 sg elements mapped
+> ata_fill_sg: PRD[0] = (0x3748000, 0x1000)
+> ata_dev_select: ENTER, ata2: device 0, wait 1
+> ata_tf_load_mmio: hob: feat 0x0 nsect 0x0, lba 0x0 0x0 0x0
+> ata_tf_load_mmio: feat 0x0 nsect 0x8 lba 0x0 0x0 0x0
+> ata_tf_load_mmio: device 0xE0
+> ata_exec_command_mmio: ata2: cmd 0x25
+> ata_scsi_translate: EXIT
+> ata_scsi_error: ENTER
+> ata_eng_timeout: ENTER
+> ata_qc_timeout: ENTER
+> ata2: command 0x25 timeout, stat 0x58 host_stat 0x2
+> ata_sg_clean: unmapping 1 sg elements
+> ata2: status=0x58 { DriveReady SeekComplete DataRequest }
+> SCSI error : <1 0 0 0> return code = 0x8000002
+> sda: Current: sense key: Aborted Command
+>     Additional sense: Scsi parity error
+> end_request: I/O error, dev sda, sector 0
+> Buffer I/O error on device sda, logical block 0
+> ata_qc_complete: EXIT
+> ata_qc_timeout: EXIT
+> ata_eng_timeout: EXIT
+> ata_scsi_error: EXIT
 
-Cheers
+Your first DMA command failed.  IIRC, there was one errata fix which 
+fixes a possible controller lock up problem on 3512 and 3114 but it only 
+happens under relatively heavy IO and 3112 isn't affected, so I don't 
+think you're experiencing that.
+
+At the first glance, your hw seems to have a problem w/ PCI bus 
+mastering.  Does any other device live on the same bus - a NIC maybe? 
+If so, can it do DMA okay?
+
+-- 
+tejun
