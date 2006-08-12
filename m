@@ -1,213 +1,37 @@
-From: Pekida Prihatin <info@prihatin.com>
-Subject: Ajak Keluarga Nikmati Perbualan PERCUMA bersama 2000 Jemaah seluruh Negara.!
-Date: Sat, 12 Aug 2006 20:35:45 +0800
-Message-ID: <c2052f635483a67c5fe54b05c5c56b5f@www.pekida.org>
+From: "Carola" <reklama@a24.spb.ru>
+Subject: hi from Folvyn
+Date: Sat, 12 Aug 2006 18:22:19 +0300
+Message-ID: <009d01c6be23$1578aa00$7d14000a__10710.8044824146$1155396116$gmane$org@ADSL-200-59-127-80.capfed1.uolsinectis.com.ar>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kelantan.mschosting.com ([202.75.42.155]:44111 "EHLO
-	kelantan.mschosting.com") by vger.kernel.org with ESMTP
-	id S932509AbWHLMfx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Aug 2006 08:35:53 -0400
-Received: from nobody by kelantan.mschosting.com with local (Exim 4.52)
-	id 1GBsiP-0002HE-BA
-	for linux-ide@vger.kernel.org; Sat, 12 Aug 2006 20:35:45 +0800
+Received: from ADSL-200-59-127-80.capfed1.uolsinectis.com.ar ([200.59.127.80]:22797
+	"EHLO ADSL-200-59-127-80.capfed1.uolsinectis.com.ar")
+	by vger.kernel.org with ESMTP id S964862AbWHLPVj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Aug 2006 11:21:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Joerg <linux-gcc@vger.kernel.org>
+
+Hallo.	
+
+I'm a very young and energetic lady! I have very positive attitude to life and people. I do enjoy new experience life can offer me: to see new interesting places, to meet new people.
+I do try to enjoy every moment of life and accept everything the way it comes without complaining.
+Though my life seems to be quite enjoyable there's one important thing missing. It's LOVE!
+Without my beloved one, my soul mate, my King my life is not completed.
+I wish i coud find him very soon so that we could share together every momement of the life-time romance! 
+What about you? Could you be my King? If answer is "yes" - you can find more about me 
+http://justwaitingforyou.com/loveyou/
+
+au revoir
+
+Folvyn
+
+If you think that you were subscribed by mistake for this mail
+delivery or if your email has been added without your permission,
+please, visit http://justwaitingforyou.com/loveyou/ and unsubscribe from our mails.
 
 
-Bismillah hirrohman nirrohim...
-
-
-
-Assalamualaikum Saudara/Saudari,
-
-
-
-Apa khabar Saudara/Saudari sekeluarga? semoga sihat-sihat selalu,
-
-Saya MAIZATUL BINTI RAHIM, mewakili pekida R&D dan Prihatin Services me=
-ngirim email ini kepada Saudara/Saudari untuk menyampaikan satu berita =
-besar.
-
-SATU BERITA GEMBIRA UNTUK KITA IAITU PERMINTAAN KITA DENGAN DESAKAN PEL=
-BAGAI PIHAK AGAR TAWARAN INI DILANJUTKAN TELAH DILULUSKAN. PEKEJ POWERT=
-OOL P38 BESERTA SUPLEMENTARY LINE DILANJUTKAN HINGGA HUJUNG BULAN OGOS =
-INI. P18 TELAH PUN DITAMATKAN.=20
-
-LANJUTAN MASA INI MEMBERIKAN KITA PELUANG KEEMASAN UNTUK MENGAJAK SERAM=
-AI MUNGKIN SANAK SAUDARA DAN SAHABAT HANDAI DALAM JEMAAH KITA SENDIRI U=
-NTUK TURUT SERTA DALAM PEKEJ INI. LEBIH RAMAI TURUTSERTA, LEBIH MERIAH =
-JEMAAH KITA, LEBIH BANYAK KENALAN UNTUK TUJUAN PENYATUAN UMMAH DAN KEUT=
-UHAN KELUARGA BESAR KITA.
-
-WALAU BAGAIMANAPUN, SYARAT KELULUSAN TELAH DIPERKETATKAN OLEH PIHAK CEL=
-COM... JADI SILA PERHATIKAN SYARAT-SYARAT YANG DITETAPKAN DI BAWAH INI.
-
-
-
-
-Saudara/Saudari ...
-
-Jika dulu kita teragak-agak dan takut-takut untuk menghubungi IBU BAPA,=
- KELUARGA, rakan taulan, pelanggan dan jemaah sendiri kerana khuatir bi=
-l telefon jadi tinggi, kini tidak perlu lagi=85 dengan Kemudahan PANGGI=
-LAN PERCUMA celcom POWERTOOLS Pekida Prihatin, kita bukan saja dapat be=
-rcakap PERCUMA secara individu, malah kita dapat BERSIDANG (CONFERENCE)=
- dengan jemaah kita sekerap mungkin dengan PERCUMA.
-
-Kami, Prihatin Services daripada unit R&D, Latihan dan Perhubungan Awam=
- PEKIDA MALAYSIA ingin menawarkan pekej ini untuk dimanfaatkan oleh ahl=
-i keluarga, syarikat dan organisasi Saudara/Saudari.
-
-Ini adalah satu Pekej Keluarga yang luar biasa, tidak pernah di tawarka=
-n oleh mana mana syarikat Telefon sebelumnya. Dirangka dan diditawarkan=
- khusus untuk memupuk sifat keperihatinan melalui perhubungan kemanusia=
-an untuk dinikmati oleh semua ahli dan sukarelawan PRIHATIN UNIT R&D PE=
-KIDA MALAYSIA.
-
-Misi kami ialah untuk bekerjasama dengan celcom, menggalakkan perhubung=
-an yang rapat di kalangan individu untuk merapatkan persahabatan, keker=
-abatan dan semangat kekeluargaan di kalangan kita. Saudara/Saudari juga=
- boleh manfaatkan pekej ini untuk memperbaiki perhubungan perniagaan se=
-sama pekerja dan pelanggan Saudara/Saudari tanpa batasan kos dan masa. =
-Berhubunglah semahunya dengan PERCUMA.
-
-Saudara/Saudari juga boleh menawarkan pekej EMAS ini kepada Organisasi =
-NGO, rakan niaga, rakan politik dan pengundi yang suka berhubung dan si=
-apa saja. Apa yang perlu Saudara/Saudari lakukan ialah mendaftar sebaga=
-i sukarelawan Prihatin UNIT R&D PEKIDA MALAYSIA dan Saudara/Saudari lay=
-ak untuk mendaftar dan mendapatkan satu talian Celcom di bawah Pekej EM=
-AS ini dengan PERCUMA, tanpa DEPOSIT, tanpa PENJAMIN.=20
-
-
-Dengan Pekej ini, Saudara/Saudari dan kumpulan Saudara/Saudari akan men=
-ikmati tarif khas yang sangat menarik seperti berikut.
-
-a)	Panggilan PERCUMA sesama kumpulan=20
-b)	Caj panggilan dan sms MURAH (diskaun melebihi 50%) untuk panggilan k=
-epada bukan ahli dalam kumpulan.
-c)	KADAR SAMA RATA untuk panggilan yang dibuat dari dan ke mana saja se=
-luruh negara, termasuk Sabah dan Serawak.
-d)	Caj minima (5 sen untuk panggilan dan 2 sen untuk sms) untuk 8 NOMBO=
-R CELCOM YANG DIPILIH.
-e)	Maksima 3 TALIAN ANAK percuma dengan bayaran rm 13 sebulan dan boleh=
- bercakap percuma sesama ahli dalam kumpulan kecil (1+3=3D4 talian)
-f)	Pendaftaran PERCUMA, tanpa cagaran, tanpa penjamin.
-g)	Setiap penama BOLEH MENDAFTAR SEHINGGA 3 TALIAN UTAMA dan setiap tal=
-ian utama boleh memohon 3 talian anak (supplementary).
-h)	PERCUMA KAD SIM 128K baru yang dilengkapi dengan memori tinggi dan k=
-emudahan 3g.=20
-i)	Voice activated Service (V.A.S.) percuma, mel suara, panggilan menun=
-ggu, panggilan persidangan (Conference), clip dan sebagainya.
-=20
-Untuk makluman dan tindakan Saudara/Saudari, tawaran ini akan berakhir =
-sebelum hujung bulan Ogos'06. Jadi, janganlah berlengah lagi. Ahli Baia=
-h Pekida adalah di kira sebagai layak menyertai skim ini walaupun belum=
- menerima kad ahli Pekida... apa yang perlu dilakukan ialah mendaftar s=
-ebagai Sukarelawan Khas Unit R&D Pekida Malaysia secara rasmi (kelulusa=
-n serta merta) ...
-
-Kalau bukan Ahli Pekida, Saudara/Saudari wajib mendaftar sebagai sukare=
-lawan Prihatin Unit R&D Pekida Malaysia sebagai syarat layak. Borang ad=
-a kami pastekan di www.prihatin/celcom.
-
-Celcom mengenakan syarat yang agak ketat sekarang, hanya yang berdaftar=
- sebagai ahli Pekida atau Sukarelawan Prihatin saja diluluskan untuk me=
-nggunakan talian ini.
-
-Prihatin ditubuhkan oleh unit R&D untuk mendekatkan masyarakat dgn Peki=
-da melalui kerja kemanusiaan dan kemsyarakatan. Kebanyakkan ahli prihat=
-in akhirnya menjadi ahli Pekida yang Prihatin.
-
-Untuk mempercepatkan masa kerana tawaran hingga ke hujung bulan ini saj=
-a, maka ada baiknya samada Saudara/Saudari datang ke kajang atau email/=
-faxkan =20
-
-1. salinan ic depan belakang.
-
-2. beri nama ibu.
-
-3. beri alamat pos untuk penghantaran bil dan simkad.
-
-4. beri nombor talipun sekarang.
-
-
-
-kami di sini semua telah menggunakan talian free ini dan amat gembira m=
-elakukan conference seluruh negara dengan PERCUMA bersama jemaah yang t=
-elahpun mengaktifkan talian celcom Powertools mereka. Ini termasuklah r=
-amai khalifah dan penyelia kawasan yang telah menerima berita lebih awa=
-l. Semuga Saudara/Saudari dapat bersama kita dan menjadikan hubungan in=
-i lebih akrab selepas ini.
-
-Sila lihat brosur khas dan keterangan lanjut di www.pekida.org/celcom a=
-tau www.prihatin.com/celcom atau hubungi kami melalui email atau sms un=
-tuk tindakan segera.
-
-SETELAH SELESAI URUSAN PENDAFTARAN, KESEMUA PENGGUNA TALIAN POWERTOOL P=
-RIHATIN AKAN KITA SATUKAN DALAM SATU DIREKTORI DAN AKAN KITA PANJANGKAN=
- DENGAN SATU MAJLIS SERTA AKTIVITI SOSIAL DAN PERNIAGAAN YANG PASTINYA =
-MENJADIKAN HIDUP KITA YANG ASALNYA KURANG KENAL MENGENALI SEBELUM INI M=
-ENJADI LEBIH BAIK DAN AKRAB. PELUANG MENDAPAT KENALAN-KENALAN BARU DARI=
- SELURUH NEGARA YANG AKHIRNYA MENJADI SEHATI SEJIWA MELALUI KEAKRABAN P=
-ERHUBUNGAN PERCUMA POWETOOL INI PASTI AKAN MENJADIKAN MALAYSIA LEBIH IN=
-DAH UNTUK KITA SEMUA....
-
-Jika Saudara/Saudari sedang di blacklisted, boleh gunakan nama rakan da=
-n berkongsi penama kerana satu penama boleh mendaftar sehingga 3 talian=
- utama.
-
-
-HUBUNGI KAMI SEKARANG DI,
-
-PRIHATIN SERVICES
-ROB NO: (1607051-X)
-8558, Jalan Pegawai, Sungai Ramal Baru
-43000 Kajang, Selangor Darul Ehsan
-Tel: 03-87369645 Tel/Fax: 03-87399645
-Mobile: 019-6230363 (TOLL FREE POWERTOOLS )=20
-
-Atau
-HUBUNGI SECARA PERIBADI PEGAWAI RND YANG BERIKUT:
-
-KEKANDA ANDY - Johor (POWERTOOL CALL FREE 013-3976760),=20
-KEKANDA AZAR - JOHOR ((POWERTOOL CALL FREE 013-3984543) Nick name Forum=
- : TONTOYO,=20
-KEKANDA JONO / AZMAN - JOHOR (POWERTOOL CALL FREE 013-3983220),=20
-KEKANDA  ZACK - HQ (012-6931005),=20
-KEKANDA NIZAM - Penang (012-2778349, POWERTOOL CALL FREE 013-3335636),=20
-ERFI =96 KEDAH POWERTOOL CALL FREE 019-6230223
-KEKANDA WAN TAIPING - 013-5321736 / POWERTOOL CALL FREE 019-6230421),=20
-
-KEKANDA KHALID - HQ POWERTOOL CALL FREE 019-6230426
-KEKANDA MAIZATUL =96 HQ- POWERTOOL CALL FREE 019-6230425
-WAN BOS - HQ (016-3233036, (POWERTOOL CALL FREE 013-3303028)=20
-AZMI HQ - POWERTOOL CALL FREE 013-3984546,=20
-HAFIZ HQ - POWERTOOL CALL FREE 013-3303089,=20
-
-ATAU
-AYAHANDA DR.HJ.MASJUKI (013 3671112, 013-2299930 POWERTOOL CALL FREE 01=
-9-6230363)
-
-Email: info@prihatin.com   rnd@pekida.org
-Website: http://www.prihatin.com/celcom  or www.pekida.org/celcom =20
-
-Sokongan dan dokongan daripada Saudara/Saudari saya dahului dengan juta=
-an terima kasih... Semuga dengan pekej ini kita dapat berhubung lebih r=
-apat dan misi perjuangan lebih mudah dicapai=85. Insyaallah.
-
-Sekian dahulu buat masa ini,
-
-
-Wassalam dan selamat sejahtera dari saya...
-
-MAIZATUL
-
-
-
- Please Paste following link to Un-subscribe :  http://www.pekida.org/m=
-aillist/unsubscribe.php?mail=3Dlinux-ide@vger.kernel.org&id=3D12
 
