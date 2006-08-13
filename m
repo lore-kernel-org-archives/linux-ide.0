@@ -1,57 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [-mm patch] cleanup drivers/ata/Kconfig
-Date: Sun, 13 Aug 2006 23:46:19 +0100
-Message-ID: <1155509179.24077.172.camel@localhost.localdomain>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.18-rc4-mm1: ATI SB600 SATA drivers: modpost errors
+Date: Mon, 14 Aug 2006 01:01:41 +0200
+Message-ID: <20060813230141.GT3543@stusta.de>
 References: <20060813012454.f1d52189.akpm@osdl.org>
-	 <20060813210106.GO3543@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45280 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751682AbWHMW2G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Aug 2006 18:28:06 -0400
-In-Reply-To: <20060813210106.GO3543@stusta.de>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:49422 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751705AbWHMXBn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 13 Aug 2006 19:01:43 -0400
+Content-Disposition: inline
+In-Reply-To: <20060813012454.f1d52189.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Anatoli Antonovitch <antonovi@ati.com>
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, rusty@rustcorp.com.au, sam@ravnborg.org
 
-Ar Sul, 2006-08-13 am 23:01 +0200, ysgrifennodd Adrian Bunk:
-> One issue I noticed while creating this patch is that for the following 
-> options the dependency and the prompt don't agree whether the option
-> is EXPERIMENTAL:
-> - SATA_SX4
-> - PATA_AMD
-> - PATA_HPT3X3
-> - PATA_SC1200
+On Sun, Aug 13, 2006 at 01:24:54AM -0700, Andrew Morton wrote:
+>...
+> Changes since 2.6.18-rc3-mm2:
+>...
+> +ahci-ati-sb600-sata-support-for-various-modes.patch
+> +atiixp-ati-sb600-ide-support-for-various-modes.patch
+>...
+>  Misc patches
+>...
 
-HPT3x3, SC1200 are experimental
-AMD is not intended to be any more.
+<--  snip  -->
 
-Thanks for spotting these.
+...
+  MODPOST 1955 modules
+WARNING: Can't handle masks in drivers/ata/ahci:FFFF05
+WARNING: Can't handle masks in drivers/ide/pci/atiixp:FFFF05
+...
 
->  config ATA_JMICRON
->  	tristate "JMicron non-AHCI support (Experimental)"
-> -	depends on ATA && PCI && EXPERIMENTAL
-> +	depends on PCI && EXPERIMENTAL
->  	help
->  	  This option enables support for Jmicron ATA controllers
->  	  ports running in non-AHCI mode. Where possible you should
->  	  set the configuration for AHCI to get better performance
+<--  snip  -->
 
-Actually I should mark this as non-experimental too but I'll do that and
-push it the proper path.
+cu
+Adrian
 
->  config PATA_LEGACY
->  	tristate "Legacy ISA PATA support (Experimental)"
-> -	depends on ATA && PCI && EXPERIMENTAL
-> +	depends on PCI && EXPERIMENTAL
+-- 
 
-My fault I suspect - shouldn't have been && PCI originally
+    Gentoo kernels are 42 times more popular than SUSE kernels among
+    KLive users  (a service by SUSE contractor Andrea Arcangeli that
+    gathers data about kernels from many users worldwide).
 
-
-
-Acked-by: Alan Cox <alan@redhat.com>
+       There are three kinds of lies: Lies, Damn Lies, and Statistics.
+                                                    Benjamin Disraeli
 
