@@ -1,34 +1,31 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: PATCH: Add CFA modes
-Date: Mon, 14 Aug 2006 14:06:35 -0400
-Message-ID: <44E0BBAB.7050304@pobox.com>
-References: <1155232332.24077.7.camel@localhost.localdomain>
+Subject: Re: [PATCH 1/1] libata: Build fix for drivers/scsi users
+Date: Mon, 14 Aug 2006 14:13:16 -0400
+Message-ID: <44E0BD3C.5090203@pobox.com>
+References: <200608101516.k7AFG0Ov030312@d03av03.boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:23197 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932666AbWHNSGk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Aug 2006 14:06:40 -0400
-In-Reply-To: <1155232332.24077.7.camel@localhost.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:41117 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751600AbWHNSNT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Aug 2006 14:13:19 -0400
+In-Reply-To: <200608101516.k7AFG0Ov030312@d03av03.boulder.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Brian King <brking@us.ibm.com>
 Cc: linux-ide@vger.kernel.org
 
-applied
+Brian King wrote:
+> When moving libata to drivers/ata, SCSI/SAS drivers were
+> broken. Alter the build process for libata to be done in
+> a similar manner to how scsi is done today.
+> 
+> Signed-off-by: Brian King <brking@us.ibm.com>
 
-PLEASE start using normal subject lines, per 
-http://linux.yyz.us/patch-format.html:
+applied manually, since I had already changed all the symbol names
 
-1) On subject line, use brackets to enclose PATCH:
+	Jeff
 
-	[PATCH] ...
-
-2) Your subject line is the one-line summary for the patch, that is 
-global namespace for the entire kernel.  Thus, you MUST (using RFC 
-language) include some hint as to what part of the kernel you are modifying:
-
-	[PATCH] libata: Add CFA modes
 
 
