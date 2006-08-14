@@ -1,86 +1,75 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: ASUS A8V Deluxe, x86_64
-Date: Mon, 14 Aug 2006 14:31:00 +0800
-Message-ID: <44E018A4.3000907@tw.ibm.com>
-References: <8E8F647D7835334B985D069AE964A4F702463F@ECQCMTLMAIL1.quebec.int.ec.gc.ca> <200608100847.00837.r.brandstaedter@eunet.at> <44DAE22E.3050909@tw.ibm.com> <200608101056.06254.r.brandstaedter@eunet.at>
-Reply-To: albertl@mail.com
+From: Martin =?ISO-8859-1?Q?Ammerm=FCller?= <tenco@gmx.de>
+Subject: Re: [sata_sil] kernel 2.6.17(-mm2) test - timeout issue
+Date: Mon, 14 Aug 2006 12:12:00 +0200
+Message-ID: <1155550320.6423.2.camel@localhost>
+References: <1151182247.5566.18.camel@localhost>
+	 <449DFDC4.5050207@gmail.com> <1153729271.3860.14.camel@localhost>
+	 <44CD1512.1060802@gmail.com> <1154785005.9220.1.camel@localhost>
+	 <44D61004.3070109@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EwrCmgTe0k/IjhlYixVz"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:222 "EHLO e36.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751893AbWHNGbR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Aug 2006 02:31:17 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7E6VHHG022773
-	for <linux-ide@vger.kernel.org>; Mon, 14 Aug 2006 02:31:17 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7E6VGsk218364
-	for <linux-ide@vger.kernel.org>; Mon, 14 Aug 2006 00:31:16 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7E6VGhp011457
-	for <linux-ide@vger.kernel.org>; Mon, 14 Aug 2006 00:31:16 -0600
-In-Reply-To: <200608101056.06254.r.brandstaedter@eunet.at>
+Received: from mail.gmx.net ([213.165.64.20]:41882 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932227AbWHNKL5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Aug 2006 06:11:57 -0400
+In-Reply-To: <44D61004.3070109@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: r.brandstaedter@gmx.at
-Cc: albertl@mail.com, linux-ide@vger.kernel.org, Unicorn Chang <uchang@tw.ibm.com>
-
-Reinhard Brandst=E4dter wrote:
-> On Thursday 10 August 2006 09:37, Albert Lee wrote:
->=20
->>Reinhard Brandst=E4dter wrote:
->>
->>>On Tuesday 16 May 2006 14:57, Albert Lee wrote:
->>>
->>>>Reinhard has a Plextor PX-712SA + svia.
->>>>Maybe he can also help to check whether the patch fixes the problem=
- on
->>>>his box.
->>>
->>>What I finally ended up with was solving the problem on the hardware
->>>side:
->>>
->>>The Plextor PX-712SA is a normal ATA device wich a IDE:SATA adapter
->>>plugged in at the back. I openend the DVDR Device (2 srews at the ba=
-ck)
->>>repoved the adapter (1 screw) and then u get the normal IDE Interfac=
-e
->>>(with master/slave jumpers, audio interface and normal ower plug). Y=
-ou
->>>can use this device on an normal IDE interface then. Works perfect f=
-or
->>>me, maybe the 716SA Drive is similar
->>>This was the only solution that fixed the problem for me, any submit=
-ted
->>>kernel patches didn't work.
->>
->>I'm curious what's the PATA-to-SATA bridge chip used on the Plextor
->>PX-712SA. (Maybe it is not compatible with the VIA chip.)
->>Could you please check the IC on the IDE-SATA adapter?
->=20
->=20
-> On the IC it reads:
-> 88SA8040-TBC
-> AP039208.3
-> 0432 B0S
->=20
-> I also attached a picture of the IC.
->=20
-
-Hi Reinhard,
-
-It's a Marvell 88SA8040. I have a Marvell 88SA8040 bridge at hand and
-the bridge has been tested with SiI 3112 and it works ok with SiI 3112
-and several CD-ROM drives.
-
-Don't know whether the Marvell 88SA8040 works with SVIA.
-Unicorn (on the cc list) has a VIA VT6421 SATA adapter. Will try
-connecting the Marvell 88SA8040 with the VIA VT6421 and see if it works=
-=2E
-
---
-albert
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
 
+--=-EwrCmgTe0k/IjhlYixVz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Am Montag, den 07.08.2006, 00:51 +0900 schrieb Tejun Heo:=20
+> I'm not sure why the previous patch didn't kick in.  The condition=20
+> should have been caught and EH_HARDRESET requested.  Can you please=20
+> double check the patched kernel is running?  You can put a little=20
+> printk() after the freeze: label in sil_interrupt() to be sure.  That's=20
+> the only place where sata_sil freezes the port except for timing out.
+
+Sorry, i couldn't find a "freeze" label in sil_interrupt(). There's one
+in sil_host_intr(), but appending 'printk("THIS VERSION RUNS MODIFIED
+sata_sil!");' there, doesn't have any effect (it doesn't get printed
+out). That's the only freeze label i found in sata_sil.c. My original
+drivers/scsi/sata_sil.c was version 2.6.18-rc1.
+
+'strings /lib/modules/2.6.18-rc1/kernel/drivers/scsi/sata_sil.ko'
+doesn't give any unexpected results:
+
+----------------------
+[...]
+<7>%s %s: version 2.0
+<3>ata%u: XXX: qc=3D%p ctl=3D%x
+<3>ata%u: XXX: HSM=3D%d
+<6>ata%u.%02u: applying Seagate errata fix (mod15write workaround)
+<6>ata%u.%02u: applying Maxtor errata fix %s
+<4>%s %s: cache line size not set.  Driver may not function
+<6>%s %s: Applying R_ERR on DMA activate FIS errata fix
+<3>ata%u: XXX: SATA_IRQ serror=3D%x
+<3>ata%u: XXX: BUSY status=3D%x
+THIS VERSION RUNS MODIFIED sata_sil!
+[...]
+------------------------
+
+The kernel was built with Debian's make-kpkg (make-kpkg --initrd
+kernel_image). Output is still the same.
+
+- Martin
+
+--=-EwrCmgTe0k/IjhlYixVz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Dies ist ein digital signierter Nachrichtenteil
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+
+iD8DBQBE4ExvFjFZ/qjkvZARArUMAJ40kM0pTaL00x9JkaypXnM5MIcEYACfQBe1
+hYKaPntLkhFrZ1eqC0a8yAQ=
+=ugG7
+-----END PGP SIGNATURE-----
+
+--=-EwrCmgTe0k/IjhlYixVz--
 
