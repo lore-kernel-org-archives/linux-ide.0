@@ -1,35 +1,50 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Len Brown <len.brown@intel.com>
 Subject: Re: What determines which interrupts are shared under Linux?
-Date: Tue, 15 Aug 2006 16:06:19 +0100
-Message-ID: <1155654379.24077.286.camel@localhost.localdomain>
+Date: Tue, 15 Aug 2006 10:47:43 -0400
+Message-ID: <200608151047.44255.len.brown@intel.com>
 References: <44E1D760.6070600@atipa.com>
+Reply-To: Len Brown <lenb@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:15077 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030327AbWHOOpo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Aug 2006 10:45:44 -0400
+Received: from hera.kernel.org ([140.211.167.34]:14037 "EHLO hera.kernel.org")
+	by vger.kernel.org with ESMTP id S1030324AbWHOOq6 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Aug 2006 10:46:58 -0400
 In-Reply-To: <44E1D760.6070600@atipa.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Roger Heflin <rheflin@atipa.com>
 Cc: Linux-Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Ar Maw, 2006-08-15 am 09:17 -0500, ysgrifennodd Roger Heflin:
-> On Linux when interrupts are defined similar to below, what defines say
-> ide2, ide3 to be on the same interrupt?    The bios, linux, the driver using
-> the interrupt?    And can that be controlled/overrode at the 
-> kernel/driver level?
+On Tuesday 15 August 2006 10:17, Roger Heflin wrote:
+>  22: =A0 =A0 =A0 1165 =A0 =A01704243 =A0 =A0 576247 =A0 =A0 =A0 6796 =
+=A0 IO-APIC-level =A0ide2,  ide3
 
-Only with a soldering iron. They are the way the system is wired. Moving
-boards between slots may change the IRQ allocation.
+The first thing that determines interrupt sharing is where the physical=
+ wires from
+the devices are routed.  If these ide controllers are add-on boards, th=
+en you
+could try moving them between PCI slots -- as the slots generally have =
+different
+primary interrupt lines.  When the board runs out of unique lines,
+they are generally wired to re-use lines on different slots.
+The manual for the board will generally tell you how the lines
+are routed.
 
-> I have identified that the disks that are shared on ide2, ide3 do funny
-> things when both are being heavily used (dma_expiry), this is an older 
-> driver versions
+If the devices are using the same physical interrupt line, then it
+is not possible for software or BIOS to move them to different
+lines.
 
-That could be occuring just through lack of PCI bus bandwidth.
+If these devices are functions in the same device, it is possible
+that there is some internal (BIOS or firmware) setting to tell it to
+use two interrupt wires instead of one.
 
+Once the wire for the device is determined, it is up to the BIOS
+and the OS to program (or not) an interrupt router to assign
+the wire to an interrupt input pin.  Your dmesg will tell us
+if this is happening on this board.
 
+-Len
