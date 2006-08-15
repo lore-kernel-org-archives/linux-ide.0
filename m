@@ -1,34 +1,57 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Tue, 15 Aug 2006 10:01:00 -0400
-Message-ID: <44E1D39C.60900@garzik.org>
-References: <1155144599.5729.226.camel@localhost.localdomain>	<44DA4288.6020806@rtr.ca> <44DACE9F.3090909@garzik.org>	<44DCA67B.5070400@rtr.ca> <ebsibq$qgb$1@sea.gmane.org>
+From: Roger Heflin <rheflin@atipa.com>
+Subject: What determines which interrupts are shared under Linux?
+Date: Tue, 15 Aug 2006 09:17:04 -0500
+Message-ID: <44E1D760.6070600@atipa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:62401 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030297AbWHOOBD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Aug 2006 10:01:03 -0400
-In-Reply-To: <ebsibq$qgb$1@sea.gmane.org>
+Received: from 125.14.cm.sunflower.com ([24.124.14.125]:36743 "EHLO
+	mail.atipa.com") by vger.kernel.org with ESMTP id S965373AbWHOOQ6
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Aug 2006 10:16:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthieu CASTET <castet.matthieu@free.fr>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux-Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Matthieu CASTET wrote:
-> On Fri, 11 Aug 2006 11:47:07 -0400, Mark Lord wrote:
->> And libata already has sufficient ioctl compatibility for nearly all
->> purposes with the old drivers/ide stuff.  Yes, there are some more
->> esoteric ioctls that I once implemented in drivers/ide that do not
->> exist for libata, and nobody will miss them.
+Hello,
 
-> IRRC, there nothing for ATAPI ioctl compatibility, there only things for
-> ATA.
+On Linux when interrupts are defined similar to below, what defines say
+ide2, ide3 to be on the same interrupt?    The bios, linux, the driver using
+the interrupt?    And can that be controlled/overrode at the 
+kernel/driver level?
 
-What _specifically_ is missing, in your opinion?
+I have identified that the disks that are shared on ide2, ide3 do funny
+things when both are being heavily used (dma_expiry), this is an older 
+driver versions
+but I have experienced it before with a lot newer driver, and a bios 
+adjustment
+previously fixed a similar issue, so that may be what is needed in this 
+case also,
+I am not sure how they fixed it, but I suspect that the setup the interrupt
+to not be shared.   I have a large number of machines and under heavy 
+loads all
+seem to duplicate the issue, and it always happens with the disks on 
+ide2/ide3,
+never on the disk connected to ide4.
 
-	Jeff
+            CPU0       CPU1       CPU2       CPU3
+   0:   56616921    5359998    7002142     938817          XT-PIC  timer
+   1:          8         88         96          0    IO-APIC-edge  i8042
+   2:          0          0          0          0          XT-PIC  cascade
+   4:       2091        100        208       2477    IO-APIC-edge  serial
+   8:          0          0          0          0    IO-APIC-edge  rtc
+   9:          0          0          0          0   IO-APIC-level  acpi
+  20:          0          0          0          0   IO-APIC-level  ehci_hcd
+  21:          0        950     401419     414482   IO-APIC-level  ide4, 
+ohci_hcd
+  22:       1165    1704243     576247       6796   IO-APIC-level  ide2, 
+ide3
+  47:      65971          0          0          0   IO-APIC-level  eth0
+NMI:          1          1          1          1
+LOC:   69904264   69877733   69879541   69901903
+ERR:          0
+MIS:        105
 
 
-
+                                       Roger
