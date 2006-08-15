@@ -1,71 +1,35 @@
-From: Roger Heflin <rheflin@atipa.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: What determines which interrupts are shared under Linux?
-Date: Tue, 15 Aug 2006 09:38:06 -0500
-Message-ID: <44E1DC4E.1020506@atipa.com>
-References: <44E1D760.6070600@atipa.com> <44E1DA98.2040404@ru.mvista.com>
+Date: Tue, 15 Aug 2006 16:06:19 +0100
+Message-ID: <1155654379.24077.286.camel@localhost.localdomain>
+References: <44E1D760.6070600@atipa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 125.14.cm.sunflower.com ([24.124.14.125]:51851 "EHLO
-	mail.atipa.com") by vger.kernel.org with ESMTP id S1030315AbWHOOh6
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Aug 2006 10:37:58 -0400
-In-Reply-To: <44E1DA98.2040404@ru.mvista.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:15077 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1030327AbWHOOpo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Aug 2006 10:45:44 -0400
+In-Reply-To: <44E1D760.6070600@atipa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Roger Heflin <rheflin@atipa.com>
 Cc: Linux-Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Sergei Shtylyov wrote:
-> Hello,
-> 
->> I have identified that the disks that are shared on ide2, ide3 do funny
->> things when both are being heavily used (dma_expiry), this is an older 
->> driver versions
->> but I have experienced it before with a lot newer driver, and a bios 
->> adjustment
->> previously fixed a similar issue, so that may be what is needed in 
->> this case also,
->> I am not sure how they fixed it, but I suspect that the setup the 
->> interrupt
->> to not be shared.
-> 
->    I doubt that your suspicions are justified.
-> 
->>   I have a large number of machines and under heavy loads all
->> seem to duplicate the issue, and it always happens with the disks on 
->> ide2/ide3,
->> never on the disk connected to ide4.
-> 
->    BTW, you never named your particular IDE hardware.
+Ar Maw, 2006-08-15 am 09:17 -0500, ysgrifennodd Roger Heflin:
+> On Linux when interrupts are defined similar to below, what defines say
+> ide2, ide3 to be on the same interrupt?    The bios, linux, the driver using
+> the interrupt?    And can that be controlled/overrode at the 
+> kernel/driver level?
 
-NVIDIA, CK804 chipset.
+Only with a soldering iron. They are the way the system is wired. Moving
+boards between slots may change the IRQ allocation.
 
-And the disks are on the sata part, and are found as e g and i so if
-they are in legacy mode, it would make me suspect that the disks believe
-they are on separate channels, and the performance characteristics appear
-to confirm that as the disks don't seem to interfere with each other.
+> I have identified that the disks that are shared on ide2, ide3 do funny
+> things when both are being heavily used (dma_expiry), this is an older 
+> driver versions
 
-> 
->>            CPU0       CPU1       CPU2       CPU3
->>   0:   56616921    5359998    7002142     938817          XT-PIC  timer
->>   1:          8         88         96          0    IO-APIC-edge  i8042
->>   2:          0          0          0          0          XT-PIC  cascade
->>   4:       2091        100        208       2477    IO-APIC-edge  serial
->>   8:          0          0          0          0    IO-APIC-edge  rtc
->>   9:          0          0          0          0   IO-APIC-level  acpi
->>  20:          0          0          0          0   IO-APIC-level  
->> ehci_hcd
->>  21:          0        950     401419     414482   IO-APIC-level  
->> ide4, ohci_hcd
->>  22:       1165    1704243     576247       6796   IO-APIC-level  
->> ide2, ide3
->>  47:      65971          0          0          0   IO-APIC-level  eth0
->> NMI:          1          1          1          1
->> LOC:   69904264   69877733   69879541   69901903
->> ERR:          0
->> MIS:        105
-> 
-> MBR, Sergei
-> 
+That could be occuring just through lack of PCI bus bandwidth.
+
+
