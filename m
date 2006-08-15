@@ -1,44 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Libata-tj-stable patch /w sil3124 and PMP... 'device or resource
- busy'
-Date: Tue, 15 Aug 2006 21:55:26 +0900
-Message-ID: <44E1C43E.1020302@gmail.com>
-References: <44E105A7.3030900@grokthis.net>
+From: "Matthieu CASTET" <castet.matthieu@free.fr>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Tue, 15 Aug 2006 13:31:38 +0000 (UTC)
+Message-ID: <ebsibq$qgb$1@sea.gmane.org>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+	<44DA4288.6020806@rtr.ca> <44DACE9F.3090909@garzik.org>
+	<44DCA67B.5070400@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.202]:31874 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S965088AbWHOMzd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Aug 2006 08:55:33 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so566774nzf
-        for <linux-ide@vger.kernel.org>; Tue, 15 Aug 2006 05:55:33 -0700 (PDT)
-In-Reply-To: <44E105A7.3030900@grokthis.net>
+Received: from main.gmane.org ([80.91.229.2]:61855 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S1030239AbWHONb7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Aug 2006 09:31:59 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1GCz1H-0006kL-Ir
+	for linux-ide@vger.kernel.org; Tue, 15 Aug 2006 15:31:47 +0200
+Received: from cac94-1-81-57-151-96.fbx.proxad.net ([81.57.151.96])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 15 Aug 2006 15:31:47 +0200
+Received: from castet.matthieu by cac94-1-81-57-151-96.fbx.proxad.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 15 Aug 2006 15:31:47 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eric Windisch <eric@grokthis.net>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Eric Windisch wrote:
-> First, I should note that I've attempted to use the latest 
-> libata-tj-stable patch, against 2.6.17.4 and 2.6.17.7 (it patched 
-> cleanly), and I've tried 2.6.18-rc3.  All three have given me either the 
-> same, or a worse result.  My controller is a sil3124, I have 5 sata 
-> drives, and I'm using a couple sil 3726 PMPs (to support a potential 
-> maximum of 12 drives with my Norco 1220 disk array).
-> 
-> Regarding the behavior, while I can see all 5 disks, and even partition 
-> them (iirc, parted worked, but fdisk didn't), and see my created 
-> partitions, when attempting to use 'mdadm --create', I get the error:  
-> "Device or resource busy".   mkfs.ext3 gives a similar error as well.  
-> The disks are not mounted or otherwise being accessed (such as via 
-> software raid or lvm).
+Hi,
 
-Hello, Eric.
+On Fri, 11 Aug 2006 11:47:07 -0400, Mark Lord wrote:
 
-Can you post the result of 'dmesg', 'cat /proc/mounts' and 'fuser -v 
-/dev/sdX#'?
+> And libata already has sufficient ioctl compatibility for nearly all
+> purposes with the old drivers/ide stuff.  Yes, there are some more
+> esoteric ioctls that I once implemented in drivers/ide that do not
+> exist for libata, and nobody will miss them.
+IRRC, there nothing for ATAPI ioctl compatibility, there only things for
+ATA.
 
--- 
-tejun
+Matthieu
+
