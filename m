@@ -1,27 +1,29 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: More ATA corner cases
-Date: Wed, 16 Aug 2006 18:50:37 -0400
-Message-ID: <44E3A13D.20102@rtr.ca>
-References: <1155731962.24077.346.camel@localhost.localdomain>
+Subject: Re: What determines which interrupts are shared under Linux?
+Date: Wed, 16 Aug 2006 18:54:39 -0400
+Message-ID: <44E3A22F.20400@rtr.ca>
+References: <44E1D760.6070600@atipa.com>	 <1155654379.24077.286.camel@localhost.localdomain>	 <44E1E719.6020005@atipa.com> <1155657316.24077.293.camel@localhost.localdomain> <44E208AD.8060505@atipa.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:26521 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S932310AbWHPWuj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Aug 2006 18:50:39 -0400
-In-Reply-To: <1155731962.24077.346.camel@localhost.localdomain>
+Received: from rtr.ca ([64.26.128.89]:29593 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932314AbWHPWyk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Aug 2006 18:54:40 -0400
+In-Reply-To: <44E208AD.8060505@atipa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Roger Heflin <rheflin@atipa.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux-Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Any objection to me adding a new cable type for "40 wire ATA66 capable"
-> to indicate the laptop vendor has been sneaky and we should do full UDMA
-> ranges regardless of drive or other controller reporting.
+Roger Heflin wrote:
+>
+> It looks like the older DMA recovery code never works on this chipset,
+> once it goes into DMA recovery it never comes out of it.    I am looking
+> at that to see if anything can be done about it.
 
-Good.  I'll need that feature for a little mini-ITX box here as well.
-It uses a *really short* 40W cable for UDMA4 operation.
+You could try booting with ide2=serialize as a kernel parameter.
+That should ensure the two channels are never in use simultaneously.
+Trades off a bit of performance for a bit of reliability.
 
-Cheers 
+Cheers
