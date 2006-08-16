@@ -1,36 +1,22 @@
-From: jason <huzhijiang@gmail.com>
-Subject: via8237A driver [resend]
-Date: Wed, 16 Aug 2006 18:55:13 +0800
-Message-ID: <380087de0608160355r36f8bc9dh6cf0293ce348fc60@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: More ATA corner cases
+Date: Wed, 16 Aug 2006 13:39:22 +0100
+Message-ID: <1155731962.24077.346.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:5765 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1750855AbWHPKzO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Aug 2006 06:55:14 -0400
-Received: by py-out-1112.google.com with SMTP id z74so627143pyg
-        for <linux-ide@vger.kernel.org>; Wed, 16 Aug 2006 03:55:13 -0700 (PDT)
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:1930 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751135AbWHPMTY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Aug 2006 08:19:24 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi, all
+Any objection to me adding a new cable type for "40 wire ATA66 capable"
+to indicate the laptop vendor has been sneaky and we should do full UDMA
+ranges regardless of drive or other controller reporting.
 
-Sorry, the last mail is not plain text.
+Alan
 
- I`m currently runing a 2.6.16.x (with tejun`s new EH patchset
-http://home-tj.org/wiki/index.php/Libata-tj-stable )POST
-http://mail.google.com/mail/?&ik=09eaeb4457&cmid=17&newa got two
-patches, one is add the ids(1106:0591) to drivers/ide the other is add
-it to drivers/scsi. So for my kernel now, which patch is the best
-chooice?("best" means work stable and I don`t care if the driver can
-do PM or HP ...).
-  Please help, thank you!
-
--- 
-Yours,
-jason
