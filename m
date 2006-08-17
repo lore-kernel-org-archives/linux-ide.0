@@ -1,37 +1,37 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: /dev/sd*
-Date: Thu, 17 Aug 2006 11:21:18 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0608171120260.4252@yvahk01.tjqt.qr>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Thu, 17 Aug 2006 10:52:28 +0100
+Message-ID: <1155808348.15195.55.camel@localhost.localdomain>
 References: <1155144599.5729.226.camel@localhost.localdomain>
- <20060809212124.GC3691@stusta.de> <1155160903.5729.263.camel@localhost.localdomain>
- <20060809221857.GG3691@stusta.de> <20060810123643.GC25187@boogie.lpds.sztaki.hu>
- <44DB289A.4060503@garzik.org> <44E3DFD6.4010504@PicturesInMotion.net>
- <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr> <44E42900.1030905@PicturesInMotion.net>
+	 <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
+	 <200608102140.36733.rjw@sisk.pl> <44E3E1E6.9090908@PicturesInMotion.net>
+	 <20060817091842.GC17899@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailer.gwdg.de ([134.76.10.26]:43679 "EHLO mailer.gwdg.de")
-	by vger.kernel.org with ESMTP id S964771AbWHQJ12 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2006 05:27:28 -0400
-In-Reply-To: <44E42900.1030905@PicturesInMotion.net>
+Received: from [81.2.110.250] ([81.2.110.250]:55472 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S964778AbWHQJcu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2006 05:32:50 -0400
+In-Reply-To: <20060817091842.GC17899@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Trager <Lee@PicturesInMotion.net>
-Cc: Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: Lee Trager <Lee@PicturesInMotion.net>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jason Lunz <lunz@falooley.org>, Jens Axboe <axboe@suse.de>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Stefan Seyfried <seife@suse.de>
 
->> In the process, we can rename the then-"generic disk" (scsi ide whatever) 
->> back to "hd*" since that actually expands to Hard Disk.
->> (If I would have known a lot earlier about Linux I would have proposed 
->> "id*" for the IDE disks.)
->>
->Actually that does make more sense then using disk. So I guess we're
->back to square one. Personally I don't think its that big of a deal, all
->you have to do is change fstab and grub or lilo. My main concern is for
->the less advanced Linux users.
+Ar Iau, 2006-08-17 am 11:18 +0200, ysgrifennodd Pavel Machek:
+> > Well it seems I am one of those users who is bit by the resume bug. I
+> > was wondering why no developer has replied to my
+> > bug(http://bugzilla.kernel.org/show_bug.cgi?id=6840) even though many
+> > users have. Id try to fix it myself but Ive never done kernel
 
-Less advanced users should use the upgrade tools their distribution 
-provides.
+Probably because its a repeat of a well known problem and nobody has
+volunteered to fix it even when its been explained to them
 
+When we set the HPA on boot we must do the same on resume or the error
+you see occurs.
 
-Jan Engelhardt
--- 
+> 
+> Time to learn?
+> 
+> 								Pavel
