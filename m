@@ -1,53 +1,44 @@
-From: Lee Trager <Lee@PicturesInMotion.net>
-Subject: Re: /dev/sd*
-Date: Thu, 17 Aug 2006 04:29:52 -0400
-Message-ID: <44E42900.1030905@PicturesInMotion.net>
-References: <1155144599.5729.226.camel@localhost.localdomain>
- <20060809212124.GC3691@stusta.de>
- <1155160903.5729.263.camel@localhost.localdomain>
- <20060809221857.GG3691@stusta.de>
- <20060810123643.GC25187@boogie.lpds.sztaki.hu> <44DB289A.4060503@garzik.org>
- <44E3DFD6.4010504@PicturesInMotion.net>
- <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Thu, 17 Aug 2006 11:18:42 +0200
+Message-ID: <20060817091842.GC17899@elf.ucw.cz>
+References: <1155144599.5729.226.camel@localhost.localdomain> <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex> <200608102140.36733.rjw@sisk.pl> <44E3E1E6.9090908@PicturesInMotion.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta4.srv.hcvlny.cv.net ([167.206.4.199]:4963 "EHLO
-	mta4.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
-	id S932449AbWHQI3q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Aug 2006 04:29:46 -0400
-In-reply-to: <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:53229 "EHLO amd.ucw.cz")
+	by vger.kernel.org with ESMTP id S932382AbWHQJTF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2006 05:19:05 -0400
+Content-Disposition: inline
+In-Reply-To: <44E3E1E6.9090908@PicturesInMotion.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Lee Trager <Lee@PicturesInMotion.net>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jason Lunz <lunz@falooley.org>, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Stefan Seyfried <seife@suse.de>
 
-Jan Engelhardt wrote:
->>>> AFAIR long ago Linus said he'd like just one major number (and thus only
->>>> one naming scheme) for every disk in the system; with /dev/sd* we're now
->>>> getting there.
->>>>         
->>> Yep.  /dev/disk is a long term goal :)
->>>
->>>       
->> I agree with Adrian, users are going to get confused if their devices
->> are named something different once they switch to this new interface. So
->> if we're going to confusing them why not just take the big leap and
->> switch it over to /dev/disk? It seems to make more sense then to have
->> all IDE and SATA users use /dev/sda for awhile only to down the road
->> have to to switch to /dev/disk.
->>     
->
-> In the process, we can rename the then-"generic disk" (scsi ide whatever) 
-> back to "hd*" since that actually expands to Hard Disk.
-> (If I would have known a lot earlier about Linux I would have proposed 
-> "id*" for the IDE disks.)
->
->
-> Jan Engelhardt
->   
-Actually that does make more sense then using disk. So I guess we're
-back to square one. Personally I don't think its that big of a deal, all
-you have to do is change fstab and grub or lilo. My main concern is for
-the less advanced Linux users.
+
+> > I agree.  Moreover, the disk-related resume-from-ram problems are the hardest
+> > ones (the graphics may be handled from the user land to a reasonable extent).
+> >
+> > Actually, I'm looking for someone who'd agree to be Cced on bug reports where
+> > we suspect the problem may be related to IDE/PATA/SATA . ;-)
+> >
+> > Greetings,
+> > Rafael
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >   
+> Well it seems I am one of those users who is bit by the resume bug. I
+> was wondering why no developer has replied to my
+> bug(http://bugzilla.kernel.org/show_bug.cgi?id=6840) even though many
+> users have. Id try to fix it myself but Ive never done kernel
+
+Time to learn?
+
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
