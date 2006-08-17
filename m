@@ -1,37 +1,144 @@
-From: Roger Heflin <rheflin@atipa.com>
-Subject: Re: What determines which interrupts are shared under Linux?
-Date: Thu, 17 Aug 2006 08:18:52 -0500
-Message-ID: <44E46CBC.6060500@atipa.com>
-References: <44E1D760.6070600@atipa.com>	 <1155654379.24077.286.camel@localhost.localdomain>	 <44E1E719.6020005@atipa.com>	 <1155657316.24077.293.camel@localhost.localdomain>	 <44E208AD.8060505@atipa.com>  <44E3A22F.20400@rtr.ca> <1155775180.15195.16.camel@localhost.localdomain>
+From: Vlad Codrea <VladCodrea@mail.utexas.edu>
+Subject: Re: Libata in 2.6.18-rc4-mm1 doesn't recognize DVD-ROM drive
+Date: Thu, 17 Aug 2006 12:54:46 -0500
+Message-ID: <44E4AD66.1060605@mail.utexas.edu>
+References: <44E3EC71.1080200@mail.utexas.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 125.14.cm.sunflower.com ([24.124.14.125]:61466 "EHLO
-	mail.atipa.com") by vger.kernel.org with ESMTP id S932468AbWHQNSo
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Aug 2006 09:18:44 -0400
-In-Reply-To: <1155775180.15195.16.camel@localhost.localdomain>
+Received: from ironman.mail.utexas.edu ([128.83.32.51]:21931 "EHLO
+	ironman.mail.utexas.edu") by vger.kernel.org with ESMTP
+	id S932422AbWHQQp5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Aug 2006 12:45:57 -0400
+In-Reply-To: <44E3EC71.1080200@mail.utexas.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, Linux-Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Ar Mer, 2006-08-16 am 18:54 -0400, ysgrifennodd Mark Lord:
->> Roger Heflin wrote:
->>> It looks like the older DMA recovery code never works on this chipset,
->>> once it goes into DMA recovery it never comes out of it. 
-> 
-> DMA recovery is fairly broken in drivers/ide especially if it tries to
-> change mode. libata does not have this problem and I have no plans to
-> even try and fix the drivers/ide code for this issue as its a major
-> piece of work.
-> 
-> 
+Vlad Codrea wrote:
+>
+> Libata in 2.6.18-rc4-mm1 doesn't recognize my DVD-ROM drive, which is 
+> an ATAPI TORiSAN DVD-ROM DRD-N216.
 
-If already figured that since I was pretty sure all of it was
-being rolled to libata.   I was able to switch that controller and
-disk to the libata sata_nv.
+If I add "TORiSAN DVD-ROM DRD-N216" to ata_dma_blacklist[] on line 2990 
+of drivers/ata/libata-core.c, I am able to mount CDs. However, md5sum 
+fails for some files on the CD, and eventually the drive freezes with 
+the following message. The CD is definitely good since md5sum works on 
+my other computer. If having ssh access to the affected computer would 
+help someone solve this error, I'd be happy to arrange that.
 
-                                 Roger
+kernel: ata2.00: 61440 bytes trailing data
+kernel: ata2: soft resetting port
+kernel: ata2: port is slow to respond, please be patient
+kernel: ATA: abnormal status 0xD8 on port 0x177
+last message repeated 3 times
+kernel: ata2.00: qc timeout (cmd 0xa1)
+kernel: ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+kernel: ata2: failed to recover some devices, retrying in 5 secs
+kernel: ata2: port is slow to respond, please be patient
+kernel: ata2: soft resetting port
+kernel: ata2: port is slow to respond, please be patient
+kernel: ATA: abnormal status 0xD8 on port 0x177
+last message repeated 3 times
+kernel: ata2.00: qc timeout (cmd 0xa1)
+kernel: ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+kernel: ata2: failed to recover some devices, retrying in 5 secs
+kernel: ata2: port is slow to respond, please be patient
+kernel: ata2: soft resetting port
+kernel: ata2: port is slow to respond, please be patient
+kernel: ATA: abnormal status 0xD8 on port 0x177
+last message repeated 3 times
+kernel: ata2.00: qc timeout (cmd 0xa1)
+kernel: ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+kernel: ata2.00: disabled
+kernel: ata2: EH complete
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1391424
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1391560
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1391816
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1392072
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1392328
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1392584
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1392840
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1391424
+kernel: Reducing readahead size to 256K
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1395092
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1395092
+kernel: Reducing readahead size to 256K
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1396096
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1396096
+kernel: Reducing readahead size to 256K
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 260
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 264
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 272
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 280
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 288
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 312
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 320
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 328
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 336
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 344
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1040
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1040
+kernel: Reducing readahead size to 256K
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 348
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 516
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1044
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1044
+kernel: Reducing readahead size to 256K
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 564
+kernel: ISOFS: unable to read i-node block
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1488
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 1488
+kernel: Reducing readahead size to 256K
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 2204
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 2204
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 2280
+kernel: sr 1:0:0:0: SCSI error: return code = 0x00040000
+kernel: end_request: I/O error, dev sr0, sector 2280
