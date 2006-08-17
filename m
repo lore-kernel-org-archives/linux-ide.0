@@ -1,32 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Thu, 17 Aug 2006 12:51:31 +0100
-Message-ID: <1155815491.15195.75.camel@localhost.localdomain>
-References: <1155144599.5729.226.camel@localhost.localdomain>
-	 <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
-	 <200608102140.36733.rjw@sisk.pl> <44E3E1E6.9090908@PicturesInMotion.net>
-	 <20060817091842.GC17899@elf.ucw.cz>
-	 <1155808348.15195.55.camel@localhost.localdomain>
-	 <20060817094512.GD17899@elf.ucw.cz>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Add MSI support to sata_vsc driver
+Date: Thu, 17 Aug 2006 08:30:45 -0400
+Message-ID: <44E46175.8040501@garzik.org>
+References: <87840E8EE8A8D240A13F8AA92CAB07D9024C14A6@azsmsx402> <20060817040738.GA854817@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:7594 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964811AbWHQLbF
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Aug 2006 07:31:05 -0400
-In-Reply-To: <20060817094512.GD17899@elf.ucw.cz>
+Received: from srv5.dvmed.net ([207.36.208.214]:20650 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932336AbWHQMau (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2006 08:30:50 -0400
+In-Reply-To: <20060817040738.GA854817@sgi.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: Lee Trager <Lee@PicturesInMotion.net>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jason Lunz <lunz@falooley.org>, Jens Axboe <axboe@suse.de>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Stefan Seyfried <seife@suse.de>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: "Wolstenholme, Daniel E" <daniel.e.wolstenholme@intel.com>, linux-ide@vger.kernel.org
 
-Ar Iau, 2006-08-17 am 11:45 +0200, ysgrifennodd Pavel Machek:
-> This should not be it... it also happens on suspend-to-disk according
-> to the report, and during swsusp we do normal boot so HPA should be
-> initialized...?
+Jeremy Higdon wrote:
+> On Tue, Aug 15, 2006 at 05:25:14PM -0700, Wolstenholme, Daniel E wrote:
+>>    In the course of some work I'm doing with MSI interrupts, I had an
+>>    Intel GD81344 card I wanted to try out with MSI interrupts, and I
+>>    found that it does indeed support MSI.  Here's a patch to add support.
+> 
+> You sent the patch as html.  That's not going to work.  Even the text/plain
+> part of it is quoted/printable with lots of extra blank lines, etc.  If
+> you're using Outlook, the only way to send a patch is to first turn off
+> html and then send the patch as a text/plain attachment (as far as I know).
+> 
+>>    I implemented this rather simple patch using #ifdef CONFIG_PCI_MSI.  I
+>>    noticed some other drivers, such as sata_mv and LSI's fusion drivers,
+>>    use a kernel command-line parameter to enable MSI support.  I honestly
+>>    don't know the advantage to this; it seems to me to be easier if it's
+>>    enabled by default, as long as MSI support is selected in the kernel
+>>    configuration.  If not, someone please let me know.
+> 
+> It might be that some platforms that have MSI enabled won't support it
+> on certain machines where these chips are installed.  So it's probably
+> best to make it an option.  I'll defer to jgarzik on this, however.
 
-The suspend to disk case I've not personally seen. The suspend to ram
-one I have looked at and seen and verified the HPA was not reset.
+There's no need for #ifdefs at all.  You call pci_enable_msi() 
+unconditionally, and if it fails, don't configure/use MSI.  From the 
+driver's perspective, everything is handled with runtime function calls.
+
+	Jeff
+
+
 
