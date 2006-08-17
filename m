@@ -1,83 +1,106 @@
-From: Lee Trager <Lee@PicturesInMotion.net>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Wed, 16 Aug 2006 23:26:30 -0400
-Message-ID: <44E3E1E6.9090908@PicturesInMotion.net>
-References: <1155144599.5729.226.camel@localhost.localdomain>
- <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
- <200608102140.36733.rjw@sisk.pl>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH] Add MSI support to sata_vsc driver
+Date: Wed, 16 Aug 2006 21:07:38 -0700
+Message-ID: <20060817040738.GA854817@sgi.com>
+References: <87840E8EE8A8D240A13F8AA92CAB07D9024C14A6@azsmsx402>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta3.srv.hcvlny.cv.net ([167.206.4.198]:30942 "EHLO
-	mta3.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
-	id S1751260AbWHQD0U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Aug 2006 23:26:20 -0400
-In-reply-to: <200608102140.36733.rjw@sisk.pl>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:49598 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S932270AbWHQEHl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2006 00:07:41 -0400
+Content-Disposition: inline
+In-Reply-To: <87840E8EE8A8D240A13F8AA92CAB07D9024C14A6@azsmsx402>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jason Lunz <lunz@falooley.org>, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Pavel Machek <pavel@ucw.cz>, Stefan Seyfried <seife@suse.de>
+To: "Wolstenholme, Daniel E" <daniel.e.wolstenholme@intel.com>
+Cc: linux-ide@vger.kernel.org
 
-Rafael J. Wysocki wrote:
-> On Thursday 10 August 2006 21:02, Jason Lunz wrote:
->   
->> In gmane.linux.kernel, you wrote:
->>     
->>> You make it sound much worse than it is. Apart for HPA, I'm not aware of
->>> any setups that require extra treatment. And the amount of reported bugs
->>> against it are pretty close to zero :-)
->>>       
->
-> No, it's not.
->
->   
->> *ahem*.
->>
->> I needed to do this to cure IDE hangs on resume:
->>
->> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc3/2.6.18-rc3-mm2/broken-out/ide-reprogram-disk-pio-timings-on-resume.patch
->>
->> Are you watching the suspend mailing lists? There's no shortage of them:
->>
->> suspend-devel:	http://dir.gmane.org/gmane.linux.kernel.suspend.devel
->> linux-pm:	http://dir.gmane.org/gmane.linux.power-management.general
->> suspend2-devel:	http://dir.gmane.org/gmane.linux.swsusp.devel
->> suspend2-users:	http://dir.gmane.org/gmane.linux.swsusp.general
->>
->> I'm currently trying to help out one Sheer El-Showk, whose piix ide
->> requires 30 seconds of floundering followed by a bus reset to resume:
->>
->> http://thread.gmane.org/gmane.linux.kernel.suspend.devel/276/focus=347
->>
->> But I know next-to-nothing about ATA.
->>
->> It's not surprising you're not getting many bug reports. It's common for
->> several things to go wrong during s2ram, and the user often ends up
->> looking at a hung system with a dead screen. It takes some quality time
->> with netconsole to even begin to narrow down that it's IDE hanging the
->> system, after which you can *begin* solving the no-video-on-resume
->> issue.
->>     
->
-> I agree.  Moreover, the disk-related resume-from-ram problems are the hardest
-> ones (the graphics may be handled from the user land to a reasonable extent).
->
-> Actually, I'm looking for someone who'd agree to be Cced on bug reports where
-> we suspect the problem may be related to IDE/PATA/SATA . ;-)
->
-> Greetings,
-> Rafael
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->   
-Well it seems I am one of those users who is bit by the resume bug. I
-was wondering why no developer has replied to my
-bug(http://bugzilla.kernel.org/show_bug.cgi?id=6840) even though many
-users have. Id try to fix it myself but Ive never done kernel hacking. I
-haven't posted on the linux suspend lists because I talked to one of the
-suspend2 developers who told me that the problem was with the ide driver
-and thus could not help me.
+On Tue, Aug 15, 2006 at 05:25:14PM -0700, Wolstenholme, Daniel E wrote:
+> 
+>    In the course of some work I'm doing with MSI interrupts, I had an
+>    Intel GD81344 card I wanted to try out with MSI interrupts, and I
+>    found that it does indeed support MSI.  Here's a patch to add support.
+
+You sent the patch as html.  That's not going to work.  Even the text/plain
+part of it is quoted/printable with lots of extra blank lines, etc.  If
+you're using Outlook, the only way to send a patch is to first turn off
+html and then send the patch as a text/plain attachment (as far as I know).
+
+>    I implemented this rather simple patch using #ifdef CONFIG_PCI_MSI.  I
+>    noticed some other drivers, such as sata_mv and LSI's fusion drivers,
+>    use a kernel command-line parameter to enable MSI support.  I honestly
+>    don't know the advantage to this; it seems to me to be easier if it's
+>    enabled by default, as long as MSI support is selected in the kernel
+>    configuration.  If not, someone please let me know.
+
+It might be that some platforms that have MSI enabled won't support it
+on certain machines where these chips are installed.  So it's probably
+best to make it an option.  I'll defer to jgarzik on this, however.
+
+jeremy
+
+>    This patch is against 2.6.18-rc1.  There shouldn't be any problems
+>    applying it to other 2.6.18 versions.
+> 
+> 
+>    Dan
+> 
+> 
+>    diff -Naur linux-2.6.18-rc1-original/drivers/scsi/sata_vsc.c
+>    linux-2.6.18-rc1/drivers/scsi/sata_vsc.c
+> 
+>    --- linux-2.6.18-rc1-original/drivers/scsi/sata_vsc.c   2006-08-15
+>    17:13:53.000000000 -0700
+> 
+>    +++ linux-2.6.18-rc1/drivers/scsi/sata_vsc.c    2006-08-15
+>    16:02:26.000000000 -0700
+> 
+>    @@ -406,13 +406,23 @@
+> 
+>             */
+> 
+>            pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
+> 
+> 
+>    +#ifdef CONFIG_PCI_MSI
+> 
+>    +       if (pci_enable_msi(pdev) == 0) {
+> 
+>    +               probe_ent->irq_flags &= ~IRQF_SHARED;
+> 
+>    +       }
+> 
+>    +       else {
+> 
+>    +               probe_ent->irq_flags = IRQF_SHARED;
+> 
+>    +       }
+> 
+>    +#else
+> 
+>    +       probe_ent->irq_flags = IRQF_SHARED;
+> 
+>    +#endif
+> 
+>    +
+> 
+>            probe_ent->sht = &vsc_sata_sht;
+> 
+>            probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+> 
+>                                    ATA_FLAG_MMIO;
+> 
+>            probe_ent->port_ops = &vsc_sata_ops;
+> 
+>            probe_ent->n_ports = 4;
+> 
+>            probe_ent->irq = pdev->irq;
+> 
+>    -       probe_ent->irq_flags = IRQF_SHARED;
+> 
+>            probe_ent->mmio_base = mmio_base;
+> 
+> 
+>            /* We don't care much about the PIO/UDMA masks, but the core
+>    won't like us
