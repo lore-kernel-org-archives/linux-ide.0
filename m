@@ -1,31 +1,53 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Lee Trager <Lee@PicturesInMotion.net>
 Subject: Re: /dev/sd*
-Date: Thu, 17 Aug 2006 09:45:13 +0100
-Message-ID: <1155804314.15195.34.camel@localhost.localdomain>
+Date: Thu, 17 Aug 2006 04:29:52 -0400
+Message-ID: <44E42900.1030905@PicturesInMotion.net>
 References: <1155144599.5729.226.camel@localhost.localdomain>
-	 <20060809212124.GC3691@stusta.de>
-	 <1155160903.5729.263.camel@localhost.localdomain>
-	 <20060809221857.GG3691@stusta.de>
-	 <20060810123643.GC25187@boogie.lpds.sztaki.hu>
-	 <44DB289A.4060503@garzik.org> <44E3DFD6.4010504@PicturesInMotion.net>
-	 <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr>
+ <20060809212124.GC3691@stusta.de>
+ <1155160903.5729.263.camel@localhost.localdomain>
+ <20060809221857.GG3691@stusta.de>
+ <20060810123643.GC25187@boogie.lpds.sztaki.hu> <44DB289A.4060503@garzik.org>
+ <44E3DFD6.4010504@PicturesInMotion.net>
+ <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42889 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932446AbWHQI2p
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Aug 2006 04:28:45 -0400
-In-Reply-To: <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr>
+Received: from mta4.srv.hcvlny.cv.net ([167.206.4.199]:4963 "EHLO
+	mta4.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S932449AbWHQI3q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Aug 2006 04:29:46 -0400
+In-reply-to: <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Lee Trager <Lee@PicturesInMotion.net>, Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ar Iau, 2006-08-17 am 10:01 +0200, ysgrifennodd Jan Engelhardt:
+Jan Engelhardt wrote:
+>>>> AFAIR long ago Linus said he'd like just one major number (and thus only
+>>>> one naming scheme) for every disk in the system; with /dev/sd* we're now
+>>>> getting there.
+>>>>         
+>>> Yep.  /dev/disk is a long term goal :)
+>>>
+>>>       
+>> I agree with Adrian, users are going to get confused if their devices
+>> are named something different once they switch to this new interface. So
+>> if we're going to confusing them why not just take the big leap and
+>> switch it over to /dev/disk? It seems to make more sense then to have
+>> all IDE and SATA users use /dev/sda for awhile only to down the road
+>> have to to switch to /dev/disk.
+>>     
+>
+> In the process, we can rename the then-"generic disk" (scsi ide whatever) 
+> back to "hd*" since that actually expands to Hard Disk.
 > (If I would have known a lot earlier about Linux I would have proposed 
 > "id*" for the IDE disks.)
-
-IDE basically did not exist at the time that the hd name was chosen. 
-
+>
+>
+> Jan Engelhardt
+>   
+Actually that does make more sense then using disk. So I guess we're
+back to square one. Personally I don't think its that big of a deal, all
+you have to do is change fstab and grub or lilo. My main concern is for
+the less advanced Linux users.
