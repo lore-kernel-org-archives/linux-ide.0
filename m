@@ -1,148 +1,40 @@
-From: "Unicorn Chang" <unicorn.mail@gmail.com>
-Subject: Re: [PATCH] ata_piix: fix ghost device probing by honoring PCS present bits
-Date: Thu, 17 Aug 2006 15:52:18 +0800
-Message-ID: <e4c012fe0608170052w7b75c451n2a69d9dd9143944b@mail.gmail.com>
-References: <20060810052347.GC6371@htj.dyndns.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: /dev/sd*
+Date: Thu, 17 Aug 2006 11:58:16 +0400
+Message-ID: <44E42198.3030500@tls.msk.ru>
+References: <1155144599.5729.226.camel@localhost.localdomain> <20060809212124.GC3691@stusta.de> <1155160903.5729.263.camel@localhost.localdomain> <20060809221857.GG3691@stusta.de> <20060810123643.GC25187@boogie.lpds.sztaki.hu> <44DB289A.4060503@garzik.org> <44E3DFD6.4010504@PicturesInMotion.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:38636 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932234AbWHQHwT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Aug 2006 03:52:19 -0400
-Received: by py-out-1112.google.com with SMTP id z74so1320286pyg
-        for <linux-ide@vger.kernel.org>; Thu, 17 Aug 2006 00:52:19 -0700 (PDT)
-In-Reply-To: <20060810052347.GC6371@htj.dyndns.org>
-Content-Disposition: inline
+Received: from hobbit.corpit.ru ([81.13.94.6]:27480 "EHLO hobbit.corpit.ru")
+	by vger.kernel.org with ESMTP id S932250AbWHQH6X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2006 03:58:23 -0400
+In-Reply-To: <44E3DFD6.4010504@PicturesInMotion.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Gary Hade <garyhade@us.ibm.com>
+To: Lee Trager <Lee@PicturesInMotion.net>
+Cc: Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I tested this patch on IBM Intellistation M Pro with Quantum GoVault
-(kernel 2.6.18-rc4),
-it works fine !
+Lee Trager wrote:
+> Jeff Garzik wrote:
+>> Gabor Gombas wrote:
+>>> AFAIR long ago Linus said he'd like just one major number (and thus only
+>>> one naming scheme) for every disk in the system; with /dev/sd* we're now
+>>> getting there.
+>> Yep.  /dev/disk is a long term goal :)
+[]
+> I agree with Adrian, users are going to get confused if their devices
+> are named something different once they switch to this new interface. So
+> if we're going to confusing them why not just take the big leap and
+> switch it over to /dev/disk? It seems to make more sense then to have
+> all IDE and SATA users use /dev/sda for awhile only to down the road
+> have to to switch to /dev/disk.
 
-SATA controller is configured to "Compatible" mode.
-Intel Corporation 82801GB/GR/GH (ICH7 Family) Serial ATA Storage
-Controllers cc=IDE (rev 01)
+The reason, in my opinion anyway, is that not all the word is IDE now,
+and it has been this way for a long time.  I mean, real scsi uses /dev/sd*
+*right now*, and changing this to /dev/disk* will break just everything,
+not only people using IDE.
 
---
-Unicorn
+/mjt
 
-On 8/10/06, Tejun Heo <htejun@gmail.com> wrote:
-> Move out PCS handling from piix_sata_prereset() into
-> piix_sata_present_mask() and use it from newly implemented
-> piix_sata_softreset().  Class codes for devices which are indicated to
-> be absent by PCS are cleared to ATA_DEV_NONE.  This fixes ghost device
-> problem reported on ICH6 and 7 (and probably 8).
->
-> This patch moves PCS handling from prereset to softreset, which makes
-> ata_piix perform softreset even when PCS indicates no device.
->
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
->
-> diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
-> index 19745a3..ad880b8 100644
-> --- a/drivers/scsi/ata_piix.c
-> +++ b/drivers/scsi/ata_piix.c
-> @@ -531,27 +531,25 @@ static void piix_pata_error_handler(stru
->  }
->
->  /**
-> - *     piix_sata_prereset - prereset for SATA host controller
-> + *     piix_sata_present_mask - determine present mask for SATA host controller
->   *     @ap: Target port
->   *
-> - *     Reads and configures SATA PCI device's PCI config register
-> - *     Port Configuration and Status (PCS) to determine port and
-> - *     device availability.  Return -ENODEV to skip reset if no
-> - *     device is present.
-> + *     Reads SATA PCI device's PCI config register Port Configuration
-> + *     and Status (PCS) to determine port and device availability.
->   *
->   *     LOCKING:
->   *     None (inherited from caller).
->   *
->   *     RETURNS:
-> - *     0 if device is present, -ENODEV otherwise.
-> + *     determined present_mask
->   */
-> -static int piix_sata_prereset(struct ata_port *ap)
-> +static unsigned int piix_sata_present_mask(struct ata_port *ap)
->  {
->         struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
->         struct piix_host_priv *hpriv = ap->host_set->private_data;
->         const unsigned int *map = hpriv->map;
->         int base = 2 * ap->hard_port_no;
-> -       unsigned int present = 0;
-> +       unsigned int present_mask = 0;
->         int port, i;
->         u16 pcs;
->
-> @@ -564,24 +562,52 @@ static int piix_sata_prereset(struct ata
->                         continue;
->                 if ((ap->flags & PIIX_FLAG_IGNORE_PCS) ||
->                     (pcs & 1 << (hpriv->map_db->present_shift + port)))
-> -                       present = 1;
-> +                       present_mask |= 1 << i;
->         }
->
->         DPRINTK("ata%u: LEAVE, pcs=0x%x present_mask=0x%x\n",
->                 ap->id, pcs, present_mask);
->
-> -       if (!present) {
-> -               ata_port_printk(ap, KERN_INFO, "SATA port has no device.\n");
-> -               ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
-> -               return 0;
-> +       return present_mask;
-> +}
-> +
-> +/**
-> + *     piix_sata_softreset - reset SATA host port via ATA SRST
-> + *     @ap: port to reset
-> + *     @classes: resulting classes of attached devices
-> + *
-> + *     Reset SATA host port via ATA SRST.  On controllers with
-> + *     reliable PCS present bits, the bits are used to determine
-> + *     device presence.
-> + *
-> + *     LOCKING:
-> + *     Kernel thread context (may sleep)
-> + *
-> + *     RETURNS:
-> + *     0 on success, -errno otherwise.
-> + */
-> +static int piix_sata_softreset(struct ata_port *ap, unsigned int *classes)
-> +{
-> +       unsigned int present_mask;
-> +       int i, rc;
-> +
-> +       present_mask = piix_sata_present_mask(ap);
-> +
-> +       rc = ata_std_softreset(ap, classes);
-> +       if (rc)
-> +               return rc;
-> +
-> +       for (i = 0; i < ATA_MAX_DEVICES; i++) {
-> +               if (!(present_mask & (1 << i)))
-> +                       classes[i] = ATA_DEV_NONE;
->         }
->
-> -       return ata_std_prereset(ap);
-> +       return 0;
->  }
->
->  static void piix_sata_error_handler(struct ata_port *ap)
->  {
-> -       ata_bmdma_drive_eh(ap, piix_sata_prereset, ata_std_softreset, NULL,
-> +       ata_bmdma_drive_eh(ap, ata_std_prereset, piix_sata_softreset, NULL,
->                            ata_std_postreset);
->  }
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
