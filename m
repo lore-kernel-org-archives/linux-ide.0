@@ -1,59 +1,41 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: /dev/sd*
-Date: Fri, 18 Aug 2006 08:45:38 -0400
-Message-ID: <44E5B672.1010407@tmr.com>
-References: <1155144599.5729.226.camel@localhost.localdomain> <20060809212124.GC3691@stusta.de> <1155160903.5729.263.camel@localhost.localdomain> <20060809221857.GG3691@stusta.de> <20060810123643.GC25187@boogie.lpds.sztaki.hu> <44DB289A.4060503@garzik.org> <44E3DFD6.4010504@PicturesInMotion.net> <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr> <44E42900.1030905@PicturesInMotion.net> <Pine.LNX.4.61.0608171120260.4252@yvahk01.tjqt.qr> <44E56804.1080906@bfh.ch>
+Date: Fri, 18 Aug 2006 15:57:51 +0100
+Message-ID: <1155913072.28764.3.camel@localhost.localdomain>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+	 <20060809212124.GC3691@stusta.de>
+	 <1155160903.5729.263.camel@localhost.localdomain>
+	 <20060809221857.GG3691@stusta.de>
+	 <20060810123643.GC25187@boogie.lpds.sztaki.hu>
+	 <44DB289A.4060503@garzik.org> <44E3DFD6.4010504@PicturesInMotion.net>
+	 <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr>
+	 <44E42900.1030905@PicturesInMotion.net>
+	 <Pine.LNX.4.61.0608171120260.4252@yvahk01.tjqt.qr>
+	 <44E56804.1080906@bfh.ch>
+	 <Pine.LNX.4.61.0608181050490.27740@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:48026 "EHLO pixels.tmr.com")
-	by vger.kernel.org with ESMTP id S932372AbWHRMnG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Aug 2006 08:43:06 -0400
-In-Reply-To: <44E56804.1080906@bfh.ch>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:22144 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1030429AbWHROjJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Aug 2006 10:39:09 -0400
+In-Reply-To: <Pine.LNX.4.61.0608181050490.27740@yvahk01.tjqt.qr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Seewer Philippe <philippe.seewer@bfh.ch>
-Cc: Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: Seewer Philippe <philippe.seewer@bfh.ch>, Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Seewer Philippe wrote:
-> Jan Engelhardt wrote:
->>>> In the process, we can rename the then-"generic disk" (scsi ide whatever) 
->>>> back to "hd*" since that actually expands to Hard Disk.
->>>> (If I would have known a lot earlier about Linux I would have proposed 
->>>> "id*" for the IDE disks.)
->>>>
->>> Actually that does make more sense then using disk. So I guess we're
->>> back to square one. Personally I don't think its that big of a deal, all
->>> you have to do is change fstab and grub or lilo. My main concern is for
->>> the less advanced Linux users.
->> Less advanced users should use the upgrade tools their distribution 
->> provides.
-> 
-> And personally I think less advanced users will be very happy with
-> /dev/disk (or /dev/hd). No more confusion wether to user /dev/hdx or
-> /dev/sdx or whatever!
-> 
-But less clarity about which name goes with which device. I think it's 
-desirable to have a way for the user, the non-guru user, to find out 
-what meaningless name goes with which actual device. Currently finding 
-out what's on a system involves /proc/ide/hd*/model and /proc/scsi/scsi 
-to see what's attached and what names are being used.
+Ar Gwe, 2006-08-18 am 10:52 +0200, ysgrifennodd Jan Engelhardt:
+> Umm, hdx or sdx is a small impact. The real power of /dev/disk is that 
+> not-so-technically minded users can go looking for their disk by its name 
 
-For discussion I suggest /proc/ata/devices, a single flat file matching 
-a name meaningful to open() with a vendor string and whatever other info 
-is handy, like serial number and the like. If people are going to use 
-ATA that allows them to generate their own tools using familiar methods 
-like awk, sed, grep, perl, python or whatever. Having that information 
-in an inobvious format will really slow adoption by triggering the "it's 
-hard to use" or "I need to use all these new tools" responses.
+They already can. It appears on their desktop with a little picture that
+says "My iSpod" or similar 8)
 
-And those responses are not limited to newbies, experienced users are 
-aware of the ratio of learning curve to functionality as well.
+What sort of "name" are you considering for /dev/disk ?
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-   Obscure bug of 2004: BASH BUFFER OVERFLOW - if bash is being run by a
-normal user and is setuid root, with the "vi" line edit mode selected,
-and the character set is "big5," an off-by-one errors occurs during
-wildcard (glob) expansion.
+Alan
+
+
