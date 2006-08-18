@@ -1,34 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Fri, 18 Aug 2006 17:01:09 +0100
-Message-ID: <1155916869.28764.20.camel@localhost.localdomain>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: /dev/sd*
+Date: Fri, 18 Aug 2006 17:48:17 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0608181746220.11320@yvahk01.tjqt.qr>
 References: <1155144599.5729.226.camel@localhost.localdomain>
-	 <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
-	 <200608102140.36733.rjw@sisk.pl> <44E3E1E6.9090908@PicturesInMotion.net>
-	 <20060817091842.GC17899@elf.ucw.cz>
-	 <1155808348.15195.55.camel@localhost.localdomain>
-	 <20060817094512.GD17899@elf.ucw.cz>
-	 <1155815491.15195.75.camel@localhost.localdomain>
-	 <44E53635.3080702@PicturesInMotion.net>
-	 <44E53A9B.6080701@PicturesInMotion.net>
+ <20060809212124.GC3691@stusta.de> <1155160903.5729.263.camel@localhost.localdomain>
+ <20060809221857.GG3691@stusta.de> <20060810123643.GC25187@boogie.lpds.sztaki.hu>
+ <44DB289A.4060503@garzik.org> <44E3DFD6.4010504@PicturesInMotion.net>
+ <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr> <44E42900.1030905@PicturesInMotion.net>
+ <Pine.LNX.4.61.0608171120260.4252@yvahk01.tjqt.qr> <44E56804.1080906@bfh.ch>
+ <44E5B672.1010407@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47811 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1161026AbWHRPlM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Aug 2006 11:41:12 -0400
-In-Reply-To: <44E53A9B.6080701@PicturesInMotion.net>
+Received: from mailer.gwdg.de ([134.76.10.26]:51161 "EHLO mailer.gwdg.de")
+	by vger.kernel.org with ESMTP id S932216AbWHRPzq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Aug 2006 11:55:46 -0400
+In-Reply-To: <44E5B672.1010407@tmr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Trager <Lee@PicturesInMotion.net>
-Cc: Pavel Machek <pavel@suse.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jason Lunz <lunz@falooley.org>, Jens Axboe <axboe@suse.de>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Stefan Seyfried <seife@suse.de>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Seewer Philippe <philippe.seewer@bfh.ch>, Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ar Iau, 2006-08-17 am 23:57 -0400, ysgrifennodd Lee Trager:
-> Ok I got it now. Anyway I tried disabling it in the BIOS(IBM called it
-> the Predesktop Area) and I still get the same thing.
+>
+> For discussion I suggest /proc/ata/devices, a single flat file
 
-You would. You'd need to reinstall not using the HPA area of the disk in
-order to fix this, or patch the kernel to restore the HPA on resume
+Ahem. /sys please. And do not just limit it to ATA.
 
+> matching a name meaningful to open() with a vendor string and
+> whatever other info is handy, like serial number and the like. If
+> people are going to use ATA that allows them to generate their own
+> tools using familiar methods like awk, sed, grep, perl, python or
+> whatever. Having that information in an inobvious format will really
+> slow adoption by triggering the "it's hard to use" or "I need to use
+> all these new tools" responses.
+>
+> And those responses are not limited to newbies, experienced users are aware of
+> the ratio of learning curve to functionality as well.
+
+What would the contents of /ata/devices look like, can you give an
+example?
+
+
+Jan Engelhardt
+-- 
