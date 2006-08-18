@@ -1,7 +1,7 @@
-From: Lee Revell <rlrevell@joe-job.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: /dev/sd*
-Date: Fri, 18 Aug 2006 12:47:18 -0400
-Message-ID: <1155919638.24907.54.camel@mindpipe>
+Date: Fri, 18 Aug 2006 18:02:21 +0100
+Message-ID: <1155920541.30279.11.camel@localhost.localdomain>
 References: <1155144599.5729.226.camel@localhost.localdomain>
 	 <20060809212124.GC3691@stusta.de>
 	 <1155160903.5729.263.camel@localhost.localdomain>
@@ -19,29 +19,24 @@ Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mustang.oldcity.dca.net ([216.158.38.3]:52630 "HELO
-	mustang.oldcity.dca.net") by vger.kernel.org with SMTP
-	id S1751420AbWHRQqf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Aug 2006 12:46:35 -0400
+Received: from [81.2.110.250] ([81.2.110.250]:9939 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S1161041AbWHRQsB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Aug 2006 12:48:01 -0400
 In-Reply-To: <Pine.LNX.4.61.0608181748280.11320@yvahk01.tjqt.qr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Seewer Philippe <philippe.seewer@bfh.ch>, Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Seewer Philippe <philippe.seewer@bfh.ch>, Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, Adrian Bunk <bunk@stusta.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 2006-08-18 at 17:51 +0200, Jan Engelhardt wrote:
-> >> Umm, hdx or sdx is a small impact. The real power of /dev/disk is that 
-> >> not-so-technically minded users can go looking for their disk by its name 
-> >
-> >They already can. It appears on their desktop with a little picture that
-> >says "My iSpod" or similar 8)
+Ar Gwe, 2006-08-18 am 17:51 +0200, ysgrifennodd Jan Engelhardt:
+> Whatever udev does currently seems good:
 > 
-> Not everyone follows Linus's "suggestion" to use KDE. Actually, there are 
-> even people not thrilled by either KDE or GNOME.
+> 17:48 shanghai:~ > ls /dev/disk/by-id/*
+> /dev/disk/by-id/ata-DIAMOND_250G_2B5400_030400026
+> /dev/disk/by-id/ata-DIAMOND_250G_2B5400_030400026-part1
+> /dev/disk/by-id/usb-0_USB_DRIVE_0000000000004287
+> /dev/disk/by-id/usb-0_USB_DRIVE_0000000000004287-part1
 
-It works the same way in Gnome (and any reasonable desktop OS).  If
-users really don't want an integrated desktop environment I think they
-get to figure out the disk naming issues themselves.
-
-Lee
+I wouldn't try that on a typical "non technical user", at least except
+for Halloween 8)
 
