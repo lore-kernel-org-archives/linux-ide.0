@@ -1,30 +1,46 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH] Add MSI support to sata_vsc driver
-Date: Thu, 17 Aug 2006 17:18:44 -0700
-Message-ID: <20060818001844.GF857981@sgi.com>
-References: <87840E8EE8A8D240A13F8AA92CAB07D9024C14B3@azsmsx402> <44E4FF4B.6020407@garzik.org>
+From: Lee Trager <Lee@PicturesInMotion.net>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Thu, 17 Aug 2006 23:38:29 -0400
+Message-ID: <44E53635.3080702@PicturesInMotion.net>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+ <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
+ <200608102140.36733.rjw@sisk.pl> <44E3E1E6.9090908@PicturesInMotion.net>
+ <20060817091842.GC17899@elf.ucw.cz>
+ <1155808348.15195.55.camel@localhost.localdomain>
+ <20060817094512.GD17899@elf.ucw.cz>
+ <1155815491.15195.75.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:51120 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S932235AbWHRASy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2006 20:18:54 -0400
-Content-Disposition: inline
-In-Reply-To: <44E4FF4B.6020407@garzik.org>
+Received: from mta1.srv.hcvlny.cv.net ([167.206.4.196]:6884 "EHLO
+	mta1.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S932337AbWHRDj0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Aug 2006 23:39:26 -0400
+In-reply-to: <1155815491.15195.75.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Wolstenholme, Daniel E" <daniel.e.wolstenholme@intel.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Pavel Machek <pavel@suse.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jason Lunz <lunz@falooley.org>, Jens Axboe <axboe@suse.de>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Stefan Seyfried <seife@suse.de>
 
-On Thu, Aug 17, 2006 at 07:44:11PM -0400, Jeff Garzik wrote:
-> Wolstenholme, Daniel E wrote:
-> >Unfortunately, I'm stuck using Lookout for now. 
-> 
-> That's OK, this one needs another iteration anyway :)
-
-Daniel, you'll need to send as a text attachment, too.
-Your previous patch has some linewrap.  Unless some M$ expert
-knows differently, I think the text attachment is the only way
-to avoid that.
-
-jeremy
+Alan Cox wrote:
+> Ar Iau, 2006-08-17 am 11:45 +0200, ysgrifennodd Pavel Machek:
+>   
+>> This should not be it... it also happens on suspend-to-disk according
+>> to the report, and during swsusp we do normal boot so HPA should be
+>> initialized...?
+>>     
+>
+> The suspend to disk case I've not personally seen. The suspend to ram
+> one I have looked at and seen and verified the HPA was not reset.
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
+Well how do we reset HPA? If someone could point me in the right
+direction I could try to get it to work, although I've never really done
+any kernel hacking before. Im not even sure what HPA is, Wikipedia has
+nothing on it so I guess I'll google around.
