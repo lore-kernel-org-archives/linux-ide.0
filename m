@@ -1,57 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: s/CONFIG_SCSI_SATA/CONFIG_[S]ATA/g in pci/quirks.c
-Date: Sat, 19 Aug 2006 03:54:39 +0900
-Message-ID: <20060818185439.GK6371@htj.dyndns.org>
-References: <20060818180832.GJ6371@htj.dyndns.org> <44E60898.4020805@pobox.com>
+From: Lee Trager <Lee@PicturesInMotion.net>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Fri, 18 Aug 2006 15:22:35 -0400
+Message-ID: <44E6137B.9090103@PicturesInMotion.net>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+ <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
+ <200608102140.36733.rjw@sisk.pl> <44E3E1E6.9090908@PicturesInMotion.net>
+ <20060817091842.GC17899@elf.ucw.cz>
+ <1155808348.15195.55.camel@localhost.localdomain>
+ <20060817094512.GD17899@elf.ucw.cz>
+ <1155815491.15195.75.camel@localhost.localdomain>
+ <44E53635.3080702@PicturesInMotion.net>
+ <44E53A9B.6080701@PicturesInMotion.net>
+ <1155916869.28764.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:17061 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1161071AbWHRSyo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Aug 2006 14:54:44 -0400
-Received: by py-out-1112.google.com with SMTP id n25so1193547pyg
-        for <linux-ide@vger.kernel.org>; Fri, 18 Aug 2006 11:54:43 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <44E60898.4020805@pobox.com>
+Received: from mta7.srv.hcvlny.cv.net ([167.206.4.202]:11211 "EHLO
+	mta7.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S932487AbWHRTWT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Aug 2006 15:22:19 -0400
+In-reply-to: <1155916869.28764.20.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Pavel Machek <pavel@suse.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jason Lunz <lunz@falooley.org>, Jens Axboe <axboe@suse.de>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Stefan Seyfried <seife@suse.de>
 
-drivers/pci/quirks.c was not updated when libata config constants were
-renamed braking several libata quirks.  Fix it.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-
-Index: work/drivers/pci/quirks.c
-===================================================================
---- work.orig/drivers/pci/quirks.c	2006-08-19 03:12:58.000000000 +0900
-+++ work/drivers/pci/quirks.c	2006-08-19 03:50:29.000000000 +0900
-@@ -1209,7 +1209,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SI,	PCI_DEVICE_ID_SI_963,		quirk_sis_96x_smbus );
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SI,	PCI_DEVICE_ID_SI_LPC,		quirk_sis_96x_smbus );
- 
--#if defined(CONFIG_SCSI_SATA) || defined(CONFIG_SCSI_SATA_MODULE)
-+#if defined(CONFIG_ATA) || defined(CONFIG_ATA_MODULE)
- 
- /*
-  *	If we are using libata we can drive this chip properly but must
-@@ -1299,7 +1299,7 @@ static int __init combined_setup(char *s
- }
- __setup("combined_mode=", combined_setup);
- 
--#ifdef CONFIG_SCSI_SATA_INTEL_COMBINED
-+#ifdef CONFIG_SATA_INTEL_COMBINED
- static void __devinit quirk_intel_ide_combined(struct pci_dev *pdev)
- {
- 	u8 prog, comb, tmp;
-@@ -1392,7 +1392,7 @@ static void __devinit quirk_intel_ide_co
- 		request_region(0x170, 8, "libata");	/* port 1 */
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,    PCI_ANY_ID,	  quirk_intel_ide_combined );
--#endif /* CONFIG_SCSI_SATA_INTEL_COMBINED */
-+#endif /* CONFIG_SATA_INTEL_COMBINED */
- 
- 
- int pcie_mch_quirk;
+Alan Cox wrote:
+> Ar Iau, 2006-08-17 am 23:57 -0400, ysgrifennodd Lee Trager:
+>   
+>> Ok I got it now. Anyway I tried disabling it in the BIOS(IBM called it
+>> the Predesktop Area) and I still get the same thing.
+>>     
+>
+> You would. You'd need to reinstall not using the HPA area of the disk in
+> order to fix this, or patch the kernel to restore the HPA on resume
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
+Well where in the kernel is the code that disabled HPA on startup? Im
+new to kernel hacking so if you could point me in the right direction I
+could try to patch it myself.
