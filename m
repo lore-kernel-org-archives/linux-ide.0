@@ -1,41 +1,34 @@
-From: Jay Cliburn <jacliburn@bellsouth.net>
-Subject: Re: [RESEND][PATCH] sata_via: Add SATA support for vt8237a
-Date: Sat, 19 Aug 2006 15:11:40 -0500
-Message-ID: <44E7707C.4090907@bellsouth.net>
-References: <20060814031030.GA3088@osprey.hogchain.net> <20060819182553.GA11985@unjust.cyrius.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ata_piix: fix ghost device probing by honoring PCS present
+ bits
+Date: Sat, 19 Aug 2006 17:35:23 -0400
+Message-ID: <44E7841B.6050004@pobox.com>
+References: <20060810052347.GC6371@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imf23aec.mail.bellsouth.net ([205.152.59.71]:50123 "EHLO
-	imf23aec.mail.bellsouth.net") by vger.kernel.org with ESMTP
-	id S1751492AbWHSULr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Aug 2006 16:11:47 -0400
-Received: from ibm66aec.bellsouth.net ([70.152.106.23])
-          by imf23aec.mail.bellsouth.net with ESMTP
-          id <20060819201142.RIVR27575.imf23aec.mail.bellsouth.net@ibm66aec.bellsouth.net>
-          for <linux-ide@vger.kernel.org>; Sat, 19 Aug 2006 16:11:42 -0400
-In-Reply-To: <20060819182553.GA11985@unjust.cyrius.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:10656 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751533AbWHSVf0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Aug 2006 17:35:26 -0400
+In-Reply-To: <20060810052347.GC6371@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Martin Michlmayr wrote:
-> * Jay Cliburn <jacliburn@bellsouth.net> [2006-08-13 22:10]:
->> This patch adds support for the VIA Technologies VT8237A SATA controller.
->>
->> Signed-off-by: Jay Cliburn <jacliburn@bellsouth.net>
->>
->>  static const struct pci_device_id svia_pci_tbl[] = {
->> +	{ 0x1106, 0x0591, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6420 },
->>  	{ 0x1106, 0x3149, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6420 },
->>  	{ 0x1106, 0x3249, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6421 },
+Tejun Heo wrote:
+> Move out PCS handling from piix_sata_prereset() into
+> piix_sata_present_mask() and use it from newly implemented
+> piix_sata_softreset().  Class codes for devices which are indicated to
+> be absent by PCS are cleared to ATA_DEV_NONE.  This fixes ghost device
+> problem reported on ICH6 and 7 (and probably 8).
 > 
-> What's the status of this patch?  Someone just reported a bug to
-> Debian saying that their controller is not supported and that this
-> patch works.
+> This patch moves PCS handling from prereset to softreset, which makes
+> ata_piix perform softreset even when PCS indicates no device.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-It has not been ACKed, NACKed, or applied.  I can only assume it's queued.
+ACK, but doesn't apply to upstream-fixes
 
-Jay
+
