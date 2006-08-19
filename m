@@ -1,26 +1,26 @@
-From: "Rufus" <beaverboric@rpn.cz>
-Subject: Feel Pleasure from Introducing a great product which will make you a better, more confident man!
-Date: Sat, 19 Aug 2006 09:58:51 +0900
-Message-ID: <91361382940950.596E9EE2CE__26422.6848529235$1155949195$gmane$org@RNOBR>
+From: "Kendall" <deducecurt@royalblanks.com>
+Subject: Feel Pleasure from This is what you always needed to lead a happier, more fulfilling life.
+Date: Fri, 18 Aug 2006 20:55:09 -0400
+Message-ID: <47551001074229.3BA5F287AF@CYUN2>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ZE102069.ppp.dion.ne.jp ([220.217.102.69]:56080 "EHLO
-	FM-9594D04FB77F") by vger.kernel.org with ESMTP id S1422672AbWHSA6o
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Aug 2006 20:58:44 -0400
+Received: from pool-72-81-212-151.bltmmd.fios.verizon.net ([72.81.212.151]:61431
+	"EHLO 3npauzia.03qa5uo.comcast.net") by vger.kernel.org with ESMTP
+	id S1161104AbWHSBOA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Aug 2006 21:14:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Never-seen
- Finally there is something that really gives you extra inches and extra confidence. All you need is a supply for a month or so! She will beg you to order more after you use it for a month.
- You certainly thought about women worshipping you because of your size and performance. She will love the new you, increased in size and a much better male in terms of confidence. Come in: http://www.gozolvor.com/gal/ms/ 
+Latest stuff
+ Unlike other products, this one gives you permanent gains in size - and loads of pleasure! A month or less will pass, and you will forget what it feels like to doubt your size and performance.
 
-This costs much less than a luxury car - but makes you a lot more confident and attractive.
+ Did she ever tell you your size is insufficient? No? Maybe she was just being polite? Get ready to hear girls spreading gossip behind your back about your new size. See our shop: http://www.gozolvor.com/gal/ms/ 
+You won't increase your most important muscle in gyms - so this is what you have to try!
 
 
- The best things come in small packages Life begins at forty Better bend than break Many are called but few are chosen Give and spend and God will send
+ Love is an ideal thing, marriage a real thing History repeats itself St Swithins Day, if thou does rain, for forty days it will remain, St Swithins day if thou be fair for forty days twill rain no more A closed mouth gathers no feet. 
 
