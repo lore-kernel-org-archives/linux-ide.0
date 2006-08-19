@@ -1,43 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/20] libata: kill ata_host_stop()
-Date: Sun, 20 Aug 2006 00:29:04 +0900
-Message-ID: <44E72E40.80604@gmail.com>
-References: <11559779703875-git-send-email-htejun@gmail.com> <44E7257B.3090902@pobox.com>
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: Re: [RESEND][PATCH] sata_via: Add SATA support for vt8237a
+Date: Sat, 19 Aug 2006 19:25:54 +0100
+Message-ID: <20060819182553.GA11985@unjust.cyrius.com>
+References: <20060814031030.GA3088@osprey.hogchain.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:41932 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751469AbWHSP3L (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Aug 2006 11:29:11 -0400
-Received: by py-out-1112.google.com with SMTP id n25so1604661pyg
-        for <linux-ide@vger.kernel.org>; Sat, 19 Aug 2006 08:29:11 -0700 (PDT)
-In-Reply-To: <44E7257B.3090902@pobox.com>
+Received: from sorrow.cyrius.com ([65.19.161.204]:2572 "EHLO sorrow.cyrius.com")
+	by vger.kernel.org with ESMTP id S1750981AbWHSSZ5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Aug 2006 14:25:57 -0400
+Content-Disposition: inline
+In-Reply-To: <20060814031030.GA3088@osprey.hogchain.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, brking@us.ibm.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+Cc: Jay Cliburn <jacliburn@bellsouth.net>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> As all the current LLDs are PCI, ata_pci_host_stop() should be used,
->> which BTW is effectively identical to ata_host_stop().  Convert all
->> LLDs to use ata_pci_host_stop() and kill ata_host_stop().
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
+* Jay Cliburn <jacliburn@bellsouth.net> [2006-08-13 22:10]:
+> This patch adds support for the VIA Technologies VT8237A SATA controller.
 > 
-> This patch is broken because now several drivers which do not do
+> Signed-off-by: Jay Cliburn <jacliburn@bellsouth.net>
 > 
->     mmio_base = pci_iomap()
-> 
-> now unconditionally call pci_iounmap().
+>  static const struct pci_device_id svia_pci_tbl[] = {
+> +	{ 0x1106, 0x0591, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6420 },
+>  	{ 0x1106, 0x3149, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6420 },
+>  	{ 0x1106, 0x3249, PCI_ANY_ID, PCI_ANY_ID, 0, 0, vt6421 },
 
-I thought pci_iounmap() allowed NULL input.  i386 and x86_64 look safe 
-but NULL arg doesn't seem to be supported explicitly.  I'll add 'if 
-(host->mmio_base)' to ata_pci_host_stop().
-
-Thanks.
-
+What's the status of this patch?  Someone just reported a bug to
+Debian saying that their controller is not supported and that this
+patch works.
 -- 
-tejun
+Martin Michlmayr
+tbm@cyrius.com
