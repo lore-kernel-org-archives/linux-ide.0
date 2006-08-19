@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/20] libata: reimplement ata_pci_remove_one() using new PCI init helpers
-Date: Sat, 19 Aug 2006 17:59:32 +0900
-Message-ID: <11559779721874-git-send-email-htejun@gmail.com>
+Subject: [PATCH 6/20] libata: implement legacy ATA init helpers
+Date: Sat, 19 Aug 2006 17:59:31 +0900
+Message-ID: <1155977971677-git-send-email-htejun@gmail.com>
 References: <11559778241753-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -10,200 +10,368 @@ Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from py-out-1112.google.com ([64.233.166.181]:63322 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751677AbWHSJ1k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Aug 2006 05:27:40 -0400
+	id S1751673AbWHSJ1l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Aug 2006 05:27:41 -0400
 Received: by py-out-1112.google.com with SMTP id n25so1477495pyg
-        for <linux-ide@vger.kernel.org>; Sat, 19 Aug 2006 02:27:40 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Sat, 19 Aug 2006 02:27:41 -0700 (PDT)
 In-Reply-To: <11559778241753-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, brking@us.ibm.com, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Reimplement ata_pci_remove_one() using new PCI init helpers.
+Implement the following legacy ATA init helpers.
 
-* drvdata clearing is moved to ata_host_detach().
+* ata_legacy_acquire_resources()	: acquire legacy ATA resources
+* ata_legacy_release_resources()	: release legacy ATA resources
+* ata_legacy_init_ports()		: init legacy port addresses
+* ata_legacy_request_irqs()		: request legacy ATA IRQs
+* ata_legacy_free_irqs()		: free legacy ATA IRQs
 
-* if (!ops->host_stop) mmio_base is iounmapped.  This makes mmio_base
-  release libata-pci's responsibility and will ease following
-  host_stop and iomap updates.  This behavior is temporary.
-
-* unused ata_host_remove() is killed.
+These helpers can be used independently or called implictly from other
+bus helpers which has support for legacy ATA device for compatibility
+(e.g. PCI).
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |   72 +--------------------------------------------
- drivers/ata/libata-pci.c  |   29 ++++++++++++++++++
- include/linux/libata.h    |    1 -
- 3 files changed, 31 insertions(+), 71 deletions(-)
+ drivers/ata/Kconfig         |    5 +
+ drivers/ata/Makefile        |    3 +
+ drivers/ata/libata-legacy.c |  241 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata.h        |   11 ++
+ include/linux/libata.h      |   15 ++-
+ 5 files changed, 273 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0509935..ad32d35 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6108,6 +6108,8 @@ void ata_host_detach(struct ata_host *ho
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 2109d75..1a98559 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -15,6 +15,11 @@ config ATA
+ 	  that "speaks" the ATA protocol, also called ATA controller),
+ 	  because you will be asked for it.
  
- 	for (i = 0; i < host->n_ports; i++)
- 		ata_port_detach(host->ports[i]);
++config ATA_LEGACY
++	bool
++	depends on ATA
++	default n
 +
-+	dev_set_drvdata(host->dev, NULL);
- }
+ config SATA_AHCI
+ 	tristate "AHCI SATA support"
+ 	depends on ATA && PCI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index c17ae9c..61d3e76 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -19,3 +19,6 @@ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
  
- /**
-@@ -6212,48 +6214,6 @@ void ata_host_free(struct ata_host *host
- 	kfree(host);
- }
+ libata-objs	:= libata-core.o libata-scsi.o libata-bmdma.o libata-eh.o
  
--/**
-- *	ata_host_remove - PCI layer callback for device removal
-- *	@host: ATA host set that was removed
-- *
-- *	Unregister all objects associated with this host set. Free those
-- *	objects.
-- *
-- *	LOCKING:
-- *	Inherited from calling layer (may sleep).
-- */
--void ata_host_remove(struct ata_host *host)
--{
--	unsigned int i;
--
--	ata_host_detach(host);
--
--	free_irq(host->irq, host);
--	if (host->irq2)
--		free_irq(host->irq2, host);
--
--	ata_host_stop(host);
--
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--
--		if ((ap->flags & ATA_FLAG_NO_LEGACY) == 0) {
--			struct ata_ioports *ioaddr = &ap->ioaddr;
--
--			/* FIXME: Add -ac IDE pci mods to remove these special cases */
--			if (ioaddr->cmd_addr == ATA_PRIMARY_CMD)
--				release_region(ATA_PRIMARY_CMD, 8);
--			else if (ioaddr->cmd_addr == ATA_SECONDARY_CMD)
--				release_region(ATA_SECONDARY_CMD, 8);
--		}
--	}
--
--	if (host->ops->host_stop)
--		host->ops->host_stop(host);
--
--	ata_host_free(host);
--}
--
- struct ata_probe_ent *
- ata_probe_ent_alloc(struct device *dev, const struct ata_port_info *port)
- {
-@@ -6315,32 +6275,6 @@ void ata_pci_host_stop (struct ata_host 
- 	pci_iounmap(pdev, host->mmio_base);
- }
- 
--/**
-- *	ata_pci_remove_one - PCI layer callback for device removal
-- *	@pdev: PCI device that was removed
-- *
-- *	PCI layer indicates to libata via this hook that
-- *	hot-unplug or module unload event has occurred.
-- *	Handle this by unregistering all objects associated
-- *	with this PCI device.  Free those objects.  Then finally
-- *	release PCI resources and disable device.
-- *
-- *	LOCKING:
-- *	Inherited from PCI layer (may sleep).
-- */
--
--void ata_pci_remove_one (struct pci_dev *pdev)
--{
--	struct device *dev = pci_dev_to_dev(pdev);
--	struct ata_host *host = dev_get_drvdata(dev);
--
--	ata_host_remove(host);
--
--	pci_release_regions(pdev);
--	pci_disable_device(pdev);
--	dev_set_drvdata(dev, NULL);
--}
--
- /* move to PCI subsystem */
- int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits)
- {
-@@ -6572,7 +6506,6 @@ EXPORT_SYMBOL_GPL(ata_host_detach);
- EXPORT_SYMBOL_GPL(ata_host_stop);
- EXPORT_SYMBOL_GPL(ata_host_free_irqs);
- EXPORT_SYMBOL_GPL(ata_host_free);
--EXPORT_SYMBOL_GPL(ata_host_remove);
- EXPORT_SYMBOL_GPL(ata_sg_init);
- EXPORT_SYMBOL_GPL(ata_sg_init_one);
- EXPORT_SYMBOL_GPL(ata_hsm_move);
-@@ -6651,7 +6584,6 @@ #ifdef CONFIG_PCI
- EXPORT_SYMBOL_GPL(pci_test_config_bits);
- EXPORT_SYMBOL_GPL(ata_pci_host_stop);
- EXPORT_SYMBOL_GPL(ata_pci_init_native_mode);
--EXPORT_SYMBOL_GPL(ata_pci_remove_one);
- EXPORT_SYMBOL_GPL(ata_pci_device_do_suspend);
- EXPORT_SYMBOL_GPL(ata_pci_device_do_resume);
- EXPORT_SYMBOL_GPL(ata_pci_device_suspend);
-diff --git a/drivers/ata/libata-pci.c b/drivers/ata/libata-pci.c
-index 9649a8c..6e2c454 100644
---- a/drivers/ata/libata-pci.c
-+++ b/drivers/ata/libata-pci.c
-@@ -619,6 +619,34 @@ int ata_pci_init_one(struct pci_dev *pde
- 	return rc;
- }
- 
-+/**
-+ *	ata_pci_remove_one - PCI layer callback for device removal
-+ *	@pdev: PCI device that was removed
++ifeq ($(CONFIG_ATA_LEGACY),y)
++libata-objs	+= libata-legacy.o
++endif
+diff --git a/drivers/ata/libata-legacy.c b/drivers/ata/libata-legacy.c
+new file mode 100644
+index 0000000..00b70b0
+--- /dev/null
++++ b/drivers/ata/libata-legacy.c
+@@ -0,0 +1,241 @@
++/*
++ *  libata-legacy.c - helper library for legacy ATA
 + *
-+ *	PCI layer indicates to libata via this hook that
-+ *	hot-unplug or module unload event has occurred.
-+ *	Handle this by unregistering all objects associated
-+ *	with this PCI device.  Free those objects.  Then finally
-+ *	release PCI resources and disable device.
++ *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *    		    Please ALWAYS copy linux-ide@vger.kernel.org
++ *		    on emails.
 + *
-+ *	LOCKING:
-+ *	Inherited from PCI layer (may sleep).
++ *  Copyright 2006 Tejun Heo <htejun@gmail.com>
++ *
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License as
++ *  published by the Free Software Foundation; either version 2, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *  General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; see the file COPYING.  If not, write to
++ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
++ *  USA.
++ *
++ *
++ *  libata documentation is available via 'make {ps|pdf}docs',
++ *  as Documentation/DocBook/libata.*
++ *
++ *  Hardware documentation available from http://www.t13.org/ and
++ *  http://www.sata-io.org/
++ *
 + */
-+void ata_pci_remove_one(struct pci_dev *pdev)
++
++#include <linux/kernel.h>
++#include <linux/libata.h>
++
++#include "libata.h"
++
++static unsigned long ata_legacy_addr(int port, int sel)
 +{
-+	struct device *dev = pci_dev_to_dev(pdev);
-+	struct ata_host *host = dev_get_drvdata(dev);
-+
-+	ata_host_detach(host);
-+
-+	if (host->mmio_base) {
-+		ata_host_stop(host);
-+		pci_iounmap(pdev, host->mmio_base);
++	if (port == 0) {
++		if (sel == 0)
++			return ATA_PRIMARY_CMD;
++		else
++			return ATA_PRIMARY_CTL;
++	} else {
++		if (sel == 0)
++			return ATA_SECONDARY_CMD;
++		else
++			return ATA_SECONDARY_CTL;
 +	}
-+
-+	ata_pci_host_destroy(host);
 +}
 +
- EXPORT_SYMBOL_GPL(ata_pci_legacy_mask);
- EXPORT_SYMBOL_GPL(ata_pci_set_dma_mask);
- EXPORT_SYMBOL_GPL(ata_pci_acquire_resources);
-@@ -631,3 +659,4 @@ EXPORT_SYMBOL_GPL(ata_pci_free_msix_irqs
- EXPORT_SYMBOL_GPL(ata_pci_host_prepare);
- EXPORT_SYMBOL_GPL(ata_pci_host_destroy);
- EXPORT_SYMBOL_GPL(ata_pci_init_one);
-+EXPORT_SYMBOL_GPL(ata_pci_remove_one);
++static int ata_legacy_acquire_port(struct ata_port *ap)
++{
++	struct ata_host *host = ap->host;
++	unsigned long cmd_addr = ata_legacy_addr(ap->port_no, 0);
++
++	if (request_region(cmd_addr, 8, "libata") != NULL)
++		host->legacy_flags |= ATA_LEGACY_RES_PRI << ap->port_no;
++	else {
++		struct resource *conflict, res;
++
++		res.start = cmd_addr;
++		res.end = cmd_addr + 8 - 1;
++		conflict = ____request_resource(&ioport_resource, &res);
++
++		if (strcmp(conflict->name, "libata")) {
++			printk(KERN_WARNING "ata: 0x%0lX IDE port busy\n",
++			       cmd_addr);
++			host->flags |= ATA_HOST_DEV_BUSY;
++			return -EBUSY;
++		}
++		printk("ata: 0x%0lX IDE port preallocated\n", cmd_addr);
++	}
++
++	return 0;
++}
++
++/**
++ *	ata_legacy_acquire_resources - acquire legacy ATA resources
++ *	@host: target ATA host
++ *	@p_reason: out arg for error message (can be NULL)
++ *
++ *	Acquire legacy ATA resources for ports specified by
++ *	ATA_PORT_PRIMARY/SECONDARY mask in host->legacy_flags.  If the
++ *	port is busy, this function makes the port dummy instead of
++ *	failing.  This is to allow legacy ports to be driven by other
++ *	drivers.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int ata_legacy_acquire_resources(struct ata_host *host, const char **p_reason)
++{
++	int i;
++
++	for (i = 0; i < 2; i++) {
++		if (!(host->legacy_flags & (ATA_PORT_PRIMARY << i)))
++			continue;
++		BUG_ON(i >= host->n_ports);
++
++		if (ata_legacy_acquire_port(host->ports[i]))
++			host->ports[i]->ops = &ata_dummy_port_ops;
++	}
++
++	return 0;
++}
++
++/**
++ *	ata_legacy_release_resources - release legacy ATA resources
++ *	@host: target ATA host
++ *
++ *	Free all legacy ATA resources @host is holding.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ */
++void ata_legacy_release_resources(struct ata_host *host)
++{
++	int i;
++
++	for (i = 0; i < 2; i++) {
++		if (host->legacy_flags & (ATA_LEGACY_RES_PRI << i)) {
++			release_region(ata_legacy_addr(i, 0), 8);
++			host->legacy_flags &= ~(ATA_LEGACY_RES_PRI << i);
++		}
++	}
++}
++
++/**
++ *	ata_legacy_init_ports - initialize legacy ATA port addresses
++ *	@host: target ATA host
++ *
++ *	Initialize legacy ATA port addresses for non-dummy legacy
++ *	ports in @host.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer.
++ */
++void ata_legacy_init_ports(struct ata_host *host)
++{
++	int i;
++
++	for (i = 0; i < 2; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		if (host->legacy_flags & (ATA_PORT_PRIMARY << i) &&
++		    !ata_port_is_dummy(ap)) {
++			struct ata_ioports *ioaddr = &ap->ioaddr;
++			unsigned long cmd_addr = ata_legacy_addr(i, 0);
++			unsigned long ctl_addr = ata_legacy_addr(i, 1);
++
++			ioaddr->cmd_addr = cmd_addr;
++			ioaddr->altstatus_addr = ctl_addr;
++			ioaddr->ctl_addr = ctl_addr;
++			ata_std_ports(ioaddr);
++		}
++	}
++}
++
++/**
++ *	ata_legacy_request_irqs - request legacy ATA IRQs
++ *	@host: target ATA host
++ *	@handler: array of IRQ handlers
++ *	@irq_flags: array of IRQ flags
++ *	@dev_id: array of IRQ dev_ids
++ *	@p_reason: out arg for error message (can be NULL)
++ *
++ *	Request legacy IRQs for non-dummy legacy ports in @host.  All
++ *	IRQ parameters are passed as array to allow ports to have
++ *	separate IRQ handlers.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int ata_legacy_request_irqs(struct ata_host *host,
++		irqreturn_t (* const * handler)(int, void *, struct pt_regs *),
++		const unsigned int *irq_flags, void * const *dev_id,
++		const char **p_reason)
++{
++	const unsigned int legacy_irq[] = { 14, 15 };
++	const char *reason;
++	int i, rc;
++
++	for (i = 0; i < 2; i++) {
++		struct ata_port *ap = host->ports[i];
++		unsigned int irq = legacy_irq[i];
++
++		if (!(host->legacy_flags & (ATA_PORT_PRIMARY << i)) ||
++		    ata_port_is_dummy(ap))
++			continue;
++
++		if (!handler[i]) {
++			reason = "NULL handler";
++			rc = -EINVAL;
++			goto err;
++		}
++
++		rc = ata_host_request_irq_marker(host, irq,
++					handler[i], irq_flags[i], dev_id[i],
++					ata_legacy_request_irqs, &reason);
++		if (rc)
++			goto err;
++
++		/* only for info printing */
++		if (i == 0)
++			host->irq = irq;
++		else
++			host->irq2 = irq;
++	}
++
++	return 0;
++
++ err:
++	ata_legacy_free_irqs(host);
++	if (p_reason)
++		*p_reason = reason;
++	return rc;
++}
++
++/**
++ *	ata_legacy_free_irqs - free legacy ATA IRQs
++ *	@host: target ATA host
++ *
++ *	Free all legacy ATA IRQs of @host.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ */
++void ata_legacy_free_irqs(struct ata_host *host)
++{
++	ata_host_free_irqs_marker(host, ata_legacy_request_irqs);
++}
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 1d24254..0601c4a 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -117,6 +117,17 @@ extern void ata_schedule_scsi_eh(struct 
+ extern void ata_scsi_dev_rescan(void *data);
+ extern int ata_bus_probe(struct ata_port *ap);
+ 
++/* libata-legacy.c */
++extern int ata_legacy_acquire_resources(struct ata_host *host,
++					const char **p_reason);
++extern void ata_legacy_release_resources(struct ata_host *host);
++extern void ata_legacy_init_ports(struct ata_host *host);
++extern int ata_legacy_request_irqs(struct ata_host *host,
++		irqreturn_t (* const * handler)(int, void *, struct pt_regs *),
++		const unsigned int *irq_flags, void * const *dev_id,
++		const char **p_reason);
++extern void ata_legacy_free_irqs(struct ata_host *host);
++
+ /* libata-eh.c */
+ extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
+ extern void ata_scsi_error(struct Scsi_Host *host);
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3705d09..e96c257 100644
+index b050517..9535f54 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -767,7 +767,6 @@ extern void ata_host_free_irqs(struct at
- extern void ata_host_free(struct ata_host *host);
- extern void ata_host_init(struct ata_host *, struct device *,
- 			  unsigned long, const struct ata_port_operations *);
--extern void ata_host_remove(struct ata_host *host);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
+@@ -200,8 +200,16 @@ enum {
+ 	ATA_QCFLAG_EH_SCHEDULED = (1 << 18), /* EH scheduled (obsolete) */
+ 
+ 	/* host set flags */
+-	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
+-	
++	ATA_HOST_SIMPLEX	= (1 << 0), /* host is simplex, one DMA channel per host only */
++	ATA_HOST_DEV_BUSY	= (1 << 1), /* host device was busy on init */
++
++	/* legacy flags */
++	/* BIT 0 and 1 are reserved for ATA_PORT_PRIMARY and SECONDARY */
++	ATA_LEGACY_MASK		= (1 << 0) | (1 << 1),
++
++	ATA_LEGACY_RES_PRI	= (1 << 8),
++	ATA_LEGACY_RES_SEC	= (1 << 9),
++
+ 	/* various lengths of time */
+ 	ATA_TMOUT_BOOT		= 30 * HZ,	/* heuristic */
+ 	ATA_TMOUT_BOOT_QUICK	= 7 * HZ,	/* heuristic */
+@@ -376,8 +384,11 @@ struct ata_host {
+ 	void			*private_data;
+ 	const struct ata_port_operations *ops;
+ 	unsigned long		flags;
++
+ 	int			simplex_claimed;	/* Keep seperate in case we
+ 							   ever need to do this locked */
++	unsigned int		legacy_flags;
++
+ 	struct list_head	irq_list;	/* list of acquired irqs */
+ 	struct ata_port		*ports[0];
+ };
 -- 
 1.4.1.1
 
