@@ -1,35 +1,48 @@
-From: news@harcore365.com
-Subject: business link news #05655
-Date: Fri, 18 Aug 2006 15:23:23 -0700 (PDT)
-Message-ID: <28725872.1155939803613.JavaMail.Administrator@vger.kernel.org>
-Reply-To: news@harcore365.com
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: /dev/sd*
+Date: Sat, 19 Aug 2006 02:15:23 +0200
+Message-ID: <20060819001523.GA6440@boogie.lpds.sztaki.hu>
+References: <1155160903.5729.263.camel@localhost.localdomain> <20060809221857.GG3691@stusta.de> <20060810123643.GC25187@boogie.lpds.sztaki.hu> <44DB289A.4060503@garzik.org> <44E3DFD6.4010504@PicturesInMotion.net> <Pine.LNX.4.61.0608171000220.19847@yvahk01.tjqt.qr> <44E42900.1030905@PicturesInMotion.net> <Pine.LNX.4.61.0608171120260.4252@yvahk01.tjqt.qr> <44E56804.1080906@bfh.ch> <44E5B672.1010407@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_234494_12858884.1155939803613"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.harcore365.com ([217.113.108.1]:40208 "EHLO 217.113.108.1")
-	by vger.kernel.org with ESMTP id S1751533AbWHRWXV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Aug 2006 18:23:21 -0400
+Received: from boogie.lpds.sztaki.hu ([193.224.70.237]:13979 "EHLO
+	boogie.lpds.sztaki.hu") by vger.kernel.org with ESMTP
+	id S1422657AbWHSAPZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Aug 2006 20:15:25 -0400
+Content-Disposition: inline
+In-Reply-To: <44E5B672.1010407@tmr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Seewer Philippe <philippe.seewer@bfh.ch>, Jeff Garzik <jeff@garzik.org>, Adrian Bunk <bunk@stusta.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-------=_Part_234494_12858884.1155939803613
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+On Fri, Aug 18, 2006 at 08:45:38AM -0400, Bill Davidsen wrote:
 
-ISBN:ypphqwgjrt
+> For discussion I suggest /proc/ata/devices, a single flat file matching 
+> a name meaningful to open() with a vendor string and whatever other info 
+> is handy, like serial number and the like.
 
-if you need any furter informations, please feel free to contact the admin of the named sites.
+Why just ATA? Let it contain all disk-like devices in the system, and
+add an extra field showing the transport method
+(IDE/USB/SCSI/SATA/whatever) the device is currently using.
 
-http://www.adultchamber.com
-http://www.hardcore365.com
-http://www.xxxlaw.net
-http://www.story-service.com
-http://www.webmasterparadise.com
-http://www.storyservice.com
-http://www.firstamendment.com
-http://www.event-cals.com
-http://www.eventcals.com
-------=_Part_234494_12858884.1155939803613--
+Hmm, /sys/block already contains all the kernel-internal device names,
+/sys/block/*/device already gives the physical location. We might just
+need a couple additional attributes (like "serial") for user
+convenience, and a little shell script that walks /sys/block and emits
+an unified device list?
 
+Alternatively, the shell scipt could use blktool to collect the data not
+already present under /sys/block, so there would be no need to modify
+the kernel at all. blktool could be modified to accept a path name under
+/sys/block as well as a device node, and print some more data the serial
+number when using the "id" command, but I think that's doable.
+
+Gabor
+
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
