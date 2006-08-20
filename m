@@ -1,59 +1,25 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Any known issues to cause data miscompares on sg read/write on
- 2.6.15.4 and 2.6.18-rc2?
-Date: Sun, 20 Aug 2006 10:42:55 -0700
-Message-ID: <20060820104255.25c88623.akpm@osdl.org>
-References: <8202f4270608200230s34aa9505s2426f3f3b90fa7ec@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: 2.6.18-rc4-mm2
+Date: Sun, 20 Aug 2006 19:07:53 +0100
+Message-ID: <1156097273.4051.19.camel@localhost.localdomain>
+References: <20060819220008.843d2f64.akpm@osdl.org>
+	 <6bffcb0e0608200630h40d2b07v1db22d19753734be@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:8668 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751043AbWHTRnx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Aug 2006 13:43:53 -0400
-In-Reply-To: <8202f4270608200230s34aa9505s2426f3f3b90fa7ec@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751060AbWHTRqv@vger.kernel.org>
+In-Reply-To: <6bffcb0e0608200630h40d2b07v1db22d19753734be@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dougg@torque.net, jgarzik@pobox.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, rmk@arm.linux.org.uk
 
-On Sun, 20 Aug 2006 03:30:56 -0600
-"Fajun Chen" <fajunchen@gmail.com> wrote:
+Ar Sul, 2006-08-20 am 15:30 +0200, ysgrifennodd Michal Piotrowski:
+> 0kB Cache?
+> 
+> hdc: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
+> Uniform CD-ROM driver Revision: 3.20
+> hdd: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
 
-> Hi Folks,
-> 
-> I use ATA pass through via sg ioctl interface for data read/write. Two
-> kernels were tested:
-> Linux 2.6.15.4 with Jeff Garzik's libata patch (pata support)
-> Linux 2.6.18-rc2 with Jeff Garzik's git libata patch (new EH, hotplug,
-> pata support)
-> Hardware: ARM IOP80321 with PCI-X
-> Host adapters: sata Sil3124 and pata Sil680
-> Test algorithm: random write-read-compare (same range)
-> 
-> I've tried sg mmap, direct and indirect IO on both 2.6.18-rc2 and
-> 2.6.15.4 release, none of the combinations survived data compare
-> overnight test.  I also tried to change cache policy to write through
-> on 2.6.15.4,  no luck either.  Several different symptoms were
-> observed among the failures:
-> 1. A few bytes in a data pattern were not written correctly to the
-> disc (low data miscompare rate)
-> 2. Pretty much none of the data were written correctly to the disc
-> (high data miscompare rate)
-> 3. Data were written to the disc correctly but miscompares when read
-> it back. What's weird is that when the read buffer was printed out
-> right after data miscompare , it contains the correct data!
-> Sg write failures (symptom #1 and #2) are more typical than read
-> failure (symptom #3).  This problem has been observed on many
-> different test machines with both pata and sata drives.
-> 
-> I don't know of a good way to trace and isolate the problem yet. Since
-> data miscompare issue can be caused by issues from different
-> subsystems, I cc'ed some subsystem maintainers here.  Any information
-> or suggestions are greatly appreciated.
-> 
-
-Have you tested the same hardware to the same extent without using the SG
-interface?  Say, using read() and write()?  That'll help us determine
-whether the problem is related to the sg stuff, or to something else, like
-a hardware failure.
+Zero means "unspecified", so unless this changed from other boots I
+wouldn't worry
