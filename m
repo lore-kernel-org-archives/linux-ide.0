@@ -1,25 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.18-rc4-mm2
-Date: Sun, 20 Aug 2006 19:07:53 +0100
-Message-ID: <1156097273.4051.19.camel@localhost.localdomain>
-References: <20060819220008.843d2f64.akpm@osdl.org>
-	 <6bffcb0e0608200630h40d2b07v1db22d19753734be@mail.gmail.com>
+From: Eric Sesterhenn <snakebyte@gmx.de>
+Subject: Is drive->id always set when ide_dma_check () gets called?
+Date: Mon, 21 Aug 2006 00:51:10 +0200
+Message-ID: <1156114270.7078.6.camel@alice>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751060AbWHTRqv@vger.kernel.org>
-In-Reply-To: <6bffcb0e0608200630h40d2b07v1db22d19753734be@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:53126 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751764AbWHTWvS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Aug 2006 18:51:18 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Ar Sul, 2006-08-20 am 15:30 +0200, ysgrifennodd Michal Piotrowski:
-> 0kB Cache?
-> 
-> hdc: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
-> Uniform CD-ROM driver Revision: 3.20
-> hdd: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
+hi,
 
-Zero means "unspecified", so unless this changed from other boots I
-wouldn't worry
+while trying to tackle some more coverity bugs, I came across
+bug #206 to #211. They are all about the function they register for 
+hwif->ide_dma_check. Basically they all do something like
+
+struct hd_driveid *id	= drive->id
+
+if (id && (id->capability & 1) && drive->autodma) {
+	something();
+} else if ((id->capability & 8) || (id->field_valid & 2)) {
+	something_else();
+}
+
+Coverity complains that id is only checked for != NULL in the first case
+but not the second. While trying to review the callers, all of them
+either checked drive->id or dereferenced it themselves. Only with
+probe_hwif() in drivers/ide/ide-probe.c I am not sure. So the question boils down
+to: should we,
+
+a) remove the check
+b) add the check to the second case
+c) just tell coverity to shut up
+
+Thanks for comments,
+Eric
+
