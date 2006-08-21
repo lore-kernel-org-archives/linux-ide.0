@@ -1,581 +1,93 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [libata patch] cleanup drivers/ata/Kconfig
-Date: Tue, 22 Aug 2006 00:00:53 +0200
-Message-ID: <20060821220053.GR11651@stusta.de>
+From: Doug Maxey <dwm@austin.ibm.com>
+Subject: Re: Loading PATA_PDC2027x as a module
+Date: Mon, 21 Aug 2006 18:06:08 -0500
+Message-ID: <11901.1156201568@falcon10.austin.ibm.com>
+References: <BAY113-F2401E0634D22FB7C0EC841DF410@phx.gbl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:62222 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1751229AbWHUWAx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Aug 2006 18:00:53 -0400
-Content-Disposition: inline
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:18390 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751283AbWHUXGU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2006 19:06:20 -0400
+In-reply-to: <BAY113-F2401E0634D22FB7C0EC841DF410@phx.gbl> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: John Treubig <jtreubig@hotmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-This patch contains the following cleanups:
-- replace the dependencies on ATA with an "if ATA"
-  as a side effect, this fixes a menu breakage due to SATA_INTEL_COMBINED
-- fix a typo in the PATA_OPTIDMA prompt
-- let ATA selet SCSI instead of depending on SCSI
-  this should make it easier for users to enable ATA (similar to USB_STORAGE)
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+On Mon, 21 Aug 2006 16:32:58 CDT, "John Treubig" wrote:
+>Thanks for the quick response.  
 
----
+You are most welcome.
 
-This patch was already sent on:
-- 15 Aug 2006
+> Spent most of the day figuring out how to 
+>build the ramdisk.  Built both drivers (pata_pdc2027x and pdc202xx_old) and 
 
-Alans additional suggestions that will be in another patch.
+My "clarity in writing" courses must have worn off. :)
 
- drivers/ata/Kconfig |  115 ++++++++++++++++++++++----------------------
- 1 file changed, 58 insertions(+), 57 deletions(-)
+With only the pata_pdc2027x driver in the initrd, it wins the race, and
+gets loaded.  With both, the old ide driver loads first, and cannot be
+unloaded do to some, ah, features, of the old ide stack.
 
---- libata-dev/drivers/ata/Kconfig.old	2006-08-15 00:23:28.000000000 +0200
-+++ libata-dev/drivers/ata/Kconfig	2006-08-15 00:28:02.000000000 +0200
-@@ -1,483 +1,484 @@
- #
- # SATA/PATA driver configuration
- #
- 
- menu "Serial ATA (prod) and Parallel ATA (experimental) drivers"
--	depends on SCSI
- 
- config ATA
- 	tristate "ATA device support"
--	depends on SCSI
-+	select SCSI
- 	---help---
- 	  If you want to use a ATA hard disk, ATA tape drive, ATA CD-ROM or
- 	  any other ATA device under Linux, say Y and make sure that you know
- 	  the name of your ATA host adapter (the card inside your computer
- 	  that "speaks" the ATA protocol, also called ATA controller),
- 	  because you will be asked for it.
- 
-+if ATA
-+
- config SATA_AHCI
- 	tristate "AHCI SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for AHCI Serial ATA.
- 
- 	  If unsure, say N.
- 
- config SATA_SVW
- 	tristate "ServerWorks Frodo / Apple K2 SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for Broadcom/Serverworks/Apple K2
- 	  SATA support.
- 
- 	  If unsure, say N.
- 
- config ATA_PIIX
- 	tristate "Intel PIIX/ICH SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for ICH5/6/7/8 Serial ATA.
- 	  If PATA support was enabled previously, this enables
- 	  support for select Intel PIIX/ICH PATA host controllers.
- 
- 	  If unsure, say N.
- 
- config SATA_MV
- 	tristate "Marvell SATA support (HIGHLY EXPERIMENTAL)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the Marvell Serial ATA family.
- 	  Currently supports 88SX[56]0[48][01] chips.
- 
- 	  If unsure, say N.
- 
- config SATA_NV
- 	tristate "NVIDIA SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for NVIDIA Serial ATA.
- 
- 	  If unsure, say N.
- 
- config PDC_ADMA
- 	tristate "Pacific Digital ADMA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for Pacific Digital ADMA controllers
- 
- 	  If unsure, say N.
- 
- config SATA_QSTOR
- 	tristate "Pacific Digital SATA QStor support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for Pacific Digital Serial ATA QStor.
- 
- 	  If unsure, say N.
- 
- config SATA_PROMISE
- 	tristate "Promise SATA TX2/TX4 support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for Promise Serial ATA TX2/TX4.
- 
- 	  If unsure, say N.
- 
- config SATA_SX4
- 	tristate "Promise SATA SX4 support"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for Promise Serial ATA SX4.
- 
- 	  If unsure, say N.
- 
- config SATA_SIL
- 	tristate "Silicon Image SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for Silicon Image Serial ATA.
- 
- 	  If unsure, say N.
- 
- config SATA_SIL24
- 	tristate "Silicon Image 3124/3132 SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for Silicon Image 3124/3132 Serial ATA.
- 
- 	  If unsure, say N.
- 
- config SATA_SIS
- 	tristate "SiS 964/180 SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for SiS Serial ATA 964/180.
- 
- 	  If unsure, say N.
- 
- config SATA_ULI
- 	tristate "ULi Electronics SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for ULi Electronics SATA.
- 
- 	  If unsure, say N.
- 
- config SATA_VIA
- 	tristate "VIA SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for VIA Serial ATA.
- 
- 	  If unsure, say N.
- 
- config SATA_VITESSE
- 	tristate "VITESSE VSC-7174 / INTEL 31244 SATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for Vitesse VSC7174 and Intel 31244 Serial ATA.
- 
- 	  If unsure, say N.
- 
- config SATA_INTEL_COMBINED
- 	bool
- 	depends on IDE=y && !BLK_DEV_IDE_SATA && (SATA_AHCI || ATA_PIIX)
- 	default y
- 
- config PATA_ALI
- 	tristate "ALi PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the ALi ATA interfaces
- 	  found on the many ALi chipsets.
- 
- 	  If unsure, say N.
- 
- config PATA_AMD
- 	tristate "AMD/NVidia PATA support (Experimental)"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for the AMD and NVidia PATA
- 	  interfaces found on the chipsets for Athlon/Athlon64.
- 
- 	  If unsure, say N.
- 
- config PATA_ARTOP
- 	tristate "ARTOP 6210/6260 PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for ARTOP PATA controllers.
- 
- 	  If unsure, say N.
- 
- config PATA_ATIIXP
- 	tristate "ATI PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the ATI ATA interfaces
- 	  found on the many ATI chipsets.
- 
- 	  If unsure, say N.
- 
- config PATA_CMD64X
- 	tristate "CMD64x PATA support (Very Experimental)"
--	depends on ATA && PCI&& EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the CMD64x series chips
- 	  except for the CMD640.
- 
- 	  If unsure, say N.
- 
- config PATA_CS5520
- 	tristate "CS5510/5520 PATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for the Cyrix 5510/5520
- 	  companion chip used with the MediaGX/Geode processor family.
- 
- 	  If unsure, say N.
- 
- config PATA_CS5530
- 	tristate "CS5530 PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the Cyrix/NatSemi/AMD CS5530
- 	  companion chip used with the MediaGX/Geode processor family.
- 
- 	  If unsure, say N.
- 
- config PATA_CS5535
- 	tristate "CS5535 PATA support (Experimental)"
--	depends on ATA && PCI && X86 && !X86_64 && EXPERIMENTAL
-+	depends on PCI && X86 && !X86_64 && EXPERIMENTAL
- 	help
- 	  This option enables support for the NatSemi/AMD CS5535
- 	  companion chip used with the Geode processor family.
- 
- 	  If unsure, say N.
- 
- config PATA_CYPRESS
- 	tristate "Cypress CY82C693 PATA support (Very Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the Cypress/Contaq CY82C693
- 	  chipset found in some Alpha systems
- 
- 	  If unsure, say N.
- 
- config PATA_EFAR
- 	tristate "EFAR SLC90E66 support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for the EFAR SLC90E66
- 	  IDE controller found on some older machines.
- 
- 	  If unsure, say N.
- 
- config ATA_GENERIC
- 	tristate "Generic ATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for generic BIOS configured
- 	  ATA controllers via the new ATA layer
- 
- 	  If unsure, say N.
- 
- config PATA_HPT366
- 	tristate "HPT 366/368 PATA support (Very Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the HPT 366 and 368
- 	  PATA controllers via the new ATA layer.
- 
- 	  If unsure, say N.
- 
- config PATA_HPT37X
- 	tristate "HPT 370/370A/371/372/374/302 PATA support (Very Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the majority of the later HPT
- 	  PATA controllers via the new ATA layer.
- 
- 	  If unsure, say N.
- 
- config PATA_HPT3X2N
- 	tristate "HPT 372N/302N PATA support (Very Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the N variant HPT PATA
- 	  controllers via the new ATA layer
- 
- 	  If unsure, say N.
- 
- config PATA_HPT3X3
- 	tristate "HPT 343/363 PATA support (Experimental)"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for the HPT 343/363
- 	  PATA controllers via the new ATA layer
- 
- 	  If unsure, say N.
- 
- config PATA_ISAPNP
- 	tristate "ISA Plug and Play PATA support (Very Experimental)"
--	depends on ATA && EXPERIMENTAL && ISAPNP
-+	depends on EXPERIMENTAL && ISAPNP
- 	help
- 	  This option enables support for ISA plug & play ATA
- 	  controllers such as those found on old soundcards.
- 
- 	  If unsure, say N.
- 
- config PATA_IT8172
- 	tristate "IT8172 PATA support (Very Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the ITE 8172 PATA controller
- 	  via the new ATA layer.
- 
- 	  If unsure, say N.
- 
- config PATA_IT821X
- 	tristate "IT821x PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the ITE 8211 and 8212
- 	  PATA controllers via the new ATA layer, including RAID
- 	  mode.
- 
- 	  If unsure, say N.
- 
- config PATA_LEGACY
- 	tristate "Legacy ISA PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for ISA/VLB bus legacy PATA
- 	  ports and allows them to be accessed via the new ATA layer.
- 
- 	  If unsure, say N.
- 
- config PATA_TRIFLEX
- 	tristate "Compaq Triflex PATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  Enable support for the Compaq 'Triflex' IDE controller as found
- 	  on many Compaq Pentium-Pro systems, via the new ATA layer.
- 
- 	  If unsure, say N.
- 
- config PATA_MPIIX
- 	tristate "Intel PATA MPIIX support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for MPIIX PATA support.
- 
- 	  If unsure, say N.
- 
- config PATA_OLDPIIX
- 	tristate "Intel PATA old PIIX support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for old(?) PIIX PATA support.
- 
- 	  If unsure, say N.
- 
- config PATA_NETCELL
- 	tristate "NETCELL Revolution RAID support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for the Netcell Revolution RAID
- 	  PATA controller.
- 
- 	  If unsure, say N.
- 
- config PATA_NS87410
- 	tristate "Nat Semi NS87410 PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the National Semiconductor
- 	  NS87410 PCI-IDE controller.
- 
- 	  If unsure, say N.
- 
- config PATA_OPTI
- 	tristate "OPTI621/6215 PATA support (Very Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables full PIO support for the early Opti ATA
- 	  controllers found on some old motherboards.
- 
- 	  If unsure, say N.
- 
- config PATA_OPTIDMA
--	tristate "OPTI FireStar PATA support (Veyr Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	tristate "OPTI FireStar PATA support (Very Experimental)"
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables DMA/PIO support for the later OPTi
- 	  controllers found on some old motherboards and in some
- 	  latops
- 
- 	  If unsure, say N.
- 
- config PATA_PCMCIA
- 	tristate "PCMCIA PATA support"
--	depends on ATA && PCMCIA
-+	depends on PCMCIA
- 	help
- 	  This option enables support for PCMCIA ATA interfaces, including
- 	  compact flash card adapters via the new ATA layer.
- 
- 	  If unsure, say N.
- 
- config PATA_PDC_OLD
- 	tristate "Older Promise PATA controller support (Very Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the Promise 20246, 20262, 20263,
- 	  20265 and 20267 adapters.
- 
- 	  If unsure, say N.
- 
- config PATA_QDI
- 	tristate "QDI VLB PATA support"
--	depends on ATA
- 	help
- 	  Support for QDI 6500 and 6580 PATA controllers on VESA local bus.
- 
- config PATA_RADISYS
- 	tristate "RADISYS 82600 PATA support (Very experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the RADISYS 82600
- 	  PATA controllers via the new ATA layer
- 
- 	  If unsure, say N.
- 
- config PATA_RZ1000
- 	tristate "PC Tech RZ1000 PATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables basic support for the PC Tech RZ1000/1
- 	  PATA controllers via the new ATA layer
- 
- 	  If unsure, say N.
- 
- config PATA_SC1200
- 	tristate "SC1200 PATA support (Raving Lunatic)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the NatSemi/AMD SC1200 SoC
- 	  companion chip used with the Geode processor family.
- 
- 	  If unsure, say N.
- 
- config PATA_SERVERWORKS
- 	tristate "SERVERWORKS OSB4/CSB5/CSB6/HT1000 PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the Serverworks OSB4/CSB5/CSB6 and
- 	  HT1000 PATA controllers, via the new ATA layer.
- 
- 	  If unsure, say N.
- 
- config PATA_PDC2027X
- 	tristate "Promise PATA 2027x support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for Promise PATA pdc20268 to pdc20277 host adapters.
- 
- 	  If unsure, say N.
- 
- config PATA_SIL680
- 	tristate "CMD / Silicon Image 680 PATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for CMD / Silicon Image 680 PATA.
- 
- 	  If unsure, say N.
- 
- config PATA_SIS
- 	tristate "SiS PATA support (Experimental)"
--	depends on ATA && PCI && EXPERIMENTAL
-+	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for SiS PATA controllers
- 
- 	  If unsure, say N.
- 
- config PATA_VIA
- 	tristate "VIA PATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for the VIA PATA interfaces
- 	  found on the many VIA chipsets.
- 
- 	  If unsure, say N.
- 
- config PATA_WINBOND
- 	tristate "Winbond SL82C105 PATA support"
--	depends on ATA && PCI
-+	depends on PCI
- 	help
- 	  This option enables support for SL82C105 PATA devices found in the
- 	  Netwinder and some other systems
- 
- 	  If unsure, say N.
- 
--endmenu
-+endif  # ATA
- 
-+endmenu  # "ATA drivers"
+With the libata stack (via the pata_pdc2027x), those particular features
+are no longer present.  So no need for the pdc202xxx... driver.
+
+>the ramdisk, loaded the ramdisk at boot and still system is using IDE driver 
+>for the Promise attached drives.  Have attached the boot log and the verbose 
+>output of the ramdisk build.  Got any ideas as to what might be the hang up? 
+>  I am using the M/B controller for system disk and it is not of the Promise 
+>variety.   The Promise is a PCI card in the I/O card bay.
+>
+>Best wishes,
+>John
+>
+>
+>From: Doug Maxey <dwm@enoyolf.org>
+>To: "John Treubig" <jtreubig@hotmail.com>
+>CC: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,        
+>dwm@bebe.enoyolf.org
+>Subject: Re: Loading PATA_PDC2027x as a module
+>Date: Mon, 21 Aug 2006 11:08:52 -0500
+>
+>
+>On Mon, 21 Aug 2006 10:38:12 CDT, "John Treubig" wrote:
+> > Can I load pata_pdc2027x as a module or must it be built as part of the
+> > kernel?  I am using RedHat Fedora with 2.6.17.1 stock kernel.  LibATA has
+> > been installed in the kernel with ATA_ENABLE_PATA undefined.  The
+> > pata_pdc2027x driver is not part of the Fedora build, so I have been able 
+>to
+> > build pata_pdc2027x as a module with ATA_ENABLE_PATA defined for the 
+>module.
+> >   When I try to load the pata_pdc2027x module it will not displace the 
+>IDE
+> > native driver.  What's the mechanism that is used to determine if the IDE
+> > driver grabs the device or LibATA/pata_pdc_2027x?
+>
+>The base kernel needs the old driver (pdc202xxx...) built as a module
+>(or not at all) to give the pata_pdc2027x module a chance to load.
+>
+>Once that is done, you can add the module as required to mkinitrd and
+>it should be the first loaded, which prevents the other driver from
+>loading.
+>
+> >
+> > You may ask why I don't just live with the IDE driver.  This stems from
+> > problems we saw in accessing the Promise PDC2027x drives under 2.6.10 
+>where
+> > the system lost time.  In discussions with Albert Lee, it was resolved 
+>that
+> > the best approach was to convert our access to use LibATA.  After usage 
+>of
+> > the LibATA access, the time loses issue has gone away.  I know that there
+> > have been changes in both the IDE and LibATA structures, so I'm open to
+> > additional advice.
+> >
+> > Best wishes,
+> > John Treubig
+> > VT Miltope
+> > Senior Test Engineer
+>
+>
+
 
