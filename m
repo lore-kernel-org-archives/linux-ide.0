@@ -1,46 +1,36 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: 2.6.18-rc4-mm2
-Date: Mon, 21 Aug 2006 09:59:36 +0200
-Message-ID: <20060821075936.GQ4290@suse.de>
-References: <20060819220008.843d2f64.akpm@osdl.org> <6bffcb0e0608200630h40d2b07v1db22d19753734be@mail.gmail.com>
+From: "Bahadir Balban" <bahadir.balban@gmail.com>
+Subject: libata no-dma pata driver
+Date: Mon, 21 Aug 2006 16:38:21 +0100
+Message-ID: <7ac1e90c0608210838l324e7f45lce3125c0cf4e9933@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:15655 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1030300AbWHUH50 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2006 03:57:26 -0400
+Received: from wr-out-0506.google.com ([64.233.184.229]:13898 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751826AbWHUPiW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Aug 2006 11:38:22 -0400
+Received: by wr-out-0506.google.com with SMTP id i21so273069wra
+        for <linux-ide@vger.kernel.org>; Mon, 21 Aug 2006 08:38:21 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <6bffcb0e0608200630h40d2b07v1db22d19753734be@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, Aug 20 2006, Michal Piotrowski wrote:
-> On 20/08/06, Andrew Morton <akpm@osdl.org> wrote:
-> >
-> >ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc4/2.6.18-rc4-mm2/
-> >
-> 
-> 0kB Cache?
-> 
-> hdc: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
-> Uniform CD-ROM driver Revision: 3.20
-> hdd: ATAPI CD-ROM drive, 0kB Cache, UDMA(33)
-> 
-> It should be 2048kB
-> 
-> Aug 20 14:28:07 euridica kernel: hdc: ATAPI 48X DVD-ROM DVD-R CD-R/RW
-> drive, 2048kB Cache, UDMA(33)
-> Aug 20 14:28:07 euridica kernel: Uniform CD-ROM driver Revision: 3.20
-> Aug 20 14:28:07 euridica kernel: hdd: ATAPI 52X CD-ROM CD-R/RW drive,
-> 2048kB Cache, UDMA(33)
-> 
-> config & dmesg -> http://www.stardust.webpages.pl/files/mm/2.6.18-rc4-mm2/
+Hi,
 
-Does 2.6.18-rc4 correctly identify the cache size? If so, this smells
-like another out fall from the rq-cmd-type patch.
+I am writing a libata-based ide driver for a compact flash interface
+based on the ata_generic.c using 2.6.18-rc4-mm1.
 
--- 
-Jens Axboe
+The device doesn't support dma, so I need to implement a pio-only
+driver. However ata_device_add() makes various calls to dma-related
+functions such as ata_bmdma_*, ata_port_start(),
+generic_error_handler() etc.
 
+Could you give a bit of advice on what sort of ata_port_info fields
+and ata_port_operations to use for no-dma operation? Is it readily
+possible in the current implementation, i.e. are there any example
+pio-only drivers?
+
+Many thanks,
+Bahadir
