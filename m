@@ -1,36 +1,38 @@
-From: "Bahadir Balban" <bahadir.balban@gmail.com>
-Subject: libata no-dma pata driver
-Date: Mon, 21 Aug 2006 16:38:21 +0100
-Message-ID: <7ac1e90c0608210838l324e7f45lce3125c0cf4e9933@mail.gmail.com>
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Loading PATA_PDC2027x as a module
+Date: Mon, 21 Aug 2006 10:38:12 -0500
+Message-ID: <BAY113-F29FED2E57FBE3CF8195662DF410@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:13898 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751826AbWHUPiW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Aug 2006 11:38:22 -0400
-Received: by wr-out-0506.google.com with SMTP id i21so273069wra
-        for <linux-ide@vger.kernel.org>; Mon, 21 Aug 2006 08:38:21 -0700 (PDT)
-Content-Disposition: inline
+Received: from bay0-omc3-s20.bay0.hotmail.com ([65.54.246.220]:62260 "EHLO
+	bay0-omc3-s20.bay0.hotmail.com") by vger.kernel.org with ESMTP
+	id S1751203AbWHUPiP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Aug 2006 11:38:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
+Can I load pata_pdc2027x as a module or must it be built as part of the 
+kernel?  I am using RedHat Fedora with 2.6.17.1 stock kernel.  LibATA has 
+been installed in the kernel with ATA_ENABLE_PATA undefined.  The 
+pata_pdc2027x driver is not part of the Fedora build, so I have been able to 
+build pata_pdc2027x as a module with ATA_ENABLE_PATA defined for the module. 
+  When I try to load the pata_pdc2027x module it will not displace the IDE 
+native driver.  What's the mechanism that is used to determine if the IDE 
+driver grabs the device or LibATA/pata_pdc_2027x?
 
-I am writing a libata-based ide driver for a compact flash interface
-based on the ata_generic.c using 2.6.18-rc4-mm1.
+You may ask why I don't just live with the IDE driver.  This stems from 
+problems we saw in accessing the Promise PDC2027x drives under 2.6.10 where 
+the system lost time.  In discussions with Albert Lee, it was resolved that 
+the best approach was to convert our access to use LibATA.  After usage of 
+the LibATA access, the time loses issue has gone away.  I know that there 
+have been changes in both the IDE and LibATA structures, so I'm open to 
+additional advice.
 
-The device doesn't support dma, so I need to implement a pio-only
-driver. However ata_device_add() makes various calls to dma-related
-functions such as ata_bmdma_*, ata_port_start(),
-generic_error_handler() etc.
+Best wishes,
+John Treubig
+VT Miltope
+Senior Test Engineer
 
-Could you give a bit of advice on what sort of ata_port_info fields
-and ata_port_operations to use for no-dma operation? Is it readily
-possible in the current implementation, i.e. are there any example
-pio-only drivers?
 
-Many thanks,
-Bahadir
