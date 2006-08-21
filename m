@@ -1,161 +1,127 @@
 From: Lee Trager <Lee@PicturesInMotion.net>
-Subject: Re: Merging libata PATA support into the base kernel
-Date: Sun, 20 Aug 2006 20:44:03 -0400
-Message-ID: <44E901D3.4000902@PicturesInMotion.net>
-References: <1155144599.5729.226.camel@localhost.localdomain>
- <20060810122056.GP11829@suse.de> <20060810190222.GA12818@knob.reflex>
- <200608102140.36733.rjw@sisk.pl> <44E3E1E6.9090908@PicturesInMotion.net>
- <20060817091842.GC17899@elf.ucw.cz>
- <1155808348.15195.55.camel@localhost.localdomain>
- <20060817094512.GD17899@elf.ucw.cz>
- <1155815491.15195.75.camel@localhost.localdomain>
- <44E53635.3080702@PicturesInMotion.net>
- <44E53A9B.6080701@PicturesInMotion.net>
- <1155916869.28764.20.camel@localhost.localdomain>
- <44E6137B.9090103@PicturesInMotion.net>
- <1155934254.31543.1.camel@localhost.localdomain>
- <44E6C916.2030907@PicturesInMotion.net>
+Subject: [PATCH] ide: Reinitilize idedisk_capacity for HPA drives on resume
+Date: Sun, 20 Aug 2006 20:51:25 -0400
+Message-ID: <44E9038D.4040109@PicturesInMotion.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta2.srv.hcvlny.cv.net ([167.206.4.197]:22638 "EHLO
-	mta2.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
-	id S932488AbWHUAob (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 Aug 2006 20:44:31 -0400
-In-reply-to: <44E6C916.2030907@PicturesInMotion.net>
+Received: from mta4.srv.hcvlny.cv.net ([167.206.4.199]:53147 "EHLO
+	mta4.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S932431AbWHUAvE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 Aug 2006 20:51:04 -0400
+Received: from [192.168.1.102] (ool-4351c743.dyn.optonline.net [67.81.199.67])
+ by mta4.srv.hcvlny.cv.net
+ (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
+ with ESMTP id <0J4B00HC1P180I10@mta4.srv.hcvlny.cv.net> for
+ linux-ide@vger.kernel.org; Sun, 20 Aug 2006 20:51:12 -0400 (EDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Trager <Lee@PicturesInMotion.net>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Pavel Machek <pavel@suse.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jason Lunz <lunz@falooley.org>, Jens Axboe <axboe@suse.de>, Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Stefan Seyfried <seife@suse.de>
+To: linux-ide@vger.kernel.org
 
-Lee Trager wrote:
-> Alan Cox wrote:
->   
->> Ar Gwe, 2006-08-18 am 15:22 -0400, ysgrifennodd Lee Trager:
->>   
->>     
->>> Well where in the kernel is the code that disabled HPA on startup? Im
->>> new to kernel hacking so if you could point me in the right direction I
->>> could try to patch it myself.
->>>     
->>>       
->> drivers/ide/ide-disk.c
->>
->> Particularly:
->> 	idedisk_check_hpa()
->>
->> which if you call at the end of the resume sequence for disks ought to
->> do the right thing for you
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>   
->>     
-> Well I tried to do exactly what you said. All that happens now is that
-> it does not come out of resume. Below is a patch of the code I tried to
-> do in case you could like to look at it. Basically I called
-> idedisk_check_hpa at the end of generic_ide_resume() in drivers/ide/ide.c
->
-> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide-disk.c
-> linux-2.6.18-rc4/drivers/ide/ide-disk.c
-> --- linux-2.6.18-rc4-old/drivers/ide/ide-disk.c    2006-08-19
-> 03:49:03.000000000 -0400
-> +++ linux-2.6.18-rc4/drivers/ide/ide-disk.c    2006-08-19
-> 03:41:33.000000000 -0400
-> @@ -464,16 +464,6 @@
->  }
->  
->  /*
-> - * Bits 10 of command_set_1 and cfs_enable_1 must be equal,
-> - * so on non-buggy drives we need test only one.
-> - * However, we should also check whether these fields are valid.
-> - */
-> -static inline int idedisk_supports_hpa(const struct hd_driveid *id)
-> -{
-> -    return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
-> -}
-> -
-> -/*
->   * The same here.
->   */
->  static inline int idedisk_supports_lba48(const struct hd_driveid *id)
-> @@ -482,7 +472,7 @@
->             && id->lba_capacity_2;
->  }
->  
-> -static void idedisk_check_hpa(ide_drive_t *drive)
-> +void idedisk_check_hpa(ide_drive_t *drive)
->  {
->      unsigned long long capacity, set_max;
->      int lba48 = idedisk_supports_lba48(drive->id);
-> @@ -514,6 +504,8 @@
->      }
->  }
->  
-> +EXPORT_SYMBOL(idedisk_check_hpa);
-> +
->  /*
->   * Compute drive->capacity, the full capacity of the drive
->   * Called with drive->id != NULL.
-> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c
-> linux-2.6.18-rc4/drivers/ide/ide.c
-> --- linux-2.6.18-rc4-old/drivers/ide/ide.c    2006-08-19
-> 03:49:03.000000000 -0400
-> +++ linux-2.6.18-rc4/drivers/ide/ide.c    2006-08-19 03:41:33.000000000
-> -0400
-> @@ -1242,6 +1242,13 @@
->      rqpm.pm_step = ide_pm_state_start_resume;
->      rqpm.pm_state = PM_EVENT_ON;
->  
-> +    /* check to see if this is a hard drive
-> +     * if it is then checkhpa needs to be
-> +     * disabled */
-> +    if(drive->media == ide_disk)
-> +        if(idedisk_supports_hpa(drive->id))
-> +            idedisk_check_hpa(drive);
-> +
->      return ide_do_drive_cmd(drive, &rq, ide_head_wait);
->  }
-> diff -Naur linux-2.6.18-rc4-old/include/linux/ide.h
-> linux-2.6.18-rc4/include/linux/ide.h
-> --- linux-2.6.18-rc4-old/include/linux/ide.h    2006-08-19
-> 03:49:03.000000000 -0400
-> +++ linux-2.6.18-rc4/include/linux/ide.h    2006-08-19
-> 03:42:53.000000000 -0400
-> @@ -1377,4 +1377,16 @@
->      return dev ? pcibus_to_node(dev->bus) : -1;
->  }
->  
-> +extern void idedisk_check_hpa(ide_drive_t *drive);
-> +
-> +/*
-> + *  * Bits 10 of command_set_1 and cfs_enable_1 must be equal,
-> + *   * so on non-buggy drives we need test only one.
-> + *    * However, we should also check whether these fields are valid.
-> + *     */
-> +static inline int idedisk_supports_hpa(const struct hd_driveid *id)
-> +{
-> +        return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
-> +}
-> +
->  #endif /* _IDE_H */
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->   
-Ok I have it working now. The problem was that I had to call
-ide_do_drive_cmd() first and then I had to call init_idedisk_capacity()
-instead of idedisk_check_hpa(). Anyway im submitting the patch on the list.
+This patch fixes a problem that when a computer with HPA on it's hard
+drive comes out of sleep mode it needs the disks capacity reinitialized.
 
-Thanks,
-
+This is my first patch to the Linux kernel so if I did anything wrong
+please be gentle ;)
 
 Lee Trager
+
+diff -Naur linux-2.6.18-rc4-old/include/linux/ide.h
+linux-2.6.18-rc4/include/linux/ide.h
+--- linux-2.6.18-rc4-old/include/linux/ide.h    2006-08-19
+03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/include/linux/ide.h    2006-08-20
+19:13:10.000000000 -0400
+@@ -1201,6 +1201,17 @@
+ void ide_register_subdriver(ide_drive_t *, ide_driver_t *);
+ void ide_unregister_subdriver(ide_drive_t *, ide_driver_t *);
+ 
++/* Bits 10 of command_set_1 and cfs_enable_1 must be equal,
++ * so on non-buggy drives we need test only one.
++ * However, we should also check whether these fields are valid.
++*/
++static inline int idedisk_supports_hpa(const struct hd_driveid *id)
++{
++        return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
++}
++
++extern void init_idedisk_capacity (ide_drive_t  *drive);
++
+ #define ON_BOARD        1
+ #define NEVER_BOARD        0
+
+diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide-disk.c
+linux-2.6.18-rc4/drivers/ide/ide-disk.c
+--- linux-2.6.18-rc4-old/drivers/ide/ide-disk.c    2006-08-19
+03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/drivers/ide/ide-disk.c    2006-08-20
+19:13:56.000000000 -0400
+@@ -464,16 +464,6 @@
+ }
+ 
+ /*
+- * Bits 10 of command_set_1 and cfs_enable_1 must be equal,
+- * so on non-buggy drives we need test only one.
+- * However, we should also check whether these fields are valid.
+- */
+-static inline int idedisk_supports_hpa(const struct hd_driveid *id)
+-{
+-    return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
+-}
+-
+-/*
+  * The same here.
+  */
+ static inline int idedisk_supports_lba48(const struct hd_driveid *id)
+@@ -528,7 +518,7 @@
+  * in above order (i.e., if value of higher priority is available,
+  * reset will be ignored).
+  */
+-static void init_idedisk_capacity (ide_drive_t  *drive)
++void init_idedisk_capacity (ide_drive_t  *drive)
+ {
+     struct hd_driveid *id = drive->id;
+     /*
+@@ -555,6 +545,8 @@
+     }
+ }
+ 
++EXPORT_SYMBOL(init_idedisk_capacity);
++
+ static sector_t idedisk_capacity (ide_drive_t *drive)
+ {
+     return drive->capacity64 - drive->sect0;
+diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c
+linux-2.6.18-rc4/drivers/ide/ide.c
+--- linux-2.6.18-rc4-old/drivers/ide/ide.c    2006-08-19
+03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/drivers/ide/ide.c    2006-08-20 19:12:38.000000000
+-0400
+@@ -1232,6 +1232,7 @@
+     struct request rq;
+     struct request_pm_state rqpm;
+     ide_task_t args;
++    int ide_cmd;
+ 
+     memset(&rq, 0, sizeof(rq));
+     memset(&rqpm, 0, sizeof(rqpm));
+@@ -1242,7 +1243,15 @@
+     rqpm.pm_step = ide_pm_state_start_resume;
+     rqpm.pm_state = PM_EVENT_ON;
+ 
+-    return ide_do_drive_cmd(drive, &rq, ide_head_wait);
++    ide_cmd = ide_do_drive_cmd(drive, &rq, ide_head_wait);
++
++    /* check to see if this is a hard drive
++     * if it is then checkhpa needs to be
++     * disabled */
++    if(drive->media == ide_disk && idedisk_supports_hpa(drive->id))
++        init_idedisk_capacity(drive);
++
++    return ide_cmd;
+ }
+ 
+ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct
+block_device *bdev,
+
