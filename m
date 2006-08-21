@@ -1,93 +1,181 @@
-From: Doug Maxey <dwm@austin.ibm.com>
-Subject: Re: Loading PATA_PDC2027x as a module
-Date: Mon, 21 Aug 2006 18:06:08 -0500
-Message-ID: <11901.1156201568@falcon10.austin.ibm.com>
-References: <BAY113-F2401E0634D22FB7C0EC841DF410@phx.gbl>
+From: Lee Trager <Lee@PicturesInMotion.net>
+Subject: Re: [PATCH] ide: Reinitilize idedisk_capacity for HPA drives on resume
+Date: Mon, 21 Aug 2006 19:15:10 -0400
+Message-ID: <44EA3E7E.5030706@PicturesInMotion.net>
+References: <44E9038D.4040109@PicturesInMotion.net>
+ <44E9E05B.4030502@ru.mvista.com> <44EA232C.30907@PicturesInMotion.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:18390 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751283AbWHUXGU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2006 19:06:20 -0400
-In-reply-to: <BAY113-F2401E0634D22FB7C0EC841DF410@phx.gbl> 
+Received: from mta10.srv.hcvlny.cv.net ([167.206.4.205]:2754 "EHLO
+	mta10.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S1751306AbWHUXPS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Aug 2006 19:15:18 -0400
+Received: from [192.168.1.102] (ool-4351c743.dyn.optonline.net [67.81.199.67])
+ by mta10.srv.hcvlny.cv.net
+ (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
+ with ESMTP id <0J4D000YXF6YL0F0@mta10.srv.hcvlny.cv.net> for
+ linux-ide@vger.kernel.org; Mon, 21 Aug 2006 19:13:49 -0400 (EDT)
+In-reply-to: <44EA232C.30907@PicturesInMotion.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Lee Trager <Lee@PicturesInMotion.net>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-
-On Mon, 21 Aug 2006 16:32:58 CDT, "John Treubig" wrote:
->Thanks for the quick response.  
-
-You are most welcome.
-
-> Spent most of the day figuring out how to 
->build the ramdisk.  Built both drivers (pata_pdc2027x and pdc202xx_old) and 
-
-My "clarity in writing" courses must have worn off. :)
-
-With only the pata_pdc2027x driver in the initrd, it wins the race, and
-gets loaded.  With both, the old ide driver loads first, and cannot be
-unloaded do to some, ah, features, of the old ide stack.
-
-With the libata stack (via the pata_pdc2027x), those particular features
-are no longer present.  So no need for the pdc202xxx... driver.
-
->the ramdisk, loaded the ramdisk at boot and still system is using IDE driver 
->for the Promise attached drives.  Have attached the boot log and the verbose 
->output of the ramdisk build.  Got any ideas as to what might be the hang up? 
->  I am using the M/B controller for system disk and it is not of the Promise 
->variety.   The Promise is a PCI card in the I/O card bay.
+Lee Trager wrote:
+> Sergei Shtylyov wrote:
+>   
+>> Hello.
+>>
+>> Lee Trager wrote:
+>>
+>>     
+>>> This patch fixes a problem that when a computer with HPA on it's hard
+>>> drive comes out of sleep mode it needs the disks capacity reinitialized.
+>>>       
+>>> This is my first patch to the Linux kernel so if I did anything wrong
+>>> please be gentle ;)
+>>>       
+>>    Your mailer spoils tabs, so either attach your patch or use the
+>> different
+>> mailer.
+>>
+>> [...]
+>>
+>>     
+>>> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c
+>>> linux-2.6.18-rc4/drivers/ide/ide.c
+>>> --- linux-2.6.18-rc4-old/drivers/ide/ide.c    2006-08-19
+>>> 03:49:03.000000000 -0400
+>>> +++ linux-2.6.18-rc4/drivers/ide/ide.c    2006-08-20 19:12:38.000000000
+>>> -0400
+>>> @@ -1232,6 +1232,7 @@
+>>>      struct request rq;
+>>>      struct request_pm_state rqpm;
+>>>      ide_task_t args;
+>>> +    int ide_cmd;
+>>>  
+>>>      memset(&rq, 0, sizeof(rq));
+>>>      memset(&rqpm, 0, sizeof(rqpm));
+>>> @@ -1242,7 +1243,15 @@
+>>>      rqpm.pm_step = ide_pm_state_start_resume;
+>>>      rqpm.pm_state = PM_EVENT_ON;
+>>>  
+>>> -    return ide_do_drive_cmd(drive, &rq, ide_head_wait);
+>>> +    ide_cmd = ide_do_drive_cmd(drive, &rq, ide_head_wait);
+>>> +
+>>> +    /* check to see if this is a hard drive
+>>> +     * if it is then checkhpa needs to be
+>>> +     * disabled */
+>>> +    if(drive->media == ide_disk && idedisk_supports_hpa(drive->id))
+>>> +        init_idedisk_capacity(drive);
+>>> +
+>>> +    return ide_cmd;
+>>>  }
+>>>       
+>>    Hm, shouldn't this be handled as a separate resume process step?
+>>
+>> MBR, Sergei
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>     
+> Ok I attached it now.
+>   
+> ------------------------------------------------------------------------
 >
->Best wishes,
->John
+> diff -Naur linux-2.6.18-rc4-old/include/linux/ide.h linux-2.6.18-rc4/include/linux/ide.h
+> --- linux-2.6.18-rc4-old/include/linux/ide.h	2006-08-19 03:49:03.000000000 -0400
+> +++ linux-2.6.18-rc4/include/linux/ide.h	2006-08-20 19:13:10.000000000 -0400
+> @@ -1201,6 +1201,17 @@
+>  void ide_register_subdriver(ide_drive_t *, ide_driver_t *);
+>  void ide_unregister_subdriver(ide_drive_t *, ide_driver_t *);
+>  
+> +/* Bits 10 of command_set_1 and cfs_enable_1 must be equal,
+> + * so on non-buggy drives we need test only one.
+> + * However, we should also check whether these fields are valid.
+> +*/
+> +static inline int idedisk_supports_hpa(const struct hd_driveid *id)
+> +{
+> +        return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
+> +}
+> +
+> +extern void init_idedisk_capacity (ide_drive_t  *drive);
+> +
+>  #define ON_BOARD		1
+>  #define NEVER_BOARD		0
 >
->
->From: Doug Maxey <dwm@enoyolf.org>
->To: "John Treubig" <jtreubig@hotmail.com>
->CC: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,        
->dwm@bebe.enoyolf.org
->Subject: Re: Loading PATA_PDC2027x as a module
->Date: Mon, 21 Aug 2006 11:08:52 -0500
->
->
->On Mon, 21 Aug 2006 10:38:12 CDT, "John Treubig" wrote:
-> > Can I load pata_pdc2027x as a module or must it be built as part of the
-> > kernel?  I am using RedHat Fedora with 2.6.17.1 stock kernel.  LibATA has
-> > been installed in the kernel with ATA_ENABLE_PATA undefined.  The
-> > pata_pdc2027x driver is not part of the Fedora build, so I have been able 
->to
-> > build pata_pdc2027x as a module with ATA_ENABLE_PATA defined for the 
->module.
-> >   When I try to load the pata_pdc2027x module it will not displace the 
->IDE
-> > native driver.  What's the mechanism that is used to determine if the IDE
-> > driver grabs the device or LibATA/pata_pdc_2027x?
->
->The base kernel needs the old driver (pdc202xxx...) built as a module
->(or not at all) to give the pata_pdc2027x module a chance to load.
->
->Once that is done, you can add the module as required to mkinitrd and
->it should be the first loaded, which prevents the other driver from
->loading.
->
-> >
-> > You may ask why I don't just live with the IDE driver.  This stems from
-> > problems we saw in accessing the Promise PDC2027x drives under 2.6.10 
->where
-> > the system lost time.  In discussions with Albert Lee, it was resolved 
->that
-> > the best approach was to convert our access to use LibATA.  After usage 
->of
-> > the LibATA access, the time loses issue has gone away.  I know that there
-> > have been changes in both the IDE and LibATA structures, so I'm open to
-> > additional advice.
-> >
-> > Best wishes,
-> > John Treubig
-> > VT Miltope
-> > Senior Test Engineer
->
->
-
-
+> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide-disk.c linux-2.6.18-rc4/drivers/ide/ide-disk.c
+> --- linux-2.6.18-rc4-old/drivers/ide/ide-disk.c	2006-08-19 03:49:03.000000000 -0400
+> +++ linux-2.6.18-rc4/drivers/ide/ide-disk.c	2006-08-20 19:13:56.000000000 -0400
+> @@ -464,16 +464,6 @@
+>  }
+>  
+>  /*
+> - * Bits 10 of command_set_1 and cfs_enable_1 must be equal,
+> - * so on non-buggy drives we need test only one.
+> - * However, we should also check whether these fields are valid.
+> - */
+> -static inline int idedisk_supports_hpa(const struct hd_driveid *id)
+> -{
+> -	return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
+> -}
+> -
+> -/*
+>   * The same here.
+>   */
+>  static inline int idedisk_supports_lba48(const struct hd_driveid *id)
+> @@ -528,7 +518,7 @@
+>   * in above order (i.e., if value of higher priority is available,
+>   * reset will be ignored).
+>   */
+> -static void init_idedisk_capacity (ide_drive_t  *drive)
+> +void init_idedisk_capacity (ide_drive_t  *drive)
+>  {
+>  	struct hd_driveid *id = drive->id;
+>  	/*
+> @@ -555,6 +545,8 @@
+>  	}
+>  }
+>  
+> +EXPORT_SYMBOL(init_idedisk_capacity);
+> +
+>  static sector_t idedisk_capacity (ide_drive_t *drive)
+>  {
+>  	return drive->capacity64 - drive->sect0;
+> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c linux-2.6.18-rc4/drivers/ide/ide.c
+> --- linux-2.6.18-rc4-old/drivers/ide/ide.c	2006-08-19 03:49:03.000000000 -0400
+> +++ linux-2.6.18-rc4/drivers/ide/ide.c	2006-08-20 19:12:38.000000000 -0400
+> @@ -1232,6 +1232,7 @@
+>  	struct request rq;
+>  	struct request_pm_state rqpm;
+>  	ide_task_t args;
+> +	int ide_cmd;
+>  
+>  	memset(&rq, 0, sizeof(rq));
+>  	memset(&rqpm, 0, sizeof(rqpm));
+> @@ -1242,7 +1243,15 @@
+>  	rqpm.pm_step = ide_pm_state_start_resume;
+>  	rqpm.pm_state = PM_EVENT_ON;
+>  
+> -	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> +	ide_cmd = ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> +
+> +	/* check to see if this is a hard drive
+> +	 * if it is then checkhpa needs to be
+> +	 * disabled */
+> +	if(drive->media == ide_disk && idedisk_supports_hpa(drive->id))
+> +		init_idedisk_capacity(drive);
+> +
+> +	return ide_cmd;
+>  }
+>  
+>  int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device *bdev,
+>   
+I put it there because honestly I wasn't sure where else to put it.
+Anyway it is in the generic_ide_resume() and its something that needs to
+be done on an ide disk with HPA on resume.
