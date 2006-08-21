@@ -1,51 +1,67 @@
-From: Doug Maxey <dwm@enoyolf.org>
-Subject: Re: Loading PATA_PDC2027x as a module
-Date: Mon, 21 Aug 2006 11:08:52 -0500
-Message-ID: <20060821160852.207632@bebe.enoyolf.org>
-References: <BAY113-F29FED2E57FBE3CF8195662DF410@phx.gbl>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: Reinitilize idedisk_capacity for HPA drives on resume
+Date: Mon, 21 Aug 2006 20:33:31 +0400
+Message-ID: <44E9E05B.4030502@ru.mvista.com>
+References: <44E9038D.4040109@PicturesInMotion.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:26752 "EHLO
-	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1422692AbWHUQJz
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Aug 2006 12:09:55 -0400
-In-reply-to: <BAY113-F29FED2E57FBE3CF8195662DF410@phx.gbl>
+Received: from h155.mvista.com ([63.81.120.155]:60136 "EHLO imap.sh.mvista.com")
+	by vger.kernel.org with ESMTP id S964967AbWHUQcZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2006 12:32:25 -0400
+In-Reply-To: <44E9038D.4040109@PicturesInMotion.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dwm@bebe.enoyolf.org
+To: Lee Trager <Lee@PicturesInMotion.net>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
+Hello.
 
-On Mon, 21 Aug 2006 10:38:12 CDT, "John Treubig" wrote:
-> Can I load pata_pdc2027x as a module or must it be built as part of the 
-> kernel?  I am using RedHat Fedora with 2.6.17.1 stock kernel.  LibATA has 
-> been installed in the kernel with ATA_ENABLE_PATA undefined.  The 
-> pata_pdc2027x driver is not part of the Fedora build, so I have been able to 
-> build pata_pdc2027x as a module with ATA_ENABLE_PATA defined for the module. 
->   When I try to load the pata_pdc2027x module it will not displace the IDE 
-> native driver.  What's the mechanism that is used to determine if the IDE 
-> driver grabs the device or LibATA/pata_pdc_2027x?
+Lee Trager wrote:
 
-The base kernel needs the old driver (pdc202xxx...) built as a module
-(or not at all) to give the pata_pdc2027x module a chance to load.
+> This patch fixes a problem that when a computer with HPA on it's hard
+> drive comes out of sleep mode it needs the disks capacity reinitialized.
 
-Once that is done, you can add the module as required to mkinitrd and 
-it should be the first loaded, which prevents the other driver from 
-loading.
- 
-> 
-> You may ask why I don't just live with the IDE driver.  This stems from 
-> problems we saw in accessing the Promise PDC2027x drives under 2.6.10 where 
-> the system lost time.  In discussions with Albert Lee, it was resolved that 
-> the best approach was to convert our access to use LibATA.  After usage of 
-> the LibATA access, the time loses issue has gone away.  I know that there 
-> have been changes in both the IDE and LibATA structures, so I'm open to 
-> additional advice.
-> 
-> Best wishes,
-> John Treubig
-> VT Miltope
-> Senior Test Engineer
+> This is my first patch to the Linux kernel so if I did anything wrong
+> please be gentle ;)
 
+    Your mailer spoils tabs, so either attach your patch or use the different
+mailer.
+
+[...]
+
+> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c
+> linux-2.6.18-rc4/drivers/ide/ide.c
+> --- linux-2.6.18-rc4-old/drivers/ide/ide.c    2006-08-19
+> 03:49:03.000000000 -0400
+> +++ linux-2.6.18-rc4/drivers/ide/ide.c    2006-08-20 19:12:38.000000000
+> -0400
+> @@ -1232,6 +1232,7 @@
+>      struct request rq;
+>      struct request_pm_state rqpm;
+>      ide_task_t args;
+> +    int ide_cmd;
+>  
+>      memset(&rq, 0, sizeof(rq));
+>      memset(&rqpm, 0, sizeof(rqpm));
+> @@ -1242,7 +1243,15 @@
+>      rqpm.pm_step = ide_pm_state_start_resume;
+>      rqpm.pm_state = PM_EVENT_ON;
+>  
+> -    return ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> +    ide_cmd = ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> +
+> +    /* check to see if this is a hard drive
+> +     * if it is then checkhpa needs to be
+> +     * disabled */
+> +    if(drive->media == ide_disk && idedisk_supports_hpa(drive->id))
+> +        init_idedisk_capacity(drive);
+> +
+> +    return ide_cmd;
+>  }
+
+    Hm, shouldn't this be handled as a separate resume process step?
+
+MBR, Sergei
 
