@@ -1,33 +1,62 @@
-From: Kaitlin Conway <dougphdv@corella.com>
-Subject: Dude check out this sweet site!
-Date: Tue, 22 Aug 2006 02:46:41 -0400
-Message-ID: <077217370776.518379479063@corella.com>
-Reply-To: Kaitlin Conway <dougphdv@corella.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] ata_piix: ignore PCS on ICH5
+Date: Tue, 22 Aug 2006 21:06:46 +0900
+Message-ID: <20060822120646.GA21866@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [61.133.219.242] ([61.133.219.242]:7701 "HELO 61.133.219.242")
-	by vger.kernel.org with SMTP id S1750981AbWHVGhR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Aug 2006 02:37:17 -0400
-Received: from mail15.opentransfer.com
-	by 61.133.219.242 (Postfix) with ESMTP id 8F2484A8D3
-	for <linux-ide@vger.kernel.org>; Tue, 22 Aug 2006 02:46:41 -0400
-Received: from 125.128.21.122 ([125.128.21.122])
-	by mail15.opentransfer.com (Postfix) with ESMTP id 4Kjh2Im8rke9
-	for <linux-ide@vger.kernel.org>; Tue, 22 Aug 2006 02:46:41 -0400
+Received: from py-out-1112.google.com ([64.233.166.182]:10221 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932186AbWHVMGw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Aug 2006 08:06:52 -0400
+Received: by py-out-1112.google.com with SMTP id n25so2953692pyg
+        for <linux-ide@vger.kernel.org>; Tue, 22 Aug 2006 05:06:52 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, kaos@ocs.com.au, stevenm@umd.edu, linux-ide@vger.kernel.org
 
+There have been a number of reports regarding some ICH5s failing to
+detect devices since the PCS handling update.  Analysis shows that
+these problems are caused by bogus PCS values from those controllers.
 
-Hey man face, check out the discounts these  guys are offering  to on enlarge patches code!
-Steel Package:  10 Patches reg $79.95 Now $49.95 ! Free shipping too! here
-Silver Package: just 25 Patches reg $129.95, Now $99.95! Free shipping and free exercise manual included! we
-Gold Package:  job 40 Patches reg $189.95, Now $149.95! Free shipping and free exercise manual included! your
-Platinum Package:  65 Patches reg $259.95, Now $199.95! Free shipping and free exercise manual included! world
-Millions of men are taking advantage of this revolutionary new product - Don't be left behind! 
-http://www.stranayavmiatina.com/
-You don't get in life what you want you get in life what you are.
+Before the PCS update, the driver didn't honor PCS regs exactly and
+probed them in many cases PCS reports no device.  Now that PCS is
+honored exactly, these hardware problems are visible.
 
+This patch makes ICH5 ignore PCS.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+
+Keith Owens, Steve and Andre, please test this patch and report how
+this works for you guys.  If possible, please test with several
+different setups.  Some ICHs (7 and 8) suffer from long boot delays
+due to ghost device if PCS is not honored and we want to make sure
+that ICH5 doesn't have that problem.
+
+ICH7 and 8's choke if the master device is ATAPI and the slave slot is
+empty, so testing this case on ICH5 would be especially helpful.
+e.g. If your ata_piix reports [P0 P1 IDE IDE], connect SATA ATAPI
+device to SATA port 0 and don't connect anything to P1, boot and see
+if things work okay.
+
+This patch is against libata-dev#upstream-fixes and should apply to
+2.6.18-rc4 and the current linus #master.
+
+Thanks.
+
+diff --git a/drivers/scsi/ata_piix.c b/drivers/scsi/ata_piix.c
+index 01b3530..3b98f18 100644
+--- a/drivers/scsi/ata_piix.c
++++ b/drivers/scsi/ata_piix.c
+@@ -390,7 +390,8 @@ #endif
+ 	/* ich5_sata */
+ 	{
+ 		.sht		= &piix_sht,
+-		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
++		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR |
++				  PIIX_FLAG_IGNORE_PCS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f,	/* udma0-6 */
