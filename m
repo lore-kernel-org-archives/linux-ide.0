@@ -1,181 +1,37 @@
-From: Lee Trager <Lee@PicturesInMotion.net>
-Subject: Re: [PATCH] ide: Reinitilize idedisk_capacity for HPA drives on resume
-Date: Mon, 21 Aug 2006 19:15:10 -0400
-Message-ID: <44EA3E7E.5030706@PicturesInMotion.net>
-References: <44E9038D.4040109@PicturesInMotion.net>
- <44E9E05B.4030502@ru.mvista.com> <44EA232C.30907@PicturesInMotion.net>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Some questions about new EH in libata
+Date: Mon, 21 Aug 2006 22:54:08 -0600
+Message-ID: <8202f4270608212154k787f63a1k15ed3dcfff0624c2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta10.srv.hcvlny.cv.net ([167.206.4.205]:2754 "EHLO
-	mta10.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
-	id S1751306AbWHUXPS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Aug 2006 19:15:18 -0400
-Received: from [192.168.1.102] (ool-4351c743.dyn.optonline.net [67.81.199.67])
- by mta10.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
- with ESMTP id <0J4D000YXF6YL0F0@mta10.srv.hcvlny.cv.net> for
- linux-ide@vger.kernel.org; Mon, 21 Aug 2006 19:13:49 -0400 (EDT)
-In-reply-to: <44EA232C.30907@PicturesInMotion.net>
+Received: from py-out-1112.google.com ([64.233.166.179]:10839 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932104AbWHVEyJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Aug 2006 00:54:09 -0400
+Received: by py-out-1112.google.com with SMTP id n25so2788414pyg
+        for <linux-ide@vger.kernel.org>; Mon, 21 Aug 2006 21:54:08 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Trager <Lee@PicturesInMotion.net>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, htejun@gmail.com
 
-Lee Trager wrote:
-> Sergei Shtylyov wrote:
->   
->> Hello.
->>
->> Lee Trager wrote:
->>
->>     
->>> This patch fixes a problem that when a computer with HPA on it's hard
->>> drive comes out of sleep mode it needs the disks capacity reinitialized.
->>>       
->>> This is my first patch to the Linux kernel so if I did anything wrong
->>> please be gentle ;)
->>>       
->>    Your mailer spoils tabs, so either attach your patch or use the
->> different
->> mailer.
->>
->> [...]
->>
->>     
->>> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c
->>> linux-2.6.18-rc4/drivers/ide/ide.c
->>> --- linux-2.6.18-rc4-old/drivers/ide/ide.c    2006-08-19
->>> 03:49:03.000000000 -0400
->>> +++ linux-2.6.18-rc4/drivers/ide/ide.c    2006-08-20 19:12:38.000000000
->>> -0400
->>> @@ -1232,6 +1232,7 @@
->>>      struct request rq;
->>>      struct request_pm_state rqpm;
->>>      ide_task_t args;
->>> +    int ide_cmd;
->>>  
->>>      memset(&rq, 0, sizeof(rq));
->>>      memset(&rqpm, 0, sizeof(rqpm));
->>> @@ -1242,7 +1243,15 @@
->>>      rqpm.pm_step = ide_pm_state_start_resume;
->>>      rqpm.pm_state = PM_EVENT_ON;
->>>  
->>> -    return ide_do_drive_cmd(drive, &rq, ide_head_wait);
->>> +    ide_cmd = ide_do_drive_cmd(drive, &rq, ide_head_wait);
->>> +
->>> +    /* check to see if this is a hard drive
->>> +     * if it is then checkhpa needs to be
->>> +     * disabled */
->>> +    if(drive->media == ide_disk && idedisk_supports_hpa(drive->id))
->>> +        init_idedisk_capacity(drive);
->>> +
->>> +    return ide_cmd;
->>>  }
->>>       
->>    Hm, shouldn't this be handled as a separate resume process step?
->>
->> MBR, Sergei
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>     
-> Ok I attached it now.
->   
-> ------------------------------------------------------------------------
->
-> diff -Naur linux-2.6.18-rc4-old/include/linux/ide.h linux-2.6.18-rc4/include/linux/ide.h
-> --- linux-2.6.18-rc4-old/include/linux/ide.h	2006-08-19 03:49:03.000000000 -0400
-> +++ linux-2.6.18-rc4/include/linux/ide.h	2006-08-20 19:13:10.000000000 -0400
-> @@ -1201,6 +1201,17 @@
->  void ide_register_subdriver(ide_drive_t *, ide_driver_t *);
->  void ide_unregister_subdriver(ide_drive_t *, ide_driver_t *);
->  
-> +/* Bits 10 of command_set_1 and cfs_enable_1 must be equal,
-> + * so on non-buggy drives we need test only one.
-> + * However, we should also check whether these fields are valid.
-> +*/
-> +static inline int idedisk_supports_hpa(const struct hd_driveid *id)
-> +{
-> +        return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
-> +}
-> +
-> +extern void init_idedisk_capacity (ide_drive_t  *drive);
-> +
->  #define ON_BOARD		1
->  #define NEVER_BOARD		0
->
-> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide-disk.c linux-2.6.18-rc4/drivers/ide/ide-disk.c
-> --- linux-2.6.18-rc4-old/drivers/ide/ide-disk.c	2006-08-19 03:49:03.000000000 -0400
-> +++ linux-2.6.18-rc4/drivers/ide/ide-disk.c	2006-08-20 19:13:56.000000000 -0400
-> @@ -464,16 +464,6 @@
->  }
->  
->  /*
-> - * Bits 10 of command_set_1 and cfs_enable_1 must be equal,
-> - * so on non-buggy drives we need test only one.
-> - * However, we should also check whether these fields are valid.
-> - */
-> -static inline int idedisk_supports_hpa(const struct hd_driveid *id)
-> -{
-> -	return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
-> -}
-> -
-> -/*
->   * The same here.
->   */
->  static inline int idedisk_supports_lba48(const struct hd_driveid *id)
-> @@ -528,7 +518,7 @@
->   * in above order (i.e., if value of higher priority is available,
->   * reset will be ignored).
->   */
-> -static void init_idedisk_capacity (ide_drive_t  *drive)
-> +void init_idedisk_capacity (ide_drive_t  *drive)
->  {
->  	struct hd_driveid *id = drive->id;
->  	/*
-> @@ -555,6 +545,8 @@
->  	}
->  }
->  
-> +EXPORT_SYMBOL(init_idedisk_capacity);
-> +
->  static sector_t idedisk_capacity (ide_drive_t *drive)
->  {
->  	return drive->capacity64 - drive->sect0;
-> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c linux-2.6.18-rc4/drivers/ide/ide.c
-> --- linux-2.6.18-rc4-old/drivers/ide/ide.c	2006-08-19 03:49:03.000000000 -0400
-> +++ linux-2.6.18-rc4/drivers/ide/ide.c	2006-08-20 19:12:38.000000000 -0400
-> @@ -1232,6 +1232,7 @@
->  	struct request rq;
->  	struct request_pm_state rqpm;
->  	ide_task_t args;
-> +	int ide_cmd;
->  
->  	memset(&rq, 0, sizeof(rq));
->  	memset(&rqpm, 0, sizeof(rqpm));
-> @@ -1242,7 +1243,15 @@
->  	rqpm.pm_step = ide_pm_state_start_resume;
->  	rqpm.pm_state = PM_EVENT_ON;
->  
-> -	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
-> +	ide_cmd = ide_do_drive_cmd(drive, &rq, ide_head_wait);
-> +
-> +	/* check to see if this is a hard drive
-> +	 * if it is then checkhpa needs to be
-> +	 * disabled */
-> +	if(drive->media == ide_disk && idedisk_supports_hpa(drive->id))
-> +		init_idedisk_capacity(drive);
-> +
-> +	return ide_cmd;
->  }
->  
->  int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device *bdev,
->   
-I put it there because honestly I wasn't sure where else to put it.
-Anyway it is in the generic_ide_resume() and its something that needs to
-be done on an ide disk with HPA on resume.
+Hi Folks,
+
+I just upgraded to the libata with new EH and I have some questions
+about the new error handler:
+1. In several occasions, I saw a port being disable, under what kind
+of conditions will new EH disable a port?
+2. For user space program, is there any way to checked the state of a
+port/drive? I noticed that dmesg has some printout but that could be
+wiped out by other traces or errors.
+3. Does libata allow user space code to reset host/bus/drive or only
+libata itself has the privilege? I tried sg reset IOCTL interface on
+SATA Sil3124, it seems not working.
+4. How to reenable a port/drive after it's disabled without rebooting?
+Any API or command from user space?
+
+Thanks,
+Fajun
