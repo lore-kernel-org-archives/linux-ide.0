@@ -1,40 +1,136 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata : Add 40pin "short" cable support, honour drive
- side speed detection
-Date: Thu, 24 Aug 2006 10:41:55 -0400
-Message-ID: <44EDBAB3.3000404@pobox.com>
-References: <1156188229.18887.56.camel@localhost.localdomain>	 <44ED4DB5.10400@pobox.com> <1156417070.3007.64.camel@localhost.localdomain>	 <44EDAEFC.6000609@pobox.com> <1156431385.3007.153.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH 001/001]  libata: upstream version of the 40pin short cable
+	patch
+Date: Thu, 24 Aug 2006 18:09:34 +0100
+Message-ID: <1156439374.3007.173.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:1161 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932096AbWHXOmC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Aug 2006 10:42:02 -0400
-In-Reply-To: <1156431385.3007.153.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030391AbWHXQvD@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Ar Iau, 2006-08-24 am 09:51 -0400, ysgrifennodd Jeff Garzik:
->> The standard policy, in place since you began, has been to push core 
->> stuff into #upstream, and the driver side into #pata-drivers.
-> 
-> Jeff, I've no problem with putting it in upstream but all this talk of
-> "standard policy" is crap. Or at least "standard policy" is a concept
-> existing only in Jeff's brain and not documented clearly externally in
-> this case...
+Signed-off-by: Alan Cox <number6@the-village.bc.nu>
 
-The pata-drivers branch has never received any libata*.[ch] changes in 
-its entire lifetime, and you've no doubt noticed libata*.[ch] PATA work 
-appearing in the upstream kernel, even when pata_*.c continues to not 
-exist in the upstream kernel.  Core stuff has always been split up; 
-maybe I just didn't say that explicitly.  Its pretty self-evident by 
-looking at public commits, though.
+(Sorry its -R, git doesn't appear to have the ability to generate
+reverse diffs to fix this)
 
-	Jeff
-
-
-
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 62b1a3f..22b2dba 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -93,7 +93,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"ata_piix"
+-#define DRV_VERSION	"2.00-u1ac40"
++#define DRV_VERSION	"2.00"
+ 
+ enum {
+ 	PIIX_IOCFG		= 0x54, /* IDE I/O configuration register */
+@@ -473,24 +473,6 @@ module_param(force_pcs, int, 0444);
+ MODULE_PARM_DESC(force_pcs, "force honoring or ignoring PCS to work around "
+ 		 "device mis-detection (0=default, 1=ignore PCS, 2=honor PCS)");
+ 
+-
+-struct ich_laptop {
+-	u16 device;
+-	u16 subvendor;
+-	u16 subdevice;
+-};
+-
+-/*
+- *	List of laptops that use short cables rather than 80 wire
+- */
+-
+-static const struct ich_laptop ich_laptop[] = {
+-	/* devid, subvendor, subdev */
+-	{ 0x27DF, 0x0005, 0x0280 },	/* ICH7 on Acer 5602WLMi */
+-	/* end marker */
+-	{ 0, }
+-};
+-
+ /**
+  *	piix_pata_cbl_detect - Probe host controller cable detect info
+  *	@ap: Port for which cable detect info is desired
+@@ -504,21 +486,12 @@ static const struct ich_laptop ich_lapto
+ static void piix_pata_cbl_detect(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	const struct ich_laptop *lap = &ich_laptop[0];
+ 	u8 tmp, mask;
+ 
+ 	/* no 80c support in host controller? */
+ 	if ((ap->udma_mask & ~ATA_UDMA_MASK_40C) == 0)
+ 		goto cbl40;
+ 
+-	/* Check for specials - Acer Aspire 5602WLMi */
+-	while (lap->device) {
+-		if (lap->device == pdev->device && 
+-		    lap->subvendor == pdev->subsystem_vendor &&
+-		    lap->subdevice == pdev->subsystem_device)
+-		    	return ATA_CBL_PATA40_SHORT;
+-		lap++;
+-	}
+ 	/* check BIOS cable detect results */
+ 	mask = ap->port_no == 0 ? PIIX_80C_PRI : PIIX_80C_SEC;
+ 	pci_read_config_byte(pdev, PIIX_IOCFG, &tmp);
+@@ -604,7 +577,6 @@ static unsigned int piix_sata_present_ma
+ 	return present_mask;
+ }
+ 
+-
+ /**
+  *	piix_sata_softreset - reset SATA host port via ATA SRST
+  *	@ap: port to reset
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 82dc3ad..1c93154 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3093,13 +3093,6 @@ static void ata_dev_xfermask(struct ata_
+ 	 */
+ 	if (ap->cbl == ATA_CBL_PATA40)
+ 		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+-	/* Apply drive side cable rule. Unknown or 80 pin cables reported
+-	 * host side are checked drive side as well. Cases where we know a
+-	 * 40wire cable is used safely for 80 are not checked here.
+-	 */
+-        if (ata_drive_40wire(dev->id) && (ap->cbl == ATA_CBL_PATA_UNK || ap->cbl == ATA_CBL_PATA80))
+-		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+-        	
+ 
+ 	xfer_mask &= ata_pack_xfermask(dev->pio_mask,
+ 				       dev->mwdma_mask, dev->udma_mask);
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 0a7a284..991b858 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -200,9 +200,8 @@ enum {
+ 	ATA_CBL_NONE		= 0,
+ 	ATA_CBL_PATA40		= 1,
+ 	ATA_CBL_PATA80		= 2,
+-	ATA_CBL_PATA40_SHORT	= 3,		/* 40 wire cable to high UDMA spec */
+-	ATA_CBL_PATA_UNK	= 4,
+-	ATA_CBL_SATA		= 5,
++	ATA_CBL_PATA_UNK	= 3,
++	ATA_CBL_SATA		= 4,
+ 
+ 	/* SATA Status and Control Registers */
+ 	SCR_STATUS		= 0,
+@@ -343,15 +342,6 @@ static inline int ata_id_is_cfa(const u1
+ 	return 0;
+ }
+ 
+-static inline int ata_drive_40wire(const u16 *dev_id)
+-{
+-	if (ata_id_major_version(dev_id) >= 5 && ata_id_is_sata(dev_id))
+-		return 0;	/* SATA */
+-	if (dev_id[93] & 0x4000)
+-		return 0;	/* 80 wire */
+-	return 1;
+-}
+-
+ static inline int atapi_cdb_len(const u16 *dev_id)
+ {
+ 	u16 tmp = dev_id[0] & 0x3;
