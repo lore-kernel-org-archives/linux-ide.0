@@ -1,29 +1,17 @@
-From: "Bettie" <pweekszhog@passkey.com>
-Subject: Don't be inadequate anymore!
-Date: Wed, 23 Aug 2006 20:08:39 -0400
-Message-ID: <0382762476.477764466159@passkey.com>
-Reply-To: "Bettie Tuttle" <pweekszhog@passkey.com>
+From: "Craig Everett" <cardmasterhy@1000kmedia.com>
+Subject: re:Hi
+Date: Thu, 24 Aug 2006 01:30:15 -0540
+Message-ID: <6273770977.20060824013015@1000kmedia.com>
+Reply-To: "Craig Everett" <cardmasterhy@1000kmedia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl-201-98-67-39.prod-infinitum.com.mx ([201.98.67.39]:50933
-	"HELO 201.98.67.39") by vger.kernel.org with SMTP id S965314AbWHWX7D
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Aug 2006 19:59:03 -0400
-Received: from cluster1.us.messagelabs.com
-	by 201.98.67.39 (Postfix) with ESMTP id E6DEF2E2D8
-	for <linux-ide@vger.kernel.org>; Wed, 23 Aug 2006 20:08:39 -0400
-Received: from 211.149.117.26 ([211.149.117.26])
-	by cluster1.us.messagelabs.com (qmail-ldap-1.03) with SMTP
-	for <linux-ide@vger.kernel.org>; Wed, 23 Aug 2006 20:08:39 -0400
+Received: from [218.209.39.246] ([218.209.39.246]:59126 "EHLO doug.fm.net")
+	by vger.kernel.org with ESMTP id S965327AbWHXBaT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Aug 2006 21:30:19 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-
-Over a million drive men have been helped with the potent ingredients in Pen is check  Growth Patch – men have experienced bigger size ever, more action old, and super-satisfying results for themselves and their partners chance.
-Don't be left behind eyes! Take advantage of price specials going on now your. Sure of their qualities and demanding praise, more go to ruined fortunes than are raised.
-http://www.keloparemazik.com/
-
-
+The young and perspective financial company employs young experts. It is your unique chance to start your career in the company with a world name. We have some kinds of vacancies. You can work freelance or work in office. With us you can achieve new horizons in your career. You can earn up to 3000-4000$ per month. The basic requirements to the candidates are: knowledge of PC and bases of accounts department, honesty, clearness and efficiency in work. If you are interested in the given offer, please send your CV to USA@direct-goldusa1.biz
