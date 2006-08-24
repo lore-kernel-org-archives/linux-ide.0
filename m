@@ -1,38 +1,29 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Doug Maxey <dwm@enoyolf.org>
 Subject: Re: Merging libata PATA support into the base kernel
-Date: Wed, 23 Aug 2006 23:38:16 -0400
-Message-ID: <44ED1F28.4070808@pobox.com>
-References: <1155144599.5729.226.camel@localhost.localdomain> <44ED1D93.3020203@tw.ibm.com>
+Date: Wed, 23 Aug 2006 23:13:01 -0500
+Message-ID: <20060824041301.791203@bebe.enoyolf.org>
+References: <1155144599.5729.226.camel@localhost.localdomain> <44ED1D93.3020203@tw.ibm.com> <44ED1F28.4070808@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:63201 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030252AbWHXDiX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Aug 2006 23:38:23 -0400
-In-Reply-To: <44ED1D93.3020203@tw.ibm.com>
+Received: from falcon30.maxeymade.com ([24.173.215.190]:58756 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1030273AbWHXENl
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Aug 2006 00:13:41 -0400
+In-reply-to: <44ED1F28.4070808@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Doug Maxey <dwm@enoyolf.org>, Unicorn Chang <uchang@tw.ibm.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: albertl@mail.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Unicorn Chang <uchang@tw.ibm.com>
 
-Albert Lee wrote:
-> Alan Cox wrote:
->> Jeff (rightly) thinks the plan should be discussed publically, so here
->> is the plan
->>
->> For 2.6.19 to move the libata drivers to drivers/ata
->> Add a subset of the new PATA drivers living in -mm to the base kernel
->>
+
+On Wed, 23 Aug 2006 23:38:16 EDT, Jeff Garzik wrote:
 > 
-> Is it planned for the pata_pdc2027x driver to be included in the
-> subset of upstream PATA drivers? It would be nice to have the driver
-> for the adapter hotplug on ppc64.
+> Yes.  That driver will go along with all the other PATA drivers in the 
+> #pata-drivers branch.
 
-Yes.  That driver will go along with all the other PATA drivers in the 
-#pata-drivers branch.
+Sweet.  Does this mean pata_pdc2027x will move to upstream for the 2.6.19
+merge window opening?
 
-	Jeff
-
-
+++doug
 
