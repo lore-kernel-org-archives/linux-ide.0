@@ -1,43 +1,30 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata fixes
-Date: Thu, 24 Aug 2006 05:00:18 -0400
-Message-ID: <44ED6AA2.2080306@garzik.org>
-References: <20060824081336.GA15502@havoc.gtf.org> <20060824082954.GA9315@kroah.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata : Add 40pin "short" cable support, honour drive
+	side speed detection
+Date: Thu, 24 Aug 2006 11:57:49 +0100
+Message-ID: <1156417070.3007.64.camel@localhost.localdomain>
+References: <1156188229.18887.56.camel@localhost.localdomain>
+	 <44ED4DB5.10400@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42731 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750861AbWHXJAX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Aug 2006 05:00:23 -0400
-In-Reply-To: <20060824082954.GA9315@kroah.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42180 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751066AbWHXKiB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Aug 2006 06:38:01 -0400
+In-Reply-To: <44ED4DB5.10400@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Greg KH wrote:
-> On Thu, Aug 24, 2006 at 04:13:36AM -0400, Jeff Garzik wrote:
->> Please pull from 'upstream-greg' branch of
->> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-greg
->>
->> to receive the following updates:
->>
->>  drivers/scsi/ata_piix.c    |   84 +++++++++++++++++++++++++-------
->>  drivers/scsi/libata-core.c |    2 
->>  drivers/scsi/pdc_adma.c    |    3 -
->>  drivers/scsi/sata_via.c    |  117 +++++++++++++++++++++++++++++++++++++++++++--
->>  4 files changed, 180 insertions(+), 26 deletions(-)
-> 
-> Pulled from, and pushed out.  Is this set of patches supposed to fix my
-> ata_piix cdrom problem for my laptop?  I'll go build and test to see if
-> it does or not...
+Ar Iau, 2006-08-24 am 02:56 -0400, ysgrifennodd Jeff Garzik:
+> ACK, but you need to split this up into core (#upstream) and PATA 
+> (#pata-drivers) patches.
 
-It should, yes.
+Its not really needed until you have pata drivers so I was planning to
+submit it only for the pata-drivers side of things ?
 
-You can twiddle with the force_pcs module option if things are still wonky.
-
-	Jeff
-
-
+Alan
 
