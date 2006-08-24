@@ -1,17 +1,36 @@
-From: "Craig Everett" <cardmasterhy@1000kmedia.com>
-Subject: re:Hi
-Date: Thu, 24 Aug 2006 01:30:15 -0540
-Message-ID: <6273770977.20060824013015@1000kmedia.com>
-Reply-To: "Craig Everett" <cardmasterhy@1000kmedia.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: Merging libata PATA support into the base kernel
+Date: Thu, 24 Aug 2006 11:31:31 +0800
+Message-ID: <44ED1D93.3020203@tw.ibm.com>
+References: <1155144599.5729.226.camel@localhost.localdomain>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [218.209.39.246] ([218.209.39.246]:59126 "EHLO doug.fm.net")
-	by vger.kernel.org with ESMTP id S965327AbWHXBaT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Aug 2006 21:30:19 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.153]:63384 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030235AbWHXDbt
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Aug 2006 23:31:49 -0400
+In-Reply-To: <1155144599.5729.226.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Doug Maxey <dwm@enoyolf.org>, Unicorn Chang <uchang@tw.ibm.com>
 
-The young and perspective financial company employs young experts. It is your unique chance to start your career in the company with a world name. We have some kinds of vacancies. You can work freelance or work in office. With us you can achieve new horizons in your career. You can earn up to 3000-4000$ per month. The basic requirements to the candidates are: knowledge of PC and bases of accounts department, honesty, clearness and efficiency in work. If you are interested in the given offer, please send your CV to USA@direct-goldusa1.biz
+Alan Cox wrote:
+> Jeff (rightly) thinks the plan should be discussed publically, so here
+> is the plan
+> 
+> For 2.6.19 to move the libata drivers to drivers/ata
+> Add a subset of the new PATA drivers living in -mm to the base kernel
+> 
+
+Is it planned for the pata_pdc2027x driver to be included in the
+subset of upstream PATA drivers? It would be nice to have the driver
+for the adapter hotplug on ppc64.
+
+Thanks,
+
+Albert
+
