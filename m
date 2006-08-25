@@ -1,59 +1,80 @@
-From: Thierry Vignaud <tvignaud@mandriva.com>
-Subject: Re: [Fwd: [BUG] sata_via doesn't detect anymore my disks (broken between rc1 and rc3)]
-Date: Fri, 25 Aug 2006 16:09:34 +0200
-Message-ID: <m2ac5soqjl.fsf@vador.mandriva.com>
-References: <m2wt98bio1.fsf@vador.mandriva.com>
-	<m2sljwbil7.fsf@vador.mandriva.com> <44E37BD4.8010709@pobox.com>
-	<m23bbva9cs.fsf@vador.mandriva.com> <44E46E0E.4060703@gmail.com>
-	<m2fyfv7a8s.fsf@vador.mandriva.com> <44EB32AD.1080305@gmail.com>
-	<m2fyfnciky.fsf@vador.mandriva.com> <m2d5aprtw0.fsf@vador.mandriva.com>
-	<44EEEA29.1010008@gmail.com> <20060825135540.GE21866@htj.dyndns.org>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Re: Libata EH False Alarm (2.6.18-rc2)?
+Date: Fri, 25 Aug 2006 08:41:24 -0600
+Message-ID: <8202f4270608250741l15047a96q544d38eebca8d57e@mail.gmail.com>
+References: <8202f4270608241242i7a4d2d0anc3f607dad7df0129@mail.gmail.com>
+	 <44EE0561.1030007@gmail.com>
+	 <8202f4270608241305n2e0d3e80q2bd377ae85d841bb@mail.gmail.com>
+	 <44EE0A42.4070104@gmail.com> <44EE0AE6.8070608@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ezoffice.mandriva.com ([84.14.106.134]:19464 "EHLO
-	office.mandriva.com") by vger.kernel.org with ESMTP
-	id S1751211AbWHYOJg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Aug 2006 10:09:36 -0400
-In-Reply-To: <20060825135540.GE21866@htj.dyndns.org> (Tejun Heo's message of "Fri, 25 Aug 2006 22:55:40 +0900")
+Received: from py-out-1112.google.com ([64.233.166.176]:45737 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751290AbWHYOlZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Aug 2006 10:41:25 -0400
+Received: by py-out-1112.google.com with SMTP id n25so1265248pyg
+        for <linux-ide@vger.kernel.org>; Fri, 25 Aug 2006 07:41:25 -0700 (PDT)
+In-Reply-To: <44EE0AE6.8070608@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Tejun Heo <htejun@gmail.com> writes:
+Hi Tejun,
 
-> > >none of both these patches worked :-(
-> > 
-> > The second didn't work?  But you said the following one liner worked.
-> > 
-> > --- drivers/ata/sata_via.c.tv6	2006-08-20 16:37:41.000000000 +0200
-> > +++ drivers/ata/sata_via.c	2006-08-20 17:20:23.000000000 +0200
-> > @@ -244,7 +244,7 @@
-> > 
-> >  static void vt6421_error_handler(struct ata_port *ap)
-> >  {
-> > -	return ata_bmdma_drive_eh(ap, ata_std_prereset, NULL,
-> > +	return ata_bmdma_drive_eh(ap, vt6420_prereset, ata_std_softreset,
-> >  				  sata_std_hardreset, ata_std_postreset);
-> >  }
-> > 
-> > The second patch is essentially identical to what you did the one liner. 
-> >  Can you please check it once more?  I'll prepare old-sequence 
-> > hardreset in the meantime.
-> 
-> Okay, here's the old-sequence hardreset patch.  This should have the
-> highest chance of working.  This patch should be applied on top of the
-> vt6420 patch.
+I tested your patch. No more EH alarms in dmesg during an overnight
+test.  One question I have is whether this fix will mask genuine
+failure.
 
-On top of which patch?
-I just tried to apply it on top of:
-- your last week patch
-- your two patches of this week
+Thanks,
+Fajun
 
-and it does *not* apply on top of anyone...
-
-Couldn't you either check first your patch or (better) just send a
-patch against vanilla 2.6.18-rc4-mm2?
-
-Thanks
+On 8/24/06, Tejun Heo <htejun@gmail.com> wrote:
+> Tejun Heo wrote:
+> > Fajun Chen wrote:
+> >> Sil3124. That's the only chipset we use.
+> >
+> >>> > [30540.003174] ata1: exception Emask 0x10 SAct 0x0 SErr 0x80000 action
+> >>> > 0x2 frozen
+> >>> > [30540.003259] ata1: (irq_stat 0x01100010, PHY RDY changed)
+> >
+> > Yeap, this message from sata_sil24.  You're not getting any phy status
+> > changes bits in SError although the device is reporting phy rdy changed
+> > event.  However, your 3124 is reporting 8b/10b decoding error threshold
+> > exceeded error interrupt.  That could be related to the phyrdy status
+> > changed event.  This happens only under heavy IO, right?  How often does
+> > it occur in units of times per megabytes transferred?
+> >
+> > 8b/10b error is a recoverable FIS reception error.  The interrupt bit
+> > (bit 24 of irq_stat) is only turned on if threshold count is exceeded,
+> > which is initialized to 0x8000 at the moment.  This indicates that there
+> > are quite some number of transmission failures.
+> >
+>
+> Sorry, I forgot to attach patch.  Can you please try the attached patch?
+>
+> --
+> tejun
+>
+>
+> --- a/drivers/scsi/sata_sil24.c
+> +++ b/drivers/scsi/sata_sil24.c
+> @@ -1034,9 +1034,9 @@ static void sil24_init_controller(struct
+>                         writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
+>
+>                 /* Zero error counters. */
+> -               writel(0x8000, port + PORT_DECODE_ERR_THRESH);
+> -               writel(0x8000, port + PORT_CRC_ERR_THRESH);
+> -               writel(0x8000, port + PORT_HSHK_ERR_THRESH);
+> +               writel(0x0000, port + PORT_DECODE_ERR_THRESH);
+> +               writel(0x0000, port + PORT_CRC_ERR_THRESH);
+> +               writel(0x0000, port + PORT_HSHK_ERR_THRESH);
+>                 writel(0x0000, port + PORT_DECODE_ERR_CNT);
+>                 writel(0x0000, port + PORT_CRC_ERR_CNT);
+>                 writel(0x0000, port + PORT_HSHK_ERR_CNT);
+>
+>
+>
