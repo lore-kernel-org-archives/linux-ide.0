@@ -1,35 +1,40 @@
-From: Thierry Vignaud <tvignaud@mandriva.com>
-Subject: Re: [Fwd: [BUG] sata_via doesn't detect anymore my disks (broken between rc1 and rc3)]
-Date: Fri, 25 Aug 2006 17:30:24 +0200
-Message-ID: <m2y7tcltnz.fsf@vador.mandriva.com>
-References: <m2wt98bio1.fsf@vador.mandriva.com>
-	<m2sljwbil7.fsf@vador.mandriva.com> <44E37BD4.8010709@pobox.com>
-	<m23bbva9cs.fsf@vador.mandriva.com> <44E46E0E.4060703@gmail.com>
-	<m2fyfv7a8s.fsf@vador.mandriva.com> <44EB32AD.1080305@gmail.com>
-	<m2fyfnciky.fsf@vador.mandriva.com> <m2d5aprtw0.fsf@vador.mandriva.com>
-	<44EEEA29.1010008@gmail.com> <20060825135540.GE21866@htj.dyndns.org>
-	<m2ac5soqjl.fsf@vador.mandriva.com> <44EF1158.1040507@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: PATA Sil680 Warm Plug Caused 2.6.18-rc2 Kernel Internel Error
+Date: Sat, 26 Aug 2006 00:35:24 +0900
+Message-ID: <44EF18BC.8040505@gmail.com>
+References: <8202f4270608230906r73b1d91bj279bfc0ef4b7a39d@mail.gmail.com>	 <44EC8128.2040204@gmail.com>	 <8202f4270608231212g29e945adg23c32ad1ae132885@mail.gmail.com>	 <44ECAB62.8030804@gmail.com>	 <8202f4270608231255k116918dfk58e4c14cd859c175@mail.gmail.com>	 <8202f4270608231349v5aabace2xaff8fe93c133a7ca@mail.gmail.com>	 <20060824070257.GD21866@htj.dyndns.org>	 <8202f4270608240942i6b620961t1a03d4148dd4a32d@mail.gmail.com>	 <44EDDB91.1050102@gmail.com>	 <8202f4270608241701g494bfadaw74dd3d059182e4cc@mail.gmail.com> <8202f4270608250826h67edf5d7n8436961374896348@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ezoffice.mandriva.com ([84.14.106.134]:11015 "EHLO
-	office.mandriva.com") by vger.kernel.org with ESMTP
-	id S1030218AbWHYPa0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Aug 2006 11:30:26 -0400
-In-Reply-To: <44EF1158.1040507@gmail.com> (Tejun Heo's message of "Sat, 26 Aug 2006 00:03:52 +0900")
+Received: from wr-out-0506.google.com ([64.233.184.227]:49868 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1030254AbWHYPfb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Aug 2006 11:35:31 -0400
+Received: by wr-out-0506.google.com with SMTP id i21so157516wra
+        for <linux-ide@vger.kernel.org>; Fri, 25 Aug 2006 08:35:31 -0700 (PDT)
+In-Reply-To: <8202f4270608250826h67edf5d7n8436961374896348@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo <htejun@gmail.com> writes:
-
-> > Couldn't you either check first your patch or (better) just send a
-> > patch against vanilla 2.6.18-rc4-mm2?
+Fajun Chen wrote:
+> Hi Tejun,
 > 
-> I've attached whole sata_via.c to the other mail.  I think that
-> should do the trick.
+> JFYI. I found a workaround which seems to be working in 2.6.18-rc2.
+> During warm plug/unplug, if I don't delete the device through sysfs or
+> proc and just rescan the host, it recovered just fine.
 
-I'll test and report back to you monday sarg' :-)
+Hello,
 
-Have a nice week end and thank you for trying to solve that issue.
+I'm trying to reproduce it here but haven't succeeded yet.  Can you 
+describe what you did in more detail?  I'm trying various things - 
+issuing delete / scan, combination of them after unplugging my drive, 
+etc..., but haven't succeeded in reproducing your error condition.  It 
+seems to be a sdev refcnting problem in libata but I need more clue...
+
+Thanks.
+
+-- 
+tejun
