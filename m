@@ -1,86 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] libata: implement new initialization model w/ iomap
- support, take 2
-Date: Sun, 27 Aug 2006 19:12:08 +0900
-Message-ID: <44F16FF8.7010706@gmail.com>
-References: <11559778241753-git-send-email-htejun@gmail.com> <44EB80BB.5040309@us.ibm.com>
+From: Sergey Vlasov <vsu@altlinux.ru>
+Subject: Re: HPA Resume patch
+Date: Sun, 27 Aug 2006 14:16:56 +0400
+Message-ID: <20060827141656.0e4d2c17.vsu@altlinux.ru>
+References: <44F15ADB.5040609@PicturesInMotion.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Sun__27_Aug_2006_14_16_56_+0400_KmQY0HRYRUWSpa6Z"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:61247 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932088AbWH0KMP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Aug 2006 06:12:15 -0400
-Received: by py-out-1112.google.com with SMTP id n25so2047588pyg
-        for <linux-ide@vger.kernel.org>; Sun, 27 Aug 2006 03:12:15 -0700 (PDT)
-In-Reply-To: <44EB80BB.5040309@us.ibm.com>
+Received: from master.altlinux.org ([62.118.250.235]:18706 "EHLO
+	master.altlinux.org") by vger.kernel.org with ESMTP
+	id S1750706AbWH0KRZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Aug 2006 06:17:25 -0400
+In-Reply-To: <44F15ADB.5040609@PicturesInMotion.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: Lee Trager <Lee@PicturesInMotion.net>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
 
-Hello,
+--Signature=_Sun__27_Aug_2006_14_16_56_+0400_KmQY0HRYRUWSpa6Z
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Brian King wrote:
-> Tejun Heo wrote:
->> Brian, can you please take a look at how LLDs use new init functions
->> and see if SAS can use the same approach?  If you pass NULL as @sht to
->> ata_host_alloc(), it won't associate ports as part of Scsi_Host just
->> as ata_sas_port_alloc() does and ata_host_free() will do the right
->> thing when freeing a host allocated that way.
-> 
-> I started looking through your patch set and have a few comments.
-> 
-> The idea of a static number of "ata ports" per ata host in SAS doesn't
-> really work. Since you can have ATA devices under a SAS expander, the
-> number of possible ATA devices that can be attached to a SAS adapter
-> can be rather large and can change depending on the SAS fabric. If libata
-> ever needed to iterate over the ata_port's for a SAS ata_host, then we would
-> probably need to convert the static array of ata_ports to a linked
-> list, allowing it to be more dynamic.
+On Sun, 27 Aug 2006 04:42:03 -0400 Lee Trager wrote:
 
-Making the array dynamically-sized isn't difficult at all; however, the 
-current libata code assumes that ata_host->ports[] array is packed - ie. 
-no intervening empty entry.  Can SAS keep this restriction or does it 
-need more flexibility?
+> This patch fixes a problem with computers that have HPA on their hard
+> drive and not being able to come out of resume from RAM or disk. I've
+> tested this patch on 2.6.17.x and 2.6.18-rc4 and it works great on both
+> of these. This patch also fixes the bug #6840. This is my first patch to
+> the kernel and I was told to e-mail the above people to get my patch
+> into the kernel. If I made a mistake please be gentle and correct me ;)
 
-> Object lifetime rules also have me concerned. Currently, for SAS,
-> there are a couple objects that libata is concerned with. The first is
-> an ata_host_set, which I am allocating as part of the scsi_host struct,
-> so it inherits the object lifetime rules of that. The second is the
-> ata_port, which I allocate and free in target_alloc/target_destroy,
-> so I get refcounting for free there as well. Your patch set introduces
-> an ata_host struct, which is kmalloc'ed and doesn't inherit any of the
-> above refcounting. 
+The patch adds a call from ide.c to a function inside ide-disk.c - this
+won't work when IDE support is built as modules (it will cause a
+circular dependency between ide-core and ide-disk modules).
 
-Actually, ata_host is ata_host_set.  It's just renamed recently.
+The proper way to do such calls is to add a new method to ide_driver_t
+and call it from generic_ide_resume().  Also, if the ide_do_drive_cmd()
+call failed, it is probably unsafe to reset HPA, so you need to check
+the result and call the resume method only if the low-level resume has
+succeeded.
 
-cca3974e48607c3775dc73b544a5700b2e37c21a in libata-dev#upstream
+And please and "-p" to diff options.
 
-Hmmm.... I was kind of hoping SAS could use ata_host_alloc() and store 
-its pointer and then later release it w/ ata_host_free(), hmmm.. maybe 
-you can call ata_host_free from ->slave_destroy?.  That gives libata 
-more control over the host structure (e.g. if we implement dynamic ports 
-array, it needs to be freed too).  Port lifetime rules aren't changed by 
-these updates and host free does need some changes but IMHO that 
-shouldn't be difficult.
+--Signature=_Sun__27_Aug_2006_14_16_56_+0400_KmQY0HRYRUWSpa6Z
+Content-Type: application/pgp-signature
 
->> sata_sil24.c is a pretty straight-forward example.  If you can't
->> determine the number of ports when allocating host, please take a look
->> at how ahci.c initializes its host.
->>
->> The intention was to allow SAS to use all the regular init/deinit
->> functions just as other LLDs.  If something doesn't seem to be right,
->> please let me know.
-> 
-> I think it can use bits of it, but I think the actual device discovery
-> process is better initiated by the SAS layer. The SAS layer knows what
-> devices are out there when it does discovery and can tell libata about
-> them.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-Hmmm.... I see.  Something like ata_dev_attach(adev) after initialized 
-by SAS maybe?
+iD8DBQFE8XEcW82GfkQfsqIRAiwaAJ4sB+oiXUP/TUUa0KvF831PpYN0zgCfSz9U
+1ZhSb7fpMOr/2ExK9m984Q4=
+=WDlr
+-----END PGP SIGNATURE-----
 
--- 
-tejun
+--Signature=_Sun__27_Aug_2006_14_16_56_+0400_KmQY0HRYRUWSpa6Z--
