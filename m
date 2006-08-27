@@ -1,66 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: PATA Sil680 Warm Plug Caused 2.6.18-rc2 Kernel Internel Error
-Date: Sat, 26 Aug 2006 05:32:04 +0900
-Message-ID: <44EF5E44.1010002@gmail.com>
-References: <8202f4270608230906r73b1d91bj279bfc0ef4b7a39d@mail.gmail.com>	 <8202f4270608231349v5aabace2xaff8fe93c133a7ca@mail.gmail.com>	 <20060824070257.GD21866@htj.dyndns.org>	 <8202f4270608240942i6b620961t1a03d4148dd4a32d@mail.gmail.com>	 <44EDDB91.1050102@gmail.com>	 <8202f4270608241701g494bfadaw74dd3d059182e4cc@mail.gmail.com>	 <8202f4270608250826h67edf5d7n8436961374896348@mail.gmail.com>	 <44EF18BC.8040505@gmail.com>	 <8202f4270608251027j4ae31243laab8a6bd3e433697@mail.gmail.com>	 <44EF3AA8.6040100@gmail.com> <8202f4270608251319g275ca996qb413ad41b920c044@mail.gmail.com>
+From: "centrist" <allahconfrontation@earthlink.net>
+Subject: daddy
+Date: Sun, 27 Aug 2006 00:06:00 -0700
+Message-ID: <45235019084742.D4D68BB5BB@5SM5QVYU>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:34769 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1422889AbWHYUcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Aug 2006 16:32:10 -0400
-Received: by py-out-1112.google.com with SMTP id n25so1378441pyg
-        for <linux-ide@vger.kernel.org>; Fri, 25 Aug 2006 13:32:10 -0700 (PDT)
-In-Reply-To: <8202f4270608251319g275ca996qb413ad41b920c044@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Fajun Chen wrote:
-> On 8/25/06, Tejun Heo <htejun@gmail.com> wrote:
->> Fajun Chen wrote:
->> > Hi Tejun,
->> >
->> > Below are the tests I performed:
->> > Test1:
->> > a) Power off the drive
->> > b) echo "scsi remove-single-device h b t l" > /proc/scsi/scsi
->> > or delete using sysfs
->> > c) Power on the drive
->> > d) echo "scsi add-single-device h b t l" > /proc/scsi/scsi
->> > or scan using sysfs
->> > The kernel error in my first email is induced in this test but not
->> > consistently reproducible. In most of the case, no kernel error but sg
->> > was not reattached when adding device.
->> >
->> > Test2:
->> > Ignore step c) in test1. Basically, try to add device while the device
->> > is still powered off.
->> >
->> > Hope this helps.
->>
->> Was the drive loaded with commands issued via /dev/sgX when you did
->> above operation?
-> 
-> No.   One note: the kernel error I reported in my first email
-> happened in ARM XSCale IOP80321 platform.
+W a t c h   o u t!
 
-I could regenerate an oops while the drive was loaded w/ command from 
-sg.  Mine occurs earlier than yours because kmalloc debug is turned on 
-(the memory is poisoned on free and the the next access oopses).  It 
-seems that sg has refcounting bug.
+ALILANCE ENTERPIRSE (A ETR)
+Currnet Prcie: 0.80
+Add this g e m to your wa tch list, and watc h it tard closely!
 
-You can issue all raw commands via high level device node - e.g. 
-/dev/sdX or /dev/srX, so you don't really need to use sg devices in many 
-cases.
+Nwes Relesae!
 
-Other than sg related, I couldn't find any problem with hot/warm/pervert 
-plugging.  Can you please try without any sg use?  If you need loaded 
-test, just load them with regular IO or use /dev/sdX to issue raw 
-commands.  I'm not sure I'll track down the sg problem.
+Taeocrp announces breackrough in removing deadly landm ines.
 
--- 
-tejun
+Mill Valley, California August 25, 2006 - The Alliacne Enterrpise Corproation announced today a breakthrough in developing an Areial Lnadmine Sytsem aimed at locating, detecting and mapping deadly landmin es.
+
+TaeoCrp's mission is to reclaim lands around the globe embedded with la ndmines that victimize countries and their stakeholders.
+
+More than 100 m i l l i o n land mines in 83 countries are holding international communities and industries hostage, preventing the i nvestment in and development of produc tive lands and the re-building of infrastructure. A broad variety of landm ines have been scattered over p roductive areas effectively crippling the eco nomy and disabling thousands of children and adults.  There are no reliable records that accurately show where these d e v a s t a t i n g l andmines lie in wait for their vi ctims.
+ 
+With the present day c osts to clear a single land mine ranging between $1,000 to $1,500, solving the problem of de-mining lands will reach billions of dol lars.  TaeCorp has developed a technology based, c ost effective solution to this problem using its three tiered approach to scanning, mapping and removing l andmines. TaeCorp's System will provide many social and econo mic benef its to countries and their industries including oil and gas, mining, agriculture, roads and infrastructure development.
+
+About TaeCorp.
+
+TaeCorp's vision is to be the recognized leader in providing Areial Detcetion Sytsems including global de-mining, clearing a path to a safer planet for all humankind.
+
+Here comes the big one! 
+All signs show that AE TR is going to Explode!
+
+Conclusio n:
+The examples above show the awesome, earning potential of little known companies that explode onto invetsor's radar screens; Many of you are already familiar with this. Is AET R poised and positioned to do that for you? Then you may feel the time has come to act... And please watch this one trdae tomorrow! Go AE TR.
+Penn y stcoks are considered highly speculative and may be unsuitable for all but very aggressive invsetors.  This p rofile is not in any way af filiated with the featured company.  This report is for entertainment and advertising purposes only and should not be used as inevstment advice.  If you wish to stop future m a i lings, or if you feel you have been wrongfully placed in our membership, send a blank e m a i l with No Thanks in the subject to 
+
+
+
+
