@@ -1,114 +1,93 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Libata-tj-stable patch /w sil3124 and PMP... 'device or resource
- busy'
-Date: Sun, 27 Aug 2006 18:35:12 +0900
-Message-ID: <44F16750.5080100@gmail.com>
-References: <44E105A7.3030900@grokthis.net> <44E1C43E.1020302@gmail.com> <44E28313.7050601@grokthis.net>
+Subject: Re: [PATCH 5/20] libata: implement several LLD init helpers
+Date: Sun, 27 Aug 2006 18:52:43 +0900
+Message-ID: <44F16B6B.7050207@gmail.com>
+References: <11559779712708-git-send-email-htejun@gmail.com> <44EB8111.4090901@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090200080109080705060105"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:64715 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.181]:33543 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751083AbWH0JfT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Aug 2006 05:35:19 -0400
-Received: by py-out-1112.google.com with SMTP id n25so2035663pyg
-        for <linux-ide@vger.kernel.org>; Sun, 27 Aug 2006 02:35:18 -0700 (PDT)
-In-Reply-To: <44E28313.7050601@grokthis.net>
+	id S932070AbWH0Jwv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Aug 2006 05:52:51 -0400
+Received: by py-out-1112.google.com with SMTP id n25so2041219pyg
+        for <linux-ide@vger.kernel.org>; Sun, 27 Aug 2006 02:52:51 -0700 (PDT)
+In-Reply-To: <44EB8111.4090901@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eric Windisch <eric@grokthis.net>
-Cc: linux-ide@vger.kernel.org
+To: brking@us.ibm.com
+Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090200080109080705060105
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Hello, Brian.
 
-Eric Windisch wrote:
->> Can you post the result of 'dmesg'
+Brian King wrote:
+> Tejun Heo wrote:
 > 
-> Attached as dmesg.log
+>> +static void __ata_host_init_pinfo(struct ata_host *host,
+>> +				  const struct ata_port_info **pinfo,
+>> +				  int n_ports, int pi_is_ar)
+>> +{
+>> +	int i;
+>> +
+>> +	if (host->private_data == NULL)
+>> +		host->private_data = pinfo[0]->private_data;
+>> +	host->ops = pinfo[0]->port_ops;
+>> +
+>> +	for (i = 0; i < host->n_ports; i++) {
+>> +		struct ata_port *ap = host->ports[i];
+>> +		const struct ata_port_info *pi;
+>> +
+>> +		if (pi_is_ar)
+>> +			pi = pinfo[i];
+>> +		else
+>> +			pi = pinfo[0];
+>> +
 > 
->> 'cat /proc/mounts' and 
 > 
-> Attached as proc.mounts.txt
+>> +		ap->pio_mask = pi->pio_mask;
+>> +		ap->mwdma_mask = pi->mwdma_mask;
+>> +		ap->udma_mask = pi->udma_mask;
+>> +		ap->flags |= pi->flags;
+>> +		ap->ops = pi->port_ops;
 > 
+> Could this bit be moved into ata_port_init and possibly change the
+> parameter list of ata_port_init to something like:
 > 
->> 'fuser -v /dev/sdX#'?
+> void ata_port_init(struct ata_port *ap, struct ata_host *host,
+> 		   const struct ata_port_info *pinfo, unsigned int port_no)
 > 
-> root@san001:~# fuser -v /dev/sda1
-> root@san001:~# fuser -v /dev/sdb1
-> root@san001:~# fuser -v /dev/sdc1
-> root@san001:~# fuser -v /dev/sdd1
-> root@san001:~# fuser -v /dev/sde1
-> root@san001:~# fuser -v /dev/sde
-> root@san001:~# fuser -v /dev/sdd
-> root@san001:~# fuser -v /dev/sdc
-> root@san001:~# fuser -v /dev/sdb
-> root@san001:~# fuser -v /dev/sda
-> root@san001:~# fuser -v /dev/sd*
-> root@san001:~#
-> 
-> And for good measure...
-> 
-> root@san001:~# lsof /dev/sd*
-> root@san001:~#
+> Then we could get rid of the struct ata_probe_ent stuff completely.
 
-Can you apply the attached patch and report what the kernel says?
+Hmmm... ata_port_init() is still exported only to support ata_sas_* 
+helpers.  Once the SAS helpers are converted to use new model, this 
+function will be made static or merged into ata_host_alloc().  In the 
+new init model, initialization is done by...
+
+1. allocate the host and associated ports with ata_host_alloc().  If 
+port number cannot be determined at this point.  ports can be added 
+later.  The returned ata_host has only the basic fields, which assume 
+the same initial values regardless of the user, initialized.
+
+2. initialize ata_host and associated ports appropriately.  During this 
+ata_host_add_ports() can be used to add ports if host has no ports yet.
+
+3. attach the initialized ata_host using ata_host_attach().
+
+The ata_host_alloc_pinfo[_ar]() functions are just helpers which perform 
+#1 and part of #2 as ata_port_info is handy for many LLDs.
+
+For SAS helpers, I don't think using pinfo helpers is necessary.  Just 
+initializing the above fields manually in SAS helper or SAS LLD should 
+do.  The pinfo helpers are specifically for this purpose and doesn't 
+allow delayed port addition.
+
+Also, note that probe_ent is still there only for SAS helpers.  If you 
+take a look at normal SATA init path, no probe_ent is used.  Only 
+ata_port_init() deals with it and usual SATA path calls it with null 
+probe_ent.
 
 Thanks.
 
 -- 
 tejun
-
---------------090200080109080705060105
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="patch"
-
-ZGlmZiAtLWdpdCBhL2ZzL2Jsb2NrX2Rldi5jIGIvZnMvYmxvY2tfZGV2LmMKaW5kZXggZjU5
-NThmNC4uYzRmYWUxNyAxMDA2NDQKLS0tIGEvZnMvYmxvY2tfZGV2LmMKKysrIGIvZnMvYmxv
-Y2tfZGV2LmMKQEAgLTQ1MiwxNiArNDUyLDIzIEBAIGludCBiZF9jbGFpbShzdHJ1Y3QgYmxv
-Y2tfZGV2aWNlICpiZGV2LCAKIAkvKiBmaXJzdCBkZWNpZGUgcmVzdWx0ICovCiAJaWYgKGJk
-ZXYtPmJkX2hvbGRlciA9PSBob2xkZXIpCiAJCXJlcyA9IDA7CSAvKiBhbHJlYWR5IGEgaG9s
-ZGVyICovCi0JZWxzZSBpZiAoYmRldi0+YmRfaG9sZGVyICE9IE5VTEwpCisJZWxzZSBpZiAo
-YmRldi0+YmRfaG9sZGVyICE9IE5VTEwpIHsKKwkJcHJpbnRrKCJYWFggYmRfY2xhaW0gJWQ6
-JWQgZmFpbGVkICVkQCVwXG4iLAorCQkgICAgICAgTUFKT1IoYmRldi0+YmRfZGV2KSwgTUlO
-T1IoYmRldi0+YmRfZGV2KSwKKwkJICAgICAgIGJkZXYtPmJkX2hvbGRlcnMsIGJkZXYtPmJk
-X2hvbGRlcik7CiAJCXJlcyA9IC1FQlVTWTsgCSAvKiBoZWxkIGJ5IHNvbWVvbmUgZWxzZSAq
-LworCX0KIAllbHNlIGlmIChiZGV2LT5iZF9jb250YWlucyA9PSBiZGV2KQogCQlyZXMgPSAw
-OyAgCSAvKiBpcyBhIHdob2xlIGRldmljZSB3aGljaCBpc24ndCBoZWxkICovCiAKIAllbHNl
-IGlmIChiZGV2LT5iZF9jb250YWlucy0+YmRfaG9sZGVyID09IGJkX2NsYWltKQogCQlyZXMg
-PSAwOyAJIC8qIGlzIGEgcGFydGl0aW9uIG9mIGEgZGV2aWNlIHRoYXQgaXMgYmVpbmcgcGFy
-dGl0aW9uZWQgKi8KLQllbHNlIGlmIChiZGV2LT5iZF9jb250YWlucy0+YmRfaG9sZGVyICE9
-IE5VTEwpCisJZWxzZSBpZiAoYmRldi0+YmRfY29udGFpbnMtPmJkX2hvbGRlciAhPSBOVUxM
-KSB7CisJCXByaW50aygiWFhYIGJkX2NsYWltICVkOiVkIGZhaWxlZCAlZEAlcCAocGFydCBv
-ZiBhIGhlbGQgZGV2KVxuIiwKKwkJICAgICAgIE1BSk9SKGJkZXYtPmJkX2RldiksIE1JTk9S
-KGJkZXYtPmJkX2RldiksCisJCSAgICAgICBiZGV2LT5iZF9ob2xkZXJzLCBiZGV2LT5iZF9o
-b2xkZXIpOwogCQlyZXMgPSAtRUJVU1k7CSAvKiBpcyBhIHBhcnRpdGlvbiBvZiBhIGhlbGQg
-ZGV2aWNlICovCi0JZWxzZQorCX0gZWxzZQogCQlyZXMgPSAwOwkgLyogaXMgYSBwYXJ0aXRp
-b24gb2YgYW4gdW4taGVsZCBkZXZpY2UgKi8KIAogCS8qIG5vdyBpbXBvc2UgY2hhbmdlICov
-CkBAIC00NzQsNiArNDgxLDE0IEBAIGludCBiZF9jbGFpbShzdHJ1Y3QgYmxvY2tfZGV2aWNl
-ICpiZGV2LCAKIAkJYmRldi0+YmRfY29udGFpbnMtPmJkX2hvbGRlciA9IGJkX2NsYWltOwog
-CQliZGV2LT5iZF9ob2xkZXJzKys7CiAJCWJkZXYtPmJkX2hvbGRlciA9IGhvbGRlcjsKKwkJ
-cHJpbnRrKCJYWFggYmRfY2xhaW0gJWQ6JWQvJWQ6JWQgJWRAJXAgJWRAJXBcbiIsCisJCSAg
-ICAgICBNQUpPUihiZGV2LT5iZF9kZXYpLCBNSU5PUihiZGV2LT5iZF9kZXYpLAorCQkgICAg
-ICAgTUFKT1IoYmRldi0+YmRfY29udGFpbnMtPmJkX2RldiksCisJCSAgICAgICBNSU5PUihi
-ZGV2LT5iZF9jb250YWlucy0+YmRfZGV2KSwKKwkJICAgICAgIGJkZXYtPmJkX2hvbGRlcnMs
-IGJkZXYtPmJkX2hvbGRlciwKKwkJICAgICAgIGJkZXYtPmJkX2NvbnRhaW5zLT5iZF9ob2xk
-ZXJzLAorCQkgICAgICAgYmRldi0+YmRfY29udGFpbnMtPmJkX2hvbGRlcik7CisJCWR1bXBf
-c3RhY2soKTsKIAl9CiAJc3Bpbl91bmxvY2soJmJkZXZfbG9jayk7CiAJcmV0dXJuIHJlczsK
-QEAgLTQ4NCw2ICs0OTksMTIgQEAgRVhQT1JUX1NZTUJPTChiZF9jbGFpbSk7CiB2b2lkIGJk
-X3JlbGVhc2Uoc3RydWN0IGJsb2NrX2RldmljZSAqYmRldikKIHsKIAlzcGluX2xvY2soJmJk
-ZXZfbG9jayk7CisJcHJpbnRrKCJYWFggYmRfcmVsZWFzZSAlZDolZC8lZDolZCAlZEAlcCAl
-ZEAlcFxuIiwKKwkgICAgICAgTUFKT1IoYmRldi0+YmRfZGV2KSwgTUlOT1IoYmRldi0+YmRf
-ZGV2KSwKKwkgICAgICAgTUFKT1IoYmRldi0+YmRfY29udGFpbnMtPmJkX2RldiksCisJICAg
-ICAgIE1JTk9SKGJkZXYtPmJkX2NvbnRhaW5zLT5iZF9kZXYpLAorCSAgICAgICBiZGV2LT5i
-ZF9ob2xkZXJzLCBiZGV2LT5iZF9ob2xkZXIsCisJICAgICAgIGJkZXYtPmJkX2NvbnRhaW5z
-LT5iZF9ob2xkZXJzLCBiZGV2LT5iZF9jb250YWlucy0+YmRfaG9sZGVyKTsKIAlpZiAoIS0t
-YmRldi0+YmRfY29udGFpbnMtPmJkX2hvbGRlcnMpCiAJCWJkZXYtPmJkX2NvbnRhaW5zLT5i
-ZF9ob2xkZXIgPSBOVUxMOwogCWlmICghLS1iZGV2LT5iZF9ob2xkZXJzKQo=
---------------090200080109080705060105--
