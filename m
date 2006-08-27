@@ -1,58 +1,28 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: HPA Resume patch
-Date: Sun, 27 Aug 2006 14:16:56 +0400
-Message-ID: <20060827141656.0e4d2c17.vsu@altlinux.ru>
-References: <44F15ADB.5040609@PicturesInMotion.net>
+From: "Maritza Joseph" <MarjorieQ6@yahoo.com>
+Subject: Vaigrra from $139.95
+Date: Sun, 27 Aug 2006 09:50:30 -0400
+Message-ID: <5A017EE3.7684.3815C2D5__43603.13577713$1156683339$gmane$org@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Sun__27_Aug_2006_14_16_56_+0400_KmQY0HRYRUWSpa6Z"
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from master.altlinux.org ([62.118.250.235]:18706 "EHLO
-	master.altlinux.org") by vger.kernel.org with ESMTP
-	id S1750706AbWH0KRZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Aug 2006 06:17:25 -0400
-In-Reply-To: <44F15ADB.5040609@PicturesInMotion.net>
+Received: from host85148671.waldex.3s.pl ([85.14.86.71]:38929 "HELO 3E6E8C70")
+	by vger.kernel.org with SMTP id S932123AbWH0Mz2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Aug 2006 08:55:28 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Trager <Lee@PicturesInMotion.net>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
+To: linux-diald@vger.kernel.org
+Cc: linux-laptop@vger.kernel.org, linux-ide@vger.kernel.org
 
---Signature=_Sun__27_Aug_2006_14_16_56_+0400_KmQY0HRYRUWSpa6Z
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Sun, 27 Aug 2006 04:42:03 -0400 Lee Trager wrote:
 
-> This patch fixes a problem with computers that have HPA on their hard
-> drive and not being able to come out of resume from RAM or disk. I've
-> tested this patch on 2.6.17.x and 2.6.18-rc4 and it works great on both
-> of these. This patch also fixes the bug #6840. This is my first patch to
-> the kernel and I was told to e-mail the above people to get my patch
-> into the kernel. If I made a mistake please be gentle and correct me ;)
 
-The patch adds a call from ide.c to a function inside ide-disk.c - this
-won't work when IDE support is built as modules (it will cause a
-circular dependency between ide-core and ide-disk modules).
+Huge selection of me ds available
+at attrac tive prices. 
+Highest qualiity assured.
 
-The proper way to do such calls is to add a new method to ide_driver_t
-and call it from generic_ide_resume().  Also, if the ide_do_drive_cmd()
-call failed, it is probably unsafe to reset HPA, so you need to check
-the result and call the resume method only if the low-level resume has
-succeeded.
+Try us out today..
 
-And please and "-p" to diff options.
+http://antiverite.com/?4l6l
 
---Signature=_Sun__27_Aug_2006_14_16_56_+0400_KmQY0HRYRUWSpa6Z
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQFE8XEcW82GfkQfsqIRAiwaAJ4sB+oiXUP/TUUa0KvF831PpYN0zgCfSz9U
-1ZhSb7fpMOr/2ExK9m984Q4=
-=WDlr
------END PGP SIGNATURE-----
-
---Signature=_Sun__27_Aug_2006_14_16_56_+0400_KmQY0HRYRUWSpa6Z--
+MU
