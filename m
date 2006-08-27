@@ -1,28 +1,130 @@
-From: "Maritza Joseph" <MarjorieQ6@yahoo.com>
-Subject: Vaigrra from $139.95
-Date: Sun, 27 Aug 2006 09:50:30 -0400
-Message-ID: <5A017EE3.7684.3815C2D5__43603.13577713$1156683339$gmane$org@localhost>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: HPA Resume patch
+Date: Sun, 27 Aug 2006 15:06:08 +0000
+Message-ID: <20060827150608.GA4534@ucw.cz>
+References: <44F15ADB.5040609@PicturesInMotion.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host85148671.waldex.3s.pl ([85.14.86.71]:38929 "HELO 3E6E8C70")
-	by vger.kernel.org with SMTP id S932123AbWH0Mz2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Aug 2006 08:55:28 -0400
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:19722 "EHLO
+	spitz.ucw.cz") by vger.kernel.org with ESMTP id S932136AbWH0PQv
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Aug 2006 11:16:51 -0400
+Content-Disposition: inline
+In-Reply-To: <44F15ADB.5040609@PicturesInMotion.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-diald@vger.kernel.org
-Cc: linux-laptop@vger.kernel.org, linux-ide@vger.kernel.org
+To: Lee Trager <Lee@PicturesInMotion.net>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, seife@suse.de
+
+Hi!
+
+> This patch fixes a problem with computers that have HPA on their hard
+> drive and not being able to come out of resume from RAM or disk. I've
+> tested this patch on 2.6.17.x and 2.6.18-rc4 and it works great on both
+> of these. This patch also fixes the bug #6840. This is my first patch to
+> the kernel and I was told to e-mail the above people to get my patch
+> into the kernel.
+
+Congratulations for a first patch.
+
+> If I made a mistake please be gentle and correct me ;)
+
+We'll need signed-off-by: line next time.
+
+Stefan, can we get this some testing? Or anyone else with thinkpad
+with host-protected area still enabled?
+							Pavel
 
 
+> diff -Naur linux-2.6.18-rc4-old/include/linux/ide.h linux-2.6.18-rc4/include/linux/ide.h
+> --- linux-2.6.18-rc4-old/include/linux/ide.h	2006-08-19 03:49:03.000000000 -0400
+> +++ linux-2.6.18-rc4/include/linux/ide.h	2006-08-20 19:13:10.000000000 -0400
+> @@ -1201,6 +1201,17 @@
+>  void ide_register_subdriver(ide_drive_t *, ide_driver_t *);
+>  void ide_unregister_subdriver(ide_drive_t *, ide_driver_t *);
+>  
+> +/* Bits 10 of command_set_1 and cfs_enable_1 must be equal,
+> + * so on non-buggy drives we need test only one.
+> + * However, we should also check whether these fields are valid.
+> +*/
+> +static inline int idedisk_supports_hpa(const struct hd_driveid *id)
+> +{
+> +        return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
+> +}
+> +
+> +extern void init_idedisk_capacity (ide_drive_t  *drive);
+> +
+>  #define ON_BOARD		1
+>  #define NEVER_BOARD		0
+> 
+> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide-disk.c linux-2.6.18-rc4/drivers/ide/ide-disk.c
+> --- linux-2.6.18-rc4-old/drivers/ide/ide-disk.c	2006-08-19 03:49:03.000000000 -0400
+> +++ linux-2.6.18-rc4/drivers/ide/ide-disk.c	2006-08-20 19:13:56.000000000 -0400
+> @@ -464,16 +464,6 @@
+>  }
+>  
+>  /*
+> - * Bits 10 of command_set_1 and cfs_enable_1 must be equal,
+> - * so on non-buggy drives we need test only one.
+> - * However, we should also check whether these fields are valid.
+> - */
+> -static inline int idedisk_supports_hpa(const struct hd_driveid *id)
+> -{
+> -	return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
+> -}
+> -
+> -/*
+>   * The same here.
+>   */
+>  static inline int idedisk_supports_lba48(const struct hd_driveid *id)
+> @@ -528,7 +518,7 @@
+>   * in above order (i.e., if value of higher priority is available,
+>   * reset will be ignored).
+>   */
+> -static void init_idedisk_capacity (ide_drive_t  *drive)
+> +void init_idedisk_capacity (ide_drive_t  *drive)
+>  {
+>  	struct hd_driveid *id = drive->id;
+>  	/*
+> @@ -555,6 +545,8 @@
+>  	}
+>  }
+>  
+> +EXPORT_SYMBOL(init_idedisk_capacity);
+> +
+>  static sector_t idedisk_capacity (ide_drive_t *drive)
+>  {
+>  	return drive->capacity64 - drive->sect0;
+> diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c linux-2.6.18-rc4/drivers/ide/ide.c
+> --- linux-2.6.18-rc4-old/drivers/ide/ide.c	2006-08-19 03:49:03.000000000 -0400
+> +++ linux-2.6.18-rc4/drivers/ide/ide.c	2006-08-20 19:12:38.000000000 -0400
+> @@ -1232,6 +1232,7 @@
+>  	struct request rq;
+>  	struct request_pm_state rqpm;
+>  	ide_task_t args;
+> +	int ide_cmd;
+>  
+>  	memset(&rq, 0, sizeof(rq));
+>  	memset(&rqpm, 0, sizeof(rqpm));
+> @@ -1242,7 +1243,15 @@
+>  	rqpm.pm_step = ide_pm_state_start_resume;
+>  	rqpm.pm_state = PM_EVENT_ON;
+>  
+> -	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> +	ide_cmd = ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> +
+> +	/* check to see if this is a hard drive
+> +	 * if it is then checkhpa needs to be
+> +	 * disabled */
+> +	if(drive->media == ide_disk && idedisk_supports_hpa(drive->id))
+> +		init_idedisk_capacity(drive);
+> +
+> +	return ide_cmd;
+>  }
+>  
+>  int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device *bdev,
 
 
-Huge selection of me ds available
-at attrac tive prices. 
-Highest qualiity assured.
-
-Try us out today..
-
-http://antiverite.com/?4l6l
-
-
-MU
+-- 
+Thanks for all the (sleeping) penguins.
