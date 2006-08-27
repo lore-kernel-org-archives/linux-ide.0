@@ -1,45 +1,125 @@
-From: "centrist" <allahconfrontation@earthlink.net>
-Subject: daddy
-Date: Sun, 27 Aug 2006 00:06:00 -0700
-Message-ID: <45235019084742.D4D68BB5BB@5SM5QVYU>
+From: Lee Trager <Lee@PicturesInMotion.net>
+Subject: HPA Resume patch
+Date: Sun, 27 Aug 2006 04:42:03 -0400
+Message-ID: <44F15ADB.5040609@PicturesInMotion.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
+Content-Type: multipart/mixed; boundary="Boundary_(ID_P+o2gIDjKl1TKo+gMfpnjQ)"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mta8.srv.hcvlny.cv.net ([167.206.4.203]:50 "EHLO
+	mta8.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S1750829AbWH0ImA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Aug 2006 04:42:00 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: B.Zolnierkiewicz@elka.pw.edu.pl
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
 
-W a t c h   o u t!
+This is a multi-part message in MIME format.
 
-ALILANCE ENTERPIRSE (A ETR)
-Currnet Prcie: 0.80
-Add this g e m to your wa tch list, and watc h it tard closely!
+--Boundary_(ID_P+o2gIDjKl1TKo+gMfpnjQ)
+Content-type: text/plain; charset=ISO-8859-1
+Content-transfer-encoding: 7BIT
 
-Nwes Relesae!
+This patch fixes a problem with computers that have HPA on their hard
+drive and not being able to come out of resume from RAM or disk. I've
+tested this patch on 2.6.17.x and 2.6.18-rc4 and it works great on both
+of these. This patch also fixes the bug #6840. This is my first patch to
+the kernel and I was told to e-mail the above people to get my patch
+into the kernel. If I made a mistake please be gentle and correct me ;)
 
-Taeocrp announces breackrough in removing deadly landm ines.
+Lee Trager
 
-Mill Valley, California August 25, 2006 - The Alliacne Enterrpise Corproation announced today a breakthrough in developing an Areial Lnadmine Sytsem aimed at locating, detecting and mapping deadly landmin es.
+--Boundary_(ID_P+o2gIDjKl1TKo+gMfpnjQ)
+Content-type: text/plain; name=hpa-resume.patch
+Content-transfer-encoding: 7BIT
+Content-disposition: inline; filename=hpa-resume.patch
 
-TaeoCrp's mission is to reclaim lands around the globe embedded with la ndmines that victimize countries and their stakeholders.
-
-More than 100 m i l l i o n land mines in 83 countries are holding international communities and industries hostage, preventing the i nvestment in and development of produc tive lands and the re-building of infrastructure. A broad variety of landm ines have been scattered over p roductive areas effectively crippling the eco nomy and disabling thousands of children and adults.  There are no reliable records that accurately show where these d e v a s t a t i n g l andmines lie in wait for their vi ctims.
+diff -Naur linux-2.6.18-rc4-old/include/linux/ide.h linux-2.6.18-rc4/include/linux/ide.h
+--- linux-2.6.18-rc4-old/include/linux/ide.h	2006-08-19 03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/include/linux/ide.h	2006-08-20 19:13:10.000000000 -0400
+@@ -1201,6 +1201,17 @@
+ void ide_register_subdriver(ide_drive_t *, ide_driver_t *);
+ void ide_unregister_subdriver(ide_drive_t *, ide_driver_t *);
  
-With the present day c osts to clear a single land mine ranging between $1,000 to $1,500, solving the problem of de-mining lands will reach billions of dol lars.  TaeCorp has developed a technology based, c ost effective solution to this problem using its three tiered approach to scanning, mapping and removing l andmines. TaeCorp's System will provide many social and econo mic benef its to countries and their industries including oil and gas, mining, agriculture, roads and infrastructure development.
++/* Bits 10 of command_set_1 and cfs_enable_1 must be equal,
++ * so on non-buggy drives we need test only one.
++ * However, we should also check whether these fields are valid.
++*/
++static inline int idedisk_supports_hpa(const struct hd_driveid *id)
++{
++        return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
++}
++
++extern void init_idedisk_capacity (ide_drive_t  *drive);
++
+ #define ON_BOARD		1
+ #define NEVER_BOARD		0
 
-About TaeCorp.
+diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide-disk.c linux-2.6.18-rc4/drivers/ide/ide-disk.c
+--- linux-2.6.18-rc4-old/drivers/ide/ide-disk.c	2006-08-19 03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/drivers/ide/ide-disk.c	2006-08-20 19:13:56.000000000 -0400
+@@ -464,16 +464,6 @@
+ }
+ 
+ /*
+- * Bits 10 of command_set_1 and cfs_enable_1 must be equal,
+- * so on non-buggy drives we need test only one.
+- * However, we should also check whether these fields are valid.
+- */
+-static inline int idedisk_supports_hpa(const struct hd_driveid *id)
+-{
+-	return (id->command_set_1 & 0x0400) && (id->cfs_enable_1 & 0x0400);
+-}
+-
+-/*
+  * The same here.
+  */
+ static inline int idedisk_supports_lba48(const struct hd_driveid *id)
+@@ -528,7 +518,7 @@
+  * in above order (i.e., if value of higher priority is available,
+  * reset will be ignored).
+  */
+-static void init_idedisk_capacity (ide_drive_t  *drive)
++void init_idedisk_capacity (ide_drive_t  *drive)
+ {
+ 	struct hd_driveid *id = drive->id;
+ 	/*
+@@ -555,6 +545,8 @@
+ 	}
+ }
+ 
++EXPORT_SYMBOL(init_idedisk_capacity);
++
+ static sector_t idedisk_capacity (ide_drive_t *drive)
+ {
+ 	return drive->capacity64 - drive->sect0;
+diff -Naur linux-2.6.18-rc4-old/drivers/ide/ide.c linux-2.6.18-rc4/drivers/ide/ide.c
+--- linux-2.6.18-rc4-old/drivers/ide/ide.c	2006-08-19 03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/drivers/ide/ide.c	2006-08-20 19:12:38.000000000 -0400
+@@ -1232,6 +1232,7 @@
+ 	struct request rq;
+ 	struct request_pm_state rqpm;
+ 	ide_task_t args;
++	int ide_cmd;
+ 
+ 	memset(&rq, 0, sizeof(rq));
+ 	memset(&rqpm, 0, sizeof(rqpm));
+@@ -1242,7 +1243,15 @@
+ 	rqpm.pm_step = ide_pm_state_start_resume;
+ 	rqpm.pm_state = PM_EVENT_ON;
+ 
+-	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
++	ide_cmd = ide_do_drive_cmd(drive, &rq, ide_head_wait);
++
++	/* check to see if this is a hard drive
++	 * if it is then checkhpa needs to be
++	 * disabled */
++	if(drive->media == ide_disk && idedisk_supports_hpa(drive->id))
++		init_idedisk_capacity(drive);
++
++	return ide_cmd;
+ }
+ 
+ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device *bdev,
 
-TaeCorp's vision is to be the recognized leader in providing Areial Detcetion Sytsems including global de-mining, clearing a path to a safer planet for all humankind.
-
-Here comes the big one! 
-All signs show that AE TR is going to Explode!
-
-Conclusio n:
-The examples above show the awesome, earning potential of little known companies that explode onto invetsor's radar screens; Many of you are already familiar with this. Is AET R poised and positioned to do that for you? Then you may feel the time has come to act... And please watch this one trdae tomorrow! Go AE TR.
-Penn y stcoks are considered highly speculative and may be unsuitable for all but very aggressive invsetors.  This p rofile is not in any way af filiated with the featured company.  This report is for entertainment and advertising purposes only and should not be used as inevstment advice.  If you wish to stop future m a i lings, or if you feel you have been wrongfully placed in our membership, send a blank e m a i l with No Thanks in the subject to 
-
-
-
-
+--Boundary_(ID_P+o2gIDjKl1TKo+gMfpnjQ)--
