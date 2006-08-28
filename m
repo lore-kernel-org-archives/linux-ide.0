@@ -1,78 +1,53 @@
-From: "Laurent CORBES {Caf'} <caf@glot.net> (by way of Laurent CORBES {Caf'}"
-	<caf@glot.net>
-Subject: PROBLEM: ata_piix disk detection 2.6.18-rc5
-Date: Mon, 28 Aug 2006 15:08:25 +0200
-Message-ID: <20060828150825.7e32a8d2@localhost>
+From: Thierry Vignaud <tvignaud@mandriva.com>
+Subject: Re: [Fwd: [BUG] sata_via doesn't detect anymore my disks (broken between rc1 and rc3)]
+Date: Mon, 28 Aug 2006 16:34:14 +0200
+Message-ID: <m2r6z1c4k9.fsf@vador.mandriva.com>
+References: <m2wt98bio1.fsf@vador.mandriva.com>
+	<m2sljwbil7.fsf@vador.mandriva.com> <44E37BD4.8010709@pobox.com>
+	<m23bbva9cs.fsf@vador.mandriva.com> <44E46E0E.4060703@gmail.com>
+	<m2fyfv7a8s.fsf@vador.mandriva.com> <44EB32AD.1080305@gmail.com>
+	<m2fyfnciky.fsf@vador.mandriva.com> <m2d5aprtw0.fsf@vador.mandriva.com>
+	<44EEEA29.1010008@gmail.com> <20060825135540.GE21866@htj.dyndns.org>
+	<m2ac5soqjl.fsf@vador.mandriva.com> <44EF1158.1040507@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from republique.smartjog.net ([83.243.17.194]:29198 "EHLO
-	mx.republique.smartjog.net") by vger.kernel.org with ESMTP
-	id S1750793AbWH1NIu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Aug 2006 09:08:50 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mx.republique.smartjog.net (Postfix) with ESMTP id 95B5DC02F
-	for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 15:08:25 +0200 (CEST)
-Received: from mx.republique.smartjog.net ([127.0.0.1])
-	by localhost (mail [127.0.0.1]) (amavisd-new, port 10024) with LMTP
-	id 08358-02-8 for <linux-ide@vger.kernel.org>;
-	Mon, 28 Aug 2006 15:08:25 +0200 (CEST)
-Received: from localhost (lcorbes.republique.smartjog.lan [192.168.0.72])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx.republique.smartjog.net (Postfix) with ESMTP id 7D7E1C02D
-	for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 15:08:25 +0200 (CEST)
+Received: from ezoffice.mandriva.com ([84.14.106.134]:3849 "EHLO
+	office.mandriva.com") by vger.kernel.org with ESMTP
+	id S1751015AbWH1OeO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Aug 2006 10:34:14 -0400
+In-Reply-To: <44EF1158.1040507@gmail.com> (Tejun Heo's message of "Sat, 26 Aug 2006 00:03:52 +0900")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi, 
+Tejun Heo <htejun@gmail.com> writes:
 
-Not really a severe bug but it can hide other problems. I have a Dell
-optiplex with a ICH5 chipset. When I load the ata_piix module and there
-is no drive plugged in, the driver try to contact the Hdd and fail.
+> > > > The second patch is essentially identical to what you did the
+> > > > one liner.  Can you please check it once more?  I'll prepare
+> > > > old-sequence hardreset in the meantime.
+> > >
+> > > Okay, here's the old-sequence hardreset patch.  This should have
+> > > the highest chance of working.  This patch should be applied on
+> > > top of the vt6420 patch.
+> >
+> > On top of which patch?
+> > I just tried to apply it on top of:
+> > - your last week patch
+> > - your two patches of this week
+> > and it does *not* apply on top of anyone...
+> 
+> Arghh... Sorry.  I sent the wrong version.  This patch is against
+> #upstream while I should have sent the one against #upstream-fixes.
+> 
+> > Couldn't you either check first your patch or (better) just send a
+> > patch against vanilla 2.6.18-rc4-mm2?
+> 
+> I've attached whole sata_via.c to the other mail.  I think that should
+> do the trick.
 
-This was not a problem with 2.6.17.
-
-
-Linux laurent 2.6.18-rc5 #1 SMP PREEMPT Mon Aug 28 14:19:16
-CEST 2006 i686 GNU/Linux
-
-libata version 2.00 loaded.
-ata_piix 0000:00:1f.2: version 2.00
-ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ]
-ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 17
-PCI: Setting latency timer of device 0000:00:1f.2 to 64
-ata1: SATA max UDMA/133 cmd 0xFE00 ctl 0xFE12 bmdma 0xFEA0 irq 17
-ata2: SATA max UDMA/133 cmd 0xFE20 ctl 0xFE32 bmdma 0xFEA8 irq 17
-scsi1 : ata_piix
-ata1: port is slow to respond, please be patient
-ata1: port failed to respond (30 secs)
-ata1: SRST failed (status 0xFF)
-ata1: SRST failed (err_mask=0x100)
-ata1: softreset failed, retrying in 5 secs
-ata1: SRST failed (status 0xFF)
-ata1: SRST failed (err_mask=0x100)
-ata1: softreset failed, retrying in 5 secs
-ata1: SRST failed (status 0xFF)
-ata1: SRST failed (err_mask=0x100)
-ata1: reset failed, giving up
-scsi2 : ata_piix
-ata2: port is slow to respond, please be patient
-ata2: port failed to respond (30 secs)
-ata2: SRST failed (status 0xFF)
-ata2: SRST failed (err_mask=0x100)
-ata2: softreset failed, retrying in 5 secs
-ata2: SRST failed (status 0xFF)
-ata2: SRST failed (err_mask=0x100)
-ata2: softreset failed, retrying in 5 secs
-ata2: SRST failed (status 0xFF)
-ata2: SRST failed (err_mask=0x100)
-ata2: reset failed, giving up
-
-Thanks,
-regards.
--- 
-  http://glot.net/, caf@glot.net
-  Cycom http://www.rezal.net/, Epidemic http://epidemic.glot.net/
+It didn't (tested by overwriting 2.6.18-rc4-mm2's driver).
+I tried a few reset methods combinations w/os success.
+Like in other faillure cases, the driver saw the two links but failed
+to see the hd attached to the second sata link.
