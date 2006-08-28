@@ -1,31 +1,31 @@
-From: Laurent CORBES {Caf'} <caf@glot.net> (by way of Laurent CORBES
-	{Caf'} <caf@glot.net>)
+From: "Laurent CORBES {Caf'} <caf@glot.net> (by way of Laurent CORBES {Caf'}"
+	<caf@glot.net>
 Subject: PROBLEM: ata_piix disk detection 2.6.18-rc5
-Date: Mon, 28 Aug 2006 15:05:51 +0200
-Message-ID: <20060828150551.73655f99@localhost>
+Date: Mon, 28 Aug 2006 15:08:25 +0200
+Message-ID: <20060828150825.7e32a8d2@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: binary
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from republique.smartjog.net ([83.243.17.194]:24590 "EHLO
+Received: from republique.smartjog.net ([83.243.17.194]:29198 "EHLO
 	mx.republique.smartjog.net") by vger.kernel.org with ESMTP
-	id S1750790AbWH1NHQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Aug 2006 09:07:16 -0400
+	id S1750793AbWH1NIu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Aug 2006 09:08:50 -0400
 Received: from localhost (localhost [127.0.0.1])
-	by mx.republique.smartjog.net (Postfix) with ESMTP id 11FA7C02F
-	for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 15:06:51 +0200 (CEST)
+	by mx.republique.smartjog.net (Postfix) with ESMTP id 95B5DC02F
+	for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 15:08:25 +0200 (CEST)
 Received: from mx.republique.smartjog.net ([127.0.0.1])
 	by localhost (mail [127.0.0.1]) (amavisd-new, port 10024) with LMTP
-	id 08358-02-5 for <linux-ide@vger.kernel.org>;
-	Mon, 28 Aug 2006 15:06:47 +0200 (CEST)
+	id 08358-02-8 for <linux-ide@vger.kernel.org>;
+	Mon, 28 Aug 2006 15:08:25 +0200 (CEST)
 Received: from localhost (lcorbes.republique.smartjog.lan [192.168.0.72])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by mx.republique.smartjog.net (Postfix) with ESMTP id C7626C02D
-	for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 15:06:47 +0200 (CEST)
+	by mx.republique.smartjog.net (Postfix) with ESMTP id 7D7E1C02D
+	for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 15:08:25 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: linux-ide@vger.kernel.org
 
 Hi, 
 
