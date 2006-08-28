@@ -1,63 +1,78 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Port multiplier
-Date: Mon, 28 Aug 2006 22:05:43 +0900
-Message-ID: <44F2EA27.9090603@gmail.com>
-References: <44F2984F.6030100@clear.net.nz>
+From: Laurent CORBES {Caf'} <caf@glot.net> (by way of Laurent CORBES
+	{Caf'} <caf@glot.net>)
+Subject: PROBLEM: ata_piix disk detection 2.6.18-rc5
+Date: Mon, 28 Aug 2006 15:05:51 +0200
+Message-ID: <20060828150551.73655f99@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: binary
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.200]:3782 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750783AbWH1NFv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Aug 2006 09:05:51 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so1008556nzf
-        for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 06:05:50 -0700 (PDT)
-In-Reply-To: <44F2984F.6030100@clear.net.nz>
+Received: from republique.smartjog.net ([83.243.17.194]:24590 "EHLO
+	mx.republique.smartjog.net") by vger.kernel.org with ESMTP
+	id S1750790AbWH1NHQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Aug 2006 09:07:16 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mx.republique.smartjog.net (Postfix) with ESMTP id 11FA7C02F
+	for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 15:06:51 +0200 (CEST)
+Received: from mx.republique.smartjog.net ([127.0.0.1])
+	by localhost (mail [127.0.0.1]) (amavisd-new, port 10024) with LMTP
+	id 08358-02-5 for <linux-ide@vger.kernel.org>;
+	Mon, 28 Aug 2006 15:06:47 +0200 (CEST)
+Received: from localhost (lcorbes.republique.smartjog.lan [192.168.0.72])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx.republique.smartjog.net (Postfix) with ESMTP id C7626C02D
+	for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 15:06:47 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Scobie <r.scobie@clear.net.nz>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
 
-Hello,
+Hi, 
 
-Richard Scobie wrote:
-> I have ordered an ASUS M2N SLI Deluxe which in addition to the NVIDIA
-> SATA controller, has a JMicron 363 SATA controller which handles one
-> internal SATA connector and an external eSATA connector.
-> 
-> My understanding is that the JMicron will work using kernel AHCI support
-> and the board BIOS has an AHCI setting.
-> 
-> My hope is to be able to connect an Addonics AD5APM-E 5 disk port
-> multiplier module to this. From the photo and some other information at
-> their website, this appears to use either a Silicon Image 3124 or 3132 
-> chip.
-> 
-> Do you think this will work, if I use the current patch 20060710 on your
-> Wiki?
+Not really a severe bug but it can hide other problems. I have a Dell
+optiplex with a ICH5 chipset. When I load the ata_piix module and there
+is no drive plugged in, the driver try to contact the Hdd and fail.
 
-PMP support for AHCI isn't yet included in PMP patches, so, no, it won't.
+This was not a problem with 2.6.17.
 
-> If so, and it supports hotplugging, which I believe it may do, what
-> exactly does this mean?
-> 
-> Can I power up an external enclosure containing the Addonics and 3
-> drives, configured as a RAID 5 and plug it straight into the running 
-> system?
 
-Yeap.  libata should detect the new drives and attach them.
+Linux laurent 2.6.18-rc5 #1 SMP PREEMPT Mon Aug 28 14:19:16
+CEST 2006 i686 GNU/Linux
 
-> If so, can this be set up to mount automatically?
+libata version 2.00 loaded.
+ata_piix 0000:00:1f.2: version 2.00
+ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ]
+ACPI: PCI Interrupt 0000:00:1f.2[A] -> GSI 18 (level, low) -> IRQ 17
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: SATA max UDMA/133 cmd 0xFE00 ctl 0xFE12 bmdma 0xFEA0 irq 17
+ata2: SATA max UDMA/133 cmd 0xFE20 ctl 0xFE32 bmdma 0xFEA8 irq 17
+scsi1 : ata_piix
+ata1: port is slow to respond, please be patient
+ata1: port failed to respond (30 secs)
+ata1: SRST failed (status 0xFF)
+ata1: SRST failed (err_mask=0x100)
+ata1: softreset failed, retrying in 5 secs
+ata1: SRST failed (status 0xFF)
+ata1: SRST failed (err_mask=0x100)
+ata1: softreset failed, retrying in 5 secs
+ata1: SRST failed (status 0xFF)
+ata1: SRST failed (err_mask=0x100)
+ata1: reset failed, giving up
+scsi2 : ata_piix
+ata2: port is slow to respond, please be patient
+ata2: port failed to respond (30 secs)
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=0x100)
+ata2: reset failed, giving up
 
-Well, the kernel detects the device and notifies hotplug.  The rest is 
-upto how hotplug is configured.
-
-> Can I unmount the connected and mounted array and just unplug the array
-> with no further concern?
-
-The machine will survive and detach the device correctly but 
-yet-unwritten data will be lost.
-
+Thanks,
+regards.
 -- 
-tejun
+  http://glot.net/, caf@glot.net
+  Cycom http://www.rezal.net/, Epidemic http://epidemic.glot.net/
