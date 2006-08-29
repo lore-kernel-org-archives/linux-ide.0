@@ -1,59 +1,128 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Re: Some questions about new EH in libata
-Date: Mon, 28 Aug 2006 18:51:46 -0600
-Message-ID: <8202f4270608281751v7cddfdddo28ba1b86eb43e60f@mail.gmail.com>
-References: <8202f4270608212154k787f63a1k15ed3dcfff0624c2@mail.gmail.com>
-	 <44EA91A8.5090309@gmail.com>
+From: Lee Trager <Lee@PicturesInMotion.net>
+Subject: Re: HPA Resume patch
+Date: Mon, 28 Aug 2006 22:14:34 -0400
+Message-ID: <44F3A30A.3090509@PicturesInMotion.net>
+References: <44F15ADB.5040609@PicturesInMotion.net>
+ <20060827150608.GA4534@ucw.cz> <20060827170501.GD30609@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:39709 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1750712AbWH2Avr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Aug 2006 20:51:47 -0400
-Received: by py-out-1112.google.com with SMTP id n25so2654598pyg
-        for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 17:51:46 -0700 (PDT)
-In-Reply-To: <44EA91A8.5090309@gmail.com>
-Content-Disposition: inline
+Received: from mta4.srv.hcvlny.cv.net ([167.206.4.199]:40406 "EHLO
+	mta4.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S932101AbWH2COj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Aug 2006 22:14:39 -0400
+In-reply-to: <20060827170501.GD30609@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Pavel Machek <pavel@ucw.cz>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, seife@suse.de
 
-On 8/21/06, Tejun Heo <htejun@gmail.com> wrote:
-> Fajun Chen wrote:
-> > Hi Folks,
-> >
-> > I just upgraded to the libata with new EH and I have some questions
-> > about the new error handler:
-> > 1. In several occasions, I saw a port being disable, under what kind
-> > of conditions will new EH disable a port?
+Jens Axboe wrote:
+> On Sun, Aug 27 2006, Pavel Machek wrote:
+>   
+>> Hi!
+>>
+>>     
+>>> This patch fixes a problem with computers that have HPA on their hard
+>>> drive and not being able to come out of resume from RAM or disk. I've
+>>> tested this patch on 2.6.17.x and 2.6.18-rc4 and it works great on both
+>>> of these. This patch also fixes the bug #6840. This is my first patch to
+>>> the kernel and I was told to e-mail the above people to get my patch
+>>> into the kernel.
+>>>       
+>> Congratulations for a first patch.
+>>
+>>     
+>>> If I made a mistake please be gentle and correct me ;)
+>>>       
+>> We'll need signed-off-by: line next time.
+>>
+>> Stefan, can we get this some testing? Or anyone else with thinkpad
+>> with host-protected area still enabled?
+>>     
 >
-> After EH fails to recover a device.  It usually takes three recovery
-> trial failures.
+> It has design issues, at someone else already noticed. hpa restore needs
+> to be a driver private step, included in the resume state machine. The
+> current patch is a gross layering violation.
 >
-> > 2. For user space program, is there any way to checked the state of a
-> > port/drive? I noticed that dmesg has some printout but that could be
-> > wiped out by other traces or errors.
+> But thanks to Lee for taking a stab at this, I hope he'll continue and
+> get it polished :-)
 >
-> Hmmm... Not yet.
->
-> > 3. Does libata allow user space code to reset host/bus/drive or only
-> > libata itself has the privilege? I tried sg reset IOCTL interface on
-> > SATA Sil3124, it seems not working.
->
-> No, that doesn't work but issuing userscan forces libata to reset the
-> channel.
->
-> > 4. How to reenable a port/drive after it's disabled without rebooting?
-> > Any API or command from user space?
->
-> You can use SCSI userscan interface.
->
-Is this a scsi command? I looked at scsi spec and haven't found it
-yet. I know how to initiate user scan from proc or sysfs, but there is
-no way to know the result of user scan through proc or sysfs.  I'm
-looking for a way to check when a pata drive is back online after a
-power cycle. May I issue userscan periodically until its result
-indicates pata drive is available?
+>   
+Ok I redid the patch following exactly what Sergey and Randy said. This
+problem happens on any computer that has HPA on their drive when they
+come back from resume so I don't think you have to only test this with
+Thinkpad users. Anyway my only question is how to I get my patched
+signed off by someone?
+
+Thanks for all your help!
+
+--- linux-2.6.18-rc4-old/include/linux/ide.h	2006-08-19 03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/include/linux/ide.h	2006-08-28 05:45:06.000000000 -0400
+@@ -987,6 +987,7 @@ typedef struct ide_driver_s {
+ 	int		(*probe)(ide_drive_t *);
+ 	void		(*remove)(ide_drive_t *);
+ 	void		(*shutdown)(ide_drive_t *);
++	void		(*resume)(ide_drive_t *);
+ } ide_driver_t;
+ 
+ #define to_ide_driver(drv) container_of(drv, ide_driver_t, gen_driver)
+--- linux-2.6.18-rc4-old/drivers/ide/ide.c	2006-08-19 03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/drivers/ide/ide.c	2006-08-28 21:38:50.000000000 -0400
+@@ -1229,9 +1229,11 @@ static int generic_ide_suspend(struct de
+ static int generic_ide_resume(struct device *dev)
+ {
+ 	ide_drive_t *drive = dev->driver_data;
++	ide_driver_t *drv = to_ide_driver(dev->driver);
+ 	struct request rq;
+ 	struct request_pm_state rqpm;
+ 	ide_task_t args;
++	int err;
+ 
+ 	memset(&rq, 0, sizeof(rq));
+ 	memset(&rqpm, 0, sizeof(rqpm));
+@@ -1242,7 +1244,12 @@ static int generic_ide_resume(struct dev
+ 	rqpm.pm_step = ide_pm_state_start_resume;
+ 	rqpm.pm_state = PM_EVENT_ON;
+ 
+-	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
++	err = ide_do_drive_cmd(drive, &rq, ide_head_wait);
++
++	if (err == 0 && drv->resume)
++		drv->resume(drive);
++
++	return err;
+ }
+ 
+ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device *bdev,
+--- linux-2.6.18-rc4-old/drivers/ide/ide-disk.c	2006-08-19 03:49:03.000000000 -0400
++++ linux-2.6.18-rc4/drivers/ide/ide-disk.c	2006-08-28 21:54:17.000000000 -0400
+@@ -1024,6 +1024,17 @@ static void ide_disk_release(struct kref
+ 
+ static int ide_disk_probe(ide_drive_t *drive);
+ 
++/*
++ * On HPA drives the capacity needs to be
++ * reinitilized on resume otherwise the disk
++ * can not be used and a hard reset is required
++ */
++static void ide_disk_resume(ide_drive_t *drive)
++{
++	if (idedisk_supports_hpa(drive->id))
++		init_idedisk_capacity(drive);
++}
++
+ static void ide_device_shutdown(ide_drive_t *drive)
+ {
+ #ifdef	CONFIG_ALPHA
+@@ -1067,6 +1078,7 @@ static ide_driver_t idedisk_driver = {
+ 	.error			= __ide_error,
+ 	.abort			= __ide_abort,
+ 	.proc			= idedisk_proc,
++	.resume			= ide_disk_resume,
+ };
+ 
+ static int idedisk_open(struct inode *inode, struct file *filp)
+
+
