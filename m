@@ -1,90 +1,25 @@
-From: Derek Taubert <taubert@geeks.org>
-Subject: Re: Bad write performance with libata-tj-stable-2.6.17.4-20060710, pcmcia based sata_sil24, PMP, and NCQ drive
-Date: Tue, 29 Aug 2006 09:44:24 -0700
-Message-ID: <20060829164424.GA1603@geeks.org>
-References: <20060828230132.GB20189@geeks.org> <44F3A8FD.6090108@gmail.com> <20060829045816.GA21746@geeks.org> <44F440BE.80000@gmail.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: question on hotplug on ICH8M
+Date: Tue, 29 Aug 2006 10:10:39 -0700
+Message-ID: <20060829101039.8a1ec81e.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jacobs.geeks.org ([204.153.247.1]:32473 "EHLO mail.geeks.org")
-	by vger.kernel.org with ESMTP id S965103AbWH2Qo0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Aug 2006 12:44:26 -0400
-Content-Disposition: inline
-In-Reply-To: <44F440BE.80000@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:61536 "EHLO
+	orsmga102-1.jf.intel.com") by vger.kernel.org with ESMTP
+	id S965171AbWH2RVN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Aug 2006 13:21:13 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Derek Taubert <taubert@geeks.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, Aug 29, 2006 at 10:27:26PM +0900, Tejun Heo wrote:
-> >>>2) hdparm -C for all 4 drives always shows "drive state is:  standby"
-> >>>  even when I'm certain that the drives are active.
-> >>hdparm -C says the same thing for my drive.  I think it's safe to 
-> >>ignore.  Hmmm... it needs to be tracked down.  Maybe some problem in 
-> >>HDIO ioctl implementation in libata.
-> >
-> >It's a "nice to have" for using smartd.  ie: don't spin the drives up to
-> >poll the failure attributes, but they should be checked if the drive's
-> >already active.
-> 
-> I don't really understand what you mean.  Can you elaborate?
+hi,
+I have a CD/DVD rom device on an ICH8M that and the ahci driver that
+I am trying to hot remove with kernel 2.6.18-rc4-git.  It seems that
+hotplug for this device should be supported.  Do I need to do anything
+special to hot remove this device (such as write to some sysfs file),
+or can I just "pull the plug" so to speak?
 
-Sure.  See the "-n standby" option here:
-
-http://smartmontools.sourceforge.net/man/smartd.conf.5.html
-
-If the driver always reports "standby", then smartd effectively won't
-monitor the device if "-n standby" is configured.
-
-Now I can certainly eliminate the -n option from smartd.conf, but
-then smartd will cause the drive(s) to spin up when it polls (see the
--p, -u, -t options).
-
-
-> >>>I'd really like some assistance debugging the write performance issue.
-> >>>The "hdparm -C" issue would be gravy...
-> >>Please track down the reader.
-> >
-> >Before running dd (fuser -v /dev/sda1 shows nothing):
-> [--snip--]
-> 
-> Can you try 'dd if=/dev/zero of=/dev/sdX bs=4M count=1'?
-
-Increasing the block size eliminates the reads (presumably because the
-block driver doesn't have to fetch lines to read/modify/write), but the
-write throughput is still very slow:
-
-# dd if=/dev/zero of=/dev/sda1 bs=4M count=512
-
-avg-cpu:  %user   %nice    %sys %iowait   %idle
-           0.90    0.00    1.30   97.80    0.00
-
-Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-fd0               0.00         0.00         0.00          0          0
-hda               0.20         0.80         0.00          8          0
-md0               0.00         0.00         0.00          0          0
-md1               0.00         0.00         0.00          0          0
-sda              15.00         0.00      1920.00          0      19200
-sdb               0.00         0.00         0.00          0          0
-sdc               0.00         0.00         0.00          0          0
-sdd               0.00         0.00         0.00          0          0
-
-
-Compare that with:
-
-# dd of=/dev/null if=/dev/sda1 bs=4M count=512
-
-avg-cpu:  %user   %nice    %sys %iowait   %idle
-           0.50    0.00   78.10   21.40    0.00
-
-Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-fd0               0.00         0.00         0.00          0          0
-hda               1.10         4.40         0.00         44          0
-md0               0.00         0.00         0.00          0          0
-md1               0.00         0.00         0.00          0          0
-sda             426.70     51532.80         0.00     515328          0
-sdb               0.00         0.00         0.00          0          0
-sdc               0.00         0.00         0.00          0          0
-sdd               0.00         0.00         0.00          0          0
-
-Derek
+Thanks,
+Kristen
