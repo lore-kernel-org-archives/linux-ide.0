@@ -1,54 +1,46 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: Re: HPA Resume patch
-Date: Tue, 29 Aug 2006 10:14:29 -0400
-Message-ID: <200608291414.k7TEETg8003595@turing-police.cc.vt.edu>
-References: <44F15ADB.5040609@PicturesInMotion.net> <20060827150608.GA4534@ucw.cz> <20060827170501.GD30609@kernel.dk>
-            <44F3A30A.3090509@PicturesInMotion.net>
+From: Eric Windisch <eric@grokthis.net>
+Subject: Re: Libata-tj-stable patch /w sil3124 and PMP... 'device
+	or	resource busy'
+Date: Tue, 29 Aug 2006 10:58:31 -0400
+Message-ID: <1156863511.3718.36.camel@manet>
+References: <44E105A7.3030900@grokthis.net> <44E1C43E.1020302@gmail.com>
+	 <44E28313.7050601@grokthis.net>  <44F16750.5080100@gmail.com>
+	 <1156727790.28709.1.camel@lennon>  <44F3ACAB.5070506@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1156860868_3126P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:40115 "EHLO
-	turing-police.cc.vt.edu") by vger.kernel.org with ESMTP
-	id S964984AbWH2OP1 (ORCPT <RFC822;linux-ide@vger.kernel.org>);
-	Tue, 29 Aug 2006 10:15:27 -0400
-In-Reply-To: Your message of "Mon, 28 Aug 2006 22:14:34 EDT."
-             <44F3A30A.3090509@PicturesInMotion.net>
+Received: from marley.grokthis.net ([69.93.78.26]:8870 "EHLO
+	marley.grokthis.net") by vger.kernel.org with ESMTP id S965022AbWH2Ovr
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Aug 2006 10:51:47 -0400
+In-Reply-To: <44F3ACAB.5070506@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Trager <Lee@PicturesInMotion.net>
-Cc: Jens Axboe <axboe@kernel.dk>, Pavel Machek <pavel@ucw.cz>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, seife@suse.de
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
---==_Exmh_1156860868_3126P
-Content-Type: text/plain; charset=us-ascii
 
-On Mon, 28 Aug 2006 22:14:34 EDT, Lee Trager said:
+> The exclusive refs held above are never released.  Thus the kernel 
+> correctly denies any other exclusive access to the devices.  dm is 
+> holding them all.  I have never used dm so don't know much about it.  It 
+> seems that you'll have to make dm ignore those SCSI disks if you wanna 
+> use them for any other purpose.
 
-> Thinkpad users. Anyway my only question is how to I get my patched
-> signed off by someone?
+I've never used it either, at least not directly.  Whatever it is doing
+is automatic.  However, you're right, I'm sorry for bringing up someone
+else's bug -- if nothing else, its good google fodder ;-)  So far, its
+looking to me like a bug in Ubuntu Dapper.  I haven't yet figured out
+how to tell Ubuntu to leave my devices alone (yes, I looked at udev),
+but at least I can get my disks working!
 
-You read Documentation/SubmittingPatches, and follow the directions there,
-and remember to merge in any comments people might have...
+$ dmsetup remove sde1
+root@san001:~# mkfs.ext3 -m1 /dev/sde1 2>/dev/null >/dev/null && echo 1
+1
 
-> +	err = ide_do_drive_cmd(drive, &rq, ide_head_wait);
-> +
-> +	if (err == 0 && drv->resume)
+Thank you!
 
-Often better written as:
+-- 
+Eric Windisch <eric@grokthis.net>
+GrokThis.net
 
-	if (!err && drv->resume)
-
---==_Exmh_1156860868_3126P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFE9EvEcC3lWbTT17ARAhsmAJ9HOcLzLEnR3g7RSUG+RprFTGS8nwCeMVKR
-EvI5vJ8N/7zUzxIMwehfvFk=
-=fAM3
------END PGP SIGNATURE-----
-
---==_Exmh_1156860868_3126P--
