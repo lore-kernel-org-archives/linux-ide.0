@@ -1,41 +1,56 @@
-From: Eric Windisch <eric@grokthis.net>
-Subject: Re: Libata-tj-stable patch /w sil3124 and PMP...
-	'device	or	resource busy'
-Date: Tue, 29 Aug 2006 11:15:01 -0400
-Message-ID: <1156864501.3718.46.camel@manet>
-References: <44E105A7.3030900@grokthis.net> <44E1C43E.1020302@gmail.com>
-	 <44E28313.7050601@grokthis.net>  <44F16750.5080100@gmail.com>
-	 <1156727790.28709.1.camel@lennon>  <44F3ACAB.5070506@gmail.com>
-	 <1156863511.3718.36.camel@manet>  <44F455C2.1010309@gmail.com>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Re: Some questions about new EH in libata
+Date: Tue, 29 Aug 2006 09:51:30 -0600
+Message-ID: <8202f4270608290851u20ec2eb5j2fd7e509f617cf35@mail.gmail.com>
+References: <8202f4270608212154k787f63a1k15ed3dcfff0624c2@mail.gmail.com>
+	 <44EA91A8.5090309@gmail.com>
+	 <8202f4270608281751v7cddfdddo28ba1b86eb43e60f@mail.gmail.com>
+	 <44F3A384.4080505@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from marley.grokthis.net ([69.93.78.26]:39335 "EHLO
-	marley.grokthis.net") by vger.kernel.org with ESMTP id S965026AbWH2PIR
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Aug 2006 11:08:17 -0400
-In-Reply-To: <44F455C2.1010309@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.183]:16029 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S965035AbWH2Pvc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Aug 2006 11:51:32 -0400
+Received: by py-out-1112.google.com with SMTP id n25so2935522pyg
+        for <linux-ide@vger.kernel.org>; Tue, 29 Aug 2006 08:51:31 -0700 (PDT)
+In-Reply-To: <44F3A384.4080505@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-> > I've never used it either, at least not directly.  Whatever it is doing
-> > is automatic.  However, you're right, I'm sorry for bringing up someone
-> > else's bug -- if nothing else, its good google fodder ;-)  So far, its
-> > looking to me like a bug in Ubuntu Dapper.
-> 
-> Maybe you're supposed to use all disks via dm, which actually makes 
-> sense.  Direct partitions on disks are pretty lame way to manage disks 
-> these days although I've never used anything else.  :-p
+On 8/28/06, Tejun Heo <htejun@gmail.com> wrote:
+> Fajun Chen wrote:
+> >> You can use SCSI userscan interface.
+> >>
+> > Is this a scsi command? I looked at scsi spec and haven't found it
+> > yet. I know how to initiate user scan from proc or sysfs,
+>
+> Yeap, that's what I meant.
+>
+> > but there is
+> > no way to know the result of user scan through proc or sysfs.  I'm
+> > looking for a way to check when a pata drive is back online after a
+> > power cycle. May I issue userscan periodically until its result
+> > indicates pata drive is available?
+>
+> Hmmm.. When new devices are attached, hotplug events are generated.  I
+> think that's the only way to get any result back, so when it fails,
+> there's no indication.  Periodically repeating userscan request should
+> be fine although it may result in an extra reset after successfully
+> detecting the device.  That shouldn't hurt too much.
+>
 
-I thought about this, but I couldn't intuitively figure out how.  I'm
-not sure that whatever Ubuntu is doing is being done correctly.  I'll
-have to read up on it, deal with manually removing these
-devices-mappings, or switch to another distribution.  Thanks again!
+I assume that alt status register will be updated when pata/sata is
+back online. So as an alternative and less invasive way, could I check
+alt status register and start user scan only if device is ready on alt
+status register? libata has ata_altstatus() function, is it available
+to user space? If not, may I expose it? I'm looking for a way to check
+device registers without side effects.
 
--- 
-Eric Windisch <eric@grokthis.net>
-GrokThis.net
-
+Thanks,
+Fajun
