@@ -1,60 +1,83 @@
-From: Derek Taubert <taubert@geeks.org>
-Subject: Re: Bad write performance with libata-tj-stable-2.6.17.4-20060710, pcmcia based sata_sil24, PMP, and NCQ drive
-Date: Tue, 29 Aug 2006 00:54:54 -0700
-Message-ID: <20060829075454.GA22899@geeks.org>
-References: <20060828230132.GB20189@geeks.org> <44F3A8FD.6090108@gmail.com> <20060829045816.GA21746@geeks.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: HPA Resume patch
+Date: Tue, 29 Aug 2006 11:12:00 +0200
+Message-ID: <20060829091200.GF12257@kernel.dk>
+References: <44F15ADB.5040609@PicturesInMotion.net> <20060827150608.GA4534@ucw.cz> <20060827170501.GD30609@kernel.dk> <44F3A30A.3090509@PicturesInMotion.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jacobs.geeks.org ([204.153.247.1]:4058 "EHLO mail.geeks.org")
-	by vger.kernel.org with ESMTP id S1750726AbWH2Hy4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Aug 2006 03:54:56 -0400
+Received: from brick.kernel.dk ([62.242.22.158]:50460 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1751342AbWH2JJR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Aug 2006 05:09:17 -0400
 Content-Disposition: inline
-In-Reply-To: <20060829045816.GA21746@geeks.org>
+In-Reply-To: <44F3A30A.3090509@PicturesInMotion.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Derek Taubert <taubert@geeks.org>, linux-ide@vger.kernel.org
+To: Lee Trager <Lee@PicturesInMotion.net>
+Cc: Pavel Machek <pavel@ucw.cz>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, seife@suse.de
 
-On Mon, Aug 28, 2006 at 09:58:16PM -0700, Derek Taubert wrote:
-> On Tue, Aug 29, 2006 at 11:39:57AM +0900, Tejun Heo wrote:
-> > The result doesn't seem to indicate any problem in libata or any storage 
-> > related kernel subsystem.  I would track down the reader first.
+On Mon, Aug 28 2006, Lee Trager wrote:
+> Jens Axboe wrote:
+> > On Sun, Aug 27 2006, Pavel Machek wrote:
+> >   
+> >> Hi!
+> >>
+> >>     
+> >>> This patch fixes a problem with computers that have HPA on their hard
+> >>> drive and not being able to come out of resume from RAM or disk. I've
+> >>> tested this patch on 2.6.17.x and 2.6.18-rc4 and it works great on both
+> >>> of these. This patch also fixes the bug #6840. This is my first patch to
+> >>> the kernel and I was told to e-mail the above people to get my patch
+> >>> into the kernel.
+> >>>       
+> >> Congratulations for a first patch.
+> >>
+> >>     
+> >>> If I made a mistake please be gentle and correct me ;)
+> >>>       
+> >> We'll need signed-off-by: line next time.
+> >>
+> >> Stefan, can we get this some testing? Or anyone else with thinkpad
+> >> with host-protected area still enabled?
+> >>     
+> >
+> > It has design issues, at someone else already noticed. hpa restore needs
+> > to be a driver private step, included in the resume state machine. The
+> > current patch is a gross layering violation.
+> >
+> > But thanks to Lee for taking a stab at this, I hope he'll continue and
+> > get it polished :-)
+> >
+> >   
+> Ok I redid the patch following exactly what Sergey and Randy said. This
+> problem happens on any computer that has HPA on their drive when they
+> come back from resume so I don't think you have to only test this with
+> Thinkpad users. Anyway my only question is how to I get my patched
+> signed off by someone?
 > 
-> This drive has only been partitioned; there is no filesystem on it.  So,
-> it certainly isn't mounted anywhere.  There honestly isn't _anything_
-> other than the dd going on to sda1, and that's the only partition on
-> sda.
-> 
-> After starting dd:
-> 
-> # fuser -v /dev/sda1
-> 
->                      USER        PID ACCESS COMMAND
-> /dev/sda1            root      21753 f....  dd
-> 
-> avg-cpu:  %user   %nice    %sys %iowait   %idle
->            0.90    0.00   11.01   88.09    0.00
-> 
-> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-> sda            1306.61      1295.60      1310.11      12943      13088
+> Thanks for all your help!
 
-Another thought about this...
+While this is a _lot_ better than your previous patch, I don't think you
+quite understood my suggestion. Which is probably fault, so I'll try to
+be a little more verbose.
 
-The sd cache_type is set to "write back" for this drive.  I suspect that
-the reads are coming from the block driver attempting to fill lines.
+If you look at the suspend state machine, it goes through a (small)
+sequence of steps (see drivers/ide/ide-io.c:ide_complete_power_step())
+and get the device suspended. Same thing for resume, just not that many
+steps there. My suggestion was to continue using this infrastructure and
+just add the HPA restore as a resume state. Right now it does:
 
-# cat /sys/bus/scsi/devices/0:0:0:0/scsi_disk:0:0:0:0/cache_type
-write back
+        ide_pm_state_start_resume (== idedisk_pm_idle)
+                complete that
+        ide_pm_restore_dma
+                complete that
 
-Also, a problem here:
+and we are done. Your patch basically puts more actions into a single
+resume state switch, not ideal. What you want to do is have the HPA
+restore as an additional state.
 
-# echo "none" > /sys/bus/scsi/devices/0:0:0:0/scsi_disk:0:0:0:0/cache_type
-echo: write error: invalid argument
+Is that clearer? If not, let me know...
 
-dmesg says:
+-- 
+Jens Axboe
 
-sda: Current: sense key: Illegal Request
-    Additional sense: Invalid field in cdb
-
-Derek
