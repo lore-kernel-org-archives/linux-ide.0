@@ -1,121 +1,154 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Bad write performance with libata-tj-stable-2.6.17.4-20060710,
- pcmcia based sata_sil24, PMP, and NCQ drive
-Date: Tue, 29 Aug 2006 11:39:57 +0900
-Message-ID: <44F3A8FD.6090108@gmail.com>
-References: <20060828230132.GB20189@geeks.org>
+Subject: Re: Libata-tj-stable patch /w sil3124 and PMP... 'device or	resource
+ busy'
+Date: Tue, 29 Aug 2006 11:55:39 +0900
+Message-ID: <44F3ACAB.5070506@gmail.com>
+References: <44E105A7.3030900@grokthis.net> <44E1C43E.1020302@gmail.com>	 <44E28313.7050601@grokthis.net>  <44F16750.5080100@gmail.com> <1156727790.28709.1.camel@lennon>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.198]:3522 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S932109AbWH2CkF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Aug 2006 22:40:05 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so1175065nzf
-        for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 19:40:05 -0700 (PDT)
-In-Reply-To: <20060828230132.GB20189@geeks.org>
+Received: from wx-out-0506.google.com ([66.249.82.226]:21043 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S932116AbWH2Czq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Aug 2006 22:55:46 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so1906449wxc
+        for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2006 19:55:45 -0700 (PDT)
+In-Reply-To: <1156727790.28709.1.camel@lennon>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Derek Taubert <taubert@geeks.org>
+To: Eric Windisch <eric@grokthis.net>
 Cc: linux-ide@vger.kernel.org
 
-Hello,
+Hello, there.
 
-Derek Taubert wrote:
-> Greetings!
-> 
-> I'm using a 2.6.17.4 kernel (straight from kernel.org) patched with
-> libata-tj-stable-2.6.17.4-20060710 in an effort to make use of an external
-> drive bay with a Silicon Image port multipler and a bunch of SATA/PATA
-> drives.  For the most part, it's a success (more below) but the write
-> performance that I'm seeing to a new Seagate 750GB drive (with NCQ) is
-> terrible (on the order of 1.2MBytes/sec).
-> 
-> The host is an old Toshiba laptop (PIIX4 based) with a 550MHz Celeron
-> processor.  The SATA host interface is a PCMCIA based Silicon Image 3124
-> chip plugged into the Yenta PCMCIA controller.  A tulip based Linksys
-> 10/100 card takes up the other slot.  From dmesg:
+Eric Windisch wrote:
+<--snip-->
+> [4294682.866000] XXX bd_claim 3:2/3:0 1@c0406572 1@c0162830
+> [4294682.866000]  <c01628d6> bd_claim+0xa6/0x130  <c0162830> bd_claim+0x0/0x130
+> [4294682.867000]  <c0163001> bd_claim_by_disk+0x91/0x1b0  <c0314615> open_dev+0x55/0xa0
+> [4294682.867000]  <c03153fd> dm_get_device+0x19d/0x470  <c0233fd7> vsscanf+0x4b7/0x530
+> [4294682.867000]  <c0315fcf> linear_ctr+0xaf/0x130  <c0314f4b> dm_table_add_target+0x17b/0x2f0
+> [4294682.867000]  <c0317e6f> table_load+0xff/0x220  <c0317371> ctl_ioctl+0x1c1/0x2e0
+> [4294682.868000]  <c0317d70> table_load+0x0/0x220  <c016e176> do_ioctl+0x76/0x80
+> [4294682.868000]  <c016e1d2> vfs_ioctl+0x52/0x2c0  <c016e4c8> sys_ioctl+0x88/0xa0
+> [4294682.868000]  <c0102c33> syscall_call+0x7/0xb 
+> [4294682.941000] XXX bd_claim 3:2/3:0 2@c0406572 2@c0162830
+> [4294682.941000]  <c01628d6> bd_claim+0xa6/0x130  <c0162830> bd_claim+0x0/0x130
+> [4294682.941000]  <c0163001> bd_claim_by_disk+0x91/0x1b0  <c0314615> open_dev+0x55/0xa0
+> [4294682.942000]  <c03153fd> dm_get_device+0x19d/0x470  <c0233fd7> vsscanf+0x4b7/0x530
+> [4294682.942000]  <c0315fcf> linear_ctr+0xaf/0x130  <c0314f4b> dm_table_add_target+0x17b/0x2f0
+> [4294682.942000]  <c0317e6f> table_load+0xff/0x220  <c0317371> ctl_ioctl+0x1c1/0x2e0
+> [4294682.942000]  <c0317d70> table_load+0x0/0x220  <c016e176> do_ioctl+0x76/0x80
+> [4294682.943000]  <c016e1d2> vfs_ioctl+0x52/0x2c0  <c016e4c8> sys_ioctl+0x88/0xa0
+> [4294682.943000]  <c0102c33> syscall_call+0x7/0xb 
+> [4294683.015000] XXX bd_claim 3:2/3:0 3@c0406572 3@c0162830
+> [4294683.016000]  <c01628d6> bd_claim+0xa6/0x130  <c0162830> bd_claim+0x0/0x130
+> [4294683.016000]  <c0163001> bd_claim_by_disk+0x91/0x1b0  <c0314615> open_dev+0x55/0xa0
+> [4294683.016000]  <c03153fd> dm_get_device+0x19d/0x470  <c0233fd7> vsscanf+0x4b7/0x530
+> [4294683.016000]  <c0315fcf> linear_ctr+0xaf/0x130  <c0314f4b> dm_table_add_target+0x17b/0x2f0
+> [4294683.017000]  <c0317e6f> table_load+0xff/0x220  <c0317371> ctl_ioctl+0x1c1/0x2e0
+> [4294683.017000]  <c0317d70> table_load+0x0/0x220  <c016e176> do_ioctl+0x76/0x80
+> [4294683.017000]  <c016e1d2> vfs_ioctl+0x52/0x2c0  <c016e4c8> sys_ioctl+0x88/0xa0
+> [4294683.017000]  <c0102c33> syscall_call+0x7/0xb 
 
-Hah... interesting setup.
+/dev/hda2 is exclusively opened three times by dm.
 
-(dmesg snipped, all look good)
+> [4294683.087000] Attempting manual resume
+> [4294683.115000] XXX bd_claim 253:0/253:0 2@c0442a60 2@c0442a60
+> [4294683.115000]  <c01628d6> bd_claim+0xa6/0x130  <c0163ae5> open_bdev_excl+0x65/0x90
+> [4294683.115000]  <c01623af> get_sb_bdev+0x2f/0x15a  <c01422a3> __alloc_pages+0x53/0x310
+> [4294683.115000]  <c01deab0> ext3_get_sb+0x30/0x40  <c01e0a60> ext3_fill_super+0x0/0x17f0
+> [4294683.116000]  <c0161af9> do_kern_mount+0xd9/0x190  <c0178f09> do_mount+0x3f9/0x770
+> [4294683.116000]  <c014a418> __handle_mm_fault+0x678/0x830  <c016b7bb> do_path_lookup+0x8b/0x200
+> [4294683.116000]  <c0168f3f> getname+0xdf/0x110  <c01422a3> __alloc_pages+0x53/0x310
+> [4294683.117000]  <c0113b30> do_page_fault+0x0/0x701  <c01427ee> __get_free_pages+0x1e/0x50
+> [4294683.118000]  <c0177b68> copy_mount_options+0x48/0x160  <c0179318> sys_mount+0x98/0xe0
+> [4294683.118000]  <c0102c33> syscall_call+0x7/0xb 
 
-> What works:
-> 
-> 1) Read performance to all 4 drives is ok (40-50 MBytes/sec as reported
->    by iostat) and stable.  I've hammered a read-only software RAID5 spread
->    across the last 3 drives with no problem.
-> 2) "smartctl -d ata -a" works nicely to all 4 drives.
-> 3) hdparm -S makes the drives spin down when idle as expected.
-> 4) Hotplug seems to work quite well.  I'm even able to power down and
->    remove a drive from the port multiplier while the other 3 are reading
->    data (during a "e2fsck -f -n /dev/md0").
+Hmmm... maybe, created dm device being mounted.
 
-Good.
+<--snip-->
+> [4294694.160000] XXX bd_claim 253:2/253:2 2@c01525b0 2@c01525b0
+> [4294694.160000]  <c01628d6> bd_claim+0xa6/0x130  <c01525b0> sys_swapon+0x0/0xb50
+> [4294694.161000]  <c01525b0> sys_swapon+0x0/0xb50  <c01528c2> sys_swapon+0x312/0xb50
+> [4294694.161000]  <c01525b0> sys_swapon+0x0/0xb50  <c0113c67> do_page_fault+0x137/0x701
+> [4294694.161000]  <c0102bcb> sysenter_past_esp+0x54/0x75 
 
-> What doesn't work so well:
-> 
-> 1) Writing to sda1.
-> 
-> # dd if=/dev/zero of=/dev/sda1 count=4M
-> <ctrl-c, then wait 30 seconds>
-> 264205+0 records in
-> 264204+0 records out
-> 135272448 bytes (135 MB) copied, 111.373 seconds, 1.2 MB/s
-> 
-> From iostat -k 10:
-> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-> sda            2428.64      2422.46       667.66      24273       6690
-> sda              36.84        23.72      1667.87        237      16662
-> sda            2440.60      2434.90       616.00      24349       6160
-> The read rate is curious (should be 0)...
-> 
-> Top shows 1% user, 3% system, 93% wait.
+Swap on the dm device (right?)
 
-It seems some kind of read IO is in progress.  Can you repeat the test 
-on an unused/idle (iostat -k 10 shows all zeros...) drive?  The above 
-result actually looks good if you consider both read and write sides. 
-The result doesn't seem to indicate any problem in libata or any storage 
-related kernel subsystem.  I would track down the reader first.
+> [4294705.726000] XXX bd_claim 3:0 failed 3@c0162830
+> [4294705.726000] device-mapper: dm-linear: Device lookup failed
+> [4294705.726000] device-mapper: error adding target to table
+> [4294705.728000] XXX bd_claim 3:0 failed 3@c0162830
+> [4294705.728000] device-mapper: dm-linear: Device lookup failed
+> [4294705.728000] device-mapper: error adding target to table
+> [4294705.730000] XXX bd_claim 3:0 failed 3@c0162830
+> [4294705.730000] device-mapper: dm-linear: Device lookup failed
+> [4294705.731000] device-mapper: error adding target to table
+> [4294705.733000] XXX bd_claim 3:0 failed 3@c0162830
+> [4294705.733000] device-mapper: dm-linear: Device lookup failed
+> [4294705.733000] device-mapper: error adding target to table
 
-> If I "cat /proc/scsi/sg/devices" during this test, the next to last column
-> seems to indicate that the queue fills up and pretty much stays that way:
-> 
-> # cat /proc/scsi/sg/devices
-> 0       0       0       0       0       1       31      0       1
-> 0       0       1       0       0       1       1       0       1
-> 0       0       2       0       0       1       1       0       1
-> 0       0       3       0       0       1       1       0       1
-> # cat /proc/scsi/sg/devices
-> 0       0       0       0       0       1       31      29      1
-> 0       0       1       0       0       1       1       0       1
-> 0       0       2       0       0       1       1       1       1
-> 0       0       3       0       0       1       1       1       1
-> # cat /proc/scsi/sg/devices
-> 0       0       0       0       0       1       31      31      1
-> 0       0       1       0       0       1       1       0       1
-> 0       0       2       0       0       1       1       0       1
-> 0       0       3       0       0       1       1       0       1
-> # cat /proc/scsi/sg/devices
-> 0       0       0       0       0       1       31      30      1
-> 0       0       1       0       0       1       1       0       1
-> 0       0       2       0       0       1       1       1       1
-> 0       0       3       0       0       1       1       0       1
+hda is already grabbed.  dm is trying to open the device exclusively 
+again with a different id, which is correctly denied.  Is this normal 
+behavior?
 
-This looks okay too considering the write queue is full.
+> [4294705.735000] XXX bd_claim 8:0/8:0 2@c0406572 2@c0406572
+> [4294705.735000]  <c01628d6> bd_claim+0xa6/0x130  <c0163001> bd_claim_by_disk+0x91/0x1b0
+> [4294705.735000]  <c0314615> open_dev+0x55/0xa0  <c03153fd> dm_get_device+0x19d/0x470
+> [4294705.736000]  <c0233fd7> vsscanf+0x4b7/0x530  <c0315fcf> linear_ctr+0xaf/0x130
+> [4294705.736000]  <c0314f4b> dm_table_add_target+0x17b/0x2f0  <c0317e6f> table_load+0xff/0x220
+> [4294705.736000]  <c0317371> ctl_ioctl+0x1c1/0x2e0  <c013f305> __generic_file_aio_write_nolock+0x285/0x490
+> [4294705.737000]  <c0317d70> table_load+0x0/0x220  <c016e176> do_ioctl+0x76/0x80
+> [4294705.737000]  <c016e1d2> vfs_ioctl+0x52/0x2c0  <c016e4c8> sys_ioctl+0x88/0xa0
+> [4294705.737000]  <c0102bcb> sysenter_past_esp+0x54/0x75 
+> [4294705.740000] XXX bd_claim 8:16/8:16 2@c0406572 2@c0406572
+> [4294705.740000]  <c01628d6> bd_claim+0xa6/0x130  <c0163001> bd_claim_by_disk+0x91/0x1b0
+> [4294705.740000]  <c0314615> open_dev+0x55/0xa0  <c03153fd> dm_get_device+0x19d/0x470
+> [4294705.740000]  <c0233fd7> vsscanf+0x4b7/0x530  <c0315fcf> linear_ctr+0xaf/0x130
+> [4294705.741000]  <c0314f4b> dm_table_add_target+0x17b/0x2f0  <c0317e6f> table_load+0xff/0x220
+> [4294705.741000]  <c0317371> ctl_ioctl+0x1c1/0x2e0  <c0173b33> dput+0x93/0x140
+> [4294705.741000]  <c0317d70> table_load+0x0/0x220  <c016e176> do_ioctl+0x76/0x80
+> [4294705.742000]  <c016e1d2> vfs_ioctl+0x52/0x2c0  <c016e4c8> sys_ioctl+0x88/0xa0
+> [4294705.742000]  <c0102bcb> sysenter_past_esp+0x54/0x75 
+> [4294705.745000] XXX bd_claim 8:32/8:32 2@c0406572 2@c0406572
+> [4294705.745000]  <c01628d6> bd_claim+0xa6/0x130  <c0163001> bd_claim_by_disk+0x91/0x1b0
+> [4294705.745000]  <c0314615> open_dev+0x55/0xa0  <c03153fd> dm_get_device+0x19d/0x470
+> [4294705.745000]  <c0233fd7> vsscanf+0x4b7/0x530  <c0315fcf> linear_ctr+0xaf/0x130
+> [4294705.746000]  <c0314f4b> dm_table_add_target+0x17b/0x2f0  <c0317e6f> table_load+0xff/0x220
+> [4294705.746000]  <c0317371> ctl_ioctl+0x1c1/0x2e0  <c0173b33> dput+0x93/0x140
+> [4294705.746000]  <c0317d70> table_load+0x0/0x220  <c016e176> do_ioctl+0x76/0x80
+> [4294705.746000]  <c016e1d2> vfs_ioctl+0x52/0x2c0  <c016e4c8> sys_ioctl+0x88/0xa0
+> [4294705.747000]  <c0102bcb> sysenter_past_esp+0x54/0x75 
+> [4294705.749000] XXX bd_claim 8:48/8:48 2@c0406572 2@c0406572
+> [4294705.749000]  <c01628d6> bd_claim+0xa6/0x130  <c0163001> bd_claim_by_disk+0x91/0x1b0
+> [4294705.750000]  <c0314615> open_dev+0x55/0xa0  <c03153fd> dm_get_device+0x19d/0x470
+> [4294705.750000]  <c0233fd7> vsscanf+0x4b7/0x530  <c0315fcf> linear_ctr+0xaf/0x130
+> [4294705.750000]  <c0314f4b> dm_table_add_target+0x17b/0x2f0  <c0317e6f> table_load+0xff/0x220
+> [4294705.751000]  <c0317371> ctl_ioctl+0x1c1/0x2e0  <c0173b33> dput+0x93/0x140
+> [4294705.751000]  <c0317d70> table_load+0x0/0x220  <c016e176> do_ioctl+0x76/0x80
+> [4294705.751000]  <c016e1d2> vfs_ioctl+0x52/0x2c0  <c016e4c8> sys_ioctl+0x88/0xa0
+> [4294705.751000]  <c0102bcb> sysenter_past_esp+0x54/0x75 
+> [4294705.754000] XXX bd_claim 8:64/8:64 2@c0406572 2@c0406572
+> [4294705.754000]  <c01628d6> bd_claim+0xa6/0x130  <c0163001> bd_claim_by_disk+0x91/0x1b0
+> [4294705.755000]  <c0314615> open_dev+0x55/0xa0  <c03153fd> dm_get_device+0x19d/0x470
+> [4294705.755000]  <c0233fd7> vsscanf+0x4b7/0x530  <c0315fcf> linear_ctr+0xaf/0x130
+> [4294705.755000]  <c0314f4b> dm_table_add_target+0x17b/0x2f0  <c0317e6f> table_load+0xff/0x220
+> [4294705.755000]  <c0317371> ctl_ioctl+0x1c1/0x2e0  <c0173b33> dput+0x93/0x140
+> [4294705.756000]  <c0317d70> table_load+0x0/0x220  <c016e176> do_ioctl+0x76/0x80
+> [4294705.756000]  <c016e1d2> vfs_ioctl+0x52/0x2c0  <c016e4c8> sys_ioctl+0x88/0xa0
+> [4294705.756000]  <c0102bcb> sysenter_past_esp+0x54/0x75 
 
-> 2) hdparm -C for all 4 drives always shows "drive state is:  standby"
->    even when I'm certain that the drives are active.
+Here, all the SCSI disks are claimed exclusively by dm.
 
-hdparm -C says the same thing for my drive.  I think it's safe to 
-ignore.  Hmmm... it needs to be tracked down.  Maybe some problem in 
-HDIO ioctl implementation in libata.
+<--snip-->
 
-> I'd really like some assistance debugging the write performance issue.
-> The "hdparm -C" issue would be gravy...
-
-Please track down the reader.
+The exclusive refs held above are never released.  Thus the kernel 
+correctly denies any other exclusive access to the devices.  dm is 
+holding them all.  I have never used dm so don't know much about it.  It 
+seems that you'll have to make dm ignore those SCSI disks if you wanna 
+use them for any other purpose.
 
 -- 
 tejun
