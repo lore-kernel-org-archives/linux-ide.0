@@ -1,37 +1,62 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: 2.6.18-rc5 - HPT302 wierdness
-Date: Wed, 30 Aug 2006 10:04:10 -0400
-Message-ID: <17653.39642.605716.215981@smtp.charter.net>
-References: <17652.55275.556545.19616@smtp.charter.net>
-	<1156932104.6271.138.camel@localhost.localdomain>
+From: "Michael S. Tsirkin" <mst@mellanox.co.il>
+Subject: Re: T60 not coming out of suspend to RAM
+Date: Wed, 30 Aug 2006 18:05:36 +0300
+Message-ID: <20060830150535.GA30172@mellanox.co.il>
+References: <20060830144646.GC1923@elf.ucw.cz>
+Reply-To: "Michael S. Tsirkin" <mst@mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxsf13.cluster1.charter.net ([209.225.28.213]:9860 "EHLO
-	mxsf13.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S1751061AbWH3OEN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Aug 2006 10:04:13 -0400
-In-Reply-To: <1156932104.6271.138.camel@localhost.localdomain>
+Received: from dev.mellanox.co.il ([194.90.237.44]:35203 "EHLO
+	dev.mellanox.co.il") by vger.kernel.org with ESMTP id S1750946AbWH3PGf
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Aug 2006 11:06:35 -0400
+Content-Disposition: inline
+In-Reply-To: <20060830144646.GC1923@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: John Stoffel <john@stoffel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>, linux-pm@osdl.org, Thomas Glanzmann <sithglan@stud.uni-erlangen.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
+Quoting r. Pavel Machek <pavel@suse.cz>:
+> Subject: Re: T60 not coming out of suspend to RAM
+> 
+> Hi!
+> 
+> > > > > > OK, it turns out the problem was with running SATA drive in AHCI mode.
+> > > > > > 
+> > > > > > After applying the following patch from Forrest Zhao
+> > > > > > http://lkml.org/lkml/2006/7/20/56
+> > > > > > both suspend to disk and suspend to ram work fine now.
+> > > > > > This patch is going into 2.6.18, isn't it?
+> > > > > 
+> > > > > Not sure, check latest -rc5, and if it is not there, ask akpm...
+> > > > > 
+> > > > 
+> > > > Andrew, this is going into 2.6.18, isn't it? I don't see it in -rc5.
+> > > > 
+> > > 
+> > > It looks like Forrest's stuff is all queued up in the libata devel tree,
+> > > although in a significantly different-looking form.
+> > > 
+> > > So no, right now it doesn't look good for 2.6.18.
+> > > 
+> > 
+> > Ugh, more's the pity :( How about merging this one patch? T60 is only half
+> > as useful without it (no disk after resume), and the rate of changes in
+> > libata is high so just using a patch is gonnu be painful in the long run.
+> 
+> I guess you need to convince SATA maintainer that patch is safe before
+> it can go in...
 
+Right.
 
-Alan> Ar Maw, 2006-08-29 am 20:12 -0400, ysgrifennodd John Stoffel:
->> The drives are identical, and bought at the same time, yet on bootup
->> of 2.6.18-rc5, they show up with different values for CHS and for Max
->> Request Size.
+Jeff, could you please ack whether the following patch from Forrest Zhao
+is safe for 2.6.18?
+http://lkml.org/lkml/2006/7/20/56
 
-Alan> One is using LBA48 the other is not. Looks like you have two
-Alan> very different firmwares
+Without it, no disk access is possible after resume from suspend-to-ram
+on my T60.
 
-Thanks Alan, looking at them, the firwares are quite different.  I'm
-going to see about upgrading the down-rev one if possible, and I'll
-check my third 120gb drive which is in an un-powered external
-enclosure right now.  Whee!
-
-Thanks,
-John
+-- 
+MST
