@@ -1,68 +1,127 @@
-From: "David Wang" <touch@sis.com>
-Subject: [PATCH] libata: support for SiS AHCI controller in SiS966/SiS968
-Date: Thu, 31 Aug 2006 17:56:36 +0800
-Message-ID: <OFD4641DBA.8DD06DEC-ON482571DB.00364E08@sis.com.tw>
+From: "Thomas Pfaff" <tpfaff@gmx.net>
+Subject: Re: CompactFlash on VT6421 PATA (failed to set xfermode)
+Date: Thu, 31 Aug 2006 14:24:54 +0200
+Message-ID: <20060831122454.150260@gmx.net>
+References: <20060828113807.15790@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sism02.sis.com ([203.67.208.23]:8878 "EHLO sism02.sis.com")
-	by vger.kernel.org with ESMTP id S1751388AbWHaJx0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Aug 2006 05:53:26 -0400
+Received: from mail.gmx.net ([213.165.64.20]:45998 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751439AbWHaMYz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Aug 2006 08:24:55 -0400
+In-Reply-To: <20060828113807.15790@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "inux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
 
-Hi all,
-My name is David Wang, working for SiS now.
-This is my first try to post mail here.
+It works if i simply ignore the failed ata_dev_set_xfermode call.
 
-This patch, against 2.6.17.11, adds support for SiS AHCI controller.
-Device IDs, 0x1184 and 0x1185 are 1.5Gbps AHCI in SiS966 south bridge.
-Device ID 0x0186 is 3Gbps AHCI in next SiS968.
+Regards,
+Thomas
 
-While I load the driver, dmesg gives:
-ahci 0000:00:05.0: version 1.2
-ACPI: PCI Interrupt 0000:00:05.0[A] -> Link [LNKB] -> GSI 11 (level, low) ->
-IR
-ahci 0000:00:05.0: AHCI 0001.0000 32 slots 2 ports 1.5 Gbps 0x3 impl RAID
-mode
-ahci 0000:00:05.0: flags: ncq ilck led clo pmp pio slum part
-ata3: SATA max UDMA/133 cmd 0xF8806900 ctl 0x0 bmdma 0x0 irq 11
-ata4: SATA max UDMA/133 cmd 0xF8806980 ctl 0x0 bmdma 0x0 irq 11
-ata3: SATA link up 1.5 Gbps (SStatus 113)
-ata3: dev 0 cfg 49:2f00 82:346b 83:7fe9 84:4773 85:3469 86:3c01 87:4763
-88:007f
-ata3: dev 0 ATA-7, max UDMA/133, 160836480 sectors: LBA48
-ata3: dev 0 configured for UDMA/133
-scsi2 : ahci
-ata4: SATA link down (SStatus 0)
-scsi3 : ahci
-  Vendor: ATA       Model: HDS728080PLA380   Rev: PF2O
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 160836480 512-byte hdwr sectors (82348 MB)
+-------- Original-Nachricht --------
+Datum: Mon, 28 Aug 2006 13:38:07 +0200
+Von: "Thomas Pfaff" <tpfaff@gmx.net>
+An: linux-ide@vger.kernel.org
+Betreff: CompactFlash on VT6421 PATA (failed to set xfermode)
 
-It seems running well with my several SATA devices.
-If you need more information about the hardware or request a motherboard for
-testing,
-Contact me or Hank lee (mlee08@sis.com).
+> I have some trouble with a Hitachi XX.V.3.7 CompactFlash connected to=
+ an
+> VIA VT6421 Raid Controller together with kernel 2.6.17.
+>=20
+> First i had to add a patch from VIA to support PATA in sata-via.c.
+>=20
+> Now i get following error during boot :
+>=20
+> libata version 1.20 loaded.
+> sata_via 0000:00:14.0: version 1.1
+> ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 5
+> PCI: setting IRQ 5 as level-triggered
+> ACPI: PCI Interrupt 0000:00:14.0[A] -> Link [LNKB] -> GSI 5 (level, l=
+ow)
+> -> IRQ 5
+> sata_via 0000:00:14.0: routed to hard irq line 7
+> ata_device_add: ENTER
+> ata_host_add: ENTER
+> ata_port_start: prd alloc, virt cf63e000, dma f63e000
+> ata1: PATA max UDMA/133 cmd 0xFD00 ctl 0xFD0A bmdma 0xF900 irq 5
+> ata_host_add: ENTER
+> ata_port_start: prd alloc, virt cf626000, dma f626000
+> ata2: PATA max UDMA/133 cmd 0xFC00 ctl 0xFC0A bmdma 0xF908 irq 5
+> ata_host_add: ENTER
+> ata_port_start: prd alloc, virt c12e9000, dma 12e9000
+> ata3: PATA max UDMA/133 cmd 0xFB00 ctl 0xFB0A bmdma 0xF910 irq 5
+> ata_device_add: probe begin
+> ata_device_add: ata1: bus probe begin
+> ata_bus_reset: ENTER, host 1, port 0
+> ata_bus_softreset: ata1: bus reset via SRST
+> ata1: disabling port
+> ata_bus_reset: EXIT
+> ata_device_add: ata1: bus probe end
+> scsi0 : sata_via
+> ata_device_add: ata2: bus probe begin
+> ata_bus_reset: ENTER, host 2, port 1
+> ata_bus_softreset: ata2: bus reset via SRST
+> ata2: disabling port
+> ata_bus_reset: EXIT
+> ata_device_add: ata2: bus probe end
+> scsi1 : sata_via
+> ata_device_add: ata3: bus probe begin
+> ata_bus_reset: ENTER, host 3, port 2
+> ata_bus_softreset: ata3: bus reset via SRST
+> ata_dev_classify: found ATA device by sig
+> ata_bus_reset: EXIT
+> ata_dev_read_id: ENTER, host 3, dev 1
+> ata_dev_select: ENTER, ata3: device 1, wait 1
+> ata_dev_select: ENTER, ata3: device 1, wait 1
+> ata_exec_command_pio: ata3: cmd 0xEC
+> ata_pio_sector: data read
+> ata_dev_init_params: init dev params=20
+> ata_dev_select: ENTER, ata3: device 1, wait 1
+> ata_tf_load_pio: feat 0x0 nsect 0x30 lba 0x0 0x0 0x0
+> ata_tf_load_pio: device 0xBE
+> ata_exec_command_pio: ata3: cmd 0x91
+> ata_host_intr: ata3: protocol 1 (dev_stat 0x50)
+> ata_dev_init_params: EXIT, err_mask=3D0
+> ata_dev_select: ENTER, ata3: device 1, wait 1
+> ata_exec_command_pio: ata3: cmd 0xEC
+> ata_pio_sector: data read
+> ata_dev_configure: ENTER, host 3, dev 1
+> ata3: dev 1 cfg 49:0200 82:7000 83:4004 84:4000 85:7000 86:0004 87:40=
+00
+> 88:0000
+> ata_dump_id: 49=3D=3D0x0200  53=3D=3D0x0003  63=3D=3D0x0000  64=3D=3D=
+0x0003  75=3D=3D0x0000 =20
+> ata_dump_id: 80=3D=3D0x0000  81=3D=3D0x0000  82=3D=3D0x7000  83=3D=3D=
+0x4004  84=3D=3D0x4000 =20
+> ata_dump_id: 88=3D=3D0x0000  93=3D=3D0x0000
+> ata3: dev 1 ATA-0, max PIO4, 500400 sectors: LBA
+> ata_dev_configure: EXIT, drv_stat =3D 0x50
+> ata_dev_set_xfermode: set features - xfer mode
+> ata_dev_select: ENTER, ata3: device 1, wait 1
+> ata_tf_load_pio: feat 0x3 nsect 0xC lba 0x0 0x0 0x0
+> ata_tf_load_pio: device 0xB0
+> ata_exec_command_pio: ata3: cmd 0xEF
+> ata_host_intr: ata3: protocol 1 (dev_stat 0x51)
+> ata_dev_set_xfermode: EXIT, err_mask=3D1
+> ata3: failed to set xfermode (err_mask=3D0x1)
+> ata_device_add: ata3: bus probe end
+> scsi2 : sata_via
+> ata_device_add: host probe begin
+> ata_device_add: EXIT, returning 3
+>=20
+> What does "failed to set xfermode (err_mask=3D0x1)" means ?
+>=20
+> Is this a problem with the CompactFlash card or with the PATA support=
+ in
+> sata-via ?
+>=20
+> Thank you in advance,
+> Thomas
 
-Signed-off-by: David Wang <touch@sis.com >
----
-diff -up a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
---- a/drivers/scsi/ahci.c       2006-08-24 05:16:33.000000000 +0800
-+++ b/drivers/scsi/ahci.c       2006-08-31 16:36:03.000000000 +0800
-@@ -296,6 +296,12 @@
-          board_ahci }, /* ATI SB600 non-raid */
-        { PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-          board_ahci }, /* ATI SB600 raid */
-+       { PCI_VENDOR_ID_SI, 0x1184, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+         board_ahci }, /* SiS 966, 1184 RAID */
-+       { PCI_VENDOR_ID_SI, 0x1185, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+         board_ahci }, /* SiS 966, 1185 AHCI */
-+       { PCI_VENDOR_ID_SI, 0x0186, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+         board_ahci }, /* SiS 968, 186 AHCI 3Gbps */
-        { }     /* terminate list */
- };
+--=20
 
+
+Der GMX SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen!
+Ideal f=FCr Modem und ISDN: http://www.gmx.net/de/go/smartsurfer
