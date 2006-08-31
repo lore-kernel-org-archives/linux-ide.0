@@ -1,96 +1,68 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 5/20] libata: implement several LLD init helpers
-Date: Wed, 30 Aug 2006 16:16:56 -0500
-Message-ID: <44F60048.90900@us.ibm.com>
-References: <11559779712708-git-send-email-htejun@gmail.com> <44EB8111.4090901@us.ibm.com> <44F16B6B.7050207@gmail.com>
-Reply-To: brking@us.ibm.com
+From: "David Wang" <touch@sis.com>
+Subject: [PATCH] libata: support for SiS AHCI controller in SiS966/SiS968
+Date: Thu, 31 Aug 2006 17:56:36 +0800
+Message-ID: <OFD4641DBA.8DD06DEC-ON482571DB.00364E08@sis.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:47325 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932068AbWH3VRC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Aug 2006 17:17:02 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k7ULGxeB013066
-	for <linux-ide@vger.kernel.org>; Wed, 30 Aug 2006 17:16:59 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7ULGxvR141634
-	for <linux-ide@vger.kernel.org>; Wed, 30 Aug 2006 17:16:59 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7ULGwxE021568
-	for <linux-ide@vger.kernel.org>; Wed, 30 Aug 2006 17:16:58 -0400
-In-Reply-To: <44F16B6B.7050207@gmail.com>
+Received: from sism02.sis.com ([203.67.208.23]:8878 "EHLO sism02.sis.com")
+	by vger.kernel.org with ESMTP id S1751388AbWHaJx0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Aug 2006 05:53:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, mlord@pobox.com, albertcc@tw.ibm.com, uchang@tw.ibm.com, forrest.zhao@intel.com, linux-ide@vger.kernel.org
+To: "inux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Tejun Heo wrote:
-> Hello, Brian.
-> 
-> Brian King wrote:
->> Tejun Heo wrote:
->>
->>> +static void __ata_host_init_pinfo(struct ata_host *host,
->>> +				  const struct ata_port_info **pinfo,
->>> +				  int n_ports, int pi_is_ar)
->>> +{
->>> +	int i;
->>> +
->>> +	if (host->private_data == NULL)
->>> +		host->private_data = pinfo[0]->private_data;
->>> +	host->ops = pinfo[0]->port_ops;
->>> +
->>> +	for (i = 0; i < host->n_ports; i++) {
->>> +		struct ata_port *ap = host->ports[i];
->>> +		const struct ata_port_info *pi;
->>> +
->>> +		if (pi_is_ar)
->>> +			pi = pinfo[i];
->>> +		else
->>> +			pi = pinfo[0];
->>> +
->>
->>> +		ap->pio_mask = pi->pio_mask;
->>> +		ap->mwdma_mask = pi->mwdma_mask;
->>> +		ap->udma_mask = pi->udma_mask;
->>> +		ap->flags |= pi->flags;
->>> +		ap->ops = pi->port_ops;
->> Could this bit be moved into ata_port_init and possibly change the
->> parameter list of ata_port_init to something like:
->>
->> void ata_port_init(struct ata_port *ap, struct ata_host *host,
->> 		   const struct ata_port_info *pinfo, unsigned int port_no)
->>
->> Then we could get rid of the struct ata_probe_ent stuff completely.
-> 
-> Hmmm... ata_port_init() is still exported only to support ata_sas_* 
-> helpers.  Once the SAS helpers are converted to use new model, this 
-> function will be made static or merged into ata_host_alloc().  In the 
-> new init model, initialization is done by...
-> 
-> 1. allocate the host and associated ports with ata_host_alloc().  If 
-> port number cannot be determined at this point.  ports can be added 
-> later.  The returned ata_host has only the basic fields, which assume 
-> the same initial values regardless of the user, initialized.
-> 
-> 2. initialize ata_host and associated ports appropriately.  During this 
-> ata_host_add_ports() can be used to add ports if host has no ports yet.
-> 
-> 3. attach the initialized ata_host using ata_host_attach().
+Hi all,
+My name is David Wang, working for SiS now.
+This is my first try to post mail here.
 
-Are you suggesting SAS would follow this host initialization model as well?
-ata_host_attach currently does not work for SAS since it calls scsi_add_host
-for each ata port, but that is easily fixed. I think the broader question is
-whether or not SAS should be calling ata_host_attach to probe all "ports" on
-the SAS adapter. Since for SAS, the concept of a SATA "port" is really a
-virtual and very dynamic thing, I'm inclined to think SAS users calling
-ata_host_attach to scan all "ports" might not be the best approach.
+This patch, against 2.6.17.11, adds support for SiS AHCI controller.
+Device IDs, 0x1184 and 0x1185 are 1.5Gbps AHCI in SiS966 south bridge.
+Device ID 0x0186 is 3Gbps AHCI in next SiS968.
 
-Brian
+While I load the driver, dmesg gives:
+ahci 0000:00:05.0: version 1.2
+ACPI: PCI Interrupt 0000:00:05.0[A] -> Link [LNKB] -> GSI 11 (level, low) ->
+IR
+ahci 0000:00:05.0: AHCI 0001.0000 32 slots 2 ports 1.5 Gbps 0x3 impl RAID
+mode
+ahci 0000:00:05.0: flags: ncq ilck led clo pmp pio slum part
+ata3: SATA max UDMA/133 cmd 0xF8806900 ctl 0x0 bmdma 0x0 irq 11
+ata4: SATA max UDMA/133 cmd 0xF8806980 ctl 0x0 bmdma 0x0 irq 11
+ata3: SATA link up 1.5 Gbps (SStatus 113)
+ata3: dev 0 cfg 49:2f00 82:346b 83:7fe9 84:4773 85:3469 86:3c01 87:4763
+88:007f
+ata3: dev 0 ATA-7, max UDMA/133, 160836480 sectors: LBA48
+ata3: dev 0 configured for UDMA/133
+scsi2 : ahci
+ata4: SATA link down (SStatus 0)
+scsi3 : ahci
+  Vendor: ATA       Model: HDS728080PLA380   Rev: PF2O
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 160836480 512-byte hdwr sectors (82348 MB)
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+It seems running well with my several SATA devices.
+If you need more information about the hardware or request a motherboard for
+testing,
+Contact me or Hank lee (mlee08@sis.com).
+
+Signed-off-by: David Wang <touch@sis.com >
+---
+diff -up a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
+--- a/drivers/scsi/ahci.c       2006-08-24 05:16:33.000000000 +0800
++++ b/drivers/scsi/ahci.c       2006-08-31 16:36:03.000000000 +0800
+@@ -296,6 +296,12 @@
+          board_ahci }, /* ATI SB600 non-raid */
+        { PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+          board_ahci }, /* ATI SB600 raid */
++       { PCI_VENDOR_ID_SI, 0x1184, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++         board_ahci }, /* SiS 966, 1184 RAID */
++       { PCI_VENDOR_ID_SI, 0x1185, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++         board_ahci }, /* SiS 966, 1185 AHCI */
++       { PCI_VENDOR_ID_SI, 0x0186, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++         board_ahci }, /* SiS 968, 186 AHCI 3Gbps */
+        { }     /* terminate list */
+ };
+
