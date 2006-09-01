@@ -1,26 +1,29 @@
-From: "Wolstenholme, Daniel E" <daniel.e.wolstenholme@intel.com>
-Subject: RE: [PATCH] Add MSI support to sata_vsc driver
-Date: Fri, 1 Sep 2006 13:11:12 -0700
-Message-ID: <DE99218BE995814CA3B82E6AD9939C3C114CDD@azsmsx415.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: "Faye Fitzpatrick" <Curthvo@yahoo.com>
+Subject: Best Losing Weight Anatrim
+Date: Sat, 02 Sep 2006 01:26:22 +0400
+Message-ID: <151.32e558d5.2a9BRO44__15337.8737894402$1157142517$gmane$org@sol.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:48275 "EHLO
-	azsmga101-1.ch.intel.com") by vger.kernel.org with ESMTP
-	id S1751873AbWIAULN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Sep 2006 16:11:13 -0400
-Content-class: urn:content-classes:message
+Received: from [83.222.181.202] ([83.222.181.202]:10760 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751171AbWIAU2V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Sep 2006 16:28:21 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jeremy Higdon <jeremy@sgi.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-ppp@vger.kernel.org, linux-x25@vger.kernel.org, linux-hams@vger.kernel.org, autoanswer@vger.kernel.org, linux-assembly@vger.kernel.org
 
-Hi,
 
-I'm just wondering if my latest patch was seen, and if there were any
-more problems with it that I should address.
+Latest product of "Anatrim" Guuaranttes:
 
-Thanks!
-Dan
+- results in 2-3 weeks
+- burn fat naturally, and never gain it back
+- much effective than running 10 miles per week
+- no hunger and stay full although eat less or nothing
+- 100% safe (no drugs and chemicals)
+- used by millions of people worldwide...
+
+Act Now! 
+http://www.serdocs.com/n/?159
+
+
+
+-- 
+VGER BF report: S 1
