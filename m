@@ -1,295 +1,79 @@
-From: "David Wang" <touch@sis.com>
-Subject: [PATCH] sata_sis: support for SiS 966 chipset
-Date: Fri, 1 Sep 2006 17:43:35 +0800
-Message-ID: <OF4D22CCD9.03BE95A7-ON482571DC.00351C4C@sis.com.tw>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Bad write performance with libata-tj-stable-2.6.17.4-20060710,
+ pcmcia based sata_sil24, PMP, and NCQ drive
+Date: Fri, 01 Sep 2006 22:32:12 +0900
+Message-ID: <44F8365C.2020609@gmail.com>
+References: <20060828230132.GB20189@geeks.org> <44F3A8FD.6090108@gmail.com> <20060829045816.GA21746@geeks.org> <44F440BE.80000@gmail.com> <20060829164424.GA1603@geeks.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sism01.sis.com ([203.67.208.22]:5088 "EHLO sism01.sis.com")
-	by vger.kernel.org with ESMTP id S1751346AbWIAJkQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Sep 2006 05:40:16 -0400
+Received: from wx-out-0506.google.com ([66.249.82.233]:25056 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751360AbWIAPKd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Sep 2006 11:10:33 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so1028677wxc
+        for <linux-ide@vger.kernel.org>; Fri, 01 Sep 2006 08:10:33 -0700 (PDT)
+In-Reply-To: <20060829164424.GA1603@geeks.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: uwe.koziolek@gmx.net
-Cc: "inux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Derek Taubert <taubert@geeks.org>
+Cc: linux-ide@vger.kernel.org
 
-Hi Uwe,
+Derek Taubert wrote:
+> On Tue, Aug 29, 2006 at 10:27:26PM +0900, Tejun Heo wrote:
+>>>>> 2) hdparm -C for all 4 drives always shows "drive state is:  standby"
+>>>>>  even when I'm certain that the drives are active.
+>>>> hdparm -C says the same thing for my drive.  I think it's safe to 
+>>>> ignore.  Hmmm... it needs to be tracked down.  Maybe some problem in 
+>>>> HDIO ioctl implementation in libata.
+>>> It's a "nice to have" for using smartd.  ie: don't spin the drives up to
+>>> poll the failure attributes, but they should be checked if the drive's
+>>> already active.
+>> I don't really understand what you mean.  Can you elaborate?
+> 
+> Sure.  See the "-n standby" option here:
+> 
+> http://smartmontools.sourceforge.net/man/smartd.conf.5.html
+> 
+> If the driver always reports "standby", then smartd effectively won't
+> monitor the device if "-n standby" is configured.
+> 
+> Now I can certainly eliminate the -n option from smartd.conf, but
+> then smartd will cause the drive(s) to spin up when it polls (see the
+> -p, -u, -t options).
 
-I modify the sata_sis code to support SiS 966 chipset.
-The SATA IDs could be 0x1180, 0x1182 and 0x1183 in SiS 966 chipset.
+Ah.. I see.  I'll try to track down that ioctl problem.
 
-Basically, the hardware behavior is same as previous SiS SATA controller.
-Only the port mapping is a little different. 
+>>>>> I'd really like some assistance debugging the write performance issue.
+>>>>> The "hdparm -C" issue would be gravy...
+>>>> Please track down the reader.
+>>> Before running dd (fuser -v /dev/sda1 shows nothing):
+>> [--snip--]
+>>
+>> Can you try 'dd if=/dev/zero of=/dev/sdX bs=4M count=1'?
+> 
+> Increasing the block size eliminates the reads (presumably because the
+> block driver doesn't have to fetch lines to read/modify/write),
 
-1. get_scr_cfg_addr( ) routine: 
-point out where scr register address is, according to the hardware IDs.
+That's actually page cache trying to fill the rest of the page.
 
-2. sis_scr_cfg_read( ) and sis_scr_cfg_write( ) function: 
-Max two devices (act as mater/salve)can be attached on a channel.
-Per scr_read function is ORed with two scr registers.
-Also per scr_write function need to write two registers.
+ > but the write throughput is still very slow:
+> # dd if=/dev/zero of=/dev/sda1 bs=4M count=512
+> 
+> avg-cpu:  %user   %nice    %sys %iowait   %idle
+>            0.90    0.00    1.30   97.80    0.00
+> 
+> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+> sda              15.00         0.00      1920.00          0      19200
 
-3. At init_one( ) function:
-When the sata controller is set as ide (for class code 0101)with legacy
-mode,
-ignore it. I am not sure if this is correct. For unrecognized ide
-controller,
-ide-generic driver will get chance to be loaded. But some boards are
-designed
-with two 0x1180 devices.
+Hmm... this really is weird.  FYI, you're the first to report such 
+problem.  As Jeff said, turning off write-back caching can have adverse 
+effect on write performance, but, then again, you previously reported 
+that the command queue is full.  Please update us on the write-back stuff.
 
+Thanks.
 
-If you need any resouces( Specification or mother board ), let me know.
-We can prepare it for you. 
-
-David
-
-Signed-off-by: David Wang <touch@sis.com >
----
-diff -up a/drivers/scsi/sata_sis.c b/drivers/scsi/sata_sis.c
---- a/drivers/scsi/sata_sis.c	2006-08-24 05:16:33.000000000 +0800
-+++ b/drivers/scsi/sata_sis.c	2006-09-01 12:03:16.000000000 +0800
-@@ -71,6 +71,9 @@ static const struct pci_device_id sis_pc
- 	{ PCI_VENDOR_ID_SI, 0x180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- 	{ PCI_VENDOR_ID_SI, 0x181, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- 	{ PCI_VENDOR_ID_SI, 0x182, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
-+	{ PCI_VENDOR_ID_SI, 0x1180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
-
-+	{ PCI_VENDOR_ID_SI, 0x1182, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
-+	{ PCI_VENDOR_ID_SI, 0x1183, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
-
- 	{ }	/* terminate list */
- };
- 
-@@ -126,7 +129,7 @@ static const struct ata_port_operations 
- static struct ata_port_info sis_port_info = {
- 	.sht		= &sis_sht,
- 	.host_flags	= ATA_FLAG_SATA | ATA_FLAG_SATA_RESET |
--			  ATA_FLAG_NO_LEGACY,
-+			  ATA_FLAG_NO_LEGACY | ATA_FLAG_SLAVE_POSS,
- 	.pio_mask	= 0x1f,
- 	.mwdma_mask	= 0x7,
- 	.udma_mask	= 0x7f,
-@@ -140,15 +143,37 @@ MODULE_LICENSE("GPL");
- MODULE_DEVICE_TABLE(pci, sis_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
- 
--static unsigned int get_scr_cfg_addr(unsigned int port_no, unsigned int
-sc_reg, int device)
-+static unsigned int get_scr_cfg_addr(unsigned int port_no, unsigned int
-sc_reg, struct pci_dev *pdev)
- {
- 	unsigned int addr = SIS_SCR_BASE + (4 * sc_reg);
-+	u32 val = 0;
- 
- 	if (port_no)  {
--		if (device == 0x182)
--			addr += SIS182_SATA1_OFS;
--		else
--			addr += SIS180_SATA1_OFS;
-+		switch (pdev->device) {
-+			case 0x0180:
-+			case 0x0181:
-+				addr += SIS180_SATA1_OFS;
-+				break;
-+			case 0x0182:
-+			case 0x1182:
-+			case 0x1183:
-+				addr += SIS182_SATA1_OFS;
-+				break;
-+			case 0x1180:
-+				/*
-+				 *  If hw_id == 0x1180
-+				 *  read PCI offset 64h, bit 28 to decide
-what the chip is.
-+				 *  This is the only way to tell SiS966 from
-SiS966L.
-+				 *  1: 966L port0 = c0h, port1 = e0h
-+				 *  0: 966  port0 = c0h, port1 = d0h
-+				 */
-+				pci_read_config_dword(pdev, 0x64, &val);
-+				if (val & (1 << 28))
-+					addr += SIS182_SATA1_OFS; /* SB-966L
-*/
-+				else
-+					addr += SIS180_SATA1_OFS; /* 966 */
-+				break;					
-+		}
- 	}
- 
- 	return addr;
-@@ -157,7 +182,7 @@ static unsigned int get_scr_cfg_addr(uns
- static u32 sis_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
--	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, sc_reg,
-pdev->device);
-+	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, sc_reg, pdev);
- 	u32 val, val2 = 0;
- 	u8 pmr;
- 
-@@ -168,16 +193,19 @@ static u32 sis_scr_cfg_read (struct ata_
- 
- 	pci_read_config_dword(pdev, cfg_addr, &val);
- 
--	if ((pdev->device == 0x182) || (pmr & SIS_PMR_COMBINED))
-+	if ((pdev->device == 0x182) || (pdev->device == 0x1182) ||
-(pdev->device == 0x1183) ||(pmr & SIS_PMR_COMBINED))
- 		pci_read_config_dword(pdev, cfg_addr+0x10, &val2);
--
--	return val|val2;
-+		
-+	/* Due to the port status is ORed with two SATA ports.
-+	   The unused SATA port might be powered down by BIOS.
-+	   We need to mask 0x3 to report the correct value */
-+	return (val|val2) & 3U;
- }
- 
- static void sis_scr_cfg_write (struct ata_port *ap, unsigned int scr, u32
-val)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host_set->dev);
--	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, scr,
-pdev->device);
-+	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, scr, pdev);
- 	u8 pmr;
- 
- 	if (scr == SCR_ERROR) /* doesn't exist in PCI cfg space */
-@@ -187,7 +215,7 @@ static void sis_scr_cfg_write (struct at
- 
- 	pci_write_config_dword(pdev, cfg_addr, val);
- 
--	if ((pdev->device == 0x182) || (pmr & SIS_PMR_COMBINED))
-+	if ((pdev->device == 0x182) || (pdev->device == 0x1182) ||
-(pdev->device == 0x1183) ||(pmr & SIS_PMR_COMBINED))	
- 		pci_write_config_dword(pdev, cfg_addr+0x10, val);
- }
- 
-@@ -207,10 +235,13 @@ static u32 sis_scr_read (struct ata_port
- 
- 	val = inl(ap->ioaddr.scr_addr + (sc_reg * 4));
- 
--	if ((pdev->device == 0x182) || (pmr & SIS_PMR_COMBINED))
-+	if ((pdev->device == 0x182) || (pdev->device == 0x1182) ||
-(pdev->device == 0x1183) ||(pmr & SIS_PMR_COMBINED))
- 		val2 = inl(ap->ioaddr.scr_addr + (sc_reg * 4) + 0x10);
--
--	return val | val2;
-+		
-+	/* Due to the port status is ORed with two SATA ports.
-+	   The unused SATA port might be powered down by BIOS.
-+	   We need to mask 0x3 to report the correct value */
-+	return (val|val2) & 3U;
- }
- 
- static void sis_scr_write (struct ata_port *ap, unsigned int sc_reg, u32
-val)
-@@ -227,7 +258,7 @@ static void sis_scr_write (struct ata_po
- 		sis_scr_cfg_write(ap, sc_reg, val);
- 	else {
- 		outl(val, ap->ioaddr.scr_addr + (sc_reg * 4));
--		if ((pdev->device == 0x182) || (pmr & SIS_PMR_COMBINED))
-+		if ((pdev->device == 0x182) || (pdev->device == 0x1182) ||
-(pdev->device == 0x1183) ||(pmr & SIS_PMR_COMBINED))
- 			outl(val, ap->ioaddr.scr_addr + (sc_reg * 4)+0x10);
- 	}
- }
-@@ -241,11 +272,29 @@ static int sis_init_one (struct pci_dev 
- 	struct ata_port_info *ppi;
- 	int pci_dev_busy = 0;
- 	u8 pmr;
--	u8 port2_start;
-+	u8 port2_start = 0;
-+	u8 progintf;
-+	u16 classCode;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_INFO, &pdev->dev, "version " DRV_VERSION
-"\n");
- 
-+	/* check if the device's programming interface 09h,
-+	   is compatibility mode
-+	*/
-+	pci_read_config_word(pdev, 0x0A, &classCode);
-+	if (classCode == 0x0101) {
-+		pci_read_config_byte(pdev, 0x09, &progintf);
-+		if ((progintf & 0x5) == 0) {
-+			dev_printk(KERN_INFO, &pdev->dev,
-+				"SiS-%x IDE device is compatibiltiy mode.
-Ignore it\n", 
-+				ent->device);
-+			dev_printk(KERN_INFO, &pdev->dev,
-+				"Try to change BIOS setting with native
-mode..\n");
-+			rc = -1;
-+			return rc;
-+		}
-+	}
- 	rc = pci_enable_device(pdev);
- 	if (rc)
- 		return rc;
-@@ -275,6 +324,10 @@ static int sis_init_one (struct pci_dev 
- 	if ((genctl & GENCTL_IOMAPPED_SCR) == 0)
- 		probe_ent->host_flags |= SIS_FLAG_CFGSCR;
- 
-+	/* 0x1180 does not provide SCRs mapping. Set the CFGSCR Flag */
-
-+	if (ent->device == 0x1180)	
-+		probe_ent->host_flags |= SIS_FLAG_CFGSCR;
-+		
- 	/* if hardware thinks SCRs are in IO space, but there are
- 	 * no IO resources assigned, change to PCI cfg space.
- 	 */
-@@ -287,21 +340,31 @@ static int sis_init_one (struct pci_dev 
- 	}
- 
- 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
--	if (ent->device != 0x182) {
--		if ((pmr & SIS_PMR_COMBINED) == 0) {
--			dev_printk(KERN_INFO, &pdev->dev,
-+	switch (ent->device) {
-+		case 0x0180:
-+		case 0x0181:
-+			if ((pmr & SIS_PMR_COMBINED) == 0) {
-+				dev_printk(KERN_INFO, &pdev->dev,
- 				   "Detected SiS 180/181 chipset in SATA
-mode\n");
--			port2_start = 64;
--		}
--		else {
--			dev_printk(KERN_INFO, &pdev->dev,
-+				port2_start = 64;
-+			}
-+			else {
-+				dev_printk(KERN_INFO, &pdev->dev,
- 				   "Detected SiS 180/181 chipset in combined
-mode\n");
--			port2_start=0;
--		}
--	}
--	else {
--		dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 182
-chipset\n");
--		port2_start = 0x20;
-+				port2_start = 0;
-+ 		  	}		
-+			break;
-+			
-+		case 0x0182:			
-+		case 0x1182:
-+		case 0x1183:
-+			dev_printk(KERN_INFO, &pdev->dev, "Detected SiS
-182/1182/1183 SATA controller\n");
-+			port2_start = 0x20;		
-+			break;
-+			
-+		case 0x1180:
-+			dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 1180
-SATA controller\n");
-+			break;
- 	}
- 
- 	if (!(probe_ent->host_flags & SIS_FLAG_CFGSCR)) {
+-- 
+tejun
 
