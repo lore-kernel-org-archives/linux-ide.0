@@ -1,32 +1,34 @@
-From: Jeremy Fitzhardinge <jeremy@goop.org>
-Subject: Re: 2.6.18-rc5-mm1
-Date: Sat, 02 Sep 2006 02:56:50 -0700
-Message-ID: <44F95562.2060909@goop.org>
-References: <20060901015818.42767813.akpm@osdl.org> <1157158847.20509.10.camel@mhcln03> <20060901183028.1c6da4df.akpm@osdl.org> <44F93EB3.8050500@goop.org> <44F942B9.6050102@goop.org> <20060902084440.GA13361@suse.de> <44F9452F.8090306@goop.org> <20060902085254.GA14123@suse.de> <44F950A3.1000206@goop.org> <44F95110.6010500@garzik.org>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Which kernel?
+Date: Sun, 03 Sep 2006 11:05:57 +1200
+Message-ID: <44FA0E55.8070504@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw.goop.org ([64.81.55.164]:12459 "EHLO mail.goop.org")
-	by vger.kernel.org with ESMTP id S1750966AbWIBJ4u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Sep 2006 05:56:50 -0400
-In-Reply-To: <44F95110.6010500@garzik.org>
+Received: from sauce.co.nz ([210.48.49.72]:19395 "EHLO smtp.sauce.co.nz")
+	by vger.kernel.org with ESMTP id S1751674AbWIBWzt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Sep 2006 18:55:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Greg KH <gregkh@suse.de>, Andrew Morton <akpm@osdl.org>, Matthias Hentges <oe@hentges.net>, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>, linux-ide@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
+To: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Did you re-enable CONFIG_PCI_MSI, after reverting the patches?
+I am about to start testing involving 6 SATA drives on the NVIDIA AM2 
+570 controller, along with linux SW RAID.
 
-Hm, still doesn't link with The GregKH Nine removed but CONFIG_MSI:
+After some googling, I am wondering if someone can suggest the best 
+kernel/patch combination to use:
 
-drivers/built-in.o: In function `pci_enable_msix':
-drivers/pci/msi.c:956: undefined reference to `pci_msi_supported'
+2.6.17.11, 2.6.18-rc5, 2.6.18-rc5-mm1?
 
-I'll just do without for now.
+Should Tejun's patches be added?
 
-    J
+Thanks for any assistance.
+
+Regards,
+
+Richard
+
 
 -- 
-VGER BF report: H 0
+VGER BF report: U 0.490949
