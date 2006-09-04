@@ -1,61 +1,37 @@
-From: Moritz Rempel <m.rempel@bee.de>
-Subject: sata_promise PDC20575 I/O error
-Date: Tue, 5 Sep 2006 15:13:39 +0200
-Message-ID: <20060905151339.62e5c9be.m.rempel@bee.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide: Fix crash on repeated reset
+Date: Mon, 04 Sep 2006 23:04:37 +0100
+Message-ID: <1157407477.9018.0.camel@localhost.localdomain>
+References: <1157378041.30801.78.camel@localhost.localdomain>
+	 <20060904193807.GA6118@rhlx01.fht-esslingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from webmail.bee.de ([213.221.112.22]:61420 "HELO webmail.bee.de")
-	by vger.kernel.org with SMTP id S932189AbWIENNZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2006 09:13:25 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:14245 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964845AbWIENSv
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Sep 2006 09:18:51 -0400
+In-Reply-To: <20060904193807.GA6118@rhlx01.fht-esslingen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: m.rempel@bee.de
+To: Andreas Mohr <andi@rhlx01.fht-esslingen.de>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi!
+Ar Llu, 2006-09-04 am 21:38 +0200, ysgrifennodd Andreas Mohr:
+> Hi,
+> 
+> On Mon, Sep 04, 2006 at 02:54:01PM +0100, Alan Cox wrote:
+> >  	unsigned int sleeping	: 1;
+> >  		/* BOOL: polling active & poll_timeout field valid */
+> >  	unsigned int polling	: 1;
+> > +	 	/* BOOL: in a polling reset situation. Must not trigger another reset yet */
+> > +	unsigned	resetting  : 1;
+> > +
+> 
+> Inconsistent variable type declarations/formatting?
 
-I'm getting the following error on a system with a Promise SATAII150
-TX2plus Controller:
+Harmless but true. Updated in my tree.
 
-Sep  4 15:15:26 server kernel: ata1: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-Sep  4 15:15:26 server kernel: ata1: status=0xff { Busy }
-Sep  4 15:15:56 server kernel: ata1: command timeout
-Sep  4 15:15:56 server kernel: ata1: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-Sep  4 15:15:56 server kernel: ata1: status=0xff { Busy }
-Sep  4 15:15:56 server kernel: sd 1:0:0:0: SCSI error: return code = 0x8000002
-Sep  4 15:15:56 server kernel: sdb: Current: sense key: Aborted Command
-Sep  4 15:15:56 server kernel:     Additional sense: Scsi parity error
-Sep  4 15:15:56 server kernel: Info fld=0xfffffff
-Sep  4 15:15:56 server kernel: end_request: I/O error, dev sdb, sector 839
-Sep  4 15:15:56 server kernel: Buffer I/O error on device sdb1, logical block 388
-Sep  4 15:15:56 server kernel: lost page write due to I/O error on sdb1
-Sep  4 15:16:26 server kernel: ata1: command timeout
+Alan
 
-I had no problem formatting the drive, but the error showes up short after
-issueing mkfs.ext3 on the one partition I created over the whole disk. mkfs
-then hangs and those messages repeat with increasing sector and block number.
-
-Attached to the controller is a external 500G Seagate HD (ST3500641AS)
-connected via eSATA. As I've tested with different HDs (of the same type),
-I think it's not a defective drive.
-
-Kernels I've tested so far: 2.6.16.19 and 2.6.17.11
-
-Any ideas what is goping wrong?
-
-If you need more information or want me to do any tests I'll do my best to
-serve your requests.
-
-thanks in advance,
-	Moritz
-
--- 
------------------------------------------------------------------------
-    *  *  *  *   bee Baastrup EDV-Entwicklung GmbH        Moritz Rempel
-||  *  *  *  *   Schwanenwall 40                        m.rempel@bee.de
-||\\ //\\ //\\   44135 Dortmund / Germany             http://www.bee.de
-||// \\-' \\-'   fon: +49 (0)0231 58719-0         Softwareentwicklung &
-    *  *  *  *   fax: +49 (0)0231 58719-50        System-Administration
------------------------------------------------------------------------
