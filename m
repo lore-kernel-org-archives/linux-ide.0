@@ -1,33 +1,32 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: PATA drivers queued for 2.6.19
-Date: Mon, 4 Sep 2006 15:35:41 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0609041534210.17279@yvahk01.tjqt.qr>
-References: <44FC0779.9030405@garzik.org> <po4of2pnhpc0325kqj2hd37b7eh3epcdsm@4ax.com>
- <Pine.LNX.4.61.0609041406140.21005@yvahk01.tjqt.qr> <20060904123546.GB23978@irc.pl>
+From: Andreas Mohr <andi@rhlx01.fht-esslingen.de>
+Subject: Re: [PATCH] ide: Fix crash on repeated reset
+Date: Mon, 4 Sep 2006 21:38:07 +0200
+Message-ID: <20060904193807.GA6118@rhlx01.fht-esslingen.de>
+References: <1157378041.30801.78.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailer.gwdg.de ([134.76.10.24]:57056 "EHLO emailer.gwdg.de")
-	by vger.kernel.org with ESMTP id S1751382AbWIDNmz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Sep 2006 09:42:55 -0400
-In-Reply-To: <20060904123546.GB23978@irc.pl>
+Received: from rhlx01.fht-esslingen.de ([129.143.116.10]:17640 "EHLO
+	rhlx01.fht-esslingen.de") by vger.kernel.org with ESMTP
+	id S964970AbWIDTiI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Sep 2006 15:38:08 -0400
+Content-Disposition: inline
+In-Reply-To: <1157378041.30801.78.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomasz Torcz <zdzichu@irc.pl>
-Cc: Grant Coady <gcoady.lk@gmail.com>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hi,
 
->> Got udev?
->> 
->> /dev/disk/by-id/ata-ST3802110A_5LR13RN7-partX could be your friend.
->
->  Almost. It would alternate between "ata-" and "scsi-".
+On Mon, Sep 04, 2006 at 02:54:01PM +0100, Alan Cox wrote:
+>  	unsigned int sleeping	: 1;
+>  		/* BOOL: polling active & poll_timeout field valid */
+>  	unsigned int polling	: 1;
+> +	 	/* BOOL: in a polling reset situation. Must not trigger another reset yet */
+> +	unsigned	resetting  : 1;
+> +
 
-Well then label your partitions and use /dev/disk/by-label/ (harhar...)
+Inconsistent variable type declarations/formatting?
 
-You can also try by-uuid (FS UUID) (a214ecf5-6e06-47a8-bc6d-9cd9d6f10cd6) 
-or by-path (pci-0000:00:1f.1-ide-0:0-part1).
-
-
-Jan Engelhardt
--- 
+Andreas Mohr
