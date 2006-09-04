@@ -1,82 +1,31 @@
-From: Tomasz Torcz <zdzichu@irc.pl>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: PATA drivers queued for 2.6.19
-Date: Mon, 4 Sep 2006 14:35:46 +0200
-Message-ID: <20060904123546.GB23978@irc.pl>
-References: <44FC0779.9030405@garzik.org> <po4of2pnhpc0325kqj2hd37b7eh3epcdsm@4ax.com> <Pine.LNX.4.61.0609041406140.21005@yvahk01.tjqt.qr>
+Date: Mon, 04 Sep 2006 14:27:09 +0100
+Message-ID: <1157376429.30801.57.camel@localhost.localdomain>
+References: <44FC0779.9030405@garzik.org>
+	 <po4of2pnhpc0325kqj2hd37b7eh3epcdsm@4ax.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="E39vaYmALEf/7YXx"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nsm.pl ([195.34.211.229]:27908 "EHLO nsm.pl")
-	by vger.kernel.org with ESMTP id S964816AbWIDMfw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Sep 2006 08:35:52 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by nsm.pl (Postfix) with ESMTP id B5D432CAB37
-	for <linux-ide@vger.kernel.org>; Mon,  4 Sep 2006 14:35:41 +0200 (CEST)
-Received: from nsm.pl ([195.34.211.229])
- by localhost (nsm.pl [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
- id 02088-03 for <linux-ide@vger.kernel.org>;
- Mon,  4 Sep 2006 14:35:41 +0200 (CEST)
-Received: from matthew.ogrody.nsm.pl (matthew.ogrody.nsm.pl [192.168.173.98])
-	by nsm.pl (Postfix) with SMTP id 9D1322CAB36
-	for <linux-ide@vger.kernel.org>; Mon,  4 Sep 2006 14:35:40 +0200 (CEST)
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0609041406140.21005@yvahk01.tjqt.qr>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37854 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964901AbWIDNFB
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Sep 2006 09:05:01 -0400
+In-Reply-To: <po4of2pnhpc0325kqj2hd37b7eh3epcdsm@4ax.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Grant Coady <gcoady.lk@gmail.com>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: Grant Coady <gcoady.lk@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
+Ar Llu, 2006-09-04 am 22:02 +1000, ysgrifennodd Grant Coady:
+> I can't see an easy way to arrange multi-boot with different /etc/fstab 
+> depending if I'm trying /dev/hdaX or /dev/sdaX.  Parallel '/' partitions?
 
---E39vaYmALEf/7YXx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Mount by label on modern distributions. You can also generally boot far
+enough to just test by booting a libata kernel with
+root=/dev/sdawhatever init=/bin/sh
 
-On Mon, Sep 04, 2006 at 02:07:29PM +0200, Jan Engelhardt wrote:
-> >>I just pulled the "pata-drivers" branch of libata-dev.git into the=20
-> >>"upstream" branch, which means that Alan's libata PATA driver collectio=
-n=20
-> >>is now queued for 2.6.19.
-> >>
-> >>Testing-wise, these PATA drivers have been Andrew Morton's -mm tree for=
-=20
-> >>many months.  Community-wise, no one posted objections to the PATA=20
-> >>driver merge plan, when Alan posted it on LKML and linux-ide.
-> >
-> >Too friggin' hard to test Alan's stuff for older IDE here, therefore=20
-> >ignored so far :(   I have some old hardware that Alan is addressing,=20
-> >even an old IBM 260MB PCMCIA HDD.
-> >
-> >I can't see an easy way to arrange multi-boot with different /etc/fstab=
-=20
-> >depending if I'm trying /dev/hdaX or /dev/sdaX.  Parallel '/' partitions?
->=20
-> Got udev?
->=20
-> /dev/disk/by-id/ata-ST3802110A_5LR13RN7-partX could be your friend.
+Thats enough to get a test shell and poke around and check the boot
+messages
 
-  Almost. It would alternate between "ata-" and "scsi-".
-
---=20
-Tomasz Torcz                Only gods can safely risk perfection,
-zdzichu@irc.-nie.spam-.pl     it's a dangerous thing for a man.  -- Alia
-
-
---E39vaYmALEf/7YXx
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-Comment: gpg --search-keys Tomasz Torcz
-
-iD8DBQFE/B2i10UJr+75NrkRAmQeAJ459ZMUpXKgL8V+q3wgUhGhVZh7IgCfTSpw
-MLouCQpsYse7zK3VP07cwkU=
-=xicF
------END PGP SIGNATURE-----
-
---E39vaYmALEf/7YXx--
-
--- 
-VGER BF report: H 0.00322981
