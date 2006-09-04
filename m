@@ -1,59 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: PATA drivers queued for 2.6.19
-Date: Mon, 04 Sep 2006 07:01:13 -0400
-Message-ID: <44FC0779.9030405@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATA drivers queued for 2.6.19
+Date: Mon, 04 Sep 2006 13:02:43 +0100
+Message-ID: <1157371363.30801.31.camel@localhost.localdomain>
+References: <44FC0779.9030405@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:2944 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751395AbWIDLBP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Sep 2006 07:01:15 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964842AbWIDLkV@vger.kernel.org>
+In-Reply-To: <44FC0779.9030405@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
+Ar Llu, 2006-09-04 am 07:01 -0400, ysgrifennodd Jeff Garzik:
+> The following must be in all caps, though:
+> 
+> drivers/ide IS STILL THE PATA DRIVER SET THAT USERS AND DISTROS SHOULD 
+> CHOOSE.
 
-I just pulled the "pata-drivers" branch of libata-dev.git into the 
-"upstream" branch, which means that Alan's libata PATA driver collection 
-is now queued for 2.6.19.
+Except optionally for the following for chips not handled by or broken
+totally in drivers/ide:
 
-Testing-wise, these PATA drivers have been Andrew Morton's -mm tree for 
-many months.  Community-wise, no one posted objections to the PATA 
-driver merge plan, when Alan posted it on LKML and linux-ide.
+	pata_mpiix - some early pentium era laptops
+	pata_oldpiix - original "PIIX" chipset
+	pata_radisys - embedded chipset
 
-The following must be in all caps, though:
+The other apparently "libata only" chips are pata_jmicron and
+pata_optidma. There are patches to handle these as "generic" PCI IDE in
+the base 2.6.18 tree already so only features will be lost (eg mode
+switching). As Jeff implies distributions should be using drivers/ide
+for the Jmicron PATA and the Opti DMA PATA for now.
 
-drivers/ide IS STILL THE PATA DRIVER SET THAT USERS AND DISTROS SHOULD 
-CHOOSE.
+> * /dev/sdX supports fewer partitions than /dev/hdX (16 versus 64, IIRC)
+> 
+> * /dev/sdX does not support all the HDIO_xxx ioctls that /dev/hdX does. 
+>   In practice, the ioctls we ignored are ones that very few people care 
+> about.
 
-At this time, drivers/ide should not be added to 
-Documentation/feature-removal-schedule.txt.  The libata PATA driver set 
-should be considered experimental still, and there remains a few 
-user-visible differences between the two trees:
+Add "/dev/sr*" does not support partitions. (That needs fixing anyway)
+    
+> * ARM, PPC and other non-x86 platform drivers are severely 
+> under-represented.
 
-* Host-protected area (HPA) not ignored in libata, which means disk 
-sizes differ between drivers/ide (whole disk) and libata (whole disk 
-minus HPA).
+libata needs changes for this too. I have some stuff saved from the
+older discussions to look at.
 
-* The obvious change between /dev/hdX to /dev/sdX
+> As an aside, I would love to see paride updated to use libata, but we 
+> can probably count the number of paride users on one hand these days...
 
-* /dev/sdX supports fewer partitions than /dev/hdX (16 versus 64, IIRC)
-
-* /dev/sdX does not support all the HDIO_xxx ioctls that /dev/hdX does. 
-  In practice, the ioctls we ignored are ones that very few people care 
-about.
-
-* ARM, PPC and other non-x86 platform drivers are severely 
-under-represented.
-
-As an aside, I would love to see paride updated to use libata, but we 
-can probably count the number of paride users on one hand these days...
-
-	Jeff
-
+and thats without using fingers or thumbs.
 
 
 -- 
-VGER BF report: U 0.499983
+VGER BF report: H 0.235691
