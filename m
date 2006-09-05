@@ -1,35 +1,26 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: faulty disk testing
-Date: Tue, 05 Sep 2006 10:15:30 -0400
-Message-ID: <44FD8682.1070305@pobox.com>
-References: <44FCD328.3020800@emc.com> <44FD662A.6060404@gmail.com> <44FD803B.3040000@pobox.com> <44FD84E8.8000705@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATA drivers queued for 2.6.19
+Date: Tue, 05 Sep 2006 15:39:36 +0100
+Message-ID: <1157467176.9018.48.camel@localhost.localdomain>
+References: <44FC0779.9030405@garzik.org>
+	 <po4of2pnhpc0325kqj2hd37b7eh3epcdsm@4ax.com>
+	 <Pine.LNX.4.61.0609041406140.21005@yvahk01.tjqt.qr>
+	 <44FD7B1E.7020102@aitel.hist.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from proof.pobox.com ([207.106.133.28]:1738 "EHLO proof.pobox.com")
-	by vger.kernel.org with ESMTP id S965069AbWIEOPh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2006 10:15:37 -0400
-In-Reply-To: <44FD84E8.8000705@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965077AbWIEOSj@vger.kernel.org>
+In-Reply-To: <44FD7B1E.7020102@aitel.hist.no>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Helge Hafting <helge.hafting@aitel.hist.no>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Grant Coady <gcoady.lk@gmail.com>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-ata_port_wait_eh
+Ar Maw, 2006-09-05 am 15:26 +0200, ysgrifennodd Helge Hafting:
+> between sda/hda unless they also use an initrd.  The kernel
+> itself does not seem to support partition by label. :-(
 
-Tejun Heo wrote:
-> ..
-> For Ric's case, I'm waiting for more info.  If EH is looping forever 
-> without reporting to upper layer, it definitely needs fixing, but I 
-> don't think that's the case.
+This is correct and one reason vendor kernels generally use an initrd.
+The kernel does however support "root=/dev/sda1"
 
-What happens with the loop in ata_port_wait_eh() for a drive
-which never succeeds in the reset/reinit phase?
-
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
-
+Alan
