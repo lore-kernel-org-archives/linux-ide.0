@@ -1,99 +1,61 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: faulty disk testing
-Date: Tue, 05 Sep 2006 08:46:51 -0400
-Message-ID: <44FD71BB.4040606@emc.com>
-References: <44FCD328.3020800@emc.com> <44FD662A.6060404@gmail.com>
-Reply-To: ric@emc.com
+From: Moritz Rempel <m.rempel@bee.de>
+Subject: sata_promise PDC20575 I/O error
+Date: Tue, 5 Sep 2006 15:13:39 +0200
+Message-ID: <20060905151339.62e5c9be.m.rempel@bee.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:61789 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S964795AbWIEMs2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Sep 2006 08:48:28 -0400
-In-Reply-To: <44FD662A.6060404@gmail.com>
+Received: from webmail.bee.de ([213.221.112.22]:61420 "HELO webmail.bee.de")
+	by vger.kernel.org with SMTP id S932189AbWIENNZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2006 09:13:25 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linux-ide <linux-ide@vger.kernel.org>, Mark Lord <mlord@pobox.com>, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
+Cc: m.rempel@bee.de
 
-Tejun Heo wrote:
-> Hello, Ric.
-> 
-> [cc'ing Jeff]
+Hi!
 
-Sorry about that - I had assumed that Jeff was on linux-ide...
+I'm getting the following error on a system with a Promise SATAII150
+TX2plus Controller:
 
-> 
-> Ric Wheeler wrote:
-> 
->> Hi Tejun,
->>
->> We have been trying to inject some errors on some drives & validate 
->> that the new error handling kicks out drives.
->>
->> Using 2.6.18rc3 on a box with 4 drives - 3 good & one with an 
->> artificially created ecc error in the 4-way MD RAID1 partition.
->>
->> The error handling worked through the various transitions, but did not 
->> give up on the drive well enough to let the boot continue using the 
->> other 3.
-> 
-> 
-> I suppose the introduced errors are transient and some sectors complete 
-> IO successfully between errors, right?  As long as the drive responds to 
-> recovery action (provide signature on reset, ID data on IDENTIFY and 
-> responds to SETFEATURES), libata assumes the error condition is 
-> transient and let the drive continue operating.
+Sep  4 15:15:26 server kernel: ata1: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+Sep  4 15:15:26 server kernel: ata1: status=0xff { Busy }
+Sep  4 15:15:56 server kernel: ata1: command timeout
+Sep  4 15:15:56 server kernel: ata1: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+Sep  4 15:15:56 server kernel: ata1: status=0xff { Busy }
+Sep  4 15:15:56 server kernel: sd 1:0:0:0: SCSI error: return code = 0x8000002
+Sep  4 15:15:56 server kernel: sdb: Current: sense key: Aborted Command
+Sep  4 15:15:56 server kernel:     Additional sense: Scsi parity error
+Sep  4 15:15:56 server kernel: Info fld=0xfffffff
+Sep  4 15:15:56 server kernel: end_request: I/O error, dev sdb, sector 839
+Sep  4 15:15:56 server kernel: Buffer I/O error on device sdb1, logical block 388
+Sep  4 15:15:56 server kernel: lost page write due to I/O error on sdb1
+Sep  4 15:16:26 server kernel: ata1: command timeout
 
-This particular sector will always be bad until written (i.e., the ecc 
-bits are reset).  All other sectors on the drive should be able to 
-respond, but I will use the analyzer to verify that (and make sure that 
-nothing weird happened to hang the bus).
+I had no problem formatting the drive, but the error showes up short after
+issueing mkfs.ext3 on the one partition I created over the whole disk. mkfs
+then hangs and those messages repeat with increasing sector and block number.
 
-> 
-> So, no, libata won't drop a drive unless it fails to respond to recovery 
-> sequence.  libata just doesn't have enough information about how devices 
-> are used to determine whether a device is failing too often to be 
-> useful.  e.g. there is a very big difference between a harddrive serving 
-> rootfs by itself and a drive which is in md array w/ several spares.
+Attached to the controller is a external 500G Seagate HD (ST3500641AS)
+connected via eSATA. As I've tested with different HDs (of the same type),
+I think it's not a defective drive.
 
-Agreed - use case does matter.
+Kernels I've tested so far: 2.6.16.19 and 2.6.17.11
 
-The broader concern is that the error recovery seems to end with a 
-sequence that does not let the MD see the errors so that it can be 
-kicked out of the RAID group. Nothing else makes forward progress - I 
-will try to figure out where things are hung precisely.
+Any ideas what is goping wrong?
 
-> 
->> I plan to look at the state of the drive with an analyzer tomorrow to 
->> make sure that the drive is not holding the bus or something & try 
->> your latest "new init" git tree code.
-> 
-> 
-> New init stuff won't change anything regarding this.
-> 
->> What it looks like is a soft hang - maybe the box is stuck in 
->> ata_port_wait_eh() which never seems to timeout on a bus that does not 
->> recover?
-> 
-> 
-> It seems like we need a separate mechanism here to implement policy for 
-> longer-term handling for frequently-failing devices.  Probably providing 
-> some monitoring sysfs nodes should do it - some error history w/ 
-> recovery time record and stuff such that user management process can 
-> decide to pull the plug if seems appropriate.
+If you need more information or want me to do any tests I'll do my best to
+serve your requests.
 
-This sounds like a good framework, but in this specific case I am not 
-sure that the other processes/user space will get a chance to run...  I 
-will send an update out in a few hours with the next level of detail.
+thanks in advance,
+	Moritz
 
-> 
-> Thanks.
-> 
-
-Thank you - this new error handling work is very appreciated!
-
-
-
+-- 
+-----------------------------------------------------------------------
+    *  *  *  *   bee Baastrup EDV-Entwicklung GmbH        Moritz Rempel
+||  *  *  *  *   Schwanenwall 40                        m.rempel@bee.de
+||\\ //\\ //\\   44135 Dortmund / Germany             http://www.bee.de
+||// \\-' \\-'   fon: +49 (0)0231 58719-0         Softwareentwicklung &
+    *  *  *  *   fax: +49 (0)0231 58719-50        System-Administration
+-----------------------------------------------------------------------
