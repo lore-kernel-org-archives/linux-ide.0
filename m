@@ -1,33 +1,68 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: PATA drivers queued for 2.6.19
-Date: Tue, 05 Sep 2006 19:57:34 +0200
-Message-ID: <m3veo2b3ht.fsf@defiant.localdomain>
-References: <44FC0779.9030405@garzik.org>
-	<po4of2pnhpc0325kqj2hd37b7eh3epcdsm@4ax.com>
-	<Pine.LNX.4.61.0609041406140.21005@yvahk01.tjqt.qr>
-	<44FD7B1E.7020102@aitel.hist.no>
-	<1157467176.9018.48.camel@localhost.localdomain>
-	<b9arf2lrbh5v4pv9klbtujfhvq3hiuehdk@4ax.com>
+Date: Tue, 05 Sep 2006 16:48:32 -0400
+Message-ID: <44FDE2A0.3080705@tmr.com>
+References: <44FC0779.9030405@garzik.org> <1157371363.30801.31.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:1702 "EHLO khc.piap.pl")
-	by vger.kernel.org with ESMTP id S965241AbWIER5q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2006 13:57:46 -0400
-In-Reply-To: <b9arf2lrbh5v4pv9klbtujfhvq3hiuehdk@4ax.com> (Grant Coady's message of "Wed, 06 Sep 2006 02:51:56 +1000")
+Received: from mail.tmr.com ([64.65.253.246]:20646 "EHLO pixels.tmr.com")
+	by vger.kernel.org with ESMTP id S1161047AbWIEUo0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2006 16:44:26 -0400
+In-Reply-To: <1157371363.30801.31.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Coady <gcoady.lk@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Helge Hafting <helge.hafting@aitel.hist.no>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-Grant Coady <gcoady.lk@gmail.com> writes:
+Alan Cox wrote:
+> Ar Llu, 2006-09-04 am 07:01 -0400, ysgrifennodd Jeff Garzik:
+>> The following must be in all caps, though:
+>>
+>> drivers/ide IS STILL THE PATA DRIVER SET THAT USERS AND DISTROS SHOULD 
+>> CHOOSE.
+> 
+> Except optionally for the following for chips not handled by or broken
+> totally in drivers/ide:
+> 
+> 	pata_mpiix - some early pentium era laptops
+> 	pata_oldpiix - original "PIIX" chipset
+> 	pata_radisys - embedded chipset
+> 
+> The other apparently "libata only" chips are pata_jmicron and
+> pata_optidma. There are patches to handle these as "generic" PCI IDE in
+> the base 2.6.18 tree already so only features will be lost (eg mode
+> switching). As Jeff implies distributions should be using drivers/ide
+> for the Jmicron PATA and the Opti DMA PATA for now.
+> 
+>> * /dev/sdX supports fewer partitions than /dev/hdX (16 versus 64, IIRC)
+>>
+>> * /dev/sdX does not support all the HDIO_xxx ioctls that /dev/hdX does. 
+>>   In practice, the ioctls we ignored are ones that very few people care 
+>> about.
+> 
+> Add "/dev/sr*" does not support partitions. (That needs fixing anyway)
+>     
+>> * ARM, PPC and other non-x86 platform drivers are severely 
+>> under-represented.
+> 
+> libata needs changes for this too. I have some stuff saved from the
+> older discussions to look at.
+> 
+>> As an aside, I would love to see paride updated to use libata, but we 
+>> can probably count the number of paride users on one hand these days...
+> 
+> and thats without using fingers or thumbs.
+> 
+> 
+I still use that interface, although I can't say it's critical if I 
+can't upgrade at some point. There are some other users in the local UG, 
+but they are probably not ever going to upgrade.
 
-> Which leads back to this slackware user, who's never used an initrd, 
-> thinking about dual root partitions just to get the name change from 
-> another /etc/fstab?  
-
-I think it's unnecessary, /etc/fstab is not used while mounting root fs,
-and both mount and fsck should understand labels (i.e., you can put
-labels there, even for root fs).
 -- 
-Krzysztof Halasa
+Bill Davidsen <davidsen@tmr.com>
+   Obscure bug of 2004: BASH BUFFER OVERFLOW - if bash is being run by a
+normal user and is setuid root, with the "vi" line edit mode selected,
+and the character set is "big5," an off-by-one errors occurs during
+wildcard (glob) expansion.
