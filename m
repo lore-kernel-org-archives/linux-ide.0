@@ -1,62 +1,42 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: faulty disk testing
-Date: Tue, 05 Sep 2006 11:48:15 -0400
-Message-ID: <44FD9C3F.1030803@emc.com>
-References: <44FCD328.3020800@emc.com> <44FD662A.6060404@gmail.com> <44FD803B.3040000@pobox.com> <44FD84E8.8000705@gmail.com> <44FD8781.9040905@emc.com> <44FD9022.5060208@gmail.com>
-Reply-To: ric@emc.com
+From: Grant Coady <gcoady.lk@gmail.com>
+Subject: Re: PATA drivers queued for 2.6.19
+Date: Wed, 06 Sep 2006 02:51:56 +1000
+Message-ID: <b9arf2lrbh5v4pv9klbtujfhvq3hiuehdk@4ax.com>
+References: <44FC0779.9030405@garzik.org> <po4of2pnhpc0325kqj2hd37b7eh3epcdsm@4ax.com> <Pine.LNX.4.61.0609041406140.21005@yvahk01.tjqt.qr> <44FD7B1E.7020102@aitel.hist.no> <1157467176.9018.48.camel@localhost.localdomain>
+Reply-To: Grant Coady <gcoady.lk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [168.159.213.200] ([168.159.213.200]:29351 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S965164AbWIEPuS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Sep 2006 11:50:18 -0400
-In-Reply-To: <44FD9022.5060208@gmail.com>
+Received: from relay01.mail-hub.dodo.com.au ([203.220.32.149]:12988 "EHLO
+	relay01.mail-hub.dodo.com.au") by vger.kernel.org with ESMTP
+	id S1030190AbWIEQwJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Sep 2006 12:52:09 -0400
+In-Reply-To: <1157467176.9018.48.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Mark Lord <mlord@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Helge Hafting <helge.hafting@aitel.hist.no>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-Tejun Heo wrote:
-> Ric Wheeler wrote:
-> 
->>> One of the problems is that currently libata EH can take some minutes 
->>> recovering from an error condition.  With partial request retry from 
->>> sd,  a batch of consecutive bad sectors can make recovery take a 
->>> really long time.  This needs fixing.
->>
->>
->> So far, the new-init build has been running the recovery in the lab 
->> for about 40 minutes ;-)
-> 
-> 
-> Ouch.  that's long.  BTW, from the log you posted.
-> 
-> sd 1:0:0:0: SCSI error: return code = 0x08000002
-> sdb: Current: sense key: Medium Error
->     Additional sense: Unrecovered read error - auto reallocate failed
-> end_request: I/O error, dev sdb, sector 272900
-> Buffer I/O error on device sdb3, logical block 208640
-> Buffer I/O error on device sdb3, logical block 208641
-> Buffer I/O error on device sdb3, logical block 208642
-> Buffer I/O error on device sdb3, logical block 208643
-> Buffer I/O error on device sdb3, logical block 208644
-> Buffer I/O error on device sdb3, logical block 208645
-> Buffer I/O error on device sdb3, logical block 208646
-> Buffer I/O error on device sdb3, logical block 208647
-> 
-> This is sd failing the request and the error completion propagating 
-> through fs/buffer and thus back to its user - probably md.  It's a bit 
-> weird that md doesn't drop the device at this point.  I think it could 
-> be that special metadata path thing you mentioned.
+On Tue, 05 Sep 2006 15:39:36 +0100, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-Neil, any special paths in MD (mainline MD) that would not kick out a 
-failing drive (drive superblock probe time)?
+>Ar Maw, 2006-09-05 am 15:26 +0200, ysgrifennodd Helge Hafting:
+>> between sda/hda unless they also use an initrd.  The kernel
+>> itself does not seem to support partition by label. :-(
+>
+>This is correct and one reason vendor kernels generally use an initrd.
+>The kernel does however support "root=/dev/sda1"
 
-Thanks!
+Which leads back to this slackware user, who's never used an initrd, 
+thinking about dual root partitions just to get the name change from 
+another /etc/fstab?  
 
-ric
+I dual boot 2.4 / 2.6 kernels, looking for a simple solution so I can 
+test Alan's work.  
 
+No udev, no initrd, funny I see a second '/' partition as 'easy'? ;)
 
+I'm missing something here?  Generally /etc/lilo.conf looks like:
+  <http://bugsplatter.mine.nu/test/boxen/deltree/lilo.conf>
 
+Grant.
