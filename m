@@ -1,44 +1,44 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: PATA drivers queued for 2.6.19
-Date: Tue, 05 Sep 2006 17:46:37 +0400
-Message-ID: <44FD7FBD.2060309@ru.mvista.com>
-References: <44FC0779.9030405@garzik.org>	<1157371363.30801.31.camel@localhost.localdomain> <17661.31750.457301.687508@smtp.charter.net>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: faulty disk testing
+Date: Tue, 05 Sep 2006 09:48:43 -0400
+Message-ID: <44FD803B.3040000@pobox.com>
+References: <44FCD328.3020800@emc.com> <44FD662A.6060404@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965071AbWIENob@vger.kernel.org>
-In-Reply-To: <17661.31750.457301.687508@smtp.charter.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from proof.pobox.com ([207.106.133.28]:32185 "EHLO proof.pobox.com")
+	by vger.kernel.org with ESMTP id S965069AbWIENsv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2006 09:48:51 -0400
+In-Reply-To: <44FD662A.6060404@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-John Stoffel wrote:
->>>>>>"Alan" == Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
-> 
-> 
-> Alan> Ar Llu, 2006-09-04 am 07:01 -0400, ysgrifennodd Jeff Garzik:
-> 
->>>The following must be in all caps, though:
->>>
->>>drivers/ide IS STILL THE PATA DRIVER SET THAT USERS AND DISTROS SHOULD 
->>>CHOOSE.
-> 
-> 
-> Alan> Except optionally for the following for chips not handled by or broken
-> Alan> totally in drivers/ide:
-> 
-> Alan> 	pata_mpiix - some early pentium era laptops
-> Alan> 	pata_oldpiix - original "PIIX" chipset
-> Alan> 	pata_radisys - embedded chipset
-> 
-> What about pata_hpt37x and it's failure to work with my HPT302 Rev one
-> controller?  I admit it could be just an IRQ problem, but since
-> 2.6.18-rc5-mm1 works with the old ide/pci/hpt366.c, but not with the
+Tejun Heo wrote:
+>
+> So, no, libata won't drop a drive unless it fails to respond to recovery 
+> sequence.  libata just doesn't have enough information about how devices 
+> are used to determine whether a device is failing too often to be useful.
 
-    Hm, I believe this driver hasn't been updated since 2.617-mm4 (I have one 
-patch pending still).
+Sure it does.  It can determine the number of consecutive failures on
+the same drive/channel, and it can also count intervening successes, if any.
 
-> new version?  It's using the same interrupt each time too.
+>From that, at a minimum, it could notice that the same drive has gone 'round
+the error treadmill (say) 20 times in a row, with no other I/O possible on it
+because it has yet to successfully complete the reset+reinit phase.
 
-    What's up with it?
+Such a drive is a candidate for pushing the error upstairs,
+and possibly for getting offlined.
+
+Fancier fault-handling is also possible, but the bare minimum is that we
+must not get stuck forever looping in the EH code.  Eventually a failed status
+has to be returned to the layers above, I think.
+
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
+
