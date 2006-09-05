@@ -1,26 +1,83 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PATA drivers queued for 2.6.19
-Date: Tue, 05 Sep 2006 15:39:36 +0100
-Message-ID: <1157467176.9018.48.camel@localhost.localdomain>
-References: <44FC0779.9030405@garzik.org>
-	 <po4of2pnhpc0325kqj2hd37b7eh3epcdsm@4ax.com>
-	 <Pine.LNX.4.61.0609041406140.21005@yvahk01.tjqt.qr>
-	 <44FD7B1E.7020102@aitel.hist.no>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: faulty disk testing
+Date: Tue, 05 Sep 2006 10:19:45 -0400
+Message-ID: <44FD8781.9040905@emc.com>
+References: <44FCD328.3020800@emc.com> <44FD662A.6060404@gmail.com> <44FD803B.3040000@pobox.com> <44FD84E8.8000705@gmail.com>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965077AbWIEOSj@vger.kernel.org>
-In-Reply-To: <44FD7B1E.7020102@aitel.hist.no>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Helge Hafting <helge.hafting@aitel.hist.no>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Grant Coady <gcoady.lk@gmail.com>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:9438 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S964794AbWIEOVh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Sep 2006 10:21:37 -0400
+In-Reply-To: <44FD84E8.8000705@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <mlord@pobox.com>, Linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Ar Maw, 2006-09-05 am 15:26 +0200, ysgrifennodd Helge Hafting:
-> between sda/hda unless they also use an initrd.  The kernel
-> itself does not seem to support partition by label. :-(
+Tejun Heo wrote:
+> Hello, Mark.
+> 
+> Mark Lord wrote:
+> 
+>> Sure it does.  It can determine the number of consecutive failures on
+>> the same drive/channel, and it can also count intervening successes, 
+>> if any.
+>>
+>> From that, at a minimum, it could notice that the same drive has gone 
+>> 'round
+>> the error treadmill (say) 20 times in a row, with no other I/O 
+>> possible on it
+>> because it has yet to successfully complete the reset+reinit phase.
+> 
+> 
+> If a device fails reset+reinit phase a few times, libata surely drops 
+> the device, but I don't think the kernel can drop a device because it 
+> failed, say, 20 consecutive IO commands when it can respond to reset and 
+> reinit.  That's where policy needs to come in, IMHO.
+> 
+> For Ric's case, I'm waiting for more info.  If EH is looping forever 
+> without reporting to upper layer, it definitely needs fixing, but I 
+> don't think that's the case.
 
-This is correct and one reason vendor kernels generally use an initrd.
-The kernel does however support "root=/dev/sda1"
+Let me know what is useful here - I am working on the quick run with 
+your new-init git tree & will do a second run with ATA_DEBUG enabled.  I 
+also want to validate the disk interaction on the analyzer this morning.
 
-Alan
+> 
+>> Such a drive is a candidate for pushing the error upstairs,
+>> and possibly for getting offlined.
+>>
+>> Fancier fault-handling is also possible, but the bare minimum is that we
+>> must not get stuck forever looping in the EH code.  Eventually a 
+>> failed status
+>> has to be returned to the layers above, I think.
+> 
+> 
+> Error is always pushed upstairs.  libata itself doesn't initiate any 
+> kind of retrials.  That's upto high level driver - in this case, sd.
+
+If the error does pop out from SD, MD should (and has in the past) drop 
+the drive from the array.
+
+This certainly could be either the SD layer or the MD layer on top of 
+that - it seems that my hardware friend injected the faulty sector onto 
+the MD super block, so it might be a special path through MD.
+
+
+> 
+> One of the problems is that currently libata EH can take some minutes 
+> recovering from an error condition.  With partial request retry from sd, 
+>  a batch of consecutive bad sectors can make recovery take a really long 
+> time.  This needs fixing.
+
+So far, the new-init build has been running the recovery in the lab for 
+about 40 minutes ;-)
+
+regards,
+
+ric
+
