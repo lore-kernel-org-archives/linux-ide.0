@@ -1,32 +1,42 @@
-From: Andres Salomon <dilinger@debian.org>
-Subject: Re: weird port status w/ sata_mv
-Date: Thu, 07 Sep 2006 03:22:28 -0400
-Message-ID: <1157613748.32204.43.camel@localhost.localdomain>
-References: <1157612390.32204.40.camel@localhost.localdomain>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] optical /proc/ide/*/media
+Date: Thu, 7 Sep 2006 15:08:46 +0400
+Message-ID: <20060907110846.GB5470@martell.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mouth.voxel.net ([69.9.180.118]:23688 "EHLO mail.squishy.cc")
-	by vger.kernel.org with ESMTP id S1750925AbWIGHWX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Sep 2006 03:22:23 -0400
-In-Reply-To: <1157612390.32204.40.camel@localhost.localdomain>
+Received: from nf-out-0910.google.com ([64.233.182.190]:11164 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751657AbWIGLIv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Sep 2006 07:08:51 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so417338nfa
+        for <linux-ide@vger.kernel.org>; Thu, 07 Sep 2006 04:08:50 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brett Russ <russb@emc.com>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, 2006-09-07 at 02:59 -0400, Andres Salomon wrote:
-[...]
-> 
-> What does 0x4 in the SCR_STATUS register actually mean?  Is there
-> something that can be initialized or reset to coax the port to a normal
-> status/state?
-> 
-> 
+Sergey Vlasov reported that his "FUJITSU MCC3064AP, ATAPI OPTICAL drive"
+pops up as UNKNOWN in /proc/ide/*/media .
 
-Ok, so to answer my own question: according to
-<http://www.monkey.org/openbsd/archive/misc/0408/msg01454.html>, it
-would appear that 0x4 means the PHY is in offline mode.  So the question
-is, why is it offline, and what can be done to reset it?
+Closes #4145.
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
+
+ drivers/ide/ide-proc.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/drivers/ide/ide-proc.c
++++ b/drivers/ide/ide-proc.c
+@@ -376,6 +376,8 @@ static int proc_ide_read_media
+ 				break;
+ 		case ide_floppy:media = "floppy\n";
+ 				break;
++		case ide_optical:media = "optical\n";
++				break;
+ 		default:	media = "UNKNOWN\n";
+ 				break;
+ 	}
 
