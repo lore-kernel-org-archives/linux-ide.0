@@ -1,42 +1,68 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH] optical /proc/ide/*/media
-Date: Thu, 7 Sep 2006 15:08:46 +0400
-Message-ID: <20060907110846.GB5470@martell.zuzino.mipt.ru>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCHSET] libata: implement new initialization model w/ iomap
+ support, take 2
+Date: Thu, 07 Sep 2006 08:22:58 -0500
+Message-ID: <45001D32.3080109@us.ibm.com>
+References: <11559778241753-git-send-email-htejun@gmail.com> <44EB80BB.5040309@us.ibm.com> <44F16FF8.7010706@gmail.com> <44F5FBE2.3030201@us.ibm.com> <44F83988.20102@gmail.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:11164 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751657AbWIGLIv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Sep 2006 07:08:51 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so417338nfa
-        for <linux-ide@vger.kernel.org>; Thu, 07 Sep 2006 04:08:50 -0700 (PDT)
-Content-Disposition: inline
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:56711 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932084AbWIGNXB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Sep 2006 09:23:01 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k87DN077009054
+	for <linux-ide@vger.kernel.org>; Thu, 7 Sep 2006 09:23:00 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k87DN0mS136364
+	for <linux-ide@vger.kernel.org>; Thu, 7 Sep 2006 09:23:00 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k87DMxTF025076
+	for <linux-ide@vger.kernel.org>; Thu, 7 Sep 2006 09:23:00 -0400
+In-Reply-To: <44F83988.20102@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, uchang@tw.ibm.com, linux-ide@vger.kernel.org
 
-Sergey Vlasov reported that his "FUJITSU MCC3064AP, ATAPI OPTICAL drive"
-pops up as UNKNOWN in /proc/ide/*/media .
+Tejun Heo wrote:
+> You're right.  I was confused that ->slave_destroy() is called on host 
+> release.  SCSI doesn't have host release callback.  What do you think 
+> about adding a host release callback?  That should make things easier 
+> and it is generally useful.
 
-Closes #4145.
+Sounds reasonable. 
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
----
 
- drivers/ide/ide-proc.c |    2 ++
- 1 file changed, 2 insertions(+)
+>> In order to do what you are proposing, I think we would need to add
+>> some refcounting to the ata_host object. Each allocated ata_port would
+>> get a reference to its parent ata_host and would put a reference when the
+>> port is freed. Otherwise I am concerned that we would end up in the situation
+>> where the ata_host is freed before all the ata ports and the scsi_host is
+>> freed. It might be appropriate to create an ata_host class device and
+>> an ata_port class device...
+> 
+> Or we can just keep ata_host_init() and let sas allocate ata_host as 
+> part of SCSI host and free all dynamic stuff when all ports are 
+> detached.  It's a bit hacky but should work for the time being.
 
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -376,6 +376,8 @@ static int proc_ide_read_media
- 				break;
- 		case ide_floppy:media = "floppy\n";
- 				break;
-+		case ide_optical:media = "optical\n";
-+				break;
- 		default:	media = "UNKNOWN\n";
- 				break;
- 	}
+I think that's a fine approach for now.
 
+> 
+>>> Hmmm.... I see.  Something like ata_dev_attach(adev) after initialized 
+>>> by SAS maybe?
+>> Possibly. Are you proposing that ata_dev_attach would then end up calling
+>> scsi_add_device after doing the ATA initialization stuff?
+> 
+> For SAS, libata isn't controlling SCSI host, so I think it's more 
+> logical to leave SCSI devices to SAS too. 
+
+I agree.
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
