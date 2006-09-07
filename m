@@ -1,68 +1,71 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCHSET] libata: implement new initialization model w/ iomap
- support, take 2
-Date: Thu, 07 Sep 2006 08:22:58 -0500
-Message-ID: <45001D32.3080109@us.ibm.com>
-References: <11559778241753-git-send-email-htejun@gmail.com> <44EB80BB.5040309@us.ibm.com> <44F16FF8.7010706@gmail.com> <44F5FBE2.3030201@us.ibm.com> <44F83988.20102@gmail.com>
-Reply-To: brking@us.ibm.com
+From: Kevin Hilman <khilman@mvista.com>
+Subject: Re: PCI SATA controllers on embedded, no-BIOS targets
+Date: Thu, 07 Sep 2006 16:05:56 -0700
+Message-ID: <4500A5D4.50606@mvista.com>
+References: <44EB32E4.8080706@mvista.com> <44EB33BB.4090101@gmail.com> <44EB3650.1080404@mvista.com> <44EB3E2F.4040504@gmail.com> <44EB3F70.6000702@gmail.com> <44EB40DA.3010904@mvista.com> <44EB4658.3060207@gmail.com> <44EB7E13.5090807@mvista.com> <44EBCA7D.60808@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:56711 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932084AbWIGNXB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Sep 2006 09:23:01 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k87DN077009054
-	for <linux-ide@vger.kernel.org>; Thu, 7 Sep 2006 09:23:00 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k87DN0mS136364
-	for <linux-ide@vger.kernel.org>; Thu, 7 Sep 2006 09:23:00 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k87DMxTF025076
-	for <linux-ide@vger.kernel.org>; Thu, 7 Sep 2006 09:23:00 -0400
-In-Reply-To: <44F83988.20102@gmail.com>
+Received: from homer.mvista.com ([63.81.120.158]:30855 "EHLO
+	gateway-1237.mvista.com") by vger.kernel.org with ESMTP
+	id S1422679AbWIGXF6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Sep 2006 19:05:58 -0400
+In-Reply-To: <44EBCA7D.60808@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, uchang@tw.ibm.com, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> You're right.  I was confused that ->slave_destroy() is called on host 
-> release.  SCSI doesn't have host release callback.  What do you think 
-> about adding a host release callback?  That should make things easier 
-> and it is generally useful.
-
-Sounds reasonable. 
-
-
->> In order to do what you are proposing, I think we would need to add
->> some refcounting to the ata_host object. Each allocated ata_port would
->> get a reference to its parent ata_host and would put a reference when the
->> port is freed. Otherwise I am concerned that we would end up in the situation
->> where the ata_host is freed before all the ata ports and the scsi_host is
->> freed. It might be appropriate to create an ata_host class device and
->> an ata_port class device...
+> Kevin Hilman wrote:
+>> Tejun Heo wrote:
+>>> Kevin Hilman wrote:
+>>>>>> I've personally seen it working on XScale and ATI's mips.
+>>>>
+>>>> OK, that's good to know.
+>>>>
+>>>>> For the record, for ATI's new mips platform, sata_sil needs some
+>>>>> modifications.  Their PCI bridge can't handle byte-aligned mmio and
+>>>>> the driver had to be modified to use IO address space.
+>>>>
+>>>> I'm using 2.6.18-rc4 on this XScale IXP425 (big endian) and both the
+>>>> legacy driver (drivers/ide/pci/siimage.c) and the libata driver
+>>>> (drivers/scsi/sata_sil.c) cause crashes during probing due to bad
+>>>> memory accesses.
+>>>
+>>> So, that one can't do byte-aligned mmio either?
+>>>
+>>>> Switching the legacy driver into PIO mode makes the probing work
+>>>> well, but still can't figure out what's happening in the libata
+>>>> driver, AFICT, it can't do PIO.
+>>>
+>>> By PIO, you mean accessing registers via IO address space instead of
+>>> memory address space, right?  Not PIO as opposed to DMA.
+>>
+>> yes, I mean using PCI IO address space.
+>>
+>>>> Any chance you can share the changes to use IO address space?  Maybe
+>>>> the PCI on this XScale has similar limitations.
+>>>
+>>> Sure, I've just got okay for releasing the code and am going to post
+>>> the patches on my website anyway.  I'm attaching a patch.  This might
+>>> not apply cleanly to your kernel but it should give enough idea.  Oh
+>>> the code kills 4 ports support for 3114 too.
+>>
+>> OK, tweaking your patch onto 2.6.18-rc4, I've got it to work using IO
+>> address space.  My patch attached for reference.  FYI, in addition to
+>> your changes, I also had to change the data_xfer method to use
+>> ata_pio_data_xfer instead of ata_mmio_data_xfer which was faulting
+>> since  my arch doesn't have direct memory access to IO space.
 > 
-> Or we can just keep ata_host_init() and let sas allocate ata_host as 
-> part of SCSI host and free all dynamic stuff when all ports are 
-> detached.  It's a bit hacky but should work for the time being.
+> Ah... right.  ATI is okay with work/double word aligned PIO, so I didn't
+> notice it.
 
-I think that's a fine approach for now.
+I've now been using a patched sata_sil driver for a while to support PCI
+IO space on my embedded ARM target.  Do you have any plans of pushing
+support for this upstream?
 
-> 
->>> Hmmm.... I see.  Something like ata_dev_attach(adev) after initialized 
->>> by SAS maybe?
->> Possibly. Are you proposing that ata_dev_attach would then end up calling
->> scsi_add_device after doing the ATA initialization stuff?
-> 
-> For SAS, libata isn't controlling SCSI host, so I think it's more 
-> logical to leave SCSI devices to SAS too. 
-
-I agree.
+Kevin
 
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
