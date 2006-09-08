@@ -1,224 +1,32 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Data read/write slows down other programs dramatically (2.6.18-rc2)
-Date: Thu, 7 Sep 2006 18:29:32 -0600
-Message-ID: <8202f4270609071729n84eaff7j5696e5db65090af8@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: PCI SATA controllers on embedded, no-BIOS targets
+Date: Thu, 07 Sep 2006 21:46:29 -0400
+Message-ID: <4500CB75.6050504@garzik.org>
+References: <44EB32E4.8080706@mvista.com> <44EB33BB.4090101@gmail.com> <44EB3650.1080404@mvista.com> <44EB3E2F.4040504@gmail.com> <44EB3F70.6000702@gmail.com> <44EB40DA.3010904@mvista.com> <44EB4658.3060207@gmail.com> <44EB7E13.5090807@mvista.com> <44EBCA7D.60808@gmail.com> <4500A5D4.50606@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:12011 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751944AbWIHA3d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Sep 2006 20:29:33 -0400
-Received: by py-out-1112.google.com with SMTP id n25so558062pyg
-        for <linux-ide@vger.kernel.org>; Thu, 07 Sep 2006 17:29:32 -0700 (PDT)
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:43691 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751881AbWIHBqe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Sep 2006 21:46:34 -0400
+In-Reply-To: <4500A5D4.50606@mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Kevin Hilman <khilman@mvista.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Hi,
+Kevin Hilman wrote:
+> I've now been using a patched sata_sil driver for a while to support PCI
+> IO space on my embedded ARM target.  Do you have any plans of pushing
+> support for this upstream?
 
-I use ATA pass through via sg ioctl interface for data read/write.
-Linux 2.6.18-rc2 with Jeff Garzik's git libata patch was used.
-Hardware is ARM IOP80321 with PCI-X. Host adapters: sata Sil3124 and
-pata Sil680. Physical RAM on the target is 64MB.
+MMIO doesn't work at all?
 
-The following problem was observed occasionally: the test program uses
-99% of cpu and other programs slowed down dramatically: telnet session
-was very slow to respond,  ip connection was almost time out...  It
-seems the slowness was related to the dmesg traces below (just an
-observation which may not be true). Has anyone seen similar problem
-before? Is there any place or hot spot I should look closely?
+I'm a bit reluctant to push this into mainline, particularly when I feel 
+that the sata_sil driver could still be updated to use only 32-bit MMIO 
+transactions without much problem.
 
-Thanks,
-Fajun
----------
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata1: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata1: (irq_stat 0x01100010, PHY RDY changed)
-ata1: waiting for device to spin up (8 secs)
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata1: soft resetting port
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.00: configured for UDMA/100
-ata1: EH complete
-SCSI device sda: 1465149168 512-byte hdwr sectors (750156 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0xd0000 action 0x2 frozen
-ata2: (irq_stat 0x01900090, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0xd0000 action 0x2 frozen
-ata2: (irq_stat 0x01900090, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata1: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata1: (irq_stat 0x01100010, PHY RDY changed)
-ata1: waiting for device to spin up (8 secs)
-ata1: soft resetting port
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.00: configured for UDMA/100
-ata1: EH complete
-SCSI device sda: 1465149168 512-byte hdwr sectors (750156 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: waiting for device to spin up (8 secs)
-ata2: soft resetting port
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x80000 action 0x2 frozen
-ata2: (irq_stat 0x01100010, PHY RDY changed)
-ata2: soft resetting port
-ata2: SATA link down (SStatus 0 SControl 300)
-ata2: failed to recover some devices, retrying in 5 secs
-ata1: exception Emask 0x10 SAct 0x0 SErr 0x80000 action 0x2 frozen
-ata1: (irq_stat 0x01100010, PHY RDY changed)
-ata1: soft resetting port
-ata1: SATA link down (SStatus 0 SControl 300)
-ata1: failed to recover some devices, retrying in 5 secs
-ata2: hard resetting port
-ata2: SATA link down (SStatus 0 SControl 300)
-ata2: failed to recover some devices, retrying in 5 secs
-ata1: hard resetting port
-ata1: SATA link down (SStatus 0 SControl 300)
-ata1: failed to recover some devices, retrying in 5 secs
-ata2: hard resetting port
-ata2: SATA link down (SStatus 0 SControl 300)
-ata2.00: disabled
-sd 1:0:0:0: rejecting I/O to offline device
-ata2: EH complete
-ata2.00: detaching (SCSI 1:0:0:0)
-ata1: hard resetting port
-ata1: SATA link down (SStatus 0 SControl 300)
-ata1.00: disabled
-ata1: EH complete
-ata1.00: detaching (SCSI 0:0:0:0)
+	Jeff
+
+
