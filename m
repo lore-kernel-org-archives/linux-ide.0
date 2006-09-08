@@ -1,71 +1,224 @@
-From: Kevin Hilman <khilman@mvista.com>
-Subject: Re: PCI SATA controllers on embedded, no-BIOS targets
-Date: Thu, 07 Sep 2006 16:05:56 -0700
-Message-ID: <4500A5D4.50606@mvista.com>
-References: <44EB32E4.8080706@mvista.com> <44EB33BB.4090101@gmail.com> <44EB3650.1080404@mvista.com> <44EB3E2F.4040504@gmail.com> <44EB3F70.6000702@gmail.com> <44EB40DA.3010904@mvista.com> <44EB4658.3060207@gmail.com> <44EB7E13.5090807@mvista.com> <44EBCA7D.60808@gmail.com>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Data read/write slows down other programs dramatically (2.6.18-rc2)
+Date: Thu, 7 Sep 2006 18:29:32 -0600
+Message-ID: <8202f4270609071729n84eaff7j5696e5db65090af8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.158]:30855 "EHLO
-	gateway-1237.mvista.com") by vger.kernel.org with ESMTP
-	id S1422679AbWIGXF6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Sep 2006 19:05:58 -0400
-In-Reply-To: <44EBCA7D.60808@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.178]:12011 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751944AbWIHA3d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Sep 2006 20:29:33 -0400
+Received: by py-out-1112.google.com with SMTP id n25so558062pyg
+        for <linux-ide@vger.kernel.org>; Thu, 07 Sep 2006 17:29:32 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
-> Kevin Hilman wrote:
->> Tejun Heo wrote:
->>> Kevin Hilman wrote:
->>>>>> I've personally seen it working on XScale and ATI's mips.
->>>>
->>>> OK, that's good to know.
->>>>
->>>>> For the record, for ATI's new mips platform, sata_sil needs some
->>>>> modifications.  Their PCI bridge can't handle byte-aligned mmio and
->>>>> the driver had to be modified to use IO address space.
->>>>
->>>> I'm using 2.6.18-rc4 on this XScale IXP425 (big endian) and both the
->>>> legacy driver (drivers/ide/pci/siimage.c) and the libata driver
->>>> (drivers/scsi/sata_sil.c) cause crashes during probing due to bad
->>>> memory accesses.
->>>
->>> So, that one can't do byte-aligned mmio either?
->>>
->>>> Switching the legacy driver into PIO mode makes the probing work
->>>> well, but still can't figure out what's happening in the libata
->>>> driver, AFICT, it can't do PIO.
->>>
->>> By PIO, you mean accessing registers via IO address space instead of
->>> memory address space, right?  Not PIO as opposed to DMA.
->>
->> yes, I mean using PCI IO address space.
->>
->>>> Any chance you can share the changes to use IO address space?  Maybe
->>>> the PCI on this XScale has similar limitations.
->>>
->>> Sure, I've just got okay for releasing the code and am going to post
->>> the patches on my website anyway.  I'm attaching a patch.  This might
->>> not apply cleanly to your kernel but it should give enough idea.  Oh
->>> the code kills 4 ports support for 3114 too.
->>
->> OK, tweaking your patch onto 2.6.18-rc4, I've got it to work using IO
->> address space.  My patch attached for reference.  FYI, in addition to
->> your changes, I also had to change the data_xfer method to use
->> ata_pio_data_xfer instead of ata_mmio_data_xfer which was faulting
->> since  my arch doesn't have direct memory access to IO space.
-> 
-> Ah... right.  ATI is okay with work/double word aligned PIO, so I didn't
-> notice it.
+Hi,
 
-I've now been using a patched sata_sil driver for a while to support PCI
-IO space on my embedded ARM target.  Do you have any plans of pushing
-support for this upstream?
+I use ATA pass through via sg ioctl interface for data read/write.
+Linux 2.6.18-rc2 with Jeff Garzik's git libata patch was used.
+Hardware is ARM IOP80321 with PCI-X. Host adapters: sata Sil3124 and
+pata Sil680. Physical RAM on the target is 64MB.
 
-Kevin
+The following problem was observed occasionally: the test program uses
+99% of cpu and other programs slowed down dramatically: telnet session
+was very slow to respond,  ip connection was almost time out...  It
+seems the slowness was related to the dmesg traces below (just an
+observation which may not be true). Has anyone seen similar problem
+before? Is there any place or hot spot I should look closely?
 
-
+Thanks,
+Fajun
+---------
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata1: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata1: (irq_stat 0x01100010, PHY RDY changed)
+ata1: waiting for device to spin up (8 secs)
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata1: soft resetting port
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: configured for UDMA/100
+ata1: EH complete
+SCSI device sda: 1465149168 512-byte hdwr sectors (750156 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0xd0000 action 0x2 frozen
+ata2: (irq_stat 0x01900090, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0xd0000 action 0x2 frozen
+ata2: (irq_stat 0x01900090, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata1: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata1: (irq_stat 0x01100010, PHY RDY changed)
+ata1: waiting for device to spin up (8 secs)
+ata1: soft resetting port
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: configured for UDMA/100
+ata1: EH complete
+SCSI device sda: 1465149168 512-byte hdwr sectors (750156 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: waiting for device to spin up (8 secs)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+SCSI device sdb: 1465149168 512-byte hdwr sectors (750156 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x80000 action 0x2 frozen
+ata2: (irq_stat 0x01100010, PHY RDY changed)
+ata2: soft resetting port
+ata2: SATA link down (SStatus 0 SControl 300)
+ata2: failed to recover some devices, retrying in 5 secs
+ata1: exception Emask 0x10 SAct 0x0 SErr 0x80000 action 0x2 frozen
+ata1: (irq_stat 0x01100010, PHY RDY changed)
+ata1: soft resetting port
+ata1: SATA link down (SStatus 0 SControl 300)
+ata1: failed to recover some devices, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 300)
+ata2: failed to recover some devices, retrying in 5 secs
+ata1: hard resetting port
+ata1: SATA link down (SStatus 0 SControl 300)
+ata1: failed to recover some devices, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 300)
+ata2.00: disabled
+sd 1:0:0:0: rejecting I/O to offline device
+ata2: EH complete
+ata2.00: detaching (SCSI 1:0:0:0)
+ata1: hard resetting port
+ata1: SATA link down (SStatus 0 SControl 300)
+ata1.00: disabled
+ata1: EH complete
+ata1.00: detaching (SCSI 0:0:0:0)
