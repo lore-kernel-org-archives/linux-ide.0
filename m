@@ -1,29 +1,25 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] optical /proc/ide/*/media
-Date: Sat, 09 Sep 2006 16:18:18 +0100
-Message-ID: <1157815098.6877.36.camel@localhost.localdomain>
-References: <20060907110846.GB5470@martell.zuzino.mipt.ru>
+From: Jeremy Fitzhardinge <jeremy@goop.org>
+Subject: Re: 2.6.18-rc5-mm1
+Date: Sat, 09 Sep 2006 16:47:18 -0700
+Message-ID: <45035286.8070209@goop.org>
+References: <20060901015818.42767813.akpm@osdl.org> <1157158847.20509.10.camel@mhcln03> <20060901183028.1c6da4df.akpm@osdl.org> <44F93EB3.8050500@goop.org> <44F942B9.6050102@goop.org> <20060902084440.GA13361@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60385 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932240AbWIIOzQ
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 9 Sep 2006 10:55:16 -0400
-In-Reply-To: <20060907110846.GB5470@martell.zuzino.mipt.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20060902084440.GA13361@suse.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Greg KH <gregkh@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, Matthias Hentges <oe@hentges.net>, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, "Eric W. Biederman" <ebiederm@xmission.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ar Iau, 2006-09-07 am 15:08 +0400, ysgrifennodd Alexey Dobriyan:
-> Sergey Vlasov reported that his "FUJITSU MCC3064AP, ATAPI OPTICAL drive"
-> pops up as UNKNOWN in /proc/ide/*/media .
-> 
-> Closes #4145.
+Greg KH wrote:
+> There are 9 MSI patches in my tree that you can just remove.  They were
+> just recently (a few hours ago) replaced with a total rewrite due to a
+> number of different problems that were found.  So I'd suggest just
+> waiting till the next -mm release to see if it works properly or not.
+>   
 
-Harmless but yes this seems sensible
+I'm seeing exactly the same oops with CONFIG_MSI on 2.6.18-rc6-mm1.
 
-Acked-by: Alan Cox <alan@redhat.com>
-
+    J
