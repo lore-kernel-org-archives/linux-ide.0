@@ -1,28 +1,55 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: What's in libata-dev.git
-Date: Mon, 11 Sep 2006 11:24:19 -0400
-Message-ID: <45057FA3.4000509@garzik.org>
-References: <20060911132250.GA5178@havoc.gtf.org> <45056627.7030202@ru.mvista.com> <450566A2.1090009@garzik.org> <450568F3.3020005@ru.mvista.com> <4505694D.5020304@garzik.org> <Pine.LNX.4.64.0609110749410.27779@g5.osdl.org>
+Date: Mon, 11 Sep 2006 17:37:06 +0200
+Message-ID: <20060911153706.GE4955@suse.de>
+References: <20060911132250.GA5178@havoc.gtf.org> <45056627.7030202@ru.mvista.com> <450566A2.1090009@garzik.org> <450568F3.3020005@ru.mvista.com> <1157986974.23085.147.camel@localhost.localdomain> <45057651.8000404@garzik.org> <1157988513.23085.159.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57526 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964881AbWIKPYZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2006 11:24:25 -0400
-In-Reply-To: <Pine.LNX.4.64.0609110749410.27779@g5.osdl.org>
+Received: from brick.kernel.dk ([62.242.22.158]:2055 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S964886AbWIKPit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2006 11:38:49 -0400
+Content-Disposition: inline
+In-Reply-To: <1157988513.23085.159.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-Linus Torvalds wrote:
-> It's not even like you'd get magically higher performance by using 256 
-> sectors, so there's simply no win from living dangerously. Only losses.
+On Mon, Sep 11 2006, Alan Cox wrote:
+> Ar Llu, 2006-09-11 am 10:44 -0400, ysgrifennodd Jeff Garzik:
+> > > drivers/ide. You might want to do 256 for SATA Jeff but please don't do
+> > > 256 for PATA. Reading specs is too hard for some people ;)
+> > > 
+> > > Some drives abort the xfer, some just choked.
+> > 
+> > Where in drivers/ide is it limited to 255?
+> 
+> Being a sensible sanity check it was removed, and that was a small
+> mistake. Some 2.4 also has a 256 limit and it broken various transparent
+> raid units, older Maxtors(1Gb or so), some IBM drives etc. Got fixed in
+> -ac but never in base.
+> 
+> The failure pattern is pretty ugly too, your box runs and runs and
+> eventually you get a linear 256 sector I/O and it all blows up,
+> sometimes. The IBM's abort the xfer but the maxtors may or may not get
+> it right (its as if half the firmware has the right test).
 
-It's easy enough to change.  Does this mean you want drivers/ide changed 
-too?  It's apparently been living dangerously for years and years.
+So this is a confirmed, broken case? Why has no one complained for 2.4
+and 2.6?
 
-	Jeff
+> We could perhaps do it by ATA version - 255 for ATA < 3 256 for ATA 3+,
 
+Might be sane, yep.
+
+> lots for LBA48 ? Thats assuming you can show 256 sectors is faster than
+> 255. I'd bet for normal I/O its unmeasurably small.
+
+255 isn't faster than 256, measurably. But the alignment for "natural"
+transfer sizes is much nicer with 256, that's the problem. You really
+don't want 248 + 8 going down all the time, for instance. Perhaps it's
+not a real problem, but it could be.
+
+-- 
+Jens Axboe
 
