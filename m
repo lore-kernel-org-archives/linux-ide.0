@@ -1,9 +1,8 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
 Subject: Re: What's in libata-dev.git
-Date: Tue, 12 Sep 2006 00:00:36 +0100
-Message-ID: <1158015636.23085.218.camel@localhost.localdomain>
-References: <20060911132250.GA5178@havoc.gtf.org>
-	 <45056627.7030202@ru.mvista.com> <450566A2.1090009@garzik.org>
+Date: Mon, 11 Sep 2006 18:53:51 -0400
+Message-ID: <87f94c370609111553m102cc128tf30058e5fff9e887@mail.gmail.com>
+References: <20060911132250.GA5178@havoc.gtf.org> <450566A2.1090009@garzik.org>
 	 <450568F3.3020005@ru.mvista.com>
 	 <1157986974.23085.147.camel@localhost.localdomain>
 	 <45057651.8000404@garzik.org>
@@ -11,89 +10,40 @@ References: <20060911132250.GA5178@havoc.gtf.org>
 	 <20060911153706.GE4955@suse.de>
 	 <Pine.LNX.4.64.0609110850380.27779@g5.osdl.org>
 	 <20060911195106.GA6775@kernel.dk>
+	 <1158015636.23085.218.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:750 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932188AbWIKWkF
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Sep 2006 18:40:05 -0400
-In-Reply-To: <20060911195106.GA6775@kernel.dk>
+Received: from ug-out-1314.google.com ([66.249.92.168]:5588 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S932292AbWIKWxx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 Sep 2006 18:53:53 -0400
+Received: by ug-out-1314.google.com with SMTP id m3so1368400ugc
+        for <linux-ide@vger.kernel.org>; Mon, 11 Sep 2006 15:53:52 -0700 (PDT)
+In-Reply-To: <1158015636.23085.218.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Linus Torvalds <torvalds@osdl.org>, Jens Axboe <axboe@suse.de>, Jeff Garzik <jeff@garzik.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@osdl.org>, Jens Axboe <axboe@suse.de>, Jeff Garzik <jeff@garzik.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Ar Llu, 2006-09-11 am 21:51 +0200, ysgrifennodd Jens Axboe:
-> Well, as I said, I don't think we ever saw a case that was demonstrably
-> due to the 256 sector issue. And I really don't think it is as obscure a
-> fact that people seem to think it is.
+On 9/11/06, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> Ar Llu, 2006-09-11 am 21:51 +0200, ysgrifennodd Jens Axboe:
+> > Well, as I said, I don't think we ever saw a case that was demonstrably
+> > due to the 256 sector issue. And I really don't think it is as obscure a
+> > fact that people seem to think it is.
+>
+> One of the ones I've got saved here is this thread. Paul goes on to
+> demonstrate that changing the 255<->256 limit makes 2.0/2.2/2.4 break or
+> not break.
+>
+<snip>
 
-One of the ones I've got saved here is this thread. Paul goes on to
-demonstrate that changing the 255<->256 limit makes 2.0/2.2/2.4 break or
-not break.
+The whole thread is at http://lkml.org/lkml/2001/3/18/29
 
---------
-
-There is a potentially serious bug in ide-probe.c in which max_sectors
-is set to 256 instead of 255. I am surprised that this hasn't bit anyone
-else yet. Perhaps because you need a disk that is slow in comparison to 
-the host in order for the queue to climb up to and then hit the 256, at
-which point it then falls over. 
-
-
-For example, with an old 700MB Maxtor on a "fast" 486, VL-bus, PIO, 
-hdparm -c1 -m8 -u1, I could pretty much on demand generate the
-following 
-error by multiple builds, or by the final linking of any big project:
-
-
-hdc: lost interrupt
-hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-hdc: drive not ready for command
-<user space sees binary cruft in source files, etc etc...>
-
-
-(Note that nothing in the status is really an error). With the
-following 
-patch, everything works as it should & no errors even under high load.
-Patch is against 2.4.3pre2.
-
-
-Paul.
-
-
---- drivers/ide/ide-probe.c~ Sat Mar 17 16:50:14 2001
-+++ drivers/ide/ide-probe.c Sat Mar 17 16:58:33 2001
-@@ -1,5 +1,5 @@
-/*
-- * linux/drivers/ide/ide-probe.c Version 1.06 June 9, 2000
-+ * linux/drivers/ide/ide-probe.c Version 1.07 March 18, 2001
-*
-* Copyright (C) 1994-1998 Linus Torvalds & authors (see below)
-*/
-@@ -25,6 +25,8 @@
-* allowed for secondary flash card to be detectable
-* with new flag : drive->ata_flash : 1;
-* Version 1.06 stream line request queue and prep for cascade project.
-+ * Version 1.07 max_sect <= 255; slower disks would get behind and
-+ * then fall over when they get to 256. Paul G.
-*/
-
-#undef REALLY_SLOW_IO /* most systems can safely undef this */
-@@ -772,10 +774,10 @@
-for (unit = 0; unit < minors; ++unit) {
-*bs++ = BLOCK_SIZE;
-#ifdef CONFIG_BLK_DEV_PDC4030
-- *max_sect++ = ((hwif->chipset == ide_pdc4030) ? 127 : 256);
-+ *max_sect++ = ((hwif->chipset == ide_pdc4030) ? 127 : 255);
-#else
-/* IDE can do up to 128K per request. */
-- *max_sect++ = 256;
-+ *max_sect++ = 255;
-#endif
-*max_ra++ = MAX_READAHEAD;
-}
-
-
+Greg
+-- 
+Greg Freemyer
+The Norcross Group
+Forensics for the 21st Century
