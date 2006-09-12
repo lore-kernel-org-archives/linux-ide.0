@@ -1,86 +1,39 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] libata: improve handling of diagostic fail (and hardware
-	that misreports it)
-Date: Tue, 12 Sep 2006 16:55:12 +0100
-Message-ID: <1158076512.6780.41.camel@localhost.localdomain>
+Subject: [PATCH]: Update SiS PATA
+Date: Tue, 12 Sep 2006 17:15:12 +0100
+Message-ID: <1158077712.6780.47.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751337AbWILPfz@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751446AbWILPxT@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: akpm@osdl.org, jgarzik@pobox.com, "." <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-
-Our ATA probe code checks that a device is not reporting a diagnostic
-failure during start up. Unfortunately at least one device seems to like
-doing this - the Gigabyte iRAM.
-
-This is only done for the master right now (which is fine for the iRAM
-as it is SATA), as with PATA some combinations of ATAPI device seem to
-fool the check into seeing a drive that isn't there if it is applied to
-the slave.
-
-Please review
+New chipset identifiers
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/drivers/ata/libata-core.c linux-2.6.18-rc6-mm1/drivers/ata/libata-core.c
---- linux.vanilla-2.6.18-rc6-mm1/drivers/ata/libata-core.c	2006-09-11 17:00:08.000000000 +0100
-+++ linux-2.6.18-rc6-mm1/drivers/ata/libata-core.c	2006-09-12 11:18:34.000000000 +0100
-@@ -616,8 +616,11 @@
- 	if (r_err)
- 		*r_err = err;
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/drivers/ata/pata_sis.c linux-2.6.18-rc6-mm1/drivers/ata/pata_sis.c
+--- linux.vanilla-2.6.18-rc6-mm1/drivers/ata/pata_sis.c	2006-09-11 17:00:08.000000000 +0100
++++ linux-2.6.18-rc6-mm1/drivers/ata/pata_sis.c	2006-09-11 20:10:29.000000000 +0100
+@@ -34,7 +34,7 @@
+ #include <linux/ata.h>
  
--	/* see if device passed diags */
--	if (err == 1)
-+	/* see if device passed diags: if master then continue and warn later */
-+	if (err == 0 && device == 0)
-+		/* diagnostic fail : do nothing _YET_ */
-+		ap->device[device].horkage |= ATA_HORKAGE_DIAGNOSTIC;
-+	else if(err == 1)
- 		/* do nothing */ ;
- 	else if ((device == 0) && (err == 0x81))
- 		/* do nothing */ ;
-@@ -1523,6 +1526,18 @@
- 				       cdb_intr_string);
- 	}
+ #define DRV_NAME	"pata_sis"
+-#define DRV_VERSION	"0.4.2"
++#define DRV_VERSION	"0.4.3"
  
-+	if (dev->horkage & ATA_HORKAGE_DIAGNOSTIC) {
-+		/* Let the user know. We don't want to disallow opens for
-+		   rescue purposes, or in case the vendor is just a blithering
-+		   idiot */
-+                if (print_info) {
-+			ata_dev_printk(dev, KERN_WARNING,
-+"Drive reports diagnostics failure. This may indicate a drive\n");
-+			ata_dev_printk(dev, KERN_WARNING,
-+"fault or invalid emulation. Contact drive vendor for information.\n");
-+		}
-+	}
-+
- 	ata_set_port_max_cmd_len(ap);
+ struct sis_chipset {
+ 	u16 device;			/* PCI host ID */
+@@ -857,6 +857,10 @@
+ 	struct sis_chipset *chipset = NULL;
  
- 	/* limit bridge transfers to udma5, 200 sectors */
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/include/linux/libata.h linux-2.6.18-rc6-mm1/include/linux/libata.h
---- linux.vanilla-2.6.18-rc6-mm1/include/linux/libata.h	2006-09-11 17:00:24.000000000 +0100
-+++ linux-2.6.18-rc6-mm1/include/linux/libata.h	2006-09-11 17:21:16.000000000 +0100
-@@ -289,6 +289,11 @@
- 	 * most devices.
- 	 */
- 	ATA_SPINUP_WAIT		= 8000,
+ 	static struct sis_chipset sis_chipsets[] = {
 +	
-+	/* Horkage types. May be set by libata or controller on drives
-+	   (some horkage may be drive/controller pair dependant */
-+
-+	ATA_HORKAGE_DIAGNOSTIC	= 1,		/* Failed boot diag */
- };
- 
- enum hsm_task_states {
-@@ -469,6 +474,7 @@
- 
- 	/* error history */
- 	struct ata_ering	ering;
-+	unsigned int		horkage;	/* List of broken features */
- };
- 
- /* Offset into struct ata_device.  Fields above it are maintained
++		{ 0x0968, &sis_info133 },
++		{ 0x0966, &sis_info133 },
++		{ 0x0965, &sis_info133 },
+ 		{ 0x0745, &sis_info100 },
+ 		{ 0x0735, &sis_info100 },
+ 		{ 0x0733, &sis_info100 },
