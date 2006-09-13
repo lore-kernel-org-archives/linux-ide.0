@@ -1,82 +1,94 @@
-From: Tejun Heo <htejun@gmail.com>
+From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
 Subject: Re: libata hotplug and md raid?
-Date: Wed, 13 Sep 2006 20:06:41 +0900
-Message-ID: <4507E641.7090508@gmail.com>
-References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com> <4507E2A9.7070306@emc.com>
+Date: Wed, 13 Sep 2006 13:45:05 +0200
+Message-ID: <c384c5ea0609130445sfe3bea9w91294c5789b99f65@mail.gmail.com>
+References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com>
+	 <4507E2A9.7070306@emc.com> <4507E641.7090508@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:37440 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751461AbWIMLGr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Sep 2006 07:06:47 -0400
-Received: by py-out-1112.google.com with SMTP id n25so3120120pyg
-        for <linux-ide@vger.kernel.org>; Wed, 13 Sep 2006 04:06:47 -0700 (PDT)
-In-Reply-To: <4507E2A9.7070306@emc.com>
+Received: from nz-out-0102.google.com ([64.233.162.196]:26730 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750710AbWIMLpG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Sep 2006 07:45:06 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so931934nzf
+        for <linux-ide@vger.kernel.org>; Wed, 13 Sep 2006 04:45:05 -0700 (PDT)
+In-Reply-To: <4507E641.7090508@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: Leon Woestenberg <leon.woestenberg@gmail.com>, linux-raid@vger.kernel.org, Greg KH <gregkh@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Ric Wheeler <ric@emc.com>, linux-raid@vger.kernel.org, Greg KH <gregkh@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Ric Wheeler wrote:
-> (Adding Tejun & Greg KH to this thread)
-Adding linux-ide to this thread.
-> 
-> Leon Woestenberg wrote:
-[--snip--]
->> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
->> each driven by libata ahci. I unplug then replug the drive that is
->> rebuilding in RAID-5.
->>
->> When I unplug a drive, /dev/sda is removed, hotplug seems to work to
->> the point where proc/mdstat shows the drive failed, but not removed.
+Hello Tejun et al,
 
-Yeap, that sounds about right.
+On 9/13/06, Tejun Heo <htejun@gmail.com> wrote:
+> Ric Wheeler wrote:
+> > (Adding Tejun & Greg KH to this thread)
+> Adding linux-ide to this thread.
+> >
+> > Leon Woestenberg wrote:
+> [--snip--]
+> >> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
+> >> each driven by libata ahci. I unplug then replug the drive that is
+> >> rebuilding in RAID-5.
+> >>
+> >> When I unplug a drive, /dev/sda is removed, hotplug seems to work to
+> >> the point where proc/mdstat shows the drive failed, but not removed.
+>
+> Yeap, that sounds about right.
+>
+I suppose this is 'right', but only if we think of a hot unplugged
+device as a failing device.
 
->> Every other notion of the drive (in kernel and udev /dev namespace)
->> seems to be gone after unplugging. I cannot manually removed the drive
->> using mdadm, because it tells me the drive does not exist.
+As in most cases we cannot tell if the hot unplug was intentional or
+not (because we see a device disappearing from the phy and we have no
+other sensory data available), assuming the drive 'fails' seems
+reasonable.
 
-I see.  That's a problem.  Can you use /dev/.static/dev/sda instead?  If 
-you can't find those static nodes, just create one w/ 'mknod 
-my-static-sda b 8 0' and use it.
+> >> Every other notion of the drive (in kernel and udev /dev namespace)
+> >> seems to be gone after unplugging. I cannot manually removed the drive
+> >> using mdadm, because it tells me the drive does not exist.
+>
+> I see.  That's a problem.  Can you use /dev/.static/dev/sda instead?  If
+> you can't find those static nodes, just create one w/ 'mknod
+> my-static-sda b 8 0' and use it.
+>
+Yes, that works.
 
->> Replugging the drive brings it back as /dev/sde, md0 will not pick it up.
+Also, replugging brings back the device as /dev/sda, indicating md is
+no longer holding the internal lock.
 
-No, it won't.
+> Apart from persistent naming Ric mentioned above, the reason why you
+> don't get sda back is md is holding the internal device.  It's removed
+> from all visible name spaces but md still holds a reference, so the
+> device cannot be destroyed.
+>
+To me, this seems a bug, as the kernel already told everyone else
+(userland) that it thinks the device is no longer there.
 
-> I have a similar setup, AHCI + 4 drives but using a RAID-1 group.  The 
-> thing that you are looking for is "persistent device naming" and should 
-> work properly if you can tweak udev/hotplug correctly.
-> 
-> I have verified that a drive pull/drive reinsert on a mainline kernel 
-> with a SLES10 base does provide this (first insertion gives me sdb, pull 
-> followed by reinsert still is sdb), but have not tested interaction with 
-> RAID since I am focused on the bad block handling at the moment.  I will 
-> add this to my list ;-)
-> 
->>
->> The expected behaviour (from me) is that the drive re-appears as 
->> /dev/sda.
+This contradicts the fact that the kernel itself has dangling references to it.
 
-Apart from persistent naming Ric mentioned above, the reason why you 
-don't get sda back is md is holding the internal device.  It's removed 
-from all visible name spaces but md still holds a reference, so the 
-device cannot be destroyed.  So, when a new device comes along, sda is 
-occupied by the dead device, and the new one gets the next available 
-slot, which happens to be sde in your case.
+> So, when a new device comes along, sda is
+> occupied by the dead device, and the new one gets the next available
+> slot, which happens to be sde in your case.
+>
+> >> What is the intended behaviour of md in this case?
+> >>
+> >> Should some user-space application fail-remove a drive as a pre-action
+> >> of the unplug event from udev, or should md fully remove the drive
+> >> within kernel space??
+>
+> I'm curious too.  Would it be better for md to listen to hotplug events
+> and auto-remove dead devices or is it something which belongs to userland?
+>
+...also considering race conditions between userland and kernel in that case...
 
->> What is the intended behaviour of md in this case?
->>
->> Should some user-space application fail-remove a drive as a pre-action
->> of the unplug event from udev, or should md fully remove the drive
->> within kernel space??
+My first thoughts would be that a unplugged device should be handled
+differently than a device that failed in other senses, or at least
+this should be considered by the kernel developers.
 
-I'm curious too.  Would it be better for md to listen to hotplug events 
-and auto-remove dead devices or is it something which belongs to userland?
-
-Thanks.
-
+Thanks for the response so far, regards,
 -- 
-tejun
+Leon
