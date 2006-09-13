@@ -1,53 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_amd: Check enable bits on Nvidia
-Date: Tue, 12 Sep 2006 17:14:03 +0100
-Message-ID: <1158077643.6780.45.camel@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: What's in libata-dev.git
+Date: Wed, 13 Sep 2006 10:50:28 +0900
+Message-ID: <450763E4.6010602@gmail.com>
+References: <20060911132250.GA5178@havoc.gtf.org> <45056627.7030202@ru.mvista.com> <450566A2.1090009@garzik.org> <450568F3.3020005@ru.mvista.com> <4505694D.5020304@garzik.org> <Pine.LNX.4.64.0609110749410.27779@g5.osdl.org> <45067312.7020900@aitel.hist.no>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751460AbWILPwq@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: akpm@osdl.org, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0102.google.com ([64.233.162.199]:55648 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751486AbWIMBuz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Sep 2006 21:50:55 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so864771nzf
+        for <linux-ide@vger.kernel.org>; Tue, 12 Sep 2006 18:50:54 -0700 (PDT)
+In-Reply-To: <45067312.7020900@aitel.hist.no>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Helge Hafting <helge.hafting@aitel.hist.no>
+Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-A couple of people reported long delays on probe with the newer kernels
-and Nvidia PATA. This turned out to be because the Nvidia path forgot to
-check the enable bits so probed empty ports.
+Helge Hafting wrote:
+> How about a simple and harmless test?
+> When an IDE disk is accessed for the first time, perhaps when
+> the partition table is read - issue a 256-sector read and see
+> what happens.  If it works - fine.  If not, tag the thing as
+> supporting max 255 sectors.
+> 
+> No wrecking of file systems, and full performance for
+> the vast majority.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Before implementing anything like that, we need a test case.  We don't 
+know how a faulty drive reacts on such cases.  If it actively aborts the 
+command, we can reduce the limit to 255 sectors after upper layer issues 
+such command, no need to do it earlier.  If it times out, we can't do it 
+during boot and it will suck later too.  If it silently corrupts data 
+(highly unlikely), we need to detect the condition during boot.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/drivers/ata/pata_amd.c linux-2.6.18-rc6-mm1/drivers/ata/pata_amd.c
---- linux.vanilla-2.6.18-rc6-mm1/drivers/ata/pata_amd.c	2006-09-11 17:00:08.000000000 +0100
-+++ linux-2.6.18-rc6-mm1/drivers/ata/pata_amd.c	2006-09-11 17:17:19.000000000 +0100
-@@ -25,7 +25,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_amd"
--#define DRV_VERSION "0.2.2"
-+#define DRV_VERSION "0.2.3"
- 
- /**
-  *	timing_setup		-	shared timing computation and load
-@@ -253,11 +253,22 @@
- 
- static int nv_pre_reset(struct ata_port *ap) {
- 	static const u8 bitmask[2] = {0x03, 0xC0};
-+	static const struct pci_bits nv_enable_bits[] = {
-+		{ 0x50, 1, 0x02, 0x02 },
-+		{ 0x50, 1, 0x01, 0x01 }
-+	};
- 
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u8 ata66;
- 	u16 udma;
- 
-+	if (!pci_test_config_bits(pdev, &nv_enable_bits[ap->port_no])) {
-+		ata_port_disable(ap);
-+		printk(KERN_INFO "ata%u: port disabled. ignoring.\n", ap->id);
-+		return 0;
-+	}
-+
-+
- 	pci_read_config_byte(pdev, 0x52, &ata66);
- 	if (ata66 & bitmask[ap->port_no])
- 		ap->cbl = ATA_CBL_PATA80;
+I don't think it matters all that much anyway.  IDE has been running w/ 
+256 sectors for a loooong time and someone who seeks performance from 
+LBA28 only drive has bigger problems (also I don't think 255 would be 
+noticeably slower than 256).
+
+-- 
+tejun
