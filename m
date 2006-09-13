@@ -1,31 +1,64 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PROBLEM: (libata) cdrom drive not detected in -mm series
-Date: Wed, 13 Sep 2006 15:45:32 +0100
-Message-ID: <1158158732.13977.25.camel@localhost.localdomain>
-References: <9bfa9ae0609111802o9131e8bg6c5d394ad87b16ea@mail.gmail.com>
-	 <450664C7.3000105@gmail.com>
-	 <9bfa9ae0609120430g7d557c8ds3fe802e1ddfffb27@mail.gmail.com>
-	 <20060913133743.GF21866@htj.dyndns.org>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: [PATCH] pata_amd: Check enable bits on Nvidia
+Date: Wed, 13 Sep 2006 21:12:25 +0200
+Message-ID: <m3wt871syu.fsf@defiant.localdomain>
+References: <1158077643.6780.45.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50050 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1750863AbWIMOXq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Sep 2006 10:23:46 -0400
-In-Reply-To: <20060913133743.GF21866@htj.dyndns.org>
+Received: from khc.piap.pl ([195.187.100.11]:36069 "EHLO khc.piap.pl")
+	by vger.kernel.org with ESMTP id S1751117AbWIMTM2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Sep 2006 15:12:28 -0400
+In-Reply-To: <1158077643.6780.45.camel@localhost.localdomain> (Alan Cox's message of "Tue, 12 Sep 2006 17:14:03 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Nelson A. de Oliveira" <naoliv@gmail.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ar Mer, 2006-09-13 am 22:37 +0900, ysgrifennodd Tejun Heo:
-> [adding Alan to this thread]
-> 
-> The whole thread can be read from
+Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
 
-Looks sensible. I didn't consider that case because in the PATA world
-nothing is quite that deranged. 
+> +++ linux-2.6.18-rc6-mm1/drivers/ata/pata_amd.c	2006-09-11 17:17:19.000000000 +0100
+> @@ -25,7 +25,7 @@
+>  #include <linux/libata.h>
+>  
+>  #define DRV_NAME "pata_amd"
+> -#define DRV_VERSION "0.2.2"
+> +#define DRV_VERSION "0.2.3"
+>  
+>  /**
+>   *	timing_setup		-	shared timing computation and load
+> @@ -253,11 +253,22 @@
+>  
+>  static int nv_pre_reset(struct ata_port *ap) {
+>  	static const u8 bitmask[2] = {0x03, 0xC0};
+> +	static const struct pci_bits nv_enable_bits[] = {
+> +		{ 0x50, 1, 0x02, 0x02 },
+> +		{ 0x50, 1, 0x01, 0x01 }
+> +	};
+>  
+>  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+>  	u8 ata66;
+>  	u16 udma;
+>  
+> +	if (!pci_test_config_bits(pdev, &nv_enable_bits[ap->port_no])) {
+> +		ata_port_disable(ap);
+> +		printk(KERN_INFO "ata%u: port disabled. ignoring.\n", ap->id);
+> +		return 0;
+> +	}
+> +
+> +
 
+Well, it's now a bit better :-)
 
+ata4: port disabled. ignoring.
+ata4: SRST failed (status 0xFF)
+ata4: SRST failed (err_mask=0x100)
+ata4: softreset failed, retrying in 5 secs
+ata4: SRST failed (status 0xFF)
+ata4: SRST failed (err_mask=0x100)
+ata4: softreset failed, retrying in 5 secs
+ata4: SRST failed (status 0xFF)
+ata4: SRST failed (err_mask=0x100)
+ata4: reset failed, giving up
+-- 
+Krzysztof Halasa
