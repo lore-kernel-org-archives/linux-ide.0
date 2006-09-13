@@ -1,45 +1,82 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: What's in libata-dev.git
-Date: Wed, 13 Sep 2006 10:50:28 +0900
-Message-ID: <450763E4.6010602@gmail.com>
-References: <20060911132250.GA5178@havoc.gtf.org> <45056627.7030202@ru.mvista.com> <450566A2.1090009@garzik.org> <450568F3.3020005@ru.mvista.com> <4505694D.5020304@garzik.org> <Pine.LNX.4.64.0609110749410.27779@g5.osdl.org> <45067312.7020900@aitel.hist.no>
+Subject: Re: libata hotplug and md raid?
+Date: Wed, 13 Sep 2006 20:06:41 +0900
+Message-ID: <4507E641.7090508@gmail.com>
+References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com> <4507E2A9.7070306@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.199]:55648 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751486AbWIMBuz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Sep 2006 21:50:55 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so864771nzf
-        for <linux-ide@vger.kernel.org>; Tue, 12 Sep 2006 18:50:54 -0700 (PDT)
-In-Reply-To: <45067312.7020900@aitel.hist.no>
+Received: from py-out-1112.google.com ([64.233.166.180]:37440 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751461AbWIMLGr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Sep 2006 07:06:47 -0400
+Received: by py-out-1112.google.com with SMTP id n25so3120120pyg
+        for <linux-ide@vger.kernel.org>; Wed, 13 Sep 2006 04:06:47 -0700 (PDT)
+In-Reply-To: <4507E2A9.7070306@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Helge Hafting <helge.hafting@aitel.hist.no>
-Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Ric Wheeler <ric@emc.com>
+Cc: Leon Woestenberg <leon.woestenberg@gmail.com>, linux-raid@vger.kernel.org, Greg KH <gregkh@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Helge Hafting wrote:
-> How about a simple and harmless test?
-> When an IDE disk is accessed for the first time, perhaps when
-> the partition table is read - issue a 256-sector read and see
-> what happens.  If it works - fine.  If not, tag the thing as
-> supporting max 255 sectors.
+Ric Wheeler wrote:
+> (Adding Tejun & Greg KH to this thread)
+Adding linux-ide to this thread.
 > 
-> No wrecking of file systems, and full performance for
-> the vast majority.
+> Leon Woestenberg wrote:
+[--snip--]
+>> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
+>> each driven by libata ahci. I unplug then replug the drive that is
+>> rebuilding in RAID-5.
+>>
+>> When I unplug a drive, /dev/sda is removed, hotplug seems to work to
+>> the point where proc/mdstat shows the drive failed, but not removed.
 
-Before implementing anything like that, we need a test case.  We don't 
-know how a faulty drive reacts on such cases.  If it actively aborts the 
-command, we can reduce the limit to 255 sectors after upper layer issues 
-such command, no need to do it earlier.  If it times out, we can't do it 
-during boot and it will suck later too.  If it silently corrupts data 
-(highly unlikely), we need to detect the condition during boot.
+Yeap, that sounds about right.
 
-I don't think it matters all that much anyway.  IDE has been running w/ 
-256 sectors for a loooong time and someone who seeks performance from 
-LBA28 only drive has bigger problems (also I don't think 255 would be 
-noticeably slower than 256).
+>> Every other notion of the drive (in kernel and udev /dev namespace)
+>> seems to be gone after unplugging. I cannot manually removed the drive
+>> using mdadm, because it tells me the drive does not exist.
+
+I see.  That's a problem.  Can you use /dev/.static/dev/sda instead?  If 
+you can't find those static nodes, just create one w/ 'mknod 
+my-static-sda b 8 0' and use it.
+
+>> Replugging the drive brings it back as /dev/sde, md0 will not pick it up.
+
+No, it won't.
+
+> I have a similar setup, AHCI + 4 drives but using a RAID-1 group.  The 
+> thing that you are looking for is "persistent device naming" and should 
+> work properly if you can tweak udev/hotplug correctly.
+> 
+> I have verified that a drive pull/drive reinsert on a mainline kernel 
+> with a SLES10 base does provide this (first insertion gives me sdb, pull 
+> followed by reinsert still is sdb), but have not tested interaction with 
+> RAID since I am focused on the bad block handling at the moment.  I will 
+> add this to my list ;-)
+> 
+>>
+>> The expected behaviour (from me) is that the drive re-appears as 
+>> /dev/sda.
+
+Apart from persistent naming Ric mentioned above, the reason why you 
+don't get sda back is md is holding the internal device.  It's removed 
+from all visible name spaces but md still holds a reference, so the 
+device cannot be destroyed.  So, when a new device comes along, sda is 
+occupied by the dead device, and the new one gets the next available 
+slot, which happens to be sde in your case.
+
+>> What is the intended behaviour of md in this case?
+>>
+>> Should some user-space application fail-remove a drive as a pre-action
+>> of the unplug event from udev, or should md fully remove the drive
+>> within kernel space??
+
+I'm curious too.  Would it be better for md to listen to hotplug events 
+and auto-remove dead devices or is it something which belongs to userland?
+
+Thanks.
 
 -- 
 tejun
