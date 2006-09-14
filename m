@@ -1,55 +1,68 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v3] libsas: move ATA bits into a separate module
-Date: Thu, 14 Sep 2006 18:49:51 -0400
-Message-ID: <4509DC8F.6030900@garzik.org>
-References: <4508A0A2.2080605@us.ibm.com> <450971D3.2040405@garzik.org> <4509DA77.7000508@us.ibm.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: libata hotplug and md raid?
+Date: Thu, 14 Sep 2006 16:23:04 -0700
+Message-ID: <20060914232304.GB2616@suse.de>
+References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com> <4507E2A9.7070306@emc.com> <4507E641.7090508@gmail.com> <c384c5ea0609140524ofed0dd8v6f1b89a6b4d67f75@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4509DA77.7000508@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <c384c5ea0609140524ofed0dd8v6f1b89a6b4d67f75@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Leon Woestenberg <leon.woestenberg@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, linux-raid@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Darrick J. Wong wrote:
-> Jeff Garzik wrote:
+On Thu, Sep 14, 2006 at 02:24:45PM +0200, Leon Woestenberg wrote:
+> Hello all,
 > 
->> I disagree completely with this approach.
->>
->> You don't need a table of hooks for the case where libata is disabled in
->> .config.  Thus, it's only useful for the case where libsas is loaded as
->> a module, but libata is not.
+> On 9/13/06, Tejun Heo <htejun@gmail.com> wrote:
+> >Ric Wheeler wrote:
+> >> Leon Woestenberg wrote:
+> >>> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
+> >>> each driven by libata ahci. I unplug then replug the drive that is
+> >>> rebuilding in RAID-5.
+> >>>
+> >>> When I unplug a drive, /dev/sda is removed, hotplug seems to work to
+> >>> the point where proc/mdstat shows the drive failed, but not removed.
+> >
+> >Yeap, that sounds about right.
+> >
+> >>> Every other notion of the drive (in kernel and udev /dev namespace)
+> >>> seems to be gone after unplugging. I cannot manually removed the drive
+> >>> using mdadm, because it tells me the drive does not exist.
+> >
+> >I see.  That's a problem.  Can you use /dev/.static/dev/sda instead?  If
+> >you can't find those static nodes, just create one w/ 'mknod
+> >my-static-sda b 8 0' and use it.
+> >
 > 
-> Indeed, I misunderstood what James Bottomley wanted, so I reworked the
-> patch.  It has the same functionality as before, but this module uses
-> the module loader/symbol resolver for all the functions in libata, and
-> allows libsas to (optionally) call into sas_ata with weak references by
-> pushing a table of the necessary function pointers into libsas at
-> sas_ata load time.  Thus, libsas doesn't need to load libata/sas_ata
-> unless it actually finds a SATA device.
+> I did further testing of the ideas set out in this thread.
 > 
->> The libsas code should directly call libata functions.  If ATA support
->> in libsas is disabled in .config, then those functions will never be
->> called, thus never loaded the libata module.
+> Although I can use (1) static device nodes, or (2) persistent naming
+> with the proper udev rules, each has its own kind of problems with md.
 > 
-> I certainly can (and now do) call libata functions from sas_ata.
-> However, there are a few cases where libsas needs to call libata (ex.
-> sas_ioctl); for those cases, I think the function pointers are still
-> necessary because I don't want to make libsas require libata.  In any
-> case, if ATA support is disabled in .config, sata_is_dev always returns
-> 0, so the dead-code eliminator should zap that out of libsas entirely.
+> As long as the kernel announces drives as disappeared but md still
+> holds a lock, replugging drives will map to other major:minor number
+> no matter what I try in userspace.
+> 
+> Static device nodes will therefore not help me select the drive that
+> was unplugged/plugged per se.
+> 
+> Persistent naming using udev works OK (I used /dev/bay0 through
+> /dev/bay3 to pinpoint the drive bays) but these disappear upon
+> unplugging, while md keeps a lock to the major:minor, so replugging
+> will move it to different major:minor numbers.
+> 
+> So the question remains: How will hotplug and md work together?
+> 
+> How does md and hotplug work together for current hotplug devices?
 
-Looks MUCH better to me, and eliminates my objection to the 
-libata-related hooks.
+The answer to both of these questions is, "not very well."  Me and Kay
+have been talking with Neil Brown about this and he agrees that it needs
+to be fixed up.  That md device needs to have proper lifetime rules and
+go away proper.  Hopefully it gets fixed soon.
 
-There remains the issue that I poke James about on IRC, namely that 
-there is no need to emulate the SATA phy registers.  libata permits a 
-driver high level access to the ATA engine without needing SATA SCRs. 
-Witness all the PATA drivers, which obviously do not have SCRs at all.
+thanks,
 
-	Jeff
-
-
-
+greg k-h
