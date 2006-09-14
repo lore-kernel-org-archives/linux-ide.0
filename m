@@ -1,64 +1,35 @@
-From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
-Subject: Re: libata hotplug and md raid?
-Date: Thu, 14 Sep 2006 14:24:45 +0200
-Message-ID: <c384c5ea0609140524ofed0dd8v6f1b89a6b4d67f75@mail.gmail.com>
-References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com>
-	 <4507E2A9.7070306@emc.com> <4507E641.7090508@gmail.com>
+From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
+Subject: Re: libata hotplug with md, unplugging does not remove drive from md?
+Date: Thu, 14 Sep 2006 19:01:48 +0300
+Message-ID: <5b170a7d0609140901v6f2425bdy463823213d3927d5@mail.gmail.com>
+References: <c384c5ea0609120656w478afacblcd51d2a346401d6d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4507E641.7090508@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.175]:2978 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1750950AbWINQBu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Sep 2006 12:01:50 -0400
+Received: by ug-out-1314.google.com with SMTP id o38so74692ugd
+        for <linux-ide@vger.kernel.org>; Thu, 14 Sep 2006 09:01:49 -0700 (PDT)
+In-Reply-To: <c384c5ea0609120656w478afacblcd51d2a346401d6d@mail.gmail.com>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Ric Wheeler <ric@emc.com>, linux-raid@vger.kernel.org, Greg KH <gregkh@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Leon Woestenberg <leon.woestenberg@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello all,
-
-On 9/13/06, Tejun Heo <htejun@gmail.com> wrote:
-> Ric Wheeler wrote:
-> > Leon Woestenberg wrote:
-> >> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
-> >> each driven by libata ahci. I unplug then replug the drive that is
-> >> rebuilding in RAID-5.
-> >>
-> >> When I unplug a drive, /dev/sda is removed, hotplug seems to work to
-> >> the point where proc/mdstat shows the drive failed, but not removed.
+On 9/12/06, Leon Woestenberg <leon.woestenberg@gmail.com> wrote:
+> When I unplug that drive, /dev/sda is removed, hotplug seems to work to
+> the point where proc/mdstat shows the drive failed, but not removed.
 >
-> Yeap, that sounds about right.
+> Replugging shows the drive re-appearing as /dev/sde
 >
-> >> Every other notion of the drive (in kernel and udev /dev namespace)
-> >> seems to be gone after unplugging. I cannot manually removed the drive
-> >> using mdadm, because it tells me the drive does not exist.
+> It seems hot unplug does not remove a drive from an md array.
 >
-> I see.  That's a problem.  Can you use /dev/.static/dev/sda instead?  If
-> you can't find those static nodes, just create one w/ 'mknod
-> my-static-sda b 8 0' and use it.
->
+> Is this intentional?
 
-I did further testing of the ideas set out in this thread.
-
-Although I can use (1) static device nodes, or (2) persistent naming
-with the proper udev rules, each has its own kind of problems with md.
-
-As long as the kernel announces drives as disappeared but md still
-holds a lock, replugging drives will map to other major:minor number
-no matter what I try in userspace.
-
-Static device nodes will therefore not help me select the drive that
-was unplugged/plugged per se.
-
-Persistent naming using udev works OK (I used /dev/bay0 through
-/dev/bay3 to pinpoint the drive bays) but these disappear upon
-unplugging, while md keeps a lock to the major:minor, so replugging
-will move it to different major:minor numbers.
-
-So the question remains: How will hotplug and md work together?
-
-How does md and hotplug work together for current hotplug devices?
-
-Regards,
-
-Leon.
+Yes. You may want to re-add it to the array (see man mdadm (new-ish)
+for --re-add with bitmaps). Your userspace should probably take care
+of removing the failed device.
