@@ -1,29 +1,59 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: fix non-uniform ports handling
-Date: Fri, 15 Sep 2006 19:32:56 +0100
-Message-ID: <1158345176.29932.124.camel@localhost.localdomain>
-References: <20060915180415.GB25800@htj.dyndns.org>
+From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
+Subject: Re: libata hotplug and md raid?
+Date: Fri, 15 Sep 2006 21:38:05 +0200
+Message-ID: <c384c5ea0609151238v52e348f1m31eb8d26f31adabb@mail.gmail.com>
+References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com>
+	 <4507E2A9.7070306@emc.com> <4507E641.7090508@gmail.com>
+	 <c384c5ea0609140524ofed0dd8v6f1b89a6b4d67f75@mail.gmail.com>
+	 <20060914232304.GB2616@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43149 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751337AbWIOSJx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Sep 2006 14:09:53 -0400
-In-Reply-To: <20060915180415.GB25800@htj.dyndns.org>
+Received: from nz-out-0102.google.com ([64.233.162.193]:465 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750925AbWIOTiG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Sep 2006 15:38:06 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so1458953nzf
+        for <linux-ide@vger.kernel.org>; Fri, 15 Sep 2006 12:38:05 -0700 (PDT)
+In-Reply-To: <20060914232304.GB2616@suse.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Nelson A. de Oliveira" <naoliv@gmail.com>
+To: Greg KH <gregkh@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, linux-raid@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Ar Sad, 2006-09-16 am 03:04 +0900, ysgrifennodd Tejun Heo:
-> Non-uniform ports handling got broken while updating libata to handle
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> Cc: Nelson A. de Oliveira <naoliv@gmail.com>
+Hello all,
 
+On 9/15/06, Greg KH <gregkh@suse.de> wrote:
+> On Thu, Sep 14, 2006 at 02:24:45PM +0200, Leon Woestenberg wrote:
+> > On 9/13/06, Tejun Heo <htejun@gmail.com> wrote:
+> > >Ric Wheeler wrote:
+> > >> Leon Woestenberg wrote:
+> > >>> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
+> > >>> each driven by libata ahci. I unplug then replug the drive that is
+> > >>> rebuilding in RAID-5.
+> > ...
+> > So the question remains: How will hotplug and md work together?
+> > ...
+> > How does md and hotplug work together for current hotplug devices?
+>
+> The answer to both of these questions is, "not very well."  Me and Kay
+> have been talking with Neil Brown about this and he agrees that it needs
+> to be fixed up.  That md device needs to have proper lifetime rules and
+> go away proper.  Hopefully it gets fixed soon.
+>
 
-Acked-by: Alan Cox <alan@redhat.com>
+I will try to catch any kernel work on this so that I can pick it up
+for testing.
 
+For the moment, I'll try to make this work as best as possible using
+udev rules and userspace (mdadm). I suppose I can act on both unplugs
+and plugs, both before and after the event, is that true?
 
+Regards,
+
+Leon Woestenberg.
+
+-- 
+Leon
