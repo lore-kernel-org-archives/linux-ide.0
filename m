@@ -1,113 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: fix non-uniform ports handling
-Date: Sat, 16 Sep 2006 03:04:15 +0900
-Message-ID: <20060915180415.GB25800@htj.dyndns.org>
+Subject: Re: How to make SATA hotplug path tight?
+Date: Sat, 16 Sep 2006 03:09:03 +0900
+Message-ID: <20060915180903.GC25800@htj.dyndns.org>
+References: <8202f4270609150812r654c1319r511b18aadf7e1f7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:64872 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.182]:32117 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751297AbWIOSEW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Sep 2006 14:04:22 -0400
-Received: by py-out-1112.google.com with SMTP id n25so4169518pyg
-        for <linux-ide@vger.kernel.org>; Fri, 15 Sep 2006 11:04:21 -0700 (PDT)
+	id S1751332AbWIOSJI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Sep 2006 14:09:08 -0400
+Received: by py-out-1112.google.com with SMTP id n25so4171204pyg
+        for <linux-ide@vger.kernel.org>; Fri, 15 Sep 2006 11:09:08 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <8202f4270609150812r654c1319r511b18aadf7e1f7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, alan@lxorguk.ukuu.org.uk, "Nelson A. de Oliveira" <naoliv@gmail.com>
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Non-uniform ports handling got broken while updating libata to handle
-those in the same host.  Only separate irq for the non-uniform
-secondary port was implemented while all other fields (host flags,
-transfer mode...) of the secondary port simply shared those of the
-first.
+On Fri, Sep 15, 2006 at 09:12:33AM -0600, Fajun Chen wrote:
+> Hi,
+> 
+> I'm trying to speed up the SATA hotplug sequence so I can measure the
+> disk spinup time more accurately.  I noticed two delays which may be
+> unnecessary in SATA hotplug:
+> 1. About 4-5 seconds delay during power cycle (power down then power
+> up) as shown below (detail log at the end):
+> [65642.680000] ata_eh_prep_resume: ENTER
+> [65642.680000] ata_eh_prep_resume: EXIT
+> [65642.680000] __ata_port_freeze: ata2 port frozen
+> [65646.970000] ata2: soft resetting port
+> [65646.970000] sil24_softreset: ENTER
+> Question: where is the delay introduced and can we eliminate this delay?
 
-For ata_piix combined mode, which ATM is the only user of non-uniform
-ports, this causes the secondary port assume the wrong type.  This can
-cause PATA port to use SATA ops, which results in bogus check on PCS
-and detection failure.
+It's probably waiting for ATA_BUSY to clear in prereset.
 
-This patch adds ata_probe_ent->pinfo2 which points to optional
-port_info for the secondary port.  For the time being, this seems to
-be the simplest solution.  This workaround will be removed together
-with ata_probe_ent itself after init model is updated to allow more
-flexibility.
+> 2. Soft reset fails sometimes then followed by a successful hard reset.
+> Question: may I do hard reset to start with and where is the best
+> place to change this? I know sata spec recommend attempting less
+> intrusive recovery procedure first, but I need to eliminate as much
+> unnecessary delay as possible.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Nelson A. de Oliveira <naoliv@gmail.com>
----
- drivers/ata/libata-core.c |   18 +++++++++++++-----
- drivers/ata/libata-sff.c  |    2 ++
- include/linux/libata.h    |    8 ++++++++
- 3 files changed, 23 insertions(+), 5 deletions(-)
+ATA_FLAG_HRST_TO_RESUME.  You probably also want to tweak
+ATA_SPINUP_WAIT.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 1c93154..bb66a12 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5269,11 +5269,19 @@ void ata_port_init(struct ata_port *ap, 
- 	ap->host = host;
- 	ap->dev = ent->dev;
- 	ap->port_no = port_no;
--	ap->pio_mask = ent->pio_mask;
--	ap->mwdma_mask = ent->mwdma_mask;
--	ap->udma_mask = ent->udma_mask;
--	ap->flags |= ent->port_flags;
--	ap->ops = ent->port_ops;
-+	if (port_no == 1 && ent->pinfo2) {
-+		ap->pio_mask = ent->pinfo2->pio_mask;
-+		ap->mwdma_mask = ent->pinfo2->mwdma_mask;
-+		ap->udma_mask = ent->pinfo2->udma_mask;
-+		ap->flags |= ent->pinfo2->flags;
-+		ap->ops = ent->pinfo2->port_ops;
-+	} else {
-+		ap->pio_mask = ent->pio_mask;
-+		ap->mwdma_mask = ent->mwdma_mask;
-+		ap->udma_mask = ent->udma_mask;
-+		ap->flags |= ent->port_flags;
-+		ap->ops = ent->port_ops;
-+	}
- 	ap->hw_sata_spd_limit = UINT_MAX;
- 	ap->active_tag = ATA_TAG_POISON;
- 	ap->last_ctl = 0xFF;
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 7605028..e72ed8d 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -858,6 +858,7 @@ ata_pci_init_native_mode(struct pci_dev 
- 			probe_ent->port[p].bmdma_addr = bmdma;
- 		}
- 		ata_std_ports(&probe_ent->port[p]);
-+		probe_ent->pinfo2 = port[1];
- 		p++;
- 	}
- 
-@@ -907,6 +908,7 @@ static struct ata_probe_ent *ata_pci_ini
- 				probe_ent->_host_flags |= ATA_HOST_SIMPLEX;
- 		}
- 		ata_std_ports(&probe_ent->port[1]);
-+		probe_ent->pinfo2 = port[1];
- 	} else
- 		probe_ent->dummy_port_mask |= ATA_PORT_SECONDARY;
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 8715305..ff67e75 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -361,6 +361,14 @@ struct ata_probe_ent {
- 	unsigned long		_host_flags;
- 	void __iomem		*mmio_base;
- 	void			*private_data;
-+
-+	/* port_info for the secondary port.  Together with irq2, it's
-+	 * used to implement non-uniform secondary port.  Currently,
-+	 * the only user is ata_piix combined mode.  This workaround
-+	 * will be removed together with ata_probe_ent when init model
-+	 * is updated.
-+	 */
-+	const struct ata_port_info *pinfo2;
- };
- 
- struct ata_host {
+> Is there any other place in new eh where SATA hotplug can be optimized?
+
+Too many to point out.  :-)
+
+-- 
+tejun
