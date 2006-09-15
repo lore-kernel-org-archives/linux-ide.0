@@ -1,42 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] sis5513: Switch to pci refcounting
-Date: Fri, 15 Sep 2006 15:18:07 +0100
-Message-ID: <1158329887.29932.45.camel@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] piix: Use refcounted interface when searching for a 450NX
+Date: Fri, 15 Sep 2006 18:14:39 +0400
+Message-ID: <450AB54F.5000905@ru.mvista.com>
+References: <1158329678.29932.41.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44196 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751480AbWIONyY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Sep 2006 09:54:24 -0400
+Received: from h155.mvista.com ([63.81.120.155]:35536 "EHLO imap.sh.mvista.com")
+	by vger.kernel.org with ESMTP id S1751496AbWIOOMb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2006 10:12:31 -0400
+In-Reply-To: <1158329678.29932.41.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mirrors the drivers/ata version, hold a reference to the host bridge
-while we are doing setup.
+Hello.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Alan Cox wrote:
+> Simple conversion
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/drivers/ide/pci/piix.c linux-2.6.18-rc6-mm1/drivers/ide/pci/piix.c
+> --- linux.vanilla-2.6.18-rc6-mm1/drivers/ide/pci/piix.c	2006-09-11 17:00:09.000000000 +0100
+> +++ linux-2.6.18-rc6-mm1/drivers/ide/pci/piix.c	2006-09-14 17:19:12.000000000 +0100
+> @@ -602,7 +602,7 @@
+>  	struct pci_dev *pdev = NULL;
+>  	u16 cfg;
+>  	u8 rev;
+> -	while((pdev=pci_find_device(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82454NX, pdev))!=NULL)
+> +	while((pdev=pci_get_device(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82454NX, pdev))!=NULL)
+>  	{
+>  		/* Look for 450NX PXB. Check for problem configurations
+>  		   A PCI quirk checks bit 6 already */
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/drivers/ide/pci/sis5513.c linux-2.6.18-rc6-mm1/drivers/ide/pci/sis5513.c
---- linux.vanilla-2.6.18-rc6-mm1/drivers/ide/pci/sis5513.c	2006-09-11 17:00:09.000000000 +0100
-+++ linux-2.6.18-rc6-mm1/drivers/ide/pci/sis5513.c	2006-09-14 17:19:58.000000000 +0100
-@@ -739,7 +739,7 @@
- 
- 	for (i = 0; i < ARRAY_SIZE(SiSHostChipInfo) && !chipset_family; i++) {
- 
--		host = pci_find_device(PCI_VENDOR_ID_SI, SiSHostChipInfo[i].host_id, NULL);
-+		host = pci_get_device(PCI_VENDOR_ID_SI, SiSHostChipInfo[i].host_id, NULL);
- 
- 		if (!host)
- 			continue;
-@@ -753,6 +753,7 @@
- 			if (hostrev >= 0x30)
- 				chipset_family = ATA_100a;
- 		}
-+		pci_dev_put(host);
- 	
- 		printk(KERN_INFO "SIS5513: %s %s controller\n",
- 			 SiSHostChipInfo[i].name, chipset_capability[chipset_family]);
+    Shouldn't pci_put_dev() be called after the bridge device no longer needed?
+I assume it's not needed anymore after this function is finished...
 
+WBR, Sergei
