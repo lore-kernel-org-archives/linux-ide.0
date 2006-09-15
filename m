@@ -1,40 +1,36 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] piix: Use refcounted interface when searching for a
- 450NX
-Date: Fri, 15 Sep 2006 09:54:09 -0700
-Message-ID: <20060915095409.d0171431.akpm@osdl.org>
-References: <1158329678.29932.41.camel@localhost.localdomain>
+From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
+Subject: Re: How to make SATA hotplug path tight?
+Date: Fri, 15 Sep 2006 19:11:50 +0200
+Message-ID: <c384c5ea0609151011o2995e8a4x1fa2d0ac1ef5074d@mail.gmail.com>
+References: <8202f4270609150812r654c1319r511b18aadf7e1f7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:39607 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750733AbWIOQyZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2006 12:54:25 -0400
-In-Reply-To: <1158329678.29932.41.camel@localhost.localdomain>
+Received: from nz-out-0102.google.com ([64.233.162.200]:23361 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932069AbWIORLv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Sep 2006 13:11:51 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so1426938nzf
+        for <linux-ide@vger.kernel.org>; Fri, 15 Sep 2006 10:11:51 -0700 (PDT)
+In-Reply-To: <8202f4270609150812r654c1319r511b18aadf7e1f7@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
-On Fri, 15 Sep 2006 15:14:38 +0100
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+Fajun,
 
-> Simple conversion
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/drivers/ide/pci/piix.c linux-2.6.18-rc6-mm1/drivers/ide/pci/piix.c
-> --- linux.vanilla-2.6.18-rc6-mm1/drivers/ide/pci/piix.c	2006-09-11 17:00:09.000000000 +0100
-> +++ linux-2.6.18-rc6-mm1/drivers/ide/pci/piix.c	2006-09-14 17:19:12.000000000 +0100
-> @@ -602,7 +602,7 @@
->  	struct pci_dev *pdev = NULL;
->  	u16 cfg;
->  	u8 rev;
-> -	while((pdev=pci_find_device(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82454NX, pdev))!=NULL)
-> +	while((pdev=pci_get_device(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82454NX, pdev))!=NULL)
->  	{
->  		/* Look for 450NX PXB. Check for problem configurations
->  		   A PCI quirk checks bit 6 already */
+On 9/15/06, Fajun Chen <fajunchen@gmail.com> wrote:
+> Hi,
+>
+> I'm trying to speed up the SATA hotplug sequence so I can measure the
+> disk spinup time more accurately.  I noticed two delays which may be
+>
+Did you check whether the SMART attribute that indicates disk spin-up
+time did suit your needs?
 
-fwiw, I have an ad450nx server upon which I occasionally test kernels.
+Regards,
+
+Leon.
