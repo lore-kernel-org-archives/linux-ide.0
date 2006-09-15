@@ -1,93 +1,57 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Re: How to make SATA hotplug path tight?
-Date: Fri, 15 Sep 2006 13:48:28 -0600
-Message-ID: <8202f4270609151248k236d6c24vab519b64902f102e@mail.gmail.com>
-References: <8202f4270609150812r654c1319r511b18aadf7e1f7@mail.gmail.com>
-	 <20060915180903.GC25800@htj.dyndns.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH] libata: fix non-uniform ports handling
+Date: Fri, 15 Sep 2006 15:29:32 -0700
+Message-ID: <20060915152932.6aafff8e.akpm@osdl.org>
+References: <20060915180415.GB25800@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:5265 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751590AbWIOTs3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Sep 2006 15:48:29 -0400
-Received: by py-out-1112.google.com with SMTP id n25so4197882pyg
-        for <linux-ide@vger.kernel.org>; Fri, 15 Sep 2006 12:48:28 -0700 (PDT)
-In-Reply-To: <20060915180903.GC25800@htj.dyndns.org>
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.4]:13987 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932334AbWIOW3v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2006 18:29:51 -0400
+In-Reply-To: <20060915180415.GB25800@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, alan@lxorguk.ukuu.org.uk, "Nelson A. de Oliveira" <naoliv@gmail.com>
 
-On 9/15/06, Tejun Heo <htejun@gmail.com> wrote:
-> On Fri, Sep 15, 2006 at 09:12:33AM -0600, Fajun Chen wrote:
-> > Hi,
-> >
-> > I'm trying to speed up the SATA hotplug sequence so I can measure the
-> > disk spinup time more accurately.  I noticed two delays which may be
-> > unnecessary in SATA hotplug:
-> > 1. About 4-5 seconds delay during power cycle (power down then power
-> > up) as shown below (detail log at the end):
-> > [65642.680000] ata_eh_prep_resume: ENTER
-> > [65642.680000] ata_eh_prep_resume: EXIT
-> > [65642.680000] __ata_port_freeze: ata2 port frozen
-> > [65646.970000] ata2: soft resetting port
-> > [65646.970000] sil24_softreset: ENTER
-> > Question: where is the delay introduced and can we eliminate this delay?
->
-> It's probably waiting for ATA_BUSY to clear in prereset.
->
-> > 2. Soft reset fails sometimes then followed by a successful hard reset.
-> > Question: may I do hard reset to start with and where is the best
-> > place to change this? I know sata spec recommend attempting less
-> > intrusive recovery procedure first, but I need to eliminate as much
-> > unnecessary delay as possible.
->
-> ATA_FLAG_HRST_TO_RESUME.  You probably also want to tweak
-> ATA_SPINUP_WAIT.
->
+On Sat, 16 Sep 2006 03:04:15 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-    Tejun, I use SATA Sil24.  Where should ATA_FLAG_HRST_TO_RESUME be
-flagged?  I made one attempt by making the following change in
-libata.h and it seems not working sometimes (see log at the end)? I'm
-a little puzzled by different flags such as ap->flags, ehc->flags...
-Is there any document about new eh?
+> @@ -5269,11 +5269,19 @@ void ata_port_init(struct ata_port *ap, 
+>  	ap->host = host;
+>  	ap->dev = ent->dev;
+>  	ap->port_no = port_no;
+> -	ap->pio_mask = ent->pio_mask;
+> -	ap->mwdma_mask = ent->mwdma_mask;
+> -	ap->udma_mask = ent->udma_mask;
+> -	ap->flags |= ent->port_flags;
+> -	ap->ops = ent->port_ops;
+> +	if (port_no == 1 && ent->pinfo2) {
+> +		ap->pio_mask = ent->pinfo2->pio_mask;
+> +		ap->mwdma_mask = ent->pinfo2->mwdma_mask;
+> +		ap->udma_mask = ent->pinfo2->udma_mask;
+> +		ap->flags |= ent->pinfo2->flags;
+> +		ap->ops = ent->pinfo2->port_ops;
+> +	} else {
+> +		ap->pio_mask = ent->pio_mask;
+> +		ap->mwdma_mask = ent->mwdma_mask;
+> +		ap->udma_mask = ent->udma_mask;
+> +		ap->flags |= ent->port_flags;
+> +		ap->ops = ent->port_ops;
+> +	}
 
-static inline void __ata_ehi_hotplugged(struct ata_eh_info *ehi)
-{
-	if (ehi->flags & ATA_EHI_HOTPLUGGED)
-		return;
 
-	ehi->flags |= ATA_EHI_HOTPLUGGED | ATA_EHI_RESUME_LINK;
-	ehi->hotplug_timestamp = jiffies;
+Same problem: the git-libata-all which I pulled 30 seconds ago
+has:
 
-	ehi->action |= ATA_EH_HARDRESET;    // My Change for Hard Reset
-	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
-}
-...
-[ 5985.450000] ata1: EH pending after completion, repeating EH (cnt=4)
-[ 5985.450000] ata_eh_autopsy: ENTER
-[ 5985.450000] ata_eh_autopsy: EXIT
-[ 5985.450000] ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x1
-[ 5985.450000] ata1: (irq_stat 0x00b40090, PHY RDY changed)
-[ 5985.450000] ata_eh_recover: ENTER
-[ 5985.450000] ata_eh_prep_resume: ENTER
-[ 5985.450000] ata_eh_prep_resume: EXIT
-[ 5985.450000] __ata_port_freeze: ata1 port frozen
-[ 5985.450000] ata_wait_spinup: ENTER
-[ 5985.450000] sata_phy_debounce: ENTER
-[ 5985.970000] sata_phy_debounce: EXIT
-[ 5988.990000] ata_wait_spinup: EXIT
-[ 5988.990000] sata_phy_resume: ENTER
-[ 5989.200000] sata_phy_debounce: ENTER
-[ 5989.720000] sata_phy_debounce: EXIT
-[ 5989.720000] sata_phy_resume: EXIT
-[ 5989.720000] ata1: soft resetting port
-[ 5989.720000] sil24_softreset: ENTER
-[ 5989.830000] ata_dev_classify: found ATA device by sig
-[ 5989.830000] sil24_softreset: EXIT, class=1
-[ 5989.830000] ata_std_postreset: ENTER
-[ 5989.830000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-...
+	ap->flags |= ent->port_flags | ent->_port_flags[port_no];
+
+and not
+
+	ap->flags |= ent->port_flags;
+
+which is what your patch expects.
+
+Oh well, hopefully Jeff will sort it out.
