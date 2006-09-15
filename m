@@ -1,59 +1,37 @@
-From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
-Subject: Re: libata hotplug and md raid?
-Date: Fri, 15 Sep 2006 21:38:05 +0200
-Message-ID: <c384c5ea0609151238v52e348f1m31eb8d26f31adabb@mail.gmail.com>
-References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com>
-	 <4507E2A9.7070306@emc.com> <4507E641.7090508@gmail.com>
-	 <c384c5ea0609140524ofed0dd8v6f1b89a6b4d67f75@mail.gmail.com>
-	 <20060914232304.GB2616@suse.de>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Re: How to make SATA hotplug path tight?
+Date: Fri, 15 Sep 2006 13:40:10 -0600
+Message-ID: <8202f4270609151240v119a6465o313968e184189c36@mail.gmail.com>
+References: <8202f4270609150812r654c1319r511b18aadf7e1f7@mail.gmail.com>
+	 <c384c5ea0609151011o2995e8a4x1fa2d0ac1ef5074d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.193]:465 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750925AbWIOTiG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Sep 2006 15:38:06 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so1458953nzf
-        for <linux-ide@vger.kernel.org>; Fri, 15 Sep 2006 12:38:05 -0700 (PDT)
-In-Reply-To: <20060914232304.GB2616@suse.de>
+Received: from qb-out-0506.google.com ([72.14.204.239]:16983 "EHLO
+	qb-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751514AbWIOTkL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Sep 2006 15:40:11 -0400
+Received: by qb-out-0506.google.com with SMTP id p36so784876qba
+        for <linux-ide@vger.kernel.org>; Fri, 15 Sep 2006 12:40:11 -0700 (PDT)
+In-Reply-To: <c384c5ea0609151011o2995e8a4x1fa2d0ac1ef5074d@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, linux-raid@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Leon Woestenberg <leon.woestenberg@gmail.com>
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
-Hello all,
-
-On 9/15/06, Greg KH <gregkh@suse.de> wrote:
-> On Thu, Sep 14, 2006 at 02:24:45PM +0200, Leon Woestenberg wrote:
-> > On 9/13/06, Tejun Heo <htejun@gmail.com> wrote:
-> > >Ric Wheeler wrote:
-> > >> Leon Woestenberg wrote:
-> > >>> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
-> > >>> each driven by libata ahci. I unplug then replug the drive that is
-> > >>> rebuilding in RAID-5.
-> > ...
-> > So the question remains: How will hotplug and md work together?
-> > ...
-> > How does md and hotplug work together for current hotplug devices?
+On 9/15/06, Leon Woestenberg <leon.woestenberg@gmail.com> wrote:
+> Fajun,
 >
-> The answer to both of these questions is, "not very well."  Me and Kay
-> have been talking with Neil Brown about this and he agrees that it needs
-> to be fixed up.  That md device needs to have proper lifetime rules and
-> go away proper.  Hopefully it gets fixed soon.
+> On 9/15/06, Fajun Chen <fajunchen@gmail.com> wrote:
+> > Hi,
+> >
+> > I'm trying to speed up the SATA hotplug sequence so I can measure the
+> > disk spinup time more accurately.  I noticed two delays which may be
+> >
+> Did you check whether the SMART attribute that indicates disk spin-up
+> time did suit your needs?
 >
-
-I will try to catch any kernel work on this so that I can pick it up
-for testing.
-
-For the moment, I'll try to make this work as best as possible using
-udev rules and userspace (mdadm). I suppose I can act on both unplugs
-and plugs, both before and after the event, is that true?
-
-Regards,
-
-Leon Woestenberg.
-
--- 
-Leon
+Leon, I need to measure this in software to make sure interface is
+ready while SMART attributes spinup time may have some uncertainty.
