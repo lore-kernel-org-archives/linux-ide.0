@@ -1,52 +1,57 @@
-From: Dave Maurer <dcmaurer1@cox.net>
-Subject: Intel 5000X ESB2 AHCI PCI Dev ID not recognized by ahci.c (0x2680)
-Date: Mon, 18 Sep 2006 12:37:35 -0700
-Message-ID: <200609181237.35209.dcmaurer1@cox.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v3] libsas: move ATA bits into a separate module
+Date: Mon, 18 Sep 2006 17:47:24 -0400
+Message-ID: <450F13EC.2020303@garzik.org>
+References: <4508A0A2.2080605@us.ibm.com> <450971D3.2040405@garzik.org> <4509DA77.7000508@us.ibm.com> <20060918190033.GD17670@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fed1rmmtao11.cox.net ([68.230.241.28]:49904 "EHLO
-	fed1rmmtao11.cox.net") by vger.kernel.org with ESMTP
-	id S932317AbWIRThh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Sep 2006 15:37:37 -0400
-Received: from fed1rmimpo01.cox.net ([70.169.32.71])
-          by fed1rmmtao11.cox.net
-          (InterMail vM.6.01.06.01 201-2131-130-101-20060113) with ESMTP
-          id <20060918193736.JAUG13992.fed1rmmtao11.cox.net@fed1rmimpo01.cox.net>
-          for <linux-ide@vger.kernel.org>; Mon, 18 Sep 2006 15:37:36 -0400
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:7056 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751937AbWIRVrc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2006 17:47:32 -0400
+In-Reply-To: <20060918190033.GD17670@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>, Andrew Morton <akpm@osdl.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
 
-I have a Mac Pro which has an Intel 5000X chipset in it.  On boot, the PCI 
-Device ID for the ESB2 SATA/AHCI controller is set to 0x2680.  The last three 
-bits of the Dev ID are assigned by the fuse bits.  I can't find anywhere in 
-the Intel docs for this chipset what the fuse bits mean, or why the bits are 
-different across the chipsets that contain ESB2 chips.
+Christoph Hellwig wrote:
+> On Thu, Sep 14, 2006 at 03:40:55PM -0700, Darrick J. Wong wrote:
+>> Jeff Garzik wrote:
+>>
+>>> I disagree completely with this approach.
+>>>
+>>> You don't need a table of hooks for the case where libata is disabled in
+>>> .config.  Thus, it's only useful for the case where libsas is loaded as
+>>> a module, but libata is not.
+>> Indeed, I misunderstood what James Bottomley wanted, so I reworked the
+>> patch.  It has the same functionality as before, but this module uses
+>> the module loader/symbol resolver for all the functions in libata, and
+>> allows libsas to (optionally) call into sas_ata with weak references by
+>> pushing a table of the necessary function pointers into libsas at
+>> sas_ata load time.  Thus, libsas doesn't need to load libata/sas_ata
+>> unless it actually finds a SATA device.
+> 
+> NACK again.  Week references are bad.  Please change it back to normal
+> hard references so that it works like everything else in the kernel.
 
-Regardless, the ahci.c file only looks for the AHCI on ESB2 chips if the Dev 
-ID is 0x2681, 0x2682, or 0x2683.  So, only the ata_piix.c driver picks up the 
-0x2680 Dev ID and treats it as the SATA controller in ICH6.  The side effect 
-is that only the first 4 SATA ports are detected and probed, and the last 2 
-are ignored.
+I strongly agree.
 
-I added an entry in ahci.c to detect ESB2 on the 0x2680 ID, and all is well. I 
-made this change to the 2.0 version of the ahci.c fle. Upon boot with the 
-change, all SATA ports were detected and enabled correctly.
+The kernel code will bloat, and performance will suffer, if we did weak 
+refs and jump tables everywhere.
 
-So I don't know if the simple patch would be just to add the ID to ahci.c, or 
-if this would cause problems with other chipsets, (ICH6, ICH7, etc.)
+I just don't see the overhead of loading libata, and not using it, as a 
+huge penalty, when looking at the alternatives.
 
-FYI, here's the device list for the ESB2 SATA controller on the Mac Pros.  
-This might be common across all 5000X chipsets, might not.
+Consider the common use cases:  (a) normal distro usage, often servers 
+where libata loading will be common anyway due to SATA presence on 
+motherboard, and (b) embedded use, where ATA support can be .config'd 
+out at compile time.
 
-00:1f.1 0101: 8086:269e (rev 09)  -- Legacy IDE controller
-00:1f.2 0101: 8086:2680 (rev 09)  -- SATA/AHCI controller
+Thus, the use cases where end users really will care about libata being 
+loaded, but not used, are slim to none.
 
+	Jeff
 
-Thanks!
-Dave Maurer
 
