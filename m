@@ -1,60 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: How to make SATA hotplug path tight?
-Date: Tue, 19 Sep 2006 12:11:46 +0900
-Message-ID: <450F5FF2.9030208@gmail.com>
-References: <8202f4270609150812r654c1319r511b18aadf7e1f7@mail.gmail.com>	 <20060915180903.GC25800@htj.dyndns.org>	 <8202f4270609151248k236d6c24vab519b64902f102e@mail.gmail.com>	 <450B58C9.7010904@gmail.com> <8202f4270609181218h160b8df7x4853f58429229b3b@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: 2.6.18-rc7-git1: AHCI not seeing devices on ICH8 mobo (DG965RY)
+Date: Mon, 18 Sep 2006 23:53:39 -0400
+Message-ID: <450F69C3.8060603@garzik.org>
+References: <20060914200500.GD27531@curie-int.orbis-terrarum.net> <4509AB2E.1030800@garzik.org> <20060914205050.GE27531@curie-int.orbis-terrarum.net> <20060916203812.GC30391@curie-int.orbis-terrarum.net> <20060916210857.GD30391@curie-int.orbis-terrarum.net> <20060917074929.GD25800@htj.dyndns.org> <20060918034826.GA10116@curie-int.orbis-terrarum.net> <450E13D4.10200@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.226]:22712 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751197AbWISDLw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Sep 2006 23:11:52 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so4275164wxc
-        for <linux-ide@vger.kernel.org>; Mon, 18 Sep 2006 20:11:52 -0700 (PDT)
-In-Reply-To: <8202f4270609181218h160b8df7x4853f58429229b3b@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:41115 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1752023AbWISDxn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2006 23:53:43 -0400
+In-Reply-To: <450E13D4.10200@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-[adding linux-ide back, please don't drop it]
-
-Fajun Chen wrote:
-> Hi Tejun,
+Tejun Heo wrote:
+> Jeff, we've been ignoring PI in ahci_host_init()...
 > 
-> I try to understand your eh code and still have several questions:
+>     for (i = 0; i < probe_ent->n_ports; i++) {
+> #if 0 /* BIOSen initialize this incorrectly */
+>         if (!(hpriv->port_map & (1 << i)))
+>             continue;
+> #endif
 > 
-> 1. Why software is needed after hard reset under certain condition?
+> The comment suggests that some BIOSen initialize PI incorrectly which 
+> will probably result in undetected ports.  Is this true?  Would it be 
+> dangerous to honor PI on some controllers?  If so, PI should be used 
+> only for controllers which does non-linear port mapping.
 
-Because some controllers including sil24 cannot acquire device signature 
-after hardreset.
 
->     rc = ata_do_reset(ap, reset, classes);
->     did_followup_srst = 0;
->     if (reset == hardreset &&
->         ata_eh_followup_srst_needed(rc, classify, classes)) {
->         /* okay, let's do follow-up softreset */
->         did_followup_srst = 1;
->         reset = softreset;
->       ...
->       Sometimes this part of the code costed as many as 7 secs:
-> [  366.400000] ata2: hard resetting port
-> [  366.400000] sata_phy_debounce: ENTER
-> [  368.490000] sata_phy_debounce: EXIT
-> [  368.490000] sil24_softreset: ENTER
-> [  375.750000] ata_dev_classify: found ATA device by sig
-> [  375.750000] sil24_softreset: EXIT, class=1
->       Is there any way to get drive going without going through this?
+The core problem is that this register is write-once after reset, i.e. 
+BIOS-initialized.  And my experience with pre-production machines has 
+been that after reset _by the driver_, the register was useless until 
+initialized to a value... _by the driver_.  Which defeats the purpose of 
+the register.
 
-Well, on hotplug case, you need to detect which class of device is 
-attached, so you need a softreset there.
+So the info contained in the register is quite useful -- when info is 
+contained in the register.  :)
 
-> 2.  What's the concept of port suspend and resume?
+Now, granted, I have only seen this on pre-production machines, hence 
+the #if 0.  But also, since the code has been disabled in production, we 
+don't know how effective it is across all platforms, and we _do_ know 
+that it is ineffective if used directly after a reset.  The write-once 
+behavior is documented, and normal.
 
-Port being suspended and resumed, I think. :-) You need ask more 
-specifically.
+We can't really know which controllers have a non-linear port mapping, 
+because that is dependent on both the silicon and whether or not the 
+chip is connected to port X[0-31].  The BIOS knows this, of course :)
 
--- 
-tejun
+We can try to enable the code, but I worry that it will fail in 
+situations such as kexec.
+
+	Jeff
+
+
