@@ -1,58 +1,55 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
 Subject: Re: 2.6.18-rc7-git1: AHCI not seeing devices on ICH8 mobo (DG965RY)
-Date: Mon, 18 Sep 2006 23:53:39 -0400
-Message-ID: <450F69C3.8060603@garzik.org>
-References: <20060914200500.GD27531@curie-int.orbis-terrarum.net> <4509AB2E.1030800@garzik.org> <20060914205050.GE27531@curie-int.orbis-terrarum.net> <20060916203812.GC30391@curie-int.orbis-terrarum.net> <20060916210857.GD30391@curie-int.orbis-terrarum.net> <20060917074929.GD25800@htj.dyndns.org> <20060918034826.GA10116@curie-int.orbis-terrarum.net> <450E13D4.10200@gmail.com>
+Date: Mon, 18 Sep 2006 21:49:13 -0700
+Message-ID: <20060919044913.GD569@curie-int.orbis-terrarum.net>
+References: <20060914200500.GD27531@curie-int.orbis-terrarum.net> <4509AB2E.1030800@garzik.org> <20060914205050.GE27531@curie-int.orbis-terrarum.net> <20060916203812.GC30391@curie-int.orbis-terrarum.net> <20060916210857.GD30391@curie-int.orbis-terrarum.net> <20060917074929.GD25800@htj.dyndns.org> <20060918034826.GA10116@curie-int.orbis-terrarum.net> <450E13D4.10200@gmail.com> <450F69C3.8060603@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="z4+8/lEcDcG5Ke9S"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41115 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1752023AbWISDxn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2006 23:53:43 -0400
-In-Reply-To: <450E13D4.10200@gmail.com>
+Received: from mail.isohunt.com ([69.64.61.20]:46495 "EHLO mail.isohunt.com")
+	by vger.kernel.org with ESMTP id S1752039AbWISELm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Sep 2006 00:11:42 -0400
+Content-Disposition: inline
+In-Reply-To: <450F69C3.8060603@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-Tejun Heo wrote:
-> Jeff, we've been ignoring PI in ahci_host_init()...
-> 
->     for (i = 0; i < probe_ent->n_ports; i++) {
-> #if 0 /* BIOSen initialize this incorrectly */
->         if (!(hpriv->port_map & (1 << i)))
->             continue;
-> #endif
-> 
-> The comment suggests that some BIOSen initialize PI incorrectly which 
-> will probably result in undetected ports.  Is this true?  Would it be 
-> dangerous to honor PI on some controllers?  If so, PI should be used 
-> only for controllers which does non-linear port mapping.
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 
-The core problem is that this register is write-once after reset, i.e. 
-BIOS-initialized.  And my experience with pre-production machines has 
-been that after reset _by the driver_, the register was useless until 
-initialized to a value... _by the driver_.  Which defeats the purpose of 
-the register.
+--z4+8/lEcDcG5Ke9S
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-So the info contained in the register is quite useful -- when info is 
-contained in the register.  :)
+On Mon, Sep 18, 2006 at 11:53:39PM -0400, Jeff Garzik wrote:
+> We can't really know which controllers have a non-linear port mapping,=20
+> because that is dependent on both the silicon and whether or not the=20
+> chip is connected to port X[0-31].  The BIOS knows this, of course :)
+I noticed that in my case, when the wrong ioports were probed (base +
+port_idx*offset) for port_idx being 2/3 - all of the return values were
+zero, instead of the expected values.
 
-Now, granted, I have only seen this on pre-production machines, hence 
-the #if 0.  But also, since the code has been disabled in production, we 
-don't know how effective it is across all platforms, and we _do_ know 
-that it is ineffective if used directly after a reset.  The write-once 
-behavior is documented, and normal.
+You could probably use this to detect cases where PI claims a port is
+not present, but it really is.
 
-We can't really know which controllers have a non-linear port mapping, 
-because that is dependent on both the silicon and whether or not the 
-chip is connected to port X[0-31].  The BIOS knows this, of course :)
+--=20
+Robin Hugh Johnson
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
 
-We can try to enable the code, but I worry that it will fail in 
-situations such as kexec.
+--z4+8/lEcDcG5Ke9S
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-	Jeff
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks
 
+iD8DBQFFD3bJPpIsIjIzwiwRAkG8AKC5T6rNZJXnVf6asL188fPmq8/WxgCfVTZ1
+7GRmlAcnffO49QBBdgwTNJk=
+=u5n6
+-----END PGP SIGNATURE-----
 
+--z4+8/lEcDcG5Ke9S--
