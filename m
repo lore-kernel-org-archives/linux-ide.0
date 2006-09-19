@@ -1,57 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v3] libsas: move ATA bits into a separate module
-Date: Mon, 18 Sep 2006 17:47:24 -0400
-Message-ID: <450F13EC.2020303@garzik.org>
-References: <4508A0A2.2080605@us.ibm.com> <450971D3.2040405@garzik.org> <4509DA77.7000508@us.ibm.com> <20060918190033.GD17670@infradead.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: How to make SATA hotplug path tight?
+Date: Tue, 19 Sep 2006 12:11:46 +0900
+Message-ID: <450F5FF2.9030208@gmail.com>
+References: <8202f4270609150812r654c1319r511b18aadf7e1f7@mail.gmail.com>	 <20060915180903.GC25800@htj.dyndns.org>	 <8202f4270609151248k236d6c24vab519b64902f102e@mail.gmail.com>	 <450B58C9.7010904@gmail.com> <8202f4270609181218h160b8df7x4853f58429229b3b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:7056 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751937AbWIRVrc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2006 17:47:32 -0400
-In-Reply-To: <20060918190033.GD17670@infradead.org>
+Received: from wx-out-0506.google.com ([66.249.82.226]:22712 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751197AbWISDLw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Sep 2006 23:11:52 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so4275164wxc
+        for <linux-ide@vger.kernel.org>; Mon, 18 Sep 2006 20:11:52 -0700 (PDT)
+In-Reply-To: <8202f4270609181218h160b8df7x4853f58429229b3b@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>, Andrew Morton <akpm@osdl.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Christoph Hellwig wrote:
-> On Thu, Sep 14, 2006 at 03:40:55PM -0700, Darrick J. Wong wrote:
->> Jeff Garzik wrote:
->>
->>> I disagree completely with this approach.
->>>
->>> You don't need a table of hooks for the case where libata is disabled in
->>> .config.  Thus, it's only useful for the case where libsas is loaded as
->>> a module, but libata is not.
->> Indeed, I misunderstood what James Bottomley wanted, so I reworked the
->> patch.  It has the same functionality as before, but this module uses
->> the module loader/symbol resolver for all the functions in libata, and
->> allows libsas to (optionally) call into sas_ata with weak references by
->> pushing a table of the necessary function pointers into libsas at
->> sas_ata load time.  Thus, libsas doesn't need to load libata/sas_ata
->> unless it actually finds a SATA device.
+[adding linux-ide back, please don't drop it]
+
+Fajun Chen wrote:
+> Hi Tejun,
 > 
-> NACK again.  Week references are bad.  Please change it back to normal
-> hard references so that it works like everything else in the kernel.
+> I try to understand your eh code and still have several questions:
+> 
+> 1. Why software is needed after hard reset under certain condition?
 
-I strongly agree.
+Because some controllers including sil24 cannot acquire device signature 
+after hardreset.
 
-The kernel code will bloat, and performance will suffer, if we did weak 
-refs and jump tables everywhere.
+>     rc = ata_do_reset(ap, reset, classes);
+>     did_followup_srst = 0;
+>     if (reset == hardreset &&
+>         ata_eh_followup_srst_needed(rc, classify, classes)) {
+>         /* okay, let's do follow-up softreset */
+>         did_followup_srst = 1;
+>         reset = softreset;
+>       ...
+>       Sometimes this part of the code costed as many as 7 secs:
+> [  366.400000] ata2: hard resetting port
+> [  366.400000] sata_phy_debounce: ENTER
+> [  368.490000] sata_phy_debounce: EXIT
+> [  368.490000] sil24_softreset: ENTER
+> [  375.750000] ata_dev_classify: found ATA device by sig
+> [  375.750000] sil24_softreset: EXIT, class=1
+>       Is there any way to get drive going without going through this?
 
-I just don't see the overhead of loading libata, and not using it, as a 
-huge penalty, when looking at the alternatives.
+Well, on hotplug case, you need to detect which class of device is 
+attached, so you need a softreset there.
 
-Consider the common use cases:  (a) normal distro usage, often servers 
-where libata loading will be common anyway due to SATA presence on 
-motherboard, and (b) embedded use, where ATA support can be .config'd 
-out at compile time.
+> 2.  What's the concept of port suspend and resume?
 
-Thus, the use cases where end users really will care about libata being 
-loaded, but not used, are slim to none.
+Port being suspended and resumed, I think. :-) You need ask more 
+specifically.
 
-	Jeff
-
-
+-- 
+tejun
