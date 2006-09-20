@@ -1,52 +1,49 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: sil24 vs. noapic: what does this mean?
-Date: Wed, 20 Sep 2006 22:48:11 +1000
-Message-ID: <4511388B.2040504@eyal.emu.id.au>
-References: <4D87F853B8020F4888896B1507DC0F09B19B3A@mail2.netezza.com>
+From: Ric Wheeler <ric@emc.com>
+Subject: error handling - DMA to PIO step down sequence
+Date: Wed, 20 Sep 2006 15:03:27 -0400
+Message-ID: <4511907F.1010104@emc.com>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from customer-domains.icp-qv1-irony8.iinet.net.au ([203.59.1.133]:49758
-	"EHLO customer-domains.icp-qv1-irony8.iinet.net.au")
-	by vger.kernel.org with ESMTP id S1751217AbWITMtJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Sep 2006 08:49:09 -0400
-Received: from [192.168.3.7] (e7.eyal.emu.id.au [192.168.3.7])
-	by e4.eyal.emu.id.au (8.11.6/8.11.6) with ESMTP id k8KCmBP31390
-	for <linux-ide@vger.kernel.org>; Wed, 20 Sep 2006 22:48:11 +1000
-In-Reply-To: <4D87F853B8020F4888896B1507DC0F09B19B3A@mail2.netezza.com>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:54895 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S932267AbWITTFo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Sep 2006 15:05:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: list linux-ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <mlord@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Mark Odell wrote:
->>-----Original Message-----
->>From: linux-ide-owner@vger.kernel.org 
->>[mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Eyal Lebedinsky
->>Sent: Wednesday, September 20, 2006 5:31 AM
->>To: list linux-ide
->>Subject: sil24 vs. noapic: what does this mean?
->>
->>At the office we are testing a new mobo and initially used 
->>the onboard SATA controllers (an sata_nv and sil24).
->>
->>Disks are Seagate Barracuda ES 750GB on Asus P5N-SLI-SE-DELUXE mobo.
->>
->>We get regular failures on the sil24 attached disks. Changing 
->>power supply had no effect. We then booted with 'noapic' and 
->>not a single error today.
->>
->>The errors are of this type (sorry, no logs were kept)
->>	status=0x50 { DriveReady SeekComplete }
-> 
-> 
-> Which of course is a "no error" status. The LSbit indicates an error
-> which is not set here. Is it possible interrupts are not working
-> correctly?
+Now that Tejun has put in the enhanced error handling (which is a big 
+jump forward), I have been trying to test and validate the code and the 
+assumptions.
 
-Of course. This is actually what I am asking here - is apic buggy
-in Linux? On the mobo?
+Having spent far too much time on planes recently, broken only by 
+spending the other part of my time helping do root cause failure 
+analysis of drives, I have been questioning the validity of the way we 
+currently derate our p-ata and s-ata connected drives from DMA to slower 
+DMA to PIO and then spiral on down.
 
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
+All of this is a long winded way of asking if this step down is ever 
+valid for either S-ATA (or even modern P-ATA) drives.
+
+ From what I see and what I hear from the way my colleagues handle drive 
+errors in non-linux code, this seems to be very aggressive and most 
+likely not justified with modern drives and hba's.
+
+Derating should probably never happen on normal drive errors - even 
+those that might take 10's of seconds.  Often, drives will try really, 
+really hard to recover and might eventually respond after internally 
+giving up after up to 30 seconds.
+
+Also, NACK's from unsupported commands or any type of media errors 
+should not kick off this sequence.
+
+Would this be a reasonable thing for a config option? Better to add yet 
+another blacklist for devices that might have a justified need for this 
+derating?
+
+
+
+
