@@ -1,60 +1,97 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH] ata-piix: kerneldoc-error-on-ata_piixc.patch 2nd try
-Date: Mon, 25 Sep 2006 14:23:46 -0700
-Message-ID: <20060925142346.cbf0ed6a.rdunlap@xenotime.net>
-References: <451826BE.2040201@nachtwindheim.de>
-	<4518305C.3090906@pobox.com>
-	<20060925131151.4f73612c.rdunlap@xenotime.net>
-	<45183880.40003@pobox.com>
-	<45183E12.1080503@nachtwindheim.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH v1] Re: NV SATA breakage: jgarzik/libata-dev#upstream etc
+Date: Mon, 25 Sep 2006 18:39:39 -0400
+Message-ID: <45185AAB.8010309@pobox.com>
+References: <m3wt7tm6sh.fsf@defiant.localdomain> <451721F8.4060600@pobox.com>	 <m3vencjeit.fsf@defiant.localdomain>	 <m364fbrhow.fsf@defiant.localdomain> <1327be9e0609251112j34ccc787wbcc4886623af2714@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------070101080704090403040303"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:10928 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751393AbWIYVWe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2006 17:22:34 -0400
-Received: from midway.site ([71.117.233.155]) by xenotime.net for <linux-ide@vger.kernel.org>; Mon, 25 Sep 2006 14:22:31 -0700
-In-Reply-To: <45183E12.1080503@nachtwindheim.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:56276 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751562AbWIYWjn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2006 18:39:43 -0400
+In-Reply-To: <1327be9e0609251112j34ccc787wbcc4886623af2714@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Henne <henne@nachtwindheim.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Diego Rosario Brogna <dierbro@gmail.com>
+Cc: "linux-kernel@vger.kernel.org Krzysztof Halasa" <khc@pm.waw.pl>, Tejun Heo <htejun@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Mon, 25 Sep 2006 22:37:38 +0200 Henne wrote:
+This is a multi-part message in MIME format.
+--------------070101080704090403040303
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> Jeff Garzik schrieb:
-> > Randy Dunlap wrote:
-> >> I agree with all of these except #4.  Maybe you can reconcile your
-> >> preference with that in Documentation/SubmittingPatches, which
-> >> contains:
-> >>
-> >> <quote>
-> >> The canonical patch message body contains the following:
-> >>
-> >>   - A "from" line specifying the patch author.
-> >> </quote>
-> >>
-> >> A patch submitter should not need to know the patch receiver's
-> >> personal preferences and vary patches based on those.
-> > 
-> > 
-> > It's not a personal preference.  It's all based on git-applymbox, pretty
-> > much.
-> > 
-> > The SubmittingPatches doc should be updated to clarify that a From line
-> > is not needed in the email body, if it is the same as the From line in
-> > the RFC822 header.
+Does the attached patch fix the SATA oops?
 
-It seems to be a small, simple matter of "not needed" vs. "allowed".
-AFAIK, From: is always allowed but it is not needed if the From: mail
-header matches the From: body text.
+	Jeff
 
 
-> >     Jeff
-> Thanks for pointing my nose on this guys! I'll keep that in mind when writing patches, but that from line
-> should be discussed by the maintainers.
 
 
----
-~Randy
+--------------070101080704090403040303
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="patch"
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL3NhdGFfbnYuYyBiL2RyaXZlcnMvYXRhL3NhdGFf
+bnYuYwppbmRleCAyN2MyMmZlLi44Y2Q3MzBmIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9z
+YXRhX252LmMKKysrIGIvZHJpdmVycy9hdGEvc2F0YV9udi5jCkBAIC00ODQsNyArNDg0LDcg
+QEAgc3RhdGljIHZvaWQgbnZfZXJyb3JfaGFuZGxlcihzdHJ1Y3QgYXRhXwogc3RhdGljIGlu
+dCBudl9pbml0X29uZSAoc3RydWN0IHBjaV9kZXYgKnBkZXYsIGNvbnN0IHN0cnVjdCBwY2lf
+ZGV2aWNlX2lkICplbnQpCiB7CiAJc3RhdGljIGludCBwcmludGVkX3ZlcnNpb24gPSAwOwot
+CXN0cnVjdCBhdGFfcG9ydF9pbmZvICpwcGk7CisJc3RydWN0IGF0YV9wb3J0X2luZm8gKnBw
+aVsyXTsKIAlzdHJ1Y3QgYXRhX3Byb2JlX2VudCAqcHJvYmVfZW50OwogCWludCBwY2lfZGV2
+X2J1c3kgPSAwOwogCWludCByYzsKQEAgLTUyMCw4ICs1MjAsOCBAQCBzdGF0aWMgaW50IG52
+X2luaXRfb25lIChzdHJ1Y3QgcGNpX2RldiAqCiAKIAlyYyA9IC1FTk9NRU07CiAKLQlwcGkg
+PSAmbnZfcG9ydF9pbmZvW2VudC0+ZHJpdmVyX2RhdGFdOwotCXByb2JlX2VudCA9IGF0YV9w
+Y2lfaW5pdF9uYXRpdmVfbW9kZShwZGV2LCAmcHBpLCBBVEFfUE9SVF9QUklNQVJZIHwgQVRB
+X1BPUlRfU0VDT05EQVJZKTsKKwlwcGlbMF0gPSBwcGlbMV0gPSAmbnZfcG9ydF9pbmZvW2Vu
+dC0+ZHJpdmVyX2RhdGFdOworCXByb2JlX2VudCA9IGF0YV9wY2lfaW5pdF9uYXRpdmVfbW9k
+ZShwZGV2LCBwcGksIEFUQV9QT1JUX1BSSU1BUlkgfCBBVEFfUE9SVF9TRUNPTkRBUlkpOwog
+CWlmICghcHJvYmVfZW50KQogCQlnb3RvIGVycl9vdXRfcmVnaW9uczsKIApkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9hdGEvc2F0YV9zaXMuYyBiL2RyaXZlcnMvYXRhL3NhdGFfc2lzLmMKaW5k
+ZXggOWIxNzM3NS4uMThkNDlmZiAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvc2F0YV9zaXMu
+YworKysgYi9kcml2ZXJzL2F0YS9zYXRhX3Npcy5jCkBAIC0yNDAsNyArMjQwLDcgQEAgc3Rh
+dGljIGludCBzaXNfaW5pdF9vbmUgKHN0cnVjdCBwY2lfZGV2IAogCXN0cnVjdCBhdGFfcHJv
+YmVfZW50ICpwcm9iZV9lbnQgPSBOVUxMOwogCWludCByYzsKIAl1MzIgZ2VuY3RsOwotCXN0
+cnVjdCBhdGFfcG9ydF9pbmZvICpwcGk7CisJc3RydWN0IGF0YV9wb3J0X2luZm8gKnBwaVsy
+XTsKIAlpbnQgcGNpX2Rldl9idXN5ID0gMDsKIAl1OCBwbXI7CiAJdTggcG9ydDJfc3RhcnQ7
+CkBAIC0yNjUsOCArMjY1LDggQEAgc3RhdGljIGludCBzaXNfaW5pdF9vbmUgKHN0cnVjdCBw
+Y2lfZGV2IAogCWlmIChyYykKIAkJZ290byBlcnJfb3V0X3JlZ2lvbnM7CiAKLQlwcGkgPSAm
+c2lzX3BvcnRfaW5mbzsKLQlwcm9iZV9lbnQgPSBhdGFfcGNpX2luaXRfbmF0aXZlX21vZGUo
+cGRldiwgJnBwaSwgQVRBX1BPUlRfUFJJTUFSWSB8IEFUQV9QT1JUX1NFQ09OREFSWSk7CisJ
+cHBpWzBdID0gcHBpWzFdID0gJnNpc19wb3J0X2luZm87CisJcHJvYmVfZW50ID0gYXRhX3Bj
+aV9pbml0X25hdGl2ZV9tb2RlKHBkZXYsIHBwaSwgQVRBX1BPUlRfUFJJTUFSWSB8IEFUQV9Q
+T1JUX1NFQ09OREFSWSk7CiAJaWYgKCFwcm9iZV9lbnQpIHsKIAkJcmMgPSAtRU5PTUVNOwog
+CQlnb3RvIGVycl9vdXRfcmVnaW9uczsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL3NhdGFf
+dWxpLmMgYi9kcml2ZXJzL2F0YS9zYXRhX3VsaS5jCmluZGV4IDhmYzZlODAuLmRkNzZmMzcg
+MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFfdWxpLmMKKysrIGIvZHJpdmVycy9hdGEv
+c2F0YV91bGkuYwpAQCAtMTg1LDcgKzE4NSw3IEBAIHN0YXRpYyBpbnQgdWxpX2luaXRfb25l
+IChzdHJ1Y3QgcGNpX2RldiAKIHsKIAlzdGF0aWMgaW50IHByaW50ZWRfdmVyc2lvbjsKIAlz
+dHJ1Y3QgYXRhX3Byb2JlX2VudCAqcHJvYmVfZW50OwotCXN0cnVjdCBhdGFfcG9ydF9pbmZv
+ICpwcGk7CisJc3RydWN0IGF0YV9wb3J0X2luZm8gKnBwaVsyXTsKIAlpbnQgcmM7CiAJdW5z
+aWduZWQgaW50IGJvYXJkX2lkeCA9ICh1bnNpZ25lZCBpbnQpIGVudC0+ZHJpdmVyX2RhdGE7
+CiAJaW50IHBjaV9kZXZfYnVzeSA9IDA7CkBAIC0yMTEsOCArMjExLDggQEAgc3RhdGljIGlu
+dCB1bGlfaW5pdF9vbmUgKHN0cnVjdCBwY2lfZGV2IAogCWlmIChyYykKIAkJZ290byBlcnJf
+b3V0X3JlZ2lvbnM7CiAKLQlwcGkgPSAmdWxpX3BvcnRfaW5mbzsKLQlwcm9iZV9lbnQgPSBh
+dGFfcGNpX2luaXRfbmF0aXZlX21vZGUocGRldiwgJnBwaSwgQVRBX1BPUlRfUFJJTUFSWSB8
+IEFUQV9QT1JUX1NFQ09OREFSWSk7CisJcHBpWzBdID0gcHBpWzFdID0gJnVsaV9wb3J0X2lu
+Zm87CisJcHJvYmVfZW50ID0gYXRhX3BjaV9pbml0X25hdGl2ZV9tb2RlKHBkZXYsIHBwaSwg
+QVRBX1BPUlRfUFJJTUFSWSB8IEFUQV9QT1JUX1NFQ09OREFSWSk7CiAJaWYgKCFwcm9iZV9l
+bnQpIHsKIAkJcmMgPSAtRU5PTUVNOwogCQlnb3RvIGVycl9vdXRfcmVnaW9uczsKZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvYXRhL3NhdGFfdmlhLmMgYi9kcml2ZXJzL2F0YS9zYXRhX3ZpYS5j
+CmluZGV4IDdmMDg3YWUuLmE3MmEyMzggMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFf
+dmlhLmMKKysrIGIvZHJpdmVycy9hdGEvc2F0YV92aWEuYwpAQCAtMzE4LDkgKzMxOCwxMCBA
+QCBzdGF0aWMgdm9pZCB2dDY0MjFfaW5pdF9hZGRycyhzdHJ1Y3QgYXRhCiBzdGF0aWMgc3Ry
+dWN0IGF0YV9wcm9iZV9lbnQgKnZ0NjQyMF9pbml0X3Byb2JlX2VudChzdHJ1Y3QgcGNpX2Rl
+diAqcGRldikKIHsKIAlzdHJ1Y3QgYXRhX3Byb2JlX2VudCAqcHJvYmVfZW50OwotCXN0cnVj
+dCBhdGFfcG9ydF9pbmZvICpwcGkgPSAmdnQ2NDIwX3BvcnRfaW5mbzsKLQotCXByb2JlX2Vu
+dCA9IGF0YV9wY2lfaW5pdF9uYXRpdmVfbW9kZShwZGV2LCAmcHBpLCBBVEFfUE9SVF9QUklN
+QVJZIHwgQVRBX1BPUlRfU0VDT05EQVJZKTsKKwlzdHJ1Y3QgYXRhX3BvcnRfaW5mbyAqcHBp
+WzJdOworCQorCXBwaVswXSA9IHBwaVsxXSA9ICZ2dDY0MjBfcG9ydF9pbmZvOworCXByb2Jl
+X2VudCA9IGF0YV9wY2lfaW5pdF9uYXRpdmVfbW9kZShwZGV2LCBwcGksIEFUQV9QT1JUX1BS
+SU1BUlkgfCBBVEFfUE9SVF9TRUNPTkRBUlkpOwogCWlmICghcHJvYmVfZW50KQogCQlyZXR1
+cm4gTlVMTDsKIAo=
+--------------070101080704090403040303--
