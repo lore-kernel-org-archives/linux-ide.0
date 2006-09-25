@@ -1,44 +1,122 @@
-From: Henne <henne@nachtwindheim.de>
-Subject: [PATCH] ata-piix: kerneldoc-error-on-ata_piixc.patch 2nd try
-Date: Mon, 25 Sep 2006 20:58:06 +0200
-Message-ID: <451826BE.2040201@nachtwindheim.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata fix
+Date: Mon, 25 Sep 2006 15:35:11 -0400
+Message-ID: <20060925193511.GA6129@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from server6.greatnet.de ([83.133.96.26]:5260 "EHLO
-	server6.greatnet.de") by vger.kernel.org with ESMTP
-	id S1751004AbWIYS5q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Sep 2006 14:57:46 -0400
+Received: from havoc.gtf.org ([69.61.125.42]:31461 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1750731AbWIYTfR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2006 15:35:17 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, Andrew Morton <akpm@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-Heres a new version of the kerneldoc error in ata_piix.c
-The old one which doesn't apply clean is in 2.6.18-mm1 and can be removed there if acked.
-
-Greets,
-Henne
-
-From: Henrik Kretzschmar <henne@nachtwindheim.de>
-
-Fixes an error in kerneldoc of ata_piix.c.
-This is the 2nd try, written for 2.6.18-git4
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
-
----
-
---- linux-2.6/drivers/ata/ata_piix.c	2006-09-25 09:27:46.000000000 +0200
-+++ linux-2.6.18-git4/drivers/ata/ata_piix.c	2006-09-25 20:47:32.000000000 +0200
-@@ -851,7 +851,7 @@
-  *	@ap: Port whose timings we are configuring
-  *	@adev: Drive in question
-  *	@udma: udma mode, 0 - 6
-- *	@is_ich: set if the chip is an ICH device
-+ *	@isich: set if the chip is an ICH device
-  *
-  *	Set UDMA mode for device, in host controller PCI config space.
-  *
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+[hey Linus, your git summary hint helped, thanks]
+
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ include/asm-alpha/libata-portmap.h   |    1 -
+ include/asm-frv/libata-portmap.h     |    1 -
+ include/asm-i386/libata-portmap.h    |    1 -
+ include/asm-ia64/libata-portmap.h    |    1 -
+ include/asm-powerpc/libata-portmap.h |    1 -
+ include/asm-sparc/libata-portmap.h   |    1 -
+ include/asm-sparc64/libata-portmap.h |    1 -
+ include/asm-x86_64/libata-portmap.h  |    1 -
+ include/linux/libata.h               |    8 ++++++++
+ 9 files changed, 8 insertions(+), 8 deletions(-)
+ delete mode 100644 include/asm-alpha/libata-portmap.h
+ delete mode 100644 include/asm-frv/libata-portmap.h
+ delete mode 100644 include/asm-i386/libata-portmap.h
+ delete mode 100644 include/asm-ia64/libata-portmap.h
+ delete mode 100644 include/asm-powerpc/libata-portmap.h
+ delete mode 100644 include/asm-sparc/libata-portmap.h
+ delete mode 100644 include/asm-sparc64/libata-portmap.h
+ delete mode 100644 include/asm-x86_64/libata-portmap.h
+
+Jeff Garzik:
+      [libata] No need for all those arch libata-portmap.h headers
+
+diff --git a/include/asm-alpha/libata-portmap.h b/include/asm-alpha/libata-portmap.h
+deleted file mode 100644
+index 75484ef..0000000
+--- a/include/asm-alpha/libata-portmap.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <asm-generic/libata-portmap.h>
+diff --git a/include/asm-frv/libata-portmap.h b/include/asm-frv/libata-portmap.h
+deleted file mode 100644
+index 75484ef..0000000
+--- a/include/asm-frv/libata-portmap.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <asm-generic/libata-portmap.h>
+diff --git a/include/asm-i386/libata-portmap.h b/include/asm-i386/libata-portmap.h
+deleted file mode 100644
+index 75484ef..0000000
+--- a/include/asm-i386/libata-portmap.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <asm-generic/libata-portmap.h>
+diff --git a/include/asm-ia64/libata-portmap.h b/include/asm-ia64/libata-portmap.h
+deleted file mode 100644
+index 75484ef..0000000
+--- a/include/asm-ia64/libata-portmap.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <asm-generic/libata-portmap.h>
+diff --git a/include/asm-powerpc/libata-portmap.h b/include/asm-powerpc/libata-portmap.h
+deleted file mode 100644
+index 75484ef..0000000
+--- a/include/asm-powerpc/libata-portmap.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <asm-generic/libata-portmap.h>
+diff --git a/include/asm-sparc/libata-portmap.h b/include/asm-sparc/libata-portmap.h
+deleted file mode 100644
+index 75484ef..0000000
+--- a/include/asm-sparc/libata-portmap.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <asm-generic/libata-portmap.h>
+diff --git a/include/asm-sparc64/libata-portmap.h b/include/asm-sparc64/libata-portmap.h
+deleted file mode 100644
+index 75484ef..0000000
+--- a/include/asm-sparc64/libata-portmap.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <asm-generic/libata-portmap.h>
+diff --git a/include/asm-x86_64/libata-portmap.h b/include/asm-x86_64/libata-portmap.h
+deleted file mode 100644
+index 75484ef..0000000
+--- a/include/asm-x86_64/libata-portmap.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <asm-generic/libata-portmap.h>
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 1ef3d39..d6a3d4b 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -36,7 +36,15 @@ #include <linux/ata.h>
+ #include <linux/workqueue.h>
+ #include <scsi/scsi_host.h>
+ 
++/*
++ * Define if arch has non-standard setup.  This is a _PCI_ standard
++ * not a legacy or ISA standard.
++ */
++#ifdef CONFIG_ATA_NONSTANDARD
+ #include <asm/libata-portmap.h>
++#else
++#include <asm-generic/libata-portmap.h>
++#endif
+ 
+ /*
+  * compile-time options: to be removed as soon as all the drivers are
