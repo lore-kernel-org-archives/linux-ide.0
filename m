@@ -1,27 +1,32 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: enable-cdrom-dma-access-with-pdc20265_old.patch
-Date: Tue, 26 Sep 2006 13:05:30 -0700
-Message-ID: <20060926130530.5ac89c91.akpm@osdl.org>
-References: <BAY105-F11E6F724B96A5A607106EAA3260@phx.gbl>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Continuing ata_piix PCS saga...
+Date: Tue, 26 Sep 2006 17:33:26 -0400
+Message-ID: <45199CA6.3050308@pobox.com>
+References: <450F6F21.7080909@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932263AbWIZUFz@vger.kernel.org>
-In-Reply-To: <BAY105-F11E6F724B96A5A607106EAA3260@phx.gbl>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tobias Oed <tobiasoed@hotmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, alan@lxorguk.ukuu.org.uk, sshtylyov@ru.mvista.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:14483 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964825AbWIZVd6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2006 17:33:58 -0400
+In-Reply-To: <450F6F21.7080909@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: nabiki@teleline.es, Keith Owens <kaos@ocs.com.au>, stevenm@umd.edu, jfs@keytradebank.com, 0602@eq.cz, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Sat, 23 Sep 2006 10:43:57 -0400
-"Tobias Oed" <tobiasoed@hotmail.com> wrote:
+Judging from early Intel responses, on ICH >= 6, we should use SATA phy 
+registers via AHCI space rather than PCS.
 
-> If it makes things easier my patch labeled
-> enable-cdrom-dma-access-with-pdc20265_old.patch in -mm
-> could be dropped in favour of what follows (against 2.6.18),
-> making the feature an EXPERIMENTAL config option.
+[implying, I suppose, that PCS must be used when there is no AHCI PCI 
+BAR address assigned]
 
-eh, we'll just merge it as-is, see what happens, I think.
+Still waiting on further response from Intel...
 
-I'll assume that this new patch contained no other changes (ie: the patch
-in -mm is ok-to-merge).
+	Jeff
+
+
+
+
+
