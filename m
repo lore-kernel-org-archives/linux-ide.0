@@ -1,97 +1,138 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH v1] Re: NV SATA breakage: jgarzik/libata-dev#upstream etc
-Date: Mon, 25 Sep 2006 18:39:39 -0400
-Message-ID: <45185AAB.8010309@pobox.com>
-References: <m3wt7tm6sh.fsf@defiant.localdomain> <451721F8.4060600@pobox.com>	 <m3vencjeit.fsf@defiant.localdomain>	 <m364fbrhow.fsf@defiant.localdomain> <1327be9e0609251112j34ccc787wbcc4886623af2714@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes (incl. oops fix)
+Date: Mon, 25 Sep 2006 21:58:02 -0400
+Message-ID: <20060926015802.GA9417@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070101080704090403040303"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56276 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751562AbWIYWjn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2006 18:39:43 -0400
-In-Reply-To: <1327be9e0609251112j34ccc787wbcc4886623af2714@mail.gmail.com>
+Received: from havoc.gtf.org ([69.61.125.42]:31619 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1750962AbWIZB6H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2006 21:58:07 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Diego Rosario Brogna <dierbro@gmail.com>
-Cc: "linux-kernel@vger.kernel.org Krzysztof Halasa" <khc@pm.waw.pl>, Tejun Heo <htejun@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------070101080704090403040303
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Does the attached patch fix the SATA oops?
-
-	Jeff
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
+to receive the following updates:
 
---------------070101080704090403040303
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="patch"
+ drivers/ata/ata_piix.c |    2 +-
+ drivers/ata/sata_nv.c  |    6 +++---
+ drivers/ata/sata_sis.c |    6 +++---
+ drivers/ata/sata_uli.c |    6 +++---
+ drivers/ata/sata_via.c |    7 ++++---
+ 5 files changed, 14 insertions(+), 13 deletions(-)
 
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL3NhdGFfbnYuYyBiL2RyaXZlcnMvYXRhL3NhdGFf
-bnYuYwppbmRleCAyN2MyMmZlLi44Y2Q3MzBmIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9z
-YXRhX252LmMKKysrIGIvZHJpdmVycy9hdGEvc2F0YV9udi5jCkBAIC00ODQsNyArNDg0LDcg
-QEAgc3RhdGljIHZvaWQgbnZfZXJyb3JfaGFuZGxlcihzdHJ1Y3QgYXRhXwogc3RhdGljIGlu
-dCBudl9pbml0X29uZSAoc3RydWN0IHBjaV9kZXYgKnBkZXYsIGNvbnN0IHN0cnVjdCBwY2lf
-ZGV2aWNlX2lkICplbnQpCiB7CiAJc3RhdGljIGludCBwcmludGVkX3ZlcnNpb24gPSAwOwot
-CXN0cnVjdCBhdGFfcG9ydF9pbmZvICpwcGk7CisJc3RydWN0IGF0YV9wb3J0X2luZm8gKnBw
-aVsyXTsKIAlzdHJ1Y3QgYXRhX3Byb2JlX2VudCAqcHJvYmVfZW50OwogCWludCBwY2lfZGV2
-X2J1c3kgPSAwOwogCWludCByYzsKQEAgLTUyMCw4ICs1MjAsOCBAQCBzdGF0aWMgaW50IG52
-X2luaXRfb25lIChzdHJ1Y3QgcGNpX2RldiAqCiAKIAlyYyA9IC1FTk9NRU07CiAKLQlwcGkg
-PSAmbnZfcG9ydF9pbmZvW2VudC0+ZHJpdmVyX2RhdGFdOwotCXByb2JlX2VudCA9IGF0YV9w
-Y2lfaW5pdF9uYXRpdmVfbW9kZShwZGV2LCAmcHBpLCBBVEFfUE9SVF9QUklNQVJZIHwgQVRB
-X1BPUlRfU0VDT05EQVJZKTsKKwlwcGlbMF0gPSBwcGlbMV0gPSAmbnZfcG9ydF9pbmZvW2Vu
-dC0+ZHJpdmVyX2RhdGFdOworCXByb2JlX2VudCA9IGF0YV9wY2lfaW5pdF9uYXRpdmVfbW9k
-ZShwZGV2LCBwcGksIEFUQV9QT1JUX1BSSU1BUlkgfCBBVEFfUE9SVF9TRUNPTkRBUlkpOwog
-CWlmICghcHJvYmVfZW50KQogCQlnb3RvIGVycl9vdXRfcmVnaW9uczsKIApkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9hdGEvc2F0YV9zaXMuYyBiL2RyaXZlcnMvYXRhL3NhdGFfc2lzLmMKaW5k
-ZXggOWIxNzM3NS4uMThkNDlmZiAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvc2F0YV9zaXMu
-YworKysgYi9kcml2ZXJzL2F0YS9zYXRhX3Npcy5jCkBAIC0yNDAsNyArMjQwLDcgQEAgc3Rh
-dGljIGludCBzaXNfaW5pdF9vbmUgKHN0cnVjdCBwY2lfZGV2IAogCXN0cnVjdCBhdGFfcHJv
-YmVfZW50ICpwcm9iZV9lbnQgPSBOVUxMOwogCWludCByYzsKIAl1MzIgZ2VuY3RsOwotCXN0
-cnVjdCBhdGFfcG9ydF9pbmZvICpwcGk7CisJc3RydWN0IGF0YV9wb3J0X2luZm8gKnBwaVsy
-XTsKIAlpbnQgcGNpX2Rldl9idXN5ID0gMDsKIAl1OCBwbXI7CiAJdTggcG9ydDJfc3RhcnQ7
-CkBAIC0yNjUsOCArMjY1LDggQEAgc3RhdGljIGludCBzaXNfaW5pdF9vbmUgKHN0cnVjdCBw
-Y2lfZGV2IAogCWlmIChyYykKIAkJZ290byBlcnJfb3V0X3JlZ2lvbnM7CiAKLQlwcGkgPSAm
-c2lzX3BvcnRfaW5mbzsKLQlwcm9iZV9lbnQgPSBhdGFfcGNpX2luaXRfbmF0aXZlX21vZGUo
-cGRldiwgJnBwaSwgQVRBX1BPUlRfUFJJTUFSWSB8IEFUQV9QT1JUX1NFQ09OREFSWSk7CisJ
-cHBpWzBdID0gcHBpWzFdID0gJnNpc19wb3J0X2luZm87CisJcHJvYmVfZW50ID0gYXRhX3Bj
-aV9pbml0X25hdGl2ZV9tb2RlKHBkZXYsIHBwaSwgQVRBX1BPUlRfUFJJTUFSWSB8IEFUQV9Q
-T1JUX1NFQ09OREFSWSk7CiAJaWYgKCFwcm9iZV9lbnQpIHsKIAkJcmMgPSAtRU5PTUVNOwog
-CQlnb3RvIGVycl9vdXRfcmVnaW9uczsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL3NhdGFf
-dWxpLmMgYi9kcml2ZXJzL2F0YS9zYXRhX3VsaS5jCmluZGV4IDhmYzZlODAuLmRkNzZmMzcg
-MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFfdWxpLmMKKysrIGIvZHJpdmVycy9hdGEv
-c2F0YV91bGkuYwpAQCAtMTg1LDcgKzE4NSw3IEBAIHN0YXRpYyBpbnQgdWxpX2luaXRfb25l
-IChzdHJ1Y3QgcGNpX2RldiAKIHsKIAlzdGF0aWMgaW50IHByaW50ZWRfdmVyc2lvbjsKIAlz
-dHJ1Y3QgYXRhX3Byb2JlX2VudCAqcHJvYmVfZW50OwotCXN0cnVjdCBhdGFfcG9ydF9pbmZv
-ICpwcGk7CisJc3RydWN0IGF0YV9wb3J0X2luZm8gKnBwaVsyXTsKIAlpbnQgcmM7CiAJdW5z
-aWduZWQgaW50IGJvYXJkX2lkeCA9ICh1bnNpZ25lZCBpbnQpIGVudC0+ZHJpdmVyX2RhdGE7
-CiAJaW50IHBjaV9kZXZfYnVzeSA9IDA7CkBAIC0yMTEsOCArMjExLDggQEAgc3RhdGljIGlu
-dCB1bGlfaW5pdF9vbmUgKHN0cnVjdCBwY2lfZGV2IAogCWlmIChyYykKIAkJZ290byBlcnJf
-b3V0X3JlZ2lvbnM7CiAKLQlwcGkgPSAmdWxpX3BvcnRfaW5mbzsKLQlwcm9iZV9lbnQgPSBh
-dGFfcGNpX2luaXRfbmF0aXZlX21vZGUocGRldiwgJnBwaSwgQVRBX1BPUlRfUFJJTUFSWSB8
-IEFUQV9QT1JUX1NFQ09OREFSWSk7CisJcHBpWzBdID0gcHBpWzFdID0gJnVsaV9wb3J0X2lu
-Zm87CisJcHJvYmVfZW50ID0gYXRhX3BjaV9pbml0X25hdGl2ZV9tb2RlKHBkZXYsIHBwaSwg
-QVRBX1BPUlRfUFJJTUFSWSB8IEFUQV9QT1JUX1NFQ09OREFSWSk7CiAJaWYgKCFwcm9iZV9l
-bnQpIHsKIAkJcmMgPSAtRU5PTUVNOwogCQlnb3RvIGVycl9vdXRfcmVnaW9uczsKZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvYXRhL3NhdGFfdmlhLmMgYi9kcml2ZXJzL2F0YS9zYXRhX3ZpYS5j
-CmluZGV4IDdmMDg3YWUuLmE3MmEyMzggMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFf
-dmlhLmMKKysrIGIvZHJpdmVycy9hdGEvc2F0YV92aWEuYwpAQCAtMzE4LDkgKzMxOCwxMCBA
-QCBzdGF0aWMgdm9pZCB2dDY0MjFfaW5pdF9hZGRycyhzdHJ1Y3QgYXRhCiBzdGF0aWMgc3Ry
-dWN0IGF0YV9wcm9iZV9lbnQgKnZ0NjQyMF9pbml0X3Byb2JlX2VudChzdHJ1Y3QgcGNpX2Rl
-diAqcGRldikKIHsKIAlzdHJ1Y3QgYXRhX3Byb2JlX2VudCAqcHJvYmVfZW50OwotCXN0cnVj
-dCBhdGFfcG9ydF9pbmZvICpwcGkgPSAmdnQ2NDIwX3BvcnRfaW5mbzsKLQotCXByb2JlX2Vu
-dCA9IGF0YV9wY2lfaW5pdF9uYXRpdmVfbW9kZShwZGV2LCAmcHBpLCBBVEFfUE9SVF9QUklN
-QVJZIHwgQVRBX1BPUlRfU0VDT05EQVJZKTsKKwlzdHJ1Y3QgYXRhX3BvcnRfaW5mbyAqcHBp
-WzJdOworCQorCXBwaVswXSA9IHBwaVsxXSA9ICZ2dDY0MjBfcG9ydF9pbmZvOworCXByb2Jl
-X2VudCA9IGF0YV9wY2lfaW5pdF9uYXRpdmVfbW9kZShwZGV2LCBwcGksIEFUQV9QT1JUX1BS
-SU1BUlkgfCBBVEFfUE9SVF9TRUNPTkRBUlkpOwogCWlmICghcHJvYmVfZW50KQogCQlyZXR1
-cm4gTlVMTDsKIAo=
---------------070101080704090403040303--
+Henne:
+      ata-piix: fixes kerneldoc error
+
+Jeff Garzik:
+      [libata] Fix oops introduced in non-uniform port handling fix
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index ab2eccc..ffa111e 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -851,7 +851,7 @@ static void piix_set_piomode (struct ata
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Drive in question
+  *	@udma: udma mode, 0 - 6
+- *	@is_ich: set if the chip is an ICH device
++ *	@isich: set if the chip is an ICH device
+  *
+  *	Set UDMA mode for device, in host controller PCI config space.
+  *
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 27c22fe..8cd730f 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -484,7 +484,7 @@ static void nv_error_handler(struct ata_
+ static int nv_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version = 0;
+-	struct ata_port_info *ppi;
++	struct ata_port_info *ppi[2];
+ 	struct ata_probe_ent *probe_ent;
+ 	int pci_dev_busy = 0;
+ 	int rc;
+@@ -520,8 +520,8 @@ static int nv_init_one (struct pci_dev *
+ 
+ 	rc = -ENOMEM;
+ 
+-	ppi = &nv_port_info[ent->driver_data];
+-	probe_ent = ata_pci_init_native_mode(pdev, &ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
++	ppi[0] = ppi[1] = &nv_port_info[ent->driver_data];
++	probe_ent = ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
+ 	if (!probe_ent)
+ 		goto err_out_regions;
+ 
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index 9b17375..18d49ff 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -240,7 +240,7 @@ static int sis_init_one (struct pci_dev 
+ 	struct ata_probe_ent *probe_ent = NULL;
+ 	int rc;
+ 	u32 genctl;
+-	struct ata_port_info *ppi;
++	struct ata_port_info *ppi[2];
+ 	int pci_dev_busy = 0;
+ 	u8 pmr;
+ 	u8 port2_start;
+@@ -265,8 +265,8 @@ static int sis_init_one (struct pci_dev 
+ 	if (rc)
+ 		goto err_out_regions;
+ 
+-	ppi = &sis_port_info;
+-	probe_ent = ata_pci_init_native_mode(pdev, &ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
++	ppi[0] = ppi[1] = &sis_port_info;
++	probe_ent = ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
+ 	if (!probe_ent) {
+ 		rc = -ENOMEM;
+ 		goto err_out_regions;
+diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
+index 8fc6e80..dd76f37 100644
+--- a/drivers/ata/sata_uli.c
++++ b/drivers/ata/sata_uli.c
+@@ -185,7 +185,7 @@ static int uli_init_one (struct pci_dev 
+ {
+ 	static int printed_version;
+ 	struct ata_probe_ent *probe_ent;
+-	struct ata_port_info *ppi;
++	struct ata_port_info *ppi[2];
+ 	int rc;
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+ 	int pci_dev_busy = 0;
+@@ -211,8 +211,8 @@ static int uli_init_one (struct pci_dev 
+ 	if (rc)
+ 		goto err_out_regions;
+ 
+-	ppi = &uli_port_info;
+-	probe_ent = ata_pci_init_native_mode(pdev, &ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
++	ppi[0] = ppi[1] = &uli_port_info;
++	probe_ent = ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
+ 	if (!probe_ent) {
+ 		rc = -ENOMEM;
+ 		goto err_out_regions;
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 7f087ae..a72a238 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -318,9 +318,10 @@ static void vt6421_init_addrs(struct ata
+ static struct ata_probe_ent *vt6420_init_probe_ent(struct pci_dev *pdev)
+ {
+ 	struct ata_probe_ent *probe_ent;
+-	struct ata_port_info *ppi = &vt6420_port_info;
+-
+-	probe_ent = ata_pci_init_native_mode(pdev, &ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
++	struct ata_port_info *ppi[2];
++	
++	ppi[0] = ppi[1] = &vt6420_port_info;
++	probe_ent = ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
+ 	if (!probe_ent)
+ 		return NULL;
+ 
