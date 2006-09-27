@@ -1,98 +1,38 @@
-From: Jim Paris <jim@jtan.com>
-Subject: smartctl causing HSM violation on sata_nv, 2.6.18
-Date: Wed, 27 Sep 2006 14:33:39 -0400
-Message-ID: <20060927183339.GA28174@jim.sh>
+From: "Tobias Oed" <tobiasoed@hotmail.com>
+Subject: Re: enable-cdrom-dma-access-with-pdc20265_old.patch
+Date: Wed, 27 Sep 2006 15:36:45 -0400
+Message-ID: <BAY105-F18AEE697B69389FD4208FEA31A0@phx.gbl>
+References: <20060926130530.5ac89c91.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:4304 "EHLO neurosis.jim.sh")
-	by vger.kernel.org with ESMTP id S1030522AbWI0Sdm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Sep 2006 14:33:42 -0400
-Content-Disposition: inline
+Received: from bay0-omc3-s17.bay0.hotmail.com ([65.54.246.217]:19645 "EHLO
+	bay0-omc3-s17.bay0.hotmail.com") by vger.kernel.org with ESMTP
+	id S1030698AbWI0Tgv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Sep 2006 15:36:51 -0400
+In-Reply-To: <20060926130530.5ac89c91.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, alan@lxorguk.ukuu.org.uk, sshtylyov@ru.mvista.com
 
-Hi Tejun,
+>
+> > If it makes things easier my patch labeled
+> > enable-cdrom-dma-access-with-pdc20265_old.patch in -mm
+> > could be dropped in favour of what follows (against 2.6.18),
+> > making the feature an EXPERIMENTAL config option.
+>
+>eh, we'll just merge it as-is, see what happens, I think.
+>
+>I'll assume that this new patch contained no other changes (ie: the patch
+>in -mm is ok-to-merge).
 
-My NVIDIA SATA controller is having some problems with smartctl on
-2.6.18 (+ the previously mentioned sata_nv patch).  If I try to enable
-Attribute Autosafe (smartctl -S on) or Automatic Offline (smartctl -o
-on), the controller craps out (but recovers).  Executing the same
-command on an identical disk connected to a SiI3132 works fine.  Other
-SMART stuff (reading attributes, running self-tests) seems to be
-behaving just fine.  
+Hi Andrew,
+except for the config option, the two patches are identical, so
+keeping the one that is already in -mm now works with me.
+Tobias.
 
--jim
+_________________________________________________________________
+Be seen and heard with Windows Live Messenger and Microsoft LifeCams 
+http://clk.atdmt.com/MSN/go/msnnkwme0020000001msn/direct/01/?href=http://www.microsoft.com/hardware/digitalcommunication/default.mspx?locale=en-us&source=hmtagline
 
-
-### sata_nv controller (CK804):
-
-# smartctl -data -S on /dev/disk/by-path/pci-0000:00:07.0-scsi-0:0:0:0
-smartctl version 5.36 [x86_64-unknown-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-=== START OF ENABLE/DISABLE COMMANDS SECTION ===
-Error SMART Enable Auto-save failed: Input/output error
-Smartctl: SMART Enable Attribute Autosave Failed.
-
-A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
-
-
-### sata_sil24 controller (SiI3132):
-
-# smartctl -data -S on /dev/disk/by-path/pci-0000:04:00.0-scsi-0:0:0:0
-smartctl version 5.36 [x86_64-unknown-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-=== START OF ENABLE/DISABLE COMMANDS SECTION ===
-SMART Attribute Autosave Enabled.
-
-
-### Kernel log for NVIDIA case:
-
-[36911.153208] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[36911.153245] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
-[36911.462381] ata1: soft resetting port
-[36911.618322] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[36911.620269] ata1.00: configured for UDMA/133
-[36911.620277] ata1: EH complete
-[36911.620410] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[36911.620442] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
-[36911.930163] ata1: soft resetting port
-[36912.086097] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[36912.087984] ata1.00: configured for UDMA/133
-[36912.087996] ata1: EH complete
-[36912.088126] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[36912.088158] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
-[36912.397930] ata1: soft resetting port
-[36912.553871] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[36912.555790] ata1.00: configured for UDMA/133
-[36912.555801] ata1: EH complete
-[36912.555931] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[36912.555963] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
-[36912.865705] ata1: soft resetting port
-[36913.021646] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[36913.023482] ata1.00: configured for UDMA/133
-[36913.023488] ata1: EH complete
-[36913.023621] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[36913.023653] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
-[36913.333482] ata1: soft resetting port
-[36913.489422] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[36913.491320] ata1.00: configured for UDMA/133
-[36913.491327] ata1: EH complete
-[36913.491461] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[36913.491493] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
-[36913.801255] ata1: soft resetting port
-[36913.957198] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[36913.959100] ata1.00: configured for UDMA/133
-[36913.959110] ata1: EH complete
-[36913.959384] SCSI device sda: 625142448 512-byte hdwr sectors (320073 MB)
-[36913.959530] sda: Write Protect is off
-[36913.959534] sda: Mode Sense: 00 3a 00 00
-[36913.959801] SCSI device sda: drive cache: write back
-[36913.960018] SCSI device sda: 625142448 512-byte hdwr sectors (320073 MB)
-[36913.960352] sda: Write Protect is off
-[36913.960357] sda: Mode Sense: 00 3a 00 00
-[36913.960544] SCSI device sda: drive cache: write back
