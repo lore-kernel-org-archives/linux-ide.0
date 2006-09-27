@@ -1,38 +1,136 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SATA: Marvell 88SE6141 kernel support?
-Date: Wed, 27 Sep 2006 05:33:25 -0400
-Message-ID: <451A4565.2080601@garzik.org>
-References: <393855126.1159346763423.JavaMail.root@fepweb13>
+From: Eran Tromer <eran@tromer.org>
+Subject: [patch] libata: return sense data in HDIO_DRIVE_CMD ioctl
+Date: Wed, 27 Sep 2006 19:06:07 +0300
+Message-ID: <451AA16F.1080704@tromer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35755 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965474AbWI0Jd2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Sep 2006 05:33:28 -0400
-In-Reply-To: <393855126.1159346763423.JavaMail.root@fepweb13>
+Received: from line108-16.adsl.actcom.co.il ([192.117.108.16]:30950 "EHLO
+	lucian.tromer.org") by vger.kernel.org with ESMTP id S1751169AbWI0QRP
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Sep 2006 12:17:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: genestapp@charter.net
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Lord <mlord@pobox.com>
 
-genestapp@charter.net wrote:
-> I talked to Gord Peters who asked about this sata chip in June. He said there is a experimental patch for it, but the one he had was an old version. I've been looking all over but could not find it. Also I've checked the newest linux kernel builds and there is no mention of mv_61x support. Does anyone know the status of kernel support for this chip? I'm running 2.6.17 kernel currently but will be upgrading to .18 on Thursday (FC5)
-> 
-> I'm using the Asus P5WD2-E motherboard. I've already used the 4 sata ports on the ICH7 chip and I'm looking to expand my software raid 5 array with a couple more drives (and more later).
-> For reference, this was the earlier thread from archives:
-> http://lkml.org/lkml/2006/6/14/259
+Make the HDIO_DRIVE_CMD ioctl in libata (ATA command pass through)
+return a few ATA registers to userspace, following the same convention
+as the drivers/ide implementation of the same ioctl. This is needed to
+support ATA commands like CHECK POWER MODE, which return information
+in nsectors.
 
-This chip is vastly different from sata_mv.
+This fixes "hdparm -C" on SATA drives.
 
-For the SATA portion (not PATA), you might have some luck adding your 
-PCI ID to ahci.c.  Give that a try, and let us know if it works or 
-explodes :)
+Forcing the sense data read via the cc flag causes spurious check
+conditions, so we filter these out (following the
+ATA command pass-through specification T10/04-262r7).
 
-Other than that, no progress at all to report.  Marvell just provided 
-the documentation to me, but I've made no progress yet.
+Signed-off-by: Eran Tromer <eran@tromer.org>
+---
 
-	Jeff
+Applies to git/jgarzik/libata-dev.git master and git/torvalds/linux-2.6.git
+master. To apply to 2.6.18, change drivers/ata/ to drivers/scsi/.
+
+On 2006-08-29 05:39, Tejun Heo wrote to linux-ide@vger.kernel.org:
+>> 2) hdparm -C for all 4 drives always shows "drive state is:  standby"
+>>    even when I'm certain that the drives are active.
+>
+> hdparm -C says the same thing for my drive.  I think it's safe to
+> ignore.  Hmmm... it needs to be tracked down.  Maybe some problem in
+> HDIO ioctl implementation in libata.
+
+Yes, and fixed by this patch.
 
 
+drivers/ata/libata-scsi.c |   46 +++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 39 insertions(+), 7 deletions(-)
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -164,10 +164,10 @@ int ata_cmd_ioctl(struct scsi_device *sc
+ {
+ 	int rc = 0;
+ 	u8 scsi_cmd[MAX_COMMAND_SIZE];
+-	u8 args[4], *argbuf = NULL;
++	u8 args[4], *argbuf = NULL, *sensebuf = NULL;
+ 	int argsize = 0;
+-	struct scsi_sense_hdr sshdr;
+ 	enum dma_data_direction data_dir;
++	int cmd_result;
+
+ 	if (arg == NULL)
+ 		return -EINVAL;
+@@ -175,6 +175,10 @@ int ata_cmd_ioctl(struct scsi_device *sc
+ 	if (copy_from_user(args, arg, sizeof(args)))
+ 		return -EFAULT;
+
++	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
++	if (!sensebuf)
++		return -ENOMEM;
++
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+
+ 	if (args[3]) {
+@@ -191,7 +195,7 @@ int ata_cmd_ioctl(struct scsi_device *sc
+ 		data_dir = DMA_FROM_DEVICE;
+ 	} else {
+ 		scsi_cmd[1]  = (3 << 1); /* Non-data */
+-		/* scsi_cmd[2] is already 0 -- no off.line, cc, or data xfer */
++		scsi_cmd[2]  = 0x20;     /* cc but no off.line or data xfer */
+ 		data_dir = DMA_NONE;
+ 	}
+
+@@ -210,18 +214,46 @@ int ata_cmd_ioctl(struct scsi_device *sc
+
+ 	/* Good values for timeout and retries?  Values below
+ 	   from scsi_ioctl_send_command() for default case... */
+-	if (scsi_execute_req(scsidev, scsi_cmd, data_dir, argbuf, argsize,
+-			     &sshdr, (10*HZ), 5)) {
++	cmd_result = scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, argsize,
++	                          sensebuf, (10*HZ), 5, 0);
++
++	if ((cmd_result>>24) == DRIVER_SENSE) {   /* sense data available */
++		u8 *desc = sensebuf + 8;
++		cmd_result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
++
++		/* If we set cc then ATA pass-through will cause a
++		 * check condition even if no error. Filter that. */
++		if (cmd_result & SAM_STAT_CHECK_CONDITION) {
++			struct scsi_sense_hdr sshdr;
++			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
++			                      &sshdr);
++			if (sshdr.sense_key==0 &&
++			    sshdr.asc==0 && sshdr.ascq==0)
++				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
++		}
++
++		/* Send userspace a few ATA registers (same as drivers/ide) */
++		if (sensebuf[0] == 0x72 &&     /* format is "descriptor" */
++		    desc[0] == 0x09 ) {        /* code is "ATA Descriptor" */
++			args[0] = desc[13];    /* status */
++			args[1] = desc[3];     /* error */
++			args[2] = desc[5];     /* sector count (0:7) */
++			if (copy_to_user(arg, args, sizeof(args)))
++				rc = -EFAULT;
++		}
++	}
++
++
++	if (cmd_result) {
+ 		rc = -EIO;
+ 		goto error;
+ 	}
+
+-	/* Need code to retrieve data from check condition? */
+-
+ 	if ((argbuf)
+ 	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
+ 		rc = -EFAULT;
+ error:
++	kfree(sensebuf);
+ 	kfree(argbuf);
+ 	return rc;
+ }
 
