@@ -1,66 +1,118 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: dvd-r detection problem with port multiplier
-Date: Wed, 27 Sep 2006 11:37:24 +0900
-Message-ID: <20060927023724.GE25800@htj.dyndns.org>
-References: <KMS--2047072133-2724@mail.norwalkdist.com> <4519D585.5010604@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH][RFT] libata AHCI reset speed-up, improvements
+Date: Tue, 26 Sep 2006 22:56:39 -0400
+Message-ID: <20060927025639.GA16969@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.233]:38336 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1750817AbWI0Ch3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Sep 2006 22:37:29 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so48218wxc
-        for <linux-ide@vger.kernel.org>; Tue, 26 Sep 2006 19:37:28 -0700 (PDT)
+Received: from havoc.gtf.org ([69.61.125.42]:25265 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S932328AbWI0C4k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2006 22:56:40 -0400
 Content-Disposition: inline
-In-Reply-To: <4519D585.5010604@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Trent George <trent@norwalkdist.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 
-Can you please test the following patch?  The spec says that clearing
-PMP status should be followed by port initialization and I missed that
-before.
 
-Index: work1/drivers/scsi/sata_sil24.c
-===================================================================
---- work1.orig/drivers/scsi/sata_sil24.c	2006-09-27 11:35:00.000000000 +0900
-+++ work1/drivers/scsi/sata_sil24.c	2006-09-27 11:35:04.000000000 +0900
-@@ -594,15 +594,17 @@ static int sil24_init_port(struct ata_po
- 	struct sil24_port_priv *pp = ap->private_data;
- 	u32 tmp;
+This patch, diff'd against 2.6.18-git5 (or later), attempts the
+following improvements:
+
+* Speed up reset, by polling rather than unconditionally sleeping
+  for one seconds.
+* Save the Ports-Implemented register across controller resets.
+* Verify that AHCI mode was truly enabled.
+
+I'm quite interested in hearing people's test feedback on this patch.
+On my own ICH7 machine, it introduces a "softreset failed" error, but
+EH recovers nicely and nonetheless configures everything successfully.
+Probably just a slow ATAPI device, but I may have exposed a latent
+problem in the driver that was hidden until now by the ssleep(1).
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1aabc81..1def9c9 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -40,6 +40,7 @@ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/sched.h>
++#include <linux/jiffies.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/device.h>
+ #include <scsi/scsi_host.h>
+@@ -593,11 +594,13 @@ static int ahci_deinit_port(void __iomem
  
-+	if (ap->nr_pmp_links) {
-+		/* clear PMP error status */
-+		sil24_clear_pmp(ap);
+ static int ahci_reset_controller(void __iomem *mmio, struct pci_dev *pdev)
+ {
+-	u32 cap_save, tmp;
++	u32 cap_save, impl_save, tmp;
++	unsigned long end_time;
+ 
+ 	cap_save = readl(mmio + HOST_CAP);
+ 	cap_save &= ( (1<<28) | (1<<17) );
+ 	cap_save |= (1 << 27);
++	impl_save = readl(mmio + HOST_PORTS_IMPL);
+ 
+ 	/* global controller reset */
+ 	tmp = readl(mmio + HOST_CTL);
+@@ -609,19 +612,36 @@ static int ahci_reset_controller(void __
+ 	/* reset must complete within 1 second, or
+ 	 * the hardware should be considered fried.
+ 	 */
+-	ssleep(1);
++	end_time = jiffies + HZ;
++	while (1) {
++		msleep(100);
++
++		tmp = readl(mmio + HOST_CTL);
++		if (!(tmp & HOST_RESET))
++			break;
++		if (time_after(jiffies, end_time))
++			break;
++
++	}
+ 
+-	tmp = readl(mmio + HOST_CTL);
+ 	if (tmp & HOST_RESET) {
+ 		dev_printk(KERN_ERR, &pdev->dev,
+ 			   "controller reset failed (0x%x)\n", tmp);
+ 		return -EIO;
+ 	}
+ 
++	/* turn on AHCI mode */
+ 	writel(HOST_AHCI_EN, mmio + HOST_CTL);
+ 	(void) readl(mmio + HOST_CTL);	/* flush */
++
++	/*
++	 * these write-once registers are normally cleared
++	 * on reset.  Restore BIOS values... which we HOPE
++	 * were present before reset.
++	 */
++
+ 	writel(cap_save, mmio + HOST_CAP);
+-	writel(0xf, mmio + HOST_PORTS_IMPL);
++	writel(impl_save, mmio + HOST_PORTS_IMPL);
+ 	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
+ 
+ 	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+@@ -633,6 +653,19 @@ static int ahci_reset_controller(void __
+ 		pci_write_config_word(pdev, 0x92, tmp16);
+ 	}
+ 
++	/*
++	 * if AHCI failed to enable, AHCI function may not
++	 * be present in the chipset.  This is true of certain
++	 * ICHx chipsets, which export the SATA phy registers
++	 * via the AHCI memory space, but don't support full AHCI.
++	 */
++	tmp = readl(mmio + HOST_CTL);
++	if (!(tmp & HOST_AHCI_EN)) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "AHCI enable failed (0x%x)\n", tmp);
++		return -ENODEV;
 +	}
 +
- 	writel(PORT_CS_INIT, port + PORT_CTRL_STAT);
- 	ata_wait_register(port + PORT_CTRL_STAT,
- 			  PORT_CS_INIT, PORT_CS_INIT, 10, 100);
- 	tmp = ata_wait_register(port + PORT_CTRL_STAT,
- 				PORT_CS_RDY, 0, 10, 100);
- 
--	/* clear PMP error status */
--	sil24_clear_pmp(ap);
--
- 	if ((tmp & (PORT_CS_INIT | PORT_CS_RDY)) != PORT_CS_RDY) {
- 		pp->do_port_rst = 1;
- 		ap->link.eh_context.i.action |= ATA_EH_HARDRESET;
-@@ -916,12 +918,12 @@ static void sil24_irq_clear(struct ata_p
- static void sil24_pmp_attach(struct ata_port *ap)
- {
- 	sil24_config_pmp(ap, 1);
--	sil24_clear_pmp(ap);
-+	sil24_init_port(ap);
+ 	return 0;
  }
  
- static void sil24_pmp_detach(struct ata_port *ap)
- {
--	sil24_clear_pmp(ap);
-+	sil24_init_port(ap);
- 	sil24_config_pmp(ap, 0);
- }
- 
-
