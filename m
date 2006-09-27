@@ -1,108 +1,130 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: dvd-r detection problem with port multiplier
-Date: Wed, 27 Sep 2006 16:24:27 +0900
-Message-ID: <451A272B.60500@gmail.com>
-References: <KMS--2023338046-2588@mail.norwalkdist.com>
+From: Jim Paris <jim@jtan.com>
+Subject: sata_nv hotplug in 2.6.18
+Date: Wed, 27 Sep 2006 04:20:05 -0400
+Message-ID: <20060927082005.GA14569@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.202]:30711 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S965421AbWI0HYd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Sep 2006 03:24:33 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so28851nzf
-        for <linux-ide@vger.kernel.org>; Wed, 27 Sep 2006 00:24:32 -0700 (PDT)
-In-Reply-To: <KMS--2023338046-2588@mail.norwalkdist.com>
+Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:14496 "EHLO neurosis.jim.sh")
+	by vger.kernel.org with ESMTP id S964774AbWI0IUL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Sep 2006 04:20:11 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Trent George <trent@norwalkdist.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Hello,
+Hi Tejun,
 
-Trent George wrote:
-> sorry to be a pest with this.
-> Hopefully this helps though..
+I set up a new machine with a NVIDIA SATA controller and 2.6.18.
+Hotplug did not work correctly.  I discovered that it's the same
+problem Philipp Wagner had a few months ago with 2.6.18-rc4:
 
-Don't be sorry.  You're helping a lot.
+  http://www.spinics.net/lists/linux-ide/msg04081.html
 
-[--snip--]
-> that patch did not work for me.
-> 
-> this folling patch did work for me. (I moved the one line fix
-> into the sil24_init_port function, compared to before)
-> 
-> I wonder if the processer speed makes a difference ?
-> I'am on a intel 820 D dual core 2.8ghz
-> 
-> I believe the problem is based on a failing PRB_CTRL_SRST, 
-> while the PORT_CS_INIT is still in progress.
-> Even though the PORT_CS_RDY comes ready quickly.
+The patch you provided there solves the problem on my system as well.
+I haven't seen this patch mentioned anywhere else, and I don't see 
+it in libata-dev.git, so I just wanted to check on its status.
 
-PORT_CS_INIT is "Port Initialize" and is internal (re-)initialization. 
-It doesn't issue anything to outside of the controller silicon.  It 
-simply makes the chip forget about pending commands and internal state 
-and ready for the next command.  So, I'm a bit surprised that slow 
-device has affect on it.  It's described in 7.3.3 Bit[2].
+Relevant logs below.
 
-> I think you can not send another pmp command until the last 
-> one completes (seems the init is slow on some bridgeboards)
+Thanks,
+-jim
 
-Not only that, from the result it seems the whole controller is locked 
-up after such sequence.
+######
 
-> the plextor finsihed in 12/250 seconds, the pioneer in 84/250 sec
-> The other option is a msleep(1000); in the do_softrest after
-> the init_port.
+Affected device:
 
-I see.
+00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3) (prog-if 85 [Master SecO PriO])
+        Subsystem: Tyan Computer Unknown device 2877
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+        Latency: 0 (750ns min, 250ns max)
+        Interrupt: pin A routed to IRQ 58
+        Region 0: I/O ports at 1440 [size=8]
+        Region 1: I/O ports at 1434 [size=4]
+        Region 2: I/O ports at 1438 [size=8]
+        Region 3: I/O ports at 1430 [size=4]
+        Region 4: I/O ports at 1410 [size=16]
+        Region 5: Memory at d8002000 (32-bit, non-prefetchable) [size=4K]
+        Capabilities: [44] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-> It seems you can also monitor the PORT_SACTIVE register with a 
-> ata_wait_register(port + PORT_SACTIVE, 1, 1, 10, 1000);
-> to do the same thing.
+######
 
-I'm just curious what PORT_SACTIVE or Active Slot field has to do with 
-PORT_CS_INIT.  Maybe it's some internal detail.....
+Without patch:
 
-> all in all, it is VERY hard to fix without the same revision
-> hardware, as if you can't duplicate it, you cant fix it.
-> The spec does not really tell you what will happen on a init
-> while in pmp mode. it shows a different enumeration method
-> than the driver uses for pmp ...
-> 
-> Plus the plextor is very fast, and one slow device, messes it
-> up for all the other devices.
-> 
-> it seems this may not be optimum on non-pmp hardware though.
-> my vote would be for the msleep for compatability
+Removed disk:
 
-I'll contact simg and ask them about the problem and incorporate 
-whatever fix they recommend to next iteration of PMP patches.  I hope 
-you'll be around to test it.  :-)
+[  298.452420] ata3: exception Emask 0x10 SAct 0x0 SErr 0x1910000 action 0x2 frozen
+[  299.169503] ata3: soft resetting port
+[  299.169509] ata3: SATA link down (SStatus 0 SControl 300)
+[  299.169514] ata3: failed to recover some devices, retrying in 5 secs
+[  304.171105] ata3: hard resetting port
+[  304.894753] ata3: SATA link down (SStatus 0 SControl 300)
+[  304.894758] ata3: failed to recover some devices, retrying in 5 secs
+[  309.896354] ata3: hard resetting port
+[  310.620003] ata3: SATA link down (SStatus 0 SControl 300)
+[  310.620010] ata3.00: disabled
+[  311.123763] ata3: EH complete
+[  311.123774] ata3.00: detaching (SCSI 2:0:0:0)
 
-[--snip--]
-> here is a dmesg output of the bad and good version
-> the bad version, just cycles through reseting seamingly "forever"
+Plugged disk back in:
 
-Well, it gives up link by link.  As the timeout is quite long and all 
-links fail, it takes quite some time but it isn't forever.  This will be 
-improved in the future.
+[  352.429871] ata3: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+[  360.148230] ata3: port is slow to respond, please be patient
+[  383.153148] ata3: port failed to respond (30 secs)
+[  383.153198] ata3: soft resetting port
+[  390.309735] ata3: port is slow to respond, please be patient
+[  413.318647] ata3: port failed to respond (30 secs)
+[  413.318705] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  413.318712] ata3: EH complete
 
-[--snip--]
-> not to get off topic, but
-> this was from SiI-DS-0113_3124-1_full.pdf
-> 5.4.6 Interrupts and Command Completion
-> talked about the multi interrupt lines. 
+The disk never comes back.
 
-Ah... that one.  Now I remember.  Yeah, sil24 can do 4 IRQs using 
-INTA-D, which is pretty interesting, but I don't think off-the-shelf IO 
-add-on cards actually connect them.  Even if there is card which do, I 
-think we'll need to jump through some loops to get IRQ routing right. 
-INTA-D lines aren't supposed to be used like that after all.  I think 
-that's why the doc says "In certain embedded environments,...".
+######
 
-Thanks.
+With patch:
 
--- 
-tejun
+Removed disk:
+
+[  132.414496] ata3: exception Emask 0x10 SAct 0x0 SErr 0x1810000 action 0x2 frozen
+[  132.925157] ata3: hard resetting port
+[  133.648811] ata3: SATA link down (SStatus 0 SControl 300)
+[  133.648818] ata3: failed to recover some devices, retrying in 5 secs
+[  139.162162] ata3: hard resetting port
+[  139.885815] ata3: SATA link down (SStatus 0 SControl 300)
+[  139.885821] ata3: failed to recover some devices, retrying in 5 secs
+[  145.399165] ata3: hard resetting port
+[  146.122816] ata3: SATA link down (SStatus 0 SControl 300)
+[  146.122821] ata3.00: disabled
+[  146.626577] ata3: EH pending after completion, repeating EH (cnt=4)
+[  146.626590] ata3: EH complete
+[  146.626597] ata3.00: detaching (SCSI 2:0:0:0)
+
+Plugged disk back in:
+
+[  174.511797] ata3: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+[  175.024925] ata3: waiting for device to spin up (8 secs)
+[  175.027704] ata3: hard resetting port
+[  181.621773] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  181.622628] ata3.00: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 0/32)
+[  181.623677] ata3.00: configured for UDMA/133
+[  181.623681] ata3: EH pending after completion, repeating EH (cnt=4)
+[  181.623691] ata3: EH complete
+[  181.623810]   Vendor: ATA       Model: ST3320620AS       Rev: 3.AA
+[  181.623821]   Type:   Direct-Access                      ANSI SCSI revision: 05
+[  181.623910] SCSI device sdc: 625142448 512-byte hdwr sectors (320073 MB)
+[  181.623923] sdc: Write Protect is off
+[  181.623926] sdc: Mode Sense: 00 3a 00 00
+[  181.623946] SCSI device sdc: drive cache: write back
+[  181.624005] SCSI device sdc: 625142448 512-byte hdwr sectors (320073 MB)
+[  181.624017] sdc: Write Protect is off
+[  181.624020] sdc: Mode Sense: 00 3a 00 00
+[  181.624039] SCSI device sdc: drive cache: write back
+[  181.624044]  sdc: sdc1
+[  181.636017] sd 2:0:0:0: Attached scsi disk sdc
+
+Everything is fine.
+
