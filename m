@@ -1,136 +1,98 @@
-From: Eran Tromer <eran@tromer.org>
-Subject: [patch] libata: return sense data in HDIO_DRIVE_CMD ioctl
-Date: Wed, 27 Sep 2006 19:06:07 +0300
-Message-ID: <451AA16F.1080704@tromer.org>
+From: Jim Paris <jim@jtan.com>
+Subject: smartctl causing HSM violation on sata_nv, 2.6.18
+Date: Wed, 27 Sep 2006 14:33:39 -0400
+Message-ID: <20060927183339.GA28174@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from line108-16.adsl.actcom.co.il ([192.117.108.16]:30950 "EHLO
-	lucian.tromer.org") by vger.kernel.org with ESMTP id S1751169AbWI0QRP
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Sep 2006 12:17:15 -0400
+Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:4304 "EHLO neurosis.jim.sh")
+	by vger.kernel.org with ESMTP id S1030522AbWI0Sdm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Sep 2006 14:33:42 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Lord <mlord@pobox.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Make the HDIO_DRIVE_CMD ioctl in libata (ATA command pass through)
-return a few ATA registers to userspace, following the same convention
-as the drivers/ide implementation of the same ioctl. This is needed to
-support ATA commands like CHECK POWER MODE, which return information
-in nsectors.
+Hi Tejun,
 
-This fixes "hdparm -C" on SATA drives.
+My NVIDIA SATA controller is having some problems with smartctl on
+2.6.18 (+ the previously mentioned sata_nv patch).  If I try to enable
+Attribute Autosafe (smartctl -S on) or Automatic Offline (smartctl -o
+on), the controller craps out (but recovers).  Executing the same
+command on an identical disk connected to a SiI3132 works fine.  Other
+SMART stuff (reading attributes, running self-tests) seems to be
+behaving just fine.  
 
-Forcing the sense data read via the cc flag causes spurious check
-conditions, so we filter these out (following the
-ATA command pass-through specification T10/04-262r7).
-
-Signed-off-by: Eran Tromer <eran@tromer.org>
----
-
-Applies to git/jgarzik/libata-dev.git master and git/torvalds/linux-2.6.git
-master. To apply to 2.6.18, change drivers/ata/ to drivers/scsi/.
-
-On 2006-08-29 05:39, Tejun Heo wrote to linux-ide@vger.kernel.org:
->> 2) hdparm -C for all 4 drives always shows "drive state is:  standby"
->>    even when I'm certain that the drives are active.
->
-> hdparm -C says the same thing for my drive.  I think it's safe to
-> ignore.  Hmmm... it needs to be tracked down.  Maybe some problem in
-> HDIO ioctl implementation in libata.
-
-Yes, and fixed by this patch.
+-jim
 
 
-drivers/ata/libata-scsi.c |   46 +++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 39 insertions(+), 7 deletions(-)
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -164,10 +164,10 @@ int ata_cmd_ioctl(struct scsi_device *sc
- {
- 	int rc = 0;
- 	u8 scsi_cmd[MAX_COMMAND_SIZE];
--	u8 args[4], *argbuf = NULL;
-+	u8 args[4], *argbuf = NULL, *sensebuf = NULL;
- 	int argsize = 0;
--	struct scsi_sense_hdr sshdr;
- 	enum dma_data_direction data_dir;
-+	int cmd_result;
+### sata_nv controller (CK804):
 
- 	if (arg == NULL)
- 		return -EINVAL;
-@@ -175,6 +175,10 @@ int ata_cmd_ioctl(struct scsi_device *sc
- 	if (copy_from_user(args, arg, sizeof(args)))
- 		return -EFAULT;
+# smartctl -data -S on /dev/disk/by-path/pci-0000:00:07.0-scsi-0:0:0:0
+smartctl version 5.36 [x86_64-unknown-linux-gnu] Copyright (C) 2002-6 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
 
-+	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sensebuf)
-+		return -ENOMEM;
-+
- 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+=== START OF ENABLE/DISABLE COMMANDS SECTION ===
+Error SMART Enable Auto-save failed: Input/output error
+Smartctl: SMART Enable Attribute Autosave Failed.
 
- 	if (args[3]) {
-@@ -191,7 +195,7 @@ int ata_cmd_ioctl(struct scsi_device *sc
- 		data_dir = DMA_FROM_DEVICE;
- 	} else {
- 		scsi_cmd[1]  = (3 << 1); /* Non-data */
--		/* scsi_cmd[2] is already 0 -- no off.line, cc, or data xfer */
-+		scsi_cmd[2]  = 0x20;     /* cc but no off.line or data xfer */
- 		data_dir = DMA_NONE;
- 	}
+A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
 
-@@ -210,18 +214,46 @@ int ata_cmd_ioctl(struct scsi_device *sc
 
- 	/* Good values for timeout and retries?  Values below
- 	   from scsi_ioctl_send_command() for default case... */
--	if (scsi_execute_req(scsidev, scsi_cmd, data_dir, argbuf, argsize,
--			     &sshdr, (10*HZ), 5)) {
-+	cmd_result = scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, argsize,
-+	                          sensebuf, (10*HZ), 5, 0);
-+
-+	if ((cmd_result>>24) == DRIVER_SENSE) {   /* sense data available */
-+		u8 *desc = sensebuf + 8;
-+		cmd_result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
-+
-+		/* If we set cc then ATA pass-through will cause a
-+		 * check condition even if no error. Filter that. */
-+		if (cmd_result & SAM_STAT_CHECK_CONDITION) {
-+			struct scsi_sense_hdr sshdr;
-+			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
-+			                      &sshdr);
-+			if (sshdr.sense_key==0 &&
-+			    sshdr.asc==0 && sshdr.ascq==0)
-+				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
-+		}
-+
-+		/* Send userspace a few ATA registers (same as drivers/ide) */
-+		if (sensebuf[0] == 0x72 &&     /* format is "descriptor" */
-+		    desc[0] == 0x09 ) {        /* code is "ATA Descriptor" */
-+			args[0] = desc[13];    /* status */
-+			args[1] = desc[3];     /* error */
-+			args[2] = desc[5];     /* sector count (0:7) */
-+			if (copy_to_user(arg, args, sizeof(args)))
-+				rc = -EFAULT;
-+		}
-+	}
-+
-+
-+	if (cmd_result) {
- 		rc = -EIO;
- 		goto error;
- 	}
+### sata_sil24 controller (SiI3132):
 
--	/* Need code to retrieve data from check condition? */
--
- 	if ((argbuf)
- 	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
- 		rc = -EFAULT;
- error:
-+	kfree(sensebuf);
- 	kfree(argbuf);
- 	return rc;
- }
+# smartctl -data -S on /dev/disk/by-path/pci-0000:04:00.0-scsi-0:0:0:0
+smartctl version 5.36 [x86_64-unknown-linux-gnu] Copyright (C) 2002-6 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
 
+=== START OF ENABLE/DISABLE COMMANDS SECTION ===
+SMART Attribute Autosave Enabled.
+
+
+### Kernel log for NVIDIA case:
+
+[36911.153208] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[36911.153245] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
+[36911.462381] ata1: soft resetting port
+[36911.618322] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[36911.620269] ata1.00: configured for UDMA/133
+[36911.620277] ata1: EH complete
+[36911.620410] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[36911.620442] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
+[36911.930163] ata1: soft resetting port
+[36912.086097] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[36912.087984] ata1.00: configured for UDMA/133
+[36912.087996] ata1: EH complete
+[36912.088126] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[36912.088158] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
+[36912.397930] ata1: soft resetting port
+[36912.553871] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[36912.555790] ata1.00: configured for UDMA/133
+[36912.555801] ata1: EH complete
+[36912.555931] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[36912.555963] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
+[36912.865705] ata1: soft resetting port
+[36913.021646] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[36913.023482] ata1.00: configured for UDMA/133
+[36913.023488] ata1: EH complete
+[36913.023621] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[36913.023653] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
+[36913.333482] ata1: soft resetting port
+[36913.489422] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[36913.491320] ata1.00: configured for UDMA/133
+[36913.491327] ata1: EH complete
+[36913.491461] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[36913.491493] ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
+[36913.801255] ata1: soft resetting port
+[36913.957198] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[36913.959100] ata1.00: configured for UDMA/133
+[36913.959110] ata1: EH complete
+[36913.959384] SCSI device sda: 625142448 512-byte hdwr sectors (320073 MB)
+[36913.959530] sda: Write Protect is off
+[36913.959534] sda: Mode Sense: 00 3a 00 00
+[36913.959801] SCSI device sda: drive cache: write back
+[36913.960018] SCSI device sda: 625142448 512-byte hdwr sectors (320073 MB)
+[36913.960352] sda: Write Protect is off
+[36913.960357] sda: Mode Sense: 00 3a 00 00
+[36913.960544] SCSI device sda: drive cache: write back
