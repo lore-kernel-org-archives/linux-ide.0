@@ -1,147 +1,99 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [RFT PATCH] libata: implement ATA_FLAG_SETXFER_POLLING and use it in pata_via
-Date: Thu, 28 Sep 2006 20:11:51 +0900
-Message-ID: <20060928111151.GN25800@htj.dyndns.org>
+From: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
+Subject: Adaptec Unknown device 0241 (rev01): Serial ATA II RAID 1420SA
+Date: Thu, 28 Sep 2006 07:23:17 -0400
+Message-ID: <8E8F647D7835334B985D069AE964A4F7028FDFEB@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:25517 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751795AbWI1LMB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Sep 2006 07:12:01 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so698950nfa
-        for <linux-ide@vger.kernel.org>; Thu, 28 Sep 2006 04:12:00 -0700 (PDT)
-Content-Disposition: inline
+Received: from fwstl1-1.wul.qc.ec.gc.ca ([205.211.132.24]:7729 "EHLO
+	ecqcmtlbh.quebec.int.ec.gc.ca") by vger.kernel.org with ESMTP
+	id S1161078AbWI1LXW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Sep 2006 07:23:22 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: castet.matthieu@free.fr, alan@lxorguk.ukuu.org.uk, jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org
+To: linux-ide@vger.kernel.org
 
-This patch implements ATA_FLAG_SETXFER_POLLING and use in pata_via.
-If this flag is set, transfer mode setting performed by polling not by
-interrupt.  This should help those controllers which raise interrupt
-before the command is actually complete on SETXFER.
+Hi all,
 
-Rationale for this approach.
+I don't know if it's worth to mention but I have an Adaptec Serial ATA
+II RAID 1420SA quad port which supports RAID 0, 1 and 10.
 
-* uses existing facility and relatively simple
-* no busy sleep in the interrupt handler
-* updating drivers is easy
+I am using it whith a single 160GB HD and it is working properly since
+around 2.6.16 ...
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
+The lspci show the device has Unknown:
+0000:04:0e.0 RAID bus controller: Adaptec: Unknown device 0241 (rev 01)
 
-Matthieu Castet, can you please test this patch?  It's against
-libata-dev#upstream, but -mm might work too.  If you want a patch
-against -mm, just let me know.
+Lspci -vv
+0000:04:0e.0 RAID bus controller: Adaptec: Unknown device 0241 (rev 01)
+        Subsystem: Adaptec: Unknown device 0241
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
+ParErr- Stepping- SERR+ FastB2B-
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+<TAbort- <MAbort- >SERR- <PERR-
+        Latency: 64, Cache Line Size: 0x10 (64 bytes)
+        Interrupt: pin A routed to IRQ 201
+        Region 0: Memory at fe100000 (64-bit, non-prefetchable)
+[size=1M]
+        Region 2: I/O ports at e800 [size=256]
+        Capabilities: [40] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] Message Signalled Interrupts: 64bit+
+Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [60] PCI-X non-bridge device.
+                Command: DPERE- ERO- RBC=0 OST=3
+                Status: Bus=255 Dev=31 Func=0 64bit+ 133MHz+ SCD- USC-,
+DC=simple, DMMRBC=0, DMOST=3, DMCRS=0, RSCEM-
 
-Jeff, Alan, what do you think about this approach?
 
-Thanks.
+While the dmesg loads properly the sata_mv driver:
+libata version 1.20 loaded.
+sata_mv 0000:04:0e.0: version 0.7
+ACPI: PCI Interrupt 0000:04:0e.0[A] -> GSI 18 (level, low) -> IRQ 201
+sata_mv 0000:04:0e.0: Applying B2 workarounds to unknown rev
+sata_mv 0000:04:0e.0: 32 slots 4 ports unknown mode IRQ via INTx
+ata1: SATA max UDMA/133 cmd 0x0 ctl 0xF8DA2120 bmdma 0x0 irq 201
+ata2: SATA max UDMA/133 cmd 0x0 ctl 0xF8DA4120 bmdma 0x0 irq 201
+ata3: SATA max UDMA/133 cmd 0x0 ctl 0xF8DA6120 bmdma 0x0 irq 201
+ata4: SATA max UDMA/133 cmd 0x0 ctl 0xF8DA8120 bmdma 0x0 irq 201
+ieee1394: Host added: ID:BUS[0-00:1023]  GUID[805b0600cbb18600]
+ata1: dev 0 cfg 49:2f00 82:3069 83:7c01 84:4023 85:3069 86:3c01 87:4023
+88:203f
+ata1: dev 0 ATA-7, max UDMA/100, 312581808 sectors: LBA48
+ata1: dev 0 configured for UDMA/100
+scsi0 : sata_mv
+ata2: no device found (phy stat 00000000)
+scsi1 : sata_mv
+ata3: no device found (phy stat 00000000)
+scsi2 : sata_mv
+ata4: no device found (phy stat 00000000)
+scsi3 : sata_mv
+  Vendor: ATA       Model: ST3160828AS       Rev: 3.02
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+eth1394: eth1: IEEE-1394 IPv4 over 1394 Ethernet (fw-host0)
+SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
+sd 0:0:0:0: Attached scsi disk sda
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 753b015..c71d896 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4082,7 +4082,8 @@ int ata_hsm_move(struct ata_port *ap, st
- 
- fsm_start:
- 	DPRINTK("ata%u: protocol %d task_state %d (dev_stat 0x%X)\n",
--		ap->id, qc->tf.protocol, ap->hsm_task_state, status);
-+		ap->id, qc->tf.protocol, ap->hsm_task_state, status,
-+		qc->tf.flags & ATA_TFLAG_POLLING);
- 
- 	switch (ap->hsm_task_state) {
- 	case HSM_ST_FIRST:
-@@ -4668,6 +4669,14 @@ unsigned int ata_qc_issue_prot(struct at
- 		}
- 	}
- 
-+	/* Some controllers show flaky interrupt behavior after
-+	 * setting xfer mode.  Use polling instead.
-+	 */
-+	if (unlikely(qc->tf.command == ATA_CMD_SET_FEATURES &&
-+		     qc->tf.feature == SETFEATURES_XFER) &&
-+	    (ap->flags & ATA_FLAG_SETXFER_POLLING))
-+		qc->tf.flags |= ATA_TFLAG_POLLING;
-+
- 	/* select the device */
- 	ata_dev_select(ap, qc->dev->devno, 1, 0);
- 
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index 1b2ff13..a973718 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -385,7 +385,8 @@ static int via_init_one(struct pci_dev *
- 	/* Early VIA without UDMA support */
- 	static struct ata_port_info via_mwdma_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
-+			 ATA_FLAG_SETXFER_POLLING,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.port_ops = &via_port_ops
-@@ -393,7 +394,8 @@ static int via_init_one(struct pci_dev *
- 	/* Ditto with IRQ masking required */
- 	static struct ata_port_info via_mwdma_info_borked = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
-+			 ATA_FLAG_SETXFER_POLLING,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.port_ops = &via_port_ops_noirq,
-@@ -401,7 +403,8 @@ static int via_init_one(struct pci_dev *
- 	/* VIA UDMA 33 devices (and borked 66) */
- 	static struct ata_port_info via_udma33_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
-+			 ATA_FLAG_SETXFER_POLLING,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x7,
-@@ -410,7 +413,8 @@ static int via_init_one(struct pci_dev *
- 	/* VIA UDMA 66 devices */
- 	static struct ata_port_info via_udma66_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
-+			 ATA_FLAG_SETXFER_POLLING,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x1f,
-@@ -419,7 +423,8 @@ static int via_init_one(struct pci_dev *
- 	/* VIA UDMA 100 devices */
- 	static struct ata_port_info via_udma100_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
-+			 ATA_FLAG_SETXFER_POLLING,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x3f,
-@@ -428,7 +433,8 @@ static int via_init_one(struct pci_dev *
- 	/* UDMA133 with bad AST (All current 133) */
- 	static struct ata_port_info via_udma133_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
-+			 ATA_FLAG_SETXFER_POLLING,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x7f,	/* FIXME: should check north bridge */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index d6a3d4b..9eabc87 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -170,6 +170,7 @@ enum {
- 	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
- 					      * Register FIS clearing BSY */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
-+	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
- 
- 	/* The following flag belongs to ap->pflags but is kept in
- 	 * ap->flags because it's referenced in many LLDs and will be
+
+One more thing I've found out is that the port probing is in reverse
+order since the ports 0 1 2 3 are actually 4 3 2 1 (maybie 3 2 1 0
+have'nt looked lately :) has wrote down on the adapter?
+
+Thnx!
+
+- vin
 
