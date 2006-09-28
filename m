@@ -1,48 +1,94 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 2/2] libata: _SDD support
-Date: Wed, 27 Sep 2006 18:54:07 -0400
-Message-ID: <451B010F.4010308@pobox.com>
-References: <20060927223441.205181000@localhost.localdomain> <20060927153634.716a8aa1.kristen.c.accardi@intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch] libata: return sense data in HDIO_DRIVE_CMD ioctl
+Date: Thu, 28 Sep 2006 10:45:29 +0900
+Message-ID: <20060928014529.GF25800@htj.dyndns.org>
+References: <451AA16F.1080704@tromer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40908 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1031189AbWI0WyK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Sep 2006 18:54:10 -0400
-In-Reply-To: <20060927153634.716a8aa1.kristen.c.accardi@intel.com>
+Received: from nf-out-0910.google.com ([64.233.182.190]:20899 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S965101AbWI1Bpj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Sep 2006 21:45:39 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so615147nfa
+        for <linux-ide@vger.kernel.org>; Wed, 27 Sep 2006 18:45:37 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <451AA16F.1080704@tromer.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rdunlap@xenotime.net
+To: Eran Tromer <eran@tromer.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Lord <mlord@pobox.com>
 
-Kristen Carlson Accardi wrote:
-> +	/* Don't continue if not a SATA device. */
-> +	if (!ata_id_is_sata(atadev->id)) {
-> +		if (ata_msg_probe(ap))
-> +			ata_dev_printk(atadev, KERN_DEBUG,
-> +				"%s: ata_id_is_sata is False\n", __FUNCTION__);
-> +		goto out;
+Hello, Eran Tromer.
+
+On Wed, Sep 27, 2006 at 07:06:07PM +0300, Eran Tromer wrote:
+> > hdparm -C says the same thing for my drive.  I think it's safe to
+> > ignore.  Hmmm... it needs to be tracked down.  Maybe some problem in
+> > HDIO ioctl implementation in libata.
+> 
+> Yes, and fixed by this patch.
+
+Great.  Things look good at the first glance.  Just a few comments.
+
+> @@ -210,18 +214,46 @@ int ata_cmd_ioctl(struct scsi_device *sc
+> 
+>  	/* Good values for timeout and retries?  Values below
+>  	   from scsi_ioctl_send_command() for default case... */
+> -	if (scsi_execute_req(scsidev, scsi_cmd, data_dir, argbuf, argsize,
+> -			     &sshdr, (10*HZ), 5)) {
+> +	cmd_result = scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, argsize,
+> +	                          sensebuf, (10*HZ), 5, 0);
+> +
+> +	if ((cmd_result>>24) == DRIVER_SENSE) {   /* sense data available */
+
+driver_byte() seems more appropriate.
+
+> +		u8 *desc = sensebuf + 8;
+> +		cmd_result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
+> +
+> +		/* If we set cc then ATA pass-through will cause a
+> +		 * check condition even if no error. Filter that. */
+> +		if (cmd_result & SAM_STAT_CHECK_CONDITION) {
+> +			struct scsi_sense_hdr sshdr;
+> +			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
+> +			                      &sshdr);
+> +			if (sshdr.sense_key==0 &&
+> +			    sshdr.asc==0 && sshdr.ascq==0)
+> +				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
+> +		}
+> +
+> +		/* Send userspace a few ATA registers (same as drivers/ide) */
+> +		if (sensebuf[0] == 0x72 &&     /* format is "descriptor" */
+> +		    desc[0] == 0x09 ) {        /* code is "ATA Descriptor" */
+> +			args[0] = desc[13];    /* status */
+> +			args[1] = desc[3];     /* error */
+> +			args[2] = desc[5];     /* sector count (0:7) */
+> +			if (copy_to_user(arg, args, sizeof(args)))
+> +				rc = -EFAULT;
+> +		}
 > +	}
+> +
+> +
+> +	if (cmd_result) {
 
-I forgot to note this in patch #1, so this comment applies to both patch 
-#1 and patch #2:
+I wonder whether we need to fake default error ATA regsiters here.
+Anyways, it's unrelated to this patch.
 
-ata_id_is_sata() is probably not the check you want.  This tests Word 93 
-of IDENTIFY DEVICE output, which is a check that's not in the ATA 
-specification, but rather something I came up with.  It will indicate 
-false for ATA devices that attach via SATA cables, but have a PATA 
-bridge chip soldered onto the ATA device.
+>  		rc = -EIO;
+>  		goto error;
+>  	}
+> 
+> -	/* Need code to retrieve data from check condition? */
+> -
+>  	if ((argbuf)
+>  	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
+>  		rc = -EFAULT;
+>  error:
+> +	kfree(sensebuf);
+>  	kfree(argbuf);
+>  	return rc;
 
-A better test is probably "ap->cbl == ATA_CBL_SATA".
+Acked-by: Tejun Heo <htejun@gmail.com>
 
-
-> +EXPORT_SYMBOL_GPL(ata_acpi_push_id);
-
-Remove the export, this is for exporting symbols to export kernel 
-modules, not for making symbols visible at the C level, to other C modules.
-
-	Jeff
-
-
-
+-- 
+tejun
