@@ -1,35 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFT PATCH] libata: implement ATA_FLAG_SETXFER_POLLING and use
-	it in pata_via
-Date: Thu, 28 Sep 2006 12:51:06 +0100
-Message-ID: <1159444266.11049.422.camel@localhost.localdomain>
-References: <20060928111151.GN25800@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Adaptec Unknown device 0241 (rev01): Serial ATA II RAID 1420SA
+Date: Thu, 28 Sep 2006 07:37:54 -0400
+Message-ID: <451BB412.7080104@garzik.org>
+References: <8E8F647D7835334B985D069AE964A4F7028FDFEB@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:4530 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1161085AbWI1L0R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Sep 2006 07:26:17 -0400
-In-Reply-To: <20060928111151.GN25800@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:41188 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965323AbWI1LiE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Sep 2006 07:38:04 -0400
+In-Reply-To: <8E8F647D7835334B985D069AE964A4F7028FDFEB@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: castet.matthieu@free.fr, jeff@garzik.org, linux-ide@vger.kernel.org, akpm@osdl.org
+To: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
+Cc: linux-ide@vger.kernel.org
 
-Ar Iau, 2006-09-28 am 20:11 +0900, ysgrifennodd Tejun Heo:
-> Rationale for this approach.
+Fortier,Vincent [Montreal] wrote:
+> Hi all,
 > 
-> * uses existing facility and relatively simple
-> * no busy sleep in the interrupt handler
-> * updating drivers is easy
+> I don't know if it's worth to mention but I have an Adaptec Serial ATA
+> II RAID 1420SA quad port which supports RAID 0, 1 and 10.
 
-And another
-	Follows the same behaviour as drivers/ide and certain other things. So
-we are shifting to a different "known sane" behaviour path
+Note this is "fake RAID" or software RAID.
 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-Acked-by: Alan Cox <alan@redhat.com>
+So, it supports RAID5, RAID6, etc. :)
+
+
+> I am using it whith a single 160GB HD and it is working properly since
+> around 2.6.16 ...
+
+Great!
+
+
+> The lspci show the device has Unknown:
+> 0000:04:0e.0 RAID bus controller: Adaptec: Unknown device 0241 (rev 01)
+
+This should be reported to the pciutils maintainer 
+(http://pciids.sf.net/).  This isn't related to the kernel.
+
+	Jeff
 
 
