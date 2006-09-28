@@ -1,94 +1,68 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch] libata: return sense data in HDIO_DRIVE_CMD ioctl
-Date: Thu, 28 Sep 2006 10:45:29 +0900
-Message-ID: <20060928014529.GF25800@htj.dyndns.org>
-References: <451AA16F.1080704@tromer.org>
+Subject: [PATCH] libata: lengthen interval between SRST set and clear
+Date: Thu, 28 Sep 2006 14:14:15 +0900
+Message-ID: <20060928051415.GG25800@htj.dyndns.org>
+References: <20060927082005.GA14569@jim.sh>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:20899 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.188]:42031 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S965101AbWI1Bpj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Sep 2006 21:45:39 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so615147nfa
-        for <linux-ide@vger.kernel.org>; Wed, 27 Sep 2006 18:45:37 -0700 (PDT)
+	id S1751615AbWI1FOY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Sep 2006 01:14:24 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so645338nfa
+        for <linux-ide@vger.kernel.org>; Wed, 27 Sep 2006 22:14:23 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <451AA16F.1080704@tromer.org>
+In-Reply-To: <20060927082005.GA14569@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eran Tromer <eran@tromer.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Lord <mlord@pobox.com>
+To: Jim Paris <jim@jtan.com>, mail@philipp-wagner.com
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Hello, Eran Tromer.
+20us isn't enough for some SATA controllers (sata_nv) ending up not
+sending the second FIS27 to clear SRST.  This usually results in SRST
+timeout causing excessive delays during hotplug.
 
-On Wed, Sep 27, 2006 at 07:06:07PM +0300, Eran Tromer wrote:
-> > hdparm -C says the same thing for my drive.  I think it's safe to
-> > ignore.  Hmmm... it needs to be tracked down.  Maybe some problem in
-> > HDIO ioctl implementation in libata.
-> 
-> Yes, and fixed by this patch.
+This patch lengthens the delay from 20us to 1ms and also converts it
+to msleep() instead of busy wait.
 
-Great.  Things look good at the first glance.  Just a few comments.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Hello, Jim Paris, Philipp Wagner.
 
-> @@ -210,18 +214,46 @@ int ata_cmd_ioctl(struct scsi_device *sc
-> 
->  	/* Good values for timeout and retries?  Values below
->  	   from scsi_ioctl_send_command() for default case... */
-> -	if (scsi_execute_req(scsidev, scsi_cmd, data_dir, argbuf, argsize,
-> -			     &sshdr, (10*HZ), 5)) {
-> +	cmd_result = scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, argsize,
-> +	                          sensebuf, (10*HZ), 5, 0);
-> +
-> +	if ((cmd_result>>24) == DRIVER_SENSE) {   /* sense data available */
+Can you guys please give this patch a shot?  This patch is againt
+libata-dev#upstream so if you're using 2.6.18, the patched file
+(libata-core.c) wouldn't be there.  If that's the case, just edit
+drivers/scsi/libata-core.c accordng to the following patch (replace
+udelay(20)s in ata_bus_softreset() w/ msleep(1)).
 
-driver_byte() seems more appropriate.
+Jeff, this function is called from both old EH and new EH's
+ata_std_softreset().  I think this change is safe but curious about
+your opinion.
 
-> +		u8 *desc = sensebuf + 8;
-> +		cmd_result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
-> +
-> +		/* If we set cc then ATA pass-through will cause a
-> +		 * check condition even if no error. Filter that. */
-> +		if (cmd_result & SAM_STAT_CHECK_CONDITION) {
-> +			struct scsi_sense_hdr sshdr;
-> +			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
-> +			                      &sshdr);
-> +			if (sshdr.sense_key==0 &&
-> +			    sshdr.asc==0 && sshdr.ascq==0)
-> +				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
-> +		}
-> +
-> +		/* Send userspace a few ATA registers (same as drivers/ide) */
-> +		if (sensebuf[0] == 0x72 &&     /* format is "descriptor" */
-> +		    desc[0] == 0x09 ) {        /* code is "ATA Descriptor" */
-> +			args[0] = desc[13];    /* status */
-> +			args[1] = desc[3];     /* error */
-> +			args[2] = desc[5];     /* sector count (0:7) */
-> +			if (copy_to_user(arg, args, sizeof(args)))
-> +				rc = -EFAULT;
-> +		}
-> +	}
-> +
-> +
-> +	if (cmd_result) {
+Thanks.
 
-I wonder whether we need to fake default error ATA regsiters here.
-Anyways, it's unrelated to this patch.
-
->  		rc = -EIO;
->  		goto error;
->  	}
-> 
-> -	/* Need code to retrieve data from check condition? */
-> -
->  	if ((argbuf)
->  	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
->  		rc = -EFAULT;
->  error:
-> +	kfree(sensebuf);
->  	kfree(argbuf);
->  	return rc;
-
-Acked-by: Tejun Heo <htejun@gmail.com>
-
--- 
-tejun
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 753b015..007020e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2414,15 +2414,15 @@ static unsigned int ata_bus_softreset(st
+ 	/* software reset.  causes dev0 to be selected */
+ 	if (ap->flags & ATA_FLAG_MMIO) {
+ 		writeb(ap->ctl, (void __iomem *) ioaddr->ctl_addr);
+-		udelay(20);	/* FIXME: flush */
++		msleep(1);	/* FIXME: flush */
+ 		writeb(ap->ctl | ATA_SRST, (void __iomem *) ioaddr->ctl_addr);
+-		udelay(20);	/* FIXME: flush */
++		msleep(1);	/* FIXME: flush */
+ 		writeb(ap->ctl, (void __iomem *) ioaddr->ctl_addr);
+ 	} else {
+ 		outb(ap->ctl, ioaddr->ctl_addr);
+-		udelay(10);
++		msleep(1);
+ 		outb(ap->ctl | ATA_SRST, ioaddr->ctl_addr);
+-		udelay(10);
++		msleep(1);
+ 		outb(ap->ctl, ioaddr->ctl_addr);
+ 	}
+ 
