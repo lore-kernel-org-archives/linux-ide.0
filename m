@@ -1,71 +1,36 @@
-From: Prakash Punnoor <prakash@punnoor.de>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: SATA status reports update
-Date: Fri, 29 Sep 2006 12:00:56 +0200
-Message-ID: <200609291200.56308.prakash@punnoor.de>
-References: <451CE8EC.1020203@garzik.org> <200609291149.37009.prakash@punnoor.de> <451CED23.1090909@garzik.org>
+Date: Fri, 29 Sep 2006 06:03:58 -0400
+Message-ID: <451CEF8E.2050601@garzik.org>
+References: <451CE8EC.1020203@garzik.org> <200609291149.37009.prakash@punnoor.de> <451CED23.1090909@garzik.org> <200609291200.56308.prakash@punnoor.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1540062.iuFlL0M7mx";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-in-01.arcor-online.net ([151.189.21.41]:54700 "EHLO
-	mail-in-01.arcor-online.net") by vger.kernel.org with ESMTP
-	id S1750761AbWI2KBO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Sep 2006 06:01:14 -0400
-In-Reply-To: <451CED23.1090909@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:7842 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932080AbWI2KEA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Sep 2006 06:04:00 -0400
+In-Reply-To: <200609291200.56308.prakash@punnoor.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
+To: Prakash Punnoor <prakash@punnoor.de>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
---nextPart1540062.iuFlL0M7mx
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Prakash Punnoor wrote:
+> Well, how would one debug it w/o hw docs? Or is it possible to compare the 
+> patch with a working driver for another chipset?
 
-Am Freitag 29 September 2006 11:53 schrieb Jeff Garzik:
-> Prakash Punnoor wrote:
-> > Am Freitag 29 September 2006 11:35 schrieb Jeff Garzik:
-> >> I updated the info at http://linux-ata.org/ to match the current code =
-in
-> >> linux-2.6.git.
-> >>
-> >> Hardware and driver status:
-> >> 	http://linux-ata.org/driver-status.html
-> >>    notably, the driver matrix:
-> >> 	http://linux-ata.org/driver-status.html#matrix
-> >
-> > Does any ETA exists for NV NON-AHCI NCQ support? The proabably not so
-> > small userbase would be happy if work on it would be done...
->
-> No ETA at all.  It is admittedly low priority, and unfortunately the
-> only people with hardware documentation are myself and NVIDIA.
->
-> There is a non-working patch, if someone wants to debug it, though:
-> http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/archive/2.6.=
-17
->-nv-adma.patch.bz2
+Well, it is based off of the standard ADMA[1] specification, albeit with 
+modifications.  There is pdc_adma.c, which is also based off ADMA.  And 
+the author (from NVIDIA) claims that the driver worked at one time, so 
+maybe it is simply bit rot that broke the driver.
 
-Well, how would one debug it w/o hw docs? Or is it possible to compare the=
-=20
-patch with a working driver for another chipset?
-=2D-=20
-(=B0=3D                 =3D=B0)
-//\ Prakash Punnoor /\\
-V_/                 \_V
+If I knew the answer, it would be fixed, so the best answer 
+unfortunately is "who knows".
 
---nextPart1540062.iuFlL0M7mx
-Content-Type: application/pgp-signature
+I wish I had the time.  But I also wish I had a team of programmers 
+working on libata, too ;-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+	Jeff
 
-iD8DBQBFHO7YxU2n/+9+t5gRArq6AKC+/0EYDaCCUWnVDpX0+WHpZqu7qACgnySr
-9g1INrWDI9NZV2elt/MSAvs=
-=bbad
------END PGP SIGNATURE-----
 
---nextPart1540062.iuFlL0M7mx--
