@@ -1,1758 +1,529 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] too late: updated version of the ACPI patches
-Date: Fri, 29 Sep 2006 10:58:04 +0200
-Message-ID: <451CE01C.8050406@suse.de>
-References: <451B8A05.5080002@suse.de> <20060928100547.a284c0eb.kristen.c.accardi@intel.com>
+From: "Joe Jin" <lkmaillist@gmail.com>
+Subject: [PATCH] libata: skip nodevice bus on execute reset
+Date: Fri, 29 Sep 2006 17:18:30 +0800
+Message-ID: <215036450609290218l401a5f74qa96125d78602b22f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------090905080109020404040101"
+	boundary="----=_Part_3657_29502206.1159521510700"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:17341 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1030432AbWI2I6H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Sep 2006 04:58:07 -0400
-In-Reply-To: <20060928100547.a284c0eb.kristen.c.accardi@intel.com>
+Received: from wx-out-0506.google.com ([66.249.82.228]:32059 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1750720AbWI2JSd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Sep 2006 05:18:33 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so880685wxc
+        for <linux-ide@vger.kernel.org>; Fri, 29 Sep 2006 02:18:32 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: lkml <linux-kernel@vger.kernel.org>, chris.mason@oracle.com
 
-This is a multi-part message in MIME format.
---------------090905080109020404040101
+------=_Part_3657_29502206.1159521510700
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
-
-Kristen Carlson Accardi wrote:
-> On Thu, 28 Sep 2006 10:38:29 +0200
-> Hannes Reinecke <hare@suse.de> wrote:
-> 
->> Hi Jeff,
->>
->> argl. Appearently I'm in Yeltsin mode.
->>
->> Anyway: I'm also have finished an updated version of the ACPI patches.
->> They are also based upon the patches by Randy Dunlap but with some 
->> improvements:
-> 
-> Hey,
-> I don't care who gets this stuff in, I just want it done with :).
-> I'm going to go ahead and make the changes to my patches that Jeff 
-> suggested yesterday, but I'm also glad to help review your patches.  
-> But having looked at your attachment I feel like I'm missing something.  
-> Was there more than this?  I don't see the patch that has libata-acpi.c in it.
-> 
-Oh, not again. Feeling like a git newbie :-(
-
-Right. Fixed now.
-
->> - Omit the namespace walk for SATA devices. We can really trust the ACPI 
->> layer to find out the correct device. If not the ACPI is buggered anyway 
->> and we shouldn't even try to continue.
-> 
-> Not sure about this one - how does this work for devices that may not
-> be present at boot time?  Normally this is something we have to walk
-> namespace for in order to discover -- at least with removable bay
-> devices.
-> 
-Tricky that. Don't think so. Reasoning as follows:
-
-ACPI is _really_ not designed for hotplugging. The entire ACPI code has 
-to be present at boot time; it's not possible to modify it during 
-run-time. Hence it already _knows_ about all possible controllers and 
-the objects are already present in memory.
-And all removable bay controllers I've seen so far are either USB 
-devices (which aren't controlled by ACPI anyway) or already present on 
-the mainboard. There might not be a drive attached to them (ie if the 
-bay is not present), but the controller is.
-And the controller is the only one which actually has a representation 
-in sysfs, hence the correct ACPI object is already attached to it.
-The SATA-device or PATA channel / PATA-drive don't have a direct 
-representation in sysfs, hence we have to take care of identifying the 
-correct ACPI object ourselves.
-Which is what we're already do.
-But the controller itself will already be present.
-And even if not we can be reasonably sure that the driver core already 
-has assigned the correct handle for us. But to be on the safe side I've 
-put in a sanity check anyway.
-
-So, attached is an updated version of my patch, based on the 'acpi' 
-branch from libata-dev.
-We now even do _GTM & _STM and have the possiblity to call _GTF for PATA 
-devices, too.
-Not that I recommend that.
-
-Comments etc are welcome.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
-
---------------090905080109020404040101
-Content-Type: text/plain;
- name="libata-acpi-update-pata"
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-acpi-update-pata"
+Content-Disposition: inline
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 50adcc5..bebf339 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -258,6 +258,10 @@ running once the system is up.
- 	arcrimi=	[HW,NET] ARCnet - "RIM I" (entirely mem-mapped) cards
- 			Format: <io>,<irq>,<nodeID>
- 
-+	ata_acpi=	[LIBATA] Disables use of ACPI in libata suspend/resume
-+			when set.
-+			Format: <int>
-+
- 	ataflop=	[HW,M68k]
- 
- 	atarimouse=	[HW,MOUSE] Atari Mouse
-@@ -1021,10 +1025,6 @@ running once the system is up.
- 			emulation library even if a 387 maths coprocessor
- 			is present.
- 
--	noacpi		[LIBATA] Disables use of ACPI in libata suspend/resume
--			when set.
--			Format: <int>
--
- 	noalign		[KNL,ARM]
- 
- 	noapic		[SMP,APIC] Tells the kernel to not make use of any
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index f5a5694..96de687 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -144,21 +144,21 @@ config SATA_VITESSE
- 
- config SATA_INTEL_COMBINED
- 	bool
--	depends on IDE=y && !BLK_DEV_IDE_SATA && (SATA_AHCI || ATA_PIIX)
-+	depends on IDE!=n && !BLK_DEV_IDE_SATA && (SATA_AHCI || ATA_PIIX)
- 	default y
- 
--config SATA_ACPI
--	bool
-+config ATA_ACPI
-+	bool "Handle ATA-related ACPI objects"
- 	depends on ACPI && PCI
- 	default y
- 	help
--	  This option adds support for SATA-related ACPI objects.
-+	  This option adds support for ATA-related ACPI objects.
- 	  These ACPI objects add the ability to retrieve taskfiles
- 	  from the ACPI BIOS and write them to the disk controller.
- 	  These objects may be related to performance, security,
- 	  power management, or other areas.
- 	  You can disable this at kernel boot time by using the
--	  option libata.noacpi=1
-+	  option 'libata.ata_acpi=0'.
- 
- config PATA_ALI
- 	tristate "ALi PATA support (Experimental)"
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 1d77823..26d72ee 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -59,4 +59,5 @@ # Should be last libata driver
- obj-$(CONFIG_PATA_LEGACY)	+= pata_legacy.o
- 
- libata-objs	:= libata-core.o libata-scsi.o libata-sff.o libata-eh.o
--libata-$(CONFIG_SATA_ACPI) += libata-acpi.o
-+libata-$(CONFIG_ATA_ACPI) += libata-acpi.o
-+
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index f2fd0dd..9fd152d 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -4,6 +4,8 @@
-  *
-  * Copyright (C) 2006 Intel Corp.
-  * Copyright (C) 2006 Randy Dunlap
-+ * Copyright (C) 2006 SUSE Linux Products GmbH
-+ * Copyright (C) 2006 Hannes Reinecke
-  */
- 
- #include <linux/ata.h>
-@@ -26,6 +28,7 @@ #include <acpi/actypes.h>
- 
- #define SATA_ROOT_PORT(x)	(((x) >> 16) & 0xffff)
- #define SATA_PORT_NUMBER(x)	((x) & 0xffff)	/* or NO_PORT_MULT */
-+#define SATA_PORT_ADR(x,y)      ((((x) & 0xffff) << 16) | ((y) & 0xffff))
- #define NO_PORT_MULT		0xffff
- #define SATA_ADR_RSVD		0xffffffff
- 
-@@ -34,229 +37,456 @@ struct taskfile_array {
- 	u8	tfa[REGS_PER_GTF];	/* regs. 0x1f1 - 0x1f7 */
- };
- 
-+struct GTM_buffer {
-+	u32	PIO_speed0;
-+	u32	DMA_speed0;
-+	u32	PIO_speed1;
-+	u32	DMA_speed1;
-+	u32	GTM_flags;
-+};
- 
- /**
-- * sata_get_dev_handle - finds acpi_handle and PCI device.function
-- * @dev: device to locate
-- * @handle: returned acpi_handle for @dev
-- * @pcidevfn: return PCI device.func for @dev
-- *
-- * This function is somewhat SATA-specific.  Or at least the
-- * PATA & SATA versions of this function are different,
-- * so it's not entirely generic code.
-+ * ata_acpi_get_name - Retrieve the ACPI name of an object
-+ * @handle: handle of the ACPI object
-  *
-- * Returns 0 on success, <0 on error.
-+ * Returns a string with the ACPI object name or NULL on error.
-+ * The returned string has to be freed by the caller.
-  */
--static int sata_get_dev_handle(struct device *dev, acpi_handle *handle,
--					acpi_integer *pcidevfn)
-+static char *ata_acpi_get_name(acpi_handle *handle)
- {
--	struct pci_dev	*pci_dev;
--	acpi_integer	addr;
-+	struct acpi_buffer namebuf = {.length = ACPI_ALLOCATE_BUFFER,
-+				      .pointer = NULL};
-+	int status;
- 
--	pci_dev = to_pci_dev(dev);	/* NOTE: PCI-specific */
--	/* Please refer to the ACPI spec for the syntax of _ADR. */
--	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
--	*pcidevfn = addr;
--	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
--	if (!*handle)
--		return -ENODEV;
--	return 0;
-+	status = acpi_get_name(handle, ACPI_FULL_PATHNAME, &namebuf);
-+	if (ACPI_FAILURE(status))
-+		return NULL;
-+
-+	return namebuf.pointer;
- }
- 
- /**
-- * pata_get_dev_handle - finds acpi_handle and PCI device.function
-+ * ata_acpi_check_handle - Check the ACPI handle of an ata_port
-+ * @ap: target ata_port
-  * @dev: device to locate
-  * @handle: returned acpi_handle for @dev
-  * @pcidevfn: return PCI device.func for @dev
-  *
-- * The PATA and SATA versions of this function are different.
-+ * This function performs some sanity checks on the ACPI handle
-+ * for a given ata_port. Once the ACPI interpreter has somewhat
-+ * stabilized we can probably get rid of this.
-  *
-  * Returns 0 on success, <0 on error.
-  */
--static int pata_get_dev_handle(struct device *dev, acpi_handle *handle,
--				acpi_integer *pcidevfn)
-+static int ata_acpi_check_handle(struct ata_port *ap, acpi_handle *handle)
- {
- 	unsigned int bus, devnum, func;
- 	acpi_integer addr;
- 	acpi_handle dev_handle, parent_handle;
- 	struct acpi_buffer buffer = {.length = ACPI_ALLOCATE_BUFFER,
--					.pointer = NULL};
-+				     .pointer = NULL};
-+	char *pathname = NULL;
- 	acpi_status status;
- 	struct acpi_device_info	*dinfo = NULL;
- 	int ret = -ENODEV;
--	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct pci_dev *pdev = to_pci_dev(ap->dev);
- 
- 	bus = pdev->bus->number;
- 	devnum = PCI_SLOT(pdev->devfn);
- 	func = PCI_FUNC(pdev->devfn);
- 
--	dev_handle = DEVICE_ACPI_HANDLE(dev);
--	parent_handle = DEVICE_ACPI_HANDLE(dev->parent);
-+	dev_handle = DEVICE_ACPI_HANDLE(ap->dev);
-+	parent_handle = DEVICE_ACPI_HANDLE(ap->dev->parent);
-+
-+	if (!dev_handle)
-+		return -ENODEV;
-+
-+	/* Get the ACPI object name */
-+	pathname = ata_acpi_get_name(dev_handle);
-+	if (!pathname) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: get_name failed (dev %s, handle %p)\n",
-+					__FUNCTION__, pci_name(pdev), dev_handle);
-+		return -ENODEV;
-+	}
- 
-+	/* Check whether the parent object has the same bus address */
- 	status = acpi_get_object_info(parent_handle, &buffer);
--	if (ACPI_FAILURE(status))
-+	if (ACPI_FAILURE(status)) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: no info for parent of %s"
-+					"(pci %s, handle %p)\n",
-+					__FUNCTION__, pathname,
-+					pci_name(pdev), parent_handle);
- 		goto err;
--
-+	}
- 	dinfo = buffer.pointer;
--	if (dinfo && (dinfo->valid & ACPI_VALID_ADR) &&
--	    dinfo->address == bus) {
--		/* ACPI spec for _ADR for PCI bus: */
--		addr = (acpi_integer)(devnum << 16 | func);
--		*pcidevfn = addr;
--		*handle = dev_handle;
--	} else {
-+	if (!dinfo || !(dinfo->valid & ACPI_VALID_ADR) || 
-+	    dinfo->address != bus) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: wrong bus for parent of %s"
-+					" (%llu, should be %d)\n",
-+					__FUNCTION__, pathname, 
-+					dinfo ? (unsigned long long)dinfo->address
-+					: -1ULL, bus);
- 		goto err;
- 	}
- 
--	if (!*handle)
-+
-+	/* ACPI spec for _ADR for PCI bus: */
-+	addr = (acpi_integer)(devnum << 16 | func);
-+	dev_handle = acpi_get_child(parent_handle, addr);
-+	if (!dev_handle) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: parent of %s has no child "
-+					"with addr: 0x%llx\n",
-+					__FUNCTION__, pathname,
-+					(unsigned long long)addr );
- 		goto err;
-+	}
-+
-+	if (dev_handle != DEVICE_ACPI_HANDLE(ap->dev)) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: handle for object %s "
-+					"do not match (is %p, should %p)\n",
-+					__FUNCTION__, pathname,
-+					DEVICE_ACPI_HANDLE(ap->dev),
-+					dev_handle );
-+	}
-+
-+	if (ata_msg_probe(ap)) {
-+		ata_port_printk(ap, KERN_DEBUG,
-+				"%s: found %s (addr: 0x%llx, handle: 0x%p)\n",
-+				__FUNCTION__, pathname,
-+				(unsigned long long)addr, dev_handle);
-+	}
-+	*handle = dev_handle;
- 	ret = 0;
- err:
- 	kfree(dinfo);
-+	kfree(pathname);
- 	return ret;
- }
- 
--struct walk_info {		/* can be trimmed some */
--	struct device	*dev;
--	struct acpi_device *adev;
--	acpi_handle	handle;
--	acpi_integer	pcidevfn;
--	unsigned int	drivenum;
--	acpi_handle	obj_handle;
--	struct ata_port *ataport;
--	struct ata_device *atadev;
--	u32		sata_adr;
--	int		status;
--	char		basepath[ACPI_PATHNAME_MAX];
--	int		basepath_len;
--};
-+/**
-+ * sata_get_dev_handle - finds acpi_handle for a given SATA device
-+ * @atadev: target ata_device
-+ * @dev_handle: acpi_handle for @atadev->ap
-+ *
-+ * Returns the ACPI handle for a given SATA device. The ACPI layout
-+ * for SATA devices is:
-+ *
-+ * \_SB
-+ *     PCI0
-+ *         SATA          S-ATA controller
-+ *             _ADR      PCI Address of the SATA controller
-+ *             PRT0      Port 0 device
-+ *                 _ADR  Physical port and multiplier topology
-+ *             PRTn      Port n device
-+ *
-+ *
-+ * Returns 0 on success, <0 on error.
-+ */
-+static int sata_get_dev_handle(struct ata_device *atadev)
-+{
-+	struct ata_port *ap = atadev->ap;
-+	acpi_integer	addr;
-+	acpi_handle     dev_handle, port_handle;
-+	int             err = 0;
-+	char            *objname;
-+
-+	/* Check APCI handle of the controller */
-+	err = ata_acpi_check_handle(ap, &dev_handle);
-+	if (err < 0) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: ata_acpi_check_handle failed (%d)\n",
-+				       __FUNCTION__, err);
-+		return -ENODEV;
-+	}
-+
-+	/* Try device without port multiplier first */
-+	addr = SATA_PORT_ADR(ap->port_no, NO_PORT_MULT);
-+	port_handle = acpi_get_child(dev_handle, addr);
-+	if (!port_handle) {
-+		/* Check for port multiplier */
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+					"%s: No ACPI handle for SATA "
-+					"adr=0x%08llx, checking for "
-+					"port multiplier\n",
-+					__FUNCTION__, (unsigned long long)addr);
-+		addr = SATA_PORT_ADR(ap->port_no, atadev->devno);
-+		port_handle = acpi_get_child(dev_handle, addr);
-+		if (!port_handle) {
-+			if (ata_msg_probe(ap))
-+				ata_dev_printk(atadev, KERN_DEBUG,
-+						"%s: No ACPI handle for SATA "
-+						"adr=0x%08lx\n",__FUNCTION__,
-+						(unsigned long)addr);
-+			return -ENODEV;
-+		}
-+	}
-+
-+	/* Get the ACPI object name */
-+	objname = ata_acpi_get_name(port_handle);
-+	if (!objname) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: get_name failed (adr 0x%llx, "
-+				       "handle %p)\n", __FUNCTION__,
-+				       (unsigned long long)addr, dev_handle);
-+		return -ENODEV;
-+	}
-+
-+	if (ata_msg_probe(ap))
-+		ata_dev_printk(atadev, KERN_DEBUG,
-+			       "%s: using %s (adr=0x%08llx, handle=0x%p)\n",
-+				__FUNCTION__, objname,
-+				(unsigned long long)addr, port_handle);
-+	kfree(objname);
-+
-+	atadev->obj_handle = port_handle;
-+	return 0;
-+}
-+
- 
--static acpi_status get_devices(acpi_handle handle,
--				u32 level, void *context, void **return_value)
-+/**
-+ * pata_get_dev_handle - finds acpi_handle for a given PATA device
-+ * @atadev: target ata_device
-+ * @dev_handle: acpi_handle for @atadev->ap
-+ *
-+ * Returns the ACPI handle for a given PATA device. The ACPI layout
-+ * for IDE devices is:
-+ *
-+ * \_SB
-+ *    PCI0
-+ *        IDE0                IDE controller
-+ *            _ADR            PCI Address of the first IDE channel
-+ *            PRIM            IDE channel
-+ *                _ADR        Address of the channel (0 primary, 1 secondary)
-+ *                MSTR        IDE drive
-+ *                    _ADR    Adress of the device (0 master, 1 slave)
-+ *
-+ *
-+ * When a correct ACPI handle is found it is being attached to 
-+ * @atadev->obj_handle.
-+ * Returns 0 on success, <0 on error.
-+ */
-+static int pata_get_dev_handle(struct ata_device *atadev)
- {
--	acpi_status		status;
--	struct walk_info	*winfo = context;
--	struct acpi_buffer	namebuf = {ACPI_ALLOCATE_BUFFER, NULL};
--	char			*pathname;
--	struct acpi_buffer	buffer;
--	struct acpi_device_info	*dinfo;
-+	struct ata_port *ap = atadev->ap;
-+	int err = 0;
-+	acpi_handle dev_handle, chan_handle, drive_handle;
-+	char *objname;
- 
--	status = acpi_get_name(handle, ACPI_FULL_PATHNAME, &namebuf);
--	if (status)
--		goto ret;
--	pathname = namebuf.pointer;
-+	/* Check APCI handle of the controller */
-+	err = ata_acpi_check_handle(ap, &dev_handle);
-+	if (err < 0) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: ata_acpi_check_handle failed (%d)\n",
-+				       __FUNCTION__, err);
-+		return -ENODEV;
-+	}
- 
--	buffer.length = ACPI_ALLOCATE_BUFFER;
--	buffer.pointer = NULL;
--	status = acpi_get_object_info(handle, &buffer);
--	if (ACPI_FAILURE(status))
--		goto out2;
-+	/* Get the IDE channel object */
-+	/* Channel address is ap->port_no */
-+	chan_handle = acpi_get_child(dev_handle, ap->port_no);
-+	if (!chan_handle) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: no ACPI handle for chan=%d\n",
-+				       __FUNCTION__, ap->port_no);
-+		return -ENODEV;
-+	}
- 
--	dinfo = buffer.pointer;
-+	/* Get the IDE drive object */
-+	/* Drive address is atadev->devno */
-+	drive_handle = acpi_get_child(chan_handle, atadev->devno);
-+	if (!drive_handle) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: no ACPI handle for drive=%d:%d\n",
-+				       __FUNCTION__, ap->port_no, 
-+				       atadev->devno);
-+		return -ENODEV;
-+	}
- 
--	/* find full device path name for pcidevfn */
--	if (dinfo && (dinfo->valid & ACPI_VALID_ADR) &&
--	    dinfo->address == winfo->pcidevfn) {
--		if (ata_msg_probe(winfo->ataport))
--			ata_dev_printk(winfo->atadev, KERN_DEBUG,
--				":%s: matches pcidevfn (0x%llx)\n",
--				pathname, winfo->pcidevfn);
--		strlcpy(winfo->basepath, pathname,
--			sizeof(winfo->basepath));
--		winfo->basepath_len = strlen(pathname);
--		goto out;
-+	/* Get the ACPI object name */
-+	objname = ata_acpi_get_name(drive_handle);
-+	if (!objname) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: get_name failed (handle %p)\n",
-+				       __FUNCTION__, drive_handle);
-+		return -ENODEV;
- 	}
- 
--	/* if basepath is not yet known, ignore this object */
--	if (!winfo->basepath_len)
--		goto out;
-+	if (ata_msg_probe(ap))
-+		ata_dev_printk(atadev, KERN_DEBUG,
-+			       "%s: using %s (drive=%d:%d, handle=0x%p)\n",
-+			       __FUNCTION__, objname,
-+			       ap->port_no, atadev->devno, drive_handle);
-+	kfree(objname);
- 
--	/* if this object is in scope of basepath, maybe use it */
--	if (strncmp(pathname, winfo->basepath,
--	    winfo->basepath_len) == 0) {
--		if (!(dinfo->valid & ACPI_VALID_ADR))
--			goto out;
--		if (ata_msg_probe(winfo->ataport))
--			ata_dev_printk(winfo->atadev, KERN_DEBUG,
--				"GOT ONE: (%s) root_port = 0x%llx,"
--				" port_num = 0x%llx\n", pathname,
--				SATA_ROOT_PORT(dinfo->address),
--				SATA_PORT_NUMBER(dinfo->address));
--		/* heuristics: */
--		if (SATA_PORT_NUMBER(dinfo->address) != NO_PORT_MULT)
--			if (ata_msg_probe(winfo->ataport))
--				ata_dev_printk(winfo->atadev,
--					KERN_DEBUG, "warning: don't"
--					" know how to handle SATA port"
--					" multiplier\n");
--		if (SATA_ROOT_PORT(dinfo->address) ==
--			winfo->ataport->port_no &&
--		    SATA_PORT_NUMBER(dinfo->address) == NO_PORT_MULT) {
--			if (ata_msg_probe(winfo->ataport))
--				ata_dev_printk(winfo->atadev,
--					KERN_DEBUG,
--					"THIS ^^^^^ is the requested"
--					" SATA drive (handle = 0x%p)\n",
--					handle);
--			winfo->sata_adr = dinfo->address;
--			winfo->obj_handle = handle;
--		}
-+	atadev->obj_handle = drive_handle;
-+	return err;
-+}
-+
-+/**
-+ * pata_get_chan_handle - finds acpi_handle for a given PATA port
-+ * @ap: target ata_port
-+ * @ret_handle: returns the acpi_handle for @ap
-+ *
-+ * Returns the ACPI handle for a given PATA device. The ACPI layout
-+ * for IDE devices is:
-+ *
-+ * \_SB
-+ *    PCI0
-+ *        IDE0                IDE controller
-+ *            _ADR            PCI Address of the first IDE channel
-+ *            PRIM            IDE channel
-+ *                _ADR        Address of the channel (0 primary, 1 secondary)
-+ *
-+ *
-+ * Returns 0 on success, <0 on error.
-+ */
-+static int pata_get_chan_handle(struct ata_port *ap,
-+				acpi_handle *ret_handle)
-+{
-+	int err = 0;
-+	acpi_handle dev_handle, chan_handle;
-+	char *objname;
-+
-+	/* Check APCI handle of the controller */
-+	err = ata_acpi_check_handle(ap, &dev_handle);
-+	if (err < 0) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+				       "%s: ata_acpi_check_handle failed (%d)\n",
-+				       __FUNCTION__, err);
-+		return -ENODEV;
- 	}
--out:
--	kfree(dinfo);
--out2:
--	kfree(pathname);
- 
--ret:
--	return status;
-+	/* Get the IDE channel object */
-+	/* Channel address is ap->port_no */
-+	chan_handle = acpi_get_child(dev_handle, ap->port_no);
-+	if (!chan_handle) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+				       "%s: no ACPI handle for chan=%d\n",
-+				       __FUNCTION__, ap->port_no);
-+		return -ENODEV;
-+	}
-+
-+	/* Get the ACPI object name */
-+	objname = ata_acpi_get_name(chan_handle);
-+	if (!objname) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: get_name failed\n",
-+					__FUNCTION__);
-+		return -ENODEV;
-+	}
-+
-+	if (ata_msg_probe(ap))
-+		ata_port_printk(ap, KERN_DEBUG,
-+				"%s: using %s (chan=%d, handle=0x%p)\n",
-+				__FUNCTION__, objname, 
-+				ap->port_no, chan_handle);
-+	kfree(objname);
-+
-+	*ret_handle = chan_handle;
-+	return err;
- }
- 
--/* Get the SATA drive _ADR object. */
--static int get_sata_adr(struct device *dev, acpi_handle handle,
--			acpi_integer pcidevfn, unsigned int drive,
--			struct ata_port *ap,
--			struct ata_device *atadev, u32 *dev_adr)
-+/**
-+ * ata_acpi_push_id - send Identify data to a drive
-+ * @atadev: the ata_device for the drive
-+ *
-+ * Executes _SDD ACPI object; this is for SATA mode only.
-+ * The _SDD objects sends the device identification as
-+ * received by Identify (Packet) Device to the ACPI code.
-+ * This allows the ACPI code to modify the contents of
-+ * _GTF (which has to be executed after _SDD) according
-+ * to the detected device.
-+ */
-+int ata_acpi_push_id(struct ata_device *atadev)
- {
--	acpi_status	status;
--	struct walk_info *winfo;
--	int		err = -ENOMEM;
-+	int				err = -ENODEV;
-+	struct ata_port			*ap = atadev->ap;
-+	acpi_status			status;
-+	struct acpi_object_list		input;
-+	union acpi_object 		in_params[1];
- 
--	winfo = kzalloc(sizeof(struct walk_info), GFP_KERNEL);
--	if (!winfo)
--		goto out;
-+	if (!(libata_acpi & ATA_ACPI_SATA_SDD))
-+		return 0;
-+
-+	if (ata_msg_probe(ap))
-+		ata_dev_printk(atadev, KERN_DEBUG,
-+			"%s: ap->id: %d, devno = %d, port#: %d\n",
-+			__FUNCTION__, ap->id, atadev->devno,
-+			ap->port_no);
- 
--	winfo->dev = dev;
--	winfo->atadev = atadev;
--	winfo->ataport = ap;
--	if (acpi_bus_get_device(handle, &winfo->adev) < 0)
-+	/* Don't continue if it's not a SATA device. */
-+	if (!ata_id_is_sata(atadev->id)) {
- 		if (ata_msg_probe(ap))
--			ata_dev_printk(winfo->atadev, KERN_DEBUG,
--				"acpi_bus_get_device failed\n");
--	winfo->handle = handle;
--	winfo->pcidevfn = pcidevfn;
--	winfo->drivenum = drive;
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: skipping for PATA mode\n",
-+				       __FUNCTION__);
-+		goto out;
-+	}
- 
--	status = acpi_get_devices(NULL, get_devices, winfo, NULL);
--	if (ACPI_FAILURE(status)) {
-+	/* Don't continue if device has no _ADR method.
-+	 * _SDD is intended for known motherboard devices. */
-+
-+	/* Get this drive's _ADR info. if not already known. */
-+	if (!atadev->obj_handle) {
-+		err = sata_get_dev_handle(atadev);
-+		if (err < 0 || !atadev->obj_handle) {
-+			if (ata_msg_probe(ap))
-+				ata_dev_printk(atadev, KERN_DEBUG,
-+					       "%s: sata_get_dev_handle failed\n",
-+					       __FUNCTION__);
-+			goto out;
-+		}
-+	}
-+
-+	/* Give the drive Identify data to the drive via the _SDD method */
-+	/* _SDD: set up input parameters */
-+	input.count = 1;
-+	input.pointer = in_params;
-+	in_params[0].type = ACPI_TYPE_BUFFER;
-+	in_params[0].buffer.length = sizeof(atadev->id[0]) * ATA_ID_WORDS;
-+	in_params[0].buffer.pointer = (u8 *)atadev->id;
-+	/* Output buffer: _SDD has no output */
-+
-+	/* It's OK for _SDD to be missing too. */
-+	swap_buf_le16(atadev->id, ATA_ID_WORDS);
-+	status = acpi_evaluate_object(atadev->obj_handle, "_SDD", &input, NULL);
-+	swap_buf_le16(atadev->id, ATA_ID_WORDS);
-+
-+	err = ACPI_FAILURE(status) ? -EIO : 0;
-+	if (err < 0) {
- 		if (ata_msg_probe(ap))
--			ata_dev_printk(winfo->atadev, KERN_DEBUG,
--				"%s: acpi_get_devices failed\n",
--				__FUNCTION__);
--		err = -ENODEV;
--	} else {
--		*dev_adr = winfo->sata_adr;
--		atadev->obj_handle = winfo->obj_handle;
--		err = 0;
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s _SDD error: status = 0x%x\n",
-+				       __FUNCTION__, status);
- 	}
--	kfree(winfo);
- out:
- 	return err;
- }
-+EXPORT_SYMBOL_GPL(ata_acpi_push_id);
- 
- /**
-  * do_drive_get_GTF - get the drive bootup default taskfile settings
-- * @ap: the ata_port for the drive
-- * @ix: target ata_device (drive) index
-+ * @atadev: the ata_device for the drive
-  * @gtf_length: number of bytes of _GTF data returned at @gtf_address
-  * @gtf_address: buffer containing _GTF taskfile arrays
-  *
-@@ -271,103 +501,51 @@ out:
-  * The returned @gtf_length and @gtf_address are only valid if the
-  * function return value is 0.
-  */
--static int do_drive_get_GTF(struct ata_port *ap, int ix,
--			unsigned int *gtf_length, unsigned long *gtf_address,
--			unsigned long *obj_loc)
-+static int do_drive_get_GTF(struct ata_device *atadev,
-+			    unsigned int *gtf_length, 
-+			    unsigned long *gtf_address,
-+			    unsigned long *obj_loc)
- {
- 	acpi_status			status;
--	acpi_handle			dev_handle = NULL;
--	acpi_handle			chan_handle, drive_handle;
--	acpi_integer			pcidevfn = 0;
--	u32				dev_adr;
- 	struct acpi_buffer		output;
- 	union acpi_object 		*out_obj;
--	struct device			*dev = ap->host->dev;
--	struct ata_device		*atadev = &ap->device[ix];
-+	struct ata_port			*ap = atadev->ap;
- 	int				err = -ENODEV;
- 
- 	*gtf_length = 0;
- 	*gtf_address = 0UL;
- 	*obj_loc = 0UL;
- 
--	if (noacpi)
--		return 0;
--
- 	if (ata_msg_probe(ap))
- 		ata_dev_printk(atadev, KERN_DEBUG,
--			"%s: ENTER: ap->id: %d, port#: %d\n",
--			__FUNCTION__, ap->id, ap->port_no);
--
--	if (!ata_dev_enabled(atadev) || (ap->flags & ATA_FLAG_DISABLED)) {
--		if (ata_msg_probe(ap))
--			ata_dev_printk(atadev, KERN_DEBUG, "%s: ERR: "
--				"ata_dev_present: %d, PORT_DISABLED: %lu\n",
--				__FUNCTION__, ata_dev_enabled(atadev),
--				ap->flags & ATA_FLAG_DISABLED);
--		goto out;
--	}
-+			"%s: ENTER: ap->id: %d, port#: %d, dev#: %d\n",
-+		       __FUNCTION__, ap->id, ap->port_no, atadev->devno);
- 
- 	/* Don't continue if device has no _ADR method.
- 	 * _GTF is intended for known motherboard devices. */
--	if (!(ap->cbl == ATA_CBL_SATA)) {
--		err = pata_get_dev_handle(dev, &dev_handle, &pcidevfn);
--		if (err < 0) {
--			if (ata_msg_probe(ap))
--				ata_dev_printk(atadev, KERN_DEBUG,
--					"%s: pata_get_dev_handle failed (%d)\n",
--					__FUNCTION__, err);
--			goto out;
--		}
--	} else {
--		err = sata_get_dev_handle(dev, &dev_handle, &pcidevfn);
--		if (err < 0) {
--			if (ata_msg_probe(ap))
--				ata_dev_printk(atadev, KERN_DEBUG,
--					"%s: sata_get_dev_handle failed (%d\n",
--					__FUNCTION__, err);
--			goto out;
--		}
--	}
- 
- 	/* Get this drive's _ADR info. if not already known. */
- 	if (!atadev->obj_handle) {
--		if (!(ap->cbl == ATA_CBL_SATA)) {
--			/* get child objects of dev_handle == channel objects,
--	 		 * + _their_ children == drive objects */
--			/* channel is ap->port_no */
--			chan_handle = acpi_get_child(dev_handle,
--						ap->port_no);
--			if (ata_msg_probe(ap))
--				ata_dev_printk(atadev, KERN_DEBUG,
--					"%s: chan adr=%d: chan_handle=0x%p\n",
--					__FUNCTION__, ap->port_no,
--					chan_handle);
--			if (!chan_handle) {
--				err = -ENODEV;
-+		if (!ata_id_is_sata(atadev->id)) {
-+			err = pata_get_dev_handle(atadev);
-+			if (err < 0 || !atadev->obj_handle) {
-+				if (ata_msg_probe(ap))
-+					ata_dev_printk(atadev, KERN_DEBUG,
-+						       "%s: pata_get_dev_handle "
-+						       "failed (%d)\n",
-+						       __FUNCTION__, err);
- 				goto out;
- 			}
--			/* TBD: could also check ACPI object VALID bits */
--			drive_handle = acpi_get_child(chan_handle, ix);
--			if (!drive_handle) {
--				err = -ENODEV;
-+		} else {
-+			err = sata_get_dev_handle(atadev);
-+			if (err < 0 || !atadev->obj_handle) {
-+				if (ata_msg_probe(ap))
-+					ata_dev_printk(atadev, KERN_DEBUG,
-+						       "%s: sata_get_dev_handle "
-+						       "failed (%d)\n",
-+						       __FUNCTION__, err);
- 				goto out;
- 			}
--			dev_adr = ix;
--			atadev->obj_handle = drive_handle;
--		} else {	/* for SATA mode */
--			dev_adr = SATA_ADR_RSVD;
--			err = get_sata_adr(dev, dev_handle, pcidevfn, 0,
--					ap, atadev, &dev_adr);
--		}
--		if (err < 0 || dev_adr == SATA_ADR_RSVD ||
--		    !atadev->obj_handle) {
--			if (ata_msg_probe(ap))
--				ata_dev_printk(atadev, KERN_DEBUG,
--					"%s: get_sata/pata_adr failed: "
--					"err=%d, dev_adr=%u, obj_handle=0x%p\n",
--					__FUNCTION__, err, dev_adr,
--					atadev->obj_handle);
--			goto out;
- 		}
- 	}
- 
-@@ -382,18 +560,20 @@ static int do_drive_get_GTF(struct ata_p
- 	if (ACPI_FAILURE(status)) {
- 		if (ata_msg_probe(ap))
- 			ata_dev_printk(atadev, KERN_DEBUG,
--				"%s: Run _GTF error: status = 0x%x\n",
--				__FUNCTION__, status);
-+				       "%s: Run _GTF error: status = 0x%x\n",
-+				       __FUNCTION__, status);
- 		goto out;
- 	}
- 
- 	if (!output.length || !output.pointer) {
- 		if (ata_msg_probe(ap))
--			ata_dev_printk(atadev, KERN_DEBUG, "%s: Run _GTF: "
--				"length or ptr is NULL (0x%llx, 0x%p)\n",
--				__FUNCTION__,
--				(unsigned long long)output.length,
--				output.pointer);
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: Run _GTF: "
-+				       "length or ptr is NULL "
-+				       "(0x%llx, 0x%p)\n",
-+				       __FUNCTION__,
-+				       (unsigned long long)output.length,
-+				       output.pointer);
- 		kfree(output.pointer);
- 		goto out;
- 	}
-@@ -402,10 +582,11 @@ static int do_drive_get_GTF(struct ata_p
- 	if (out_obj->type != ACPI_TYPE_BUFFER) {
- 		kfree(output.pointer);
- 		if (ata_msg_probe(ap))
--			ata_dev_printk(atadev, KERN_DEBUG, "%s: Run _GTF: "
--				"error: expected object type of "
--				" ACPI_TYPE_BUFFER, got 0x%x\n",
--				__FUNCTION__, out_obj->type);
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: Run _GTF: error: "
-+				       "expected object type of ACPI_TYPE_BUFFER, "
-+				       "got 0x%x\n",
-+				       __FUNCTION__, out_obj->type);
- 		err = -ENOENT;
- 		goto out;
- 	}
-@@ -414,9 +595,9 @@ static int do_drive_get_GTF(struct ata_p
- 	    out_obj->buffer.length % REGS_PER_GTF) {
- 		if (ata_msg_drv(ap))
- 			ata_dev_printk(atadev, KERN_ERR,
--				"%s: unexpected GTF length (%d) or addr (0x%p)\n",
--				__FUNCTION__, out_obj->buffer.length,
--				out_obj->buffer.pointer);
-+				       "%s: unexpected GTF length (%d) or addr (0x%p)\n",
-+				       __FUNCTION__, out_obj->buffer.length,
-+				       out_obj->buffer.pointer);
- 		err = -ENOENT;
- 		goto out;
- 	}
-@@ -426,8 +607,8 @@ static int do_drive_get_GTF(struct ata_p
- 	*obj_loc = (unsigned long)out_obj;
- 	if (ata_msg_probe(ap))
- 		ata_dev_printk(atadev, KERN_DEBUG, "%s: returning "
--			"gtf_length=%d, gtf_address=0x%lx, obj_loc=0x%lx\n",
--			__FUNCTION__, *gtf_length, *gtf_address, *obj_loc);
-+			       "gtf_length=%d, gtf_address=0x%lx, obj_loc=0x%lx\n",
-+			       __FUNCTION__, *gtf_length, *gtf_address, *obj_loc);
- 	err = 0;
- out:
- 	return err;
-@@ -435,11 +616,10 @@ out:
- 
- /**
-  * taskfile_load_raw - send taskfile registers to host controller
-- * @ap: Port to which output is sent
-+ * @atadev: device to which the taskfile is sent
-  * @gtf: raw ATA taskfile register set (0x1f1 - 0x1f7)
-  *
-- * Outputs ATA taskfile to standard ATA host controller using MMIO
-- * or PIO as indicated by the ATA_FLAG_MMIO flag.
-+ * Outputs ATA taskfile to a given ATA device.
-  * Writes the control, feature, nsect, lbal, lbam, and lbah registers.
-  * Optionally (ATA_TFLAG_LBA48) writes hob_feature, hob_nsect,
-  * hob_lbal, hob_lbam, and hob_lbah.
-@@ -449,24 +629,33 @@ out:
-  * function also waits for idle after writing control and before
-  * writing the remaining registers.
-  *
-- * LOCKING: TBD:
-- * Inherited from caller.
-+ * BIG FAT WARNING: This function allows the ACPI code to sent
-+ * arbitrary commands to the drive. SATA devices seem to work
-+ * properly, but for PATA devices this is a good way to lock up
-+ * the drive.
-+ *
-  */
--static void taskfile_load_raw(struct ata_port *ap,
--				struct ata_device *atadev,
--				const struct taskfile_array *gtf)
-+static void taskfile_load_raw(struct ata_device *atadev,
-+			      const struct taskfile_array *gtf)
- {
-+	struct ata_port *ap = atadev->ap;
-+
- 	if (ata_msg_probe(ap))
--		ata_dev_printk(atadev, KERN_DEBUG, "%s: (0x1f1-1f7): hex: "
--			"%02x %02x %02x %02x %02x %02x %02x\n",
--			__FUNCTION__,
--			gtf->tfa[0], gtf->tfa[1], gtf->tfa[2],
--			gtf->tfa[3], gtf->tfa[4], gtf->tfa[5], gtf->tfa[6]);
--
--	if ((gtf->tfa[0] == 0) && (gtf->tfa[1] == 0) && (gtf->tfa[2] == 0)
--	    && (gtf->tfa[3] == 0) && (gtf->tfa[4] == 0) && (gtf->tfa[5] == 0)
--	    && (gtf->tfa[6] == 0))
-+		ata_dev_printk(atadev, KERN_DEBUG,
-+			       "%s: (0x1f1-1f7): hex: "
-+			       "%02x %02x %02x %02x %02x %02x %02x\n",
-+			       __FUNCTION__,
-+			       gtf->tfa[0], gtf->tfa[1], gtf->tfa[2],
-+			       gtf->tfa[3], gtf->tfa[4], gtf->tfa[5],
-+			       gtf->tfa[6]);
-+
-+	if (!(ata_acpi_flags(atadev,libata_acpi) & ATA_ACPI_TFX)) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: ACPI tf execution disabled\n",
-+				       __FUNCTION__);
- 		return;
-+	}
- 
- 	if (ap->ops->qc_issue) {
- 		struct ata_taskfile tf;
-@@ -487,16 +676,16 @@ static void taskfile_load_raw(struct ata
- 		tf.command = gtf->tfa[6];	/* 0x1f7 */
- 
- 		err = ata_exec_internal(atadev, &tf, NULL, DMA_NONE, NULL, 0);
--		if (err && ata_msg_probe(ap))
--			ata_dev_printk(atadev, KERN_ERR,
--				"%s: ata_exec_internal failed: %u\n",
--				__FUNCTION__, err);
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: ata_exec_internal %s "
-+				       "with errmask 0x%x\n",__FUNCTION__,
-+				       err?"failed":"suceeded", err);
- 	} else
- 		if (ata_msg_warn(ap))
- 			ata_dev_printk(atadev, KERN_WARNING,
--				"%s: SATA driver is missing qc_issue function"
--				" entry points\n",
--				__FUNCTION__);
-+				       "%s: SATA driver is missing qc_issue function entry points\n",
-+				       __FUNCTION__);
- }
- 
- /**
-@@ -511,33 +700,30 @@ static void taskfile_load_raw(struct ata
-  * Write {gtf_address, length gtf_length} in groups of
-  * REGS_PER_GTF bytes.
-  */
--static int do_drive_set_taskfiles(struct ata_port *ap,
--		struct ata_device *atadev, unsigned int gtf_length,
--		unsigned long gtf_address)
-+static int do_drive_set_taskfiles(struct ata_device *atadev,
-+				  unsigned int gtf_length,
-+				  unsigned long gtf_address)
- {
-+	struct ata_port		*ap = atadev->ap;
- 	int			err = -ENODEV;
- 	int			gtf_count = gtf_length / REGS_PER_GTF;
- 	int			ix;
- 	struct taskfile_array	*gtf;
- 
--	if (ata_msg_probe(ap))
--		ata_dev_printk(atadev, KERN_DEBUG,
--			"%s: ENTER: ap->id: %d, port#: %d\n",
--			__FUNCTION__, ap->id, ap->port_no);
--
--	if (noacpi || !(ap->cbl == ATA_CBL_SATA))
--		return 0;
--
--	if (!ata_dev_enabled(atadev) || (ap->flags & ATA_FLAG_DISABLED))
--		goto out;
- 	if (!gtf_count)		/* shouldn't be here */
- 		goto out;
- 
-+	if (ata_msg_probe(ap))
-+		ata_dev_printk(atadev, KERN_DEBUG,
-+			       "%s: total GTF bytes=%u (0x%x), "
-+			       "gtf_count=%d, addr=0x%lx\n",
-+			       __FUNCTION__, gtf_length, gtf_length,
-+			       gtf_count, gtf_address);
- 	if (gtf_length % REGS_PER_GTF) {
- 		if (ata_msg_drv(ap))
- 			ata_dev_printk(atadev, KERN_ERR,
--				"%s: unexpected GTF length (%d)\n",
--				__FUNCTION__, gtf_length);
-+				       "%s: unexpected GTF length (%d)\n",
-+				       __FUNCTION__, gtf_length);
- 		goto out;
- 	}
- 
-@@ -546,7 +732,7 @@ static int do_drive_set_taskfiles(struct
- 			(gtf_address + ix * REGS_PER_GTF);
- 
- 		/* send all TaskFile registers (0x1f1-0x1f7) *in*that*order* */
--		taskfile_load_raw(ap, atadev, gtf);
-+		taskfile_load_raw(atadev, gtf);
- 	}
- 
- 	err = 0;
-@@ -559,140 +745,243 @@ out:
-  * @ap: the ata_port for the drive
-  *
-  * This applies to both PATA and SATA drives.
-+ * Has to be called after ata_acpi_push_id() (for SATA devices)
-+ * or ata_acpi_push_timings() (for PATA devices) as the
-+ * contents of taskfile registers might be modified by the
-+ * ACPI code according to the received data.
-  */
--int ata_acpi_exec_tfs(struct ata_port *ap)
-+int ata_acpi_exec_tfs(struct ata_device *atadev)
- {
--	int		ix;
--	int		ret =0;
-+	struct ata_port *ap = atadev->ap;
-+	int		ret;
- 	unsigned int	gtf_length;
- 	unsigned long	gtf_address;
- 	unsigned long	obj_loc;
- 
--	if (noacpi)
-+	if (!(ata_acpi_flags(atadev,libata_acpi) & 
-+	      (ATA_ACPI_GTF | ATA_ACPI_TFX))) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: disabled\n",
-+				       __FUNCTION__);
- 		return 0;
-+	}
- 
--	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
--		if (!ata_dev_enabled(&ap->device[ix]))
--			continue;
--
--		ret = do_drive_get_GTF(ap, ix,
--				&gtf_length, &gtf_address, &obj_loc);
--		if (ret < 0) {
--			if (ata_msg_probe(ap))
--				ata_port_printk(ap, KERN_DEBUG,
--					"%s: get_GTF error (%d)\n",
--					__FUNCTION__, ret);
--			break;
--		}
-+	ret = do_drive_get_GTF(atadev,
-+			       &gtf_length, &gtf_address, &obj_loc);
-+	if (ret < 0) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: get_GTF error (%d)\n",
-+				       __FUNCTION__, ret);
-+		return 0;
-+	}
- 
--		ret = do_drive_set_taskfiles(ap, &ap->device[ix],
--				gtf_length, gtf_address);
--		kfree((void *)obj_loc);
--		if (ret < 0) {
--			if (ata_msg_probe(ap))
--				ata_port_printk(ap, KERN_DEBUG,
--					"%s: set_taskfiles error (%d)\n",
--					__FUNCTION__, ret);
--			break;
--		}
-+	ret = do_drive_set_taskfiles(atadev, gtf_length, gtf_address);
-+	kfree((void *)obj_loc);
-+	if (ret < 0) {
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(atadev, KERN_DEBUG,
-+				       "%s: set_taskfiles error (%d)\n",
-+				       __FUNCTION__, ret);
-+		return 0;
- 	}
- 
-+	if (ata_msg_probe(ap))
-+		ata_dev_printk(atadev, KERN_DEBUG,
-+			       "%s: ret=%d\n", __FUNCTION__, ret);
-+
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ata_acpi_exec_tfs);
- 
- /**
-- * ata_acpi_push_id - send Identify data to drive
-- * @ap: the ata_port for the drive
-- * @ix: drive index
-+ * ata_acpi_get_timing - get the channel (controller) timings
-+ * @ap: target ata_port (channel)
-+ *
-+ * For PATA ACPI, this function executes the _GTM ACPI method for the
-+ * target channel.
-  *
-- * _SDD ACPI object: for SATA mode only
-- * Must be after Identify (Packet) Device -- uses its data
-- * ATM this function never returns a failure.  It is an optional
-- * method and if it fails for whatever reason, we should still
-- * just keep going.
-+ * _GTM only applies to ATA controllers in PATA (legacy) mode, not to SATA.
-+ * In legacy mode, ap->port_no is channel (controller) number.
-  */
--int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
-+void ata_acpi_get_timing(struct ata_port *ap)
- {
--	acpi_handle                     handle;
--	acpi_integer                    pcidevfn;
--	int                             err;
--	struct device                   *dev = ap->host->dev;
--	struct ata_device               *atadev = &ap->device[ix];
--	u32                             dev_adr;
--	acpi_status                     status;
--	struct acpi_object_list         input;
--	union acpi_object               in_params[1];
--
--	if (noacpi)
--		return 0;
-+	int			err;
-+	acpi_handle		chan_handle;
-+	acpi_status		status;
-+	struct acpi_buffer	output;
-+	union acpi_object 	*out_obj;
-+	struct GTM_buffer	*gtm;
-+
-+	if (!(libata_acpi & ATA_ACPI_PATA_GTM))
-+		goto out;
-+
-+	/* TODO: Check for legacy mode */
- 
-+	err = pata_get_chan_handle(ap, &chan_handle);
-+	if (err < 0) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: pata_get_dev_handle failed (%d)\n",
-+					__FUNCTION__, err);
-+		goto out;
-+	}
-+
-+	/* Setting up output buffer for _GTM */
-+	output.length = ACPI_ALLOCATE_BUFFER;
-+	output.pointer = NULL;	/* ACPI-CA sets this; save/free it later */
-+
-+	/* _GTM has no input parameters */
-+	status = acpi_evaluate_object(chan_handle, "_GTM",
-+					NULL, &output);
- 	if (ata_msg_probe(ap))
--		ata_dev_printk(atadev, KERN_DEBUG,
--			"%s: ap->id: %d, ix = %d, port#: %d\n",
--			__FUNCTION__, ap->id, ix, ap->port_no);
-+		ata_port_printk(ap, KERN_DEBUG,
-+				"%s: _GTM status: %d, outptr: 0x%p, outlen: 0x%llx\n",
-+				__FUNCTION__, status, output.pointer,
-+				(unsigned long long)output.length);
-+	if (ACPI_FAILURE(status)) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: Run _GTM error: status = 0x%x\n",
-+					__FUNCTION__, status);
-+		goto out;
-+	}
- 
--	/* Don't continue if not a SATA device. */
--	if (!(ap->cbl == ATA_CBL_SATA)) {
-+	if (!output.length || !output.pointer) {
- 		if (ata_msg_probe(ap))
--			ata_dev_printk(atadev, KERN_DEBUG,
--				"%s: Not a SATA device\n", __FUNCTION__);
-+			ata_port_printk(ap, KERN_DEBUG, "%s: Run _GTM: "
-+					"length or ptr is NULL (0x%llx, 0x%p)\n",
-+					__FUNCTION__,
-+					(unsigned long long)output.length,
-+					output.pointer);
-+		kfree(output.pointer);
- 		goto out;
- 	}
- 
--	/* Don't continue if device has no _ADR method.
--	 * _SDD is intended for known motherboard devices. */
--	err = sata_get_dev_handle(dev, &handle, &pcidevfn);
--	if (err < 0) {
-+	out_obj = output.pointer;
-+	if (out_obj->type != ACPI_TYPE_BUFFER) {
-+		kfree(output.pointer);
- 		if (ata_msg_probe(ap))
--			ata_dev_printk(atadev, KERN_DEBUG,
--				"%s: sata_get_dev_handle failed (%d\n",
--				__FUNCTION__, err);
-+			ata_port_printk(ap, KERN_DEBUG, "%s: Run _GTM: error: "
-+					"expected object type of ACPI_TYPE_BUFFER, "
-+					"got 0x%x\n",
-+					__FUNCTION__, out_obj->type);
- 		goto out;
- 	}
- 
--	/* Get this drive's _ADR info, if not already known */
--	if (!atadev->obj_handle) {
--		dev_adr = SATA_ADR_RSVD;
--		err = get_sata_adr(dev, handle, pcidevfn, ix, ap, atadev,
--					&dev_adr);
--		if (err < 0 || dev_adr == SATA_ADR_RSVD ||
--			!atadev->obj_handle) {
--			if (ata_msg_probe(ap))
--				ata_dev_printk(atadev, KERN_DEBUG,
--					"%s: get_sata_adr failed: "
--					"err=%d, dev_adr=%u, obj_handle=0x%p\n",
--					__FUNCTION__, err, dev_adr,
--					atadev->obj_handle);
--			goto out;
--		}
-+	if (!out_obj->buffer.length || !out_obj->buffer.pointer ||
-+	    out_obj->buffer.length != sizeof(struct GTM_buffer)) {
-+		kfree(output.pointer);
-+		if (ata_msg_drv(ap))
-+			ata_port_printk(ap, KERN_ERR,
-+					"%s: unexpected _GTM length (0x%x) [should be 0x%zx] or addr (0x%p)\n",
-+					__FUNCTION__, out_obj->buffer.length,
-+					sizeof(struct GTM_buffer), out_obj->buffer.pointer);
-+		goto out;
- 	}
- 
--	/* Give the drive Identify data to the drive via the _SDD method */
--	/* _SDD: set up input parameters */
--	input.count = 1;
--	input.pointer = in_params;
--	in_params[0].type = ACPI_TYPE_BUFFER;
--	in_params[0].buffer.length = sizeof(atadev->id[0] * ATA_ID_WORDS);
--	in_params[0].buffer.pointer = (u8 *)atadev->id;
--	/* Output buffer: _SDD has no output */
-+	gtm = (struct GTM_buffer *)out_obj->buffer.pointer;
-+	if (ata_msg_probe(ap)) {
-+		ata_port_printk(ap, KERN_DEBUG,
-+				"%s: _GTM info: ptr: 0x%p, len: 0x%x, exp.len: 0x%Zx\n",
-+				__FUNCTION__, out_obj->buffer.pointer,
-+				out_obj->buffer.length, sizeof(struct GTM_buffer));
-+		ata_port_printk(ap, KERN_DEBUG,
-+				"%s: _GTM fields: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n",
-+				__FUNCTION__, gtm->PIO_speed0, gtm->DMA_speed0,
-+				gtm->PIO_speed1, gtm->DMA_speed1, gtm->GTM_flags);
-+	}
- 
--	/* It's OK for _SDD to be missing too. */
--	swap_buf_le16(atadev->id, ATA_ID_WORDS);
--	status = acpi_evaluate_object(atadev->obj_handle, "_SDD", &input, NULL);
--	swap_buf_le16(atadev->id, ATA_ID_WORDS);
-+	/* TBD: when to free gtm */
-+	ap->gtm = gtm;
-+	kfree(ap->gtm_object_area); /* free previous then store new one */
-+	ap->gtm_object_area = out_obj;
-+out:;
-+}
-+EXPORT_SYMBOL_GPL(ata_acpi_get_timing);
- 
--	err = ACPI_FAILURE(status) ? -EIO : 0;
--	if (err < 0) {
-+/**
-+ * platform_set_timing - set the channel (controller) timings
-+ * @ap: target ata_port (channel)
-+ *
-+ * For PATA ACPI, this function executes the _STM ACPI method for the
-+ * target channel.
-+ *
-+ * _STM only applies to ATA controllers in PATA (legacy) mode, not to SATA.
-+ * In legacy mode, ap->port_no is channel (controller) number.
-+ *
-+ * _STM requires Identify Drive data, which must already be present in
-+ * ata_device->id[] (i.e., it's not fetched here).
-+ */
-+void ata_acpi_push_timing(struct ata_port *ap)
-+{
-+	int			err;
-+	acpi_handle		chan_handle;
-+	acpi_status		status;
-+	struct acpi_object_list	input;
-+	union acpi_object 	in_params[3];
-+
-+	if (!(libata_acpi & ATA_ACPI_PATA_GTM))
-+		goto out;
-+
-+	if (!ap->gtm) {
- 		if (ata_msg_probe(ap))
--			ata_dev_printk(atadev, KERN_DEBUG,
--				"ata%u(%u): %s _SDD error: status = 0x%x\n",
--				ap->id, ap->device->devno,
--				__FUNCTION__, status);
-+			ata_port_printk(ap, KERN_DEBUG, "%s: no GTM data\n",
-+					__FUNCTION__);
-+		goto out;
- 	}
- 
--	/* always return success */
--out:
--	return 0;
--}
-+	/* TODO: Check for legacy mode */
- 
-+	if (!ap->device[0].id[49] && !ap->device[1].id[49]) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: missing Identify data\n",
-+					__FUNCTION__);
-+		goto out;
-+	}
-+
-+	err = pata_get_chan_handle(ap, &chan_handle);
-+	if (err < 0) {
-+		if (ata_msg_probe(ap))
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: pata_get_dev_handle failed (%d)\n",
-+					__FUNCTION__, err);
-+		goto out;
-+	}
- 
-+	/* Give the GTM buffer + drive Identify data to the channel via the
-+	 * _STM method: */
-+	/* setup input parameters buffer for _STM */
-+	input.count = 3;
-+	input.pointer = in_params;
-+	in_params[0].type = ACPI_TYPE_BUFFER;
-+	in_params[0].buffer.length = sizeof(struct GTM_buffer);
-+	in_params[0].buffer.pointer = (u8 *)ap->gtm;
-+	in_params[1].type = ACPI_TYPE_BUFFER;
-+	in_params[1].buffer.length = sizeof(ap->device[0].id[0]) * ATA_ID_WORDS;
-+	in_params[1].buffer.pointer = (u8 *)ap->device[0].id;
-+	in_params[2].type = ACPI_TYPE_BUFFER;
-+	in_params[2].buffer.length = sizeof(ap->device[1].id[1]) * ATA_ID_WORDS;
-+	in_params[2].buffer.pointer = (u8 *)ap->device[1].id;
-+	/* Output buffer: _STM has no output */
-+
-+	swap_buf_le16(ap->device[0].id, ATA_ID_WORDS);
-+	swap_buf_le16(ap->device[1].id, ATA_ID_WORDS);
-+	status = acpi_evaluate_object(chan_handle, "_STM", &input, NULL);
-+	swap_buf_le16(ap->device[0].id, ATA_ID_WORDS);
-+	swap_buf_le16(ap->device[1].id, ATA_ID_WORDS);
-+	if (ata_msg_probe(ap)) {
-+		if (ACPI_FAILURE(status)) {
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"%s: _STM error: status = 0x%x\n",
-+					__FUNCTION__, status);
-+		} else {
-+			ata_port_printk(ap, KERN_DEBUG, "%s: _STM success\n",
-+					__FUNCTION__);
-+		}
-+	}
-+out:;
-+}
-+EXPORT_SYMBOL_GPL(ata_acpi_push_timing);
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 22bb5be..9d9c3ee 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -90,9 +90,11 @@ static int ata_probe_timeout = ATA_TMOUT
- module_param(ata_probe_timeout, int, 0444);
- MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
- 
--int noacpi;
--module_param(noacpi, int, 0444);
--MODULE_PARM_DESC(noacpi, "Disables the use of ACPI in suspend/resume when set");
-+#ifdef CONFIG_ATA_ACPI
-+int libata_acpi = 0x73;
-+module_param_named(ata_acpi, libata_acpi, int, 0444);
-+MODULE_PARM_DESC(ata_acpi, "Controls use of ACPI objects");
-+#endif
- 
- MODULE_AUTHOR("Jeff Garzik");
- MODULE_DESCRIPTION("Library module for ATA devices");
-@@ -1408,10 +1410,10 @@ int ata_dev_configure(struct ata_device 
- 	if (ata_msg_probe(ap))
- 		ata_dev_printk(dev, KERN_DEBUG,
- 			       "%s: cfg 49:%04x 82:%04x 83:%04x 84:%04x "
--			       "85:%04x 86:%04x 87:%04x 88:%04x\n",
-+			       "85:%04x 86:%04x 87:%04x 88:%04x 93:%04x\n",
- 			       __FUNCTION__,
--			       id[49], id[82], id[83], id[84],
--			       id[85], id[86], id[87], id[88]);
-+			       id[49], id[82], id[83], id[84], id[85],
-+			       id[86], id[87], id[88], id[93]);
- 
- 	/* initialize to-be-configured parameters */
- 	dev->flags &= ~ATA_DFLAG_CFG_MASK;
-@@ -1556,14 +1558,6 @@ int ata_dev_configure(struct ata_device 
- 	if (ap->ops->dev_config)
- 		ap->ops->dev_config(ap, dev);
- 
--	/* set _SDD */
--	rc = ata_acpi_push_id(ap, dev->devno);
--	if (rc) {
--		ata_dev_printk(dev, KERN_WARNING, "failed to set _SDD(%d)\n",
--			rc);
--		goto err_out_nosup;
--	}
--
- 	if (ata_msg_probe(ap))
- 		ata_dev_printk(dev, KERN_DEBUG, "%s: EXIT, drv_stat = 0x%x\n",
- 			__FUNCTION__, ata_chk_status(ap));
-@@ -1609,9 +1603,6 @@ int ata_bus_probe(struct ata_port *ap)
- 	/* reset and determine device classes */
- 	ap->ops->phy_reset(ap);
- 
--	/* retrieve and execute the ATA task file of _GTF */
--	ata_acpi_exec_tfs(ap);
--
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		dev = &ap->device[i];
- 
-@@ -1658,6 +1649,32 @@ int ata_bus_probe(struct ata_port *ap)
- 		goto fail;
- 	}
- 
-+#ifdef CONFIG_ATA_ACPI
-+	if (!(ap->flags & ATA_FLAG_SATA)) {
-+		/*  Call _GTM for PATA ports*/
-+		ata_acpi_get_timing(ap);
-+		/* Call _STM for PATA ports
-+		 * required as _STM may modify _GTF information */
-+		ata_acpi_push_timing(ap);
-+	}
-+
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		dev = &ap->device[i];
-+
-+		if (!ata_dev_enabled(dev))
-+			continue;
-+
-+		if (ata_id_is_sata(dev->id)) {
-+			/* Send down drive data via _SDD */
-+			ata_acpi_push_id(dev);
-+		}
-+
-+		/* retrieve and execute the ATA task file of _GTF */
-+		ata_acpi_exec_tfs(dev);
-+
-+	}
-+#endif
-+
- 	for (i = 0; i < ATA_MAX_DEVICES; i++)
- 		if (ata_dev_enabled(&ap->device[i]))
- 			return 0;
-@@ -2221,6 +2238,11 @@ int ata_set_mode(struct ata_port *ap, st
- 				break;
- 			}
- 		}
-+#ifdef CONFIG_ATA_ACPI
-+		/* Call _GTM for PATA ports */
-+		if (!(ap->flags & ATA_FLAG_SATA))
-+			ata_acpi_get_timing(ap);
-+#endif
- 		return 0;
- 	}
- 
-@@ -2300,6 +2322,11 @@ int ata_set_mode(struct ata_port *ap, st
- 	/* step5: chip specific finalisation */
- 	if (ap->ops->post_set_mode)
- 		ap->ops->post_set_mode(ap);
-+#ifdef CONFIG_ATA_ACPI
-+	/* step6: Call _GTM for PATA ports */
-+	if (!(ap->flags & ATA_FLAG_SATA))
-+		ata_acpi_get_timing(ap);
-+#endif
- 
-  out:
- 	if (rc)
-@@ -5525,6 +5552,7 @@ int ata_device_add(const struct ata_prob
- 		/* print per-port info to dmesg */
- 		ata_port_printk(ap, KERN_INFO, "%cATA max %s cmd 0x%lX "
- 				"ctl 0x%lX bmdma 0x%lX irq %d\n",
-+				ap->flags & ATA_FLAG_PATA_MODE ? 'P' :
- 				ap->flags & ATA_FLAG_SATA ? 'S' : 'P',
- 				ata_mode_string(xfer_mode_mask),
- 				ap->ioaddr.cmd_addr,
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 02b2b27..8735138 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1994,6 +1994,21 @@ static int ata_eh_recover(struct ata_por
- 			down_xfermask = 1;
- 			goto dev_fail;
- 		}
-+
-+#ifdef CONFIG_ATA_ACPI
-+		for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+			dev = &ap->device[i];
-+
-+			if (!ata_dev_enabled(dev))
-+				continue;
-+
-+			/* Send down drive data via _SDD */
-+			ata_acpi_push_id(dev);
-+
-+			/* retrieve and execute the ATA task file of _GTF */
-+			ata_acpi_exec_tfs(dev);			
-+		}
-+#endif
- 	}
- 
- 	/* suspend devices */
-@@ -2218,6 +2233,12 @@ static void ata_eh_handle_port_resume(st
- 	if (!(ap->pflags & ATA_PFLAG_SUSPENDED))
- 		goto done;
- 
-+#ifdef CONFIG_ATA_ACPI
-+	if (!(ap->flags & ATA_FLAG_SATA)) {
-+		/* Call _STM for PATA ports */
-+		ata_acpi_push_timing(ap);
-+	}
-+#endif
- 	if (ap->ops->port_resume)
- 		rc = ap->ops->port_resume(ap);
- 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 06daaa3..430ac1c 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -976,6 +976,11 @@ int ata_pci_init_one (struct pci_dev *pd
- 	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
- 		u8 tmp8;
- 
-+		if ((port[0]->host_flags & ATA_FLAG_NO_LEGACY) == 0) {
-+			port[0]->host_flags |= ATA_FLAG_PATA_MODE;
-+			port[0]->host_flags &= ~ATA_FLAG_SATA;
-+		}
-+
- 		/* TODO: What if one channel is in native mode ... */
- 		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
- 		mask = (1 << 2) | (1 << 0);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index d565025..2b16dcc 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -43,7 +43,9 @@ extern struct workqueue_struct *ata_aux_
- extern int atapi_enabled;
- extern int atapi_dmadir;
- extern int libata_fua;
--extern int noacpi;
-+#ifdef CONFIG_ATA_ACPI
-+extern int libata_acpi;
-+#endif
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
- extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
- extern void ata_dev_disable(struct ata_device *dev);
-@@ -134,4 +136,12 @@ extern void ata_scsi_error(struct Scsi_H
- extern void ata_port_wait_eh(struct ata_port *ap);
- extern void ata_qc_schedule_eh(struct ata_queued_cmd *qc);
- 
-+/* libata-acpi.c */
-+#ifdef CONFIG_ATA_ACPI
-+extern int ata_acpi_push_id(struct ata_device *atadev);
-+extern int ata_acpi_exec_tfs(struct ata_device *atadev);
-+extern void ata_acpi_get_timing(struct ata_port *ap);
-+extern void ata_acpi_push_timing(struct ata_port *ap);
-+#endif
-+
- #endif /* __LIBATA_H__ */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a7bb6e4..f90b3e3 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -106,6 +106,25 @@ static inline u32 ata_msg_init(int dval,
- 	return (1 << dval) - 1;
- }
- 
-+#ifdef CONFIG_ATA_ACPI
-+enum {
-+    ATA_ACPI_SATA_MASK = 0xf0,
-+    ATA_ACPI_SATA_SDD  = 0x10, /* Execute _SDD method */
-+    ATA_ACPI_SATA_GTF  = 0x20, /* Execute _GTF method */
-+    ATA_ACPI_SATA_TFX  = 0x40, /* Execute tf registers received via _GTF */
-+    ATA_ACPI_PATA_MASK = 0x0f,
-+    ATA_ACPI_PATA_GTM  = 0x01, /* Execute _GTM & _STM method */
-+    ATA_ACPI_PATA_GTF  = 0x02, /* Execute _GTF method */
-+    ATA_ACPI_PATA_TFX  = 0x04, /* Execute tf registers received via _GTF */
-+
-+    ATA_ACPI_GTF  = 0x02, /* Execute _GTF method */
-+    ATA_ACPI_TFX  = 0x04, /* Execute tf registers received via _GTF */
-+};
-+
-+#define ata_acpi_flags(a,f)  ata_id_is_sata((a)->id)?((f)>>4):(f)
-+
-+#endif
-+
- /* defines only for the constants which don't work well as enums */
- #define ATA_TAG_POISON		0xfafbfcfdU
- 
-@@ -175,6 +194,7 @@ enum {
- 	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
- 					      * Register FIS clearing BSY */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
-+	ATA_FLAG_PATA_MODE	= (1 << 14), /* port in PATA mode */
- 
- 	/* The following flag belongs to ap->pflags but is kept in
- 	 * ap->flags because it's referenced in many LLDs and will be
-@@ -336,6 +356,7 @@ struct scsi_device;
- struct ata_port_operations;
- struct ata_port;
- struct ata_queued_cmd;
-+struct GTM_buffer;
- 
- /* typedefs */
- typedef void (*ata_qc_cb_t) (struct ata_queued_cmd *qc);
-@@ -495,9 +516,10 @@ struct ata_device {
- 	/* error history */
- 	struct ata_ering	ering;
- 	unsigned int		horkage;	/* List of broken features */
--#ifdef CONFIG_SATA_ACPI
-+
-+#ifdef CONFIG_ATA_ACPI
- 	/* ACPI objects info */
--	acpi_handle obj_handle;
-+	acpi_handle		obj_handle;
- #endif
- };
- 
-@@ -585,6 +607,11 @@ struct ata_port {
- 	pm_message_t		pm_mesg;
- 	int			*pm_result;
- 
-+#ifdef CONFIG_ATA_ACPI
-+	struct GTM_buffer	*gtm;
-+	void			*gtm_object_area;
-+#endif
-+
- 	void			*private_data;
- 
- 	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
+on Dell OptiPlex GX620, 2.6.18 kernel always report next info:
+===========================================
+ata2: port is slow to respond, please be patient
+ata2: port failed to respond (30 secs)
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=0x100)
+ata2: reset failed, giving up
+===========================================
 
---------------090905080109020404040101--
+and lspci output:
+===========================================
+00:00.0 Host bridge: Intel Corporation 945G/GZ/P/PL Express Memory
+Controller Hub (rev 02)
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, fast devsel, latency 0
+        Capabilities: [e0] Vendor Specific Information
+00: 86 80 70 27 06 01 90 20 02 00 00 06 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 e0 00 00 00 00 00 00 00 00 00 00 00
+40: 01 50 da fe 01 00 da fe 05 00 00 f0 01 40 da fe
+50: 00 00 30 00 1b 00 00 00 00 00 00 00 00 00 00 00
+60: 01 c0 da fe 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 10 11 11 00 00 00 00 00 ff 03 00 00 80 1a 79 00
+a0: 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 10 01 00 00
+e0: 09 00 09 51 02 e1 9b 88 06 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 03 00 00 00 00 00
+
+00:01.0 PCI bridge: Intel Corporation 945G/GZ/P/PL Express PCI Express
+Root Port (rev 02) (prog-if 00 [Normal decode])
+        Flags: bus master, fast devsel, latency 0
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        Memory behind bridge: fe900000-fe9fffff
+        Capabilities: [88] #0d [0000]
+        Capabilities: [80] Power Management version 2
+        Capabilities: [90] Message Signalled Interrupts: 64bit-
+Queue=0/0 Enable+
+        Capabilities: [a0] Express Root Port (Slot+) IRQ 0
+        Capabilities: [100] Virtual Channel
+        Capabilities: [140] Unknown (5)
+00: 86 80 71 27 07 05 10 00 02 00 04 06 10 00 01 00
+10: 00 00 00 00 00 00 00 00 00 01 01 00 f0 00 00 00
+20: 90 fe 90 fe f1 ff 01 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 88 00 00 00 00 00 00 00 0b 01 02 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02
+80: 01 90 02 c8 00 00 00 00 0d 80 00 00 86 80 00 00
+90: 05 a0 01 00 00 00 e0 fe c1 40 00 00 00 00 00 00
+a0: 10 00 41 01 00 00 00 00 00 00 00 00 01 25 01 02
+b0: 50 00 01 10 80 0c 00 f0 c0 01 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 07 00 00 00
+f0: 00 00 01 00 00 00 00 00 86 0f 03 00 00 00 00 00
+
+00:02.0 VGA compatible controller: Intel Corporation 945G/GZ Express
+Integrated Graphics Controller (rev 02) (prog-if 00 [VGA])
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, fast devsel, latency 0, IRQ 169
+        Memory at feb00000 (32-bit, non-prefetchable) [size=512K]
+        I/O ports at e898 [size=8]
+        Memory at e0000000 (32-bit, prefetchable) [size=256M]
+        Memory at feac0000 (32-bit, non-prefetchable) [size=256K]
+        Capabilities: [90] Message Signalled Interrupts: 64bit-
+Queue=0/0 Enable-
+        Capabilities: [d0] Power Management version 2
+00: 86 80 72 27 07 00 90 00 02 00 00 03 00 00 80 00
+10: 00 00 b0 fe 99 e8 00 00 08 00 00 e0 00 00 ac fe
+20: 00 00 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 90 00 00 00 00 00 00 00 0b 01 00 00
+40: 00 00 00 00 e0 00 00 00 09 00 09 51 02 e1 9b 88
+50: 06 00 30 00 1b 00 00 00 00 00 00 00 00 00 80 7f
+60: 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 05 d0 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 01 00 22 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 34 05 64 34 00 00 00 00 86 0f 03 00 00 00 00 00
+
+00:02.1 Display controller: Intel Corporation 945G/GZ Express
+Integrated Graphics Controller (rev 02)
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, fast devsel, latency 0
+        Memory at feb80000 (32-bit, non-prefetchable) [size=512K]
+        Capabilities: [d0] Power Management version 2
+00: 86 80 76 27 07 00 90 00 02 00 80 03 00 00 80 00
+10: 00 00 b8 fe 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 d0 00 00 00 00 00 00 00 00 00 00 00
+40: 00 00 00 00 e0 00 00 00 09 00 09 51 02 e1 9b 88
+50: 06 00 30 00 1b 00 00 00 00 00 00 00 00 00 80 7f
+60: 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 01 00 22 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 34 05 64 34 00 00 00 00 86 0f 03 00 00 00 00 00
+
+00:1c.0 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express
+Port 1 (rev 01) (prog-if 00 [Normal decode])
+        Flags: bus master, fast devsel, latency 0
+        Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+        Memory behind bridge: fe800000-fe8fffff
+        Capabilities: [40] Express Root Port (Slot+) IRQ 0
+        Capabilities: [80] Message Signalled Interrupts: 64bit-
+Queue=0/0 Enable+
+        Capabilities: [90] #0d [0000]
+        Capabilities: [a0] Power Management version 2
+        Capabilities: [100] Virtual Channel
+        Capabilities: [180] Unknown (5)
+00: 86 80 d0 27 07 05 10 00 01 00 04 06 10 00 81 00
+10: 00 00 00 00 00 00 00 00 00 02 02 00 f0 00 00 20
+20: 80 fe 80 fe f1 ff 01 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 40 00 00 00 00 00 00 00 0b 01 02 00
+40: 10 80 41 01 c0 0f 00 00 00 00 10 00 11 24 11 01
+50: 40 00 11 30 60 05 10 00 00 00 48 01 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 05 90 01 00 00 00 e0 fe c9 40 00 00 00 00 00 00
+90: 0d a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 01 00 02 c8 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 11 00 00 00 00 00
+e0: 00 00 c7 00 06 07 08 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1c.1 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express
+Port 2 (rev 01) (prog-if 00 [Normal decode])
+        Flags: bus master, fast devsel, latency 0
+        Bus: primary=00, secondary=03, subordinate=03, sec-latency=0
+        Memory behind bridge: fe700000-fe7fffff
+        Capabilities: [40] Express Root Port (Slot+) IRQ 0
+        Capabilities: [80] Message Signalled Interrupts: 64bit-
+Queue=0/0 Enable+
+        Capabilities: [90] #0d [0000]
+        Capabilities: [a0] Power Management version 2
+        Capabilities: [100] Virtual Channel
+        Capabilities: [180] Unknown (5)
+00: 86 80 d2 27 07 05 10 00 01 00 04 06 10 00 81 00
+10: 00 00 00 00 00 00 00 00 00 03 03 00 f0 00 00 20
+20: 70 fe 70 fe f1 ff 01 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 02 02 00
+40: 10 80 41 01 c0 0f 00 00 00 00 10 00 11 24 11 02
+50: 40 00 01 10 60 05 18 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 05 90 01 00 00 00 e0 fe d1 40 00 00 00 00 00 00
+90: 0d a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 01 00 02 c8 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 11 00 00 00 00 00
+e0: 00 00 c7 00 06 07 08 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1d.0 USB Controller: Intel Corporation 82801G (ICH7 Family) USB
+UHCI #1 (rev 01) (prog-if 00 [UHCI])
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, medium devsel, latency 0, IRQ 233
+        I/O ports at ff80 [size=32]
+00: 86 80 c8 27 05 00 80 02 01 00 03 0c 00 00 80 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 81 ff 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 00 00 00 00 00 00 00 00 09 01 00 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 24 00 00 03 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1d.1 USB Controller: Intel Corporation 82801G (ICH7 Family) USB
+UHCI #2 (rev 01) (prog-if 00 [UHCI])
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, medium devsel, latency 0, IRQ 50
+        I/O ports at ff60 [size=32]
+00: 86 80 c9 27 05 00 80 02 01 00 03 0c 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 61 ff 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 00 00 00 00 00 00 00 00 05 02 00 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 24 00 00 03 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1d.2 USB Controller: Intel Corporation 82801G (ICH7 Family) USB
+UHCI #3 (rev 01) (prog-if 00 [UHCI])
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, medium devsel, latency 0, IRQ 58
+        I/O ports at ff40 [size=32]
+00: 86 80 ca 27 05 00 80 02 01 00 03 0c 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 41 ff 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 00 00 00 00 00 00 00 00 03 03 00 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 24 00 00 03 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1d.3 USB Controller: Intel Corporation 82801G (ICH7 Family) USB
+UHCI #4 (rev 01) (prog-if 00 [UHCI])
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, medium devsel, latency 0, IRQ 225
+        I/O ports at ff20 [size=32]
+00: 86 80 cb 27 05 00 80 02 01 00 03 0c 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 21 ff 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 00 00 00 00 00 00 00 00 0a 04 00 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 24 00 00 03 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1d.7 USB Controller: Intel Corporation 82801G (ICH7 Family) USB2
+EHCI Controller (rev 01) (prog-if 20 [EHCI])
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, medium devsel, latency 0, IRQ 233
+        Memory at ffa80800 (32-bit, non-prefetchable) [size=1K]
+        Capabilities: [50] Power Management version 2
+        Capabilities: [58] Debug port
+00: 86 80 cc 27 06 01 90 02 01 20 03 0c 00 00 00 00
+10: 00 08 a8 ff 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 50 00 00 00 00 00 00 00 09 01 00 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 01 58 c2 c9 00 00 00 00 0a 00 a0 20 00 00 00 00
+60: 20 20 ff 01 00 00 00 00 01 00 00 01 00 00 08 00
+70: 00 00 df 3f 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 aa ff 00 ff 00 ff 00 20 00 00 88
+e0: 00 00 00 00 db b6 6d 00 00 00 00 00 00 00 00 00
+f0: 00 80 00 09 88 85 40 00 86 0f 01 00 06 17 02 20
+
+00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev e1)
+(prog-if 01 [Subtractive decode])
+        Flags: bus master, fast devsel, latency 0
+        Bus: primary=00, secondary=04, subordinate=04, sec-latency=32
+        Capabilities: [50] #0d [0000]
+00: 86 80 4e 24 07 01 10 00 e1 01 04 06 00 00 81 00
+10: 00 00 00 00 00 00 00 00 00 04 04 20 f0 00 80 22
+20: f0 ff 00 00 f1 ff 01 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 50 00 00 00 00 00 00 00 00 00 02 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 12 00 00
+50: 0d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1e.2 Multimedia audio controller: Intel Corporation 82801G (ICH7
+Family) AC'97 Audio Controller (rev 01)
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, medium devsel, latency 0, IRQ 225
+        I/O ports at ec00 [size=256]
+        I/O ports at e8c0 [size=64]
+        Memory at feabfa00 (32-bit, non-prefetchable) [size=512]
+        Memory at feabf900 (32-bit, non-prefetchable) [size=256]
+        Capabilities: [50] Power Management version 2
+00: 86 80 de 27 07 00 90 02 01 00 01 04 00 00 00 00
+10: 01 ec 00 00 c1 e8 00 00 00 fa ab fe 00 f9 ab fe
+20: 00 00 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 50 00 00 00 00 00 00 00 0a 01 00 00
+40: 09 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 01 00 c2 c9 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1f.0 ISA bridge: Intel Corporation 82801GB/GR (ICH7 Family) LPC
+Interface Bridge (rev 01)
+        Flags: bus master, medium devsel, latency 0
+        Capabilities: [e0] Vendor Specific Information
+00: 86 80 b8 27 07 01 10 02 01 00 01 06 00 00 80 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 e0 00 00 00 00 00 00 00 00 00 00 00
+40: 01 08 00 00 80 00 00 00 81 08 00 00 10 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 8b 8a 83 80 d0 00 00 00 85 89 85 8a 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 05 14 01 0c 7c 00 e1 00 04 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 10 06 00 00 38 00 00 00 13 00 00 00 00 03 00 00
+b0: 00 00 f0 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 33 22 11 00 67 45 00 00 c0 c0 00 00 02 00 00 00
+e0: 09 00 0c 10 a8 00 24 00 00 00 00 00 00 00 00 00
+f0: 01 80 da fe 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1f.1 IDE interface: Intel Corporation 82801G (ICH7 Family) IDE
+Controller (rev 01) (prog-if 8a [Master SecP PriP])
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, medium devsel, latency 0, IRQ 169
+        I/O ports at <ignored>
+        I/O ports at <ignored>
+        I/O ports at <ignored>
+        I/O ports at <ignored>
+        I/O ports at ffa0 [size=16]
+00: 86 80 df 27 05 00 88 02 01 8a 01 01 00 00 00 00
+10: f1 01 00 00 f5 03 00 00 71 01 00 00 75 03 00 00
+20: a1 ff 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 00 00 00 00 00 00 00 00 0b 01 00 00
+40: 07 e3 00 00 00 00 00 00 01 00 02 00 00 00 00 00
+50: 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 03 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1f.2 IDE interface: Intel Corporation 82801GB/GR/GH (ICH7 Family)
+Serial ATA Storage Controller IDE (rev 01) (prog-if 8f [Master SecP
+SecO PriP PriO])
+        Subsystem: Dell: Unknown device 01ad
+        Flags: bus master, 66Mhz, medium devsel, latency 0, IRQ 217
+        I/O ports at fe00 [size=8]
+        I/O ports at fe10 [size=4]
+        I/O ports at fe20 [size=8]
+        I/O ports at fe30 [size=4]
+        I/O ports at fea0 [size=16]
+        Capabilities: [70] Power Management version 2
+00: 86 80 c0 27 07 00 b0 02 01 8f 01 01 00 00 00 00
+10: 01 fe 00 00 11 fe 00 00 21 fe 00 00 31 fe 00 00
+20: a1 fe 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 70 00 00 00 00 00 00 00 05 03 00 00
+40: 07 e3 00 00 00 00 00 00 01 00 01 00 00 00 00 00
+50: 00 00 00 00 11 10 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 01 00 02 40 00 00 00 00 00 00 00 00 00 00 00 00
+80: 05 70 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 1f 00 80 01 80 40 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+00:1f.3 SMBus: Intel Corporation 82801G (ICH7 Family) SMBus Controller (rev 01)
+        Subsystem: Dell: Unknown device 01ad
+        Flags: medium devsel, IRQ 177
+        I/O ports at e8a0 [size=32]
+00: 86 80 da 27 01 01 80 02 01 00 05 0c 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: a1 e8 00 00 00 00 00 00 00 00 00 00 28 10 ad 01
+30: 00 00 00 00 00 00 00 00 00 00 00 00 0a 02 00 00
+40: 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 86 0f 01 00 00 00 00 00
+
+02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5751
+Gigabit Ethernet PCI Express (rev 01)
+        Subsystem: Dell Optiplex GX620
+        Flags: bus master, fast devsel, latency 0, IRQ 169
+        Memory at fe8f0000 (64-bit, non-prefetchable) [size=64K]
+        Capabilities: [48] Power Management version 2
+        Capabilities: [50] Vital Product Data
+        Capabilities: [58] Message Signalled Interrupts: 64bit+
+Queue=0/3 Enable-
+        Capabilities: [d0] Express Endpoint IRQ 0
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [13c] Virtual Channel
+00: e4 14 77 16 06 00 10 00 01 00 00 02 10 00 00 00
+10: 04 00 8f fe 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 07 00 00 00 28 10 ad 01
+30: 00 00 00 00 48 00 00 00 00 00 00 00 0b 01 00 00
+40: 00 00 00 00 00 00 00 00 01 50 02 c0 00 20 00 64
+50: 03 58 a0 00 20 00 20 06 05 d0 86 00 28 20 84 52
+60: 89 0c 90 a8 80 04 00 00 98 02 01 40 00 00 18 76
+70: f2 10 00 00 c0 00 00 00 50 00 00 00 00 00 00 00
+80: 03 58 a0 00 00 00 00 00 34 00 13 04 82 10 08 3c
+90: 09 96 00 01 00 00 00 00 00 00 00 00 40 01 00 00
+a0: 00 00 00 00 78 00 00 00 00 00 00 00 9a 00 00 00
+b0: 00 00 00 00 00 00 00 ae 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 0e 00 00 00 00 00 00 00
+d0: 10 00 01 00 a0 0f 28 00 00 50 10 00 11 64 03 00
+e0: 40 00 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+===========================================
+it occured while scsi_eh_x  call ata_std_prereset and ata_std_softreset
+I dont know if should check device on the bus at these func, and if have
+not any devices, should skip it?
+
+if yes , follow patch maybe useful :)
+
+-Joe
+
+------=_Part_3657_29502206.1159521510700
+Content-Type: text/x-patch; name="libata-core.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="libata-core.patch"
+X-Attachment-Id: f_esod5tpm
+
+cGF0Y2ggZm9yIHNraXAgIm5vIGRldmljZSBidXMgcmVzZXQgb3BlcmF0aW9ucyIKClNpZ25lZC1v
+ZmYtYnk6IEpvZSBKaW4gPGxrbWFpbGxpc3RAZ21haWwuY29tPgotLS0KCi0tLSBsaW51eC0yLjYu
+MTgub3JpZy9kcml2ZXJzL3Njc2kvbGliYXRhLWNvcmUuYwkyMDA2LTA5LTI5IDE2OjU4OjM4LjAw
+MDAwMDAwMCArMDgwMAorKysgbGludXgtMi42LjE4Lm5ldy9kcml2ZXJzL3Njc2kvbGliYXRhLWNv
+cmUuYwkyMDA2LTA5LTI5IDE2OjUzOjIwLjAwMDAwMDAwMCArMDgwMApAQCAtMjYzMSw4ICsyNjMx
+LDIwIEBACiB7CiAJc3RydWN0IGF0YV9laF9jb250ZXh0ICplaGMgPSAmYXAtPmVoX2NvbnRleHQ7
+CiAJY29uc3QgdW5zaWduZWQgbG9uZyAqdGltaW5nID0gc2F0YV9laGNfZGViX3RpbWluZyhlaGMp
+OworCXVuc2lnbmVkIGludCBzbGF2ZV9wb3NzaWJsZSA9IGFwLT5mbGFncyAmIEFUQV9GTEFHX1NM
+QVZFX1BPU1M7CisJdW5zaWduZWQgaW50IGRldm1hc2sgPSAwOwogCWludCByYzsKIAorCWlmIChh
+dGFfcG9ydF9vZmZsaW5lKGFwKSkgeworCQlyZXR1cm4gMDsKKwl9CisKKwkvKiBkZXRlcm1pbmUg
+aWYgZGV2aWNlIDAvMSBhcmUgcHJlc2VudCAqLworCWlmIChhdGFfZGV2Y2hrKGFwLCAwKSkKKwkJ
+ZGV2bWFzayB8PSAoMSA8PCAwKTsKKwlpZiAoc2xhdmVfcG9zc2libGUgJiYgYXRhX2RldmNoayhh
+cCwgMSkpCisJCWRldm1hc2sgfD0gKDEgPDwgMSk7CisKIAkvKiBoYW5kbGUgbGluayByZXN1bWUg
+JiBob3RwbHVnIHNwaW51cCAqLwogCWlmICgoZWhjLT5pLmZsYWdzICYgQVRBX0VISV9SRVNVTUVf
+TElOSykgJiYKIAkgICAgKGFwLT5mbGFncyAmIEFUQV9GTEFHX0hSU1RfVE9fUkVTVU1FKSkKQEAg
+LTI2NjAsNyArMjY3Miw4IEBACiAJLyogV2FpdCBmb3IgIUJTWSBpZiB0aGUgY29udHJvbGxlciBj
+YW4gd2FpdCBmb3IgdGhlIGZpcnN0IEQySAogCSAqIFJlZyBGSVMgYW5kIHdlIGRvbid0IGtub3cg
+dGhhdCBubyBkZXZpY2UgaXMgYXR0YWNoZWQuCiAJICovCi0JaWYgKCEoYXAtPmZsYWdzICYgQVRB
+X0ZMQUdfU0tJUF9EMkhfQlNZKSAmJiAhYXRhX3BvcnRfb2ZmbGluZShhcCkpCisJaWYgKCEoYXAt
+PmZsYWdzICYgQVRBX0ZMQUdfU0tJUF9EMkhfQlNZKSAmJiAKKyAgICAgICAgICAgICFhdGFfcG9y
+dF9vZmZsaW5lKGFwKSAmJiBkZXZtYXNrKQogCQlhdGFfYnVzeV9zbGVlcChhcCwgQVRBX1RNT1VU
+X0JPT1RfUVVJQ0ssIEFUQV9UTU9VVF9CT09UKTsKIAogCXJldHVybiAwOwpAQCAtMjY5Nyw2ICsy
+NzEwLDEwIEBACiAJCWRldm1hc2sgfD0gKDEgPDwgMCk7CiAJaWYgKHNsYXZlX3Bvc3NpYmxlICYm
+IGF0YV9kZXZjaGsoYXAsIDEpKQogCQlkZXZtYXNrIHw9ICgxIDw8IDEpOworCQorCS8qIGhhdmUg
+bm90IGEgaW52YWxpZCBkZXZpY2UgYmVlbiBmb3VuZCAqLworCWlmICghZGV2bWFzaykKKwkJcmV0
+dXJuIDA7CiAKIAkvKiBzZWxlY3QgZGV2aWNlIDAgYWdhaW4gKi8KIAlhcC0+b3BzLT5kZXZfc2Vs
+ZWN0KGFwLCAwKTsK
+------=_Part_3657_29502206.1159521510700--
