@@ -1,43 +1,51 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: [patch] 2.6.18: Initialize the SWARM IDE driver
-Date: Fri, 29 Sep 2006 18:56:07 +0100 (BST)
-Message-ID: <Pine.LNX.4.64N.0609291849570.1573@blysk.ds.pg.gda.pl>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: [patch 2/2] libata: _SDD support
+Date: Fri, 29 Sep 2006 13:56:17 -0400
+Message-ID: <200609291756.k8THuHAc008660@turing-police.cc.vt.edu>
+References: <20060928182211.076258000@localhost.localdomain>
+            <20060928113043.2dd47049.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; boundary="==_Exmh_1159552577_3377P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pollux.ds.pg.gda.pl ([153.19.208.7]:59398 "EHLO
-	pollux.ds.pg.gda.pl") by vger.kernel.org with ESMTP
-	id S1751223AbWI2R4I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Sep 2006 13:56:08 -0400
+Received: from turing-police.cc.vt.edu ([128.173.14.107]:40605 "EHLO
+	turing-police.cc.vt.edu") by vger.kernel.org with ESMTP
+	id S1751234AbWI2R4T (ORCPT <RFC822;linux-ide@vger.kernel.org>);
+	Fri, 29 Sep 2006 13:56:19 -0400
+In-Reply-To: Your message of "Thu, 28 Sep 2006 11:30:43 PDT."
+             <20060928113043.2dd47049.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: B.Zolnierkiewicz@elka.pw.edu.pl
-Cc: linux-ide@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, rdunlap@xenotime.net
 
-Hello,
+--==_Exmh_1159552577_3377P
+Content-Type: text/plain; charset=us-ascii
 
- The following patch is required for the SWARM GenBus IDE interface to be 
-recognized.  Please apply.
+On Thu, 28 Sep 2006 11:30:43 PDT, Kristen Carlson Accardi said:
+> _SDD (Set Device Data) is an ACPI method that is used to tell the 
+> firmware what the identify data is of the device that is attached to
+> the port.  It is an optional method, and it's ok for it to be missing. 
+> Because of this, we always return success from the routine that calls
+> this method, even if the execution fails.
 
-  Maciej
+I'm OK on it returning success if the _SDD is missing entirely.  And I see
+where it's properly droppping a KERN_DEBUG-level printk if it misbehaves.
+Whether it should continue on and return success anyhow, I'm not sure.  Can one
+of the ACPI wizards comment on that?
 
-patch-mips-2.6.18-20060920-swarm-ide-0
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/drivers/ide/mips/swarm.c linux-mips-2.6.18-20060920/drivers/ide/mips/swarm.c
---- linux-mips-2.6.18-20060920.macro/drivers/ide/mips/swarm.c	2005-11-18 05:58:14.000000000 +0000
-+++ linux-mips-2.6.18-20060920/drivers/ide/mips/swarm.c	2006-09-28 23:35:42.000000000 +0000
-@@ -4,6 +4,7 @@
-  *	Author:	Manish Lachwani, mlachwani@mvista.com
-  * Copyright (C) 2004  MIPS Technologies, Inc.  All rights reserved.
-  *	Author: Maciej W. Rozycki <macro@mips.com>
-+ * Copyright (c) 2006  Maciej W. Rozycki
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License
-@@ -127,6 +128,7 @@ static int __devinit swarm_ide_probe(str
- 	memcpy(hwif->io_ports, hwif->hw.io_ports, sizeof(hwif->io_ports));
- 	hwif->irq = hwif->hw.irq;
- 
-+	probe_hwif_init(hwif);
- 	dev_set_drvdata(dev, hwif);
- 
- 	return 0;
+
+--==_Exmh_1159552577_3377P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFFHV5AcC3lWbTT17ARAkKJAKD9k5z4IeQ6Jugkhzey5mxDaVhMOwCfSZhR
+RMZSCGD+8REjEtgxEYSIexQ=
+=fvUr
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1159552577_3377P--
