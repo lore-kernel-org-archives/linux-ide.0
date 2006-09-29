@@ -1,130 +1,58 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 2/5] libata: minor PCI IDE probe fixes and cleanups
-Date: Thu, 28 Sep 2006 20:27:25 -0400
-Message-ID: <20060929002725.GB7458@havoc.gtf.org>
+Subject: [PATCH 4/5] libata: Print out Status register
+Date: Thu, 28 Sep 2006 20:28:22 -0400
+Message-ID: <20060929002822.GD7458@havoc.gtf.org>
 References: <20060929002601.GA7397@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:31623 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1161214AbWI2A10 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Sep 2006 20:27:26 -0400
+Received: from havoc.gtf.org ([69.61.125.42]:32391 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1161223AbWI2A2X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Sep 2006 20:28:23 -0400
 Content-Disposition: inline
 In-Reply-To: <20060929002601.GA7397@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: LKML <linux-kernel@vger.kernel.org>
 
 
-commit c791c30670ea61f19eec390124128bf278e854fe
+commit 35aa7a436c0901fd6f352eff347f58448c141a25
 Author: Jeff Garzik <jeff@garzik.org>
-Date:   Thu Sep 28 03:40:11 2006 -0400
+Date:   Thu Sep 28 06:50:24 2006 -0400
 
-    [libata] minor PCI IDE probe fixes and cleanups
+    [libata] Print out Status register, if a BSY-sleep takes too long
 
-    * Replace needless 'n_ports > 2' check with a simple BUG_ON().
-      No existing driver ever wants more than 2 ports.
-
-    * Delete ATA_FLAG_NO_LEGACY check.  No current driver uses
-      ata_pci_init_one(), that sets this flag.
-
-    * Move PCI_CLASS_PROG register read below pci_enable_device()
-
-    * Handle ata_device_add() failure
+    We have the info stored in an ata_busy_sleep() variable, so might as
+    well print it, and provide some additional diagnostic info.
 
     Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
- drivers/ata/libata-sff.c |   40 ++++++++++++++++++++--------------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+ drivers/ata/libata-core.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-c791c30670ea61f19eec390124128bf278e854fe
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 08b3a40..a620e23 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -946,35 +946,21 @@ int ata_pci_init_one (struct pci_dev *pd
- {
- 	struct ata_probe_ent *probe_ent = NULL;
- 	struct ata_port_info *port[2];
--	u8 tmp8, mask;
-+	u8 mask;
- 	unsigned int legacy_mode = 0;
- 	int disable_dev_on_err = 1;
- 	int rc;
+35aa7a436c0901fd6f352eff347f58448c141a25
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 72644bd..7ab45f4 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2340,7 +2340,8 @@ unsigned int ata_busy_sleep (struct ata_
  
- 	DPRINTK("ENTER\n");
+ 	if (status & ATA_BUSY)
+ 		ata_port_printk(ap, KERN_WARNING,
+-				"port is slow to respond, please be patient\n");
++				"port is slow to respond, please be patient "
++				"(Status 0x%x)\n", status);
  
-+	BUG_ON(n_ports < 1 || n_ports > 2);
-+
- 	port[0] = port_info[0];
- 	if (n_ports > 1)
- 		port[1] = port_info[1];
- 	else
- 		port[1] = port[0];
+ 	timeout = timer_start + tmout;
+ 	while ((status & ATA_BUSY) && (time_before(jiffies, timeout))) {
+@@ -2350,7 +2351,8 @@ unsigned int ata_busy_sleep (struct ata_
  
--	if ((port[0]->flags & ATA_FLAG_NO_LEGACY) == 0
--	    && (pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
--		/* TODO: What if one channel is in native mode ... */
--		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
--		mask = (1 << 2) | (1 << 0);
--		if ((tmp8 & mask) != mask)
--			legacy_mode = (1 << 3);
--	}
--
--	/* FIXME... */
--	if ((!legacy_mode) && (n_ports > 2)) {
--		printk(KERN_ERR "ata: BUG: native mode, n_ports > 2\n");
--		n_ports = 2;
--		/* For now */
--	}
--
- 	/* FIXME: Really for ATA it isn't safe because the device may be
- 	   multi-purpose and we want to leave it alone if it was already
- 	   enabled. Secondly for shared use as Arjan says we want refcounting
-@@ -987,6 +973,16 @@ int ata_pci_init_one (struct pci_dev *pd
- 	if (rc)
- 		return rc;
- 
-+	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
-+		u8 tmp8;
-+
-+		/* TODO: What if one channel is in native mode ... */
-+		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
-+		mask = (1 << 2) | (1 << 0);
-+		if ((tmp8 & mask) != mask)
-+			legacy_mode = (1 << 3);
-+	}
-+
- 	rc = pci_request_regions(pdev, DRV_NAME);
- 	if (rc) {
- 		disable_dev_on_err = 0;
-@@ -1039,7 +1035,7 @@ int ata_pci_init_one (struct pci_dev *pd
- 		goto err_out_regions;
+ 	if (status & ATA_BUSY) {
+ 		ata_port_printk(ap, KERN_ERR, "port failed to respond "
+-				"(%lu secs)\n", tmout / HZ);
++				"(%lu secs, Status 0x%x)\n",
++				tmout / HZ, status);
+ 		return 1;
  	}
  
--	/* FIXME: If we get no DMA mask we should fall back to PIO */
-+	/* TODO: If we get no DMA mask we should fall back to PIO */
- 	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
- 	if (rc)
- 		goto err_out_regions;
-@@ -1062,13 +1058,17 @@ int ata_pci_init_one (struct pci_dev *pd
- 
- 	pci_set_master(pdev);
- 
--	/* FIXME: check ata_device_add return */
--	ata_device_add(probe_ent);
-+	if (!ata_device_add(probe_ent)) {
-+		rc = -ENODEV;
-+		goto err_out_ent;
-+	}
- 
- 	kfree(probe_ent);
- 
- 	return 0;
- 
-+err_out_ent:
-+	kfree(probe_ent);
- err_out_regions:
- 	if (legacy_mode & ATA_PORT_PRIMARY)
- 		release_region(ATA_PRIMARY_CMD, 8);
