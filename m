@@ -1,33 +1,22 @@
-From: Derek Taubert <taubert@geeks.org>
-Subject: Re: Bad write performance with libata-tj-stable-2.6.17.4-20060710, pcmcia based sata_sil24, PMP, and NCQ drive
-Date: Thu, 28 Sep 2006 15:07:29 -0700
-Message-ID: <20060928220729.GB8064@geeks.org>
-References: <44F3A8FD.6090108@gmail.com> <20060829045816.GA21746@geeks.org> <44F440BE.80000@gmail.com> <20060829164424.GA1603@geeks.org> <44F8365C.2020609@gmail.com> <20060901172435.GA26975@geeks.org> <20060902053459.GA4467@geeks.org> <20060903062653.GA4340@geeks.org> <44FB26FA.4070704@gmail.com> <20060903200449.GA9607@geeks.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH 0/5] libata: various queued changes
+Date: Thu, 28 Sep 2006 20:26:01 -0400
+Message-ID: <20060929002601.GA7397@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jacobs.geeks.org ([204.153.247.1]:49890 "EHLO mail.geeks.org")
-	by vger.kernel.org with ESMTP id S932524AbWI1WHb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Sep 2006 18:07:31 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161211AbWI2A0J@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20060903200449.GA9607@geeks.org>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Derek Taubert <taubert@geeks.org>, linux-ide@vger.kernel.org
 
-> > >I'm not sure if this will affect PCI-X configurations, but it is
-> > >certainly worth trying.
-> > 
-> > Can you post full result of "lspci -vvv -xxx"?  I'm curious why things 
-> > ended up that way.
-> 
-> Below.  This output shows the modified cache line config for the 3124,
-> btw.
 
-FWIW, I got ahold of a system with the same host bridge but with a 3124
-on the primary PCI bus, and the cache line size was properly configured.
+These five patches are random bits I've queued in
+libata-dev.git#upstream:
 
-Something to do with the cardbus bridge, perhaps...
-
-Derek
+[libata] Use new PCI_VDEVICE() macro to dramatically shorten ID lists
+[libata] minor PCI IDE probe fixes and cleanups
+[libata] init probe_ent->private_data in a common location
+[libata] Print out Status register, if a BSY-sleep takes too long
+[libata] PCI ID table cleanup in various drivers
