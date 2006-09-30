@@ -1,197 +1,202 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/6] ata_piix: strip now unneded MAP related stuff
+Subject: [PATCH 5/6] ata_piix: apply device detection via polling IDENTIFY
 Date: Sat, 30 Sep 2006 15:46:50 +0900
-Message-ID: <11595988102485-git-send-email-htejun@gmail.com>
+Message-ID: <1159598810227-git-send-email-htejun@gmail.com>
 References: <11595988092938-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.238]:990 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751083AbWI3GrB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Sep 2006 02:47:01 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so1162646wxc
-        for <linux-ide@vger.kernel.org>; Fri, 29 Sep 2006 23:47:01 -0700 (PDT)
+Received: from nf-out-0910.google.com ([64.233.182.185]:42834 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751093AbWI3GrF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Sep 2006 02:47:05 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so1150186nfa
+        for <linux-ide@vger.kernel.org>; Fri, 29 Sep 2006 23:47:05 -0700 (PDT)
 In-Reply-To: <11595988092938-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: nabiki@teleline.es, kaos@ocs.com.au, stevenm@umd.edu, jfs@keytradebank.com, 0602@eq.cz, jgarzik@pobox.com, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Now that PCS isn't used for device detection anymore...
+PATA PIIX uses reset signature + TF r/w test for device presence
+detection, which doesn't always work.  It sometimes reports phantom
+device which results in IDENTIFY timeouts.
 
-* esb_sata is identical to ich5_sata
-* no reason to know present_shift
-* no reason to store map_db in host private area
+SATA PIIX uses some combination of PCS + reset signature + TF r/w test
+for device presence detection.  No combination satifies all and for
+some controllers, there doesn't seem to be any combination which
+works reliably.
 
-The MAP table itself is left because it can be used for SCR access.
+This patch makes both PATA and SATA piix's use reset signature + TF
+r/w + polling IDENTIFY for device detection.  This is what the old
+libata (before irq-pio and new EH) did and what IDE does.
+
+This patch also removes now obsolete PIIX_FLAG_IGNORE_PCS, force_pcs
+and related code.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ata_piix.c |   44 ++++++++++++--------------------------------
- 1 files changed, 12 insertions(+), 32 deletions(-)
+ drivers/ata/ata_piix.c |  104 +++---------------------------------------------
+ 1 files changed, 6 insertions(+), 98 deletions(-)
 
 diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index a92c798..944d534 100644
+index cdb99dc..a92c798 100644
 --- a/drivers/ata/ata_piix.c
 +++ b/drivers/ata/ata_piix.c
-@@ -125,12 +125,11 @@ enum {
- 	ich_pata_100		= 3,	/* ICH up to UDMA 100 */
- 	ich_pata_133		= 4,	/* ICH up to UDMA 133 */
- 	ich5_sata		= 5,
--	esb_sata		= 6,
--	ich6_sata		= 7,
--	ich6_sata_ahci		= 8,
--	ich6m_sata_ahci		= 9,
--	ich7m_sata_ahci		= 10,
--	ich8_sata_ahci		= 11,
-+	ich6_sata		= 6,
-+	ich6_sata_ahci		= 7,
-+	ich6m_sata_ahci		= 8,
-+	ich7m_sata_ahci		= 9,
-+	ich8_sata_ahci		= 10,
+@@ -101,13 +101,13 @@ enum {
+ 	ICH5_PCS		= 0x92,	/* port control and status */
+ 	PIIX_SCC		= 0x0A, /* sub-class code register */
  
- 	/* constants for mapping table */
- 	P0			= 0,  /* port 0 */
-@@ -147,13 +146,11 @@ enum {
- struct piix_map_db {
- 	const u32 mask;
- 	const u16 port_enable;
--	const int present_shift;
- 	const int map[][4];
- };
+-	PIIX_FLAG_IGNORE_PCS	= (1 << 25), /* ignore PCS present bits */
+ 	PIIX_FLAG_SCR		= (1 << 26), /* SCR available */
+ 	PIIX_FLAG_AHCI		= (1 << 27), /* AHCI possible */
+ 	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
  
- struct piix_host_priv {
- 	const int *map;
--	const struct piix_map_db *map_db;
- };
+-	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS,
+-	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
++	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_DETECT_POLLING,
++	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR |
++				  ATA_FLAG_DETECT_POLLING,
  
- static int piix_init_one (struct pci_dev *pdev,
-@@ -218,9 +215,9 @@ #endif
- 	/* 82801EB (ICH5) */
- 	{ 0x8086, 0x24df, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
- 	/* 6300ESB (ICH5 variant with broken PCS present bits) */
--	{ 0x8086, 0x25a3, PCI_ANY_ID, PCI_ANY_ID, 0, 0, esb_sata },
-+	{ 0x8086, 0x25a3, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
- 	/* 6300ESB pretending RAID */
--	{ 0x8086, 0x25b0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, esb_sata },
-+	{ 0x8086, 0x25b0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
- 	/* 82801FB/FW (ICH6/ICH6W) */
- 	{ 0x8086, 0x2651, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
- 	/* 82801FR/FRW (ICH6R/ICH6RW) */
-@@ -371,7 +368,6 @@ static const struct ata_port_operations 
- static const struct piix_map_db ich5_map_db = {
- 	.mask = 0x7,
- 	.port_enable = 0x3,
--	.present_shift = 4,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP  */
- 		{  P0,  NA,  P1,  NA }, /* 000b */
-@@ -388,7 +384,6 @@ static const struct piix_map_db ich5_map
- static const struct piix_map_db ich6_map_db = {
- 	.mask = 0x3,
- 	.port_enable = 0xf,
--	.present_shift = 4,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
- 		{  P0,  P2,  P1,  P3 }, /* 00b */
-@@ -401,7 +396,6 @@ static const struct piix_map_db ich6_map
- static const struct piix_map_db ich6m_map_db = {
- 	.mask = 0x3,
- 	.port_enable = 0x5,
--	.present_shift = 4,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
- 		{  P0,  P2,  RV,  RV }, /* 00b */
-@@ -414,7 +408,6 @@ static const struct piix_map_db ich6m_ma
- static const struct piix_map_db ich7m_map_db = {
- 	.mask = 0x3,
- 	.port_enable = 0x5,
--	.present_shift = 4,
+ 	/* combined mode.  if set, PATA is channel 0.
+ 	 * if clear, PATA is channel 1.
+@@ -505,7 +505,7 @@ static struct ata_port_info piix_port_in
+ 	/* ich5_sata: 5 */
+ 	{
+ 		.sht		= &piix_sht,
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_IGNORE_PCS,
++		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f,	/* udma0-6 */
+@@ -515,7 +515,7 @@ static struct ata_port_info piix_port_in
+ 	/* i6300esb_sata: 6 */
+ 	{
+ 		.sht		= &piix_sht,
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_IGNORE_PCS,
++		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f,	/* udma0-6 */
+@@ -589,11 +589,6 @@ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
  
- 	/* Map 01b isn't specified in the doc but some notebooks use
- 	 * it anyway.  ATM, the only case spotted carries subsystem ID
-@@ -432,7 +425,6 @@ static const struct piix_map_db ich7m_ma
- static const struct piix_map_db ich8_map_db = {
- 	.mask = 0x3,
- 	.port_enable = 0x3,
--	.present_shift = 8,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
- 		{  P0,  NA,  P1,  NA }, /* 00b (hardwired) */
-@@ -444,7 +436,6 @@ static const struct piix_map_db ich8_map
- 
- static const struct piix_map_db *piix_map_db_table[] = {
- 	[ich5_sata]		= &ich5_map_db,
--	[esb_sata]		= &ich5_map_db,
- 	[ich6_sata]		= &ich6_map_db,
- 	[ich6_sata_ahci]	= &ich6_map_db,
- 	[ich6m_sata_ahci]	= &ich6m_map_db,
-@@ -512,17 +503,7 @@ static struct ata_port_info piix_port_in
- 		.port_ops	= &piix_sata_ops,
- 	},
- 
--	/* i6300esb_sata: 6 */
--	{
--		.sht		= &piix_sht,
--		.flags		= PIIX_SATA_FLAGS,
--		.pio_mask	= 0x1f,	/* pio0-4 */
--		.mwdma_mask	= 0x07, /* mwdma0-2 */
--		.udma_mask	= 0x7f,	/* udma0-6 */
--		.port_ops	= &piix_sata_ops,
--	},
+-static int force_pcs = 0;
+-module_param(force_pcs, int, 0444);
+-MODULE_PARM_DESC(force_pcs, "force honoring or ignoring PCS to work around "
+-		 "device mis-detection (0=default, 1=ignore PCS, 2=honor PCS)");
 -
--	/* ich6_sata: 7 */
-+	/* ich6_sata: 6 */
- 	{
- 		.sht		= &piix_sht,
- 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR,
-@@ -532,7 +513,7 @@ static struct ata_port_info piix_port_in
- 		.port_ops	= &piix_sata_ops,
- 	},
- 
--	/* ich6_sata_ahci: 8 */
-+	/* ich6_sata_ahci: 7 */
- 	{
- 		.sht		= &piix_sht,
- 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
-@@ -543,7 +524,7 @@ static struct ata_port_info piix_port_in
- 		.port_ops	= &piix_sata_ops,
- 	},
- 
--	/* ich6m_sata_ahci: 9 */
-+	/* ich6m_sata_ahci: 8 */
- 	{
- 		.sht		= &piix_sht,
- 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
-@@ -554,7 +535,7 @@ static struct ata_port_info piix_port_in
- 		.port_ops	= &piix_sata_ops,
- 	},
- 
--	/* ich7m_sata_ahci: 10 */
-+	/* ich7m_sata_ahci: 9 */
- 	{
- 		.sht		= &piix_sht,
- 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
-@@ -565,7 +546,7 @@ static struct ata_port_info piix_port_in
- 		.port_ops	= &piix_sata_ops,
- 	},
- 
--	/* ich8_sata_ahci: 11 */
-+	/* ich8_sata_ahci: 10 */
- 	{
- 		.sht		= &piix_sht,
- 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
-@@ -1043,7 +1024,6 @@ static void __devinit piix_init_sata_map
- 			   "invalid MAP value %u\n", map_value);
- 
- 	hpriv->map = map;
--	hpriv->map_db = map_db;
+ /**
+  *	piix_pata_cbl_detect - Probe host controller cable detect info
+  *	@ap: Port for which cable detect info is desired
+@@ -682,84 +677,9 @@ static void ich_pata_error_handler(struc
+ 			   ata_std_postreset);
  }
  
- /**
+-/**
+- *	piix_sata_present_mask - determine present mask for SATA host controller
+- *	@ap: Target port
+- *
+- *	Reads SATA PCI device's PCI config register Port Configuration
+- *	and Status (PCS) to determine port and device availability.
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- *
+- *	RETURNS:
+- *	determined present_mask
+- */
+-static unsigned int piix_sata_present_mask(struct ata_port *ap)
+-{
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	struct piix_host_priv *hpriv = ap->host->private_data;
+-	const unsigned int *map = hpriv->map;
+-	int base = 2 * ap->port_no;
+-	unsigned int present_mask = 0;
+-	int port, i;
+-	u16 pcs;
+-
+-	pci_read_config_word(pdev, ICH5_PCS, &pcs);
+-	DPRINTK("ata%u: ENTER, pcs=0x%x base=%d\n", ap->id, pcs, base);
+-
+-	for (i = 0; i < 2; i++) {
+-		port = map[base + i];
+-		if (port < 0)
+-			continue;
+-		if ((ap->flags & PIIX_FLAG_IGNORE_PCS) ||
+-		    (pcs & 1 << (hpriv->map_db->present_shift + port)))
+-			present_mask |= 1 << i;
+-	}
+-
+-	DPRINTK("ata%u: LEAVE, pcs=0x%x present_mask=0x%x\n",
+-		ap->id, pcs, present_mask);
+-
+-	return present_mask;
+-}
+-
+-/**
+- *	piix_sata_softreset - reset SATA host port via ATA SRST
+- *	@ap: port to reset
+- *	@classes: resulting classes of attached devices
+- *
+- *	Reset SATA host port via ATA SRST.  On controllers with
+- *	reliable PCS present bits, the bits are used to determine
+- *	device presence.
+- *
+- *	LOCKING:
+- *	Kernel thread context (may sleep)
+- *
+- *	RETURNS:
+- *	0 on success, -errno otherwise.
+- */
+-static int piix_sata_softreset(struct ata_port *ap, unsigned int *classes)
+-{
+-	unsigned int present_mask;
+-	int i, rc;
+-
+-	present_mask = piix_sata_present_mask(ap);
+-
+-	rc = ata_std_softreset(ap, classes);
+-	if (rc)
+-		return rc;
+-
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		if (!(present_mask & (1 << i)))
+-			classes[i] = ATA_DEV_NONE;
+-	}
+-
+-	return 0;
+-}
+-
+ static void piix_sata_error_handler(struct ata_port *ap)
+ {
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, piix_sata_softreset, NULL,
++	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL,
+ 			   ata_std_postreset);
+ }
+ 
+@@ -1074,18 +994,6 @@ static void __devinit piix_init_pcs(stru
+ 		pci_write_config_word(pdev, ICH5_PCS, new_pcs);
+ 		msleep(150);
+ 	}
+-
+-	if (force_pcs == 1) {
+-		dev_printk(KERN_INFO, &pdev->dev,
+-			   "force ignoring PCS (0x%x)\n", new_pcs);
+-		pinfo[0].flags |= PIIX_FLAG_IGNORE_PCS;
+-		pinfo[1].flags |= PIIX_FLAG_IGNORE_PCS;
+-	} else if (force_pcs == 2) {
+-		dev_printk(KERN_INFO, &pdev->dev,
+-			   "force honoring PCS (0x%x)\n", new_pcs);
+-		pinfo[0].flags &= ~PIIX_FLAG_IGNORE_PCS;
+-		pinfo[1].flags &= ~PIIX_FLAG_IGNORE_PCS;
+-	}
+ }
+ 
+ static void __devinit piix_init_sata_map(struct pci_dev *pdev,
 -- 
 1.4.2.1
 
