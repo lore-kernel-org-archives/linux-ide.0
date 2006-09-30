@@ -1,71 +1,65 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/6] libata: unexport ata_dev_revalidate()
-Date: Sat, 30 Sep 2006 15:46:49 +0900
-Message-ID: <11595988092784-git-send-email-htejun@gmail.com>
-References: <11595988092938-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+From: Prakash Punnoor <prakash@punnoor.de>
+Subject: Re: SATA status reports update
+Date: Sat, 30 Sep 2006 09:26:01 +0200
+Message-ID: <200609300926.04964.prakash@punnoor.de>
+References: <451CE8EC.1020203@garzik.org> <200609291200.56308.prakash@punnoor.de> <451CEF8E.2050601@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed;
+  boundary="nextPart1709138.FVaA91345o";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.238]:990 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751084AbWI3Gq4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Sep 2006 02:46:56 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so1162646wxc
-        for <linux-ide@vger.kernel.org>; Fri, 29 Sep 2006 23:46:55 -0700 (PDT)
-In-Reply-To: <11595988092938-git-send-email-htejun@gmail.com>
+Received: from mail-in-03.arcor-online.net ([151.189.21.43]:54934 "EHLO
+	mail-in-01.arcor-online.net") by vger.kernel.org with ESMTP
+	id S1751077AbWI3H0Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Sep 2006 03:26:24 -0400
+In-Reply-To: <451CEF8E.2050601@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: nabiki@teleline.es, kaos@ocs.com.au, stevenm@umd.edu, jfs@keytradebank.com, 0602@eq.cz, jgarzik@pobox.com, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-ata_dev_revalidate() isn't used outside of libata core.  Unexport it.
+--nextPart1709138.FVaA91345o
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |    1 -
- drivers/ata/libata.h      |    1 +
- include/linux/libata.h    |    1 -
- 3 files changed, 1 insertions(+), 2 deletions(-)
+Am Freitag 29 September 2006 12:03 schrieb Jeff Garzik:
+> Prakash Punnoor wrote:
+> > Well, how would one debug it w/o hw docs? Or is it possible to compare
+> > the patch with a working driver for another chipset?
+>
+> Well, it is based off of the standard ADMA[1] specification, albeit with
+> modifications.  There is pdc_adma.c, which is also based off ADMA.  And
+> the author (from NVIDIA) claims that the driver worked at one time, so
+> maybe it is simply bit rot that broke the driver.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 7ab45f4..6cbb5e7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6119,7 +6119,6 @@ EXPORT_SYMBOL_GPL(ata_std_prereset);
- EXPORT_SYMBOL_GPL(ata_std_softreset);
- EXPORT_SYMBOL_GPL(sata_std_hardreset);
- EXPORT_SYMBOL_GPL(ata_std_postreset);
--EXPORT_SYMBOL_GPL(ata_dev_revalidate);
- EXPORT_SYMBOL_GPL(ata_dev_classify);
- EXPORT_SYMBOL_GPL(ata_dev_pair);
- EXPORT_SYMBOL_GPL(ata_port_disable);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index a5ecb71..0ed263b 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -53,6 +53,7 @@ extern unsigned ata_exec_internal(struct
- extern unsigned int ata_do_simple_cmd(struct ata_device *dev, u8 cmd);
- extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
- 			   int post_reset, u16 *id);
-+extern int ata_dev_revalidate(struct ata_device *dev, int post_reset);
- extern int ata_dev_configure(struct ata_device *dev, int print_info);
- extern int sata_down_spd_limit(struct ata_port *ap);
- extern int sata_set_spd_needed(struct ata_port *ap);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index df44b09..0cd6699 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -701,7 +701,6 @@ extern int ata_std_prereset(struct ata_p
- extern int ata_std_softreset(struct ata_port *ap, unsigned int *classes);
- extern int sata_std_hardreset(struct ata_port *ap, unsigned int *class);
- extern void ata_std_postreset(struct ata_port *ap, unsigned int *classes);
--extern int ata_dev_revalidate(struct ata_device *dev, int post_reset);
- extern void ata_port_disable(struct ata_port *);
- extern void ata_std_ports(struct ata_ioports *ioaddr);
- #ifdef CONFIG_PCI
--- 
-1.4.2.1
+Well, I tried to hack the patch into 2.6.18 driver, but wasn't very=20
+successful. It migt be also due to the case that I have a MCP51 chipset and=
+=20
+if I read the patch correctly it isn't designed  to activate ADMA on MCP51.=
+=20
+Do you know whether MCP51 knows ADMA? If not, how is NCQ to be activated on=
+=20
+MCP51? According to nvidia.com and windows user reports MCP51 does know NCQ.
 
+Cheers,
+=2D-=20
+(=B0=3D                 =3D=B0)
+//\ Prakash Punnoor /\\
+V_/                 \_V
 
+--nextPart1709138.FVaA91345o
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFHhwMxU2n/+9+t5gRAs9hAKDRq2VPIuJz8uAARUJToozpmEZq3wCguWwx
+/UNGHleepNs7heo1HREwLq4=
+=2Qnu
+-----END PGP SIGNATURE-----
+
+--nextPart1709138.FVaA91345o--
