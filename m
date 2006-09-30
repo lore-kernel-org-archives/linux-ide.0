@@ -1,79 +1,47 @@
-From: Alessandro Bono <alessandro.bono@gmail.com>
-Subject: Re: [PATCHSET] libata: implement presence detection using polling IDENTIFY for ata_piix
-Date: Sat, 30 Sep 2006 10:59:23 +0200
-Message-ID: <eflbl2$oq0$1@sea.gmane.org>
-References: <11595988092938-git-send-email-htejun@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: make user scan wait for scan to complete
+Date: Sat, 30 Sep 2006 18:07:17 +0900
+Message-ID: <20060930090717.GO25800@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:17129 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S1751178AbWI3JFJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Sep 2006 05:05:09 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1GTamM-0006iO-9b
-	for linux-ide@vger.kernel.org; Sat, 30 Sep 2006 11:05:02 +0200
-Received: from ppp-96-10.29-151.libero.it ([151.29.10.96])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sat, 30 Sep 2006 11:05:02 +0200
-Received: from alessandro.bono by ppp-96-10.29-151.libero.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sat, 30 Sep 2006 11:05:02 +0200
+Received: from py-out-1112.google.com ([64.233.166.182]:60431 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1751084AbWI3JHW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Sep 2006 05:07:22 -0400
+Received: by py-out-1112.google.com with SMTP id n25so1617260pyg
+        for <linux-ide@vger.kernel.org>; Sat, 30 Sep 2006 02:07:22 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: fajunchen@gmail.com
 
-Tejun Heo wrote:
+Make user scan wait for scan to complete.  This way user can wait for
+warm plug request to complete and is prevented from causing EH event
+storm by repetitively issuing scan request while EH is in progress.
 
-> Please test this patchset.  If you don't feel comfortable with handling
-> patch series, this patchset is also available as...
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Fajun Chen <fajunchen@gmail.com>
 
-Hi Tejun
-
-I can confirm that 2.6.18-git3 + this patchset boot perfectly without any
-delay
-
-libata version 2.00 loaded.
-ata_piix 0000:00:1f.1: version 2.00ac6
-PCI: Enabling device 0000:00:1f.1 (0005 -> 0007)
-ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 7
-PCI: setting IRQ 7 as level-triggered
-ACPI: PCI Interrupt 0000:00:1f.1[A] -> Link [LNKC] -> GSI 7 (level, low) ->
-IRQ 7
-PCI: Setting latency timer of device 0000:00:1f.1 to 64
-ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xFFA0 irq 14
-ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xFFA8 irq 15
-scsi0 : ata_piix
-ata1.00: ATA-6, max UDMA/100, 195371568 sectors: LBA
-ata1.00: ata1: dev 0 multi count 16
-ata1.00: configured for UDMA/100
-scsi1 : ata_piix
-input: AT Translated Set 2 keyboard as /class/input/input0
-input: AT Translated Set 2 keyboard as /class/input/input1
-ata2.00: ATAPI, max UDMA/33
-ata2.00: configured for UDMA/33
-scsi 0:0:0:0: Direct-Access     ATA      FUJITSU MHV2100A 0000 PQ: 0 ANSI: 5
-scsi 1:0:0:0: CD-ROM            MATSHITA UJ-820D          1.01 PQ: 0 ANSI: 5
-SCSI device sda: 195371568 512-byte hdwr sectors (100030 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-SCSI device sda: 195371568 512-byte hdwr sectors (100030 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
- sda: sda1 sda2
-sd 0:0:0:0: Attached scsi disk sda
-.....
-sr0: scsi3-mmc drive: 24x/24x writer cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-sr 1:0:0:0: Attached scsi CD-ROM sr0
-.....
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-sr 1:0:0:0: Attached scsi generic sg1 type 5
-
-
-
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 3986ec8..e1fe832 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3138,10 +3138,12 @@ static int ata_scsi_user_scan(struct Scs
+ 			rc = -EINVAL;
+ 	}
+ 
+-	if (rc == 0)
++	if (rc == 0) {
+ 		ata_port_schedule_eh(ap);
+-
+-	spin_unlock_irqrestore(ap->lock, flags);
++		spin_unlock_irqrestore(ap->lock, flags);
++		ata_port_wait_eh(ap);
++	} else
++		spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	return rc;
+ }
 
