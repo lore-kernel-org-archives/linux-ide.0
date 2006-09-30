@@ -1,162 +1,163 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/6] ata_piix: clean up port flags
-Date: Sat, 30 Sep 2006 15:46:49 +0900
-Message-ID: <1159598809262-git-send-email-htejun@gmail.com>
+Subject: [PATCH 4/6] libata: implement presence detection via polling IDENTIFY
+Date: Sat, 30 Sep 2006 15:46:50 +0900
+Message-ID: <11595988103169-git-send-email-htejun@gmail.com>
 References: <11595988092938-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:42834 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751091AbWI3GrB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Sep 2006 02:47:01 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so1150186nfa
-        for <linux-ide@vger.kernel.org>; Fri, 29 Sep 2006 23:47:00 -0700 (PDT)
+Received: from wx-out-0506.google.com ([66.249.82.236]:36573 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751087AbWI3Gq5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Sep 2006 02:46:57 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so1162647wxc
+        for <linux-ide@vger.kernel.org>; Fri, 29 Sep 2006 23:46:56 -0700 (PDT)
 In-Reply-To: <11595988092938-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: nabiki@teleline.es, kaos@ocs.com.au, stevenm@umd.edu, jfs@keytradebank.com, 0602@eq.cz, jgarzik@pobox.com, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-* move common flags into PIIX_PATA_FLAGS and PIIX_SATA_FLAGS
-* kill unnecessary ATA_FLAG_SRST
+On some controllers (ICHs in piix mode), there is *NO* reliable way to
+determine device presence other than issuing IDENTIFY and see how the
+transaction proceeds by watching the TF status register.
+
+libata acted this way before irq-pio and phantom devices caused very
+little problem but now that IDENTIFY is performed using IRQ drive PIO,
+such phantom devices now result in multiple 30sec timeouts during
+boot.
+
+This patch implements ATA_FLAG_DETECT_POLLING.  If a LLD sets this
+flag, libata core issues the initial IDENTIFY in polling mode and if
+the initial data transfer fails w/ HSM violation, the port is
+considered to be empty thus replicating the old libata and IDE
+behavior.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ata_piix.c |   34 +++++++++++++++-------------------
- 1 files changed, 15 insertions(+), 19 deletions(-)
+ drivers/ata/libata-core.c |   19 +++++++++++++++++--
+ drivers/ata/libata-eh.c   |   20 +++++++++++++++++---
+ drivers/ata/libata.h      |    2 ++
+ include/linux/libata.h    |    3 +++
+ 4 files changed, 39 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 5719704..cdb99dc 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -106,6 +106,9 @@ enum {
- 	PIIX_FLAG_AHCI		= (1 << 27), /* AHCI possible */
- 	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 8e8f359..9c3963e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1268,9 +1268,20 @@ int ata_dev_read_id(struct ata_device *d
  
-+	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS,
-+	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
+ 	tf.protocol = ATA_PROT_PIO;
+ 
++	/* presence detection using polling IDENTIFY? */
++	if (flags & ATA_READID_DETECT)
++		tf.flags |= ATA_TFLAG_POLLING;
 +
- 	/* combined mode.  if set, PATA is channel 0.
- 	 * if clear, PATA is channel 1.
- 	 */
-@@ -453,7 +456,7 @@ static struct ata_port_info piix_port_in
- 	/* piix_pata_33: 0:  PIIX3 or 4 at 33MHz */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.flags		= PIIX_PATA_FLAGS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x06, /* mwdma1-2 ?? CHECK 0 should be ok but slow */
- 		.udma_mask	= ATA_UDMA_MASK_40C,
-@@ -463,7 +466,7 @@ static struct ata_port_info piix_port_in
- 	/* ich_pata_33: 1 	ICH0 - ICH at 33Mhz*/
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SRST | ATA_FLAG_SLAVE_POSS,
-+		.flags		= PIIX_PATA_FLAGS,
- 		.pio_mask 	= 0x1f,	/* pio 0-4 */
- 		.mwdma_mask	= 0x06, /* Check: maybe 0x07  */
- 		.udma_mask	= ATA_UDMA2, /* UDMA33 */
-@@ -472,7 +475,7 @@ static struct ata_port_info piix_port_in
- 	/* ich_pata_66: 2 	ICH controllers up to 66MHz */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SRST | ATA_FLAG_SLAVE_POSS,
-+		.flags		= PIIX_PATA_FLAGS,
- 		.pio_mask 	= 0x1f,	/* pio 0-4 */
- 		.mwdma_mask	= 0x06, /* MWDMA0 is broken on chip */
- 		.udma_mask	= ATA_UDMA4,
-@@ -482,7 +485,7 @@ static struct ata_port_info piix_port_in
- 	/* ich_pata_100: 3 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SRST | ATA_FLAG_SLAVE_POSS | PIIX_FLAG_CHECKINTR,
-+		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_CHECKINTR,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x06, /* mwdma1-2 */
- 		.udma_mask	= ATA_UDMA5, /* udma0-5 */
-@@ -492,7 +495,7 @@ static struct ata_port_info piix_port_in
- 	/* ich_pata_133: 4 	ICH with full UDMA6 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SRST | ATA_FLAG_SLAVE_POSS | PIIX_FLAG_CHECKINTR,
-+		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_CHECKINTR,
- 		.pio_mask 	= 0x1f,	/* pio 0-4 */
- 		.mwdma_mask	= 0x06, /* Check: maybe 0x07  */
- 		.udma_mask	= ATA_UDMA6, /* UDMA133 */
-@@ -502,8 +505,7 @@ static struct ata_port_info piix_port_in
- 	/* ich5_sata: 5 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR |
--				  PIIX_FLAG_IGNORE_PCS,
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_IGNORE_PCS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
-@@ -513,8 +515,7 @@ static struct ata_port_info piix_port_in
- 	/* i6300esb_sata: 6 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SATA |
--				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_IGNORE_PCS,
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_IGNORE_PCS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
-@@ -524,8 +525,7 @@ static struct ata_port_info piix_port_in
- 	/* ich6_sata: 7 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SATA |
--				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_SCR,
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f,	/* udma0-6 */
-@@ -535,8 +535,7 @@ static struct ata_port_info piix_port_in
- 	/* ich6_sata_ahci: 8 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SATA |
--				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_SCR |
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
- 				  PIIX_FLAG_AHCI,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
-@@ -547,8 +546,7 @@ static struct ata_port_info piix_port_in
- 	/* ich6m_sata_ahci: 9 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SATA |
--				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_SCR |
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
- 				  PIIX_FLAG_AHCI,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
-@@ -559,8 +557,7 @@ static struct ata_port_info piix_port_in
- 	/* ich7m_sata_ahci: 10 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SATA |
--				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_SCR |
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
- 				  PIIX_FLAG_AHCI,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
-@@ -571,8 +568,7 @@ static struct ata_port_info piix_port_in
- 	/* ich8_sata_ahci: 11 */
- 	{
- 		.sht		= &piix_sht,
--		.flags		= ATA_FLAG_SATA |
--				  PIIX_FLAG_CHECKINTR | PIIX_FLAG_SCR |
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
- 				  PIIX_FLAG_AHCI,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+ 				     id, sizeof(id[0]) * ATA_ID_WORDS);
+ 	if (err_mask) {
++		if ((flags & ATA_READID_DETECT) &&
++		    (err_mask & AC_ERR_NODEV_HINT)) {
++			DPRINTK("ata%u.%d: NODEV after polling detection\n",
++				ap->id, dev->devno);
++			return -ENOENT;
++		}
++
+ 		rc = -EIO;
+ 		reason = "I/O error";
+ 		goto err_out;
+@@ -4197,8 +4208,12 @@ fsm_start:
+ 					/* device stops HSM for abort/error */
+ 					qc->err_mask |= AC_ERR_DEV;
+ 				else
+-					/* HSM violation. Let EH handle this */
+-					qc->err_mask |= AC_ERR_HSM;
++					/* HSM violation. Let EH handle this.
++					 * Phantom devices also trigger this
++					 * condition.  Mark hint.
++					 */
++					qc->err_mask |= AC_ERR_HSM |
++							AC_ERR_NODEV_HINT;
+ 
+ 				ap->hsm_task_state = HSM_ST_ERR;
+ 				goto fsm_start;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 94faeee..76405fe 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1662,19 +1662,33 @@ static int ata_eh_revalidate_and_attach(
+ 			   ata_class_enabled(ehc->classes[dev->devno])) {
+ 			dev->class = ehc->classes[dev->devno];
+ 
++			if (ap->flags & ATA_FLAG_DETECT_POLLING)
++				readid_flags |= ATA_READID_DETECT;
++
+ 			rc = ata_dev_read_id(dev, &dev->class, readid_flags,
+ 					     dev->id);
+ 			if (rc == 0)
+ 				rc = ata_dev_configure(dev, 1);
++			else if (rc == -ENOENT) {
++				/* IDENTIFY was issued to non-existent
++				 * device.  No need to reset.  Just
++				 * thaw and kill the device.
++				 */
++				ata_eh_thaw_port(ap);
++				dev->class = ATA_DEV_UNKNOWN;
++				rc = 0;
++			}
+ 
+ 			if (rc) {
+ 				dev->class = ATA_DEV_UNKNOWN;
+ 				break;
+ 			}
+ 
+-			spin_lock_irqsave(ap->lock, flags);
+-			ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
+-			spin_unlock_irqrestore(ap->lock, flags);
++			if (ata_dev_enabled(dev)) {
++				spin_lock_irqsave(ap->lock, flags);
++				ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
++				spin_unlock_irqrestore(ap->lock, flags);
++			}
+ 		}
+ 	}
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 34c4054..9d830ef 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -42,6 +42,8 @@ struct ata_scsi_args {
+ enum {
+ 	/* flags for ata_dev_read_id() */
+ 	ATA_READID_POSTRESET	= (1 << 0), /* reading ID after reset */
++	ATA_READID_DETECT	= (1 << 1), /* perform presence detection
++					     * using polling IDENTIFY */
+ };
+ 
+ extern struct workqueue_struct *ata_aux_wq;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0cd6699..41180cc 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -174,6 +174,8 @@ enum {
+ 	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
+ 					      * Register FIS clearing BSY */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
++	ATA_FLAG_DETECT_POLLING	= (1 << 14), /* detect device presence by
++					      * polling IDENTIFY */
+ 
+ 	/* The following flag belongs to ap->pflags but is kept in
+ 	 * ap->flags because it's referenced in many LLDs and will be
+@@ -328,6 +330,7 @@ enum ata_completion_errors {
+ 	AC_ERR_SYSTEM		= (1 << 6), /* system error */
+ 	AC_ERR_INVALID		= (1 << 7), /* invalid argument */
+ 	AC_ERR_OTHER		= (1 << 8), /* unknown */
++	AC_ERR_NODEV_HINT	= (1 << 9), /* polling device detection hint */
+ };
+ 
+ /* forward declarations */
 -- 
 1.4.2.1
 
