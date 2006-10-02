@@ -1,49 +1,39 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: Re: libata-dev.git frozen
-Date: Mon, 02 Oct 2006 17:20:37 +0200
-Message-ID: <45212E45.4000307@gmx.net>
-References: <451F3B33.3080000@garzik.org> <45202B9E.50503@gmx.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: smartctl causing HSM violation on sata_nv, 2.6.18
+Date: Tue, 03 Oct 2006 03:33:42 +0900
+Message-ID: <45215B86.3020106@gmail.com>
+References: <20060927183339.GA28174@jim.sh> <20060928065409.GI25800@htj.dyndns.org> <20060928080945.GA17964@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:37093 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S964774AbWJBPUp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Oct 2006 11:20:45 -0400
-In-Reply-To: <45202B9E.50503@gmx.net>
+Received: from nz-out-0102.google.com ([64.233.162.205]:9589 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S965282AbWJBSdg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Oct 2006 14:33:36 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so547441nzf
+        for <linux-ide@vger.kernel.org>; Mon, 02 Oct 2006 11:33:35 -0700 (PDT)
+In-Reply-To: <20060928080945.GA17964@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Jim Paris <jim@jtan.com>
+Cc: linux-ide@vger.kernel.org, smartmontools-support@lists.sourceforge.net
 
-Uwe Koziolek schrieb:
-> Hi Jeff
->
-> I have sent to you a patch for sata_sis withsis966 before the frozen
-> statement. But i have got no feedback from you. reject ? acknowledged
-> for 2.6.20?
-> What must I do?.
->
-> regards,
-> Uwe Koziolek
->
-> Jeff Garzik wrote:
->> Similar to the netdev announcement, libata-dev.git is now closed to
->> new features.
->>
->> Though really, [my fault] I should have posted this as soon as the
->> merge window opened.  The stuff that goes into each new release, when
->> the merge window opens, should be stuff that has already been through
->> a round of testing in -mm.
->>
->> The updates presented in #upstream -- just minor stuff, really --
->> will go upstream tomorrow.  Everything else will be fixes.
->>
->> And the message for the future is:  don't wait until the merge window
->> opens, to submit your code.  Doing so means it doesn't get the normal
->> amount of testing and review, and is thus discouraged.
->>
->>     Jeff
->>
->
+Jim Paris wrote:
+> Hi Tejun,
+> 
+> Tejun Heo wrote:
+>> The following patch against smartmontools-5.36 converts it to use
+>> HDIO_DRIVE_TASK ioctl for AUTOSAVE and AUTO_OFFLINE which don't have
+>> the above issue.
+> 
+> This patch works like a charm.  Now "smartctl -S on" and "smartctl -o on"
+> works as expected on all of my SATA and IDE controllers.  Thank you!
 
+I've got delivery failure notice for smartmontools-support mail address. 
+  Does anyone know how to contact smartmontools author?
+
+Thanks.
+
+-- 
+tejun
