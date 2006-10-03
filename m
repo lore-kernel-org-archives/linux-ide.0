@@ -1,60 +1,96 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA repeated failure (command 0x35 timeout, status 0xd8)
-Date: Tue, 03 Oct 2006 15:54:53 +0900
-Message-ID: <4522093D.9040506@gmail.com>
-References: <62b0912f0609240816q54c3535bt86f781745ecbfa13@mail.gmail.com>	 <4518B643.6030407@gmail.com> <62b0912f0610011927k789b63f4r370b419e5b98bb5f@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Michael-Luke Jones <jonesml@fastmail.to>
+Subject: [REQUEST] VT6421 PATA support
+Date: Tue, 3 Oct 2006 12:50:44 +0100
+Message-ID: <1554B818-8A3B-492D-BEAB-512BC72EB374@fastmail.to>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: multipart/signed; micalg=sha1; boundary=Apple-Mail-1--967059098; protocol="application/pkcs7-signature"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:53619 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S965273AbWJCGyq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Oct 2006 02:54:46 -0400
-Received: by py-out-1112.google.com with SMTP id n25so2826151pyg
-        for <linux-ide@vger.kernel.org>; Mon, 02 Oct 2006 23:54:45 -0700 (PDT)
-In-Reply-To: <62b0912f0610011927k789b63f4r370b419e5b98bb5f@mail.gmail.com>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:53912 "EHLO
+	out1.smtp.messagingengine.com") by vger.kernel.org with ESMTP
+	id S1750696AbWJCLuy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Oct 2006 07:50:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Molle Bestefich wrote:
-[--snip--]
-> The above repeats itself thru modes UDMA/66, UDMA/44, UDMA/33,
-> UDMA/25, UDMA/16, PIO4, PIO3, PIO1 and PIO0.
 
-Can you full dmesg for this?  Preferably w/ timestamp?
+--Apple-Mail-1--967059098
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=US-ASCII;
+	delsp=yes;
+	format=flowed
 
-> At which point /dev/sdb disappears completely, only to reappear as 
-> /dev/sdh:
-> ===============
-> SCSI device sdh: 398297088 512-byte hdwr sectors (203928 MB)
-> sdh: Write Protect is off
-> sdh: Mode Sense: 00 3a 00 00
-> SCSI device sdh: drive cache: write back
-> SCSI device sdh: 398297088 512-byte hdwr sectors (203928 MB)
-> sdh: Write Protect is off
-> sdh: Mode Sense: 00 3a 00 00
-> SCSI device sdh: drive cache: write back
-> ===============
-> 
-> (Odd.)
-> 
-> I don't get why PowerMax works this drive just fine while Linux
-> doesn't.  Perhaps because PowerMax only uses SMART commands and
-> doesn't transfer data over the SATA bus?
-> 
-> Anyway, with the device now failing fairly consistently, I guess I
-> should begin moving around cables, controllers, disks etc. again.  I'm
-> very worried about doing this though, since I'm pretty sure that it'll
-> break the MD array on the disks very quickly..
+Hi there,
 
-Your problem seems to be hardware transmission error.  I don't know what 
-a powermax is and doesn't know what it does, so you'll have to play the 
-swap-and-see-what-breaks game to figure out the problematic part.
+I understand from the LKML that you've been seriously busy over the  
+last couple of weeks, but I was wondering if I could ask you to have  
+a look at supporting PATA operation on the VT6421. This chip is  
+included in an embedded ARM device called the Freecom FSG-3 which we  
+the NSLU2-Linux project would like to support.
 
-Thanks.
+This has been on the todo list since 2.6.11, as I understand ;)
 
--- 
-tejun
+We have a patch to enable PATA support and while it works under  
+2.6.16, it clearly is not correct, and does not easily apply to 2.6.18.
+http://tinyurl.com/qbrpm
+
+Thanks for your help with this,
+
+Michael-Luke
+NSLU2-Linux Core Team
+
+
+--Apple-Mail-1--967059098
+Content-Transfer-Encoding: base64
+Content-Type: application/pkcs7-signature;
+	name=smime.p7s
+Content-Disposition: attachment;
+	filename=smime.p7s
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGJzCCAuAw
+ggJJoAMCAQICEEHHURnhmUJgrpkCDjXaf+8wDQYJKoZIhvcNAQEEBQAwYjELMAkGA1UEBhMCWkEx
+JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
+ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA2MDUwNDA4NDI1OFoXDTA3MDUwNDA4NDI1
+OFowRTEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEiMCAGCSqGSIb3DQEJARYTam9u
+ZXNtbEBmYXN0bWFpbC50bzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL81zYhIVrEm
+6UfledVDRtVfQro78RqFoROIU1blASRMw75X4jDCnFOgYmTj8Otej8JMll33N+nyWwMqcPwf7GUl
+H6TQB94pWPzYhGs1oChQy0bNpGrP9tiFlihFOokd4WSVnphATWPER6zNU1Be/YKTXHZOMiPu4lCR
+w/B9D2WoSBpgoSjtYziOQAoz8xX/4mXVGOvOQzyZMZ4xEYiF50bDuyQ8Deu65BFm7+JBwcdZu1xH
+bjQv5mF8dAqvP8KtCt7ZBJBW+my6skzkCK3XdWGBL6hiaDuAGoqlvCOiALoVBzLW9UihB33VNdi/
+cFZMpl/V25sU7dLKPHmGqsV/vRECAwEAAaMwMC4wHgYDVR0RBBcwFYETam9uZXNtbEBmYXN0bWFp
+bC50bzAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBAUAA4GBAEeCiolC4X07PTTzzGEnk5hsKPXg
+h4DOpKHg8LYA7QC1cbvxraPQlm5ZoiwYXGObJ7yCZti3w3AzVRcY68UOcQheWieb5+O/7uTiBWdG
+Er2ox+XIUlqLeD1XVYb/VUf3OwclOexEUf1hVBKaXQE6xgq9dYtrpParJBUepDSrQ92KMIIDPzCC
+AqigAwIBAgIBDTANBgkqhkiG9w0BAQUFADCB0TELMAkGA1UEBhMCWkExFTATBgNVBAgTDFdlc3Rl
+cm4gQ2FwZTESMBAGA1UEBxMJQ2FwZSBUb3duMRowGAYDVQQKExFUaGF3dGUgQ29uc3VsdGluZzEo
+MCYGA1UECxMfQ2VydGlmaWNhdGlvbiBTZXJ2aWNlcyBEaXZpc2lvbjEkMCIGA1UEAxMbVGhhd3Rl
+IFBlcnNvbmFsIEZyZWVtYWlsIENBMSswKQYJKoZIhvcNAQkBFhxwZXJzb25hbC1mcmVlbWFpbEB0
+aGF3dGUuY29tMB4XDTAzMDcxNzAwMDAwMFoXDTEzMDcxNjIzNTk1OVowYjELMAkGA1UEBhMCWkEx
+JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
+ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDE
+pjxVc1X7TrnKmVoeaMB1BHCd3+n/ox7svc31W/Iadr1/DDph8r9RzgHU5VAKMNcCY1osiRVwjt3J
+8CuFWqo/cVbLrzwLB+fxH5E2JCoTzyvV84J3PQO+K/67GD4Hv0CAAmTXp6a7n2XRxSpUhQ9IBH+n
+ttE8YQRAHmQZcmC3+wIDAQABo4GUMIGRMBIGA1UdEwEB/wQIMAYBAf8CAQAwQwYDVR0fBDwwOjA4
+oDagNIYyaHR0cDovL2NybC50aGF3dGUuY29tL1RoYXd0ZVBlcnNvbmFsRnJlZW1haWxDQS5jcmww
+CwYDVR0PBAQDAgEGMCkGA1UdEQQiMCCkHjAcMRowGAYDVQQDExFQcml2YXRlTGFiZWwyLTEzODAN
+BgkqhkiG9w0BAQUFAAOBgQBIjNFQg+oLLswNo2asZw9/r6y+whehQ5aUnX9MIbj4Nh+qLZ82L8D0
+HFAgk3A8/a3hYWLD2ToZfoSxmRsAxRoLgnSeJVCUYsfbJ3FXJY3dqZw5jowgT2Vfldr394fWxghO
+rvbqNOUQGls1TXfjViF4gtwhGTXeJLHTHUb/XV9lTzGCAxAwggMMAgEBMHYwYjELMAkGA1UEBhMC
+WkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0
+ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhBBx1EZ4ZlCYK6ZAg412n/vMAkGBSsOAwIa
+BQCgggFvMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MTAwMzEx
+NTA0NVowIwYJKoZIhvcNAQkEMRYEFP0OkOukR4we+znU4AFOT1Mo4AV7MIGFBgkrBgEEAYI3EAQx
+eDB2MGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQu
+MSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIQQcdRGeGZQmCu
+mQIONdp/7zCBhwYLKoZIhvcNAQkQAgsxeKB2MGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
+dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
+aWwgSXNzdWluZyBDQQIQQcdRGeGZQmCumQIONdp/7zANBgkqhkiG9w0BAQEFAASCAQATz2MhU/Zc
+w/ShPGvrt1rmDKdRn34p9XSehnEJ5FXIl1UAiBd1mhkZDacGKisvhEHxAyXFG19SjsyEZsk5whCQ
+B+/cfz4mqYos/wtUMEIMrLAgPzwQ9cdNKI+p0KSqBTzymQsQYk2tJG8A3K9nOJx9Mas0xLN0C1YP
+47lnRs3dpKOkMqYCiuIk2zKX56X5Gb8I48zgmstZ8tOW1QH2DS/0OICEys0ugzIP+uBqSJsbwD2S
+nE/+9vpmaab8pEXZEgBzAHjXnuLhpxhi8sLuakbho9Z8jk+yCveG4fnJmUK09ycdWG/w5h15Bijd
+7qc/vSpQs9Z/vzCUN6r7MA8/pkf/AAAAAAAA
+
+--Apple-Mail-1--967059098--
