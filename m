@@ -1,96 +1,108 @@
-From: Michael-Luke Jones <jonesml@fastmail.to>
-Subject: [REQUEST] VT6421 PATA support
-Date: Tue, 3 Oct 2006 12:50:44 +0100
-Message-ID: <1554B818-8A3B-492D-BEAB-512BC72EB374@fastmail.to>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: multipart/signed; micalg=sha1; boundary=Apple-Mail-1--967059098; protocol="application/pkcs7-signature"
+From: Jonathan Dieter <jdieter@gmail.com>
+Subject: MAP value 01b for ICH6M
+Date: Tue, 03 Oct 2006 16:42:09 +0300
+Message-ID: <452268B1.8090304@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:53912 "EHLO
-	out1.smtp.messagingengine.com") by vger.kernel.org with ESMTP
-	id S1750696AbWJCLuy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Oct 2006 07:50:54 -0400
+Received: from nf-out-0910.google.com ([64.233.182.189]:25205 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1750820AbWJCNmT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Oct 2006 09:42:19 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so167879nfa
+        for <linux-ide@vger.kernel.org>; Tue, 03 Oct 2006 06:42:18 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+Cc: Tom Deblauwe <tom.deblauwe@telenet.be>
+
+Tejun, I've received an e-mail from Tom Deblauwe about the ata_piix.c 
+fix for the ICH7M controllers with MAP value 01b.  It looks like he has 
+a ICH6M controller with MAP value 01b.  I'm including the relevant snips 
+from his dmesg and lspci.  He has already used my original patch that 
+worked against both ICH6M and ICH7M controllers, not the one the made it 
+into the 2.6.18 kernel that just worked against the ICH7M controller.  
+I've CC'd him, so if you want to communicate directly with him, his 
+e-mail is included in the header.
+
+Thanks,
+Jonathan
+
+-------- Original Message --------
+From: 	Tom Deblauwe <tom.deblauwe "at" telenet "dat" be>
+To: 	Jonathan Dieter <jdieter@gmail.com>
+Subject: 	Re: Kernel 2.6.18 patch
 
 
---Apple-Mail-1--967059098
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=US-ASCII;
-	delsp=yes;
-	format=flowed
+Here is the log of dmesg and lspci -v:
 
-Hi there,
+Linux version 2.6.17.13 (root@majorTom) (gcc version 4.1.2 20060901 
+(prerelease) (Debian 4.1.1-13)) #1 SMP PREEMPT Thu Sep 14 14:38:22 CEST 2006
+BIOS-provided physical RAM map:
+BIOS-e820: 0000000000000000 - 000000000009f800 (usable)
+BIOS-e820: 000000000009f800 - 00000000000a0000 (reserved)
+BIOS-e820: 00000000000dc000 - 0000000000100000 (reserved)
+BIOS-e820: 0000000000100000 - 000000001f690000 (usable)
+BIOS-e820: 000000001f690000 - 000000001f6a2000 (ACPI data)
+BIOS-e820: 000000001f6a2000 - 000000001f700000 (ACPI NVS)
+BIOS-e820: 000000001f700000 - 0000000020000000 (reserved)
+BIOS-e820: 00000000e0000000 - 00000000f0006000 (reserved)
+BIOS-e820: 00000000f0008000 - 00000000f000c000 (reserved)
+BIOS-e820: 00000000fed20000 - 00000000fed90000 (reserved)
+BIOS-e820: 00000000ff000000 - 0000000100000000 (reserved)
 
-I understand from the LKML that you've been seriously busy over the  
-last couple of weeks, but I was wondering if I could ask you to have  
-a look at supporting PATA operation on the VT6421. This chip is  
-included in an embedded ARM device called the Freecom FSG-3 which we  
-the NSLU2-Linux project would like to support.
+[snip]
 
-This has been on the todo list since 2.6.11, as I understand ;)
+SCSI subsystem initialized
+libata version 1.20 loaded.
+ahci 0000:00:1f.2: version 1.2
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 17 (level, low) -> IRQ 169
+ACPI: PCI interrupt for device 0000:00:1f.2 disabled
+ahci: probe of 0000:00:1f.2 failed with error -12
+ata_piix 0000:00:1f.2: version 1.05
+ata_piix 0000:00:1f.2: MAP [ IDE IDE P1 P3 ]
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 17 (level, low) -> IRQ 169
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0x18B0 irq 14
+usbcore: registered new driver usbfs
+usbcore: registered new driver hub
+USB Universal Host Controller Interface driver v3.0
+ata1: dev 0 cfg 49:2f00 82:346b 83:7f09 84:6023 85:3c69 86:3d01 87:6003 
+88:203f
+ata1: dev 0 ATA-7, max UDMA/100, 195371568 sectors: LBA48
+ata1: dev 1 cfg 49:0f00 82:421c 83:0000 84:0000 85:0000 86:0000 87:0000 
+88:0407
+ata1: dev 1 ATAPI, max UDMA/33
+ata1: dev 0 configured for UDMA/33
+ata1: dev 1 configured for UDMA/33
+scsi0 : ata_piix
+ Vendor: ATA       Model: SAMSUNG HM100JC   Rev: YN10
+ Type:   Direct-Access                      ANSI SCSI revision: 05
+ Vendor: HL-DT-ST  Model: DVDRAM GMA-4082N  Rev: HA01
+ Type:   CD-ROM                             ANSI SCSI revision: 05
+ata2: SATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0x18B8 irq 15
+ata2: SATA port has no device.
+scsi1 : ata_piix
 
-We have a patch to enable PATA support and while it works under  
-2.6.16, it clearly is not correct, and does not easily apply to 2.6.18.
-http://tinyurl.com/qbrpm
+[snip]
 
-Thanks for your help with this,
+LSPCI -V:
 
-Michael-Luke
-NSLU2-Linux Core Team
+majortom@majorTom:~$ lspci -v
 
+[snip]
 
---Apple-Mail-1--967059098
-Content-Transfer-Encoding: base64
-Content-Type: application/pkcs7-signature;
-	name=smime.p7s
-Content-Disposition: attachment;
-	filename=smime.p7s
+00:1f.2 IDE interface: Intel Corporation 82801FBM (ICH6M) SATA Controller (rev 
+03) (prog-if 80 [Master])
+       Subsystem: Wistron Corp. Unknown device 4042
+       Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 169
+       I/O ports at <unassigned>
+       I/O ports at <unassigned>
+       I/O ports at <unassigned>
+       I/O ports at <unassigned>
+       I/O ports at 18b0 [size=16]
+       Capabilities: <access denied>
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGJzCCAuAw
-ggJJoAMCAQICEEHHURnhmUJgrpkCDjXaf+8wDQYJKoZIhvcNAQEEBQAwYjELMAkGA1UEBhMCWkEx
-JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
-ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA2MDUwNDA4NDI1OFoXDTA3MDUwNDA4NDI1
-OFowRTEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEiMCAGCSqGSIb3DQEJARYTam9u
-ZXNtbEBmYXN0bWFpbC50bzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL81zYhIVrEm
-6UfledVDRtVfQro78RqFoROIU1blASRMw75X4jDCnFOgYmTj8Otej8JMll33N+nyWwMqcPwf7GUl
-H6TQB94pWPzYhGs1oChQy0bNpGrP9tiFlihFOokd4WSVnphATWPER6zNU1Be/YKTXHZOMiPu4lCR
-w/B9D2WoSBpgoSjtYziOQAoz8xX/4mXVGOvOQzyZMZ4xEYiF50bDuyQ8Deu65BFm7+JBwcdZu1xH
-bjQv5mF8dAqvP8KtCt7ZBJBW+my6skzkCK3XdWGBL6hiaDuAGoqlvCOiALoVBzLW9UihB33VNdi/
-cFZMpl/V25sU7dLKPHmGqsV/vRECAwEAAaMwMC4wHgYDVR0RBBcwFYETam9uZXNtbEBmYXN0bWFp
-bC50bzAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBAUAA4GBAEeCiolC4X07PTTzzGEnk5hsKPXg
-h4DOpKHg8LYA7QC1cbvxraPQlm5ZoiwYXGObJ7yCZti3w3AzVRcY68UOcQheWieb5+O/7uTiBWdG
-Er2ox+XIUlqLeD1XVYb/VUf3OwclOexEUf1hVBKaXQE6xgq9dYtrpParJBUepDSrQ92KMIIDPzCC
-AqigAwIBAgIBDTANBgkqhkiG9w0BAQUFADCB0TELMAkGA1UEBhMCWkExFTATBgNVBAgTDFdlc3Rl
-cm4gQ2FwZTESMBAGA1UEBxMJQ2FwZSBUb3duMRowGAYDVQQKExFUaGF3dGUgQ29uc3VsdGluZzEo
-MCYGA1UECxMfQ2VydGlmaWNhdGlvbiBTZXJ2aWNlcyBEaXZpc2lvbjEkMCIGA1UEAxMbVGhhd3Rl
-IFBlcnNvbmFsIEZyZWVtYWlsIENBMSswKQYJKoZIhvcNAQkBFhxwZXJzb25hbC1mcmVlbWFpbEB0
-aGF3dGUuY29tMB4XDTAzMDcxNzAwMDAwMFoXDTEzMDcxNjIzNTk1OVowYjELMAkGA1UEBhMCWkEx
-JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
-ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDE
-pjxVc1X7TrnKmVoeaMB1BHCd3+n/ox7svc31W/Iadr1/DDph8r9RzgHU5VAKMNcCY1osiRVwjt3J
-8CuFWqo/cVbLrzwLB+fxH5E2JCoTzyvV84J3PQO+K/67GD4Hv0CAAmTXp6a7n2XRxSpUhQ9IBH+n
-ttE8YQRAHmQZcmC3+wIDAQABo4GUMIGRMBIGA1UdEwEB/wQIMAYBAf8CAQAwQwYDVR0fBDwwOjA4
-oDagNIYyaHR0cDovL2NybC50aGF3dGUuY29tL1RoYXd0ZVBlcnNvbmFsRnJlZW1haWxDQS5jcmww
-CwYDVR0PBAQDAgEGMCkGA1UdEQQiMCCkHjAcMRowGAYDVQQDExFQcml2YXRlTGFiZWwyLTEzODAN
-BgkqhkiG9w0BAQUFAAOBgQBIjNFQg+oLLswNo2asZw9/r6y+whehQ5aUnX9MIbj4Nh+qLZ82L8D0
-HFAgk3A8/a3hYWLD2ToZfoSxmRsAxRoLgnSeJVCUYsfbJ3FXJY3dqZw5jowgT2Vfldr394fWxghO
-rvbqNOUQGls1TXfjViF4gtwhGTXeJLHTHUb/XV9lTzGCAxAwggMMAgEBMHYwYjELMAkGA1UEBhMC
-WkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0
-ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhBBx1EZ4ZlCYK6ZAg412n/vMAkGBSsOAwIa
-BQCgggFvMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MTAwMzEx
-NTA0NVowIwYJKoZIhvcNAQkEMRYEFP0OkOukR4we+znU4AFOT1Mo4AV7MIGFBgkrBgEEAYI3EAQx
-eDB2MGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQu
-MSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIQQcdRGeGZQmCu
-mQIONdp/7zCBhwYLKoZIhvcNAQkQAgsxeKB2MGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3
-dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1h
-aWwgSXNzdWluZyBDQQIQQcdRGeGZQmCumQIONdp/7zANBgkqhkiG9w0BAQEFAASCAQATz2MhU/Zc
-w/ShPGvrt1rmDKdRn34p9XSehnEJ5FXIl1UAiBd1mhkZDacGKisvhEHxAyXFG19SjsyEZsk5whCQ
-B+/cfz4mqYos/wtUMEIMrLAgPzwQ9cdNKI+p0KSqBTzymQsQYk2tJG8A3K9nOJx9Mas0xLN0C1YP
-47lnRs3dpKOkMqYCiuIk2zKX56X5Gb8I48zgmstZ8tOW1QH2DS/0OICEys0ugzIP+uBqSJsbwD2S
-nE/+9vpmaab8pEXZEgBzAHjXnuLhpxhi8sLuakbho9Z8jk+yCveG4fnJmUK09ycdWG/w5h15Bijd
-7qc/vSpQs9Z/vzCUN6r7MA8/pkf/AAAAAAAA
+[snip]
 
---Apple-Mail-1--967059098--
