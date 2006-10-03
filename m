@@ -1,55 +1,94 @@
-From: Thierry Vignaud <tvignaud@mandriva.com>
-Subject: Re: [Fwd: [BUG] sata_via doesn't detect anymore my disks (broken between rc1 and rc3)]
-Date: Tue, 03 Oct 2006 17:00:21 +0200
-Message-ID: <m2k63hfnqy.fsf@vador.mandriva.com>
-References: <m2wt98bio1.fsf@vador.mandriva.com>
-	<m2sljwbil7.fsf@vador.mandriva.com> <44E37BD4.8010709@pobox.com>
-	<m23bbva9cs.fsf@vador.mandriva.com> <44E46E0E.4060703@gmail.com>
-	<m2fyfv7a8s.fsf@vador.mandriva.com> <44EB32AD.1080305@gmail.com>
-	<m2fyfnciky.fsf@vador.mandriva.com> <m2d5aprtw0.fsf@vador.mandriva.com>
-	<44EEEA29.1010008@gmail.com> <20060825135540.GE21866@htj.dyndns.org>
-	<m2ac5soqjl.fsf@vador.mandriva.com> <44EF1158.1040507@gmail.com>
-	<m2r6z1c4k9.fsf@vador.mandriva.com> <44F30ABE.2050803@gmail.com>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: [patch] 2.6.18: 32-bit compatibility HDIO IOCTLs
+Date: Tue, 3 Oct 2006 17:20:20 +0100 (BST)
+Message-ID: <Pine.LNX.4.64N.0610031703010.4642@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ezoffice.mandriva.com ([84.14.106.134]:14853 "EHLO
-	office.mandriva.com") by vger.kernel.org with ESMTP id S964800AbWJCPAY
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Oct 2006 11:00:24 -0400
-In-Reply-To: <44F30ABE.2050803@gmail.com> (Tejun Heo's message of "Tue, 29 Aug 2006 00:24:46 +0900")
+Received: from pollux.ds.pg.gda.pl ([153.19.208.7]:24327 "EHLO
+	pollux.ds.pg.gda.pl") by vger.kernel.org with ESMTP
+	id S1750888AbWJCQUV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Oct 2006 12:20:21 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo <htejun@gmail.com> writes:
+Hello,
 
-> >>>>> The second patch is essentially identical to what you did the
-> >>>>> one liner.  Can you please check it once more?  I'll prepare
-> >>>>> old-sequence hardreset in the meantime.
-> >>>> Okay, here's the old-sequence hardreset patch.  This should have
-> >>>> the highest chance of working.  This patch should be applied on
-> >>>> top of the vt6420 patch.
-> >>> On top of which patch?
-> >>> I just tried to apply it on top of:
-> >>> - your last week patch
-> >>> - your two patches of this week
-> >>> and it does *not* apply on top of anyone...
-> >> Arghh... Sorry.  I sent the wrong version.  This patch is against
-> >> #upstream while I should have sent the one against #upstream-fixes.
-> >>
-> >>> Couldn't you either check first your patch or (better) just send a
-> >>> patch against vanilla 2.6.18-rc4-mm2?
-> >> I've attached whole sata_via.c to the other mail.  I think that should
-> >> do the trick.
-> > It didn't (tested by overwriting 2.6.18-rc4-mm2's driver).
-> > I tried a few reset methods combinations w/os success.
-> > Like in other faillure cases, the driver saw the two links but failed
-> > to see the hd attached to the second sata link.
-> 
-> Hmmm.. That's very weird.  The detection sequence is almost
-> identical to the original code.  Argh.....  Any ideas?
+ A couple of HDIO IOCTLs are not yet handled and a few others are marked 
+as using a pointer rather than an unsigned long.  The formers include: 
+HDIO_GET_WCACHE, HDIO_GET_ACOUSTIC, HDIO_GET_ADDRESS and 
+HDIO_GET_BUSSTATE.  The latters are: HDIO_SET_MULTCOUNT, 
+HDIO_SET_UNMASKINTR, HDIO_SET_KEEPSETTINGS, HDIO_SET_32BIT, 
+HDIO_SET_NOWERR, HDIO_SET_DMA, HDIO_SET_PIO_MODE and HDIO_SET_NICE.  
+Additionally 0x330 used to be HDIO_GETGEO_BIG and may be issued by 32-bit 
+`hdparm' run on a 64-bit kernel making Linux complain loudly.
 
-now that the defective bits have hitten the mainstream kernel, I've
-entered the bug into http://bugzilla.kernel.org/show_bug.cgi?id=7255
+ The following patch fixes these issues.  Please apply.
+
+  Maciej
+
+Signed-off-by: Maciej W. Rozycki <macro@linux-mips.org>
+
+patch-mips-2.6.15-20060124-hdio-ioctl32-3
+diff -up --recursive --new-file linux-mips-2.6.15-20060124.macro/fs/compat_ioctl.c linux-mips-2.6.15-20060124/fs/compat_ioctl.c
+--- linux-mips-2.6.15-20060124.macro/fs/compat_ioctl.c	2006-01-12 06:00:27.000000000 +0000
++++ linux-mips-2.6.15-20060124/fs/compat_ioctl.c	2006-02-01 21:32:14.000000000 +0000
+@@ -2776,13 +2776,17 @@ HANDLE_IOCTL(0x1260, broken_blkgetsize)
+ HANDLE_IOCTL(BLKFRAGET, w_long)
+ HANDLE_IOCTL(BLKSECTGET, w_long)
+ HANDLE_IOCTL(BLKPG, blkpg_ioctl_trans)
+-HANDLE_IOCTL(HDIO_GET_KEEPSETTINGS, hdio_ioctl_trans)
+ HANDLE_IOCTL(HDIO_GET_UNMASKINTR, hdio_ioctl_trans)
+-HANDLE_IOCTL(HDIO_GET_DMA, hdio_ioctl_trans)
+-HANDLE_IOCTL(HDIO_GET_32BIT, hdio_ioctl_trans)
+ HANDLE_IOCTL(HDIO_GET_MULTCOUNT, hdio_ioctl_trans)
++HANDLE_IOCTL(HDIO_GET_KEEPSETTINGS, hdio_ioctl_trans)
++HANDLE_IOCTL(HDIO_GET_32BIT, hdio_ioctl_trans)
+ HANDLE_IOCTL(HDIO_GET_NOWERR, hdio_ioctl_trans)
++HANDLE_IOCTL(HDIO_GET_DMA, hdio_ioctl_trans)
+ HANDLE_IOCTL(HDIO_GET_NICE, hdio_ioctl_trans)
++HANDLE_IOCTL(HDIO_GET_WCACHE, hdio_ioctl_trans)
++HANDLE_IOCTL(HDIO_GET_ACOUSTIC, hdio_ioctl_trans)
++HANDLE_IOCTL(HDIO_GET_ADDRESS, hdio_ioctl_trans)
++HANDLE_IOCTL(HDIO_GET_BUSSTATE, hdio_ioctl_trans)
+ HANDLE_IOCTL(FDSETPRM32, fd_ioctl_trans)
+ HANDLE_IOCTL(FDDEFPRM32, fd_ioctl_trans)
+ HANDLE_IOCTL(FDGETPRM32, fd_ioctl_trans)
+diff -up --recursive --new-file linux-mips-2.6.15-20060124.macro/include/linux/compat_ioctl.h linux-mips-2.6.15-20060124/include/linux/compat_ioctl.h
+--- linux-mips-2.6.15-20060124.macro/include/linux/compat_ioctl.h	2006-01-12 06:00:39.000000000 +0000
++++ linux-mips-2.6.15-20060124/include/linux/compat_ioctl.h	2006-02-01 21:31:56.000000000 +0000
+@@ -61,17 +61,23 @@ COMPATIBLE_IOCTL(FIGETBSZ)
+  *         Some need translations, these do not.
+  */
+ COMPATIBLE_IOCTL(HDIO_GET_IDENTITY)
+-COMPATIBLE_IOCTL(HDIO_SET_DMA)
+-COMPATIBLE_IOCTL(HDIO_SET_UNMASKINTR)
+-COMPATIBLE_IOCTL(HDIO_SET_NOWERR)
+-COMPATIBLE_IOCTL(HDIO_SET_32BIT)
+-COMPATIBLE_IOCTL(HDIO_SET_MULTCOUNT)
+-COMPATIBLE_IOCTL(HDIO_DRIVE_CMD)
+ COMPATIBLE_IOCTL(HDIO_DRIVE_TASK)
+-COMPATIBLE_IOCTL(HDIO_SET_PIO_MODE)
+-COMPATIBLE_IOCTL(HDIO_SET_NICE)
+-COMPATIBLE_IOCTL(HDIO_SET_KEEPSETTINGS)
++COMPATIBLE_IOCTL(HDIO_DRIVE_CMD)
++ULONG_IOCTL(HDIO_SET_MULTCOUNT)
++ULONG_IOCTL(HDIO_SET_UNMASKINTR)
++ULONG_IOCTL(HDIO_SET_KEEPSETTINGS)
++ULONG_IOCTL(HDIO_SET_32BIT)
++ULONG_IOCTL(HDIO_SET_NOWERR)
++ULONG_IOCTL(HDIO_SET_DMA)
++ULONG_IOCTL(HDIO_SET_PIO_MODE)
++ULONG_IOCTL(HDIO_SET_NICE)
++ULONG_IOCTL(HDIO_SET_WCACHE)
++ULONG_IOCTL(HDIO_SET_ACOUSTIC)
++ULONG_IOCTL(HDIO_SET_BUSSTATE)
++ULONG_IOCTL(HDIO_SET_ADDRESS)
+ COMPATIBLE_IOCTL(HDIO_SCAN_HWIF)
++/* 0x330 is reserved -- it used to be HDIO_GETGEO_BIG */
++COMPATIBLE_IOCTL(0x330)
+ /* 0x02 -- Floppy ioctls */
+ COMPATIBLE_IOCTL(FDMSGON)
+ COMPATIBLE_IOCTL(FDMSGOFF)
