@@ -1,74 +1,192 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [git patches] libata updates
-Date: Wed, 04 Oct 2006 12:47:14 +0100
-Message-ID: <1159962434.25772.19.camel@localhost.localdomain>
-References: <20061004060212.GA4653@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: girish <girishvg@gmail.com>
+Subject: Re: [PATCH] Generic platform device IDE driver
+Date: Wed, 4 Oct 2006 20:30:36 +0900
+Message-ID: <A1AC65D6-07AC-42CB-80F1-9621DBCACF83@gmail.com>
+References: <20061004074535.GA7180@localhost.hsdv.com>
+Mime-Version: 1.0 (Apple Message framework v749)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56045 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030816AbWJDLWW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Oct 2006 07:22:22 -0400
-In-Reply-To: <20061004060212.GA4653@havoc.gtf.org>
+Received: from py-out-1112.google.com ([64.233.166.176]:27028 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1030788AbWJDLao (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Oct 2006 07:30:44 -0400
+Received: by py-out-1112.google.com with SMTP id n25so239015pyg
+        for <linux-ide@vger.kernel.org>; Wed, 04 Oct 2006 04:30:43 -0700 (PDT)
+In-Reply-To: <20061004074535.GA7180@localhost.hsdv.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Paul Mundt <lethal@linux-sh.org>
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, rmk@arm.linux.org.uk, gregkh@suse.de, ysato@users.sourceforge.jp
 
-Ar Mer, 2006-10-04 am 02:02 -0400, ysgrifennodd Jeff Garzik:
-> Final libata batch for 2.6.19.  Meant to send this a couple days ago.
-> 
-> Nothing interesting:  minor bugfix, some cleanups, improved diagnostics.
 
-Please also include the following. The first fixes support for rev c8 of
-the ALi/ULi PATA. The second keeps pcmcia in sync so ide_cs and
-pata_pcmcia are interchangable, both are only changes to constants.
+question:  where is linux/ide-platform.h header?
 
-Right now rev 0xC8 and higher don't work with libata but 0xc8 is in the
-field now.
+On Oct 4, 2006, at 4:45 PM, Paul Mundt wrote:
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-mm3/drivers/ata/pata_ali.c linux-2.6.18-mm3/drivers/ata/pata_ali.c
---- linux.vanilla-2.6.18-mm3/drivers/ata/pata_ali.c	2006-10-03 19:23:02.000000000 +0100
-+++ linux-2.6.18-mm3/drivers/ata/pata_ali.c	2006-10-03 23:26:09.000000000 +0100
-@@ -34,7 +34,7 @@
- #include <linux/dmi.h>
- 
- #define DRV_NAME "pata_ali"
--#define DRV_VERSION "0.6.5"
-+#define DRV_VERSION "0.6.6"
- 
- /*
-  *	Cable special cases
-@@ -630,7 +630,7 @@
- 		pci_read_config_byte(pdev, 0x53, &tmp);
- 		if (rev <= 0x20)
- 			tmp &= ~0x02;
--		if (rev == 0xc7)
-+		if (rev >= 0xc7)
- 			tmp |= 0x03;
- 		else
- 			tmp |= 0x01;	/* CD_ROM enable for DMA */
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-mm3/drivers/ata/pata_pcmcia.c linux-2.6.18-mm3/drivers/ata/pata_pcmcia.c
---- linux.vanilla-2.6.18-mm3/drivers/ata/pata_pcmcia.c	2006-10-03 19:23:02.000000000 +0100
-+++ linux-2.6.18-mm3/drivers/ata/pata_pcmcia.c	2006-09-28 15:24:37.000000000 +0100
-@@ -42,7 +42,7 @@
- 
- 
- #define DRV_NAME "pata_pcmcia"
--#define DRV_VERSION "0.2.9"
-+#define DRV_VERSION "0.2.11"
- 
- /*
-  *	Private data structure to glue stuff together
-@@ -355,6 +355,8 @@
- 	PCMCIA_DEVICE_PROD_ID12("SAMSUNG", "04/05/06", 0x43d74cb4, 0x6a22777d),
- 	PCMCIA_DEVICE_PROD_ID12("SMI VENDOR", "SMI PRODUCT", 0x30896c92, 0x703cc5f6),
- 	PCMCIA_DEVICE_PROD_ID12("TOSHIBA", "MK2001MPL", 0xb4585a1a, 0x3489e003),
-+	PCMCIA_DEVICE_PROD_ID1("TRANSCEND    512M   ", 0xd0909443),
-+	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS4GCF120", 0x709b1bf1, 0xf54a91c8),
- 	PCMCIA_DEVICE_PROD_ID12("WIT", "IDE16", 0x244e5994, 0x3e232852),
- 	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
- 	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
+> Currently the platforms that have very simplistic needs for IDE  
+> devices
+> are forced to invent their own driver for adding the built-in devices.
+> At the moment ARM is the in-tree user in this category, h8300 could be
+> switched to something more generic, and SH is roughly in the same
+> category as ARM.
+>
+> The only constant that really tends to change between these platforms
+> are the I/O base and the IRQ, with everything else rather constant.  
+> The
+> ctl base could also change, but everyone seems to keep it at 0x206, so
+> it's debatable whether it's worth leaving this configurable or not.
+>
+> I've hacked together a quick driver, 'ide-platform' (for lack of a
+> better name), that allows for these specifics to be passed in via
+> platform device resources (registering a device per-port) rather than
+> having to add more of these things to drivers/ide.
+>
+> With this we can remove ide_arm (and the h8300 driver can likely be
+> reworked to use this too), and I don't have to invent a new driver for
+> SH that does effectively the same thing.
+>
+> This is intended purely for the simple NO_DMA ide_generic case..  
+> nothing
+> complicated.
+>
+> What do people think about this, is there a better way to do this?
+>
+> Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+>
+> --
+>
+>  drivers/ide/Makefile       |    3 +-
+>  drivers/ide/ide-platform.c |   60 +++++++++++++++++++++++++++++++++ 
+> ++++++++++++
+>  drivers/ide/ide.c          |    3 ++
+>  3 files changed, 65 insertions(+), 1 deletion(-)
+>
+> commit f2da2c8c9b5e648ca9a43d9d3fed9bcd356f0efd
+> Author: Paul Mundt <lethal@linux-sh.org>
+> Date:   Wed Oct 4 16:41:21 2006 +0900
+>
+>     ide: Simple platform device IDE driver.
+>
+>     This adds a trivial platform device IDE driver. Users are  
+> required to
+>     register a couple of resources:
+>
+>     	- I/O Base
+>     	- CTL Base
+>     	- IRQ
+>
+>     Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+>
+> diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
+> index 569fae7..24c9a0f 100644
+> --- a/drivers/ide/Makefile
+> +++ b/drivers/ide/Makefile
+> @@ -13,7 +13,8 @@ EXTRA_CFLAGS				+= -Idrivers/ide
+>
+>  obj-$(CONFIG_BLK_DEV_IDE)		+= pci/
+>
+> -ide-core-y += ide.o ide-io.o ide-iops.o ide-lib.o ide-probe.o ide- 
+> taskfile.o
+> +ide-core-y += ide.o ide-io.o ide-iops.o ide-lib.o ide-probe.o ide- 
+> taskfile.o \
+> +	      ide-platform.o
+>
+>  ide-core-$(CONFIG_BLK_DEV_CMD640)	+= pci/cmd640.o
+>
+> diff --git a/drivers/ide/ide-platform.c b/drivers/ide/ide-platform.c
+> new file mode 100644
+> index 0000000..6d89878
+> --- /dev/null
+> +++ b/drivers/ide/ide-platform.c
+> @@ -0,0 +1,60 @@
+> +/*
+> + * Generic IDE platform device driver
+> + *
+> + * Copyright (C) 2006  Paul Mundt
+> + *
+> + * This file is subject to the terms and conditions of the GNU  
+> General Public
+> + * License.  See the file "COPYING" in the main directory of this  
+> archive
+> + * for more details.
+> + */
+> +#include <linux/init.h>
+> +#include <linux/ide.h>
+> +#include <linux/platform_device.h>
+> +
+> +/*
+> + * Users use per-port registration with a simple set of 3 resources
+> + * per port:
+> + * 		- I/O Base (IORESOURCE_IO)
+> + * 		- CTL Base (IORESOURCE_IO)
+> + * 		- IRQ	   (IORESOURCE_IRQ)
+> + */
+> +static int __devinit ide_platform_probe(struct platform_device *dev)
+> +{
+> +	struct resource *io_res, *ctl_res;
+> +	hw_regs_t hw;
+> +
+> +	if (unlikely(dev->num_resources != 3)) {
+> +		dev_err(&dev->dev, "invalid number of resources\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	io_res = platform_get_resource(dev, IORESOURCE_IO, 0);
+> +	if (unlikely(io_res == NULL))
+> +		return -EINVAL;
+> +
+> +	ctl_res = platform_get_resource(dev, IORESOURCE_IO, 1);
+> +	if (unlikely(ctl_res == NULL))
+> +		return -EINVAL;
+> +
+> +	memset(&hw, 0, sizeof(hw_regs_t));
+> +	ide_std_init_ports(&hw, io_res->start, ctl_res->start);
+> +
+> +	hw.irq		= platform_get_irq(dev, 0);
+> +	hw.chipset	= ide_generic;
+> +
+> +	return ide_register_hw(&hw, NULL);
+> +}
+> +
+> +static struct platform_driver ide_platform_driver = {
+> +	.probe		= ide_platform_probe,
+> +	.driver		= {
+> +		.name	= "ide-platform",
+> +		.owner	= THIS_MODULE,
+> +	},
+> +};
+> +
+> +void __init ide_platform_init(void)
+> +{
+> +	printk(KERN_INFO "ide-platform: platform device IDE interface\n");
+> +	platform_driver_register(&ide_platform_driver);
+> +}
+> diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+> index 287a662..994cdd4 100644
+> --- a/drivers/ide/ide.c
+> +++ b/drivers/ide/ide.c
+> @@ -1782,6 +1782,7 @@ done:
+>  }
+>
+>  extern void pnpide_init(void);
+> +extern void ide_platform_init(void);
+>  extern void h8300_ide_init(void);
+>
+>  /*
+> @@ -1793,6 +1794,8 @@ #ifdef CONFIG_BLK_DEV_IDEPCI
+>  	ide_scan_pcibus(ide_scan_direction);
+>  #endif /* CONFIG_BLK_DEV_IDEPCI */
+>
+> +	ide_platform_init();
+> +
+>  #ifdef CONFIG_ETRAX_IDE
+>  	{
+>  		extern void init_e100_ide(void);
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux- 
+> kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
