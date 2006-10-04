@@ -1,64 +1,33 @@
-From: girish <girishvg@gmail.com>
-Subject: Re: [PATCH] Generic platform device IDE driver
-Date: Wed, 4 Oct 2006 21:25:43 +0900
-Message-ID: <F3D1520B-B37D-4DF8-9482-DE6D1A708F75@gmail.com>
-References: <20061004074535.GA7180@localhost.hsdv.com> <A1AC65D6-07AC-42CB-80F1-9621DBCACF83@gmail.com> <20061004200214.GA6664@localhost.Internal.Linux-SH.ORG>
-Mime-Version: 1.0 (Apple Message framework v749)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: "saeed bishara" <saeed.bishara@gmail.com>
+Subject: Re: [PATCH 2/2] libata: turn off NCQ if queue depth is adjusted to 1
+Date: Wed, 4 Oct 2006 15:37:31 +0200
+Message-ID: <c70ff3ad0610040637l4daf8f0bhec3af8c959d80ff1@mail.gmail.com>
+References: <20060930104439.GP25800@htj.dyndns.org>
+	 <20060930104500.GQ25800@htj.dyndns.org>
+	 <20060930180359.GP4163@kernel.dk>
+	 <1159649460.13029.145.camel@localhost.localdomain>
+	 <20060930202628.GF5670@kernel.dk> <451F0927.2010804@emc.com>
+	 <451F0BF7.1000200@gmail.com> <20061001195516.GS5670@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:20288 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1030836AbWJDMZu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Oct 2006 08:25:50 -0400
-Received: by py-out-1112.google.com with SMTP id n25so259232pyg
-        for <linux-ide@vger.kernel.org>; Wed, 04 Oct 2006 05:25:50 -0700 (PDT)
-In-Reply-To: <20061004200214.GA6664@localhost.Internal.Linux-SH.ORG>
+Received: from nf-out-0910.google.com ([64.233.182.187]:37842 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1030378AbWJDNhd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Oct 2006 09:37:33 -0400
+Received: by nf-out-0910.google.com with SMTP id x30so482261nfb
+        for <linux-ide@vger.kernel.org>; Wed, 04 Oct 2006 06:37:31 -0700 (PDT)
+In-Reply-To: <20061001195516.GS5670@kernel.dk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, rmk@arm.linux.org.uk, gregkh@suse.de, ysato@users.sourceforge.jp
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
+the NCQ commands contain the FUA (force unit access) field
+(mandatory), so disabling the NCQ will waste this feature.
+I don't know how much ans when this feature is usuable, but someday it
+can be usefull.
 
-On Oct 5, 2006, at 5:02 AM, Paul Mundt wrote:
-
-> On Wed, Oct 04, 2006 at 08:30:36PM +0900, girish wrote:
->> question:  where is linux/ide-platform.h header?
->>
-> answer: there isn't one, as it's not needed. The reason for using
-> platform devices is so we get _away_ from this ridiculous static  
-> set of
-> definitions for I/O addresses and IRQs that are sprinkled around a lot
-> of these drivers.
-
-i wrote wrong file name:
-
-where is linux/platform_device.h file?
-
-as per the patch :
-
-
-+#include <linux/ide.h>
-+#include <linux/platform_device.h>
-+
-+/*
-+ * Users use per-port registration with a simple set of 3 resources
-+ * per port:
-+ * 		- I/O Base (IORESOURCE_IO)
-+ * 		- CTL Base (IORESOURCE_IO)
-+ * 		- IRQ	   (IORESOURCE_IRQ)
-+ */
-+static int __devinit ide_platform_probe(struct platform_device *dev)
-+{
-+	struct resource *io_res, *ctl_res;
-+	hw_regs_t hw;
-+
-+	if (unlikely(dev->num_resources != 3)) {
-+		dev_err(&dev->dev, "invalid number of resources\n");
-+		return -EINVAL;
-+	}
-+
-+	io_res = platform_get_resource(dev, IORESOURCE_IO, 0);
-+	if (unlikely(io_res == NULL))
-+		return -EINVAL;
-+
+-saeed
