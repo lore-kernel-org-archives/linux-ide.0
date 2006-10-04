@@ -1,51 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Mark Lord <lkml@rtr.ca>
 Subject: Re: What's in libata-dev.git
-Date: Wed, 04 Oct 2006 22:03:39 +0400
-Message-ID: <4523F77B.1030908@ru.mvista.com>
-References: <20060911132250.GA5178@havoc.gtf.org> <45056627.7030202@ru.mvista.com> <4523F602.6070608@rtr.ca>
+Date: Wed, 04 Oct 2006 14:48:24 -0400
+Message-ID: <452401F8.5000004@rtr.ca>
+References: <20060911132250.GA5178@havoc.gtf.org> <45056627.7030202@ru.mvista.com> <4523F602.6070608@rtr.ca> <4523F77B.1030908@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422713AbWJDSDt@vger.kernel.org>
-In-Reply-To: <4523F602.6070608@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:40453 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1422825AbWJDSsZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Oct 2006 14:48:25 -0400
+In-Reply-To: <4523F77B.1030908@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-Hello.
-
-Mark Lord wrote:
-
->>>       [ATA] Increase lba48 max-sectors from 200 to 256.
-
->>    So was it for LBA28 or for LBA48?
->>    As for LBA28, it might be quite dangerous. Particularly, I know 
->> that IBM drives used to mistreated 256 as 0 in the past (bumped into 
->> that on a 8-year old drive which is still alive though).
-
-> ..
-
->> The exact model was IBM DHEA-34331.
-
-> I've been travelling for the past month, so pardon the late tuning in here.
-> I've *never* encountered a drive that had this problem.
-> Controllers, yes, and those are easily dealt with in the chipset drivers.
+Sergei Shtylyov wrote:
+>..
+>> I suspect Sergei simply had a bad controller card at the time.
 > 
-> But never drives.  Not since 1992 when I first took up Linux IDE stuff.
-> 
-> I have some 7-year old IBM drives here, and they certainly don't have
-> this problem either (but they do have working TCQ etc..).
+>    I can hardly imagine the reason why a PCI IDE controller (that was 
+> something like VT82C586 I think) would need to mess with the sector 
+> count reg. in PIO mode and return "command aborted" in the error reg... 
+> That was the exact sympthom IIRC.
 
-    That was 8-year old Ultra33 drive, what TCQ? :-)
+Ahh.. well, if it just returned command aborted, then Jeff's original
+change would present no real danger --> any occurances would be detected.
 
-> I suspect Sergei simply had a bad controller card at the time.
+But to answer the imaginative question, the *reason* why a PCI (or VLB) IDE
+controller would mess with the registers, is because the makers have this
+nasty habit of wanting to do data prefetching (and posting) to speed up
+transfers, particularly PIO transfers.  And the only way they can do the
+prefetching/posting "safely", is to snoop the taskfile registers and have
+the contoller "know" their meanings.
 
-    I can hardly imagine the reason why a PCI IDE controller (that was 
-something like VT82C586 I think) would need to mess with the sector count reg. 
-in PIO mode and return "command aborted" in the error reg... That was the 
-exact sympthom IIRC.
+This has lead to all kinds of lunacies, like the RZ1000, CMD640, and other
+memorable disasters of mis-implementation.
 
-> Cheers
-
-WBR, Sergei
+Cheers!
