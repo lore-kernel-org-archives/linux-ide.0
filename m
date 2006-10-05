@@ -1,27 +1,40 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [discuss] [patch] x86, fix rwsem build bug on CONFIG_M386=y
-Date: Thu, 5 Oct 2006 11:41:21 +0200
-Message-ID: <200610051141.21189.ak@suse.de>
-References: <Pine.LNX.4.64.0610042017340.3952@g5.osdl.org> <20061005042816.GD16812@stusta.de> <20061005082757.GA27120@elte.hu>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch] 2.6.18: 32-bit compatibility HDIO IOCTLs
+Date: Thu, 05 Oct 2006 06:38:29 -0400
+Message-ID: <4524E0A5.5010901@pobox.com>
+References: <Pine.LNX.4.64N.0610031703010.4642@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20061005082757.GA27120@elte.hu>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: discuss@x86-64.org
-Cc: Ingo Molnar <mingo@elte.hu>, Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Klaus Knopper <knopper@knopper.net>, Luca Tettamanti <kronos.it@gmail.com>, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Thierry Vignaud <tvignaud@mandriva.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, len.brown@intel.com, linux-acpi@vger.kernel.org, Olaf Hering <olaf@aepfle.de>, Jens Axboe <axboe@suse.de>, Andrew Morton <akpm@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:16603 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751619AbWJEKid (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Oct 2006 06:38:33 -0400
+In-Reply-To: <Pine.LNX.4.64N.0610031703010.4642@blysk.ds.pg.gda.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Maciej W. Rozycki" <macro@linux-mips.org>
+Cc: linux-ide@vger.kernel.org
 
-
+Maciej W. Rozycki wrote:
+> Hello,
 > 
-> -------------------->
-> Subject: [patch] x86, fix rwsem build bug on CONFIG_M386=y
-> From: Ingo Molnar <mingo@elte.hu>
+>  A couple of HDIO IOCTLs are not yet handled and a few others are marked 
+> as using a pointer rather than an unsigned long.  The formers include: 
+> HDIO_GET_WCACHE, HDIO_GET_ACOUSTIC, HDIO_GET_ADDRESS and 
+> HDIO_GET_BUSSTATE.  The latters are: HDIO_SET_MULTCOUNT, 
+> HDIO_SET_UNMASKINTR, HDIO_SET_KEEPSETTINGS, HDIO_SET_32BIT, 
+> HDIO_SET_NOWERR, HDIO_SET_DMA, HDIO_SET_PIO_MODE and HDIO_SET_NICE.  
+> Additionally 0x330 used to be HDIO_GETGEO_BIG and may be issued by 32-bit 
+> `hdparm' run on a 64-bit kernel making Linux complain loudly.
+> 
+>  The following patch fixes these issues.  Please apply.
+> 
+>   Maciej
+> 
+> Signed-off-by: Maciej W. Rozycki <macro@linux-mips.org>
 
-added thanks
+Looks OK to me, but I would forward to Alan Cox and Andrew Morton for 
+review and application...
 
--Andi
 
