@@ -1,49 +1,36 @@
-From: "Steve Hindle" <mech422@gmail.com>
-Subject: Re: PROBLEM: Hardlock with 2.6.1[678] on Abit AI7, ICH5 + XFS, SATA under heavy I/O load
-Date: Wed, 4 Oct 2006 22:27:18 -0700
-Message-ID: <9a0545880610042227i7960737alb49480c609cff802@mail.gmail.com>
-References: <9a0545880610041828w658d7aaco20348d54e9321d8f@mail.gmail.com>
-	 <20061005043154.GA11811@melbourne.sgi.com>
+From: Nigel Cunningham <ncunningham@linuxmail.org>
+Subject: Re: 2.6.19-rc1: known regressions
+Date: Thu, 05 Oct 2006 17:16:40 +1000
+Message-ID: <1160032600.7086.4.camel@nigel.suspend2.net>
+References: <Pine.LNX.4.64.0610042017340.3952@g5.osdl.org>
+	 <20061005042816.GD16812@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:47052 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751117AbWJEF1U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Oct 2006 01:27:20 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so687253nfa
-        for <linux-ide@vger.kernel.org>; Wed, 04 Oct 2006 22:27:18 -0700 (PDT)
-In-Reply-To: <20061005043154.GA11811@melbourne.sgi.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20061005042816.GD16812@stusta.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Klaus Knopper <knopper@knopper.net>, Andi Kleen <ak@suse.de>, Luca Tettamanti <kronos.it@gmail.com>, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, discuss@x86-64.org, Thierry Vignaud <tvignaud@mandriva.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, len.brown@intel.com, linux-acpi@vger.kernel.org, Olaf Hering <olaf@aepfle.de>, Jens Axboe <axboe@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On 10/4/06, David Chinner <dgc@sgi.com> wrote:
-> On Wed, Oct 04, 2006 at 06:28:35PM -0700, Steve Hindle wrote:
-> > Hello,
-> >
-> >  My machine is hardlocking with recent kernels (including 2.6.18-mm3)
-> > under heavy I/O load (for instance, just compiling the kernel is
-> > enough to lock the machine).  No bug,oops,or panic and nothing in the
-> > system logs.
->
-> Does it happen on any other filesystems? Is this your root filesystem
-> that is hanging?
->
-no, its not my root - but my other partitions are also XFS and are on
-the same drive...
-so not really any way to check ATM.
+Hi.
 
-> Journalling filesystems shouldn't get corrupted by hangs or
-> crashes...
+On Thu, 2006-10-05 at 06:28 +0200, Adrian Bunk wrote:
+> Contrary to popular belief, there are people who test -rc kernels
+> and report bugs.
+> 
+> And there are even people who test -git kernels.
 
-I understood this in theory - but was rather pleased theory == practice.
-However, I didn't even notice a 'not unmounted cleanly' message during
-subsequent boots?
-I might just have missed it though - Debian's boot has gotten much
-'chattier' over the years...
+Slightly off topic, but let me report a "metoo" as far as testing -git
+goes (you can even find a suspend2-against-current-git tree on
+kernel.org now!), and some positive progress: for the first time in
+months, I'm reliably suspending and resuming my amd64 based laptop. I
+don't have an exact cause, but would guess at Andi's multitude of
+patches and/or any cpufreq fixes that might have slid in there too. It's
+been really strange writing software that others can use reliably, and
+not being able to reliably use it yourself! Kudos to all the authors of
+suspend/resume bug fixes that have gone in!
 
-Steve
+Nigel
+
