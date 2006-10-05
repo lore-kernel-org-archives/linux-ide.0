@@ -1,66 +1,34 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: [patch] x86, fix rwsem build bug on CONFIG_M386=y
-Date: Thu, 5 Oct 2006 10:27:58 +0200
-Message-ID: <20061005082757.GA27120@elte.hu>
-References: <Pine.LNX.4.64.0610042017340.3952@g5.osdl.org> <20061005042816.GD16812@stusta.de>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 2/2] libata: turn off NCQ if queue depth is adjusted to 1
+Date: Thu, 5 Oct 2006 11:08:22 +0200
+Message-ID: <20061005090820.GM5170@kernel.dk>
+References: <20060930104439.GP25800@htj.dyndns.org> <20060930104500.GQ25800@htj.dyndns.org> <20060930180359.GP4163@kernel.dk> <1159649460.13029.145.camel@localhost.localdomain> <20060930202628.GF5670@kernel.dk> <451F0927.2010804@emc.com> <451F0BF7.1000200@gmail.com> <20061001195516.GS5670@kernel.dk> <c70ff3ad0610040637l4daf8f0bhec3af8c959d80ff1@mail.gmail.com> <20061004133755.GP7778@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([62.242.22.158]:38684 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1751527AbWJEJIn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Oct 2006 05:08:43 -0400
 Content-Disposition: inline
-In-Reply-To: <20061005042816.GD16812@stusta.de>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Klaus Knopper <knopper@knopper.net>, Andi Kleen <ak@suse.de>, Luca Tettamanti <kronos.it@gmail.com>, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, discuss@x86-64.org, Thierry Vignaud <tvignaud@mandriva.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, len.brown@intel.com, linux-acpi@vger.kernel.org, Olaf Hering <olaf@aepfle.de>, Jens Axboe <axboe@suse.de>, Andrew Morton <akpm@osdl.org>
+In-Reply-To: <20061004133755.GP7778@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
+On Wed, Oct 04 2006, Jens Axboe wrote:
+> On Wed, Oct 04 2006, saeed bishara wrote:
+> > the NCQ commands contain the FUA (force unit access) field
+> > (mandatory), so disabling the NCQ will waste this feature.
+> > I don't know how much ans when this feature is usuable, but someday it
+> > can be usefull.
+> 
+> It's already useful, for io barriers. Yet another reason why the
+> distinction between depth == 1 and NCQ needs to available.
 
-* Adrian Bunk <bunk@stusta.de> wrote:
+Ehm, I completely missed the bigger picture - non-ncq has FUA available
+too. So NCQ or not has no bearing on FUA functionality.
 
-> This email lists some known regressions in 2.6.19-rc1 compared to 
-> 2.6.18.
+-- 
+Jens Axboe
 
-thanks Adrian - this list is extremely useful in my opinion! Please keep 
-up the good work.
-
-> Subject    : CONFIG_M386=y rwsem compile error
-> References : http://lkml.org/lkml/2006/10/3/240
-> Submitter  : Klaus Knopper <knopper@knopper.net>
-> Guilty     : Andi Kleen <ak@suse.de>
->              commit add659bf8aa92f8b3f01a8c0220557c959507fb1
-> Status     : unknown
-
-find the fix below.
-
--------------------->
-Subject: [patch] x86, fix rwsem build bug on CONFIG_M386=y
-From: Ingo Molnar <mingo@elte.hu>
-
-CONFIG_M386 turns on spinlock-based generic rwsems - which surprises the 
-semaphore.S rwsem stubs. Tested both with and without CONFIG_M386.
-
-Reported-by: Klaus Knopper <knopper@knopper.net>
-Triaged-by: Adrian Bunk <bunk@stusta.de>
-
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
----
- arch/i386/lib/semaphore.S |    3 +++
- 1 file changed, 3 insertions(+)
-
-Index: linux/arch/i386/lib/semaphore.S
-===================================================================
---- linux.orig/arch/i386/lib/semaphore.S
-+++ linux/arch/i386/lib/semaphore.S
-@@ -152,6 +152,8 @@ ENTRY(__read_lock_failed)
- 
- #endif
- 
-+#ifdef CONFIG_RWSEM_XCHGADD_ALGORITHM
-+
- /* Fix up special calling conventions */
- ENTRY(call_rwsem_down_read_failed)
- 	CFI_STARTPROC
-@@ -214,3 +216,4 @@ ENTRY(call_rwsem_downgrade_wake)
- 	CFI_ENDPROC
- 	END(call_rwsem_downgrade_wake)
- 
-+#endif
