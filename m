@@ -1,48 +1,52 @@
-From: Jim Paris <jim@jtan.com>
-Subject: sata_sis only recognizing primary drive in 2.6.18
-Date: Fri, 6 Oct 2006 02:58:16 -0400
-Message-ID: <20061006065816.GA5782@jim.sh>
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: Re: sata_sis only recognizing primary drive in 2.6.18
+Date: Fri, 06 Oct 2006 12:57:07 +0200
+Message-ID: <45263683.408@gmx.net>
+References: <20061006065816.GA5782@jim.sh>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:14479 "EHLO neurosis.jim.sh")
-	by vger.kernel.org with ESMTP id S932631AbWJFG6X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Oct 2006 02:58:23 -0400
-Content-Disposition: inline
+Received: from mail.gmx.net ([213.165.64.20]:40607 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751471AbWJFK5K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Oct 2006 06:57:10 -0400
+In-Reply-To: <20061006065816.GA5782@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, muthas@mit.edu, fragmede@gmail.com
+To: Jim Paris <jim@jtan.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, muthas@mit.edu, fragmede@gmail.com
 
-Hi Tejun,
+Hi Jim,
 
-My friend has a motherboard with a SIS182 chipset (1039:0182), with
-four ports on the motherboard.  BIOS sees it as two controllers,
-"IDE2" and "IDE3" with two ports apiece: "IDE2 Primary", "IDE2
-Secondary", etc.
+the sata_sis is running without slave support in the versions from
+kernel.org. That is ok if you are using
+a SiS964 and 965L chip. The SiS 965, SiS180 and SiS966 needs a slave
+support.
 
-If we plug drives into both the IDE2 Primary and IDE2 Secondary ports,
-BIOS correctly sees and identifies both drives, and they're both
-visible to grub, but sata_sis only sees the primary drive.  The second
-drive just never shows up; no errors are reported.  This is with
-Debian kernel 2.6.18 (same thing happens in .15, .16, .17).  Changing
-various SATA-related BIOS settings doesn't help.
+The attached patch against 2.6.18 should help.
 
-I don't have any logs on me at the moment, but I'm trying to get a
-hold of this machine for a few days so I can put in a PATA root disk
-and build/test custom libata modules with more debugging info.  Is
-there anything in particular I should look for or try?
+feedback, log and output of lspci -vvxxx are welcome.
 
-If I request warmplug with
-  echo 0 0 0 > /sys/class/scsi_host/host1/scan
-or
-  echo 0 1 0 > /sys/class/scsi_host/host1/scan
-then there is a soft-reset and the primary disk is rediscovered in
-both cases, but neither causes the secondary disk to be discovered.
+regards
+Uwe Koziolek
+> My friend has a motherboard with a SIS182 chipset (1039:0182), with
+> four ports on the motherboard.  BIOS sees it as two controllers,
+> "IDE2" and "IDE3" with two ports apiece: "IDE2 Primary", "IDE2
+> Secondary", etc.
+>
+> If we plug drives into both the IDE2 Primary and IDE2 Secondary ports,
+> BIOS correctly sees and identifies both drives, and they're both
+> visible to grub, but sata_sis only sees the primary drive.  The second
+> drive just never shows up; no errors are reported.  This is with
+--- a/drivers/scsi/sata_sis.c 2006-09-20 05:42:06.000000000 +0200
++++ b/drivers/scsi/sata_sis.c 2006-10-06 12:43:11.000000000 +0200
+@@ -128,7 +128,7 @@
 
-Also, hotplug polling doesn't seem to work.  Removed disks aren't
-recognized as gone until I/O is attempted, and I have to request
-warmplug to get an inserted disk recognized.  It's otherwise working
-fine.
+static struct ata_port_info sis_port_info = {
+.sht = &sis_sht,
+- .host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++ .host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY | ATA_FLAG_SLAVE_POSS,
+.pio_mask = 0x1f,
+.mwdma_mask = 0x7,
+.udma_mask = 0x7f,
 
--jim
