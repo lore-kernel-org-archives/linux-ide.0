@@ -1,71 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Robert Hancock <hancockr@shaw.ca>
 Subject: Re: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
-Date: Sat, 07 Oct 2006 11:28:43 -0400
-Message-ID: <4527C7AB.9080801@garzik.org>
-References: <45276085.3040102@shaw.ca>
+Date: Sat, 07 Oct 2006 09:54:52 -0600
+Message-ID: <4527CDCC.1080209@shaw.ca>
+References: <45276085.3040102@shaw.ca> <200610071142.26045.prakash@punnoor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:63425 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932266AbWJGP2r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Oct 2006 11:28:47 -0400
-In-Reply-To: <45276085.3040102@shaw.ca>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:45213 "EHLO
+	pd3mo1so.prod.shaw.ca") by vger.kernel.org with ESMTP
+	id S932280AbWJGPyz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Oct 2006 11:54:55 -0400
+In-reply-to: <200610071142.26045.prakash@punnoor.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, prakash@punnoor.de
+To: Prakash Punnoor <prakash@punnoor.de>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-Robert Hancock wrote:
-> I've been working on the patch for sata_nv ADMA support for nForce4 that 
-> Jeff Garzik has in a git branch. I've gotten it into a state where the 
-> ADMA and NCQ features appear to be working with no obvious problems. 
-> I've attached a patch against 2.6.18-mm2.
+Prakash Punnoor wrote:
+> Am Samstag 07 Oktober 2006 10:08 schrieb Robert Hancock:
+>> I've been working on the patch for sata_nv ADMA support for nForce4 that
 > 
-> The code was mostly in a working state for the non-NCQ case but there 
-> were a number of heinous bugs that prevented NCQ from working, like in 
-> the sg list to APRD conversion code and in the interrupt handler.
+> Nice!
 > 
-> This is still in quite an experimental state. It has survived system 
-> boots into Fedora Core 5 and Bonnie++ benchmark runs without blowing up, 
-> but there could still be bugs that could corrupt data, etc. so test with 
-> caution.
+>> make the default 1). I only enabled ADMA on those chipsets and not
+>> MCP51, MCP55 or MCP61 since that was all that the original NVIDIA
+>> version did. I assume there was a reason for this, though maybe not.
 > 
-> There is a module parameter adma_enabled which has to be set to 1 to 
-> enable ADMA on CK804/MCP04 chipsets (either that or hack the code to 
-> make the default 1). I only enabled ADMA on those chipsets and not 
-> MCP51, MCP55 or MCP61 since that was all that the original NVIDIA 
-> version did. I assume there was a reason for this, though maybe not. 
-> Someone with one of these chipsets should probably try it out (replacing 
-> the GENERIC type with CK804 in the PCI device table may be all it takes).
+> Unfortunately it doesn't work for me on MCP51 if I change GENERIC to ADMA. So 
+> I wonder whether MCP51 has ADMA mode or what needs to be done to get NCQ 
+> working. :-(
 
-Nice!  Good work.
+What happened when you tried it? It would be useful if you could change 
+the #undef in these lines:
 
+  53 #undef ATA_DEBUG                /* debugging output */
+  54 #undef ATA_VERBOSE_DEBUG        /* yet more debugging output */
 
-> A few outstanding issues:
-> 
-> -Error handling likely needs work. EH works well enough to get past 
-> drive detection but that's likely about all. When I ran into errors 
-> while debugging, it usually locked up the machine when trying to do a 
-> soft reset.
-> 
-> -Error handling is also noisy at the moment (it dumps a bunch of 
-> controller state information).
-> 
-> -Jeff will probably cringe at how I implemented the 
-> bmdma_stop/start/status/setup functions. This kludge of toggling 
-> ATA_FLAG_MMIO off for the call into libata was needed since this 
-> controller is almost what libata calls ATA_FLAG_MMIO, but not quite (the 
-> ATA taskfile registers are MMIO but the BMDMA registers are PIO). This 
-> is also why I needed the patch to libata-sff.c to use the adapter's 
-> bmdma_status function rather than hardcoded ata_bmdma_status.
+in include/linux/libata.h to #define and rebuild and try it then, that 
+will spew out a bunch more output and I can see if any reasonable 
+looking values are showing up at all. I was capturing this output the 
+crude way, booting with vga=6 to get a smaller font and taking a picture 
+of the screen :-) Also, maybe post the lspci -v output from the SATA 
+controller..
 
-*shrug*  I don't cringe if that's the most expedient way to do something.
+If that doesn't provide any insight, maybe the docs Jeff has provide the 
+answer for whether or not the MCP5x/MCP61 controllers have the same 
+interface as the CK804/MCP04..
 
-But I really don't think that is necessary.  I will take a look at docs 
-and see how things match up, when I am much more awake.  Most likely you 
-need to be using another set of registers, and be all MMIO, all the time.
-
-	Jeff
-
-
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
