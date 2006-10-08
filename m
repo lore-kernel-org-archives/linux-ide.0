@@ -1,40 +1,43 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sis only recognizing primary drive in 2.6.18
-Date: Sun, 08 Oct 2006 13:24:37 +0900
-Message-ID: <45287D85.1050302@gmail.com>
-References: <20061006065816.GA5782@jim.sh> <45263683.408@gmx.net>
+Subject: Re: Unable to find root fs with libata only 2.6.18-mm3
+Date: Sun, 08 Oct 2006 13:08:53 +0900
+Message-ID: <452879D5.5020707@gmail.com>
+References: <45284BE0.7030600@comcast.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:24146 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.178]:34898 "EHLO
 	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751131AbWJHMqV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 8 Oct 2006 08:46:21 -0400
-Received: by py-out-1112.google.com with SMTP id n25so1922382pyg
-        for <linux-ide@vger.kernel.org>; Sun, 08 Oct 2006 05:46:21 -0700 (PDT)
-In-Reply-To: <45263683.408@gmx.net>
+	id S1751129AbWJHMqP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Oct 2006 08:46:15 -0400
+Received: by py-out-1112.google.com with SMTP id n25so1922383pyg
+        for <linux-ide@vger.kernel.org>; Sun, 08 Oct 2006 05:46:15 -0700 (PDT)
+In-Reply-To: <45284BE0.7030600@comcast.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: Jim Paris <jim@jtan.com>, linux-ide@vger.kernel.org, muthas@mit.edu, fragmede@gmail.com
+To: Ed Sweetman <safemode2@comcast.net>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi!
+[cc'ing linux-ide]
 
-Uwe Koziolek wrote:
-> Hi Jim,
-> 
-> the sata_sis is running without slave support in the versions from
-> kernel.org. That is ok if you are using
-> a SiS964 and 965L chip. The SiS 965, SiS180 and SiS966 needs a slave
-> support.
-> 
-> The attached patch against 2.6.18 should help.
-> 
-> feedback, log and output of lspci -vvxxx are welcome.
+Ed Sweetman wrote:
+> My question is, do I still need to compile in scsi disk/cdrom/generic 
+> support into my kernel to get libata devices to work or is there some 
+> other syntax i'm missing?    Libata detects my drives, but as far as I 
+> could see, and it flies by too fast to read, no device nodes were 
+> assigned to them.
 
-Can you make separate port_info for controllers which support 4 ports 
-and send a properly formatted patch?
+Yes, you do need to select SCSI high level drivers you need - sd and sr 
+should suffice for libata.
+
+> If you do need scsi support, why isn't that done automatically when you 
+> select your libata drivers? or at least a pointer in the "Help" dialog 
+> to tell you to enable that ?
+
+Probably because no other SCSI low level driver selects high level 
+driver automatically.  I agree that we need better help message.  Feel 
+free to submit patch.
 
 Thanks.
 
