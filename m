@@ -1,40 +1,67 @@
-From: Trond Myklebust <Trond.Myklebust@netapp.com>
+From: matthieu castet <castet.matthieu@free.fr>
 Subject: Re: 2.6.19-rc1: known regressions (v2)
-Date: 7 Oct 2006 21:43:51 -0700
-Message-ID: <EXSVLRB01xe0ymQ1WE900000265@exsvlrb01.hq.netapp.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:32262 "EHLO mx2.netapp.com")
-	by vger.kernel.org with ESMTP id S1750718AbWJHEn5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Oct 2006 00:43:57 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-
-Cc: Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, art@usfltd.com, ak@suse.de, discuss@x86-64.org,  Prakash Punnoor <prakash@punnoor.de>, perex@suse.cz, alsa-devel@alsa-project.org, Steve Fox <drfickle@us.ibm.com>,  netdev@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>,  len.brown@intel.com, linux-acpi@vger.kernel.org, Pavel Machek <pavel@ucw.cz>,  Olaf Hering <olaf@aepfle.de>, Antonino Daplas <adaplas@pol.net>, linux-fbdev-devel@lists.sourceforge.net,  Thierry Vignaud <tvignaud@mandriva.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Ernst Herzberg <list-lkml@net4u.de>, Matthieu Castet <castet.matthieu@free.fr>,  linux-usb-devel@lists.sourceforge.net, Jens Axboe <axboe@oracle.com>,  Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-pm@osdl.org, linuxppc-dev@ozlabs.org, Andreas Schwab <schwab@suse.de>,  Mel Gorman <mel
- @skynet.ie>, Alex Romosan <romosan@sycorax.lbl.gov>, Sukadev Bhattiprolu <sukadev@us.ibm.!
- com>, Dave Kleikamp <shaggy@austin.ibm.com>, Torsten Kaiser <kernel@bardioc.dyndns.org>, Magnus Damm <magnus.damm@gmail.com>, Vivek Goyal <vgoyal@in.ibm.com>, ebiederm@xmission.com, fastboot@osdl.org, Alistair John Strachan <s0348365@sms.ed.ac.uk>, Stefan Richter <stefanr@s5r6.in-berlin.de>,  linux1394-devel@lists.sourceforge.net
-In-Reply-To: <20061007214620.GB8810@stusta.de>
+Date: Sun, 08 Oct 2006 10:56:39 +0200
+Message-ID: <4528BD47.5030509@free.fr>
 References: <Pine.LNX.4.64.0610042017340.3952@g5.osdl.org>
-	 <20061007214620.GB8810@stusta.de>
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Organization: Network Appliance Inc
-Date: Sun, 08 Oct 2006 00:43:35 -0400
-Message-Id: <1160282615.5506.9.camel@lade.trondhjem.org>
+	<20061007214620.GB8810@stusta.de>
 Mime-Version: 1.0
-X-Mailer: Evolution 2.8.1 
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fastboot-bounces@lists.osdl.org>
+In-Reply-To: <20061007214620.GB8810@stusta.de>
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
+	<mailto:fastboot-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/fastboot>
+List-Post: <mailto:fastboot@lists.osdl.org>
+List-Help: <mailto:fastboot-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
+	<mailto:fastboot-request@lists.osdl.org?subject=subscribe>
+Sender: fastboot-bounces@lists.osdl.org
+Errors-To: fastboot-bounces@lists.osdl.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: len.brown@intel.com, alsa-devel@alsa-project.org, Thierry Vignaud <tvignaud@mandriva.com>, linux-pm@osdl.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Alex Romosan <romosan@sycorax.lbl.gov>, Torsten Kaiser <kernel@bardioc.dyndns.org>, Olaf Hering <olaf@aepfle.de>, ak@suse.de, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, fastboot@osdl.org, Dave Kleikamp <shaggy@austin.ibm.com>, Pavel Machek <pavel@ucw.cz>, Antonino Daplas <adaplas@pol.net>, linux1394-devel@lists.sourceforge.net, perex@suse.cz, Alistair John Strachan <s0348365@sms.ed.ac.uk>, discuss@x86-64.org, linux-fbdev-devel@lists.sourceforge.net, linux-usb-devel@lists.sourceforge.net, Trond Myklebust <Trond.Myklebust@netapp.com>, linuxppc-dev@ozlabs.org, Steve Fox <drfickle@us.ibm.com>, netdev@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Linux
+List-Id: linux-ide@vger.kernel.org
 
-On Sat, 2006-10-07 at 23:46 +0200, Adrian Bunk wrote:
+Hi,
 
-> Subject    : NFSv4 fails to mount (timeout)
-> References : http://bugzilla.kernel.org/show_bug.cgi?id=7274
-> Submitter  : Torsten Kaiser <kernel@bardioc.dyndns.org>
-> Guilty     : Trond Myklebust <Trond.Myklebust@netapp.com>
->              commit 51b6ded4d9a94a61035deba1d8f51a54e3a3dd86
-> Handled-By : Trond Myklebust <Trond.Myklebust@netapp.com>
-> Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=7274
-> Status     : patch available
+Adrian Bunk wrote:
+> This email lists some known regressions in 2.6.19-rc1 compared to 2.6.18
+> that are not yet fixed Linus' tree.
+> =
 
-Thanks... Always nice to hear that you have been judged and found
-guilty. Now go and reread that fucking bug report...
+> If you find your name in the Cc header, you are either submitter of one
+> of the bugs, maintainer of an affectected subsystem or driver, a patch
+> of you was declared guilty for a breakage or I'm considering you in any
+> other way possibly involved with one or more of these issues.
+> =
 
+> Due to the huge amount of recipients, please trim the Cc when answering.
+> =
+
+> =
+
+
+> =
+
+> Subject    : ueagle-atm Oops
+> References : http://lkml.org/lkml/2006/10/6/390
+> Submitter  : Ernst Herzberg <list-lkml@net4u.de>
+> Handled-By : Matthieu Castet <castet.matthieu@free.fr>
+> Status     : unknown
+> =
+
+> =
+
+Guilty     :
+http://www.kernel.org/git/gitweb.cgi?p=3Dlinux/kernel/git/torvalds/linux-2.=
+6.git;a=3Dcommitdiff;h=3De7ccdfec087f02930c5cdc81143d4a045ae8d361
+
+Patch available at =
+
+https://mail.gna.org/public/ueagleatm-dev/2006-10/msg00022.html , but =
+
+some cleaning is need (I wasn't aware of "USB: fix __must_check warnings =
+
+in drivers/usb/atm/" patch).
+
+Matthieu
