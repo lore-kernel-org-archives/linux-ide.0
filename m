@@ -1,45 +1,42 @@
-From: "Shem Multinymous" <multinymous-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Debugging strange system lockups possibly
-	triggered by ATA commands
-Date: Mon, 9 Oct 2006 14:12:18 +0200
-Message-ID: <41840b750610090512j42588537u16994de23d22cf38@mail.gmail.com>
-References: <877iz9ohbe.fsf@denkblock.local>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [2.6.19 patch] ATA must depend on BLOCK
+Date: Mon, 09 Oct 2006 15:08:37 +0200
+Message-ID: <452A49D5.4060904@s5r6.in-berlin.de>
+References: <20061008231621.GM6755@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <hdaps-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-In-Reply-To: <877iz9ohbe.fsf-tKmc6CDQn9GVtrcxygCVqg@public.gmane.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/hdaps-devel>,
-	<mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=hdaps-devel>
-List-Post: <mailto:hdaps-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/hdaps-devel>,
-	<mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Sender: hdaps-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-Errors-To: hdaps-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hdaps-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932798AbWJINIk@vger.kernel.org>
+In-Reply-To: <20061008231621.GM6755@stusta.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, David Howells <dhowells@redhat.com>, Jesper Juhl <jesper.juhl@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Elias,
+Adrian Bunk wrote:
+> This patch fixes the following compile error with CONFIG_ATA=y, 
+> CONFIG_BLOCK=n:
+[...]
+>  config ATA
+>  	tristate "ATA device support"
+> +	depends on BLOCK
+>  	depends on !(M32R || M68K) || BROKEN
+>  	depends on !SUN4 || BROKEN
+>  	select SCSI
 
-On 10/9/06, Elias Oltmanns <oltmanns-OhoefBWHl6Eb1SvskN2V4Q@public.gmane.org> wrote:
+The Kconfig isn't broken but the tool which generated the .config.
 
-> A slightly stripped version of the patch is available too, which has
-> been verified to trigger the described problem in exactly the same way
-> as the original but lacks the IDLE IMMEDIATE feature (leaving the
-> STANDBY IMMEDIATE option only) in order to make it (hopefully) more
-> readable and easier to understand.
+"config ATA\ select SCSI" implies a dependency of ATA on SCSI. SCSI
+depends on BLOCK.
 
-What happens if you strip away *all* the head parking code, leaving
-only the queue freeze code? Conversely, what happens if you issue the
-head park command but don't freeze the queue?
+Therefore "select SCSI" && "config SCSI\ depends on BLOCK" implies
+either "config ATA\ select BLOCK" or "config ATA\ depends on BLOCK".
 
-  Shem
-
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys -- and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
+{Ignore all what I said if ATA code directly uses the block API. Usages
+of the block API to manipulate SCSI data structures, particularly the
+request queue, does not necessarily count as independent usage of the
+block API though.}
+-- 
+Stefan Richter
+-=====-=-==- =-=- -=---
+http://arcgraph.de/sr/
