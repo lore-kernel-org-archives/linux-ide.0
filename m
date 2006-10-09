@@ -1,42 +1,60 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [2.6.19 patch] ATA must depend on BLOCK
-Date: Mon, 09 Oct 2006 15:08:37 +0200
-Message-ID: <452A49D5.4060904@s5r6.in-berlin.de>
-References: <20061008231621.GM6755@stusta.de>
+From: "Jonathan Bell" <doggs.lay.eggs@googlemail.com>
+Subject: Re: Errors when copying between drives on a SiI3114 controller under kernel 2.6.18
+Date: Mon, 09 Oct 2006 15:49:26 +0100
+Message-ID: <op.tg5ssogyxci36i@akima>
+References: <op.tg1yx12kxci36i@akima> <45287FA6.5020906@gmail.com> <op.tg3tyekpxci36i@akima> <452A0A86.8070107@gmail.com> <452A0BA6.8030401@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932798AbWJINIk@vger.kernel.org>
-In-Reply-To: <20061008231621.GM6755@stusta.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, David Howells <dhowells@redhat.com>, Jesper Juhl <jesper.juhl@gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed	delsp=yes
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:55402 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S932913AbWJIOtW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Oct 2006 10:49:22 -0400
+Received: by ug-out-1314.google.com with SMTP id o38so588706ugd
+        for <linux-ide@vger.kernel.org>; Mon, 09 Oct 2006 07:49:21 -0700 (PDT)
+In-Reply-To: <452A0BA6.8030401@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Adrian Bunk wrote:
-> This patch fixes the following compile error with CONFIG_ATA=y, 
-> CONFIG_BLOCK=n:
-[...]
->  config ATA
->  	tristate "ATA device support"
-> +	depends on BLOCK
->  	depends on !(M32R || M68K) || BROKEN
->  	depends on !SUN4 || BROKEN
->  	select SCSI
+On Mon, 09 Oct 2006 09:43:18 +0100, Tejun Heo <htejun@gmail.com> wrote:
 
-The Kconfig isn't broken but the tool which generated the .config.
+> Tejun Heo wrote:
+>> I cannot reproduce your problem here.  Can you retest after running the  
+>> following commands?
+>>  # setpci -s 01:07.0 0c.b=04
+>> # setpci -s 01:08.0 0c.b=04
+>
+> I forgot something.
+>
+> * You need to make sata_sil a module.  Boot, unload sata_sil if loaded,  
+> run above commands, load sata_sil and test.
+>
+> * If above commands don't work, try =00 instead of =04.
+>
+> Thanks.
+>
 
-"config ATA\ select SCSI" implies a dependency of ATA on SCSI. SCSI
-depends on BLOCK.
 
-Therefore "select SCSI" && "config SCSI\ depends on BLOCK" implies
-either "config ATA\ select BLOCK" or "config ATA\ depends on BLOCK".
+setpci -s 01:07/8.0 0c.b=04 performed, sata_sil inserted...
 
-{Ignore all what I said if ATA code directly uses the block API. Usages
-of the block API to manipulate SCSI data structures, particularly the
-request queue, does not necessarily count as independent usage of the
-block API though.}
--- 
-Stefan Richter
--=====-=-==- =-=- -=---
-http://arcgraph.de/sr/
+md5sum crapped out again, similar errors in dmesg as before.
+
+setpci -s 01:07/8.0 0c.b=00 performed, sata_sil inserted...
+
+It worked...
+cp ~/hugefile /mnt/sda1 && cp /mnt/sda1/hugefile /mnt/sdb1
+&& md5sum /mnt/sda1/hugefile /mnt/sdb1/hugefile
+
+ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sda1/hugefile
+ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sdb1/hugefile
+
+What does this register do, out of interest? With 00 it took ages and made  
+my load average shoot up to about 6.50!
+
+
+
+
