@@ -1,60 +1,69 @@
-From: "Jonathan Bell" <doggs.lay.eggs@googlemail.com>
-Subject: Re: Errors when copying between drives on a SiI3114 controller under kernel 2.6.18
-Date: Mon, 09 Oct 2006 15:49:26 +0100
-Message-ID: <op.tg5ssogyxci36i@akima>
-References: <op.tg1yx12kxci36i@akima> <45287FA6.5020906@gmail.com> <op.tg3tyekpxci36i@akima> <452A0A86.8070107@gmail.com> <452A0BA6.8030401@gmail.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [patch 1/2] libata: _GTF support
+Date: Mon, 9 Oct 2006 08:10:37 -0700
+Message-ID: <20061009081037.620bb5e3.rdunlap@xenotime.net>
+References: <20060927223441.205181000@localhost.localdomain>
+	<20060927153627.c931de2d.kristen.c.accardi@intel.com>
+	<20061009114150.GA32716@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed	delsp=yes
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:55402 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S932913AbWJIOtW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Oct 2006 10:49:22 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so588706ugd
-        for <linux-ide@vger.kernel.org>; Mon, 09 Oct 2006 07:49:21 -0700 (PDT)
-In-Reply-To: <452A0BA6.8030401@gmail.com>
+Received: from xenotime.net ([66.160.160.81]:49875 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S932925AbWJIPJM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Oct 2006 11:09:12 -0400
+Received: from midway.site ([71.117.236.95]) by xenotime.net for <linux-ide@vger.kernel.org>; Mon, 9 Oct 2006 08:09:09 -0700
+In-Reply-To: <20061009114150.GA32716@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Stefan Seyfried <seife@suse.de>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Mon, 09 Oct 2006 09:43:18 +0100, Tejun Heo <htejun@gmail.com> wrote:
+On Mon, 9 Oct 2006 13:41:50 +0200 Stefan Seyfried wrote:
 
-> Tejun Heo wrote:
->> I cannot reproduce your problem here.  Can you retest after running the  
->> following commands?
->>  # setpci -s 01:07.0 0c.b=04
->> # setpci -s 01:08.0 0c.b=04
->
-> I forgot something.
->
-> * You need to make sata_sil a module.  Boot, unload sata_sil if loaded,  
-> run above commands, load sata_sil and test.
->
-> * If above commands don't work, try =00 instead of =04.
->
-> Thanks.
->
+> On Wed, Sep 27, 2006 at 03:36:27PM -0700, Kristen Carlson Accardi wrote:
+> > _GTF is an acpi method that is used to reinitialize the drive.  It returns
+> > a task file containing ata commands that are sent back to the drive to restore
+> > it to boot up defaults.
+> > 
+> > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> > 
+> > ---
+> >  Documentation/kernel-parameters.txt |    5 
+>  
+> > --- 2.6-mm.orig/Documentation/kernel-parameters.txt
+> > +++ 2.6-mm/Documentation/kernel-parameters.txt
+> > @@ -48,6 +48,7 @@ parameter is applicable:
+> >  	ISAPNP	ISA PnP code is enabled.
+> >  	ISDN	Appropriate ISDN support is enabled.
+> >  	JOY	Appropriate joystick support is enabled.
+> > +	LIBATA  Libata driver is enabled
+> >  	LP	Printer support is enabled.
+> >  	LOOP	Loopback device support is enabled.
+> >  	M68k	M68k architecture is enabled.
+> > @@ -1013,6 +1014,10 @@ and is between 256 and 4096 characters. 
+> >  			emulation library even if a 387 maths coprocessor
+> >  			is present.
+> >  
+> > +	noacpi		[LIBATA] Disables use of ACPI in libata suspend/resume
+> > +			when set.
+> > +			Format: <int>
+> 
+> this will confuse users that already think they can disable ACPI with "noacpi"
+> (instead of "acpi=off") and that already fight with "noapic". I have seen too
+> many confusions of this kind in bugreports.
+> 
+> Couldn't it be made "libata=noacpi" like we have "pci=noacpi" already?
 
+It only applies to the libata module, so it could be more fully
+documented as "libata.noacpi=1" to disable ACPI for libata.
+We don't usually do that in Documentation/kernel-parameters.txt,
+but there are a few cases/examples of doing so.
 
-setpci -s 01:07/8.0 0c.b=04 performed, sata_sil inserted...
+Of course, that's for libata built-in the kernel image.  If libata
+is a loadable module, it's just
+	modprobe libata noacpi=1
+or set it in /etc/modprobe.conf.
 
-md5sum crapped out again, similar errors in dmesg as before.
-
-setpci -s 01:07/8.0 0c.b=00 performed, sata_sil inserted...
-
-It worked...
-cp ~/hugefile /mnt/sda1 && cp /mnt/sda1/hugefile /mnt/sdb1
-&& md5sum /mnt/sda1/hugefile /mnt/sdb1/hugefile
-
-ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sda1/hugefile
-ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sdb1/hugefile
-
-What does this register do, out of interest? With 00 it took ages and made  
-my load average shoot up to about 6.50!
-
-
-
-
+---
+~Randy
