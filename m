@@ -1,144 +1,131 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: handle 0xff status properly
-Date: Mon, 9 Oct 2006 18:32:15 +0900
-Message-ID: <20061009093215.GF10832@htj.dyndns.org>
+From: Elias Oltmanns <oltmanns-OhoefBWHl6Eb1SvskN2V4Q@public.gmane.org>
+Subject: Debugging strange system lockups possibly triggered
+	by ATA commands
+Date: Mon, 09 Oct 2006 13:32:37 +0200
+Message-ID: <877iz9ohbe.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:59707 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751725AbWJIJcf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Oct 2006 05:32:35 -0400
-Received: by nf-out-0910.google.com with SMTP id x30so1913025nfb
-        for <linux-ide@vger.kernel.org>; Mon, 09 Oct 2006 02:32:33 -0700 (PDT)
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <hdaps-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/hdaps-devel>,
+	<mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=hdaps-devel>
+List-Post: <mailto:hdaps-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/hdaps-devel>,
+	<mailto:hdaps-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Sender: hdaps-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Errors-To: hdaps-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hdaps-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
-Cc: Joe Jin <lkmaillist@gmail.com>
 
-libata waits for !BSY even when the status register reports 0xff.
-This causes long boot delays when D8 isn't pulled down properly.  This
-patch does the followings.
+Hi there,
 
-* don't wait if status register is 0xff in all wait functions
+recently, I've adapted the hdaps_protect patch to make it work with
+kernel 2.6.18. This patch adds a file "protect" to the queue directory
+of block devices managed by ide or libata in sysfs. Depending on the
+drive's capabilities or a module/kernel parameter, an IDLE IMMEDIATE
+with UNLOAD feature or a STANDBY IMMEDIATE command is issued when ever
+a positive value is written to this "protect" file. After completion
+of this command, the request queue of the respective device is stopped
+in order to prevent it from performing further IO operations. The
+queue is started again after a certain timeout has elapsed, that is,
+as many seconds as the positive number that has originally been
+written to the "protect" file.
 
-* make ata_busy_sleep() return 0 on success and -errno on failure.
-  -ENODEV is returned on 0xff status and -EBUSY on other failures.
+The purpose of this patch is to provide an interface to unload the
+disk heads on request from user space, e.g., in order to minimise the
+chance for the heads to hit the platter in certain situations like
+a laptop sliding off the lap. This makes it imperative to insert the
+unload command at the head of the request queue.
 
-* make ata_bus_softreset() succeed on 0xff status.  0xff status is not
-  reset failure.  It indicates no device.  This removes unnecessary
-  retries on such ports.  Note that the code change assumes unoccupied
-  port reporting 0xff status does not produce valid device signature.
+Testing the patch, I experienced some nasty system lockups which I
+cannot quite reliably reproduce, let alone having an idea as to what
+might be the cause. Since these lockups occurred on my machine
+regardless whether I used the ide piix driver in vanilla 2.6.18 or the
+ata_piix driver with pata support enabled in Jeff Garzik's git tree
+(upstream-linus as of 2006-09-29), and since the ide related part of
+the patch had to be changed very little from 2.6.17 to 2.6.18, there
+seem to be two options: Either I've missed an important change in the
+way io requests and the request queue have to be handled in 2.6.18, or
+the patch just demonstrates a flaw somewhere else in the kernel. The
+former seems quite likely considering that I'm rather superficially
+acquainted with the relevant api. The latter does not seem completely
+unlikely, at least, as the problem occurs on ide as well as libata.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Joe Jin <lkmaillist@gmail.com>
+Unfortunately, my system just froze without displaying a panic
+message. Moreover, the lockup appears to be hard to reproduce. Here
+are some details about some of the tests I've performed so far:
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 7ab45f4..68e9d0a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2321,11 +2321,14 @@ static inline void ata_tf_to_host(struct
-  *	Sleep until ATA Status register bit BSY clears,
-  *	or a timeout occurs.
-  *
-- *	LOCKING: None.
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-  */
--
--unsigned int ata_busy_sleep (struct ata_port *ap,
--			     unsigned long tmout_pat, unsigned long tmout)
-+int ata_busy_sleep(struct ata_port *ap,
-+		   unsigned long tmout_pat, unsigned long tmout)
- {
- 	unsigned long timer_start, timeout;
- 	u8 status;
-@@ -2333,27 +2336,32 @@ unsigned int ata_busy_sleep (struct ata_
- 	status = ata_busy_wait(ap, ATA_BUSY, 300);
- 	timer_start = jiffies;
- 	timeout = timer_start + tmout_pat;
--	while ((status & ATA_BUSY) && (time_before(jiffies, timeout))) {
-+	while (status != 0xff && (status & ATA_BUSY) &&
-+	       time_before(jiffies, timeout)) {
- 		msleep(50);
- 		status = ata_busy_wait(ap, ATA_BUSY, 3);
- 	}
- 
--	if (status & ATA_BUSY)
-+	if (status != 0xff && (status & ATA_BUSY))
- 		ata_port_printk(ap, KERN_WARNING,
- 				"port is slow to respond, please be patient "
- 				"(Status 0x%x)\n", status);
- 
- 	timeout = timer_start + tmout;
--	while ((status & ATA_BUSY) && (time_before(jiffies, timeout))) {
-+	while (status != 0xff && (status & ATA_BUSY) &&
-+	       time_before(jiffies, timeout)) {
- 		msleep(50);
- 		status = ata_chk_status(ap);
- 	}
- 
-+	if (status == 0xff)
-+		return -ENODEV;
-+
- 	if (status & ATA_BUSY) {
- 		ata_port_printk(ap, KERN_ERR, "port failed to respond "
- 				"(%lu secs, Status 0x%x)\n",
- 				tmout / HZ, status);
--		return 1;
-+		return -EBUSY;
- 	}
- 
- 	return 0;
-@@ -2444,10 +2452,8 @@ static unsigned int ata_bus_softreset(st
- 	 * the bus shows 0xFF because the odd clown forgets the D7
- 	 * pulldown resistor.
- 	 */
--	if (ata_check_status(ap) == 0xFF) {
--		ata_port_printk(ap, KERN_ERR, "SRST failed (status 0xFF)\n");
--		return AC_ERR_OTHER;
--	}
-+	if (ata_check_status(ap) == 0xFF)
-+		return 0;
- 
- 	ata_bus_post_reset(ap, devmask);
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index df44b09..2306cb8 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -744,9 +744,8 @@ extern int ata_scsi_device_suspend(struc
- extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
- extern void ata_host_resume(struct ata_host *host);
- extern int ata_ratelimit(void);
--extern unsigned int ata_busy_sleep(struct ata_port *ap,
--				   unsigned long timeout_pat,
--				   unsigned long timeout);
-+extern int ata_busy_sleep(struct ata_port *ap,
-+			  unsigned long timeout_pat, unsigned long timeout);
- extern void ata_port_queue_task(struct ata_port *ap, void (*fn)(void *),
- 				void *data, unsigned long delay);
- extern u32 ata_wait_register(void __iomem *reg, u32 mask, u32 val,
-@@ -1061,7 +1060,7 @@ static inline u8 ata_busy_wait(struct at
- 		udelay(10);
- 		status = ata_chk_status(ap);
- 		max--;
--	} while ((status & bits) && (max > 0));
-+	} while (status != 0xff && (status & bits) && (max > 0));
- 
- 	return status;
- }
-@@ -1082,7 +1081,7 @@ static inline u8 ata_wait_idle(struct at
- {
- 	u8 status = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
- 
--	if (status & (ATA_BUSY | ATA_DRQ)) {
-+	if (status != 0xff && (status & (ATA_BUSY | ATA_DRQ))) {
- 		unsigned long l = ap->ioaddr.status_addr;
- 		if (ata_msg_warn(ap))
- 			printk(KERN_WARNING "ATA: abnormal status 0x%X on port 0x%lX\n",
+
+1. vanilla 2.6.18:
+------------------
+I used my standard configuration for self compiled kernels and make
+oldconfig to adjust it to 2.6.18. Basically, that means a highly
+modularised kernel with ramdisk and initrd support compiled in - by
+that time I hadn't realised yet that ramdisk support isn't needed for
+initramfs support anymore. Amongst the modules: ide-core, ide-disk,
+ide-generic, piix, no sata support. With the hdaps_protect patch applied, I
+could reliably reproduce the system freeze by the following steps:
+Boot into single user mode
+# modprobe ibm-acpi
+# while true; do echo -n 1 > /sys/block/hda/queue/protect; \
+> echo -n 0 > /sys/block/hda/queue/protect; done
+The system freezes and there is no way to reactivate it, except a cold
+reset. Note that there was no freeze without ibm-acpi being loaded,
+even modprobe ibm-acpi; modprobe -r ibm-acpi and the while loop did
+not lead to a freeze. However, switching to the external monitor and
+back again after loading ibm-acpi prevents the system from freezing
+too which makes the whole thing even more difficult.
+
+
+2. Branch upstream-linus from Jeff Garzik's git tree as of 2006-09-29:
+----------------------------------------------------------------------
+Here I used almost the identical configuration except that I disabled
+ide support completely and enabled sata support and the module
+ata_piix. Besides, #define ATA_ENABLE_PATA was set in
+include/linux/libata.h.
+With this setup the system shew the same behavior as described above.
+
+
+3. Vanilla 2.6.18 with stripped configuration:
+----------------------------------------------
+In the hope to provide a minimal test case, I stripped the
+configuration considerably, disabling several subsystems lke scsi, a
+lot of networking stuff, and so on. Additionally, I disabled
+ide-generic and ramdisk support, as I'm using initramfs anyway. The
+module ibm_acpi was still included.
+Regrettably, the freeze was not reproducible anymore.
+
+4. Branch upstream-linus from Jeff Garzik's git tree as of 2006-10-09:
+----------------------------------------------------------------------
+Exact same config as in 2. Problem is not reproducible as in 3. and
+I'm currently working on this system.
+
+
+Admittedly, I'm completely lost at this point. That's why I'm asking
+you for advice and suggestions how to debug this problem. If you want
+to have a look at the patch in question, please see:
+1. applying to vanilla 2.6.18
+   <http://www.uni-bonn.de/~oltmanns/linux/hdaps_protect-2.6.18-20060922-3.patch>
+2. applying to Jeff's git tree as in examples 2. and 4. above:
+   <http://www.uni-bonn.de/~oltmanns/linux/hdaps_protect-2.6.18-20060922-pata-2.patch>
+
+A slightly stripped version of the patch is available too, which has
+been verified to trigger the described problem in exactly the same way
+as the original but lacks the IDLE IMMEDIATE feature (leaving the
+STANDBY IMMEDIATE option only) in order to make it (hopefully) more
+readable and easier to understand. You can find this version of the
+patch which applies to vanilla 2.6.18 here:
+<http://www.uni-bonn.de/~oltmanns/linux/hdaps_protect-stripped-2.6.18-1.patch>
+
+Kind regards and thanks for your help in advance,
+
+Elias
+
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys -- and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
