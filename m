@@ -1,49 +1,46 @@
 From: "Allen Martin" <AMartin@nvidia.com>
 Subject: RE: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
-Date: Mon, 9 Oct 2006 23:44:35 -0700
-Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B018E81719@hqemmail02.nvidia.com>
-References: <4527CDCC.1080209@shaw.ca>
+Date: Mon, 9 Oct 2006 23:52:34 -0700
+Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B018E8171B@hqemmail02.nvidia.com>
+References: <4527C7AB.9080801@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate02.nvidia.com ([216.228.112.143]:15925 "EHLO
-	HQEMGATE02.nvidia.com") by vger.kernel.org with ESMTP
-	id S965023AbWJJGom convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Oct 2006 02:44:42 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965045AbWJJGwg@vger.kernel.org>
 Content-class: urn:content-classes:message
-In-Reply-To: <4527CDCC.1080209@shaw.ca>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <4527C7AB.9080801@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, prakash@punnoor.de
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>, Prakash Punnoor <prakash@punnoor.de>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-> > Unfortunately it doesn't work for me on MCP51 if I change 
-> GENERIC to 
-> > ADMA. So I wonder whether MCP51 has ADMA mode or what needs 
-> to be done 
-> > to get NCQ working. :-(
+> > -Jeff will probably cringe at how I implemented the 
+> > bmdma_stop/start/status/setup functions. This kludge of toggling 
+> > ATA_FLAG_MMIO off for the call into libata was needed since this 
+> > controller is almost what libata calls ATA_FLAG_MMIO, but not quite 
+> > (the ATA taskfile registers are MMIO but the BMDMA 
+> registers are PIO). 
+> > This is also why I needed the patch to libata-sff.c to use the 
+> > adapter's bmdma_status function rather than hardcoded 
+> ata_bmdma_status.
 > 
-> What happened when you tried it? It would be useful if you 
-> could change the #undef in these lines:
+> *shrug*  I don't cringe if that's the most expedient way to 
+> do something.
 > 
->   53 #undef ATA_DEBUG                /* debugging output */
->   54 #undef ATA_VERBOSE_DEBUG        /* yet more debugging output */
-> 
-> in include/linux/libata.h to #define and rebuild and try it 
-> then, that will spew out a bunch more output and I can see if 
-> any reasonable looking values are showing up at all. I was 
-> capturing this output the crude way, booting with vga=6 to 
-> get a smaller font and taking a picture of the screen :-) 
-> Also, maybe post the lspci -v output from the SATA controller..
-> 
-> If that doesn't provide any insight, maybe the docs Jeff has 
-> provide the answer for whether or not the MCP5x/MCP61 
-> controllers have the same interface as the CK804/MCP04..
+> But I really don't think that is necessary.  I will take a 
+> look at docs and see how things match up, when I am much more 
+> awake.  Most likely you need to be using another set of 
+> registers, and be all MMIO, all the time.
 
-No, only CK804 and MCP04 support ADMA.  We'll be publishing some patches
-for NCQ support for MCP55/MCP61 soon.
+You shouldn't be touching BM registers when ADMA is enabled, it can
+cause bad things to happen.
+
+You should be using BM registers when doing ATAPI protocol though, as it
+doesn't work through ADMA.  So I wouldn't say you should be using MMIO
+all the time.
+
+-Allen
 -----------------------------------------------------------------------------------
 This email message is for the sole use of the intended recipient(s) and may contain
 confidential information.  Any unauthorized review, use, disclosure or distribution
