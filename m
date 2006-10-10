@@ -1,81 +1,65 @@
-From: Elias Oltmanns <oltmanns@uni-bonn.de>
-Subject: Re: Debugging strange system lockups possibly triggered by ATA commands
-Date: Tue, 10 Oct 2006 20:58:56 +0200
-Message-ID: <874pucatfz.fsf@denkblock.local>
-References: <741Eo-2m9-5@gated-at.bofh.it>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFT PATCH] libata: implement ATA_FLAG_SETXFER_POLLING and use
+ it in pata_via
+Date: Wed, 11 Oct 2006 07:09:29 +0900
+Message-ID: <452C1A19.6010607@gmail.com>
+References: <20060928111151.GN25800@htj.dyndns.org> <452BEA3D.4020204@free.fr> <452BEAB7.9010901@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751098AbWJJS7v@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, hdaps-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0102.google.com ([64.233.162.202]:61931 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1030568AbWJJWJg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Oct 2006 18:09:36 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so5726nzf
+        for <linux-ide@vger.kernel.org>; Tue, 10 Oct 2006 15:09:35 -0700 (PDT)
+In-Reply-To: <452BEAB7.9010901@free.fr>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: matthieu castet <castet.matthieu@free.fr>
+Cc: alan@lxorguk.ukuu.org.uk, jeff@garzik.org, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Hi again,
+matthieu castet wrote:
+> matthieu castet wrote:
+>> Hi,
+>>
+>> Sorry for the delay.
+>>
+>> Tejun Heo wrote:
+>>
+>>> This patch implements ATA_FLAG_SETXFER_POLLING and use in pata_via.
+>>> If this flag is set, transfer mode setting performed by polling not by
+>>> interrupt.  This should help those controllers which raise interrupt
+>>> before the command is actually complete on SETXFER.
+>>>
+>>> Rationale for this approach.
+>>>
+>>> * uses existing facility and relatively simple
+>>> * no busy sleep in the interrupt handler
+>>> * updating drivers is easy
+>>>
+>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>> ---
+>>>
+>>> Matthieu Castet, can you please test this patch?  It's against
+>>> libata-dev#upstream, but -mm might work too.  If you want a patch
+>>> against -mm, just let me know.
+>>
+>>
+>> With the attached patch against 19-rc1-mm1 (I had to remove pata irq 
+>> handler), it seems to work (see the attached log).
+>>                           * polling IDENTIFY */
+>> +    ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
+>>  
+> opps i forgot to change ATA_FLAG_SETXFER_POLLING to 
+> ATA_FLAG_SETXFER_POLLING (1<<15).
+> 
+> I suppose I need to retest that ?
 
-here is some additional information and further test results:
+Yes, you probably need to.  Both features must have kicked in.
 
-Elias Oltmanns <oltmanns@uni-bonn.de> wrote:
-[...]
-> Unfortunately, my system just froze without displaying a panic
-> message. Moreover, the lockup appears to be hard to reproduce.
+Thanks.
 
-I've been made aware that this might be a hint for all sorts of flacky
-hardware. Admittedly, the test case presented, which involves a very
-tight while true loop, means a lot of stress for the hardware. Let me
-point out, however, that this is just my best approach to trigger the
-problem as fast and reliably as possible. It was only after I had
-experienced such lockups during normal operation that I developed
-this particular test case. "Normal operation" in this context means
-running the hdapsd daemon which writes a positive number to the sysfs
-protect attribute whenever it detects an unusual condition from
-reading data from an acceleration sensor. As soon as hdapsd thinks
-that everything is alright again, it writes a 0 to the protect
-attribute.
-
-This means that in practice a very short sequence of writes to the
-protect attribute under certain conditions suffices to freeze the
-system. Please note, that repeated writes of 1 to the protect
-attribute within an interval of less then one second between each of
-these writes does actually issue the park command to the disk only
-once and just updates the unfreeze timer until there are no further
-writes to protect and the timeout expires and the request queue is
-started again.
-
-> Here are some details about some of the tests I've performed so far:
->
->
-> 1. vanilla 2.6.18:
-> ------------------
-> I used my standard configuration for self compiled kernels and make
-> oldconfig to adjust it to 2.6.18. Basically, that means a highly
-> modularised kernel with ramdisk and initrd support compiled in - by
-> that time I hadn't realised yet that ramdisk support isn't needed for
-> initramfs support anymore. Amongst the modules: ide-core, ide-disk,
-> ide-generic, piix, no sata support. With the hdaps_protect patch applied, I
-> could reliably reproduce the system freeze by the following steps:
-> Boot into single user mode
-> # modprobe ibm-acpi
-> # while true; do echo -n 1 > /sys/block/hda/queue/protect; \
-> > echo -n 0 > /sys/block/hda/queue/protect; done
-> The system freezes and there is no way to reactivate it, except a cold
-> reset. Note that there was no freeze without ibm-acpi being loaded,
-> even modprobe ibm-acpi; modprobe -r ibm-acpi and the while loop did
-> not lead to a freeze. However, switching to the external monitor and
-> back again after loading ibm-acpi prevents the system from freezing
-> too which makes the whole thing even more difficult.
-[...]
-
-The freezes have been observed in all setups of the four test cases
-described in my original post. The problem can be reproduced with
-the while loop as described above but without loading ibm-acpi.
-It seems to be sufficient that the disk is currently performing some
-io operations. Doing ls /usr/sbin instead of modprobe ibm-acpi and
-starting the while loop rather shortly afterwards works as well. At
-least, that makes much more sense than the connection between this
-problem and ibm-acpi. This also indicates that the problem is not as
-configuration dependent as implied before.
-
-Regards,
-
-Elias
+-- 
+tejun
