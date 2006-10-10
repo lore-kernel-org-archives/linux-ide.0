@@ -1,65 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFT PATCH] libata: implement ATA_FLAG_SETXFER_POLLING and use
- it in pata_via
-Date: Wed, 11 Oct 2006 07:09:29 +0900
-Message-ID: <452C1A19.6010607@gmail.com>
-References: <20060928111151.GN25800@htj.dyndns.org> <452BEA3D.4020204@free.fr> <452BEAB7.9010901@free.fr>
+From: Paul Mackerras <paulus@samba.org>
+Subject: Re: 2.6.19-rc1: known regressions (v3)
+Date: Wed, 11 Oct 2006 08:58:45 +1000
+Message-ID: <17708.9637.569670.824121@cargo.ozlabs.ibm.com>
+References: <Pine.LNX.4.64.0610042017340.3952@g5.osdl.org>
+	<20061010051019.GB3650@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.202]:61931 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1030568AbWJJWJg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Oct 2006 18:09:36 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so5726nzf
-        for <linux-ide@vger.kernel.org>; Tue, 10 Oct 2006 15:09:35 -0700 (PDT)
-In-Reply-To: <452BEAB7.9010901@free.fr>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fastboot-bounces@lists.osdl.org>
+In-Reply-To: <20061010051019.GB3650@stusta.de>
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
+	<mailto:fastboot-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/fastboot>
+List-Post: <mailto:fastboot@lists.osdl.org>
+List-Help: <mailto:fastboot-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
+	<mailto:fastboot-request@lists.osdl.org?subject=subscribe>
+Sender: fastboot-bounces@lists.osdl.org
+Errors-To: fastboot-bounces@lists.osdl.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: fastboot@osdl.org, alsa-devel@alsa-project.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Thierry Vignaud <tvignaud@mandriva.com>, discuss@x86-64.org, Trond Myklebust <Trond.Myklebust@netapp.com>, Alex Romosan <romosan@sycorax.lbl.gov>, Torsten Kaiser <kernel@bardioc.dyndns.org>, Olaf Hering <olaf@aepfle.de>, ak@suse.de, linuxppc-dev@ozlabs.org, Andrew de Quincey <adq_dvb@lidskialf.net>, Dave Kleikamp <shaggy@austin.ibm.com>, Jens Axboe <jens.axboe@oracle.com>, Sukadev Bhattiprolu <sukadev@us.ibm.com>, Antonino Daplas <adaplas@pol.net>, v4l-dvb-maintainer@linuxtv.org, perex@suse.cz, Linus Torvalds <torvalds@osdl.org>, linux-pm@osdl.org, linux-fbdev-devel@lists.sourceforge.net, linux-usb-devel@lists.sourceforge.net, linux-ide@vger.kernel.org, Steve Fox <drfickle@us.ibm.com>, netdev@vger.kernel.org, Greg Kroah-Hartman <gregkh>
 List-Id: linux-ide@vger.kernel.org
-To: matthieu castet <castet.matthieu@free.fr>
-Cc: alan@lxorguk.ukuu.org.uk, jeff@garzik.org, linux-ide@vger.kernel.org, akpm@osdl.org
 
-matthieu castet wrote:
-> matthieu castet wrote:
->> Hi,
->>
->> Sorry for the delay.
->>
->> Tejun Heo wrote:
->>
->>> This patch implements ATA_FLAG_SETXFER_POLLING and use in pata_via.
->>> If this flag is set, transfer mode setting performed by polling not by
->>> interrupt.  This should help those controllers which raise interrupt
->>> before the command is actually complete on SETXFER.
->>>
->>> Rationale for this approach.
->>>
->>> * uses existing facility and relatively simple
->>> * no busy sleep in the interrupt handler
->>> * updating drivers is easy
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>> ---
->>>
->>> Matthieu Castet, can you please test this patch?  It's against
->>> libata-dev#upstream, but -mm might work too.  If you want a patch
->>> against -mm, just let me know.
->>
->>
->> With the attached patch against 19-rc1-mm1 (I had to remove pata irq 
->> handler), it seems to work (see the attached log).
->>                           * polling IDENTIFY */
->> +    ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
->>  
-> opps i forgot to change ATA_FLAG_SETXFER_POLLING to 
-> ATA_FLAG_SETXFER_POLLING (1<<15).
-> 
-> I suppose I need to retest that ?
+Adrian Bunk writes:
 
-Yes, you probably need to.  Both features must have kicked in.
+> Subject    : sleep/wakeup on powerbooks apparently busted
+> References : http://lkml.org/lkml/2006/10/5/13
+> Submitter  : Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Handled-By : Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Status     : Benjamin will investigate
 
-Thanks.
+Should be fixed once Linus pulls the powerpc.git tree.
 
--- 
-tejun
+Paul.
