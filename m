@@ -1,49 +1,67 @@
-From: "Allen Martin" <AMartin@nvidia.com>
-Subject: RE: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
-Date: Mon, 9 Oct 2006 23:52:34 -0700
-Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B018E8171B@hqemmail02.nvidia.com>
-References: <4527C7AB.9080801@garzik.org>
+From: Prakash Punnoor <prakash@punnoor.de>
+Subject: Re: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
+Date: Tue, 10 Oct 2006 09:52:28 +0200
+Message-ID: <200610100952.31913.prakash@punnoor.de>
+References: <DBFABB80F7FD3143A911F9E6CFD477B018E81719@hqemmail02.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965045AbWJJGwg@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <4527C7AB.9080801@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, prakash@punnoor.de
+Content-Type: multipart/signed;
+  boundary="nextPart1333816.Ofur7ZDYHh";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-in-13.arcor-online.net ([151.189.21.53]:49305 "EHLO
+	mail-in-01.arcor-online.net") by vger.kernel.org with ESMTP
+	id S1752001AbWJJHwa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Oct 2006 03:52:30 -0400
+In-Reply-To: <DBFABB80F7FD3143A911F9E6CFD477B018E81719@hqemmail02.nvidia.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Allen Martin <AMartin@nvidia.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-> > -Jeff will probably cringe at how I implemented the 
-> > bmdma_stop/start/status/setup functions. This kludge of toggling 
-> > ATA_FLAG_MMIO off for the call into libata was needed since this 
-> > controller is almost what libata calls ATA_FLAG_MMIO, but not quite 
-> > (the ATA taskfile registers are MMIO but the BMDMA 
-> registers are PIO). 
-> > This is also why I needed the patch to libata-sff.c to use the 
-> > adapter's bmdma_status function rather than hardcoded 
-> ata_bmdma_status.
-> 
-> *shrug*  I don't cringe if that's the most expedient way to 
-> do something.
-> 
-> But I really don't think that is necessary.  I will take a 
-> look at docs and see how things match up, when I am much more 
-> awake.  Most likely you need to be using another set of 
-> registers, and be all MMIO, all the time.
+--nextPart1333816.Ofur7ZDYHh
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-You shouldn't be touching BM registers when ADMA is enabled, it can
-cause bad things to happen.
+Am Dienstag 10 Oktober 2006 08:44 schrieb Allen Martin:
+> > > Unfortunately it doesn't work for me on MCP51 if I change
+> >
+> > GENERIC to
+> >
+> > > ADMA. So I wonder whether MCP51 has ADMA mode or what needs
+> >
+> > to be done
+> >
+> > > to get NCQ working. :-(
+> >
 
-You should be using BM registers when doing ATAPI protocol though, as it
-doesn't work through ADMA.  So I wouldn't say you should be using MMIO
-all the time.
+> > If that doesn't provide any insight, maybe the docs Jeff has
+> > provide the answer for whether or not the MCP5x/MCP61
+> > controllers have the same interface as the CK804/MCP04..
+>
+> No, only CK804 and MCP04 support ADMA.  We'll be publishing some patches
+> for NCQ support for MCP55/MCP61 soon.
 
--Allen
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+That's great news! I hope you don't forget the MCP51, as well, as you didn'=
+t=20
+mention it. :-)
+=2D-=20
+(=B0=3D                 =3D=B0)
+//\ Prakash Punnoor /\\
+V_/                 \_V
+
+--nextPart1333816.Ofur7ZDYHh
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFK1E/xU2n/+9+t5gRAhBeAJ9VnJ99I6uNesna0uXF2nGukCgKEQCgx8Gp
+JC9wmOtyDgasbUBPjDLKX3U=
+=Oirh
+-----END PGP SIGNATURE-----
+
+--nextPart1333816.Ofur7ZDYHh--
