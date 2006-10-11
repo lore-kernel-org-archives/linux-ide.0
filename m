@@ -1,38 +1,38 @@
-From: "Shem Multinymous" <multinymous@gmail.com>
-Subject: Re: Debugging strange system lockups possibly triggered by ATA commands
-Date: Wed, 11 Oct 2006 15:19:58 +0200
-Message-ID: <41840b750610110619v56d3efd5h7a05cfb42cb21464@mail.gmail.com>
-References: <741Eo-2m9-5@gated-at.bofh.it> <742hc-4n3-25@gated-at.bofh.it>
-	 <87ejtgatgp.fsf@denkblock.local>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: handle 0xff status properly
+Date: Wed, 11 Oct 2006 17:16:28 +0100
+Message-ID: <1160583388.16513.27.camel@localhost.localdomain>
+References: <20061009093215.GF10832@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:55444 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1751272AbWJKNUA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Oct 2006 09:20:00 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so103272ugd
-        for <linux-ide@vger.kernel.org>; Wed, 11 Oct 2006 06:19:58 -0700 (PDT)
-In-Reply-To: <87ejtgatgp.fsf@denkblock.local>
-Content-Disposition: inline
+Received: from [81.2.110.250] ([81.2.110.250]:949 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S1161090AbWJKPvU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Oct 2006 11:51:20 -0400
+In-Reply-To: <20061009093215.GF10832@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, hdaps-devel@sourceforge.net
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Joe Jin <lkmaillist@gmail.com>
 
-Hi Elias,
+Ar Llu, 2006-10-09 am 18:32 +0900, ysgrifennodd Tejun Heo:
+> libata waits for !BSY even when the status register reports 0xff.
+> This causes long boot delays when D8 isn't pulled down properly.  This
+> patch does the followings.
+> 
+> * don't wait if status register is 0xff in all wait functions
+> 
+> * make ata_busy_sleep() return 0 on success and -errno on failure.
+>   -ENODEV is returned on 0xff status and -EBUSY on other failures.
+> 
+> * make ata_bus_softreset() succeed on 0xff status.  0xff status is not
+>   reset failure.  It indicates no device.  This removes unnecessary
+>   retries on such ports.  Note that the code change assumes unoccupied
+>   port reporting 0xff status does not produce valid device signature.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Joe Jin <lkmaillist@gmail.com>
 
-On 10/10/06, Elias Oltmanns <oltmanns@uni-bonn.de> wrote:
-> Testing the queue handling stuff without actually issuing any
-> commands seems rather difficult to me as its the callback mechanism
-> used to freeze the queue after command completion which I'd really
-> like to test. If I don't issue any command, I don't know how to test
-> whether the callback procedure and all the rest works as expected.
+Acked-by: Alan Cox <alan@redhat.com>
 
-Try doing a dump_stack(), and nothing else, in the callback. This may
-provide some hint.
-
-(Remember to increase console_loglevel so you can see the result on
-the console before the hang.)
-
-  Shem
