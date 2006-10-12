@@ -1,79 +1,210 @@
-From: "Jonathan Bell" <doggs.lay.eggs@googlemail.com>
-Subject: Re: Errors when copying between drives on a SiI3114 controller under kernel 2.6.18
-Date: Wed, 11 Oct 2006 23:35:03 +0100
-Message-ID: <op.tg93opjoxci36i@akima>
-References: <op.tg1yx12kxci36i@akima> <45287FA6.5020906@gmail.com> <op.tg3tyekpxci36i@akima> <452A0A86.8070107@gmail.com> <452A0BA6.8030401@gmail.com> <op.tg5ssogyxci36i@akima>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH] Generic platform device IDE driver
+Date: Thu, 12 Oct 2006 15:13:48 +0900
+Message-ID: <20061012061348.GA7844@linux-sh.org>
+References: <20061004074535.GA7180@localhost.hsdv.com> <1159972725.25772.26.camel@localhost.localdomain> <20061005091631.GA8631@localhost.hsdv.com> <200610111450.41909.matthias.fuchs@esd-electronics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed	delsp=yes
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:19285 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1161245AbWJKWfC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Oct 2006 18:35:02 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so214470ugd
-        for <linux-ide@vger.kernel.org>; Wed, 11 Oct 2006 15:35:01 -0700 (PDT)
-In-Reply-To: <op.tg5ssogyxci36i@akima>
+Received: from smtp.ocgnet.org ([64.20.243.3]:15559 "EHLO smtp.ocgnet.org")
+	by vger.kernel.org with ESMTP id S932492AbWJLGOI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Oct 2006 02:14:08 -0400
+Content-Disposition: inline
+In-Reply-To: <200610111450.41909.matthias.fuchs@esd-electronics.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Matthias Fuchs <matthias.fuchs@esd-electronics.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
 
-On Mon, 09 Oct 2006 15:49:26 +0100, Jonathan Bell  
-<doggs.lay.eggs@googlemail.com> wrote:
+Hi Matthias,
 
-> On Mon, 09 Oct 2006 09:43:18 +0100, Tejun Heo <htejun@gmail.com> wrote:
->
->> Tejun Heo wrote:
->>> I cannot reproduce your problem here.  Can you retest after running  
->>> the following commands?
->>>  # setpci -s 01:07.0 0c.b=04
->>> # setpci -s 01:08.0 0c.b=04
->>
->> I forgot something.
->>
->> * You need to make sata_sil a module.  Boot, unload sata_sil if loaded,  
->> run above commands, load sata_sil and test.
->>
->> * If above commands don't work, try =00 instead of =04.
->>
->> Thanks.
->>
->
->
-> setpci -s 01:07/8.0 0c.b=04 performed, sata_sil inserted...
->
-> md5sum crapped out again, similar errors in dmesg as before.
->
-> setpci -s 01:07/8.0 0c.b=00 performed, sata_sil inserted...
->
-> It worked...
-> cp ~/hugefile /mnt/sda1 && cp /mnt/sda1/hugefile /mnt/sdb1
-> && md5sum /mnt/sda1/hugefile /mnt/sdb1/hugefile
->
-> ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sda1/hugefile
-> ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sdb1/hugefile
->
-> What does this register do, out of interest? With 00 it took ages and  
-> made my load average shoot up to about 6.50!
->
->
->
+On Wed, Oct 11, 2006 at 02:50:41PM +0200, Matthias Fuchs wrote:
+> I tried you patch on our CPCI405 PowerPC board 
+> (arch/ppc/platforms/4xx/cpci405.c). 
+> It seems to work fine together with our onboard CompactFlash slot.
+> 
+> Because our IDE registers are memory mapped, I had to patch the 
+> resource .start and .end address by subtracting _IO_BASE, 
+> so that the pata code can use the IO way to talk to the 
+> IDE registers.
+> 
+> Perhaps it is a good idea to update the pata platform driver to be able to 
+> handle both _IO and _MEM resources. The _IO resources be be handled 
+> as it is already done by your code and for _MEM resources the pata platform
+> driver can do the ioremapping as I currently do in my board setup.
+> 
+Yes, that's one thing I was thinking of as well.. Here's a patch that
+makes an attempt at that, can you give it a try and see if it works for
+you? This applies on top of the earlier patch. None of the ARM, SH, or
+H8300 cases need to do the remapping at least.
 
-Apologies for bumping this a mere 2 days later but I felt that progress  
-was being made...
+Hopefully this will clean up your setup mess a bit.. If this works for
+you, I'll tidy it up a bit and submit the entire patch again.
 
-Ok, so it's the PCI cache line size register... 08 means a value of 64  
-bits which corresponds to the line size of my L1/L2 cache, am I correct?
+ drivers/ata/pata_platform.c |  103 ++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 90 insertions(+), 13 deletions(-)
 
-The fact that even with a value of 01 set (for fun) still corrupts the  
-file seems to indicate that the fault is somewhere there, but why? Should  
-I just give up and buy a decent mainboard? :P (currently running  
-A7N8X-Deluxe v2.0, latest 1008 BIOS)
+--
 
-I would like to know more about this since the only topics on PCI cache  
-line sizes I can find are ones where people are having problems.
-
-Regards
-Jonathan
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 5d98332..a716e63 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -21,7 +21,7 @@ #include <linux/libata.h>
+ #include <linux/platform_device.h>
+ 
+ #define DRV_NAME "pata_platform"
+-#define DRV_VERSION "0.1.0"
++#define DRV_VERSION "0.1.1"
+ 
+ static int pio_mask = 1;
+ 
+@@ -45,6 +45,23 @@ static void pata_platform_set_mode(struc
+ 	}
+ }
+ 
++static void pata_platform_host_stop(struct ata_host *host)
++{
++	int i;
++
++	/*
++	 * Unmap the bases for MMIO
++	 */
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		if (ap->flags & ATA_FLAG_MMIO) {
++			iounmap((void __iomem *)ap->ioaddr.ctl_addr);
++			iounmap((void __iomem *)ap->ioaddr.cmd_addr);
++		}
++	}
++}
++
+ static struct scsi_host_template pata_platform_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -88,7 +105,7 @@ static struct ata_port_operations pata_p
+ 
+ 	.port_start		= ata_port_start,
+ 	.port_stop		= ata_port_stop,
+-	.host_stop		= ata_host_stop
++	.host_stop		= pata_platform_host_stop
+ };
+ 
+ /**
+@@ -100,14 +117,20 @@ static struct ata_port_operations pata_p
+  *
+  *	Platform devices are expected to contain 3 resources per port:
+  *
+- *		- I/O Base (IORESOURCE_IO)
+- *		- CTL Base (IORESOURCE_IO)
++ *		- I/O Base (IORESOURCE_IO or IORESOURCE_MEM)
++ *		- CTL Base (IORESOURCE_IO or IORESOURCE_MEM)
+  *		- IRQ	   (IORESOURCE_IRQ)
++ *
++ * 	If the base resources are both mem types, the ioremap() is handled
++ * 	here. For IORESOURCE_IO, it's assumed that there's no remapping
++ * 	necessary.
+  */
+ static int __devinit pata_platform_probe(struct platform_device *pdev)
+ {
+ 	struct resource *io_res, *ctl_res;
+ 	struct ata_probe_ent ae;
++	unsigned int mmio;
++	int ret;
+ 
+ 	/*
+ 	 * Simple resource validation ..
+@@ -117,13 +140,31 @@ static int __devinit pata_platform_probe
+ 		return -EINVAL;
+ 	}
+ 
++	/*
++	 * Get the I/O base first
++	 */
+ 	io_res = platform_get_resource(pdev, IORESOURCE_IO, 0);
+-	if (unlikely(io_res == NULL))
+-		return -EINVAL;
++	if (io_res == NULL) {
++		io_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++		if (unlikely(io_res == NULL))
++			return -EINVAL;
++	}
+ 
++	/*
++	 * Then the CTL base
++	 */
+ 	ctl_res = platform_get_resource(pdev, IORESOURCE_IO, 1);
+-	if (unlikely(ctl_res == NULL))
+-		return -EINVAL;
++	if (ctl_res == NULL) {
++		ctl_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++		if (unlikely(ctl_res == NULL))
++			return -EINVAL;
++	}
++
++	/*
++	 * Check for MMIO
++	 */
++	mmio = (( io_res->flags == IORESOURCE_MEM) &&
++		(ctl_res->flags == IORESOURCE_MEM));
+ 
+ 	/*
+ 	 * Now that that's out of the way, wire up the port..
+@@ -138,15 +179,51 @@ static int __devinit pata_platform_probe
+ 	ae.irq = platform_get_irq(pdev, 0);
+ 	ae.irq_flags = 0;
+ 	ae.port_flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST;
+-	ae.port[0].cmd_addr = io_res->start;
+-	ae.port[0].altstatus_addr = ctl_res->start;
+-	ae.port[0].ctl_addr = ctl_res->start;
++
++	/*
++	 * Handle the MMIO case
++	 */
++	if (mmio) {
++		ae.port_flags |= ATA_FLAG_MMIO;
++
++		ae.port[0].cmd_addr = (unsigned long)ioremap(io_res->start,
++				io_res->end - io_res->start + 1);
++		if (unlikely(!ae.port[0].cmd_addr)) {
++			dev_err(&pdev->dev, "failed to remap IO base\n");
++			return -ENXIO;
++		}
++
++		ae.port[0].ctl_addr = (unsigned long)ioremap(ctl_res->start,
++				ctl_res->end - ctl_res->start + 1);
++		if (unlikely(!ae.port[0].ctl_addr)) {
++			dev_err(&pdev->dev, "failed to remap CTL base\n");
++			ret = -ENXIO;
++			goto bad_remap;
++		}
++	} else {
++		ae.port[0].cmd_addr = io_res->start;
++		ae.port[0].ctl_addr = ctl_res->start;
++	}
++
++	ae.port[0].altstatus_addr = ae.port[0].ctl_addr;
++
+ 	ata_std_ports(&ae.port[0]);
+ 
+-	if (unlikely(ata_device_add(&ae) == 0))
+-		return -ENODEV;
++	if (unlikely(ata_device_add(&ae) == 0)) {
++		ret = -ENODEV;
++		goto add_failed;
++	}
+ 
+ 	return 0;
++
++add_failed:
++	if (ae.port[0].ctl_addr && mmio)
++		iounmap((void __iomem *)ae.port[0].ctl_addr);
++bad_remap:
++	if (ae.port[0].cmd_addr && mmio)
++		iounmap((void __iomem *)ae.port[0].cmd_addr);
++
++	return ret;
+ }
+ 
+ /**
