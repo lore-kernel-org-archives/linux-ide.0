@@ -1,47 +1,78 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [PATCH] Generic platform device IDE driver
-Date: Fri, 13 Oct 2006 08:52:19 +0100
-Message-ID: <20061013075219.GA28654@flint.arm.linux.org.uk>
-References: <20061004074535.GA7180@localhost.hsdv.com> <1159972725.25772.26.camel@localhost.localdomain> <20061005091631.GA8631@localhost.hsdv.com> <200610111450.41909.matthias.fuchs@esd-electronics.com> <20061012061348.GA7844@linux-sh.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
+Date: Fri, 13 Oct 2006 10:04:35 +0200
+Message-ID: <20061013080434.GE6515@kernel.dk>
+References: <DBFABB80F7FD3143A911F9E6CFD477B018E8171B@hqemmail02.nvidia.com> <452C7C1D.3040704@shaw.ca> <20061011103038.GK6515@kernel.dk> <452F053B.2000906@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([217.147.92.249]:47369 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S1751426AbWJMHwf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Oct 2006 03:52:35 -0400
+Received: from brick.kernel.dk ([62.242.22.158]:41558 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1750709AbWJMIEV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Oct 2006 04:04:21 -0400
 Content-Disposition: inline
-In-Reply-To: <20061012061348.GA7844@linux-sh.org>
+In-Reply-To: <452F053B.2000906@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: Matthias Fuchs <matthias.fuchs@esd-electronics.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, prakash@punnoor.de
 
-On Thu, Oct 12, 2006 at 03:13:48PM +0900, Paul Mundt wrote:
-> On Wed, Oct 11, 2006 at 02:50:41PM +0200, Matthias Fuchs wrote:
-> > Perhaps it is a good idea to update the pata platform driver to be able to 
-> > handle both _IO and _MEM resources. The _IO resources be be handled 
-> > as it is already done by your code and for _MEM resources the pata platform
-> > driver can do the ioremapping as I currently do in my board setup.
->
-> Yes, that's one thing I was thinking of as well.. Here's a patch that
-> makes an attempt at that, can you give it a try and see if it works for
-> you? This applies on top of the earlier patch. None of the ARM, SH, or
-> H8300 cases need to do the remapping at least.
+On Thu, Oct 12 2006, Robert Hancock wrote:
+> Jens Axboe wrote:
+> >On Tue, Oct 10 2006, Robert Hancock wrote:
+> >>Allen Martin wrote:
+> >>>>But I really don't think that is necessary.  I will take a 
+> >>>>look at docs and see how things match up, when I am much more 
+> >>>>awake.  Most likely you need to be using another set of 
+> >>>>registers, and be all MMIO, all the time.
+> >>>You shouldn't be touching BM registers when ADMA is enabled, it can
+> >>>cause bad things to happen.
+> >>>
+> >>>You should be using BM registers when doing ATAPI protocol though, as it
+> >>>doesn't work through ADMA.  So I wouldn't say you should be using MMIO
+> >>>all the time.
+> >>>
+> >>>-Allen
+> >>OK, I've updated the code to take this into account, an updated patch is 
+> >>attached. However, this does raise an issue. If we have to fall back to 
+> >>legacy mode to do ATAPI DMA, this means that we can't do 64-bit DMA for 
+> >>such transfers. Since by the time the driver gets a request the SGs have 
+> >>already been created based on the set DMA mask, the only way I can see 
+> >>to handle this is to either allow ATAPI DMA or 64-bit DMA, not both. 
+> >>I've chosen to default to 64-bit DMA in this version, but there is a 
+> >>module parameter which allows overriding this if you care more about 
+> >>using ATAPI devices than efficiency with over 4GB of RAM. I'm open to 
+> >>suggestions on a better way to handle this..
+> >
+> >Should be easily fixable - in general, set 64-bit dma mask. Then when
+> >you detect an atapi device, lower the dma mask settings to 32-bit dma
+> >for that device only. So the pci device in question gets a full 64-bit
+> >dma mask, the attached scsi devices can have lower masks if necessary.
+> >I'd suggest doing this off slave config.
+> >
+> 
+> I think that should be feasible.. However, one problem is that 
+> slave_config only has access to the struct scsi_device and the 
+> ata_scsi_find_dev function to turn that into a struct ata_device isn't 
+> exported, which it would need to be in order to do anything useful 
+> inside the driver for slave_config. We could export it, or I suppose the 
+> other place we could do this handling would be postreset, as at that 
+> point we should know what kind of device is attached.. any comments?
 
-It's likely that ARM will switch over to using the MMIO resources if
-this patch makes it in.  There's certain ARM platforms which would
-benefit from this change (since inb() and friends are more complex
-than they necessarily need to be.)
+What else do you need? From the scsi device, call the
+blk_queue_bounce_limit() on the queue tored in there. That shold be it.
 
-However, one issue needs to be solved before we could do that - how do
-we handle the case where the IDE registers are on a 4 byte spacing
-interval instead of the usual 1 byte?
+> Also, how is the driver supposed to be setting the DMA mask for the SCSI 
+> device? I suppose blk_queue_bounce_limit would work, but it seems a bit 
+> odd to use block layer calls at the libata driver level.
 
-I notice that this driver is calling ata_std_ports() which handles
-the standard setup.  Maybe that needs to become a little more inteligent?
+That is the right thing to do.
+
+> I also noticed that I'm still using the default 64KB libata dma_boundary 
+> value, this should be 4GB for ADMA mode (but fixed up back to the 
+> default if an ATAPI device is connected, same as with the DMA mask).
+
+You can set that from the same location as the bounce limit.
 
 -- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+Jens Axboe
+
