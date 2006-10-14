@@ -1,105 +1,90 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [1/3] 2.6.19-rc2: known unfixed regressions
-Date: Sat, 14 Oct 2006 13:22:26 +0200
-Message-ID: <20061014112226.GJ30596@stusta.de>
-References: <Pine.LNX.4.64.0610130941550.3952@g5.osdl.org> <20061014111458.GI30596@stusta.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Errors when copying between drives on a SiI3114 controller under
+ kernel 2.6.18
+Date: Sat, 14 Oct 2006 21:13:40 +0900
+Message-ID: <4530D474.6000609@gmail.com>
+References: <op.tg1yx12kxci36i@akima> <45287FA6.5020906@gmail.com> <op.tg3tyekpxci36i@akima> <452A0A86.8070107@gmail.com> <452A0BA6.8030401@gmail.com> <op.tg5ssogyxci36i@akima> <op.tg93opjoxci36i@akima>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:30737 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1752159AbWJNLWb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 14 Oct 2006 07:22:31 -0400
-Content-Disposition: inline
-In-Reply-To: <20061014111458.GI30596@stusta.de>
+Received: from nf-out-0910.google.com ([64.233.182.190]:21441 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S932191AbWJNMNu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 14 Oct 2006 08:13:50 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so283749nfe
+        for <linux-ide@vger.kernel.org>; Sat, 14 Oct 2006 05:13:48 -0700 (PDT)
+In-Reply-To: <op.tg93opjoxci36i@akima>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jesper Juhl <jesper.juhl@gmail.com>, David Howells <dhowells@redhat.com>, James.Bottomley@HansenPartnership.com, pazke@donpac.ru, linux-visws-devel@lists.sf.net, Alex Romosan <romosan@sycorax.lbl.gov>, Jens Axboe <jens.axboe@oracle.com>, Thierry Vignaud <tvignaud@mandriva.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Olaf Hering <olaf@aepfle.de>, Antonino Daplas <adaplas@pol.net>, linux-fbdev-devel@lists.sourceforge.net, art@usfltd.com, ak@suse.de, discuss@x86-64.org, Robert Hancock <hancockr@shaw.ca>, "Eric W. Biederman" <ebiederm@xmission.com>, David Gerber <dg-kernel-bug@zapek.com>, Dmitry Torokhov <dtor@insightbb.com>, John Stultz <johnstul@us.ibm.com>, linux-input@atrey.karlin.mff.cuni.cz, Kenny Graunke <kenny@whitecape.org>, Patrick Jefferson <henj@hp.com>, Alan Cox <alan@redhat.com>
+To: Jonathan Bell <doggs.lay.eggs@googlemail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-This email lists some known unfixed regressions in 2.6.19-rc2 compared 
-to 2.6.18.
+[cc'ing Carlos again.  please don't drop cc list]
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possibly
-involved with one or more of these issues.
+Jonathan Bell wrote:
+> On Mon, 09 Oct 2006 15:49:26 +0100, Jonathan Bell 
+> <doggs.lay.eggs@googlemail.com> wrote:
+> 
+>> On Mon, 09 Oct 2006 09:43:18 +0100, Tejun Heo <htejun@gmail.com> wrote:
+>>
+>>> Tejun Heo wrote:
+>>>> I cannot reproduce your problem here.  Can you retest after running 
+>>>> the following commands?
+>>>>  # setpci -s 01:07.0 0c.b=04
+>>>> # setpci -s 01:08.0 0c.b=04
+>>>
+>>> I forgot something.
+>>>
+>>> * You need to make sata_sil a module.  Boot, unload sata_sil if 
+>>> loaded, run above commands, load sata_sil and test.
+>>>
+>>> * If above commands don't work, try =00 instead of =04.
+>>>
+>>> Thanks.
+>>
+>> setpci -s 01:07/8.0 0c.b=04 performed, sata_sil inserted...
+>>
+>> md5sum crapped out again, similar errors in dmesg as before.
+>>
+>> setpci -s 01:07/8.0 0c.b=00 performed, sata_sil inserted...
+>>
+>> It worked...
+>> cp ~/hugefile /mnt/sda1 && cp /mnt/sda1/hugefile /mnt/sdb1
+>> && md5sum /mnt/sda1/hugefile /mnt/sdb1/hugefile
+>>
+>> ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sda1/hugefile
+>> ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sdb1/hugefile
+>>
+>> What does this register do, out of interest? With 00 it took ages and 
+>> made my load average shoot up to about 6.50!
+> 
+> Apologies for bumping this a mere 2 days later but I felt that progress 
+> was being made...
+> 
+> Ok, so it's the PCI cache line size register... 08 means a value of 64 
+> bits which corresponds to the line size of my L1/L2 cache, am I correct?
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+Yes, you're right.
 
+> The fact that even with a value of 01 set (for fun) still corrupts the 
+> file seems to indicate that the fault is somewhere there, but why? 
+> Should I just give up and buy a decent mainboard? :P (currently running 
+> A7N8X-Deluxe v2.0, latest 1008 BIOS)
 
-Subject    : CONFIG_X86_VOYAGER=y, CONFIG_SMP=n compile error
-References : http://lkml.org/lkml/2006/10/7/51
-Submitter  : Jesper Juhl <jesper.juhl@gmail.com>
-Caused-By  : David Howells <dhowells@redhat.com>
-             commit 7d12e780e003f93433d49ce78cfedf4b4c52adc5
-Status     : unknown
+I'm not sure whether the cache line size is the actual problem or the 
+slowdown caused by 0 cacheline size (r/w optimizations based on 
+cacheline size are turned off) hides the problem.  I was hoping BIOS 
+messed up while setting cachline size and adjusting it to 4 makes things 
+work.
 
+> I would like to know more about this since the only topics on PCI cache 
+> line sizes I can find are ones where people are having problems.
 
-Subject    : CONFIG_X86_VISWS=y, CONFIG_SMP=n compile error
-References : http://lkml.org/lkml/2006/10/7/51
-Submitter  : Jesper Juhl <jesper.juhl@gmail.com>
-Caused-By  : David Howells <dhowells@redhat.com>
-             commit 7d12e780e003f93433d49ce78cfedf4b4c52adc5
-Status     : unknown
+I don't know.  I think this can be best diagnosed by SIMG.  Carlos, does 
+anything ring a bell?
 
+Thanks.
 
-Subject    : unable to rip cd
-References : http://lkml.org/lkml/2006/10/13/100
-Submitter  : Alex Romosan <romosan@sycorax.lbl.gov>
-Status     : unknown
-
-
-Subject    : sata-via doesn't detect anymore disks attached to VIA vt6421
-References : http://bugzilla.kernel.org/show_bug.cgi?id=7255
-Submitter  : Thierry Vignaud <tvignaud@mandriva.com>
-Status     : unknown
-
-
-Subject    : monitor not active after boot
-References : http://lkml.org/lkml/2006/10/5/338
-Submitter  : Olaf Hering <olaf@aepfle.de>
-Caused-By  : Antonino Daplas <adaplas@pol.net>
-             commit 346bc21026e7a92e1d7a4a1b3792c5e8b686133d
-Status     : unknown
-
-
-Subject    : SMP x86_64 boot problem
-References : http://lkml.org/lkml/2006/9/28/330
-             http://lkml.org/lkml/2006/10/5/289
-Submitter  : art@usfltd.com
-Status     : submitter was asked to git bisect
-             result of bisecting seems to be wrong
-
-
-Subject    : do_IRQ: No irq handler for vector
-References : http://lkml.org/lkml/2006/10/11/13
-Submitter  : Robert Hancock <hancockr@shaw.ca>
-Handled-By : "Eric W. Biederman" <ebiederm@xmission.com>
-Status     : Andrew: a few people are seeing this. Eric is working it.
-
-
-Subject    : messed up keyboard events, TSC related
-References : http://bugzilla.kernel.org/show_bug.cgi?id=7291
-Submitter  : David Gerber <dg-kernel-bug@zapek.com>
-Handled-By : Dmitry Torokhov <dtor@insightbb.com>
-             John Stultz <johnstul@us.ibm.com>
-Status     : Dmitry and John are investigating
-
-
-Subject    : ide-generic no longer finds marvell controller
-References : http://bugzilla.kernel.org/show_bug.cgi?id=7353
-Submitter  : Kenny Graunke <kenny@whitecape.org>
-Caused-By  : Patrick Jefferson <henj@hp.com>
-             commit a4bea10eca68152e84ffc4eaeb9d20ec2ac34664
-Handled-By : Alan Cox <alan@redhat.com>
-Status     : Alan is investigating
-
-
-Subject    : cpufreq not working on AMD K8
-References : http://lkml.org/lkml/2006/10/10/114
-Submitter  : Christian <christiand59@web.de>
-Handled-By : Mark Langsdorf <mark.langsdorf@amd.com>
-Status     : Mark is investigating
-
-
+-- 
+tejun
