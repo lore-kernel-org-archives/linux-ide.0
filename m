@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/18] [PATCH] libata-link: implement ata_link_abort()
-Date: Mon, 16 Oct 2006 07:54:41 +0900
-Message-ID: <11609528814161-git-send-email-htejun@gmail.com>
+Subject: [PATCH 7/18] [PATCH] libata-link: linkify EH action helpers
+Date: Mon, 16 Oct 2006 07:54:40 +0900
+Message-ID: <11609528803629-git-send-email-htejun@gmail.com>
 References: <1160952879581-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:2229 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.188]:50102 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1422929AbWJOWyx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1422928AbWJOWyx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Sun, 15 Oct 2006 18:54:53 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so626618nfe
+Received: by nf-out-0910.google.com with SMTP id c2so626620nfe
         for <linux-ide@vger.kernel.org>; Sun, 15 Oct 2006 15:54:53 -0700 (PDT)
 In-Reply-To: <1160952879581-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,114 +20,173 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement ata_link_abort().
+Make ata_eh_about_to_do() and ata_eh_done() deal with ata_link instead
+of ata_port.
+
+This patch introduces no behavior change.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |    1 +
- drivers/ata/libata-eh.c   |   50 ++++++++++++++++++++++++++++++++-------------
- include/linux/libata.h    |    1 +
- 3 files changed, 38 insertions(+), 14 deletions(-)
+ drivers/ata/libata-eh.c |   43 ++++++++++++++++++++++---------------------
+ 1 files changed, 22 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 67e08e3..2813bb8 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6349,6 +6349,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_device_resume
- 
- EXPORT_SYMBOL_GPL(ata_eng_timeout);
- EXPORT_SYMBOL_GPL(ata_port_schedule_eh);
-+EXPORT_SYMBOL_GPL(ata_link_abort);
- EXPORT_SYMBOL_GPL(ata_port_abort);
- EXPORT_SYMBOL_GPL(ata_port_freeze);
- EXPORT_SYMBOL_GPL(ata_eh_freeze_port);
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 9b16bc6..d1927a7 100644
+index 9cf41c4..7c089d3 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -533,19 +533,7 @@ void ata_port_schedule_eh(struct ata_por
- 	DPRINTK("port EH scheduled\n");
- }
+@@ -766,23 +766,24 @@ static void ata_eh_detach_dev(struct ata
  
--/**
-- *	ata_port_abort - abort all qc's on the port
-- *	@ap: ATA port to abort qc's for
-- *
-- *	Abort all active qc's of @ap and schedule EH.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- *
-- *	RETURNS:
-- *	Number of aborted qc's.
-- */
--int ata_port_abort(struct ata_port *ap)
-+static int ata_do_link_abort(struct ata_port *ap, struct ata_link *link)
+ /**
+  *	ata_eh_about_to_do - about to perform eh_action
+- *	@ap: target ATA port
++ *	@link: target ATA link
+  *	@dev: target ATA dev for per-dev action (can be NULL)
+  *	@action: action about to be performed
+  *
+  *	Called just before performing EH actions to clear related bits
+- *	in @ap->link.eh_info such that eh actions are not
+- *	unnecessarily repeated.
++ *	in @link->eh_info such that eh actions are not unnecessarily
++ *	repeated.
+  *
+  *	LOCKING:
+  *	None.
+  */
+-static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
++static void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+ 			       unsigned int action)
  {
- 	int tag, nr_aborted = 0;
++	struct ata_port *ap = link->ap;
++	struct ata_eh_info *ehi = &link->eh_info;
++	struct ata_eh_context *ehc = &link->eh_context;
+ 	unsigned long flags;
+-	struct ata_eh_info *ehi = &ap->link.eh_info;
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
  
-@@ -554,7 +542,7 @@ int ata_port_abort(struct ata_port *ap)
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
+ 	spin_lock_irqsave(ap->lock, flags);
  
--		if (qc) {
-+		if (qc && (!link || qc->dev->link == link)) {
- 			qc->flags |= ATA_QCFLAG_FAILED;
- 			ata_qc_complete(qc);
- 			nr_aborted++;
-@@ -568,6 +556,40 @@ int ata_port_abort(struct ata_port *ap)
+@@ -799,7 +800,7 @@ static void ata_eh_about_to_do(struct at
+ 		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+ 	}
+ 
+-	ata_eh_clear_action(&ap->link, dev, ehi, action);
++	ata_eh_clear_action(link, dev, ehi, action);
+ 
+ 	if (!(ehc->i.flags & ATA_EHI_QUIET))
+ 		ap->pflags |= ATA_PFLAG_RECOVERED;
+@@ -809,20 +810,20 @@ static void ata_eh_about_to_do(struct at
+ 
+ /**
+  *	ata_eh_done - EH action complete
+- *	@ap: target ATA port
++*	@ap: target ATA port
+  *	@dev: target ATA dev for per-dev action (can be NULL)
+  *	@action: action just completed
+  *
+  *	Called right after performing EH actions to clear related bits
+- *	in @ap->link.eh_context.
++ *	in @link->eh_context.
+  *
+  *	LOCKING:
+  *	None.
+  */
+-static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
++static void ata_eh_done(struct ata_link *link, struct ata_device *dev,
+ 			unsigned int action)
+ {
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
++	struct ata_eh_context *ehc = &link->eh_context;
+ 
+ 	/* if reset is complete, clear all reset actions & reset modifier */
+ 	if (action & ATA_EH_RESET_MASK) {
+@@ -830,7 +831,7 @@ static void ata_eh_done(struct ata_port 
+ 		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+ 	}
+ 
+-	ata_eh_clear_action(&ap->link, dev, &ehc->i, action);
++	ata_eh_clear_action(link, dev, &ehc->i, action);
  }
  
  /**
-+ *	ata_link_abort - abort all qc's on the link
-+ *	@link: ATA link to abort qc's for
-+ *
-+ *	Abort all active qc's active on @link and schedule EH.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	Number of aborted qc's.
-+ */
-+int ata_link_abort(struct ata_link *link)
-+{
-+	return ata_do_link_abort(link->ap, link);
-+}
-+
-+/**
-+ *	ata_port_abort - abort all qc's on the port
-+ *	@ap: ATA port to abort qc's for
-+ *
-+ *	Abort all active qc's of @ap and schedule EH.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	Number of aborted qc's.
-+ */
-+int ata_port_abort(struct ata_port *ap)
-+{
-+	return ata_do_link_abort(ap, NULL);
-+}
-+
-+/**
-  *	__ata_port_freeze - freeze port
-  *	@ap: ATA port to freeze
-  *
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 02e21a7..e4fd809 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -890,6 +890,7 @@ #endif /* CONFIG_PCI */
- extern void ata_eng_timeout(struct ata_port *ap);
+@@ -1527,7 +1528,7 @@ static int ata_eh_reset(struct ata_port 
+ 	int did_followup_srst, rc;
  
- extern void ata_port_schedule_eh(struct ata_port *ap);
-+extern int ata_link_abort(struct ata_link *link);
- extern int ata_port_abort(struct ata_port *ap);
- extern int ata_port_freeze(struct ata_port *ap);
+ 	/* about to reset */
+-	ata_eh_about_to_do(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
++	ata_eh_about_to_do(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
  
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine and modify it.
+@@ -1600,7 +1601,7 @@ static int ata_eh_reset(struct ata_port 
+ 			return -EINVAL;
+ 		}
+ 
+-		ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
++		ata_eh_about_to_do(link, NULL, ATA_EH_RESET_MASK);
+ 		rc = ata_do_reset(ap, reset, classes);
+ 
+ 		if (rc == 0 && classify &&
+@@ -1644,7 +1645,7 @@ static int ata_eh_reset(struct ata_port 
+ 			postreset(ap, classes);
+ 
+ 		/* reset successful, schedule revalidation */
+-		ata_eh_done(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
++		ata_eh_done(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+ 		ehc->i.action |= ATA_EH_REVALIDATE;
+ 	}
+ 
+@@ -1670,13 +1671,13 @@ static int ata_eh_revalidate_and_attach(
+ 				break;
+ 			}
+ 
+-			ata_eh_about_to_do(ap, dev, ATA_EH_REVALIDATE);
++			ata_eh_about_to_do(&ap->link, dev, ATA_EH_REVALIDATE);
+ 			rc = ata_dev_revalidate(dev,
+ 					ehc->i.flags & ATA_EHI_DID_RESET);
+ 			if (rc)
+ 				break;
+ 
+-			ata_eh_done(ap, dev, ATA_EH_REVALIDATE);
++			ata_eh_done(&ap->link, dev, ATA_EH_REVALIDATE);
+ 
+ 			/* schedule the scsi_rescan_device() here */
+ 			queue_work(ata_aux_wq, &(ap->scsi_rescan_task));
+@@ -1740,7 +1741,7 @@ static int ata_eh_suspend(struct ata_por
+ 
+ 		WARN_ON(dev->flags & ATA_DFLAG_SUSPENDED);
+ 
+-		ata_eh_about_to_do(ap, dev, ATA_EH_SUSPEND);
++		ata_eh_about_to_do(&ap->link, dev, ATA_EH_SUSPEND);
+ 
+ 		if (dev->class == ATA_DEV_ATA && !(action & ATA_EH_PM_FREEZE)) {
+ 			/* flush cache */
+@@ -1763,7 +1764,7 @@ static int ata_eh_suspend(struct ata_por
+ 		dev->flags |= ATA_DFLAG_SUSPENDED;
+ 		spin_unlock_irqrestore(ap->lock, flags);
+ 
+-		ata_eh_done(ap, dev, ATA_EH_SUSPEND);
++		ata_eh_done(&ap->link, dev, ATA_EH_SUSPEND);
+ 	}
+ 
+ 	if (rc)
+@@ -1833,7 +1834,7 @@ static int ata_eh_resume(struct ata_port
+ 		if (!ata_dev_enabled(dev) || !(action & ATA_EH_RESUME))
+ 			continue;
+ 
+-		ata_eh_about_to_do(ap, dev, ATA_EH_RESUME);
++		ata_eh_about_to_do(&ap->link, dev, ATA_EH_RESUME);
+ 
+ 		if (dev->class == ATA_DEV_ATA && !(action & ATA_EH_PM_FREEZE)) {
+ 			err_mask = ata_do_simple_cmd(dev,
+@@ -1847,7 +1848,7 @@ static int ata_eh_resume(struct ata_port
+ 			}
+ 		}
+ 
+-		ata_eh_done(ap, dev, ATA_EH_RESUME);
++		ata_eh_done(&ap->link, dev, ATA_EH_RESUME);
+ 	}
+ 
+ 	if (rc)
 -- 
 1.4.2.3
 
