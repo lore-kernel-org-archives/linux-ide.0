@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/18] [PATCH] libata-link: add PMP related ATA constants
+Subject: [PATCH 2/18] [PATCH] libata-link: separate out ata_eh_handle_dev_fail()
 Date: Mon, 16 Oct 2006 07:54:40 +0900
-Message-ID: <1160952880699-git-send-email-htejun@gmail.com>
+Message-ID: <11609528802346-git-send-email-htejun@gmail.com>
 References: <1160952879581-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:2229 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1422925AbWJOWys (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Oct 2006 18:54:48 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so626618nfe
+Received: from py-out-1112.google.com ([64.233.166.177]:23669 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1422923AbWJOWyr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Oct 2006 18:54:47 -0400
+Received: by py-out-1112.google.com with SMTP id t32so2080267pyc
         for <linux-ide@vger.kernel.org>; Sun, 15 Oct 2006 15:54:46 -0700 (PDT)
 In-Reply-To: <1160952879581-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,66 +20,123 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add Port Multiplier related ATA constants and macros.  Some of these
-will be used by ata_link implementation.
+Separate out ata_eh_handle_dev_fail() from ata_eh_recover().  This is
+in preparation of ata_link and PMP support.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- include/linux/ata.h |   29 +++++++++++++++++++++++++++++
- 1 files changed, 29 insertions(+), 0 deletions(-)
+ drivers/ata/libata-eh.c |   91 ++++++++++++++++++++++++++---------------------
+ 1 files changed, 50 insertions(+), 41 deletions(-)
 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 1df9416..123f316 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -156,6 +156,8 @@ enum {
- 	ATA_CMD_READ_NATIVE_MAX	= 0xF8,
- 	ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
- 	ATA_CMD_READ_LOG_EXT	= 0x2f,
-+	ATA_CMD_PMP_READ	= 0xE4,
-+	ATA_CMD_PMP_WRITE	= 0xE8,
- 
- 	/* READ_LOG_EXT pages */
- 	ATA_LOG_SATA_NCQ	= 0x10,
-@@ -196,6 +198,28 @@ enum {
- 						   0=to device, 1=to host */
- 	ATAPI_CDB_LEN		= 16,
- 
-+	/* PMP stuff */
-+	SATA_PMP_MAX_PORTS	= 15,
-+	SATA_PMP_CTRL_PORT	= 15,
-+
-+	SATA_PMP_GSCR_DWORDS	= 128,
-+	SATA_PMP_GSCR_PROD_ID	= 0,
-+	SATA_PMP_GSCR_REV	= 1,
-+	SATA_PMP_GSCR_PORT_INFO	= 2,
-+	SATA_PMP_GSCR_ERROR	= 32,
-+	SATA_PMP_GSCR_ERROR_EN	= 33,
-+	SATA_PMP_GSCR_FEAT	= 64,
-+	SATA_PMP_GSCR_FEAT_EN	= 96,
-+
-+	SATA_PMP_PSCR_STATUS	= 0,
-+	SATA_PMP_PSCR_ERROR	= 1,
-+	SATA_PMP_PSCR_CONTROL	= 2,
-+
-+	SATA_PMP_FEAT_BIST	= (1 << 0),
-+	SATA_PMP_FEAT_PMREQ	= (1 << 1),
-+	SATA_PMP_FEAT_DYNSSC	= (1 << 2),
-+	SATA_PMP_FEAT_NOTIFY	= (1 << 3),
-+
- 	/* cable types */
- 	ATA_CBL_NONE		= 0,
- 	ATA_CBL_PATA40		= 1,
-@@ -396,4 +420,9 @@ static inline int lba_48_ok(u64 block, u
- 	return ((block + n_block - 1) < ((u64)1 << 48)) && (n_block <= 65536);
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 2067db0..2cbd19d 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1911,6 +1911,55 @@ static int ata_eh_skip_recovery(struct a
+ 	return 1;
  }
  
-+#define sata_pmp_gscr_vendor(gscr)	((gscr)[SATA_PMP_GSCR_PROD_ID] & 0xffff)
-+#define sata_pmp_gscr_devid(gscr)	((gscr)[SATA_PMP_GSCR_PROD_ID] >> 16)
-+#define sata_pmp_gscr_rev(gscr)		(((gscr)[SATA_PMP_GSCR_REV] >> 8) & 0xff)
-+#define sata_pmp_gscr_ports(gscr)	((gscr)[SATA_PMP_GSCR_PORT_INFO] & 0xf)
++static void ata_eh_handle_dev_fail(struct ata_device *dev, int err,
++				   int down_xfermask)
++{
++	struct ata_port *ap = dev->ap;
++	struct ata_eh_context *ehc = &ap->eh_context;
 +
- #endif /* __LINUX_ATA_H__ */
++	switch (err) {
++	case -ENODEV:
++		/* device missing, schedule probing */
++		ehc->i.probe_mask |= (1 << dev->devno);
++	case -EINVAL:
++		ehc->tries[dev->devno] = 0;
++		break;
++	case -EIO:
++		sata_down_spd_limit(ap);
++	default:
++		ehc->tries[dev->devno]--;
++		if (down_xfermask &&
++		    ata_down_xfermask_limit(dev, ehc->tries[dev->devno] == 1))
++			ehc->tries[dev->devno] = 0;
++	}
++
++	if (ata_dev_enabled(dev) && !ehc->tries[dev->devno]) {
++		/* disable device if it has used up all its chances */
++		ata_dev_disable(dev);
++
++		/* detach if offline */
++		if (ata_port_offline(ap))
++			ata_eh_detach_dev(dev);
++
++		/* probe if requested */
++		if ((ehc->i.probe_mask & (1 << dev->devno)) &&
++		    !(ehc->did_probe_mask & (1 << dev->devno))) {
++			ata_eh_detach_dev(dev);
++			ata_dev_init(dev);
++
++			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
++			ehc->did_probe_mask |= (1 << dev->devno);
++			ehc->i.action |= ATA_EH_SOFTRESET;
++		}
++	} else {
++		/* soft didn't work?  be haaaaard */
++		if (ehc->i.flags & ATA_EHI_DID_RESET)
++			ehc->i.action |= ATA_EH_HARDRESET;
++		else
++			ehc->i.action |= ATA_EH_SOFTRESET;
++	}
++}
++
+ /**
+  *	ata_eh_recover - recover host port after error
+  *	@ap: host port to recover
+@@ -2022,47 +2071,7 @@ static int ata_eh_recover(struct ata_por
+ 	goto out;
+ 
+  dev_fail:
+-	switch (rc) {
+-	case -ENODEV:
+-		/* device missing, schedule probing */
+-		ehc->i.probe_mask |= (1 << dev->devno);
+-	case -EINVAL:
+-		ehc->tries[dev->devno] = 0;
+-		break;
+-	case -EIO:
+-		sata_down_spd_limit(ap);
+-	default:
+-		ehc->tries[dev->devno]--;
+-		if (down_xfermask &&
+-		    ata_down_xfermask_limit(dev, ehc->tries[dev->devno] == 1))
+-			ehc->tries[dev->devno] = 0;
+-	}
+-
+-	if (ata_dev_enabled(dev) && !ehc->tries[dev->devno]) {
+-		/* disable device if it has used up all its chances */
+-		ata_dev_disable(dev);
+-
+-		/* detach if offline */
+-		if (ata_port_offline(ap))
+-			ata_eh_detach_dev(dev);
+-
+-		/* probe if requested */
+-		if ((ehc->i.probe_mask & (1 << dev->devno)) &&
+-		    !(ehc->did_probe_mask & (1 << dev->devno))) {
+-			ata_eh_detach_dev(dev);
+-			ata_dev_init(dev);
+-
+-			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
+-			ehc->did_probe_mask |= (1 << dev->devno);
+-			ehc->i.action |= ATA_EH_SOFTRESET;
+-		}
+-	} else {
+-		/* soft didn't work?  be haaaaard */
+-		if (ehc->i.flags & ATA_EHI_DID_RESET)
+-			ehc->i.action |= ATA_EH_HARDRESET;
+-		else
+-			ehc->i.action |= ATA_EH_SOFTRESET;
+-	}
++	ata_eh_handle_dev_fail(dev, rc, down_xfermask);
+ 
+ 	if (ata_port_nr_enabled(ap)) {
+ 		ata_port_printk(ap, KERN_WARNING, "failed to recover some "
 -- 
 1.4.2.3
 
