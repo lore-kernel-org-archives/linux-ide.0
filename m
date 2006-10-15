@@ -1,51 +1,57 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: IDE panic, 2.6.18
-Date: Sun, 15 Oct 2006 12:32:35 -0400
-Message-ID: <20061015163235.GA402@animx.eu.org>
-References: <20061007203222.24846.qmail@science.horizon.com> <20061015162906.4270.qmail@science.horizon.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCHSET] hotplug polling, take 5
+Date: Mon, 16 Oct 2006 07:37:26 +0900
+Message-ID: <11609518461142-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from animx.eu.org ([216.98.75.249]:32984 "EHLO animx.eu.org")
-	by vger.kernel.org with ESMTP id S1161003AbWJOQmx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Oct 2006 12:42:53 -0400
-Content-Disposition: inline
-In-Reply-To: <20061015162906.4270.qmail@science.horizon.com>
+Received: from py-out-1112.google.com ([64.233.166.180]:64583 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1161197AbWJOWhd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Oct 2006 18:37:33 -0400
+Received: by py-out-1112.google.com with SMTP id n25so2068070pyg
+        for <linux-ide@vger.kernel.org>; Sun, 15 Oct 2006 15:37:33 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, htejun@gmail.com
 
-linux@horizon.com wrote:
-> I just got a fourth panic.  Fortunately, no file system corruption
-> this time.  It was an exact clone of the second one, down to the register
-> contents, except for the process name, so I haven't bothered transcribing
-> it separately.  Also, I wasn't messing with the drives when it happened;
-> I was asleep in bed and found the panic greeting me on the morning.
-> 
-> I apologize for the truncated logs, but I couldn't scroll back and had
-> to photograph the console screen to get what's here.
-> 
-> i686 uniprocessor, 440BX motherboard, 1 GB ECC memory (you can see from
-> the kernel addresses that I'm using a 2.75/1.25 G memory split), has been
-> in production with excellent stability for a long time.  Occasional disk
-> glitches handled by RAID; almost everything except for some scratch
-> space is mirrored.
-> 
-> Monolithic kernel.org 2.6.18 + linuxpps patches.
+Hello, all.
 
-I had something similar to this happen to me, however, I was unable to use
-the system at all once this happened.
+This is the fifth take of hotplug polling patchset.  This take doesn't
+contain any real change than rebasing over the current upstream[U].
+PMP patchset will be posted soon on top of this patchset and I wanted
+to avoid confusion by posting patchsets in order.
 
-I'm using a Supermicro X5DA8 motherboard (2x 2.6ghz xeon, 1gb mem, 3 dual
-scsi controllers).  IDE is a module and as soon as hotplug loads the module
-for the IDE controller, it hangs.  My boot disk is on the internal scsi ch0
-controller.  The only IDE device is a single cdrom (all other drives are
-scsi or use a hardware ide-to-scsi converter).  The IDE controller is an
-Intel ICH4 controller (Intel E7505 chipset)
+As the name implies, this patchset implements hotplug by polling.
+hp-poll is used to
 
-If anyone is interested, I will post my 2.6.18 config.
+* Monitor ports EH gave up.  When EH gives up on a port, it freezes
+  the port to protect the rest of the system from it.  The user used
+  to have to issue manual scan to retry the port.  hp-poll can monitor
+  such port and retry it when hotplug event is detected.  This is also
+  used by PMP support.
 
--- 
- Lab tests show that use of micro$oft causes cancer in lab animals
- Got Gas???
+* Support hotplug on controllers which can report hotplug conditions
+  but cannot raise interrupt.
+
+Changes from the last take[L] are.
+
+* updated to the current upstream
+
+This patchset is also available in the following git tree.
+
+  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=hp-poll
+  git://htj.dyndns.org/libata-tj hp-poll
+
+Thanks.
+
+--
+tejun
+
+[U] da54f5fe54c7d75e2db7d17961fb36a8c28a8501
+[L] http://article.gmane.org/gmane.linux.ide/13418
+
+
