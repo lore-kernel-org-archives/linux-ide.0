@@ -1,111 +1,55 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/3] libata: add hp-poll support to controllers with hotplug interrutps
-Date: Mon, 16 Oct 2006 07:37:26 +0900
-Message-ID: <11609518463890-git-send-email-htejun@gmail.com>
-References: <11609518461142-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET] ahci updates regarding vt8251 support, take #2
+Date: Mon, 16 Oct 2006 07:43:23 +0900
+Message-ID: <11609522031228-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:64583 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1161199AbWJOWhe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Oct 2006 18:37:34 -0400
-Received: by py-out-1112.google.com with SMTP id n25so2068070pyg
-        for <linux-ide@vger.kernel.org>; Sun, 15 Oct 2006 15:37:34 -0700 (PDT)
-In-Reply-To: <11609518461142-git-send-email-htejun@gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.190]:62602 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S932078AbWJOWnc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Oct 2006 18:43:32 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so624555nfe
+        for <linux-ide@vger.kernel.org>; Sun, 15 Oct 2006 15:43:31 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, aalderd.boac@wanadoo.nl, linux-ide@vger.kernel.org, htejun@gmail.com
 
-This patch adds hp-poll support to the following drivers.
+Hello, all.
 
-* ahci
-* sata_nv (nf2 and c804 only)
-* sata_sil
-* sata_sil24
+This is the second take of vt8251-ahci patchset.  This patchset
+updates libata and ahci to improve vt8251 EH and hotplug support.
 
-All the above controllers are capable of hotplug-by-interrupt and
-hp-poll will be used only for watching disabled ports.
+#01 : separate out sata_port_hardreset(), to be used by vt8251 reset
+#02 : update CLO handling in softreset and kill RESET_NEEDS_CLO
+#03 : update vt8251 support in ahci
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/ahci.c       |    4 +++-
- drivers/ata/sata_nv.c    |    4 ++++
- drivers/ata/sata_sil.c   |    2 ++
- drivers/ata/sata_sil24.c |    3 +++
- 4 files changed, 12 insertions(+), 1 deletions(-)
+Changes from the last take[L] are
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 2592912..d95d99b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -262,10 +262,12 @@ static const struct ata_port_operations 
- 
- 	.freeze			= ahci_freeze,
- 	.thaw			= ahci_thaw,
--
- 	.error_handler		= ahci_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
- 
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
-+
- 	.port_suspend		= ahci_port_suspend,
- 	.port_resume		= ahci_port_resume,
- 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 323b607..a75d5cc 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -200,6 +200,8 @@ static const struct ata_port_operations 
- 	.thaw			= nv_nf2_thaw,
- 	.error_handler		= nv_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
- 	.data_xfer		= ata_pio_data_xfer,
- 	.irq_handler		= nv_nf2_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-@@ -227,6 +229,8 @@ static const struct ata_port_operations 
- 	.thaw			= nv_ck804_thaw,
- 	.error_handler		= nv_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
- 	.data_xfer		= ata_pio_data_xfer,
- 	.irq_handler		= nv_ck804_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index ca8d993..5c8a349 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -205,6 +205,8 @@ static const struct ata_port_operations 
- 	.thaw			= sil_thaw,
- 	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
- 	.irq_handler		= sil_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
- 	.scr_read		= sil_scr_read,
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 169e200..c84efc3 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -410,6 +410,9 @@ static const struct ata_port_operations 
- 	.error_handler		= sil24_error_handler,
- 	.post_internal_cmd	= sil24_post_internal_cmd,
- 
-+	.hp_poll_activate	= sata_std_hp_poll_activate,
-+	.hp_poll		= sata_std_hp_poll,
-+
- 	.port_start		= sil24_port_start,
- 	.port_stop		= sil24_port_stop,
- 	.host_stop		= sil24_host_stop,
--- 
-1.4.2.3
+* rebased over the current upstream + hp-poll
+* hp-poll callbacks added to ahci_vt8251_ops
+
+This patchset is against
+  upstream (da54f5fe54c7d75e2db7d17961fb36a8c28a8501)
+  + hp-poll patchset, take #5 [1]
+
+This patchset has been verified by me and Aalderd Bouwman
+<aalderd.boac@wanadoo.nl>.
+
+The git tree is avilable at
+
+  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=vt8251-ahci
+  git://htj.dyndns.org/libata-tj vt8251-ahci
+
+Thanks.
+
+--
+tejun
+
+[L] http://article.gmane.org/gmane.linux.ide/13449
+[1] http://article.gmane.org/gmane.linux.ide/13467
 
 
