@@ -1,29 +1,130 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
-Date: Mon, 16 Oct 2006 12:17:55 -0400
-Message-ID: <4533B0B3.8070205@rtr.ca>
-References: <DBFABB80F7FD3143A911F9E6CFD477B018E8171B@hqemmail02.nvidia.com> <452C7C1D.3040704@shaw.ca> <20061011103038.GK6515@kernel.dk> <452F053B.2000906@shaw.ca>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: 2.6.19-rc2 - total hang with libata, CDRW and grip
+Date: Mon, 16 Oct 2006 14:57:18 -0400
+Message-ID: <17715.54798.646517.200326@smtp.charter.net>
+References: <17714.52331.657287.564246@smtp.charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:23825 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1422714AbWJPQR5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Oct 2006 12:17:57 -0400
-In-Reply-To: <452F053B.2000906@shaw.ca>
+Received: from mxsf24.cluster1.charter.net ([209.225.28.224]:53221 "EHLO
+	mxsf24.cluster1.charter.net") by vger.kernel.org with ESMTP
+	id S1422822AbWJPS51 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Oct 2006 14:57:27 -0400
+In-Reply-To: <17714.52331.657287.564246@smtp.charter.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, prakash@punnoor.de
+To: John Stoffel <john@stoffel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-Robert Hancock wrote:
-> 
-> I also noticed that I'm still using the default 64KB libata dma_boundary 
-> value, this should be 4GB for ADMA mode (but fixed up back to the 
-> default if an ATAPI device is connected, same as with the DMA mask).
 
-Be careful of that.  The original PDC hardware for ADMA still had
-the "don't cross a 64KB boundary" requirement.
+Ok, now I've got a bunch of error reports from the 120GB HD as well,
+which I'm using for a staging disk with Bacula for backups.  A bunch
+of data gets written and then read from the disk before being written
+to tape.  I see the following errors in the logs:
 
-Cheers
+   ....
+   end_request: I/O error, dev sdc, sector 87
+   ata2: EH complete
+   ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+   ata2.00: (BMDMA stat 0x20)
+   ata2.00: tag 0 cmd 0xc8 Emask 0x81 stat 0x51 err 0x10 (invalid
+   argument)
+   sd 3:0:0:0: SCSI error: return code = 0x08000002
+   sdc: Current: sense key: Aborted Command
+       Additional sense: Recorded entity not found
+   end_request: I/O error, dev sdc, sector 95
+   ata2: EH complete
+   SCSI device sdc: drive cache: write back
+   ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+   ata2.00: (BMDMA stat 0x20)
+   ata2.00: tag 0 cmd 0xc8 Emask 0x81 stat 0x51 err 0x10 (invalid
+   argument)
+   sd 3:0:0:0: SCSI error: return code = 0x08000002
+   sdc: Current: sense key: Aborted Command
+       Additional sense: Recorded entity not found
+   end_request: I/O error, dev sdc, sector 95
+   ata2: EH complete
+   ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+   ata2.00: (BMDMA stat 0x20)
+   ata2.00: tag 0 cmd 0xc8 Emask 0x81 stat 0x51 err 0x10 (invalid
+   argument)
+   sd 3:0:0:0: SCSI error: return code = 0x08000002
+   sdc: Current: sense key: Aborted Command
+       Additional sense: Recorded entity not found
+   end_request: I/O error, dev sdc, sector 95
+   ata2: EH complete
+   SCSI device sdc: 234441648 512-byte hdwr sectors (120034 MB)
+   sdc: Write Protect is off
+   sdc: Mode Sense: 00 3a 00 00
+   SCSI device sdc: drive cache: write back
+   SCSI device sdc: 234441648 512-byte hdwr sectors (120034 MB)
+   sdc: Write Protect is off
+   sdc: Mode Sense: 00 3a 00 00
+   SCSI device sdc: drive cache: write back
+   ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+   ata2.00: (BMDMA stat 0x20)
+   ata2.00: tag 0 cmd 0xc8 Emask 0x81 stat 0x51 err 0x10 (invalid
+   argument)
+   sd 3:0:0:0: SCSI error: return code = 0x08000002
+   sdc: Current: sense key: Aborted Command
+       Additional sense: Recorded entity not found
+   end_request: I/O error, dev sdc, sector 63
+   ata2: EH complete
+   SCSI device sdc: 234441648 512-byte hdwr sectors (120034 MB)
+   sdc: Write Protect is off
+   sdc: Mode Sense: 00 3a 00 00
+   SCSI device sdc: drive cache: write back
 
+
+This is 2.6.19-rc2, libata, regular old IDE running an HPT302 Rev 1
+controller with two 12gb HDs, an 18G SCSI disk holding /, /usr, /var &
+/boot, dual CPU Xeon PIII 550mhz, 768Gb RAM, Debian unstable updated
+within the last two days.
+
+The filesystem (/staging) gets remounted read-only.  Now when I run
+badblocks against the drive, it just complains and complains about all
+the blocks.  
+
+If I reboot, the system comes up cleanly and I can access the drive
+again.  A pass with badblocks completes, as does doing the various
+pvcreate, vgcreate, lvcreate, mke2fs commands to setup the filesystem
+all over again on the disk. 
+
+It's /dev/sdc1 hold the PV, holds the VG, holds the LV, holds the
+filesystem.  
+
+> sudo pvs
+  /dev/sdc1: read failed after 0 of 2048 at 0: Input/output error
+  PV         VG      Fmt  Attr PSize   PFree
+  /dev/md0   data_vg lvm2 a-   111.79G 1.79G
+
+> sudo vgs
+  /dev/sdc1: read failed after 0 of 2048 at 0: Input/output error
+  VG      #PV #LV #SN Attr   VSize   VFree
+  data_vg   1   3   0 wz--n- 111.79G 1.79G
+
+> sudo lvs
+Password:
+  /dev/sdc1: read failed after 0 of 2048 at 0: Input/output error
+  LV       VG      Attr   LSize  Origin Snap%  Move Log Copy% 
+  home_lv  data_vg -wi-ao 67.00G                              
+  local_lv data_vg -wi-ao 35.00G                              
+  staging  data_vg -wi-a-  8.00G                
+
+I can either reboot the system and get more details, or I can leave it
+like it is now and try some suggestions to get the disk back online.
+
+  > sdparm --version
+  version: 0.98 20060509
+
+  > sudo sdparm -v /dev/sdc
+      /dev/sdc: ATA       WDC WD1200JB-00C  17.0
+      Request Sense cmd: 03 00 00 00 40 00 
+  request sense:  Fixed format, current;  Sense key: Illegal Request
+   Additional sense: Invalid command operation code
+  REQUEST SENSE failed
+
+
+Thanks,
+John
