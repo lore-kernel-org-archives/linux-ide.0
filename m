@@ -1,25 +1,22 @@
 From: "Wolstenholme, Daniel E" <daniel.e.wolstenholme@intel.com>
-Subject: [PATCH] sata_vsc: Add MSI support to sata_vsc driver (resubmit)
-Date: Mon, 16 Oct 2006 12:39:12 -0700
-Message-ID: <DE99218BE995814CA3B82E6AD9939C3C114D0E@azsmsx415.amr.corp.intel.com>
+Subject: [PATCH] sata_vsc: Add MSI support to sata_vsc driver (resubmit) (fixed attachment)
+Date: Mon, 16 Oct 2006 12:59:10 -0700
+Message-ID: <DE99218BE995814CA3B82E6AD9939C3C114D0F@azsmsx415.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C6F15A.C1BEC8C8"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14196 "EHLO mga09.intel.com")
-	by vger.kernel.org with ESMTP id S1422871AbWJPTjN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Oct 2006 15:39:13 -0400
+Received: from mga01.intel.com ([192.55.52.88]:3446 "EHLO mga01.intel.com")
+	by vger.kernel.org with ESMTP id S1750776AbWJPT7O convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Oct 2006 15:59:14 -0400
 Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_01C6F15A.C1BEC8C8
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Ok, hopefully I can get the attachment right here.
 
 Here's a resubmission of my MSI patch for the sata_vsc driver.
 
@@ -33,72 +30,117 @@ Signed-off-by: Daniel Wolstenholme <daniel.e.wolstenholme@intel.com>
 
 --------
 
+diff -uprN a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
+--- a/drivers/scsi/sata_vsc.c 2006-09-19 20:42:06.000000000 -0700
++++ b/drivers/scsi/sata_vsc.c 2006-10-16 12:11:43.000000000 -0700
+@@ -94,8 +94,14 @@ enum {
+            VSC_SATA_INT_ERROR_P    | VSC_SATA_INT_ERROR_R | \
+            VSC_SATA_INT_ERROR_E    | VSC_SATA_INT_ERROR_M | \
+            VSC_SATA_INT_PHY_CHANGE),
++
++ /* Host private flags (hp_flags) */
++ VSC_SATA_HP_FLAG_MSI  = (1 << 0),
+ };
+
++struct vsc_sata_host_priv {
++ u32     hp_flags;
++};
+
+ #define is_vsc_sata_int_err(port_idx, int_status) \
+   (int_status & (VSC_SATA_INT_ERROR << (8 * port_idx)))
+@@ -118,6 +124,19 @@ static void vsc_sata_scr_write (struct a
+ }
 
 
-------_=_NextPart_001_01C6F15A.C1BEC8C8
-Content-Type: application/octet-stream;
-	name="patch.sata_vsc"
-Content-Transfer-Encoding: base64
-Content-Description: patch.sata_vsc
-Content-Disposition: attachment;
-	filename="patch.sata_vsc"
++static void vsc_sata_host_stop(struct ata_host_set *host_set)
++{
++ struct vsc_sata_host_priv *hpriv = host_set->private_data;
++ struct pci_dev *pdev = to_pci_dev(host_set->dev);
++
++ if (hpriv->hp_flags & VSC_SATA_HP_FLAG_MSI)
++   pci_disable_msi(pdev);
++ else
++   pci_intx(pdev, 0);
++ kfree (hpriv);
++ ata_pci_host_stop(host_set);
++}
++
+ static void vsc_intr_mask_update(struct ata_port *ap, u8 ctl)
+ {
+  void __iomem *mask_addr;
+@@ -308,7 +327,7 @@ static const struct ata_port_operations
+  .scr_write    = vsc_sata_scr_write,
+  .port_start   = ata_port_start,
+  .port_stop    = ata_port_stop,
+- .host_stop    = ata_pci_host_stop,
++ .host_stop    = vsc_sata_host_stop,
+ };
 
-ZGlmZiAtdXByTiBhL2RyaXZlcnMvc2NzaS9zYXRhX3ZzYy5jIGIvZHJpdmVycy9zY3NpL3NhdGFf
-dnNjLmMKLS0tIGEvZHJpdmVycy9zY3NpL3NhdGFfdnNjLmMJMjAwNi0wOS0xOSAyMDo0MjowNi4w
-MDAwMDAwMDAgLTA3MDAKKysrIGIvZHJpdmVycy9zY3NpL3NhdGFfdnNjLmMJMjAwNi0xMC0xNiAx
-MjoxMTo0My4wMDAwMDAwMDAgLTA3MDAKQEAgLTk0LDggKzk0LDE0IEBAIGVudW0gewogCQkJICAg
-ICAgVlNDX1NBVEFfSU5UX0VSUk9SX1AgICAgfCBWU0NfU0FUQV9JTlRfRVJST1JfUiB8IFwKIAkJ
-CSAgICAgIFZTQ19TQVRBX0lOVF9FUlJPUl9FICAgIHwgVlNDX1NBVEFfSU5UX0VSUk9SX00gfCBc
-CiAJCQkgICAgICBWU0NfU0FUQV9JTlRfUEhZX0NIQU5HRSksCisKKwkvKiBIb3N0IHByaXZhdGUg
-ZmxhZ3MgKGhwX2ZsYWdzKSAqLworCVZTQ19TQVRBX0hQX0ZMQUdfTVNJCT0gKDEgPDwgMCksCiB9
-OwogCitzdHJ1Y3QgdnNjX3NhdGFfaG9zdF9wcml2IHsKKwl1MzIJCQlocF9mbGFnczsKK307CiAK
-ICNkZWZpbmUgaXNfdnNjX3NhdGFfaW50X2Vycihwb3J0X2lkeCwgaW50X3N0YXR1cykgXAogCSAo
-aW50X3N0YXR1cyAmIChWU0NfU0FUQV9JTlRfRVJST1IgPDwgKDggKiBwb3J0X2lkeCkpKQpAQCAt
-MTE4LDYgKzEyNCwxOSBAQCBzdGF0aWMgdm9pZCB2c2Nfc2F0YV9zY3Jfd3JpdGUgKHN0cnVjdCBh
-CiB9CiAKIAorc3RhdGljIHZvaWQgdnNjX3NhdGFfaG9zdF9zdG9wKHN0cnVjdCBhdGFfaG9zdF9z
-ZXQgKmhvc3Rfc2V0KQoreworCXN0cnVjdCB2c2Nfc2F0YV9ob3N0X3ByaXYgKmhwcml2ID0gaG9z
-dF9zZXQtPnByaXZhdGVfZGF0YTsKKwlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYo
-aG9zdF9zZXQtPmRldik7CisKKwlpZiAoaHByaXYtPmhwX2ZsYWdzICYgVlNDX1NBVEFfSFBfRkxB
-R19NU0kpCisJCXBjaV9kaXNhYmxlX21zaShwZGV2KTsKKwllbHNlCisJCXBjaV9pbnR4KHBkZXYs
-IDApOworCWtmcmVlIChocHJpdik7CisJYXRhX3BjaV9ob3N0X3N0b3AoaG9zdF9zZXQpOworfQor
-CiBzdGF0aWMgdm9pZCB2c2NfaW50cl9tYXNrX3VwZGF0ZShzdHJ1Y3QgYXRhX3BvcnQgKmFwLCB1
-OCBjdGwpCiB7CiAJdm9pZCBfX2lvbWVtICptYXNrX2FkZHI7CkBAIC0zMDgsNyArMzI3LDcgQEAg
-c3RhdGljIGNvbnN0IHN0cnVjdCBhdGFfcG9ydF9vcGVyYXRpb25zIAogCS5zY3Jfd3JpdGUJCT0g
-dnNjX3NhdGFfc2NyX3dyaXRlLAogCS5wb3J0X3N0YXJ0CQk9IGF0YV9wb3J0X3N0YXJ0LAogCS5w
-b3J0X3N0b3AJCT0gYXRhX3BvcnRfc3RvcCwKLQkuaG9zdF9zdG9wCQk9IGF0YV9wY2lfaG9zdF9z
-dG9wLAorCS5ob3N0X3N0b3AJCT0gdnNjX3NhdGFfaG9zdF9zdG9wLAogfTsKIAogc3RhdGljIHZv
-aWQgX19kZXZpbml0IHZzY19zYXRhX3NldHVwX3BvcnQoc3RydWN0IGF0YV9pb3BvcnRzICpwb3J0
-LCB1bnNpZ25lZCBsb25nIGJhc2UpCkBAIC0zMzcsNiArMzU2LDcgQEAgc3RhdGljIGludCBfX2Rl
-dmluaXQgdnNjX3NhdGFfaW5pdF9vbmUgKAogewogCXN0YXRpYyBpbnQgcHJpbnRlZF92ZXJzaW9u
-OwogCXN0cnVjdCBhdGFfcHJvYmVfZW50ICpwcm9iZV9lbnQgPSBOVUxMOworCXN0cnVjdCB2c2Nf
-c2F0YV9ob3N0X3ByaXYgKmhwcml2OwogCXVuc2lnbmVkIGxvbmcgYmFzZTsKIAlpbnQgcGNpX2Rl
-dl9idXN5ID0gMDsKIAl2b2lkIF9faW9tZW0gKm1taW9fYmFzZTsKQEAgLTM3OCw2ICszOTgsNyBA
-QCBzdGF0aWMgaW50IF9fZGV2aW5pdCB2c2Nfc2F0YV9pbml0X29uZSAoCiAJCXJjID0gLUVOT01F
-TTsKIAkJZ290byBlcnJfb3V0X3JlZ2lvbnM7CiAJfQorCiAJbWVtc2V0KHByb2JlX2VudCwgMCwg
-c2l6ZW9mKCpwcm9iZV9lbnQpKTsKIAlwcm9iZV9lbnQtPmRldiA9IHBjaV9kZXZfdG9fZGV2KHBk
-ZXYpOwogCUlOSVRfTElTVF9IRUFEKCZwcm9iZV9lbnQtPm5vZGUpOwpAQCAtMzg5LDE5ICs0MTAs
-MzMgQEAgc3RhdGljIGludCBfX2RldmluaXQgdnNjX3NhdGFfaW5pdF9vbmUgKAogCX0KIAliYXNl
-ID0gKHVuc2lnbmVkIGxvbmcpIG1taW9fYmFzZTsKIAorCWhwcml2ID0ga21hbGxvYyhzaXplb2Yo
-Kmhwcml2KSwgR0ZQX0tFUk5FTCk7CisJaWYgKCFocHJpdikgeworCQlyYyA9IC1FTk9NRU07CisJ
-CWdvdG8gZXJyX291dF9pb3VubWFwOworCX0KKwltZW1zZXQoaHByaXYsIDAsIHNpemVvZigqaHBy
-aXYpKTsKKwogCS8qCiAJICogRHVlIHRvIGEgYnVnIGluIHRoZSBjaGlwLCB0aGUgZGVmYXVsdCBj
-YWNoZSBsaW5lIHNpemUgY2FuJ3QgYmUgdXNlZAogCSAqLwogCXBjaV93cml0ZV9jb25maWdfYnl0
-ZShwZGV2LCBQQ0lfQ0FDSEVfTElORV9TSVpFLCAweDgwKTsKIAorCWlmIChwY2lfZW5hYmxlX21z
-aShwZGV2KSA9PSAwKSB7CisJCWhwcml2LT5ocF9mbGFncyB8PSBWU0NfU0FUQV9IUF9GTEFHX01T
-STsKKwkJcGNpX2ludHgocGRldiwgMCk7CisJfQorCWVsc2UKKwkJcHJvYmVfZW50LT5pcnFfZmxh
-Z3MgPSBJUlFGX1NIQVJFRDsKKwogCXByb2JlX2VudC0+c2h0ID0gJnZzY19zYXRhX3NodDsKIAlw
-cm9iZV9lbnQtPmhvc3RfZmxhZ3MgPSBBVEFfRkxBR19TQVRBIHwgQVRBX0ZMQUdfTk9fTEVHQUNZ
-IHwKIAkJCQlBVEFfRkxBR19NTUlPOwogCXByb2JlX2VudC0+cG9ydF9vcHMgPSAmdnNjX3NhdGFf
-b3BzOwogCXByb2JlX2VudC0+bl9wb3J0cyA9IDQ7CiAJcHJvYmVfZW50LT5pcnEgPSBwZGV2LT5p
-cnE7Ci0JcHJvYmVfZW50LT5pcnFfZmxhZ3MgPSBJUlFGX1NIQVJFRDsKIAlwcm9iZV9lbnQtPm1t
-aW9fYmFzZSA9IG1taW9fYmFzZTsKKwlwcm9iZV9lbnQtPnByaXZhdGVfZGF0YSA9IGhwcml2Owog
-CiAJLyogV2UgZG9uJ3QgY2FyZSBtdWNoIGFib3V0IHRoZSBQSU8vVURNQSBtYXNrcywgYnV0IHRo
-ZSBjb3JlIHdvbid0IGxpa2UgdXMKIAkgKiBpZiB3ZSBkb24ndCBmaWxsIHRoZXNlCkBAIC00Mjgs
-MTAgKzQ2MywxMiBAQCBzdGF0aWMgaW50IF9fZGV2aW5pdCB2c2Nfc2F0YV9pbml0X29uZSAoCiAK
-IAkvKiBGSVhNRTogY2hlY2sgYXRhX2RldmljZV9hZGQgcmV0dXJuIHZhbHVlICovCiAJYXRhX2Rl
-dmljZV9hZGQocHJvYmVfZW50KTsKLQlrZnJlZShwcm9iZV9lbnQpOwogCisJa2ZyZWUocHJvYmVf
-ZW50KTsKIAlyZXR1cm4gMDsKIAorZXJyX291dF9pb3VubWFwOgorCXBjaV9pb3VubWFwKHBkZXYs
-IG1taW9fYmFzZSk7CiBlcnJfb3V0X2ZyZWVfZW50OgogCWtmcmVlKHByb2JlX2VudCk7CiBlcnJf
-b3V0X3JlZ2lvbnM6Cg==
+ static void __devinit vsc_sata_setup_port(struct ata_ioports *port,
+unsigned long base)
+@@ -337,6 +356,7 @@ static int __devinit vsc_sata_init_one (
+ {
+  static int printed_version;
+  struct ata_probe_ent *probe_ent = NULL;
++ struct vsc_sata_host_priv *hpriv;
+  unsigned long base;
+  int pci_dev_busy = 0;
+  void __iomem *mmio_base;
+@@ -378,6 +398,7 @@ static int __devinit vsc_sata_init_one (
+    rc = -ENOMEM;
+    goto err_out_regions;
+  }
++
+  memset(probe_ent, 0, sizeof(*probe_ent));
+  probe_ent->dev = pci_dev_to_dev(pdev);
+  INIT_LIST_HEAD(&probe_ent->node);
+@@ -389,19 +410,33 @@ static int __devinit vsc_sata_init_one (
+  }
+  base = (unsigned long) mmio_base;
 
-------_=_NextPart_001_01C6F15A.C1BEC8C8--
++ hpriv = kmalloc(sizeof(*hpriv), GFP_KERNEL);
++ if (!hpriv) {
++   rc = -ENOMEM;
++   goto err_out_iounmap;
++ }
++ memset(hpriv, 0, sizeof(*hpriv));
++
+  /*
+   * Due to a bug in the chip, the default cache line size can't be used
+   */
+  pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
+
++ if (pci_enable_msi(pdev) == 0) {
++   hpriv->hp_flags |= VSC_SATA_HP_FLAG_MSI;
++   pci_intx(pdev, 0);
++ }
++ else
++   probe_ent->irq_flags = IRQF_SHARED;
++
+  probe_ent->sht = &vsc_sata_sht;
+  probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+        ATA_FLAG_MMIO;
+  probe_ent->port_ops = &vsc_sata_ops;
+  probe_ent->n_ports = 4;
+  probe_ent->irq = pdev->irq;
+- probe_ent->irq_flags = IRQF_SHARED;
+  probe_ent->mmio_base = mmio_base;
++ probe_ent->private_data = hpriv;
+
+  /* We don't care much about the PIO/UDMA masks, but the core won't
+like us
+   * if we don't fill these
+@@ -428,10 +463,12 @@ static int __devinit vsc_sata_init_one (
+
+  /* FIXME: check ata_device_add return value */
+  ata_device_add(probe_ent);
+- kfree(probe_ent);
+
++ kfree(probe_ent);
+  return 0;
+
++err_out_iounmap:
++ pci_iounmap(pdev, mmio_base);
+ err_out_free_ent:
+  kfree(probe_ent);
+ err_out_regions:
