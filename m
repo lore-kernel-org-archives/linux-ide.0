@@ -1,130 +1,104 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: 2.6.19-rc2 - total hang with libata, CDRW and grip
-Date: Mon, 16 Oct 2006 14:57:18 -0400
-Message-ID: <17715.54798.646517.200326@smtp.charter.net>
-References: <17714.52331.657287.564246@smtp.charter.net>
+From: "Wolstenholme, Daniel E" <daniel.e.wolstenholme@intel.com>
+Subject: [PATCH] sata_vsc: Add MSI support to sata_vsc driver (resubmit)
+Date: Mon, 16 Oct 2006 12:39:12 -0700
+Message-ID: <DE99218BE995814CA3B82E6AD9939C3C114D0E@azsmsx415.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C6F15A.C1BEC8C8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxsf24.cluster1.charter.net ([209.225.28.224]:53221 "EHLO
-	mxsf24.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S1422822AbWJPS51 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Oct 2006 14:57:27 -0400
-In-Reply-To: <17714.52331.657287.564246@smtp.charter.net>
+Received: from mga09.intel.com ([134.134.136.24]:14196 "EHLO mga09.intel.com")
+	by vger.kernel.org with ESMTP id S1422871AbWJPTjN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Oct 2006 15:39:13 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
+To: linux-ide@vger.kernel.org
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01C6F15A.C1BEC8C8
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Here's a resubmission of my MSI patch for the sata_vsc driver.
+
+I've added a new vsc_sata_host_priv data structure (basically copied
+from the sata_mv driver) which has an hp_flags bitfield with a bit to
+indicate whether MSI is being used. This is used in the new
+vsc_sata_host_stop() routine to call
+pci_disable_msi() if MSI is on, pci_intx() if not.
+
+Signed-off-by: Daniel Wolstenholme <daniel.e.wolstenholme@intel.com>
+
+--------
 
 
-Ok, now I've got a bunch of error reports from the 120GB HD as well,
-which I'm using for a staging disk with Bacula for backups.  A bunch
-of data gets written and then read from the disk before being written
-to tape.  I see the following errors in the logs:
 
-   ....
-   end_request: I/O error, dev sdc, sector 87
-   ata2: EH complete
-   ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-   ata2.00: (BMDMA stat 0x20)
-   ata2.00: tag 0 cmd 0xc8 Emask 0x81 stat 0x51 err 0x10 (invalid
-   argument)
-   sd 3:0:0:0: SCSI error: return code = 0x08000002
-   sdc: Current: sense key: Aborted Command
-       Additional sense: Recorded entity not found
-   end_request: I/O error, dev sdc, sector 95
-   ata2: EH complete
-   SCSI device sdc: drive cache: write back
-   ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-   ata2.00: (BMDMA stat 0x20)
-   ata2.00: tag 0 cmd 0xc8 Emask 0x81 stat 0x51 err 0x10 (invalid
-   argument)
-   sd 3:0:0:0: SCSI error: return code = 0x08000002
-   sdc: Current: sense key: Aborted Command
-       Additional sense: Recorded entity not found
-   end_request: I/O error, dev sdc, sector 95
-   ata2: EH complete
-   ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-   ata2.00: (BMDMA stat 0x20)
-   ata2.00: tag 0 cmd 0xc8 Emask 0x81 stat 0x51 err 0x10 (invalid
-   argument)
-   sd 3:0:0:0: SCSI error: return code = 0x08000002
-   sdc: Current: sense key: Aborted Command
-       Additional sense: Recorded entity not found
-   end_request: I/O error, dev sdc, sector 95
-   ata2: EH complete
-   SCSI device sdc: 234441648 512-byte hdwr sectors (120034 MB)
-   sdc: Write Protect is off
-   sdc: Mode Sense: 00 3a 00 00
-   SCSI device sdc: drive cache: write back
-   SCSI device sdc: 234441648 512-byte hdwr sectors (120034 MB)
-   sdc: Write Protect is off
-   sdc: Mode Sense: 00 3a 00 00
-   SCSI device sdc: drive cache: write back
-   ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-   ata2.00: (BMDMA stat 0x20)
-   ata2.00: tag 0 cmd 0xc8 Emask 0x81 stat 0x51 err 0x10 (invalid
-   argument)
-   sd 3:0:0:0: SCSI error: return code = 0x08000002
-   sdc: Current: sense key: Aborted Command
-       Additional sense: Recorded entity not found
-   end_request: I/O error, dev sdc, sector 63
-   ata2: EH complete
-   SCSI device sdc: 234441648 512-byte hdwr sectors (120034 MB)
-   sdc: Write Protect is off
-   sdc: Mode Sense: 00 3a 00 00
-   SCSI device sdc: drive cache: write back
+------_=_NextPart_001_01C6F15A.C1BEC8C8
+Content-Type: application/octet-stream;
+	name="patch.sata_vsc"
+Content-Transfer-Encoding: base64
+Content-Description: patch.sata_vsc
+Content-Disposition: attachment;
+	filename="patch.sata_vsc"
 
+ZGlmZiAtdXByTiBhL2RyaXZlcnMvc2NzaS9zYXRhX3ZzYy5jIGIvZHJpdmVycy9zY3NpL3NhdGFf
+dnNjLmMKLS0tIGEvZHJpdmVycy9zY3NpL3NhdGFfdnNjLmMJMjAwNi0wOS0xOSAyMDo0MjowNi4w
+MDAwMDAwMDAgLTA3MDAKKysrIGIvZHJpdmVycy9zY3NpL3NhdGFfdnNjLmMJMjAwNi0xMC0xNiAx
+MjoxMTo0My4wMDAwMDAwMDAgLTA3MDAKQEAgLTk0LDggKzk0LDE0IEBAIGVudW0gewogCQkJICAg
+ICAgVlNDX1NBVEFfSU5UX0VSUk9SX1AgICAgfCBWU0NfU0FUQV9JTlRfRVJST1JfUiB8IFwKIAkJ
+CSAgICAgIFZTQ19TQVRBX0lOVF9FUlJPUl9FICAgIHwgVlNDX1NBVEFfSU5UX0VSUk9SX00gfCBc
+CiAJCQkgICAgICBWU0NfU0FUQV9JTlRfUEhZX0NIQU5HRSksCisKKwkvKiBIb3N0IHByaXZhdGUg
+ZmxhZ3MgKGhwX2ZsYWdzKSAqLworCVZTQ19TQVRBX0hQX0ZMQUdfTVNJCT0gKDEgPDwgMCksCiB9
+OwogCitzdHJ1Y3QgdnNjX3NhdGFfaG9zdF9wcml2IHsKKwl1MzIJCQlocF9mbGFnczsKK307CiAK
+ICNkZWZpbmUgaXNfdnNjX3NhdGFfaW50X2Vycihwb3J0X2lkeCwgaW50X3N0YXR1cykgXAogCSAo
+aW50X3N0YXR1cyAmIChWU0NfU0FUQV9JTlRfRVJST1IgPDwgKDggKiBwb3J0X2lkeCkpKQpAQCAt
+MTE4LDYgKzEyNCwxOSBAQCBzdGF0aWMgdm9pZCB2c2Nfc2F0YV9zY3Jfd3JpdGUgKHN0cnVjdCBh
+CiB9CiAKIAorc3RhdGljIHZvaWQgdnNjX3NhdGFfaG9zdF9zdG9wKHN0cnVjdCBhdGFfaG9zdF9z
+ZXQgKmhvc3Rfc2V0KQoreworCXN0cnVjdCB2c2Nfc2F0YV9ob3N0X3ByaXYgKmhwcml2ID0gaG9z
+dF9zZXQtPnByaXZhdGVfZGF0YTsKKwlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYo
+aG9zdF9zZXQtPmRldik7CisKKwlpZiAoaHByaXYtPmhwX2ZsYWdzICYgVlNDX1NBVEFfSFBfRkxB
+R19NU0kpCisJCXBjaV9kaXNhYmxlX21zaShwZGV2KTsKKwllbHNlCisJCXBjaV9pbnR4KHBkZXYs
+IDApOworCWtmcmVlIChocHJpdik7CisJYXRhX3BjaV9ob3N0X3N0b3AoaG9zdF9zZXQpOworfQor
+CiBzdGF0aWMgdm9pZCB2c2NfaW50cl9tYXNrX3VwZGF0ZShzdHJ1Y3QgYXRhX3BvcnQgKmFwLCB1
+OCBjdGwpCiB7CiAJdm9pZCBfX2lvbWVtICptYXNrX2FkZHI7CkBAIC0zMDgsNyArMzI3LDcgQEAg
+c3RhdGljIGNvbnN0IHN0cnVjdCBhdGFfcG9ydF9vcGVyYXRpb25zIAogCS5zY3Jfd3JpdGUJCT0g
+dnNjX3NhdGFfc2NyX3dyaXRlLAogCS5wb3J0X3N0YXJ0CQk9IGF0YV9wb3J0X3N0YXJ0LAogCS5w
+b3J0X3N0b3AJCT0gYXRhX3BvcnRfc3RvcCwKLQkuaG9zdF9zdG9wCQk9IGF0YV9wY2lfaG9zdF9z
+dG9wLAorCS5ob3N0X3N0b3AJCT0gdnNjX3NhdGFfaG9zdF9zdG9wLAogfTsKIAogc3RhdGljIHZv
+aWQgX19kZXZpbml0IHZzY19zYXRhX3NldHVwX3BvcnQoc3RydWN0IGF0YV9pb3BvcnRzICpwb3J0
+LCB1bnNpZ25lZCBsb25nIGJhc2UpCkBAIC0zMzcsNiArMzU2LDcgQEAgc3RhdGljIGludCBfX2Rl
+dmluaXQgdnNjX3NhdGFfaW5pdF9vbmUgKAogewogCXN0YXRpYyBpbnQgcHJpbnRlZF92ZXJzaW9u
+OwogCXN0cnVjdCBhdGFfcHJvYmVfZW50ICpwcm9iZV9lbnQgPSBOVUxMOworCXN0cnVjdCB2c2Nf
+c2F0YV9ob3N0X3ByaXYgKmhwcml2OwogCXVuc2lnbmVkIGxvbmcgYmFzZTsKIAlpbnQgcGNpX2Rl
+dl9idXN5ID0gMDsKIAl2b2lkIF9faW9tZW0gKm1taW9fYmFzZTsKQEAgLTM3OCw2ICszOTgsNyBA
+QCBzdGF0aWMgaW50IF9fZGV2aW5pdCB2c2Nfc2F0YV9pbml0X29uZSAoCiAJCXJjID0gLUVOT01F
+TTsKIAkJZ290byBlcnJfb3V0X3JlZ2lvbnM7CiAJfQorCiAJbWVtc2V0KHByb2JlX2VudCwgMCwg
+c2l6ZW9mKCpwcm9iZV9lbnQpKTsKIAlwcm9iZV9lbnQtPmRldiA9IHBjaV9kZXZfdG9fZGV2KHBk
+ZXYpOwogCUlOSVRfTElTVF9IRUFEKCZwcm9iZV9lbnQtPm5vZGUpOwpAQCAtMzg5LDE5ICs0MTAs
+MzMgQEAgc3RhdGljIGludCBfX2RldmluaXQgdnNjX3NhdGFfaW5pdF9vbmUgKAogCX0KIAliYXNl
+ID0gKHVuc2lnbmVkIGxvbmcpIG1taW9fYmFzZTsKIAorCWhwcml2ID0ga21hbGxvYyhzaXplb2Yo
+Kmhwcml2KSwgR0ZQX0tFUk5FTCk7CisJaWYgKCFocHJpdikgeworCQlyYyA9IC1FTk9NRU07CisJ
+CWdvdG8gZXJyX291dF9pb3VubWFwOworCX0KKwltZW1zZXQoaHByaXYsIDAsIHNpemVvZigqaHBy
+aXYpKTsKKwogCS8qCiAJICogRHVlIHRvIGEgYnVnIGluIHRoZSBjaGlwLCB0aGUgZGVmYXVsdCBj
+YWNoZSBsaW5lIHNpemUgY2FuJ3QgYmUgdXNlZAogCSAqLwogCXBjaV93cml0ZV9jb25maWdfYnl0
+ZShwZGV2LCBQQ0lfQ0FDSEVfTElORV9TSVpFLCAweDgwKTsKIAorCWlmIChwY2lfZW5hYmxlX21z
+aShwZGV2KSA9PSAwKSB7CisJCWhwcml2LT5ocF9mbGFncyB8PSBWU0NfU0FUQV9IUF9GTEFHX01T
+STsKKwkJcGNpX2ludHgocGRldiwgMCk7CisJfQorCWVsc2UKKwkJcHJvYmVfZW50LT5pcnFfZmxh
+Z3MgPSBJUlFGX1NIQVJFRDsKKwogCXByb2JlX2VudC0+c2h0ID0gJnZzY19zYXRhX3NodDsKIAlw
+cm9iZV9lbnQtPmhvc3RfZmxhZ3MgPSBBVEFfRkxBR19TQVRBIHwgQVRBX0ZMQUdfTk9fTEVHQUNZ
+IHwKIAkJCQlBVEFfRkxBR19NTUlPOwogCXByb2JlX2VudC0+cG9ydF9vcHMgPSAmdnNjX3NhdGFf
+b3BzOwogCXByb2JlX2VudC0+bl9wb3J0cyA9IDQ7CiAJcHJvYmVfZW50LT5pcnEgPSBwZGV2LT5p
+cnE7Ci0JcHJvYmVfZW50LT5pcnFfZmxhZ3MgPSBJUlFGX1NIQVJFRDsKIAlwcm9iZV9lbnQtPm1t
+aW9fYmFzZSA9IG1taW9fYmFzZTsKKwlwcm9iZV9lbnQtPnByaXZhdGVfZGF0YSA9IGhwcml2Owog
+CiAJLyogV2UgZG9uJ3QgY2FyZSBtdWNoIGFib3V0IHRoZSBQSU8vVURNQSBtYXNrcywgYnV0IHRo
+ZSBjb3JlIHdvbid0IGxpa2UgdXMKIAkgKiBpZiB3ZSBkb24ndCBmaWxsIHRoZXNlCkBAIC00Mjgs
+MTAgKzQ2MywxMiBAQCBzdGF0aWMgaW50IF9fZGV2aW5pdCB2c2Nfc2F0YV9pbml0X29uZSAoCiAK
+IAkvKiBGSVhNRTogY2hlY2sgYXRhX2RldmljZV9hZGQgcmV0dXJuIHZhbHVlICovCiAJYXRhX2Rl
+dmljZV9hZGQocHJvYmVfZW50KTsKLQlrZnJlZShwcm9iZV9lbnQpOwogCisJa2ZyZWUocHJvYmVf
+ZW50KTsKIAlyZXR1cm4gMDsKIAorZXJyX291dF9pb3VubWFwOgorCXBjaV9pb3VubWFwKHBkZXYs
+IG1taW9fYmFzZSk7CiBlcnJfb3V0X2ZyZWVfZW50OgogCWtmcmVlKHByb2JlX2VudCk7CiBlcnJf
+b3V0X3JlZ2lvbnM6Cg==
 
-This is 2.6.19-rc2, libata, regular old IDE running an HPT302 Rev 1
-controller with two 12gb HDs, an 18G SCSI disk holding /, /usr, /var &
-/boot, dual CPU Xeon PIII 550mhz, 768Gb RAM, Debian unstable updated
-within the last two days.
-
-The filesystem (/staging) gets remounted read-only.  Now when I run
-badblocks against the drive, it just complains and complains about all
-the blocks.  
-
-If I reboot, the system comes up cleanly and I can access the drive
-again.  A pass with badblocks completes, as does doing the various
-pvcreate, vgcreate, lvcreate, mke2fs commands to setup the filesystem
-all over again on the disk. 
-
-It's /dev/sdc1 hold the PV, holds the VG, holds the LV, holds the
-filesystem.  
-
-> sudo pvs
-  /dev/sdc1: read failed after 0 of 2048 at 0: Input/output error
-  PV         VG      Fmt  Attr PSize   PFree
-  /dev/md0   data_vg lvm2 a-   111.79G 1.79G
-
-> sudo vgs
-  /dev/sdc1: read failed after 0 of 2048 at 0: Input/output error
-  VG      #PV #LV #SN Attr   VSize   VFree
-  data_vg   1   3   0 wz--n- 111.79G 1.79G
-
-> sudo lvs
-Password:
-  /dev/sdc1: read failed after 0 of 2048 at 0: Input/output error
-  LV       VG      Attr   LSize  Origin Snap%  Move Log Copy% 
-  home_lv  data_vg -wi-ao 67.00G                              
-  local_lv data_vg -wi-ao 35.00G                              
-  staging  data_vg -wi-a-  8.00G                
-
-I can either reboot the system and get more details, or I can leave it
-like it is now and try some suggestions to get the disk back online.
-
-  > sdparm --version
-  version: 0.98 20060509
-
-  > sudo sdparm -v /dev/sdc
-      /dev/sdc: ATA       WDC WD1200JB-00C  17.0
-      Request Sense cmd: 03 00 00 00 40 00 
-  request sense:  Fixed format, current;  Sense key: Illegal Request
-   Additional sense: Invalid command operation code
-  REQUEST SENSE failed
-
-
-Thanks,
-John
+------_=_NextPart_001_01C6F15A.C1BEC8C8--
