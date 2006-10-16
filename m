@@ -1,34 +1,29 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: hdparm -C on SATA always prints "standby"
-Date: Mon, 16 Oct 2006 12:09:47 -0400
-Message-ID: <4533AECB.7010102@rtr.ca>
-References: <200610161136.04754.len.brown@intel.com> <4533ADFA.4000703@rtr.ca>
+Subject: Re: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
+Date: Mon, 16 Oct 2006 12:17:55 -0400
+Message-ID: <4533B0B3.8070205@rtr.ca>
+References: <DBFABB80F7FD3143A911F9E6CFD477B018E8171B@hqemmail02.nvidia.com> <452C7C1D.3040704@shaw.ca> <20061011103038.GK6515@kernel.dk> <452F053B.2000906@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:27152 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1422691AbWJPQJt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Oct 2006 12:09:49 -0400
-In-Reply-To: <4533ADFA.4000703@rtr.ca>
+Received: from rtr.ca ([64.26.128.89]:23825 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1422714AbWJPQR5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Oct 2006 12:17:57 -0400
+In-Reply-To: <452F053B.2000906@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Len Brown <lenb@kernel.org>
-Cc: linux-ide@vger.kernel.org, bltk-discussion@lists.sourceforge.net
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, prakash@punnoor.de
 
->> hdparm -C seems to work on the PATA laptops I have,
->> but it always returns standby on the SATA laptops I have.
->>
->> Is this a known issue?
+Robert Hancock wrote:
 > 
-> Yes, due to incomplete implemetation of the HDIO_* ioctls in libata.
-> Somebody else posted a patch here recently to fix it.
-> I don't know if Jeff picked it up or not.
+> I also noticed that I'm still using the default 64KB libata dma_boundary 
+> value, this should be 4GB for ADMA mode (but fixed up back to the 
+> default if an ATAPI device is connected, same as with the DMA mask).
 
-Correction on that.  Jeff has indeed picked up the fix,
-as of his "pull" request on Ocober 11:
-
->Eran Tromer:
->      libata: return sense data in HDIO_DRIVE_CMD ioctl
+Be careful of that.  The original PDC hardware for ADMA still had
+the "don't cross a 64KB boundary" requirement.
 
 Cheers
+
