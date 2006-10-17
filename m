@@ -1,162 +1,89 @@
-From: "Jesse Brandeburg" <jesse.brandeburg@gmail.com>
-Subject: Re: [PATCH] libata: skip reset on bus not a device
-Date: Tue, 17 Oct 2006 16:13:20 -0700
-Message-ID: <4807377b0610171613i5df25ddekb8c470d767a11005@mail.gmail.com>
-References: <215036450609292206pd16c7cxa1c5c77ee52c050e@mail.gmail.com>
-	 <451E7BD2.7020002@gmail.com>
-	 <215036450609301849h64551749uf6b4a3e48c57fe15@mail.gmail.com>
-	 <4529BCC4.8060906@gmail.com>
-	 <215036450610082354q34b906bdp54a3b9cee52a5855@mail.gmail.com>
-	 <4529F391.3030504@gmail.com> <20061009070652.GE10832@htj.dyndns.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: CFP: Linux 2007 File System & IO Workshop
+Date: Tue, 17 Oct 2006 16:25:06 -0700 (PDT)
+Message-ID: <20061017232506.36297.qmail@web31805.mail.mud.yahoo.com>
+References: <1161124834.6245.51.camel@mulgrave.il.steeleye.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:53605 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1751069AbWJQXNW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Oct 2006 19:13:22 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so67584ugd
-        for <linux-ide@vger.kernel.org>; Tue, 17 Oct 2006 16:13:21 -0700 (PDT)
-In-Reply-To: <20061009070652.GE10832@htj.dyndns.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1161124834.6245.51.camel@mulgrave.il.steeleye.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Ric Wheeler <ric@emc.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, reiserfs-list@namesys.com, ext2-devel@lists.sourceforge.net, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, lsf07pc@usenix.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Joe Jin <lkmaillist@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On 10/9/06, Tejun Heo <htejun@gmail.com> wrote:
-> On Mon, Oct 09, 2006 at 04:00:33PM +0900, Tejun Heo wrote:
-> > Joe Jin wrote:
-> > >>SRST failure would have still occurred but 30sec timeout should have
-> > >>gone.  Can you post full dmesg?
-> > >
-> > >Yes it is.
-> > >attachment is the output of dmesg
-> >
-> > Great.
-> >
-> > >>Also, please test the patch in the following mail.  You can use either
-> > >>git or download the full kernel tarball to get the modified kernel.
-> > >>
-> > >
-> > >Did the pathc against 2.6.19-rc1?
-> > >I have test it, but it have not any change and timeout also appeared :(
-> >
-> > It's against libata development tree.  So, you downloaded the tar.gz and
-> > tested it?
->
-> And, one more thing to try.  The following patch should fix your
-> problem.  It's against v2.6.18.
->
-> diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-> index 427b73a..3bc7f57 100644
-> --- a/drivers/scsi/libata-core.c
-> +++ b/drivers/scsi/libata-core.c
-> @@ -2271,11 +2271,14 @@ static inline void ata_tf_to_host(struct
->   *     Sleep until ATA Status register bit BSY clears,
->   *     or a timeout occurs.
->   *
-> - *     LOCKING: None.
-> + *     LOCKING:
-> + *     Kernel thread context (may sleep).
-> + *
-> + *     RETURNS:
-> + *     0 on success, -errno otherwise.
->   */
-> -
-> -unsigned int ata_busy_sleep (struct ata_port *ap,
-> -                            unsigned long tmout_pat, unsigned long tmout)
-> +int ata_busy_sleep(struct ata_port *ap,
-> +                  unsigned long tmout_pat, unsigned long tmout)
->  {
->         unsigned long timer_start, timeout;
->         u8 status;
-> @@ -2283,25 +2286,30 @@ unsigned int ata_busy_sleep (struct ata_
->         status = ata_busy_wait(ap, ATA_BUSY, 300);
->         timer_start = jiffies;
->         timeout = timer_start + tmout_pat;
-> -       while ((status & ATA_BUSY) && (time_before(jiffies, timeout))) {
-> +       while (status != 0xff && (status & ATA_BUSY) &&
-> +              time_before(jiffies, timeout)) {
->                 msleep(50);
->                 status = ata_busy_wait(ap, ATA_BUSY, 3);
->         }
->
-> -       if (status & ATA_BUSY)
-> +       if (status != 0xff && (status & ATA_BUSY))
->                 ata_port_printk(ap, KERN_WARNING,
->                                 "port is slow to respond, please be patient\n");
->
->         timeout = timer_start + tmout;
-> -       while ((status & ATA_BUSY) && (time_before(jiffies, timeout))) {
-> +       while (status != 0xff && (status & ATA_BUSY) &&
-> +              time_before(jiffies, timeout)) {
->                 msleep(50);
->                 status = ata_chk_status(ap);
->         }
->
-> +       if (status == 0xff)
-> +               return -ENODEV;
-> +
->         if (status & ATA_BUSY) {
->                 ata_port_printk(ap, KERN_ERR, "port failed to respond "
->                                 "(%lu secs)\n", tmout / HZ);
-> -               return 1;
-> +               return -EBUSY;
->         }
->
->         return 0;
-> @@ -2392,10 +2400,8 @@ static unsigned int ata_bus_softreset(st
->          * the bus shows 0xFF because the odd clown forgets the D7
->          * pulldown resistor.
->          */
-> -       if (ata_check_status(ap) == 0xFF) {
-> -               ata_port_printk(ap, KERN_ERR, "SRST failed (status 0xFF)\n");
-> -               return AC_ERR_OTHER;
-> -       }
-> +       if (ata_check_status(ap) == 0xFF)
-> +               return 0;
->
->         ata_bus_post_reset(ap, devmask);
->
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 66c3100..eb7d90f 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -702,9 +702,8 @@ extern int ata_host_set_suspend(struct a
->                                 pm_message_t mesg);
->  extern void ata_host_set_resume(struct ata_host_set *host_set);
->  extern int ata_ratelimit(void);
-> -extern unsigned int ata_busy_sleep(struct ata_port *ap,
-> -                                  unsigned long timeout_pat,
-> -                                  unsigned long timeout);
-> +extern int ata_busy_sleep(struct ata_port *ap,
-> +                         unsigned long timeout_pat, unsigned long timeout);
->  extern void ata_port_queue_task(struct ata_port *ap, void (*fn)(void *),
->                                 void *data, unsigned long delay);
->  extern u32 ata_wait_register(void __iomem *reg, u32 mask, u32 val,
-> @@ -1019,7 +1018,7 @@ static inline u8 ata_busy_wait(struct at
->                 udelay(10);
->                 status = ata_chk_status(ap);
->                 max--;
-> -       } while ((status & bits) && (max > 0));
-> +       } while (status != 0xff && (status & bits) && (max > 0));
->
->         return status;
->  }
-> @@ -1040,7 +1039,7 @@ static inline u8 ata_wait_idle(struct at
->  {
->         u8 status = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
->
-> -       if (status & (ATA_BUSY | ATA_DRQ)) {
-> +       if (status != 0xff && (status & (ATA_BUSY | ATA_DRQ))) {
->                 unsigned long l = ap->ioaddr.status_addr;
->                 if (ata_msg_warn(ap))
->                         printk(KERN_WARNING "ATA: abnormal status 0x%X on port 0x%lX\n",
->
-> -
+--- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> On Mon, 2006-10-16 at 20:40 -0400, Ric Wheeler wrote:
+> > On  February 12-13, we have put together a combined Linux file system & 
+> > IO 2-day workshop in San Jose, CA. Note that the USENIX File System and 
+> > Storage Technologies conference follows us in the same venue, so we hope 
+> > to get some interaction between the two groups as well as leverage the 
+> > USENIX people to help us get this done.
+> > 
+> > For more information, please see:
+> > 
+> > http://www.usenix.org/events/lsf07/
+> 
+> Just to clarify, this event is a follow on to the Vancouver Storage
+> summit.
 
-Is this patch going to go upstream?  I've been testing 2.6.18 on a
-couple different systems and seen the same issue.  I haven't tested
-the patch yet.
+The only mentioning of "Vancouver Storage summit" in the web content
+therein was, quoting from http://www.usenix.org/events/lsf07/cfp/ :
+ ...
+ * Progress reports on implementation of features discussed at the
+   Vancouver Storage Summit
+ ...
+So by "follow on" you mean "progress report" only?  Or will this
+event also accept and/or discuss new material?
+
+> Although USENIX is helping us to run it, you don't have to be
+> a USENIX member to submit a position paper.  The idea of the position
+> papers is to give the limited number of places (for storage we've got
+> about 20-25 and about the same again for fs) to people who have
+> interesting topics they need to discuss---so if you submit, be prepared
+> to make a presentation of it.
+
+Can I make a presentation of this paper:
+
+Serial Attached SCSI, An Architecture For Linux
+---------------------------------
+This paper would start with an overview of SCSI (SCSI-3, that is), its
+object oriented nature and why such is the direction of SCSI.
+
+Then an introduction to SAS from this SCSI point of view will be given,
+i.e. where it fits in the object oriented model, why and how. There may be
+very little SAS technical introduction--a couple of sentences, something
+anyone would understand and something sufficient for the latter sections of
+the paper.
+
+Then an introduction to SAS as an architecture in a SCSI stack would
+follow. A layered, object oriented model will be presented, similar to the
+one found in my code.
+
+This will be accompanied with a SCSI "architectural roadmap", the how and
+why the architecture.
+
+Then an overview of pure-SCSI drivers would be given (at this point the
+paper talks about implementations at each layer of the storage software
+stack). Those are implementations which hide the transport layer completely
+in their firmware, and present a pure SCSI "picture", a la SAM, to the
+OS. How and why they do it and why it is better.
+
+Then the paper would talk about what unifies those implementations, how it
+can be done, and why it should be done this way. An introduction to SDI,
+SCSI Driver Interface, would be presented.
+
+There would be a section on a SCSI/ATA Translation, SAT, and a SAT
+Layer (SATL). Where it fits, how and why. What its interface is and why.
+
+The paper would include pictures and figures as necessary to show layers,
+object oriented concepts and the like.
+----------------------------------------
+
+The thread is here:
+http://marc.theaimsgroup.com/?t=114197580200002&r=1&w=2
+
+   Luben
+
