@@ -1,58 +1,47 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: CFP: Linux 2007 File System & IO Workshop
-Date: Tue, 17 Oct 2006 20:00:08 -0400
-Message-ID: <1161129608.6245.61.camel__31793.5786363252$1161133823$gmane$org@mulgrave.il.steeleye.com>
-References: <20061017232506.36297.qmail@web31805.mail.mud.yahoo.com>
+From: Ryan Richter <ryan@tau.solarneutrino.net>
+Subject: Re: DVD drive not recognized on Intel G965 (2.6.19-rc2)
+Date: Tue, 17 Oct 2006 19:50:40 -0400
+Message-ID: <20061017235040.GA25185__23834.6152277247$1161134070$gmane$org@tau.solarneutrino.net>
+References: <20061017180420.GD24789@tau.solarneutrino.net> <453533AB.9020801@argo.co.il> <1161124349.5014.12.camel@localhost.localdomain> <20061017222310.GA24891@tau.solarneutrino.net> <1161127585.5014.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:20891 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750793AbWJRADU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Oct 2006 20:03:20 -0400
-In-Reply-To: <20061017232506.36297.qmail@web31805.mail.mud.yahoo.com>
+Received: from solarneutrino.net ([66.199.224.43]:23310 "EHLO
+	tau.solarneutrino.net") by vger.kernel.org with ESMTP
+	id S1751172AbWJQXus (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Oct 2006 19:50:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1161127585.5014.27.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Ric Wheeler <ric@emc.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, reiserfs-list@namesys.com, ext2-devel@lists.sourceforge.net, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, lsf07pc@usenix.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Avi Kivity <avi@argo.co.il>, "Dr. David Alan Gilbert" <dave@treblig.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, 2006-10-17 at 16:25 -0700, Luben Tuikov wrote:
-> The only mentioning of "Vancouver Storage summit" in the web content
-> therein was, quoting from http://www.usenix.org/events/lsf07/cfp/ :
->  ...
->  * Progress reports on implementation of features discussed at the
->    Vancouver Storage Summit
->  ...
-> So by "follow on" you mean "progress report" only?  Or will this
-> event also accept and/or discuss new material?
-
-That was only one of the topics ... there are several other suggestions
-in the list you pulled that quote from.
-
-> > Although USENIX is helping us to run it, you don't have to be
-> > a USENIX member to submit a position paper.  The idea of the position
-> > papers is to give the limited number of places (for storage we've got
-> > about 20-25 and about the same again for fs) to people who have
-> > interesting topics they need to discuss---so if you submit, be prepared
-> > to make a presentation of it.
+On Wed, Oct 18, 2006 at 12:26:25AM +0100, Alan Cox wrote:
+> Ar Maw, 2006-10-17 am 18:23 -0400, ysgrifennodd Ryan Richter:
+> > 02:00.0 IDE interface: Marvell Technology Group Ltd. Unknown device 6101 (rev b1) (prog-if 8f [Master SecP SecO PriP PriO])
+> > 	Subsystem: Marvell Technology Group Ltd. Unknown device 6101
 > 
-> Can I make a presentation of this paper:
+> That should work with libata and the newest driver version I posted (the
+> earlier one won't handle the 6101 just 6145). You need at least rev
+> 0.0.4t.
 
-You can submit it as your position paper, certainly.
-
-However, the object of this event is not to collect a list of papers to
-be presented: it's not a conference with hundreds of attendees (if you
-want to present to an audience, you should submit to FAST, which is such
-a conference, with which we're co-located).  It's a roundtable type
-discussion with 20-25 people in the field; plus some plenary sessions to
-get input and ideas from people working on the filesystem layer.  The
-object is to stimulate discussion of important issues (which may be
-guided by papers or other materials).  The position paper thing is only
-to ensure people actually have things they want to discuss (and to allow
-the programme committee to pick the attendees if there would be too
-many).
-
-James
+OK, now it's doing a little better.  It seems to recognize the
+controller and drive, but it's not getting assigned a /dev/[sh]d? device
+(it doesn't show up in /proc/diskstats, e.g.).  Here's the relevant
+portion of dmesg:
 
 
+ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+PCI: Setting latency timer of device 0000:02:00.0 to 64
+ata5: PATA max UDMA/100 cmd 0x1018 ctl 0x1026 bmdma 0x1000 irq 17
+scsi4 : pata_marvell
+BAR5:00:00 01:7F 02:22 03:CA 04:00 05:00 06:00 07:00 08:00 09:00 0A:00 0B:00 0C:01 0D:00 0E:00 0F:00 
+ata5.00: ATAPI, max UDMA/33
+ata5.00: applying bridge limits
+ata5.00: configured for UDMA/33
+scsi 4:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-H10N  JL10 PQ: 0 ANSI: 5
+scsi 4:0:0:0: Attached scsi generic sg0 type 5
+
+Thanks,
+-ryan
