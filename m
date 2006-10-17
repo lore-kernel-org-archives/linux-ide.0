@@ -1,34 +1,35 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_nv ADMA/NCQ support for nForce4
-Date: Tue, 17 Oct 2006 16:54:56 -0400
-Message-ID: <45354320.6030009@rtr.ca>
-References: <DBFABB80F7FD3143A911F9E6CFD477B018E8171B@hqemmail02.nvidia.com>	<452C7C1D.3040704@shaw.ca> <20061011103038.GK6515@kernel.dk>	<452F053B.2000906@shaw.ca> <20061013080434.GE6515@kernel.dk>	<45344F4D.6070703@shaw.ca> <45345015.2010601@rtr.ca>	<45345B16.4090505@shaw.ca> <4535032F.2080807@rtr.ca> <adaslhmu8mt.fsf@cisco.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: DVD drive not recognized on Intel G965 (2.6.19-rc2)
+Date: Tue, 17 Oct 2006 23:32:29 +0100
+Message-ID: <1161124349.5014.12.camel@localhost.localdomain>
+References: <20061017180420.GD24789@tau.solarneutrino.net>
+	 <453533AB.9020801@argo.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:39437 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1750831AbWJQUy6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2006 16:54:58 -0400
-In-Reply-To: <adaslhmu8mt.fsf@cisco.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:28573 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1750807AbWJQWGC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Oct 2006 18:06:02 -0400
+In-Reply-To: <453533AB.9020801@argo.co.il>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Robert Hancock <hancockr@shaw.ca>, Jens Axboe <jens.axboe@oracle.com>, Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, prakash@punnoor.de
+To: Avi Kivity <avi@argo.co.il>
+Cc: Ryan Richter <ryan@tau.solarneutrino.net>, "Dr. David Alan Gilbert" <dave@treblig.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Roland Dreier wrote:
->     Mark> I was thinking more about the non wordsized fields, such as
->     Mark> the various u8 bytes that gcc will lay out differently
->     Mark> depending upon endianess.
-> 
-> I don't know of any gcc version that changes the order of struct
-> fields.  You might be thinking of bitfields, which are laid out in an
-> endian-dependent way.
+Ar Maw, 2006-10-17 am 21:48 +0200, ysgrifennodd Avi Kivity:
+> > I tried the JMicron driver, but it didn't find a controller.  This board
+> > has only one PATA port, and I'm pretty sure it's from the Intel
+> > southbridge.
 
-Ack.  And also thinking about other compilers I work with,
-which apparently are not so friendly.
+JMB368 by the sound of it, this should "just work" with either the
+generic pci driver in 2.6.18.1 or later, or the jmicron driver if you
+have libata support enabled.
 
-You are correct -- I just verified it (again) for myself on x86 & PPC,
-and the layout of u8 doesn't change.
+> Try adding all-generic-ide to the kernel command line, and if that 
+> fails, post your lspci output.
 
-Cheers!
+Please cc me on any jmicron chipset problems. I've got
+hardware/docs/nice man at Jmicron to ask questions of
+
