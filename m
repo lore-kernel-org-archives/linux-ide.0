@@ -1,33 +1,32 @@
-From: Jiri Kosina <jikos@jikos.cz>
-Subject: Re: sata_mv problems on Marvell MV88SX5081
-Date: Wed, 18 Oct 2006 14:53:46 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0610181449470.29022@twin.jikos.cz>
-References: <Pine.LNX.4.64.0610181258330.29022@twin.jikos.cz> <45361FB1.4060304@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: skip reset on bus not a device
+Date: Thu, 19 Oct 2006 01:24:37 +0900
+Message-ID: <45365545.9000703@gmail.com>
+References: <215036450609292206pd16c7cxa1c5c77ee52c050e@mail.gmail.com>	 <451E7BD2.7020002@gmail.com>	 <215036450609301849h64551749uf6b4a3e48c57fe15@mail.gmail.com>	 <4529BCC4.8060906@gmail.com>	 <215036450610082354q34b906bdp54a3b9cee52a5855@mail.gmail.com>	 <4529F391.3030504@gmail.com> <20061009070652.GE10832@htj.dyndns.org> <4807377b0610171613i5df25ddekb8c470d767a11005@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from twin.jikos.cz ([213.151.79.26]:39125 "EHLO twin.jikos.cz")
-	by vger.kernel.org with ESMTP id S1030257AbWJRMy1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2006 08:54:27 -0400
-In-Reply-To: <45361FB1.4060304@rtr.ca>
+Received: from nz-out-0102.google.com ([64.233.162.192]:45370 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751482AbWJRQYq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Oct 2006 12:24:46 -0400
+Received: by nz-out-0102.google.com with SMTP id z3so118459nzf
+        for <linux-ide@vger.kernel.org>; Wed, 18 Oct 2006 09:24:46 -0700 (PDT)
+In-Reply-To: <4807377b0610171613i5df25ddekb8c470d767a11005@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Jesse Brandeburg <jesse.brandeburg@gmail.com>
+Cc: Joe Jin <lkmaillist@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Wed, 18 Oct 2006, Mark Lord wrote:
+Jesse Brandeburg wrote:
+> Is this patch going to go upstream?  I've been testing 2.6.18 on a
+> couple different systems and seen the same issue.  I haven't tested
+> the patch yet.
 
-> > Buffer I/O error on device sda1, logical block 122126336
-> Scroll WAY BACK in the log, and find the error messages which preceeded
-> the first occurance of that one.  (with a bad sector, it is very likely
-> you will see a zillion "Buffer I/O errors", as the SCSI mid-layer is not
-> at all nice about how it handles them).
+The patch is pending review.
 
-Actually the "Buffer I/O error" is the very first error message I am 
-receiving, a few minutes after the driver is initialized and there is some 
-disk activity happening.
-
-Thanks,
+http://thread.gmane.org/gmane.linux.ide/13408/focus=13439
 
 -- 
-Jiri Kosina
+tejun
