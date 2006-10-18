@@ -1,18 +1,17 @@
 From: "Andrew Lyon" <andrew.lyon@gmail.com>
 Subject: Problems writing with Samsung SH-W163A SATA CD/DVDRW
-Date: Wed, 18 Oct 2006 09:31:48 +0100
-Message-ID: <f4527be0610180131i67d96805g2367cc9730de9d06@mail.gmail.com>
+Date: Wed, 18 Oct 2006 10:19:49 +0100
+Message-ID: <f4527be0610180219q6e5d316fif4c0b8c8a4d389c9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:1435 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.187]:24461 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S932100AbWJRIbu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2006 04:31:50 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so591334nfe
-        for <linux-ide@vger.kernel.org>; Wed, 18 Oct 2006 01:31:48 -0700 (PDT)
+	id S932155AbWJRJTv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Oct 2006 05:19:51 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so605169nfe
+        for <linux-ide@vger.kernel.org>; Wed, 18 Oct 2006 02:19:50 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -35,8 +34,7 @@ scsidev: 'ATAPI:0,0,0'
 devname: 'ATAPI'
 scsibus: 0 target: 0 lun: 0
 Warning: Using ATA Packet interface.
-Warning: The related Linux kernel interface code seems to be unmaintain=
-ed.
+Warning: The related Linux kernel interface code seems to be unmaintained.
 Warning: There is absolutely NO DMA, operations thus are slow.
 Using libscg version 'schily-0.8'.
 Device type    : Removable CD-ROM
@@ -73,20 +71,13 @@ On node 0 totalpages: 524272
   HighMem zone: 294896 pages, LIFO batch:31
 DMI 2.3 present.
 ACPI: RSDP (v000 GBT                                   ) @ 0x000f6c80
-ACPI: RSDT (v001 GBT    AWRDACPI 0x42302e31 AWRD 0x01010101) @ 0x7fff30=
-40
-ACPI: FADT (v001 GBT    AWRDACPI 0x42302e31 AWRD 0x01010101) @ 0x7fff30=
-c0
-ACPI: MCFG (v001 GBT    AWRDACPI 0x42302e31 AWRD 0x01010101) @ 0x7fff7b=
-80
-ACPI: MADT (v001 GBT    AWRDACPI 0x42302e31 AWRD 0x01010101) @ 0x7fff7a=
-80
-ACPI: SSDT (v001  PmRef  Cpu0Ist 0x00003000 INTL 0x20040311) @ 0x7fff7c=
-00
-ACPI: SSDT (v001  PmRef    CpuPm 0x00003000 INTL 0x20040311) @ 0x7fff80=
-90
-ACPI: DSDT (v001 GBT    AWRDACPI 0x00001000 MSFT 0x0100000c) @ 0x000000=
-00
+ACPI: RSDT (v001 GBT    AWRDACPI 0x42302e31 AWRD 0x01010101) @ 0x7fff3040
+ACPI: FADT (v001 GBT    AWRDACPI 0x42302e31 AWRD 0x01010101) @ 0x7fff30c0
+ACPI: MCFG (v001 GBT    AWRDACPI 0x42302e31 AWRD 0x01010101) @ 0x7fff7b80
+ACPI: MADT (v001 GBT    AWRDACPI 0x42302e31 AWRD 0x01010101) @ 0x7fff7a80
+ACPI: SSDT (v001  PmRef  Cpu0Ist 0x00003000 INTL 0x20040311) @ 0x7fff7c00
+ACPI: SSDT (v001  PmRef    CpuPm 0x00003000 INTL 0x20040311) @ 0x7fff8090
+ACPI: DSDT (v001 GBT    AWRDACPI 0x00001000 MSFT 0x0100000c) @ 0x00000000
 ACPI: PM-Timer IO Port: 0x408
 ACPI: Local APIC address 0xfee00000
 ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
@@ -123,10 +114,10 @@ Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
 Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
 Memory: 2074476k/2097088k available (2417k kernel code, 21384k
 reserved, 914k data, 204k init, 1179584k highmem)
-Checking if this processor honours the WP bit even in supervisor mode..=
-=2E Ok.
-Calibrating delay using timer specific routine.. 4802.67 BogoMIPS (lpj=3D=
-24013353)
+Checking if this processor honours the WP bit even in supervisor mode... Ok=
+.
+Calibrating delay using timer specific routine.. 4802.67 BogoMIPS (lpj=3D24=
+013353)
 Mount-cache hash table entries: 512
 CPU: After generic identify, caps: bfebfbff 20100000 00000000 00000000
 0000e3bd 00000000 00000001
@@ -144,13 +135,13 @@ Intel machine check architecture supported.
 Intel machine check reporting enabled on CPU#0.
 Compat vDSO mapped to ffffe000.
 Checking 'hlt' instruction... OK.
-=46reeing SMP alternatives: 16k freed
+Freeing SMP alternatives: 16k freed
 ACPI: Core revision 20060707
 CPU0: Intel(R) Core(TM)2 CPU          6600  @ 2.40GHz stepping 06
 Booting processor 1/1 eip 2000
 Initializing CPU#1
-Calibrating delay using timer specific routine.. 4800.12 BogoMIPS (lpj=3D=
-24000631)
+Calibrating delay using timer specific routine.. 4800.12 BogoMIPS (lpj=3D24=
+000631)
 CPU: After generic identify, caps: bfebfbff 20100000 00000000 00000000
 0000e3bd 00000000 00000001
 CPU: After vendor identify, caps: bfebfbff 20100000 00000000 00000000
@@ -167,7 +158,7 @@ Intel machine check reporting enabled on CPU#1.
 CPU1: Intel(R) Core(TM)2 CPU          6600  @ 2.40GHz stepping 06
 Total of 2 processors activated (9602.79 BogoMIPS).
 ENABLING IO-APIC IRQs
-=2E.TIMER: vector=3D0x31 apic1=3D0 pin1=3D2 apic2=3D-1 pin2=3D-1
+..TIMER: vector=3D0x31 apic1=3D0 pin1=3D2 apic2=3D-1 pin2=3D-1
 checking TSC synchronization across 2 CPUs: passed.
 Brought up 2 CPUs
 migration_cost=3D16
@@ -191,17 +182,17 @@ ACPI: PCI Interrupt Link [LNKB] (IRQs *3 4 5 6 7 9 10 11 12 14 15)
 ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 *5 6 7 9 10 11 12 14 15)
 ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 9 10 11 12 14 *15)
 ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 5 6 7 9 10 11 12 *14 15)
-ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 6 7 9 10 11 12 14 15) *0, d=
-isabled.
+ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 6 7 9 10 11 12 14 15) *0, disab=
+led.
 ACPI: PCI Interrupt Link [LNK0] (IRQs 3 4 5 6 7 9 *10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNK1] (IRQs 3 4 5 6 7 9 10 11 12 14 15) *0, d=
-isabled.
+ACPI: PCI Interrupt Link [LNK1] (IRQs 3 4 5 6 7 9 10 11 12 14 15) *0, disab=
+led.
 SCSI subsystem initialized
 usbcore: registered new driver usbfs
 usbcore: registered new driver hub
 PCI: Using ACPI for IRQ routing
-PCI: If a device doesn't work, try "pci=3Drouteirq".  If it helps, post=
- a report
+PCI: If a device doesn't work, try "pci=3Drouteirq".  If it helps, post a r=
+eport
 PCI: Bridge: 0000:00:01.0
   IO window: 6000-6fff
   MEM window: f4000000-f6ffffff
@@ -275,8 +266,7 @@ Real Time Clock Driver v1.12ac
 Non-volatile memory driver v1.2
 Linux agpgart interface v0.101 (c) Dave Jones
 [drm] Initialized drm 1.0.1 20051102
-Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing disabl=
-ed
+Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing disabled
 serial8250: ttyS0 at I/O 0x3f8 (irq =3D 4) is a 16550A
 parport0: PC-style at 0x378 [PCSPP,TRISTATE]
 lp0: using parport0 (polling).
@@ -285,14 +275,14 @@ loop: loaded (max 8 devices)
 e100: Intel(R) PRO/100 Network Driver, 3.5.10-k2-NAPI
 e100: Copyright(c) 1999-2005 Intel Corporation
 Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebu=
-s=3Dxx
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=3D=
+xx
 libata version 2.00 loaded.
 ahci 0000:03:00.0: version 2.0
 ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 19 (level, low) -> IRQ 17
 PCI: Setting latency timer of device 0000:03:00.0 to 64
-ahci 0000:03:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA=
- mode
+ahci 0000:03:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA mod=
+e
 ahci 0000:03:00.0: flags: 64bit ncq pm led clo pmp pio slum part
 ata1: SATA max UDMA/133 cmd 0xF8CD4100 ctl 0x0 bmdma 0x0 irq 17
 ata2: SATA max UDMA/133 cmd 0xF8CD4180 ctl 0x0 bmdma 0x0 irq 17
@@ -415,8 +405,7 @@ ehci_hcd 0000:00:1d.7: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
 usb usb2: configuration #1 chosen from 1 choice
 hub 2-0:1.0: USB hub found
 hub 2-0:1.0: 6 ports detected
-ohci_hcd: 2005 April 22 USB 1.1 'Open' Host Controller (OHCI) Driver (P=
-CI)
+ohci_hcd: 2005 April 22 USB 1.1 'Open' Host Controller (OHCI) Driver (PCI)
 USB Universal Host Controller Interface driver v3.0
 ACPI: PCI Interrupt 0000:00:1a.0[A] -> GSI 16 (level, low) -> IRQ 16
 PCI: Setting latency timer of device 0000:00:1a.0 to 64
@@ -492,8 +481,8 @@ raid5: automatically using best checksumming function: pIII_sse
 raid5: using function: pIII_sse (8780.400 MB/sec)
 md: md driver 0.90.3 MAX_MD_DEVS=3D256, MD_SB_DISKS=3D27
 md: bitmap version 4.39
-ip_conntrack version 2.4 (8192 buckets, 65536 max) - 172 bytes per conn=
-track
+ip_conntrack version 2.4 (8192 buckets, 65536 max) - 172 bytes per conntrac=
+k
 ip_tables: (C) 2000-2006 Netfilter Core Team
 TCP bic registered
 NET: Registered protocol family 1
@@ -520,7 +509,7 @@ EXT3-fs: sda2: 4 orphan inodes deleted
 EXT3-fs: recovery complete.
 EXT3-fs: mounted filesystem with ordered data mode.
 VFS: Mounted root (ext3 filesystem) readonly.
-=46reeing unused kernel memory: 204k freed
+Freeing unused kernel memory: 204k freed
 EXT3 FS on sda2, internal journal
 ACPI: PCI Interrupt 0000:04:00.0[A] -> GSI 16 (level, low) -> IRQ 16
 PCI: Setting latency timer of device 0000:04:00.0 to 64
@@ -531,25 +520,17 @@ saa7130/34: v4l2 driver version 0.2.14 loaded
 ACPI: PCI Interrupt 0000:05:02.0[A] -> GSI 18 (level, low) -> IRQ 18
 saa7134[0]: found at 0000:05:02.0, rev: 1, irq: 18, latency: 32, mmio:
 0xf9101000
-saa7134[0]: subsystem: 1461:2c05, board: AverTV DVB-T 777 [card=3D85,au=
-todetected]
+saa7134[0]: subsystem: 1461:2c05, board: AverTV DVB-T 777 [card=3D85,autode=
+tected]
 saa7134[0]: board init: gpio is 2f800
-saa7134[0]: i2c eeprom 00: 61 14 05 2c 00 00 00 00 00 00 00 00 00 00 00=
- 00
-saa7134[0]: i2c eeprom 10: 00 ff 82 0e ff 20 ff ff ff ff ff ff ff ff ff=
- ff
-saa7134[0]: i2c eeprom 20: 01 40 01 02 02 03 03 01 08 ff 00 a8 ff ff ff=
- ff
-saa7134[0]: i2c eeprom 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
- ff
-saa7134[0]: i2c eeprom 40: ff 32 00 c0 86 1e ff ff ff ff ff ff ff ff ff=
- ff
-saa7134[0]: i2c eeprom 50: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
- ff
-saa7134[0]: i2c eeprom 60: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
- ff
-saa7134[0]: i2c eeprom 70: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
- ff
+saa7134[0]: i2c eeprom 00: 61 14 05 2c 00 00 00 00 00 00 00 00 00 00 00 00
+saa7134[0]: i2c eeprom 10: 00 ff 82 0e ff 20 ff ff ff ff ff ff ff ff ff ff
+saa7134[0]: i2c eeprom 20: 01 40 01 02 02 03 03 01 08 ff 00 a8 ff ff ff ff
+saa7134[0]: i2c eeprom 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+saa7134[0]: i2c eeprom 40: ff 32 00 c0 86 1e ff ff ff ff ff ff ff ff ff ff
+saa7134[0]: i2c eeprom 50: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+saa7134[0]: i2c eeprom 60: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+saa7134[0]: i2c eeprom 70: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 saa7134[0]: registered device video0 [v4l2]
 saa7134[0]: registered device vbi0
 saa7134[0]: avertv 777 dvb setup
@@ -557,8 +538,7 @@ DVB: registering new adapter (saa7134[0]).
 DVB: registering frontend 0 (Zarlink MT352 DVB-T)...
 saa7146: register extension 'budget_ci dvb'.
 ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 20 (level, low) -> IRQ 21
-saa7146: found saa7146 @ mem f8e9a000 (revision 1, irq 21) (0x13c2,0x10=
-17).
+saa7146: found saa7146 @ mem f8e9a000 (revision 1, irq 21) (0x13c2,0x1017).
 saa7146 (0): dma buffer size 192512
 DVB: registering new adapter (TT-Budget/S-1500 PCI).
 adapter has MAC addr =3D 00:d0:5c:07:97:6e
@@ -569,8 +549,7 @@ DVB: registering frontend 1 (ST STV0299 DVB-S)...
 input: eGalax Inc. USB TouchController as /class/input/input1
 usbcore: registered new driver usbtouchscreen
 input: Logitech USB Receiver as /class/input/input2
-input: USB HID v1.10 Mouse [Logitech USB Receiver] on usb-0000:00:1a.0-=
-1
+input: USB HID v1.10 Mouse [Logitech USB Receiver] on usb-0000:00:1a.0-1
 input:    Wireless Keyboard/Mouse(2.4G) as /class/input/input3
 input: USB HID v1.10 Keyboard [   Wireless Keyboard/Mouse(2.4G)] on
 usb-0000:00:1d.2-2
@@ -585,7 +564,7 @@ sr 1:0:0:0: Attached scsi CD-ROM sr0
 usbcore: registered new driver usbserial
 drivers/usb/serial/usb-serial.c: USB Serial Driver core
 drivers/usb/serial/usb-serial.c: USB Serial support registered for
-=46TDI USB Serial Device
+FTDI USB Serial Device
 ftdi_sio 3-2:1.0: FTDI USB Serial Device converter detected
 drivers/usb/serial/ftdi_sio.c: Detected FT232BM
 usb 3-2: FTDI USB Serial Device converter now attached to ttyUSB0
@@ -630,8 +609,7 @@ EXT3-fs: mounted filesystem with ordered data mode.
 kjournald starting.  Commit interval 5 seconds
 EXT3 FS on sda8, internal journal
 EXT3-fs: mounted filesystem with ordered data mode.
-Adding 4000176k swap on /dev/sda3.  Priority:-1 extents:1 across:400017=
-6k
+Adding 4000176k swap on /dev/sda3.  Priority:-1 extents:1 across:4000176k
 
 If I try to record a dvd using cdrecord or any other app it will start
 the process and then fail saying that the drive is not ready, and
