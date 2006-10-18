@@ -1,102 +1,51 @@
-From: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Subject: [PATCH] lockdep: fix ide/proc interaction
-Date: Wed, 18 Oct 2006 20:49:40 +0200
-Message-ID: <1161197380.3036.73.camel@taijtu>
+From: Roger Heflin <rheflin@atipa.com>
+Subject: Re: sata_mv problems on Marvell MV88SX5081
+Date: Wed, 18 Oct 2006 16:08:43 -0500
+Message-ID: <453697DB.2060806@atipa.com>
+References: <Pine.LNX.4.64.0610181258330.29022@twin.jikos.cz> <45361FB1.4060304@rtr.ca> <Pine.LNX.4.64.0610181449470.29022@twin.jikos.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from amsfep17-int.chello.nl ([213.46.243.15]:42931 "EHLO
-	amsfep16-int.chello.nl") by vger.kernel.org with ESMTP
-	id S1422789AbWJRStM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Oct 2006 14:49:12 -0400
+Received: from 125.14.cm.sunflower.com ([24.124.14.125]:10526 "EHLO
+	mail.atipa.com") by vger.kernel.org with ESMTP id S1422938AbWJRVIo
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Oct 2006 17:08:44 -0400
+In-Reply-To: <Pine.LNX.4.64.0610181449470.29022@twin.jikos.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
-Cc: Andrew Morton <akpm@osdl.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jiri Kosina <jikos@jikos.cz>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-rmmod/3080 [HC0[0]:SC0[0]:HE0:SE1] is trying to acquire:
- (proc_subdir_lock){--..}, at: [<c04a33b0>] remove_proc_entry+0x40/0x191
+Jiri Kosina wrote:
+> On Wed, 18 Oct 2006, Mark Lord wrote:
+> 
+>>> Buffer I/O error on device sda1, logical block 122126336
+>> Scroll WAY BACK in the log, and find the error messages which preceeded
+>> the first occurance of that one.  (with a bad sector, it is very likely
+>> you will see a zillion "Buffer I/O errors", as the SCSI mid-layer is not
+>> at all nice about how it handles them).
+> 
+> Actually the "Buffer I/O error" is the very first error message I am 
+> receiving, a few minutes after the driver is initialized and there is some 
+> disk activity happening.
+> 
+> Thanks,
+> 
 
-and this task is already holding:
- (ide_lock){++..}, at: [<c05651a2>] ide_unregister_subdriver+0x39/0xc8
-which would create a new lock dependency:
- (ide_lock){++..} -> (proc_subdir_lock){--..}
+Jiri,
 
-but this new dependency connects a hard-irq-safe lock:
- (ide_lock){++..}
-... which became hard-irq-safe at:
-  [<c043c458>] lock_acquire+0x4b/0x6b
-  [<c06129d7>] _spin_lock_irqsave+0x22/0x32
-  [<c0567870>] ide_intr+0x17/0x1a9
-  [<c044eb31>] handle_IRQ_event+0x20/0x4d
-  [<c044ebf2>] __do_IRQ+0x94/0xef
-  [<c0406771>] do_IRQ+0x9e/0xbd
+Make sure that you delete the arrays in the highpoint bios before
+trying to use the open source driver.
 
-to a hard-irq-unsafe lock:
- (proc_subdir_lock){--..}
-... which became hard-irq-unsafe at:
-...  [<c043c458>] lock_acquire+0x4b/0x6b
-  [<c06126ab>] _spin_lock+0x19/0x28
-  [<c04a32f2>] xlate_proc_name+0x1b/0x99
-  [<c04a3547>] proc_create+0x46/0xdf
-  [<c04a3642>] create_proc_entry+0x62/0xa5
-  [<c07c1972>] proc_misc_init+0x1c/0x1d2
-  [<c07c1844>] proc_root_init+0x4c/0xe9
-  [<c07ad703>] start_kernel+0x294/0x3b3
-  [<00000000>] 0x0
+I have seen alot of really funny things on several of the different
+hw/sw raid controllers (not just highpoint's) if you attempt to use
+a disk that someone has already tagged as raid disks, even on the
+same controller it gets interesting if you attempt to use them
+non-raid.
 
-Move ide_remove_proc_entries() out from under ide_lock; there is nothing
-that indicates that this is needed.
+I would be interested in knowing if the open source driver can successfully
+driver those boards.
 
-In specific, the call to ide_add_proc_entries() is unprotected, and there
-is nothing else in the file using the respective ->proc fields. Also the
-lock order around destroy_proc_ide_interface() suggests this.
-
-Signed-off-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
----
- drivers/ide/ide.c |   19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
-
-Index: linux-2.6/drivers/ide/ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide.c
-+++ linux-2.6/drivers/ide/ide.c
-@@ -973,8 +973,8 @@ ide_settings_t *ide_find_setting_by_name
-  *	@drive: drive
-  *
-  *	Automatically remove all the driver specific settings for this
-- *	drive. This function may sleep and must not be called from IRQ
-- *	context. The caller must hold ide_setting_sem.
-+ *	drive. This function may not be called from IRQ context. The
-+ *	caller must hold ide_setting_sem.
-  */
-  
- static void auto_remove_settings (ide_drive_t *drive)
-@@ -1874,11 +1874,22 @@ void ide_unregister_subdriver(ide_drive_
- {
- 	unsigned long flags;
- 	
--	down(&ide_setting_sem);
--	spin_lock_irqsave(&ide_lock, flags);
- #ifdef CONFIG_PROC_FS
- 	ide_remove_proc_entries(drive->proc, driver->proc);
- #endif
-+	down(&ide_setting_sem);
-+	spin_lock_irqsave(&ide_lock, flags);
-+	/*
-+	 * ide_setting_sem protects the settings list
-+	 * ide_lock protects the use of settings
-+	 *
-+	 * so we need to hold both, ide_settings_sem because we want to
-+	 * modify the settings list, and ide_lock because we cannot take
-+	 * a setting out that is being used.
-+	 *
-+	 * OTOH both ide_{read,write}_setting are only ever used under
-+	 * ide_setting_sem.
-+	 */
- 	auto_remove_settings(drive);
- 	spin_unlock_irqrestore(&ide_lock, flags);
- 	up(&ide_setting_sem);
-
+                           Roger
 
