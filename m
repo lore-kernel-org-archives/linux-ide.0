@@ -1,46 +1,67 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: CFP: Linux 2007 File System & IO Workshop
-Date: Tue, 17 Oct 2006 17:50:12 -0700 (PDT)
-Message-ID: <20061018005013.97509.qmail@web31803.mail.mud.yahoo.com>
-References: <1161129608.6245.61.camel@mulgrave.il.steeleye.com>
-Reply-To: ltuikov@yahoo.com
+From: Aalderd Bouwman <aalderd.boac@wanadoo.nl>
+Subject: Re: [PATCHSET] ahci updates regarding vt8251 support, take #2
+Date: Wed, 18 Oct 2006 06:45:22 +0200
+Message-ID: <1161146723.3008.2.camel@anja>
+References: <11609522031228-git-send-email-htejun@gmail.com>
+Reply-To: aalderd.boac@wanadoo.nl
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <xfs-bounce@oss.sgi.com>
-In-Reply-To: <1161129608.6245.61.camel@mulgrave.il.steeleye.com>
-Sender: xfs-bounce@oss.sgi.com
-Errors-to: xfs-bounce@oss.sgi.com
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Ric Wheeler <ric@emc.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, reiserfs-list@namesys.com, ext4@lists.sourceforge.net, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, lsf07pc@usenix.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp-1.orange.nl ([193.252.22.241]:28713 "EHLO smtp-1.orange.nl")
+	by vger.kernel.org with ESMTP id S932083AbWJREnp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2006 00:43:45 -0400
+In-Reply-To: <11609522031228-git-send-email-htejun@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> You can submit it as your position paper, certainly.
+Hello Tejun,
 
-It is not a "position" paper.  There is too much SCSI
-Architecture Model (SAM) in it.  But from linux-scsi point of view
-I guess it is.
+I now have received the message in dmesg:
+spurious 8259A interrupt: IRQ7.
 
-> However, the object of this event is not to collect a list of papers to
-> be presented: it's not a conference with hundreds of attendees (if you
-> want to present to an audience, you should submit to FAST, which is such
-> a conference, with which we're co-located).  It's a roundtable type
-> discussion with 20-25 people in the field; plus some plenary sessions to
-> get input and ideas from people working on the filesystem layer.  The
-> object is to stimulate discussion of important issues (which may be
-> guided by papers or other materials).  The position paper thing is only
-> to ensure people actually have things they want to discuss (and to allow
-> the programme committee to pick the attendees if there would be too
-> many).
+What does it mean? And is it a problem for the properly working of the
+system?
 
-Ok, so this is targeted at the same 20-25 Linux people who attended
-the "Vancouver Storage summit" and you're just using FAST to co-locate.
+Aalderd.
 
-I incorrectly assumed that this was targeted at storage professionals
-not necessarily Linux related, but with Linux exposure so as to hear
-new ideas and pathways.  I also missed to see the "by-invitation" clause
-at the top.
+On Mon, 2006-10-16 at 07:43 +0900, Tejun Heo wrote:
+> Hello, all.
+> 
+> This is the second take of vt8251-ahci patchset.  This patchset
+> updates libata and ahci to improve vt8251 EH and hotplug support.
+> 
+> #01 : separate out sata_port_hardreset(), to be used by vt8251 reset
+> #02 : update CLO handling in softreset and kill RESET_NEEDS_CLO
+> #03 : update vt8251 support in ahci
+> 
+> Changes from the last take[L] are
+> 
+> * rebased over the current upstream + hp-poll
+> * hp-poll callbacks added to ahci_vt8251_ops
+> 
+> This patchset is against
+>   upstream (da54f5fe54c7d75e2db7d17961fb36a8c28a8501)
+>   + hp-poll patchset, take #5 [1]
+> 
+> This patchset has been verified by me and Aalderd Bouwman
+> <aalderd.boac@wanadoo.nl>.
+> 
+> The git tree is avilable at
+> 
+>   http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=vt8251-ahci
+>   git://htj.dyndns.org/libata-tj vt8251-ahci
+> 
+> Thanks.
+> 
+> --
+> tejun
+> 
+> [L] http://article.gmane.org/gmane.linux.ide/13449
+> [1] http://article.gmane.org/gmane.linux.ide/13467
+> 
+> 
+> 
 
-Thanks for the explanation!
-   Luben
