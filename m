@@ -1,40 +1,34 @@
-From: Jiri Kosina <jikos@jikos.cz>
-Subject: sata_mv problems on Marvell MV88SX5081
-Date: Wed, 18 Oct 2006 13:19:40 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0610181258330.29022@twin.jikos.cz>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET] ahci updates regarding vt8251 support, take #2
+Date: Wed, 18 Oct 2006 20:50:33 +0900
+Message-ID: <45361509.2050000@gmail.com>
+References: <11609522031228-git-send-email-htejun@gmail.com> <1161146723.3008.2.camel@anja>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from twin.jikos.cz ([213.151.79.26]:43973 "EHLO twin.jikos.cz")
-	by vger.kernel.org with ESMTP id S1751466AbWJRLUp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2006 07:20:45 -0400
+Received: from nz-out-0102.google.com ([64.233.162.207]:40253 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1160995AbWJRLuh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Oct 2006 07:50:37 -0400
+Received: by nz-out-0102.google.com with SMTP id z3so78184nzf
+        for <linux-ide@vger.kernel.org>; Wed, 18 Oct 2006 04:50:36 -0700 (PDT)
+In-Reply-To: <1161146723.3008.2.camel@anja>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: aalderd.boac@wanadoo.nl
+Cc: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Hi,
+Aalderd Bouwman wrote:
+> Hello Tejun,
+> 
+> I now have received the message in dmesg:
+> spurious 8259A interrupt: IRQ7.
+> 
+> What does it mean? And is it a problem for the properly working of the
+> system?
 
-I have this piece:
-
-01:06.0 SCSI storage controller: Marvell Technology Group Ltd. MV88SX5081 
-8-port SATA I PCI-X Controller (rev 03)
-
-It's RocketRAID 1820A controller.
-
-With sata_mv libata driver from 2.6.18, I am getting a load of these:
-
-Buffer I/O error on device sda1, logical block 122126336
-
-After a few minutes of using the device, the filesystem gets corrupted - 
-write()s to some directories start returning -EIO, kernel gives
-
-EXT2-fs error (device sda1): read_inode_bitmap: Cannot read inode bitmap - block_group = 10664, inode_bitmap = 349437953
-
-etc. 
-
-The proprietary open-source driver from 
-http://www.highpoint-tech.com/USA/bios_rr1820a.htm doesn't seem to have 
-this problem and works well so it's likely not a HW problem.
+Can you post full dmesg?
 
 -- 
-Jiri Kosina
+tejun
