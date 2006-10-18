@@ -1,38 +1,33 @@
-From: Mark Lord <liml@rtr.ca>
+From: Jiri Kosina <jikos@jikos.cz>
 Subject: Re: sata_mv problems on Marvell MV88SX5081
-Date: Wed, 18 Oct 2006 08:36:01 -0400
-Message-ID: <45361FB1.4060304@rtr.ca>
-References: <Pine.LNX.4.64.0610181258330.29022@twin.jikos.cz>
+Date: Wed, 18 Oct 2006 14:53:46 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0610181449470.29022@twin.jikos.cz>
+References: <Pine.LNX.4.64.0610181258330.29022@twin.jikos.cz> <45361FB1.4060304@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:19723 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1030249AbWJRMgD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2006 08:36:03 -0400
-In-Reply-To: <Pine.LNX.4.64.0610181258330.29022@twin.jikos.cz>
+Received: from twin.jikos.cz ([213.151.79.26]:39125 "EHLO twin.jikos.cz")
+	by vger.kernel.org with ESMTP id S1030257AbWJRMy1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2006 08:54:27 -0400
+In-Reply-To: <45361FB1.4060304@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Kosina <jikos@jikos.cz>
+To: Mark Lord <liml@rtr.ca>
 Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Jiri Kosina wrote:
-> Hi,
-> 
-> I have this piece:
-> 
-> 01:06.0 SCSI storage controller: Marvell Technology Group Ltd. MV88SX5081 
-> 8-port SATA I PCI-X Controller (rev 03)
-> 
-> It's RocketRAID 1820A controller.
-> 
-> With sata_mv libata driver from 2.6.18, I am getting a load of these:
-> 
-> Buffer I/O error on device sda1, logical block 122126336
+On Wed, 18 Oct 2006, Mark Lord wrote:
 
-Scroll WAY BACK in the log, and find the error messages which preceeded
-the first occurance of that one.  (with a bad sector, it is very likely
-you will see a zillion "Buffer I/O errors", as the SCSI mid-layer is not
-at all nice about how it handles them).
+> > Buffer I/O error on device sda1, logical block 122126336
+> Scroll WAY BACK in the log, and find the error messages which preceeded
+> the first occurance of that one.  (with a bad sector, it is very likely
+> you will see a zillion "Buffer I/O errors", as the SCSI mid-layer is not
+> at all nice about how it handles them).
 
-Cheers
+Actually the "Buffer I/O error" is the very first error message I am 
+receiving, a few minutes after the driver is initialized and there is some 
+disk activity happening.
+
+Thanks,
+
+-- 
+Jiri Kosina
