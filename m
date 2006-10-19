@@ -1,76 +1,42 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [2.6.19-rc2] SATA boot problems
-Date: Thu, 19 Oct 2006 16:24:28 -0400
-Message-ID: <4537DEFC.5050404@rtr.ca>
-References: <4537697C.7080500@tweerlei.de>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch] libata: use correct map_db values for ICH8
+Date: Thu, 19 Oct 2006 13:27:39 -0700
+Message-ID: <20061019132739.10e504ef.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:39440 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1946442AbWJSUYb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Oct 2006 16:24:31 -0400
-In-Reply-To: <4537697C.7080500@tweerlei.de>
+Received: from mga01.intel.com ([192.55.52.88]:44183 "EHLO mga01.intel.com")
+	by vger.kernel.org with ESMTP id S1946452AbWJSU1o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Oct 2006 16:27:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Wruck <wruck@tweerlei.de>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jeff@garzik.org
 
-Hi.  I'm copying your posting for the linux-ide mailing list,
-where the libata designers hang out.
 
-Robert Wruck wrote:
-> Hi,
-> 
-> I'm having problems booting from a SATA disk with 2.6.19-rc2.
-> Grub loads fine, but when the kernel boots, it *sometimes* ends up with
-> VFS: Cannot open root device "sda5" or unknown-block(0,0)
-> 
-> The strange thing is that this happens only in 2/3 of the boot attempts.
-> If I reset the machine, the next attempt is likely to succeed.
-> I first noted this when switching from 2.6.17 (2.6.17.11, IIRC) to
-> 2.6.18 and it persists in 2.6.19-rc2 (Windows does not encounter similar
-> problems on the same machine).
-> 
-> I attached a diff of a successful and an unsuccessful netconsole log
-> below. It seems that the drive is sometimes simply not detected...
-> I'm not using an initrd and changing the kernel command line from
-> root=/dev/sda5 to root=0x0805 did not help.
-> 
-> The controller is:
-> 00:1f.2 IDE interface: Intel Corporation 82801FB/FW (ICH6/ICH6W) SATA
-> Controller (rev 03)
-> 
-> Any ideas? Please CC me, as I'm not subscribed.
-> Robert
-> 
-> 
->  ata1: SATA max UDMA/133 cmd 0xEC00 ctl 0xE802 bmdma 0xDC00 irq 19
->  ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 19
->  scsi0 : ata_piix
-> +ata1.00: ATA-7, max UDMA/133, 312581808 sectors: LBA48 NCQ (depth 0/32)
-> +ata1.00: ata1: dev 0 multi count 16
-> +ata1.00: configured for UDMA/133
->  scsi1 : ata_piix
->  ATA: abnormal status 0x7F on port 0xE407
-> +  Vendor: ATA       Model: Maxtor 6V160E0    Rev: VA11
-> +  Type:   Direct-Access                      ANSI SCSI revision: 05
-> +SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-> +sda: Write Protect is off
-> +SCSI device sda: drive cache: write back
-> +SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-> +sda: Write Protect is off
-> +SCSI device sda: drive cache: write back
-> + sda: sda1 sda2 sda3 < sda5 sda6 sda7 sda8 sda9 sda10 sda11 sda12 >
-> +sd 0:0:0:0: Attached scsi disk sda
-> +sd 0:0:0:0: Attached scsi generic sg0 type 0
->  ACPI: PCI Interrupt 0000:00:1d.7[A] -> GSI 23 (level, low) -> IRQ 20
->  ehci_hcd 0000:00:1d.7: EHCI Host Controller
->  ehci_hcd 0000:00:1d.7: new USB bus registered, assigned bus number 1
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Use valid values for ICH8 map_db.  With the old values, when the 
+controller was in Native mode, and SCC was 1 (drives configured for
+IDE), any drive plugged into a slave port was not recognized.  For
+Combined Mode (and SCC is still 1), 2 is a value value for MAP.map_value,
+and needs to be recognized.
 
+Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+---
+ drivers/ata/ata_piix.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- 2.6-git.orig/drivers/ata/ata_piix.c
++++ 2.6-git/drivers/ata/ata_piix.c
+@@ -432,9 +432,9 @@ static const struct piix_map_db ich8_map
+ 	.present_shift = 8,
+ 	.map = {
+ 		/* PM   PS   SM   SS       MAP */
+-		{  P0,  NA,  P1,  NA }, /* 00b (hardwired) */
++		{  P0,  P2,  P1,  P3 }, /* 00b (hardwired when in AHCI) */
+ 		{  RV,  RV,  RV,  RV },
+-		{  RV,  RV,  RV,  RV }, /* 10b (never) */
++		{  IDE,  IDE,  NA,  NA }, /* 10b (IDE mode) */
+ 		{  RV,  RV,  RV,  RV },
+ 	},
+ };
