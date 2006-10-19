@@ -1,41 +1,42 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Question about Scsi error handling/recovery
-Date: Thu, 19 Oct 2006 10:50:53 +0900
-Message-ID: <4536D9FD.4050708@gmail.com>
-References: <8202f4270610181711k7b15f81bw589f956f6e521988@mail.gmail.com>
+Subject: [PATCH] libata: typo fix
+Date: Thu, 19 Oct 2006 14:44:53 +0900
+Message-ID: <20061019054453.GE13677@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:2064 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1945973AbWJSBve (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Oct 2006 21:51:34 -0400
-Received: by py-out-1112.google.com with SMTP id n25so595396pyg
-        for <linux-ide@vger.kernel.org>; Wed, 18 Oct 2006 18:51:00 -0700 (PDT)
-In-Reply-To: <8202f4270610181711k7b15f81bw589f956f6e521988@mail.gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.185]:33941 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1030303AbWJSFqy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Oct 2006 01:46:54 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so922822nfe
+        for <linux-ide@vger.kernel.org>; Wed, 18 Oct 2006 22:46:53 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Fajun Chen wrote:
-> Hi,
-> 
-> I tested two SATA drives on the same controller (Sil3124) and found
-> that if their hotplug/unplug sequences overlaps, scsi layer will block
-> the use of any of the drives during error recovery phase.  So even if
-> one drive is recovered way early, it won't process any commands until
-> the error recovery  on another drive is completed.  Could someone
-> explain why the block is on controller/host basis instead of on port
-> basis? Is this because the controller could be reset during any error
-> recovery?
+Typo fix in commment.
 
-I don't think that's true.  Each ATA port is represented as separate 
-host to SCSI midlayer, so SCSI doesn't have any way to enforce such 
-cross-port synchronization.  In fact, libata needs to implement such 
-facility to properly implement transfer mode reconfiguration on several 
-controllers.  What exactly are you seeing?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ include/linux/libata.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index d0a7ad5..b03d5a3 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -143,7 +143,7 @@ enum {
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+ 
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
+-	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* devied limited to non-NCQ mode */
++	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* device limited to non-NCQ mode */
+ 	ATA_DFLAG_SUSPENDED	= (1 << 10), /* device suspended */
+ 	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
+ 
 -- 
-tejun
+1.4.2.3
+
