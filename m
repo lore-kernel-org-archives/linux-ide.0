@@ -1,79 +1,113 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6.19 patch] drivers/ide/pci/generic.c: re-add the __setup("all-generic-ide",...)
-Date: Thu, 19 Oct 2006 17:26:51 +0200
-Message-ID: <20061019152651.GR3502@stusta.de>
-References: <Pine.LNX.4.64.0610130941550.3952@g5.osdl.org> <20061017155934.GC3502@stusta.de> <4534C7A7.7000607@hp.com> <20061018221520.GK3502@stusta.de> <20061018231844.GA16857@devserv.devel.redhat.com>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Re: Question about Scsi error handling/recovery
+Date: Thu, 19 Oct 2006 09:22:59 -0600
+Message-ID: <8202f4270610190822g71992718ka17858321e2affb7@mail.gmail.com>
+References: <8202f4270610181711k7b15f81bw589f956f6e521988@mail.gmail.com>
+	 <4536D9FD.4050708@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:15370 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1946112AbWJSP0y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Oct 2006 11:26:54 -0400
+Received: from py-out-1112.google.com ([64.233.166.178]:43408 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1946121AbWJSPlT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Oct 2006 11:41:19 -0400
+Received: by py-out-1112.google.com with SMTP id z74so820022pyg
+        for <linux-ide@vger.kernel.org>; Thu, 19 Oct 2006 08:40:46 -0700 (PDT)
+In-Reply-To: <4536D9FD.4050708@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20061018231844.GA16857@devserv.devel.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: Patrick Jefferson <henj@hp.com>, Kenny Graunke <kenny@whitecape.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Oct 18, 2006 at 07:18:44PM -0400, Alan Cox wrote:
-> On Thu, Oct 19, 2006 at 12:15:20AM +0200, Adrian Bunk wrote:
-> > IOW, your patch does break existing setups since the change to 
-> > module_param() requires prefixing with the module name (the ata_generic 
-> > option with the same name is irrelevant)?
-> > 
-> > Considering that drivers/ide/ is slowly approaching a RIP status, 
-> > is such an incompatible change really required?
-> > 
-> > I'd be more inclined to revert your patch.
-> 
-> We shouldn't revert it - there is a real problem for some users whose
-> distro has it modular this fixed. We might want to honour both 
+On 10/18/06, Tejun Heo <htejun@gmail.com> wrote:
+> Fajun Chen wrote:
+> > Hi,
+> >
+> > I tested two SATA drives on the same controller (Sil3124) and found
+> > that if their hotplug/unplug sequences overlaps, scsi layer will block
+> > the use of any of the drives during error recovery phase.  So even if
+> > one drive is recovered way early, it won't process any commands until
+> > the error recovery  on another drive is completed.  Could someone
+> > explain why the block is on controller/host basis instead of on port
+> > basis? Is this because the controller could be reset during any error
+> > recovery?
+>
+> I don't think that's true.  Each ATA port is represented as separate
+> host to SCSI midlayer, so SCSI doesn't have any way to enforce such
+> cross-port synchronization.  In fact, libata needs to implement such
+> facility to properly implement transfer mode reconfiguration on several
+> controllers.  What exactly are you seeing?
+>
 
-Agreed, patch below.
+Below is the relevant dmesg log when both drives were power cycled:
+...
 
-cu
-Adrian
+[14054.070000] ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+[14054.070000] ata1: (irq_stat 0x00a00080, device exchanged)
+[14054.070000] ata1: hard resetting port
+[14055.830000] ata2: exception Emask 0x10 SAct 0x0 SErr 0x80000 action
+0x2 frozen
+[14055.830000] ata2: (irq_stat 0x01100010, PHY RDY changed)
+[14055.830000] ata2: hard resetting port
+[14056.380000] ata2: SATA link down (SStatus 0 SControl 300)
+[14056.380000] ata2: failed to recover some devices, retrying in 5 secs
+[14056.790000] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[14056.790000] ata1.00: ATA-7, max UDMA/100, 39070080 sectors: LBA48
+NCQ (depth 1)
+[14056.790000] ata1.00: configured for UDMA/100
+[14056.790000] ata1: EH complete
+[14056.790000]   Vendor: ATA       Model: ST920217AS        Rev: 3.01
+[14056.790000]   Type:   Direct-Access                      ANSI SCSI
+revision: 05
+[14056.790000] SCSI device sdb: 39070080 512-byte hdwr sectors (20004 MB)
+[14056.790000] sdb: Write Protect is off
+[14056.790000] sdb: Mode Sense: 00 3a 00 00
+[14056.800000] SCSI device sdb: drive cache: write back
+[14056.800000] SCSI device sdb: 39070080 512-byte hdwr sectors (20004 MB)
+[14056.800000] sdb: Write Protect is off
+[14056.800000] sdb: Mode Sense: 00 3a 00 00
+[14056.810000] SCSI device sdb: drive cache: write back
+[14056.810000]  sdb: unknown partition table
+[14056.860000] sd 0:0:0:0: Attached scsi disk sdb
+[14056.860000] sd 0:0:0:0: Attached scsi generic sg1 type 0
+[14061.390000] ata2: hard resetting port
+[14061.940000] ata2: SATA link down (SStatus 0 SControl 300)
+[14061.940000] ata2: failed to recover some devices, retrying in 5 secs
+[14066.950000] ata2: hard resetting port
+[14067.500000] ata2: SATA link down (SStatus 0 SControl 300)
+[14067.500000] ata2.00: disabled
+[14068.010000] ata2: EH complete
+[14068.010000] ata2.00: detaching (SCSI 1:0:0:0)
 
+Note that it took less than 3 seconds for ata1 to be reconfigured as
+sg1. My user space application opened sg1 for ioctl -
+SCSI_IOCTL_GET_BUS_NUMBER once it's available but got block for around
+11 seconds.  It seems the ioctl call was unblocked until the error
+recovery on ata2 was completed at time stamp 14068.  I suspect it's
+blocked in the scsi_ioctl.c:
+int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+{
+	char scsi_cmd[MAX_COMMAND_SIZE];
 
-<--  snip  -->
+	/* No idea how this happens.... */
+	if (!sdev)
+		return -ENXIO;
 
+	/*
+	 * If we are in the middle of error recovery, don't let anyone
+	 * else try and use this device.  Also, if error recovery fails, it
+	 * may try and take the device offline, in which case all further
+	 * access to the device is prohibited.
+	 */
+	if (!scsi_block_when_processing_errors(sdev))
+		return -ENODEV;
+...
+}
 
-The change from __setup() to module_param_named() requires users to 
-prefix the option with "generic.".
+If the ioctl() on sg1/ata1 was not blocked due to ata2 error recovery,
+then where it could be blocked?
 
-This patch re-adds the __setup() additionally to the 
-module_param_named().
-
-Usually it would make sense getting rid of such an obsolete __setup() at 
-some time, but considering that drivers/ide/ is slowly approaching a RIP 
-status it's already implicitely scheduled for removal.
-
-This patch fixes kernel Bugzilla #7353.
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
---- linux-2.6/drivers/ide/pci/generic.c.old	2006-10-19 16:35:15.000000000 +0200
-+++ linux-2.6/drivers/ide/pci/generic.c	2006-10-19 16:46:21.000000000 +0200
-@@ -40,6 +40,19 @@
- 
- static int ide_generic_all;		/* Set to claim all devices */
- 
-+/*
-+ * the module_param_named() was added for the modular case
-+ * the __setup() is left as compatibility for existing setups
-+ */
-+#ifndef MODULE
-+static int __init ide_generic_all_on(char *unused)
-+{
-+	ide_generic_all = 1;
-+	printk(KERN_INFO "IDE generic will claim all unknown PCI IDE storage controllers.");
-+	return 1;
-+}
-+__setup("all-generic-ide", ide_generic_all_on);
-+#endif
- module_param_named(all_generic_ide, ide_generic_all, bool, 0444);
- MODULE_PARM_DESC(all_generic_ide, "IDE generic will claim all unknown PCI IDE storage controllers.");
- 
-
+Thanks,
+Fajun
