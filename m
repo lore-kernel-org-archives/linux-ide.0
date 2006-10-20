@@ -1,71 +1,29 @@
-From: akpm@osdl.org
-Subject: [patch 01/12] ATA must depend on BLOCK
-Date: Fri, 20 Oct 2006 14:39:35 -0700
-Message-ID: <200610202139.k9KLdZ2Q003562@shell0.pdx.osdl.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: incoming
+Date: Fri, 20 Oct 2006 23:31:16 +0100
+Message-ID: <1161383476.26440.63.camel@localhost.localdomain>
+References: <20061020143929.8819dfa8.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:53124 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1946481AbWJTVnu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Oct 2006 17:43:50 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:25800 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S2992725AbWJTWbz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Oct 2006 18:31:55 -0400
+In-Reply-To: <20061020143929.8819dfa8.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
+To: Andrew Morton <akpm@osdl.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-=46rom: Adrian Bunk <bunk@stusta.de>
+Ar Gwe, 2006-10-20 am 14:39 -0700, ysgrifennodd Andrew Morton:
+> I have 12 ata patches here - I'm not sure that Tejun's ones are the latest
+> version, but I'll just send the whole lot as-is, see what happens...
 
-=46ix the following compile error with CONFIG_ATA=3Dy, CONFIG_BLOCK=3Dn=
-:
+Looks fine with respect to my bits and Tejun's. Now Tejun's polling
+identify is in I'll have a pile of patches next week as most PATA
+controllers want to use this.
 
-=2E..
-  CC      drivers/ata/libata-scsi.o
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c: In=
- function =E2=80=98ata_scsi_dev_config=E2=80=99:
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c:791=
-: warning: implicit declaration of function =E2=80=98blk_queue_max_sect=
-ors=E2=80=99
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c:799=
-: error: =E2=80=98request_queue_t=E2=80=99 undeclared (first use in thi=
-s function)
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c:799=
-: error: (Each undeclared identifier is reported only once
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c:799=
-: error: for each function it appears in.)
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c:799=
-: error: =E2=80=98q=E2=80=99 undeclared (first use in this function)
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c:800=
-: warning: implicit declaration of function =E2=80=98blk_queue_max_hw_s=
-egments=E2=80=99
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c: In=
- function =E2=80=98ata_scsi_slave_config=E2=80=99:
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-scsi.c:831=
-:
-warning: implicit declaration of function =E2=80=98blk_queue_max_phys_s=
-egments=E2=80=99
-make[3]: *** [drivers/ata/libata-scsi.o] Error 1
+Alan
 
-Bug report by Jesper Juhl.
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- drivers/ata/Kconfig |    1 +
- 1 files changed, 1 insertion(+)
-
-diff -puN drivers/ata/Kconfig~ata-must-depend-on-block drivers/ata/Kcon=
-fig
---- a/drivers/ata/Kconfig~ata-must-depend-on-block
-+++ a/drivers/ata/Kconfig
-@@ -6,6 +6,7 @@ menu "Serial ATA (prod) and Parallel ATA
-=20
- config ATA
- 	tristate "ATA device support"
-+	depends on BLOCK
- 	depends on !(M32R || M68K) || BROKEN
- 	depends on !SUN4 || BROKEN
- 	select SCSI
-_
