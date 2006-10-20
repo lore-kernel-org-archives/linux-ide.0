@@ -1,50 +1,43 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6.19 patch] drivers/ide/pci/generic.c: re-add the __setup("all-generic-ide",...)
-Date: Fri, 20 Oct 2006 23:05:33 +0200
-Message-ID: <20061020210533.GW3502@stusta.de>
-References: <Pine.LNX.4.64.0610130941550.3952@g5.osdl.org> <20061017155934.GC3502@stusta.de> <4534C7A7.7000607@hp.com> <20061018221520.GK3502@stusta.de> <20061018231844.GA16857@devserv.devel.redhat.com> <20061019152651.GR3502@stusta.de> <20061019090741.853ea100.randy.dunlap@oracle.com> <20061019161338.GT3502@stusta.de> <1161275398.17335.87.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Linux 2.6.19-rc2
+Date: Fri, 20 Oct 2006 17:12:36 -0400
+Message-ID: <45393BC4.5020903@garzik.org>
+References: <Pine.LNX.4.64.0610130941550.3952@g5.osdl.org>	 <3b0ffc1f0610201130i8f15e49oec2cdc68abb8dbd@mail.gmail.com> <1161377586.26440.61.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:3336 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1946515AbWJTVFg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:05:36 -0400
-Content-Disposition: inline
-In-Reply-To: <1161275398.17335.87.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S2992728AbWJTVMq@vger.kernel.org>
+In-Reply-To: <1161377586.26440.61.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Alan Cox <alan@redhat.com>, Patrick Jefferson <henj@hp.com>, Kenny Graunke <kenny@whitecape.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Kevin Radloff <radsaq@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Thu, Oct 19, 2006 at 05:29:58PM +0100, Alan Cox wrote:
-> Ar Iau, 2006-10-19 am 18:13 +0200, ysgrifennodd Adrian Bunk:
-> > > Missing update to Documentation/kernel-parameters.txt ?
-> > > (maybe it's been missing forever?)
-> > 
-> > It's been missing forever.
-> > 
-> > I'm not sure whether documenting it now where it's deprecated and nearly 
-> > dead makes sense..
+Alan Cox wrote:
+> Ar Gwe, 2006-10-20 am 14:30 -0400, ysgrifennodd Kevin Radloff:
+>> On 10/13/06, Linus Torvalds <torvalds@osdl.org> wrote:
+>>> Ok, it's a week since -rc1, so -rc2 is out there.
+>> A bit behind, but booting still takes ages on my laptop as
+>> libata/ata_piix tries to probe a device that isn't there (I reported
+>> this previously against -rc1, but got no response):
 > 
-> Its not dead, its so useful that drivers/ata also supports it
+> Probing is somewhat broken in 2.6.18 - something in the core code
+> changed as its upset quite a few drivers at once. One case causes
+> repeated errors and finally detection of an ATAPI device, the other
+> causes repeated errors and then failure when no device is present but
+> takes a few minutes and keeps IRQs locked off for long periods. Both
+> appear to be fallouts from the new EH code.
 
-But in the drivers/ata case it's a module parameter, not a __setup 
-kernel parameter.
+There are definitely warts related to the new EH stuff, but specifically 
+for SATA + ata_piix, it has been a long hard road of trying various 
+probing mechanisms.  Tejun has some patches that revert all the PCS work 
+and rewinds back to original SATA ata_piix probing, in -mm for testing.
 
-And I don't think it makes sense to manually add module parameters to 
-kernel-parameters.txt
+If testing feedback proves positive, let's go ahead and fast-track that 
+up the line.
 
-If a documentation of all module parameters is considered useful, 
-someone should write a script to automatically generate such a list.
+With ata_piix, I would worry more about PCS register follies than core 
+libata.  Users can try the module option force_pcs=[0|1|2] to experiment 
+and see if any of the three possibilities improves their boot.
 
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+	Jeff
