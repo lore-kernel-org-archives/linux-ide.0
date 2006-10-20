@@ -1,182 +1,208 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Question about Scsi error handling/recovery
-Date: Fri, 20 Oct 2006 17:10:50 +0900
-Message-ID: <20061020081050.GG13677@htj.dyndns.org>
-References: <8202f4270610181711k7b15f81bw589f956f6e521988@mail.gmail.com> <4536D9FD.4050708@gmail.com> <8202f4270610190822g71992718ka17858321e2affb7@mail.gmail.com>
+Subject: Re: Problems writing with Samsung SH-W163A SATA CD/DVDRW
+Date: Fri, 20 Oct 2006 17:24:09 +0900
+Message-ID: <20061020082409.GH13677@htj.dyndns.org>
+References: <f4527be0610180219q6e5d316fif4c0b8c8a4d389c9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="ZPt4rx8FFjLCG7dd"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:24756 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.188]:58611 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S2992581AbWJTIK7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Oct 2006 04:10:59 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so1342136nfe
-        for <linux-ide@vger.kernel.org>; Fri, 20 Oct 2006 01:10:57 -0700 (PDT)
+	id S2992583AbWJTIYU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Oct 2006 04:24:20 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so1345888nfe
+        for <linux-ide@vger.kernel.org>; Fri, 20 Oct 2006 01:24:18 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <8202f4270610190822g71992718ka17858321e2affb7@mail.gmail.com>
+In-Reply-To: <f4527be0610180219q6e5d316fif4c0b8c8a4d389c9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
+To: Andrew Lyon <andrew.lyon@gmail.com>, justin@jmicron.com
 Cc: linux-ide@vger.kernel.org
 
+[Adding Justin Tsai, Hi!]
 
---ZPt4rx8FFjLCG7dd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Thu, Oct 19, 2006 at 09:22:59AM -0600, Fajun Chen wrote:
-> Note that it took less than 3 seconds for ata1 to be reconfigured as
-> sg1. My user space application opened sg1 for ioctl -
-> SCSI_IOCTL_GET_BUS_NUMBER once it's available but got block for around
-> 11 seconds.  It seems the ioctl call was unblocked until the error
-> recovery on ata2 was completed at time stamp 14068.  I suspect it's
-> blocked in the scsi_ioctl.c:
-> int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-> {
-> 	char scsi_cmd[MAX_COMMAND_SIZE];
+On Wed, Oct 18, 2006 at 10:19:49AM +0100, Andrew Lyon wrote:
+> Hi,
 > 
-> 	/* No idea how this happens.... */
-> 	if (!sdev)
-> 		return -ENXIO;
+> I have a Samsung SH-W163A SATA CD/DVDRW connected to jmicron
+> 20360/20363 onboard sata controller on Gigabyte GA-965P-DS3, running
+> kernel 2.6.18 with sr_mod loaded I can mount recorded/original disks
+> and read them, but if I try to burn a cd or dvd using cdrecord, and
+> somtimes when mounting media I get loads of errors in dmesg and the
+> burn fails.
 > 
-> 	/*
-> 	 * If we are in the middle of error recovery, don't let anyone
-> 	 * else try and use this device.  Also, if error recovery fails, it
-> 	 * may try and take the device offline, in which case all further
-> 	 * access to the device is prohibited.
-> 	 */
-> 	if (!scsi_block_when_processing_errors(sdev))
-> 		return -ENODEV;
-> ...
-> }
+> Info from cdrecord dev=3DATAPI:0,0,0 -checkdrive:
 > 
-> If the ioctl() on sg1/ata1 was not blocked due to ata2 error recovery,
-> then where it could be blocked?
+> Cdrecord-ProDVD-Clone 2.01.01a10 (i686-pc-linux-gnu) Copyright (C)
+> 1995-2006 J=C3=B6rg Schilling
+> scsidev: 'ATAPI:0,0,0'
+> devname: 'ATAPI'
+> scsibus: 0 target: 0 lun: 0
+> Warning: Using ATA Packet interface.
+> Warning: The related Linux kernel interface code seems to be unmaintained.
+> Warning: There is absolutely NO DMA, operations thus are slow.
+> Using libscg version 'schily-0.8'.
+> Device type    : Removable CD-ROM
+> Version        : 5
+> Response Format: 2
+> Capabilities   :
+> Vendor_info    : 'TSSTcorp'
+> Identifikation : 'CD/DVDW SH-W163A'
+> Revision       : 'TS01'
+> Device seems to be: Generic mmc2 DVD-R/DVD-RW.
+> Using generic SCSI-3/mmc-2 DVD-R/DVD-RW driver (mmc_dvd).
+> Driver flags   : DVD MMC-3 SWABAUDIO BURNFREE
+> Supported modes: PACKET SAO
+> 
+[--snip--]
+> ahci 0000:03:00.0: version 2.0
+> ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 19 (level, low) -> IRQ 17
+> PCI: Setting latency timer of device 0000:03:00.0 to 64
+> ahci 0000:03:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA mod=
+> e
+> ahci 0000:03:00.0: flags: 64bit ncq pm led clo pmp pio slum part
+> ata1: SATA max UDMA/133 cmd 0xF8CD4100 ctl 0x0 bmdma 0x0 irq 17
+> ata2: SATA max UDMA/133 cmd 0xF8CD4180 ctl 0x0 bmdma 0x0 irq 17
+> scsi0 : ahci
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: ATA-7, max UDMA/133, 145223999 sectors: LBA48 NCQ (depth 0/32)
+> ata1.00: ata1: dev 0 multi count 0
+> ata1.00: configured for UDMA/133
+> scsi1 : ahci
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: ATAPI, max UDMA/33
+> ata2.00: applying bridge limits
+> ata2.00: configured for UDMA/33
+>  Vendor: ATA       Model: WDC WD740ADFD-00  Rev: 20.0
+>  Type:   Direct-Access                      ANSI SCSI revision: 05
+>  Vendor: TSSTcorp  Model: CD/DVDW SH-W163A  Rev: TS01
+>  Type:   CD-ROM                             ANSI SCSI revision: 05
+[--snip--]
+> If I try to record a dvd using cdrecord or any other app it will start
+> the process and then fail saying that the drive is not ready, and
+> there are loads of errors in dmesg:
+> 
+> 
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: (irq_stat 0x48000000, interface fatal error)
+> ata2.00: tag 0 cmd 0xa0 Emask 0x50 stat 0x51 err 0x54 (ATA bus error)
+> ata2: soft resetting port
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: configured for UDMA/33
+> ata2: EH complete
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: (irq_stat 0x48000000, interface fatal error)
+> ata2.00: tag 0 cmd 0xa0 Emask 0x50 stat 0x51 err 0x54 (ATA bus error)
+> ata2: soft resetting port
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: configured for UDMA/33
+> ata2: EH complete
+[--the same repeats--]
 
-My test says otherwise.  What I did was...
+Actually, my 20360 + PX-716SA combination is worse.  It shows the same
+behavior during device detection.
 
-1. execute "./testsg /dev/sg0"
-2. hotplug one harddrive (took ~3secs)
-3. hotplug another drive (took ~6secs)
+====
 
-The result is...
+# lspci -nnxxxvvvs 03:00.0
+03:00.0 SATA controller [0106]: JMicron Technologies, Inc. JMicron 20360/20363 A
+HCI Controller [197b:2360] (rev 03) (prog-if 01 [AHCI 1.0])
+        Subsystem: JMicron Technologies, Inc. JMicron 20360/20363 AHCI Controlle
+r [197b:2360]
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Step
+ping- SERR- FastB2B-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR-
+        Latency: 0, Cache Line Size: 16 bytes
+        Interrupt: pin A routed to IRQ 17
+        Region 0: I/O ports at d800 [size=8]
+        Region 1: I/O ports at d400 [size=4]
+        Region 2: I/O ports at d000 [size=8]
+        Region 3: I/O ports at c800 [size=4]
+        Region 4: I/O ports at c400 [size=16]
+        Region 5: Memory at deffe000 (32-bit, non-prefetchable) [size=8K]
+        Capabilities: [68] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot
++,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] Express Legacy Endpoint IRQ 1
+                Device: Supported: MaxPayload 128 bytes, PhantFunc 0, ExtTag-
+                Device: Latency L0s <64ns, L1 <1us
+                Device: AtnBtn- AtnInd- PwrInd-
+                Device: Errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                Device: RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                Device: MaxPayload 128 bytes, MaxReadReq 512 bytes
+                Link: Supported Speed 2.5Gb/s, Width x1, ASPM L0s, Port 1
+                Link: Latency L0s <1us, L1 <16us
+                Link: ASPM Disabled RCB 64 bytes CommClk+ ExtSynch-
+                Link: Speed 2.5Gb/s, Width x1
+00: 7b 19 60 23 07 00 10 00 03 01 06 01 04 00 00 00
+10: 01 d8 00 00 01 d4 00 00 01 d0 00 00 01 c8 00 00
+20: 01 c4 00 00 00 e0 ff de 00 00 00 00 7b 19 60 23
+30: 00 00 00 00 68 00 00 00 00 00 00 00 0b 01 00 00
+40: b1 a1 02 00 08 08 ff e0 20 00 00 21 00 00 00 00
+50: 10 00 11 02 00 00 00 00 00 20 0c 00 11 44 02 01
+60: 40 00 11 10 00 00 00 00 01 50 02 40 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 a0 01 0a 00 0f aa 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 00
+c0: c3 8b 38 00 03 45 02 00 53 00 00 00 0f a0 a6 00
+d0: 18 00 00 80 01 00 00 10 41 00 eb 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 18 35 9c c2 01 a0 00 84
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-# ./testsg /dev/sg0
-ata6: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
-[  127.205451] ata6: (irq_stat 0x00b40090, PHY RDY changed)
-[  127.721061] ata6: waiting for device to spin up (8 secs)
-[  133.077235] ata5: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
-[  133.084452] ata5: (irq_stat 0x00a00080, device exchanged)
-[  133.599527] ata5: waiting for device to spin up (8 secs)
-[  135.903791] ata6: soft resetting port
-[  136.007637] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  136.018667] ata6.00: ATA-7, max UDMA7, 312581808 sectors: LBA48 NCQ (depth 31
-/32)
-[  136.026217] ata6.00: ata6: dev 0 multi count 16
-[  136.057713] ata6.00: configured for UDMA/100
-[  136.062050] ata6: EH complete
-[  137.062103] scsi 5:0:0:0: Direct-Access     ATA      SAMSUNG HD160JJ  ZM10 PQ
+====
+
+dmesg follows.
+
+[  121.978072] ata1: exception Emask 0x10 SAct 0x0 SErr 0x4040000 action 0x2 fro
+zen
+[  121.985535] ata1: (irq_stat 0x00000040, connection status changed)
+[  122.500426] ata1: waiting for device to spin up (8 secs)
+[  130.683159] ata1: soft resetting port
+[  130.854900] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  131.015978] ata1.00: ATAPI, max UDMA/66
+[  131.019870] ata1.00: applying bridge limits
+[  131.179713] ata1.00: configured for UDMA/66
+[  131.183961] ata1: EH complete
+[  131.187701] scsi 0:0:0:0: CD-ROM            PLEXTOR  DVDR   PX-716A   1.09 PQ
 : 0 ANSI: 5
-[  137.071696] SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-[  137.078695] sda: Write Protect is off
-[  137.082751] SCSI device sda: drive cache: write back
-[  137.088087] SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-[  137.095156] sda: Write Protect is off
-[  137.099203] SCSI device sda: drive cache: write back
-[  137.104261]  sda: unknown partition table
-[  137.115839] sd 5:0:0:0: Attached scsi disk sda
-[  137.120480] sd 5:0:0:0: Attached scsi generic sg0 type 0
-open succeeded after 13859ms
-ioctl completed after 0ms, rc=0, bus=5
+[  131.196111] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[  131.203222] ata1.00: (irq_stat 0x48000000, interface fatal error)
+[  131.209368] ata1.00: tag 0 cmd 0xa0 Emask 0x50 stat 0x51 err 0x64 (ATA bus er
+ror)
+[  131.525798] ata1: soft resetting port
+[  131.697535] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  132.014347] ata1.00: configured for UDMA/66
+[  132.018600] ata1: EH complete
+[  132.022359] sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
+[  132.029325] sr 0:0:0:0: Attached scsi CD-ROM sr0
+[  132.029443] sr 0:0:0:0: Attached scsi generic sg0 type 5
+[  132.052247] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[  132.059354] ata1.00: (irq_stat 0x48000000, interface fatal error)
+[  132.065498] ata1.00: tag 0 cmd 0xa0 Emask 0x50 stat 0x51 err 0x24 (ATA bus er
+ror)
+[  132.384402] ata1: soft resetting port
+[  132.556142] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  132.872944] ata1.00: configured for UDMA/66
+[  132.877193] ata1: EH complete
+[--repeats--]
+[  138.703220] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[  138.710317] ata1.00: (irq_stat 0x48000000, interface fatal error)
+[  138.716460] ata1.00: tag 0 cmd 0xa0 Emask 0x50 stat 0x51 err 0x54 (ATA bus er
+ror)
+[  139.033621] ata1: soft resetting port
+[  139.205361] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  139.522142] ata1.00: configured for PIO2
+[  139.526138] ata1: EH complete
 
---> ioctl is executed back-to-back to open
+Justin, this seems very similar to the problem which occurs when PMP
+is attached.  This one is very reproducible too.  Just boot up
+libata-dev#upstream and connect PX716-SA.  Any ideas?
 
-[root@jtj:~/ttmp]#
-
---> testsg is complete at this point
-
-[  141.798233] ata5: soft resetting port
-[  141.902079] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[  141.909519] ata5.00: ATA-7, max UDMA/133, 160086528 sectors: LBA NCQ (depth 3
-1/32)
-[  141.917170] ata5.00: ata5: dev 0 multi count 0
-[  141.923737] ata5.00: configured for UDMA/100
-[  141.928073] ata5: EH complete
-[  142.928568] scsi 4:0:0:0: Direct-Access     ATA      Maxtor 6B080M0   BANC PQ
-: 0 ANSI: 5
-[  142.938171] SCSI device sdb: 160086528 512-byte hdwr sectors (81964 MB)
-[  142.945046] sdb: Write Protect is off
-[  142.949056] SCSI device sdb: drive cache: write back
-[  142.954352] SCSI device sdb: 160086528 512-byte hdwr sectors (81964 MB)
-[  142.961186] sdb: Write Protect is off
-[  142.965239] SCSI device sdb: drive cache: write back
-[  142.970289]  sdb: unknown partition table
-[  142.992997] sd 4:0:0:0: Attached scsi disk sdb
-[  142.997629] sd 4:0:0:0: Attached scsi generic sg1 type 0
-
-Your wait is somewhere else.
+Thanks.
 
 -- 
 tejun
-
---ZPt4rx8FFjLCG7dd
-Content-Type: text/x-csrc; charset=us-ascii
-Content-Disposition: attachment; filename="testsg.c"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <scsi/scsi.h>
-
-int main(int argc, char **argv)
-{
-	const struct timespec ts_1ms = { 0, 1000000 };
-	struct timeval tv0, tv1, result;
-	unsigned long interval;
-	int rc, fd, bus;
-
-	if (argc < 2)
-		fprintf(stderr, "Usage: testsg SGFILE\n");
-
-	gettimeofday(&tv0, NULL);
-
-	while (1) {
-		fd = open(argv[1], O_RDONLY);
-		if (fd >= 0 || errno != ENOENT)
-			break;
-		nanosleep(&ts_1ms, NULL);
-	}
-
-	gettimeofday(&tv1, NULL);
-	timersub(&tv1, &tv0, &result);
-	interval = result.tv_sec * 1000 + result.tv_usec / 1000;
-
-	if (fd < 0) {
-		fprintf(stderr, "open failed (%s) after %lums\n",
-			strerror(errno), interval);
-		return 1;
-	}
-
-	printf("open succeeded after %lums\n", interval);
-
-	gettimeofday(&tv0, NULL);
-
-	rc = ioctl(fd, SCSI_IOCTL_GET_BUS_NUMBER, &bus);
-
-	gettimeofday(&tv1, NULL);
-	timersub(&tv1, &tv0, &result);
-	interval = result.tv_sec * 1000 + result.tv_usec / 1000;
-
-	printf("ioctl completed after %lums, rc=%d, bus=%d\n",
-	       interval, rc, bus);
-
-	return 0;
-}
-
---ZPt4rx8FFjLCG7dd--
