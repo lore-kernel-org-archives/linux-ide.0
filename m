@@ -1,57 +1,50 @@
-From: Thierry Vignaud <tvignaud@mandriva.com>
-Subject: Re: [Fwd: [BUG] sata_via doesn't detect anymore my disks (broken between rc1 and rc3)]
-Date: Fri, 20 Oct 2006 20:59:03 +0200
-Message-ID: <m2u01yddag.fsf@vador.mandriva.com>
-References: <m2wt98bio1.fsf@vador.mandriva.com>
-	<m2sljwbil7.fsf@vador.mandriva.com> <44E37BD4.8010709@pobox.com>
-	<m23bbva9cs.fsf@vador.mandriva.com> <44E46E0E.4060703@gmail.com>
-	<m2fyfv7a8s.fsf@vador.mandriva.com> <44EB32AD.1080305@gmail.com>
-	<m2fyfnciky.fsf@vador.mandriva.com> <m2d5aprtw0.fsf@vador.mandriva.com>
-	<44EEEA29.1010008@gmail.com> <20060825135540.GE21866@htj.dyndns.org>
-	<m2ac5soqjl.fsf@vador.mandriva.com> <44EF1158.1040507@gmail.com>
-	<m2r6z1c4k9.fsf@vador.mandriva.com> <44F30ABE.2050803@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6.19 patch] drivers/ide/pci/generic.c: re-add the __setup("all-generic-ide",...)
+Date: Fri, 20 Oct 2006 23:05:33 +0200
+Message-ID: <20061020210533.GW3502@stusta.de>
+References: <Pine.LNX.4.64.0610130941550.3952@g5.osdl.org> <20061017155934.GC3502@stusta.de> <4534C7A7.7000607@hp.com> <20061018221520.GK3502@stusta.de> <20061018231844.GA16857@devserv.devel.redhat.com> <20061019152651.GR3502@stusta.de> <20061019090741.853ea100.randy.dunlap@oracle.com> <20061019161338.GT3502@stusta.de> <1161275398.17335.87.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ezoffice.mandriva.com ([84.14.106.134]:32523 "EHLO
-	office.mandriva.com") by vger.kernel.org with ESMTP
-	id S2992708AbWJTS7F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Oct 2006 14:59:05 -0400
-In-Reply-To: <44F30ABE.2050803@gmail.com> (Tejun Heo's message of "Tue, 29 Aug 2006 00:24:46 +0900")
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:3336 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1946515AbWJTVFg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Oct 2006 17:05:36 -0400
+Content-Disposition: inline
+In-Reply-To: <1161275398.17335.87.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Alan Cox <alan@redhat.com>, Patrick Jefferson <henj@hp.com>, Kenny Graunke <kenny@whitecape.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Tejun Heo <htejun@gmail.com> writes:
-
-> >>>>> The second patch is essentially identical to what you did the
-> >>>>> one liner.  Can you please check it once more?  I'll prepare
-> >>>>> old-sequence hardreset in the meantime.
-> >>>> Okay, here's the old-sequence hardreset patch.  This should have
-> >>>> the highest chance of working.  This patch should be applied on
-> >>>> top of the vt6420 patch.
-> >>> On top of which patch?
-> >>> I just tried to apply it on top of:
-> >>> - your last week patch
-> >>> - your two patches of this week
-> >>> and it does *not* apply on top of anyone...
-> >> Arghh... Sorry.  I sent the wrong version.  This patch is against
-> >> #upstream while I should have sent the one against #upstream-fixes.
-> >>
-> >>> Couldn't you either check first your patch or (better) just send a
-> >>> patch against vanilla 2.6.18-rc4-mm2?
-> >> I've attached whole sata_via.c to the other mail.  I think that should
-> >> do the trick.
-> > It didn't (tested by overwriting 2.6.18-rc4-mm2's driver).
-> > I tried a few reset methods combinations w/os success.
-> > Like in other faillure cases, the driver saw the two links but failed
-> > to see the hd attached to the second sata link.
+On Thu, Oct 19, 2006 at 05:29:58PM +0100, Alan Cox wrote:
+> Ar Iau, 2006-10-19 am 18:13 +0200, ysgrifennodd Adrian Bunk:
+> > > Missing update to Documentation/kernel-parameters.txt ?
+> > > (maybe it's been missing forever?)
+> > 
+> > It's been missing forever.
+> > 
+> > I'm not sure whether documenting it now where it's deprecated and nearly 
+> > dead makes sense..
 > 
-> Hmmm.. That's very weird.  The detection sequence is almost identical
-> to the original code.  Argh.....  Any ideas?
+> Its not dead, its so useful that drivers/ata also supports it
 
-btw, I tried again with rc1 and rc2.
-here, the diff on sata-via against 2.6.18 are trivials and irrelevant
-so it looks like the issue is introduce by core changes in libata
-(that maybe uncover a previously hidded issue in sata-via?)
+But in the drivers/ata case it's a module parameter, not a __setup 
+kernel parameter.
+
+And I don't think it makes sense to manually add module parameters to 
+kernel-parameters.txt
+
+If a documentation of all module parameters is considered useful, 
+someone should write a script to automatically generate such a list.
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
