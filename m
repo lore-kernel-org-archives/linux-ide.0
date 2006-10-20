@@ -1,151 +1,182 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: fix ATA passthrough handling for ATAPI devices
-Date: Fri, 20 Oct 2006 14:09:48 +0900
-Message-ID: <20061020050948.GF13677@htj.dyndns.org>
+Subject: Re: Question about Scsi error handling/recovery
+Date: Fri, 20 Oct 2006 17:10:50 +0900
+Message-ID: <20061020081050.GG13677@htj.dyndns.org>
+References: <8202f4270610181711k7b15f81bw589f956f6e521988@mail.gmail.com> <4536D9FD.4050708@gmail.com> <8202f4270610190822g71992718ka17858321e2affb7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="ZPt4rx8FFjLCG7dd"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:56172 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.189]:24756 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1161444AbWJTFJ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Oct 2006 01:09:58 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so1293617nfe
-        for <linux-ide@vger.kernel.org>; Thu, 19 Oct 2006 22:09:56 -0700 (PDT)
+	id S2992581AbWJTIK7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Oct 2006 04:10:59 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so1342136nfe
+        for <linux-ide@vger.kernel.org>; Fri, 20 Oct 2006 01:10:57 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <8202f4270610190822g71992718ka17858321e2affb7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: dougg@torque.net
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-libata used to pass all SCSI commands directly to ATAPI devices.
-However, this is incorrect for ATA passthrough commands as they must
-be handled by the SAT layer in libata.  Also, regardless of the
-attached ATAPI device's supported packet length, SAT says that both
-flavors of passthrough commands (ATA12 and ATA16) should work.
 
-This patch makes the following changes to fix ATA passthrough handling
-for ATAPI devices.
+--ZPt4rx8FFjLCG7dd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-* implement atapi_get_xlat_func() and make libata handle ATA12 and
-  ATA16 in SAT layer instead of passing it directly to the target
-  device even if the device is ATAPI.
+On Thu, Oct 19, 2006 at 09:22:59AM -0600, Fajun Chen wrote:
+> Note that it took less than 3 seconds for ata1 to be reconfigured as
+> sg1. My user space application opened sg1 for ioctl -
+> SCSI_IOCTL_GET_BUS_NUMBER once it's available but got block for around
+> 11 seconds.  It seems the ioctl call was unblocked until the error
+> recovery on ata2 was completed at time stamp 14068.  I suspect it's
+> blocked in the scsi_ioctl.c:
+> int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+> {
+> 	char scsi_cmd[MAX_COMMAND_SIZE];
+> 
+> 	/* No idea how this happens.... */
+> 	if (!sdev)
+> 		return -ENXIO;
+> 
+> 	/*
+> 	 * If we are in the middle of error recovery, don't let anyone
+> 	 * else try and use this device.  Also, if error recovery fails, it
+> 	 * may try and take the device offline, in which case all further
+> 	 * access to the device is prohibited.
+> 	 */
+> 	if (!scsi_block_when_processing_errors(sdev))
+> 		return -ENODEV;
+> ...
+> }
+> 
+> If the ioctl() on sg1/ata1 was not blocked due to ata2 error recovery,
+> then where it could be blocked?
 
-* Always allow 16byte CDBs for ATAPI devices.  This makes
-  ata_set_port_max_cmd_len() unnecessary and dev->cdb_len meaningless
-  for ATA devices.  Both are stripped away.  Note that this doesn't
-  breach error checking in any substantial way.  shost->max_cmd_len
-  has never beena ble to properly protect CDB length violation anyway.
+My test says otherwise.  What I did was...
 
-This problem has been spotted by Doublas Gilbert <dougg@torque.net>.
+1. execute "./testsg /dev/sg0"
+2. hotplug one harddrive (took ~3secs)
+3. hotplug another drive (took ~6secs)
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Douglas Gilbert <dougg@torque.net>
+The result is...
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c127d6f..5c80c73 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1357,20 +1357,6 @@ static void ata_dev_config_ncq(struct at
- 		snprintf(desc, desc_sz, "NCQ (depth %d/%d)", hdepth, ddepth);
- }
- 
--static void ata_set_port_max_cmd_len(struct ata_port *ap)
--{
--	int i;
--
--	if (ap->scsi_host) {
--		unsigned int len = 0;
--
--		for (i = 0; i < ATA_MAX_DEVICES; i++)
--			len = max(len, ap->device[i].cdb_len);
--
--		ap->scsi_host->max_cmd_len = len;
--	}
--}
--
- /**
-  *	ata_dev_configure - Configure the specified ATA/ATAPI device
-  *	@dev: Target device to configure
-@@ -1500,8 +1486,6 @@ int ata_dev_configure(struct ata_device 
- 					"ata%u: dev %u multi count %u\n",
- 					ap->id, dev->devno, dev->multi_count);
- 		}
--
--		dev->cdb_len = 16;
- 	}
- 
- 	/* ATAPI-specific feature tests */
-@@ -1542,8 +1526,6 @@ int ata_dev_configure(struct ata_device 
- 		}
- 	}
- 
--	ata_set_port_max_cmd_len(ap);
--
- 	/* limit bridge transfers to udma5, 200 sectors */
- 	if (ata_dev_knobble(dev)) {
- 		if (ata_msg_drv(ap) && print_info)
-@@ -5371,7 +5353,7 @@ static void ata_port_init_shost(struct a
- 	shost->max_id = 16;
- 	shost->max_lun = 1;
- 	shost->max_channel = 1;
--	shost->max_cmd_len = 12;
-+	shost->max_cmd_len = 16;
- }
- 
- /**
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 7af2a4b..9e27b7f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2794,6 +2794,23 @@ static inline ata_xlat_func_t ata_get_xl
- }
- 
- /**
-+ *	atapi_get_xlat_func - determine translation function for ATAPI
-+ *	@cmd: SCSI command opcode to consider
-+ *
-+ *	Look up the SCSI command given, and determine how to translate
-+ *	the command.
-+ *
-+ *	RETURNS:
-+ *	Pointer to translation function.
-+ */
-+static ata_xlat_func_t atapi_get_xlat_func(u8 cmd)
-+{
-+	if (cmd == ATA_12 || cmd == ATA_16)
-+		return ata_scsi_pass_thru;
-+	return atapi_xlat;
-+}
-+
-+/**
-  *	ata_scsi_dump_cdb - dump SCSI command contents to dmesg
-  *	@ap: ATA port to which the command was being sent
-  *	@cmd: SCSI command to dump
-@@ -2831,8 +2848,11 @@ static inline int __ata_scsi_queuecmd(st
- 			rc = ata_scsi_translate(dev, cmd, done, xlat_func);
- 		else
- 			ata_scsi_simulate(dev, cmd, done);
--	} else
--		rc = ata_scsi_translate(dev, cmd, done, atapi_xlat);
-+	} else {
-+		ata_xlat_func_t xlat_func = atapi_get_xlat_func(cmd->cmnd[0]);
-+
-+		rc = ata_scsi_translate(dev, cmd, done, xlat_func);
-+	}
- 
- 	return rc;
- }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index d0a7ad5..a0f95f4 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -480,7 +480,7 @@ struct ata_device {
- 	unsigned int		multi_count;	/* sectors count for
- 						   READ/WRITE MULTIPLE */
- 	unsigned int		max_sectors;	/* per-device max sectors */
--	unsigned int		cdb_len;
-+	unsigned int		cdb_len;	/* ATAPI CDB length */
- 
- 	/* per-dev xfer mask */
- 	unsigned int		pio_mask;
+# ./testsg /dev/sg0
+ata6: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+[  127.205451] ata6: (irq_stat 0x00b40090, PHY RDY changed)
+[  127.721061] ata6: waiting for device to spin up (8 secs)
+[  133.077235] ata5: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+[  133.084452] ata5: (irq_stat 0x00a00080, device exchanged)
+[  133.599527] ata5: waiting for device to spin up (8 secs)
+[  135.903791] ata6: soft resetting port
+[  136.007637] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[  136.018667] ata6.00: ATA-7, max UDMA7, 312581808 sectors: LBA48 NCQ (depth 31
+/32)
+[  136.026217] ata6.00: ata6: dev 0 multi count 16
+[  136.057713] ata6.00: configured for UDMA/100
+[  136.062050] ata6: EH complete
+[  137.062103] scsi 5:0:0:0: Direct-Access     ATA      SAMSUNG HD160JJ  ZM10 PQ
+: 0 ANSI: 5
+[  137.071696] SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+[  137.078695] sda: Write Protect is off
+[  137.082751] SCSI device sda: drive cache: write back
+[  137.088087] SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+[  137.095156] sda: Write Protect is off
+[  137.099203] SCSI device sda: drive cache: write back
+[  137.104261]  sda: unknown partition table
+[  137.115839] sd 5:0:0:0: Attached scsi disk sda
+[  137.120480] sd 5:0:0:0: Attached scsi generic sg0 type 0
+open succeeded after 13859ms
+ioctl completed after 0ms, rc=0, bus=5
 
+--> ioctl is executed back-to-back to open
+
+[root@jtj:~/ttmp]#
+
+--> testsg is complete at this point
+
+[  141.798233] ata5: soft resetting port
+[  141.902079] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  141.909519] ata5.00: ATA-7, max UDMA/133, 160086528 sectors: LBA NCQ (depth 3
+1/32)
+[  141.917170] ata5.00: ata5: dev 0 multi count 0
+[  141.923737] ata5.00: configured for UDMA/100
+[  141.928073] ata5: EH complete
+[  142.928568] scsi 4:0:0:0: Direct-Access     ATA      Maxtor 6B080M0   BANC PQ
+: 0 ANSI: 5
+[  142.938171] SCSI device sdb: 160086528 512-byte hdwr sectors (81964 MB)
+[  142.945046] sdb: Write Protect is off
+[  142.949056] SCSI device sdb: drive cache: write back
+[  142.954352] SCSI device sdb: 160086528 512-byte hdwr sectors (81964 MB)
+[  142.961186] sdb: Write Protect is off
+[  142.965239] SCSI device sdb: drive cache: write back
+[  142.970289]  sdb: unknown partition table
+[  142.992997] sd 4:0:0:0: Attached scsi disk sdb
+[  142.997629] sd 4:0:0:0: Attached scsi generic sg1 type 0
+
+Your wait is somewhere else.
+
+-- 
+tejun
+
+--ZPt4rx8FFjLCG7dd
+Content-Type: text/x-csrc; charset=us-ascii
+Content-Disposition: attachment; filename="testsg.c"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <scsi/scsi.h>
+
+int main(int argc, char **argv)
+{
+	const struct timespec ts_1ms = { 0, 1000000 };
+	struct timeval tv0, tv1, result;
+	unsigned long interval;
+	int rc, fd, bus;
+
+	if (argc < 2)
+		fprintf(stderr, "Usage: testsg SGFILE\n");
+
+	gettimeofday(&tv0, NULL);
+
+	while (1) {
+		fd = open(argv[1], O_RDONLY);
+		if (fd >= 0 || errno != ENOENT)
+			break;
+		nanosleep(&ts_1ms, NULL);
+	}
+
+	gettimeofday(&tv1, NULL);
+	timersub(&tv1, &tv0, &result);
+	interval = result.tv_sec * 1000 + result.tv_usec / 1000;
+
+	if (fd < 0) {
+		fprintf(stderr, "open failed (%s) after %lums\n",
+			strerror(errno), interval);
+		return 1;
+	}
+
+	printf("open succeeded after %lums\n", interval);
+
+	gettimeofday(&tv0, NULL);
+
+	rc = ioctl(fd, SCSI_IOCTL_GET_BUS_NUMBER, &bus);
+
+	gettimeofday(&tv1, NULL);
+	timersub(&tv1, &tv0, &result);
+	interval = result.tv_sec * 1000 + result.tv_usec / 1000;
+
+	printf("ioctl completed after %lums, rc=%d, bus=%d\n",
+	       interval, rc, bus);
+
+	return 0;
+}
+
+--ZPt4rx8FFjLCG7dd--
