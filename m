@@ -1,42 +1,151 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: [patch] libata: use correct map_db values for ICH8
-Date: Thu, 19 Oct 2006 13:27:39 -0700
-Message-ID: <20061019132739.10e504ef.kristen.c.accardi@intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: fix ATA passthrough handling for ATAPI devices
+Date: Fri, 20 Oct 2006 14:09:48 +0900
+Message-ID: <20061020050948.GF13677@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44183 "EHLO mga01.intel.com")
-	by vger.kernel.org with ESMTP id S1946452AbWJSU1o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Oct 2006 16:27:44 -0400
+Received: from nf-out-0910.google.com ([64.233.182.184]:56172 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1161444AbWJTFJ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Oct 2006 01:09:58 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so1293617nfe
+        for <linux-ide@vger.kernel.org>; Thu, 19 Oct 2006 22:09:56 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: dougg@torque.net
 
+libata used to pass all SCSI commands directly to ATAPI devices.
+However, this is incorrect for ATA passthrough commands as they must
+be handled by the SAT layer in libata.  Also, regardless of the
+attached ATAPI device's supported packet length, SAT says that both
+flavors of passthrough commands (ATA12 and ATA16) should work.
 
-Use valid values for ICH8 map_db.  With the old values, when the 
-controller was in Native mode, and SCC was 1 (drives configured for
-IDE), any drive plugged into a slave port was not recognized.  For
-Combined Mode (and SCC is still 1), 2 is a value value for MAP.map_value,
-and needs to be recognized.
+This patch makes the following changes to fix ATA passthrough handling
+for ATAPI devices.
 
-Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
----
- drivers/ata/ata_piix.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+* implement atapi_get_xlat_func() and make libata handle ATA12 and
+  ATA16 in SAT layer instead of passing it directly to the target
+  device even if the device is ATAPI.
 
---- 2.6-git.orig/drivers/ata/ata_piix.c
-+++ 2.6-git/drivers/ata/ata_piix.c
-@@ -432,9 +432,9 @@ static const struct piix_map_db ich8_map
- 	.present_shift = 8,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
--		{  P0,  NA,  P1,  NA }, /* 00b (hardwired) */
-+		{  P0,  P2,  P1,  P3 }, /* 00b (hardwired when in AHCI) */
- 		{  RV,  RV,  RV,  RV },
--		{  RV,  RV,  RV,  RV }, /* 10b (never) */
-+		{  IDE,  IDE,  NA,  NA }, /* 10b (IDE mode) */
- 		{  RV,  RV,  RV,  RV },
- 	},
- };
+* Always allow 16byte CDBs for ATAPI devices.  This makes
+  ata_set_port_max_cmd_len() unnecessary and dev->cdb_len meaningless
+  for ATA devices.  Both are stripped away.  Note that this doesn't
+  breach error checking in any substantial way.  shost->max_cmd_len
+  has never beena ble to properly protect CDB length violation anyway.
+
+This problem has been spotted by Doublas Gilbert <dougg@torque.net>.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Douglas Gilbert <dougg@torque.net>
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c127d6f..5c80c73 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1357,20 +1357,6 @@ static void ata_dev_config_ncq(struct at
+ 		snprintf(desc, desc_sz, "NCQ (depth %d/%d)", hdepth, ddepth);
+ }
+ 
+-static void ata_set_port_max_cmd_len(struct ata_port *ap)
+-{
+-	int i;
+-
+-	if (ap->scsi_host) {
+-		unsigned int len = 0;
+-
+-		for (i = 0; i < ATA_MAX_DEVICES; i++)
+-			len = max(len, ap->device[i].cdb_len);
+-
+-		ap->scsi_host->max_cmd_len = len;
+-	}
+-}
+-
+ /**
+  *	ata_dev_configure - Configure the specified ATA/ATAPI device
+  *	@dev: Target device to configure
+@@ -1500,8 +1486,6 @@ int ata_dev_configure(struct ata_device 
+ 					"ata%u: dev %u multi count %u\n",
+ 					ap->id, dev->devno, dev->multi_count);
+ 		}
+-
+-		dev->cdb_len = 16;
+ 	}
+ 
+ 	/* ATAPI-specific feature tests */
+@@ -1542,8 +1526,6 @@ int ata_dev_configure(struct ata_device 
+ 		}
+ 	}
+ 
+-	ata_set_port_max_cmd_len(ap);
+-
+ 	/* limit bridge transfers to udma5, 200 sectors */
+ 	if (ata_dev_knobble(dev)) {
+ 		if (ata_msg_drv(ap) && print_info)
+@@ -5371,7 +5353,7 @@ static void ata_port_init_shost(struct a
+ 	shost->max_id = 16;
+ 	shost->max_lun = 1;
+ 	shost->max_channel = 1;
+-	shost->max_cmd_len = 12;
++	shost->max_cmd_len = 16;
+ }
+ 
+ /**
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7af2a4b..9e27b7f 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2794,6 +2794,23 @@ static inline ata_xlat_func_t ata_get_xl
+ }
+ 
+ /**
++ *	atapi_get_xlat_func - determine translation function for ATAPI
++ *	@cmd: SCSI command opcode to consider
++ *
++ *	Look up the SCSI command given, and determine how to translate
++ *	the command.
++ *
++ *	RETURNS:
++ *	Pointer to translation function.
++ */
++static ata_xlat_func_t atapi_get_xlat_func(u8 cmd)
++{
++	if (cmd == ATA_12 || cmd == ATA_16)
++		return ata_scsi_pass_thru;
++	return atapi_xlat;
++}
++
++/**
+  *	ata_scsi_dump_cdb - dump SCSI command contents to dmesg
+  *	@ap: ATA port to which the command was being sent
+  *	@cmd: SCSI command to dump
+@@ -2831,8 +2848,11 @@ static inline int __ata_scsi_queuecmd(st
+ 			rc = ata_scsi_translate(dev, cmd, done, xlat_func);
+ 		else
+ 			ata_scsi_simulate(dev, cmd, done);
+-	} else
+-		rc = ata_scsi_translate(dev, cmd, done, atapi_xlat);
++	} else {
++		ata_xlat_func_t xlat_func = atapi_get_xlat_func(cmd->cmnd[0]);
++
++		rc = ata_scsi_translate(dev, cmd, done, xlat_func);
++	}
+ 
+ 	return rc;
+ }
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index d0a7ad5..a0f95f4 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -480,7 +480,7 @@ struct ata_device {
+ 	unsigned int		multi_count;	/* sectors count for
+ 						   READ/WRITE MULTIPLE */
+ 	unsigned int		max_sectors;	/* per-device max sectors */
+-	unsigned int		cdb_len;
++	unsigned int		cdb_len;	/* ATAPI CDB length */
+ 
+ 	/* per-dev xfer mask */
+ 	unsigned int		pio_mask;
+
