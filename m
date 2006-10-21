@@ -1,87 +1,50 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [2.6.19 patch] drivers/ide/pci/generic.c: re-add the
- __setup("all-generic-ide",...)
-Date: Sat, 21 Oct 2006 10:54:35 -0700
-Message-ID: <20061021105435.9f07d613.rdunlap@xenotime.net>
-References: <Pine.LNX.4.64.0610130941550.3952@g5.osdl.org>
-	<20061017155934.GC3502@stusta.de>
-	<4534C7A7.7000607@hp.com>
-	<20061018221520.GK3502@stusta.de>
-	<20061018231844.GA16857@devserv.devel.redhat.com>
-	<20061019152651.GR3502@stusta.de>
-	<20061019090741.853ea100.randy.dunlap@oracle.com>
-	<20061019161338.GT3502@stusta.de>
-	<1161275398.17335.87.camel@localhost.localdomain>
-	<20061020210533.GW3502@stusta.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: fix ATA passthrough handling for ATAPI devices
+Date: Sat, 21 Oct 2006 15:16:28 -0400
+Message-ID: <453A720C.6070905@pobox.com>
+References: <20061020050948.GF13677@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:56251 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1423374AbWJURw7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Oct 2006 13:52:59 -0400
-Received: from midway.site ([71.117.236.95]) by xenotime.net for <linux-ide@vger.kernel.org>; Sat, 21 Oct 2006 10:52:58 -0700
-In-Reply-To: <20061020210533.GW3502@stusta.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:60141 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1422686AbWJUTQe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Oct 2006 15:16:34 -0400
+In-Reply-To: <20061020050948.GF13677@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Randy Dunlap <randy.dunlap@oracle.com>, Alan Cox <alan@redhat.com>, Patrick Jefferson <henj@hp.com>, Kenny Graunke <kenny@whitecape.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, dougg@torque.net
 
-On Fri, 20 Oct 2006 23:05:33 +0200 Adrian Bunk wrote:
-
-> On Thu, Oct 19, 2006 at 05:29:58PM +0100, Alan Cox wrote:
-> > Ar Iau, 2006-10-19 am 18:13 +0200, ysgrifennodd Adrian Bunk:
-> > > > Missing update to Documentation/kernel-parameters.txt ?
-> > > > (maybe it's been missing forever?)
-> > > 
-> > > It's been missing forever.
-> > > 
-> > > I'm not sure whether documenting it now where it's deprecated and nearly 
-> > > dead makes sense..
-> > 
-> > Its not dead, its so useful that drivers/ata also supports it
+Tejun Heo wrote:
+> libata used to pass all SCSI commands directly to ATAPI devices.
+> However, this is incorrect for ATA passthrough commands as they must
+> be handled by the SAT layer in libata.  Also, regardless of the
+> attached ATAPI device's supported packet length, SAT says that both
+> flavors of passthrough commands (ATA12 and ATA16) should work.
 > 
-> But in the drivers/ata case it's a module parameter, not a __setup 
-> kernel parameter.
+> This patch makes the following changes to fix ATA passthrough handling
+> for ATAPI devices.
+> 
+> * implement atapi_get_xlat_func() and make libata handle ATA12 and
+>   ATA16 in SAT layer instead of passing it directly to the target
+>   device even if the device is ATAPI.
+> 
+> * Always allow 16byte CDBs for ATAPI devices.  This makes
 
-That's just an implementation nit/detail.  Users don't care which
-way it's implemented, they just need to see some reasonable
-documentation.
+This is definitely wrong.  Some ATAPI devices are limited to 12-byte CDBs.
 
-> And I don't think it makes sense to manually add module parameters to 
-> kernel-parameters.txt
+Also, are we sure that no ATAPI device ever implements these opcodes?
 
-There are module parameters there already...
-so we are being inconsistent.
+Prior to the SAT spec -- which includes most ATAPI firmwares -- those 
+opcodes might have been vendor-reserved space.  Did you or Doug verify 
+against the older specifications who might care about these opcodes?
 
-> If a documentation of all module parameters is considered useful, 
-> someone should write a script to automatically generate such a list.
+Or maybe there is a flag somewhere we can abuse, that permits support of 
+both scenarios -- passing the command to the device, and handling the 
+command internally?
 
-I think that sounds great -- in theory.  Really, I do.
-I even wrote a (simple) script for it last night.[1]
-(but someone else is free to redo it, and probably not in
-shell script :)
+	Jeff
 
-And maybe one "development community" answer is that this is
-a distro problem, let them handle it.  (I don't like that answer,
-but possibly the distros are OK with it.  I don't know.)
 
-Ideally, users would be able to see/read documentation (like kernel
-or module parameters) (a) without reading the source code and
-(b) without building the module binary files.  Maybe that's too
-much to ask of the development community, so the users can just
-build all 1500 or so (and growing) loadable kernel modules
-and run 'modinfo' on them to see what the possible module
-parameters are.  Of course, if they need this information to be
-able to install their (only) Linux system, then they are out of
-luck, or they can use their other (or working) OS to search the
-internet for such documenation.
 
-Anyway, regarding your suggestion:  Yes, I think that it would be
-good to generate such documentation instead of maintaining it
-(and sometimes not doing that).  Maybe someone can & will make
-that happen.
-
----
-~Randy
-[1] http://www.xenotime.net/linux/scripts/module-params
