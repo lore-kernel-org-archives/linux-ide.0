@@ -1,118 +1,83 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Sat, 21 Oct 2006 15:55:53 -0400
-Message-ID: <20061021195553.GA315@havoc.gtf.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] libata: fix ATA passthrough handling for ATAPI devices
+Date: Sat, 21 Oct 2006 16:00:43 -0400
+Message-ID: <453A7C6B.3050108@torque.net>
+References: <20061020050948.GF13677@htj.dyndns.org> <453A720C.6070905@pobox.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:1740 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1422748AbWJUTz6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Oct 2006 15:55:58 -0400
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:39352 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1423388AbWJUT7T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 21 Oct 2006 15:59:19 -0400
+In-Reply-To: <453A720C.6070905@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> libata used to pass all SCSI commands directly to ATAPI devices.
+>> However, this is incorrect for ATA passthrough commands as they must
+>> be handled by the SAT layer in libata.  Also, regardless of the
+>> attached ATAPI device's supported packet length, SAT says that both
+>> flavors of passthrough commands (ATA12 and ATA16) should work.
+>>
+>> This patch makes the following changes to fix ATA passthrough handling
+>> for ATAPI devices.
+>>
+>> * implement atapi_get_xlat_func() and make libata handle ATA12 and
+>>   ATA16 in SAT layer instead of passing it directly to the target
+>>   device even if the device is ATAPI.
+>>
+>> * Always allow 16byte CDBs for ATAPI devices.  This makes
+> 
+> This is definitely wrong.  Some ATAPI devices are limited to 12-byte CDBs.
 
-Got some more fixes brewing, pending feedback.
+Jeff,
+The 16 byte CDB that Tejun is talking about is the
+ATA PASS THROUGH (16) SCSI command. That is valid to
+send to SATL (in front of a ATAPI device) for certain
+values of EXTEND and T_LENGTH in that CDB (see
+sat-r09.pdf section 12.2.4).
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+> Also, are we sure that no ATAPI device ever implements these opcodes?
 
-to receive the following updates:
+The SATL is on the computer side of the ATAPI host
+(initiator) so the ATA PASS THROUGH (12+16) SCSI
+commands should never be seen by the ATAPI device
+(target). Reason: the SATL translates those SCSI
+commands into ATA commands prior to them being presented
+to the ATAPI host.
 
- drivers/ata/Kconfig      |    1 +
- drivers/ata/ahci.c       |    2 +-
- drivers/ata/ata_piix.c   |    4 ++--
- drivers/ata/libata-sff.c |    9 +++++++++
- include/linux/libata.h   |    2 +-
- 5 files changed, 14 insertions(+), 4 deletions(-)
+> Prior to the SAT spec -- which includes most ATAPI firmwares -- those
+> opcodes might have been vendor-reserved space.  Did you or Doug verify
+> against the older specifications who might care about these opcodes?
 
-Adrian Bunk:
-      ATA must depend on BLOCK
+The only clash between MMC and SATL SCSI opcodes is
+with opcode 0xA1: BLANK in MMC and ATA PASS THROUGH (12)
+in SAT. So, in the future, one way to resolve this is
+to optionally tell the SATL not to translate the ATA PASS
+THROUGH (12) SCSI command and send it through to the
+ATAPI device which would interpret it as BLANK. That would
+leave SATL users with the ATA PASS THROUGH (16) SCSI command
+for sending ATA commands to the ATAPI device. And that ....
+is definitely valid IMO.
 
-Alan Cox:
-      ahci: readability tweak
-      libata-sff: Allow for wacky systems
+> Or maybe there is a flag somewhere we can abuse, that permits support of
+> both scenarios -- passing the command to the device, and handling the
+> command internally?
 
-Kristen Carlson Accardi:
-      libata: use correct map_db values for ICH8
+This is all about being able to send ATA commands to
+ATAPI devices that are valid for PACKET devices, examples:
+    IDENTIFY PACKET DEVICE
+    SET FEATURES
+    IDENTIFY DEVICE (should abort command + set signature)
+    DEVICE RESET
+and I assume there are others.
 
-Tejun Heo:
-      libata: typo fix
+Doug Gilbert
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 3f4aa0c..03f6338 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -6,6 +6,7 @@ menu "Serial ATA (prod) and Parallel ATA
- 
- config ATA
- 	tristate "ATA device support"
-+	depends on BLOCK
- 	depends on !(M32R || M68K) || BROKEN
- 	depends on !SUN4 || BROKEN
- 	select SCSI
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 2592912..cef2e70 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1041,7 +1041,7 @@ static void ahci_host_intr(struct ata_po
- 	/* hmmm... a spurious interupt */
- 
- 	/* some devices send D2H reg with I bit set during NCQ command phase */
--	if (ap->sactive && status & PORT_IRQ_D2H_REG_FIS)
-+	if (ap->sactive && (status & PORT_IRQ_D2H_REG_FIS))
- 		return;
- 
- 	/* ignore interim PIO setup fis interrupts */
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 5719704..5250187 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -432,9 +432,9 @@ static const struct piix_map_db ich8_map
- 	.present_shift = 8,
- 	.map = {
- 		/* PM   PS   SM   SS       MAP */
--		{  P0,  NA,  P1,  NA }, /* 00b (hardwired) */
-+		{  P0,  P2,  P1,  P3 }, /* 00b (hardwired when in AHCI) */
- 		{  RV,  RV,  RV,  RV },
--		{  RV,  RV,  RV,  RV }, /* 10b (never) */
-+		{  IDE,  IDE,  NA,  NA }, /* 10b (IDE mode) */
- 		{  RV,  RV,  RV,  RV },
- 	},
- };
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 06daaa3..7645f2b 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -981,6 +981,15 @@ int ata_pci_init_one (struct pci_dev *pd
- 		mask = (1 << 2) | (1 << 0);
- 		if ((tmp8 & mask) != mask)
- 			legacy_mode = (1 << 3);
-+#if defined(CONFIG_NO_ATA_LEGACY)
-+		/* Some platforms with PCI limits cannot address compat
-+		   port space. In that case we punt if their firmware has
-+		   left a device in compatibility mode */
-+		if (legacy_mode) {
-+			printk(KERN_ERR "ata: Compatibility mode ATA is not supported on this platform, skipping.\n");
-+			return -EOPNOTSUPP;
-+		}
-+#endif
- 	}
- 
- 	rc = pci_request_regions(pdev, DRV_NAME);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index d0a7ad5..b03d5a3 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -143,7 +143,7 @@ enum {
- 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
- 
- 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
--	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* devied limited to non-NCQ mode */
-+	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* device limited to non-NCQ mode */
- 	ATA_DFLAG_SUSPENDED	= (1 << 10), /* device suspended */
- 	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
- 
