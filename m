@@ -1,97 +1,106 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [PATCH] sata_nv ADMA/NCQ support for nForce4 (updated) II
-Date: Sun, 22 Oct 2006 15:19:20 +0200
-Message-ID: <200610221519.20721.ak@suse.de>
-References: <45397D22.4030200@shaw.ca> <p73ejt1m5gj.fsf_-_@verdi.suse.de> <453B1946.3070201@shaw.ca>
+From: "Jonathan Bell" <doggs.lay.eggs@googlemail.com>
+Subject: Re: Errors when copying between drives on a SiI3114 controller under kernel 2.6.18
+Date: Sun, 22 Oct 2006 16:33:58 +0100
+Message-ID: <op.thtxiw0axci36i@akima>
+References: <op.tg1yx12kxci36i@akima> <45287FA6.5020906@gmail.com> <op.tg3tyekpxci36i@akima> <452A0A86.8070107@gmail.com> <452A0BA6.8030401@gmail.com> <op.tg5ssogyxci36i@akima> <op.tg93opjoxci36i@akima> <4530D474.6000609@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed	delsp=yes
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:43220 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1750778AbWJVNUq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Oct 2006 09:20:46 -0400
-In-Reply-To: <453B1946.3070201@shaw.ca>
-Content-Disposition: inline
+Received: from ug-out-1314.google.com ([66.249.92.174]:9089 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1750943AbWJVPd5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Oct 2006 11:33:57 -0400
+Received: by ug-out-1314.google.com with SMTP id o38so1061486ugd
+        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 08:33:55 -0700 (PDT)
+In-Reply-To: <4530D474.6000609@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sunday 22 October 2006 09:09, Robert Hancock wrote:
-> Andi Kleen wrote:
-> > Andi Kleen <ak@suse.de> writes:
-> > 
-> >> I tested it on a NF4-Professional system with 8GB RAM and a single 
-> >> SATA disk. It first did nicely in LTP and some other tests,
-> >> but during a bonnie++ run it eventually blocked with all
-> >> IO hanging forever. No output either. I did a full backtrace
-> >> and it just showed the processes waiting for a IO wakeup.
-> > 
-> > Hmm, to follow myself up: after a few more minutes the machine recovered
-> > and i could log in again (overall the stall was at least 5+ minutes
-> > though)
-> > 
-> > Not sure whom to blame, the IO driver might be actually innocent
-> > and it just be one of the usual known but unfixed IO starvation problems.
-> > 
-> > -Andi
-> 
-> Hmm.. The system hanging up for 5 minutes 
+On Sat, 14 Oct 2006 13:13:40 +0100, Tejun Heo <htejun@gmail.com> wrote:
 
-I've actually seen that before on different systems. Sometimes
-under some IO loads writes can be really starved for that long
-and they block the calling process. Normally it only happened
-when a very slow IO device (like slow USB storage) was involved
+> [cc'ing Carlos again.  please don't drop cc list]
+>
+> Jonathan Bell wrote:
+>> On Mon, 09 Oct 2006 15:49:26 +0100, Jonathan Bell  
+>> <doggs.lay.eggs@googlemail.com> wrote:
+>>
+>>> On Mon, 09 Oct 2006 09:43:18 +0100, Tejun Heo <htejun@gmail.com> wrote:
+>>>
+>>>> Tejun Heo wrote:
+>>>>> I cannot reproduce your problem here.  Can you retest after running  
+>>>>> the following commands?
+>>>>>  # setpci -s 01:07.0 0c.b=04
+>>>>> # setpci -s 01:08.0 0c.b=04
+>>>>
+>>>> I forgot something.
+>>>>
+>>>> * You need to make sata_sil a module.  Boot, unload sata_sil if  
+>>>> loaded, run above commands, load sata_sil and test.
+>>>>
+>>>> * If above commands don't work, try =00 instead of =04.
+>>>>
+>>>> Thanks.
+>>>
+>>> setpci -s 01:07/8.0 0c.b=04 performed, sata_sil inserted...
+>>>
+>>> md5sum crapped out again, similar errors in dmesg as before.
+>>>
+>>> setpci -s 01:07/8.0 0c.b=00 performed, sata_sil inserted...
+>>>
+>>> It worked...
+>>> cp ~/hugefile /mnt/sda1 && cp /mnt/sda1/hugefile /mnt/sdb1
+>>> && md5sum /mnt/sda1/hugefile /mnt/sdb1/hugefile
+>>>
+>>> ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sda1/hugefile
+>>> ccf5f9052aa1fac3062c3f1920abb1fc  /mnt/sdb1/hugefile
+>>>
+>>> What does this register do, out of interest? With 00 it took ages and  
+>>> made my load average shoot up to about 6.50!
+>>  Apologies for bumping this a mere 2 days later but I felt that  
+>> progress was being made...
+>>  Ok, so it's the PCI cache line size register... 08 means a value of 64  
+>> bits which corresponds to the line size of my L1/L2 cache, am I correct?
+>
+> Yes, you're right.
+>
+>> The fact that even with a value of 01 set (for fun) still corrupts the  
+>> file seems to indicate that the fault is somewhere there, but why?  
+>> Should I just give up and buy a decent mainboard? :P (currently running  
+>> A7N8X-Deluxe v2.0, latest 1008 BIOS)
+>
+> I'm not sure whether the cache line size is the actual problem or the  
+> slowdown caused by 0 cacheline size (r/w optimizations based on  
+> cacheline size are turned off) hides the problem.  I was hoping BIOS  
+> messed up while setting cachline size and adjusting it to 4 makes things  
+> work.
+>
+>> I would like to know more about this since the only topics on PCI cache  
+>> line sizes I can find are ones where people are having problems.
+>
+> I don't know.  I think this can be best diagnosed by SIMG.  Carlos, does  
+> anything ring a bell?
+>
+> Thanks.
+>
 
-e.g. typical trace:
+This is where it gets wierd... I may have uncovered a BIOS bug.
 
-sshd          D ffff810001072b20     0 11554   3381         11556 11127 (NOTLB)
- ffff810114dffb08 0000000000000086 5353535353535353 5353535353535353
- 5353535353535353 000000000000057e ffff81014b344af0 ffff81014b404770
- 000001ede41c7140 ffff81014b344cc8 5353535300000001 5353535353535353
-Call Trace:
- [<ffffffff802e8cc2>] start_this_handle+0x2f4/0x37b
- [<ffffffff802e8e16>] journal_start+0xcd/0x105
- [<ffff81014b11e800>]
-DWARF2 unwinder stuck at 0xffff81014b11e800
-Leftover inexact backtrace:
- [<ffffffff802da5f5>] ext3_dirty_inode+0x28/0x7b
- [<ffffffff80291bbb>] __mark_inode_dirty+0x2c/0x17d
- [<ffffffff80256611>] do_generic_mapping_read+0x3b0/0x3c2
- [<ffffffff80255415>] file_read_actor+0x0/0xd6
- [<ffffffff80256d8b>] generic_file_aio_read+0x164/0x1b8
- [<ffffffff80278774>] do_sync_read+0xc9/0x10c
- [<ffffffff80241ecc>] autoremove_wake_function+0x0/0x2e
- [<ffffffff80531aef>] cond_resched+0x34/0x3b
- [<ffffffff80258f27>] __alloc_pages+0x5e/0x2ae
- [<ffffffff8027365a>] cache_alloc_refill+0xf1/0x1f8
- [<ffffffff80278ade>] vfs_read+0xa8/0x14e
- [<ffffffff8027bbbd>] kernel_read+0x38/0x4c
- [<ffffffff8027d6d4>] do_execve+0x105/0x1f9
- [<ffffffff80207bc9>] sys_execve+0x33/0x8b
- [<ffffffff80209857>] stub_execve+0x67/0xb0
+I changed the mainboard out as a last-ditch attempt to get this working  
+and BEHOLD! The drives work perfectly. I swapped the A7N8X-D out for an  
+Abit NF7-M (same nForce2 chipset, with the exception of onboard graphics)  
+and used the same hardware as before.
+
+This NF7-M is on loan to me so I cannot use it indefinitely. Any ideas,  
+Tejun?
+
+Worst comes to worst I can buy an old nForce2 board for a minor sum off  
+eBay.
+
+Jonathan
 
 
-I've got quite a lot of processes in journal_start -> start_this_handle.
-I suppose they're waiting for the transaction to finish.
 
-> and then recovering seems  
-> rather odd, as far as I know the timeouts in libata are all quite a bit 
-> shorter than that. Was there anything unusual in dmesg? 
-
-Nothing in dmesg except for the sysrqs I triggered.
-
-> If the IO  
-> commands weren't completing at the driver level then I would expect the 
-> error handling to kick in in some fashion..
-
-And print something, yes.
-
-I assume it wasn't the driver for now.
-
-Thanks for your work.
-
--Andi
-
- 
