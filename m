@@ -1,65 +1,57 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] libata: fix ATA passthrough handling for ATAPI devices
-Date: Sat, 21 Oct 2006 19:11:25 -0400
-Message-ID: <453AA91D.8060803@torque.net>
-References: <20061020050948.GF13677@htj.dyndns.org> <453A720C.6070905@pobox.com> <453A7C6B.3050108@torque.net> <453A7F6B.1010205@pobox.com> <453A8E96.9040702@torque.net> <453A93CB.9000008@pobox.com>
-Reply-To: dougg@torque.net
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [PATCH] sata_nv ADMA/NCQ support for nForce4 (updated)
+Date: 22 Oct 2006 04:41:19 +0200
+Message-ID: <p73iridm5rk.fsf@verdi.suse.de>
+References: <45397D22.4030200@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:50117 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1161151AbWJUXJ7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 21 Oct 2006 19:09:59 -0400
-In-Reply-To: <453A93CB.9000008@pobox.com>
+Received: from cantor2.suse.de ([195.135.220.15]:35210 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S1751762AbWJVClZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Oct 2006 22:41:25 -0400
+In-Reply-To: <45397D22.4030200@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Douglas Gilbert wrote:
->> Jeff Garzik wrote:
->>> I'm talking about the changes to the implementation, which appear to
->>> mistakenly allow 16-byte CDBs through to the ATAPI device, even if it
->>> only supports 12-byte CDBs.
->>>
->>> I am quite aware of the ATA passthru SCSI command.  Heck, the spec had
->>> input from me.  I'm talking about something different.
+Robert Hancock <hancockr@shaw.ca> writes:
+
+> Here's the latest version of this patch. Changes since the last version I posted: fix to actually use the legacy interface for ATAPI as was intended, set the proper sg_tablesize for legacy and ADMA mode, some message and formatting cleanups, and ADMA is now enabled by default.
 > 
->> The above were attempts to send IDENTIFY PACKET DEVICE
->> to the PATAPI cd/dvd drive via the ATA PASS THROUGH
->> (16 and 12) commands respectively. The first one caught
->> my attention. Why did it fail with a DID_ABORT?
->>
->> Whatever the reason both responses are wrong. The second
->> one is wrong because
->>   - the cd/dvd drive does support that opcode (the error
->>     should be either not ready or incompatible format), or
->>   - it didn't do the ATA PASS THROUGH (12) properly
+> This patch is against 2.6.19-rc2.
 > 
-> The thread has moved on from discussing the acknowledged problem to
-> discussing the solution.
-> 
-> To summarize my quoted email above, I'm talking about problems with the
-> implementation details.  There are two engineering constraints which a
-> solution must not violate:
+> As before, testing by people with this hardware would be appreciated. Also, it would be nice to get this into libata-dev or -mm to get some more exposure..
 
-> 1) The kernel must prevent 16-byte non-passthru commands from reaching
-> 12-byte-only ATAPI devices.
+I tested it on a NF4-Professional system with 8GB RAM and a single 
+SATA disk. It first did nicely in LTP and some other tests,
+but during a bonnie++ run it eventually blocked with all
+IO hanging forever. No output either. I did a full backtrace
+and it just showed the processes waiting for a IO wakeup.
 
-I would prefer to see the command sent through until
-it hits a transport that cannot carry a 16 byte cdb.
-That transport may be in an external enclosure, or
-the limitation may have been removed.
+-Andi
 
-> 2) Existing in-the-field solutions that issue commands such as BLANK or
-> a vendor-reserved 0x85 opcode must continue working, without recompile.
 
-Opcodes 0x85 and 0xa1 are not vendor reserved. They have
-been reserved for t10.org use since SCSI-2. Other SCSI
-opcode ranges are set aside for vendor use.
-The BLANK problems remains.
-
-Doug Gilbert
+sata_nv 0000:00:07.0: Using ADMA mode
+PCI: Setting latency timer of device 0000:00:07.0 to 64
+ata1: SATA max UDMA/133 cmd 0xFFFFC2000003C480 ctl 0xFFFFC2000003C4A0 bmdma 0x1C10 irq 22
+ata2: SATA max UDMA/133 cmd 0xFFFFC2000003C580 ctl 0xFFFFC2000003C5A0 bmdma 0x1C18 irq 22
+scsi0 : sata_nv
+ata1: SATA link down (SStatus 0 SControl 300)
+scsi1 : sata_nv
+ata2: SATA link down (SStatus 0 SControl 300)
+ACPI: PCI Interrupt Link [LSI1] enabled at IRQ 21
+ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [LSI1] -> GSI 21 (level, high) -> IRQ 21
+sata_nv 0000:00:08.0: Using ADMA mode
+PCI: Setting latency timer of device 0000:00:08.0 to 64
+ata3: SATA max UDMA/133 cmd 0xFFFFC2000003E480 ctl 0xFFFFC2000003E4A0 bmdma 0x1C20 irq 21
+ata4: SATA max UDMA/133 cmd 0xFFFFC2000003E580 ctl 0xFFFFC2000003E5A0 bmdma 0x1C28 irq 21
+scsi2 : sata_nv
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata3.00: ATA-6, max UDMA/133, 312581808 sectors: LBA48 
+ata3.00: ata3: dev 0 multi count 16
+ata3.00: configured for UDMA/133
+scsi3 : sata_nv
+ata4: SATA link down (SStatus 0 SControl 300)
+scsi 2:0:0:0: Direct-Access     ATA      ST3160023AS      3.18 PQ: 0 ANSI: 5
+ata3: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
