@@ -1,112 +1,97 @@
-From: Udo van den Heuvel <udovdh@xs4all.nl>
-Subject: Re: sata_via issue for VIA Epia SP8000 in 2.6.18[.1]?
-Date: Sun, 22 Oct 2006 15:16:13 +0200
-Message-ID: <453B6F1D.5030208@xs4all.nl>
-References: <453B67B6.9060708@xs4all.nl>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [PATCH] sata_nv ADMA/NCQ support for nForce4 (updated) II
+Date: Sun, 22 Oct 2006 15:19:20 +0200
+Message-ID: <200610221519.20721.ak@suse.de>
+References: <45397D22.4030200@shaw.ca> <p73ejt1m5gj.fsf_-_@verdi.suse.de> <453B1946.3070201@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-vbr10.xs4all.nl ([194.109.24.30]:58125 "EHLO
-	smtp-vbr10.xs4all.nl") by vger.kernel.org with ESMTP
-	id S1750870AbWJVNQQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Oct 2006 09:16:16 -0400
-Received: from [192.168.10.69] (pindarots.xs4all.nl [82.92.197.115])
-	(authenticated bits=0)
-	by smtp-vbr10.xs4all.nl (8.13.8/8.13.8) with ESMTP id k9MDGERT034107
-	for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 15:16:15 +0200 (CEST)
-	(envelope-from udovdh@xs4all.nl)
-In-Reply-To: <453B67B6.9060708@xs4all.nl>
+Received: from mx1.suse.de ([195.135.220.2]:43220 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1750778AbWJVNUq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Oct 2006 09:20:46 -0400
+In-Reply-To: <453B1946.3070201@shaw.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Udo van den Heuvel wrote:
-> Now I try to get 2.6.18.1 working. SATA is detected by this kernel but
-> disk gives timeout while 2.6.17.13 boots fine.
+On Sunday 22 October 2006 09:09, Robert Hancock wrote:
+> Andi Kleen wrote:
+> > Andi Kleen <ak@suse.de> writes:
+> > 
+> >> I tested it on a NF4-Professional system with 8GB RAM and a single 
+> >> SATA disk. It first did nicely in LTP and some other tests,
+> >> but during a bonnie++ run it eventually blocked with all
+> >> IO hanging forever. No output either. I did a full backtrace
+> >> and it just showed the processes waiting for a IO wakeup.
+> > 
+> > Hmm, to follow myself up: after a few more minutes the machine recovered
+> > and i could log in again (overall the stall was at least 5+ minutes
+> > though)
+> > 
+> > Not sure whom to blame, the IO driver might be actually innocent
+> > and it just be one of the usual known but unfixed IO starvation problems.
+> > 
+> > -Andi
+> 
+> Hmm.. The system hanging up for 5 minutes 
 
-By changing quirks.c, quirk_via_irq to be mopre precise to
+I've actually seen that before on different systems. Sometimes
+under some IO loads writes can be really starved for that long
+and they block the calling process. Normally it only happened
+when a very slow IO device (like slow USB storage) was involved
 
-[...]
-                        pci_name(dev), irq, new_irq);
-                udelay(15);     /* unknown if delay really needed */
-                pci_write_config_byte(dev, PCI_INTERRUPT_LINE, new_irq);
-        }
-}
-DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA, PCI_ANY_ID, quirk_via_irq)
-/*DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA,
-PCI_DEVICE_ID_VIA_82C586_0, quirk_via_irq);
-DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_1,
-quirk_via_irq);
-DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_2,
-quirk_via_irq);
-DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_3,
-quirk_via_irq);
-DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA,
-PCI_DEVICE_ID_VIA_8235_USB_2, quirk_via_irq);
-DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C686,
-quirk_via_irq);
-DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C686_4,
-quirk_via_irq);
-DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C686_5,
-quirk_via_irq);*/
+e.g. typical trace:
 
-stuff starts booting again.
-This issue has been there since 2.6,17.x. Please FIX!
-
-Thanks,
-Udo
+sshd          D ffff810001072b20     0 11554   3381         11556 11127 (NOTLB)
+ ffff810114dffb08 0000000000000086 5353535353535353 5353535353535353
+ 5353535353535353 000000000000057e ffff81014b344af0 ffff81014b404770
+ 000001ede41c7140 ffff81014b344cc8 5353535300000001 5353535353535353
+Call Trace:
+ [<ffffffff802e8cc2>] start_this_handle+0x2f4/0x37b
+ [<ffffffff802e8e16>] journal_start+0xcd/0x105
+ [<ffff81014b11e800>]
+DWARF2 unwinder stuck at 0xffff81014b11e800
+Leftover inexact backtrace:
+ [<ffffffff802da5f5>] ext3_dirty_inode+0x28/0x7b
+ [<ffffffff80291bbb>] __mark_inode_dirty+0x2c/0x17d
+ [<ffffffff80256611>] do_generic_mapping_read+0x3b0/0x3c2
+ [<ffffffff80255415>] file_read_actor+0x0/0xd6
+ [<ffffffff80256d8b>] generic_file_aio_read+0x164/0x1b8
+ [<ffffffff80278774>] do_sync_read+0xc9/0x10c
+ [<ffffffff80241ecc>] autoremove_wake_function+0x0/0x2e
+ [<ffffffff80531aef>] cond_resched+0x34/0x3b
+ [<ffffffff80258f27>] __alloc_pages+0x5e/0x2ae
+ [<ffffffff8027365a>] cache_alloc_refill+0xf1/0x1f8
+ [<ffffffff80278ade>] vfs_read+0xa8/0x14e
+ [<ffffffff8027bbbd>] kernel_read+0x38/0x4c
+ [<ffffffff8027d6d4>] do_execve+0x105/0x1f9
+ [<ffffffff80207bc9>] sys_execve+0x33/0x8b
+ [<ffffffff80209857>] stub_execve+0x67/0xb0
 
 
-PS:
+I've got quite a lot of processes in journal_start -> start_this_handle.
+I suppose they're waiting for the transaction to finish.
 
-# lspci
-00:00.0 Host bridge: VIA Technologies, Inc. CN400/PM880 Host Bridge
-00:00.1 Host bridge: VIA Technologies, Inc. CN400/PM880 Host Bridge
-00:00.2 Host bridge: VIA Technologies, Inc. CN400/PM880 Host Bridge
-00:00.3 Host bridge: VIA Technologies, Inc. CN400/PM880 Host Bridge
-00:00.4 Host bridge: VIA Technologies, Inc. CN400/PM880 Host Bridge
-00:00.7 Host bridge: VIA Technologies, Inc. CN400/PM880 Host Bridge
-00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI Bridge
-00:0d.0 FireWire (IEEE 1394): VIA Technologies, Inc. IEEE 1394 Host
-Controller (rev 80)
-00:0f.0 IDE interface: VIA Technologies, Inc. VIA VT6420 SATA RAID
-Controller (rev 80)
-00:0f.1 IDE interface: VIA Technologies, Inc.
-VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
-00:10.0 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev 81)
-00:10.1 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev 81)
-00:10.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev 81)
-00:10.3 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev 81)
-00:10.4 USB Controller: VIA Technologies, Inc. USB 2.0 (rev 86)
-00:11.0 ISA bridge: VIA Technologies, Inc. VT8237 ISA bridge
-[KT600/K8T800/K8T890 South]
-00:11.5 Multimedia audio controller: VIA Technologies, Inc.
-VT8233/A/8235/8237 AC97 Audio Controller (rev 60)
-00:12.0 Ethernet controller: VIA Technologies, Inc. VT6102 [Rhine-II]
-(rev 78)
-00:14.0 Multimedia controller: Philips Semiconductors SAA7146 (rev 01)
-01:00.0 VGA compatible controller: VIA Technologies, Inc. S3 Unichrome
-Pro VGA Adapter (rev 02)
+> and then recovering seems  
+> rather odd, as far as I know the timeouts in libata are all quite a bit 
+> shorter than that. Was there anything unusual in dmesg? 
 
-# cat /proc/interrupts
-           CPU0
-  0:     341650          XT-PIC  timer
-  1:         48          XT-PIC  i8042
-  2:          0          XT-PIC  cascade
-  8:          1          XT-PIC  rtc
-  9:          0          XT-PIC  acpi
- 10:      13348          XT-PIC  libata, VIA8237, uhci_hcd:usb3,
-uhci_hcd:usb4, ehci_hcd:usb5, ohci1394
- 11:    4945538          XT-PIC  uhci_hcd:usb1, uhci_hcd:usb2, eth0,
-via@pci:0000:01:00.0
- 12:       3389          XT-PIC  i8042
- 14:      11782          XT-PIC  ide0
-NMI:          0
-ERR:          0
+Nothing in dmesg except for the sysrqs I triggered.
 
-What other info is useful?
+> If the IO  
+> commands weren't completing at the driver level then I would expect the 
+> error handling to kick in in some fashion..
+
+And print something, yes.
+
+I assume it wasn't the driver for now.
+
+Thanks for your work.
+
+-Andi
+
+ 
