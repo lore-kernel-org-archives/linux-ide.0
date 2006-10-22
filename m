@@ -1,102 +1,64 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.19-rc2: known unfixed regressions (v3)
-Date: Sun, 22 Oct 2006 14:23:55 +0200
-Message-ID: <20061022122355.GC3502@stusta.de>
-References: <Pine.LNX.4.64.0610130941550.3952@g5.osdl.org>
+From: Udo van den Heuvel <udovdh@xs4all.nl>
+Subject: sata_via issue for VIA Epia SP8000 in 2.6.18[.1]?
+Date: Sun, 22 Oct 2006 14:44:38 +0200
+Message-ID: <453B67B6.9060708@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0610130941550.3952@g5.osdl.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Meelis Roos <mroos@linux.ee>, paulus@samba.org, linuxppc-dev@ozlabs.org, Martin Lorenz <martin@lorenz.eu.org>, "Michael S. Tsirkin" <mst@mellanox.co.il>, len.brown@intel.com, linux-acpi@vger.kernel.org, pavel@suse.cz, linux-pm@osdl.org, Jesper Juhl <jesper.juhl@gmail.com>, David Howells <dhowells@redhat.com>, James.Bottomley@HansenPartnership.com, pazke@donpac.ru, linux-visws-devel@lists.sf.net, Thierry Vignaud <tvignaud@mandriva.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, art@usfltd.com, ak@suse.de, discuss@x86-64.org, Alex Romosan <romosan@sycorax.lbl.gov>, Jens Axboe <jens.axboe@oracle.com>, Christian <christiand59@web.de>, Mark Langsdorf <mark.langsdorf@amd.com>, davej@codemonkey.org.uk, cpufreq@lists.linux.org.uk, Stephen Hemminger <shemminger@osdl.org>, Greg KH <greg@kroah.com>, linux-pci@atrey.k
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp-vbr16.xs4all.nl ([194.109.24.36]:41476 "EHLO
+	smtp-vbr16.xs4all.nl") by vger.kernel.org with ESMTP
+	id S1750739AbWJVMol (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Oct 2006 08:44:41 -0400
+Received: from [192.168.10.69] (pindarots.xs4all.nl [82.92.197.115])
+	(authenticated bits=0)
+	by smtp-vbr16.xs4all.nl (8.13.8/8.13.8) with ESMTP id k9MCicCd095940
+	for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 14:44:39 +0200 (CEST)
+	(envelope-from udovdh@xs4all.nl)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This email lists some known unfixed regressions in 2.6.19-rc2 compared 
-to 2.6.18 that are not yet fixed Linus' tree.
+Hello,
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possibly
-involved with one or more of these issues.
+2.6.17.13 works OK on this VIA Epia SP8000.
+(remember vaguely about some (PCI?) fixups to get things going)
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+Now I try to get 2.6.18.1 working. SATA is detected by this kernel but
+disk gives timeout while 2.6.17.13 boots fine.
 
+Some blurbs:
 
-Subject    : ppc prep boot hang
-References : http://lkml.org/lkml/2006/10/14/58
-Submitter  : Meelis Roos <mroos@linux.ee>
-Status     : unknown
+Links is up but  SStatus 113 SControl 300
+qc timeout (cmd 0xec)
+failed to IDENTIFY
+This results in a kernel panic.
 
+Any ideas?
 
-Subject    : X60s: BUG()s, lose ACPI events after suspend/resume
-References : http://lkml.org/lkml/2006/10/10/39
-Submitter  : Martin Lorenz <martin@lorenz.eu.org>
-Status     : unknown
+2.6.17.13 gives stuff like this:
 
-
-Subject    : T60 stops triggering any ACPI events
-References : http://lkml.org/lkml/2006/10/4/425
-             http://lkml.org/lkml/2006/10/16/262
-Submitter  : "Michael S. Tsirkin" <mst@mellanox.co.il>
-Status     : unknown
-
-
-Subject    : CONFIG_X86_VOYAGER=y, CONFIG_SMP=n compile error
-References : http://lkml.org/lkml/2006/10/7/51
-Submitter  : Jesper Juhl <jesper.juhl@gmail.com>
-Caused-By  : David Howells <dhowells@redhat.com>
-             commit 7d12e780e003f93433d49ce78cfedf4b4c52adc5
-Status     : unknown
-
-
-Subject    : CONFIG_X86_VISWS=y, CONFIG_SMP=n compile error
-References : http://lkml.org/lkml/2006/10/7/51
-Submitter  : Jesper Juhl <jesper.juhl@gmail.com>
-Caused-By  : David Howells <dhowells@redhat.com>
-             commit 7d12e780e003f93433d49ce78cfedf4b4c52adc5
-Status     : unknown
+scsi0 : sata_via
+ata2: SATA link up 1.5 Gbps (SStatus 113)
+ata2: dev 0 cfg 49:2f00 82:746b 83:7f01 84:4023 85:7469 86:3c01 87:4023
+88:40ff
+ata2: dev 0 ATA-7, max UDMA7, 312581808 sectors: LBA48
+ata2: dev 0 configured for UDMA/133
+scsi1 : sata_via
+  Vendor: ATA       Model: SAMSUNG HD160JJ   Rev: ZM10
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 < sda5 sda6 sda7 sda8 sda9 sda10 >
+sd 1:0:0:0: Attached scsi disk sda
 
 
-Subject    : sata-via doesn't detect anymore disks attached to VIA vt6421
-References : http://bugzilla.kernel.org/show_bug.cgi?id=7255
-Submitter  : Thierry Vignaud <tvignaud@mandriva.com>
-Status     : unknown
+Udo
 
-
-Subject    : SMP x86_64 boot problem
-References : http://lkml.org/lkml/2006/9/28/330
-             http://lkml.org/lkml/2006/10/5/289
-Submitter  : art@usfltd.com
-Status     : submitter was asked to git bisect
-             result of bisecting seems to be wrong
-
-
-Subject    : unable to rip cd
-References : http://lkml.org/lkml/2006/10/13/100
-Submitter  : Alex Romosan <romosan@sycorax.lbl.gov>
-Status     : unknown
-
-
-Subject    : cpufreq not working on AMD K8
-References : http://lkml.org/lkml/2006/10/10/114
-Submitter  : Christian <christiand59@web.de>
-Handled-By : Mark Langsdorf <mark.langsdorf@amd.com>
-Status     : Mark is investigating
-
-
-Subject    : MSI errors during boot (CONFIG_PCI_MULTITHREAD_PROBE)
-References : http://lkml.org/lkml/2006/10/16/291
-Submitter  : Stephen Hemminger <shemminger@osdl.org>
-Handled-By : Greg KH <greg@kroah.com>
-Status     : Greg is working on a fix
-
-
-Subject    : snd-hda-intel <-> forcedeth MSI problem
-References : http://lkml.org/lkml/2006/10/5/40
-             http://lkml.org/lkml/2006/10/7/164
-Submitter  : Prakash Punnoor <prakash@punnoor.de>
-Status     : patches are being discussed
-
-
+PS: Sorry for sending this also to linux-kernel
