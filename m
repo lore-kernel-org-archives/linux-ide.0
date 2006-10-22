@@ -1,33 +1,48 @@
-From: Andi Kleen <ak@suse.de>
+From: Robert Hancock <hancockr@shaw.ca>
 Subject: Re: [PATCH] sata_nv ADMA/NCQ support for nForce4 (updated) II
-Date: 22 Oct 2006 04:47:56 +0200
-Message-ID: <p73ejt1m5gj.fsf_-_@verdi.suse.de>
+Date: Sun, 22 Oct 2006 01:09:58 -0600
+Message-ID: <453B1946.3070201@shaw.ca>
 References: <45397D22.4030200@shaw.ca> <p73iridm5rk.fsf@verdi.suse.de>
+ <p73ejt1m5gj.fsf_-_@verdi.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:651 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1751762AbWJVCr5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Oct 2006 22:47:57 -0400
-In-Reply-To: <p73iridm5rk.fsf@verdi.suse.de>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:43150 "EHLO
+	pd3mo3so.prod.shaw.ca") by vger.kernel.org with ESMTP
+	id S1750721AbWJVHKB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Oct 2006 03:10:01 -0400
+In-reply-to: <p73ejt1m5gj.fsf_-_@verdi.suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, hancockr@shaw.ca
-Cc: linux-ide@vger.kernel.org
+To: Andi Kleen <ak@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Andi Kleen <ak@suse.de> writes:
+Andi Kleen wrote:
+> Andi Kleen <ak@suse.de> writes:
+> 
+>> I tested it on a NF4-Professional system with 8GB RAM and a single 
+>> SATA disk. It first did nicely in LTP and some other tests,
+>> but during a bonnie++ run it eventually blocked with all
+>> IO hanging forever. No output either. I did a full backtrace
+>> and it just showed the processes waiting for a IO wakeup.
+> 
+> Hmm, to follow myself up: after a few more minutes the machine recovered
+> and i could log in again (overall the stall was at least 5+ minutes
+> though)
+> 
+> Not sure whom to blame, the IO driver might be actually innocent
+> and it just be one of the usual known but unfixed IO starvation problems.
+> 
+> -Andi
 
-> I tested it on a NF4-Professional system with 8GB RAM and a single 
-> SATA disk. It first did nicely in LTP and some other tests,
-> but during a bonnie++ run it eventually blocked with all
-> IO hanging forever. No output either. I did a full backtrace
-> and it just showed the processes waiting for a IO wakeup.
+Hmm.. The system hanging up for 5 minutes and then recovering seems 
+rather odd, as far as I know the timeouts in libata are all quite a bit 
+shorter than that. Was there anything unusual in dmesg? If the IO 
+commands weren't completing at the driver level then I would expect the 
+error handling to kick in in some fashion..
 
-Hmm, to follow myself up: after a few more minutes the machine recovered
-and i could log in again (overall the stall was at least 5+ minutes
-though)
-
-Not sure whom to blame, the IO driver might be actually innocent
-and it just be one of the usual known but unfixed IO starvation problems.
-
--Andi
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
