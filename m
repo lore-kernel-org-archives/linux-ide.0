@@ -1,392 +1,154 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: [PATCH] ata: Generic platform_device libata driver, take 2.
-Date: Mon, 23 Oct 2006 15:59:07 +0900
-Message-ID: <20061023065907.GA22029@linux-sh.org>
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: Re: sata_sis only recognizing primary drive in 2.6.18
+Date: Mon, 23 Oct 2006 10:45:51 +0200
+Message-ID: <200610231045.51679.uwe.koziolek@gmx.net>
+References: <20061006065816.GA5782@jim.sh> <453A8B66.8080302@gmx.net> <453C25A1.5010208@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ocgnet.org ([64.20.243.3]:18853 "EHLO smtp.ocgnet.org")
-	by vger.kernel.org with ESMTP id S1751624AbWJWG70 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Oct 2006 02:59:26 -0400
+Received: from mail.gmx.net ([213.165.64.20]:16327 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751833AbWJWIp4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Oct 2006 04:45:56 -0400
+In-Reply-To: <453C25A1.5010208@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Russell King <rmk@arm.linux.org.uk>
-Cc: Matthias Fuchs <matthias.fuchs@esd-electronics.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jim Paris <jim@jtan.com>, linux-ide@vger.kernel.org, muthas@mit.edu, fragmede@gmail.com, David Wang <touch@sis.com>
 
-This is the second attempt at a generic platform_device libata driver,
-attempting to take in to account issues raised by Matthias Fuchs and rmk.
+Hi,
 
-Changes in this version include adding a small pata_platform.h header for
-the private data (which at the moment is limited to a register shift
-that's needed by ARM), though other things can be added in here if
-platforms start having other needs.
+here is the patch for slave support. No fixes for the second port handl=
+ing are included.
 
-At the moment this takes care of the IDE needs across some PPC and SH,
-and with this change, hopefully ARM as well. H8300 should still be
-trivial to move over to this.
+regards
+Uwe
 
-Comments?
+>=20
+> It might be sufficient to just add ATA_FLAG_SLAVE_POSS for all=20
+> controllers but in general we don't want to sprinkle that flag over=20
+> controllers which don't actually support slave device - sometimes for=
+=20
+> safety and also for documentation purpose. =A0So, please make a separ=
+ate=20
+> port_info and add ATA_FLAG_SLAVE_POSS only to controllers which actua=
+lly=20
+> support slave devices.
 
-Signed-off-by: Paul Mundt <lethal@linux-sh.org>
-
---
-
- drivers/ata/Kconfig           |    9 +
- drivers/ata/Makefile          |    1 
- drivers/ata/pata_platform.c   |  295 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/pata_platform.h |   13 +
- 4 files changed, 318 insertions(+)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 03f6338..ac4aa73 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -483,6 +483,15 @@ config PATA_WINBOND
- 
- 	  If unsure, say N.
- 
-+config PATA_PLATFORM
-+	tristate "Generic platform device PATA support"
-+	depends on EMBEDDED
-+	help
-+	  This option enables support for generic directly connected ATA
-+	  devices commonly found on embedded systems.
-+
-+	  If unsure, say N.
-+
- endif
- endmenu
- 
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 72243a6..408c8c9 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -53,6 +53,7 @@ obj-$(CONFIG_PATA_VIA)		+= pata_via.o
- obj-$(CONFIG_PATA_WINBOND)	+= pata_sl82c105.o
- obj-$(CONFIG_PATA_SIS)		+= pata_sis.o
- obj-$(CONFIG_PATA_TRIFLEX)	+= pata_triflex.o
-+obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
- # Should be last but one libata driver
- obj-$(CONFIG_ATA_GENERIC)	+= ata_generic.o
- # Should be last libata driver
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-new file mode 100644
-index 0000000..63d6687
---- /dev/null
-+++ b/drivers/ata/pata_platform.c
-@@ -0,0 +1,295 @@
-+/*
-+ * Generic platform device PATA driver
-+ *
-+ * Copyright (C) 2006  Paul Mundt
-+ *
-+ * Based on pata_pcmcia:
-+ *
-+ *   Copyright 2005-2006 Red Hat Inc <alan@redhat.com>, all rights reserved.
-+ *
-+ * This file is subject to the terms and conditions of the GNU General Public
-+ * License.  See the file "COPYING" in the main directory of this archive
-+ * for more details.
-+ */
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/blkdev.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/ata.h>
-+#include <linux/libata.h>
-+#include <linux/platform_device.h>
-+#include <linux/pata_platform.h>
-+
-+#define DRV_NAME "pata_platform"
-+#define DRV_VERSION "0.1.2"
-+
-+static int pio_mask = 1;
-+
-+/*
-+ * Provide our own set_mode() as we don't want to change anything that has
-+ * already been configured..
-+ */
-+static void pata_platform_set_mode(struct ata_port *ap)
-+{
-+	int i;
-+
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+
-+		if (ata_dev_enabled(dev)) {
-+			/* We don't really care */
-+			dev->pio_mode = dev->xfer_mode = XFER_PIO_0;
-+			dev->xfer_shift = ATA_SHIFT_PIO;
-+			dev->flags |= ATA_DFLAG_PIO;
-+		}
-+	}
-+}
-+
-+static void pata_platform_host_stop(struct ata_host *host)
-+{
-+	int i;
-+
-+	/*
-+	 * Unmap the bases for MMIO
-+	 */
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		if (ap->flags & ATA_FLAG_MMIO) {
-+			iounmap((void __iomem *)ap->ioaddr.ctl_addr);
-+			iounmap((void __iomem *)ap->ioaddr.cmd_addr);
-+		}
-+	}
-+}
-+
-+static struct scsi_host_template pata_platform_sht = {
-+	.module			= THIS_MODULE,
-+	.name			= DRV_NAME,
-+	.ioctl			= ata_scsi_ioctl,
-+	.queuecommand		= ata_scsi_queuecmd,
-+	.can_queue		= ATA_DEF_QUEUE,
-+	.this_id		= ATA_SHT_THIS_ID,
-+	.sg_tablesize		= LIBATA_MAX_PRD,
-+	.max_sectors		= ATA_MAX_SECTORS,
-+	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
-+	.emulated		= ATA_SHT_EMULATED,
-+	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-+	.proc_name		= DRV_NAME,
-+	.dma_boundary		= ATA_DMA_BOUNDARY,
-+	.slave_configure	= ata_scsi_slave_config,
-+	.bios_param		= ata_std_bios_param,
-+};
-+
-+static struct ata_port_operations pata_platform_port_ops = {
-+	.set_mode		= pata_platform_set_mode,
-+
-+	.port_disable		= ata_port_disable,
-+	.tf_load		= ata_tf_load,
-+	.tf_read		= ata_tf_read,
-+	.check_status		= ata_check_status,
-+	.exec_command		= ata_exec_command,
-+	.dev_select		= ata_std_dev_select,
-+
-+	.freeze			= ata_bmdma_freeze,
-+	.thaw			= ata_bmdma_thaw,
-+	.error_handler		= ata_bmdma_error_handler,
-+	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+
-+	.qc_prep		= ata_qc_prep,
-+	.qc_issue		= ata_qc_issue_prot,
-+
-+	.data_xfer		= ata_pio_data_xfer_noirq,
-+
-+	.irq_handler		= ata_interrupt,
-+	.irq_clear		= ata_bmdma_irq_clear,
-+
-+	.port_start		= ata_port_start,
-+	.port_stop		= ata_port_stop,
-+	.host_stop		= pata_platform_host_stop
-+};
-+
-+static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-+				     struct pata_platform_info *info)
-+{
-+	unsigned int shift = 0;
-+
-+	/* Fixup the port shift for platforms that need it */
-+	if (info && info->ioport_shift)
-+		shift = info->ioport_shift;
-+
-+	ioaddr->data_addr	= ioaddr->cmd_addr + (ATA_REG_DATA    << shift);
-+	ioaddr->error_addr	= ioaddr->cmd_addr + (ATA_REG_ERR     << shift);
-+	ioaddr->feature_addr	= ioaddr->cmd_addr + (ATA_REG_FEATURE << shift);
-+	ioaddr->nsect_addr	= ioaddr->cmd_addr + (ATA_REG_NSECT   << shift);
-+	ioaddr->lbal_addr	= ioaddr->cmd_addr + (ATA_REG_LBAL    << shift);
-+	ioaddr->lbam_addr	= ioaddr->cmd_addr + (ATA_REG_LBAM    << shift);
-+	ioaddr->lbah_addr	= ioaddr->cmd_addr + (ATA_REG_LBAH    << shift);
-+	ioaddr->device_addr	= ioaddr->cmd_addr + (ATA_REG_DEVICE  << shift);
-+	ioaddr->status_addr	= ioaddr->cmd_addr + (ATA_REG_STATUS  << shift);
-+	ioaddr->command_addr	= ioaddr->cmd_addr + (ATA_REG_CMD     << shift);
-+}
-+
-+/**
-+ *	pata_platform_probe		-	attach a platform interface
-+ *	@pdev: platform device
-+ *
-+ *	Register a platform bus IDE interface. Such interfaces are PIO and we
-+ *	assume do not support IRQ sharing.
-+ *
-+ *	Platform devices are expected to contain 3 resources per port:
-+ *
-+ *		- I/O Base (IORESOURCE_IO or IORESOURCE_MEM)
-+ *		- CTL Base (IORESOURCE_IO or IORESOURCE_MEM)
-+ *		- IRQ	   (IORESOURCE_IRQ)
-+ *
-+ *	If the base resources are both mem types, the ioremap() is handled
-+ *	here. For IORESOURCE_IO, it's assumed that there's no remapping
-+ *	necessary.
-+ */
-+static int __devinit pata_platform_probe(struct platform_device *pdev)
-+{
-+	struct resource *io_res, *ctl_res;
-+	struct ata_probe_ent ae;
-+	unsigned int mmio;
-+	int ret;
-+
-+	/*
-+	 * Simple resource validation ..
-+	 */
-+	if (unlikely(pdev->num_resources != 3)) {
-+		dev_err(&pdev->dev, "invalid number of resources\n");
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * Get the I/O base first
-+	 */
-+	io_res = platform_get_resource(pdev, IORESOURCE_IO, 0);
-+	if (io_res == NULL) {
-+		io_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+		if (unlikely(io_res == NULL))
-+			return -EINVAL;
-+	}
-+
-+	/*
-+	 * Then the CTL base
-+	 */
-+	ctl_res = platform_get_resource(pdev, IORESOURCE_IO, 1);
-+	if (ctl_res == NULL) {
-+		ctl_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+		if (unlikely(ctl_res == NULL))
-+			return -EINVAL;
-+	}
-+
-+	/*
-+	 * Check for MMIO
-+	 */
-+	mmio = (( io_res->flags == IORESOURCE_MEM) &&
-+		(ctl_res->flags == IORESOURCE_MEM));
-+
-+	/*
-+	 * Now that that's out of the way, wire up the port..
-+	 */
-+	memset(&ae, 0, sizeof(struct ata_probe_ent));
-+	INIT_LIST_HEAD(&ae.node);
-+	ae.dev = &pdev->dev;
-+	ae.port_ops = &pata_platform_port_ops;
-+	ae.sht = &pata_platform_sht;
-+	ae.n_ports = 1;
-+	ae.pio_mask = pio_mask;
-+	ae.irq = platform_get_irq(pdev, 0);
-+	ae.irq_flags = 0;
-+	ae.port_flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST;
-+
-+	/*
-+	 * Handle the MMIO case
-+	 */
-+	if (mmio) {
-+		ae.port_flags |= ATA_FLAG_MMIO;
-+
-+		ae.port[0].cmd_addr = (unsigned long)ioremap(io_res->start,
-+				io_res->end - io_res->start + 1);
-+		if (unlikely(!ae.port[0].cmd_addr)) {
-+			dev_err(&pdev->dev, "failed to remap IO base\n");
-+			return -ENXIO;
-+		}
-+
-+		ae.port[0].ctl_addr = (unsigned long)ioremap(ctl_res->start,
-+				ctl_res->end - ctl_res->start + 1);
-+		if (unlikely(!ae.port[0].ctl_addr)) {
-+			dev_err(&pdev->dev, "failed to remap CTL base\n");
-+			ret = -ENXIO;
-+			goto bad_remap;
-+		}
-+	} else {
-+		ae.port[0].cmd_addr = io_res->start;
-+		ae.port[0].ctl_addr = ctl_res->start;
-+	}
-+
-+	ae.port[0].altstatus_addr = ae.port[0].ctl_addr;
-+
-+	pata_platform_setup_port(&ae.port[0], pdev->dev.platform_data);
-+
-+	if (unlikely(ata_device_add(&ae) == 0)) {
-+		ret = -ENODEV;
-+		goto add_failed;
-+	}
-+
-+	return 0;
-+
-+add_failed:
-+	if (ae.port[0].ctl_addr && mmio)
-+		iounmap((void __iomem *)ae.port[0].ctl_addr);
-+bad_remap:
-+	if (ae.port[0].cmd_addr && mmio)
-+		iounmap((void __iomem *)ae.port[0].cmd_addr);
-+
-+	return ret;
-+}
-+
-+/**
-+ *	pata_platform_remove	-	unplug a platform interface
-+ *	@pdev: platform device
-+ *
-+ *	A platform bus ATA device has been unplugged. Perform the needed
-+ *	cleanup. Also called on module unload for any active devices.
-+ */
-+static int __devexit pata_platform_remove(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct ata_host *host = dev_get_drvdata(dev);
-+
-+	ata_host_remove(host);
-+	dev_set_drvdata(dev, NULL);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver pata_platform_driver = {
-+	.probe		= pata_platform_probe,
-+	.remove		= __devexit_p(pata_platform_remove),
-+	.driver = {
-+		.name		= DRV_NAME,
-+		.owner		= THIS_MODULE,
+--- a/drivers/ata/sata_sis.c	2006-10-18 23:15:59.000000000 +0200
++++ b/drivers/ata/sata_sis.c	2006-10-23 10:16:09.000000000 +0200
+@@ -126,13 +126,26 @@
+ 	.host_stop		=3D ata_host_stop,
+ };
+=20
+-static struct ata_port_info sis_port_info =3D {
+-	.sht		=3D &sis_sht,
+-	.flags		=3D ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
+-	.pio_mask	=3D 0x1f,
+-	.mwdma_mask	=3D 0x7,
+-	.udma_mask	=3D 0x7f,
+-	.port_ops	=3D &sis_ops,
++static struct ata_port_info sis_port_info[] =3D {
++	/* 2 ports, SiS964, SiS965L, SiS966L */
++	{
++		.sht		=3D &sis_sht,
++		.flags		=3D ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++		.pio_mask	=3D 0x1f,
++		.mwdma_mask	=3D 0x7,
++		.udma_mask	=3D 0x7f,
++		.port_ops	=3D &sis_ops,
 +	},
-+};
-+
-+static int __init pata_platform_init(void)
-+{
-+	return platform_driver_register(&pata_platform_driver);
-+}
-+
-+static void __exit pata_platform_exit(void)
-+{
-+	platform_driver_unregister(&pata_platform_driver);
-+}
-+module_init(pata_platform_init);
-+module_exit(pata_platform_exit);
-+
-+module_param(pio_mask, int, 0);
-+
-+MODULE_AUTHOR("Paul Mundt");
-+MODULE_DESCRIPTION("low-level driver for platform device ATA");
-+MODULE_LICENSE("GPL");
-+MODULE_VERSION(DRV_VERSION);
-diff --git a/include/linux/pata_platform.h b/include/linux/pata_platform.h
-new file mode 100644
-index 0000000..2d5fd64
---- /dev/null
-+++ b/include/linux/pata_platform.h
-@@ -0,0 +1,13 @@
-+#ifndef __LINUX_PATA_PLATFORM_H
-+#define __LINUX_PATA_PLATFORM_H
-+
-+struct pata_platform_info {
-+	/*
-+	 * I/O port shift, for platforms with ports that are
-+	 * constantly spaced and need larger than the 1-byte
-+	 * spacing used by ata_std_ports().
-+	 */
-+	unsigned int ioport_shift;
-+};
-+
-+#endif /* __LINUX_PATA_PLATFORM_H */
++	/* 4 ports, SiS180, SiS965, SiS966 */
++	{
++		.sht		=3D &sis_sht,
++		.flags		=3D ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++				  ATA_FLAG_SLAVE_POSS,
++		.pio_mask	=3D 0x1f,
++		.mwdma_mask	=3D 0x7,
++		.udma_mask	=3D 0x7f,
++		.port_ops	=3D &sis_ops,
++	}
+ };
+=20
+=20
+@@ -244,6 +257,8 @@
+ 	int pci_dev_busy =3D 0;
+ 	u8 pmr;
+ 	u8 port2_start;
++	int slave_poss =3D 0;
++	u32 chipid;
+=20
+ 	if (!printed_version++)
+ 		dev_printk(KERN_INFO, &pdev->dev, "version " DRV_VERSION "\n");
+@@ -265,7 +280,38 @@
+ 	if (rc)
+ 		goto err_out_regions;
+=20
+-	ppi[0] =3D ppi[1] =3D &sis_port_info;
++	switch (ent->device) {
++	case 0x0180:
++	case 0x0181:	/* SiS180/181/964 */
++		pci_read_config_byte(pdev, SIS_PMR, &pmr);
++		if ((pmr & SIS_PMR_COMBINED) =3D=3D 0) {
++			dev_printk(KERN_INFO, &pdev->dev,
++				   "Detected SiS 180/181/964 chipset in SATA mode\n");
++			port2_start =3D 64;
++		}
++		else {
++			dev_printk(KERN_INFO, &pdev->dev,
++				   "Detected SiS 180/181 chipset in combined mode\n");
++			port2_start =3D 0;
++			slave_poss =3D 1;
++		}
++		break;
++	case 0x182:		/* SiS965/965L */
++		pci_read_config_dword ( pdev, 0x6C, &chipid);
++		if (chipid & (1L << 31)) {
++			dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 182/965 chipset\n")=
+;
++			slave_poss =3D 1;
++		}
++		else {
++			dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 182/965L chipset\n"=
+);
++		}
++		port2_start =3D 0x20;
++		break;
++	}
++	ppi[0] =3D ppi[1] =3D &sis_port_info[0];
++	if (slave_poss) {
++		ppi[0] =3D ppi[1] =3D &sis_port_info[1];
++	}
+ 	probe_ent =3D ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | =
+ATA_PORT_SECONDARY);
+ 	if (!probe_ent) {
+ 		rc =3D -ENOMEM;
+@@ -288,24 +334,6 @@
+ 		probe_ent->port_flags |=3D SIS_FLAG_CFGSCR;
+ 	}
+=20
+-	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+-	if (ent->device !=3D 0x182) {
+-		if ((pmr & SIS_PMR_COMBINED) =3D=3D 0) {
+-			dev_printk(KERN_INFO, &pdev->dev,
+-				   "Detected SiS 180/181 chipset in SATA mode\n");
+-			port2_start =3D 64;
+-		}
+-		else {
+-			dev_printk(KERN_INFO, &pdev->dev,
+-				   "Detected SiS 180/181 chipset in combined mode\n");
+-			port2_start=3D0;
+-		}
+-	}
+-	else {
+-		dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 182 chipset\n");
+-		port2_start =3D 0x20;
+-	}
+-
+ 	if (!(probe_ent->port_flags & SIS_FLAG_CFGSCR)) {
+ 		probe_ent->port[0].scr_addr =3D
+ 			pci_resource_start(pdev, SIS_SCR_PCI_BAR);
+
+
