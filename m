@@ -1,52 +1,62 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] ahci updates regarding vt8251 support, take #2
-Date: Mon, 23 Oct 2006 11:29:06 +0900
-Message-ID: <453C28F2.5070004@gmail.com>
-References: <11609522031228-git-send-email-htejun@gmail.com> <453A73CE.60205@pobox.com>
+Subject: Re: [PATCH] libata: fix ATA passthrough handling for ATAPI devices
+Date: Mon, 23 Oct 2006 11:55:35 +0900
+Message-ID: <453C2F27.9030302@gmail.com>
+References: <20061020050948.GF13677@htj.dyndns.org> <453A720C.6070905@pobox.com> <453A7C6B.3050108@torque.net> <453A7F6B.1010205@pobox.com> <453A8E96.9040702@torque.net> <453A93CB.9000008@pobox.com> <453AA91D.8060803@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:12 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.191]:8334 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751182AbWJWC3P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Oct 2006 22:29:15 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so2234164nfe
-        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 19:29:14 -0700 (PDT)
-In-Reply-To: <453A73CE.60205@pobox.com>
+	id S1751282AbWJWCzm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Oct 2006 22:55:42 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so2241487nfe
+        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 19:55:41 -0700 (PDT)
+In-Reply-To: <453AA91D.8060803@torque.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: alan@lxorguk.ukuu.org.uk, aalderd.boac@wanadoo.nl, linux-ide@vger.kernel.org
+To: dougg@torque.net
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hello, Jeff.
-
-Jeff Garzik wrote:
-> Patchset looks OK to me, with a few notes:
+Douglas Gilbert wrote:
+>> 1) The kernel must prevent 16-byte non-passthru commands from reaching
+>> 12-byte-only ATAPI devices.
 > 
-> 1) might want to separate out this change and forward it to 
-> #upstream-fixes:
-> -    ahci_tf_read(ap, &tf);
-> -    if (tf.command & (ATA_BUSY | ATA_DRQ)) {
-> +    if (ahci_check_status(ap) & (ATA_BUSY | ATA_DRQ)) {
+> I would prefer to see the command sent through until
+> it hits a transport that cannot carry a 16 byte cdb.
+> That transport may be in an external enclosure, or
+> the limitation may have been removed.
 
-Okay, will do that.
+The host max CDB len has never been a proper protection against illegal 
+CDB length.  Think about PATA, ata_piix SLAVE_POSS or PMP cases sharing 
+the host w/ ATA devices.  Max CDB len is always 16 in such cases whether 
+an ATAPI device supports 12 or 16 byte CDB.  Also, max CDB len doesn't 
+protect against smaller CDB (12 bytes) when the device supports 16 byte 
+CDBs.
 
-> 2) In general, it's a good idea to clear SError after twiddling with the 
-> phy.  Not just on vt8521.
+So, for some cases, we had protection and in many others we didn't. 
+We've always depended on applications sending correctly sized CDBs and 
+ATAPI devices aborting wrong sized CDBs.
 
-It's done in ->post_reset() after a successful soft/hard reset, so the 
-issue occurs only when the controller needs follow-up SRST after 
-hardreset and the softreset doesn't work unless SError isn't cleared. 
-And, vt8251 is the only such controller at the moment (heh heh 
-surprise!), so I think we can leave it there for the time being.
+I'm not sure whether the protection is necessary, but if it is, we can 
+do the protection *properly* by moving cdb restriction to lower level 
+such that it's applied per-device not per-host.  This also solves the 
+16byte passthrough problem.
 
-> 3) Any positive test results yet?
+IMHO, this issues is separate from SAT passthrough and needs 
+improvements regardless.
 
-Aalderd confirmed the change.  He has reported a spurious IRQ problem 
-but it's emitted when loading vmware modules and doesn't seem to be 
-related to libata at all.  My vt8251 also does hotplug happily with the 
-change, so we have two positive test results.
+>> 2) Existing in-the-field solutions that issue commands such as BLANK or
+>> a vendor-reserved 0x85 opcode must continue working, without recompile.
+> 
+> Opcodes 0x85 and 0xa1 are not vendor reserved. They have
+> been reserved for t10.org use since SCSI-2. Other SCSI
+> opcode ranges are set aside for vendor use.
+> The BLANK problems remains.
+
+Ah.. I haven't thought about opcode clash.  I'm all ears on this.  Just 
+tell me what to do, I'll go and implement it.
 
 Thanks.
 
