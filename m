@@ -1,64 +1,98 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: fix ATA passthrough handling for ATAPI devices
-Date: Mon, 23 Oct 2006 11:55:35 +0900
-Message-ID: <453C2F27.9030302@gmail.com>
-References: <20061020050948.GF13677@htj.dyndns.org> <453A720C.6070905@pobox.com> <453A7C6B.3050108@torque.net> <453A7F6B.1010205@pobox.com> <453A8E96.9040702@torque.net> <453A93CB.9000008@pobox.com> <453AA91D.8060803@torque.net>
+Subject: [PATCH] sata_sis: fix flags handling for the secondary port
+Date: Mon, 23 Oct 2006 12:48:21 +0900
+Message-ID: <20061023034821.GI13677@htj.dyndns.org>
+References: <453A3F0C.3000406@trash.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:8334 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.186]:15005 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751282AbWJWCzm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Oct 2006 22:55:42 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so2241487nfe
-        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 19:55:41 -0700 (PDT)
-In-Reply-To: <453AA91D.8060803@torque.net>
+	id S1751220AbWJWDsb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Oct 2006 23:48:31 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so2256195nfe
+        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 20:48:30 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <453A3F0C.3000406@trash.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dougg@torque.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: Patrick McHardy <kaber@trash.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Douglas Gilbert wrote:
->> 1) The kernel must prevent 16-byte non-passthru commands from reaching
->> 12-byte-only ATAPI devices.
-> 
-> I would prefer to see the command sent through until
-> it hits a transport that cannot carry a 16 byte cdb.
-> That transport may be in an external enclosure, or
-> the limitation may have been removed.
+sis_init_one() modifies probe_ent->port_flags after allocating and
+initializing it using ata_pci_init_native_mode().  This makes
+port_flags for the secondary port (probe_ent->pinfo2->flags) go out of
+sync resulting in misdetection of device due to incorrectly
+initialized SCR access flag.
 
-The host max CDB len has never been a proper protection against illegal 
-CDB length.  Think about PATA, ata_piix SLAVE_POSS or PMP cases sharing 
-the host w/ ATA devices.  Max CDB len is always 16 in such cases whether 
-an ATAPI device supports 12 or 16 byte CDB.  Also, max CDB len doesn't 
-protect against smaller CDB (12 bytes) when the device supports 16 byte 
-CDBs.
+This patch make probe_ent alloc/init happen after the final port flags
+value is determined.  This is fragile but probe_ent and all the
+related mess are scheduled to go away soon for exactly this reason.
+We just need to hold everything together till then.
 
-So, for some cases, we had protection and in many others we didn't. 
-We've always depended on applications sending correctly sized CDBs and 
-ATAPI devices aborting wrong sized CDBs.
+This has been spotted and diagnosed by Patrick McHardy.
 
-I'm not sure whether the protection is necessary, but if it is, we can 
-do the protection *properly* by moving cdb restriction to lower level 
-such that it's applied per-device not per-host.  This also solves the 
-16byte passthrough problem.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Patric McHardy <kaber@trash.net>
+---
+Patrick, can you test this patch and post result?
 
-IMHO, this issues is separate from SAT passthrough and needs 
-improvements regardless.
-
->> 2) Existing in-the-field solutions that issue commands such as BLANK or
->> a vendor-reserved 0x85 opcode must continue working, without recompile.
-> 
-> Opcodes 0x85 and 0xa1 are not vendor reserved. They have
-> been reserved for t10.org use since SCSI-2. Other SCSI
-> opcode ranges are set aside for vendor use.
-> The BLANK problems remains.
-
-Ah.. I haven't thought about opcode clash.  I'm all ears on this.  Just 
-tell me what to do, I'll go and implement it.
+Jeff, please don't apply this patch till Patrick acks it.
 
 Thanks.
 
--- 
-tejun
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -240,7 +240,7 @@ static int sis_init_one (struct pci_dev 
+ 	struct ata_probe_ent *probe_ent = NULL;
+ 	int rc;
+ 	u32 genctl;
+-	struct ata_port_info *ppi[2];
++	struct ata_port_info pi = sis_port_info, *ppi[2] = { &pi, &pi };
+ 	int pci_dev_busy = 0;
+ 	u8 pmr;
+ 	u8 port2_start;
+@@ -265,27 +265,20 @@ static int sis_init_one (struct pci_dev 
+ 	if (rc)
+ 		goto err_out_regions;
+ 
+-	ppi[0] = ppi[1] = &sis_port_info;
+-	probe_ent = ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
+-	if (!probe_ent) {
+-		rc = -ENOMEM;
+-		goto err_out_regions;
+-	}
+-
+ 	/* check and see if the SCRs are in IO space or PCI cfg space */
+ 	pci_read_config_dword(pdev, SIS_GENCTL, &genctl);
+ 	if ((genctl & GENCTL_IOMAPPED_SCR) == 0)
+-		probe_ent->port_flags |= SIS_FLAG_CFGSCR;
++		pi.flags |= SIS_FLAG_CFGSCR;
+ 
+ 	/* if hardware thinks SCRs are in IO space, but there are
+ 	 * no IO resources assigned, change to PCI cfg space.
+ 	 */
+-	if ((!(probe_ent->port_flags & SIS_FLAG_CFGSCR)) &&
++	if ((!(pi.flags & SIS_FLAG_CFGSCR)) &&
+ 	    ((pci_resource_start(pdev, SIS_SCR_PCI_BAR) == 0) ||
+ 	     (pci_resource_len(pdev, SIS_SCR_PCI_BAR) < 128))) {
+ 		genctl &= ~GENCTL_IOMAPPED_SCR;
+ 		pci_write_config_dword(pdev, SIS_GENCTL, genctl);
+-		probe_ent->port_flags |= SIS_FLAG_CFGSCR;
++		pi.flags |= SIS_FLAG_CFGSCR;
+ 	}
+ 
+ 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+@@ -306,6 +299,12 @@ static int sis_init_one (struct pci_dev 
+ 		port2_start = 0x20;
+ 	}
+ 
++	probe_ent = ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
++	if (!probe_ent) {
++		rc = -ENOMEM;
++		goto err_out_regions;
++	}
++
+ 	if (!(probe_ent->port_flags & SIS_FLAG_CFGSCR)) {
+ 		probe_ent->port[0].scr_addr =
+ 			pci_resource_start(pdev, SIS_SCR_PCI_BAR);
