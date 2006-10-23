@@ -1,44 +1,49 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sis only recognizing primary drive in 2.6.18
-Date: Mon, 23 Oct 2006 11:14:57 +0900
-Message-ID: <453C25A1.5010208@gmail.com>
-References: <20061006065816.GA5782@jim.sh> <45263683.408@gmx.net> <45287D85.1050302@gmail.com> <453A8B66.8080302@gmx.net>
+Subject: Re: Errors when copying between drives on a SiI3114 controller under
+ kernel 2.6.18
+Date: Mon, 23 Oct 2006 11:22:00 +0900
+Message-ID: <453C2748.9030008@gmail.com>
+References: <op.tg1yx12kxci36i@akima> <45287FA6.5020906@gmail.com> <op.tg3tyekpxci36i@akima> <452A0A86.8070107@gmail.com> <452A0BA6.8030401@gmail.com> <op.tg5ssogyxci36i@akima> <op.tg93opjoxci36i@akima> <4530D474.6000609@gmail.com> <op.thtxiw0axci36i@akima>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:61813 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.175]:45198 "EHLO
 	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1751187AbWJWCPH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Oct 2006 22:15:07 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so1143340ugd
-        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 19:15:06 -0700 (PDT)
-In-Reply-To: <453A8B66.8080302@gmx.net>
+	id S1751094AbWJWCWI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Oct 2006 22:22:08 -0400
+Received: by ug-out-1314.google.com with SMTP id o38so1144272ugd
+        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 19:22:06 -0700 (PDT)
+In-Reply-To: <op.thtxiw0axci36i@akima>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: Jim Paris <jim@jtan.com>, linux-ide@vger.kernel.org, muthas@mit.edu, fragmede@gmail.com, David Wang <touch@sis.com>
+To: Jonathan Bell <doggs.lay.eggs@googlemail.com>
+Cc: linux-ide@vger.kernel.org
 
-Uwe Koziolek wrote:
-> Hi,
+Jonathan Bell wrote:
+> This is where it gets wierd... I may have uncovered a BIOS bug.
 > 
-> I have tested the patch with separate port_info and a patch only adding
-> the flag ATA_FLAG_SLAVE_POSS for all controllers.
-> The result  is allways  the  same.  The second sata disk  is allways
-> /dev/sdb. libata handles this  correctly.
+> I changed the mainboard out as a last-ditch attempt to get this working 
+> and BEHOLD! The drives work perfectly. I swapped the A7N8X-D out for an 
+> Abit NF7-M (same nForce2 chipset, with the exception of onboard 
+> graphics) and used the same hardware as before.
 > 
-> So i am not sure, that the separate port_info is really necessary. My
-> assumption is a ATA_FLAG_SLAVE_POSS
-> is sufficient for a correct handling.
+> This NF7-M is on loan to me so I cannot use it indefinitely. Any ideas, 
+> Tejun?
 > 
-> If i am wrong, i will send a patch with separate port_info .
+> Worst comes to worst I can buy an old nForce2 board for a minor sum off 
+> eBay.
 
-It might be sufficient to just add ATA_FLAG_SLAVE_POSS for all 
-controllers but in general we don't want to sprinkle that flag over 
-controllers which don't actually support slave device - sometimes for 
-safety and also for documentation purpose.  So, please make a separate 
-port_info and add ATA_FLAG_SLAVE_POSS only to controllers which actually 
-support slave devices.
+I guess it could be a PCI bus problem.  Maybe the controller and the PCI 
+bus on the board don't like each other and thing get corrupt when 
+transactions occur at high speed.  I've seen data corruption over PCI 
+bus on some pilot embedded system board.  Not sure whether such things 
+are applicable to consumer products.
+
+I dunno.  Simply changing the motherboard or the controller might be the 
+best solution for you.  Considering the large deployment of 
+3112/3152/3114 controllers, it's hard to believe your problem is 
+software bug.
 
 Thanks.
 
