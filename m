@@ -1,49 +1,52 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Errors when copying between drives on a SiI3114 controller under
- kernel 2.6.18
-Date: Mon, 23 Oct 2006 11:22:00 +0900
-Message-ID: <453C2748.9030008@gmail.com>
-References: <op.tg1yx12kxci36i@akima> <45287FA6.5020906@gmail.com> <op.tg3tyekpxci36i@akima> <452A0A86.8070107@gmail.com> <452A0BA6.8030401@gmail.com> <op.tg5ssogyxci36i@akima> <op.tg93opjoxci36i@akima> <4530D474.6000609@gmail.com> <op.thtxiw0axci36i@akima>
+Subject: Re: [PATCHSET] ahci updates regarding vt8251 support, take #2
+Date: Mon, 23 Oct 2006 11:29:06 +0900
+Message-ID: <453C28F2.5070004@gmail.com>
+References: <11609522031228-git-send-email-htejun@gmail.com> <453A73CE.60205@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:45198 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1751094AbWJWCWI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Oct 2006 22:22:08 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so1144272ugd
-        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 19:22:06 -0700 (PDT)
-In-Reply-To: <op.thtxiw0axci36i@akima>
+Received: from nf-out-0910.google.com ([64.233.182.188]:12 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751182AbWJWC3P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Oct 2006 22:29:15 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so2234164nfe
+        for <linux-ide@vger.kernel.org>; Sun, 22 Oct 2006 19:29:14 -0700 (PDT)
+In-Reply-To: <453A73CE.60205@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jonathan Bell <doggs.lay.eggs@googlemail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: alan@lxorguk.ukuu.org.uk, aalderd.boac@wanadoo.nl, linux-ide@vger.kernel.org
 
-Jonathan Bell wrote:
-> This is where it gets wierd... I may have uncovered a BIOS bug.
-> 
-> I changed the mainboard out as a last-ditch attempt to get this working 
-> and BEHOLD! The drives work perfectly. I swapped the A7N8X-D out for an 
-> Abit NF7-M (same nForce2 chipset, with the exception of onboard 
-> graphics) and used the same hardware as before.
-> 
-> This NF7-M is on loan to me so I cannot use it indefinitely. Any ideas, 
-> Tejun?
-> 
-> Worst comes to worst I can buy an old nForce2 board for a minor sum off 
-> eBay.
+Hello, Jeff.
 
-I guess it could be a PCI bus problem.  Maybe the controller and the PCI 
-bus on the board don't like each other and thing get corrupt when 
-transactions occur at high speed.  I've seen data corruption over PCI 
-bus on some pilot embedded system board.  Not sure whether such things 
-are applicable to consumer products.
+Jeff Garzik wrote:
+> Patchset looks OK to me, with a few notes:
+> 
+> 1) might want to separate out this change and forward it to 
+> #upstream-fixes:
+> -    ahci_tf_read(ap, &tf);
+> -    if (tf.command & (ATA_BUSY | ATA_DRQ)) {
+> +    if (ahci_check_status(ap) & (ATA_BUSY | ATA_DRQ)) {
 
-I dunno.  Simply changing the motherboard or the controller might be the 
-best solution for you.  Considering the large deployment of 
-3112/3152/3114 controllers, it's hard to believe your problem is 
-software bug.
+Okay, will do that.
+
+> 2) In general, it's a good idea to clear SError after twiddling with the 
+> phy.  Not just on vt8521.
+
+It's done in ->post_reset() after a successful soft/hard reset, so the 
+issue occurs only when the controller needs follow-up SRST after 
+hardreset and the softreset doesn't work unless SError isn't cleared. 
+And, vt8251 is the only such controller at the moment (heh heh 
+surprise!), so I think we can leave it there for the time being.
+
+> 3) Any positive test results yet?
+
+Aalderd confirmed the change.  He has reported a spurious IRQ problem 
+but it's emitted when loading vmware modules and doesn't seem to be 
+related to libata at all.  My vt8251 also does hotplug happily with the 
+change, so we have two positive test results.
 
 Thanks.
 
