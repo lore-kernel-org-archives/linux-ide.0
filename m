@@ -1,38 +1,31 @@
-From: Martin Hicks <mort@bork.org>
-Subject: vendor unique commands
-Date: Mon, 23 Oct 2006 11:17:22 -0400
-Message-ID: <20061023151722.GA12704@socrates.bork.org>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [PATCH] ata: Generic platform_device libata driver, take 2.
+Date: Mon, 23 Oct 2006 17:42:21 +0100
+Message-ID: <20061023164220.GA24471@flint.arm.linux.org.uk>
+References: <20061023065907.GA22029@linux-sh.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from galileo.bork.org ([134.117.69.57]:37898 "EHLO galileo.bork.org")
-	by vger.kernel.org with ESMTP id S964931AbWJWPR1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Oct 2006 11:17:27 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by galileo.bork.org (Postfix) with ESMTP id F29B94190
-	for <linux-ide@vger.kernel.org>; Mon, 23 Oct 2006 11:17:26 -0400 (EDT)
-Received: from galileo.bork.org ([127.0.0.1])
-	by localhost (galileo.bork.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 14340-08 for <linux-ide@vger.kernel.org>;
-	Mon, 23 Oct 2006 11:17:26 -0400 (EDT)
-Received: from socrates.bork.org (socrates.bork.org [192.168.3.3])
-	by galileo.bork.org (Postfix) with ESMTP id C04044171
-	for <linux-ide@vger.kernel.org>; Mon, 23 Oct 2006 11:17:26 -0400 (EDT)
-Received: from mort by socrates.bork.org with local (Exim 4.63)
-	(envelope-from <mort@socrates.bork.org>)
-	id 1Gc1YI-0003Mz-2i
-	for linux-ide@vger.kernel.org; Mon, 23 Oct 2006 11:17:22 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752005AbWJWQme@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20061023065907.GA22029@linux-sh.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Mundt <lethal@linux-sh.org>, Jeff Garzik <jgarzik@pobox.com>, Matthias Fuchs <matthias.fuchs@esd-electronics.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
+On Mon, Oct 23, 2006 at 03:59:07PM +0900, Paul Mundt wrote:
+> This is the second attempt at a generic platform_device libata driver,
+> attempting to take in to account issues raised by Matthias Fuchs and rmk.
+> 
+> Changes in this version include adding a small pata_platform.h header for
+> the private data (which at the moment is limited to a register shift
+> that's needed by ARM), though other things can be added in here if
+> platforms start having other needs.
 
-Can someone point me in the right direction for how to send vendor
-unique commands to SATA drives connected via libata?
+Thanks, this will enable me to use this code on ARM.
 
-thanks
-mh
+Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 -- 
-Martin Hicks || mort@bork.org || PGP/GnuPG: 0x4C7F2BEE
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
