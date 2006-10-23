@@ -1,54 +1,62 @@
-From: "Jonathan Bell" <doggs.lay.eggs@googlemail.com>
-Subject: Re: Errors when copying between drives on a SiI3114 controller under kernel 2.6.18
-Date: Mon, 23 Oct 2006 14:35:59 +0100
-Message-ID: <op.thvmp9mrxci36i@akima>
-References: <op.tg1yx12kxci36i@akima> <45287FA6.5020906@gmail.com> <op.tg3tyekpxci36i@akima> <452A0A86.8070107@gmail.com> <452A0BA6.8030401@gmail.com> <op.tg5ssogyxci36i@akima> <op.tg93opjoxci36i@akima> <4530D474.6000609@gmail.com> <op.thtxiw0axci36i@akima> <453C2748.9030008@gmail.com> <1161598438.19388.7.camel@localhost.localdomain>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: promise-sata-pata crash on boot
+Date: Mon, 23 Oct 2006 09:38:44 -0400
+Message-ID: <453CC5E4.9020001@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:9552 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S964857AbWJWNgD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Oct 2006 09:36:03 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so1244419ugd
-        for <linux-ide@vger.kernel.org>; Mon, 23 Oct 2006 06:36:01 -0700 (PDT)
-In-Reply-To: <1161598438.19388.7.camel@localhost.localdomain>
+Received: from smtp121.iad.emailsrvr.com ([207.97.245.121]:39630 "EHLO
+	smtp121.iad.emailsrvr.com") by vger.kernel.org with ESMTP
+	id S1751054AbWJWNjo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Oct 2006 09:39:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, erikbenada@yahoo.ca, caver_sean@ou.edu
 
-On Mon, 23 Oct 2006 11:13:57 +0100, Alan Cox <alan@lxorguk.ukuu.org.uk>  
-wrote:
+Hi Jeff,
 
-> Ar Llu, 2006-10-23 am 11:22 +0900, ysgrifennodd Tejun Heo:
->> I guess it could be a PCI bus problem.  Maybe the controller and the PCI
->> bus on the board don't like each other and thing get corrupt when
->> transactions occur at high speed.  I've seen data corruption over PCI
->> bus on some pilot embedded system board.  Not sure whether such things
->> are applicable to consumer products.
->
->> From the IDE driver...
->
->  *      If you have strange problems with nVidia chipset systems please
->  *      see the SI support documentation and update your system BIOS
->  *      if neccessary
->
->
-> Alan
->
+I've been including the promise-sata-pata patch in the Gentoo kernel for 
+quite a while, taken directly from the git branch. The most recent 
+incarnations of this patch have stopped working, causing an oops on 
+bootup. This has been reproduced with unmodified 2.6.19-rc2 plus the patch.
+
+Unable to handle kernel NULL pointer dereference at 0
+RIP: pdc_sata_scr_read+0x3e
+
+Trace:
+sata_scr_read
+ata_device_add
+process_timeout
+pdc_ata_init_one
+pci_device_probe
+driver_probe_device
+
+http://weather.ou.edu/~sarms/panic3.jpeg
+
+We added the following printk to pdc_sata_scr_read:
+
+         printk("pdc_sata_scr_read ap=%p scr_addr %ld sc_reg %d\n", ap,
+		ap->ioaddr.scr_addr, sc_reg);
+
+And the output is:
+
+pdc_sata_src_read ap=ffff8100bfce0498 src_addr -68169720896256 sc_reg 2
+pdc_sata_src_read ap=ffff8100bfce0498 src_addr -68169720896256 sc_reg 0
+pdc_sata_src_read ap=ffff8100bfce0498 src_addr -68169720896256 sc_reg 0
+pdc_sata_src_read ap=ffff8100bfce0498 src_addr -68169720896256 sc_reg 2
+pdc_sata_src_read ap=ffff8100bfce0498 src_addr -68169720896256 sc_reg 0
+ata2: SATA link down (SStatus 0 SControl 300)
+pdc_sata_src_read ap=ffff8100bfce0498 src_addr -68169720896256 sc_reg 0
+pdc_sata_src_read ap=ffff8100bfd08498 src_addr 0 sc_reg 2
+Unable to handle kernel NULL pointer dereference
+
+See http://weather.ou.edu/~sarms/panic4.jpeg
 
 
-BIOS for the A7N8X is the latest 1008 version which overcomes a boot  
-limitation - the board would not boot with more than 1 SATA controller  
-installed.
+Bug report is at http://bugs.gentoo.org/148059
+Any ideas? Should we file this on the kernel bugzilla?
 
-This RAID corruption bug was supposedly fixed in 1005.
-
-Since contacting Asus technical support is likely to be as productive as  
-getting blood from a stone, I'm going to go ahead and scrounge another  
-motherboard - since this is socket A stuff it should be dirt cheap by now.
-
-Thanks for all the suggestions,
-Jonathan
+Thanks!
+Daniel
