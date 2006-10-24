@@ -1,53 +1,64 @@
-From: "Michael S. Tsirkin" <mst@mellanox.co.il>
-Subject: Re: 2.6.19-rc2: known unfixed regressions (v3)
-Date: Tue, 24 Oct 2006 17:00:51 +0200
-Message-ID: <20061024150050.GA8766@mellanox.co.il>
-References: <20061022122355.GC3502@stusta.de>
-Reply-To: "Michael S. Tsirkin" <mst@mellanox.co.il>
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: Re: 2.6.19-rc2 - Cable detection problem in pata_amd
+Date: Tue, 24 Oct 2006 11:10:02 -0400
+Message-ID: <200610241110.02413.gene.heskett@verizon.net>
+References: <453D5067.9070407@lorettotel.net>
+ <1161698939.22348.33.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dev.mellanox.co.il ([194.90.237.44]:52624 "EHLO
-	dev.mellanox.co.il") by vger.kernel.org with ESMTP id S965054AbWJXPHH
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Oct 2006 11:07:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20061022122355.GC3502@stusta.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965160AbWJXPLL@vger.kernel.org>
+In-reply-to: <1161698939.22348.33.camel@localhost.localdomain>
+Content-disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Walt H <walt_h@lorettotel.net>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, len.brown@intel.com, linux-acpi@vger.kernel.org, pavel@suse.cz, linux-pm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Quoting r. Adrian Bunk <bunk@stusta.de>:
-> Subject: 2.6.19-rc2: known unfixed regressions (v3)
-> 
-> This email lists some known unfixed regressions in 2.6.19-rc2 compared 
-> to 2.6.18 that are not yet fixed Linus' tree.
-> 
-> If you find your name in the Cc header, you are either submitter of one
-> of the bugs, maintainer of an affectected subsystem or driver, a patch
-> of you caused a breakage or I'm considering you in any other way possibly
-> involved with one or more of these issues.
-> 
-> Due to the huge amount of recipients, please trim the Cc when answering.
+On Tuesday 24 October 2006 10:08, Alan Cox wrote:
+>Ar Llu, 2006-10-23 am 18:29 -0500, ysgrifennodd Walt H:
+>> On bootup, the pata_amd driver mis-detects the cable connected to the
+>> 2nd port on my system as 40 wire and sets UDMA/33 for this drive. Prior
 >
-
-skip, hope I didn't trim too much.
-
+>Can you stick it in bugzilla.kernel.org and assign it to me. Also attach
+>an lspci -vxxx. There is a bug or two somewhere in this area still but
+>I'm very busy at the moment with other stuff so don't want your report
+>to go in one ear and out of the other in a couple of days then get
+>forgotten.
 >
-> Subject    : T60 stops triggering any ACPI events
-> References : http://lkml.org/lkml/2006/10/4/425
->              http://lkml.org/lkml/2006/10/16/262
-> Submitter  : "Michael S. Tsirkin" <mst@mellanox.co.il>
-> Status     : unknown
+That doesn't seem to happen on an nforce2 board here:
 
-Just retested with 2.6.19-rc3 - it's still there:
-e.g. after I do a full kernel compile, my T60 stops triggering any ACPI events:
-tail -f /var/log/acpid does not show anything, even on Fn/F4 which is supposed
-to be always enabled.  Restarting the acpid doesn't do anything either - ACPI
-starts working again, for a while, only after reboot.
+hda: 240121728 sectors (122942 MB) w/7936KiB Cache, CHS=65535/16/63, 
+UDMA(133)
+hda: cache flushes supported
+ hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 hda8 >
+hdb: max request size: 512KiB
+hdb: 312581808 sectors (160041 MB) w/8192KiB Cache, CHS=19457/255/63, 
+UDMA(100)
+hdb: cache flushes supported
+ hdb: hdb1 hdb2 hdb3 hdb4 < hdb5 hdb6 hdb7 hdb8 hdb9 hdb10 >
+hdd: max request size: 512KiB
+hdd: 390721968 sectors (200049 MB) w/8192KiB Cache, CHS=24321/255/63, 
+UDMA(100)
+hdd: cache flushes supported
+ hdd: hdd1 hdd2 hdd3
+hdc: ATAPI 48X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(66)
+Uniform CD-ROM driver Revision: 3.20
 
-Works fine in 2.6.18 ( + this patch http://lkml.org/lkml/2006/7/20/56).
+So this might be a chipset problem.  Post the bugzilla # when its been done 
+and I'll add this if its revelent.
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-kernel"
+> in the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>Please read the FAQ at  http://www.tux.org/lkml/
 
 -- 
-MST
+Cheers, Gene
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+Yahoo.com and AOL/TW attorneys please note, additions to the above
+message by Gene Heskett are:
+Copyright 2006 by Maurice Eugene Heskett, all rights reserved.
