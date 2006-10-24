@@ -1,101 +1,82 @@
-From: Vasily Averin <vvs@sw.ru>
-Subject: Re: [Q] ide cdrom in native mode leads to irq storm?
-Date: Tue, 24 Oct 2006 11:53:00 +0400
-Message-ID: <453DC65C.8000408@sw.ru>
-References: <453DC2A9.8000507@sw.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
-Content-Transfer-Encoding: 7bit
+From: David Howells <dhowells@redhat.com>
+Subject: Fun with HPT302N (Rocket Raid 1520 PCI card)
+Date: Tue, 24 Oct 2006 11:04:29 +0100
+Message-ID: <23724.1161684269@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:7843 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S1752110AbWJXHxv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Oct 2006 03:53:51 -0400
-In-Reply-To: <453DC2A9.8000507@sw.ru>
+Received: from mx1.redhat.com ([66.187.233.31]:17630 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1030267AbWJXKVB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Oct 2006 06:21:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, devel@openvz.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Vasily Averin wrote:
-> there is node with Intel 7520-based motherboard (MSI-9136), IDE cdrom (hda) and
-> SATA disc and 2.6.19-rc3 linux kernel.
-> 
-> When I set IDE controller into the native mode, I get irq storm on the node and
-> this interrupt is disabled. If this interrupt is shared, the other subsystems
-> are stop working too.
-> 
-> When I switch the IDE controller into legacy mode, all works correctly.
-> 
-> I've tried to use noapic, acpi=off, pci=routeirq, irqpoll options but it does
-> not help.
 
-When I use irqpoll option I get the following oops in create_empty_buffers():
-it is not expected that alloc_page_buffers(page, blocksize, 1) can return NULL,
-but it does it because of requested blocksize is more than PAGE_SIZE.
+Hi Jeff,
 
-Unfortunately I have not any ideas how to fix this issue correctly.
+Do you have a SATA driver for the HPT302N chipset (as found on a Rocket Raid
+1520 PCI card)?
 
-thank you,
-	Vasily Averin
+The PCI ID maps to PCI_DEVICE_ID_TTI_HPT302, but it's revision 2, so that'd
+make it the HPT302N according to the comments in the pata_hpt37x.c and
+pata_hpt3x2n.c drivers.
 
-BUG: unable to handle kernel NULL pointer dereference at virtual address 00000000
- printing eip:
-c0191790
-*pde = 37b31001
-Oops: 0002 [#1]
-SMP
-Modules linked in: thermal processor fan button battery asus_acpi ac lp
-parport_pc parport floppy ehci_hcd uhci_hcd sg e1000 i2c_i801 i2c_core ide_cd
-cdrom shpchp usbcore
-CPU:    0
-EIP:    0060:[<c0191790>]    Not tainted VLI
-EFLAGS: 00010296   (2.6.19-rc3 #1)
-EIP is at create_empty_buffers+0x30/0xb0
-eax: 00000000   ebx: c16e1360   ecx: c16e1360   edx: 00000000
-esi: 00000000   edi: 00000000   ebp: f7a720ac   esp: f7f3bc5c
-ds: 007b   es: 007b   ss: 0068
-Process lvm.static (pid: 2249, ti=f7f3a000 task=f7bce550 task.ti=f7f3a000)
-Stack: c16e1360 00010000 00000001 00010000 00000000 f7a72150 c0192491 c16e1360
-       00010000 00000000 00000011 f7f3bcb8 c01059fe 00000000 00000000 00000001
-       00000440 00010000 00000003 c16e0740 f7a72150 00000004 c0103ace 00000000
-Call Trace:
- [<c0192491>] block_read_full_page+0x251/0x3a0
- [<c01059fe>] do_IRQ+0x6e/0xd0
- [<c0103ace>] common_interrupt+0x1a/0x20
- [<c0147cac>] add_to_page_cache+0x9c/0xc0
- [<c014f515>] read_pages+0x45/0x100
- [<c0195a10>] blkdev_get_block+0x0/0x80
- [<c014d035>] __alloc_pages+0x55/0x320
- [<c014f73d>] __do_page_cache_readahead+0x16d/0x180
- [<c014f8b9>] blockable_page_cache_readahead+0x59/0xd0
- [<c014fb3e>] page_cache_readahead+0x13e/0x1f0
- [<c0148980>] do_generic_mapping_read+0x4c0/0x600
- [<c0148de4>] generic_file_aio_read+0x214/0x250
- [<c0148ac0>] file_read_actor+0x0/0x110
- [<c016bbee>] do_sync_read+0xde/0x130
- [<c0136e60>] autoremove_wake_function+0x0/0x60
- [<f8846d08>] usb_hcd_irq+0x28/0x70 [usbcore]
- [<c0145e48>] misrouted_irq+0xd8/0x150
- [<c0146016>] note_interrupt+0x96/0xe0
- [<c016bcfe>] vfs_read+0xbe/0x1a0
- [<c016c101>] sys_read+0x51/0x80
- [<c0103147>] syscall_call+0x7/0xb
- =======================
-Code: 00 00 53 83 ec 0c 8b 5c 24 1c 89 74 24 08 8b 44 24 20 8b 7c 24 24 89 1c 24
-89 44 24 04 e8 69 f4 ff ff 89 c6 89 c2 90 8d 74 26 00 <09> 3a 89 d0 8b 52 04 85
-d2 75 f5 89 70 04 8b 43 10 83 c0 44 e8
-EIP: [<c0191790>] create_empty_buffers+0x30/0xb0 SS:ESP 0068:f7f3bc5c
- <3>irq 17: nobody cared (try booting with the "irqpoll" option)
- [<c0145eea>] __report_bad_irq+0x2a/0xa0
- [<c014602f>] note_interrupt+0xaf/0xe0
- [<c0146888>] handle_fasteoi_irq+0xc8/0xe0
- [<c01059f9>] do_IRQ+0x69/0xd0
- [<c0103ace>] common_interrupt+0x1a/0x20
- [<c0101082>] mwait_idle_with_hints+0x32/0x40
- [<c01010a8>] mwait_idle+0x18/0x30
- [<c0100ef3>] cpu_idle+0x73/0x90
- [<c0552a5a>] start_kernel+0x1ca/0x220
- [<c0552370>] unknown_bootoption+0x0/0x1e0
- =======================
-handlers:
-[<c02b30c0>] (ide_intr+0x0/0x170)
-Disabling IRQ #17
+It would seem that the pata_hpt3x2n.c driver handles it - but by the driver's
+name it would seem to be for driving a PATA interface, not a SATA interface.
+If I compile that driver in, it does indeed find the device:
+
+	hpt3xn: BIOS clock data not set.
+	ata3: PATA max UDMA/133 cmd 0xE4000820 ctl 0xE400082A bmdma 0xE4000C00 irq 20
+	ata4: PATA max UDMA/133 cmd 0xE4000830 ctl 0xE400082E bmdma 0xE4000C08 irq 20
+	scsi2 : pata_hpt3x2n
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ata3.00: qc timeout (cmd 0xec)
+	ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+	ATA: abnormal status 0x7F on port 0xE4000827
+
+And seems to think that it's a PATA interface, which is not what I see looking
+at the card itself.  I'm not sure what's going on with the failure to IDENTIFY,
+but it doesn't actually have any drives attached at the moment.  I'll have to
+get a SATA drive to plug into it to see what happens.
+
+David
+---
+
+
+00:11.0 RAID bus controller: Triones Technologies, Inc. HPT302/302N (rev 02)
+        Subsystem: Triones Technologies, Inc. Unknown device 0001
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Step
+ping- SERR- FastB2B-
+        Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort
+- <MAbort- >SERR- <PERR-
+        Latency: 0 (2000ns min, 2000ns max)
+        Interrupt: pin A routed to IRQ 20
+        Region 0: I/O ports at e4000820 [size=8]
+        Region 1: I/O ports at e4000828 [size=4]
+        Region 2: I/O ports at e4000830 [size=8]
+        Region 3: I/O ports at e400082c [size=4]
+        Region 4: I/O ports at e4000c00 [size=256]
+        Expansion ROM at <unassigned> [disabled] [size=128K]
+        Capabilities: [60] Power Management version 2
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot
+-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+
+00:11.0 RAID bus controller: Triones Technologies, Inc. HPT302/302N (rev 02)
+00: 03 11 06 00 07 00 30 02 02 00 04 01 00 00 00 00
+10: 21 08 00 e4 29 08 00 e4 31 08 00 e4 2d 08 00 e4
+20: 01 0c 00 e4 00 00 00 00 00 00 00 00 03 11 01 00
+30: 00 00 00 00 60 00 00 00 00 00 00 00 14 01 08 08
+
+00:11.0 0104: 1103:0006 (rev 02)
