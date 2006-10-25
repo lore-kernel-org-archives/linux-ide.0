@@ -1,54 +1,55 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_nv failure on 2.4.18 (Fedora Core 6)
-Date: Wed, 25 Oct 2006 14:51:13 +0900
-Message-ID: <453EFB51.5080709@gmail.com>
-References: <Pine.LNX.4.64.0610242257410.21847@gate.crashing.org>	 <20061025042811.GJ13677@htj.dyndns.org> <1161753976.22582.46.camel@localhost.localdomain>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: 2.6.19-rc2: known unfixed regressions (v3)
+Date: Wed, 25 Oct 2006 10:28:20 +0200
+Message-ID: <20061025082820.GD7083@elf.ucw.cz>
+References: <20061022122355.GC3502@stusta.de> <20061024150050.GA8766@mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:62893 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1423031AbWJYFvW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Oct 2006 01:51:22 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so477835nfe
-        for <linux-ide@vger.kernel.org>; Tue, 24 Oct 2006 22:51:21 -0700 (PDT)
-In-Reply-To: <1161753976.22582.46.camel@localhost.localdomain>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:54433 "EHLO amd.ucw.cz")
+	by vger.kernel.org with ESMTP id S1423122AbWJYI22 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Oct 2006 04:28:28 -0400
+Content-Disposition: inline
+In-Reply-To: <20061024150050.GA8766@mellanox.co.il>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Mark Hatle <fray@gate.crashing.org>, linux-ide@vger.kernel.org, hancockr@shaw.ca
+To: "Michael S. Tsirkin" <mst@mellanox.co.il>
+Cc: Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, len.brown@intel.com, linux-acpi@vger.kernel.org, linux-pm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Benjamin Herrenschmidt wrote:
->> Does the problem occur on 2.6.18 but not on earlier version?  If it
->> doesn't happen on 2.6.17, we can rule out h/w problem.
+On Tue 2006-10-24 17:00:51, Michael S. Tsirkin wrote:
+> Quoting r. Adrian Bunk <bunk@stusta.de>:
+> > Subject: 2.6.19-rc2: known unfixed regressions (v3)
+> > 
+> > This email lists some known unfixed regressions in 2.6.19-rc2 compared 
+> > to 2.6.18 that are not yet fixed Linus' tree.
+> > 
+> > If you find your name in the Cc header, you are either submitter of one
+> > of the bugs, maintainer of an affectected subsystem or driver, a patch
+> > of you caused a breakage or I'm considering you in any other way possibly
+> > involved with one or more of these issues.
+> > 
+> > Due to the huge amount of recipients, please trim the Cc when answering.
+> >
 > 
-> Difficult to say... this is a fresh install of FC6 and it's a production
-> box (heh, it handles my email !) so we can't easily test plenty
-> different kernels on it unfortunately... If 2.6.17 can be booted and
-> works fine on FC6, might be worth giving it a go but I wouldnt' expect
-> too many tests of that sort.
+> skip, hope I didn't trim too much.
 > 
->> * If 2.6.17 shows the same problem : could be a faulty drive or
->>   problem in the controller.  NV SATA controllers supply two
->>   interfaces - legacy TF/BMDMA and ADMA.  The former tends to react
->>   badly when error condition occurs.  Driver for ADMA interface is
->>   under development.  It could be that the controller cannot cope with
->>   transient transmission errors.  If this is the case, ADMA driver
->>   should be able to fix it.
+> >
+> > Subject    : T60 stops triggering any ACPI events
+> > References : http://lkml.org/lkml/2006/10/4/425
+> >              http://lkml.org/lkml/2006/10/16/262
+> > Submitter  : "Michael S. Tsirkin" <mst@mellanox.co.il>
+> > Status     : unknown
 > 
-> Do we have any contact at nVidia that could rule on that issue ? The
-> drives both appear to work fine on the SIL controller... 
+> Just retested with 2.6.19-rc3 - it's still there:
+> e.g. after I do a full kernel compile, my T60 stops triggering any ACPI events:
+> tail -f /var/log/acpid does not show anything, even on Fn/F4 which is supposed
+> to be always enabled.  Restarting the acpid doesn't do anything either - ACPI
+> starts working again, for a while, only after reboot.
+> 
+> Works fine in 2.6.18 ( + this patch http://lkml.org/lkml/2006/7/20/56).
 
-Robert Hancock is working on nv adma suppport.
-
-   http://article.gmane.org/gmane.linux.ide/13608
-
-W/ the above patch, sata_nv should be able to recover much better from 
-error conditions, but we still have to find out why such errors are 
-occurring in the first place.
-
-Thanks.
-
+Bugzilla.kernel.org, assign it to acpi people...
+									Pavel
 -- 
-tejun
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
