@@ -1,38 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH]: JMB 368 PATA detection
-Date: Fri, 27 Oct 2006 13:07:41 +0100
-Message-ID: <1161950862.16839.21.camel@localhost.localdomain>
+From: Vasily Averin <vvs@sw.ru>
+Subject: Re: [Q] ide cdrom in native mode leads to irq storm?
+Date: Fri, 27 Oct 2006 17:17:34 +0400
+Message-ID: <454206EE.9080206@sw.ru>
+References: <453DC2A9.8000507@sw.ru> <453DC65C.8000408@sw.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=KOI8-R
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46289 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1946447AbWJ0MES (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Oct 2006 08:04:18 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752180AbWJ0NTd@vger.kernel.org>
+In-Reply-To: <453DC65C.8000408@sw.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org
+Cc: devel@openvz.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, akpm@osdl.org, linux-ide@vger.kernel.org
 
-The Jmicron JMB368 is PATA only so has the PATA on function zero. Don't
-therefore skip function zero on this device when probing
+Vasily Averin wrote:
+> Vasily Averin wrote:
+>> there is node with Intel 7520-based motherboard (MSI-9136), IDE cdrom (hda) and
+>> SATA disc and 2.6.19-rc3 linux kernel.
+>>
+>> When I set IDE controller into the native mode, I get irq storm on the node and
+>> this interrupt is disabled. If this interrupt is shared, the other subsystems
+>> are stop working too.
+>>
+>> When I switch the IDE controller into legacy mode, all works correctly.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+I have reproduced the same issue on the another node:
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.19-rc2-mm1/drivers/ide/pci/generic.c linux-2.6.19-rc2-mm1/drivers/ide/pci/generic.c
---- linux.vanilla-2.6.19-rc2-mm1/drivers/ide/pci/generic.c	2006-10-18 13:50:13.000000000 +0100
-+++ linux-2.6.19-rc2-mm1/drivers/ide/pci/generic.c	2006-10-27 12:31:46.000000000 +0100
-@@ -234,8 +234,10 @@
- 	    (!(PCI_FUNC(dev->devfn) & 1)))
- 		goto out;
- 
--	if (dev->vendor == PCI_VENDOR_ID_JMICRON && PCI_FUNC(dev->devfn) != 1)
--		goto out;
-+	if (dev->vendor == PCI_VENDOR_ID_JMICRON) {
-+		if (dev->device != PCI_DEVICE_ID_JMICRON_JMB368 && PCI_FUNC(dev->devfn) != 1)
-+			goto out;
-+	}
- 
- 	if (dev->vendor != PCI_VENDOR_ID_JMICRON) {
- 		pci_read_config_word(dev, PCI_COMMAND, &command);
+ASUSTeK P5GD1-VM,
+Intel 915G chipset,
+ICH6 IDE controller,
+IDE dvdrom: SONY DVD-ROM DDU1615 (hda),
+sata disk: WDC WD1600JS-00M
 
+when I switch IDE controller to the native mode, I see "Disabling IRQ" message,
+then kernel generates an oops in create_empty_buffers(), like I've reported earlier.
+
+Could somebody please help me to troubleshoot this issue? I've seen this issue
+on the customer nodes and would like to know how I can work-around this issue
+without any changes inside motherboard BIOS.
+
+thank you,
+	Vasily Averin
