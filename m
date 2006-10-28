@@ -1,19 +1,19 @@
 From: "Andrew Lyon" <andrew.lyon@gmail.com>
 Subject: Re: Sil 3124 Pci Express?
-Date: Sat, 28 Oct 2006 21:03:02 +0100
-Message-ID: <f4527be0610281303x2c8144d5kbabb8992b5d8dfa2@mail.gmail.com>
+Date: Sat, 28 Oct 2006 21:06:24 +0100
+Message-ID: <f4527be0610281306l437b58d6wbf19e87198733446@mail.gmail.com>
 References: <f4527be0610281237x33c05f75j82879ba1c90b9e4a@mail.gmail.com>
 	 <9dccd9b80610281257w7eaf852s32720753dfb9ee3e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:40783 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.186]:4188 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751381AbWJ1UDE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Oct 2006 16:03:04 -0400
-Received: by nf-out-0910.google.com with SMTP id c2so1705255nfe
-        for <linux-ide@vger.kernel.org>; Sat, 28 Oct 2006 13:03:02 -0700 (PDT)
+	id S964786AbWJ1UGb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 28 Oct 2006 16:06:31 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so1706000nfe
+        for <linux-ide@vger.kernel.org>; Sat, 28 Oct 2006 13:06:30 -0700 (PDT)
 In-Reply-To: <9dccd9b80610281257w7eaf852s32720753dfb9ee3e@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
@@ -23,6 +23,15 @@ Cc: linux-ide@vger.kernel.org
 
 > I'm using the Stardom SC-SATA-II-X PCI-X card with very good results.
 > It has 3+1 ports, 3 internal and one external.
+
+Thats not a PCI Express card is it? its PCI-X... at least thats what
+their website says.
+
+I only have 3 PCI slots and all are filled with DVB cards, I have 3
+PCI Express free so thats what I need.
+
+Andy
+
 >
 > I bought also a Stardom SOHOTANK, a SATA external box with 5 disks
 > slots and plugged 3 disks of 750GB each, in Linux RAID5, so I have 1.5
@@ -57,9 +66,3 @@ Cc: linux-ide@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > >
 >
-
-Interesting, I'd not considered a card with external sata connector,
-I'd completely forgotten about multiport.
-
-Thanks for the info
-andy
