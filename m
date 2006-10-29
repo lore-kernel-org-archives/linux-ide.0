@@ -1,115 +1,53 @@
-From: "Gregor Jasny" <gjasny@googlemail.com>
-Subject: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
-Date: Sun, 29 Oct 2006 20:20:17 +0100
-Message-ID: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com>
+From: Ken Moffat <zarniwhoop@ntlworld.com>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Sun, 29 Oct 2006 21:31:06 +0000
+Message-ID: <20061029213106.GA25865@deepthought.linux.bogus>
+References: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_59512_4416021.1162149617391"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932434AbWJ2TUV@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-
-------=_Part_59512_4416021.1162149617391
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [81.103.221.47] ([81.103.221.47]:63414 "EHLO
+	mtaout01-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
+	id S1030341AbWJ2Vbc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Oct 2006 16:31:32 -0500
 Content-Disposition: inline
+In-Reply-To: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Gregor Jasny <gjasny@googlemail.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hi,
+On Sun, Oct 29, 2006 at 08:20:17PM +0100, Gregor Jasny wrote:
+> Hi,
+>=20
+> Today I tried the new cdparanoia from Debian Sid (3.10+debian~pre0-2)=
+=2E
+> When I started ripping with "cdparanoia -d /dev/scd0 1" my system
+> freezes after some seconds. There is no oops and even the console
+> cursor stops blinking.
+>=20
+> If I start cdparanoia with -g /dev/scd0 it starts ripping and but the
+> kernel prints many "program cdparanoia not setting count and/or
+> reply_len properly" warnings. But this seems to be a cdparanoia bug.
+>=20
+> My CDROM:
+> Vendor:                    PIONEER
+> Product:                   DVD-ROM DVD-106
+> Revision level:            1.22
+>=20
+ I'm guessing this is really an IDE drive ?  If so, I suspect the
+problem is in scsi emulation (which doesn't deny that the bug might
+be at least partly in the application, although hanging the box is
+nasty).
 
-Today I tried the new cdparanoia from Debian Sid (3.10+debian~pre0-2).
-When I started ripping with "cdparanoia -d /dev/scd0 1" my system
-freezes after some seconds. There is no oops and even the console
-cursor stops blinking.
+ Specifically, I've just compiled that version with the debian patch
+on my (non-debian) amd64 and successfully ripped a CD (without any
+log messages) on both 2.6.18 and 2.6.19-rc3 using /dev/hdc.
 
-If I start cdparanoia with -g /dev/scd0 it starts ripping and but the
-kernel prints many "program cdparanoia not setting count and/or
-reply_len properly" warnings. But this seems to be a cdparanoia bug.
+ So, if this isn't a real SCSI drive, as a work-around you could try
+disabling ide-scsi and use the IDE device name.
 
-My CDROM:
-Vendor:                    PIONEER
-Product:                   DVD-ROM DVD-106
-Revision level:            1.22
-
-
-
-
-
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=391901
-
-------=_Part_59512_4416021.1162149617391
-Content-Type: text/plain; name=backtrace.txt; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_etvt2pmu
-Content-Disposition: attachment; filename="backtrace.txt"
-
-KGdkYikgYnQgZnVsbAojMCAgMHhiN2VkMTYwMCBpbiBpb2N0bCAoKSBmcm9tIC9saWIvdGxzL2k2
-ODYvY21vdi9saWJjLnNvLjYKTm8gc3ltYm9sIHRhYmxlIGluZm8gYXZhaWxhYmxlLgojMSAgMHgw
-ODA1MGRlYSBpbiBzZ2lvX2hhbmRsZV9zY3NpX2NtZCAoZD0weDgwNmIwYTgsIGNtZD0weGJmOTc0
-ODEyICJcMDIyIiwgY21kX2xlbj02LCBpbl9zaXplPTAsIG91dF9zaXplPTU2LCBieXRlZmlsbD0y
-NTUgJ/8nLCBieXRlY2hlY2s9MSwKICAgIHNlbnNlPTB4YmY5NzQ4MTggIiIpIGF0IHNjc2lfaW50
-ZXJmYWNlLmM6MzUyCiAgICAgICAgc3RhdHVzID0gMAogICAgICAgIGhkciA9IHtpbnRlcmZhY2Vf
-aWQgPSA4MywgZHhmZXJfZGlyZWN0aW9uID0gLTQsIGNtZF9sZW4gPSA2ICdcMDA2JywgbXhfc2Jf
-bGVuID0gMTYgJ1wwMjAnLCBpb3ZlY19jb3VudCA9IDAsIGR4ZmVyX2xlbiA9IDU2LCBkeGZlcnAg
-PSAweDgwNmI0ZDgsCiAgY21kcCA9IDB4YmY5NzQ4MTIgIlwwMjIiLCBzYnAgPSAweGJmOTc0ODE4
-ICIiLCB0aW1lb3V0ID0gNTAwMDAsIGZsYWdzID0gMSwgcGFja19pZCA9IDAsIHVzcl9wdHIgPSAw
-eDAsIHN0YXR1cyA9IDAgJ1wwJywgbWFza2VkX3N0YXR1cyA9IDAgJ1wwJywKICBtc2dfc3RhdHVz
-ID0gMCAnXDAnLCBzYl9sZW5fd3IgPSAwICdcMCcsIGhvc3Rfc3RhdHVzID0gMCwgZHJpdmVyX3N0
-YXR1cyA9IDAsIHJlc2lkID0gMCwgZHVyYXRpb24gPSAwLCBpbmZvID0gMH0KIzIgIDB4MDgwNTBl
-ZjQgaW4gaGFuZGxlX3Njc2lfY21kIChkPTB4ODA2YjBhOCwgY21kPTB4YmY5NzQ4MTIgIlwwMjIi
-LCBjbWRfbGVuPTYsIGluX3NpemU9MCwgb3V0X3NpemU9NTYsIGJ5dGVmaWxsPTI1NSAn/ycsIGJ5
-dGVjaGVjaz0xLCBzZW5zZT0weGJmOTc0ODE4ICIiKQogICAgYXQgc2NzaV9pbnRlcmZhY2UuYzoz
-OTEKTm8gbG9jYWxzLgojMyAgMHgwODA1M2ZmNiBpbiBzY3NpX2lucXVpcnkgKGQ9MHg4MDZiMGE4
-KSBhdCBzY3NpX2ludGVyZmFjZS5jOjE1MzUKICAgICAgICBzZW5zZSA9ICJcMDAwXDAwMFwwMDBc
-MDAwXDAwMVwwMDBcMDAwXDAwMFwwMDBcMDAwXDAwMFwwMDFcMDAyXDAwMFwwMDAiCiAgICAgICAg
-Y21kID0gIlwwMjJcMDAwXDAwMFwwMDA4IgojNCAgMHgwODA0ZTE0NiBpbiBjZGRhX2lkZW50aWZ5
-X3Njc2kgKGdlbmVyaWNfZGV2aWNlPTB4MCwgc3BlY2lhbGl6ZWRfZGV2aWNlPTB4ODA2YjA5OCAi
-L2Rldi9zY2QwIiwgbWVzc2FnZWRlc3Q9MCwgbWVzc2FnZXM9MHgwKSBhdCBzY2FuX2RldmljZXMu
-Yzo3MDMKICAgICAgICBkID0gKGNkcm9tX2RyaXZlICopIDB4ODA2YjBhOAogICAgICAgIGlfc3Qg
-PSB7c3RfZGV2ID0gMTQsIF9fcGFkMSA9IDAsIHN0X2lubyA9IDIwMjgsIHN0X21vZGUgPSAyNTAw
-OCwgc3RfbmxpbmsgPSAxLCBzdF91aWQgPSAwLCBzdF9naWQgPSAyNCwgc3RfcmRldiA9IDI4MTYs
-IF9fcGFkMiA9IDAsIHN0X3NpemUgPSAwLAogIHN0X2Jsa3NpemUgPSA0MDk2LCBzdF9ibG9ja3Mg
-PSAwLCBzdF9hdGltID0ge3R2X3NlYyA9IDExNjIxNTAzMTQsIHR2X25zZWMgPSAzMjQ5Mjc2MjB9
-LCBzdF9tdGltID0ge3R2X3NlYyA9IDExNjIxNTAzMTQsIHR2X25zZWMgPSAzMjQ5Mjc2MjB9LCBz
-dF9jdGltID0gewogICAgdHZfc2VjID0gMTE2MjE1MDMxNCwgdHZfbnNlYyA9IDMyNDkyNzYyMH0s
-IF9fdW51c2VkNCA9IDAsIF9fdW51c2VkNSA9IDB9CiAgICAgICAgZ19zdCA9IHtzdF9kZXYgPSAx
-NDExMzYzMDE5Mjk3Njk3MDAsIF9fcGFkMSA9IDAsIHN0X2lubyA9IDQ4LCBzdF9tb2RlID0gMzA3
-MDIzMDUyOCwgc3RfbmxpbmsgPSAwLCBzdF91aWQgPSAwLCBzdF9naWQgPSA5OTE0NjU2LCBzdF9y
-ZGV2ID0gODU4OTkzNDY0MSwKICBfX3BhZDIgPSA2NTUzNSwgc3Rfc2l6ZSA9IC0xMjA4ODA2MTU2
-LCBzdF9ibGtzaXplID0gLTEyMDkyMDQ4ODIsIHN0X2Jsb2NrcyA9IC0xMjA4NzY2NDc2LCBzdF9h
-dGltID0ge3R2X3NlYyA9IDMsIHR2X25zZWMgPSAtMTA4MDYwMDk2MH0sIHN0X210aW0gPSB7CiAg
-ICB0dl9zZWMgPSAtMTA4MDYwNDM4NCwgdHZfbnNlYyA9IC0xMjA5MjMwNjg1fSwgc3RfY3RpbSA9
-IHt0dl9zZWMgPSAzLCB0dl9uc2VjID0gLTEwODA2MDQ0ODh9LCBfX3VudXNlZDQgPSAzMjE0MzYy
-OTcyLCBfX3VudXNlZDUgPSAxNH0KICAgICAgICB1c2Vfc2dpbyA9IDEKICAgICAgICBpX2ZkID0g
-NgogICAgICAgIGkgPSAtMTA4MDYwNDM2MAogICAgICAgIGdfZmQgPSA3CiAgICAgICAgdmVyc2lv
-biA9IDMKICAgICAgICB0eXBlID0gMTEKICAgICAgICBwID0gMHhiZjk3NDk1YyAiXDAxNiIKIzUg
-IDB4MDgwNGNkNGUgaW4gY2RkYV9pZGVudGlmeSAoZGV2aWNlPTB4ODA2YjAwOCAiL2Rldi9zY2Qw
-IiwgbWVzc2FnZWRlc3Q9MCwgbWVzc2FnZXM9MHgwKSBhdCBzY2FuX2RldmljZXMuYzoxMjMKICAg
-ICAgICBzdCA9IHtzdF9kZXYgPSAxNCwgX19wYWQxID0gMCwgc3RfaW5vID0gMjAyOCwgc3RfbW9k
-ZSA9IDI1MDA4LCBzdF9ubGluayA9IDEsIHN0X3VpZCA9IDAsIHN0X2dpZCA9IDI0LCBzdF9yZGV2
-ID0gMjgxNiwgX19wYWQyID0gMCwgc3Rfc2l6ZSA9IDAsCiAgc3RfYmxrc2l6ZSA9IDQwOTYsIHN0
-X2Jsb2NrcyA9IDAsIHN0X2F0aW0gPSB7dHZfc2VjID0gMTE2MjE1MDMxNCwgdHZfbnNlYyA9IDMy
-NDkyNzYyMH0sIHN0X210aW0gPSB7dHZfc2VjID0gMTE2MjE1MDMxNCwgdHZfbnNlYyA9IDMyNDky
-NzYyMH0sIHN0X2N0aW0gPSB7CiAgICB0dl9zZWMgPSAxMTYyMTUwMzE0LCB0dl9uc2VjID0gMzI0
-OTI3NjIwfSwgX191bnVzZWQ0ID0gMCwgX191bnVzZWQ1ID0gMH0KICAgICAgICBkID0gKGNkcm9t
-X2RyaXZlICopIDB4MAojNiAgMHgwODA0YTQ4NSBpbiBtYWluIChhcmdjPTQsIGFyZ3Y9MHhiZjk3
-NTZmNCkgYXQgbWFpbi5jOjc5NAogICAgICAgIHRvY19iaWFzID0gMAogICAgICAgIHRvY19vZmZz
-ZXQgPSAwCiAgICAgICAgc2FtcGxlX29mZnNldCA9IDAKICAgICAgICBmb3JjZV9jZHJvbV9lbmRp
-YW4gPSAtMQogICAgICAgIGZvcmNlX2Nkcm9tX3NlY3RvcnMgPSAtMQogICAgICAgIGZvcmNlX2Nk
-cm9tX292ZXJsYXAgPSAtMQogICAgICAgIGZvcmNlX2Nkcm9tX2RldmljZSA9IDB4ODA2YjAwOCAi
-L2Rldi9zY2QwIgogICAgICAgIGZvcmNlX2dlbmVyaWNfZGV2aWNlID0gMHgwCiAgICAgICAgZm9y
-Y2VfY2Ryb21fc3BlZWQgPSAtMQogICAgICAgIG1heF9yZXRyaWVzID0gMjAKICAgICAgICBzcGFu
-ID0gMHg4MDZiMDE4ICIxIgogICAgICAgIG91dHB1dF90eXBlID0gMQogICAgICAgIG91dHB1dF9l
-bmRpYW4gPSAwCiAgICAgICAgcXVlcnlfb25seSA9IDAKICAgICAgICBiYXRjaCA9IDAKICAgICAg
-ICBpID0gMAogICAgICAgIHBhcmFub2lhX21vZGUgPSAyMjMKICAgICAgICBpbmZvX2ZpbGUgPSAw
-eDAKICAgICAgICBvdXQgPSAwCiAgICAgICAgc2VhcmNoID0gMAogICAgICAgIGMgPSAtMQogICAg
-ICAgIGxvbmdfb3B0aW9uX2luZGV4ID0gMAooZ2RiKSBsaXN0IHNjc2lfaW50ZXJmYWNlLmM6MTUz
-NQoxNTMwICAgIC8qIHJlcXVlc3QgdmVuZG9yIGJyYW5kIGFuZCBtb2RlbCAqLwoxNTMxICAgIHVu
-c2lnbmVkIGNoYXIgKnNjc2lfaW5xdWlyeShjZHJvbV9kcml2ZSAqZCl7CjE1MzIgICAgICB1bnNp
-Z25lZCBjaGFyIHNlbnNlW1NHX01BWF9TRU5TRV07CjE1MzMgICAgICB1bnNpZ25lZCBjaGFyIGNt
-ZFs2XT17IDB4MTIsMCwwLDAsNTYsMCB9OwoxNTM0CjE1MzUgICAgICBpZihoYW5kbGVfc2NzaV9j
-bWQoZCxjbWQsNiwgMCwgNTYsJ1wzNzcnLDEsc2Vuc2UpKSB7CjE1MzYgICAgICAgIGNkZXJyb3Io
-ZCwiMDA4OiBVbmFibGUgdG8gaWRlbnRpZnkgQ0RST00gbW9kZWxcbiIpOwoxNTM3ICAgICAgICBy
-ZXR1cm4oTlVMTCk7CjE1MzggICAgICB9CjE1MzkgICAgICByZXR1cm4gKGQtPnNnX2J1ZmZlcik7
-CgoK
-------=_Part_59512_4416021.1162149617391--
+Ken
+--=20
+das eine Mal als Trag=F6die, das andere Mal als Farce
