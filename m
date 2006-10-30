@@ -1,55 +1,61 @@
-From: Mark Lord <liml@rtr.ca>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: 2.6.19-rc3-git7: scsi_device_unbusy: inconsistent lock state
-Date: Mon, 30 Oct 2006 12:54:35 -0500
-Message-ID: <45463C5B.7070900@rtr.ca>
-References: <45460D52.3000404@rtr.ca> <20061030144315.GG4563@kernel.dk> <1162220239.2948.27.camel@laptopd505.fenrus.org> <20061030154444.GH4563@kernel.dk> <1162225002.2948.45.camel@laptopd505.fenrus.org> <20061030162621.GK4563@kernel.dk> <1162225915.2948.49.camel@laptopd505.fenrus.org> <20061030175224.GB14055@kernel.dk>
+Date: Mon, 30 Oct 2006 19:03:57 +0100
+Message-ID: <20061030180357.GD14055@kernel.dk>
+References: <45460D52.3000404@rtr.ca> <20061030144315.GG4563@kernel.dk> <1162220239.2948.27.camel@laptopd505.fenrus.org> <20061030154444.GH4563@kernel.dk> <1162225002.2948.45.camel@laptopd505.fenrus.org> <20061030162621.GK4563@kernel.dk> <1162225915.2948.49.camel@laptopd505.fenrus.org> <20061030175224.GB14055@kernel.dk> <20061030175400.GA31581@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:22534 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1161243AbWJ3Ryi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Oct 2006 12:54:38 -0500
-In-Reply-To: <20061030175224.GB14055@kernel.dk>
+Received: from brick.kernel.dk ([62.242.22.158]:58418 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S932466AbWJ3SCS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Oct 2006 13:02:18 -0500
+Content-Disposition: inline
+In-Reply-To: <20061030175400.GA31581@elte.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, mingo@elte.hu
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Arjan van de Ven <arjan@infradead.org>, Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Jens Axboe wrote:
-> I looked over them, and cfq_cic_link() should use _irqsave() instead of
-> _irq() if called without __GFP_WAIT set. That doesn't happen in the
-> normal io path though, so I'm not sure that is it.
+On Mon, Oct 30 2006, Ingo Molnar wrote:
 > 
-> So if the bug is using spin_lock_irq() with interrupts already disabled,
-> iirc that would trigger a different warning...
-..
-
-This seems 100% reproduceable here, so if there's any specific instrumentation
-that might be useful, just let me know.  Meanwhile I'll try Jen's patch (below).
-
--ml
-
+> * Jens Axboe <jens.axboe@oracle.com> wrote:
 > 
-> diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-> index 4bae64e..da9bddf 100644
-> --- a/block/cfq-iosched.c
-> +++ b/block/cfq-iosched.c
-> @@ -1355,6 +1355,7 @@ cfq_cic_link(struct cfq_data *cfqd, stru
->  	struct rb_node **p;
->  	struct rb_node *parent;
->  	struct cfq_io_context *__cic;
-> +	unsigned long flags;
->  	void *k;
->  
->  	cic->ioc = ioc;
-> @@ -1384,9 +1385,9 @@ restart:
->  	rb_link_node(&cic->rb_node, parent, p);
->  	rb_insert_color(&cic->rb_node, &ioc->cic_root);
->  
-> -	spin_lock_irq(cfqd->queue->queue_lock);
-> +	spin_lock_irqsave(cfqd->queue->queue_lock, flags);
->  	list_add(&cic->queue_list, &cfqd->cic_list);
-> -	spin_unlock_irq(cfqd->queue->queue_lock);
-> +	spin_unlock_irqrestore(cfqd->queue->queue_lock, flags);
->  }
+> > > > things may be allocated from that path, so we pass gfp_mask around. I'll
+> > > > double check it tonight, but I don't currently see what could be wrong.
+> > > > Would lockdep complain about:
+> > > > 
+> > > >         spin_lock_irqsave(lock, flags);
+> > > >         ...
+> > > >         spin_unlock_irq(lock);
+> > > >         ...
+> > > >         spin_lock_irq(lock);
+> > > >         ...
+> > > >         spin_unlock_irqrestore(lock, flags);
+> > > 
+> > > this is fine for lockdep IF and only IF there is no "out lock" held
+> > > around this that requires irqs to be off. So if you do
+> > > 
+> > > spin_lock_irqsave(lock1, flags);
+> > > ...
+> > > spin_lock_irqsave(lock2, flags);
+> > > spin_unlock_irq(lock2)
+> > > ...
+> > > 
+> > > then lockdep WILL complain, and rightfully so, about a violation since
+> > > lock1 gets violated here ;)
+> > 
+> > Naturally, that is a bug fair and simple, nothing to do with lockdep.
+> 
+> well, finding such locking bugs is the main purpose of lockdep, so there 
+> is at least some connection i'd say ;-)
+
+Right, I'm totally with you on that one, I wasn't trying to state
+otherwise :-)
+
+But we've also had a class of lockdep complaints that simply need some
+sort of annotation so that lockdep understands there's nothing wrong
+with it.
+
+-- 
+Jens Axboe
+
