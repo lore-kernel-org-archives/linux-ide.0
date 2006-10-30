@@ -1,36 +1,40 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_promise TX2/TX4 cards rejecting smart auto-offline & auto-save
- ata cmds?
-Date: Mon, 30 Oct 2006 16:43:07 +0900
-Message-ID: <4545AD0B.1030903@gmail.com>
-References: <76366b180610292250n400fff81s76a2a9cd84d61366@mail.gmail.com>	 <4545A74E.8020604@gmail.com> <76366b180610292331t6827f0ddl54ffe24be39dea2c@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Mon, 30 Oct 2006 12:45:03 +0100
+Message-ID: <20061030114503.GW4563@kernel.dk>
+References: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:63152 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1161177AbWJ3HnP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Oct 2006 02:43:15 -0500
-Received: by ug-out-1314.google.com with SMTP id 32so1066271ugm
-        for <linux-ide@vger.kernel.org>; Sun, 29 Oct 2006 23:43:14 -0800 (PST)
-In-Reply-To: <76366b180610292331t6827f0ddl54ffe24be39dea2c@mail.gmail.com>
+Received: from brick.kernel.dk ([62.242.22.158]:52496 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S932448AbWJ3LnZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Oct 2006 06:43:25 -0500
+Content-Disposition: inline
+In-Reply-To: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Paprocki <andrew@ishiboo.com>
-Cc: linux-ide@vger.kernel.org
+To: Gregor Jasny <gjasny@googlemail.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Andrew Paprocki wrote:
-> On 10/30/06, Tejun Heo <htejun@gmail.com> wrote:
->> Please read the following thread.
->>
->> http://thread.gmane.org/gmane.linux.ide/13222/focus=13235
+On Sun, Oct 29 2006, Gregor Jasny wrote:
+> Hi,
 > 
-> Worked like a charm! Just patched up smartmontools now and I don't get
-> the failed cmds anymore. Hope Bruce takes that patch soon.
+> Today I tried the new cdparanoia from Debian Sid (3.10+debian~pre0-2).
+> When I started ripping with "cdparanoia -d /dev/scd0 1" my system
+> freezes after some seconds. There is no oops and even the console
+> cursor stops blinking.
+> 
+> If I start cdparanoia with -g /dev/scd0 it starts ripping and but the
+> kernel prints many "program cdparanoia not setting count and/or
+> reply_len properly" warnings. But this seems to be a cdparanoia bug.
+> 
+> My CDROM:
+> Vendor:                    PIONEER
+> Product:                   DVD-ROM DVD-106
+> Revision level:            1.22
 
-Bruce took the patch and it will be included in the next version of 
-smartmontools.  :-)
+Can you confirm that 2.6.18 works?
 
 -- 
-tejun
+Jens Axboe
+
