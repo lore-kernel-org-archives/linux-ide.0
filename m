@@ -1,26 +1,34 @@
-From: "Gregor Jasny" <gjasny@googlemail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
-Date: Mon, 30 Oct 2006 14:17:06 +0100
-Message-ID: <9d2cd630610300517q5187043eieb0880047ddd03eb@mail.gmail.com>
-References: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com>
-	 <20061030114503.GW4563@kernel.dk>
+Date: Mon, 30 Oct 2006 14:27:47 +0100
+Message-ID: <20061030132745.GE4563@kernel.dk>
+References: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com> <20061030114503.GW4563@kernel.dk> <9d2cd630610300517q5187043eieb0880047ddd03eb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964975AbWJ3NRK@vger.kernel.org>
-In-Reply-To: <20061030114503.GW4563@kernel.dk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([62.242.22.158]:27155 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S932435AbWJ3N0J (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Oct 2006 08:26:09 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+In-Reply-To: <9d2cd630610300517q5187043eieb0880047ddd03eb@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gregor Jasny <gjasny@googlemail.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-2006/10/30, Jens Axboe <jens.axboe@oracle.com>:
-> Can you confirm that 2.6.18 works?
+On Mon, Oct 30 2006, Gregor Jasny wrote:
+> 2006/10/30, Jens Axboe <jens.axboe@oracle.com>:
+> >Can you confirm that 2.6.18 works?
+> 
+> The reporter of [1] states that his SATA Thinkpad freezes with 2.6.17
+> and 2.6.18, too.
+> 
+> Gregor
+> 
+> [1] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=391901
 
-The reporter of [1] states that his SATA Thinkpad freezes with 2.6.17
-and 2.6.18, too.
+Ok, mainly just checking if this was a potential dupe of another bug.
 
-Gregor
+-- 
+Jens Axboe
 
-[1] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=391901
