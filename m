@@ -1,74 +1,36 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: 2.6.19-rc3-git7: scsi_device_unbusy: inconsistent lock state
-Date: Mon, 30 Oct 2006 17:31:55 +0100
-Message-ID: <1162225915.2948.49.camel@laptopd505.fenrus.org>
-References: <45460D52.3000404@rtr.ca> <20061030144315.GG4563@kernel.dk>
-	 <1162220239.2948.27.camel@laptopd505.fenrus.org>
-	 <20061030154444.GH4563@kernel.dk>
-	 <1162225002.2948.45.camel@laptopd505.fenrus.org>
-	 <20061030162621.GK4563@kernel.dk>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: Sil 3124 Pci Express?
+Date: Mon, 30 Oct 2006 10:33:12 -0700
+Message-ID: <311601c90610300933k4cd2bad8sb37f698adb01fdae@mail.gmail.com>
+References: <f4527be0610281237x33c05f75j82879ba1c90b9e4a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:30855 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S965019AbWJ3QcA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Oct 2006 11:32:00 -0500
-In-Reply-To: <20061030162621.GK4563@kernel.dk>
+Received: from wr-out-0506.google.com ([64.233.184.236]:31471 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1030559AbWJ3RdP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Oct 2006 12:33:15 -0500
+Received: by wr-out-0506.google.com with SMTP id i7so286441wra
+        for <linux-ide@vger.kernel.org>; Mon, 30 Oct 2006 09:33:14 -0800 (PST)
+In-Reply-To: <f4527be0610281237x33c05f75j82879ba1c90b9e4a@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, mingo@elte.hu
+To: Andrew Lyon <andrew.lyon@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
+On 10/28/06, Andrew Lyon <andrew.lyon@gmail.com> wrote:
+> Hi,
+>
+> Can anybody recommend a Pci Express Sil 3124 card?
+> http://linux-ata.org/driver-status.html#sii3124 shows that this is the
+> best supported chip, I am looking for a card with 4 or more ports, any
+> suggestions?
 
-> > 
-> > 
-> >  [<c0219091>] cfq_set_request+0x351/0x3b0
-> >  [<c020c7fc>] elv_set_request+0x1c/0x40
-> >  [<c020fcff>] get_request+0x23f/0x270
-> >  [<c0210537>] get_request_wait+0x27/0x120
-> >  [<c02107ca>] __make_request+0x5a/0x350
-> >  [<c020f40f>] generic_make_request+0x16f/0x220
-> >  [<c02117e4>] submit_bio+0x64/0x110
-> > 
-> > now cfq_set_request() uses several inlines which muddies the situation,
-> > but lockdep claims one of them is not done correctly. (eg either it
-> > takes the lock incorrectly or something does spin_unlock_irq while the
-> > lock is held)
-> 
-> It's not really inlined trickery, the trace is exactly as printed.
+3124, as was said above, is a PCI-X/PCI chipset.  Most of the
+implementations using this chip will work in both normal PCI and PCI-X
+slots.
 
-what I meant is that cfq_set_request() calls a few inlines that also
-take locks so it might be one of those instead
-
->  A few
-> things may be allocated from that path, so we pass gfp_mask around. I'll
-> double check it tonight, but I don't currently see what could be wrong.
-> Would lockdep complain about:
-> 
->         spin_lock_irqsave(lock, flags);
->         ...
->         spin_unlock_irq(lock);
->         ...
->         spin_lock_irq(lock);
->         ...
->         spin_unlock_irqrestore(lock, flags);
-
-this is fine for lockdep IF and only IF there is no "out lock" held
-around this that requires irqs to be off. So if you do
-
-spin_lock_irqsave(lock1, flags);
-...
-spin_lock_irqsave(lock2, flags);
-spin_unlock_irq(lock2)
-...
-
-then lockdep WILL complain, and rightfully so, about a violation since
-lock1 gets violated here ;)
-
-
--- 
-if you want to mail me at work (you don't), use arjan (at) linux.intel.com
-Test the interaction between Linux and your BIOS via http://www.linuxfirmwarekit.org
-
+They have a 3132 which is their PCI-e (x1) chipset, but I don't think
+they ever made a 4-port version, just the 2-port version.
