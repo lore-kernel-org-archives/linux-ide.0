@@ -1,56 +1,76 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: 2.6.19-rc3-git7: scsi_device_unbusy: inconsistent lock state
-Date: Mon, 30 Oct 2006 16:44:44 +0100
-Message-ID: <20061030154444.GH4563@kernel.dk>
-References: <45460D52.3000404@rtr.ca> <20061030144315.GG4563@kernel.dk> <1162220239.2948.27.camel@laptopd505.fenrus.org>
+Date: Mon, 30 Oct 2006 17:16:42 +0100
+Message-ID: <1162225002.2948.45.camel@laptopd505.fenrus.org>
+References: <45460D52.3000404@rtr.ca> <20061030144315.GG4563@kernel.dk>
+	 <1162220239.2948.27.camel@laptopd505.fenrus.org>
+	 <20061030154444.GH4563@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030543AbWJ3PnJ@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1162220239.2948.27.camel@laptopd505.fenrus.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, mingo@elte.hu
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:41666 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1030555AbWJ3QQr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Oct 2006 11:16:47 -0500
+In-Reply-To: <20061030154444.GH4563@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, mingo@elte.hu
 
-On Mon, Oct 30 2006, Arjan van de Ven wrote:
+
 > 
-> > which has always been considered safe, while not very pretty.
+> > so to me it looks like lockdep at least has the appearance of moaning
+> > about a reasonably fishy situation...
 > 
-> 
-> actually it's different I think (based on a brief inspection of the
-> code, I could well be wrong): 
-> get_request_wait() causes a get_request() call with a GFP_NOIO gfp_mask
-> which perculates upto cfq_set_request() as argument.
-> cfq_set_request() then calls the inline cfq_get_queue() (which isn't in
-> the backtrace due to inlining) which does
->                 } else if (gfp_mask & __GFP_WAIT) {
->                         /* 
->                          * Inform the allocator of the fact that we will
->                          * just repeat this allocation if it fails, to allow
->                          * the allocator to do whatever it needs to attempt to
->                          * free memory.
->                          */
->                         spin_unlock_irq(cfqd->queue->queue_lock);
-> 
-> which enables interrupts right smack in the middle of holding a whole
-> bunch of locks.....
+> To me it looks more about lockdep complaining because it doesn't grok
+> the full picture. The question is how to shut it up.
 
-Where do you get 'a bunch' from? If you call get_request() with a
-gfp_mask that includes __GFP_WAIT with a spinlock held, it's a bug. Just
-as if you had called kmalloc() or similar with __GFP_WAIT set and
-holding a lock. cfq even includes a warning check:
+ok that is quite possible. But I do think you read the original output
+incorrectly so let me at least phrase it in english:
 
-        might_sleep_if(gfp_mask & __GFP_WAIT);
 
-So there's no bug there, cfq even grabbed the lock on its own before
-calling cfq_get_queue().
+__queue_lock is used in softirq context like this:
+  [<c0361c59>] _spin_lock+0x29/0x40
+  [<c029fa24>] scsi_device_unbusy+0x64/0x90
+  [<c029a5bc>] scsi_finish_command+0x1c/0xa0
+  [<c02115c2>] blk_done_softirq+0x62/0x70
+  [<c0122a27>] __do_softirq+0x87/0x100
+  [<c0122af5>] do_softirq+0x55/0x60
+  [<c0122f3c>] ksoftirqd+0x7c/0xd0
+  [<c0130f76>] kthread+0xf6/0x100
 
-> so to me it looks like lockdep at least has the appearance of moaning
-> about a reasonably fishy situation...
+which means that it always has to be taken _irq / _irqsave and one never
+can enable interrupts while holding this lock. This backtrace is from
+the first time the lock was taken in irq context.
 
-To me it looks more about lockdep complaining because it doesn't grok
-the full picture. The question is how to shut it up.
+Now a new situation has arisen that violates this constraint, and it
+looks like this:
+
+
+ [<c0219091>] cfq_set_request+0x351/0x3b0
+ [<c020c7fc>] elv_set_request+0x1c/0x40
+ [<c020fcff>] get_request+0x23f/0x270
+ [<c0210537>] get_request_wait+0x27/0x120
+ [<c02107ca>] __make_request+0x5a/0x350
+ [<c020f40f>] generic_make_request+0x16f/0x220
+ [<c02117e4>] submit_bio+0x64/0x110
+
+now cfq_set_request() uses several inlines which muddies the situation,
+but lockdep claims one of them is not done correctly. (eg either it
+takes the lock incorrectly or something does spin_unlock_irq while the
+lock is held)
+
+
+I get the impression you assumed lockdep was complaining about
+scsi_device_unbusy; but it's not; that function is only referenced since
+it's the first place since boot where the lock was taken in softirq
+context... not because the violation is occuring there.
+
+
 
 -- 
-Jens Axboe
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
+Test the interaction between Linux and your BIOS via http://www.linuxfirmwarekit.org
+
