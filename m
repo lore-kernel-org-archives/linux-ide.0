@@ -1,78 +1,115 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.19-rc3: known unfixed regressions (v3)
-Date: Mon, 30 Oct 2006 00:13:58 +0100
-Message-ID: <20061029231358.GI27968@stusta.de>
-References: <Pine.LNX.4.64.0610231618510.3962@g5.osdl.org>
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: [PATCH] Added S.M.A.R.T. command decoding to libata error reporting.
+Date: Mon, 30 Oct 2006 01:09:20 -0500
+Message-ID: <76366b180610292209u3202a77bqdfe1b6c46eea74da@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.175]:3784 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1161122AbWJ3GJW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Oct 2006 01:09:22 -0500
+Received: by ug-out-1314.google.com with SMTP id 32so1058348ugm
+        for <linux-ide@vger.kernel.org>; Sun, 29 Oct 2006 22:09:20 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0610231618510.3962@g5.osdl.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeff Chua <jeff.chua.linux@gmail.com>, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Prakash Punnoor <prakash@punnoor.de>, phil.el@wanadoo.fr, oprofile-list@lists.sf.net, Martin Lorenz <martin@lorenz.eu.org>, len.brown@intel.com, linux-acpi@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, Thierry Vignaud <tvignaud@mandriva.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Alex Romosan <romosan@sycorax.lbl.gov>, Jens Axboe <jens.axboe@oracle.com>, Komuro <komurojun-mbn@nifty.com>, Thomas Gleixner <tglx@linutronix.de>, Christian <christiand59@web.de>, Mark Langsdorf <mark.langsdorf@amd.com>, davej@codemonkey.org.uk, cpufreq@lists.linux.org.uk
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This email lists some known regressions in 2.6.19-rc3 compared to 2.6.18
-that are not yet fixed in Linus' tree.
+Added S.M.A.R.T. command decoding to libata error reporting.
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possibly
-involved with one or more of these issues.
+This is useful because if a user program attempts to send an
+invalid smart command, the standard reporting only indicates
+that cmd 0xb0 (now ATA_CMD_SMART) failed. This code prints out
+a readable string indicating which smart cmd was attempted as
+encoded in tf.feature per the ATAPI spec.
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+Example with patch applied:
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.00: tag 0 cmd 0xb0 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
+ata1.00: smart cmd 0xd2 (enable/disable attribute autosave)
 
+---
+ drivers/ata/libata-eh.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/ata.h     |    1 +
+ 2 files changed, 47 insertions(+), 0 deletions(-)
 
-Subject    : PCI: MMCONFIG breakage
-References : http://lkml.org/lkml/2006/10/23/182
-Submitter  : Jeff Chua <jeff.chua.linux@gmail.com>
-Status     : unknown, both BIOS and Direct work
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 02b2b27..dd93ab8 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -849,6 +849,46 @@ static const char * ata_err_string(unsig
+ }
 
+ /**
++ *     ata_smart_feature - convert feature code to descriptive string
++ *     @feature: feature byte to convert to string
++ *
++ *     Convert @feature to descriptive string. SMART command features
++ *     are located in the ATAPI specification.
++ *
++ *     LOCKING:
++ *     None.
++ *
++ *     RETURNS:
++ *     Descriptive string for @feature
++ */
++static const char * ata_smart_feature(u8 feature)
++{
++       switch (feature) {
++               case 0xD0:
++                       return "read data";
++               case 0xD2:
++                       return "enable/disable attribute autosave";
++               case 0xD4:
++                       return "execute off-line immediate";
++               case 0xD5:
++                       return "read log";
++               case 0xD6:
++                       return "write log";
++               case 0xD8:
++                       return "enable operations";
++               case 0xD9:
++                       return "disable operations";
++               case 0xDA:
++                       return "return status";
++               default:
++                       if (feature >= 0xE0)
++                               return "vendor specific feature";
++                       else
++                               return "obsolete or reserved feature";
++       }
++}
++
++/**
+  *     ata_read_log_page - read a specific log page
+  *     @dev: target device
+  *     @page: page to read
+@@ -1443,6 +1483,12 @@ static void ata_eh_report(struct ata_por
+                               qc->tag, qc->tf.command, qc->err_mask,
+                               qc->result_tf.command, qc->result_tf.feature,
+                               ata_err_string(qc->err_mask));
++
++               if (qc->tf.command == ATA_CMD_SMART)
++                   ata_dev_printk(qc->dev, KERN_ERR, "smart "
++                                  "cmd 0x%02x (%s)\n",
++                                  qc->tf.feature,
++                                  ata_smart_feature(qc->tf.feature));
+        }
+ }
 
-Subject    : x86_64: oprofile doesn't work
-References : http://lkml.org/lkml/2006/10/27/3
-Submitter  : Prakash Punnoor <prakash@punnoor.de>
-Status     : unknown
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index d894419..46dd849 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -156,6 +156,7 @@ enum {
+        ATA_CMD_READ_NATIVE_MAX = 0xF8,
+        ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
+        ATA_CMD_READ_LOG_EXT    = 0x2f,
++       ATA_CMD_SMART           = 0xB0,
 
-
-Subject    : X60s: BUG()s, lose ACPI events after suspend/resume
-References : http://lkml.org/lkml/2006/10/10/39
-Submitter  : Martin Lorenz <martin@lorenz.eu.org>
-Status     : unknown
-
-
-Subject    : T60 stops triggering any ACPI events
-References : http://lkml.org/lkml/2006/10/4/425
-             http://lkml.org/lkml/2006/10/16/262
-             http://bugzilla.kernel.org/show_bug.cgi?id=7408
-Submitter  : "Michael S. Tsirkin" <mst@mellanox.co.il>
-Status     : unknown
-
-
-Subject    : sata-via doesn't detect anymore disks attached to VIA vt6421
-References : http://bugzilla.kernel.org/show_bug.cgi?id=7255
-Submitter  : Thierry Vignaud <tvignaud@mandriva.com>
-Status     : unknown
-
-
-Subject    : unable to rip cd
-References : http://lkml.org/lkml/2006/10/13/100
-Submitter  : Alex Romosan <romosan@sycorax.lbl.gov>
-Status     : unknown
-
-
-Subject    : SMP kernel can not generate ISA irq properly
-References : http://lkml.org/lkml/2006/10/22/15
-Submitter  : Komuro <komurojun-mbn@nifty.com>
-Handled-By : Thomas Gleixner <tglx@linutronix.de>
-Status     : Thomas will investigate
-
-
-Subject    : cpufreq not working on AMD K8
-References : http://lkml.org/lkml/2006/10/10/114
-Submitter  : Christian <christiand59@web.de>
-Handled-By : Mark Langsdorf <mark.langsdorf@amd.com>
-Status     : Mark is investigating
-
-
+        /* READ_LOG_EXT pages */
+        ATA_LOG_SATA_NCQ        = 0x10,
+-- 
+1.4.1.1
