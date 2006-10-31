@@ -1,60 +1,125 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: sata_via and VT6421 PATA support?
-Date: Tue, 31 Oct 2006 11:45:58 +0100
-Message-ID: <45472966.80209@wpkg.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Summary of libata-dev backlog
+Date: Tue, 31 Oct 2006 19:54:45 +0900
+Message-ID: <45472B75.6060909@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.syneticon.net ([213.239.212.131]:41899 "EHLO
-	mail2.syneticon.net") by vger.kernel.org with ESMTP
-	id S1423096AbWJaKqd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Oct 2006 05:46:33 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail2.syneticon.net (Postfix) with ESMTP id 3120F4D50D
-	for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 11:46:30 +0100 (CET)
-Received: from mail2.syneticon.net ([127.0.0.1])
- by localhost (linux [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
- id 31111-15 for <linux-ide@vger.kernel.org>;
- Tue, 31 Oct 2006 11:46:02 +0100 (CET)
-Received: from postfix1.syneticon.net (postfix1.syneticon.net [192.168.112.6])
-	by mail2.syneticon.net (Postfix) with ESMTP
-	for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 11:46:02 +0100 (CET)
-Received: from localhost (filter1.syneticon.net [192.168.113.3])
-	by postfix1.syneticon.net (Postfix) with ESMTP id 491B394EF
-	for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 11:46:02 +0100 (CET)
-Received: from postfix1.syneticon.net ([192.168.113.4])
-	by localhost (192.168.113.3 [192.168.113.3]) (amavisd-new, port 10025)
-	with ESMTP id it+xt7bplTSk for <linux-ide@vger.kernel.org>;
-	Tue, 31 Oct 2006 11:45:59 +0100 (CET)
-Received: from [192.168.10.145] (xdsl-81-173-189-226.netcologne.de [81.173.189.226])
-	by postfix1.syneticon.net (Postfix) with ESMTP
-	for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 11:45:59 +0100 (CET)
+Received: from ug-out-1314.google.com ([66.249.92.170]:42617 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1423105AbWJaKyz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Oct 2006 05:54:55 -0500
+Received: by ug-out-1314.google.com with SMTP id 32so1405834ugm
+        for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 02:54:53 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Almost a year ago, Jeff Garzik posted a patch from VIA which adds 
-support for PATA in VT6421 (sata_via driver):
+Hello, Jeff.
 
-http://lkml.org/lkml/2005/12/11/203
+Here is the list of patches pending for #upstream-fixes, #upstream and 
+waiting your review.
 
-There was a very brief discussion about it, but nothing more.
+Some of the patches collide and some might not apply to the current 
+#upstream[-fixes].  If you want me to regenerate them or stack them in 
+any particular order in a git tree, just let me know.
 
+Thanks.
 
-There were some major changes between 2.6.17 and 2.6.18:
+***
+*** pending patches for #upstream-fixes
+***
 
--#define DRV_VERSION    "1.1"
-+#define DRV_VERSION    "2.0"
+[PATCH] sata_sis: fix flags handling for the secondary port
+http://article.gmane.org/gmane.linux.ide/13639
 
+	This bug breaks the secondary port and is a regression.  The
+	fix has been verified by Uwe Koziolek <uwe.koziolek@gmx.net>
+	and Patrick McHardy <kaber@trash.net>.
 
-and VIA's patch no longer applies (however, it looks it shouldn't be 
-that hard to correct it).
+***
+*** pending patches which might be appropriate for #upstream-fixes
+***
 
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Re: sata_sis only recognizing primary drive in 2.6.18
+http://article.gmane.org/gmane.linux.ide/13641
 
-What's the status of sata_via and VT6421 PATA support?
+	This is straight forward SLAVE_POSS flag addition for
+	controllers which can do slave ports.  I think it's safe to
+	push this to #upstream-fixes too.
 
+[PATCH] ata_piix: allow 01b MAP for both ICH6M and ICH7M
+http://article.gmane.org/gmane.linux.ide/13398
+
+	Verified by Tom Deblauwe <tom.deblauwe@telenet.be> via private
+	mail.
+
+***
+*** pending patches for #upstream
+***
+
+[PATCH] sata_nv: SRST sometimes fails after hotplug, use HRST_TO_RESUME
+http://article.gmane.org/gmane.linux.ide/13241
+
+	verified by Jim Paris <jim@jtan.com> && harmless
+
+[RFT PATCH] libata: implement ATA_FLAG_SETXFER_POLLING and use it in 
+pata_via
+http://article.gmane.org/gmane.linux.ide/13248
+
+	Matthieu Castet <castet.matthieu@free.fr> tested with both
+	SETXFER_POLLING and DETECT_POLLING turned on.  I asked for
+	re-test but no response yet.  SETXFER_POLLING and
+	DETECT_POLLING affect different stages of detection and his
+	setup working okay means SETXFER_POLLING is doing its job.  I
+	think we can put this into upstream and -mm for more testing.
+
+[PATCHSET] libata: implement presence detection using polling IDENTIFY 
+for ata_piix
+http://thread.gmane.org/gmane.linux.ide/13284/focus=13284
+
+	Has been in -mm for some time now.  This doesn't solve all
+	piix detection problems but it solves problems caused by PCS
+	not reporting device presence when device is actually there.
+	This basically reverts detection behavior to pre-IRQ-pio when
+	we seemed to have much fewer problems.  There hasn't been any
+	report of this patch causing negative effect.
+
+	With this patch applied, I think one left PCS problem is PCS
+	update failing to enable ports.
+
+	http://bugzilla.kernel.org/show_bug.cgi?id=7170
+
+***
+*** patchsets pending review
+***
+
+[PATCH] libata: handle 0xff status properly
+http://article.gmane.org/gmane.linux.ide/13408
+
+	Acked by Alan Cox and I have at least one positive report of
+	killing unnecessary wait and those annonying 0xff messages
+	during boot.  As this patch mimics the behavior of the IDE
+	driver, the approach should be safe.
+
+[PATCHSET] hotplug polling, take 5
+http://thread.gmane.org/gmane.linux.ide/13467/focus=13467
+
+[PATCHSET] implement ata_link, take 3
+http://thread.gmane.org/gmane.linux.ide/13478/focus=13494
+
+[PATCHSET] prep for PMP suport, take 3
+http://thread.gmane.org/gmane.linux.ide/13500/focus=13500
+
+[PATCHSET] implement PMP support, take 3
+http://thread.gmane.org/gmane.linux.ide/13503/focus=13503
+(the patchset title is wrong, sorry)
+
+[PATCHSET] sata_sil: implement Mod15Write workaround by split request 
+processing
+http://thread.gmane.org/gmane.linux.ide/13570/focus=13570
 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+tejun
