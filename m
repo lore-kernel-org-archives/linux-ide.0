@@ -1,31 +1,33 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [Patch] IDE: Add nvidia IDE controller of MCP67 support to
-	amd74xx.c
-Date: Tue, 31 Oct 2006 09:29:52 +0000
-Message-ID: <1162286992.11965.31.camel@localhost.localdomain>
-References: <15F501D1A78BD343BE8F4D8DB854566B0C42D5A1@hkemmail01.nvidia.com>
+From: Evan_D <spampit@iinet.net.au>
+Subject: kernel support for Marvell 88SE614x chipset
+Date: Tue, 31 Oct 2006 20:50:06 +1100
+Message-ID: <45471C4E.8050902@iinet.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56804 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1423011AbWJaJ0X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Oct 2006 04:26:23 -0500
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B0C42D5A1@hkemmail01.nvidia.com>
+Received: from ihug-mail.icp-qv1-irony3.iinet.net.au ([203.59.1.197]:63325
+	"EHLO mail-ihug.icp-qv1-irony3.iinet.net.au") by vger.kernel.org
+	with ESMTP id S1423039AbWJaJuG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Oct 2006 04:50:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <pchen@nvidia.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Ar Maw, 2006-10-31 am 16:03 +0800, ysgrifennodd Peer Chen:
-> Add the support for IDE controller of MCP67.
-> The following amd74xx.c patch is based on kernel 2.6.18.
-> 
-> Signed-off by: Peer Chen <pchen@nvidia.com>
+Hi
 
-For current kernels you need to update both drivers/ide/ and drivers/ata
-pata drivers for AMD/Nvidia.
+Is any work being done on implementing kernel support for the Marvell 
+88SE614x  chipset?
 
-Alan
+Asus have released source code drivers for the chipset to accompany the 
+ASUS P5WDG2 WS Professional motherboard (Marvell 88SE6141 chipset).  The 
+source is available for download @ 
+http://dlsvr01.asus.com/pub/ASUS/misc/ide/marvell6141/61xx_SATA_linux.zip.  
+Being a relatively newcomer to Linux I've not managed to successfully 
+compile and install the drivers.
+
+In any event, if kernel support is in the wings hopefully the linked 
+source is of some use.
+
+
 
