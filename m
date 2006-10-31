@@ -1,1956 +1,717 @@
-From: jurriaan <thunder7@xs4all.nl>
-Subject: scary message 'failed to recover some devices ... retrying' HPT370
-Date: Tue, 31 Oct 2006 19:59:21 +0100
-Message-ID: <20061031185921.GA3636@amd64.of.nowhere>
-Reply-To: Jurriaan <thunder7@xs4all.nl>
+From: <Jason_Mack@Dell.com>
+Subject: Fwd: RH [Bug 199216] Sata_promise works for kernel 2.6.16-1.2122_FC5 but not for 2.6.17-1.2157_FC5
+Date: Tue, 31 Oct 2006 13:12:45 -0600
+Message-ID: <13C8ED0565B9B24E975C818C3D50A5064F4DB5@ausx3mpc121.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C6FD20.8C1A1EBA"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-vbr6.xs4all.nl ([194.109.24.26]:23818 "EHLO
-	smtp-vbr6.xs4all.nl") by vger.kernel.org with ESMTP
-	id S1423790AbWJaS7a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Oct 2006 13:59:30 -0500
-Received: from rivierenland.xs4all.nl (zeeotter.xs4all.nl [80.126.31.149])
-	by smtp-vbr6.xs4all.nl (8.13.8/8.13.8) with ESMTP id k9VIxQgB025511
-	for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 19:59:27 +0100 (CET)
-	(envelope-from jurriaan@rivierenland.xs4all.nl)
-Content-Disposition: inline
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:62289 "EHLO
+	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
+	id S1423799AbWJaTMt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Oct 2006 14:12:49 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Matt_Domsch@Dell.com, ddalton@shortbus.net
 
-On a whim, after reading about recent developments, I tried to boot
-2.6.19-rc4-mm1 with only the new SATA drivers active, and all PATA
-drivers inactive.
+This is a multi-part message in MIME format.
 
-This is an Asus A8N-SLI Premium motherboard, with 8 sata drives on the
-NForce chipset and on a SiL3114 controller, 3 pata devices (2 hd, 1 dvd
-writer) on the motherboards PATA connectors and, for good measure, 2
-additional hds on a HPT374 4-port PATA raid card, in JBOD mode.
+------_=_NextPart_001_01C6FD20.8C1A1EBA
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: quoted-printable
 
-The message reads 'ata11: failed to recover some devices, retrying in 5
-secs' in this part:
+Jeff,
 
-pata_hpt37x: BIOS has not set timing clocks.
-hpt37x: HPT374: Bus clock 33MHz.
-ACPI: PCI Interrupt 0000:05:06.0[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
-ata11: PATA max UDMA/133 cmd 0x6000 ctl 0x6402 bmdma 0x7000 irq 16
-ata12: PATA max UDMA/133 cmd 0x6800 ctl 0x6C02 bmdma 0x7008 irq 16
-scsi10 : pata_hpt37x
-ata11.00: ATA-6, max UDMA/100, 488397168 sectors: LBA48
-ata11.00: ata11: dev 0 multi count 16
-ata11.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata11: failed to recover some devices, retrying in 5 secs
-ata11.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata11: failed to recover some devices, retrying in 5 secs
-ata11.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata11: failed to recover some devices, retrying in 5 secs
-Find mode for 12 reports A81F442
-Find mode for DMA 69 reports 12848242
-ata11.00: configured for UDMA/100
-scsi11 : pata_hpt37x
-ATA: abnormal status 0x8 on port 0x6807
-scsi 10:0:0:0: Direct-Access     ATA      WDC WD2500JB-00F 15.0 PQ: 0 ANSI: 5
-SCSI device sdk: 488397168 512-byte hdwr sectors (250059 MB)
-sdk: Write Protect is off
-sdk: Mode Sense: 00 3a 00 00
-SCSI device sdk: drive cache: write back
-SCSI device sdk: 488397168 512-byte hdwr sectors (250059 MB)
-sdk: Write Protect is off
-sdk: Mode Sense: 00 3a 00 00
-SCSI device sdk: drive cache: write back
- sdk: sdk1
-sd 10:0:0:0: Attached scsi disk sdk
-sd 10:0:0:0: Attached scsi generic sg11 type 0
-pata_hpt37x: BIOS has not set timing clocks.
-hpt37x: HPT374: Bus clock 33MHz.
-ACPI: PCI Interrupt 0000:05:06.1[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
-ata13: PATA max UDMA/133 cmd 0x7400 ctl 0x7802 bmdma 0x8400 irq 16
-ata14: PATA max UDMA/133 cmd 0x7C00 ctl 0x8002 bmdma 0x8408 irq 16
-scsi12 : pata_hpt37x
-ata13.00: ATA-7, max UDMA/100, 586072368 sectors: LBA48
-ata13.00: ata13: dev 0 multi count 16
-Find mode for 12 reports A81F442
-Find mode for DMA 69 reports 12848242
-ata13.00: configured for UDMA/100
-scsi13 : pata_hpt37x
-ATA: abnormal status 0x8 on port 0x7C07
-scsi 12:0:0:0: Direct-Access     ATA      ST3300831A       3.01 PQ: 0 ANSI: 5
-SCSI device sdl: 586072368 512-byte hdwr sectors (300069 MB)
-sdl: Write Protect is off
-sdl: Mode Sense: 00 3a 00 00
-SCSI device sdl: drive cache: write back
-SCSI device sdl: 586072368 512-byte hdwr sectors (300069 MB)
-sdl: Write Protect is off
-sdl: Mode Sense: 00 3a 00 00
-SCSI device sdl: drive cache: write back
- sdl: sdl1
+We did get the kernel Oops trace captured.
 
-It seems that one of the empty ports on the HPT374 card is giving these
-scary messages. Why only one of the empty ports? lspci -v and dmesg
-(both for 2.6.19-rc4-mm1 with regular PATA drivers and without) included
-below.
+Please see attached or
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=3D199216 for the
+trace and output of lspci.
 
-Are these messages anything to worry about?
+Matt seems to have pinpointed the problem code block.  Anyone have a
+patch?
 
-Kind regards,
-Jurriaan
-[please note: I'm subscribed to lkml, not to linux-ide]
+Thanks!
 
-lspci -v:
+Jason
+=20
 
-00:00.0 Memory controller: nVidia Corporation CK804 Memory Controller (rev a3)
-	Subsystem: ASUSTeK Computer Inc. Unknown device 815a
-	Flags: bus master, 66MHz, fast devsel, latency 0
-	Capabilities: [44] HyperTransport: Slave or Primary Interface
-	Capabilities: [e0] HyperTransport: MSI Mapping
+-----Original Message-----
+From: Jason M. []=20
+Sent: Wednesday, October 25, 2006 7:29 PM
+To: Matt
+Cc: Mack, Jason - Authorized Dell Representative
+Subject: [Fwd: [Bug 199216] Sata_promise works for kernel
+2.6.16-1.2122_FC5 but not for 2.6.17-1.2157_FC5]
 
-00:01.0 ISA bridge: nVidia Corporation CK804 ISA Bridge (rev a3)
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: bus master, 66MHz, fast devsel, latency 0
+Matt,
 
-00:01.1 SMBus: nVidia Corporation CK804 SMBus (rev a2)
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: 66MHz, fast devsel, IRQ 7
-	I/O ports at e400 [size=32]
-	I/O ports at 4c00 [size=64]
-	I/O ports at 4c40 [size=64]
-	Capabilities: [44] Power Management version 2
+Here is Bug number.  I agree with the submitter that there is a valid
+bug here.  We haven't heard even a "We're working on it" response.
 
-00:02.0 USB Controller: nVidia Corporation CK804 USB Controller (rev a2) (prog-if 10 [OHCI])
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 23
-	Memory at da004000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: [44] Power Management version 2
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=3D199216
 
-00:02.1 USB Controller: nVidia Corporation CK804 USB Controller (rev a3) (prog-if 20 [EHCI])
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 20
-	Memory at feb00000 (32-bit, non-prefetchable) [size=256]
-	Capabilities: [44] Debug port
-	Capabilities: [80] Power Management version 2
+Thanks!
 
-00:04.0 Multimedia audio controller: nVidia Corporation CK804 AC'97 Audio Controller (rev a2)
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 7
-	I/O ports at dc00 [size=256]
-	I/O ports at e000 [size=256]
-	Memory at da003000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: [44] Power Management version 2
+Jason
 
-00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev f2) (prog-if 8a [Master SecP PriP])
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: bus master, 66MHz, fast devsel, latency 0
-	[virtual] Memory at 000001f0 (32-bit, non-prefetchable) [disabled] [size=8]
-	[virtual] Memory at 000003f0 (type 3, non-prefetchable) [disabled] [size=1]
-	[virtual] Memory at 00000170 (32-bit, non-prefetchable) [disabled] [size=8]
-	[virtual] Memory at 00000370 (type 3, non-prefetchable) [disabled] [size=1]
-	I/O ports at f000 [size=16]
-	Capabilities: [44] Power Management version 2
 
-00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3) (prog-if 85 [Master SecO PriO])
-	Subsystem: ASUSTeK Computer Inc. Unknown device 815a
-	Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 22
-	I/O ports at 09f0 [size=8]
-	I/O ports at 0bf0 [size=4]
-	I/O ports at 0970 [size=8]
-	I/O ports at 0b70 [size=4]
-	I/O ports at d800 [size=16]
-	Memory at da002000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: [44] Power Management version 2
+-------- Original Message --------
+From: - Thu Sep  7 09:53:53 2006
+X-Account-Key: account2
+X-UIDL: _IRH.DA8_EB.mxin2.lsn.net
+X-Mozilla-Status: 0001
+X-Mozilla-Status2: 00000000
+Return-Path: <apache@redhat.com>
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])	by=20
+mxin2.lsn.net (8.13.5/8.13.5) with ESMTP id k876jKfK029761	for=20
+<>; Thu, 7 Sep 2006 01:45:21 -0500
+Received: from bugzilla.redhat.com (bugzilla.redhat.com=20
+[172.16.48.198])	by mx1.redhat.com (8.12.11.20060308/8.12.11)
+with=20
+ESMTP id k876jWp3003585	for <>; Thu, 7 Sep 2006=20
+02:45:32 -0400
+Received: from bugzilla.redhat.com (localhost.localdomain [127.0.0.1])=20
+by bugzilla.redhat.com (8.13.1/8.13.1) with ESMTP id k876jRHH024201
+for=20
+<>; Thu, 7 Sep 2006 02:45:27 -0400
+Received: (from apache@localhost)	by bugzilla.redhat.com=20
+(8.13.1/8.12.11/Submit) id k876jRTE024200;	Thu, 7 Sep 2006 02:45:27
+-0400
+Date: Thu, 7 Sep 2006 02:45:27 -0400
+Message-Id: <200609070645.k876jRTE024200@bugzilla.redhat.com>
+From: bugzilla@redhat.com
+To:=20
+Subject: [Bug 199216] Sata_promise works for kernel 2.6.16-1.2122_FC5
+but not for 2.6.17-1.2157_FC5
+Content-type: text/plain; charset=3Dutf-8
+In-Reply-To: <bug-199216-202291@bugzilla.redhat.com>
+X-Loop: bugzilla@redhat.com
+X-BeenThere: bugzilla@redhat.com
+X-Bugzilla-Product: Fedora Core
+X-Bugzilla-Version: devel
+X-Bugzilla-Component: kernel
+X-Bugzilla-Status: NEW
+X-Bugzilla-Comment: Public
+X-Bugzilla-Reason: CC
+X-Bugzilla-Changed-Fields: Comment
+X-Virus-Scanned: ClamAV 0.88.4/1816/Wed Sep  6 21:29:36 2006 on
+mx0.lsn.net
+X-Virus-Status: Clean
+X-Spam-Checker-Version: SpamAssassin 2.60 (1.212-2003-09-23-exp) on
+nm1.lsn.net
+X-Spam-Status: No, hits=3D-4.7 required=3D5.0 =
+tests=3DBAYES_00,NO_REAL_NAME
+autolearn=3Dno version=3D2.60
+X-Spam-Level:
 
-00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3) (prog-if 85 [Master SecO PriO])
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 21
-	I/O ports at 09e0 [size=8]
-	I/O ports at 0be0 [size=4]
-	I/O ports at 0960 [size=8]
-	I/O ports at 0b60 [size=4]
-	I/O ports at c400 [size=16]
-	Memory at da001000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: [44] Power Management version 2
+Please do not reply directly to this email. All additional comments
+should be made in the comments box of this bug report.
 
-00:09.0 PCI bridge: nVidia Corporation CK804 PCI Bridge (rev a2) (prog-if 01 [Subtractive decode])
-	Flags: bus master, 66MHz, fast devsel, latency 0
-	Bus: primary=00, secondary=05, subordinate=05, sec-latency=128
-	I/O behind bridge: 00006000-0000afff
-	Memory behind bridge: d8000000-d9ffffff
-	Prefetchable memory behind bridge: da100000-da1fffff
+Summary: Sata_promise works for kernel 2.6.16-1.2122_FC5 but not for
+2.6.17-1.2157_FC5
 
-00:0a.0 Bridge: nVidia Corporation CK804 Ethernet Controller (rev a3)
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 23
-	Memory at da000000 (32-bit, non-prefetchable) [size=4K]
-	I/O ports at b000 [size=8]
-	Capabilities: [44] Power Management version 2
 
-00:0b.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3) (prog-if 00 [Normal decode])
-	Flags: bus master, fast devsel, latency 0
-	Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
-	Capabilities: [40] Power Management version 2
-	Capabilities: [48] Message Signalled Interrupts: Mask- 64bit+ Queue=0/1 Enable-
-	Capabilities: [58] HyperTransport: MSI Mapping
-	Capabilities: [80] Express Root Port (Slot+) IRQ 0
-	Capabilities: [100] Virtual Channel
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=3D199216
 
-00:0c.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3) (prog-if 00 [Normal decode])
-	Flags: bus master, fast devsel, latency 0
-	Bus: primary=00, secondary=03, subordinate=03, sec-latency=0
-	Capabilities: [40] Power Management version 2
-	Capabilities: [48] Message Signalled Interrupts: Mask- 64bit+ Queue=0/1 Enable-
-	Capabilities: [58] HyperTransport: MSI Mapping
-	Capabilities: [80] Express Root Port (Slot+) IRQ 0
-	Capabilities: [100] Virtual Channel
+------_=_NextPart_001_01C6FD20.8C1A1EBA
+Content-Type: application/octet-stream;
+	name="minicom.cap"
+Content-Transfer-Encoding: base64
+Content-Description: minicom.cap
+Content-Disposition: attachment;
+	filename="minicom.cap"
 
-00:0d.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3) (prog-if 00 [Normal decode])
-	Flags: bus master, fast devsel, latency 0
-	Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
-	Capabilities: [40] Power Management version 2
-	Capabilities: [48] Message Signalled Interrupts: Mask- 64bit+ Queue=0/1 Enable-
-	Capabilities: [58] HyperTransport: MSI Mapping
-	Capabilities: [80] Express Root Port (Slot+) IRQ 0
-	Capabilities: [100] Virtual Channel
+TGludXggdmVyc2lvbiAyLjYuMTgtMS4yMjAwLmZjNSAoYnJld2J1aWxkZXJAaHMyMC1iYzItMy5i
+dWlsZC5yZWRoYXQuY29tKSAoZ2NjIHZlcnNpb24gNC4xLjEgMjAwNjA1MjUgKFJlZCBIYXQgNC4x
+LjEtMSkpICMxIFNhdCBPY3QgMTQgMTY6NTk6MjYgRURUIDIwMDYKQklPUy1wcm92aWRlZCBwaHlz
+aWNhbCBSQU0gbWFwOgogQklPUy1lODIwOiAwMDAwMDAwMDAwMDAwMDAwIC0gMDAwMDAwMDAwMDA5
+ZDQwMCAodXNhYmxlKQogQklPUy1lODIwOiAwMDAwMDAwMDAwMDlkNDAwIC0gMDAwMDAwMDAwMDBh
+MDAwMCAocmVzZXJ2ZWQpCiBCSU9TLWU4MjA6IDAwMDAwMDAwMDAwZjAwMDAgLSAwMDAwMDAwMDAw
+MTAwMDAwIChyZXNlcnZlZCkKIEJJT1MtZTgyMDogMDAwMDAwMDAwMDEwMDAwMCAtIDAwMDAwMDAw
+OWZmZWMwMDAgKHVzYWJsZSkKIEJJT1MtZTgyMDogMDAwMDAwMDA5ZmZlYzAwMCAtIDAwMDAwMDAw
+OWZmZWYwMDAgKEFDUEkgZGF0YSkKIEJJT1MtZTgyMDogMDAwMDAwMDA5ZmZlZjAwMCAtIDAwMDAw
+MDAwOWZmZmYwMDAgKHJlc2VydmVkKQogQklPUy1lODIwOiAwMDAwMDAwMDlmZmZmMDAwIC0gMDAw
+MDAwMDBhMDAwMDAwMCAoQUNQSSBOVlMpCiBCSU9TLWU4MjA6IDAwMDAwMDAwZmVjMDAwMDAgLSAw
+MDAwMDAwMGZlYzAxMDAwIChyZXNlcnZlZCkKIEJJT1MtZTgyMDogMDAwMDAwMDBmZWUwMDAwMCAt
+IDAwMDAwMDAwZmVlMDEwMDAgKHJlc2VydmVkKQogQklPUy1lODIwOiAwMDAwMDAwMGZmZmYwMDAw
+IC0gMDAwMDAwMDEwMDAwMDAwMCAocmVzZXJ2ZWQpCjE2NjNNQiBISUdITUVNIGF2YWlsYWJsZS4K
+ODk2TUIgTE9XTUVNIGF2YWlsYWJsZS4KZm91bmQgU01QIE1QLXRhYmxlIGF0IDAwMGY3ZTkwClVz
+aW5nIHg4NiBzZWdtZW50IGxpbWl0cyB0byBhcHByb3hpbWF0ZSBOWCBwcm90ZWN0aW9uCk9uIG5v
+ZGUgMCB0b3RhbHBhZ2VzOiA2NTUzNDAKICBETUEgem9uZTogNDA5NiBwYWdlcywgTElGTyBiYXRj
+aDowCiAgTm9ybWFsIHpvbmU6IDIyNTI4MCBwYWdlcywgTElGTyBiYXRjaDozMQogIEhpZ2hNZW0g
+em9uZTogNDI1OTY0IHBhZ2VzLCBMSUZPIGJhdGNoOjMxCkRNSSAyLjMgcHJlc2VudC4KQUNQSTog
+UlNEUCAodjAwMCBBU1VTICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICkgQCAweDAw
+MGY4NWUwCkFDUEk6IFJTRFQgKHYwMDEgQVNVUyAgIEE3TTI2Ni1EIDB4MzAzMDMwMzEgTVNGVCAw
+eDMxMzEzMDMxKSBAIDB4OWZmZWMwMDAKQUNQSTogRkFEVCAodjAwMSBBU1VTICAgQTdNMjY2LUQg
+MHgzMDMwMzAzMSBNU0ZUIDB4MzEzMTMwMzEpIEAgMHg5ZmZlYzEwMApBQ1BJOiBCT09UICh2MDAx
+IEFTVVMgICBBN00yNjYtRCAweDMwMzAzMDMxIE1TRlQgMHgzMTMxMzAzMSkgQCAweDlmZmVjMDQw
+CkFDUEk6IE1BRFQgKHYwMDEgQVNVUyAgIEE3TTI2Ni1EIDB4MzAzMDMwMzEgTVNGVCAweDMxMzEz
+MDMxKSBAIDB4OWZmZWMwODAKQUNQSTogRFNEVCAodjAwMSAgIEFTVVMgQTdNMjY2LUQgMHgwMDAw
+MTAwMCBNU0ZUIDB4MDEwMDAwMGIpIEAgMHgwMDAwMDAwMApBQ1BJOiBQTS1UaW1lciBJTyBQb3J0
+OiAweGU0MDgKQUNQSTogTG9jYWwgQVBJQyBhZGRyZXNzIDB4ZmVlMDAwMDAKQUNQSTogTEFQSUMg
+KGFjcGlfaWRbMHgwMF0gbGFwaWNfaWRbMHgwMF0gZW5hYmxlZCkKUHJvY2Vzc29yICMwIDY6OCBB
+UElDIHZlcnNpb24gMTYKQUNQSTogTEFQSUMgKGFjcGlfaWRbMHgwMV0gbGFwaWNfaWRbMHgwMV0g
+ZW5hYmxlZCkKUHJvY2Vzc29yICMxIDY6OCBBUElDIHZlcnNpb24gMTYKV0FSTklORzogTlJfQ1BV
+UyBsaW1pdCBvZiAxIHJlYWNoZWQuICBQcm9jZXNzb3IgaWdub3JlZC4KQUNQSTogTEFQSUNfTk1J
+IChhY3BpX2lkWzB4MDBdIGhpZ2ggZWRnZSBsaW50WzB4MV0pCkFDUEk6IExBUElDX05NSSAoYWNw
+aV9pZFsweDAxXSBoaWdoIGVkZ2UgbGludFsweDFdKQpBQ1BJOiBJT0FQSUMgKGlkWzB4MDJdIGFk
+ZHJlc3NbMHhmZWMwMDAwMF0gZ3NpX2Jhc2VbMF0pCklPQVBJQ1swXTogYXBpY19pZCAyLCB2ZXJz
+aW9uIDE3LCBhZGRyZXNzIDB4ZmVjMDAwMDAsIEdTSSAwLTIzCkFDUEk6IElOVF9TUkNfT1ZSIChi
+dXMgMCBidXNfaXJxIDAgZ2xvYmFsX2lycSAyIGRmbCBkZmwpCkFDUEk6IElOVF9TUkNfT1ZSIChi
+dXMgMCBidXNfaXJxIDkgZ2xvYmFsX2lycSA5IGxvdyBsZXZlbCkKQUNQSTogSVJRMCB1c2VkIGJ5
+IG92ZXJyaWRlLgpBQ1BJOiBJUlEyIHVzZWQgYnkgb3ZlcnJpZGUuCkFDUEk6IElSUTkgdXNlZCBi
+eSBvdmVycmlkZS4KRW5hYmxpbmcgQVBJQyBtb2RlOiAgRmxhdC4gIFVzaW5nIDEgSS9PIEFQSUNz
+ClVzaW5nIEFDUEkgKE1BRFQpIGZvciBTTVAgY29uZmlndXJhdGlvbiBpbmZvcm1hdGlvbgpBbGxv
+Y2F0aW5nIFBDSSByZXNvdXJjZXMgc3RhcnRpbmcgYXQgYTgwMDAwMDAgKGdhcDogYTAwMDAwMDA6
+NWVjMDAwMDApCkRldGVjdGVkIDE2NjYuNzg3IE1IeiBwcm9jZXNzb3IuCkJ1aWx0IDEgem9uZWxp
+c3RzLiAgVG90YWwgcGFnZXM6IDY1NTM0MApLZXJuZWwgY29tbWFuZCBsaW5lOiBybyByb290PUxB
+QkVMPS8gZGVidWcgc2luZ2xlIGNvbnNvbGU9dHR5UzAsOTYwMCxuODEgY29uc29sZT10dHkwCm1h
+cHBlZCBBUElDIHRvIGZmZmZkMDAwIChmZWUwMDAwMCkKbWFwcGVkIElPQVBJQyB0byBmZmZmYzAw
+MCAoZmVjMDAwMDApCkVuYWJsaW5nIGZhc3QgRlBVIHNhdmUgYW5kIHJlc3RvcmUuLi4gZG9uZS4K
+RW5hYmxpbmcgdW5tYXNrZWQgU0lNRCBGUFUgZXhjZXB0aW9uIHN1cHBvcnQuLi4gZG9uZS4KSW5p
+dGlhbGl6aW5nIENQVSMwCkNQVSAwIGlycXN0YWNrcywgaGFyZD1jMDc1YjAwMCBzb2Z0PWMwNzVh
+MDAwClBJRCBoYXNoIHRhYmxlIGVudHJpZXM6IDQwOTYgKG9yZGVyOiAxMiwgMTYzODQgYnl0ZXMp
+CkNvbnNvbGU6IGNvbG91ciBWR0ErIDgweDI1CkRlbnRyeSBjYWNoZSBoYXNoIHRhYmxlIGVudHJp
+ZXM6IDEzMTA3MiAob3JkZXI6IDcsIDUyNDI4OCBieXRlcykKSW5vZGUtY2FjaGUgaGFzaCB0YWJs
+ZSBlbnRyaWVzOiA2NTUzNiAob3JkZXI6IDYsIDI2MjE0NCBieXRlcykKTWVtb3J5OiAyNTkzNzY4
+ay8yNjIxMzYwayBhdmFpbGFibGUgKDIwNDFrIGtlcm5lbCBjb2RlLCAyNjMwOGsgcmVzZXJ2ZWQs
+IDgwMWsgZGF0YSwgMjIwayBpbml0LCAxNzAzODU2ayBoaWdobWVtKQpDaGVja2luZyBpZiB0aGlz
+IHByb2Nlc3NvciBob25vdXJzIHRoZSBXUCBiaXQgZXZlbiBpbiBzdXBlcnZpc29yIG1vZGUuLi4g
+T2suCkNhbGlicmF0aW5nIGRlbGF5IHVzaW5nIHRpbWVyIHNwZWNpZmljIHJvdXRpbmUuLiAzMzM2
+Ljk0IEJvZ29NSVBTIChscGo9NjY3Mzg5MykKU2VjdXJpdHkgRnJhbWV3b3JrIHYxLjAuMCBpbml0
+aWFsaXplZApTRUxpbnV4OiAgSW5pdGlhbGl6aW5nLgpTRUxpbnV4OiAgU3RhcnRpbmcgaW4gcGVy
+bWlzc2l2ZSBtb2RlCnNlbGludXhfcmVnaXN0ZXJfc2VjdXJpdHk6ICBSZWdpc3RlcmluZyBzZWNv
+bmRhcnkgbW9kdWxlIGNhcGFiaWxpdHkKQ2FwYWJpbGl0eSBMU00gaW5pdGlhbGl6ZWQgYXMgc2Vj
+b25kYXJ5Ck1vdW50LWNhY2hlIGhhc2ggdGFibGUgZW50cmllczogNTEyCkNQVTogQWZ0ZXIgZ2Vu
+ZXJpYyBpZGVudGlmeSwgY2FwczogMDM4M2ZiZmYgYzFjYmZiZmYgMDAwMDAwMDAgMDAwMDAwMDAg
+MDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAKQ1BVOiBBZnRlciB2ZW5kb3IgaWRlbnRpZnksIGNh
+cHM6IDAzODNmYmZmIGMxY2JmYmZmIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAw
+IDAwMDAwMDAwCkNQVTogQ0xLX0NUTCBNU1Igd2FzIDYwMDNkMjJmLiBSZXByb2dyYW1taW5nIHRv
+IDIwMDNkMjJmCkNQVTogTDEgSSBDYWNoZTogNjRLICg2NCBieXRlcy9saW5lKSwgRCBjYWNoZSA2
+NEsgKDY0IGJ5dGVzL2xpbmUpCkNQVTogTDIgQ2FjaGU6IDI1NksgKDY0IGJ5dGVzL2xpbmUpCkNQ
+VTogQWZ0ZXIgYWxsIGluaXRzLCBjYXBzOiAwMzgzZjNmZiBjMWNiZmJmZiAwMDAwMDAwMCAwMDAw
+MDQyMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMApJbnRlbCBtYWNoaW5lIGNoZWNrIGFyY2hp
+dGVjdHVyZSBzdXBwb3J0ZWQuCkludGVsIG1hY2hpbmUgY2hlY2sgcmVwb3J0aW5nIGVuYWJsZWQg
+b24gQ1BVIzAuCkNQVTogQU1EIEF0aGxvbihUTSkgTVAgMjAwMCsgc3RlcHBpbmcgMDEKQ2hlY2tp
+bmcgJ2hsdCcgaW5zdHJ1Y3Rpb24uLi4gT0suCkFDUEk6IENvcmUgcmV2aXNpb24gMjAwNjA3MDcK
+RU5BQkxJTkcgSU8tQVBJQyBJUlFzCi4uVElNRVI6IHZlY3Rvcj0weDMxIGFwaWMxPTAgcGluMT0y
+IGFwaWMyPS0xIHBpbjI9LTEKY2hlY2tpbmcgaWYgaW1hZ2UgaXMgaW5pdHJhbWZzLi4uIGl0IGlz
+CkZyZWVpbmcgaW5pdHJkIG1lbW9yeTogMTA2NGsgZnJlZWQKTkVUOiBSZWdpc3RlcmVkIHByb3Rv
+Y29sIGZhbWlseSAxNgpBQ1BJOiBidXMgdHlwZSBwY2kgcmVnaXN0ZXJlZApQQ0k6IFBDSSBCSU9T
+IHJldmlzaW9uIDIuMTAgZW50cnkgYXQgMHhmMWYyMCwgbGFzdCBidXM9MgpQQ0k6IFVzaW5nIGNv
+bmZpZ3VyYXRpb24gdHlwZSAxClNldHRpbmcgdXAgc3RhbmRhcmQgUENJIHJlc291cmNlcwpBQ1BJ
+OiBJbnRlcnByZXRlciBlbmFibGVkCkFDUEk6IFVzaW5nIElPQVBJQyBmb3IgaW50ZXJydXB0IHJv
+dXRpbmcKQUNQSTogUENJIEludGVycnVwdCBMaW5rIFtMTktBXSAoSVJRcyAzIDQgNSA2IDcgOSAx
+MCAqMTEgMTIgMTQgMTUpCkFDUEk6IFBDSSBJbnRlcnJ1cHQgTGluayBbTE5LQl0gKElSUXMgMyA0
+IDUgNiA3IDkgKjEwIDExIDEyIDE0IDE1KQpBQ1BJOiBQQ0kgSW50ZXJydXB0IExpbmsgW0xOS0Nd
+IChJUlFzIDMgNCAqNSA2IDcgOSAxMCAxMSAxMiAxNCAxNSkKQUNQSTogUENJIEludGVycnVwdCBM
+aW5rIFtMTktEXSAoSVJRcyAzIDQgNSA2IDcgKjkgMTAgMTEgMTIgMTQgMTUpCkFDUEk6IFBDSSBS
+b290IEJyaWRnZSBbUENJMF0gKDAwMDA6MDApClBDSTogUHJvYmluZyBQQ0kgaGFyZHdhcmUgKGJ1
+cyAwMCkKQUNQSTogQXNzdW1lIHJvb3QgYnJpZGdlIFtcX1NCXy5QQ0kwXSBidXMgaXMgMApCb290
+IHZpZGVvIGRldmljZSBpcyAwMDAwOjAxOjA1LjAKQUNQSTogUENJIEludGVycnVwdCBSb3V0aW5n
+IFRhYmxlIFtcX1NCXy5QQ0kwLl9QUlRdCkFDUEk6IFBDSSBJbnRlcnJ1cHQgUm91dGluZyBUYWJs
+ZSBbXF9TQl8uUENJMC5QQ0kxLl9QUlRdCkFDUEk6IFBDSSBJbnRlcnJ1cHQgUm91dGluZyBUYWJs
+ZSBbXF9TQl8uUENJMC5QQ0kyLl9QUlRdCkxpbnV4IFBsdWcgYW5kIFBsYXkgU3VwcG9ydCB2MC45
+NyAoYykgQWRhbSBCZWxheQpwbnA6IFBuUCBBQ1BJIGluaXQKcG5wOiBQblAgQUNQSTogZm91bmQg
+MTQgZGV2aWNlcwp1c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBkcml2ZXIgdXNiZnMKdXNiY29yZTog
+cmVnaXN0ZXJlZCBuZXcgZHJpdmVyIGh1YgpQQ0k6IFVzaW5nIEFDUEkgZm9yIElSUSByb3V0aW5n
+ClBDSTogSWYgYSBkZXZpY2UgZG9lc24ndCB3b3JrLCB0cnkgInBjaT1yb3V0ZWlycSIuICBJZiBp
+dCBoZWxwcywgcG9zdCBhIHJlcG9ydApwbnA6IDAwOjAzOiBpb3BvcnQgcmFuZ2UgMHhlNDAwLTB4
+ZTRmZSBjb3VsZCBub3QgYmUgcmVzZXJ2ZWQKUENJOiBCcmlkZ2U6IDAwMDA6MDA6MDEuMAogIElP
+IHdpbmRvdzogZDAwMC1kZmZmCiAgTUVNIHdpbmRvdzogZWUwMDAwMDAtZWVkZmZmZmYKICBQUkVG
+RVRDSCB3aW5kb3c6IGVmZjAwMDAwLWZiN2ZmZmZmClBDSTogQnJpZGdlOiAwMDAwOjAwOjEwLjAK
+ICBJTyB3aW5kb3c6IGEwMDAtYWZmZgogIE1FTSB3aW5kb3c6IGU5ODAwMDAwLWVjZmZmZmZmCiAg
+UFJFRkVUQ0ggd2luZG93OiBlZWUwMDAwMC1lZWVmZmZmZgpQQ0k6IFNldHRpbmcgbGF0ZW5jeSB0
+aW1lciBvZiBkZXZpY2UgMDAwMDowMDowMS4wIHRvIDY0Ck5FVDogUmVnaXN0ZXJlZCBwcm90b2Nv
+bCBmYW1pbHkgMgpJUCByb3V0ZSBjYWNoZSBoYXNoIHRhYmxlIGVudHJpZXM6IDMyNzY4IChvcmRl
+cjogNSwgMTMxMDcyIGJ5dGVzKQpUQ1AgZXN0YWJsaXNoZWQgaGFzaCB0YWJsZSBlbnRyaWVzOiAy
+NjIxNDQgKG9yZGVyOiAxMCwgNDE5NDMwNCBieXRlcykKVENQIGJpbmQgaGFzaCB0YWJsZSBlbnRy
+aWVzOiA2NTUzNiAob3JkZXI6IDgsIDEzMTA3MjAgYnl0ZXMpClRDUDogSGFzaCB0YWJsZXMgY29u
+ZmlndXJlZCAoZXN0YWJsaXNoZWQgMjYyMTQ0IGJpbmQgNjU1MzYpClRDUCByZW5vIHJlZ2lzdGVy
+ZWQKU2ltcGxlIEJvb3QgRmxhZyB2YWx1ZSAweDAgcmVhZCBmcm9tIENNT1MgUkFNIHdhcyBpbnZh
+bGlkClNpbXBsZSBCb290IEZsYWcgYXQgMHgzYSBzZXQgdG8gMHgxCmFwbTogQklPUyB2ZXJzaW9u
+IDEuMiBGbGFncyAweDAzIChEcml2ZXIgdmVyc2lvbiAxLjE2YWMpCmFwbTogb3ZlcnJpZGRlbiBi
+eSBBQ1BJLgphdWRpdDogaW5pdGlhbGl6aW5nIG5ldGxpbmsgc29ja2V0IChkaXNhYmxlZCkKYXVk
+aXQoMTE2MjA2NTE0MS4yMTY6MSk6IGluaXRpYWxpemVkCmhpZ2htZW0gYm91bmNlIHBvb2wgc2l6
+ZTogNjQgcGFnZXMKVG90YWwgSHVnZVRMQiBtZW1vcnkgYWxsb2NhdGVkLCAwClZGUzogRGlzayBx
+dW90YXMgZHF1b3RfNi41LjEKRHF1b3QtY2FjaGUgaGFzaCB0YWJsZSBlbnRyaWVzOiAxMDI0IChv
+cmRlciAwLCA0MDk2IGJ5dGVzKQpTRUxpbnV4OiAgUmVnaXN0ZXJpbmcgbmV0ZmlsdGVyIGhvb2tz
+CkluaXRpYWxpemluZyBDcnlwdG9ncmFwaGljIEFQSQprc2lnbjogSW5zdGFsbGluZyBwdWJsaWMg
+a2V5IGRhdGEKTG9hZGluZyBrZXlyaW5nCi0gQWRkZWQgcHVibGljIGtleSBBRkI4MUNDOEFBRTcy
+MUJFCi0gVXNlciBJRDogUmVkIEhhdCwgSW5jLiAoS2VybmVsIE1vZHVsZSBHUEcga2V5KQppbyBz
+Y2hlZHVsZXIgbm9vcCByZWdpc3RlcmVkCmlvIHNjaGVkdWxlciBhbnRpY2lwYXRvcnkgcmVnaXN0
+ZXJlZAppbyBzY2hlZHVsZXIgZGVhZGxpbmUgcmVnaXN0ZXJlZAppbyBzY2hlZHVsZXIgY2ZxIHJl
+Z2lzdGVyZWQgKGRlZmF1bHQpCkJJT1MgZmFpbGVkIHRvIGVuYWJsZSBQQ0kgc3RhbmRhcmRzIGNv
+bXBsaWFuY2UsIGZpeGluZyB0aGlzIGVycm9yLgpwY2lfaG90cGx1ZzogUENJIEhvdCBQbHVnIFBD
+SSBDb3JlIHZlcnNpb246IDAuNQpBQ1BJOiBHZXR0aW5nIGNwdWluZGV4IGZvciBhY3BpaWQgMHgx
+CmlzYXBucDogU2Nhbm5pbmcgZm9yIFBuUCBjYXJkcy4uLgppc2FwbnA6IE5vIFBsdWcgJiBQbGF5
+IGRldmljZSBmb3VuZApSZWFsIFRpbWUgQ2xvY2sgRHJpdmVyIHYxLjEyYWMKTm9uLXZvbGF0aWxl
+IG1lbW9yeSBkcml2ZXIgdjEuMgpMaW51eCBhZ3BnYXJ0IGludGVyZmFjZSB2MC4xMDEgKGMpIERh
+dmUgSm9uZXMKYWdwZ2FydDogRGV0ZWN0ZWQgQU1EIDc2ME1QIGNoaXBzZXQKYWdwZ2FydDogQUdQ
+IGFwZXJ0dXJlIGlzIDMyTSBAIDB4ZmMwMDAwMDAKU2VyaWFsOiA4MjUwLzE2NTUwIGRyaXZlciAk
+UmV2aXNpb246IDEuOTAgJCA0IHBvcnRzLCBJUlEgc2hhcmluZyBlbmFibGVkCv9zZXJpYWw4MjUw
+OiB0dHlTMCBhdCBJL08gMHgzZjggKGlycSA9IDQpIGlzIGEgMTY1NTBBCnNlcmlhbDgyNTA6IHR0
+eVMxIGF0IEkvTyAweDJmOCAoaXJxID0gMykgaXMgYSAxNjU1MEEKMDA6MGE6IHR0eVMwIGF0IEkv
+TyAweDNmOCAoaXJxID0gNCkgaXMgYSAxNjU1MEEKMDA6MGI6IHR0eVMxIGF0IEkvTyAweDJmOCAo
+aXJxID0gMykgaXMgYSAxNjU1MEEKUkFNRElTSyBkcml2ZXIgaW5pdGlhbGl6ZWQ6IDE2IFJBTSBk
+aXNrcyBvZiAxNjM4NEsgc2l6ZSA0MDk2IGJsb2Nrc2l6ZQpVbmlmb3JtIE11bHRpLVBsYXRmb3Jt
+IEUtSURFIGRyaXZlciBSZXZpc2lvbjogNy4wMGFscGhhMgppZGU6IEFzc3VtaW5nIDMzTUh6IHN5
+c3RlbSBidXMgc3BlZWQgZm9yIFBJTyBtb2Rlczsgb3ZlcnJpZGUgd2l0aCBpZGVidXM9eHgKQU1E
+NzQ0MTogSURFIGNvbnRyb2xsZXIgYXQgUENJIHNsb3QgMDAwMDowMDowNy4xCkFNRDc0NDE6IGNo
+aXBzZXQgcmV2aXNpb24gNApBTUQ3NDQxOiBub3QgMTAwJSBuYXRpdmUgbW9kZTogd2lsbCBwcm9i
+ZSBpcnFzIGxhdGVyCkFNRDc0NDE6IDAwMDA6MDA6MDcuMSAocmV2IDA0KSBVRE1BMTAwIGNvbnRy
+b2xsZXIKICAgIGlkZTA6IEJNLURNQSBhdCAweGI4MDAtMHhiODA3LCBCSU9TIHNldHRpbmdzOiBo
+ZGE6RE1BLCBoZGI6cGlvCiAgICBpZGUxOiBCTS1ETUEgYXQgMHhiODA4LTB4YjgwZiwgQklPUyBz
+ZXR0aW5nczogaGRjOkRNQSwgaGRkOkRNQQpQcm9iaW5nIElERSBpbnRlcmZhY2UgaWRlMC4uLgpo
+ZGE6IFdEQyBXRDQwMEpCLTAwSkpBMCwgQVRBIERJU0sgZHJpdmUKaWRlMCBhdCAweDFmMC0weDFm
+NywweDNmNiBvbiBpcnEgMTQKUHJvYmluZyBJREUgaW50ZXJmYWNlIGlkZTEuLi4KaGRjOiBXREMg
+V0QxMjAwSkItMDBSRUEwLCBBVEEgRElTSyBkcml2ZQpoZGQ6IFdEQyBXRDEyMDBKQi0wMEdWQTAs
+IEFUQSBESVNLIGRyaXZlCmlkZTEgYXQgMHgxNzAtMHgxNzcsMHgzNzYgb24gaXJxIDE1CmhkYTog
+bWF4IHJlcXVlc3Qgc2l6ZTogMTI4S2lCCmhkYTogNzgxNjUzNjAgc2VjdG9ycyAoNDAwMjAgTUIp
+IHcvODE5MktpQiBDYWNoZSwgQ0hTPTY1NTM1LzE2LzYzLCBVRE1BKDEwMCkKaGRhOiBjYWNoZSBm
+bHVzaGVzIHN1cHBvcnRlZAogaGRhOiBoZGExIGhkYTIgaGRhNCA8IGhkYTUgPgpoZGM6IG1heCBy
+ZXF1ZXN0IHNpemU6IDUxMktpQgpoZGM6IDIzNDQ0MTY0OCBzZWN0b3JzICgxMjAwMzQgTUIpIHcv
+ODE5MktpQiBDYWNoZSwgQ0hTPTE2MzgzLzI1NS82MywgVURNQSgxMDApCmhkYzogY2FjaGUgZmx1
+c2hlcyBzdXBwb3J0ZWQKIGhkYzogaGRjMQpoZGQ6IG1heCByZXF1ZXN0IHNpemU6IDUxMktpQgpo
+ZGQ6IDIzNDQ0MTY0OCBzZWN0b3JzICgxMjAwMzQgTUIpIHcvODE5MktpQiBDYWNoZSwgQ0hTPTE2
+MzgzLzI1NS82MywgVURNQSgxMDApCmhkZDogY2FjaGUgZmx1c2hlcyBzdXBwb3J0ZWQKIGhkZDog
+aGRkMQppZGUtZmxvcHB5IGRyaXZlciAwLjk5Lm5ld2lkZQp1c2Jjb3JlOiByZWdpc3RlcmVkIG5l
+dyBkcml2ZXIgbGlidXN1YWwKdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgZHJpdmVyIGhpZGRldgp1
+c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBkcml2ZXIgdXNiaGlkCmRyaXZlcnMvdXNiL2lucHV0L2hp
+ZC1jb3JlLmM6IHYyLjY6VVNCIEhJRCBjb3JlIGRyaXZlcgpQTlA6IFBTLzIgQ29udHJvbGxlciBb
+UE5QMDMwMzpQUzJLLFBOUDBmMTM6UFMyTV0gYXQgMHg2MCwweDY0IGlycSAxLDEyCnNlcmlvOiBp
+ODA0MiBBVVggcG9ydCBhdCAweDYwLDB4NjQgaXJxIDEyCnNlcmlvOiBpODA0MiBLQkQgcG9ydCBh
+dCAweDYwLDB4NjQgaXJxIDEKbWljZTogUFMvMiBtb3VzZSBkZXZpY2UgY29tbW9uIGZvciBhbGwg
+bWljZQptZDogbWQgZHJpdmVyIDAuOTAuMyBNQVhfTURfREVWUz0yNTYsIE1EX1NCX0RJU0tTPTI3
+Cm1kOiBiaXRtYXAgdmVyc2lvbiA0LjM5ClRDUCBiaWMgcmVnaXN0ZXJlZApJbml0aWFsaXppbmcg
+SVBzZWMgbmV0bGluayBzb2NrZXQKTkVUOiBSZWdpc3RlcmVkIHByb3RvY29sIGZhbWlseSAxCk5F
+VDogUmVnaXN0ZXJlZCBwcm90b2NvbCBmYW1pbHkgMTcKcG93ZXJub3ctazg6IFByb2Nlc3NvciBj
+cHVpZCA2ODEgbm90IHN1cHBvcnRlZApVc2luZyBJUEkgU2hvcnRjdXQgbW9kZQpUaW1lOiB0c2Mg
+Y2xvY2tzb3VyY2UgaGFzIGJlZW4gaW5zdGFsbGVkLgpBQ1BJOiAoc3VwcG9ydHMgUzAgUzEgUzQg
+UzUpCkZyZWVpbmcgdW51c2VkIGtlcm5lbCBtZW1vcnk6IDIyMGsgZnJlZWQKV3JpdGUgcHJvdGVj
+dGluZyB0aGUga2VybmVsIHJlYWQtb25seSBkYXRhOiAzNzdrCmlucHV0OiBBVCBUcmFuc2xhdGVk
+IFNldCAyIGtleWJvYXJkIGFzIC9jbGFzcy9pbnB1dC9pbnB1dDAKbG9naXBzMnBwOiBEZXRlY3Rl
+ZCB1bmtub3duIGxvZ2l0ZWNoIG1vdXNlIG1vZGVsIDc3ClNDU0kgc3Vic3lzdGVtIGluaXRpYWxp
+emVkCmxpYmF0YSB2ZXJzaW9uIDIuMDAgbG9hZGVkLgpzYXRhX3Byb21pc2UgMDAwMDowMjowNi4w
+OiB2ZXJzaW9uIDEuMDQKQUNQSTogUENJIEludGVycnVwdCAwMDAwOjAyOjA2LjBbQV0gLT4gR1NJ
+IDE3IChsZXZlbCwgbG93KSAtPiBJUlEgMTY5CnNhdGFfcHJvbWlzZSBQQVRBIHBvcnQgZm91bmQK
+YXRhMTogU0FUQSBtYXggVURNQS8xMzMgY21kIDB4Rjg4MkMyMDAgY3RsIDB4Rjg4MkMyMzggYm1k
+bWEgMHgwIGlycSAxNjkKYXRhMjogU0FUQSBtYXggVURNQS8xMzMgY21kIDB4Rjg4MkMyODAgY3Rs
+IDB4Rjg4MkMyQjggYm1kbWEgMHgwIGlycSAxNjkKYXRhMzogU0FUQSBtYXggVURNQS8xMzMgY21k
+IDB4Rjg4MkMzMDAgY3RsIDB4Rjg4MkMzMzggYm1kbWEgMHgwIGlycSAxNjkKc2NzaTAgOiBzYXRh
+X3Byb21pc2UKaW5wdXQ6IFBTLzIgTG9naXRlY2ggTW91c2UgYXMgL2NsYXNzL2lucHV0L2lucHV0
+MQphdGExOiBTQVRBIGxpbmsgdXAgMS41IEdicHMgKFNTdGF0dXMgMTEzIFNDb250cm9sIDMwMCkK
+YXRhMS4wMDogQVRBLTcsIG1heCBVRE1BLzEzMywgMzEyNTgxODA4IHNlY3RvcnM6IExCQTQ4IAph
+dGExLjAwOiBhdGExOiBkZXYgMCBtdWx0aSBjb3VudCAwCmF0YTEuMDA6IGNvbmZpZ3VyZWQgZm9y
+IFVETUEvMTMzCnNjc2kxIDogc2F0YV9wcm9taXNlCmF0YTI6IFNBVEEgbGluayB1cCAxLjUgR2Jw
+cyAoU1N0YXR1cyAxMTMgU0NvbnRyb2wgMzAwKQphdGEyLjAwOiBBVEEtNywgbWF4IFVETUEvMTMz
+LCAzMTI1ODE4MDggc2VjdG9yczogTEJBNDggCmF0YTIuMDA6IGF0YTI6IGRldiAwIG11bHRpIGNv
+dW50IDAKYXRhMi4wMDogY29uZmlndXJlZCBmb3IgVURNQS8xMzMKQlVHOiB1bmFibGUgdG8gaGFu
+ZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgYXQgdmlydHVhbCBhZGRyZXNzIDAw
+MDAwMDA4CiBwcmludGluZyBlaXA6CmY4ODc5NTRjCipwZGUgPSAwMDAwMDAwMApPb3BzOiAwMDAw
+IFsjMV0KbGFzdCBzeXNmcyBmaWxlOiAvYmxvY2svcmFtMC9yZW1vdmFibGUKTW9kdWxlcyBsaW5r
+ZWQgaW46IHNhdGFfcHJvbWlzZSBsaWJhdGEgc2RfbW9kIHNjc2lfbW9kCkNQVTogICAgMApFSVA6
+ICAgIDAwNjA6WzxmODg3OTU0Yz5dICAgIE5vdCB0YWludGVkIFZMSQpFRkxBR1M6IDAwMDEwMjAy
+ICAgKDIuNi4xOC0xLjIyMDAuZmM1ICMxKSAKRUlQIGlzIGF0IHBkY19zYXRhX3Njcl9yZWFkKzB4
+MTQvMHgxNyBbc2F0YV9wcm9taXNlXQplYXg6IDAwMDAwMDA4ICAgZWJ4OiBjMjYyODM1YyAgIGVj
+eDogYzI2MjgzNWMgICBlZHg6IDAwMDAwMDAyCmVzaTogZjdlZGNlMTggICBlZGk6IGMyNjI4MzVj
+ICAgZWJwOiBjMjYyNGQ3OCAgIGVzcDogZjdlZGNkYjgKZHM6IDAwN2IgICBlczogMDA3YiAgIHNz
+OiAwMDY4ClByb2Nlc3MgaW5zbW9kIChwaWQ6IDMzMiwgdGk9ZjdlZGMwMDAgdGFzaz1mN2VlYTBi
+MCB0YXNrLnRpPWY3ZWRjMDAwKQpTdGFjazogZjg4M2JhNjkgYzI2MjQ5MzAgYzI2MjQ0ZTggZjg4
+NDA1YzQgYzI2MjQ1MDQgYzI2MGQ4ZTAgMDAwMDAwNTMgZjg4NDZlMTcgCiAgICAgICBmODgyYzMw
+MCBmODgyYzMzOCAwMDAwMDAwMCAwMDAwMDBhOSBjMjYxM2MwMCBjMjYwZDhlMCAwMDAwMDAwMCAw
+MDAwMDAwMyAKICAgICAgIGY3ZmE2ODQ4IDAwMDAwMDAyIDAwMDAwMDAyIDAwMDAwMDAzIDAwMDAw
+MDAzIDAwMDAwMDAxIDAwMDAwMDA1IGMyNjI0OTMwIApDYWxsIFRyYWNlOgogWzxmODgzYmE2OT5d
+IHNhdGFfc2NyX3JlYWQrMHgxYS8weDI4IFtsaWJhdGFdCiBbPGY4ODQwNWM0Pl0gYXRhX2Rldmlj
+ZV9hZGQrMHg0MDYvMHg3NjIgW2xpYmF0YV0KIFs8Zjg4NzlhMjM+XSBwZGNfYXRhX2luaXRfb25l
+KzB4MmRjLzB4MzE5IFtzYXRhX3Byb21pc2VdCiBbPGMwNGRmNGVmPl0gcGNpX2RldmljZV9wcm9i
+ZSsweDM2LzB4NTcKIFs8YzA1NDA1MzE+XSBkcml2ZXJfcHJvYmVfZGV2aWNlKzB4NDUvMHg5YQog
+WzxjMDU0MDY1OD5dIF9fZHJpdmVyX2F0dGFjaCsweDYzLzB4OGIKIFs8YzA1M2ZmYmU+XSBidXNf
+Zm9yX2VhY2hfZGV2KzB4MzcvMHg1OQogWzxjMDU0MDQ5Mj5dIGRyaXZlcl9hdHRhY2grMHgxNi8w
+eDE4CiBbPGMwNTNmY2I2Pl0gYnVzX2FkZF9kcml2ZXIrMHg2Zi8weDEwZAogWzxjMDRkZjYyMT5d
+IF9fcGNpX3JlZ2lzdGVyX2RyaXZlcisweDQ5LzB4NjMKIFs8YzA0MzQxZmU+XSBzeXNfaW5pdF9t
+b2R1bGUrMHgxNGI5LzB4MTYwYQogWzxjMDQwMmQ5Yj5dIHN5c2NhbGxfY2FsbCsweDcvMHhiCkRX
+QVJGMiB1bndpbmRlciBzdHVjayBhdCBzeXNjYWxsX2NhbGwrMHg3LzB4YgpMZWZ0b3ZlciBpbmV4
+YWN0IGJhY2t0cmFjZToKID09PT09PT09PT09PT09PT09PT09PT09CkNvZGU6IDg0IDMyIGJhIGM3
+IGU4IDM0IGIxIGI4IGM3IDgzIGM0IDE0IDg5IGRhIDg5IGYwIDViIDVlIGU5IDgyIGExIGZjIGZm
+IDg5IGMxIDgzIGM4IGZmIDgzIGZhIDAyIDc3IDBjIDhkIDA0IDk1IDAwIDAwIDAwIDAwIDAzIDQx
+IDY4IDw4Yj4gMDAgYzMgOGIgODAgYjggMWYgMDAgMDAgOGIgNDAgMTggOGIgNDAgNDAgYzMgODMg
+ZmEgMDIgNTMgODkgCkVJUDogWzxmODg3OTU0Yz5dIHBkY19zYXRhX3Njcl9yZWFkKzB4MTQvMHgx
+NyBbc2F0YV9wcm9taXNlXSBTUzpFU1AgMDA2ODpmN2VkY2RiOAogPDY+bWVnYXJhaWQgY21tOiAy
+LjIwLjIuNyAoUmVsZWFzZSBEYXRlOiBTdW4gSnVsIDE2IDAwOjAxOjAzIEVTVCAyMDA2KQptZWdh
+cmFpZDogMi4yMC40LjkgKFJlbGVhc2UgRGF0ZTogU3VuIEp1bCAxNiAxMjoyNzoyMiBFU1QgMjAw
+NikKbWVnYXJhaWQ6IHByb2JlIG5ldyBkZXZpY2UgMHgxMDAwOjB4MTk2MDoweDEwMDA6MHgwNTE4
+OiBidXMgMDpzbG90IDk6ZnVuYyAwCkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowMDowOS4wW0Fd
+IC0+IEdTSSAyMSAobGV2ZWwsIGxvdykgLT4gSVJRIDE3NwptZWdhcmFpZDogZncgdmVyc2lvbjpb
+MUwzN10gYmlvcyB2ZXJzaW9uOltHMTE5XQpzY3NpMyA6IExTSSBMb2dpYyBNZWdhUkFJRCBkcml2
+ZXIKc2NzaVszXTogc2Nhbm5pbmcgc2NzaSBjaGFubmVsIDAgW1BoeSAwXSBmb3Igbm9uLXJhaWQg
+ZGV2aWNlcwpzY3NpWzNdOiBzY2FubmluZyBzY3NpIGNoYW5uZWwgMSBbUGh5IDFdIGZvciBub24t
+cmFpZCBkZXZpY2VzCnNjc2lbM106IHNjYW5uaW5nIHNjc2kgY2hhbm5lbCAyIFt2aXJ0dWFsXSBm
+b3IgbG9naWNhbCBkcml2ZXMKICBWZW5kb3I6IE1lZ2FSQUlEICBNb2RlbDogTEQwIFJBSUQ1IDcw
+MDA0UiAgUmV2OiAxTDM3CiAgVHlwZTogICBEaXJlY3QtQWNjZXNzICAgICAgICAgICAgICAgICAg
+ICAgIEFOU0kgU0NTSSByZXZpc2lvbjogMDIKU0NTSSBkZXZpY2Ugc2RhOiAxNDMzNjgxOTIgNTEy
+LWJ5dGUgaGR3ciBzZWN0b3JzICg3MzQwNSBNQikKc2RhOiBXcml0ZSBQcm90ZWN0IGlzIG9mZgpz
+ZGE6IE1vZGUgU2Vuc2U6IDAwIDAwIDAwIDAwCnNkYTogYXNraW5nIGZvciBjYWNoZSBkYXRhIGZh
+aWxlZApzZGE6IGFzc3VtaW5nIGRyaXZlIGNhY2hlOiB3cml0ZSB0aHJvdWdoClNDU0kgZGV2aWNl
+IHNkYTogMTQzMzY4MTkyIDUxMi1ieXRlIGhkd3Igc2VjdG9ycyAoNzM0MDUgTUIpCnNkYTogV3Jp
+dGUgUHJvdGVjdCBpcyBvZmYKc2RhOiBNb2RlIFNlbnNlOiAwMCAwMCAwMCAwMApzZGE6IGFza2lu
+ZyBmb3IgY2FjaGUgZGF0YSBmYWlsZWQKc2RhOiBhc3N1bWluZyBkcml2ZSBjYWNoZTogd3JpdGUg
+dGhyb3VnaAogc2RhOiBzZGExIHNkYTIgc2RhMyBzZGE0IDwgc2RhNSA+CnNkIDM6MjowOjA6IEF0
+dGFjaGVkIHNjc2kgZGlzayBzZGEK
 
-00:0e.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3) (prog-if 00 [Normal decode])
-	Flags: bus master, fast devsel, latency 0
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-	Memory behind bridge: d0000000-d7ffffff
-	Prefetchable memory behind bridge: 00000000c0000000-00000000cfffffff
-	Capabilities: [40] Power Management version 2
-	Capabilities: [48] Message Signalled Interrupts: Mask- 64bit+ Queue=0/1 Enable-
-	Capabilities: [58] HyperTransport: MSI Mapping
-	Capabilities: [80] Express Root Port (Slot+) IRQ 0
-	Capabilities: [100] Virtual Channel
+------_=_NextPart_001_01C6FD20.8C1A1EBA
+Content-Type: text/plain;
+	name="lspcivv.txt"
+Content-Transfer-Encoding: base64
+Content-Description: lspcivv.txt
+Content-Disposition: attachment;
+	filename="lspcivv.txt"
 
-00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-	Flags: fast devsel
-	Capabilities: [80] HyperTransport: Host or Secondary Interface
+MDA6MDAuMCBIb3N0IGJyaWRnZTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcyBbQU1EXSBBTUQtNzYw
+IE1QIFtJR0Q0LTJQXSBTeXN0ZW0gQ29udHJvbGxlciAocmV2IDExKQoJQ29udHJvbDogSS9PLSBN
+ZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLSBTdGVw
+cGluZy0gU0VSUi0gRmFzdEIyQi0KCVN0YXR1czogQ2FwKyA2Nk1IeisgVURGLSBGYXN0QjJCLSBQ
+YXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydCsgPlNFUlItIDxQ
+RVJSLQoJTGF0ZW5jeTogMzIKCVJlZ2lvbiAwOiBNZW1vcnkgYXQgZmMwMDAwMDAgKDMyLWJpdCwg
+cHJlZmV0Y2hhYmxlKSBbc2l6ZT0zMk1dCglSZWdpb24gMTogTWVtb3J5IGF0IGZiODAwMDAwICgz
+Mi1iaXQsIHByZWZldGNoYWJsZSkgW3NpemU9NEtdCglSZWdpb24gMjogSS9PIHBvcnRzIGF0IGU4
+MDAgW2Rpc2FibGVkXSBbc2l6ZT00XQoJQ2FwYWJpbGl0aWVzOiBbYTBdIEFHUCB2ZXJzaW9uIDIu
+MAoJCVN0YXR1czogUlE9MTYgSXNvLSBBcnFTej0wIENhbD0wIFNCQSsgSVRBQ29oLSBHQVJUNjQt
+IEhUcmFucy0gNjRiaXQtIEZXLSBBR1AzLSBSYXRlPXgxLHgyLHg0CgkJQ29tbWFuZDogUlE9MSBB
+cnFTej0wIENhbD0wIFNCQS0gQUdQLSBHQVJUNjQtIDY0Yml0LSBGVy0gUmF0ZT08bm9uZT4KCjAw
+OjAxLjAgUENJIGJyaWRnZTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcyBbQU1EXSBBTUQtNzYwIE1Q
+IFtJR0Q0LTJQXSBBR1AgQnJpZGdlIChwcm9nLWlmIDAwIFtOb3JtYWwgZGVjb2RlXSkKCUNvbnRy
+b2w6IEkvTysgTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBh
+ckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItCglTdGF0dXM6IENhcC0gNjZNSHorIFVERi0g
+RmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQt
+ID5TRVJSLSA8UEVSUi0KCUxhdGVuY3k6IDY0CglCdXM6IHByaW1hcnk9MDAsIHNlY29uZGFyeT0w
+MSwgc3Vib3JkaW5hdGU9MDEsIHNlYy1sYXRlbmN5PTAKCUkvTyBiZWhpbmQgYnJpZGdlOiAwMDAw
+ZDAwMC0wMDAwZGZmZgoJTWVtb3J5IGJlaGluZCBicmlkZ2U6IGVlMDAwMDAwLWVlZGZmZmZmCglQ
+cmVmZXRjaGFibGUgbWVtb3J5IGJlaGluZCBicmlkZ2U6IGVmZjAwMDAwLWZiN2ZmZmZmCglTZWNv
+bmRhcnkgc3RhdHVzOiA2Nk1IeisgRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9bWVkaXVtID5UQWJv
+cnQtIDxUQWJvcnQtIDxNQWJvcnQrIDxTRVJSLSA8UEVSUi0KCUJyaWRnZUN0bDogUGFyaXR5LSBT
+RVJSLSBOb0lTQS0gVkdBKyBNQWJvcnQtID5SZXNldC0gRmFzdEIyQi0KCjAwOjA3LjAgSVNBIGJy
+aWRnZTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcyBbQU1EXSBBTUQtNzY4IFtPcHVzXSBJU0EgKHJl
+diAwNSkKCVN1YnN5c3RlbTogQVNVU1RlSyBDb21wdXRlciBJbmMuIEE3TS1EIE1haW5ib2FyZAoJ
+Q29udHJvbDogSS9PKyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlKyBNZW1XSU5WLSBWR0FTbm9v
+cC0gUGFyRXJyLSBTdGVwcGluZy0gU0VSUi0gRmFzdEIyQi0KCVN0YXR1czogQ2FwLSA2Nk1Ieisg
+VURGLSBGYXN0QjJCLSBQYXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1B
+Ym9ydC0gPlNFUlItIDxQRVJSLQoJTGF0ZW5jeTogMAoKMDA6MDcuMSBJREUgaW50ZXJmYWNlOiBB
+ZHZhbmNlZCBNaWNybyBEZXZpY2VzIFtBTURdIEFNRC03NjggW09wdXNdIElERSAocmV2IDA0KSAo
+cHJvZy1pZiA4YSBbTWFzdGVyIFNlY1AgUHJpUF0pCglTdWJzeXN0ZW06IEFkdmFuY2VkIE1pY3Jv
+IERldmljZXMgW0FNRF0gQU1ELTc2OCBbT3B1c10gSURFCglDb250cm9sOiBJL08rIE1lbS0gQnVz
+TWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBT
+RVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAtIDY2TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0g
+REVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglM
+YXRlbmN5OiAzMgoJUmVnaW9uIDQ6IEkvTyBwb3J0cyBhdCBiODAwIFtzaXplPTE2XQoKMDA6MDcu
+MyBCcmlkZ2U6IEFkdmFuY2VkIE1pY3JvIERldmljZXMgW0FNRF0gQU1ELTc2OCBbT3B1c10gQUNQ
+SSAocmV2IDAzKQoJU3Vic3lzdGVtOiBBU1VTVGVLIENvbXB1dGVyIEluYy4gQTdNLUQgTWFpbmJv
+YXJkCglDb250cm9sOiBJL08tIE1lbS0gQnVzTWFzdGVyLSBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZH
+QVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAtIDY2
+TUh6LSBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0
+LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCgowMDowOC4wIEV0aGVybmV0IGNvbnRyb2xsZXI6IElu
+dGVsIENvcnBvcmF0aW9uIDgyNTQ0RUkgR2lnYWJpdCBFdGhlcm5ldCBDb250cm9sbGVyIChDb3Bw
+ZXIpIChyZXYgMDIpCglTdWJzeXN0ZW06IEludGVsIENvcnBvcmF0aW9uIFBSTy8xMDAwIFhUIFNl
+cnZlciBBZGFwdGVyCglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1l
+bVdJTlYrIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVz
+OiBDYXArIDY2TUh6KyBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0
+LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAzMiAoNjM3NTBucyBt
+aW4pLCBDYWNoZSBMaW5lIFNpemUgMDgKCUludGVycnVwdDogcGluIEEgcm91dGVkIHRvIElSUSAx
+OAoJUmVnaW9uIDA6IE1lbW9yeSBhdCBlZDgwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxl
+KSBbc2l6ZT0xMjhLXQoJUmVnaW9uIDE6IE1lbW9yeSBhdCBlZDAwMDAwMCAoMzItYml0LCBub24t
+cHJlZmV0Y2hhYmxlKSBbc2l6ZT0xMjhLXQoJUmVnaW9uIDI6IEkvTyBwb3J0cyBhdCBiNDAwIFtz
+aXplPTMyXQoJW3ZpcnR1YWxdIEV4cGFuc2lvbiBST00gYXQgYTgwMDAwMDAgW2Rpc2FibGVkXSBb
+c2l6ZT0xMjhLXQoJQ2FwYWJpbGl0aWVzOiBbZGNdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAy
+CgkJRmxhZ3M6IFBNRUNsay0gRFNJKyBEMS0gRDItIEF1eEN1cnJlbnQ9MG1BIFBNRShEMCssRDEt
+LEQyLSxEM2hvdCssRDNjb2xkKykKCQlTdGF0dXM6IEQwIFBNRS1FbmFibGUtIERTZWw9MCBEU2Nh
+bGU9MSBQTUUtCglDYXBhYmlsaXRpZXM6IFtlNF0gUENJLVggbm9uLWJyaWRnZSBkZXZpY2UKCQlD
+b21tYW5kOiBEUEVSRS0gRVJPKyBSQkM9NTEyIE9TVD0xCgkJU3RhdHVzOiBEZXY9MDA6MDAuMCA2
+NGJpdCsgMTMzTUh6KyBTQ0QtIFVTQy0gREM9c2ltcGxlIERNTVJCQz0yMDQ4IERNT1NUPTEgRE1D
+UlM9MTYgUlNDRU0tIDI2Nk1Iei0gNTMzTUh6LQoJQ2FwYWJpbGl0aWVzOiBbZjBdIE1lc3NhZ2Ug
+U2lnbmFsbGVkIEludGVycnVwdHM6IDY0Yml0KyBRdWV1ZT0wLzAgRW5hYmxlLQoJCUFkZHJlc3M6
+IDAwMDAwMDAwMDAwMDAwMDAgIERhdGE6IDAwMDAKCjAwOjA5LjAgUkFJRCBidXMgY29udHJvbGxl
+cjogTFNJIExvZ2ljIC8gU3ltYmlvcyBMb2dpYyBNZWdhUkFJRCAocmV2IDAxKQoJU3Vic3lzdGVt
+OiBMU0kgTG9naWMgLyBTeW1iaW9zIExvZ2ljIE1lZ2FSQUlEIDUxOCBTQ1NJIDMyMC0yIENvbnRy
+b2xsZXIKCUNvbnRyb2w6IEkvTy0gTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVisg
+VkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItCglTdGF0dXM6IENhcCsg
+NjZNSHorIFVERi0gRmFzdEIyQisgUGFyRXJyLSBERVZTRUw9c2xvdyA+VEFib3J0LSA8VEFib3J0
+LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAzMiwgQ2FjaGUgTGluZSBTaXplIDA4
+CglJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJUlEgMTcKCVJlZ2lvbiAwOiBNZW1vcnkgYXQg
+ZWYwMDAwMDAgKDMyLWJpdCwgcHJlZmV0Y2hhYmxlKSBbc2l6ZT02NEtdCglbdmlydHVhbF0gRXhw
+YW5zaW9uIFJPTSBhdCBhODAyMDAwMCBbZGlzYWJsZWRdIFtzaXplPTY0S10KCUNhcGFiaWxpdGll
+czogWzgwXSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMgoJCUZsYWdzOiBQTUVDbGstIERTSS0g
+RDEtIEQyLSBBdXhDdXJyZW50PTBtQSBQTUUoRDAtLEQxLSxEMi0sRDNob3QtLEQzY29sZC0pCgkJ
+U3RhdHVzOiBEMCBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAgUE1FLQoKMDA6MTAuMCBQQ0kg
+YnJpZGdlOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzIFtBTURdIEFNRC03NjggW09wdXNdIFBDSSAo
+cmV2IDA1KSAocHJvZy1pZiAwMCBbTm9ybWFsIGRlY29kZV0pCglDb250cm9sOiBJL08rIE1lbSsg
+QnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYrIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5n
+LSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAtIDY2TUh6KyBVREYtIEZhc3RCMkItIFBhckVy
+ci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0KyA+U0VSUi0gPFBFUlIt
+CglMYXRlbmN5OiAzMgoJQnVzOiBwcmltYXJ5PTAwLCBzZWNvbmRhcnk9MDIsIHN1Ym9yZGluYXRl
+PTAyLCBzZWMtbGF0ZW5jeT0zMgoJSS9PIGJlaGluZCBicmlkZ2U6IDAwMDBhMDAwLTAwMDBhZmZm
+CglNZW1vcnkgYmVoaW5kIGJyaWRnZTogZTk4MDAwMDAtZWNmZmZmZmYKCVByZWZldGNoYWJsZSBt
+ZW1vcnkgYmVoaW5kIGJyaWRnZTogZWVlMDAwMDAtZWVlZmZmZmYKCVNlY29uZGFyeSBzdGF0dXM6
+IDY2TUh6LSBGYXN0QjJCLSBQYXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0g
+PE1BYm9ydC0gPFNFUlItIDxQRVJSLQoJQnJpZGdlQ3RsOiBQYXJpdHktIFNFUlItIE5vSVNBKyBW
+R0EtIE1BYm9ydC0gPlJlc2V0LSBGYXN0QjJCLQoKMDE6MDUuMCBWR0EgY29tcGF0aWJsZSBjb250
+cm9sbGVyOiBBVEkgVGVjaG5vbG9naWVzIEluYyBSVjM1MCBBVCBbRmlyZSBHTCBUMl0gKHJldiA4
+MCkgKHByb2ctaWYgMDAgW1ZHQV0pCglTdWJzeXN0ZW06IEFUSSBUZWNobm9sb2dpZXMgSW5jIFVu
+a25vd24gZGV2aWNlIDAwMDIKCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNs
+ZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItCglT
+dGF0dXM6IENhcCsgNjZNSHorIFVERi0gRmFzdEIyQisgUGFyRXJyLSBERVZTRUw9bWVkaXVtID5U
+QWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUi0KCUxhdGVuY3k6IDY0ICgyMDAw
+bnMgbWluKSwgQ2FjaGUgTGluZSBTaXplIDA4CglJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJ
+UlEgMjAKCVJlZ2lvbiAwOiBNZW1vcnkgYXQgZjAwMDAwMDAgKDMyLWJpdCwgcHJlZmV0Y2hhYmxl
+KSBbc2l6ZT0xMjhNXQoJUmVnaW9uIDE6IEkvTyBwb3J0cyBhdCBkODAwIFtzaXplPTI1Nl0KCVJl
+Z2lvbiAyOiBNZW1vcnkgYXQgZWUwMDAwMDAgKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3Np
+emU9NjRLXQoJRXhwYW5zaW9uIFJPTSBhdCBlZmZlMDAwMCBbZGlzYWJsZWRdIFtzaXplPTEyOEtd
+CglDYXBhYmlsaXRpZXM6IFs1OF0gQUdQIHZlcnNpb24gMi4wCgkJU3RhdHVzOiBSUT04MCBJc28t
+IEFycVN6PTAgQ2FsPTAgU0JBKyBJVEFDb2gtIEdBUlQ2NC0gSFRyYW5zLSA2NGJpdC0gRlcrIEFH
+UDMtIFJhdGU9eDEseDIseDQKCQlDb21tYW5kOiBSUT0xIEFycVN6PTAgQ2FsPTAgU0JBKyBBR1At
+IEdBUlQ2NC0gNjRiaXQtIEZXLSBSYXRlPTxub25lPgoJQ2FwYWJpbGl0aWVzOiBbNTBdIFBvd2Vy
+IE1hbmFnZW1lbnQgdmVyc2lvbiAyCgkJRmxhZ3M6IFBNRUNsay0gRFNJLSBEMSsgRDIrIEF1eEN1
+cnJlbnQ9MG1BIFBNRShEMC0sRDEtLEQyLSxEM2hvdC0sRDNjb2xkLSkKCQlTdGF0dXM6IEQwIFBN
+RS1FbmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtCgowMjowNC4wIE11bHRpbWVkaWEgYXVkaW8g
+Y29udHJvbGxlcjogQy1NZWRpYSBFbGVjdHJvbmljcyBJbmMgQ004NzM4IChyZXYgMTApCglTdWJz
+eXN0ZW06IEFTVVNUZUsgQ29tcHV0ZXIgSW5jLiBDTUk4NzM4IDYtY2hhbm5lbCBhdWRpbyBjb250
+cm9sbGVyCglDb250cm9sOiBJL08rIE1lbS0gQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYt
+IFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nKyBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAr
+IDY2TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFi
+b3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAzMiAoNTAwbnMgbWluLCA2MDAw
+bnMgbWF4KQoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQgdG8gSVJRIDE2CglSZWdpb24gMDogSS9P
+IHBvcnRzIGF0IGE4MDAgW3NpemU9MjU2XQoJQ2FwYWJpbGl0aWVzOiBbYzBdIFBvd2VyIE1hbmFn
+ZW1lbnQgdmVyc2lvbiAyCgkJRmxhZ3M6IFBNRUNsay0gRFNJLSBEMSsgRDIrIEF1eEN1cnJlbnQ9
+MG1BIFBNRShEMC0sRDEtLEQyLSxEM2hvdC0sRDNjb2xkLSkKCQlTdGF0dXM6IEQwIFBNRS1FbmFi
+bGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtCgowMjowNS4wIFVTQiBDb250cm9sbGVyOiBBTGkgQ29y
+cG9yYXRpb24gVVNCIDEuMSBDb250cm9sbGVyIChyZXYgMDMpIChwcm9nLWlmIDEwIFtPSENJXSkK
+CVN1YnN5c3RlbTogQUxpIENvcnBvcmF0aW9uIFVTQiAxLjEgQ29udHJvbGxlcgoJQ29udHJvbDog
+SS9PKyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WKyBWR0FTbm9vcC0gUGFyRXJy
+LSBTdGVwcGluZy0gU0VSUi0gRmFzdEIyQi0KCVN0YXR1czogQ2FwKyA2Nk1IeisgVURGLSBGYXN0
+QjJCKyBQYXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNF
+UlItIDxQRVJSLQoJTGF0ZW5jeTogMzIgKDIwMDAwbnMgbWF4KSwgQ2FjaGUgTGluZSBTaXplIDA4
+CglJbnRlcnJ1cHQ6IHBpbiBCIHJvdXRlZCB0byBJUlEgMTkKCVJlZ2lvbiAwOiBNZW1vcnkgYXQg
+ZWMwMDAwMDAgKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9NEtdCglDYXBhYmlsaXRp
+ZXM6IFs2MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1FQ2xrLSBEU0kt
+IEQxLSBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQwKyxEMSssRDItLEQzaG90KyxEM2NvbGQrKQoJ
+CVN0YXR1czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERTY2FsZT0wIFBNRS0KCjAyOjA1LjEgVVNC
+IENvbnRyb2xsZXI6IEFMaSBDb3Jwb3JhdGlvbiBVU0IgMS4xIENvbnRyb2xsZXIgKHJldiAwMykg
+KHByb2ctaWYgMTAgW09IQ0ldKQoJU3Vic3lzdGVtOiBBTGkgQ29ycG9yYXRpb24gVVNCIDEuMSBD
+b250cm9sbGVyCglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJ
+TlYrIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBD
+YXArIDY2TUh6KyBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8
+VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAzMiAoMjAwMDBucyBtYXgp
+LCBDYWNoZSBMaW5lIFNpemUgMDgKCUludGVycnVwdDogcGluIEMgcm91dGVkIHRvIElSUSAyMAoJ
+UmVnaW9uIDA6IE1lbW9yeSBhdCBlYjgwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBb
+c2l6ZT00S10KCUNhcGFiaWxpdGllczogWzYwXSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMgoJ
+CUZsYWdzOiBQTUVDbGstIERTSS0gRDEtIEQyLSBBdXhDdXJyZW50PTBtQSBQTUUoRDArLEQxKyxE
+Mi0sRDNob3QrLEQzY29sZCspCgkJU3RhdHVzOiBEMCBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxl
+PTAgUE1FKwoKMDI6MDUuMiBVU0IgQ29udHJvbGxlcjogQUxpIENvcnBvcmF0aW9uIFVTQiAxLjEg
+Q29udHJvbGxlciAocmV2IDAzKSAocHJvZy1pZiAxMCBbT0hDSV0pCglTdWJzeXN0ZW06IEFMaSBD
+b3Jwb3JhdGlvbiBVU0IgMS4xIENvbnRyb2xsZXIKCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNNYXN0
+ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVisgVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlIt
+IEZhc3RCMkItCglTdGF0dXM6IENhcCsgNjZNSHorIFVERi0gRmFzdEIyQisgUGFyRXJyLSBERVZT
+RUw9bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUi0KCUxhdGVu
+Y3k6IDMyICgyMDAwMG5zIG1heCksIENhY2hlIExpbmUgU2l6ZSAwOAoJSW50ZXJydXB0OiBwaW4g
+RCByb3V0ZWQgdG8gSVJRIDE2CglSZWdpb24gMDogTWVtb3J5IGF0IGViMDAwMDAwICgzMi1iaXQs
+IG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTRLXQoJQ2FwYWJpbGl0aWVzOiBbNjBdIFBvd2VyIE1h
+bmFnZW1lbnQgdmVyc2lvbiAyCgkJRmxhZ3M6IFBNRUNsay0gRFNJLSBEMS0gRDItIEF1eEN1cnJl
+bnQ9MG1BIFBNRShEMCssRDErLEQyLSxEM2hvdCssRDNjb2xkKykKCQlTdGF0dXM6IEQwIFBNRS1F
+bmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtCgowMjowNS4zIFVTQiBDb250cm9sbGVyOiBBTGkg
+Q29ycG9yYXRpb24gVVNCIDIuMCBDb250cm9sbGVyIChyZXYgMDEpIChwcm9nLWlmIDIwIFtFSENJ
+XSkKCVN1YnN5c3RlbTogVW5rbm93biBkZXZpY2UgMjAyMDo4ODg4CglDb250cm9sOiBJL08tIE1l
+bSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYrIFZHQVNub29wLSBQYXJFcnItIFN0ZXBw
+aW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXArIDY2TUh6KyBVREYtIEZhc3RCMkIrIFBh
+ckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBF
+UlItCglMYXRlbmN5OiAzMiAoMjAwMDBucyBtYXgpLCBDYWNoZSBMaW5lIFNpemUgMTAKCUludGVy
+cnVwdDogcGluIEEgcm91dGVkIHRvIElSUSAyMQoJUmVnaW9uIDA6IE1lbW9yeSBhdCBlYTgwMDAw
+MCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT0yNTZdCglDYXBhYmlsaXRpZXM6IFs1
+MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1FQ2xrLSBEU0ktIEQxLSBE
+Mi0gQXV4Q3VycmVudD0wbUEgUE1FKEQwKyxEMS0sRDItLEQzaG90KyxEM2NvbGQrKQoJCVN0YXR1
+czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERTY2FsZT0wIFBNRS0KCUNhcGFiaWxpdGllczogWzU4
+XSBEZWJ1ZyBwb3J0CgowMjowNi4wIE1hc3Mgc3RvcmFnZSBjb250cm9sbGVyOiBQcm9taXNlIFRl
+Y2hub2xvZ3ksIEluYy4gUERDMjA1NzUgKFNBVEFJSTE1MCBUWDJwbHVzKSAocmV2IDAyKQoJU3Vi
+c3lzdGVtOiBQcm9taXNlIFRlY2hub2xvZ3ksIEluYy4gUERDMjA1NzUgKFNBVEFJSTE1MCBUWDJw
+bHVzKQoJQ29udHJvbDogSS9PKyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WKyBW
+R0FTbm9vcC0gUGFyRXJyLSBTdGVwcGluZy0gU0VSUi0gRmFzdEIyQi0KCVN0YXR1czogQ2FwKyA2
+Nk1IeisgVURGLSBGYXN0QjJCLSBQYXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9y
+dC0gPE1BYm9ydC0gPlNFUlItIDxQRVJSLQoJTGF0ZW5jeTogNzIgKDEwMDBucyBtaW4sIDQ1MDBu
+cyBtYXgpLCBDYWNoZSBMaW5lIFNpemUgMDEKCUludGVycnVwdDogcGluIEEgcm91dGVkIHRvIElS
+USAxNgoJUmVnaW9uIDA6IEkvTyBwb3J0cyBhdCBhNDAwIFtzaXplPTEyOF0KCVJlZ2lvbiAyOiBJ
+L08gcG9ydHMgYXQgYTAwMCBbc2l6ZT0yNTZdCglSZWdpb24gMzogTWVtb3J5IGF0IGVhMDAwMDAw
+ICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTRLXQoJUmVnaW9uIDQ6IE1lbW9yeSBh
+dCBlOTgwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT0xMjhLXQoJW3ZpcnR1
+YWxdIEV4cGFuc2lvbiBST00gYXQgZWVlMDAwMDAgW2Rpc2FibGVkXSBbc2l6ZT0zMktdCglDYXBh
+YmlsaXRpZXM6IFs2MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1FQ2xr
+LSBEU0krIEQxKyBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQwLSxEMS0sRDItLEQzaG90LSxEM2Nv
+bGQtKQoJCVN0YXR1czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERTY2FsZT0wIFBNRS0KCg==
 
-00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
-	Flags: fast devsel
+------_=_NextPart_001_01C6FD20.8C1A1EBA
+Content-Type: text/plain;
+	name="lspcivvn.txt"
+Content-Transfer-Encoding: base64
+Content-Description: lspcivvn.txt
+Content-Disposition: attachment;
+	filename="lspcivvn.txt"
 
-00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
-	Flags: fast devsel
+MDA6MDAuMCAwNjAwOiAxMDIyOjcwMGMgKHJldiAxMSkKCUNvbnRyb2w6IEkvTy0gTWVtKyBCdXNN
+YXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNF
+UlItIEZhc3RCMkItCglTdGF0dXM6IENhcCsgNjZNSHorIFVERi0gRmFzdEIyQi0gUGFyRXJyLSBE
+RVZTRUw9bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQrID5TRVJSLSA8UEVSUi0KCUxh
+dGVuY3k6IDMyCglSZWdpb24gMDogTWVtb3J5IGF0IGZjMDAwMDAwICgzMi1iaXQsIHByZWZldGNo
+YWJsZSkgW3NpemU9MzJNXQoJUmVnaW9uIDE6IE1lbW9yeSBhdCBmYjgwMDAwMCAoMzItYml0LCBw
+cmVmZXRjaGFibGUpIFtzaXplPTRLXQoJUmVnaW9uIDI6IEkvTyBwb3J0cyBhdCBlODAwIFtkaXNh
+YmxlZF0gW3NpemU9NF0KCUNhcGFiaWxpdGllczogW2EwXSBBR1AgdmVyc2lvbiAyLjAKCQlTdGF0
+dXM6IFJRPTE2IElzby0gQXJxU3o9MCBDYWw9MCBTQkErIElUQUNvaC0gR0FSVDY0LSBIVHJhbnMt
+IDY0Yml0LSBGVy0gQUdQMy0gUmF0ZT14MSx4Mix4NAoJCUNvbW1hbmQ6IFJRPTEgQXJxU3o9MCBD
+YWw9MCBTQkEtIEFHUC0gR0FSVDY0LSA2NGJpdC0gRlctIFJhdGU9PG5vbmU+CgowMDowMS4wIDA2
+MDQ6IDEwMjI6NzAwZAoJQ29udHJvbDogSS9PKyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBN
+ZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLSBTdGVwcGluZy0gU0VSUi0gRmFzdEIyQi0KCVN0YXR1
+czogQ2FwLSA2Nk1IeisgVURGLSBGYXN0QjJCLSBQYXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9y
+dC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNFUlItIDxQRVJSLQoJTGF0ZW5jeTogNjQKCUJ1czogcHJp
+bWFyeT0wMCwgc2Vjb25kYXJ5PTAxLCBzdWJvcmRpbmF0ZT0wMSwgc2VjLWxhdGVuY3k9MAoJSS9P
+IGJlaGluZCBicmlkZ2U6IDAwMDBkMDAwLTAwMDBkZmZmCglNZW1vcnkgYmVoaW5kIGJyaWRnZTog
+ZWUwMDAwMDAtZWVkZmZmZmYKCVByZWZldGNoYWJsZSBtZW1vcnkgYmVoaW5kIGJyaWRnZTogZWZm
+MDAwMDAtZmI3ZmZmZmYKCVNlY29uZGFyeSBzdGF0dXM6IDY2TUh6KyBGYXN0QjJCLSBQYXJFcnIt
+IERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydCsgPFNFUlItIDxQRVJSLQoJ
+QnJpZGdlQ3RsOiBQYXJpdHktIFNFUlItIE5vSVNBLSBWR0ErIE1BYm9ydC0gPlJlc2V0LSBGYXN0
+QjJCLQoKMDA6MDcuMCAwNjAxOiAxMDIyOjc0NDAgKHJldiAwNSkKCVN1YnN5c3RlbTogMTA0Mzo4
+MDQ0CglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUrIE1lbVdJTlYtIFZH
+QVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAtIDY2
+TUh6KyBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0
+LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAwCgowMDowNy4xIDAxMDE6IDEwMjI6
+NzQ0MSAocmV2IDA0KSAocHJvZy1pZiA4YSkKCVN1YnN5c3RlbTogMTAyMjo3NDQxCglDb250cm9s
+OiBJL08rIE1lbS0gQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZHQVNub29wLSBQYXJF
+cnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAtIDY2TUh6LSBVREYtIEZh
+c3RCMkItIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+
+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAzMgoJUmVnaW9uIDQ6IEkvTyBwb3J0cyBhdCBiODAwIFtz
+aXplPTE2XQoKMDA6MDcuMyAwNjgwOiAxMDIyOjc0NDMgKHJldiAwMykKCVN1YnN5c3RlbTogMTA0
+Mzo4MDQ0CglDb250cm9sOiBJL08tIE1lbS0gQnVzTWFzdGVyLSBTcGVjQ3ljbGUtIE1lbVdJTlYt
+IFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAt
+IDY2TUh6LSBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFi
+b3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCgowMDowOC4wIDAyMDA6IDgwODY6MTAwOCAocmV2
+IDAyKQoJU3Vic3lzdGVtOiA4MDg2OjExMDcKCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNNYXN0ZXIr
+IFNwZWNDeWNsZS0gTWVtV0lOVisgVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZh
+c3RCMkItCglTdGF0dXM6IENhcCsgNjZNSHorIFVERi0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9
+bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUi0KCUxhdGVuY3k6
+IDMyICg2Mzc1MG5zIG1pbiksIENhY2hlIExpbmUgU2l6ZSAwOAoJSW50ZXJydXB0OiBwaW4gQSBy
+b3V0ZWQgdG8gSVJRIDE4CglSZWdpb24gMDogTWVtb3J5IGF0IGVkODAwMDAwICgzMi1iaXQsIG5v
+bi1wcmVmZXRjaGFibGUpIFtzaXplPTEyOEtdCglSZWdpb24gMTogTWVtb3J5IGF0IGVkMDAwMDAw
+ICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTEyOEtdCglSZWdpb24gMjogSS9PIHBv
+cnRzIGF0IGI0MDAgW3NpemU9MzJdCglbdmlydHVhbF0gRXhwYW5zaW9uIFJPTSBhdCBhODAwMDAw
+MCBbZGlzYWJsZWRdIFtzaXplPTEyOEtdCglDYXBhYmlsaXRpZXM6IFtkY10gUG93ZXIgTWFuYWdl
+bWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1FQ2xrLSBEU0krIEQxLSBEMi0gQXV4Q3VycmVudD0w
+bUEgUE1FKEQwKyxEMS0sRDItLEQzaG90KyxEM2NvbGQrKQoJCVN0YXR1czogRDAgUE1FLUVuYWJs
+ZS0gRFNlbD0wIERTY2FsZT0xIFBNRS0KCUNhcGFiaWxpdGllczogW2U0XSBQQ0ktWCBub24tYnJp
+ZGdlIGRldmljZQoJCUNvbW1hbmQ6IERQRVJFLSBFUk8rIFJCQz01MTIgT1NUPTEKCQlTdGF0dXM6
+IERldj0wMDowMC4wIDY0Yml0KyAxMzNNSHorIFNDRC0gVVNDLSBEQz1zaW1wbGUgRE1NUkJDPTIw
+NDggRE1PU1Q9MSBETUNSUz0xNiBSU0NFTS0gMjY2TUh6LSA1MzNNSHotCglDYXBhYmlsaXRpZXM6
+IFtmMF0gTWVzc2FnZSBTaWduYWxsZWQgSW50ZXJydXB0czogNjRiaXQrIFF1ZXVlPTAvMCBFbmFi
+bGUtCgkJQWRkcmVzczogMDAwMDAwMDAwMDAwMDAwMCAgRGF0YTogMDAwMAoKMDA6MDkuMCAwMTA0
+OiAxMDAwOjE5NjAgKHJldiAwMSkKCVN1YnN5c3RlbTogMTAwMDowNTE4CglDb250cm9sOiBJL08t
+IE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYrIFZHQVNub29wLSBQYXJFcnItIFN0
+ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXArIDY2TUh6KyBVREYtIEZhc3RCMkIr
+IFBhckVyci0gREVWU0VMPXNsb3cgPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNFUlItIDxQ
+RVJSLQoJTGF0ZW5jeTogMzIsIENhY2hlIExpbmUgU2l6ZSAwOAoJSW50ZXJydXB0OiBwaW4gQSBy
+b3V0ZWQgdG8gSVJRIDE3CglSZWdpb24gMDogTWVtb3J5IGF0IGVmMDAwMDAwICgzMi1iaXQsIHBy
+ZWZldGNoYWJsZSkgW3NpemU9NjRLXQoJW3ZpcnR1YWxdIEV4cGFuc2lvbiBST00gYXQgYTgwMjAw
+MDAgW2Rpc2FibGVkXSBbc2l6ZT02NEtdCglDYXBhYmlsaXRpZXM6IFs4MF0gUG93ZXIgTWFuYWdl
+bWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1FQ2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVudD0w
+bUEgUE1FKEQwLSxEMS0sRDItLEQzaG90LSxEM2NvbGQtKQoJCVN0YXR1czogRDAgUE1FLUVuYWJs
+ZS0gRFNlbD0wIERTY2FsZT0wIFBNRS0KCjAwOjEwLjAgMDYwNDogMTAyMjo3NDQ4IChyZXYgMDUp
+CglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYrIFZHQVNu
+b29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAtIDY2TUh6
+KyBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8
+TUFib3J0KyA+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAzMgoJQnVzOiBwcmltYXJ5PTAwLCBzZWNv
+bmRhcnk9MDIsIHN1Ym9yZGluYXRlPTAyLCBzZWMtbGF0ZW5jeT0zMgoJSS9PIGJlaGluZCBicmlk
+Z2U6IDAwMDBhMDAwLTAwMDBhZmZmCglNZW1vcnkgYmVoaW5kIGJyaWRnZTogZTk4MDAwMDAtZWNm
+ZmZmZmYKCVByZWZldGNoYWJsZSBtZW1vcnkgYmVoaW5kIGJyaWRnZTogZWVlMDAwMDAtZWVlZmZm
+ZmYKCVNlY29uZGFyeSBzdGF0dXM6IDY2TUh6LSBGYXN0QjJCLSBQYXJFcnItIERFVlNFTD1tZWRp
+dW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPFNFUlItIDxQRVJSLQoJQnJpZGdlQ3RsOiBQ
+YXJpdHktIFNFUlItIE5vSVNBKyBWR0EtIE1BYm9ydC0gPlJlc2V0LSBGYXN0QjJCLQoKMDE6MDUu
+MCAwMzAwOiAxMDAyOjQxNTQgKHJldiA4MCkKCVN1YnN5c3RlbTogMTAwMjowMDAyCglDb250cm9s
+OiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZHQVNub29wLSBQYXJF
+cnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXArIDY2TUh6KyBVREYtIEZh
+c3RCMkIrIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+
+U0VSUi0gPFBFUlItCglMYXRlbmN5OiA2NCAoMjAwMG5zIG1pbiksIENhY2hlIExpbmUgU2l6ZSAw
+OAoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQgdG8gSVJRIDIwCglSZWdpb24gMDogTWVtb3J5IGF0
+IGYwMDAwMDAwICgzMi1iaXQsIHByZWZldGNoYWJsZSkgW3NpemU9MTI4TV0KCVJlZ2lvbiAxOiBJ
+L08gcG9ydHMgYXQgZDgwMCBbc2l6ZT0yNTZdCglSZWdpb24gMjogTWVtb3J5IGF0IGVlMDAwMDAw
+ICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTY0S10KCUV4cGFuc2lvbiBST00gYXQg
+ZWZmZTAwMDAgW2Rpc2FibGVkXSBbc2l6ZT0xMjhLXQoJQ2FwYWJpbGl0aWVzOiBbNThdIEFHUCB2
+ZXJzaW9uIDIuMAoJCVN0YXR1czogUlE9ODAgSXNvLSBBcnFTej0wIENhbD0wIFNCQSsgSVRBQ29o
+LSBHQVJUNjQtIEhUcmFucy0gNjRiaXQtIEZXKyBBR1AzLSBSYXRlPXgxLHgyLHg0CgkJQ29tbWFu
+ZDogUlE9MSBBcnFTej0wIENhbD0wIFNCQSsgQUdQLSBHQVJUNjQtIDY0Yml0LSBGVy0gUmF0ZT08
+bm9uZT4KCUNhcGFiaWxpdGllczogWzUwXSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMgoJCUZs
+YWdzOiBQTUVDbGstIERTSS0gRDErIEQyKyBBdXhDdXJyZW50PTBtQSBQTUUoRDAtLEQxLSxEMi0s
+RDNob3QtLEQzY29sZC0pCgkJU3RhdHVzOiBEMCBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAg
+UE1FLQoKMDI6MDQuMCAwNDAxOiAxM2Y2OjAxMTEgKHJldiAxMCkKCVN1YnN5c3RlbTogMTA0Mzo4
+MDc3CglDb250cm9sOiBJL08rIE1lbS0gQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZH
+QVNub29wLSBQYXJFcnItIFN0ZXBwaW5nKyBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXArIDY2
+TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0
+LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAzMiAoNTAwbnMgbWluLCA2MDAwbnMg
+bWF4KQoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQgdG8gSVJRIDE2CglSZWdpb24gMDogSS9PIHBv
+cnRzIGF0IGE4MDAgW3NpemU9MjU2XQoJQ2FwYWJpbGl0aWVzOiBbYzBdIFBvd2VyIE1hbmFnZW1l
+bnQgdmVyc2lvbiAyCgkJRmxhZ3M6IFBNRUNsay0gRFNJLSBEMSsgRDIrIEF1eEN1cnJlbnQ9MG1B
+IFBNRShEMC0sRDEtLEQyLSxEM2hvdC0sRDNjb2xkLSkKCQlTdGF0dXM6IEQwIFBNRS1FbmFibGUt
+IERTZWw9MCBEU2NhbGU9MCBQTUUtCgowMjowNS4wIDBjMDM6IDEwYjk6NTIzNyAocmV2IDAzKSAo
+cHJvZy1pZiAxMCkKCVN1YnN5c3RlbTogMTBiOTo1MjM3CglDb250cm9sOiBJL08rIE1lbSsgQnVz
+TWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYrIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBT
+RVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXArIDY2TUh6KyBVREYtIEZhc3RCMkIrIFBhckVyci0g
+REVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglM
+YXRlbmN5OiAzMiAoMjAwMDBucyBtYXgpLCBDYWNoZSBMaW5lIFNpemUgMDgKCUludGVycnVwdDog
+cGluIEIgcm91dGVkIHRvIElSUSAxOQoJUmVnaW9uIDA6IE1lbW9yeSBhdCBlYzAwMDAwMCAoMzIt
+Yml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT00S10KCUNhcGFiaWxpdGllczogWzYwXSBQb3dl
+ciBNYW5hZ2VtZW50IHZlcnNpb24gMgoJCUZsYWdzOiBQTUVDbGstIERTSS0gRDEtIEQyLSBBdXhD
+dXJyZW50PTBtQSBQTUUoRDArLEQxKyxEMi0sRDNob3QrLEQzY29sZCspCgkJU3RhdHVzOiBEMCBQ
+TUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAgUE1FLQoKMDI6MDUuMSAwYzAzOiAxMGI5OjUyMzcg
+KHJldiAwMykgKHByb2ctaWYgMTApCglTdWJzeXN0ZW06IDEwYjk6NTIzNwoJQ29udHJvbDogSS9P
+KyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WKyBWR0FTbm9vcC0gUGFyRXJyLSBT
+dGVwcGluZy0gU0VSUi0gRmFzdEIyQi0KCVN0YXR1czogQ2FwKyA2Nk1IeisgVURGLSBGYXN0QjJC
+KyBQYXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNFUlIt
+IDxQRVJSLQoJTGF0ZW5jeTogMzIgKDIwMDAwbnMgbWF4KSwgQ2FjaGUgTGluZSBTaXplIDA4CglJ
+bnRlcnJ1cHQ6IHBpbiBDIHJvdXRlZCB0byBJUlEgMjAKCVJlZ2lvbiAwOiBNZW1vcnkgYXQgZWI4
+MDAwMDAgKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9NEtdCglDYXBhYmlsaXRpZXM6
+IFs2MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlGbGFnczogUE1FQ2xrLSBEU0ktIEQx
+LSBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQwKyxEMSssRDItLEQzaG90KyxEM2NvbGQrKQoJCVN0
+YXR1czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERTY2FsZT0wIFBNRSsKCjAyOjA1LjIgMGMwMzog
+MTBiOTo1MjM3IChyZXYgMDMpIChwcm9nLWlmIDEwKQoJU3Vic3lzdGVtOiAxMGI5OjUyMzcKCUNv
+bnRyb2w6IEkvTysgTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVisgVkdBU25vb3At
+IFBhckVyci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItCglTdGF0dXM6IENhcCsgNjZNSHorIFVE
+Ri0gRmFzdEIyQisgUGFyRXJyLSBERVZTRUw9bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJv
+cnQtID5TRVJSLSA8UEVSUi0KCUxhdGVuY3k6IDMyICgyMDAwMG5zIG1heCksIENhY2hlIExpbmUg
+U2l6ZSAwOAoJSW50ZXJydXB0OiBwaW4gRCByb3V0ZWQgdG8gSVJRIDE2CglSZWdpb24gMDogTWVt
+b3J5IGF0IGViMDAwMDAwICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTRLXQoJQ2Fw
+YWJpbGl0aWVzOiBbNjBdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAyCgkJRmxhZ3M6IFBNRUNs
+ay0gRFNJLSBEMS0gRDItIEF1eEN1cnJlbnQ9MG1BIFBNRShEMCssRDErLEQyLSxEM2hvdCssRDNj
+b2xkKykKCQlTdGF0dXM6IEQwIFBNRS1FbmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtCgowMjow
+NS4zIDBjMDM6IDEwYjk6NTIzOSAocmV2IDAxKSAocHJvZy1pZiAyMCkKCVN1YnN5c3RlbTogMjAy
+MDo4ODg4CglDb250cm9sOiBJL08tIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYr
+IFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSLSBGYXN0QjJCLQoJU3RhdHVzOiBDYXAr
+IDY2TUh6KyBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFi
+b3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5OiAzMiAoMjAwMDBucyBtYXgpLCBD
+YWNoZSBMaW5lIFNpemUgMTAKCUludGVycnVwdDogcGluIEEgcm91dGVkIHRvIElSUSAyMQoJUmVn
+aW9uIDA6IE1lbW9yeSBhdCBlYTgwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6
+ZT0yNTZdCglDYXBhYmlsaXRpZXM6IFs1MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlG
+bGFnczogUE1FQ2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQwKyxEMS0sRDIt
+LEQzaG90KyxEM2NvbGQrKQoJCVN0YXR1czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERTY2FsZT0w
+IFBNRS0KCUNhcGFiaWxpdGllczogWzU4XSBEZWJ1ZyBwb3J0CgowMjowNi4wIDAxODA6IDEwNWE6
+M2Q3NSAocmV2IDAyKQoJU3Vic3lzdGVtOiAxMDVhOjNkNzUKCUNvbnRyb2w6IEkvTysgTWVtKyBC
+dXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVisgVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmct
+IFNFUlItIEZhc3RCMkItCglTdGF0dXM6IENhcCsgNjZNSHorIFVERi0gRmFzdEIyQi0gUGFyRXJy
+LSBERVZTRUw9bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUi0K
+CUxhdGVuY3k6IDcyICgxMDAwbnMgbWluLCA0NTAwbnMgbWF4KSwgQ2FjaGUgTGluZSBTaXplIDAx
+CglJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJUlEgMTYKCVJlZ2lvbiAwOiBJL08gcG9ydHMg
+YXQgYTQwMCBbc2l6ZT0xMjhdCglSZWdpb24gMjogSS9PIHBvcnRzIGF0IGEwMDAgW3NpemU9MjU2
+XQoJUmVnaW9uIDM6IE1lbW9yeSBhdCBlYTAwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxl
+KSBbc2l6ZT00S10KCVJlZ2lvbiA0OiBNZW1vcnkgYXQgZTk4MDAwMDAgKDMyLWJpdCwgbm9uLXBy
+ZWZldGNoYWJsZSkgW3NpemU9MTI4S10KCVt2aXJ0dWFsXSBFeHBhbnNpb24gUk9NIGF0IGVlZTAw
+MDAwIFtkaXNhYmxlZF0gW3NpemU9MzJLXQoJQ2FwYWJpbGl0aWVzOiBbNjBdIFBvd2VyIE1hbmFn
+ZW1lbnQgdmVyc2lvbiAyCgkJRmxhZ3M6IFBNRUNsay0gRFNJKyBEMSsgRDItIEF1eEN1cnJlbnQ9
+MG1BIFBNRShEMC0sRDEtLEQyLSxEM2hvdC0sRDNjb2xkLSkKCQlTdGF0dXM6IEQwIFBNRS1FbmFi
+bGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtCgo=
 
-00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-	Flags: fast devsel
-
-01:00.0 VGA compatible controller: nVidia Corporation NV43 [GeForce 6600] (rev a2) (prog-if 00 [VGA])
-	Flags: bus master, fast devsel, latency 0, IRQ 18
-	Memory at d0000000 (32-bit, non-prefetchable) [size=64M]
-	Memory at c0000000 (64-bit, prefetchable) [size=256M]
-	Memory at d4000000 (64-bit, non-prefetchable) [size=16M]
-	[virtual] Expansion ROM at d5000000 [disabled] [size=128K]
-	Capabilities: [60] Power Management version 2
-	Capabilities: [68] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
-	Capabilities: [78] Express Endpoint IRQ 0
-	Capabilities: [100] Virtual Channel
-	Capabilities: [128] Power Budgeting
-
-05:06.0 RAID bus controller: Triones Technologies, Inc. HPT374 (rev 07)
-	Subsystem: Triones Technologies, Inc. Unknown device 0001
-	Flags: bus master, 66MHz, medium devsel, latency 120, IRQ 16
-	I/O ports at 6000 [size=8]
-	I/O ports at 6400 [size=4]
-	I/O ports at 6800 [size=8]
-	I/O ports at 6c00 [size=4]
-	I/O ports at 7000 [size=256]
-	Expansion ROM at da1c0000 [disabled by cmd] [size=128K]
-	Capabilities: [60] Power Management version 2
-
-05:06.1 RAID bus controller: Triones Technologies, Inc. HPT374 (rev 07)
-	Subsystem: Triones Technologies, Inc. Unknown device 0001
-	Flags: bus master, 66MHz, medium devsel, latency 120, IRQ 16
-	I/O ports at 7400 [size=8]
-	I/O ports at 7800 [size=4]
-	I/O ports at 7c00 [size=8]
-	I/O ports at 8000 [size=4]
-	I/O ports at 8400 [size=256]
-	Capabilities: [60] Power Management version 2
-
-05:07.0 Ethernet controller: Lite-On Communications Inc LNE100TX (rev 20)
-	Subsystem: Lite-On Communications Inc LNE100TX
-	Flags: bus master, medium devsel, latency 32, IRQ 17
-	I/O ports at 8800 [size=256]
-	Memory at d900f000 (32-bit, non-prefetchable) [size=256]
-	[virtual] Expansion ROM at da180000 [disabled] [size=256K]
-
-05:08.0 Multimedia audio controller: Creative Labs SB Audigy (rev 04)
-	Subsystem: Creative Labs Unknown device 2001
-	Flags: bus master, medium devsel, latency 32, IRQ 18
-	I/O ports at 8c00 [size=64]
-	Capabilities: [dc] Power Management version 2
-
-05:08.1 Input device controller: Creative Labs SB Audigy Game Port (rev 04)
-	Subsystem: Creative Labs SB Audigy MIDI/Game Port
-	Flags: bus master, medium devsel, latency 32
-	I/O ports at 9000 [size=8]
-	Capabilities: [dc] Power Management version 2
-
-05:08.2 FireWire (IEEE 1394): Creative Labs SB Audigy FireWire Port (rev 04) (prog-if 10 [OHCI])
-	Subsystem: Creative Labs SB Audigy FireWire Port
-	Flags: bus master, medium devsel, latency 32, IRQ 19
-	Memory at d900e000 (32-bit, non-prefetchable) [size=2K]
-	Memory at d9000000 (32-bit, non-prefetchable) [size=16K]
-	Capabilities: [44] Power Management version 2
-
-05:0a.0 RAID bus controller: Silicon Image, Inc. SiI 3114 [SATALink/SATARaid] Serial ATA Controller (rev 02)
-	Subsystem: ASUSTeK Computer Inc. Unknown device 8167
-	Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 19
-	I/O ports at 9400 [size=8]
-	I/O ports at 9800 [size=4]
-	I/O ports at 9c00 [size=8]
-	I/O ports at a000 [size=4]
-	I/O ports at a400 [size=16]
-	Memory at d900c000 (32-bit, non-prefetchable) [size=1K]
-	[virtual] Expansion ROM at da100000 [disabled] [size=512K]
-	Capabilities: [60] Power Management version 2
-
-05:0b.0 FireWire (IEEE 1394): Texas Instruments TSB43AB22/A IEEE-1394a-2000 Controller (PHY/Link) (prog-if 10 [OHCI])
-	Subsystem: ASUSTeK Computer Inc. K8N4-E Mainboard
-	Flags: bus master, medium devsel, latency 32, IRQ 16
-	Memory at d900d000 (32-bit, non-prefetchable) [size=2K]
-	Memory at d9004000 (32-bit, non-prefetchable) [size=16K]
-	Capabilities: [44] Power Management version 2
-
-05:0c.0 Ethernet controller: Marvell Technology Group Ltd. 88E8001 Gigabit Ethernet Controller (rev 13)
-	Subsystem: ASUSTeK Computer Inc. Marvell 88E8001 Gigabit Ethernet Controller (Asus)
-	Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 17
-	Memory at d9008000 (32-bit, non-prefetchable) [size=16K]
-	I/O ports at a800 [size=256]
-	[virtual] Expansion ROM at da1e0000 [disabled] [size=128K]
-	Capabilities: [48] Power Management version 2
-	Capabilities: [50] Vital Product Data
-
-dmesg for 2.6.19-rc4-mm1 with PATA drivers:
-
-Linux version 2.6.19-rc4-mm1 (jurriaan@middle) (gcc version 4.1.2 20061028 (prerelease) (Debian 4.1.1-19)) #8 SMP Tue Oct 31 19:10:57 CET 2006
-Command line: root=/dev/md2 video=nvidiafb:1600x1200-32@85 atkbd.softrepeat=1
-BIOS-provided physical RAM map:
- BIOS-e820: 0000000000000000 - 000000000009c800 (usable)
- BIOS-e820: 000000000009c800 - 00000000000a0000 (reserved)
- BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
- BIOS-e820: 0000000000100000 - 00000000bfff0000 (usable)
- BIOS-e820: 00000000bfff0000 - 00000000bfff3000 (ACPI NVS)
- BIOS-e820: 00000000bfff3000 - 00000000c0000000 (ACPI data)
- BIOS-e820: 00000000e0000000 - 00000000f0000000 (reserved)
- BIOS-e820: 00000000fec00000 - 0000000100000000 (reserved)
- BIOS-e820: 0000000100000000 - 0000000140000000 (usable)
-Entering add_active_range(0, 0, 156) 0 entries of 256 used
-Entering add_active_range(0, 256, 786416) 1 entries of 256 used
-Entering add_active_range(0, 1048576, 1310720) 2 entries of 256 used
-end_pfn_map = 1310720
-DMI 2.3 present.
-ACPI: RSDP (v000 Nvidia                                ) @ 0x00000000000f7d30
-ACPI: RSDT (v001 Nvidia AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x00000000bfff3040
-ACPI: FADT (v001 Nvidia AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x00000000bfff30c0
-ACPI: SSDT (v001 PTLTD  POWERNOW 0x00000001  LTP 0x00000001) @ 0x00000000bfff9900
-ACPI: SRAT (v001 AMD    HAMMER   0x00000001 AMD  0x00000001) @ 0x00000000bfff9b80
-ACPI: MCFG (v001 Nvidia AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x00000000bfff9cc0
-ACPI: MADT (v001 Nvidia AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x00000000bfff9840
-ACPI: DSDT (v001 NVIDIA AWRDACPI 0x00001000 MSFT 0x0100000e) @ 0x0000000000000000
-Entering add_active_range(0, 0, 156) 0 entries of 256 used
-Entering add_active_range(0, 256, 786416) 1 entries of 256 used
-Entering add_active_range(0, 1048576, 1310720) 2 entries of 256 used
-Zone PFN ranges:
-  DMA             0 ->     4096
-  DMA32        4096 ->  1048576
-  Normal    1048576 ->  1310720
-early_node_map[3] active PFN ranges
-    0:        0 ->      156
-    0:      256 ->   786416
-    0:  1048576 ->  1310720
-On node 0 totalpages: 1048460
-  DMA zone: 56 pages used for memmap
-  DMA zone: 1852 pages reserved
-  DMA zone: 2088 pages, LIFO batch:0
-  DMA32 zone: 14280 pages used for memmap
-  DMA32 zone: 768040 pages, LIFO batch:31
-  Normal zone: 3584 pages used for memmap
-  Normal zone: 258560 pages, LIFO batch:31
-Nvidia board detected. Ignoring ACPI timer override.
-ACPI: PM-Timer IO Port: 0x4008
-ACPI: Local APIC address 0xfee00000
-ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
-Processor #0 (Bootup-CPU)
-ACPI: LAPIC (acpi_id[0x01] lapic_id[0x01] enabled)
-Processor #1
-ACPI: LAPIC_NMI (acpi_id[0x00] high edge lint[0x1])
-ACPI: LAPIC_NMI (acpi_id[0x01] high edge lint[0x1])
-ACPI: IOAPIC (id[0x02] address[0xfec00000] gsi_base[0])
-IOAPIC[0]: apic_id 2, address 0xfec00000, GSI 0-23
-ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-ACPI: BIOS IRQ0 pin2 override ignored.
-ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
-ACPI: INT_SRC_OVR (bus 0 bus_irq 14 global_irq 14 high edge)
-ACPI: INT_SRC_OVR (bus 0 bus_irq 15 global_irq 15 high edge)
-ACPI: IRQ9 used by override.
-ACPI: IRQ14 used by override.
-ACPI: IRQ15 used by override.
-Setting APIC routing to flat
-Using ACPI (MADT) for SMP configuration information
-Nosave address range: 000000000009c000 - 000000000009d000
-Nosave address range: 000000000009d000 - 00000000000a0000
-Nosave address range: 00000000000a0000 - 00000000000f0000
-Nosave address range: 00000000000f0000 - 0000000000100000
-Nosave address range: 00000000bfff0000 - 00000000bfff3000
-Nosave address range: 00000000bfff3000 - 00000000c0000000
-Nosave address range: 00000000c0000000 - 00000000e0000000
-Nosave address range: 00000000e0000000 - 00000000f0000000
-Nosave address range: 00000000f0000000 - 00000000fec00000
-Nosave address range: 00000000fec00000 - 0000000100000000
-Allocating PCI resources starting at c2000000 (gap: c0000000:20000000)
-PERCPU: Allocating 31936 bytes of per cpu data
-Built 1 zonelists.  Total pages: 1028688
-Kernel command line: root=/dev/md2 video=nvidiafb:1600x1200-32@85 atkbd.softrepeat=1
-Initializing CPU#0
-PID hash table entries: 4096 (order: 12, 32768 bytes)
-Console: colour VGA+ 80x25
-Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes)
-Inode-cache hash table entries: 262144 (order: 9, 2097152 bytes)
-Checking aperture...
-CPU 0: aperture @ 8000000 size 32 MB
-Aperture too small (32 MB)
-No AGP bridge found
-Your BIOS doesn't leave a aperture memory hole
-Please enable the IOMMU option in the BIOS setup
-This costs you 64 MB of RAM
-Mapping aperture over 65536 KB of RAM @ 8000000
-Memory: 4042632k/5242880k available (3945k kernel code, 150996k reserved, 2407k data, 288k init)
-Calibrating delay using timer specific routine.. 5042.57 BogoMIPS (lpj=2521288)
-Mount-cache hash table entries: 256
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 512K (64 bytes/line)
-CPU: Physical Processor ID: 0
-CPU: Processor Core ID: 0
-Freeing SMP alternatives: 44k freed
-ACPI: Core revision 20060707
-Using local APIC timer interrupts.
-result 13128039
-Detected 13.128 MHz APIC timer.
-Booting processor 1/2 APIC 0x1
-Initializing CPU#1
-Calibrating delay using timer specific routine.. 5040.43 BogoMIPS (lpj=2520217)
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 512K (64 bytes/line)
-CPU: Physical Processor ID: 0
-CPU: Processor Core ID: 1
-AMD Athlon(tm) 64 X2 Dual Core Processor 4600+ stepping 01
-CPU 1: Syncing TSC to CPU 0.
-CPU 1: synchronized TSC with CPU 0 (last diff -76 cycles, maxerr 588 cycles)
-Brought up 2 CPUs
-testing NMI watchdog ... CPU#0: NMI appears to be stuck (111->116)!
-CPU#1: NMI appears to be stuck (60->65)!
-Uhhuh. NMI received for unknown reason 3d.
-Do you have a strange power saving mode enabled?
-Dazed and confused, but trying to continue
-Disabling vsyscall due to use of PM timer
-time.c: Using 3.579545 MHz WALL PM GTOD PM timer.
-time.c: Detected 2520.581 MHz processor.
-Uhhuh. NMI received for unknown reason 00.
-Do you have a strange power saving mode enabled?
-Dazed and confused, but trying to continue
-migration_cost=141
-NET: Registered protocol family 16
-ACPI: bus type pci registered
-PCI: Using MMCONFIG at e0000000
-PCI: No mmconfig possible on device 00:18
-ACPI: Interpreter enabled
-ACPI: Using IOAPIC for interrupt routing
-ACPI: PCI Root Bridge [PCI0] (0000:00)
-PCI: Transparent bridge - 0000:00:09.0
-Boot video device is 0000:01:00.0
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.HUB0._PRT]
-ACPI: PCI Interrupt Link [LNK1] (IRQs *3 4 5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNK2] (IRQs 3 4 5 7 9 10 *11 12 14 15)
-ACPI: PCI Interrupt Link [LNK3] (IRQs 3 4 *5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNK4] (IRQs *3 4 5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNK5] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [LUBA] (IRQs 3 4 5 7 9 10 *11 12 14 15)
-ACPI: PCI Interrupt Link [LUBB] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [LMAC] (IRQs *3 4 5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LACI] (IRQs 3 4 5 *7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LMCI] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [LSMB] (IRQs 3 4 5 *7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LUB2] (IRQs 3 4 *5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LIDE] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [LSID] (IRQs 3 4 5 7 9 10 *11 12 14 15)
-ACPI: PCI Interrupt Link [LFID] (IRQs 3 4 *5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LPCA] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [APC1] (IRQs 16) *0, disabled.
-ACPI: PCI Interrupt Link [APC2] (IRQs 17) *0, disabled.
-ACPI: PCI Interrupt Link [APC3] (IRQs 18) *0, disabled.
-ACPI: PCI Interrupt Link [APC4] (IRQs 19) *0, disabled.
-ACPI: PCI Interrupt Link [APC5] (IRQs *16), disabled.
-ACPI: PCI Interrupt Link [APCF] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCG] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCH] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCJ] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCK] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCS] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCL] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCZ] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APSI] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APSJ] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCP] (IRQs 20 21 22 23) *0, disabled.
-Generic PHY: Registered new driver
-SCSI subsystem initialized
-usbcore: registered new interface driver usbfs
-usbcore: registered new interface driver hub
-usbcore: registered new device driver usb
-PCI: Using ACPI for IRQ routing
-PCI: If a device doesn't work, try "pci=routeirq".  If it helps, post a report
-PCI-DMA: Disabling AGP.
-PCI-DMA: aperture base @ 8000000 size 65536 KB
-PCI-DMA: using GART IOMMU.
-PCI-DMA: Reserving 64MB of IOMMU area in the AGP aperture
-ieee1394: Initialized config rom entry `ip1394'
-ACPI: PCI Interrupt Link [APC4] enabled at IRQ 19
-ACPI: PCI Interrupt 0000:05:08.2[B] -> Link [APC4] -> GSI 19 (level, low) -> IRQ 19
-ohci1394: fw-host0: OHCI-1394 1.1 (PCI): IRQ=[19]  MMIO=[d900e000-d900e7ff]  Max Packet=[2048]  IR/IT contexts=[4/8]
-ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
-ACPI: PCI Interrupt 0000:05:0b.0[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
-ohci1394: fw-host1: OHCI-1394 1.1 (PCI): IRQ=[16]  MMIO=[d900d000-d900d7ff]  Max Packet=[2048]  IR/IT contexts=[4/8]
-PCI: Bridge: 0000:00:09.0
-  IO window: 6000-afff
-  MEM window: d8000000-d9ffffff
-  PREFETCH window: da100000-da1fffff
-PCI: Bridge: 0000:00:0b.0
-  IO window: disabled.
-  MEM window: disabled.
-  PREFETCH window: disabled.
-PCI: Bridge: 0000:00:0c.0
-  IO window: disabled.
-  MEM window: disabled.
-  PREFETCH window: disabled.
-PCI: Bridge: 0000:00:0d.0
-  IO window: disabled.
-  MEM window: disabled.
-  PREFETCH window: disabled.
-PCI: Bridge: 0000:00:0e.0
-  IO window: disabled.
-  MEM window: d0000000-d7ffffff
-  PREFETCH window: c0000000-cfffffff
-PCI: Setting latency timer of device 0000:00:09.0 to 64
-PCI: Setting latency timer of device 0000:00:0b.0 to 64
-PCI: Setting latency timer of device 0000:00:0c.0 to 64
-PCI: Setting latency timer of device 0000:00:0d.0 to 64
-PCI: Setting latency timer of device 0000:00:0e.0 to 64
-NET: Registered protocol family 2
-IP route cache hash table entries: 131072 (order: 8, 1048576 bytes)
-TCP established hash table entries: 262144 (order: 10, 4194304 bytes)
-TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
-TCP: Hash tables configured (established 262144 bind 65536)
-TCP reno registered
-Coda Kernel/Venus communications, v6.0.0, coda@cs.cmu.edu
-Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
-NTFS driver 2.1.27 [Flags: R/O].
-io scheduler noop registered
-io scheduler cfq registered (default)
-PCI: Linking AER extended capability on 0000:00:0b.0
-PCI: Linking AER extended capability on 0000:00:0c.0
-PCI: Linking AER extended capability on 0000:00:0d.0
-PCI: Linking AER extended capability on 0000:00:0e.0
-PCI: Setting latency timer of device 0000:00:0b.0 to 64
-pcie_portdrv_probe->Dev[005d:10de] has invalid IRQ. Check vendor BIOS
-assign_interrupt_mode Found MSI capability
-Allocate Port Service[0000:00:0b.0:pcie00]
-Allocate Port Service[0000:00:0b.0:pcie03]
-PCI: Setting latency timer of device 0000:00:0c.0 to 64
-pcie_portdrv_probe->Dev[005d:10de] has invalid IRQ. Check vendor BIOS
-assign_interrupt_mode Found MSI capability
-Allocate Port Service[0000:00:0c.0:pcie00]
-Allocate Port Service[0000:00:0c.0:pcie03]
-PCI: Setting latency timer of device 0000:00:0d.0 to 64
-pcie_portdrv_probe->Dev[005d:10de] has invalid IRQ. Check vendor BIOS
-assign_interrupt_mode Found MSI capability
-Allocate Port Service[0000:00:0d.0:pcie00]
-Allocate Port Service[0000:00:0d.0:pcie03]
-PCI: Setting latency timer of device 0000:00:0e.0 to 64
-pcie_portdrv_probe->Dev[005d:10de] has invalid IRQ. Check vendor BIOS
-assign_interrupt_mode Found MSI capability
-Allocate Port Service[0000:00:0e.0:pcie00]
-Allocate Port Service[0000:00:0e.0:pcie03]
-ACPI: PCI Interrupt Link [APC3] enabled at IRQ 18
-ACPI: PCI Interrupt 0000:01:00.0[A] -> Link [APC3] -> GSI 18 (level, low) -> IRQ 18
-nvidiafb: Device ID: 10de0141 
-nvidiafb: CRTC0 analog found
-nvidiafb: CRTC1 analog found
-nvidiafb: EDID found from BUS2
-nvidiafb: CRTC 0 appears to have a CRT attached
-nvidiafb: Using CRT on CRTC 0
-nvidiafb: MTRR set to ON
-Console: switching to colour frame buffer device 160x66
-nvidiafb: PCI nVidia NV14 framebuffer (64MB @ 0xC0000000)
-ACPI: Power Button (FF) [PWRF]
-ACPI: Power Button (CM) [PWRB]
-Using specific hotkey driver
-lp: driver loaded but no devices found
-Real Time Clock Driver v1.12ac
-Non-volatile memory driver v1.2
-Linux agpgart interface v0.101 (c) Dave Jones
-Hangcheck: starting hangcheck timer 0.9.0 (tick is 180 seconds, margin is 60 seconds).
-Hangcheck: Using monotonic_clock().
-Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing enabled
-serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-Floppy drive(s): fd0 is 1.44M
-FDC 0 is a post-1991 82077
-RAMDISK driver initialized: 16 RAM disks of 65536K size 1024 blocksize
-ACPI: PCI Interrupt Link [APC2] enabled at IRQ 17
-ACPI: PCI Interrupt 0000:05:0c.0[A] -> Link [APC2] -> GSI 17 (level, low) -> IRQ 17
-skge 1.9 addr 0xd9008000 irq 17 chip Yukon-Lite rev 9
-skge eth0: addr 00:15:f2:20:e6:69
-Marvell 88E1101: Registered new driver
-Davicom DM9161E: Registered new driver
-Davicom DM9131: Registered new driver
-Cicada Cis8204: Registered new driver
-Cicada Cis8201: Registered new driver
-LXT970: Registered new driver
-LXT971: Registered new driver
-QS6612: Registered new driver
-forcedeth.c: Reverse Engineered nForce ethernet driver. Version 0.59.
-ACPI: PCI Interrupt Link [APCH] enabled at IRQ 23
-ACPI: PCI Interrupt 0000:00:0a.0[A] -> Link [APCH] -> GSI 23 (level, low) -> IRQ 23
-PCI: Setting latency timer of device 0000:00:0a.0 to 64
-forcedeth: using HIGHDMA
-eth1: forcedeth.c: subsystem: 01043:8141 bound to 0000:00:0a.0
-Linux Tulip driver version 1.1.14 (May 11, 2002)
-ACPI: PCI Interrupt 0000:05:07.0[A] -> Link [APC2] -> GSI 17 (level, low) -> IRQ 17
-tulip0:  MII transceiver #1 config 3100 status 7829 advertising 01e1.
-eth2: Lite-On 82c168 PNIC rev 32 at Port 0x8800, 00:A0:CC:21:89:0C, IRQ 17.
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-NFORCE-CK804: IDE controller at PCI slot 0000:00:06.0
-NFORCE-CK804: chipset revision 242
-NFORCE-CK804: not 100% native mode: will probe irqs later
-NFORCE-CK804: BIOS didn't set cable bits correctly. Enabling workaround.
-NFORCE-CK804: 0000:00:06.0 (rev f2) UDMA133 controller
-    ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:DMA, hdb:DMA
-    ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:DMA, hdd:DMA
-Probing IDE interface ide0...
-hda: WDC WD2000JB-32EVA0, ATA DISK drive
-ieee1394: The root node is not cycle master capable; selecting a new root node and resetting...
-hdb: _NEC DVD_RW ND-3540A, ATAPI CD/DVD-ROM drive
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-Probing IDE interface ide1...
-ieee1394: Host added: ID:BUS[1-00:1023]  GUID[0011d80000738f5d]
-hdc: WDC WD2000JB-00FUA0, ATA DISK drive
-ieee1394: Host added: ID:BUS[0-01:1023]  GUID[00023c014100f4bf]
-ide1 at 0x170-0x177,0x376 on irq 15
-HPT374: IDE controller at PCI slot 0000:05:06.0
-ACPI: PCI Interrupt 0000:05:06.0[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
-HPT374: chipset revision 7
-HPT374: DPLL base: 48 MHz, f_CNT: 147, assuming 33 MHz PCI
-HPT374: using 66 MHz DPLL clock
-HPT374: 100% native mode on irq 16
-    ide2: BM-DMA at 0x7000-0x7007, BIOS settings: hde:DMA, hdf:pio
-    ide3: BM-DMA at 0x7008-0x700f, BIOS settings: hdg:pio, hdh:pio
-ACPI: PCI Interrupt 0000:05:06.1[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
-HPT374: no clock data saved by BIOS
-HPT374: DPLL base: 48 MHz, f_CNT: 122, assuming 33 MHz PCI
-HPT374: using 66 MHz DPLL clock
-    ide4: BM-DMA at 0x8400-0x8407, BIOS settings: hdi:DMA, hdj:pio
-    ide5: BM-DMA at 0x8408-0x840f, BIOS settings: hdk:pio, hdl:pio
-Probing IDE interface ide2...
-hde: WDC WD2500JB-00FUA0, ATA DISK drive
-ide2 at 0x6000-0x6007,0x6402 on irq 16
-Probing IDE interface ide3...
-Probing IDE interface ide4...
-hdi: ST3300831A, ATA DISK drive
-ide4 at 0x7400-0x7407,0x7802 on irq 16
-Probing IDE interface ide5...
-Probing IDE interface ide3...
-Probing IDE interface ide5...
-hda: max request size: 512KiB
-hda: 390721968 sectors (200049 MB) w/8192KiB Cache, CHS=24321/255/63, UDMA(100)
-hda: cache flushes supported
- hda: hda1 hda2 < hda5 hda6 hda7 hda8 hda9 >
-hdc: max request size: 512KiB
-hdc: 390721968 sectors (200049 MB) w/8192KiB Cache, CHS=24321/255/63, UDMA(100)
-hdc: cache flushes supported
- hdc: hdc1 hdc2 < hdc5 hdc6 hdc7 hdc8 hdc9 >
-hde: max request size: 512KiB
-hde: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63, UDMA(100)
-hde: cache flushes supported
- hde: hde1
-hdi: max request size: 512KiB
-hdi: 586072368 sectors (300069 MB) w/8192KiB Cache, CHS=36481/255/63, UDMA(100)
-hdi: cache flushes supported
- hdi: hdi1
-hdb: ATAPI 48X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(33)
-Uniform CD-ROM driver Revision: 3.20
-RocketRAID 3xxx SATA Controller driver v1.0 (060426)
-libata version 2.00 loaded.
-sata_sil 0000:05:0a.0: version 2.0
-ACPI: PCI Interrupt 0000:05:0a.0[A] -> Link [APC4] -> GSI 19 (level, low) -> IRQ 19
-sata_sil 0000:05:0a.0: Applying R_ERR on DMA activate FIS errata fix
-ata1: SATA max UDMA/100 cmd 0xFFFFC200100BA080 ctl 0xFFFFC200100BA08A bmdma 0xFFFFC200100BA000 irq 19
-ata2: SATA max UDMA/100 cmd 0xFFFFC200100BA0C0 ctl 0xFFFFC200100BA0CA bmdma 0xFFFFC200100BA008 irq 19
-ata3: SATA max UDMA/100 cmd 0xFFFFC200100BA280 ctl 0xFFFFC200100BA28A bmdma 0xFFFFC200100BA200 irq 19
-ata4: SATA max UDMA/100 cmd 0xFFFFC200100BA2C0 ctl 0xFFFFC200100BA2CA bmdma 0xFFFFC200100BA208 irq 19
-scsi0 : sata_sil
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata1.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 0/32)
-ata1.00: ata1: dev 0 multi count 16
-ata1.00: configured for UDMA/100
-scsi1 : sata_sil
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata2.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 0/32)
-ata2.00: ata2: dev 0 multi count 16
-ata2.00: configured for UDMA/100
-scsi2 : sata_sil
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata3.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 0/32)
-ata3.00: ata3: dev 0 multi count 16
-ata3.00: configured for UDMA/100
-scsi3 : sata_sil
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata4.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 0/32)
-ata4.00: ata4: dev 0 multi count 16
-ata4.00: configured for UDMA/100
-scsi 0:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
- sda: sda1
-sd 0:0:0:0: Attached scsi disk sda
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-scsi 1:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
- sdb: sdb1
-sd 1:0:0:0: Attached scsi disk sdb
-sd 1:0:0:0: Attached scsi generic sg1 type 0
-scsi 2:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-SCSI device sdc: 488397168 512-byte hdwr sectors (250059 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 488397168 512-byte hdwr sectors (250059 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
-SCSI device sdc: drive cache: write back
- sdc: sdc1
-sd 2:0:0:0: Attached scsi disk sdc
-sd 2:0:0:0: Attached scsi generic sg2 type 0
-scsi 3:0:0:0: Direct-Access     ATA      ST3250823AS      3.02 PQ: 0 ANSI: 5
-SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
-sdd: Write Protect is off
-sdd: Mode Sense: 00 3a 00 00
-SCSI device sdd: drive cache: write back
-SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
-sdd: Write Protect is off
-sdd: Mode Sense: 00 3a 00 00
-SCSI device sdd: drive cache: write back
- sdd: sdd1
-sd 3:0:0:0: Attached scsi disk sdd
-sd 3:0:0:0: Attached scsi generic sg3 type 0
-sata_nv 0000:00:07.0: version 3.1
-ACPI: PCI Interrupt Link [APSI] enabled at IRQ 22
-ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [APSI] -> GSI 22 (level, low) -> IRQ 22
-sata_nv 0000:00:07.0: Using ADMA mode
-PCI: Setting latency timer of device 0000:00:07.0 to 64
-ata5: SATA max UDMA/133 cmd 0xFFFFC200100BC480 ctl 0xFFFFC200100BC4A0 bmdma 0xD800 irq 22
-ata6: SATA max UDMA/133 cmd 0xFFFFC200100BC580 ctl 0xFFFFC200100BC5A0 bmdma 0xD808 irq 22
-Losing some ticks... checking if CPU frequency changed.
-scsi4 : sata_nv
-ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata5.00: ATA-7, max UDMA/133, 586072368 sectors: LBA48 NCQ (depth 31/32)
-ata5.00: ata5: dev 0 multi count 1
-ata5.00: configured for UDMA/133
-scsi5 : sata_nv
-ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata6.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 31/32)
-ata6.00: ata6: dev 0 multi count 1
-ata6.00: configured for UDMA/133
-scsi 4:0:0:0: Direct-Access     ATA      ST3300622AS      3.AA PQ: 0 ANSI: 5
-ata5: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
-SCSI device sde: 586072368 512-byte hdwr sectors (300069 MB)
-sde: Write Protect is off
-sde: Mode Sense: 00 3a 00 00
-SCSI device sde: drive cache: write back
-SCSI device sde: 586072368 512-byte hdwr sectors (300069 MB)
-sde: Write Protect is off
-sde: Mode Sense: 00 3a 00 00
-SCSI device sde: drive cache: write back
- sde: sde1 sde2
-sd 4:0:0:0: Attached scsi disk sde
-sd 4:0:0:0: Attached scsi generic sg4 type 0
-scsi 5:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-ata6: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
-SCSI device sdf: 488397168 512-byte hdwr sectors (250059 MB)
-sdf: Write Protect is off
-sdf: Mode Sense: 00 3a 00 00
-SCSI device sdf: drive cache: write back
-SCSI device sdf: 488397168 512-byte hdwr sectors (250059 MB)
-sdf: Write Protect is off
-sdf: Mode Sense: 00 3a 00 00
-SCSI device sdf: drive cache: write back
- sdf: sdf1
-sd 5:0:0:0: Attached scsi disk sdf
-sd 5:0:0:0: Attached scsi generic sg5 type 0
-ACPI: PCI Interrupt Link [APSJ] enabled at IRQ 21
-ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [APSJ] -> GSI 21 (level, low) -> IRQ 21
-sata_nv 0000:00:08.0: Using ADMA mode
-PCI: Setting latency timer of device 0000:00:08.0 to 64
-ata7: SATA max UDMA/133 cmd 0xFFFFC200100BE480 ctl 0xFFFFC200100BE4A0 bmdma 0xC400 irq 21
-ata8: SATA max UDMA/133 cmd 0xFFFFC200100BE580 ctl 0xFFFFC200100BE5A0 bmdma 0xC408 irq 21
-scsi6 : sata_nv
-ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.00: ATA-7, max UDMA/133, 586072368 sectors: LBA48 NCQ (depth 31/32)
-ata7.00: ata7: dev 0 multi count 1
-ata7.00: configured for UDMA/133
-scsi7 : sata_nv
-ata8: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata8.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 31/32)
-ata8.00: ata8: dev 0 multi count 1
-ata8.00: configured for UDMA/133
-scsi 6:0:0:0: Direct-Access     ATA      ST3300622AS      3.AA PQ: 0 ANSI: 5
-ata7: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
-SCSI device sdg: 586072368 512-byte hdwr sectors (300069 MB)
-sdg: Write Protect is off
-sdg: Mode Sense: 00 3a 00 00
-SCSI device sdg: drive cache: write back
-SCSI device sdg: 586072368 512-byte hdwr sectors (300069 MB)
-sdg: Write Protect is off
-sdg: Mode Sense: 00 3a 00 00
-SCSI device sdg: drive cache: write back
- sdg: sdg1 sdg2
-sd 6:0:0:0: Attached scsi disk sdg
-sd 6:0:0:0: Attached scsi generic sg6 type 0
-scsi 7:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-ata8: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
-SCSI device sdh: 488397168 512-byte hdwr sectors (250059 MB)
-sdh: Write Protect is off
-sdh: Mode Sense: 00 3a 00 00
-SCSI device sdh: drive cache: write back
-SCSI device sdh: 488397168 512-byte hdwr sectors (250059 MB)
-sdh: Write Protect is off
-sdh: Mode Sense: 00 3a 00 00
-SCSI device sdh: drive cache: write back
- sdh: sdh1
-sd 7:0:0:0: Attached scsi disk sdh
-sd 7:0:0:0: Attached scsi generic sg7 type 0
-pata_hpt37x: BIOS has not set timing clocks.
-hpt37x: HPT374: Bus clock 33MHz.
-PCI: Unable to reserve I/O region #1:8@7400 for device 0000:05:06.1
-pata_hpt37x: probe of 0000:05:06.1 failed with error -16
-video1394: Installed video1394 module
-ieee1394: raw1394: /dev/raw1394 device initialized
-ieee1394: sbp2: Driver forced to serialize I/O (serialize_io=1)
-ieee1394: sbp2: Try serialize_io=0 for better performance
-ACPI: PCI Interrupt Link [APCL] enabled at IRQ 20
-ACPI: PCI Interrupt 0000:00:02.1[B] -> Link [APCL] -> GSI 20 (level, low) -> IRQ 20
-PCI: Setting latency timer of device 0000:00:02.1 to 64
-ehci_hcd 0000:00:02.1: EHCI Host Controller
-ehci_hcd 0000:00:02.1: new USB bus registered, assigned bus number 1
-ehci_hcd 0000:00:02.1: debug port 1
-PCI: cache line size of 64 is not supported by device 0000:00:02.1
-ehci_hcd 0000:00:02.1: irq 20, io mem 0xfeb00000
-ehci_hcd 0000:00:02.1: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
-usb usb1: new device found, idVendor=0000, idProduct=0000
-usb usb1: new device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb1: Product: EHCI Host Controller
-usb usb1: Manufacturer: Linux 2.6.19-rc4-mm1 ehci_hcd
-usb usb1: SerialNumber: 0000:00:02.1
-usb usb1: configuration #1 chosen from 1 choice
-hub 1-0:1.0: USB hub found
-hub 1-0:1.0: 10 ports detected
-ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver (PCI)
-ACPI: PCI Interrupt Link [APCF] enabled at IRQ 23
-ACPI: PCI Interrupt 0000:00:02.0[A] -> Link [APCF] -> GSI 23 (level, low) -> IRQ 23
-PCI: Setting latency timer of device 0000:00:02.0 to 64
-ohci_hcd 0000:00:02.0: OHCI Host Controller
-ohci_hcd 0000:00:02.0: new USB bus registered, assigned bus number 2
-ohci_hcd 0000:00:02.0: irq 23, io mem 0xda004000
-usb usb2: new device found, idVendor=0000, idProduct=0000
-usb usb2: new device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb2: Product: OHCI Host Controller
-usb usb2: Manufacturer: Linux 2.6.19-rc4-mm1 ohci_hcd
-usb usb2: SerialNumber: 0000:00:02.0
-usb usb2: configuration #1 chosen from 1 choice
-hub 2-0:1.0: USB hub found
-hub 2-0:1.0: 10 ports detected
-usbcore: registered new interface driver usblp
-drivers/usb/class/usblp.c: v0.13: USB Printer Device Class driver
-serio: i8042 KBD port at 0x60,0x64 irq 1
-serio: i8042 AUX port at 0x60,0x64 irq 12
-mice: PS/2 mouse device common for all mice
-input: PC Speaker as /class/input/input0
-input: AT Translated Set 2 keyboard as /class/input/input1
-i2c /dev entries driver
-md: linear personality registered for level -1
-md: raid0 personality registered for level 0
-md: raid1 personality registered for level 1
-raid6: int64x1   2328 MB/s
-raid6: int64x2   3148 MB/s
-raid6: int64x4   3035 MB/s
-raid6: int64x8   2050 MB/s
-raid6: sse2x1    2320 MB/s
-raid6: sse2x2    3285 MB/s
-raid6: sse2x4    3929 MB/s
-raid6: using algorithm sse2x4 (3929 MB/s)
-md: raid6 personality registered for level 6
-md: raid5 personality registered for level 5
-md: raid4 personality registered for level 4
-raid5: automatically using best checksumming function: generic_sse
-   generic_sse:  8036.000 MB/sec
-raid5: using function: generic_sse (8036.000 MB/sec)
-IPv4 over IPv4 tunneling driver
-GRE over IPv4 tunneling driver
-TCP cubic registered
-NET: Registered protocol family 1
-NET: Registered protocol family 10
-lo: Disabled Privacy Extensions
-IPv6 over IPv4 tunneling driver
-NET: Registered protocol family 17
-NET: Registered protocol family 15
-NET: Registered protocol family 8
-NET: Registered protocol family 20
-powernow-k8: Found 2 AMD Athlon(tm) 64 X2 Dual Core Processor 4600+ processors (version 2.00.00)
-powernow-k8:    0 : fid 0x10 (2400 MHz), vid 0x8
-powernow-k8:    1 : fid 0xe (2200 MHz), vid 0xa
-powernow-k8:    2 : fid 0xc (2000 MHz), vid 0xc
-powernow-k8:    3 : fid 0xa (1800 MHz), vid 0xe
-powernow-k8:    4 : fid 0x2 (1000 MHz), vid 0x12
-drivers/rtc/hctosys.c: unable to open rtc device (rtc0)
-logips2pp: Detected unknown logitech mouse model 1
-input: ImPS/2 Logitech Wheel Mouse as /class/input/input2
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering sdh1 ...
-md:  adding sdh1 ...
-md:  adding sdg1 ...
-md:  adding sdf1 ...
-md:  adding sde1 ...
-md:  adding sdd1 ...
-md:  adding sdc1 ...
-md:  adding sdb1 ...
-md:  adding sda1 ...
-md: hdc9 has different UUID to sdh1
-md: hdc8 has different UUID to sdh1
-md: hdc7 has different UUID to sdh1
-md: hdc6 has different UUID to sdh1
-md: hdc5 has different UUID to sdh1
-md: hda9 has different UUID to sdh1
-md: hda8 has different UUID to sdh1
-md: hda7 has different UUID to sdh1
-md: hda6 has different UUID to sdh1
-md: hda5 has different UUID to sdh1
-md: created md0
-md: bind<sda1>
-md: bind<sdb1>
-md: bind<sdc1>
-md: bind<sdd1>
-md: bind<sde1>
-md: bind<sdf1>
-md: bind<sdg1>
-md: bind<sdh1>
-md: running: <sdh1><sdg1><sdf1><sde1><sdd1><sdc1><sdb1><sda1>
-raid5: device sdh1 operational as raid disk 1
-raid5: device sdg1 operational as raid disk 0
-raid5: device sdf1 operational as raid disk 5
-raid5: device sde1 operational as raid disk 6
-raid5: device sdd1 operational as raid disk 7
-raid5: device sdc1 operational as raid disk 3
-raid5: device sdb1 operational as raid disk 2
-raid5: device sda1 operational as raid disk 4
-raid5: allocated 8462kB for md0
-raid5: raid level 6 set md0 active with 8 out of 8 devices, algorithm 2
-RAID5 conf printout:
- --- rd:8 wd:8
- disk 0, o:1, dev:sdg1
- disk 1, o:1, dev:sdh1
- disk 2, o:1, dev:sdb1
- disk 3, o:1, dev:sdc1
- disk 4, o:1, dev:sda1
- disk 5, o:1, dev:sdf1
- disk 6, o:1, dev:sde1
- disk 7, o:1, dev:sdd1
-md0: bitmap initialized from disk: read 15/15 pages, set 1 bits, status: 0
-created bitmap (233 pages) for device md0
-md: considering hdc9 ...
-md:  adding hdc9 ...
-md: hdc8 has different UUID to hdc9
-md: hdc7 has different UUID to hdc9
-md: hdc6 has different UUID to hdc9
-md: hdc5 has different UUID to hdc9
-md:  adding hda9 ...
-md: hda8 has different UUID to hdc9
-md: hda7 has different UUID to hdc9
-md: hda6 has different UUID to hdc9
-md: hda5 has different UUID to hdc9
-md: created md4
-md: bind<hda9>
-md: bind<hdc9>
-md: running: <hdc9><hda9>
-raid1: raid set md4 active with 2 out of 2 mirrors
-md4: bitmap initialized from disk: read 10/10 pages, set 48 bits, status: 0
-created bitmap (156 pages) for device md4
-md: considering hdc8 ...
-md:  adding hdc8 ...
-md: hdc7 has different UUID to hdc8
-md: hdc6 has different UUID to hdc8
-md: hdc5 has different UUID to hdc8
-md:  adding hda8 ...
-md: hda7 has different UUID to hdc8
-md: hda6 has different UUID to hdc8
-md: hda5 has different UUID to hdc8
-md: created md3
-md: bind<hda8>
-md: bind<hdc8>
-md: running: <hdc8><hda8>
-raid1: raid set md3 active with 2 out of 2 mirrors
-md3: bitmap initialized from disk: read 8/8 pages, set 5 bits, status: 0
-created bitmap (123 pages) for device md3
-md: considering hdc7 ...
-md:  adding hdc7 ...
-md: hdc6 has different UUID to hdc7
-md: hdc5 has different UUID to hdc7
-md:  adding hda7 ...
-md: hda6 has different UUID to hdc7
-md: hda5 has different UUID to hdc7
-md: created md2
-md: bind<hda7>
-md: bind<hdc7>
-md: running: <hdc7><hda7>
-raid1: raid set md2 active with 2 out of 2 mirrors
-md2: bitmap initialized from disk: read 8/8 pages, set 83 bits, status: 0
-created bitmap (123 pages) for device md2
-md: considering hdc6 ...
-md:  adding hdc6 ...
-md: hdc5 has different UUID to hdc6
-md:  adding hda6 ...
-md: hda5 has different UUID to hdc6
-md: created md1
-md: bind<hda6>
-md: bind<hdc6>
-md: running: <hdc6><hda6>
-raid1: raid set md1 active with 2 out of 2 mirrors
-md1: bitmap initialized from disk: read 12/12 pages, set 70 bits, status: 0
-created bitmap (184 pages) for device md1
-md: considering hdc5 ...
-md:  adding hdc5 ...
-md:  adding hda5 ...
-md: created md5
-md: bind<hda5>
-md: bind<hdc5>
-md: running: <hdc5><hda5>
-raid1: raid set md5 active with 2 out of 2 mirrors
-md5: bitmap initialized from disk: read 9/9 pages, set 0 bits, status: 0
-created bitmap (129 pages) for device md5
-md: ... autorun DONE.
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs: mounted filesystem with ordered data mode.
-VFS: Mounted root (ext3 filesystem) readonly.
-Freeing unused kernel memory: 288k freed
-Adding 4200888k swap on /dev/md5.  Priority:-1 extents:1 across:4200888k
-EXT3-fs warning: maximal mount count reached, running e2fsck is recommended
-EXT3 FS on md2, internal journal
-i2c_adapter i2c-3: nForce2 SMBus adapter at 0x4c00
-i2c_adapter i2c-4: nForce2 SMBus adapter at 0x4c40
-it87: Found IT8712F chip at 0x290, revision 7
-it87: in3 is VCC (+5V)
-it87: in7 is VCCH (+5V Stand-By)
-it87-isa 9191-0290: Detected broken BIOS defaults, disabling PWM interface
-ACPI: PCI Interrupt 0000:05:08.0[A] -> Link [APC3] -> GSI 18 (level, low) -> IRQ 18
-Installing spdif_bug patch: Audigy 2 ZS [2001]
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs warning: maximal mount count reached, running e2fsck is recommended
-EXT3 FS on md1, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md3, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-ReiserFS: md4: found reiserfs format "3.6" with standard journal
-ReiserFS: md4: using ordered data mode
-ReiserFS: md4: journal params: device md4, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-ReiserFS: md4: checking transaction log (md4)
-ReiserFS: md4: Using r5 hash to sort names
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md0, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-ReiserFS: hde1: found reiserfs format "3.6" with standard journal
-ReiserFS: hde1: using ordered data mode
-ReiserFS: hde1: journal params: device hde1, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-ReiserFS: hde1: checking transaction log (hde1)
-ReiserFS: hde1: Using r5 hash to sort names
-ReiserFS: sde2: found reiserfs format "3.6" with standard journal
-ReiserFS: sde2: using ordered data mode
-ReiserFS: sde2: journal params: device sde2, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-ReiserFS: sde2: checking transaction log (sde2)
-ReiserFS: sde2: Using r5 hash to sort names
-ReiserFS: sdg2: found reiserfs format "3.6" with standard journal
-ReiserFS: sdg2: using ordered data mode
-ReiserFS: sdg2: journal params: device sdg2, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-ReiserFS: sdg2: checking transaction log (sdg2)
-ReiserFS: sdg2: Using r5 hash to sort names
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on hdi1, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-ip_tables: (C) 2000-2006 Netfilter Core Team
-switch: Setting full-duplex based on MII#1 link partner capability of 8de1.
-ip_conntrack version 2.4 (8192 buckets, 65536 max) - 312 bytes per conntrack
-adsl: no IPv6 routers present
-switch: no IPv6 routers present
-
-dmesg for 2.6.19-rc4-mm1 without PATA drivers:
-Linux version 2.6.19-rc4-mm1 (jurriaan@middle) (gcc version 4.1.2 20061028 (prerelease) (Debian 4.1.1-19)) #9 SMP Tue Oct 31 19:27:17 CET 2006
-Command line: root=/dev/md2 video=nvidiafb:1600x1200-32@85
-BIOS-provided physical RAM map:
- BIOS-e820: 0000000000000000 - 000000000009c800 (usable)
- BIOS-e820: 000000000009c800 - 00000000000a0000 (reserved)
- BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
- BIOS-e820: 0000000000100000 - 00000000bfff0000 (usable)
- BIOS-e820: 00000000bfff0000 - 00000000bfff3000 (ACPI NVS)
- BIOS-e820: 00000000bfff3000 - 00000000c0000000 (ACPI data)
- BIOS-e820: 00000000e0000000 - 00000000f0000000 (reserved)
- BIOS-e820: 00000000fec00000 - 0000000100000000 (reserved)
- BIOS-e820: 0000000100000000 - 0000000140000000 (usable)
-Entering add_active_range(0, 0, 156) 0 entries of 256 used
-Entering add_active_range(0, 256, 786416) 1 entries of 256 used
-Entering add_active_range(0, 1048576, 1310720) 2 entries of 256 used
-end_pfn_map = 1310720
-DMI 2.3 present.
-ACPI: RSDP (v000 Nvidia                                ) @ 0x00000000000f7d30
-ACPI: RSDT (v001 Nvidia AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x00000000bfff3040
-ACPI: FADT (v001 Nvidia AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x00000000bfff30c0
-ACPI: SSDT (v001 PTLTD  POWERNOW 0x00000001  LTP 0x00000001) @ 0x00000000bfff9900
-ACPI: SRAT (v001 AMD    HAMMER   0x00000001 AMD  0x00000001) @ 0x00000000bfff9b80
-ACPI: MCFG (v001 Nvidia AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x00000000bfff9cc0
-ACPI: MADT (v001 Nvidia AWRDACPI 0x42302e31 AWRD 0x00000000) @ 0x00000000bfff9840
-ACPI: DSDT (v001 NVIDIA AWRDACPI 0x00001000 MSFT 0x0100000e) @ 0x0000000000000000
-Entering add_active_range(0, 0, 156) 0 entries of 256 used
-Entering add_active_range(0, 256, 786416) 1 entries of 256 used
-Entering add_active_range(0, 1048576, 1310720) 2 entries of 256 used
-Zone PFN ranges:
-  DMA             0 ->     4096
-  DMA32        4096 ->  1048576
-  Normal    1048576 ->  1310720
-early_node_map[3] active PFN ranges
-    0:        0 ->      156
-    0:      256 ->   786416
-    0:  1048576 ->  1310720
-On node 0 totalpages: 1048460
-  DMA zone: 56 pages used for memmap
-  DMA zone: 1841 pages reserved
-  DMA zone: 2099 pages, LIFO batch:0
-  DMA32 zone: 14280 pages used for memmap
-  DMA32 zone: 768040 pages, LIFO batch:31
-  Normal zone: 3584 pages used for memmap
-  Normal zone: 258560 pages, LIFO batch:31
-Nvidia board detected. Ignoring ACPI timer override.
-ACPI: PM-Timer IO Port: 0x4008
-ACPI: Local APIC address 0xfee00000
-ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
-Processor #0 (Bootup-CPU)
-ACPI: LAPIC (acpi_id[0x01] lapic_id[0x01] enabled)
-Processor #1
-ACPI: LAPIC_NMI (acpi_id[0x00] high edge lint[0x1])
-ACPI: LAPIC_NMI (acpi_id[0x01] high edge lint[0x1])
-ACPI: IOAPIC (id[0x02] address[0xfec00000] gsi_base[0])
-IOAPIC[0]: apic_id 2, address 0xfec00000, GSI 0-23
-ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-ACPI: BIOS IRQ0 pin2 override ignored.
-ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
-ACPI: INT_SRC_OVR (bus 0 bus_irq 14 global_irq 14 high edge)
-ACPI: INT_SRC_OVR (bus 0 bus_irq 15 global_irq 15 high edge)
-ACPI: IRQ9 used by override.
-ACPI: IRQ14 used by override.
-ACPI: IRQ15 used by override.
-Setting APIC routing to flat
-Using ACPI (MADT) for SMP configuration information
-Nosave address range: 000000000009c000 - 000000000009d000
-Nosave address range: 000000000009d000 - 00000000000a0000
-Nosave address range: 00000000000a0000 - 00000000000f0000
-Nosave address range: 00000000000f0000 - 0000000000100000
-Nosave address range: 00000000bfff0000 - 00000000bfff3000
-Nosave address range: 00000000bfff3000 - 00000000c0000000
-Nosave address range: 00000000c0000000 - 00000000e0000000
-Nosave address range: 00000000e0000000 - 00000000f0000000
-Nosave address range: 00000000f0000000 - 00000000fec00000
-Nosave address range: 00000000fec00000 - 0000000100000000
-Allocating PCI resources starting at c2000000 (gap: c0000000:20000000)
-PERCPU: Allocating 31936 bytes of per cpu data
-Built 1 zonelists.  Total pages: 1028699
-Kernel command line: root=/dev/md2 video=nvidiafb:1600x1200-32@85
-Initializing CPU#0
-PID hash table entries: 4096 (order: 12, 32768 bytes)
-Console: colour VGA+ 80x25
-Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes)
-Inode-cache hash table entries: 262144 (order: 9, 2097152 bytes)
-Checking aperture...
-CPU 0: aperture @ 8000000 size 32 MB
-Aperture too small (32 MB)
-No AGP bridge found
-Your BIOS doesn't leave a aperture memory hole
-Please enable the IOMMU option in the BIOS setup
-This costs you 64 MB of RAM
-Mapping aperture over 65536 KB of RAM @ 8000000
-Memory: 4042676k/5242880k available (3924k kernel code, 150952k reserved, 2389k data, 284k init)
-Calibrating delay using timer specific routine.. 5042.57 BogoMIPS (lpj=2521288)
-Mount-cache hash table entries: 256
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 512K (64 bytes/line)
-CPU: Physical Processor ID: 0
-CPU: Processor Core ID: 0
-Freeing SMP alternatives: 44k freed
-ACPI: Core revision 20060707
-Using local APIC timer interrupts.
-result 13127938
-Detected 13.127 MHz APIC timer.
-Booting processor 1/2 APIC 0x1
-Initializing CPU#1
-Calibrating delay using timer specific routine.. 5040.43 BogoMIPS (lpj=2520217)
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 512K (64 bytes/line)
-CPU: Physical Processor ID: 0
-CPU: Processor Core ID: 1
-AMD Athlon(tm) 64 X2 Dual Core Processor 4600+ stepping 01
-CPU 1: Syncing TSC to CPU 0.
-CPU 1: synchronized TSC with CPU 0 (last diff -76 cycles, maxerr 588 cycles)
-Brought up 2 CPUs
-testing NMI watchdog ... CPU#0: NMI appears to be stuck (111->116)!
-CPU#1: NMI appears to be stuck (60->65)!
-Disabling vsyscall due to use of PM timer
-time.c: Using 3.579545 MHz WALL PM GTOD PM timer.
-time.c: Detected 2520.562 MHz processor.
-Uhhuh. NMI received for unknown reason 2d.
-Do you have a strange power saving mode enabled?
-Dazed and confused, but trying to continue
-Uhhuh. NMI received for unknown reason 00.
-Do you have a strange power saving mode enabled?
-Dazed and confused, but trying to continue
-migration_cost=161
-NET: Registered protocol family 16
-ACPI: bus type pci registered
-PCI: Using MMCONFIG at e0000000
-PCI: No mmconfig possible on device 00:18
-ACPI: Interpreter enabled
-ACPI: Using IOAPIC for interrupt routing
-ACPI: PCI Root Bridge [PCI0] (0000:00)
-PCI: Transparent bridge - 0000:00:09.0
-Boot video device is 0000:01:00.0
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.HUB0._PRT]
-ACPI: PCI Interrupt Link [LNK1] (IRQs *3 4 5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNK2] (IRQs 3 4 5 7 9 10 *11 12 14 15)
-ACPI: PCI Interrupt Link [LNK3] (IRQs 3 4 *5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNK4] (IRQs *3 4 5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNK5] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [LUBA] (IRQs 3 4 5 7 9 10 *11 12 14 15)
-ACPI: PCI Interrupt Link [LUBB] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [LMAC] (IRQs *3 4 5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LACI] (IRQs 3 4 5 *7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LMCI] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [LSMB] (IRQs 3 4 5 *7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LUB2] (IRQs 3 4 *5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LIDE] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [LSID] (IRQs 3 4 5 7 9 10 *11 12 14 15)
-ACPI: PCI Interrupt Link [LFID] (IRQs 3 4 *5 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LPCA] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
-ACPI: PCI Interrupt Link [APC1] (IRQs 16) *0, disabled.
-ACPI: PCI Interrupt Link [APC2] (IRQs 17) *0, disabled.
-ACPI: PCI Interrupt Link [APC3] (IRQs 18) *0, disabled.
-ACPI: PCI Interrupt Link [APC4] (IRQs 19) *0, disabled.
-ACPI: PCI Interrupt Link [APC5] (IRQs *16), disabled.
-ACPI: PCI Interrupt Link [APCF] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCG] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCH] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCJ] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCK] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCS] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCL] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCZ] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APSI] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APSJ] (IRQs 20 21 22 23) *0, disabled.
-ACPI: PCI Interrupt Link [APCP] (IRQs 20 21 22 23) *0, disabled.
-Generic PHY: Registered new driver
-SCSI subsystem initialized
-usbcore: registered new interface driver usbfs
-usbcore: registered new interface driver hub
-usbcore: registered new device driver usb
-PCI: Using ACPI for IRQ routing
-PCI: If a device doesn't work, try "pci=routeirq".  If it helps, post a report
-PCI-DMA: Disabling AGP.
-PCI-DMA: aperture base @ 8000000 size 65536 KB
-PCI-DMA: using GART IOMMU.
-PCI-DMA: Reserving 64MB of IOMMU area in the AGP aperture
-ieee1394: Initialized config rom entry `ip1394'
-ACPI: PCI Interrupt Link [APC4] enabled at IRQ 19
-ACPI: PCI Interrupt 0000:05:08.2[B] -> Link [APC4] -> GSI 19 (level, low) -> IRQ 19
-ohci1394: fw-host0: OHCI-1394 1.1 (PCI): IRQ=[19]  MMIO=[d900e000-d900e7ff]  Max Packet=[2048]  IR/IT contexts=[4/8]
-ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
-ACPI: PCI Interrupt 0000:05:0b.0[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
-ohci1394: fw-host1: OHCI-1394 1.1 (PCI): IRQ=[16]  MMIO=[d900d000-d900d7ff]  Max Packet=[2048]  IR/IT contexts=[4/8]
-PCI: Bridge: 0000:00:09.0
-  IO window: 6000-afff
-  MEM window: d8000000-d9ffffff
-  PREFETCH window: da100000-da1fffff
-PCI: Bridge: 0000:00:0b.0
-  IO window: disabled.
-  MEM window: disabled.
-  PREFETCH window: disabled.
-PCI: Bridge: 0000:00:0c.0
-  IO window: disabled.
-  MEM window: disabled.
-  PREFETCH window: disabled.
-PCI: Bridge: 0000:00:0d.0
-  IO window: disabled.
-  MEM window: disabled.
-  PREFETCH window: disabled.
-PCI: Bridge: 0000:00:0e.0
-  IO window: disabled.
-  MEM window: d0000000-d7ffffff
-  PREFETCH window: c0000000-cfffffff
-PCI: Setting latency timer of device 0000:00:09.0 to 64
-PCI: Setting latency timer of device 0000:00:0b.0 to 64
-PCI: Setting latency timer of device 0000:00:0c.0 to 64
-PCI: Setting latency timer of device 0000:00:0d.0 to 64
-PCI: Setting latency timer of device 0000:00:0e.0 to 64
-NET: Registered protocol family 2
-IP route cache hash table entries: 131072 (order: 8, 1048576 bytes)
-TCP established hash table entries: 262144 (order: 10, 4194304 bytes)
-TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
-TCP: Hash tables configured (established 262144 bind 65536)
-TCP reno registered
-Coda Kernel/Venus communications, v6.0.0, coda@cs.cmu.edu
-Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
-NTFS driver 2.1.27 [Flags: R/O].
-io scheduler noop registered
-io scheduler cfq registered (default)
-PCI: Linking AER extended capability on 0000:00:0b.0
-PCI: Linking AER extended capability on 0000:00:0c.0
-PCI: Linking AER extended capability on 0000:00:0d.0
-PCI: Linking AER extended capability on 0000:00:0e.0
-PCI: Setting latency timer of device 0000:00:0b.0 to 64
-pcie_portdrv_probe->Dev[005d:10de] has invalid IRQ. Check vendor BIOS
-assign_interrupt_mode Found MSI capability
-Allocate Port Service[0000:00:0b.0:pcie00]
-Allocate Port Service[0000:00:0b.0:pcie03]
-PCI: Setting latency timer of device 0000:00:0c.0 to 64
-pcie_portdrv_probe->Dev[005d:10de] has invalid IRQ. Check vendor BIOS
-assign_interrupt_mode Found MSI capability
-Allocate Port Service[0000:00:0c.0:pcie00]
-Allocate Port Service[0000:00:0c.0:pcie03]
-PCI: Setting latency timer of device 0000:00:0d.0 to 64
-pcie_portdrv_probe->Dev[005d:10de] has invalid IRQ. Check vendor BIOS
-assign_interrupt_mode Found MSI capability
-Allocate Port Service[0000:00:0d.0:pcie00]
-Allocate Port Service[0000:00:0d.0:pcie03]
-PCI: Setting latency timer of device 0000:00:0e.0 to 64
-pcie_portdrv_probe->Dev[005d:10de] has invalid IRQ. Check vendor BIOS
-assign_interrupt_mode Found MSI capability
-Allocate Port Service[0000:00:0e.0:pcie00]
-Allocate Port Service[0000:00:0e.0:pcie03]
-ACPI: PCI Interrupt Link [APC3] enabled at IRQ 18
-ACPI: PCI Interrupt 0000:01:00.0[A] -> Link [APC3] -> GSI 18 (level, low) -> IRQ 18
-nvidiafb: Device ID: 10de0141 
-nvidiafb: CRTC0 analog found
-nvidiafb: CRTC1 analog found
-nvidiafb: EDID found from BUS2
-nvidiafb: CRTC 0 appears to have a CRT attached
-nvidiafb: Using CRT on CRTC 0
-nvidiafb: MTRR set to ON
-Console: switching to colour frame buffer device 160x66
-nvidiafb: PCI nVidia NV14 framebuffer (64MB @ 0xC0000000)
-ACPI: Power Button (FF) [PWRF]
-ACPI: Power Button (CM) [PWRB]
-Using specific hotkey driver
-lp: driver loaded but no devices found
-Real Time Clock Driver v1.12ac
-Non-volatile memory driver v1.2
-Linux agpgart interface v0.101 (c) Dave Jones
-Hangcheck: starting hangcheck timer 0.9.0 (tick is 180 seconds, margin is 60 seconds).
-Hangcheck: Using monotonic_clock().
-Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing enabled
-serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-Floppy drive(s): fd0 is 1.44M
-FDC 0 is a post-1991 82077
-RAMDISK driver initialized: 16 RAM disks of 65536K size 1024 blocksize
-ACPI: PCI Interrupt Link [APC2] enabled at IRQ 17
-ACPI: PCI Interrupt 0000:05:0c.0[A] -> Link [APC2] -> GSI 17 (level, low) -> IRQ 17
-skge 1.9 addr 0xd9008000 irq 17 chip Yukon-Lite rev 9
-skge eth0: addr 00:15:f2:20:e6:69
-Marvell 88E1101: Registered new driver
-Davicom DM9161E: Registered new driver
-Davicom DM9131: Registered new driver
-Cicada Cis8204: Registered new driver
-Cicada Cis8201: Registered new driver
-LXT970: Registered new driver
-LXT971: Registered new driver
-QS6612: Registered new driver
-forcedeth.c: Reverse Engineered nForce ethernet driver. Version 0.59.
-ACPI: PCI Interrupt Link [APCH] enabled at IRQ 23
-ACPI: PCI Interrupt 0000:00:0a.0[A] -> Link [APCH] -> GSI 23 (level, low) -> IRQ 23
-PCI: Setting latency timer of device 0000:00:0a.0 to 64
-forcedeth: using HIGHDMA
-eth1: forcedeth.c: subsystem: 01043:8141 bound to 0000:00:0a.0
-Linux Tulip driver version 1.1.14 (May 11, 2002)
-ACPI: PCI Interrupt 0000:05:07.0[A] -> Link [APC2] -> GSI 17 (level, low) -> IRQ 17
-tulip0:  MII transceiver #1 config 3100 status 7829 advertising 01e1.
-eth2: Lite-On 82c168 PNIC rev 32 at Port 0x8800, 00:A0:CC:21:89:0C, IRQ 17.
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-RocketRAID 3xxx SATA Controller driver v1.0 (060426)
-libata version 2.00 loaded.
-sata_sil 0000:05:0a.0: version 2.0
-ACPI: PCI Interrupt 0000:05:0a.0[A] -> Link [APC4] -> GSI 19 (level, low) -> IRQ 19
-sata_sil 0000:05:0a.0: Applying R_ERR on DMA activate FIS errata fix
-ata1: SATA max UDMA/100 cmd 0xFFFFC20000056080 ctl 0xFFFFC2000005608A bmdma 0xFFFFC20000056000 irq 19
-ata2: SATA max UDMA/100 cmd 0xFFFFC200000560C0 ctl 0xFFFFC200000560CA bmdma 0xFFFFC20000056008 irq 19
-ata3: SATA max UDMA/100 cmd 0xFFFFC20000056280 ctl 0xFFFFC2000005628A bmdma 0xFFFFC20000056200 irq 19
-ata4: SATA max UDMA/100 cmd 0xFFFFC200000562C0 ctl 0xFFFFC200000562CA bmdma 0xFFFFC20000056208 irq 19
-scsi0 : sata_sil
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata1.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 0/32)
-ata1.00: ata1: dev 0 multi count 16
-ata1.00: configured for UDMA/100
-scsi1 : sata_sil
-ieee1394: Host added: ID:BUS[0-01:1023]  GUID[00023c014100f4bf]
-ieee1394: Host added: ID:BUS[1-00:1023]  GUID[0011d80000738f5d]
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata2.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 0/32)
-ata2.00: ata2: dev 0 multi count 16
-ata2.00: configured for UDMA/100
-scsi2 : sata_sil
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata3.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 0/32)
-ata3.00: ata3: dev 0 multi count 16
-ata3.00: configured for UDMA/100
-scsi3 : sata_sil
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata4.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 0/32)
-ata4.00: ata4: dev 0 multi count 16
-ata4.00: configured for UDMA/100
-scsi 0:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
- sda: sda1
-sd 0:0:0:0: Attached scsi disk sda
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-scsi 1:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
- sdb: sdb1
-sd 1:0:0:0: Attached scsi disk sdb
-sd 1:0:0:0: Attached scsi generic sg1 type 0
-scsi 2:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-SCSI device sdc: 488397168 512-byte hdwr sectors (250059 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 488397168 512-byte hdwr sectors (250059 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
-SCSI device sdc: drive cache: write back
- sdc: sdc1
-sd 2:0:0:0: Attached scsi disk sdc
-sd 2:0:0:0: Attached scsi generic sg2 type 0
-scsi 3:0:0:0: Direct-Access     ATA      ST3250823AS      3.02 PQ: 0 ANSI: 5
-SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
-sdd: Write Protect is off
-sdd: Mode Sense: 00 3a 00 00
-SCSI device sdd: drive cache: write back
-SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
-sdd: Write Protect is off
-sdd: Mode Sense: 00 3a 00 00
-SCSI device sdd: drive cache: write back
- sdd: sdd1
-sd 3:0:0:0: Attached scsi disk sdd
-sd 3:0:0:0: Attached scsi generic sg3 type 0
-sata_nv 0000:00:07.0: version 3.1
-ACPI: PCI Interrupt Link [APSI] enabled at IRQ 22
-ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [APSI] -> GSI 22 (level, low) -> IRQ 22
-sata_nv 0000:00:07.0: Using ADMA mode
-PCI: Setting latency timer of device 0000:00:07.0 to 64
-ata5: SATA max UDMA/133 cmd 0xFFFFC200100BC480 ctl 0xFFFFC200100BC4A0 bmdma 0xD800 irq 22
-ata6: SATA max UDMA/133 cmd 0xFFFFC200100BC580 ctl 0xFFFFC200100BC5A0 bmdma 0xD808 irq 22
-scsi4 : sata_nv
-ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata5.00: ATA-7, max UDMA/133, 586072368 sectors: LBA48 NCQ (depth 31/32)
-ata5.00: ata5: dev 0 multi count 1
-ata5.00: configured for UDMA/133
-scsi5 : sata_nv
-ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata6.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 31/32)
-ata6.00: ata6: dev 0 multi count 1
-ata6.00: configured for UDMA/133
-scsi 4:0:0:0: Direct-Access     ATA      ST3300622AS      3.AA PQ: 0 ANSI: 5
-ata5: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
-SCSI device sde: 586072368 512-byte hdwr sectors (300069 MB)
-sde: Write Protect is off
-sde: Mode Sense: 00 3a 00 00
-SCSI device sde: drive cache: write back
-SCSI device sde: 586072368 512-byte hdwr sectors (300069 MB)
-sde: Write Protect is off
-sde: Mode Sense: 00 3a 00 00
-SCSI device sde: drive cache: write back
- sde: sde1 sde2
-sd 4:0:0:0: Attached scsi disk sde
-sd 4:0:0:0: Attached scsi generic sg4 type 0
-scsi 5:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-ata6: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
-SCSI device sdf: 488397168 512-byte hdwr sectors (250059 MB)
-sdf: Write Protect is off
-sdf: Mode Sense: 00 3a 00 00
-SCSI device sdf: drive cache: write back
-SCSI device sdf: 488397168 512-byte hdwr sectors (250059 MB)
-sdf: Write Protect is off
-sdf: Mode Sense: 00 3a 00 00
-SCSI device sdf: drive cache: write back
- sdf: sdf1
-sd 5:0:0:0: Attached scsi disk sdf
-sd 5:0:0:0: Attached scsi generic sg5 type 0
-ACPI: PCI Interrupt Link [APSJ] enabled at IRQ 21
-ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [APSJ] -> GSI 21 (level, low) -> IRQ 21
-sata_nv 0000:00:08.0: Using ADMA mode
-PCI: Setting latency timer of device 0000:00:08.0 to 64
-ata7: SATA max UDMA/133 cmd 0xFFFFC200100BE480 ctl 0xFFFFC200100BE4A0 bmdma 0xC400 irq 21
-ata8: SATA max UDMA/133 cmd 0xFFFFC200100BE580 ctl 0xFFFFC200100BE5A0 bmdma 0xC408 irq 21
-scsi6 : sata_nv
-ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.00: ATA-7, max UDMA/133, 586072368 sectors: LBA48 NCQ (depth 31/32)
-ata7.00: ata7: dev 0 multi count 1
-ata7.00: configured for UDMA/133
-scsi7 : sata_nv
-ata8: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata8.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ (depth 31/32)
-ata8.00: ata8: dev 0 multi count 1
-ata8.00: configured for UDMA/133
-scsi 6:0:0:0: Direct-Access     ATA      ST3300622AS      3.AA PQ: 0 ANSI: 5
-ata7: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
-SCSI device sdg: 586072368 512-byte hdwr sectors (300069 MB)
-sdg: Write Protect is off
-sdg: Mode Sense: 00 3a 00 00
-SCSI device sdg: drive cache: write back
-SCSI device sdg: 586072368 512-byte hdwr sectors (300069 MB)
-sdg: Write Protect is off
-sdg: Mode Sense: 00 3a 00 00
-SCSI device sdg: drive cache: write back
- sdg: sdg1 sdg2
-sd 6:0:0:0: Attached scsi disk sdg
-sd 6:0:0:0: Attached scsi generic sg6 type 0
-scsi 7:0:0:0: Direct-Access     ATA      ST3250823AS      3.03 PQ: 0 ANSI: 5
-ata8: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
-SCSI device sdh: 488397168 512-byte hdwr sectors (250059 MB)
-sdh: Write Protect is off
-sdh: Mode Sense: 00 3a 00 00
-SCSI device sdh: drive cache: write back
-SCSI device sdh: 488397168 512-byte hdwr sectors (250059 MB)
-sdh: Write Protect is off
-sdh: Mode Sense: 00 3a 00 00
-SCSI device sdh: drive cache: write back
- sdh: sdh1
-sd 7:0:0:0: Attached scsi disk sdh
-sd 7:0:0:0: Attached scsi generic sg7 type 0
-pata_amd 0000:00:06.0: version 0.2.4
-PCI: Setting latency timer of device 0000:00:06.0 to 64
-ata9: PATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
-ata10: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xF008 irq 15
-scsi8 : pata_amd
-ata9.00: ATA-6, max UDMA/100, 390721968 sectors: LBA48 
-ata9.00: ata9: dev 0 multi count 1
-ata9.01: ATAPI, max UDMA/33
-ata9.00: configured for UDMA/100
-ata9.01: configured for UDMA/33
-scsi9 : pata_amd
-ata10.00: ATA-6, max UDMA/100, 390721968 sectors: LBA48 
-ata10.00: ata10: dev 0 multi count 1
-ata10.00: configured for UDMA/100
-scsi 8:0:0:0: Direct-Access     ATA      WDC WD2000JB-32E 15.0 PQ: 0 ANSI: 5
-SCSI device sdi: 390721968 512-byte hdwr sectors (200050 MB)
-Losing some ticks... checking if CPU frequency changed.
-sdi: Write Protect is off
-sdi: Mode Sense: 00 3a 00 00
-SCSI device sdi: drive cache: write back
-SCSI device sdi: 390721968 512-byte hdwr sectors (200050 MB)
-sdi: Write Protect is off
-sdi: Mode Sense: 00 3a 00 00
-SCSI device sdi: drive cache: write back
- sdi: sdi1 sdi2 < sdi5 sdi6 sdi7 sdi8 sdi9 >
-sd 8:0:0:0: Attached scsi disk sdi
-sd 8:0:0:0: Attached scsi generic sg8 type 0
-scsi 8:0:1:0: CD-ROM            _NEC     DVD_RW ND-3540A  1.01 PQ: 0 ANSI: 5
-sr0: scsi3-mmc drive: 48x/48x writer cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-sr 8:0:1:0: Attached scsi CD-ROM sr0
-sr 8:0:1:0: Attached scsi generic sg9 type 5
-scsi 9:0:0:0: Direct-Access     ATA      WDC WD2000JB-00F 15.0 PQ: 0 ANSI: 5
-SCSI device sdj: 390721968 512-byte hdwr sectors (200050 MB)
-sdj: Write Protect is off
-sdj: Mode Sense: 00 3a 00 00
-SCSI device sdj: drive cache: write back
-SCSI device sdj: 390721968 512-byte hdwr sectors (200050 MB)
-sdj: Write Protect is off
-sdj: Mode Sense: 00 3a 00 00
-SCSI device sdj: drive cache: write back
- sdj: sdj1 sdj2 < sdj5 sdj6 sdj7 sdj8 sdj9 >
-sd 9:0:0:0: Attached scsi disk sdj
-sd 9:0:0:0: Attached scsi generic sg10 type 0
-pata_hpt37x: BIOS has not set timing clocks.
-hpt37x: HPT374: Bus clock 33MHz.
-ACPI: PCI Interrupt 0000:05:06.0[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
-ata11: PATA max UDMA/133 cmd 0x6000 ctl 0x6402 bmdma 0x7000 irq 16
-ata12: PATA max UDMA/133 cmd 0x6800 ctl 0x6C02 bmdma 0x7008 irq 16
-scsi10 : pata_hpt37x
-ata11.00: ATA-6, max UDMA/100, 488397168 sectors: LBA48 
-ata11.00: ata11: dev 0 multi count 16
-ata11.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata11: failed to recover some devices, retrying in 5 secs
-ata11.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata11: failed to recover some devices, retrying in 5 secs
-ata11.01: failed to IDENTIFY (I/O error, err_mask=0x1)
-ata11: failed to recover some devices, retrying in 5 secs
-Find mode for 12 reports A81F442
-Find mode for DMA 69 reports 12848242
-ata11.00: configured for UDMA/100
-scsi11 : pata_hpt37x
-ATA: abnormal status 0x8 on port 0x6807
-scsi 10:0:0:0: Direct-Access     ATA      WDC WD2500JB-00F 15.0 PQ: 0 ANSI: 5
-SCSI device sdk: 488397168 512-byte hdwr sectors (250059 MB)
-sdk: Write Protect is off
-sdk: Mode Sense: 00 3a 00 00
-SCSI device sdk: drive cache: write back
-SCSI device sdk: 488397168 512-byte hdwr sectors (250059 MB)
-sdk: Write Protect is off
-sdk: Mode Sense: 00 3a 00 00
-SCSI device sdk: drive cache: write back
- sdk: sdk1
-sd 10:0:0:0: Attached scsi disk sdk
-sd 10:0:0:0: Attached scsi generic sg11 type 0
-pata_hpt37x: BIOS has not set timing clocks.
-hpt37x: HPT374: Bus clock 33MHz.
-ACPI: PCI Interrupt 0000:05:06.1[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
-ata13: PATA max UDMA/133 cmd 0x7400 ctl 0x7802 bmdma 0x8400 irq 16
-ata14: PATA max UDMA/133 cmd 0x7C00 ctl 0x8002 bmdma 0x8408 irq 16
-scsi12 : pata_hpt37x
-ata13.00: ATA-7, max UDMA/100, 586072368 sectors: LBA48 
-ata13.00: ata13: dev 0 multi count 16
-Find mode for 12 reports A81F442
-Find mode for DMA 69 reports 12848242
-ata13.00: configured for UDMA/100
-scsi13 : pata_hpt37x
-ATA: abnormal status 0x8 on port 0x7C07
-scsi 12:0:0:0: Direct-Access     ATA      ST3300831A       3.01 PQ: 0 ANSI: 5
-SCSI device sdl: 586072368 512-byte hdwr sectors (300069 MB)
-sdl: Write Protect is off
-sdl: Mode Sense: 00 3a 00 00
-SCSI device sdl: drive cache: write back
-SCSI device sdl: 586072368 512-byte hdwr sectors (300069 MB)
-sdl: Write Protect is off
-sdl: Mode Sense: 00 3a 00 00
-SCSI device sdl: drive cache: write back
- sdl: sdl1
-sd 12:0:0:0: Attached scsi disk sdl
-sd 12:0:0:0: Attached scsi generic sg12 type 0
-video1394: Installed video1394 module
-ieee1394: raw1394: /dev/raw1394 device initialized
-ieee1394: sbp2: Driver forced to serialize I/O (serialize_io=1)
-ieee1394: sbp2: Try serialize_io=0 for better performance
-ACPI: PCI Interrupt Link [APCL] enabled at IRQ 20
-ACPI: PCI Interrupt 0000:00:02.1[B] -> Link [APCL] -> GSI 20 (level, low) -> IRQ 20
-PCI: Setting latency timer of device 0000:00:02.1 to 64
-ehci_hcd 0000:00:02.1: EHCI Host Controller
-ehci_hcd 0000:00:02.1: new USB bus registered, assigned bus number 1
-ehci_hcd 0000:00:02.1: debug port 1
-PCI: cache line size of 64 is not supported by device 0000:00:02.1
-ehci_hcd 0000:00:02.1: irq 20, io mem 0xfeb00000
-ehci_hcd 0000:00:02.1: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
-usb usb1: new device found, idVendor=0000, idProduct=0000
-usb usb1: new device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb1: Product: EHCI Host Controller
-usb usb1: Manufacturer: Linux 2.6.19-rc4-mm1 ehci_hcd
-usb usb1: SerialNumber: 0000:00:02.1
-usb usb1: configuration #1 chosen from 1 choice
-hub 1-0:1.0: USB hub found
-hub 1-0:1.0: 10 ports detected
-ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver (PCI)
-ACPI: PCI Interrupt Link [APCF] enabled at IRQ 23
-ACPI: PCI Interrupt 0000:00:02.0[A] -> Link [APCF] -> GSI 23 (level, low) -> IRQ 23
-PCI: Setting latency timer of device 0000:00:02.0 to 64
-ohci_hcd 0000:00:02.0: OHCI Host Controller
-ohci_hcd 0000:00:02.0: new USB bus registered, assigned bus number 2
-ohci_hcd 0000:00:02.0: irq 23, io mem 0xda004000
-usb usb2: new device found, idVendor=0000, idProduct=0000
-usb usb2: new device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb2: Product: OHCI Host Controller
-usb usb2: Manufacturer: Linux 2.6.19-rc4-mm1 ohci_hcd
-usb usb2: SerialNumber: 0000:00:02.0
-usb usb2: configuration #1 chosen from 1 choice
-hub 2-0:1.0: USB hub found
-hub 2-0:1.0: 10 ports detected
-usbcore: registered new interface driver usblp
-drivers/usb/class/usblp.c: v0.13: USB Printer Device Class driver
-serio: i8042 KBD port at 0x60,0x64 irq 1
-serio: i8042 AUX port at 0x60,0x64 irq 12
-mice: PS/2 mouse device common for all mice
-input: PC Speaker as /class/input/input0
-input: AT Translated Set 2 keyboard as /class/input/input1
-i2c /dev entries driver
-md: linear personality registered for level -1
-md: raid0 personality registered for level 0
-md: raid1 personality registered for level 1
-raid6: int64x1   2339 MB/s
-raid6: int64x2   3156 MB/s
-raid6: int64x4   2992 MB/s
-raid6: int64x8   2070 MB/s
-raid6: sse2x1    2386 MB/s
-raid6: sse2x2    3367 MB/s
-raid6: sse2x4    3929 MB/s
-raid6: using algorithm sse2x4 (3929 MB/s)
-md: raid6 personality registered for level 6
-md: raid5 personality registered for level 5
-md: raid4 personality registered for level 4
-raid5: automatically using best checksumming function: generic_sse
-   generic_sse:  8040.000 MB/sec
-raid5: using function: generic_sse (8040.000 MB/sec)
-IPv4 over IPv4 tunneling driver
-GRE over IPv4 tunneling driver
-TCP cubic registered
-NET: Registered protocol family 1
-NET: Registered protocol family 10
-lo: Disabled Privacy Extensions
-IPv6 over IPv4 tunneling driver
-NET: Registered protocol family 17
-NET: Registered protocol family 15
-NET: Registered protocol family 8
-NET: Registered protocol family 20
-powernow-k8: Found 2 AMD Athlon(tm) 64 X2 Dual Core Processor 4600+ processors (version 2.00.00)
-powernow-k8:    0 : fid 0x10 (2400 MHz), vid 0x8
-powernow-k8:    1 : fid 0xe (2200 MHz), vid 0xa
-powernow-k8:    2 : fid 0xc (2000 MHz), vid 0xc
-powernow-k8:    3 : fid 0xa (1800 MHz), vid 0xe
-powernow-k8:    4 : fid 0x2 (1000 MHz), vid 0x12
-drivers/rtc/hctosys.c: unable to open rtc device (rtc0)
-logips2pp: Detected unknown logitech mouse model 1
-input: ImPS/2 Logitech Wheel Mouse as /class/input/input2
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering sdj9 ...
-md:  adding sdj9 ...
-md: sdj8 has different UUID to sdj9
-md: sdj7 has different UUID to sdj9
-md: sdj6 has different UUID to sdj9
-md: sdj5 has different UUID to sdj9
-md:  adding sdi9 ...
-md: sdi8 has different UUID to sdj9
-md: sdi7 has different UUID to sdj9
-md: sdi6 has different UUID to sdj9
-md: sdi5 has different UUID to sdj9
-md: sdh1 has different UUID to sdj9
-md: sdg1 has different UUID to sdj9
-md: sdf1 has different UUID to sdj9
-md: sde1 has different UUID to sdj9
-md: sdd1 has different UUID to sdj9
-md: sdc1 has different UUID to sdj9
-md: sdb1 has different UUID to sdj9
-md: sda1 has different UUID to sdj9
-md: created md4
-md: bind<sdi9>
-md: bind<sdj9>
-md: running: <sdj9><sdi9>
-raid1: raid set md4 active with 2 out of 2 mirrors
-md4: bitmap initialized from disk: read 10/10 pages, set 48 bits, status: 0
-created bitmap (156 pages) for device md4
-md: considering sdj8 ...
-md:  adding sdj8 ...
-md: sdj7 has different UUID to sdj8
-md: sdj6 has different UUID to sdj8
-md: sdj5 has different UUID to sdj8
-md:  adding sdi8 ...
-md: sdi7 has different UUID to sdj8
-md: sdi6 has different UUID to sdj8
-md: sdi5 has different UUID to sdj8
-md: sdh1 has different UUID to sdj8
-md: sdg1 has different UUID to sdj8
-md: sdf1 has different UUID to sdj8
-md: sde1 has different UUID to sdj8
-md: sdd1 has different UUID to sdj8
-md: sdc1 has different UUID to sdj8
-md: sdb1 has different UUID to sdj8
-md: sda1 has different UUID to sdj8
-md: created md3
-md: bind<sdi8>
-md: bind<sdj8>
-md: running: <sdj8><sdi8>
-raid1: raid set md3 active with 2 out of 2 mirrors
-md3: bitmap initialized from disk: read 8/8 pages, set 6 bits, status: 0
-created bitmap (123 pages) for device md3
-md: considering sdj7 ...
-md:  adding sdj7 ...
-md: sdj6 has different UUID to sdj7
-md: sdj5 has different UUID to sdj7
-md:  adding sdi7 ...
-md: sdi6 has different UUID to sdj7
-md: sdi5 has different UUID to sdj7
-md: sdh1 has different UUID to sdj7
-md: sdg1 has different UUID to sdj7
-md: sdf1 has different UUID to sdj7
-md: sde1 has different UUID to sdj7
-md: sdd1 has different UUID to sdj7
-md: sdc1 has different UUID to sdj7
-md: sdb1 has different UUID to sdj7
-md: sda1 has different UUID to sdj7
-md: created md2
-md: bind<sdi7>
-md: bind<sdj7>
-md: running: <sdj7><sdi7>
-raid1: raid set md2 active with 2 out of 2 mirrors
-md2: bitmap initialized from disk: read 8/8 pages, set 91 bits, status: 0
-created bitmap (123 pages) for device md2
-md: considering sdj6 ...
-md:  adding sdj6 ...
-md: sdj5 has different UUID to sdj6
-md:  adding sdi6 ...
-md: sdi5 has different UUID to sdj6
-md: sdh1 has different UUID to sdj6
-md: sdg1 has different UUID to sdj6
-md: sdf1 has different UUID to sdj6
-md: sde1 has different UUID to sdj6
-md: sdd1 has different UUID to sdj6
-md: sdc1 has different UUID to sdj6
-md: sdb1 has different UUID to sdj6
-md: sda1 has different UUID to sdj6
-md: created md1
-md: bind<sdi6>
-md: bind<sdj6>
-md: running: <sdj6><sdi6>
-raid1: raid set md1 active with 2 out of 2 mirrors
-md1: bitmap initialized from disk: read 12/12 pages, set 40 bits, status: 0
-created bitmap (184 pages) for device md1
-md: considering sdj5 ...
-md:  adding sdj5 ...
-md:  adding sdi5 ...
-md: sdh1 has different UUID to sdj5
-md: sdg1 has different UUID to sdj5
-md: sdf1 has different UUID to sdj5
-md: sde1 has different UUID to sdj5
-md: sdd1 has different UUID to sdj5
-md: sdc1 has different UUID to sdj5
-md: sdb1 has different UUID to sdj5
-md: sda1 has different UUID to sdj5
-md: created md5
-md: bind<sdi5>
-md: bind<sdj5>
-md: running: <sdj5><sdi5>
-raid1: raid set md5 active with 2 out of 2 mirrors
-md5: bitmap initialized from disk: read 9/9 pages, set 0 bits, status: 0
-created bitmap (129 pages) for device md5
-md: considering sdh1 ...
-md:  adding sdh1 ...
-md:  adding sdg1 ...
-md:  adding sdf1 ...
-md:  adding sde1 ...
-md:  adding sdd1 ...
-md:  adding sdc1 ...
-md:  adding sdb1 ...
-md:  adding sda1 ...
-md: created md0
-md: bind<sda1>
-md: bind<sdb1>
-md: bind<sdc1>
-md: bind<sdd1>
-md: bind<sde1>
-md: bind<sdf1>
-md: bind<sdg1>
-md: bind<sdh1>
-md: running: <sdh1><sdg1><sdf1><sde1><sdd1><sdc1><sdb1><sda1>
-raid5: device sdh1 operational as raid disk 1
-raid5: device sdg1 operational as raid disk 0
-raid5: device sdf1 operational as raid disk 5
-raid5: device sde1 operational as raid disk 6
-raid5: device sdd1 operational as raid disk 7
-raid5: device sdc1 operational as raid disk 3
-raid5: device sdb1 operational as raid disk 2
-raid5: device sda1 operational as raid disk 4
-raid5: allocated 8462kB for md0
-raid5: raid level 6 set md0 active with 8 out of 8 devices, algorithm 2
-RAID5 conf printout:
- --- rd:8 wd:8
- disk 0, o:1, dev:sdg1
- disk 1, o:1, dev:sdh1
- disk 2, o:1, dev:sdb1
- disk 3, o:1, dev:sdc1
- disk 4, o:1, dev:sda1
- disk 5, o:1, dev:sdf1
- disk 6, o:1, dev:sde1
- disk 7, o:1, dev:sdd1
-md0: bitmap initialized from disk: read 15/15 pages, set 1 bits, status: 0
-created bitmap (233 pages) for device md0
-md: ... autorun DONE.
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs: mounted filesystem with ordered data mode.
-VFS: Mounted root (ext3 filesystem) readonly.
-Freeing unused kernel memory: 284k freed
-Adding 4200888k swap on /dev/md5.  Priority:-1 extents:1 across:4200888k
-EXT3-fs warning: maximal mount count reached, running e2fsck is recommended
-EXT3 FS on md2, internal journal
-i2c_adapter i2c-3: nForce2 SMBus adapter at 0x4c00
-i2c_adapter i2c-4: nForce2 SMBus adapter at 0x4c40
-it87: Found IT8712F chip at 0x290, revision 7
-it87: in3 is VCC (+5V)
-it87: in7 is VCCH (+5V Stand-By)
-it87-isa 9191-0290: Detected broken BIOS defaults, disabling PWM interface
-ACPI: PCI Interrupt 0000:05:08.0[A] -> Link [APC3] -> GSI 18 (level, low) -> IRQ 18
-Installing spdif_bug patch: Audigy 2 ZS [2001]
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs warning: maximal mount count reached, running e2fsck is recommended
-EXT3 FS on md1, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md3, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-ReiserFS: md4: found reiserfs format "3.6" with standard journal
-ReiserFS: md4: using ordered data mode
-ReiserFS: md4: journal params: device md4, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-ReiserFS: md4: checking transaction log (md4)
-ReiserFS: md4: Using r5 hash to sort names
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md0, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-ReiserFS: sde2: found reiserfs format "3.6" with standard journal
-ReiserFS: sde2: using ordered data mode
-ReiserFS: sde2: journal params: device sde2, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-ReiserFS: sde2: checking transaction log (sde2)
-ReiserFS: sde2: Using r5 hash to sort names
-ReiserFS: sdg2: found reiserfs format "3.6" with standard journal
-ReiserFS: sdg2: using ordered data mode
-ReiserFS: sdg2: journal params: device sdg2, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-ReiserFS: sdg2: checking transaction log (sdg2)
-ReiserFS: sdg2: Using r5 hash to sort names
-ip_tables: (C) 2000-2006 Netfilter Core Team
-switch: Setting full-duplex based on MII#1 link partner capability of 8de1.
-ip_conntrack version 2.4 (8192 buckets, 65536 max) - 312 bytes per conntrack
-switch: no IPv6 routers present
-adsl: no IPv6 routers present
--- 
-"Besides," she added with a shrug, "strategy and tactics are anathema
-to the Apocalypse."
-        Steven Erikson - Deadhouse Gates
-Debian (Unstable) GNU/Linux 2.6.18-mm3 2x5042 bogomips load 2.04
+------_=_NextPart_001_01C6FD20.8C1A1EBA--
