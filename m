@@ -1,49 +1,59 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: kernel support for Marvell 88SE614x chipset
-Date: Tue, 31 Oct 2006 13:19:58 +0000
-Message-ID: <1162300798.11965.59.camel@localhost.localdomain>
-References: <45471C4E.8050902@iinet.net.au>
+From: Tomasz Torcz <zdzichu@irc.pl>
+Subject: sata_nv: hot plug or hotswap?
+Date: Tue, 31 Oct 2006 15:00:08 +0100
+Message-ID: <20061031140008.GA5261@irc.pl>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:30682 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1423223AbWJaNRQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Oct 2006 08:17:16 -0500
-In-Reply-To: <45471C4E.8050902@iinet.net.au>
+Received: from nsm.pl ([195.34.211.229]:55700 "EHLO nsm.pl")
+	by vger.kernel.org with ESMTP id S1423265AbWJaOAb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Oct 2006 09:00:31 -0500
+Received: from matthew.ogrody.nsm.pl (unknown [10.10.174.98])
+	by nsm.pl (Postfix) with SMTP id 1B152D7953
+	for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 15:00:09 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Evan_D <spampit@iinet.net.au>
+To: achew@nvidia.com
 Cc: linux-ide@vger.kernel.org
 
-Ar Maw, 2006-10-31 am 20:50 +1100, ysgrifennodd Evan_D:
-> Hi
-> 
-> Is any work being done on implementing kernel support for the Marvell 
-> 88SE614x  chipset?
 
-Marvell provided some docs recently
+--/9DWx/yDrRhgMJTb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> http://dlsvr01.asus.com/pub/ASUS/misc/ide/marvell6141/61xx_SATA_linux.zip.  
-> Being a relatively newcomer to Linux I've not managed to successfully 
-> compile and install the drivers.
 
-Well it seems to be a 50MB tar ball that actually just adds the Marvell
-device id to a copy of ahci.c
+  Hi,
 
-Something like this ought to work
+ I'm pretty confused by information about nVidia SATA controller.
+Specifically, Sun Microsystems sells servers with such chip and
+describes it's ability as "hotplug". Linux documentation describes
+controller as "hotswap".
+  Sun uses "hotswap" when disk could be put in AND took out without
+powering machine down (like SAS drives in SunFire x4100/4200). Term
+"hotplug" is used when when disk can be put in, but NOT took out.
+  So is disability to remove disk limitation of controller chip or only
+deficency of Solaris driver?
 
---- drivers/ata/ahci.c~	2006-10-31 13:00:50.918919744 +0000
-+++ drivers/ata/ahci.c	2006-10-31 13:00:50.927918376 +0000
-@@ -344,6 +344,9 @@
- 	{ PCI_VDEVICE(SI, 0x1184), board_ahci }, /* SiS 966 */
- 	{ PCI_VDEVICE(SI, 0x1185), board_ahci }, /* SiS 966 */
- 	{ PCI_VDEVICE(SI, 0x0186), board_ahci }, /* SiS 968 */
-+	
-+	/* Marvell */
-+	{ PCI_VDEVICE(MARVELL, 0x6141), board_ahci }, 	/* Marvell 88SE614x */
- 
- 	{ }	/* terminate list */
- };
+  Thanks for your answer,
+--=20
+Tomasz Torcz                Only gods can safely risk perfection,
+zdzichu@irc.-nie.spam-.pl     it's a dangerous thing for a man.  -- Alia
 
+
+--/9DWx/yDrRhgMJTb
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: gpg --search-keys Tomasz Torcz
+
+iD8DBQFFR1bo10UJr+75NrkRAnjrAJ0UPHFk9k52Jkmft/oMypTjblLciACfc5dF
+HBobE80YoohPOHHqv81oquY=
+=fvT7
+-----END PGP SIGNATURE-----
+
+--/9DWx/yDrRhgMJTb--
