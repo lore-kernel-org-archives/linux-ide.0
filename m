@@ -1,49 +1,36 @@
-From: "Peer Chen" <pchen@nvidia.com>
-Subject: [PATCH 2/2] sata_nv: Add nvidia SATA controllers of MCP67 support to sata_nv.c
-Date: Wed, 1 Nov 2006 17:01:15 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B0C54F5CF@hkemmail01.nvidia.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 4/4] sata_sil: implement Mod15Write workaround by split
+ request processing
+Date: Wed, 01 Nov 2006 18:16:11 +0900
+Message-ID: <454865DB.1060000@gmail.com>
+References: <11612370993859-git-send-email-htejun@gmail.com> <4547FF96.4070808@pobox.com> <454803BB.6000006@gmail.com> <454806F1.8010703@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate01.nvidia.com ([216.228.112.170]:32313 "EHLO
-	HQEMGATE01.nvidia.com") by vger.kernel.org with ESMTP
-	id S1423959AbWKAJBk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 04:01:40 -0500
-Content-class: urn:content-classes:message
+Received: from nf-out-0910.google.com ([64.233.182.190]:31501 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1946716AbWKAJQU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Nov 2006 04:16:20 -0500
+Received: by nf-out-0910.google.com with SMTP id c2so734987nfe
+        for <linux-ide@vger.kernel.org>; Wed, 01 Nov 2006 01:16:18 -0800 (PST)
+In-Reply-To: <454806F1.8010703@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: jgarzik@pobox.com, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Add device IDs of SATA controllers of MCP67 to pci_ids.h.
-The patch will be applied to kernel 2.6.19-rc4-git1.
+Jeff Garzik wrote:
+> Sorry, I just think it adds too much complexity to sata_sil itself.  If 
+> the driver ever grows PIO-DMA support, it may make sense in that case, 
+> since you would need the complexity (sil context) anyway.
+> 
+> Seeing the patch, and comparing with the current driver, really weights 
+> in favor of the current more-simple driver.  There are a lot of 
+> "early-rev hardware bug" things that we just don't bother with in Linux, 
+> and I think this is one of them.
 
-Signed-off-by: Peer Chen <pchen@nvidia.com>
+Okay, I'll maintain it out-of-tree then.
 
-=============================================
---- linux-2.6.19-rc4-git1/include/linux/pci_ids.h.orig
-+++ linux-2.6.19-rc4-git1/include/linux/pci_ids.h
-@@ -1213,6 +1213,15 @@
- #define PCI_DEVICE_ID_NVIDIA_NVENET_21              0x0451
- #define PCI_DEVICE_ID_NVIDIA_NVENET_22              0x0452
- #define PCI_DEVICE_ID_NVIDIA_NVENET_23              0x0453
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA      0x045C
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA2     0x045D
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA3     0x045E
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_SATA4     0x045F
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_SATA      0x0550
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_SATA2     0x0551
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_SATA3     0x0552
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_SATA4     0x0553
-+#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE       0x0560
- 
- #define PCI_VENDOR_ID_IMS		0x10e0
- #define PCI_DEVICE_ID_IMS_TT128		0x9128
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+-- 
+tejun
