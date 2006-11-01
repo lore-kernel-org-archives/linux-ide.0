@@ -1,36 +1,52 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: AHCI should try to claim all AHCI controllers
-Date: Tue, 31 Oct 2006 21:22:49 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0610312120200.25218@g5.osdl.org>
-References: <FFECF24D2A7F6D418B9511AF6F358602F2CE9E@shacnexch2.atitech.com>
- <45482BA7.6070904@pobox.com>
+Date: Wed, 01 Nov 2006 00:35:09 -0500
+Message-ID: <4548320D.5090601@pobox.com>
+References: <FFECF24D2A7F6D418B9511AF6F358602F2CE9E@shacnexch2.atitech.com> <45482BA7.6070904@pobox.com> <Pine.LNX.4.64.0610312120200.25218@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:2474 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1946078AbWKAFW5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 00:22:57 -0500
-In-Reply-To: <45482BA7.6070904@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:14044 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1946118AbWKAFfN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 00:35:13 -0500
+In-Reply-To: <Pine.LNX.4.64.0610312120200.25218@g5.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Linus Torvalds <torvalds@osdl.org>
 Cc: Conke Hu <conke.hu@amd.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-
-
-On Wed, 1 Nov 2006, Jeff Garzik wrote:
+Linus Torvalds wrote:
 > 
-> For the benefit of others, some background:  we should not be -removing- any
-> PCI IDs due to this, because quite often the PCI class code will be RAID or
-> something else, yet still be drive-able with this ahci driver.
+> On Wed, 1 Nov 2006, Jeff Garzik wrote:
+>> For the benefit of others, some background:  we should not be -removing- any
+>> PCI IDs due to this, because quite often the PCI class code will be RAID or
+>> something else, yet still be drive-able with this ahci driver.
+> 
+> Well, it might obviously be worthwhile removing the PCI ID's that actually 
+> do say that they are AHCI. Maybe that's not all of them, but I wouldn't be 
+> surprised if it's actually the majority of them..
 
-Well, it might obviously be worthwhile removing the PCI ID's that actually 
-do say that they are AHCI. Maybe that's not all of them, but I wouldn't be 
-surprised if it's actually the majority of them..
+The same PCI ID maps to either RAID or AHCI.  The PCI ID only changes 
+when it's no longer in AHCI mode (IDE/legacy mode).
 
-(We had the same issue with "PCI IDE controller". Some PCI IDE controllers 
-are clearly exactly that from a programming interface standpoint, but 
-because they support RAID in hardware, they claim to be RAID controllers, 
-since that is more "glamorous". Gaah ;^).
+To confuse matters even further, sometimes you can use AHCI even though 
+it claims it is in IDE mode.  And the reverse is -often- true:  you can 
+usually use legacy IDE mode even if the PCI ID and class code claim AHCI 
+mode.
 
-		Linus
+Who knows what beasts lurk behind the same PCI ID...
+
+
+> (We had the same issue with "PCI IDE controller". Some PCI IDE controllers 
+> are clearly exactly that from a programming interface standpoint, but 
+> because they support RAID in hardware, they claim to be RAID controllers, 
+> since that is more "glamorous". Gaah ;^).
+
+Heck these days 'RAID' is a marketing requirement for your hardware, 
+regardless of its capabilities...
+
+	Jeff
+
+
+
