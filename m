@@ -1,80 +1,40 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: move dev->max_sectors configuration into ata_dev_configure()
-Date: Wed, 1 Nov 2006 18:39:55 +0900
-Message-ID: <20061101093955.GU13677@htj.dyndns.org>
-References: <20061101093852.GS13677@htj.dyndns.org> <20061101093927.GT13677@htj.dyndns.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/2] sata_nv: Add nvidia SATA controllers of MCP67support
+ to sata_nv.c
+Date: Wed, 01 Nov 2006 04:47:51 -0500
+Message-ID: <45486D47.9020803@pobox.com>
+References: <15F501D1A78BD343BE8F4D8DB854566B0C54F590@hkemmail01.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:58995 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1946737AbWKAJkD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Nov 2006 04:40:03 -0500
-Received: by nf-out-0910.google.com with SMTP id c2so744373nfe
-        for <linux-ide@vger.kernel.org>; Wed, 01 Nov 2006 01:40:02 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20061101093927.GT13677@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:47590 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1946738AbWKAJr7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 04:47:59 -0500
+In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B0C54F590@hkemmail01.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Peer Chen <pchen@nvidia.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Move dev->max_sectors configuration from ata_scsi_dev_config() to
-ata_dev_configure().
+Peer Chen wrote:
+> Attached the patch cause my mail client always wrap the plain text format.
+> Check attachment for patch,thanks.
 
-* more consistent.
-* allows LLDs to peek at the default dev->max_sectors value.
+Need one more modification:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |    5 +++++
- drivers/ata/libata-scsi.c |   19 +++----------------
- 2 files changed, 8 insertions(+), 16 deletions(-)
+It is the libata policy to prefer use of numeric hexidecimal constants
+for the PCI device id, rather than always defining a symbol in
+include/linux/pci_ids.h.  The PCI device ID is a single-use "magic
+number" that is only used in the PCI ID table.
 
-Index: work/drivers/ata/libata-core.c
-===================================================================
---- work.orig/drivers/ata/libata-core.c
-+++ work/drivers/ata/libata-core.c
-@@ -1533,6 +1533,11 @@ int ata_dev_configure(struct ata_device 
- 				       cdb_intr_string);
- 	}
- 
-+	/* determine max_sectors */
-+	dev->max_sectors = ATA_MAX_SECTORS;
-+	if (dev->flags & ATA_DFLAG_LBA48)
-+		dev->max_sectors = ATA_MAX_SECTORS_LBA48;
-+
- 	if (dev->horkage & ATA_HORKAGE_DIAGNOSTIC) {
- 		/* Let the user know. We don't want to disallow opens for
- 		   rescue purposes, or in case the vendor is just a blithering
-Index: work/drivers/ata/libata-scsi.c
-===================================================================
---- work.orig/drivers/ata/libata-scsi.c
-+++ work/drivers/ata/libata-scsi.c
-@@ -807,23 +807,10 @@ static void ata_scsi_sdev_config(struct 
- static void ata_scsi_dev_config(struct scsi_device *sdev,
- 				struct ata_device *dev)
- {
--	unsigned int max_sectors;
-+	/* configure max sectors */
-+	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
- 
--	/* TODO: 2048 is an arbitrary number, not the
--	 * hardware maximum.  This should be increased to
--	 * 65534 when Jens Axboe's patch for dynamically
--	 * determining max_sectors is merged.
--	 */
--	max_sectors = ATA_MAX_SECTORS;
--	if (dev->flags & ATA_DFLAG_LBA48)
--		max_sectors = ATA_MAX_SECTORS_LBA48;
--	if (dev->max_sectors)
--		max_sectors = dev->max_sectors;
--
--	blk_queue_max_sectors(sdev->request_queue, max_sectors);
--
--	/*
--	 * SATA DMA transfers must be multiples of 4 byte, so
-+	/* SATA DMA transfers must be multiples of 4 byte, so
- 	 * we need to pad ATAPI transfers using an extra sg.
- 	 * Decrement max hw segments accordingly.
- 	 */
+Therefore, when your patch changes the hex numbers to constants, it is
+reversing that policy.
+
+Instead, please submit a patch that simply adds more hexidecimal PCI
+device ids.
+
+	Jeff
+
+
+
