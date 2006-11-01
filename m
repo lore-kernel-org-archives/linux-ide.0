@@ -1,45 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/6] ata_piix: clean up port flags
-Date: Wed, 01 Nov 2006 00:19:47 -0500
-Message-ID: <45482E73.70004@pobox.com>
-References: <1159598809262-git-send-email-htejun@gmail.com> <454828CA.1000806@pobox.com> <45482CC1.9090301@gmail.com>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: AHCI should try to claim all AHCI controllers
+Date: Tue, 31 Oct 2006 21:22:49 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0610312120200.25218@g5.osdl.org>
+References: <FFECF24D2A7F6D418B9511AF6F358602F2CE9E@shacnexch2.atitech.com>
+ <45482BA7.6070904@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55515 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1946070AbWKAFT7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 00:19:59 -0500
-In-Reply-To: <45482CC1.9090301@gmail.com>
+Received: from smtp.osdl.org ([65.172.181.4]:2474 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1946078AbWKAFW5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 00:22:57 -0500
+In-Reply-To: <45482BA7.6070904@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: nabiki@teleline.es, kaos@ocs.com.au, stevenm@umd.edu, jfs@keytradebank.com, 0602@eq.cz, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Conke Hu <conke.hu@amd.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> * move common flags into PIIX_PATA_FLAGS and PIIX_SATA_FLAGS
->>> * kill unnecessary ATA_FLAG_SRST
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>
->> AFAICS, SRST is quite necessary on PATA.  What's going on?  There 
->> isn't much of any explanation for the SRST removal here :/
+
+
+On Wed, 1 Nov 2006, Jeff Garzik wrote:
 > 
-> Both reset flags ATA_FLAG_SATA_RESET and ATA_FLAG_SRST are used to tell 
-> old EH how to reset and probe the port.  In new EH, those flags don't 
-> play any role.  What method to use and in what sequence is upto 
-> ->error_handler() now.  For PATA piix, it only implements SRST, so 
-> that's gonna be used.  For SATA piix, ata_bmdma_drive_eh() always 
-> prefers SRST on boot probe.
-> 
-> Once sata_promise/mv/.. are converted to new EH, the above two reset 
-> flags can be removed.
+> For the benefit of others, some background:  we should not be -removing- any
+> PCI IDs due to this, because quite often the PCI class code will be RAID or
+> something else, yet still be drive-able with this ahci driver.
 
-Ah, duh.  I knew that, thanks for the clue-hammer :)
+Well, it might obviously be worthwhile removing the PCI ID's that actually 
+do say that they are AHCI. Maybe that's not all of them, but I wouldn't be 
+surprised if it's actually the majority of them..
 
-	Jeff
+(We had the same issue with "PCI IDE controller". Some PCI IDE controllers 
+are clearly exactly that from a programming interface standpoint, but 
+because they support RAID in hardware, they claim to be RAID controllers, 
+since that is more "glamorous". Gaah ;^).
 
-
-
+		Linus
