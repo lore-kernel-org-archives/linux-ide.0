@@ -1,40 +1,53 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Fun with HPT302N (Rocket Raid 1520 PCI card)
-Date: Wed, 01 Nov 2006 16:26:39 +0400
-Message-ID: <4548927F.10804@wasp.net.au>
-References: <23724.1161684269@redhat.com>  <454869C8.9000103@pobox.com> <1162383443.11965.109.camel@localhost.localdomain>
+From: "Conke Hu" <conke.hu@amd.com>
+Subject: RE: AHCI should try to claim all AHCI controllers
+Date: Wed, 1 Nov 2006 21:39:23 +0800
+Message-ID: <FFECF24D2A7F6D418B9511AF6F358602F2D2C0@shacnexch2.atitech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=gb2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:10374 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S1751353AbWKAM1b (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 07:27:31 -0500
-In-Reply-To: <1162383443.11965.109.camel@localhost.localdomain>
+Received: from outbound-blu.frontbridge.com ([65.55.251.16]:38748 "EHLO
+	outbound2-blu-R.bigfish.com") by vger.kernel.org with ESMTP
+	id S1946846AbWKANji convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 08:39:38 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, David Howells <dhowells@redhat.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Ar Mer, 2006-11-01 am 04:32 -0500, ysgrifennodd Jeff Garzik:
->> I think the newer HPTs present a pata_hpt*.c compatible interface, even 
->> though the card is driving SATA devices.
-> 
-> Some of the cards using HPT3xx chips for SATA are PATA chips with
-> bridges so it may well be such a card. I really need to know what
-> happens if you plug a drive in.
-> 
+Thank you, Jeff.
+But who should be the "Signed-off-by" man when I create a patch and rea=
+dy for sending it to kernel org?
 
-Here is a complete dmesg from a Rocketraid 1540 (htp37x with bridges) if it helps.
-(4 ports, 3 have drives and the 4th exhibits the failure David is seeing)
+Best regards,
+Conke @ AMD, Inc.
 
-http://www.nabble.com/2.6.19-rc3-pata_hpt37x-dying-with-%22irq-16:-nobody-cared%22-t2504272.html
 
-I still have this in a machine dedicated for testing if you need more info.
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+-----Original Message-----
+=46rom: Jeff Garzik [mailto:jgarzik@pobox.com]=20
+Sent: 2006=C4=EA11=D4=C21=C8=D5 13:11
+To: Conke Hu
+Cc: torvalds@osdl.org; linux-kernel@vger.kernel.org; linux-ide@vger.ker=
+nel.org
+Subject: Re: AHCI should try to claim all AHCI controllers
+
+Conke Hu wrote:
+> Hi all,
+> 	According to PCI 3.0 spec, ACHI's PCI class code is 0x010601,
+> and I suggest the ahci driver had better try to claim all ahci
+> controllers, pls see the following patch:
+
+BTW, make sure to always include a Signed-off-by: line in every patch.
+
+See http://linux.yyz.us/patch-format.html and=20
+http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt and=20
+Documentation/SubmittingPatches (in the kernel source tree).
+
+	Jeff
+
+
+
+
+
