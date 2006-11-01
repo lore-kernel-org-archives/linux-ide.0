@@ -1,75 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] prep for PMP support, take 3
-Date: Wed, 01 Nov 2006 13:25:17 +0900
-Message-ID: <454821AD.5060909@gmail.com>
-References: <11609542672061-git-send-email-htejun@gmail.com> <454804CB.9030805@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: handle 0xff status properly
+Date: Tue, 31 Oct 2006 23:50:16 -0500
+Message-ID: <45482788.9050804@pobox.com>
+References: <20061009093215.GF10832@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:16750 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1423948AbWKAEZ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Oct 2006 23:25:27 -0500
-Received: by ug-out-1314.google.com with SMTP id 32so1639265ugm
-        for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 20:25:25 -0800 (PST)
-In-Reply-To: <454804CB.9030805@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:51162 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1161302AbWKAEuU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Oct 2006 23:50:20 -0500
+In-Reply-To: <20061009093215.GF10832@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Joe Jin <lkmaillist@gmail.com>
 
-Jeff Garzik wrote:
-> Weak ACK for the patchset:
+Tejun Heo wrote:
+> libata waits for !BSY even when the status register reports 0xff.
+> This causes long boot delays when D8 isn't pulled down properly.  This
+> patch does the followings.
 > 
-> SET FEATURES - XFER MODE also needs to use the defer capability.
+> * don't wait if status register is 0xff in all wait functions
+> 
+> * make ata_busy_sleep() return 0 on success and -errno on failure.
+>   -ENODEV is returned on 0xff status and -EBUSY on other failures.
+> 
+> * make ata_bus_softreset() succeed on 0xff status.  0xff status is not
+>   reset failure.  It indicates no device.  This removes unnecessary
+>   retries on such ports.  Note that the code change assumes unoccupied
+>   port reporting 0xff status does not produce valid device signature.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Joe Jin <lkmaillist@gmail.com>
 
-We need to reconfigure the controller and revalidate devices after XFER 
-MODE, so simple command exclusion isn't enough for XFER MODE.  I think 
-we need EH level synchronization.  e.g. Something like the following.
+applied to #upstream
 
-* Controller has two ports portA and portB.  It needs host-wide 
-exclusion for XFER_MODE and the associated controller reprogramming.
 
-1. User (or whatever) issues XFER MODE for portA.
-
-2. portA EH is invoked for XFER MODE. (local exclusion automatically 
-achieved)
-
-3. portA EH asks portB EH to participate in host-wide exclusion.
-
-4. portB EH is invoked and waits for port A EH to complete.
-
-5. portA EH now has host-wide exclusion.  Do XFER MODE, reprogram 
-controller and revalidate.
-
-6. portA EH tells portB EH that it's free to go and portA resumes.
-
-7. portB resumes.
-
-> And we also have such a need for simplex devices.  It would be useful
-> to have all of this stuff collected into an "ATA command scheduling /
->  sequencing" area, rather than just a new hook confined to a single
-> area. I think the problem space is more complex than that.
-
-For simplex controllers, I dunno.  The current code depends on SCSI 
-midlayer for command queue management and, as each ATA port is 
-represented as separate SCSI host, it's difficult to implement 
-cross-host exclusion properly.  Also, are simplex controllers big deal? 
-    Aren't they mostly historical?
-
-So, although per-host scheduling by asking SCSI midlayer to retry on 
-certain conditions is a bit crude, I think it covers most common use 
-cases (NCQ, PMP and whatever port level exclusion).
-
-As you pointed out previously, it would be better if we can do it via 
-return value of ->qc_prep or ->qc_issue, but we can't because a prepped 
-qc cannot be given back to SCSI queue for retrial, which makes the 
-separation between ->qc_prep and ->qc_issue meaningless at the moment. 
-So, we end up with, ->qc_defer (before qc prep) and ->qc_prep/issue 
-(after qc prep).
-
-Thanks.
-
--- 
-tejun
