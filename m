@@ -1,53 +1,54 @@
-From: "Conke Hu" <conke.hu@amd.com>
-Subject: RE: AHCI should try to claim all AHCI controllers
-Date: Wed, 1 Nov 2006 21:39:23 +0800
-Message-ID: <FFECF24D2A7F6D418B9511AF6F358602F2D2C0@shacnexch2.atitech.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: [git patches] libata fixes
+Date: Wed, 1 Nov 2006 09:06:43 -0500
+Message-ID: <17736.43507.649685.484648@smtp.charter.net>
+References: <20061101021301.GA21568@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=gb2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-blu.frontbridge.com ([65.55.251.16]:38748 "EHLO
-	outbound2-blu-R.bigfish.com") by vger.kernel.org with ESMTP
-	id S1946846AbWKANji convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 08:39:38 -0500
-Content-class: urn:content-classes:message
+Received: from mxsf18.cluster1.charter.net ([209.225.28.218]:11238 "EHLO
+	mxsf18.cluster1.charter.net") by vger.kernel.org with ESMTP
+	id S1946888AbWKAOHH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Nov 2006 09:07:07 -0500
+In-Reply-To: <20061101021301.GA21568@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Thank you, Jeff.
-But who should be the "Signed-off-by" man when I create a patch and rea=
-dy for sending it to kernel org?
-
-Best regards,
-Conke @ AMD, Inc.
+>>>>> "Jeff" == Jeff Garzik <jeff@garzik.org> writes:
 
 
+Jeff> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+Jeff> index 5250187..8385387 100644
+Jeff> --- a/drivers/ata/ata_piix.c
+Jeff> +++ b/drivers/ata/ata_piix.c
+Jeff> @@ -126,8 +126,7 @@ enum {
+Jeff>  	ich6_sata		= 7,
+Jeff>  	ich6_sata_ahci		= 8,
+Jeff>  	ich6m_sata_ahci		= 9,
+Jeff> -	ich7m_sata_ahci		= 10,
+Jeff> -	ich8_sata_ahci		= 11,
+Jeff> +	ich8_sata_ahci		= 10,
+ 
+Jeff>  	/* constants for mapping table */
+Jeff>  	P0			= 0,  /* port 0 */
+Jeff> @@ -169,6 +168,7 @@ static const struct pci_device_id piix_p
+Jeff>  #ifdef ATA_ENABLE_PATA
+Jeff>  	/* Intel PIIX4 for the 430TX/440BX/MX chipset: UDMA 33 */
+Jeff>  	/* Also PIIX4E (fn3 rev 2) and PIIX4M (fn3 rev 3) */
+Jeff> +	{ 0x8086, 0x7110, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
+Jeff>  	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
 
------Original Message-----
-=46rom: Jeff Garzik [mailto:jgarzik@pobox.com]=20
-Sent: 2006=C4=EA11=D4=C21=C8=D5 13:11
-To: Conke Hu
-Cc: torvalds@osdl.org; linux-kernel@vger.kernel.org; linux-ide@vger.ker=
-nel.org
-Subject: Re: AHCI should try to claim all AHCI controllers
+Umm, according to lspci -nn on my 440GX box, isn't the 0x8086/0x7110
+an ISA bridge, not a PIIX? controller?  
 
-Conke Hu wrote:
-> Hi all,
-> 	According to PCI 3.0 spec, ACHI's PCI class code is 0x010601,
-> and I suggest the ahci driver had better try to claim all ahci
-> controllers, pls see the following patch:
+00:00.0 Host bridge [0600]: Intel Corporation 440GX - 82443GX Host bridge [8086:71a0]
+00:01.0 PCI bridge [0604]: Intel Corporation 440GX - 82443GX AGP bridge [8086:71a1]
+00:07.0 ISA bridge [0601]: Intel Corporation 82371AB/EB/MB PIIX4 ISA [8086:7110] (rev 02)
+00:07.1 IDE interface [0101]: Intel Corporation 82371AB/EB/MB PIIX4 IDE [8086:7111] (rev 01)
+00:07.2 USB Controller [0c03]: Intel Corporation 82371AB/EB/MB PIIX4 USB [8086:7112] (rev 01)
+00:07.3 Bridge [0680]: Intel Corporation 82371AB/EB/MB PIIX4 ACPI [8086:7113] (rev 02)
 
-BTW, make sure to always include a Signed-off-by: line in every patch.
-
-See http://linux.yyz.us/patch-format.html and=20
-http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt and=20
-Documentation/SubmittingPatches (in the kernel source tree).
-
-	Jeff
-
-
-
-
-
+John
