@@ -1,39 +1,30 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: AHCI should try to claim all AHCI controllers
-Date: Wed, 01 Nov 2006 09:37:49 -0500
-Message-ID: <4548B13D.6070501@rtr.ca>
-References: <FFECF24D2A7F6D418B9511AF6F358602F2CE9E@shacnexch2.atitech.com>	 <45482BA7.6070904@pobox.com>	 <Pine.LNX.4.64.0610312120200.25218@g5.osdl.org> <1162383783.11965.116.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [git patches] libata fixes
+Date: Wed, 01 Nov 2006 14:30:35 +0000
+Message-ID: <1162391435.11965.128.camel@localhost.localdomain>
+References: <20061101021301.GA21568@havoc.gtf.org>
+	 <17736.43507.649685.484648@smtp.charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:23310 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S2992512AbWKAOhv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 09:37:51 -0500
-In-Reply-To: <1162383783.11965.116.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:65468 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S2992514AbWKAOiU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Nov 2006 09:38:20 -0500
+In-Reply-To: <17736.43507.649685.484648@smtp.charter.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jgarzik@pobox.com>, Conke Hu <conke.hu@amd.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: John Stoffel <john@stoffel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Alan Cox wrote:
-> Ar Maw, 2006-10-31 am 21:22 -0800, ysgrifennodd Linus Torvalds:
->> (We had the same issue with "PCI IDE controller". Some PCI IDE controllers 
->> are clearly exactly that from a programming interface standpoint, but 
->> because they support RAID in hardware, they claim to be RAID controllers, 
->> since that is more "glamorous". Gaah ;^).
+Ar Mer, 2006-11-01 am 09:06 -0500, ysgrifennodd John Stoffel:
+> Jeff> +	{ 0x8086, 0x7110, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
+> Jeff>  	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
 > 
-> Actually its far uglier than that. With one exception they don't support
-> hardware raid mode, they use the RAID class tag to stop other OS drivers
-> grabbing the interface or seeing it directly as un-raided software raid.
+> Umm, according to lspci -nn on my 440GX box, isn't the 0x8086/0x7110
+> an ISA bridge, not a PIIX? controller?  
 
-Note that a lot of the software raid controllers actually have full
-hardware RAID acceleration in the chipset (single block command is automatically
-remapped across several drives of a RAID 0/1/10 configuration, reducing bus
-transactions and bandwidth requirements.
+Correct - the 7110 doesn't belong on that list.
 
-But they still require a driver do perform the RAID management,
-and are thus not true "hardware" RAID.  But they are higher on the
-food chain than total "pretend" RAID devices.
 
-Cheers
