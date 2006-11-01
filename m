@@ -1,38 +1,50 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 1/2] sata_nv: Add nvidia SATA controllers of MCP67
-	support to sata_nv.c
-Date: Wed, 01 Nov 2006 09:14:31 +0100
-Message-ID: <1162368871.3044.77.camel@laptopd505.fenrus.org>
-References: <15F501D1A78BD343BE8F4D8DB854566B0C54F43D@hkemmail01.nvidia.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream-fixes] ahci: fix status register check in ahci_softreset
+Date: Wed, 1 Nov 2006 17:19:18 +0900
+Message-ID: <20061101081918.GO13677@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:34176 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1946695AbWKAIOh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Nov 2006 03:14:37 -0500
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B0C54F43D@hkemmail01.nvidia.com>
+Received: from nf-out-0910.google.com ([64.233.182.185]:2326 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1946700AbWKAIT0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Nov 2006 03:19:26 -0500
+Received: by nf-out-0910.google.com with SMTP id c2so710815nfe
+        for <linux-ide@vger.kernel.org>; Wed, 01 Nov 2006 00:19:24 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <pchen@nvidia.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 2006-11-01 at 15:23 +0800, Peer Chen wrote:
-> Add support for SATA controllers of MCP67.
-> The patch will be applied to kernel 2.6.19-rc4-git1.
-> 
-> Signed-off-by: Peer Chen <pchen@nvidia.com>
-> 
-> =============================================
-> --- linux-2.6.19-rc4-git1/drivers/ata/sata_nv.c.orig	2006-10-31
-> 20:44:45.000000000 +0800
-> +++ linux-2.6.19-rc4-git1/drivers/ata/sata_nv.c	2006-11-01
-> 00:14:48.000000000 +0800
-> @@ -117,10 +117,14 @@ static const struct pci_device_id nv_pci
->  	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA),
-> GENERIC },
+ahci_softreset() used to use ahci_tf_read() which reads D2H_REG area
+to check for the Status register.  However, this area is zeroed on
+initialization and not set by initial signature FIS.  Replace it with
+ahci_check_status().
 
-your patch is still word-wrapped!
+This bug prevented CLO code from being activated whenever BSY and/or
+DRQ is set prior to softreset.  This fix makes
+AHCI_FLAG_RESET_NEEDS_CLO flag redundant.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
 
+Jeff, check_status fix is separated as requested.  Please apply to
+#upstream-fixes.
+
+Thanks.
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index cef2e70..988f8bb 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -736,8 +736,7 @@ static int ahci_softreset(struct ata_por
+ 	}
+ 
+ 	/* check BUSY/DRQ, perform Command List Override if necessary */
+-	ahci_tf_read(ap, &tf);
+-	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
++	if (ahci_check_status(ap) & (ATA_BUSY | ATA_DRQ)) {
+ 		rc = ahci_clo(ap);
+ 
+ 		if (rc == -EOPNOTSUPP) {
