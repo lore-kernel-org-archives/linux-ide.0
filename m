@@ -1,95 +1,150 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/3 #upstream] ahci: kill AHCI_FLAG_RESET_NEEDS_CLO
-Date: Wed, 1 Nov 2006 17:58:33 +0900
-Message-ID: <20061101085833.GP13677@htj.dyndns.org>
+Subject: [PATCH 2/3 #upstream] libata: separate out and export sata_port_hardreset()
+Date: Wed, 1 Nov 2006 17:59:53 +0900
+Message-ID: <20061101085953.GQ13677@htj.dyndns.org>
+References: <20061101085833.GP13677@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:4286 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1423955AbWKAI6m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Nov 2006 03:58:42 -0500
-Received: by nf-out-0910.google.com with SMTP id c2so727689nfe
-        for <linux-ide@vger.kernel.org>; Wed, 01 Nov 2006 00:58:40 -0800 (PST)
+Received: from ug-out-1314.google.com ([66.249.92.169]:19541 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1423958AbWKAJAC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Nov 2006 04:00:02 -0500
+Received: by ug-out-1314.google.com with SMTP id 32so1664614ugm
+        for <linux-ide@vger.kernel.org>; Wed, 01 Nov 2006 01:00:01 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <20061101085833.GP13677@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Now that ahci_softreset() is fixed to automatically perform CLO if
-BSY/DRQ is set on entry, AHCI_FLAG_RESET_NEEDS_CLO is redundant.  Kill
-it.
+Separate out sata_port_hardreset() from sata_std_hardreset().  This
+will be used by LLD hardreset implementation and later by PMP.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
+ drivers/ata/libata-core.c |   52 +++++++++++++++++++++++++++++++++++++---------
+ include/linux/libata.h    |    2 +
+ 2 files changed, 44 insertions(+), 10 deletions(-)
 
-Jeff, this is respin of the following patch series.
-
-    http://thread.gmane.org/gmane.linux.ide/13471/focus=13471
-
-fix-status-check-in-ahci_softreset patch is separated and submitted
-for #upstream-fixes inclusion.
-
-This patch series is against.
-
-   upstream (ee0fd6c1b95105832d463f7318b874ad448e476a)
-   + fix-status-check-in-ahci_softreset
-     (http://article.gmane.org/gmane.linux.ide/13815)
-
-Thanks.
-
- drivers/ata/ahci.c |   19 +++----------------
- 1 file changed, 3 insertions(+), 16 deletions(-)
-
-Index: work/drivers/ata/ahci.c
+Index: work/drivers/ata/libata-core.c
 ===================================================================
---- work.orig/drivers/ata/ahci.c
-+++ work/drivers/ata/ahci.c
-@@ -166,8 +166,7 @@ enum {
- 	AHCI_FLAG_MSI		= (1 << 0),
- 
- 	/* ap->flags bits */
--	AHCI_FLAG_RESET_NEEDS_CLO	= (1 << 24),
--	AHCI_FLAG_NO_NCQ		= (1 << 25),
-+	AHCI_FLAG_NO_NCQ		= (1 << 24),
- };
- 
- struct ahci_cmd_hdr {
-@@ -289,8 +288,7 @@ static const struct ata_port_info ahci_p
- 		.sht		= &ahci_sht,
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
--				  ATA_FLAG_SKIP_D2H_BSY |
--				  AHCI_FLAG_RESET_NEEDS_CLO | AHCI_FLAG_NO_NCQ,
-+				  ATA_FLAG_SKIP_D2H_BSY | AHCI_FLAG_NO_NCQ,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
-@@ -697,17 +695,6 @@ static int ahci_clo(struct ata_port *ap)
- 	return 0;
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -2786,9 +2786,9 @@ int ata_std_softreset(struct ata_port *a
  }
  
--static int ahci_prereset(struct ata_port *ap)
--{
--	if ((ap->flags & AHCI_FLAG_RESET_NEEDS_CLO) &&
--	    (ata_busy_wait(ap, ATA_BUSY, 1000) & ATA_BUSY)) {
--		/* ATA_BUSY hasn't cleared, so send a CLO */
--		ahci_clo(ap);
--	}
--
--	return ata_std_prereset(ap);
--}
--
- static int ahci_softreset(struct ata_port *ap, unsigned int *class)
+ /**
+- *	sata_std_hardreset - reset host port via SATA phy reset
++ *	sata_port_hardreset - reset port via SATA phy reset
+  *	@ap: port to reset
+- *	@class: resulting class of attached device
++ *	@timing: timing parameters { interval, duratinon, timeout } in msec
+  *
+  *	SATA phy-reset host port using DET bits of SControl register.
+  *
+@@ -2798,10 +2798,8 @@ int ata_std_softreset(struct ata_port *a
+  *	RETURNS:
+  *	0 on success, -errno otherwise.
+  */
+-int sata_std_hardreset(struct ata_port *ap, unsigned int *class)
++int sata_port_hardreset(struct ata_port *ap, const unsigned long *timing)
  {
- 	struct ahci_port_priv *pp = ap->private_data;
-@@ -1160,7 +1147,7 @@ static void ahci_error_handler(struct at
+-	struct ata_eh_context *ehc = &ap->eh_context;
+-	const unsigned long *timing = sata_ehc_deb_timing(ehc);
+ 	u32 scontrol;
+ 	int rc;
+ 
+@@ -2814,24 +2812,24 @@ int sata_std_hardreset(struct ata_port *
+ 		 * and Sil3124.
+ 		 */
+ 		if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
+-			return rc;
++			goto out;
+ 
+ 		scontrol = (scontrol & 0x0f0) | 0x304;
+ 
+ 		if ((rc = sata_scr_write(ap, SCR_CONTROL, scontrol)))
+-			return rc;
++			goto out;
+ 
+ 		sata_set_spd(ap);
  	}
  
- 	/* perform recovery */
--	ata_do_eh(ap, ahci_prereset, ahci_softreset, ahci_hardreset,
-+	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_hardreset,
- 		  ahci_postreset);
- }
+ 	/* issue phy wake/reset */
+ 	if ((rc = sata_scr_read(ap, SCR_CONTROL, &scontrol)))
+-		return rc;
++		goto out;
  
+ 	scontrol = (scontrol & 0x0f0) | 0x301;
+ 
+ 	if ((rc = sata_scr_write_flush(ap, SCR_CONTROL, scontrol)))
+-		return rc;
++		goto out;
+ 
+ 	/* Couldn't find anything in SATA I/II specs, but AHCI-1.1
+ 	 * 10.4.2 says at least 1 ms.
+@@ -2839,7 +2837,40 @@ int sata_std_hardreset(struct ata_port *
+ 	msleep(1);
+ 
+ 	/* bring phy back */
+-	sata_phy_resume(ap, timing);
++	rc = sata_phy_resume(ap, timing);
++ out:
++	DPRINTK("EXIT, rc=%d\n", rc);
++	return rc;
++}
++
++/**
++ *	sata_std_hardreset - reset host port via SATA phy reset
++ *	@ap: port to reset
++ *	@class: resulting class of attached device
++ *
++ *	SATA phy-reset host port using DET bits of SControl register,
++ *	wait for !BSY and classify the attached device.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep)
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int sata_std_hardreset(struct ata_port *ap, unsigned int *class)
++{
++	const unsigned long *timing = sata_ehc_deb_timing(&ap->eh_context);
++	int rc;
++
++	DPRINTK("ENTER\n");
++
++	/* do hardreset */
++	rc = sata_port_hardreset(ap, timing);
++	if (rc) {
++		ata_port_printk(ap, KERN_ERR,
++				"COMRESET failed (errno=%d)\n", rc);
++		return rc;
++	}
+ 
+ 	/* TODO: phy layer with polling, timeouts, etc. */
+ 	if (ata_port_offline(ap)) {
+@@ -6159,6 +6190,7 @@ EXPORT_SYMBOL_GPL(__sata_phy_reset);
+ EXPORT_SYMBOL_GPL(ata_bus_reset);
+ EXPORT_SYMBOL_GPL(ata_std_prereset);
+ EXPORT_SYMBOL_GPL(ata_std_softreset);
++EXPORT_SYMBOL_GPL(sata_port_hardreset);
+ EXPORT_SYMBOL_GPL(sata_std_hardreset);
+ EXPORT_SYMBOL_GPL(ata_std_postreset);
+ EXPORT_SYMBOL_GPL(ata_dev_classify);
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -702,6 +702,8 @@ extern int sata_phy_debounce(struct ata_
+ extern int sata_phy_resume(struct ata_port *ap, const unsigned long *param);
+ extern int ata_std_prereset(struct ata_port *ap);
+ extern int ata_std_softreset(struct ata_port *ap, unsigned int *classes);
++extern int sata_port_hardreset(struct ata_port *ap,
++			       const unsigned long *timing);
+ extern int sata_std_hardreset(struct ata_port *ap, unsigned int *class);
+ extern void ata_std_postreset(struct ata_port *ap, unsigned int *classes);
+ extern void ata_port_disable(struct ata_port *);
