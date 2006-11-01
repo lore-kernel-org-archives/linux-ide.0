@@ -1,70 +1,73 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 4/4] sata_sil: implement Mod15Write workaround by split
- request processing
-Date: Wed, 01 Nov 2006 11:17:31 +0900
-Message-ID: <454803BB.6000006@gmail.com>
-References: <11612370993859-git-send-email-htejun@gmail.com> <4547FF96.4070808@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCHSET] prep for PMP support, take 3
+Date: Tue, 31 Oct 2006 21:22:03 -0500
+Message-ID: <454804CB.9030805@pobox.com>
+References: <11609542672061-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:16311 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1946421AbWKACRp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Oct 2006 21:17:45 -0500
-Received: by ug-out-1314.google.com with SMTP id 32so1623759ugm
-        for <linux-ide@vger.kernel.org>; Tue, 31 Oct 2006 18:17:44 -0800 (PST)
-In-Reply-To: <4547FF96.4070808@pobox.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:32470 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1946023AbWKACWJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Oct 2006 21:22:09 -0500
+In-Reply-To: <11609542672061-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Instead of limiting max_sectors to 15 unconditionally, this patch
->> leaves max_sectors at the default value and process write requests
->> larger than 15 sectors by processing them in <= 15 sectors chunks.
->> This results in unhamplered read performance and better write
->> performance.
->>
->> Split request processing is performed only for DMA write requests > 15
->> sectors.  dev->max_sectors is limited to 15 sectors when the device is
->> put into PIO mode.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
+Tejun Heo wrote:
+> Hello, all.
 > 
-> I'm still put off by the complexity that this adds to each transfer, and 
-> to the overall driver itself.
+> This is the third take of libata-pmp-prep patchset.  This patchset
+> contains 5 patches and implements various stuff needed for PMP.
 > 
-> It's largely older chips and drives, so I don't think it's worth 
-> carrying this code for decades to come, just for some early SATA screwups.
+> Changes from the last take[L] are.
+> 
+> * rebased
+> * sata_link_hardreset() separation is done earlier by vt8251-ahci
+>   patchset and thus dropped from this patchset.
+> 
+> This patchset is against
+> 
+>   upstream (da54f5fe54c7d75e2db7d17961fb36a8c28a8501)
+>   + [1] hp-poll patchset, take #5
+>   + [2] vt8251-ahci patchset, take #2
+>   + [3] libata-link patchset, take #3
+> 
+> Git tree can be accessed at
+> 
+>   http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=pmp-prep
+>   git://htj.dyndns.org/libata-tj pmp-prep
+> 
+> Jeff, I couldn't merge ->qc_defer() into ->qc_prep() or ->qc_issue().
+> The problem is that ->qc_prep() is done after sg mapping is done which
+> is a bit costly to throw away if the qc has to be deferred.
+> ->qc_defer() is called right after qc is allocated and translated but
+> before any resource for qc execution is acuquired.
+> 
+> Another way would be to let ->qc_issue() determine whether deferring
+> is needed and cache prepared qc while deferred.  This has the
+> following problems.
+> 
+> * qc and related resources are held by deferred command.  Currently,
+>   qc directly maps to hardware command slots and w/ PMP this can get
+>   messy.
+> 
+> * Separate requeueing/restarting mechanism must be implemented.  ATM,
+>   libata depends on SCSI for retrying deferred commands with
+>   reasonable fairness.  To hold prepared qc, libata needs to implement
+>   its own mechanism and I don't think the added benefits justify the
+>   complexity.
+> 
+> So, I think it's better to keep ->qc_defer().
 
-Hey, you are the one who said that this can be included in the mainline. 
-I agree that this is a complex workaround, but...
+Weak ACK for the patchset:
 
-* There are quite some number of users out there.  My sil m15w 
-workaround page has quite some visitors and many of them are returning 
-visitors.
+SET FEATURES - XFER MODE also needs to use the defer capability.  And we 
+also have such a need for simplex devices.  It would be useful to have 
+all of this stuff collected into an "ATA command scheduling / 
+sequencing" area, rather than just a new hook confined to a single area. 
+  I think the problem space is more complex than that.
 
-* The workaround kicks in only under certain circumstances, so it's not 
-like it adds overhead to normal command processing.
-
-* It's complex but I've been carrying this around for quite some time 
-now and it's pretty easy to maintain.  If you prefer, I can put all the 
-workaround implementation inside #if 1 .. #endif, so it can be dropped 
-very easily in the future.
-
-I think it's worthwhile to have the workaround included.  It has real 
-users out there and they benefit a lot from it.  Complexity is contained 
-inside sata_sil proper and it has been shown that maintenance overhead 
-isn't too big.
-
-I'll even put /* feel free to turn off #if for m15w workaround if it 
-causes any problem to new feature/bug fix/whatsoever.  I'll follow up 
-and update it accordingly. */ comment above it.
-
-Thanks.
-
--- 
-tejun
+	Jeff
