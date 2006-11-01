@@ -1,54 +1,33 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: AHCI should try to claim all AHCI controllers
-Date: Wed, 01 Nov 2006 00:07:51 -0500
-Message-ID: <45482BA7.6070904@pobox.com>
+Date: Wed, 01 Nov 2006 00:11:00 -0500
+Message-ID: <45482C64.2020902@pobox.com>
 References: <FFECF24D2A7F6D418B9511AF6F358602F2CE9E@shacnexch2.atitech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:16603 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1161663AbWKAFHz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 00:07:55 -0500
+Received: from srv5.dvmed.net ([207.36.208.214]:22235 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1161664AbWKAFLF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 00:11:05 -0500
 In-Reply-To: <FFECF24D2A7F6D418B9511AF6F358602F2CE9E@shacnexch2.atitech.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Conke Hu <conke.hu@amd.com>
-Cc: torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+Cc: torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 Conke Hu wrote:
 > Hi all,
 > 	According to PCI 3.0 spec, ACHI's PCI class code is 0x010601,
 > and I suggest the ahci driver had better try to claim all ahci
 > controllers, pls see the following patch:
-> 
-> diff -Nur linux-2.6.17/drivers/scsi/ahci.c
-> linux-2.6.17-ahci/drivers/scsi/ahci.c
-> --- linux-2.6.17/drivers/scsi/ahci.c	2006-06-18 09:49:35.000000000
-> +0800
-> +++ linux-2.6.17-ahci/drivers/scsi/ahci.c	2006-10-31
-> 22:50:54.000000000 +0800
-> @@ -296,6 +296,11 @@
->  	  board_ahci }, /* ATI SB600 non-raid */
->  	{ PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
->  	  board_ahci }, /* ATI SB600 raid */
-> +	/* Claim all AHCI controllers not listed above. 
-> +	 * According to PCI 3.0, AHCI's class code is 0x010601 
-> +        */
-> +	{ PCI_AND_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, 0x010601,
-> 0xffffff, 
-> +	board_ahci },
->  	{ }	/* terminate list */
->  };
 
-Since things have settled in this area, yes, this would probably be a 
-good thing to add.
+BTW, make sure to always include a Signed-off-by: line in every patch.
 
-For the benefit of others, some background:  we should not be -removing- 
-any PCI IDs due to this, because quite often the PCI class code will be 
-RAID or something else, yet still be drive-able with this ahci driver.
+See http://linux.yyz.us/patch-format.html and 
+http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt and 
+Documentation/SubmittingPatches (in the kernel source tree).
 
 	Jeff
-
 
 
