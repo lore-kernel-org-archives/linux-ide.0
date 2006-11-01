@@ -1,39 +1,31 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: handle 0xff status properly
-Date: Tue, 31 Oct 2006 23:50:16 -0500
-Message-ID: <45482788.9050804@pobox.com>
-References: <20061009093215.GF10832@htj.dyndns.org>
+Subject: Re: [PATCH 1/6] ata_piix: clean up port flags
+Date: Tue, 31 Oct 2006 23:55:38 -0500
+Message-ID: <454828CA.1000806@pobox.com>
+References: <1159598809262-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51162 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1161302AbWKAEuU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Oct 2006 23:50:20 -0500
-In-Reply-To: <20061009093215.GF10832@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:65242 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1161488AbWKAEzv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Oct 2006 23:55:51 -0500
+In-Reply-To: <1159598809262-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Joe Jin <lkmaillist@gmail.com>
+Cc: nabiki@teleline.es, kaos@ocs.com.au, stevenm@umd.edu, jfs@keytradebank.com, 0602@eq.cz, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> libata waits for !BSY even when the status register reports 0xff.
-> This causes long boot delays when D8 isn't pulled down properly.  This
-> patch does the followings.
-> 
-> * don't wait if status register is 0xff in all wait functions
-> 
-> * make ata_busy_sleep() return 0 on success and -errno on failure.
->   -ENODEV is returned on 0xff status and -EBUSY on other failures.
-> 
-> * make ata_bus_softreset() succeed on 0xff status.  0xff status is not
->   reset failure.  It indicates no device.  This removes unnecessary
->   retries on such ports.  Note that the code change assumes unoccupied
->   port reporting 0xff status does not produce valid device signature.
+> * move common flags into PIIX_PATA_FLAGS and PIIX_SATA_FLAGS
+> * kill unnecessary ATA_FLAG_SRST
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Joe Jin <lkmaillist@gmail.com>
 
-applied to #upstream
+AFAICS, SRST is quite necessary on PATA.  What's going on?  There isn't 
+much of any explanation for the SRST removal here :/
+
+	Jeff
+
 
 
