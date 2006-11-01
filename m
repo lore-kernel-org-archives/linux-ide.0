@@ -1,29 +1,52 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/6] ata_piix: clean up port flags
-Date: Tue, 31 Oct 2006 23:55:38 -0500
-Message-ID: <454828CA.1000806@pobox.com>
-References: <1159598809262-git-send-email-htejun@gmail.com>
+Subject: Re: AHCI should try to claim all AHCI controllers
+Date: Wed, 01 Nov 2006 00:07:51 -0500
+Message-ID: <45482BA7.6070904@pobox.com>
+References: <FFECF24D2A7F6D418B9511AF6F358602F2CE9E@shacnexch2.atitech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:65242 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1161488AbWKAEzv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Oct 2006 23:55:51 -0500
-In-Reply-To: <1159598809262-git-send-email-htejun@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:16603 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1161663AbWKAFHz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 00:07:55 -0500
+In-Reply-To: <FFECF24D2A7F6D418B9511AF6F358602F2CE9E@shacnexch2.atitech.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: nabiki@teleline.es, kaos@ocs.com.au, stevenm@umd.edu, jfs@keytradebank.com, 0602@eq.cz, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Conke Hu <conke.hu@amd.com>
+Cc: torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Tejun Heo wrote:
-> * move common flags into PIIX_PATA_FLAGS and PIIX_SATA_FLAGS
-> * kill unnecessary ATA_FLAG_SRST
+Conke Hu wrote:
+> Hi all,
+> 	According to PCI 3.0 spec, ACHI's PCI class code is 0x010601,
+> and I suggest the ahci driver had better try to claim all ahci
+> controllers, pls see the following patch:
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> diff -Nur linux-2.6.17/drivers/scsi/ahci.c
+> linux-2.6.17-ahci/drivers/scsi/ahci.c
+> --- linux-2.6.17/drivers/scsi/ahci.c	2006-06-18 09:49:35.000000000
+> +0800
+> +++ linux-2.6.17-ahci/drivers/scsi/ahci.c	2006-10-31
+> 22:50:54.000000000 +0800
+> @@ -296,6 +296,11 @@
+>  	  board_ahci }, /* ATI SB600 non-raid */
+>  	{ PCI_VENDOR_ID_ATI, 0x4381, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+>  	  board_ahci }, /* ATI SB600 raid */
+> +	/* Claim all AHCI controllers not listed above. 
+> +	 * According to PCI 3.0, AHCI's class code is 0x010601 
+> +        */
+> +	{ PCI_AND_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, 0x010601,
+> 0xffffff, 
+> +	board_ahci },
+>  	{ }	/* terminate list */
+>  };
 
-AFAICS, SRST is quite necessary on PATA.  What's going on?  There isn't 
-much of any explanation for the SRST removal here :/
+Since things have settled in this area, yes, this would probably be a 
+good thing to add.
+
+For the benefit of others, some background:  we should not be -removing- 
+any PCI IDs due to this, because quite often the PCI class code will be 
+RAID or something else, yet still be drive-able with this ahci driver.
 
 	Jeff
 
