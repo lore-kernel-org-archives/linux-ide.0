@@ -1,85 +1,96 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Wed, 1 Nov 2006 22:11:06 -0500
-Message-ID: <20061102031106.GA4586@havoc.gtf.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 1/2 #upstream] ahci: preserve PORTS_IMPL over host resets
+Date: Thu, 2 Nov 2006 12:17:23 +0900
+Message-ID: <20061102031723.GV13677@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:3971 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1752544AbWKBDLH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 22:11:07 -0500
+Received: from ug-out-1314.google.com ([66.249.92.175]:47047 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1752585AbWKBDRc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Nov 2006 22:17:32 -0500
+Received: by ug-out-1314.google.com with SMTP id m3so28821ugc
+        for <linux-ide@vger.kernel.org>; Wed, 01 Nov 2006 19:17:31 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>, robbat2@gentoo.org
+Cc: linux-ide@vger.kernel.org
 
+Instead of writing 0xf blindly, preserve the content of write-once
+PORTS_IMPL register over host resets.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+This patch is taken from Jeff Garzik's AHCI init update patch.
 
-to receive the following updates:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Protection against 0 PI is added as suggested in the following
+message.
 
- drivers/ata/ahci.c     |    3 +--
- drivers/ata/ata_piix.c |    1 -
- drivers/ata/sata_nv.c  |   12 ++++++++----
- 3 files changed, 9 insertions(+), 7 deletions(-)
+    http://article.gmane.org/gmane.linux.ide/13365
 
-Jeff Garzik:
-      Revert "Add 0x7110 piix to ata_piix.c"
+ drivers/ata/ahci.c |   23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
-Peer Chen:
-      [libata] sata_nv: Add PCI IDs
-
-Tejun Heo:
-      ahci: fix status register check in ahci_softreset
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index cef2e70..988f8bb 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -736,8 +736,7 @@ static int ahci_softreset(struct ata_por
+Index: work/drivers/ata/ahci.c
+===================================================================
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -389,6 +389,11 @@ static struct pci_driver ahci_pci_driver
+ };
+ 
+ 
++static inline int ahci_nr_ports(u32 cap)
++{
++	return (cap & 0x1f) + 1;
++}
++
+ static inline unsigned long ahci_port_base_ul (unsigned long base, unsigned int port)
+ {
+ 	return base + 0x100 + (port * 0x80);
+@@ -598,11 +603,12 @@ static int ahci_deinit_port(void __iomem
+ 
+ static int ahci_reset_controller(void __iomem *mmio, struct pci_dev *pdev)
+ {
+-	u32 cap_save, tmp;
++	u32 cap_save, impl_save, tmp;
+ 
+ 	cap_save = readl(mmio + HOST_CAP);
+ 	cap_save &= ( (1<<28) | (1<<17) );
+ 	cap_save |= (1 << 27);
++	impl_save = readl(mmio + HOST_PORTS_IMPL);
+ 
+ 	/* global controller reset */
+ 	tmp = readl(mmio + HOST_CTL);
+@@ -623,10 +629,21 @@ static int ahci_reset_controller(void __
+ 		return -EIO;
  	}
  
- 	/* check BUSY/DRQ, perform Command List Override if necessary */
--	ahci_tf_read(ap, &tf);
--	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
-+	if (ahci_check_status(ap) & (ATA_BUSY | ATA_DRQ)) {
- 		rc = ahci_clo(ap);
++	/* turn on AHCI mode */
+ 	writel(HOST_AHCI_EN, mmio + HOST_CTL);
+ 	(void) readl(mmio + HOST_CTL);	/* flush */
++
++	/* These write-once registers are normally cleared on reset.
++	 * Restore BIOS values... which we HOPE were present before
++	 * reset.
++	 */
++	if (!impl_save) {
++		impl_save = (1 << ahci_nr_ports(cap_save)) - 1;
++		dev_printk(KERN_WARNING, &pdev->dev,
++			   "PORTS_IMPL is zero, forcing 0x%x\n", impl_save);
++	}
+ 	writel(cap_save, mmio + HOST_CAP);
+-	writel(0xf, mmio + HOST_PORTS_IMPL);
++	writel(impl_save, mmio + HOST_PORTS_IMPL);
+ 	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
  
- 		if (rc == -EOPNOTSUPP) {
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 8385387..720174d 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -168,7 +168,6 @@ static const struct pci_device_id piix_p
- #ifdef ATA_ENABLE_PATA
- 	/* Intel PIIX4 for the 430TX/440BX/MX chipset: UDMA 33 */
- 	/* Also PIIX4E (fn3 rev 2) and PIIX4M (fn3 rev 3) */
--	{ 0x8086, 0x7110, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
- 	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
- 	{ 0x8086, 0x24db, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
- 	{ 0x8086, 0x25a2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 323b607..d65ebfd 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -117,10 +117,14 @@ static const struct pci_device_id nv_pci
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA), GENERIC },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2), GENERIC },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3), GENERIC },
--	{ PCI_VDEVICE(NVIDIA, 0x045c), GENERIC },
--	{ PCI_VDEVICE(NVIDIA, 0x045d), GENERIC },
--	{ PCI_VDEVICE(NVIDIA, 0x045e), GENERIC },
--	{ PCI_VDEVICE(NVIDIA, 0x045f), GENERIC },
-+	{ PCI_VDEVICE(NVIDIA, 0x045c), GENERIC }, /* MCP65 */
-+	{ PCI_VDEVICE(NVIDIA, 0x045d), GENERIC }, /* MCP65 */
-+	{ PCI_VDEVICE(NVIDIA, 0x045e), GENERIC }, /* MCP65 */
-+	{ PCI_VDEVICE(NVIDIA, 0x045f), GENERIC }, /* MCP65 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0550), GENERIC }, /* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0551), GENERIC }, /* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0552), GENERIC }, /* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0553), GENERIC }, /* MCP67 */
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 		PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, GENERIC },
+ 	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+@@ -1431,7 +1448,7 @@ static int ahci_host_init(struct ata_pro
+ 
+ 	hpriv->cap = readl(mmio + HOST_CAP);
+ 	hpriv->port_map = readl(mmio + HOST_PORTS_IMPL);
+-	probe_ent->n_ports = (hpriv->cap & 0x1f) + 1;
++	probe_ent->n_ports = ahci_nr_ports(hpriv->cap);
+ 
+ 	VPRINTK("cap 0x%x  port_map 0x%x  n_ports %d\n",
+ 		hpriv->cap, hpriv->port_map, probe_ent->n_ports);
