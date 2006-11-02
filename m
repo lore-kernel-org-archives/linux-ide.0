@@ -1,53 +1,44 @@
-From: Martin Waitz <tali@admingilde.org>
-Subject: Re: AHCI should try to claim all AHCI controllers
-Date: Thu, 2 Nov 2006 14:15:23 +0100
-Message-ID: <20061102131523.GC7545@admingilde.org>
-References: <FFECF24D2A7F6D418B9511AF6F358602F2D2C0@shacnexch2.atitech.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Fun with HPT302N (Rocket Raid 1520 PCI card)
+Date: Thu, 02 Nov 2006 16:24:15 +0000
+Message-ID: <1162484655.11965.212.camel@localhost.localdomain>
+References: <23724.1161684269@redhat.com>  <454869C8.9000103@pobox.com>
+	 <1162383443.11965.109.camel@localhost.localdomain>
+	 <4548927F.10804@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KDt/GgjP6HVcx58l"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from agent.admingilde.org ([213.95.21.5]:3308 "EHLO
-	mail.admingilde.org") by vger.kernel.org with ESMTP
-	id S1752850AbWKBNP1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Nov 2006 08:15:27 -0500
-Content-Disposition: inline
-In-Reply-To: <FFECF24D2A7F6D418B9511AF6F358602F2D2C0@shacnexch2.atitech.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:6623 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751963AbWKBQ1s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Nov 2006 11:27:48 -0500
+In-Reply-To: <4548927F.10804@wasp.net.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Conke Hu <conke.hu@amd.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Jeff Garzik <jgarzik@pobox.com>, David Howells <dhowells@redhat.com>, linux-ide@vger.kernel.org
 
+Ar Mer, 2006-11-01 am 16:26 +0400, ysgrifennodd Brad Campbell:
+> Here is a complete dmesg from a Rocketraid 1540 (htp37x with bridges) if it helps.
+> (4 ports, 3 have drives and the 4th exhibits the failure David is seeing)
+> 
+> http://www.nabble.com/2.6.19-rc3-pata_hpt37x-dying-with-%22irq-16:-nobody-cared%22-t2504272.html
+> 
+> I still have this in a machine dedicated for testing if you need more info.
 
---KDt/GgjP6HVcx58l
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+That one is really very useful. The error handling is leaving some kind
+of IRQ status no cleared which in turn brings the house down. I think
+there are two different things in the log here - one is the empty port,
+the other is some kind of other failure.
 
-hoi :)
+With a current -mm kernel can you stick ATA_FLAG_DETECT_POLLING on the
+various .flags = ATA_FLAG_SLAVE_POSS|.... lines for each ata_port_info
+structure in hpt37x_init_one then see if the identify behaviour is
+happier.
 
-On Wed, Nov 01, 2006 at 09:39:23PM +0800, Conke Hu wrote:
-> But who should be the "Signed-off-by" man when I create a patch and ready=
- for sending it to kernel org?
+That recipe is probably what we need to do for all the PATA chips that
+don't have reliable device presence bits.
 
-yourself.
+Alan
 
-Please look into Documentation/SubmittingPatches paragraph 11.
-
---=20
-Martin Waitz
-
---KDt/GgjP6HVcx58l
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFFSe9rj/Eaxd/oD7IRAo79AJ9CEzei+6jjUdxIpmPSTnxEc84mwgCeOf1T
-thpjYiwoxWQWJcmlTGsUqkM=
-=/U2r
------END PGP SIGNATURE-----
-
---KDt/GgjP6HVcx58l--
