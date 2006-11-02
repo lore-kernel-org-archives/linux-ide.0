@@ -1,42 +1,85 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata fixes
-Date: Wed, 01 Nov 2006 20:06:05 -0500
-Message-ID: <4549447D.5010500@garzik.org>
-References: <20061101021301.GA21568@havoc.gtf.org>	<17736.43507.649685.484648@smtp.charter.net>	<1162391435.11965.128.camel@localhost.localdomain> <20061101160207.6b5e4c29.akpm@osdl.org>
+Subject: [git patches] libata fixes
+Date: Wed, 1 Nov 2006 22:11:06 -0500
+Message-ID: <20061102031106.GA4586@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50844 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1752622AbWKBBGL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 20:06:11 -0500
-In-Reply-To: <20061101160207.6b5e4c29.akpm@osdl.org>
+Received: from havoc.gtf.org ([69.61.125.42]:3971 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1752544AbWKBDLH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Nov 2006 22:11:07 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, John Stoffel <john@stoffel.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-
-Andrew Morton wrote:
-> On Wed, 01 Nov 2006 14:30:35 +0000
-> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> 
->> Ar Mer, 2006-11-01 am 09:06 -0500, ysgrifennodd John Stoffel:
->>> Jeff> +	{ 0x8086, 0x7110, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
->>> Jeff>  	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
->>>
->>> Umm, according to lspci -nn on my 440GX box, isn't the 0x8086/0x7110
->>> an ISA bridge, not a PIIX? controller?  
->> Correct - the 7110 doesn't belong on that list.
-> 
-> So should it be moved elsewhere, or simply removed?
-
-Well, according to Jens' own comment message, the PCI ID he needed was 
-already in the driver (my eyes didn't catch this).
-
-It looks like it should be reverted, based on this thread and also the 
-patch's commit message itself.
-
-	Jeff
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
+to receive the following updates:
+
+ drivers/ata/ahci.c     |    3 +--
+ drivers/ata/ata_piix.c |    1 -
+ drivers/ata/sata_nv.c  |   12 ++++++++----
+ 3 files changed, 9 insertions(+), 7 deletions(-)
+
+Jeff Garzik:
+      Revert "Add 0x7110 piix to ata_piix.c"
+
+Peer Chen:
+      [libata] sata_nv: Add PCI IDs
+
+Tejun Heo:
+      ahci: fix status register check in ahci_softreset
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index cef2e70..988f8bb 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -736,8 +736,7 @@ static int ahci_softreset(struct ata_por
+ 	}
+ 
+ 	/* check BUSY/DRQ, perform Command List Override if necessary */
+-	ahci_tf_read(ap, &tf);
+-	if (tf.command & (ATA_BUSY | ATA_DRQ)) {
++	if (ahci_check_status(ap) & (ATA_BUSY | ATA_DRQ)) {
+ 		rc = ahci_clo(ap);
+ 
+ 		if (rc == -EOPNOTSUPP) {
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 8385387..720174d 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -168,7 +168,6 @@ static const struct pci_device_id piix_p
+ #ifdef ATA_ENABLE_PATA
+ 	/* Intel PIIX4 for the 430TX/440BX/MX chipset: UDMA 33 */
+ 	/* Also PIIX4E (fn3 rev 2) and PIIX4M (fn3 rev 3) */
+-	{ 0x8086, 0x7110, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
+ 	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
+ 	{ 0x8086, 0x24db, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+ 	{ 0x8086, 0x25a2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 323b607..d65ebfd 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -117,10 +117,14 @@ static const struct pci_device_id nv_pci
+ 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA), GENERIC },
+ 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2), GENERIC },
+ 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3), GENERIC },
+-	{ PCI_VDEVICE(NVIDIA, 0x045c), GENERIC },
+-	{ PCI_VDEVICE(NVIDIA, 0x045d), GENERIC },
+-	{ PCI_VDEVICE(NVIDIA, 0x045e), GENERIC },
+-	{ PCI_VDEVICE(NVIDIA, 0x045f), GENERIC },
++	{ PCI_VDEVICE(NVIDIA, 0x045c), GENERIC }, /* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x045d), GENERIC }, /* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x045e), GENERIC }, /* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x045f), GENERIC }, /* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x0550), GENERIC }, /* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0551), GENERIC }, /* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0552), GENERIC }, /* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0553), GENERIC }, /* MCP67 */
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 		PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, GENERIC },
