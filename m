@@ -1,34 +1,53 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/2] IDE: Add the support of nvidia PATA controllers of
-	MCP67 to amd74xx.c & pata_amd.c
-Date: Thu, 02 Nov 2006 11:32:20 +0000
-Message-ID: <1162467141.11965.160.camel@localhost.localdomain>
-References: <15F501D1A78BD343BE8F4D8DB854566B0C54FBA7@hkemmail01.nvidia.com>
+From: Martin Waitz <tali@admingilde.org>
+Subject: Re: AHCI should try to claim all AHCI controllers
+Date: Thu, 2 Nov 2006 14:15:23 +0100
+Message-ID: <20061102131523.GC7545@admingilde.org>
+References: <FFECF24D2A7F6D418B9511AF6F358602F2D2C0@shacnexch2.atitech.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="KDt/GgjP6HVcx58l"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48301 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1752855AbWKBL32 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Nov 2006 06:29:28 -0500
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B0C54FBA7@hkemmail01.nvidia.com>
+Received: from agent.admingilde.org ([213.95.21.5]:3308 "EHLO
+	mail.admingilde.org") by vger.kernel.org with ESMTP
+	id S1752850AbWKBNP1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Nov 2006 08:15:27 -0500
+Content-Disposition: inline
+In-Reply-To: <FFECF24D2A7F6D418B9511AF6F358602F2D2C0@shacnexch2.atitech.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <pchen@nvidia.com>, akpm@osdl.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+To: Conke Hu <conke.hu@amd.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Ar Iau, 2006-11-02 am 11:30 +0800, ysgrifennodd Peer Chen:
-> Add support for PATA controllers of MCP67 to amd74xx.c.
-> The patch will be applied to kernel 2.6.19-rc4-git1.
-> Please check attachment for the patch.
-> 
-> Signed-off-by: Peer Chen <pchen@nvidia.com>
 
-Acked-by: Alan Cox <alan@redhat.com>
+--KDt/GgjP6HVcx58l
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Andrew - it would be good if these two patches + ahci one could make
-2.6.19 final as they are just ident updates for chipsets.
+hoi :)
 
-Alan
+On Wed, Nov 01, 2006 at 09:39:23PM +0800, Conke Hu wrote:
+> But who should be the "Signed-off-by" man when I create a patch and ready=
+ for sending it to kernel org?
 
+yourself.
+
+Please look into Documentation/SubmittingPatches paragraph 11.
+
+--=20
+Martin Waitz
+
+--KDt/GgjP6HVcx58l
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFFSe9rj/Eaxd/oD7IRAo79AJ9CEzei+6jjUdxIpmPSTnxEc84mwgCeOf1T
+thpjYiwoxWQWJcmlTGsUqkM=
+=/U2r
+-----END PGP SIGNATURE-----
+
+--KDt/GgjP6HVcx58l--
