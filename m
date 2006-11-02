@@ -1,42 +1,48 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: More Promise chipset specs opened
-Date: Thu, 02 Nov 2006 00:46:16 -0500
-Message-ID: <45498628.9090105@garzik.org>
-References: <45497E3A.6060103@garzik.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [git patches] libata fixes
+Date: Thu, 2 Nov 2006 09:00:41 +0100
+Message-ID: <20061102080041.GW13555@kernel.dk>
+References: <20061101021301.GA21568@havoc.gtf.org> <17736.43507.649685.484648@smtp.charter.net> <1162391435.11965.128.camel@localhost.localdomain> <20061101160207.6b5e4c29.akpm@osdl.org> <4549447D.5010500@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35238 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1752680AbWKBFqT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Nov 2006 00:46:19 -0500
-In-Reply-To: <45497E3A.6060103@garzik.org>
+Received: from brick.kernel.dk ([62.242.22.158]:34114 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1752713AbWKBH6w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Nov 2006 02:58:52 -0500
+Content-Disposition: inline
+In-Reply-To: <4549447D.5010500@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@osdl.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, John Stoffel <john@stoffel.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Promise has given me permission to post hardware programming info for 
-> one of their chips (Linux driver: sata_promise), PDC20319.  This also 
-> marks the first open chipset for Promise (AFAIK), so let's give them a 
-> round of applause.
+On Wed, Nov 01 2006, Jeff Garzik wrote:
+> Andrew Morton wrote:
+> >On Wed, 01 Nov 2006 14:30:35 +0000
+> >Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> >
+> >>Ar Mer, 2006-11-01 am 09:06 -0500, ysgrifennodd John Stoffel:
+> >>>Jeff> +	{ 0x8086, 0x7110, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 
+> >>>},
+> >>>Jeff>  	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 
+> >>>},
+> >>>
+> >>>Umm, according to lspci -nn on my 440GX box, isn't the 0x8086/0x7110
+> >>>an ISA bridge, not a PIIX? controller?  
+> >>Correct - the 7110 doesn't belong on that list.
+> >
+> >So should it be moved elsewhere, or simply removed?
+> 
+> Well, according to Jens' own comment message, the PCI ID he needed was 
+> already in the driver (my eyes didn't catch this).
+> 
+> It looks like it should be reverted, based on this thread and also the 
+> patch's commit message itself.
 
-I missed an email from Promise which supplied even more chipset docs to 
-open.  Whoops.  The entire line supported by sata_promise.c should now 
-be open:
+I think so, I must have botched the lspci -> lspci -n read. I'll retest
+and see what went wrong on this notebook, but I can definitely ack that
+0x7110 is an isa bridge here as well.
 
-2037x:
-http://gkernel.sourceforge.net/specs/promise/pdc2037x%20series%20development%20guide.pdf.bz2
-
-20319 (updated link, updated doc):
-http://gkernel.sourceforge.net/specs/promise/pdc20319%20development%20guide.pdf.bz2
-
-205xx (the newer NCQ chips):
-http://gkernel.sourceforge.net/specs/promise/pdc205xx%20development%20guide%201.0.pdf.bz2
-
-Cheers,
-
-	Jeff
-
+-- 
+Jens Axboe
 
