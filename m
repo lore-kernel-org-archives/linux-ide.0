@@ -1,70 +1,80 @@
-From: Nathaniel Case <ncase@xes-inc.com>
-Subject: Buffer-cache corruption with SMP + PIO IDE
-Date: Thu, 02 Nov 2006 18:01:28 -0600
-Message-ID: <1162512088.5339.84.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata PCI ids (updated)
+Date: Thu, 2 Nov 2006 19:03:00 -0500
+Message-ID: <20061103000300.GA3759@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xes-mad.com ([216.165.139.214]:52367 "EHLO xes-mad.com")
-	by vger.kernel.org with ESMTP id S1752756AbWKCABa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Nov 2006 19:01:30 -0500
-Received: from [10.52.0.27] ([10.52.0.27])
-	by xes-mad.com (8.11.6/8.11.6) with ESMTP id kA301ch04808
-	for <linux-ide@vger.kernel.org>; Thu, 2 Nov 2006 18:01:38 -0600
+Received: from havoc.gtf.org ([69.61.125.42]:26542 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1752760AbWKCADB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Nov 2006 19:03:01 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hello,
 
-I'm looking for some guidance in tracking down this strange drive
-corruption that occurs under the following conditions:
+Updated with the necessary constant.
 
-	- IDE (PIO mode)
-	- SMP system
-	- Buffer-cache is filled as much as it can be filled
-	- No swap file used
 
-My test showing the corruption is a stupid script that extracts a
-large .tar.bz2 file to the drive's filesystem, then verifies MD5
-checksums of each extracted file against a list of known checksum
-values.  It then deletes the extracted files, and repeats the whole
-process forever.
 
-When the corruption happens, the MD5 sums for maybe 5-20 of the 1000+
-files will be wrong.  In the corrupted files, I see that it's missing 2
-bytes somewhere in the middle in a few places, and then after a chunk of
-valid data I see two bogus "0xd0" bytes.  In all files, it always seems
-to be "0xd0 0xd0".  It looks like it actually wrote the data fine to
-disk, but is wrong in the buffer cache.
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-Platform: An embedded single-board computer with dual MPC7448 processors
+to receive the following updates:
 
-The problem exists both while using a PMC hard drive (controller
-accessed over PCI bus) and an IDE controller on the board's FPGA wired
-to a CompactFlash slot.  I verified that the corruption happened with
-both ext3 and ReiserFS.
+ drivers/ata/ahci.c      |    8 ++++++++
+ drivers/ata/pata_amd.c  |    2 ++
+ include/linux/pci_ids.h |    1 +
+ 3 files changed, 11 insertions(+), 0 deletions(-)
 
-The problem does NOT occur if I use DMA mode with the PMC hard drive, or
-on a Uniprocessor kernel.  Maybe nobody has stumbled upon this since the
-combination of a multiprocessor system with PIO IDE seems unlikely?
+Peer Chen:
+      [libata] Add support for PATA controllers of MCP67 to pata_amd.c.
+      [libata] Add support for AHCI controllers of MCP67.
+      pci_ids.h: Add NVIDIA PCI ID
 
-Also, and I think this is key: The test will run fine until it appears
-that the buffer-cache occupies as much memory as it can.  That is, if I
-run a simple program that mallocs 300 MB in the background while the
-test runs, it will fail quite soon.   I initially chalked it up to
-expected behavior for a low-memory situation, but the same test setup
-runs fine in a uniprocessor kernel though.
-
-Using kernel 2.6.16, but I'm fairly sure this problem also happened in
-2.6.11 as well.
-
-Any ideas?  I've tried things like disabling the L2 cache on both CPUs,
-enforcing HW cache-coherency, adding additional spin-locks in places,
-but to no avail.
-
-Thanks,
-
-- Nate Case <ncase@xes-inc.com>
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 988f8bb..234197e 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -334,6 +334,14 @@ static const struct pci_device_id ahci_p
+ 	{ PCI_VDEVICE(NVIDIA, 0x044d), board_ahci },		/* MCP65 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x044e), board_ahci },		/* MCP65 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x044f), board_ahci },		/* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x0554), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0555), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0556), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0557), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0558), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0559), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x055a), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x055b), board_ahci },		/* MCP67 */
+ 
+ 	/* SiS */
+ 	{ PCI_VDEVICE(SI, 0x1184), board_ahci }, /* SiS 966 */
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 29234c8..5c47a9e 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -677,6 +677,8 @@ static const struct pci_device_id amd[] 
+ 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE),	8 },
+ 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE),	8 },
+ 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE),	8 },
++	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE),	8 },
++	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE),	8 },
+ 	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		9 },
+ 
+ 	{ },
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index f3a168f..fa4e1d7 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1213,6 +1213,7 @@ #define PCI_DEVICE_ID_NVIDIA_NVENET_20  
+ #define PCI_DEVICE_ID_NVIDIA_NVENET_21              0x0451
+ #define PCI_DEVICE_ID_NVIDIA_NVENET_22              0x0452
+ #define PCI_DEVICE_ID_NVIDIA_NVENET_23              0x0453
++#define PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE       0x0560
+ 
+ #define PCI_VENDOR_ID_IMS		0x10e0
+ #define PCI_DEVICE_ID_IMS_TT128		0x9128
