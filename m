@@ -1,31 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata: some last minute PCI IDs
-Date: Thu, 02 Nov 2006 19:04:04 -0500
-Message-ID: <454A8774.2030009@garzik.org>
-References: <20061102230301.GA29659@havoc.gtf.org> <20061102153337.7e7c3e06.akpm@osdl.org>
+From: "Peer Chen" <pchen@nvidia.com>
+Subject: RE: [PATCH ] ahci: Add the support of nvidia AHCI controllers of MCP67 to ahci.c
+Date: Fri, 3 Nov 2006 10:02:07 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B0C6447E7@hkemmail01.nvidia.com>
+References: <454A7870.2020900@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:11729 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1752843AbWKCAEI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Nov 2006 19:04:08 -0500
-In-Reply-To: <20061102153337.7e7c3e06.akpm@osdl.org>
+Received: from hqemgate01.nvidia.com ([216.228.112.170]:20742 "EHLO
+	HQEMGATE01.nvidia.com") by vger.kernel.org with ESMTP
+	id S1752465AbWKCCGO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Nov 2006 21:06:14 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <454A7870.2020900@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Peer Chen <pchen@nvidia.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Andrew Morton wrote:
-> I think you'll find we're missing definitions for
-> PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE (at least).
+Great job,thanks. 
 
 
-Whoops.  This is what happens when you deal with manually extracted MIME 
-patches :/  That was sitting around uncommitted in my tree.
+BRs
+Peer Chen
 
-Checked in -- though only the _IDE symbol is needed.
+-----Original Message-----
+From: Jeff Garzik [mailto:jgarzik@pobox.com] 
+Sent: Friday, November 03, 2006 7:00 AM
+To: Peer Chen
+Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org; Alan Cox
+Subject: Re: [PATCH ] ahci: Add the support of nvidia AHCI controllers
+of MCP67 to ahci.c
 
-	Jeff
+Peer Chen wrote:
+> Add support for AHCI controllers of MCP67.
+> The patch will be applied to kernel 2.6.19-rc4-git1.
+> Please check attachment for the patch.
+> 
+> Signed-off-by: Peer Chen <pchen@nvidia.com>
+
+applied
 
 
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
