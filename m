@@ -1,47 +1,46 @@
-From: "Jeff Chua" <jeff.chua.linux@gmail.com>
-Subject: Re: 2.6.19-rc4: known unfixed regressions (v3)
-Date: Sun, 5 Nov 2006 17:30:27 +0800
-Message-ID: <b6a2187b0611050130s325d777che069a7d9619f061b@mail.gmail.com>
-References: <Pine.LNX.4.64.0610302019560.25218@g5.osdl.org>
-	<20061105064801.GV13381@stusta.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: More Promise chipset specs opened
+Date: Sun, 05 Nov 2006 04:41:18 -0500
+Message-ID: <454DB1BE.7030103@garzik.org>
+References: <454C6767.3090901@gmx.net> <454C92D2.8060809@garzik.org> <454DA7A9.7000608@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.osdl.org>
-In-Reply-To: <20061105064801.GV13381@stusta.de>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.osdl.org>
-List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.osdl.org
-Errors-To: linux-pm-bounces@lists.osdl.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, len.brown@intel.com, Komuro <komurojun-mbn@nifty.com>, linux-pm@osdl.org, Ernst Herzberg <earny@net4u.de>, Christian <christiand59@web.de>, Alex Romosan <romosan@sycorax.lbl.gov>, openib-general@openib.org, ak@suse.de, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, oprofile-list@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, linux-pci@atrey.karlin.mff.cuni.cz, Elimar Riesebieter <riesebie@lxtec.de>, discuss@x86-64.org, Thierry Vignaud <tvignaud@mandriva.com>, Tim Chen <tim.c.chen@linux.intel.com>, phil.el@wanadoo.fr, gregkh@suse.de, neilb@cse.unsw.edu.au, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org, mingo@redhat.com, nfs@lists.sourceforge.net, "Eric W. Biederman" <ebiederm@xmission.com>, cpufreq@lists.linux.org.uk, "Michael S. Tsirkin" <mst@mellan>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:972 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932604AbWKEJlV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Nov 2006 04:41:21 -0500
+In-Reply-To: <454DA7A9.7000608@gmx.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: otto Meier <gf435@gmx.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 11/5/06, Adrian Bunk <bunk@stusta.de> wrote:
+otto Meier wrote:
+> Jeff Garzik schrieb:
+>> otto Meier wrote:
+>>> In which controller classes does it belong?
+>>> Promise claims it should  have NCQ  how to enable ?
+>> If it claims NCQ and 3.0Gbps support, I would guess 205xx
+>>
+>>     Jeff
+>>
+> Does this mean, changing :
+> 
+>  { PCI_VDEVICE(PROMISE, 0x3d17), board_20319 },
+> to
+>  { PCI_VDEVICE(PROMISE, 0x3d17), board_2057X },
+> 
+> in sata_promise.c would do the trick to activate NCQ of this board?
+> 
+> Does this hurt?
+> Do I need to do something else to get NCQ working?
 
-> Subject    : PCI: MMCONFIG breakage
-> References : http://lkml.org/lkml/2006/10/27/251
-> Submitter  : Jeff Chua <jeff.chua.linux@gmail.com>
-> Status     : unknown, both BIOS and Direct work
->              Greg said it should already be fixed
+Heh, no, a lot more than that...  NCQ is not supported at all in the 
+driver.  If someone is looking for a project, the docs are now available 
+for them to work on NCQ.
 
-Here's results with vanilla 2.6.19-rc4 (gcc version 3.4.5) ...
+	Jeff
 
-1) PCI access mode (Any) ... FAILED
 
-2) PCI access mode (MMConfig) ... FAILED
 
-3) PCI access mode (Direct) ... PASSED
-
-4) PCI access mode (BIOS) ... PASSED
-
-Looks like it's still having problem with Dell Optiplex GX620.
-
-Thanks,
-Jeff.
