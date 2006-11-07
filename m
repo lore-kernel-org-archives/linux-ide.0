@@ -1,29 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2 #upstream] ahci: preserve PORTS_IMPL over host resets
-Date: Tue, 07 Nov 2006 04:46:32 -0500
-Message-ID: <455055F8.9000707@pobox.com>
-References: <20061102031723.GV13677@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/2 #upstream] ahci: honor PORTS_IMPL on ICH8s
+Date: Tue, 07 Nov 2006 18:54:11 +0900
+Message-ID: <455057C3.2040905@gmail.com>
+References: <20061102031723.GV13677@htj.dyndns.org> <20061102032059.GW13677@htj.dyndns.org> <20061106010505.GJ15897@curie-int.orbis-terrarum.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:31668 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1754157AbWKGJqh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Nov 2006 04:46:37 -0500
-In-Reply-To: <20061102031723.GV13677@htj.dyndns.org>
+Received: from nz-out-0102.google.com ([64.233.162.207]:29351 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1754165AbWKGJyT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Nov 2006 04:54:19 -0500
+Received: by nz-out-0102.google.com with SMTP id z3so1078126nzf
+        for <linux-ide@vger.kernel.org>; Tue, 07 Nov 2006 01:54:19 -0800 (PST)
+In-Reply-To: <20061106010505.GJ15897@curie-int.orbis-terrarum.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: robbat2@gentoo.org, linux-ide@vger.kernel.org
+To: "Robin H. Johnson" <robbat2@gentoo.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Instead of writing 0xf blindly, preserve the content of write-once
-> PORTS_IMPL register over host resets.
+Robin H. Johnson wrote:
+> On Thu, Nov 02, 2006 at 12:20:59PM +0900, Tejun Heo wrote:
+>> @@ -1439,7 +1453,7 @@ static int ahci_host_init(struct ata_pro
+>>  	struct ahci_host_priv *hpriv = probe_ent->private_data;
+>>  	struct pci_dev *pdev = to_pci_dev(probe_ent->dev);
+>>  	void __iomem *mmio = probe_ent->mmio_base;
+>> -	unsigned int i, using_dac;
+>> +	unsigned int i, cap_n_ports, using_dac;
+>>  	int rc;
+>>  
+>>  	rc = ahci_reset_controller(mmio, pdev);
+>> @@ -1448,10 +1462,34 @@ static int ahci_host_init(struct ata_pro
+>>  
+>>  	hpriv->cap = readl(mmio + HOST_CAP);
+>>  	hpriv->port_map = readl(mmio + HOST_PORTS_IMPL);
+>> -	probe_ent->n_ports = ahci_nr_ports(hpriv->cap);
+>> +	cap_n_ports = ahci_nr_ports(hpriv->cap);
+>>  
+>>  	VPRINTK("cap 0x%x  port_map 0x%x  n_ports %d\n",
+>> -		hpriv->cap, hpriv->port_map, probe_ent->n_ports);
+>> +		hpriv->cap, hpriv->port_map, n_ports);
+> n_ports is undefined here. Should be cap_n_ports instead.
 > 
-> This patch is taken from Jeff Garzik's AHCI init update patch.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Other than that, the two patches work perfectly.
 
-applied
+Thanks.  Forgot to drop that part again.  I'll post updated patch in a 
+few hours.
 
-
+-- 
+tejun
