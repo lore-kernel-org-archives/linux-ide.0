@@ -1,85 +1,45 @@
-From: Jeff Chua <jeff.chua.linux@gmail.com>
-Subject: Re: [discuss] Re: 2.6.19-rc4: known unfixed regressions
-	(v3)
-Date: Wed, 8 Nov 2006 00:56:30 +0800 (SGT)
-Message-ID: <Pine.LNX.4.64.0611080051030.12828@silvia.corp.fedex.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_mv 7042 support and port multipliers
+Date: Tue, 07 Nov 2006 12:10:20 -0500
+Message-ID: <4550BDFC.1050408@rtr.ca>
+References: <20061106043114.GO15897@curie-int.orbis-terrarum.net> <454ED4A0.2090408@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.osdl.org>
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.osdl.org>
-List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.osdl.org
-Errors-To: linux-pm-bounces@lists.osdl.org
-To: Aaron Durbin <adurbin@google.com>
-Cc: Andrew Morton <akpm@osdl.org>, len.brown@intel.com, Komuro <komurojun-mbn@nifty.com>, linux-pm@osdl.org, Ernst Herzberg <earny@net4u.de>, Christian <christiand59@web.de>, Alex Romosan <romosan@sycorax.lbl.gov>, openib-general@openib.org, Andi Kleen <ak@suse.de>, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, oprofile-list@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, Martin Lorenz <martin@lorenz.eu.org>, linux-pci@atrey.karlin.mff.cuni.cz, Elimar Riesebieter <riesebie@lxtec.de>, discuss@x86-64.org, Thierry Vignaud <tvignaud@mandriva.com>, Tim Chen <tim.c.chen@linux.intel.com>, phil.el@wanadoo.fr, gregkh@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, mingo@redhat.com, nfs@lists.sourceforge.net, "Eric W. Biederman" <ebiederm@xmission.com>cp
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:42246 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S964990AbWKGRKW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Nov 2006 12:10:22 -0500
+In-Reply-To: <454ED4A0.2090408@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Robin H. Johnson" <robbat2@gentoo.org>, linux-ide@vger.kernel.org
 
+Jeff Garzik wrote:
+> Robin H. Johnson wrote:
+..
+>> The card reports as revision 2, which is not in the code either.
+>>
+>> I've got the hardware, so I'm willing to do heavy lifting of code (NCQ,
+>> Hotplug, PMP) if it hasn't been done yet, if somebody point me to some
+>> docs on the matter.  I've seen the mvSata-3.6.1 driver, and it appears
+>> to have most of the stuff on revision 1, but nothing on hardware
+>> revision 2 either.
+>>
+>> Jeff: you mentioned back in September about Marvell being a bit more
+>> generous with docs? Were 7042 docs amongst them or do I have to slog
+>> through the messy mvSata driver to find everything?
+> 
+> That's what I had to do.  I have the docs, which cover the programming 
+> interface, but it doesn't cover a lot of the associated errata.  I had 
+> to dig that out of the mvSata driver myself.
+> 
+> I had thought that Mark Lord was working on improving sata_mv, but 
+> outside of a locking bugfixes, I haven't seen anything since mid-May.
 
-On 11/7/06, Aaron Durbin <adurbin@google.com> wrote:
+I no longer use a system with that chipset (6081), so if someone new (Robin?)
+wants to take up the cause, then go for it!
 
-> Could please you post a dump of /proc/iomem for both the kernel that
-> works for you and the kernel that fails to allocate the PCI resources?
+Cheers
 
-
-
-1) this works ...
-
-00000000-0009ffff : System RAM
-000a0000-000bffff : Video RAM area
-000c0000-000c7fff : Video ROM
-000cc800-000cffff : Adapter ROM
-000f0000-000fffff : System ROM
-00100000-df686bff : System RAM
-   00100000-00357d27 : Kernel code
-   00357d28-0042bab3 : Kernel data
-df686c00-df688bff : ACPI Non-volatile Storage
-df688c00-df68abff : ACPI Tables
-df68ac00-dfffffff : reserved
-e0000000-efffffff : 0000:00:02.0
-f0000000-f3ffffff : reserved
-fe700000-fe7fffff : PCI Bus #03
-fe800000-fe8fffff : PCI Bus #02
-   fe8f0000-fe8fffff : 0000:02:00.0
-     fe8f0000-fe8fffff : tg3
-fe900000-fe9fffff : PCI Bus #01
-feabf900-feabf9ff : 0000:00:1e.2
-feabfa00-feabfbff : 0000:00:1e.2
-feac0000-feafffff : 0000:00:02.0
-feb00000-feb7ffff : 0000:00:02.0
-feb80000-febfffff : 0000:00:02.1
-fed00000-fed003ff : HPET 0
-fed20000-fed9ffff : reserved
-fee00000-feefffff : reserved
-ffa80800-ffa80bff : 0000:00:1d.7
-   ffa80800-ffa80bff : ehci_hcd
-ffb00000-ffffffff : reserved
-
-
-
-2) this fails ...
-
-00000000-0009ffff : System RAM
-000a0000-000bffff : Video RAM area
-000c0000-000c7fff : Video ROM
-000cc800-000cffff : Adapter ROM
-000f0000-000fffff : System ROM
-00100000-df686bff : System RAM
-   00100000-00358927 : Kernel code
-   00358928-0042cab3 : Kernel data
-df686c00-df688bff : ACPI Non-volatile Storage
-df688c00-df68abff : ACPI Tables
-df68ac00-dfffffff : reserved
-e0000000-efffffff : 0000:00:02.0
-f0000000-ffffffff : PCI MMCONFIG 0
-   fed00000-fed003ff : HPET 0
-
-
-
-Thanks,
-Jeff
