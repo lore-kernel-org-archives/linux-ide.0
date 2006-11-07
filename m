@@ -1,41 +1,43 @@
-From: "Don Dupuis" <dondster@gmail.com>
-Subject: Re: Libata and Drive Write Cache Disable
-Date: Tue, 7 Nov 2006 11:56:37 -0600
-Message-ID: <632b79000611070956gc2ff7e8y67457dec1d5e17cc@mail.gmail.com>
-References: <632b79000611060948v267bd33ahf1ff585cf4de9fcc@mail.gmail.com>
-	 <4550BE54.7060508@rtr.ca>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [discuss] Re: 2.6.19-rc4: known unfixed regressions
+	(v3)
+Date: Tue, 7 Nov 2006 10:56:52 -0700
+Message-ID: <20061107175651.GV27140@parisc-linux.org>
+References: <Pine.LNX.4.64.0611080056480.12828@silvia.corp.fedex.com>
+	<20061107171143.GU27140@parisc-linux.org>
+	<8f95bb250611070950m3dc45674gbd370e3173b6168d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:13692 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S932769AbWKGR4j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Nov 2006 12:56:39 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so351638nfa
-        for <linux-ide@vger.kernel.org>; Tue, 07 Nov 2006 09:56:37 -0800 (PST)
-In-Reply-To: <4550BE54.7060508@rtr.ca>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.osdl.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <8f95bb250611070950m3dc45674gbd370e3173b6168d@mail.gmail.com>
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.osdl.org>
+List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.osdl.org
+Errors-To: linux-pm-bounces@lists.osdl.org
+To: Aaron Durbin <adurbin@google.com>
+Cc: Andrew Morton <akpm@osdl.org>, len.brown@intel.com, Thierry Vignaud <tvignaud@mandriva.com>, linux-pm@osdl.org, Ernst Herzberg <earny@net4u.de>, Christian <christiand59@web.de>, Alex Romosan <romosan@sycorax.lbl.gov>, openib-general@openib.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, oprofile-list@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, linux-pci@atrey.karlin.mff.cuni.cz, Elimar Riesebieter <riesebie@lxtec.de>, discuss@x86-64.org, Komuro <komurojun-mbn@nifty.com>, Jeff Chua <jeff.chua.linux@gmail.com>, Tim Chen <tim.c.chen@linux.intel.com>, phil.el@wanadoo.fr, cpufreq@lists.linux.org.uk, gregkh@suse.de, neilb@cse.unsw.edu.au, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, mingo@redhat.com, nfs@lists.sourceforge.net, Eric W. Biederman
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
 
-Thanks,  It worked just fine like you said. I thought I could only use
-sdparm since these were SATA disks.
+On Tue, Nov 07, 2006 at 09:50:54AM -0800, Aaron Durbin wrote:
+> Maybe Andi can shed some light on the reasoning for not checking e820
+> to see if the entire MMCONFIG region is reported as reserved in the
+> e820 map.  I can patch up the pci_mmcfg_insert_resource to verify if
+> the region that is exported by ACPI is reserved in e820 and printk an
+> error message if it is not and skip the resource insertion.
+> =
 
-Don
+> Does that seem like a good avenue to pursue?
 
-On 11/7/06, Mark Lord <liml@rtr.ca> wrote:
-> Don Dupuis wrote:
-> > When will this be supported in libata. I have drives attached to a
-> > AHCI controller and want to turn drive write cache OFF. Sdparm will
-> > not allow me to do so. Any work-arounds or patches would be greatly
-> > appreciated. I am also using kernel 2.6.18.
->
-> hdparm -W0 /dev/sda
->
-> It works just fine.
->
-> Cheers
->
+Sounds much better than Eric's idea of maximum bus number currently in
+use (which was also my first thought).
+
+But rather than skipping the resource insertion, I believe you should
+limit its size to the largest multiple of 1MB that will fit within the
+reserved region.
