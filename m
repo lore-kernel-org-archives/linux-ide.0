@@ -1,159 +1,83 @@
-From: "daniel@wolstenholme.net" <daniel@wolstenholme.net>
-Subject: Re: [PATCH] sata_vsc: Add MSI support to sata_vsc driver (resubmit)
- (fixed attachment)
-Date: Tue, 7 Nov 2006 00:12:34 +0000 (UTC)
-Message-ID: <4396600.1162858354272.JavaMail.?@fh1037.dia.cp.net>
-Reply-To: "daniel@wolstenholme.net" <daniel@wolstenholme.net>
+From: Ernst Herzberg <earny@net4u.de>
+Subject: Re: 2.6.19-rc4: known unfixed regressions (v3)
+Date: Tue, 7 Nov 2006 03:17:34 +0100
+Message-ID: <200611070317.42230.earny@net4u.de>
+References: <Pine.LNX.4.64.0610302019560.25218@g5.osdl.org>
+	<20061105064801.GV13381@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpout1445.sc1.he.tucows.com ([64.97.157.145]:8485 "EHLO
-	n007.sc1.cp.net") by vger.kernel.org with ESMTP id S1753861AbWKGAN5
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Nov 2006 19:13:57 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.osdl.org>
+In-Reply-To: <20061105064801.GV13381@stusta.de>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.osdl.org>
+List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.osdl.org
+Errors-To: linux-pm-bounces@lists.osdl.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, len.brown@intel.com, Komuro <komurojun-mbn@nifty.com>, linux-pm@osdl.org, Christian <christiand59@web.de>, Alex Romosan <romosan@sycorax.lbl.gov>, openib-general@openib.org, ak@suse.de, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, oprofile-list@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, linux-pci@atrey.karlin.mff.cuni.cz, Elimar Riesebieter <riesebie@lxtec.de>, discuss@x86-64.org, Thierry Vignaud <tvignaud@mandriva.com>, Jeff Chua <jeff.chua.linux@gmail.com>, Tim Chen <tim.c.chen@linux.intel.com>, phil.el@wanadoo.fr, gregkh@suse.de, neilb@cse.unsw.edu.au, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org, mingo@redhat.com, nfs@lists.sourceforge.net, "Eric W. Biederman" <ebiederm@xmission.com>, cpufreq@lists.linux.org.uk"Michael S. Tsirkin" <m>
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org
 
->Wolstenholme, Daniel E wrote:
->> Ok, hopefully I can get the attachment right here.
->> 
->> Here's a resubmission of my MSI patch for the sata_vsc driver.
->> 
->> I've added a new vsc_sata_host_priv data structure (basically copied
->> from the sata_mv driver) which has an hp_flags bitfield with a bit to
->> indicate whether MSI is being used. This is used in the new
->> vsc_sata_host_stop() routine to call
->> pci_disable_msi() if MSI is on, pci_intx() if not.
->> 
->> Signed-off-by: Daniel Wolstenholme <daniel.e.wolstenholme@intel.com>
->
->ACK the patch technical content.
->
->Unfortunately, the patch was corrupted, and tabs were converted to 
->spaces, which makes it impossible to apply the patch.apply the patch.
+On Sunday 05 November 2006 07:48, Adrian Bunk wrote:
+> ...
+> Subject    : ThinkPad R50p: boot fail with (lapic && on_battery)
+> References : http://lkml.org/lkml/2006/10/31/333
+> Submitter  : Ernst Herzberg <earny@net4u.de>
+> Status     : problem is being debugged
 
-Ok, this one should get it right.  This makes me miss the days of elm and no 
-firewalls.
-Dan
+Update:
 
+2.6.19-rc4-git11 does _not_ fix the problem.
 
----------------
+But now it doesn't matter if Cardbus/PCMCIA is compiled in or not.
 
-diff -uprN a/drivers/scsi/sata_vsc.c b/drivers/scsi/sata_vsc.c
---- a/drivers/scsi/sata_vsc.c	2006-09-19 20:42:06.000000000 -0700
-+++ b/drivers/scsi/sata_vsc.c	2006-10-16 12:11:43.000000000 -0700
-@@ -94,8 +94,14 @@ enum {
- 			      VSC_SATA_INT_ERROR_P    | VSC_SATA_INT_ERROR_R | \
- 			      VSC_SATA_INT_ERROR_E    | VSC_SATA_INT_ERROR_M | \
- 			      VSC_SATA_INT_PHY_CHANGE),
-+
-+	/* Host private flags (hp_flags) */
-+	VSC_SATA_HP_FLAG_MSI	= (1 << 0),
- };
- 
-+struct vsc_sata_host_priv {
-+	u32			hp_flags;
-+};
- 
- #define is_vsc_sata_int_err(port_idx, int_status) \
- 	 (int_status & (VSC_SATA_INT_ERROR << (8 * port_idx)))
-@@ -118,6 +124,19 @@ static void vsc_sata_scr_write (struct a
- }
- 
- 
-+static void vsc_sata_host_stop(struct ata_host_set *host_set)
-+{
-+	struct vsc_sata_host_priv *hpriv = host_set->private_data;
-+	struct pci_dev *pdev = to_pci_dev(host_set->dev);
-+
-+	if (hpriv->hp_flags & VSC_SATA_HP_FLAG_MSI)
-+		pci_disable_msi(pdev);
-+	else
-+		pci_intx(pdev, 0);
-+	kfree (hpriv);
-+	ata_pci_host_stop(host_set);
-+}
-+
- static void vsc_intr_mask_update(struct ata_port *ap, u8 ctl)
- {
- 	void __iomem *mask_addr;
-@@ -308,7 +327,7 @@ static const struct ata_port_operations 
- 	.scr_write		= vsc_sata_scr_write,
- 	.port_start		= ata_port_start,
- 	.port_stop		= ata_port_stop,
--	.host_stop		= ata_pci_host_stop,
-+	.host_stop		= vsc_sata_host_stop,
- };
- 
- static void __devinit vsc_sata_setup_port(struct ata_ioports *port, unsigned 
-long base)
-@@ -337,6 +356,7 @@ static int __devinit vsc_sata_init_one (
- {
- 	static int printed_version;
- 	struct ata_probe_ent *probe_ent = NULL;
-+	struct vsc_sata_host_priv *hpriv;
- 	unsigned long base;
- 	int pci_dev_busy = 0;
- 	void __iomem *mmio_base;
-@@ -378,6 +398,7 @@ static int __devinit vsc_sata_init_one (
- 		rc = -ENOMEM;
- 		goto err_out_regions;
- 	}
-+
- 	memset(probe_ent, 0, sizeof(*probe_ent));
- 	probe_ent->dev = pci_dev_to_dev(pdev);
- 	INIT_LIST_HEAD(&probe_ent->node);
-@@ -389,19 +410,33 @@ static int __devinit vsc_sata_init_one (
- 	}
- 	base = (unsigned long) mmio_base;
- 
-+	hpriv = kmalloc(sizeof(*hpriv), GFP_KERNEL);
-+	if (!hpriv) {
-+		rc = -ENOMEM;
-+		goto err_out_iounmap;
-+	}
-+	memset(hpriv, 0, sizeof(*hpriv));
-+
- 	/*
- 	 * Due to a bug in the chip, the default cache line size can't be used
- 	 */
- 	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
- 
-+	if (pci_enable_msi(pdev) == 0) {
-+		hpriv->hp_flags |= VSC_SATA_HP_FLAG_MSI;
-+		pci_intx(pdev, 0);
-+	}
-+	else
-+		probe_ent->irq_flags = IRQF_SHARED;
-+
- 	probe_ent->sht = &vsc_sata_sht;
- 	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				ATA_FLAG_MMIO;
- 	probe_ent->port_ops = &vsc_sata_ops;
- 	probe_ent->n_ports = 4;
- 	probe_ent->irq = pdev->irq;
--	probe_ent->irq_flags = IRQF_SHARED;
- 	probe_ent->mmio_base = mmio_base;
-+	probe_ent->private_data = hpriv;
- 
- 	/* We don't care much about the PIO/UDMA masks, but the core won't like us
- 	 * if we don't fill these
-@@ -428,10 +463,12 @@ static int __devinit vsc_sata_init_one (
- 
- 	/* FIXME: check ata_device_add return value */
- 	ata_device_add(probe_ent);
--	kfree(probe_ent);
- 
-+	kfree(probe_ent);
- 	return 0;
- 
-+err_out_iounmap:
-+	pci_iounmap(pdev, mmio_base);
- err_out_free_ent:
- 	kfree(probe_ent);
- err_out_regions:
+What also matters is a setting in the BIOS:
+
+If i set instead of
+
+Power -> =
+
+   SpeedStep ->
+      Mode for AC -    "Max Performance"
+      Mode for Battery "Max Battery"
+
+to
+
+Power -> =
+
+   SpeedStep ->
+      Mode for AC -    "Max Battery"
+      Mode for Battery "Max Performance" =
 
 
+he _does_ boot from battery but also on AC...
+
+Also the problem is now(?) not very reliable. Sometimes the boot is success=
+ful =
+
+even on battery and then the laptop works without a glitch.
+This makes it not easier to isolate the problem.
+
+About the reverts of some patches: I'm not, lets say it carefull, an very   =
+
+experienced git user;-) =
+
+What i get is:
+
+# git-revert -n cf4c6a2f27f5db810b69dcb1da7f194489e8ff88
+First trying simple merge strategy to revert.
+Simple revert fails; trying Automatic revert.
+Auto-merging arch/i386/kernel/io_apic.c
+merge: warning: conflicts during merge
+ERROR: Merge conflict in arch/i386/kernel/io_apic.c
+....
+
+
+Is somewhere a howto-revert-patches-in-kernel-git-for-raw-beginners?
+
+<earny>
