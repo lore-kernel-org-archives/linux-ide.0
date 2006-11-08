@@ -1,82 +1,26 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [discuss] Re: 2.6.19-rc4: known unfixed regressions
-	(v3)
-Date: Wed, 08 Nov 2006 12:24:54 -0700
-Message-ID: <m1r6wd3fnd.fsf@ebiederm.dsl.xmission.com>
-References: <Pine.LNX.4.64.0611080056480.12828@silvia.corp.fedex.com>
-	<20061107171143.GU27140@parisc-linux.org>
-	<200611080839.46670.ak@suse.de>
-	<20061108122237.GF27140@parisc-linux.org>
-	<Pine.LNX.4.64.0611080803280.3667@g5.osdl.org>
-	<m1d57x4z58.fsf@ebiederm.dsl.xmission.com>
-	<Pine.LNX.4.64.0611081048330.3667@g5.osdl.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Problems with Samsung SH-W163A SATA CD/DVDRW JMicron
+	20360/20363 2.6.18.1
+Date: Wed, 08 Nov 2006 20:23:57 +0000
+Message-ID: <1163017437.23956.73.camel@localhost.localdomain>
+References: <f4527be0611081117x4f7610e1wc4aacbbfdcd6993a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.osdl.org>
-In-Reply-To: <Pine.LNX.4.64.0611081048330.3667@g5.osdl.org> (Linus Torvalds's
-	message of "Wed, 8 Nov 2006 10:52:05 -0800 (PST)")
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.osdl.org>
-List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.osdl.org
-Errors-To: linux-pm-bounces@lists.osdl.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Andrew Morton <akpm@osdl.org>, len.brown@intel.com, Thierry Vignaud <tvignaud@mandriva.com>, Matthew Wilcox <matthew@wil.cx>, Ernst Herzberg <earny@net4u.de>, Aaron Durbin <adurbin@google.com>, Alex Romosan <romosan@sycorax.lbl.gov>, openib-general@openib.org, Andi Kleen <ak@suse.de>, linux-ide@vger.kernel.org, oprofile-list@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, Adrian Bunk <bunk@stusta.de>, linux-pci@atrey.karlin.mff.cuni.cz, Elimar Riesebieter <riesebie@lxtec.de>, discuss@x86-64.org, linux-pm@osdl.org, Komuro <komurojun-mbn@nifty.com>, Jeff Chua <jeff.chua.linux@gmail.com>, Tim Chen <tim.c.chen@linux.intel.com>, phil.el@wanadoo.fr, gregkh@suse.de, neilb@cse.unsw.edu.au, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org, mingo@redhat.com, nfs@lists.sourceforge.net, cpufreq@lists.linux.o
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51082 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1422810AbWKHUTX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Nov 2006 15:19:23 -0500
+In-Reply-To: <f4527be0611081117x4f7610e1wc4aacbbfdcd6993a@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Lyon <andrew.lyon@gmail.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Linus Torvalds <torvalds@osdl.org> writes:
+Several people are reporting problems with AHCI and CD burning - are all
+the people concerned seeing this with Jmicron controllers or with other
+cases too ?
 
-> On Wed, 8 Nov 2006, Eric W. Biederman wrote:
->> =
+Alan
 
->> The implementations I have seen, I believe have all been on bridges and
->> the maximum size is actually generated from the bus number below the bri=
-dge.
->
-> Hmm. It might be possible to first set up the MMCONFIG thing for the =
-
-> minimum range, then read the bus numbers from the host bridge on that bus=
-, =
-
-> and then expand the mmconfig range if necessary.
->
-> Because pretty much ANYTHING is better than trusting the BIOS tables.
->
-> That said, I'd really be a _lot_ more confident about it if we were to be =
-
-> able to read the values from the hardware itself some way. There's =
-
-> obviously a chicken-and-egg issue on mmcfg configuration, but it's one =
-
-> that the BIOS startup code also has, so I assume that there is a solution =
-
-> to that somewhere.
-
-cfc and cf8 still work on x86.  So you can start with the old path
-and then when you know mmconfig works you can upgrade.
-
-In fact mmconfig doesn't necessary allow access to the entire pci domain.
-On AMD systems currently you will get all of the subordinate busses but
-the cpus themselves will not show up in the mmconfig space.
-
-So we should have the infrastructure to only use mmconfig for some set
-of busses.  If that interface is well described we can probably
-bootstrap sanely, only enabling what we know exists and like wise
-only reserving what we know is used.
-
-For chipsets I know that there is quite a bit of information publicly
-available.  For intel chipsets I believe those are registers they
-make available in their public docs.  For things like the Nvidia
-chipset the knowledge should be in the publicly available linuxbios
-code base.
-
-Hopefully that is enough of a pointer to get people going.  I might
-have enough time to write the patch but I don't have enough time to
-maintain it until mmconfig becomes boring.
-
-Eric
