@@ -1,31 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.19-rc4-mm2] sata_sis: slave support on SiS965
-Date: Wed, 08 Nov 2006 08:24:41 -0500
-Message-ID: <4551DA99.1000401@garzik.org>
-References: <200611080957.00349.uwe.koziolek@gmx.net>
+Subject: Re: [PATCH 2/2] Workaround for SB600 SATA ODD issue
+Date: Wed, 08 Nov 2006 08:30:25 -0500
+Message-ID: <4551DBF1.2080609@garzik.org>
+References: <20061103190004.9ED8DCBD48@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58500 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965728AbWKHNYp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Nov 2006 08:24:45 -0500
-In-Reply-To: <200611080957.00349.uwe.koziolek@gmx.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:24453 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965737AbWKHNa2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Nov 2006 08:30:28 -0500
+In-Reply-To: <20061103190004.9ED8DCBD48@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Luugi Marsan <luugi.marsan@amd.com>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Uwe Koziolek wrote:
-> SiS965 and SiS180 chips must support slave mode,
-> SiS965L and SiS964 chips must not support slave mode.
+Luugi Marsan wrote:
+> From: conke.hu@amd.com
 > 
-> SCR_STATUS for SATA ports in powerdown state fixed.
-> Now returning 0x0113 instead of 0x0117. Avoids problem
-> on detecting sata_sis controller.
+> There was an ASIC bug in the SB600 SATA controller of low revision (<=13) and CD burning may hang (only SATA ODD has this issue, and SATA HDD works well). The patch provides a workaround for this issue.
 > 
-> Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
+> Signed-off-by:  Luugi Marsan <luugi.marsan@amd.com>
 
-applied
+ACK technical content, but it needs one revision:  like someone else 
+(Alan or Tejun?) mentioned, this patch should be revised to use a 
+separate ata_port_operations for the affected chip(s).
+
+Copy ahci_ops to sb600_ops, add your check-atapi-dma function without 
+the vendor/device ID check.  Move the vendor/device check to the 
+pci_device_id table by creating a board_ahci_sb600 constant and 
+associated table data.
+
+I agree with other posters that we should move the revision check to 
+more generic code, but such a move should not block this patch.  The two 
+efforts can occur in parallel.
+
+	Jeff
 
 
