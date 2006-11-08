@@ -1,44 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sata_mv 7042 support and port multipliers
-Date: Wed, 08 Nov 2006 08:42:29 -0500
-Message-ID: <4551DEC5.4000307@pobox.com>
-References: <20061106043114.GO15897@curie-int.orbis-terrarum.net> <454ED4A0.2090408@pobox.com> <20061108133511.GH16523@curie-int.orbis-terrarum.net>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [discuss] Re: 2.6.19-rc4: known unfixed regressions
+	(v3)
+Date: Wed, 8 Nov 2006 16:14:01 +0100
+Message-ID: <200611081614.03735.ak@suse.de>
+References: <Pine.LNX.4.64.0611080056480.12828@silvia.corp.fedex.com>
+	<20061107171143.GU27140@parisc-linux.org>
+	<8f95bb250611070950m3dc45674gbd370e3173b6168d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:16774 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965750AbWKHNnE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Nov 2006 08:43:04 -0500
-In-Reply-To: <20061108133511.GH16523@curie-int.orbis-terrarum.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.osdl.org>
+In-Reply-To: <8f95bb250611070950m3dc45674gbd370e3173b6168d@mail.gmail.com>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.osdl.org>
+List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.osdl.org
+Errors-To: linux-pm-bounces@lists.osdl.org
+To: discuss@x86-64.org
+Cc: Andrew Morton <akpm@osdl.org>, len.brown@intel.com, Thierry Vignaud <tvignaud@mandriva.com>, Matthew Wilcox <matthew@wil.cx>, Ernst Herzberg <earny@net4u.de>, Aaron Durbin <adurbin@google.com>, Alex Romosan <romosan@sycorax.lbl.gov>, openib-general@openib.org, neilb@cse.unsw.edu.au, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, oprofile-list@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, linux-pci@atrey.karlin.mff.cuni.cz, Elimar Riesebieter <riesebie@lxtec.de>, linux-pm@osdl.org, Komuro <komurojun-mbn@nifty.com>, Jeff Chua <jeff.chua.linux@gmail.com>, Tim Chen <tim.c.chen@linux.intel.com>, phil.el@wanadoo.fr, gregkh@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christian <christiand59@web.de>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, mingo@redhat.com, nfs@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
-To: "Robin H. Johnson" <robbat2@orbis-terrarum.net>
-Cc: "Robin H. Johnson" <robbat2@gentoo.org>, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
-
-Robin H. Johnson wrote:
-> On Mon, Nov 06, 2006 at 01:22:24AM -0500, Jeff Garzik wrote:
->> That's what I had to do.  I have the docs, which cover the programming 
->> interface, but it doesn't cover a lot of the associated errata.  I had 
->> to dig that out of the mvSata driver myself.
->>
->> I had thought that Mark Lord was working on improving sata_mv, but 
->> outside of a locking bugfixes, I haven't seen anything since mid-May.
->>
->> So I guess sata_mv is in limbo again...
-> Ok, since Mark says he doesn't have the 6081 anymore I guess if I want
-> this working at all, I get to write and maintain it myself :-).
-> 
-> Are those Marvell docs under some form of protection (NDA etc)? Can I
-> get a copy of them? There a few questions (around NCQ/PMP) that the
-> mvSata driver raises for me, and I think the docs would help there.
-
-Yes, they're under NDA.  If you have specific programming questions that 
-deal directly with the functioning of the driver (i.e. imparting facts 
-necessary for the operation of the open source driver), I can help out 
-though.
-
-	Jeff
 
 
 
+> I can patch up the pci_mmcfg_insert_resource to verify if =
+
+> the region that is exported by ACPI is reserved in e820 and printk an
+> error message if it is not and skip the resource insertion.
+
+It probably should get its information from pci_mcfg_init()
+and only reserve what is used there instead of adding duplicate
+e820 checking code somewhere else.
+
+Or perhaps only reserve when the bus is discovered?
+
+-Andi
