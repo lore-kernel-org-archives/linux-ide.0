@@ -1,102 +1,60 @@
-From: Martin Devera <devik@cdi.cz>
-Subject: sata_via broken in 2.6.19rc4
-Date: Tue, 07 Nov 2006 23:36:08 +0100
-Message-ID: <45510A58.1040300@cdi.cz>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [discuss] Re: 2.6.19-rc4: known unfixed regressions
+	(v3)
+Date: Wed, 8 Nov 2006 08:39:44 +0100
+Message-ID: <200611080839.46670.ak@suse.de>
+References: <Pine.LNX.4.64.0611080056480.12828@silvia.corp.fedex.com>
+	<20061107171143.GU27140@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.cdi.cz ([80.95.109.117]:24986 "EHLO luxik.cdi.cz")
-	by vger.kernel.org with ESMTP id S1753465AbWKGWgN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Nov 2006 17:36:13 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.osdl.org>
+In-Reply-To: <20061107171143.GU27140@parisc-linux.org>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.osdl.org>
+List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.osdl.org
+Errors-To: linux-pm-bounces@lists.osdl.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andrew Morton <akpm@osdl.org>, len.brown@intel.com, Thierry Vignaud <tvignaud@mandriva.com>, linux-pm@osdl.org, Ernst Herzberg <earny@net4u.de>, Aaron Durbin <adurbin@google.com>, Alex Romosan <romosan@sycorax.lbl.gov>, openib-general@openib.org, neilb@cse.unsw.edu.au, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@osdl.org>, oprofile-list@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, linux-pci@atrey.karlin.mff.cuni.cz, Elimar Riesebieter <riesebie@lxtec.de>, discuss@x86-64.org, Komuro <komurojun-mbn@nifty.com>, Jeff Chua <jeff.chua.linux@gmail.com>, Tim Chen <tim.c.chen@linux.intel.com>, phil.el@wanadoo.fr, gregkh@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christian <christiand59@web.de>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, mingo@redhat.com, nfs@lists.sourceforge.net, Eric W. Bied
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-Hi,
+On Tuesday 07 November 2006 18:11, Matthew Wilcox wrote:
+> On Wed, Nov 08, 2006 at 12:57:03AM +0800, Jeff Chua wrote:
+> > 2) this fails ...
+> >
+> > e0000000-efffffff : 0000:00:02.0
+> > f0000000-ffffffff : PCI MMCONFIG 0
+> >    fed00000-fed003ff : HPET 0
+>
+> Heh, no kidding ...
+>
+>                 num_buses =3D pci_mmcfg_config[i].end_bus_number -
+>                     pci_mmcfg_config[i].start_bus_number + 1;
+>                 res->start =3D pci_mmcfg_config[i].base_address;
+>                 res->end =3D res->start + (num_buses << 20) - 1;
+>                 res->flags =3D IORESOURCE_MEM | IORESOURCE_BUSY;
+>                 insert_resource(&iomem_resource, res);
+>
+> So if we have 256 busses assigned, then we request 256MB and, well,
+> there's no room for anyone else.  This code was added by Andi in commit
+> de09bddb9d6f96785be470c832b881e6d72d589f
+>
+> Hopefully he'll have a good idea how to restrict it.  Given your "working"
+> resource map, it seems like it should be limited to 16MB (and thus 16
+> busses). But how to figure that out?
 
-it seems there is typo in sata_via.c (see ATA_PFLAG_LOADING constant usage):
 
-static int vt6420_prereset(struct ata_port *ap)
-{
-         struct ata_eh_context *ehc = &ap->eh_context;
-         unsigned long timeout = jiffies + (HZ * 5);
-         u32 sstatus, scontrol;
-         int online;
+ACPI knows the number of busses.
 
-         /* don't do any SCR stuff if we're not loading */
-         if (!ATA_PFLAG_LOADING)
-                 goto skip_scr;
+Just need to get the information there, which is a ordering issue
+(normally MCFG initialization is before this is known I think)
 
-also, It doesn't work on my 6420 hw. When I unplugged (and replugged) drive it
-cycles forever like below. Any idea what is wrong ?
+Len, ACPI folks, any ideas how to fix this cleanly?
 
-Nov  7 19:07:10 www1 kernel: [ 4774.536000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
-action 0x
-2 frozen
-Nov  7 19:07:10 www1 kernel: [ 4774.536000] ata1.00: (BMDMA stat 0x1)
-Nov  7 19:07:10 www1 kernel: [ 4774.536000] ata1.00: tag 0 cmd 0xc8 Emask 0x4 stat 0x40 err 
-0x0 (tim
-eout)
-Nov  7 19:07:16 www1 kernel: [ 4779.636000] ata1: SATA link down 1.5 Gbps (SStatus 1 
-SControl 300)
-Nov  7 19:07:16 www1 kernel: [ 4779.636000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:07:16 www1 kernel: [ 4779.640000] ata1: EH complete
-Nov  7 19:07:16 www1 kernel: [ 4779.640000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:07:16 www1 last message repeated 2 times
-Nov  7 19:07:46 www1 kernel: [ 4809.640000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
-action 0x
-2 frozen
-Nov  7 19:07:46 www1 kernel: [ 4809.640000] ata1.00: (BMDMA stat 0x1)
-Nov  7 19:07:46 www1 kernel: [ 4809.640000] ata1.00: tag 0 cmd 0xc8 Emask 0x4 stat 0x40 err 
-0x0 (tim
-eout)
-Nov  7 19:07:51 www1 kernel: [ 4814.740000] ata1: SATA link down 1.5 Gbps (SStatus 1 
-SControl 300)
-Nov  7 19:14:52 www1 kernel: [ 4814.740000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:14:52 www1 kernel: [ 4814.744000] ata1: EH complete
-Nov  7 19:14:52 www1 kernel: [ 4814.744000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:14:52 www1 last message repeated 2 times
-Nov  7 19:14:52 www1 kernel: [ 4844.744000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
-action 0x
-2 frozen
-Nov  7 19:14:52 www1 kernel: [ 4844.744000] ata1.00: (BMDMA stat 0x1)
-Nov  7 19:14:52 www1 kernel: [ 4844.744000] ata1.00: tag 0 cmd 0xc8 Emask 0x4 stat 0x40 err 
-0x0 (tim
-eout)
-Nov  7 19:14:52 www1 kernel: [ 4849.844000] ata1: SATA link down 1.5 Gbps (SStatus 1 
-SControl 300)
-Nov  7 19:14:52 www1 kernel: [ 4849.844000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:14:52 www1 kernel: [ 4849.848000] ata1: EH complete
-Nov  7 19:14:52 www1 kernel: [ 4849.848000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:14:52 www1 last message repeated 2 times
-Nov  7 19:14:52 www1 kernel: [ 4879.848000] ata1.00: limiting speed to UDMA/100
-Nov  7 19:14:52 www1 kernel: [ 4879.848000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
-action 0x
-2 frozen
-Nov  7 19:14:52 www1 kernel: [ 4879.848000] ata1.00: (BMDMA stat 0x1)
-Nov  7 19:14:52 www1 kernel: [ 4879.848000] ata1.00: tag 0 cmd 0xc8 Emask 0x4 stat 0x40 err 
-0x0 (tim
-eout)
-Nov  7 19:14:52 www1 kernel: [ 4884.948000] ata1: SATA link down 1.5 Gbps (SStatus 1 
-SControl 300)
-Nov  7 19:14:52 www1 kernel: [ 4884.948000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:14:52 www1 kernel: [ 4884.952000] ata1: EH complete
-Nov  7 19:14:52 www1 kernel: [ 4884.952000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:14:52 www1 last message repeated 2 times
-Nov  7 19:14:52 www1 kernel: [ 4914.952000] ata1.00: limiting speed to UDMA/66
-Nov  7 19:14:52 www1 kernel: [ 4914.952000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
-action 0x
-2 frozen
-Nov  7 19:14:52 www1 kernel: [ 4914.952000] ata1.00: (BMDMA stat 0x1)
-Nov  7 19:14:52 www1 kernel: [ 4914.952000] ata1.00: tag 0 cmd 0xc8 Emask 0x4 stat 0x40 err 
-0x0 (tim
-eout)
-Nov  7 19:14:52 www1 kernel: [ 4920.052000] ata1: SATA link down 1.5 Gbps (SStatus 1 
-SControl 300)
-Nov  7 19:14:52 www1 kernel: [ 4920.052000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:14:52 www1 kernel: [ 4920.056000] ata1: EH complete
-Nov  7 19:14:52 www1 kernel: [ 4920.056000] ATA: abnormal status 0xD0 on port 0xC007
-Nov  7 19:14:52 www1 last message repeated 2 times
-Nov  7 19:14:52 www1 kernel: [ 4950.056000] ata1.00: limiting speed to UDMA/44
+-Andi
