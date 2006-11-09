@@ -1,134 +1,54 @@
-From: Martin Lorenz <martin@lorenz.eu.org>
-Subject: Re: 2.6.19-rc5: known regressions
-Date: Thu, 9 Nov 2006 14:55:30 +0100
-Message-ID: <20061109135530.GA6600@gimli>
-References: <Pine.LNX.4.64.0611071829340.3667@g5.osdl.org>
-	<20061108085235.GT4729@stusta.de> <20061109080458.GB6073@gimli>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Thu, 09 Nov 2006 09:14:16 -0500
+Message-ID: <455337B8.5000902@pobox.com>
+References: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com> <20061030114503.GW4563@kernel.dk> <9d2cd630610300517q5187043eieb0880047ddd03eb@mail.gmail.com> <20061030132745.GE4563@kernel.dk> <4552F905.3020109@ens-lyon.org> <45533468.1060400@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.osdl.org>
-Content-Disposition: inline
-In-Reply-To: <20061109080458.GB6073@gimli>
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.osdl.org>
-List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.osdl.org
-Errors-To: linux-pm-bounces@lists.osdl.org
-To: Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ernst Herzberg <earny@net4u.de>, Len Brown <len.brown@intel.com>, mingo@redhat.com, pavel@suse.cz, linux-pm@osdl.org, Paolo Ornati <ornati@fastwebnet.it>, Olivier Mondoloni <olivier.mondoloni@waika9.com>, linux-acpi@vger.kernel.org, Thierry Vignaud <tvignaud@mandriva.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Alex Romosan <romosan@sycorax.lbl.gov>, Jens Axboe <jens.axboe@oracle.com>, Prakash Punnoor <prakash@punnoor.de>, phil.el@wanadoo.fr, oprofile-list@lists.sourceforge.net, ak@suse.de, discuss@x86-64.org, Tim Chen <tim.c.chen@linux.intel.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Jeff Chua <jeff.chua.linux@gmail.com>, Aaron Durbin <adurbin@google.com>, Matthew
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:48318 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S966017AbWKIOOa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Nov 2006 09:14:30 -0500
+In-Reply-To: <45533468.1060400@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Douglas Gilbert <dougg@torque.net>, monty@xiph.org
 
-> =
+Tejun Heo wrote:
+> This works for most PATA ATAPI devices.  Most devices detect reversed 
+> transfer and terminate the command promptly.  But this doesn't seem to 
+> be true for SATA device.  Many just hang and time out commands with the 
+> wrong transfer direction.  If you consider that most early SATA ATAPI 
+> devices are actually PATA + bridge, this is sorta inevitable.  The 
+> PATA-SATA bridge cannot issue D2H FIS to abort the command by itself. 
+> It's just mirroring the status of PATA side and PATA side doesn't know 
+> SATA protocol mismatch has occurred.
+> 
+> So, IDENTIFY w/ write-DMA protocol times out after quite some seconds. 
+> This is where things go worse from bad.  SATA controllers which have 
+> shadow TF registers don't handle timeout conditions very well, 
+> especially when they're waiting for data transfer.  They basically hold 
+> the PCI bus and hang till the transfer completes (which never happens). 
+>  That's where the hard lock up comes from.
+> 
+> Jens, I think we need to match block sg's behavior to SCSI's.  Monty, 
+> the timeout and hard lock up are due to hardware restrictions.  Kernel 
+> and libata can't do much about it.  So, please find other way to detect 
+> interface.
 
-> current kernel is 2.6.19-rc5+ieee80211+e1000-45.3+1909-g6a4abeae-dirty
-> =
 
-> Commit: 6a4abeaefae897ded6b39ed3f3a84662923e6b60
-> Author: Martin Lorenz <mlo@gimli.(none)> Wed, 08 Nov 2006 19:58:44 +0100
-> =
+Mapping 'bidirectional' is a bit difficult.  It might be reasonable to 
+interpret that as "userspace doesn't know" at lower layers, and then 
+fill in a data transfer direction based on ATA command opcode.
 
-> which is my e1000 patch =
+Given that there are stupid apps/libs out there in the field with this 
+behavior, even if the apps are fixed I think we are stuck with the 
+stupidities.  At the very least, we could abort commands that transfer 
+data in the opposite direction from indicated, based on a command opcode 
+table.
 
-> =
+	Jeff
 
-> Commit: 17dfbe2264b50308189de1fe4068bdffbf065dfc
-> Author: Martin Lorenz <mlo@gimli.(none)> Wed, 08 Nov 2006 19:58:44 +0100
-> =
 
-> which is the patch to upgrade ieee80211 to V.1.2.15 so I can use ipw3945
-> =
-
-> =
-
-> Commit: 48797ebd9e8b16fddcd4ef062f792314a6b9219a
-> Author: Linus Torvalds <torvalds@merom.osdl.org> Wed, 08 Nov 2006 10:27:54
-> -0800
-> =
-
-> ...the version I pulled
-> =
-
-> $ cg-status
-> Heads:
->     >master     6a4abeaefae897ded6b39ed3f3a84662923e6b60
->      origin     082f2f84be5db164280483efa7eb1549d867353d
-> =
-
-> =
-
-> it's an X60s BTW
-> > =
-
-> > Subject    : ThinkPad T60: no screen after resume
-> > References : http://mail.matrix.de/pipermail/linux-thinkpad/2006-Novemb=
-er/037011.html
-> > Submitter  : Martin Lorenz <martin@lorenz.eu.org>
-> > Status     : unknown
-> > =
-
-> > =
-
-> seems fixed
-> I have to retest it, but it came back nicely on two subsequent
-> suspend/resume cycles
-
-did a lot of testing now.
-no more black screen after resume
-
-> =
-
-> > Subject    : ThinkPad T60: lose ACPI events after suspend/resume
-> > References : http://lkml.org/lkml/2006/10/10/39
-> > Submitter  : Martin Lorenz <martin@lorenz.eu.org>
-> > Status     : problem might be fixed by
-> >              commit f9dadfa71bc594df09044da61d1c72701121d802
-> > =
-
-> =
-
-> same as above
-ACPI seems to be ok as well
-nothing strange happening anymore even after a LOT of fancy playing around
-
-> =
-
-> > =
-
-> > Subject    : i386: more DWARFs and strange messages
-> > References : http://lkml.org/lkml/2006/10/29/127
-> > Submitter  : Martin Lorenz <martin@lorenz.eu.org>
-> > Status     : should be fixed by
-> >              commit 4b96b1a10cb00c867103b21f0f2a6c91b705db11
-> =
-
-> none present in my current dmesg
-not one since I booted this kernel
-
-> =
-
-> I will keep testing and reporting :-)
-> =
-
-> thanks a lot =
-
-  mlo
---
-Dipl.-Ing. Martin Lorenz
-
-            They that can give up essential liberty =
-
-	    to obtain a little temporary safety =
-
-	    deserve neither liberty nor safety.
-                                   Benjamin Franklin
-
-please encrypt your mail to me
-GnuPG key-ID: F1AAD37D
-get it here:
-http://blackhole.pca.dfn.de:11371/pks/lookup?op=3Dget&search=3D0xF1AAD37D
-
-ICQ UIN: 33588107
