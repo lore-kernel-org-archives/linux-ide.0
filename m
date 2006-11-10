@@ -1,45 +1,92 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [PATCH] pata_artop: fix "& (1 >>" typo
-Date: Fri, 10 Nov 2006 11:25:35 -0500
-Message-ID: <20061110162535.GA7338@devserv.devel.redhat.com>
-References: <20061110195246.GC5872@localhost.sw.ru>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: use FLUSH_EXT only when driver is larger than LBA28 limit
+Date: Sat, 11 Nov 2006 03:33:04 +0900
+Message-ID: <20061110183304.GA22793@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:2215 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1946765AbWKJQZj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Nov 2006 11:25:39 -0500
+Received: from ug-out-1314.google.com ([66.249.92.170]:57607 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1161871AbWKJSdN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Nov 2006 13:33:13 -0500
+Received: by ug-out-1314.google.com with SMTP id m3so601555ugc
+        for <linux-ide@vger.kernel.org>; Fri, 10 Nov 2006 10:33:12 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20061110195246.GC5872@localhost.sw.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@openvz.org>
-Cc: Andrew Morton <akpm@osdl.org>, Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, devel@openvz.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: Danny Kukawka <dkukawka@novell.com>, Stefan Seyfried <seife@novell.com>
 
-On Fri, Nov 10, 2006 at 10:52:46PM +0300, Alexey Dobriyan wrote:
-> Signed-off-by: Alexey Dobriyan <adobriyan@openvz.org>
+Many drives support LBA48 even when its capacity is smaller than
+1<<28, as LBA48 is required for many functionalities.  FLUSH_EXT is
+mandatory for drives w/ LBA48 support.
 
-Acked-by: Alan Cox <alan@redhat.com>
+Interestingly, at least one of such drives (ST960812A) has problems
+dealing with FLUSH_EXT.  It eventually completes the command but takes
+around 7 seconds to finish in many cases thus drastically slowing down
+IO transactions.  This seems to be a firmware bug which sneaked into
+production probably because no other ATA driver including linux IDE
+issues FLUSH_EXT to drives which report support for LBA48 & FLUSH_EXT
+but is smaller than 1<<28 blocks.
 
-> ---
->=20
->  drivers/ata/pata_artop.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> --- a/drivers/ata/pata_artop.c
-> +++ b/drivers/ata/pata_artop.c
-> @@ -92,7 +92,7 @@ static int artop6260_pre_reset(struct at
->  		return -ENOENT;
-> =20
->  	pci_read_config_byte(pdev, 0x49, &tmp);
-> -	if (tmp & (1 >> ap->port_no))
-> +	if (tmp & (1 << ap->port_no))
->  		ap->cbl =3D ATA_CBL_PATA40;
->  	else
->  		ap->cbl =3D ATA_CBL_PATA80;
+This patch adds ATA_DFLAG_FLUSH_EXT which is set iff the drive
+supports LBA48 & FLUSH_EXT and is larger than LBA28 limit.  Both cache
+flush paths are updated to issue FLUSH_EXT only when the flag is set.
+Note that the changed behavior is more inline with the rest of libata.
+libata prefers shorter commands whenever possible.
 
---=20
-    "People who choose variable names like htlbpagek SHOULD be sent to
-             produce a street map of R'Lyeh.=A0 On site."
-			-- Al Viro
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Danny Kukawka <dkukawka@novell.com>
+Cc: Stefan Seyfried <seife@novell.com>
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9fdb266..669ee26 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1457,6 +1457,10 @@ int ata_dev_configure(struct ata_device
+ 			if (ata_id_has_lba48(id)) {
+ 				dev->flags |= ATA_DFLAG_LBA48;
+ 				lba_desc = "LBA48";
++
++				if (ata_id_u64(id, 100) >= (1UL << 28) &&
++				    ata_id_has_flush_ext(id))
++					dev->flags |= ATA_DFLAG_FLUSH_EXT;
+ 			}
+ 
+ 			/* config NCQ */
+@@ -5128,7 +5132,7 @@ int ata_flush_cache(struct ata_device *d
+ 	if (!ata_try_flush_cache(dev))
+ 		return 0;
+ 
+-	if (ata_id_has_flush_ext(dev->id))
++	if (dev->flags & ATA_DFLAG_FLUSH_EXT)
+ 		cmd = ATA_CMD_FLUSH_EXT;
+ 	else
+ 		cmd = ATA_CMD_FLUSH;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a0b6ee1..2be51c6 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1027,8 +1027,7 @@ static unsigned int ata_scsi_flush_xlat(
+ 	tf->flags |= ATA_TFLAG_DEVICE;
+ 	tf->protocol = ATA_PROT_NODATA;
+ 
+-	if ((qc->dev->flags & ATA_DFLAG_LBA48) &&
+-	    (ata_id_has_flush_ext(qc->dev->id)))
++	if (qc->dev->flags & ATA_DFLAG_FLUSH_EXT)
+ 		tf->command = ATA_CMD_FLUSH_EXT;
+ 	else
+ 		tf->command = ATA_CMD_FLUSH;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0d0ddea..36e233c 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -140,6 +140,7 @@ enum {
+ 	ATA_DFLAG_LBA48		= (1 << 1), /* device supports LBA48 */
+ 	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
+ 	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
++	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+ 
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
+
