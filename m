@@ -1,168 +1,179 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/5] libata: implement presence detection via polling IDENTIFY
+Subject: [PATCH 2/5] libata: convert @post_reset to @flags in ata_dev_read_id()
 Date: Fri, 10 Nov 2006 18:08:10 +0900
-Message-ID: <116314969087-git-send-email-htejun@gmail.com>
+Message-ID: <11631496902762-git-send-email-htejun@gmail.com>
 References: <11631496893280-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.194]:49171 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1946058AbWKJJIR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+Received: from wx-out-0506.google.com ([66.249.82.239]:15056 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1946092AbWKJJIR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 10 Nov 2006 04:08:17 -0500
-Received: by nz-out-0102.google.com with SMTP id l1so257953nzf
-        for <linux-ide@vger.kernel.org>; Fri, 10 Nov 2006 01:08:16 -0800 (PST)
+Received: by wx-out-0506.google.com with SMTP id s7so11365wxc
+        for <linux-ide@vger.kernel.org>; Fri, 10 Nov 2006 01:08:17 -0800 (PST)
 In-Reply-To: <11631496893280-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-On some controllers (ICHs in piix mode), there is *NO* reliable way to
-determine device presence other than issuing IDENTIFY and see how the
-transaction proceeds by watching the TF status register.
-
-libata acted this way before irq-pio and phantom devices caused very
-little problem but now that IDENTIFY is performed using IRQ drive PIO,
-such phantom devices now result in multiple 30sec timeouts during
-boot.
-
-This patch implements ATA_FLAG_DETECT_POLLING.  If a LLD sets this
-flag, libata core issues the initial IDENTIFY in polling mode and if
-the initial data transfer fails w/ HSM violation, the port is
-considered to be empty thus replicating the old libata and IDE
-behavior.
+Make ata_dev_read_id() take @flags instead of @post_reset.  Currently
+there is only one flag defined - ATA_READID_POSTRESET, which is
+equivalent to @post_reset.  This is preparation for polling presence
+detection.
 ---
- drivers/ata/libata-core.c |   19 +++++++++++++++++--
- drivers/ata/libata-eh.c   |   23 ++++++++++++++++++-----
- drivers/ata/libata.h      |    2 ++
- include/linux/libata.h    |    3 +++
- 4 files changed, 40 insertions(+), 7 deletions(-)
+ drivers/ata/libata-core.c |   17 +++++++++--------
+ drivers/ata/libata-eh.c   |   11 +++++++----
+ drivers/ata/libata.h      |    9 +++++++--
+ 3 files changed, 23 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 486cabf..4616bb3 100644
+index 9fdb266..486cabf 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -1272,9 +1272,20 @@ int ata_dev_read_id(struct ata_device *d
+@@ -1224,7 +1224,7 @@ unsigned int ata_pio_need_iordy(const st
+  *	ata_dev_read_id - Read ID data from the specified device
+  *	@dev: target device
+  *	@p_class: pointer to class of the target device (may be changed)
+- *	@post_reset: is this read ID post-reset?
++ *	@flags: ATA_READID_* flags
+  *	@id: buffer to read IDENTIFY data into
+  *
+  *	Read ID data from the specified device.  ATA_CMD_ID_ATA is
+@@ -1239,7 +1239,7 @@ unsigned int ata_pio_need_iordy(const st
+  *	0 on success, -errno otherwise.
+  */
+ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+-		    int post_reset, u16 *id)
++		    unsigned int flags, u16 *id)
+ {
+ 	struct ata_port *ap = dev->ap;
+ 	unsigned int class = *p_class;
+@@ -1294,7 +1294,7 @@ int ata_dev_read_id(struct ata_device *d
+ 			goto err_out;
+ 	}
  
- 	tf.protocol = ATA_PROT_PIO;
+-	if (post_reset && class == ATA_DEV_ATA) {
++	if ((flags & ATA_READID_POSTRESET) && class == ATA_DEV_ATA) {
+ 		/*
+ 		 * The exact sequence expected by certain pre-ATA4 drives is:
+ 		 * SRST RESET
+@@ -1314,7 +1314,7 @@ int ata_dev_read_id(struct ata_device *d
+ 			/* current CHS translation info (id[53-58]) might be
+ 			 * changed. reread the identify device info.
+ 			 */
+-			post_reset = 0;
++			flags &= ~ATA_READID_POSTRESET;
+ 			goto retry;
+ 		}
+ 	}
+@@ -1639,7 +1639,8 @@ int ata_bus_probe(struct ata_port *ap)
+ 		if (!ata_dev_enabled(dev))
+ 			continue;
  
-+	/* presence detection using polling IDENTIFY? */
-+	if (flags & ATA_READID_DETECT)
-+		tf.flags |= ATA_TFLAG_POLLING;
-+
- 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
- 				     id, sizeof(id[0]) * ATA_ID_WORDS);
- 	if (err_mask) {
-+		if ((flags & ATA_READID_DETECT) &&
-+		    (err_mask & AC_ERR_NODEV_HINT)) {
-+			DPRINTK("ata%u.%d: NODEV after polling detection\n",
-+				ap->id, dev->devno);
-+			return -ENOENT;
-+		}
-+
- 		rc = -EIO;
- 		reason = "I/O error";
- 		goto err_out;
-@@ -4281,8 +4292,12 @@ fsm_start:
- 					/* device stops HSM for abort/error */
- 					qc->err_mask |= AC_ERR_DEV;
- 				else
--					/* HSM violation. Let EH handle this */
--					qc->err_mask |= AC_ERR_HSM;
-+					/* HSM violation. Let EH handle this.
-+					 * Phantom devices also trigger this
-+					 * condition.  Mark hint.
-+					 */
-+					qc->err_mask |= AC_ERR_HSM |
-+							AC_ERR_NODEV_HINT;
+-		rc = ata_dev_read_id(dev, &dev->class, 1, dev->id);
++		rc = ata_dev_read_id(dev, &dev->class, ATA_READID_POSTRESET,
++				     dev->id);
+ 		if (rc)
+ 			goto fail;
  
- 				ap->hsm_task_state = HSM_ST_ERR;
- 				goto fsm_start;
+@@ -3019,7 +3020,7 @@ static int ata_dev_same_device(struct at
+ /**
+  *	ata_dev_revalidate - Revalidate ATA device
+  *	@dev: device to revalidate
+- *	@post_reset: is this revalidation after reset?
++ *	@readid_flags: read ID flags
+  *
+  *	Re-read IDENTIFY page and make sure @dev is still attached to
+  *	the port.
+@@ -3030,7 +3031,7 @@ static int ata_dev_same_device(struct at
+  *	RETURNS:
+  *	0 on success, negative errno otherwise
+  */
+-int ata_dev_revalidate(struct ata_device *dev, int post_reset)
++int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
+ {
+ 	unsigned int class = dev->class;
+ 	u16 *id = (void *)dev->ap->sector_buf;
+@@ -3042,7 +3043,7 @@ int ata_dev_revalidate(struct ata_device
+ 	}
+ 
+ 	/* read ID data */
+-	rc = ata_dev_read_id(dev, &class, post_reset, id);
++	rc = ata_dev_read_id(dev, &class, readid_flags, id);
+ 	if (rc)
+ 		goto fail;
+ 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 755fc68..e69f3df 100644
+index 4776488..755fc68 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1667,12 +1667,23 @@ static int ata_eh_revalidate_and_attach(
+@@ -1634,11 +1634,14 @@ static int ata_eh_revalidate_and_attach(
+ 	DPRINTK("ENTER\n");
+ 
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		unsigned int action;
++		unsigned int action, readid_flags = 0;
+ 
+ 		dev = &ap->device[i];
+ 		action = ata_eh_dev_action(dev);
+ 
++		if (ehc->i.flags & ATA_EHI_DID_RESET)
++			readid_flags |= ATA_READID_POSTRESET;
++
+ 		if (action & ATA_EH_REVALIDATE && ata_dev_ready(dev)) {
+ 			if (ata_port_offline(ap)) {
+ 				rc = -EIO;
+@@ -1646,8 +1649,7 @@ static int ata_eh_revalidate_and_attach(
+ 			}
+ 
+ 			ata_eh_about_to_do(ap, dev, ATA_EH_REVALIDATE);
+-			rc = ata_dev_revalidate(dev,
+-					ehc->i.flags & ATA_EHI_DID_RESET);
++			rc = ata_dev_revalidate(dev, readid_flags);
+ 			if (rc)
+ 				break;
+ 
+@@ -1665,7 +1667,8 @@ static int ata_eh_revalidate_and_attach(
  			   ata_class_enabled(ehc->classes[dev->devno])) {
  			dev->class = ehc->classes[dev->devno];
  
-+			if (ap->flags & ATA_FLAG_DETECT_POLLING)
-+				readid_flags |= ATA_READID_DETECT;
-+
- 			rc = ata_dev_read_id(dev, &dev->class, readid_flags,
- 					     dev->id);
+-			rc = ata_dev_read_id(dev, &dev->class, 1, dev->id);
++			rc = ata_dev_read_id(dev, &dev->class, readid_flags,
++					     dev->id);
  			if (rc == 0) {
  				ehc->i.flags |= ATA_EHI_PRINTINFO;
  				rc = ata_dev_configure(dev);
- 				ehc->i.flags &= ~ATA_EHI_PRINTINFO;
-+			} else if (rc == -ENOENT) {
-+				/* IDENTIFY was issued to non-existent
-+				 * device.  No need to reset.  Just
-+				 * thaw and kill the device.
-+				 */
-+				ata_eh_thaw_port(ap);
-+				dev->class = ATA_DEV_UNKNOWN;
-+				rc = 0;
- 			}
- 
- 			if (rc) {
-@@ -1680,12 +1691,14 @@ static int ata_eh_revalidate_and_attach(
- 				break;
- 			}
- 
--			spin_lock_irqsave(ap->lock, flags);
--			ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
--			spin_unlock_irqrestore(ap->lock, flags);
-+			if (ata_dev_enabled(dev)) {
-+				spin_lock_irqsave(ap->lock, flags);
-+				ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
-+				spin_unlock_irqrestore(ap->lock, flags);
- 
--			/* new device discovered, configure transfer mode */
--			ehc->i.flags |= ATA_EHI_SETMODE;
-+				/* new device discovered, configure xfermode */
-+				ehc->i.flags |= ATA_EHI_SETMODE;
-+			}
- 		}
- 	}
- 
 diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index bb98390..be2ac39 100644
+index e4ffb2e..bb98390 100644
 --- a/drivers/ata/libata.h
 +++ b/drivers/ata/libata.h
-@@ -42,6 +42,8 @@ struct ata_scsi_args {
- enum {
- 	/* flags for ata_dev_read_id() */
- 	ATA_READID_POSTRESET	= (1 << 0), /* reading ID after reset */
-+	ATA_READID_DETECT	= (1 << 1), /* perform presence detection
-+					     * using polling IDENTIFY */
+@@ -39,6 +39,11 @@ struct ata_scsi_args {
  };
  
+ /* libata-core.c */
++enum {
++	/* flags for ata_dev_read_id() */
++	ATA_READID_POSTRESET	= (1 << 0), /* reading ID after reset */
++};
++
  extern struct workqueue_struct *ata_aux_wq;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0d0ddea..4236efc 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -175,6 +175,8 @@ enum {
- 	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
- 					      * Register FIS clearing BSY */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
-+	ATA_FLAG_DETECT_POLLING	= (1 << 14), /* detect device presence by
-+					      * polling IDENTIFY */
- 
- 	/* The following flag belongs to ap->pflags but is kept in
- 	 * ap->flags because it's referenced in many LLDs and will be
-@@ -334,6 +336,7 @@ enum ata_completion_errors {
- 	AC_ERR_SYSTEM		= (1 << 6), /* system error */
- 	AC_ERR_INVALID		= (1 << 7), /* invalid argument */
- 	AC_ERR_OTHER		= (1 << 8), /* unknown */
-+	AC_ERR_NODEV_HINT	= (1 << 9), /* polling device detection hint */
- };
- 
- /* forward declarations */
+ extern int atapi_enabled;
+ extern int atapi_dmadir;
+@@ -52,8 +57,8 @@ extern unsigned ata_exec_internal(struct
+ 				  int dma_dir, void *buf, unsigned int buflen);
+ extern unsigned int ata_do_simple_cmd(struct ata_device *dev, u8 cmd);
+ extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+-			   int post_reset, u16 *id);
+-extern int ata_dev_revalidate(struct ata_device *dev, int post_reset);
++			   unsigned int flags, u16 *id);
++extern int ata_dev_revalidate(struct ata_device *dev, unsigned int flags);
+ extern int ata_dev_configure(struct ata_device *dev);
+ extern int sata_down_spd_limit(struct ata_port *ap);
+ extern int sata_set_spd_needed(struct ata_port *ap);
 -- 
 1.4.3.3
 
