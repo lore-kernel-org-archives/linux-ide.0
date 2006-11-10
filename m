@@ -1,38 +1,174 @@
-From: Stefan Seyfried <seife@suse.de>
-Subject: Re: [PATCH] libata: use FLUSH_EXT only when driver is larger than LBA28 limit
-Date: Fri, 10 Nov 2006 20:18:34 +0100
-Message-ID: <20061110191834.GA8359@suse.de>
-References: <20061110183304.GA22793@htj.dyndns.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Fri, 10 Nov 2006 12:08:15 -0800 (PST)
+Message-ID: <508312.85189.qm@web31812.mail.mud.yahoo.com>
+References: <4554777B.7050708@torque.net>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:23680 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1161951AbWKJTT1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Nov 2006 14:19:27 -0500
-Content-Disposition: inline
-In-Reply-To: <20061110183304.GA22793@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4554777B.7050708@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: dougg@torque.net
+Cc: Tejun Heo <htejun@gmail.com>, Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, monty@xiph.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Danny Kukawka <dkukawka@suse.de>
 
-On Sat, Nov 11, 2006 at 03:33:04AM +0900, Tejun Heo wrote:
+--- Douglas Gilbert <dougg@torque.net> wrote:
+> Luben Tuikov wrote:
+> > --- Douglas Gilbert <dougg@torque.net> wrote:
+> >> Tejun Heo wrote:
+> >>> [CC'ing Monty and Douglas.]
+> >>>
+> >>> Hello, the original thread can be read from the following URL.
+> >>>
+> >>> http://thread.gmane.org/gmane.linux.ide/13708/focus=13708
+> >>>
+> >>> Brice Goglin wrote:
+> >>>> ens Axboe wrote:
+> >>>>> On Mon, Oct 30 2006, Gregor Jasny wrote:
+> >>>>>  
+> >>>>>> 2006/10/30, Jens Axboe <jens.axboe@oracle.com>:
+> >>>>>>    
+> >>>>>>> Can you confirm that 2.6.18 works?
+> >>>>>>>       
+> >>>>>> The reporter of [1] states that his SATA Thinkpad freezes with 2.6.17
+> >>>>>> and 2.6.18, too.
+> >>>>>>
+> >>>>>> Gregor
+> >>>>>>
+> >>>>>> [1] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=391901
+> >>>>>>     
+> >>>>> Ok, mainly just checking if this was a potential dupe of another bug.
+> >>>>>
+> >>>>>   
+> >>>> Jens (or anybody else who has any idea of how to debug this),
+> >>>>
+> >>>> Did you have a chance to reproduce the problem? I guess we "only" need a
+> >>>> machine with SATA/ata_piix and cdparanoia 3.10. If you want me to debug
+> >>>> some stuff, feel free to tell me what. But, since it freezes the machine
+> >>>> and sysrq doesn't even work, I don't really know what to try...
+> >>>>
+> >>>> I just tried on rc5 and rc5-mm1, both have the problem (as 2.6.16, .17
+> >>>> and .18 do, don't know about earlier kernels). I didn't have a audio CD
+> >>>> here, so I tried abcde on a DVD on purpose. With cdparanoia 3.10-pre0
+> >>>> (from Debian testing), it reports nothing during about 5 seconds and
+> >>>> then the machine freezes. With cdparanoia 3a9.8-11 (from Debian stable),
+> >>>> it reports an error very quickly, and dmesg gets a couple line like
+> >>>> these:
+> >>>>     sg_write: data in/out 12/12 bytes for SCSI command 0x43--guessing
+> >>>> data in;
+> >>>>        program cdparanoia not setting count and/or reply_len properly
+> >>> Okay, here's the story.
+> >>>
+> >>> In interface/scan_devices.c::cdda_identify_scsi(), cdparanoia calls
+> >>> scsi_inquiry() to identify the device and determine interface type. This
+> >>> seems to be the first time to actually issue commands to the device.  As
+> >>> interface type isn't completely determined, for sg devices, it first
+> >>> issues the command w/ d->interface set to SGIO_SCSI.  If that fails, it
+> >>> falls back to SGIO_SCSI_BUGGY1.
+> >>>
+> >>> For to-device request, both SGIO_SCSI and SGIO_SCSI_BUGGY1 set
+> >>> sg_io_hdr.dxfer_direction to SG_DXFER_TO_DEV.  But for from-device
+> >>> request, SGIO_SCSI uses SG_DXFER_TO_FROM_DEV while SGIO_SCSI_BUGGY1 uses
+> >>> SG_DXFER_FROM_DEV.  So, cdparanoia first issues inquiry w/
+> >>> SG_DXFER_TO_FROM_DEV and if that fails falls back to SG_DXFER_FROM_DEV.
+> >>>
+> >>> drivers/scsi/sg.c interprets SG_DXFER_TO_FROM_DEV as read while
+> >>> block/scsi_ioctl.c interprets it as write.  I guess this is historic
+> >>> thing (scsi/sg.c updated but block/scsi_ioctl.c is forgotten).  As
+> >>> written above, cdparanoia can handle both cases as long as the kernel
+> >>> promptly fails command issued with the wrong direction.
+> >>>
+> >>> This works for most PATA ATAPI devices.  Most devices detect reversed
+> >>> transfer and terminate the command promptly.  But this doesn't seem to
+> >>> be true for SATA device.  Many just hang and time out commands with the
+> >>> wrong transfer direction.  If you consider that most early SATA ATAPI
+> >>> devices are actually PATA + bridge, this is sorta inevitable.  The
+> >>> PATA-SATA bridge cannot issue D2H FIS to abort the command by itself.
+> >>> It's just mirroring the status of PATA side and PATA side doesn't know
+> >>> SATA protocol mismatch has occurred.
+> >>>
+> >>> So, IDENTIFY w/ write-DMA protocol times out after quite some seconds.
+> >>> This is where things go worse from bad.  SATA controllers which have
+> >>> shadow TF registers don't handle timeout conditions very well,
+> >>> especially when they're waiting for data transfer.  They basically hold
+> >>> the PCI bus and hang till the transfer completes (which never happens).
+> >>>  That's where the hard lock up comes from.
+> >>>
+> >>> Jens, I think we need to match block sg's behavior to SCSI's.  Monty,
+> >>> the timeout and hard lock up are due to hardware restrictions.  Kernel
+> >>> and libata can't do much about it.  So, please find other way to detect
+> >>> interface.
+> >> Tejun,
+> >> Your SG_DXFER_TO_FROM_DEV analysis is correct.
+> >>
+> >> The stupid ~!@# who wrote the code, and the documentation
+> >> for it, defined SG_DXFER_TO_FROM_DEV to mean a "transfer
+> >> from device" operation where the kernel buffer receiving
+> >> the DMA transfer was prefilled with data that the application
+> >> provided. That certainly isn't a bidirectional transfer to/from
+> >> the device, but it is a bidirectional transfer to kernel
+> >> buffers when indirect IO is used.
+> >>
+> >> Why do this? Because the 'resid' field indicating how much
+> >> less data was transferred in a "from_device" transfer than
+> >> was requested, was not added to SCSI infrastructure till much
+> >> later. There are still LLDs out there that don't implement it.
+> >> It also reflected a similar technique used with the sg_header
+> >> structure (circa 1992) for precisely the same reason. And
+> >> application writers wanted that functionality. Joerg was the
+> >> first name of one such application writer.
+> >>
+> >>
+> >> Coincidentally I am sitting on a patch from Luben Tuikov
+> >> to cause the same breakage in the sg driver itself.
+> > 
+> > Here is a link to the recently posted 8 month patch:
+> > http://marc.theaimsgroup.com/?l=linux-scsi&m=116267031029025&w=2
+> > 
+> > The patch would appear to fix the problem Tejun is describing.
+> > 
+> > I cannot quite remember exactly what I was doing that day 8 months
+> > ago, but was either disk or tape devices testing and arrived
+> > at that patch.
+> > 
+> > This patch had been in my dev (gateway) tree for the last 8
+> > months, without any problems.
+> > 
+> >     Luben
+> > 
+> > 
+> >> Nobody has proposed a patch to the documentation for
+> >> the explanation of SG_DXFER_TO_FROM_DEV :-)
+> >>     http://www.torque.net/sg/p/sg_v3_ho.html
+>                                   ^^^^^^^^^^^^^
+> 
+> Luben,
+> The failure being reported is that the block layer
+> SG_IO ioctl already does what you are proposing to
+> do for the sg driver.
+> 
+> Hence an application, cdparanoia in this case, since
+> it coded against documented behaviour, assumes that
+> SG_DXFER_TO_FROM_DEV will read from the device.
+> See the definition of SG_DXFER_TO_FROM_DEV in sg.h and
+> the document above.
+> 
+> So your proposed patch would compound the problem. The
+> solution is _not_ to change the sg driver and put the
+> equivalent of the reverse of your patch in the block
+> layer SG_IO ioctl.
+> 
+> There is nothing to stop a new direction flag being
+> added called SG_DXFER_BIDIRECTIONAL that maps to
+> DMA_BIDIRECTIONAL.
 
-> Interestingly, at least one of such drives (ST960812A) has problems
-> dealing with FLUSH_EXT.  It eventually completes the command but take=
-s
-> around 7 seconds to finish in many cases thus drastically slowing dow=
-n
-> IO transactions.  This seems to be a firmware bug which sneaked into
-> production probably because no other ATA driver including linux IDE
-> issues FLUSH_EXT to drives which report support for LBA48 & FLUSH_EXT
-> but is smaller than 1<<28 blocks.
+Sounds good!
 
-Note that i'm quite sure that i have seen this on more than this single
-drive. It might be that those were all seagates, though.
---=20
-Stefan Seyfried
-QA / R&D Team Mobile Devices        |              "Any ideas, John?"
-SUSE LINUX Products GmbH, N=FCrnberg  | "Well, surrounding them's out."=
-=20
+  Luben
+
+P.S. I'd love to see SG_DXFER_TO_FROM_DEV completely ripped out
+of sg.c, for obvious reasons.  Can you not duplicate the resid "fix"
+it provides into "FROM_DEV" -- do apps really rely on it?
+
