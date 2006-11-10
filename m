@@ -1,174 +1,58 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
-Date: Fri, 10 Nov 2006 12:08:15 -0800 (PST)
-Message-ID: <508312.85189.qm@web31812.mail.mud.yahoo.com>
-References: <4554777B.7050708@torque.net>
-Reply-To: ltuikov@yahoo.com
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: Problems with mounting filesystems from /dev/hdb (kernel 2.6.18.1)
+Date: Fri, 10 Nov 2006 21:36:47 +0100
+Message-ID: <4554E2DF.2020102@gmail.com>
+References: <d9a083460611081439v2eacb065nef62f129d2d9c9c0@mail.gmail.com>	 <4af2d03a0611090320m5d8316a7l86b42cde888a4fd@mail.gmail.com>	 <45534B31.50008@cfl.rr.com> <45534D2C.6080509@gmail.com>	 <d9a083460611090855w3b3a9eb6w347a24b1e704ca61@mail.gmail.com>	 <45537B67.6050804@gmail.com> <d9a083460611100739v531b0293i5ae5fd8d3ccee800@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4554777B.7050708@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: Tejun Heo <htejun@gmail.com>, Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, monty@xiph.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tirith.ics.muni.cz ([147.251.4.36]:12232 "EHLO
+	tirith.ics.muni.cz") by vger.kernel.org with ESMTP id S966112AbWKJUiK
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Nov 2006 15:38:10 -0500
+In-Reply-To: <d9a083460611100739v531b0293i5ae5fd8d3ccee800@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jano <jasieczek@gmail.com>
+Cc: Phillip Susi <psusi@cfl.rr.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
---- Douglas Gilbert <dougg@torque.net> wrote:
-> Luben Tuikov wrote:
-> > --- Douglas Gilbert <dougg@torque.net> wrote:
-> >> Tejun Heo wrote:
-> >>> [CC'ing Monty and Douglas.]
-> >>>
-> >>> Hello, the original thread can be read from the following URL.
-> >>>
-> >>> http://thread.gmane.org/gmane.linux.ide/13708/focus=13708
-> >>>
-> >>> Brice Goglin wrote:
-> >>>> ens Axboe wrote:
-> >>>>> On Mon, Oct 30 2006, Gregor Jasny wrote:
-> >>>>>  
-> >>>>>> 2006/10/30, Jens Axboe <jens.axboe@oracle.com>:
-> >>>>>>    
-> >>>>>>> Can you confirm that 2.6.18 works?
-> >>>>>>>       
-> >>>>>> The reporter of [1] states that his SATA Thinkpad freezes with 2.6.17
-> >>>>>> and 2.6.18, too.
-> >>>>>>
-> >>>>>> Gregor
-> >>>>>>
-> >>>>>> [1] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=391901
-> >>>>>>     
-> >>>>> Ok, mainly just checking if this was a potential dupe of another bug.
-> >>>>>
-> >>>>>   
-> >>>> Jens (or anybody else who has any idea of how to debug this),
-> >>>>
-> >>>> Did you have a chance to reproduce the problem? I guess we "only" need a
-> >>>> machine with SATA/ata_piix and cdparanoia 3.10. If you want me to debug
-> >>>> some stuff, feel free to tell me what. But, since it freezes the machine
-> >>>> and sysrq doesn't even work, I don't really know what to try...
-> >>>>
-> >>>> I just tried on rc5 and rc5-mm1, both have the problem (as 2.6.16, .17
-> >>>> and .18 do, don't know about earlier kernels). I didn't have a audio CD
-> >>>> here, so I tried abcde on a DVD on purpose. With cdparanoia 3.10-pre0
-> >>>> (from Debian testing), it reports nothing during about 5 seconds and
-> >>>> then the machine freezes. With cdparanoia 3a9.8-11 (from Debian stable),
-> >>>> it reports an error very quickly, and dmesg gets a couple line like
-> >>>> these:
-> >>>>     sg_write: data in/out 12/12 bytes for SCSI command 0x43--guessing
-> >>>> data in;
-> >>>>        program cdparanoia not setting count and/or reply_len properly
-> >>> Okay, here's the story.
-> >>>
-> >>> In interface/scan_devices.c::cdda_identify_scsi(), cdparanoia calls
-> >>> scsi_inquiry() to identify the device and determine interface type. This
-> >>> seems to be the first time to actually issue commands to the device.  As
-> >>> interface type isn't completely determined, for sg devices, it first
-> >>> issues the command w/ d->interface set to SGIO_SCSI.  If that fails, it
-> >>> falls back to SGIO_SCSI_BUGGY1.
-> >>>
-> >>> For to-device request, both SGIO_SCSI and SGIO_SCSI_BUGGY1 set
-> >>> sg_io_hdr.dxfer_direction to SG_DXFER_TO_DEV.  But for from-device
-> >>> request, SGIO_SCSI uses SG_DXFER_TO_FROM_DEV while SGIO_SCSI_BUGGY1 uses
-> >>> SG_DXFER_FROM_DEV.  So, cdparanoia first issues inquiry w/
-> >>> SG_DXFER_TO_FROM_DEV and if that fails falls back to SG_DXFER_FROM_DEV.
-> >>>
-> >>> drivers/scsi/sg.c interprets SG_DXFER_TO_FROM_DEV as read while
-> >>> block/scsi_ioctl.c interprets it as write.  I guess this is historic
-> >>> thing (scsi/sg.c updated but block/scsi_ioctl.c is forgotten).  As
-> >>> written above, cdparanoia can handle both cases as long as the kernel
-> >>> promptly fails command issued with the wrong direction.
-> >>>
-> >>> This works for most PATA ATAPI devices.  Most devices detect reversed
-> >>> transfer and terminate the command promptly.  But this doesn't seem to
-> >>> be true for SATA device.  Many just hang and time out commands with the
-> >>> wrong transfer direction.  If you consider that most early SATA ATAPI
-> >>> devices are actually PATA + bridge, this is sorta inevitable.  The
-> >>> PATA-SATA bridge cannot issue D2H FIS to abort the command by itself.
-> >>> It's just mirroring the status of PATA side and PATA side doesn't know
-> >>> SATA protocol mismatch has occurred.
-> >>>
-> >>> So, IDENTIFY w/ write-DMA protocol times out after quite some seconds.
-> >>> This is where things go worse from bad.  SATA controllers which have
-> >>> shadow TF registers don't handle timeout conditions very well,
-> >>> especially when they're waiting for data transfer.  They basically hold
-> >>> the PCI bus and hang till the transfer completes (which never happens).
-> >>>  That's where the hard lock up comes from.
-> >>>
-> >>> Jens, I think we need to match block sg's behavior to SCSI's.  Monty,
-> >>> the timeout and hard lock up are due to hardware restrictions.  Kernel
-> >>> and libata can't do much about it.  So, please find other way to detect
-> >>> interface.
-> >> Tejun,
-> >> Your SG_DXFER_TO_FROM_DEV analysis is correct.
-> >>
-> >> The stupid ~!@# who wrote the code, and the documentation
-> >> for it, defined SG_DXFER_TO_FROM_DEV to mean a "transfer
-> >> from device" operation where the kernel buffer receiving
-> >> the DMA transfer was prefilled with data that the application
-> >> provided. That certainly isn't a bidirectional transfer to/from
-> >> the device, but it is a bidirectional transfer to kernel
-> >> buffers when indirect IO is used.
-> >>
-> >> Why do this? Because the 'resid' field indicating how much
-> >> less data was transferred in a "from_device" transfer than
-> >> was requested, was not added to SCSI infrastructure till much
-> >> later. There are still LLDs out there that don't implement it.
-> >> It also reflected a similar technique used with the sg_header
-> >> structure (circa 1992) for precisely the same reason. And
-> >> application writers wanted that functionality. Joerg was the
-> >> first name of one such application writer.
-> >>
-> >>
-> >> Coincidentally I am sitting on a patch from Luben Tuikov
-> >> to cause the same breakage in the sg driver itself.
-> > 
-> > Here is a link to the recently posted 8 month patch:
-> > http://marc.theaimsgroup.com/?l=linux-scsi&m=116267031029025&w=2
-> > 
-> > The patch would appear to fix the problem Tejun is describing.
-> > 
-> > I cannot quite remember exactly what I was doing that day 8 months
-> > ago, but was either disk or tape devices testing and arrived
-> > at that patch.
-> > 
-> > This patch had been in my dev (gateway) tree for the last 8
-> > months, without any problems.
-> > 
-> >     Luben
-> > 
-> > 
-> >> Nobody has proposed a patch to the documentation for
-> >> the explanation of SG_DXFER_TO_FROM_DEV :-)
-> >>     http://www.torque.net/sg/p/sg_v3_ho.html
->                                   ^^^^^^^^^^^^^
+Jano wrote:
+> 2006/11/9, Jiri Slaby <jirislaby@gmail.com>:
+>>
+>> In such cases google is very helpful ;).
+>>
 > 
-> Luben,
-> The failure being reported is that the block layer
-> SG_IO ioctl already does what you are proposing to
-> do for the sg driver.
+> Sorry, my mistake :D.
 > 
-> Hence an application, cdparanoia in this case, since
-> it coded against documented behaviour, assumes that
-> SG_DXFER_TO_FROM_DEV will read from the device.
-> See the definition of SG_DXFER_TO_FROM_DEV in sg.h and
-> the document above.
+>>
+>> No, I meant strace(1):
+>> strace mount /dev/hdbX /home
+>>
 > 
-> So your proposed patch would compound the problem. The
-> solution is _not_ to change the sg driver and put the
-> equivalent of the reverse of your patch in the block
-> layer SG_IO ioctl.
+> # strace mount /dev/hdb1 > file1
+> # strace mount /home > file2
+
+yeah. Either redirect stderr by 2> file1 (this will contain mount errors too) or
+use strace -o file1
+
+[snip]
+>> And try to turn "VIA82CXXX chipset support" to <*>, i.e. built-in
+>> (somebody
+>> holds regions of ide0 and ide1, let's try via driver to probe first).
+>>
 > 
-> There is nothing to stop a new direction flag being
-> added called SG_DXFER_BIDIRECTIONAL that maps to
-> DMA_BIDIRECTIONAL.
+> Also done. Haven't changed anything.
+> 
+> Hope that strace output will be helpful. As far as I'll be able to
+> save the results. Any suggestions?
 
-Sounds good!
+When you boot with init=/bin/bash not to allow system to start scripts, does it
+work? (add init=/bin/bash kernel parameter)
 
-  Luben
-
-P.S. I'd love to see SG_DXFER_TO_FROM_DEV completely ripped out
-of sg.c, for obvious reasons.  Can you not duplicate the resid "fix"
-it provides into "FROM_DEV" -- do apps really rely on it?
-
+regards,
+-- 
+http://www.fi.muni.cz/~xslaby/            Jiri Slaby
+faculty of informatics, masaryk university, brno, cz
+e-mail: jirislaby gmail com, gpg pubkey fingerprint:
+B674 9967 0407 CE62 ACC8  22A0 32CC 55C3 39D4 7A7E
