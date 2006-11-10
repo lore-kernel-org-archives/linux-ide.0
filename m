@@ -1,41 +1,88 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
-Date: Fri, 10 Nov 2006 07:47:10 +0900
-Message-ID: <4553AFEE.1070504@gmail.com>
-References: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com>	 <20061030114503.GW4563@kernel.dk>	 <9d2cd630610300517q5187043eieb0880047ddd03eb@mail.gmail.com>	 <20061030132745.GE4563@kernel.dk> <4552F905.3020109@ens-lyon.org>	 <45533468.1060400@gmail.com> <806dafc20611091209s5864c9eam77a9290194de343d@mail.gmail.com>
+From: jozwicki <jozwicki@aster.pl>
+Subject: Acer Aspire 3682 with ICH7 can't be configured to use UDMA66 and higher
+Date: Fri, 10 Nov 2006 01:19:45 +0100 (CET)
+Message-ID: <537ECE143B86EB78CF020C3E1BDBB56E11631179808E38F5CD54641F3F30@webmail.aster.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:15079 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1424217AbWKIWrV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Nov 2006 17:47:21 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1178777nfa
-        for <linux-ide@vger.kernel.org>; Thu, 09 Nov 2006 14:47:20 -0800 (PST)
-In-Reply-To: <806dafc20611091209s5864c9eam77a9290194de343d@mail.gmail.com>
+Received: from mail0.aster.pl ([212.76.33.39]:1610 "EHLO mail0.astercity.net")
+	by vger.kernel.org with ESMTP id S1424303AbWKJATr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Nov 2006 19:19:47 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Monty Montgomery <monty@xiph.org>
-Cc: Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Douglas Gilbert <dougg@torque.net>
+To: linux-ide@vger.kernel.org
+Cc: alan@redhat.com
 
 Hello,
+Acer Aspire 3682 with ICH7 can't be configured to use UDMA66 and
+higher. It appears that it has got short 40-pins ATA cable for hard
+disk. Register 0x54 is 0.
 
-Monty Montgomery wrote:
-[--snip--]
->>  Kernel
->> and libata can't do much about it.  So, please find other way to detect
->> interface.
-> 
-> Just to be clear-- it is the kernel at fault here, and the kernel can
-> do something about it-- but only if the kernel gets fixed.  Also to be
-> clear, given this brokenness, yes I need to find another way.
+I've looked at
+http://marc.theaimsgroup.com/?l=linux-ide&m=115618757116620&w=2
+and similary written fix for drivers/ide/pci/piix.c.
+Because libata 2.0 is not in linux 2.6.18, this fix may be usefull for
+some people.
 
-Yeap, it seems to be kernel's fault and we need to fix both.
 
-> Dammit, dammit, dammit, one step forward, two steps back :-(
+Regards,
+Jakub Jozwicki
 
-:-(
+--- CUT ---
 
--- 
-tejun
+--- linux-2.6.16.21SLERT10/drivers/ide/pci/piix.c	2006-04-25
+23:03:47.000000000 +0200
++++ linux-2.6.16.21-0.25/drivers/ide/pci/piix.c	2006-11-10
+00:47:27.223832134 +0100
+@@ -431,8 +431,23 @@
+*	out to be nice and simple
+*/
+
++struct ich_laptop {
++	u16 device;
++	u16 subvendor;
++	u16 subdevice;
++};
++
++static const struct ich_laptop ich_laptop[] = {
++	/* devid, subvendor, subdev */
++        { 0x27df, 0x1025, 0x0110 },	/* ICH7 on Acer Aspire 3682 WLMi
+*/
++	/* end marker */
++	{ 0, }
++};
++
+static unsigned int __devinit init_chipset_piix (struct pci_dev *dev,
+const char *name)
+{
++	const struct ich_laptop *lap = &ich_laptop[0];
++
+switch(dev->device) {
+case PCI_DEVICE_ID_INTEL_82801EB_1:
+case PCI_DEVICE_ID_INTEL_82801AA_1:
+@@ -454,6 +469,19 @@
+{
+unsigned int extra = 0;
+pci_read_config_dword(dev, 0x54, &extra);
++
++			/* Fix UDMA66 capabilities on Acer Aspire */
++			while (!extra && lap->device) {
++			    if (lap->device == dev->device &&
++				lap->subvendor == dev->subsystem_vendor &&
++				lap->subdevice == dev->subsystem_device)
++			    {
++				extra = 0xf0;
++				printk(KERN_WARNING "ICH7 laptop detected, setting register 0x54
+to 0x4f0\n");
++			    }
++			    lap++;
++			}
++
+pci_write_config_dword(dev, 0x54, extra|0x400);
+}
+default:
+
+---- CUT -----
+
