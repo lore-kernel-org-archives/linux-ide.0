@@ -1,32 +1,37 @@
-From: Fredrik <fredrik@obra.se>
-Subject: Re: Problems with Samsung SH-W163A SATA CD/DVDRW JMicron 20360/20363 2.6.18.1
-Date: Sat, 11 Nov 2006 01:39:36 +0100
-Message-ID: <20061111003936.GA4271@useful.obra.se>
+From: Nicolas Kaiser <nikai@nikai.net>
+Subject: [PATCH][TRIVIAL] drivers/ide: stray bracket
+Date: Sat, 11 Nov 2006 01:47:56 +0100
+Message-ID: <20061111014756.3467d7ee@lucky.kitzblitz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxfep01.bredband.com ([195.54.107.70]:50886 "EHLO
-	mxfep01.bredband.com") by vger.kernel.org with ESMTP
-	id S1424467AbWKKAjm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Nov 2006 19:39:42 -0500
-Received: from ironport2.bredband.com ([195.54.107.84] [195.54.107.84])
-          by mxfep01.bredband.com with ESMTP
-          id <20061111003940.QEGS9747.mxfep01.bredband.com@ironport2.bredband.com>
-          for <linux-ide@vger.kernel.org>; Sat, 11 Nov 2006 01:39:40 +0100
-Content-Disposition: inline
+Received: from ensim03.ffm.m2soft.com ([195.38.20.12]:24271 "EHLO
+	ensim03.ffm.m2soft.com") by vger.kernel.org with ESMTP
+	id S1424469AbWKKAtx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Nov 2006 19:49:53 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org
 
->Several people are reporting problems with AHCI and CD burning - are
->all
->the people concerned seeing this with Jmicron controllers or with other
->cases too ?
->
->Alan
+Stray bracket in debug code.
 
-I have the same problems as Andrew Lyon when connected to jmicron 20363
-AHCI. Samsung SH-S183A in my case. I'm currently using it on the onboard
-ICH8 controller and that gives no errors. Asus P5B motherboard.
+Signed-off-by: Nicolas Kaiser <nikai@nikai.net>
+---
 
-/Fredrik Rinnestam
+ drivers/ide/legacy/hd.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -uprN a/drivers/ide/legacy/hd.c b/drivers/ide/legacy/hd.c
+--- a/drivers/ide/legacy/hd.c	2006-09-20 05:42:06.000000000 +0200
++++ b/drivers/ide/legacy/hd.c	2006-11-10 21:52:20.000000000 +0100
+@@ -459,7 +459,7 @@ ok_to_read:
+ #ifdef DEBUG
+ 	printk("%s: read: sector %ld, remaining = %ld, buffer=%p\n",
+ 		req->rq_disk->disk_name, req->sector, req->nr_sectors,
+-		req->buffer+512));
++		req->buffer+512);
+ #endif
+ 	if (req->current_nr_sectors <= 0)
+ 		end_request(req, 1);
