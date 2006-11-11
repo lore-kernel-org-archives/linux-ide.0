@@ -1,50 +1,44 @@
-From: Nicolas Kaiser <nikai@nikai.net>
-Subject: Re: [PATCH][TRIVIAL] drivers/ide: stray bracket
-Date: Sat, 11 Nov 2006 17:21:12 +0100
-Message-ID: <20061111172112.7e1aba49@lucky.kitzblitz>
-References: <20061111014756.3467d7ee@lucky.kitzblitz>
-	<20061111131612.GA4974@martell.zuzino.mipt.ru>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Sat, 11 Nov 2006 11:39:44 -0500
+Message-ID: <4555FCD0.7030505@torque.net>
+References: <4554777B.7050708@torque.net> <508312.85189.qm@web31812.mail.mud.yahoo.com> <20061111104642.GA3356@infradead.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ensim03.ffm.m2soft.com ([195.38.20.12]:52444 "EHLO
-	ensim03.ffm.m2soft.com") by vger.kernel.org with ESMTP
-	id S1424433AbWKKQXA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Nov 2006 11:23:00 -0500
-In-Reply-To: <20061111131612.GA4974@martell.zuzino.mipt.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20061111104642.GA3356@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Tejun Heo <htejun@gmail.com>, Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, monty@xiph.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: linux-ide@vger.kernel.org, trivial@kernel.org, linux-kernel@vger.kernel.org
 
-* Alexey Dobriyan <adobriyan@gmail.com>:
-> On Sat, Nov 11, 2006 at 01:47:56AM +0100, Nicolas Kaiser wrote:
-> > Stray bracket in debug code.
+Christoph Hellwig wrote:
+> On Fri, Nov 10, 2006 at 12:08:15PM -0800, Luben Tuikov wrote:
+>> P.S. I'd love to see SG_DXFER_TO_FROM_DEV completely ripped out
+>> of sg.c, for obvious reasons.  Can you not duplicate the resid "fix"
+>> it provides into "FROM_DEV" -- do apps really rely on it?
+> 
+> At the beginning of this thread it was mentioned cdparanio uses it.
+> But in general we can't just rip out userland interfaces, we pretend
+> to have a stable userspace abi (and except for the big sysfs mess that
+> actually comes very close to the truth).
+> 
+> What we should do is to document very well what SG_DXFER_TO_FROM_DEV
+> is doing and that odd name that's been chosen for it.  I'll prepare
+> a patch for that.
 
-> Just remove whole printk. It was broken for a looong time.
+Christoph,
+It is documented and has been from day one. See scsi/sg.h
+and http://sg.torque.net/sg/p/sg_v3_ho.html
 
-If you prefer it that way, here we go:
-Remove debug code that was broken for long time.
+Naming it is a challenge and at the time there
+were no bidirectional transfers to/from a device
+to worry about.
 
-Signed-off-by: Nicolas Kaiser <nikai@nikai.net>
----
+A more appropriate but impractical name might be:
+SG_DXFER_TO_KERNEL_BUFFER_THEN_READ_FROM_DEV_VIA_KERNEL_BUFFER
 
- drivers/ide/legacy/hd.c |    5 -----
- 1 file changed, 5 deletions(-)
 
-diff -uprN a/drivers/ide/legacy/hd.c b/drivers/ide/legacy/hd.c
---- a/drivers/ide/legacy/hd.c	2006-09-20 05:42:06.000000000 +0200
-+++ b/drivers/ide/legacy/hd.c	2006-11-11 17:11:28.000000000 +0100
-@@ -456,11 +456,6 @@ ok_to_read:
- 	req->errors = 0;
- 	i = --req->nr_sectors;
- 	--req->current_nr_sectors;
--#ifdef DEBUG
--	printk("%s: read: sector %ld, remaining = %ld, buffer=%p\n",
--		req->rq_disk->disk_name, req->sector, req->nr_sectors,
--		req->buffer+512));
--#endif
- 	if (req->current_nr_sectors <= 0)
- 		end_request(req, 1);
- 	if (i > 0) {
+Doug Gilbert
+
