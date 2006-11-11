@@ -1,299 +1,122 @@
-From: =?ISO-8859-1?Q?Daniel_Schr=F6der?= <mail@dschroeder.info>
-Subject: [PMP] sil3132 st6600 problem
-Date: Sat, 11 Nov 2006 02:24:48 +0100
-Message-ID: <45552660.4050902@dschroeder.info>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.19-rc5: known regressions (v2)
+Date: Sat, 11 Nov 2006 02:50:35 +0100
+Message-ID: <20061111015035.GU4729@stusta.de>
+References: <Pine.LNX.4.64.0611071829340.3667@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:40416 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S1946866AbWKKBY5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Nov 2006 20:24:57 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.osdl.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0611071829340.3667@g5.osdl.org>
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.osdl.org>
+List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.osdl.org
+Errors-To: linux-pm-bounces@lists.osdl.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: len.brown@intel.com, Alex Romosan <romosan@sycorax.lbl.gov>, Komuro <komurojun-mbn@nifty.com>, discuss@x86-64.org, Mel Gorman <mel@csn.ul.ie>, Aaron Durbin <adurbin@google.com>, Olivier Mondoloni <olivier.mondoloni@waika9.com>, "alsa-devel@alsa-project.org Olivier Nicolas" <olivn@trollprod.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andre Noll <maan@systemlinux.org>, linux-ide@vger.kernel.org, Brian King <brking@us.ibm.com>, oprofile-list@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, Thomas Gleixner <tglx@linutronix.de>, perex@suse.cz, linux-pm@osdl.org, Thierry Vignaud <tvignaud@mandriva.com>, Paolo Ornati <ornati@fastwebnet.it>, phil.el@wanadoo.fr, gregkh@suse.de, ak@suse.de, Ernst Herzberg <earny@net4u.de>, linux-acpi@vger.kernel.org, mingo@redhat.com, Prakash Punnoor <prakash@punnoor.de>, linux-pci@atrey.karl
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-Hello *,
+This email lists some known regressions in 2.6.19-rc5 compared to 2.6.18
+that are not yet fixed in Linus' tree.
 
-a couple of weeks ago, i posted a "success" message. This time i have a
-strange issue to report. A couple of weeks, with only one Samsung
-HD401LJ and everything was fine. Yesterday, i put another drive a
-Samsung HD501LJ into the second bay and shortly after this. (After FDISK
-and MKFS and a couple of powercycles) The device is completely
-unresponsive. With this device on, Windows XP freezes instantly...Linux
-shows the following at turning on:
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possibly
+involved with one or more of these issues.
 
-And everytime, when i played with this device, he said something about
-USB...WTF?! Same IRQ? I dont think so:
-
-<interrupts>
-cat /proc/interrupts
-           CPU0
-  0:     876859          XT-PIC  timer
-  1:       7955          XT-PIC  i8042
-  2:          0          XT-PIC  cascade
-  5:     466863          XT-PIC  libata, libata, libata, eth1
-  7:     347524          XT-PIC  libata, eth0
-  9:          0          XT-PIC  acpi
- 10:        931          XT-PIC  ehci_hcd:usb1, HDA Intel
- 11:     211376          XT-PIC  ohci1394, nvidia
- 12:      25578          XT-PIC  i8042
- 14:         46          XT-PIC  ide0
-NMI:          0
-LOC:     876799
-ERR:          1
-MIS:          0
-</interrupts>
-
-beneath you find some logs:
-
-1. first time i put the device on with the new harddisk added
-2. "test" of hotplug
-3. device is dead
-
-any clues/hints what i could do?
-
-TIA
-
-Daniel
-
-<log-first-time-all-seems-to-be-ok.but why he wrote this with USB at the
-time i turn on the device?>
-Nov  9 12:35:04 isla-magica hub 1-2:1.0: port 2 disabled by hub (EMI?),
-re-enabling...
-Nov  9 12:35:04 isla-magica usb 1-2.2: USB disconnect, address 4
-Nov  9 12:35:04 isla-magica ata1: exception Emask 0x10 SAct 0x0 SErr
-0x10000 action 0x42 frozen
-Nov  9 12:35:04 isla-magica ata1: (irq_stat 0x00a00080, device exchanged)
-Nov  9 12:35:04 isla-magica usb 1-2.2: new low speed USB device using
-ehci_hcd and address 7
-Nov  9 12:35:04 isla-magica usb 1-2.2: configuration #1 chosen from 1 choice
-Nov  9 12:35:04 isla-magica input: HID 0c12:0005 as /class/input/input3
-Nov  9 12:35:04 isla-magica input: USB HID v1.00 Joystick [HID
-0c12:0005] on usb-0000:00:0a.1-2.2
-Nov  9 12:35:04 isla-magica ata1: waiting for device to spin up (8 secs)
-Nov  9 12:35:12 isla-magica ata1: soft resetting port
-Nov  9 12:35:12 isla-magica ata1: SATA link up 3.0 Gbps (SStatus 123
-SControl 300)
-Nov  9 12:35:12 isla-magica ata1.15: Port Multiplier 1.1, 0x1095:0x3726
-r23, 5 ports, feat 0x9/0x9
-Nov  9 12:35:13 isla-magica ata1.00: hard resetting port
-Nov  9 12:35:13 isla-magica ata1.00: SATA link up 3.0 Gbps (SStatus 123
-SControl 300)
-Nov  9 12:35:13 isla-magica ata1.01: hard resetting port
-Nov  9 12:35:14 isla-magica ata1.01: SATA link up 3.0 Gbps (SStatus 123
-SControl 300)
-Nov  9 12:35:14 isla-magica ata1.02: hard resetting port
-Nov  9 12:35:14 isla-magica ata1.02: SATA link down (SStatus 0 SControl 300)
-Nov  9 12:35:14 isla-magica ata1.03: hard resetting port
-Nov  9 12:35:15 isla-magica ata1.03: SATA link down (SStatus 0 SControl 300)
-Nov  9 12:35:15 isla-magica ata1.04: hard resetting port
-Nov  9 12:35:15 isla-magica ata1.04: SATA link down (SStatus 0 SControl 300)
-Nov  9 12:35:15 isla-magica ata1.00: ATA-7, max UDMA7, 976773168
-sectors: LBA48 NCQ (depth 31/32)
-Nov  9 12:35:15 isla-magica ata1.00: configured for UDMA/100
-Nov  9 12:35:15 isla-magica ata1.01: ATA-7, max UDMA7, 781422768
-sectors: LBA48 NCQ (depth 31/32)
-Nov  9 12:35:15 isla-magica ata1.01: configured for UDMA/100
-Nov  9 12:35:15 isla-magica ata1: EH complete
-Nov  9 12:35:15 isla-magica Vendor: ATA       Model: SAMSUNG HD501LJ
-Rev: CR10
-Nov  9 12:35:15 isla-magica Type:   Direct-Access
-ANSI SCSI revision: 05
-Nov  9 12:35:15 isla-magica SCSI device sdd: 976773168 512-byte hdwr
-sectors (500108 MB)
-Nov  9 12:35:15 isla-magica sdd: Write Protect is off
-Nov  9 12:35:15 isla-magica sdd: Mode Sense: 00 3a 00 00
-Nov  9 12:35:15 isla-magica SCSI device sdd: drive cache: write back
-Nov  9 12:35:15 isla-magica SCSI device sdd: 976773168 512-byte hdwr
-sectors (500108 MB)
-Nov  9 12:35:15 isla-magica sdd: Write Protect is off
-Nov  9 12:35:15 isla-magica sdd: Mode Sense: 00 3a 00 00
-Nov  9 12:35:15 isla-magica SCSI device sdd: drive cache: write back
-Nov  9 12:35:15 isla-magica sdd: unknown partition table
-Nov  9 12:35:15 isla-magica sd 0:0:0:0: Attached scsi disk sdd
-Nov  9 12:35:15 isla-magica sd 0:0:0:0: Attached scsi generic sg3 type 0
-Nov  9 12:35:15 isla-magica Vendor: ATA       Model: SAMSUNG HD401LJ
-Rev: ZZ10
-Nov  9 12:35:15 isla-magica Type:   Direct-Access
-ANSI SCSI revision: 05
-Nov  9 12:35:15 isla-magica SCSI device sde: 781422768 512-byte hdwr
-sectors (400088 MB)
-Nov  9 12:35:15 isla-magica sde: Write Protect is off
-Nov  9 12:35:15 isla-magica sde: Mode Sense: 00 3a 00 00
-Nov  9 12:35:15 isla-magica SCSI device sde: drive cache: write back
-Nov  9 12:35:15 isla-magica SCSI device sde: 781422768 512-byte hdwr
-sectors (400088 MB)
-Nov  9 12:35:15 isla-magica sde: Write Protect is off
-Nov  9 12:35:15 isla-magica sde: Mode Sense: 00 3a 00 00
-Nov  9 12:35:15 isla-magica SCSI device sde: drive cache: write back
-Nov  9 12:35:15 isla-magica sde: sde1
-Nov  9 12:35:15 isla-magica sd 0:0:1:0: Attached scsi disk sde
-Nov  9 12:35:15 isla-magica sd 0:0:1:0: Attached scsi generic sg4 type 0
-Nov  9 12:35:15 isla-magica scsi.agent[9175]: disk at
-/devices/pci0000:00/0000:00:16.0/0000:06:00.0/host0/target0:0:0/0:0:0:0
-Nov  9 12:35:15 isla-magica scsi.agent[9192]: disk at
-/devices/pci0000:00/0000:00:16.0/0000:06:00.0/host0/target0:0:1/0:0:1:0
-</log-first-time-all-seems-to-be-ok.but why he wrote this with USB at
-the time i turn on the device?>
+Due to the huge amount of recipients, please trim the Cc when answering.
 
 
-test of hotplug
+Subject    : PCI MSI setting corrupted during resume
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7479
+Submitter  : Stephen Hemminger <shemminger@osdl.org>
+Status     : unknown
 
-<log-hotplug>
-Nov  9 12:38:44 isla-magica ata1.15: exception Emask 0x100 SAct 0x0 SErr
-0x0 action 0x1 frozen
-Nov  9 12:38:44 isla-magica ata1.15: (irq_stat 0x08000800, SDB notify)
-Nov  9 12:38:44 isla-magica ata1.15: failed to read PMP GSCR[0] (errno=-16)
-Nov  9 12:38:44 isla-magica ata1.15: PMP revalidation failed (errno=-16)
-Nov  9 12:38:44 isla-magica ata1.15: retrying hardreset
-Nov  9 12:38:44 isla-magica ata1.15: hard resetting port
-Nov  9 12:38:49 isla-magica ata1.15: SATA link down (SStatus 1 SControl 300)
-Nov  9 12:38:50 isla-magica ata1.15: failed to read PMP GSCR[0] (errno=-16)
-Nov  9 12:38:50 isla-magica ata1.15: PMP revalidation failed (errno=-16)
-Nov  9 12:38:50 isla-magica ata1.15: retrying hardreset in 5 secs
-Nov  9 12:38:55 isla-magica ata1.15: hard resetting port
-Nov  9 12:38:56 isla-magica hub 1-2:1.0: port 2 disabled by hub (EMI?),
-re-enabling...
-Nov  9 12:38:56 isla-magica usb 1-2.2: USB disconnect, address 7
-Nov  9 12:38:56 isla-magica usb 1-2.2: new low speed USB device using
-ehci_hcd and address 8
-Nov  9 12:38:56 isla-magica usb 1-2.2: configuration #1 chosen from 1 choice
-Nov  9 12:38:56 isla-magica input: HID 0c12:0005 as /class/input/input4
-Nov  9 12:38:56 isla-magica input: USB HID v1.00 Joystick [HID
-0c12:0005] on usb-0000:00:0a.1-2.2
-Nov  9 12:38:58 isla-magica ata1.15: SATA link up 3.0 Gbps (SStatus 123
-SControl 300)
-Nov  9 12:38:59 isla-magica ata1.00: hard resetting port
-Nov  9 12:39:00 isla-magica ata1.00: softreset failed (SRST command error)
-Nov  9 12:39:00 isla-magica ata1.00: follow-up softreset failed,
-retrying in 5 secs
-Nov  9 12:39:05 isla-magica ata1.00: hard resetting port
-Nov  9 12:39:07 isla-magica ata1.01: hard resetting port
-Nov  9 12:39:08 isla-magica ata1.01: COMRESET failed (errno=-16)
-Nov  9 12:39:08 isla-magica ata1.01: hardreset failed, retrying in 5 secs
-Nov  9 12:39:14 isla-magica ata1.01: hard resetting port
-Nov  9 12:39:15 isla-magica ata1.01: COMRESET failed (errno=-16)
-Nov  9 12:39:15 isla-magica ata1.01: reset failed, giving up
-Nov  9 12:39:15 isla-magica ata1.15: hard resetting port
-Nov  9 12:39:15 isla-magica ata1: controller in dubious state,
-performing PORT_RST
-Nov  9 12:39:17 isla-magica ata1.15: SATA link up 3.0 Gbps (SStatus 123
-SControl 0)
-Nov  9 12:39:18 isla-magica ata1.00: hard resetting port
-Nov  9 12:39:19 isla-magica ata1.00: SATA link up 1.5 Gbps (SStatus 113
-SControl 300)
-Nov  9 12:39:19 isla-magica ata1.01: hard resetting port
-Nov  9 12:39:20 isla-magica ata1.01: SATA link up 3.0 Gbps (SStatus 123
-SControl 300)
-Nov  9 12:39:21 isla-magica ata1.02: hard resetting port
-Nov  9 12:39:22 isla-magica ata1.02: SATA link down (SStatus 0 SControl 300)
-Nov  9 12:39:22 isla-magica ata1.03: hard resetting port
-Nov  9 12:39:23 isla-magica ata1.03: SATA link down (SStatus 0 SControl 300)
-Nov  9 12:39:24 isla-magica ata1.04: hard resetting port
-Nov  9 12:39:25 isla-magica ata1.04: SATA link down (SStatus 0 SControl 300)
-Nov  9 12:39:25 isla-magica ata1.00: configured for UDMA/100
-Nov  9 12:39:25 isla-magica ata1.01: configured for UDMA/100
-Nov  9 12:39:25 isla-magica ata1: EH pending after completion, repeating
-EH (cnt=4)
-Nov  9 12:39:25 isla-magica ata1.15: exception Emask 0x10 SAct 0x0 SErr
-0x0 action 0x41
-Nov  9 12:39:25 isla-magica ata1.15: (irq_stat 0x01900090, PHY RDY changed)
-Nov  9 12:39:25 isla-magica ata1: EH complete
-Nov  9 12:39:25 isla-magica SCSI device sdd: 976773168 512-byte hdwr
-sectors (500108 MB)
-Nov  9 12:39:25 isla-magica sdd: Write Protect is off
-Nov  9 12:39:25 isla-magica sdd: Mode Sense: 00 3a 00 00
-Nov  9 12:39:25 isla-magica SCSI device sdd: drive cache: write back
-Nov  9 12:39:25 isla-magica SCSI device sde: 781422768 512-byte hdwr
-sectors (400088 MB)
-Nov  9 12:39:25 isla-magica sde: Write Protect is off
-Nov  9 12:39:25 isla-magica sde: Mode Sense: 00 3a 00 00
-Nov  9 12:39:25 isla-magica SCSI device sde: drive cache: write back
-Nov  9 12:39:25 isla-magica SCSI device sdd: 976773168 512-byte hdwr
-sectors (500108 MB)
-Nov  9 12:39:25 isla-magica sdd: Write Protect is off
-Nov  9 12:39:25 isla-magica sdd: Mode Sense: 00 3a 00 00
-Nov  9 12:39:25 isla-magica SCSI device sdd: drive cache: write back
-Nov  9 12:39:25 isla-magica SCSI device sde: 781422768 512-byte hdwr
-sectors (400088 MB)
-Nov  9 12:39:25 isla-magica sde: Write Protect is off
-Nov  9 12:39:25 isla-magica sde: Mode Sense: 00 3a 00 00
-Nov  9 12:39:25 isla-magica SCSI device sde: drive cache: write back
-</log-hotplug>
 
-and this is bad...
+Subject    : x86_64 boot failure: irq 22: nobody cared (hda_intel MSI)
+References : http://lkml.org/lkml/2006/11/8/98
+Submitter  : Olivier Nicolas <olivn@trollprod.org>
+Status     : unknown
 
-<log-bad>
-Nov  9 12:50:40 isla-magica ata1: exception Emask 0x10 SAct 0x0 SErr
-0x10000 action 0x42 frozen
-Nov  9 12:50:40 isla-magica ata1: (irq_stat 0x00a00080, device exchanged)
-Nov  9 12:50:40 isla-magica ata1: waiting for device to spin up (8 secs)
-Nov  9 12:50:49 isla-magica ata1: soft resetting port
-Nov  9 12:50:57 isla-magica (dschroeder-11893): starting (version
-2.14.0), pid 11893 user 'dschroeder'
-Nov  9 12:50:57 isla-magica (dschroeder-11893): Resolved address
-"xml:readonly:/etc/gconf/gconf.xml.mandatory" to a read-only
-configuration source at posit
-ion 0
-Nov  9 12:50:57 isla-magica (dschroeder-11893): Resolved address
-"xml:readwrite:/home/dschroeder/.gconf" to a writable configuration
-source at position 1
-Nov  9 12:50:57 isla-magica (dschroeder-11893): Resolved address
-"xml:readonly:/etc/gconf/gconf.xml.defaults" to a read-only
-configuration source at positi
-on 2
-Nov  9 12:51:19 isla-magica ata1: softreset failed (timeout)
-Nov  9 12:51:19 isla-magica ata1: softreset failed, retrying in 5 secs
-Nov  9 12:51:24 isla-magica ata1: hard resetting port
-Nov  9 12:51:56 isla-magica ata1: softreset failed (timeout)
-Nov  9 12:51:56 isla-magica ata1: follow-up softreset failed, retrying
-in 5 secs
-Nov  9 12:52:01 isla-magica ata1: hard resetting port
-Nov  9 12:52:33 isla-magica ata1: softreset failed (timeout)
-Nov  9 12:52:33 isla-magica ata1: reset failed, giving up
-Nov  9 12:52:33 isla-magica ata1: EH complete
-Nov  9 12:53:12 isla-magica ata1: exception Emask 0x10 SAct 0x0 SErr
-0xc0000 action 0x42 frozen
-Nov  9 12:53:16 isla-magica ata1: soft resetting port
-Nov  9 12:53:16 isla-magica ata1: SATA link down (SStatus 1 SControl 300)
-Nov  9 12:53:16 isla-magica ata1: EH complete
-Nov  9 12:53:22 isla-magica ata1: exception Emask 0x10 SAct 0x0 SErr
-0x10000 action 0x42 frozen
-Nov  9 12:53:22 isla-magica ata1: (irq_stat 0x00a00080, device exchanged)
-Nov  9 12:53:22 isla-magica hub 1-2:1.0: port 2 disabled by hub (EMI?),
-re-enabling...
-Nov  9 12:53:22 isla-magica usb 1-2.2: USB disconnect, address 4
-Nov  9 12:53:22 isla-magica usb 1-2.2: new low speed USB device using
-ehci_hcd and address 7
-Nov  9 12:53:22 isla-magica usb 1-2.2: configuration #1 chosen from 1 choice
-Nov  9 12:53:22 isla-magica input: HID 0c12:0005 as /class/input/input3
-Nov  9 12:53:22 isla-magica input: USB HID v1.00 Joystick [HID
-0c12:0005] on usb-0000:00:0a.1-2.2
-Nov  9 12:53:22 isla-magica ata1: waiting for device to spin up (8 secs)
-Nov  9 12:53:30 isla-magica ata1: soft resetting port
-Nov  9 12:54:00 isla-magica ata1: softreset failed (timeout)
-Nov  9 12:54:00 isla-magica ata1: softreset failed, retrying in 5 secs
-Nov  9 12:54:05 isla-magica ata1: hard resetting port
-Nov  9 12:54:15 isla-magica ntpd[11442]: synchronized to 129.174.135.11,
-stratum 2
-Nov  9 12:54:15 isla-magica ntpd[11442]: kernel time sync enabled 0001
-Nov  9 12:54:37 isla-magica ata1: softreset failed (timeout)
-Nov  9 12:54:37 isla-magica ata1: follow-up softreset failed, retrying
-in 5 secs
-Nov  9 12:54:42 isla-magica ata1: hard resetting port
-Nov  9 12:54:52 isla-magica hub 1-2:1.0: port 2 disabled by hub (EMI?),
-re-enabling...
-Nov  9 12:54:52 isla-magica usb 1-2.2: USB disconnect, address 7
-Nov  9 12:54:52 isla-magica usb 1-2.2: new low speed USB device using
-ehci_hcd and address 8
-Nov  9 12:54:52 isla-magica usb 1-2.2: configuration #1 chosen from 1 choice
-Nov  9 12:54:52 isla-magica input: HID 0c12:0005 as /class/input/input4
-Nov  9 12:54:52 isla-magica input: USB HID v1.00 Joystick [HID
-0c12:0005] on usb-0000:00:0a.1-2.2
-Nov  9 12:55:15 isla-magica ata1: softreset failed (timeout)
-Nov  9 12:55:15 isla-magica ata1: reset failed, giving up
-Nov  9 12:55:15 isla-magica ata1: EH complete
-</log-bad>
+
+Subject    : SMP kernel can not generate ISA irq properly
+References : http://lkml.org/lkml/2006/10/22/15
+             http://lkml.org/lkml/2006/11/10/142
+Submitter  : Komuro <komurojun-mbn@nifty.com>
+Handled-By : Thomas Gleixner <tglx@linutronix.de>
+Status     : Thomas is investigating
+
+
+Subject    : x86_64: Fix partial page check to ensure unusable memory
+                     is not being marked usable
+References : http://lkml.org/lkml/2006/11/9/239
+Submitter  : Aaron Durbin <adurbin@google.com>
+Caused-By  : Mel Gorman <mel@csn.ul.ie>
+             commit 5cb248abf5ab65ab543b2d5fc16c738b28031fc0
+Patch      : http://lkml.org/lkml/2006/11/9/239
+Status     : patch available
+
+
+Subject    : x86_64: Bad page state in process 'swapper'
+References : http://lkml.org/lkml/2006/11/10/135
+             http://lkml.org/lkml/2006/11/10/208
+Submitter  : Andre Noll <maan@systemlinux.org>
+Handled-By : Andi Kleen <ak@suse.de>
+Status     : Andi is investigating
+
+
+Subject    : x86_64: oprofile doesn't work
+References : http://lkml.org/lkml/2006/10/27/3
+Submitter  : Prakash Punnoor <prakash@punnoor.de>
+Status     : unknown
+
+
+Subject    : weird battery charge level reported
+             ACPI Error method parse / execution failed
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7466
+Submitter  : Olivier Mondoloni <olivier.mondoloni@waika9.com>
+Status     : unknown
+
+
+Subject    : ThinkPad R50p: boot fail with (lapic && on_battery)
+References : http://lkml.org/lkml/2006/10/31/333
+Submitter  : Ernst Herzberg <earny@net4u.de>
+Handled-By : Len Brown <len.brown@intel.com>
+Status     : problem is being debugged
+
+
+Subject    : BUG: scheduling while atomic: events/0/0x00000001/4
+             after resume
+References : http://lkml.org/lkml/2006/11/2/209
+Submitter  : Paolo Ornati <ornati@fastwebnet.it>
+Status     : unknown
+
+
+Subject    : sata-via doesn't detect anymore disks attached to VIA vt6421
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7255
+Submitter  : Thierry Vignaud <tvignaud@mandriva.com>
+Status     : unknown
+
+
+Subject    : libata must be initialized earlier
+References : http://ozlabs.org/pipermail/linuxppc-dev/2006-November/027945.=
+html
+Submitter  : Paul Mackerras <paulus@samba.org>
+Handled-By : Brian King <brking@us.ibm.com>
+Patch      : http://marc.theaimsgroup.com/?l=3Dlinux-ide&m=3D11616993840759=
+6&w=3D2
+Status     : patch available
+
+
+Subject    : unable to rip cd
+References : http://lkml.org/lkml/2006/10/13/100
+             http://lkml.org/lkml/2006/11/8/42
+Submitter  : Alex Romosan <romosan@sycorax.lbl.gov>
+Handled-By : Jens Axboe <jens.axboe@oracle.com>
+Status     : Jens is investigating
