@@ -1,50 +1,29 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ASUS P5B and AHCI with 4 SATA drives (reminder)
-Date: Sat, 11 Nov 2006 11:45:09 +0900
-Message-ID: <45553935.7020508@gmail.com>
-References: <20061111002016.GA3742@mail.majes.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Sat, 11 Nov 2006 10:46:42 +0000
+Message-ID: <20061111104642.GA3356@infradead.org>
+References: <4554777B.7050708@torque.net> <508312.85189.qm@web31812.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:35056 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1946974AbWKKCpY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Nov 2006 21:45:24 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1523840nfa
-        for <linux-ide@vger.kernel.org>; Fri, 10 Nov 2006 18:45:22 -0800 (PST)
-In-Reply-To: <20061111002016.GA3742@mail.majes.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <508312.85189.qm@web31812.mail.mud.yahoo.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: dougg@torque.net, Tejun Heo <htejun@gmail.com>, Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, monty@xiph.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mathias Jeschke <jeschke@informatik.hu-berlin.de>
-Cc: linux-ide@vger.kernel.org
 
-Mathias Jeschke wrote:
-> Hallo kernel hackers,
-> 
-> as I mentioned in my last mail from 2006-08-31 [1],
-> the AHCI driver (ahci.c) from the default linux kernel tree
-> does not support all 4 ports of my ASUS P5B mainboard.
-> (only 2 of 4 hard discs)
-> 
-> I ask you, what is wrong with my patch I attached at the mail
-> to Jeff and this mailing-list?
-> I know that introducing a new kernel commandline argument is no smart
-> way to solve it, but better than no solution, yet. Isn't it?
-> 
-> Has anybody more details about that problem of detecting the right
-> number of physical ports and their mapping?
-> 
-> Regards,
-> Mathias
-> 
-> [1] http://marc.theaimsgroup.com/?l=linux-ide&m=115705276301404&w=2
+On Fri, Nov 10, 2006 at 12:08:15PM -0800, Luben Tuikov wrote:
+> P.S. I'd love to see SG_DXFER_TO_FROM_DEV completely ripped out
+> of sg.c, for obvious reasons.  Can you not duplicate the resid "fix"
+> it provides into "FROM_DEV" -- do apps really rely on it?
 
-Hello, Mathias Jeschke.
+At the beginning of this thread it was mentioned cdparanio uses it.
+But in general we can't just rip out userland interfaces, we pretend
+to have a stable userspace abi (and except for the big sysfs mess that
+actually comes very close to the truth).
 
-The following fix is pending merge.
+What we should do is to document very well what SG_DXFER_TO_FROM_DEV
+is doing and that odd name that's been chosen for it.  I'll prepare
+a patch for that.
 
-http://thread.gmane.org/gmane.linux.ide/13844/focus=13844
-
--- 
-tejun
