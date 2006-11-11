@@ -1,62 +1,32 @@
-From: Mathias Jeschke <jeschke@informatik.hu-berlin.de>
-Subject: ASUS P5B and AHCI with 4 SATA drives (reminder)
-Date: Sat, 11 Nov 2006 01:20:16 +0100
-Message-ID: <20061111002016.GA3742@mail.majes.de>
+From: Fredrik <fredrik@obra.se>
+Subject: Re: Problems with Samsung SH-W163A SATA CD/DVDRW JMicron 20360/20363 2.6.18.1
+Date: Sat, 11 Nov 2006 01:39:36 +0100
+Message-ID: <20061111003936.GA4271@useful.obra.se>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="45Z9DzgjV8m4Oswq"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from berlin.zq1.de ([85.25.132.119]:3091 "EHLO mail.majes.de")
-	by vger.kernel.org with ESMTP id S1946859AbWKKAUT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Nov 2006 19:20:19 -0500
+Received: from mxfep01.bredband.com ([195.54.107.70]:50886 "EHLO
+	mxfep01.bredband.com") by vger.kernel.org with ESMTP
+	id S1424467AbWKKAjm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Nov 2006 19:39:42 -0500
+Received: from ironport2.bredband.com ([195.54.107.84] [195.54.107.84])
+          by mxfep01.bredband.com with ESMTP
+          id <20061111003940.QEGS9747.mxfep01.bredband.com@ironport2.bredband.com>
+          for <linux-ide@vger.kernel.org>; Sat, 11 Nov 2006 01:39:40 +0100
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
+>Several people are reporting problems with AHCI and CD burning - are
+>all
+>the people concerned seeing this with Jmicron controllers or with other
+>cases too ?
+>
+>Alan
 
---45Z9DzgjV8m4Oswq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I have the same problems as Andrew Lyon when connected to jmicron 20363
+AHCI. Samsung SH-S183A in my case. I'm currently using it on the onboard
+ICH8 controller and that gives no errors. Asus P5B motherboard.
 
-Hallo kernel hackers,
-
-as I mentioned in my last mail from 2006-08-31 [1],
-the AHCI driver (ahci.c) from the default linux kernel tree
-does not support all 4 ports of my ASUS P5B mainboard.
-(only 2 of 4 hard discs)
-
-I ask you, what is wrong with my patch I attached at the mail
-to Jeff and this mailing-list?
-I know that introducing a new kernel commandline argument is no smart
-way to solve it, but better than no solution, yet. Isn't it?
-
-Has anybody more details about that problem of detecting the right
-number of physical ports and their mapping?
-
-Regards,
-Mathias
-
-[1] http://marc.theaimsgroup.com/?l=3Dlinux-ide&m=3D115705276301404&w=3D2
-
---=20
-Mathias Jeschke
-home: http://www.informatik.hu-berlin.de/~jeschke/
-mail: jeschke@informatik.hu-berlin.de
-gpg fingerprint: CF50 E22C 50F4 AF70 9628  7AB9 7E10 3A60 EAE5 4729
-
---45Z9DzgjV8m4Oswq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFFVRdAfhA6YOrlRykRAgbcAJ9BE0GWDyW9RXJthvn4R/kCDC+PhgCfZ2KK
-sSEQ/90tYYXseAj4vodjXb0=
-=+UcV
------END PGP SIGNATURE-----
-
---45Z9DzgjV8m4Oswq--
+/Fredrik Rinnestam
