@@ -1,58 +1,73 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: Problems with mounting filesystems from /dev/hdb (kernel 2.6.18.1)
-Date: Fri, 10 Nov 2006 21:36:47 +0100
-Message-ID: <4554E2DF.2020102@gmail.com>
-References: <d9a083460611081439v2eacb065nef62f129d2d9c9c0@mail.gmail.com>	 <4af2d03a0611090320m5d8316a7l86b42cde888a4fd@mail.gmail.com>	 <45534B31.50008@cfl.rr.com> <45534D2C.6080509@gmail.com>	 <d9a083460611090855w3b3a9eb6w347a24b1e704ca61@mail.gmail.com>	 <45537B67.6050804@gmail.com> <d9a083460611100739v531b0293i5ae5fd8d3ccee800@mail.gmail.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch] libata: change order of _SDD/_GTF execution (resend #3)
+Date: Fri, 10 Nov 2006 16:14:47 -0800
+Message-ID: <20061110161447.b4599cbd.kristen.c.accardi@intel.com>
+References: <20060928182211.076258000@localhost.localdomain>
+	<20060928112912.d2ae0d8f.kristen.c.accardi@intel.com>
+	<20060929021353.GB22082@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tirith.ics.muni.cz ([147.251.4.36]:12232 "EHLO
-	tirith.ics.muni.cz") by vger.kernel.org with ESMTP id S966112AbWKJUiK
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Nov 2006 15:38:10 -0500
-In-Reply-To: <d9a083460611100739v531b0293i5ae5fd8d3ccee800@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:42773 "EHLO mga01.intel.com")
+	by vger.kernel.org with ESMTP id S1946858AbWKKAO7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Nov 2006 19:14:59 -0500
+In-Reply-To: <20060929021353.GB22082@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jano <jasieczek@gmail.com>
-Cc: Phillip Susi <psusi@cfl.rr.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, akpm@osdl.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rdunlap@xenotime.net, mjg59@srcf.ucam.org
 
-Jano wrote:
-> 2006/11/9, Jiri Slaby <jirislaby@gmail.com>:
->>
->> In such cases google is very helpful ;).
->>
-> 
-> Sorry, my mistake :D.
-> 
->>
->> No, I meant strace(1):
->> strace mount /dev/hdbX /home
->>
-> 
-> # strace mount /dev/hdb1 > file1
-> # strace mount /home > file2
+Make the sdd call come before gtf.  _SDD is used to provide
+input to the _GTF file, so it should be executed first.
 
-yeah. Either redirect stderr by 2> file1 (this will contain mount errors too) or
-use strace -o file1
+Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-[snip]
->> And try to turn "VIA82CXXX chipset support" to <*>, i.e. built-in
->> (somebody
->> holds regions of ide0 and ide1, let's try via driver to probe first).
->>
-> 
-> Also done. Haven't changed anything.
-> 
-> Hope that strace output will be helpful. As far as I'll be able to
-> save the results. Any suggestions?
+---
+ drivers/ata/libata-core.c |   21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
-When you boot with init=/bin/bash not to allow system to start scripts, does it
-work? (add init=/bin/bash kernel parameter)
-
-regards,
--- 
-http://www.fi.muni.cz/~xslaby/            Jiri Slaby
-faculty of informatics, masaryk university, brno, cz
-e-mail: jirislaby gmail com, gpg pubkey fingerprint:
-B674 9967 0407 CE62 ACC8  22A0 32CC 55C3 39D4 7A7E
+--- 2.6-mm.orig/drivers/ata/libata-core.c
++++ 2.6-mm/drivers/ata/libata-core.c
+@@ -1411,6 +1411,16 @@ int ata_dev_configure(struct ata_device 
+ 		ata_dev_printk(dev, KERN_DEBUG, "%s: ENTER, host %u, dev %u\n",
+ 			       __FUNCTION__, ap->id, dev->devno);
+ 
++	/* set _SDD */
++	rc = ata_acpi_push_id(ap, dev->devno);
++	if (rc) {
++		ata_dev_printk(dev, KERN_WARNING, "failed to set _SDD(%d)\n",
++			rc);
++	}
++
++	/* retrieve and execute the ATA task file of _GTF */
++	ata_acpi_exec_tfs(ap);
++
+ 	/* print device capabilities */
+ 	if (ata_msg_probe(ap))
+ 		ata_dev_printk(dev, KERN_DEBUG,
+@@ -1568,14 +1578,6 @@ int ata_dev_configure(struct ata_device 
+ 	if (ap->ops->dev_config)
+ 		ap->ops->dev_config(ap, dev);
+ 
+-	/* set _SDD */
+-	rc = ata_acpi_push_id(ap, dev->devno);
+-	if (rc) {
+-		ata_dev_printk(dev, KERN_WARNING, "failed to set _SDD(%d)\n",
+-			rc);
+-		goto err_out_nosup;
+-	}
+-
+ 	if (ata_msg_probe(ap))
+ 		ata_dev_printk(dev, KERN_DEBUG, "%s: EXIT, drv_stat = 0x%x\n",
+ 			__FUNCTION__, ata_chk_status(ap));
+@@ -1621,9 +1623,6 @@ int ata_bus_probe(struct ata_port *ap)
+ 	/* reset and determine device classes */
+ 	ap->ops->phy_reset(ap);
+ 
+-	/* retrieve and execute the ATA task file of _GTF */
+-	ata_acpi_exec_tfs(ap);
+-
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		dev = &ap->device[i];
+ 
