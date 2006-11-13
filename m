@@ -1,36 +1,86 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Is the SIL 3112 capable of PMP support?
-Date: Mon, 13 Nov 2006 23:03:40 +0900
-Message-ID: <45587B3C.3080303@gmail.com>
-References: <455810BC.6090304@wasp.net.au> <45587548.7020808@garzik.org>
+From: Mathieu Fluhr <mfluhr@nero.com>
+Subject: READ SCSI cmd seems to fail on SATA optical devices...
+Date: Mon, 13 Nov 2006 17:19:36 +0100
+Message-ID: <1163434776.2984.21.camel@de-c-l-110.nero-de.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:44411 "EHLO
-	wr-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1754662AbWKMODu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Nov 2006 09:03:50 -0500
-Received: by wr-out-0506.google.com with SMTP id i28so472878wra
-        for <linux-ide@vger.kernel.org>; Mon, 13 Nov 2006 06:03:50 -0800 (PST)
-In-Reply-To: <45587548.7020808@garzik.org>
+Received: from s1.mailresponder.info ([193.24.237.10]:14863 "EHLO
+	s1.mailresponder.info") by vger.kernel.org with ESMTP
+	id S1755204AbWKMQVG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Nov 2006 11:21:06 -0500
+Received: from moonfish.nero.com (193.47.77.31)
+          by s1.mailresponder.info with MERCUR Mailserver (v4.02.30 ODAtMjQzOS03MTc5)
+          for <linux-ide@vger.kernel.org>; Mon, 13 Nov 2006 17:19:43 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Brad Campbell <brad@wasp.net.au>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
-> Brad Campbell wrote:
->> I've been planning on doing some testing with PMP's and noticed that 
->> sata_sil does not support PMP. Is that a hardware limitation or just 
->> that nobody has implemented it in the driver yet ?
-> 
-> Well, it doesn't support hardware context switching.  It probably 
-> supports PMP "the slow way" (one PMP-attached device at a time)
+Hello,
 
-I doubt 3112 can do pmp even "the slow way".  It doesn't expose FIS 
-interface nor does it have PMP field in its SControl register.  It just 
-can't generate PMP-aware FIS.
+I recently tried to burn some datas on CDs and DVD using a SATA burner
+and the latest 2.6.18.2 kernel... using NeroLINUX. (It is controlling
+the device by sending SCSI commands over the 'sg' driver)
+
+The burn process works like a charm, no problems at all. But it seems
+that there are some slight problems with the READ scsi cmd:
+Inside our software, we have a verification routine that will make a
+sector-by-sector verification to check that everything that has been
+written is OK.
+
+The problem is that, on SATA devices controlled by libata, on some big
+files (like for example a 600 MB file) the READ command seems to fail
+and outputs garbage (not 1 or 2 bytes diff, but the whole buffer).
+ -> This problem does not come out everytime, and each time on    
+    different sectors.
+
+Please note that:
+- it is not chipset dependant (tested on nforce4 and sii3114)
+- it is not medium or device dependant
+
+
+I debugged a little bit and found out the following:
+
+- Our software tries to guess the bus type for each device by using
+INQUIRY SCSI cmds. For SATA devices, it always returns SCSI. 
+(which according to the source code is normal -> libata-scsi.c:2396)
+
+- When I force the bus type to be IDE, our software will then send ATA
+commands. In this case, everything works like a charm. No errors at all.
+ 
+
+I tried to debug a little bit more inside the source code of the Linux
+kernel, but I must admit that I am really not so familiar with the
+code... but it would be no problem to help anyone on this issue. :)
+
+Best Regards,
+Mathieu
+
 
 -- 
-tejun
+*********************************************************
+Mathieu Fluhr
+Linux Software Engineer
+
+Nero AG
+Im Stoeckmaedle 18
+76307 Karlsbad
+Germany
+
+E-mail: mfluhr@nero.com
+
+NERO - BECAUSE TECHNOLOGY COUNTS
+www.nero.com
+
+*********************************************************
+This e-mail may contain confidential and/or
+privileged information. If you are not the intended
+recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy
+this e-mail. Any unauthorised copying, disclosure
+or distribution of the material in this e-mail is
+strictly forbidden.
+********************************************************* 
+
