@@ -1,40 +1,54 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
-Date: Tue, 14 Nov 2006 13:50:14 +0100
-Message-ID: <20061114125014.GE22178@kernel.dk>
-References: <20061030132745.GE4563@kernel.dk> <4552F905.3020109@ens-lyon.org> <45533468.1060400@gmail.com> <806dafc20611091209s5864c9eam77a9290194de343d@mail.gmail.com> <20061110161510.GC15031@kernel.dk> <4554A681.2000502@ens-lyon.org> <20061110162330.GE15031@kernel.dk> <4559B580.3070201@ens-lyon.org> <20061114122914.GD22178@kernel.dk> <4559B92E.4010003@ens-lyon.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: trivial updates to ata_sg_init_one()
+Date: Tue, 14 Nov 2006 22:35:43 +0900
+Message-ID: <20061114133543.GB27684@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:14161 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S933424AbWKNMrf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 07:47:35 -0500
+Received: from nz-out-0102.google.com ([64.233.162.193]:55883 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S965693AbWKNNfu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Nov 2006 08:35:50 -0500
+Received: by nz-out-0102.google.com with SMTP id l1so970999nzf
+        for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2006 05:35:49 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <4559B92E.4010003@ens-lyon.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brice Goglin <Brice.Goglin@ens-lyon.org>
-Cc: Monty Montgomery <monty@xiph.org>, Tejun Heo <htejun@gmail.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Douglas Gilbert <dougg@torque.net>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Tue, Nov 14 2006, Brice Goglin wrote:
-> Jens Axboe wrote:
-> > On Tue, Nov 14 2006, Brice Goglin wrote:
-> >   
-> >> I just tried commit 616e8a091a035c0bd9b871695f4af191df123caa on top of
-> >> rc5 just in case. This commit fixes
-> >> http://lkml.org/lkml/2006/10/13/100, which looks related. And it
-> >> actually appears to fix our freeze too. Does this speak to you guys ?
-> >>     
-> >
-> > I thought you had already tested that?
-> 
-> IIRC, the one I tested was
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=116267031029025&w=2. It
-> does something similar in sg.c instead of scsi_ioctl.c.
+There's no need to memset &qc->sgent manually, sg_init_one() clears
+sgent inside it.  Also, kill not-so-necessary sg local variable.
 
-You most likely aren't using sg, but the block layer direct path. So no
-wonder it didn't change anything.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9fdb266..994bc27 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3475,19 +3475,15 @@ void ata_noop_qc_prep(struct ata_queued_
+ 
+ void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf, unsigned int buflen)
+ {
+-	struct scatterlist *sg;
+-
+ 	qc->flags |= ATA_QCFLAG_SINGLE;
+ 
+-	memset(&qc->sgent, 0, sizeof(qc->sgent));
+ 	qc->__sg = &qc->sgent;
+ 	qc->n_elem = 1;
+ 	qc->orig_n_elem = 1;
+ 	qc->buf_virt = buf;
+ 	qc->nbytes = buflen;
+ 
+-	sg = qc->__sg;
+-	sg_init_one(sg, buf, buflen);
++	sg_init_one(&qc->sgent, buf, buflen);
+ }
+ 
+ /**
 -- 
-Jens Axboe
+1.4.3.3
 
