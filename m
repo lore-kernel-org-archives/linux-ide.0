@@ -1,71 +1,25 @@
-From: Mathieu Fluhr <mfluhr@nero.com>
-Subject: Re: READ SCSI cmd seems to fail on SATA optical devices...
-Date: Tue, 14 Nov 2006 11:08:11 +0100
-Message-ID: <1163498891.3005.11.camel@de-c-l-110.nero-de.internal>
-References: <1163434776.2984.21.camel@de-c-l-110.nero-de.internal>
-	 <455923B5.3030608@gmail.com>
+From: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Tue, 14 Nov 2006 13:24:32 +0100
+Message-ID: <4559B580.3070201@ens-lyon.org>
+References: <9d2cd630610291120l3f1b8053i5337cf3a97ba6ff0@mail.gmail.com> <20061030114503.GW4563@kernel.dk> <9d2cd630610300517q5187043eieb0880047ddd03eb@mail.gmail.com> <20061030132745.GE4563@kernel.dk> <4552F905.3020109@ens-lyon.org> <45533468.1060400@gmail.com> <806dafc20611091209s5864c9eam77a9290194de343d@mail.gmail.com> <20061110161510.GC15031@kernel.dk> <4554A681.2000502@ens-lyon.org> <20061110162330.GE15031@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s1.mailresponder.info ([193.24.237.10]:61960 "EHLO
-	s1.mailresponder.info") by vger.kernel.org with ESMTP
-	id S933371AbWKNKIw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Nov 2006 05:08:52 -0500
-Received: from moonfish.nero.com (193.47.77.31)
-          by s1.mailresponder.info with MERCUR Mailserver (v4.02.30 ODAtMjQzOS03MTc5)
-          for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2006 11:08:19 +0100
-In-Reply-To: <455923B5.3030608@gmail.com>
+Received: from iona.labri.fr ([147.210.8.143]:37078 "EHLO iona.labri.fr")
+	by vger.kernel.org with ESMTP id S965359AbWKNMYi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 07:24:38 -0500
+In-Reply-To: <20061110162330.GE15031@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Monty Montgomery <monty@xiph.org>, Tejun Heo <htejun@gmail.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Douglas Gilbert <dougg@torque.net>
 
-On Tue, 2006-11-14 at 11:02 +0900, Tejun Heo wrote:
-> Hello, Mattieu Fluhr.
-> 
-> Mathieu Fluhr wrote:
-> > The problem is that, on SATA devices controlled by libata, on some big
-> > files (like for example a 600 MB file) the READ command seems to fail
-> > and outputs garbage (not 1 or 2 bytes diff, but the whole buffer).
-> >  -> This problem does not come out everytime, and each time on    
-> >     different sectors.
-> > 
-> > Please note that:
-> > - it is not chipset dependant (tested on nforce4 and sii3114)
-> > - it is not medium or device dependant
-> 
-> Hmmm... Interesting.  So, you're reading the media by directly issuing 
-> commands through the sg interface, right?  Can you please try the 
-> followings?
-> 
-> * Try using /dev/srX or /dev/scdX device instead of /dev/sgX.  You can 
-> use the command SG_IO but the code path is different, so it will help us 
-> rule out sg bug.
-> 
-> * Perform rounds of read-verify test using standard block interface (ie. 
-> simply opening /dev/srX and reading it).
-I will try this and report the results.
+I just tried commit 616e8a091a035c0bd9b871695f4af191df123caa on top of
+rc5 just in case. This commit fixes
+http://lkml.org/lkml/2006/10/13/100, which looks related. And it
+actually appears to fix our freeze too. Does this speak to you guys ?
 
-> 
-> [--snip--]
-> > - When I force the bus type to be IDE, our software will then send ATA
-> > commands. In this case, everything works like a charm. No errors at all.
-> 
-> What do you mean by 'sending ATA commands'?  libata exports all devices 
-> as SCSI devices.  For ATA devices, you can use ATA passthrough but you 
-> send CDBs to ATAPI devices anyway.
-Inside our code, we first guess which the bus type of every device using
-an INQUIRY cmd (0x12). 
-- If the device appears to be a SCSI one, then we send "pure" SCSI CDBs
-- For an IDE device, we do, as described in the Annex A of the MMC-5
-spec, and pad each CDBs to 12 bytes.
-
-So in the case of a READ CDB, we send 10 bytes if the device is a SCSI
-one and 12 for IDE one.
-
-
-> 
-> Thanks.
-> 
+Brice
 
