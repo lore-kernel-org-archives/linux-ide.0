@@ -1,40 +1,36 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Is the SIL 3112 capable of PMP support?
-Date: Tue, 14 Nov 2006 16:29:19 +0400
-Message-ID: <4559B69F.7080207@wasp.net.au>
-References: <455810BC.6090304@wasp.net.au> <45587548.7020808@garzik.org> <45587B3C.3080303@gmail.com>
+From: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Tue, 14 Nov 2006 13:40:14 +0100
+Message-ID: <4559B92E.4010003@ens-lyon.org>
+References: <20061030114503.GW4563@kernel.dk> <9d2cd630610300517q5187043eieb0880047ddd03eb@mail.gmail.com> <20061030132745.GE4563@kernel.dk> <4552F905.3020109@ens-lyon.org> <45533468.1060400@gmail.com> <806dafc20611091209s5864c9eam77a9290194de343d@mail.gmail.com> <20061110161510.GC15031@kernel.dk> <4554A681.2000502@ens-lyon.org> <20061110162330.GE15031@kernel.dk> <4559B580.3070201@ens-lyon.org> <20061114122914.GD22178@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:7570 "EHLO wasp.net.au")
-	by vger.kernel.org with ESMTP id S965463AbWKNM3l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 07:29:41 -0500
-In-Reply-To: <45587B3C.3080303@gmail.com>
+Received: from iona.labri.fr ([147.210.8.143]:2520 "EHLO iona.labri.fr")
+	by vger.kernel.org with ESMTP id S965552AbWKNMkQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 07:40:16 -0500
+In-Reply-To: <20061114122914.GD22178@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Monty Montgomery <monty@xiph.org>, Tejun Heo <htejun@gmail.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Douglas Gilbert <dougg@torque.net>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Brad Campbell wrote:
->>> I've been planning on doing some testing with PMP's and noticed that 
->>> sata_sil does not support PMP. Is that a hardware limitation or just 
->>> that nobody has implemented it in the driver yet ?
->>
->> Well, it doesn't support hardware context switching.  It probably 
->> supports PMP "the slow way" (one PMP-attached device at a time)
-> 
-> I doubt 3112 can do pmp even "the slow way".  It doesn't expose FIS 
-> interface nor does it have PMP field in its SControl register.  It just 
-> can't generate PMP-aware FIS.
-> 
+Jens Axboe wrote:
+> On Tue, Nov 14 2006, Brice Goglin wrote:
+>   
+>> I just tried commit 616e8a091a035c0bd9b871695f4af191df123caa on top of
+>> rc5 just in case. This commit fixes
+>> http://lkml.org/lkml/2006/10/13/100, which looks related. And it
+>> actually appears to fix our freeze too. Does this speak to you guys ?
+>>     
+>
+> I thought you had already tested that?
 
-That answers the question nicely then. Time to upgrade to some 3124's I guess.
+IIRC, the one I tested was
+http://marc.theaimsgroup.com/?l=linux-scsi&m=116267031029025&w=2. It
+does something similar in sg.c instead of scsi_ioctl.c.
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+Thanks,
+Brice
+
