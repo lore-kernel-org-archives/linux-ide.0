@@ -1,77 +1,94 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/4] libata: separate out rw ATA taskfile building into
- ata_build_tf()
-Date: Wed, 15 Nov 2006 01:51:03 +0900
-Message-ID: <4559F3F7.4080509@gmail.com>
-References: <11635120302199-git-send-email-htejun@gmail.com> <4559EB3B.9050805@rtr.ca>
+Subject: Re: READ SCSI cmd seems to fail on SATA optical devices...
+Date: Wed, 15 Nov 2006 02:24:31 +0900
+Message-ID: <4559FBCF.9050203@gmail.com>
+References: <1163434776.2984.21.camel@de-c-l-110.nero-de.internal>	 <4558BE57.4020700@cfl.rr.com>	 <1163444160.27291.2.camel@de-c-l-110.nero-de.internal>	 <1163446372.15249.190.camel@laptopd505.fenrus.org> <1163519125.2998.8.camel@de-c-l-110.nero-de.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060503030804010707040602"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.202]:47394 "EHLO
+Received: from nz-out-0102.google.com ([64.233.162.197]:62095 "EHLO
 	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S966204AbWKNQvU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Nov 2006 11:51:20 -0500
-Received: by nz-out-0102.google.com with SMTP id l1so1027945nzf
-        for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2006 08:51:19 -0800 (PST)
-In-Reply-To: <4559EB3B.9050805@rtr.ca>
+	id S933463AbWKNRYs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Nov 2006 12:24:48 -0500
+Received: by nz-out-0102.google.com with SMTP id l1so1038192nzf
+        for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2006 09:24:47 -0800 (PST)
+In-Reply-To: <1163519125.2998.8.camel@de-c-l-110.nero-de.internal>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Mathieu Fluhr <mfluhr@nero.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Phillip Susi <psusi@cfl.rr.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> This logic sequence bothers me slightly:
-> 
-> Tejun Heo wrote:
->> Separate out rw ATA taskfile building from ata_scsi_rw_xlat() into
->> ata_build_tf().  This will be used to improve media error handling.
-> ...
->> +    if ((dev->flags & (ATA_DFLAG_PIO | ATA_DFLAG_NCQ_OFF |
->> +               ATA_DFLAG_NCQ)) == ATA_DFLAG_NCQ) {
->> +        /* yay, NCQ */
->> +        if (!lba_48_ok(block, n_block))
->> +            return -ERANGE;
-> ...
->> +    } else if (dev->flags & ATA_DFLAG_LBA) {
->> +        tf->flags |= ATA_TFLAG_LBA;
->> +
->> +        if (lba_28_ok(block, n_block)) {
->> +            /* use LBA28 */
->> +            tf->device |= (block >> 24) & 0xf;
->> +        } else if (lba_48_ok(block, n_block)) {
->> +            if (!(dev->flags & ATA_DFLAG_LBA48))
->> +                return -ERANGE;
-> ...
-> 
-> In the first case, if !lba_48_ok(), then we should at least attempt
-> to see if the request can be issued via non-NCQ.
-> 
-> Something like this:
-> 
-> if (lba_48_ok() && dev->flags & 
-> (ATA_DFLAG_PIO|ATA_DFLAG_NCQ_OFF|ATA_DFLAG_NCQ)) == ATA_DFLAG_NCQ) {
->   /* yay, NCQ */
->   ...
-> } else if (dev->flags & ATA_DFLAG_LBA) {
->   ...
-> 
-> ..except prettier!  ;)
-> 
-> In theory, it looks like an impossible sequence anyway..
-> if we have the NCQ flag set, then we probably already *know*
-> that LBA48 is okay.  But since we're not making that assumption,
-> let's give it the benefit of a doubt and try non-NCQ if LBA48 is a no-go.
+This is a multi-part message in MIME format.
+--------------060503030804010707040602
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-First of all, that function is moved verbatim from ata_scsi_rw_xlat(), 
-and I don't really understand your point.  lba_48_ok() checks whether 
-the given block and n_block are inside LBA48 limit.  NCQ commands use 
-LBA48 (well, nsect is in the different registers but the limits are the 
-same) which is the largest addressing mode currently available.  So, if 
-a command cannot be issued using NCQ, it cannot be issued w/ any command 
-mode.  ie. if !lba_48_ok(), that command just cannot be issued.
+Mathieu Fluhr wrote:
+> On Mon, 2006-11-13 at 20:32 +0100, Arjan van de Ven wrote:
+>> On Mon, 2006-11-13 at 19:56 +0100, Mathieu Fluhr wrote:
+>>> On Mon, 2006-11-13 at 13:49 -0500, Phillip Susi wrote:
+>>>> Mathieu Fluhr wrote:
+>>>>> Hello,
+>>>>>
+>>>>> I recently tried to burn some datas on CDs and DVD using a SATA burner
+>>>>> and the latest 2.6.18.2 kernel... using NeroLINUX. (It is controlling
+>>>>> the device by sending SCSI commands over the 'sg' driver)
+>>>>>
+>>>> Please note that the sg interface is depreciated.  It is now recommended 
+>>>> that you send the CCBs directly to the normal device, i.e. /dev/hdc.
+>>> Of course for native IDE devices, we are using the /dev/hdXX device, but
+>>> for SATA devices controlled by the libata, this is not possible ;)
+>> for those there is /dev/scd0 etc...
+>> (usually nicely symlinked to /dev/cdrom)
+> 
+> Hummm as we are _writing_ to devices, I think that using /dev/sgXX with
+> SG_IO is better no?
 
-Am I misunderstanding you?
+The recommended way is using SG_IO to /dev/srX (or /dev/scdX).
+
+> ... and the problem is not in accessing the device itself (this is
+> working like a charm) but understanding why a SCSI READ(10) cmd
+> sometimes fails as a ATA-padded READ(10) cmd - as discribed in the Annex
+> A of the MMC-5 spec - ALWAYS works.
+> -> I would suspect somehow a synchronisation problem somehow in the
+> translation of SCSI to ATA command...
+
+Can you try the attached patch and see if anything changes?
 
 -- 
 tejun
+
+--------------060503030804010707040602
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 2dc3264..fa82151 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -286,6 +286,7 @@ static int sg_io(struct file *file, requ
+ 	 * fill in request structure
+ 	 */
+ 	rq->cmd_len = hdr->cmd_len;
++	memset(rq->cmd, 0, BLK_MAX_CDB);
+ 	memcpy(rq->cmd, cmd, hdr->cmd_len);
+ 	if (sizeof(rq->cmd) != hdr->cmd_len)
+ 		memset(rq->cmd + hdr->cmd_len, 0, sizeof(rq->cmd) - hdr->cmd_len);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d2c02df..080c2ed 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -410,6 +410,7 @@ int scsi_execute_async(struct scsi_devic
+ 		goto free_req;
+ 
+ 	req->cmd_len = cmd_len;
++	memset(req->cmd, 0, BLK_MAX_CDB);
+ 	memcpy(req->cmd, cmd, req->cmd_len);
+ 	req->sense = sioc->sense;
+ 	req->sense_len = 0;
+
+--------------060503030804010707040602--
