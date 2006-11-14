@@ -1,94 +1,28 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: READ SCSI cmd seems to fail on SATA optical devices...
-Date: Wed, 15 Nov 2006 02:24:31 +0900
-Message-ID: <4559FBCF.9050203@gmail.com>
-References: <1163434776.2984.21.camel@de-c-l-110.nero-de.internal>	 <4558BE57.4020700@cfl.rr.com>	 <1163444160.27291.2.camel@de-c-l-110.nero-de.internal>	 <1163446372.15249.190.camel@laptopd505.fenrus.org> <1163519125.2998.8.camel@de-c-l-110.nero-de.internal>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [git patches] libata fixes
+Date: Tue, 14 Nov 2006 13:11:07 -0500
+Message-ID: <455A06BB.8020002@rtr.ca>
+References: <20061114150454.GA11900@havoc.gtf.org> <4559EFB2.1000809@rtr.ca> <4559F1CE.9040805@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060503030804010707040602"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.197]:62095 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S933463AbWKNRYs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Nov 2006 12:24:48 -0500
-Received: by nz-out-0102.google.com with SMTP id l1so1038192nzf
-        for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2006 09:24:47 -0800 (PST)
-In-Reply-To: <1163519125.2998.8.camel@de-c-l-110.nero-de.internal>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Mathieu Fluhr <mfluhr@nero.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Phillip Susi <psusi@cfl.rr.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------060503030804010707040602
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:40203 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S966242AbWKNSLJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 13:11:09 -0500
+In-Reply-To: <4559F1CE.9040805@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Mathieu Fluhr wrote:
-> On Mon, 2006-11-13 at 20:32 +0100, Arjan van de Ven wrote:
->> On Mon, 2006-11-13 at 19:56 +0100, Mathieu Fluhr wrote:
->>> On Mon, 2006-11-13 at 13:49 -0500, Phillip Susi wrote:
->>>> Mathieu Fluhr wrote:
->>>>> Hello,
->>>>>
->>>>> I recently tried to burn some datas on CDs and DVD using a SATA burner
->>>>> and the latest 2.6.18.2 kernel... using NeroLINUX. (It is controlling
->>>>> the device by sending SCSI commands over the 'sg' driver)
->>>>>
->>>> Please note that the sg interface is depreciated.  It is now recommended 
->>>> that you send the CCBs directly to the normal device, i.e. /dev/hdc.
->>> Of course for native IDE devices, we are using the /dev/hdXX device, but
->>> for SATA devices controlled by the libata, this is not possible ;)
->> for those there is /dev/scd0 etc...
->> (usually nicely symlinked to /dev/cdrom)
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>> Any time we return 0 from queuecommand, the SCSI mid-layer expects us
+>> to also take care of invoking the done() function.  Where does this now
+>> happen for this case (err_mem) ???
 > 
-> Hummm as we are _writing_ to devices, I think that using /dev/sgXX with
-> SG_IO is better no?
+> It _already_ happened in the error path of ata_scsi_qc_new(), which is 
+> why this is a double-completion bug fix.
 
-The recommended way is using SG_IO to /dev/srX (or /dev/scdX).
-
-> ... and the problem is not in accessing the device itself (this is
-> working like a charm) but understanding why a SCSI READ(10) cmd
-> sometimes fails as a ATA-padded READ(10) cmd - as discribed in the Annex
-> A of the MMC-5 spec - ALWAYS works.
-> -> I would suspect somehow a synchronisation problem somehow in the
-> translation of SCSI to ATA command...
-
-Can you try the attached patch and see if anything changes?
-
--- 
-tejun
-
---------------060503030804010707040602
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 2dc3264..fa82151 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -286,6 +286,7 @@ static int sg_io(struct file *file, requ
- 	 * fill in request structure
- 	 */
- 	rq->cmd_len = hdr->cmd_len;
-+	memset(rq->cmd, 0, BLK_MAX_CDB);
- 	memcpy(rq->cmd, cmd, hdr->cmd_len);
- 	if (sizeof(rq->cmd) != hdr->cmd_len)
- 		memset(rq->cmd + hdr->cmd_len, 0, sizeof(rq->cmd) - hdr->cmd_len);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d2c02df..080c2ed 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -410,6 +410,7 @@ int scsi_execute_async(struct scsi_devic
- 		goto free_req;
- 
- 	req->cmd_len = cmd_len;
-+	memset(req->cmd, 0, BLK_MAX_CDB);
- 	memcpy(req->cmd, cmd, req->cmd_len);
- 	req->sense = sioc->sense;
- 	req->sense_len = 0;
-
---------------060503030804010707040602--
+Ack. 
