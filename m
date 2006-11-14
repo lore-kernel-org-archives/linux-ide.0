@@ -1,26 +1,42 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_vsc: s/host_set/host/
-Date: Tue, 14 Nov 2006 13:45:47 -0500
-Message-ID: <455A0EDB.5050705@pobox.com>
-References: <20061109030304.GY13677@htj.dyndns.org>
+Subject: Re: [PATCH 2/2 #upstream] ahci: honor PORTS_IMPL on ICH8s
+Date: Tue, 14 Nov 2006 13:45:58 -0500
+Message-ID: <455A0EE6.1000809@pobox.com>
+References: <20061102031723.GV13677@htj.dyndns.org> <20061102032059.GW13677@htj.dyndns.org> <20061106010505.GJ15897@curie-int.orbis-terrarum.net> <20061109060840.GZ13677@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40391 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S933470AbWKNSpv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 13:45:51 -0500
-In-Reply-To: <20061109030304.GY13677@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:42183 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S933470AbWKNSqB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 13:46:01 -0500
+In-Reply-To: <20061109060840.GZ13677@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: "Robin H. Johnson" <robbat2@gentoo.org>, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> sata_vsc MSI support merge brought in now renamed host_set and breaks
-> build.  s/host_set/host/
+> Some ICH8s use non-linear port mapping.  ahci driver didn't use to
+> honor PORTS_IMPL and this made ports after hole nonfunctional.  This
+> patch makes ahci mark those ports as dummy and properly initialize all
+> the implemented ports after the dummies.
+> 
+> As it's unknown whether other AHCIs implement PORTS_IMPL register
+> properly, new board id board_ahci_pi is added and selectively applied
+> to ICH8s.  All other AHCIs continue to use linear mapping regardless
+> of PORTS_IMPL value.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Robin H. Johnson <robbat2@gentoo.org>
+> ---
+> 
+> Two changes.
+> 
+> * AHCI_FLAG_HONOR_PI was changed to 1<<25.  1<<23 is not for LLD
+>   specific flags.
+> 
+> * VPRINTK() fixed as Robin H. Johnson pointed out.
 
 applied
 
