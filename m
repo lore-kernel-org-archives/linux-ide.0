@@ -1,81 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: improve failed qc reporting
-Date: Tue, 14 Nov 2006 22:36:12 +0900
-Message-ID: <20061114133612.GC27684@htj.dyndns.org>
+Subject: [PATCH 4/5] libata: implement ata_tf_read_block()
+Date: Tue, 14 Nov 2006 22:37:35 +0900
+Message-ID: <11635114554175-git-send-email-htejun@gmail.com>
+References: <11635114553453-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.200]:23130 "EHLO
+Received: from nz-out-0102.google.com ([64.233.162.200]:1937 "EHLO
 	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S965685AbWKNNgT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Nov 2006 08:36:19 -0500
-Received: by nz-out-0102.google.com with SMTP id i11so939916nzi
-        for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2006 05:36:19 -0800 (PST)
-Content-Disposition: inline
+	id S965753AbWKNNhr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Nov 2006 08:37:47 -0500
+Received: by nz-out-0102.google.com with SMTP id l1so971449nzf
+        for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2006 05:37:47 -0800 (PST)
+In-Reply-To: <11635114553453-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Improve failed qc reporting.  The original message didn't include the
-actual command nor full error status and it was necessary to
-temporarily patch the code to find out exactly which command is
-causing problem.  This patch makes EH report full command and result
-TFs along with data direction and length.  This change will make bug
-reports more useful.
+Implement ata_tf_read_block().
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c |   32 +++++++++++++++++++++++++++-----
- 1 files changed, 27 insertions(+), 5 deletions(-)
+ drivers/ata/libata-core.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata.h      |    1 +
+ 2 files changed, 44 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 4776488..104836e 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1433,16 +1433,38 @@ static void ata_eh_report(struct ata_por
- 	}
- 
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
-+		static const char *dma_str[] = {
-+			[DMA_BIDIRECTIONAL]	= "bidi",
-+			[DMA_TO_DEVICE]		= "out",
-+			[DMA_FROM_DEVICE]	= "in",
-+			[DMA_NONE]		= "",
-+		};
- 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
-+		struct ata_taskfile *cmd = &qc->tf, *res = &qc->result_tf;
-+		unsigned int nbytes;
- 
- 		if (!(qc->flags & ATA_QCFLAG_FAILED) || !qc->err_mask)
- 			continue;
- 
--		ata_dev_printk(qc->dev, KERN_ERR, "tag %d cmd 0x%x "
--			       "Emask 0x%x stat 0x%x err 0x%x (%s)\n",
--			       qc->tag, qc->tf.command, qc->err_mask,
--			       qc->result_tf.command, qc->result_tf.feature,
--			       ata_err_string(qc->err_mask));
-+		nbytes = qc->nbytes;
-+		if (!nbytes)
-+			nbytes = qc->nsect << 9;
-+
-+		ata_dev_printk(qc->dev, KERN_ERR,
-+			"cmd %02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x "
-+			"tag %d data %u %s\n         "
-+			"res %02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x "
-+			"Emask 0x%x (%s)\n",
-+			cmd->command, cmd->feature, cmd->nsect,
-+			cmd->lbal, cmd->lbam, cmd->lbah,
-+			cmd->hob_feature, cmd->hob_nsect,
-+			cmd->hob_lbal, cmd->hob_lbam, cmd->hob_lbah,
-+			cmd->device, qc->tag, nbytes, dma_str[qc->dma_dir],
-+			res->command, res->feature, res->nsect,
-+			res->lbal, res->lbam, res->lbah,
-+			res->hob_feature, res->hob_nsect,
-+			res->hob_lbal, res->hob_lbam, res->hob_lbah,
-+			res->device, qc->err_mask, ata_err_string(qc->err_mask));
- 	}
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 476df94..dab577c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -240,6 +240,49 @@ int ata_rwcmd_protocol(struct ata_queued
  }
  
+ /**
++ *	ata_tf_read_block - Read block address from ATA taskfile
++ *	@tf: ATA taskfile of interest
++ *	@dev: ATA device @tf belongs to
++ *
++ *	LOCKING:
++ *	None.
++ *
++ *	Read block address from @tf.  This function can handle all
++ *	three address formats - LBA, LBA48 and CHS.  tf->protocol and
++ *	flags select the address format to use.
++ *
++ *	RETURNS:
++ *	Block address read from @tf.
++ */
++u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev)
++{
++	u64 block = 0;
++
++	if (tf->flags & ATA_TFLAG_LBA) {
++		if (tf->flags & ATA_TFLAG_LBA48) {
++			block |= (u64)tf->hob_lbah << 40;
++			block |= (u64)tf->hob_lbam << 32;
++			block |= tf->hob_lbal << 24;
++		} else
++			block |= (tf->device & 0xf) << 24;
++
++		block |= tf->lbah << 16;
++		block |= tf->lbam << 8;
++		block |= tf->lbal;
++	} else {
++		u32 cyl, head, sect;
++
++		cyl = tf->lbam | (tf->lbah << 8);
++		head = tf->device & 0xf;
++		sect = tf->lbal;
++
++		block = (cyl * dev->heads + head) * dev->sectors + sect;
++	}
++
++	return block;
++}
++
++/**
+  *	ata_pack_xfermask - Pack pio, mwdma and udma masks into xfer_mask
+  *	@pio_mask: pio_mask
+  *	@mwdma_mask: mwdma_mask
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index e4ffb2e..0549b19 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -45,6 +45,7 @@ extern int atapi_dmadir;
+ extern int libata_fua;
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
+ extern int ata_rwcmd_protocol(struct ata_queued_cmd *qc);
++extern u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev);
+ extern void ata_dev_disable(struct ata_device *dev);
+ extern void ata_port_flush_task(struct ata_port *ap);
+ extern unsigned ata_exec_internal(struct ata_device *dev,
 -- 
 1.4.3.3
+
 
