@@ -1,55 +1,71 @@
-From: Vasily Averin <vvs@sw.ru>
-Subject: [Q] PCI Express and ide (native) leads to irq storm?
-Date: Tue, 14 Nov 2006 12:08:45 +0300
-Message-ID: <4559879D.8090105@sw.ru>
-References: <453DC2A9.8000507@sw.ru> <453DC65C.8000408@sw.ru>	 <454206EE.9080206@sw.ru> <1161958862.16839.26.camel@localhost.localdomain>
+From: Mathieu Fluhr <mfluhr@nero.com>
+Subject: Re: READ SCSI cmd seems to fail on SATA optical devices...
+Date: Tue, 14 Nov 2006 11:08:11 +0100
+Message-ID: <1163498891.3005.11.camel@de-c-l-110.nero-de.internal>
+References: <1163434776.2984.21.camel@de-c-l-110.nero-de.internal>
+	 <455923B5.3030608@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:55834 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S933316AbWKNJKW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 04:10:22 -0500
-In-Reply-To: <1161958862.16839.26.camel@localhost.localdomain>
+Received: from s1.mailresponder.info ([193.24.237.10]:61960 "EHLO
+	s1.mailresponder.info") by vger.kernel.org with ESMTP
+	id S933371AbWKNKIw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Nov 2006 05:08:52 -0500
+Received: from moonfish.nero.com (193.47.77.31)
+          by s1.mailresponder.info with MERCUR Mailserver (v4.02.30 ODAtMjQzOS03MTc5)
+          for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2006 11:08:19 +0100
+In-Reply-To: <455923B5.3030608@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, devel@openvz.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
-> Ar Gwe, 2006-10-27 am 17:17 +0400, ysgrifennodd Vasily Averin:
->> Could somebody please help me to troubleshoot this issue? I've seen this issue
->> on the customer nodes and would like to know how I can work-around this issue
->> without any changes inside motherboard BIOS.
+On Tue, 2006-11-14 at 11:02 +0900, Tejun Heo wrote:
+> Hello, Mattieu Fluhr.
 > 
-> If its an IRQ routing triggered problem you probably can't, at least not
-> the IDE error. The oops wants debugging further because it shouldn't
-> have oopsed on that error merely given up.
+> Mathieu Fluhr wrote:
+> > The problem is that, on SATA devices controlled by libata, on some big
+> > files (like for example a 600 MB file) the READ command seems to fail
+> > and outputs garbage (not 1 or 2 bytes diff, but the whole buffer).
+> >  -> This problem does not come out everytime, and each time on    
+> >     different sectors.
+> > 
+> > Please note that:
+> > - it is not chipset dependant (tested on nforce4 and sii3114)
+> > - it is not medium or device dependant
+> 
+> Hmmm... Interesting.  So, you're reading the media by directly issuing 
+> commands through the sg interface, right?  Can you please try the 
+> followings?
+> 
+> * Try using /dev/srX or /dev/scdX device instead of /dev/sgX.  You can 
+> use the command SG_IO but the code path is different, so it will help us 
+> rule out sg bug.
+> 
+> * Perform rounds of read-verify test using standard block interface (ie. 
+> simply opening /dev/srX and reading it).
+I will try this and report the results.
 
-Alan,
-I've reproduced this issue on linux 2.6.19-rc5 kernel.
+> 
+> [--snip--]
+> > - When I force the bus type to be IDE, our software will then send ATA
+> > commands. In this case, everything works like a charm. No errors at all.
+> 
+> What do you mean by 'sending ATA commands'?  libata exports all devices 
+> as SCSI devices.  For ATA devices, you can use ATA passthrough but you 
+> send CDBs to ATAPI devices anyway.
+Inside our code, we first guess which the bus type of every device using
+an INQUIRY cmd (0x12). 
+- If the device appears to be a SCSI one, then we send "pure" SCSI CDBs
+- For an IDE device, we do, as described in the Annex A of the MMC-5
+spec, and pad each CDBs to 12 bytes.
 
-As far as I see if IDE controller is switched into native mode it shares irq
-together with one of PCI Express Ports. It seems for me the last device is
-guilty in this issue, becuase of it shares IDE irq on all the checked nodes.
-and I do not know the ways to change their irq number or disable this device at all.
+So in the case of a READ CDB, we send 10 bytes if the device is a SCSI
+one and 12 for IDE one.
 
-I means the following devices:
 
-on Intel 915G-based nodes
-0000:00:1c.2 Class 0604: 8086:2664 (rev 03)
-0000:00:1c.2 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family)
-PCI Express Port 3 (rev 03)
+> 
+> Thanks.
+> 
 
-on Intel E7520 node:
-00:04.0 0604: 8086:3597 (rev 0a)
-00:05.0 0604: 8086:3598 (rev 0a)
-00:04.0 PCI bridge: Intel Corporation E7525/E7520 PCI Express Port B (rev 0a)
-00:05.0 PCI bridge: Intel Corporation E7520 PCI Express Port B1 (rev 0a)
-
-I've checked Intel chipset spec updates but do not found any related issues.
-
-Please see http://bugzilla.kernel.org/show_bug.cgi?id=7518 for details
-
-thank you,
-	Vasily Averin
