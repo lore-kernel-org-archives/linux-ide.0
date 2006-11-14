@@ -1,28 +1,27 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 14 Nov 2006 13:11:07 -0500
-Message-ID: <455A06BB.8020002@rtr.ca>
-References: <20061114150454.GA11900@havoc.gtf.org> <4559EFB2.1000809@rtr.ca> <4559F1CE.9040805@garzik.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_vsc: s/host_set/host/
+Date: Tue, 14 Nov 2006 13:45:47 -0500
+Message-ID: <455A0EDB.5050705@pobox.com>
+References: <20061109030304.GY13677@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:40203 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S966242AbWKNSLJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 13:11:09 -0500
-In-Reply-To: <4559F1CE.9040805@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:40391 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S933470AbWKNSpv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2006 13:45:51 -0500
+In-Reply-To: <20061109030304.GY13677@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Any time we return 0 from queuecommand, the SCSI mid-layer expects us
->> to also take care of invoking the done() function.  Where does this now
->> happen for this case (err_mem) ???
+Tejun Heo wrote:
+> sata_vsc MSI support merge brought in now renamed host_set and breaks
+> build.  s/host_set/host/
 > 
-> It _already_ happened in the error path of ata_scsi_qc_new(), which is 
-> why this is a double-completion bug fix.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Ack. 
+applied
+
+
