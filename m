@@ -1,37 +1,37 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: READ SCSI cmd seems to fail on SATA optical devices...
-Date: Wed, 15 Nov 2006 16:28:09 +0000
-Message-ID: <20061115162809.3ecd7d3a@localhost.localdomain>
-References: <1163434776.2984.21.camel@de-c-l-110.nero-de.internal>
-	<4558BE57.4020700@cfl.rr.com>
-	<1163444160.27291.2.camel@de-c-l-110.nero-de.internal>
-	<1163446372.15249.190.camel@laptopd505.fenrus.org>
-	<1163519125.2998.8.camel@de-c-l-110.nero-de.internal>
-	<455 <455B3A78.7010503@gmail.com>
-	<455B3D99.8040705@cfl.rr.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [Q] PCI Express and ide (native) leads to irq storm?
+Date: Wed, 15 Nov 2006 13:49:21 -0500
+Message-ID: <455B6131.1@pobox.com>
+References: <453DC2A9.8000507@sw.ru> <453DC65C.8000408@sw.ru>	 <454206EE.9080206@sw.ru> <1161958862.16839.26.camel@localhost.localdomain> <4559879D.8090105@sw.ru> <455AF01C.5090307@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:1505 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030667AbWKOQbF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Nov 2006 11:31:05 -0500
-In-Reply-To: <455B3D99.8040705@cfl.rr.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:32144 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030863AbWKOStd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Nov 2006 13:49:33 -0500
+In-Reply-To: <455AF01C.5090307@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Tejun Heo <htejun@gmail.com>, Mathieu Fluhr <mfluhr@nero.com>, Arjan van de Ven <arjan@infradead.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Vasily Averin <vvs@sw.ru>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, devel@openvz.org
 
-On Wed, 15 Nov 2006 11:17:29 -0500
-Phillip Susi <psusi@cfl.rr.com> wrote:
+Tejun Heo wrote:
+> In short, some piix controllers including ICH7, when put into enhanced 
+> mode (PCI native mode), uses BMDMA Interrupt bit as interrupt 
+> pending/clear bit for *all* commands.  ie. Reading STATUS does NOT clear 
 
-> The original patch memsets the entire buffer only to copy over most of 
-> it right after.  Could you amend the patch so that it memcpys first, 
-> then memsets only the remainder of the buffer?  No sense wasting cpu 
-> cycles.
+Yep.  I thought I had mentioned this, ages ago.
 
-Look at the generated code - its faster to memset the entire CDB as Tejun
-is doing than actually bother to think about it.
 
-Alan
+> Fortunately, libata is immune to the problem because it does 
+> ap->ops->irq_clear(ap) in ata_host_intr() regardless of command type in 
+> flight.  So, not loading IDE piix and using libata to drive all piix 
+> ports solves the problem.
+
+Yep, that's intentional :)
+
+	Jeff
+
+
+
