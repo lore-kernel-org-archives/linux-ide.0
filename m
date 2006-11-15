@@ -1,37 +1,63 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [Q] PCI Express and ide (native) leads to irq storm?
-Date: Wed, 15 Nov 2006 13:49:21 -0500
-Message-ID: <455B6131.1@pobox.com>
-References: <453DC2A9.8000507@sw.ru> <453DC65C.8000408@sw.ru>	 <454206EE.9080206@sw.ru> <1161958862.16839.26.camel@localhost.localdomain> <4559879D.8090105@sw.ru> <455AF01C.5090307@gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Testing with 2.6.19-rc5
+Date: Wed, 15 Nov 2006 11:03:33 -0800
+Message-ID: <20061115110333.4daccb6d.akpm@osdl.org>
+References: <f4527be0611150645h7cc2791cub7a2ca753156564f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:32144 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030863AbWKOStd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Nov 2006 13:49:33 -0500
-In-Reply-To: <455AF01C.5090307@gmail.com>
+Received: from smtp.osdl.org ([65.172.181.4]:56759 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030890AbWKOTDl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Nov 2006 14:03:41 -0500
+In-Reply-To: <f4527be0611150645h7cc2791cub7a2ca753156564f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Vasily Averin <vvs@sw.ru>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, devel@openvz.org
+To: Andrew Lyon <andrew.lyon@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> In short, some piix controllers including ICH7, when put into enhanced 
-> mode (PCI native mode), uses BMDMA Interrupt bit as interrupt 
-> pending/clear bit for *all* commands.  ie. Reading STATUS does NOT clear 
+On Wed, 15 Nov 2006 14:45:27 +0000
+"Andrew Lyon" <andrew.lyon@gmail.com> wrote:
 
-Yep.  I thought I had mentioned this, ages ago.
+> Andrew,
+> 
+> You asked me to test if the issues I reported (Re: JMicron 20360/20363
+> AHCI Controller much slower with 2.6.18 / Re: SATA CD/DVDRW Support in
+> 2.6.18? / Re: Problems with Samsung SH-W163A SATA CD/DVDRW JMicron
+> 20360/20363 2.6.18.1) were still present with 2.6.19-rc5, I tried it
+> today and ran into a very strange problem, the 4 400gb Samsung SATA
+> HDs connected to ata_piix were detected as normal but the raid that
+> they belong to failed to start, the raid system couldnt find any
+> superblock at all.
 
+You mean that the raid works in 2.6.18 but not in 2.6.19-rc5?   Ouch.
 
-> Fortunately, libata is immune to the problem because it does 
-> ap->ops->irq_clear(ap) in ata_host_intr() regardless of command type in 
-> flight.  So, not loading IDE piix and using libata to drive all piix 
-> ports solves the problem.
+What sort of raid setup are you using?
 
-Yep, that's intentional :)
+> Is it possible that the addressing of the sectors has changed such
+> that the device data structure does not map to the on disk data in the
+> same way as it did with 2.6.18.x ?
 
-	Jeff
+Sounds unlikely.  More likely we're reading junk from the disks.
 
+> unfortunately they drives are not
+> partitioned, just added straight to the raid, otherwise checking the
+> partition table would be a good test.
+> 
+> I had a idea about taking a copy of a few kbs of data from each drive
+> using both kernel versions and comparing them,
 
+Good idea.
 
+> but if the raid is
+> started under 2.6.18 its possible the data would change anyway.. so I
+> dont think that would work.
+
+Do you actually need to start the raid under 2.6.18?  Shut the raid down,
+take a copy of the first 32k of each disk, then boto 2.6.19-rc5 and do the
+same?
+
+> Any suggestions? I really want to complete testing of the two issues I
+> reported..
+
+Thanks.
