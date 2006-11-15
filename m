@@ -1,34 +1,29 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: ata_piix on Thinkpad T30 - qc timeout on boot
-Date: Wed, 15 Nov 2006 15:43:31 -0500
-Message-ID: <455B7BF3.1030703@garzik.org>
-References: <1163563453.3100.24.camel@dv> <1163569390.4410.8.camel@dv>	 <455AF614.1090109@gmail.com> <1163620856.19441.1.camel@dv>
+Subject: Promise SATA vendor drivers uploaded
+Date: Wed, 15 Nov 2006 15:50:06 -0500
+Message-ID: <455B7D7E.2030400@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:10136 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030972AbWKOUnf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Nov 2006 15:43:35 -0500
-In-Reply-To: <1163620856.19441.1.camel@dv>
+Received: from srv5.dvmed.net ([207.36.208.214]:34712 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030995AbWKOUuI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Nov 2006 15:50:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Roskin <proski@gnu.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Mikael Pettersson <mikpe@it.uu.se>
 
-Pavel Roskin wrote:
-> On Wed, 2006-11-15 at 20:12 +0900, Tejun Heo wrote:
->> Fixed in libata-dev#upstream and will soon be included in -mm.  Please 
->> read the following thread.
-> 
-> libata-dev#upstream is working fine for me.  No more delays on startup.
-> Thank you!
-> 
-> I hope it will get into 2.6.19.
+To further assist anyone wishing to hack on sata_promise.c, I just 
+uploaded the long-since-GPL'd vendor drivers for Generation-I and 
+Generation-II chipsets to http://gkernel.sourceforge.net/specs/promise/
 
-Far too late for a change that will affect so many users... :/
+This should help with isolating the proper initialization sequence for a 
+given set of chips, particularly.
+
+If someone knows of updated versions of these GPL'd drivers, please let 
+me know.
 
 	Jeff
-
 
 
