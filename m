@@ -1,95 +1,81 @@
-From: Pavel Roskin <proski@gnu.org>
-Subject: Re: ata_piix on Thinkpad T30 - qc timeout on boot
-Date: Wed, 15 Nov 2006 00:43:10 -0500
-Message-ID: <1163569390.4410.8.camel@dv>
-References: <1163563453.3100.24.camel@dv>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [Q] PCI Express and ide (native) leads to irq storm?
+Date: Wed, 15 Nov 2006 19:46:52 +0900
+Message-ID: <455AF01C.5090307@gmail.com>
+References: <453DC2A9.8000507@sw.ru> <453DC65C.8000408@sw.ru>	 <454206EE.9080206@sw.ru> <1161958862.16839.26.camel@localhost.localdomain> <4559879D.8090105@sw.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:30370 "EHLO
-	fencepost.gnu.org") by vger.kernel.org with ESMTP id S966678AbWKOIIG
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Nov 2006 03:08:06 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.34)
-	id 1GkDYZ-0007AW-1u
-	for linux-ide@vger.kernel.org; Wed, 15 Nov 2006 00:43:31 -0500
-Received: from proski by gnu.org with local (Exim 4.63)
-	(envelope-from <proski@gnu.org>)
-	id 1GkDYE-0001Av-Cw
-	for linux-ide@vger.kernel.org; Wed, 15 Nov 2006 00:43:10 -0500
-In-Reply-To: <1163563453.3100.24.camel@dv>
+Received: from nf-out-0910.google.com ([64.233.182.187]:35947 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S966766AbWKOKrC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Nov 2006 05:47:02 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so615287nfa
+        for <linux-ide@vger.kernel.org>; Wed, 15 Nov 2006 02:47:01 -0800 (PST)
+In-Reply-To: <4559879D.8090105@sw.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Vasily Averin <vvs@sw.ru>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, devel@openvz.orgJeff Garzik <jgarzik@pobox.com>
 
-Hello again and sorry for post scriptum.
+Vasily Averin wrote:
+> Alan Cox wrote:
+>> Ar Gwe, 2006-10-27 am 17:17 +0400, ysgrifennodd Vasily Averin:
+>>> Could somebody please help me to troubleshoot this issue? I've seen this issue
+>>> on the customer nodes and would like to know how I can work-around this issue
+>>> without any changes inside motherboard BIOS.
+>> If its an IRQ routing triggered problem you probably can't, at least not
+>> the IDE error. The oops wants debugging further because it shouldn't
+>> have oopsed on that error merely given up.
+> 
+> Alan,
+> I've reproduced this issue on linux 2.6.19-rc5 kernel.
+> 
+> As far as I see if IDE controller is switched into native mode it shares irq
+> together with one of PCI Express Ports. It seems for me the last device is
+> guilty in this issue, becuase of it shares IDE irq on all the checked nodes.
+> and I do not know the ways to change their irq number or disable this device at all.
+> 
+> I means the following devices:
+> 
+> on Intel 915G-based nodes
+> 0000:00:1c.2 Class 0604: 8086:2664 (rev 03)
+> 0000:00:1c.2 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family)
+> PCI Express Port 3 (rev 03)
+> 
+> on Intel E7520 node:
+> 00:04.0 0604: 8086:3597 (rev 0a)
+> 00:05.0 0604: 8086:3598 (rev 0a)
+> 00:04.0 PCI bridge: Intel Corporation E7525/E7520 PCI Express Port B (rev 0a)
+> 00:05.0 PCI bridge: Intel Corporation E7520 PCI Express Port B1 (rev 0a)
+> 
+> I've checked Intel chipset spec updates but do not found any related issues.
+> 
+> Please see http://bugzilla.kernel.org/show_bug.cgi?id=7518 for details
 
-On Tue, 2006-11-14 at 23:04 -0500, Pavel Roskin wrote:
+Okay, I tracked this one down.  It's pretty interesting.
 
-> ata2.01: qc timeout (cmd 0xa1)
-> ata2.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-... 
-> Note that with CONFIG_IDE, the hard drive is /dev/hda and DVD
-> is /dev/hdc, so it's not the secondary interface - it's something else.
+In short, some piix controllers including ICH7, when put into enhanced 
+mode (PCI native mode), uses BMDMA Interrupt bit as interrupt 
+pending/clear bit for *all* commands.  ie. Reading STATUS does NOT clear 
+IRQ even for PIO commands.  1 should be written to BMDMA Interrupt bit 
+to clear IRQ.  That's what's causing IRQ storm.  IDE driver does what 
+it's supposed to do but IRQ is just stuck at low active.
 
-Closer examination of the code shows that the problem is with the slave
-on the secondary interface, i.e. /dev/hdd in the IDE driver.
+Fortunately, libata is immune to the problem because it does 
+ap->ops->irq_clear(ap) in ata_host_intr() regardless of command type in 
+flight.  So, not loading IDE piix and using libata to drive all piix 
+ports solves the problem.
 
-Here's one thing I didn't mention.  The combo DVD-ROM/CD-RW drive I'm
-using wasn't native to the laptop.  I took it from another Thinkpad -
-from an older T23 model (and I'm dealing with T30) to replace a native
-DVD-ROM.
+I guess this behavior is unique to some piixs in enhanced mode 
+considering wide use of IDE driver.  Fixing this in IDE driver is pain 
+in the ass because IRQ handler is scattered all over the place.  I'm 
+thinking about adding big warning message saying "IRQ storm can occur 
+and you better switch to libata if that happens".  But if anyone else is 
+up for the job of fixing IDE, please don't hesitate.
 
-That's how the drive is identified:
-
-scsi 1:0:0:0: CD-ROM            MATSHITA UJDA720 DVD/CDRW 1.03 PQ: 0 ANSI: 5
-
-I swapped the drives back and there is no delay anymore!
-
-scsi0 : ata_piix                                                                                
-ata1.00: ATA-5, max UDMA/100, 78140160 sectors: LBA                                             
-ata1.00: ata1: dev 0 multi count 16                                                             
-ata1.00: configured for UDMA/100                                                                
-scsi1 : ata_piix                                                                                
-ata2.00: ATAPI, max UDMA/33                                                                     
-ata2.00: configured for UDMA/33                                                                 
-scsi 0:0:0:0: Direct-Access     ATA      IC25N040ATCS05-0 CS4O PQ: 0 ANSI: 5                    
-SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)                                      
-sda: Write Protect is off                                                                       
-SCSI device sda: drive cache: write back                                                        
-SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)                                      
-sda: Write Protect is off                                                                       
-SCSI device sda: drive cache: write back                                                        
- sda: sda1 sda2 sda3 sda4                                                                       
-sd 0:0:0:0: Attached scsi disk sda                                                              
-sd 0:0:0:0: Attached scsi generic sg0 type 0                                                    
-scsi 1:0:0:0: CD-ROM            MATSHITA DVD-ROM SR-8177  NB21 PQ: 0 ANSI: 5                    
-
-Likewise, there is no delay if I remove the drive:
-
-scsi0 : ata_piix                                                                                
-ata1.00: ATA-5, max UDMA/100, 78140160 sectors: LBA                                             
-ata1.00: ata1: dev 0 multi count 16                                                             
-ata1.00: configured for UDMA/100                                                                
-scsi1 : ata_piix                                                                                
-scsi 0:0:0:0: Direct-Access     ATA      IC25N040ATCS05-0 CS4O PQ: 0 ANSI: 5                    
-SCSI device sda: 78140160 512-byte hdwr sectors (40008 MB)                                      
-
-There are no jumpers on either drive.  I assume they are configured as
-either master or "cable select".
-
-I also tried booting the same kernel on the Thinkpad T23 with the combo
-drive.  I got the same "qc timeout" errors.  Thinkpad T23 has the same
-IDE controller 8086:248a, it's also at 00:1f.1.
-
-So the problem has been reduced to Matsushita (Matshita Panasonic)
-UJDA720 in an IBM Thinkpad blocking detection of empty slave on the same
-port.  It's clearly a regression in libata compared to the IDE driver,
-and it would be nice to have it fixed.
+Thanks.
 
 -- 
-Regards,
-Pavel Roskin
-
-
+tejun
