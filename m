@@ -1,81 +1,34 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [Q] PCI Express and ide (native) leads to irq storm?
-Date: Wed, 15 Nov 2006 19:46:52 +0900
-Message-ID: <455AF01C.5090307@gmail.com>
-References: <453DC2A9.8000507@sw.ru> <453DC65C.8000408@sw.ru>	 <454206EE.9080206@sw.ru> <1161958862.16839.26.camel@localhost.localdomain> <4559879D.8090105@sw.ru>
+Subject: Re: ata_piix on Thinkpad T30 - qc timeout on boot
+Date: Wed, 15 Nov 2006 20:12:20 +0900
+Message-ID: <455AF614.1090109@gmail.com>
+References: <1163563453.3100.24.camel@dv> <1163569390.4410.8.camel@dv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:35947 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S966766AbWKOKrC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Nov 2006 05:47:02 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so615287nfa
-        for <linux-ide@vger.kernel.org>; Wed, 15 Nov 2006 02:47:01 -0800 (PST)
-In-Reply-To: <4559879D.8090105@sw.ru>
+Received: from ug-out-1314.google.com ([66.249.92.170]:54582 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1030257AbWKOLM2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Nov 2006 06:12:28 -0500
+Received: by ug-out-1314.google.com with SMTP id m3so101123ugc
+        for <linux-ide@vger.kernel.org>; Wed, 15 Nov 2006 03:12:26 -0800 (PST)
+In-Reply-To: <1163569390.4410.8.camel@dv>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vasily Averin <vvs@sw.ru>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, devel@openvz.orgJeff Garzik <jgarzik@pobox.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-ide@vger.kernel.org
 
-Vasily Averin wrote:
-> Alan Cox wrote:
->> Ar Gwe, 2006-10-27 am 17:17 +0400, ysgrifennodd Vasily Averin:
->>> Could somebody please help me to troubleshoot this issue? I've seen this issue
->>> on the customer nodes and would like to know how I can work-around this issue
->>> without any changes inside motherboard BIOS.
->> If its an IRQ routing triggered problem you probably can't, at least not
->> the IDE error. The oops wants debugging further because it shouldn't
->> have oopsed on that error merely given up.
-> 
-> Alan,
-> I've reproduced this issue on linux 2.6.19-rc5 kernel.
-> 
-> As far as I see if IDE controller is switched into native mode it shares irq
-> together with one of PCI Express Ports. It seems for me the last device is
-> guilty in this issue, becuase of it shares IDE irq on all the checked nodes.
-> and I do not know the ways to change their irq number or disable this device at all.
-> 
-> I means the following devices:
-> 
-> on Intel 915G-based nodes
-> 0000:00:1c.2 Class 0604: 8086:2664 (rev 03)
-> 0000:00:1c.2 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family)
-> PCI Express Port 3 (rev 03)
-> 
-> on Intel E7520 node:
-> 00:04.0 0604: 8086:3597 (rev 0a)
-> 00:05.0 0604: 8086:3598 (rev 0a)
-> 00:04.0 PCI bridge: Intel Corporation E7525/E7520 PCI Express Port B (rev 0a)
-> 00:05.0 PCI bridge: Intel Corporation E7520 PCI Express Port B1 (rev 0a)
-> 
-> I've checked Intel chipset spec updates but do not found any related issues.
-> 
-> Please see http://bugzilla.kernel.org/show_bug.cgi?id=7518 for details
+Pavel Roskin wrote:
+> So the problem has been reduced to Matsushita (Matshita Panasonic)
+> UJDA720 in an IBM Thinkpad blocking detection of empty slave on the same
+> port.  It's clearly a regression in libata compared to the IDE driver,
+> and it would be nice to have it fixed.
 
-Okay, I tracked this one down.  It's pretty interesting.
+Fixed in libata-dev#upstream and will soon be included in -mm.  Please 
+read the following thread.
 
-In short, some piix controllers including ICH7, when put into enhanced 
-mode (PCI native mode), uses BMDMA Interrupt bit as interrupt 
-pending/clear bit for *all* commands.  ie. Reading STATUS does NOT clear 
-IRQ even for PIO commands.  1 should be written to BMDMA Interrupt bit 
-to clear IRQ.  That's what's causing IRQ storm.  IDE driver does what 
-it's supposed to do but IRQ is just stuck at low active.
-
-Fortunately, libata is immune to the problem because it does 
-ap->ops->irq_clear(ap) in ata_host_intr() regardless of command type in 
-flight.  So, not loading IDE piix and using libata to drive all piix 
-ports solves the problem.
-
-I guess this behavior is unique to some piixs in enhanced mode 
-considering wide use of IDE driver.  Fixing this in IDE driver is pain 
-in the ass because IRQ handler is scattered all over the place.  I'm 
-thinking about adding big warning message saying "IRQ storm can occur 
-and you better switch to libata if that happens".  But if anyone else is 
-up for the job of fixing IDE, please don't hesitate.
-
-Thanks.
+http://thread.gmane.org/gmane.linux.ide/13975/focus=13975
 
 -- 
 tejun
