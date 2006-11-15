@@ -1,63 +1,37 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Testing with 2.6.19-rc5
-Date: Wed, 15 Nov 2006 11:03:33 -0800
-Message-ID: <20061115110333.4daccb6d.akpm@osdl.org>
-References: <f4527be0611150645h7cc2791cub7a2ca753156564f@mail.gmail.com>
+From: Pavel Roskin <proski@gnu.org>
+Subject: Re: ata_piix on Thinkpad T30 - qc timeout on boot
+Date: Wed, 15 Nov 2006 15:00:56 -0500
+Message-ID: <1163620856.19441.1.camel@dv>
+References: <1163563453.3100.24.camel@dv> <1163569390.4410.8.camel@dv>
+	 <455AF614.1090109@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:56759 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030890AbWKOTDl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Nov 2006 14:03:41 -0500
-In-Reply-To: <f4527be0611150645h7cc2791cub7a2ca753156564f@mail.gmail.com>
+Received: from fencepost.gnu.org ([199.232.76.164]:37833 "EHLO
+	fencepost.gnu.org") by vger.kernel.org with ESMTP id S1030720AbWKOUA7
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Nov 2006 15:00:59 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.34)
+	id 1GkQwM-0003pu-MK
+	for linux-ide@vger.kernel.org; Wed, 15 Nov 2006 15:00:58 -0500
+In-Reply-To: <455AF614.1090109@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lyon <andrew.lyon@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-On Wed, 15 Nov 2006 14:45:27 +0000
-"Andrew Lyon" <andrew.lyon@gmail.com> wrote:
+On Wed, 2006-11-15 at 20:12 +0900, Tejun Heo wrote:
+> Fixed in libata-dev#upstream and will soon be included in -mm.  Please 
+> read the following thread.
 
-> Andrew,
-> 
-> You asked me to test if the issues I reported (Re: JMicron 20360/20363
-> AHCI Controller much slower with 2.6.18 / Re: SATA CD/DVDRW Support in
-> 2.6.18? / Re: Problems with Samsung SH-W163A SATA CD/DVDRW JMicron
-> 20360/20363 2.6.18.1) were still present with 2.6.19-rc5, I tried it
-> today and ran into a very strange problem, the 4 400gb Samsung SATA
-> HDs connected to ata_piix were detected as normal but the raid that
-> they belong to failed to start, the raid system couldnt find any
-> superblock at all.
+libata-dev#upstream is working fine for me.  No more delays on startup.
+Thank you!
 
-You mean that the raid works in 2.6.18 but not in 2.6.19-rc5?   Ouch.
+I hope it will get into 2.6.19.
 
-What sort of raid setup are you using?
+-- 
+Regards,
+Pavel Roskin
 
-> Is it possible that the addressing of the sectors has changed such
-> that the device data structure does not map to the on disk data in the
-> same way as it did with 2.6.18.x ?
 
-Sounds unlikely.  More likely we're reading junk from the disks.
-
-> unfortunately they drives are not
-> partitioned, just added straight to the raid, otherwise checking the
-> partition table would be a good test.
-> 
-> I had a idea about taking a copy of a few kbs of data from each drive
-> using both kernel versions and comparing them,
-
-Good idea.
-
-> but if the raid is
-> started under 2.6.18 its possible the data would change anyway.. so I
-> dont think that would work.
-
-Do you actually need to start the raid under 2.6.18?  Shut the raid down,
-take a copy of the first 32k of each disk, then boto 2.6.19-rc5 and do the
-same?
-
-> Any suggestions? I really want to complete testing of the two issues I
-> reported..
-
-Thanks.
