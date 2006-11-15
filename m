@@ -1,29 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Promise SATA vendor drivers uploaded
-Date: Wed, 15 Nov 2006 15:50:06 -0500
-Message-ID: <455B7D7E.2030400@garzik.org>
+From: Marek Podmaka <marki@marki-online.net>
+Subject: AHCI and add_disk_randomness()
+Date: Wed, 15 Nov 2006 22:01:30 +0100
+Message-ID: <1124564609.20061115220130@marki-online.net>
+Reply-To: Marek Podmaka <marki@marki-online.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34712 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030995AbWKOUuI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Nov 2006 15:50:08 -0500
+Received: from kenny.oneemedia.com ([85.248.115.102]:40673 "EHLO
+	kenny.oneemedia.com") by vger.kernel.org with ESMTP
+	id S1030734AbWKOVBf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Nov 2006 16:01:35 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Mikael Pettersson <mikpe@it.uu.se>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-To further assist anyone wishing to hack on sata_promise.c, I just 
-uploaded the long-since-GPL'd vendor drivers for Generation-I and 
-Generation-II chipsets to http://gkernel.sourceforge.net/specs/promise/
+Hello,
 
-This should help with isolating the proper initialization sequence for a 
-given set of chips, particularly.
+  I have server with Intel 5000V motherboard with integrated AHCI SATA
+  controller. It works well with kernel 2.6.18.2. But I have problem
+  with little entropy available and I'm not sure if one of the reasons
+  is that AHCI driver does not use add_disk_randomness() to contribute
+  to the kernel entropy pool.
 
-If someone knows of updated versions of these GPL'd drivers, please let 
-me know.
+  I'm not very skilled on kernel "hacking"... I tried finding where
+  this is called (it's defined in drivers/char/random.c and used for
+  example in Comapaq SmartArray driver in drivers/block/cciss.c). For
+  the SCSI part, I found it in scsi_lib.c, but I was not able to
+  determine if this is actually used by ahci/libata drivers.
 
-	Jeff
+  If not, would it be possible to implement it? I tried to figure out
+  where to call it by looking at cciss.c, but it seems that this is
+  totally different case, at least for me. I don't know where to add
+  it, because its parameter is struct gendisk *disk and didn't find it
+  used anywhere in ahci or libata.
+
+-- 
+  bYE, Marki
 
 
