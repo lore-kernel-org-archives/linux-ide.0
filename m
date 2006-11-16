@@ -1,41 +1,59 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] clear garbage after CDBs on SG_IO
-Date: Thu, 16 Nov 2006 00:49:03 -0800
-Message-ID: <20061116004903.ed9b81ac.akpm@osdl.org>
-References: <20061116005227.GD27684@htj.dyndns.org>
+From: "Martin Bene" <martin.bene@icomedias.com>
+Subject: AW: Promise SATA vendor drivers uploaded
+Date: Thu, 16 Nov 2006 11:04:31 +0100
+Message-ID: <FA095C015271B64E99B197937712FD020F1F2939@freedom.grz.icomedias.com>
+References: <455B7D7E.2030400@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:60047 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1422691AbWKPIuB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 03:50:01 -0500
-In-Reply-To: <20061116005227.GD27684@htj.dyndns.org>
+Received: from relay.icomedias.com ([62.99.232.66]:27403 "EHLO
+	relay.icomedias.com") by vger.kernel.org with ESMTP
+	id S1422868AbWKPKEe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 05:04:34 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <455B7D7E.2030400@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, dougg@torque.net, mfluhr@nero.com, alan@lxorguk.ukuu.org.uk, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Thu, 16 Nov 2006 09:52:27 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> ATAPI devices transfer fixed number of bytes for CDBs (12 or 16).
-> Some ATAPI devices choke when shorter CDB is used and the left bytes
-> contain garbage.  Block SG_IO cleared left bytes but SCSI SG_IO
-> didn't.  This patch makes SCSI SG_IO clear it and simplify CDB
-> clearing in block SG_IO.
+> To further assist anyone wishing to hack on sata_promise.c, I just 
+> uploaded the long-since-GPL'd vendor drivers for Generation-I and 
+> Generation-II chipsets to 
+> http://gkernel.sourceforge.net/specs/promise/
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Mathieu Fluhr <mfluhr@nero.com>
+> This should help with isolating the proper initialization 
+> sequence for a given set of chips, particularly.
 > 
-> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-> index 2dc3264..cac7f18 100644
-> --- a/block/scsi_ioctl.c
-> +++ b/block/scsi_ioctl.c
-> @@ -286,9 +286,8 @@ static int sg_io(struct file *file, requ
->  	 * fill in request structure
->  	 */
->  	rq->cmd_len = hdr->cmd_len;
-> +	memset(req->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
+> If someone knows of updated versions of these GPL'd drivers, 
+> please let me know.
 
-s/req/rq/ makes the compiler happier there.
+The uploaded versions seem to be version 1.00.0.15 for kernel 2.4 only. 
+
+The newest version (for sataII TX4/300, TX4/150 and friends) I find on
+the promise website is 1.01.0.20 for the 2.6 kernel series; not much
+newer though, the files are timestamped 2005-07-05.
+
+Also: I'm not quite sure about the license: while the top level files
+are GPL, the stuff in cam/ subdirectory seems to have a differenc
+license:
+
+ * Copyright (c) 2002 Promise Technology, Inc.  All rights reserved.
+ * No part of this document may be reproduced or transmitted in any form
+or
+ * by any means, electronic or mechanical, for any purpose, without the
+ * express written permission of Promise Technology, Inc.
+
+Same license appears in the archives you uploaded to sourceforge btw.
+
+I had been using the promise drivers for quite some time on 2.6.13
+because I needed the hotplug functionality - didn't work reliably
+though, used to crash the kernel with about 25% probability when
+connecting new drives. 
+
+Finaly gave up a few days ago, got a SiI 3114 based controller and
+upgraded to 2.6.18 which has the new eh and hotplug for that chipset. 
+
+Bye, Martin
