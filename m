@@ -1,43 +1,31 @@
-From: "Jordan Crouse" <jordan.crouse@amd.com>
-Subject: Re: 2.6.19-rc5: Geode GX IDE and compact flash issues
-Date: Thu, 16 Nov 2006 09:36:35 -0700
-Message-ID: <20061116163634.GA17301@cosmic.amd.com>
-References: <808c8e9d0611151421k64c22a73p1c51e39cc4b5480@mail.gmail.com>
- <20061115224757.GA3411@cosmic.amd.com>
- <808c8e9d0611152110m19ca21b5gcafda26a38c9018f@mail.gmail.com>
+From: "Valentina" <garrett@myhotwife.com>
+Subject: Re[5]:Your lady!
+Date: Thu, 16 Nov 2006 20:53:01 +0200
+Message-ID: <001801c709b0$4f23f880$e20e000a__23533.6944148459$1163703217$gmane$org@BRBy>
 Mime-Version: 1.0
 Content-Type: text/plain;
- charset=us-ascii
+	charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-red.frontbridge.com ([216.148.222.49]:36968 "EHLO
-	outbound1-red-R.bigfish.com") by vger.kernel.org with ESMTP
-	id S1031180AbWKPQeK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Nov 2006 11:34:10 -0500
-In-Reply-To: <808c8e9d0611152110m19ca21b5gcafda26a38c9018f@mail.gmail.com>
-Content-Disposition: inline
+Received: from pppoe-user-201-23-199-25.frionline.com.br ([201.23.199.25]:15378
+	"EHLO pppoe-user-201-23-199-25.frionline.com.br") by vger.kernel.org
+	with ESMTP id S1424325AbWKPSwW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 13:52:22 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ben Gardner <gardner.ben@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: majordomo <majordomo@vger.kernel.org>
 
-On 15/11/06 23:10 -0600, Ben Gardner wrote:
-> On 11/15/06, Jordan Crouse <jordan.crouse@amd.com> wrote:
-> >I am embarrassed to say that I have yet to try out the
-> >CS5535 PATA driver.
-> 
-> So which driver is used with the OLPC?
-> Or does that not use IDE devices?
+Hi there!
 
-OLPC uses USB and NAND.  I'll leave it as an exercise to the reader if thats
-better or worse... :)
+I miss love in my life and I desire to find it!
+Hello, gentleman. I am a single girl, nice, attractive, intelligent, active and easy-going, but lonely...
+I am looking for a responsible man, the one who can show me wisdom, love and attention he has.
+I love life and I am sure I can make my only man happy. If you want to learn me better,
+you can find me here http://greatfeelingoflove.com/flirtwithlove
+If you write to me, I will gladly answer all your questions as something inside says to me that something big and beautiful can grow between us...
 
-Jordan
+Kiss-kiss
 
--- 
-Jordan Crouse
-Senior Linux Engineer
-Advanced Micro Devices, Inc.
-<www.amd.com/embeddedprocessors>
+Valentina
 
 
