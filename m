@@ -1,59 +1,80 @@
-From: "Martin Bene" <martin.bene@icomedias.com>
-Subject: AW: Promise SATA vendor drivers uploaded
-Date: Thu, 16 Nov 2006 11:04:31 +0100
-Message-ID: <FA095C015271B64E99B197937712FD020F1F2939@freedom.grz.icomedias.com>
-References: <455B7D7E.2030400@garzik.org>
+From: "Andrew Lyon" <andrew.lyon@gmail.com>
+Subject: Re: Testing with 2.6.19-rc5
+Date: Thu, 16 Nov 2006 11:21:26 +0000
+Message-ID: <f4527be0611160321o118c8f35ic3969dbda40a7358@mail.gmail.com>
+References: <f4527be0611150645h7cc2791cub7a2ca753156564f@mail.gmail.com>
+	 <20061115110333.4daccb6d.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay.icomedias.com ([62.99.232.66]:27403 "EHLO
-	relay.icomedias.com") by vger.kernel.org with ESMTP
-	id S1422868AbWKPKEe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 05:04:34 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <455B7D7E.2030400@garzik.org>
+Received: from ug-out-1314.google.com ([66.249.92.168]:20751 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1161770AbWKPLV2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Nov 2006 06:21:28 -0500
+Received: by ug-out-1314.google.com with SMTP id m3so399507ugc
+        for <linux-ide@vger.kernel.org>; Thu, 16 Nov 2006 03:21:26 -0800 (PST)
+In-Reply-To: <20061115110333.4daccb6d.akpm@osdl.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-> To further assist anyone wishing to hack on sata_promise.c, I just 
-> uploaded the long-since-GPL'd vendor drivers for Generation-I and 
-> Generation-II chipsets to 
-> http://gkernel.sourceforge.net/specs/promise/
-> 
-> This should help with isolating the proper initialization 
-> sequence for a given set of chips, particularly.
-> 
-> If someone knows of updated versions of these GPL'd drivers, 
-> please let me know.
+On 11/15/06, Andrew Morton <akpm@osdl.org> wrote:
+> On Wed, 15 Nov 2006 14:45:27 +0000
+> "Andrew Lyon" <andrew.lyon@gmail.com> wrote:
+>
+> > Andrew,
+> >
+> > You asked me to test if the issues I reported (Re: JMicron 20360/20363
+> > AHCI Controller much slower with 2.6.18 / Re: SATA CD/DVDRW Support in
+> > 2.6.18? / Re: Problems with Samsung SH-W163A SATA CD/DVDRW JMicron
+> > 20360/20363 2.6.18.1) were still present with 2.6.19-rc5, I tried it
+> > today and ran into a very strange problem, the 4 400gb Samsung SATA
+> > HDs connected to ata_piix were detected as normal but the raid that
+> > they belong to failed to start, the raid system couldnt find any
+> > superblock at all.
+>
+> You mean that the raid works in 2.6.18 but not in 2.6.19-rc5?   Ouch.
 
-The uploaded versions seem to be version 1.00.0.15 for kernel 2.4 only. 
+Yes, thats exactly what I mean, the disks are detected but the raid
+does not start because no superblocks are found.
 
-The newest version (for sataII TX4/300, TX4/150 and friends) I find on
-the promise website is 1.01.0.20 for the 2.6 kernel series; not much
-newer though, the files are timestamped 2005-07-05.
+> What sort of raid setup are you using?
 
-Also: I'm not quite sure about the license: while the top level files
-are GPL, the stuff in cam/ subdirectory seems to have a differenc
-license:
+Raid 5, 4 x 400gb Samsung SATA HDs all connected to ata_piix.
 
- * Copyright (c) 2002 Promise Technology, Inc.  All rights reserved.
- * No part of this document may be reproduced or transmitted in any form
-or
- * by any means, electronic or mechanical, for any purpose, without the
- * express written permission of Promise Technology, Inc.
+> > Is it possible that the addressing of the sectors has changed such
+> > that the device data structure does not map to the on disk data in the
+> > same way as it did with 2.6.18.x ?
+>
+> Sounds unlikely.  More likely we're reading junk from the disks.
+>
+> > unfortunately they drives are not
+> > partitioned, just added straight to the raid, otherwise checking the
+> > partition table would be a good test.
+> >
+> > I had a idea about taking a copy of a few kbs of data from each drive
+> > using both kernel versions and comparing them,
+>
+> Good idea.
+>
+> > but if the raid is
+> > started under 2.6.18 its possible the data would change anyway.. so I
+> > dont think that would work.
+>
+> Do you actually need to start the raid under 2.6.18?  Shut the raid down,
+> take a copy of the first 32k of each disk, then boto 2.6.19-rc5 and do the
+> same?
 
-Same license appears in the archives you uploaded to sourceforge btw.
+Actually you are right, I will disable the raid and do the 32k test as
+soon as I can, hopefully tonight.
 
-I had been using the promise drivers for quite some time on 2.6.13
-because I needed the hotplug functionality - didn't work reliably
-though, used to crash the kernel with about 25% probability when
-connecting new drives. 
+Andy
 
-Finaly gave up a few days ago, got a SiI 3114 based controller and
-upgraded to 2.6.18 which has the new eh and hotplug for that chipset. 
-
-Bye, Martin
+>
+> > Any suggestions? I really want to complete testing of the two issues I
+> > reported..
+>
+> Thanks.
+>
