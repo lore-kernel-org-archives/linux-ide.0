@@ -1,55 +1,55 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problem booting linux 2.6.19-rc5, 2.6.19-rc5-git6,      2.6.19-rc5-mm2
- with md raid 1 over lvm root
-Date: Thu, 16 Nov 2006 09:26:03 +0900
-Message-ID: <455BB01B.2080309@gmail.com>
-References: <41884.81.64.156.37.1163631254.squirrel@rousalka.dyndns.org>
+Subject: [PATCH] clear garbage after CDBs on SG_IO
+Date: Thu, 16 Nov 2006 09:52:27 +0900
+Message-ID: <20061116005227.GD27684@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:27158 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.169]:14213 "EHLO
 	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1162112AbWKPA0d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Nov 2006 19:26:33 -0500
-Received: by ug-out-1314.google.com with SMTP id m3so311266ugc
-        for <linux-ide@vger.kernel.org>; Wed, 15 Nov 2006 16:26:31 -0800 (PST)
-In-Reply-To: <41884.81.64.156.37.1163631254.squirrel@rousalka.dyndns.org>
+	id S1162132AbWKPAws (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Nov 2006 19:52:48 -0500
+Received: by ug-out-1314.google.com with SMTP id m3so316483ugc
+        for <linux-ide@vger.kernel.org>; Wed, 15 Nov 2006 16:52:47 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nicolas Mailhot <nicolas.mailhot@laposte.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au, mingo@redhat.com, dm-devel@redhat.com
+To: Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, dougg@torque.net
+Cc: mfluhr@nero.com, alan@lxorguk.ukuu.org.uk, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Nicolas Mailhot wrote:
-> The failing kernels (I tried -rc5, -rc5-git6, -rc5-mm2 only print :
->=20
-> %<----
-> device-mapper: ioctl: 4.7.0-ioctl (2006-06-24) initialised:
-> dm-devel@redhat.com
-> md: Autodetecting RAID arrays.
-> md: autorun ...
-> md: ... autorun DONE.
-> %<-----
->=20
-> (I didn't bother copying the rest of the failing kernel dmesg, as sat=
-a
-> initialisation fills the first half of the screen, then dm is initial=
-ised,
-> then you only get the logical consequences of failing to detect the /
-> volume. The sata part seems fine =E2=80=93 it prints the name of the =
-hard drives
-> we want to use)
->=20
-> I'm attaching the dmesg for the working distro kernel (yes I know not=
- 100%
-> distro kernel, but very close to one), distro config , and the config=
- I
-> used in my test. If anyone could help me to figure what's wrong I'd b=
-e
-> grateful.
+ATAPI devices transfer fixed number of bytes for CDBs (12 or 16).
+Some ATAPI devices choke when shorter CDB is used and the left bytes
+contain garbage.  Block SG_IO cleared left bytes but SCSI SG_IO
+didn't.  This patch makes SCSI SG_IO clear it and simplify CDB
+clearing in block SG_IO.
 
-Say 'y' not 'm' to SCSI disk support.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Mathieu Fluhr <mfluhr@nero.com>
 
---=20
-tejun
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 2dc3264..cac7f18 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -286,9 +286,8 @@ static int sg_io(struct file *file, requ
+ 	 * fill in request structure
+ 	 */
+ 	rq->cmd_len = hdr->cmd_len;
++	memset(req->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
+ 	memcpy(rq->cmd, cmd, hdr->cmd_len);
+-	if (sizeof(rq->cmd) != hdr->cmd_len)
+-		memset(rq->cmd + hdr->cmd_len, 0, sizeof(rq->cmd) - hdr->cmd_len);
+ 
+ 	memset(sense, 0, sizeof(sense));
+ 	rq->sense = sense;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d2c02df..3ac4890 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -410,6 +410,7 @@ int scsi_execute_async(struct scsi_devic
+ 		goto free_req;
+ 
+ 	req->cmd_len = cmd_len;
++	memset(req->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
+ 	memcpy(req->cmd, cmd, req->cmd_len);
+ 	req->sense = sioc->sense;
+ 	req->sense_len = 0;
