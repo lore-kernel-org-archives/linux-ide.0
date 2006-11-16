@@ -1,66 +1,40 @@
-From: "Nicolas Mailhot" <nicolas.mailhot@laposte.net>
-Subject: 2.6.19-rc5-mm2: WARNING at drivers/ata/sata_nv.c:762
-     nv_adma_bmdma_setup()
-Date: Thu, 16 Nov 2006 23:45:51 +0100 (CET)
-Message-ID: <34862.81.64.156.37.1163717151.squirrel@rousalka.dyndns.org>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH/RFC] ata: Add support for the MPC52xx ATA controller
+ using libata
+Date: Thu, 16 Nov 2006 23:46:01 +0000
+Message-ID: <20061116234601.78325642@localhost.localdomain>
+References: <11637151391017-git-send-email-tnt@246tNt.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:45386 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S1755482AbWKPWrT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 17:47:19 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:24495 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1424590AbWKPXkv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Nov 2006 18:40:51 -0500
+In-Reply-To: <11637151391017-git-send-email-tnt@246tNt.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: hancockr@shaw.ca, linux-kernel@vger.kernel.org, akpm@osdl.org
+Cc: Linux PPC Embedded <linuxppc-embedded@ozlabs.org>, Linux IDE <linux-ide@vger.kernel.org>, Grant Likely <grant.likely@secretlab.ca>, Nicolas DET <nd@bplan-gmbh.de>, Sven Luther <sl@bplan-gmbh.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, John Rigby <jcrigby@gmail.com>, Sylvain Munaut <tnt@246tNt.com>
 
-Hi,
+On Thu, 16 Nov 2006 23:12:19 +0100
+Sylvain Munaut <tnt@246tNt.com> wrote:
 
-When booting a fresh 2.6.19-rc5-mm2, I get a lof of traces like this:
+> * The manual states we should check for the TIP bit before all
+> PIO transaction. That's not really supported by libata and requires
+> reimplementing almost all the hooks. But after talking to Freescale,
+> it turnsout it's not really necessary. So this driver doesn't implement
+> that check. I noticed no problem so far ...
+>
 
+All PIO transactions meaning each PIO command sequence or each register
+read/write ? In the former case is it not enough just to wrap the command
+write ?
 
-WARNING at drivers/ata/sata_nv.c:762 nv_adma_bmdma_setup()
+> * This driver doesn't use the standard function to compute timing
+> because the 5200 needs more timing parameters that are not handled
+> by the generic call (ta and t4).
 
-Call Trace:
- [<ffffffff802614eb>] show_trace+0x34/0x47
- [<ffffffff80261510>] dump_stack+0x12/0x17
- [<ffffffff8806e48b>] :libata:ata_qc_issue_prot+0x1ec/0x24c
- [<ffffffff8806bc0e>] :libata:ata_qc_issue+0x400/0x45d
- [<ffffffff8807075e>] :libata:ata_scsi_translate+0xcf/0x118
- [<ffffffff8807177a>] :libata:ata_scsi_queuecmd+0x103/0x122
- [<ffffffff8037a6bd>] scsi_dispatch_cmd+0x22d/0x2c0
- [<ffffffff8037f7af>] scsi_request_fn+0x2c4/0x38f
- [<ffffffff803113bf>] blk_execute_rq_nowait+0x7a/0x8b
- [<ffffffff80311489>] blk_execute_rq+0xb9/0xe1
- [<ffffffff8037f376>] scsi_execute+0xca/0xe6
- [<ffffffff8037f44b>] scsi_execute_req+0xb9/0xde
- [<ffffffff80380778>] scsi_probe_and_add_lun+0x231/0xa39
- [<ffffffff80381af7>] __scsi_add_device+0x6c/0x97
- [<ffffffff88070150>] :libata:ata_scsi_scan_host+0x46/0x6f
- [<ffffffff8806ec34>] :libata:ata_device_add+0x420/0x4e8
- [<ffffffff88096b35>] :sata_nv:nv_init_one+0x2df/0x333
- [<ffffffff803251ca>] pci_device_probe+0x4c/0x75
- [<ffffffff8037524a>] really_probe+0x87/0x10c
- [<ffffffff803754a1>] __driver_attach+0x90/0xcd
- [<ffffffff8037476f>] bus_for_each_dev+0x43/0x6e
- [<ffffffff80374a65>] bus_add_driver+0x6b/0x18d
- [<ffffffff8032538d>] __pci_register_driver+0x85/0xba
- [<ffffffff8029232b>] sys_init_module+0x1733/0x18b2
- [<ffffffff8025511e>] system_call+0x7e/0x83
-DWARF2 unwinder stuck at system_call+0x7e/0x83
-Leftover inexact backtrace:
-
-The optical drive on the nvidia sata controler is dead (there is also two
-pata drives hanging there, but I don't use them with Linux)
-
-Full dmesg, kernel config, etc available there:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=7538
-
-Regards,
-
--- 
-Nicolas Mailhot
-
+I'd rather the generic code was taught to compute any extra times you
+need but it seems clean enough.
 
