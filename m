@@ -1,102 +1,41 @@
-From: Vasily Averin <vvs@sw.ru>
-Subject: Re: [Q] PCI Express and ide (native) leads to irq storm?
-Date: Thu, 16 Nov 2006 11:45:04 +0300
-Message-ID: <455C2510.5000002@sw.ru>
-References: <453DC2A9.8000507@sw.ru> <453DC65C.8000408@sw.ru>	 <454206EE.9080206@sw.ru> <1161958862.16839.26.camel@localhost.localdomain> <4559879D.8090105@sw.ru> <455AF01C.5090307@gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH] clear garbage after CDBs on SG_IO
+Date: Thu, 16 Nov 2006 00:49:03 -0800
+Message-ID: <20061116004903.ed9b81ac.akpm@osdl.org>
+References: <20061116005227.GD27684@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:36904 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S1031076AbWKPIpK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 03:45:10 -0500
-In-Reply-To: <455AF01C.5090307@gmail.com>
+Received: from smtp.osdl.org ([65.172.181.4]:60047 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1422691AbWKPIuB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 03:50:01 -0500
+In-Reply-To: <20061116005227.GD27684@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, devel@openvz.org
+Cc: Jens Axboe <axboe@suse.de>, dougg@torque.net, mfluhr@nero.com, alan@lxorguk.ukuu.org.uk, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Vasily Averin wrote:
->> Alan Cox wrote:
->>> Ar Gwe, 2006-10-27 am 17:17 +0400, ysgrifennodd Vasily Averin:
->>>> Could somebody please help me to troubleshoot this issue? I've seen this issue
->>>> on the customer nodes and would like to know how I can work-around this issue
->>>> without any changes inside motherboard BIOS.
->>> If its an IRQ routing triggered problem you probably can't, at least not
->>> the IDE error. The oops wants debugging further because it shouldn't
->>> have oopsed on that error merely given up.
->> Alan,
->> I've reproduced this issue on linux 2.6.19-rc5 kernel.
->>
->> As far as I see if IDE controller is switched into native mode it shares irq
->> together with one of PCI Express Ports. It seems for me the last device is
->> guilty in this issue, becuase of it shares IDE irq on all the checked nodes.
->> and I do not know the ways to change their irq number or disable this device at all.
->>
->> I means the following devices:
->>
->> on Intel 915G-based nodes
->> 0000:00:1c.2 Class 0604: 8086:2664 (rev 03)
->> 0000:00:1c.2 PCI bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family)
->> PCI Express Port 3 (rev 03)
->>
->> on Intel E7520 node:
->> 00:04.0 0604: 8086:3597 (rev 0a)
->> 00:05.0 0604: 8086:3598 (rev 0a)
->> 00:04.0 PCI bridge: Intel Corporation E7525/E7520 PCI Express Port B (rev 0a)
->> 00:05.0 PCI bridge: Intel Corporation E7520 PCI Express Port B1 (rev 0a)
->>
->> I've checked Intel chipset spec updates but do not found any related issues.
->>
->> Please see http://bugzilla.kernel.org/show_bug.cgi?id=7518 for details
+On Thu, 16 Nov 2006 09:52:27 +0900
+Tejun Heo <htejun@gmail.com> wrote:
+
+> ATAPI devices transfer fixed number of bytes for CDBs (12 or 16).
+> Some ATAPI devices choke when shorter CDB is used and the left bytes
+> contain garbage.  Block SG_IO cleared left bytes but SCSI SG_IO
+> didn't.  This patch makes SCSI SG_IO clear it and simplify CDB
+> clearing in block SG_IO.
 > 
-> Okay, I tracked this one down.  It's pretty interesting.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Mathieu Fluhr <mfluhr@nero.com>
 > 
-> In short, some piix controllers including ICH7, when put into enhanced 
-> mode (PCI native mode), uses BMDMA Interrupt bit as interrupt 
-> pending/clear bit for *all* commands.  ie. Reading STATUS does NOT clear 
-> IRQ even for PIO commands.  1 should be written to BMDMA Interrupt bit 
-> to clear IRQ.  That's what's causing IRQ storm.  IDE driver does what 
-> it's supposed to do but IRQ is just stuck at low active.
-> 
-> Fortunately, libata is immune to the problem because it does 
-> ap->ops->irq_clear(ap) in ata_host_intr() regardless of command type in 
-> flight.  So, not loading IDE piix and using libata to drive all piix 
-> ports solves the problem.
+> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+> index 2dc3264..cac7f18 100644
+> --- a/block/scsi_ioctl.c
+> +++ b/block/scsi_ioctl.c
+> @@ -286,9 +286,8 @@ static int sg_io(struct file *file, requ
+>  	 * fill in request structure
+>  	 */
+>  	rq->cmd_len = hdr->cmd_len;
+> +	memset(req->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
 
-I've disabled IDE support in the config and recompiled the kernel.
-It seems you are right, problem go away, new kernel was booted without any
-problems and works well.
-
-> I guess this behavior is unique to some piixs in enhanced mode 
-> considering wide use of IDE driver.  Fixing this in IDE driver is pain 
-> in the ass because IRQ handler is scattered all over the place.  I'm 
-> thinking about adding big warning message saying "IRQ storm can occur 
-> and you better switch to libata if that happens".  But if anyone else is 
-> up for the job of fixing IDE, please don't hesitate.
-
-I'm very happy that we have found the cause of this issue, however it seems for
-me you do not understand fully its severity for linux end-users.
-
-At the present moment this issue is present in all vendor kernels, and they
-cannot be installed on the huge number of end-user nodes. Moreover, end-user
-nodes can have installed old Linux distribution where initscripts do not loads
-all the detected modules at the boot-time. Linux may be installed  and the
-following situation is possible: kernel was booted and works well until some
-user will going to access the CDROM.
-
->From end-users point of view this issue looks mystic and very dump: is the linux
-stable? is it ready for desktop? $%^&#! It crashes when I accessing the CDROM! :(
-
-As a linux support engeneer I've seen this issue several times on the user-nodes
-and it was very hard to understand what's happened and how to prevent this issue
-in the future. First question is resolved now but from support point of view it
-is very important to find some workaround against this issue on existing
-distributions. Right now I see only one way: if this issue is detected on the
-user node, we can add something like "ide=disable" into kernel commandline.
-
-Probably the better solution exists?
-
-thank you,
-	Vasily Averin
+s/req/rq/ makes the compiler happier there.
