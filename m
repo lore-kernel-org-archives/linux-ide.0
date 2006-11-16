@@ -1,31 +1,49 @@
-From: "Valentina" <garrett@myhotwife.com>
-Subject: Re[5]:Your lady!
-Date: Thu, 16 Nov 2006 20:53:01 +0200
-Message-ID: <001801c709b0$4f23f880$e20e000a__23533.6944148459$1163703217$gmane$org@BRBy>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Testing with 2.6.19-rc5
+Date: Thu, 16 Nov 2006 12:36:06 -0800
+Message-ID: <20061116123606.78e251ca.akpm@osdl.org>
+References: <f4527be0611150645h7cc2791cub7a2ca753156564f@mail.gmail.com>
+	<20061115110333.4daccb6d.akpm@osdl.org>
+	<f4527be0611160321o118c8f35ic3969dbda40a7358@mail.gmail.com>
+	<f4527be0611160552j1b00bffag790f1a1a29790078@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1252"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pppoe-user-201-23-199-25.frionline.com.br ([201.23.199.25]:15378
-	"EHLO pppoe-user-201-23-199-25.frionline.com.br") by vger.kernel.org
-	with ESMTP id S1424325AbWKPSwW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 13:52:22 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:54960 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1424444AbWKPUgT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Nov 2006 15:36:19 -0500
+In-Reply-To: <f4527be0611160552j1b00bffag790f1a1a29790078@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: majordomo <majordomo@vger.kernel.org>
+To: Andrew Lyon <andrew.lyon@gmail.com>
+Cc: linux-ide@vger.kernel.org, Neil Brown <neilb@suse.de>
 
-Hi there!
+On Thu, 16 Nov 2006 13:52:28 +0000
+"Andrew Lyon" <andrew.lyon@gmail.com> wrote:
 
-I miss love in my life and I desire to find it!
-Hello, gentleman. I am a single girl, nice, attractive, intelligent, active and easy-going, but lonely...
-I am looking for a responsible man, the one who can show me wisdom, love and attention he has.
-I love life and I am sure I can make my only man happy. If you want to learn me better,
-you can find me here http://greatfeelingoflove.com/flirtwithlove
-If you write to me, I will gladly answer all your questions as something inside says to me that something big and beautiful can grow between us...
+> 
+> Comparing the first 32k of the 4 disks under 2.6.18.2 and 2.6.19-rc5
+> there is no difference, so I decided to compare the bootup dmesg, the
+> following text is not output with 2.6.19-rc5:
+> 
+> md: md driver 0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
+> md: bitmap version 4.39
+> 
+> also missing from 2.6.19-rc5 dmesg:
+> 
+> md: raidstart(pid 3158) used deprecated START_ARRAY ioctl. This will
+> not be supported beyond July 2006
+> 
+> Might that explain why my raid5 does not work in 2.6.19-rc5 ?
 
-Kiss-kiss
+That sounds like a very good theory.
 
-Valentina
+> I have
+> attached the full dmesg and kernel config's from both versions, in
+> case I have made a error there.
+> 
+> I am currnetly using raidtools 1.00.3
 
-
+That appears to be something which Ingo released three and a half years ago ;)
+I guess it's time to learn mdadm.
