@@ -1,55 +1,38 @@
-From: Vasily Averin <vvs@sw.ru>
-Subject: Re: [Q] workaround for ide (native) leads to irq storm?
-Date: Fri, 17 Nov 2006 15:54:43 +0300
-Message-ID: <455DB113.4000309@sw.ru>
-References: <453DC2A9.8000507@sw.ru> <453DC65C.8000408@sw.ru>		<454206EE.9080206@sw.ru>	<1161958862.16839.26.camel@localhost.localdomain>	<4559879D.8090105@sw.ru> <455AF01C.5090307@gmail.com> <455C2510.5000002@sw.ru>
+From: Heikki Orsila <shd@zakalwe.fi>
+Subject: Re: [PATCH] SCSI: Add the SGPIO support for sata_nv.c
+Date: Fri, 17 Nov 2006 17:06:12 +0200
+Message-ID: <20061117150612.GC12227@zakalwe.fi>
+References: <15F501D1A78BD343BE8F4D8DB854566B0CEB90E0@hkemmail01.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:6545 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S933525AbWKQMyt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Nov 2006 07:54:49 -0500
-In-Reply-To: <455C2510.5000002@sw.ru>
+Received: from zakalwe.fi ([80.83.5.154]:20944 "EHLO zakalwe.fi")
+	by vger.kernel.org with ESMTP id S932068AbWKQPGU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Nov 2006 10:06:20 -0500
+Content-Disposition: inline
+In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B0CEB90E0@hkemmail01.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: devel@openvz.org
-Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Peer Chen <pchen@nvidia.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Prakash Punnoor <prakash@punnoor.de>, Andrew Morton <akpm@osdl.org>, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
 
-Vasily Averin wrote:
-> Tejun Heo wrote:
->> Vasily Averin wrote:
->>> I've reproduced this issue on linux 2.6.19-rc5 kernel.
->>>
->>> Please see http://bugzilla.kernel.org/show_bug.cgi?id=7518 for details
->>
->> Fortunately, libata is immune to the problem because it does 
->> ap->ops->irq_clear(ap) in ata_host_intr() regardless of command type in 
->> flight.  So, not loading IDE piix and using libata to drive all piix 
->> ports solves the problem.
-> 
-> I've disabled IDE support in the config and recompiled the kernel.
-> It seems you are right, problem go away, new kernel was booted without any
-> problems and works well.
-> 
-> As a linux support engeneer I've seen this issue several times on the user-nodes
-> and it was very hard to understand what's happened and how to prevent this issue
-> in the future. First question is resolved now but from support point of view it
-> is very important to find some workaround against this issue on existing
-> distributions. Right now I see only one way: if this issue is detected on the
-> user node, we can add something like "ide=disable" into kernel commandline.
+On Fri, Nov 17, 2006 at 04:36:37PM +0800, Peer Chen wrote:
+> I didn't get any comment from you guys for new patch, does someone take
+> care this patch, do we still need some modification upon it? Or do we
+> need re-submit it in other thread?
 
-I've tried to find the some work around for this issue. "hda=noprobe" helps, CD
-is not detected on the node and all other devices on the node works well...
+One small change suggestion:
 
-However if I have additional device who uses the same irq the issue returns
-back. When I enable USB support on my testnode, one of USB controllers requests
-the same IRQ line. And IRQ storm occurs again when I load uhci_hcd driver on the
-node. It is very strange for me: we do not have any IDE devices in this case.
+> +static inline bool nv_sgpio_capable(const struct pci_device_id *ent)         
+> +{                                                                            
+> +     if (ent->device == PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2)             
+> +             return 1;                                                       
+> +     else                                                                    
+> +             return 0;                                                       
+> +}                          
 
-I would note, that I've seen the same behaviour when I detach the CDROM manually.
+Make it shorter ->
 
-I've updated the bug.
+	return ent->device == PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2;
 
-Thank you,
-	Vasily Averin
+ - Heikki
