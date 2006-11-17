@@ -1,98 +1,75 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/2] libata: move BMDMA host status recording from EH to interrupt handler
-Date: Fri, 17 Nov 2006 12:06:21 +0900
-Message-ID: <20061117030621.GD2184@htj.dyndns.org>
+Subject: [PATCH 2/2] libata: make sure IRQ is cleared after ata_bmdma_freeze()
+Date: Fri, 17 Nov 2006 12:07:50 +0900
+Message-ID: <20061117030750.GE2184@htj.dyndns.org>
+References: <20061117030621.GD2184@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:64555 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.187]:56113 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1424752AbWKQDGa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Nov 2006 22:06:30 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1202739nfa
-        for <linux-ide@vger.kernel.org>; Thu, 16 Nov 2006 19:06:29 -0800 (PST)
+	id S1424755AbWKQDH5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Nov 2006 22:07:57 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1203166nfa
+        for <linux-ide@vger.kernel.org>; Thu, 16 Nov 2006 19:07:56 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <20061117030621.GD2184@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-For certain errors, interrupt handler alter BMDMA host status before
-entering EH (clears active and intr).  Thus altered BMDMA host status
-value is recorded by BMDMA EH and reported to user.  Move BMDMA host
-status recording from EH to interrupt handler.
+Now that BMDMA status is recorded in irq handler.  ata_bmdma_freeze()
+is free to manipulate host status.  Under certain circumstances, some
+controllers (ICH7 in enhanced mode w/ IRQ shared) raise IRQ when CTL
+register is written to and ATA_NIEN doesn't mask it.
+
+This patch makes ata_bmdma_freeze() clear all pending IRQs after
+freezing a port.  This change makes explicit clearing in
+ata_device_add() unnecessary and thus kills it.  The removed code was
+SFF-specific and was in the wrong place.
+
+Note that ->freeze() handler is always called under ap->lock held and
+irq disabled.  Even if CTL manipulation causes stuck IRQ, it's cleared
+immediately.  This should be safe (enough) even in SMP environment.
+More correct solution is to mask the IRQ from IRQ controller but that
+would be an overkill.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |    6 ++++++
- drivers/ata/libata-sff.c  |    3 ---
- drivers/ata/sata_sil.c    |    5 +++++
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ drivers/ata/libata-core.c |    5 ++---
+ drivers/ata/libata-sff.c  |    6 ++++++
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-Index: work/drivers/ata/sata_sil.c
-===================================================================
---- work.orig/drivers/ata/sata_sil.c
-+++ work/drivers/ata/sata_sil.c
-@@ -356,6 +356,7 @@ static void sil_scr_write (struct ata_po
- 
- static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
- {
-+	struct ata_eh_info *ehi = &ap->eh_info;
- 	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
- 	u8 status;
- 
-@@ -428,6 +429,10 @@ static void sil_host_intr(struct ata_por
- 	/* kick HSM in the ass */
- 	ata_hsm_move(ap, qc, status, 0);
- 
-+	if (unlikely(qc->err_mask) && (qc->tf.protocol == ATA_PROT_DMA ||
-+				       qc->tf.protocol == ATA_PROT_ATAPI_DMA))
-+		ata_ehi_push_desc(ehi, "BMDMA2 stat 0x%x", bmdma2);
-+
- 	return;
- 
-  err_hsm:
 Index: work/drivers/ata/libata-core.c
 ===================================================================
 --- work.orig/drivers/ata/libata-core.c
 +++ work/drivers/ata/libata-core.c
-@@ -4862,6 +4862,7 @@ unsigned int ata_qc_issue_prot(struct at
- inline unsigned int ata_host_intr (struct ata_port *ap,
- 				   struct ata_queued_cmd *qc)
- {
-+	struct ata_eh_info *ehi = &ap->eh_info;
- 	u8 status, host_stat = 0;
+@@ -5606,9 +5606,8 @@ int ata_device_add(const struct ata_prob
+ 				ap->ioaddr.bmdma_addr,
+ 				irq_line);
  
- 	VPRINTK("ata%u: protocol %d task_state %d\n",
-@@ -4922,6 +4923,11 @@ inline unsigned int ata_host_intr (struc
- 	ap->ops->irq_clear(ap);
+-		ata_chk_status(ap);
+-		host->ops->irq_clear(ap);
+-		ata_eh_freeze_port(ap);	/* freeze port before requesting IRQ */
++		/* freeze port before requesting IRQ */
++		ata_eh_freeze_port(ap);
+ 	}
  
- 	ata_hsm_move(ap, qc, status, 0);
-+
-+	if (unlikely(qc->err_mask) && (qc->tf.protocol == ATA_PROT_DMA ||
-+				       qc->tf.protocol == ATA_PROT_ATAPI_DMA))
-+		ata_ehi_push_desc(ehi, "BMDMA stat 0x%x", host_stat);
-+
- 	return 1;	/* irq handled */
- 
- idle_irq:
+ 	/* obtain irq, that may be shared between channels */
 Index: work/drivers/ata/libata-sff.c
 ===================================================================
 --- work.orig/drivers/ata/libata-sff.c
 +++ work/drivers/ata/libata-sff.c
-@@ -743,7 +743,6 @@ void ata_bmdma_drive_eh(struct ata_port 
- 			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 			ata_postreset_fn_t postreset)
- {
--	struct ata_eh_context *ehc = &ap->eh_context;
- 	struct ata_queued_cmd *qc;
- 	unsigned long flags;
- 	int thaw = 0;
-@@ -763,8 +762,6 @@ void ata_bmdma_drive_eh(struct ata_port 
+@@ -700,6 +700,12 @@ void ata_bmdma_freeze(struct ata_port *a
+ 		writeb(ap->ctl, (void __iomem *)ioaddr->ctl_addr);
+ 	else
+ 		outb(ap->ctl, ioaddr->ctl_addr);
++
++	/* Many controllers fail to clear pending IRQ on ATA_NIEN
++	 * assertion.  Clear it.
++	 */
++	ata_chk_status(ap);
++	ap->ops->irq_clear(ap);
+ }
  
- 		host_stat = ap->ops->bmdma_status(ap);
- 
--		ata_ehi_push_desc(&ehc->i, "BMDMA stat 0x%x", host_stat);
--
- 		/* BMDMA controllers indicate host bus error by
- 		 * setting DMA_ERR bit and timing out.  As it wasn't
- 		 * really a timeout event, adjust error mask and
+ /**
