@@ -1,19 +1,19 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/2] libata: make sure IRQ is cleared after ata_bmdma_freeze()
-Date: Fri, 17 Nov 2006 12:07:50 +0900
-Message-ID: <20061117030750.GE2184@htj.dyndns.org>
-References: <20061117030621.GD2184@htj.dyndns.org>
+Subject: [PATCH 2/2 UPDATED] libata: make sure IRQ is cleared after ata_bmdma_freeze()
+Date: Fri, 17 Nov 2006 12:24:22 +0900
+Message-ID: <20061117032422.GF2184@htj.dyndns.org>
+References: <20061117030621.GD2184@htj.dyndns.org> <20061117030750.GE2184@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:56113 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.191]:51572 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1424755AbWKQDH5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Nov 2006 22:07:57 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1203166nfa
-        for <linux-ide@vger.kernel.org>; Thu, 16 Nov 2006 19:07:56 -0800 (PST)
+	id S1424650AbWKQDYb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Nov 2006 22:24:31 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1207563nfa
+        for <linux-ide@vger.kernel.org>; Thu, 16 Nov 2006 19:24:30 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20061117030621.GD2184@htj.dyndns.org>
+In-Reply-To: <20061117030750.GE2184@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
@@ -36,9 +36,12 @@ would be an overkill.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
+The original comment didn't really explain what's going on.  Updated
+w/ better comment.
+
  drivers/ata/libata-core.c |    5 ++---
- drivers/ata/libata-sff.c  |    6 ++++++
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ drivers/ata/libata-sff.c  |    8 ++++++++
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
 Index: work/drivers/ata/libata-core.c
 ===================================================================
@@ -60,15 +63,17 @@ Index: work/drivers/ata/libata-sff.c
 ===================================================================
 --- work.orig/drivers/ata/libata-sff.c
 +++ work/drivers/ata/libata-sff.c
-@@ -700,6 +700,12 @@ void ata_bmdma_freeze(struct ata_port *a
+@@ -700,6 +700,14 @@ void ata_bmdma_freeze(struct ata_port *a
  		writeb(ap->ctl, (void __iomem *)ioaddr->ctl_addr);
  	else
  		outb(ap->ctl, ioaddr->ctl_addr);
 +
-+	/* Many controllers fail to clear pending IRQ on ATA_NIEN
-+	 * assertion.  Clear it.
++	/* Under certain circumstances, some controllers raise IRQ on
++	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
++	 * previously pending IRQ on ATA_NIEN assertion.  Clear it.
 +	 */
 +	ata_chk_status(ap);
++
 +	ap->ops->irq_clear(ap);
  }
  
