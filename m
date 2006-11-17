@@ -1,38 +1,44 @@
-From: Heikki Orsila <shd@zakalwe.fi>
-Subject: Re: [PATCH] SCSI: Add the SGPIO support for sata_nv.c
-Date: Fri, 17 Nov 2006 17:06:12 +0200
-Message-ID: <20061117150612.GC12227@zakalwe.fi>
-References: <15F501D1A78BD343BE8F4D8DB854566B0CEB90E0@hkemmail01.nvidia.com>
+From: Arnaud Patard <apatard@mandriva.com>
+Subject: [PATCH] pata_marvell: fix cable detection
+Date: Fri, 17 Nov 2006 19:04:06 +0100
+Message-ID: <m3fycidk6h.fsf@anduin.mandriva.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: multipart/mixed; boundary="=-=-="
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zakalwe.fi ([80.83.5.154]:20944 "EHLO zakalwe.fi")
-	by vger.kernel.org with ESMTP id S932068AbWKQPGU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Nov 2006 10:06:20 -0500
-Content-Disposition: inline
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B0CEB90E0@hkemmail01.nvidia.com>
+Received: from ezoffice.mandriva.com ([84.14.106.134]:47373 "EHLO
+	office.mandriva.com") by vger.kernel.org with ESMTP id S932975AbWKQSCC
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Nov 2006 13:02:02 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <pchen@nvidia.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Prakash Punnoor <prakash@punnoor.de>, Andrew Morton <akpm@osdl.org>, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
+To: linux-ide@vger.kernel.org
+Cc: alan@redhat.com
 
-On Fri, Nov 17, 2006 at 04:36:37PM +0800, Peer Chen wrote:
-> I didn't get any comment from you guys for new patch, does someone take
-> care this patch, do we still need some modification upon it? Or do we
-> need re-submit it in other thread?
+--=-=-=
 
-One small change suggestion:
 
-> +static inline bool nv_sgpio_capable(const struct pci_device_id *ent)         
-> +{                                                                            
-> +     if (ent->device == PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2)             
-> +             return 1;                                                       
-> +     else                                                                    
-> +             return 0;                                                       
-> +}                          
+A "break;" is missing in the cable detection switch() statement, leading
+to a wrong detection of the cable type.
 
-Make it shorter ->
+Signed-off-by: Arnaud Patard <apatard@mandriva.com>
+---
 
-	return ent->device == PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2;
+--=-=-=
+Content-Type: text/x-patch
+Content-Disposition: inline; filename=pata_marvell_fix_cbl_detect.patch
 
- - Heikki
+Index: libata-dev/drivers/ata/pata_marvell.c
+===================================================================
+--- libata-dev.orig/drivers/ata/pata_marvell.c
++++ libata-dev/drivers/ata/pata_marvell.c
+@@ -62,6 +62,7 @@ static int marvell_pre_reset(struct ata_
+ 			ap->cbl = ATA_CBL_PATA80;
+ 		else
+ 			ap->cbl = ATA_CBL_PATA40;
++		break;
+ 
+ 	case 1: /* Legacy SATA port */
+ 		ap->cbl = ATA_CBL_SATA;
+
+--=-=-=--
+
