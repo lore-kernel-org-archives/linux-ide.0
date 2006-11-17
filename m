@@ -1,49 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/2] libata: make sure IRQ is cleared after ata_bmdma_freeze()
-Date: Fri, 17 Nov 2006 12:44:48 +0900
-Message-ID: <455D3030.8060702@gmail.com>
-References: <20061117030621.GD2184@htj.dyndns.org> <20061117030750.GE2184@htj.dyndns.org> <455D2C3E.8010509@rtr.ca>
+Subject: [PATCH] libata: set IRQF_SHARED for legacy PCI IDE IRQs
+Date: Fri, 17 Nov 2006 16:22:27 +0900
+Message-ID: <20061117072227.GG2184@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:52164 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1424245AbWKQDo5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Nov 2006 22:44:57 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1212917nfa
-        for <linux-ide@vger.kernel.org>; Thu, 16 Nov 2006 19:44:56 -0800 (PST)
-In-Reply-To: <455D2C3E.8010509@rtr.ca>
+Received: from py-out-1112.google.com ([64.233.166.178]:31623 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1755527AbWKQHWg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Nov 2006 02:22:36 -0500
+Received: by py-out-1112.google.com with SMTP id a29so472544pyi
+        for <linux-ide@vger.kernel.org>; Thu, 16 Nov 2006 23:22:36 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->>
->> Note that ->freeze() handler is always called under ap->lock held and
->> irq disabled.  Even if CTL manipulation causes stuck IRQ, it's cleared
->> immediately.  This should be safe (enough) even in SMP environment.
->> More correct solution is to mask the IRQ from IRQ controller but that
->> would be an overkill.
-> 
-> Could this possibly lead to a "nobody cared" message from the IRQ layer,
-> followed by the kernel then disabling this IRQ?
-> 
-> Just wondering, because that's what can happen if we trigger an IRQ
-> but then don't report "handled" for it from our interrupt handler.
+There are machines out there which share legacy PCI IDE IRQs w/ other
+devices.  libata SFF interrupt/HSM code is ready for shared IRQ and
+has been setting IRQF_SHARED for devices in native PCI mode.  Device
+in legacy mode is still a PCI device and thus supposedly uses
+active-low level triggered IRQ.
 
-Nobody cared triggers after a LOT of interrupts are consecutively 
-unhandled, so this is safe for UP and safe enough for SMP, IMHO.  Also, 
-that's how it has been done in ata_irq_on().  Without this patch, my 
-ich7 in native pci mode w/ shared IRQ does cause nobody cared.  That's 
-why this patch is written.
+Machines with such setup should be quite rare and w/o this flag libata
+is likely to fail loading and render the system unuseable.  Also, IDE
+driver has been setting IRQF_SHARED for devices in legacy mode for a
+looooong time.
 
-> I'm puzzling through a similar situation in sata_qstor right now,
-> and the fix will involve manipulating the NIEN bit, with the same risk.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
 
-Well, I guess, testing is the only way to find answer.  :-(
+Jeff, I couldn't find a generic way to check whether an IRQ is
+confiured as level or edge.  All these legacy mess are pretty much for
+the BIOS to figure out, so let's just do what IDE has been doing.
 
--- 
-tejun
+Thanks.
+
+ drivers/ata/libata-sff.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+Index: work/drivers/ata/libata-sff.c
+===================================================================
+--- work.orig/drivers/ata/libata-sff.c
++++ work/drivers/ata/libata-sff.c
+@@ -911,6 +911,7 @@ static struct ata_probe_ent *ata_pci_ini
+ 		return NULL;
+ 
+ 	probe_ent->n_ports = 2;
++	probe_ent->irq_flags = IRQF_SHARED;
+ 
+ 	if (port_mask & ATA_PORT_PRIMARY) {
+ 		probe_ent->irq = ATA_PRIMARY_IRQ;
+
