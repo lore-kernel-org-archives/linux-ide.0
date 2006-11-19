@@ -1,58 +1,63 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: possibility to merge via_pata fixes to .19 stable series?
-Date: Sat, 18 Nov 2006 22:02:06 -0800
-Message-ID: <20061118220206.6c76c127.akpm@osdl.org>
-References: <200611180759.34622.t.powa@gmx.de>
-	<20061118002357.564dbb9d.akpm@osdl.org>
-	<455F790C.2030509@garzik.org>
-	<20061118224334.72e3685c@localhost.localdomain>
-	<20061118190720.4498d14e.akpm@osdl.org>
-	<455FECFC.9070302@gmail.com>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: [PATCH 1/8] pcmcia: Add an id to ide-cs.c
+Date: Sun, 19 Nov 2006 11:38:51 -0500
+Message-ID: <20061119163851.GB2924@dominikbrodowski.de>
+References: <20061119163427.GA2924@dominikbrodowski.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:54146 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1756459AbWKSGCo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Nov 2006 01:02:44 -0500
-In-Reply-To: <455FECFC.9070302@gmail.com>
+Received: from isilmar.linta.de ([213.239.214.66]:3264 "EHLO linta.de")
+	by vger.kernel.org with ESMTP id S1756774AbWKSQpT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Nov 2006 11:45:19 -0500
+Content-Disposition: inline
+In-Reply-To: <20061119163427.GA2924@dominikbrodowski.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Tobias Powalowski <t.powa@gmx.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, matthieu castet <castet.matthieu@free.fr>
+To: linux-pcmcia@lists.infradead.org
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Sun, 19 Nov 2006 14:34:52 +0900
-Tejun Heo <htejun@gmail.com> wrote:
 
-> Andrew Morton wrote:
-> > On Sat, 18 Nov 2006 22:43:34 +0000
-> > Alan <alan@lxorguk.ukuu.org.uk> wrote:
-> > 
-> >> On Sat, 18 Nov 2006 16:20:12 -0500
-> >> Jeff Garzik <jeff@garzik.org> wrote:
-> >>>> I don't know if they're still concerns, nor if they're fatal concerns
-> >>>> either.  But I've been sitting on that patch for nearly five months.
-> >>> This isn't driver-specific, so a similar change should be applied to the 
-> >>> core.
-> >> Agreed - it belongs in the core code. We see the same problem on multiple
-> >> controllers and its one of the big things that at the moment makes it
-> >> impossible to progress the PATA drivers further.
-> > 
-> > A five month stall of a patch which makes the difference betweem "working"
-> > and "not working" sounds pretty serious.
-> > 
-> > Is this something someone is working on?  If not, is it something which
-> > Matthieu might have time to look into (please?)
-> 
-> Doing SETXFER via polling is proposed as solution and verfivied by Matthieu.
-> 
-> http://thread.gmane.org/gmane.linux.ide/13248/focus=13248
+From: Matt Reimer <mattjreimer@gmail.com>
+Date: Thu, 26 Oct 2006 15:56:00 -0700
+Subject: [PATCH] pcmcia: Add an id to ide-cs.c
 
-Great, thanks.
+Add an ID entry for:
 
-> The patch has been updated and re-submitted a few days ago.
-> 
-> http://thread.gmane.org/gmane.linux.ide/14088/focus=14088
-> 
+product info: "TRANSCEND", "TS1GCF80", "", ""
+manfid: 0x000a, 0x0000
+function: 4 (fixed disk)
 
-OIC.  I'm not on linux-ide.
+Signed-off-by: Matt Reimer <mreimer@vpop.net>
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+---
+ drivers/ata/pata_pcmcia.c   |    1 +
+ drivers/ide/legacy/ide-cs.c |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index e93ea27..e587e73 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -356,6 +356,7 @@ static struct pcmcia_device_id pcmcia_de
+ 	PCMCIA_DEVICE_PROD_ID12("SMI VENDOR", "SMI PRODUCT", 0x30896c92, 0x703cc5f6),
+ 	PCMCIA_DEVICE_PROD_ID12("TOSHIBA", "MK2001MPL", 0xb4585a1a, 0x3489e003),
+ 	PCMCIA_DEVICE_PROD_ID1("TRANSCEND    512M   ", 0xd0909443),
++	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS1GCF80", 0x709b1bf1, 0x2a54d4b1),
+ 	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS4GCF120", 0x709b1bf1, 0xf54a91c8),
+ 	PCMCIA_DEVICE_PROD_ID12("WIT", "IDE16", 0x244e5994, 0x3e232852),
+ 	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
+diff --git a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
+index bef4759..8b04ed4 100644
+--- a/drivers/ide/legacy/ide-cs.c
++++ b/drivers/ide/legacy/ide-cs.c
+@@ -408,6 +408,7 @@ static struct pcmcia_device_id ide_ids[]
+ 	PCMCIA_DEVICE_PROD_ID12("SMI VENDOR", "SMI PRODUCT", 0x30896c92, 0x703cc5f6),
+ 	PCMCIA_DEVICE_PROD_ID12("TOSHIBA", "MK2001MPL", 0xb4585a1a, 0x3489e003),
+ 	PCMCIA_DEVICE_PROD_ID1("TRANSCEND    512M   ", 0xd0909443),
++	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS1GCF80", 0x709b1bf1, 0x2a54d4b1),
+ 	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS4GCF120", 0x709b1bf1, 0xf54a91c8),
+ 	PCMCIA_DEVICE_PROD_ID12("WIT", "IDE16", 0x244e5994, 0x3e232852),
+ 	PCMCIA_DEVICE_PROD_ID1("STI Flash", 0xe4a13209),
+-- 
+1.4.4
+
