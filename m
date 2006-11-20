@@ -1,49 +1,64 @@
-From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
-Subject: Re: Problem booting linux 2.6.19-rc5, 2.6.19-rc5-git6,     
-	2.6.19-rc5-mm2 with md raid 1 over lvm root
-Date: Mon, 20 Nov 2006 20:47:26 +0100
-Message-ID: <1164052047.3004.25.camel@rousalka.dyndns.org>
-References: <41884.81.64.156.37.1163631254.squirrel@rousalka.dyndns.org>
-	 <455BB01B.2080309@gmail.com>  <456202FF.8060709@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 1/1] libata: Fixup ata_sas_queuecmd to handle __ata_scsi_queuecmd failure
+Date: Mon, 20 Nov 2006 13:51:56 -0600
+Message-ID: <200611201951.kAKJpwix023253@d03av03.boulder.ibm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:30667 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S966584AbWKTTtp convert rfc822-to-8bit
+Received: from e31.co.us.ibm.com ([32.97.110.149]:57837 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S966590AbWKTTwB
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Nov 2006 14:49:45 -0500
-In-Reply-To: <456202FF.8060709@tmr.com>
+	Mon, 20 Nov 2006 14:52:01 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id kAKJpxvn031276
+	for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2006 14:51:59 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kAKJpxSE330624
+	for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2006 12:51:59 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kAKJpwD3023260
+	for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2006 12:51:58 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au, mingo@redhat.com, dm-devel@redhat.com
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, brking@us.ibm.com
 
-Le lundi 20 novembre 2006 =C3=A0 14:33 -0500, Bill Davidsen a =C3=A9cri=
-t :
-> Tejun Heo wrote:
 
-> >> I'm attaching the dmesg for the working distro kernel (yes I know =
-not=20
-> >> 100%
-> >> distro kernel, but very close to one), distro config , and the con=
-fig I
-> >> used in my test. If anyone could help me to figure what's wrong I'=
-d be
-> >> grateful.
-> >
-> > Say 'y' not 'm' to SCSI disk support.
-> >
-> That will probably work, but just building a new initrd is probably a=
-=20
-> lot easier. Although I thought the SCSI modules were included if buil=
-t=20
-> and installed if present.
+Fixes ata_sas_queuecmd to properly handle a failure from
+__ata_scsi_queuecmd. 
 
-Absolutely no idea why the inird-ing works on distro kernels but not
-this one. Probably confused by the full-sata config
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
 
-Regards,
+ libata-dev-bjking1/drivers/ata/libata-scsi.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
---=20
-Nicolas Mailhot
+diff -puN drivers/ata/libata-scsi.c~libata_sas_qcmd_response drivers/ata/libata-scsi.c
+--- libata-dev/drivers/ata/libata-scsi.c~libata_sas_qcmd_response	2006-11-20 13:49:29.000000000 -0600
++++ libata-dev-bjking1/drivers/ata/libata-scsi.c	2006-11-20 13:49:29.000000000 -0600
+@@ -3330,20 +3330,23 @@ EXPORT_SYMBOL_GPL(ata_sas_slave_configur
+  *	@ap:	ATA port to which the command is being sent
+  *
+  *	RETURNS:
+- *	Zero.
++ *	Return value from __ata_scsi_queuecmd() if @cmd can be queued,
++ *	0 otherwise.
+  */
+ 
+ int ata_sas_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
+ 		     struct ata_port *ap)
+ {
++	int rc = 0;
++
+ 	ata_scsi_dump_cdb(ap, cmd);
+ 
+ 	if (likely(ata_scsi_dev_enabled(ap->device)))
+-		__ata_scsi_queuecmd(cmd, done, ap->device);
++		rc = __ata_scsi_queuecmd(cmd, done, ap->device);
+ 	else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+ 		done(cmd);
+ 	}
+-	return 0;
++	return rc;
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
+_
