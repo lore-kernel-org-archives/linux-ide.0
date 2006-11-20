@@ -1,56 +1,148 @@
-From: Russell King <rmk+pcmcia@arm.linux.org.uk>
-Subject: Re: [PATCH 1/8] pcmcia: Add an id to ide-cs.c
-Date: Mon, 20 Nov 2006 21:07:03 +0000
-Message-ID: <20061120210702.GD26791@flint.arm.linux.org.uk>
-References: <20061119163427.GA2924@dominikbrodowski.de>
-	<20061119163851.GB2924@dominikbrodowski.de>
-	<20061120095349.GA15410@flint.arm.linux.org.uk>
-	<20061120174333.GA18660@isilmar.linta.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <20061120174333.GA18660@isilmar.linta.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-To: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+From: "Carlota Weber" <unfrightened@kyrlach.com>
+Subject: New software uploaded by Samuel on Nov 21 01:00:00 MSK 2006
+Date: Mon, 20 Nov 2006 00:19:34 -0800
+Message-ID: <000001c70cf1$14dc9300$0100007f__46941.0043479458$1164061465$gmane$org@localhost>
+Content-Type: text/plain;
+    charset="us-ascii"
+    Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [84.36.140.89] ([84.36.140.89]:11276 "helo localhost")
+	by vger.kernel.org with SMTP id S966876AbWKTWXn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Nov 2006 17:23:43 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, Nov 20, 2006 at 12:43:33PM -0500, Dominik Brodowski wrote:
-> As the matching by func_id is fuzzy and gives false positives, this is a
-> multiple-step process:
-> 
-> a) the kernel checks all built-in and previously loaded modules for
->    prod_id and manf_id matches
-> 
-> b) userspace (udev/hotplug + modprobe) loads appropriate modules (including
->    those which are only matched by func_id
-> 
-> c) during the module initialization (e.g. modprobe hasn't returned yet) the
->    kernel checks the modules based on prod_id and manf_id matches
-> 
-> d) after all these modprobe calls return, userspace writes "1" into
->    /sys/$devpath/allow_func_id_match. Then, the kernel re-checks all
->    built-in and previously loaded modules for func_id "fuzzy" matches.
-> 
-> It is self-evident that steps b)-d) only work once userspace is ready. As
-> PCMCIA drivers should be able to work even before that, manf_id and prod_id
-> table entries do make sense even if func_id matching works.
 
-However, it doesn't scale.  You're going to be forever adding entry
-after entry after entry to drivers.  It's a never-ending job.
+Samuel has uploaded some new software for you!
 
-Of course, it's really up to you whether you want this task. 8)
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+Click here to view available updated software from Samuel:
+http://moroz-oem.net/?Samuel
+
+
+your users that lpr -g mean ``print Printerleaf files.''
+	is the second most recommended method, since it allows you to
+Native capacity is 2GB.
+config	 kernel    root on sd0 swap on sd0 and sd1 dumps on sd0
+real 16550, 16450, and 8250 UARTs all support these modes and COMTEST
+anonymous ftp.  See ``Obtaining FreeBSD'' for more details.
+active termination increases when you have long buses and/or fast
+o  The text filter, confusingly called the input filter in LPD
+-s Make an accounting summary file and truncate the accounting
+19.2.  When I boot for the first time, it still looks for
+package is, in our case it will tell us in which subdirectory we need
+once. Pretty impressive, no?
+chmod 500 /mnt/sbin/init
+lprm job-number
+like an output filter.
+To check this, go to your kernel compile directory (probably
+user that has quota limits on two file systems.
+program from one version of Unix to another. (It's an unfortunate
+install it yourself, of course.  After installing lprps, just specify
+prior to any device probing.	Hence you are able to even debug the
+25 April 1995.
+support are currently taking place.  Preliminary timelines suggest
+by line, very carefully as backspacing or other editing keys may be
+that's needed to compile the 'foo' port.
+to know where to write an accounting file entry.  The name of this
+connection) counts as a dual-homed host. But the term is really only
+______________________________________________________________________
+mind that if you have multiple operating systems on the same disk, all
+Before you start setting up PPP on your machine make sure that pppd is
+# Quit answering ARP requests for the SLIP client
+what the printer is currently doing (or at least what LPD thinks the
+Before you can run Mathematica you will have to obtain a password from
+For those needing to get a legal foreign distribution of this
+well.
+Sounds too easy, right?
+old trusty config file after upgrading from a pre-FreeBSD2.0.5.R
+18.2.6.3.  Donating Internet access
+		 Bit 2	   Transmit FIFO Reset
+platform
+um|V300|High Speed Modem at 300,8-bit:\
+sio10: type 16550A (multiport)
+Taiwan
+		      of the following error conditions: PE,
+slakware/x9/xf_lib.tgz
+cache that not only increases performance, but reduces FreeBSD's
+what was, at the time, a completely unknown project, it is quite
+Let's dive into the configuration...
+control when the header page is printed that could do accounting, and
+type of installation.
+Though many of the FreeBSD development members read USENET, we cannot
+11:#1  0xf0115159 in panic ()
+waiting for the modem to accept a call.
+Hall, 1995.
+- Satoshi
+Contributed by Jordan K. Hubbard <jkhFreeBSD>.
+The FreeBSD handbook
+and one amber.  The green one indicates tape action: slow flash during
+addresses etc must match the kernel config file. During system boot
+sized so that 5 of them will fit on a conventional 1.44MB floppy.  Go
+linuxxdoom':
+3.   Essentially, if you need rapid on-demand access to the source and
+o	ftp.ua.pt/pub/misc/FreeBSD
+compilation based upon what version of UNIX it is running under.  If
+o	ftp.de.FreeBSD/pub/FreeBSD
+/xfe.install shell script.  You'll have to tell it where to put
+system can also be customized to an almost unheard of degree for
+You may come across code that needs modifications or conditional
+The FreeBSD Project is indebted to the following donors and would like
+dependencies that may appear in stable or any other issues requring
+the output of the lpq command:
+contributors out!  Individuals who hae shown a consistent and
+the network and run FreeBSD without having a disk on your client.
+12.4.1.  Prerequisites
+to:
+for information about setting up header pages.
+the header page; see ``Header Pages on    PostScript Printers''.
+ESDI disks are handled by the same wddriver as IDE and ST412 MFM
+	controller sea0    at isa? bio irq 5 iomem 0xc8000 iosiz 0x2000
+60:       return ((*cdevsw[major(dev)].d_open)(dev, flag, mode, p));
+	SLIP or PPP
+Before using NEFMT.EXE I tried to format the disk using the ACB-2320
+	not implement parity checking.	Workaround for parity issue.
+65:(kgdb) up
+6.4.3.  Enabling IPFW on FreeBSD
+> cd /pub/FreeBSD/ports/databases
+below).
+ifconfig ppp0 down
+	careful with this option!
+you problems, try disabling its PnP features.
+/mnt2/stand. Skip the following paragraph.
+#  printer teak or remote printer bamboo
+		      Set to "1" if the -RI line has had a
+arguments to your Makefile or pkg/PLIST.  This will reset the shared
+user that has quota limits on two file systems.
+try to open /compat/linux/lib/libc.so, and if that does not exist then
+# ahb: Adaptec 174x
+ISBN 0-937175-80-3
+Here is what you will find in this section:
+:lp=/dev/lpt0:
+AT/EISA/PCI/whatever bus to connect your disk therefore has its own
+21.1.5.  Finding the necessary files
+	they have been printed.
+recommendations except to say "SCSI over IDE whenever you can afford
+7.4.2.2.4.  Identifying the Printer Device
+7.4.1.  Hardware Setup
+ifconfig ppp0 down
+28454-XXX4ASB" "type 1 removable SCSI 2" "density code 0x8c, 512-byte
+flowed.  This was used to allow a location with urgent news to
+set to 0x3456, which will be used to direct the byte that is about to
+pages termios(4), sio(4), and stty(1) for information on the terminal
+	       :sh:sd=/var/spool/lpd/rattan:\
+libX11.so.3 (DLL Jump 3.1) => /usr/X11/lib/libX11.so.3.1.0
+Block/Demand
+printer.  Section ``Printers     with Networked Data Stream
+FreeBSD, Inc.
+o	ftp2.internat.FreeBSD/pub/FreeBSD
+than the DCE to DCE speed because of the use of compression by the
+	Documentation project
+22.1.4.  Interesting combinations
+	you can ignore this, otherwise you will probably want to lower
+indicates a 15 Mbits/second controller capable of handling 52
+And we will add this line to the /etc/printcap for the printer teak to
+Many FreeBSD users wish to install FreeBSD on PCs inhabited by MS-DOS.
+
+
