@@ -1,33 +1,148 @@
-From: Nicolas DET <nd@bplan-gmbh.de>
-Subject: Re: [PATCH/RFC] ata: Add support for the MPC52xx ATA controller using libata
-Date: Sun, 19 Nov 2006 20:14:09 +0100 (MET)
-Message-ID: <20061119201411.b5dd5dd5.nd@bplan-gmbh.de>
-References: <11637151391017-git-send-email-tnt@246tNt.com>	<200611172049.49260.jarno.manninen@tut.fi>	<455E0907.8000009@246tNt.com>	<455E3A7E.3030807@garzik.org>	<455E4406.8050405@246tNt.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: fix READ CAPACITY simulation
+Date: Mon, 20 Nov 2006 11:15:47 +0900
+Message-ID: <20061120021547.GL2184@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-p07-ob.rzone.de ([81.169.146.190]:37580 "EHLO
-	mo-p07-ob.rzone.de") by vger.kernel.org with ESMTP id S933038AbWKSTO5
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Nov 2006 14:14:57 -0500
-In-Reply-To: <455E4406.8050405@246tNt.com>
+Received: from ug-out-1314.google.com ([66.249.92.173]:63678 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S933856AbWKTCPz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Nov 2006 21:15:55 -0500
+Received: by ug-out-1314.google.com with SMTP id m3so1084979ugc
+        for <linux-ide@vger.kernel.org>; Sun, 19 Nov 2006 18:15:54 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sylvain Munaut <tnt@246tNt.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Sven Luther <sl@bplan-gmbh.de>, linuxppc-embedded@ozlabs.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: Carlos.Pardo@siliconimage.com
 
-On Sat, 18 Nov 2006 00:21:42 +0100
-Sylvain Munaut <tnt@246tNt.com> wrote:
+* READ CAPACITY (16) implementation fixed.  Result was shifted by two
+  bytes.  Carlos Pardo spotted this problem and submitted preliminary
+  patch.  Capacity => 2TB is handled correctly now.  (verifid w/ fake
+  capacity)
 
+* Use dev->n_sectors instead of re-reading directly from ID data.
 
-> Aside from that, does the driver looks ok ? It has been tested ok on another
-> 5200b platform as well. I'd like to include it in a patch set I'll probably
-> send next weekend. I'll try to add the timing computation to the generic
-> call and make use of those.
-> 
-> 
+* Define and use ATA_SCSI_RBUF_SET() which considers rbuf length.
+  This should be done for all simulation functions.  Userland can
+  issue any simulated command with arbitrary buffer length.
 
-I succefully tested the driver on Efika 5k2: I booted my root fs and did 2 min badblocks. No problems.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
-Regards,
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 86dadf4..6badeb7 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1696,6 +1696,22 @@ void ata_scsi_rbuf_fill(struct ata_scsi_
+ }
+ 
+ /**
++ *	ATA_SCSI_RBUF_SET - helper to set values in SCSI response buffer
++ *	@idx: byte index into SCSI response buffer
++ *	@val: value to set
++ *
++ *	To be used by SCSI command simulator functions.  This macros
++ *	expects two local variables, u8 *rbuf and unsigned int buflen,
++ *	are in scope.
++ *
++ *	LOCKING:
++ *	None.
++ */
++#define ATA_SCSI_RBUF_SET(idx, val) do { \
++		if ((idx) < buflen) rbuf[(idx)] = (u8)(val); \
++	} while (0)
++
++/**
+  *	ata_scsiop_inq_std - Simulate INQUIRY command
+  *	@args: device IDENTIFY data / SCSI command of interest.
+  *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
+@@ -2154,67 +2170,42 @@ saving_not_supp:
+  *	Simulate READ CAPACITY commands.
+  *
+  *	LOCKING:
+- *	spin_lock_irqsave(host lock)
++ *	None.
+  */
+-
+ unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf,
+ 			        unsigned int buflen)
+ {
+-	u64 n_sectors;
+-	u32 tmp;
++	u64 last_lba = args->dev->n_sectors - 1; /* LBA of the last block */
+ 
+ 	VPRINTK("ENTER\n");
+ 
+-	if (ata_id_has_lba(args->id)) {
+-		if (ata_id_has_lba48(args->id))
+-			n_sectors = ata_id_u64(args->id, 100);
+-		else
+-			n_sectors = ata_id_u32(args->id, 60);
+-	} else {
+-		/* CHS default translation */
+-		n_sectors = args->id[1] * args->id[3] * args->id[6];
+-
+-		if (ata_id_current_chs_valid(args->id))
+-			/* CHS current translation */
+-			n_sectors = ata_id_u32(args->id, 57);
+-	}
+-
+-	n_sectors--;		/* ATA TotalUserSectors - 1 */
+-
+ 	if (args->cmd->cmnd[0] == READ_CAPACITY) {
+-		if( n_sectors >= 0xffffffffULL )
+-			tmp = 0xffffffff ;  /* Return max count on overflow */
+-		else
+-			tmp = n_sectors ;
++		if (last_lba >= 0xffffffffULL)
++			last_lba = 0xffffffff;
+ 
+ 		/* sector count, 32-bit */
+-		rbuf[0] = tmp >> (8 * 3);
+-		rbuf[1] = tmp >> (8 * 2);
+-		rbuf[2] = tmp >> (8 * 1);
+-		rbuf[3] = tmp;
++		ATA_SCSI_RBUF_SET(0, last_lba >> (8 * 3));
++		ATA_SCSI_RBUF_SET(1, last_lba >> (8 * 2));
++		ATA_SCSI_RBUF_SET(2, last_lba >> (8 * 1));
++		ATA_SCSI_RBUF_SET(3, last_lba);
+ 
+ 		/* sector size */
+-		tmp = ATA_SECT_SIZE;
+-		rbuf[6] = tmp >> 8;
+-		rbuf[7] = tmp;
+-
++		ATA_SCSI_RBUF_SET(6, ATA_SECT_SIZE >> 8);
++		ATA_SCSI_RBUF_SET(7, ATA_SECT_SIZE);
+ 	} else {
+ 		/* sector count, 64-bit */
+-		tmp = n_sectors >> (8 * 4);
+-		rbuf[2] = tmp >> (8 * 3);
+-		rbuf[3] = tmp >> (8 * 2);
+-		rbuf[4] = tmp >> (8 * 1);
+-		rbuf[5] = tmp;
+-		tmp = n_sectors;
+-		rbuf[6] = tmp >> (8 * 3);
+-		rbuf[7] = tmp >> (8 * 2);
+-		rbuf[8] = tmp >> (8 * 1);
+-		rbuf[9] = tmp;
++		ATA_SCSI_RBUF_SET(0, last_lba >> (8 * 7));
++		ATA_SCSI_RBUF_SET(1, last_lba >> (8 * 6));
++		ATA_SCSI_RBUF_SET(2, last_lba >> (8 * 5));
++		ATA_SCSI_RBUF_SET(3, last_lba >> (8 * 4));
++		ATA_SCSI_RBUF_SET(4, last_lba >> (8 * 3));
++		ATA_SCSI_RBUF_SET(5, last_lba >> (8 * 2));
++		ATA_SCSI_RBUF_SET(6, last_lba >> (8 * 1));
++		ATA_SCSI_RBUF_SET(7, last_lba);
+ 
+ 		/* sector size */
+-		tmp = ATA_SECT_SIZE;
+-		rbuf[12] = tmp >> 8;
+-		rbuf[13] = tmp;
++		ATA_SCSI_RBUF_SET(10, ATA_SECT_SIZE >> 8);
++		ATA_SCSI_RBUF_SET(11, ATA_SECT_SIZE);
+ 	}
+ 
+ 	return 0;
