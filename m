@@ -1,143 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: fix SCSI/ATA device association during hotplug
-Date: Mon, 20 Nov 2006 18:25:34 +0900
-Message-ID: <20061120092534.GP2184@htj.dyndns.org>
+From: Russell King <rmk+pcmcia@arm.linux.org.uk>
+Subject: Re: [PATCH 1/8] pcmcia: Add an id to ide-cs.c
+Date: Mon, 20 Nov 2006 09:53:49 +0000
+Message-ID: <20061120095349.GA15410@flint.arm.linux.org.uk>
+References: <20061119163427.GA2924@dominikbrodowski.de> <20061119163851.GB2924@dominikbrodowski.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:3406 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S934035AbWKTJZn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Nov 2006 04:25:43 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so2279095nfa
-        for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2006 01:25:42 -0800 (PST)
+Received: from caramon.arm.linux.org.uk ([217.147.92.249]:14600 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S934039AbWKTJxz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 20 Nov 2006 04:53:55 -0500
 Content-Disposition: inline
+In-Reply-To: <20061119163851.GB2924@dominikbrodowski.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Two subtle hotplug related bugs are found.
+On Sun, Nov 19, 2006 at 11:38:51AM -0500, Dominik Brodowski wrote:
+> 
+> From: Matt Reimer <mattjreimer@gmail.com>
+> Date: Thu, 26 Oct 2006 15:56:00 -0700
+> Subject: [PATCH] pcmcia: Add an id to ide-cs.c
+> 
+> Add an ID entry for:
+> 
+> product info: "TRANSCEND", "TS1GCF80", "", ""
+> manfid: 0x000a, 0x0000
+> function: 4 (fixed disk)
 
-* SCSI didn't use to issue commands to devices in SDEV_CANCEL state
-  but now it does.  For ATA devices, it means that SYNCHRONIZE_CACHE
-  is issued even after libata tells SCSI midlayer that the SCSI device
-  is offline now.  When devices are swapped, SYNCHRONIZE_CACHE for the
-  previous device can be issued to the later device.
+Erm, silly question: isn't this supposed to be matched by the following:
 
-* Devices can be swapped while SCSI probing is in progress.  SCSI
-  device used to get associated with ATA device only after probing is
-  complete, which means that SCSI device detaching is not performed
-  while probing.  This can result in mismatch between SCSI device and
-  ATA device (e.g. sd attached to ATAPI device) if devices are
-  swapped after INQUIRY but before probing is complete.
+static struct pcmcia_device_id ide_ids[] = {
+        PCMCIA_DEVICE_FUNC_ID(4),
 
-This patch makes libata associate new SCSI device with ATA device
-before INQUIRY is issued and check whether SCSI device issuing a
-command matches dev->sdev on each command.  Both bugs are fixed by
-this tighter coupling between SCSI device and ATA device.
+or are we going to be ignoring the function ID and only matching using
+the manfid and product info strings?
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-scsi.c |   51 +++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 39 insertions(+), 12 deletions(-)
-
-Index: work/drivers/ata/libata-scsi.c
-===================================================================
---- work.orig/drivers/ata/libata-scsi.c
-+++ work/drivers/ata/libata-scsi.c
-@@ -54,9 +54,9 @@
- typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc, const u8 *scsicmd);
- 
- static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
--					const struct scsi_device *scsidev);
-+					       struct scsi_device *scsidev);
- static struct ata_device * ata_scsi_find_dev(struct ata_port *ap,
--					    const struct scsi_device *scsidev);
-+					     struct scsi_device *scsidev);
- static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
- 			      unsigned int id, unsigned int lun);
- 
-@@ -877,7 +877,7 @@ void ata_scsi_slave_destroy(struct scsi_
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 	dev = __ata_scsi_find_dev(ap, sdev);
--	if (dev && dev->sdev) {
-+	if (dev) {
- 		/* SCSI device already in CANCEL state, no need to offline it */
- 		dev->sdev = NULL;
- 		dev->flags |= ATA_DFLAG_DETACH;
-@@ -2509,13 +2509,29 @@ static struct ata_device * ata_find_dev(
- }
- 
- static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
--					const struct scsi_device *scsidev)
-+					       struct scsi_device *scsidev)
- {
-+	struct ata_device *dev;
-+
- 	/* skip commands not addressed to targets we simulate */
- 	if (unlikely(scsidev->channel || scsidev->lun))
- 		return NULL;
- 
--	return ata_find_dev(ap, scsidev->id);
-+	dev = ata_find_dev(ap, scsidev->id);
-+
-+	if (likely(dev && dev->sdev == scsidev))
-+		return dev;
-+
-+	/* if the ATA device is avialable and SCSI device is looking
-+	 * for partner, match them.  For details, read comment in
-+	 * ata_scsi_scan_host().
-+	 */
-+	if (dev && !dev->sdev && scsidev->sdev_state == SDEV_CREATED)
-+		dev->sdev = scsidev;
-+	else
-+		dev = NULL;
-+
-+	return dev;
- }
- 
- /**
-@@ -2565,7 +2581,7 @@ static int ata_scsi_dev_enabled(struct a
-  *	Associated ATA device, or %NULL if not found.
-  */
- static struct ata_device *
--ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev)
-+ata_scsi_find_dev(struct ata_port *ap, struct scsi_device *scsidev)
- {
- 	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
- 
-@@ -2964,16 +2980,27 @@ void ata_scsi_scan_host(struct ata_port 
- 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
--		struct scsi_device *sdev;
- 
- 		if (!ata_dev_enabled(dev) || dev->sdev)
- 			continue;
- 
--		sdev = __scsi_add_device(ap->scsi_host, 0, i, 0, NULL);
--		if (!IS_ERR(sdev)) {
--			dev->sdev = sdev;
--			scsi_device_put(sdev);
--		}
-+		/* Try to attach new SCSI device.  SCSI midlayer
-+		 * doesn't supply separate interfaces for allocating
-+		 * and probing, so in this function, we can associate
-+		 * new SCSI device with its target ATA device only
-+		 * after probing is complete.
-+		 *
-+		 * However, hotplug event may occur during probing and
-+		 * we might have to detach a SCSI device which is in
-+		 * the middle of probing.  So, we need to associate
-+		 * new SCSI device with its target ATA device before
-+		 * the first INQUIRY is complete.
-+		 *
-+		 * This is achieved by automatically associating sdev
-+		 * in SDEV_CREATED state with NULL dev->sdev in
-+		 * __ata_scsi_find_dev().
-+		 */
-+		scsi_add_device(ap->scsi_host, 0, i, 0);
- 	}
- }
- 
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
