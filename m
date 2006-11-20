@@ -1,53 +1,61 @@
-From: Arnaud Patard <apatard@mandriva.com>
-Subject: [PATCH] pata_marvell: fix cable detection - take 2
-Date: Mon, 20 Nov 2006 21:20:44 +0100
-Message-ID: <m3psbhdg4j.fsf@anduin.mandriva.com>
+From: Tom Fredrik Blenning Klaussen <bfg-dev@blenning.no>
+Subject: Driver for the Promise sx4000 HW RAID card
+Date: Mon, 20 Nov 2006 21:22:45 +0100
+Message-ID: <1164054165.5035.40.camel@bfg>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-=-="
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7eve7LYztTOqnvP0Aruf"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ezoffice.mandriva.com ([84.14.106.134]:41738 "EHLO
-	office.mandriva.com") by vger.kernel.org with ESMTP id S965862AbWKTUSO
+Received: from kunder.interhost.no ([80.239.54.98]:55233 "EHLO
+	kunder.interhost.no") by vger.kernel.org with ESMTP id S966637AbWKTUWr
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Nov 2006 15:18:14 -0500
+	Mon, 20 Nov 2006 15:22:47 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: alan@redhat.com
-
---=-=-=
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Renan Calliari <renan_calliari@terra.com.br>, Juha Leivo <jmleivo@gmail.com>
 
 
-Last time I looked at the cable detection code, I fixed the "always
-detect cable as sata cable" case, but this is not enough. I didn't
-notice that the 80-pin cable was seen as a 40-pin cable.
-The appended patch fixes that.
+--=-7eve7LYztTOqnvP0Aruf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Arnaud Patard <apatard@mandriva.com>
----
+We are currently trying to start a project with the goal to support the
+Promise sx4000 RAID card. There is already one provided, but it is not
+working with the current 2.6 kernel.
 
---=-=-=
-Content-Type: text/x-patch
-Content-Disposition: inline;
- filename=pata_marvell_fix_cable_detection_take2.patch
+It seem there are two possible ways to attack this problem.
 
-Index: libata-dev/drivers/ata/pata_marvell.c
-===================================================================
---- libata-dev.orig/drivers/ata/pata_marvell.c
-+++ libata-dev/drivers/ata/pata_marvell.c
-@@ -57,11 +57,10 @@ static int marvell_pre_reset(struct ata_
- 	switch(ap->port_no)
- 	{
- 	case 0:
--		/* Might be backward, docs unclear */
- 		if (inb(ap->ioaddr.bmdma_addr + 1) & 1)
--			ap->cbl = ATA_CBL_PATA80;
--		else
- 			ap->cbl = ATA_CBL_PATA40;
-+		else
-+			ap->cbl = ATA_CBL_PATA80;
- 		break;
- 
- 	case 1: /* Legacy SATA port */
+1. Get the driver provided by promise up to a current state, and do some
+disassembling of their binary code. Alternatively use it as is, but
+getting a tainted kernel. There is some evidence suggesting that this
+driver is a windows version adapted to be used under Linux.
 
---=-=-=--
+2. The card seems to be an older version of the card already supported
+with the module sata_sx4, except it runs PATA and not SATA. It should be
+possible to do some backporting on this driver.
+
+I have scrambled a small team consisting of me and Renan Calliari as
+developers. In addition to Juha Leivo, who is willing to contribute as a
+tester. Neither of us are unfortunately experienced with driver
+development, and we would appreciate any help you can give us.
+
+We look forward to hear from you.
+
+Best regards
+--=20
+Tom Fredrik Klaussen
+
+--=-7eve7LYztTOqnvP0Aruf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFYg6V5VkLJaz9JvgRAnpCAKCV3jG8xrbPYKHnBA7GFwNt0zKWSACeNvGs
+9YNGXK5QLY/gE9f4A2b9p44=
+=5SNb
+-----END PGP SIGNATURE-----
+
+--=-7eve7LYztTOqnvP0Aruf--
 
