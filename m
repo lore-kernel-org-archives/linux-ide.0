@@ -1,88 +1,62 @@
-From: Jonas Lundgren <jonas@local.se>
-Subject: problem with ata_piix + ICH8 on Abit AB9 Pro
-Date: Mon, 20 Nov 2006 16:34:40 +0100
-Message-ID: <4561CB10.8040506@local.se>
-Reply-To: jonas@local.se
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: [PATCH 1/8] pcmcia: Add an id to ide-cs.c
+Date: Mon, 20 Nov 2006 12:43:33 -0500
+Message-ID: <20061120174333.GA18660@isilmar.linta.de>
+References: <20061119163427.GA2924@dominikbrodowski.de> <20061119163851.GB2924@dominikbrodowski.de> <20061120095349.GA15410@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxfep02.bredband.com ([195.54.107.73]:48061 "EHLO
-	mxfep02.bredband.com") by vger.kernel.org with ESMTP
-	id S965904AbWKTPem (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Nov 2006 10:34:42 -0500
-Received: from ironport.bredband.com ([195.54.107.82] [195.54.107.82])
-          by mxfep02.bredband.com with ESMTP
-          id <20061120153440.NHKA16896.mxfep02.bredband.com@ironport.bredband.com>
-          for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2006 16:34:40 +0100
+Received: from isilmar.linta.de ([213.239.214.66]:44736 "EHLO linta.de")
+	by vger.kernel.org with ESMTP id S966283AbWKTRnf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Nov 2006 12:43:35 -0500
+Content-Disposition: inline
+In-Reply-To: <20061120095349.GA15410@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-I've got some big performance related problem with my Abit AB9 pro mobo, 
-the ICH8 controller and my SATA disks.. I've got 2 64GB WD raptor disks 
-in a raid0(These are the disks I have used dd/hdparm on in the commands 
-below), and a 2x250GB WD disk raid0, and I used to get around 
-130-140mb/sec seq write with them, but now with my new mobo I'm lucky if 
-I get 10mb/sec. During heavy disk activity the system locks up, until 
-the write is completed (Ie, no other read or write is being made, it's 
-like heavy IO completely starves all other processes until it's finished)..
+Hi,
 
-Running 2.6.19-rc5-mm2 atm, but I've tried a few diffrent kernels, same 
-thing.
+On Mon, Nov 20, 2006 at 09:53:49AM +0000, Russell King wrote:
+> On Sun, Nov 19, 2006 at 11:38:51AM -0500, Dominik Brodowski wrote:
+> > 
+> > From: Matt Reimer <mattjreimer@gmail.com>
+> > Date: Thu, 26 Oct 2006 15:56:00 -0700
+> > Subject: [PATCH] pcmcia: Add an id to ide-cs.c
+> > 
+> > Add an ID entry for:
+> > 
+> > product info: "TRANSCEND", "TS1GCF80", "", ""
+> > manfid: 0x000a, 0x0000
+> > function: 4 (fixed disk)
+> 
+> Erm, silly question: isn't this supposed to be matched by the following:
+> 
+> static struct pcmcia_device_id ide_ids[] = {
+>         PCMCIA_DEVICE_FUNC_ID(4),
+> 
+> or are we going to be ignoring the function ID and only matching using
+> the manfid and product info strings?
 
-Also, it doesn't matter if I enable AHCI in the BIOS (But with AHCI 
-enabled the disks spin down/power down when I boot, just to power up 
-again a few seconds after. The boot progress freezes until the disks 
-have spun up again. (This happens when the kernel probes the sata 
-controller ports at bootup, the disks spin down at the same time, but 
-spin up one by one as they're getting probed))
+As the matching by func_id is fuzzy and gives false positives, this is a
+multiple-step process:
 
-I've tried changing I/O scheduler, only noticable diffrence is when I 
-use "noop". Then I get like 20mb/sec write instead of 4mb/sec. I have no 
-idea why this is :P
+a) the kernel checks all built-in and previously loaded modules for
+   prod_id and manf_id matches
 
-Example of what I mean with crappy performance:
-dd if=/dev/zero of=test232 bs=1M count=100; time sync
-100+0 records in
-100+0 records out
-104857600 bytes (105 MB) copied, 0.130424 s, 804 MB/s
-real 0m21.104s
-user 0m0.000s
-sys 0m0.011s
+b) userspace (udev/hotplug + modprobe) loads appropriate modules (including
+   those which are only matched by func_id
 
-21 seconds to do a seq write of 100mb.. And during this time ALL other 
-disk IO gets starved, I can't do anything that uses disk IO for the 
-duration.. (not even `ls`)
+c) during the module initialization (e.g. modprobe hasn't returned yet) the
+   kernel checks the modules based on prod_id and manf_id matches
 
-Yet, a hdparm shows a decent read
-hdparm -tT /dev/md4
-/dev/md4:
-Timing cached reads: 8060 MB in 1.99 seconds = 4042.19 MB/sec
-Timing buffered disk reads: 400 MB in 3.00 seconds = 133.28 MB/sec
+d) after all these modprobe calls return, userspace writes "1" into
+   /sys/$devpath/allow_func_id_match. Then, the kernel re-checks all
+   built-in and previously loaded modules for func_id "fuzzy" matches.
 
-dd if=1GBzeroFile of=/dev/null bs=1M count=1000
-1000+0 records in
-1000+0 records out
-1048576000 bytes (1.0 GB) copied, 11.4335 s, 91.7 MB/s
+It is self-evident that steps b)-d) only work once userspace is ready. As
+PCMCIA drivers should be able to work even before that, manf_id and prod_id
+table entries do make sense even if func_id matching works.
 
-This is the cpu usage stats I get from top when running the dd write:
-Cpu0 : 0.0%us, 0.0%sy, 0.0%ni, 0.0%id, 99.0%wa, 0.5%hi, 0.5%si, 0.0%st
-Cpu1 : 0.0%us, 0.0%sy, 0.0%ni,100.0%id, 0.0%wa, 0.0%hi, 0.0%si, 0.0%st
-
-Pretty crappy read speeds compared to what I got on my previous mobo 
-(around 140mb/sec), but still alot better than the 4mb/sec I get when 
-writing..
-
-I've also googled this for many hours, I've searched the lkml, checked 
-these gentoo forums, as well as other distro forums, I just don't know 
-what else to do. I'll appreciate any help or hints I can get.
-
--- 
--Jonas
-
-Name:   Jonas Lundgren
-ICQ#:   52064961
-Mail:   jonas@local.se
-IRC:    neon / neonman @ EFnet, Undernet, Quakenet, freenode
+Thanks,
+	Dominik
