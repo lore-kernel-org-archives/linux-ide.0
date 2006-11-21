@@ -1,37 +1,51 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: [PATCH 1/1] sgiioc4: Disable module unload
-Date: Mon, 20 Nov 2006 19:15:52 -0800
-Message-ID: <20061121031552.GA73433@sgi.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PMP] sil3132 st6600 problem
+Date: Tue, 21 Nov 2006 15:00:07 +0900
+Message-ID: <456295E7.9080909@gmail.com>
+References: <45552660.4050902@dschroeder.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:56715 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1030676AbWKUDPw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Nov 2006 22:15:52 -0500
-Content-Disposition: inline
+Received: from nf-out-0910.google.com ([64.233.182.188]:33523 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1030770AbWKUGAQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Nov 2006 01:00:16 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so67073nfa
+        for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2006 22:00:15 -0800 (PST)
+In-Reply-To: <45552660.4050902@dschroeder.info>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, akpm@osdl.org
+To: =?ISO-8859-1?Q?Daniel_Schr=F6der?= <mail@dschroeder.info>
+Cc: linux-ide@vger.kernel.org
 
-This patch removes a module_exit function that it sgiioc4 should not have had.
+Daniel Schr=F6der wrote:
+> Hello *,
+>=20
+> a couple of weeks ago, i posted a "success" message. This time i have=
+ a
+> strange issue to report. A couple of weeks, with only one Samsung
+> HD401LJ and everything was fine. Yesterday, i put another drive a
+> Samsung HD501LJ into the second bay and shortly after this. (After FD=
+ISK
+> and MKFS and a couple of powercycles) The device is completely
+> unresponsive. With this device on, Windows XP freezes instantly...Lin=
+ux
+> shows the following at turning on:
+>=20
+> And everytime, when i played with this device, he said something abou=
+t
+> USB...WTF?! Same IRQ? I dont think so:
 
-Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
+USB messages seem to be power supply related..  If you have another=20
+power supply available, try to use it for disks (using power supply w/o=
+=20
+motherboard isn't difficult. just ask google) or buy a better one.
 
+When PMP detection fails, did you have the first PMP port occupied?=20
+Sil3726/4726 PMPs fail to initialize if the first port isn't occupied.=20
+Dunno if it's those hardware's fault or driver's fault yet.
 
---- linux-2.6.19-rc6/drivers/ide/pci/sgiioc4.c	2006-11-15 20:03:40.000000000 -0800
-+++ linux-2.6.19-rc6-mod/drivers/ide/pci/sgiioc4.c	2006-11-20 18:45:08.506724280 -0800
-@@ -768,14 +768,7 @@
- 	return ioc4_register_submodule(&ioc4_ide_submodule);
- }
- 
--static void __devexit
--ioc4_ide_exit(void)
--{
--	ioc4_unregister_submodule(&ioc4_ide_submodule);
--}
--
- late_initcall(ioc4_ide_init); /* Call only after IDE init is done */
--module_exit(ioc4_ide_exit);
- 
- MODULE_AUTHOR("Aniket Malatpure/Jeremy Higdon");
- MODULE_DESCRIPTION("IDE PCI driver module for SGI IOC4 Base-IO Card");
+--=20
+tejun
