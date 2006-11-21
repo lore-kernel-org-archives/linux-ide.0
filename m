@@ -1,48 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] drivers/ide: PATA driver	for Celleb
-Date: Tue, 21 Nov 2006 19:07:16 +0900
-Message-ID: <4562CFD4.6040702@gmail.com>
-References: <200611210959.kAL9x8eH026223@toshiba.co.jp>
+From: Arnaud Patard <apatard@mandriva.com>
+Subject: Re: [PATCH] pata_marvell: fix cable detection - take 2
+Date: Tue, 21 Nov 2006 11:28:55 +0100
+Message-ID: <m3d57hccuw.fsf@anduin.mandriva.com>
+References: <m3psbhdg4j.fsf@anduin.mandriva.com>
+	<20061120204218.GC24922@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:4996 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1030810AbWKUKH0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Nov 2006 05:07:26 -0500
-Received: by ug-out-1314.google.com with SMTP id m3so1456902ugc
-        for <linux-ide@vger.kernel.org>; Tue, 21 Nov 2006 02:07:24 -0800 (PST)
-In-Reply-To: <200611210959.kAL9x8eH026223@toshiba.co.jp>
+Received: from ezoffice.mandriva.com ([84.14.106.134]:24842 "EHLO
+	office.mandriva.com") by vger.kernel.org with ESMTP
+	id S1030771AbWKUK0U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Nov 2006 05:26:20 -0500
+In-Reply-To: <20061120204218.GC24922@devserv.devel.redhat.com> (Alan Cox's
+	message of "Mon, 20 Nov 2006 15:42:18 -0500")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp
+To: Alan Cox <alan@redhat.com>
+Cc: linux-ide@vger.kernel.org
 
-Akira Iguchi wrote:
-> Dear everyone,
-> 
-> This is the patch (based on 2.6.19-rc4) for PATA controller of
-> Toshiba Cell reference set(Celleb). The reference set consists
-> of Cell, 512MB memory, Super Companion Chip(SCC) and some
-> peripherals such as HDD, GbE, etc. You can see brief explanation
-> and picture of Cell reference set at following URLs.
-> 
->     http://www.toshiba.co.jp/about/press/2005_09/pr2001.htm
->     http://cell-industries.com/toshiba_announces.php
-> 
-> We use a drivers/ide driver because its design is more suitable for
-> SCC IDE controller than libata driver. Since SCC supports only 32bit
-> read/write, we must override many callbacks of ata_port_operations
-> by modifying generic helpers. Each time the libata common code is
-> updated, we must update those modified helpers. It is very hard for us.
-> But we will try to implement the libata driver as needed.
-> 
-> This patch set is intended to be merged to 2.6.20.
-> If you have any comment, please write to me.
+Alan Cox <alan@redhat.com> writes:
 
-Care to post libata version (even if it's not complete)?  Let's work 
-something out.
+> On Mon, Nov 20, 2006 at 09:20:44PM +0100, Arnaud Patard wrote:
+>> 
+>> Last time I looked at the cable detection code, I fixed the "always
+>> detect cable as sata cable" case, but this is not enough. I didn't
+>> notice that the 80-pin cable was seen as a 40-pin cable.
+>> The appended patch fixes that.
+>
+> Thanks - the docs were a bit blank on which was which - have you checked
+> this now detects right both ways around ?
 
--- 
-tejun
+yeah, I've tested on two boxes, with 40-pin and 80-pin cables :)
+
+
