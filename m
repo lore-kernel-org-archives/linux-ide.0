@@ -1,35 +1,52 @@
-From: Arnaud Patard <apatard@mandriva.com>
-Subject: Re: [PATCH] pata_marvell: fix cable detection - take 2
-Date: Tue, 21 Nov 2006 11:28:55 +0100
-Message-ID: <m3d57hccuw.fsf@anduin.mandriva.com>
-References: <m3psbhdg4j.fsf@anduin.mandriva.com>
-	<20061120204218.GC24922@devserv.devel.redhat.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] drivers/ide: PATA driver	for Celleb
+Date: Tue, 21 Nov 2006 22:02:30 +1100
+Message-ID: <1164106951.5597.33.camel@localhost.localdomain>
+References: <200611210959.kAL9x8eH026223@toshiba.co.jp>
+	 <4562CFD4.6040702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ezoffice.mandriva.com ([84.14.106.134]:24842 "EHLO
-	office.mandriva.com") by vger.kernel.org with ESMTP
-	id S1030771AbWKUK0U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Nov 2006 05:26:20 -0500
-In-Reply-To: <20061120204218.GC24922@devserv.devel.redhat.com> (Alan Cox's
-	message of "Mon, 20 Nov 2006 15:42:18 -0500")
+Received: from gate.crashing.org ([63.228.1.57]:41154 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S934281AbWKULCG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Nov 2006 06:02:06 -0500
+In-Reply-To: <4562CFD4.6040702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Alan Cox <alan@redhat.com> writes:
 
-> On Mon, Nov 20, 2006 at 09:20:44PM +0100, Arnaud Patard wrote:
->> 
->> Last time I looked at the cable detection code, I fixed the "always
->> detect cable as sata cable" case, but this is not enough. I didn't
->> notice that the 80-pin cable was seen as a 40-pin cable.
->> The appended patch fixes that.
->
-> Thanks - the docs were a bit blank on which was which - have you checked
-> this now detects right both ways around ?
+> > We use a drivers/ide driver because its design is more suitable for
+> > SCC IDE controller than libata driver. Since SCC supports only 32bit
+> > read/write, we must override many callbacks of ata_port_operations
+> > by modifying generic helpers. Each time the libata common code is
+> > updated, we must update those modified helpers. It is very hard for us.
+> > But we will try to implement the libata driver as needed.
+> > 
+> > This patch set is intended to be merged to 2.6.20.
+> > If you have any comment, please write to me.
+> 
+> Care to post libata version (even if it's not complete)?  Let's work 
+> something out.
 
-yeah, I've tested on two boxes, with 40-pin and 80-pin cables :)
+The main problem is error handling / reset code.
+
+With the current libata, basically, you can only override the whole
+thing pretty much at the toplevel. The problem is with things like
+ata_std_prereset, ata_std_softreset and ata_std_postreset and callees.
+
+We can either comletely re-implement them but that seems fairly dodgy to
+me, or find a way to add hooks. At the end of the day, all they need is:
+
+ - write to the control register
+ - read & write of nsect_addr & lbal_addr
+
+I wonder how much of these could be replaced by either a hook, or
+taskfile accessors (possibly with a special flag).
+
+Cheers,
+Ben.
 
 
