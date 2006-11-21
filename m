@@ -1,61 +1,96 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: don't request sense if the port is frozen
-Date: Tue, 21 Nov 2006 10:40:51 +0900
-Message-ID: <20061121014051.GQ2184@htj.dyndns.org>
+Subject: [PATCH] ahci: ignore PORT_IRQ_IF_ERR on JMB controllers
+Date: Tue, 21 Nov 2006 10:48:02 +0900
+Message-ID: <20061121014802.GR2184@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:24414 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.170]:37767 "EHLO
 	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1030651AbWKUBk7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Nov 2006 20:40:59 -0500
-Received: by ug-out-1314.google.com with SMTP id m3so1381373ugc
-        for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2006 17:40:58 -0800 (PST)
+	id S1030652AbWKUBsL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 20 Nov 2006 20:48:11 -0500
+Received: by ug-out-1314.google.com with SMTP id m3so1383562ugc
+        for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2006 17:48:10 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: justin@jmicron.com, andrew.lyon@gmail.com, fredrik@obra.se
 
-If EH command is issued to a frozen port, it fails with AC_ERR_SYSTEM.
-libata used to request sense even when the port is frozen needlessly
-adding AC_ERR_SYSTEM to err_mask.  Don't do it.
+JMicron AHCI controllers set PORT_IRQ_IF_ERR on device errors.  The
+IRQ status bit indicates interface error or protocol mismatch and ahci
+driver interprets it into AC_ERR_ATA_BUS.  So, whenever an ATAPI
+device raises check condition, ahci interprets it as ATA bus error and
+thus resets it which, in turn, raises check condition thus creating a
+reset loop and rendering the device unuseable.
+
+This patch makes JMB controllers ignore PORT_IRQ_IF_ERR when
+interpreting error condition.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Justin Tsai <justin@jmicron.com>
 
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1136,19 +1136,21 @@ static unsigned int ata_eh_analyze_tf(st
- 		break;
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -80,6 +80,7 @@ enum {
+ 	board_ahci		= 0,
+ 	board_ahci_pi		= 1,
+ 	board_ahci_vt8251	= 2,
++	board_ahci_ign_iferr	= 3,
  
- 	case ATA_DEV_ATAPI:
--		tmp = atapi_eh_request_sense(qc->dev,
--					     qc->scsicmd->sense_buffer);
--		if (!tmp) {
--			/* ATA_QCFLAG_SENSE_VALID is used to tell
--			 * atapi_qc_complete() that sense data is
--			 * already valid.
--			 *
--			 * TODO: interpret sense data and set
--			 * appropriate err_mask.
--			 */
--			qc->flags |= ATA_QCFLAG_SENSE_VALID;
--		} else
--			qc->err_mask |= tmp;
-+		if (!(qc->ap->pflags & ATA_PFLAG_FROZEN)) {
-+			tmp = atapi_eh_request_sense(qc->dev,
-+						     qc->scsicmd->sense_buffer);
-+			if (!tmp) {
-+				/* ATA_QCFLAG_SENSE_VALID is used to
-+				 * tell atapi_qc_complete() that sense
-+				 * data is already valid.
-+				 *
-+				 * TODO: interpret sense data and set
-+				 * appropriate err_mask.
-+				 */
-+				qc->flags |= ATA_QCFLAG_SENSE_VALID;
-+			} else
-+				qc->err_mask |= tmp;
-+		}
- 	}
+ 	/* global controller registers */
+ 	HOST_CAP		= 0x00, /* host capabilities */
+@@ -170,6 +171,7 @@ enum {
+ 	/* ap->flags bits */
+ 	AHCI_FLAG_NO_NCQ		= (1 << 24),
+ 	AHCI_FLAG_HONOR_PI		= (1 << 25), /* honor PORTS_IMPL */
++	AHCI_FLAG_IGN_IRQ_IF_ERR	= (1 << 26), /* ignore IRQ_IF_ERR */
+ };
  
- 	if (qc->err_mask & (AC_ERR_HSM | AC_ERR_TIMEOUT | AC_ERR_ATA_BUS))
+ struct ahci_cmd_hdr {
+@@ -339,6 +341,17 @@ static const struct ata_port_info ahci_p
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &ahci_vt8251_ops,
+ 	},
++	/* board_ahci_ign_iferr */
++	{
++		.sht		= &ahci_sht,
++		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
++				  ATA_FLAG_SKIP_D2H_BSY |
++				  AHCI_FLAG_IGN_IRQ_IF_ERR,
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
++		.port_ops	= &ahci_vt8251_ops,
++	},
+ };
+ 
+ static const struct pci_device_id ahci_pci_tbl[] = {
+@@ -360,11 +373,11 @@ static const struct pci_device_id ahci_p
+ 	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci_pi }, /* ICH8M */
+ 
+ 	/* JMicron */
+-	{ PCI_VDEVICE(JMICRON, 0x2360), board_ahci }, /* JMicron JMB360 */
+-	{ PCI_VDEVICE(JMICRON, 0x2361), board_ahci }, /* JMicron JMB361 */
+-	{ PCI_VDEVICE(JMICRON, 0x2363), board_ahci }, /* JMicron JMB363 */
+-	{ PCI_VDEVICE(JMICRON, 0x2365), board_ahci }, /* JMicron JMB365 */
+-	{ PCI_VDEVICE(JMICRON, 0x2366), board_ahci }, /* JMicron JMB366 */
++	{ PCI_VDEVICE(JMICRON, 0x2360), board_ahci_ign_iferr }, /* JMB360 */
++	{ PCI_VDEVICE(JMICRON, 0x2361), board_ahci_ign_iferr }, /* JMB361 */
++	{ PCI_VDEVICE(JMICRON, 0x2363), board_ahci_ign_iferr }, /* JMB363 */
++	{ PCI_VDEVICE(JMICRON, 0x2365), board_ahci_ign_iferr }, /* JMB365 */
++	{ PCI_VDEVICE(JMICRON, 0x2366), board_ahci_ign_iferr }, /* JMB366 */
+ 
+ 	/* ATI */
+ 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci }, /* ATI SB600 non-raid */
+@@ -1042,6 +1055,10 @@ static void ahci_error_intr(struct ata_p
+ 	/* analyze @irq_stat */
+ 	ata_ehi_push_desc(ehi, "irq_stat 0x%08x", irq_stat);
+ 
++	/* some controllers set IRQ_IF_ERR on device errors, ignore it */
++	if (ap->flags & AHCI_FLAG_IGN_IRQ_IF_ERR)
++		irq_stat &= ~PORT_IRQ_IF_ERR;
++
+ 	if (irq_stat & PORT_IRQ_TF_ERR)
+ 		err_mask |= AC_ERR_DEV;
+ 
