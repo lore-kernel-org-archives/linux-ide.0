@@ -2,26 +2,23 @@ From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCH] drivers/ide: PATA driver
 	for Celleb
 Date: Tue, 21 Nov 2006 19:01:57 +0900
-Message-ID: <200611210959.kAL9x8eH026223@toshiba.co.jp>
+Message-ID: <200611210959.kAL9x8ik013299@toshiba.co.jp>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imx12.toshiba.co.jp ([61.202.160.132]:14326 "EHLO
-	imx12.toshiba.co.jp") by vger.kernel.org with ESMTP
-	id S1030771AbWKUJ7N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Nov 2006 04:59:13 -0500
-Received: from wall11.toshiba.co.jp (wall11 [133.199.90.149])
-	by imx12.toshiba.co.jp  with ESMTP id kAL9x9Uk015211
-	for <linux-ide@vger.kernel.org>; Tue, 21 Nov 2006 18:59:09 +0900 (JST)
-Received: (from root@localhost)
-	by wall11.toshiba.co.jp  id kAL9x9Qm006681
-	for linux-ide@vger.kernel.org; Tue, 21 Nov 2006 18:59:09 +0900 (JST)
-Received: from mx2.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp11.toshiba.co.jp  with ESMTP id kAL9x8Wq024537
-	for <linux-ide@vger.kernel.org>; Tue, 21 Nov 2006 18:59:08 +0900 (JST)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp
+Cc: linuxppc-dev@ozlabs.org
+List-Id: linux-ide@vger.kernel.org
 
 Dear everyone,
 
@@ -896,4 +893,3 @@ diff -u /dev/null linux-2.6.19/drivers/ide/ppc/scc_pata.c:1.1
 +
 +MODULE_DESCRIPTION("PCI driver module for Toshiba SCC IDE");
 +MODULE_LICENSE("GPL");
-
