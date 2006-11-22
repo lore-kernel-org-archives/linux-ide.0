@@ -1,17 +1,35 @@
-From: Jason Gaston <jason.d.gaston@intel.com>
-Subject: [PATCH 2.6.19-rc6] ata_piix: IDE mode SATA patch for Intel ICH9
-Date: Tue, 21 Nov 2006 14:51:36 -0800
-Message-ID: <1164149496.27730.15.camel@localhost.localdomain>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: [PATCH 2.6.19-rc6] ata_piix: IDE mode SATA patch for Intel ICH9
+Date: Tue, 21 Nov 2006 16:37:15 -0800
+Message-ID: <39B20DF628532344BC7A2692CB6AEE07A5A310@orsmsx420.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52303 "EHLO mga02.intel.com")
-	by vger.kernel.org with ESMTP id S1031275AbWKUWvy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Nov 2006 17:51:54 -0500
+Received: from mga09.intel.com ([134.134.136.24]:23220 "EHLO mga09.intel.com")
+	by vger.kernel.org with ESMTP id S1031232AbWKVAhS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Nov 2006 19:37:18 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jason.d.gaston@intel.com
+To: "Gaston, Jason D" <jason.d.gaston@intel.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Did this come through ok, using Evolution, or do I need to try a
+different email client and send again?
+
+Thanks,
+
+Jason
+
+
+-----Original Message-----
+From: Gaston, Jason D 
+Sent: Tuesday, November 21, 2006 2:52 PM
+To: jgarzik@pobox.com; linux-ide@vger.kernel.org;
+linux-kernel@vger.kernel.org; Gaston, Jason D
+Subject: [PATCH 2.6.19-rc6] ata_piix: IDE mode SATA patch for Intel ICH9
 
 This patch adds the Intel ICH9 IDE mode SATA controller DID's.
 
@@ -30,33 +48,45 @@ Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
  	/* constants for mapping table */
  	P0			= 0,  /* port 0 */
 @@ -227,14 +228,26 @@
- 	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
+ 	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci
+},
  	/* 2801GBM/GHM (ICH7M, identical to ICH6M) */
- 	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata_ahci },
+ 	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata_ahci
+},
 -	/* Enterprise Southbridge 2 (where's the datasheet?) */
 +	/* Enterprise Southbridge 2 (631xESB/632xESB) */
- 	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
+ 	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci
+},
 -	/* SATA Controller 1 IDE (ICH8, no datasheet yet) */
 +	/* SATA Controller 1 IDE (ICH8) */
- 	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
+ 	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci
+},
 -	/* SATA Controller 2 IDE (ICH8, ditto) */
 +	/* SATA Controller 2 IDE (ICH8) */
- 	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
+ 	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci
+},
 -	/* Mobile SATA Controller IDE (ICH8M, ditto) */
 +	/* Mobile SATA Controller IDE (ICH8M) */
- 	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
+ 	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci
+},
 +	/* SATA Controller 1 IDE (ICH9) */
-+	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci },
++	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci
+},
 +	/* SATA Controller 1 IDE (ICH9) */
-+	{ 0x8086, 0x2921, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci },
++	{ 0x8086, 0x2921, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci
+},
 +	/* SATA Controller 2 IDE (ICH9) */
-+	{ 0x8086, 0x2926, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci },
++	{ 0x8086, 0x2926, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci
+},
 +	/* Mobile SATA Controller 1 IDE (ICH9M) */
-+	{ 0x8086, 0x2928, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci },
++	{ 0x8086, 0x2928, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci
+},
 +	/* Mobile SATA Controller 2 IDE (ICH9M) */
-+	{ 0x8086, 0x292d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci },
++	{ 0x8086, 0x292d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci
+},
 +	/* Mobile SATA Controller 2 IDE (ICH9M) */
-+	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci },
++	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_sata_ahci
+},
  
  	{ }	/* terminate list */
  };
@@ -70,7 +100,8 @@ Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
 +	.present_shift = 8,
 +	.map = {
 +		/* PM   PS   SM   SS       MAP */
-+		{  P0,  P2,  P1,  P3 }, /* 00b (hardwired when in AHCI) */
++		{  P0,  P2,  P1,  P3 }, /* 00b (hardwired when in AHCI)
+*/
 +		{  RV,  RV,  RV,  RV },
 +		{  IDE,  IDE,  NA,  NA }, /* 10b (IDE mode) */
 +		{  RV,  RV,  RV,  RV },
