@@ -1,58 +1,59 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 1/1] sgiioc4: Disable module unload
-Date: Tue, 21 Nov 2006 18:13:46 -0800
-Message-ID: <20061121181346.7933fe43.akpm@osdl.org>
-References: <20061121031552.GA73433@sgi.com>
-	<20061121172816.63495f1f.akpm@osdl.org>
-	<20061122015952.GH75625@sgi.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: make sure sdev doesn't go away while rescanning
+Date: Wed, 22 Nov 2006 11:21:31 +0900
+Message-ID: <20061122022131.GU2184@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:50093 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S967013AbWKVCNt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Nov 2006 21:13:49 -0500
-In-Reply-To: <20061122015952.GH75625@sgi.com>
+Received: from ug-out-1314.google.com ([66.249.92.168]:52335 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S967005AbWKVCVi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Nov 2006 21:21:38 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so51997uga
+        for <linux-ide@vger.kernel.org>; Tue, 21 Nov 2006 18:21:37 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Tue, 21 Nov 2006 17:59:52 -0800
-Jeremy Higdon <jeremy@sgi.com> wrote:
+ata_scsi_dev_rescan() doesn't synchronize against SCSI device detach
+and the target sdev might go away in the middle.  Fix it.
 
-> On Tue, Nov 21, 2006 at 05:28:16PM -0800, Andrew Morton wrote:
-> > On Mon, 20 Nov 2006 19:15:52 -0800
-> > Jeremy Higdon <jeremy@sgi.com> wrote:
-> > 
-> > > This patch removes a module_exit function that it sgiioc4 should not have had.
-> > > 
-> > > Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
-> > > 
-> > > 
-> > > --- linux-2.6.19-rc6/drivers/ide/pci/sgiioc4.c	2006-11-15 20:03:40.000000000 -0800
-> > > +++ linux-2.6.19-rc6-mod/drivers/ide/pci/sgiioc4.c	2006-11-20 18:45:08.506724280 -0800
-> > > @@ -768,14 +768,7 @@
-> > >  	return ioc4_register_submodule(&ioc4_ide_submodule);
-> > >  }
-> > >  
-> > > -static void __devexit
-> > > -ioc4_ide_exit(void)
-> > > -{
-> > > -	ioc4_unregister_submodule(&ioc4_ide_submodule);
-> > > -}
-> > > -
-> > >  late_initcall(ioc4_ide_init); /* Call only after IDE init is done */
-> > > -module_exit(ioc4_ide_exit);
-> > >  
-> > >  MODULE_AUTHOR("Aniket Malatpure/Jeremy Higdon");
-> > >  MODULE_DESCRIPTION("IDE PCI driver module for SGI IOC4 Base-IO Card");
-> > 
-> > Why?  We'd prefer that the module be unloadable, wouldn't we?
-> 
-> It seems that the IDE layer doesn't support that.  sgiioc4 was the only
-> driver in drivers/ide/pci that had an exit function.  After an unload,
-> the devices would stay around and the next attempt to reference would
-> crash...
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-oh, OK, thanks.  I updated the changelog.
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0552c3f..3976b25 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3215,15 +3215,27 @@ static int ata_scsi_user_scan(struct Scs
+ void ata_scsi_dev_rescan(void *data)
+ {
+ 	struct ata_port *ap = data;
+-	struct ata_device *dev;
++	unsigned long flags;
+ 	unsigned int i;
+ 
++	spin_lock_irqsave(ap->lock, flags);
++
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->device[i];
++		struct ata_device *dev = &ap->device[i];
++		struct scsi_device *sdev = dev->sdev;
+ 
+-		if (ata_dev_enabled(dev) && dev->sdev)
+-			scsi_rescan_device(&(dev->sdev->sdev_gendev));
++		if (!ata_dev_enabled(dev) || !sdev)
++			continue;
++		if (scsi_device_get(sdev))
++			continue;
++
++		spin_unlock_irqrestore(ap->lock, flags);
++		scsi_rescan_device(&(sdev->sdev_gendev));
++		scsi_device_put(sdev);
++		spin_lock_irqsave(ap->lock, flags);
+ 	}
++
++	spin_unlock_irqrestore(ap->lock, flags);
+ }
+ 
+ /**
