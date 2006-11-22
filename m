@@ -1,60 +1,37 @@
-From: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Subject: RE: [PATCH 2.6.19-rc6] ahci: AHCI mode SATA patch for Intel ICH9
-Date: Wed, 22 Nov 2006 08:17:17 -0800
-Message-ID: <39B20DF628532344BC7A2692CB6AEE07A5A41E@orsmsx420.amr.corp.intel.com>
+From: "Federico Levi" <feduchi@gmail.com>
+Subject: Re: 2007 Linux Storage & Filesystem Workshop
+Date: Wed, 22 Nov 2006 14:43:46 -0300
+Message-ID: <9e2856050611220943p65df4c9as1875b6b941865da7@mail.gmail.com>
+References: <E1GkQQv-0001ZV-8X@candygram.thunk.org> <45644FF8.20409@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:56892 "EHLO mga01.intel.com")
-	by vger.kernel.org with ESMTP id S1755314AbWKVQRT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Nov 2006 11:17:19 -0500
-Content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756059AbWKVRnt@vger.kernel.org>
+In-Reply-To: <45644FF8.20409@emc.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ric Wheeler <ric@emc.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>, linux-ext4@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I don't know the specifics of that discussion.  If you are asking about
-using class code rather then a DID; that would work for ICH9.
-
-Thanks,
-
-Jason
-
-
-
->-----Original Message-----
->From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
->owner@vger.kernel.org] On Behalf Of Arjan van de Ven
->Sent: Wednesday, November 22, 2006 1:04 AM
->To: Gaston, Jason D
->Cc: jgarzik@pobox.com; linux-ide@vger.kernel.org; linux-
->kernel@vger.kernel.org
->Subject: Re: [PATCH 2.6.19-rc6] ahci: AHCI mode SATA patch for Intel
-ICH9
->
->On Tue, 2006-11-21 at 14:51 -0800, Jason Gaston wrote:
->> This patch adds the Intel ICH9 AHCI controller DID's for SATA
-support.
->>
->> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
->
->there was some discussion about a generic class match for ahci...
->would these devices be matched by that?
->
->
->--
->if you want to mail me at work (you don't), use arjan (at)
-linux.intel.com
->Test the interaction between Linux and your BIOS via
->http://www.linuxfirmwarekit.org
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-kernel"
-in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
+We are two students from the University of Cordoba, Argentina,
+studying Computer Science. We are taking a second year course named
+Operating Systems, in which we study, well, basically, Andrew
+Tanenbaum's "Modern Operating Systems" (2nd Edition).
+We also have a programming-related lab, in which we've worked in
+several areas, such as managing processes and threads -work with race
+conditions, semaphores, mutexes, etc- (all done in linux, obviously),
+wrote a little baash-like command interpreter, and a memory manager to
+understand how bitmaps work, and the different algorithms to optimize
+memory managment.
+For our last project we were asked to write a paper on a subject of
+our choice. After looking though a few possibilities, we chose to do
+it about linux Ext4. We've been asked to not only compare it
+(performance-wise) with Ext3, but to explain -and try to justify the
+results of the benchmark comparisons- the following: caracteristics of
+each file system, internal arquitecture, and disk structure. Doing
+research, we've found little information related to these subjects,
+and just read this email, which seems to be highly related. If anyone
+could direct us to some good reading on the subject, or knows about
+this, we would apreciate it very much.
+Thank you very much for your time!
