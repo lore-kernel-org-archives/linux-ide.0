@@ -1,45 +1,53 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 1/1] sgiioc4: Disable module unload
-Date: Tue, 21 Nov 2006 17:28:16 -0800
-Message-ID: <20061121172816.63495f1f.akpm@osdl.org>
-References: <20061121031552.GA73433@sgi.com>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: [PATCH 2.6.19-rc6][RESEND] ata_piix: IDE mode SATA patch for Intel ICH9
+Date: Tue, 21 Nov 2006 17:30:52 -0800
+Message-ID: <39B20DF628532344BC7A2692CB6AEE07A5A356@orsmsx420.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:23715 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1031449AbWKVB2S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Nov 2006 20:28:18 -0500
-In-Reply-To: <20061121031552.GA73433@sgi.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1031451AbWKVBa4@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-ide@vger.kernel.org
 
-On Mon, 20 Nov 2006 19:15:52 -0800
-Jeremy Higdon <jeremy@sgi.com> wrote:
+I was thinking that if a functional difference was found, it would be
+easier to tweak.
 
-> This patch removes a module_exit function that it sgiioc4 should not have had.
-> 
-> Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
-> 
-> 
-> --- linux-2.6.19-rc6/drivers/ide/pci/sgiioc4.c	2006-11-15 20:03:40.000000000 -0800
-> +++ linux-2.6.19-rc6-mod/drivers/ide/pci/sgiioc4.c	2006-11-20 18:45:08.506724280 -0800
-> @@ -768,14 +768,7 @@
->  	return ioc4_register_submodule(&ioc4_ide_submodule);
->  }
->  
-> -static void __devexit
-> -ioc4_ide_exit(void)
-> -{
-> -	ioc4_unregister_submodule(&ioc4_ide_submodule);
-> -}
-> -
->  late_initcall(ioc4_ide_init); /* Call only after IDE init is done */
-> -module_exit(ioc4_ide_exit);
->  
->  MODULE_AUTHOR("Aniket Malatpure/Jeremy Higdon");
->  MODULE_DESCRIPTION("IDE PCI driver module for SGI IOC4 Base-IO Card");
+There are differences between the ICH8 and ICH9 SATA controller.  For
+example, the PCS register now has port present bits that used to be
+reserved in ICH8.  I'm not sure how or if these could be used in
+ata_piix.
 
-Why?  We'd prefer that the module be unloadable, wouldn't we?
+Jason
+
+
+
+>-----Original Message-----
+>From: Tejun Heo [mailto:htejun@gmail.com]
+>Sent: Tuesday, November 21, 2006 5:23 PM
+>To: Gaston, Jason D
+>Cc: jgarzik@pobox.com; linux-ide@vger.kernel.org; linux-
+>kernel@vger.kernel.org
+>Subject: Re: [PATCH 2.6.19-rc6][RESEND] ata_piix: IDE mode SATA patch
+for
+>Intel ICH9
+>
+>Jason Gaston wrote:
+>> This patch adds the Intel ICH9 IDE mode SATA controller DID's.
+>>
+>> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
+>>
+>> --- linux-2.6.19-rc6/drivers/ata/ata_piix.c.orig	2006-11-20
+>04:58:48.000000000 -0800
+>> +++ linux-2.6.19-rc6/drivers/ata/ata_piix.c	2006-11-20
+>06:15:12.000000000 -0800
+>
+>Yeap, it came through fine this time, but ich8 and ich9 are identical
+>from ata_piix's point of view.  Don't add ich9_sata_ahci, just use
+>ich8_sata_ahci.
+>
+>--
+>tejun
