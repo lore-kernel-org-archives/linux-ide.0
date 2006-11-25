@@ -1,128 +1,89 @@
-From: "Berck E. Nash" <flyboy@gmail.com>
-Subject: Re: [PATCH] ahci: do not powerdown during initialization
-Date: Fri, 24 Nov 2006 10:53:39 -0700
-Message-ID: <456731A3.8070807@gmail.com>
-References: <20061120064236.GM2184@htj.dyndns.org>
+From: Krzysztof Oledzki <olel@ans.pl>
+Subject: pata_via in 2.6.19-rc6: UDMA/66 hdd downgraded to UDMA/33
+Date: Sat, 25 Nov 2006 02:25:08 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0611250216550.26262@bizon.gios.gov.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-187430788-742963814-1164417908=:26262"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.231]:5569 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S934998AbWKXRxn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Nov 2006 12:53:43 -0500
-Received: by wx-out-0506.google.com with SMTP id h27so965269wxd
-        for <linux-ide@vger.kernel.org>; Fri, 24 Nov 2006 09:53:43 -0800 (PST)
-In-Reply-To: <20061120064236.GM2184@htj.dyndns.org>
+Received: from bizon.gios.gov.pl ([212.244.124.8]:4558 "EHLO bizon.gios.gov.pl")
+	by vger.kernel.org with ESMTP id S935120AbWKYBZM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Nov 2006 20:25:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> This patch moves power up/down out of port init/deinit and call them
-> only when needed.
-> ---
-> 
-> Berck, can you please test this patch?  This might fix your problem
-> too.  Jeff, this patch is necessary regardless of Berck's repsonse.  I
-> think this should go into #usptream-fixes too after some testing in
-> #upstream (and in -mm).
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Nope, that doesn't do it.  All along I've also been getting weird 
-messages on system power-downs.  I just now set up a serial console to 
-capture them.  I dunno if they're of any significance, but they're on 
-the same device that pauses on boot, so perhaps they're related.
+---187430788-742963814-1164417908=:26262
+Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Berck
+Hello,
 
-Will now halt.
-[  538.178188] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.191083] ata2.00: (irq_stat 0x40000001)
-[  538.199288] ata2.00: tag 0 cmd 0xe0 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.222873] ata2.00: configured for UDMA/133
-[  538.231432] ata2: EH complete
-[  538.237406] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.250289] ata2.00: (irq_stat 0x40000001)
-[  538.258497] ata2.00: tag 0 cmd 0xe0 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.282048] ata2.00: configured for UDMA/133
-[  538.290606] ata2: EH complete
-[  538.296580] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.309465] ata2.00: (irq_stat 0x40000001)
-[  538.317672] ata2.00: tag 0 cmd 0xe0 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.341206] ata2.00: configured for UDMA/133
-[  538.349764] ata2: EH complete
-[  538.355738] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.368621] ata2.00: (irq_stat 0x40000001)
-[  538.376834] ata2.00: tag 0 cmd 0xe0 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.400367] ata2.00: configured for UDMA/133
-[  538.408920] ata2: EH complete
-[  538.414894] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.427783] ata2.00: (irq_stat 0x40000001)
-[  538.435987] ata2.00: tag 0 cmd 0xe0 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.459528] ata2.00: configured for UDMA/133
-[  538.468077] ata2: EH complete
-[  538.474054] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.486941] ata2.00: (irq_stat 0x40000001)
-[  538.495144] ata2.00: tag 0 cmd 0xe0 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.518681] ata2.00: configured for UDMA/133
-[  538.527242] ata2: EH complete
-[  538.533219] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.546113] ata2.00: (irq_stat 0x40000001)
-[  538.554319] ata2.00: tag 0 cmd 0x94 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.577860] ata2.00: configured for UDMA/133
-[  538.586410] ata2: EH complete
-[  538.592387] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.605269] ata2.00: (irq_stat 0x40000001)
-[  538.613475] ata2.00: tag 0 cmd 0x94 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.637015] ata2.00: configured for UDMA/133
-[  538.645566] ata2: EH complete
-[  538.651540] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.664425] ata2.00: (irq_stat 0x40000001)
-[  538.672634] ata2.00: tag 0 cmd 0x94 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.696179] ata2.00: configured for UDMA/133
-[  538.704742] ata2: EH complete
-[  538.710716] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.723601] ata2.00: (irq_stat 0x40000001)
-[  538.731807] ata2.00: tag 0 cmd 0x94 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.755349] ata2.00: configured for UDMA/133
-[  538.763900] ata2: EH complete
-[  538.769873] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.782765] ata2.00: (irq_stat 0x40000001)
-[  538.790965] ata2.00: tag 0 cmd 0x94 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.814513] ata2.00: configured for UDMA/133
-[  538.823073] ata2: EH complete
-[  538.829047] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  538.841933] ata2.00: (irq_stat 0x40000001)
-[  538.850140] ata2.00: tag 0 cmd 0x94 Emask 0x1 stat 0x51 err 0x4 
-(device error)
-[  538.873679] ata2.00: configured for UDMA/133
-[  538.882233] ata2: EH complete
-[  538.888199] SCSI device sdd: 640 512-byte hdwr sectors (0 MB)
-[  538.890404] Synchronizing SCSI cache for disk sde:
-[  538.909477] sdd: Write Protect is off
-[  538.916822] SCSI device sdd: drive cache: write through
-[  538.927285] SCSI device sdd: 640 512-byte hdwr sectors (0 MB)
-[  538.938797] Synchronizing SCSI cache for disk sdc:
-[  538.948561] sdd: Write Protect is off
-[  538.949171] Synchronizing SCSI cache for disk sdb:
-[  538.949424] Synchronizing SCSI cache for disk sda:
-[  538.975451] SCSI device sdd: drive cache: write through
-[  539.441444] Shutdown: hdg
-[  539.446910] Shutdown: hde
-[  539.452716] Power down.
-[  539.457706] acpi_power_off called
+After upgrading to 2.6.19-rc6 and enabling experimental support of=20
+pata_via noticed that my hdd was downgraded to UDMA/33:
+
+Before (2.6.18-rc & via82cxxx):
+
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override withidebus=3Dx=
+x
+VP_IDE: IDE controller at PCI slot 0000:00:07.1
+PCI: VIA IRQ fixup for 0000:00:07.1, from 255 to 0
+VP_IDE: chipset revision 16
+VP_IDE: not 100%% native mode: will probe irqs later
+VP_IDE: VIA vt82c686a (rev 22) IDE UDMA66 controller on pci0000:00:07.1
+     ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:DMA, hdb:pio
+     ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:pio, hdd:pio
+hda: max request size: 128KiB
+hda: 40031712 sectors (20496 MB) w/512KiB Cache, CHS=3D39714/16/63, UDMA(66=
+)
+hda: cache flushes not supported
+  hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 hda8 hda9 hda10 hda11 >
 
 
+Now (2.6.16-rc6 & pata_via):
 
+pata_via 0000:00:07.1: version 0.1.14
+ata1: PATA max UDMA/66 cmd 0x1F0 ctl 0x3F6 bmdma 0xFFA0 irq 14
+ata2: PATA max UDMA/66 cmd 0x170 ctl 0x376 bmdma 0xFFA8 irq 15
+scsi0 : pata_via
+ata1.00: ATA-5, max UDMA/66, 40031712 sectors: LBA
+ata1.00: ata1: dev 0 multi count 16
+ata1.00: configured for UDMA/33
+scsi1 : pata_via
+ata2: port is slow to respond, please be patient (Status 0xff)
+ata2: port failed to respond (30 secs, Status 0xff)
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: reset failed, giving up
+scsi 0:0:0:0: Direct-Access     ATA      FUJITSU MPF3204A 0031 PQ: 0 ANSI: =
+5
+SCSI device sda: 40031712 512-byte hdwr sectors (20496 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 40031712 512-byte hdwr sectors (20496 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 sda11 >
+sd 0:0:0:0: Attached scsi disk sda
+
+# hdparm -I /dev/sda|grep dma
+         DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 udma3 udma4
+
+BTW: is it possible to do something with this annoying long delay with=20
+the "port is slow to respond, please be patient" message? :)
+
+Best regards,
+
+ =09=09=09=09Krzysztof Ol=EAdzki
+---187430788-742963814-1164417908=:26262--
