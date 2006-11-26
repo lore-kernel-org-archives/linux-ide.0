@@ -1,202 +1,566 @@
-From: Luca Tettamanti <kronos.it@gmail.com>
-Subject: pata_ali: troubles with interrupt
-Date: Sun, 26 Nov 2006 19:01:49 +0100
-Message-ID: <20061126180149.GA10986@dreamland.darkstar.lan>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH -mm] sata_nv: fix ATAPI in ADMA mode
+Date: Sun, 26 Nov 2006 14:20:19 -0600
+Message-ID: <4569F703.8010209@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary=------------090209050809030107040107
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:27524 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S934539AbWKZRCF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Nov 2006 12:02:05 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so962204uga
-        for <linux-ide@vger.kernel.org>; Sun, 26 Nov 2006 09:02:03 -0800 (PST)
-Content-Disposition: inline
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:41941 "EHLO
+	pd4mo1so.prod.shaw.ca") by vger.kernel.org with ESMTP
+	id S1757962AbWKZUVK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Nov 2006 15:21:10 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, kronos.it@gmail.com
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, Nicolas.Mailhot@LaPoste.net
 
-Hi,
-I have a "hamlet xsataci" card[1], which is basically a PCI card with
-both an Ali M5228 PATA controller and a M5281 SATA controller:
+This is a multi-part message in MIME format.
+--------------090209050809030107040107
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-05:02.0 Mass storage controller: ALi Corporation ALi M5281 Serial ATA / RAID Host Controller (rev a4)
-05:02.1 Mass storage controller: ALi Corporation M5228 ALi ATA/RAID Controller (rev c6)
+The attached patch against 2.6.19-rc6-mm1 fixes some problems in sata_nv 
+with ATAPI devices on controllers running in ADMA mode. Some of the 
+logic in the nv_adma_bmdma_* functions was inverted causing a bunch of 
+warnings and caused those functions not to work properly. Also, when an 
+ATAPI device is connected, we need to use the legacy DMA engine. The 
+code now disables the PCI configuration register bits for ADMA so that 
+this works, and ensures that no ATAPI DMA commands go through until this 
+is done.
 
-I'm using kernel 2.6.19-rc6 (current git, pulled few hours ago) SMP
-(dual core CPU) and PREEMP enabled; PCI_MULTITHREAD_PROBE is disabled.
-alim15x3 works (almost) fine:
+Fixes Bugzilla http://bugzilla.kernel.org/show_bug.cgi?id=7538
 
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-ALI15X3: IDE controller at PCI slot 0000:05:02.1
-ACPI: PCI Interrupt 0000:05:02.1[A] -> GSI 23 (level, low) -> IRQ 18
-ALI15X3: chipset revision 198
-ALI15X3: 100% native mode on irq 18
-    ide0: BM-DMA at 0xc080-0xc087, BIOS settings: hda:DMA, hdb:DMA
-    ide1: BM-DMA at 0xc088-0xc08f, BIOS settings: hdc:pio, hdd:pio
-Probing IDE interface ide0...
-Probing IDE interface ide1...
-hdc: Maxtor 6Y120L0, ATA DISK drive
-hdd: QUANTUM FIREBALLlct10 10, ATA DISK drive
-ide1 at 0xc480-0xc487,0xc402 on irq 18
-hdc: max request size: 128KiB
-hdc: 240121728 sectors (122942 MB) w/2048KiB Cache, CHS=65535/16/63, UDMA(133)
-hdc: cache flushes supported
- hdc: hdc1 hdc2 < hdc5 hdc6 hdc7 hdc8 > hdc3
-hdd: max request size: 128KiB
-hdd: 20044080 sectors (10262 MB) w/418KiB Cache, CHS=19885/16/63, UDMA(33)
-hdd: cache flushes not supported
- hdd: hdd1 hdd2
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-only problem is that hdd supports UDMA66 but it's configured as UDMA33.
-
-sata_uli handles the SATA part of the board fine (nothing connected ATM,
-but I plan to use the external port).
-
-pata_ali doesn't work for this board though:
-
-sata_uli 0000:05:02.0: version 1.0
-ACPI: PCI Interrupt 0000:05:02.0[A] -> GSI 23 (level, low) -> IRQ 18
-ata11: SATA max UDMA/133 cmd 0xC000 ctl 0xBC02 bmdma 0xB480 irq 18
-ata12: SATA max UDMA/133 cmd 0xB880 ctl 0xB802 bmdma 0xB488 irq 18
-scsi10 : sata_uli
-ata11: SATA link down (SStatus 0 SControl 310)
-scsi11 : sata_uli
-ata12: SATA link down (SStatus 0 SControl 310)
-ACPI: PCI Interrupt 0000:05:02.1[A] -> GSI 23 (level, low) -> IRQ 18
-ata13: PATA max UDMA/133 cmd 0xC880 ctl 0xC802 bmdma 0xC080 irq 18
-ata14: PATA max UDMA/133 cmd 0xC480 ctl 0xC402 bmdma 0xC088 irq 18
-scsi12 : pata_ali
-irq 18: nobody cared (try booting with the "irqpoll" option)
- [<b0103ec3>] dump_trace+0x69/0x1af
- [<b0104021>] show_trace_log_lvl+0x18/0x2c
- [<b01046d8>] show_trace+0xf/0x11
- [<b0104788>] dump_stack+0x15/0x17
- [<b0143e8a>] __report_bad_irq+0x36/0x7d
- [<b0144070>] note_interrupt+0x19f/0x1db
- [<b01445a6>] handle_fasteoi_irq+0x86/0xa7
- [<b0105ab3>] do_IRQ+0xd9/0x112
- =======================
-handlers:
-[<b02552b1>] (ata_interrupt+0x0/0x178)
-[<b02552b1>] (ata_interrupt+0x0/0x178)
-Disabling IRQ #18
-ata13: port is slow to respond, please be patient (Status 0xff)
-ata13: port failed to respond (30 secs, Status 0xff)
-ata13: SRST failed (status 0xFF)
-ata13: SRST failed (err_mask=0x100)
-ata13: softreset failed, retrying in 5 secs
-ata13: SRST failed (status 0xFF)
-ata13: SRST failed (err_mask=0x100)
-ata13: softreset failed, retrying in 5 secs
-ata13: SRST failed (status 0xFF)
-ata13: SRST failed (err_mask=0x100)
-ata13: reset failed, giving up
-scsi13 : pata_ali
-ata14.00: qc timeout (cmd 0xec)
-ata14.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-ata14.00: qc timeout (cmd 0xec)
-ata14.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-
-I also tried booting without sata_uli but I still get the same screaming
-interrupt.
-Note that the card has only one PATA channel (and 2 SATA ports).
-
-/proc/ide/ali:
-                                Ali M15x3 Chipset.
-                                ------------------
-PCI Clock: 0.
-CD_ROM FIFO:No , CD_ROM DMA:Yes
-FIFO Status: contains 0 Words, runs.
-
--------------------primary channel-------------------secondary channel---------
-
-channel status:       Off                               Off
-both channels togth:  No                                Yes
-Channel state:        busy                              OK            
-Add. Setup Timing:    8T                                1T
-Command Act. Count:   8T                                3T
-Command Rec. Count:   16T                               1T
-
-----------------drive0-----------drive1------------drive0-----------drive1------
-
-DMA enabled:      Yes              Yes               Yes              Yes
-FIFO threshold:    4 Words          4 Words           8 Words          8 Words
-FIFO mode:        FIFO Off         FIFO Off          FIFO On          FIFO On 
-Dt RW act. Cnt     8T               8T                3T               3T
-Dt RW rec. Cnt    16T              16T                1T               1T
-
------------------------------------UDMA Timings--------------------------------
-
-UDMA:             No               No                OK               OK
-UDMA timings:     3.5T             3.5T                4T             2.5T
-
-
-lspci -vvvxxx:
-
-05:02.0 Mass storage controller: ALi Corporation ALi M5281 Serial ATA / RAID Host Controller (rev a4) (prog-if 85)
-	Subsystem: ALi Corporation ALi M5281 Serial ATA / RAID Host Controller
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 128, cache line size 80
-	Interrupt: pin A routed to IRQ 18
-	Region 0: I/O ports at c000 [size=8]
-	Region 1: I/O ports at bc00 [size=4]
-	Region 2: I/O ports at b880 [size=8]
-	Region 3: I/O ports at b800 [size=4]
-	Region 4: I/O ports at b480 [size=16]
-	Expansion ROM at dfe00000 [disabled] [size=64K]
-00: b9 10 81 52 05 00 a0 02 a4 85 80 01 80 80 80 00
-10: 01 c0 00 00 01 bc 00 00 81 b8 00 00 01 b8 00 00
-20: 81 b4 00 00 00 00 00 00 00 00 00 00 b9 10 81 52
-30: 00 00 7f ff 00 00 00 00 00 00 00 00 0e 01 00 00
-40: 80 88 08 0f 00 00 55 b1 0a 00 b1 0e 68 00 68 00
-50: 01 00 02 00 00 00 00 00 00 00 00 00 09 bc 44 00
-60: 00 00 00 00 00 00 00 00 10 03 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 09 00 44 00
-c0: 00 00 00 00 00 00 00 00 10 03 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-05:02.1 Mass storage controller: ALi Corporation M5228 ALi ATA/RAID Controller (rev c6) (prog-if 85)
-	Subsystem: ALi Corporation: Unknown device 5281
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 128
-	Interrupt: pin A routed to IRQ 18
-	Region 0: I/O ports at c880 [size=8]
-	Region 1: I/O ports at c800 [size=4]
-	Region 2: I/O ports at c480 [size=8]
-	Region 3: I/O ports at c400 [size=4]
-	Region 4: I/O ports at c080 [size=16]
-00: b9 10 28 52 05 00 a0 02 c6 85 80 01 00 80 80 00
-10: 81 c8 00 00 01 c8 00 00 81 c4 00 00 01 c4 00 00
-20: 81 c0 00 00 00 00 00 00 a0 00 00 00 b9 10 81 52
-30: 00 00 00 00 00 00 00 00 00 00 00 00 0e 01 00 00
-40: 00 00 00 7f 00 00 00 00 00 10 64 c9 00 00 ba 1a
-50: 00 00 00 81 00 55 44 ad 00 00 00 00 01 31 31 31
-60: 01 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-
-Luca
-[1] http://www.hamletcom.com/ProductDetails.aspx?ProductId=3483
 -- 
-"New processes are created by other processes, just like new
- humans. New humans are created by other humans, of course,
- not by processes." -- Unix System Administration Handbook
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
+
+--------------090209050809030107040107
+Content-Type: text/plain;
+ name="sata_nv-fix-atapi-in-adma-mode.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sata_nv-fix-atapi-in-adma-mode.patch"
+
+--- linux-2.6.19-rc6-mm1/drivers/ata/sata_nv.c	2006-11-25 10:04:14.000000000 -0600
++++ linux-2.6.19-rc6-mm1-admafix/drivers/ata/sata_nv.c	2006-11-25 21:06:24.000000000 -0600
+@@ -49,7 +49,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME			"sata_nv"
+-#define DRV_VERSION			"3.1"
++#define DRV_VERSION			"3.2"
+ 
+ #define NV_ADMA_DMA_BOUNDARY		0xffffffffUL
+ 
+@@ -165,6 +165,7 @@ enum {
+ 
+ 	/* port flags */
+ 	NV_ADMA_PORT_REGISTER_MODE	= (1 << 0),
++	NV_ADMA_ATAPI_SETUP_COMPLETE	= (1 << 1),
+ 
+ };
+ 
+@@ -231,6 +232,7 @@ static void nv_ck804_freeze(struct ata_p
+ static void nv_ck804_thaw(struct ata_port *ap);
+ static void nv_error_handler(struct ata_port *ap);
+ static int nv_adma_slave_config(struct scsi_device *sdev);
++static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
+ static void nv_adma_qc_prep(struct ata_queued_cmd *qc);
+ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc);
+ static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance);
+@@ -415,6 +417,7 @@ static const struct ata_port_operations 
+ 	.port_disable		= ata_port_disable,
+ 	.tf_load		= ata_tf_load,
+ 	.tf_read		= ata_tf_read,
++	.check_atapi_dma	= nv_adma_check_atapi_dma,
+ 	.exec_command		= ata_exec_command,
+ 	.check_status		= ata_check_status,
+ 	.dev_select		= ata_std_dev_select,
+@@ -489,13 +492,71 @@ MODULE_VERSION(DRV_VERSION);
+ 
+ static int adma_enabled = 1;
+ 
++static inline void __iomem *__nv_adma_ctl_block(void __iomem *mmio,
++					        unsigned int port_no)
++{
++	mmio += NV_ADMA_PORT + port_no * NV_ADMA_PORT_SIZE;
++	return mmio;
++}
++
++static inline void __iomem *nv_adma_ctl_block(struct ata_port *ap)
++{
++	return __nv_adma_ctl_block(ap->host->mmio_base, ap->port_no);
++}
++
++static inline void __iomem *nv_adma_gen_block(struct ata_port *ap)
++{
++	return (ap->host->mmio_base + NV_ADMA_GEN);
++}
++
++static inline void __iomem *nv_adma_notifier_clear_block(struct ata_port *ap)
++{
++	return (nv_adma_gen_block(ap) + NV_ADMA_NOTIFIER_CLEAR + (4 * ap->port_no));
++}
++
++static void nv_adma_register_mode(struct ata_port *ap)
++{
++	void __iomem *mmio = nv_adma_ctl_block(ap);
++	struct nv_adma_port_priv *pp = ap->private_data;
++	u16 tmp;
++
++	if (pp->flags & NV_ADMA_PORT_REGISTER_MODE)
++		return;
++
++	tmp = readw(mmio + NV_ADMA_CTL);
++	writew(tmp & ~NV_ADMA_CTL_GO, mmio + NV_ADMA_CTL);
++
++	pp->flags |= NV_ADMA_PORT_REGISTER_MODE;
++}
++
++static void nv_adma_mode(struct ata_port *ap)
++{
++	void __iomem *mmio = nv_adma_ctl_block(ap);
++	struct nv_adma_port_priv *pp = ap->private_data;
++	u16 tmp;
++
++	if (!(pp->flags & NV_ADMA_PORT_REGISTER_MODE))
++		return;
++		
++	WARN_ON(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE);
++
++	tmp = readw(mmio + NV_ADMA_CTL);
++	writew(tmp | NV_ADMA_CTL_GO, mmio + NV_ADMA_CTL);
++
++	pp->flags &= ~NV_ADMA_PORT_REGISTER_MODE;
++}
++
+ static int nv_adma_slave_config(struct scsi_device *sdev)
+ {
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	struct nv_adma_port_priv *pp = ap->private_data;
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u64 bounce_limit;
+ 	unsigned long segment_boundary;
+ 	unsigned short sg_tablesize;
+ 	int rc;
++	int adma_enable;
++	u32 current_reg, new_reg, config_mask;
+ 
+ 	rc = ata_scsi_slave_config(sdev);
+ 
+@@ -516,13 +577,40 @@ static int nv_adma_slave_config(struct s
+ 		/* Subtract 1 since an extra entry may be needed for padding, see
+ 		   libata-scsi.c */
+ 		sg_tablesize = LIBATA_MAX_PRD - 1;
++		
++		/* Since the legacy DMA engine is in use, we need to disable ADMA
++		   on the port. */
++		adma_enable = 0;
++		nv_adma_register_mode(ap);
+ 	}
+ 	else {
+ 		bounce_limit = *ap->dev->dma_mask;
+ 		segment_boundary = NV_ADMA_DMA_BOUNDARY;
+ 		sg_tablesize = NV_ADMA_SGTBL_TOTAL_LEN;
++		adma_enable = 1;
+ 	}
++	
++	pci_read_config_dword(pdev, NV_MCP_SATA_CFG_20, &current_reg);
+ 
++	if(ap->port_no == 1)
++		config_mask = NV_MCP_SATA_CFG_20_PORT1_EN |
++			      NV_MCP_SATA_CFG_20_PORT1_PWB_EN;
++	else
++		config_mask = NV_MCP_SATA_CFG_20_PORT0_EN |
++			      NV_MCP_SATA_CFG_20_PORT0_PWB_EN;
++	
++	if(adma_enable) {
++		new_reg = current_reg | config_mask;
++		pp->flags &= ~NV_ADMA_ATAPI_SETUP_COMPLETE;
++	}
++	else {
++		new_reg = current_reg & ~config_mask;
++		pp->flags |= NV_ADMA_ATAPI_SETUP_COMPLETE;
++	}
++	
++	if(current_reg != new_reg)
++		pci_write_config_dword(pdev, NV_MCP_SATA_CFG_20, new_reg);
++	
+ 	blk_queue_bounce_limit(sdev->request_queue, bounce_limit);
+ 	blk_queue_segment_boundary(sdev->request_queue, segment_boundary);
+ 	blk_queue_max_hw_segments(sdev->request_queue, sg_tablesize);
+@@ -532,7 +620,13 @@ static int nv_adma_slave_config(struct s
+ 	return rc;
+ }
+ 
+-static unsigned int nv_adma_tf_to_cpb(struct ata_taskfile *tf, u16 *cpb)
++static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc)
++{
++	struct nv_adma_port_priv *pp = qc->ap->private_data;
++	return !(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE);
++}
++
++static unsigned int nv_adma_tf_to_cpb(struct ata_taskfile *tf, __le16 *cpb)
+ {
+ 	unsigned int idx = 0;
+ 
+@@ -563,33 +657,11 @@ static unsigned int nv_adma_tf_to_cpb(st
+ 	return idx;
+ }
+ 
+-static inline void __iomem *__nv_adma_ctl_block(void __iomem *mmio,
+-					        unsigned int port_no)
+-{
+-	mmio += NV_ADMA_PORT + port_no * NV_ADMA_PORT_SIZE;
+-	return mmio;
+-}
+-
+-static inline void __iomem *nv_adma_ctl_block(struct ata_port *ap)
+-{
+-	return __nv_adma_ctl_block(ap->host->mmio_base, ap->port_no);
+-}
+-
+-static inline void __iomem *nv_adma_gen_block(struct ata_port *ap)
+-{
+-	return (ap->host->mmio_base + NV_ADMA_GEN);
+-}
+-
+-static inline void __iomem *nv_adma_notifier_clear_block(struct ata_port *ap)
+-{
+-	return (nv_adma_gen_block(ap) + NV_ADMA_NOTIFIER_CLEAR + (4 * ap->port_no));
+-}
+-
+ static void nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
+ {
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+ 	int complete = 0, have_err = 0;
+-	u16 flags = pp->cpb[cpb_num].resp_flags;
++	u8 flags = pp->cpb[cpb_num].resp_flags;
+ 
+ 	VPRINTK("CPB %d, flags=0x%x\n", cpb_num, flags);
+ 
+@@ -634,15 +706,48 @@ static void nv_adma_check_cpb(struct ata
+ 	}
+ }
+ 
++static int nv_host_intr(struct ata_port *ap, u8 irq_stat)
++{
++	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
++	int handled;
++
++	/* freeze if hotplugged */
++	if (unlikely(irq_stat & (NV_INT_ADDED | NV_INT_REMOVED))) {
++		ata_port_freeze(ap);
++		return 1;
++	}
++
++	/* bail out if not our interrupt */
++	if (!(irq_stat & NV_INT_DEV))
++		return 0;
++
++	/* DEV interrupt w/ no active qc? */
++	if (unlikely(!qc || (qc->tf.flags & ATA_TFLAG_POLLING))) {
++		ata_check_status(ap);
++		return 1;
++	}
++
++	/* handle interrupt */
++	handled = ata_host_intr(ap, qc);
++	if (unlikely(!handled)) {
++		/* spurious, clear it */
++		ata_check_status(ap);
++	}
++
++	return 1;
++}
++
+ static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
+ 	int i, handled = 0;
++	u32 notifier_clears[2];
+ 
+ 	spin_lock(&host->lock);
+ 
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
++		notifier_clears[i] = 0;
+ 
+ 		if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
+ 			struct nv_adma_port_priv *pp = ap->private_data;
+@@ -654,30 +759,18 @@ static irqreturn_t nv_adma_interrupt(int
+ 
+ 			/* if in ATA register mode, use standard ata interrupt handler */
+ 			if (pp->flags & NV_ADMA_PORT_REGISTER_MODE) {
+-				struct ata_queued_cmd *qc;
+-				VPRINTK("in ATA register mode\n");
+-				qc = ata_qc_from_tag(ap, ap->active_tag);
+-				if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
+-					handled += ata_host_intr(ap, qc);
+-				else {
+-					/* No request pending?  Clear interrupt status
+-					   anyway, in case there's one pending. */
+-					ap->ops->check_status(ap);
+-					handled++;
+-				}
++				u8 irq_stat = readb(host->mmio_base + NV_INT_STATUS_CK804)
++					>> (NV_INT_PORT_SHIFT * i);
++				handled += nv_host_intr(ap, irq_stat);
+ 				continue;
+ 			}
+ 
+ 			notifier = readl(mmio + NV_ADMA_NOTIFIER);
+ 			notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
++			notifier_clears[i] = notifier | notifier_error;
+ 
+ 			gen_ctl = readl(nv_adma_gen_block(ap) + NV_ADMA_GEN_CTL);
+ 
+-			/* Seems necessary to clear notifiers even when they were 0.
+-			   Otherwise we seem to stop receiving further interrupts.
+-			   Unsure why. */
+-			writel(notifier | notifier_error, nv_adma_notifier_clear_block(ap));
+-
+ 			if( !NV_ADMA_CHECK_INTR(gen_ctl, ap->port_no) && !notifier &&
+ 			    !notifier_error)
+ 				/* Nothing to do */
+@@ -730,6 +823,15 @@ static irqreturn_t nv_adma_interrupt(int
+ 			handled++; /* irq handled if we got here */
+ 		}
+ 	}
++	
++	if(notifier_clears[0] || notifier_clears[1]) {
++		/* Note: Both notifier clear registers must be written
++		   if either is set, even if one is zero, according to NVIDIA. */
++		writel(notifier_clears[0], 
++			nv_adma_notifier_clear_block(host->ports[0]));
++		writel(notifier_clears[1], 
++			nv_adma_notifier_clear_block(host->ports[1]));
++	}
+ 
+ 	spin_unlock(&host->lock);
+ 
+@@ -742,6 +844,7 @@ static void nv_adma_irq_clear(struct ata
+ 	u16 status = readw(mmio + NV_ADMA_STAT);
+ 	u32 notifier = readl(mmio + NV_ADMA_NOTIFIER);
+ 	u32 notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
++	unsigned long dma_stat_addr = ap->ioaddr.bmdma_addr + ATA_DMA_STATUS;
+ 
+ 	/* clear ADMA status */
+ 	writew(status, mmio + NV_ADMA_STAT);
+@@ -749,92 +852,76 @@ static void nv_adma_irq_clear(struct ata
+ 	       nv_adma_notifier_clear_block(ap));
+ 
+ 	/** clear legacy status */
+-	ap->flags &= ~ATA_FLAG_MMIO;
+-	ata_bmdma_irq_clear(ap);
+-	ap->flags |= ATA_FLAG_MMIO;
++	outb(inb(dma_stat_addr), dma_stat_addr);
+ }
+ 
+ static void nv_adma_bmdma_setup(struct ata_queued_cmd *qc)
+ {
+-	struct nv_adma_port_priv *pp = qc->ap->private_data;
++	struct ata_port *ap = qc->ap;
++	unsigned int rw = (qc->tf.flags & ATA_TFLAG_WRITE);
++	struct nv_adma_port_priv *pp = ap->private_data;
++	u8 dmactl;
+ 
+-	if(pp->flags & NV_ADMA_PORT_REGISTER_MODE) {
++	if(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE)) {
+ 		WARN_ON(1);
+ 		return;
+ 	}
+ 
+-	qc->ap->flags &= ~ATA_FLAG_MMIO;
+-	ata_bmdma_setup(qc);
+-	qc->ap->flags |= ATA_FLAG_MMIO;
++	/* load PRD table addr. */
++	outl(ap->prd_dma, ap->ioaddr.bmdma_addr + ATA_DMA_TABLE_OFS);
++
++	/* specify data direction, triple-check start bit is clear */
++	dmactl = inb(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
++	dmactl &= ~(ATA_DMA_WR | ATA_DMA_START);
++	if (!rw)
++		dmactl |= ATA_DMA_WR;
++
++	outb(dmactl, ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
++
++	/* issue r/w command */
++	ata_exec_command(ap, &qc->tf);
+ }
+ 
+ static void nv_adma_bmdma_start(struct ata_queued_cmd *qc)
+ {
+-	struct nv_adma_port_priv *pp = qc->ap->private_data;
++	struct ata_port *ap = qc->ap;
++	struct nv_adma_port_priv *pp = ap->private_data;
++	u8 dmactl;
+ 
+-	if(pp->flags & NV_ADMA_PORT_REGISTER_MODE) {
++	if(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE)) {
+ 		WARN_ON(1);
+ 		return;
+ 	}
+ 
+-	qc->ap->flags &= ~ATA_FLAG_MMIO;
+-	ata_bmdma_start(qc);
+-	qc->ap->flags |= ATA_FLAG_MMIO;
++	/* start host DMA transaction */
++	dmactl = inb(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
++	outb(dmactl | ATA_DMA_START,
++	     ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+ }
+ 
+ static void nv_adma_bmdma_stop(struct ata_queued_cmd *qc)
+ {
+-	struct nv_adma_port_priv *pp = qc->ap->private_data;
+-
+-	if(pp->flags & NV_ADMA_PORT_REGISTER_MODE)
+-		return;
+-
+-	qc->ap->flags &= ~ATA_FLAG_MMIO;
+-	ata_bmdma_stop(qc);
+-	qc->ap->flags |= ATA_FLAG_MMIO;
+-}
+-
+-static u8 nv_adma_bmdma_status(struct ata_port *ap)
+-{
+-	u8 status;
+-	struct nv_adma_port_priv *pp = ap->private_data;
+-
+-	WARN_ON(pp->flags & NV_ADMA_PORT_REGISTER_MODE);
+-
+-	ap->flags &= ~ATA_FLAG_MMIO;
+-	status = ata_bmdma_status(ap);
+-	ap->flags |= ATA_FLAG_MMIO;
+-	return status;
+-}
+-
+-static void nv_adma_register_mode(struct ata_port *ap)
+-{
+-	void __iomem *mmio = nv_adma_ctl_block(ap);
++	struct ata_port *ap = qc->ap;
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+-	u16 tmp;
+ 
+-	if (pp->flags & NV_ADMA_PORT_REGISTER_MODE)
++	if(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE))
+ 		return;
+ 
+-	tmp = readw(mmio + NV_ADMA_CTL);
+-	writew(tmp & ~NV_ADMA_CTL_GO, mmio + NV_ADMA_CTL);
++	/* clear start/stop bit */
++	outb(inb(ap->ioaddr.bmdma_addr + ATA_DMA_CMD) & ~ATA_DMA_START,
++		ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+ 
+-	pp->flags |= NV_ADMA_PORT_REGISTER_MODE;
++	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
++	ata_altstatus(ap);        /* dummy read */
+ }
+ 
+-static void nv_adma_mode(struct ata_port *ap)
++static u8 nv_adma_bmdma_status(struct ata_port *ap)
+ {
+-	void __iomem *mmio = nv_adma_ctl_block(ap);
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+-	u16 tmp;
+-
+-	if (!(pp->flags & NV_ADMA_PORT_REGISTER_MODE))
+-		return;
+ 
+-	tmp = readw(mmio + NV_ADMA_CTL);
+-	writew(tmp | NV_ADMA_CTL_GO, mmio + NV_ADMA_CTL);
++	WARN_ON(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE));
+ 
+-	pp->flags &= ~NV_ADMA_PORT_REGISTER_MODE;
++	return inb(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
+ }
+ 
+ static int nv_adma_port_start(struct ata_port *ap)
+@@ -997,7 +1084,7 @@ static void nv_adma_fill_aprd(struct ata
+ 			      int idx,
+ 			      struct nv_adma_prd *aprd)
+ {
+-	u32 flags;
++	u8 flags;
+ 
+ 	memset(aprd, 0, sizeof(struct nv_adma_prd));
+ 
+@@ -1011,7 +1098,7 @@ static void nv_adma_fill_aprd(struct ata
+ 
+ 	aprd->addr  = cpu_to_le64(((u64)sg_dma_address(sg)));
+ 	aprd->len   = cpu_to_le32(((u32)sg_dma_len(sg))); /* len in bytes */
+-	aprd->flags = cpu_to_le32(flags);
++	aprd->flags = flags;
+ }
+ 
+ static void nv_adma_fill_sg(struct ata_queued_cmd *qc, struct nv_adma_cpb *cpb)
+@@ -1045,7 +1132,8 @@ static void nv_adma_qc_prep(struct ata_q
+ 	VPRINTK("qc->flags = 0x%lx\n", qc->flags);
+ 
+ 	if (!(qc->flags & ATA_QCFLAG_DMAMAP) ||
+-	     qc->tf.protocol == ATA_PROT_ATAPI_DMA) {
++	     (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
++		nv_adma_register_mode(qc->ap);
+ 		ata_qc_prep(qc);
+ 		return;
+ 	}
+@@ -1072,12 +1160,13 @@ static void nv_adma_qc_prep(struct ata_q
+ 
+ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
+ {
++	struct nv_adma_port_priv *pp = qc->ap->private_data;
+ 	void __iomem *mmio = nv_adma_ctl_block(qc->ap);
+ 
+ 	VPRINTK("ENTER\n");
+ 
+ 	if (!(qc->flags & ATA_QCFLAG_DMAMAP) ||
+-	     qc->tf.protocol == ATA_PROT_ATAPI_DMA) {
++	     (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
+ 		/* use ATA register mode */
+ 		VPRINTK("no dmamap or ATAPI, using ATA register mode: 0x%lx\n", qc->flags);
+ 		nv_adma_register_mode(qc->ap);
+@@ -1128,37 +1217,6 @@ static irqreturn_t nv_generic_interrupt(
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+-static int nv_host_intr(struct ata_port *ap, u8 irq_stat)
+-{
+-	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
+-	int handled;
+-
+-	/* freeze if hotplugged */
+-	if (unlikely(irq_stat & (NV_INT_ADDED | NV_INT_REMOVED))) {
+-		ata_port_freeze(ap);
+-		return 1;
+-	}
+-
+-	/* bail out if not our interrupt */
+-	if (!(irq_stat & NV_INT_DEV))
+-		return 0;
+-
+-	/* DEV interrupt w/ no active qc? */
+-	if (unlikely(!qc || (qc->tf.flags & ATA_TFLAG_POLLING))) {
+-		ata_check_status(ap);
+-		return 1;
+-	}
+-
+-	/* handle interrupt */
+-	handled = ata_host_intr(ap, qc);
+-	if (unlikely(!handled)) {
+-		/* spurious, clear it */
+-		ata_check_status(ap);
+-	}
+-
+-	return 1;
+-}
+-
+ static irqreturn_t nv_do_interrupt(struct ata_host *host, u8 irq_stat)
+ {
+ 	int i, handled = 0;
+
+--------------090209050809030107040107--
+
