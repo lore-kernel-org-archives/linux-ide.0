@@ -1,15 +1,15 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH -mm] sata_nv: fix ATAPI in ADMA mode
-Date: Mon, 27 Nov 2006 18:31:44 -0500
-Message-ID: <456B7560.2020301@garzik.org>
+Date: Mon, 27 Nov 2006 18:32:03 -0500
+Message-ID: <456B7573.1050200@garzik.org>
 References: <4569F703.8010209@shaw.ca> <20061127151541.16a93d49.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54441 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1758606AbWK0Xbz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Nov 2006 18:31:55 -0500
+Received: from srv5.dvmed.net ([207.36.208.214]:57001 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1758608AbWK0XcF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Nov 2006 18:32:05 -0500
 In-Reply-To: <20061127151541.16a93d49.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
