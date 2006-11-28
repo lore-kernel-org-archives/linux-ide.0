@@ -1,34 +1,30 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Scary Intel SATA problem: "frozen"
-Date: Tue, 28 Nov 2006 20:55:04 +0300
-Message-ID: <456C77F8.5020608@ru.mvista.com>
-References: <20061114150454.GA11900@havoc.gtf.org> <Pine.LNX.4.64.0611280908320.4244@woody.osdl.org> <456C73D8.3050803@rtr.ca>
+Date: Tue, 28 Nov 2006 18:05:54 +0000
+Message-ID: <20061128180554.3ec64259@localhost.localdomain>
+References: <20061114150454.GA11900@havoc.gtf.org>
+	<Pine.LNX.4.64.0611280908320.4244@woody.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:13700 "EHLO
-	imap.sh.mvista.com") by vger.kernel.org with ESMTP id S935987AbWK1Rxc
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:20653 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S935994AbWK1R7a
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Nov 2006 12:53:32 -0500
-In-Reply-To: <456C73D8.3050803@rtr.ca>
+	Tue, 28 Nov 2006 12:59:30 -0500
+In-Reply-To: <Pine.LNX.4.64.0611280908320.4244@woody.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-Hello.
+On Tue, 28 Nov 2006 09:31:51 -0800 (PST)
+Linus Torvalds <torvalds@osdl.org> wrote:
 
-Mark Lord wrote:
+>  I just had a scary thing on my nice new Intel i965 box (all Intel 
+> chipsets apart from some strange Marvell IDE interface that I'm not using 
+> and that no driver even detected, and a TI firewire thing that I'm 
 
-> Bit #4, when actually implemented, is a rotational seek indicator,
-> which can be used for timing purposes.
+Mr Morton has the Marvell libata driver in his tree waiting to head your
+way.
 
-    Hm, I thought it was DSC (drive seek complete) set by the SEEK command 
-completion, and it's always implemented. Didn't you mean IDX (bit 1, IIRC)?
-
-> But when BUSY (bit #7) is set, the rest are generally nonsense.
-
-    Indeed...
-
-WBR, Sergei
