@@ -1,38 +1,73 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: waits up to 10 microseconds for early irq problem
-Date: Tue, 28 Nov 2006 09:42:20 -0500
-Message-ID: <456C4ACC.1050806@rtr.ca>
-References: <200611180759.34622.t.powa@gmx.de> <20061118002357.564dbb9d.akpm@osdl.org> <455F790C.2030509@garzik.org> <456BDCAC.4060609@tw.ibm.com> <456C4514.9090107@tw.ibm.com>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Scary Intel SATA errors..
+Date: Tue, 28 Nov 2006 08:56:59 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0611280853280.30076@woody.osdl.org>
+References: <20061114150454.GA11900@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:61967 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S935330AbWK1OmX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 09:42:23 -0500
-In-Reply-To: <456C4514.9090107@tw.ibm.com>
+Received: from smtp.osdl.org ([65.172.181.25]:49838 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S935889AbWK1Q5O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 11:57:14 -0500
+In-Reply-To: <20061114150454.GA11900@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, matthieu castet <castet.matthieu@free.fr>, Tobias Powalowski <t.powa@gmx.de>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> It's worthwhile to poll alt_status and wait for BSY to clear in this case. 
 
-Polling the ATA ALT_STATUS register can take up to 600ns,
-or the equivalent of several thousand wasted instructions
-on a modern CPU.
+Jeff, what does this mean:
 
-It's only worthwhile if the poll was actually necessary.
-My question is, do we really want this overhead in the hot path
-on every single ATA interrupt, or should we instead simply blacklist
-those devices with the problem?
+	ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+	ata1.00: (BMDMA stat 0x21)
+	ata1.00: tag 0 cmd 0xca Emask 0x4 stat 0x40 err 0x0 (timeout)
+	ata1: port is slow to respond, please be patient (Status 0xd0)
+	ata1: port failed to respond (30 secs, Status 0xd0)
+	ata1: soft resetting port
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ata1.00: qc timeout (cmd 0xec)
+	ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+	ata1.00: revalidation failed (errno=-5)
+	ata1: failed to recover some devices, retrying in 5 secs
+	ata1: port is slow to respond, please be patient (Status 0xd0)
+	ata1: port failed to respond (30 secs, Status 0xd0)
+	ata1: soft resetting port
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ata1.00: qc timeout (cmd 0xec)
+	ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+	ata1.00: revalidation failed (errno=-5)
+	ata1: failed to recover some devices, retrying in 5 secs
+	ata1: port is slow to respond, please be patient (Status 0xd0)
+	ata1: port failed to respond (30 secs, Status 0xd0)
+	ata1: soft resetting port
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ATA: abnormal status 0xD0 on port 0x214F
+	ata1.00: qc timeout (cmd 0xec)
+	ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+	ata1.00: revalidation failed (errno=-5)
+	ata1.00: disabled
+	ata1: EH complete
 
-Or perhaps be more clever in handling it:  If the device driver interrupt
-routine see's BUSY still set after the normal ATA STATUS read,
-*then* we could do the poll.  That way it never adds unnecessary overhead.
+followed by various IO errors:
 
-This is more than "just a single instruction" here.. it's the equivalent
-of thousands of them, each time we read an ATA register.
+	sd 0:0:0:0: SCSI error: return code = 0x00040000
+	end_request: I/O error, dev sda, sector 335093
+	sd 0:0:0:0: SCSI error: return code = 0x00040000
+	end_request: I/O error, dev sda, sector 896217445
+	Buffer I/O error on device dm-0, logical block 112001027
+	lost page write due to I/O error on dm-0
+	..
 
-Cheers
+nasty, nasty, nasty.
+
+This is with ata_piix on a Intel i965 motherboard (everything Intel)
+
+		Linus
