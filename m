@@ -1,40 +1,31 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: fix scsi_host_template in drivers
-Date: Tue, 28 Nov 2006 03:42:45 -0500
-Message-ID: <456BF685.3090004@pobox.com>
-References: <20061122060411.GW2184@htj.dyndns.org>
+Subject: Re: [PATCH] libata: don't schedule EH on wcache on/off if old EH
+Date: Tue, 28 Nov 2006 03:45:44 -0500
+Message-ID: <456BF738.5060606@pobox.com>
+References: <20061122033943.GV2184@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:7810 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S935698AbWK1Ims (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 03:42:48 -0500
-In-Reply-To: <20061122060411.GW2184@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:19842 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S935696AbWK1Ipq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 03:45:46 -0500
+In-Reply-To: <20061122033943.GV2184@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> This patch fixes the followings regarding sht usage in libata drivers.
+> Do not schedule EH for revalidation on wcache on/off if old EH.  Old
+> EH cannot handle it and will result in WARN_ON()'s and oops.
 > 
-> * sht->max_sectors is overrided unconditionally in ->slave_configure.
->   There's no reason to set it to any value.
-> 
-> * Many LLDs are missing sht->slave_destroy.  The method is mandatory
->   to support device warm unplugging (echo 1 > /sys/.../delete).
->   Without it, libata might access released scsi device.
+> This closes bug #7412.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 > ---
-> 
-> Another candidate for #upstream-fixes.
+> Jeff, this one should go into #upstream-fixes too.
 
-if you want stuff in #upstream-fixes, you have to cut the patch down to 
-its bare minimum.  the max_sectors change in this case is a cleanup.
-
-I ACK the patch, but ask:  would you prefer to split the patch, or just 
-this into #upstream?
+applied to #upstream-fixes
 
 
