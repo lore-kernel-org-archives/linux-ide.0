@@ -1,48 +1,34 @@
-From: Mark Lord <liml@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: Scary Intel SATA problem: "frozen"
-Date: Tue, 28 Nov 2006 12:37:28 -0500
-Message-ID: <456C73D8.3050803@rtr.ca>
-References: <20061114150454.GA11900@havoc.gtf.org> <Pine.LNX.4.64.0611280908320.4244@woody.osdl.org>
+Date: Tue, 28 Nov 2006 20:55:04 +0300
+Message-ID: <456C77F8.5020608@ru.mvista.com>
+References: <20061114150454.GA11900@havoc.gtf.org> <Pine.LNX.4.64.0611280908320.4244@woody.osdl.org> <456C73D8.3050803@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:39431 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S935955AbWK1Rha (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 12:37:30 -0500
-In-Reply-To: <Pine.LNX.4.64.0611280908320.4244@woody.osdl.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:13700 "EHLO
+	imap.sh.mvista.com") by vger.kernel.org with ESMTP id S935987AbWK1Rxc
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Nov 2006 12:53:32 -0500
+In-Reply-To: <456C73D8.3050803@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Linus Torvalds wrote:
-> [ You may or may not have gotten my previous email. The kernel stayed 
->   working, but due to the IO errors the filesystem got re-mounted 
->   read-only, and I'm not sure that the email I sent out in that state 
->   actually ever made it out. I suspect it didn't. ]
-> 
-> Jeff,
->  I just had a scary thing on my nice new Intel i965 box (all Intel 
-> chipsets apart from some strange Marvell IDE interface that I'm not using 
-> and that no driver even detected, and a TI firewire thing that I'm 
-> similarly not using).
-> 
-> The machine basically froze for about a minute or so (well, things worked 
-> surprisingly well, considering that apparently no disk IO happened - I 
-> initially thought it was just firefox that had frozen up, since my mail 
-> session seemed to be fine), and after it came back the filesystem was 
-> mounted read-only and nothing really worked any more..
-> 
-> I have no idea what status 0xD0 means: it looks like ATA_BUSY + ATA_DRDY + 
-> "bit#4", but what is bit#4?
+Hello.
 
-Bit #4, when actually implemented, is a rotational seek indicator,
-which can be used for timing purposes.
+Mark Lord wrote:
 
-But when BUSY (bit #7) is set, the rest are generally nonsense.
- 
-> And clearly, the soft-reset isn't doing squat.
+> Bit #4, when actually implemented, is a rotational seek indicator,
+> which can be used for timing purposes.
 
-Tejun ?
+    Hm, I thought it was DSC (drive seek complete) set by the SEEK command 
+completion, and it's always implemented. Didn't you mean IDX (bit 1, IIRC)?
 
+> But when BUSY (bit #7) is set, the rest are generally nonsense.
+
+    Indeed...
+
+WBR, Sergei
