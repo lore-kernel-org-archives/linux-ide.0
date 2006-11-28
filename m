@@ -1,73 +1,42 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Scary Intel SATA errors..
-Date: Tue, 28 Nov 2006 08:56:59 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0611280853280.30076@woody.osdl.org>
-References: <20061114150454.GA11900@havoc.gtf.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: fix SCSI/ATA device association during hotplug
+Date: Wed, 29 Nov 2006 02:14:59 +0900
+Message-ID: <456C6E93.9040203@gmail.com>
+References: <20061120092534.GP2184@htj.dyndns.org> <456C43BF.4060807@rtr.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:49838 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S935889AbWK1Q5O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 11:57:14 -0500
-In-Reply-To: <20061114150454.GA11900@havoc.gtf.org>
+Received: from ug-out-1314.google.com ([66.249.92.174]:26478 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1758709AbWK1RPH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Nov 2006 12:15:07 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so1536412uga
+        for <linux-ide@vger.kernel.org>; Tue, 28 Nov 2006 09:15:06 -0800 (PST)
+In-Reply-To: <456C43BF.4060807@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
+Mark Lord wrote:
+> Tejun Heo wrote:
+> ..
+>> +        /* Try to attach new SCSI device.  SCSI midlayer
+>> +         * doesn't supply separate interfaces for allocating
+>> +         * and probing, so in this function, we can associate
+>> +         * new SCSI device with its target ATA device only
+>> +         * after probing is complete.
+> ..
+> 
+> I'm not necessarily disagreeing with the code, but rather that comment.
+> 
+> Mmm.. isn't slave_alloc() for allocating?  It gets invoked before
+> the INQUIRY, and then slave_configure() is invoked after a successful
+> device INQUIRY (otherwise slave_destroy() is invoked to clean up).
 
-Jeff, what does this mean:
+Yeah, right.  That will be the perfect place to attach ATA device. 
+Thanks for pointing out.  I'll redo this patch.
 
-	ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-	ata1.00: (BMDMA stat 0x21)
-	ata1.00: tag 0 cmd 0xca Emask 0x4 stat 0x40 err 0x0 (timeout)
-	ata1: port is slow to respond, please be patient (Status 0xd0)
-	ata1: port failed to respond (30 secs, Status 0xd0)
-	ata1: soft resetting port
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ata1.00: qc timeout (cmd 0xec)
-	ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-	ata1.00: revalidation failed (errno=-5)
-	ata1: failed to recover some devices, retrying in 5 secs
-	ata1: port is slow to respond, please be patient (Status 0xd0)
-	ata1: port failed to respond (30 secs, Status 0xd0)
-	ata1: soft resetting port
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ata1.00: qc timeout (cmd 0xec)
-	ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-	ata1.00: revalidation failed (errno=-5)
-	ata1: failed to recover some devices, retrying in 5 secs
-	ata1: port is slow to respond, please be patient (Status 0xd0)
-	ata1: port failed to respond (30 secs, Status 0xd0)
-	ata1: soft resetting port
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ATA: abnormal status 0xD0 on port 0x214F
-	ata1.00: qc timeout (cmd 0xec)
-	ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-	ata1.00: revalidation failed (errno=-5)
-	ata1.00: disabled
-	ata1: EH complete
-
-followed by various IO errors:
-
-	sd 0:0:0:0: SCSI error: return code = 0x00040000
-	end_request: I/O error, dev sda, sector 335093
-	sd 0:0:0:0: SCSI error: return code = 0x00040000
-	end_request: I/O error, dev sda, sector 896217445
-	Buffer I/O error on device dm-0, logical block 112001027
-	lost page write due to I/O error on dm-0
-	..
-
-nasty, nasty, nasty.
-
-This is with ata_piix on a Intel i965 motherboard (everything Intel)
-
-		Linus
+-- 
+tejun
