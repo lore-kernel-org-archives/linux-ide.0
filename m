@@ -1,35 +1,32 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: implement ATA_FLAG_SETXFER_POLLING and use it
- in pata_via, take #2
-Date: Tue, 28 Nov 2006 04:00:45 -0500
-Message-ID: <456BFABD.6030600@pobox.com>
-References: <20061116015050.GB2184@htj.dyndns.org>
+Subject: Re: [PATCH] libata: remove unused HSM_ST_UNKNOWN
+Date: Tue, 28 Nov 2006 04:00:54 -0500
+Message-ID: <456BFAC6.3070403@pobox.com>
+References: <20061117030511.GC2184@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49794 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S935721AbWK1JAt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 04:00:49 -0500
-In-Reply-To: <20061116015050.GB2184@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:51586 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S935722AbWK1JA4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 04:00:56 -0500
+In-Reply-To: <20061117030511.GC2184@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, castet.matthieu@free.fr
+Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> This patch implements ATA_FLAG_SETXFER_POLLING and use in pata_via.
-> If this flag is set, transfer mode setting performed by polling not by
-> interrupt.  This should help those controllers which raise interrupt
-> before the command is actually complete on SETXFER.
+> HSM_ST_UNKNOWN is not used anywhere.  Its value is zero and supposed
+> to serve sanity check purpose but HSM_ST_IDLE is used for that
+> purpose.  This unused state causes confusion.  After a port is
+> initialized but before the first command is executed, the idle hsm
+> state is UNKNOWN.  However, once a command has completed, the idle hsm
+> state is IDLE.  This defeats sanity check in ata_pio_task() for the
+> first command.
 > 
-> Rationale for this approach.
-> 
-> * uses existing facility and relatively simple
-> * no busy sleep in the interrupt handler
-> * updating drivers is easy
-> 
-> While at it, kill now unused flag ATA_FLAG_SRST in pata_via.
+> This patch removes HSM_ST_UNKNOWN and consequently make HSM_ST_IDLE
+> the default state.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 
