@@ -1,38 +1,43 @@
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH 2.6.15.4 rel.2 1/1] libata: add hotswap to sata_svw
-Date: Tue, 28 Nov 2006 23:22:19 +0000
-Message-ID: <1164756139.14595.37.camel@pmac.infradead.org>
-References: <E1F9klH-0004Fg-00@devix>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Scary Intel SATA problem: "frozen"
+Date: Tue, 28 Nov 2006 18:22:45 -0500
+Message-ID: <456CC4C5.6090003@garzik.org>
+References: <456CB72A.3010004@local.se> <Pine.LNX.4.64.0611281444330.4244@woody.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:26796 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1757849AbWK1XWZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Nov 2006 18:22:25 -0500
-In-Reply-To: <E1F9klH-0004Fg-00@devix>
+Received: from srv5.dvmed.net ([207.36.208.214]:7581 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1757883AbWK1XWw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 18:22:52 -0500
+In-Reply-To: <Pine.LNX.4.64.0611281444330.4244@woody.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Devera <devik@cdi.cz>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, lkosewsk@gmail.com.jgarzik
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Jonas Lundgren <jonas@local.se>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Thu, 2006-02-16 at 16:09 +0100, Martin Devera wrote:
-> From: Martin Devera <devik@cdi.cz>
-> 
-> Add hotswap capability to Serverworks/BroadCom SATA controlers. The
-> controler has SIM register and it selects which bits in SATA_ERROR
-> register fires interrupt.
-> The solution hooks on COMWAKE (plug), PHYRDY change and 10B8B decode 
-> error (unplug) and calls into Lukasz's hotswap framework.
-> The code got one day testing on dual core Athlon64 H8SSL Supermicro 
-> MoBo with HT-1000 SATA, SMP kernel and two CaviarRE SATA HDDs in
-> hotswap bays.
-> 
-> Signed-off-by: Martin Devera <devik@cdi.cz>
+Linus Torvalds wrote:
+> So maybe these _are_ related somehow, and my problem showed up because I 
+> actually had concurrent access to my DVD drive (some KDE media daemon 
+> checking to see if I inserted a music CD or something?). Jeff, Tejun, is 
+> there any reason to believe that the two channels on a PIIX ata controller 
+> are somehow "tied together" and it could be problematic for concurrent 
+> accesses?
 
-What became of this?
 
--- 
-dwmw2
+I was sorta wondering in that direction too.  If its in legacy mode 
+(PATA and SATA smushed together), that's a possibility.  But native or 
+AHCI modes, the channels are pretty independent (which is the nature of 
+SATA).
+
+Historical note:  ata_piix is IMO more complicated than ahci, because 
+the silicon is emulating the PATA interface using an internal (probably 
+huge) state machine, converting PATA behavior to sending/receiving SATA 
+packets.  There are classes of problems that just don't exist on ahci, 
+simply because we can directly talk to the sata phy, rather than having 
+to guess what the emulation state machine is doing.
+
+	Jeff
+
+
 
