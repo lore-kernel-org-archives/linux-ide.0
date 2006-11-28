@@ -1,35 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ahci: ignore PORT_IRQ_IF_ERR on JMB controllers
-Date: Tue, 28 Nov 2006 03:49:20 -0500
-Message-ID: <456BF810.3050604@pobox.com>
-References: <20061121014802.GR2184@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: fix scsi_host_template in drivers
+Date: Tue, 28 Nov 2006 17:50:09 +0900
+Message-ID: <456BF841.5010102@gmail.com>
+References: <20061122060411.GW2184@htj.dyndns.org> <456BF685.3090004@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:32898 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S935699AbWK1ItY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 03:49:24 -0500
-In-Reply-To: <20061121014802.GR2184@htj.dyndns.org>
+Received: from nz-out-0506.google.com ([64.233.162.235]:34632 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S935691AbWK1IuP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Nov 2006 03:50:15 -0500
+Received: by nz-out-0102.google.com with SMTP id s1so807274nze
+        for <linux-ide@vger.kernel.org>; Tue, 28 Nov 2006 00:50:15 -0800 (PST)
+In-Reply-To: <456BF685.3090004@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, justin@jmicron.com, andrew.lyon@gmail.com, fredrik@obra.se
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> JMicron AHCI controllers set PORT_IRQ_IF_ERR on device errors.  The
-> IRQ status bit indicates interface error or protocol mismatch and ahci
-> driver interprets it into AC_ERR_ATA_BUS.  So, whenever an ATAPI
-> device raises check condition, ahci interprets it as ATA bus error and
-> thus resets it which, in turn, raises check condition thus creating a
-> reset loop and rendering the device unuseable.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> This patch fixes the followings regarding sht usage in libata drivers.
+>>
+>> * sht->max_sectors is overrided unconditionally in ->slave_configure.
+>>   There's no reason to set it to any value.
+>>
+>> * Many LLDs are missing sht->slave_destroy.  The method is mandatory
+>>   to support device warm unplugging (echo 1 > /sys/.../delete).
+>>   Without it, libata might access released scsi device.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ---
+>>
+>> Another candidate for #upstream-fixes.
 > 
-> This patch makes JMB controllers ignore PORT_IRQ_IF_ERR when
-> interpreting error condition.
+> if you want stuff in #upstream-fixes, you have to cut the patch down to 
+> its bare minimum.  the max_sectors change in this case is a cleanup.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Justin Tsai <justin@jmicron.com>
+> I ACK the patch, but ask:  would you prefer to split the patch, or just 
+> this into #upstream?
 
-ACK, but please resend against latest #upstream-fixes (which includes 
-Intel ahci ICH9 PCI IDs)
+I'll split.
 
+-- 
+tejun
