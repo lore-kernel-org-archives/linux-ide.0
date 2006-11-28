@@ -1,60 +1,57 @@
-From: Jason Gaston <jason.d.gaston@intel.com>
-Subject: [PATCH 2.6.19-rc6][reRESEND] ata_piix: IDE mode SATA patch for Intel ICH9
-Date: Tue, 28 Nov 2006 10:32:38 -0800
-Message-ID: <200611281032.39214.jason.d.gaston@intel.com>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: Scary Intel SATA problem: "frozen"
+Date: Tue, 28 Nov 2006 10:33:29 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0611281020590.4244@woody.osdl.org>
+References: <20061114150454.GA11900@havoc.gtf.org>
+ <Pine.LNX.4.64.0611280908320.4244@woody.osdl.org> <20061128180554.3ec64259@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:62554 "EHLO mga02.intel.com")
-	by vger.kernel.org with ESMTP id S1758735AbWK1Scq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Nov 2006 13:32:46 -0500
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.25]:11985 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1758736AbWK1Sdt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 13:33:49 -0500
+In-Reply-To: <20061128180554.3ec64259@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jason.d.gaston@intel.com, htejun@gmail.com
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-This updated patch adds the Intel ICH9 IDE mode SATA controller DID's.
 
-Signed-off-by: =A0Jason Gaston <jason.d.gaston@intel.com>
 
---- linux-2.6.19-rc6/drivers/ata/ata_piix.c.orig	2006-11-20 04:58:48.00=
-0000000=20
--0800
-+++ linux-2.6.19-rc6/drivers/ata/ata_piix.c	2006-11-22 02:59:05.0000000=
-00=20
--0800
-@@ -227,15 +227,27 @@
- 	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
- 	/* 2801GBM/GHM (ICH7M, identical to ICH6M) */
- 	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata_ahci },
--	/* Enterprise Southbridge 2 (where's the datasheet?) */
-+	/* Enterprise Southbridge 2 (631xESB/632xESB) */
- 	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
--	/* SATA Controller 1 IDE (ICH8, no datasheet yet) */
-+	/* SATA Controller 1 IDE (ICH8) */
- 	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
--	/* SATA Controller 2 IDE (ICH8, ditto) */
-+	/* SATA Controller 2 IDE (ICH8) */
- 	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
--	/* Mobile SATA Controller IDE (ICH8M, ditto) */
-+	/* Mobile SATA Controller IDE (ICH8M) */
- 	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
--
-+	/* SATA Controller IDE (ICH9) */
-+	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	/* SATA Controller IDE (ICH9) */
-+	{ 0x8086, 0x2921, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	/* SATA Controller IDE (ICH9) */
-+	{ 0x8086, 0x2926, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	/* SATA Controller IDE (ICH9M) */
-+	{ 0x8086, 0x2928, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	/* SATA Controller IDE (ICH9M) */
-+	{ 0x8086, 0x292d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	/* SATA Controller IDE (ICH9M) */
-+	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+=09
- 	{ }	/* terminate list */
- };
-=20
+On Tue, 28 Nov 2006, Alan wrote:
+>
+> On Tue, 28 Nov 2006 09:31:51 -0800 (PST)
+> Linus Torvalds <torvalds@osdl.org> wrote:
+> 
+> >  I just had a scary thing on my nice new Intel i965 box (all Intel 
+> > chipsets apart from some strange Marvell IDE interface that I'm not using 
+> > and that no driver even detected, and a TI firewire thing that I'm 
+> 
+> Mr Morton has the Marvell libata driver in his tree waiting to head your
+> way.
+
+Well, I don't actually personally want it (I have nothing connected to it, 
+nor any intention of connecting anything in the future), I just want my 
+bog-standard PIIX driver to not do the scary things to me.
+
+	"Mommy, mommy, the IDE messages/behaviour is scaring me!"
+
+I just mentioned the Marvell chip because apart from those two (unused) 
+chips, the box is absolutely and utterly bog-standard Intel-everything. 
+The i965 may still be somewhat unusual right now, but that's going to 
+change, and if there's something strange going on, we should try to fix it 
+asap.
+
+It could be a one-off thing (knock wood), but on the other hand, I've only 
+been using this machine for a couple of weeks now, and I can't remember 
+seeing anything even remotely similar on my other machines (including the 
+earlier-generation i945 SATA setup that I've had a lot longer). So I worry 
+that it's something i965-specific, and that will be a _very_ common 
+chipset soon enough.
+
+One data-point that may or may not be relevant: the afore-mentioned i945 
+machine that I've had longer is otherwise reasonably similar, but the DVD 
+drive on that one is in legacy mode. Not that I see why it should matter 
+(the problem happened on the harddisk, not the DVD)...
+
+		Linus
