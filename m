@@ -1,64 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.19-rc6] sata_promise updates
-Date: Tue, 28 Nov 2006 03:25:15 -0500
-Message-ID: <456BF26B.6040607@garzik.org>
-References: <200611222100.kAML0FlK010399@alkaid.it.uu.se>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] pata_it821x: Suspend/Resume support
+Date: Tue, 28 Nov 2006 03:34:22 -0500
+Message-ID: <456BF48E.6040709@pobox.com>
+References: <20061127161436.51e1a8de@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:27777 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S935771AbWK1IZn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 03:25:43 -0500
-In-Reply-To: <200611222100.kAML0FlK010399@alkaid.it.uu.se>
+Received: from srv5.dvmed.net ([207.36.208.214]:50049 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S935675AbWK1IeY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 03:34:24 -0500
+In-Reply-To: <20061127161436.51e1a8de@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: akpm@osdl.org, davem@davemloft.net, htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> On Tue, 21 Nov 2006 16:07:17 -0500, Jeff Garzik wrote:
->> Mikael Pettersson wrote:
->>> This patch updates the sata_promise driver as follows:
-> ...
->> Looks pretty decent to me.  Two small nits:
->>
->> 1) no_tbg_slew_init should be a bit flag ("1 << 0") inside a 'flags' 
->> variable in struct pdc_host_priv.
->>
->> 2) Check pdc_ulsata2 again, I think the flash control register is 
->> programmed with a different value on SATAI versus SATAII.
+Alan wrote:
+> If you are using the noraid option then after a suspend/resume sequence
+> we need to reset the card back out of raid mode again.
 > 
-> Done. Updated patch below.
-> 
-> This patch updates the sata_promise driver as follows:
-> - Correct typo in definition of PDC_TBG_MODE: it's at 0x41C not 0x41
->   in first-generation chips. This error caused PCI access alignment
->   exceptions on SPARC64, and on all platforms it disabled the expected
->   initialisation of TBG mode.
-> - Add flags field to struct pdc_host_priv. Define PDC_FLAG_GEN_II
->   and use it to distinguish first- and second-generation chips.
-> - Prevent the FLASH_CTL FIFO_SHD bit from being set to 1 on second-
->   generation chips. This matches Promises' ulsata2 driver.
-> - Prevent TBG mode and SLEW rate initialisation in second-generation chips.
->   These two registers have moved, TBG mode has been redefined, and
->   Promise's ulsata2 driver no longer attempts to initialise them.
-> - Correct PCI device table so devices 0x3570, 0x3571, and 0x3d73 are
->   marked as 2057x (2nd gen) not 2037x (1st gen).
-> - Correct PCI device table so device 0x3d17 is marked as 40518
->   (2nd gen 4 ports) not 20319 (1st gen 4 ports).
-> - Correct pdc_ata_init_one() to treat 20771 as a second-generation chip.
-> 
-> Tested on 0x3d75 (2nd gen), 0x3d73 (2nd gen), and 0x3373 (1st gen) chips.
-> The information comes from the newly uploaded Promise SATA HW specs,
-> Promise's ultra and ulsata2 drivers, and debugging on 3d75/3d73/3373 chips.
-> 
-> hp->hotplug_offset could now be removed and its value recomputed
-> in pdc_host_init() using hp->flags, but that would be a cleanup
-> not a functional change, so I'm ignoring it for now.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-applied to libata-dev.git#upstream (queued for 2.6.20)
+applied this, and similar patches:
+
+serverworks
+via
+amd
+hpt36x
+hpt3x3
+pata : more drivers...
+
+and also
+
+pata_marvell: merge Mandriva patches
 
 
