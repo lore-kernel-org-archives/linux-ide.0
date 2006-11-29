@@ -1,46 +1,46 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: Scary Intel SATA problem: "frozen"
-Date: Tue, 28 Nov 2006 15:43:04 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0611281531550.4244@woody.osdl.org>
-References: <456CB72A.3010004@local.se> <Pine.LNX.4.64.0611281444330.4244@woody.osdl.org>
- <456CC4C5.6090003@garzik.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 2.6.15.4 rel.2 1/1] libata: add hotswap to sata_svw
+Date: Wed, 29 Nov 2006 11:01:23 +1100
+Message-ID: <1164758483.5350.113.camel@localhost.localdomain>
+References: <E1F9klH-0004Fg-00@devix>
+	 <1164756139.14595.37.camel@pmac.infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:6859 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1756906AbWK1Xn1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 18:43:27 -0500
-In-Reply-To: <456CC4C5.6090003@garzik.org>
+Received: from gate.crashing.org ([63.228.1.57]:54684 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S1757089AbWK2ADZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 19:03:25 -0500
+In-Reply-To: <1164756139.14595.37.camel@pmac.infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jonas Lundgren <jonas@local.se>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Martin Devera <devik@cdi.cz>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, lkosewsk@gmail.com.jgarzik
 
-
-
-On Tue, 28 Nov 2006, Jeff Garzik wrote:
+On Tue, 2006-11-28 at 23:22 +0000, David Woodhouse wrote:
+> On Thu, 2006-02-16 at 16:09 +0100, Martin Devera wrote:
+> > From: Martin Devera <devik@cdi.cz>
+> > 
+> > Add hotswap capability to Serverworks/BroadCom SATA controlers. The
+> > controler has SIM register and it selects which bits in SATA_ERROR
+> > register fires interrupt.
+> > The solution hooks on COMWAKE (plug), PHYRDY change and 10B8B decode 
+> > error (unplug) and calls into Lukasz's hotswap framework.
+> > The code got one day testing on dual core Athlon64 H8SSL Supermicro 
+> > MoBo with HT-1000 SATA, SMP kernel and two CaviarRE SATA HDDs in
+> > hotswap bays.
+> > 
+> > Signed-off-by: Martin Devera <devik@cdi.cz>
 > 
-> I was sorta wondering in that direction too.  If its in legacy mode (PATA and
-> SATA smushed together), that's a possibility.  But native or AHCI modes, the
-> channels are pretty independent (which is the nature of SATA).
+> What became of this?
 
-Well, what I was more wondering about is whether perhaps the legacy mode 
-emulation - even when it isn't actually used - means that there is simply 
-some shared state (read: chipset bug that nobody noticed).
+I might be to blame for not testing it... The Xserve I had on my desk
+was too noisy for most of my co-workers so I kept delaying and forgot
+about it.... 
 
-> Historical note:  ata_piix is IMO more complicated than ahci, because the
-> silicon is emulating the PATA interface using an internal (probably huge)
-> state machine, converting PATA behavior to sending/receiving SATA packets.
+Also the Xserve I have only has one disk, which makes hotplug testing a
+bit harder :-)
 
-Well, there's bound to be the same big state machine working the other 
-way, and maybe the chip simply internally gets confused. Or, as you say, 
-simply because the emulation state machinery has to be taken into account, 
-and _that_ ends up beign shared between the two otherwise independent 
-channels..
+Ben.
 
-How hard would it be to just force a shared spinlock between two sata 
-channels on the same "controller"? It sounds like Jonas has a very 
-repeatable setup, so even if I can't repeat my problem, if the performance 
-degradation on writes is related, he can check his thing..
 
-		Linus
