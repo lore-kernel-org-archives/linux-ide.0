@@ -1,101 +1,131 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Scary Intel SATA problem: "frozen"
-Date: Wed, 29 Nov 2006 16:29:03 +0900
-Message-ID: <456D36BF.1060809@gmail.com>
-References: <456CB72A.3010004@local.se> <456CDB06.40806@gmail.com> <456D3370.5050003@local.se>
+Subject: Re: 2.6.18 - AHCI detection pauses excessively
+Date: Wed, 29 Nov 2006 17:55:51 +0900
+Message-ID: <456D4B17.4080503@gmail.com>
+References: <4557B7D2.2050004@gmail.com> <455B0BD7.20108@gmail.com> <455B5ADF.2040503@gmail.com> <20061127033550.GB11250@htj.dyndns.org> <456AA89C.909@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------080406080106090206090004"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:36387 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S935441AbWK2H3N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Nov 2006 02:29:13 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so1708675uga
-        for <linux-ide@vger.kernel.org>; Tue, 28 Nov 2006 23:29:10 -0800 (PST)
-In-Reply-To: <456D3370.5050003@local.se>
+Received: from nz-out-0506.google.com ([64.233.162.231]:21028 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S966389AbWK2Iz6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Nov 2006 03:55:58 -0500
+Received: by nz-out-0102.google.com with SMTP id s1so1048859nze
+        for <linux-ide@vger.kernel.org>; Wed, 29 Nov 2006 00:55:57 -0800 (PST)
+In-Reply-To: <456AA89C.909@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jonas@local.se
-Cc: linux-ide@vger.kernel.org, torvalds@osdl.org
+To: "Berck E. Nash" <flyboy@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Jonas Lundgren wrote:
->> Also, does 'mount -o remount,barrier=0 /' change anything?
+This is a multi-part message in MIME format.
+--------------080406080106090206090004
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Berck E. Nash wrote:
+> Tejun Heo wrote:
 > 
-> I will post this info as soon as I can "reproduce" the error.
+>> Yeah, I did and forgot about this thread too.  Sorry.  This is on the
+>> top of my to-do list now.  I'm attaching the patch.  TIA.
+> 
+> That didn't fix the problem, but did change the messages.  I've attached 
+> the entire log, including the weird errors on power-off from the same 
+> device that gives problems on boot, which I suspect are related.
 
-If it doesn't occur as soon as you boot, it's probably irrelevant.
-
-> Atm I run the ICH8 SATA ports in AHCI mode with "IDE bus master"(To be
-> honest I don't really know what this option does, no info about it in
-> the BIOS nor the mobo manual) turned off in BIOS. The drives are
-> connected to port 1, 3, 6 and 8 (raptor+raptor on 1+3, and WD 250G + WD
-> 250G (also a raid0) on ports 6+8)
-
-I guess that's just your mobo's way of telling that ahci mode is active.
+Hmm... this is difficult.  The problem is that everything looks normal 
+until command is issued.  My primary suspect still is ahci powering down 
+phy during initialization.  Can you please test the attached patch again?
 
 [--snip--]
->> Please full dmesg after your computer got really slow.  I suspect libata
->> decided to switch to PIO mode.
-> 
-> If that's so, how come I still get good read speeds? o.O
+> Mounting root filesystem read-only...done.
+> Will now halt.
+> [ 9371.896444] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+> [ 9371.903036] ata2.00: (irq_stat 0x40000001)
+> [ 9371.907228] ata2.00: cmd e0/00:00:00:00:00/00:00:00:00:00/00 tag 0 data 0 in
+> [ 9371.907229]          res 51/04:00:01:01:80/00:00:00:00:00/a0 Emask 0x1 (device error)
+> [ 9371.931688] ata2.00: configured for UDMA/133
+> [ 9371.936073] ata2: EH complete
 
-Yeah, if you're still getting good read speed, PIO mode hasn't kicked in.
+Weird, the drive is failing STANDBY IMMEDIATE.
 
->>> I don't know what causes it, but most of the times when I've gotten it
->>> my system has been under heavy load (compiling, downloading torrents in
->>> 11mb/sec etc). Please let me know if you want any additional info, want
->>> me to try something out, or whatever. My recent hardware upgrade for
->>> around $1200 (to a core2duo system, i965 mobo) is just going to waste
->>> because of this problem. :/
->> Heh, nice machine you got there.  When you look at the dmesg, do the
->> error messages occur only on one of the two drives?  Or are both
->> affected?  If only one is affected,
-> 
-> IIRC only sda is affected, and later today I'm gonna switch back to
-> non-AHCI mode and try to reproduce this error (This might be my
-> imagination, but it feels like I get the error more frequently if I
-> don't run the ports in AHCI mode..) so I can try out the things you've
-> listed here.. Would suck if there's a hardware problem with one of my
-> disks, but I guess it's possible.
+[--snip--]
+> [ 9372.152310] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+> [ 9372.158882] ata2.00: (irq_stat 0x40000001)
+> [ 9372.163079] ata2.00: cmd 94/00:00:00:00:00/00:00:00:00:00/00 tag 0 data 0 in
+> [ 9372.163080]          res 51/04:00:01:01:80/00:00:00:00:00/a0 Emask 0x1 (device error)
+> [ 9372.187505] ata2.00: configured for UDMA/133
 
-Cabling/power issue is more likely than faulty hard drive, I think. 
-Interestingly, you're more likely to encounter insufficient power 
-problem if you have multi-lane power supply (most high-powered ones are 
-multi-lane these days) because they have less power per lane.
+Then, a series of obsolete STANDBY failures.  Who's issuing these 
+commands?  It's not libata, libata uses STANDBY (0xe2).  Is it some kind 
+of gentoo thing?  Anyways, doesn't really matter although it's 
+surprising that the drive fails STANDBY IMMEDIATE.
 
-e.g. Single-lane 350w power supply won't have problem powering 5 drives 
-no matter how you connect them but if you somehow hook up five drives to 
-a single lane in 450w multi-lane power, you're screwed.  Furthermore, 
-it's not always clear which cable belongs to which power lane.
-
->> 1. swap the two.  you'll probably have to dance a little bit with boot
->> loader but md should handle that fine once the kernel is loaded.  does
->> the errors persist?  on which device do they occur?  do they follow the
->> drive or stay on the mobo port?
-> 
-> (I'm running my /boot on a raid1, so switching drives should require no
-> reconfiguration at all :)
-> 
->> 2. try different cable / port.  if you change port, again, you need to
->> dance w/ boot loader.  who's carrying the error messages with it?
->>
->> 3. try different power plug from different power lane.
->>
->>> I just got so glad when I saw the post of this on linux-ide, I've been
->>> searching like crazy to find another person having the same problem (and
->>> possibly a solution) for the past 2-3 weeks or so.
->> My first guess is frequent transmission errors.  Please report the test
->> results.  Thanks.
->>
-> 
-> I've pushing my system really hard for half an hour or so to reproduce
-> this problem, and I got something else (no write speed slowdown, but
-> some page allocation errors, no idea if this has something to do with
-> anything, but I'll post it anyways)
-
-You pushed your box really hard and the kernel can't get the memory it 
-wants.  Not really relevant to SATA problem.
+Thanks.
 
 -- 
 tejun
+
+--------------080406080106090206090004
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 8f75c60..6100cbc 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -612,9 +612,6 @@ static void ahci_power_down(void __iomem
+ static void ahci_init_port(void __iomem *port_mmio, u32 cap,
+ 			   dma_addr_t cmd_slot_dma, dma_addr_t rx_fis_dma)
+ {
+-	/* power up */
+-	ahci_power_up(port_mmio, cap);
+-
+ 	/* enable FIS reception */
+ 	ahci_start_fis_rx(port_mmio, cap, cmd_slot_dma, rx_fis_dma);
+ 
+@@ -640,9 +637,6 @@ static int ahci_deinit_port(void __iomem
+ 		return rc;
+ 	}
+ 
+-	/* put device into slumber mode */
+-	ahci_power_down(port_mmio, cap);
+-
+ 	return 0;
+ }
+ 
+@@ -1321,7 +1315,9 @@ static int ahci_port_suspend(struct ata_
+ 	int rc;
+ 
+ 	rc = ahci_deinit_port(port_mmio, hpriv->cap, &emsg);
+-	if (rc) {
++	if (rc == 0)
++		ahci_power_down(port_mmio, hpriv->cap);
++	else {
+ 		ata_port_printk(ap, KERN_ERR, "%s (%d)\n", emsg, rc);
+ 		ahci_init_port(port_mmio, hpriv->cap,
+ 			       pp->cmd_slot_dma, pp->rx_fis_dma);
+@@ -1337,6 +1333,7 @@ static int ahci_port_resume(struct ata_p
+ 	void __iomem *mmio = ap->host->mmio_base;
+ 	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+ 
++	ahci_power_up(port_mmio, hpriv->cap);
+ 	ahci_init_port(port_mmio, hpriv->cap, pp->cmd_slot_dma, pp->rx_fis_dma);
+ 
+ 	return 0;
+@@ -1443,6 +1440,9 @@ static int ahci_port_start(struct ata_po
+ 
+ 	ap->private_data = pp;
+ 
++	/* power up port */
++	ahci_power_up(port_mmio, hpriv->cap);
++
+ 	/* initialize port */
+ 	ahci_init_port(port_mmio, hpriv->cap, pp->cmd_slot_dma, pp->rx_fis_dma);
+ 
+
+--------------080406080106090206090004--
