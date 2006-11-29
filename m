@@ -1,47 +1,33 @@
-From: Martin Devera <devik@cdi.cz>
-Subject: Re: [PATCH 2.6.15.4 rel.2 1/1] libata: add hotswap to sata_svw
-Date: Wed, 29 Nov 2006 03:05:32 +0100
-Message-ID: <456CEAEC.6010802@cdi.cz>
-References: <E1F9klH-0004Fg-00@devix>	 <1164756139.14595.37.camel@pmac.infradead.org> <1164758483.5350.113.camel@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Scary Intel SATA problem: "frozen"
+Date: Tue, 28 Nov 2006 21:51:16 -0500
+Message-ID: <456CF5A4.3040304@rtr.ca>
+References: <456CB72A.3010004@local.se> <Pine.LNX.4.64.0611281444330.4244@woody.osdl.org> <456CC4C5.6090003@garzik.org> <Pine.LNX.4.64.0611281531550.4244@woody.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.cdi.cz ([80.95.109.117]:7149 "EHLO luxik.cdi.cz")
-	by vger.kernel.org with ESMTP id S1758769AbWK2CFr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 21:05:47 -0500
-In-Reply-To: <1164758483.5350.113.camel@localhost.localdomain>
+Received: from rtr.ca ([64.26.128.89]:24082 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1755296AbWK2CvT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Nov 2006 21:51:19 -0500
+In-Reply-To: <Pine.LNX.4.64.0611281531550.4244@woody.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: David Woodhouse <dwmw2@infradead.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, lkosewsk@gmail.com, Jeff Garzik <jgarzik@pobox.com>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Jonas Lundgren <jonas@local.se>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Benjamin Herrenschmidt wrote:
-> On Tue, 2006-11-28 at 23:22 +0000, David Woodhouse wrote:
->> On Thu, 2006-02-16 at 16:09 +0100, Martin Devera wrote:
->>> From: Martin Devera <devik@cdi.cz>
->>>
->>> Add hotswap capability to Serverworks/BroadCom SATA controlers. The
->>> controler has SIM register and it selects which bits in SATA_ERROR
->>> register fires interrupt.
->>> The solution hooks on COMWAKE (plug), PHYRDY change and 10B8B decode 
->>> error (unplug) and calls into Lukasz's hotswap framework.
->>> The code got one day testing on dual core Athlon64 H8SSL Supermicro 
->>> MoBo with HT-1000 SATA, SMP kernel and two CaviarRE SATA HDDs in
->>> hotswap bays.
->>>
->>> Signed-off-by: Martin Devera <devik@cdi.cz>
->> What became of this?
-> 
-> I might be to blame for not testing it... The Xserve I had on my desk
-> was too noisy for most of my co-workers so I kept delaying and forgot
-> about it.... 
-> 
-> Also the Xserve I have only has one disk, which makes hotplug testing a
-> bit harder :-)
+> How hard would it be to just force a shared spinlock between two sata 
+> channels on the same "controller"? It sounds like Jonas has a very 
+> repeatable setup, so even if I can't repeat my problem, if the performance 
+> degradation on writes is related, he can check his thing..
 
-Unfortunately my box with ht1000 is already deployed. Another similar one should
-arrive soon so that I'll retest it.
-Just now I've VIA based mobo here - and hotswap is NOT working with it ..
+Kinda like the "ide0=serialize" flag for the IDE subsystem, I suppose.
 
-Martin
+We certainly don't want it to be the default, as millions of ata_piix 
+systems already out there seem to be working just fine (not all of them
+running Linux, but enough of them to extrapolate to the zillions of
+identical models).
+
+It must be something new with ICH8 that we're not doing correctly yet.
+
+???
