@@ -1,45 +1,35 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] ahci: do not powerdown during initialization
-Date: Wed, 29 Nov 2006 12:52:00 +0900
-Message-ID: <456D03E0.1080805@gmail.com>
-References: <20061120064236.GM2184@htj.dyndns.org> <456BFE30.2010602@pobox.com>
+Subject: [PATCH] pata_cs5535: add missing comma in pci_driver initializer
+Date: Wed, 29 Nov 2006 15:22:47 +0900
+Message-ID: <20061129062247.GD11250@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:39904 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1758056AbWK2DwH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Nov 2006 22:52:07 -0500
-Received: by nz-out-0102.google.com with SMTP id s1so1016398nze
-        for <linux-ide@vger.kernel.org>; Tue, 28 Nov 2006 19:52:07 -0800 (PST)
-In-Reply-To: <456BFE30.2010602@pobox.com>
+Received: from nf-out-0910.google.com ([64.233.182.184]:26191 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S934493AbWK2GXI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Nov 2006 01:23:08 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so2811359nfa
+        for <linux-ide@vger.kernel.org>; Tue, 28 Nov 2006 22:23:05 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, flyboy@gmail.com
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> ahci_init_controller() calls ahci_deinit_port() to make sure the
->> controller is stopped before initializing the controller.  In turn,
->> ahci_deinit_port() invokes ahci_power_down() to power down the port.
->> If the controller supports slumber mode, the link is put into it.
-> 
-> I would rather just pass a 'dont suspend port' flag to 
-> ahci_deinit_port().  That leaves ahci_port_stop() behavior unchanged.
+PATA PM update introduced intialization line without comma.  Add it.
 
-That behavior change is intended.  ahci_port_stop() must not call 
-ahci_power_down(); otherwise, it will cause strange behaviors on some 
-devices on driver unloading.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-The baseline is that power up/down shouldn't be done as part of 
-controller init/deinit.  Power up/down involves link power management 
-operation which make some devices choke.  They should only be done when 
-actual power management is required.  This is okay even for devices 
-which choke on link pm because system-wide PM powers those devices down 
-clearing lockup.  I dunno what should be done with partial power 
-management tho.
-
--- 
-tejun
+diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
+index 73b9b54..e3efec4 100644
+--- a/drivers/ata/pata_cs5535.c
++++ b/drivers/ata/pata_cs5535.c
+@@ -269,7 +269,7 @@ static struct pci_driver cs5535_pci_driv
+ 	.name		= DRV_NAME,
+ 	.id_table	= cs5535,
+ 	.probe 		= cs5535_init_one,
+-	.remove		= ata_pci_remove_one
++	.remove		= ata_pci_remove_one,
+ 	.suspend	= ata_pci_device_suspend,
+ 	.resume		= ata_pci_device_resume,
+ };
