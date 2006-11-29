@@ -1,59 +1,50 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] ide_scsi: allow it to be used for non CD only
-Date: Wed, 29 Nov 2006 14:46:52 +0000
-Message-ID: <20061129144652.299f7919@localhost.localdomain>
+Subject: Re: pata_via in 2.6.19-rc6: UDMA/66 hdd downgraded to UDMA/33
+Date: Wed, 29 Nov 2006 15:39:21 +0000
+Message-ID: <20061129153921.1c27e19d@localhost.localdomain>
+References: <Pine.LNX.4.64.0611250216550.26262@bizon.gios.gov.pl>
+	<20061125160342.4e9ddef0@localhost.localdomain>
+	<Pine.LNX.4.64.0611251718210.2557@bizon.gios.gov.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:64441 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S967367AbWK2OkH
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43404 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S967433AbWK2Pcf
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Nov 2006 09:40:07 -0500
+	Wed, 29 Nov 2006 10:32:35 -0500
+In-Reply-To: <Pine.LNX.4.64.0611251718210.2557@bizon.gios.gov.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org
+To: Krzysztof Oledzki <olel@ans.pl>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Some people want to use ide_cd for CD-ROM but still dynamically load
-ide-scsi for things like tape drives. If you compile in the CD driver
-this works out but if you want them modular you need an option to ensure
-that whoever loads first the right things happen.
+Does this fix it
 
-This replaces the original draft patch which leaked a scsi host reference
-
-Signed-off-by: Alan Cox <alan@redhat.com>
-
-diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.19-rc6-mm1/drivers/scsi/ide-scsi.c linux-2.6.19-rc6-mm1/drivers/scsi/ide-scsi.c
---- linux.vanilla-2.6.19-rc6-mm1/drivers/scsi/ide-scsi.c	2006-11-24 13:58:08.000000000 +0000
-+++ linux-2.6.19-rc6-mm1/drivers/scsi/ide-scsi.c	2006-11-29 14:18:12.000000000 +0000
-@@ -110,6 +110,7 @@
- } idescsi_scsi_t;
+--- drivers/ata/pata_via.c~	2006-11-29 15:16:10.961387472 +0000
++++ drivers/ata/pata_via.c	2006-11-29 15:17:08.784597008 +0000
+@@ -60,7 +60,7 @@
+ #include <linux/libata.h>
  
- static DEFINE_MUTEX(idescsi_ref_mutex);
-+static int idescsi_nocd;			/* Set by module param to skip cd */
+ #define DRV_NAME "pata_via"
+-#define DRV_VERSION "0.2.0"
++#define DRV_VERSION "0.2.1"
  
- #define ide_scsi_g(disk) \
- 	container_of((disk)->private_data, struct ide_scsi_obj, driver)
-@@ -1127,11 +1128,14 @@
- 		warned = 1;
+ /*
+  *	The following comes directly from Vojtech Pavlik's ide/pci/via82cxxx
+@@ -159,10 +159,13 @@
+ 			return -ENOENT;
  	}
  
-+	if (idescsi_nocd && drive->media == ide_cdrom)
-+		return -ENODEV;
+-	if ((config->flags & VIA_UDMA) >= VIA_UDMA_66)
++	if ((config->flags & VIA_UDMA) >= VIA_UDMA_100)
+ 		ap->cbl = via_cable_detect(ap);
+-	else
++	/* The UDMA66 series has no cable detect so do drive side detect */
++	else if ((config->flags & VIA_UDMA) < VIA_UDMA_66)
+ 		ap->cbl = ATA_CBL_PATA40;
++		
 +
- 	if (!strstr("ide-scsi", drive->driver_req) ||
- 	    !drive->present ||
- 	    drive->media == ide_disk ||
- 	    !(host = scsi_host_alloc(&idescsi_template,sizeof(idescsi_scsi_t))))
- 		return -ENODEV;
- 
- 	g = alloc_disk(1 << PARTN_BITS);
- 	if (!g)
-@@ -1187,6 +1192,7 @@
- 	driver_unregister(&idescsi_driver.gen_driver);
+ 	return ata_std_prereset(ap);
  }
  
-+module_param(idescsi_nocd, int, 0600);
- module_init(init_idescsi_module);
- module_exit(exit_idescsi_module);
- MODULE_LICENSE("GPL");
