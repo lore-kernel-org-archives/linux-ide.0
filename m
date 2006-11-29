@@ -1,26 +1,59 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Scary Intel SATA problem: "frozen"
-Date: Wed, 29 Nov 2006 09:11:43 -0500
-Message-ID: <456D951F.8000903@rtr.ca>
-References: <456CB72A.3010004@local.se> <456CDB06.40806@gmail.com> <456D3370.5050003@local.se> <456D36BF.1060809@gmail.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ide_scsi: allow it to be used for non CD only
+Date: Wed, 29 Nov 2006 14:46:52 +0000
+Message-ID: <20061129144652.299f7919@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:11013 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S934614AbWK2OLq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Nov 2006 09:11:46 -0500
-In-Reply-To: <456D36BF.1060809@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:64441 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S967367AbWK2OkH
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Nov 2006 09:40:07 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jonas@local.se, linux-ide@vger.kernel.org, torvalds@osdl.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Tejun Heo wrote:
->
-> You pushed your box really hard and the kernel can't get the memory it 
-> wants.  Not really relevant to SATA problem.
+Some people want to use ide_cd for CD-ROM but still dynamically load
+ide-scsi for things like tape drives. If you compile in the CD driver
+this works out but if you want them modular you need an option to ensure
+that whoever loads first the right things happen.
 
-...unless the slowdown is due to extraordinarily high swap activity,
-because of the low-memory situation..
+This replaces the original draft patch which leaked a scsi host reference
 
+Signed-off-by: Alan Cox <alan@redhat.com>
+
+diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.19-rc6-mm1/drivers/scsi/ide-scsi.c linux-2.6.19-rc6-mm1/drivers/scsi/ide-scsi.c
+--- linux.vanilla-2.6.19-rc6-mm1/drivers/scsi/ide-scsi.c	2006-11-24 13:58:08.000000000 +0000
++++ linux-2.6.19-rc6-mm1/drivers/scsi/ide-scsi.c	2006-11-29 14:18:12.000000000 +0000
+@@ -110,6 +110,7 @@
+ } idescsi_scsi_t;
+ 
+ static DEFINE_MUTEX(idescsi_ref_mutex);
++static int idescsi_nocd;			/* Set by module param to skip cd */
+ 
+ #define ide_scsi_g(disk) \
+ 	container_of((disk)->private_data, struct ide_scsi_obj, driver)
+@@ -1127,11 +1128,14 @@
+ 		warned = 1;
+ 	}
+ 
++	if (idescsi_nocd && drive->media == ide_cdrom)
++		return -ENODEV;
++
+ 	if (!strstr("ide-scsi", drive->driver_req) ||
+ 	    !drive->present ||
+ 	    drive->media == ide_disk ||
+ 	    !(host = scsi_host_alloc(&idescsi_template,sizeof(idescsi_scsi_t))))
+ 		return -ENODEV;
+ 
+ 	g = alloc_disk(1 << PARTN_BITS);
+ 	if (!g)
+@@ -1187,6 +1192,7 @@
+ 	driver_unregister(&idescsi_driver.gen_driver);
+ }
+ 
++module_param(idescsi_nocd, int, 0600);
+ module_init(init_idescsi_module);
+ module_exit(exit_idescsi_module);
+ MODULE_LICENSE("GPL");
