@@ -1,131 +1,26 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.18 - AHCI detection pauses excessively
-Date: Wed, 29 Nov 2006 17:55:51 +0900
-Message-ID: <456D4B17.4080503@gmail.com>
-References: <4557B7D2.2050004@gmail.com> <455B0BD7.20108@gmail.com> <455B5ADF.2040503@gmail.com> <20061127033550.GB11250@htj.dyndns.org> <456AA89C.909@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Scary Intel SATA problem: "frozen"
+Date: Wed, 29 Nov 2006 09:11:43 -0500
+Message-ID: <456D951F.8000903@rtr.ca>
+References: <456CB72A.3010004@local.se> <456CDB06.40806@gmail.com> <456D3370.5050003@local.se> <456D36BF.1060809@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080406080106090206090004"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:21028 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S966389AbWK2Iz6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Nov 2006 03:55:58 -0500
-Received: by nz-out-0102.google.com with SMTP id s1so1048859nze
-        for <linux-ide@vger.kernel.org>; Wed, 29 Nov 2006 00:55:57 -0800 (PST)
-In-Reply-To: <456AA89C.909@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: "Berck E. Nash" <flyboy@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------080406080106090206090004
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:11013 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S934614AbWK2OLq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Nov 2006 09:11:46 -0500
+In-Reply-To: <456D36BF.1060809@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jonas@local.se, linux-ide@vger.kernel.org, torvalds@osdl.org
 
-Berck E. Nash wrote:
-> Tejun Heo wrote:
-> 
->> Yeah, I did and forgot about this thread too.  Sorry.  This is on the
->> top of my to-do list now.  I'm attaching the patch.  TIA.
-> 
-> That didn't fix the problem, but did change the messages.  I've attached 
-> the entire log, including the weird errors on power-off from the same 
-> device that gives problems on boot, which I suspect are related.
+Tejun Heo wrote:
+>
+> You pushed your box really hard and the kernel can't get the memory it 
+> wants.  Not really relevant to SATA problem.
 
-Hmm... this is difficult.  The problem is that everything looks normal 
-until command is issued.  My primary suspect still is ahci powering down 
-phy during initialization.  Can you please test the attached patch again?
+...unless the slowdown is due to extraordinarily high swap activity,
+because of the low-memory situation..
 
-[--snip--]
-> Mounting root filesystem read-only...done.
-> Will now halt.
-> [ 9371.896444] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> [ 9371.903036] ata2.00: (irq_stat 0x40000001)
-> [ 9371.907228] ata2.00: cmd e0/00:00:00:00:00/00:00:00:00:00/00 tag 0 data 0 in
-> [ 9371.907229]          res 51/04:00:01:01:80/00:00:00:00:00/a0 Emask 0x1 (device error)
-> [ 9371.931688] ata2.00: configured for UDMA/133
-> [ 9371.936073] ata2: EH complete
-
-Weird, the drive is failing STANDBY IMMEDIATE.
-
-[--snip--]
-> [ 9372.152310] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> [ 9372.158882] ata2.00: (irq_stat 0x40000001)
-> [ 9372.163079] ata2.00: cmd 94/00:00:00:00:00/00:00:00:00:00/00 tag 0 data 0 in
-> [ 9372.163080]          res 51/04:00:01:01:80/00:00:00:00:00/a0 Emask 0x1 (device error)
-> [ 9372.187505] ata2.00: configured for UDMA/133
-
-Then, a series of obsolete STANDBY failures.  Who's issuing these 
-commands?  It's not libata, libata uses STANDBY (0xe2).  Is it some kind 
-of gentoo thing?  Anyways, doesn't really matter although it's 
-surprising that the drive fails STANDBY IMMEDIATE.
-
-Thanks.
-
--- 
-tejun
-
---------------080406080106090206090004
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 8f75c60..6100cbc 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -612,9 +612,6 @@ static void ahci_power_down(void __iomem
- static void ahci_init_port(void __iomem *port_mmio, u32 cap,
- 			   dma_addr_t cmd_slot_dma, dma_addr_t rx_fis_dma)
- {
--	/* power up */
--	ahci_power_up(port_mmio, cap);
--
- 	/* enable FIS reception */
- 	ahci_start_fis_rx(port_mmio, cap, cmd_slot_dma, rx_fis_dma);
- 
-@@ -640,9 +637,6 @@ static int ahci_deinit_port(void __iomem
- 		return rc;
- 	}
- 
--	/* put device into slumber mode */
--	ahci_power_down(port_mmio, cap);
--
- 	return 0;
- }
- 
-@@ -1321,7 +1315,9 @@ static int ahci_port_suspend(struct ata_
- 	int rc;
- 
- 	rc = ahci_deinit_port(port_mmio, hpriv->cap, &emsg);
--	if (rc) {
-+	if (rc == 0)
-+		ahci_power_down(port_mmio, hpriv->cap);
-+	else {
- 		ata_port_printk(ap, KERN_ERR, "%s (%d)\n", emsg, rc);
- 		ahci_init_port(port_mmio, hpriv->cap,
- 			       pp->cmd_slot_dma, pp->rx_fis_dma);
-@@ -1337,6 +1333,7 @@ static int ahci_port_resume(struct ata_p
- 	void __iomem *mmio = ap->host->mmio_base;
- 	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
- 
-+	ahci_power_up(port_mmio, hpriv->cap);
- 	ahci_init_port(port_mmio, hpriv->cap, pp->cmd_slot_dma, pp->rx_fis_dma);
- 
- 	return 0;
-@@ -1443,6 +1440,9 @@ static int ahci_port_start(struct ata_po
- 
- 	ap->private_data = pp;
- 
-+	/* power up port */
-+	ahci_power_up(port_mmio, hpriv->cap);
-+
- 	/* initialize port */
- 	ahci_init_port(port_mmio, hpriv->cap, pp->cmd_slot_dma, pp->rx_fis_dma);
- 
-
---------------080406080106090206090004--
