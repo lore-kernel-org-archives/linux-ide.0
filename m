@@ -1,40 +1,37 @@
-From: Mark Lord <liml@rtr.ca>
+From: Alan <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Scary Intel SATA errors..
-Date: Wed, 29 Nov 2006 13:25:18 -0500
-Message-ID: <456DD08E.4050402@rtr.ca>
-References: <20061114150454.GA11900@havoc.gtf.org> <Pine.LNX.4.64.0611280853280.30076@woody.osdl.org>
+Date: Wed, 29 Nov 2006 18:42:07 +0000
+Message-ID: <20061129184207.68a57ea9@localhost.localdomain>
+References: <20061114150454.GA11900@havoc.gtf.org>
+	<Pine.LNX.4.64.0611280853280.30076@woody.osdl.org>
+	<456DD08E.4050402@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:19979 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S967512AbWK2SZV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Nov 2006 13:25:21 -0500
-In-Reply-To: <Pine.LNX.4.64.0611280853280.30076@woody.osdl.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:63467 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S967523AbWK2SgA
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Nov 2006 13:36:00 -0500
+In-Reply-To: <456DD08E.4050402@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-Mmmm.. Tejun, here's a clue for what Linus saw on his system:
+On Wed, 29 Nov 2006 13:25:18 -0500
+Mark Lord <liml@rtr.ca> wrote:
 
-Right now I'm implementing support for READ/WRITE LONG commands via libata.
+> I'm betting that the ata_piix hardware has some kind of internal pipeline that
+> gets confused *sometimes* when a non-512 multiple passes through.  Rarely, though.
 
-And the ata_piix driver gets into a non-recoverable state after successfully
-doing a READ LONG command for me, a very similar state to what Linus reported.
+It will do this if the FIFO setup is misconfigured.
+ 
+> I wonder if there's something on that device that we could bit-bang to reset 
+> it's internal pipelines?
 
-But the ahci driver does NOT have this problem.  I haven't tried others.
+That would cripple performance and just ask for more bizarre bugs.
+Firstly I think it makes sense to verify/play with the fifo and prefetch
+setup then verify the problem case and see what Intel think.
 
-The thing about R/W LONG, is that they transfer a single PIO sector of data,
-PLUS an extra 4 (or more) words at the end.
-
-Funny thing about ATAPI DVD/RW drives, is that they also transfer odd amounts
-of data, non-multiples of 512.
-
-I'm betting that the ata_piix hardware has some kind of internal pipeline that
-gets confused *sometimes* when a non-512 multiple passes through.  Rarely, though.
-
-I wonder if there's something on that device that we could bit-bang to reset 
-it's internal pipelines?
-
-Cheers
+Alan
