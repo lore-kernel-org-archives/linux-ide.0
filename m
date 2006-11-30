@@ -1,52 +1,51 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] winbond IDE depends on IDEDMA
-Date: Thu, 30 Nov 2006 15:39:33 +0100 (MET)
-Message-ID: <20061130143803.GA22451@aepfle.de>
+From: Prakash Punnoor <prakash@punnoor.de>
+Subject: Re: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
+Date: Thu, 30 Nov 2006 17:46:23 +0100
+Message-ID: <200611301746.27193.prakash@punnoor.de>
+References: <DBFABB80F7FD3143A911F9E6CFD477B018E81719@hqemmail02.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed;
+  boundary="nextPart1383361.5Wj1XmsPUk";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-p07-ob.rzone.de ([81.169.146.189]:5867 "EHLO
-	mo-p07-ob.rzone.de") by vger.kernel.org with ESMTP id S936432AbWK3Okj
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Nov 2006 09:40:39 -0500
-Content-Disposition: inline
+Received: from mail-in-05.arcor-online.net ([151.189.21.45]:36243 "EHLO
+	mail-in-05.arcor-online.net") by vger.kernel.org with ESMTP
+	id S1759269AbWK3QsP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Nov 2006 11:48:15 -0500
+In-Reply-To: <DBFABB80F7FD3143A911F9E6CFD477B018E81719@hqemmail02.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Allen Martin <AMartin@nvidia.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, jeff@garzik.org
 
+--nextPart1383361.5Wj1XmsPUk
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-winbond ide depends on idedma.
+Am Dienstag 10 Oktober 2006 08:44 schrieb Allen Martin:
 
-drivers/built-in.o: In function `.sl82c105_ide_dma_timeout':
-sl82c105.c:(.text+0x624d0): undefined reference to `.__ide_dma_timeout'
-drivers/built-in.o: In function `.sl82c105_ide_dma_off_quietly':
-sl82c105.c:(.text+0x6274c): undefined reference to `.__ide_dma_off_quietly'
-drivers/built-in.o: In function `.sl82c105_ide_dma_on':
-sl82c105.c:(.text+0x6284c): undefined reference to `.__ide_dma_on'
-drivers/built-in.o: In function `.sl82c105_check_drive':
-sl82c105.c:(.text+0x628ec): undefined reference to `.__ide_dma_bad_drive'
-sl82c105.c:(.text+0x62934): undefined reference to `.__ide_dma_good_drive'
-drivers/built-in.o: In function `.sl82c105_ide_dma_start':
-sl82c105.c:(.text+0x62c24): undefined reference to `.ide_dma_start'
-make[1]: *** [.tmp_vmlinux1] Error 1
+> No, only CK804 and MCP04 support ADMA.  We'll be publishing some patches
+> for NCQ support for MCP55/MCP61 soon.
 
+Just wondering whether I missed them? It is now 1,5 month later...
+=2D-=20
+(=B0=3D                 =3D=B0)
+//\ Prakash Punnoor /\\
+V_/                 \_V
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
+--nextPart1383361.5Wj1XmsPUk
+Content-Type: application/pgp-signature
 
----
- drivers/ide/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-Index: linux-2.6.19/drivers/ide/Kconfig
-===================================================================
---- linux-2.6.19.orig/drivers/ide/Kconfig
-+++ linux-2.6.19/drivers/ide/Kconfig
-@@ -391,7 +391,7 @@ config BLK_DEV_RZ1000
- 
- config BLK_DEV_SL82C105
- 	tristate "Winbond SL82c105 support"
--	depends on PCI && (PPC || ARM) && BLK_DEV_IDEPCI
-+	depends on PCI && (PPC || ARM) && BLK_DEV_IDEPCI && BLK_DEV_IDEDMA_PCI
- 	help
- 	  If you have a Winbond SL82c105 IDE controller, say Y here to enable
- 	  special configuration for this chip. This is common on various CHRP
+iD8DBQBFbwrjxU2n/+9+t5gRAhd2AKCoVyow52w5bory972q81yZcPmSjgCgiB1R
+imZOI5Fvce94rqA4ZuCdA9g=
+=Fyqm
+-----END PGP SIGNATURE-----
+
+--nextPart1383361.5Wj1XmsPUk--
