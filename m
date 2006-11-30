@@ -1,90 +1,43 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Fwd: [PATCH] (2.6.19-rc6-mm2) pdc202xx_new: fix PIO mode setup
-Date: Thu, 30 Nov 2006 20:59:49 +0300
-Message-ID: <200611302059.49646.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] winbond IDE depends on IDEDMA
+Date: Thu, 30 Nov 2006 21:25:58 +0300
+Message-ID: <456F2236.3030401@ru.mvista.com>
+References: <20061130143803.GA22451@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:55233 "EHLO imap.sh.mvista.com")
-	by vger.kernel.org with ESMTP id S1030904AbWK3R6T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Nov 2006 12:58:19 -0500
-Received: from wasted.dev.rtsoft.ru (unknown [10.150.0.9])
-	by imap.sh.mvista.com (Postfix) with ESMTP id 8CCA73ECA
-	for <linux-ide@vger.kernel.org>; Thu, 30 Nov 2006 09:58:12 -0800 (PST)
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:28354 "EHLO imap.sh.mvista.com")
+	by vger.kernel.org with ESMTP id S1030964AbWK3SY2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Nov 2006 13:24:28 -0500
+In-Reply-To: <20061130143803.GA22451@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-Shoot! CCed Alan Cox twice, instead of CCing linux-ide...
+Hello.
 
-----------  Forwarded Message  ----------
+Olaf Hering wrote:
+> winbond ide depends on idedma.
 
-Subject: [PATCH] (2.6.19-rc6-mm2) pdc202xx_new: fix PIO mode setup
-Date: Thursday 30 November 2006 20:54
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-To: akpm@osdl.org, bzolnier@gmail.com
-Cc: alan@lxorguk.ukuu.org.uk, alan@lxorguk.ukuu.org.uk
+[...]
 
-Fix pdcnew_tune_drive() to always set the PIO mode requested, not pick the
- best possible one, change pdcnew_config_drive_xfer_rate() accordingly, and
- get rid of the duplicate tuneproc() call in config_chipset_for_dma().
+> Index: linux-2.6.19/drivers/ide/Kconfig
+> ===================================================================
+> --- linux-2.6.19.orig/drivers/ide/Kconfig
+> +++ linux-2.6.19/drivers/ide/Kconfig
+> @@ -391,7 +391,7 @@ config BLK_DEV_RZ1000
+>  
+>  config BLK_DEV_SL82C105
+>  	tristate "Winbond SL82c105 support"
+> -	depends on PCI && (PPC || ARM) && BLK_DEV_IDEPCI
+> +	depends on PCI && (PPC || ARM) && BLK_DEV_IDEPCI && BLK_DEV_IDEDMA_PCI
+>  	help
+>  	  If you have a Winbond SL82c105 IDE controller, say Y here to enable
+>  	  special configuration for this chip. This is common on various CHRP
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+    This whole item should be moved below, under ifdef BLK_DEV_IDEDMA_PCI 
+then, for consistency.  Please recast.
 
- drivers/ide/pci/pdc202xx_new.c |   15 +++++----------
- 1 files changed, 5 insertions(+), 10 deletions(-)
-
-Index: linux-2.6/drivers/ide/pci/pdc202xx_new.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/pdc202xx_new.c
-+++ linux-2.6/drivers/ide/pci/pdc202xx_new.c
-@@ -9,6 +9,7 @@
-  *  Split from:
-  *  linux/drivers/ide/pdc202xx.c	Version 0.35	Mar. 30, 2002
-  *  Copyright (C) 1998-2002		Andre Hedrick <andre@linux-ide.org>
-+ *  Copyright (C) 2005-2006		MontaVista Software, Inc.
-  *  Portions Copyright (C) 1999 Promise Technology, Inc.
-  *  Author: Frank Tiernan (frankt@promise.com)
-  *  Released under terms of General Public License
-@@ -168,12 +169,8 @@ static int pdcnew_new_tune_chipset (ide_
-  */
- static void pdcnew_tune_drive(ide_drive_t *drive, u8 pio)
- {
--	u8 speed;
--
--	if (pio == 5) pio = 4;
--	speed = XFER_PIO_0 + ide_get_best_pio_mode(drive, 255, pio, NULL);
--
--	(void)pdcnew_new_tune_chipset(drive, speed);
-+	pio = ide_get_best_pio_mode(drive, pio, 4, NULL);
-+	(void)pdcnew_new_tune_chipset(drive, XFER_PIO_0 + pio);
- }
-
- static u8 pdcnew_new_cable_detect (ide_hwif_t *hwif)
-@@ -207,10 +204,8 @@ static int config_chipset_for_dma (ide_d
-
- 	speed = ide_dma_speed(drive, pdcnew_ratemask(drive));
-
--	if (!(speed)) {
--		hwif->tuneproc(drive, 5);
-+	if (!speed)
- 		return 0;
--	}
-
- 	(void) hwif->speedproc(drive, speed);
- 	return ide_dma_enable(drive);
-@@ -234,7 +229,7 @@ static int pdcnew_config_drive_xfer_rate
-
- 	} else if ((id->capability & 8) || (id->field_valid & 2)) {
- fast_ata_pio:
--		hwif->tuneproc(drive, 5);
-+		hwif->tuneproc(drive, 255);
- 		return hwif->ide_dma_off_quietly(drive);
- 	}
- 	/* IORDY not supported */
-
--------------------------------------------------------
-
+WBR, Sergei
