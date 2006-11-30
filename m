@@ -1,43 +1,55 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] winbond IDE depends on IDEDMA
-Date: Thu, 30 Nov 2006 21:25:58 +0300
-Message-ID: <456F2236.3030401@ru.mvista.com>
-References: <20061130143803.GA22451@aepfle.de>
+From: "Matthias Urlichs" <matthias@urlichs.de>
+Subject: Re: [COORDINATE] INIC-1620TA/1622TA2/1623TA2 SATA controllers from
+ initio
+Date: Thu, 30 Nov 2006 18:09:56 +0000 (UTC)
+Message-ID: <ekn6pj$9dt$1@sea.gmane.org>
+References: <43D646C2.6040104@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:28354 "EHLO imap.sh.mvista.com")
-	by vger.kernel.org with ESMTP id S1030964AbWK3SY2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Nov 2006 13:24:28 -0500
-In-Reply-To: <20061130143803.GA22451@aepfle.de>
+Received: from main.gmane.org ([80.91.229.2]:667 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S1030988AbWK3SZu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Nov 2006 13:25:50 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Gpqam-0007b2-M7
+	for linux-ide@vger.kernel.org; Thu, 30 Nov 2006 19:25:04 +0100
+Received: from smurf.noris.de ([192.109.102.42])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 30 Nov 2006 19:25:04 +0100
+Received: from matthias by smurf.noris.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 30 Nov 2006 19:25:04 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+On Wed, 25 Jan 2006 00:24:50 +0900, Tejun Heo wrote:
 
-Olaf Hering wrote:
-> winbond ide depends on idedma.
+> I've just bought this brand-new/quite affordable INIC-1622TA2 
+> controller.  AFAIK, there's no driver yet. 
 
-[...]
+Any progress? I acquired two of those beasts today and *really* would like
+to get them up&running ASAP. :-/
 
-> Index: linux-2.6.19/drivers/ide/Kconfig
-> ===================================================================
-> --- linux-2.6.19.orig/drivers/ide/Kconfig
-> +++ linux-2.6.19/drivers/ide/Kconfig
-> @@ -391,7 +391,7 @@ config BLK_DEV_RZ1000
->  
->  config BLK_DEV_SL82C105
->  	tristate "Winbond SL82c105 support"
-> -	depends on PCI && (PPC || ARM) && BLK_DEV_IDEPCI
-> +	depends on PCI && (PPC || ARM) && BLK_DEV_IDEPCI && BLK_DEV_IDEDMA_PCI
->  	help
->  	  If you have a Winbond SL82c105 IDE controller, say Y here to enable
->  	  special configuration for this chip. This is common on various CHRP
+There seems to be a driver for Linux 2.4 at
+http://www.sunix.com.tw/it/en/down/driver/SATA/SATA2100/Linux%202.4.zip
+which might be helpful in writing a 2.6 driver.
 
-    This whole item should be moved below, under ifdef BLK_DEV_IDEDMA_PCI 
-then, for consistency.  Please recast.
+> http://initio.com/products/sata.htm
 
-WBR, Sergei
+The documentation on that page doesn't mention the 1622 any more, only the
+1623. Does anybody still have the "old" data sheet?
+
+Which of the sata_*.c drivers would be a good sample code / starting point
+for writing a new driver?
+
+Thanks,
+-- 
+Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
+Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
+ - -
+The worst men often give the best advice.
+					-- Bailey
+
