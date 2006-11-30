@@ -1,68 +1,52 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: Re: Intel DQ965GF booted
-Date: Thu, 30 Nov 2006 04:15:38 -0800
-Message-ID: <20061130121538.GW22012@curie-int.orbis-terrarum.net>
-References: <20061128214326.GA4141@m.safari.iki.fi>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: [PATCH] winbond IDE depends on IDEDMA
+Date: Thu, 30 Nov 2006 15:39:33 +0100 (MET)
+Message-ID: <20061130143803.GA22451@aepfle.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wNT7VBaN1rUIB9jO"
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.isohunt.com ([69.64.61.20]:61153 "EHLO mail.isohunt.com")
-	by vger.kernel.org with ESMTP id S936287AbWK3MPn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Nov 2006 07:15:43 -0500
+Received: from mo-p07-ob.rzone.de ([81.169.146.189]:5867 "EHLO
+	mo-p07-ob.rzone.de") by vger.kernel.org with ESMTP id S936432AbWK3Okj
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Nov 2006 09:40:39 -0500
 Content-Disposition: inline
-In-Reply-To: <20061128214326.GA4141@m.safari.iki.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sami Farin <atafarin@suomi24.fi>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
 
---wNT7VBaN1rUIB9jO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+winbond ide depends on idedma.
 
-On Tue, Nov 28, 2006 at 11:43:26PM +0200, Sami Farin wrote:
-> OK OK... it seems to work, I noticed after two days
-> of hacking(?), when I use
-> "all-generic-ide root=3D5841" param for lilo...
-> I guess LABEL would have been nice if I were using it
-> before mobo crash.
->=20
-> And lilo does not know about 5841 so I have to upgrade(?)
-> to grub?
-[snip your contents of lspci, that look like an old version of lspci
-too]
+drivers/built-in.o: In function `.sl82c105_ide_dma_timeout':
+sl82c105.c:(.text+0x624d0): undefined reference to `.__ide_dma_timeout'
+drivers/built-in.o: In function `.sl82c105_ide_dma_off_quietly':
+sl82c105.c:(.text+0x6274c): undefined reference to `.__ide_dma_off_quietly'
+drivers/built-in.o: In function `.sl82c105_ide_dma_on':
+sl82c105.c:(.text+0x6284c): undefined reference to `.__ide_dma_on'
+drivers/built-in.o: In function `.sl82c105_check_drive':
+sl82c105.c:(.text+0x628ec): undefined reference to `.__ide_dma_bad_drive'
+sl82c105.c:(.text+0x62934): undefined reference to `.__ide_dma_good_drive'
+drivers/built-in.o: In function `.sl82c105_ide_dma_start':
+sl82c105.c:(.text+0x62c24): undefined reference to `.ide_dma_start'
+make[1]: *** [.tmp_vmlinux1] Error 1
 
-You've gotten bit by the same bug I was, you need the AHCI_PI patch that
-Tejun hashed out, and is presently in libata#upstream.
 
-Also, make sure you switch your hardware to AHCI mode in the BIOS!
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
-As for a boot loader, you're on your own there, I just netboot all of my
-kernels lately (and use a local root device).
+---
+ drivers/ide/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-AHCI (remember to put the SCSI disk driver into the kernel, or build a
-suitable initrd with everything) would put your root into /dev/sdX
-territory, so modify your bootparams accordingly.
-
---=20
-Robin Hugh Johnson
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
-
---wNT7VBaN1rUIB9jO
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5-ecc0.1.6 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks
-
-iD8DBQFFbstqPpIsIjIzwiwRAno/AJ9ciZ1TRYlUoa1EoBpPGZTbXiN2eACg7FFM
-DlglQc1n31ROAMw12CJNp0k=
-=K9CJ
------END PGP SIGNATURE-----
-
---wNT7VBaN1rUIB9jO--
+Index: linux-2.6.19/drivers/ide/Kconfig
+===================================================================
+--- linux-2.6.19.orig/drivers/ide/Kconfig
++++ linux-2.6.19/drivers/ide/Kconfig
+@@ -391,7 +391,7 @@ config BLK_DEV_RZ1000
+ 
+ config BLK_DEV_SL82C105
+ 	tristate "Winbond SL82c105 support"
+-	depends on PCI && (PPC || ARM) && BLK_DEV_IDEPCI
++	depends on PCI && (PPC || ARM) && BLK_DEV_IDEPCI && BLK_DEV_IDEDMA_PCI
+ 	help
+ 	  If you have a Winbond SL82c105 IDE controller, say Y here to enable
+ 	  special configuration for this chip. This is common on various CHRP
