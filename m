@@ -1,53 +1,48 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [COORDINATE] INIC-1620TA/1622TA2/1623TA2 SATA controllers from
- initio
-Date: Fri, 01 Dec 2006 09:57:59 +0900
-Message-ID: <456F7E17.6050301@gmail.com>
-References: <43D646C2.6040104@gmail.com> <ekn6pj$9dt$1@sea.gmane.org>
+Subject: Re: PMP in sata_sil24
+Date: Fri, 01 Dec 2006 10:54:19 +0900
+Message-ID: <456F8B4B.6070408@gmail.com>
+References: <200611302318.kAUNIS1v030758@tenet.verdasys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:13319 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.170]:64751 "EHLO
 	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1031665AbWLAA6M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Nov 2006 19:58:12 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so2289124uga
-        for <linux-ide@vger.kernel.org>; Thu, 30 Nov 2006 16:58:11 -0800 (PST)
-In-Reply-To: <ekn6pj$9dt$1@sea.gmane.org>
+	id S1755139AbWLABya (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Nov 2006 20:54:30 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so2299232uga
+        for <linux-ide@vger.kernel.org>; Thu, 30 Nov 2006 17:54:29 -0800 (PST)
+In-Reply-To: <200611302318.kAUNIS1v030758@tenet.verdasys.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthias Urlichs <matthias@urlichs.de>
-Cc: linux-ide@vger.kernel.org
+To: Marc Bejarano <beej@adverplex.com>
+Cc: jeff@garzik.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Raymond Liu <Raymond.Liu@siliconimage.com>
 
-Matthias Urlichs wrote:
-> On Wed, 25 Jan 2006 00:24:50 +0900, Tejun Heo wrote:
-> 
->> I've just bought this brand-new/quite affordable INIC-1622TA2 
->> controller.  AFAIK, there's no driver yet. 
-> 
-> Any progress? I acquired two of those beasts today and *really* would like
-> to get them up&running ASAP. :-/
-> 
-> There seems to be a driver for Linux 2.4 at
-> http://www.sunix.com.tw/it/en/down/driver/SATA/SATA2100/Linux%202.4.zip
-> which might be helpful in writing a 2.6 driver.
+[cc'ing linux-ide and Raymond]
 
-Yeah, I saw that.  The problem with the driver is that it doesn't
-contain any license notice.  I'm not sure if it would be okay to read
-the driver and use the acquired info to implement GPL driver.  I asked
-sunix about it but got no useful answer.
-
->> http://initio.com/products/sata.htm
+Marc Bejarano wrote:
+> trying jeff's other address...
 > 
-> The documentation on that page doesn't mention the 1622 any more, only the
-> 1623. Does anybody still have the "old" data sheet?
+> marc
+> =====
+> Date: Mon, 13 Nov 2006 14:52:13 -0500
+> To: jgarzik@redhat.com
+> From: Marc Bejarano <beej@adverplex.com>
+> Subject: Fwd: Re: PMP in sata_sil24
 > 
-> Which of the sata_*.c drivers would be a good sample code / starting point
-> for writing a new driver?
+> hi, jeff.  have you had any recent contact with tejun?  i've got
+> reproducible problems with the sata_sil24 driver and i haven't been able
+> to reach him.
 
-For controllers which support NCQ, ahci and sata_sil24 are pretty good
-examples.
+Yeap, he had and your message is on my ever-growing to-do list.  Just
+haven't had time to work on PMP lately and can't regenerate your problem
+here either.  I need to contact SIMG about the issue (hello, Raymond).
+
+I think PMP support waited long enough (IOW, excessively).  Even boards
+with on-board PMP are out there.  I'll do something about it soon.
+
+Thanks.
 
 -- 
 tejun
