@@ -1,33 +1,37 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] (2.6.19-rc6-mm2) pdc202xx_new cleanup
-Date: Fri, 1 Dec 2006 00:13:21 +0000
-Message-ID: <20061201001321.1b946f0e@localhost.localdomain>
-References: <200611302151.33319.sshtylyov@ru.mvista.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [RFC PATCH] nForce4 ADMA with NCQ: It's aliiiive..
+Date: Thu, 30 Nov 2006 18:07:16 -0600
+Message-ID: <456F7234.8010203@shaw.ca>
+References: <DBFABB80F7FD3143A911F9E6CFD477B018E81719@hqemmail02.nvidia.com>
+ <200611301746.27193.prakash@punnoor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51117 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030973AbWLAAGl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Nov 2006 19:06:41 -0500
-In-Reply-To: <200611302151.33319.sshtylyov@ru.mvista.com>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:35931 "EHLO
+	pd4mo3so.prod.shaw.ca") by vger.kernel.org with ESMTP
+	id S1031620AbWLAAJr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Nov 2006 19:09:47 -0500
+In-reply-to: <200611301746.27193.prakash@punnoor.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: akpm@osdl.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Prakash Punnoor <prakash@punnoor.de>
+Cc: Allen Martin <AMartin@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, jeff@garzik.org
 
+Prakash Punnoor wrote:
+> Am Dienstag 10 Oktober 2006 08:44 schrieb Allen Martin:
+> 
+>> No, only CK804 and MCP04 support ADMA.  We'll be publishing some patches
+>> for NCQ support for MCP55/MCP61 soon.
+> 
+> Just wondering whether I missed them? It is now 1,5 month later...
 
-I believe this is completely the wrong thing to do. Adding a ton of
-changes to the existing (and stable) life expired drivers/ide driver
-rather than keeping new and risky stuff in the new libata code is bad.
+I don't think you missed them.. It would be nice to get this support in, 
+those are the last NVIDIA chipsets which have NCQ support (apparently) 
+that don't support it under Linux. Even just the hardware docs would be 
+useful..
 
-The existing code *works*, its been rock solid since the reset drain fix
-and it is the code everyone who is conservative relies on not to eat
-their data. We have somewhere to do new and cool stuff its libata.
-
-I don't see the point in risking destabilising a good solid driver. I can
-just about see justification for !X86 implementation of the PLL handling
-but that is about it.
-
-Alan
+---
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
