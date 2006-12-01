@@ -1,48 +1,33 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: blacklist for early irq problem
-Date: Thu, 30 Nov 2006 15:45:30 -0500
-Message-ID: <456F42EA.1020806@rtr.ca>
-References: <200611180759.34622.t.powa@gmx.de> <20061118002357.564dbb9d.akpm@osdl.org> <455F790C.2030509@garzik.org> <456BDCAC.4060609@tw.ibm.com> <456C4514.9090107@tw.ibm.com> <456C4ACC.1050806@rtr.ca> <456C8A51.3000605@garzik.org> <456EA7D6.2050101@tw.ibm.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] (2.6.19-rc6-mm2) pdc202xx_new cleanup
+Date: Fri, 1 Dec 2006 00:13:21 +0000
+Message-ID: <20061201001321.1b946f0e@localhost.localdomain>
+References: <200611302151.33319.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:35082 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S967865AbWK3Upd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Nov 2006 15:45:33 -0500
-In-Reply-To: <456EA7D6.2050101@tw.ibm.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51117 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1030973AbWLAAGl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Nov 2006 19:06:41 -0500
+In-Reply-To: <200611302151.33319.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, matthieu castet <castet.matthieu@free.fr>, Tobias Powalowski <t.powa@gmx.de>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: akpm@osdl.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
->...
->  
-> +	/* some drives raise INTRQ early before clearing BSY */
-> +	if (unlikely(qc->dev->horkage & ATA_HORKAGE_EARLY_IRQ))
-> +		/* wait up to 10 microseconds for BSY to clear */
-> +		ata_busy_wait_alt(ap, ATA_BUSY, ATA_EARLY_IRQ_WAIT);
-> +
->  	/* check altstatus */
->  	status = ata_altstatus(ap);
->  	if (status & ATA_BUSY)
-...
 
-I dunno.
+I believe this is completely the wrong thing to do. Adding a ton of
+changes to the existing (and stable) life expired drivers/ide driver
+rather than keeping new and risky stuff in the new libata code is bad.
 
-I think a much simpler patch could address the same situation,
-with *no blacklist* to maintain, and no added overhead required:
+The existing code *works*, its been rock solid since the reset drain fix
+and it is the code everyone who is conservative relies on not to eat
+their data. We have somewhere to do new and cool stuff its libata.
 
-	/* check altstatus */
-+	retries = 10;
-+	while (((status = ata_altstatus(ap)) & ATA_BUSY) && --retries) {
-+		udelay(1);
-+	}
--	status = ata_altstatus(ap);
-	if (status & ATA_BUSY)
+I don't see the point in risking destabilising a good solid driver. I can
+just about see justification for !X86 implementation of the PLL handling
+but that is about it.
 
-This still just does a single access in the hot path, but without any
-real added complexity otherwise.
-
-????
+Alan
