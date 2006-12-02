@@ -1,54 +1,32 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: pata_sl82c105 can not reserve IO region
-Date: Sat, 02 Dec 2006 09:19:43 +1100
-Message-ID: <1165011583.22108.17.camel@localhost.localdomain>
-References: <20061130165202.GA23205@aepfle.de>
-	 <20061130171049.7b80a40c@localhost.localdomain>
-	 <20061130184748.GA24071@aepfle.de> <20061201183355.GA9701@aepfle.de>
-	 <45707CF8.3090106@ru.mvista.com>
-	 <1165010029.22108.10.camel@localhost.localdomain>
-	 <20061201221525.7a741062@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: libata-dev.git rebased
+Date: Fri, 01 Dec 2006 23:36:47 -0500
+Message-ID: <457102DF.5020407@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:18624 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1162104AbWLAWUC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Dec 2006 17:20:02 -0500
-In-Reply-To: <20061201221525.7a741062@localhost.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:44717 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1162774AbWLBEgw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Dec 2006 23:36:52 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Olaf Hering <olaf@aepfle.de>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Tejun Heo <htejun@gmail.com>, Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+I just rebased all branches of libata-dev.git, and there was a bit of 
+fallout:
 
-> I don't think that is the problem. pci_request_regions() handles all
-> this internally. It is incorrect for me to not request BAR 5
-> if present as nobody else should use that resource with my driver loaded.
->
-> The underlying problem appears to be that PPC64 isn't setting up the
-> resources properly (at least as viewed by the pci core code). If a
-> resource is not set up then pci_request_resource() correctly handles
-> it .. except on PPC64. You have a resource at zero with a length and
-> type. PPC64 is not reporting to the upper layers that the resource was
-> not allocated. It is reporting that the resource *was* allocated, and at a
-> bogus address of zero.
-> 
-> If you trust the firmware that is fine, but you need to report the truth,
-> at which point pci_request_resources() will work correctly.
+1) Dan, I'll have to ask you to resend your sata_vsc MSI patch yet 
+again, this time against 2.6.19.  Since it was against 
+drivers/scsi/sata_vsc.c, that caused some cross-directory-move related 
+problems.
 
-We don't have a choice but to trust the firmware on those machines. We
-can't assign things ourselves on most of them for various reasons (in
-many cases, the hypervisor won't let us).
+2) Tejun, I'll have to ask you to rebase your 'upstream' branch again.
 
-So you suggest that I clear resource->flags in that case ?
+Here are the commits, so that you know when it has mirrored out to the 
+kernel.org farm successfully:
 
-I think part of the problem is a firmware bug in that the firmware data
-actually decodes to BAR 5 is assigned to address 0 ... I suppose we can
-consider that address 0 is never valid on those machines and consider
-that as unassigned but it's a bit dodgy.. Or maybe a PCI quirk in the
-pSeries code would be best.
-
-Ben.
-
-
+[jgarzik@pretzel libata-dev]$ cat .git/refs/heads/upstream 
+.git/refs/heads/ALL
+664e8503fee2f299d0f96eaab0f5f8fae8fad325
+f2e07d8e550dd4e6155ee8bf6b691c323ffb729f
