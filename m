@@ -1,59 +1,72 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: pata_sl82c105 can not reserve IO region
-Date: Sun, 3 Dec 2006 18:12:16 +0100 (MET)
-Message-ID: <20061203171216.GB21947@aepfle.de>
-References: <20061130165202.GA23205@aepfle.de>
+From: Sven Ladegast <sven@linux4geeks.de>
+Subject: sata_sis and SIS180 in combined mode
+Date: Sun, 3 Dec 2006 18:34:13 +0100
+Message-ID: <200612031834.16797.sven@linux4geeks.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed;
+  boundary="nextPart1335176.QAoBJNOePi";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-p07-ob.rzone.de ([81.169.146.188]:61246 "EHLO
-	mo-p07-ob.rzone.de") by vger.kernel.org with ESMTP id S1757945AbWLCRMV
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Dec 2006 12:12:21 -0500
-Content-Disposition: inline
-In-Reply-To: <20061130165202.GA23205@aepfle.de>
+Received: from newton.linux4geeks.de ([193.30.1.1]:26339 "EHLO
+	newton.linux4geeks.de") by vger.kernel.org with ESMTP
+	id S1758219AbWLCReM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Dec 2006 12:34:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: uwe.koziolek@web.de
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Nov 30, Olaf Hering wrote:
+--nextPart1335176.QAoBJNOePi
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> 
-> pata_sl82c105 can be used on the ppc64 POWER4 system p610, p615 and p630
-> for the onboard IDE CD drive. It could be also used for ppc32 Motorola
-> PowerStack PReP systems.
-> 
-> Unfortunately, it doesnt work for me on the p630:
-> 
-> PCI: Enabling device: (0000:00:03.1), cmd 141
-> PCI: Unable to reserve I/O region #6:10@0 for device 0000:00:03.1
-> pata_sl82c105: probe of 0000:00:03.1 failed with error -16
+Hello Uwe,
 
-I modified pci_request_regions to request only the first 5 regions.
-Now the detection works, but access to the drive does not work:
+I am having problems to access a hard drive connected to a SIS180=20
+SATA-RAID controller.
 
-[  175.479288] PCI: Enabling device: (0000:00:03.1), cmd 141
-[  181.533396] ata1: PATA max MWDMA2 cmd 0xF000 ctl 0xF012 bmdma 0xF040 irq 86
-[  175.542281] scsi2 : pata_sl82c105
-[  175.879574] ata1.00: ATAPI, max UDMA/33
-[  176.055641] ata1.00: configured for MWDMA2
-[  176.065579] scsi 2:0:0:0: CD-ROM            LG       CD-ROM CRD-8484B 2.01 PQ: 0 ANSI: 5
-[  176.077138] sr0: scsi3-mmc drive: 48x/48x cd/rw xa/form2 cdda tray
-[  176.086020] Uniform CD-ROM driver Revision: 3.20
-[  176.094959] sr 2:0:0:0: Attached scsi CD-ROM sr0
-[  176.103932] sr 2:0:0:0: Attached scsi generic sg4 type 5
+The controller is located on my mainboard (Elitegroup KV2 extreme).
+There is only one hard disk drive connected to the PATA port od the=20
+controller. Both SATA ports are empty. The BIOS of the controller=20
+recognizes the disk and while running Microsoft Windows I can access the=20
+disk.
 
+dmesg-output looks like this (kernel 2.6.19):
 
-[  194.947620] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[  194.947628] ata1.00: (BMDMA stat 0x41)
-[  194.947693] ata1.00: tag 0 cmd 0xa0 Emask 0x4 stat 0x40 err 0x0 (timeout)
-[  194.947714] ata1: soft resetting port
-[  195.448133] ata1.00: configured for MWDMA2
-[  195.448157] ata1: EH complete
-[  200.450116] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[  200.450124] ata1.00: (BMDMA stat 0x41)
-[  200.450132] ata1.00: tag 0 cmd 0xa0 Emask 0x4 stat 0x40 err 0x0 (timeout)
-[  200.450153] ata1: soft resetting port
-[  200.945670] ata1.00: configured for MWDMA2
-[  200.945695] ata1: EH complete
+sata_sis 0000:00:07.0: version 0.6
+ACPI: PCI Interrupt 0000:00:07.0[A] -> GSI 18 (level, low) -> IRQ 16
+sata_sis 0000:00:07.0: Detected SiS 180/181 chipset in combined mode
+ata9: SATA max UDMA/133 cmd 0xFF00 ctl 0xFE02 bmdma 0xFB00 irq 16
+ata10: SATA max UDMA/133 cmd 0xFD00 ctl 0xFC02 bmdma 0xFB08 irq 16
+scsi15 : sata_sis
+PM: Adding info for No Bus:host15
+ata9: SATA link down (SStatus 0 SControl 300)
+scsi16 : sata_sis
+PM: Adding info for No Bus:host16
+ata10: SATA link down (SStatus 0 SControl 300)
+ATA: abnormal status 0x7F on port 0xFD07
 
+I do not know the SIS180 chipset. Probably it is a fake-RAID but I do not=20
+know if the PATA port is just a SATA-PATA birdge hardwired on the=20
+mainboard or if it is a seperate port.
+
+Maybe you have an idea?
+
+Sven
+
+--nextPart1335176.QAoBJNOePi
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFcwqYaS6OJ1hWpe0RAk70AKDdjyaT3kMSOEtGMtKhQpeBUUaoyQCfawt3
+C4l0iclCscxJeNn5/e/nZwc=
+=V6lY
+-----END PGP SIGNATURE-----
+
+--nextPart1335176.QAoBJNOePi--
