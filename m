@@ -1,38 +1,54 @@
-From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
-Subject: Re: AHCI support on Intel chipsets (confusion?)
-Date: Sun, 3 Dec 2006 21:32:29 +0100
-Message-ID: <c384c5ea0612031232w571caac0sab34e4f1e964d48e@mail.gmail.com>
-References: <45715381.80206@SystemDesignWorks.com> <4572D27B.3000909@gmail.com>
-	 <457327F4.9040403@SystemDesignWorks.com>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: pata_sl82c105 can not reserve IO region
+Date: Sun, 3 Dec 2006 23:24:49 +0100 (MET)
+Message-ID: <20061203222450.GA23765@aepfle.de>
+References: <20061130165202.GA23205@aepfle.de>
+ <20061203171216.GB21947@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.228]:29036 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1760079AbWLCUca (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Dec 2006 15:32:30 -0500
-Received: by nz-out-0102.google.com with SMTP id s1so1754976nze
-        for <linux-ide@vger.kernel.org>; Sun, 03 Dec 2006 12:32:29 -0800 (PST)
-In-Reply-To: <457327F4.9040403@SystemDesignWorks.com>
+Received: from mo-p07-ob.rzone.de ([81.169.146.190]:58220 "EHLO
+	mo-p07-ob.rzone.de") by vger.kernel.org with ESMTP id S1759730AbWLCWYx
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Dec 2006 17:24:53 -0500
 Content-Disposition: inline
+In-Reply-To: <20061203171216.GB21947@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Wayne Sherman <Wayne@systemdesignworks.com>
-Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Wayne,
+On Sun, Dec 03, Olaf Hering wrote:
 
-On 12/3/06, Wayne Sherman <Wayne@systemdesignworks.com> wrote:
-> The docs indicate that the Device IDs can change.  They represent the
-> mode, not specifically the device.  But when we compare these sources we
-> can conclude:
->
+> [  194.947620] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> [  194.947628] ata1.00: (BMDMA stat 0x41)
+> [  194.947693] ata1.00: tag 0 cmd 0xa0 Emask 0x4 stat 0x40 err 0x0 (timeout)
+> [  194.947714] ata1: soft resetting port
+> [  195.448133] ata1.00: configured for MWDMA2
+> [  195.448157] ata1: EH complete
+> [  200.450116] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> [  200.450124] ata1.00: (BMDMA stat 0x41)
+> [  200.450132] ata1.00: tag 0 cmd 0xa0 Emask 0x4 stat 0x40 err 0x0 (timeout)
+> [  200.450153] ata1: soft resetting port
+> [  200.945670] ata1.00: configured for MWDMA2
+> [  200.945695] ata1: EH complete
 
-Yes, that is exactly what we see; depending on the BIOS setting,
-either 0x27c0 or 0x27c1 appears in the PCI identifier.
+This change seems to fix it, only a single reset occurs. I think that
+one is normal when a CD is in the drive during bootup, maybe it leaves
+the drive in a confused state.
 
-Also, thanks for correcting me, the Supermicro PDSMI+ indeed has a
-ICH7R, not a plain ICH7.
+@@ -167,9 +175,13 @@ static void sl82c105_reset_engine(struct
+        struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+        u16 val;
 
-Leon.
++       udelay(42);
+        pci_read_config_word(pdev, 0x7E, &val);
++       udelay(10);
+        pci_write_config_word(pdev, 0x7E, val | 4);
++       udelay(10);
+        pci_write_config_word(pdev, 0x7E, val & ~4);
++       udelay(42);
+ }
+
+ /**
+
+
