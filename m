@@ -1,57 +1,42 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: Re: sata_sis and SIS180 in combined mode
-Date: Mon, 04 Dec 2006 00:18:41 +0100
-Message-ID: <45735B51.5040501@gmx.net>
-References: <200612031834.16797.sven@linux4geeks.de>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: pata_sl82c105 can not reserve IO region
+Date: Sun, 3 Dec 2006 23:39:02 +0000
+Message-ID: <20061203233902.4550e39f@localhost.localdomain>
+References: <20061130165202.GA23205@aepfle.de>
+	<20061130171049.7b80a40c@localhost.localdomain>
+	<20061130184748.GA24071@aepfle.de>
+	<20061201183355.GA9701@aepfle.de>
+	<45707CF8.3090106@ru.mvista.com>
+	<1165010029.22108.10.camel@localhost.localdomain>
+	<20061201221525.7a741062@localhost.localdomain>
+	<1165011583.22108.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:31137 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1758846AbWLCXSo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Dec 2006 18:18:44 -0500
-In-Reply-To: <200612031834.16797.sven@linux4geeks.de>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:27526 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1759739AbWLCXcF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Dec 2006 18:32:05 -0500
+In-Reply-To: <1165011583.22108.17.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sven Ladegast <sven@linux4geeks.de>
-Cc: uwe.koziolek@web.de, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Olaf Hering <olaf@aepfle.de>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Hello Sven,
+On Sat, 02 Dec 2006 09:19:43 +1100
+> We don't have a choice but to trust the firmware on those machines. We
+> can't assign things ourselves on most of them for various reasons (in
+> many cases, the hypervisor won't let us).
+> 
+> So you suggest that I clear resource->flags in that case ?
 
-the sata_sis does not really supports PATA-ports.  The driver must be
-modified.
-A good solution would be to move the SiS180/964 support to pata_sis
-because the PATA code is much longer then the SATA code.
-Only some lines must be added to the pata_sis, to support  the SATA  ports.
-But actually it does not work.
-Because you are only using the PATA port, you can make a private
-solution, move the PCI-ID 180 from  sata_sis.c  to  sis5513.c  or 
-pata_sis.c
-dependend on the ide driver you want to use.
+That will do the trick yes.
+ 
+> I think part of the problem is a firmware bug in that the firmware data
+> actually decodes to BAR 5 is assigned to address 0 ... I suppose we can
+> consider that address 0 is never valid on those machines and consider
+> that as unassigned 
 
-The SiS180 has no hardware RAID functionality, It is only a BIOS based
-software raid. The SiS180 is a combined  SATA/PATA controller.
-
-I will try a patch for this issue.
-
-regards,
-Uwe Koziolek
-
-
-Sven Ladegast wrote:
-> Hello Uwe,
->
-> I am having problems to access a hard drive connected to a SIS180 
-> SATA-RAID controller.
->
-> The controller is located on my mainboard (Elitegroup KV2 extreme).
-> There is only one hard disk drive connected to the PATA port od the 
-> controller. Both SATA ports are empty. The BIOS of the controller 
-> recognizes the disk and while running Microsoft Windows I can access the 
-> disk.
->
-> I do not know the SIS180 chipset. Probably it is a fake-RAID but I do not 
-> know if the PATA port is just a SATA-PATA birdge hardwired on the 
-> mainboard or if it is a seperate port.
->
->   
+The core PCI code already "knows" that zero in a resource_start() is
+unassigned
