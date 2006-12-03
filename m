@@ -1,83 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.19 2/3] sata_promise: new EH conversion
-Date: Sun, 03 Dec 2006 22:00:42 +0900
-Message-ID: <4572CA7A.6010103@gmail.com>
-References: <200612010958.kB19wGbg002454@alkaid.it.uu.se>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: always use polling IDENTIFY
+Date: Sun, 03 Dec 2006 08:02:40 -0500
+Message-ID: <4572CAF0.2040806@pobox.com>
+References: <20061203103032.GE11250@htj.dyndns.org> <20061203125603.493ebde6@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.232]:7491 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1758607AbWLCNAt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Dec 2006 08:00:49 -0500
-Received: by nz-out-0102.google.com with SMTP id s1so1727081nze
-        for <linux-ide@vger.kernel.org>; Sun, 03 Dec 2006 05:00:48 -0800 (PST)
-In-Reply-To: <200612010958.kB19wGbg002454@alkaid.it.uu.se>
+Received: from srv5.dvmed.net ([207.36.208.214]:15053 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1758466AbWLCNCn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Dec 2006 08:02:43 -0500
+In-Reply-To: <20061203125603.493ebde6@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Hello, Mikael.
+Alan wrote:
+> On Sun, 3 Dec 2006 19:30:32 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
+> 
+>> libata switched to IRQ-driven IDENTIFY when IRQ-driven PIO was
+>> introduced.  This has caused a lot of problems including device
+>> misdetection and phantom device.
+>>
+>> ATA_FLAG_DETECT_POLLING was added recently to selectively use polling
+>> IDENTIFY on problemetic drivers but many controllers and devices are
+>> affected by this problem and trying to adding ATA_FLAG_DETECT_POLLING
+>> for each such case is diffcult and not very rewarding.
+>>
+>> This patch makes libata always use polling IDENTIFY.  This is
+>> consistent with libata's original behavior and drivers/ide's behavior.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> Acked-by: Alan Cox <alan@redhat.com>
+> 
+> One possibility however would be to invert the flag we have now so we can
+> try turning -on- IRQ polling on some devices in future and maybe figure
+> it out that way around ?
 
-Thanks for doing this.
+Agreed, though it is low priority.
 
-Mikael Pettersson wrote:
-[--snip--]
-> +static void pdc_freeze(struct ata_port *ap)
-> +{
-> +	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-> +	u32 tmp;
-> +
-> +	tmp = readl(mmio + PDC_CTLSTAT);
-> +	tmp |= PDC_IRQ_DISABLE;
-> +	tmp &= ~PDC_DMA_ENABLE;
-> +	writel(tmp, mmio + PDC_CTLSTAT);
-> +	readl(mmio + PDC_CTLSTAT); /* flush *//* XXX: needed? sata_sil does this */
+You'll note that Tejun's change only applies to the [large] set of 
+drivers using libata-sff, rather than all drivers.  Modern, unbridged 
+SATA controllers (ahci, sata_sil24) continue to do their own interrupts 
+based on received packets (FIS's) through the use of the higher level 
+libata hooks.
 
-Just drop the above line.
+	Jeff
 
-> +}
-> +
-> +static void pdc_thaw(struct ata_port *ap)
-> +{
-> +	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-> +	u32 tmp;
-> +
-> +	/* clear IRQ */
-> +	readl(mmio + PDC_INT_SEQMASK);
-> +
-> +	/* turn IRQ back on */
-> +	tmp = readl(mmio + PDC_CTLSTAT);
-> +	tmp &= ~PDC_IRQ_DISABLE;
-> +	writel(tmp, mmio + PDC_CTLSTAT);
-> +	readl(mmio + PDC_CTLSTAT); /* flush *//* XXX: needed? */
 
-Ditto.
 
-> +}
-> +
-> +static void pdc_error_handler(struct ata_port *ap)
-> +{
-> +	struct ata_eh_context *ehc = &ap->eh_context;
-> +	ata_reset_fn_t hardreset;
-> +
-> +	/* stop DMA, mask IRQ, don't clobber anything else */
-> +	ata_eh_freeze_port(ap);
-
-Don't freeze port unconditionally.  You'll end up hardresetting on every
-error.  Just make sure DMA engine is stopped and the controller is in a
-sane state.  If that fails, then, the port should be frozen.
-
-> +	hardreset = NULL;
-> +	if (sata_scr_valid(ap)) {
-> +		ehc->i.action |= ATA_EH_HARDRESET;
-
-Why always force HARDRESET?
-
-> +		hardreset = sata_std_hardreset;
-> +	}
-
--- 
-tejun
