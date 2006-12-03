@@ -1,44 +1,80 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.19 3/3] sata_promise: cleanups
-Date: Sun, 03 Dec 2006 08:07:46 -0500
-Message-ID: <4572CC22.4050303@garzik.org>
-References: <200612010959.kB19xmAw002464@alkaid.it.uu.se>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.19 2/3] sata_promise: new EH conversion
+Date: Sun, 03 Dec 2006 22:19:35 +0900
+Message-ID: <4572CEE7.502@gmail.com>
+References: <200612010958.kB19wGbg002454@alkaid.it.uu.se> <4572CA7A.6010103@gmail.com> <4572CB2B.8050406@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:30669 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1759656AbWLCNHs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Dec 2006 08:07:48 -0500
-In-Reply-To: <200612010959.kB19xmAw002464@alkaid.it.uu.se>
+Received: from nz-out-0506.google.com ([64.233.162.238]:60236 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1759663AbWLCNTn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Dec 2006 08:19:43 -0500
+Received: by nz-out-0102.google.com with SMTP id s1so1727879nze
+        for <linux-ide@vger.kernel.org>; Sun, 03 Dec 2006 05:19:42 -0800 (PST)
+In-Reply-To: <4572CB2B.8050406@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mikael Pettersson wrote:
-> This patch performs two simple cleanups of sata_promise.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Hello, Mikael.
+>>
+>> Thanks for doing this.
+>>
+>> Mikael Pettersson wrote:
+>> [--snip--]
+>>> +static void pdc_freeze(struct ata_port *ap)
+>>> +{
+>>> +    void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+>>> +    u32 tmp;
+>>> +
+>>> +    tmp = readl(mmio + PDC_CTLSTAT);
+>>> +    tmp |= PDC_IRQ_DISABLE;
+>>> +    tmp &= ~PDC_DMA_ENABLE;
+>>> +    writel(tmp, mmio + PDC_CTLSTAT);
+>>> +    readl(mmio + PDC_CTLSTAT); /* flush *//* XXX: needed? sata_sil
+>>> does this */
+>>
+>> Just drop the above line.
+>>
+>>> +}
+>>> +
+>>> +static void pdc_thaw(struct ata_port *ap)
+>>> +{
+>>> +    void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+>>> +    u32 tmp;
+>>> +
+>>> +    /* clear IRQ */
+>>> +    readl(mmio + PDC_INT_SEQMASK);
+>>> +
+>>> +    /* turn IRQ back on */
+>>> +    tmp = readl(mmio + PDC_CTLSTAT);
+>>> +    tmp &= ~PDC_IRQ_DISABLE;
+>>> +    writel(tmp, mmio + PDC_CTLSTAT);
+>>> +    readl(mmio + PDC_CTLSTAT); /* flush *//* XXX: needed? */
+>>
+>> Ditto.
 > 
-> * Remove board_20771 and map device id 0x3577 to board_2057x.
->   After the recent corrections for SATAII chips, board_20771 and
->   board_2057x were equivalent in the driver.
-> 
-> * Remove hp->hotplug_offset and use hp->flags & PDC_FLAG_GEN_II
->   to compute hotplug_offset in pdc_host_init().
-> 
-> This patch depends on the sata_promise SATAII updates
-> patch I sent recently.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Why do you think these flushes are not needed?
 
-ACK, but not applied:
+1. for thaw, it doesn't matter.  it's always followed by further IO
+operations.
 
-patch #2 (presumably this patches depends on it) probably needs revision 
-(see Tejun's comments).
+2. for freeze, interrupt delivery is asynchronous to IO anyway and
+freeze is also called from outside of interrupt handler.  IRQ handler
+must be ready to handle spurious interrupts on a frozen port (Note they
+automatically are because they can't access aborted qc's).  As long as
+it gets quiesced after finite number of interrupts, it's okay.
 
-feel free to resend this patch against #upstream, while revising patch #2
+3. we don't have them in ahci nor sata_sil24.
 
-	Jeff
+But, having those flushes won't hurt either.  What was the conclusion of
+mmio <-> spinlock sync discussion?  I always feel kind of uncomfortable
+about readl() flushes.  I think they're too subtle.
 
-
-
+-- 
+tejun
