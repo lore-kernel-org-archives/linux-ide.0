@@ -1,44 +1,54 @@
-From: Sven Ladegast <sven@linux4geeks.de>
-Subject: Re: sata_sis and SIS180 in combined mode
-Date: Mon, 4 Dec 2006 00:06:06 +0100
-Message-ID: <200612040006.06191.sven@linux4geeks.de>
-References: <200612031834.16797.sven@linux4geeks.de> <20061203230411.1df15e56@localhost.localdomain>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: pata_sl82c105 can not reserve IO region
+Date: Sun, 3 Dec 2006 23:23:49 +0000
+Message-ID: <20061203232349.72be01e7@localhost.localdomain>
+References: <20061130165202.GA23205@aepfle.de>
+	<20061203171216.GB21947@aepfle.de>
+	<20061203222450.GA23765@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from newton.linux4geeks.de ([193.30.1.1]:37605 "EHLO
-	newton.linux4geeks.de") by vger.kernel.org with ESMTP
-	id S1758818AbWLCXGA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Dec 2006 18:06:00 -0500
-In-Reply-To: <20061203230411.1df15e56@localhost.localdomain>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44709 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1758841AbWLCXQj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Dec 2006 18:16:39 -0500
+In-Reply-To: <20061203222450.GA23765@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: uwe.koziolek@web.de, linux-ide@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Am Montag, 4. Dezember 2006 00:04 schrieben Sie:
+On Sun, 3 Dec 2006 23:24:49 +0100 (MET)
+Olaf Hering <olaf@aepfle.de> wrote:
 
-> What does lspci show ?
+> This change seems to fix it, only a single reset occurs. I think that
+> one is normal when a CD is in the drive during bootup, maybe it leaves
+> the drive in a confused state.
+> 
+> @@ -167,9 +175,13 @@ static void sl82c105_reset_engine(struct
+>         struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+>         u16 val;
+> 
+> +       udelay(42);
+>         pci_read_config_word(pdev, 0x7E, &val);
+> +       udelay(10);
+>         pci_write_config_word(pdev, 0x7E, val | 4);
+> +       udelay(10);
+>         pci_write_config_word(pdev, 0x7E, val & ~4);
+> +       udelay(42);
+>  }
 
-lspci says the following:
+Where do you get the delays from ? There is nothing in the documentation
+or errata sheets I have here on that subject. Is this guesswork, divine
+inspiration or an errata note I don't posess ?
 
-00:07.0 RAID bus controller: Silicon Integrated Systems [SiS] RAID bus 
-controller 180 SATA/PATA  [SiS] (prog-if 85)
-        Subsystem: Silicon Integrated Systems [SiS] RAID bus controller 
-180 SATA/PATA  [SiS]
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
-ParErr- Stepping- SERR- FastB2B-
-        Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 128
-        Interrupt: pin A routed to IRQ 16
-        Region 0: I/O ports at ff00 [size=8]
-        Region 1: I/O ports at fe00 [size=4]
-        Region 2: I/O ports at fd00 [size=8]
-        Region 3: I/O ports at fc00 [size=4]
-        Region 4: I/O ports at fb00 [size=16]
-        Region 5: I/O ports at <unassigned>
-        [virtual] Expansion ROM at 40040000 [disabled] [size=64K]
+In the absence of documented behaviour its seem to me much more likely
+that the delay is actually either moving a race condition in the libata
+code, or perhaps just allowing some time for the CD to "recover" in which
+case it's perhaps a bit of a delay we need in libata. That would explain
+why the old -> new change broke stuff.
+
+Either way its most interesting it makes a difference.
+
+Alan
