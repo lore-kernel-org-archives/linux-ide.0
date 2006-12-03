@@ -1,24 +1,30 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: sata_sis and SIS180 in combined mode
-Date: Sun, 3 Dec 2006 23:04:11 +0000
-Message-ID: <20061203230411.1df15e56@localhost.localdomain>
-References: <200612031834.16797.sven@linux4geeks.de>
+Subject: Re: pata_sl82c105 can not reserve IO region
+Date: Sun, 3 Dec 2006 23:07:20 +0000
+Message-ID: <20061203230720.65832f93@localhost.localdomain>
+References: <20061130165202.GA23205@aepfle.de>
+	<20061203171216.GB21947@aepfle.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:1254 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:2534 "EHLO
 	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1755735AbWLCW5H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Dec 2006 17:57:07 -0500
-In-Reply-To: <200612031834.16797.sven@linux4geeks.de>
+	id S1760150AbWLCXAN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Dec 2006 18:00:13 -0500
+In-Reply-To: <20061203171216.GB21947@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sven Ladegast <sven@linux4geeks.de>
-Cc: uwe.koziolek@web.de, linux-ide@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-80 chipset. Probably it is a fake-RAID but I do not 
-> know if the PATA port is just a SATA-PATA birdge hardwired on the 
-> mainboard or if it is a seperate port.
+> I modified pci_request_regions to request only the first 5 regions.
+> Now the detection works, but access to the drive does not work:
 
-What does lspci show ?
+Some drives do that with the new EH code. Its ATAPI specific and I don't
+know why. With the older libata it all works. It may also be a driver bug
+but since it also pops up all over the place with the new EH code and not
+the old its damn near impossible to debug any PATA problems that look
+like this at the moment.
+
+Alan
