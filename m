@@ -1,10 +1,10 @@
-From: Segher Boessenkool <segher@kernel.crashing.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH] mark PCI resource with start 0 as unassigned
-Date: Mon, 4 Dec 2006 13:44:03 +0100
-Message-ID: <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
+Date: Mon, 04 Dec 2006 15:47:11 +0300
+Message-ID: <457418CF.9040303@ru.mvista.com>
 References: <20061130165202.GA23205@aepfle.de>
 	<20061204123854.GA28159@aepfle.de>
-Mime-Version: 1.0 (Apple Message framework v752.2)
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
@@ -22,26 +22,35 @@ To: Olaf Hering <olaf@aepfle.de>
 Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
 
+Hello.
+
+Olaf Hering wrote:
+> mark pci resources with start 0 as unassigned
+> libata calls pci_request_regions to claim bar 0 - 5
+> bar 5 has base 0.
+> Tested on a p630 in SMP mode with pata_sl82c105
+
+[...]
+
 > --- a/arch/powerpc/kernel/pci_64.c
 > +++ b/arch/powerpc/kernel/pci_64.c
 > @@ -1234,6 +1234,14 @@ static void __devinit fixup_resource(str
 >  	struct pci_controller *hose = pci_bus_to_host(dev->bus);
 >  	unsigned long start, end, mask, offset;
->
+>  
 > +	/*
 > +	 * tell the core code that this ressource is unassigned
 > +	 * fixes p630 winbond IDE with libata
 > +	 */
 > +	if (res->start == 0) {
 > +		res->flags = 0;
+
+     Wouldn't it be better to set flags to IORESOURCE_UNSET to get it reassigned?
+
 > +		return;
 > +	}
 >  	if (res->flags & IORESOURCE_IO) {
 >  		offset = (unsigned long)hose->io_base_virt - pci_io_base;
+> 
 
-Please make this run on pSeries only; on a PowerMac for
-example, it's totally normal that the first PCI legacy I/O
-BAR in the system gets assigned 0.
-
-
-Segher
+WBR, Sergei
