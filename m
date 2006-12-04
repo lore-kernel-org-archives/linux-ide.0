@@ -1,48 +1,46 @@
-From: Axel Reinhold <areinhol@le-gobw.de>
-Subject: ata_piix (2.4.x) on ICH7R
-Date: Mon, 4 Dec 2006 11:27:24 +0100
-Message-ID: <200612041027.kB4AROta030399@l0p.le-gobw.de>
+From: "Thinus Viljoen" <thinus.viljoen@gmail.com>
+Subject: Disabling SATA hardware interrupts
+Date: Mon, 4 Dec 2006 13:08:50 +0200
+Message-ID: <c70dbe410612040308o5cbe878cue4ce98c088776afc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout01.sul.t-online.com ([194.25.134.80]:60098 "EHLO
-	mailout01.sul.t-online.com") by vger.kernel.org with ESMTP
-	id S1758302AbWLDK2y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Dec 2006 05:28:54 -0500
+Received: from wx-out-0506.google.com ([66.249.82.226]:9134 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S935734AbWLDLIz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Dec 2006 06:08:55 -0500
+Received: by wx-out-0506.google.com with SMTP id h27so3762307wxd
+        for <linux-ide@vger.kernel.org>; Mon, 04 Dec 2006 03:08:50 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Dear Jeff,
+Hi
 
-we need ata_piix for kernel 2.4 - using current 2.4.33.4 vanilla does 
-not load ata_piix on a Supermicro PDSMi+ board (ICH7R). Is there a 
-patch or should we try to backport 2.6 ata_piix? No kernel messages 
-ata_piix just does not load.
+I have the following questions:
+1. Is it possible to (temporarily) disable the SATA hardware from
+generating interrupts (either the controller or the actual HDD)?
+2. if so, how?
+3. if so, is it safe?
 
-Axel
+My setup is as follows:
+Modules loaded:
+ata_piix, libata, scsi_mod, ahci (ahci doesn't seem to be used)
 
--- 
-+----------------------------------------------------------+
-| Le-go Bekleidungswerke | Fon:   +49-9281/750-299         |
-|  Axel Reinhold -  CIO  | Fax:   +49-9281/750-270         |
-| Am Wiesengrund 20      | eMail: Axel.Reinhold@Le-goBW.de |
-| 95032 Hof              | WWW:   http://www.le-gobw.de    |
-+----------------------------------------------------------+
-| Bitte um Nur-Text-Mails - Office-, HTML, .EXE-Anhaenge   |
-|            oeffne ich grundsaetzlich nicht.              |
-+----------------------------------------------------------+
+SATA controller (from lspci):
+00:1f.2 IDE interface: Intel Corporation 82801FBM (ICH6M) SATA
+Controller (rev 04)
 
-BEGIN:VCARD
-VERSION:2.1
-N:Reinhold;Axel
-FN:Axel Reinhold
-ORG:Le-go Bekleidungswerke GmbH
-ADR:;;Am Wiesengrund 20;Hof;;95032;Germany
-TEL;WORK:+49-9281-750-299
-TEL;FAX:+49-9281-750-270
-TEL;CELL:+49-172-9382465
-EMAIL:Axel.Reinhold@Le-goBW.de
-END:VCARD
+HDD:
+Hitachi Travelstar, model HTS541080G9SA00
+
+Reason: I am building a real-time system using RTAI. I do not need to
+access the HDD while in real-time mode, but I must access another
+peripheral which shares the interrupt with libata. I want do disable
+the libata interrupts while in real-time mode, to improve the timing
+characteristics of the real-time peripheral.
+
+Thanks
+Thinus Viljoen
