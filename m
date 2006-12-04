@@ -1,36 +1,43 @@
-From: Segher Boessenkool <segher@kernel.crashing.org>
+From: Olaf Hering <olaf@aepfle.de>
 Subject: Re: [PATCH] mark PCI resource with start 0 as unassigned
-Date: Mon, 4 Dec 2006 13:54:59 +0100
-Message-ID: <4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org>
-References: <20061130165202.GA23205@aepfle.de>	<20061204123854.GA28159@aepfle.de> <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org> <4574197A.2020204@ru.mvista.com>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Date: Mon, 4 Dec 2006 13:56:46 +0100 (MET)
+Message-ID: <20061204125646.GA28600@aepfle.de>
+References: <20061130165202.GA23205@aepfle.de>
+ <20061204123854.GA28159@aepfle.de>
+ <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-in-10.arcor-online.net ([151.189.21.50]:55238 "EHLO
-	mail-in-10.arcor-online.net") by vger.kernel.org with ESMTP
-	id S936786AbWLDMzT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Dec 2006 07:55:19 -0500
-In-Reply-To: <4574197A.2020204@ru.mvista.com>
+Received: from mo-p07-ob.rzone.de ([81.169.146.189]:18810 "EHLO
+	mo-p07-ob.rzone.de") by vger.kernel.org with ESMTP id S1758764AbWLDM4x
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Dec 2006 07:56:53 -0500
+Content-Disposition: inline
+In-Reply-To: <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Olaf Hering <olaf@aepfle.de>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Segher Boessenkool <segher@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
->> Please make this run on pSeries only; on a PowerMac for
->> example, it's totally normal that the first PCI legacy I/O
->> BAR in the system gets assigned 0.
->
->    What do you mean by legacy I/O BAR?
+On Mon, Dec 04, Segher Boessenkool wrote:
 
-Any PCI BAR with bits 1:0 == 0b01.
+> >--- a/arch/powerpc/kernel/pci_64.c
+> >+++ b/arch/powerpc/kernel/pci_64.c
+> >@@ -1234,6 +1234,14 @@ static void __devinit fixup_resource(str
+> > 	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+> > 	unsigned long start, end, mask, offset;
+> >
+> >+	/*
+> >+	 * tell the core code that this ressource is unassigned
+> >+	 * fixes p630 winbond IDE with libata
+> >+	 */
+> >+	if (res->start == 0) {
+> >+		res->flags = 0;
+> >+		return;
+> >+	}
+> > 	if (res->flags & IORESOURCE_IO) {
+> > 		offset = (unsigned long)hose->io_base_virt - pci_io_base;
+> 
+> Please make this run on pSeries only; on a PowerMac for
 
-> If you mean IDE controller, that would drive IDE core mad like this:
->
-> W82C105_IDE: inconsistent baseregs (BIOS) for port 0, skipping
-
-So that needs fixing too, then.
-
-
-Segher
-
+I could just match for winbond an start == 0.
