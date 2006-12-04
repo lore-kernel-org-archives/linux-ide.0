@@ -1,43 +1,31 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: [PATCH] mark PCI resource with start 0 as unassigned
-Date: Mon, 4 Dec 2006 13:56:46 +0100 (MET)
-Message-ID: <20061204125646.GA28600@aepfle.de>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] add delay around sl82c105_reset_engine calls
+Date: Mon, 4 Dec 2006 13:02:54 +0000
+Message-ID: <20061204130254.424c7979@localhost.localdomain>
 References: <20061130165202.GA23205@aepfle.de>
- <20061204123854.GA28159@aepfle.de>
- <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
+	<20061204124026.GB28159@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-p07-ob.rzone.de ([81.169.146.189]:18810 "EHLO
-	mo-p07-ob.rzone.de") by vger.kernel.org with ESMTP id S1758764AbWLDM4x
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Dec 2006 07:56:53 -0500
-Content-Disposition: inline
-In-Reply-To: <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
+Received: from [81.2.110.250] ([81.2.110.250]:31636 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S1759702AbWLDM7H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Dec 2006 07:59:07 -0500
+In-Reply-To: <20061204124026.GB28159@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Segher Boessenkool <segher@kernel.crashing.org>
+To: Olaf Hering <olaf@aepfle.de>
 Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On Mon, Dec 04, Segher Boessenkool wrote:
+On Mon, 4 Dec 2006 13:40:26 +0100 (MET)
+Olaf Hering <olaf@aepfle.de> wrote:
 
-> >--- a/arch/powerpc/kernel/pci_64.c
-> >+++ b/arch/powerpc/kernel/pci_64.c
-> >@@ -1234,6 +1234,14 @@ static void __devinit fixup_resource(str
-> > 	struct pci_controller *hose = pci_bus_to_host(dev->bus);
-> > 	unsigned long start, end, mask, offset;
-> >
-> >+	/*
-> >+	 * tell the core code that this ressource is unassigned
-> >+	 * fixes p630 winbond IDE with libata
-> >+	 */
-> >+	if (res->start == 0) {
-> >+		res->flags = 0;
-> >+		return;
-> >+	}
-> > 	if (res->flags & IORESOURCE_IO) {
-> > 		offset = (unsigned long)hose->io_base_virt - pci_io_base;
 > 
-> Please make this run on pSeries only; on a PowerMac for
+> 
+> the hald media changed polling does really confuse things.
+> noone knows why the delays are needed, but they give us access to
+> the CD.
 
-I could just match for winbond an start == 0.
+Can you tell me what happens if you completely pull the reset out of the
+dma_end function. Do you still need delays then.
+
