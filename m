@@ -1,46 +1,72 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: What is the correct way to indicate an unassigned PCI resource
- ?
-Date: Mon, 04 Dec 2006 18:55:15 +0300
-Message-ID: <457444E3.7030706@ru.mvista.com>
-References: <20061130165202.GA23205@aepfle.de>	<20061204123854.GA28159@aepfle.de>	<FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>	<4574197A.2020204@ru.mvista.com>	<4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org>	<45741DDE.4080509@ru.mvista.com>	<20061204132124.4f7c50a9@localhost.localdomain>	<45742253.1000807@ru.mvista.com>	<20061204142201.68d9621f@localhost.localdomain>	<457431FE.6040702@ru.mvista.com>	<20061204144411.246f3700@localhost.localdomain> <45744159.8040301@ru.mvista.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ide-cd: Handle strange interrupt on the Intel ESB2
+Date: Mon, 4 Dec 2006 16:30:57 +0000
+Message-ID: <20061204163057.2f27a12a@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:8185 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S937044AbWLDPxo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Dec 2006 10:53:44 -0500
-In-Reply-To: <45744159.8040301@ru.mvista.com>
+Received: from [81.2.110.250] ([81.2.110.250]:53199 "EHLO lxorguk.ukuu.org.uk"
+	rhost-flags-FAIL-??-OK-FAIL) by vger.kernel.org with ESMTP
+	id S937088AbWLDQZU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Dec 2006 11:25:20 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Olaf Hering <olaf@aepfle.de>, linuxppc-dev@ozlabs.org, greg@kroah.com, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Hello.
+The ESB2 appears to emit spurious DMA interrupts when configured for
+native mode and handling ATAPI devices. Stratus were able to pin this bug
+down and produce a patch. This is a rework which applies the fixup only
+to the ESB2 (for now). We can apply it to other chips later if the same
+problem is found.
 
-Sergei Shtylyov wrote:
+This code has been tested and confirmed to fix the problem on the tested
+systems.
 
->>>   When Linus remaps IRQ0 on x86, I'll follow that code as a testament. Until 
->>>this happens, I consider is just an opinion. Forcing every arch but x86 to 
->>>remap IRQ0 is an example of the double standards.
+Signed-off-by: Alan Cox <alan@redhat.com>
+(Most of the hard work done by Stratus however)
 
->>Yawn.. x86 does not expose IRQ 0 outside of arch specific code.
-
->     Can you believe, some non-x86 platofrms also don't -- for example, IRQ0 
-> may be internal to SOC, not shareable or routable outside of it, BUT the SOC 
-> device is driven by the standard driver (I'm minding 8250.c here). Yet we're 
-> told that we should remap it, period...
-
->>>>The checks need pushing upwards and removing from their current place -
->>>>the pci layer should check the resource length, the isa pnp should I
->>>>believe check for zero address etc.
-
-    Although, I'm getting the point -- PCI is likely to return 0 for 
-unassigned the interrupt line register (this isn't always true though).  So, 
-some mixup is possible in that regard.  Well, then we're unlucky, and indeed 
-remapping IRQ0 has sense...
-
-WBR, Sergei
-
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.19-rc6-mm1/drivers/ide/ide-cd.c linux-2.6.19-rc6-mm1/drivers/ide/ide-cd.c
+--- linux.vanilla-2.6.19-rc6-mm1/drivers/ide/ide-cd.c	2006-11-24 13:58:06.000000000 +0000
++++ linux-2.6.19-rc6-mm1/drivers/ide/ide-cd.c	2006-12-01 19:24:58.000000000 +0000
+@@ -687,8 +687,15 @@
+ static int cdrom_decode_status(ide_drive_t *drive, int good_stat, int *stat_ret)
+ {
+ 	struct request *rq = HWGROUP(drive)->rq;
++	ide_hwif_t *hwif = HWIF(drive);
+ 	int stat, err, sense_key;
+ 	
++	/* We may have bogus DMA interrupts in PIO state here */
++	if (HWIF(drive)->dma_status && hwif->atapi_irq_bogon) {
++		stat = hwif->INB(hwif->dma_status);
++		/* Should we force the bit as well ? */
++		hwif->OUTB(stat, hwif->dma_status);
++	}
+ 	/* Check for errors. */
+ 	stat = HWIF(drive)->INB(IDE_STATUS_REG);
+ 	if (stat_ret)
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.19-rc6-mm1/drivers/ide/pci/piix.c linux-2.6.19-rc6-mm1/drivers/ide/pci/piix.c
+--- linux.vanilla-2.6.19-rc6-mm1/drivers/ide/pci/piix.c	2006-11-24 13:58:29.000000000 +0000
++++ linux-2.6.19-rc6-mm1/drivers/ide/pci/piix.c	2006-12-01 19:20:46.000000000 +0000
+@@ -473,6 +473,10 @@
+ 		/* This is a painful system best to let it self tune for now */
+ 		return;
+ 	}
++	/* ESB2 appears to generate spurious DMA interrupts in PIO mode
++	   when in native mode */
++	if (hwif->pci_dev->device == PCI_DEVICE_ID_INTEL_ESB2_18)
++		hwif->atapi_irq_bogon = 1;
+ 
+ 	hwif->autodma = 0;
+ 	hwif->tuneproc = &piix_tune_drive;
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.19-rc6-mm1/include/linux/ide.h linux-2.6.19-rc6-mm1/include/linux/ide.h
+--- linux.vanilla-2.6.19-rc6-mm1/include/linux/ide.h	2006-11-24 13:58:12.000000000 +0000
++++ linux-2.6.19-rc6-mm1/include/linux/ide.h	2006-12-01 19:16:27.000000000 +0000
+@@ -796,6 +796,7 @@
+ 	unsigned	sg_mapped  : 1;	/* sg_table and sg_nents are ready */
+ 	unsigned	no_io_32bit : 1; /* 1 = can not do 32-bit IO ops */
+ 	unsigned	err_stops_fifo : 1; /* 1=data FIFO is cleared by an error */
++	unsigned	atapi_irq_bogon : 1; /* Generates spurious DMA interrupts in PIO mode */
+ 
+ 	struct device	gendev;
+ 	struct completion gendev_rel_comp; /* To deal with device release() */
