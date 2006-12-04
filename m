@@ -1,31 +1,29 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Disabling SATA hardware interrupts
-Date: Mon, 4 Dec 2006 12:03:50 +0000
-Message-ID: <20061204120350.3bbd520d@localhost.localdomain>
-References: <c70dbe410612040308o5cbe878cue4ce98c088776afc@mail.gmail.com>
+Subject: Re: [PATCH] ata: Add support for the MPC52xx ATA controller using
+ libata
+Date: Mon, 4 Dec 2006 12:18:15 +0000
+Message-ID: <20061204121815.022a2cdd@localhost.localdomain>
+References: <4573D90E.3050806@246tNt.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:49373 "EHLO lxorguk.ukuu.org.uk")
-	by vger.kernel.org with ESMTP id S1757095AbWLDL5F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Dec 2006 06:57:05 -0500
-In-Reply-To: <c70dbe410612040308o5cbe878cue4ce98c088776afc@mail.gmail.com>
+Received: from [81.2.110.250] ([81.2.110.250]:9397 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S936178AbWLDMRM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Dec 2006 07:17:12 -0500
+In-Reply-To: <4573D90E.3050806@246tNt.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thinus Viljoen <thinus.viljoen@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Sylvain Munaut <tnt@246tNt.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-> Reason: I am building a real-time system using RTAI. I do not need to
-> access the HDD while in real-time mode, but I must access another
-> peripheral which shares the interrupt with libata. I want do disable
-> the libata interrupts while in real-time mode, to improve the timing
-> characteristics of the real-time peripheral.
+On Mon, 04 Dec 2006 09:15:10 +0100
+Sylvain Munaut <tnt@246tNt.com> wrote:
 
-The nIEN bit in the device registers control interrupt generation on ATA
-devices. However ATA devices don't generate interrupts except on command
-completion or during command processing so if you have no I/O outstanding
-you won't have any interrupts anyway.
+> This patch adds libata support for the Freescale MPC5200 IDE
+> controller.
+nit timings to PIO0 */
+urce(op->node, 0, &res_mem);
+>
 
-With funky new stuff like AHCI and NCQ this isn't so simple but for
-simple ATA as with the ata_piix driver it is.
+Acked-by: Alan Cox <alan@redhat.com>
