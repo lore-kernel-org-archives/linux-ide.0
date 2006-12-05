@@ -1,76 +1,59 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: What is the correct way to indicate an unassigned PCI resource
- ?
-Date: Tue, 5 Dec 2006 09:15:55 +0100 (MET)
-Message-ID: <20061205081557.GA8483@aepfle.de>
-References: <20061130165202.GA23205@aepfle.de>
- <20061204123854.GA28159@aepfle.de>
- <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
- <4574197A.2020204@ru.mvista.com>
- <4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org>
- <45741DDE.4080509@ru.mvista.com>
- <20061204132124.4f7c50a9@localhost.localdomain>
- <45742253.1000807@ru.mvista.com>
- <20061204142201.68d9621f@localhost.localdomain>
- <1165293679.29784.39.camel@localhost.localdomain>
+From: Gabriel Paubert <paubert@iram.es>
+Subject: Re: What is the correct way to indicate an unassigned PCI resource ?
+Date: Tue, 5 Dec 2006 11:51:26 +0100
+Message-ID: <20061205105126.GC12351@iram.es>
+References: <20061130165202.GA23205@aepfle.de> <20061204123854.GA28159@aepfle.de> <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org> <4574197A.2020204@ru.mvista.com> <4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org> <45741DDE.4080509@ru.mvista.com> <20061204132124.4f7c50a9@localhost.localdomain> <45742253.1000807@ru.mvista.com> <20061204142201.68d9621f@localhost.localdomain> <1165293679.29784.39.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-p07-ob.rzone.de ([81.169.146.188]:29749 "EHLO
-	mo-p07-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S937479AbWLEIQW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Dec 2006 03:16:22 -0500
+Received: from gra-lx1.iram.es ([150.214.224.41]:54826 "EHLO gra-lx1.iram.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S937515AbWLEKvi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Dec 2006 05:51:38 -0500
 Content-Disposition: inline
 In-Reply-To: <1165293679.29784.39.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linuxppc-dev@ozlabs.org, greg@kroah.com, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Olaf Hering <olaf@aepfle.de>, linux-ide@vger.kernel.org, greg@kroah.com, linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz
 
-On Tue, Dec 05, Benjamin Herrenschmidt wrote:
+On Tue, Dec 05, 2006 at 03:41:19PM +1100, Benjamin Herrenschmidt wrote:
+> On Mon, 2006-12-04 at 14:22 +0000, Alan wrote:
+> 
+> > The discussion I was having was about sl82cxx and handling unassigned
+> > resources. The zero address isn't relevant to that.
+> 
+> Well, actually, it's unclear to me wether the resource is unassigned or
+> has been assigned to 0 :-) And in the later case, why claim'ing it
+> fails.
 
-> Olaf, can you give me a dump of /proc/ioports ? What is sitting at 0 on
-> that PCI bus ?
+Well, I don't have the PCI specification, but I have a device with the 
+following gem in its errata (name edited and changed to <Device>):
 
-with IDE=y
+""The <Device> contains two PCI base registers to allow for both greater 
+flexibility in tightly constrained I/O space as well as the "on the fly" 
+option to access the <Device> registers from either I/O or memory space. 
+Both PCI base registers contained in the <Device> will accept the value 
+of "zero" as a valid and decodable address. This differs from the PCI 2.1 
+specification, where a zero value being written to the PCI base register 
+should disable the register space. <Device> will continue to decode for 
+register accesses using the value "zero" written to the PCI_BS register 
+as the base address for decoding.""
 
-==> /proc/ioports <==
-00000000-0000001f : dma1
-00000020-00000021 : 8259 (master)
-00000040-0000005f : timer
-00000060-0000006f : i8042
-00000080-0000008f : dma page reg
-000000a0-000000a1 : 8259 (slave)
-000000c0-000000df : dma2
-000002f8-000002ff : serial
-000003c0-000003df : matrox
-000003f8-000003ff : serial
-000004d0-000004d1 : 8259 edge control
-00000898-0000089f : serial
-0000f000-0000f007 : 0000:00:03.1
-  0000f000-0000f007 : ide0
-0000f010-0000f013 : 0000:00:03.1
-  0000f012-0000f012 : ide0
-0000f020-0000f027 : 0000:00:03.1
-0000f030-0000f033 : 0000:00:03.1
-0000f040-0000f04f : 0000:00:03.1
-  0000f040-0000f047 : ide0
-  0000f048-0000f04f : ide1
-00010000-0001ffff : PCI Bus #01
-00020000-0002ffff : PCI Bus #21
-  0002ec00-0002ec3f : 0000:21:01.0
-    0002ec00-0002ec3f : e100
-00030000-0003ffff : PCI Bus #41
-  0003e800-0003e8ff : 0000:41:01.0
-    0003e800-0003e8ff : sym53c8xx
-  0003ec00-0003ecff : 0000:41:01.1
-    0003ec00-0003ecff : sym53c8xx
-00040000-0004ffff : PCI Bus #61
-00100000-001fffff : /pci@400000000112
-  00100000-0010ffff : PCI Bus #01
-  00110000-0011ffff : PCI Bus #21
-    0011ec00-0011ec3f : 0001:21:01.0
-      0011ec00-0011ec3f : e100
-  00120000-0012ffff : PCI Bus #61
+which makes me suspect that a base address of zero really should mean
+unassigned and is a way to disable base registers on a region by region
+basis.
 
+Now the fun with this device is that the I/O region occupies 4kB, so 
+it leads to serious conflicts since there is also an ISA bridge in
+the system (no 8259 anymore, serial console dead, etc...). The best
+way to make this bug harmless is to write all ones to said base
+register (it has 32 bit). This moves it to an address which cannot 
+be generated by the host bridge (unless you program it in a really 
+weird way).
 
+Whatever a specification says, you'll always find some device that
+has a bug in this area.
+
+	Regards,
+	Gabriel
