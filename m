@@ -1,55 +1,39 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
-Date: Mon, 04 Dec 2006 15:32:20 -0800
-Message-ID: <4574B004.6030606@us.ibm.com>
-References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: Re: sata_sis and SIS180 in combined mode
+Date: Tue, 05 Dec 2006 01:12:24 +0100
+Message-ID: <4574B968.1070709@gmx.net>
+References: <200612031834.16797.sven@linux4geeks.de>	<45735B51.5040501@gmx.net>	<20061204001114.066b10f3@localhost.localdomain>	<457370CB.60008@gmx.net> <20061204125637.539c102d@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:41001 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967814AbWLDXcX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Dec 2006 18:32:23 -0500
-In-Reply-To: <4574AB78.40102@garzik.org>
+Received: from mail.gmx.net ([213.165.64.20]:51823 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S967871AbWLEAM3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Dec 2006 19:12:29 -0500
+In-Reply-To: <20061204125637.539c102d@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Sven Ladegast <sven@linux4geeks.de>, uwe.koziolek@web.de, linux-ide@vger.kernel.org
 
-The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
-response to a REPORT LUNS packet.  If this happens to an ATAPI device
-that is attached to a SAS controller (this is the case with sas_ata),
-the device does not load because SCSI won't touch a "SCSI device"
-that won't report its LUNs.  Since most ATAPI devices don't support
-multiple LUNs anyway, we might as well fake a response like we do for
-ATA devices.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+>> One port is PATA, the other port is SATA, they have the same PCI
+>> resources. It is possible to configure
+>> the controller to use both ports in SATA mode without slave. Then the
+>> PATA part of the controller is not
+>> reachable.
+>>     
+>
+> Ok so if the pata_sis driver exports
+>
+> 	sis_info133		(UDMA 133 port_info structure)
+>
+> is that sufficient for you to attach the PATA port to the PATA methods
+> for this chipset ?
+>
+> Alan
+>   
+It should be sufficient .
 
- drivers/ata/libata-scsi.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 47ea111..5ecf260 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2833,8 +2833,13 @@ static inline int __ata_scsi_queuecmd(st
- 			rc = ata_scsi_translate(dev, cmd, done, xlat_func);
- 		else
- 			ata_scsi_simulate(dev, cmd, done);
--	} else
--		rc = ata_scsi_translate(dev, cmd, done, atapi_xlat);
-+	} else {
-+		/* Simulate REPORT LUNS for ATAPI devices */
-+		if (cmd->cmnd[0] == REPORT_LUNS)
-+			ata_scsi_simulate(dev, cmd, done);
-+		else
-+			rc = ata_scsi_translate(dev, cmd, done, atapi_xlat);
-+	}
- 
- 	return rc;
- }
-
+Uwe
