@@ -1,118 +1,86 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (2.6.19-rc6-mm2) sl82c105: straighten up IDE control/status register caching
-Date: Tue, 5 Dec 2006 21:59:28 +0300
-Message-ID: <200612052159.28202.sshtylyov@ru.mvista.com>
+Subject: Re: What is the correct way to indicate an unassigned PCI resource
+ ?
+Date: Tue, 05 Dec 2006 22:22:04 +0300
+Message-ID: <4575C6DC.7000204@ru.mvista.com>
+References: <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org> <4574197A.2020204@ru.mvista.com> <4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org> <45741DDE.4080509@ru.mvista.com> <20061204132124.4f7c50a9@localhost.localdomain> <45742253.1000807@ru.mvista.com> <20061204142201.68d9621f@localhost.localdomain> <1165293679.29784.39.camel@localhost.localdomain> <20061205105126.GC12351@iram.es> <45756861.2050004@ru.mvista.com> <20061205173735.GA13179@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:16772 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:17000 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S968629AbWLES56 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Dec 2006 13:57:58 -0500
-Content-Disposition: inline
+	id S968646AbWLETVD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Dec 2006 14:21:03 -0500
+In-Reply-To: <20061205173735.GA13179@colo.lackof.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, linuxppc-dev@ozlabs.org, linux-arm@lists.arm.linux.org.uk
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: Gabriel Paubert <paubert@iram.es>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Olaf Hering <olaf@aepfle.de>, linux-ide@vger.kernel.org, greg@kroah.com, linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz, Alan <alan@lxorguk.ukuu.org.uk>
 
-Straighten up the IDE control/status register caching -- you *really* can't
-cache the shared register per-channel and hope that it won't get out ouf sync.
+Hello.
 
-Set the PIO fallback mode to PIO0 for the slave drive as well as master --
-there was no point in having them different (most probably a resutl of typo).
+Grant Grundler wrote:
 
-Do a bit of reformat and cleanup while at it...
+>>>Well, I don't have the PCI specification, but I have a device with the 
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>>   Try googling for pdf21.pdf, pdf22.pdf if you need it. :-)
 
- drivers/ide/pci/sl82c105.c |   31 +++++++++++++------------------
- 1 files changed, 13 insertions(+), 18 deletions(-)
+> I think you meant pci21.pdf/pci22.pdf/pci23.pdf.
 
-Index: linux-2.6/drivers/ide/pci/sl82c105.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/sl82c105.c
-+++ linux-2.6/drivers/ide/pci/sl82c105.c
-@@ -299,14 +299,14 @@ static void sl82c105_selectproc(ide_driv
- 	//DBG(("sl82c105_selectproc(drive:%s)\n", drive->name));
- 
- 	mask = hwif->channel ? CTRL_P1F16 : CTRL_P0F16;
--	old = val = *((u32 *)&hwif->hwif_data);
-+	old = val = (u32)pci_get_drvdata(dev);
- 	if (drive->using_dma)
- 		val &= ~mask;
- 	else
- 		val |= mask;
- 	if (old != val) {
- 		pci_write_config_dword(dev, 0x40, val);	
--		*((u32 *)&hwif->hwif_data) = val;
-+		pci_set_drvdata(dev, (void *)val);
- 	}
- }
- 
-@@ -316,14 +316,13 @@ static void sl82c105_selectproc(ide_driv
-  */
- static void sl82c105_resetproc(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif = HWIF(drive);
--	struct pci_dev *dev = hwif->pci_dev;
-+	struct pci_dev *dev = HWIF(drive)->pci_dev;
- 	u32 val;
- 
- 	DBG(("sl82c105_resetproc(drive:%s)\n", drive->name));
- 
- 	pci_read_config_dword(dev, 0x40, &val);
--	*((u32 *)&hwif->hwif_data) = val;
-+	pci_set_drvdata(dev, (void *)val);
- }
- 	
- /*
-@@ -394,6 +393,7 @@ static unsigned int __devinit init_chips
- 	pci_read_config_dword(dev, 0x40, &val);
- 	val |= CTRL_P0EN | CTRL_P0F16 | CTRL_P1F16;
- 	pci_write_config_dword(dev, 0x40, val);
-+	pci_set_drvdata(dev, (void *)val);
- 
- 	return dev->irq;
- }
-@@ -404,30 +404,25 @@ static unsigned int __devinit init_chips
- 
- static void __devinit init_hwif_sl82c105(ide_hwif_t *hwif)
- {
--	struct pci_dev *dev = hwif->pci_dev;
- 	unsigned int rev;
- 	u8 dma_state;
--	u32 val;
--	
-+
- 	DBG(("init_hwif_sl82c105(hwif: ide%d)\n", hwif->index));
- 
- 	hwif->tuneproc = tune_sl82c105;
- 	hwif->selectproc = sl82c105_selectproc;
- 	hwif->resetproc = sl82c105_resetproc;
--	
--	/* Default to PIO 0 for fallback unless tuned otherwise,
--	 * we always autotune PIO, this is done before DMA is
--	 * checked, so there is no risk of accidentally disabling
--	 * DMA
--	  */
-+
-+	/*
-+	 * Default to PIO 0 for fallback unless tuned otherwise.
-+	 * We always autotune PIO,  this is done before DMA is checked,
-+	 * so there's no risk of accidentally disabling DMA
-+	 */
- 	hwif->drives[0].pio_speed = XFER_PIO_0;
- 	hwif->drives[0].autotune = 1;
--	hwif->drives[1].pio_speed = XFER_PIO_1;
-+	hwif->drives[1].pio_speed = XFER_PIO_0;
- 	hwif->drives[1].autotune = 1;
- 
--	pci_read_config_dword(dev, 0x40, &val);
--	*((u32 *)&hwif->hwif_data) = val;
--	
- 	hwif->atapi_dma = 0;
- 	hwif->mwdma_mask = 0;
- 	hwif->swdma_mask = 0;
+> And if you find them, trust me when I say whoever is hosting those files
+> can expect a cease-and-desist letter in the mail shortly there after.
 
+> Better to just ask someone with proper access to lookup the parts
+> you need to know (i.e. ask here). Member companies are listed at:
+> 	http://www.pcisig.com/membership/about_us/membership_roster/
+
+> if you want to approach someone offlist.
+
+    That's not fun. :-)
+
+>>>following gem in its errata (name edited and changed to <Device>):
+
+>>>""The <Device> contains two PCI base registers to allow for both greater 
+>>>flexibility in tightly constrained I/O space as well as the "on the fly" 
+>>>option to access the <Device> registers from either I/O or memory space. 
+>>>Both PCI base registers contained in the <Device> will accept the value 
+>>>of "zero" as a valid and decodable address. This differs from the PCI 2.1 
+>>>specification, where a zero value being written to the PCI base register 
+>>>should disable the register space.
+
+>>   I haven't found such words in PCI 2.1 -- it only said that 0 is not a 
+>>valid address (those words are gone from 2.2).
+
+> AFAIK, zero is a valid address for IO Port space on several architectures.
+> But PCI generic code should never use it. See usage of PCIBIOS_MIN_IO
+> and PCIBIOS_MIN_MEM in the various asm-*/pci.h files.
+
+    That'd be all good if bootloaders also folllowed this rule... Not all of 
+them do, hence the thread. :-/
+
+>>>which makes me suspect that a base address of zero really should mean
+>>>unassigned and is a way to disable base registers on a region by region
+>>>basis.
+
+>>   AFAIR, there's never been a provision to enable/disable BARs on an 
+>>individual basis in PCI (except the expansion ROM BAR). The decoders are
+>>only controlled via 2 command register bits for I/O and memory space.
+
+> One can "disable" a BAR by pointing it at an address that is NOT routed
+> by the upstream bridge. Ie CPU physical addresses that can never reach
+> that secondary bus. But I'm not aware of any code to do that currently
+
+    Yeah, that's the trick that Gabriel has already described...
+
+> and it certainly won't work with all "PCI-like" (think integrated south
+> bridges) devices.
+
+    Well, those are using subtractive decoders, so will only get the R/W 
+cycles that nobody else cared about. If using I/O ports higher than 0xffff the 
+trick will still work on x86 even in presence of ISA bridges...
+
+> hth,
+> grant
+
+WBR, Sergei
