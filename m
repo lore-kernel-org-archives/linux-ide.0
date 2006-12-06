@@ -1,61 +1,33 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] ata/kconfig: Re: Why SCSI module needed for PCI-IDE ATA
- only disks ?
-Date: Tue, 5 Dec 2006 19:54:27 -0800
-Message-ID: <20061205195427.b5c44f83.randy.dunlap@oracle.com>
-References: <fa.juE97gahpb4n2kNNH/Todtcvh3s@ifi.uio.no>
-	<fa.IqtlZas3d+ZPuhF6S6N/ivdF8Wo@ifi.uio.no>
-	<fa.HDRhmOhDQliejH7ijqJBWw9Jw0o@ifi.uio.no>
-	<45761B2F.9060804@shaw.ca>
-	<457625CF.2080105@comcast.net>
-	<45762781.8020207@shaw.ca>
-	<45762F1E.4030805@comcast.net>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: Oops in pata_pdc2027x
+Date: Wed, 06 Dec 2006 14:10:15 +0800
+Message-ID: <45765EC7.2000908@tw.ibm.com>
+References: <20061205170144.0b98d7e6.sfr@canb.auug.org.au>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:40322 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759896AbWLFDxt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Dec 2006 22:53:49 -0500
-In-Reply-To: <45762F1E.4030805@comcast.net>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760235AbWLFGKg@vger.kernel.org>
+In-Reply-To: <20061205170144.0b98d7e6.sfr@canb.auug.org.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>, ppc-dev <linuxppc-dev@ozlabs.org>
 List-Id: linux-ide@vger.kernel.org
-To: Ed Sweetman <safemode2@comcast.net>, jgarzik <jgarzik@pobox.com>, ide <linux-ide@vger.kernel.org>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Tue, 05 Dec 2006 21:46:54 -0500 Ed Sweetman wrote:
+Stephen Rothwell wrote:
+> Hi all,
+> 
+> I get an oops during initialisation of the pata_pdc2027x module on a
+> POWER 285 machine.  This is on a very recent Linus kernel tree
+> (ff51a98799931256b555446b2f5675db08de6229) with Paulus' powerpc tree
+> (that has now been merged). The oops looks like this:
+> 
 
--ETOOMANYWORDS && -ENOPATCH, so here is one to consider.
-Help text can also be added.  <supply text>
-This is similar to what USB storage already does.
+Hi Stephen,
 
----
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Where could I download the patched kernel source? There are two
+POWER5 9110-51A boxes here. Maybe I could try to reproduce the problem
+on these boxes.
 
-Provide more clues about SCSI config options that are needed
-for libata (SATA/PATA) drivers.
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/ata/Kconfig |    9 +++++++++
- 1 file changed, 9 insertions(+)
-
---- linux-2.6.19-git7.orig/drivers/ata/Kconfig
-+++ linux-2.6.19-git7/drivers/ata/Kconfig
-@@ -17,6 +17,15 @@ config ATA
- 	  that "speaks" the ATA protocol, also called ATA controller),
- 	  because you will be asked for it.
- 
-+comment "NOTE: ATA enables basic SCSI support; *however*,"
-+	depends on ATA
-+comment "+ 'SCSI disk support', 'SCSI tape support', or '"
-+	depends on ATA
-+comment "+ 'SCSI CDROM support' may also be needed,"
-+	depends on ATA
-+comment "+ depending on your hardware configuration."
-+	depends on ATA
-+
- if ATA
- 
- config SATA_AHCI
+--
+albert
