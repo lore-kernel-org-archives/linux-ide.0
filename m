@@ -1,46 +1,32 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: low performance trying pata_sis
-Date: Wed, 06 Dec 2006 11:58:23 +0100
-Message-ID: <4576A24F.90200@gmx.net>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: low performance trying pata_sis
+Date: Wed, 6 Dec 2006 13:19:55 +0000
+Message-ID: <20061206131955.37a4e2fc@localhost.localdomain>
+References: <4576A24F.90200@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37250 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1760460AbWLFK60 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Dec 2006 05:58:26 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45928 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760587AbWLFNMY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 08:12:24 -0500
+In-Reply-To: <4576A24F.90200@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux.ide" <linux-ide@vger.kernel.org>
+To: Uwe Koziolek <uwe.koziolek@gmx.net>
+Cc: "linux.ide" <linux-ide@vger.kernel.org>
 
-There is a wrong order to initialize the drivers. The IDE-platform
-driver was initialized before pata_sis.
-So the generic platform driver is driving the IDE controller instead of
-pata_sis.
-kernel 2.6.19
+On Wed, 06 Dec 2006 11:58:23 +0100
+Uwe Koziolek <uwe.koziolek@gmx.net> wrote:
 
-.config
-# CONFIG_BLK_DEV_SIS5513 is not set
-CONFIG_ATA=y
-CONFIG_PATA_SIS=y
+> There is a wrong order to initialize the drivers. The IDE-platform
+> driver was initialized before pata_sis.
+> So the generic platform driver is driving the IDE controller instead of
+> pata_sis.
 
-dmesg
-...
-libata version 2.00 loaded.
-...
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-Probing IDE interface ide0...
-hda: SAMSUNG SP1614N, ATA DISK drive
-Probing IDE interface ide1...
-...
-pata_sis 0000:00:02.5: version 0.4.4
-ata: 0x1F0 IDE port busy
-ata: conflict with ide0
-ata: 0x170 IDE port busy
-ata: conflict with ide1
-pata_sis: probe of 0000:00:02.5 failed with error -16
+I would suggest not trying to use both together - there isn't an easy way
+to sort that out because the generic driver in libata will grab devices
+before legacy drivers/ide if it is the other way around.
 
-regards
-Uwe Koziolek
+At least the current way around you get the old drivers by default.
