@@ -1,68 +1,48 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH 2.6.19 2/3] sata_promise: new EH conversion
-Date: Wed, 06 Dec 2006 18:19:18 +0900
-Message-ID: <45768B16.5020603@gmail.com>
-References: <200612060853.kB68r0Gg024641@harpo.it.uu.se>
+Date: Wed, 06 Dec 2006 18:38:12 +0900
+Message-ID: <45768F84.7090707@gmail.com>
+References: <200612010958.kB19wGbg002454@alkaid.it.uu.se>	 <4572CA7A.6010103@gmail.com> <4572CB2B.8050406@garzik.org>	 <4572CEE7.502@gmail.com> <1165155367.3233.220.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:31837 "EHLO
-	nz-out-0102.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760365AbWLFJTZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 04:19:25 -0500
-Received: by nz-out-0102.google.com with SMTP id s1so89063nze
-        for <linux-ide@vger.kernel.org>; Wed, 06 Dec 2006 01:19:24 -0800 (PST)
-In-Reply-To: <200612060853.kB68r0Gg024641@harpo.it.uu.se>
+Received: from wx-out-0506.google.com ([66.249.82.229]:34352 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760377AbWLFJiT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 04:38:19 -0500
+Received: by wx-out-0506.google.com with SMTP id h27so157893wxd
+        for <linux-ide@vger.kernel.org>; Wed, 06 Dec 2006 01:38:18 -0800 (PST)
+In-Reply-To: <1165155367.3233.220.camel@laptopd505.fenrus.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mikael Pettersson wrote:
->> Don't freeze port unconditionally.  You'll end up hardresetting on every
->> error.  Just make sure DMA engine is stopped and the controller is in a
->> sane state.  If that fails, then, the port should be frozen.
-
-Sorry, s/hardresetting/resetting/
-
-> I'm looking into this now, but so far it seems only a reset
-> (what Promise calls software reset, I don't know if libata
-> considers it a soft or hard reset) of the ATA channel will do.
-
-Errors properly reported by the device shouldn't cause resets.  Think
-about ATAPI check condition.
-
->>> +	hardreset = NULL;
->>> +	if (sata_scr_valid(ap)) {
->>> +		ehc->i.action |= ATA_EH_HARDRESET;
->> Why always force HARDRESET?
+Arjan van de Ven wrote:
+>> But, having those flushes won't hurt either.  What was the conclusion of
+>> mmio <-> spinlock sync discussion?  I always feel kind of uncomfortable
+>> about readl() flushes.  I think they're too subtle.
 > 
-> I based that on sata_sil24:
-> 
-> 	if (sil24_init_port(ap)) {
-> 		ata_eh_freeze_port(ap);
-> 		ehc->i.action |= ATA_EH_HARDRESET;
-> 	}
-> 
-> I interpreted the ATA_EH_HARDRESET as being required due to
-> the ata_eh_freeze_port(), but perhaps it's only there because
-> sil24_init_port() returned failure?
+> those are orthogonal!
+> The posting flushes have nothing to do with spinlock-vs-mmio; that
+> discussion was about the CPU, while posting flushes are about the
+> chipset / bridges / etc....
 
-Yeap, that's right.
+The problem is that it's not clear what those posting flushes actually
+achieve.  Do they achieve IRQ disabling on completion?  Hardly, IRQ can
+use whole different channel anyway.
 
-> A different issue, but of practical importance, is which
-> libata branch I should base the EH conversion on: #upstream
-> or #ALL? Andrew Morton's -mm kernels include the ALL patches,
-> but they in turn include the promise-sata-pata patches, and
-> there is a conflict between the PATA patch and the EH conversion.
-> Currently my EH conversion is based on #upstream, and I've ported
-> the PATA patch to apply on top of it.
+And, as for spinlock/IO ordering, libata currently depends on IO
+instructions not leaking outside of spinlock (ordering-wise).  We have
+posting flushes at several places and some of them clearly make sense
+(e.g. timed wait) but some others aren't that clear while majority of
+places just don't do anything about ordering other than wrapping them
+inside spinlock.
 
-#upstream, It is.  #ALL is merge of all libata-dev devel branches and no
-development work occurs there directly.
-
-Thanks.
+So, I don't really know.  Do we have to add mmiowb() before every
+spin_unlock after IO?  Or, do we have to do explicit flushes everytime?
+ Or, is it something to be taken care of in the upper layer?
 
 -- 
 tejun
