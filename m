@@ -1,32 +1,167 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: low performance trying pata_sis
-Date: Wed, 6 Dec 2006 13:19:55 +0000
-Message-ID: <20061206131955.37a4e2fc@localhost.localdomain>
-References: <4576A24F.90200@gmx.net>
+From: Jonas Lundgren <jonas@local.se>
+Subject: Re: Scary Intel SATA problem: "frozen"
+Date: Wed, 06 Dec 2006 18:58:18 +0100
+Message-ID: <457704BA.7090001@local.se>
+References: <456CB72A.3010004@local.se> <456CDB06.40806@gmail.com>
+Reply-To: jonas@local.se
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45928 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760587AbWLFNMY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 08:12:24 -0500
-In-Reply-To: <4576A24F.90200@gmx.net>
+Received: from mxfep03.bredband.com ([195.54.107.76]:42648 "EHLO
+	mxfep03.bredband.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936964AbWLFR61 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 12:58:27 -0500
+Received: from ironport.bredband.com ([195.54.107.82] [195.54.107.82])
+          by mxfep03.bredband.com with ESMTP
+          id <20061206175824.IWWH8861.mxfep03.bredband.com@ironport.bredband.com>
+          for <linux-ide@vger.kernel.org>; Wed, 6 Dec 2006 18:58:24 +0100
+In-Reply-To: <456CDB06.40806@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: "linux.ide" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Wed, 06 Dec 2006 11:58:23 +0100
-Uwe Koziolek <uwe.koziolek@gmx.net> wrote:
+Tejun Heo wrote:
+[--snip--]
 
-> There is a wrong order to initialize the drivers. The IDE-platform
-> driver was initialized before pata_sis.
-> So the generic platform driver is driving the IDE controller instead of
-> pata_sis.
+>> IF the system does recover, I start getting
+>> the extremly low disk write speeds that I reported above, and only a
+>> reboot will get the performance back to regular.
+> 
+> Please full dmesg after your computer got really slow.  I suspect libata
+> decided to switch to PIO mode.
+Here's the relevant part, if you want the whole dmesg look at:
+http://pastebin.ca/269581
 
-I would suggest not trying to use both together - there isn't an easy way
-to sort that out because the generic driver in libata will grab devices
-before legacy drivers/ide if it is the other way around.
+[--snip--]
+[82048.255126] can't create port
+[85055.578172] reiser4[unrar(30787)]: disable_write_barrier
+(fs/reiser4/wander.c:234)[zam-1055]:
+[85055.578174] NOTICE: md5 does not support write barriers, using
+synchronous write instead.
+[87825.501998] can't create port
+[89520.019538] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+frozen
+[89520.019545] ata2.00: cmd c8/00:08:fe:68:df/00:00:00:00:00/e1 tag 0
+data 4096 in
+[89520.019547]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[89520.322292] ata2: soft resetting port
+[89527.515891] ata2: port is slow to respond, please be patient (Status
+0xd0)
+[89550.457913] ata2: port failed to respond (30 secs, Status 0xd0)
+[89550.457917] ata2: softreset failed (device not ready)
+[89550.457921] ata2: softreset failed, retrying in 5 secs
+[89555.454103] ata2: hard resetting port
+[89562.799693] ata2: port is slow to respond, please be patient (Status
+0x80)
+[89585.740239] ata2: port failed to respond (30 secs, Status 0x80)
+[89585.740242] ata2: COMRESET failed (device not ready)
+[89585.740245] ata2: hardreset failed, retrying in 5 secs
+[89590.736978] ata2: hard resetting port
+[89598.081854] ata2: port is slow to respond, please be patient (Status
+0x80)
+[89617.604742] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[89617.611034] ata2.00: configured for UDMA/100
+[89617.611042] ata2: EH complete
+[89617.623426] SCSI device sdb: 145226112 512-byte hdwr sectors (74356 MB)
+[89617.633551] sdb: Write Protect is off
+[89617.633553] sdb: Mode Sense: 00 3a 00 00
+[89617.637765] SCSI device sdb: write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
 
-At least the current way around you get the old drivers by default.
+> 
+>> I don't know what causes it, but most of the times when I've gotten it
+>> my system has been under heavy load (compiling, downloading torrents in
+>> 11mb/sec etc). Please let me know if you want any additional info, want
+>> me to try something out, or whatever. My recent hardware upgrade for
+>> around $1200 (to a core2duo system, i965 mobo) is just going to waste
+>> because of this problem. :/
+> 
+> Heh, nice machine you got there.  When you look at the dmesg, do the
+> error messages occur only on one of the two drives?  Or are both
+> affected?  If only one is affected,
+> 
+> 1. swap the two.  you'll probably have to dance a little bit with boot
+> loader but md should handle that fine once the kernel is loaded.  does
+> the errors persist?  on which device do they occur?  do they follow the
+> drive or stay on the mobo port?
+It follows the drive. (Hardware problem?)
+
+> 
+> 2. try different cable / port.  if you change port, again, you need to
+> dance w/ boot loader.  who's carrying the error messages with it?
+Read above.
+
+> 
+> 3. try different power plug from different power lane.
+I've got a really good power supply, wich can handle max 560W on the +12
+/ -12 V rail alone.
+
+> 
+>> I just got so glad when I saw the post of this on linux-ide, I've been
+>> searching like crazy to find another person having the same problem (and
+>> possibly a solution) for the past 2-3 weeks or so.
+> 
+> My first guess is frequent transmission errors.  Please report the test
+> results.  Thanks.
+>
+
+I guess it could only be a hardware problem since the error follows the
+drive, and both the drives are identical, so it can't be a firmware
+problem. Correct me if I'm wrong.
+
+I just checked the smart status, and the drive passes, but it seems like
+it's going down though, on the other hand I might misread the results.
+
+smartctl -d ata -A /dev/sdb
+smartctl version 5.36 [i686-pc-linux-gnu] Copyright (C) 2002-6 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF READ SMART DATA SECTION ===
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
+UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000b   200   200   051    Pre-fail  Always
+      -       0
+  3 Spin_Up_Time            0x0007   113   111   021    Pre-fail  Always
+    -       4875
+  4 Start_Stop_Count        0x0032   100   100   040    Old_age   Always
+      -       237
+  5 Reallocated_Sector_Ct   0x0033   153   153   140    Pre-fail  Always
+      -       747
+  7 Seek_Error_Rate         0x000b   100   253   051    Pre-fail  Always
+      -       0
+  9 Power_On_Hours          0x0032   076   076   000    Old_age   Always
+      -       18117
+ 10 Spin_Retry_Count        0x0013   100   100   051    Pre-fail  Always
+      -       0
+ 11 Calibration_Retry_Count 0x0013   100   100   051    Pre-fail  Always
+      -       0
+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always
+      -       228
+194 Temperature_Celsius     0x0022   117   108   000    Old_age   Always
+      -       33
+196 Reallocated_Event_Count 0x0032   001   001   000    Old_age   Always
+      -       639
+197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always
+      -       0
+198 Offline_Uncorrectable   0x0012   200   200   000    Old_age   Always
+      -       0
+199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   Always
+      -       0
+200 Multi_Zone_Error_Rate   0x0009   200   179   051    Pre-fail
+Offline      -       0
+
+
+The "Reallocated_Sector_Ct" and "Reallocated_Event_Count" worries me..
+Should I be worried?
+
+-- 
+-Jonas
+
+Name:   Jonas Lundgren
+ICQ#:   52064961
+Mail:   jonas@local.se
+IRC:    neon / neonman @ EFnet, Undernet, Quakenet, freenode
