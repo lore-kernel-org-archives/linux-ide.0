@@ -1,52 +1,49 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: Oops in pata_pdc2027x
-Date: Wed, 6 Dec 2006 17:21:14 +1100
-Message-ID: <20061206172114.a1c515f8.sfr@canb.auug.org.au>
-References: <20061205170144.0b98d7e6.sfr@canb.auug.org.au>
-	<45765EC7.2000908@tw.ibm.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__6_Dec_2006_17_21_14_+1100_J+KINg=8AeB7wdyv"
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH 2.6.19 3/3] sata_promise: cleanups
+Date: Wed, 6 Dec 2006 09:51:07 +0100 (MET)
+Message-ID: <200612060851.kB68p7Dp024603@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:53662 "EHLO smtps.tip.net.au"
+Received: from aun.it.uu.se ([130.238.12.36]:63224 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760247AbWLFGVX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Dec 2006 01:21:23 -0500
-In-Reply-To: <45765EC7.2000908@tw.ibm.com>
+	id S1760312AbWLFIvV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 6 Dec 2006 03:51:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>, ppc-dev <linuxppc-dev@ozlabs.org>
+To: htejun@gmail.com, mikpe@it.uu.se
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
---Signature=_Wed__6_Dec_2006_17_21_14_+1100_J+KINg=8AeB7wdyv
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
-On Wed, 06 Dec 2006 14:10:15 +0800 Albert Lee <albertcc@tw.ibm.com> wrote:
+On Sun, 03 Dec 2006 22:05:51 +0900, Tejun Heo wrote:
+>Mikael Pettersson wrote:
+>> This patch performs two simple cleanups of sata_promise.
+>> 
+>> * Remove board_20771 and map device id 0x3577 to board_2057x.
+>>   After the recent corrections for SATAII chips, board_20771 and
+>>   board_2057x were equivalent in the driver.
 >
-> Where could I download the patched kernel source? There are two
-> POWER5 9110-51A boxes here. Maybe I could try to reproduce the problem
-> on these boxes.
+>Ack.
+>
+>> * Remove hp->hotplug_offset and use hp->flags & PDC_FLAG_GEN_II
+>>   to compute hotplug_offset in pdc_host_init().
+>
+>Please explain why.
 
-You can just use Linus' current tree - it exhibits the same problem (and
-the powerpc tree has been merged into it).
+hp->hotplug_offset was used to allow pdc_host_init() to work for both
+1st and 2nd generation chips. However, more tests were needed to
+properly handle other aspects of 2nd generation chips, so hp->flags
+and PDC_FLAG_GEN_II were introduced. Now hp->hotplug_offset is redundant
+since its value is derivable from hp->flags & PDC_FLAG_GEN_II.
 
---
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+>
+>> @@ -704,7 +684,7 @@ static void pdc_host_init(unsigned int c
+>>  {
+>>  	void __iomem *mmio = pe->mmio_base;
+>>  	struct pdc_host_priv *hp = pe->private_data;
+>> -	int hotplug_offset = hp->hotplug_offset;
+>> +	int hotplug_offset = (hp->flags & PDC_FLAG_GEN_II) ? PDC2_SATA_PLUG_CSR : PDC_SATA_PLUG_CSR;
+>
+>People tend to prefer explicit if () over ?: and dislike lines much
+>longer than 80 column, well, at least in libata.
 
---Signature=_Wed__6_Dec_2006_17_21_14_+1100_J+KINg=8AeB7wdyv
-Content-Type: application/pgp-signature
+OK, I'll replace the ?: with an if-statement.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQFFdmFaFdBgD/zoJvwRAlrrAJ9nTsXfOmskR8L8mTwmI4mp8C65KwCgmDUe
-HB9+ck7EU3PHukwX4zzUs20=
-=OW9h
------END PGP SIGNATURE-----
-
---Signature=_Wed__6_Dec_2006_17_21_14_+1100_J+KINg=8AeB7wdyv--
+/Mikael
