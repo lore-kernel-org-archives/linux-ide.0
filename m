@@ -1,112 +1,186 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: -mm merge plans for 2.6.20
-Date: Wed, 6 Dec 2006 14:36:12 -0800
-Message-ID: <20061206143612.84642868.akpm@osdl.org>
-References: <20061204204024.2401148d.akpm@osdl.org>
-	<4574FC0A.8090607@garzik.org>
-	<20061204214114.433485fc.akpm@osdl.org>
-	<1165432780.21881.20.camel@linux-qmhe.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.19-git7] sata_promise: new EH conversion, take 2
+Date: Thu, 7 Dec 2006 00:06:51 +0100 (MET)
+Message-ID: <200612062306.kB6N6p0t009272@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:49727 "EHLO smtp.osdl.org"
+Received: from aun.it.uu.se ([130.238.12.36]:44280 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937750AbWLFWg0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Dec 2006 17:36:26 -0500
-In-Reply-To: <1165432780.21881.20.camel@linux-qmhe.site>
+	id S937770AbWLFXHD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 6 Dec 2006 18:07:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: conke.hu@gmail.com
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 07 Dec 2006 03:19:40 +0800
-Conke Hu <conke.hu@gmail.com> wrote:
+This patch converts sata_promise to use new-style libata error
+handling on Promise SATA chips, for both SATA and PATA ports.
 
-> On Mon, 2006-12-04 at 21:41 -0800, Andrew Morton wrote:
-> > On Mon, 04 Dec 2006 23:56:42 -0500
-> > Jeff Garzik <jeff@garzik.org> wrote:
-> > 
-> > > Andrew Morton wrote:
-> > > > via-pata-controller-xfer-fixes.patch
-> > > > via-pata-controller-xfer-fixes-fix.patch
-> > > 
-> > > Tejun's 3d3cca37559e3ab2b574eda11ed5207ccdb8980a has been ack'd by the 
-> > > reporter as fixing things, so these two shouldn't be needed.
-> > 
-> > OK thanks, I dropped it.
-> > 
-> > > 
-> > > > libata_resume_fix.patch
-> > > 
-> > > I thought this was resolved long ago?  Are there still open reports that 
-> > > this solves, where upstream doesn't work?
-> > 
-> > Heck, I don't know.
-> > 
-> > > 
-> > > > ahci-ati-sb600-sata-support-for-various-modes.patch
-> > > 
-> > > With the PCI quirk, I thought ATI was finally sorted?
-> > 
-> > Was it?  I don't know that either.
-> > 
-> > I'll drop these too.
-> > -
-> 
-> Hi Jeff, Andrew
->     The following patch is ATI's final solution. It was ACKed by Alan.
->     Jeff, you're the maintainer of libata, but this patch is based on
-> pci/quirks.c, so I don't know who will apply this patch? You or somebody
-> else?
->     Andrew, could you please drop ATI's previous patch and add this one
-> in next -mm patch? The previous patch I sent
-> (ahci-ati-sb600-sata-support-for-various-modes.patch) is not as good as
-> this one :)
-> 
-> 
-> Best regards,
-> Conke @AMD/ATI
+* ATA_FLAG_SRST is no longer set
+* ->phy_reset is no longer set as it is unused when ->error_handler
+   is present, and pdc_sata_phy_reset() has been removed
+* pdc_freeze() masks interrupts and halts DMA via PDC_CTLSTAT
+* pdc_thaw() clears interrupt status in PDC_INT_SEQMASK and then
+  unmasks interrupts in PDC_CTLSTAT
+* pdc_error_handler() reinitialises the port if it isn't frozen,
+  and then invokes ata_do_eh() with standard {s,}ata reset methods
+* pdc_post_internal_cmd() resets the port in case of errors
+* the PATA-only 20619 chip continues to use old-style EH:
+  not by necessity but simply because I don't have documentation
+  for it or any way to test it
 
-Please send a signed-off-by: for this work, and a changelog which tells us
-what it does and why the kernel needs this change.
+Since the previous version pdc_error_handler() has been rewritten
+and it now mostly matches ahci and sata_sil24. In case anyone
+wonders: the call to pdc_reset_port() isn't a heavy-duty reset,
+it's a light-weight reset to quickly put a port into a sane state.
 
-I shall then remove the ifdef (it's __devinit, and other quirks don't do
-this, and vmlinux doesn't know whether or not this driver will later be
-loaded) and I shall fix up the word wrapping and I shall convert the spaces
-back into tabs and I shall then send it on to Greg, thanks.
+The discussion about the PCI flushes in pdc_freeze() and pdc_thaw()
+seemed to end with a consensus that the flushes are OK and not
+obviously redundant, so I decided to keep them for now.
 
+This patch was prepared against 2.6.19-git7, but it also applies
+to 2.6.19 + libata #upstream, with or without the revised sata_promise
+cleanup patch I recently submitted.
 
-> [------------------PATCH------------------]
-> 
-> --- linux-2.6.19-rc6-git4/drivers/pci/quirks.c.orig     2006-11-23
-> 19:45:49.000000000 +0800
-> +++ linux-2.6.19-rc6-git4/drivers/pci/quirks.c  2006-11-23
-> 19:34:23.000000000 +0800
-> @@ -795,6 +795,25 @@ static void __init quirk_mediagx_master(
->        }
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CYRIX,
-> PCI_DEVICE_ID_CYRIX_PCI_MASTER, quirk_mediagx_master );
-> +
-> +#if defined(CONFIG_SATA_AHCI) || defined(CONFIG_SATA_AHCI_MODULE)
-> +static void __devinit quirk_sb600_sata(struct pci_dev *pdev)
-> +{
-> +       /* set sb600 sata to ahci mode */
-> +       if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
-> +               u8 tmp;
-> +
-> +               pci_read_config_byte(pdev, 0x40, &tmp);
-> +               pci_write_config_byte(pdev, 0x40, tmp|1);
-> +               pci_write_config_byte(pdev, 0x9, 1);
-> +               pci_write_config_byte(pdev, 0xa, 6);
-> +               pci_write_config_byte(pdev, 0x40, tmp);
-> +
-> +               pdev->class = 0x010601;
-> +       }
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI,
-> PCI_DEVICE_ID_ATI_IXP600_SATA, quirk_sb600_sata);
-> +#endif
+This patch does conflict with the #promise-sata-pata patch:
+this patch removes pdc_sata_phy_reset() while #promise-sata-pata
+modifies it. The correct patch resolution is to remove the function.
 
+Tested on 2037x and 2057x chips, with PATA patches on top and disks
+on both SATA and PATA ports.
 
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+
+--- linux-2.6.19-git7/drivers/ata/sata_promise.c.~1~	2006-12-06 23:29:14.000000000 +0100
++++ linux-2.6.19-git7/drivers/ata/sata_promise.c	2006-12-06 23:29:43.000000000 +0100
+@@ -72,9 +72,12 @@ enum {
+ 
+ 	PDC_HAS_PATA		= (1 << 1), /* PDC20375/20575 has PATA */
+ 
++	/* PDC_CTLSTAT bit definitions */
++	PDC_DMA_ENABLE		= (1 << 7),
++	PDC_IRQ_DISABLE		= (1 << 10),
+ 	PDC_RESET		= (1 << 11), /* HDMA reset */
+ 
+-	PDC_COMMON_FLAGS	= ATA_FLAG_NO_LEGACY | ATA_FLAG_SRST |
++	PDC_COMMON_FLAGS	= ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_NO_ATAPI |
+ 				  ATA_FLAG_PIO_POLLING,
+ 
+@@ -101,13 +104,16 @@ static void pdc_eng_timeout(struct ata_p
+ static int pdc_port_start(struct ata_port *ap);
+ static void pdc_port_stop(struct ata_port *ap);
+ static void pdc_pata_phy_reset(struct ata_port *ap);
+-static void pdc_sata_phy_reset(struct ata_port *ap);
+ static void pdc_qc_prep(struct ata_queued_cmd *qc);
+ static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
+ static void pdc_exec_command_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
+ static void pdc_irq_clear(struct ata_port *ap);
+ static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
+ static void pdc_host_stop(struct ata_host *host);
++static void pdc_freeze(struct ata_port *ap);
++static void pdc_thaw(struct ata_port *ap);
++static void pdc_error_handler(struct ata_port *ap);
++static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
+ 
+ 
+ static struct scsi_host_template pdc_ata_sht = {
+@@ -136,11 +142,12 @@ static const struct ata_port_operations 
+ 	.exec_command		= pdc_exec_command_mmio,
+ 	.dev_select		= ata_std_dev_select,
+ 
+-	.phy_reset		= pdc_sata_phy_reset,
+-
+ 	.qc_prep		= pdc_qc_prep,
+ 	.qc_issue		= pdc_qc_issue_prot,
+-	.eng_timeout		= pdc_eng_timeout,
++	.freeze			= pdc_freeze,
++	.thaw			= pdc_thaw,
++	.error_handler		= pdc_error_handler,
++	.post_internal_cmd	= pdc_post_internal_cmd,
+ 	.data_xfer		= ata_mmio_data_xfer,
+ 	.irq_handler		= pdc_interrupt,
+ 	.irq_clear		= pdc_irq_clear,
+@@ -198,7 +205,7 @@ static const struct ata_port_info pdc_po
+ 	/* board_20619 */
+ 	{
+ 		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS,
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SRST | ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -366,12 +373,6 @@ static void pdc_reset_port(struct ata_po
+ 	readl(mmio);	/* flush */
+ }
+ 
+-static void pdc_sata_phy_reset(struct ata_port *ap)
+-{
+-	pdc_reset_port(ap);
+-	sata_phy_reset(ap);
+-}
+-
+ static void pdc_pata_cbl_detect(struct ata_port *ap)
+ {
+ 	u8 tmp;
+@@ -439,6 +440,61 @@ static void pdc_qc_prep(struct ata_queue
+ 	}
+ }
+ 
++static void pdc_freeze(struct ata_port *ap)
++{
++	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
++	u32 tmp;
++
++	tmp = readl(mmio + PDC_CTLSTAT);
++	tmp |= PDC_IRQ_DISABLE;
++	tmp &= ~PDC_DMA_ENABLE;
++	writel(tmp, mmio + PDC_CTLSTAT);
++	readl(mmio + PDC_CTLSTAT); /* flush */
++}
++
++static void pdc_thaw(struct ata_port *ap)
++{
++	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
++	u32 tmp;
++
++	/* clear IRQ */
++	readl(mmio + PDC_INT_SEQMASK);
++
++	/* turn IRQ back on */
++	tmp = readl(mmio + PDC_CTLSTAT);
++	tmp &= ~PDC_IRQ_DISABLE;
++	writel(tmp, mmio + PDC_CTLSTAT);
++	readl(mmio + PDC_CTLSTAT); /* flush */
++}
++
++static void pdc_error_handler(struct ata_port *ap)
++{
++	ata_reset_fn_t hardreset;
++
++	if (!(ap->pflags & ATA_PFLAG_FROZEN))
++		pdc_reset_port(ap);
++
++	hardreset = NULL;
++	if (sata_scr_valid(ap))
++		hardreset = sata_std_hardreset;
++
++	/* perform recovery */
++	ata_do_eh(ap, ata_std_prereset, ata_std_softreset, hardreset,
++		  ata_std_postreset);
++}
++
++static void pdc_post_internal_cmd(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++
++	if (qc->flags & ATA_QCFLAG_FAILED)
++		qc->err_mask |= AC_ERR_OTHER;
++
++	/* make DMA engine forget about the failed command */
++	if (qc->err_mask)
++		pdc_reset_port(ap);
++}
++
+ static void pdc_eng_timeout(struct ata_port *ap)
+ {
+ 	struct ata_host *host = ap->host;
