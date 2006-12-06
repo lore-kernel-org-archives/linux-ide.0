@@ -1,167 +1,248 @@
-From: Jonas Lundgren <jonas@local.se>
-Subject: Re: Scary Intel SATA problem: "frozen"
-Date: Wed, 06 Dec 2006 18:58:18 +0100
-Message-ID: <457704BA.7090001@local.se>
-References: <456CB72A.3010004@local.se> <456CDB06.40806@gmail.com>
-Reply-To: jonas@local.se
+From: "Art Haas" <ahaas@airmail.net>
+Subject: Re: CDROM drive not found when booting using new libata code
+Date: Wed, 6 Dec 2006 12:16:52 -0600
+Message-ID: <20061206181652.GA3107@artsapartment.org>
+References: <20060924221020.GB2080@artsapartment.org> <4562C65C.2010802@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxfep03.bredband.com ([195.54.107.76]:42648 "EHLO
-	mxfep03.bredband.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936964AbWLFR61 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 12:58:27 -0500
-Received: from ironport.bredband.com ([195.54.107.82] [195.54.107.82])
-          by mxfep03.bredband.com with ESMTP
-          id <20061206175824.IWWH8861.mxfep03.bredband.com@ironport.bredband.com>
-          for <linux-ide@vger.kernel.org>; Wed, 6 Dec 2006 18:58:24 +0100
-In-Reply-To: <456CDB06.40806@gmail.com>
+Received: from wmail-1.airmail.net ([209.196.70.86]:64367 "EHLO
+	wmail-1.airmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936981AbWLFSSF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 13:18:05 -0500
+Received: from cpe-68-201-223-150.houston.res.rr.com ([68.201.223.150] helo=pcdebian)
+	by wmail-1.airmail.net with esmtp (Exim 4.60)
+	(envelope-from <ahaas@airmail.net>)
+	id 1Gs1LH-000Bq3-Qu
+	for linux-ide@vger.kernel.org; Wed, 06 Dec 2006 12:18:04 -0600
+Content-Disposition: inline
+In-Reply-To: <4562C65C.2010802@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-[--snip--]
-
->> IF the system does recover, I start getting
->> the extremly low disk write speeds that I reported above, and only a
->> reboot will get the performance back to regular.
+On Tue, Nov 21, 2006 at 06:26:52PM +0900, Tejun Heo wrote:
+> Art Haas wrote:
+> >Hi.
+> >
+> >As Linus has just pulled in the large libata changes into his tree, I
+> >wanted to try out the new code. I'm running Debian on a PIIX
+> >motherboard, and I've enclosed the 'dmesg' output for the machine
+> >when booting 2.6.18 which uses the piix.c code in drivers/ide and
+> >the new 2.6.18+ code which uses ata_piix.c in drivers/ata.
 > 
-> Please full dmesg after your computer got really slow.  I suspect libata
-> decided to switch to PIO mode.
-Here's the relevant part, if you want the whole dmesg look at:
-http://pastebin.ca/269581
+> Can you please test 2.6.19-rc5-mm2?
 
-[--snip--]
-[82048.255126] can't create port
-[85055.578172] reiser4[unrar(30787)]: disable_write_barrier
-(fs/reiser4/wander.c:234)[zam-1055]:
-[85055.578174] NOTICE: md5 does not support write barriers, using
-synchronous write instead.
-[87825.501998] can't create port
-[89520.019538] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-frozen
-[89520.019545] ata2.00: cmd c8/00:08:fe:68:df/00:00:00:00:00/e1 tag 0
-data 4096 in
-[89520.019547]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-[89520.322292] ata2: soft resetting port
-[89527.515891] ata2: port is slow to respond, please be patient (Status
-0xd0)
-[89550.457913] ata2: port failed to respond (30 secs, Status 0xd0)
-[89550.457917] ata2: softreset failed (device not ready)
-[89550.457921] ata2: softreset failed, retrying in 5 secs
-[89555.454103] ata2: hard resetting port
-[89562.799693] ata2: port is slow to respond, please be patient (Status
-0x80)
-[89585.740239] ata2: port failed to respond (30 secs, Status 0x80)
-[89585.740242] ata2: COMRESET failed (device not ready)
-[89585.740245] ata2: hardreset failed, retrying in 5 secs
-[89590.736978] ata2: hard resetting port
-[89598.081854] ata2: port is slow to respond, please be patient (Status
-0x80)
-[89617.604742] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[89617.611034] ata2.00: configured for UDMA/100
-[89617.611042] ata2: EH complete
-[89617.623426] SCSI device sdb: 145226112 512-byte hdwr sectors (74356 MB)
-[89617.633551] sdb: Write Protect is off
-[89617.633553] sdb: Mode Sense: 00 3a 00 00
-[89617.637765] SCSI device sdb: write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
+Hello.
 
-> 
->> I don't know what causes it, but most of the times when I've gotten it
->> my system has been under heavy load (compiling, downloading torrents in
->> 11mb/sec etc). Please let me know if you want any additional info, want
->> me to try something out, or whatever. My recent hardware upgrade for
->> around $1200 (to a core2duo system, i965 mobo) is just going to waste
->> because of this problem. :/
-> 
-> Heh, nice machine you got there.  When you look at the dmesg, do the
-> error messages occur only on one of the two drives?  Or are both
-> affected?  If only one is affected,
-> 
-> 1. swap the two.  you'll probably have to dance a little bit with boot
-> loader but md should handle that fine once the kernel is loaded.  does
-> the errors persist?  on which device do they occur?  do they follow the
-> drive or stay on the mobo port?
-It follows the drive. (Hardware problem?)
+I didn't get a chance to try that release, but since then many of the
+libata patches have been merged into Linus's post-2.6.19 tree, which
+I'm now running. The CD-ROM drive is still not being found,
+unfortunately. Trimmed 'dmesg' output below:
 
-> 
-> 2. try different cable / port.  if you change port, again, you need to
-> dance w/ boot loader.  who's carrying the error messages with it?
-Read above.
+Linux version 2.6.19-ajh (arth@pcdebian) (gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-20)) #6 Wed Dec 6 08:38:32 CST 2006
+[ ... snip ... ]
+SCSI subsystem initialized
+libata version 2.00 loaded.
+PCI: Using ACPI for IRQ routing
+PCI: If a device doesn't work, try "pci=routeirq".  If it helps, post a report
+pnp: the driver 'system' has been registered
+pnp: match found with the PnP device '00:01' and the driver 'system'
+pnp: match found with the PnP device '00:02' and the driver 'system'
+PCI: Bridge: 0000:00:01.0
+  IO window: d000-dfff
+  MEM window: disabled.
+  PREFETCH window: disabled.
+NET: Registered protocol family 2
+IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+TCP established hash table entries: 4096 (order: 2, 16384 bytes)
+TCP bind hash table entries: 2048 (order: 1, 8192 bytes)
+TCP: Hash tables configured (established 4096 bind 2048)
+TCP reno registered
+io scheduler noop registered
+io scheduler anticipatory registered (default)
+io scheduler deadline registered
+io scheduler cfq registered
+Limiting direct PCI/PCI transfers.
+isapnp: Scanning for PnP cards...
+isapnp: No Plug & Play device found
+Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing disabled
+serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+serial8250: ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+pnp: the driver 'serial' has been registered
+pnp: match found with the PnP device '00:08' and the driver 'serial'
+00:08: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+pnp: match found with the PnP device '00:09' and the driver 'serial'
+00:09: ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+ata_piix 0000:00:07.1: version 2.00ac7
+ata1: PATA max UDMA/33 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
+ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xF008 irq 15
+scsi0 : ata_piix
+ata1.00: ATA-2, max UDMA/33, 6303024 sectors: LBA 
+ata1.00: ata1: dev 0 multi count 16
+ata1.01: ATA-4, max UDMA/66, 16514064 sectors: LBA 
+ata1.01: ata1: dev 1 multi count 16
+ata1.00: configured for UDMA/33
+ata1.01: configured for UDMA/33
+scsi1 : ata_piix
+ata2.00: ATAPI, max MWDMA1
+ata2.00: revalidation failed (errno=-2)
+ata2.00: limiting speed to PIO4
+ata2: failed to recover some devices, retrying in 5 secs
+ata2.00: revalidation failed (errno=-2)
+ata2.00: limiting speed to PIO0
+ata2: failed to recover some devices, retrying in 5 secs
+ata2.00: revalidation failed (errno=-2)
+ata2.00: disabled
+scsi 0:0:0:0: Direct-Access     ATA      ST33232A         3.02 PQ: 0 ANSI: 5
+SCSI device sda: 6303024 512-byte hdwr sectors (3227 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+SCSI device sda: 6303024 512-byte hdwr sectors (3227 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 < sda5 sda6 sda7 >
+sd 0:0:0:0: Attached scsi disk sda
+scsi 0:0:1:0: Direct-Access     ATA      FUJITSU MPD3084A DD-0 PQ: 0 ANSI: 5
+SCSI device sdb: 16514064 512-byte hdwr sectors (8455 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+SCSI device sdb: 16514064 512-byte hdwr sectors (8455 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1 sdb2 < sdb5 sdb6 > sdb3
+sd 0:0:1:0: Attached scsi disk sdb
+[ ... snip ... ]
 
-> 
-> 3. try different power plug from different power lane.
-I've got a really good power supply, wich can handle max 560W on the +12
-/ -12 V rail alone.
+Although the CD-ROM wasn't found, the bootup was speedier than it had
+been with the libata code from the 2.6.19-pre releases. I notice that
+the 'revalidation failed' value is different that what I had been
+seeing, also. Here is trimmed 'dmesg' output from when I first tried out
+the new libata code:
 
-> 
->> I just got so glad when I saw the post of this on linux-ide, I've been
->> searching like crazy to find another person having the same problem (and
->> possibly a solution) for the past 2-3 weeks or so.
-> 
-> My first guess is frequent transmission errors.  Please report the test
-> results.  Thanks.
->
+Linux version 2.6.18-pata (arth@pcdebian) (gcc version 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)) #25 Wed Oct 4 16:12:47 CDT 2006
+[ ... snip ... ]
+libata version 2.00 loaded.
+ata_piix 0000:00:07.1: version 2.00ac6
+ata1: PATA max UDMA/33 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000 irq 14
+ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xF008 irq 15
+scsi0 : ata_piix
+ata1.00: ATA-2, max UDMA/33, 6303024 sectors: LBA 
+ata1.00: ata1: dev 0 multi count 16
+ata1.01: ATA-4, max UDMA/66, 16514064 sectors: LBA 
+ata1.01: ata1: dev 1 multi count 16
+ata1.00: configured for UDMA/33
+ata1.01: configured for UDMA/33
+scsi1 : ata_piix
+ATA: abnormal status 0xFF on port 0x177
+ATA: abnormal status 0xFF on port 0x177
+ata2.00: ATAPI, max MWDMA1
+ata2.00: qc timeout (cmd 0xa1)
+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata2.00: revalidation failed (errno=-5)
+ata2.00: limiting speed to PIO4
+ata2: failed to recover some devices, retrying in 5 secs
+ATA: abnormal status 0xFF on port 0x177
+ATA: abnormal status 0xFF on port 0x177
+ata2.00: qc timeout (cmd 0xa1)
+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata2.00: revalidation failed (errno=-5)
+ata2.00: limiting speed to PIO0
+ata2: failed to recover some devices, retrying in 5 secs
+ATA: abnormal status 0xFF on port 0x177
+ATA: abnormal status 0xFF on port 0x177
+ata2.00: qc timeout (cmd 0xa1)
+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata2.00: revalidation failed (errno=-5)
+ata2.00: disabled
+scsi 0:0:0:0: Direct-Access     ATA      ST33232A         3.02 PQ: 0 ANSI: 5
+SCSI device sda: 6303024 512-byte hdwr sectors (3227 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write through
+SCSI device sda: 6303024 512-byte hdwr sectors (3227 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2 < sda5 sda6 sda7 >
+sd 0:0:0:0: Attached scsi disk sda
+scsi 0:0:1:0: Direct-Access     ATA      FUJITSU MPD3084A DD-0 PQ: 0 ANSI: 5
+SCSI device sdb: 16514064 512-byte hdwr sectors (8455 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 16514064 512-byte hdwr sectors (8455 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ sdb: sdb1 sdb2 < sdb5 sdb6 > sdb3
+sd 0:0:1:0: Attached scsi disk sdb
+[ ... snip ... ]
 
-I guess it could only be a hardware problem since the error follows the
-drive, and both the drives are identical, so it can't be a firmware
-problem. Correct me if I'm wrong.
+For comparison here is trimmed 'dmesg' output from a 2.6.18 kernel using
+the drivers/ide code:
 
-I just checked the smart status, and the drive passes, but it seems like
-it's going down though, on the other hand I might misread the results.
+Linux version 2.6.18 (arth@pcdebian) (gcc version 4.1.2 20060901 (prerelease) (Debian 4.1.1-13)) #1 Wed Sep 20 06:56:45 CDT 2006
+[ ... snip ... ]
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+PIIX4: IDE controller at PCI slot 0000:00:07.1
+PIIX4: chipset revision 1
+PIIX4: not 100% native mode: will probe irqs later
+    ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:pio, hdb:pio
+    ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:pio, hdd:pio
+Probing IDE interface ide0...
+hda: ST33232A, ATA DISK drive
+hdb: FUJITSU MPD3084AT, ATA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+Probing IDE interface ide1...
+hdc: ATAPI CDROM, ATAPI CD/DVD-ROM drive
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: max request size: 128KiB
+hda: 6303024 sectors (3227 MB) w/128KiB Cache, CHS=6253/16/63, UDMA(33)
+hda: cache flushes not supported
+ hda: hda1 hda2 < hda5 hda6 hda7 >
+hdb: max request size: 128KiB
+hdb: 16514064 sectors (8455 MB) w/512KiB Cache, CHS=16383/16/63, UDMA(33)
+hdb: cache flushes not supported
+ hdb: hdb1 hdb2 < hdb5 hdb6 > hdb3
+PNP: PS/2 Controller [PNP0303:PS2K] at 0x60,0x64 irq 1
+PNP: PS/2 controller doesn't have AUX irq; using default 12
+serio: i8042 AUX port at 0x60,0x64 irq 12
+serio: i8042 KBD port at 0x60,0x64 irq 1
+mice: PS/2 mouse device common for all mice
+TCP bic registered
+Using IPI Shortcut mode
+Time: tsc clocksource has been installed.
+VFS: Mounted root (ext2 filesystem) readonly.
+Freeing unused kernel memory: 132k freed
+input: AT Translated Set 2 keyboard as /class/input/input0
+NET: Registered protocol family 1
+Floppy drive(s): fd0 is 1.44M
+FDC 0 is a post-1991 82077
+parport: PnPBIOS parport detected.
+parport0: PC-style at 0x378, irq 7 [PCSPP(,...)]
+hdc: ATAPI 24X CD-ROM drive, 120kB Cache, DMA
+Uniform CD-ROM driver Revision: 3.20
+[ ... snip ... ]
 
-smartctl -d ata -A /dev/sdb
-smartctl version 5.36 [i686-pc-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
+In better news, I'm running Linus' current tree on a SMP PIII machine
+which also uses the piix motherboard. This machine previous would
+also not find the CD-ROM and had long delays probing the disks during
+bootup. I'm pleased to report both problems are solved!
 
-=== START OF READ SMART DATA SECTION ===
-SMART Attributes Data Structure revision number: 16
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
-UPDATED  WHEN_FAILED RAW_VALUE
-  1 Raw_Read_Error_Rate     0x000b   200   200   051    Pre-fail  Always
-      -       0
-  3 Spin_Up_Time            0x0007   113   111   021    Pre-fail  Always
-    -       4875
-  4 Start_Stop_Count        0x0032   100   100   040    Old_age   Always
-      -       237
-  5 Reallocated_Sector_Ct   0x0033   153   153   140    Pre-fail  Always
-      -       747
-  7 Seek_Error_Rate         0x000b   100   253   051    Pre-fail  Always
-      -       0
-  9 Power_On_Hours          0x0032   076   076   000    Old_age   Always
-      -       18117
- 10 Spin_Retry_Count        0x0013   100   100   051    Pre-fail  Always
-      -       0
- 11 Calibration_Retry_Count 0x0013   100   100   051    Pre-fail  Always
-      -       0
- 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always
-      -       228
-194 Temperature_Celsius     0x0022   117   108   000    Old_age   Always
-      -       33
-196 Reallocated_Event_Count 0x0032   001   001   000    Old_age   Always
-      -       639
-197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always
-      -       0
-198 Offline_Uncorrectable   0x0012   200   200   000    Old_age   Always
-      -       0
-199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   Always
-      -       0
-200 Multi_Zone_Error_Rate   0x0009   200   179   051    Pre-fail
-Offline      -       0
+Please let me know what other info I can pass along to help identify
+the problem, and I'll be glad to test patches.
 
+My thanks to everyone working on Linux and the new libata code.
 
-The "Reallocated_Sector_Ct" and "Reallocated_Event_Count" worries me..
-Should I be worried?
-
+Art Haas
 -- 
--Jonas
+Man once surrendering his reason, has no remaining guard against absurdities
+the most monstrous, and like a ship without rudder, is the sport of every wind.
 
-Name:   Jonas Lundgren
-ICQ#:   52064961
-Mail:   jonas@local.se
-IRC:    neon / neonman @ EFnet, Undernet, Quakenet, freenode
+-Thomas Jefferson to James Smith, 1822
