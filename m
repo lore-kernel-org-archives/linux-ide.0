@@ -1,68 +1,89 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
-Date: Thu, 07 Dec 2006 10:47:15 -0500
-Message-ID: <45783783.3040800@torque.net>
-References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org> <4574B004.6030606@us.ibm.com> <45780726.8010107@garzik.org>
-Reply-To: dougg@torque.net
+From: Steve Graham <stgraham2000@yahoo.com>
+Subject: SIL3512 lockup problem using driver verion 0.9 and Linux 2.6.14
+Date: Thu, 7 Dec 2006 08:08:50 -0800 (PST)
+Message-ID: <74342.74582.qm@web52304.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:53580 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032319AbWLGPsI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Dec 2006 10:48:08 -0500
-In-Reply-To: <45780726.8010107@garzik.org>
+Received: from web52304.mail.yahoo.com ([206.190.48.147]:30991 "HELO
+	web52304.mail.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1032339AbWLGQIw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Dec 2006 11:08:52 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Darrick J. Wong wrote:
->> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
->> response to a REPORT LUNS packet.  If this happens to an ATAPI device
->> that is attached to a SAS controller (this is the case with sas_ata),
->> the device does not load because SCSI won't touch a "SCSI device"
->> that won't report its LUNs.  Since most ATAPI devices don't support
->> multiple LUNs anyway, we might as well fake a response like we do for
->> ATA devices.
->>
->> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-> 
-> Seems sane to me, but I would like additional comment/testing/etc.
-> before applying...
+Hi Jeff,
 
-A SCSI target contains zero or more logical units. As
-in this case, those logical units may use a different
-transport. In such cases a SCSI target needs to emulate responses
-to some SCSI commands (and modify the responses to others).
-Here is a list that is probably not comprehensive:
-  - INQUIRY  (peripheral qualifier in standard response)
-  - INQUIRY, device identification VPD page (0x83)
-       - obviously for the device name+identifier and port
-         name+identifier
-       - may need to concatenate those with the lu's
-         name+identifier
-  - INQUIRY, SCSI ports VPD page
-  - INQUIRY, ATA Information VPD page (for SAT)
-  - REPORT LUNS [mandatory in SPC-3 hence mandatory in SAT]
-  - protocol specific port mode page (0x19)
-  - protocol specific lu mode page (0x18) [could simulate]
-  - PATA control mode page (0xa,0xf1) (for SAT)
-  - protocol specific port _log_ page (0x18)
+My name is Steve Graham and I work for a small
+startup.  Our company is developing a server board
+with the Silicon Images 3512 and we are getting some
+strange lockups during high levels of disk activity. 
+The test I'm currently running to cause the problem is
+to run the following concurrently: 'nbench',
+'tiobench', and an 'scp' of a 200Meg file to the sata
+drive.  Every so often I will get the following
+message:
 
-And for SAT you could add the ATA PASS-THROUGH
-commands to that list. Those that are really ambitious
-could implement well know logical units (wluns) which are
-essentially a clean way to talk directly to the target
-rather than a logical unit.
+ata1: status=0x51 { DriveReady SeekComplete Error }
+  ata1: error=0x04 { DriveStatusError }
+
+This doesn't mean the drive is locked up and doesn't
+appear to have any side effects on its own but
+eventually I will get the above message that is
+immediately followed by the next block of messages
+that do result in a lockup:
+
+ata1: command 0x35 timeout, stat 0xd1 host_stat 0x1
+  ata1: status=0xd1 { Busy }
+  sd 0:0:0:0: SCSI error: return code = 0x8000002
+  sda: Current: sense key=0xb
+      ASC=0x47 ASCQ=0x0
+  end_request: I/O error, dev sda, sector 17033103
+  ata1: Abnormal status 0xD1 on port 0xC001E087
+  ata1: Alternate status 0xD1 on port 0xC001E08A
+  ata1: Error 0xd1
+  ata1: Abnormal status 0xD1 on port 0xC001E087
+  ata1: Alternate status 0xD1 on port 0xC001E08A
+  ata1: Error 0xd1
+  ata1: Abnormal status 0xD1 on port 0xC001E087
+  ata1: Alternate status 0xD1 on port 0xC001E08A
+
+These messages will repeat every 30 seconds and at
+this point all disk accesses are locked.
+
+This problem has occured with both a Seagate and
+Western Digital drive so I don't think I've got drive
+issues.  Unfortunately I'm not at my desk or I would
+tell you the model numbers on the above drives.
+
+It looks like after the DriveStatusError the drive
+will sometimes report that it is in the 'Busy' state
+and it never returns from that state.  That causes the
+WRITE_REQ ATA command to always timeout waiting for
+the drive to become ready.
+
+>From reading the forums, it looks like this isn't a
+new problem but it also looks like it was a problem
+that should have been resolved in earlier versions of
+the driver.
+
+Do you know of any other fixes that have been made to
+this driver that I can try and if not do you have any
+suggestions on where I may start to look to try to
+debug this problem.  Also, is there a safe way to
+'force' the drive out of this 'busy' state that will
+not result in us losing data.
+
+Thanks,
+
+Steve Graham... 
 
 
-About the multi-lun ATAPI devices comment: how would libata
-represent multiple S-ATAPI devices connected to a SATA
-port multiplier?
-
-Doug Gilbert
-
-
+ 
+____________________________________________________________________________________
+Do you Yahoo!?
+Everyone is raving about the all-new Yahoo! Mail beta.
+http://new.mail.yahoo.com
