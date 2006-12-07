@@ -1,32 +1,34 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ata: Add support for the MPC52xx ATA controller using
- libata
-Date: Thu, 07 Dec 2006 07:20:24 -0500
-Message-ID: <45780708.9090300@pobox.com>
-References: <4573D90E.3050806@246tNt.com> <11652699172867-git-send-email-tnt@246tNt.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
+Date: Thu, 07 Dec 2006 07:20:54 -0500
+Message-ID: <45780726.8010107@garzik.org>
+References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org> <4574B004.6030606@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37310 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37319 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1032102AbWLGMU0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Dec 2006 07:20:26 -0500
-In-Reply-To: <11652699172867-git-send-email-tnt@246tNt.com>
+	id S1032103AbWLGMU7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Dec 2006 07:20:59 -0500
+In-Reply-To: <4574B004.6030606@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sylvain Munaut <tnt@246tNt.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Sylvain Munaut wrote:
-> This patch adds initial libata support for the Freescale
-> MPC5200 integrated IDE controller.
+Darrick J. Wong wrote:
+> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
+> response to a REPORT LUNS packet.  If this happens to an ATAPI device
+> that is attached to a SAS controller (this is the case with sas_ata),
+> the device does not load because SCSI won't touch a "SCSI device"
+> that won't report its LUNs.  Since most ATAPI devices don't support
+> multiple LUNs anyway, we might as well fake a response like we do for
+> ATA devices.
 > 
-> Signed-off-by: Sylvain Munaut <tnt@246tNt.com>
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-ACK, with one final revision request:  please kill the header, and just 
-add that stuff to the top of the .c file.
-
-Resend and I'll apply swiftly :)
+Seems sane to me, but I would like additional comment/testing/etc. 
+before applying...
 
 
