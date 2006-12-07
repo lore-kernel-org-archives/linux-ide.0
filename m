@@ -1,37 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.19] sata_promise: cleanups, take 2
-Date: Thu, 07 Dec 2006 07:21:41 -0500
-Message-ID: <45780755.3040404@garzik.org>
-References: <200612060855.kB68th9a024699@harpo.it.uu.se>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/1] libata: let ATA_FLAG_PIO_POLLING use polling pio
+ for ATA_PROT_NODATA
+Date: Thu, 07 Dec 2006 07:22:38 -0500
+Message-ID: <4578078E.1020601@pobox.com>
+References: <45778C96.7010101@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1032123AbWLGMVp@vger.kernel.org>
-In-Reply-To: <200612060855.kB68th9a024699@harpo.it.uu.se>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:37370 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1032120AbWLGMWq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Dec 2006 07:22:46 -0500
+In-Reply-To: <45778C96.7010101@tw.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Alessandro Zummo <a.zummo@towertech.it>, Linux IDE <linux-ide@vger.kernel.org>
 
-Mikael Pettersson wrote:
-> This patch performs two simple cleanups of sata_promise.
+Albert Lee wrote:
+> Even if ATA_FLAG_PIO_POLLING is set, libata uses irq pio for the ATA_PROT_NODATA protocol.
+> This patch let ATA_FLAG_PIO_POLLING use polling pio for the ATA_PROT_NODATA protocol.
 > 
-> * Remove board_20771 and map device id 0x3577 to board_2057x.
->   After the recent corrections for SATAII chips, board_20771 and
->   board_2057x were equivalent in the driver.
-> 
-> * Remove hp->hotplug_offset and use hp->flags & PDC_FLAG_GEN_II
->   to compute hotplug_offset in pdc_host_init(). hp->hotplug_offset
->   was used to distinguish 1st and 2nd generation chips in one
->   particular case, but now we have that information in a more
->   general form in hp->flags, so hp->hotplug_offset is redundant.
-> 
-> Changes since previous submission: rebased on libata-dev #upstream,
-> cleaned up hotplug_offset computation based on Tejun's comments,
-> expanded hotplug_offset removal rationale.
-> 
-> This patch does not depend on the pending new EH conversion patch.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 
 applied
+
+
