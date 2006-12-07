@@ -1,34 +1,41 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 2.6.19-rc6][reRESEND] ata_piix: IDE mode SATA patch for
- Intel ICH9
-Date: Thu, 7 Dec 2006 08:57:17 -0800
-Message-ID: <20061207085717.50a8c831.akpm@osdl.org>
-References: <200611281032.39214.jason.d.gaston@intel.com>
-	<45780628.1030306@pobox.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
+Date: Thu, 07 Dec 2006 12:09:43 -0600
+Message-ID: <1165514983.4698.21.camel@mulgrave.il.steeleye.com>
+References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org>
+	 <4574B004.6030606@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:44201 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1032516AbWLGRAO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Dec 2006 12:00:14 -0500
-In-Reply-To: <45780628.1030306@pobox.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:45096 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1163145AbWLGSJ4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Dec 2006 13:09:56 -0500
+In-Reply-To: <4574B004.6030606@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jason Gaston <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Thu, 07 Dec 2006 07:16:40 -0500
-Jeff Garzik <jgarzik@pobox.com> wrote:
+On Mon, 2006-12-04 at 15:32 -0800, Darrick J. Wong wrote:
+> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
+> response to a REPORT LUNS packet.  If this happens to an ATAPI device
+> that is attached to a SAS controller (this is the case with sas_ata),
+> the device does not load because SCSI won't touch a "SCSI device"
+> that won't report its LUNs.  Since most ATAPI devices don't support
+> multiple LUNs anyway, we might as well fake a response like we do for
+> ATA devices.
 
-> Jason Gaston wrote:
-> > This updated patch adds the Intel ICH9 IDE mode SATA controller DID's.
-> > 
-> > Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
-> 
-> ACK but your mailer is still chomping things.
-> 
-> Andrew, do you happen to have this one lying around?
+Actually, there may be a standards conflict here.  SPC says that all
+devices reporting compliance with this standard (as the inquiry data for
+this device claims) shall support REPORT LUNS.  On the other hand, MMC
+doesn't list REPORT LUNS in its table of mandatory commands.
 
-yup, will send.
+I'm starting to think that even if they report a SCSI compliance level
+of 3 or greater, we still shouldn't send REPORT LUNS to devices that
+return MMC type unless we have a white list override.
+
+James
+
+
