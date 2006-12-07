@@ -1,28 +1,45 @@
-From: "Felicia Clay" <RustyR@hotmail.com>
-Subject: Look...Here
-Date: Thu, 07 Dec 2006 09:19:38 -0100
-Message-ID: <6A157EE3.7684.6515C2D5@localhost>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: CDROM drive not found when booting using new libata code
+Date: Thu, 7 Dec 2006 10:55:25 +0000
+Message-ID: <20061207105525.4ebb4547@localhost.localdomain>
+References: <20060924221020.GB2080@artsapartment.org>
+	<4562C65C.2010802@gmail.com>
+	<20061206181652.GA3107@artsapartment.org>
+	<45779852.1030909@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pppoe-90.8.110.89-adsl.spbnit.ru ([89.110.8.90]:4284 "HELO
-	3C93EBF8" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1031983AbWLGKYm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Dec 2006 05:24:42 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35820 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1032012AbWLGKsM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Dec 2006 05:48:12 -0500
+In-Reply-To: <45779852.1030909@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-laptop@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-ppp@vger.kernel.org, linux-x25@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Art Haas <ahaas@airmail.net>, linux-ide@vger.kernel.org
 
+On Thu, 07 Dec 2006 13:28:02 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
+> Please test the attached patch.
 
+That should be getting done automatically by the driver and used to work
+with the old eh/probe code. It does rely on having done the initial PIO0
+identify of both devices and the mode decision being made before mode
+setting functions are called however, and that is/was documented as a
+guarantee, and is relied upon all over.
 
-Huge selection of me ds available
-at attrac tive prices. 
-Highest qualiity assured.
+Definitely worth testing Art, especially if it shows something up.
 
-Try us out today..
+Tejun: pata_amd does the timing merges itself both for 8bit which is
+shared and in the timing compute for the DMA cases. Also the other
+pattern to these reports is ATAPI, although that might I guess be a
+symptom of "slave". 
 
-http://ddkpro.com
+The other problem is that mmio bus reset is broken, but the AMD always
+uses PIO cycles so that shouldn't be involved.
 
+Alan (still baffled by this one)
 
