@@ -1,186 +1,74 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.19-git7] sata_promise: new EH conversion, take 2
-Date: Thu, 7 Dec 2006 00:06:51 +0100 (MET)
-Message-ID: <200612062306.kB6N6p0t009272@harpo.it.uu.se>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Scary Intel SATA problem: "frozen"
+Date: Thu, 7 Dec 2006 10:25:46 +0900
+Message-ID: <20061207012546.GA15219@htj.dyndns.org>
+References: <456CB72A.3010004@local.se> <456CDB06.40806@gmail.com> <457704BA.7090001@local.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:44280 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937770AbWLFXHD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Dec 2006 18:07:03 -0500
+Received: from ug-out-1314.google.com ([66.249.92.170]:31035 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937917AbWLGBZy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 20:25:54 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so324726uga
+        for <linux-ide@vger.kernel.org>; Wed, 06 Dec 2006 17:25:53 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <457704BA.7090001@local.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jonas Lundgren <jonas@local.se>
+Cc: linux-ide@vger.kernel.org
 
-This patch converts sata_promise to use new-style libata error
-handling on Promise SATA chips, for both SATA and PATA ports.
+On Wed, Dec 06, 2006 at 06:58:18PM +0100, Jonas Lundgren wrote:
+> Here's the relevant part, if you want the whole dmesg look at:
+> http://pastebin.ca/269581
+> 
+[--snip--]
+> [89585.740245] ata2: hardreset failed, retrying in 5 secs
+> [89590.736978] ata2: hard resetting port
+> [89598.081854] ata2: port is slow to respond, please be patient (Status
+> 0x80)
+> [89617.604742] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [89617.611034] ata2.00: configured for UDMA/100
+> [89617.611042] ata2: EH complete
+> [89617.623426] SCSI device sdb: 145226112 512-byte hdwr sectors (74356 MB)
+> [89617.633551] sdb: Write Protect is off
+> [89617.633553] sdb: Mode Sense: 00 3a 00 00
+> [89617.637765] SCSI device sdb: write cache: enabled, read cache:
+> enabled, doesn't support DPO or FUA
 
-* ATA_FLAG_SRST is no longer set
-* ->phy_reset is no longer set as it is unused when ->error_handler
-   is present, and pdc_sata_phy_reset() has been removed
-* pdc_freeze() masks interrupts and halts DMA via PDC_CTLSTAT
-* pdc_thaw() clears interrupt status in PDC_INT_SEQMASK and then
-  unmasks interrupts in PDC_CTLSTAT
-* pdc_error_handler() reinitialises the port if it isn't frozen,
-  and then invokes ata_do_eh() with standard {s,}ata reset methods
-* pdc_post_internal_cmd() resets the port in case of errors
-* the PATA-only 20619 chip continues to use old-style EH:
-  not by necessity but simply because I don't have documentation
-  for it or any way to test it
+EH went okay although your harddrive is responding sluggishly.
 
-Since the previous version pdc_error_handler() has been rewritten
-and it now mostly matches ahci and sata_sil24. In case anyone
-wonders: the call to pdc_reset_port() isn't a heavy-duty reset,
-it's a light-weight reset to quickly put a port into a sane state.
+> > 1. swap the two.  you'll probably have to dance a little bit with boot
+> > loader but md should handle that fine once the kernel is loaded.  does
+> > the errors persist?  on which device do they occur?  do they follow the
+> > drive or stay on the mobo port?
+>
+> It follows the drive. (Hardware problem?)
 
-The discussion about the PCI flushes in pdc_freeze() and pdc_thaw()
-seemed to end with a consensus that the flushes are OK and not
-obviously redundant, so I decided to keep them for now.
+Yeap, probably.
 
-This patch was prepared against 2.6.19-git7, but it also applies
-to 2.6.19 + libata #upstream, with or without the revised sata_promise
-cleanup patch I recently submitted.
+[--snip--]
+> I guess it could only be a hardware problem since the error follows the
+> drive, and both the drives are identical, so it can't be a firmware
+> problem. Correct me if I'm wrong.
 
-This patch does conflict with the #promise-sata-pata patch:
-this patch removes pdc_sata_phy_reset() while #promise-sata-pata
-modifies it. The correct patch resolution is to remove the function.
+Firmware?  Could be a firmware bug on the drive but not
+controller/driver problem.
 
-Tested on 2037x and 2057x chips, with PATA patches on top and disks
-on both SATA and PATA ports.
+[--snip--]
+>   9 Power_On_Hours          0x0032   076   076   000    Old_age   Always
+>       -       18117
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+That's two year's worth of spinning.  I wouldn't be surprised if the
+drive gives out.
 
---- linux-2.6.19-git7/drivers/ata/sata_promise.c.~1~	2006-12-06 23:29:14.000000000 +0100
-+++ linux-2.6.19-git7/drivers/ata/sata_promise.c	2006-12-06 23:29:43.000000000 +0100
-@@ -72,9 +72,12 @@ enum {
- 
- 	PDC_HAS_PATA		= (1 << 1), /* PDC20375/20575 has PATA */
- 
-+	/* PDC_CTLSTAT bit definitions */
-+	PDC_DMA_ENABLE		= (1 << 7),
-+	PDC_IRQ_DISABLE		= (1 << 10),
- 	PDC_RESET		= (1 << 11), /* HDMA reset */
- 
--	PDC_COMMON_FLAGS	= ATA_FLAG_NO_LEGACY | ATA_FLAG_SRST |
-+	PDC_COMMON_FLAGS	= ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_NO_ATAPI |
- 				  ATA_FLAG_PIO_POLLING,
- 
-@@ -101,13 +104,16 @@ static void pdc_eng_timeout(struct ata_p
- static int pdc_port_start(struct ata_port *ap);
- static void pdc_port_stop(struct ata_port *ap);
- static void pdc_pata_phy_reset(struct ata_port *ap);
--static void pdc_sata_phy_reset(struct ata_port *ap);
- static void pdc_qc_prep(struct ata_queued_cmd *qc);
- static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
- static void pdc_exec_command_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
- static void pdc_irq_clear(struct ata_port *ap);
- static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
- static void pdc_host_stop(struct ata_host *host);
-+static void pdc_freeze(struct ata_port *ap);
-+static void pdc_thaw(struct ata_port *ap);
-+static void pdc_error_handler(struct ata_port *ap);
-+static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
- 
- 
- static struct scsi_host_template pdc_ata_sht = {
-@@ -136,11 +142,12 @@ static const struct ata_port_operations 
- 	.exec_command		= pdc_exec_command_mmio,
- 	.dev_select		= ata_std_dev_select,
- 
--	.phy_reset		= pdc_sata_phy_reset,
--
- 	.qc_prep		= pdc_qc_prep,
- 	.qc_issue		= pdc_qc_issue_prot,
--	.eng_timeout		= pdc_eng_timeout,
-+	.freeze			= pdc_freeze,
-+	.thaw			= pdc_thaw,
-+	.error_handler		= pdc_error_handler,
-+	.post_internal_cmd	= pdc_post_internal_cmd,
- 	.data_xfer		= ata_mmio_data_xfer,
- 	.irq_handler		= pdc_interrupt,
- 	.irq_clear		= pdc_irq_clear,
-@@ -198,7 +205,7 @@ static const struct ata_port_info pdc_po
- 	/* board_20619 */
- 	{
- 		.sht		= &pdc_ata_sht,
--		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS,
-+		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SRST | ATA_FLAG_SLAVE_POSS,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-@@ -366,12 +373,6 @@ static void pdc_reset_port(struct ata_po
- 	readl(mmio);	/* flush */
- }
- 
--static void pdc_sata_phy_reset(struct ata_port *ap)
--{
--	pdc_reset_port(ap);
--	sata_phy_reset(ap);
--}
--
- static void pdc_pata_cbl_detect(struct ata_port *ap)
- {
- 	u8 tmp;
-@@ -439,6 +440,61 @@ static void pdc_qc_prep(struct ata_queue
- 	}
- }
- 
-+static void pdc_freeze(struct ata_port *ap)
-+{
-+	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-+	u32 tmp;
-+
-+	tmp = readl(mmio + PDC_CTLSTAT);
-+	tmp |= PDC_IRQ_DISABLE;
-+	tmp &= ~PDC_DMA_ENABLE;
-+	writel(tmp, mmio + PDC_CTLSTAT);
-+	readl(mmio + PDC_CTLSTAT); /* flush */
-+}
-+
-+static void pdc_thaw(struct ata_port *ap)
-+{
-+	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-+	u32 tmp;
-+
-+	/* clear IRQ */
-+	readl(mmio + PDC_INT_SEQMASK);
-+
-+	/* turn IRQ back on */
-+	tmp = readl(mmio + PDC_CTLSTAT);
-+	tmp &= ~PDC_IRQ_DISABLE;
-+	writel(tmp, mmio + PDC_CTLSTAT);
-+	readl(mmio + PDC_CTLSTAT); /* flush */
-+}
-+
-+static void pdc_error_handler(struct ata_port *ap)
-+{
-+	ata_reset_fn_t hardreset;
-+
-+	if (!(ap->pflags & ATA_PFLAG_FROZEN))
-+		pdc_reset_port(ap);
-+
-+	hardreset = NULL;
-+	if (sata_scr_valid(ap))
-+		hardreset = sata_std_hardreset;
-+
-+	/* perform recovery */
-+	ata_do_eh(ap, ata_std_prereset, ata_std_softreset, hardreset,
-+		  ata_std_postreset);
-+}
-+
-+static void pdc_post_internal_cmd(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+
-+	if (qc->flags & ATA_QCFLAG_FAILED)
-+		qc->err_mask |= AC_ERR_OTHER;
-+
-+	/* make DMA engine forget about the failed command */
-+	if (qc->err_mask)
-+		pdc_reset_port(ap);
-+}
-+
- static void pdc_eng_timeout(struct ata_port *ap)
- {
- 	struct ata_host *host = ap->host;
+> 196 Reallocated_Event_Count 0x0032   001   001   000    Old_age   Always
+>       -       639
+
+And quite some number of reallocations.  Reallocation itself doesn't
+necessarily indicate critical condition but if you've got 639 of them,
+you gotta throw that thing away.
+
+-- 
+tejun
