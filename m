@@ -1,83 +1,65 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: CDROM drive not found when booting using new libata code
-Date: Thu, 07 Dec 2006 13:28:02 +0900
-Message-ID: <45779852.1030909@gmail.com>
-References: <20060924221020.GB2080@artsapartment.org> <4562C65C.2010802@gmail.com> <20061206181652.GA3107@artsapartment.org>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: Oops in pata_pdc2027x
+Date: Thu, 7 Dec 2006 17:16:23 +1100
+Message-ID: <20061207171623.fa0384c5.sfr@canb.auug.org.au>
+References: <20061205170144.0b98d7e6.sfr@canb.auug.org.au>
+	<457790F0.2070208@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050404000709000702030808"
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__7_Dec_2006_17_16_23_+1100_jDScxizf0QVQEAtA"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:1550 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968738AbWLGE2J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2006 23:28:09 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so766694nfa
-        for <linux-ide@vger.kernel.org>; Wed, 06 Dec 2006 20:28:08 -0800 (PST)
-In-Reply-To: <20061206181652.GA3107@artsapartment.org>
+Received: from chilli.pcug.org.au ([203.10.76.44]:49516 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031643AbWLGGQY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Dec 2006 01:16:24 -0500
+In-Reply-To: <457790F0.2070208@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Art Haas <ahaas@airmail.net>
-Cc: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>, ppc-dev <linuxppc-dev@ozlabs.org>
 
-This is a multi-part message in MIME format.
---------------050404000709000702030808
-Content-Type: text/plain; charset=ISO-8859-1
+--Signature=_Thu__7_Dec_2006_17_16_23_+1100_jDScxizf0QVQEAtA
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 
-Please test the attached patch.
+On Thu, 07 Dec 2006 11:56:32 +0800 Albert Lee <albertcc@tw.ibm.com> wrote:
+>
+> It seems the opps occurred in the ata_exec_internal(). Could you please
+> try the attached patch and see if the older ata_exec_internal() works?
+> This can help to narrow it down.
 
-Thanks.
+This worked much better:
 
--- 
-tejun
+Waiting for /dev to be fully populated...pata_pdc2027x 0001:cc:01.0: PLL input clock 32721 kHz
+ata1: PATA max UDMA/133 cmd 0xD0000800801457C0 ctl 0xD000080080145FDA bmdma 0xD000080080145000 irq 324
+ata2: PATA max UDMA/133 cmd 0xD0000800801455C0 ctl 0xD000080080145DDA bmdma 0xD000080080145008 irq 324
+scsi1 : pata_pdc2027x
+ata1.00: ATAPI, max UDMA/66
+ata1.00: configured for UDMA/66
+scsi2 : pata_pdc2027x
+ATA: abnormal status 0x8 on port 0xD0000800801455DF
+scsi 1:0:0:0: CD-ROM            IBM      DROM00205L1   H0 P533 PQ: 0 ANSI: 2
+sr0: scsi3-mmc drive: 24x/24x cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
+sr 1:0:0:0: Attached scsi generic sg4 type 5
+done.
 
---------------050404000709000702030808
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+--
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f8ec389..6d0f0ee 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3396,6 +3396,7 @@ static void ata_dev_xfermask(struct ata_device *dev)
- 	struct ata_port *ap = dev->ap;
- 	struct ata_host *host = ap->host;
- 	unsigned long xfer_mask;
-+	int i;
- 
- 	/* controller modes available */
- 	xfer_mask = ata_pack_xfermask(ap->pio_mask,
-@@ -3413,11 +3414,27 @@ static void ata_dev_xfermask(struct ata_device *dev)
-         if (ata_drive_40wire(dev->id) && (ap->cbl == ATA_CBL_PATA_UNK || ap->cbl == ATA_CBL_PATA80))
- 		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
- 
--
-+	/* apply xfermask limits of this device */
- 	xfer_mask &= ata_pack_xfermask(dev->pio_mask,
- 				       dev->mwdma_mask, dev->udma_mask);
- 	xfer_mask &= ata_id_xfermask(dev->id);
- 
-+	/* PIO xfermask limits are shared by all devices on the same
-+	 * channel to avoid violating device selection timing.
-+	 */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *d = &ap->device[i];
-+		unsigned int pio_mask;
-+
-+		if (ata_dev_absent(d))
-+			continue;
-+
-+		ata_unpack_xfermask(ata_id_xfermask(d->id),
-+				    &pio_mask, NULL, NULL);
-+		pio_mask &= d->pio_mask;
-+		xfer_mask &= ata_pack_xfermask(pio_mask, UINT_MAX, UINT_MAX);
-+	}
-+
- 	/*
- 	 *	CFA Advanced TrueIDE timings are not allowed on a shared
- 	 *	cable
+--Signature=_Thu__7_Dec_2006_17_16_23_+1100_jDScxizf0QVQEAtA
+Content-Type: application/pgp-signature
 
---------------050404000709000702030808--
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQFFd7G3FdBgD/zoJvwRAnvrAKCISQ59ZqrcorBm0FgYlLSv+iGDXgCePdwM
+vf+/qufsnb2xGdqNniWJH88=
+=NbCo
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__7_Dec_2006_17_16_23_+1100_jDScxizf0QVQEAtA--
