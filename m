@@ -1,34 +1,37 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
-Date: Thu, 07 Dec 2006 07:20:54 -0500
-Message-ID: <45780726.8010107@garzik.org>
-References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org> <4574B004.6030606@us.ibm.com>
+Subject: Re: [PATCH 2.6.19] sata_promise: cleanups, take 2
+Date: Thu, 07 Dec 2006 07:21:41 -0500
+Message-ID: <45780755.3040404@garzik.org>
+References: <200612060855.kB68th9a024699@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37319 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1032103AbWLGMU7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Dec 2006 07:20:59 -0500
-In-Reply-To: <4574B004.6030606@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1032123AbWLGMVp@vger.kernel.org>
+In-Reply-To: <200612060855.kB68th9a024699@harpo.it.uu.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Darrick J. Wong wrote:
-> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
-> response to a REPORT LUNS packet.  If this happens to an ATAPI device
-> that is attached to a SAS controller (this is the case with sas_ata),
-> the device does not load because SCSI won't touch a "SCSI device"
-> that won't report its LUNs.  Since most ATAPI devices don't support
-> multiple LUNs anyway, we might as well fake a response like we do for
-> ATA devices.
+Mikael Pettersson wrote:
+> This patch performs two simple cleanups of sata_promise.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> * Remove board_20771 and map device id 0x3577 to board_2057x.
+>   After the recent corrections for SATAII chips, board_20771 and
+>   board_2057x were equivalent in the driver.
+> 
+> * Remove hp->hotplug_offset and use hp->flags & PDC_FLAG_GEN_II
+>   to compute hotplug_offset in pdc_host_init(). hp->hotplug_offset
+>   was used to distinguish 1st and 2nd generation chips in one
+>   particular case, but now we have that information in a more
+>   general form in hp->flags, so hp->hotplug_offset is redundant.
+> 
+> Changes since previous submission: rebased on libata-dev #upstream,
+> cleaned up hotplug_offset computation based on Tejun's comments,
+> expanded hotplug_offset removal rationale.
+> 
+> This patch does not depend on the pending new EH conversion patch.
+> 
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
-Seems sane to me, but I would like additional comment/testing/etc. 
-before applying...
-
-
+applied
