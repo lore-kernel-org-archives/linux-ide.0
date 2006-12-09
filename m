@@ -1,140 +1,161 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Oops in pata_pdc2027x
-Date: Sat, 09 Dec 2006 18:57:12 +1100
-Message-ID: <1165651032.1103.123.camel@localhost.localdomain>
-References: <20061205170144.0b98d7e6.sfr@canb.auug.org.au>
-	 <457790F0.2070208@tw.ibm.com>
+From: Krzysztof Oledzki <olel@ans.pl>
+Subject: Re: pata_via in 2.6.19-rc6: UDMA/66 hdd downgraded to UDMA/33
+Date: Sat, 9 Dec 2006 13:03:56 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0612091259160.17215@bizon.gios.gov.pl>
+References: <Pine.LNX.4.64.0611250216550.26262@bizon.gios.gov.pl>
+ <20061125160342.4e9ddef0@localhost.localdomain> <Pine.LNX.4.64.0611251718210.2557@bizon.gios.gov.pl>
+ <20061129153921.1c27e19d@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-187430788-2206153-1165665836=:17215"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:57623 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936410AbWLII7X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 9 Dec 2006 03:59:23 -0500
-In-Reply-To: <457790F0.2070208@tw.ibm.com>
+Received: from bizon.gios.gov.pl ([212.244.124.8]:54317 "EHLO
+	bizon.gios.gov.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967817AbWLIMEB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Dec 2006 07:04:01 -0500
+In-Reply-To: <20061129153921.1c27e19d@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, ppc-dev <linuxppc-dev@ozlabs.org>
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Could that be related to the fix
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-[PATCH] libata: fix oops with sparsemem
-
-That Arnd Bergmann just posted ? I'm copying it below in case you
-haven't seen it.
-
-----
-
-                              From: 
-Arnd Bergmann
-<arnd.bergmann@de.ibm.com>
-                                To: 
-jgarzik@pobox.com
-                                Cc: 
-linux-ide@vger.kernel.org,
-linux-kernel@vger.kernel.org,
-linuxppc-dev@ozlabs.org
-                           Subject: 
-[PATCH] libata: fix oops with
-sparsemem
-                              Date: 
-Fri, 8 Dec 2006 19:14:40 +0100
-(Sat, 05:14 EST)
+---187430788-2206153-1165665836=:17215
+Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
 
-libata incorrectly passes NULL arguments to sg_set_buf, which
-crashes on powerpc64 when looking for the corresponding mem_section.
 
-This introduces a new ata_exec_nodma() wrapper that takes no buffer
-arguments and does not call sg_set_buf either. In order to make it
-easier to detect this sort of problem, it also adds a WARN_ON(!buf)
-to sg_set_buf() so we get a log message even platforms without
-sparsemem.
+On Wed, 29 Nov 2006, Alan wrote:
 
-Signed-off-by: Arnd Bergmann <arnd.bergmann@de.ibm.com>
+> Does this fix it
+>
+> --- drivers/ata/pata_via.c~=092006-11-29 15:16:10.961387472 +0000
+> +++ drivers/ata/pata_via.c=092006-11-29 15:17:08.784597008 +0000
+> @@ -60,7 +60,7 @@
+> #include <linux/libata.h>
+>
+> #define DRV_NAME "pata_via"
+> -#define DRV_VERSION "0.2.0"
+> +#define DRV_VERSION "0.2.1"
+>
+> /*
+>  *=09The following comes directly from Vojtech Pavlik's ide/pci/via82cxxx
+> @@ -159,10 +159,13 @@
+> =09=09=09return -ENOENT;
+> =09}
+>
+> -=09if ((config->flags & VIA_UDMA) >=3D VIA_UDMA_66)
+> +=09if ((config->flags & VIA_UDMA) >=3D VIA_UDMA_100)
+> =09=09ap->cbl =3D via_cable_detect(ap);
+> -=09else
+> +=09/* The UDMA66 series has no cable detect so do drive side detect */
+> +=09else if ((config->flags & VIA_UDMA) < VIA_UDMA_66)
+> =09=09ap->cbl =3D ATA_CBL_PATA40;
+> +
+> +
+> =09return ata_std_prereset(ap);
+> }
 
-Index: linux-2.6/drivers/ata/libata-core.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-core.c
-+++ linux-2.6/drivers/ata/libata-core.c
-@@ -1332,7 +1332,7 @@ unsigned ata_exec_internal_sg(struct ata
- }
- 
- /**
-- *     ata_exec_internal_sg - execute libata internal command
-+ *     ata_exec_internal - execute libata internal command
-  *     @dev: Device to which the command is sent
-  *     @tf: Taskfile registers for the command and the result
-  *     @cdb: CDB for packet command
-@@ -1361,6 +1361,25 @@ unsigned ata_exec_internal(struct ata_de
- }
- 
- /**
-+ *     ata_exec_nodma - execute libata internal command
-+ *     @dev: Device to which the command is sent
-+ *     @tf: Taskfile registers for the command and the result
-+ *
-+ *     Wrapper around ata_exec_internal_sg() which takes no
-+ *     data buffer.
-+ *
-+ *     LOCKING:
-+ *     None.  Should be called with kernel context, might sleep.
-+ *
-+ *     RETURNS:
-+ *     Zero on success, AC_ERR_* mask on failure
-+ */
-+static unsigned ata_exec_nodma(struct ata_device *dev, struct
-ata_taskfile *tf)
-+{
-+       return ata_exec_internal_sg(dev, tf, NULL, DMA_NONE, NULL, 0);
-+}
-+
-+/**
-  *     ata_do_simple_cmd - execute simple internal command
-  *     @dev: Device to which the command is sent
-  *     @cmd: Opcode to execute
-@@ -1384,7 +1403,7 @@ unsigned int ata_do_simple_cmd(struct at
-        tf.flags |= ATA_TFLAG_DEVICE;
-        tf.protocol = ATA_PROT_NODATA;
- 
--       return ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-+       return ata_exec_nodma(dev, &tf);
- }
- 
- /**
-@@ -3475,7 +3494,7 @@ static unsigned int ata_dev_set_xfermode
-        tf.protocol = ATA_PROT_NODATA;
-        tf.nsect = dev->xfer_mode;
- 
--       err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-+       err_mask = ata_exec_nodma(dev, &tf);
- 
-        DPRINTK("EXIT, err_mask=%x\n", err_mask);
-        return err_mask;
-@@ -3513,7 +3532,7 @@ static unsigned int ata_dev_init_params(
-        tf.nsect = sectors;
-        tf.device |= (heads - 1) & 0x0f; /* max head = num. of heads - 1
-*/
- 
--       err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-+       err_mask = ata_exec_nodma(dev, &tf);
- 
-        DPRINTK("EXIT, err_mask=%x\n", err_mask);
-        return err_mask;
-Index: linux-2.6/include/linux/scatterlist.h
-===================================================================
---- linux-2.6.orig/include/linux/scatterlist.h
-+++ linux-2.6/include/linux/scatterlist.h
-@@ -8,6 +8,8 @@
- static inline void sg_set_buf(struct scatterlist *sg, const void *buf,
-                              unsigned int buflen)
- {
-+       WARN_ON(!buf); /* virt_to_page(NULL) crashes with sparsemem */
-+
-        sg->page = virt_to_page(buf);
-        sg->offset = offset_in_page(buf);
-        sg->length = buflen;
-_______________________________________________
+Yes and no - UDMA66 gets enabled, but with both 80-wire and 40-wire=20
+cables.
 
+* With 80-wire cable:
+pata_via 0000:00:07.1: version 0.1.14
+ata1: PATA max UDMA/66 cmd 0x1F0 ctl 0x3F6 bmdma 0xFFA0 irq 14
+ata2: PATA max UDMA/66 cmd 0x170 ctl 0x376 bmdma 0xFFA8 irq 15
+scsi0 : pata_via
+ata1.00: ATA-5, max UDMA/66, 40031712 sectors: LBA
+ata1.00: ata1: dev 0 multi count 16
+ata1.00: configured for UDMA/66
+scsi1 : pata_via
+ata2: port is slow to respond, please be patient (Status 0xff)
+ata2: port failed to respond (30 secs, Status 0xff)
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: reset failed, giving up
+scsi 0:0:0:0: Direct-Access     ATA      FUJITSU MPF3204A 0031 PQ: 0 ANSI: =
+5
+SCSI device sda: 40031712 512-byte hdwr sectors (20496 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 40031712 512-byte hdwr sectors (20496 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 sda11 >
+sd 0:0:0:0: Attached scsi disk sda
+(...)
+
+* With 40-wire cable:
+pata_via 0000:00:07.1: version 0.1.14
+ata1: PATA max UDMA/66 cmd 0x1F0 ctl 0x3F6 bmdma 0xFFA0 irq 14
+ata2: PATA max UDMA/66 cmd 0x170 ctl 0x376 bmdma 0xFFA8 irq 15
+scsi0 : pata_via
+ata1.00: ATA-5, max UDMA/66, 40031712 sectors: LBA
+ata1.00: ata1: dev 0 multi count 16
+ata1.00: configured for UDMA/66
+scsi1 : pata_via
+ata2: port is slow to respond, please be patient (Status 0xff)
+ata2: port failed to respond (30 secs, Status 0xff)
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: softreset failed, retrying in 5 secs
+ata2: SRST failed (status 0xFF)
+ata2: SRST failed (err_mask=3D0x100)
+ata2: reset failed, giving up
+scsi 0:0:0:0: Direct-Access     ATA      FUJITSU MPF3204A 0031 PQ: 0 ANSI: =
+5
+SCSI device sda: 40031712 512-byte hdwr sectors (20496 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 40031712 512-byte hdwr sectors (20496 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+  sda:<3>ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata1.00: (BMDMA stat 0x20)
+ata1.00: tag 0 cmd 0xc8 Emask 0x10 stat 0x51 err 0x84 (ATA bus error)
+ata1: soft resetting port
+ata1.00: configured for UDMA/66
+ata1: EH complete
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata1.00: (BMDMA stat 0x20)
+ata1.00: tag 0 cmd 0xc8 Emask 0x10 stat 0x51 err 0x84 (ATA bus error)
+ata1: soft resetting port
+ata1.00: configured for UDMA/66
+ata1: EH complete
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata1.00: (BMDMA stat 0x20)
+ata1.00: tag 0 cmd 0xc8 Emask 0x10 stat 0x51 err 0x84 (ATA bus error)
+ata1: soft resetting port
+ata1.00: configured for UDMA/66
+ata1: EH complete
+ata1.00: limiting speed to UDMA/44
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata1.00: (BMDMA stat 0x20)
+ata1.00: tag 0 cmd 0xc8 Emask 0x10 stat 0x51 err 0x84 (ATA bus error)
+ata1: soft resetting port
+ata1.00: configured for UDMA/44
+ata1: EH complete
+  sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 sda11 >
+sd 0:0:0:0: Attached scsi disk sda
+
+
+
+Besr regards,
+
+ =09=09=09=09Krzysztof Ol=EAdzki
+---187430788-2206153-1165665836=:17215--
