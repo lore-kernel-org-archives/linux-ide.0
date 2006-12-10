@@ -1,39 +1,49 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: Re: sata_sis and SIS180 in combined mode
-Date: Sun, 10 Dec 2006 16:01:47 +0100
-Message-ID: <457C215B.2000506@gmx.net>
-References: <200612031834.16797.sven@linux4geeks.de>	<45735B51.5040501@gmx.net>	<20061204001114.066b10f3@localhost.localdomain>	<457370CB.60008@gmx.net>	<20061204125637.539c102d@localhost.localdomain>	<4574B968.1070709@gmx.net> <20061205003108.2b22f665@localhost.localdomain>
+From: "Licht Casper" <Hung@ausunghot.com>
+Subject: Who wanna be the best lover?
+Date: Sun, 10 Dec 2006 15:19:49 +0000
+Message-ID: <5a0f01c71c6e$00ee0872$d122e958@dsl88-233-8913.ttnet.net.tr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	format=flowed;
+	charset="Windows-1252";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45316 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1760814AbWLJPBv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 10 Dec 2006 10:01:51 -0500
-In-Reply-To: <20061205003108.2b22f665@localhost.localdomain>
+Received: from dsl88-233-8913.ttnet.net.tr ([88.233.34.209]:1611 "HELO
+	dsl88-233-8913.ttnet.net.tr" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1761161AbWLJPVy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Dec 2006 10:21:54 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Sven Ladegast <sven@linux4geeks.de>, uwe.koziolek@web.de, linux-ide@vger.kernel.org
+To: Manolo Navarro <linux-ide@vger.kernel.org>
 
-Hello Alan,
+salute Dude
 
-The sata_sis.c did not work using the sis_info133 for PATA port:
-scsi0: pata_sis
-ata1: port disabled. ignoring
-ata1: reset failed, giving up
+I don't care why your meat is so small, but 83% of women do.
+They are pretty sure that bigger member will make their desire
+stronger. You have the chance to change your life.
 
-If i have added SATA disks to the controller und using the old code, the
-PATA disk is running, because the PATA disk is
-using the SATA status from the SATA disk (incorrectly).
+Here http://lustily.net you can get the thing.
 
-> Please push with the SATA driver changes to use it.
->   
-I have no idea why the import is not working.
-I have removed the static before sis_info133 because the symbol was not
-exported.
+It will help you for sure.
+The remedy can be sent worldwide.
+If you wont be satisfied - we will return all you money.
+No bullshit.
 
-regards
-Uwe
+
+
+-- 
+elkgdlgkhjghbjwerijgg ogrprtrlsrshnlrkrorqturlslsmrgopstsirkslsrsloksiruso
+
+cordons. There  was  one man, but he was partly  hidden. He was not near the
+path, which was the best place from  which to see the  execution, but on the
+northern  side,  where the hill was  not smooth and passable but  rough  and
+jagged with gulleys  and  fissures,  at a  spot  where  a  sickly  fig  tree
+struggled to keep alive on that arid soil by rooting itself in a crevice.
+     Although the fig tree gave no shade, this sole remaining spectator  had
+been sitting  beneath it on a stone  since the  very start  of the execution
+four  hours before.  He had chosen the worst  place to  watch the execution,
+although he had  a direct view  of the gibbets  and could even  see  the two
+glittering  badges  on  the  centurion's  chest.  His  vantage  point seemed
+
 
