@@ -1,20 +1,17 @@
-From: "Hoka \"ME\" Tichenci" <melkin@uci.edu>
+From: hokatichenci <hokatichenci@gmail.com>
 Subject: sata_nv fails to reattach drive during hotswap?
-Date: Sun, 10 Dec 2006 02:24:16 -0800
-Message-ID: <457BE050.9090109@uci.edu>
+Date: Sun, 10 Dec 2006 02:41:11 -0800
+Message-ID: <457BE447.2000705@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fed1rmmtao04.cox.net ([68.230.241.35]:36482 "EHLO
-	fed1rmmtao04.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760648AbWLJKYD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Dec 2006 05:24:03 -0500
-Received: from fed1rmimpo02.cox.net ([70.169.32.72])
-          by fed1rmmtao04.cox.net
-          (InterMail vM.6.01.06.03 201-2131-130-104-20060516) with ESMTP
-          id <20061210102403.ONNH7494.fed1rmmtao04.cox.net@fed1rmimpo02.cox.net>
-          for <linux-ide@vger.kernel.org>; Sun, 10 Dec 2006 05:24:03 -0500
+Received: from wx-out-0506.google.com ([66.249.82.227]:34548 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760638AbWLJKlA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Dec 2006 05:41:00 -0500
+Received: by wx-out-0506.google.com with SMTP id h27so1266405wxd
+        for <linux-ide@vger.kernel.org>; Sun, 10 Dec 2006 02:41:00 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -39,6 +36,7 @@ http://forums.gentoo.org/viewtopic-t-523012.html
 Any help, ideas, suggestions, questions, and pointers are appreciated.
 
 --hoka
+ps: if for any reason this email is received multiple times, I apologize, I'm having problems on my end
 
 Kernels attempted:
 Gentoo-sources 2.6.19-r1
@@ -102,3 +100,4 @@ ata5: port is slow to respond, please be patient
 ata5: port failed to respond (30 secs)
 ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
 ata5: EH complete
+
