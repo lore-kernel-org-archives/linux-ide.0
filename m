@@ -1,103 +1,39 @@
-From: hokatichenci <hokatichenci@gmail.com>
-Subject: sata_nv fails to reattach drive during hotswap?
-Date: Sun, 10 Dec 2006 02:41:11 -0800
-Message-ID: <457BE447.2000705@gmail.com>
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: Re: sata_sis and SIS180 in combined mode
+Date: Sun, 10 Dec 2006 16:01:47 +0100
+Message-ID: <457C215B.2000506@gmx.net>
+References: <200612031834.16797.sven@linux4geeks.de>	<45735B51.5040501@gmx.net>	<20061204001114.066b10f3@localhost.localdomain>	<457370CB.60008@gmx.net>	<20061204125637.539c102d@localhost.localdomain>	<4574B968.1070709@gmx.net> <20061205003108.2b22f665@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.227]:34548 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760638AbWLJKlA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Dec 2006 05:41:00 -0500
-Received: by wx-out-0506.google.com with SMTP id h27so1266405wxd
-        for <linux-ide@vger.kernel.org>; Sun, 10 Dec 2006 02:41:00 -0800 (PST)
+Received: from mail.gmx.net ([213.165.64.20]:45316 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1760814AbWLJPBv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 10 Dec 2006 10:01:51 -0500
+In-Reply-To: <20061205003108.2b22f665@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Sven Ladegast <sven@linux4geeks.de>, uwe.koziolek@web.de, linux-ide@vger.kernel.org
 
-I'm currently using an Asus A8N-SLI Premium which offers 8 ports (4
-each) through a SI3114 and CK804 chipset. I have a generic istar/athena
-4 in 3 SATA hot swap cage thats worked for very well with my Areca array
-on another system. When booting, it detects the drive just fine
-connected to the sata_nv controller. When I detach the drive, it also
-cleanly removes the device node. The problem is reattaching a drive
-(turning the power back on), libata will apparently detect the new
-drive, but then the port will "fail to respond" about twice before the
-link is determined. After this stage EH is complete, but the drive is
-nowhere to be found. udevmonitor --env shows nothing after the removal
-of the block device, it does not exist under /dev/sd*, and does not show
-up anywhere that I can find. I've tried multiple kernels, all have the
-same results. When I use the si3114 controller, hotswapping works
-exactly as desired. I have a post on the gentoo forums about the issue,
-but I will also append on the important bits:
-http://forums.gentoo.org/viewtopic-t-523012.html
+Hello Alan,
 
-Any help, ideas, suggestions, questions, and pointers are appreciated.
+The sata_sis.c did not work using the sis_info133 for PATA port:
+scsi0: pata_sis
+ata1: port disabled. ignoring
+ata1: reset failed, giving up
 
---hoka
-ps: if for any reason this email is received multiple times, I apologize, I'm having problems on my end
+If i have added SATA disks to the controller und using the old code, the
+PATA disk is running, because the PATA disk is
+using the SATA status from the SATA disk (incorrectly).
 
-Kernels attempted:
-Gentoo-sources 2.6.19-r1
-Gentoo-hardened-sources 2.6.18
-2.6.19-rc6-mm2
-2.6.19-git12
+> Please push with the SATA driver changes to use it.
+>   
+I have no idea why the import is not working.
+I have removed the static before sis_info133 because the symbol was not
+exported.
 
-lspci:
-00:00.0 Memory controller: nVidia Corporation CK804 Memory Controller
-(rev a3)
-00:01.0 ISA bridge: nVidia Corporation CK804 ISA Bridge (rev a3)
-00:01.1 SMBus: nVidia Corporation CK804 SMBus (rev a2)
-00:02.0 USB Controller: nVidia Corporation CK804 USB Controller (rev a2)
-00:02.1 USB Controller: nVidia Corporation CK804 USB Controller (rev a3)
-00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev f2)
-00:07.0 RAID bus controller: nVidia Corporation CK804 Serial ATA
-Controller (rev f3)
-00:08.0 RAID bus controller: nVidia Corporation CK804 Serial ATA
-Controller (rev f3)
-00:09.0 PCI bridge: nVidia Corporation CK804 PCI Bridge (rev a2)
-00:0a.0 Bridge: nVidia Corporation CK804 Ethernet Controller (rev a3)
-00:0b.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
-00:0c.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
-00:0d.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
-00:0e.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
-00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-HyperTransport Technology Configuration
-00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-Address Map
-00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-DRAM Controller
-00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-Miscellaneous Control
-05:07.0 VGA compatible controller: nVidia Corporation NV34 [GeForce FX
-5200] (rev a1)
-05:0a.0 RAID bus controller: Silicon Image, Inc. SiI 3114
-[SATALink/SATARaid] Serial ATA Controller (rev 02)
-05:0c.0 Ethernet controller: Marvell Technology Group Ltd. 88E8001
-Gigabit Ethernet Controller (rev 13)
-
-A sample of the kernel log showing the problem:
-ata5: exception Emask 0x10 SAct 0x0 SErr 0x1810000 action 0x2 frozen
-ata5: soft resetting port
-ata5: SATA link down (SStatus 0 SControl 300)
-ata5: failed to recover some devices, retrying in 5 secs
-ata5: hard resetting port
-ata5: SATA link down (SStatus 0 SControl 300)
-ata5: failed to recover some devices, retrying in 5 secs
-ata5: hard resetting port
-ata5: SATA link down (SStatus 0 SControl 300)
-ata5.00: disabled
-ata5: EH complete
-ata5.00: detaching (SCSI 4:0:0:0)
-PM: Removing info for scsi:4:0:0:0
-PM: Removing info for No Bus:target4:0:0
-ata5: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
-ata5: port is slow to respond, please be patient
-ata5: port failed to respond (30 secs)
-ata5: soft resetting port
-ata5: port is slow to respond, please be patient
-ata5: port failed to respond (30 secs)
-ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata5: EH complete
+regards
+Uwe
 
