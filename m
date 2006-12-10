@@ -1,49 +1,39 @@
-From: "Licht Casper" <Hung@ausunghot.com>
-Subject: Who wanna be the best lover?
-Date: Sun, 10 Dec 2006 15:19:49 +0000
-Message-ID: <5a0f01c71c6e$00ee0872$d122e958@dsl88-233-8913.ttnet.net.tr>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: sata_sis and SIS180 in combined mode
+Date: Sun, 10 Dec 2006 15:51:29 +0000
+Message-ID: <20061210155129.08f32084@localhost.localdomain>
+References: <200612031834.16797.sven@linux4geeks.de>
+	<45735B51.5040501@gmx.net>
+	<20061204001114.066b10f3@localhost.localdomain>
+	<457370CB.60008@gmx.net>
+	<20061204125637.539c102d@localhost.localdomain>
+	<4574B968.1070709@gmx.net>
+	<20061205003108.2b22f665@localhost.localdomain>
+	<457C215B.2000506@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="Windows-1252";
-	reply-type=original
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl88-233-8913.ttnet.net.tr ([88.233.34.209]:1611 "HELO
-	dsl88-233-8913.ttnet.net.tr" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1761161AbWLJPVy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Dec 2006 10:21:54 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56944 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761276AbWLJPnz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Dec 2006 10:43:55 -0500
+In-Reply-To: <457C215B.2000506@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Manolo Navarro <linux-ide@vger.kernel.org>
+To: Uwe Koziolek <uwe.koziolek@gmx.net>
+Cc: Sven Ladegast <sven@linux4geeks.de>, uwe.koziolek@web.de, linux-ide@vger.kernel.org
 
-salute Dude
+On Sun, 10 Dec 2006 16:01:47 +0100
+Uwe Koziolek <uwe.koziolek@gmx.net> wrote:
 
-I don't care why your meat is so small, but 83% of women do.
-They are pretty sure that bigger member will make their desire
-stronger. You have the chance to change your life.
+> Hello Alan,
+> 
+> The sata_sis.c did not work using the sis_info133 for PATA port:
+> scsi0: pata_sis
+> ata1: port disabled. ignoring
 
-Here http://lustily.net you can get the thing.
-
-It will help you for sure.
-The remedy can be sent worldwide.
-If you wont be satisfied - we will return all you money.
-No bullshit.
-
-
-
--- 
-elkgdlgkhjghbjwerijgg ogrprtrlsrshnlrkrorqturlslsmrgopstsirkslsrsloksiruso
-
-cordons. There  was  one man, but he was partly  hidden. He was not near the
-path, which was the best place from  which to see the  execution, but on the
-northern  side,  where the hill was  not smooth and passable but  rough  and
-jagged with gulleys  and  fissures,  at a  spot  where  a  sickly  fig  tree
-struggled to keep alive on that arid soil by rooting itself in a crevice.
-     Although the fig tree gave no shade, this sole remaining spectator  had
-been sitting  beneath it on a stone  since the  very start  of the execution
-four  hours before.  He had chosen the worst  place to  watch the execution,
-although he had  a direct view  of the gibbets  and could even  see  the two
-glittering  badges  on  the  centurion's  chest.  His  vantage  point seemed
-
-
+That sort of makes sense. The sis_info133 will check the enable bits on
+the basis that its a pata port. What port port number do you pass - I
+assume 2 - that runs off the end of the array. Tweak sis_133_pre_reset
+and try that.
