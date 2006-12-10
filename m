@@ -1,120 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (2.6.19-rc6-mm2) pdc202xx_*: remove check_in_drive_lists() abomination
-Date: Sun, 10 Dec 2006 20:48:48 +0300
-Message-ID: <200612102048.48247.sshtylyov@ru.mvista.com>
+From: Jim Paris <jim@jtan.com>
+Subject: Re: sata_nv fails to reattach drive during hotswap?
+Date: Sun, 10 Dec 2006 12:48:27 -0500
+Message-ID: <20061210174827.GA3689@jim.sh>
+References: <457BE447.2000705@gmail.com> <457BE050.9090109@uci.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:52123 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1762288AbWLJRrP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 10 Dec 2006 12:47:15 -0500
+Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:57967 "EHLO neurosis.jim.sh"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762289AbWLJRsi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 10 Dec 2006 12:48:38 -0500
 Content-Disposition: inline
+In-Reply-To: <457BE447.2000705@gmail.com> <457BE050.9090109@uci.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Hoka ME Tichenci <melkin@uci.edu>, hokatichenci <hokatichenci@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Fold check_in_drive_lists() into quirkproc() handler in both PDC202xx drivers--
-this function was never called with a list other than pdc_quirk_drives and was
-a bad example of code overall...
+Hoka ME Tichenci wrote:
+> I'm currently using an Asus A8N-SLI Premium which offers 8 ports (4
+> each) through a SI3114 and CK804 chipset. I have a generic istar/athena
+> 4 in 3 SATA hot swap cage thats worked for very well with my Areca array
+> on another system. When booting, it detects the drive just fine
+> connected to the sata_nv controller. When I detach the drive, it also
+> cleanly removes the device node. The problem is reattaching a drive
+> (turning the power back on), libata will apparently detect the new
+> drive, but then the port will "fail to respond" about twice before the
+> link is determined.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Hi Hoka,
 
- drivers/ide/pci/pdc202xx_new.c |   27 ++++++---------------------
- drivers/ide/pci/pdc202xx_old.c |   27 ++++++---------------------
- 2 files changed, 12 insertions(+), 42 deletions(-)
+I think this patch fixes your problem:
 
-Index: linux-2.6/drivers/ide/pci/pdc202xx_new.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/pdc202xx_new.c
-+++ linux-2.6/drivers/ide/pci/pdc202xx_new.c
-@@ -92,26 +92,6 @@ static u8 pdcnew_ratemask(ide_drive_t *d
- 	return	mode;
- }
- 
--static int check_in_drive_lists(ide_drive_t *drive, const char **list)
--{
--	struct hd_driveid *id = drive->id;
--
--	if (pdc_quirk_drives == list) {
--		while (*list) {
--			if (strstr(id->model, *list++)) {
--				return 2;
--			}
--		}
--	} else {
--		while (*list) {
--			if (!strcmp(*list++,id->model)) {
--				return 1;
--			}
--		}
--	}
--	return 0;
--}
--
- /**
-  * get_indexed_reg - Get indexed register
-  * @hwif: for the port address
-@@ -324,7 +304,12 @@ fast_ata_pio:
- 
- static int pdcnew_quirkproc(ide_drive_t *drive)
- {
--	return check_in_drive_lists(drive, pdc_quirk_drives);
-+	const char **list, *model = drive->id->model;
-+
-+	for (list = pdc_quirk_drives; *list != NULL; list++)
-+		if (strstr(model, *list) != NULL)
-+			return 2;
-+	return 0;
- }
- 
- static void pdcnew_reset(ide_drive_t *drive)
-Index: linux-2.6/drivers/ide/pci/pdc202xx_old.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/pdc202xx_old.c
-+++ linux-2.6/drivers/ide/pci/pdc202xx_old.c
-@@ -123,26 +123,6 @@ static u8 pdc202xx_ratemask (ide_drive_t
- 	return mode;
- }
- 
--static int check_in_drive_lists (ide_drive_t *drive, const char **list)
--{
--	struct hd_driveid *id = drive->id;
--
--	if (pdc_quirk_drives == list) {
--		while (*list) {
--			if (strstr(id->model, *list++)) {
--				return 2;
--			}
--		}
--	} else {
--		while (*list) {
--			if (!strcmp(*list++,id->model)) {
--				return 1;
--			}
--		}
--	}
--	return 0;
--}
--
- static int pdc202xx_tune_chipset (ide_drive_t *drive, u8 xferspeed)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
-@@ -377,7 +357,12 @@ fast_ata_pio:
- 
- static int pdc202xx_quirkproc (ide_drive_t *drive)
- {
--	return ((int) check_in_drive_lists(drive, pdc_quirk_drives));
-+	const char **list, *model = drive->id->model;
-+
-+	for (list = pdc_quirk_drives; *list != NULL; list++)
-+		if (strstr(model, *list) != NULL)
-+			return 2;
-+	return 0;
- }
- 
- static void pdc202xx_old_ide_dma_start(ide_drive_t *drive)
+  http://www.spinics.net/lists/linux-ide/msg04992.html
 
+-jim
