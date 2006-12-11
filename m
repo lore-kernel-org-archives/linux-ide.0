@@ -1,39 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Add support for asynchronous scans to libata
-Date: Mon, 11 Dec 2006 11:18:17 -0500
-Message-ID: <457D84C9.6020907@pobox.com>
-References: <20061208211236.GC29763@parisc-linux.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
+Date: Mon, 11 Dec 2006 11:24:23 -0500
+Message-ID: <457D8637.5070707@garzik.org>
+References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org> <4574B004.6030606@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47243 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936947AbWLKQSU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Dec 2006 11:18:20 -0500
-In-Reply-To: <20061208211236.GC29763@parisc-linux.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4574B004.6030606@us.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Douglas Gilbert <dougg@torque.net>
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Matthew Wilcox wrote:
-> Some of the drivers (AHCI was mentioned to me as a culprit) take a long
-> time to discover all the devices attached to them.  Even for ones which
-> are relatively quick, if you put a lot of them in a machine, it will
-> take a long time in aggregate.  This can be fixed by adding support for
-> asynchronous scsi scans, which causes the time-consuming portions of
-> initialisation to take place in threads.
+Darrick J. Wong wrote:
+> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
+> response to a REPORT LUNS packet.  If this happens to an ATAPI device
+> that is attached to a SAS controller (this is the case with sas_ata),
+> the device does not load because SCSI won't touch a "SCSI device"
+> that won't report its LUNs.  Since most ATAPI devices don't support
+> multiple LUNs anyway, we might as well fake a response like we do for
+> ATA devices.
 > 
-> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-ACK.  I tried to apply the patch, but git-applymbox choked on every 
-single file modified.  Quite possibly, its due to a whitespace cleanup 
-in Alan territory.
+I'm leaning towards applying this, perhaps with a module option that 
+allows experimenters to revert back to the older behavior.
 
-If you would either (a) wait several hours for libata-dev.git#upstream 
-to mirror out, and resend, or (b) supply a git:// URL to pull from, I'll 
-merge.
+Any chance you could be talked into tackling some of the SAT 
+translation-related items Doug G mentioned?  I'm almost certain there 
+are some info pages we should be returning, but are not, at the very least.
 
 	Jeff
 
