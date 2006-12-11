@@ -1,50 +1,273 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: ata kmap_atomic abuse
-Date: Mon, 11 Dec 2006 00:13:14 -0800
-Message-ID: <20061211001314.9ecb17a2.akpm@osdl.org>
+From: Mauro Ziliani <mauro.ziliani@tin.it>
+Subject: Seagate ST3808110AS and Sil3114 RAID1 trouble.
+Date: Mon, 11 Dec 2006 10:04:15 +0100
+Message-ID: <457D1F0F.20204@tin.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:57359 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762648AbWLKIN2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Dec 2006 03:13:28 -0500
+Received: from 81-174-11-230.f5.ngi.it ([81.174.11.230]:41451 "EHLO
+	mercurio.cosmo.lan" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762674AbWLKJE2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Dec 2006 04:04:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-[  231.948000] SCSI device sda: 195371568 512-byte hdwr sectors (100030 MB)
-[  232.232000] ata1.00: configured for UDMA/33
-[  232.404000] WARNING (1) at arch/i386/mm/highmem.c:47 kmap_atomic()
-[  232.404000]  [<c01162e6>] kmap_atomic+0xa9/0x1ab
-[  232.404000]  [<c0242c81>] ata_scsi_rbuf_get+0x1c/0x30
-[  232.404000]  [<c0242caf>] ata_scsi_rbuf_fill+0x1a/0x87
-[  232.404000]  [<c0243ab2>] ata_scsiop_mode_sense+0x0/0x309
-[  232.404000]  [<c01729d5>] end_bio_bh_io_sync+0x0/0x37
-[  232.404000]  [<c02311c6>] scsi_done+0x0/0x16
-[  232.404000]  [<c02311c6>] scsi_done+0x0/0x16
-[  232.404000]  [<c0242dcc>] ata_scsi_simulate+0xb0/0x13f
-[  232.404000]  [<c0140f12>] mempool_free+0x4a/0x4e
-[  232.404000]  [<c02311c6>] scsi_done+0x0/0x16
-[  232.404000]  [<c0244451>] ata_scsi_queuecmd+0xa5/0xe1
-[  232.404000]  [<c0231817>] scsi_dispatch_cmd+0x1b3/0x226
-[  232.404000]  [<c0236284>] scsi_request_fn+0x250/0x2c2
-[  232.404000]  [<c01bd7e2>] as_completed_request+0x1ce/0x1db
-[  232.404000]  [<c01b9d00>] blk_run_queue+0x2a/0x4b
-[  232.404000]  [<c0235025>] scsi_next_command+0x25/0x2f
-[  232.404000]  [<c023519e>] scsi_end_request+0x8c/0x96
-[  232.404000]  [<c023533f>] scsi_io_completion+0x15a/0x329
-[  232.404000]  [<c023ec39>] ata_hsm_move+0x719/0x729
-[  232.404000]  [<c023a2e1>] sd_rw_intr+0x209/0x233
-[  232.404000]  [<c0110000>] wakeup_pmode_return+0x0/0x55
-[  232.404000]  [<c0231164>] scsi_finish_command+0x81/0x88
-[  232.404000]  [<c01b9c4f>] blk_done_softirq+0x4a/0x55
-[  232.404000]  [<c011d564>] __do_softirq+0x35/0x75
-[  232.404000]  [<c011d5c6>] do_softirq+0x22/0x26
-[  232.404000]  [<c0104f1a>] do_IRQ+0x67/0x81
-[  232.404000]  [<c010352f>] common_interrupt+0x23/0x28
-[  232.404000]  =======================
 
-It's using KM_USER0 from softirq.
+Goodmorning.
+
+My name's Mauro Ziliani from Parma ITALY.
+I use two disk Seagate ST3808110AS with an Sil3114 SATA controller.
+The first disk is sdb and the second is sdc.
+I configured a RAID1 software mirror onto this two disk where sdb1 is 
+the master disk for RAID.
+I often receive the following warning message from the kernel during 
+synchronization of md0 device
+
+...
+RAID1 conf printout:
+Dec 11 00:47:00 mercurio kernel:  --- wd:1 rd:2
+Dec 11 00:47:00 mercurio kernel:  disk 0, wo:1, o:1, dev:sdc1
+Dec 11 00:47:00 mercurio kernel:  disk 1, wo:0, o:1, dev:sdb1
+Dec 11 00:47:00 mercurio kernel: md: syncing RAID array md0
+Dec 11 00:47:00 mercurio kernel: md: minimum _guaranteed_ reconstruction 
+speed: 1000 KB/sec/disc.
+Dec 11 00:47:00 mercurio kernel: md: using maximum available idle IO 
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+Dec 11 00:47:00 mercurio kernel: md: using 128k window, over a total of 
+78148096 blocks.
+Dec 11 00:47:27 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:47:27 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:47:27 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:47:27 mercurio kernel: ata1: EH complete
+Dec 11 00:47:27 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:47:28 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:47:28 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:47:28 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:47:49 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:47:49 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:47:49 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:47:49 mercurio kernel: ata1: EH complete
+Dec 11 00:47:49 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:47:49 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:47:49 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:47:49 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:48:13 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:48:13 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:48:13 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:48:13 mercurio kernel: ata1: EH complete
+Dec 11 00:48:13 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:48:13 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:48:13 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:48:13 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:49:00 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:49:00 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:49:00 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:49:00 mercurio kernel: ata1: EH complete
+Dec 11 00:49:00 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:49:00 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:49:01 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:49:01 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:49:23 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:49:23 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:49:23 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:49:23 mercurio kernel: ata1: EH complete
+Dec 11 00:49:23 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:49:23 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:49:23 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:49:23 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:52:01 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:52:01 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:52:01 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:52:01 mercurio kernel: ata1: EH complete
+Dec 11 00:52:01 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:52:01 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:52:01 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:52:01 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:52:12 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:52:12 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:52:12 mercurio kernel: ata1.00: tag 0 cmd 0xc8 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:52:12 mercurio kernel: ata1: EH complete
+Dec 11 00:52:12 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:52:12 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:52:12 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:52:12 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:52:17 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:52:17 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:52:17 mercurio kernel: ata1.00: tag 0 cmd 0xc8 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:52:17 mercurio kernel: ata1: EH complete
+Dec 11 00:52:17 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:52:17 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:52:17 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:52:17 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:52:24 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:52:24 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:52:24 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:52:24 mercurio kernel: ata1: EH complete
+Dec 11 00:52:24 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:52:24 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:52:24 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:52:24 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:52:25 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x0
+Dec 11 00:52:25 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:52:25 mercurio kernel: ata1.00: tag 0 cmd 0xc8 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:52:25 mercurio kernel: ata1: EH complete
+Dec 11 00:52:25 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:52:25 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:52:25 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:52:25 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:52:55 mercurio kernel: ata1.00: limiting speed to UDMA/66
+Dec 11 00:52:55 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x2
+Dec 11 00:52:55 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:52:56 mercurio kernel: ata1.00: tag 0 cmd 0xc8 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:52:56 mercurio kernel: ata1: soft resetting port
+Dec 11 00:52:56 mercurio kernel: ata1: SATA link up 1.5 Gbps (SStatus 
+113 SControl 310)
+Dec 11 00:52:56 mercurio kernel: ata1.00: configured for UDMA/66
+Dec 11 00:52:56 mercurio kernel: ata1: EH complete
+Dec 11 00:52:56 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:52:56 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:52:56 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:52:56 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:53:48 mercurio kernel: ata1.00: limiting speed to UDMA/44
+Dec 11 00:53:48 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x2
+Dec 11 00:53:48 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:53:48 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:53:49 mercurio kernel: ata1: soft resetting port
+Dec 11 00:53:49 mercurio kernel: ata1: SATA link up 1.5 Gbps (SStatus 
+113 SControl 310)
+Dec 11 00:53:49 mercurio kernel: ata1.00: configured for UDMA/44
+Dec 11 00:53:49 mercurio kernel: ata1: EH complete
+Dec 11 00:53:49 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:53:49 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:53:49 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:53:49 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:54:05 mercurio kernel: ata1.00: limiting speed to UDMA/33
+Dec 11 00:54:05 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x2
+Dec 11 00:54:05 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:54:05 mercurio kernel: ata1.00: tag 0 cmd 0xc8 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:54:05 mercurio kernel: ata1: soft resetting port
+Dec 11 00:54:06 mercurio kernel: ata1: SATA link up 1.5 Gbps (SStatus 
+113 SControl 310)
+Dec 11 00:54:06 mercurio kernel: ata1.00: configured for UDMA/33
+Dec 11 00:54:06 mercurio kernel: ata1: EH complete
+Dec 11 00:54:06 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:54:06 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:54:06 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:54:06 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:54:13 mercurio kernel: ata1.00: limiting speed to UDMA/25
+Dec 11 00:54:13 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x200000 action 0x2
+Dec 11 00:54:13 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:54:13 mercurio kernel: ata1.00: tag 0 cmd 0xc8 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:54:13 mercurio kernel: ata1: soft resetting port
+Dec 11 00:54:13 mercurio kernel: ata1: SATA link up 1.5 Gbps (SStatus 
+113 SControl 310)
+Dec 11 00:54:13 mercurio kernel: ata1.00: configured for UDMA/25
+Dec 11 00:54:13 mercurio kernel: ata1: EH complete
+Dec 11 00:54:13 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:54:14 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:54:14 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:54:14 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:54:14 mercurio kernel: ata1.00: limiting speed to UDMA/16
+Dec 11 00:54:14 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x2
+Dec 11 00:54:14 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:54:14 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:54:15 mercurio kernel: ata1: soft resetting port
+Dec 11 00:54:15 mercurio kernel: ata1: SATA link up 1.5 Gbps (SStatus 
+113 SControl 310)
+Dec 11 00:54:15 mercurio kernel: ata1.00: configured for UDMA/16
+Dec 11 00:54:15 mercurio kernel: ata1: EH complete
+Dec 11 00:54:15 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:54:15 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:54:15 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:54:15 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:54:34 mercurio kernel: ata1.00: limiting speed to PIO4
+Dec 11 00:54:34 mercurio kernel: ata1.00: exception Emask 0x0 SAct 0x0 
+SErr 0x280000 action 0x2
+Dec 11 00:54:34 mercurio kernel: ata1.00: (BMDMA stat 0x60)
+Dec 11 00:54:34 mercurio kernel: ata1.00: tag 0 cmd 0x25 Emask 0x1 stat 
+0x51 err 0x4 (device error)
+Dec 11 00:54:34 mercurio kernel: ata1: soft resetting port
+Dec 11 00:54:34 mercurio kernel: ata1: SATA link up 1.5 Gbps (SStatus 
+113 SControl 310)
+Dec 11 00:54:34 mercurio kernel: ata1.00: configured for PIO4
+Dec 11 00:54:35 mercurio kernel: ata1: EH complete
+Dec 11 00:54:35 mercurio kernel: SCSI device sdb: 156301488 512-byte 
+hdwr sectors (80026 MB)
+Dec 11 00:54:35 mercurio kernel: sdb: Write Protect is off
+Dec 11 00:54:36 mercurio kernel: sdb: Mode Sense: 00 3a 00 00
+Dec 11 00:54:36 mercurio kernel: SCSI device sdb: drive cache: write back
+Dec 11 00:59:03 mercurio kernel: raid1: Disk failure on sdc1, disabling 
+device.
+Dec 11 00:59:03 mercurio kernel: ^IOperation continuing on 1 devices
+Dec 11 00:59:04 mercurio kernel: md: md0: sync done.
+Dec 11 00:59:04 mercurio kernel: RAID1 conf printout:
+Dec 11 00:59:04 mercurio kernel:  --- wd:1 rd:2
+Dec 11 00:59:04 mercurio kernel:  disk 0, wo:1, o:0, dev:sdc1
+Dec 11 00:59:04 mercurio kernel:  disk 1, wo:0, o:1, dev:sdb1
+Dec 11 00:59:04 mercurio kernel: RAID1 conf printout:
+Dec 11 00:59:04 mercurio kernel:  --- wd:1 rd:2
+Dec 11 00:59:04 mercurio kernel:  disk 1, wo:0, o:1, dev:sdb1
+....
+
+
+Why this happens?
+
+I control the disk with PowerMax 4.23 and the disk works fine.
+All test are ok.
+
+Is it better to make the RAID1 throught Sill3114 BIOS or throught 
+software md?
+
+Thanks a lot in advance.
+
+Best regard
+  Mauro Ziliani
+
