@@ -1,43 +1,39 @@
-From: Arnd Bergmann <arnd@arndb.de>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH] libata: don't initialize sg in ata_exec_internal() if
-	DMA_NONE
-Date: Mon, 11 Dec 2006 15:18:46 +0100
-Message-ID: <200612111518.46887.arnd@arndb.de>
-References: <200612081914.41810.arnd.bergmann@de.ibm.com>
-	<20061211140258.GB18947@htj.dyndns.org>
+ DMA_NONE
+Date: Mon, 11 Dec 2006 23:23:35 +0900
+Message-ID: <457D69E7.9040708@gmail.com>
+References: <200612081914.41810.arnd.bergmann@de.ibm.com> <20061211140258.GB18947@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.237]:28039 "EHLO
+	nz-out-0102.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934422AbWLKOXo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Dec 2006 09:23:44 -0500
+Received: by nz-out-0102.google.com with SMTP id s1so793409nze
+        for <linux-ide@vger.kernel.org>; Mon, 11 Dec 2006 06:23:44 -0800 (PST)
 In-Reply-To: <20061211140258.GB18947@htj.dyndns.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: linuxppc-dev@ozlabs.org
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd.bergmann@de.ibm.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
 
-On Monday 11 December 2006 15:02, Tejun Heo wrote:
-> =A0{
-> =A0=A0=A0=A0=A0=A0=A0=A0struct scatterlist sg;
-> +=A0=A0=A0=A0=A0=A0=A0unsigned int n_elem =3D 0;
-> =A0
-> -=A0=A0=A0=A0=A0=A0=A0sg_init_one(&sg, buf, buflen);
-> +=A0=A0=A0=A0=A0=A0=A0if (dma_dir !=3D DMA_NONE) {
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0WARN_ON(!buf);
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0sg_init_one(&sg, buf, bufle=
-n);
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0n_elem++;
-> +=A0=A0=A0=A0=A0=A0=A0}
-> =A0
-Ok, looks good as well. I still think we should have the WARN_ON()
-in sg_set_buf(), but I can send a separate patch for that to linux-mm.
+Tejun Heo wrote:
+> I'll follow up with conversion to ata_do_simple_cmd().
 
-	Arnd <><
+The current situation is...
+
+ata_exec_internal_sg()	: no user except for ata_exec_internal() yet
+ata_exec_internal()	: one data transferring user. other are non-data
+ata_do_simple_cmd()	: three users
+
+So, adding another exec_internal variant doesn't look so hot.  It seems
+we already have enough variants considering the small number of users.
+I think it's best to leave it alone for now.
+
+Thanks.
+
+-- 
+tejun
