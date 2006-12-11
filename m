@@ -1,37 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
-Date: Mon, 11 Dec 2006 11:24:23 -0500
-Message-ID: <457D8637.5070707@garzik.org>
-References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org> <4574B004.6030606@us.ibm.com>
+Subject: Re: [PATCH -mm] sata_nv: add suspend/resume support
+Date: Mon, 11 Dec 2006 11:27:28 -0500
+Message-ID: <457D86F0.4020408@garzik.org>
+References: <456E3ED5.3090201@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4574B004.6030606@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Douglas Gilbert <dougg@torque.net>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:47331 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S937052AbWLKQ1a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 Dec 2006 11:27:30 -0500
+In-Reply-To: <456E3ED5.3090201@shaw.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Darrick J. Wong wrote:
-> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
-> response to a REPORT LUNS packet.  If this happens to an ATAPI device
-> that is attached to a SAS controller (this is the case with sas_ata),
-> the device does not load because SCSI won't touch a "SCSI device"
-> that won't report its LUNs.  Since most ATAPI devices don't support
-> multiple LUNs anyway, we might as well fake a response like we do for
-> ATA devices.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+Robert Hancock wrote:
+> +static void nv_remove_one (struct pci_dev *pdev)
+> +{
+> +	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+> +	struct nv_host_priv *hpriv = host->private_data;
+> +	
+> +	kfree(hpriv);
+> +	ata_pci_remove_one(pdev);
+> +}	
 
-I'm leaning towards applying this, perhaps with a module option that 
-allows experimenters to revert back to the older behavior.
 
-Any chance you could be talked into tackling some of the SAT 
-translation-related items Doug G mentioned?  I'm almost certain there 
-are some info pages we should be returning, but are not, at the very least.
+It is unwise to free the struct before the ports are even detached.
+
+Otherwise, seems ok, but I would like to see some more positive user 
+reports (both ADMA and not) before pushing upstream.
 
 	Jeff
-
 
 
