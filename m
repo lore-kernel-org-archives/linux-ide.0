@@ -2,26 +2,23 @@ From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCH] drivers/ata: PATA driver
 	for Celleb
 Date: Tue, 12 Dec 2006 11:08:24 +0900
-Message-ID: <200612120206.kBC26wVj029206@toshiba.co.jp>
+Message-ID: <200612120206.kBC26wHr022838@toshiba.co.jp>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:51542 "EHLO
-	inet-tsb5.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870AbWLLCHE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Dec 2006 21:07:04 -0500
-Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
-	by inet-tsb5.toshiba.co.jp  with ESMTP id kBC270jQ005514
-	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2006 11:07:00 +0900 (JST)
-Received: (from root@localhost)
-	by tsb-wall.toshiba.co.jp  id kBC271AF021454
-	for linux-ide@vger.kernel.org; Tue, 12 Dec 2006 11:07:01 +0900 (JST)
-Received: from mx2.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp1.toshiba.co.jp  with ESMTP id kBC270Jf027162
-	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2006 11:07:00 +0900 (JST)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, benh@kernel.crashing.org, arnd@arndb.de, paulus@samba.org
+Cc: linuxppc-dev@ozlabs.org, paulus@samba.org, arnd@arndb.de
+List-Id: linux-ide@vger.kernel.org
 
 Dear everyone,
 
@@ -2367,4 +2364,3 @@ diff -c linux-2.6.19/include/linux/libata.h:1.1.1.4 linux-2.6.19/include/linux/l
 + }
 + 
   #endif /* __LINUX_LIBATA_H__ */
-
