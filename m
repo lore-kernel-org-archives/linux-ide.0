@@ -1,57 +1,51 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [PATCH] drivers/ata: PATA driver for Celleb
-Date: Tue, 12 Dec 2006 17:34:21 -0600
-Message-ID: <20061212233421.GM4329@austin.ibm.com>
-References: <200612120206.kBC26wHr022838@toshiba.co.jp>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2.6.19-rc1] Toshiba TC86C001 IDE driver
+Date: Tue, 12 Dec 2006 23:41:45 +0000
+Message-ID: <20061212234145.557cb035@localhost.localdomain>
+References: <200612130148.34539.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:57068 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932509AbWLLXeb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Dec 2006 18:34:31 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id kBCNYMRY030897
-	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2006 18:34:22 -0500
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kBCNYMMG548298
-	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2006 16:34:22 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kBCNYLXL029357
-	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2006 16:34:22 -0700
-Content-Disposition: inline
-In-Reply-To: <200612120206.kBC26wHr022838@toshiba.co.jp>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54700 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932583AbWLMAMN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Dec 2006 19:12:13 -0500
+In-Reply-To: <200612130148.34539.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, paulus@samba.org, arnd@arndb.de
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: akpm@osdl.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 12, 2006 at 11:08:24AM +0900, Akira Iguchi wrote:
-> 
-> I use some static functions in libata-core.c because it makes
+> + * We work around this by initiating dummy, zero-length DMA transfer on
+> + * a DMA timeout expiration. I found no better way to do this with the current
 
-You will want to split this patch into several pars, and submit the 
-changes to libata-core.c separately.
+Novel workaround and probably better than resetting the chip as the
+winbong does.
 
-> --- linux-2.6.19/drivers/ata/libata-core.c	Wed Dec  6 12:00:47 2006
-> ***************
-> *** 600,606 ****
->    *	Device type - %ATA_DEV_ATA, %ATA_DEV_ATAPI or %ATA_DEV_NONE.
->    */
->   
-> ! static unsigned int
->   ata_dev_try_classify(struct ata_port *ap, unsigned int device, u8 *r_err)
->   {
->   	struct ata_taskfile tf;
-> --- 600,606 ----
->    *	Device type - %ATA_DEV_ATA, %ATA_DEV_ATAPI or %ATA_DEV_NONE.
->    */
->   
-> ! unsigned int
->   ata_dev_try_classify(struct ata_port *ap, unsigned int device, u8 *r_err)
+> +static int tc86c001_busproc(ide_drive_t *drive, int state)
+> +{
 
-Please generate unified diffs (diff -pu) or use quilt,
-this makes the patches easier to read. (and smaller)
+Waste of space having a busproc routine. The maintainer removed all the
+usable hotplug support from old IDE so this might as well be dropped.
 
---linas
+> @@ -1407,6 +1407,24 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260a, quirk_intel_pcie_pm);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260b, quirk_intel_pcie_pm);
+>  
+> +/*
+> + * Toshiba TC86C001 IDE controller reports the standard 8-byte BAR0 size
+> + * but PIO transfer won't work if BAR0 falls at the odd 8 bytes.
+> + * Re-allocate the region if needed.
+> + */
 
+NAK. I think this fixup should be testing if the device port 0 is in
+native mode before doing the fixup. In comaptibility mode bar 0 is
+ignored and the correct compatibility values set up in the resource tree
+by the PCI layer as of 2.6.18-mm-mumble. They are also of course on a xx0
+boundary.
+
+"Close but no cookie": please fix the PCI quirk to match the current -mm
+behaviour with the ATA resource tree. Otherwise - nice driver.
+
+Alan
