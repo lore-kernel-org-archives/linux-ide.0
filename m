@@ -1,48 +1,34 @@
-From: Leigh <nabble@theanthonys.net>
-Subject: Re: [COORDINATE] INIC-1620TA/1622TA2/1623TA2 SATA controllers from
- initio
-Date: Mon, 11 Dec 2006 20:33:34 -0800 (PST)
-Message-ID: <7827233.post@talk.nabble.com>
-References: <43D646C2.6040104@gmail.com> <ekn6pj$9dt$1@sea.gmane.org> <20061201134818.3071445f@localhost.localdomain> <20061201172042.GA6369@kiste.smurf.noris.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Add support for asynchronous scans to libata
+Date: Mon, 11 Dec 2006 22:02:40 -0700
+Message-ID: <20061212050239.GG21070@parisc-linux.org>
+References: <20061208211236.GC29763@parisc-linux.org> <457D84C9.6020907@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.nabble.com ([72.21.53.35]:48856 "EHLO talk.nabble.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751147AbWLLEdf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Dec 2006 23:33:35 -0500
-Received: from [72.21.53.38] (helo=jubjub.nabble.com)
-	by talk.nabble.com with esmtp (Exim 4.50)
-	id 1GtzKg-000519-Ij
-	for linux-ide@vger.kernel.org; Mon, 11 Dec 2006 20:33:34 -0800
-In-Reply-To: <20061201172042.GA6369@kiste.smurf.noris.de>
+Received: from palinux.external.hp.com ([192.25.206.14]:41798 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbWLLFCk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Dec 2006 00:02:40 -0500
+Content-Disposition: inline
+In-Reply-To: <457D84C9.6020907@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-Hi
-
-How did this go?  I doubt I'm the only one who fell afoul of the "has linux
-drivers" implication on initio's website...
-
-I know its early days, but any idea when this might be ready for production?
-
-Regards & thanks,
---
-
-
-Matthias Urlichs wrote:
+On Mon, Dec 11, 2006 at 11:18:17AM -0500, Jeff Garzik wrote:
+> ACK.  I tried to apply the patch, but git-applymbox choked on every 
+> single file modified.  Quite possibly, its due to a whitespace cleanup 
+> in Alan territory.
 > 
->> libata driver will follow, just needs a test victim...
-> 
-> *raises hand*  I've got a freshly-installed Debian box here,
-> which should be an ideal test candidate over the weekend.
-> 
-> 
+> If you would either (a) wait several hours for libata-dev.git#upstream 
+> to mirror out, and resend, or (b) supply a git:// URL to pull from, I'll 
+> merge.
 
--- 
-View this message in context: http://www.nabble.com/-COORDINATE--INIC-1620TA-1622TA2-1623TA2-SATA-controllers-from-initio-tf987765.html#a7827233
-Sent from the linux-ide mailing list archive at Nabble.com.
+Here's a merge against your upstream head.  It's perhaps more of a
+conceptual merge as it adds entries to drivers that have been added
+since I wrote the patch.  I also added a couple of missing slave_destroy
+methods to the newly-added drivers.
 
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
