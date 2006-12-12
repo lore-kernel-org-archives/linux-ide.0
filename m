@@ -1,48 +1,26 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Add support for asynchronous scans to libata
-Date: Tue, 12 Dec 2006 09:02:32 -0500
-Message-ID: <457EB678.6010507@pobox.com>
-References: <20061208211236.GC29763@parisc-linux.org> <457D800E.5070908@pobox.com> <20061211160945.GC21070@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Julius Tolbert" <MNENUUV@yahoo.com>
+Subject: We Guuaranteees Bigger Pen-nis
+Date: Tue, 12 Dec 2006 10:32:19 -0700
+Message-ID: <CFE5.9A5.3065898B8C__29677.154022693$1165945006$gmane$org@mopalinux.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55685 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751357AbWLLOCf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Dec 2006 09:02:35 -0500
-In-Reply-To: <20061211160945.GC21070@parisc-linux.org>
+Received: from ip-71.net-82-216-183.issy1.rev.numericable.fr ([82.216.183.71]:3374
+	"HELO 45746DE8" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S932282AbWLLRg3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Dec 2006 12:36:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
-
-Matthew Wilcox wrote:
-> On Mon, Dec 11, 2006 at 10:58:06AM -0500, Jeff Garzik wrote:
->> The time-consuming portion already takes place in a thread.  Do you mean 
->> multiple threads?  Or, ATA's scan is in one thread, while work continues 
->> in other threads?
->>
->> Patch seems sane, provided that I am educated a bit :)
-> 
-> Each host will be scanned in its own thread.  So boot-up and
-> initialisation of other devices (eg, USB, networking, PS/2, etc) will
-> continue.  Drive ordering and numbering is maintained, and the default
-> configuration right now is to not enable this feature.
-> 
-> We have infrastructure in place to make sure that all discs are found
-> before we try to start init or autorun RAID.  If there's anywhere we're
-> missing a call to scsi_complete_async_scans(), it'll affect SCSI as much
-> as it will IDE, and I'm extremely interested in fixing it.
-
-oh, err, hum.
-
-libata uses one scsihost per port, not one-per-controller, so it won't 
-work like you think.
-
-This will conflict with AHCI's staggered spin-up, at least.
-
-	Jeff
+To: linux-laptop@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-ppp@vger.kernel.org, linux-x25@vger.kernel.org
 
 
+Suffering from short penniss?
+Introduce revolution "ManXL" formula which
+gauranteees sizes increase or moneey baack.
 
+Users reported:
+- 2 inches extra in size
+- 3x pleasurable orgasms
+- 27% thicker
+
+Why waiting?
+
+http://hauntedyou.biz/size/
