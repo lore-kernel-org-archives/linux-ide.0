@@ -1,79 +1,57 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH 2.6.19-rc1] Toshiba TC86C001 IDE driver
-Date: Tue, 12 Dec 2006 15:12:15 -0800
-Message-ID: <457F374F.4030106@oracle.com>
-References: <200612130148.34539.sshtylyov@ru.mvista.com> <20061212150052.b05b05db.randy.dunlap@oracle.com> <457F3621.9030804@ru.mvista.com>
+From: linas@austin.ibm.com (Linas Vepstas)
+Subject: Re: [PATCH] drivers/ata: PATA driver for Celleb
+Date: Tue, 12 Dec 2006 17:34:21 -0600
+Message-ID: <20061212233421.GM4329@austin.ibm.com>
+References: <200612120206.kBC26wHr022838@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:12409 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964802AbWLLXLj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Dec 2006 18:11:39 -0500
-In-Reply-To: <457F3621.9030804@ru.mvista.com>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:57068 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932509AbWLLXeb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Dec 2006 18:34:31 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id kBCNYMRY030897
+	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2006 18:34:22 -0500
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kBCNYMMG548298
+	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2006 16:34:22 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kBCNYLXL029357
+	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2006 16:34:22 -0700
+Content-Disposition: inline
+In-Reply-To: <200612120206.kBC26wHr022838@toshiba.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: akpm@osdl.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, paulus@samba.org, arnd@arndb.de
 
-Sergei Shtylyov wrote:
-> Hello.
+On Tue, Dec 12, 2006 at 11:08:24AM +0900, Akira Iguchi wrote:
 > 
-> Randy Dunlap wrote:
-> 
->>> Behold!  This is the driver for the Toshiba TC86C001 GOKU-S IDE 
->>> controller,
->>> completely reworked from the original brain-damaged Toshiba's 2.4 
->>> version.
->>>
->>> This single channel UltraDMA/66 controller is very simple in 
->>> programming, yet
->>> Toshiba managed to plant many interesting bugs in it.  The 
->>> particularly nasty
->>> "limitation 5" (as they call the errata) caused me to abuse the IDE 
->>> core in a
->>> possibly most interesting way so far.  However, this is still better 
->>> than the
->>> #ifdef mess in drivers/ide/ide-io.c that the original version 
->>> included (well,
->>> it had much more mess)...
-> 
->>> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
->>> drivers/ide/Kconfig        |    5 drivers/ide/pci/Makefile   |    1 
->>> drivers/ide/pci/tc86c001.c |  304 
->>> +++++++++++++++++++++++++++++++++++++++++++++
->>> drivers/pci/quirks.c       |   18 ++
->>> include/linux/pci_ids.h    |    1 5 files changed, 329 insertions(+)
->>>
->>> Index: linux-2.6/drivers/ide/Kconfig
->>> ===================================================================
->>> --- linux-2.6.orig/drivers/ide/Kconfig
->>> +++ linux-2.6/drivers/ide/Kconfig
->>> @@ -742,6 +742,11 @@ config BLK_DEV_VIA82CXXX
->>>       This allows the kernel to change PIO, DMA and UDMA speeds and to
->>>       configure the chip to optimum performance.
->>>
->>> +config BLK_DEV_TC86C001
->>> +    tristate "Toshiba TC86C001 support"
-> 
->> Needs something here like lots of other IDE PCI drivers have:
->>     depends on PCI && BLK_DEV_IDEPCI
-> 
->> or at least:  depends on PCI
-> 
->    No, it's already under if BLK_DEV_IDEPCI. And if you really look into 
-> Kconfig you'll see hwo it's done there...
-> 
->>> +    help
->>> +    This driver adds support for Toshiba TC86C001 GOKU-S chip.
->>> +
->>> endif
-> 
->    Here's that endif.
+> I use some static functions in libata-core.c because it makes
 
-Ack.  Thanks.
+You will want to split this patch into several pars, and submit the 
+changes to libata-core.c separately.
 
--- 
-~Randy
+> --- linux-2.6.19/drivers/ata/libata-core.c	Wed Dec  6 12:00:47 2006
+> ***************
+> *** 600,606 ****
+>    *	Device type - %ATA_DEV_ATA, %ATA_DEV_ATAPI or %ATA_DEV_NONE.
+>    */
+>   
+> ! static unsigned int
+>   ata_dev_try_classify(struct ata_port *ap, unsigned int device, u8 *r_err)
+>   {
+>   	struct ata_taskfile tf;
+> --- 600,606 ----
+>    *	Device type - %ATA_DEV_ATA, %ATA_DEV_ATAPI or %ATA_DEV_NONE.
+>    */
+>   
+> ! unsigned int
+>   ata_dev_try_classify(struct ata_port *ap, unsigned int device, u8 *r_err)
+
+Please generate unified diffs (diff -pu) or use quilt,
+this makes the patches easier to read. (and smaller)
+
+--linas
+
