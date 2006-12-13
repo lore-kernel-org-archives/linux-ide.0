@@ -1,41 +1,39 @@
-From: "Catalin Marinas" <catalin.marinas@gmail.com>
-Subject: Re: [PATCH] ata_piix: use piix_host_stop() in ich_pata_ops
-Date: Wed, 13 Dec 2006 10:41:15 +0000
-Message-ID: <b0943d9e0612130241k3363a2c9kd464d33122e6147f@mail.gmail.com>
-References: <b0943d9e0612091454j6df1fb0ej2fa006c3fa33abae@mail.gmail.com>
-	 <20061211132625.GA18947@htj.dyndns.org>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2.6.19-rc1] Toshiba TC86C001 IDE driver
+Date: Wed, 13 Dec 2006 11:32:48 +0000
+Message-ID: <20061213113248.06372806@localhost.localdomain>
+References: <200612130148.34539.sshtylyov@ru.mvista.com>
+	<20061212234145.557cb035@localhost.localdomain>
+	<58cb370e0612121709x41270fb2p20280cc1edc9c533@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:3442 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932657AbWLMKlQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Dec 2006 05:41:16 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so55377nze
-        for <linux-ide@vger.kernel.org>; Wed, 13 Dec 2006 02:41:15 -0800 (PST)
-In-Reply-To: <20061211132625.GA18947@htj.dyndns.org>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51181 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S964855AbWLMLY5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Dec 2006 06:24:57 -0500
+In-Reply-To: <58cb370e0612121709x41270fb2p20280cc1edc9c533@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun,
+> > Waste of space having a busproc routine. The maintainer removed all the
+> > usable hotplug support from old IDE so this might as well be dropped.
+> 
+> I took over IDE when hotplug was already broken (late 2.5), moreover IDE
+> hotplug support has been always a quick hack according to its original author...
+> I remember your great efforts to fix it but unfortunately they
+> depended on executing
+> ioctls on non-existing devices which made them depend on layering
+> violation in 2.6,
 
-On 11/12/06, Tejun Heo <htejun@gmail.com> wrote:
-> piix_init_one() allocates host private data which should be freed by
-> piix_host_stop().  ich_pata_ops wasn't converted to piix_host_stop()
-> while merging, leaking 4 bytes on driver detach.  Fix it.
+Bart, I'm really not interested in a 500 email rehash of the fact you
+chose to refuse the hotplug support (that was working) for 2.6.x. You
+did, the world has moved on, and there is no point putting a busproc
+function in that driver.
 
-I tried your patch last night but the leak is still reported. I need
-to investigate further and put some printk's in the piix_host_stop
-function to check whether the freeing really takes place.
+Do something useful. Send a patch to make Sergei the IDE maintainer as
+he's doing all the IDE stuff these days.
 
-What I can't follow is where the ata_port_info.private_data
-(port_info[] or ppinfo[]) in piix_init_one gets transfered to
-ata_host.private_data (the "host" argument) that piix_host_stop tries
-to free.
-
--- 
-Catalin
