@@ -1,48 +1,62 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH 2.6.19-rc1] Toshiba TC86C001 IDE driver
-Date: Wed, 13 Dec 2006 15:19:51 +0100
-Message-ID: <58cb370e0612130619g4b0f1aa4vbbd877c9ccd44236@mail.gmail.com>
-References: <200612130148.34539.sshtylyov@ru.mvista.com>
-	 <20061212234145.557cb035@localhost.localdomain>
-	 <58cb370e0612121709x41270fb2p20280cc1edc9c533@mail.gmail.com>
-	 <20061213113248.06372806@localhost.localdomain>
-	 <58cb370e0612130601w72c4cf73m45f26c74103f2231@mail.gmail.com>
-	 <20061213141628.25bd7bd0@localhost.localdomain>
+Date: Wed, 13 Dec 2006 17:16:45 +0300
+Message-ID: <45800B4D.8000906@ru.mvista.com>
+References: <200612130148.34539.sshtylyov@ru.mvista.com> <20061212234145.557cb035@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:1417 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932521AbWLMOTx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Dec 2006 09:19:53 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so183200uga
-        for <linux-ide@vger.kernel.org>; Wed, 13 Dec 2006 06:19:52 -0800 (PST)
-In-Reply-To: <20061213141628.25bd7bd0@localhost.localdomain>
-Content-Disposition: inline
+Received: from homer.mvista.com ([63.81.120.155]:13832 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S964974AbWLMOkx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Dec 2006 09:40:53 -0500
+In-Reply-To: <20061212234145.557cb035@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: akpm@osdl.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 12/13/06, Alan <alan@lxorguk.ukuu.org.uk> wrote:
-> > Unfortunately it seems that not everybody has moved on.  It is not
-> > about your not accepted patches but about "the maintainer removed
-> > all the usable hotplug support from old IDE" false accusations which
-> > are unproven and untrue.
+Hello.
 
-Moreover I could be just bypassed (which happened quite a few times in the
-past) and you could get your patches accepted anyway.  And this indeed did
-happened for some of your IDE patches but not for "working" hotplug support.
-Strange, isn't?  So accept the damn fact that your hotplug support was far
-from being acceptable and move on finally...
+Alan wrote:
 
-> I invite anyone who cares to study the archive.
+>>+ * We work around this by initiating dummy, zero-length DMA transfer on
+>>+ * a DMA timeout expiration. I found no better way to do this with the current
 
-I also invite anyone to study the archive.
+> Novel workaround and probably better than resetting the chip as the
+> winbong does.
 
-> Welcome back to my killfile.
+    I didn't try resetting however the datasheet suggests it just won't do.
 
-A novel way to prove your statements...
+>>+static int tc86c001_busproc(ide_drive_t *drive, int state)
+>>+{
 
-Bart
+> Waste of space having a busproc routine. The maintainer removed all the
+> usable hotplug support from old IDE so this might as well be dropped.
+
+    Don't know what you mean, ioctl is still there...
+
+>>@@ -1407,6 +1407,24 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
+>> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260a, quirk_intel_pcie_pm);
+>> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x260b, quirk_intel_pcie_pm);
+
+>>+/*
+>>+ * Toshiba TC86C001 IDE controller reports the standard 8-byte BAR0 size
+>>+ * but PIO transfer won't work if BAR0 falls at the odd 8 bytes.
+>>+ * Re-allocate the region if needed.
+>>+ */
+
+> NAK. I think this fixup should be testing if the device port 0 is in
+> native mode before doing the fixup. In comaptibility mode bar 0 is
+
+    The chip is native mode only.
+
+> "Close but no cookie": please fix the PCI quirk to match the current -mm
+> behaviour with the ATA resource tree. Otherwise - nice driver.
+
+    Ugh, I should've expected some backstab from -mm tree...
+
+> Alan
+
+WBR, Sergei
