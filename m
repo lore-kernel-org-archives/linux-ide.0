@@ -1,107 +1,120 @@
-From: Patrik Jonsson <patrik@ucolick.org>
-Subject: Frequent SATA errors / port timeouts in 2.6.18.3?
-Date: Wed, 13 Dec 2006 15:45:01 -0800
-Message-ID: <4580907D.1020407@ucolick.org>
-References: <4578F5D4.8080205@moniker.net>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH] Fix ata_task_ioctl to return ATA registers on check condition
+Date: Thu, 14 Dec 2006 09:59:19 -0600
+Message-ID: <458174D7.1020307@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig04FEAC0060D98E41272AF05F"
+Content-Type: multipart/mixed;
+ boundary="------------060703070502090308030905"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zilan.ucolick.org ([128.114.23.234]:52820 "EHLO
-	smtp.ucolick.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807AbWLNAJu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Dec 2006 19:09:50 -0500
-Received: from smtp.ucolick.org (localhost [127.0.0.1])
-	by smtp.ucolick.org (Postfix) with ESMTP id D8D6D3FC4
-	for <linux-ide@vger.kernel.org>; Wed, 13 Dec 2006 15:44:33 -0800 (PST)
-Received: from [128.114.22.77] (dhcp-22-77.ucolick.org [128.114.22.77])
-	by smtp.ucolick.org (Postfix) with ESMTP id C480E2AC4
-	for <linux-ide@vger.kernel.org>; Wed, 13 Dec 2006 15:44:33 -0800 (PST)
-In-Reply-To: <4578F5D4.8080205@moniker.net>
+Received: from mx1.redhat.com ([66.187.233.31]:49675 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932837AbWLNP51 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Dec 2006 10:57:27 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig04FEAC0060D98E41272AF05F
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+This is a multi-part message in MIME format.
+--------------060703070502090308030905
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi all,
+The HDIO_DRIVE_TASK ioctl should output the taskfile register values, 
+the smartctl utility checks the values of the lba registers specifically 
+the values of lbam and lbah for failure status (0xf4 and 0x2c 
+respectively). This patch will copy the ATA registers back to the 
+user-space application on a check condition similiar to ata_cmd_ioctl().
 
-Hopefully someone here will know what's up with my machine. It's an
-nforce4 ultra box that's running a 10-drive RAID5 array. I upgraded from
-2.6.17-rc4 to 2.6.18.3 about a week ago, and I've since had 3 drives
-kicked out. Previously, I had no kicks over almost a year. The kernel
-message is:
+Please ACK or comment.
 
-ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata7.00: (BMDMA stat 0x20)
-ata7.00: tag 0 cmd 0xc8 Emask 0x1 stat 0x41 err 0x4 (device error)
-ata7: EH complete
-SCSI device sdc: 488397168 512-byte hdwr sectors (250059 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
-SCSI device sdc: drive cache: write back
-ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata7.00: (BMDMA stat 0x20)
-ata7.00: tag 0 cmd 0xca Emask 0x4 stat 0x40 err 0x0 (timeout)
-ata7: port is slow to respond, please be patient
-ata7: port failed to respond (30 secs)
-ata7: soft resetting port
-ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata7.00: failed to IDENTIFY (I/O error, err_mask=3D0x2)
-ata7.00: revalidation failed (errno=3D-5)
-ata7: failed to recover some devices, retrying in 5 secs
-ata7: hard resetting port
-ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata7.00: failed to IDENTIFY (I/O error, err_mask=3D0x2)
-ata7.00: revalidation failed (errno=3D-5)
-ata7: failed to recover some devices, retrying in 5 secs
-ata7: hard resetting port
-ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata7.00: failed to IDENTIFY (I/O error, err_mask=3D0x2)
-ata7.00: revalidation failed (errno=3D-5)
-ata7.00: disabled
-ata7: EH complete
+Thanks,
+David
 
+--------------060703070502090308030905
+Content-Type: text/x-patch;
+ name="linux-2.6.19-ata-task-ioctl-sense.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="linux-2.6.19-ata-task-ioctl-sense.patch"
 
-First I thought it was a cabling or card issue, because the same drive
-got kicked twice. That drive was connected to a 2-port SIG sata_sil24
-card. However, I just had another drive kicked that's connected to the
-onboard sata_nv, which leads me to suspect that the upgraded kernel
-might have something to do with it. A quick googling seems to indicate
-that others are seeing this with 2.6.18, too, so I was wondering if
-anyone knows more. The drives contain science data for analysis, so it
-would be a pain (though not a disaster) to lose it. Would it be
-advisable to revert to the previous 2.6.17 that I was running before or
-is this a problem that's fixed in a later kernel than the one I'm
-running now?
+--- linux-2.6.19-rc5/drivers/ata/libata-scsi.c.smart
++++ linux-2.6.19-rc5/drivers/ata/libata-scsi.c
+@@ -273,8 +273,8 @@ int ata_task_ioctl(struct scsi_device *s
+ {
+ 	int rc = 0;
+ 	u8 scsi_cmd[MAX_COMMAND_SIZE];
+-	u8 args[7];
+-	struct scsi_sense_hdr sshdr;
++	u8 args[7], *sensebuf = NULL;
++	int cmd_result;
+ 
+ 	if (arg == NULL)
+ 		return -EINVAL;
+@@ -282,10 +282,14 @@ int ata_task_ioctl(struct scsi_device *s
+ 	if (copy_from_user(args, arg, sizeof(args)))
+ 		return -EFAULT;
+ 
++	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
++	if (!sensebuf)
++		return -ENOMEM;
++
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+ 	scsi_cmd[0]  = ATA_16;
+ 	scsi_cmd[1]  = (3 << 1); /* Non-data */
+-	/* scsi_cmd[2] is already 0 -- no off.line, cc, or data xfer */
++	scsi_cmd[2]  = 0x20;     /* cc but no off.line or data xfer */
+ 	scsi_cmd[4]  = args[1];
+ 	scsi_cmd[6]  = args[2];
+ 	scsi_cmd[8]  = args[3];
+@@ -295,11 +299,46 @@ int ata_task_ioctl(struct scsi_device *s
+ 
+ 	/* Good values for timeout and retries?  Values below
+ 	   from scsi_ioctl_send_command() for default case... */
+-	if (scsi_execute_req(scsidev, scsi_cmd, DMA_NONE, NULL, 0, &sshdr,
+-			     (10*HZ), 5))
++	cmd_result = scsi_execute(scsidev, scsi_cmd, DMA_NONE, NULL, 0,
++				  sensebuf, (10*HZ), 5, 0);
++	
++	if (driver_byte(cmd_result) == DRIVER_SENSE) {/* sense data available */
++		u8 *desc = sensebuf + 8;
++		cmd_result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
++
++		/* If we set cc then ATA pass-through will cause a
++		 * check condition even if no error. Filter that. */
++		if (cmd_result & SAM_STAT_CHECK_CONDITION) {
++			struct scsi_sense_hdr sshdr;
++			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
++					     &sshdr);
++			if (sshdr.sense_key==0 &&
++			    sshdr.asc==0 && sshdr.ascq==0)
++				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
++		}
++
++		/* Send userspace ATA registers */
++		if (sensebuf[0] == 0x72 &&     /* format is "descriptor" */
++		    desc[0] == 0x09) {         /* code is "ATA Descriptor" */
++			args[0] = desc[13];    /* status */
++			args[1] = desc[3];     /* error */
++			args[2] = desc[5];     /* sector count (0:7) */
++			args[3] = desc[7];     /* lbal */
++			args[4] = desc[9];     /* lbam */
++			args[5] = desc[11];    /* lbah */
++			args[6] = desc[12];    /* select */
++			if (copy_to_user(arg, args, sizeof(args)))
++				rc = -EFAULT;
++		}
++	}
++
++	if (cmd_result) {
+ 		rc = -EIO;
++		goto error;
++	}
+ 
+-	/* Need code to retrieve data from check condition? */
++ error:
++	kfree(sensebuf);
+ 	return rc;
+ }
+ 
 
-I did at the same time also install an Areca ARC1260 controller and
-connected a bunch of drives to it, so another idea I had was cable
-interference or something (there are now 18 drives in the machine).
-
-Any ideas or thought would be appreciated,
-
-/Patrik
-
-
-
-
---------------enig04FEAC0060D98E41272AF05F
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFFgJB9T+KvsdUW5p8RAow6AJ0aa0cF7G9zs7MX44L7blYje3g3CwCfRmui
-4mTBNWVXYbyOEpzkNMwlAZE=
-=zGpf
------END PGP SIGNATURE-----
-
---------------enig04FEAC0060D98E41272AF05F--
+--------------060703070502090308030905--
