@@ -1,26 +1,26 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [-mm patch] drivers/ide/pci/tc86c001.c: make a function static
-Date: Sat, 16 Dec 2006 14:18:13 +0000
-Message-ID: <20061216141813.16233431@localhost.localdomain>
-References: <20061214225913.3338f677.akpm@osdl.org>
-	<20061216135650.GA3388@stusta.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: Missing sff fix for the PCI updates
+Date: Sat, 16 Dec 2006 10:57:19 -0500
+Message-ID: <4584175F.9060004@pobox.com>
+References: <20061215221247.1e0313a8@localhost.localdomain> <Pine.LNX.4.64.0612151826511.3557@woody.osdl.org> <458367B2.2010907@pobox.com> <20061216115917.1d9cd814@localhost.localdomain> <45840B44.8030408@pobox.com> <20061216154658.64cb2d42@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51915 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932408AbWLPOOm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Dec 2006 09:14:42 -0500
-In-Reply-To: <20061216135650.GA3388@stusta.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:34582 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161112AbWLPP5V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 16 Dec 2006 10:57:21 -0500
+In-Reply-To: <20061216154658.64cb2d42@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-> I'm not sure whether it'd be a good idea to include such a driver for 
-> the legacy IDE subsystem without a libata based driver for the same 
-> hardware.
+BTW2: if you make probe_ent per-port, rather than per-controller, we can 
+trivially support all these PATA+SATA controllers.
 
-It would be nice to have a libata driver but having the hardware
-supported is far better than no support at all.
+	Jeff
+
+
+
