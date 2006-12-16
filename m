@@ -1,54 +1,50 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Slow SATA detection on bootup
-Date: Sat, 16 Dec 2006 12:02:03 -0500
-Message-ID: <4584268B.9040903@pobox.com>
-References: <20061025114504.450b3425@localhost>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+ SATA 300 TX4
+Date: Sat, 16 Dec 2006 12:09:00 -0500
+Message-ID: <4584282C.5060803@pobox.com>
+References: <43FFAE3D.7010002@physics.harvard.edu> <44000036.7070403@eyal.emu.id.au> <011f01c639f9$8dc86bc0$3d64880a@speedy> <442DB29D.1010102@avona.com> <447CB9B4.50700@physics.harvard.edu> <Pine.LNX.4.62.0610021700350.10249@kinison.puremagic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34939 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932494AbWLPRCH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 Dec 2006 12:02:07 -0500
-In-Reply-To: <20061025114504.450b3425@localhost>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.62.0610021700350.10249@kinison.puremagic.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Evan Harris <eharris@puremagic.com>
+Cc: Milan Kupcevic <milan@physics.harvard.edu>, Fabian Knittel <fabian.knittel@avona.com>, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, Stan Seibert <volsung@mailsnare.net>, linux-ide@vger.kernel.org, Christiaan den Besten <chris@scorpion.nl>, Mikael Pettersson <mikpe@it.uu.se>
 List-Id: linux-ide@vger.kernel.org
-To: Stephen Hemminger <shemminger@osdl.org>
-Cc: linux-ide@vger.kernel.org
 
-Stephen Hemminger wrote:
-> This laptop has long timeouts during bootup.  Something is
-> wrong. This is a Sony VAIO NG170. On a positive note suspend works.
+Evan Harris wrote:
 > 
-> Here is the console log during the 40 seconds of dead time.
+> I have a card that mirrors this one from your list:
 > 
-> [    2.942000] PCI: Setting latency timer of device 0000:00:1f.2 to 64
-> [    2.942000] ata1: SATA max UDMA/133 cmd 0x18B0 ctl 0x18A6 bmdma 0x1890 irq 225
-> [    2.942000] ata2: SATA max UDMA/133 cmd 0x18A8 ctl 0x18A2 bmdma 0x1898 irq 225
-> [    2.942000] scsi0 : ata_piix
-> [    3.094000] ata1.00: ATA-7, max UDMA/100, 234441648 sectors: LBA48 NCQ (depth 0/32)
-> [    3.094000] ata1.00: ata1: dev 0 multi count 16
-> [    3.097000] ata1.00: configured for UDMA/100
-> [    3.097000] scsi1 : ata_piix
-> [   10.144000] ata2: port is slow to respond, please be patient
-> [   33.104000] ata2: port failed to respond (30 secs)
-> [   33.255000] ata2: SRST failed (status 0xFF)
-> [   33.255000] ata2: SRST failed (err_mask=0x100)
-> [   33.255000] ata2: softreset failed, retrying in 5 secs
-> [   38.407000] ata2: SRST failed (status 0xFF)
-> [   38.407000] ata2: SRST failed (err_mask=0x100)
-> [   38.407000] ata2: softreset failed, retrying in 5 secs
-> [   43.560000] ata2: SRST failed (status 0xFF)
-> [   43.560000] ata2: SRST failed (err_mask=0x100)
-> [   43.560000] ata2: reset failed, giving up
-> [   43.560000]   Vendor: ATA       Model: FUJITSU MHV2120B  Rev: 0000
-> [   43.561000]   Type:   Direct-Access                      ANSI SCSI revision: 05
-> [   43.567000] SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+> Retail name: SATA300 TX4
+> Chip label: PDC40718-GP  SATAII300
+> Vendor-Device number: 105a:3d17 (rev 02)
+> 
+> Through testing, I've found linux 2.6.16 and 2.6.17 find the ports in 
+> this order (the list is ordered by linux detection):
+> 
+> 1. silkscreen port 3
+> 2. silkscreen port 2
+> 3. silkscreen port 4
+> 4. silkscreen port 1
+>> NOTE: the patch I have submitted ( 
+>> http://marc.theaimsgroup.com/?l=linux-ide&m=114082978311290&w=2 ) is a 
+>> solution that doesn't know about the older Promise SATA controllers, 
+>> which are not affected with the "new wiring" problem, so the older 
+>> controllers will appear screwed if you use it.
+>>
+>> Hopefully we will collect enough info about all the SATA Promise 
+>> controllers to distinguish the new and the old wiring controllers, 
+>> then produce a new patch that will be a correct solution to the "new 
+>> wiring" problem.
 
-ACK or NAK -- does 2.6.20-rc1 fix this?
+Mikael Pettersson has been doing some excellent work recently on 
+sata_promise.  If enough data has been collected on this sata_promise 
+port enumeration problem, maybe the data could be collated and proposed 
+via Mikael as a patch?
 
 	Jeff
-
 
 
