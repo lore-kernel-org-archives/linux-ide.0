@@ -1,33 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH -stable] SCSI: add missing cdb clearing in scsi_execute()
-Date: Sat, 16 Dec 2006 20:02:32 +0900
-Message-ID: <20061216110232.GF5400@htj.dyndns.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] drivers/ide/pci/tc86c001.c: make a function static
+Date: Sat, 16 Dec 2006 14:56:50 +0100
+Message-ID: <20061216135650.GA3388@stusta.de>
+References: <20061214225913.3338f677.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:3326 "HELO
+	mailout.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753711AbWLPN4v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Dec 2006 08:56:51 -0500
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: jens.axboe@oracle.com, dougg@torque.net, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, stable@kernel.org
+In-Reply-To: <20061214225913.3338f677.akpm@osdl.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-kernel@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
 
-Clear-garbage-after-CDB patch missed scsi_execute() and it causes some
-ODDs (HL-DT-ST DVD-RAM GSA-H30N) choke during SCSI scan.  Note that
-this patch is only for -stable.  There is another more reliable fix
-for this problem proposed for devel tree.
+On Thu, Dec 14, 2006 at 10:59:13PM -0800, Andrew Morton wrote:
+>...
+> Changes since 2.6.19-mm1:
+>...
+> +toshiba-tc86c001-ide-driver-take-2.patch
+>...
+>  Misc.
+>...
 
-http://thread.gmane.org/gmane.linux.ide/14605/focus=14605
+This patch makes the needlessly global init_hwif_tc86c001() static.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1748e27..644f711 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -191,6 +191,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 		goto out;
+---
+
+BTW:
+I'm not sure whether it'd be a good idea to include such a driver for 
+the legacy IDE subsystem without a libata based driver for the same 
+hardware.
+
+--- linux-2.6.20-rc1-mm1/drivers/ide/pci/tc86c001.c.old	2006-12-15 21:58:44.000000000 +0100
++++ linux-2.6.20-rc1-mm1/drivers/ide/pci/tc86c001.c	2006-12-15 21:58:54.000000000 +0100
+@@ -204,7 +204,7 @@
+ 	return 0;
+ }
  
- 	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memset(req->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
- 	memcpy(req->cmd, cmd, req->cmd_len);
- 	req->sense = sense;
- 	req->sense_len = 0;
+-void __devinit init_hwif_tc86c001(ide_hwif_t *hwif)
++static void __devinit init_hwif_tc86c001(ide_hwif_t *hwif)
+ {
+ 	unsigned long sc_base	= pci_resource_start(hwif->pci_dev, 5);
+ 	u16 scr1		= hwif->INW(sc_base + 0x00);;
+
