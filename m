@@ -1,194 +1,878 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/2] libata: kill qc->nsect and cursect
-Date: Sun, 17 Dec 2006 10:48:27 +0900
-Message-ID: <20061217014827.GK5400@htj.dyndns.org>
+Subject: [PATCH 2/2] sata_inic162x: finally, driver for initio 162x SATA controllers
+Date: Sun, 17 Dec 2006 10:50:08 +0900
+Message-ID: <20061217015008.GL5400@htj.dyndns.org>
+References: <20061217014827.GK5400@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:48424 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbWLQBsg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Dec 2006 20:48:36 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1550268nfa
-        for <linux-ide@vger.kernel.org>; Sat, 16 Dec 2006 17:48:35 -0800 (PST)
+Received: from ug-out-1314.google.com ([66.249.92.168]:25745 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751481AbWLQBuY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Dec 2006 20:50:24 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so1186496uga
+        for <linux-ide@vger.kernel.org>; Sat, 16 Dec 2006 17:50:22 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <20061217014827.GK5400@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, bob@evoria.net, nabble@theanthonys.net, alan@lxorguk.ukuu.org.uk, matthias@urlichs.de, romieu@fr.zoreil.com, carlosmarcelomartinez@gmail.com
 
-libata used two separate sets of variables to record request size and
-current offset for ATA and ATAPI.  This is confusing and fragile.
-This patch replaces qc->nsect/cursect with qc->nbytes/curbytes and
-kills them.  Also, ata_pio_sector() is updated to use bytes for
-qc->cursg_ofs instead of sectors.  The field used to be used in bytes
-for ATAPI and in sectors for ATA.
+Driver for Initio 162x SATA controllers.  ATA r/w, ATAPI r, hotplug
+and suspend/resume work.  ATAPI w (recording, that is) broken.  Feel
+free to fix it, but be warned, this controller is weird.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c       |   15 ++++++++-------
- drivers/ata/libata-eh.c         |    7 +------
- drivers/ata/libata-scsi.c       |    4 ++--
- drivers/ata/pata_pdc202xx_old.c |    5 +----
- drivers/ata/sata_qstor.c        |    2 +-
- include/linux/libata.h          |    6 +-----
- 6 files changed, 14 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index fd20e7a..2a496d0 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1249,7 +1249,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 			buflen += sg[i].length;
+As suggested, custom ->slave_configure instead of
+ap->max_segement_size mess.  And, yeah, I like this way much better
+too.  What was I thinking?  :-)
+
+Thanks.
+
+ drivers/ata/Kconfig         |    6 +
+ drivers/ata/Makefile        |    1 +
+ drivers/ata/sata_inic162x.c |  802 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 809 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index fb1de86..95df246 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -143,6 +143,12 @@ config SATA_VITESSE
  
- 		ata_sg_init(qc, sg, n_elem);
--		qc->nsect = buflen / ATA_SECT_SIZE;
-+		qc->nbytes = buflen;
- 	}
+ 	  If unsure, say N.
  
- 	qc->private_data = &wait;
-@@ -4031,11 +4031,11 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
- 	unsigned int offset;
- 	unsigned char *buf;
++config SATA_INIC162X
++	tristate "Initio 162x SATA support"
++	depends on PCI
++	help
++	  This option enables support for Initio 162x Serial ATA.
++
+ config SATA_INTEL_COMBINED
+ 	bool
+ 	depends on IDE=y && !BLK_DEV_IDE_SATA && (SATA_AHCI || ATA_PIIX)
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index a0df15d..cd096f0 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -15,6 +15,7 @@ obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
+ obj-$(CONFIG_SATA_NV)		+= sata_nv.o
+ obj-$(CONFIG_SATA_ULI)		+= sata_uli.o
+ obj-$(CONFIG_SATA_MV)		+= sata_mv.o
++obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
  
--	if (qc->cursect == (qc->nsect - 1))
-+	if (qc->curbytes == qc->nbytes - ATA_SECT_SIZE)
- 		ap->hsm_task_state = HSM_ST_LAST;
- 
- 	page = sg[qc->cursg].page;
--	offset = sg[qc->cursg].offset + qc->cursg_ofs * ATA_SECT_SIZE;
-+	offset = sg[qc->cursg].offset + qc->cursg_ofs;
- 
- 	/* get the current page and offset */
- 	page = nth_page(page, (offset >> PAGE_SHIFT));
-@@ -4060,10 +4060,10 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
- 		ap->ops->data_xfer(qc->dev, buf + offset, ATA_SECT_SIZE, do_write);
- 	}
- 
--	qc->cursect++;
--	qc->cursg_ofs++;
-+	qc->curbytes += ATA_SECT_SIZE;
-+	qc->cursg_ofs += ATA_SECT_SIZE;
- 
--	if ((qc->cursg_ofs * ATA_SECT_SIZE) == (&sg[qc->cursg])->length) {
-+	if (qc->cursg_ofs == (&sg[qc->cursg])->length) {
- 		qc->cursg++;
- 		qc->cursg_ofs = 0;
- 	}
-@@ -4088,7 +4088,8 @@ static void ata_pio_sectors(struct ata_queued_cmd *qc)
- 
- 		WARN_ON(qc->dev->multi_count == 0);
- 
--		nsect = min(qc->nsect - qc->cursect, qc->dev->multi_count);
-+		nsect = min((qc->nbytes - qc->curbytes) / ATA_SECT_SIZE,
-+			    qc->dev->multi_count);
- 		while (nsect--)
- 			ata_pio_sector(qc);
- 	} else
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 08ad44b..dee403c 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1443,15 +1443,10 @@ static void ata_eh_report(struct ata_port *ap)
- 		};
- 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
- 		struct ata_taskfile *cmd = &qc->tf, *res = &qc->result_tf;
--		unsigned int nbytes;
- 
- 		if (!(qc->flags & ATA_QCFLAG_FAILED) || !qc->err_mask)
- 			continue;
- 
--		nbytes = qc->nbytes;
--		if (!nbytes)
--			nbytes = qc->nsect << 9;
--
- 		ata_dev_printk(qc->dev, KERN_ERR,
- 			"cmd %02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x "
- 			"tag %d cdb 0x%x data %u %s\n         "
-@@ -1461,7 +1456,7 @@ static void ata_eh_report(struct ata_port *ap)
- 			cmd->lbal, cmd->lbam, cmd->lbah,
- 			cmd->hob_feature, cmd->hob_nsect,
- 			cmd->hob_lbal, cmd->hob_lbam, cmd->hob_lbah,
--			cmd->device, qc->tag, qc->cdb[0], nbytes,
-+			cmd->device, qc->tag, qc->cdb[0], qc->nbytes,
- 			dma_str[qc->dma_dir],
- 			res->command, res->feature, res->nsect,
- 			res->lbal, res->lbam, res->lbah,
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 836947d..b4faaa4 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1321,7 +1321,7 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- 		goto nothing_to_do;
- 
- 	qc->flags |= ATA_QCFLAG_IO;
--	qc->nsect = n_block;
-+	qc->nbytes = n_block * ATA_SECT_SIZE;
- 
- 	rc = ata_build_rw_tf(&qc->tf, qc->dev, block, n_block, tf_flags,
- 			     qc->tag);
-@@ -2623,7 +2623,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	 * TODO: find out if we need to do more here to
- 	 *       cover scatter/gather case.
- 	 */
--	qc->nsect = scmd->request_bufflen / ATA_SECT_SIZE;
-+	qc->nbytes = scmd->request_bufflen;
- 
- 	/* request result TF */
- 	qc->flags |= ATA_QCFLAG_RESULT_TF;
-diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-index ad691b9..ba982ba 100644
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -189,10 +189,7 @@ static void pdc2026x_bmdma_start(struct ata_queued_cmd *qc)
- 	/* Cases the state machine will not complete correctly without help */
- 	if ((tf->flags & ATA_TFLAG_LBA48) ||  tf->protocol == ATA_PROT_ATAPI_DMA)
- 	{
--		if (tf->flags & ATA_TFLAG_LBA48)
--			len = qc->nsect * 512;
--		else
--			len = qc->nbytes;
-+		len = qc->nbytes;
- 
- 		if (tf->flags & ATA_TFLAG_WRITE)
- 			len |= 0x06000000;
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 710909d..0292a79 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -325,7 +325,7 @@ static void qs_qc_prep(struct ata_queued_cmd *qc)
- 	/* host control block (HCB) */
- 	buf[ 0] = QS_HCB_HDR;
- 	buf[ 1] = hflags;
--	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
-+	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nbytes);
- 	*(__le32 *)(&buf[ 8]) = cpu_to_le32(nelem);
- 	addr = ((u64)pp->pkt_dma) + QS_CPB_BYTES;
- 	*(__le64 *)(&buf[16]) = cpu_to_le64(addr);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9356322..b7c86b4 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -430,9 +430,6 @@ struct ata_queued_cmd {
- 
- 	unsigned int		pad_len;
- 
--	unsigned int		nsect;
--	unsigned int		cursect;
--
- 	unsigned int		nbytes;
- 	unsigned int		curbytes;
- 
-@@ -1145,8 +1142,7 @@ static inline void ata_qc_reinit(struct ata_queued_cmd *qc)
- {
- 	qc->__sg = NULL;
- 	qc->flags = 0;
--	qc->cursect = qc->cursg = qc->cursg_ofs = 0;
--	qc->nsect = 0;
-+	qc->cursg = qc->cursg_ofs = 0;
- 	qc->nbytes = qc->curbytes = 0;
- 	qc->err_mask = 0;
- 
+ obj-$(CONFIG_PATA_ALI)		+= pata_ali.o
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+new file mode 100644
+index 0000000..2caf9c0
+--- /dev/null
++++ b/drivers/ata/sata_inic162x.c
+@@ -0,0 +1,802 @@
++/*
++ * sata_inic162x.c - Driver for Initio 162x SATA controllers
++ *
++ * Copyright 2006  SUSE Linux Products GmbH
++ * Copyright 2006  Tejun Heo <teheo@novell.com>
++ *
++ * This file is released under GPL v2.
++ *
++ * This controller is eccentric and easily locks up if something isn't
++ * right.  Documentation is available at initio's website but it only
++ * documents registers (not programming model).
++ *
++ * - ATA disks work.
++ * - Hotplug works.
++ * - ATAPI read works but burning doesn't.  This thing is really
++ *   peculiar about ATAPI and I couldn't figure out how ATAPI PIO and
++ *   ATAPI DMA WRITE should be programmed.  If you've got a clue, be
++ *   my guest.
++ * - Both STR and STD work.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <scsi/scsi_host.h>
++#include <linux/libata.h>
++#include <linux/blkdev.h>
++#include <scsi/scsi_device.h>
++
++#define DRV_NAME	"sata_inic162x"
++#define DRV_VERSION	"0.1"
++
++enum {
++	MMIO_BAR		= 5,
++
++	NR_PORTS		= 2,
++
++	HOST_CTL		= 0x7c,
++	HOST_STAT		= 0x7e,
++	HOST_IRQ_STAT		= 0xbc,
++	HOST_IRQ_MASK		= 0xbe,
++
++	PORT_SIZE		= 0x40,
++
++	/* registers for ATA TF operation */
++	PORT_TF			= 0x00,
++	PORT_ALT_STAT		= 0x08,
++	PORT_IRQ_STAT		= 0x09,
++	PORT_IRQ_MASK		= 0x0a,
++	PORT_PRD_CTL		= 0x0b,
++	PORT_PRD_ADDR		= 0x0c,
++	PORT_PRD_XFERLEN	= 0x10,
++
++	/* IDMA register */
++	PORT_IDMA_CTL		= 0x14,
++
++	PORT_SCR		= 0x20,
++
++	/* HOST_CTL bits */
++	HCTL_IRQOFF		= (1 << 8),  /* global IRQ off */
++	HCTL_PWRDWN		= (1 << 13), /* power down PHYs */
++	HCTL_SOFTRST		= (1 << 13), /* global reset (no phy reset) */
++	HCTL_RPGSEL		= (1 << 15), /* register page select */
++
++	HCTL_KNOWN_BITS		= HCTL_IRQOFF | HCTL_PWRDWN | HCTL_SOFTRST |
++				  HCTL_RPGSEL,
++
++	/* HOST_IRQ_(STAT|MASK) bits */
++	HIRQ_PORT0		= (1 << 0),
++	HIRQ_PORT1		= (1 << 1),
++	HIRQ_SOFT		= (1 << 14),
++	HIRQ_GLOBAL		= (1 << 15), /* STAT only */
++
++	/* PORT_IRQ_(STAT|MASK) bits */
++	PIRQ_OFFLINE		= (1 << 0),  /* device unplugged */
++	PIRQ_ONLINE		= (1 << 1),  /* device plugged */
++	PIRQ_COMPLETE		= (1 << 2),  /* completion interrupt */
++	PIRQ_FATAL		= (1 << 3),  /* fatal error */
++	PIRQ_ATA		= (1 << 4),  /* ATA interrupt */
++	PIRQ_REPLY		= (1 << 5),  /* reply FIFO not empty */
++	PIRQ_PENDING		= (1 << 7),  /* port IRQ pending (STAT only) */
++
++	PIRQ_ERR		= PIRQ_OFFLINE | PIRQ_ONLINE | PIRQ_FATAL,
++
++	PIRQ_MASK_DMA_READ	= PIRQ_REPLY | PIRQ_ATA,
++	PIRQ_MASK_OTHER		= PIRQ_REPLY | PIRQ_COMPLETE,
++	PIRQ_MASK_FREEZE	= 0xff,
++
++	/* PORT_PRD_CTL bits */
++	PRD_CTL_START		= (1 << 0),
++	PRD_CTL_WR		= (1 << 3),
++	PRD_CTL_DMAEN		= (1 << 7),  /* DMA enable */
++
++	/* PORT_IDMA_CTL bits */
++	IDMA_CTL_RST_ATA	= (1 << 2),  /* hardreset ATA bus */
++	IDMA_CTL_RST_IDMA	= (1 << 5),  /* reset IDMA machinary */
++	IDMA_CTL_GO		= (1 << 7),  /* IDMA mode go */
++	IDMA_CTL_ATA_NIEN	= (1 << 8),  /* ATA IRQ disable */
++};
++
++struct inic_host_priv {
++	u16 cached_hctl;
++};
++
++struct inic_port_priv {
++	u8 dfl_prdctl, cached_prdctl;
++	u8 cached_pirq_mask;
++};
++
++static int inic_slave_config(struct scsi_device *sdev)
++{
++	/* This controller is braindamaged.  dma_boundary is 0xffff
++	 * like others but it will lock up the whole machine HARD if
++	 * 65536 byte PRD entry is fed.  Reduce maximum segment size.
++	 */
++	blk_queue_max_segment_size(sdev->request_queue, 65536 - 512);
++
++	return ata_scsi_slave_config(sdev);
++}
++
++static struct scsi_host_template inic_sht = {
++	.module			= THIS_MODULE,
++	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
++	.queuecommand		= ata_scsi_queuecmd,
++	.can_queue		= ATA_DEF_QUEUE,
++	.this_id		= ATA_SHT_THIS_ID,
++	.sg_tablesize		= LIBATA_MAX_PRD,
++	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
++	.emulated		= ATA_SHT_EMULATED,
++	.use_clustering		= ATA_SHT_USE_CLUSTERING,
++	.proc_name		= DRV_NAME,
++	.dma_boundary		= ATA_DMA_BOUNDARY,
++	.slave_configure	= inic_slave_config,
++	.slave_destroy		= ata_scsi_slave_destroy,
++	.bios_param		= ata_std_bios_param,
++	.suspend		= ata_scsi_device_suspend,
++	.resume			= ata_scsi_device_resume,
++};
++
++static const int scr_map[] = {
++	[SCR_STATUS]	= 0,
++	[SCR_ERROR]	= 1,
++	[SCR_CONTROL]	= 2,
++};
++
++static void __iomem * get_port_base(struct ata_port *ap)
++{
++	return ap->host->mmio_base + ap->port_no * PORT_SIZE;
++}
++
++static void __set_pirq_mask(struct ata_port *ap, u8 mask)
++{
++	void __iomem *port_base = get_port_base(ap);
++	struct inic_port_priv *pp = ap->private_data;
++
++	writeb(mask, port_base + PORT_IRQ_MASK);
++	pp->cached_pirq_mask = mask;
++}
++
++static void set_pirq_mask(struct ata_port *ap, u8 mask)
++{
++	struct inic_port_priv *pp = ap->private_data;
++
++	if (pp->cached_pirq_mask != mask)
++		__set_pirq_mask(ap, mask);
++}
++
++static void reset_port(void __iomem *port_base)
++{
++	void __iomem *idma_ctl = port_base + PORT_IDMA_CTL;
++	u16 ctl;
++
++	ctl = readw(idma_ctl);
++	ctl &= ~(IDMA_CTL_RST_IDMA | IDMA_CTL_ATA_NIEN | IDMA_CTL_GO);
++
++	/* mask IRQ and assert reset */
++	writew(ctl | IDMA_CTL_RST_IDMA | IDMA_CTL_ATA_NIEN, idma_ctl);
++	readw(idma_ctl); /* flush */
++
++	/* give it some time */
++	msleep(1);
++
++	/* release reset */
++	writew(ctl | IDMA_CTL_ATA_NIEN, idma_ctl);
++
++	/* clear irq */
++	writeb(0xff, port_base + PORT_IRQ_STAT);
++
++	/* reenable ATA IRQ, turn off IDMA mode */
++	writew(ctl, idma_ctl);
++}
++
++static u32 inic_scr_read(struct ata_port *ap, unsigned sc_reg)
++{
++	void __iomem *scr_addr = (void __iomem *)ap->ioaddr.scr_addr;
++	if (sc_reg < ARRAY_SIZE(scr_map)) {
++		void __iomem *addr;
++		u32 val;
++
++		addr = scr_addr + scr_map[sc_reg] * 4;
++		val = readl(scr_addr + scr_map[sc_reg] * 4);
++
++		/* this controller has stuck DIAG.N, ignore it */
++		if (sc_reg == SCR_ERROR)
++			val &= ~SERR_PHYRDY_CHG;
++		return val;
++	}
++	return 0xffffffffU;
++}
++
++static void inic_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val)
++{
++	void __iomem *scr_addr = (void __iomem *)ap->ioaddr.scr_addr;
++	if (sc_reg < ARRAY_SIZE(scr_map)) {
++		void __iomem *addr;
++		addr = scr_addr + scr_map[sc_reg] * 4;
++		writel(val, scr_addr + scr_map[sc_reg] * 4);
++	}
++}
++
++/*
++ * In TF mode, inic162x is very similar to SFF device.  TF registers
++ * function the same.  DMA engine behaves similary using the same PRD
++ * format as BMDMA but different command register, interrupt and event
++ * notification methods are used.  The following inic_bmdma_*()
++ * functions do the impedance matching.
++ */
++static void inic_bmdma_setup(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct inic_port_priv *pp = ap->private_data;
++	void __iomem *port_base = get_port_base(ap);
++	int rw = qc->tf.flags & ATA_TFLAG_WRITE;
++
++	/* make sure device sees PRD table writes */
++	wmb();
++
++	/* load transfer length */
++	writel(qc->nbytes, port_base + PORT_PRD_XFERLEN);
++
++	/* turn on DMA and specify data direction */
++	pp->cached_prdctl = pp->dfl_prdctl | PRD_CTL_DMAEN;
++	if (!rw)
++		pp->cached_prdctl |= PRD_CTL_WR;
++	writeb(pp->cached_prdctl, port_base + PORT_PRD_CTL);
++
++	/* issue r/w command */
++	ap->ops->exec_command(ap, &qc->tf);
++}
++
++static void inic_bmdma_start(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct inic_port_priv *pp = ap->private_data;
++	void __iomem *port_base = get_port_base(ap);
++
++	/* start host DMA transaction */
++	pp->cached_prdctl |= PRD_CTL_START;
++	writeb(pp->cached_prdctl, port_base + PORT_PRD_CTL);
++}
++
++static void inic_bmdma_stop(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct inic_port_priv *pp = ap->private_data;
++	void __iomem *port_base = get_port_base(ap);
++
++	/* stop DMA engine */
++	writeb(pp->dfl_prdctl, port_base + PORT_PRD_CTL);
++}
++
++static u8 inic_bmdma_status(struct ata_port *ap)
++{
++	/* event is already verified by the interrupt handler */
++	return ATA_DMA_INTR;
++}
++
++static void inic_irq_clear(struct ata_port *ap)
++{
++	/* noop */
++}
++
++static void inic_host_intr(struct ata_port *ap)
++{
++	void __iomem *port_base = get_port_base(ap);
++	struct ata_eh_info *ehi = &ap->eh_info;
++	u8 irq_stat;
++
++	/* fetch and clear irq */
++	irq_stat = readb(port_base + PORT_IRQ_STAT);
++	writeb(irq_stat, port_base + PORT_IRQ_STAT);
++
++	if (likely(!(irq_stat & PIRQ_ERR))) {
++		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
++
++		if (unlikely(!qc || (qc->tf.flags & ATA_TFLAG_POLLING))) {
++			ata_chk_status(ap);	/* clear ATA interrupt */
++			return;
++		}
++
++		if (likely(ata_host_intr(ap, qc)))
++			return;
++
++		ata_chk_status(ap);	/* clear ATA interrupt */
++		ata_port_printk(ap, KERN_WARNING, "unhandled "
++				"interrupt, irq_stat=%x\n", irq_stat);
++		return;
++	}
++
++	/* error */
++	ata_ehi_push_desc(ehi, "irq_stat=0x%x", irq_stat);
++
++	if (irq_stat & (PIRQ_OFFLINE | PIRQ_ONLINE)) {
++		ata_ehi_hotplugged(ehi);
++		ata_port_freeze(ap);
++	} else
++		ata_port_abort(ap);
++}
++
++static irqreturn_t inic_interrupt(int irq, void *dev_instance)
++{
++	struct ata_host *host = dev_instance;
++	void __iomem *mmio_base = host->mmio_base;
++	u16 host_irq_stat;
++	int i, handled = 0;;
++
++	host_irq_stat = readw(mmio_base + HOST_IRQ_STAT);
++
++	if (unlikely(!(host_irq_stat & HIRQ_GLOBAL)))
++		goto out;
++
++	spin_lock(&host->lock);
++
++	for (i = 0; i < NR_PORTS; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		if (!(host_irq_stat & (HIRQ_PORT0 << i)))
++			continue;
++
++		if (likely(ap && !(ap->flags & ATA_FLAG_DISABLED))) {
++			inic_host_intr(ap);
++			handled++;
++		} else {
++			if (ata_ratelimit())
++				dev_printk(KERN_ERR, host->dev, "interrupt "
++					   "from disabled port %d (0x%x)\n",
++					   i, host_irq_stat);
++		}
++	}
++
++	spin_unlock(&host->lock);
++
++ out:
++	return IRQ_RETVAL(handled);
++}
++
++static unsigned int inic_qc_issue(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++
++	/* ATA IRQ doesn't wait for DMA transfer completion and vice
++	 * versa.  Mask IRQ selectively to detect command completion.
++	 * Without it, ATA DMA read command can cause data corruption.
++	 *
++	 * Something similar might be needed for ATAPI writes.  I
++	 * tried a lot of combinations but couldn't find the solution.
++	 */
++	if (qc->tf.protocol == ATA_PROT_DMA &&
++	    !(qc->tf.flags & ATA_TFLAG_WRITE))
++		set_pirq_mask(ap, PIRQ_MASK_DMA_READ);
++	else
++		set_pirq_mask(ap, PIRQ_MASK_OTHER);
++
++	/* Issuing a command to yet uninitialized port locks up the
++	 * controller.  Most of the time, this happens for the first
++	 * command after reset which are ATA and ATAPI IDENTIFYs.
++	 * Fast fail if stat is 0x7f or 0xff for those commands.
++	 */
++	if (unlikely(qc->tf.command == ATA_CMD_ID_ATA ||
++		     qc->tf.command == ATA_CMD_ID_ATAPI)) {
++		u8 stat = ata_chk_status(ap);
++		if (stat == 0x7f || stat == 0xff)
++			return AC_ERR_HSM;
++	}
++
++	return ata_qc_issue_prot(qc);
++}
++
++static void inic_freeze(struct ata_port *ap)
++{
++	void __iomem *port_base = get_port_base(ap);
++
++	__set_pirq_mask(ap, PIRQ_MASK_FREEZE);
++
++	ata_chk_status(ap);
++	writeb(0xff, port_base + PORT_IRQ_STAT);
++}
++
++static void inic_thaw(struct ata_port *ap)
++{
++	void __iomem *port_base = get_port_base(ap);
++
++	ata_chk_status(ap);
++	writeb(0xff, port_base + PORT_IRQ_STAT);
++
++	__set_pirq_mask(ap, PIRQ_MASK_OTHER);
++}
++
++/*
++ * SRST and SControl hardreset don't give valid signature on this
++ * controller.  Only controller specific hardreset mechanism works.
++ */
++static int inic_hardreset(struct ata_port *ap, unsigned int *class)
++{
++	void __iomem *port_base = get_port_base(ap);
++	void __iomem *idma_ctl = port_base + PORT_IDMA_CTL;
++	const unsigned long *timing = sata_ehc_deb_timing(&ap->eh_context);
++	u16 val;
++	int rc;
++
++	/* hammer it into sane state */
++	reset_port(port_base);
++
++	if (ata_port_offline(ap)) {
++		*class = ATA_DEV_NONE;
++		return 0;
++	}
++
++	val = readw(idma_ctl);
++	writew(val | IDMA_CTL_RST_ATA, idma_ctl);
++	readw(idma_ctl);	/* flush */
++	msleep(1);
++	writew(val & ~IDMA_CTL_RST_ATA, idma_ctl);
++
++	rc = sata_phy_resume(ap, timing);
++	if (rc) {
++		ata_port_printk(ap, KERN_WARNING, "failed to resume "
++				"link for reset (errno=%d)\n", rc);
++		return rc;
++	}
++
++	msleep(150);
++
++	*class = ATA_DEV_NONE;
++	if (ata_port_online(ap)) {
++		struct ata_taskfile tf;
++
++		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
++			ata_port_printk(ap, KERN_WARNING,
++					"device busy after hardreset\n");
++			return -EIO;
++		}
++
++		ata_tf_read(ap, &tf);
++		*class = ata_dev_classify(&tf);
++		if (*class == ATA_DEV_UNKNOWN)
++			*class = ATA_DEV_NONE;
++	}
++
++	return 0;
++}
++
++static void inic_error_handler(struct ata_port *ap)
++{
++	void __iomem *port_base = get_port_base(ap);
++	struct inic_port_priv *pp = ap->private_data;
++	unsigned long flags;
++
++	/* reset PIO HSM and stop DMA engine */
++	reset_port(port_base);
++
++	spin_lock_irqsave(ap->lock, flags);
++	ap->hsm_task_state = HSM_ST_IDLE;
++	writeb(pp->dfl_prdctl, port_base + PORT_PRD_CTL);
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	/* PIO and DMA engines have been stopped, perform recovery */
++	ata_do_eh(ap, ata_std_prereset, NULL, inic_hardreset,
++		  ata_std_postreset);
++}
++
++static void inic_post_internal_cmd(struct ata_queued_cmd *qc)
++{
++	/* make DMA engine forget about the failed command */
++	if (qc->err_mask)
++		reset_port(get_port_base(qc->ap));
++}
++
++static void inic_dev_config(struct ata_port *ap, struct ata_device *dev)
++{
++	/* inic can only handle upto LBA28 max sectors */
++	if (dev->max_sectors > ATA_MAX_SECTORS)
++		dev->max_sectors = ATA_MAX_SECTORS;
++}
++
++static void init_port(struct ata_port *ap)
++{
++	void __iomem *port_base = get_port_base(ap);
++
++	/* Setup PRD address */
++	writel(ap->prd_dma, port_base + PORT_PRD_ADDR);
++}
++
++static int inic_port_resume(struct ata_port *ap)
++{
++	init_port(ap);
++	return 0;
++}
++
++static int inic_port_start(struct ata_port *ap)
++{
++	void __iomem *port_base = get_port_base(ap);
++	struct inic_port_priv *pp;
++	u8 tmp;
++	int rc;
++
++	/* alloc and initialize private data */
++	pp = kzalloc(sizeof(*pp), GFP_KERNEL);
++	if (!pp)
++		return -ENOMEM;
++	ap->private_data = pp;
++
++	/* default PRD_CTL value, DMAEN, WR and START off */
++	tmp = readb(port_base + PORT_PRD_CTL);
++	tmp &= ~(PRD_CTL_DMAEN | PRD_CTL_WR | PRD_CTL_START);
++	pp->dfl_prdctl = tmp;
++
++	/* Alloc resources */
++	rc = ata_port_start(ap);
++	if (rc) {
++		kfree(pp);
++		return rc;
++	}
++
++	init_port(ap);
++
++	return 0;
++}
++
++static void inic_port_stop(struct ata_port *ap)
++{
++	ata_port_stop(ap);
++	kfree(ap->private_data);
++}
++
++static struct ata_port_operations inic_port_ops = {
++	.port_disable		= ata_port_disable,
++	.tf_load		= ata_tf_load,
++	.tf_read		= ata_tf_read,
++	.check_status		= ata_check_status,
++	.exec_command		= ata_exec_command,
++	.dev_select		= ata_std_dev_select,
++
++	.scr_read		= inic_scr_read,
++	.scr_write		= inic_scr_write,
++
++	.bmdma_setup		= inic_bmdma_setup,
++	.bmdma_start		= inic_bmdma_start,
++	.bmdma_stop		= inic_bmdma_stop,
++	.bmdma_status		= inic_bmdma_status,
++
++	.irq_handler		= inic_interrupt,
++	.irq_clear		= inic_irq_clear,
++
++	.qc_prep	 	= ata_qc_prep,
++	.qc_issue		= inic_qc_issue,
++	.data_xfer		= ata_pio_data_xfer,
++
++	.freeze			= inic_freeze,
++	.thaw			= inic_thaw,
++	.error_handler		= inic_error_handler,
++	.post_internal_cmd	= inic_post_internal_cmd,
++	.dev_config		= inic_dev_config,
++
++	.port_resume		= inic_port_resume,
++
++	.port_start		= inic_port_start,
++	.port_stop		= inic_port_stop,
++	.host_stop		= ata_pci_host_stop
++};
++
++static struct ata_port_info inic_port_info = {
++	.sht			= &inic_sht,
++	/* For some reason, ATA_PROT_ATAPI is broken on this
++	 * controller, and no, PIO_POLLING does't fix it.  It somehow
++	 * manages to report the wrong ireason and ignoring ireason
++	 * results in machine lock up.  Tell libata to always prefer
++	 * DMA.
++	 */
++	.flags			= ATA_FLAG_SATA | ATA_FLAG_PIO_DMA,
++	.pio_mask		= 0x1f,	/* pio0-4 */
++	.mwdma_mask		= 0x07, /* mwdma0-2 */
++	.udma_mask		= 0x7f,	/* udma0-6 */
++	.port_ops		= &inic_port_ops
++};
++
++static int init_controller(void __iomem *mmio_base, u16 hctl)
++{
++	int i;
++	u16 val;
++
++	hctl &= ~HCTL_KNOWN_BITS;
++
++	/* Soft reset whole controller.  Spec says reset duration is 3
++	 * PCI clocks, be generous and give it 10ms.
++	 */
++	writew(hctl | HCTL_SOFTRST, mmio_base + HOST_CTL);
++	readw(mmio_base + HOST_CTL); /* flush */
++
++	for (i = 0; i < 10; i++) {
++		msleep(1);
++		val = readw(mmio_base + HOST_CTL);
++		if (!(val & HCTL_SOFTRST))
++			break;
++	}
++
++	if (val & HCTL_SOFTRST)
++		return -EIO;
++
++	/* mask all interrupts and reset ports */
++	for (i = 0; i < NR_PORTS; i++) {
++		void __iomem *port_base = mmio_base + i * PORT_SIZE;
++
++		writeb(0xff, port_base + PORT_IRQ_MASK);
++		reset_port(port_base);
++	}
++
++	/* port IRQ is masked now, unmask global IRQ */
++	writew(hctl & ~HCTL_IRQOFF, mmio_base + HOST_CTL);
++	val = readw(mmio_base + HOST_IRQ_MASK);
++	val &= ~(HIRQ_PORT0 | HIRQ_PORT1);
++	writew(val, mmio_base + HOST_IRQ_MASK);
++
++	return 0;
++}
++
++static int inic_pci_device_resume(struct pci_dev *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct inic_host_priv *hpriv = host->private_data;
++	void __iomem *mmio_base = host->mmio_base;
++	int rc;
++
++	ata_pci_device_do_resume(pdev);
++
++	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
++		printk("XXX\n");
++		rc = init_controller(mmio_base, hpriv->cached_hctl);
++		if (rc)
++			return rc;
++	}
++
++	ata_host_resume(host);
++
++	return 0;
++}
++
++static int inic_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
++{
++	static int printed_version;
++	struct ata_port_info *pinfo = &inic_port_info;
++	struct ata_probe_ent *probe_ent;
++	struct inic_host_priv *hpriv;
++	void __iomem *mmio_base;
++	int i, rc;
++
++	if (!printed_version++)
++		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
++
++	rc = pci_enable_device(pdev);
++	if (rc)
++		return rc;
++
++	rc = pci_request_regions(pdev, DRV_NAME);
++	if (rc)
++		goto err_out;
++
++	rc = -ENOMEM;
++	mmio_base = pci_iomap(pdev, MMIO_BAR, 0);
++	if (!mmio_base)
++		goto err_out_regions;
++
++	/* Set dma_mask.  This devices doesn't support 64bit addressing. */
++	rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
++	if (rc) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "32-bit DMA enable failed\n");
++		goto err_out_map;
++	}
++
++	rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
++	if (rc) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "32-bit consistent DMA enable failed\n");
++		goto err_out_map;
++	}
++
++	rc = -ENOMEM;
++	probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
++	if (!probe_ent)
++		goto err_out_map;
++
++	hpriv = kzalloc(sizeof(*hpriv), GFP_KERNEL);
++	if (!hpriv)
++		goto err_out_ent;
++
++	probe_ent->dev = &pdev->dev;
++	INIT_LIST_HEAD(&probe_ent->node);
++
++	probe_ent->sht			= pinfo->sht;
++	probe_ent->port_flags		= pinfo->flags;
++	probe_ent->pio_mask		= pinfo->pio_mask;
++	probe_ent->mwdma_mask		= pinfo->mwdma_mask;
++	probe_ent->udma_mask		= pinfo->udma_mask;
++	probe_ent->port_ops		= pinfo->port_ops;
++	probe_ent->n_ports		= NR_PORTS;
++
++	probe_ent->irq = pdev->irq;
++	probe_ent->irq_flags = SA_SHIRQ;
++
++	probe_ent->mmio_base = mmio_base;
++
++	for (i = 0; i < NR_PORTS; i++) {
++		struct ata_ioports *port = &probe_ent->port[i];
++		unsigned long port_base =
++			(unsigned long)mmio_base + i * PORT_SIZE;
++
++		port->cmd_addr = pci_resource_start(pdev, 2 * i);
++		port->altstatus_addr =
++		port->ctl_addr =
++			pci_resource_start(pdev, 2 * i + 1) | ATA_PCI_CTL_OFS;
++		port->scr_addr = port_base + PORT_SCR;
++
++		ata_std_ports(port);
++	}
++
++	probe_ent->private_data = hpriv;
++	hpriv->cached_hctl = readw(mmio_base + HOST_CTL);
++
++	rc = init_controller(mmio_base, hpriv->cached_hctl);
++	if (rc) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "failed to initialize controller\n");
++		goto err_out_hpriv;
++	}
++
++	pci_set_master(pdev);
++
++	rc = -ENODEV;
++	if (!ata_device_add(probe_ent))
++		goto err_out_hpriv;
++
++	kfree(probe_ent);
++
++	return 0;
++
++ err_out_hpriv:
++	kfree(hpriv);
++ err_out_ent:
++	kfree(probe_ent);
++ err_out_map:
++	pci_iounmap(pdev, mmio_base);
++ err_out_regions:
++	pci_release_regions(pdev);
++ err_out:
++	pci_disable_device(pdev);
++	return rc;
++}
++
++static const struct pci_device_id inic_pci_tbl[] = {
++	{ PCI_VDEVICE(INIT, 0x1622), },
++	{ },
++};
++
++static struct pci_driver inic_pci_driver = {
++	.name 		= DRV_NAME,
++	.id_table	= inic_pci_tbl,
++	.suspend	= ata_pci_device_suspend,
++	.resume		= inic_pci_device_resume,
++	.probe 		= inic_init_one,
++	.remove		= ata_pci_remove_one,
++};
++
++static int __init inic_init(void)
++{
++	return pci_register_driver(&inic_pci_driver);
++}
++
++static void __exit inic_exit(void)
++{
++	pci_unregister_driver(&inic_pci_driver);
++}
++
++MODULE_AUTHOR("Tejun Heo");
++MODULE_DESCRIPTION("low-level driver for Initio 162x SATA");
++MODULE_LICENSE("GPL v2");
++MODULE_DEVICE_TABLE(pci, inic_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
++
++module_init(inic_init);
++module_exit(inic_exit);
 -- 
 1.4.4.2
-
 
