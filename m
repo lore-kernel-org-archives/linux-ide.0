@@ -1,32 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [-mm patch] drivers/ide/pci/tc86c001.c: make a function static
-Date: Sun, 17 Dec 2006 23:52:30 +0300
-Message-ID: <4585AE0E.4000607@ru.mvista.com>
-References: <20061214225913.3338f677.akpm@osdl.org> <20061216135650.GA3388@stusta.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/2] sata_inic162x: finally, driver for initio 162x SATA
+ controllers
+Date: Mon, 18 Dec 2006 09:04:44 +0900
+Message-ID: <4585DB1C.3020907@gmail.com>
+References: <20061217014827.GK5400@htj.dyndns.org>	<20061217015008.GL5400@htj.dyndns.org> <20061217122431.5dd6339e@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:42839 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751823AbWLQUvF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Dec 2006 15:51:05 -0500
-In-Reply-To: <20061216135650.GA3388@stusta.de>
+Received: from nf-out-0910.google.com ([64.233.182.188]:10846 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243AbWLRAEz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Dec 2006 19:04:55 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1778744nfa
+        for <linux-ide@vger.kernel.org>; Sun, 17 Dec 2006 16:04:54 -0800 (PST)
+In-Reply-To: <20061217122431.5dd6339e@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, bob@evoria.net, nabble@theanthonys.net, matthias@urlichs.de, romieu@fr.zoreil.com, carlosmarcelomartinez@gmail.com
 
-Hello.
+Alan wrote:
+> On Sun, 17 Dec 2006 10:50:08 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
+> 
+>> Driver for Initio 162x SATA controllers.  ATA r/w, ATAPI r, hotplug
+>> and suspend/resume work.  ATAPI w (recording, that is) broken. 
+> 
+> Does atapi write work if you just clip it to PIO for writing ?
 
-Adrian Bunk wrote:
+No, PIO ATAPI doesn't work at all (so, the ATA_FLAG_PIO_DMA flag).  I
+tried a lot of combinations but it always gives weird ireason and
+overriding ireason results in all sorts of errors.  Dunno why.
 
-> This patch makes the needlessly global init_hwif_tc86c001() static.
-
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
-    If this patch hasn't been accepted by Andrew yet, could you add another 
-fixlet: init_chipset_tc86c001() should've been __devinit.  If not or it's 
-already accepted, I'll post the patchlet myself later...
-
-WBR, Sergei
+-- 
+tejun
