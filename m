@@ -1,38 +1,27 @@
 From: Ben Collins <ben.collins@ubuntu.com>
-Subject: [PATCH 2.6.20-git] sata_svw: Check for errors from ata_device_add()
-Date: Tue, 19 Dec 2006 17:59:13 -0500
-Message-ID: <1166569153.5210.116.camel@gullible>
+Subject: Re: [PATCH 2.6.20-git] sata_svw: Check for errors from
+	ata_device_add()
+Date: Tue, 19 Dec 2006 18:33:51 -0500
+Message-ID: <1166571231.5210.121.camel@gullible>
+References: <1166569153.5210.116.camel@gullible>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933032AbWLSW7d@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from adelie.ubuntu.com ([82.211.81.139]:48985 "EHLO
+	adelie.ubuntu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932946AbWLSXeB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 18:34:01 -0500
+In-Reply-To: <1166569153.5210.116.camel@gullible>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux Kernel List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Without this patch, G5 oopses on boot. I've had this in Ubuntu since
-2.6.17, but I forgot it was in there. Still required with 2.6.20.
+On Tue, 2006-12-19 at 17:59 -0500, Ben Collins wrote:
+> Without this patch, G5 oopses on boot. I've had this in Ubuntu since
+> 2.6.17, but I forgot it was in there. Still required with 2.6.20.
+> 
+> Signed-off-by: Ben Collins <bcollins@ubuntu.com>
 
-Signed-off-by: Ben Collins <bcollins@ubuntu.com>
-
-diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-index d89c959..85911b4 100644
---- a/drivers/ata/sata_svw.c
-+++ b/drivers/ata/sata_svw.c
-@@ -473,11 +473,11 @@ static int k2_sata_init_one (struct pci_
- 
- 	pci_set_master(pdev);
- 
--	/* FIXME: check ata_device_add return value */
--	ata_device_add(probe_ent);
--	kfree(probe_ent);
-+	if (ata_device_add(probe_ent))
-+		return 0;
- 
--	return 0;
-+	/* Failed to add, no device present */
-+	rc = -ENODEV;
- 
- err_out_free_ent:
- 	kfree(probe_ent);
+Ignore this patch for now, BenH and I are discussing the issue further.
