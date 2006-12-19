@@ -1,68 +1,75 @@
-From: Joakim Crafack <joakim@crafack.dk>
-Subject: ata_piix: Quick question
-Date: Tue, 19 Dec 2006 13:37:28 +0100
-Message-ID: <4587DD08.70404@crafack.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: SATA300 TX4 + WD2500KS = status=0x50 { DriveReady SeekComplete }
+Date: Tue, 19 Dec 2006 15:24:07 +0100 (MET)
+Message-ID: <200612191424.kBJEO7bD007303@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.surf-town.net ([212.97.132.199]:44343 "EHLO
-	mailout.surf-town.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932819AbWLSMnt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 07:43:49 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mailout.surf-town.net (Postfix) with ESMTP id 75647E005CB3
-	for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 13:10:14 +0100 (CET)
-Received: from mail1.surf-town.net (mail1.surf-town.net [212.97.132.41])
-	by mailout.surf-town.net (Postfix) with SMTP id 18FADE0029C8
-	for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 12:44:19 +0100 (CET)
+Received: from aun.it.uu.se ([130.238.12.36]:36659 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752028AbWLSOYT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Dec 2006 09:24:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Roel.Teuwen@advalvas.be, greg@wildbrain.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi all.
+(cc: linux-ide added)
 
-Some time ago, I reported bug# 7170, as my ICH6 controller failed to 
-detect my disks after kernel upgrade.
+On Tue, 19 Dec 2006 12:26:07 +0100, Roel Teuwen wrote:
+> I am seeing the exact same 'problem'. I have 4 WDC WD2500KS-00MJB0
+> drives connected to a promise SATA300 TX4. The messages have been
+> flooding syslog since the drives were installed. Running 2.6.18 or
+> 2.6.19 vanilla kernels.
+> 
+> Best regards,
+> 
+> Roel Teuwen
+> 
+> On 10/25/06, Gregory Brauer <greg@wildbrain.com> wrote:
+> >
+> > I have a new Promise SATA300 TX4 4-port SATA controller
+> > to which I have attached two older WD2500JD hard drives
+> > and two brand new WD2500KS hard drives.  The older drives
+> > seem to work fine, but both of the brand new hard drives
+> > trigger the following errors every few seconds during
+> > i/o:
+> >
+> >
+> > Oct 25 13:57:18 gleep kernel: ata3: no sense translation for status: 0x50
+> > Oct 25 13:57:18 gleep kernel: ata3: translated ATA stat/err 0x50/00 to SCSI
+> > SK/ASC/ASCQ 0xb/00/00
+> > Oct 25 13:57:18 gleep kernel: ata3: status=0x50 { DriveReady SeekComplete }
+> > Oct 25 13:57:26 gleep kernel: ata1: no sense translation for status: 0x50
+> > Oct 25 13:57:26 gleep kernel: ata1: translated ATA stat/err 0x50/00 to SCSI
+> > SK/ASC/ASCQ 0xb/00/00
+> > Oct 25 13:57:26 gleep kernel: ata1: status=0x50 { DriveReady SeekComplete }
+> > Oct 25 13:57:27 gleep kernel: ata1: no sense translation for status: 0x50
+> > Oct 25 13:57:27 gleep kernel: ata1: translated ATA stat/err 0x50/00 to SCSI
+> > SK/ASC/ASCQ 0xb/00/00
+> > Oct 25 13:57:27 gleep kernel: ata1: status=0x50 { DriveReady SeekComplete }
+> > Oct 25 13:57:31 gleep kernel: ata1: no sense translation for status: 0x50
+> > Oct 25 13:57:31 gleep kernel: ata1: translated ATA stat/err 0x50/00 to SCSI
+> > SK/ASC/ASCQ 0xb/00/00
+> > Oct 25 13:57:31 gleep kernel: ata1: status=0x50 { DriveReady SeekComplete }
+> > Oct 25 13:57:47 gleep kernel: ata3: no sense translation for status: 0x50
+> > Oct 25 13:57:47 gleep kernel: ata3: translated ATA stat/err 0x50/00 to SCSI
+> > SK/ASC/ASCQ 0xb/00/00
+> > Oct 25 13:57:47 gleep kernel: ata3: status=0x50 { DriveReady SeekComplete }
+> >
+> >
+> > The machine stays running normally, and any processes doing data
+> > I/O do not pause noticeably, but these errors are very annoying.
+> > Is there anything I can do to help troubleshoot this?
+> >
+> > (Note that I am aware of the drive id mapping issue with my Promise
+> > controller, and I am *positive* that it is the two new drives that
+> > are the one's that the error messages refer to.)
 
-I tested the 2.6.20-rc1 kernel yesterday, and now the controller reports:
+If you move the disks around, do the errors stay on the same ports (ata1/ata3),
+or do they move to different ports (ata2/ata4)?
 
-[   21.506369] ICH6: IDE controller at PCI slot 0000:00:1f.1
-[   21.506420] ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, 
-low) -> IRQ 18
-[   21.506518] ICH6: chipset revision 3
-[   21.506565] ICH6: not 100% native mode: will probe irqs later
-[   21.506622]     ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: 
-hda:DMA, hdb:pio
-[   22.177871] hda: LITE-ON DVDRW SOHW-1633S, ATAPI CD/DVD-ROM drive
-[   22.789485] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-[   23.302937] hda: ATAPI 40X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache
-[   23.303232] Uniform CD-ROM driver Revision: 3.20
-[   23.305545] ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
-[   23.305787] ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, 
-low) -> IRQ 19
-[   23.305927] ata1: SATA max UDMA/133 cmd 0xB400 ctl 0xB082 bmdma 
-0xA880 irq 19
-[   23.306001] ata2: SATA max UDMA/133 cmd 0xB000 ctl 0xAC02 bmdma 
-0xA888 irq 19
-[   23.306056] scsi0 : ata_piix
-[   23.466877] ATA: abnormal status 0xD0 on port 0xB407
-[   23.466932] scsi1 : ata_piix
-[   23.627759] ATA: abnormal status 0x7F on port 0xB007
-[...]
-[   23.990751] VFS: Cannot open root device "sda3" or unknown-block(0,0)
-[   23.990798] Please append a correct "root=" boot option
-[   23.990848] Kernel panic - not syncing: VFS: Unable to mount root fs 
-on unknown-block(0,0)
+I was looking briefly at the port mapping issue on 4-port Promise controllers
+yesterday and noticed a bit of programming magic in Promise's driver that
+Linux doesn't do, and which affects two of the four ports. That _could_
+explain your issues.
 
-
-The disk is attatched to ata1, ata2 is not connected.
-
-Is there something wrong here, or has the disk "just" been renamed ???
-
-Regards
-Joakim Crafack
-
-
-
-
+/Mikael
