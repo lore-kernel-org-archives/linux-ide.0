@@ -1,38 +1,48 @@
-From: Gregory Brauer <greg@wildbrain.com>
-Subject: Re: SATA300 TX4 + WD2500KS = status=0x50 { DriveReady SeekComplete
- }
-Date: Tue, 19 Dec 2006 09:52:36 -0800
-Message-ID: <458826E4.1030806@wildbrain.com>
-References: <200612191424.kBJEO7bD007303@harpo.it.uu.se>
+From: Gary Thomas <gary@mlbassoc.com>
+Subject: Re: SATA Promise
+Date: Tue, 19 Dec 2006 11:19:14 -0700
+Message-ID: <45882D22.8030307@mlbassoc.com>
+References: <200612191738.kBJHcFkP003688@alkaid.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.wildbrain.com ([209.130.193.228]:57738 "EHLO
-	hermes.wildbrain.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932849AbWLSSI2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 13:08:28 -0500
-In-Reply-To: <200612191424.kBJEO7bD007303@harpo.it.uu.se>
+Received: from sta-204-188-98-27.rockynet.com ([204.188.98.27]:2947 "EHLO
+	hermes.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932849AbWLSSTU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 13:19:20 -0500
+In-Reply-To: <200612191738.kBJHcFkP003688@alkaid.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Roel.Teuwen@advalvas.be
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
 Mikael Pettersson wrote:
-> I was looking briefly at the port mapping issue on 4-port Promise controllers
-> yesterday and noticed a bit of programming magic in Promise's driver that
-> Linux doesn't do, and which affects two of the four ports. That _could_
-> explain your issues.
+> On Tue, 19 Dec 2006 08:54:07 -0700, Gary Thomas wrote:
+>> I'm trying to use the sata_promise driver (1.04) with a CDROM
+>> and having little luck.  I'm using this chipset:
+>>    00:0b.0 Mass storage controller: Promise Technology, Inc. PDC40775 (SATA 300 TX2plus) (rev 02)
+>>
+>> If I plug in a SATAPI drive, the driver hangs during initialization.
+>> If I plug in a (PATA) ATAPI drive, I'm told:
+>>
+>> ata3.01: ATAPI, max MWDMA2
+>> ata3.01: configured for MWDMA2
+>>    Vendor: ATA       Model: ST3250824NS       Rev: 3.AE
+>>    Type:   Direct-Access                      ANSI SCSI revision: 05
+>> ata3.01: WARNING: ATAPI is not supported with this driver, device ignored.
+>>
+>> Is there any way to get this working (I'm using Linux 2.6.18, with
+>> linux-2.6-sata-promise-pata-ports.patch from Fedora Core 6)
 > 
-> /Mikael
+> Patience. The driver doesn't support ATAPI yet, but I
+> intend to work on that soon.
 
-Just as a note, I filed the issue that this thread is about as a
-kernel bug:
+Any idea how long this might be (just wondering - I can work
+around this for the time being)?
 
-http://bugzilla.kernel.org/show_bug.cgi?id=7516
-
-I am also experiencing the port-mapping issue you mention with
-the SATA300 TX4, but I believe that the port mapping problem and
-the excess status messages are separate and unrelated problems.
-
-Greg
+-- 
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
