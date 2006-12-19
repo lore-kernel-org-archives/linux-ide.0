@@ -1,75 +1,40 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: SATA300 TX4 + WD2500KS = status=0x50 { DriveReady SeekComplete }
-Date: Tue, 19 Dec 2006 15:24:07 +0100 (MET)
-Message-ID: <200612191424.kBJEO7bD007303@harpo.it.uu.se>
+From: Gary Thomas <gary@mlbassoc.com>
+Subject: SATA Promise
+Date: Tue, 19 Dec 2006 08:54:07 -0700
+Message-ID: <45880B1F.3030701@mlbassoc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:36659 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752028AbWLSOYT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 Dec 2006 09:24:19 -0500
+Received: from sta-204-188-98-27.rockynet.com ([204.188.98.27]:2543 "EHLO
+	hermes.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052AbWLSQN7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 11:13:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Roel.Teuwen@advalvas.be, greg@wildbrain.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-(cc: linux-ide added)
+I'm trying to use the sata_promise driver (1.04) with a CDROM
+and having little luck.  I'm using this chipset:
+   00:0b.0 Mass storage controller: Promise Technology, Inc. PDC40775 (SATA 300 TX2plus) (rev 02)
 
-On Tue, 19 Dec 2006 12:26:07 +0100, Roel Teuwen wrote:
-> I am seeing the exact same 'problem'. I have 4 WDC WD2500KS-00MJB0
-> drives connected to a promise SATA300 TX4. The messages have been
-> flooding syslog since the drives were installed. Running 2.6.18 or
-> 2.6.19 vanilla kernels.
-> 
-> Best regards,
-> 
-> Roel Teuwen
-> 
-> On 10/25/06, Gregory Brauer <greg@wildbrain.com> wrote:
-> >
-> > I have a new Promise SATA300 TX4 4-port SATA controller
-> > to which I have attached two older WD2500JD hard drives
-> > and two brand new WD2500KS hard drives.  The older drives
-> > seem to work fine, but both of the brand new hard drives
-> > trigger the following errors every few seconds during
-> > i/o:
-> >
-> >
-> > Oct 25 13:57:18 gleep kernel: ata3: no sense translation for status: 0x50
-> > Oct 25 13:57:18 gleep kernel: ata3: translated ATA stat/err 0x50/00 to SCSI
-> > SK/ASC/ASCQ 0xb/00/00
-> > Oct 25 13:57:18 gleep kernel: ata3: status=0x50 { DriveReady SeekComplete }
-> > Oct 25 13:57:26 gleep kernel: ata1: no sense translation for status: 0x50
-> > Oct 25 13:57:26 gleep kernel: ata1: translated ATA stat/err 0x50/00 to SCSI
-> > SK/ASC/ASCQ 0xb/00/00
-> > Oct 25 13:57:26 gleep kernel: ata1: status=0x50 { DriveReady SeekComplete }
-> > Oct 25 13:57:27 gleep kernel: ata1: no sense translation for status: 0x50
-> > Oct 25 13:57:27 gleep kernel: ata1: translated ATA stat/err 0x50/00 to SCSI
-> > SK/ASC/ASCQ 0xb/00/00
-> > Oct 25 13:57:27 gleep kernel: ata1: status=0x50 { DriveReady SeekComplete }
-> > Oct 25 13:57:31 gleep kernel: ata1: no sense translation for status: 0x50
-> > Oct 25 13:57:31 gleep kernel: ata1: translated ATA stat/err 0x50/00 to SCSI
-> > SK/ASC/ASCQ 0xb/00/00
-> > Oct 25 13:57:31 gleep kernel: ata1: status=0x50 { DriveReady SeekComplete }
-> > Oct 25 13:57:47 gleep kernel: ata3: no sense translation for status: 0x50
-> > Oct 25 13:57:47 gleep kernel: ata3: translated ATA stat/err 0x50/00 to SCSI
-> > SK/ASC/ASCQ 0xb/00/00
-> > Oct 25 13:57:47 gleep kernel: ata3: status=0x50 { DriveReady SeekComplete }
-> >
-> >
-> > The machine stays running normally, and any processes doing data
-> > I/O do not pause noticeably, but these errors are very annoying.
-> > Is there anything I can do to help troubleshoot this?
-> >
-> > (Note that I am aware of the drive id mapping issue with my Promise
-> > controller, and I am *positive* that it is the two new drives that
-> > are the one's that the error messages refer to.)
+If I plug in a SATAPI drive, the driver hangs during initialization.
+If I plug in a (PATA) ATAPI drive, I'm told:
 
-If you move the disks around, do the errors stay on the same ports (ata1/ata3),
-or do they move to different ports (ata2/ata4)?
+ata3.01: ATAPI, max MWDMA2
+ata3.01: configured for MWDMA2
+   Vendor: ATA       Model: ST3250824NS       Rev: 3.AE
+   Type:   Direct-Access                      ANSI SCSI revision: 05
+ata3.01: WARNING: ATAPI is not supported with this driver, device ignored.
 
-I was looking briefly at the port mapping issue on 4-port Promise controllers
-yesterday and noticed a bit of programming magic in Promise's driver that
-Linux doesn't do, and which affects two of the four ports. That _could_
-explain your issues.
+Is there any way to get this working (I'm using Linux 2.6.18, with
+linux-2.6-sata-promise-pata-ports.patch from Fedora Core 6)
 
-/Mikael
+Thanks for any help/pointers
+
+-- 
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
