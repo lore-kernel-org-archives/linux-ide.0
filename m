@@ -1,51 +1,44 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: sata_inic162x driver for 2.6.19
-Date: Wed, 20 Dec 2006 15:21:52 +0900
-Message-ID: <4588D680.4060103@gmail.com>
-References: <10011.50132.qm@web810.biz.mail.mud.yahoo.com>
+Subject: Re: [PATCH 2/2] sata_inic162x: driver for initio 162x SATA controllers, take 2
+Date: Wed, 20 Dec 2006 15:25:46 +0900
+Message-ID: <20061220062546.GA4823@htj.dyndns.org>
+References: <20061217014827.GK5400@htj.dyndns.org> <20061217015008.GL5400@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010807070004010300050902"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:38365 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964905AbWLTGWI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Dec 2006 01:22:08 -0500
-Received: by py-out-1112.google.com with SMTP id a29so1149768pyi
-        for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 22:22:07 -0800 (PST)
-In-Reply-To: <10011.50132.qm@web810.biz.mail.mud.yahoo.com>
+Received: from ug-out-1314.google.com ([66.249.92.169]:31117 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964908AbWLTG0N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Dec 2006 01:26:13 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so2102547uga
+        for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 22:26:11 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20061217015008.GL5400@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bob Stewart <bob@evoria.net>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, nabble@theanthonys.net, alan@lxorguk.ukuu.org.uk, matthias@urlichs.de, romieu@fr.zoreil.com, carlosmarcelomartinez@gmail.com
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, bob@evoria.net, nabble@theanthonys.net, alan@lxorguk.ukuu.org.uk, matthias@urlichs.de, romieu@fr.zoreil.com, carlosmarcelomartinez@gmail.com
 
-This is a multi-part message in MIME format.
---------------010807070004010300050902
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Driver for Initio 162x SATA controllers.  ATA r/w, ATAPI r, hotplug
+and suspend/resume work.  ATAPI w (recording, that is) broken.  Feel
+free to fix it, but be warned, this controller is weird.
 
-The attached patch is inic162x driver for 2.6.19.  The driver against
-livata-dev#upstream didn't work on 2.6.19 due to difference in how
-dev->max_sectors is handled.  The driver is also available at...
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
 
-http://home-tj.org/files/sata_inic-2.6.19.patch
+Just two cosmetic changes.
 
-Please report how it works.
+* printk("XXX") removed
+* slightly better unhandled interrupt message.
 
--- 
-tejun
+ drivers/ata/Kconfig         |    6 
+ drivers/ata/Makefile        |    1 
+ drivers/ata/sata_inic162x.c |  802 ++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 809 insertions(+)
 
---------------010807070004010300050902
-Content-Type: text/x-patch;
- name="sata_inic-2.6.19.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sata_inic-2.6.19.patch"
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 03f6338..dcc2210 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
+Index: work/drivers/ata/Kconfig
+===================================================================
+--- work.orig/drivers/ata/Kconfig
++++ work/drivers/ata/Kconfig
 @@ -143,6 +143,12 @@ config SATA_VITESSE
  
  	  If unsure, say N.
@@ -59,10 +52,10 @@ index 03f6338..dcc2210 100644
  config SATA_INTEL_COMBINED
  	bool
  	depends on IDE=y && !BLK_DEV_IDE_SATA && (SATA_AHCI || ATA_PIIX)
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 72243a6..edd4c08 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
+Index: work/drivers/ata/Makefile
+===================================================================
+--- work.orig/drivers/ata/Makefile
++++ work/drivers/ata/Makefile
 @@ -15,6 +15,7 @@ obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
  obj-$(CONFIG_SATA_NV)		+= sata_nv.o
  obj-$(CONFIG_SATA_ULI)		+= sata_uli.o
@@ -71,12 +64,11 @@ index 72243a6..edd4c08 100644
  obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
  
  obj-$(CONFIG_PATA_ALI)		+= pata_ali.o
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-new file mode 100644
-index 0000000..ac6755a
+Index: work/drivers/ata/sata_inic162x.c
+===================================================================
 --- /dev/null
-+++ b/drivers/ata/sata_inic162x.c
-@@ -0,0 +1,805 @@
++++ work/drivers/ata/sata_inic162x.c
+@@ -0,0 +1,802 @@
 +/*
 + * sata_inic162x.c - Driver for Initio 162x SATA controllers
 + *
@@ -311,16 +303,12 @@ index 0000000..ac6755a
 +	struct inic_port_priv *pp = ap->private_data;
 +	void __iomem *port_base = get_port_base(ap);
 +	int rw = qc->tf.flags & ATA_TFLAG_WRITE;
-+	unsigned int nbytes;
 +
 +	/* make sure device sees PRD table writes */
 +	wmb();
 +
 +	/* load transfer length */
-+	nbytes = qc->nsect * ATA_SECT_SIZE;
-+	if (!nbytes)
-+		nbytes = qc->nbytes;
-+	writel(nbytes, port_base + PORT_PRD_XFERLEN);
++	writel(qc->nbytes, port_base + PORT_PRD_XFERLEN);
 +
 +	/* turn on DMA and specify data direction */
 +	pp->cached_prdctl = pp->dfl_prdctl | PRD_CTL_DMAEN;
@@ -574,7 +562,8 @@ index 0000000..ac6755a
 +static void inic_dev_config(struct ata_port *ap, struct ata_device *dev)
 +{
 +	/* inic can only handle upto LBA28 max sectors */
-+	dev->max_sectors = ATA_MAX_SECTORS;
++	if (dev->max_sectors > ATA_MAX_SECTORS)
++		dev->max_sectors = ATA_MAX_SECTORS;
 +}
 +
 +static void init_port(struct ata_port *ap)
@@ -882,5 +871,3 @@ index 0000000..ac6755a
 +
 +module_init(inic_init);
 +module_exit(inic_exit);
-
---------------010807070004010300050902--
