@@ -1,205 +1,311 @@
-From: Kovid Goyal <kovid@theory.caltech.edu>
+From: Gary Hade <garyhade@us.ibm.com>
 Subject: Re: [2.6.18,19] SATA boot problems (ICH6/ICH6W)
-Date: Tue, 19 Dec 2006 18:00:18 -0800
-Message-ID: <200612191800.18624.kovid@theory.caltech.edu>
+Date: Tue, 19 Dec 2006 19:29:41 -0800
+Message-ID: <20061220032941.GA8903@us.ibm.com>
 References: <200612111003.39928.kovid@theory.caltech.edu> <4588877D.1000400@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from theory.caltech.edu ([131.215.116.2]:39864 "EHLO
-	theory.caltech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964785AbWLTC0B convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 21:26:01 -0500
-In-Reply-To: <4588877D.1000400@gmail.com>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:53897 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964840AbWLTD3p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 22:29:45 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e31.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id kBK3ThvS023959
+	for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 22:29:43 -0500
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kBK3ThLl520296
+	for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 20:29:43 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kBK3TgPp011023
+	for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 20:29:43 -0700
 Content-Disposition: inline
+In-Reply-To: <4588877D.1000400@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Kovid Goyal <kovid@theory.caltech.edu>, linux-ide@vger.kernel.org, lcm@us.ibm.com
 
-Yes going back to 2.6.17 does fix it. Also windows and various LiveCDs =
-boot=20
-without problems.=20
+On Wed, Dec 20, 2006 at 09:44:45AM +0900, Tejun Heo wrote:
+> Kovid Goyal wrote:
+> > Hi,
+> >
+> > I'm having problems booting from a SATA disk with 2.6.19.
+> > Grub loads fine, but when the kernel boots, it *sometimes* ends up with
+> > VFS: Cannot open root device "sda5" or unknown-block(0,0).
+> >
+> > This issue appears to be identical with the one reported in
+> > http://lkml.org/lkml/2006/10/19/327 except that 2.6.19 did not fix it for me.
+> > In fact, it made it worse. The timeouts reported in that thread are still
+> > present and with 2.6.19 the fraction of unsuccessful boots has increased from
+> > 30% to 80%. I often have to reboot my machine 3 times in a row before it
+> > succeeds. I have tried both vanilla 2.6.19 and gentoo-sources-2.6.19-r1
+> >
+> > To summarize: My machine stalls for nearly a minute on all boots and the root
+> > filesystem fails to mount on 80% of the boots. This problem first manifested
+> > itself when I switched to 2.6.18 and has become worse with 2.6.19.
+> >
+> > The controller:
+> > 00:1f.2 IDE interface: Intel Corporation 82801FB/FW (ICH6/ICH6W) SATA
+> > Controller (rev 03)
+> >
+> > I don't know how to get the logs from an unsuccessful boot. Here is
+> > an extract from the logs of a successful boot (in which the timeout is
+> > present):
+> 
+> Does goving back to 2.6.17 fix the problem?  Also, please report the
+> result of 'smartctl -d ata -a /dev/sdX' where sdX is the problematic drive.
 
-Here is the output=20
-smartctl -d ata -a /dev/sda
-smartctl version 5.36 [i686-pc-linux-gnu] Copyright (C) 2002-6 Bruce Al=
-len
-Home page is http://smartmontools.sourceforge.net/
+We have been seeing what might be the same problem on an 
+IBM Intellistation M30 Pro which contains the same SATA controller.
 
-=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-Model Family:     Seagate Barracuda 7200.7 and 7200.7 Plus family
-Device Model:     ST380013AS
-Serial Number:    5JVFSQQW
-=46irmware Version: 8.05
-User Capacity:    80,000,000,000 bytes
-Device is:        In smartctl database [for details use: -P show]
-ATA Version is:   6
-ATA Standard is:  ATA/ATAPI-6 T13 1410D revision 2
-Local Time is:    Tue Dec 19 17:56:07 2006 PST
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+I have been debugging and trying to better understand the problem
+before posting my findings and possible fix but after noticing this 
+message today and then seeing the "SRST failed (status 0xFF)" messages
+included in Kovid's original message I think I should share what I 
+have found so far.
 
-=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-SMART overall-health self-assessment test result: PASSED
+In our case the SRST failures are associated with a Quantum GoVault
+removable hard drive device.  We have also noticed that failure is
+dependent on cable placement e.g. after encoutering the failure a
+reversal of the ports to which the hard drive and GoVault cables
+are connected will cause the problem to disappear.
 
-General SMART Values:
-Offline data collection status:  (0x82) Offline data collection activit=
-y
-                                        was completed without error.
-                                        Auto Offline Data Collection: E=
-nabled.
-Self-test execution status:      (   0) The previous self-test routine=20
-completed
-                                        without error or no self-test h=
-as ever
-                                        been run.
-Total time to complete Offline
-data collection:                 ( 430) seconds.
-Offline data collection
-capabilities:                    (0x5b) SMART execute Offline immediate=
-=2E
-                                        Auto Offline data collection on=
-/off=20
-support.
-                                        Suspend Offline collection upon=
- new
-                                        command.
-                                        Offline surface scan supported.
-                                        Self-test supported.
-                                        No Conveyance Self-test support=
-ed.
-                                        Selective Self-test supported.
-SMART capabilities:            (0x0003) Saves SMART data before enterin=
-g
-                                        power-saving mode.
-                                        Supports SMART auto save timer.
-Error logging capability:        (0x01) Error logging supported.
-                                        No General Purpose Logging supp=
-ort.
-Short self-test routine
-recommended polling time:        (   1) minutes.
-Extended self-test routine
-recommended polling time:        (  58) minutes.
+The above SRST failure message was from this code in libata-core.c.
 
-SMART Attributes Data Structure revision number: 10
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDAT=
-ED =20
-WHEN_FAILED RAW_VALUE
-  1 Raw_Read_Error_Rate     0x000f   060   057   006    Pre-fail =20
-Always       -       38101080
-  3 Spin_Up_Time            0x0003   098   098   000    Pre-fail =20
-Always       -       0
-  4 Start_Stop_Count        0x0032   100   100   020    Old_age  =20
-Always       -       8
-  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail =20
-Always       -       0
-  7 Seek_Error_Rate         0x000f   086   060   030    Pre-fail =20
-Always       -       424904923
-  9 Power_On_Hours          0x0032   087   087   000    Old_age  =20
-Always       -       11741
- 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail =20
-Always       -       0
- 12 Power_Cycle_Count       0x0032   100   100   020    Old_age  =20
-Always       -       311
-194 Temperature_Celsius     0x0022   060   072   000    Old_age  =20
-Always       -       60
-195 Hardware_ECC_Recovered  0x001a   060   057   000    Old_age  =20
-Always       -       38101080
-197 Current_Pending_Sector  0x0012   100   100   000    Old_age  =20
-Always       -       0
-198 Offline_Uncorrectable   0x0010   100   100   000    Old_age  =20
-Offline      -       0
-199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age  =20
-Always       -       0
-200 Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age  =20
-Offline      -       0
-202 TA_Increase_Count       0x0032   100   253   000    Old_age  =20
-Always       -       0
+        /* Before we perform post reset processing we want to see if
+         * the bus shows 0xFF because the odd clown forgets the D7
+         * pulldown resistor.
+         */
+        if (ata_check_status(ap) == 0xFF) {
+                ata_port_printk(ap, KERN_ERR, "SRST failed (status 0xFF)\n");
+                return AC_ERR_OTHER;
+        }
 
-SMART Error Log Version: 1
-No Errors Logged
+I noticed that Tejun recently provided a "libata: handle 0xff status 
+properly" patch that is now in mainline that improves this code
+  re: http://marc.theaimsgroup.com/?l=linux-ide&m=116038642105802&w=2
+but I found that the check still failed but more silently and with no 
+retries.
 
-SMART Self-test log structure revision number 1
-Num  Test_Description    Status                  Remaining  LifeTime(ho=
-urs) =20
-LBA_of_first_error
-# 1  Short offline       Completed without error       00%     11726   =
-      -
-# 2  Short offline       Completed without error       00%     11702   =
-      -
-# 3  Short offline       Completed without error       00%     11679   =
-      -
-# 4  Extended offline    Completed without error       00%     11658   =
-      -
-# 5  Short offline       Completed without error       00%     11655   =
-      -
-# 6  Short offline       Completed without error       00%     11632   =
-      -
-# 7  Short offline       Completed without error       00%     11608   =
-      -
-# 8  Short offline       Completed without error       00%     11585   =
-      -
-# 9  Short offline       Completed without error       00%     11562   =
-      -
-#10  Short offline       Completed without error       00%     11538   =
-      -
-#11  Extended offline    Completed without error       00%     11500   =
-      -
-#12  Short offline       Completed without error       00%     11498   =
-      -
-#13  Short offline       Completed without error       00%     11474   =
-      -
-#14  Short offline       Completed without error       00%     11452   =
-      -
-#15  Short offline       Completed without error       00%     11429   =
-      -
-#16  Short offline       Completed without error       00%     11405   =
-      -
-#17  Short offline       Completed without error       00%     11381   =
-      -
-#18  Short offline       Completed without error       00%     11358   =
-      -
-#19  Extended offline    Completed without error       00%     11338   =
-      -
-#20  Short offline       Completed without error       00%     11334   =
-      -
-#21  Short offline       Completed without error       00%     11311   =
-      -
+I decided to try increasing the delay that preceeds the above 
+check [ msleep(150); ] and found that a change from 150ms to 
+1000ms caused the problem to disappear. 
 
-SMART Selective self-test log data structure revision number 1
- SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
-    1        0        0  Not_testing
-    2        0        0  Not_testing
-    3        0        0  Not_testing
-    4        0        0  Not_testing
-    5        0        0  Not_testing
-Selective self-test flags (0x0):
-  After scanning selected spans, do NOT read-scan remainder of disk.
-If Selective self-test is pending on power-up, resume after 0 minute de=
-lay.
+I then replaced the msleep(150); with:
+    {
+        int i, ms = 5;
+        msleep(ms);
+        ata_port_printk(ap, KERN_INFO, "status @ %d ms: 0x%x\n",
+                                        ms, ata_check_status(ap));
+        for (i = 1; i <= 20; i++) {
+            ms += 50;
+            msleep(50);
+            ata_port_printk(ap, KERN_INFO, "status @ %d ms: 0x%x\n",
+                                            ms, ata_check_status(ap));
+        }
+    }
 
-Thanks,
+Output for two cable placement configurations (0xFF check failure 
+and 0xFF check success) are included below.  Note that there are 
+cable placement configurations for both the hard drive and 
+GoVault where the initial status is 0xff. i.e. both transition 
+from 0xff to 0x7f when BSY bit is cleared but it is taking MUCH 
+longer for the GoVault (600-700ms for GoVault and <5ms for 
+hard drive).  It does not appear that the 0xff starting status
+is device specific.
 
-Kovid.
+So, it appears that we have a situation with this SATA controller 
+where a 0xFF status is not an accurate indication that there is
+no device.  
 
-On Tuesday 19 December 2006 16:44, you wrote:
-> Does goving back to 2.6.17 fix the problem? =A0Also, please report th=
-e
-> result of 'smartctl -d ata -a /dev/sdX' where sdX is the problematic =
-drive.
+Although the 150ms to 1000ms delay increase works for the GoVault 
+device I am not sure if it is the best long term fix for the problem.
 
---=20
-_____________________________________
+Gary
 
-Kovid Goyal  MC 452-48
-California Institute of Technology
-1200 E California Blvd
-Pasadena, CA 91125
+-- 
+Gary Hade
+IBM Linux Technology Center
+503-578-4503  IBM T/L: 775-4503
+garyhade@us.ibm.com
+http://www.ibm.com/linux/ltc
 
-home  : +01 626 390 8699
-office: +01 626 395 6595 (449 Lauritsen)
-email : kovid@theory.caltech.edu
-web   : http://www.kovidgoyal.net
-_____________________________________
+================================================
+Falied 0xFF check cable placement configuration
+================================================
+libata version 2.00 loaded.
+ata_piix 0000:00:1f.2: version 2.00
+ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 225
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: SATA max UDMA/133 cmd 0x20C0 ctl 0x20BA bmdma 0x2090 irq 225
+ata2: SATA max UDMA/133 cmd 0x20B0 ctl 0x20A6 bmdma 0x2098 irq 225
+scsi0 : ata_piix
+ata1: status @ 5 ms: 0xff
+ata1: status @ 55 ms: 0xff
+ata1: status @ 105 ms: 0xff
+ata1: status @ 155 ms: 0xff
+ata1: status @ 205 ms: 0xff
+ata1: status @ 255 ms: 0xff
+ata1: status @ 305 ms: 0xff
+ata1: status @ 355 ms: 0xff
+ata1: status @ 405 ms: 0xff
+ata1: status @ 455 ms: 0xff
+ata1: status @ 505 ms: 0xff
+ata1: status @ 555 ms: 0xff
+ata1: status @ 605 ms: 0xff
+ata1: status @ 655 ms: 0x7f
+ata1: status @ 705 ms: 0x7f
+ata1: status @ 755 ms: 0x7f
+ata1: status @ 805 ms: 0x7f
+ata1: status @ 855 ms: 0x7f
+ata1: status @ 905 ms: 0x7f
+ata1: status @ 955 ms: 0x7f
+ata1: status @ 1005 ms: 0x7f
+ATA: abnormal status 0x7F on port 0x20C7
+ATA: abnormal status 0x7F on port 0x20C7
+ata1.01: ATAPI, max UDMA/66
+ata1.01: configured for UDMA/66
+scsi1 : ata_piix
+ata2: status @ 5 ms: 0x50
+ata2: status @ 55 ms: 0x50
+ata2: status @ 105 ms: 0x50
+ata2: status @ 155 ms: 0x50
+ata2: status @ 205 ms: 0x50
+ata2: status @ 255 ms: 0x50
+ata2: status @ 305 ms: 0x50
+ata2: status @ 355 ms: 0x50
+ata2: status @ 405 ms: 0x50
+ata2: status @ 455 ms: 0x50
+ata2: status @ 505 ms: 0x50
+ata2: status @ 555 ms: 0x50
+ata2: status @ 605 ms: 0x50
+ata2: status @ 655 ms: 0x50
+ata2: status @ 705 ms: 0x50
+ata2: status @ 755 ms: 0x50
+ata2: status @ 805 ms: 0x50
+ata2: status @ 855 ms: 0x50
+ata2: status @ 905 ms: 0x50
+ata2: status @ 955 ms: 0x50
+ata2: status @ 1005 ms: 0x50
+ata2.00: ATA-7, max UDMA/133, 156312576 sectors: LBA
+ata2.00: ata2: dev 0 multi count 16
+ata2.00: configured for UDMA/133
+  Vendor: IBM       Model: GoVault           Rev: 008F
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 156300464 512-byte hdwr sectors (80026 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 74 00 00
+sda: cache data unavailable
+sda: assuming drive cache: write through
+SCSI device sda: 156300464 512-byte hdwr sectors (80026 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 74 00 00
+sda: cache data unavailable
+sda: assuming drive cache: write through
+ sda: sda1 sda2 sda3
+sd 0:0:1:0: Attached scsi removable disk sda
+  Vendor: ATA       Model: Maxtor 6Y080M0    Rev: YAR5
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdb: 156312576 512-byte hdwr sectors (80032 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 156312576 512-byte hdwr sectors (80032 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: drive cache: write back
+ sdb: sdb1 sdb2 sdb3 sdb4 < sdb5 sdb6 sdb7 sdb8 sdb9 sdb10 sdb11 sdb12 >
+sd 1:0:0:0: Attached scsi disk sdb
+==========================================================
+
+===================================================
+Successful 0xFF check cable placement configuration
+===================================================
+libata version 2.00 loaded.
+ata_piix 0000:00:1f.2: version 2.00
+ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 225
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: SATA max UDMA/133 cmd 0x20C0 ctl 0x20BA bmdma 0x2090 irq 225
+ata2: SATA max UDMA/133 cmd 0x20B0 ctl 0x20A6 bmdma 0x2098 irq 225
+scsi0 : ata_piix
+ata1: status @ 5 ms: 0x7f
+ata1: status @ 55 ms: 0x7f
+ata1: status @ 105 ms: 0x7f
+ata1: status @ 155 ms: 0x7f
+ata1: status @ 205 ms: 0x7f
+ata1: status @ 255 ms: 0x7f
+ata1: status @ 305 ms: 0x7f
+ata1: status @ 355 ms: 0x7f
+ata1: status @ 405 ms: 0x7f
+ata1: status @ 455 ms: 0x7f
+ata1: status @ 505 ms: 0x7f
+ata1: status @ 555 ms: 0x7f
+ata1: status @ 605 ms: 0x7f
+ata1: status @ 655 ms: 0x7f
+ata1: status @ 705 ms: 0x7f
+ata1: status @ 755 ms: 0x7f
+ata1: status @ 805 ms: 0x7f
+ata1: status @ 855 ms: 0x7f
+ata1: status @ 905 ms: 0x7f
+ata1: status @ 955 ms: 0x7f
+ata1: status @ 1005 ms: 0x7f
+ATA: abnormal status 0x7F on port 0x20C7
+ATA: abnormal status 0x7F on port 0x20C7
+ata1.01: ATA-7, max UDMA/133, 156312576 sectors: LBA
+ata1.01: ata1: dev 1 multi count 16
+ata1.01: configured for UDMA/133
+scsi1 : ata_piix
+ata2: status @ 5 ms: 0xd0
+ata2: status @ 55 ms: 0xd0
+ata2: status @ 105 ms: 0xd0
+ata2: status @ 155 ms: 0xd0
+ata2: status @ 205 ms: 0xd0
+ata2: status @ 255 ms: 0xd0
+ata2: status @ 305 ms: 0xd0
+ata2: status @ 355 ms: 0xd0
+ata2: status @ 405 ms: 0xd0
+ata2: status @ 455 ms: 0xd0
+ata2: status @ 505 ms: 0xd0
+ata2: status @ 555 ms: 0xd0
+ata2: status @ 605 ms: 0xd0
+ata2: status @ 655 ms: 0x0
+ata2: status @ 705 ms: 0x0
+ata2: status @ 755 ms: 0x0
+ata2: status @ 805 ms: 0x0
+ata2: status @ 855 ms: 0x0
+ata2: status @ 905 ms: 0x0
+ata2: status @ 955 ms: 0x0
+ata2: status @ 1005 ms: 0x0
+ata2.00: ATAPI, max UDMA/66
+ata2.00: configured for UDMA/66
+  Vendor: ATA       Model: Maxtor 6Y080M0    Rev: YAR5
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 156312576 512-byte hdwr sectors (80032 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 156312576 512-byte hdwr sectors (80032 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 sda11 sda12 >
+sd 0:0:1:0: Attached scsi disk sda
+  Vendor: IBM       Model: GoVault           Rev: 008F
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sdb: 156300464 512-byte hdwr sectors (80026 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 74 00 00
+sdb: cache data unavailable
+sdb: assuming drive cache: write through
+SCSI device sdb: 156300464 512-byte hdwr sectors (80026 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 74 00 00
+sdb: cache data unavailable
+sdb: assuming drive cache: write through
+ sdb: sdb1 sdb2 sdb3
+sd 1:0:0:0: Attached scsi removable disk sdb
+==========================================================
+
