@@ -1,59 +1,52 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Frequent SATA errors / port timeouts in 2.6.18.3?
-Date: Wed, 20 Dec 2006 09:42:47 +0900
-Message-ID: <45888707.4010803@gmail.com>
-References: <4578F5D4.8080205@moniker.net> <4580907D.1020407@ucolick.org> <4587903C.3050204@gmail.com> <4588847E.3090303@ucolick.org>
+Subject: Re: [2.6.18,19] SATA boot problems (ICH6/ICH6W)
+Date: Wed, 20 Dec 2006 09:44:45 +0900
+Message-ID: <4588877D.1000400@gmail.com>
+References: <200612111003.39928.kovid@theory.caltech.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:40715 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932721AbWLTAmy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 19:42:54 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so796247nze
-        for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 16:42:53 -0800 (PST)
-In-Reply-To: <4588847E.3090303@ucolick.org>
+Received: from py-out-1112.google.com ([64.233.166.176]:17308 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932669AbWLTAo6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2006 19:44:58 -0500
+Received: by py-out-1112.google.com with SMTP id a29so1105502pyi
+        for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2006 16:44:57 -0800 (PST)
+In-Reply-To: <200612111003.39928.kovid@theory.caltech.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patrik Jonsson <patrik@ucolick.org>
+To: Kovid Goyal <kovid@theory.caltech.edu>
 Cc: linux-ide@vger.kernel.org
 
-Patrik Jonsson wrote:
-> At the time it happened, none of the devices responded to smart commands
-> ("not an ATA device"). After resetting, they do. The outputs are at the
-> bottom.
-
-Hmmm... Nothing indicative of power problem.  The first drive seems to
-have suffered quite some number of read failures due to bad sectors tho.
-
->>> The drives contain science data for analysis, so it
->>> would be a pain (though not a disaster) to lose it. Would it be
->>> advisable to revert to the previous 2.6.17 that I was running before or
->>> is this a problem that's fixed in a later kernel than the one I'm
->>> running now?
->>>
->>> I did at the same time also install an Areca ARC1260 controller and
->>> connected a bunch of drives to it, so another idea I had was cable
->>> interference or something (there are now 18 drives in the machine).
->>>
->>> Any ideas or thought would be appreciated,
->> Power quality degradation can cause transmission failures which can
->> result in timeouts.  How are your power lines hooked?
+Kovid Goyal wrote:
+> Hi,
 > 
-> The drives are connected to the Seasonic M12-600 PSU, connected to an
-> APC BackUPS and then it's in the wall. It's in a dedicated computer
-> room, but I'm not sure if the power in conditioned in any way.
+> I'm having problems booting from a SATA disk with 2.6.19.
+> Grub loads fine, but when the kernel boots, it *sometimes* ends up with
+> VFS: Cannot open root device "sda5" or unknown-block(0,0). 
+> 
+> This issue appears to be identical with the one reported in 
+> http://lkml.org/lkml/2006/10/19/327 except that 2.6.19 did not fix it for me. 
+> In fact, it made it worse. The timeouts reported in that thread are still 
+> present and with 2.6.19 the fraction of unsuccessful boots has increased from 
+> 30% to 80%. I often have to reboot my machine 3 times in a row before it 
+> succeeds. I have tried both vanilla 2.6.19 and gentoo-sources-2.6.19-r1
+> 
+> To summarize: My machine stalls for nearly a minute on all boots and the root 
+> filesystem fails to mount on 80% of the boots. This problem first manifested 
+> itself when I switched to 2.6.18 and has become worse with 2.6.19. 
+> 
+> The controller:
+> 00:1f.2 IDE interface: Intel Corporation 82801FB/FW (ICH6/ICH6W) SATA 
+> Controller (rev 03)
+> 
+> I don't know how to get the logs from an unsuccessful boot. Here is
+> an extract from the logs of a successful boot (in which the timeout is 
+> present):
 
-My primary suspect is still power.  Please do one of the followings.
-
-* Buy an extra power and hang 2/3 of drives there.  Just cheap 350w one
-should do.  Using PS without mainboard attached is easy, google it.  In
-my experience, single-lane 300 ~ 350w PS is better than 450w multilane
-one for this purpose.  More juice on molex/SATA 12v.
-
-* If that's not an option, disconnect the extra drives and see how the
-system behaves.
+Does goving back to 2.6.17 fix the problem?  Also, please report the
+result of 'smartctl -d ata -a /dev/sdX' where sdX is the problematic drive.
 
 -- 
 tejun
