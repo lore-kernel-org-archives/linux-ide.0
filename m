@@ -1,39 +1,38 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: libata-pata: how to select PIO mode instead of DMA?
-Date: Wed, 20 Dec 2006 13:23:56 +0100
-Message-ID: <20061220122356.GE28435@harddisk-recovery.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/2] sata_nv & ahci: Move some IDs from sata_nv.c to ahci.c
+Date: Wed, 20 Dec 2006 14:19:32 -0500
+Message-ID: <45898CC4.9010805@pobox.com>
+References: <15F501D1A78BD343BE8F4D8DB854566B07FC61A9@hkemmail01.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:53868 "HELO abra2.bitwizard.nl"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754806AbWLTMbX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Dec 2006 07:31:23 -0500
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:34918 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030304AbWLTTTg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Dec 2006 14:19:36 -0500
+In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B07FC61A9@hkemmail01.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk
+To: Peer Chen <pchen@nvidia.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Hi,
+Peer Chen wrote:
+> Resend the patch.
+> The content of memory map io of BAR5 have been change from MCP65 then sata_nv can't work fine on the platform based on MCP65 and MCP67,so move their IDs from sata_nv.c to ahci.c.
+> Please check attachment for new patch,thanks.
+> 
+> Signed-off-by: Peer Chen <pchen@nvidia.com>
 
-I'm experimenting with the libata-pata drivers in linux 2.6.19. So far
-it looks good, great job Alan! 
+Patch applied, manually.
 
-We obviously have some drives that due to their damaged nature have
-some funny behaviour. One of them is that some drives really don't like
-DMA mode anymore and can only be reliably recovered in PIO mode. With
-the old IDE drivers that was easy: hdparm -d 0 /dev/hda . Unfortunately
-I can't find a way to do the same with libata-pata.
+For future patches,
 
-The libata-pata drivers have a set_piomode method that gets called in
-libata-core.c:ata_set_mode(), which is only called from the bus probe
-function and the exception handler. What is needed to force a drive
-into PIO mode from userspace?
+1) Please do not quote the original message
+
+2) Please include patches inline, rather than as an attachment.
+
+	Jeff
 
 
-Erik
 
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
