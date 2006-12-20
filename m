@@ -1,919 +1,841 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/2] sata_inic162x: driver for initio 162x SATA controllers,
- take 2
-Date: Wed, 20 Dec 2006 14:56:16 -0500
-Message-ID: <45899560.8090401@pobox.com>
-References: <20061217014827.GK5400@htj.dyndns.org> <20061217015008.GL5400@htj.dyndns.org> <20061220062546.GA4823@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Wed, 20 Dec 2006 16:00:42 -0500
+Message-ID: <20061220210042.GA25303@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35260 "EHLO mail.dvmed.net"
+Received: from havoc.gtf.org ([69.61.125.42]:34853 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030333AbWLTT4Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Dec 2006 14:56:24 -0500
-In-Reply-To: <20061220062546.GA4823@htj.dyndns.org>
+	id S1030198AbWLTVAr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Dec 2006 16:00:47 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, bob@evoria.net, nabble@theanthonys.net, alan@lxorguk.ukuu.org.uk, matthias@urlichs.de, romieu@fr.zoreil.com, carlosmarcelomartinez@gmail.com
-
-Tejun Heo wrote:
-> Driver for Initio 162x SATA controllers.  ATA r/w, ATAPI r, hotplug
-> and suspend/resume work.  ATAPI w (recording, that is) broken.  Feel
-> free to fix it, but be warned, this controller is weird.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-
-Minor issues only...   See inline comments.
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
->  drivers/ata/Kconfig         |    6 
->  drivers/ata/Makefile        |    1 
->  drivers/ata/sata_inic162x.c |  802 ++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 809 insertions(+)
-> 
-> Index: work/drivers/ata/Kconfig
-> ===================================================================
-> --- work.orig/drivers/ata/Kconfig
-> +++ work/drivers/ata/Kconfig
-> @@ -143,6 +143,12 @@ config SATA_VITESSE
->  
->  	  If unsure, say N.
->  
-> +config SATA_INIC162X
-> +	tristate "Initio 162x SATA support"
-> +	depends on PCI
-> +	help
-> +	  This option enables support for Initio 162x Serial ATA.
-> +
->  config SATA_INTEL_COMBINED
->  	bool
->  	depends on IDE=y && !BLK_DEV_IDE_SATA && (SATA_AHCI || ATA_PIIX)
-> Index: work/drivers/ata/Makefile
-> ===================================================================
-> --- work.orig/drivers/ata/Makefile
-> +++ work/drivers/ata/Makefile
-> @@ -15,6 +15,7 @@ obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
->  obj-$(CONFIG_SATA_NV)		+= sata_nv.o
->  obj-$(CONFIG_SATA_ULI)		+= sata_uli.o
->  obj-$(CONFIG_SATA_MV)		+= sata_mv.o
-> +obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
->  obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
->  
->  obj-$(CONFIG_PATA_ALI)		+= pata_ali.o
-> Index: work/drivers/ata/sata_inic162x.c
-> ===================================================================
-> --- /dev/null
-> +++ work/drivers/ata/sata_inic162x.c
-> @@ -0,0 +1,802 @@
-> +/*
-> + * sata_inic162x.c - Driver for Initio 162x SATA controllers
-> + *
-> + * Copyright 2006  SUSE Linux Products GmbH
-> + * Copyright 2006  Tejun Heo <teheo@novell.com>
-> + *
-> + * This file is released under GPL v2.
-> + *
-> + * This controller is eccentric and easily locks up if something isn't
-> + * right.  Documentation is available at initio's website but it only
-> + * documents registers (not programming model).
-> + *
-> + * - ATA disks work.
-> + * - Hotplug works.
-> + * - ATAPI read works but burning doesn't.  This thing is really
-> + *   peculiar about ATAPI and I couldn't figure out how ATAPI PIO and
-> + *   ATAPI DMA WRITE should be programmed.  If you've got a clue, be
-> + *   my guest.
-> + * - Both STR and STD work.
+FWIW the Tejun cleanups are a fix, split into three reviewable pieces.
 
-Do everyday users get a sane error, or something bad like a lockup, when 
-trying to ATAPI write?
+Also, my local iomap branch has advanced sufficiently enough that I
+think it's high time to kill those libata warnings that spew on every
+build.  (I hear the crowds roar)
 
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/pci.h>
-> +#include <scsi/scsi_host.h>
-> +#include <linux/libata.h>
-> +#include <linux/blkdev.h>
-> +#include <scsi/scsi_device.h>
-> +
-> +#define DRV_NAME	"sata_inic162x"
-> +#define DRV_VERSION	"0.1"
-> +
-> +enum {
-> +	MMIO_BAR		= 5,
-> +
-> +	NR_PORTS		= 2,
-> +
-> +	HOST_CTL		= 0x7c,
-> +	HOST_STAT		= 0x7e,
-> +	HOST_IRQ_STAT		= 0xbc,
-> +	HOST_IRQ_MASK		= 0xbe,
-> +
-> +	PORT_SIZE		= 0x40,
-> +
-> +	/* registers for ATA TF operation */
-> +	PORT_TF			= 0x00,
-> +	PORT_ALT_STAT		= 0x08,
-> +	PORT_IRQ_STAT		= 0x09,
-> +	PORT_IRQ_MASK		= 0x0a,
-> +	PORT_PRD_CTL		= 0x0b,
-> +	PORT_PRD_ADDR		= 0x0c,
-> +	PORT_PRD_XFERLEN	= 0x10,
-> +
-> +	/* IDMA register */
-> +	PORT_IDMA_CTL		= 0x14,
-> +
-> +	PORT_SCR		= 0x20,
-> +
-> +	/* HOST_CTL bits */
-> +	HCTL_IRQOFF		= (1 << 8),  /* global IRQ off */
-> +	HCTL_PWRDWN		= (1 << 13), /* power down PHYs */
-> +	HCTL_SOFTRST		= (1 << 13), /* global reset (no phy reset) */
-> +	HCTL_RPGSEL		= (1 << 15), /* register page select */
-> +
-> +	HCTL_KNOWN_BITS		= HCTL_IRQOFF | HCTL_PWRDWN | HCTL_SOFTRST |
-> +				  HCTL_RPGSEL,
-> +
-> +	/* HOST_IRQ_(STAT|MASK) bits */
-> +	HIRQ_PORT0		= (1 << 0),
-> +	HIRQ_PORT1		= (1 << 1),
-> +	HIRQ_SOFT		= (1 << 14),
-> +	HIRQ_GLOBAL		= (1 << 15), /* STAT only */
-> +
-> +	/* PORT_IRQ_(STAT|MASK) bits */
-> +	PIRQ_OFFLINE		= (1 << 0),  /* device unplugged */
-> +	PIRQ_ONLINE		= (1 << 1),  /* device plugged */
-> +	PIRQ_COMPLETE		= (1 << 2),  /* completion interrupt */
-> +	PIRQ_FATAL		= (1 << 3),  /* fatal error */
-> +	PIRQ_ATA		= (1 << 4),  /* ATA interrupt */
-> +	PIRQ_REPLY		= (1 << 5),  /* reply FIFO not empty */
-> +	PIRQ_PENDING		= (1 << 7),  /* port IRQ pending (STAT only) */
-> +
-> +	PIRQ_ERR		= PIRQ_OFFLINE | PIRQ_ONLINE | PIRQ_FATAL,
-> +
-> +	PIRQ_MASK_DMA_READ	= PIRQ_REPLY | PIRQ_ATA,
-> +	PIRQ_MASK_OTHER		= PIRQ_REPLY | PIRQ_COMPLETE,
-> +	PIRQ_MASK_FREEZE	= 0xff,
-> +
-> +	/* PORT_PRD_CTL bits */
-> +	PRD_CTL_START		= (1 << 0),
-> +	PRD_CTL_WR		= (1 << 3),
-> +	PRD_CTL_DMAEN		= (1 << 7),  /* DMA enable */
-> +
-> +	/* PORT_IDMA_CTL bits */
-> +	IDMA_CTL_RST_ATA	= (1 << 2),  /* hardreset ATA bus */
-> +	IDMA_CTL_RST_IDMA	= (1 << 5),  /* reset IDMA machinary */
-> +	IDMA_CTL_GO		= (1 << 7),  /* IDMA mode go */
-> +	IDMA_CTL_ATA_NIEN	= (1 << 8),  /* ATA IRQ disable */
-> +};
-> +
-> +struct inic_host_priv {
-> +	u16 cached_hctl;
-> +};
-> +
-> +struct inic_port_priv {
-> +	u8 dfl_prdctl, cached_prdctl;
+to receive the following updates:
 
-> +	u8 cached_pirq_mask;
+ drivers/ata/ahci.c        |    8 ++
+ drivers/ata/libata-scsi.c |  238 +++++++++++++++++++++++---------------------
+ drivers/ata/pata_cs5530.c |    3 +-
+ drivers/ata/pata_via.c    |    2 +-
+ drivers/ata/sata_nv.c     |    8 --
+ drivers/ata/sata_svw.c    |   41 +++++----
+ drivers/ata/sata_vsc.c    |   43 +++++----
+ 7 files changed, 182 insertions(+), 161 deletions(-)
 
-apply standard struct style:
+Andrew Morton (2):
+      [libata] pata_cs5530: suspend/resume support tweak
+      [libata] pata_via: suspend/resume support fix
 
-1) one struct member per line
-2) indent between type and member name
+Jeff Garzik (1):
+      [libata] sata_svw, sata_vsc: kill iomem warnings
 
+Peer Chen (1):
+      [libata] Move some PCI IDs from sata_nv to ahci
 
-> +static int inic_slave_config(struct scsi_device *sdev)
-> +{
-> +	/* This controller is braindamaged.  dma_boundary is 0xffff
-> +	 * like others but it will lock up the whole machine HARD if
-> +	 * 65536 byte PRD entry is fed.  Reduce maximum segment size.
-> +	 */
-> +	blk_queue_max_segment_size(sdev->request_queue, 65536 - 512);
-> +
-> +	return ata_scsi_slave_config(sdev);
-> +}
-> +
-> +static struct scsi_host_template inic_sht = {
-> +	.module			= THIS_MODULE,
-> +	.name			= DRV_NAME,
-> +	.ioctl			= ata_scsi_ioctl,
-> +	.queuecommand		= ata_scsi_queuecmd,
-> +	.can_queue		= ATA_DEF_QUEUE,
-> +	.this_id		= ATA_SHT_THIS_ID,
-> +	.sg_tablesize		= LIBATA_MAX_PRD,
-> +	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
-> +	.emulated		= ATA_SHT_EMULATED,
-> +	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-> +	.proc_name		= DRV_NAME,
-> +	.dma_boundary		= ATA_DMA_BOUNDARY,
-> +	.slave_configure	= inic_slave_config,
-> +	.slave_destroy		= ata_scsi_slave_destroy,
-> +	.bios_param		= ata_std_bios_param,
-> +	.suspend		= ata_scsi_device_suspend,
-> +	.resume			= ata_scsi_device_resume,
-> +};
-> +
-> +static const int scr_map[] = {
-> +	[SCR_STATUS]	= 0,
-> +	[SCR_ERROR]	= 1,
-> +	[SCR_CONTROL]	= 2,
-> +};
-> +
-> +static void __iomem * get_port_base(struct ata_port *ap)
-> +{
-> +	return ap->host->mmio_base + ap->port_no * PORT_SIZE;
-> +}
-> +
-> +static void __set_pirq_mask(struct ata_port *ap, u8 mask)
-> +{
-> +	void __iomem *port_base = get_port_base(ap);
-> +	struct inic_port_priv *pp = ap->private_data;
-> +
-> +	writeb(mask, port_base + PORT_IRQ_MASK);
-> +	pp->cached_pirq_mask = mask;
-> +}
-> +
-> +static void set_pirq_mask(struct ata_port *ap, u8 mask)
-> +{
-> +	struct inic_port_priv *pp = ap->private_data;
-> +
-> +	if (pp->cached_pirq_mask != mask)
-> +		__set_pirq_mask(ap, mask);
-> +}
+Tejun Heo (3):
+      libata: clean up variable name usage in xlat related functions
+      libata: kill @cdb argument from xlat methods
+      libata: take scmd->cmd_len into account when translating SCSI commands
 
-
-You should either flush here, or in the one case you need it, ->thaw
-
-
-> +static void reset_port(void __iomem *port_base)
-> +{
-> +	void __iomem *idma_ctl = port_base + PORT_IDMA_CTL;
-> +	u16 ctl;
-> +
-> +	ctl = readw(idma_ctl);
-> +	ctl &= ~(IDMA_CTL_RST_IDMA | IDMA_CTL_ATA_NIEN | IDMA_CTL_GO);
-> +
-> +	/* mask IRQ and assert reset */
-> +	writew(ctl | IDMA_CTL_RST_IDMA | IDMA_CTL_ATA_NIEN, idma_ctl);
-> +	readw(idma_ctl); /* flush */
-> +
-> +	/* give it some time */
-> +	msleep(1);
-> +
-> +	/* release reset */
-> +	writew(ctl | IDMA_CTL_ATA_NIEN, idma_ctl);
-> +
-> +	/* clear irq */
-> +	writeb(0xff, port_base + PORT_IRQ_STAT);
-> +
-> +	/* reenable ATA IRQ, turn off IDMA mode */
-> +	writew(ctl, idma_ctl);
-> +}
-> +
-> +static u32 inic_scr_read(struct ata_port *ap, unsigned sc_reg)
-> +{
-> +	void __iomem *scr_addr = (void __iomem *)ap->ioaddr.scr_addr;
-> +	if (sc_reg < ARRAY_SIZE(scr_map)) {
-> +		void __iomem *addr;
-> +		u32 val;
-> +
-> +		addr = scr_addr + scr_map[sc_reg] * 4;
-> +		val = readl(scr_addr + scr_map[sc_reg] * 4);
-> +
-> +		/* this controller has stuck DIAG.N, ignore it */
-> +		if (sc_reg == SCR_ERROR)
-> +			val &= ~SERR_PHYRDY_CHG;
-> +		return val;
-> +	}
-> +	return 0xffffffffU;
-> +}
-
-style:  the main body of code should not be indented.
-
-more appropriate:
-
-	if (unlikely(sc_reg >= ARRAY_SIZE(scr_map)))
-		return 0xffffffffU;
-	...
-
-Or perhaps audit the code and ensure that the core never calls with an 
-SCR index greater than 2 (SCR_CONTROL), and then add
-
-	BUG_ON(sc_ref > SCR_CONTROL);
-
-
-> +static void inic_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val)
-> +{
-> +	void __iomem *scr_addr = (void __iomem *)ap->ioaddr.scr_addr;
-> +	if (sc_reg < ARRAY_SIZE(scr_map)) {
-> +		void __iomem *addr;
-> +		addr = scr_addr + scr_map[sc_reg] * 4;
-> +		writel(val, scr_addr + scr_map[sc_reg] * 4);
-> +	}
-> +}
-
-ditto
-
-
-> +/*
-> + * In TF mode, inic162x is very similar to SFF device.  TF registers
-> + * function the same.  DMA engine behaves similary using the same PRD
-> + * format as BMDMA but different command register, interrupt and event
-> + * notification methods are used.  The following inic_bmdma_*()
-> + * functions do the impedance matching.
-> + */
-> +static void inic_bmdma_setup(struct ata_queued_cmd *qc)
-> +{
-> +	struct ata_port *ap = qc->ap;
-> +	struct inic_port_priv *pp = ap->private_data;
-> +	void __iomem *port_base = get_port_base(ap);
-> +	int rw = qc->tf.flags & ATA_TFLAG_WRITE;
-> +
-> +	/* make sure device sees PRD table writes */
-> +	wmb();
-> +
-> +	/* load transfer length */
-> +	writel(qc->nbytes, port_base + PORT_PRD_XFERLEN);
-> +
-> +	/* turn on DMA and specify data direction */
-> +	pp->cached_prdctl = pp->dfl_prdctl | PRD_CTL_DMAEN;
-> +	if (!rw)
-> +		pp->cached_prdctl |= PRD_CTL_WR;
-> +	writeb(pp->cached_prdctl, port_base + PORT_PRD_CTL);
-> +
-> +	/* issue r/w command */
-> +	ap->ops->exec_command(ap, &qc->tf);
-> +}
-> +
-> +static void inic_bmdma_start(struct ata_queued_cmd *qc)
-> +{
-> +	struct ata_port *ap = qc->ap;
-> +	struct inic_port_priv *pp = ap->private_data;
-> +	void __iomem *port_base = get_port_base(ap);
-> +
-> +	/* start host DMA transaction */
-> +	pp->cached_prdctl |= PRD_CTL_START;
-> +	writeb(pp->cached_prdctl, port_base + PORT_PRD_CTL);
-> +}
-> +
-> +static void inic_bmdma_stop(struct ata_queued_cmd *qc)
-> +{
-> +	struct ata_port *ap = qc->ap;
-> +	struct inic_port_priv *pp = ap->private_data;
-> +	void __iomem *port_base = get_port_base(ap);
-> +
-> +	/* stop DMA engine */
-> +	writeb(pp->dfl_prdctl, port_base + PORT_PRD_CTL);
-> +}
-> +
-> +static u8 inic_bmdma_status(struct ata_port *ap)
-> +{
-> +	/* event is already verified by the interrupt handler */
-> +	return ATA_DMA_INTR;
-> +}
-> +
-> +static void inic_irq_clear(struct ata_port *ap)
-> +{
-> +	/* noop */
-> +}
-> +
-> +static void inic_host_intr(struct ata_port *ap)
-> +{
-> +	void __iomem *port_base = get_port_base(ap);
-> +	struct ata_eh_info *ehi = &ap->eh_info;
-> +	u8 irq_stat;
-> +
-> +	/* fetch and clear irq */
-> +	irq_stat = readb(port_base + PORT_IRQ_STAT);
-> +	writeb(irq_stat, port_base + PORT_IRQ_STAT);
-> +
-> +	if (likely(!(irq_stat & PIRQ_ERR))) {
-> +		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
-> +		u8 stat;
-> +
-> +		if (unlikely(!qc || (qc->tf.flags & ATA_TFLAG_POLLING))) {
-> +			ata_chk_status(ap);	/* clear ATA interrupt */
-> +			return;
-> +		}
-> +
-> +		if (likely(ata_host_intr(ap, qc)))
-> +			return;
-> +
-> +		stat = ata_chk_status(ap);	/* clear ATA interrupt */
-> +		ata_port_printk(ap, KERN_WARNING, "unhandled interrupt, "
-> +				"stat=0x%x irq_stat=0x%x\n", stat, irq_stat);
-> +		return;
-> +	}
-> +
-> +	/* error */
-> +	ata_ehi_push_desc(ehi, "irq_stat=0x%x", irq_stat);
-> +
-> +	if (irq_stat & (PIRQ_OFFLINE | PIRQ_ONLINE)) {
-> +		ata_ehi_hotplugged(ehi);
-> +		ata_port_freeze(ap);
-> +	} else
-> +		ata_port_abort(ap);
-> +}
-> +
-> +static irqreturn_t inic_interrupt(int irq, void *dev_instance)
-> +{
-> +	struct ata_host *host = dev_instance;
-> +	void __iomem *mmio_base = host->mmio_base;
-> +	u16 host_irq_stat;
-> +	int i, handled = 0;;
-> +
-> +	host_irq_stat = readw(mmio_base + HOST_IRQ_STAT);
-> +
-> +	if (unlikely(!(host_irq_stat & HIRQ_GLOBAL)))
-> +		goto out;
-> +
-> +	spin_lock(&host->lock);
-> +
-> +	for (i = 0; i < NR_PORTS; i++) {
-> +		struct ata_port *ap = host->ports[i];
-> +
-> +		if (!(host_irq_stat & (HIRQ_PORT0 << i)))
-> +			continue;
-> +
-> +		if (likely(ap && !(ap->flags & ATA_FLAG_DISABLED))) {
-> +			inic_host_intr(ap);
-> +			handled++;
-> +		} else {
-> +			if (ata_ratelimit())
-> +				dev_printk(KERN_ERR, host->dev, "interrupt "
-> +					   "from disabled port %d (0x%x)\n",
-> +					   i, host_irq_stat);
-> +		}
-> +	}
-> +
-> +	spin_unlock(&host->lock);
-> +
-> + out:
-> +	return IRQ_RETVAL(handled);
-> +}
-> +
-> +static unsigned int inic_qc_issue(struct ata_queued_cmd *qc)
-> +{
-> +	struct ata_port *ap = qc->ap;
-> +
-> +	/* ATA IRQ doesn't wait for DMA transfer completion and vice
-> +	 * versa.  Mask IRQ selectively to detect command completion.
-> +	 * Without it, ATA DMA read command can cause data corruption.
-> +	 *
-> +	 * Something similar might be needed for ATAPI writes.  I
-> +	 * tried a lot of combinations but couldn't find the solution.
-> +	 */
-> +	if (qc->tf.protocol == ATA_PROT_DMA &&
-> +	    !(qc->tf.flags & ATA_TFLAG_WRITE))
-> +		set_pirq_mask(ap, PIRQ_MASK_DMA_READ);
-> +	else
-> +		set_pirq_mask(ap, PIRQ_MASK_OTHER);
-> +
-> +	/* Issuing a command to yet uninitialized port locks up the
-> +	 * controller.  Most of the time, this happens for the first
-> +	 * command after reset which are ATA and ATAPI IDENTIFYs.
-> +	 * Fast fail if stat is 0x7f or 0xff for those commands.
-> +	 */
-> +	if (unlikely(qc->tf.command == ATA_CMD_ID_ATA ||
-> +		     qc->tf.command == ATA_CMD_ID_ATAPI)) {
-> +		u8 stat = ata_chk_status(ap);
-> +		if (stat == 0x7f || stat == 0xff)
-> +			return AC_ERR_HSM;
-> +	}
-> +
-> +	return ata_qc_issue_prot(qc);
-> +}
-> +
-> +static void inic_freeze(struct ata_port *ap)
-> +{
-> +	void __iomem *port_base = get_port_base(ap);
-> +
-> +	__set_pirq_mask(ap, PIRQ_MASK_FREEZE);
-> +
-> +	ata_chk_status(ap);
-> +	writeb(0xff, port_base + PORT_IRQ_STAT);
-> +}
-> +
-> +static void inic_thaw(struct ata_port *ap)
-> +{
-> +	void __iomem *port_base = get_port_base(ap);
-> +
-> +	ata_chk_status(ap);
-> +	writeb(0xff, port_base + PORT_IRQ_STAT);
-> +
-> +	__set_pirq_mask(ap, PIRQ_MASK_OTHER);
-> +}
-> +
-> +/*
-> + * SRST and SControl hardreset don't give valid signature on this
-> + * controller.  Only controller specific hardreset mechanism works.
-> + */
-> +static int inic_hardreset(struct ata_port *ap, unsigned int *class)
-> +{
-> +	void __iomem *port_base = get_port_base(ap);
-> +	void __iomem *idma_ctl = port_base + PORT_IDMA_CTL;
-> +	const unsigned long *timing = sata_ehc_deb_timing(&ap->eh_context);
-> +	u16 val;
-> +	int rc;
-> +
-> +	/* hammer it into sane state */
-> +	reset_port(port_base);
-> +
-> +	if (ata_port_offline(ap)) {
-> +		*class = ATA_DEV_NONE;
-> +		return 0;
-> +	}
-> +
-> +	val = readw(idma_ctl);
-> +	writew(val | IDMA_CTL_RST_ATA, idma_ctl);
-> +	readw(idma_ctl);	/* flush */
-> +	msleep(1);
-> +	writew(val & ~IDMA_CTL_RST_ATA, idma_ctl);
-> +
-> +	rc = sata_phy_resume(ap, timing);
-> +	if (rc) {
-> +		ata_port_printk(ap, KERN_WARNING, "failed to resume "
-> +				"link for reset (errno=%d)\n", rc);
-> +		return rc;
-> +	}
-> +
-> +	msleep(150);
-> +
-> +	*class = ATA_DEV_NONE;
-> +	if (ata_port_online(ap)) {
-> +		struct ata_taskfile tf;
-> +
-> +		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
-> +			ata_port_printk(ap, KERN_WARNING,
-> +					"device busy after hardreset\n");
-> +			return -EIO;
-> +		}
-> +
-> +		ata_tf_read(ap, &tf);
-> +		*class = ata_dev_classify(&tf);
-> +		if (*class == ATA_DEV_UNKNOWN)
-> +			*class = ATA_DEV_NONE;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void inic_error_handler(struct ata_port *ap)
-> +{
-> +	void __iomem *port_base = get_port_base(ap);
-> +	struct inic_port_priv *pp = ap->private_data;
-> +	unsigned long flags;
-> +
-> +	/* reset PIO HSM and stop DMA engine */
-> +	reset_port(port_base);
-
-This function name is a bit too generic, and more difficult to narrow 
-down to the single driver when viewed in an oops stack trace
-
-
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	ap->hsm_task_state = HSM_ST_IDLE;
-> +	writeb(pp->dfl_prdctl, port_base + PORT_PRD_CTL);
-> +	spin_unlock_irqrestore(ap->lock, flags);
-> +
-> +	/* PIO and DMA engines have been stopped, perform recovery */
-> +	ata_do_eh(ap, ata_std_prereset, NULL, inic_hardreset,
-> +		  ata_std_postreset);
-> +}
-> +
-> +static void inic_post_internal_cmd(struct ata_queued_cmd *qc)
-> +{
-> +	/* make DMA engine forget about the failed command */
-> +	if (qc->err_mask)
-> +		reset_port(get_port_base(qc->ap));
-> +}
-> +
-> +static void inic_dev_config(struct ata_port *ap, struct ata_device *dev)
-> +{
-> +	/* inic can only handle upto LBA28 max sectors */
-> +	if (dev->max_sectors > ATA_MAX_SECTORS)
-> +		dev->max_sectors = ATA_MAX_SECTORS;
-> +}
-
-why is this needed?  scsi host template should take care of this, right?
-
-
-> +static void init_port(struct ata_port *ap)
-> +{
-> +	void __iomem *port_base = get_port_base(ap);
-> +
-> +	/* Setup PRD address */
-> +	writel(ap->prd_dma, port_base + PORT_PRD_ADDR);
-> +}
-> +
-> +static int inic_port_resume(struct ata_port *ap)
-> +{
-> +	init_port(ap);
-
-likewise, name is too generic for the global namespace (even though its 
-a 'static' function)
-
-
-> +	return 0;
-> +}
-> +
-> +static int inic_port_start(struct ata_port *ap)
-> +{
-> +	void __iomem *port_base = get_port_base(ap);
-> +	struct inic_port_priv *pp;
-> +	u8 tmp;
-> +	int rc;
-> +
-> +	/* alloc and initialize private data */
-> +	pp = kzalloc(sizeof(*pp), GFP_KERNEL);
-> +	if (!pp)
-> +		return -ENOMEM;
-> +	ap->private_data = pp;
-> +
-> +	/* default PRD_CTL value, DMAEN, WR and START off */
-> +	tmp = readb(port_base + PORT_PRD_CTL);
-> +	tmp &= ~(PRD_CTL_DMAEN | PRD_CTL_WR | PRD_CTL_START);
-> +	pp->dfl_prdctl = tmp;
-> +
-> +	/* Alloc resources */
-> +	rc = ata_port_start(ap);
-> +	if (rc) {
-> +		kfree(pp);
-> +		return rc;
-> +	}
-> +
-> +	init_port(ap);
-> +
-> +	return 0;
-> +}
-> +
-> +static void inic_port_stop(struct ata_port *ap)
-> +{
-> +	ata_port_stop(ap);
-> +	kfree(ap->private_data);
-> +}
-> +
-> +static struct ata_port_operations inic_port_ops = {
-> +	.port_disable		= ata_port_disable,
-> +	.tf_load		= ata_tf_load,
-> +	.tf_read		= ata_tf_read,
-> +	.check_status		= ata_check_status,
-> +	.exec_command		= ata_exec_command,
-> +	.dev_select		= ata_std_dev_select,
-> +
-> +	.scr_read		= inic_scr_read,
-> +	.scr_write		= inic_scr_write,
-> +
-> +	.bmdma_setup		= inic_bmdma_setup,
-> +	.bmdma_start		= inic_bmdma_start,
-> +	.bmdma_stop		= inic_bmdma_stop,
-> +	.bmdma_status		= inic_bmdma_status,
-> +
-> +	.irq_handler		= inic_interrupt,
-> +	.irq_clear		= inic_irq_clear,
-> +
-> +	.qc_prep	 	= ata_qc_prep,
-> +	.qc_issue		= inic_qc_issue,
-> +	.data_xfer		= ata_pio_data_xfer,
-> +
-> +	.freeze			= inic_freeze,
-> +	.thaw			= inic_thaw,
-> +	.error_handler		= inic_error_handler,
-> +	.post_internal_cmd	= inic_post_internal_cmd,
-> +	.dev_config		= inic_dev_config,
-> +
-> +	.port_resume		= inic_port_resume,
-> +
-> +	.port_start		= inic_port_start,
-> +	.port_stop		= inic_port_stop,
-> +	.host_stop		= ata_pci_host_stop
-> +};
-> +
-> +static struct ata_port_info inic_port_info = {
-> +	.sht			= &inic_sht,
-> +	/* For some reason, ATA_PROT_ATAPI is broken on this
-> +	 * controller, and no, PIO_POLLING does't fix it.  It somehow
-> +	 * manages to report the wrong ireason and ignoring ireason
-> +	 * results in machine lock up.  Tell libata to always prefer
-> +	 * DMA.
-> +	 */
-> +	.flags			= ATA_FLAG_SATA | ATA_FLAG_PIO_DMA,
-> +	.pio_mask		= 0x1f,	/* pio0-4 */
-> +	.mwdma_mask		= 0x07, /* mwdma0-2 */
-> +	.udma_mask		= 0x7f,	/* udma0-6 */
-> +	.port_ops		= &inic_port_ops
-> +};
-> +
-> +static int init_controller(void __iomem *mmio_base, u16 hctl)
-> +{
-> +	int i;
-> +	u16 val;
-> +
-> +	hctl &= ~HCTL_KNOWN_BITS;
-> +
-> +	/* Soft reset whole controller.  Spec says reset duration is 3
-> +	 * PCI clocks, be generous and give it 10ms.
-> +	 */
-> +	writew(hctl | HCTL_SOFTRST, mmio_base + HOST_CTL);
-> +	readw(mmio_base + HOST_CTL); /* flush */
-> +
-> +	for (i = 0; i < 10; i++) {
-> +		msleep(1);
-> +		val = readw(mmio_base + HOST_CTL);
-> +		if (!(val & HCTL_SOFTRST))
-> +			break;
-> +	}
-> +
-> +	if (val & HCTL_SOFTRST)
-> +		return -EIO;
-> +
-> +	/* mask all interrupts and reset ports */
-> +	for (i = 0; i < NR_PORTS; i++) {
-> +		void __iomem *port_base = mmio_base + i * PORT_SIZE;
-> +
-> +		writeb(0xff, port_base + PORT_IRQ_MASK);
-> +		reset_port(port_base);
-> +	}
-> +
-> +	/* port IRQ is masked now, unmask global IRQ */
-> +	writew(hctl & ~HCTL_IRQOFF, mmio_base + HOST_CTL);
-> +	val = readw(mmio_base + HOST_IRQ_MASK);
-> +	val &= ~(HIRQ_PORT0 | HIRQ_PORT1);
-> +	writew(val, mmio_base + HOST_IRQ_MASK);
-> +
-> +	return 0;
-> +}
-> +
-> +static int inic_pci_device_resume(struct pci_dev *pdev)
-> +{
-> +	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-> +	struct inic_host_priv *hpriv = host->private_data;
-> +	void __iomem *mmio_base = host->mmio_base;
-> +	int rc;
-> +
-> +	ata_pci_device_do_resume(pdev);
-> +
-> +	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
-> +		rc = init_controller(mmio_base, hpriv->cached_hctl);
-> +		if (rc)
-> +			return rc;
-> +	}
-> +
-> +	ata_host_resume(host);
-> +
-> +	return 0;
-> +}
-> +
-> +static int inic_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
-> +{
-> +	static int printed_version;
-> +	struct ata_port_info *pinfo = &inic_port_info;
-> +	struct ata_probe_ent *probe_ent;
-> +	struct inic_host_priv *hpriv;
-> +	void __iomem *mmio_base;
-> +	int i, rc;
-> +
-> +	if (!printed_version++)
-> +		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-> +
-> +	rc = pci_enable_device(pdev);
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc = pci_request_regions(pdev, DRV_NAME);
-> +	if (rc)
-> +		goto err_out;
-> +
-> +	rc = -ENOMEM;
-> +	mmio_base = pci_iomap(pdev, MMIO_BAR, 0);
-> +	if (!mmio_base)
-> +		goto err_out_regions;
-> +
-> +	/* Set dma_mask.  This devices doesn't support 64bit addressing. */
-> +	rc = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-> +	if (rc) {
-> +		dev_printk(KERN_ERR, &pdev->dev,
-> +			   "32-bit DMA enable failed\n");
-> +		goto err_out_map;
-> +	}
-> +
-> +	rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
-> +	if (rc) {
-> +		dev_printk(KERN_ERR, &pdev->dev,
-> +			   "32-bit consistent DMA enable failed\n");
-> +		goto err_out_map;
-> +	}
-> +
-> +	rc = -ENOMEM;
-> +	probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
-> +	if (!probe_ent)
-> +		goto err_out_map;
-> +
-> +	hpriv = kzalloc(sizeof(*hpriv), GFP_KERNEL);
-> +	if (!hpriv)
-> +		goto err_out_ent;
-> +
-> +	probe_ent->dev = &pdev->dev;
-> +	INIT_LIST_HEAD(&probe_ent->node);
-> +
-> +	probe_ent->sht			= pinfo->sht;
-> +	probe_ent->port_flags		= pinfo->flags;
-> +	probe_ent->pio_mask		= pinfo->pio_mask;
-> +	probe_ent->mwdma_mask		= pinfo->mwdma_mask;
-> +	probe_ent->udma_mask		= pinfo->udma_mask;
-> +	probe_ent->port_ops		= pinfo->port_ops;
-> +	probe_ent->n_ports		= NR_PORTS;
-> +
-> +	probe_ent->irq = pdev->irq;
-> +	probe_ent->irq_flags = SA_SHIRQ;
-> +
-> +	probe_ent->mmio_base = mmio_base;
-> +
-> +	for (i = 0; i < NR_PORTS; i++) {
-> +		struct ata_ioports *port = &probe_ent->port[i];
-> +		unsigned long port_base =
-> +			(unsigned long)mmio_base + i * PORT_SIZE;
-> +
-> +		port->cmd_addr = pci_resource_start(pdev, 2 * i);
-> +		port->altstatus_addr =
-> +		port->ctl_addr =
-> +			pci_resource_start(pdev, 2 * i + 1) | ATA_PCI_CTL_OFS;
-> +		port->scr_addr = port_base + PORT_SCR;
-> +
-> +		ata_std_ports(port);
-> +	}
-> +
-> +	probe_ent->private_data = hpriv;
-> +	hpriv->cached_hctl = readw(mmio_base + HOST_CTL);
-> +
-> +	rc = init_controller(mmio_base, hpriv->cached_hctl);
-> +	if (rc) {
-> +		dev_printk(KERN_ERR, &pdev->dev,
-> +			   "failed to initialize controller\n");
-> +		goto err_out_hpriv;
-> +	}
-> +
-> +	pci_set_master(pdev);
-> +
-> +	rc = -ENODEV;
-> +	if (!ata_device_add(probe_ent))
-> +		goto err_out_hpriv;
-> +
-> +	kfree(probe_ent);
-> +
-> +	return 0;
-> +
-> + err_out_hpriv:
-> +	kfree(hpriv);
-> + err_out_ent:
-> +	kfree(probe_ent);
-> + err_out_map:
-> +	pci_iounmap(pdev, mmio_base);
-> + err_out_regions:
-> +	pci_release_regions(pdev);
-> + err_out:
-> +	pci_disable_device(pdev);
-> +	return rc;
-> +}
-> +
-> +static const struct pci_device_id inic_pci_tbl[] = {
-> +	{ PCI_VDEVICE(INIT, 0x1622), },
-> +	{ },
-> +};
-> +
-> +static struct pci_driver inic_pci_driver = {
-> +	.name 		= DRV_NAME,
-> +	.id_table	= inic_pci_tbl,
-> +	.suspend	= ata_pci_device_suspend,
-> +	.resume		= inic_pci_device_resume,
-> +	.probe 		= inic_init_one,
-> +	.remove		= ata_pci_remove_one,
-> +};
-> +
-> +static int __init inic_init(void)
-> +{
-> +	return pci_register_driver(&inic_pci_driver);
-> +}
-> +
-> +static void __exit inic_exit(void)
-> +{
-> +	pci_unregister_driver(&inic_pci_driver);
-> +}
-> +
-> +MODULE_AUTHOR("Tejun Heo");
-> +MODULE_DESCRIPTION("low-level driver for Initio 162x SATA");
-> +MODULE_LICENSE("GPL v2");
-> +MODULE_DEVICE_TABLE(pci, inic_pci_tbl);
-> +MODULE_VERSION(DRV_VERSION);
-> +
-> +module_init(inic_init);
-> +module_exit(inic_exit);
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index dbae6d9..b517d24 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -402,6 +402,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(NVIDIA, 0x044d), board_ahci },		/* MCP65 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x044e), board_ahci },		/* MCP65 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x044f), board_ahci },		/* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x045c), board_ahci },		/* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x045d), board_ahci },		/* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x045e), board_ahci },		/* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x045f), board_ahci },		/* MCP65 */
++	{ PCI_VDEVICE(NVIDIA, 0x0550), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0551), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0552), board_ahci },		/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0553), board_ahci },		/* MCP67 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x0554), board_ahci },		/* MCP67 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x0555), board_ahci },		/* MCP67 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x0556), board_ahci },		/* MCP67 */
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a4790be..836947d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -51,7 +51,7 @@
+ 
+ #define SECTOR_SIZE	512
+ 
+-typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc, const u8 *scsicmd);
++typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc);
+ 
+ static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
+ 					const struct scsi_device *scsidev);
+@@ -935,7 +935,6 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+ /**
+  *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
+  *	@qc: Storage for translated ATA taskfile
+- *	@scsicmd: SCSI command to translate
+  *
+  *	Sets up an ATA taskfile to issue STANDBY (to stop) or READ VERIFY
+  *	(to start). Perhaps these commands should be preceded by
+@@ -948,22 +947,25 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+  *	RETURNS:
+  *	Zero on success, non-zero on error.
+  */
+-
+-static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc,
+-					     const u8 *scsicmd)
++static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ {
++	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	struct ata_taskfile *tf = &qc->tf;
++	const u8 *cdb = scmd->cmnd;
++
++	if (scmd->cmd_len < 5)
++		goto invalid_fld;
+ 
+ 	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+ 	tf->protocol = ATA_PROT_NODATA;
+-	if (scsicmd[1] & 0x1) {
++	if (cdb[1] & 0x1) {
+ 		;	/* ignore IMMED bit, violates sat-r05 */
+ 	}
+-	if (scsicmd[4] & 0x2)
++	if (cdb[4] & 0x2)
+ 		goto invalid_fld;       /* LOEJ bit set not supported */
+-	if (((scsicmd[4] >> 4) & 0xf) != 0)
++	if (((cdb[4] >> 4) & 0xf) != 0)
+ 		goto invalid_fld;       /* power conditions not supported */
+-	if (scsicmd[4] & 0x1) {
++	if (cdb[4] & 0x1) {
+ 		tf->nsect = 1;	/* 1 sector, lba=0 */
+ 
+ 		if (qc->dev->flags & ATA_DFLAG_LBA) {
+@@ -996,7 +998,7 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc,
+ 	return 0;
+ 
+ invalid_fld:
+-	ata_scsi_set_sense(qc->scsicmd, ILLEGAL_REQUEST, 0x24, 0x0);
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
+ 	/* "Invalid field in cbd" */
+ 	return 1;
+ }
+@@ -1005,7 +1007,6 @@ invalid_fld:
+ /**
+  *	ata_scsi_flush_xlat - Translate SCSI SYNCHRONIZE CACHE command
+  *	@qc: Storage for translated ATA taskfile
+- *	@scsicmd: SCSI command to translate (ignored)
+  *
+  *	Sets up an ATA taskfile to issue FLUSH CACHE or
+  *	FLUSH CACHE EXT.
+@@ -1016,8 +1017,7 @@ invalid_fld:
+  *	RETURNS:
+  *	Zero on success, non-zero on error.
+  */
+-
+-static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc, const u8 *scsicmd)
++static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_taskfile *tf = &qc->tf;
+ 
+@@ -1034,7 +1034,7 @@ static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc, const u8 *scs
+ 
+ /**
+  *	scsi_6_lba_len - Get LBA and transfer length
+- *	@scsicmd: SCSI command to translate
++ *	@cdb: SCSI command to translate
+  *
+  *	Calculate LBA and transfer length for 6-byte commands.
+  *
+@@ -1042,18 +1042,17 @@ static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc, const u8 *scs
+  *	@plba: the LBA
+  *	@plen: the transfer length
+  */
+-
+-static void scsi_6_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
++static void scsi_6_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+ {
+ 	u64 lba = 0;
+ 	u32 len = 0;
+ 
+ 	VPRINTK("six-byte command\n");
+ 
+-	lba |= ((u64)scsicmd[2]) << 8;
+-	lba |= ((u64)scsicmd[3]);
++	lba |= ((u64)cdb[2]) << 8;
++	lba |= ((u64)cdb[3]);
+ 
+-	len |= ((u32)scsicmd[4]);
++	len |= ((u32)cdb[4]);
+ 
+ 	*plba = lba;
+ 	*plen = len;
+@@ -1061,7 +1060,7 @@ static void scsi_6_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
+ 
+ /**
+  *	scsi_10_lba_len - Get LBA and transfer length
+- *	@scsicmd: SCSI command to translate
++ *	@cdb: SCSI command to translate
+  *
+  *	Calculate LBA and transfer length for 10-byte commands.
+  *
+@@ -1069,21 +1068,20 @@ static void scsi_6_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
+  *	@plba: the LBA
+  *	@plen: the transfer length
+  */
+-
+-static void scsi_10_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
++static void scsi_10_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+ {
+ 	u64 lba = 0;
+ 	u32 len = 0;
+ 
+ 	VPRINTK("ten-byte command\n");
+ 
+-	lba |= ((u64)scsicmd[2]) << 24;
+-	lba |= ((u64)scsicmd[3]) << 16;
+-	lba |= ((u64)scsicmd[4]) << 8;
+-	lba |= ((u64)scsicmd[5]);
++	lba |= ((u64)cdb[2]) << 24;
++	lba |= ((u64)cdb[3]) << 16;
++	lba |= ((u64)cdb[4]) << 8;
++	lba |= ((u64)cdb[5]);
+ 
+-	len |= ((u32)scsicmd[7]) << 8;
+-	len |= ((u32)scsicmd[8]);
++	len |= ((u32)cdb[7]) << 8;
++	len |= ((u32)cdb[8]);
+ 
+ 	*plba = lba;
+ 	*plen = len;
+@@ -1091,7 +1089,7 @@ static void scsi_10_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
+ 
+ /**
+  *	scsi_16_lba_len - Get LBA and transfer length
+- *	@scsicmd: SCSI command to translate
++ *	@cdb: SCSI command to translate
+  *
+  *	Calculate LBA and transfer length for 16-byte commands.
+  *
+@@ -1099,27 +1097,26 @@ static void scsi_10_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
+  *	@plba: the LBA
+  *	@plen: the transfer length
+  */
+-
+-static void scsi_16_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
++static void scsi_16_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
+ {
+ 	u64 lba = 0;
+ 	u32 len = 0;
+ 
+ 	VPRINTK("sixteen-byte command\n");
+ 
+-	lba |= ((u64)scsicmd[2]) << 56;
+-	lba |= ((u64)scsicmd[3]) << 48;
+-	lba |= ((u64)scsicmd[4]) << 40;
+-	lba |= ((u64)scsicmd[5]) << 32;
+-	lba |= ((u64)scsicmd[6]) << 24;
+-	lba |= ((u64)scsicmd[7]) << 16;
+-	lba |= ((u64)scsicmd[8]) << 8;
+-	lba |= ((u64)scsicmd[9]);
++	lba |= ((u64)cdb[2]) << 56;
++	lba |= ((u64)cdb[3]) << 48;
++	lba |= ((u64)cdb[4]) << 40;
++	lba |= ((u64)cdb[5]) << 32;
++	lba |= ((u64)cdb[6]) << 24;
++	lba |= ((u64)cdb[7]) << 16;
++	lba |= ((u64)cdb[8]) << 8;
++	lba |= ((u64)cdb[9]);
+ 
+-	len |= ((u32)scsicmd[10]) << 24;
+-	len |= ((u32)scsicmd[11]) << 16;
+-	len |= ((u32)scsicmd[12]) << 8;
+-	len |= ((u32)scsicmd[13]);
++	len |= ((u32)cdb[10]) << 24;
++	len |= ((u32)cdb[11]) << 16;
++	len |= ((u32)cdb[12]) << 8;
++	len |= ((u32)cdb[13]);
+ 
+ 	*plba = lba;
+ 	*plen = len;
+@@ -1128,7 +1125,6 @@ static void scsi_16_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
+ /**
+  *	ata_scsi_verify_xlat - Translate SCSI VERIFY command into an ATA one
+  *	@qc: Storage for translated ATA taskfile
+- *	@scsicmd: SCSI command to translate
+  *
+  *	Converts SCSI VERIFY command to an ATA READ VERIFY command.
+  *
+@@ -1138,23 +1134,28 @@ static void scsi_16_lba_len(const u8 *scsicmd, u64 *plba, u32 *plen)
+  *	RETURNS:
+  *	Zero on success, non-zero on error.
+  */
+-
+-static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc, const u8 *scsicmd)
++static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc)
+ {
++	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	struct ata_taskfile *tf = &qc->tf;
+ 	struct ata_device *dev = qc->dev;
+ 	u64 dev_sectors = qc->dev->n_sectors;
++	const u8 *cdb = scmd->cmnd;
+ 	u64 block;
+ 	u32 n_block;
+ 
+ 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf->protocol = ATA_PROT_NODATA;
+ 
+-	if (scsicmd[0] == VERIFY)
+-		scsi_10_lba_len(scsicmd, &block, &n_block);
+-	else if (scsicmd[0] == VERIFY_16)
+-		scsi_16_lba_len(scsicmd, &block, &n_block);
+-	else
++	if (cdb[0] == VERIFY) {
++		if (scmd->cmd_len < 10)
++			goto invalid_fld;
++		scsi_10_lba_len(cdb, &block, &n_block);
++	} else if (cdb[0] == VERIFY_16) {
++		if (scmd->cmd_len < 16)
++			goto invalid_fld;
++		scsi_16_lba_len(cdb, &block, &n_block);
++	} else
+ 		goto invalid_fld;
+ 
+ 	if (!n_block)
+@@ -1229,24 +1230,23 @@ static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc, const u8 *sc
+ 	return 0;
+ 
+ invalid_fld:
+-	ata_scsi_set_sense(qc->scsicmd, ILLEGAL_REQUEST, 0x24, 0x0);
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
+ 	/* "Invalid field in cbd" */
+ 	return 1;
+ 
+ out_of_range:
+-	ata_scsi_set_sense(qc->scsicmd, ILLEGAL_REQUEST, 0x21, 0x0);
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x21, 0x0);
+ 	/* "Logical Block Address out of range" */
+ 	return 1;
+ 
+ nothing_to_do:
+-	qc->scsicmd->result = SAM_STAT_GOOD;
++	scmd->result = SAM_STAT_GOOD;
+ 	return 1;
+ }
+ 
+ /**
+  *	ata_scsi_rw_xlat - Translate SCSI r/w command into an ATA one
+  *	@qc: Storage for translated ATA taskfile
+- *	@scsicmd: SCSI command to translate
+  *
+  *	Converts any of six SCSI read/write commands into the
+  *	ATA counterpart, including starting sector (LBA),
+@@ -1262,29 +1262,33 @@ nothing_to_do:
+  *	RETURNS:
+  *	Zero on success, non-zero on error.
+  */
+-
+-static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc, const u8 *scsicmd)
++static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
+ {
++	struct scsi_cmnd *scmd = qc->scsicmd;
++	const u8 *cdb = scmd->cmnd;
+ 	unsigned int tf_flags = 0;
+ 	u64 block;
+ 	u32 n_block;
+ 	int rc;
+ 
+-	if (scsicmd[0] == WRITE_10 || scsicmd[0] == WRITE_6 ||
+-	    scsicmd[0] == WRITE_16)
++	if (cdb[0] == WRITE_10 || cdb[0] == WRITE_6 || cdb[0] == WRITE_16)
+ 		tf_flags |= ATA_TFLAG_WRITE;
+ 
+ 	/* Calculate the SCSI LBA, transfer length and FUA. */
+-	switch (scsicmd[0]) {
++	switch (cdb[0]) {
+ 	case READ_10:
+ 	case WRITE_10:
+-		scsi_10_lba_len(scsicmd, &block, &n_block);
+-		if (unlikely(scsicmd[1] & (1 << 3)))
++		if (unlikely(scmd->cmd_len < 10))
++			goto invalid_fld;
++		scsi_10_lba_len(cdb, &block, &n_block);
++		if (unlikely(cdb[1] & (1 << 3)))
+ 			tf_flags |= ATA_TFLAG_FUA;
+ 		break;
+ 	case READ_6:
+ 	case WRITE_6:
+-		scsi_6_lba_len(scsicmd, &block, &n_block);
++		if (unlikely(scmd->cmd_len < 6))
++			goto invalid_fld;
++		scsi_6_lba_len(cdb, &block, &n_block);
+ 
+ 		/* for 6-byte r/w commands, transfer length 0
+ 		 * means 256 blocks of data, not 0 block.
+@@ -1294,8 +1298,10 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc, const u8 *scsicm
+ 		break;
+ 	case READ_16:
+ 	case WRITE_16:
+-		scsi_16_lba_len(scsicmd, &block, &n_block);
+-		if (unlikely(scsicmd[1] & (1 << 3)))
++		if (unlikely(scmd->cmd_len < 16))
++			goto invalid_fld;
++		scsi_16_lba_len(cdb, &block, &n_block);
++		if (unlikely(cdb[1] & (1 << 3)))
+ 			tf_flags |= ATA_TFLAG_FUA;
+ 		break;
+ 	default:
+@@ -1326,17 +1332,17 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc, const u8 *scsicm
+ 		goto out_of_range;
+ 	/* treat all other errors as -EINVAL, fall through */
+ invalid_fld:
+-	ata_scsi_set_sense(qc->scsicmd, ILLEGAL_REQUEST, 0x24, 0x0);
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
+ 	/* "Invalid field in cbd" */
+ 	return 1;
+ 
+ out_of_range:
+-	ata_scsi_set_sense(qc->scsicmd, ILLEGAL_REQUEST, 0x21, 0x0);
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x21, 0x0);
+ 	/* "Logical Block Address out of range" */
+ 	return 1;
+ 
+ nothing_to_do:
+-	qc->scsicmd->result = SAM_STAT_GOOD;
++	scmd->result = SAM_STAT_GOOD;
+ 	return 1;
+ }
+ 
+@@ -1456,7 +1462,6 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 			      ata_xlat_func_t xlat_func)
+ {
+ 	struct ata_queued_cmd *qc;
+-	u8 *scsicmd = cmd->cmnd;
+ 	int is_io = xlat_func == ata_scsi_rw_xlat;
+ 
+ 	VPRINTK("ENTER\n");
+@@ -1488,7 +1493,7 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 
+ 	qc->complete_fn = ata_scsi_qc_complete;
+ 
+-	if (xlat_func(qc, scsicmd))
++	if (xlat_func(qc))
+ 		goto early_finish;
+ 
+ 	/* select device, send command to hardware */
+@@ -2344,7 +2349,6 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
+ /**
+  *	atapi_xlat - Initialize PACKET taskfile
+  *	@qc: command structure to be initialized
+- *	@scsicmd: SCSI CDB associated with this PACKET command
+  *
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+@@ -2352,25 +2356,25 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
+  *	RETURNS:
+  *	Zero on success, non-zero on failure.
+  */
+-
+-static unsigned int atapi_xlat(struct ata_queued_cmd *qc, const u8 *scsicmd)
++static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
+ {
+-	struct scsi_cmnd *cmd = qc->scsicmd;
++	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	struct ata_device *dev = qc->dev;
+ 	int using_pio = (dev->flags & ATA_DFLAG_PIO);
+-	int nodata = (cmd->sc_data_direction == DMA_NONE);
++	int nodata = (scmd->sc_data_direction == DMA_NONE);
+ 
+ 	if (!using_pio)
+ 		/* Check whether ATAPI DMA is safe */
+ 		if (ata_check_atapi_dma(qc))
+ 			using_pio = 1;
+ 
+-	memcpy(&qc->cdb, scsicmd, dev->cdb_len);
++	memset(qc->cdb, 0, dev->cdb_len);
++	memcpy(qc->cdb, scmd->cmnd, scmd->cmd_len);
+ 
+ 	qc->complete_fn = atapi_qc_complete;
+ 
+ 	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+-	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
++	if (scmd->sc_data_direction == DMA_TO_DEVICE) {
+ 		qc->tf.flags |= ATA_TFLAG_WRITE;
+ 		DPRINTK("direction: write\n");
+ 	}
+@@ -2392,12 +2396,12 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc, const u8 *scsicmd)
+ 		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
+ 		qc->tf.feature |= ATAPI_PKT_DMA;
+ 
+-		if (atapi_dmadir && (cmd->sc_data_direction != DMA_TO_DEVICE))
++		if (atapi_dmadir && (scmd->sc_data_direction != DMA_TO_DEVICE))
+ 			/* some SATA bridges need us to indicate data xfer direction */
+ 			qc->tf.feature |= ATAPI_DMADIR;
+ 	}
+ 
+-	qc->nbytes = cmd->request_bufflen;
++	qc->nbytes = scmd->request_bufflen;
+ 
+ 	return 0;
+ }
+@@ -2517,28 +2521,27 @@ ata_scsi_map_proto(u8 byte1)
+ /**
+  *	ata_scsi_pass_thru - convert ATA pass-thru CDB to taskfile
+  *	@qc: command structure to be initialized
+- *	@scsicmd: SCSI command to convert
+  *
+  *	Handles either 12 or 16-byte versions of the CDB.
+  *
+  *	RETURNS:
+  *	Zero on success, non-zero on failure.
+  */
+-static unsigned int
+-ata_scsi_pass_thru(struct ata_queued_cmd *qc, const u8 *scsicmd)
++static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_taskfile *tf = &(qc->tf);
+-	struct scsi_cmnd *cmd = qc->scsicmd;
++	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	struct ata_device *dev = qc->dev;
++	const u8 *cdb = scmd->cmnd;
+ 
+-	if ((tf->protocol = ata_scsi_map_proto(scsicmd[1])) == ATA_PROT_UNKNOWN)
++	if ((tf->protocol = ata_scsi_map_proto(cdb[1])) == ATA_PROT_UNKNOWN)
+ 		goto invalid_fld;
+ 
+ 	/* We may not issue DMA commands if no DMA mode is set */
+ 	if (tf->protocol == ATA_PROT_DMA && dev->dma_mode == 0)
+ 		goto invalid_fld;
+ 
+-	if (scsicmd[1] & 0xe0)
++	if (cdb[1] & 0xe0)
+ 		/* PIO multi not supported yet */
+ 		goto invalid_fld;
+ 
+@@ -2546,18 +2549,18 @@ ata_scsi_pass_thru(struct ata_queued_cmd *qc, const u8 *scsicmd)
+ 	 * 12 and 16 byte CDBs use different offsets to
+ 	 * provide the various register values.
+ 	 */
+-	if (scsicmd[0] == ATA_16) {
++	if (cdb[0] == ATA_16) {
+ 		/*
+ 		 * 16-byte CDB - may contain extended commands.
+ 		 *
+ 		 * If that is the case, copy the upper byte register values.
+ 		 */
+-		if (scsicmd[1] & 0x01) {
+-			tf->hob_feature = scsicmd[3];
+-			tf->hob_nsect = scsicmd[5];
+-			tf->hob_lbal = scsicmd[7];
+-			tf->hob_lbam = scsicmd[9];
+-			tf->hob_lbah = scsicmd[11];
++		if (cdb[1] & 0x01) {
++			tf->hob_feature = cdb[3];
++			tf->hob_nsect = cdb[5];
++			tf->hob_lbal = cdb[7];
++			tf->hob_lbam = cdb[9];
++			tf->hob_lbah = cdb[11];
+ 			tf->flags |= ATA_TFLAG_LBA48;
+ 		} else
+ 			tf->flags &= ~ATA_TFLAG_LBA48;
+@@ -2565,26 +2568,26 @@ ata_scsi_pass_thru(struct ata_queued_cmd *qc, const u8 *scsicmd)
+ 		/*
+ 		 * Always copy low byte, device and command registers.
+ 		 */
+-		tf->feature = scsicmd[4];
+-		tf->nsect = scsicmd[6];
+-		tf->lbal = scsicmd[8];
+-		tf->lbam = scsicmd[10];
+-		tf->lbah = scsicmd[12];
+-		tf->device = scsicmd[13];
+-		tf->command = scsicmd[14];
++		tf->feature = cdb[4];
++		tf->nsect = cdb[6];
++		tf->lbal = cdb[8];
++		tf->lbam = cdb[10];
++		tf->lbah = cdb[12];
++		tf->device = cdb[13];
++		tf->command = cdb[14];
+ 	} else {
+ 		/*
+ 		 * 12-byte CDB - incapable of extended commands.
+ 		 */
+ 		tf->flags &= ~ATA_TFLAG_LBA48;
+ 
+-		tf->feature = scsicmd[3];
+-		tf->nsect = scsicmd[4];
+-		tf->lbal = scsicmd[5];
+-		tf->lbam = scsicmd[6];
+-		tf->lbah = scsicmd[7];
+-		tf->device = scsicmd[8];
+-		tf->command = scsicmd[9];
++		tf->feature = cdb[3];
++		tf->nsect = cdb[4];
++		tf->lbal = cdb[5];
++		tf->lbam = cdb[6];
++		tf->lbah = cdb[7];
++		tf->device = cdb[8];
++		tf->command = cdb[9];
+ 	}
+ 	/*
+ 	 * If slave is possible, enforce correct master/slave bit
+@@ -2611,7 +2614,7 @@ ata_scsi_pass_thru(struct ata_queued_cmd *qc, const u8 *scsicmd)
+ 	 */
+ 	tf->flags |= (ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE);
+ 
+-	if (cmd->sc_data_direction == DMA_TO_DEVICE)
++	if (scmd->sc_data_direction == DMA_TO_DEVICE)
+ 		tf->flags |= ATA_TFLAG_WRITE;
+ 
+ 	/*
+@@ -2620,7 +2623,7 @@ ata_scsi_pass_thru(struct ata_queued_cmd *qc, const u8 *scsicmd)
+ 	 * TODO: find out if we need to do more here to
+ 	 *       cover scatter/gather case.
+ 	 */
+-	qc->nsect = cmd->request_bufflen / ATA_SECT_SIZE;
++	qc->nsect = scmd->request_bufflen / ATA_SECT_SIZE;
+ 
+ 	/* request result TF */
+ 	qc->flags |= ATA_QCFLAG_RESULT_TF;
+@@ -2628,7 +2631,7 @@ ata_scsi_pass_thru(struct ata_queued_cmd *qc, const u8 *scsicmd)
+ 	return 0;
+ 
+  invalid_fld:
+-	ata_scsi_set_sense(qc->scsicmd, ILLEGAL_REQUEST, 0x24, 0x00);
++	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x00);
+ 	/* "Invalid field in cdb" */
+ 	return 1;
+ }
+@@ -2701,22 +2704,29 @@ static inline void ata_scsi_dump_cdb(struct ata_port *ap,
+ #endif
+ }
+ 
+-static inline int __ata_scsi_queuecmd(struct scsi_cmnd *cmd,
++static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+ 				      void (*done)(struct scsi_cmnd *),
+ 				      struct ata_device *dev)
+ {
+ 	int rc = 0;
+ 
++	if (unlikely(!scmd->cmd_len)) {
++		ata_dev_printk(dev, KERN_WARNING, "WARNING: zero len CDB\n");
++		scmd->result = DID_ERROR << 16;
++		done(scmd);
++		return 0;
++	}
++
+ 	if (dev->class == ATA_DEV_ATA) {
+ 		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
+-							      cmd->cmnd[0]);
++							      scmd->cmnd[0]);
+ 
+ 		if (xlat_func)
+-			rc = ata_scsi_translate(dev, cmd, done, xlat_func);
++			rc = ata_scsi_translate(dev, scmd, done, xlat_func);
+ 		else
+-			ata_scsi_simulate(dev, cmd, done);
++			ata_scsi_simulate(dev, scmd, done);
+ 	} else
+-		rc = ata_scsi_translate(dev, cmd, done, atapi_xlat);
++		rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
+ 
+ 	return rc;
+ }
+diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+index 1c62801..b1ca207 100644
+--- a/drivers/ata/pata_cs5530.c
++++ b/drivers/ata/pata_cs5530.c
+@@ -372,7 +372,8 @@ static int cs5530_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ static int cs5530_reinit_one(struct pci_dev *pdev)
+ {
+ 	/* If we fail on resume we are doomed */
+-	BUG_ON(cs5530_init_chip());
++	if (cs5530_init_chip())
++		BUG();
+ 	return ata_pci_device_resume(pdev);
+ }
+ 	
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index ff93e8f..f0d4f7e 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -395,7 +395,7 @@ static void via_config_fifo(struct pci_dev *pdev, unsigned int flags)
+ 	enable &= 3;
+ 	
+ 	if (flags & VIA_SET_FIFO) {
+-		u8 fifo_setting[4] = {0x00, 0x60, 0x00, 0x20};
++		static const u8 fifo_setting[4] = {0x00, 0x60, 0x00, 0x20};
+ 		u8 fifo;
+ 
+ 		pci_read_config_byte(pdev, 0x43, &fifo);
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 0d316eb..f6d498e 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -270,14 +270,6 @@ static const struct pci_device_id nv_pci_tbl[] = {
+ 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA), GENERIC },
+ 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2), GENERIC },
+ 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3), GENERIC },
+-	{ PCI_VDEVICE(NVIDIA, 0x045c), GENERIC }, /* MCP65 */
+-	{ PCI_VDEVICE(NVIDIA, 0x045d), GENERIC }, /* MCP65 */
+-	{ PCI_VDEVICE(NVIDIA, 0x045e), GENERIC }, /* MCP65 */
+-	{ PCI_VDEVICE(NVIDIA, 0x045f), GENERIC }, /* MCP65 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0550), GENERIC }, /* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0551), GENERIC }, /* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0552), GENERIC }, /* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0553), GENERIC }, /* MCP67 */
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 		PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, GENERIC },
+diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+index d89c959..46d8a94 100644
+--- a/drivers/ata/sata_svw.c
++++ b/drivers/ata/sata_svw.c
+@@ -135,26 +135,31 @@ static void k2_sata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+ 	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
+ 
+ 	if (tf->ctl != ap->last_ctl) {
+-		writeb(tf->ctl, ioaddr->ctl_addr);
++		writeb(tf->ctl, (void __iomem *) ioaddr->ctl_addr);
+ 		ap->last_ctl = tf->ctl;
+ 		ata_wait_idle(ap);
+ 	}
+ 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+-		writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
+-		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), ioaddr->nsect_addr);
+-		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), ioaddr->lbal_addr);
+-		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), ioaddr->lbam_addr);
+-		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), ioaddr->lbah_addr);
++		writew(tf->feature | (((u16)tf->hob_feature) << 8),
++		       (void __iomem *) ioaddr->feature_addr);
++		writew(tf->nsect | (((u16)tf->hob_nsect) << 8),
++		       (void __iomem *) ioaddr->nsect_addr);
++		writew(tf->lbal | (((u16)tf->hob_lbal) << 8),
++		       (void __iomem *) ioaddr->lbal_addr);
++		writew(tf->lbam | (((u16)tf->hob_lbam) << 8),
++		       (void __iomem *) ioaddr->lbam_addr);
++		writew(tf->lbah | (((u16)tf->hob_lbah) << 8),
++		       (void __iomem *) ioaddr->lbah_addr);
+ 	} else if (is_addr) {
+-		writew(tf->feature, ioaddr->feature_addr);
+-		writew(tf->nsect, ioaddr->nsect_addr);
+-		writew(tf->lbal, ioaddr->lbal_addr);
+-		writew(tf->lbam, ioaddr->lbam_addr);
+-		writew(tf->lbah, ioaddr->lbah_addr);
++		writew(tf->feature, (void __iomem *) ioaddr->feature_addr);
++		writew(tf->nsect, (void __iomem *) ioaddr->nsect_addr);
++		writew(tf->lbal, (void __iomem *) ioaddr->lbal_addr);
++		writew(tf->lbam, (void __iomem *) ioaddr->lbam_addr);
++		writew(tf->lbah, (void __iomem *) ioaddr->lbah_addr);
+ 	}
+ 
+ 	if (tf->flags & ATA_TFLAG_DEVICE)
+-		writeb(tf->device, ioaddr->device_addr);
++		writeb(tf->device, (void __iomem *) ioaddr->device_addr);
+ 
+ 	ata_wait_idle(ap);
+ }
+@@ -166,12 +171,12 @@ static void k2_sata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+ 	u16 nsect, lbal, lbam, lbah, feature;
+ 
+ 	tf->command = k2_stat_check_status(ap);
+-	tf->device = readw(ioaddr->device_addr);
+-	feature = readw(ioaddr->error_addr);
+-	nsect = readw(ioaddr->nsect_addr);
+-	lbal = readw(ioaddr->lbal_addr);
+-	lbam = readw(ioaddr->lbam_addr);
+-	lbah = readw(ioaddr->lbah_addr);
++	tf->device = readw((void __iomem *)ioaddr->device_addr);
++	feature = readw((void __iomem *)ioaddr->error_addr);
++	nsect = readw((void __iomem *)ioaddr->nsect_addr);
++	lbal = readw((void __iomem *)ioaddr->lbal_addr);
++	lbam = readw((void __iomem *)ioaddr->lbam_addr);
++	lbah = readw((void __iomem *)ioaddr->lbah_addr);
+ 
+ 	tf->feature = feature;
+ 	tf->nsect = nsect;
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index e654b99..0fa1b89 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -149,21 +149,26 @@ static void vsc_sata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+ 		vsc_intr_mask_update(ap, tf->ctl & ATA_NIEN);
+ 	}
+ 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+-		writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
+-		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), ioaddr->nsect_addr);
+-		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), ioaddr->lbal_addr);
+-		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), ioaddr->lbam_addr);
+-		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), ioaddr->lbah_addr);
++		writew(tf->feature | (((u16)tf->hob_feature) << 8),
++		       (void __iomem *) ioaddr->feature_addr);
++		writew(tf->nsect | (((u16)tf->hob_nsect) << 8),
++		       (void __iomem *) ioaddr->nsect_addr);
++		writew(tf->lbal | (((u16)tf->hob_lbal) << 8),
++		       (void __iomem *) ioaddr->lbal_addr);
++		writew(tf->lbam | (((u16)tf->hob_lbam) << 8),
++		       (void __iomem *) ioaddr->lbam_addr);
++		writew(tf->lbah | (((u16)tf->hob_lbah) << 8),
++		       (void __iomem *) ioaddr->lbah_addr);
+ 	} else if (is_addr) {
+-		writew(tf->feature, ioaddr->feature_addr);
+-		writew(tf->nsect, ioaddr->nsect_addr);
+-		writew(tf->lbal, ioaddr->lbal_addr);
+-		writew(tf->lbam, ioaddr->lbam_addr);
+-		writew(tf->lbah, ioaddr->lbah_addr);
++		writew(tf->feature, (void __iomem *) ioaddr->feature_addr);
++		writew(tf->nsect, (void __iomem *) ioaddr->nsect_addr);
++		writew(tf->lbal, (void __iomem *) ioaddr->lbal_addr);
++		writew(tf->lbam, (void __iomem *) ioaddr->lbam_addr);
++		writew(tf->lbah, (void __iomem *) ioaddr->lbah_addr);
+ 	}
+ 
+ 	if (tf->flags & ATA_TFLAG_DEVICE)
+-		writeb(tf->device, ioaddr->device_addr);
++		writeb(tf->device, (void __iomem *) ioaddr->device_addr);
+ 
+ 	ata_wait_idle(ap);
+ }
+@@ -175,12 +180,12 @@ static void vsc_sata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+ 	u16 nsect, lbal, lbam, lbah, feature;
+ 
+ 	tf->command = ata_check_status(ap);
+-	tf->device = readw(ioaddr->device_addr);
+-	feature = readw(ioaddr->error_addr);
+-	nsect = readw(ioaddr->nsect_addr);
+-	lbal = readw(ioaddr->lbal_addr);
+-	lbam = readw(ioaddr->lbam_addr);
+-	lbah = readw(ioaddr->lbah_addr);
++	tf->device = readw((void __iomem *) ioaddr->device_addr);
++	feature = readw((void __iomem *) ioaddr->error_addr);
++	nsect = readw((void __iomem *) ioaddr->nsect_addr);
++	lbal = readw((void __iomem *) ioaddr->lbal_addr);
++	lbam = readw((void __iomem *) ioaddr->lbam_addr);
++	lbah = readw((void __iomem *) ioaddr->lbah_addr);
+ 
+ 	tf->feature = feature;
+ 	tf->nsect = nsect;
+@@ -327,8 +332,8 @@ static void __devinit vsc_sata_setup_port(struct ata_ioports *port, unsigned lon
+ 	port->ctl_addr		= base + VSC_SATA_TF_CTL_OFFSET;
+ 	port->bmdma_addr	= base + VSC_SATA_DMA_CMD_OFFSET;
+ 	port->scr_addr		= base + VSC_SATA_SCR_STATUS_OFFSET;
+-	writel(0, base + VSC_SATA_UP_DESCRIPTOR_OFFSET);
+-	writel(0, base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
++	writel(0, (void __iomem *) base + VSC_SATA_UP_DESCRIPTOR_OFFSET);
++	writel(0, (void __iomem *) base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
+ }
+ 
+ 
