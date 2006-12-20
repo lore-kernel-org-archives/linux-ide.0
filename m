@@ -1,38 +1,39 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] sata_nv & ahci: Move some IDs from sata_nv.c to ahci.c
-Date: Wed, 20 Dec 2006 14:19:32 -0500
-Message-ID: <45898CC4.9010805@pobox.com>
-References: <15F501D1A78BD343BE8F4D8DB854566B07FC61A9@hkemmail01.nvidia.com>
+Subject: Re: [PATCH] libata-scsi: ata_task_ioctl should return ATA registers
+ from sense data
+Date: Wed, 20 Dec 2006 14:21:44 -0500
+Message-ID: <45898D48.8020800@pobox.com>
+References: <458702D9.6080800@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34918 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:34974 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030304AbWLTTTg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Dec 2006 14:19:36 -0500
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B07FC61A9@hkemmail01.nvidia.com>
+	id S1030321AbWLTTVr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Dec 2006 14:21:47 -0500
+In-Reply-To: <458702D9.6080800@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <pchen@nvidia.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Peer Chen wrote:
-> Resend the patch.
-> The content of memory map io of BAR5 have been change from MCP65 then sata_nv can't work fine on the platform based on MCP65 and MCP67,so move their IDs from sata_nv.c to ahci.c.
-> Please check attachment for new patch,thanks.
+David Milburn wrote:
+> User applications using the HDIO_DRIVE_TASK ioctl through libata
+> expect specific ATA registers to be returned to userspace. Verified
+> that ata_task_ioctl correctly returns register values to the
+> smartctl application.
 > 
-> Signed-off-by: Peer Chen <pchen@nvidia.com>
+> Signed-off-by: David Milburn <dmilburn@redhat.com>
 
-Patch applied, manually.
-
-For future patches,
-
-1) Please do not quote the original message
-
-2) Please include patches inline, rather than as an attachment.
-
-	Jeff
+ACK, but fails to apply to libata-dev.git#upstream-fixes:
 
 
+[jgarzik@pretzel libata-dev]$ git-applymbox /g/tmp/mbox ~/info/signoff.txt
+1 patch(es) to process.
+
+Applying 'libata-scsi: ata_task_ioctl should return ATA registers from 
+sense data'
+
+fatal: corrupt patch at line 83
 
