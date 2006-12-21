@@ -1,36 +1,63 @@
-From: Bob Stewart <bob@evoria.net>
-Subject: Re: sata_inic162x driver for 2.6.19
-Date: Wed, 20 Dec 2006 17:48:23 -0800 (PST)
-Message-ID: <429226.30925.qm@web807.biz.mail.mud.yahoo.com>
-References: <4588D680.4060103@gmail.com>
+From: "Peer Chen" <pchen@nvidia.com>
+Subject: RE: [PATCH 1/2] sata_nv & ahci: Move some IDs from sata_nv.c to ahci.c
+Date: Thu, 21 Dec 2006 11:39:52 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B0E0A75C2@hkemmail01.nvidia.com>
+References: <45898CC4.9010805@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web807.biz.mail.mud.yahoo.com ([209.191.90.80]:45405 "HELO
-	web807.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1161127AbWLUBsY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Dec 2006 20:48:24 -0500
-In-Reply-To: <4588D680.4060103@gmail.com>
+Received: from hqemgate02.nvidia.com ([216.228.112.143]:1735 "EHLO
+	HQEMGATE02.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422676AbWLUDpA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Dec 2006 22:45:00 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <45898CC4.9010805@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+
+Thanks. 
 
 
---- Tejun Heo <htejun@gmail.com> wrote:
+BRs
+Peer Chen
 
-> The attached patch is inic162x driver for 2.6.19.  The driver against
-> livata-dev#upstream didn't work on 2.6.19 due to difference in how
-> dev->max_sectors is handled.  The driver is also available at...
+-----Original Message-----
+From: Jeff Garzik [mailto:jgarzik@pobox.com] 
+Sent: Thursday, December 21, 2006 3:20 AM
+To: Peer Chen
+Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org; Andrew
+Morton
+Subject: Re: [PATCH 1/2] sata_nv & ahci: Move some IDs from sata_nv.c to
+ahci.c
+
+Peer Chen wrote:
+> Resend the patch.
+> The content of memory map io of BAR5 have been change from MCP65 then
+sata_nv can't work fine on the platform based on MCP65 and MCP67,so move
+their IDs from sata_nv.c to ahci.c.
+> Please check attachment for new patch,thanks.
 > 
-> http://home-tj.org/files/sata_inic-2.6.19.patch
-> 
-> Please report how it works.
+> Signed-off-by: Peer Chen <pchen@nvidia.com>
+
+Patch applied, manually.
+
+For future patches,
+
+1) Please do not quote the original message
+
+2) Please include patches inline, rather than as an attachment.
+
+	Jeff
 
 
-As further data, I have discovered that the problem with the lockups only
-occurs when mkfs.xfs reports that it will create more then 16383 blocks in the
-new filesystem.
 
-Bob
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
