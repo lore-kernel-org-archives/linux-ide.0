@@ -1,63 +1,57 @@
-From: "Peer Chen" <pchen@nvidia.com>
-Subject: RE: [PATCH 1/2] sata_nv & ahci: Move some IDs from sata_nv.c to ahci.c
-Date: Thu, 21 Dec 2006 11:39:52 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B0E0A75C2@hkemmail01.nvidia.com>
-References: <45898CC4.9010805@pobox.com>
+From: Bob Stewart <bob@evoria.net>
+Subject: Re: sata_inic162x driver for 2.6.19
+Date: Wed, 20 Dec 2006 20:16:18 -0800 (PST)
+Message-ID: <20061221041618.12158.qmail@web813.biz.mail.mud.yahoo.com>
+References: <429226.30925.qm@web807.biz.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate02.nvidia.com ([216.228.112.143]:1735 "EHLO
-	HQEMGATE02.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422676AbWLUDpA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Dec 2006 22:45:00 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <45898CC4.9010805@pobox.com>
+Received: from web813.biz.mail.mud.yahoo.com ([209.191.90.86]:23908 "HELO
+	web813.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1422685AbWLUEQT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Dec 2006 23:16:19 -0500
+In-Reply-To: <429226.30925.qm@web807.biz.mail.mud.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Thanks. 
-
-
-BRs
-Peer Chen
-
------Original Message-----
-From: Jeff Garzik [mailto:jgarzik@pobox.com] 
-Sent: Thursday, December 21, 2006 3:20 AM
-To: Peer Chen
-Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org; Andrew
-Morton
-Subject: Re: [PATCH 1/2] sata_nv & ahci: Move some IDs from sata_nv.c to
-ahci.c
-
-Peer Chen wrote:
-> Resend the patch.
-> The content of memory map io of BAR5 have been change from MCP65 then
-sata_nv can't work fine on the platform based on MCP65 and MCP67,so move
-their IDs from sata_nv.c to ahci.c.
-> Please check attachment for new patch,thanks.
+--- Bob Stewart <bob@evoria.net> wrote:
+> As further data, I have discovered that the problem with the lockups only
+> occurs when mkfs.xfs reports that it will create more then 16383 blocks in
+> the
+> new filesystem.
 > 
-> Signed-off-by: Peer Chen <pchen@nvidia.com>
+> Bob
 
-Patch applied, manually.
+Sorry, that should have been "logblocks".  As shown below, it works unless the
+partition is such that logblocks will be larger than 16383.  In fdisk, that
+number of cylinders anything greater than 16709.  "Works" is relative, though. 
+When doing a copy of several gigabytes, the syslog shows periodic device
+errors, which I have posted previously.  Each time, it lowers the access rate
+until it eventually reaches PI04.
 
-For future patches,
+# mkfs.xfs -f /dev/sda1
 
-1) Please do not quote the original message
+meta-data=/dev/sda1              isize=256    agcount=16, agsize=2097109 blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=33553744, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=16383, version=1
+         =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=65536  blocks=0, rtextents=0
 
-2) Please include patches inline, rather than as an attachment.
 
-	Jeff
+Here is the fdisk screen for the above disk.  If I use a figure larger than
+16709 cylinders mkfs.xfs will not be successful.
 
+Disk /dev/sda: 200.0 GB, 200049647616 bytes
+255 heads, 63 sectors/track, 24321 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
 
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1       16709   134215011   83  Linux
 
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+Bob
