@@ -1,32 +1,26 @@
-From: rabbit@rabbit.us (Peter Rabbitson)
-Subject: SATAII150 TX4 Disk ordering (Was: Promise SATAII150 TX4: strange disk ordering)
-Date: Fri, 22 Dec 2006 06:31:31 -0500
-Message-ID: <20061222113131.GA24610@rabbit.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: Re: hda on Via Epia-ML motherboard seen on 2.6.18, but not 2.6.19
+Date: Mon, 25 Dec 2006 05:36:56 +0800
+Message-ID: <200612242136.kBOLau9p010748@freya.yggdrasil.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from arx.rabbit.us ([68.251.127.6]:4888 "EHLO arx.rabbit.us"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964819AbWLVL4d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Dec 2006 06:56:33 -0500
-Content-Disposition: inline
+Received: from [61.49.148.102] ([61.49.148.102]:45360 "EHLO
+	freya.yggdrasil.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752902AbWLXVqI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Dec 2006 16:46:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com
 
-Hello. I have stumbled upon the problem described more than a year ago 
-in http://www.mail-archive.com/linux-ide@vger.kernel.org/msg01743.html 
-It manifested itself in a very unpleasant way while trying to sort out a 
-damaged GRUB installation. As GRUB relies on BIOS device numbering 
-rather than linux kernel device numbering (there is no kernel at that 
-stage) writing a manual boot stanza took a number of trial and errors. I 
-just wanted to drop my 2 cents by pointing a use case when this mismatch 
-is a real pain. The above URL was the only info I was able to find on 
-google, so I assume no further work has been done on this.
-This is a non-production system so I can help with any tests necessary 
-to get the ordering right, if anyone decides to work on the driver. 
+On Fri, 22 Dec 2006, i wrote:
 
-Thanks
+>	I have a 666MHz Via Epia-ML motherboard (using a Via Eden, I
+>think).  I am booting it from a CompactFlash card attached by an
+>IDE-CF adapter.  Everything works fine under 2.6.18.  Under 2.6.19,
+>2.6.19.1 and 2.6.20-rc1, the master device on ide0 is not seen.
+[...]
 
-Peter
+	Not to nag, as there is more I can do to better diagnose the
+problem, but just to pass along a new data point, the problem is still
+present in 2.6.20-rc2.
+
+Adam Richter
