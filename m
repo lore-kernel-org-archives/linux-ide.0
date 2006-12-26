@@ -1,139 +1,252 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 7/12] libata: handle pci_enable_device() failure while resuming
+Subject: [PATCH 5/12] devres: implement managed PCI interface
 Date: Wed, 27 Dec 2006 00:18:34 +0900
-Message-ID: <1167146314835-git-send-email-htejun@gmail.com>
+Message-ID: <11671463142754-git-send-email-htejun@gmail.com>
 References: <1167146313307-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932676AbWLZPVU@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932657AbWLZPWm@vger.kernel.org>
 In-Reply-To: <1167146313307-git-send-email-htejun@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: gregkh@suse.de, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Handle pci_enable_device() failure while resuming.  This patch kills
-the "ignoring return value of 'pci_enable_device'" warning message and
-propagates __must_check through ata_pci_device_do_resume().
+Implement managed PCI interface - pcim_enable_device(),
+pcim_pin_device() and pci_is_managed().  pcim_enable_device() is
+equivalent to pci_enable_device() except that it makes the PCI device
+managed.  After pcim_enable_device(), PCI resources such as
+enabledness, msi/msix/intx status and BAR regions become managed.
+
+pcim_pin_device() is used by device drivers to ask PCI devres not to
+disable the device on driver detach.  This function is to handle cases
+where a driver finds out that a device is otherwise busy and thus
+shouldn't be disabled on probe failure or driver detach.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c        |    4 +++-
- drivers/ata/libata-core.c |   22 +++++++++++++++++-----
- drivers/ata/sata_sil.c    |    6 +++++-
- drivers/ata/sata_sil24.c  |    5 ++++-
- include/linux/libata.h    |    2 +-
- 5 files changed, 30 insertions(+), 9 deletions(-)
+ drivers/pci/pci.c   |  127 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/pci.h |    9 ++++
+ 2 files changed, 135 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index b517d24..0656334 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1372,7 +1372,9 @@ static int ahci_pci_device_resume(struct pci_dev *pdev)
- 	void __iomem *mmio = host->mmio_base;
- 	int rc;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6bfb942..2ab2f8a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -744,6 +744,104 @@ int pci_enable_device(struct pci_dev *dev)
+ 	return result;
+ }
  
--	ata_pci_device_do_resume(pdev);
-+	rc = ata_pci_device_do_resume(pdev);
-+	if (rc)
-+		return rc;
++/*
++ * Managed PCI resources.  This manages device on/off, intx/msi/msix
++ * on/off and BAR regions.  pci_dev itself records msi/msix status, so
++ * there's no need to track it separately.  pci_devres is initialized
++ * when a device is enabled using managed PCI device enable interface.
++ */
++struct pci_devres {
++	unsigned int disable:1;
++	unsigned int orig_intx:1;
++	unsigned int restore_intx:1;
++	u32 region_mask;
++};
++
++static void pcim_release(struct device *gendev, void *res)
++{
++	struct pci_dev *dev = container_of(gendev, struct pci_dev, dev);
++	struct pci_devres *this = res;
++	int i;
++
++	if (dev->msi_enabled)
++		pci_disable_msi(dev);
++	if (dev->msix_enabled)
++		pci_disable_msix(dev);
++
++	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
++		if (this->region_mask & (1 << i))
++			pci_release_region(dev, i);
++
++	if (this->restore_intx)
++		pci_intx(dev, this->orig_intx);
++
++	if (this->disable)
++		pci_disable_device(dev);
++}
++
++static struct pci_devres * get_pci_dr(struct pci_dev *pdev)
++{
++	struct pci_devres *dr, *new_dr;
++
++	dr = devres_find(&pdev->dev, pcim_release, NULL, NULL);
++	if (dr)
++		return dr;
++
++	new_dr = devres_alloc(pcim_release, sizeof(*new_dr), GFP_KERNEL);
++	if (!new_dr)
++		return NULL;
++	return devres_get(&pdev->dev, new_dr, NULL, NULL);
++}
++
++static struct pci_devres * find_pci_dr(struct pci_dev *pdev)
++{
++	if (pci_is_managed(pdev))
++		return devres_find(&pdev->dev, pcim_release, NULL, NULL);
++	return NULL;
++}
++
++/**
++ * pcim_enable_device - Managed pci_enable_device()
++ * @pdev: PCI device to be initialized
++ *
++ * Managed pci_enable_device().
++ */
++int pcim_enable_device(struct pci_dev *pdev)
++{
++	struct pci_devres *dr;
++	int rc;
++
++	dr = get_pci_dr(pdev);
++	if (unlikely(!dr))
++		return -ENOMEM;
++	WARN_ON(!!dr->disable);
++
++	rc = pci_enable_device(pdev);
++	if (!rc) {
++		pdev->is_managed = 1;
++		dr->disable = 1;
++	}
++	return rc;
++}
++
++/**
++ * pcim_pin_device - Pin managed PCI device
++ * @pdev: PCI device to pin
++ *
++ * Pin managed PCI device @pdev.  Pinned device won't be disabled on
++ * driver detach.  @pdev must have been enabled with
++ * pcim_enable_device().
++ */
++void pcim_pin_device(struct pci_dev *pdev)
++{
++	struct pci_devres *dr;
++
++	dr = find_pci_dr(pdev);
++	WARN_ON(!dr || !dr->disable);
++	if (dr)
++		dr->disable = 0;
++}
++
+ /**
+  * pcibios_disable_device - disable arch specific PCI resources for device dev
+  * @dev: the PCI device to disable
+@@ -767,8 +865,13 @@ void __attribute__ ((weak)) pcibios_disable_device (struct pci_dev *dev) {}
+ void
+ pci_disable_device(struct pci_dev *dev)
+ {
++	struct pci_devres *dr;
+ 	u16 pci_command;
  
- 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
- 		rc = ahci_reset_controller(mmio, pdev);
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0d51d13..5fdf37f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6221,12 +6221,22 @@ void ata_pci_device_do_suspend(struct pci_dev *pdev, pm_message_t mesg)
++	dr = find_pci_dr(dev);
++	if (dr)
++		dr->disable = 0;
++
+ 	if (atomic_sub_return(1, &dev->enable_cnt) != 0)
+ 		return;
+ 
+@@ -867,6 +970,8 @@ pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge)
+  */
+ void pci_release_region(struct pci_dev *pdev, int bar)
+ {
++	struct pci_devres *dr;
++
+ 	if (pci_resource_len(pdev, bar) == 0)
+ 		return;
+ 	if (pci_resource_flags(pdev, bar) & IORESOURCE_IO)
+@@ -875,6 +980,10 @@ void pci_release_region(struct pci_dev *pdev, int bar)
+ 	else if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM)
+ 		release_mem_region(pci_resource_start(pdev, bar),
+ 				pci_resource_len(pdev, bar));
++
++	dr = find_pci_dr(pdev);
++	if (dr)
++		dr->region_mask &= ~(1 << bar);
+ }
+ 
+ /**
+@@ -893,6 +1002,8 @@ void pci_release_region(struct pci_dev *pdev, int bar)
+  */
+ int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
+ {
++	struct pci_devres *dr;
++
+ 	if (pci_resource_len(pdev, bar) == 0)
+ 		return 0;
+ 		
+@@ -906,7 +1017,11 @@ int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
+ 				        pci_resource_len(pdev, bar), res_name))
+ 			goto err_out;
+ 	}
+-	
++
++	dr = find_pci_dr(pdev);
++	if (dr)
++		dr->region_mask |= 1 << bar;
++
+ 	return 0;
+ 
+ err_out:
+@@ -1117,7 +1232,15 @@ pci_intx(struct pci_dev *pdev, int enable)
+ 	}
+ 
+ 	if (new != pci_command) {
++		struct pci_devres *dr;
++
+ 		pci_write_config_word(pdev, PCI_COMMAND, new);
++
++		dr = find_pci_dr(pdev);
++		if (dr && !dr->restore_intx) {
++			dr->restore_intx = 1;
++			dr->orig_intx = !enable;
++		}
  	}
  }
  
--void ata_pci_device_do_resume(struct pci_dev *pdev)
-+int ata_pci_device_do_resume(struct pci_dev *pdev)
- {
-+	int rc;
+@@ -1189,6 +1312,8 @@ EXPORT_SYMBOL(isa_bridge);
+ EXPORT_SYMBOL_GPL(pci_restore_bars);
+ EXPORT_SYMBOL(pci_enable_device_bars);
+ EXPORT_SYMBOL(pci_enable_device);
++EXPORT_SYMBOL(pcim_enable_device);
++EXPORT_SYMBOL(pcim_pin_device);
+ EXPORT_SYMBOL(pci_disable_device);
+ EXPORT_SYMBOL(pci_find_capability);
+ EXPORT_SYMBOL(pci_bus_find_capability);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f3c617e..1f82eb9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -167,6 +167,7 @@ struct pci_dev {
+ 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
+ 	unsigned int 	msi_enabled:1;
+ 	unsigned int	msix_enabled:1;
++	unsigned int	is_managed:1;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
+ 	u32		saved_config_space[16]; /* config space saved at suspend time */
+@@ -521,6 +522,14 @@ static inline int pci_write_config_dword(struct pci_dev *dev, int where, u32 val
+ 
+ int __must_check pci_enable_device(struct pci_dev *dev);
+ int __must_check pci_enable_device_bars(struct pci_dev *dev, int mask);
++int __must_check pcim_enable_device(struct pci_dev *pdev);
++void pcim_pin_device(struct pci_dev *pdev);
 +
- 	pci_set_power_state(pdev, PCI_D0);
- 	pci_restore_state(pdev);
--	pci_enable_device(pdev);
++static inline int pci_is_managed(struct pci_dev *pdev)
++{
++	return pdev->is_managed;
++}
 +
-+	rc = pci_enable_device(pdev);
-+	if (rc) {
-+		dev_printk(KERN_ERR, &pdev->dev,
-+			   "failed to enable device after resume (%d)\n", rc);
-+		return rc;
-+	}
-+
- 	pci_set_master(pdev);
-+	return 0;
- }
- 
- int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
-@@ -6246,10 +6256,12 @@ int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
- int ata_pci_device_resume(struct pci_dev *pdev)
- {
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	int rc;
- 
--	ata_pci_device_do_resume(pdev);
--	ata_host_resume(host);
--	return 0;
-+	rc = ata_pci_device_do_resume(pdev);
-+	if (rc == 0)
-+		ata_host_resume(host);
-+	return rc;
- }
- #endif /* CONFIG_PCI */
- 
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 7808d03..ca7111a 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -710,8 +710,12 @@ err_out:
- static int sil_pci_device_resume(struct pci_dev *pdev)
- {
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	int rc;
-+
-+	rc = ata_pci_device_do_resume(pdev);
-+	if (rc)
-+		return rc;
- 
--	ata_pci_device_do_resume(pdev);
- 	sil_init_controller(pdev, host->n_ports, host->ports[0]->flags,
- 			    host->mmio_base);
- 	ata_host_resume(host);
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 5aa288d..da982ed 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -1200,8 +1200,11 @@ static int sil24_pci_device_resume(struct pci_dev *pdev)
- {
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
- 	struct sil24_host_priv *hpriv = host->private_data;
-+	int rc;
- 
--	ata_pci_device_do_resume(pdev);
-+	rc = ata_pci_device_do_resume(pdev);
-+	if (rc)
-+		return rc;
- 
- 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND)
- 		writel(HOST_CTRL_GLOBAL_RST, hpriv->host_base + HOST_CTRL);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index ab27548..8028a57 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -719,7 +719,7 @@ extern int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_i
- 			     unsigned int n_ports);
- extern void ata_pci_remove_one (struct pci_dev *pdev);
- extern void ata_pci_device_do_suspend(struct pci_dev *pdev, pm_message_t mesg);
--extern void ata_pci_device_do_resume(struct pci_dev *pdev);
-+extern int __must_check ata_pci_device_do_resume(struct pci_dev *pdev);
- extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
- extern int ata_pci_device_resume(struct pci_dev *pdev);
- extern int ata_pci_clear_simplex(struct pci_dev *pdev);
+ void pci_disable_device(struct pci_dev *dev);
+ void pci_set_master(struct pci_dev *dev);
+ #define HAVE_PCI_SET_MWI
 -- 
 1.4.4.2
