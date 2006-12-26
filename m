@@ -1,49 +1,138 @@
-From: "Adam J. Richter" <adam@yggdrasil.com>
-Subject: Re: hda on Via Epia-ML motherboard seen on 2.6.18, but not 2.6.19
-Date: Tue, 26 Dec 2006 06:36:45 +0800
-Message-ID: <200612252236.kBPMajuC014253@freya.yggdrasil.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: handle pci_enable_device() failure while resuming
+Date: Tue, 26 Dec 2006 19:39:50 +0900
+Message-ID: <20061226103950.GA10987@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [61.49.234.13] ([61.49.234.13]:50119 "EHLO freya.yggdrasil.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754553AbWLYWqT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Dec 2006 17:46:19 -0500
+Received: from [221.139.199.108] ([221.139.199.108]:51302 "EHLO htj.dyndns.org"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S932506AbWLZLHG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 26 Dec 2006 06:07:06 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Fri, 22 Dec 2006 14:56:20 +0100, Bartlomiej Zolnierkiewicz wrote:
->On 12/22/06, Adam J. Richter <adam@yggdrasil.com> wrote:
->>         I have a 666MHz Via Epia-ML motherboard (using a Via Eden, I
->> think).  I am booting it from a CompactFlash card attached by an
->> IDE-CF adapter.  Everything works fine under 2.6.18.  Under 2.6.19,
->> 2.6.19.1 and 2.6.20-rc1, the master device on ide0 is not seen.
-[...]
+Handle pci_enable_device() failure while resuming.  This patch kills
+the "ignoring return value of 'pci_enable_device'" warning message and
+propagates __must_check through ata_pci_device_do_resume().
 
->>From the quick look the only IDE subsystem change in 2.6.19
->which could be responsible (wild guess) for this is the commit:
->17c1033d331a430ce631805e15215e63b4cce764
->[ patch attached in case you don't have git tree at hand ]
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/ahci.c        |    4 +++-
+ drivers/ata/libata-core.c |   22 +++++++++++++++++-----
+ drivers/ata/sata_sil.c    |    6 +++++-
+ drivers/ata/sata_sil24.c  |    5 ++++-
+ include/linux/libata.h    |    2 +-
+ 5 files changed, 30 insertions(+), 9 deletions(-)
 
->Could you check if reverting it fixes the problem?
->If not it seems that the best way to proceed is git bisect.
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -6221,12 +6221,22 @@ void ata_pci_device_do_suspend(struct pc
+ 	}
+ }
+ 
+-void ata_pci_device_do_resume(struct pci_dev *pdev)
++int ata_pci_device_do_resume(struct pci_dev *pdev)
+ {
++	int rc;
++
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	pci_restore_state(pdev);
+-	pci_enable_device(pdev);
++
++	rc = pci_enable_device(pdev);
++	if (rc) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "failed to enable device after resume (%d)\n", rc);
++		return rc;
++	}
++
+ 	pci_set_master(pdev);
++	return 0;
+ }
+ 
+ int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
+@@ -6246,10 +6256,12 @@ int ata_pci_device_suspend(struct pci_de
+ int ata_pci_device_resume(struct pci_dev *pdev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
+ 
+-	ata_pci_device_do_resume(pdev);
+-	ata_host_resume(host);
+-	return 0;
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc == 0)
++		ata_host_resume(host);
++	return rc;
+ }
+ #endif /* CONFIG_PCI */
+ 
+Index: work/drivers/ata/ahci.c
+===================================================================
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -1364,7 +1364,9 @@ static int ahci_pci_device_resume(struct
+ 	void __iomem *mmio = host->mmio_base;
+ 	int rc;
+ 
+-	ata_pci_device_do_resume(pdev);
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 
+ 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
+ 		rc = ahci_reset_controller(mmio, pdev);
+Index: work/drivers/ata/sata_sil.c
+===================================================================
+--- work.orig/drivers/ata/sata_sil.c
++++ work/drivers/ata/sata_sil.c
+@@ -710,8 +710,12 @@ err_out:
+ static int sil_pci_device_resume(struct pci_dev *pdev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 
+-	ata_pci_device_do_resume(pdev);
+ 	sil_init_controller(pdev, host->n_ports, host->ports[0]->flags,
+ 			    host->mmio_base);
+ 	ata_host_resume(host);
+Index: work/drivers/ata/sata_sil24.c
+===================================================================
+--- work.orig/drivers/ata/sata_sil24.c
++++ work/drivers/ata/sata_sil24.c
+@@ -1200,8 +1200,11 @@ static int sil24_pci_device_resume(struc
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	struct sil24_host_priv *hpriv = host->private_data;
++	int rc;
+ 
+-	ata_pci_device_do_resume(pdev);
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 
+ 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND)
+ 		writel(HOST_CTRL_GLOBAL_RST, hpriv->host_base + HOST_CTRL);
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -715,7 +715,7 @@ extern int ata_pci_init_one (struct pci_
+ 			     unsigned int n_ports);
+ extern void ata_pci_remove_one (struct pci_dev *pdev);
+ extern void ata_pci_device_do_suspend(struct pci_dev *pdev, pm_message_t mesg);
+-extern void ata_pci_device_do_resume(struct pci_dev *pdev);
++extern int __must_check ata_pci_device_do_resume(struct pci_dev *pdev);
+ extern int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
+ extern int ata_pci_device_resume(struct pci_dev *pdev);
+ extern int ata_pci_clear_simplex(struct pci_dev *pdev);
 
-I'll cc this message to linux-ide in case anyone else encounters the
-problem and wants to be informed about it.
-
-As mentioned in my previous off-list email, the reverting attached
-patch did not fix the problem.
-
-I now have a few more data points to narrow where the bug was introduced:
-
-2.6.18.4	ok
-2.6.18.6	ok
-2.6.19-rc1	fails
-
-I expect I will now work on setting up a git tree fed by kernel.org
-and using git bisect as you suggest.
-
-Thanks for your advice.  I'll let you know when I have more news.
-
-
-Adam Richter
