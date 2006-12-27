@@ -1,43 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] via82cxxx: fix cable detection
-Date: Wed, 27 Dec 2006 12:20:11 -0500
-Message-ID: <4592AB4B.1010609@pobox.com>
-References: <20061227124659.GB10987@htj.dyndns.org>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: sata_sil24 performance weirdness
+Date: Thu, 28 Dec 2006 07:25:53 +1300
+Message-ID: <4592BAB1.1050900@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45363 "EHLO mail.dvmed.net"
+Received: from smtp.sauce.co.nz ([210.48.49.72]:57706 "EHLO smtp.sauce.co.nz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933010AbWL0RUS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Dec 2006 12:20:18 -0500
-In-Reply-To: <20061227124659.GB10987@htj.dyndns.org>
+	id S1754670AbWL0SQE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Dec 2006 13:16:04 -0500
+Received: from [192.168.4.111] (unknown [192.168.4.111])
+	by test.sauce.co.nz (Postfix) with ESMTP id 7DF30B387B
+	for <linux-ide@vger.kernel.org>; Thu, 28 Dec 2006 07:09:18 +1300 (NZDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Cable detection got broken probably while converting the driver to
-> support multiple controllers.  Cable detection is done by examining
-> how BIOS configured the attached devices.  The current code is broken
-> in that it examines the status *after* modifying Clk66 configuration
-> ending up detecting 40c cables as 80c.  This patch fixes it.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> 
-> This certainly is a regression and there are users affected by this.
-> I've verified this on both primary and secondary channel of vt6421.
-> Who takes IDE patches these days?  Jeff, can you push this through
-> libata-dev#upstream-fixes?
+Robin H. Johnson wrote:
 
-I would guess Alan or Andrew or (who just replied) Bart.
+ >While dmesg claims that 3.0Gbps was negotiated, the combined 
+ >performance of the 5 disks never exceeds 1.5Gbps, no matter how I 
+ >combine them. Is something in the driver overriding the 3Gbps speed 
+ >bits somewhere?
 
-You can count on me to /not/ apply drivers/ide patches.  It's easier 
-that way, if I stay out of that game.
+Perhaps there is a hardware/firmware issue with the Sil3132, as this has 
+been reported at a reputable Mac hardware performance site, see:
 
-	Jeff
+http://www.barefeats.com/quick.html
 
+The December 23rd entry, "ExpressCard SATA bandwidth woes" mentions 
+exactly this issue with an Express card using the Sil3132 and on a 
+Sil3132 based SATA Adaptor card.
 
+Regards,
 
+Richard
