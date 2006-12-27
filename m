@@ -1,252 +1,238 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/12] devres: implement managed PCI interface
-Date: Wed, 27 Dec 2006 00:18:34 +0900
-Message-ID: <11671463142754-git-send-email-htejun@gmail.com>
-References: <1167146313307-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] via82cxxx: fix cable detection
+Date: Wed, 27 Dec 2006 21:46:59 +0900
+Message-ID: <20061227124659.GB10987@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932657AbWLZPWm@vger.kernel.org>
-In-Reply-To: <1167146313307-git-send-email-htejun@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@suse.de, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [221.139.199.108] ([221.139.199.108]:40960 "EHLO htj.dyndns.org"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S932795AbWL0MrF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Dec 2006 07:47:05 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
 
-Implement managed PCI interface - pcim_enable_device(),
-pcim_pin_device() and pci_is_managed().  pcim_enable_device() is
-equivalent to pci_enable_device() except that it makes the PCI device
-managed.  After pcim_enable_device(), PCI resources such as
-enabledness, msi/msix/intx status and BAR regions become managed.
-
-pcim_pin_device() is used by device drivers to ask PCI devres not to
-disable the device on driver detach.  This function is to handle cases
-where a driver finds out that a device is otherwise busy and thus
-shouldn't be disabled on probe failure or driver detach.
+Cable detection got broken probably while converting the driver to
+support multiple controllers.  Cable detection is done by examining
+how BIOS configured the attached devices.  The current code is broken
+in that it examines the status *after* modifying Clk66 configuration
+ending up detecting 40c cables as 80c.  This patch fixes it.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/pci/pci.c   |  127 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h |    9 ++++
- 2 files changed, 135 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6bfb942..2ab2f8a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -744,6 +744,104 @@ int pci_enable_device(struct pci_dev *dev)
- 	return result;
+This certainly is a regression and there are users affected by this.
+I've verified this on both primary and secondary channel of vt6421.
+Who takes IDE patches these days?  Jeff, can you push this through
+libata-dev#upstream-fixes?
+
+diff --git a/drivers/ide/pci/via82cxxx.c b/drivers/ide/pci/via82cxxx.c
+index 61f1a96..381cc6f 100644
+--- a/drivers/ide/pci/via82cxxx.c
++++ b/drivers/ide/pci/via82cxxx.c
+@@ -123,7 +123,7 @@ struct via82cxxx_dev
+ static void via_set_speed(ide_hwif_t *hwif, u8 dn, struct ide_timing *timing)
+ {
+ 	struct pci_dev *dev = hwif->pci_dev;
+-	struct via82cxxx_dev *vdev = ide_get_hwifdata(hwif);
++	struct via82cxxx_dev *vdev = pci_get_drvdata(hwif->pci_dev);
+ 	u8 t;
+ 
+ 	if (~vdev->via_config->flags & VIA_BAD_AST) {
+@@ -162,7 +162,7 @@ static void via_set_speed(ide_hwif_t *hwif, u8 dn, struct ide_timing *timing)
+ static int via_set_drive(ide_drive_t *drive, u8 speed)
+ {
+ 	ide_drive_t *peer = HWIF(drive)->drives + (~drive->dn & 1);
+-	struct via82cxxx_dev *vdev = ide_get_hwifdata(drive->hwif);
++	struct via82cxxx_dev *vdev = pci_get_drvdata(drive->hwif->pci_dev);
+ 	struct ide_timing t, p;
+ 	unsigned int T, UT;
+ 
+@@ -225,7 +225,7 @@ static void via82cxxx_tune_drive(ide_drive_t *drive, u8 pio)
+ static int via82cxxx_ide_dma_check (ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+-	struct via82cxxx_dev *vdev = ide_get_hwifdata(hwif);
++	struct via82cxxx_dev *vdev = pci_get_drvdata(hwif->pci_dev);
+ 	u16 w80 = hwif->udma_four;
+ 
+ 	u16 speed = ide_find_best_mode(drive,
+@@ -262,6 +262,53 @@ static struct via_isa_bridge *via_config_find(struct pci_dev **isa)
+ 	return via_config;
  }
  
 +/*
-+ * Managed PCI resources.  This manages device on/off, intx/msi/msix
-+ * on/off and BAR regions.  pci_dev itself records msi/msix status, so
-+ * there's no need to track it separately.  pci_devres is initialized
-+ * when a device is enabled using managed PCI device enable interface.
++ * Check and handle 80-wire cable presence
 + */
-+struct pci_devres {
-+	unsigned int disable:1;
-+	unsigned int orig_intx:1;
-+	unsigned int restore_intx:1;
-+	u32 region_mask;
-+};
-+
-+static void pcim_release(struct device *gendev, void *res)
++static void __devinit via_cable_detect(struct via82cxxx_dev *vdev, u32 u)
 +{
-+	struct pci_dev *dev = container_of(gendev, struct pci_dev, dev);
-+	struct pci_devres *this = res;
 +	int i;
 +
-+	if (dev->msi_enabled)
-+		pci_disable_msi(dev);
-+	if (dev->msix_enabled)
-+		pci_disable_msix(dev);
++	switch (vdev->via_config->flags & VIA_UDMA) {
++		case VIA_UDMA_66:
++			for (i = 24; i >= 0; i -= 8)
++				if (((u >> (i & 16)) & 8) &&
++				    ((u >> i) & 0x20) &&
++				     (((u >> i) & 7) < 2)) {
++					/*
++					 * 2x PCI clock and
++					 * UDMA w/ < 3T/cycle
++					 */
++					vdev->via_80w |= (1 << (1 - (i >> 4)));
++				}
++			break;
 +
-+	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
-+		if (this->region_mask & (1 << i))
-+			pci_release_region(dev, i);
++		case VIA_UDMA_100:
++			for (i = 24; i >= 0; i -= 8)
++				if (((u >> i) & 0x10) ||
++				    (((u >> i) & 0x20) &&
++				     (((u >> i) & 7) < 4))) {
++					/* BIOS 80-wire bit or
++					 * UDMA w/ < 60ns/cycle
++					 */
++					vdev->via_80w |= (1 << (1 - (i >> 4)));
++				}
++			break;
 +
-+	if (this->restore_intx)
-+		pci_intx(dev, this->orig_intx);
-+
-+	if (this->disable)
-+		pci_disable_device(dev);
-+}
-+
-+static struct pci_devres * get_pci_dr(struct pci_dev *pdev)
-+{
-+	struct pci_devres *dr, *new_dr;
-+
-+	dr = devres_find(&pdev->dev, pcim_release, NULL, NULL);
-+	if (dr)
-+		return dr;
-+
-+	new_dr = devres_alloc(pcim_release, sizeof(*new_dr), GFP_KERNEL);
-+	if (!new_dr)
-+		return NULL;
-+	return devres_get(&pdev->dev, new_dr, NULL, NULL);
-+}
-+
-+static struct pci_devres * find_pci_dr(struct pci_dev *pdev)
-+{
-+	if (pci_is_managed(pdev))
-+		return devres_find(&pdev->dev, pcim_release, NULL, NULL);
-+	return NULL;
-+}
-+
-+/**
-+ * pcim_enable_device - Managed pci_enable_device()
-+ * @pdev: PCI device to be initialized
-+ *
-+ * Managed pci_enable_device().
-+ */
-+int pcim_enable_device(struct pci_dev *pdev)
-+{
-+	struct pci_devres *dr;
-+	int rc;
-+
-+	dr = get_pci_dr(pdev);
-+	if (unlikely(!dr))
-+		return -ENOMEM;
-+	WARN_ON(!!dr->disable);
-+
-+	rc = pci_enable_device(pdev);
-+	if (!rc) {
-+		pdev->is_managed = 1;
-+		dr->disable = 1;
++		case VIA_UDMA_133:
++			for (i = 24; i >= 0; i -= 8)
++				if (((u >> i) & 0x10) ||
++				    (((u >> i) & 0x20) &&
++				     (((u >> i) & 7) < 6))) {
++					/* BIOS 80-wire bit or
++					 * UDMA w/ < 60ns/cycle
++					 */
++					vdev->via_80w |= (1 << (1 - (i >> 4)));
++				}
++			break;
 +	}
-+	return rc;
-+}
-+
-+/**
-+ * pcim_pin_device - Pin managed PCI device
-+ * @pdev: PCI device to pin
-+ *
-+ * Pin managed PCI device @pdev.  Pinned device won't be disabled on
-+ * driver detach.  @pdev must have been enabled with
-+ * pcim_enable_device().
-+ */
-+void pcim_pin_device(struct pci_dev *pdev)
-+{
-+	struct pci_devres *dr;
-+
-+	dr = find_pci_dr(pdev);
-+	WARN_ON(!dr || !dr->disable);
-+	if (dr)
-+		dr->disable = 0;
 +}
 +
  /**
-  * pcibios_disable_device - disable arch specific PCI resources for device dev
-  * @dev: the PCI device to disable
-@@ -767,8 +865,13 @@ void __attribute__ ((weak)) pcibios_disable_device (struct pci_dev *dev) {}
- void
- pci_disable_device(struct pci_dev *dev)
+  *	init_chipset_via82cxxx	-	initialization handler
+  *	@dev: PCI device
+@@ -274,14 +321,22 @@ static struct via_isa_bridge *via_config_find(struct pci_dev **isa)
+ static unsigned int __devinit init_chipset_via82cxxx(struct pci_dev *dev, const char *name)
  {
-+	struct pci_devres *dr;
- 	u16 pci_command;
+ 	struct pci_dev *isa = NULL;
++	struct via82cxxx_dev *vdev;
+ 	struct via_isa_bridge *via_config;
+ 	u8 t, v;
+-	unsigned int u;
++	u32 u;
++
++	vdev = kzalloc(sizeof(*vdev), GFP_KERNEL);
++	if (!vdev) {
++		printk(KERN_ERR "VP_IDE: out of memory :(\n");
++		return -ENOMEM;
++	}
++	pci_set_drvdata(dev, vdev);
  
-+	dr = find_pci_dr(dev);
-+	if (dr)
-+		dr->disable = 0;
-+
- 	if (atomic_sub_return(1, &dev->enable_cnt) != 0)
- 		return;
+ 	/*
+ 	 * Find the ISA bridge to see how good the IDE is.
+ 	 */
+-	via_config = via_config_find(&isa);
++	vdev->via_config = via_config = via_config_find(&isa);
  
-@@ -867,6 +970,8 @@ pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge)
-  */
- void pci_release_region(struct pci_dev *pdev, int bar)
- {
-+	struct pci_devres *dr;
-+
- 	if (pci_resource_len(pdev, bar) == 0)
- 		return;
- 	if (pci_resource_flags(pdev, bar) & IORESOURCE_IO)
-@@ -875,6 +980,10 @@ void pci_release_region(struct pci_dev *pdev, int bar)
- 	else if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM)
- 		release_mem_region(pci_resource_start(pdev, bar),
- 				pci_resource_len(pdev, bar));
-+
-+	dr = find_pci_dr(pdev);
-+	if (dr)
-+		dr->region_mask &= ~(1 << bar);
- }
+ 	/* We checked this earlier so if it fails here deeep badness
+ 	   is involved */
+@@ -289,16 +344,17 @@ static unsigned int __devinit init_chipset_via82cxxx(struct pci_dev *dev, const
+ 	BUG_ON(!via_config->id);
  
- /**
-@@ -893,6 +1002,8 @@ void pci_release_region(struct pci_dev *pdev, int bar)
-  */
- int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
- {
-+	struct pci_devres *dr;
+ 	/*
+-	 * Setup or disable Clk66 if appropriate
++	 * Detect cable and configure Clk66
+ 	 */
++	pci_read_config_dword(dev, VIA_UDMA_TIMING, &u);
 +
- 	if (pci_resource_len(pdev, bar) == 0)
- 		return 0;
- 		
-@@ -906,7 +1017,11 @@ int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
- 				        pci_resource_len(pdev, bar), res_name))
- 			goto err_out;
++	via_cable_detect(vdev, u);
+ 
+ 	if ((via_config->flags & VIA_UDMA) == VIA_UDMA_66) {
+ 		/* Enable Clk66 */
+-		pci_read_config_dword(dev, VIA_UDMA_TIMING, &u);
+ 		pci_write_config_dword(dev, VIA_UDMA_TIMING, u|0x80008);
+ 	} else if (via_config->flags & VIA_BAD_CLK66) {
+ 		/* Would cause trouble on 596a and 686 */
+-		pci_read_config_dword(dev, VIA_UDMA_TIMING, &u);
+ 		pci_write_config_dword(dev, VIA_UDMA_TIMING, u & ~0x80008);
  	}
--	
-+
-+	dr = find_pci_dr(pdev);
-+	if (dr)
-+		dr->region_mask |= 1 << bar;
-+
+ 
+@@ -367,75 +423,11 @@ static unsigned int __devinit init_chipset_via82cxxx(struct pci_dev *dev, const
  	return 0;
- 
- err_out:
-@@ -1117,7 +1232,15 @@ pci_intx(struct pci_dev *pdev, int enable)
- 	}
- 
- 	if (new != pci_command) {
-+		struct pci_devres *dr;
-+
- 		pci_write_config_word(pdev, PCI_COMMAND, new);
-+
-+		dr = find_pci_dr(pdev);
-+		if (dr && !dr->restore_intx) {
-+			dr->restore_intx = 1;
-+			dr->orig_intx = !enable;
-+		}
- 	}
  }
  
-@@ -1189,6 +1312,8 @@ EXPORT_SYMBOL(isa_bridge);
- EXPORT_SYMBOL_GPL(pci_restore_bars);
- EXPORT_SYMBOL(pci_enable_device_bars);
- EXPORT_SYMBOL(pci_enable_device);
-+EXPORT_SYMBOL(pcim_enable_device);
-+EXPORT_SYMBOL(pcim_pin_device);
- EXPORT_SYMBOL(pci_disable_device);
- EXPORT_SYMBOL(pci_find_capability);
- EXPORT_SYMBOL(pci_bus_find_capability);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f3c617e..1f82eb9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -167,6 +167,7 @@ struct pci_dev {
- 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
- 	unsigned int 	msi_enabled:1;
- 	unsigned int	msix_enabled:1;
-+	unsigned int	is_managed:1;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+-/*
+- * Check and handle 80-wire cable presence
+- */
+-static void __devinit via_cable_detect(struct pci_dev *dev, struct via82cxxx_dev *vdev)
+-{
+-	unsigned int u;
+-	int i;
+-	pci_read_config_dword(dev, VIA_UDMA_TIMING, &u);
+-
+-	switch (vdev->via_config->flags & VIA_UDMA) {
+-
+-		case VIA_UDMA_66:
+-			for (i = 24; i >= 0; i -= 8)
+-				if (((u >> (i & 16)) & 8) &&
+-				    ((u >> i) & 0x20) &&
+-				     (((u >> i) & 7) < 2)) {
+-					/*
+-					 * 2x PCI clock and
+-					 * UDMA w/ < 3T/cycle
+-					 */
+-					vdev->via_80w |= (1 << (1 - (i >> 4)));
+-				}
+-			break;
+-
+-		case VIA_UDMA_100:
+-			for (i = 24; i >= 0; i -= 8)
+-				if (((u >> i) & 0x10) ||
+-				    (((u >> i) & 0x20) &&
+-				     (((u >> i) & 7) < 4))) {
+-					/* BIOS 80-wire bit or
+-					 * UDMA w/ < 60ns/cycle
+-					 */
+-					vdev->via_80w |= (1 << (1 - (i >> 4)));
+-				}
+-			break;
+-
+-		case VIA_UDMA_133:
+-			for (i = 24; i >= 0; i -= 8)
+-				if (((u >> i) & 0x10) ||
+-				    (((u >> i) & 0x20) &&
+-				     (((u >> i) & 7) < 6))) {
+-					/* BIOS 80-wire bit or
+-					 * UDMA w/ < 60ns/cycle
+-					 */
+-					vdev->via_80w |= (1 << (1 - (i >> 4)));
+-				}
+-			break;
+-
+-	}
+-}
+-
+ static void __devinit init_hwif_via82cxxx(ide_hwif_t *hwif)
+ {
+-	struct via82cxxx_dev *vdev = kmalloc(sizeof(struct via82cxxx_dev),
+-		GFP_KERNEL);
+-	struct pci_dev *isa = NULL;
++	struct via82cxxx_dev *vdev = pci_get_drvdata(hwif->pci_dev);
+ 	int i;
  
- 	u32		saved_config_space[16]; /* config space saved at suspend time */
-@@ -521,6 +522,14 @@ static inline int pci_write_config_dword(struct pci_dev *dev, int where, u32 val
+-	if (vdev == NULL) {
+-		printk(KERN_ERR "VP_IDE: out of memory :(\n");
+-		return;
+-	}
+-
+-	memset(vdev, 0, sizeof(struct via82cxxx_dev));
+-	ide_set_hwifdata(hwif, vdev);
+-
+-	vdev->via_config = via_config_find(&isa);
+-	via_cable_detect(hwif->pci_dev, vdev);
+-
+ 	hwif->autodma = 0;
  
- int __must_check pci_enable_device(struct pci_dev *dev);
- int __must_check pci_enable_device_bars(struct pci_dev *dev, int mask);
-+int __must_check pcim_enable_device(struct pci_dev *pdev);
-+void pcim_pin_device(struct pci_dev *pdev);
-+
-+static inline int pci_is_managed(struct pci_dev *pdev)
-+{
-+	return pdev->is_managed;
-+}
-+
- void pci_disable_device(struct pci_dev *dev);
- void pci_set_master(struct pci_dev *dev);
- #define HAVE_PCI_SET_MWI
--- 
-1.4.4.2
+ 	hwif->tuneproc = &via82cxxx_tune_drive;
