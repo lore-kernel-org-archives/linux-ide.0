@@ -1,97 +1,43 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: sata_sil24 performance weirdness
-Date: Wed, 27 Dec 2006 05:45:03 -0800
-Message-ID: <20061227134503.GD28939@curie-int.orbis-terrarum.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] via82cxxx: fix cable detection
+Date: Wed, 27 Dec 2006 12:20:11 -0500
+Message-ID: <4592AB4B.1010609@pobox.com>
+References: <20061227124659.GB10987@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="vni90+aGYgRvsTuO"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.isohunt.com ([69.64.61.20]:51104 "EHLO mail.isohunt.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:45363 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932819AbWL0Nve (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Dec 2006 08:51:34 -0500
-Content-Disposition: inline
+	id S933010AbWL0RUS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Dec 2006 12:20:18 -0500
+In-Reply-To: <20061227124659.GB10987@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+
+Tejun Heo wrote:
+> Cable detection got broken probably while converting the driver to
+> support multiple controllers.  Cable detection is done by examining
+> how BIOS configured the attached devices.  The current code is broken
+> in that it examines the status *after* modifying Clk66 configuration
+> ending up detecting 40c cables as 80c.  This patch fixes it.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> 
+> This certainly is a regression and there are users affected by this.
+> I've verified this on both primary and secondary channel of vt6421.
+> Who takes IDE patches these days?  Jeff, can you push this through
+> libata-dev#upstream-fixes?
+
+I would guess Alan or Andrew or (who just replied) Bart.
+
+You can count on me to /not/ apply drivers/ide patches.  It's easier 
+that way, if I stay out of that game.
+
+	Jeff
 
 
---vni90+aGYgRvsTuO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-I forward-ported Tejun's PMP patches to libata#upstream (my first attempt a=
-t it
-a few weeks ago failed, but this round works fine, tested at each branch
-stage), and in using them, I have noticed a bit of oddity.
-
-While dmesg claims that 3.0Gbps was negotiated, the combined performance of=
- the
-5 disks never exceeds 1.5Gbps, no matter how I combine them. Is something in
-the driver overriding the 3Gbps speed bits somewhere?
-
-My SATA enclosure the 5-disk Fusion 500P from Sonnet (PMP 0x1095:0x3726)
-
-Controller:
-Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Co=
-ntroller (rev 01)
-
-Drives:
-5x Seagate ST3320620AS (7200.10 320Gbyte)
-
-ata9: SATA max UDMA/133 cmd 0xFFFFC20000070000 ctl 0x0 bmdma 0x0 irq 18
-ata10: SATA max UDMA/133 cmd 0xFFFFC20000072000 ctl 0x0 bmdma 0x0 irq 18
-scsi10 : sata_sil24
-ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata9.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 5 ports, feat 0x9/0x9
-ata9.00: hard resetting port
-ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata9.01: hard resetting port
-ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata9.02: hard resetting port
-ata9.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata9.03: hard resetting port
-ata9.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata9.04: hard resetting port
-ata9.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata9.00: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata9.00: configured for UDMA/133
-ata9.01: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata9.01: configured for UDMA/133
-ata9.02: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata9.02: configured for UDMA/133
-ata9.03: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata9.03: configured for UDMA/133
-ata9.04: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata9.04: configured for UDMA/133
-ata9: EH complete
-scsi11 : sata_sil24
-ata10: SATA link down (SStatus 0 SControl 300)
-scsi 10:0:0:0: Direct-Access     ATA      ST3320620AS      3.AA PQ: 0 ANSI:=
- 5
-SCSI device sdi: 625142448 512-byte hdwr sectors (320073 MB)
-sdi: Write Protect is off
-sdi: Mode Sense: 00 3a 00 00
-(rest of the disks sdi-> sdm all brought up in an identical fashion here).
-
---=20
-Robin Hugh Johnson
-Gentoo Linux Developer
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
-
---vni90+aGYgRvsTuO
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6-ecc01.6 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks
-
-iD8DBQFFknjfPpIsIjIzwiwRAvzlAKDq5QEC85tMuKSQ7y6f/69sUWWx7QCg+R5O
-WHfOnPohNKnLP1weSGnvZG4=
-=akKI
------END PGP SIGNATURE-----
-
---vni90+aGYgRvsTuO--
