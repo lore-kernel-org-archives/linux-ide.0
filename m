@@ -1,148 +1,89 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: sata_sil24 startup weirdness - long times to start up all PMP sub-links
-Date: Thu, 28 Dec 2006 03:41:39 -0800
-Message-ID: <20061228114139.GJ28939@curie-int.orbis-terrarum.net>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: hda on Via Epia-ML motherboard seen on 2.6.18, but not 2.6.19
+Date: Thu, 28 Dec 2006 16:21:22 +0100
+Message-ID: <58cb370e0612280721p4f1282c1m5e3d9d7d8f084cd3@mail.gmail.com>
+References: <200612280531.kBS5VlrO015115@freya.yggdrasil.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ofZMSlrAVk9bLeVm"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.isohunt.com ([69.64.61.20]:55588 "EHLO mail.isohunt.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753280AbWL1Llb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Dec 2006 06:41:31 -0500
+Received: from nf-out-0910.google.com ([64.233.182.190]:27671 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754869AbWL1PVY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Dec 2006 10:21:24 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so5585277nfa
+        for <linux-ide@vger.kernel.org>; Thu, 28 Dec 2006 07:21:22 -0800 (PST)
+In-Reply-To: <200612280531.kBS5VlrO015115@freya.yggdrasil.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Adam J. Richter" <adam@yggdrasil.com>
+Cc: linux-ide@vger.kernel.org
 
+On 12/28/06, Adam J. Richter <adam@yggdrasil.com> wrote:
+> On Tue, 26 Dec 2006 06:36:45 +0800, Adam Richter wrote:
+> >On Fri, 22 Dec 2006 14:56:20 +0100, Bartlomiej Zolnierkiewicz wrote:
+> >>On 12/22/06, Adam J. Richter <adam@yggdrasil.com> wrote:
+> >>>         I have a 666MHz Via Epia-ML motherboard (using a Via Eden, I
+> >>> think).  I am booting it from a CompactFlash card attached by an
+> >>> IDE-CF adapter.  Everything works fine under 2.6.18.  Under 2.6.19,
+> >>> 2.6.19.1 and 2.6.20-rc1, the master device on ide0 is not seen.
+> >[...]
+>
+> >>>From the quick look the only IDE subsystem change in 2.6.19
+> >>which could be responsible (wild guess) for this is the commit:
+> >>17c1033d331a430ce631805e15215e63b4cce764
+> >>[ patch attached in case you don't have git tree at hand ]
+>
+> >>Could you check if reverting it fixes the problem?
+> >>If not it seems that the best way to proceed is git bisect.
+>
+> >I'll cc this message to linux-ide in case anyone else encounters the
+> >problem and wants to be informed about it.
+>
+> >As mentioned in my previous off-list email, the reverting attached
+> >patch did not fix the problem.
+>
+> >I now have a few more data points to narrow where the bug was introduced:
+>
+> >2.6.18.4       ok
+> >2.6.18.6       ok
+> >2.6.19-rc1     fails
+>
+> >I expect I will now work on setting up a git tree fed by kernel.org
+> >and using git bisect as you suggest.
+>
+> >Thanks for your advice.  I'll let you know when I have more news.
+>
+> Before pulling from the official git development tree, I tried the
+> linux-2.6.18-git[n] snapshots.  It looks the problem goes back as far
+> as 2.6.18-git1.  Here is a list of test results, for completeness.
+>
+> 2.6.18          ok
+> 2.6.18.1        ok
+> 2.6.18.4        ok
+> 2.6.18.6        ok
+> 2.6.18-git1     fails
+> 2.6.18-git2     fails
+> 2.6.18-git5     fails
+> 2.6.18-git10    fails
+> 2.6.19-rc1      fails
+> 2.6.19          fails
+> 2.6.20-rc1      fails
+> 2.6.20-rc2      fails
 
---ofZMSlrAVk9bLeVm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks for testing.
 
-Another sata_sil24 issue I noticed, this time in the start up of the PMP, w=
-hen
-the enclosure was powered off, and turned on after the driver was already
-loaded.
+> Now I guess will pull from the official git development tree and try using
+> git bisect to narrow the problem further.
 
-Synopsis:
-When starting many links on a PMP unit, there is an excessive delay.
-Startup sequence is (Port0),(Port0,1),(Port0,1,2),(Port0,1,2,3),(Port0,1,2,=
-3,4)
+Yes, 2.6.18-git1 patch is still near 3MB large, more-over
 
-This takes a total of ~25 seconds on my machine.
+[bzolnier@trik adam]$ grep drivers/ide patch-2.6.18-git1
+diff --git a/drivers/ide/ppc/pmac.c b/drivers/ide/ppc/pmac.c
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
 
-(At this point, I turn the enclosure on. No devices were detected prior to
-this).
-ata7: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x42 frozen
-ata7: (irq_stat 0x00b00090, PHY RDY changed)
-ata7: waiting for device to spin up (8 secs)
-ata7: soft resetting port
-ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 5 ports, feat 0x9/0x9
-ata7.00: hard resetting port
-ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.01: hard resetting port
-ata7.01: softreset failed (SRST command error)
-ata7.01: follow-up softreset failed, retrying in 5 secs
-ata7.01: hard resetting port
-ata7.01: hardreset failed (port not ready)
-ata7.01: reset failed, giving up
-ata7.15: hard resetting port
-ata7: controller in dubious state, performing PORT_RST
-ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-ata7.00: hard resetting port
-ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.01: hard resetting port
-ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.02: hard resetting port
-ata7.02: softreset failed (SRST command error)
-ata7.02: follow-up softreset failed, retrying in 5 secs
-ata7.02: hard resetting port
-ata7.02: hardreset failed (port not ready)
-ata7.02: reset failed, giving up
-ata7.15: hard resetting port
-ata7: controller in dubious state, performing PORT_RST
-ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-ata7.00: hard resetting port
-ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.01: hard resetting port
-ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.02: hard resetting port
-ata7.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.03: hard resetting port
-ata7.03: softreset failed (SRST command error)
-ata7.03: follow-up softreset failed, retrying in 5 secs
-ata7.03: hard resetting port
-ata7.03: COMRESET failed (errno=3D-5)
-ata7.03: reset failed, giving up
-ata7.15: hard resetting port
-ata7: controller in dubious state, performing PORT_RST
-ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-ata7.00: hard resetting port
-ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.01: hard resetting port
-ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.02: hard resetting port
-ata7.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.03: hard resetting port
-ata7.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.04: hard resetting port
-ata7.04: softreset failed (SRST command error)
-ata7.04: follow-up softreset failed, retrying in 5 secs
-ata7.04: hard resetting port
-ata7.04: hardreset failed (port not ready)
-ata7.04: reset failed, giving up
-ata7.15: hard resetting port
-ata7: controller in dubious state, performing PORT_RST
-ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-ata7.00: hard resetting port
-ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.01: hard resetting port
-ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.02: hard resetting port
-ata7.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.03: hard resetting port
-ata7.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.04: hard resetting port
-ata7.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata7.00: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata7.00: configured for UDMA/100
-ata7.01: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata7.01: configured for UDMA/100
-ata7.02: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata7.02: configured for UDMA/100
-ata7.03: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata7.03: configured for UDMA/100
-ata7.04: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 31/32)
-ata7.04: configured for UDMA/100
-ata7: EH complete
-scsi 8:0:0:0: Direct-Access     ATA      ST3320620AS      3.AA PQ: 0 ANSI: 5
-SCSI device sdi: 625142448 512-byte hdwr sectors (320073 MB)
-sdi: Write Protect is off
-sdi: Mode Sense: 00 3a 00 00
-SCSI device sdi: write cache: enabled, read cache: enabled, doesn't support=
- DPO or FUA
-(rest of devices thru sdm detected as usual).
+so it looks like some non-IDE commit is affecting IDE driver. :?
 
---=20
-Robin Hugh Johnson
-Gentoo Linux Developer
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
-
---ofZMSlrAVk9bLeVm
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6-ecc01.6 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks
-
-iD8DBQFFk61zPpIsIjIzwiwRApKhAKCxWxPCyqeHwEE9ObvXzzdZBP9sPgCdFCv2
-njhZh0PFZEEsVlA1u+Jx34I=
-=YFIN
------END PGP SIGNATURE-----
-
---ofZMSlrAVk9bLeVm--
+Bart
