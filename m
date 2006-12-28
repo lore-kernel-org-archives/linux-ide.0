@@ -1,35 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] ata_piix.c ICH6M MAP typo.
-Date: Thu, 28 Dec 2006 10:53:32 +0900
-Message-ID: <4593239C.2050204@gmail.com>
-References: <826a2b270612271514k12e87daag3ec84fc5f0fd8d0a@mail.gmail.com> <826a2b270612271519id1da2a0x671632e8079a02f4@mail.gmail.com>
+From: "Andrew Lyon" <andrew.lyon@gmail.com>
+Subject: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0) r0xj0
+Date: Thu, 28 Dec 2006 02:12:48 +0000
+Message-ID: <f4527be0612271812p7282de31j98462aebde16e5a1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:13263 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964832AbWL1Bxt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Dec 2006 20:53:49 -0500
-Received: by an-out-0708.google.com with SMTP id b33so1282488ana
-        for <linux-ide@vger.kernel.org>; Wed, 27 Dec 2006 17:53:48 -0800 (PST)
-In-Reply-To: <826a2b270612271519id1da2a0x671632e8079a02f4@mail.gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.174]:45785 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964869AbWL1CMu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Dec 2006 21:12:50 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so4038070uga
+        for <linux-ide@vger.kernel.org>; Wed, 27 Dec 2006 18:12:48 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pierre Tardy <tardyp@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Pierre Tardy wrote:
-> I assume, this patch is a typo correction. this still avoids me an
-> error at boot:
-> ata_piix 0000:00:1f.2: version 2.00
-> ata_piix 0000:00:1f.2: MAP [ P0 P2 XX XX ]
-> ata_piix 0000:00:1f.2: invalid MAP value 0
+Hi,
 
-Please post with proper patch description and Signed-off-by: line.
-Other than that,
+My system is gigabyte ds3 motherboard with onboard SATA JMicron
+20360/20363 AHCI Controller (rev 02), drive connected is WDC
+WD740ADFD-00 20.0, I am running 2.6.18.6 32 bit, under heavy i/o I get
+the following messaegs:
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
 
--- 
-tejun
+Is this condition dangerous?
+
+I plan to upgrade to 2.6.19 soon as I have problems with a sata dvd
+writer but I have to wait for a driver that I need to catch up, this
+system cannot be down for long as it runs mythtv.
+
+Andy
