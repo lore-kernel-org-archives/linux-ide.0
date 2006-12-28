@@ -1,99 +1,71 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive
- 0x0) r0xj0
-Date: Thu, 28 Dec 2006 12:30:27 +0900
-Message-ID: <45933A53.1090702@gmail.com>
-References: <f4527be0612271812p7282de31j98462aebde16e5a1@mail.gmail.com>
+Subject: Re: CDROM drive not found when booting using new libata code
+Date: Thu, 28 Dec 2006 12:51:06 +0900
+Message-ID: <45933F2A.5070304@gmail.com>
+References: <20060924221020.GB2080@artsapartment.org> <4562C65C.2010802@gmail.com> <20061206181652.GA3107@artsapartment.org> <45779852.1030909@gmail.com> <20061207105525.4ebb4547@localhost.localdomain> <45780AF5.2020605@gmail.com> <20061208010626.GA1856@artsapartment.org> <45927532.3060404@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------040406010202020601080905"
+ boundary="------------040804090401030005030406"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.238]:4299 "EHLO
+Received: from wx-out-0506.google.com ([66.249.82.231]:13220 "EHLO
 	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964900AbWL1Dak (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Dec 2006 22:30:40 -0500
-Received: by wx-out-0506.google.com with SMTP id h27so4435545wxd
-        for <linux-ide@vger.kernel.org>; Wed, 27 Dec 2006 19:30:40 -0800 (PST)
-In-Reply-To: <f4527be0612271812p7282de31j98462aebde16e5a1@mail.gmail.com>
+	with ESMTP id S964913AbWL1DvU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Dec 2006 22:51:20 -0500
+Received: by wx-out-0506.google.com with SMTP id h27so4440490wxd
+        for <linux-ide@vger.kernel.org>; Wed, 27 Dec 2006 19:51:19 -0800 (PST)
+In-Reply-To: <45927532.3060404@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lyon <andrew.lyon@gmail.com>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Art Haas <ahaas@airmail.net>
+Cc: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------040406010202020601080905
+--------------040804090401030005030406
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
-Andrew Lyon wrote:
-> Hi,
+Tejun Heo wrote:
+> Art Haas wrote:
+>> Sorry to report that patch did not work. I applied the patch against
+>> Linus's tree this morning, built and installed that kernel, and
+>> the CD-ROM was not found. I also tried the patch with an update
+>> from Linus's tree from this evening, and again the same result.
 > 
-> My system is gigabyte ds3 motherboard with onboard SATA JMicron
-> 20360/20363 AHCI Controller (rev 02), drive connected is WDC
-> WD740ADFD-00 20.0, I am running 2.6.18.6 32 bit, under heavy i/o I get
-> the following messaegs:
+> Hello, Art.
 > 
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
-> 
-> Is this condition dangerous?
+> Can you please test the attached patch?  The patch is against 2.6.19.
+> Please give me my late christmas gift.
 
-Not usually.  Might indicate something is going wrong in some really
-rare cases.  I think vendors are getting NCQ right these days.  Maybe
-it's time to remove that printk.
-
-> I plan to upgrade to 2.6.19 soon as I have problems with a sata dvd
-> writer but I have to wait for a driver that I need to catch up, this
-> system cannot be down for long as it runs mythtv.
-
-Can you apply the attached patch and report what the kernel says?
-Please include full dmesg.
-
-Thanks.
+Please test this patch too.  TIA.
 
 -- 
 tejun
 
---------------040406010202020601080905
+--------------040804090401030005030406
 Content-Type: text/plain;
  name="patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
  filename="patch"
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index b517d24..13f5853 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1162,10 +1162,21 @@ static void ahci_host_intr(struct ata_port *ap)
- 	if (ata_tag_valid(ap->active_tag) && (status & PORT_IRQ_PIOS_FIS))
- 		return;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index abd2deb..7a4cf9e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1166,6 +1166,14 @@ static inline u8 ata_irq_on(struct ata_port *ap)
+ 	ap->ctl &= ~ATA_NIEN;
+ 	ap->last_ctl = ap->ctl;
  
--	if (ata_ratelimit())
-+	if (ata_ratelimit()) {
-+		struct ahci_port_priv *pp = ap->private_data;
-+		const u32 *f = pp->rx_fis + 0x58;
++	ap->ops->dev_select(ap, 1);
++	if (ap->flags & ATA_FLAG_MMIO)
++		writeb(ap->ctl, (void __iomem *) ioaddr->ctl_addr);
++	else
++		outb(ap->ctl, ioaddr->ctl_addr);
++	tmp = ata_wait_idle(ap);
 +
- 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
--				"(irq_stat 0x%x active_tag %d sactive 0x%x)\n",
-+				"(irq_stat 0x%x active_tag 0x%x sactive 0x%x)\n",
- 				status, ap->active_tag, ap->sactive);
-+		if (status & PORT_IRQ_SDB_FIS) {
-+			ata_port_printk(ap, KERN_INFO, "issue=0x%x SAct=0x%x "
-+					"SDB_FIS=%08x:%08x\n",
-+					readl(port_mmio + PORT_CMD_ISSUE),
-+					readl(port_mmio + PORT_SCR_ACT),
-+					f[0], f[1]);
-+		}
-+	}
- }
- 
- static void ahci_irq_clear(struct ata_port *ap)
++	ap->ops->dev_select(ap, 0);
+ 	if (ap->flags & ATA_FLAG_MMIO)
+ 		writeb(ap->ctl, (void __iomem *) ioaddr->ctl_addr);
+ 	else
 
---------------040406010202020601080905--
+--------------040804090401030005030406--
