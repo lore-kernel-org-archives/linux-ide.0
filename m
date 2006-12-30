@@ -1,113 +1,73 @@
-From: Steve Graham <stgraham2000@yahoo.com>
-Subject: Re: SIL3512 lockup problem using driver verion 0.9 and Linux 2.6.14
-Date: Sat, 30 Dec 2006 10:53:06 -0800 (PST)
-Message-ID: <227868.71850.qm@web52301.mail.yahoo.com>
-References: <457E040D.2020707@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 2.6.20-rc2-mm1] HPT36x PCI clock detection fix
+Date: Sat, 30 Dec 2006 22:36:36 +0300
+Message-ID: <200612302236.36285.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web52301.mail.yahoo.com ([206.190.48.144]:24168 "HELO
-	web52301.mail.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1030298AbWL3S7r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Dec 2006 13:59:47 -0500
-In-Reply-To: <457E040D.2020707@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:64660 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030313AbWL3Tgy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Dec 2006 14:36:54 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: akpm@osdl.org, bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Hi Tejun,
+Fix minor coding mistake in the HPT36x PCI clock detection code noticed by
+Bartlomiej Zolnierkiewicz -- it always reported 33 MHz due to the missing
+'break' statements.  This, however, most probably never mattered -- in fact,
+I was thinking of removing the 25/40 MHz cases completely since HPT36x BIOSes
+didn't seem to set any other value than 7 into the 'cmd_high_time' field, i.e.
+supported only 33 MHz PCI.
 
-Sorry it took some time to respond.  I went away for
-th holidays and just returned yesterday.
+Note that in the original driver there was another bug: 25 and 40 MHz cases
+were interchanged.  Since the 'cmd_high_time' field is in units of PCI clocks,
+a lower clock count just *cannot* correspond to a higher frequency, i. e. it
+should be 5 for 25 MHz PCI and 9 for 40 MHz PCI, not the other way around.
 
-We were using linux 2.6.14.  I saw a message on one of
-the forums that suggested moving to linux 2.6.18
-because of improved error handling to fix this
-problem.  I tried that by moving the entire SCSI
-framework from 2.6.18 into 2.6.14 (The full 2.6.18 is
-not stable on our platform).
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Anyhow, after doing this difficult task I managed to
-get rid of the lockups but I still get error messages
-and drive 'stalls'.  Unfortunately, I don't have them
-recorded anywhere because the error messages don't
-seem to hurt anything.  The drive locks for about 30
-seconds, the driver does a 'soft reset' and then the
-drive comes back alive.  It's far from optimal but at
-least the system is usable.
+ drivers/ide/pci/hpt366.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-I will try to repeat the test and get the error
-messages again so I can send them to you but if you
-have any ideas before then please let me know.
+Index: linux-2.6/drivers/ide/pci/hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/hpt366.c
++++ linux-2.6/drivers/ide/pci/hpt366.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/hpt366.c		Version 1.00	Jun 25, 2006
++ * linux/drivers/ide/pci/hpt366.c		Version 1.01	Dec 23, 2006
+  *
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+@@ -107,7 +107,8 @@
+  *   frequency
+  * - switch to using the  DPLL clock and enable UltraATA/133 mode by default on
+  *   anything  newer than HPT370/A
+- * - fold PCI clock detection and DPLL setup code into init_chipset_hpt366();
++ * - fold PCI clock detection and DPLL setup code into init_chipset_hpt366(),
++ *   also fixing the interchanged 25/40 MHz PCI clock cases for HPT36x chips;
+  *   unify HPT36x/37x timing setup code and the speedproc handlers by joining
+  *   the register setting lists into the table indexed by the clock selected
+  *	Sergei Shtylyov, <sshtylyov@ru.mvista.com> or <source@mvista.com>
+@@ -1125,11 +1126,14 @@ static unsigned int __devinit init_chips
+ 		switch((itr1 >> 8) & 0x07) {
+ 			case 0x09:
+ 				pci_clk = 40;
++				break;
+ 			case 0x05:
+ 				pci_clk = 25;
++				break;
+ 			case 0x07:
+ 			default:
+ 				pci_clk = 33;
++				break;
+ 		}
+ 	}
+ 
 
-Cheers,
-
-Steve...
-
---- Tejun Heo <htejun@gmail.com> wrote:
-
-> Hello,
-> 
-> Steve Graham wrote:
-> > My name is Steve Graham and I work for a small
-> > startup.  Our company is developing a server board
-> > with the Silicon Images 3512 and we are getting
-> some
-> > strange lockups during high levels of disk
-> activity. 
-> > The test I'm currently running to cause the
-> problem is
-> > to run the following concurrently: 'nbench',
-> > 'tiobench', and an 'scp' of a 200Meg file to the
-> sata
-> > drive.  Every so often I will get the following
-> > message:
-> > 
-> > ata1: status=0x51 { DriveReady SeekComplete Error
-> }
-> >   ata1: error=0x04 { DriveStatusError }
-> 
-> Which kernel version are you running?
-> 
-> > This doesn't mean the drive is locked up and
-> doesn't
-> > appear to have any side effects on its own but
-> > eventually I will get the above message that is
-> > immediately followed by the next block of messages
-> > that do result in a lockup:
-> > 
-> > ata1: command 0x35 timeout, stat 0xd1 host_stat
-> 0x1
-> >   ata1: status=0xd1 { Busy }
-> >   sd 0:0:0:0: SCSI error: return code = 0x8000002
-> >   sda: Current: sense key=0xb
-> >       ASC=0x47 ASCQ=0x0
-> >   end_request: I/O error, dev sda, sector 17033103
-> >   ata1: Abnormal status 0xD1 on port 0xC001E087
-> >   ata1: Alternate status 0xD1 on port 0xC001E08A
-> >   ata1: Error 0xd1
-> >   ata1: Abnormal status 0xD1 on port 0xC001E087
-> >   ata1: Alternate status 0xD1 on port 0xC001E08A
-> >   ata1: Error 0xd1
-> >   ata1: Abnormal status 0xD1 on port 0xC001E087
-> >   ata1: Alternate status 0xD1 on port 0xC001E08A
-> 
-> This is message from old error handling and doesn't
-> really contain much
-> useful info.  Even if you have to use previous
-> kernel in production
-> system, providing error messages from 2.6.19 will
-> help chasing down the
-> cause.
-> 
-> -- 
-> tejun
-> 
-
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
