@@ -1,53 +1,117 @@
-From: Benjamin LaHaise <bcrl@kvack.org>
-Subject: Re: bug: AHCI: Serial ATA to CompactFlash adapter loops endlessly
-Date: Sat, 30 Dec 2006 12:48:44 -0500
-Message-ID: <20061230174844.GY18867@kvack.org>
-References: <20061117211135.GO7299@kvack.org> <45842390.1000102@pobox.com> <20061220021309.GY1104@kvack.org> <4596984F.4020604@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 2.6.20-rc2-mm1] PIIX tuneproc() fixes/cleanups
+Date: Sat, 30 Dec 2006 21:01:20 +0300
+Message-ID: <200612302101.20679.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kanga.kvack.org ([66.96.29.28]:36080 "EHLO kanga.kvack.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755181AbWL3RtD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Dec 2006 12:49:03 -0500
+Received: from h155.mvista.com ([63.81.120.155]:64434 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755186AbWL3SBc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Dec 2006 13:01:32 -0500
 Content-Disposition: inline
-In-Reply-To: <4596984F.4020604@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: akpm@osdl.org, bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Sat, Dec 30, 2006 at 11:48:15AM -0500, Mark Lord wrote:
-> >Got any ideas for things to try?
-> 
-> Just for extra info, try redoing your tests *without* smartd running.
-> (possible theory is that S.M.A.R.T. commands may be interfering
-> or triggering some kind of buggy behaviour somewhere).
+Fix/cleanup the driver's tuneproc() and ratemask() methods:
 
-With smartd killed, it still seems to be triggering with the following 
-message:
+- PPE, IE, and TIME bits need to be cleared beforehand for the slave drive as
+  well as master (Alan probably just forgot about it);
 
-Dec 30 12:38:49 tower kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-Dec 30 12:38:49 tower kernel: ata4.00: (BMDMA stat 0x26)
-Dec 30 12:38:49 tower kernel: ata4.00: cmd c8/00:08:70:e9:02/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
-Dec 30 12:38:49 tower kernel:          res 50/00:00:70:e9:02/00:00:00:00:00/e0 Emask 0x20 (host bus error)
-Dec 30 12:38:49 tower kernel: ata4.00: configured for UDMA/33
-Dec 30 12:38:49 tower kernel: ata4: EH complete
-Dec 30 12:38:49 tower kernel: SCSI device sdc: 4030464 512-byte hdwr sectors (2064 MB)
-Dec 30 12:38:49 tower kernel: sdc: Write Protect is off
-Dec 30 12:38:49 tower kernel: SCSI device sdc: write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+- this driver only supports PIO modes up to 4, so must pass the correct limit
+  to ide_get_best_pio_mode();
 
->From what I've found experimenting, the problem seems to occur much more 
-frequently with larger IOs often around the same offset (~181000 blocks).  
-Is there any way to force libata to drop back to a slower UDMA mode (but not 
-PIO) to see if it may be a timing issue with the card and adapter itself?
+- use min_t() macro instead of min();
 
-The other problem I'm finding is that this new motherboard doesn't want to 
-use AHCI, regardless of the settings of the BIOS.  The old IDE drivers will 
-only work in PIO mode on this chipset (an ICH7, I think), making it difficult 
-to compare things.
+- simplify slave vs master drive evaluation;
 
-		-ben
--- 
-"Time is of no importance, Mr. President, only life is important."
-Don't Email: <dont@kvack.org>.
+- do come coding and formatting cleanups...
+
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+ drivers/ide/pci/piix.c |   21 ++++++++++-----------
+ 1 files changed, 10 insertions(+), 11 deletions(-)
+
+Index: linux-2.6/drivers/ide/pci/piix.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/piix.c
++++ linux-2.6/drivers/ide/pci/piix.c
+@@ -1,5 +1,5 @@
+ /*
+- *  linux/drivers/ide/pci/piix.c	Version 0.45	May 12, 2006
++ *  linux/drivers/ide/pci/piix.c	Version 0.46	December 3, 2006
+  *
+  *  Copyright (C) 1998-1999 Andrzej Krzysztofowicz, Author and Maintainer
+  *  Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
+@@ -163,7 +163,7 @@ static u8 piix_ratemask (ide_drive_t *dr
+ 	 *	if the drive cannot see an 80pin cable.
+ 	 */
+ 	if (!eighty_ninty_three(drive))
+-		mode = min(mode, (u8)1);
++		mode = min_t(u8, mode, 1);
+ 	return mode;
+ }
+ 
+@@ -216,7 +216,7 @@ static void piix_tune_drive (ide_drive_t
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	struct pci_dev *dev	= hwif->pci_dev;
+-	int is_slave		= (&hwif->drives[1] == drive);
++	int is_slave		= drive->dn & 1;
+ 	int master_port		= hwif->channel ? 0x42 : 0x40;
+ 	int slave_port		= 0x44;
+ 	unsigned long flags;
+@@ -225,7 +225,7 @@ static void piix_tune_drive (ide_drive_t
+ 	static DEFINE_SPINLOCK(tune_lock);
+ 	int control = 0;
+ 
+-				 /* ISP  RTC */
++				     /* ISP  RTC */
+ 	static const u8 timings[][2]= {
+ 					{ 0, 0 },
+ 					{ 0, 0 },
+@@ -233,7 +233,7 @@ static void piix_tune_drive (ide_drive_t
+ 					{ 2, 1 },
+ 					{ 2, 3 }, };
+ 
+-	pio = ide_get_best_pio_mode(drive, pio, 5, NULL);
++	pio = ide_get_best_pio_mode(drive, pio, 4, NULL);
+ 
+ 	/*
+ 	 * Master vs slave is synchronized above us but the slave register is
+@@ -243,25 +243,24 @@ static void piix_tune_drive (ide_drive_t
+ 	spin_lock_irqsave(&tune_lock, flags);
+ 	pci_read_config_word(dev, master_port, &master_data);
+ 
+-	if (pio >= 2)
++	if (pio > 1)
+ 		control |= 1;	/* Programmable timing on */
+ 	if (drive->media == ide_disk)
+ 		control |= 4;	/* Prefetch, post write */
+-	if (pio >= 3)
++	if (pio > 2)
+ 		control |= 2;	/* IORDY */
+ 	if (is_slave) {
+-		master_data = master_data | 0x4000;
++		master_data |=  0x4000;
++		master_data &= ~0x0070;
+ 		if (pio > 1) {
+ 			/* enable PPE, IE and TIME */
+ 			master_data = master_data | (control << 4);
+-		} else {
+-			master_data &= ~0x0070;
+ 		}
+ 		pci_read_config_byte(dev, slave_port, &slave_data);
+ 		slave_data = slave_data & (hwif->channel ? 0x0f : 0xf0);
+ 		slave_data = slave_data | (((timings[pio][0] << 2) | timings[pio][1]) << (hwif->channel ? 4 : 0));
+ 	} else {
+-		master_data = master_data & 0xccf8;
++		master_data &= ~0x3307;
+ 		if (pio > 1) {
+ 			/* enable PPE, IE and TIME */
+ 			master_data = master_data | control;
+
