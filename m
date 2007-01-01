@@ -1,36 +1,27 @@
-From: Bryan Boatright <yahoo-groups@omega71.com>
-Subject: Re: AHCI NCQ on ESB2 (8086:2681)
-Date: Mon, 01 Jan 2007 08:35:27 -0600
-Message-ID: <45991C2F.6030705@omega71.com>
+From: Bryan Boatright <boatright@ieee.org>
+Subject: Re: AHCI NCQ on ESB2 (8086:2681) (RESOLVED)
+Date: Mon, 01 Jan 2007 08:32:39 -0600
+Message-ID: <45991B87.90905@ieee.org>
 References: <4597B34C.1090606@omega71.com> <45987E06.1070101@gmail.com>
-Reply-To: yahoo-groups@omega71.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp106.sbc.mail.re2.yahoo.com ([68.142.229.99]:40187 "HELO
+Received: from smtp106.sbc.mail.re2.yahoo.com ([68.142.229.99]:40493 "HELO
 	smtp106.sbc.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755207AbXAAOf3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jan 2007 09:35:29 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by beta.omega71.com (Postfix) with ESMTP id D3074292F
-	for <linux-ide@vger.kernel.org>; Mon,  1 Jan 2007 08:35:27 -0600 (CST)
-Received: from beta.omega71.com ([127.0.0.1])
- by localhost (beta.omega71.com [127.0.0.1]) (amavisd-new, port 10024)
- with ESMTP id 04444-03 for <linux-ide@vger.kernel.org>;
- Mon,  1 Jan 2007 08:35:27 -0600 (CST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by beta.omega71.com (Postfix) with ESMTP id 41EA224E2
-	for <linux-ide@vger.kernel.org>; Mon,  1 Jan 2007 08:35:27 -0600 (CST)
+	by vger.kernel.org with SMTP id S1755215AbXAAOjW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jan 2007 09:39:22 -0500
 In-Reply-To: <45987E06.1070101@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
 Thanks.  The new ahci_reset_controller proc solved the problem.  
 HOST_CAP is now correct for both NCQ and phy speed capability.
 
 Bryan
+
 
 Tejun Heo wrote:
 > Bryan Boatright wrote:
