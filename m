@@ -1,62 +1,98 @@
-From: Bryan Boatright <boatright@ieee.org>
-Subject: Re: AHCI NCQ on ESB2 (8086:2681) (RESOLVED)
-Date: Mon, 01 Jan 2007 08:32:39 -0600
-Message-ID: <45991B87.90905@ieee.org>
-References: <4597B34C.1090606@omega71.com> <45987E06.1070101@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH] preliminary sata_promise ATAPI support
+Date: Mon, 1 Jan 2007 20:00:08 +0100 (MET)
+Message-ID: <200701011900.l01J08qF005615@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp106.sbc.mail.re2.yahoo.com ([68.142.229.99]:40493 "HELO
-	smtp106.sbc.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755215AbXAAOjW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jan 2007 09:39:22 -0500
-In-Reply-To: <45987E06.1070101@gmail.com>
+Received: from aun.it.uu.se ([130.238.12.36]:37019 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750866AbXAATAz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Jan 2007 14:00:55 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Thanks.  The new ahci_reset_controller proc solved the problem.  
-HOST_CAP is now correct for both NCQ and phy speed capability.
+On Sat, 30 Dec 2006 18:37:18 +0100 (MET), Mikael Pettersson wrote:
+>This patch against 2.6.20-rc2 adds partial ATAPI support to
+>the sata_promise driver. This patch is preliminary and for
+>review only.
+...
+>As to why CD-writing fails with DMA enabled, I suspect that I
+>either need to blacklist specific packet commands from using
+>DMA, or ...
 
-Bryan
+That was it: ->check_atapi_dma() needs to inspect the packet
+command and only enable DMA for bulk data transfers. With this
+change sata_promise successfully both reads and writes CDs.
 
+The rules for which commands should use DMA are taken from
+Promise's drivers. I missed this filter originally because it
+is located in their high-level Linux glue driver while I was
+mostly studying their low-level hardware driver. The filter matches
+the corresponding code in pata_pdc2027x.c, with the exception
+of an additional no-DMA restriction for WRITE_10 with large LBA.
 
-Tejun Heo wrote:
-> Bryan Boatright wrote:
->>
->> I hope this is an appropriate place to ask this question.  Googling for
->> answers turned up nothing.
->>
->> I am using kernel 2.6.19.1 and am trying to get NCQ support working.  My
->> Intel chipset (ESB2, see details below) should support NCQ, but it is
->> not returning the NCQ capabilities bit in the HBA Capabilities
->> register.  Here's the relevant dmesg output:
->
-> Please test the latest Linus git-tree.  ahci used to clear CAP while
-> resetting controller expecting it to set supported feature bits again.
-> Apparently some controllers don't do it resulting in disabled NCQ.
-> This was fixed recently by the following commit.
->
-> Commit: 551c012d7eea3dc5ec063c7ff9c718d39e77634f
-> Author: Tejun Heo <htejun@gmail.com>  2006-12-12 20:17:32
-> Committer: Jeff Garzik <jeff@garzik.org>  2006-12-17 00:13:29
-> Branches: upstream-fixes, upstream, quilt-init
-> Follows: v2.6.19
-> Precedes:
->
->    [PATCH] ahci: do not mangle saved HOST_CAP while resetting controller
->
->    Do not mangle with HOST_CAP while resetting controller.  The code is
->    there for a historical reason.  The mangling breaks controller feature
->    detection and 0 PORTS_IMPL workaround code.
->
->    This problem was spotted by Manoj Kasichainula.
->
->    Signed-off-by: Tejun Heo <htejun@gmail.com>
->    Cc: Manoj Kasichainula <manoj@io.com>
->    Signed-off-by: Jeff Garzik <jeff@garzik.org>
->
-> Happy new year.
->
+The patch below goes on top of the first preliminary patch.
+
+/Mikael
+
+--- linux-2.6.20-rc3/drivers/ata/sata_promise.c.~1~	2007-01-01 17:13:05.000000000 +0100
++++ linux-2.6.20-rc3/drivers/ata/sata_promise.c	2007-01-01 19:14:00.000000000 +0100
+@@ -39,6 +39,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/sched.h>
+ #include <linux/device.h>
++#include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+@@ -430,16 +431,10 @@ static void pdc_qc_prep(struct ata_queue
+ 		qc->tf.protocol = ATA_PROT_DMA;
+ 		pdc_pkt_header(&qc->tf, qc->ap->prd_dma, qc->dev->devno, pp->pkt);
+ 		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
+-		if (qc->dev->cdb_len & ~0x1E) { /* 2/4/6/8/10/12/14/16 are Ok */
+-			printk(KERN_ERR "%s: bad cdb_len %u\n", __FUNCTION__, qc->dev->cdb_len);
+-			BUG();
+-		}
++		/* we can represent cdb lengths 2/4/6/8/10/12/14/16 */
++		BUG_ON(qc->dev->cdb_len & ~0x1E);
+ 		pp->pkt[12] = (((qc->dev->cdb_len >> 1) & 7) << 5) | 0x00 | 0x08;
+ 		memcpy(pp->pkt+13, qc->cdb, qc->dev->cdb_len);
+-#if 0
+-		/* pdc-ultra/cam/cam_ata.c will pad SG length to a multiple
+-		   of 4 here, but libata has already done that for us */
+-#endif
+ 		break;
+ 
+ 	default:
+@@ -788,7 +783,29 @@ static void pdc_exec_command_mmio(struct
+ 
+ static int pdc_check_atapi_dma(struct ata_queued_cmd *qc)
+ {
+-	return 0;	/* ATAPI DMA is supported */
++	u8 *scsicmd = qc->scsicmd->cmnd;
++	int pio = 1; /* atapi dma off by default */
++
++	/* Whitelist commands that may use DMA. */
++	switch (scsicmd[0]) {
++	case WRITE_12:
++	case WRITE_10:
++	case WRITE_6:
++	case READ_12:
++	case READ_10:
++	case READ_6:
++	case 0xad: /* READ_DVD_STRUCTURE */
++	case 0xbe: /* READ_CD */
++		pio = 0;
++	}
++	/* -45150 (FFFF4FA2) to -1 (FFFFFFFF) shall use PIO mode */
++	if (scsicmd[0] == WRITE_10) {
++		unsigned int lba;
++		lba = (scsicmd[2] << 24) | (scsicmd[3] << 16) | (scsicmd[4] << 8) | scsicmd[5];
++		if (lba >= 0xFFFF4FA2)
++			pio = 1;
++	}
++	return pio;
+ }
+ 
+ static void pdc_ata_setup_port(struct ata_ioports *port, unsigned long base)
