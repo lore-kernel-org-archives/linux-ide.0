@@ -1,84 +1,51 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] libata use ATA_12 in HDIO_* ioctls for ATAPI compatibility
-Date: Tue, 2 Jan 2007 17:36:51 -0500
-Message-ID: <200701021736.51465.liml@rtr.ca>
-References: <200701021724.39613.liml@rtr.ca> <200701021730.07356.liml@rtr.ca> <200701021732.35120.liml@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.20-rc3] fix broken retval test in sr_block_ioctl
+Date: Tue, 02 Jan 2007 17:37:37 -0500
+Message-ID: <459ADEB1.7080505@pobox.com>
+References: <200701021724.39613.liml@rtr.ca> <200701021730.07356.liml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3837 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:47373 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965010AbXABWgt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Jan 2007 17:36:49 -0500
-In-Reply-To: <200701021732.35120.liml@rtr.ca>
-Content-Disposition: inline
+	id S965011AbXABWhl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Jan 2007 17:37:41 -0500
+In-Reply-To: <200701021730.07356.liml@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Douglas Gilbert <dougg@torque.net>
 
-Existing ATAPI devices do not support 16-byte commands,
-so issuing ATA_16 against them gets rejected by the upper layers.
+Mark Lord wrote:
+> This patch adds support for passing ATA_12 and ATA_16 commands
+> through to ATAPI devices in libata.  In practice, the upper layers will
+> still currently prevent ATA_16 commands, as no (?) ATAPI drives support
+> them yet.  But it will work if such a drive is ever encountered.
+> 
+> This patch is necessary for using SG_IO from userspace,
+> and an upcoming hdparm release will be updated to use this interface.
+> 
+> Signed-off-by:  Mark Lord <mlord@pobox.com>
+> ---
+> Allow ATA_12 / ATA_16 passthru commands to be issued for ATAPI devices
 
-This patch updates the libata implementations of HDIO_DRIVE_CMD
-and HDIO_DRIVE_TASK to use ATA_12 (rather than ATA_16) so that
-they can now also be used for ATAPI devices.
+Douglas Gilbert noticed this a while ago.
 
-Signed-off-by:  Mark Lord <mlord@pobox.com>
----
---- linux/drivers/ata/libata-scsi.c.1	2007-01-02 15:31:56.000000000 -0500
-+++ linux/drivers/ata/libata-scsi.c	2007-01-02 15:43:20.000000000 -0500
-@@ -199,18 +199,17 @@
- 		data_dir = DMA_NONE;
- 	}
- 
--	scsi_cmd[0] = ATA_16;
--
--	scsi_cmd[4] = args[2];
-+	scsi_cmd[0] = ATA_12;
-+	scsi_cmd[3] = args[2];
- 	if (args[0] == WIN_SMART) { /* hack -- ide driver does this too... */
--		scsi_cmd[6]  = args[3];
--		scsi_cmd[8]  = args[1];
--		scsi_cmd[10] = 0x4f;
--		scsi_cmd[12] = 0xc2;
-+		scsi_cmd[4] = args[3];
-+		scsi_cmd[5] = args[1];
-+		scsi_cmd[6] = 0x4f;
-+		scsi_cmd[7] = 0xc2;
- 	} else {
--		scsi_cmd[6]  = args[1];
-+		scsi_cmd[4] = args[1];
- 	}
--	scsi_cmd[14] = args[0];
-+	scsi_cmd[9] = args[0];
- 
- 	/* Good values for timeout and retries?  Values below
- 	   from scsi_ioctl_send_command() for default case... */
-@@ -283,15 +282,15 @@
- 		return -EFAULT;
- 
- 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
--	scsi_cmd[0]  = ATA_16;
--	scsi_cmd[1]  = (3 << 1); /* Non-data */
-+	scsi_cmd[0] = ATA_12;
-+	scsi_cmd[1] = (3 << 1); /* Non-data */
- 	/* scsi_cmd[2] is already 0 -- no off.line, cc, or data xfer */
--	scsi_cmd[4]  = args[1];
--	scsi_cmd[6]  = args[2];
--	scsi_cmd[8]  = args[3];
--	scsi_cmd[10] = args[4];
--	scsi_cmd[12] = args[5];
--	scsi_cmd[14] = args[0];
-+	scsi_cmd[3] = args[1];
-+	scsi_cmd[4] = args[2];
-+	scsi_cmd[5] = args[3];
-+	scsi_cmd[6] = args[4];
-+	scsi_cmd[7] = args[5];
-+	scsi_cmd[9] = args[0];
- 
- 	/* Good values for timeout and retries?  Values below
- 	   from scsi_ioctl_send_command() for default case... */
+The patch's technical content is fine, but there is an open policy 
+question:  For some devices, there is an opcode overlap (BLANK?  Doug 
+probably remembers the issue better than I).  And from a practical 
+standpoint, to handle any vendor weird-isms (nahhh those never happen in 
+ATAPI), it would be nice to be able to force the current (pre-mlord 
+patch) behavior to ensure that all opcodes are passed to ATAPI.
+
+Absent a better idea, I would simply suggest adding a module parameter 
+that restores the "all opcodes are passed to device, guaranteed" mode.
+
+I'm fine with changing the default behavior to that which is presented 
+by your patch.
+
+	Jeff
+
 
 
