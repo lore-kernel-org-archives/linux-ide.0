@@ -1,57 +1,33 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc3: known regressions with patches available (part 2)
-Date: Tue, 2 Jan 2007 20:30:01 +0100
-Message-ID: <20070102193001.GW20714@stusta.de>
-References: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: [PATCH] atiixp: Old drivers/ide layer driver for the ATIIXP hang fix
+Date: Tue, 2 Jan 2007 21:19:10 +0100
+Message-ID: <58cb370e0701021219l162406cax8116402e55feeac5@mail.gmail.com>
+References: <20070102155752.78f6a01e@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.175]:55414 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754947AbXABUTL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jan 2007 15:19:11 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so4994273uga
+        for <linux-ide@vger.kernel.org>; Tue, 02 Jan 2007 12:19:10 -0800 (PST)
+In-Reply-To: <20070102155752.78f6a01e@localhost.localdomain>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
-Sender: netdev-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Adam J. Richter" <adam@yggdrasil.com>, Paul Moore <paul.moore@hp.com>, Parag Warudkar <paragw@paragw.zapto.org>, sds@tycho.nsa.gov, jmorris@namei.org, netdev@vger.kernel.org, Alessandro Suardi <alessandro.suardi@gmail.com>, Theodore Tso <tytso@mit.edu>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Ben Castricum <mail0612@bencastricum.nl>, Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@atrey.karlin.mff.cuni.cz
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org
 
-This email lists some known regressions in 2.6.20-rc3 compared to 2.6.19
-with patches available
+On 1/2/07, Alan <alan@lxorguk.ukuu.org.uk> wrote:
+> When the old IDE layer calls into methods in the driver during error
+> handling it is essentially random whether ide_lock is already held. This
+> causes a deadlock in the atiixp driver which also uses ide_lock internally
+> for locking.
+>
+> Switch to a private lock instead.
+>
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possibly
-involved with one or more of these issues.
-
-Due to the huge amount of recipients, please trim the Cc when answering.
-
-
-Subject    : selinux networking: sleeping function called from invalid context
-References : http://lkml.org/lkml/2006/12/24/78
-Submitter  : Adam J. Richter <adam@yggdrasil.com>
-Caused-By  : Paul Moore <paul.moore@hp.com>
-Handled-By : Parag Warudkar <paragw@paragw.zapto.org>
-Patch      : http://lkml.org/lkml/2006/12/24/89
-Status     : patch available
-
-
-Subject    : kernel panics on boot (libata-sff)
-References : http://lkml.org/lkml/2006/12/3/99
-             http://lkml.org/lkml/2006/12/14/153
-             http://lkml.org/lkml/2006/12/24/33
-             http://lkml.org/lkml/2007/1/1/84
-Submitter  : Alessandro Suardi <alessandro.suardi@gmail.com>
-             Theodore Tso <tytso@mit.edu>
-Caused-By  : Alan Cox <alan@lxorguk.ukuu.org.uk>
-             commit 368c73d4f689dae0807d0a2aa74c61fd2b9b075f
-Handled-By : Alan Cox <alan@lxorguk.ukuu.org.uk>
-             Jeff Garzik <jeff@garzik.org>
-Patch      : http://lkml.org/lkml/2007/1/2/64
-Status     : patch available
-
-
-Subject    : PCI_MULTITHREAD_PROBE breakage
-References : http://lkml.org/lkml/2006/12/12/21
-Submitter  : Ben Castricum <mail0612@bencastricum.nl>
-Caused-By  : Greg Kroah-Hartman <gregkh@suse.de>
-             commit 009af1ff78bfc30b9a27807dd0207fc32848218a
-Handled-By : Greg Kroah-Hartman <gregkh@suse.de>
-Status     : patch available
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
