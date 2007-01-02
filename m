@@ -1,72 +1,54 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] cdrom: longer timeout for "Read Track Info" command
-Date: Tue, 2 Jan 2007 14:50:53 +0100
-Message-ID: <20070102135052.GA2483@kernel.dk>
-References: <20070102023623.GA3108@sgi.com> <20070102102829.4117b230@localhost.localdomain>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: problem with pata_hpt37x ...
+Date: Tue, 2 Jan 2007 14:58:55 +0000
+Message-ID: <20070102145855.170c03e2@localhost.localdomain>
+References: <20070102070144.GA11270@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:16858 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754844AbXABNu5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Jan 2007 08:50:57 -0500
-Content-Disposition: inline
-In-Reply-To: <20070102102829.4117b230@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52787 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754857AbXABOs4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jan 2007 09:48:56 -0500
+In-Reply-To: <20070102070144.GA11270@MAIL.13thfloor.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Jeremy Higdon <jeremy@sgi.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org
+To: Herbert Poetzl <herbert@13thfloor.at>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel ML <linux-kernel@vger.kernel.org>
 
-On Tue, Jan 02 2007, Alan wrote:
-> On Mon, 1 Jan 2007 18:36:24 -0800
-> Jeremy Higdon <jeremy@sgi.com> wrote:
-> 
-> > I have a DVD combo drive and a CD in which the
-> > "READ TRACK INFORMATION" command (implemented in the
-> > cdrom_get_track_info() function) takes about 7 seconds to run.
-> > The current implementation of cdrom_get_track_info() uses the
-> > default timeout of 5 seconds.  So here's a patch that increases
-> > the timeout from 5 to 15 seconds.
-> > 
-> > The drive in question is a TSSTcorpCD/DVDW SN-S082D, and I have
-> > a Silicon Image 680A adapter, in case that's of interest.
-> > 
-> > signed-off-by: <jeremy@sgi.com>
-> 
-> Please test with a seven second timeout rather than fifteen which is way
-> longer than anyone wants to wait. Seven is the magic value used by
-> another major vendor so ought to be right for all hardware 8)
+On Tue, 2 Jan 2007 08:01:45 +0100
+Herbert Poetzl <herbert@13thfloor.at> wrote:
 
-Yep, I suspect this patch is long overdue. Jeremy, is this enough to fix
-it for you?
+> if you are interested in investigating this, please
+> let me know what kind of data you would like to see
+> and/or what kind of tests would be appreciated.
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 66d028d..3105ddd 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -337,6 +337,12 @@ static const char *mrw_address_space[] = { "DMA", "GAA" };
- /* used in the audio ioctls */
- #define CHECKAUDIO if ((ret=check_for_audio_disc(cdi, cdo))) return ret
+I reviewed the 374 code a bit further to see what might be causing this
+and found the slave channel end of DMA handling was using the wrong port
+I think.
+
+Signed-off-by: Alan Cox <alan@redhat.com>
+
+--- linux.vanilla-2.6.20-rc3/drivers/ata/pata_hpt37x.c	2007-01-01 21:43:27.000000000 +0000
++++ linux-2.6.20-rc3/drivers/ata/pata_hpt37x.c	2007-01-02 14:30:18.122801920 +0000
+@@ -25,7 +25,7 @@
+ #include <linux/libata.h>
  
-+/*
-+ * Another popular OS uses 7 seconds as the hard timeout for default
-+ * commands, so it is a good choice for us as well.
-+ */
-+#define CDROM_DEF_TIMEOUT	(7 * HZ)
-+
- /* Not-exported routines. */
- static int open_for_data(struct cdrom_device_info * cdi);
- static int check_for_audio_disc(struct cdrom_device_info * cdi,
-@@ -1528,7 +1534,7 @@ void init_cdrom_command(struct packet_command *cgc, void *buf, int len,
- 	cgc->buffer = (char *) buf;
- 	cgc->buflen = len;
- 	cgc->data_direction = type;
--	cgc->timeout = 5*HZ;
-+	cgc->timeout = CDROM_DEF_TIMEOUT;
- }
+ #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.5.1"
++#define DRV_VERSION	"0.5.2"
  
- /* DVD handling */
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -749,7 +749,7 @@
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	int mscreg = 0x50 + 2 * ap->port_no;
++	int mscreg = 0x50 + 4 * ap->port_no;
+ 	u8 bwsr_stat, msc_stat;
+ 
+ 	pci_read_config_byte(pdev, 0x6A, &bwsr_stat);
 
--- 
-Jens Axboe
 
