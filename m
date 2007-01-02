@@ -1,40 +1,57 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: implement HDIO_GET_IDENTITY
-Date: Tue, 02 Jan 2007 13:18:32 -0500
-Message-ID: <459AA1F8.7080402@rtr.ca>
-References: <20070102111849.GD10987@htj.dyndns.org> <20070102111940.GE10987@htj.dyndns.org> <20070102112007.GF10987@htj.dyndns.org> <459A9AA8.5060808@rtr.ca> <459A9D81.8040904@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc3: known regressions with patches available (part 2)
+Date: Tue, 2 Jan 2007 20:30:01 +0100
+Message-ID: <20070102193001.GW20714@stusta.de>
+References: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1153 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754870AbXABSSf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Jan 2007 13:18:35 -0500
-In-Reply-To: <459A9D81.8040904@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
+Sender: netdev-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Adam J. Richter" <adam@yggdrasil.com>, Paul Moore <paul.moore@hp.com>, Parag Warudkar <paragw@paragw.zapto.org>, sds@tycho.nsa.gov, jmorris@namei.org, netdev@vger.kernel.org, Alessandro Suardi <alessandro.suardi@gmail.com>, Theodore Tso <tytso@mit.edu>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Ben Castricum <mail0612@bencastricum.nl>, Greg Kroah-Hartman <gregkh@suse.de>, linux-pci@atrey.karlin.mff.cuni.cz
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Mark Lord wrote:
-..
->> hdparm *does* try to issue the PACKET IDENTIFY whenever
->> a regular IDENTIFY fails.  Currently these all go through
->> the HDIO_DRIVE_CMD ioctl().  I don't have a system set up
->> here that has any ATAPI over libata to test with.
->> Could you perhaps try and see where that ioctl() is failing?
-> 
-> Ah.. Okay, so that's the second HDIO_DRIVE_CMD.  I'll test why the
-> second one is failing tomorrow.
-> 
+This email lists some known regressions in 2.6.20-rc3 compared to 2.6.19
+with patches available
 
-Okay, I suspect it's failing because libata-scsi *always*
-forces passthru commands to go via atapi_xlat, even when
-the command itself is not a PACKET command.  Doh!
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possibly
+involved with one or more of these issues.
 
-I'll see if there's a sensible easy fix for it, and maybe post
-a patch here unless you beat me to it.
+Due to the huge amount of recipients, please trim the Cc when answering.
 
-Cheers
+
+Subject    : selinux networking: sleeping function called from invalid context
+References : http://lkml.org/lkml/2006/12/24/78
+Submitter  : Adam J. Richter <adam@yggdrasil.com>
+Caused-By  : Paul Moore <paul.moore@hp.com>
+Handled-By : Parag Warudkar <paragw@paragw.zapto.org>
+Patch      : http://lkml.org/lkml/2006/12/24/89
+Status     : patch available
+
+
+Subject    : kernel panics on boot (libata-sff)
+References : http://lkml.org/lkml/2006/12/3/99
+             http://lkml.org/lkml/2006/12/14/153
+             http://lkml.org/lkml/2006/12/24/33
+             http://lkml.org/lkml/2007/1/1/84
+Submitter  : Alessandro Suardi <alessandro.suardi@gmail.com>
+             Theodore Tso <tytso@mit.edu>
+Caused-By  : Alan Cox <alan@lxorguk.ukuu.org.uk>
+             commit 368c73d4f689dae0807d0a2aa74c61fd2b9b075f
+Handled-By : Alan Cox <alan@lxorguk.ukuu.org.uk>
+             Jeff Garzik <jeff@garzik.org>
+Patch      : http://lkml.org/lkml/2007/1/2/64
+Status     : patch available
+
+
+Subject    : PCI_MULTITHREAD_PROBE breakage
+References : http://lkml.org/lkml/2006/12/12/21
+Submitter  : Ben Castricum <mail0612@bencastricum.nl>
+Caused-By  : Greg Kroah-Hartman <gregkh@suse.de>
+             commit 009af1ff78bfc30b9a27807dd0207fc32848218a
+Handled-By : Greg Kroah-Hartman <gregkh@suse.de>
+Status     : patch available
