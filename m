@@ -1,40 +1,73 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: [PATCH] cdrom: longer timeout for "Read Track Info" command
-Date: Mon, 1 Jan 2007 18:36:24 -0800
-Message-ID: <20070102023623.GA3108@sgi.com>
+From: Herbert Poetzl <herbert@13thfloor.at>
+Subject: problem with pata_hpt37x ...
+Date: Tue, 2 Jan 2007 08:01:45 +0100
+Message-ID: <20070102070144.GA11270@MAIL.13thfloor.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:34306 "EHLO omx2.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755040AbXABCg1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Jan 2007 21:36:27 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932663AbXABHBr@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel ML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org
 
-I have a DVD combo drive and a CD in which the
-"READ TRACK INFORMATION" command (implemented in the
-cdrom_get_track_info() function) takes about 7 seconds to run.
-The current implementation of cdrom_get_track_info() uses the
-default timeout of 5 seconds.  So here's a patch that increases
-the timeout from 5 to 15 seconds.
 
-The drive in question is a TSSTcorpCD/DVDW SN-S082D, and I have
-a Silicon Image 680A adapter, in case that's of interest.
+Hi Jeff! Alan!
 
-signed-off-by: <jeremy@sgi.com>
+today I decided to put a (granted somewhat older)
+RocketRAID 454 card (hpt374 as it seems) into an
+Asus P5B (which already has some controllers using
+libata quite happily), and it seems that the driver
+support is not perfect yet :)
 
-diff -ur linux-2.6.20-rc3_ORIG/drivers/cdrom/cdrom.c linux-2.6.20-rc3/drivers/cdrom/cdrom.c
---- linux-2.6.20-rc3_ORIG/drivers/cdrom/cdrom.c	2006-12-31 16:53:20.000000000 -0800
-+++ linux-2.6.20-rc3/drivers/cdrom/cdrom.c	2007-01-01 18:13:50.135173456 -0800
-@@ -3094,6 +3094,7 @@
- 	cgc.cmd[5] = track & 0xff;
- 	cgc.cmd[8] = 8;
- 	cgc.quiet = 1;
-+	cgc.timeout = 15*HZ;
- 
- 	if ((ret = cdo->generic_packet(cdi, &cgc)))
- 		return ret;
+note: the older hpt366 (ide) driver works quite
+fine with the hpt374 controller, even under heavy
+load (as I figured an hour ago) and I remembered
+that there was some efford to get away from the
+'old' ide drivers ...
+
+here are the details:
+
+[    0.000000] Linux version 2.6.19.1 (gcc version 4.1.1 20060724 (prerelease) (4.1.1-3mdk)) #10 SMP Tue Jan 2 15:13:40 CET 2007
+[    0.000000] Command line: root=/dev/sda1 panic=20 console=ttyS0,115200n8
+
+[  552.115825] irq 23: nobody cared (try booting with the "irqpoll" option)
+[  552.122730] 
+[  552.122731] Call Trace:
+[  552.126795]  [<ffffffff8026403e>] dump_trace+0xaa/0x403
+[  552.132169]  [<ffffffff802643d3>] show_trace+0x3c/0x52
+[  552.137488]  [<ffffffff802643fe>] dump_stack+0x15/0x17
+[  552.142748]  [<ffffffff802a4ddb>] __report_bad_irq+0x38/0x87
+[  552.148589]  [<ffffffff802a4ff3>] note_interrupt+0x1c9/0x20f
+[  552.154383]  [<ffffffff802a5868>] handle_fasteoi_irq+0xa7/0xd0
+[  552.160321]  [<ffffffff80265cc3>] do_IRQ+0x105/0x158
+[  552.165416]  [<ffffffff80258641>] ret_from_intr+0x0/0xa
+[  552.170771]  [<ffffffff80263840>] mwait_idle_with_hints+0x48/0x4a
+[  552.177035]  [<ffffffff80251ce1>] mwait_idle+0x10/0x25
+[  552.182303]  [<ffffffff80244586>] cpu_idle+0x58/0x77
+[  552.187433]  [<ffffffff80263079>] rest_init+0x26/0x28
+[  552.192640]  [<ffffffff80620725>] start_kernel+0x213/0x215
+[  552.198256]  [<ffffffff80620156>] _sinittext+0x156/0x15d
+[  552.203730] 
+[  552.205263] handlers:
+[  552.207611] [<ffffffff803e5469>] (usb_hcd_irq+0x0/0x58)
+[  552.213027] [<ffffffff803e5469>] (usb_hcd_irq+0x0/0x58)
+[  552.218451] [<ffffffff8803ba13>] (ata_interrupt+0x0/0x1a0 [libata])
+[  552.224915] [<ffffffff8803ba13>] (ata_interrupt+0x0/0x1a0 [libata])
+[  552.231387] Disabling IRQ #23
+
+after that, the system is basically dead, as the
+irq is shared with the USB controller, where it
+booted from ...
+
+shufflings cards around (i.e. giving the hpt374 a
+separate, non shared IRQ line) doesn't help there,
+the result is the same once the devices are accessed
+(only IRQ changes from #23 to #21)
+
+if you are interested in investigating this, please
+let me know what kind of data you would like to see
+and/or what kind of tests would be appreciated.
+
+TIA,
+Herbert
