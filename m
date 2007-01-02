@@ -1,94 +1,36 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] Add ATA_12/ATA_16 support for libata ATAPI
-Date: Tue, 2 Jan 2007 17:32:35 -0500
-Message-ID: <200701021732.35120.liml@rtr.ca>
-References: <200701021724.39613.liml@rtr.ca> <200701021730.07356.liml@rtr.ca>
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: Re: A question to Uwe Koziolek (raid on sis180)
+Date: Tue, 02 Jan 2007 23:36:30 +0100
+Message-ID: <459ADE6E.4020303@gmx.net>
+References: <459A1D09.000001.14988@tide.yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3087 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965000AbXABWcd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Jan 2007 17:32:33 -0500
-In-Reply-To: <200701021730.07356.liml@rtr.ca>
-Content-Disposition: inline
+Received: from mail.gmx.net ([213.165.64.20]:53376 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S965010AbXABWgm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Jan 2007 17:36:42 -0500
+In-Reply-To: <459A1D09.000001.14988@tide.yandex.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: rmanzhos@yandex.ru
+Cc: linux-ide@vger.kernel.org
 
-Resending with fixed Subject line:
+>
+> Hello.
+> Could you help me with such a question.
+> A have sis180 and raid0 on two sata disks. In windows all works: simply give it a driver and I have access to the raid like to an ordinary disk (nothing to think about). But when I try linux, I obtain two disks (sdb and sdc, for exaple) and interestingly on one disk I can "see" (I mean dmesg output) 3 partitions (sdb1, sdb2 and sdb3) and on the other  - 2 (sdc1, sdc2) - in windows I partitioned the disk on 3 partitions. I tried the driver from sis.com (sis18x_20060508.zip). As I understood the sata_sis from sis.com is the same or almost the same as in kernel tree (I've tried 2.6.11). Then I looked at dmraid - it supports a lot of fakeraids, but not the sis:( I thought about software raid, but this frights me:)
+> And now the question: is there any posibility to obtain acces to my raid0-disk in linux or would I better find different problem to solve:)
+>   
+Actually I have no information for the SiS software raid. But it is a 
+good idea to support this using dmraid. I can try a support of this 
+controller in dmraid,
+but it takes some time.
 
-On Tuesday 02 January 2007 17:30, Mark Lord wrote:
-> This patch adds support for passing ATA_12 and ATA_16 commands
-> through to ATAPI devices in libata.  In practice, the upper layers will
-> still currently prevent ATA_16 commands, as no (?) ATAPI drives support
-> them yet.  But it will work if such a drive is ever encountered.
-> 
-> This patch is necessary for using SG_IO from userspace,
-> and an upcoming hdparm release will be updated to use this interface.
-
-Signed-off-by:  Mark Lord <mlord@pobox.com>
----
-Allow ATA_12 / ATA_16 passthru commands to be issued for ATAPI devices
+regards,
+Uwe Koziolek
 
 
-diff -u --recursive --new-file --exclude='.*' --exclude='*.[osa]' --exclude='*.ko' --exclude='*.mod.c' --exclude='*.orig' --exclude=System.map --exclude='*.lds' --exclude='*.symvers' old/drivers/ata/libata-scsi.c linux/drivers/ata/libata-scsi.c
---- old/drivers/ata/libata-scsi.c	2007-01-02 15:12:31.000000000 -0500
-+++ linux/drivers/ata/libata-scsi.c	2007-01-02 15:31:56.000000000 -0500
-@@ -2650,6 +2650,12 @@
- 
- static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- {
-+	if (cmd == ATA_12 || cmd == ATA_16)
-+		return ata_scsi_pass_thru;
-+
-+	if (dev->class == ATA_DEV_ATAPI)
-+		return atapi_xlat;
-+
- 	switch (cmd) {
- 	case READ_6:
- 	case READ_10:
-@@ -2669,10 +2675,6 @@
- 	case VERIFY_16:
- 		return ata_scsi_verify_xlat;
- 
--	case ATA_12:
--	case ATA_16:
--		return ata_scsi_pass_thru;
--
- 	case START_STOP:
- 		return ata_scsi_start_stop_xlat;
- 	}
-@@ -2708,6 +2710,7 @@
- 				      void (*done)(struct scsi_cmnd *),
- 				      struct ata_device *dev)
- {
-+	ata_xlat_func_t xlat_func;
- 	int rc = 0;
- 
- 	if (unlikely(!scmd->cmd_len)) {
-@@ -2717,17 +2720,11 @@
- 		return 0;
- 	}
- 
--	if (dev->class == ATA_DEV_ATA) {
--		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
--							      scmd->cmnd[0]);
--
--		if (xlat_func)
--			rc = ata_scsi_translate(dev, scmd, done, xlat_func);
--		else
--			ata_scsi_simulate(dev, scmd, done);
--	} else
--		rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
--
-+	xlat_func = ata_get_xlat_func(dev, scmd->cmnd[0]);
-+	if (xlat_func)
-+		rc = ata_scsi_translate(dev, scmd, done, xlat_func);
-+	else
-+		ata_scsi_simulate(dev, scmd, done);
- 	return rc;
- }
- 
+
+
