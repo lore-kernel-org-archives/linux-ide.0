@@ -1,57 +1,44 @@
-From: Bjorn Wesen <bjorn.wesen@axis.com>
-Subject: 2.6.20-rc3 IRQ race upon resume? => killing SATA IRQ
-Date: Thu, 4 Jan 2007 00:26:54 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0701040006300.15167@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] SCSI, libata: add support for ATA_16	commands	to	libata
+ ATAPI devices
+Date: Wed, 03 Jan 2007 18:57:43 -0500
+Message-ID: <459C42F7.2000000@rtr.ca>
+References: <200701021935.07840.liml@rtr.ca>	 <1167788405.3687.25.camel@mulgrave.il.steeleye.com>	 <459B4243.5080804@rtr.ca>	 <1167838307.2789.12.camel@mulgrave.il.steeleye.com>	 <459C066D.30507@torque.net> <1167860496.2789.70.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bart.se.axis.com ([193.13.178.9]:39843 "EHLO bart.se.axis.com"
+Received: from rtr.ca ([64.26.128.89]:3750 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932198AbXACXtd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Jan 2007 18:49:33 -0500
-Received: from bart.se.axis.com (bart.se.axis.com [127.0.0.1])
-	by bart.se.axis.com (Postfix) with ESMTP id 9C2BD641BB
-	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2007 00:26:54 +0100 (CET)
-Received: from godzilla.se.axis.com (godzilla.se.axis.com [10.84.17.11])
-	by bart.se.axis.com (Postfix) with ESMTP id 8E987641BA
-	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2007 00:26:54 +0100 (CET)
+	id S932194AbXACX5t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jan 2007 18:57:49 -0500
+In-Reply-To: <1167860496.2789.70.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dougg@torque.net, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 
-Hi folks,
+James Bottomley wrote:
+>
+> As I read the code Mark sent me, current libata will only accept ATA_16
+> for ATAPI devices (whether type 5 or not) ... pehaps this needs to be
+> altered?
 
-There is only one thing keeping suspend-to-ram on my Sony Vaio SZ2 laptop 
-from working currently, and that is that most of the times I suspend/resume, 
-the SATA HD becomes blocked. Looking closer it is because an irq occurs 
-during resume, which reaches ata_interrupt, it does not handle it, and Linux 
-responds by blocking it permanently (the dreaded irq X: nobody cared).
+It could be.
 
-The SZ2 has a Core Duo CPU, ICH7 and SATA is handled by the ata_piix driver. 
-No other PCI interrupts are mapped or enabled to the same interrupt.
+Both ATA_12 and ATA_16 are just ways of getting a taskfile sent
+down to the LLD, and ATA_12 is merely a restricted subset of ATA_16
+so it is not really necessary here.
 
-I can't help thinking this looks like a race, because it resumes correctly 
-sometimes and then the HD works perfectly fine. Perhaps the SATA driver 
-hasn't recovered itself at the time the first irq occurs and thus it feels 
-it shouldn't handle it ?
+I think that given the opcode conflict with "BLANK", it may be best for
+the moment to just not bother with ATA_12 for libata ATAPI.  We don't really
+have a need for ATA_12 anyway, as ATA_16 is more flexible.
 
-I can't paste in the dmesg because the HD locks when it happens and thus 
-it's not written to it, but essentially, the "nobody cared" msg comes after 
-the extra CPU core is brought up, then the irq is disabled, then the ata 
-driver is trying to reconfigure the devices and then it locks up.
+And any application code that uses these isn't going to want to have
+to vary its commands between ATA_12 and ATA_16 depending upon the target.
+I think they'll all just go straight for ATA_16 for uniformity and
+to minimize testing drudgery.
 
-I can debug it but I'd need some pointers on where to start. For example, 
-one strategy could be to try forcing an acknowledge of the interrupt somehow 
-in the bottom of ata_interrupt if it feels it can't handle an interrupt 
-(I've only programmed embedded linux before not i386 so I don't know where 
-to ack such an irq - in the PCI bridge itself, or in the ATA device ? :).
+hdparm will certainly use only ATA_16 once it becomes available in SCSI/libata.
 
-Another strategy could be to find the reason why the interrupt is not 
-handled by enabling some debug or something which I haven't really looked 
-into yet...
-
-Any ideas ?
-
-Regards,
-
-Bjorn
+Cheers
