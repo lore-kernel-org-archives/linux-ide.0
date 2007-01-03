@@ -1,87 +1,87 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] SCSI, libata: add support for ATA_16 commands to libata ATAPI devices
-Date: Tue, 2 Jan 2007 19:35:07 -0500
-Message-ID: <200701021935.07840.liml@rtr.ca>
+Subject: [PATCH] libata: add support for ATA_16 commands to ATAPI devices
+Date: Tue, 2 Jan 2007 19:39:10 -0500
+Message-ID: <200701021939.10496.liml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1074 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([64.26.128.89]:1130 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056AbXACAfG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Jan 2007 19:35:06 -0500
+	id S1752415AbXACAjI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jan 2007 19:39:08 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
+To: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>
 
-In an ideal world, we would use the existing ATA_12 opcode
-to issue 12-byte ATA passthrough commands for libata ATAPI drives
-from userspace.
+This patch adds support for passing ATA_16 commands
+through to ATAPI devices in libata. =A0In practice, the upper layers wi=
+ll
+still currently prevent ATA_16 commands, as no (?) ATAPI drives support
+them yet. =A0But it will work if such a drive is ever encountered.
 
-But ATA_12 happens to have the same SCSI opcode value as the older
-CD/RW "BLANK" command, widely used by cdrecord and friends.
+Support for ATA_16 is necessary for using SG_IO from userspace,
+and an upcoming hdparm release will be updated to use this interface.
 
-So, to achieve ATA passthru capability for libata ATAPI,
-we have to instead use the ATA_16 opcode: a 16-byte command.
-
-SCSI normally disallows issuing 16-byte commands to 12-byte devices,
-so special support has to be added for this.
-
-Introduce an "allow_ata_16" boolean to the scsi_host struct.
-This provides a means for libata to signal that 16-byte ATA_16
-commands should be permitted even for 12-byte ATAPI devices.
+This version is very similar to the earlier first submission,
+except that ATA_12 is no longer passed through to ATAPI
+because of the conflict it has with the SCSI BLANK opcode.
 
 Signed-off-by:  Mark Lord <mlord@pobox.com>
 
---- old/include/scsi/scsi_host.h	2007-01-02 19:06:45.000000000 -0500
-+++ new/include/scsi/scsi_host.h	2007-01-02 19:09:06.000000000 -0500
-@@ -608,6 +608,13 @@
- 	unsigned async_scan:1;
- 
- 	/*
-+	 * True for libata, to allow issuing ATA_16 16-byte CDBs
-+	 * to (otherwise) 12-byte ATAPI drives.  ATAPI cannot use
-+	 * the ATA_12 opcode, because it means "BLANK" to CDRW drives.
-+	 */
-+	unsigned allow_ata_16:1;
+--- old/drivers/ata/libata-scsi.c	2007-01-02 19:20:23.000000000 -0500
++++ new/drivers/ata/libata-scsi.c	2007-01-02 19:20:49.000000000 -0500
+@@ -2650,6 +2650,12 @@
+=20
+ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev=
+, u8 cmd)
+ {
++	if (cmd =3D=3D ATA_16)
++		return ata_scsi_pass_thru;
 +
-+	/*
- 	 * Optional work queue to be utilized by the transport
- 	 */
- 	char work_q_name[KOBJ_NAME_LEN];
---- old/drivers/scsi/scsi.c	2007-01-02 19:06:45.000000000 -0500
-+++ new/drivers/scsi/scsi.c	2007-01-02 19:09:06.000000000 -0500
-@@ -567,12 +567,17 @@
- 	 * length exceeds what the host adapter can handle.
- 	 */
- 	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
--		SCSI_LOG_MLQUEUE(3,
-+		/* permit ATA_16 passthru to 12-byte ATAPI devices */
-+		if (cmd->cmnd[0]  != ATA_16
-+		 || CDB_SIZE(cmd) != 16
-+		 || !cmd->device->host->allow_ata_16) {
-+			SCSI_LOG_MLQUEUE(3,
- 				printk("queuecommand : command too long.\n"));
--		cmd->result = (DID_ABORT << 16);
-+			cmd->result = (DID_ABORT << 16);
- 
--		scsi_done(cmd);
--		goto out;
-+			scsi_done(cmd);
-+			goto out;
-+		}
++	if (dev->class =3D=3D ATA_DEV_ATAPI)
++		return atapi_xlat;
++
+ 	switch (cmd) {
+ 	case READ_6:
+ 	case READ_10:
+@@ -2670,7 +2676,6 @@
+ 		return ata_scsi_verify_xlat;
+=20
+ 	case ATA_12:
+-	case ATA_16:
+ 		return ata_scsi_pass_thru;
+=20
+ 	case START_STOP:
+@@ -2708,6 +2713,7 @@
+ 				      void (*done)(struct scsi_cmnd *),
+ 				      struct ata_device *dev)
+ {
++	ata_xlat_func_t xlat_func;
+ 	int rc =3D 0;
+=20
+ 	if (unlikely(!scmd->cmd_len)) {
+@@ -2717,17 +2723,11 @@
+ 		return 0;
  	}
- 
- 	spin_lock_irqsave(host->host_lock, flags);
---- old/drivers/ata/libata-core.c	2007-01-02 19:06:44.000000000 -0500
-+++ new/drivers/ata/libata-core.c	2007-01-02 19:09:06.000000000 -0500
-@@ -5686,6 +5686,7 @@
- 	shost->max_lun = 1;
- 	shost->max_channel = 1;
- 	shost->max_cmd_len = 12;
-+	shost->allow_ata_16 = 1;
+=20
+-	if (dev->class =3D=3D ATA_DEV_ATA) {
+-		ata_xlat_func_t xlat_func =3D ata_get_xlat_func(dev,
+-							      scmd->cmnd[0]);
+-
+-		if (xlat_func)
+-			rc =3D ata_scsi_translate(dev, scmd, done, xlat_func);
+-		else
+-			ata_scsi_simulate(dev, scmd, done);
+-	} else
+-		rc =3D ata_scsi_translate(dev, scmd, done, atapi_xlat);
+-
++	xlat_func =3D ata_get_xlat_func(dev, scmd->cmnd[0]);
++	if (xlat_func)
++		rc =3D ata_scsi_translate(dev, scmd, done, xlat_func);
++	else
++		ata_scsi_simulate(dev, scmd, done);
+ 	return rc;
  }
- 
- /**
+=20
