@@ -1,49 +1,69 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: add support for ATA_16 commands to ATAPI devices
-Date: Wed, 03 Jan 2007 00:47:54 -0500
-Message-ID: <459B438A.8070601@rtr.ca>
-References: <200701021939.10496.liml@rtr.ca> <459AFDC2.6060900@garzik.org>
+Subject: [PATCH] libata: add atapi_passthru=1 parameter
+Date: Wed, 3 Jan 2007 01:01:09 -0500
+Message-ID: <200701030101.09838.liml@rtr.ca>
+References: <200701021939.10496.liml@rtr.ca> <459AFDC2.6060900@garzik.org> <459B438A.8070601@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1378 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([64.26.128.89]:4920 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753783AbXACFsA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Jan 2007 00:48:00 -0500
-In-Reply-To: <459AFDC2.6060900@garzik.org>
+	id S1754074AbXACGBN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jan 2007 01:01:13 -0500
+In-Reply-To: <459B438A.8070601@rtr.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> This patch adds support for passing ATA_16 commands
->> through to ATAPI devices in libata.  In practice, the upper layers will
->> still currently prevent ATA_16 commands, as no (?) ATAPI drives support
->> them yet.  But it will work if such a drive is ever encountered.
->>
->> Support for ATA_16 is necessary for using SG_IO from userspace,
->> and an upcoming hdparm release will be updated to use this interface.
->>
->> This version is very similar to the earlier first submission,
->> except that ATA_12 is no longer passed through to ATAPI
->> because of the conflict it has with the SCSI BLANK opcode.
-..
-> As I said, provide some avenue for the user to choose.
+On Wednesday 03 January 2007 00:47, Mark Lord wrote:
+> Jeff Garzik wrote:
+> > As I said, provide some avenue for the user to choose.
 
-The user does NOT want to choose here.  They just want it to work,
-without needing to alter some mysterious boot flag from app to app.  ;)
+This patch isn't really needed, but it might provide an "out"
+just in case somebody has some really non-compliant hardware
+out there someday.
 
-The only conflict was with ATA_12, and that is no longer a problem here,
-so no option is necessary for it.
+Add a boot/module parameter for libata to force the ATA_16
+SCSI opcode to not be interpreted as a standards-compliant
+ATA passthrough mechanism when used on an ATAPI device
+ -- instead, it gets passed directly to the ATAPI device.
 
-ATA_16 is a heretofore unused opcode, now standardized for the future.
-It falls completely outside the "vendor specific" opcode blocks for SCSI
-(there's a standard formula for those, and ATA_16 doesn't fit it).
-
-We can add a useless boot/module flag if you really want one, though.
-But it's really just bloat in this case.
-
-Cheers
+Signed-off-by:  Mark Lord <mlord@pobox.com>
+--- old/drivers/ata/libata.h	2007-01-02 19:06:56.000000000 -0500
++++ linux/drivers/ata/libata.h	2007-01-03 00:55:01.000000000 -0500
+@@ -46,6 +46,7 @@
+ 
+ extern struct workqueue_struct *ata_aux_wq;
+ extern int atapi_enabled;
++extern int atapi_passthru;
+ extern int atapi_dmadir;
+ extern int libata_fua;
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
+--- old/drivers/ata/libata-core.c	2007-01-02 19:09:06.000000000 -0500
++++ linux/drivers/ata/libata-core.c	2007-01-03 00:52:51.000000000 -0500
+@@ -78,6 +78,10 @@
+ module_param(atapi_enabled, int, 0444);
+ MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+ 
++int atapi_passthru = 0;
++module_param(atapi_passthru, int, 0444);
++MODULE_PARM_DESC(atapi_passthru, "Enable passthru of SCSI opcode 0x85 to ATAPI devices");
++
+ int atapi_dmadir = 0;
+ module_param(atapi_dmadir, int, 0444);
+ MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
+--- old/drivers/ata/libata-scsi.c	2007-01-02 19:20:49.000000000 -0500
++++ linux/drivers/ata/libata-scsi.c	2007-01-03 00:55:08.000000000 -0500
+@@ -2650,7 +2650,7 @@
+ 
+ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+ {
+-	if (cmd == ATA_16)
++	if (cmd == ATA_16 && !atapi_passthru)
+ 		return ata_scsi_pass_thru;
+ 
+ 	if (dev->class == ATA_DEV_ATAPI)
