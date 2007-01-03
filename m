@@ -1,38 +1,87 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata use ATA_12 in HDIO_* ioctls for ATAPI compatibility
-Date: Tue, 02 Jan 2007 19:23:44 -0500
-Message-ID: <459AF790.1030401@rtr.ca>
-References: <200701021724.39613.liml@rtr.ca> <200701021730.07356.liml@rtr.ca> <200701021732.35120.liml@rtr.ca> <200701021736.51465.liml@rtr.ca>
+Subject: [PATCH] SCSI, libata: add support for ATA_16 commands to libata ATAPI devices
+Date: Tue, 2 Jan 2007 19:35:07 -0500
+Message-ID: <200701021935.07840.liml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1325 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([64.26.128.89]:1074 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751583AbXACAXm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Jan 2007 19:23:42 -0500
-In-Reply-To: <200701021736.51465.liml@rtr.ca>
+	id S1751056AbXACAfG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Jan 2007 19:35:06 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 
-Mark Lord wrote:
-> Existing ATAPI devices do not support 16-byte commands,
-> so issuing ATA_16 against them gets rejected by the upper layers.
-> 
-> This patch updates the libata implementations of HDIO_DRIVE_CMD
-> and HDIO_DRIVE_TASK to use ATA_12 (rather than ATA_16) so that
-> they can now also be used for ATAPI devices.
-> 
-> Signed-off-by:  Mark Lord <mlord@pobox.com>
-> ---
-> --- linux/drivers/ata/libata-scsi.c.1	2007-01-02 15:31:56.000000000 -0500
-> +++ linux/drivers/ata/libata-scsi.c	2007-01-02 15:43:20.000000000 -0500
-..
+In an ideal world, we would use the existing ATA_12 opcode
+to issue 12-byte ATA passthrough commands for libata ATAPI drives
+from userspace.
 
-NUKE that one.   Due to the conflict between ATA_12 and "BLANK",
-we have to leave it all as ATA_16.
+But ATA_12 happens to have the same SCSI opcode value as the older
+CD/RW "BLANK" command, widely used by cdrecord and friends.
 
-I'll post a new ATAPI/ATA_16 patch shortly.
+So, to achieve ATA passthru capability for libata ATAPI,
+we have to instead use the ATA_16 opcode: a 16-byte command.
 
-Mark
+SCSI normally disallows issuing 16-byte commands to 12-byte devices,
+so special support has to be added for this.
+
+Introduce an "allow_ata_16" boolean to the scsi_host struct.
+This provides a means for libata to signal that 16-byte ATA_16
+commands should be permitted even for 12-byte ATAPI devices.
+
+Signed-off-by:  Mark Lord <mlord@pobox.com>
+
+--- old/include/scsi/scsi_host.h	2007-01-02 19:06:45.000000000 -0500
++++ new/include/scsi/scsi_host.h	2007-01-02 19:09:06.000000000 -0500
+@@ -608,6 +608,13 @@
+ 	unsigned async_scan:1;
+ 
+ 	/*
++	 * True for libata, to allow issuing ATA_16 16-byte CDBs
++	 * to (otherwise) 12-byte ATAPI drives.  ATAPI cannot use
++	 * the ATA_12 opcode, because it means "BLANK" to CDRW drives.
++	 */
++	unsigned allow_ata_16:1;
++
++	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
+ 	char work_q_name[KOBJ_NAME_LEN];
+--- old/drivers/scsi/scsi.c	2007-01-02 19:06:45.000000000 -0500
++++ new/drivers/scsi/scsi.c	2007-01-02 19:09:06.000000000 -0500
+@@ -567,12 +567,17 @@
+ 	 * length exceeds what the host adapter can handle.
+ 	 */
+ 	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
+-		SCSI_LOG_MLQUEUE(3,
++		/* permit ATA_16 passthru to 12-byte ATAPI devices */
++		if (cmd->cmnd[0]  != ATA_16
++		 || CDB_SIZE(cmd) != 16
++		 || !cmd->device->host->allow_ata_16) {
++			SCSI_LOG_MLQUEUE(3,
+ 				printk("queuecommand : command too long.\n"));
+-		cmd->result = (DID_ABORT << 16);
++			cmd->result = (DID_ABORT << 16);
+ 
+-		scsi_done(cmd);
+-		goto out;
++			scsi_done(cmd);
++			goto out;
++		}
+ 	}
+ 
+ 	spin_lock_irqsave(host->host_lock, flags);
+--- old/drivers/ata/libata-core.c	2007-01-02 19:06:44.000000000 -0500
++++ new/drivers/ata/libata-core.c	2007-01-02 19:09:06.000000000 -0500
+@@ -5686,6 +5686,7 @@
+ 	shost->max_lun = 1;
+ 	shost->max_channel = 1;
+ 	shost->max_cmd_len = 12;
++	shost->allow_ata_16 = 1;
+ }
+ 
+ /**
