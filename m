@@ -1,126 +1,191 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/2] sata_inic162x: driver for initio 162x SATA controllers,
- take 2
-Date: Wed, 03 Jan 2007 17:18:02 +0900
-Message-ID: <459B66BA.2010405@gmail.com>
-References: <20061217014827.GK5400@htj.dyndns.org> <20061217015008.GL5400@htj.dyndns.org> <20061220062546.GA4823@htj.dyndns.org> <45899560.8090401@pobox.com>
+Subject: [PATCH 1/2] libata: kill qc->nsect and cursect
+Date: Wed, 3 Jan 2007 17:30:39 +0900
+Message-ID: <20070103083039.GG10987@htj.dyndns.org>
+References: <20061217014827.GK5400@htj.dyndns.org> <20061217015008.GL5400@htj.dyndns.org> <20061220062546.GA4823@htj.dyndns.org> <45899560.8090401@pobox.com> <459B66BA.2010405@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:18695 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755011AbXACISQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jan 2007 03:18:16 -0500
-Received: by an-out-0708.google.com with SMTP id b33so78683ana
-        for <linux-ide@vger.kernel.org>; Wed, 03 Jan 2007 00:18:15 -0800 (PST)
-In-Reply-To: <45899560.8090401@pobox.com>
+Received: from [221.139.199.108] ([221.139.199.108]:49899 "EHLO htj.dyndns.org"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1755032AbXACIas (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jan 2007 03:30:48 -0500
+Content-Disposition: inline
+In-Reply-To: <459B66BA.2010405@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, bob@evoria.net, nabble@theanthonys.net, alan@lxorguk.ukuu.org.uk, matthias@urlichs.de, romieu@fr.zoreil.com, carlosmarcelomartinez@gmail.com
 
-Jeff Garzik wrote:
->> + * - ATA disks work.
->> + * - Hotplug works.
->> + * - ATAPI read works but burning doesn't.  This thing is really
->> + *   peculiar about ATAPI and I couldn't figure out how ATAPI PIO and
->> + *   ATAPI DMA WRITE should be programmed.  If you've got a clue, be
->> + *   my guest.
->> + * - Both STR and STD work.
-> 
-> Do everyday users get a sane error, or something bad like a lockup, when
-> trying to ATAPI write?
+libata used two separate sets of variables to record request size and
+current offset for ATA and ATAPI.  This is confusing and fragile.
+This patch replaces qc->nsect/cursect with qc->nbytes/curbytes and
+kills them.  Also, ata_pio_sector() is updated to use bytes for
+qc->cursg_ofs instead of sectors.  The field used to be used in bytes
+for ATAPI and in sectors for ATA.
 
-It will simply fail.  No lock up.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c       |   15 ++++++++-------
+ drivers/ata/libata-eh.c         |    7 +------
+ drivers/ata/libata-scsi.c       |    4 ++--
+ drivers/ata/pata_pdc202xx_old.c |    5 +----
+ drivers/ata/sata_qstor.c        |    2 +-
+ include/linux/libata.h          |    6 +-----
+ 6 files changed, 14 insertions(+), 25 deletions(-)
 
->> +struct inic_port_priv {
->> +    u8 dfl_prdctl, cached_prdctl;
-> 
->> +    u8 cached_pirq_mask;
-> 
-> apply standard struct style:
-> 
-> 1) one struct member per line
-> 2) indent between type and member name
-
-Okay.
-
->> +static void set_pirq_mask(struct ata_port *ap, u8 mask)
->> +{
->> +    struct inic_port_priv *pp = ap->private_data;
->> +
->> +    if (pp->cached_pirq_mask != mask)
->> +        __set_pirq_mask(ap, mask);
->> +}
-> 
-> 
-> You should either flush here, or in the one case you need it, ->thaw
-
-Still dazed and scared about those flushes.  Will add it to ->freeze and
-->thaw.
-
->> +static u32 inic_scr_read(struct ata_port *ap, unsigned sc_reg)
->> +{
->> +    void __iomem *scr_addr = (void __iomem *)ap->ioaddr.scr_addr;
->> +    if (sc_reg < ARRAY_SIZE(scr_map)) {
->> +        void __iomem *addr;
->> +        u32 val;
->> +
->> +        addr = scr_addr + scr_map[sc_reg] * 4;
->> +        val = readl(scr_addr + scr_map[sc_reg] * 4);
->> +
->> +        /* this controller has stuck DIAG.N, ignore it */
->> +        if (sc_reg == SCR_ERROR)
->> +            val &= ~SERR_PHYRDY_CHG;
->> +        return val;
->> +    }
->> +    return 0xffffffffU;
->> +}
-> 
-> style:  the main body of code should not be indented.
-> 
-> more appropriate:
-> 
->     if (unlikely(sc_reg >= ARRAY_SIZE(scr_map)))
->         return 0xffffffffU;
->     ...
-> 
-> Or perhaps audit the code and ensure that the core never calls with an
-> SCR index greater than 2 (SCR_CONTROL), and then add
-> 
->     BUG_ON(sc_ref > SCR_CONTROL);
-
-I'll take the first option for the time being.
-
->> +static void inic_error_handler(struct ata_port *ap)
->> +{
->> +    void __iomem *port_base = get_port_base(ap);
->> +    struct inic_port_priv *pp = ap->private_data;
->> +    unsigned long flags;
->> +
->> +    /* reset PIO HSM and stop DMA engine */
->> +    reset_port(port_base);
-> 
-> This function name is a bit too generic, and more difficult to narrow
-> down to the single driver when viewed in an oops stack trace
-
-Will add inic_ prefixes.
-
->> +static void inic_dev_config(struct ata_port *ap, struct ata_device *dev)
->> +{
->> +    /* inic can only handle upto LBA28 max sectors */
->> +    if (dev->max_sectors > ATA_MAX_SECTORS)
->> +        dev->max_sectors = ATA_MAX_SECTORS;
->> +}
-> 
-> why is this needed?  scsi host template should take care of this, right?
-
-No, not really.  This is the only and correct place to configure max
-sectors.  We do 'blk_queue_max_sectors(sdev->request_queue,
-dev->max_sectors)' unconditionally during slave_config().
-
-Thanks.
-
--- 
-tejun
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -1249,7 +1249,7 @@ unsigned ata_exec_internal_sg(struct ata
+ 			buflen += sg[i].length;
+ 
+ 		ata_sg_init(qc, sg, n_elem);
+-		qc->nsect = buflen / ATA_SECT_SIZE;
++		qc->nbytes = buflen;
+ 	}
+ 
+ 	qc->private_data = &wait;
+@@ -4031,11 +4031,11 @@ static void ata_pio_sector(struct ata_qu
+ 	unsigned int offset;
+ 	unsigned char *buf;
+ 
+-	if (qc->cursect == (qc->nsect - 1))
++	if (qc->curbytes == qc->nbytes - ATA_SECT_SIZE)
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 
+ 	page = sg[qc->cursg].page;
+-	offset = sg[qc->cursg].offset + qc->cursg_ofs * ATA_SECT_SIZE;
++	offset = sg[qc->cursg].offset + qc->cursg_ofs;
+ 
+ 	/* get the current page and offset */
+ 	page = nth_page(page, (offset >> PAGE_SHIFT));
+@@ -4060,10 +4060,10 @@ static void ata_pio_sector(struct ata_qu
+ 		ap->ops->data_xfer(qc->dev, buf + offset, ATA_SECT_SIZE, do_write);
+ 	}
+ 
+-	qc->cursect++;
+-	qc->cursg_ofs++;
++	qc->curbytes += ATA_SECT_SIZE;
++	qc->cursg_ofs += ATA_SECT_SIZE;
+ 
+-	if ((qc->cursg_ofs * ATA_SECT_SIZE) == (&sg[qc->cursg])->length) {
++	if (qc->cursg_ofs == (&sg[qc->cursg])->length) {
+ 		qc->cursg++;
+ 		qc->cursg_ofs = 0;
+ 	}
+@@ -4088,7 +4088,8 @@ static void ata_pio_sectors(struct ata_q
+ 
+ 		WARN_ON(qc->dev->multi_count == 0);
+ 
+-		nsect = min(qc->nsect - qc->cursect, qc->dev->multi_count);
++		nsect = min((qc->nbytes - qc->curbytes) / ATA_SECT_SIZE,
++			    qc->dev->multi_count);
+ 		while (nsect--)
+ 			ata_pio_sector(qc);
+ 	} else
+Index: work/drivers/ata/libata-scsi.c
+===================================================================
+--- work.orig/drivers/ata/libata-scsi.c
++++ work/drivers/ata/libata-scsi.c
+@@ -1323,7 +1323,7 @@ static unsigned int ata_scsi_rw_xlat(str
+ 		goto nothing_to_do;
+ 
+ 	qc->flags |= ATA_QCFLAG_IO;
+-	qc->nsect = n_block;
++	qc->nbytes = n_block * ATA_SECT_SIZE;
+ 
+ 	rc = ata_build_rw_tf(&qc->tf, qc->dev, block, n_block, tf_flags,
+ 			     qc->tag);
+@@ -2626,7 +2626,7 @@ ata_scsi_pass_thru(struct ata_queued_cmd
+ 	 * TODO: find out if we need to do more here to
+ 	 *       cover scatter/gather case.
+ 	 */
+-	qc->nsect = scmd->request_bufflen / ATA_SECT_SIZE;
++	qc->nbytes = scmd->request_bufflen;
+ 
+ 	/* request result TF */
+ 	qc->flags |= ATA_QCFLAG_RESULT_TF;
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -430,9 +430,6 @@ struct ata_queued_cmd {
+ 
+ 	unsigned int		pad_len;
+ 
+-	unsigned int		nsect;
+-	unsigned int		cursect;
+-
+ 	unsigned int		nbytes;
+ 	unsigned int		curbytes;
+ 
+@@ -1145,8 +1142,7 @@ static inline void ata_qc_reinit(struct 
+ {
+ 	qc->__sg = NULL;
+ 	qc->flags = 0;
+-	qc->cursect = qc->cursg = qc->cursg_ofs = 0;
+-	qc->nsect = 0;
++	qc->cursg = qc->cursg_ofs = 0;
+ 	qc->nbytes = qc->curbytes = 0;
+ 	qc->err_mask = 0;
+ 
+Index: work/drivers/ata/pata_pdc202xx_old.c
+===================================================================
+--- work.orig/drivers/ata/pata_pdc202xx_old.c
++++ work/drivers/ata/pata_pdc202xx_old.c
+@@ -189,10 +189,7 @@ static void pdc2026x_bmdma_start(struct 
+ 	/* Cases the state machine will not complete correctly without help */
+ 	if ((tf->flags & ATA_TFLAG_LBA48) ||  tf->protocol == ATA_PROT_ATAPI_DMA)
+ 	{
+-		if (tf->flags & ATA_TFLAG_LBA48)
+-			len = qc->nsect * 512;
+-		else
+-			len = qc->nbytes;
++		len = qc->nbytes;
+ 
+ 		if (tf->flags & ATA_TFLAG_WRITE)
+ 			len |= 0x06000000;
+Index: work/drivers/ata/sata_qstor.c
+===================================================================
+--- work.orig/drivers/ata/sata_qstor.c
++++ work/drivers/ata/sata_qstor.c
+@@ -325,7 +325,7 @@ static void qs_qc_prep(struct ata_queued
+ 	/* host control block (HCB) */
+ 	buf[ 0] = QS_HCB_HDR;
+ 	buf[ 1] = hflags;
+-	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nsect * ATA_SECT_SIZE);
++	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nbytes);
+ 	*(__le32 *)(&buf[ 8]) = cpu_to_le32(nelem);
+ 	addr = ((u64)pp->pkt_dma) + QS_CPB_BYTES;
+ 	*(__le64 *)(&buf[16]) = cpu_to_le64(addr);
+Index: work/drivers/ata/libata-eh.c
+===================================================================
+--- work.orig/drivers/ata/libata-eh.c
++++ work/drivers/ata/libata-eh.c
+@@ -1443,15 +1443,10 @@ static void ata_eh_report(struct ata_por
+ 		};
+ 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
+ 		struct ata_taskfile *cmd = &qc->tf, *res = &qc->result_tf;
+-		unsigned int nbytes;
+ 
+ 		if (!(qc->flags & ATA_QCFLAG_FAILED) || !qc->err_mask)
+ 			continue;
+ 
+-		nbytes = qc->nbytes;
+-		if (!nbytes)
+-			nbytes = qc->nsect << 9;
+-
+ 		ata_dev_printk(qc->dev, KERN_ERR,
+ 			"cmd %02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x "
+ 			"tag %d cdb 0x%x data %u %s\n         "
+@@ -1461,7 +1456,7 @@ static void ata_eh_report(struct ata_por
+ 			cmd->lbal, cmd->lbam, cmd->lbah,
+ 			cmd->hob_feature, cmd->hob_nsect,
+ 			cmd->hob_lbal, cmd->hob_lbam, cmd->hob_lbah,
+-			cmd->device, qc->tag, qc->cdb[0], nbytes,
++			cmd->device, qc->tag, qc->cdb[0], qc->nbytes,
+ 			dma_str[qc->dma_dir],
+ 			res->command, res->feature, res->nsect,
+ 			res->lbal, res->lbam, res->lbah,
