@@ -1,62 +1,45 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH] cdrom: longer timeout for "Read Track Info" command
-Date: Tue, 2 Jan 2007 16:59:42 -0800
-Message-ID: <20070103005942.GB25765@sgi.com>
-References: <20070102023623.GA3108@sgi.com> <20070102102829.4117b230@localhost.localdomain> <20070102135052.GA2483@kernel.dk>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: add support for ATA_16 commands to ATAPI devices
+Date: Tue, 02 Jan 2007 20:06:57 -0500
+Message-ID: <459B01B1.7030608@garzik.org>
+References: <200701021939.10496.liml@rtr.ca>	<459AFDC2.6060900@garzik.org> <20070103010724.19b17522@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:54769 "EHLO omx2.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752532AbXACA7p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Jan 2007 19:59:45 -0500
-Content-Disposition: inline
-In-Reply-To: <20070102135052.GA2483@kernel.dk>
+Received: from srv5.dvmed.net ([207.36.208.214]:48372 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752731AbXACBHA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Jan 2007 20:07:00 -0500
+In-Reply-To: <20070103010724.19b17522@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-On Tue, Jan 02, 2007 at 02:50:53PM +0100, Jens Axboe wrote:
-> Yep, I suspect this patch is long overdue. Jeremy, is this enough to fix
-> it for you?
+Alan wrote:
+>> I do not wish to completely eliminate the current behavior, which passes 
+>> through all opcodes to the ATAPI device.  You cannot guarantee that 
+>> ATA_16 is never used for a vendor-reserved opcode, for example.
+> 
+> For 16 byte commands via SG_IO you know the command is 16 bytes long as
+> the command length is passed in hdr->cmd_len which becomes rq->cmd_len.
+> Is that not sufficient to avoid this ATA_16 test if you pass it on to the
+> required functions ?
 
-Yes, the 7 second timeout is fine.  It actually takes about 6.7 seconds.
-I guess if "another popular OS" has a 7 second timeout that we won't find
-multimedia devices out there that take longer than that.  :-)
+Well, its a question of whether you are executing the supplied cdb as an 
+ATA command or a SCSI command.  If executing as an ATA command, libata 
+needs to intercept it (as Mark's patch does), because few if any ATAPI 
+devices support the ATA_16 command in the firmware.
 
-My 15 seconds assumed that the observed case wasn't the worst case, but
-it probably is.
+The current behavior treats everything as SCSI commands, passed to the 
+firmware (if a bit massaged, a la INQUIRY), which means there is no way 
+for userspace to directly address the underlying ATA bus outside of 
+libata-scsi.
 
-This patch looks good.
+Or am I misunderstanding things completely?  :)
 
-Thanks
+	Jeff
 
-jeremy
 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index 66d028d..3105ddd 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -337,6 +337,12 @@ static const char *mrw_address_space[] = { "DMA", "GAA" };
->  /* used in the audio ioctls */
->  #define CHECKAUDIO if ((ret=check_for_audio_disc(cdi, cdo))) return ret
->  
-> +/*
-> + * Another popular OS uses 7 seconds as the hard timeout for default
-> + * commands, so it is a good choice for us as well.
-> + */
-> +#define CDROM_DEF_TIMEOUT	(7 * HZ)
-> +
->  /* Not-exported routines. */
->  static int open_for_data(struct cdrom_device_info * cdi);
->  static int check_for_audio_disc(struct cdrom_device_info * cdi,
-> @@ -1528,7 +1534,7 @@ void init_cdrom_command(struct packet_command *cgc, void *buf, int len,
->  	cgc->buffer = (char *) buf;
->  	cgc->buflen = len;
->  	cgc->data_direction = type;
-> -	cgc->timeout = 5*HZ;
-> +	cgc->timeout = CDROM_DEF_TIMEOUT;
->  }
->  
->  /* DVD handling */
+
