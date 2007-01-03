@@ -1,128 +1,59 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive
- 0x0) r0xj0
-Date: Wed, 03 Jan 2007 11:25:16 +0900
-Message-ID: <459B140C.1060401@gmail.com>
-References: <f4527be0612271812p7282de31j98462aebde16e5a1@mail.gmail.com> <45933A53.1090702@gmail.com> <loom.20070103T020347-255@post.gmane.org>
+From: Matthew Stapleton <matthew4196@gmail.com>
+Subject: Re: ICH7m problem using libata
+Date: Wed, 3 Jan 2007 13:07:21 +1000
+Message-ID: <200701031307.23024.matthew4196@gmail.com>
+References: <1165253799.16504.37.camel@laundromat.jangutter.com> <45888144.9070608@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:51956 "EHLO
+Received: from wx-out-0506.google.com ([66.249.82.238]:3791 "EHLO
 	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753681AbXACCZY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jan 2007 21:25:24 -0500
-Received: by wx-out-0506.google.com with SMTP id h27so6271948wxd
-        for <linux-ide@vger.kernel.org>; Tue, 02 Jan 2007 18:25:23 -0800 (PST)
-In-Reply-To: <loom.20070103T020347-255@post.gmane.org>
+	with ESMTP id S1754070AbXACDIS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jan 2007 22:08:18 -0500
+Received: by wx-out-0506.google.com with SMTP id h27so6282338wxd
+        for <linux-ide@vger.kernel.org>; Tue, 02 Jan 2007 19:08:18 -0800 (PST)
+In-Reply-To: <45888144.9070608@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bbee <bumble.bee@xs4all.nl>
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-[cc'ing linux-ide]
-
-bbee wrote:
-> Tejun Heo <htejun <at> gmail.com> writes:
->> Andrew Lyon wrote:
->>> My system is gigabyte ds3 motherboard with onboard SATA JMicron
->>> 20360/20363 AHCI Controller (rev 02), drive connected is WDC
->>> WD740ADFD-00 20.0, I am running 2.6.18.6 32 bit, under heavy i/o I get
->>> the following messaegs:
->>>
->>> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
->>> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
->>>
->>> Is this condition dangerous?
->> Not usually.  Might indicate something is going wrong in some really
->> rare cases.  I think vendors are getting NCQ right these days.  Maybe
->> it's time to remove that printk.
+Tejun Heo wrote:
+> Please apply the attached patch over 2.6.19 and report what the kernel says.
 > 
-> Hi Tejun, it's funny you should say that, because in the subthread at
-> http://thread.gmane.org/gmane.linux.ide/10264/focus=10334
-> you seemed to have major issues with this very error and were saying there
-> could even be data corruption.
-
-Yeap, I have major issues with SDB FISes which contains spurious
-completions but most other spurious interrupts shouldn't be dangerous
-and I haven't seen spurious completions for quite some time, so I was
-thinking either removing the message or printing it only on SDB FIS
-containing spurious completions.
-
-But, Andrew Lyon *is* reporting spurious completions.  Now I just wanna
-update those printks such that more info is reported only on spurious
-SDB FISes.
-
-> I too have this error, on a Asrock 939Dual-SATA2 board wich has the same
-> controller. Syslog lines like
-> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0xf4)
-> every so often.
+> Thanks.
 > 
-> However, in my case it gets a lot worse. The following happens infrequently,
-> usually within 15 days of uptime on a light I/O load:
-> 
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata1.00: (irq_stat 0x48000000, interface fatal error)
-> ata1.00: tag 0 cmd 0xea Emask 0x12 stat 0x37 err 0x0 (ATA bus error)
-> ata1: soft resetting port
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: qc timeout (cmd 0xec)
-> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x104)
-> ata1.00: revalidation failed (errno=-5)
-> ata1: failed to recover some devices, retrying in 5 secs
-> ata1: hard resetting port
-> ata1: SATA link down (SStatus 0 SControl 300)
-> ata1: failed to recover some devices, retrying in 5 secs
-> ata1: hard resetting port
-> ata1: SATA link down (SStatus 0 SControl 300)
-> ata1.00: disabled
-> ata1: EH complete
-> ata1.00: detaching (SCSI 0:0:0:0)
-> scsi 0:0:0:0: rejecting I/O to dead device
-> 
-> The drive then dissapears from the system. This is not preceded by any
-> spurious interrupt messages, but I have a hunch it is related because
-> following your grave comments in the referenced thread, I looked for a kernel
-> option to disable NCQ. Astonished to find none, I changed the source using the
-> flag you added in this patch:
 
-Yeah, it usually indicates lousy NCQ implementation on drive's side.  I
-can't tell whether the drive going offline is directly related tho.
+I got the following errors during the timeout when running hald:
 
-> http://article.gmane.org/gmane.linux.ide/11527
-> With NCQ disabled, the spurious interrupt messages as well as the exceptions
-> go away.
+ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.01: cmd a0/00:00:00:00:20/00:00:00:00:00/b0 tag 0 cdb 0x1e data 0 in
+         res 40/00:03:00:00:00/00:00:00:00:00/b0 Emask 0x4 (timeout)
+ata1.01: CDB: 1e:00:00:00:00:00:00:00 00:00:00:00:00:00:00:00 p=6
 
-Hmmm... How certain are you about disabling NCQ fixing the problem?  Are
-other conditions controlled?  How many times did you verify the fix?  If
-you undo the change and leave everything else the same, does the
-exception come back?  Can you post the results of 'dmesg' and 'hdparm -I
-/dev/sdX'?
+ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.01: (BMDMA stat 0x64)
+ata1.01: cmd a0/01:00:00:00:00/00:00:00:00:00/b0 tag 0 cdb 0x25 data 8 in
+         res 40/00:03:00:00:00/00:00:00:00:00/b0 Emask 0x4 (timeout)
+ata1.01: CDB: 25:00:00:00:00:00:00:00 00:00:00:00:00:00:00:00 p=7
 
-> This has been happening for a few months on a box whose log I'd been neglecting
-> and I hadn't even noticed the issue since the drive is part of a md array. The
-> drive would get re-detected when I rebooted the box and md would rebuild the
-> array.
-> 
-> Here comes the weird part. When I discovered the problem, I backtracked through
-> the syslog to see when the problems started. They started a few months ago when
-> I added a DVB card to the system (it is a mythtv box). I noticed in Andrew's
-> dmesg that he also has a DVB card.
-> 
-> Could the DVB subsystem have anything to do with this? I realize the systems
-> are completely unrelated..
-> Perhaps the JMicron chip has noise issues? These are often triggered by adding
-> tuner cards..
-> 
-> It probably won't make any difference to system performance, but it would be
-> nice if we could resolve this so I can re-enable NCQ and stop patching my
-> kernels ;)
+With my test program that opens and closes the cdrom drive every second, I got 
+the following errors during the timeout:
 
-Yeap, I'm definitely interested in resolving this problem.  It's not
-likely but possible that the *controller* is responsible for spurious
-interrupts.
+ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.01: (BMDMA stat 0x64)
+ata1.01: cmd a0/01:00:00:00:00/00:00:00:00:00/b0 tag 0 cdb 0x43 data 12 in
+         res 40/00:03:00:00:00/00:00:00:00:00/b0 Emask 0x4 (timeout)
+ata1.01: CDB: 43:00:00:00:00:00:00:00 0c:40:00:00:00:00:00:00 p=7
 
-Thanks.
+ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.01: (BMDMA stat 0x4)
+ata1.01: cmd a0/01:00:00:00:00/00:00:00:00:00/b0 tag 0 cdb 0x25 data 8 in
+         res 40/00:03:00:00:00/00:00:00:00:00/b0 Emask 0x4 (timeout)
+ata1.01: CDB: 25:00:00:00:00:00:00:00 00:00:00:00:00:00:00:00 p=7
 
 -- 
-tejun
+Matthew Stapleton
