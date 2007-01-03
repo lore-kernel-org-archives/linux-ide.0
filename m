@@ -1,99 +1,60 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: re:[PATCH] libata: add support for ATA_16 commands to ATAPI devices
-Date: Tue, 2 Jan 2007 19:44:21 -0500
-Message-ID: <200701021944.21865.liml@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: add support for ATA_16 commands to ATAPI devices
+Date: Tue, 02 Jan 2007 19:50:10 -0500
+Message-ID: <459AFDC2.6060900@garzik.org>
 References: <200701021939.10496.liml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1805 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:48199 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752394AbXACAoT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jan 2007 19:44:19 -0500
+	id S1752476AbXACAuN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Jan 2007 19:50:13 -0500
 In-Reply-To: <200701021939.10496.liml@rtr.ca>
-Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-On Tuesday 02 January 2007 19:39, Mark Lord wrote:
+Mark Lord wrote:
 > This patch adds support for passing ATA_16 commands
-> through to ATAPI devices in libata. =A0In practice, the upper layers =
-will
-> still currently prevent ATA_16 commands, as no (?) ATAPI drives suppo=
-rt
-> them yet. =A0But it will work if such a drive is ever encountered.
+> through to ATAPI devices in libata.  In practice, the upper layers will
+> still currently prevent ATA_16 commands, as no (?) ATAPI drives support
+> them yet.  But it will work if such a drive is ever encountered.
+> 
+> Support for ATA_16 is necessary for using SG_IO from userspace,
+> and an upcoming hdparm release will be updated to use this interface.
+> 
+> This version is very similar to the earlier first submission,
+> except that ATA_12 is no longer passed through to ATAPI
+> because of the conflict it has with the SCSI BLANK opcode.
+> 
+> Signed-off-by:  Mark Lord <mlord@pobox.com>
+> 
+> --- old/drivers/ata/libata-scsi.c	2007-01-02 19:20:23.000000000 -0500
+> +++ new/drivers/ata/libata-scsi.c	2007-01-02 19:20:49.000000000 -0500
+> @@ -2650,6 +2650,12 @@
+>  
+>  static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+>  {
+> +	if (cmd == ATA_16)
+> +		return ata_scsi_pass_thru;
+> +
+> +	if (dev->class == ATA_DEV_ATAPI)
+> +		return atapi_xlat;
+> +
 
-The above comment is out of date -- nuke it.
-Instead, there is now a separate patch to permit ATA_16 commands
-for 12-byte libata devices.
+As I said, provide some avenue for the user to choose.
 
-The rest of this stuff is still correct no changes below).
+I do not wish to completely eliminate the current behavior, which passes 
+through all opcodes to the ATAPI device.  You cannot guarantee that 
+ATA_16 is never used for a vendor-reserved opcode, for example.
 
-* * *
-Support for ATA_16 is necessary for using SG_IO from userspace,
-and an upcoming hdparm release will be updated to use this interface.
+Your proposed change to the default behavior is ACK'd, as long as the 
+current behavior is not completely eliminated, as you have done above.
 
-This version is very similar to the earlier first submission,
-except that ATA_12 is no longer passed through to ATAPI
-because of the conflict it has with the SCSI BLANK opcode.
+	Jeff
 
-Signed-off-by:  Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/libata-scsi.c	2007-01-02 19:20:23.000000000 -0500
-+++ new/drivers/ata/libata-scsi.c	2007-01-02 19:20:49.000000000 -0500
-@@ -2650,6 +2650,12 @@
-=20
- static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev=
-, u8 cmd)
- {
-+	if (cmd =3D=3D ATA_16)
-+		return ata_scsi_pass_thru;
-+
-+	if (dev->class =3D=3D ATA_DEV_ATAPI)
-+		return atapi_xlat;
-+
- 	switch (cmd) {
- 	case READ_6:
- 	case READ_10:
-@@ -2670,7 +2676,6 @@
- 		return ata_scsi_verify_xlat;
-=20
- 	case ATA_12:
--	case ATA_16:
- 		return ata_scsi_pass_thru;
-=20
- 	case START_STOP:
-@@ -2708,6 +2713,7 @@
- 				      void (*done)(struct scsi_cmnd *),
- 				      struct ata_device *dev)
- {
-+	ata_xlat_func_t xlat_func;
- 	int rc =3D 0;
-=20
- 	if (unlikely(!scmd->cmd_len)) {
-@@ -2717,17 +2723,11 @@
- 		return 0;
- 	}
-=20
--	if (dev->class =3D=3D ATA_DEV_ATA) {
--		ata_xlat_func_t xlat_func =3D ata_get_xlat_func(dev,
--							      scmd->cmnd[0]);
--
--		if (xlat_func)
--			rc =3D ata_scsi_translate(dev, scmd, done, xlat_func);
--		else
--			ata_scsi_simulate(dev, scmd, done);
--	} else
--		rc =3D ata_scsi_translate(dev, scmd, done, atapi_xlat);
--
-+	xlat_func =3D ata_get_xlat_func(dev, scmd->cmnd[0]);
-+	if (xlat_func)
-+		rc =3D ata_scsi_translate(dev, scmd, done, xlat_func);
-+	else
-+		ata_scsi_simulate(dev, scmd, done);
- 	return rc;
- }
-=20
+
