@@ -1,66 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive
- 0x0) r0xj0
-Date: Wed, 03 Jan 2007 13:15:38 +0900
-Message-ID: <459B2DEA.8080202@gmail.com>
-References: <f4527be0612271812p7282de31j98462aebde16e5a1@mail.gmail.com> <45933A53.1090702@gmail.com> <loom.20070103T020347-255@post.gmane.org> <459B140C.1060401@gmail.com> <Pine.LNX.4.64.0701030334460.12309@dolores.legate.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] SCSI, libata: add support for ATA_16 commands to	libata
+ ATAPI devices
+Date: Wed, 03 Jan 2007 00:42:27 -0500
+Message-ID: <459B4243.5080804@rtr.ca>
+References: <200701021935.07840.liml@rtr.ca> <1167788405.3687.25.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.234]:30315 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754141AbXACEP4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jan 2007 23:15:56 -0500
-Received: by wx-out-0506.google.com with SMTP id h27so6298847wxd
-        for <linux-ide@vger.kernel.org>; Tue, 02 Jan 2007 20:15:55 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.64.0701030334460.12309@dolores.legate.org>
+Received: from rtr.ca ([64.26.128.89]:4290 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754065AbXACFme (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jan 2007 00:42:34 -0500
+In-Reply-To: <1167788405.3687.25.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bbee <bumble.bee@xs4all.nl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 
-bbee wrote:
->> Yeap, I have major issues with SDB FISes which contains spurious
->> completions but most other spurious interrupts shouldn't be dangerous
->> and I haven't seen spurious completions for quite some time, so I was
->> thinking either removing the message or printing it only on SDB FIS
->> containing spurious completions.
->>
->> But, Andrew Lyon *is* reporting spurious completions.  Now I just wanna
->> update those printks such that more info is reported only on spurious
->> SDB FISes.
-> 
-> That would certainly help verify that I'm having the exact same problem,
-> since Andrew didn't say anything about his drive going offline.
+James Bottomley wrote:
+> ..
+> I don't think I quite understand what you're trying to do here.  My
+> understanding is that ATA_12 and ATA_16 are part of the SAT layer. i.e.
+> they're used when we're speaking SCSI to an underlying ATA device to
+> send taskfiles.  However, ATAPI devices don't use SAT ... every SCSI
+> command you send to an ATAPI device goes out as an ATA PACKET command
+> without being translated.
 
-Okay.
+ATAPI devices also implement quite a few ATA (non-packet) commands.
+This patch gives us a way to issue them in response to SG_IO ATA passthru
+and the existing (non working) libata HDIO_DRIVE_CMD and HDIO_DRIVE_TASK
+ioctl calls.
 
-[--snip--]
-> I reverted the patch and am waiting for the exception while running
-> "stress --io 2 --hdd 2". By past experience, it could take a while; I am
-> already seeing the spurious iterrupt messages though.
+Without this patch, SCSI blocks the ATA_16 passthru attempts,
+because it thinks the CDB is too large for the 12-byte packet protocol
+that ATAPI devices use.  This limit (12 bytes) is totally non-applicable
+to ATA protocol commands.
 
-Thanks, please keep me posted.
+> Is there a missing piece to this patch, where you scan the incoming
+> commands to ATAPI devices and actually do translation for ATA_16?
 
->> Can you post the results of 'dmesg' and 'hdparm -I /dev/sdX'?
-> 
-> Follows at end of message (md init snipped from dmesg for brevity).
-> 
->> Yeap, I'm definitely interested in resolving this problem.  It's not
->> likely but possible that the *controller* is responsible for spurious
->> interrupts.
-> 
-> Unfortunately I don't have any other model of SATA drive to test it
-> with, but Andrew by his dmesg seems to be using a different brand of drive.
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: ATA-7, max UDMA/100, 586072368 sectors: LBA48 NCQ (depth 31/32)
-> ata1.00: ata1: dev 0 multi count 16
-> ata1.00: configured for UDMA/100
-> scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6V300F0   VA11 PQ: 0
-> ANSI: 5
+Look at the existing libata-core.c ioctl's for HDIO_DRIVE_CMD
+and HDIO_DRIVE_TASK, used by hdparm and others.
 
-Yeah, a different drive.  I'll ask around.  Thanks.
-
--- 
-tejun
+Cheers
