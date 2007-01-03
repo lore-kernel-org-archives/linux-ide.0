@@ -1,78 +1,59 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/ata/: make 4 functions static
-Date: Thu, 4 Jan 2007 00:09:36 +0100
-Message-ID: <20070103230936.GR20714@stusta.de>
+From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
+Subject: Re: CDROM drive not found when booting using new libata code
+Date: Wed, 3 Jan 2007 21:19:46 -0200
+Message-ID: <i9qt64-fc7.ln1@tux.abusar.org>
+References: <4562C65C.2010802@gmail.com>
+	<20061206181652.GA3107@artsapartment.org>
+	<45779852.1030909@gmail.com>
+	<20061207105525.4ebb4547@localhost.localdomain>
+	<45780AF5.2020605@gmail.com>
+	<20061208010626.GA1856@artsapartment.org>
+	<45927532.3060404@gmail.com>
+	<45933F2A.5070304@gmail.com>
+	<20070102210708.GI24909@artsapartment.org>
+	<459B239B.90204@gmail.com>
+	<20070103180840.GC2268@artsapartment.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:1040 "HELO
-	mailout.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932172AbXACXJd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jan 2007 18:09:33 -0500
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:41637 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932177AbXACXaN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jan 2007 18:30:13 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1H2FYY-0005lx-To
+	for linux-ide@vger.kernel.org; Thu, 04 Jan 2007 00:30:02 +0100
+Received: from 200-207-206-233.dsl.telesp.net.br ([200.207.206.233])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 04 Jan 2007 00:30:02 +0100
+Received: from fragabr by 200-207-206-233.dsl.telesp.net.br with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 04 Jan 2007 00:30:02 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This patch makes the following needlessly global functions static:
-- libata-core.c: ata_qc_complete_internal()
-- libata-scsi.c: ata_scsi_qc_new()
-- libata-scsi.c: ata_dump_status()
-- libata-scsi.c: ata_to_sense_error()
+On Wed, 3 Jan 2007 12:08:40 -0600
+"Art Haas" <ahaas@airmail.net> wrote:
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> ata2.00: ATAPI, max MWDMA1:PIO4
+> ata2.00: revalidation failed (errno=-2)
+> ata2.00: limiting speed to PIO4
+> ata2: failed to recover some devices, retrying in 5 secs
+> ata2.00: revalidation failed (errno=-2)
+> ata2.00: limiting speed to PIO0
+> ata2: failed to recover some devices, retrying in 5 secs
+> ata2.00: revalidation failed (errno=-2)
+> ata2.00: disabled
 
----
+	While this problem isn't solved, how can we disable the second
+device (in lilo or something like that) so we don't have to wait for the
+retries? Thanks!
 
- drivers/ata/libata-core.c |    2 +-
- drivers/ata/libata-scsi.c |   12 ++++++------
- 2 files changed, 7 insertions(+), 7 deletions(-)
-
---- linux-2.6.20-rc2-mm1/drivers/ata/libata-core.c.old	2007-01-03 23:06:04.000000000 +0100
-+++ linux-2.6.20-rc2-mm1/drivers/ata/libata-core.c	2007-01-03 23:06:12.000000000 +0100
-@@ -1160,7 +1160,7 @@
- 		ata_port_printk(ap, KERN_DEBUG, "%s: EXIT\n", __FUNCTION__);
- }
- 
--void ata_qc_complete_internal(struct ata_queued_cmd *qc)
-+static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
- {
- 	struct completion *waiting = qc->private_data;
- 
---- linux-2.6.20-rc2-mm1/drivers/ata/libata-scsi.c.old	2007-01-03 23:06:35.000000000 +0100
-+++ linux-2.6.20-rc2-mm1/drivers/ata/libata-scsi.c	2007-01-03 23:07:52.000000000 +0100
-@@ -397,9 +397,9 @@
-  *	RETURNS:
-  *	Command allocated, or %NULL if none available.
-  */
--struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
--				       struct scsi_cmnd *cmd,
--				       void (*done)(struct scsi_cmnd *))
-+static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
-+					      struct scsi_cmnd *cmd,
-+					      void (*done)(struct scsi_cmnd *))
- {
- 	struct ata_queued_cmd *qc;
- 
-@@ -435,7 +435,7 @@
-  *	LOCKING:
-  *	inherited from caller
-  */
--void ata_dump_status(unsigned id, struct ata_taskfile *tf)
-+static void ata_dump_status(unsigned id, struct ata_taskfile *tf)
- {
- 	u8 stat = tf->command, err = tf->feature;
- 
-@@ -610,8 +610,8 @@
-  *	LOCKING:
-  *	spin_lock_irqsave(host lock)
-  */
--void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk, u8 *asc,
--			u8 *ascq, int verbose)
-+static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk,
-+			       u8 *asc, u8 *ascq, int verbose)
- {
- 	int i;
- 
+-- 
+http://u-br.net
+Linux 2.6.19: Avast! A bilge rat!
+Sao Paulo - SP
 
