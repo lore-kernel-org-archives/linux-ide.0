@@ -1,68 +1,39 @@
-From: bbee <bumble.bee@xs4all.nl>
-Subject: Re: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995
- sactive 0x0) r0xj0
-Date: Wed, 3 Jan 2007 17:50:38 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0701031733001.1969@dolores.legate.org>
-References: <f4527be0612271812p7282de31j98462aebde16e5a1@mail.gmail.com>
- <45933A53.1090702@gmail.com> <loom.20070103T020347-255@post.gmane.org>
- <459B140C.1060401@gmail.com> <Pine.LNX.4.64.0701030334460.12309@dolores.legate.org>
- <459B2DEA.8080202@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] SCSI, libata: add support for ATA_16	commands	to	libata
+ ATAPI devices
+Date: Wed, 03 Jan 2007 12:58:10 -0500
+Message-ID: <459BEEB2.9000903@rtr.ca>
+References: <200701021935.07840.liml@rtr.ca>	 <1167788405.3687.25.camel@mulgrave.il.steeleye.com>	 <459B4243.5080804@rtr.ca>	 <1167838307.2789.12.camel@mulgrave.il.steeleye.com>	 <459BCF82.5000906@garzik.org> <1167839851.2789.17.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-vbr17.xs4all.nl ([194.109.24.37]:3179 "EHLO
-	smtp-vbr17.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbXACQul (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jan 2007 11:50:41 -0500
-In-Reply-To: <459B2DEA.8080202@gmail.com>
+Received: from rtr.ca ([64.26.128.89]:2947 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750999AbXACR6N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jan 2007 12:58:13 -0500
+In-Reply-To: <1167839851.2789.17.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Andrew Lyon <andrew.lyon@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org
 
-On Wed, 3 Jan 2007, Tejun Heo wrote:
-> bbee wrote:
->>> Yeap, I have major issues with SDB FISes which contains spurious
->>> completions but most other spurious interrupts shouldn't be dangerous
->>> and I haven't seen spurious completions for quite some time, so I was
->>> thinking either removing the message or printing it only on SDB FIS
->>> containing spurious completions.
->>>
->>> But, Andrew Lyon *is* reporting spurious completions.  Now I just wanna
->>> update those printks such that more info is reported only on spurious
->>> SDB FISes.
->>
->> That would certainly help verify that I'm having the exact same problem,
->> since Andrew didn't say anything about his drive going offline.
+James Bottomley wrote:
 >
-> Okay.
+> Er I've only seen one patch ... I did ask if there was another to add
+> the ATA_16 interpretation ... did that get lost by the SCSI reflector?
 
-Sorry, I thought you meant you would need to update it *further*. I applied 
-the patch you gave to Andrew with this result so far:
+Ahh.. my apologies on that, James.
 
-$ dmesg | grep -A1 "spurious interrupt"
-ata1: spurious interrupt (irq_stat 0x8 active_tag 0xfafbfcfd sactive 0x0)
-ata1: issue=0x0 SAct=0x0 SDB_FIS=004040a1:00000008
---
-ata1: spurious interrupt (irq_stat 0x8 active_tag 0xfafbfcfd sactive 0x0)
-ata1: issue=0x0 SAct=0x0 SDB_FIS=004040a1:00000001
+The two patches apply and build independently,
+and the second patch was only for libata, so it was
+sent only to the linux-ide list.
 
-No luck yet triggering the exception.
+There's actually a third patch as well, to fix a one-line
+bug in sr.c that prevents *any* SG_IO from ever working
+on ATAPI as well.
 
-On Wed, 3 Jan 2007, Andrew Lyon wrote:
-> Alan said he was going to add the drive to a blacklist he was
-> maintaining for NCQ, perhaps that has been done in kernel 2.6.19, I
-> dont know as I am still running 2.6.18.
->
-> Perhaps the WD Raptor drive that I have does have lousy NCQ and that
-> explains both the poor performance and the spurious interrupts.
+I'll email you the full set.
 
-Blacklisting NCQ on the drive(s) for all controllers might be ill advised, 
-since it could be a JMicron-specific issue (or ahci-specific, since the 
-person in the thread I referenced had a different ahci controller..). 
-Either that, or both our drive models have "lousy NCQ"..
+Cheers!
 
-
-Thanks,
-
-bbee
