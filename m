@@ -1,59 +1,57 @@
-From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
-Subject: Re: CDROM drive not found when booting using new libata code
-Date: Wed, 3 Jan 2007 21:19:46 -0200
-Message-ID: <i9qt64-fc7.ln1@tux.abusar.org>
-References: <4562C65C.2010802@gmail.com>
-	<20061206181652.GA3107@artsapartment.org>
-	<45779852.1030909@gmail.com>
-	<20061207105525.4ebb4547@localhost.localdomain>
-	<45780AF5.2020605@gmail.com>
-	<20061208010626.GA1856@artsapartment.org>
-	<45927532.3060404@gmail.com>
-	<45933F2A.5070304@gmail.com>
-	<20070102210708.GI24909@artsapartment.org>
-	<459B239B.90204@gmail.com>
-	<20070103180840.GC2268@artsapartment.org>
+From: Bjorn Wesen <bjorn.wesen@axis.com>
+Subject: 2.6.20-rc3 IRQ race upon resume? => killing SATA IRQ
+Date: Thu, 4 Jan 2007 00:26:54 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0701040006300.15167@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41637 "EHLO ciao.gmane.org"
+Received: from bart.se.axis.com ([193.13.178.9]:39843 "EHLO bart.se.axis.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932177AbXACXaN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Jan 2007 18:30:13 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1H2FYY-0005lx-To
-	for linux-ide@vger.kernel.org; Thu, 04 Jan 2007 00:30:02 +0100
-Received: from 200-207-206-233.dsl.telesp.net.br ([200.207.206.233])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 04 Jan 2007 00:30:02 +0100
-Received: from fragabr by 200-207-206-233.dsl.telesp.net.br with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 04 Jan 2007 00:30:02 +0100
+	id S932198AbXACXtd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jan 2007 18:49:33 -0500
+Received: from bart.se.axis.com (bart.se.axis.com [127.0.0.1])
+	by bart.se.axis.com (Postfix) with ESMTP id 9C2BD641BB
+	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2007 00:26:54 +0100 (CET)
+Received: from godzilla.se.axis.com (godzilla.se.axis.com [10.84.17.11])
+	by bart.se.axis.com (Postfix) with ESMTP id 8E987641BA
+	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2007 00:26:54 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-On Wed, 3 Jan 2007 12:08:40 -0600
-"Art Haas" <ahaas@airmail.net> wrote:
+Hi folks,
 
-> ata2.00: ATAPI, max MWDMA1:PIO4
-> ata2.00: revalidation failed (errno=-2)
-> ata2.00: limiting speed to PIO4
-> ata2: failed to recover some devices, retrying in 5 secs
-> ata2.00: revalidation failed (errno=-2)
-> ata2.00: limiting speed to PIO0
-> ata2: failed to recover some devices, retrying in 5 secs
-> ata2.00: revalidation failed (errno=-2)
-> ata2.00: disabled
+There is only one thing keeping suspend-to-ram on my Sony Vaio SZ2 laptop 
+from working currently, and that is that most of the times I suspend/resume, 
+the SATA HD becomes blocked. Looking closer it is because an irq occurs 
+during resume, which reaches ata_interrupt, it does not handle it, and Linux 
+responds by blocking it permanently (the dreaded irq X: nobody cared).
 
-	While this problem isn't solved, how can we disable the second
-device (in lilo or something like that) so we don't have to wait for the
-retries? Thanks!
+The SZ2 has a Core Duo CPU, ICH7 and SATA is handled by the ata_piix driver. 
+No other PCI interrupts are mapped or enabled to the same interrupt.
 
--- 
-http://u-br.net
-Linux 2.6.19: Avast! A bilge rat!
-Sao Paulo - SP
+I can't help thinking this looks like a race, because it resumes correctly 
+sometimes and then the HD works perfectly fine. Perhaps the SATA driver 
+hasn't recovered itself at the time the first irq occurs and thus it feels 
+it shouldn't handle it ?
 
+I can't paste in the dmesg because the HD locks when it happens and thus 
+it's not written to it, but essentially, the "nobody cared" msg comes after 
+the extra CPU core is brought up, then the irq is disabled, then the ata 
+driver is trying to reconfigure the devices and then it locks up.
+
+I can debug it but I'd need some pointers on where to start. For example, 
+one strategy could be to try forcing an acknowledge of the interrupt somehow 
+in the bottom of ata_interrupt if it feels it can't handle an interrupt 
+(I've only programmed embedded linux before not i386 so I don't know where 
+to ack such an irq - in the PCI bridge itself, or in the ATA device ? :).
+
+Another strategy could be to find the reason why the interrupt is not 
+handled by enabling some debug or something which I haven't really looked 
+into yet...
+
+Any ideas ?
+
+Regards,
+
+Bjorn
