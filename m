@@ -1,52 +1,128 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] SCSI, libata: add support for ATA_16 commands to
-	libata ATAPI devices
-Date: Tue, 02 Jan 2007 19:40:05 -0600
-Message-ID: <1167788405.3687.25.camel@mulgrave.il.steeleye.com>
-References: <200701021935.07840.liml@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive
+ 0x0) r0xj0
+Date: Wed, 03 Jan 2007 11:25:16 +0900
+Message-ID: <459B140C.1060401@gmail.com>
+References: <f4527be0612271812p7282de31j98462aebde16e5a1@mail.gmail.com> <45933A53.1090702@gmail.com> <loom.20070103T020347-255@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200701021935.07840.liml@rtr.ca>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wx-out-0506.google.com ([66.249.82.237]:51956 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753681AbXACCZY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jan 2007 21:25:24 -0500
+Received: by wx-out-0506.google.com with SMTP id h27so6271948wxd
+        for <linux-ide@vger.kernel.org>; Tue, 02 Jan 2007 18:25:23 -0800 (PST)
+In-Reply-To: <loom.20070103T020347-255@post.gmane.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bbee <bumble.bee@xs4all.nl>
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Tue, 2007-01-02 at 19:35 -0500, Mark Lord wrote:
-> In an ideal world, we would use the existing ATA_12 opcode
-> to issue 12-byte ATA passthrough commands for libata ATAPI drives
-> from userspace.
+[cc'ing linux-ide]
+
+bbee wrote:
+> Tejun Heo <htejun <at> gmail.com> writes:
+>> Andrew Lyon wrote:
+>>> My system is gigabyte ds3 motherboard with onboard SATA JMicron
+>>> 20360/20363 AHCI Controller (rev 02), drive connected is WDC
+>>> WD740ADFD-00 20.0, I am running 2.6.18.6 32 bit, under heavy i/o I get
+>>> the following messaegs:
+>>>
+>>> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+>>> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0x0)
+>>>
+>>> Is this condition dangerous?
+>> Not usually.  Might indicate something is going wrong in some really
+>> rare cases.  I think vendors are getting NCQ right these days.  Maybe
+>> it's time to remove that printk.
 > 
-> But ATA_12 happens to have the same SCSI opcode value as the older
-> CD/RW "BLANK" command, widely used by cdrecord and friends.
+> Hi Tejun, it's funny you should say that, because in the subthread at
+> http://thread.gmane.org/gmane.linux.ide/10264/focus=10334
+> you seemed to have major issues with this very error and were saying there
+> could even be data corruption.
 
-It's not older; it's still current (at least as of MMC-5)
+Yeap, I have major issues with SDB FISes which contains spurious
+completions but most other spurious interrupts shouldn't be dangerous
+and I haven't seen spurious completions for quite some time, so I was
+thinking either removing the message or printing it only on SDB FIS
+containing spurious completions.
 
-> So, to achieve ATA passthru capability for libata ATAPI,
-> we have to instead use the ATA_16 opcode: a 16-byte command.
+But, Andrew Lyon *is* reporting spurious completions.  Now I just wanna
+update those printks such that more info is reported only on spurious
+SDB FISes.
+
+> I too have this error, on a Asrock 939Dual-SATA2 board wich has the same
+> controller. Syslog lines like
+> ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive 0xf4)
+> every so often.
 > 
-> SCSI normally disallows issuing 16-byte commands to 12-byte devices,
-> so special support has to be added for this.
+> However, in my case it gets a lot worse. The following happens infrequently,
+> usually within 15 days of uptime on a light I/O load:
 > 
-> Introduce an "allow_ata_16" boolean to the scsi_host struct.
-> This provides a means for libata to signal that 16-byte ATA_16
-> commands should be permitted even for 12-byte ATAPI devices.
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: (irq_stat 0x48000000, interface fatal error)
+> ata1.00: tag 0 cmd 0xea Emask 0x12 stat 0x37 err 0x0 (ATA bus error)
+> ata1: soft resetting port
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1.00: qc timeout (cmd 0xec)
+> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x104)
+> ata1.00: revalidation failed (errno=-5)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: hard resetting port
+> ata1: SATA link down (SStatus 0 SControl 300)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: hard resetting port
+> ata1: SATA link down (SStatus 0 SControl 300)
+> ata1.00: disabled
+> ata1: EH complete
+> ata1.00: detaching (SCSI 0:0:0:0)
+> scsi 0:0:0:0: rejecting I/O to dead device
+> 
+> The drive then dissapears from the system. This is not preceded by any
+> spurious interrupt messages, but I have a hunch it is related because
+> following your grave comments in the referenced thread, I looked for a kernel
+> option to disable NCQ. Astonished to find none, I changed the source using the
+> flag you added in this patch:
 
-I don't think I quite understand what you're trying to do here.  My
-understanding is that ATA_12 and ATA_16 are part of the SAT layer. i.e.
-they're used when we're speaking SCSI to an underlying ATA device to
-send taskfiles.  However, ATAPI devices don't use SAT ... every SCSI
-command you send to an ATAPI device goes out as an ATA PACKET command
-without being translated.  You can see this in
-libata-scsi.c:__ata_scsi_queuecommand() where commands for ATAPI devices
-go globally through atapi_xlat().  So at the moment libata would send
-ATA_12 or ATA_16 over to an ATAPI device also as an ATA PACKET command.
+Yeah, it usually indicates lousy NCQ implementation on drive's side.  I
+can't tell whether the drive going offline is directly related tho.
 
-Is there a missing piece to this patch, where you scan the incoming
-commands to ATAPI devices and actually do translation for ATA_16?
+> http://article.gmane.org/gmane.linux.ide/11527
+> With NCQ disabled, the spurious interrupt messages as well as the exceptions
+> go away.
 
-James
+Hmmm... How certain are you about disabling NCQ fixing the problem?  Are
+other conditions controlled?  How many times did you verify the fix?  If
+you undo the change and leave everything else the same, does the
+exception come back?  Can you post the results of 'dmesg' and 'hdparm -I
+/dev/sdX'?
 
+> This has been happening for a few months on a box whose log I'd been neglecting
+> and I hadn't even noticed the issue since the drive is part of a md array. The
+> drive would get re-detected when I rebooted the box and md would rebuild the
+> array.
+> 
+> Here comes the weird part. When I discovered the problem, I backtracked through
+> the syslog to see when the problems started. They started a few months ago when
+> I added a DVB card to the system (it is a mythtv box). I noticed in Andrew's
+> dmesg that he also has a DVB card.
+> 
+> Could the DVB subsystem have anything to do with this? I realize the systems
+> are completely unrelated..
+> Perhaps the JMicron chip has noise issues? These are often triggered by adding
+> tuner cards..
+> 
+> It probably won't make any difference to system performance, but it would be
+> nice if we could resolve this so I can re-enable NCQ and stop patching my
+> kernels ;)
 
+Yeap, I'm definitely interested in resolving this problem.  It's not
+likely but possible that the *controller* is responsible for spurious
+interrupts.
+
+Thanks.
+
+-- 
+tejun
