@@ -1,63 +1,69 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.20-rc3 IRQ race upon resume? => killing SATA IRQ
-Date: Thu, 04 Jan 2007 13:37:49 +0900
-Message-ID: <459C849D.4070904@gmail.com>
-References: <Pine.LNX.4.64.0701040006300.15167@localhost.localdomain> <Pine.LNX.4.64.0701040244300.15167@localhost.localdomain>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: [PATCH] add delay around sl82c105_reset_engine calls
+Date: Thu, 4 Jan 2007 07:42:54 +0100
+Message-ID: <20070104064254.GA31986@aepfle.de>
+References: <20061130165202.GA23205@aepfle.de>
+	<20061204124026.GB28159@aepfle.de>
+	<20061204130254.424c7979@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.231]:9950 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932242AbXADEiC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jan 2007 23:38:02 -0500
-Received: by wx-out-0506.google.com with SMTP id h27so6640813wxd
-        for <linux-ide@vger.kernel.org>; Wed, 03 Jan 2007 20:38:01 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.64.0701040244300.15167@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+Content-Disposition: inline
+In-Reply-To: <20061204130254.424c7979@localhost.localdomain>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Bjorn Wesen <bjorn.wesen@axis.com>
-Cc: linux-ide@vger.kernel.org
 
-Bjorn Wesen wrote:
-> Just adding some info here!
-> 
-> I added this to the bottom of ata_interrupt in libata-core.c which fixed
-> the problem:
-> 
->         if(!handled) {
->           printk("ata_interrupt nobody cared. Trying to clear irq src\n");
->           for (i = 0; i < host->n_ports; i++) {
->             struct ata_port *ap;
-> 
->             ap = host->ports[i];
-> 
->             ata_bmdma_irq_clear(ap);
->           }
->           handled = 1;
->         }
-> 
-> The result was that the above message comes 3 times in a row during
-> resume, then it silences and everything works. Also, I noticed that
-> ata_host_intr is not called in these cases, so when the interrupt
-> reaches the driver after the resume, it ignores it probably because it
-> thinks it has no QC active (correctly probably). Question is, where is
-> the irq coming from then.
-> 
-> Obviously this is a horribly wrong fix, since if the interrupt is
-> shared, we will shadow the other interrupt so it never gets run (and
-> corrupt our own BM DMA operations).
+On Mon, Dec 04, Alan wrote:
 
-It is not that horribly wrong.  The only problem you'll cause by
-returning spurious non-zero handled is defeating 'nobody cared'
-detection logic.  So, if the other device sharing interrupt was raising
-spurious interrupt (not likely, most modern controllers have irq pending
-bit and drivers can reliably tell whether it is raising interrupt or
-not, IDE interface is just ooooold), the machine will lock up hard.
+> On Mon, 4 Dec 2006 13:40:26 +0100 (MET)
+> Olaf Hering <olaf@aepfle.de> wrote:
+> 
+> > 
+> > 
+> > the hald media changed polling does really confuse things.
+> > noone knows why the delays are needed, but they give us access to
+> > the CD.
+> 
+> Can you tell me what happens if you completely pull the reset out of the
+> dma_end function. Do you still need delays then.
 
-I'll investigate deeper when when I get some spare time but for the time
-being, you solution should suffice.  Another solution would be switching
-the controller into ahci mode which is much better.
+An udelay(50) will give reliable access to the drive, but there is still
+one (or more) EH reset. The drive works without EH resets with udelay(100).
 
--- 
-tejun
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
+
+---
+ drivers/ata/pata_sl82c105.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- a/drivers/ata/pata_sl82c105.c
++++ b/drivers/ata/pata_sl82c105.c
+@@ -187,7 +187,9 @@ static void sl82c105_bmdma_start(struct 
+ {
+ 	struct ata_port *ap = qc->ap;
+ 
++	udelay(100);
+ 	sl82c105_reset_engine(ap);
++	udelay(100);
+ 
+ 	/* Set the clocks for DMA */
+ 	sl82c105_configure_dmamode(ap, qc->dev);
+@@ -216,6 +218,7 @@ static void sl82c105_bmdma_stop(struct a
+ 
+ 	ata_bmdma_stop(qc);
+ 	sl82c105_reset_engine(ap);
++	udelay(100);
+ 
+ 	/* This will redo the initial setup of the DMA device to matching
+ 	   PIO timings */
