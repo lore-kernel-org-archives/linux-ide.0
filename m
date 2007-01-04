@@ -1,41 +1,40 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] SCSI, libata: add support for ATA_16  commands to libata  ATAPI devices
-Date: Thu, 4 Jan 2007 16:51:43 +0100
-Message-ID: <20070104155143.GF11203@kernel.dk>
-References: <200701021935.07840.liml@rtr.ca> <1167788405.3687.25.camel@mulgrave.il.steeleye.com> <459B4243.5080804@rtr.ca> <1167838307.2789.12.camel@mulgrave.il.steeleye.com> <459C066D.30507@torque.net> <1167860496.2789.70.camel@mulgrave.il.steeleye.com> <20070104150900.GD11203@kernel.dk> <459D1D49.3060909@rtr.ca>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: problem with pata_hpt37x ...
+Date: Thu, 04 Jan 2007 20:09:56 +0400
+Message-ID: <459D26D4.3010601@wasp.net.au>
+References: <20070102070144.GA11270@MAIL.13thfloor.at> <20070102145855.170c03e2@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:18527 "EHLO kernel.dk"
+Received: from wasp.net.au ([203.190.192.17]:34424 "EHLO wasp.net.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932274AbXADPsv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Jan 2007 10:48:51 -0500
-Content-Disposition: inline
-In-Reply-To: <459D1D49.3060909@rtr.ca>
+	id S965005AbXADQPp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Jan 2007 11:15:45 -0500
+In-Reply-To: <20070102145855.170c03e2@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, dougg@torque.net, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Herbert Poetzl <herbert@13thfloor.at>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel ML <linux-kernel@vger.kernel.org>
 
-On Thu, Jan 04 2007, Mark Lord wrote:
-> Jens Axboe wrote:
-> >On Wed, Jan 03 2007, James Bottomley wrote:
-> >>Er, well, as you know, I've never been a fan of this static list.  I
-> >>thought Jens was going to put us all out of our misery by making the
-> >>list settable per device by root and thus shovel the problem off onto
-> >>the distros?
-> >
-> >The code is there, just haven't had the guts to merge it yet.
-> >
-> >http://git.kernel.dk/?p=linux-2.6-block.git;a=commitdiff;h=bf5f922d167a5c5cf57132bbcaa1e0ddfd5c45f7
-> >
+Alan wrote:
+> On Tue, 2 Jan 2007 08:01:45 +0100
+> Herbert Poetzl <herbert@13thfloor.at> wrote:
 > 
-> That's nice, but doesn't help with the case of trying to do ATA passthru
-> to ATAPI devices, the subject of the original patch here.
+>> if you are interested in investigating this, please
+>> let me know what kind of data you would like to see
+>> and/or what kind of tests would be appreciated.
+> 
+> I reviewed the 374 code a bit further to see what might be causing this
+> and found the slave channel end of DMA handling was using the wrong port
+> I think.
 
-James brought up the filtering issue, my reply pertains to that alone.
-Hence the snipping of unrelated contents in the original mail :-)
+This now passes all my stress tests Alan. No more "Interrupt disabled" or dmesg storms.
+I put the HPT Rocketraid 1540 (HPT374) back in a box and connected 4 200GB ata drives to it using 
+SATA-PATA bridgeboards as before. It looks to be rock solid now.
 
+Brad
 -- 
-Jens Axboe
-
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
