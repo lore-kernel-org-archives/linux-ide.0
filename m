@@ -1,74 +1,59 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: What is the correct way to indicate an unassigned PCI resource ?
-Date: Thu, 4 Jan 2007 18:49:47 +0100
-Message-ID: <20070104174947.GA3636@aepfle.de>
-References: <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
-	<4574197A.2020204@ru.mvista.com>
-	<4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org>
-	<45741DDE.4080509@ru.mvista.com>
-	<20061204132124.4f7c50a9@localhost.localdomain>
-	<45742253.1000807@ru.mvista.com>
-	<20061204142201.68d9621f@localhost.localdomain>
-	<1165293679.29784.39.camel@localhost.localdomain>
-	<20061205081557.GA8483@aepfle.de>
-	<1165349941.5469.1.camel@localhost.localdomain>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: problem with pata_hpt37x ...
+Date: Thu, 04 Jan 2007 22:08:49 +0400
+Message-ID: <459D42B1.20604@wasp.net.au>
+References: <20070102070144.GA11270@MAIL.13thfloor.at> <20070102145855.170c03e2@localhost.localdomain> <459D26D4.3010601@wasp.net.au> <20070104173058.GA2160@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-Content-Disposition: inline
-In-Reply-To: <1165349941.5469.1.camel@localhost.localdomain>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, greg@kroah.com, linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz, Alan <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wasp.net.au ([203.190.192.17]:35053 "EHLO wasp.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964817AbXADSJN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Jan 2007 13:09:13 -0500
+In-Reply-To: <20070104173058.GA2160@MAIL.13thfloor.at>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>, Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel ML <linux-kernel@vger.kernel.org>
 
-On Wed, Dec 06, Benjamin Herrenschmidt wrote:
+Herbert Poetzl wrote:
 
-> On Tue, 2006-12-05 at 09:15 +0100, Olaf Hering wrote:
-> > On Tue, Dec 05, Benjamin Herrenschmidt wrote:
-> > 
-> > > Olaf, can you give me a dump of /proc/ioports ? What is sitting at 0 on
-> > > that PCI bus ?
-> > 
-> > with IDE=y
-> > 
-> > ==> /proc/ioports <==
-> > 00000000-0000001f : dma1
-> 
-> So it's indeed colliding with the cruft above.
-> 
-> I reckon it's a bug in the firmware of this machine.
-> 
-> Add to pseries/pci.c a quirk for that chipset (don't forget to test for
-> machine_is(pseries) in the quirk as they get called for all platforms in
-> a combo kernel. The quirk shall check if resource 6 has a 0 base and
-> clear the size as Alan suggested (possibly setting the UNSET flag as
-> well).
+> sounds great! where can I get that version?
+> should it be in 2.6.20-rc* or is there a separate
+> patch available somewhere?
 
-I will test this change tomorrow:
+The patch was contained in the message from Alan to you that I replied to. I just applied it to a 
+vanilla 2.6.20-rc3 tree and fired it up.
 
-+++ linux-2.6/arch/powerpc/platforms/pseries/pci.c
-@@ -98,6 +98,10 @@ static void fixup_winbond_82c105(struct
-                if (dev->resource[i].flags & IORESOURCE_IO
-                    && dev->bus->number == 0 && dev->devfn == 0x81)
-                        dev->resource[i].flags &= ~IORESOURCE_IO;
-+               if (dev->resource[i].start == 0) {
-+                       printk("disable IO resource %d on W82c105 IDE controller\n", i);
-+                       dev->resource[i].flags = IORESOURCE_DISABLED;
-+               }
-        }
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+(I've pasted it inline here for you but I'm using thunderbird and it's likely the resulting mess may 
+not apply - not hard to manually change the required lines however)
+
+--- linux.vanilla-2.6.20-rc3/drivers/ata/pata_hpt37x.c	2007-01-01 21:43:27.000000000 +0000
++++ linux-2.6.20-rc3/drivers/ata/pata_hpt37x.c	2007-01-02 14:30:18.122801920 +0000
+@@ -25,7 +25,7 @@
+  #include <linux/libata.h>
+
+  #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.5.1"
++#define DRV_VERSION	"0.5.2"
+
+  struct hpt_clock {
+  	u8	xfer_speed;
+@@ -749,7 +749,7 @@
+  {
+  	struct ata_port *ap = qc->ap;
+  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	int mscreg = 0x50 + 2 * ap->port_no;
++	int mscreg = 0x50 + 4 * ap->port_no;
+  	u8 bwsr_stat, msc_stat;
+
+  	pci_read_config_byte(pdev, 0x6A, &bwsr_stat);
 
 
 
-Or did you mean 'if (dev->resource[5].start == 0)' ?
+
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
