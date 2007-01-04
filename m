@@ -1,103 +1,65 @@
-From: Bjorn Wesen <bjorn.wesen@axis.com>
-Subject: Re: 2.6.20-rc3 IRQ race upon resume? => killing SATA IRQ
-Date: Thu, 4 Jan 2007 02:55:49 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0701040244300.15167@localhost.localdomain>
-References: <Pine.LNX.4.64.0701040006300.15167@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Initial Promise SX4 hw docs opened
+Date: Wed, 03 Jan 2007 21:08:59 -0500
+Message-ID: <459C61BB.70205@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bart.se.axis.com ([193.13.178.9]:42725 "EHLO bart.se.axis.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:55476 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750882AbXADBzu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Jan 2007 20:55:50 -0500
-Received: from bart.se.axis.com (bart.se.axis.com [127.0.0.1])
-	by bart.se.axis.com (Postfix) with ESMTP id AD3236416D
-	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2007 02:55:49 +0100 (CET)
-Received: from godzilla.se.axis.com (godzilla.se.axis.com [10.84.17.11])
-	by bart.se.axis.com (Postfix) with ESMTP id A0EB3640FA
-	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2007 02:55:49 +0100 (CET)
-In-Reply-To: <Pine.LNX.4.64.0701040006300.15167@localhost.localdomain>
+	id S1751052AbXADCJE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Jan 2007 21:09:04 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
 
-Just adding some info here!
+The first open hardware docs for the Promise SX4 (sata_sx4) series are 
+now available:
+http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
+http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
 
-I added this to the bottom of ata_interrupt in libata-core.c which fixed the 
-problem:
+These are only small, ancillary guides; the main hardware doc should be 
+opened soon.
 
-         if(!handled) {
-           printk("ata_interrupt nobody cared. Trying to clear irq src\n");
-           for (i = 0; i < host->n_ports; i++) {
-             struct ata_port *ap;
+However, I would like to take this opportunity to point hackers looking 
+for a project at this hardware.  The Promise SX4 is pretty neat, and it 
+needs more attention than I can give, to reach its full potential.
 
-             ap = host->ports[i];
+Here's a braindump:
 
-             ata_bmdma_irq_clear(ap);
-           }
-           handled = 1;
-         }
+* It's an older chipset/board, probably not actively sold anymore
 
-The result was that the above message comes 3 times in a row during resume, 
-then it silences and everything works. Also, I noticed that ata_host_intr is 
-not called in these cases, so when the interrupt reaches the driver after 
-the resume, it ignores it probably because it thinks it has no QC active 
-(correctly probably). Question is, where is the irq coming from then.
+* ATA programming interface very close to sata_promise (PDC2037x)
 
-Obviously this is a horribly wrong fix, since if the interrupt is shared, we 
-will shadow the other interrupt so it never gets run (and corrupt our own 
-BM DMA operations).
+* Contains on-board DIMM, to be used for any purpose the driver desires
 
-A bit troubling that it seems to happen 3 times in a row, so anything simple 
-like clearing the BM IRQ status bit during the first stage of resume is not 
-enough perhaps (and I guess it already does that when re-initializing?).
+* Contains on-board RAID5 XOR, also fully programmable
 
-For reference, I found this message from november about ICH7 and spurious BM 
-interrupts and a (not optimal) solution:
+A key problem is that, under Linux, sata_sx4 cannot fully exploit the 
+RAID-centric power of this hardware by driving the hardware in "dumb ATA 
+mode" as it does.
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=116373296023279&w=2
+A better driver would notice when a RAID1 or RAID5 array contains 
+multiple components attached to the SX4, and send only a single copy of 
+the data to the card (saving PCI bus bandwidth tremendously). 
+Similarly, a better driver would take advantage of the RAID5 XOR offload 
+capabilities, to offload the entire RAID5 read or write transaction to 
+the card.
 
-/Bjorn
+All this is difficult within either the MD or DM RAID frameworks, 
+because optimizing each RAID transaction requires intimate knowledge of 
+the hardware.  We have the knowledge...  but I don't have good ideas -- 
+aside from an SX4-specific RAID 0/1/5/6 driver -- on how to exploit this 
+knowledge.
 
-On Thu, 4 Jan 2007, Bjorn Wesen wrote:
+Traditionally the vendor has distributed a SCSI driver that implements 
+the necessary RAID stack pieces entirely in the hardware driver itself. 
+  That sort of approach definitely works, but is traditionally rejected 
+by upstream maintainers because it essentially requires a third (if h/w 
+specific) RAID stack.
 
-> Hi folks,
->
-> There is only one thing keeping suspend-to-ram on my Sony Vaio SZ2 laptop 
-> from working currently, and that is that most of the times I suspend/resume, 
-> the SATA HD becomes blocked. Looking closer it is because an irq occurs 
-> during resume, which reaches ata_interrupt, it does not handle it, and Linux 
-> responds by blocking it permanently (the dreaded irq X: nobody cared).
->
-> The SZ2 has a Core Duo CPU, ICH7 and SATA is handled by the ata_piix driver. 
-> No other PCI interrupts are mapped or enabled to the same interrupt.
->
-> I can't help thinking this looks like a race, because it resumes correctly 
-> sometimes and then the HD works perfectly fine. Perhaps the SATA driver 
-> hasn't recovered itself at the time the first irq occurs and thus it feels it 
-> shouldn't handle it ?
->
-> I can't paste in the dmesg because the HD locks when it happens and thus it's 
-> not written to it, but essentially, the "nobody cared" msg comes after the 
-> extra CPU core is brought up, then the irq is disabled, then the ata driver 
-> is trying to reconfigure the devices and then it locks up.
->
-> I can debug it but I'd need some pointers on where to start. For example, one 
-> strategy could be to try forcing an acknowledge of the interrupt somehow in 
-> the bottom of ata_interrupt if it feels it can't handle an interrupt (I've 
-> only programmed embedded linux before not i386 so I don't know where to ack 
-> such an irq - in the PCI bridge itself, or in the ATA device ? :).
->
-> Another strategy could be to find the reason why the interrupt is not handled 
-> by enabling some debug or something which I haven't really looked into yet...
->
-> Any ideas ?
->
-> Regards,
->
-> Bjorn
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+	Jeff
+
+
