@@ -1,49 +1,32 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] add delay around sl82c105_reset_engine calls
-Date: Thu, 4 Jan 2007 10:53:45 +0000
-Message-ID: <20070104105345.046e7aec@localhost.localdomain>
-References: <20061130165202.GA23205@aepfle.de>
-	<20061204124026.GB28159@aepfle.de>
-	<20061204130254.424c7979@localhost.localdomain>
-	<20070104064254.GA31986@aepfle.de>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] SCSI, libata: add support for ATA_16  commands to libata ATAPI devices
+Date: Thu, 4 Jan 2007 16:09:01 +0100
+Message-ID: <20070104150900.GD11203@kernel.dk>
+References: <200701021935.07840.liml@rtr.ca> <1167788405.3687.25.camel@mulgrave.il.steeleye.com> <459B4243.5080804@rtr.ca> <1167838307.2789.12.camel@mulgrave.il.steeleye.com> <459C066D.30507@torque.net> <1167860496.2789.70.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43328 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932371AbXADKnY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jan 2007 05:43:24 -0500
-In-Reply-To: <20070104064254.GA31986@aepfle.de>
+Received: from brick.kernel.dk ([62.242.22.158]:20444 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964898AbXADPGJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Jan 2007 10:06:09 -0500
+Content-Disposition: inline
+In-Reply-To: <1167860496.2789.70.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dougg@torque.net, Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 
-On Thu, 4 Jan 2007 07:42:54 +0100
-Olaf Hering <olaf@aepfle.de> wrote:
+On Wed, Jan 03 2007, James Bottomley wrote:
+> Er, well, as you know, I've never been a fan of this static list.  I
+> thought Jens was going to put us all out of our misery by making the
+> list settable per device by root and thus shovel the problem off onto
+> the distros?
 
-> On Mon, Dec 04, Alan wrote:
-> 
-> > On Mon, 4 Dec 2006 13:40:26 +0100 (MET)
-> > Olaf Hering <olaf@aepfle.de> wrote:
-> > 
-> > > 
-> > > 
-> > > the hald media changed polling does really confuse things.
-> > > noone knows why the delays are needed, but they give us access to
-> > > the CD.
-> > 
-> > Can you tell me what happens if you completely pull the reset out of the
-> > dma_end function. Do you still need delays then.
-> 
-> An udelay(50) will give reliable access to the drive, but there is still
-> one (or more) EH reset. The drive works without EH resets with udelay(100).
-> 
-> Signed-off-by: Olaf Hering <olaf@aepfle.de>
+The code is there, just haven't had the guts to merge it yet.
 
-Acked-by: Alan Cox <alan@redhat.com>
+http://git.kernel.dk/?p=linux-2.6-block.git;a=commitdiff;h=bf5f922d167a5c5cf57132bbcaa1e0ddfd5c45f7
 
-This wants revisiting some day to understand the interaction better but
-for now it gets us up and running properly.
+-- 
+Jens Axboe
 
