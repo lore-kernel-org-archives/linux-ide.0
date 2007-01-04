@@ -1,89 +1,62 @@
-From: "Dan Williams" <dan.j.williams@gmail.com>
-Subject: Re: Initial Promise SX4 hw docs opened
-Date: Thu, 4 Jan 2007 11:52:39 -0700
-Message-ID: <e9c3a7c20701041052u487929c0o2e7c79a5a8355327@mail.gmail.com>
-References: <459C61BB.70205@garzik.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: What is the correct way to indicate an unassigned PCI resource ?
+Date: Fri, 05 Jan 2007 08:30:40 +1100
+Message-ID: <1167946240.5273.11.camel@localhost.localdomain>
+References: <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
+	<4574197A.2020204@ru.mvista.com>
+	<4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org>
+	<45741DDE.4080509@ru.mvista.com>
+	<20061204132124.4f7c50a9@localhost.localdomain>
+	<45742253.1000807@ru.mvista.com>
+	<20061204142201.68d9621f@localhost.localdomain>
+	<1165293679.29784.39.camel@localhost.localdomain>
+	<20061205081557.GA8483@aepfle.de>
+	<1165349941.5469.1.camel@localhost.localdomain>
+	<20070104174947.GA3636@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:4916 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946AbXADSwk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jan 2007 13:52:40 -0500
-Received: by an-out-0708.google.com with SMTP id b33so256703ana
-        for <linux-ide@vger.kernel.org>; Thu, 04 Jan 2007 10:52:40 -0800 (PST)
-In-Reply-To: <459C61BB.70205@garzik.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <20070104174947.GA3636@aepfle.de>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: linux-ide@vger.kernel.org, greg@kroah.com, linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz, Alan <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 1/3/07, Jeff Garzik <jeff@garzik.org> wrote:
-> The first open hardware docs for the Promise SX4 (sata_sx4) series are
-> now available:
-> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
-> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
->
-> These are only small, ancillary guides; the main hardware doc should be
-> opened soon.
->
-> However, I would like to take this opportunity to point hackers looking
-> for a project at this hardware.  The Promise SX4 is pretty neat, and it
-> needs more attention than I can give, to reach its full potential.
->
-> Here's a braindump:
->
-> * It's an older chipset/board, probably not actively sold anymore
->
-> * ATA programming interface very close to sata_promise (PDC2037x)
->
-> * Contains on-board DIMM, to be used for any purpose the driver desires
->
-> * Contains on-board RAID5 XOR, also fully programmable
->
-> A key problem is that, under Linux, sata_sx4 cannot fully exploit the
-> RAID-centric power of this hardware by driving the hardware in "dumb ATA
-> mode" as it does.
->
-> A better driver would notice when a RAID1 or RAID5 array contains
-> multiple components attached to the SX4, and send only a single copy of
-> the data to the card (saving PCI bus bandwidth tremendously).
-> Similarly, a better driver would take advantage of the RAID5 XOR offload
-> capabilities, to offload the entire RAID5 read or write transaction to
-> the card.
->
-> All this is difficult within either the MD or DM RAID frameworks,
-> because optimizing each RAID transaction requires intimate knowledge of
-> the hardware.  We have the knowledge...  but I don't have good ideas --
-> aside from an SX4-specific RAID 0/1/5/6 driver -- on how to exploit this
-> knowledge.
->
-Can the XOR engines on the card access host memory or do they only
-operate on the card's local memory?  And are there DMA (copy) engines?
 
-> Traditionally the vendor has distributed a SCSI driver that implements
-> the necessary RAID stack pieces entirely in the hardware driver itself.
->   That sort of approach definitely works, but is traditionally rejected
-> by upstream maintainers because it essentially requires a third (if h/w
-> specific) RAID stack.
->
-[ brainstorming ]
-For the RAID5 case: With the hardware acceleration patches the part of
-MD that actually operates on the stripe cache is factored out of
-handle_stripe5.  So MD can be used to handle all of the cache state
-information and then use a SX4 specific operations routine to handle
-the data transfers.  However this assumes that all the members of the
-array are behind the SX4 (which is the same assumption the vendor
-driver makes so maybe its not so bad).
+> > Add to pseries/pci.c a quirk for that chipset (don't forget to test for
+> > machine_is(pseries) in the quirk as they get called for all platforms in
+> > a combo kernel. The quirk shall check if resource 6 has a 0 base and
+> > clear the size as Alan suggested (possibly setting the UNSET flag as
+> > well).
+> 
+> I will test this change tomorrow:
+> 
+> +++ linux-2.6/arch/powerpc/platforms/pseries/pci.c
+> @@ -98,6 +98,10 @@ static void fixup_winbond_82c105(struct
+>                 if (dev->resource[i].flags & IORESOURCE_IO
+>                     && dev->bus->number == 0 && dev->devfn == 0x81)
+>                         dev->resource[i].flags &= ~IORESOURCE_IO;
+> +               if (dev->resource[i].start == 0) {
+> +                       printk("disable IO resource %d on W82c105 IDE controller\n", i);
+> +                       dev->resource[i].flags = IORESOURCE_DISABLED;
+> +               }
+>         }
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+> 
+> 
+> 
+> Or did you mean 'if (dev->resource[5].start == 0)' ?
 
-The part I am lost at it is how do you tell libata and the lldd that
-data for a transaction is coming from or headed to device local memory
-and not host memory?  It seems there would need to be changes to the
-dma api to handle this distinction?
-
->         Jeff
->
-
-Dan
+Nah, but also set resource->end = 0 too and or-in IORESOURCE_UNSET for
+flags not (=) (or just set it to 0, I have no problem with completely
+clearing the resource, that will keep it out of the way)
