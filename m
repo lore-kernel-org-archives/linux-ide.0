@@ -1,49 +1,79 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
-Subject: Re: problem with pata_hpt37x ...
-Date: Thu, 4 Jan 2007 18:30:58 +0100
-Message-ID: <20070104173058.GA2160@MAIL.13thfloor.at>
-References: <20070102070144.GA11270@MAIL.13thfloor.at> <20070102145855.170c03e2@localhost.localdomain> <459D26D4.3010601@wasp.net.au>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc3: known unfixed regressions (v3)
+Date: Thu, 4 Jan 2007 18:46:32 +0100
+Message-ID: <20070104174632.GC20714@stusta.de>
+References: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from MAIL.13thfloor.at ([213.145.232.33]:36818 "EHLO
-	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965043AbXADRa7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jan 2007 12:30:59 -0500
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:2748 "HELO
+	mailout.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932080AbXADRqa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jan 2007 12:46:30 -0500
 Content-Disposition: inline
-In-Reply-To: <459D26D4.3010601@wasp.net.au>
+In-Reply-To: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel ML <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jon Smirl <jonsmirl@gmail.com>, Damien Wyart <damien.wyart@free.fr>, Aaron Sethman <androsyn@ratbox.org>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, len.brown@intel.com, linux-acpi@vger.kernel.org, Florin Iucha <florin@iucha.net>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, dmitry.torokhov@gmail.com, linux-input@atrey.karlin.mff.cuni.cz, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Komuro <komurojun-mbn@nifty.com>, YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>, netdev@vger.kernel.org, Tobias Diedrich <ranma+kernel@tdiedrich.de>, Andi Kleen <ak@suse.de>, Yinghai Lu <yinghai.lu@amd.com>, "Eric W. Biederman" <ebiederm@xmission.com>, discuss@x86-64.org, mingo@redhat.com
 
-On Thu, Jan 04, 2007 at 08:09:56PM +0400, Brad Campbell wrote:
-> Alan wrote:
-> >On Tue, 2 Jan 2007 08:01:45 +0100
-> >Herbert Poetzl <herbert@13thfloor.at> wrote:
-> >
-> >>if you are interested in investigating this, please
-> >>let me know what kind of data you would like to see
-> >>and/or what kind of tests would be appreciated.
-> >
-> >I reviewed the 374 code a bit further to see what might be causing this
-> >and found the slave channel end of DMA handling was using the wrong port
-> >I think.
-> 
-> This now passes all my stress tests Alan. No more "Interrupt disabled"
-> or dmesg storms. I put the HPT Rocketraid 1540 (HPT374) back in a box
-> and connected 4 200GB ata drives to it using SATA-PATA bridgeboards as
-> before. It looks to be rock solid now.
+This email lists some known regressions in 2.6.20-rc3 compared to 2.6.19
+that are not yet fixed in Linus' tree.
 
-sounds great! where can I get that version?
-should it be in 2.6.20-rc* or is there a separate
-patch available somewhere?
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possibly
+involved with one or more of these issues.
 
-TIA,
-Herbert
+Due to the huge amount of recipients, please trim the Cc when answering.
 
-> Brad
-> -- 
-> "Human beings, who are almost unique in having the ability
-> to learn from the experience of others, are also remarkable
-> for their apparent disinclination to do so." -- Douglas Adams
+
+Subject    : BUG: scheduling while atomic: hald-addon-stor/...
+             cdrom_{open,release,ioctl} in trace
+References : http://lkml.org/lkml/2006/12/26/105
+             http://lkml.org/lkml/2006/12/29/22
+             http://lkml.org/lkml/2006/12/31/133
+Submitter  : Jon Smirl <jonsmirl@gmail.com>
+             Damien Wyart <damien.wyart@free.fr>
+             Aaron Sethman <androsyn@ratbox.org>
+Status     : unknown
+
+
+Subject    : Acer Extensa 3002 WLMi: 'shutdown -h now' reboots the system
+References : http://lkml.org/lkml/2006/12/25/40
+Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
+Status     : unknown
+
+
+Subject    : USB keyboard unresponsive after some time
+References : http://lkml.org/lkml/2006/12/25/35
+             http://lkml.org/lkml/2006/12/26/106
+Submitter  : Florin Iucha <florin@iucha.net>
+Status     : unknown
+
+
+Subject    : SPARC64: Can't mount /  (CONFIG_SCSI_SCAN_ASYNC=y ?)
+References : http://lkml.org/lkml/2006/12/13/181
+             http://lkml.org/lkml/2007/01/04/75
+Submitter  : Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Status     : unknown
+
+
+Subject    : ftp: get or put stops during file-transfer
+References : http://lkml.org/lkml/2006/12/16/174
+Submitter  : Komuro <komurojun-mbn@nifty.com>
+Caused-By  : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+             commit cfb6eeb4c860592edd123fdea908d23c6ad1c7dc
+Handled-By : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+Status     : problem is being debugged
+
+
+Subject    : x86_64 boot failure: "IO-APIC + timer doesn't work"
+References : http://lkml.org/lkml/2006/12/16/101
+             http://lkml.org/lkml/2007/1/3/9
+Submitter  : Tobias Diedrich <ranma+kernel@tdiedrich.de>
+Caused-By  : Andi Kleen <ak@suse.de>
+             commit b026872601976f666bae77b609dc490d1834bf77
+Handled-By : Yinghai Lu <yinghai.lu@amd.com>
+             Eric W. Biederman <ebiederm@xmission.com>
+Status     : patches are being discussed
