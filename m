@@ -1,79 +1,74 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc3: known unfixed regressions (v3)
-Date: Thu, 4 Jan 2007 18:46:32 +0100
-Message-ID: <20070104174632.GC20714@stusta.de>
-References: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: What is the correct way to indicate an unassigned PCI resource ?
+Date: Thu, 4 Jan 2007 18:49:47 +0100
+Message-ID: <20070104174947.GA3636@aepfle.de>
+References: <FF278F8E-1F65-488D-8821-86A1D9F3B5DA@kernel.crashing.org>
+	<4574197A.2020204@ru.mvista.com>
+	<4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org>
+	<45741DDE.4080509@ru.mvista.com>
+	<20061204132124.4f7c50a9@localhost.localdomain>
+	<45742253.1000807@ru.mvista.com>
+	<20061204142201.68d9621f@localhost.localdomain>
+	<1165293679.29784.39.camel@localhost.localdomain>
+	<20061205081557.GA8483@aepfle.de>
+	<1165349941.5469.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:2748 "HELO
-	mailout.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932080AbXADRqa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jan 2007 12:46:30 -0500
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1165349941.5469.1.camel@localhost.localdomain>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, greg@kroah.com, linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz, Alan <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jon Smirl <jonsmirl@gmail.com>, Damien Wyart <damien.wyart@free.fr>, Aaron Sethman <androsyn@ratbox.org>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, len.brown@intel.com, linux-acpi@vger.kernel.org, Florin Iucha <florin@iucha.net>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, dmitry.torokhov@gmail.com, linux-input@atrey.karlin.mff.cuni.cz, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Komuro <komurojun-mbn@nifty.com>, YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>, netdev@vger.kernel.org, Tobias Diedrich <ranma+kernel@tdiedrich.de>, Andi Kleen <ak@suse.de>, Yinghai Lu <yinghai.lu@amd.com>, "Eric W. Biederman" <ebiederm@xmission.com>, discuss@x86-64.org, mingo@redhat.com
 
-This email lists some known regressions in 2.6.20-rc3 compared to 2.6.19
-that are not yet fixed in Linus' tree.
+On Wed, Dec 06, Benjamin Herrenschmidt wrote:
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possibly
-involved with one or more of these issues.
+> On Tue, 2006-12-05 at 09:15 +0100, Olaf Hering wrote:
+> > On Tue, Dec 05, Benjamin Herrenschmidt wrote:
+> > 
+> > > Olaf, can you give me a dump of /proc/ioports ? What is sitting at 0 on
+> > > that PCI bus ?
+> > 
+> > with IDE=y
+> > 
+> > ==> /proc/ioports <==
+> > 00000000-0000001f : dma1
+> 
+> So it's indeed colliding with the cruft above.
+> 
+> I reckon it's a bug in the firmware of this machine.
+> 
+> Add to pseries/pci.c a quirk for that chipset (don't forget to test for
+> machine_is(pseries) in the quirk as they get called for all platforms in
+> a combo kernel. The quirk shall check if resource 6 has a 0 base and
+> clear the size as Alan suggested (possibly setting the UNSET flag as
+> well).
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+I will test this change tomorrow:
 
-
-Subject    : BUG: scheduling while atomic: hald-addon-stor/...
-             cdrom_{open,release,ioctl} in trace
-References : http://lkml.org/lkml/2006/12/26/105
-             http://lkml.org/lkml/2006/12/29/22
-             http://lkml.org/lkml/2006/12/31/133
-Submitter  : Jon Smirl <jonsmirl@gmail.com>
-             Damien Wyart <damien.wyart@free.fr>
-             Aaron Sethman <androsyn@ratbox.org>
-Status     : unknown
-
-
-Subject    : Acer Extensa 3002 WLMi: 'shutdown -h now' reboots the system
-References : http://lkml.org/lkml/2006/12/25/40
-Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
-Status     : unknown
-
-
-Subject    : USB keyboard unresponsive after some time
-References : http://lkml.org/lkml/2006/12/25/35
-             http://lkml.org/lkml/2006/12/26/106
-Submitter  : Florin Iucha <florin@iucha.net>
-Status     : unknown
-
-
-Subject    : SPARC64: Can't mount /  (CONFIG_SCSI_SCAN_ASYNC=y ?)
-References : http://lkml.org/lkml/2006/12/13/181
-             http://lkml.org/lkml/2007/01/04/75
-Submitter  : Horst H. von Brand <vonbrand@inf.utfsm.cl>
-Status     : unknown
++++ linux-2.6/arch/powerpc/platforms/pseries/pci.c
+@@ -98,6 +98,10 @@ static void fixup_winbond_82c105(struct
+                if (dev->resource[i].flags & IORESOURCE_IO
+                    && dev->bus->number == 0 && dev->devfn == 0x81)
+                        dev->resource[i].flags &= ~IORESOURCE_IO;
++               if (dev->resource[i].start == 0) {
++                       printk("disable IO resource %d on W82c105 IDE controller\n", i);
++                       dev->resource[i].flags = IORESOURCE_DISABLED;
++               }
+        }
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
 
 
-Subject    : ftp: get or put stops during file-transfer
-References : http://lkml.org/lkml/2006/12/16/174
-Submitter  : Komuro <komurojun-mbn@nifty.com>
-Caused-By  : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
-             commit cfb6eeb4c860592edd123fdea908d23c6ad1c7dc
-Handled-By : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
-Status     : problem is being debugged
 
-
-Subject    : x86_64 boot failure: "IO-APIC + timer doesn't work"
-References : http://lkml.org/lkml/2006/12/16/101
-             http://lkml.org/lkml/2007/1/3/9
-Submitter  : Tobias Diedrich <ranma+kernel@tdiedrich.de>
-Caused-By  : Andi Kleen <ak@suse.de>
-             commit b026872601976f666bae77b609dc490d1834bf77
-Handled-By : Yinghai Lu <yinghai.lu@amd.com>
-             Eric W. Biederman <ebiederm@xmission.com>
-Status     : patches are being discussed
+Or did you mean 'if (dev->resource[5].start == 0)' ?
