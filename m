@@ -1,36 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Greg KH <gregkh@suse.de>
 Subject: Re: [RFC,PATCHSET] Managed device resources
-Date: Thu, 04 Jan 2007 17:26:43 -0500
-Message-ID: <459D7F23.7010807@garzik.org>
-References: <1167146313307-git-send-email-htejun@gmail.com> <20070104221916.GI28445@suse.de>
+Date: Thu, 4 Jan 2007 14:32:47 -0800
+Message-ID: <20070104223247.GA29274@suse.de>
+References: <1167146313307-git-send-email-htejun@gmail.com> <20070104221916.GI28445@suse.de> <459D7F23.7010807@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33683 "EHLO mail.dvmed.net"
+Received: from mail.kroah.org ([69.55.234.183]:55531 "EHLO perch.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965120AbXADW0q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Jan 2007 17:26:46 -0500
-In-Reply-To: <20070104221916.GI28445@suse.de>
+	id S965099AbXADWdK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Jan 2007 17:33:10 -0500
+Content-Disposition: inline
+In-Reply-To: <459D7F23.7010807@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Greg KH wrote:
-> Hm, but I guess without the follow-up patches for libata, it will not
-> really get tested much.  Jeff, if I accept this, what's your feelings of
-> letting libata be the "test bed" for it?
+On Thu, Jan 04, 2007 at 05:26:43PM -0500, Jeff Garzik wrote:
+> Greg KH wrote:
+> >Hm, but I guess without the follow-up patches for libata, it will not
+> >really get tested much.  Jeff, if I accept this, what's your feelings of
+> >letting libata be the "test bed" for it?
+> 
+> 
+> It would be easiest for me to merge this through my 
+> libata-dev.git#upstream tree.  That will auto-propagate it to -mm, and 
+> ensure that both base and libata bits are sent in one batch.
+> 
+> Just shout if you see NAK-able bits...
+> 
+> Work for you?
 
+That works for me.
 
-It would be easiest for me to merge this through my 
-libata-dev.git#upstream tree.  That will auto-propagate it to -mm, and 
-ensure that both base and libata bits are sent in one batch.
+The only question I have is on the EXPORT_SYMBOL() stuff for the new
+driver/base/ functions.  Tejun, traditionally the driver core has all
+exported symbols marked with EXPORT_SYMBOL_GPL().  So, any objection to
+marking the new ones (becides the "mirror" functions) in this manner?
 
-Just shout if you see NAK-able bits...
+thanks,
 
-Work for you?
-
-	Jeff
-
-
+greg k-h
