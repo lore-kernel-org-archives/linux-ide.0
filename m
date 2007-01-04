@@ -1,65 +1,58 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Initial Promise SX4 hw docs opened
-Date: Wed, 03 Jan 2007 21:08:59 -0500
-Message-ID: <459C61BB.70205@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata1: spurious interrupt (irq_stat 0x8 active_tag -84148995 sactive
+ 0x0) r0xj0
+Date: Thu, 04 Jan 2007 12:16:18 +0900
+Message-ID: <459C7182.4020000@gmail.com>
+References: <f4527be0612271812p7282de31j98462aebde16e5a1@mail.gmail.com> <45933A53.1090702@gmail.com> <loom.20070103T020347-255@post.gmane.org> <459B140C.1060401@gmail.com> <Pine.LNX.4.64.0701030334460.12309@dolores.legate.org> <459B2DEA.8080202@gmail.com> <Pine.LNX.4.64.0701031733001.1969@dolores.legate.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55476 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751052AbXADCJE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Jan 2007 21:09:04 -0500
+Received: from nz-out-0506.google.com ([64.233.162.236]:13171 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932267AbXADDQZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jan 2007 22:16:25 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so2992927nze
+        for <linux-ide@vger.kernel.org>; Wed, 03 Jan 2007 19:16:24 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.64.0701031733001.1969@dolores.legate.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+To: bbee <bumble.bee@xs4all.nl>
+Cc: Andrew Lyon <andrew.lyon@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The first open hardware docs for the Promise SX4 (sata_sx4) series are 
-now available:
-http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
-http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
+bbee wrote:
+> Sorry, I thought you meant you would need to update it *further*. I
+> applied the patch you gave to Andrew with this result so far:
+> 
+> $ dmesg | grep -A1 "spurious interrupt"
+> ata1: spurious interrupt (irq_stat 0x8 active_tag 0xfafbfcfd sactive 0x0)
+> ata1: issue=0x0 SAct=0x0 SDB_FIS=004040a1:00000008
+> -- 
+> ata1: spurious interrupt (irq_stat 0x8 active_tag 0xfafbfcfd sactive 0x0)
+> ata1: issue=0x0 SAct=0x0 SDB_FIS=004040a1:00000001
 
-These are only small, ancillary guides; the main hardware doc should be 
-opened soon.
+Ek... Your problem is similar too.
 
-However, I would like to take this opportunity to point hackers looking 
-for a project at this hardware.  The Promise SX4 is pretty neat, and it 
-needs more attention than I can give, to reach its full potential.
+> No luck yet triggering the exception.
+> 
+> On Wed, 3 Jan 2007, Andrew Lyon wrote:
+>> Alan said he was going to add the drive to a blacklist he was
+>> maintaining for NCQ, perhaps that has been done in kernel 2.6.19, I
+>> dont know as I am still running 2.6.18.
+>>
+>> Perhaps the WD Raptor drive that I have does have lousy NCQ and that
+>> explains both the poor performance and the spurious interrupts.
+> 
+> Blacklisting NCQ on the drive(s) for all controllers might be ill
+> advised, since it could be a JMicron-specific issue (or ahci-specific,
+> since the person in the thread I referenced had a different ahci
+> controller..). Either that, or both our drive models have "lousy NCQ"..
 
-Here's a braindump:
+If it turns out to be drive's fault, I'm afraid there's no other
+solution than blacklisting those drives on all controllers.  It's
+protocol violation on drive's side, so I don't think there is an easy
+way out here except for firmware upgrade.  I'm asking people about this,
+so please be patient.
 
-* It's an older chipset/board, probably not actively sold anymore
-
-* ATA programming interface very close to sata_promise (PDC2037x)
-
-* Contains on-board DIMM, to be used for any purpose the driver desires
-
-* Contains on-board RAID5 XOR, also fully programmable
-
-A key problem is that, under Linux, sata_sx4 cannot fully exploit the 
-RAID-centric power of this hardware by driving the hardware in "dumb ATA 
-mode" as it does.
-
-A better driver would notice when a RAID1 or RAID5 array contains 
-multiple components attached to the SX4, and send only a single copy of 
-the data to the card (saving PCI bus bandwidth tremendously). 
-Similarly, a better driver would take advantage of the RAID5 XOR offload 
-capabilities, to offload the entire RAID5 read or write transaction to 
-the card.
-
-All this is difficult within either the MD or DM RAID frameworks, 
-because optimizing each RAID transaction requires intimate knowledge of 
-the hardware.  We have the knowledge...  but I don't have good ideas -- 
-aside from an SX4-specific RAID 0/1/5/6 driver -- on how to exploit this 
-knowledge.
-
-Traditionally the vendor has distributed a SCSI driver that implements 
-the necessary RAID stack pieces entirely in the hardware driver itself. 
-  That sort of approach definitely works, but is traditionally rejected 
-by upstream maintainers because it essentially requires a third (if h/w 
-specific) RAID stack.
-
-	Jeff
-
-
+-- 
+tejun
