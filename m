@@ -1,62 +1,39 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: What is the correct way to indicate an unassigned PCI resource
-	?
-Date: Fri, 05 Jan 2007 23:05:06 +1100
-Message-ID: <1167998706.22458.22.camel@localhost.localdomain>
-References: <4FC2EBCF-C927-435A-9BE3-E4403AFC042D@kernel.crashing.org>
-	 <45741DDE.4080509@ru.mvista.com>
-	 <20061204132124.4f7c50a9@localhost.localdomain>
-	 <45742253.1000807@ru.mvista.com>
-	 <20061204142201.68d9621f@localhost.localdomain>
-	 <1165293679.29784.39.camel@localhost.localdomain>
-	 <20061205081557.GA8483@aepfle.de>
-	 <1165349941.5469.1.camel@localhost.localdomain>
-	 <20070104174947.GA3636@aepfle.de>
-	 <1167946240.5273.11.camel@localhost.localdomain>
-	 <20070105102618.GA9970@aepfle.de>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Bugs in Kernels 2.6.20-rc2, rc3 and 2.6.20-rc2-mm1
+Date: Fri, 5 Jan 2007 10:54:44 -0800
+Message-ID: <20070105105444.946f05bb.akpm@osdl.org>
+References: <20070105182037.207760@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:55672 "EHLO gate.crashing.org"
+Received: from smtp.osdl.org ([65.172.181.24]:53043 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161082AbXAEMFf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Jan 2007 07:05:35 -0500
-In-Reply-To: <20070105102618.GA9970@aepfle.de>
+	id S1422684AbXAETMe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Jan 2007 14:12:34 -0500
+In-Reply-To: <20070105182037.207760@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linuxppc-dev@ozlabs.org, greg@kroah.com, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Cc: linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>
 
-On Fri, 2007-01-05 at 11:26 +0100, Olaf Hering wrote:
-> On Fri, Jan 05, Benjamin Herrenschmidt wrote:
+On Fri, 05 Jan 2007 19:20:37 +0100
+"Uwe Bugla" <uwe.bugla@gmx.de> wrote:
+
+> Hi,
+> 1.In Kernels 2.6.20-rc2 and 2.6.20-rc3 a CD- and DVD-burning application called nerolinux is doing nasty things:
+> After a cold start you start the application, then chose the burning device, then close the application. Then the KDE Daemon comes up although no CD is inserted into the burning device. In every following use of Nerolinux after that nerolinux is incapable of recognizing CD- and DVD devices. In other words:
+> The device stays active, with or without containing a CD or DVD, and is not released anymore!
+> Dmesg looks like this:
+> hdd: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdd: drive not ready for command
 > 
-> > Nah, but also set resource->end = 0 too and or-in IORESOURCE_UNSET for
-> > flags not (=) (or just set it to 0, I have no problem with completely
-> > clearing the resource, that will keep it out of the way)
+> This does not happen in Kernel 2.6.19!
+
+Added linux-ide.
+
+> 2.In Kernel 2.6.20-rc2-mm1 you cannot mount a conventional floppy drive without hanging up the whole system. This does not happen in Kernel 2.6.20-rc2 and rc3.
 > 
-> I get this output with the change below:
-> 
-> Using INTC for W82c105 IDE controller.
-> W82c105: bn 0 dfn 19
-> 00: f 0000000000000101 s 000000000000f000 e 000000000000f007
-> 01: f 0000000000000101 s 000000000000f010 e 000000000000f013
-> 02: f 0000000000000101 s 000000000000f020 e 000000000000f027
-> 03: f 0000000000000101 s 000000000000f030 e 000000000000f033
-> 04: f 0000000000000101 s 000000000000f040 e 000000000000f04f
-> 05: f 0000000000000101 s 0000000000000000 e 000000000000000f
-> 05: disable IO resource on W82c105 IDE controller
-> 06: f 0000000000000000 s 0000000000000000 e 0000000000000000
-> 07: f 0000000000000000 s 0000000000000000 e 0000000000000000
-> 08: f 0000000000000000 s 0000000000000000 e 0000000000000000
-> 09: f 0000000000000000 s 0000000000000000 e 0000000000000000
-> 10: f 0000000000000000 s 0000000000000000 e 0000000000000000
-> 11: f 0000000000000000 s 0000000000000000 e 0000000000000000
-> 
-> If thats ok, I will submit a patch without the printk.
 
-If it works, I'm fine with it.
-
-Ben.
-
-
+Yup, this is still on my list of things to look at, thanks.
