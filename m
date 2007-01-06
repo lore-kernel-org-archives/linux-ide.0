@@ -1,45 +1,86 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH libata #promise-sata-pata] sata_promise: 2037x PATAPI support
-Date: Sat, 6 Jan 2007 21:32:03 +0100 (MET)
-Message-ID: <200701062032.l06KW3Qt022251@harpo.it.uu.se>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:40898 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932167AbXAFUcM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 6 Jan 2007 15:32:12 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc3: known unfixed regressions (v4)
+Date: Sat, 6 Jan 2007 22:04:17 +0100
+Message-ID: <20070106210417.GA20714@stusta.de>
+References: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
+Sender: netdev-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tobias Diedrich <ranma+kernel@tdiedrich.de>, Andi Kleen <ak@suse.de>, Yinghai Lu <yinghai.lu@amd.com>, "Eric W. Biederman" <ebiederm@xmission.com>, mingo@redhat.com, discuss@x86-64.org, Jon Smirl <jonsmirl@gmail.com>, Damien Wyart <damien.wyart@free.fr>, Aaron Sethman <androsyn@ratbox.org>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Uwe Bugla <uwe.bugla@gmx.de>, Florin Iucha <florin@iucha.net>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, dmitry.torokhov@gmail.com, linux-input@atrey.karlin.mff.cuni.cz, Berthold Cogel <cogel@rrz.uni-koeln.de>, Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>, len.brown@intel.com, linux-acpi@vger.kernel.org, Komuro <komurojun-mbn@nifty.com>, YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>, netdev@vger.kernel.org, Hugh Dickins <hugh@veritas.com>, Marcus
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch adds ATAPI support for the PATA port on Promise 2037x chips.
-It depends on the common sata_promise ATAPI support patch.
+This email lists some known regressions in 2.6.20-rc3 compared to 2.6.19
+that are not yet fixed in Linus' tree.
 
-First-generation chips don't support ATAPI on their SATA ports, so
-the patch removes ATA_FLAG_NO_ATAPI from the 2037x common host flags,
-and adds it back via the _port_flags[] entries for the SATA ports.
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possibly
+involved with one or more of these issues.
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+Due to the huge amount of recipients, please trim the Cc when answering.
 
---- linux-2.6.20-rc3/drivers/ata/sata_promise.c.~1~	2007-01-06 17:10:56.000000000 +0100
-+++ linux-2.6.20-rc3/drivers/ata/sata_promise.c	2007-01-06 17:14:23.000000000 +0100
-@@ -187,7 +187,7 @@ static const struct ata_port_info pdc_po
- 	/* board_2037x */
- 	{
- 		.sht		= &pdc_ata_sht,
--		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_NO_ATAPI /* | ATA_FLAG_SATA */,
-+		.flags		= PDC_COMMON_FLAGS /* | ATA_FLAG_NO_ATAPI | ATA_FLAG_SATA */,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-@@ -996,6 +996,10 @@ static int pdc_ata_init_one (struct pci_
-        			probe_ent->n_ports = 2;
- 		probe_ent->_port_flags[0] = ATA_FLAG_SATA;
- 		probe_ent->_port_flags[1] = ATA_FLAG_SATA;
-+		if (board_idx == board_2037x) {
-+			probe_ent->_port_flags[0] |= ATA_FLAG_NO_ATAPI;
-+			probe_ent->_port_flags[1] |= ATA_FLAG_NO_ATAPI;
-+		}
- 		break;
- 	case board_20619:
- 		probe_ent->n_ports = 4;
+
+Subject    : x86_64 boot failure: "IO-APIC + timer doesn't work"
+References : http://lkml.org/lkml/2006/12/16/101
+             http://lkml.org/lkml/2007/1/3/9
+Submitter  : Tobias Diedrich <ranma+kernel@tdiedrich.de>
+Caused-By  : Andi Kleen <ak@suse.de>
+             commit b026872601976f666bae77b609dc490d1834bf77
+Handled-By : Yinghai Lu <yinghai.lu@amd.com>
+             Eric W. Biederman <ebiederm@xmission.com>
+Status     : patches are being discussed
+
+
+Subject    : BUG: scheduling while atomic: hald-addon-stor/...
+             cdrom_{open,release,ioctl} in trace
+References : http://lkml.org/lkml/2006/12/26/105
+             http://lkml.org/lkml/2006/12/29/22
+             http://lkml.org/lkml/2006/12/31/133
+Submitter  : Jon Smirl <jonsmirl@gmail.com>
+             Damien Wyart <damien.wyart@free.fr>
+             Aaron Sethman <androsyn@ratbox.org>
+Status     : unknown
+
+
+Subject    : problems with CD burning
+References : http://www.spinics.net/lists/linux-ide/msg06545.html
+Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+Status     : unknown
+
+
+Subject    : USB keyboard unresponsive after some time
+References : http://lkml.org/lkml/2006/12/25/35
+             http://lkml.org/lkml/2006/12/26/106
+Submitter  : Florin Iucha <florin@iucha.net>
+Status     : unknown
+
+
+Subject    : Acer Extensa 3002 WLMi: 'shutdown -h now' reboots the system
+References : http://lkml.org/lkml/2006/12/25/40
+Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
+Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>
+Status     : problem is being debugged
+
+
+Subject    : ftp: get or put stops during file-transfer
+References : http://lkml.org/lkml/2006/12/16/174
+Submitter  : Komuro <komurojun-mbn@nifty.com>
+Caused-By  : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+             commit cfb6eeb4c860592edd123fdea908d23c6ad1c7dc
+Handled-By : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+Status     : problem is being debugged
+
+
+Subject    : PIE randomization causes random failures of kernel compiles
+References : http://lkml.org/lkml/2007/1/6/124
+Submitter  : Hugh Dickins <hugh@veritas.com>
+Caused-By  : Marcus Meissner <meissner@suse.de>
+             commit 59287c0913cc9a6c75712a775f6c1c1ef418ef3b
+Handled-By : Hugh Dickins <hugh@veritas.com>
+Patch      : http://lkml.org/lkml/2007/1/6/124
+Status     : patch was suggested
+
