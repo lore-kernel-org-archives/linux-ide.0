@@ -1,45 +1,42 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: [patch 16/50] SCSI: add missing cdb clearing in scsi_execute()
-Date: Fri, 05 Jan 2007 18:28:09 -0800
-Message-ID: <20070106023159.171784000@sous-sol.org>
-References: <20070106022753.334962000@sous-sol.org>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751109AbXAFCni@vger.kernel.org>
-Content-Disposition: inline; filename=scsi-add-missing-cdb-clearing-in-scsi_execute.patch
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, jens.axboe@oracle.com, dougg@torque.net, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, torvalds@osdl.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, Tejun Heo <htejun@gmail.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: problem with pata_hpt37x ...
+Date: Sat, 06 Jan 2007 13:06:18 +0400
+Message-ID: <459F668A.7050000@wasp.net.au>
+References: <20070102070144.GA11270@MAIL.13thfloor.at> <20070102145855.170c03e2@localhost.localdomain> <459D26D4.3010601@wasp.net.au> <20070104173058.GA2160@MAIL.13thfloor.at> <459D42B1.20604@wasp.net.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wasp.net.au ([203.190.192.17]:43728 "EHLO wasp.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751207AbXAFJGp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 6 Jan 2007 04:06:45 -0500
+In-Reply-To: <459D42B1.20604@wasp.net.au>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel ML <linux-kernel@vger.kernel.org>
 
--stable review patch.  If anyone has any objections, please let us know.
-------------------
+Brad Campbell wrote:
+> Herbert Poetzl wrote:
+> 
+>> sounds great! where can I get that version?
+>> should it be in 2.6.20-rc* or is there a separate
+>> patch available somewhere?
+> 
+> The patch was contained in the message from Alan to you that I replied 
+> to. I just applied it to a vanilla 2.6.20-rc3 tree and fired it up.
+> 
 
-From: Tejun Heo <htejun@gmail.com>
+Just a warning. I'm seeing data corruption on this system. I need to try and narrow it down, but on 
+transferring 100 files totalling about 80GB from a USB drive to the drives on this controller I'm 
+seeing repeatable and apparently random corruption on the data reaching the disks. I don't recall 
+seeing this when I used SIL controllers in place of the HPT but I now have an easily repeatable test 
+case so I'll keep testing until I peg it.
 
-Clear-garbage-after-CDB patch missed scsi_execute() and it causes some
-ODDs (HL-DT-ST DVD-RAM GSA-H30N) choke during SCSI scan.  Note that
-this patch is only for -stable.  There is another more reliable fix
-for this problem proposed for devel tree.
 
-http://thread.gmane.org/gmane.linux.ide/14605/focus=14605
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: Douglas Gilbert <dougg@torque.net>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
-
----
- drivers/scsi/scsi_lib.c |    1 +
- 1 file changed, 1 insertion(+)
-
---- linux-2.6.19.1.orig/drivers/scsi/scsi_lib.c
-+++ linux-2.6.19.1/drivers/scsi/scsi_lib.c
-@@ -191,6 +191,7 @@ int scsi_execute(struct scsi_device *sde
- 		goto out;
- 
- 	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memset(req->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
- 	memcpy(req->cmd, cmd, req->cmd_len);
- 	req->sense = sense;
- 	req->sense_len = 0;
-
---
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
