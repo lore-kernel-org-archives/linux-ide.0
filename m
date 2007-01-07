@@ -1,118 +1,74 @@
 From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [RFC] sata_promise: handle TX2plus PATA locally
-Date: Sun, 7 Jan 2007 19:32:17 +0100 (MET)
-Message-ID: <200701071832.l07IWHa2027464@harpo.it.uu.se>
+Subject: Re: [PATCH libata #promise-sata-pata] sata_promise: 2037x PATAPI support
+Date: Sun, 7 Jan 2007 23:39:45 +0100 (MET)
+Message-ID: <200701072239.l07Mdju7028895@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:46994 "EHLO aun.it.uu.se"
+Received: from aun.it.uu.se ([130.238.12.36]:48504 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964823AbXAGScd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Jan 2007 13:32:33 -0500
+	id S965230AbXAGWj5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 Jan 2007 17:39:57 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is an RFC on a simpler and less intrusive way of setting
-up port flags on the mixed SATA/PATA Promise TX2plus chips.
+On Sat, 6 Jan 2007 21:32:03 +0100 (MET), Mikael Pettersson wrote:
+>This patch adds ATAPI support for the PATA port on Promise 2037x chips.
+>It depends on the common sata_promise ATAPI support patch.
+>
+>First-generation chips don't support ATAPI on their SATA ports, so
+>the patch removes ATA_FLAG_NO_ATAPI from the 2037x common host flags,
+>and adds it back via the _port_flags[] entries for the SATA ports.
 
-The #promise-sata-pata branch requires libata core to be updated
-with a per-port flags array in the ata_probe_ent structure. I
-guess you don't approve of that solution.
+Update: SATAPI works on first-generation chips, but only in PIO mode.
 
-This alternative patch is based on the observation that ap->flags
-isn't really used until after ->port_start() has been invoked.
-So this patch places the "exceptional" per-port flags array in
-the driver's private host structure, and uses it in ->port_start()
-to finalise the flags.
+To verify that DMA doesn't work I also tried Promise's pdc-ultra
+driver for their first-generation chips. It doesn't want to support
+ATAPI without an explicit option. Enabling that option makes it
+recognise ATAPI devices, but even a simple "eject" command triggers
+command timeouts and eventually a kernel oops due to the NMI watchdog.
+So I'm fairly sure that DMA simply doesn't work.
 
-This patch also eliminates #promise-sata-pata's redundant code
-formatting changes, and eliminates the redundant port_flags[]
-assignments for the SATA-only TX4 chips.
+This patch enables ATAPI on 20319 and 2037x chips, but forces SATA
+ports to always use PIO. As a side-effect, ATAPI support is now free
+of any dependencies on the #promise-sata-pata branch.
 
 Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
---- linux-2.6.20-rc4/drivers/ata/sata_promise.c.~1~	2007-01-07 18:17:02.000000000 +0100
-+++ linux-2.6.20-rc4/drivers/ata/sata_promise.c	2007-01-07 18:25:33.000000000 +0100
-@@ -92,6 +92,7 @@ struct pdc_port_priv {
- 
- struct pdc_host_priv {
- 	unsigned long		flags;
-+	unsigned long		port_flags[ATA_MAX_PORTS];
- };
- 
- static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg);
-@@ -183,7 +184,7 @@ static const struct ata_port_info pdc_po
- 	/* board_2037x */
+--- linux-2.6.20-rc4/drivers/ata/sata_promise.c.~1~	2007-01-07 22:58:01.000000000 +0100
++++ linux-2.6.20-rc4/drivers/ata/sata_promise.c	2007-01-07 23:06:22.000000000 +0100
+@@ -197,7 +197,7 @@ static const struct ata_port_info pdc_po
+ 	/* board_20319 */
  	{
  		.sht		= &pdc_ata_sht,
--		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
-+		.flags		= PDC_COMMON_FLAGS,
+-		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_NO_ATAPI | ATA_FLAG_SATA,
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
  		.pio_mask	= 0x1f, /* pio0-4 */
  		.mwdma_mask	= 0x07, /* mwdma0-2 */
  		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-@@ -213,7 +214,7 @@ static const struct ata_port_info pdc_po
- 	/* board_2057x */
- 	{
- 		.sht		= &pdc_ata_sht,
--		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
-+		.flags		= PDC_COMMON_FLAGS,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-@@ -271,6 +272,11 @@ static int pdc_port_start(struct ata_por
- 	struct pdc_port_priv *pp;
- 	int rc;
+@@ -789,8 +789,14 @@ static void pdc_exec_command_mmio(struct
+ static int pdc_check_atapi_dma(struct ata_queued_cmd *qc)
+ {
+ 	u8 *scsicmd = qc->scsicmd->cmnd;
++	struct ata_port *ap = qc->ap;
++	struct pdc_host_priv *hp = ap->host->private_data;
+ 	int pio = 1; /* atapi dma off by default */
  
-+	/* fix up port flags and cable type for heterogeneous chips like TX2plus */
-+	ap->flags |= hp->port_flags[ap->port_no];
-+	if (ap->flags & ATA_FLAG_SATA)
-+		ap->cbl = ATA_CBL_SATA;
++	/* First generation chips cannot use ATAPI DMA on SATA ports */
++	if (!(hp->flags & PDC_FLAG_GEN_II) && sata_scr_valid(ap))
++		return 1;
 +
- 	rc = ata_port_start(ap);
- 	if (rc)
- 		return rc;
-@@ -377,7 +383,7 @@ static void pdc_pata_phy_reset(struct at
- 
- static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
- {
--	if (sc_reg > SCR_CONTROL)
-+	if ((sc_reg > SCR_CONTROL) || (ap->flags & ATA_FLAG_SLAVE_POSS))
- 		return 0xffffffffU;
- 	return readl((void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
- }
-@@ -386,7 +392,7 @@ static u32 pdc_sata_scr_read (struct ata
- static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg,
- 			       u32 val)
- {
--	if (sc_reg > SCR_CONTROL)
-+	if ((sc_reg > SCR_CONTROL) || (ap->flags & ATA_FLAG_SLAVE_POSS))
- 		return;
- 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
- }
-@@ -740,6 +746,7 @@ static int pdc_ata_init_one (struct pci_
- 	unsigned int board_idx = (unsigned int) ent->driver_data;
- 	int pci_dev_busy = 0;
- 	int rc;
-+	u8 tmp;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-@@ -820,7 +827,17 @@ static int pdc_ata_init_one (struct pci_
- 		hp->flags |= PDC_FLAG_GEN_II;
- 		/* Fall through */
- 	case board_2037x:
--		probe_ent->n_ports = 2;
-+		/* TX2plus boards also have a PATA port */
-+		tmp = readb(mmio_base + PDC_FLASH_CTL+1);
-+		if (!(tmp & 0x80)) {
-+			probe_ent->n_ports = 3;
-+			pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
-+			hp->port_flags[2] = ATA_FLAG_SLAVE_POSS;
-+			printk(KERN_INFO DRV_NAME " PATA port found\n");
-+		} else
-+			probe_ent->n_ports = 2;
-+		hp->port_flags[0] = ATA_FLAG_SATA;
-+		hp->port_flags[1] = ATA_FLAG_SATA;
+ 	/* Whitelist commands that may use DMA. */
+ 	switch (scsicmd[0]) {
+ 	case WRITE_12:
+@@ -996,10 +1002,6 @@ static int pdc_ata_init_one (struct pci_
+        			probe_ent->n_ports = 2;
+ 		probe_ent->_port_flags[0] = ATA_FLAG_SATA;
+ 		probe_ent->_port_flags[1] = ATA_FLAG_SATA;
+-		if (board_idx == board_2037x) {
+-			probe_ent->_port_flags[0] |= ATA_FLAG_NO_ATAPI;
+-			probe_ent->_port_flags[1] |= ATA_FLAG_NO_ATAPI;
+-		}
  		break;
  	case board_20619:
  		probe_ent->n_ports = 4;
