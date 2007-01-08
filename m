@@ -1,84 +1,133 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] pata_sis: implement laptop list and add ASUS A6K/A6U
-Date: Tue, 9 Jan 2007 02:36:00 +0900
-Message-ID: <20070108173600.GJ10987@htj.dyndns.org>
+From: Michael Bueker <m.bueker@berlin.de>
+Subject: DMA errors with HTP370 IDE in <= 2.6.18.2
+Date: Mon, 08 Jan 2007 20:51:08 +0100
+Message-ID: <45A2A0AC.1050203@berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [221.139.199.108] ([221.139.199.108]:57743 "EHLO htj.dyndns.org"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1422677AbXAHRgD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Jan 2007 12:36:03 -0500
-Content-Disposition: inline
+Received: from sour.ops.eusc.inter.net ([84.23.254.154]:58059 "EHLO
+	sour.ops.eusc.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932067AbXAHUQK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jan 2007 15:16:10 -0500
+Received: from sour.ops.eusc.inter.net ([10.154.10.14] helo=localhost)
+	by sour.ops.eusc.inter.net with esmtpa (Exim 4.63 id 1H40Wz-000Lc7-0L)
+	for linux-ide@vger.kernel.org; Mon, 08 Jan 2007 20:51:41 +0100
+Received: from [192.168.6.3] (terra.bueker.lan [192.168.6.3])
+	by mtu.homelinux.net (Postfix) with ESMTP id BCA321567F
+	for <linux-ide@vger.kernel.org>; Mon,  8 Jan 2007 20:51:08 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: J J <jakub007@go2.pl>
+To: linux-ide@vger.kernel.org
 
-From: J J <jakub007@go2.pl>
+Hello,
 
-In ASUS A6K/A6U hdd is connected to SiS 96x via 40c cable, however it
-is short cable and is UDMA66 capable.
+[please CC me upon replying - thank you]
 
-tj: fixed if () conditionals.
+I have a Highpoint 370 PCI IDE controller, and both my 2.6.18.2 and
+Knoppix 5's 2.6.17 display the following messages:
 
-Signed-off-by: J J <jakub007@go2.pl>
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+> HPT370: IDE controller at PCI slot 0000:01:09.0
+> HPT370: chipset revision 3
+> HPT370: 100% native mode on irq 11
+> HPT37X: using 33MHz PCI clock
+>     ide2: BM-DMA at 0xa000-0xa007, BIOS settings: hde:DMA, hdf:DMA
+> HPT37X: using 33MHz PCI clock
+>     ide3: BM-DMA at 0xa008-0xa00f, BIOS settings: hdg:pio, hdh:pio
+> Probing IDE interface ide2...
+> hde: ST340823A, ATA DISK drive
+> hdf: ExcelStor Technology J840, ATA DISK drive
+> ide2 at 0x9000-0x9007,0x9402 on irq 11
+> Probing IDE interface ide3...
+> hdg: LITE-ON LTR-52246S, ATAPI CD/DVD-ROM drive
+> ide3 at 0x9800-0x9807,0x9c02 on irq 11
+> hde: max request size: 128KiB
+> hde: 78165360 sectors (40020 MB) w/1024KiB Cache, CHS=65535/16/63, UDMA(100)
+> hde: cache flushes not supported
+>  hde:<4>hde: dma_timer_expiry: dma status == 0x61
+> hde: DMA timeout error
+> hde: 0 bytes in FIFO
+> hde: timeout waiting for DMA
+> hde: dma timeout error: status=0x80 { Busy }
+> ide: failed opcode was: unknown
+> hde: DMA disabled
+> hdf: DMA disabled
+> ide2: reset: success
+>  hde1 hde2 <<4>hde: dma_timer_expiry: dma status == 0x21
+> hde: DMA timeout error
+> hde: 0 bytes in FIFO
+> hde: timeout waiting for DMA
+> hde: dma timeout error: status=0x80 { Busy }
+> ide: failed opcode was: unknown
+> hde: DMA disabled
+> ide2: reset: success
+>  hde5<4>hde: dma_timer_expiry: dma status == 0x21
+> hde: DMA timeout error
+> hde: 0 bytes in FIFO
+> hde: timeout waiting for DMA
+> hde: dma timeout error: status=0x80 { Busy }
+> ide: failed opcode was: unknown
+> hde: DMA disabled
+> ide2: reset: success
+>  hde6 >
+> hdf: max request size: 512KiB
+> hdf: 80418240 sectors (41174 MB) w/1719KiB Cache, CHS=16383/255/63
+> hdf: cache flushes supported
+>  hdf: unknown partition table
+> hde: dma_timer_expiry: dma status == 0x21
+> hde: DMA timeout error
+> hde: 0 bytes in FIFO
+> hde: timeout waiting for DMA
+> hde: dma timeout error: status=0x80 { Busy }
+> ide: failed opcode was: unknown
+> hde: DMA disabled
+> ide2: reset: success
 
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index c434c4e..e9415a7 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -43,6 +43,33 @@ struct sis_chipset {
- 	   up code later */
- };
- 
-+struct sis_laptop {
-+	u16 device;
-+	u16 subvendor;
-+	u16 subdevice;
-+};
-+
-+static const struct sis_laptop sis_laptop[] = {
-+	/* devid, subvendor, subdev */
-+	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
-+	/* end marker */
-+	{ 0, }
-+};
-+
-+static int sis_short_ata40(struct pci_dev *dev)
-+{
-+	const struct sis_laptop *lap = &sis_laptop[0];
-+
-+	while (lap->device) {
-+		if (lap->device == dev->device &&
-+		    lap->subvendor == dev->subsystem_vendor &&
-+		    lap->subdevice == dev->subsystem_device)
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  *	sis_port_base		-	return PCI configuration base for dev
-  *	@adev: device
-@@ -79,7 +106,7 @@ static int sis_133_pre_reset(struct ata_port *ap)
- 
- 	/* The top bit of this register is the cable detect bit */
- 	pci_read_config_word(pdev, 0x50 + 2 * ap->port_no, &tmp);
--	if (tmp & 0x8000)
-+	if ((tmp & 0x8000) && !sis_short_ata40(pdev))
- 		ap->cbl = ATA_CBL_PATA40;
- 	else
- 		ap->cbl = ATA_CBL_PATA80;
-@@ -127,7 +154,7 @@ static int sis_66_pre_reset(struct ata_port *ap)
- 	/* Older chips keep cable detect in bits 4/5 of reg 0x48 */
- 	pci_read_config_byte(pdev, 0x48, &tmp);
- 	tmp >>= ap->port_no;
--	if (tmp & 0x10)
-+	if ((tmp & 0x10) && !sis_short_ata40(pdev))
- 		ap->cbl = ATA_CBL_PATA40;
- 	else
- 		ap->cbl = ATA_CBL_PATA80;
+(hdf is naked, there's no error in partition detection)
+
+The same messages appear when manually trying to enable DMA with hdparm.
+The hdparm reading of hde is:
+
+> /dev/hde:
+>  multcount    = 16 (on)
+>  IO_support   =  0 (default 16-bit)
+>  unmaskirq    =  0 (off)
+>  using_dma    =  0 (off)
+>  keepsettings =  0 (off)
+>  readonly     =  0 (off)
+>  readahead    = 256 (on)
+>  geometry     = 65535/16/63, sectors = 78165360, start = 0
+
+hda, which is on the mainboard controller and works as hde used to as
+well, reads:
+
+> /dev/hda:
+>  multcount    = 16 (on)
+>  IO_support   =  1 (32-bit)
+>  unmaskirq    =  1 (on)
+>  using_dma    =  1 (on)
+>  keepsettings =  0 (off)
+>  readonly     =  0 (off)
+>  readahead    = 256 (on)
+>  geometry     = 65535/16/63, sectors = 117231408, start = 0
+
+In the controller's setup utility, I can choose access modes. If i
+switch it from UDMA5 to PIO0, the only difference during boot is:
+
+> ide2: BM-DMA at 0xa000-0xa007, BIOS settings: hde:pio, hdf:pio
+
+instead of
+
+> ide2: BM-DMA at 0xa000-0xa007, BIOS settings: hde:DMA, hdf:DMA
+
+Please help me getting DMA to work with this controller.
+
+Thanks in advance,
+~Mik
+
+-- 
+So, how can you tell me you're lonely?
+And say that you don't have no life?
+Let me take you by the hand and show you all the geeks of London
+I'll show you something to make you change your mind!
 
