@@ -1,74 +1,105 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH libata #promise-sata-pata] sata_promise: 2037x PATAPI support
-Date: Sun, 7 Jan 2007 23:39:45 +0100 (MET)
-Message-ID: <200701072239.l07Mdju7028895@harpo.it.uu.se>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:48504 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965230AbXAGWj5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Jan 2007 17:39:57 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc4: known unfixed regressions
+Date: Mon, 8 Jan 2007 01:22:08 +0100
+Message-ID: <20070108002208.GO20714@stusta.de>
+References: <Pine.LNX.4.64.0701062216210.3661@woody.osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0701062216210.3661@woody.osdl.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Malte =?iso-8859-1?Q?Schr=F6der?= <MalteSch@gmx.de>, Bernhard Schmidt <berni@birkenwald.de>, Peter Osterlund <petero2@telia.com>, netfilter-devel@lists.netfilter.org, netdev@vger.kernel.org, Komuro <komurojun-mbn@nifty.com>, YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, ttb@tentacle.dhs.org, rml@novell.com, Jon Smirl <jonsmirl@gmail.com>, Damien Wyart <damien.wyart@free.fr>, Aaron Sethman <androsyn@ratbox.org>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Uwe Bugla <uwe.bugla@gmx.de>, Tobias Diedrich <ranma+kernel@tdiedrich.de>, Andi Kleen <ak@suse.de>, Yinghai Lu <yinghai.lu@amd.com>, "Eric W. Biederman" <ebiederm@xmission.com>, mingo@redhat.com, discuss@x86-64.org, Florin Iucha <florin@iucha.net>, Berthold Cogel <cogel@rrz.uni-koeln.de>, Alexey
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 6 Jan 2007 21:32:03 +0100 (MET), Mikael Pettersson wrote:
->This patch adds ATAPI support for the PATA port on Promise 2037x chips.
->It depends on the common sata_promise ATAPI support patch.
+This email lists some known regressions in 2.6.20-rc4 compared to 2.6.1=
+9.
+
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possib=
+ly
+involved with one or more of these issues.
+
+Due to the huge amount of recipients, please trim the Cc when answering=
+=2E
+
+
+Subject    : BUG: at mm/truncate.c:60 cancel_dirty_page()
+References : http://lkml.org/lkml/2007/1/7/117
+Submitter  : Malte Schr=F6der <MalteSch@gmx.de>
+Status     : unknown
+
+
+Subject    : netfilter conntrack Oopses
+References : http://lkml.org/lkml/2007/1/4/156
+             http://lkml.org/lkml/2007/1/7/188
+Submitter  : Bernhard Schmidt <berni@birkenwald.de>
+             Peter Osterlund <petero2@telia.com>
+Status     : unknown
+
+
+Subject    : ftp: get or put stops during file-transfer
+References : http://lkml.org/lkml/2006/12/16/174
+Submitter  : Komuro <komurojun-mbn@nifty.com>
+Caused-By  : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+             commit cfb6eeb4c860592edd123fdea908d23c6ad1c7dc
+Handled-By : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+Status     : problem is being debugged
+
+
+Subject    : BUG: at fs/inotify.c:172 set_dentry_child_flags()
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7785
+Submitter  : Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
+Status     : unknown
+
+
+Subject    : BUG: scheduling while atomic: hald-addon-stor/...
+             cdrom_{open,release,ioctl} in trace
+References : http://lkml.org/lkml/2006/12/26/105
+             http://lkml.org/lkml/2006/12/29/22
+             http://lkml.org/lkml/2006/12/31/133
+Submitter  : Jon Smirl <jonsmirl@gmail.com>
+             Damien Wyart <damien.wyart@free.fr>
+             Aaron Sethman <androsyn@ratbox.org>
+Status     : unknown
+
+
+Subject    : problems with CD burning
+References : http://www.spinics.net/lists/linux-ide/msg06545.html
+Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+Status     : unknown
+
+
+Subject    : x86_64 boot failure: "IO-APIC + timer doesn't work"
+References : http://lkml.org/lkml/2006/12/16/101
+             http://lkml.org/lkml/2007/1/3/9
+Submitter  : Tobias Diedrich <ranma+kernel@tdiedrich.de>
+Caused-By  : Andi Kleen <ak@suse.de>
+             commit b026872601976f666bae77b609dc490d1834bf77
+Handled-By : Yinghai Lu <yinghai.lu@amd.com>
+             Eric W. Biederman <ebiederm@xmission.com>
+Status     : patches are being discussed
+
+
+Subject    : USB keyboard unresponsive after some time
+References : http://lkml.org/lkml/2006/12/25/35
+             http://lkml.org/lkml/2006/12/26/106
+Submitter  : Florin Iucha <florin@iucha.net>
+Status     : unknown
+
+
+Subject    : Acer Extensa 3002 WLMi: 'shutdown -h now' reboots the syst=
+em
+References : http://lkml.org/lkml/2006/12/25/40
+Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
+Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com=
 >
->First-generation chips don't support ATAPI on their SATA ports, so
->the patch removes ATA_FLAG_NO_ATAPI from the 2037x common host flags,
->and adds it back via the _port_flags[] entries for the SATA ports.
-
-Update: SATAPI works on first-generation chips, but only in PIO mode.
-
-To verify that DMA doesn't work I also tried Promise's pdc-ultra
-driver for their first-generation chips. It doesn't want to support
-ATAPI without an explicit option. Enabling that option makes it
-recognise ATAPI devices, but even a simple "eject" command triggers
-command timeouts and eventually a kernel oops due to the NMI watchdog.
-So I'm fairly sure that DMA simply doesn't work.
-
-This patch enables ATAPI on 20319 and 2037x chips, but forces SATA
-ports to always use PIO. As a side-effect, ATAPI support is now free
-of any dependencies on the #promise-sata-pata branch.
-
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
-
---- linux-2.6.20-rc4/drivers/ata/sata_promise.c.~1~	2007-01-07 22:58:01.000000000 +0100
-+++ linux-2.6.20-rc4/drivers/ata/sata_promise.c	2007-01-07 23:06:22.000000000 +0100
-@@ -197,7 +197,7 @@ static const struct ata_port_info pdc_po
- 	/* board_20319 */
- 	{
- 		.sht		= &pdc_ata_sht,
--		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_NO_ATAPI | ATA_FLAG_SATA,
-+		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-@@ -789,8 +789,14 @@ static void pdc_exec_command_mmio(struct
- static int pdc_check_atapi_dma(struct ata_queued_cmd *qc)
- {
- 	u8 *scsicmd = qc->scsicmd->cmnd;
-+	struct ata_port *ap = qc->ap;
-+	struct pdc_host_priv *hp = ap->host->private_data;
- 	int pio = 1; /* atapi dma off by default */
- 
-+	/* First generation chips cannot use ATAPI DMA on SATA ports */
-+	if (!(hp->flags & PDC_FLAG_GEN_II) && sata_scr_valid(ap))
-+		return 1;
-+
- 	/* Whitelist commands that may use DMA. */
- 	switch (scsicmd[0]) {
- 	case WRITE_12:
-@@ -996,10 +1002,6 @@ static int pdc_ata_init_one (struct pci_
-        			probe_ent->n_ports = 2;
- 		probe_ent->_port_flags[0] = ATA_FLAG_SATA;
- 		probe_ent->_port_flags[1] = ATA_FLAG_SATA;
--		if (board_idx == board_2037x) {
--			probe_ent->_port_flags[0] |= ATA_FLAG_NO_ATAPI;
--			probe_ent->_port_flags[1] |= ATA_FLAG_NO_ATAPI;
--		}
- 		break;
- 	case board_20619:
- 		probe_ent->n_ports = 4;
+Status     : problem is being debugged
+-
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
