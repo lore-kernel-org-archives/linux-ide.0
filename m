@@ -1,52 +1,43 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Norco DS-1220 (sil3726+sil3124) / libata-tj bug report
-Date: Mon, 08 Jan 2007 11:33:40 +0900
-Message-ID: <45A1AD84.5060202@gmail.com>
-References: <Pine.LNX.4.58.0701050332200.26166@mailx>
+Subject: Re: (Another?) Seagate / Sil3112a problem...
+Date: Mon, 08 Jan 2007 12:52:32 +0900
+Message-ID: <45A1C000.7080500@gmail.com>
+References: <J5J0S1$E84BD2336C01F896088E954AAF120859@laposte.net> <20061109135956.b744a3a7.akpm@osdl.org> <200701071704.36288.philippe.grenard@m4x.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.230]:37277 "EHLO
+Received: from wx-out-0506.google.com ([66.249.82.235]:3593 "EHLO
 	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030457AbXAHCdr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jan 2007 21:33:47 -0500
-Received: by wx-out-0506.google.com with SMTP id h27so7878725wxd
-        for <linux-ide@vger.kernel.org>; Sun, 07 Jan 2007 18:33:46 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.58.0701050332200.26166@mailx>
+	with ESMTP id S1030481AbXAHDwj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jan 2007 22:52:39 -0500
+Received: by wx-out-0506.google.com with SMTP id h27so7898798wxd
+        for <linux-ide@vger.kernel.org>; Sun, 07 Jan 2007 19:52:38 -0800 (PST)
+In-Reply-To: <200701071704.36288.philippe.grenard@m4x.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Fitzpatrick <brad@danga.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: philippe.grenard@m4x.org
+Cc: Andrew Morton <akpm@osdl.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-Brad Fitzpatrick wrote:
-> Tejun,
+Hello,
+
+[cc'ing lkml and linux-ide]
+
+Philippe Grenard wrote:
+> To "close" this problem, here are the latest news :
+> I just bought some new power supply, and the problem has gone...
+> Maybe that was due to poor power flow or crappy connexion ?...
 > 
-> (I wanted to send this to linux-ide, but vger's majordomo isn't replying
-> to me.  Feel free to cc: the list...)
+> now everything seems to work well, so as suspected, it was probably hardware 
+> problem.
+> 
+> Sorry for that "false alarm", thanks again for everything, and keep up the 
+> good work!
 
-Just cc'ing linux-ide@vger.kernel.org is enough.  (done)
-
-> Disks in DS-1220 show up, kinda, but don't work.  Errors reading /
-> writing blocks.  Tried a single disk in both a PMP port and a direct
-> (non-sil3726) port.
-
->From full dmesg...
-
-The following is when the drive is attached via PMP.
-
-18:29:55 ata3.01: (irq_stat 0x00020002, device error via D2H FIS)
-18:29:55 ata3.01: tag 0 cmd 0xc8 Emask 0x1 stat 0x50 err 0x0 (device error)
-
-And directly.
-
-19:30:23 ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-19:30:23 ata6.00: (irq_stat 0x00060002, device error via D2H FIS)
-19:30:23 ata6.00: tag 0 cmd 0xc4 Emask 0x1 stat 0x50 err 0x0 (device error)
-19:30:23 ata6: EH complete
-
-Looks like a dead drive to me.  Care to post the result of 'smartctl -d
-ata -a /dev/sdX' and test other drives?
+Ah... so it was another one of those PSU problems.  This problem is
+becoming more prevalent these days.  Dual 12v lane PSUs suck for driving
+a lot of disks.  They don't seem to allocate enough power to molex/sata
+connectors.
 
 -- 
 tejun
