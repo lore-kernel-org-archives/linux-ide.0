@@ -1,37 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ata_piix: add ICH7 on Acer 3682WLMi to laptop list
-Date: Tue, 9 Jan 2007 02:26:30 +0900
-Message-ID: <20070108172630.GI10987@htj.dyndns.org>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: SATA Promise
+Date: Mon, 8 Jan 2007 18:02:54 +0100
+Message-ID: <17826.31038.143943.152976@alkaid.it.uu.se>
+References: <200612191738.kBJHcFkP003688@alkaid.it.uu.se>
+	<45A27571.3060106@mlbassoc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [221.139.199.108] ([221.139.199.108]:60772 "EHLO htj.dyndns.org"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751598AbXAHR0c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Jan 2007 12:26:32 -0500
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:56182 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751603AbXAHRa3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Jan 2007 12:30:29 -0500
+In-Reply-To: <45A27571.3060106@mlbassoc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: J J <jakub007@go2.pl>
+To: Gary Thomas <gary@mlbassoc.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-From: J J <jakub007@go2.pl>
+Gary Thomas writes:
+ > Mikael Pettersson wrote:
+ > > On Tue, 19 Dec 2006 08:54:07 -0700, Gary Thomas wrote:
+ > >   
+ > >> I'm trying to use the sata_promise driver (1.04) with a CDROM
+ > >> and having little luck.  I'm using this chipset:
+ > >>    00:0b.0 Mass storage controller: Promise Technology, Inc. PDC40775 (SATA 300 TX2plus) (rev 02)
+ > >>
+ > >> If I plug in a SATAPI drive, the driver hangs during initialization.
+ > >> If I plug in a (PATA) ATAPI drive, I'm told:
+ > >>
+ > >> ata3.01: ATAPI, max MWDMA2
+ > >> ata3.01: configured for MWDMA2
+ > >>    Vendor: ATA       Model: ST3250824NS       Rev: 3.AE
+ > >>    Type:   Direct-Access                      ANSI SCSI revision: 05
+ > >> ata3.01: WARNING: ATAPI is not supported with this driver, device ignored.
+ > >>
+ > >> Is there any way to get this working (I'm using Linux 2.6.18, with
+ > >> linux-2.6-sata-promise-pata-ports.patch from Fedora Core 6)
+ > >>     
+ > >
+ > > Patience. The driver doesn't support ATAPI yet, but I
+ > > intend to work on that soon.
+ > >
+ > >   
+ > Any progress on this? 
 
-In Acer Aspire hdd is connected to ICH7 via 40c cable, however it is
-short cable and it is UDMA66 capable.
+Yes. SATAPI and PATAPI are working. Patches have been posted
+to linux-ide, and hopefully final combined/reworked/tidied-up
+patches should be available tomorrow.
 
-Signed-off-by: J J <jakub007@go2.pl>
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 7959e4c..aadfcb3 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -569,6 +569,7 @@ struct ich_laptop {
- static const struct ich_laptop ich_laptop[] = {
- 	/* devid, subvendor, subdev */
- 	{ 0x27DF, 0x0005, 0x0280 },	/* ICH7 on Acer 5602WLMi */
-+	{ 0x27DF, 0x1025, 0x0110 },	/* ICH7 on Acer 3682WLMi */
- 	/* end marker */
- 	{ 0, }
- };
+/Mikael
