@@ -1,28 +1,27 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.20-rc3-mm1 2/2] libata: SiS 180 pata/sata support
-Date: Mon, 8 Jan 2007 10:28:09 +0000
-Message-ID: <20070108102809.512b4409@localhost.localdomain>
-References: <45A19F67.6050909@garzik.org>
+Subject: Re: [PATCH libata #promise-sata-pata] sata_promise: 2037x PATAPI
+ support
+Date: Mon, 8 Jan 2007 10:30:26 +0000
+Message-ID: <20070108103026.230470a8@localhost.localdomain>
+References: <200701072239.l07Mdju7028895@harpo.it.uu.se>
+	<45A1A2B7.8000601@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47331 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47335 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161209AbXAHKRc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jan 2007 05:17:32 -0500
-In-Reply-To: <45A19F67.6050909@garzik.org>
+	with ESMTP id S1161212AbXAHKTl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jan 2007 05:19:41 -0500
+In-Reply-To: <45A1A2B7.8000601@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Uwe Koziolek <uwe.koziolek@gmx.net>, "linux.ide" <linux-ide@vger.kernel.org>, Sven Ladegast <sven@linux4geeks.de>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> If the shared code is tiny, just create a header file and #include it 
-> (sata_promise and sata_sx4 do this).  Otherwise, create a shared library 
-> module.
+> IMO creating a new check_atapi_dma function for first-gen chips would be 
+> the preferred way to add this check.
 
-pata_sis is both the SiS driver and the shared library. What needs fixing
-IMHO is the Kconfig so that the user isn't aware of this. Then all the
-CONFIG ifdef stuff goes away too.
-
-Alan
+A mode filter would be even better, that will mean the list of modes on
+the device is correct and ATAPI devices are shown as PIO on such a
+controller.
