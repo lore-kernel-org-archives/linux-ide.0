@@ -1,42 +1,22 @@
 From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [RFC] sata_promise: handle TX2plus PATA locally
-Date: Mon, 8 Jan 2007 09:06:41 +0100 (MET)
-Message-ID: <200701080806.l0886fZA001270@harpo.it.uu.se>
+Subject: Re: [PATCH libata #promise-sata-pata] sata_promise: unbreak 20619
+Date: Mon, 8 Jan 2007 09:07:56 +0100 (MET)
+Message-ID: <200701080807.l0887umA001294@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:51300 "EHLO aun.it.uu.se"
+Received: from aun.it.uu.se ([130.238.12.36]:51312 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161182AbXAHIG5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Jan 2007 03:06:57 -0500
+	id S1161189AbXAHIIE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Jan 2007 03:08:04 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, 07 Jan 2007 20:38:56 -0500, Jeff Garzik wrote:
-> > This alternative patch is based on the observation that ap->flags
-> > isn't really used until after ->port_start() has been invoked.
-> > So this patch places the "exceptional" per-port flags array in
-> > the driver's private host structure, and uses it in ->port_start()
-> > to finalise the flags.
-> 
-> I agree with this approach, modulo a minor change...
+On Sun, 07 Jan 2007 20:46:13 -0500, Jeff Garzik wrote:
+> Given that I agree with your RFC, this means I can drop all these 
+> #promise-sata-pata patches, and kill the #promise-sata-pata branch soon, 
+> right?
 
-Excellent.
-
-> > @@ -386,7 +392,7 @@ static u32 pdc_sata_scr_read (struct ata
-> >  static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg,
-> >  			       u32 val)
-> >  {
-> > -	if (sc_reg > SCR_CONTROL)
-> > +	if ((sc_reg > SCR_CONTROL) || (ap->flags & ATA_FLAG_SLAVE_POSS))
-> >  		return;
-> >  	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
-> >  }
-> 
-> Seems like a better test than ATA_FLAG_SLAVE_POSS would be to test the 
-> cable type.
-
-Agreed. This test is what #promise-sata-pata does now, but
-I'll change it inspect the cable type instead.
+Yes
 
 /Mikael
