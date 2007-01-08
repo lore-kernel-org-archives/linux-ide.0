@@ -1,52 +1,42 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] SCSI, libata: add support for ATA_16 commands to libata ATAPI devices
-Date: Sun, 7 Jan 2007 21:00:37 -0800 (PST)
-Message-ID: <141410.19366.qm@web31811.mail.mud.yahoo.com>
-References: <459C066D.30507@torque.net>
-Reply-To: ltuikov@yahoo.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <459C066D.30507@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dougg@torque.net, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [RFC] sata_promise: handle TX2plus PATA locally
+Date: Mon, 8 Jan 2007 09:06:41 +0100 (MET)
+Message-ID: <200701080806.l0886fZA001270@harpo.it.uu.se>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from aun.it.uu.se ([130.238.12.36]:51300 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161182AbXAHIG5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Jan 2007 03:06:57 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
---- Douglas Gilbert <dougg@torque.net> wrote:
+On Sun, 07 Jan 2007 20:38:56 -0500, Jeff Garzik wrote:
+> > This alternative patch is based on the observation that ap->flags
+> > isn't really used until after ->port_start() has been invoked.
+> > So this patch places the "exceptional" per-port flags array in
+> > the driver's private host structure, and uses it in ->port_start()
+> > to finalise the flags.
 > 
-> I seem to be fighting a losing battle against the mindset
+> I agree with this approach, modulo a minor change...
 
-That may be the case.
+Excellent.
 
-> It is the _transport_ that should block the command,
-> if it so chooses. In this case the transport is a
-> virtual one between sr/sg and libata and libata should
-> recognize SCSI ATA PASS-THROUGH (12+16) cdbs as
-> transport related and not (directly) to be sent to
-> the logical unit. And it is at this level we should
-> add the wrinkle that if the pdt=5 (cd or dvd) then
-> don't translate ATA_12. [I have already been around this
-> loop with Luben and his SATL: sorted with the minimum
-> of fuss.]
+> > @@ -386,7 +392,7 @@ static u32 pdc_sata_scr_read (struct ata
+> >  static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg,
+> >  			       u32 val)
+> >  {
+> > -	if (sc_reg > SCR_CONTROL)
+> > +	if ((sc_reg > SCR_CONTROL) || (ap->flags & ATA_FLAG_SLAVE_POSS))
+> >  		return;
+> >  	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+> >  }
+> 
+> Seems like a better test than ATA_FLAG_SLAVE_POSS would be to test the 
+> cable type.
 
-LOL, I don't think your mentioning my name in an email
-to bottomley is going to convince him of anything, in
-fact it may prompt him to do it the opposite way.
+Agreed. This test is what #promise-sata-pata does now, but
+I'll change it inspect the cable type instead.
 
-Good luck!
-
-As to the "been around this loop", the fix was a two
-liner, without checking the PDT, and ATA_16, ATA_12
-and BLANK work as expected.
-
-> ** I have been told that USB disk enclosures being designed
-> now will include at a SATL. This will mean smartmontools
-
-Absolutely.  Many reasons, one of which is having to deal
-with battles like this one, probably the least one, but
-still a reason which is sometimes mentioned.
-
-    Luben
-
+/Mikael
