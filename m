@@ -1,51 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFC,PATCHSET] Managed device resources
-Date: Mon, 08 Jan 2007 13:07:03 +0900
-Message-ID: <45A1C367.5040005@gmail.com>
-References: <1167146313307-git-send-email-htejun@gmail.com> <20070104221916.GI28445@suse.de> <459D7F23.7010807@garzik.org> <20070104223247.GA29274@suse.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] SCSI, libata: add support for ATA_16 commands to libata ATAPI devices
+Date: Sun, 7 Jan 2007 21:00:37 -0800 (PST)
+Message-ID: <141410.19366.qm@web31811.mail.mud.yahoo.com>
+References: <459C066D.30507@torque.net>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.233]:9419 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030480AbXAHEHK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Jan 2007 23:07:10 -0500
-Received: by wx-out-0506.google.com with SMTP id h27so7903043wxd
-        for <linux-ide@vger.kernel.org>; Sun, 07 Jan 2007 20:07:10 -0800 (PST)
-In-Reply-To: <20070104223247.GA29274@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <459C066D.30507@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: dougg@torque.net, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Greg KH wrote:
-> On Thu, Jan 04, 2007 at 05:26:43PM -0500, Jeff Garzik wrote:
->> Greg KH wrote:
->>> Hm, but I guess without the follow-up patches for libata, it will not
->>> really get tested much.  Jeff, if I accept this, what's your feelings of
->>> letting libata be the "test bed" for it?
->>
->> It would be easiest for me to merge this through my 
->> libata-dev.git#upstream tree.  That will auto-propagate it to -mm, and 
->> ensure that both base and libata bits are sent in one batch.
->>
->> Just shout if you see NAK-able bits...
->>
->> Work for you?
+--- Douglas Gilbert <dougg@torque.net> wrote:
 > 
-> That works for me.
+> I seem to be fighting a losing battle against the mindset
 
-Great, I'll push it through Jeff.
+That may be the case.
 
-> The only question I have is on the EXPORT_SYMBOL() stuff for the new
-> driver/base/ functions.  Tejun, traditionally the driver core has all
-> exported symbols marked with EXPORT_SYMBOL_GPL().  So, any objection to
-> marking the new ones (becides the "mirror" functions) in this manner?
+> It is the _transport_ that should block the command,
+> if it so chooses. In this case the transport is a
+> virtual one between sr/sg and libata and libata should
+> recognize SCSI ATA PASS-THROUGH (12+16) cdbs as
+> transport related and not (directly) to be sent to
+> the logical unit. And it is at this level we should
+> add the wrinkle that if the pdt=5 (cd or dvd) then
+> don't translate ATA_12. [I have already been around this
+> loop with Luben and his SATL: sorted with the minimum
+> of fuss.]
 
-Okay, will do so.
+LOL, I don't think your mentioning my name in an email
+to bottomley is going to convince him of anything, in
+fact it may prompt him to do it the opposite way.
 
-Thanks.
+Good luck!
 
--- 
-tejun
+As to the "been around this loop", the fix was a two
+liner, without checking the PDT, and ATA_16, ATA_12
+and BLANK work as expected.
+
+> ** I have been told that USB disk enclosures being designed
+> now will include at a SATL. This will mean smartmontools
+
+Absolutely.  Many reasons, one of which is having to deal
+with battles like this one, probably the least one, but
+still a reason which is sometimes mentioned.
+
+    Luben
+
