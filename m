@@ -1,27 +1,40 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH libata #promise-sata-pata] sata_promise: 2037x PATAPI
- support
-Date: Mon, 8 Jan 2007 10:30:26 +0000
-Message-ID: <20070108103026.230470a8@localhost.localdomain>
-References: <200701072239.l07Mdju7028895@harpo.it.uu.se>
-	<45A1A2B7.8000601@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2.6.20-rc3-mm1 2/2] libata: SiS 180 pata/sata support
+Date: Mon, 08 Jan 2007 06:44:31 -0500
+Message-ID: <45A22E9F.1050607@garzik.org>
+References: <45A19F67.6050909@garzik.org> <20070108102809.512b4409@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47335 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161212AbXAHKTl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jan 2007 05:19:41 -0500
-In-Reply-To: <45A1A2B7.8000601@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:54110 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751483AbXAHLof (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Jan 2007 06:44:35 -0500
+In-Reply-To: <20070108102809.512b4409@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Uwe Koziolek <uwe.koziolek@gmx.net>, "linux.ide" <linux-ide@vger.kernel.org>, Sven Ladegast <sven@linux4geeks.de>
 
-> IMO creating a new check_atapi_dma function for first-gen chips would be 
-> the preferred way to add this check.
+Alan wrote:
+>> If the shared code is tiny, just create a header file and #include it 
+>> (sata_promise and sata_sx4 do this).  Otherwise, create a shared library 
+>> module.
+> 
+> pata_sis is both the SiS driver and the shared library. What needs fixing
 
-A mode filter would be even better, that will mean the list of modes on
-the device is correct and ATAPI devices are shown as PIO on such a
-controller.
+It is /very/ bad policy to force the user to load a driver that drives 
+real hardware, just to be able to access a few functions.  Hardware and 
+probe side effects are a very real possibility, and with this setup, the 
+user has /less/ control than normal over things such as load order when 
+pata_sis is loaded as a dependency.
+
+If the duplicated code in question is small, just putting it in a header 
+file a la drivers/ata/sata_promise.h is fine.  Otherwise, a library 
+approach with no side effects should be chosen.
+
+	Jeff
+
+
+
