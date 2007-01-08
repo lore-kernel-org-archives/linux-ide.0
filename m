@@ -1,80 +1,34 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH 2.6.20-rc3] sata_promise: ATAPI support
-Date: Mon, 8 Jan 2007 09:55:26 +0100 (MET)
-Message-ID: <200701080855.l088tQ6w001683@harpo.it.uu.se>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2.6.20-rc3-mm1 1/2] libata: SiS 180 pata/sata support
+Date: Mon, 8 Jan 2007 10:26:05 +0000
+Message-ID: <20070108102605.3404df8f@localhost.localdomain>
+References: <200701080017.l080H7xq000764@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:51660 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932633AbXAHIzh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Jan 2007 03:55:37 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43491 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161210AbXAHKPp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jan 2007 05:15:45 -0500
+In-Reply-To: <200701080017.l080H7xq000764@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Uwe Koziolek <uwe.koziolek@gmx.net>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Sven Ladegast <sven@linux4geeks.de>
 
-On Sun, 07 Jan 2007 20:50:48 -0500, Jeff Garzik wrote:
-> > With this patch ATAPI will work on SATA ports on second-generation
-> > chips, and on the first-generation PATA-only 20619. ATAPI on the
-> > 2057x' PATA port will work automatically when #promise-sata-pata
-> > is updated. ATAPI on the 2037x' PATA port is enabled by a followup
-> > patch for the #promise-sata-pata branch.
-> > 
-> > Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+On Mon, 8 Jan 2007 02:01:28 +0100
+Uwe Koziolek <uwe.koziolek@gmx.net> wrote:
+
+> the SiS180 is a combined PATA/SATA controller. The SiS 180 is handled
+> by the sata_sis driver. The PATA support for this controller is exported
+> by pata_sis and imported by sata_sis.
 > 
-> No objections, minor revision requests follow.
+> the pata133 sis controllers does not support a drive present status
+> in the pci configspace like the older sis controllers, check removed.
 > 
-> * general comment:  please combine the 'make first gen SATAPI work' 
-> patch with this one.
-
-Will do.
-
-> > +static unsigned int pdc_wait_for_drq(struct ata_port *ap)
-> > +{ 
-> > +	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-> > +	unsigned int i;
-> > +	unsigned int status;
-> > +
-> > +	/* Following pdc-ultra's WaitForDrq() we loop here until BSY
-> > +	 * is clear and DRQ is set in altstatus. We could possibly call
-> > +	 * ata_busy_wait() and loop until DRQ is set, but since we don't
-> > +	 * know how much time a call to ata_busy_wait() took, we don't
-> > +	 * know when to time out the outer loop.
-> > +	 */
-> > +	for(i = 0; i < 1000; ++i) {
-> > +		status = readb(port_mmio + 0x38); /* altstatus */
-> > +		if (status == 0xFF)
-> > +			break;
-> > +		if (status & ATA_BUSY)
-> > +			;
-> > +		else if (status & (ATA_DRQ | ATA_ERR))
-> > +			break;
-> > +		mdelay(1);
-> > +	}
+> unnecessary zero record in pci_bits removed.
 > 
-> This really hurts to do this with spinlocks held.  Long term, ponder 
-> ways to move this to a kernel thread that can sleep [if it takes too long?]
+> Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
 
-On the TODO list for a later update.
-
-> > +static void pdc_issue_atapi_pkt_cmd(struct ata_queued_cmd *qc)
-> > +{
-> > +	struct ata_port *ap = qc->ap;
-> > +	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-> > +	void __iomem *host_mmio = ap->host->mmio_base;
-> > +	unsigned int nbytes;
-> > +	unsigned int tmp;
-> > +
-> > +	/* disable INTA here, it will be re-enable when CAM use SEQ 0 for packets */
-> 
-> cut-n-pasted comment?  This is not CAM :)
-
-Indeed :-) Will fix.
-
-> > +	writeb(0x00, port_mmio + PDC_CTLSTAT); /* that the drive INT pass to SEQ 0*/
-> > +	writeb(0x20, host_mmio + 0); /* but mask SEQ 0 INT */
-> 
-> please create named constants for these magic numbers
-
-Will do (for this and the other places you pointed out).
-
-/Mikael
+Acked-by: Alan Cox <alan@redhat.com>
