@@ -1,40 +1,76 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.20-rc3-mm1 2/2] libata: SiS 180 pata/sata support
-Date: Mon, 08 Jan 2007 06:44:31 -0500
-Message-ID: <45A22E9F.1050607@garzik.org>
-References: <45A19F67.6050909@garzik.org> <20070108102809.512b4409@localhost.localdomain>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ide/generic: Jmicron has its own drivers now
+Date: Mon, 8 Jan 2007 12:19:47 +0000
+Message-ID: <20070108121947.04728240@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54110 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751483AbXAHLof (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Jan 2007 06:44:35 -0500
-In-Reply-To: <20070108102809.512b4409@localhost.localdomain>
+Received: from [81.2.110.250] ([81.2.110.250]:56499 "EHLO lxorguk.ukuu.org.uk"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751485AbXAHMJF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Jan 2007 07:09:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Uwe Koziolek <uwe.koziolek@gmx.net>, "linux.ide" <linux-ide@vger.kernel.org>, Sven Ladegast <sven@linux4geeks.de>
+To: akpm@osdl.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Alan wrote:
->> If the shared code is tiny, just create a header file and #include it 
->> (sata_promise and sata_sx4 do this).  Otherwise, create a shared library 
->> module.
-> 
-> pata_sis is both the SiS driver and the shared library. What needs fixing
+Drop ide-generic support for Jmicron identifiers as we now trust
+Jmicron.c for this with drivers/ide. The code check remains for
+the all-generic-ide case.
 
-It is /very/ bad policy to force the user to load a driver that drives 
-real hardware, just to be able to access a few functions.  Hardware and 
-probe side effects are a very real possibility, and with this setup, the 
-user has /less/ control than normal over things such as load order when 
-pata_sis is loaded as a dependency.
-
-If the duplicated code in question is small, just putting it in a header 
-file a la drivers/ata/sata_promise.h is fine.  Otherwise, a library 
-approach with no side effects should be chosen.
-
-	Jeff
+[Please push to Linus post 2.6.20]
 
 
+Signed-off-by: Alan Cox <alan@redhat.com>
 
+--- linux.vanilla-2.6.20-rc3-mm1/drivers/ide/pci/generic.c	2007-01-05 13:08:30.000000000 +0000
++++ linux-2.6.20-rc3-mm1/drivers/ide/pci/generic.c	2007-01-08 11:52:36.154460816 +0000
+@@ -185,36 +185,6 @@
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+ 		.bootable	= OFF_BOARD,
+-	},{	/* 15 */
+-		.name		= "JMB361",
+-		.init_hwif	= init_hwif_generic,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= OFF_BOARD,
+-	},{	/* 16 */
+-		.name		= "JMB363",
+-		.init_hwif	= init_hwif_generic,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= OFF_BOARD,
+-	},{	/* 17 */
+-		.name		= "JMB365",
+-		.init_hwif	= init_hwif_generic,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= OFF_BOARD,
+-	},{	/* 18 */
+-		.name		= "JMB366",
+-		.init_hwif	= init_hwif_generic,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= OFF_BOARD,
+-	},{	/* 19 */
+-		.name		= "JMB368",
+-		.init_hwif	= init_hwif_generic,
+-		.channels	= 2,
+-		.autodma	= AUTODMA,
+-		.bootable	= OFF_BOARD,
+ 	}
+ };
+ 
+@@ -281,11 +251,6 @@
+ 	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
+ 	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
+ 	{ PCI_VENDOR_ID_NETCELL,PCI_DEVICE_ID_REVOLUTION,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14},
+-	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 15},
+-	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB363,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 16},
+-	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB365,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 17},
+-	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB366,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 18},
+-	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB368,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 19},
+ 	/* Must come last. If you add entries adjust this table appropriately and the init_one code */
+ 	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0},
+ 	{ 0, },
