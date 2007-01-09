@@ -1,36 +1,27 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: handle pci_enable_device() failure while resuming
-Date: Tue, 09 Jan 2007 05:42:45 -0500
-Message-ID: <45A371A5.9080900@pobox.com>
-References: <20061226103950.GA10987@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: libata-dev.git rebased
+Date: Tue, 09 Jan 2007 05:59:55 -0500
+Message-ID: <45A375AB.3000900@garzik.org>
+References: <17348032.1166037662009.JavaMail.?@fh1064.dia.cp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33648 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:33825 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751314AbXAIKmr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Jan 2007 05:42:47 -0500
-In-Reply-To: <20061226103950.GA10987@htj.dyndns.org>
+	id S1751346AbXAIK76 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Jan 2007 05:59:58 -0500
+In-Reply-To: <17348032.1166037662009.JavaMail.?@fh1064.dia.cp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: daniel@wolstenholme.net
+Cc: dan.j.williams@gmail.com, linux-ide@vger.kernel.org, akpm@osdl.org, htejun@gmail.com
 
-Tejun Heo wrote:
-> Handle pci_enable_device() failure while resuming.  This patch kills
-> the "ignoring return value of 'pci_enable_device'" warning message and
-> propagates __must_check through ata_pci_device_do_resume().
+daniel@wolstenholme.net wrote:
+> Jeff,
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/ahci.c        |    4 +++-
->  drivers/ata/libata-core.c |   22 +++++++++++++++++-----
->  drivers/ata/sata_sil.c    |    6 +++++-
->  drivers/ata/sata_sil24.c  |    5 ++++-
->  include/linux/libata.h    |    2 +-
->  5 files changed, 30 insertions(+), 9 deletions(-)
+> Here's my rebased patch.  Let me know if there's a problem with it.
 
-applied
+applied (again), thanks for your patience
 
 
