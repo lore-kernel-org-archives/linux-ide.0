@@ -1,115 +1,45 @@
-From: "Conke Hu" <conke.hu@gmail.com>
-Subject: Re: [PATCH 1/3] atiixp.c: remove unused code
-Date: Tue, 9 Jan 2007 19:28:40 +0800
-Message-ID: <5767b9100701090328o4b78fd4x2b18a42a996608d9@mail.gmail.com>
-References: <5767b9100701060411h13324086uf6552a5166641534@mail.gmail.com>
-	 <58cb370e0701061812s49c4b1f5p5c5e99e5eea3bb89@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: DMA errors with HTP370 IDE in <= 2.6.18.2
+Date: Tue, 09 Jan 2007 15:42:23 +0300
+Message-ID: <45A38DAF.6020408@ru.mvista.com>
+References: <45A2A0AC.1050203@berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:7124 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250AbXAIL2l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Jan 2007 06:28:41 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so6538344uga
-        for <linux-ide@vger.kernel.org>; Tue, 09 Jan 2007 03:28:40 -0800 (PST)
-In-Reply-To: <58cb370e0701061812s49c4b1f5p5c5e99e5eea3bb89@mail.gmail.com>
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:5344 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751356AbXAIMmX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Jan 2007 07:42:23 -0500
+In-Reply-To: <45A2A0AC.1050203@berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Linux kernel mailing list <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Greg KH <greg@kroah.com>, linux-ide@vger.kernel.org
+To: Michael Bueker <m.bueker@berlin.de>
+Cc: linux-ide@vger.kernel.org
 
-On 1/7/07, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> On 1/6/07, Conke Hu <conke.hu@gmail.com> wrote:
-> > A previous patch to atiixp.c was removed but some code has not been
->
-> This one?
->
-> http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=ab17443a3df35abe4b7529e83511a591aa7384f3
->
-> Doesn't it break existing setups without giving ANY warning?
->
-> theoretical (I don't have hardware in question) scenario:
-> - user uses atiixp and has modular libata/ahci (or no libata/ahci et all)
-> - user does kernel upgrade
-> - boot fails
-> - ...
->
-> If this is true please add something like
->
-> printk(KERN_WARNING "PCI: setting SB600 SATA to AHCI mode"
-> " (please use ahci driver instead of atiixp)\n");
->
-> to quirk_sb600_sata() so people will at least know what is wrong...
->
-> > cleaned. Now we remove these code sine they are no use any longer.
->
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->
-> [ but the patch is line wrapped and unfortunately doesn't apply ]
->
-> PS: please always cc: linux-ide@vger.kernel.org on PATA/SATA patches
->
-> Thanks,
-> Bart
->
+Michael Bueker wrote:
 
+  > In the controller's setup utility, I can choose access modes. If i
+> switch it from UDMA5 to PIO0, the only difference during boot is:
 
-Hi Bart,
-    I've tried to access the following link to make sure which it is,
-but failed. The internet here   is almost broken.
-    http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=ab17443a3df35abe4b7529e83511a591aa7384f3
+    PIO0 is outrageously slow, use PIO4 (very slow as well but at least 
+somewhat faster).  Anyway, this won't help with Linux...
 
-   I sent out 2 patches for the same SB600 legacy IDE issue. the later
-(sb600 pci qurik) is better so we should clean the previous patch
-which was applied to atiixp.c. -- that is what this patch does.
+>> ide2: BM-DMA at 0xa000-0xa007, BIOS settings: hde:pio, hdf:pio
 
-    BTW, I re-create and re-send the patch (see below) based on
-2.6.20-rc4, in last patch I fogot to rename atiixp.c.1 to atiixp.c
-which may lead to patch fail, nothing else different.
-    And maybe no need to re-ACK if last one is accepted:)
-    Thanks!
+> instead of
 
---------------------
---- linux-2.6.20-rc4/drivers/ide/pci/atiixp.c.1	2007-01-09
-15:19:05.000000000 +0800
-+++ linux-2.6.20-rc4/drivers/ide/pci/atiixp.c	2007-01-09
-15:17:54.000000000 +0800
-@@ -320,20 +320,6 @@ static void __devinit init_hwif_atiixp(i
- 	hwif->drives[0].autodma = hwif->autodma;
- }
+>> ide2: BM-DMA at 0xa000-0xa007, BIOS settings: hde:DMA, hdf:DMA
 
--static void __devinit init_hwif_sb600_legacy(ide_hwif_t *hwif)
--{
--
--	hwif->atapi_dma = 1;
--	hwif->ultra_mask = 0x7f;
--	hwif->mwdma_mask = 0x07;
--	hwif->swdma_mask = 0x07;
--
--	if (!noautodma)
--		hwif->autodma = 1;
--	hwif->drives[0].autodma = hwif->autodma;
--	hwif->drives[1].autodma = hwif->autodma;
--}
--
- static ide_pci_device_t atiixp_pci_info[] __devinitdata = {
- 	{	/* 0 */
- 		.name		= "ATIIXP",
-@@ -342,13 +328,7 @@ static ide_pci_device_t atiixp_pci_info[
- 		.autodma	= AUTODMA,
- 		.enablebits	= {{0x48,0x01,0x00}, {0x48,0x08,0x00}},
- 		.bootable	= ON_BOARD,
--	},{	/* 1 */
--		.name		= "ATI SB600 SATA Legacy IDE",
--		.init_hwif	= init_hwif_sb600_legacy,
--		.channels	= 2,
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--	}
-+	},
- };
+    You should specify the option ide=nodma to the kernel to disable IDE core 
+from using DMA.
 
- /**
+> Please help me getting DMA to work with this controller.
+
+    For starters, please try the driver from 2.6.20-rc1 and (if that doesn't 
+help) from the -mm tree. I rewrote it and it's working OK on at least my HPT370...
+
+> Thanks in advance,
+> ~Mik
+
+WBR, Sergei
