@@ -1,30 +1,54 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: SATA Promise
-Date: Tue, 9 Jan 2007 10:58:19 +0100 (MET)
-Message-ID: <200701090958.l099wJKA011667@harpo.it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2.6.20-rc4 1/2] sata_promise: TX2plus PATA support
+Date: Tue, 09 Jan 2007 05:12:46 -0500
+Message-ID: <45A36A9E.8030408@garzik.org>
+References: <200701090950.l099oRPU011573@harpo.it.uu.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:61796 "EHLO aun.it.uu.se"
+Received: from srv5.dvmed.net ([207.36.208.214]:33306 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245AbXAIJ6d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Jan 2007 04:58:33 -0500
+	id S1751253AbXAIKMt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Jan 2007 05:12:49 -0500
+In-Reply-To: <200701090950.l099oRPU011573@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gary@mlbassoc.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 08 Jan 2007 10:06:49 -0700, Gary Thomas wrote:
-> > Yes. SATAPI and PATAPI are working. Patches have been posted
-> > to linux-ide, and hopefully final combined/reworked/tidied-up
-> > patches should be available tomorrow.
+Mikael Pettersson wrote:
+> This patch implements a simple way of setting up per-port
+> flags on the SATA+PATA Promise TX2plus chips, which is a
+> prerequisite for supporting the PATA port on those chips.
 > 
-> Very nice, thanks.
+> It is based on the observation that ap->flags isn't really
+> used until after ->port_start() has been invoked. So it
+> places the "exceptional" per-port flags array in the driver's
+> private host structure, and uses it in ->port_start() to
+> finalise the port's flags.
 > 
-> BTW, what SATAPI drive did you try this with?  I have a Lite-On
-> LTN-52S1S that doesn't seem to work at all with the PDC40775 - it
-> just hangs during the bootup.
+> This patch obsoletes the #promise-sata-pata branch included
+> in the #all branch.
+> 
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
-I tested SATAPI with a Samsung DVD-writer. I don't have
-the exact model # handy, but the OEM appears to be Toshiba.
-PATAPI was tested with a Phillips CD-writer.
+applied patches 1-2 to #upstream.  minor follow-up comments follow in 
+separate emails.
 
-/Mikael
+Thanks a bunch for working on this, sata_promise has needed some "love" 
+for quite a while.
+
+Any chance you could be talked to becoming "official" sata_promise 
+maintainer, by sending in a patch to MAINTAINERS?
+
+One open issue that remains is port enumeration order.  Bug reports 
+consistently indicate that the ports are numbered on the board (visible 
+to the naked eye) in a different manner than how the chip enumerates 
+each port.  According to the bug reports, Promise's driver enumerates 
+the ports in the correct order.
+
+	Jeff
+
+
+
