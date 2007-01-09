@@ -1,81 +1,116 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc4: known unfixed regressions (v2)
-Date: Tue, 9 Jan 2007 06:25:10 +0100
-Message-ID: <20070109052510.GG25007@stusta.de>
-References: <Pine.LNX.4.64.0701062216210.3661@woody.osdl.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701062216210.3661@woody.osdl.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Malte =?iso-8859-1?Q?Schr=F6der?= <MalteSch@gmx.de>, reiserfs-dev@namesys.com, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, ttb@tentacle.dhs.org, rml@novell.com, Jon Smirl <jonsmirl@gmail.com>, Damien Wyart <damien.wyart@free.fr>, Aaron Sethman <androsyn@ratbox.org>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Uwe Bugla <uwe.bugla@gmx.de>, Florin Iucha <florin@iucha.net>, Jiri Kosina <jkosina@suse.cz>, dmitry.torokhov@gmail.com, linux-input@atrey.karlin.mff.cuni.cz, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Berthold Cogel <cogel@rrz.uni-koeln.de>, Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>, len.brown@intel.com, linux-acpi@vger.kernel.org
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.20-rc4 1/2] sata_promise: TX2plus PATA support
+Date: Tue, 9 Jan 2007 10:50:27 +0100 (MET)
+Message-ID: <200701090950.l099oRPU011573@harpo.it.uu.se>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751247AbXAIJux@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-This email lists some known regressions in 2.6.20-rc4 compared to 2.6.1=
-9
-that are not yet fixed in Linus' tree.
+This patch implements a simple way of setting up per-port
+flags on the SATA+PATA Promise TX2plus chips, which is a
+prerequisite for supporting the PATA port on those chips.
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possib=
-ly
-involved with one or more of these issues.
+It is based on the observation that ap->flags isn't really
+used until after ->port_start() has been invoked. So it
+places the "exceptional" per-port flags array in the driver's
+private host structure, and uses it in ->port_start() to
+finalise the port's flags.
 
-Due to the huge amount of recipients, please trim the Cc when answering=
-=2E
+This patch obsoletes the #promise-sata-pata branch included
+in the #all branch.
 
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
-Subject    : BUG: at mm/truncate.c:60 cancel_dirty_page()  (reiserfs)
-References : http://lkml.org/lkml/2007/1/7/117
-Submitter  : Malte Schr=F6der <MalteSch@gmx.de>
-Status     : unknown
+---
 
+Changes since the RFC version:
+- check cable type not ATA_FLAG_SLAVE_POSS in ->scr_read and ->scr_write
 
-Subject    : BUG: at fs/inotify.c:172 set_dentry_child_flags()
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7785
-Submitter  : Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
-Status     : unknown
-
-
-Subject    : BUG: scheduling while atomic: hald-addon-stor/...
-             cdrom_{open,release,ioctl} in trace
-References : http://lkml.org/lkml/2006/12/26/105
-             http://lkml.org/lkml/2006/12/29/22
-             http://lkml.org/lkml/2006/12/31/133
-Submitter  : Jon Smirl <jonsmirl@gmail.com>
-             Damien Wyart <damien.wyart@free.fr>
-             Aaron Sethman <androsyn@ratbox.org>
-Status     : unknown
-
-
-Subject    : problems with CD burning
-References : http://www.spinics.net/lists/linux-ide/msg06545.html
-Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
-Status     : unknown
-
-
-Subject    : USB keyboard unresponsive after some time
-References : http://lkml.org/lkml/2006/12/25/35
-             http://lkml.org/lkml/2006/12/26/106
-Submitter  : Florin Iucha <florin@iucha.net>
-Handled-By : Jiri Kosina <jkosina@suse.cz>
-Status     : problem is being debugged
-
-
-Subject    : Acer Extensa 3002 WLMi: 'shutdown -h now' reboots the syst=
-em
-References : http://lkml.org/lkml/2006/12/25/40
-Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
-Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com=
->
-Status     : problem is being debugged
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff -rupN linux-2.6.20-rc4/drivers/ata/sata_promise.c linux-2.6.20-rc4.sata_promise-pata-20x7x-v3/drivers/ata/sata_promise.c
+--- linux-2.6.20-rc4/drivers/ata/sata_promise.c	2007-01-08 20:42:55.000000000 +0100
++++ linux-2.6.20-rc4.sata_promise-pata-20x7x-v3/drivers/ata/sata_promise.c	2007-01-09 09:35:25.000000000 +0100
+@@ -92,6 +92,7 @@ struct pdc_port_priv {
+ 
+ struct pdc_host_priv {
+ 	unsigned long		flags;
++	unsigned long		port_flags[ATA_MAX_PORTS];
+ };
+ 
+ static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg);
+@@ -183,7 +184,7 @@ static const struct ata_port_info pdc_po
+ 	/* board_2037x */
+ 	{
+ 		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
++		.flags		= PDC_COMMON_FLAGS,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -213,7 +214,7 @@ static const struct ata_port_info pdc_po
+ 	/* board_2057x */
+ 	{
+ 		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
++		.flags		= PDC_COMMON_FLAGS,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -271,6 +272,11 @@ static int pdc_port_start(struct ata_por
+ 	struct pdc_port_priv *pp;
+ 	int rc;
+ 
++	/* fix up port flags and cable type for SATA+PATA chips */
++	ap->flags |= hp->port_flags[ap->port_no];
++	if (ap->flags & ATA_FLAG_SATA)
++		ap->cbl = ATA_CBL_SATA;
++
+ 	rc = ata_port_start(ap);
+ 	if (rc)
+ 		return rc;
+@@ -377,7 +383,7 @@ static void pdc_pata_phy_reset(struct at
+ 
+ static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+ {
+-	if (sc_reg > SCR_CONTROL)
++	if (sc_reg > SCR_CONTROL || ap->cbl != ATA_CBL_SATA)
+ 		return 0xffffffffU;
+ 	return readl((void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
+@@ -386,7 +392,7 @@ static u32 pdc_sata_scr_read (struct ata
+ static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg,
+ 			       u32 val)
+ {
+-	if (sc_reg > SCR_CONTROL)
++	if (sc_reg > SCR_CONTROL || ap->cbl != ATA_CBL_SATA)
+ 		return;
+ 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
+@@ -740,6 +746,7 @@ static int pdc_ata_init_one (struct pci_
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+ 	int pci_dev_busy = 0;
+ 	int rc;
++	u8 tmp;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
+@@ -820,7 +827,17 @@ static int pdc_ata_init_one (struct pci_
+ 		hp->flags |= PDC_FLAG_GEN_II;
+ 		/* Fall through */
+ 	case board_2037x:
+-		probe_ent->n_ports = 2;
++		/* TX2plus boards also have a PATA port */
++		tmp = readb(mmio_base + PDC_FLASH_CTL+1);
++		if (!(tmp & 0x80)) {
++			probe_ent->n_ports = 3;
++			pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
++			hp->port_flags[2] = ATA_FLAG_SLAVE_POSS;
++			printk(KERN_INFO DRV_NAME " PATA port found\n");
++		} else
++			probe_ent->n_ports = 2;
++		hp->port_flags[0] = ATA_FLAG_SATA;
++		hp->port_flags[1] = ATA_FLAG_SATA;
+ 		break;
+ 	case board_20619:
+ 		probe_ent->n_ports = 4;
