@@ -1,16 +1,16 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH 2.6.20-rc4 1/2] sata_promise: TX2plus PATA support
-Date: Tue, 09 Jan 2007 05:12:46 -0500
-Message-ID: <45A36A9E.8030408@garzik.org>
+Date: Tue, 09 Jan 2007 05:16:08 -0500
+Message-ID: <45A36B68.1080204@garzik.org>
 References: <200701090950.l099oRPU011573@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33306 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:33346 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751253AbXAIKMt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Jan 2007 05:12:49 -0500
+	id S1751259AbXAIKQK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Jan 2007 05:16:10 -0500
 In-Reply-To: <200701090950.l099oRPU011573@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,37 +18,45 @@ To: Mikael Pettersson <mikpe@it.uu.se>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Mikael Pettersson wrote:
-> This patch implements a simple way of setting up per-port
-> flags on the SATA+PATA Promise TX2plus chips, which is a
-> prerequisite for supporting the PATA port on those chips.
-> 
-> It is based on the observation that ap->flags isn't really
-> used until after ->port_start() has been invoked. So it
-> places the "exceptional" per-port flags array in the driver's
-> private host structure, and uses it in ->port_start() to
-> finalise the port's flags.
-> 
-> This patch obsoletes the #promise-sata-pata branch included
-> in the #all branch.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> @@ -271,6 +272,11 @@ static int pdc_port_start(struct ata_por
+>  	struct pdc_port_priv *pp;
+>  	int rc;
+>  
+> +	/* fix up port flags and cable type for SATA+PATA chips */
+> +	ap->flags |= hp->port_flags[ap->port_no];
+> +	if (ap->flags & ATA_FLAG_SATA)
+> +		ap->cbl = ATA_CBL_SATA;
+> +
+>  	rc = ata_port_start(ap);
+>  	if (rc)
+>  		return rc;
+> @@ -377,7 +383,7 @@ static void pdc_pata_phy_reset(struct at
+>  
+>  static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+>  {
+> -	if (sc_reg > SCR_CONTROL)
+> +	if (sc_reg > SCR_CONTROL || ap->cbl != ATA_CBL_SATA)
+>  		return 0xffffffffU;
+>  	return readl((void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+>  }
+> @@ -386,7 +392,7 @@ static u32 pdc_sata_scr_read (struct ata
+>  static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg,
+>  			       u32 val)
+>  {
+> -	if (sc_reg > SCR_CONTROL)
+> +	if (sc_reg > SCR_CONTROL || ap->cbl != ATA_CBL_SATA)
+>  		return;
+>  	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+>  }
 
-applied patches 1-2 to #upstream.  minor follow-up comments follow in 
-separate emails.
 
-Thanks a bunch for working on this, sata_promise has needed some "love" 
-for quite a while.
+It would be nice to see a [tested] follow-up patch that separates SATA 
+and PATA into two separate sets of ata_port_operations hooks.  That 
+should eliminate these 'ap->cbl' tests, and some other tests.
 
-Any chance you could be talked to becoming "official" sata_promise 
-maintainer, by sending in a patch to MAINTAINERS?
-
-One open issue that remains is port enumeration order.  Bug reports 
-consistently indicate that the ports are numbered on the board (visible 
-to the naked eye) in a different manner than how the chip enumerates 
-each port.  According to the bug reports, Promise's driver enumerates 
-the ports in the correct order.
+You should be able to set ap->ops in the same manner as you are setting 
+the flags now.
 
 	Jeff
-
 
 
