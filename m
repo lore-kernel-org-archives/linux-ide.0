@@ -1,92 +1,81 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] pata_sis: implement laptop list and add ASUS A6K/A6U
-Date: Tue, 9 Jan 2007 09:01:19 +0900
-Message-ID: <20070109000119.GK10987@htj.dyndns.org>
-References: <20070108173600.GJ10987@htj.dyndns.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc4: known unfixed regressions (v2)
+Date: Tue, 9 Jan 2007 06:25:10 +0100
+Message-ID: <20070109052510.GG25007@stusta.de>
+References: <Pine.LNX.4.64.0701062216210.3661@woody.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [221.139.199.108] ([221.139.199.108]:53379 "EHLO htj.dyndns.org"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1750866AbXAIABV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Jan 2007 19:01:21 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20070108173600.GJ10987@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0701062216210.3661@woody.osdl.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Malte =?iso-8859-1?Q?Schr=F6der?= <MalteSch@gmx.de>, reiserfs-dev@namesys.com, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, ttb@tentacle.dhs.org, rml@novell.com, Jon Smirl <jonsmirl@gmail.com>, Damien Wyart <damien.wyart@free.fr>, Aaron Sethman <androsyn@ratbox.org>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Uwe Bugla <uwe.bugla@gmx.de>, Florin Iucha <florin@iucha.net>, Jiri Kosina <jkosina@suse.cz>, dmitry.torokhov@gmail.com, linux-input@atrey.karlin.mff.cuni.cz, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Berthold Cogel <cogel@rrz.uni-koeln.de>, Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>, len.brown@intel.com, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: "Jakub W. Jozwicki" <jakub007@go2.pl>, Andreas Henriksson <andreas@fatal.se>
 
-From: Jakub W. Jozwicki J <jakub007@go2.pl>
+This email lists some known regressions in 2.6.20-rc4 compared to 2.6.1=
+9
+that are not yet fixed in Linus' tree.
 
-In ASUS A6K/A6U hdd is connected to SiS 96x via 40c cable, however it
-is short cable and is UDMA66 capable.
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possib=
+ly
+involved with one or more of these issues.
 
-tj: fixed if () conditionals
-ah: fixed infinite loop
+Due to the huge amount of recipients, please trim the Cc when answering=
+=2E
 
-Signed-off-by: Jakub W. Jozwicki <jakub007@go2.pl>
-Cc: Andreas Henriksson <andreas@fatal.se>
-Signed-off-by: Tejun Heo <htejun@gmail.com>
 
----
-lap++ was missing.  This will result in infinite loop.  Please apply
-this one.  Thanks to Andreas Henriksson for spotting this.
+Subject    : BUG: at mm/truncate.c:60 cancel_dirty_page()  (reiserfs)
+References : http://lkml.org/lkml/2007/1/7/117
+Submitter  : Malte Schr=F6der <MalteSch@gmx.de>
+Status     : unknown
 
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index c434c4e..d9486fc 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -43,6 +43,34 @@ struct sis_chipset {
- 	   up code later */
- };
- 
-+struct sis_laptop {
-+	u16 device;
-+	u16 subvendor;
-+	u16 subdevice;
-+};
-+
-+static const struct sis_laptop sis_laptop[] = {
-+	/* devid, subvendor, subdev */
-+	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
-+	/* end marker */
-+	{ 0, }
-+};
-+
-+static int sis_short_ata40(struct pci_dev *dev)
-+{
-+	const struct sis_laptop *lap = &sis_laptop[0];
-+
-+	while (lap->device) {
-+		if (lap->device == dev->device &&
-+		    lap->subvendor == dev->subsystem_vendor &&
-+		    lap->subdevice == dev->subsystem_device)
-+			return 1;
-+		lap++;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  *	sis_port_base		-	return PCI configuration base for dev
-  *	@adev: device
-@@ -79,7 +107,7 @@ static int sis_133_pre_reset(struct ata_port *ap)
- 
- 	/* The top bit of this register is the cable detect bit */
- 	pci_read_config_word(pdev, 0x50 + 2 * ap->port_no, &tmp);
--	if (tmp & 0x8000)
-+	if ((tmp & 0x8000) && !sis_short_ata40(pdev))
- 		ap->cbl = ATA_CBL_PATA40;
- 	else
- 		ap->cbl = ATA_CBL_PATA80;
-@@ -127,7 +155,7 @@ static int sis_66_pre_reset(struct ata_port *ap)
- 	/* Older chips keep cable detect in bits 4/5 of reg 0x48 */
- 	pci_read_config_byte(pdev, 0x48, &tmp);
- 	tmp >>= ap->port_no;
--	if (tmp & 0x10)
-+	if ((tmp & 0x10) && !sis_short_ata40(pdev))
- 		ap->cbl = ATA_CBL_PATA40;
- 	else
- 		ap->cbl = ATA_CBL_PATA80;
+
+Subject    : BUG: at fs/inotify.c:172 set_dentry_child_flags()
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7785
+Submitter  : Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
+Status     : unknown
+
+
+Subject    : BUG: scheduling while atomic: hald-addon-stor/...
+             cdrom_{open,release,ioctl} in trace
+References : http://lkml.org/lkml/2006/12/26/105
+             http://lkml.org/lkml/2006/12/29/22
+             http://lkml.org/lkml/2006/12/31/133
+Submitter  : Jon Smirl <jonsmirl@gmail.com>
+             Damien Wyart <damien.wyart@free.fr>
+             Aaron Sethman <androsyn@ratbox.org>
+Status     : unknown
+
+
+Subject    : problems with CD burning
+References : http://www.spinics.net/lists/linux-ide/msg06545.html
+Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+Status     : unknown
+
+
+Subject    : USB keyboard unresponsive after some time
+References : http://lkml.org/lkml/2006/12/25/35
+             http://lkml.org/lkml/2006/12/26/106
+Submitter  : Florin Iucha <florin@iucha.net>
+Handled-By : Jiri Kosina <jkosina@suse.cz>
+Status     : problem is being debugged
+
+
+Subject    : Acer Extensa 3002 WLMi: 'shutdown -h now' reboots the syst=
+em
+References : http://lkml.org/lkml/2006/12/25/40
+Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
+Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com=
+>
+Status     : problem is being debugged
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
