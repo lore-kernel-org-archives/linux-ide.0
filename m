@@ -1,50 +1,32 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: hwif->rw_disk() method
-Date: Wed, 10 Jan 2007 22:47:09 +0100
-Message-ID: <58cb370e0701101347x38f67e54x32da2ec8262ec7b7@mail.gmail.com>
-References: <45A514AB.2080605@ru.mvista.com>
-	 <20070110171015.5320fa17@localhost.localdomain>
-	 <45A51CEA.9040608@ru.mvista.com>
+From: Michael Bueker <m.bueker@berlin.de>
+Subject: Re: No DMA with HTP370 IDE controller
+Date: Wed, 10 Jan 2007 23:32:22 +0100
+Message-ID: <45A56976.10208@berlin.de>
+References: <45A29690.3040003@berlin.de>	 <58cb370e0701081155j7376d15dv32e3b65906c8d325@mail.gmail.com>	 <45A35A8C.9040200@berlin.de> <58cb370e0701090544p2a851182m30f24e0fdd86f328@mail.gmail.com> <45A435A3.2020506@berlin.de> <45A4DAED.9070404@ru.mvista.com> <45A51259.2020904@berlin.de> <45A52228.1020803@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:15338 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965122AbXAJVrL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 16:47:11 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so656481nfa
-        for <linux-ide@vger.kernel.org>; Wed, 10 Jan 2007 13:47:09 -0800 (PST)
-In-Reply-To: <45A51CEA.9040608@ru.mvista.com>
-Content-Disposition: inline
+Received: from sour.ops.eusc.inter.net ([84.23.254.154]:62827 "EHLO
+	sour.ops.eusc.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965158AbXAJWdB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 17:33:01 -0500
+In-Reply-To: <45A52228.1020803@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On 1/10/07, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> Hello.
+Jeff Garzik wrote:
+> Does the libata driver work?
 
-Hi,
+Nope. There's no verbose error messages, but the kernel dies about where 
+the controller is addressed.
 
-> Alan wrote:
->
-> >>    Alan/Bart/anybody, could you enlighten me why hwif->rw_disk() method came
-> >>into being at all?
->
-> > When you needed to wrap entire disk operations. The ->dma_ methods only
-> > wrap DMA commands.
+~Mik
 
-Exactly.  IIRC ->rw_disk method was used for PIO by (removed) pdc4030 driver.
-
->     Yeah, good point. But it's not likely that the HighPoint driver actually
-> needs this wrapper for PIO or even MW DMA commands...
->
-> > For the current support hardware it can probably go, no idea if anyone
-> > embedded uses it any more and can't be bothered to check 8)
->
->     Nobody does, as far I can see, except this wretched driver... :-)
-
-Yes, so if HPT hardware doesn't need clock switch for PIO ->rw_disk can go.
-
-Bart
+-- 
+So, how can you tell me you're lonely?
+And say that you don't have no life?
+Let me take you by the hand and show you all the geeks of London
+I'll show you something to make you change your mind!
