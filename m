@@ -1,41 +1,186 @@
-From: Michael Bueker <m.bueker@berlin.de>
-Subject: Re: No DMA with HTP370 IDE controller
-Date: Wed, 10 Jan 2007 01:38:59 +0100
-Message-ID: <45A435A3.2020506@berlin.de>
-References: <45A29690.3040003@berlin.de>	 <58cb370e0701081155j7376d15dv32e3b65906c8d325@mail.gmail.com>	 <45A35A8C.9040200@berlin.de> <58cb370e0701090544p2a851182m30f24e0fdd86f328@mail.gmail.com>
+From: "Conke Hu" <conke.hu@gmail.com>
+Subject: Re: [PATCH 3/3] atiixp.c: add cable detection support for ATI IDE
+Date: Wed, 10 Jan 2007 10:34:06 +0800
+Message-ID: <5767b9100701091834q35235505refa8523438d8d54c@mail.gmail.com>
+References: <5767b9100701060422p1abd1d21x606b758220815551@mail.gmail.com>
+	 <58cb370e0701061816s308155abw719a00d499f504ea@mail.gmail.com>
+	 <5767b9100701090453g51448661td14e4c05a4eceb2a@mail.gmail.com>
+	 <45A392C7.1030309@garzik.org>
+	 <58cb370e0701090554s6aa3d1derc7d2188598644d79@mail.gmail.com>
+	 <20070109102618.e2c35b9c.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from waikiki.ops.eusc.inter.net ([84.23.254.155]:56318 "EHLO
-	waikiki.ops.eusc.inter.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932498AbXAJAje (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Jan 2007 19:39:34 -0500
-In-Reply-To: <58cb370e0701090544p2a851182m30f24e0fdd86f328@mail.gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.172]:59603 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932676AbXAJCeI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Jan 2007 21:34:08 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so6763145uga
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jan 2007 18:34:06 -0800 (PST)
+In-Reply-To: <20070109102618.e2c35b9c.akpm@osdl.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> Have you looked at changes to drivers/ide/pci/hpt366.c?
-> The code is not the same, there are a lot of fixes in -mm:
-> 
-> hpt3xx-rework-rate-filtering.patch
-> hpt3xx-rework-rate-filtering-tidy.patch
-> hpt3xx-print-the-real-chip-name-at-startup.patch
-> hpt3xx-switch-to-using-pci_get_slot.patch
-> hpt3xx-cache-channels-mcr-address.patch
-> hpt3x7-merge-speedproc-handlers.patch
-> hpt370-clean-up-dma-timeout-handling.patch
-> hpt3xx-init-code-rewrite.patch
+On 1/10/07, Andrew Morton <akpm@osdl.org> wrote:
+> <snip>
+> Here are the three patches.  Conke, can you please tell us whether this is
+> all correct and complete?
+>
+> From: "Conke Hu" <conke.hu@gmail.com>
+>
+> A previous patch to atiixp.c was removed but some code has not been
+> cleaned. Now we remove these code sine they are no use any longer.
+>
+> Signed-off-by: Conke Hu <conke.hu@amd.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Cc: Greg KH <greg@kroah.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
+> ---
+>
+>  drivers/ide/pci/atiixp.c |   21 +--------------------
+>  1 files changed, 1 insertion(+), 20 deletions(-)
+>
+> diff -puN drivers/ide/pci/atiixp.c~atiixpc-remove-unused-code drivers/ide/pci/atiixp.c
+> --- a/drivers/ide/pci/atiixp.c~atiixpc-remove-unused-code
+> +++ a/drivers/ide/pci/atiixp.c
+> @@ -320,19 +320,6 @@ static void __devinit init_hwif_atiixp(i
+>         hwif->drives[0].autodma = hwif->autodma;
+>  }
+>
+> -static void __devinit init_hwif_sb600_legacy(ide_hwif_t *hwif)
+> -{
+> -
+> -       hwif->atapi_dma = 1;
+> -       hwif->ultra_mask = 0x7f;
+> -       hwif->mwdma_mask = 0x07;
+> -       hwif->swdma_mask = 0x07;
+> -
+> -       if (!noautodma)
+> -               hwif->autodma = 1;
+> -       hwif->drives[0].autodma = hwif->autodma;
+> -       hwif->drives[1].autodma = hwif->autodma;
+> -}
+>
+>  static ide_pci_device_t atiixp_pci_info[] __devinitdata = {
+>         {       /* 0 */
+> @@ -342,13 +329,7 @@ static ide_pci_device_t atiixp_pci_info[
+>                 .autodma        = AUTODMA,
+>                 .enablebits     = {{0x48,0x01,0x00}, {0x48,0x08,0x00}},
+>                 .bootable       = ON_BOARD,
+> -       },{     /* 1 */
+> -               .name           = "ATI SB600 SATA Legacy IDE",
+> -               .init_hwif      = init_hwif_sb600_legacy,
+> -               .channels       = 2,
+> -               .autodma        = AUTODMA,
+> -               .bootable       = ON_BOARD,
+> -       }
+> +       },
+>  };
+>
+>  /**
+> _
+>
+>
+>
+> From: "Conke Hu" <conke.hu@gmail.com>
+>
+> AMD/ATI SB600 IDE/PATA controller only has one channel.
+>
+> Signed-off-by: Conke Hu <conke.hu@amd.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Cc: Greg KH <greg@kroah.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
+> ---
+>
+>  drivers/ide/pci/atiixp.c |   11 +++++++++--
+>  1 files changed, 9 insertions(+), 2 deletions(-)
+>
+> diff -puN drivers/ide/pci/atiixp.c~atiixpc-sb600-ide-only-has-one-channel drivers/ide/pci/atiixp.c
+> --- a/drivers/ide/pci/atiixp.c~atiixpc-sb600-ide-only-has-one-channel
+> +++ a/drivers/ide/pci/atiixp.c
+> @@ -329,7 +329,14 @@ static ide_pci_device_t atiixp_pci_info[
+>                 .autodma        = AUTODMA,
+>                 .enablebits     = {{0x48,0x01,0x00}, {0x48,0x08,0x00}},
+>                 .bootable       = ON_BOARD,
+> -       },
+> +       },{     /* 1 */
+> +               .name           = "SB600_PATA",
+> +               .init_hwif      = init_hwif_atiixp,
+> +               .channels       = 1,
+> +               .autodma        = AUTODMA,
+> +               .enablebits     = {{0x48,0x01,0x00}, {0x00,0x00,0x00}},
+> +               .bootable       = ON_BOARD,
+> +       },
+>  };
+>
+>  /**
+> @@ -350,7 +357,7 @@ static struct pci_device_id atiixp_pci_t
+>         { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP200_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+>         { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP300_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+>         { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+> -       { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP600_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+> +       { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP600_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
+>         { 0, },
+>  };
+>  MODULE_DEVICE_TABLE(pci, atiixp_pci_tbl);
+> _
+>
+>
+> From: "Conke Hu" <conke.hu@gmail.com>
+>
+> IDE HDD does not work if it uses a 40-pin PATA cable on ATI chipset.
+> This patch fixes the bug.
+>
+> Signed-off-by: Conke Hu <conke.hu@amd.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Cc: Greg KH <greg@kroah.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
+> ---
+>
+>  drivers/ide/pci/atiixp.c |   14 +++++++++++---
+>  1 files changed, 11 insertions(+), 3 deletions(-)
+>
+> diff -puN drivers/ide/pci/atiixp.c~atiixpc-add-cable-detection-support-for-ati-ide drivers/ide/pci/atiixp.c
+> --- a/drivers/ide/pci/atiixp.c~atiixpc-add-cable-detection-support-for-ati-ide
+> +++ a/drivers/ide/pci/atiixp.c
+> @@ -291,8 +291,12 @@ fast_ata_pio:
+>
+>  static void __devinit init_hwif_atiixp(ide_hwif_t *hwif)
+>  {
+> +       u8 udma_mode = 0;
+> +       u8 ch = hwif->channel;
+> +       struct pci_dev *pdev = hwif->pci_dev;
+> +
+>         if (!hwif->irq)
+> -               hwif->irq = hwif->channel ? 15 : 14;
+> +               hwif->irq = ch ? 15 : 14;
+>
+>         hwif->autodma = 0;
+>         hwif->tuneproc = &atiixp_tuneproc;
+> @@ -308,8 +312,12 @@ static void __devinit init_hwif_atiixp(i
+>         hwif->mwdma_mask = 0x06;
+>         hwif->swdma_mask = 0x04;
+>
+> -       /* FIXME: proper cable detection needed */
+> -       hwif->udma_four = 1;
+> +       pci_read_config_byte(pdev, ATIIXP_IDE_UDMA_MODE + ch, &udma_mode);
+> +       if ((udma_mode & 0x07) >= 0x04 || (udma_mode & 0x70) >= 0x40)
+> +               hwif->udma_four = 1;
+> +       else
+> +               hwif->udma_four = 0;
+> +
+>         hwif->ide_dma_host_on = &atiixp_ide_dma_host_on;
+>         hwif->ide_dma_host_off = &atiixp_ide_dma_host_off;
+>         hwif->ide_dma_check = &atiixp_dma_check;
+> _
+>
+>
 
-I applied all of these patches, but the errors remains just the same. I 
-actually did it twice to be sure, but to no avail.
-
-~Mik
-
--- 
-Hey Fred, did you save that posting about restoring filesystems
-with vi and a toothpick? More importantly, did you print it out?
-- From "101 Things You Don't Want To Hear Your Admin Say"
+Andrew, the 3 patches are right and complete, Thank you!
