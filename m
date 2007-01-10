@@ -1,32 +1,70 @@
-From: Michael Bueker <m.bueker@berlin.de>
-Subject: Re: No DMA with HTP370 IDE controller
-Date: Wed, 10 Jan 2007 23:32:22 +0100
-Message-ID: <45A56976.10208@berlin.de>
-References: <45A29690.3040003@berlin.de>	 <58cb370e0701081155j7376d15dv32e3b65906c8d325@mail.gmail.com>	 <45A35A8C.9040200@berlin.de> <58cb370e0701090544p2a851182m30f24e0fdd86f328@mail.gmail.com> <45A435A3.2020506@berlin.de> <45A4DAED.9070404@ru.mvista.com> <45A51259.2020904@berlin.de> <45A52228.1020803@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mike Accetta <maccetta@laurelnetworks.com>
+Subject: Re: libata hotplug and md raid?
+Date: Wed, 10 Jan 2007 17:55:42 -0500
+Message-ID: <10375.1168469742@mdt.dhcp.pit.laurelnetworks.com>
+References: <17716.14507.187306.941214@cse.unsw.edu.au>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sour.ops.eusc.inter.net ([84.23.254.154]:62827 "EHLO
-	sour.ops.eusc.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965158AbXAJWdB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 17:33:01 -0500
-In-Reply-To: <45A52228.1020803@garzik.org>
+Received: from staple.laurelnetworks.com ([63.94.127.68]:44803 "EHLO
+	staple.laurelnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965225AbXAJWzn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 17:55:43 -0500
+In-reply-to: Your message of "Tue, 17 Oct 2006 11:58:03 +1000."
+             <17716.14507.187306.941214@cse.unsw.edu.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Does the libata driver work?
 
-Nope. There's no verbose error messages, but the kernel dies about where 
-the controller is addressed.
+I am currently looking at using md RAID1 and libata hotplug under 2.6.19.
+This relevant thread from Oct 2006
 
-~Mik
+http://thread.gmane.org/gmane.linux.raid/13321/focus=13321
 
--- 
-So, how can you tell me you're lonely?
-And say that you don't have no life?
-Let me take you by the hand and show you all the geeks of London
-I'll show you something to make you change your mind!
+tailed off after this proposal from Neil Brown:
+
+> On Monday October 16, mlord@pobox.com wrote:
+> > > So the question remains: How will hotplug and md work together?
+> > > 
+> > > How does md and hotplug work together for current hotplug devices?
+> > 
+> > I have the same questions.
+> > 
+> > How does this work in a pure SCSI environment? (has it been tested?)
+> > If something should change, should those changes be in the MD layer?
+> > Or can this *really* all be done nicely from userspace?  How?
+> 
+> I would imagine that device removal would work like this:
+>  1/  you unplug the device
+>  2/ kernel notices and generates an unplug event to udev.
+>  3/ Udev does all the work to try to disconnect the device:
+>      force unmount (though that doesn't work for most filesystems)
+>      remove from dm
+>      remove from md (mdadm /dev/mdwhatever --fail /dev/dead --remove /dev/dead)
+>  4/ Udev removes the node from /dev.
+> 
+> udev can find out what needs to be done by looking at
+> /sys/block/whatever/holders. 
+> 
+> I don't know exactly how to get udev to do this, or whether there
+> would be 'issues' in getting it to work reliably.  However if anyone
+> wants to try I'm happy to help out where I can.
+> 
+> NeilBrown
+
+Not seeing any subsequent reports on the list, I decided to try
+implementing the proposed approach.  The immdiate problem I ran into
+was that /sys appears to have been cleaned up before udev sees the
+remove event and the /sys/block/whatever/holders file is no longer
+even around to consult at that point.  As a secondary problem, the
+/dev/dead file is also apparently removed by udev before any programs
+mentioned in removal rules get a chance to run so there is no longer any
+device to provide to mdadm to remove at the time the program does run,
+even if it had been possible to find out what md files were holders of
+the removed block device to begin with.  Do I have the details right?
+Any new thoughts in the last few months about how it would be best to
+solve this problem?
+--
+Mike Accetta
+
+ECI Telecom Ltd.
+Data Networking Division (previously Laurel Networks)
