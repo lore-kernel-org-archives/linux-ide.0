@@ -1,605 +1,307 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 9/13] libata: update libata core layer to use devres
+Subject: [PATCH 7/13] devres: add Documentation/driver-model/devres.txt
 Date: Wed, 10 Jan 2007 14:35:37 +0900
-Message-ID: <11684073372335-git-send-email-htejun@gmail.com>
+Message-ID: <11684073373338-git-send-email-htejun@gmail.com>
 References: <11684073353213-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932719AbXAJFgh@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.234]:4116 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932610AbXAJFfx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 00:35:53 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so46nze
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jan 2007 21:35:52 -0800 (PST)
 In-Reply-To: <11684073353213-git-send-email-htejun@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, gregkh@suse.de, alan@lxorguk.ukuu.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
-List-Id: linux-ide@vger.kernel.org
 
-Update libata core layer to use devres.
-
-* ata_device_add() acquires all resources in managed mode.
-
-* ata_host is allocated as devres associated with ata_host_release.
-
-* Port attached status is handled as devres associated with
-  ata_host_attach_release().
-
-* Initialization failure and host removal is handedl by releasing
-  devres group.
-
-* Except for ata_scsi_release() removal, LLD interface remains the
-  same.  Some functions use hacky is_managed test to support both
-  managed and unmanaged devices.  These will go away once all LLDs are
-  updated to use devres.
+Add Documentation/driver-model/drvres.txt.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c        |   21 +-----
- drivers/ata/libata-core.c |  177 +++++++++++++++++++--------------------------
- drivers/ata/libata-scsi.c |    3 +-
- drivers/ata/libata-sff.c  |   56 ++++++---------
- include/linux/libata.h    |    9 +--
- 5 files changed, 106 insertions(+), 160 deletions(-)
+ Documentation/driver-model/devres.txt |  268 +++++++++++++++++++++++++++++++++
+ 1 files changed, 268 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index d089217..7abe138 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1759,37 +1759,24 @@ err_out:
- 	return rc;
- }
- 
--static void ahci_remove_one (struct pci_dev *pdev)
-+static void ahci_remove_one(struct pci_dev *pdev)
- {
- 	struct device *dev = pci_dev_to_dev(pdev);
- 	struct ata_host *host = dev_get_drvdata(dev);
- 	struct ahci_host_priv *hpriv = host->private_data;
--	unsigned int i;
--	int have_msi;
- 
--	ata_host_detach(host);
-+	ata_host_remove(host);
- 
--	have_msi = hpriv->flags & AHCI_FLAG_MSI;
--	free_irq(host->irq, host);
--
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--
--		ata_scsi_release(ap->scsi_host);
--		scsi_host_put(ap->scsi_host);
--	}
--
--	kfree(hpriv);
- 	pci_iounmap(pdev, host->mmio_base);
--	kfree(host);
- 
--	if (have_msi)
-+	if (hpriv->flags & AHCI_FLAG_MSI)
- 		pci_disable_msi(pdev);
- 	else
- 		pci_intx(pdev, 0);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- 	dev_set_drvdata(dev, NULL);
-+	kfree(hpriv);
- }
- 
- static int __init ahci_init(void)
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c63fe10..e476574 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5495,28 +5495,25 @@ void ata_host_resume(struct ata_host *host)
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--
--int ata_port_start (struct ata_port *ap)
-+int ata_port_start(struct ata_port *ap)
- {
- 	struct device *dev = ap->dev;
- 	int rc;
- 
--	ap->prd = dma_alloc_coherent(dev, ATA_PRD_TBL_SZ, &ap->prd_dma, GFP_KERNEL);
-+	ap->prd = dmam_alloc_coherent(dev, ATA_PRD_TBL_SZ, &ap->prd_dma,
-+				      GFP_KERNEL);
- 	if (!ap->prd)
- 		return -ENOMEM;
- 
- 	rc = ata_pad_alloc(ap, dev);
--	if (rc) {
--		dma_free_coherent(dev, ATA_PRD_TBL_SZ, ap->prd, ap->prd_dma);
-+	if (rc)
- 		return rc;
--	}
--
--	DPRINTK("prd alloc, virt %p, dma %llx\n", ap->prd, (unsigned long long) ap->prd_dma);
- 
-+	DPRINTK("prd alloc, virt %p, dma %llx\n", ap->prd,
-+		(unsigned long long)ap->prd_dma);
- 	return 0;
- }
- 
--
- /**
-  *	ata_port_stop - Undo ata_port_start()
-  *	@ap: Port to shut down
-@@ -5528,12 +5525,11 @@ int ata_port_start (struct ata_port *ap)
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--
- void ata_port_stop (struct ata_port *ap)
- {
- 	struct device *dev = ap->dev;
- 
--	dma_free_coherent(dev, ATA_PRD_TBL_SZ, ap->prd, ap->prd_dma);
-+	dmam_free_coherent(dev, ATA_PRD_TBL_SZ, ap->prd, ap->prd_dma);
- 	ata_pad_free(ap, dev);
- }
- 
-@@ -5716,6 +5712,27 @@ static struct ata_port * ata_port_add(const struct ata_probe_ent *ent,
- 	return ap;
- }
- 
-+static void ata_host_release(struct device *gendev, void *res)
-+{
-+	struct ata_host *host = dev_get_drvdata(gendev);
-+	int i;
+diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+new file mode 100644
+index 0000000..5163b85
+--- /dev/null
++++ b/Documentation/driver-model/devres.txt
+@@ -0,0 +1,268 @@
++Devres - Managed Device Resource
++================================
 +
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
++Tejun Heo	<teheo@suse.de>
 +
-+		if (!ap)
-+			continue;
++First draft	10 January 2007
 +
-+		if (ap->ops->port_stop)
-+			ap->ops->port_stop(ap);
 +
-+		scsi_host_put(ap->scsi_host);
-+	}
++1. Intro			: Huh? Devres?
++2. Devres			: Devres in a nutshell
++3. Devres Group			: Group devres'es and release them together
++4. Details			: Life time rules, calling context, ...
++5. Overhead			: How much do we have to pay for this?
++6. List of managed interfaces	: Currently implemented managed interfaces
 +
-+	if (host->ops->host_stop)
-+		host->ops->host_stop(host);
-+}
 +
- /**
-  *	ata_sas_host_init - Initialize a host struct
-  *	@host:	host to initialize
-@@ -5768,11 +5785,17 @@ int ata_device_add(const struct ata_probe_ent *ent)
- 		dev_printk(KERN_ERR, dev, "is not available: No interrupt assigned.\n");
- 		return 0;
- 	}
++  1. Intro
++  --------
 +
-+	if (!devres_open_group(dev, ata_device_add, GFP_KERNEL))
-+		return 0;
++devres came up while trying to convert libata to use iomap.  Each
++iomapped address should be kept and unmapped on driver detach.  For
++example, a plain SFF ATA controller (that is, good old PCI IDE) in
++native mode makes use of 5 PCI BARs and all of them should be
++maintained.
 +
- 	/* alloc a container for our list of ATA ports (buses) */
--	host = kzalloc(sizeof(struct ata_host) +
--		       (ent->n_ports * sizeof(void *)), GFP_KERNEL);
-+	host = devres_alloc(ata_host_release, sizeof(struct ata_host) +
-+			    (ent->n_ports * sizeof(void *)), GFP_KERNEL);
- 	if (!host)
--		return 0;
-+		goto err_out;
-+	devres_add(dev, host);
-+	dev_set_drvdata(dev, host);
- 
- 	ata_host_init(host, dev, ent->_host_flags, ent->port_ops);
- 	host->n_ports = ent->n_ports;
-@@ -5830,8 +5853,8 @@ int ata_device_add(const struct ata_probe_ent *ent)
- 	}
- 
- 	/* obtain irq, that may be shared between channels */
--	rc = request_irq(ent->irq, ent->port_ops->irq_handler, ent->irq_flags,
--			 DRV_NAME, host);
-+	rc = devm_request_irq(dev, ent->irq, ent->port_ops->irq_handler,
-+			      ent->irq_flags, DRV_NAME, host);
- 	if (rc) {
- 		dev_printk(KERN_ERR, dev, "irq %lu request failed: %d\n",
- 			   ent->irq, rc);
-@@ -5844,15 +5867,19 @@ int ata_device_add(const struct ata_probe_ent *ent)
- 		   so trap it now */
- 		BUG_ON(ent->irq == ent->irq2);
- 
--		rc = request_irq(ent->irq2, ent->port_ops->irq_handler, ent->irq_flags,
--			 DRV_NAME, host);
-+		rc = devm_request_irq(dev, ent->irq2,
-+				ent->port_ops->irq_handler, ent->irq_flags,
-+				DRV_NAME, host);
- 		if (rc) {
- 			dev_printk(KERN_ERR, dev, "irq %lu request failed: %d\n",
- 				   ent->irq2, rc);
--			goto err_out_free_irq;
-+			goto err_out;
- 		}
- 	}
- 
-+	/* resource acquisition complete */
-+	devres_close_group(dev, ata_device_add);
++As with many other device drivers, libata low level drivers have
++sufficient bugs in ->remove and ->probe failure path.  Well, yes,
++that's probably because libata low level driver developers are lazy
++bunch, but aren't all low level driver developers?  After spending a
++day fiddling with braindamaged hardware with no document or
++braindamaged document, if it's finally working, well, it's working.
 +
- 	/* perform each probe synchronously */
- 	DPRINTK("probe begin\n");
- 	for (i = 0; i < host->n_ports; i++) {
-@@ -5921,24 +5948,13 @@ int ata_device_add(const struct ata_probe_ent *ent)
- 		ata_scsi_scan_host(ap);
- 	}
- 
--	dev_set_drvdata(dev, host);
--
- 	VPRINTK("EXIT, returning %u\n", ent->n_ports);
- 	return ent->n_ports; /* success */
- 
--err_out_free_irq:
--	free_irq(ent->irq, host);
--err_out:
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--		if (ap) {
--			ap->ops->port_stop(ap);
--			scsi_host_put(ap->scsi_host);
--		}
--	}
--
--	kfree(host);
--	VPRINTK("EXIT, returning 0\n");
-+ err_out:
-+	devres_release_group(dev, ata_device_add);
-+	dev_set_drvdata(dev, NULL);
-+	VPRINTK("EXIT, returning %d\n", rc);
- 	return 0;
- }
- 
-@@ -6027,66 +6043,10 @@ void ata_host_detach(struct ata_host *host)
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-  */
--
- void ata_host_remove(struct ata_host *host)
- {
--	unsigned int i;
--
- 	ata_host_detach(host);
--
--	free_irq(host->irq, host);
--	if (host->irq2)
--		free_irq(host->irq2, host);
--
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--
--		ata_scsi_release(ap->scsi_host);
--
--		if ((ap->flags & ATA_FLAG_NO_LEGACY) == 0) {
--			struct ata_ioports *ioaddr = &ap->ioaddr;
--
--			/* FIXME: Add -ac IDE pci mods to remove these special cases */
--			if (ioaddr->cmd_addr == ATA_PRIMARY_CMD)
--				release_region(ATA_PRIMARY_CMD, 8);
--			else if (ioaddr->cmd_addr == ATA_SECONDARY_CMD)
--				release_region(ATA_SECONDARY_CMD, 8);
--		}
--
--		scsi_host_put(ap->scsi_host);
--	}
--
--	if (host->ops->host_stop)
--		host->ops->host_stop(host);
--
--	kfree(host);
--}
--
--/**
-- *	ata_scsi_release - SCSI layer callback hook for host unload
-- *	@shost: libata host to be unloaded
-- *
-- *	Performs all duties necessary to shut down a libata port...
-- *	Kill port kthread, disable port, and release resources.
-- *
-- *	LOCKING:
-- *	Inherited from SCSI layer.
-- *
-- *	RETURNS:
-- *	One.
-- */
--
--int ata_scsi_release(struct Scsi_Host *shost)
--{
--	struct ata_port *ap = ata_shost_to_port(shost);
--
--	DPRINTK("ENTER\n");
--
--	ap->ops->port_disable(ap);
--	ap->ops->port_stop(ap);
--
--	DPRINTK("EXIT\n");
--	return 1;
-+	devres_release_group(host->dev, ata_device_add);
- }
- 
- struct ata_probe_ent *
-@@ -6094,7 +6054,11 @@ ata_probe_ent_alloc(struct device *dev, const struct ata_port_info *port)
- {
- 	struct ata_probe_ent *probe_ent;
- 
--	probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
-+	/* XXX - the following if can go away once all LLDs are managed */
-+	if (!list_empty(&dev->devres_head))
-+		probe_ent = devm_kzalloc(dev, sizeof(*probe_ent), GFP_KERNEL);
-+	else
-+		probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
- 	if (!probe_ent) {
- 		printk(KERN_ERR DRV_NAME "(%s): out of memory\n",
- 		       kobject_name(&(dev->kobj)));
-@@ -6148,7 +6112,11 @@ void ata_pci_host_stop (struct ata_host *host)
- {
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
- 
--	pci_iounmap(pdev, host->mmio_base);
-+	/* XXX - the following if can go away once all LLDs are managed */
-+	if (!list_empty(&host->dev->devres_head))
-+		pcim_iounmap(pdev, host->mmio_base);
-+	else
-+		pci_iounmap(pdev, host->mmio_base);
- }
- 
- /**
-@@ -6164,17 +6132,19 @@ void ata_pci_host_stop (struct ata_host *host)
-  *	LOCKING:
-  *	Inherited from PCI layer (may sleep).
-  */
--
--void ata_pci_remove_one (struct pci_dev *pdev)
-+void ata_pci_remove_one(struct pci_dev *pdev)
- {
- 	struct device *dev = pci_dev_to_dev(pdev);
- 	struct ata_host *host = dev_get_drvdata(dev);
- 
--	ata_host_remove(host);
--
--	pci_release_regions(pdev);
--	pci_disable_device(pdev);
--	dev_set_drvdata(dev, NULL);
-+	/* XXX - the following if can go away once all LLDs are managed */
-+	if (!list_empty(&host->dev->devres_head)) {
-+		ata_host_remove(host);
-+		pci_release_regions(pdev);
-+		pci_disable_device(pdev);
-+		dev_set_drvdata(dev, NULL);
-+	} else
-+		ata_host_detach(host);
- }
- 
- /* move to PCI subsystem */
-@@ -6228,7 +6198,11 @@ int ata_pci_device_do_resume(struct pci_dev *pdev)
- 	pci_set_power_state(pdev, PCI_D0);
- 	pci_restore_state(pdev);
- 
--	rc = pci_enable_device(pdev);
-+	/* XXX - the following if can go away once all LLDs are managed */
-+	if (!list_empty(&pdev->dev.devres_head))
-+		rc = pcim_enable_device(pdev);
-+	else
-+		rc = pci_enable_device(pdev);
- 	if (rc) {
- 		dev_printk(KERN_ERR, &pdev->dev,
- 			   "failed to enable device after resume (%d)\n", rc);
-@@ -6467,7 +6441,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
- EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
- EXPORT_SYMBOL_GPL(ata_scsi_slave_destroy);
- EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
--EXPORT_SYMBOL_GPL(ata_scsi_release);
- EXPORT_SYMBOL_GPL(ata_host_intr);
- EXPORT_SYMBOL_GPL(sata_scr_valid);
- EXPORT_SYMBOL_GPL(sata_scr_read);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0c43043..6d0b1fc 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3226,7 +3226,8 @@ EXPORT_SYMBOL_GPL(ata_sas_port_init);
- 
- void ata_sas_port_destroy(struct ata_port *ap)
- {
--	ap->ops->port_stop(ap);
-+	if (ap->ops->port_stop)
-+		ap->ops->port_stop(ap);
- 	kfree(ap);
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_destroy);
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 69a5910..c012306 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1001,15 +1001,18 @@ static struct ata_probe_ent *ata_pci_init_legacy_port(struct pci_dev *pdev,
- int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 		      unsigned int n_ports)
- {
-+	struct device *dev = &pdev->dev;
- 	struct ata_probe_ent *probe_ent = NULL;
- 	struct ata_port_info *port[2];
- 	u8 mask;
- 	unsigned int legacy_mode = 0;
--	int disable_dev_on_err = 1;
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
- 
-+	if (!devres_open_group(dev, NULL, GFP_KERNEL))
++For one reason or another, low level drivers don't receive as much
++attention or testing as core code, and bugs on driver detach or
++initilaization failure doesn't happen often enough to be noticeable.
++Init failure path is worse because it's much less travelled while
++needs to handle multiple entry points.
++
++So, many low level drivers end up leaking resources on driver detach
++and having half broken failure path implementation in ->probe() which
++would leak resources or even cause oops when failure occurs.  iomap
++adds more to this mix.  So do msi and msix.
++
++
++  2. Devres
++  ---------
++
++devres is basically linked list of arbitrarily sized memory areas
++associated with a struct device.  Each devres entry is associated with
++a release function.  A devres can be released in several ways.  No
++matter what, all devres entries are released on driver detach.  On
++release, the associated release function is invoked and then the
++devres entry is freed.
++
++Managed interface is created for resources commonly used by device
++drivers using devres.  For example, coherent DMA memory is acquired
++using dma_alloc_coherent().  The managed version is called
++dmam_alloc_coherent().  It is identical to dma_alloc_coherent() except
++for the DMA memory allocated using it is managed and will be
++automatically released on driver detach.  Implementation looks like
++the following.
++
++  struct dma_devres {
++	size_t		size;
++	void		*vaddr;
++	dma_addr_t	dma_handle;
++  };
++
++  static void dmam_coherent_release(struct device *dev, void *res)
++  {
++	struct dma_devres *this = res;
++
++	dma_free_coherent(dev, this->size, this->vaddr, this->dma_handle);
++  }
++
++  dmam_alloc_coherent(dev, size, dma_handle, gfp)
++  {
++	struct dma_devres *dr;
++	void *vaddr;
++
++	dr = devres_alloc(dmam_coherent_release, sizeof(*dr), gfp);
++	...
++
++	/* alloc DMA memory as usual */
++	vaddr = dma_alloc_coherent(...);
++	...
++
++	/* record size, vaddr, dma_handle in dr */
++	dr->vaddr = vaddr;
++	...
++
++	devres_add(dev, dr);
++
++	return vaddr;
++  }
++
++If a driver uses dmam_alloc_coherent(), the area is guaranteed to be
++freed whether initialization fails half-way or the device gets
++detached.  If most resources are acquired using managed interface, a
++driver can have much simpler init and exit code.  Init path basically
++looks like the following.
++
++  my_init_one()
++  {
++	struct mydev *d;
++
++	d = devm_kzalloc(dev, sizeof(*d), GFP_KERNEL);
++	if (!d)
 +		return -ENOMEM;
 +
- 	BUG_ON(n_ports < 1 || n_ports > 2);
- 
- 	port[0] = port_info[0];
-@@ -1026,9 +1029,9 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 	   boot for the primary video which is BIOS enabled
-          */
- 
--	rc = pci_enable_device(pdev);
-+	rc = pcim_enable_device(pdev);
- 	if (rc)
--		return rc;
-+		goto err_out;
- 
- 	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
- 		u8 tmp8;
-@@ -1044,7 +1047,8 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 		   left a device in compatibility mode */
- 		if (legacy_mode) {
- 			printk(KERN_ERR "ata: Compatibility mode ATA is not supported on this platform, skipping.\n");
--			return -EOPNOTSUPP;
-+			rc = -EOPNOTSUPP;
-+			goto err_out;
- 		}
- #endif
- 	}
-@@ -1052,13 +1056,13 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 	if (!legacy_mode) {
- 		rc = pci_request_regions(pdev, DRV_NAME);
- 		if (rc) {
--			disable_dev_on_err = 0;
-+			pcim_pin_device(pdev);
- 			goto err_out;
- 		}
- 	} else {
- 		/* Deal with combined mode hack. This side of the logic all
- 		   goes away once the combined mode hack is killed in 2.6.21 */
--		if (!request_region(ATA_PRIMARY_CMD, 8, "libata")) {
-+		if (!devm_request_region(dev, ATA_PRIMARY_CMD, 8, "libata")) {
- 			struct resource *conflict, res;
- 			res.start = ATA_PRIMARY_CMD;
- 			res.end = ATA_PRIMARY_CMD + 8 - 1;
-@@ -1068,7 +1072,7 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 			if (!strcmp(conflict->name, "libata"))
- 				legacy_mode |= ATA_PORT_PRIMARY;
- 			else {
--				disable_dev_on_err = 0;
-+				pcim_pin_device(pdev);
- 				printk(KERN_WARNING "ata: 0x%0X IDE port busy\n" \
- 						    "ata: conflict with %s\n",
- 						    ATA_PRIMARY_CMD,
-@@ -1077,7 +1081,7 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 		} else
- 			legacy_mode |= ATA_PORT_PRIMARY;
- 
--		if (!request_region(ATA_SECONDARY_CMD, 8, "libata")) {
-+		if (!devm_request_region(dev, ATA_SECONDARY_CMD, 8, "libata")) {
- 			struct resource *conflict, res;
- 			res.start = ATA_SECONDARY_CMD;
- 			res.end = ATA_SECONDARY_CMD + 8 - 1;
-@@ -1087,7 +1091,7 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 			if (!strcmp(conflict->name, "libata"))
- 				legacy_mode |= ATA_PORT_SECONDARY;
- 			else {
--				disable_dev_on_err = 0;
-+				pcim_pin_device(pdev);
- 				printk(KERN_WARNING "ata: 0x%X IDE port busy\n" \
- 						    "ata: conflict with %s\n",
- 						    ATA_SECONDARY_CMD,
-@@ -1107,16 +1111,16 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 	/* we have legacy mode, but all ports are unavailable */
- 	if (legacy_mode == (1 << 3)) {
- 		rc = -EBUSY;
--		goto err_out_regions;
-+		goto err_out;
- 	}
- 
- 	/* TODO: If we get no DMA mask we should fall back to PIO */
- 	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
- 	if (rc)
--		goto err_out_regions;
-+		goto err_out;
- 	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
- 	if (rc)
--		goto err_out_regions;
-+		goto err_out;
- 
- 	if (legacy_mode) {
- 		probe_ent = ata_pci_init_legacy_port(pdev, port, legacy_mode);
-@@ -1128,40 +1132,22 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 	}
- 	if (!probe_ent) {
- 		rc = -ENOMEM;
--		goto err_out_regions;
-+		goto err_out;
- 	}
- 
- 	pci_set_master(pdev);
- 
- 	if (!ata_device_add(probe_ent)) {
- 		rc = -ENODEV;
--		goto err_out_ent;
-+		goto err_out;
- 	}
- 
--	kfree(probe_ent);
--
-+	devm_kfree(dev, probe_ent);
-+	devres_remove_group(dev, NULL);
- 	return 0;
- 
--err_out_ent:
--	kfree(probe_ent);
--err_out_regions:
--	/* All this conditional stuff is needed for the combined mode hack
--	   until 2.6.21 when it can go */
--	if (legacy_mode) {
--		pci_release_region(pdev, 4);
--		if (legacy_mode & ATA_PORT_PRIMARY) {
--			release_region(ATA_PRIMARY_CMD, 8);
--			pci_release_region(pdev, 1);
--		}
--		if (legacy_mode & ATA_PORT_SECONDARY) {
--			release_region(ATA_SECONDARY_CMD, 8);
--			pci_release_region(pdev, 3);
--		}
--	} else
--		pci_release_regions(pdev);
- err_out:
--	if (disable_dev_on_err)
--		pci_disable_device(pdev);
-+	devres_release_group(dev, NULL);
- 	return rc;
- }
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 816d6ef..f6a6bef 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -31,7 +31,7 @@
- #include <linux/pci.h>
- #include <linux/dma-mapping.h>
- #include <asm/scatterlist.h>
--#include <asm/io.h>
-+#include <linux/io.h>
- #include <linux/ata.h>
- #include <linux/workqueue.h>
- #include <scsi/scsi_host.h>
-@@ -728,7 +728,6 @@ extern void ata_host_remove(struct ata_host *host);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
--extern int ata_scsi_release(struct Scsi_Host *host);
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- 					   struct ata_port_info *, struct Scsi_Host *);
-@@ -1225,14 +1224,14 @@ static inline unsigned int __ac_err_mask(u8 status)
- static inline int ata_pad_alloc(struct ata_port *ap, struct device *dev)
- {
- 	ap->pad_dma = 0;
--	ap->pad = dma_alloc_coherent(dev, ATA_DMA_PAD_BUF_SZ,
--				     &ap->pad_dma, GFP_KERNEL);
-+	ap->pad = dmam_alloc_coherent(dev, ATA_DMA_PAD_BUF_SZ,
-+				      &ap->pad_dma, GFP_KERNEL);
- 	return (ap->pad == NULL) ? -ENOMEM : 0;
- }
- 
- static inline void ata_pad_free(struct ata_port *ap, struct device *dev)
- {
--	dma_free_coherent(dev, ATA_DMA_PAD_BUF_SZ, ap->pad, ap->pad_dma);
-+	dmam_free_coherent(dev, ATA_DMA_PAD_BUF_SZ, ap->pad, ap->pad_dma);
- }
- 
- static inline struct ata_port *ata_shost_to_port(struct Scsi_Host *host)
++	d->ring = dmam_alloc_coherent(...);
++	if (!d->ring)
++		return -ENOMEM;
++
++	if (check something)
++		return -EINVAL;
++	...
++
++	return register_to_upper_layer(d);
++  }
++
++And exit path,
++
++  my_remove_one()
++  {
++	unregister_from_upper_layer(d);
++	shutdown_my_hardware();
++  }
++
++As shown above, low level drivers can be simplified a lot by using
++devres.  Complexity is shifted from less maintained low level drivers
++to better maintained higher layer.  Also, as init failure path is
++shared with exit path, both can get more testing.
++
++
++  3. Devres group
++  ---------------
++
++Devres entries can be grouped using devres group.  When a group is
++released, all contained normal devres entries and properly nested
++groups are released.  One usage is to rollback series of acquired
++resources on failure.  For example,
++
++  if (!devres_open_group(dev, NULL, GFP_KERNEL))
++	return -ENOMEM;
++
++  acquire A;
++  if (failed)
++	goto err;
++
++  acquire B;
++  if (failed)
++	goto err;
++  ...
++
++  devres_remove_group(dev, NULL);
++  return 0;
++
++ err:
++  devres_release_group(dev, NULL);
++  return err_code;
++
++As resource acquision failure usually means probe failure, constructs
++like above are usually useful in midlayer driver (e.g. libata core
++layer) where interface function shouldn't have side effect on failure.
++For LLDs, just returning error code suffices in most cases.
++
++Each group is identified by void *id.  It can either be explicitly
++specified by @id argument to devres_open_group() or automatically
++created by passing NULL as @id as in the above example.  In both
++cases, devres_open_group() returns the group's id.  The returned id
++can be passed to other devres functions to select the target group.
++If NULL is given to those functions, the latest open group is
++selected.
++
++For example, you can do something like the following.
++
++  int my_midlayer_create_something()
++  {
++	if (!devres_open_group(dev, my_midlayer_create_something, GFP_KERNEL))
++		return -ENOMEM;
++
++	...
++
++	devres_close_group(dev, my_midlayer_something);
++	return 0;
++  }
++
++  void my_midlayer_destroy_something()
++  {
++	devres_release_group(dev, my_midlayer_create_soemthing);
++  }
++
++
++  4. Details
++  ----------
++
++Lifetime of a devres entry begins on devres allocation and finishes
++when it is released or destroyed (removed and freed) - no reference
++counting.
++
++devres core guarantees atomicity to all basic devres operations and
++has support for single-instance devres types (atomic
++lookup-and-add-if-not-found).  Other than that, synchronizing
++concurrent accesses to allocated devres data is caller's
++responsibility.  This is usually non-issue because bus ops and
++resource allocations already do the job.
++
++For an example of single-instance devres type, read pcim_iomap_table()
++in lib/iomap.c.
++
++All devres interface functions can be called without context if the
++right gfp mask is given.
++
++
++  5. Overhead
++  -----------
++
++Each devres bookkeeping info is allocated together with requested data
++area.  With debug option turned off, bookkeeping info occupies 16
++bytes on 32bit machines and 24 bytes on 64bit (three pointers rounded
++up to ull alignment).  If singly linked list is used, it can be
++reduced to two pointers (8 bytes on 32bit, 16 bytes on 64bit).
++
++Each devres group occupies 8 pointers.  It can be reduced to 6 if
++singly linked list is used.
++
++Memory space overhead on ahci controller with two ports is between 300
++and 400 bytes on 32bit machine after naive conversion (we can
++certainly invest a bit more effort into libata core layer).
++
++
++  6. List of managed interfaces
++  -----------------------------
++
++IO region
++  devm_request_region()
++  devm_request_mem_region()
++  devm_release_region()
++  devm_release_mem_region()
++
++IRQ
++  devm_request_irq()
++  devm_free_irq()
++
++DMA
++  dmam_alloc_coherent()
++  dmam_free_coherent()
++  dmam_alloc_noncoherent()
++  dmam_free_noncoherent()
++  dmam_declare_coherent_memory()
++  dmam_pool_create()
++  dmam_pool_destroy()
++
++PCI
++  pcim_enable_device()	: after success, all PCI ops become managed
++  pcim_pin_device()	: keep PCI device enabled after release
++
++IOMAP
++  devm_ioport_map()
++  devm_ioport_unmap()
++  devm_ioremap()
++  devm_ioremap_nocache()
++  devm_iounmap()
++  pcim_iomap()
++  pcim_iounmap()
++  pcim_iomap_table()	: array of mapped addresses indexed by BAR
++  pcim_iomap_regions()	: do request_region() and iomap() on multiple BARs
 -- 
 1.4.4.3
+
+
