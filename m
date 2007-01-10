@@ -1,138 +1,208 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/13] devres: implement managed IO region interface
-Date: Wed, 10 Jan 2007 14:35:36 +0900
-Message-ID: <11684073361953-git-send-email-htejun@gmail.com>
+Subject: [PATCH 11/13] libata: remove unused functions
+Date: Wed, 10 Jan 2007 14:35:38 +0900
+Message-ID: <116840733843-git-send-email-htejun@gmail.com>
 References: <11684073353213-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932664AbXAJFgA@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932637AbXAJFkM@vger.kernel.org>
 In-Reply-To: <11684073353213-git-send-email-htejun@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jgarzik@pobox.com, gregkh@suse.de, alan@lxorguk.ukuu.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Implement managed IO region interface - devm_request_region() and
-devm_release_region().  Except for the first @dev argument and being
-managed, these take the same arguments and have the same effect as
-non-managed coutnerparts.
+Now that all LLDs are converted to use devres, default stop callbacks
+are unused.  Remove them.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- include/linux/ioport.h |   20 +++++++++++++++
- kernel/resource.c      |   62 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 82 insertions(+), 0 deletions(-)
+ drivers/ata/libata-core.c |   81 +++-----------------------------------------
+ include/linux/libata.h    |    4 --
+ 2 files changed, 6 insertions(+), 79 deletions(-)
 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 15228d7..6859a3b 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -137,4 +137,24 @@ static inline int __deprecated check_region(resource_size_t s,
- {
- 	return __check_region(&ioport_resource, s, n);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e476574..b5538dd 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5515,31 +5515,6 @@ int ata_port_start(struct ata_port *ap)
  }
-+
-+/* Wrappers for managed devices */
-+struct device;
-+#define devm_request_region(dev,start,n,name) \
-+	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
-+#define devm_request_mem_region(dev,start,n,name) \
-+	__devm_request_region(dev, &iomem_resource, (start), (n), (name))
-+
-+extern struct resource * __devm_request_region(struct device *dev,
-+				struct resource *parent, resource_size_t start,
-+				resource_size_t n, const char *name);
-+
-+#define devm_release_region(start,n) \
-+	__devm_release_region(dev, &ioport_resource, (start), (n))
-+#define devm_release_mem_region(start,n) \
-+	__devm_release_region(dev, &iomem_resource, (start), (n))
-+
-+extern void __devm_release_region(struct device *dev, struct resource *parent,
-+				  resource_size_t start, resource_size_t n);
-+
- #endif	/* _LINUX_IOPORT_H */
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 7b9a497..2a3f886 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -17,6 +17,7 @@
- #include <linux/fs.h>
- #include <linux/proc_fs.h>
- #include <linux/seq_file.h>
-+#include <linux/device.h>
- #include <asm/io.h>
  
+ /**
+- *	ata_port_stop - Undo ata_port_start()
+- *	@ap: Port to shut down
+- *
+- *	Frees the PRD table.
+- *
+- *	May be used as the port_stop() entry in ata_port_operations.
+- *
+- *	LOCKING:
+- *	Inherited from caller.
+- */
+-void ata_port_stop (struct ata_port *ap)
+-{
+-	struct device *dev = ap->dev;
+-
+-	dmam_free_coherent(dev, ATA_PRD_TBL_SZ, ap->prd, ap->prd_dma);
+-	ata_pad_free(ap, dev);
+-}
+-
+-void ata_host_stop (struct ata_host *host)
+-{
+-	if (host->mmio_base)
+-		iounmap(host->mmio_base);
+-}
+-
+-/**
+  *	ata_dev_init - Initialize an ata_device structure
+  *	@dev: Device structure to initialize
+  *
+@@ -5878,7 +5853,7 @@ int ata_device_add(const struct ata_probe_ent *ent)
+ 	}
  
-@@ -618,6 +619,67 @@ void __release_region(struct resource *parent, resource_size_t start,
- EXPORT_SYMBOL(__release_region);
+ 	/* resource acquisition complete */
+-	devres_close_group(dev, ata_device_add);
++	devres_remove_group(dev, ata_device_add);
  
- /*
-+ * Managed region resource
-+ */
-+struct region_devres {
-+	struct resource *parent;
-+	resource_size_t start;
-+	resource_size_t n;
-+};
-+
-+static void devm_region_release(struct device *dev, void *res)
-+{
-+	struct region_devres *this = res;
-+
-+	__release_region(this->parent, this->start, this->n);
-+}
-+
-+static int devm_region_match(struct device *dev, void *res, void *match_data)
-+{
-+	struct region_devres *this = res, *match = match_data;
-+
-+	return this->parent == match->parent &&
-+		this->start == match->start && this->n == match->n;
-+}
-+
-+struct resource * __devm_request_region(struct device *dev,
-+				struct resource *parent, resource_size_t start,
-+				resource_size_t n, const char *name)
-+{
-+	struct region_devres *dr = NULL;
-+	struct resource *res;
-+
-+	dr = devres_alloc(devm_region_release, sizeof(struct region_devres),
-+			  GFP_KERNEL);
-+	if (!dr)
-+		return NULL;
-+
-+	dr->parent = parent;
-+	dr->start = start;
-+	dr->n = n;
-+
-+	res = __request_region(parent, start, n, name);
-+	if (res)
-+		devres_add(dev, dr);
-+	else
-+		devres_free(dr);
-+
-+	return res;
-+}
-+EXPORT_SYMBOL(__devm_request_region);
-+
-+void __devm_release_region(struct device *dev, struct resource *parent,
-+			   resource_size_t start, resource_size_t n)
-+{
-+	struct region_devres match_data = { parent, start, n };
-+
-+	__release_region(parent, start, n);
-+	WARN_ON(devres_destroy(dev, devm_region_release, devm_region_match,
-+			       &match_data));
-+}
-+EXPORT_SYMBOL(__devm_release_region);
-+
-+/*
-  * Called from init/main.c to reserve IO ports.
-  */
- #define MAXRESERVE 4
+ 	/* perform each probe synchronously */
+ 	DPRINTK("probe begin\n");
+@@ -6033,22 +6008,6 @@ void ata_host_detach(struct ata_host *host)
+ 		ata_port_detach(host->ports[i]);
+ }
+ 
+-/**
+- *	ata_host_remove - PCI layer callback for device removal
+- *	@host: ATA host set that was removed
+- *
+- *	Unregister all objects associated with this host set. Free those
+- *	objects.
+- *
+- *	LOCKING:
+- *	Inherited from calling layer (may sleep).
+- */
+-void ata_host_remove(struct ata_host *host)
+-{
+-	ata_host_detach(host);
+-	devres_release_group(host->dev, ata_device_add);
+-}
+-
+ struct ata_probe_ent *
+ ata_probe_ent_alloc(struct device *dev, const struct ata_port_info *port)
+ {
+@@ -6108,26 +6067,13 @@ void ata_std_ports(struct ata_ioports *ioaddr)
+ 
+ #ifdef CONFIG_PCI
+ 
+-void ata_pci_host_stop (struct ata_host *host)
+-{
+-	struct pci_dev *pdev = to_pci_dev(host->dev);
+-
+-	/* XXX - the following if can go away once all LLDs are managed */
+-	if (!list_empty(&host->dev->devres_head))
+-		pcim_iounmap(pdev, host->mmio_base);
+-	else
+-		pci_iounmap(pdev, host->mmio_base);
+-}
+-
+ /**
+  *	ata_pci_remove_one - PCI layer callback for device removal
+  *	@pdev: PCI device that was removed
+  *
+- *	PCI layer indicates to libata via this hook that
+- *	hot-unplug or module unload event has occurred.
+- *	Handle this by unregistering all objects associated
+- *	with this PCI device.  Free those objects.  Then finally
+- *	release PCI resources and disable device.
++ *	PCI layer indicates to libata via this hook that hot-unplug or
++ *	module unload event has occurred.  Detach all ports.  Resource
++ *	release is handled via devres.
+  *
+  *	LOCKING:
+  *	Inherited from PCI layer (may sleep).
+@@ -6137,14 +6083,7 @@ void ata_pci_remove_one(struct pci_dev *pdev)
+ 	struct device *dev = pci_dev_to_dev(pdev);
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 
+-	/* XXX - the following if can go away once all LLDs are managed */
+-	if (!list_empty(&host->dev->devres_head)) {
+-		ata_host_remove(host);
+-		pci_release_regions(pdev);
+-		pci_disable_device(pdev);
+-		dev_set_drvdata(dev, NULL);
+-	} else
+-		ata_host_detach(host);
++	ata_host_detach(host);
+ }
+ 
+ /* move to PCI subsystem */
+@@ -6198,11 +6137,7 @@ int ata_pci_device_do_resume(struct pci_dev *pdev)
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	pci_restore_state(pdev);
+ 
+-	/* XXX - the following if can go away once all LLDs are managed */
+-	if (!list_empty(&pdev->dev.devres_head))
+-		rc = pcim_enable_device(pdev);
+-	else
+-		rc = pci_enable_device(pdev);
++	rc = pcim_enable_device(pdev);
+ 	if (rc) {
+ 		dev_printk(KERN_ERR, &pdev->dev,
+ 			   "failed to enable device after resume (%d)\n", rc);
+@@ -6382,7 +6317,6 @@ EXPORT_SYMBOL_GPL(ata_std_ports);
+ EXPORT_SYMBOL_GPL(ata_host_init);
+ EXPORT_SYMBOL_GPL(ata_device_add);
+ EXPORT_SYMBOL_GPL(ata_host_detach);
+-EXPORT_SYMBOL_GPL(ata_host_remove);
+ EXPORT_SYMBOL_GPL(ata_sg_init);
+ EXPORT_SYMBOL_GPL(ata_sg_init_one);
+ EXPORT_SYMBOL_GPL(ata_hsm_move);
+@@ -6399,8 +6333,6 @@ EXPORT_SYMBOL_GPL(ata_check_status);
+ EXPORT_SYMBOL_GPL(ata_altstatus);
+ EXPORT_SYMBOL_GPL(ata_exec_command);
+ EXPORT_SYMBOL_GPL(ata_port_start);
+-EXPORT_SYMBOL_GPL(ata_port_stop);
+-EXPORT_SYMBOL_GPL(ata_host_stop);
+ EXPORT_SYMBOL_GPL(ata_interrupt);
+ EXPORT_SYMBOL_GPL(ata_mmio_data_xfer);
+ EXPORT_SYMBOL_GPL(ata_pio_data_xfer);
+@@ -6461,7 +6393,6 @@ EXPORT_SYMBOL_GPL(ata_timing_merge);
+ 
+ #ifdef CONFIG_PCI
+ EXPORT_SYMBOL_GPL(pci_test_config_bits);
+-EXPORT_SYMBOL_GPL(ata_pci_host_stop);
+ EXPORT_SYMBOL_GPL(ata_pci_init_native_mode);
+ EXPORT_SYMBOL_GPL(ata_pci_init_one);
+ EXPORT_SYMBOL_GPL(ata_pci_remove_one);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index f6a6bef..afeb48b 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -724,7 +724,6 @@ extern int ata_device_add(const struct ata_probe_ent *ent);
+ extern void ata_host_detach(struct ata_host *host);
+ extern void ata_host_init(struct ata_host *, struct device *,
+ 			  unsigned long, const struct ata_port_operations *);
+-extern void ata_host_remove(struct ata_host *host);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
+ extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
+@@ -770,8 +769,6 @@ extern u8 ata_check_status(struct ata_port *ap);
+ extern u8 ata_altstatus(struct ata_port *ap);
+ extern void ata_exec_command(struct ata_port *ap, const struct ata_taskfile *tf);
+ extern int ata_port_start (struct ata_port *ap);
+-extern void ata_port_stop (struct ata_port *ap);
+-extern void ata_host_stop (struct ata_host *host);
+ extern irqreturn_t ata_interrupt (int irq, void *dev_instance);
+ extern void ata_mmio_data_xfer(struct ata_device *adev, unsigned char *buf,
+ 			       unsigned int buflen, int write_data);
+@@ -858,7 +855,6 @@ struct pci_bits {
+ 	unsigned long		val;
+ };
+ 
+-extern void ata_pci_host_stop (struct ata_host *host);
+ extern struct ata_probe_ent *
+ ata_pci_init_native_mode(struct pci_dev *pdev, struct ata_port_info **port, int portmask);
+ extern int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits);
 -- 
 1.4.4.3
