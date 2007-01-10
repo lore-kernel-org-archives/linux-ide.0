@@ -1,41 +1,52 @@
-From: Mike Accetta <maccetta@laurelnetworks.com>
-Subject: Re: ICH6-M libata disk timeouts 2.6.18 -> 2.6.19
-Date: Tue, 09 Jan 2007 23:56:07 -0500
-Message-ID: <17923.1168404967@mdt.dhcp.pit.laurelnetworks.com>
-References: <10741.1168384577@mdt.dhcp.pit.laurelnetworks.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCHSET] Managed device resources, take #2
+Date: Wed, 10 Jan 2007 14:35:35 +0900
+Message-ID: <11684073353213-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from paperclip.laurelnetworks.com ([63.94.127.69]:43735 "EHLO
-	paperclip.laurelnetworks.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932542AbXAJE4J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Jan 2007 23:56:09 -0500
-Received: from notepad.laurelnetworks.com (notepad.laurelnetworks.com [63.94.127.20])
-	by paperclip.laurelnetworks.com (ECI-DND/ECI-DND) with ESMTP id l0A4u89l006893
-	for <linux-ide@vger.kernel.org>; Tue, 9 Jan 2007 23:56:08 -0500
-Received: from mdt.dhcp.pit.laurelnetworks.com (mdt.dhcp.pit.laurelnetworks.com [10.0.21.56])
-	by notepad.laurelnetworks.com (ECI-DND/ECI-DND) with ESMTP id l0A4u8jp011408
-	for <linux-ide@vger.kernel.org>; Tue, 9 Jan 2007 23:56:08 -0500
-Received: from mdt.dhcp.pit.laurelnetworks.com (localhost.localdomain [127.0.0.1])
-	by mdt.dhcp.pit.laurelnetworks.com (8.13.8/8.13.4) with ESMTP id l0A4u7LX017924
-	for <linux-ide@vger.kernel.org>; Tue, 9 Jan 2007 23:56:08 -0500
-In-reply-to: Your message of "Tue, 09 Jan 2007 18:16:17 EST."
-             <10741.1168384577@mdt.dhcp.pit.laurelnetworks.com>
+Received: from nf-out-0910.google.com ([64.233.182.186]:40997 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932583AbXAJFfr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 00:35:47 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so399249nfa
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jan 2007 21:35:45 -0800 (PST)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, gregkh@suse.de, alan@lxorguk.ukuu.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
+Hello,
 
-Here's a bit more information on these timeouts.  I noticed a mention
-of changing the command queue depth in a recent lkml post and decided
-to give that a whirl.
+This is the second take of devres patchset.  Changes from the last
+take[L] are...
 
-This problem seems to be related to the depth of the queue.  When I
-set the value for /sys/block/sdb/device/queue_depth to 4 the raid1
-re-sync completes without incident.  When set to 5 it eventually gives
-the timeout error message (although at well past 50% of the re-sync).
-The problem was originally observed with the default setting (31).
--- 
-Mike Accetta
+* generic managed iomap interface functions implemented
+	- devm_ioport_map/unmap()
+	- devm_ioremap[_nocache](), devm_iounmap()
 
-ECI Telecom Ltd.
-Data Networking Division (previously Laurel Networks)
+* libata-sff legacy mode now uses generic managed iomap interface
+  intead of implementing its own devres
+
+* all pata drivers have been converted
+
+* Documentation/driver-model/devres.txt added
+
+Git tree is available at the following URLs.
+
+  http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=devres
+  git://htj.dyndns.org/libata-tj devres
+
+For detailed info, please read Documentation/driver-model/devres.txt.
+Similar info can also be found from the last post.
+
+Thanks.
+
+--
+tejun
+
+[L] http://thread.gmane.org/gmane.linux.ide/14690
+
 
