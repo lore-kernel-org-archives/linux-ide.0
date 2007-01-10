@@ -1,356 +1,252 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/13] devres: implement managed iomap interface
+Subject: [PATCH 5/13] devres: implement managed PCI interface
 Date: Wed, 10 Jan 2007 14:35:37 +0900
-Message-ID: <11684073371547-git-send-email-htejun@gmail.com>
+Message-ID: <1168407337830-git-send-email-htejun@gmail.com>
 References: <11684073353213-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:4081 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932603AbXAJFfx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 00:35:53 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so47nze
-        for <linux-ide@vger.kernel.org>; Tue, 09 Jan 2007 21:35:52 -0800 (PST)
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932727AbXAJFhJ@vger.kernel.org>
 In-Reply-To: <11684073353213-git-send-email-htejun@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jgarzik@pobox.com, gregkh@suse.de, alan@lxorguk.ukuu.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-Implement managed iomap interface - devm_ioport_map(),
-devm_ioport_unmap(), devm_ioremap(), devm_ioremap_nocache(),
-devm_iounmap(), pcim_iomap_table(), pcim_iomap() and pcim_iounmap().
-Except for being managed and additional gendev argument, these
-functions take the same arguments and have the same effect as
-non-managed coutnerparts.
+Implement managed PCI interface - pcim_enable_device(),
+pcim_pin_device() and pci_is_managed().  pcim_enable_device() is
+equivalent to pci_enable_device() except that it makes the PCI device
+managed.  After pcim_enable_device(), PCI resources such as
+enabledness, msi/msix/intx status and BAR regions become managed.
 
-pcim_iomap_table() returns pointer to constant array of void __iomem *
-which record addresses for all mapped BARs.  This function is
-guaranteed to succeed after successful pcim_iomap() and drivers are
-free to reference the returned iomap table.
+pcim_pin_device() is used by device drivers to ask PCI devres not to
+disable the device on driver detach.  This function is to handle cases
+where a driver finds out that a device is otherwise busy and thus
+shouldn't be disabled on probe failure or driver detach.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- include/linux/io.h |   17 ++++
- lib/Makefile       |    3 +-
- lib/iomap.c        |  246 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 263 insertions(+), 3 deletions(-)
+ drivers/pci/pci.c   |  127 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/pci.h |    9 ++++
+ 2 files changed, 135 insertions(+), 1 deletions(-)
 
-diff --git a/include/linux/io.h b/include/linux/io.h
-index 81877ea..f5edf9c 100644
---- a/include/linux/io.h
-+++ b/include/linux/io.h
-@@ -28,6 +28,23 @@ void __iowrite64_copy(void __iomem *to, const void *from, size_t count);
- int ioremap_page_range(unsigned long addr, unsigned long end,
- 		       unsigned long phys_addr, pgprot_t prot);
- 
-+/*
-+ * Managed iomap interface
-+ */
-+void __iomem * devm_ioport_map(struct device *dev, unsigned long port,
-+			       unsigned int nr);
-+void devm_ioport_unmap(struct device *dev, void __iomem *addr);
-+
-+void __iomem * devm_ioremap(struct device *dev, unsigned long offset,
-+			    unsigned long size);
-+void __iomem * devm_ioremap_nocache(struct device *dev, unsigned long offset,
-+				    unsigned long size);
-+void devm_iounmap(struct device *dev, void __iomem *addr);
-+
-+void __iomem * pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
-+void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr);
-+void __iomem * const * pcim_iomap_table(struct pci_dev *pdev);
-+
- /**
-  *	check_signature		-	find BIOS signatures
-  *	@io_addr: mmio address to check
-diff --git a/lib/Makefile b/lib/Makefile
-index 77b4bad..29b2e99 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -5,7 +5,7 @@
- lib-y := ctype.o string.o vsprintf.o cmdline.o \
- 	 bust_spinlocks.o rbtree.o radix-tree.o dump_stack.o \
- 	 idr.o div64.o int_sqrt.o bitmap.o extable.o prio_tree.o \
--	 sha1.o irq_regs.o reciprocal_div.o
-+	 sha1.o irq_regs.o reciprocal_div.o iomap.o
- 
- lib-$(CONFIG_MMU) += ioremap.o
- lib-$(CONFIG_SMP) += cpumask.o
-@@ -41,7 +41,6 @@ obj-$(CONFIG_CRC_CCITT)	+= crc-ccitt.o
- obj-$(CONFIG_CRC16)	+= crc16.o
- obj-$(CONFIG_CRC32)	+= crc32.o
- obj-$(CONFIG_LIBCRC32C)	+= libcrc32c.o
--obj-$(CONFIG_GENERIC_IOMAP) += iomap.o
- obj-$(CONFIG_GENERIC_ALLOCATOR) += genalloc.o
- 
- obj-$(CONFIG_ZLIB_INFLATE) += zlib_inflate/
-diff --git a/lib/iomap.c b/lib/iomap.c
-index d6ccdd8..3214028 100644
---- a/lib/iomap.c
-+++ b/lib/iomap.c
-@@ -4,8 +4,10 @@
-  * (C) Copyright 2004 Linus Torvalds
-  */
- #include <linux/pci.h>
-+#include <linux/io.h>
-+
-+#ifdef CONFIG_GENERIC_IOMAP
- #include <linux/module.h>
--#include <asm/io.h>
- 
- /*
-  * Read/write from/to an (offsettable) iomem cookie. It might be a PIO
-@@ -254,3 +256,245 @@ void pci_iounmap(struct pci_dev *dev, void __iomem * addr)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6bfb942..2ab2f8a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -744,6 +744,104 @@ int pci_enable_device(struct pci_dev *dev)
+ 	return result;
  }
- EXPORT_SYMBOL(pci_iomap);
- EXPORT_SYMBOL(pci_iounmap);
-+
-+#endif /* CONFIG_GENERIC_IOMAP */
-+
+ 
 +/*
-+ * Generic iomap devres
++ * Managed PCI resources.  This manages device on/off, intx/msi/msix
++ * on/off and BAR regions.  pci_dev itself records msi/msix status, so
++ * there's no need to track it separately.  pci_devres is initialized
++ * when a device is enabled using managed PCI device enable interface.
 + */
-+static void devm_ioport_map_release(struct device *dev, void *res)
-+{
-+	ioport_unmap(*(void __iomem **)res);
-+}
-+
-+static int devm_ioport_map_match(struct device *dev, void *res,
-+				 void *match_data)
-+{
-+	return *(void **)res == match_data;
-+}
-+
-+/**
-+ * devm_ioport_map - Managed ioport_map()
-+ * @dev: Generic device to map ioport for
-+ * @port: Port to map
-+ * @nr: Number of ports to map
-+ *
-+ * Managed ioport_map().  Map is automatically unmapped on driver
-+ * detach.
-+ */
-+void __iomem * devm_ioport_map(struct device *dev, unsigned long port,
-+			       unsigned int nr)
-+{
-+	void __iomem **ptr, *addr;
-+
-+	ptr = devres_alloc(devm_ioport_map_release, sizeof(*ptr), GFP_KERNEL);
-+	if (!ptr)
-+		return NULL;
-+
-+	addr = ioport_map(port, nr);
-+	if (addr) {
-+		*ptr = addr;
-+		devres_add(dev, ptr);
-+	} else
-+		devres_free(ptr);
-+
-+	return addr;
-+}
-+EXPORT_SYMBOL(devm_ioport_map);
-+
-+/**
-+ * devm_ioport_unmap - Managed ioport_unmap()
-+ * @dev: Generic device to unmap for
-+ * @addr: Address to unmap
-+ *
-+ * Managed ioport_unmap().  @addr must have been mapped using
-+ * devm_ioport_map().
-+ */
-+void devm_ioport_unmap(struct device *dev, void __iomem *addr)
-+{
-+	ioport_unmap(addr);
-+	WARN_ON(devres_destroy(dev, devm_ioport_map_release,
-+			       devm_ioport_map_match, (void *)addr));
-+}
-+EXPORT_SYMBOL(devm_ioport_unmap);
-+
-+static void devm_ioremap_release(struct device *dev, void *res)
-+{
-+	iounmap(*(void __iomem **)res);
-+}
-+
-+static int devm_ioremap_match(struct device *dev, void *res, void *match_data)
-+{
-+	return *(void **)res == match_data;
-+}
-+
-+/**
-+ * devm_ioremap - Managed ioremap()
-+ * @dev: Generic device to remap IO address for
-+ * @offset: BUS offset to map
-+ * @size: Size of map
-+ *
-+ * Managed ioremap().  Map is automatically unmapped on driver detach.
-+ */
-+void __iomem *devm_ioremap(struct device *dev, unsigned long offset,
-+			   unsigned long size)
-+{
-+	void __iomem **ptr, *addr;
-+
-+	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
-+	if (!ptr)
-+		return NULL;
-+
-+	addr = ioremap(offset, size);
-+	if (addr) {
-+		*ptr = addr;
-+		devres_add(dev, ptr);
-+	} else
-+		devres_free(ptr);
-+
-+	return addr;
-+}
-+EXPORT_SYMBOL(devm_ioremap);
-+
-+/**
-+ * devm_ioremap_nocache - Managed ioremap_nocache()
-+ * @dev: Generic device to remap IO address for
-+ * @offset: BUS offset to map
-+ * @size: Size of map
-+ *
-+ * Managed ioremap_nocache().  Map is automatically unmapped on driver
-+ * detach.
-+ */
-+void __iomem *devm_ioremap_nocache(struct device *dev, unsigned long offset,
-+				   unsigned long size)
-+{
-+	void __iomem **ptr, *addr;
-+
-+	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
-+	if (!ptr)
-+		return NULL;
-+
-+	addr = ioremap_nocache(offset, size);
-+	if (addr) {
-+		*ptr = addr;
-+		devres_add(dev, ptr);
-+	} else
-+		devres_free(ptr);
-+
-+	return addr;
-+}
-+EXPORT_SYMBOL(devm_ioremap_nocache);
-+
-+/**
-+ * devm_iounmap - Managed iounmap()
-+ * @dev: Generic device to unmap for
-+ * @addr: Address to unmap
-+ *
-+ * Managed iounmap().  @addr must have been mapped using devm_ioremap*().
-+ */
-+void devm_iounmap(struct device *dev, void __iomem *addr)
-+{
-+	iounmap(addr);
-+	WARN_ON(devres_destroy(dev, devm_ioremap_release, devm_ioremap_match,
-+			       (void *)addr));
-+}
-+EXPORT_SYMBOL(devm_iounmap);
-+
-+/*
-+ * PCI iomap devres
-+ */
-+#define PCIM_IOMAP_MAX	PCI_ROM_RESOURCE
-+
-+struct pcim_iomap_devres {
-+	void __iomem *table[PCIM_IOMAP_MAX];
++struct pci_devres {
++	unsigned int disable:1;
++	unsigned int orig_intx:1;
++	unsigned int restore_intx:1;
++	u32 region_mask;
 +};
 +
-+static void pcim_iomap_release(struct device *gendev, void *res)
++static void pcim_release(struct device *gendev, void *res)
 +{
 +	struct pci_dev *dev = container_of(gendev, struct pci_dev, dev);
-+	struct pcim_iomap_devres *this = res;
++	struct pci_devres *this = res;
 +	int i;
 +
-+	for (i = 0; i < PCIM_IOMAP_MAX; i++)
-+		if (this->table[i])
-+			pci_iounmap(dev, this->table[i]);
++	if (dev->msi_enabled)
++		pci_disable_msi(dev);
++	if (dev->msix_enabled)
++		pci_disable_msix(dev);
++
++	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
++		if (this->region_mask & (1 << i))
++			pci_release_region(dev, i);
++
++	if (this->restore_intx)
++		pci_intx(dev, this->orig_intx);
++
++	if (this->disable)
++		pci_disable_device(dev);
 +}
 +
-+/**
-+ * pcim_iomap_table - access iomap allocation table
-+ * @pdev: PCI device to access iomap table for
-+ *
-+ * Access iomap allocation table for @dev.  If iomap table doesn't
-+ * exist and @pdev is managed, it will be allocated.  All iomaps
-+ * recorded in the iomap table are automatically unmapped on driver
-+ * detach.
-+ *
-+ * This function might sleep when the table is first allocated but can
-+ * be safely called without context and guaranteed to succed once
-+ * allocated.
-+ */
-+void __iomem * const * pcim_iomap_table(struct pci_dev *pdev)
++static struct pci_devres * get_pci_dr(struct pci_dev *pdev)
 +{
-+	struct pcim_iomap_devres *dr, *new_dr;
++	struct pci_devres *dr, *new_dr;
 +
-+	dr = devres_find(&pdev->dev, pcim_iomap_release, NULL, NULL);
++	dr = devres_find(&pdev->dev, pcim_release, NULL, NULL);
 +	if (dr)
-+		return dr->table;
++		return dr;
 +
-+	new_dr = devres_alloc(pcim_iomap_release, sizeof(*new_dr), GFP_KERNEL);
++	new_dr = devres_alloc(pcim_release, sizeof(*new_dr), GFP_KERNEL);
 +	if (!new_dr)
 +		return NULL;
-+	dr = devres_get(&pdev->dev, new_dr, NULL, NULL);
-+	return dr->table;
++	return devres_get(&pdev->dev, new_dr, NULL, NULL);
 +}
-+EXPORT_SYMBOL(pcim_iomap_table);
++
++static struct pci_devres * find_pci_dr(struct pci_dev *pdev)
++{
++	if (pci_is_managed(pdev))
++		return devres_find(&pdev->dev, pcim_release, NULL, NULL);
++	return NULL;
++}
 +
 +/**
-+ * pcim_iomap - Managed pcim_iomap()
-+ * @pdev: PCI device to iomap for
-+ * @bar: BAR to iomap
-+ * @maxlen: Maximum length of iomap
++ * pcim_enable_device - Managed pci_enable_device()
++ * @pdev: PCI device to be initialized
 + *
-+ * Managed pci_iomap().  Map is automatically unmapped on driver
-+ * detach.
++ * Managed pci_enable_device().
 + */
-+void __iomem * pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen)
++int pcim_enable_device(struct pci_dev *pdev)
 +{
-+	void __iomem **tbl;
++	struct pci_devres *dr;
++	int rc;
 +
-+	BUG_ON(bar >= PCIM_IOMAP_MAX);
++	dr = get_pci_dr(pdev);
++	if (unlikely(!dr))
++		return -ENOMEM;
++	WARN_ON(!!dr->disable);
 +
-+	tbl = (void __iomem **)pcim_iomap_table(pdev);
-+	if (!tbl || tbl[bar])	/* duplicate mappings not allowed */
-+		return NULL;
-+
-+	tbl[bar] = pci_iomap(pdev, bar, maxlen);
-+	return tbl[bar];
++	rc = pci_enable_device(pdev);
++	if (!rc) {
++		pdev->is_managed = 1;
++		dr->disable = 1;
++	}
++	return rc;
 +}
-+EXPORT_SYMBOL(pcim_iomap);
 +
 +/**
-+ * pcim_iounmap - Managed pci_iounmap()
-+ * @pdev: PCI device to iounmap for
-+ * @addr: Address to unmap
++ * pcim_pin_device - Pin managed PCI device
++ * @pdev: PCI device to pin
 + *
-+ * Managed pci_iounmap().  @addr must have been mapped using pcim_iomap().
++ * Pin managed PCI device @pdev.  Pinned device won't be disabled on
++ * driver detach.  @pdev must have been enabled with
++ * pcim_enable_device().
 + */
-+void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr)
++void pcim_pin_device(struct pci_dev *pdev)
 +{
-+	void __iomem **tbl;
-+	int i;
++	struct pci_devres *dr;
 +
-+	pci_iounmap(pdev, addr);
++	dr = find_pci_dr(pdev);
++	WARN_ON(!dr || !dr->disable);
++	if (dr)
++		dr->disable = 0;
++}
 +
-+	tbl = (void __iomem **)pcim_iomap_table(pdev);
-+	BUG_ON(!tbl);
+ /**
+  * pcibios_disable_device - disable arch specific PCI resources for device dev
+  * @dev: the PCI device to disable
+@@ -767,8 +865,13 @@ void __attribute__ ((weak)) pcibios_disable_device (struct pci_dev *dev) {}
+ void
+ pci_disable_device(struct pci_dev *dev)
+ {
++	struct pci_devres *dr;
+ 	u16 pci_command;
+ 
++	dr = find_pci_dr(dev);
++	if (dr)
++		dr->disable = 0;
 +
-+	for (i = 0; i < PCIM_IOMAP_MAX; i++)
-+		if (tbl[i] == addr) {
-+			tbl[i] = NULL;
-+			return;
+ 	if (atomic_sub_return(1, &dev->enable_cnt) != 0)
+ 		return;
+ 
+@@ -867,6 +970,8 @@ pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge)
+  */
+ void pci_release_region(struct pci_dev *pdev, int bar)
+ {
++	struct pci_devres *dr;
++
+ 	if (pci_resource_len(pdev, bar) == 0)
+ 		return;
+ 	if (pci_resource_flags(pdev, bar) & IORESOURCE_IO)
+@@ -875,6 +980,10 @@ void pci_release_region(struct pci_dev *pdev, int bar)
+ 	else if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM)
+ 		release_mem_region(pci_resource_start(pdev, bar),
+ 				pci_resource_len(pdev, bar));
++
++	dr = find_pci_dr(pdev);
++	if (dr)
++		dr->region_mask &= ~(1 << bar);
+ }
+ 
+ /**
+@@ -893,6 +1002,8 @@ void pci_release_region(struct pci_dev *pdev, int bar)
+  */
+ int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
+ {
++	struct pci_devres *dr;
++
+ 	if (pci_resource_len(pdev, bar) == 0)
+ 		return 0;
+ 		
+@@ -906,7 +1017,11 @@ int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
+ 				        pci_resource_len(pdev, bar), res_name))
+ 			goto err_out;
+ 	}
+-	
++
++	dr = find_pci_dr(pdev);
++	if (dr)
++		dr->region_mask |= 1 << bar;
++
+ 	return 0;
+ 
+ err_out:
+@@ -1117,7 +1232,15 @@ pci_intx(struct pci_dev *pdev, int enable)
+ 	}
+ 
+ 	if (new != pci_command) {
++		struct pci_devres *dr;
++
+ 		pci_write_config_word(pdev, PCI_COMMAND, new);
++
++		dr = find_pci_dr(pdev);
++		if (dr && !dr->restore_intx) {
++			dr->restore_intx = 1;
++			dr->orig_intx = !enable;
 +		}
-+	WARN_ON(1);
+ 	}
+ }
+ 
+@@ -1189,6 +1312,8 @@ EXPORT_SYMBOL(isa_bridge);
+ EXPORT_SYMBOL_GPL(pci_restore_bars);
+ EXPORT_SYMBOL(pci_enable_device_bars);
+ EXPORT_SYMBOL(pci_enable_device);
++EXPORT_SYMBOL(pcim_enable_device);
++EXPORT_SYMBOL(pcim_pin_device);
+ EXPORT_SYMBOL(pci_disable_device);
+ EXPORT_SYMBOL(pci_find_capability);
+ EXPORT_SYMBOL(pci_bus_find_capability);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f3c617e..1f82eb9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -167,6 +167,7 @@ struct pci_dev {
+ 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
+ 	unsigned int 	msi_enabled:1;
+ 	unsigned int	msix_enabled:1;
++	unsigned int	is_managed:1;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
+ 	u32		saved_config_space[16]; /* config space saved at suspend time */
+@@ -521,6 +522,14 @@ static inline int pci_write_config_dword(struct pci_dev *dev, int where, u32 val
+ 
+ int __must_check pci_enable_device(struct pci_dev *dev);
+ int __must_check pci_enable_device_bars(struct pci_dev *dev, int mask);
++int __must_check pcim_enable_device(struct pci_dev *pdev);
++void pcim_pin_device(struct pci_dev *pdev);
++
++static inline int pci_is_managed(struct pci_dev *pdev)
++{
++	return pdev->is_managed;
 +}
-+EXPORT_SYMBOL(pcim_iounmap);
++
+ void pci_disable_device(struct pci_dev *dev);
+ void pci_set_master(struct pci_dev *dev);
+ #define HAVE_PCI_SET_MWI
 -- 
 1.4.4.3
-
-
