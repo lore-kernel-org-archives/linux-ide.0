@@ -1,208 +1,89 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 11/13] libata: remove unused functions
-Date: Wed, 10 Jan 2007 14:35:38 +0900
-Message-ID: <116840733843-git-send-email-htejun@gmail.com>
-References: <11684073353213-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932637AbXAJFkM@vger.kernel.org>
-In-Reply-To: <11684073353213-git-send-email-htejun@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jgarzik@pobox.com, gregkh@suse.de, alan@lxorguk.ukuu.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.20-rc4] sata_promise: ATAPI cleanup
+Date: Wed, 10 Jan 2007 09:32:34 +0100 (MET)
+Message-ID: <200701100832.l0A8WYat017411@harpo.it.uu.se>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from aun.it.uu.se ([130.238.12.36]:37874 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932738AbXAJIcr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Jan 2007 03:32:47 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Now that all LLDs are converted to use devres, default stop callbacks
-are unused.  Remove them.
+Here's a cleanup for yesterday's sata_promise ATAPI patch:
+- add and use a symbolic constant for the altstatus register
+- check return status from ata_busy_wait()
+- add missing newline in a warning printk()
+- update comment in pdc_issue_atapi_pkt_cmd() to clarify
+  that the maybe-wait-for-INT issue cannot occur in the
+  current driver, but may occur if the driver starts issuing
+  ATAPI non-DMA commands as PDC packets
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |   81 +++-----------------------------------------
- include/linux/libata.h    |    4 --
- 2 files changed, 6 insertions(+), 79 deletions(-)
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e476574..b5538dd 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5515,31 +5515,6 @@ int ata_port_start(struct ata_port *ap)
- }
- 
- /**
-- *	ata_port_stop - Undo ata_port_start()
-- *	@ap: Port to shut down
-- *
-- *	Frees the PRD table.
-- *
-- *	May be used as the port_stop() entry in ata_port_operations.
-- *
-- *	LOCKING:
-- *	Inherited from caller.
-- */
--void ata_port_stop (struct ata_port *ap)
--{
--	struct device *dev = ap->dev;
--
--	dmam_free_coherent(dev, ATA_PRD_TBL_SZ, ap->prd, ap->prd_dma);
--	ata_pad_free(ap, dev);
--}
--
--void ata_host_stop (struct ata_host *host)
--{
--	if (host->mmio_base)
--		iounmap(host->mmio_base);
--}
--
--/**
-  *	ata_dev_init - Initialize an ata_device structure
-  *	@dev: Device structure to initialize
-  *
-@@ -5878,7 +5853,7 @@ int ata_device_add(const struct ata_probe_ent *ent)
+--- linux-2.6.20-rc4/drivers/ata/sata_promise.c.~1~	2007-01-09 18:53:25.000000000 +0100
++++ linux-2.6.20-rc4/drivers/ata/sata_promise.c	2007-01-09 21:54:50.000000000 +0100
+@@ -59,6 +59,7 @@ enum {
+ 	PDC_CYLINDER_HIGH	= 0x14, /* Cylinder high reg (per port) */
+ 	PDC_DEVICE		= 0x18, /* Device/Head reg (per port) */
+ 	PDC_COMMAND		= 0x1C, /* Command/status reg (per port) */
++	PDC_ALTSTATUS		= 0x38, /* Alternate-status/device-control reg (per port) */
+ 	PDC_PKT_SUBMIT		= 0x40, /* Command packet pointer addr */
+ 	PDC_INT_SEQMASK		= 0x40,	/* Mask of asserted SEQ INTs */
+ 	PDC_FLASH_CTL		= 0x44, /* Flash control register */
+@@ -728,7 +729,7 @@ static unsigned int pdc_wait_for_drq(str
+ 	 * know when to time out the outer loop.
+ 	 */
+ 	for(i = 0; i < 1000; ++i) {
+-		status = readb(port_mmio + 0x38); /* altstatus */
++		status = readb(port_mmio + PDC_ALTSTATUS);
+ 		if (status == 0xFF)
+ 			break;
+ 		if (status & ATA_BUSY)
+@@ -738,7 +739,15 @@ static unsigned int pdc_wait_for_drq(str
+ 		mdelay(1);
  	}
- 
- 	/* resource acquisition complete */
--	devres_close_group(dev, ata_device_add);
-+	devres_remove_group(dev, ata_device_add);
- 
- 	/* perform each probe synchronously */
- 	DPRINTK("probe begin\n");
-@@ -6033,22 +6008,6 @@ void ata_host_detach(struct ata_host *host)
- 		ata_port_detach(host->ports[i]);
+ 	if (i >= 1000)
+-		ata_port_printk(ap, KERN_WARNING, "%s timed out", __FUNCTION__);
++		ata_port_printk(ap, KERN_WARNING, "%s timed out\n", __FUNCTION__);
++	return status;
++}
++
++static unsigned int pdc_wait_on_busy(struct ata_port *ap)
++{
++	unsigned int status = ata_busy_wait(ap, ATA_BUSY, 1000);
++	if (status != 0xff && (status & ATA_BUSY))
++		ata_port_printk(ap, KERN_WARNING, "%s timed out\n", __FUNCTION__);
+ 	return status;
  }
  
--/**
-- *	ata_host_remove - PCI layer callback for device removal
-- *	@host: ATA host set that was removed
-- *
-- *	Unregister all objects associated with this host set. Free those
-- *	objects.
-- *
-- *	LOCKING:
-- *	Inherited from calling layer (may sleep).
-- */
--void ata_host_remove(struct ata_host *host)
--{
--	ata_host_detach(host);
--	devres_release_group(host->dev, ata_device_add);
--}
--
- struct ata_probe_ent *
- ata_probe_ent_alloc(struct device *dev, const struct ata_port_info *port)
- {
-@@ -6108,26 +6067,13 @@ void ata_std_ports(struct ata_ioports *ioaddr)
+@@ -762,7 +771,7 @@ static void pdc_issue_atapi_pkt_cmd(stru
+ 			tmp |= ATA_DEV1;
+ 	}
+ 	writeb(tmp, port_mmio + PDC_DEVICE);
+-	ata_busy_wait(ap, ATA_BUSY, 1000);
++	pdc_wait_on_busy(ap);
  
- #ifdef CONFIG_PCI
+ 	writeb(0x00, port_mmio + PDC_SECTOR_COUNT);
+ 	writeb(0x00, port_mmio + PDC_SECTOR_NUMBER);
+@@ -788,14 +797,10 @@ static void pdc_issue_atapi_pkt_cmd(stru
+ 	/* send ATAPI packet command 0xA0 */
+ 	writeb(ATA_CMD_PACKET, port_mmio + PDC_COMMAND);
  
--void ata_pci_host_stop (struct ata_host *host)
--{
--	struct pci_dev *pdev = to_pci_dev(host->dev);
--
--	/* XXX - the following if can go away once all LLDs are managed */
--	if (!list_empty(&host->dev->devres_head))
--		pcim_iounmap(pdev, host->mmio_base);
--	else
--		pci_iounmap(pdev, host->mmio_base);
--}
--
- /**
-  *	ata_pci_remove_one - PCI layer callback for device removal
-  *	@pdev: PCI device that was removed
-  *
-- *	PCI layer indicates to libata via this hook that
-- *	hot-unplug or module unload event has occurred.
-- *	Handle this by unregistering all objects associated
-- *	with this PCI device.  Free those objects.  Then finally
-- *	release PCI resources and disable device.
-+ *	PCI layer indicates to libata via this hook that hot-unplug or
-+ *	module unload event has occurred.  Detach all ports.  Resource
-+ *	release is handled via devres.
-  *
-  *	LOCKING:
-  *	Inherited from PCI layer (may sleep).
-@@ -6137,14 +6083,7 @@ void ata_pci_remove_one(struct pci_dev *pdev)
- 	struct device *dev = pci_dev_to_dev(pdev);
- 	struct ata_host *host = dev_get_drvdata(dev);
+-	/*
+-	 * At this point in the issuing of a packet command, the Promise
+-	 * driver busy-waits for INT (CTLSTAT bit 27) if it detected
+-	 * (at port init time) that the device interrupts with assertion
+-	 * of DRQ after receiving a packet command.
+-	 *
+-	 * XXX: Do we need to handle this case as well? Does libata detect
+-	 * this case for us, or do we have to do our own per-port init?
++	/* pdc_qc_issue_prot() currently sends ATAPI PIO packets back
++	 * to libata. If we start handling those packets ourselves,
++	 * then we must busy-wait for INT (CTLSTAT bit 27) at this point
++	 * if the device has ATA_DFLAG_CDB_INTR set.
+ 	 */
  
--	/* XXX - the following if can go away once all LLDs are managed */
--	if (!list_empty(&host->dev->devres_head)) {
--		ata_host_remove(host);
--		pci_release_regions(pdev);
--		pci_disable_device(pdev);
--		dev_set_drvdata(dev, NULL);
--	} else
--		ata_host_detach(host);
-+	ata_host_detach(host);
- }
- 
- /* move to PCI subsystem */
-@@ -6198,11 +6137,7 @@ int ata_pci_device_do_resume(struct pci_dev *pdev)
- 	pci_set_power_state(pdev, PCI_D0);
- 	pci_restore_state(pdev);
- 
--	/* XXX - the following if can go away once all LLDs are managed */
--	if (!list_empty(&pdev->dev.devres_head))
--		rc = pcim_enable_device(pdev);
--	else
--		rc = pci_enable_device(pdev);
-+	rc = pcim_enable_device(pdev);
- 	if (rc) {
- 		dev_printk(KERN_ERR, &pdev->dev,
- 			   "failed to enable device after resume (%d)\n", rc);
-@@ -6382,7 +6317,6 @@ EXPORT_SYMBOL_GPL(ata_std_ports);
- EXPORT_SYMBOL_GPL(ata_host_init);
- EXPORT_SYMBOL_GPL(ata_device_add);
- EXPORT_SYMBOL_GPL(ata_host_detach);
--EXPORT_SYMBOL_GPL(ata_host_remove);
- EXPORT_SYMBOL_GPL(ata_sg_init);
- EXPORT_SYMBOL_GPL(ata_sg_init_one);
- EXPORT_SYMBOL_GPL(ata_hsm_move);
-@@ -6399,8 +6333,6 @@ EXPORT_SYMBOL_GPL(ata_check_status);
- EXPORT_SYMBOL_GPL(ata_altstatus);
- EXPORT_SYMBOL_GPL(ata_exec_command);
- EXPORT_SYMBOL_GPL(ata_port_start);
--EXPORT_SYMBOL_GPL(ata_port_stop);
--EXPORT_SYMBOL_GPL(ata_host_stop);
- EXPORT_SYMBOL_GPL(ata_interrupt);
- EXPORT_SYMBOL_GPL(ata_mmio_data_xfer);
- EXPORT_SYMBOL_GPL(ata_pio_data_xfer);
-@@ -6461,7 +6393,6 @@ EXPORT_SYMBOL_GPL(ata_timing_merge);
- 
- #ifdef CONFIG_PCI
- EXPORT_SYMBOL_GPL(pci_test_config_bits);
--EXPORT_SYMBOL_GPL(ata_pci_host_stop);
- EXPORT_SYMBOL_GPL(ata_pci_init_native_mode);
- EXPORT_SYMBOL_GPL(ata_pci_init_one);
- EXPORT_SYMBOL_GPL(ata_pci_remove_one);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f6a6bef..afeb48b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -724,7 +724,6 @@ extern int ata_device_add(const struct ata_probe_ent *ent);
- extern void ata_host_detach(struct ata_host *host);
- extern void ata_host_init(struct ata_host *, struct device *,
- 			  unsigned long, const struct ata_port_operations *);
--extern void ata_host_remove(struct ata_host *host);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
-@@ -770,8 +769,6 @@ extern u8 ata_check_status(struct ata_port *ap);
- extern u8 ata_altstatus(struct ata_port *ap);
- extern void ata_exec_command(struct ata_port *ap, const struct ata_taskfile *tf);
- extern int ata_port_start (struct ata_port *ap);
--extern void ata_port_stop (struct ata_port *ap);
--extern void ata_host_stop (struct ata_host *host);
- extern irqreturn_t ata_interrupt (int irq, void *dev_instance);
- extern void ata_mmio_data_xfer(struct ata_device *adev, unsigned char *buf,
- 			       unsigned int buflen, int write_data);
-@@ -858,7 +855,6 @@ struct pci_bits {
- 	unsigned long		val;
- };
- 
--extern void ata_pci_host_stop (struct ata_host *host);
- extern struct ata_probe_ent *
- ata_pci_init_native_mode(struct pci_dev *pdev, struct ata_port_info **port, int portmask);
- extern int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits);
--- 
-1.4.4.3
+ 	pdc_wait_for_drq(ap);
