@@ -1,27 +1,38 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: hwif->rw_disk() method
-Date: Wed, 10 Jan 2007 17:10:15 +0000
-Message-ID: <20070110171015.5320fa17@localhost.localdomain>
-References: <45A514AB.2080605@ru.mvista.com>
+Date: Wed, 10 Jan 2007 20:05:46 +0300
+Message-ID: <45A51CEA.9040608@ru.mvista.com>
+References: <45A514AB.2080605@ru.mvista.com> <20070110171015.5320fa17@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51867 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S964952AbXAJQ7Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 11:59:24 -0500
-In-Reply-To: <45A514AB.2080605@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:14892 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S964967AbXAJRFp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Jan 2007 12:05:45 -0500
+In-Reply-To: <20070110171015.5320fa17@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Alan <alan@lxorguk.ukuu.org.uk>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>
 
->     Alan/Bart/anybody, could you enlighten me why hwif->rw_disk() method came 
-> into being at all?
+Hello.
 
-When you needed to wrap entire disk operations. The ->dma_ methods only
-wrap DMA commands.
+Alan wrote:
 
-For the current support hardware it can probably go, no idea if anyone
-embedded uses it any more and can't be bothered to check 8)
+>>    Alan/Bart/anybody, could you enlighten me why hwif->rw_disk() method came 
+>>into being at all?
+
+> When you needed to wrap entire disk operations. The ->dma_ methods only
+> wrap DMA commands.
+
+    Yeah, good point. But it's not likely that the HighPoint driver actually 
+needs this wrapper for PIO or even MW DMA commands...
+
+> For the current support hardware it can probably go, no idea if anyone
+> embedded uses it any more and can't be bothered to check 8)
+
+    Nobody does, as far I can see, except this wretched driver... :-)
+
+MBR, Sergei
