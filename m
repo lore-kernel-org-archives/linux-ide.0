@@ -1,839 +1,138 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/13] devres: device resource management core
+Subject: [PATCH 2/13] devres: implement managed IO region interface
 Date: Wed, 10 Jan 2007 14:35:36 +0900
-Message-ID: <1168407336188-git-send-email-htejun@gmail.com>
+Message-ID: <11684073361953-git-send-email-htejun@gmail.com>
 References: <11684073353213-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932603AbXAJFjk@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932664AbXAJFgA@vger.kernel.org>
 In-Reply-To: <11684073353213-git-send-email-htejun@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jgarzik@pobox.com, gregkh@suse.de, alan@lxorguk.ukuu.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Implement device resource management core, in short, devres.  A device
-driver can allocate arbirary size of devres data which is associated
-with a release function.  On driver detach, release function is
-invoked on the devres data, then, devres data is freed.
-
-devreses are typed by associated release functions.  Some devreses are
-better represented by single instance of the type while others need
-multiple instances sharing the same release function.  Both usages are
-supported.
-
-devreses can be grouped using devres group such that a device driver
-can easily release acquired resources halfway through initialization
-or selectively release resources (e.g. resources for port 1 out of 4
-ports).
-
-In addition, managed kzalloc() and kfree() are implemented by this
-patch.
+Implement managed IO region interface - devm_request_region() and
+devm_release_region().  Except for the first @dev argument and being
+managed, these take the same arguments and have the same effect as
+non-managed coutnerparts.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/base/Kconfig   |   12 +
- drivers/base/Makefile  |    2 +-
- drivers/base/base.h    |    1 +
- drivers/base/core.c    |    2 +
- drivers/base/dd.c      |    3 +
- drivers/base/devres.c  |  644 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/device.h |   38 +++
- 7 files changed, 701 insertions(+), 1 deletions(-)
+ include/linux/ioport.h |   20 +++++++++++++++
+ kernel/resource.c      |   62 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 82 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
-index 1429f3a..5d6312e 100644
---- a/drivers/base/Kconfig
-+++ b/drivers/base/Kconfig
-@@ -37,6 +37,18 @@ config DEBUG_DRIVER
- 
- 	  If you are unsure about this, say N here.
- 
-+config DEBUG_DEVRES
-+	bool "Managed device resources verbose debug messages"
-+	depends on DEBUG_KERNEL
-+	help
-+	  This option enables kernel parameter devres.log. If set to
-+	  non-zero, devres debug messages are printed. Select this if
-+	  you are having a problem with devres or want to debug
-+	  resource management for a managed device. devres.log can be
-+	  switched on and off from sysfs node.
-+
-+	  If you are unsure about this, Say N here.
-+
- config SYS_HYPERVISOR
- 	bool
- 	default n
-diff --git a/drivers/base/Makefile b/drivers/base/Makefile
-index 7bbb9ee..e236f42 100644
---- a/drivers/base/Makefile
-+++ b/drivers/base/Makefile
-@@ -2,7 +2,7 @@
- 
- obj-y			:= core.o sys.o bus.o dd.o \
- 			   driver.o class.o platform.o \
--			   cpu.o firmware.o init.o map.o dmapool.o \
-+			   cpu.o firmware.o init.o map.o dmapool.o devres.o \
- 			   attribute_container.o transport_class.o
- obj-y			+= power/
- obj-$(CONFIG_ISA)	+= isa.o
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index d26644a..de7e144 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -44,3 +44,4 @@ struct class_device_attribute *to_class_dev_attr(struct attribute *_attr)
- 
- extern char *make_class_name(const char *name, struct kobject *kobj);
- 
-+extern void devres_release_all(struct device *dev);
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 67b79a7..d1c94e3 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -385,6 +385,8 @@ void device_initialize(struct device *dev)
- 	INIT_LIST_HEAD(&dev->dma_pools);
- 	INIT_LIST_HEAD(&dev->node);
- 	init_MUTEX(&dev->sem);
-+	spin_lock_init(&dev->devres_lock);
-+	INIT_LIST_HEAD(&dev->devres_head);
- 	device_init_wakeup(dev, 0);
- 	set_dev_node(dev, -1);
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 15228d7..6859a3b 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -137,4 +137,24 @@ static inline int __deprecated check_region(resource_size_t s,
+ {
+ 	return __check_region(&ioport_resource, s, n);
  }
-diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-index 510e788..437e046 100644
---- a/drivers/base/dd.c
-+++ b/drivers/base/dd.c
-@@ -108,6 +108,7 @@ static int really_probe(void *void_data)
- 	atomic_inc(&probe_count);
- 	pr_debug("%s: Probing driver %s with device %s\n",
- 		 drv->bus->name, drv->name, dev->bus_id);
-+	WARN_ON(!list_empty(&dev->devres_head));
- 
- 	dev->driver = drv;
- 	if (driver_sysfs_add(dev)) {
-@@ -133,6 +134,7 @@ static int really_probe(void *void_data)
- 	goto done;
- 
- probe_failed:
-+	devres_release_all(dev);
- 	driver_sysfs_remove(dev);
- 	dev->driver = NULL;
- 
-@@ -324,6 +326,7 @@ static void __device_release_driver(struct device * dev)
- 			dev->bus->remove(dev);
- 		else if (drv->remove)
- 			drv->remove(dev);
-+		devres_release_all(dev);
- 		dev->driver = NULL;
- 		put_driver(drv);
- 	}
-diff --git a/drivers/base/devres.c b/drivers/base/devres.c
-new file mode 100644
-index 0000000..e177c95
---- /dev/null
-+++ b/drivers/base/devres.c
-@@ -0,0 +1,644 @@
-+/*
-+ * drivers/base/devres.c - device resource management
-+ *
-+ * Copyright (c) 2006  SUSE Linux Products GmbH
-+ * Copyright (c) 2006  Tejun Heo <teheo@suse.de>
-+ *
-+ * This file is released under the GPLv2.
-+ */
 +
++/* Wrappers for managed devices */
++struct device;
++#define devm_request_region(dev,start,n,name) \
++	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
++#define devm_request_mem_region(dev,start,n,name) \
++	__devm_request_region(dev, &iomem_resource, (start), (n), (name))
++
++extern struct resource * __devm_request_region(struct device *dev,
++				struct resource *parent, resource_size_t start,
++				resource_size_t n, const char *name);
++
++#define devm_release_region(start,n) \
++	__devm_release_region(dev, &ioport_resource, (start), (n))
++#define devm_release_mem_region(start,n) \
++	__devm_release_region(dev, &iomem_resource, (start), (n))
++
++extern void __devm_release_region(struct device *dev, struct resource *parent,
++				  resource_size_t start, resource_size_t n);
++
+ #endif	/* _LINUX_IOPORT_H */
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 7b9a497..2a3f886 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -17,6 +17,7 @@
+ #include <linux/fs.h>
+ #include <linux/proc_fs.h>
+ #include <linux/seq_file.h>
 +#include <linux/device.h>
-+#include <linux/module.h>
-+
-+struct devres_node {
-+	struct list_head		entry;
-+	dr_release_t			release;
-+#ifdef CONFIG_DEBUG_DEVRES
-+	const char			*name;
-+	size_t				size;
-+#endif
-+};
-+
-+struct devres {
-+	struct devres_node		node;
-+	/* -- 3 pointers */
-+	unsigned long long		data[];	/* guarantee ull alignment */
-+};
-+
-+struct devres_group {
-+	struct devres_node		node[2];
-+	void				*id;
-+	int				color;
-+	/* -- 8 pointers */
-+};
-+
-+#ifdef CONFIG_DEBUG_DEVRES
-+static int log_devres = 0;
-+module_param_named(log, log_devres, int, S_IRUGO | S_IWUSR);
-+
-+static void set_node_dbginfo(struct devres_node *node, const char *name,
-+			     size_t size)
-+{
-+	node->name = name;
-+	node->size = size;
-+}
-+
-+static void devres_log(struct device *dev, struct devres_node *node,
-+		       const char *op)
-+{
-+	if (unlikely(log_devres))
-+		dev_printk(KERN_ERR, dev, "DEVRES %3s %p %s (%lu bytes)\n",
-+			   op, node, node->name, (unsigned long)node->size);
-+}
-+#else /* CONFIG_DEBUG_DEVRES */
-+#define set_node_dbginfo(node, n, s)	do {} while (0)
-+#define devres_log(dev, node, op)	do {} while (0)
-+#endif /* CONFIG_DEBUG_DEVRES */
-+
-+/*
-+ * Release functions for devres group.  These callbacks are used only
-+ * for identification.
-+ */
-+static void group_open_release(struct device *dev, void *res)
-+{
-+	/* noop */
-+}
-+
-+static void group_close_release(struct device *dev, void *res)
-+{
-+	/* noop */
-+}
-+
-+static struct devres_group * node_to_group(struct devres_node *node)
-+{
-+	if (node->release == &group_open_release)
-+		return container_of(node, struct devres_group, node[0]);
-+	if (node->release == &group_close_release)
-+		return container_of(node, struct devres_group, node[1]);
-+	return NULL;
-+}
-+
-+static __always_inline struct devres * alloc_dr(dr_release_t release,
-+						size_t size, gfp_t gfp)
-+{
-+	size_t tot_size = sizeof(struct devres) + size;
-+	struct devres *dr;
-+
-+	dr = kmalloc_track_caller(tot_size, gfp);
-+	if (unlikely(!dr))
-+		return NULL;
-+
-+	memset(dr, 0, tot_size);
-+	INIT_LIST_HEAD(&dr->node.entry);
-+	dr->node.release = release;
-+	return dr;
-+}
-+
-+static void add_dr(struct device *dev, struct devres_node *node)
-+{
-+	devres_log(dev, node, "ADD");
-+	BUG_ON(!list_empty(&node->entry));
-+	list_add_tail(&node->entry, &dev->devres_head);
-+}
-+
-+/**
-+ * devres_alloc - Allocate device resource data
-+ * @release: Release function devres will be associated with
-+ * @size: Allocation size
-+ * @gfp: Allocation flags
-+ *
-+ * allocate devres of @size bytes.  The allocated area is zeroed, then
-+ * associated with @release.  The returned pointer can be passed to
-+ * other devres_*() functions.
-+ *
-+ * RETURNS:
-+ * Pointer to allocated devres on success, NULL on failure.
-+ */
-+#ifdef CONFIG_DEBUG_DEVRES
-+void * __devres_alloc(dr_release_t release, size_t size, gfp_t gfp,
-+		      const char *name)
-+{
-+	struct devres *dr;
-+
-+	dr = alloc_dr(release, size, gfp);
-+	if (unlikely(!dr))
-+		return NULL;
-+	set_node_dbginfo(&dr->node, name, size);
-+	return dr->data;
-+}
-+EXPORT_SYMBOL_GPL(__devres_alloc);
-+#else
-+void * devres_alloc(dr_release_t release, size_t size, gfp_t gfp)
-+{
-+	struct devres *dr;
-+
-+	dr = alloc_dr(release, size, gfp);
-+	if (unlikely(!dr))
-+		return NULL;
-+	return dr->data;
-+}
-+EXPORT_SYMBOL_GPL(devres_alloc);
-+#endif
-+
-+/**
-+ * devres_free - Free device resource data
-+ * @res: Pointer to devres data to free
-+ *
-+ * Free devres created with devres_alloc().
-+ */
-+void devres_free(void *res)
-+{
-+	if (res) {
-+		struct devres *dr = container_of(res, struct devres, data);
-+
-+		BUG_ON(!list_empty(&dr->node.entry));
-+		kfree(dr);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(devres_free);
-+
-+/**
-+ * devres_add - Register device resource
-+ * @dev: Device to add resource to
-+ * @res: Resource to register
-+ *
-+ * Register devres @res to @dev.  @res should have been allocated
-+ * using devres_alloc().  On driver detach, the associated release
-+ * function will be invoked and devres will be freed automatically.
-+ */
-+void devres_add(struct device *dev, void *res)
-+{
-+	struct devres *dr = container_of(res, struct devres, data);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+	add_dr(dev, &dr->node);
-+	spin_unlock_irqrestore(&dev->devres_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(devres_add);
-+
-+static struct devres *find_dr(struct device *dev, dr_release_t release,
-+			      dr_match_t match, void *match_data)
-+{
-+	struct devres_node *node;
-+
-+	list_for_each_entry_reverse(node, &dev->devres_head, entry) {
-+		struct devres *dr = container_of(node, struct devres, node);
-+
-+		if (node->release != release)
-+			continue;
-+		if (match && !match(dev, dr->data, match_data))
-+			continue;
-+		return dr;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * devres_find - Find device resource
-+ * @dev: Device to lookup resource from
-+ * @release: Look for resources associated with this release function
-+ * @match: Match function (optional)
-+ * @match_data: Data for the match function
-+ *
-+ * Find the latest devres of @dev which is associated with @release
-+ * and for which @match returns 1.  If @match is NULL, it's considered
-+ * to match all.
-+ *
-+ * RETURNS:
-+ * Pointer to found devres, NULL if not found.
-+ */
-+void * devres_find(struct device *dev, dr_release_t release,
-+		   dr_match_t match, void *match_data)
-+{
-+	struct devres *dr;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+	dr = find_dr(dev, release, match, match_data);
-+	spin_unlock_irqrestore(&dev->devres_lock, flags);
-+
-+	if (dr)
-+		return dr->data;
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(devres_find);
-+
-+/**
-+ * devres_get - Find devres, if non-existent, add one atomically
-+ * @dev: Device to lookup or add devres for
-+ * @new_res: Pointer to new initialized devres to add if not found
-+ * @match: Match function (optional)
-+ * @match_data: Data for the match function
-+ *
-+ * Find the latest devres of @dev which has the same release function
-+ * as @new_res and for which @match return 1.  If found, @new_res is
-+ * freed; otherwise, @new_res is added atomically.
-+ *
-+ * RETURNS:
-+ * Pointer to found or added devres.
-+ */
-+void * devres_get(struct device *dev, void *new_res,
-+		  dr_match_t match, void *match_data)
-+{
-+	struct devres *new_dr = container_of(new_res, struct devres, data);
-+	struct devres *dr;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+	dr = find_dr(dev, new_dr->node.release, match, match_data);
-+	if (!dr) {
-+		add_dr(dev, &new_dr->node);
-+		dr = new_dr;
-+		new_dr = NULL;
-+	}
-+	spin_unlock_irqrestore(&dev->devres_lock, flags);
-+	devres_free(new_dr);
-+
-+	return dr->data;
-+}
-+EXPORT_SYMBOL_GPL(devres_get);
-+
-+/**
-+ * devres_remove - Find a device resource and remove it
-+ * @dev: Device to find resource from
-+ * @release: Look for resources associated with this release function
-+ * @match: Match function (optional)
-+ * @match_data: Data for the match function
-+ *
-+ * Find the latest devres of @dev associated with @release and for
-+ * which @match returns 1.  If @match is NULL, it's considered to
-+ * match all.  If found, the resource is removed atomically and
-+ * returned.
-+ *
-+ * RETURNS:
-+ * Pointer to removed devres on success, NULL if not found.
-+ */
-+void * devres_remove(struct device *dev, dr_release_t release,
-+		     dr_match_t match, void *match_data)
-+{
-+	struct devres *dr;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+	dr = find_dr(dev, release, match, match_data);
-+	if (dr) {
-+		list_del_init(&dr->node.entry);
-+		devres_log(dev, &dr->node, "REM");
-+	}
-+	spin_unlock_irqrestore(&dev->devres_lock, flags);
-+
-+	if (dr)
-+		return dr->data;
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(devres_remove);
-+
-+/**
-+ * devres_destroy - Find a device resource and destroy it
-+ * @dev: Device to find resource from
-+ * @release: Look for resources associated with this release function
-+ * @match: Match function (optional)
-+ * @match_data: Data for the match function
-+ *
-+ * Find the latest devres of @dev associated with @release and for
-+ * which @match returns 1.  If @match is NULL, it's considered to
-+ * match all.  If found, the resource is removed atomically and freed.
-+ *
-+ * RETURNS:
-+ * 0 if devres is found and freed, -ENOENT if not found.
-+ */
-+int devres_destroy(struct device *dev, dr_release_t release,
-+		   dr_match_t match, void *match_data)
-+{
-+	void *res;
-+
-+	res = devres_remove(dev, release, match, match_data);
-+	if (unlikely(!res))
-+		return -ENOENT;
-+
-+	devres_free(res);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(devres_destroy);
-+
-+static int remove_nodes(struct device *dev,
-+			struct list_head *first, struct list_head *end,
-+			struct list_head *todo)
-+{
-+	int cnt = 0, nr_groups = 0;
-+	struct list_head *cur;
-+
-+	/* First pass - move normal devres entries to @todo and clear
-+	 * devres_group colors.
-+	 */
-+	cur = first;
-+	while (cur != end) {
-+		struct devres_node *node;
-+		struct devres_group *grp;
-+
-+		node = list_entry(cur, struct devres_node, entry);
-+		cur = cur->next;
-+
-+		grp = node_to_group(node);
-+		if (grp) {
-+			/* clear color of group markers in the first pass */
-+			grp->color = 0;
-+			nr_groups++;
-+		} else {
-+			/* regular devres entry */
-+			if (&node->entry == first)
-+				first = first->next;
-+			list_move_tail(&node->entry, todo);
-+			cnt++;
-+		}
-+	}
-+
-+	if (!nr_groups)
-+		return cnt;
-+
-+	/* Second pass - Scan groups and color them.  A group gets
-+	 * color value of two iff the group is wholly contained in
-+	 * [cur, end).  That is, for a closed group, both opening and
-+	 * closing markers should be in the range, while just the
-+	 * opening marker is enough for an open group.
-+	 */
-+	cur = first;
-+	while (cur != end) {
-+		struct devres_node *node;
-+		struct devres_group *grp;
-+
-+		node = list_entry(cur, struct devres_node, entry);
-+		cur = cur->next;
-+
-+		grp = node_to_group(node);
-+		BUG_ON(!grp || list_empty(&grp->node[0].entry));
-+
-+		grp->color++;
-+		if (list_empty(&grp->node[1].entry))
-+			grp->color++;
-+
-+		BUG_ON(grp->color <= 0 || grp->color > 2);
-+		if (grp->color == 2) {
-+			/* No need to update cur or end.  The removed
-+			 * nodes are always before both.
-+			 */
-+			list_move_tail(&grp->node[0].entry, todo);
-+			list_del_init(&grp->node[1].entry);
-+		}
-+	}
-+
-+	return cnt;
-+}
-+
-+static int release_nodes(struct device *dev, struct list_head *first,
-+			 struct list_head *end, unsigned long flags)
-+{
-+	LIST_HEAD(todo);
-+	int cnt;
-+	struct devres *dr, *tmp;
-+
-+	cnt = remove_nodes(dev, first, end, &todo);
-+
-+	spin_unlock_irqrestore(&dev->devres_lock, flags);
-+
-+	/* Release.  Note that both devres and devres_group are
-+	 * handled as devres in the following loop.  This is safe.
-+	 */
-+	list_for_each_entry_safe_reverse(dr, tmp, &todo, node.entry) {
-+		devres_log(dev, &dr->node, "REL");
-+		dr->node.release(dev, dr->data);
-+		kfree(dr);
-+	}
-+
-+	return cnt;
-+}
-+
-+/**
-+ * devres_release_all - Release all resources
-+ * @dev: Device to release resources for
-+ *
-+ * Release all resources associated with @dev.  This function is
-+ * called on driver detach.
-+ */
-+int devres_release_all(struct device *dev)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+	return release_nodes(dev, dev->devres_head.next, &dev->devres_head,
-+			     flags);
-+}
-+
-+/**
-+ * devres_open_group - Open a new devres group
-+ * @dev: Device to open devres group for
-+ * @id: Separator ID
-+ * @gfp: Allocation flags
-+ *
-+ * Open a new devres group for @dev with @id.  For @id, using a
-+ * pointer to an object which won't be used for another group is
-+ * recommended.  If @id is NULL, address-wise unique ID is created.
-+ *
-+ * RETURNS:
-+ * ID of the new group, NULL on failure.
-+ */
-+void * devres_open_group(struct device *dev, void *id, gfp_t gfp)
-+{
-+	struct devres_group *grp;
-+	unsigned long flags;
-+
-+	grp = kmalloc(sizeof(*grp), gfp);
-+	if (unlikely(!grp))
-+		return NULL;
-+
-+	grp->node[0].release = &group_open_release;
-+	grp->node[1].release = &group_close_release;
-+	INIT_LIST_HEAD(&grp->node[0].entry);
-+	INIT_LIST_HEAD(&grp->node[1].entry);
-+	set_node_dbginfo(&grp->node[0], "grp<", 0);
-+	set_node_dbginfo(&grp->node[1], "grp>", 0);
-+	grp->id = grp;
-+	if (id)
-+		grp->id = id;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+	add_dr(dev, &grp->node[0]);
-+	spin_unlock_irqrestore(&dev->devres_lock, flags);
-+	return grp->id;
-+}
-+EXPORT_SYMBOL_GPL(devres_open_group);
-+
-+/* Find devres group with ID @id.  If @id is NULL, look for the latest. */
-+static struct devres_group * find_group(struct device *dev, void *id)
-+{
-+	struct devres_node *node;
-+
-+	list_for_each_entry_reverse(node, &dev->devres_head, entry) {
-+		struct devres_group *grp;
-+
-+		if (node->release != &group_open_release)
-+			continue;
-+
-+		grp = container_of(node, struct devres_group, node[0]);
-+
-+		if (id) {
-+			if (grp->id == id)
-+				return grp;
-+		} else if (list_empty(&grp->node[1].entry))
-+			return grp;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * devres_close_group - Close a devres group
-+ * @dev: Device to close devres group for
-+ * @id: ID of target group, can be NULL
-+ *
-+ * Close the group identified by @id.  If @id is NULL, the latest open
-+ * group is selected.
-+ */
-+void devres_close_group(struct device *dev, void *id)
-+{
-+	struct devres_group *grp;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+
-+	grp = find_group(dev, id);
-+	if (grp)
-+		add_dr(dev, &grp->node[1]);
-+	else
-+		WARN_ON(1);
-+
-+	spin_unlock_irqrestore(&dev->devres_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(devres_close_group);
-+
-+/**
-+ * devres_remove_group - Remove a devres group
-+ * @dev: Device to remove group for
-+ * @id: ID of target group, can be NULL
-+ *
-+ * Remove the group identified by @id.  If @id is NULL, the latest
-+ * open group is selected.  Note that removing a group doesn't affect
-+ * any other resources.
-+ */
-+void devres_remove_group(struct device *dev, void *id)
-+{
-+	struct devres_group *grp;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+
-+	grp = find_group(dev, id);
-+	if (grp) {
-+		list_del_init(&grp->node[0].entry);
-+		list_del_init(&grp->node[1].entry);
-+		devres_log(dev, &grp->node[0], "REM");
-+	} else
-+		WARN_ON(1);
-+
-+	spin_unlock_irqrestore(&dev->devres_lock, flags);
-+
-+	kfree(grp);
-+}
-+EXPORT_SYMBOL_GPL(devres_remove_group);
-+
-+/**
-+ * devres_release_group - Release resources in a devres group
-+ * @dev: Device to release group for
-+ * @id: ID of target group, can be NULL
-+ *
-+ * Release all resources in the group identified by @id.  If @id is
-+ * NULL, the latest open group is selected.  The selected group and
-+ * groups properly nested inside the selected group are removed.
-+ *
-+ * RETURNS:
-+ * The number of released non-group resources.
-+ */
-+int devres_release_group(struct device *dev, void *id)
-+{
-+	struct devres_group *grp;
-+	unsigned long flags;
-+	int cnt = 0;
-+
-+	spin_lock_irqsave(&dev->devres_lock, flags);
-+
-+	grp = find_group(dev, id);
-+	if (grp) {
-+		struct list_head *first = &grp->node[0].entry;
-+		struct list_head *end = &dev->devres_head;
-+
-+		if (!list_empty(&grp->node[1].entry))
-+			end = grp->node[1].entry.next;
-+
-+		cnt = release_nodes(dev, first, end, flags);
-+	} else {
-+		WARN_ON(1);
-+		spin_unlock_irqrestore(&dev->devres_lock, flags);
-+	}
-+
-+	return cnt;
-+}
-+EXPORT_SYMBOL_GPL(devres_release_group);
-+
-+/*
-+ * Managed kzalloc/kfree
-+ */
-+static void devm_kzalloc_release(struct device *dev, void *res)
-+{
-+	/* noop */
-+}
-+
-+static int devm_kzalloc_match(struct device *dev, void *res, void *data)
-+{
-+	return res == data;
-+}
-+
-+/**
-+ * devm_kzalloc - Managed kzalloc
-+ * @dev: Device to allocate memory for
-+ * @size: Allocation size
-+ * @gfp: Allocation gfp flags
-+ *
-+ * Managed kzalloc.  Memory allocated with this function is
-+ * automatically freed on driver detach.  Like all other devres
-+ * resources, guaranteed alignment is unsigned long long.
-+ *
-+ * RETURNS:
-+ * Pointer to allocated memory on success, NULL on failure.
-+ */
-+void * devm_kzalloc(struct device *dev, size_t size, gfp_t gfp)
-+{
-+	struct devres *dr;
-+
-+	/* use raw alloc_dr for kmalloc caller tracing */
-+	dr = alloc_dr(devm_kzalloc_release, size, gfp);
-+	if (unlikely(!dr))
-+		return NULL;
-+
-+	set_node_dbginfo(&dr->node, "devm_kzalloc_release", size);
-+	devres_add(dev, dr->data);
-+	return dr->data;
-+}
-+EXPORT_SYMBOL_GPL(devm_kzalloc);
-+
-+/**
-+ * devm_kfree - Managed kfree
-+ * @dev: Device this memory belongs to
-+ * @p: Memory to free
-+ *
-+ * Free memory allocated with dev_kzalloc().
-+ */
-+void devm_kfree(struct device *dev, void *p)
-+{
-+	int rc;
-+
-+	rc = devres_destroy(dev, devm_kzalloc_release, devm_kzalloc_match, p);
-+	WARN_ON(rc);
-+}
-+EXPORT_SYMBOL_GPL(devm_kfree);
-diff --git a/include/linux/device.h b/include/linux/device.h
-index f44247f..6c83917 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -346,6 +346,41 @@ extern int __must_check device_create_bin_file(struct device *dev,
- 					       struct bin_attribute *attr);
- extern void device_remove_bin_file(struct device *dev,
- 				   struct bin_attribute *attr);
-+
-+/* device resource management */
-+typedef void (*dr_release_t)(struct device *dev, void *res);
-+typedef int (*dr_match_t)(struct device *dev, void *res, void *match_data);
-+
-+#ifdef CONFIG_DEBUG_DEVRES
-+extern void * __devres_alloc(dr_release_t release, size_t size, gfp_t gfp,
-+			     const char *name);
-+#define devres_alloc(release, size, gfp) \
-+	__devres_alloc(release, size, gfp, #release)
-+#else
-+extern void * devres_alloc(dr_release_t release, size_t size, gfp_t gfp);
-+#endif
-+extern void devres_free(void *res);
-+extern void devres_add(struct device *dev, void *res);
-+extern void * devres_find(struct device *dev, dr_release_t release,
-+			  dr_match_t match, void *match_data);
-+extern void * devres_get(struct device *dev, void *new_res,
-+			 dr_match_t match, void *match_data);
-+extern void * devres_remove(struct device *dev, dr_release_t release,
-+			    dr_match_t match, void *match_data);
-+extern int devres_destroy(struct device *dev, dr_release_t release,
-+			  dr_match_t match, void *match_data);
-+
-+/* devres group */
-+extern void * __must_check devres_open_group(struct device *dev, void *id,
-+					     gfp_t gfp);
-+extern void devres_close_group(struct device *dev, void *id);
-+extern void devres_remove_group(struct device *dev, void *id);
-+extern int devres_release_group(struct device *dev, void *id);
-+
-+/* managed kzalloc/kfree for device drivers, no kmalloc, always use kzalloc */
-+extern void *devm_kzalloc(struct device *dev, size_t size, gfp_t gfp);
-+extern void devm_kfree(struct device *dev, void *p);
-+
- struct device {
- 	struct klist		klist_children;
- 	struct klist_node	knode_parent;		/* node in sibling list */
-@@ -388,6 +423,9 @@ struct device {
- 	/* arch specific additions */
- 	struct dev_archdata	archdata;
+ #include <asm/io.h>
  
-+	spinlock_t		devres_lock;
-+	struct list_head	devres_head;
+ 
+@@ -618,6 +619,67 @@ void __release_region(struct resource *parent, resource_size_t start,
+ EXPORT_SYMBOL(__release_region);
+ 
+ /*
++ * Managed region resource
++ */
++struct region_devres {
++	struct resource *parent;
++	resource_size_t start;
++	resource_size_t n;
++};
 +
- 	/* class_device migration path */
- 	struct list_head	node;
- 	struct class		*class;		/* optional*/
++static void devm_region_release(struct device *dev, void *res)
++{
++	struct region_devres *this = res;
++
++	__release_region(this->parent, this->start, this->n);
++}
++
++static int devm_region_match(struct device *dev, void *res, void *match_data)
++{
++	struct region_devres *this = res, *match = match_data;
++
++	return this->parent == match->parent &&
++		this->start == match->start && this->n == match->n;
++}
++
++struct resource * __devm_request_region(struct device *dev,
++				struct resource *parent, resource_size_t start,
++				resource_size_t n, const char *name)
++{
++	struct region_devres *dr = NULL;
++	struct resource *res;
++
++	dr = devres_alloc(devm_region_release, sizeof(struct region_devres),
++			  GFP_KERNEL);
++	if (!dr)
++		return NULL;
++
++	dr->parent = parent;
++	dr->start = start;
++	dr->n = n;
++
++	res = __request_region(parent, start, n, name);
++	if (res)
++		devres_add(dev, dr);
++	else
++		devres_free(dr);
++
++	return res;
++}
++EXPORT_SYMBOL(__devm_request_region);
++
++void __devm_release_region(struct device *dev, struct resource *parent,
++			   resource_size_t start, resource_size_t n)
++{
++	struct region_devres match_data = { parent, start, n };
++
++	__release_region(parent, start, n);
++	WARN_ON(devres_destroy(dev, devm_region_release, devm_region_match,
++			       &match_data));
++}
++EXPORT_SYMBOL(__devm_release_region);
++
++/*
+  * Called from init/main.c to reserve IO ports.
+  */
+ #define MAXRESERVE 4
 -- 
 1.4.4.3
