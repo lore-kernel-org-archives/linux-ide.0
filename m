@@ -1,252 +1,155 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/13] devres: implement managed PCI interface
-Date: Wed, 10 Jan 2007 14:35:37 +0900
-Message-ID: <1168407337830-git-send-email-htejun@gmail.com>
+Subject: [PATCH 3/13] devres: implement managed IRQ interface
+Date: Wed, 10 Jan 2007 14:35:36 +0900
+Message-ID: <11684073361560-git-send-email-htejun@gmail.com>
 References: <11684073353213-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932727AbXAJFhJ@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.235]:4081 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932624AbXAJFfy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2007 00:35:54 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so47nze
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jan 2007 21:35:54 -0800 (PST)
 In-Reply-To: <11684073353213-git-send-email-htejun@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, gregkh@suse.de, alan@lxorguk.ukuu.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
-List-Id: linux-ide@vger.kernel.org
 
-Implement managed PCI interface - pcim_enable_device(),
-pcim_pin_device() and pci_is_managed().  pcim_enable_device() is
-equivalent to pci_enable_device() except that it makes the PCI device
-managed.  After pcim_enable_device(), PCI resources such as
-enabledness, msi/msix/intx status and BAR regions become managed.
-
-pcim_pin_device() is used by device drivers to ask PCI devres not to
-disable the device on driver detach.  This function is to handle cases
-where a driver finds out that a device is otherwise busy and thus
-shouldn't be disabled on probe failure or driver detach.
+Implement managed IRQ interface - devm_request_irq() and
+devm_free_irq().  Except for the first @dev argument and being
+managed, these take the same arguments and have the same effect as
+non-managed coutnerparts.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/pci/pci.c   |  127 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h |    9 ++++
- 2 files changed, 135 insertions(+), 1 deletions(-)
+ include/linux/interrupt.h |    6 +++
+ kernel/irq/manage.c       |   86 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 92 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6bfb942..2ab2f8a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -744,6 +744,104 @@ int pci_enable_device(struct pci_dev *dev)
- 	return result;
- }
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index e36e86c..5a8ba0b 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -12,6 +12,7 @@
+ #include <linux/sched.h>
+ #include <linux/irqflags.h>
+ #include <linux/bottom_half.h>
++#include <linux/device.h>
+ #include <asm/atomic.h>
+ #include <asm/ptrace.h>
+ #include <asm/system.h>
+@@ -83,6 +84,11 @@ extern int request_irq(unsigned int, irq_handler_t handler,
+ 		       unsigned long, const char *, void *);
+ extern void free_irq(unsigned int, void *);
  
++extern int devm_request_irq(struct device *dev, unsigned int irq,
++			    irq_handler_t handler, unsigned long irqflags,
++			    const char *devname, void *dev_id);
++extern void devm_free_irq(struct device *dev, unsigned int irq, void *dev_id);
++
+ /*
+  * On lockdep we dont want to enable hardirqs in hardirq
+  * context. Use local_irq_enable_in_hardirq() to annotate
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index b385878..9aa6544 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -479,3 +479,89 @@ int request_irq(unsigned int irq, irq_handler_t handler,
+ 	return retval;
+ }
+ EXPORT_SYMBOL(request_irq);
++
 +/*
-+ * Managed PCI resources.  This manages device on/off, intx/msi/msix
-+ * on/off and BAR regions.  pci_dev itself records msi/msix status, so
-+ * there's no need to track it separately.  pci_devres is initialized
-+ * when a device is enabled using managed PCI device enable interface.
++ * Device resource management aware IRQ request/free implementation.
 + */
-+struct pci_devres {
-+	unsigned int disable:1;
-+	unsigned int orig_intx:1;
-+	unsigned int restore_intx:1;
-+	u32 region_mask;
++struct irq_devres {
++	unsigned int irq;
++	void *dev_id;
 +};
 +
-+static void pcim_release(struct device *gendev, void *res)
++static void devm_irq_release(struct device *dev, void *res)
 +{
-+	struct pci_dev *dev = container_of(gendev, struct pci_dev, dev);
-+	struct pci_devres *this = res;
-+	int i;
++	struct irq_devres *this = res;
 +
-+	if (dev->msi_enabled)
-+		pci_disable_msi(dev);
-+	if (dev->msix_enabled)
-+		pci_disable_msix(dev);
-+
-+	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
-+		if (this->region_mask & (1 << i))
-+			pci_release_region(dev, i);
-+
-+	if (this->restore_intx)
-+		pci_intx(dev, this->orig_intx);
-+
-+	if (this->disable)
-+		pci_disable_device(dev);
++	free_irq(this->irq, this->dev_id);
 +}
 +
-+static struct pci_devres * get_pci_dr(struct pci_dev *pdev)
++static int devm_irq_match(struct device *dev, void *res, void *data)
 +{
-+	struct pci_devres *dr, *new_dr;
++	struct irq_devres *this = res, *match = data;
 +
-+	dr = devres_find(&pdev->dev, pcim_release, NULL, NULL);
-+	if (dr)
-+		return dr;
-+
-+	new_dr = devres_alloc(pcim_release, sizeof(*new_dr), GFP_KERNEL);
-+	if (!new_dr)
-+		return NULL;
-+	return devres_get(&pdev->dev, new_dr, NULL, NULL);
-+}
-+
-+static struct pci_devres * find_pci_dr(struct pci_dev *pdev)
-+{
-+	if (pci_is_managed(pdev))
-+		return devres_find(&pdev->dev, pcim_release, NULL, NULL);
-+	return NULL;
++	return this->irq == match->irq && this->dev_id == match->dev_id;
 +}
 +
 +/**
-+ * pcim_enable_device - Managed pci_enable_device()
-+ * @pdev: PCI device to be initialized
++ *	devm_request_irq - allocate an interrupt line for a managed device
++ *	@dev: device to request interrupt for
++ *	@irq: Interrupt line to allocate
++ *	@handler: Function to be called when the IRQ occurs
++ *	@irqflags: Interrupt type flags
++ *	@devname: An ascii name for the claiming device
++ *	@dev_id: A cookie passed back to the handler function
 + *
-+ * Managed pci_enable_device().
++ *	Except for the extra @dev argument, this function takes the
++ *	same arguments and performs the same function as
++ *	request_irq().  IRQs requested with this function will be
++ *	automatically freed on driver detach.
++ *
++ *	If an IRQ allocated with this function needs to be freed
++ *	separately, dev_free_irq() must be used.
 + */
-+int pcim_enable_device(struct pci_dev *pdev)
++int devm_request_irq(struct device *dev, unsigned int irq,
++		     irq_handler_t handler, unsigned long irqflags,
++		     const char *devname, void *dev_id)
 +{
-+	struct pci_devres *dr;
++	struct irq_devres *dr;
 +	int rc;
 +
-+	dr = get_pci_dr(pdev);
-+	if (unlikely(!dr))
++	dr = devres_alloc(devm_irq_release, sizeof(struct irq_devres),
++			  GFP_KERNEL);
++	if (!dr)
 +		return -ENOMEM;
-+	WARN_ON(!!dr->disable);
 +
-+	rc = pci_enable_device(pdev);
-+	if (!rc) {
-+		pdev->is_managed = 1;
-+		dr->disable = 1;
++	rc = request_irq(irq, handler, irqflags, devname, dev_id);
++	if (rc) {
++		kfree(dr);
++		return rc;
 +	}
-+	return rc;
++
++	dr->irq = irq;
++	dr->dev_id = dev_id;
++	devres_add(dev, dr);
++
++	return 0;
 +}
++EXPORT_SYMBOL(devm_request_irq);
 +
 +/**
-+ * pcim_pin_device - Pin managed PCI device
-+ * @pdev: PCI device to pin
++ *	devm_free_irq - free an interrupt
++ *	@dev: device to free interrupt for
++ *	@irq: Interrupt line to free
++ *	@dev_id: Device identity to free
 + *
-+ * Pin managed PCI device @pdev.  Pinned device won't be disabled on
-+ * driver detach.  @pdev must have been enabled with
-+ * pcim_enable_device().
++ *	Except for the extra @dev argument, this function takes the
++ *	same arguments and performs the same function as free_irq().
++ *	This function instead of free_irq() should be used to manually
++ *	free IRQs allocated with dev_request_irq().
 + */
-+void pcim_pin_device(struct pci_dev *pdev)
++void devm_free_irq(struct device *dev, unsigned int irq, void *dev_id)
 +{
-+	struct pci_devres *dr;
++	struct irq_devres match_data = { irq, dev_id };
 +
-+	dr = find_pci_dr(pdev);
-+	WARN_ON(!dr || !dr->disable);
-+	if (dr)
-+		dr->disable = 0;
++	free_irq(irq, dev_id);
++	WARN_ON(devres_destroy(dev, devm_irq_release, devm_irq_match,
++			       &match_data));
 +}
-+
- /**
-  * pcibios_disable_device - disable arch specific PCI resources for device dev
-  * @dev: the PCI device to disable
-@@ -767,8 +865,13 @@ void __attribute__ ((weak)) pcibios_disable_device (struct pci_dev *dev) {}
- void
- pci_disable_device(struct pci_dev *dev)
- {
-+	struct pci_devres *dr;
- 	u16 pci_command;
- 
-+	dr = find_pci_dr(dev);
-+	if (dr)
-+		dr->disable = 0;
-+
- 	if (atomic_sub_return(1, &dev->enable_cnt) != 0)
- 		return;
- 
-@@ -867,6 +970,8 @@ pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge)
-  */
- void pci_release_region(struct pci_dev *pdev, int bar)
- {
-+	struct pci_devres *dr;
-+
- 	if (pci_resource_len(pdev, bar) == 0)
- 		return;
- 	if (pci_resource_flags(pdev, bar) & IORESOURCE_IO)
-@@ -875,6 +980,10 @@ void pci_release_region(struct pci_dev *pdev, int bar)
- 	else if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM)
- 		release_mem_region(pci_resource_start(pdev, bar),
- 				pci_resource_len(pdev, bar));
-+
-+	dr = find_pci_dr(pdev);
-+	if (dr)
-+		dr->region_mask &= ~(1 << bar);
- }
- 
- /**
-@@ -893,6 +1002,8 @@ void pci_release_region(struct pci_dev *pdev, int bar)
-  */
- int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
- {
-+	struct pci_devres *dr;
-+
- 	if (pci_resource_len(pdev, bar) == 0)
- 		return 0;
- 		
-@@ -906,7 +1017,11 @@ int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
- 				        pci_resource_len(pdev, bar), res_name))
- 			goto err_out;
- 	}
--	
-+
-+	dr = find_pci_dr(pdev);
-+	if (dr)
-+		dr->region_mask |= 1 << bar;
-+
- 	return 0;
- 
- err_out:
-@@ -1117,7 +1232,15 @@ pci_intx(struct pci_dev *pdev, int enable)
- 	}
- 
- 	if (new != pci_command) {
-+		struct pci_devres *dr;
-+
- 		pci_write_config_word(pdev, PCI_COMMAND, new);
-+
-+		dr = find_pci_dr(pdev);
-+		if (dr && !dr->restore_intx) {
-+			dr->restore_intx = 1;
-+			dr->orig_intx = !enable;
-+		}
- 	}
- }
- 
-@@ -1189,6 +1312,8 @@ EXPORT_SYMBOL(isa_bridge);
- EXPORT_SYMBOL_GPL(pci_restore_bars);
- EXPORT_SYMBOL(pci_enable_device_bars);
- EXPORT_SYMBOL(pci_enable_device);
-+EXPORT_SYMBOL(pcim_enable_device);
-+EXPORT_SYMBOL(pcim_pin_device);
- EXPORT_SYMBOL(pci_disable_device);
- EXPORT_SYMBOL(pci_find_capability);
- EXPORT_SYMBOL(pci_bus_find_capability);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f3c617e..1f82eb9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -167,6 +167,7 @@ struct pci_dev {
- 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
- 	unsigned int 	msi_enabled:1;
- 	unsigned int	msix_enabled:1;
-+	unsigned int	is_managed:1;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
- 	u32		saved_config_space[16]; /* config space saved at suspend time */
-@@ -521,6 +522,14 @@ static inline int pci_write_config_dword(struct pci_dev *dev, int where, u32 val
- 
- int __must_check pci_enable_device(struct pci_dev *dev);
- int __must_check pci_enable_device_bars(struct pci_dev *dev, int mask);
-+int __must_check pcim_enable_device(struct pci_dev *pdev);
-+void pcim_pin_device(struct pci_dev *pdev);
-+
-+static inline int pci_is_managed(struct pci_dev *pdev)
-+{
-+	return pdev->is_managed;
-+}
-+
- void pci_disable_device(struct pci_dev *dev);
- void pci_set_master(struct pci_dev *dev);
- #define HAVE_PCI_SET_MWI
++EXPORT_SYMBOL(devm_free_irq);
 -- 
 1.4.4.3
+
+
