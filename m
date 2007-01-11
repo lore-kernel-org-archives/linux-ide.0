@@ -1,87 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ia64: add pci_get_legacy_ide_irq() (was: [2.6 patch] let
- BLK_DEV_AMD74XX depend on X86)
-Date: Thu, 11 Jan 2007 16:49:30 +0100
-Message-ID: <45A65C8A.9080601@gmail.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [2.6 patch] let BLK_DEV_AMD74XX depend on X86
+Date: Thu, 11 Jan 2007 16:48:53 +0000
+Message-ID: <20070111164853.5de4ddfa@localhost.localdomain>
+References: <20070111134917.GE20027@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:38253 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbXAKPp5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jan 2007 10:45:57 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so508175uga
-        for <linux-ide@vger.kernel.org>; Thu, 11 Jan 2007 07:45:56 -0800 (PST)
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43434 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750725AbXAKQl4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jan 2007 11:41:56 -0500
+In-Reply-To: <20070111134917.GE20027@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Adrian Bunk <bunk@stusta.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Thu, 11 Jan 2007 14:49:17 +0100
+Adrian Bunk <bunk@stusta.de> wrote:
 
-Adrian Bunk wrote:
-> 
-> It's unlikely that this driver will ever be of any use on other
+> It's unlikely that this driver will ever be of any use on other 
 > architectures.
-
-It is already used on PPC.
-
-[ see arch/powerpc/platforms/maple/pci.c:maple_pci_get_legacy_ide_irq() ]
-
-
+> 
 > This fixes the following compile error on ia64:
-> 
-> <--  snip  -->
-> 
-> ...
->  CC      drivers/ide/pci/amd74xx.o
-> /home/bunk/linux/kernel-2.6/linux-2.6.20-rc3-mm1/drivers/ide/pci/amd74xx.c:
-> In function 'init_hwif_amd74xx':
-> /home/bunk/linux/kernel-2.6/linux-2.6.20-rc3-mm1/drivers/ide/pci/amd74xx.c:421:
-> 
-> warning: implicit declaration of function 'pci_get_legacy_ide_irq'
->  CC      drivers/ide/pci/cmd64x.o
-> ...
->  LD      .tmp_vmlinux1
-> drivers/built-in.o: In function `init_hwif_amd74xx':
-> /home/bunk/linux/kernel-2.6/linux-2.6.20-rc3-mm1/drivers/ide/pci/amd74xx.c:421:
-> 
-> undefined reference to `pci_get_legacy_ide_irq'
-> make[1]: *** [.tmp_vmlinux1] Error 1
-> 
-> <--  snip  -->
-> 
-> 
-> This fixes kernel Bugzilla #6644.
 
-Does the following patch fix the problem?
+NAK
 
-[PATCH] ia64: add pci_get_legacy_ide_irq()
+pci_get_legacy_ide_irq() is a required method for all platforms and is
+usually filled in by asm-generic/pci.h
 
-Add pci_get_legacy_ide_irq() identical to the one used by i386/x86_64.
-Fixes amd74xx driver build on ia64 (bugzilla bug #6644).
+Please fix the IA64 tree to do the right thing.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
----
- include/asm-ia64/pci.h |    6 ++++++
- 1 file changed, 6 insertions(+)
-
-Index: a/include/asm-ia64/pci.h
-===================================================================
---- a.orig/include/asm-ia64/pci.h
-+++ a/include/asm-ia64/pci.h
-@@ -167,4 +167,10 @@ pcibios_select_root(struct pci_dev *pdev
- 
- #define pcibios_scan_all_fns(a, b)	0
- 
-+#define HAVE_ARCH_PCI_GET_LEGACY_IDE_IRQ
-+static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
-+{
-+	return channel ? 15 : 14;
-+}
-+
- #endif /* _ASM_IA64_PCI_H */
-
-
-
+Alan
