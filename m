@@ -1,68 +1,102 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 14/19] cs5530: small cleanup
-Date: Fri, 12 Jan 2007 05:27:35 +0100
-Message-ID: <20070112042735.28794.34617.sendpatchset@localhost.localdomain>
+Subject: [PATCH 11/19] ide: remove ide_pci_device_t tables with only one entry
+Date: Fri, 12 Jan 2007 05:27:16 +0100
+Message-ID: <20070112042716.28794.40732.sendpatchset@localhost.localdomain>
 References: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030496AbXALEYA@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.169]:34121 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030493AbXALEXk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jan 2007 23:23:40 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so689929uga
+        for <linux-ide@vger.kernel.org>; Thu, 11 Jan 2007 20:23:39 -0800 (PST)
 In-Reply-To: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
-[PATCH] cs5530: small cleanup
-
-* BUG() on unknown DMA mode in cs5530_config_dma()
-* there is no need to call hwif->ide_dma_host_{off,on}() in
-  cs5530_config_dma() because hwif->ide_dma_host_{off,on}()
-  is called by hwif->ide_dma_off_{quietly,on}()
+[PATCH] ide: remove ide_pci_device_t tables with only one entry
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 ---
- drivers/ide/pci/cs5530.c |   12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/ide/pci/cy82c693.c |   21 +++++++++------------
+ drivers/ide/pci/sgiioc4.c  |    7 ++-----
+ 2 files changed, 11 insertions(+), 17 deletions(-)
 
-Index: a/drivers/ide/pci/cs5530.c
+Index: a/drivers/ide/pci/cy82c693.c
 ===================================================================
---- a.orig/drivers/ide/pci/cs5530.c
-+++ a/drivers/ide/pci/cs5530.c
-@@ -103,16 +103,13 @@ static int cs5530_config_dma (ide_drive_
- 	int			unit = drive->select.b.unit;
- 	ide_drive_t		*mate = &hwif->drives[unit^1];
- 	struct hd_driveid	*id = drive->id;
--	unsigned int		reg, timings;
-+	unsigned int		reg, timings = 0;
- 	unsigned long		basereg;
- 
- 	/*
- 	 * Default to DMA-off in case we run into trouble here.
- 	 */
- 	hwif->ide_dma_off_quietly(drive);
--	/* turn off DMA while we fiddle */
--	hwif->ide_dma_host_off(drive);
--	/* clear DMA_capable bit */
- 
- 	/*
- 	 * The CS5530 specifies that two drives sharing a cable cannot
-@@ -182,9 +179,8 @@ static int cs5530_config_dma (ide_drive_
- 		case XFER_MW_DMA_1:	timings = 0x00012121; break;
- 		case XFER_MW_DMA_2:	timings = 0x00002020; break;
- 		default:
--			printk(KERN_ERR "%s: cs5530_config_dma: huh? mode=%02x\n",
--				drive->name, mode);
--			return 1;	/* failure */
-+			BUG();
-+			break;
+--- a.orig/drivers/ide/pci/cy82c693.c
++++ a/drivers/ide/pci/cy82c693.c
+@@ -478,21 +478,18 @@ static void __devinit init_iops_cy82c693
  	}
- 	basereg = CS5530_BASEREG(hwif);
- 	reg = hwif->INL(basereg+4);		/* get drive0 config register */
-@@ -199,8 +195,6 @@ static int cs5530_config_dma (ide_drive_
- 		hwif->OUTL(reg,     basereg+4);	/* write drive0 config register */
- 		hwif->OUTL(timings, basereg+12);	/* write drive1 config register */
- 	}
--	(void) hwif->ide_dma_host_on(drive);
--	/* set DMA_capable bit */
+ }
  
- 	/*
- 	 * Finally, turn DMA on in software, and exit.
+-static ide_pci_device_t cy82c693_chipsets[] __devinitdata = {
+-	{	/* 0 */
+-		.name		= "CY82C693",
+-		.init_chipset	= init_chipset_cy82c693,
+-		.init_iops	= init_iops_cy82c693,
+-		.init_hwif	= init_hwif_cy82c693,
+-		.channels	= 1,
+-		.autodma	= AUTODMA,
+-		.bootable	= ON_BOARD,
+-	}
++static ide_pci_device_t cy82c693_chipset __devinitdata = {
++	.name		= "CY82C693",
++	.init_chipset	= init_chipset_cy82c693,
++	.init_iops	= init_iops_cy82c693,
++	.init_hwif	= init_hwif_cy82c693,
++	.channels	= 1,
++	.autodma	= AUTODMA,
++	.bootable	= ON_BOARD,
+ };
+ 
+ static int __devinit cy82c693_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ {
+-	ide_pci_device_t *d = &cy82c693_chipsets[id->driver_data];
+ 	struct pci_dev *dev2;
+ 	int ret = -ENODEV;
+ 
+@@ -501,7 +498,7 @@ static int __devinit cy82c693_init_one(s
+         if ((dev->class >> 8) == PCI_CLASS_STORAGE_IDE &&
+ 	    PCI_FUNC(dev->devfn) == 1) {
+ 		dev2 = pci_get_slot(dev->bus, dev->devfn + 1);
+-		ret = ide_setup_pci_devices(dev, dev2, d);
++		ret = ide_setup_pci_devices(dev, dev2, &cy82c693_chipset);
+ 		/* We leak pci refs here but thats ok - we can't be unloaded */
+ 	}
+ 	return ret;
+Index: a/drivers/ide/pci/sgiioc4.c
+===================================================================
+--- a.orig/drivers/ide/pci/sgiioc4.c
++++ a/drivers/ide/pci/sgiioc4.c
+@@ -729,8 +729,7 @@ out:
+ 	return ret;
+ }
+ 
+-static ide_pci_device_t sgiioc4_chipsets[] __devinitdata = {
+-	{
++static ide_pci_device_t sgiioc4_chipset __devinitdata = {
+ 	 /* Channel 0 */
+ 	 .name = "SGIIOC4",
+ 	 .init_hwif = ide_init_sgiioc4,
+@@ -739,7 +738,6 @@ static ide_pci_device_t sgiioc4_chipsets
+ 	 .autodma = AUTODMA,
+ 	 /* SGI IOC4 doesn't have enablebits. */
+ 	 .bootable = ON_BOARD,
+-	}
+ };
+ 
+ int
+@@ -751,8 +749,7 @@ ioc4_ide_attach_one(struct ioc4_driver_d
+ 	if (idd->idd_variant == IOC4_VARIANT_PCI_RT)
+ 		return 0;
+ 
+-	return pci_init_sgiioc4(idd->idd_pdev,
+-				&sgiioc4_chipsets[idd->idd_pci_id->driver_data]);
++	return pci_init_sgiioc4(idd->idd_pdev, &sgiioc4_chipset);
+ }
+ 
+ static struct ioc4_submodule ioc4_ide_submodule = {
