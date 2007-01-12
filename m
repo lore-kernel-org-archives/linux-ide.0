@@ -1,47 +1,47 @@
-From: "Dailey, Nate" <Nate.Dailey@stratus.com>
-Subject: sata_vsc.c cache line size question
-Date: Fri, 12 Jan 2007 14:45:23 -0500
-Message-ID: <92952AEF1F064042B6EF2522E0EEF43703EE316A@EXNA.corp.stratus.com>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: [PATCH 10/19] trm290: remove redundant CONFIG_BLK_DEV_IDEDMA
+Date: Fri, 12 Jan 2007 21:44:57 +0100
+Message-ID: <58cb370e0701121244nd38406aod6b5f8b8ca68fe5e@mail.gmail.com>
+References: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
+	 <20070112042710.28794.40403.sendpatchset@localhost.localdomain>
+	 <45A7E062.3080403@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailhub4.stratus.com ([134.111.1.17]:38366 "EHLO
-	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030179AbXALTwn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 14:52:43 -0500
-Content-class: urn:content-classes:message
+Received: from ug-out-1314.google.com ([66.249.92.168]:47908 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030241AbXALUpA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 15:45:00 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so887785uga
+        for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 12:44:58 -0800 (PST)
+In-Reply-To: <45A7E062.3080403@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jeremy@sgi.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-Hoping someone on this list might shed some light on this...
+Hi,
 
-I was investigating a problem of poor sequential write performance
-(IOmeter, various size sequential writes) with an embedded Vitesse 7174,
-maxing out (with disk write cache on) at around 10 MB/s...
-
-After noticing that Windows on the same hardware was using 0x10 for the
-cache line size, but Linux was using 0x80, I tried removing the
-following from sata_vsc.c:
-
-381         /*
-382          * Due to a bug in the chip, the default cache line size
-can't be used
-383          */
-384         pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
-
-Now, with cache line size the same as Windows, Linux is doing more like
-43 MB/s.
-
-Just wondering what the deal with this "bug in the chip" might be, since
-for me it seems that the default cache line size is better? If there's a
-real bug, I don't want to do anything dangerous by removing this code
-(though I've heard--haven't seen the code--that the Windows driver
-doesn't touch the cache line size, nor does the Linux non-libata
-reference driver from Vitesse).
+On 1/12/07, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> Hello.
+>
+> Bartlomiej Zolnierkiewicz wrote:
+>
+> > [PATCH] trm290: remove redundant CONFIG_BLK_DEV_IDEDMA #ifdef-s
+>
+>     Nice to see you riding again. :-)
 
 Thanks!
-Nate
+
+> > In drivers/ide/Kconfig BLK_DEV_TRM290 depends on
+> > BLK_DEV_IDEDMA_PCI (on which is BLK_DEV_IDEDMA dependant on).
+>
+>     I also remember you urging me to get rid of ide_setup_dma() call there. ;-)
+
+Hmm, I seem to have a patch doing this but it depends on unfinished
+"struct ide_dma_ops" patch (which folds individual hwif->[ide_]dma*
+methods into nice structure)...
+
+Bart
