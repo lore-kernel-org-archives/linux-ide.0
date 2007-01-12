@@ -1,33 +1,30 @@
 From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: Re: [PATCH 2/2] drivers/ata: export some static functions in
- libata-core.c
+	libata-core.c
 Date: Fri, 12 Jan 2007 09:48:19 +0900
-Message-ID: <200701120045.l0C0jq8T011886@toshiba.co.jp>
+Message-ID: <200701120045.l0C0jqHV012168@toshiba.co.jp>
 References: <200701110853.l0B8rtGK009404@toshiba.co.jp>
- <200701111008.34866.arnd@arndb.de>
- <200701110928.l0B9SUri015056@toshiba.co.jp>
- <20070111171706.GG6177@austin.ibm.com>
+	<200701111008.34866.arnd@arndb.de>
+	<200701110928.l0B9SUri015056@toshiba.co.jp>
+	<20070111171706.GG6177@austin.ibm.com>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:54579 "EHLO
-	inet-tsb5.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519AbXALAp4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jan 2007 19:45:56 -0500
-Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
-	by inet-tsb5.toshiba.co.jp  with ESMTP id l0C0jrm5009455
-	for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 09:45:53 +0900 (JST)
-Received: (from root@localhost)
-	by tsb-wall.toshiba.co.jp  id l0C0jsbD028368
-	for linux-ide@vger.kernel.org; Fri, 12 Jan 2007 09:45:54 +0900 (JST)
-Received: from mx.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp1.toshiba.co.jp  with ESMTP id l0C0jrNI005106
-	for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 09:45:53 +0900 (JST)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
 In-Reply-To: (Your message of "Thu, 11 Jan 2007 11:17:06 -0600")
-  <20070111171706.GG6177@austin.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+	<20070111171706.GG6177@austin.ibm.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: linas@austin.ibm.com, Arnd Bergmann <arnd@arndb.de>
-Cc: linux-ide@vger.kernel.org, kou.ishizaki@toshiba.co.jp, benh@kernel.crashing.org, paulus@samba.org, linuxppc-dev@ozlabs.org
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, paulus@samba.org
+List-Id: linux-ide@vger.kernel.org
 
 Hi, Linas-san, Arnd-san.
 
