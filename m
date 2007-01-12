@@ -1,29 +1,39 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 18/19] ide: add ide_use_fast_pio() helper
-Date: Fri, 12 Jan 2007 10:08:36 +0000
-Message-ID: <20070112100836.58738dbc@localhost.localdomain>
-References: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
-	<20070112042800.28794.95095.sendpatchset@localhost.localdomain>
+From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Subject: [PATCH 0/4] drivers/ata: add low-level I/O calls
+Date: Fri, 12 Jan 2007 19:00:45 +0900
+Message-ID: <200701120958.l0C9wICB019343@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161051AbXALJ5P@vger.kernel.org>
-In-Reply-To: <20070112042800.28794.95095.sendpatchset@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:41274 "EHLO
+	inet-tsb5.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161054AbXALJ6W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 04:58:22 -0500
+Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
+	by inet-tsb5.toshiba.co.jp  with ESMTP id l0C9wJ7I012774
+	for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 18:58:19 +0900 (JST)
+Received: (from root@localhost)
+	by tsb-wall.toshiba.co.jp  id l0C9wJZg012102
+	for linux-ide@vger.kernel.org; Fri, 12 Jan 2007 18:58:19 +0900 (JST)
+Received: from mx2.toshiba.co.jp (localhost [127.0.0.1])
+	by ovp1.toshiba.co.jp  with ESMTP id l0C9wJpm015639
+	for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 18:58:19 +0900 (JST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, benh@kernel.crashing.org, arnd@arndb.de, paulus@samba.org, linas@austin.ibm.com
 
-On Fri, 12 Jan 2007 05:28:00 +0100
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+Dear everyone,
 
-> [PATCH] ide: add ide_use_fast_pio() helper
-> 
-> * add ide_use_fast_pio() helper for use by host drivers
-> * add DMA capability and autodma checks to ide_use_dma()
->   - au1xxx-ide/it8213/it821x drivers didn't check for (id->capability & 1)
+This is the patchset (based on 2.6.20-rc4) to add low-level I/O calls
+which access the taskfile registers. The idea comes from drivers/ide
+IN*/OUT* calls.
 
-For the IT8211/2 in SMART this check shouldn't be made.
+As you know, these calls are unnecessary for most libata drivers.
+But the Celleb PATA driver needs them to use the libata common code.
+And using these calls, it is possible to remove similar code
+about PIO/MMIO access.
 
->   - ide-cris driver didn't set ->autodma
+Please give me any comments.
 
-You've changed the behaviour there. Should the default be autodma=0 ?
+Best regards,
+Akira Iguchi
