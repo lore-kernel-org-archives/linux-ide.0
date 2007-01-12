@@ -1,47 +1,49 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: [PATCH 10/19] trm290: remove redundant CONFIG_BLK_DEV_IDEDMA
-Date: Fri, 12 Jan 2007 21:44:57 +0100
-Message-ID: <58cb370e0701121244nd38406aod6b5f8b8ca68fe5e@mail.gmail.com>
-References: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
-	 <20070112042710.28794.40403.sendpatchset@localhost.localdomain>
-	 <45A7E062.3080403@ru.mvista.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 0/4] drivers/ata: add low-level I/O calls
+Date: Sat, 13 Jan 2007 07:50:34 +1100
+Message-ID: <1168635034.5011.27.camel@localhost.localdomain>
+References: <200701120958.l0C9wICB019343@toshiba.co.jp>
+	 <45A7BE3A.40508@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:47908 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030241AbXALUpA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 15:45:00 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so887785uga
-        for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 12:44:58 -0800 (PST)
-In-Reply-To: <45A7E062.3080403@ru.mvista.com>
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:44095 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030352AbXALUxA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Jan 2007 15:53:00 -0500
+In-Reply-To: <45A7BE3A.40508@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, arnd@arndb.de, paulus@samba.org, linas@austin.ibm.com
 
-Hi,
 
-On 1/12/07, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> Hello.
->
-> Bartlomiej Zolnierkiewicz wrote:
->
-> > [PATCH] trm290: remove redundant CONFIG_BLK_DEV_IDEDMA #ifdef-s
->
->     Nice to see you riding again. :-)
+> libata intentionally provides higher level hooks than just I/O accessors.
+> 
+> A low level I/O hook approach makes it difficult to take into account 
+> platform-specific details like mmiowb(), especially on embedded platforms.
+> 
+> The high level hook approach also enables greater efficiency.  For 
+> example, an embedded platform could do
+> 
+> 	__raw_writeb(datum, mmio_address + ATA_REG_FOO);
+> 	__raw_writeb(datum, mmio_address + ATA_REG_BAR);
+> 	eieio();
+> 
+> to optimize an entire taskfile-read or taskfile-write operation.
 
-Thanks!
+I've been looking at that for them and for Efika but it's acutally quite
+a bit of a mess. I'd be happy if you could have a look as well, but it's
+not simple to find the "right" level of abstraction to be able to use
+the reset/probe handling with special reset accessors. And hooking at
+the toplevel is such a wastage (LOTS of code duplication) that it's
+really no fun (it's what Toshiba initial patch does, though you haven't
+commented on it).
 
-> > In drivers/ide/Kconfig BLK_DEV_TRM290 depends on
-> > BLK_DEV_IDEDMA_PCI (on which is BLK_DEV_IDEDMA dependant on).
->
->     I also remember you urging me to get rid of ide_setup_dma() call there. ;-)
+So some hints as to where you think the right hooks/abstractions would
+be would be much welcome.
+ 
+Ben.
 
-Hmm, I seem to have a patch doing this but it depends on unfinished
-"struct ide_dma_ops" patch (which folds individual hwif->[ide_]dma*
-methods into nice structure)...
 
-Bart
