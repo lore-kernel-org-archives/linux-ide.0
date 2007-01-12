@@ -1,35 +1,31 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: hwif->rw_disk() method
-Date: Fri, 12 Jan 2007 10:27:00 +0000
-Message-ID: <20070112102700.3492bbb5@localhost.localdomain>
-References: <45A514AB.2080605@ru.mvista.com>
-	<20070110171015.5320fa17@localhost.localdomain>
-	<45A63DEF.3010604@ru.mvista.com>
+From: Greg Farrell <greg@gregfarrell.org>
+Subject: VIA VT6421A SATA controller
+Date: Fri, 12 Jan 2007 10:33:07 +0000
+Message-ID: <45A763E3.4080407@gregfarrell.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53141 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161054AbXALKPq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 05:15:46 -0500
-In-Reply-To: <45A63DEF.3010604@ru.mvista.com>
+Received: from mail.station1.mxsweep.com ([212.147.136.149]:1300 "EHLO
+	blue.mxsweep.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161053AbXALKjE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 05:39:04 -0500
+Received: from blue.mxsweep.com (127.0.0.1) by blue.mxsweep.com (MlfMTA v3.2r1b3) id hktiqa0171s1 for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 10:34:48 +0000 (envelope-from <greg@gregfarrell.org>)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
->     BTW, I've looked at the clock turnaround code both in drivers/ide/hpt366.c 
-> and drivers/ata/pata_hpt3x2n.c and compared it to the HighPoint driver and I'm 
-> dazed and confused (again?):  contrary to what HighPoint does (I'm not sure 
+Hi Jeff,
 
-Thats how I usually feel after looking at highpoints driver code.
+   I'm looking at getting a motherboard with a VT6421A controller.
+It'll be used in Linux and I can't find any mention on-line of anybody
+using a VT6421A (not just a VT6421) with Linux.
 
+  The sata_via.c module looks like the place it'd be supported if it
+was but there's no mention. Do you know if I can use this chipset
+in Linux or if I should avoid it?
 
->     ATA_TFLAG_WRITE indicates a write transfer (host-to-device) while 
-> hpt3x2n_use_dpll() contrarywise expects the read transfer indication. Comments?
+thank you very much,
 
-That looks like a bug. The code seems to get the DPLL choice right but
-then the caller as you say is incorrect.
-
-Will fix
+     Greg
