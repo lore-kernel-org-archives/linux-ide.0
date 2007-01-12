@@ -1,57 +1,84 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 10/19] trm290: remove redundant CONFIG_BLK_DEV_IDEDMA
-Date: Fri, 12 Jan 2007 05:27:10 +0100
-Message-ID: <20070112042710.28794.40403.sendpatchset@localhost.localdomain>
+Subject: [PATCH 17/19] ide: unexport ide_set_xfer_rate()
+Date: Fri, 12 Jan 2007 05:27:53 +0100
+Message-ID: <20070112042753.28794.89093.sendpatchset@localhost.localdomain>
 References: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030505AbXALEYQ@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.168]:34837 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030494AbXALEYS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jan 2007 23:24:18 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so689928uga
+        for <linux-ide@vger.kernel.org>; Thu, 11 Jan 2007 20:24:17 -0800 (PST)
 In-Reply-To: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
-[PATCH] trm290: remove redundant CONFIG_BLK_DEV_IDEDMA #ifdef-s
+[PATCH] ide: unexport ide_set_xfer_rate()
 
-In drivers/ide/Kconfig BLK_DEV_TRM290 depends on
-BLK_DEV_IDEDMA_PCI (on which is BLK_DEV_IDEDMA dependant on).
+In cmd64x and siimage drivers:
+* don't set drive->init_speed as it should be already
+  set by successful execution of ide_set_xfer_rate()
+* use hwif->speedproc functions directly
+
+Above changes allows removal of EXPORT_SYMBOL_GPL(ide_set_xfer_rate).
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 ---
- drivers/ide/pci/trm290.c |    4 ----
- 1 file changed, 4 deletions(-)
+ drivers/ide/ide-lib.c     |    2 --
+ drivers/ide/pci/cmd64x.c  |    7 ++-----
+ drivers/ide/pci/siimage.c |    5 +----
+ 3 files changed, 3 insertions(+), 11 deletions(-)
 
-Index: a/drivers/ide/pci/trm290.c
+Index: a/drivers/ide/ide-lib.c
 ===================================================================
---- a.orig/drivers/ide/pci/trm290.c
-+++ a/drivers/ide/pci/trm290.c
-@@ -177,7 +177,6 @@ static void trm290_selectproc (ide_drive
- 	trm290_prepare_drive(drive, drive->using_dma);
+--- a.orig/drivers/ide/ide-lib.c
++++ a/drivers/ide/ide-lib.c
+@@ -459,8 +459,6 @@ int ide_set_xfer_rate(ide_drive_t *drive
+ 		return -1;
  }
  
--#ifdef CONFIG_BLK_DEV_IDEDMA
- static void trm290_ide_dma_exec_cmd(ide_drive_t *drive, u8 command)
+-EXPORT_SYMBOL_GPL(ide_set_xfer_rate);
+-
+ static void ide_dump_opcode(ide_drive_t *drive)
  {
- 	ide_hwif_t *hwif	= HWIF(drive);
-@@ -242,7 +241,6 @@ static int trm290_ide_dma_test_irq (ide_
- 	status = hwif->INW(hwif->dma_status);
- 	return (status == 0x00ff);
+ 	struct request *rq;
+Index: a/drivers/ide/pci/cmd64x.c
+===================================================================
+--- a.orig/drivers/ide/pci/cmd64x.c
++++ a/drivers/ide/pci/cmd64x.c
+@@ -466,11 +466,8 @@ static int config_chipset_for_dma (ide_d
+ 	if (!speed)
+ 		return 0;
+ 
+-	if(ide_set_xfer_rate(drive, speed))
+-		return 0; 
+-
+-	if (!drive->init_speed)
+-		drive->init_speed = speed;
++	if (cmd64x_tune_chipset(drive, speed))
++		return 0;
+ 
+ 	return ide_dma_enable(drive);
  }
--#endif /* CONFIG_BLK_DEV_IDEDMA */
+Index: a/drivers/ide/pci/siimage.c
+===================================================================
+--- a.orig/drivers/ide/pci/siimage.c
++++ a/drivers/ide/pci/siimage.c
+@@ -397,12 +397,9 @@ static int config_chipset_for_dma (ide_d
+ 	if (!speed)
+ 		return 0;
  
- /*
-  * Invoked from ide-dma.c at boot time.
-@@ -289,13 +287,11 @@ static void __devinit init_hwif_trm290(i
+-	if (ide_set_xfer_rate(drive, speed))
++	if (siimage_tune_chipset(drive, speed))
+ 		return 0;
  
- 	ide_setup_dma(hwif, (hwif->config_data + 4) ^ (hwif->channel ? 0x0080 : 0x0000), 3);
+-	if (!drive->init_speed)
+-		drive->init_speed = speed;
+-
+ 	return ide_dma_enable(drive);
+ }
  
--#ifdef CONFIG_BLK_DEV_IDEDMA
- 	hwif->dma_setup = &trm290_ide_dma_setup;
- 	hwif->dma_exec_cmd = &trm290_ide_dma_exec_cmd;
- 	hwif->dma_start = &trm290_ide_dma_start;
- 	hwif->ide_dma_end = &trm290_ide_dma_end;
- 	hwif->ide_dma_test_irq = &trm290_ide_dma_test_irq;
--#endif /* CONFIG_BLK_DEV_IDEDMA */
- 
- 	hwif->selectproc = &trm290_selectproc;
- 	hwif->autodma = 0;		/* play it safe for now */
