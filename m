@@ -1,59 +1,45 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 0/4] drivers/ata: add low-level I/O calls
-Date: Fri, 12 Jan 2007 21:41:06 +1100
-Message-ID: <1168598466.5011.17.camel@localhost.localdomain>
-References: <200701120958.l0C9wICB019343@toshiba.co.jp>
-	 <20070112102406.6eb9374f@localhost.localdomain>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Proposed changes for libata speed handling
+Date: Fri, 12 Jan 2007 13:53:01 +0000
+Message-ID: <20070112135301.4cdba24f@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:56527 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161072AbXALKnX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Jan 2007 05:43:23 -0500
-In-Reply-To: <20070112102406.6eb9374f@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52835 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751442AbXALNli (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 08:41:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, arnd@arndb.de, paulus@samba.org, linas@austin.ibm.com
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2007-01-12 at 10:24 +0000, Alan wrote:
-> On Fri, 12 Jan 2007 19:00:45 +0900
-> Akira Iguchi <akira2.iguchi@toshiba.co.jp> wrote:
-> 
-> > Dear everyone,
-> > 
-> > This is the patchset (based on 2.6.20-rc4) to add low-level I/O calls
-> > which access the taskfile registers. The idea comes from drivers/ide
-> > IN*/OUT* calls.
-> 
-> I think this is the wrong approach. The existing code provides methods
-> for things like "read the status", "write a taskfile" and this is the
-> style that should be kept.
+I'm currently hacking on the speed handling code a bit
 
-I agree (Sorry Akira-san for the added work !), I've looked a bit and I
-think that what we need is mainly an accessor for the control register
-and for the LBA, and an ack for dmdma. It's unclear to me wether the
-full taskfile access would be a good way to do the later though, I'm a
-bit worried some HW might get upset if not accessing strictly only the
-right registers (we all know how "touchy" those IDE controllers can be).
+I'd like to do the following unless anyone has any objections
 
-That would give us something like:
+- Remove post_set_mode and make drivers wrap the guts of the existing
+set_mode() function. This allows a driver to wrap and see success/failure
+while removing a callback, and also to add pre-mode code. (ie you'd do
 
- - bmdma_irq_ack
- - dev_ctrl_read/write (unless we want to split that but there are
-   quite a few different accesses so maybe not)
- - dev_sig read/write (read/write nsect/lbal, or maybe we want to let
-drivers do their own post_reset)
+foo_set_mode() {
+    ata_default_set_mode()
+    my_fiddling();
+}
 
-I think that's it, unless I missd something. 'special' drivers can still
-replace bmdma_start/stop etc..
+- Fix the ->set_mode method FIXMEs in the current tree [DONE]
 
-That's just a very quick look, I might have missed something.
+- Add set_specific_mode, with a default behaviour that works for most
+controllers. Those using a private ->set_mode might need a private
+->set_specific_mode, in some cases like it8212 simply to error the request
 
-Ben.
- 
+- Hook set_specific_mode to the ata command parser so that instead of
+erroring set_features commands we snoop them and force the mode change
+desired on the controller (if valid)
 
+- Send the command to set the speed before setting the controller speed,
+so that we send them at the right rate.
 
+Any comments ?
 
+Alan
