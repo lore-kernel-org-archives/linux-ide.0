@@ -1,33 +1,35 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 0/4] drivers/ata: add low-level I/O calls
-Date: Fri, 12 Jan 2007 10:24:06 +0000
-Message-ID: <20070112102406.6eb9374f@localhost.localdomain>
-References: <200701120958.l0C9wICB019343@toshiba.co.jp>
+Subject: Re: hwif->rw_disk() method
+Date: Fri, 12 Jan 2007 10:27:00 +0000
+Message-ID: <20070112102700.3492bbb5@localhost.localdomain>
+References: <45A514AB.2080605@ru.mvista.com>
+	<20070110171015.5320fa17@localhost.localdomain>
+	<45A63DEF.3010604@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53136 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53141 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161048AbXALKNk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 05:13:40 -0500
-In-Reply-To: <200701120958.l0C9wICB019343@toshiba.co.jp>
+	with ESMTP id S1161054AbXALKPq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 05:15:46 -0500
+In-Reply-To: <45A63DEF.3010604@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, benh@kernel.crashing.org, arnd@arndb.de, paulus@samba.org, linas@austin.ibm.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-On Fri, 12 Jan 2007 19:00:45 +0900
-Akira Iguchi <akira2.iguchi@toshiba.co.jp> wrote:
+>     BTW, I've looked at the clock turnaround code both in drivers/ide/hpt366.c 
+> and drivers/ata/pata_hpt3x2n.c and compared it to the HighPoint driver and I'm 
+> dazed and confused (again?):  contrary to what HighPoint does (I'm not sure 
 
-> Dear everyone,
-> 
-> This is the patchset (based on 2.6.20-rc4) to add low-level I/O calls
-> which access the taskfile registers. The idea comes from drivers/ide
-> IN*/OUT* calls.
+Thats how I usually feel after looking at highpoints driver code.
 
-I think this is the wrong approach. The existing code provides methods
-for things like "read the status", "write a taskfile" and this is the
-style that should be kept.
 
-Alan
+>     ATA_TFLAG_WRITE indicates a write transfer (host-to-device) while 
+> hpt3x2n_use_dpll() contrarywise expects the read transfer indication. Comments?
+
+That looks like a bug. The code seems to get the DPLL choice right but
+then the caller as you say is incorrect.
+
+Will fix
