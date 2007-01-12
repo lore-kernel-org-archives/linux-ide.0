@@ -1,285 +1,400 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 12/19] ide: remove ide_drive_t.usage
-Date: Fri, 12 Jan 2007 05:27:22 +0100
-Message-ID: <20070112042722.28794.74399.sendpatchset@localhost.localdomain>
+Subject: [PATCH 5/19] ide: add missing __init tags to IDE PCI host drivers
+Date: Fri, 12 Jan 2007 05:26:40 +0100
+Message-ID: <20070112042640.28794.80063.sendpatchset@localhost.localdomain>
 References: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:34121 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030500AbXALEXr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jan 2007 23:23:47 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so689929uga
-        for <linux-ide@vger.kernel.org>; Thu, 11 Jan 2007 20:23:46 -0800 (PST)
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751595AbXALEXX@vger.kernel.org>
 In-Reply-To: <20070112042621.28794.6937.sendpatchset@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-[PATCH] ide: remove ide_drive_t.usage
+[PATCH] ide: add missing __init tags to IDE PCI host drivers
 
-This field is no longer used by the core IDE code so fix ide-{disk,floppy}
-drivers to keep openers count in the driver specific objects and remove
-it from ide-{cd,scsi,tape} drivers (it was write-only).
+also change __devinit tag for sgiioc4.c:ioc4_ide_init() to __init
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 ---
- drivers/ide/ide-cd.c     |   15 ++++-----------
- drivers/ide/ide-disk.c   |   14 +++++++++-----
- drivers/ide/ide-floppy.c |   18 +++++++++---------
- drivers/ide/ide-tape.c   |    8 --------
- drivers/scsi/ide-scsi.c  |    8 --------
- include/linux/ide.h      |    1 -
- 6 files changed, 22 insertions(+), 42 deletions(-)
+ drivers/ide/pci/aec62xx.c      |    2 +-
+ drivers/ide/pci/alim15x3.c     |    2 +-
+ drivers/ide/pci/amd74xx.c      |    2 +-
+ drivers/ide/pci/atiixp.c       |    2 +-
+ drivers/ide/pci/cmd64x.c       |    2 +-
+ drivers/ide/pci/cs5520.c       |    2 +-
+ drivers/ide/pci/cs5530.c       |    2 +-
+ drivers/ide/pci/cy82c693.c     |    2 +-
+ drivers/ide/pci/generic.c      |    2 +-
+ drivers/ide/pci/hpt34x.c       |    2 +-
+ drivers/ide/pci/hpt366.c       |    2 +-
+ drivers/ide/pci/ns87415.c      |    2 +-
+ drivers/ide/pci/opti621.c      |    2 +-
+ drivers/ide/pci/pdc202xx_new.c |    2 +-
+ drivers/ide/pci/pdc202xx_old.c |    2 +-
+ drivers/ide/pci/rz1000.c       |    2 +-
+ drivers/ide/pci/sc1200.c       |    2 +-
+ drivers/ide/pci/serverworks.c  |    2 +-
+ drivers/ide/pci/sgiioc4.c      |    3 +--
+ drivers/ide/pci/siimage.c      |    2 +-
+ drivers/ide/pci/sis5513.c      |    2 +-
+ drivers/ide/pci/sl82c105.c     |    2 +-
+ drivers/ide/pci/slc90e66.c     |    2 +-
+ drivers/ide/pci/tc86c001.c     |    2 +-
+ drivers/ide/pci/triflex.c      |    2 +-
+ drivers/ide/pci/trm290.c       |    2 +-
+ drivers/ide/pci/via82cxxx.c    |    2 +-
+ 27 files changed, 27 insertions(+), 28 deletions(-)
 
-Index: a/drivers/ide/ide-cd.c
+Index: a/drivers/ide/pci/aec62xx.c
 ===================================================================
---- a.orig/drivers/ide/ide-cd.c
-+++ a/drivers/ide/ide-cd.c
-@@ -3345,21 +3345,16 @@ static int idecd_open(struct inode * ino
- {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
- 	struct cdrom_info *info;
--	ide_drive_t *drive;
- 	int rc = -ENOMEM;
- 
- 	if (!(info = ide_cd_get(disk)))
- 		return -ENXIO;
- 
--	drive = info->drive;
--
--	drive->usage++;
--
- 	if (!info->buffer)
--		info->buffer = kmalloc(SECTOR_BUFFER_SIZE,
--					GFP_KERNEL|__GFP_REPEAT);
--        if (!info->buffer || (rc = cdrom_open(&info->devinfo, inode, file)))
--		drive->usage--;
-+		info->buffer = kmalloc(SECTOR_BUFFER_SIZE, GFP_KERNEL|__GFP_REPEAT);
-+
-+	if (info->buffer)
-+		rc = cdrom_open(&info->devinfo, inode, file);
- 
- 	if (rc < 0)
- 		ide_cd_put(info);
-@@ -3371,10 +3366,8 @@ static int idecd_release(struct inode * 
- {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
- 	struct cdrom_info *info = ide_cd_g(disk);
--	ide_drive_t *drive = info->drive;
- 
- 	cdrom_release (&info->devinfo, file);
--	drive->usage--;
- 
- 	ide_cd_put(info);
- 
-Index: a/drivers/ide/ide-disk.c
-===================================================================
---- a.orig/drivers/ide/ide-disk.c
-+++ a/drivers/ide/ide-disk.c
-@@ -77,6 +77,7 @@ struct ide_disk_obj {
- 	ide_driver_t	*driver;
- 	struct gendisk	*disk;
- 	struct kref	kref;
-+	unsigned int	openers;	/* protected by BKL for now */
+--- a.orig/drivers/ide/pci/aec62xx.c
++++ a/drivers/ide/pci/aec62xx.c
+@@ -441,7 +441,7 @@ static struct pci_driver driver = {
+ 	.probe		= aec62xx_init_one,
  };
  
- static DEFINE_MUTEX(idedisk_ref_mutex);
-@@ -1081,8 +1082,9 @@ static int idedisk_open(struct inode *in
- 
- 	drive = idkp->drive;
- 
--	drive->usage++;
--	if (drive->removable && drive->usage == 1) {
-+	idkp->openers++;
-+
-+	if (drive->removable && idkp->openers == 1) {
- 		ide_task_t args;
- 		memset(&args, 0, sizeof(ide_task_t));
- 		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_DOORLOCK;
-@@ -1106,9 +1108,10 @@ static int idedisk_release(struct inode 
- 	struct ide_disk_obj *idkp = ide_disk_g(disk);
- 	ide_drive_t *drive = idkp->drive;
- 
--	if (drive->usage == 1)
-+	if (idkp->openers == 1)
- 		ide_cacheflush_p(drive);
--	if (drive->removable && drive->usage == 1) {
-+
-+	if (drive->removable && idkp->openers == 1) {
- 		ide_task_t args;
- 		memset(&args, 0, sizeof(ide_task_t));
- 		args.tfRegister[IDE_COMMAND_OFFSET] = WIN_DOORUNLOCK;
-@@ -1117,7 +1120,8 @@ static int idedisk_release(struct inode 
- 		if (drive->doorlocking && ide_raw_taskfile(drive, &args, NULL))
- 			drive->doorlocking = 0;
- 	}
--	drive->usage--;
-+
-+	idkp->openers--;
- 
- 	ide_disk_put(idkp);
- 
-Index: a/drivers/ide/ide-floppy.c
-===================================================================
---- a.orig/drivers/ide/ide-floppy.c
-+++ a/drivers/ide/ide-floppy.c
-@@ -279,6 +279,7 @@ typedef struct ide_floppy_obj {
- 	ide_driver_t	*driver;
- 	struct gendisk	*disk;
- 	struct kref	kref;
-+	unsigned int	openers;	/* protected by BKL for now */
- 
- 	/* Current packet command */
- 	idefloppy_pc_t *pc;
-@@ -1949,9 +1950,9 @@ static int idefloppy_open(struct inode *
- 
- 	drive = floppy->drive;
- 
--	drive->usage++;
-+	floppy->openers++;
- 
--	if (drive->usage == 1) {
-+	if (floppy->openers == 1) {
- 		clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
- 		/* Just in case */
- 
-@@ -1969,13 +1970,11 @@ static int idefloppy_open(struct inode *
- 		    ** capacity of the drive or begin the format - Sam
- 		    */
- 		    ) {
--			drive->usage--;
- 			ret = -EIO;
- 			goto out_put_floppy;
- 		}
- 
- 		if (floppy->wp && (filp->f_mode & 2)) {
--			drive->usage--;
- 			ret = -EROFS;
- 			goto out_put_floppy;
- 		}
-@@ -1987,13 +1986,13 @@ static int idefloppy_open(struct inode *
- 		}
- 		check_disk_change(inode->i_bdev);
- 	} else if (test_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags)) {
--		drive->usage--;
- 		ret = -EBUSY;
- 		goto out_put_floppy;
- 	}
- 	return 0;
- 
- out_put_floppy:
-+	floppy->openers--;
- 	ide_floppy_put(floppy);
- 	return ret;
+-static int aec62xx_ide_init(void)
++static int __init aec62xx_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
  }
-@@ -2007,7 +2006,7 @@ static int idefloppy_release(struct inod
- 	
- 	debug_log(KERN_INFO "Reached idefloppy_release\n");
- 
--	if (drive->usage == 1) {
-+	if (floppy->openers == 1) {
- 		/* IOMEGA Clik! drives do not support lock/unlock commands */
-                 if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags)) {
- 			idefloppy_create_prevent_cmd(&pc, 0);
-@@ -2016,7 +2015,8 @@ static int idefloppy_release(struct inod
- 
- 		clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
- 	}
--	drive->usage--;
-+
-+	floppy->openers--;
- 
- 	ide_floppy_put(floppy);
- 
-@@ -2050,7 +2050,7 @@ static int idefloppy_ioctl(struct inode 
- 		prevent = 0;
- 		/* fall through */
- 	case CDROM_LOCKDOOR:
--		if (drive->usage > 1)
-+		if (floppy->openers > 1)
- 			return -EBUSY;
- 
- 		/* The IOMEGA Clik! Drive doesn't support this command - no room for an eject mechanism */
-@@ -2072,7 +2072,7 @@ static int idefloppy_ioctl(struct inode 
- 		if (!(file->f_mode & 2))
- 			return -EPERM;
- 
--		if (drive->usage > 1) {
-+		if (floppy->openers > 1) {
- 			/* Don't format if someone is using the disk */
- 
- 			clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS,
-Index: a/drivers/ide/ide-tape.c
+Index: a/drivers/ide/pci/alim15x3.c
 ===================================================================
---- a.orig/drivers/ide/ide-tape.c
-+++ a/drivers/ide/ide-tape.c
-@@ -4792,15 +4792,10 @@ static int idetape_open(struct inode *in
+--- a.orig/drivers/ide/pci/alim15x3.c
++++ a/drivers/ide/pci/alim15x3.c
+@@ -907,7 +907,7 @@ static struct pci_driver driver = {
+ 	.probe		= alim15x3_init_one,
+ };
+ 
+-static int ali15x3_ide_init(void)
++static int __init ali15x3_ide_init(void)
  {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
- 	struct ide_tape_obj *tape;
--	ide_drive_t *drive;
- 
- 	if (!(tape = ide_tape_get(disk)))
- 		return -ENXIO;
- 
--	drive = tape->drive;
--
--	drive->usage++;
--
- 	return 0;
+ 	return ide_pci_register_driver(&driver);
  }
- 
-@@ -4808,9 +4803,6 @@ static int idetape_release(struct inode 
- {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
- 	struct ide_tape_obj *tape = ide_tape_g(disk);
--	ide_drive_t *drive = tape->drive;
--
--	drive->usage--;
- 
- 	ide_tape_put(tape);
- 
-Index: a/drivers/scsi/ide-scsi.c
+Index: a/drivers/ide/pci/amd74xx.c
 ===================================================================
---- a.orig/drivers/scsi/ide-scsi.c
-+++ a/drivers/scsi/ide-scsi.c
-@@ -801,15 +801,10 @@ static int idescsi_ide_open(struct inode
+--- a.orig/drivers/ide/pci/amd74xx.c
++++ a/drivers/ide/pci/amd74xx.c
+@@ -544,7 +544,7 @@ static struct pci_driver driver = {
+ 	.probe		= amd74xx_probe,
+ };
+ 
+-static int amd74xx_ide_init(void)
++static int __init amd74xx_ide_init(void)
  {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
- 	struct ide_scsi_obj *scsi;
--	ide_drive_t *drive;
- 
- 	if (!(scsi = ide_scsi_get(disk)))
- 		return -ENXIO;
- 
--	drive = scsi->drive;
--
--	drive->usage++;
--
- 	return 0;
+ 	return ide_pci_register_driver(&driver);
  }
- 
-@@ -817,9 +812,6 @@ static int idescsi_ide_release(struct in
- {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
- 	struct ide_scsi_obj *scsi = ide_scsi_g(disk);
--	ide_drive_t *drive = scsi->drive;
--
--	drive->usage--;
- 
- 	ide_scsi_put(scsi);
- 
-Index: a/include/linux/ide.h
+Index: a/drivers/ide/pci/atiixp.c
 ===================================================================
---- a.orig/include/linux/ide.h
-+++ a/include/linux/ide.h
-@@ -628,7 +628,6 @@ typedef struct ide_drive_s {
- 	unsigned int	bios_cyl;	/* BIOS/fdisk/LILO number of cyls */
- 	unsigned int	cyl;		/* "real" number of cyls */
- 	unsigned int	drive_data;	/* use by tuneproc/selectproc */
--	unsigned int	usage;		/* current "open()" count for drive */
- 	unsigned int	failures;	/* current failure count */
- 	unsigned int	max_failures;	/* maximum allowed failure count */
- 	u64		probed_capacity;/* initial reported media capacity (ide-cd only currently) */
+--- a.orig/drivers/ide/pci/atiixp.c
++++ a/drivers/ide/pci/atiixp.c
+@@ -376,7 +376,7 @@ static struct pci_driver driver = {
+ 	.probe		= atiixp_init_one,
+ };
+ 
+-static int atiixp_ide_init(void)
++static int __init atiixp_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/cmd64x.c
+===================================================================
+--- a.orig/drivers/ide/pci/cmd64x.c
++++ a/drivers/ide/pci/cmd64x.c
+@@ -793,7 +793,7 @@ static struct pci_driver driver = {
+ 	.probe		= cmd64x_init_one,
+ };
+ 
+-static int cmd64x_ide_init(void)
++static int __init cmd64x_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/cs5520.c
+===================================================================
+--- a.orig/drivers/ide/pci/cs5520.c
++++ a/drivers/ide/pci/cs5520.c
+@@ -260,7 +260,7 @@ static struct pci_driver driver = {
+ 	.probe		= cs5520_init_one,
+ };
+ 
+-static int cs5520_ide_init(void)
++static int __init cs5520_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/cs5530.c
+===================================================================
+--- a.orig/drivers/ide/pci/cs5530.c
++++ a/drivers/ide/pci/cs5530.c
+@@ -374,7 +374,7 @@ static struct pci_driver driver = {
+ 	.probe		= cs5530_init_one,
+ };
+ 
+-static int cs5530_ide_init(void)
++static int __init cs5530_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/cy82c693.c
+===================================================================
+--- a.orig/drivers/ide/pci/cy82c693.c
++++ a/drivers/ide/pci/cy82c693.c
+@@ -519,7 +519,7 @@ static struct pci_driver driver = {
+ 	.probe		= cy82c693_init_one,
+ };
+ 
+-static int cy82c693_ide_init(void)
++static int __init cy82c693_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/generic.c
+===================================================================
+--- a.orig/drivers/ide/pci/generic.c
++++ a/drivers/ide/pci/generic.c
+@@ -263,7 +263,7 @@ static struct pci_driver driver = {
+ 	.probe		= generic_init_one,
+ };
+ 
+-static int generic_ide_init(void)
++static int __init generic_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/hpt34x.c
+===================================================================
+--- a.orig/drivers/ide/pci/hpt34x.c
++++ a/drivers/ide/pci/hpt34x.c
+@@ -265,7 +265,7 @@ static struct pci_driver driver = {
+ 	.probe		= hpt34x_init_one,
+ };
+ 
+-static int hpt34x_ide_init(void)
++static int __init hpt34x_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/hpt366.c
+===================================================================
+--- a.orig/drivers/ide/pci/hpt366.c
++++ a/drivers/ide/pci/hpt366.c
+@@ -1668,7 +1668,7 @@ static struct pci_driver driver = {
+ 	.probe		= hpt366_init_one,
+ };
+ 
+-static int hpt366_ide_init(void)
++static int __init hpt366_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/ns87415.c
+===================================================================
+--- a.orig/drivers/ide/pci/ns87415.c
++++ a/drivers/ide/pci/ns87415.c
+@@ -302,7 +302,7 @@ static struct pci_driver driver = {
+ 	.probe		= ns87415_init_one,
+ };
+ 
+-static int ns87415_ide_init(void)
++static int __init ns87415_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/opti621.c
+===================================================================
+--- a.orig/drivers/ide/pci/opti621.c
++++ a/drivers/ide/pci/opti621.c
+@@ -382,7 +382,7 @@ static struct pci_driver driver = {
+ 	.probe		= opti621_init_one,
+ };
+ 
+-static int opti621_ide_init(void)
++static int __init opti621_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/pdc202xx_new.c
+===================================================================
+--- a.orig/drivers/ide/pci/pdc202xx_new.c
++++ a/drivers/ide/pci/pdc202xx_new.c
+@@ -716,7 +716,7 @@ static struct pci_driver driver = {
+ 	.probe		= pdc202new_init_one,
+ };
+ 
+-static int pdc202new_ide_init(void)
++static int __init pdc202new_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/pdc202xx_old.c
+===================================================================
+--- a.orig/drivers/ide/pci/pdc202xx_old.c
++++ a/drivers/ide/pci/pdc202xx_old.c
+@@ -704,7 +704,7 @@ static struct pci_driver driver = {
+ 	.probe		= pdc202xx_init_one,
+ };
+ 
+-static int pdc202xx_ide_init(void)
++static int __init pdc202xx_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/rz1000.c
+===================================================================
+--- a.orig/drivers/ide/pci/rz1000.c
++++ a/drivers/ide/pci/rz1000.c
+@@ -77,7 +77,7 @@ static struct pci_driver driver = {
+ 	.probe		= rz1000_init_one,
+ };
+ 
+-static int rz1000_ide_init(void)
++static int __init rz1000_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/sc1200.c
+===================================================================
+--- a.orig/drivers/ide/pci/sc1200.c
++++ a/drivers/ide/pci/sc1200.c
+@@ -507,7 +507,7 @@ static struct pci_driver driver = {
+ #endif
+ };
+ 
+-static int sc1200_ide_init(void)
++static int __init sc1200_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/serverworks.c
+===================================================================
+--- a.orig/drivers/ide/pci/serverworks.c
++++ a/drivers/ide/pci/serverworks.c
+@@ -666,7 +666,7 @@ static struct pci_driver driver = {
+ 	.probe		= svwks_init_one,
+ };
+ 
+-static int svwks_ide_init(void)
++static int __init svwks_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/sgiioc4.c
+===================================================================
+--- a.orig/drivers/ide/pci/sgiioc4.c
++++ a/drivers/ide/pci/sgiioc4.c
+@@ -762,8 +762,7 @@ static struct ioc4_submodule ioc4_ide_su
+ /*	.is_remove = ioc4_ide_remove_one,	*/
+ };
+ 
+-static int __devinit
+-ioc4_ide_init(void)
++static int __init ioc4_ide_init(void)
+ {
+ 	return ioc4_register_submodule(&ioc4_ide_submodule);
+ }
+Index: a/drivers/ide/pci/siimage.c
+===================================================================
+--- a.orig/drivers/ide/pci/siimage.c
++++ a/drivers/ide/pci/siimage.c
+@@ -1096,7 +1096,7 @@ static struct pci_driver driver = {
+ 	.probe		= siimage_init_one,
+ };
+ 
+-static int siimage_ide_init(void)
++static int __init siimage_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/sis5513.c
+===================================================================
+--- a.orig/drivers/ide/pci/sis5513.c
++++ a/drivers/ide/pci/sis5513.c
+@@ -968,7 +968,7 @@ static struct pci_driver driver = {
+ 	.probe		= sis5513_init_one,
+ };
+ 
+-static int sis5513_ide_init(void)
++static int __init sis5513_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/sl82c105.c
+===================================================================
+--- a.orig/drivers/ide/pci/sl82c105.c
++++ a/drivers/ide/pci/sl82c105.c
+@@ -492,7 +492,7 @@ static struct pci_driver driver = {
+ 	.probe		= sl82c105_init_one,
+ };
+ 
+-static int sl82c105_ide_init(void)
++static int __init sl82c105_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/slc90e66.c
+===================================================================
+--- a.orig/drivers/ide/pci/slc90e66.c
++++ a/drivers/ide/pci/slc90e66.c
+@@ -266,7 +266,7 @@ static struct pci_driver driver = {
+ 	.probe		= slc90e66_init_one,
+ };
+ 
+-static int slc90e66_ide_init(void)
++static int __init slc90e66_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/tc86c001.c
+===================================================================
+--- a.orig/drivers/ide/pci/tc86c001.c
++++ a/drivers/ide/pci/tc86c001.c
+@@ -298,7 +298,7 @@ static struct pci_driver driver = {
+ 	.probe		= tc86c001_init_one
+ };
+ 
+-static int tc86c001_ide_init(void)
++static int __init tc86c001_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/triflex.c
+===================================================================
+--- a.orig/drivers/ide/pci/triflex.c
++++ a/drivers/ide/pci/triflex.c
+@@ -173,7 +173,7 @@ static struct pci_driver driver = {
+ 	.probe		= triflex_init_one,
+ };
+ 
+-static int triflex_ide_init(void)
++static int __init triflex_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/trm290.c
+===================================================================
+--- a.orig/drivers/ide/pci/trm290.c
++++ a/drivers/ide/pci/trm290.c
+@@ -355,7 +355,7 @@ static struct pci_driver driver = {
+ 	.probe		= trm290_init_one,
+ };
+ 
+-static int trm290_ide_init(void)
++static int __init trm290_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
+Index: a/drivers/ide/pci/via82cxxx.c
+===================================================================
+--- a.orig/drivers/ide/pci/via82cxxx.c
++++ a/drivers/ide/pci/via82cxxx.c
+@@ -514,7 +514,7 @@ static struct pci_driver driver = {
+ 	.probe 		= via_init_one,
+ };
+ 
+-static int via_ide_init(void)
++static int __init via_ide_init(void)
+ {
+ 	return ide_pci_register_driver(&driver);
+ }
