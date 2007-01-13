@@ -1,110 +1,41 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc5: known unfixed regressions
-Date: Sat, 13 Jan 2007 08:11:25 +0100
-Message-ID: <20070113071125.GG7469@stusta.de>
-References: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Proposed changes for libata speed handling
+Date: Sat, 13 Jan 2007 10:01:58 +0000
+Message-ID: <20070113100158.1d79ba9f@localhost.localdomain>
+References: <20070112135301.4cdba24f@localhost.localdomain>
+	<45A83DD2.5020000@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:2920 "HELO
-	mailout.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1161296AbXAMHLW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jan 2007 02:11:22 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51053 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751197AbXAMJub (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jan 2007 04:50:31 -0500
+In-Reply-To: <45A83DD2.5020000@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, petero2@telia.com, Uwe Bugla <uwe.bugla@gmx.de>, B.Zolnierkiewicz@elka.pw.edu.pl, Jon Smirl <jonsmirl@gmail.com>, Damien Wyart <damien.wyart@free.fr>, Aaron Sethman <androsyn@ratbox.org>, Berthold Cogel <cogel@rrz.uni-koeln.de>, Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Florin Iucha <florin@iucha.net>, Jiri Kosina <jkosina@suse.cz>, Alan Stern <stern@rowland.harvard.edu>, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, Nick Piggin <nickpiggin@yahoo.com.au>, ttb@tentacle.dhs.org, rml@novell.com, Sami Farin <7atbggg02@sneakemail.com>, David Chinner <dgc@sgi.com>, xfs-masters@oss.sgi.com, Malte =?iso-8859-1?Q?Schr=F6der?= <MalteSch@gmx.de>, "Vladimir V. Saveliev" <vs@namesy>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jan 12, 2007 at 02:27:48PM -0500, Linus Torvalds wrote:
->...
-> A lot of developers (including me) will be gone next week for=20
-> Linux.Conf.Au, so you have a week of rest and quiet to test this, and=
-=20
-> report any problems.=20
->=20
-> Not that there will be any, right? You all behave now!
->...
+O> Wouldn't it be better to have ->determine_xfer_mask() and
+> ->set_specific_mode() than having two somewhat overlapping callbacks?
+> Or is there some problem that can't be handled that way?
 
-This still leaves the old regressions we have not yet fixed...
+I'm not sure I follow what you are suggesting - can you explain further.
 
+Right now ->set_mode does all the policy management with regards to
+picking the right modes which is sometimes done by the usual ATA rules
+and sometimes by card specific code.
 
-This email lists some known regressions in 2.6.20-rc5 compared to 2.6.1=
-9.
+->set_specific_mode does no policy work but merely sets up a mode.
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possib=
-ly
-involved with one or more of these issues.
+The default behaviour of ->set_mode() is the ATA mode selection by best
+mode available, and this function is normally not provided by a driver.
 
-Due to the huge amount of recipients, please trim the Cc when answering=
-=2E
+The default behaviour of ->set_specific_mode() is to verify the mode is
+valid then issue ->set_pio|dma_mode() (for both devices in case a timing
+change on both is triggered). This function is overridable because of
+things like IT821x where the IDE mode is imaginary.
 
-
-Subject    : pktcdvd fails with pata_amd
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7810
-Submitter  : gd@spherenet.de
-Status     : unknown
-
-
-Subject    : problems with CD burning
-References : http://www.spinics.net/lists/linux-ide/msg06545.html
-Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
-Status     : unknown
-
-
-Subject    : BUG: scheduling while atomic: hald-addon-stor/...
-             cdrom_{open,release,ioctl} in trace
-References : http://lkml.org/lkml/2006/12/26/105
-             http://lkml.org/lkml/2006/12/29/22
-             http://lkml.org/lkml/2006/12/31/133
-Submitter  : Jon Smirl <jonsmirl@gmail.com>
-             Damien Wyart <damien.wyart@free.fr>
-             Aaron Sethman <androsyn@ratbox.org>
-Status     : unknown
-
-
-Subject    : 'shutdown -h now' reboots the system  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2006/12/25/40
-Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
-Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com=
->
-Status     : problem is being debugged
-
-
-Subject    : USB keyboard unresponsive after some time
-References : http://lkml.org/lkml/2006/12/25/35
-             http://lkml.org/lkml/2006/12/26/106
-Submitter  : Florin Iucha <florin@iucha.net>
-Handled-By : Jiri Kosina <jkosina@suse.cz>
-             Alan Stern <stern@rowland.harvard.edu>
-Status     : problem is being debugged
-
-
-Subject    : BUG: at fs/inotify.c:172 set_dentry_child_flags()
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7785
-Submitter  : Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
-Handled-By : Nick Piggin <nickpiggin@yahoo.com.au>
-Status     : problem is being debugged
-
-
-Subject    : BUG: at mm/truncate.c:60 cancel_dirty_page()  (XFS)
-References : http://lkml.org/lkml/2007/1/5/308
-Submitter  : Sami Farin <7atbggg02@sneakemail.com>
-Handled-By : David Chinner <dgc@sgi.com>
-Status     : problem is being discussed
-
-
-Subject    : BUG: at mm/truncate.c:60 cancel_dirty_page()  (reiserfs)
-References : http://lkml.org/lkml/2007/1/7/117
-             http://lkml.org/lkml/2007/1/10/202
-Submitter  : Malte Schr=F6der <MalteSch@gmx.de>
-Handled-By : Vladimir V. Saveliev <vs@namesys.com>
-             Nick Piggin <nickpiggin@yahoo.com.au>
-Patch      : http://lkml.org/lkml/2007/1/10/202
-Status     : problem is being discussed
-
-
+Alan
