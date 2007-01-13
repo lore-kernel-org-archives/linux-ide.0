@@ -1,208 +1,249 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] IDE Driver for Delkin/Lexar/etc.. cardbus CF adapter
-Date: Sat, 13 Jan 2007 11:25:38 -0500
-Message-ID: <200701131125.38882.liml@rtr.ca>
-References: <20070112041720.28755.49663.sendpatchset@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 1/2] sata_promise: issue ATAPI commands as normal packets
+Date: Sat, 13 Jan 2007 21:31:05 +0100 (MET)
+Message-ID: <200701132031.l0DKV5Z7010283@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2838 "EHLO mail.rtr.ca"
+Received: from aun.it.uu.se ([130.238.12.36]:38787 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422702AbXAMQZl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Jan 2007 11:25:41 -0500
-In-Reply-To: <20070112041720.28755.49663.sendpatchset@localhost.localdomain>
-Content-Disposition: inline
+	id S1422788AbXAMUbT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Jan 2007 15:31:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-On Thursday 11 January 2007 23:17, Bartlomiej Zolnierkiewicz wrote:
-> 
-> My working IDE tree (against Linus' tree) now resides here:
-> 
-> 	http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/patches/
+This patch (against libata #upstream + the ATAPI cleanup patch)
+reimplements sata_promise's ATAPI support to format ATAPI DMA
+commands as normal packets, and to issue them via the hardware's
+normal packet machinery.
 
-Bart, here's a driver I've been keeping out-of-tree for the past couple of years.
-This is for the Delking/Lexar/ASKA/etc.. 32-bit cardbus IDE CompactFlash adapter card.
+It turns out that the only reason for issuing ATAPI DMA
+commands via the pdc_issue_atapi_pkt_cmd() procedure was to
+perform two interrupt-fiddling steps for ATA_DFLAG_CDB_INTR
+devices. But these steps aren't needed because sata_promise
+sets ATA_FLAG_PIO_POLLING, which disables DMA for those devices.
+The remaining steps can easily be done in ATA taskfile packets.
 
-It's probably way out of sync with the latest driver model (??), but it still builds/works.
-I'm not interested in doing much of a rewrite, other than for libata someday,
-as I no longer use the card myself.
+Concrete changes:
+- pdc_atapi_dma_pkt() is extended to program all packet setup
+  steps, and not just contain the CDB; the sequence of steps
+  exactly mirrors what pdc_issue_atapi_pkt_cmd() did
+- pdc_atapi_dma_pkt() needed more parameters: simplify it by
+  just passing 'qc' and having it extract the data it needs
+- pdc_issue_atai_pkt_cmd() and its two helper procedures
+  pdc_wait_for_drq() and pdc_wait_on_busy() are removed
 
-But lots of other people do seem to use it, so it might be nice to see it "in-tree".
+Tested on first- and second-generation chips, SATAPI and PATAPI,
+with no observable regressions.
 
-Signed-off-by:  Mark Lord <mlord@pobox.com>
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
 ---
---- linux-2.6.11/drivers/ide/Kconfig	2005-03-02 10:07:37.000000000 -0500
-+++ linux/drivers/ide/Kconfig	2005-03-02 10:11:54.000000000 -0500
-@@ -166,6 +166,13 @@
- 	  Support for outboard IDE disks, tape drives, and CD-ROM drives
- 	  connected through a CARDBUS card.
+
+ drivers/ata/sata_promise.c |  162 ++++++++++++++++-----------------------------
+ 1 files changed, 60 insertions(+), 102 deletions(-)
+
+--- linux-2.6.20-rc5/drivers/ata/sata_promise.c.~1~	2007-01-13 16:45:08.000000000 +0100
++++ linux-2.6.20-rc5/drivers/ata/sata_promise.c	2007-01-13 16:45:54.000000000 +0100
+@@ -448,28 +448,80 @@ static void pdc_sata_scr_write (struct a
+ 	writel(val, (void __iomem *) ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
  
-+config BLK_DEV_DELKIN
-+	tristate "Cardbus IDE support (Delkin/ASKA/Workbit)"
-+	depends on CARDBUS && PCI
-+	help
-+	  Support for Delkin, ASKA, and Workbit Cardbus CompactFlash
-+	  Adapters.  This may also work for similar SD and XD adapters.
-+
- config BLK_DEV_IDECD
- 	tristate "Include IDE/ATAPI CDROM support"
- 	---help---
---- linux-2.6.11/drivers/ide/pci/delkin_cb.c	1969-12-31 19:00:00.000000000 -0500
-+++ linux/drivers/ide/pci/delkin_cb.c	2005-02-14 11:58:59.000000000 -0500
-@@ -0,0 +1,140 @@
-+/*
-+ *  linux/drivers/ide/pci/delkin_cb.c
-+ *
-+ *  Created 20 Oct 2004 by Mark Lord
-+ *
-+ *  Basic support for Delkin/ASKA/Workbit Cardbus CompactFlash adapter
-+ *
-+ *  Modeled after the 16-bit PCMCIA driver: ide-cs.c
-+ *
-+ *  This is slightly peculiar, in that it is a PCI driver,
-+ *  but is NOT an IDE PCI driver -- the IDE layer does not directly
-+ *  support hot insertion/removal of PCI interfaces, so this driver
-+ *  is unable to use the IDE PCI interfaces.  Instead, it uses the
-+ *  same interfaces as the ide-cs (PCMCIA) driver uses.
-+ *  On the plus side, the driver is also smaller/simpler this way.
-+ *
-+ *  This file is subject to the terms and conditions of the GNU General Public
-+ *  License.  See the file COPYING in the main directory of this archive for
-+ *  more details.
-+ */
-+#include <linux/autoconf.h>
-+#include <linux/types.h>
-+#include <linux/module.h>
-+#include <linux/mm.h>
-+#include <linux/blkdev.h>
-+#include <linux/hdreg.h>
-+#include <linux/ide.h>
-+#include <linux/init.h>
-+#include <linux/pci.h>
-+#include <asm/io.h>
-+
-+/*
-+ * No chip documentation has yet been found,
-+ * so these configuration values were pulled from
-+ * a running Win98 system using "debug".
-+ * This gives around 3MByte/second read performance,
-+ * which is about 2/3 of what the chip is capable of.
-+ *
-+ * There is also a 4KByte mmio region on the card,
-+ * but its purpose has yet to be reverse-engineered.
-+ */
-+static const u8 setup[] = {
-+	0x00, 0x05, 0xbe, 0x01, 0x20, 0x8f, 0x00, 0x00,
-+	0xa4, 0x1f, 0xb3, 0x1b, 0x00, 0x00, 0x00, 0x80,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0xa4, 0x83, 0x02, 0x13,
-+};
-+
-+static int __devinit
-+delkin_cb_probe (struct pci_dev *dev, const struct pci_device_id *id)
-+{
-+	unsigned long base;
-+	hw_regs_t hw;
-+	ide_hwif_t *hwif = NULL;
-+	ide_drive_t *drive;
-+	int i, rc;
-+
-+	rc = pci_enable_device(dev);
-+	if (rc) {
-+		printk(KERN_ERR "delkin_cb: pci_enable_device failed (%d)\n", rc);
-+		return rc;
+-static void pdc_atapi_dma_pkt(struct ata_taskfile *tf,
+-			      dma_addr_t sg_table,
+-			      unsigned int cdb_len, u8 *cdb,
+-			      u8 *buf)
++static void pdc_atapi_dma_pkt(struct ata_queued_cmd *qc)
+ {
++	struct ata_port *ap = qc->ap;
++	dma_addr_t sg_table = ap->prd_dma;
++	unsigned int cdb_len = qc->dev->cdb_len;
++	u8 *cdb = qc->cdb;
++	struct pdc_port_priv *pp = ap->private_data;
++	u8 *buf = pp->pkt;
+ 	u32 *buf32 = (u32 *) buf;
++	unsigned int dev_sel, feature, nbytes;
+ 
+ 	/* set control bits (byte 0), zero delay seq id (byte 3),
+ 	 * and seq id (byte 2)
+ 	 */
+-	if (!(tf->flags & ATA_TFLAG_WRITE))
++	if (!(qc->tf.flags & ATA_TFLAG_WRITE))
+ 		buf32[0] = cpu_to_le32(PDC_PKT_READ);
+ 	else
+ 		buf32[0] = 0;
+ 	buf32[1] = cpu_to_le32(sg_table);	/* S/G table addr */
+ 	buf32[2] = 0;				/* no next-packet */
+ 
++	/* select drive */
++	if (sata_scr_valid(ap)) {
++		dev_sel = PDC_DEVICE_SATA;
++	} else {
++		dev_sel = ATA_DEVICE_OBS;
++		if (qc->dev->devno != 0)
++			dev_sel |= ATA_DEV1;
 +	}
-+	rc = pci_request_regions(dev, "delkin_cb");
-+	if (rc) {
-+		printk(KERN_ERR "delkin_cb: pci_request_regions failed (%d)\n", rc);
-+		pci_disable_device(dev);
-+		return rc;
++	buf[12] = (1 << 5) | ATA_REG_DEVICE;
++	buf[13] = dev_sel;
++	buf[14] = (1 << 5) | ATA_REG_DEVICE | PDC_PKT_CLEAR_BSY;
++	buf[15] = dev_sel; /* once more, waiting for BSY to clear */
++
++	buf[16] = (1 << 5) | ATA_REG_NSECT;
++	buf[17] = 0x00;
++	buf[18] = (1 << 5) | ATA_REG_LBAL;
++	buf[19] = 0x00;
++
++	/* set feature and byte counter registers */
++	if (qc->tf.protocol != ATA_PROT_ATAPI_DMA) {
++		feature = PDC_FEATURE_ATAPI_PIO;
++		/* set byte counter register to real transfer byte count */
++		nbytes = qc->nbytes;
++		if (!nbytes)
++			nbytes = qc->nsect << 9;
++		if (nbytes > 0xffff)
++			nbytes = 0xffff;
++	} else {
++		feature = PDC_FEATURE_ATAPI_DMA;
++		/* set byte counter register to 0 */
++		nbytes = 0;
 +	}
-+	base = pci_resource_start(dev, 0);
-+	outb(0x02, base + 0x1e);	/* set nIEN to block interrupts */
-+	inb(base + 0x17);		/* read status to clear interrupts */
-+	for (i = 0; i < sizeof(setup); ++i) {
-+		if (setup[i])
-+			outb(setup[i], base + i);
-+	}
-+	pci_release_regions(dev);	/* IDE layer handles regions itself */
++	buf[20] = (1 << 5) | ATA_REG_FEATURE;
++	buf[21] = feature;
++	buf[22] = (1 << 5) | ATA_REG_BYTEL;
++	buf[23] = nbytes & 0xFF;
++	buf[24] = (1 << 5) | ATA_REG_BYTEH;
++	buf[25] = (nbytes >> 8) & 0xFF;
 +
-+	memset(&hw, 0, sizeof(hw));
-+	ide_std_init_ports(&hw, base + 0x10, base + 0x1e);
-+	hw.irq = dev->irq;
-+	hw.chipset = ide_pci;		/* this enables IRQ sharing */
++	/* send ATAPI packet command 0xA0 */
++	buf[26] = (1 << 5) | ATA_REG_CMD;
++	buf[27] = ATA_CMD_PACKET;
 +
-+	rc = ide_register_hw_with_fixup(&hw, &hwif, ide_undecoded_slave);
-+	if (rc < 0) {
-+		printk(KERN_ERR "delkin_cb: ide_register_hw failed (%d)\n", rc);
-+		pci_disable_device(dev);
-+		return -ENODEV;
-+	}
-+	pci_set_drvdata(dev, hwif);
-+	hwif->pci_dev = dev;
-+	drive = &hwif->drives[0];
-+	if (drive->present) {
-+		drive->io_32bit = 1;
-+		drive->unmask   = 1;
-+	}
-+	return 0;
-+}
++	/* select drive and check DRQ */
++	buf[28] = (1 << 5) | ATA_REG_DEVICE | PDC_PKT_WAIT_DRDY;
++	buf[29] = dev_sel;
 +
-+static void
-+delkin_cb_remove (struct pci_dev *dev)
-+{
-+	ide_hwif_t *hwif = pci_get_drvdata(dev);
-+
-+	if (hwif)
-+		ide_unregister(hwif->index);
-+	pci_disable_device(dev);
-+}
-+
-+static struct pci_device_id delkin_cb_pci_tbl[] __devinitdata = {
-+	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{ 0, },
-+};
-+MODULE_DEVICE_TABLE(pci, delkin_cb_pci_tbl);
-+
-+static struct pci_driver driver = {
-+	.name		= "Delkin-ASKA-Workbit Cardbus IDE",
-+	.id_table	= delkin_cb_pci_tbl,
-+	.probe		= delkin_cb_probe,
-+	.remove		= delkin_cb_remove,
-+};
-+
-+static int
-+delkin_cb_init (void)
-+{
-+	return pci_module_init(&driver);
-+}
-+
-+static void
-+delkin_cb_exit (void)
-+{
-+	pci_unregister_driver(&driver);
-+}
-+
-+module_init(delkin_cb_init);
-+module_exit(delkin_cb_exit);
-+
-+MODULE_AUTHOR("Mark Lord");
-+MODULE_DESCRIPTION("Basic support for Delkin/ASKA/Workbit Cardbus IDE");
-+MODULE_LICENSE("GPL");
-+
---- linux-2.6.11/drivers/ide/pci/Makefile	2005-03-02 10:07:37.000000000 -0500
-+++ linux/drivers/ide/pci/Makefile	2005-03-02 10:11:54.000000000 -0500
-@@ -8,6 +8,7 @@
- obj-$(CONFIG_BLK_DEV_CS5530)		+= cs5530.o
- obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
- obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
-+obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
- obj-$(CONFIG_BLK_DEV_HPT34X)		+= hpt34x.o
- obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
- #obj-$(CONFIG_BLK_DEV_HPT37X)		+= hpt37x.o
+ 	/* we can represent cdb lengths 2/4/6/8/10/12/14/16 */
+ 	BUG_ON(cdb_len & ~0x1E);
+ 
+-	buf[12] = (((cdb_len >> 1) & 7) << 5) | ATA_REG_DATA | PDC_LAST_REG;
+-	memcpy(buf+13, cdb, cdb_len);
++	/* append the CDB as the final part */
++	buf[30] = (((cdb_len >> 1) & 7) << 5) | ATA_REG_DATA | PDC_LAST_REG;
++	memcpy(buf+31, cdb, cdb_len);
+ }
+ 
+ static void pdc_qc_prep(struct ata_queued_cmd *qc)
+@@ -503,7 +555,7 @@ static void pdc_qc_prep(struct ata_queue
+ 
+ 	case ATA_PROT_ATAPI_DMA:
+ 		ata_qc_prep(qc);
+-		pdc_atapi_dma_pkt(&qc->tf, qc->ap->prd_dma, qc->dev->cdb_len, qc->cdb, pp->pkt);
++		pdc_atapi_dma_pkt(qc);
+ 		break;
+ 
+ 	default:
+@@ -716,104 +768,10 @@ static inline void pdc_packet_start(stru
+ 	readl((void __iomem *) ap->ioaddr.cmd_addr + PDC_PKT_SUBMIT); /* flush */
+ }
+ 
+-static unsigned int pdc_wait_for_drq(struct ata_port *ap)
+-{ 
+-	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+-	unsigned int i;
+-	unsigned int status;
+-
+-	/* Following pdc-ultra's WaitForDrq() we loop here until BSY
+-	 * is clear and DRQ is set in altstatus. We could possibly call
+-	 * ata_busy_wait() and loop until DRQ is set, but since we don't
+-	 * know how much time a call to ata_busy_wait() took, we don't
+-	 * know when to time out the outer loop.
+-	 */
+-	for(i = 0; i < 1000; ++i) {
+-		status = readb(port_mmio + PDC_ALTSTATUS);
+-		if (status == 0xFF)
+-			break;
+-		if (status & ATA_BUSY)
+-			;
+-		else if (status & (ATA_DRQ | ATA_ERR))
+-			break;
+-		mdelay(1);
+-	}
+-	if (i >= 1000)
+-		ata_port_printk(ap, KERN_WARNING, "%s timed out\n", __FUNCTION__);
+-	return status;
+-}
+-
+-static unsigned int pdc_wait_on_busy(struct ata_port *ap)
+-{
+-	unsigned int status = ata_busy_wait(ap, ATA_BUSY, 1000);
+-	if (status != 0xff && (status & ATA_BUSY))
+-		ata_port_printk(ap, KERN_WARNING, "%s timed out\n", __FUNCTION__);
+-	return status;
+-}
+-
+-static void pdc_issue_atapi_pkt_cmd(struct ata_queued_cmd *qc)
+-{
+-	struct ata_port *ap = qc->ap;
+-	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
+-	void __iomem *host_mmio = ap->host->mmio_base;
+-	unsigned int nbytes;
+-	unsigned int tmp;
+-
+-	writeb(0x00, port_mmio + PDC_CTLSTAT); /* route drive INT to SEQ 0 */
+-	writeb(PDC_SEQCNTRL_INT_MASK, host_mmio + 0); /* but mask SEQ 0 INT */
+-
+-	/* select drive */
+-	if (sata_scr_valid(ap)) {
+-		tmp = PDC_DEVICE_SATA;
+-	} else {
+-		tmp = ATA_DEVICE_OBS;
+-		if (qc->dev->devno != 0)
+-			tmp |= ATA_DEV1;
+-	}
+-	writeb(tmp, port_mmio + PDC_DEVICE);
+-	pdc_wait_on_busy(ap);
+-
+-	writeb(0x00, port_mmio + PDC_SECTOR_COUNT);
+-	writeb(0x00, port_mmio + PDC_SECTOR_NUMBER);
+-
+-	/* set feature and byte counter registers */
+-	if (qc->tf.protocol != ATA_PROT_ATAPI_DMA) {
+-		tmp = PDC_FEATURE_ATAPI_PIO;
+-		/* set byte counter register to real transfer byte count */
+-		nbytes = qc->nbytes;
+-		if (!nbytes)
+-			nbytes = qc->nsect << 9;
+-		if (nbytes > 0xffff)
+-			nbytes = 0xffff;
+-	} else {
+-		tmp = PDC_FEATURE_ATAPI_DMA;
+-		/* set byte counter register to 0 */
+-		nbytes = 0;
+-	}
+-	writeb(tmp, port_mmio + PDC_FEATURE);
+-	writeb(nbytes & 0xFF, port_mmio + PDC_CYLINDER_LOW);
+-	writeb((nbytes >> 8) & 0xFF, port_mmio + PDC_CYLINDER_HIGH);
+-
+-	/* send ATAPI packet command 0xA0 */
+-	writeb(ATA_CMD_PACKET, port_mmio + PDC_COMMAND);
+-
+-	/* pdc_qc_issue_prot() currently sends ATAPI PIO packets back
+-	 * to libata. If we start handling those packets ourselves,
+-	 * then we must busy-wait for INT (CTLSTAT bit 27) at this point
+-	 * if the device has ATA_DFLAG_CDB_INTR set.
+-	 */
+-
+-	pdc_wait_for_drq(ap);
+-
+-	/* now the device only waits for the CDB */
+-}
+-
+ static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc)
+ {
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_ATAPI_DMA:
+-		pdc_issue_atapi_pkt_cmd(qc);
+-		/*FALLTHROUGH*/
+ 	case ATA_PROT_DMA:
+ 	case ATA_PROT_NODATA:
+ 		pdc_packet_start(qc);
