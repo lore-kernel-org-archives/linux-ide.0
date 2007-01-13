@@ -1,49 +1,76 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 0/4] drivers/ata: add low-level I/O calls
-Date: Sat, 13 Jan 2007 07:50:34 +1100
-Message-ID: <1168635034.5011.27.camel@localhost.localdomain>
-References: <200701120958.l0C9wICB019343@toshiba.co.jp>
-	 <45A7BE3A.40508@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ahci_softreset prevents acpi_power_off
+Date: Sat, 13 Jan 2007 10:12:10 +0900
+Message-ID: <45A831EA.50601@gmail.com>
+References: <200701111231.26819.faik@pardus.org.tr>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:44095 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030352AbXALUxA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Jan 2007 15:53:00 -0500
-In-Reply-To: <45A7BE3A.40508@garzik.org>
+Received: from wr-out-0506.google.com ([64.233.184.234]:37078 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161192AbXAMBMS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 20:12:18 -0500
+Received: by wr-out-0506.google.com with SMTP id 70so827137wra
+        for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 17:12:17 -0800 (PST)
+In-Reply-To: <200701111231.26819.faik@pardus.org.tr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, arnd@arndb.de, paulus@samba.org, linas@austin.ibm.com
+To: Faik Uygur <faik@pardus.org.tr>
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
+Hello,
 
-> libata intentionally provides higher level hooks than just I/O accessors.
+Faik Uygur wrote:
+> We have a Sony PCG-6H1M laptop. It started failing to poweroff with our switch 
+> from 2.6.16 stable series kernels to 2.6.18 stable series. Rebooting works.
 > 
-> A low level I/O hook approach makes it difficult to take into account 
-> platform-specific details like mmiowb(), especially on embedded platforms.
+> While searching for the cause, I have found these reported bug reports in the 
+> kernel bugzilla which may be related to this bug:
 > 
-> The high level hook approach also enables greater efficiency.  For 
-> example, an embedded platform could do
+> http://bugzilla.kernel.org/show_bug.cgi?id=6982
+> http://bugzilla.kernel.org/show_bug.cgi?id=7447
+
+Seems mostly unrelated.
+
+> According to git bisect, this is the first bad commit:
 > 
-> 	__raw_writeb(datum, mmio_address + ATA_REG_FOO);
-> 	__raw_writeb(datum, mmio_address + ATA_REG_BAR);
-> 	eieio();
+> 4658f79bec0b51222e769e328c2923f39f3bda77 is first bad commit
+> commit 4658f79bec0b51222e769e328c2923f39f3bda77
+> Author: Tejun Heo <htejun@gmail.com>
+> Date:   Wed Mar 22 21:07:03 2006 +0900
 > 
-> to optimize an entire taskfile-read or taskfile-write operation.
+>     [PATCH] ahci: add softreset
+> 
+>     Now that libata is smart enought to handle both soft and hard resets,
+>     add softreset method.
+> 
+>     Signed-off-by: Tejun Heo <htejun@gmail.com>
+>     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+> 
+> :040000 040000 ba0a16d0ef82b6577bb61cfb18e6d9df9ee0984e 
+> d0fc78d8f9bbe238f98ac8964562a33e64b30605 M      drivers
+> 
+> With v2.6.20-rc4 from git, it is still failing to poweroff. By not compiling 
+> CONFIG_SCSI_SATA_AHCI, it successfully powers off.
+> 
+> Also with CONFIG_SCSI_SATA_AHCI, reverting this patch manually by setting 
+> softreset to NULL in ata_do_eh calls in ahci.c makes the machine poweroff.
 
-I've been looking at that for them and for Efika but it's acutally quite
-a bit of a mess. I'd be happy if you could have a look as well, but it's
-not simple to find the "right" level of abstraction to be able to use
-the reset/probe handling with special reset accessors. And hooking at
-the toplevel is such a wastage (LOTS of code duplication) that it's
-really no fun (it's what Toshiba initial patch does, though you haven't
-commented on it).
+Wow, this is one of the most amazing error report.  ahci softreset
+preventing system halt?
 
-So some hints as to where you think the right hooks/abstractions would
-be would be much welcome.
- 
-Ben.
+> I have attached the dmesg output with defined ATA_DEBUG, ATA_VERBOSE_DEBUG
+> if it helps. Also you may find lspci output attached. 
+> 
+> Please let me know if anything else is needed.
 
+Does everything else work okay?  Can you access devices attached to
+ahci?  What happens when you try to shutdown?  If possible, please post
+dmesg of shutting down.  You can store it easily using netconsole
+(Documentation/networking/netconsole.txt).
 
+Thanks.
+
+-- 
+tejun
