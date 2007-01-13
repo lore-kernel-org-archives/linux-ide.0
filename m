@@ -1,74 +1,56 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ahci_softreset prevents acpi_power_off
-Date: Sat, 13 Jan 2007 10:12:10 +0900
-Message-ID: <45A831EA.50601@gmail.com>
-References: <200701111231.26819.faik@pardus.org.tr>
+Subject: Re: Proposed changes for libata speed handling
+Date: Sat, 13 Jan 2007 11:02:58 +0900
+Message-ID: <45A83DD2.5020000@gmail.com>
+References: <20070112135301.4cdba24f@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.234]:37078 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161192AbXAMBMS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 20:12:18 -0500
-Received: by wr-out-0506.google.com with SMTP id 70so827137wra
-        for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 17:12:17 -0800 (PST)
-In-Reply-To: <200701111231.26819.faik@pardus.org.tr>
+Received: from wx-out-0506.google.com ([66.249.82.237]:31876 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161190AbXAMCDS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jan 2007 21:03:18 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1005701wxd
+        for <linux-ide@vger.kernel.org>; Fri, 12 Jan 2007 18:03:18 -0800 (PST)
+In-Reply-To: <20070112135301.4cdba24f@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Faik Uygur <faik@pardus.org.tr>
-Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+Alan wrote:
+> I'm currently hacking on the speed handling code a bit
+> 
+> I'd like to do the following unless anyone has any objections
+> 
+> - Remove post_set_mode and make drivers wrap the guts of the existing
+> set_mode() function. This allows a driver to wrap and see success/failure
+> while removing a callback, and also to add pre-mode code. (ie you'd do
+> 
+> foo_set_mode() {
+>     ata_default_set_mode()
+>     my_fiddling();
+> }
+> 
+> - Fix the ->set_mode method FIXMEs in the current tree [DONE]
+> 
+> - Add set_specific_mode, with a default behaviour that works for most
+> controllers. Those using a private ->set_mode might need a private
+> ->set_specific_mode, in some cases like it8212 simply to error the request
+> 
+> - Hook set_specific_mode to the ata command parser so that instead of
+> erroring set_features commands we snoop them and force the mode change
+> desired on the controller (if valid)
+> 
+> - Send the command to set the speed before setting the controller speed,
+> so that we send them at the right rate.
+> 
+> Any comments ?
 
-Faik Uygur wrote:
-> We have a Sony PCG-6H1M laptop. It started failing to poweroff with our switch 
-> from 2.6.16 stable series kernels to 2.6.18 stable series. Rebooting works.
-> 
-> While searching for the cause, I have found these reported bug reports in the 
-> kernel bugzilla which may be related to this bug:
-> 
-> http://bugzilla.kernel.org/show_bug.cgi?id=6982
-> http://bugzilla.kernel.org/show_bug.cgi?id=7447
-
-Seems mostly unrelated.
-
-> According to git bisect, this is the first bad commit:
-> 
-> 4658f79bec0b51222e769e328c2923f39f3bda77 is first bad commit
-> commit 4658f79bec0b51222e769e328c2923f39f3bda77
-> Author: Tejun Heo <htejun@gmail.com>
-> Date:   Wed Mar 22 21:07:03 2006 +0900
-> 
->     [PATCH] ahci: add softreset
-> 
->     Now that libata is smart enought to handle both soft and hard resets,
->     add softreset method.
-> 
->     Signed-off-by: Tejun Heo <htejun@gmail.com>
->     Signed-off-by: Jeff Garzik <jeff@garzik.org>
-> 
-> :040000 040000 ba0a16d0ef82b6577bb61cfb18e6d9df9ee0984e 
-> d0fc78d8f9bbe238f98ac8964562a33e64b30605 M      drivers
-> 
-> With v2.6.20-rc4 from git, it is still failing to poweroff. By not compiling 
-> CONFIG_SCSI_SATA_AHCI, it successfully powers off.
-> 
-> Also with CONFIG_SCSI_SATA_AHCI, reverting this patch manually by setting 
-> softreset to NULL in ata_do_eh calls in ahci.c makes the machine poweroff.
-
-Wow, this is one of the most amazing error report.  ahci softreset
-preventing system halt?
-
-> I have attached the dmesg output with defined ATA_DEBUG, ATA_VERBOSE_DEBUG
-> if it helps. Also you may find lspci output attached. 
-> 
-> Please let me know if anything else is needed.
-
-Does everything else work okay?  Can you access devices attached to
-ahci?  What happens when you try to shutdown?  If possible, please post
-dmesg of shutting down.  You can store it easily using netconsole
-(Documentation/networking/netconsole.txt).
+Wouldn't it be better to have ->determine_xfer_mask() and
+->set_specific_mode() than having two somewhat overlapping callbacks?
+Or is there some problem that can't be handled that way?
 
 Thanks.
 
