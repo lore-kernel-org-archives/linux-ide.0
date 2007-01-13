@@ -1,41 +1,49 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Proposed changes for libata speed handling
-Date: Sat, 13 Jan 2007 10:01:58 +0000
-Message-ID: <20070113100158.1d79ba9f@localhost.localdomain>
-References: <20070112135301.4cdba24f@localhost.localdomain>
-	<45A83DD2.5020000@gmail.com>
+From: Faik Uygur <faik@pardus.org.tr>
+Subject: Re: ahci_softreset prevents acpi_power_off
+Date: Sat, 13 Jan 2007 14:10:33 +0200
+Message-ID: <200701131410.34265.faik@pardus.org.tr>
+References: <200701111231.26819.faik@pardus.org.tr> <45A831EA.50601@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51053 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751197AbXAMJub (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jan 2007 04:50:31 -0500
-In-Reply-To: <45A83DD2.5020000@gmail.com>
+Received: from ns2.uludag.org.tr ([193.140.100.220]:47460 "EHLO uludag.org.tr"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030514AbXAMMKN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jan 2007 07:10:13 -0500
+In-Reply-To: <45A831EA.50601@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-O> Wouldn't it be better to have ->determine_xfer_mask() and
-> ->set_specific_mode() than having two somewhat overlapping callbacks?
-> Or is there some problem that can't be handled that way?
+Hello Tejun,
 
-I'm not sure I follow what you are suggesting - can you explain further.
+13 Oca 2007 Cts 03:12 tarihinde =C5=9Funlar=C4=B1 yazm=C4=B1=C5=9Ft=C4=B1=
+n=C4=B1z:
+> If possible, please post dmesg of shutting down. =20
 
-Right now ->set_mode does all the policy management with regards to
-picking the right modes which is sometimes done by the usual ATA rules
-and sometimes by card specific code.
+I have taken more detailed dmesg outputs of three configs with ATA_DEBU=
+G and=20
+ATA_VERBOSE_DEBUG defined. You can find them at this address:
 
-->set_specific_mode does no policy work but merely sets up a mode.
+http://cekirdek.pardus.org.tr/~faik/tmp/ahci/
 
-The default behaviour of ->set_mode() is the ATA mode selection by best
-mode available, and this function is normally not provided by a driver.
+* ahci file is the output of CONFIG_SCSI_SATA_AHCI compiled config
+* noahci file is the output of CONFIG_SCSI_SATA_AHCI not compiled confi=
+g
+* ahci-nullsoftreset is the output of CONFIG_SCSI_SATA_AHCI compiled co=
+nfig
+but given NULL to softreset parameters of ata_do_eh in ahci.c
 
-The default behaviour of ->set_specific_mode() is to verify the mode is
-valid then issue ->set_pio|dma_mode() (for both devices in case a timing
-change on both is triggered). This function is overridable because of
-things like IT821x where the IDE mode is imaginary.
+Also poweroff-config is the used .config file. Only CONFIG_SCSI_SATA_AH=
+CI is
+changed between them.
 
-Alan
+I am not familiar with AHCI nor ATA internals. So please ask if you wou=
+ld like=20
+to see anything more.
+
+Regards,
+- Faik
