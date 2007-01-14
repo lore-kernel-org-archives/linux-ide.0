@@ -1,53 +1,56 @@
 From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: 2.6.20-rc4-mm1
-Date: Mon, 15 Jan 2007 09:20:42 +1100
-Message-ID: <20070114222042.GO5860@kernel.dk>
-References: <20070111222627.66bb75ab.akpm@osdl.org> <1168768104.2941.53.camel@localhost.localdomain> <1168771617.2941.59.camel@localhost.localdomain> <1168785616.2941.67.camel@localhost.localdomain>
+Date: Mon, 15 Jan 2007 09:30:19 +1100
+Message-ID: <20070114223019.GP5860@kernel.dk>
+References: <20070111222627.66bb75ab.akpm@osdl.org> <1168768104.2941.53.camel@localhost.localdomain> <1168771617.2941.59.camel@localhost.localdomain> <1168785616.2941.67.camel@localhost.localdomain> <20070114220515.GG5860@kernel.dk> <1168813901.2941.85.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751742AbXAOAHb@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:9550 "EHLO virtualhost.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751246AbXANW3r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 14 Jan 2007 17:29:47 -0500
 Content-Disposition: inline
-In-Reply-To: <1168785616.2941.67.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1168813901.2941.85.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Thomas Gleixner <tglx@linutronix.de>
 Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 On Sun, Jan 14 2007, Thomas Gleixner wrote:
-> On Sun, 2007-01-14 at 11:46 +0100, Thomas Gleixner wrote:
-> > > Boot proceeds, but gets stuck hard at:
-> > > "Remounting root filesystem in read-write mode:"
-> > > 
-> > > No SysRq-T, nothing.
-> > > 
-> > > The above BUG seems unrelated to that. Investigating further.
-> > 
-> > Bisect identified: git-block.patch
+> On Mon, 2007-01-15 at 09:05 +1100, Jens Axboe wrote:
+> > raid seems to have severe problems with the plugging change. I'll try
+> > and find Neil and have a chat with him, hopefully we can work it out.
 > 
-> Does only happen on 2 systems. Both have sata + raid1 setup. I managed 
-> to get a stacktrace from the SMP box. Sits there and sleeps forever.
+> Some hints:
 > 
-> 	tglx
+> mount(1899): WRITE block 16424 on md3
+> call md_write_start
+> md3_raid1(438): WRITE block 40965504 on sdb6
+> md3_raid1(438): WRITE block 40965504 on sda6
+> First Write sector 16424 disks 2
 > 
-> [<c032ac64>] io_schedule+0x7a/0x9a
-> [<c0157f89>] sleep_on_page+0x8/0xc
-> [<c032ae45>] __wait_on_bit+0x36/0x5d
-> [<c01580d8>] wait_on_page_bit+0x5b/0x61
-> [<c0158a2b>] wait_on_page_writeback_range+0x4f/0xef
-> [<c0158b0f>] filemap_fdatawait+0x44/0x49
-> [<c0158da0>] filemap_write_and_wait+0x22/0x2d
-> [<c0190e39>] sync_blockdev+0x17/0x1d
-> [<c01a27af>] quota_sync_sb+0x33/0xd6
-> [<c01a2874>] sync_dquots+0x22/0xfa
-> [<c01757cf>] __fsync_super+0x17/0x66
-> [<c0175829>] fsync_super+0xb/0x19
-> [<c0175880>] do_remount_sb+0x49/0x101
-> [<c0187f98>] do_mount+0x1ad/0x678
-> [<c01884d2>] sys_mount+0x6f/0xa4
-> [<c0103f6a>] sysenter_past_esp+0x5f/0x99
+> Stuck.
+> 
+> Note, that neither end_buffer_async_write() nor
+> raid1_end_write_request() are invoked, 
+> 
+> In a previous write invoked by:
+> fsck.ext3(1896): WRITE block 8552 on sdb1
+> end_buffer_async_write() is invoked.
+> 
+> sdb1 is not a part of a raid device.
 
-raid seems to have severe problems with the plugging change. I'll try
-and find Neil and have a chat with him, hopefully we can work it out.
+When I briefly tested this before I left (and found it broken), doing a
+cat /proc/mdstat got things going again. Hard if that's your rootfs,
+it's just a hint :-)
+
+> Hope that helps,
+
+I can reproduce, so that's not a problem. I can't do much about it until
+I'm back next week, but Neil might be able to help. We shall see. Thanks
+for testing.
 
 -- 
 Jens Axboe
+
