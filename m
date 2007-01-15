@@ -1,85 +1,306 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Proposed changes for libata speed handling
-Date: Mon, 15 Jan 2007 12:09:20 +0900
-Message-ID: <45AAF060.3040106@gmail.com>
-References: <20070112135301.4cdba24f@localhost.localdomain>	<45A83DD2.5020000@gmail.com> <20070113100158.1d79ba9f@localhost.localdomain>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH -mm] sata_nv: cleanup ADMA error handling
+Date: Sun, 14 Jan 2007 20:40:01 -0600
+Message-ID: <45AAE981.60906@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751785AbXAODJo@vger.kernel.org>
-In-Reply-To: <20070113100158.1d79ba9f@localhost.localdomain>
+Content-Type: multipart/mixed; boundary=------------020709050709090500030209
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751790AbXAOClH@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Allen Martin <AMartin@nvidia.com>
 List-Id: linux-ide@vger.kernel.org
 
-Alan wrote:
-> O> Wouldn't it be better to have ->determine_xfer_mask() and
->> ->set_specific_mode() than having two somewhat overlapping callbacks?
->> Or is there some problem that can't be handled that way?
-> 
-> I'm not sure I follow what you are suggesting - can you explain further.
-> 
-> Right now ->set_mode does all the policy management with regards to
-> picking the right modes which is sometimes done by the usual ATA rules
-> and sometimes by card specific code.
-> 
-> ->set_specific_mode does no policy work but merely sets up a mode.
-> 
-> The default behaviour of ->set_mode() is the ATA mode selection by best
-> mode available, and this function is normally not provided by a driver.
-> 
-> The default behaviour of ->set_specific_mode() is to verify the mode is
-> valid then issue ->set_pio|dma_mode() (for both devices in case a timing
-> change on both is triggered). This function is overridable because of
-> things like IT821x where the IDE mode is imaginary.
+This is a multi-part message in MIME format.
+--------------020709050709090500030209
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-What I was thinking about was something like the following.
+Should apply to -mm tree or current libata-dev git tree. Sorry for 
+attaching, but I seem to have misplaced the magic incantations to make 
+Thunderbird not destroy inline patches..
 
-* ops
+---
 
-	unsigned int (*determine_xfer_mask)(struct ata_device *dev);
-	int (*set_specific_mode)(struct ata_device *dev,
-				unsigned int xfer_mode);
+This cleans up a few issues with the error handling in sata_nv in ADMA 
+mode to make it more consistent with other NCQ-capable drivers like ahci 
+and sata_sil24:
 
-* during init and EH
+-When a command failed, we would effectively set AC_ERR_DEV on the 
+queued command always. In the case of NCQ commands this prevents libata 
+from doing a log page query to determine the details of the failed 
+command, since it thinks we've already analyzed. Just set flags in the 
+port ehi->err_mask, then freeze or abort and let libata figure out what 
+went wrong.
 
-	if (init) {
-		ap->xfer_mask &= ops->determine_xfer_mask(dev);
-		DETERMINE best_mode;
-	}
+-The code handled NV_ADMA_STAT_CPBERR as a "really bad error" which 
+caused it to set error flags on every queued command. I don't know 
+exactly what this flag means (no docs, grr!) but from what I can guess 
+from the standard ADMA spec, it just means that one or more of the CPBs 
+had an error, so we just need to go through and do our normal checks in 
+this case.
 
-	if (ap->ehi.target_mode && valid)
-		mode = ap->ehi.target_mode;
-	else
-		mode = best_mode;
+-In the error_handler function the code would always go through and do 
+an ADMA channel reset and also dump out the state of all the CPBs. This 
+reset seems heinous in this situation since we haven't even decided to 
+reset anything yet. The output seems redundant at this point since 
+libata already dumps the state of all active commands on errors (and it 
+also triggers at times when it shouldn't, like when suspending). Do the 
+ADMA reset only on hardreset and remove the output.
 
-	rc = ops->set_specific_mode(dev, mode);
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-* when the user issues SET_XFERMODE, in the issue path
 
-	if (command is SET_XFERMODE) {
-		if (mode is invalid)
-			fail;
-		ap->ehi.target_mode = user_specified_mode;
-		ata_port_schedule_eh(ap);
-		done;
-	}
+--------------020709050709090500030209
+Content-Type: text/plain;
+ name="sata_nv-cleanup-error-handling.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sata_nv-cleanup-error-handling.patch"
 
-To sum up,
+--- linux-2.6.20-rc5/drivers/ata/sata_nv.c	2007-01-12 23:18:08.000000000 -0600
++++ linux-2.6.20-rc5edit/drivers/ata/sata_nv.c	2007-01-14 20:08:35.000000000 -0600
+@@ -646,53 +646,64 @@ static unsigned int nv_adma_tf_to_cpb(st
+ 	return idx;
+ }
+ 
+-static void nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
++static int nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
+ {
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+-	int complete = 0, have_err = 0;
+ 	u8 flags = pp->cpb[cpb_num].resp_flags;
+ 
+ 	VPRINTK("CPB %d, flags=0x%x\n", cpb_num, flags);
+ 
+-	if (flags & NV_CPB_RESP_DONE) {
+-		VPRINTK("CPB flags done, flags=0x%x\n", flags);
+-		complete = 1;
+-	}
+-	if (flags & NV_CPB_RESP_ATA_ERR) {
+-		ata_port_printk(ap, KERN_ERR, "CPB flags ATA err, flags=0x%x\n", flags);
+-		have_err = 1;
+-		complete = 1;
+-	}
+-	if (flags & NV_CPB_RESP_CMD_ERR) {
+-		ata_port_printk(ap, KERN_ERR, "CPB flags CMD err, flags=0x%x\n", flags);
+-		have_err = 1;
+-		complete = 1;
+-	}
+-	if (flags & NV_CPB_RESP_CPB_ERR) {
+-		ata_port_printk(ap, KERN_ERR, "CPB flags CPB err, flags=0x%x\n", flags);
+-		have_err = 1;
+-		complete = 1;
++	if(unlikely((force_err ||
++		     flags & (NV_CPB_RESP_ATA_ERR |
++			      NV_CPB_RESP_CMD_ERR |
++			      NV_CPB_RESP_CPB_ERR)))) {
++		struct ata_eh_info *ehi = &ap->eh_info;
++		int freeze = 0;
++		ata_ehi_clear_desc(ehi);
++		ata_ehi_push_desc(ehi, "CPB resp_flags 0x%x", flags );
++		if(flags & NV_CPB_RESP_ATA_ERR) {
++			ata_ehi_push_desc(ehi, ": ATA error");
++			ehi->err_mask |= AC_ERR_DEV;
++		}
++		else if(flags & NV_CPB_RESP_CMD_ERR) {
++			ata_ehi_push_desc(ehi, ": CMD error");
++			ehi->err_mask |= AC_ERR_DEV;
++		}
++		else if(flags & NV_CPB_RESP_CPB_ERR) {
++			ata_ehi_push_desc(ehi, ": CPB error");
++			ehi->err_mask |= AC_ERR_SYSTEM;
++			freeze = 1;
++		}
++		else {
++			/* notifier error, but no error in CPB flags? */
++			ehi->err_mask |= AC_ERR_OTHER;
++			freeze = 1;
++		}
++		/* Kill all commands. EH will determine what actually failed. */
++		if(freeze)
++			ata_port_freeze(ap);
++		else
++			ata_port_abort(ap);
++		return 1;
+ 	}
+-	if(complete || force_err)
+-	{
++		
++	if (flags & NV_CPB_RESP_DONE) {
+ 		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, cpb_num);
++		VPRINTK("CPB flags done, flags=0x%x\n", flags);
+ 		if(likely(qc)) {
+-			u8 ata_status = 0;
+-			/* Only use the ATA port status for non-NCQ commands.
++			/* Grab the ATA port status for non-NCQ commands.
+ 			   For NCQ commands the current status may have nothing to do with
+ 			   the command just completed. */
+-			if(qc->tf.protocol != ATA_PROT_NCQ)
+-				ata_status = readb(pp->ctl_block + (ATA_REG_STATUS * 4));
+-
+-			if(have_err || force_err)
+-				ata_status |= ATA_ERR;
+-
+-			qc->err_mask |= ac_err_mask(ata_status);
++			if(qc->tf.protocol != ATA_PROT_NCQ) {
++				u8 ata_status = readb(pp->ctl_block + (ATA_REG_STATUS * 4));
++				qc->err_mask |= ac_err_mask(ata_status);
++			}
+ 			DPRINTK("Completing qc from tag %d with err_mask %u\n",cpb_num,
+ 				qc->err_mask);
+ 			ata_qc_complete(qc);
+ 		}
+ 	}
++	return 0;
+ }
+ 
+ static int nv_host_intr(struct ata_port *ap, u8 irq_stat)
+@@ -743,7 +754,6 @@ static irqreturn_t nv_adma_interrupt(int
+ 			void __iomem *mmio = pp->ctl_block;
+ 			u16 status;
+ 			u32 gen_ctl;
+-			int have_global_err = 0;
+ 			u32 notifier, notifier_error;
+ 
+ 			/* if in ATA register mode, use standard ata interrupt handler */
+@@ -774,42 +784,50 @@ static irqreturn_t nv_adma_interrupt(int
+ 			readw(mmio + NV_ADMA_STAT); /* flush posted write */
+ 			rmb();
+ 
+-			/* freeze if hotplugged */
+-			if (unlikely(status & (NV_ADMA_STAT_HOTPLUG | NV_ADMA_STAT_HOTUNPLUG))) {
+-				ata_port_printk(ap, KERN_NOTICE, "Hotplug event, freezing\n");
++			handled++; /* irq handled if we got here */
++
++			/* freeze if hotplugged or controller error */
++			if (unlikely(status & (NV_ADMA_STAT_HOTPLUG |
++					       NV_ADMA_STAT_HOTUNPLUG |
++					       NV_ADMA_STAT_TIMEOUT))) {
++				struct ata_eh_info *ehi = &ap->eh_info;
++				ata_ehi_clear_desc(ehi);
++				ata_ehi_push_desc(ehi, "ADMA status 0x%08x", status );
++				if(status & NV_ADMA_STAT_TIMEOUT) {
++					ehi->err_mask |= AC_ERR_SYSTEM;
++					ata_ehi_push_desc(ehi, ": timeout");
++				}
++				else if(status & NV_ADMA_STAT_HOTPLUG) {
++					ata_ehi_hotplugged(ehi);
++					ata_ehi_push_desc(ehi, ": hotplug");
++				}
++				else if(status & NV_ADMA_STAT_HOTUNPLUG) {
++					ata_ehi_hotplugged(ehi);
++					ata_ehi_push_desc(ehi, ": hot unplug");
++				}
+ 				ata_port_freeze(ap);
+-				handled++;
+ 				continue;
+ 			}
+ 
+-			if (status & NV_ADMA_STAT_TIMEOUT) {
+-				ata_port_printk(ap, KERN_ERR, "timeout, stat=0x%x\n", status);
+-				have_global_err = 1;
+-			}
+-			if (status & NV_ADMA_STAT_CPBERR) {
+-				ata_port_printk(ap, KERN_ERR, "CPB error, stat=0x%x\n", status);
+-				have_global_err = 1;
+-			}
+-			if ((status & NV_ADMA_STAT_DONE) || have_global_err) {
++			if (status & (NV_ADMA_STAT_DONE |
++				      NV_ADMA_STAT_CPBERR)) {
+ 				/** Check CPBs for completed commands */
+ 
+ 				if(ata_tag_valid(ap->active_tag))
+ 					/* Non-NCQ command */
+-					nv_adma_check_cpb(ap, ap->active_tag, have_global_err ||
+-						(notifier_error & (1 << ap->active_tag)));
++					nv_adma_check_cpb(ap, ap->active_tag, 
++						notifier_error & (1 << ap->active_tag));
+ 				else {
+-					int pos;
++					int pos, error = 0;
+ 					u32 active = ap->sactive;
+-					while( (pos = ffs(active)) ) {
++					while( (pos = ffs(active)) && !error) {
+ 						pos--;
+-						nv_adma_check_cpb(ap, pos, have_global_err ||
+-							(notifier_error & (1 << pos)) );
++						error = nv_adma_check_cpb(ap, pos,
++							notifier_error & (1 << pos) );
+ 						active &= ~(1 << pos );
+ 					}
+ 				}
+ 			}
+-
+-			handled++; /* irq handled if we got here */
+ 		}
+ 	}
+ 	
+@@ -1373,13 +1391,7 @@ static int nv_hardreset(struct ata_port 
+ 	return sata_std_hardreset(ap, &dummy);
+ }
+ 
+-static void nv_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
+-			   nv_hardreset, ata_std_postreset);
+-}
+-
+-static void nv_adma_error_handler(struct ata_port *ap)
++static int nv_adma_hardreset(struct ata_port *ap, unsigned int *class)
+ {
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+ 	if(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE)) {
+@@ -1387,28 +1399,9 @@ static void nv_adma_error_handler(struct
+ 		int i;
+ 		u16 tmp;
+ 
+-		u32 notifier = readl(mmio + NV_ADMA_NOTIFIER);
+-		u32 notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
+-		u32 gen_ctl = readl(pp->gen_block + NV_ADMA_GEN_CTL);
+-		u32 status = readw(mmio + NV_ADMA_STAT);
+-
+-		ata_port_printk(ap, KERN_ERR, "EH in ADMA mode, notifier 0x%X "
+-			"notifier_error 0x%X gen_ctl 0x%X status 0x%X\n",
+-			notifier, notifier_error, gen_ctl, status);
+-
+-		for( i=0;i<NV_ADMA_MAX_CPBS;i++) {
+-			struct nv_adma_cpb *cpb = &pp->cpb[i];
+-			if( cpb->ctl_flags || cpb->resp_flags )
+-				ata_port_printk(ap, KERN_ERR,
+-					"CPB %d: ctl_flags 0x%x, resp_flags 0x%x\n",
+-					i, cpb->ctl_flags, cpb->resp_flags);
+-		}
+-
+-		/* Push us back into port register mode for error handling. */
++		/* Push us back into port register mode for hardreset. */
+ 		nv_adma_register_mode(ap);
+ 
+-		ata_port_printk(ap, KERN_ERR, "Resetting port\n");
+-
+ 		/* Mark all of the CPBs as invalid to prevent them from being executed */
+ 		for( i=0;i<NV_ADMA_MAX_CPBS;i++)
+ 			pp->cpb[i].ctl_flags &= ~NV_CPB_CTL_CPB_VALID;
+@@ -1424,11 +1417,21 @@ static void nv_adma_error_handler(struct
+ 		writew(tmp & ~NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
+ 		readl( mmio + NV_ADMA_CTL );	/* flush posted write */
+ 	}
++	return nv_hardreset(ap, class);
++}
+ 
++static void nv_error_handler(struct ata_port *ap)
++{
+ 	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
+ 			   nv_hardreset, ata_std_postreset);
+ }
+ 
++static void nv_adma_error_handler(struct ata_port *ap)
++{
++	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
++			   nv_adma_hardreset, ata_std_postreset);
++}
++
+ static int nv_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version = 0;
 
-1. separate supported mode detection and mode programming such that we
-can use the same programming path for both init and handling user-issued
-SET_XFERMODE.
-
-2. group all mode programming callbacks (->set_piomode, ->set_dmamode
-and ->post_set_mode into ->set_specific_mode) into ->set_specific_mode
-to allow more flexibility and replace ->set_mode.
-
-3. make sure all xfer mode programming is done in EH.  this will ease
-support for weird controllers (e.g. cross-port synchronization).
-
-Thanks.
-
--- 
-tejun
+--------------020709050709090500030209--
