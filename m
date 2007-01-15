@@ -1,40 +1,47 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: 2.6.20-rc4-mm1
-Date: Mon, 15 Jan 2007 09:22:20 +0100
-Message-ID: <20070115082219.GA9062@elte.hu>
-References: <20070111222627.66bb75ab.akpm@osdl.org> <1168768104.2941.53.camel@localhost.localdomain> <1168771617.2941.59.camel@localhost.localdomain> <1168785616.2941.67.camel@localhost.localdomain> <20070114220515.GG5860@kernel.dk> <1168813901.2941.85.camel@localhost.localdomain> <20070114223019.GP5860@kernel.dk>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Norco DS-1220 (sil3726+sil3124) / libata-tj bug report
+Date: Mon, 15 Jan 2007 14:08:59 +0900
+Message-ID: <45AB0C6B.60904@gmail.com>
+References: <Pine.LNX.4.58.0701050332200.26166@mailx> <45A1AD84.5060202@gmail.com> <Pine.LNX.4.58.0701130214230.17363@mailx> <Pine.LNX.4.58.0701132336370.17363@mailx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fallback.mail.elte.hu ([157.181.151.13]:40273 "EHLO
-	fallback.mail.elte.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751824AbXAOIdv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jan 2007 03:33:51 -0500
-Received: from mx2.mail.elte.hu ([157.181.151.9])
-	by fallback.mail.elte.hu with esmtp (Exim)
-	id 1H6NHj-00047l-Mh
-	from <mingo@elte.hu>
-	for <linux-ide@vger.kernel.org>; Mon, 15 Jan 2007 09:33:44 +0100
-Content-Disposition: inline
-In-Reply-To: <20070114223019.GP5860@kernel.dk>
+Received: from an-out-0708.google.com ([209.85.132.244]:29790 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813AbXAOFJN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jan 2007 00:09:13 -0500
+Received: by an-out-0708.google.com with SMTP id b33so730008ana
+        for <linux-ide@vger.kernel.org>; Sun, 14 Jan 2007 21:09:12 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.58.0701132336370.17363@mailx>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Brad Fitzpatrick <brad@danga.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-
-* Jens Axboe <jens.axboe@oracle.com> wrote:
-
-> > In a previous write invoked by: fsck.ext3(1896): WRITE block 8552 on 
-> > sdb1 end_buffer_async_write() is invoked.
-> > 
-> > sdb1 is not a part of a raid device.
+Brad Fitzpatrick wrote:
+> On Sat, 13 Jan 2007, Brad Fitzpatrick wrote:
 > 
-> When I briefly tested this before I left (and found it broken), doing 
-> a cat /proc/mdstat got things going again. Hard if that's your rootfs, 
-> it's just a hint :-)
+>> I tried another disk (but of the same type), and got the same results both
+>> direct and via PMP.
+>>
+>> Are these disks too old to be hot-plugged?  (but I recall the
+>> identical errors happening on boot after I power-cycled the enclosure
+>> and the host...)
+> 
+> Conclusion to this story, for posterity:
+> 
+> Seems to be the disk type.
+> 
+> I have six Western Digital WD2500JD-00GBB0.  Tried two both direct and
+> PMP, no success.
+> 
+> Went and bought a new Segate ST3500630AS 500GB and it hotplugged both
+> direct and PMP without problems.
+> 
+> So I guess the old WD2500JD-00GBB0 aren't compatible?
 
-hm, so you knew it's broken, still you let Andrew pick it up, or am i 
-misunderstanding something?
+I'll have to ask other people about this.  Don't have that particular drive.
 
-	Ingo
+-- 
+tejun
