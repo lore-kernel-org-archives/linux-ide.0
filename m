@@ -1,25 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Proposed changes for libata speed handling
-Date: Mon, 15 Jan 2007 08:52:56 -0500
-Message-ID: <45AB8738.6090405@garzik.org>
-References: <20070112135301.4cdba24f@localhost.localdomain>	<45A83DD2.5020000@gmail.com> <20070113100158.1d79ba9f@localhost.localdomain> <45AAF060.3040106@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ahci problems with sata disk.
+Date: Mon, 15 Jan 2007 18:13:22 +0900
+Message-ID: <45AB45B2.2080602@gmail.com>
+References: <1168785128.7865.13.camel@duo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932359AbXAONxB@vger.kernel.org>
-In-Reply-To: <45AAF060.3040106@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.245]:14394 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932122AbXAOJNc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jan 2007 04:13:32 -0500
+Received: by an-out-0708.google.com with SMTP id b33so738756ana
+        for <linux-ide@vger.kernel.org>; Mon, 15 Jan 2007 01:13:31 -0800 (PST)
+In-Reply-To: <1168785128.7865.13.camel@duo>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: kenneth johansson <ken@kenjo.org>
+Cc: linux-ide@vger.kernel.org
 
-BTW, for a solution to be complete, we need to halt all work on all 
-other ports, when issuing SET FEATURES - XFER MODE.  On SiI and Promise 
-controllers, possibly others, the command is snooped and side effects 
-such as register setting occur.
+kenneth johansson wrote:
+> I changed my bios setting for SATA from IDE to AHCI.
+> 
+> This resulted in some "interesting" read throughput. 
+> 
+> plots can be found at http://kenjo.org/~ken/sata/
+> The plots was done on a live disk so some noise is expected but in the
+> ahci mode the throughput get stuck at 17 MB way to much.
 
-Long standing to-do.  Currently we hack around this by serializing the 
-bus probe, and preventing people from issuing SET FEATURES - XFER MODE 
-from userspace.
+It's probably not an ahci problem but more of NCQ implementation problem
+in the drive firmware.  Please report the result of 'hdparm -I /dev/sdX'
+and try adjust queue depth and see what happens.
 
-	Jeff
+http://linux-ata.org/faq.html
+
+-- 
+tejun
