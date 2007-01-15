@@ -1,34 +1,28 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_vsc.c cache line size question
-Date: Sun, 14 Jan 2007 13:21:49 -0500
-Message-ID: <45AA74BD.9020803@garzik.org>
-References: <92952AEF1F064042B6EF2522E0EEF43703EE316A@EXNA.corp.stratus.com>	<20070114080301.GD61246@sgi.com> <20070114144722.73fe0b49@localhost.localdomain>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: ahci problems with sata disk.
+Date: Mon, 15 Jan 2007 11:36:33 +0000
+Message-ID: <20070115113633.7a1dcd44@localhost.localdomain>
+References: <1168785128.7865.13.camel@duo>
+	<45AB45B2.2080602@gmail.com>
+	<1168859112.6980.8.camel@duo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42809 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751449AbXANSVz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 14 Jan 2007 13:21:55 -0500
-In-Reply-To: <20070114144722.73fe0b49@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39328 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932230AbXAOLY6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jan 2007 06:24:58 -0500
+In-Reply-To: <1168859112.6980.8.camel@duo>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Jeremy Higdon <jeremy@sgi.com>, "Dailey, Nate" <Nate.Dailey@stratus.com>, linux-ide@vger.kernel.org
+To: kenneth johansson <ken@kenjo.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Alan wrote:
->> So I suppose the driver should be modified to set it to 0x80 only
->> if it's 0.  I believe that most PCI implementations will set it in
->> the BIOS or whatever.
-> 
-> pci_set_master should handle this automtically on most platforms.
+> also the disk is a Westen Digital raptor and it's probably the most
+> benchmarked drive one could get so I was not expecting a problem with
+> the drive. 
 
-pci_set_master() sets the latency timer not cacheline size
-
-pci_set_mwi() on x86-ish platforms sets cacheline size.
-
-	Jeff
-
-
-
+A lot of early NCQ firmware seems to reduce performance and cause
+problems. At least one other raptor is in our "don't NCQ" list in the
+kernel drivers.
