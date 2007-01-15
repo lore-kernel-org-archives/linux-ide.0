@@ -1,28 +1,56 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ahci problems with sata disk.
-Date: Mon, 15 Jan 2007 11:36:33 +0000
-Message-ID: <20070115113633.7a1dcd44@localhost.localdomain>
-References: <1168785128.7865.13.camel@duo>
-	<45AB45B2.2080602@gmail.com>
-	<1168859112.6980.8.camel@duo>
+From: Jordan Neumeyer <jnengland77@gmail.com>
+Subject: =?utf-8?b?cGF0YV9zaXM6?= =?utf-8?b?c2dfd3JpdGU=?= errors
+Date: Mon, 15 Jan 2007 19:05:29 +0000 (UTC)
+Message-ID: <loom.20070115T195130-154@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39328 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932230AbXAOLY6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jan 2007 06:24:58 -0500
-In-Reply-To: <1168859112.6980.8.camel@duo>
+Received: from main.gmane.org ([80.91.229.2]:45384 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751349AbXAOTKZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Jan 2007 14:10:25 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1H6XDX-0004GH-NT
+	for linux-ide@vger.kernel.org; Mon, 15 Jan 2007 20:10:04 +0100
+Received: from 209-159-211-241.bhfc.net ([209-159-211-241.bhfc.net])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 15 Jan 2007 20:10:03 +0100
+Received: from jnengland77 by 209-159-211-241.bhfc.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 15 Jan 2007 20:10:03 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kenneth johansson <ken@kenjo.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> also the disk is a Westen Digital raptor and it's probably the most
-> benchmarked drive one could get so I was not expecting a problem with
-> the drive. 
+Well recently I've been using libata since my my distribution offered it when
+they switched to 2.6.19( maybe? 18) in the initramfs image.  I have a sis 5513
+controller, which after a couple of days started acting up and coming up with
+the following error:
 
-A lot of early NCQ firmware seems to reduce performance and cause
-problems. At least one other raptor is in our "don't NCQ" list in the
-kernel drivers.
+sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data i$;
+ program grip not setting count and/or reply_len properly
+printk: 319 messages suppressed.
+sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data $n;
+ program grip not setting count and/or reply_len properly
+printk: 321 messages suppressed.
+sg_write: data in/out 16464/16464 bytes for SCSI command 0xbe--guessing data $n;
+ program grip not setting count and/or reply_len properly
+printk: 323 messages suppressed.
+sg_write: data in/out 16464/16464 bytes for SCSI command 0xbe--guessing data $n;
+ program grip not setting count and/or reply_len properly
+printk: 323 messages suppressed.
+sg_write: data in/out 16464/16464 bytes for SCSI command 0xbe--guessing data $n;
+ program grip not setting count and/or reply_len properly
+printk: 324 messages suppressed.
+
+It's repeated over, and over; differing amounts of bytes.  I'm unsure what
+invoked such errors, because it only started to happen a few days after use of
+the kernel.  Which was 2.6.19-beyond kernel.  I don't believe any additions made
+by the beyond kernel affected the libata system.
+
+Has this been fixed in the 2.6.20-rcXs?  
+
+~Jordan Neumeyer 
+
