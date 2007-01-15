@@ -1,40 +1,35 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: 2.6.20-rc4-mm1
-Date: Tue, 16 Jan 2007 10:55:24 +1100
-Message-ID: <20070115235524.GA4067@kernel.dk>
-References: <20070111222627.66bb75ab.akpm@osdl.org> <1168768104.2941.53.camel@localhost.localdomain> <1168771617.2941.59.camel@localhost.localdomain> <1168785616.2941.67.camel@localhost.localdomain> <20070114220515.GG5860@kernel.dk> <1168813901.2941.85.camel@localhost.localdomain> <20070114223019.GP5860@kernel.dk> <20070115082219.GA9062@elte.hu>
+From: Matthew Stapleton <matthew4196@gmail.com>
+Subject: Re: ICH7m problem using libata
+Date: Tue, 16 Jan 2007 09:58:33 +1000
+Message-ID: <200701160958.33561.matthew4196@gmail.com>
+References: <1165253799.16504.37.camel@laundromat.jangutter.com> <200701100817.28738.matthew4196@gmail.com> <45AB0F07.5020705@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:15776 "EHLO virtualhost.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932122AbXAOXy6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Jan 2007 18:54:58 -0500
+Received: from wr-out-0506.google.com ([64.233.184.228]:59430 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932136AbXAOX6t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jan 2007 18:58:49 -0500
+Received: by wr-out-0506.google.com with SMTP id i30so1163621wra
+        for <linux-ide@vger.kernel.org>; Mon, 15 Jan 2007 15:58:48 -0800 (PST)
+In-Reply-To: <45AB0F07.5020705@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20070115082219.GA9062@elte.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Jan 15 2007, Ingo Molnar wrote:
+Tejun Heo wrote:
+> Does the problem still persist?
 > 
-> * Jens Axboe <jens.axboe@oracle.com> wrote:
+> -- 
+> tejun
 > 
-> > > In a previous write invoked by: fsck.ext3(1896): WRITE block 8552 on 
-> > > sdb1 end_buffer_async_write() is invoked.
-> > > 
-> > > sdb1 is not a part of a raid device.
-> > 
-> > When I briefly tested this before I left (and found it broken), doing 
-> > a cat /proc/mdstat got things going again. Hard if that's your rootfs, 
-> > it's just a hint :-)
-> 
-> hm, so you knew it's broken, still you let Andrew pick it up, or am i 
-> misunderstanding something?
 
-Well the raid issue wasn't known before it was in -mm.
+With that kernel and the previous patches it does.  I'll try kernel 2.6.20-rc5 
+and the which-cocktail-2.6.19.patch
 
 -- 
-Jens Axboe
-
+Matthew Stapleton
