@@ -1,46 +1,35 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: 2.6.20-rc4-mm1
-Date: Sun, 14 Jan 2007 23:31:41 +0100
-Message-ID: <1168813901.2941.85.camel@localhost.localdomain>
-References: <20070111222627.66bb75ab.akpm@osdl.org>
-	 <1168768104.2941.53.camel@localhost.localdomain>
-	 <1168771617.2941.59.camel@localhost.localdomain>
-	 <1168785616.2941.67.camel@localhost.localdomain>
-	 <20070114220515.GG5860@kernel.dk>
-Reply-To: tglx@linutronix.de
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ICH7m problem using libata
+Date: Mon, 15 Jan 2007 14:20:07 +0900
+Message-ID: <45AB0F07.5020705@gmail.com>
+References: <1165253799.16504.37.camel@laundromat.jangutter.com> <200701031307.23024.matthew4196@gmail.com> <459B2699.8090506@gmail.com> <200701100817.28738.matthew4196@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751263AbXANWZf@vger.kernel.org>
-In-Reply-To: <20070114220515.GG5860@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.233]:46789 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751815AbXAOFUP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jan 2007 00:20:15 -0500
+Received: by wr-out-0506.google.com with SMTP id i30so939940wra
+        for <linux-ide@vger.kernel.org>; Sun, 14 Jan 2007 21:20:14 -0800 (PST)
+In-Reply-To: <200701100817.28738.matthew4196@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Matthew Stapleton <matthew4196@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 2007-01-15 at 09:05 +1100, Jens Axboe wrote:
-> raid seems to have severe problems with the plugging change. I'll try
-> and find Neil and have a chat with him, hopefully we can work it out.
+Matthew Stapleton wrote:
+> Tejun Heo wrote:
+>> Can you try the attached patch over 2.6.19 and report full dmesg?  Thanks.
+>>
+>> -- 
+>> tejun
+>>
+> 
+> Attached is my full dmesg.
 
-Some hints:
+Does the problem still persist?
 
-mount(1899): WRITE block 16424 on md3
-call md_write_start
-md3_raid1(438): WRITE block 40965504 on sdb6
-md3_raid1(438): WRITE block 40965504 on sda6
-First Write sector 16424 disks 2
-
-Stuck.
-
-Note, that neither end_buffer_async_write() nor
-raid1_end_write_request() are invoked, 
-
-In a previous write invoked by:
-fsck.ext3(1896): WRITE block 8552 on sdb1
-end_buffer_async_write() is invoked.
-
-sdb1 is not a part of a raid device.
-
-Hope that helps,
-
-	tglx
+-- 
+tejun
