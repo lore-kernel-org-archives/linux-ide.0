@@ -1,56 +1,40 @@
-From: Jordan Neumeyer <jnengland77@gmail.com>
-Subject: =?utf-8?b?cGF0YV9zaXM6?= =?utf-8?b?c2dfd3JpdGU=?= errors
-Date: Mon, 15 Jan 2007 19:05:29 +0000 (UTC)
-Message-ID: <loom.20070115T195130-154@post.gmane.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: 2.6.20-rc4-mm1
+Date: Tue, 16 Jan 2007 10:55:24 +1100
+Message-ID: <20070115235524.GA4067@kernel.dk>
+References: <20070111222627.66bb75ab.akpm@osdl.org> <1168768104.2941.53.camel@localhost.localdomain> <1168771617.2941.59.camel@localhost.localdomain> <1168785616.2941.67.camel@localhost.localdomain> <20070114220515.GG5860@kernel.dk> <1168813901.2941.85.camel@localhost.localdomain> <20070114223019.GP5860@kernel.dk> <20070115082219.GA9062@elte.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:45384 "EHLO ciao.gmane.org"
+Received: from ns.virtualhost.dk ([195.184.98.160]:15776 "EHLO virtualhost.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751349AbXAOTKZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Jan 2007 14:10:25 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1H6XDX-0004GH-NT
-	for linux-ide@vger.kernel.org; Mon, 15 Jan 2007 20:10:04 +0100
-Received: from 209-159-211-241.bhfc.net ([209-159-211-241.bhfc.net])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 15 Jan 2007 20:10:03 +0100
-Received: from jnengland77 by 209-159-211-241.bhfc.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 15 Jan 2007 20:10:03 +0100
+	id S932122AbXAOXy6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Jan 2007 18:54:58 -0500
+Content-Disposition: inline
+In-Reply-To: <20070115082219.GA9062@elte.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Well recently I've been using libata since my my distribution offered it when
-they switched to 2.6.19( maybe? 18) in the initramfs image.  I have a sis 5513
-controller, which after a couple of days started acting up and coming up with
-the following error:
+On Mon, Jan 15 2007, Ingo Molnar wrote:
+> 
+> * Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> > > In a previous write invoked by: fsck.ext3(1896): WRITE block 8552 on 
+> > > sdb1 end_buffer_async_write() is invoked.
+> > > 
+> > > sdb1 is not a part of a raid device.
+> > 
+> > When I briefly tested this before I left (and found it broken), doing 
+> > a cat /proc/mdstat got things going again. Hard if that's your rootfs, 
+> > it's just a hint :-)
+> 
+> hm, so you knew it's broken, still you let Andrew pick it up, or am i 
+> misunderstanding something?
 
-sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data i$;
- program grip not setting count and/or reply_len properly
-printk: 319 messages suppressed.
-sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data $n;
- program grip not setting count and/or reply_len properly
-printk: 321 messages suppressed.
-sg_write: data in/out 16464/16464 bytes for SCSI command 0xbe--guessing data $n;
- program grip not setting count and/or reply_len properly
-printk: 323 messages suppressed.
-sg_write: data in/out 16464/16464 bytes for SCSI command 0xbe--guessing data $n;
- program grip not setting count and/or reply_len properly
-printk: 323 messages suppressed.
-sg_write: data in/out 16464/16464 bytes for SCSI command 0xbe--guessing data $n;
- program grip not setting count and/or reply_len properly
-printk: 324 messages suppressed.
+Well the raid issue wasn't known before it was in -mm.
 
-It's repeated over, and over; differing amounts of bytes.  I'm unsure what
-invoked such errors, because it only started to happen a few days after use of
-the kernel.  Which was 2.6.19-beyond kernel.  I don't believe any additions made
-by the beyond kernel affected the libata system.
-
-Has this been fixed in the 2.6.20-rcXs?  
-
-~Jordan Neumeyer 
+-- 
+Jens Axboe
 
