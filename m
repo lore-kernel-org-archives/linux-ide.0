@@ -1,40 +1,31 @@
-From: jnengland77 <jnengland77@gmail.com>
-Subject: Re: pata_sis:sg_write errors
-Date: Tue, 16 Jan 2007 16:04:54 -0700
-Message-ID: <99cb77560701161504w141cdabfrff751e8f6efcd94e@mail.gmail.com>
-References: <loom.20070115T195130-154@post.gmane.org>
-	 <45AC3064.3070504@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: ipr SATA problems in 2.6.20
+Date: Tue, 16 Jan 2007 17:11:33 -0600
+Message-ID: <1168989094.2789.20.camel@mulgrave.il.steeleye.com>
+References: <45AD50AD.2040700@linux.vnet.ibm.com>
+	 <20070116224115.50d29cf7@localhost.localdomain>  <45AD55A4.50208@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:42047 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751760AbXAPXE5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jan 2007 18:04:57 -0500
-Received: by an-out-0708.google.com with SMTP id b33so1157173ana
-        for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2007 15:04:56 -0800 (PST)
-In-Reply-To: <45AC3064.3070504@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <45AD55A4.50208@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Hi
-Thank you for your help.  So all I need to do is update the sg3_utils?
- It's the only package I can find dealing with sg and scsi? And do I
-have to set this parameter or is it automatically set?  I've never
-dealt with this scsi system, because all I have are pata disks.  No
-sata nor scsi.
+On Tue, 2007-01-16 at 17:45 -0500, Jeff Garzik wrote:
+> Tejun recently updated the CDB length areas of the code.  I bet it's 
+> either a bug somewhere in there, or the SCSI layer isn't passing us 
+> proper command lengths in a case or two.
+> 
+> Additional traces (starting with SCSI command, before it hits libata) 
+> would be helpful.
 
-> This is not a kernel bug.  The SCSI midlayer is bitching that grip
-> hasn't set certain parameter while using the sg interface (which
-> previous kernels have ignored).  grip should be updated to use proper
-> parameter.  So, no, 2.6.20-rcX won't fix it.  You need to update grip.
->
-> --
-> tejun
->
+Actually, this looks like a potential bug in atapi_xlat():  it doesn't
+set qc->dma_dir.  Shouldn't it be setting it from
+qc->scsicmd->sc_data_direction like ata_scsi_translate() does?
 
-~Jordan Neumeyer
+James
+
+
