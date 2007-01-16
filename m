@@ -1,51 +1,49 @@
-From: Brad Fitzpatrick <brad@danga.com>
-Subject: crash w/ bonnie++ on XFS on LVM VG w/5 PMP devices
-Date: Tue, 16 Jan 2007 19:51:27 +0000 (UTC)
-Message-ID: <Pine.LNX.4.58.0701161933540.17363@mailx>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: ahci problems with sata disk.
+Date: Tue, 16 Jan 2007 15:20:49 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701161504050.18469@coffee.psychology.mcmaster.ca>
+References: <1168785128.7865.13.camel@duo> <45AB45B2.2080602@gmail.com>
+ <1168859112.6980.8.camel@duo> <f4527be0701160844r19fe5220i39a5834f1f4df570@mail.gmail.com>
+ <45AD1A3A.4000706@rtr.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.danga.com ([207.7.148.197]:47520 "EHLO danga.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751385AbXAPTvH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Jan 2007 14:51:07 -0500
-Received: from localhost (mailx [127.0.0.1])
-	by danga.com (Postfix) with ESMTP id 5FD9A14132A3
-	for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2007 19:51:38 +0000 (UTC)
-Received: from danga.com ([127.0.0.1])
-	by localhost (mailx [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
-	id 10893-02 for <linux-ide@vger.kernel.org>;
-	Tue, 16 Jan 2007 19:51:35 +0000 (UTC)
+Received: from coriana6.CIS.McMaster.CA ([130.113.128.17]:54085 "EHLO
+	coriana6.cis.mcmaster.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbXAPVXW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jan 2007 16:23:22 -0500
+Received: from daltron7.UTS.McMaster.CA (daltron7.UTS.mcmaster.ca [130.113.64.13])
+	by coriana6.cis.mcmaster.ca (8.13.7/8.13.7) with ESMTP id l0GKLQpv019343
+	for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2007 15:21:31 -0500 (EST)
+Received: from coffee.psychology.mcmaster.ca (coffee.Psychology.McMaster.CA [130.113.218.59])
+	by daltron7.UTS.McMaster.CA (8.13.7/8.13.7) with ESMTP id l0GKKnkf007287
+	for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2007 15:20:49 -0500
 Received: from localhost (localhost [127.0.0.1])
-	by danga.com (Postfix) with ESMTP id 167403430EF0
-	for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2007 19:51:28 +0000 (UTC)
+	by coffee.psychology.mcmaster.ca (Postfix) with ESMTP id 7BBFBEE030C
+	for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2007 15:20:49 -0500 (EST)
+In-Reply-To: <45AD1A3A.4000706@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hello,
+>>> I though that NCQ was intended to increase performance ??
 
-I can reliably crash 2.6.18.6 + libata-tj-2.6.18.1-20061020 with 5 PMP
-devices in a LVM2 volume group, with bonnie++ (filesystem benchmarking
-tool) running on a 2.3TB XFS filesystem.
+intended to increase _sales_ performance ;)
 
-The crash happens almost immediately upon starting bonnie, within writing
-~600 MB of the initial test file.
+remember that you've always had command queueing (kernel elevator): 
+the main difference with NCQ (or SCSI tagged queueing) is when
+the disk can out-schedule the kernel.  afaikt, this means sqeezing
+in a rotationally intermediate request along the way.
 
-Unfortunately the backtrace blows the VGA console and I'm unable to
-capture it with netconsole.  Sysrq seems equally useless.
+that intermediate request must be fairly small and should be a read
+(for head-settling reasons).
 
-So before I go find/buy a serial cable and move a computer to get a serial
-console backtrace, I'd like to try the latest git repo w/ PMP.  I got the
-libata-tj git with:
+I wonder how often this happens in the real world, given the relatively
+small queues the disk has to work with.
 
-   git clone git://htj.dyndns.org/libata-tj
+> My hdparm test is a sequential read-ahead test, so it will
+> naturally perform worse on a Raptor when NCQ is on.
 
-But it doesn't seem to have PMP in it.  I see the "pmp" head has it, but
-is there anything that's merged with upstream any more recently than
-2006-10?
-
-Thanks!
-
-Brad
-
+that's a surprisingly naive heuristic, especially since 
+NCQ is concerned with just a max of ~4MB of reads, only a smallish
+fraction of the available cache.
