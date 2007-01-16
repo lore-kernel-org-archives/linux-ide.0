@@ -1,40 +1,107 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_uli: ignore SIMPLEX
-Date: Tue, 16 Jan 2007 14:55:51 +0900
-Message-ID: <20070116055551.GN10987@htj.dyndns.org>
+Subject: [PATCH] ahci: improve and limit spurious interrupt messages, take#2
+Date: Tue, 16 Jan 2007 15:52:39 +0900
+Message-ID: <20070116065239.GO10987@htj.dyndns.org>
+References: <20070115090117.GL10987@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [221.139.199.108] ([221.139.199.108]:42923 "EHLO htj.dyndns.org"
+Received: from [221.139.199.108] ([221.139.199.108]:48353 "EHLO htj.dyndns.org"
 	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S932374AbXAPFz7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Jan 2007 00:55:59 -0500
+	id S932421AbXAPGwo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Jan 2007 01:52:44 -0500
 Content-Disposition: inline
+In-Reply-To: <20070115090117.GL10987@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Some uli controllers have stuck SIMPLEX bit which can't be cleared
-with ata_pci_clear_simplex(), but the controller is capable of doing
-DMAs on both channels simultaneously.  Ignore it.
+We're still seeing a lot of issues with NCQ implementation in drive
+firmwares.  Sprious FISes during NCQ command phase occur on many
+drives and some of them seem potentially dangerous (at least to me).
+Until we find the solution, spurious messages can give us more info.
+Improve and limit them such that more info can be reported while not
+disturbing users too much.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Updated to not use bitfields as requested.  Thanks.
 
-diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
-index 5c603ca..62b9269 100644
---- a/drivers/ata/sata_uli.c
-+++ b/drivers/ata/sata_uli.c
-@@ -226,6 +226,13 @@ static int uli_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5998f74..d5ea1c3 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -75,6 +75,7 @@ enum {
+ 	AHCI_CMD_CLR_BUSY	= (1 << 10),
  
- 	probe_ent->private_data = hpriv;
+ 	RX_FIS_D2H_REG		= 0x40,	/* offset of D2H Register FIS data */
++	RX_FIS_SDB		= 0x58, /* offset of SDB FIS data */
+ 	RX_FIS_UNK		= 0x60, /* offset of Unknown FIS data */
  
-+	/* these chips have stuck dummy simplex bit, ignore it */
-+	if (probe_ent->_host_flags & ATA_HOST_SIMPLEX) {
-+		dev_printk(KERN_INFO, &pdev->dev,
-+			   "BMDMA simplex set, ignored\n");
-+		probe_ent->_host_flags &= ~ATA_HOST_SIMPLEX;
-+	}
+ 	board_ahci		= 0,
+@@ -202,6 +203,9 @@ struct ahci_port_priv {
+ 	dma_addr_t		cmd_tbl_dma;
+ 	void			*rx_fis;
+ 	dma_addr_t		rx_fis_dma;
++	/* for NCQ spurious interrupt analysis */
++	int			spurious_sdb_cnt;
++	u32			seen_status;
+ };
+ 
+ static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg);
+@@ -1126,6 +1130,7 @@ static void ahci_host_intr(struct ata_port *ap)
+ 	void __iomem *mmio = ap->host->mmio_base;
+ 	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+ 	struct ata_eh_info *ehi = &ap->eh_info;
++	struct ahci_port_priv *pp = ap->private_data;
+ 	u32 status, qc_active;
+ 	int rc;
+ 
+@@ -1154,17 +1159,40 @@ static void ahci_host_intr(struct ata_port *ap)
+ 
+ 	/* hmmm... a spurious interupt */
+ 
+-	/* some devices send D2H reg with I bit set during NCQ command phase */
+-	if (ap->sactive && (status & PORT_IRQ_D2H_REG_FIS))
++	/* if !NCQ, ignore.  No modern ATA device has broken HSM
++	 * implementation for non-NCQ commands.
++	 */
++	if (!ap->sactive)
+ 		return;
+ 
+-	/* ignore interim PIO setup fis interrupts */
+-	if (ata_tag_valid(ap->active_tag) && (status & PORT_IRQ_PIOS_FIS))
+-		return;
++	if ((status & PORT_IRQ_D2H_REG_FIS) &&
++	    !(pp->seen_status & PORT_IRQ_D2H_REG_FIS)) {
++		ata_port_printk(ap, KERN_INFO, "D2H reg with I during NCQ, "
++				"this message won't be printed again\n");
++		pp->seen_status |= PORT_IRQ_D2H_REG_FIS;
++	} else if ((status & PORT_IRQ_DMAS_FIS) &&
++		   !(pp->seen_status & PORT_IRQ_DMAS_FIS)) {
++		ata_port_printk(ap, KERN_INFO, "DMAS FIS during NCQ, "
++				"this message won't be printed again\n");
++		pp->seen_status |= PORT_IRQ_DMAS_FIS;
++	} else if (status & PORT_IRQ_SDB_FIS && pp->spurious_sdb_cnt < 10) {
++		/* SDB FIS containing spurious completions might be
++		 * dangerous, we need to know more about them.  Print
++		 * more of it.
++		 */
++		const u32 *f = pp->rx_fis + RX_FIS_SDB;
 +
- 	switch (board_idx) {
- 	case uli_5287:
- 		hpriv->scr_cfg_addr[0] = ULI5287_BASE;
++		pp->spurious_sdb_cnt++;
+ 
+-	if (ata_ratelimit())
++		ata_port_printk(ap, KERN_INFO, "Spurious SDB FIS during NCQ "
++				"issue=0x%x SAct=0x%x FIS=%08x:%08x%s\n",
++				readl(port_mmio + PORT_CMD_ISSUE),
++				readl(port_mmio + PORT_SCR_ACT), f[0], f[1],
++				pp->spurious_sdb_cnt < 10 ?
++				"" : ", shutting up");
++	} else
+ 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
+-				"(irq_stat 0x%x active_tag %d sactive 0x%x)\n",
++				"(irq_stat 0x%x active_tag 0x%x sactive 0x%x)\n",
+ 				status, ap->active_tag, ap->sactive);
+ }
+ 
