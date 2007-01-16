@@ -1,44 +1,58 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 3/4] libata-sff.c: add another IRQ calls
-Date: Tue, 16 Jan 2007 17:05:45 -0500
-Message-ID: <45AD4C39.3050202@garzik.org>
-References: <200701161046.l0GAkE5u029367@toshiba.co.jp> <20070116120450.1bb44ebb@localhost.localdomain>
+Subject: Re: ahci problems with sata disk.
+Date: Tue, 16 Jan 2007 17:10:42 -0500
+Message-ID: <45AD4D62.5010308@garzik.org>
+References: <1168785128.7865.13.camel@duo> <45AB45B2.2080602@gmail.com>  <1168859112.6980.8.camel@duo> <f4527be0701160844r19fe5220i39a5834f1f4df570@mail.gmail.com> <45AD1A3A.4000706@rtr.ca> <Pine.LNX.4.64.0701161504050.18469@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59063 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:59119 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751659AbXAPWFs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Jan 2007 17:05:48 -0500
-In-Reply-To: <20070116120450.1bb44ebb@localhost.localdomain>
+	id S1751293AbXAPWKp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Jan 2007 17:10:45 -0500
+In-Reply-To: <Pine.LNX.4.64.0701161504050.18469@coffee.psychology.mcmaster.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, benh@kernel.crashing.org, arnd@arndb.de, paulus@samba.org, linas@austin.ibm.com
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: linux-ide@vger.kernel.org, Jens Axboe <axboe@suse.de>, Andrew Morton <akpm@osdl.org>
 
-Alan wrote:
-> On Tue, 16 Jan 2007 19:46:23 +0900
-> Akira Iguchi <akira2.iguchi@toshiba.co.jp> wrote:
+Mark Hahn wrote:
+>>>> I though that NCQ was intended to increase performance ??
 > 
->> When enabling IRQ, ap->ops->irq_on is checked.
->> Because most drivers can use ata_irq_on() as is, this
->> patch allows ap->ops->irq_on to be NULL.
->> If it is NULL, ata_irq_on() are used.
-> 
-> 
-> I believe you can now remove the if(ap->ioaddr.ctl_addr) check as any
-> device lacking a ctl_addr can now provide an irq_on() method using your
-> changes.
-> 
-> You've fixed the FIXME 
+> intended to increase _sales_ performance ;)
 
-Agreed.
+Yep.
 
-Abstracting out the Control/Alt-Status register block operations has 
-been a long-standing TODO that I knew would be required, sometime down 
-the line.  I certainly support adding such abstractions, as they are 
-required for several non-x86 IDE drivers, not just Cell.
+
+> remember that you've always had command queueing (kernel elevator): the 
+> main difference with NCQ (or SCSI tagged queueing) is when
+> the disk can out-schedule the kernel.  afaikt, this means sqeezing
+> in a rotationally intermediate request along the way.
+> 
+> that intermediate request must be fairly small and should be a read
+> (for head-settling reasons).
+> 
+> I wonder how often this happens in the real world, given the relatively
+> small queues the disk has to work with.
+
+ISTR either Jens or Andrew ran some numbers, and found that there was 
+little utility beyond 4 or 8 tags or so.
+
+
+>> My hdparm test is a sequential read-ahead test, so it will
+>> naturally perform worse on a Raptor when NCQ is on.
+> 
+> that's a surprisingly naive heuristic, especially since NCQ is concerned 
+> with just a max of ~4MB of reads, only a smallish
+> fraction of the available cache.
+
+NCQ mainly helps with multiple threads doing reads.  Writes are largely 
+asynchronous to the user already (except for fsync-style writes).  You 
+want to be able to stuff the disk's internal elevator with as many read 
+requests as possible, because reads are very often synchronous -- most 
+apps (1) read a block, (2) do something, (3) goto step #1.  The kernel's 
+elevator isn't much use in these cases.
 
 	Jeff
 
