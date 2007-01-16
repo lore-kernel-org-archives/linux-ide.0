@@ -1,1415 +1,588 @@
-From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Subject: [PATCH 4/4] drivers/ata: PATA driver
-	for Celleb
-Date: Tue, 16 Jan 2007 19:46:32 +0900
-Message-ID: <200701161046.l0GAkNv8019878@toshiba.co.jp>
+From: Jan Gutter <jangutter@gmail.com>
+Subject: Re: ICH7m problem using libata
+Date: Tue, 16 Jan 2007 13:31:45 +0200
+Message-ID: <1168947105.14636.11.camel@laundromat.jangutter.com>
+References: <1165253799.16504.37.camel@laundromat.jangutter.com>
+	 <200701100817.28738.matthew4196@gmail.com> <45AB0F07.5020705@gmail.com>
+	 <200701160958.33561.matthew4196@gmail.com>  <45AC933B.1000201@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: linux-ide@vger.kernel.org
-Cc: jeff@garzik.org, arnd@arndb.de, linuxppc-dev@ozlabs.org, paulus@samba.org, alan@lxorguk.ukuu.org.uk
+Content-Type: multipart/mixed; boundary="=-qf2oXkogm+dftBTG5SeV"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.169]:42173 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726AbXAPLcB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jan 2007 06:32:01 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so1643276uga
+        for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2007 03:31:59 -0800 (PST)
+In-Reply-To: <45AC933B.1000201@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Matthew Stapleton <matthew4196@gmail.com>, linux-ide@vger.kernel.org
 
-This patch adds kernel configuration and driver code
-for Celleb.
 
-Because this PATA controller supports only 32bit access,
-this driver have many special calls in ata_port_operations.
+--=-qf2oXkogm+dftBTG5SeV
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
----
+On Tue, 2007-01-16 at 17:56 +0900, Tejun Heo wrote:
+> Matthew Stapleton wrote:
+> > Tejun Heo wrote:
+> >> Does the problem still persist?
 
---- linux-2.6.20-rc4/drivers/ata/Kconfig.orig	2007-01-17 01:45:18.000000000 +0900
-+++ linux-2.6.20-rc4/drivers/ata/Kconfig	2007-01-16 18:30:38.000000000 +0900
-@@ -518,6 +518,15 @@ config PATA_IXP4XX_CF
- 
- 	  If unsure, say N.
- 
-+config PATA_SCC
-+	tristate "Toshiba's Cell Reference Set IDE support"
-+	depends on PCI
-+	help
-+	  This option enables support for the built-in IDE controller on
-+	  Toshiba Cell Reference Board.
-+
-+	  If unsure, say N.
-+
- endif
- endmenu
- 
---- linux-2.6.20-rc4/drivers/ata/Makefile.orig	2007-01-17 01:45:28.000000000 +0900
-+++ linux-2.6.20-rc4/drivers/ata/Makefile	2007-01-16 18:29:19.000000000 +0900
-@@ -56,6 +56,7 @@ obj-$(CONFIG_PATA_WINBOND_VLB)	+= pata_w
- obj-$(CONFIG_PATA_SIS)		+= pata_sis.o
- obj-$(CONFIG_PATA_TRIFLEX)	+= pata_triflex.o
- obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
-+obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
- obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
- # Should be last but one libata driver
- obj-$(CONFIG_ATA_GENERIC)	+= ata_generic.o
---- linux-2.6.20-rc4/drivers/ata/pata_scc.c.orig	2007-01-17 01:48:06.000000000 +0900
-+++ linux-2.6.20-rc4/drivers/ata/pata_scc.c	2007-01-17 01:55:17.000000000 +0900
-@@ -0,0 +1,1352 @@
-+/*
-+ * Support for IDE interfaces on Celleb platform
-+ *
-+ * (C) Copyright 2006 TOSHIBA CORPORATION
-+ *
-+ * This code is based on drivers/ata/ata_piix.c:
-+ *  Copyright 2003-2005 Red Hat Inc
-+ *  Copyright 2003-2005 Jeff Garzik
-+ *  Copyright (C) 1998-1999 Andrzej Krzysztofowicz, Author and Maintainer
-+ *  Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
-+ *  Copyright (C) 2003 Red Hat Inc <alan@redhat.com>
-+ *
-+ * and drivers/ata/libata-core.c:
-+ *  Copyright 2003-2004 Red Hat, Inc.  All rights reserved.
-+ *  Copyright 2003-2004 Jeff Garzik
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along
-+ * with this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/init.h>
-+#include <linux/blkdev.h>
-+#include <linux/delay.h>
-+#include <linux/device.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/libata.h>
-+
-+#define DRV_NAME		"pata_scc"
-+#define DRV_VERSION		"0.1"
-+
-+#define PCI_DEVICE_ID_TOSHIBA_SCC_ATA		0x01b4
-+
-+/* offset of CTRL registers */
-+#define SCC_CTL_PIOSHT		0x000
-+#define SCC_CTL_PIOCT		0x004
-+#define SCC_CTL_MDMACT		0x008
-+#define SCC_CTL_MCRCST		0x00C
-+#define SCC_CTL_SDMACT		0x010
-+#define SCC_CTL_SCRCST		0x014
-+#define SCC_CTL_UDENVT		0x018
-+#define SCC_CTL_TDVHSEL 	0x020
-+#define SCC_CTL_MODEREG 	0x024
-+#define SCC_CTL_ECMODE		0xF00
-+#define SCC_CTL_MAEA0		0xF50
-+#define SCC_CTL_MAEC0		0xF54
-+#define SCC_CTL_CCKCTRL 	0xFF0
-+
-+/* offset of BMID registers */
-+#define SCC_DMA_CMD		0x000
-+#define SCC_DMA_STATUS		0x004
-+#define SCC_DMA_TABLE_OFS	0x008
-+#define SCC_DMA_INTMASK 	0x010
-+#define SCC_DMA_INTST		0x014
-+#define SCC_DMA_PTERADD 	0x018
-+#define SCC_REG_CMD_ADDR	0x020
-+#define SCC_REG_DATA		0x000
-+#define SCC_REG_ERR		0x004
-+#define SCC_REG_FEATURE 	0x004
-+#define SCC_REG_NSECT		0x008
-+#define SCC_REG_LBAL		0x00C
-+#define SCC_REG_LBAM		0x010
-+#define SCC_REG_LBAH		0x014
-+#define SCC_REG_DEVICE		0x018
-+#define SCC_REG_STATUS		0x01C
-+#define SCC_REG_CMD		0x01C
-+#define SCC_REG_ALTSTATUS	0x020
-+
-+/* register value */
-+#define TDVHSEL_MASTER		0x00000001
-+#define TDVHSEL_SLAVE		0x00000004
-+
-+#define MODE_JCUSFEN		0x00000080
-+
-+#define ECMODE_VALUE		0x01
-+
-+#define CCKCTRL_ATARESET	0x00040000
-+#define CCKCTRL_BUFCNT		0x00020000
-+#define CCKCTRL_CRST		0x00010000
-+#define CCKCTRL_OCLKEN		0x00000100
-+#define CCKCTRL_ATACLKOEN	0x00000002
-+#define CCKCTRL_LCLKEN		0x00000001
-+
-+#define QCHCD_IOS_SS		0x00000001
-+
-+#define QCHSD_STPDIAG		0x00020000
-+
-+#define INTMASK_MSK		0xD1000012
-+#define INTSTS_SERROR		0x80000000
-+#define INTSTS_PRERR		0x40000000
-+#define INTSTS_RERR		0x10000000
-+#define INTSTS_ICERR		0x01000000
-+#define INTSTS_BMSINT		0x00000010
-+#define INTSTS_BMHE		0x00000008
-+#define INTSTS_IOIRQS		0x00000004
-+#define INTSTS_INTRQ		0x00000002
-+#define INTSTS_ACTEINT		0x00000001
-+
-+
-+typedef struct scc_ports {
-+	void __iomem *ctl_base;
-+	void __iomem *dma_base;
-+} scc_ports;
-+
-+/* PIO transfer mode table */
-+/* JCHST */
-+static const unsigned long JCHSTtbl[2][7] = {
-+	{0x0E, 0x05, 0x02, 0x03, 0x02, 0x00, 0x00},	/* 100MHz */
-+	{0x13, 0x07, 0x04, 0x04, 0x03, 0x00, 0x00}	/* 133MHz */
-+};
-+
-+/* JCHHT */
-+static const unsigned long JCHHTtbl[2][7] = {
-+	{0x0E, 0x02, 0x02, 0x02, 0x02, 0x00, 0x00},	/* 100MHz */
-+	{0x13, 0x03, 0x03, 0x03, 0x03, 0x00, 0x00}	/* 133MHz */
-+};
-+
-+/* JCHCT */
-+static const unsigned long JCHCTtbl[2][7] = {
-+	{0x1D, 0x1D, 0x1C, 0x0B, 0x06, 0x00, 0x00},	/* 100MHz */
-+	{0x27, 0x26, 0x26, 0x0E, 0x09, 0x00, 0x00}	/* 133MHz */
-+};
-+
-+/* DMA transfer mode  table */
-+/* JCHDCTM/JCHDCTS */
-+static const unsigned long JCHDCTxtbl[2][7] = {
-+	{0x0A, 0x06, 0x04, 0x03, 0x01, 0x00, 0x00},	/* 100MHz */
-+	{0x0E, 0x09, 0x06, 0x04, 0x02, 0x01, 0x00}	/* 133MHz */
-+};
-+
-+/* JCSTWTM/JCSTWTS  */
-+static const unsigned long JCSTWTxtbl[2][7] = {
-+	{0x06, 0x04, 0x03, 0x02, 0x02, 0x02, 0x00},	/* 100MHz */
-+	{0x09, 0x06, 0x04, 0x02, 0x02, 0x02, 0x02}	/* 133MHz */
-+};
-+
-+/* JCTSS */
-+static const unsigned long JCTSStbl[2][7] = {
-+	{0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x00},	/* 100MHz */
-+	{0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05}	/* 133MHz */
-+};
-+
-+/* JCENVT */
-+static const unsigned long JCENVTtbl[2][7] = {
-+	{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00},	/* 100MHz */
-+	{0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02}	/* 133MHz */
-+};
-+
-+/* JCACTSELS/JCACTSELM */
-+static const unsigned long JCACTSELtbl[2][7] = {
-+	{0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00},	/* 100MHz */
-+	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}	/* 133MHz */
-+};
-+
-+static const struct pci_device_id scc_pci_tbl[] = {
-+	{PCI_VENDOR_ID_TOSHIBA_2, PCI_DEVICE_ID_TOSHIBA_SCC_ATA,
-+	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{ }	/* terminate list */
-+};
-+
-+/**
-+ *	scc_set_piomode - Initialize host controller PATA PIO timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: um
-+ *
-+ *	Set PIO mode for device.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void scc_set_piomode (struct ata_port *ap, struct ata_device *adev)
-+{
-+	unsigned int pio = adev->pio_mode - XFER_PIO_0;
-+	struct scc_ports *ports = ap->host->private_data;
-+	void __iomem *cckctrl_port = ports->ctl_base + SCC_CTL_CCKCTRL;
-+	void __iomem *piosht_port = ports->ctl_base + SCC_CTL_PIOSHT;
-+	void __iomem *pioct_port = ports->ctl_base + SCC_CTL_PIOCT;
-+	unsigned long reg;
-+	int offset;
-+
-+	reg = in_be32(cckctrl_port);
-+	if (reg & CCKCTRL_ATACLKOEN)
-+		offset = 1;	/* 133MHz */
-+	else
-+		offset = 0;	/* 100MHz */
-+
-+	reg = JCHSTtbl[offset][pio] << 16 | JCHHTtbl[offset][pio];
-+	out_be32(piosht_port, reg);
-+	reg = JCHCTtbl[offset][pio];
-+	out_be32(pioct_port, reg);
-+}
-+
-+/**
-+ *	scc_set_dmamode - Initialize host controller PATA DMA timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: um
-+ *	@udma: udma mode, 0 - 6
-+ *
-+ *	Set UDMA mode for device.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void scc_set_dmamode (struct ata_port *ap, struct ata_device *adev)
-+{
-+	unsigned int udma = adev->dma_mode;
-+	unsigned int is_slave = (adev->devno != 0);
-+	u8 speed = udma;
-+	struct scc_ports *ports = ap->host->private_data;
-+	void __iomem *cckctrl_port = ports->ctl_base + SCC_CTL_CCKCTRL;
-+	void __iomem *mdmact_port = ports->ctl_base + SCC_CTL_MDMACT;
-+	void __iomem *mcrcst_port = ports->ctl_base + SCC_CTL_MCRCST;
-+	void __iomem *sdmact_port = ports->ctl_base + SCC_CTL_SDMACT;
-+	void __iomem *scrcst_port = ports->ctl_base + SCC_CTL_SCRCST;
-+	void __iomem *udenvt_port = ports->ctl_base + SCC_CTL_UDENVT;
-+	void __iomem *tdvhsel_port = ports->ctl_base + SCC_CTL_TDVHSEL;
-+	int offset, idx;
-+
-+	if (in_be32(cckctrl_port) & CCKCTRL_ATACLKOEN) 
-+		offset = 1;	/* 133MHz */
-+	else
-+		offset = 0;	/* 100MHz */
-+
-+	if (speed >= XFER_UDMA_0)
-+		idx = speed - XFER_UDMA_0;
-+	else
-+		return;
-+
-+	if (is_slave) {
-+		out_be32(sdmact_port, JCHDCTxtbl[offset][idx]);
-+		out_be32(scrcst_port, JCSTWTxtbl[offset][idx]);
-+		out_be32(tdvhsel_port,
-+			 (in_be32(tdvhsel_port) & ~TDVHSEL_SLAVE) | (JCACTSELtbl[offset][idx] << 2));
-+	} else {
-+		out_be32(mdmact_port, JCHDCTxtbl[offset][idx]);
-+		out_be32(mcrcst_port, JCSTWTxtbl[offset][idx]);
-+		out_be32(tdvhsel_port,
-+			 (in_be32(tdvhsel_port) & ~TDVHSEL_MASTER) | JCACTSELtbl[offset][idx]);
-+	}
-+	out_be32(udenvt_port,
-+		 JCTSStbl[offset][idx] << 16 | JCENVTtbl[offset][idx]);
-+}
-+
-+/**
-+ *	scc_tf_load - send taskfile registers to host controller
-+ *	@ap: Port to which output is sent
-+ *	@tf: ATA taskfile register set
-+ *
-+ *	Note: Original code is ata_tf_load_pio().
-+ */
-+
-+static void scc_tf_load (struct ata_port *ap, const struct ata_taskfile *tf)
-+{
-+	struct ata_ioports *ioaddr = &ap->ioaddr;
-+	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
-+
-+	if (tf->ctl != ap->last_ctl) {
-+		out_be32((void __iomem *)ap->ioaddr.ctl_addr, tf->ctl);
-+		ap->last_ctl = tf->ctl;
-+		ata_wait_idle(ap);
-+	}
-+
-+	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
-+		out_be32((void __iomem *)ioaddr->feature_addr, tf->hob_feature);
-+		out_be32((void __iomem *)ioaddr->nsect_addr, tf->hob_nsect);
-+		out_be32((void __iomem *)ioaddr->lbal_addr, tf->hob_lbal);
-+		out_be32((void __iomem *)ioaddr->lbam_addr, tf->hob_lbam);
-+		out_be32((void __iomem *)ioaddr->lbah_addr, tf->hob_lbah);
-+		VPRINTK("hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
-+			tf->hob_feature,
-+			tf->hob_nsect,
-+			tf->hob_lbal,
-+			tf->hob_lbam,
-+			tf->hob_lbah);
-+	}
-+
-+	if (is_addr) {
-+		out_be32((void __iomem *)ioaddr->feature_addr, tf->feature);
-+		out_be32((void __iomem *)ioaddr->nsect_addr, tf->nsect);
-+		out_be32((void __iomem *)ioaddr->lbal_addr, tf->lbal);
-+		out_be32((void __iomem *)ioaddr->lbam_addr, tf->lbam);
-+		out_be32((void __iomem *)ioaddr->lbah_addr, tf->lbah);
-+		VPRINTK("feat 0x%X nsect 0x%X lba 0x%X 0x%X 0x%X\n",
-+			tf->feature,
-+			tf->nsect,
-+			tf->lbal,
-+			tf->lbam,
-+			tf->lbah);
-+	}
-+
-+	if (tf->flags & ATA_TFLAG_DEVICE) {
-+		out_be32((void __iomem *)ioaddr->device_addr, tf->device);
-+		VPRINTK("device 0x%X\n", tf->device);
-+	}
-+
-+	ata_wait_idle(ap);
-+}
-+
-+/**
-+ *	scc_check_status - Read device status reg & clear interrupt
-+ *	@ap: port where the device is
-+ *
-+ *	Note: Original code is ata_check_status_pio().
-+ */
-+
-+static u8 scc_check_status (struct ata_port *ap)
-+{
-+	return in_be32((void __iomem *)ap->ioaddr.status_addr);
-+}
-+
-+/**
-+ *	scc_tf_read - input device's ATA taskfile shadow registers
-+ *	@ap: Port from which input is read
-+ *	@tf: ATA taskfile register set for storing input
-+ *
-+ *	Note: Original code is ata_tf_read_pio().
-+ */
-+
-+static void scc_tf_read (struct ata_port *ap, struct ata_taskfile *tf)
-+{
-+	struct ata_ioports *ioaddr = &ap->ioaddr;
-+
-+	tf->command = scc_check_status(ap);
-+	tf->feature = in_be32((void __iomem *)ioaddr->error_addr);
-+	tf->nsect = in_be32((void __iomem *)ioaddr->nsect_addr);
-+	tf->lbal = in_be32((void __iomem *)ioaddr->lbal_addr);
-+	tf->lbam = in_be32((void __iomem *)ioaddr->lbam_addr);
-+	tf->lbah = in_be32((void __iomem *)ioaddr->lbah_addr);
-+	tf->device = in_be32((void __iomem *)ioaddr->device_addr);
-+
-+	if (tf->flags & ATA_TFLAG_LBA48) {
-+		out_be32((void __iomem *)ap->ioaddr.ctl_addr, tf->ctl | ATA_HOB);
-+		tf->hob_feature = in_be32((void __iomem *)ioaddr->error_addr);
-+		tf->hob_nsect = in_be32((void __iomem *)ioaddr->nsect_addr);
-+		tf->hob_lbal = in_be32((void __iomem *)ioaddr->lbal_addr);
-+		tf->hob_lbam = in_be32((void __iomem *)ioaddr->lbam_addr);
-+		tf->hob_lbah = in_be32((void __iomem *)ioaddr->lbah_addr);
-+	}
-+}
-+
-+/**
-+ *	scc_exec_command - issue ATA command to host controller
-+ *	@ap: port to which command is being issued
-+ *	@tf: ATA taskfile register set
-+ *
-+ *	Note: Original code is ata_exec_command_pio().
-+ */
-+
-+static void scc_exec_command (struct ata_port *ap,
-+			      const struct ata_taskfile *tf)
-+{
-+	DPRINTK("ata%u: cmd 0x%X\n", ap->id, tf->command);
-+
-+	out_be32((void __iomem *)ap->ioaddr.command_addr, tf->command);
-+	ata_pause(ap);
-+}
-+
-+/**
-+ *	scc_check_altstatus - Read device alternate status reg
-+ *	@ap: port where the device is
-+ */
-+
-+static u8 scc_check_altstatus (struct ata_port *ap)
-+{
-+	return in_be32((void __iomem *)ap->ioaddr.altstatus_addr);
-+}
-+
-+/**
-+ *	scc_std_dev_select - Select device 0/1 on ATA bus
-+ *	@ap: ATA channel to manipulate
-+ *	@device: ATA device (numbered from zero) to select
-+ *
-+ *	Note: Original code is ata_std_dev_select().
-+ */
-+
-+static void scc_std_dev_select (struct ata_port *ap, unsigned int device)
-+{
-+	u8 tmp;
-+
-+	if (device == 0)
-+		tmp = ATA_DEVICE_OBS;
-+	else
-+		tmp = ATA_DEVICE_OBS | ATA_DEV1;
-+
-+	out_be32((void __iomem *)ap->ioaddr.device_addr, tmp);
-+	ata_pause(ap);
-+}
-+
-+/**
-+ *	scc_bmdma_setup - Set up PCI IDE BMDMA transaction
-+ *	@qc: Info associated with this ATA transaction.
-+ *
-+ *	Note: Original code is ata_bmdma_setup_pio().
-+ */
-+
-+static void scc_bmdma_setup (struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	unsigned int rw = (qc->tf.flags & ATA_TFLAG_WRITE);
-+	u8 dmactl;
-+	void __iomem *mmio = (void __iomem *) ap->ioaddr.bmdma_addr;
-+
-+	/* load PRD table addr */
-+	out_be32(mmio + SCC_DMA_TABLE_OFS, ap->prd_dma);
-+
-+	/* specify data direction, triple-check start bit is clear */
-+	dmactl = in_be32(mmio + SCC_DMA_CMD);
-+	dmactl &= ~(ATA_DMA_WR | ATA_DMA_START);
-+	if (!rw)
-+		dmactl |= ATA_DMA_WR;
-+	out_be32(mmio + SCC_DMA_CMD, dmactl);
-+
-+	/* issue r/w command */
-+	ap->ops->exec_command(ap, &qc->tf);
-+}
-+
-+/**
-+ *	scc_bmdma_start - Start a PCI IDE BMDMA transaction
-+ *	@qc: Info associated with this ATA transaction.
-+ *
-+ *	Note: Original code is ata_bmdma_start_pio().
-+ */
-+
-+static void scc_bmdma_start (struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	u8 dmactl;
-+	void __iomem *mmio = (void __iomem *) ap->ioaddr.bmdma_addr;
-+
-+	/* start host DMA transaction */
-+	dmactl = in_be32(mmio + SCC_DMA_CMD);
-+	out_be32(mmio + SCC_DMA_CMD, dmactl | ATA_DMA_START);
-+}
-+
-+/**
-+ *	scc_devchk - PATA device presence detection
-+ *	@ap: ATA channel to examine
-+ *	@device: Device to examine (starting at zero)
-+ *
-+ *	Note: Original code is ata_pio_devchk().
-+ */
-+
-+static unsigned int scc_devchk (struct ata_port *ap,
-+				unsigned int device)
-+{
-+	struct ata_ioports *ioaddr = &ap->ioaddr;
-+	u8 nsect, lbal;
-+
-+	ap->ops->dev_select(ap, device);
-+
-+	out_be32((void __iomem *)ioaddr->nsect_addr, 0x55);
-+	out_be32((void __iomem *)ioaddr->lbal_addr, 0xaa);
-+
-+	out_be32((void __iomem *)ioaddr->nsect_addr, 0xaa);
-+	out_be32((void __iomem *)ioaddr->lbal_addr, 0x55);
-+
-+	out_be32((void __iomem *)ioaddr->nsect_addr, 0x55);
-+	out_be32((void __iomem *)ioaddr->lbal_addr, 0xaa);
-+
-+	nsect = in_be32((void __iomem *)ioaddr->nsect_addr);
-+	lbal = in_be32((void __iomem *)ioaddr->lbal_addr);
-+
-+	if ((nsect == 0x55) && (lbal == 0xaa))
-+		return 1;	/* we found a device */
-+
-+	return 0;		/* nothing found */
-+}
-+
-+/**
-+ *	scc_bus_post_reset - PATA device post reset
-+ *
-+ *	Note: Original code is ata_bus_post_reset().
-+ */
-+
-+static void scc_bus_post_reset (struct ata_port *ap, unsigned int devmask)
-+{
-+	struct ata_ioports *ioaddr = &ap->ioaddr;
-+	unsigned int dev0 = devmask & (1 << 0);
-+	unsigned int dev1 = devmask & (1 << 1);
-+	unsigned long timeout;
-+
-+	/* if device 0 was found in ata_devchk, wait for its
-+	 * BSY bit to clear
-+	 */
-+	if (dev0)
-+		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
-+
-+	/* if device 1 was found in ata_devchk, wait for
-+	 * register access, then wait for BSY to clear
-+	 */
-+	timeout = jiffies + ATA_TMOUT_BOOT;
-+	while (dev1) {
-+		u8 nsect, lbal;
-+
-+		ap->ops->dev_select(ap, 1);
-+		nsect = in_be32((void __iomem *)ioaddr->nsect_addr);
-+		lbal = in_be32((void __iomem *)ioaddr->lbal_addr);
-+		if ((nsect == 1) && (lbal == 1))
-+			break;
-+		if (time_after(jiffies, timeout)) {
-+			dev1 = 0;
-+			break;
-+		}
-+		msleep(50);	/* give drive a breather */
-+	}
-+	if (dev1)
-+		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
-+
-+	/* is all this really necessary? */
-+	ap->ops->dev_select(ap, 0);
-+	if (dev1)
-+		ap->ops->dev_select(ap, 1);
-+	if (dev0)
-+		ap->ops->dev_select(ap, 0);
-+}
-+
-+/**
-+ *	scc_bus_softreset - PATA device software reset
-+ *
-+ *	Note: Original code is ata_bus_softreset().
-+ */
-+
-+static unsigned int scc_bus_softreset (struct ata_port *ap,
-+				       unsigned int devmask)
-+{
-+	struct ata_ioports *ioaddr = &ap->ioaddr;
-+
-+	DPRINTK("ata%u: bus reset via SRST\n", ap->id);
-+
-+	/* software reset.  causes dev0 to be selected */
-+	out_be32((void __iomem *)ioaddr->ctl_addr, ap->ctl);
-+	udelay(10);
-+	out_be32((void __iomem *)ioaddr->ctl_addr, ap->ctl | ATA_SRST);
-+	udelay(10);
-+	out_be32((void __iomem *)ioaddr->ctl_addr, ap->ctl);
-+
-+	/* spec mandates ">= 2ms" before checking status.
-+	 * We wait 150ms, because that was the magic delay used for
-+	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
-+	 * between when the ATA command register is written, and then
-+	 * status is checked.  Because waiting for "a while" before
-+	 * checking status is fine, post SRST, we perform this magic
-+	 * delay here as well.
-+	 *
-+	 * Old drivers/ide uses the 2mS rule and then waits for ready
-+	 */
-+	msleep(150);
-+
-+	/* Before we perform post reset processing we want to see if
-+	 * the bus shows 0xFF because the odd clown forgets the D7
-+	 * pulldown resistor.
-+	 */
-+	if (scc_check_status(ap) == 0xFF)
-+		return 0;
-+
-+	scc_bus_post_reset(ap, devmask);
-+
-+	return 0;
-+}
-+
-+/**
-+ *	scc_std_softreset - reset host port via ATA SRST
-+ *	@ap: port to reset
-+ *	@classes: resulting classes of attached devices
-+ *
-+ *	Note: Original code is ata_std_softreset().
-+ */
-+
-+static int scc_std_softreset (struct ata_port *ap, unsigned int *classes)
-+{
-+	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
-+	unsigned int devmask = 0, err_mask;
-+	u8 err;
-+
-+	DPRINTK("ENTER\n");
-+
-+	if (ata_port_offline(ap)) {
-+		classes[0] = ATA_DEV_NONE;
-+		goto out;
-+	}
-+
-+	/* determine if device 0/1 are present */
-+	if (scc_devchk(ap, 0))
-+		devmask |= (1 << 0);
-+	if (slave_possible && scc_devchk(ap, 1))
-+		devmask |= (1 << 1);
-+
-+	/* select device 0 again */
-+	ap->ops->dev_select(ap, 0);
-+
-+	/* issue bus reset */
-+	DPRINTK("about to softreset, devmask=%x\n", devmask);
-+	err_mask = scc_bus_softreset(ap, devmask);
-+	if (err_mask) {
-+		ata_port_printk(ap, KERN_ERR, "SRST failed (err_mask=0x%x)\n",
-+				err_mask);
-+		return -EIO;
-+	}
-+
-+	/* determine by signature whether we have ATA or ATAPI devices */
-+	classes[0] = ata_dev_try_classify(ap, 0, &err);
-+	if (slave_possible && err != 0x81)
-+		classes[1] = ata_dev_try_classify(ap, 1, &err);
-+
-+ out:
-+	DPRINTK("EXIT, classes[0]=%u [1]=%u\n", classes[0], classes[1]);
-+	return 0;
-+}
-+
-+/**
-+ *	scc_bmdma_stop - Stop PCI IDE BMDMA transfer
-+ *	@qc: Command we are ending DMA for
-+ *
-+ *	Note: Original code is ata_bmdma_stop().
-+ */
-+
-+static void scc_bmdma_stop (struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct scc_ports *ports = ap->host->private_data;
-+	u32 reg;
-+
-+	while (1) {
-+		reg = in_be32(ports->dma_base + SCC_DMA_INTST);
-+
-+		if (reg & INTSTS_SERROR) {
-+			printk(KERN_WARNING "%s: SERROR\n", DRV_NAME);
-+			out_be32(ports->dma_base + SCC_DMA_INTST, INTSTS_SERROR|INTSTS_BMSINT);
-+			out_be32(ports->dma_base + SCC_DMA_CMD,
-+				 in_be32(ports->dma_base + SCC_DMA_CMD) & ~ATA_DMA_START);
-+			continue;
-+		}
-+
-+		if (reg & INTSTS_PRERR) {
-+			u32 maea0, maec0;
-+			maea0 = in_be32(ports->ctl_base + SCC_CTL_MAEA0);
-+			maec0 = in_be32(ports->ctl_base + SCC_CTL_MAEC0);
-+			printk(KERN_WARNING "%s: PRERR [addr:%x cmd:%x]\n", DRV_NAME, maea0, maec0);
-+			out_be32(ports->dma_base + SCC_DMA_INTST, INTSTS_PRERR|INTSTS_BMSINT);
-+			out_be32(ports->dma_base + SCC_DMA_CMD,
-+				 in_be32(ports->dma_base + SCC_DMA_CMD) & ~ATA_DMA_START);
-+			continue;
-+		}
-+
-+		if (reg & INTSTS_RERR) {
-+			printk(KERN_WARNING "%s: Response Error\n", DRV_NAME);
-+			out_be32(ports->dma_base + SCC_DMA_INTST, INTSTS_RERR|INTSTS_BMSINT);
-+			out_be32(ports->dma_base + SCC_DMA_CMD,
-+				 in_be32(ports->dma_base + SCC_DMA_CMD) & ~ATA_DMA_START);
-+			continue;
-+		}
-+
-+		if (reg & INTSTS_ICERR) {
-+			out_be32(ports->dma_base + SCC_DMA_CMD,
-+				 in_be32(ports->dma_base + SCC_DMA_CMD) & ~ATA_DMA_START);
-+			printk(KERN_WARNING "%s: Illegal Configuration\n", DRV_NAME);
-+			out_be32(ports->dma_base + SCC_DMA_INTST, INTSTS_ICERR|INTSTS_BMSINT);
-+			continue;
-+		}
-+
-+		if (reg & INTSTS_BMSINT) {
-+			unsigned int classes;
-+			printk(KERN_WARNING "%s: Internal Bus Error\n", DRV_NAME);
-+			out_be32(ports->dma_base + SCC_DMA_INTST, INTSTS_BMSINT);
-+			/* TBD: SW reset */
-+			scc_std_softreset(ap, &classes);
-+			continue;
-+		}
-+
-+		if (reg & INTSTS_BMHE) {
-+			out_be32(ports->dma_base + SCC_DMA_INTST, INTSTS_BMHE);
-+			continue;
-+		}
-+
-+		if (reg & INTSTS_ACTEINT) {
-+			out_be32(ports->dma_base + SCC_DMA_INTST, INTSTS_ACTEINT);
-+			continue;
-+		}
-+
-+		if (reg & INTSTS_IOIRQS) {
-+			out_be32(ports->dma_base + SCC_DMA_INTST, INTSTS_IOIRQS);
-+			continue;
-+		}
-+		break;
-+	}
-+
-+	/* clear start/stop bit */
-+	out_be32(ports->dma_base + SCC_DMA_CMD,
-+		 in_be32(ports->dma_base + SCC_DMA_CMD) & ~ATA_DMA_START);
-+
-+	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
-+	ata_altstatus(ap);	/* dummy read */
-+}
-+
-+/**
-+ *	scc_bmdma_status - Read PCI IDE BMDMA status
-+ *	@ap: Port associated with this ATA transaction.
-+ *
-+ *	Note: Original code is ata_bmdma_status().
-+ */
-+
-+static u8 scc_bmdma_status (struct ata_port *ap)
-+{
-+	u8 host_stat;
-+	void __iomem *mmio = (void __iomem *) ap->ioaddr.bmdma_addr;
-+
-+	host_stat = in_be32(mmio + SCC_DMA_STATUS);
-+	return host_stat;
-+}
-+
-+/**
-+ *	scc_data_xfer - Transfer data by MMIO
-+ *	@adev: device for this I/O
-+ *	@buf: data buffer
-+ *	@buflen: buffer length
-+ *	@write_data: read/write
-+ *
-+ *	Note: Original code is ata_mmio_data_xfer().
-+ */
-+
-+static void scc_data_xfer (struct ata_device *adev, unsigned char *buf,
-+			   unsigned int buflen, int write_data)
-+{
-+	struct ata_port *ap = adev->ap;
-+	unsigned int i;
-+	unsigned int words = buflen >> 1;
-+	u16 *buf16 = (u16 *) buf;
-+	void __iomem *mmio = (void __iomem *) ap->ioaddr.data_addr;
-+
-+	/* Transfer multiple of 2 bytes */
-+	if (write_data) {
-+		for (i = 0; i < words; i++)
-+			out_be32(mmio, cpu_to_le16(buf16[i]));
-+	} else {
-+		for (i = 0; i < words; i++)
-+			buf16[i] = le16_to_cpu(in_be32(mmio));
-+	}
-+
-+	/* Transfer trailing 1 byte, if any. */
-+	if (unlikely(buflen & 0x01)) {
-+		u16 align_buf[1] = { 0 };
-+		unsigned char *trailing_buf = buf + buflen - 1;
-+
-+		if (write_data) {
-+			memcpy(align_buf, trailing_buf, 1);
-+			out_be32(mmio, cpu_to_le16(align_buf[0]));
-+		} else {
-+			align_buf[0] = le16_to_cpu(in_be32(mmio));
-+			memcpy(trailing_buf, align_buf, 1);
-+		}
-+	}
-+}
-+
-+/**
-+ *	scc_irq_on - Enable interrupts on a port.
-+ *	@ap: Port on which interrupts are enabled.
-+ *
-+ *	Note: Original code is ata_irq_on().
-+ */
-+
-+static inline u8 scc_irq_on (struct ata_port *ap)
-+{
-+	struct ata_ioports *ioaddr = &ap->ioaddr;
-+	u8 tmp;
-+
-+	ap->ctl &= ~ATA_NIEN;
-+	ap->last_ctl = ap->ctl;
-+
-+	out_be32((void __iomem *)ioaddr->ctl_addr, ap->ctl);
-+	tmp = ata_wait_idle(ap);
-+
-+	ap->ops->irq_clear(ap);
-+
-+	return tmp;
-+}
-+
-+/**
-+ *	scc_irq_ack - Acknowledge a device interrupt.
-+ *	@ap: Port on which interrupts are enabled.
-+ *
-+ *	Note: Original code is ata_irq_ack().
-+ */
-+
-+static inline u8 scc_irq_ack (struct ata_port *ap, unsigned int chk_drq)
-+{
-+	unsigned int bits = chk_drq ? ATA_BUSY | ATA_DRQ : ATA_BUSY;
-+	u8 host_stat, post_stat, status;
-+
-+	status = ata_busy_wait(ap, bits, 1000);
-+	if (status & bits)
-+		if (ata_msg_err(ap))
-+			printk(KERN_ERR "abnormal status 0x%X\n", status);
-+
-+	/* get controller status; clear intr, err bits */
-+	host_stat = in_be32((void __iomem *)ap->ioaddr.bmdma_addr + SCC_DMA_STATUS);
-+	out_be32((void __iomem *)ap->ioaddr.bmdma_addr + SCC_DMA_STATUS, host_stat | ATA_DMA_INTR | ATA_DMA_ERR);
-+
-+	post_stat = in_be32((void __iomem *)ap->ioaddr.bmdma_addr + SCC_DMA_STATUS);
-+
-+	if (ata_msg_intr(ap))
-+		printk(KERN_INFO "%s: irq ack: host_stat 0x%X, new host_stat 0x%X, drv_stat 0x%X\n",
-+		       __FUNCTION__,
-+		       host_stat, post_stat, status);
-+
-+	return status;
-+}
-+
-+/**
-+ *	scc_bmdma_freeze - Freeze BMDMA controller port
-+ *	@ap: port to freeze
-+ *
-+ *	Note: Original code is ata_bmdma_freeze().
-+ */
-+
-+static void scc_bmdma_freeze (struct ata_port *ap)
-+{
-+	struct ata_ioports *ioaddr = &ap->ioaddr;
-+
-+	ap->ctl |= ATA_NIEN;
-+	ap->last_ctl = ap->ctl;
-+
-+	out_be32((void __iomem *)ioaddr->ctl_addr, ap->ctl);
-+}
-+
-+/**
-+ *	scc_pata_prereset - prepare for reset
-+ *	@ap: ATA port to be reset
-+ *
-+ */
-+
-+static int scc_pata_prereset (struct ata_port *ap)
-+{
-+	ap->cbl = ATA_CBL_PATA80;
-+	return ata_std_prereset(ap);
-+}
-+
-+/**
-+ *	scc_std_postreset - standard postreset callback
-+ *	@ap: the target ata_port
-+ *	@classes: classes of attached devices
-+ *
-+ *	Note: Original code is ata_std_postreset().
-+ */
-+
-+static void scc_std_postreset (struct ata_port *ap, unsigned int *classes)
-+{
-+	DPRINTK("ENTER\n");
-+
-+	/* re-enable interrupts */
-+	if (!ap->ops->error_handler) {
-+		/* FIXME: hack. create a hook instead */
-+		if (ap->ioaddr.ctl_addr)
-+			ap->ops->irq_on(ap);
-+	}
-+
-+	/* is double-select really necessary? */
-+	if (classes[0] != ATA_DEV_NONE)
-+		ap->ops->dev_select(ap, 1);
-+	if (classes[1] != ATA_DEV_NONE)
-+		ap->ops->dev_select(ap, 0);
-+
-+	/* bail out if no device is present */
-+	if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE) {
-+		DPRINTK("EXIT, no device\n");
-+		return;
-+	}
-+
-+	/* set up device control */
-+	if (ap->ioaddr.ctl_addr)
-+		out_be32((void __iomem *) ap->ioaddr.ctl_addr, ap->ctl);
-+
-+	DPRINTK("EXIT\n");
-+}
-+
-+/**
-+ *	scc_error_handler - Stock error handler for BMDMA controller
-+ *	@ap: port to handle error for
-+ *
-+ */
-+
-+static void scc_error_handler (struct ata_port *ap)
-+{
-+	ata_bmdma_drive_eh(ap, scc_pata_prereset, scc_std_softreset, NULL,
-+			   scc_std_postreset);
-+}
-+
-+/**
-+ *	scc_bmdma_irq_clear - Clear PCI IDE BMDMA interrupt.
-+ *	@ap: Port associated with this ATA transaction.
-+ *
-+ *	Note: Original code is ata_bmdma_irq_clear().
-+ */
-+
-+static void scc_bmdma_irq_clear (struct ata_port *ap)
-+{
-+	void __iomem *mmio = ((void __iomem *) ap->ioaddr.bmdma_addr) + SCC_DMA_STATUS;
-+	if (!ap->ioaddr.bmdma_addr)
-+		return;
-+
-+	out_be32(mmio, in_be32(mmio));
-+}
-+
-+/**
-+ *	scc_port_start - Set port up for dma.
-+ *	@ap: Port to initialize
-+ *
-+ *	Allocate space for PRD table using ata_port_start().
-+ *	Set PRD table address for PTERADD. (PRD Transfer End Read)
-+ */
-+
-+static int scc_port_start (struct ata_port *ap)
-+{
-+	struct scc_ports *ports = ap->host->private_data;
-+	int rc;
-+
-+	rc = ata_port_start(ap);
-+	if (rc)
-+		return rc;
-+
-+	out_be32(ports->dma_base + SCC_DMA_PTERADD, ap->prd_dma);
-+	return 0;
-+}
-+
-+/**
-+ *	scc_port_stop - Undo scc_port_start()
-+ *	@ap: Port to shut down
-+ *
-+ *	Reset PTERADD and Free the PRD table.
-+ */
-+
-+static void scc_port_stop (struct ata_port *ap)
-+{
-+	struct scc_ports *ports = ap->host->private_data;
-+
-+	out_be32(ports->dma_base + SCC_DMA_PTERADD, 0);
-+	ata_port_stop(ap);
-+}
-+
-+/**
-+ *	remove_mmio_scc - Free the private data
-+ *	@pdev: pci_dev to shut down
-+ */
-+
-+static void remove_mmio_scc (struct pci_dev *pdev)
-+{
-+	struct scc_ports *ports = pci_get_drvdata(pdev);
-+	unsigned long ctl_addr = pci_resource_start(pdev, 0);
-+	unsigned long dma_addr = pci_resource_start(pdev, 1);
-+	unsigned long ctl_size = pci_resource_len(pdev, 0);
-+	unsigned long dma_size = pci_resource_len(pdev, 1);
-+
-+	pci_set_drvdata(pdev, NULL);
-+	iounmap(ports->dma_base);
-+	iounmap(ports->ctl_base);
-+	release_mem_region(dma_addr, dma_size);
-+	release_mem_region(ctl_addr, ctl_size);
-+}
-+
-+static void scc_host_stop (struct ata_host *host)
-+{
-+	struct scc_ports *ports = host->private_data;
-+
-+	ata_host_stop(host);
-+	remove_mmio_scc(to_pci_dev(host->dev));
-+	kfree(ports);
-+}
-+
-+/**
-+ *	scc_std_ports - initialize ioaddr with SCC PATA port offsets.
-+ *	@ioaddr: IO address structure to be initialized
-+ *
-+ */
-+
-+static void scc_std_ports (struct ata_ioports *ioaddr)
-+{
-+	ioaddr->data_addr = ioaddr->cmd_addr + SCC_REG_DATA;
-+	ioaddr->error_addr = ioaddr->cmd_addr + SCC_REG_ERR;
-+	ioaddr->feature_addr = ioaddr->cmd_addr + SCC_REG_FEATURE;
-+	ioaddr->nsect_addr = ioaddr->cmd_addr + SCC_REG_NSECT;
-+	ioaddr->lbal_addr = ioaddr->cmd_addr + SCC_REG_LBAL;
-+	ioaddr->lbam_addr = ioaddr->cmd_addr + SCC_REG_LBAM;
-+	ioaddr->lbah_addr = ioaddr->cmd_addr + SCC_REG_LBAH;
-+	ioaddr->device_addr = ioaddr->cmd_addr + SCC_REG_DEVICE;
-+	ioaddr->status_addr = ioaddr->cmd_addr + SCC_REG_STATUS;
-+	ioaddr->command_addr = ioaddr->cmd_addr + SCC_REG_CMD;
-+}
-+
-+/**
-+ *	scc_pci_init_native_mode - Initialize native-mode driver
-+ *	@pdev:  pci device to be initialized
-+ *	@port:  array[2] of pointers to port info structures.
-+ *	@ports: bitmap of ports present
-+ *
-+ *	Note: Original code is ata_pci_init_native_mode().
-+ */
-+
-+static struct ata_probe_ent *
-+scc_pci_init_native_mode (struct pci_dev *pdev, struct ata_port_info **port,
-+			  int ports)
-+{
-+	struct ata_probe_ent *probe_ent =
-+		ata_probe_ent_alloc(pci_dev_to_dev(pdev), port[0]);
-+	int p = 0;
-+	unsigned long bmdma;
-+	struct scc_ports *scc_port = pci_get_drvdata(pdev);
-+
-+	if (!probe_ent)
-+		return NULL;
-+
-+	probe_ent->irq = pdev->irq;
-+	probe_ent->irq_flags = IRQF_SHARED;
-+
-+	if (ports & ATA_PORT_PRIMARY) {
-+		probe_ent->port[p].cmd_addr = (unsigned long)scc_port->dma_base + SCC_REG_CMD_ADDR;
-+		probe_ent->port[p].altstatus_addr =
-+			probe_ent->port[p].ctl_addr =
-+			probe_ent->port[p].cmd_addr + SCC_REG_ALTSTATUS;
-+		bmdma = (unsigned long)scc_port->dma_base;
-+		if (bmdma)
-+			probe_ent->port[p].bmdma_addr = bmdma;
-+		scc_std_ports(&probe_ent->port[p]);
-+		p++;
-+	}
-+
-+	probe_ent->n_ports = p;
-+	return probe_ent;
-+}
-+
-+/**
-+ *	scc_pci_init_one - Initialize/register PCI IDE host controller
-+ *	@pdev: Controller to be initialized
-+ *	@port_info: Information from low-level host driver
-+ *	@n_ports: Number of ports attached to host controller
-+ *
-+ *	Note: Original code is ata_pci_init_one().
-+ */
-+
-+static int scc_pci_init_one (struct pci_dev *pdev,
-+			     struct ata_port_info **port_info,
-+			     unsigned int n_ports)
-+{
-+	struct ata_probe_ent *probe_ent = NULL;
-+	struct ata_port_info *port[2];
-+	int rc;
-+
-+	DPRINTK("ENTER\n");
-+
-+	BUG_ON(n_ports < 1 || n_ports > 2);
-+
-+	port[0] = port_info[0];
-+	if (n_ports > 1)
-+		port[1] = port_info[1];
-+	else
-+		port[1] = port[0];
-+
-+	/* FIXME: Really for ATA it isn't safe because the device may be
-+	   multi-purpose and we want to leave it alone if it was already
-+	   enabled. Secondly for shared use as Arjan says we want refcounting
-+
-+	   Checking dev->is_enabled is insufficient as this is not set at
-+	   boot for the primary video which is BIOS enabled
-+	*/
-+
-+	rc = pci_enable_device(pdev);
-+	if (rc)
-+		return rc;
-+
-+	/* TODO: If we get no DMA mask we should fall back to PIO */
-+	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
-+	if (rc)
-+		goto err_out;
-+	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
-+	if (rc)
-+		goto err_out;
-+
-+	if (n_ports == 2)
-+		probe_ent = scc_pci_init_native_mode(pdev, port, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
-+	else
-+		probe_ent = scc_pci_init_native_mode(pdev, port, ATA_PORT_PRIMARY);
-+
-+	if (!probe_ent) {
-+		rc = -ENOMEM;
-+		goto err_out;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	if (!ata_device_add(probe_ent)) {
-+		rc = -ENODEV;
-+		goto err_out_ent;
-+	}
-+
-+	kfree(probe_ent);
-+
-+	return 0;
-+
-+err_out_ent:
-+	kfree(probe_ent);
-+err_out:
-+	pci_disable_device(pdev);
-+	return rc;
-+}
-+
-+/**
-+ *	setup_mmio_scc	-	map CTRL/BMID region
-+ *	@pdev: PCI device we are configuring
-+ *	@name: device name
-+ */
-+
-+static int setup_mmio_scc (struct pci_dev *pdev, const char *name)
-+{
-+	unsigned long ctl_addr = pci_resource_start(pdev, 0);
-+	unsigned long dma_addr = pci_resource_start(pdev, 1);
-+	unsigned long ctl_size = pci_resource_len(pdev, 0);
-+	unsigned long dma_size = pci_resource_len(pdev, 1);
-+	struct scc_ports *scc_port;
-+	void __iomem *ctl_base, *dma_base;
-+
-+	scc_port = (struct scc_ports*)kzalloc(sizeof(struct scc_ports), GFP_KERNEL);
-+	if (!scc_port)
-+		return -ENOMEM;
-+
-+	if (!request_mem_region(ctl_addr, ctl_size, name)) {
-+		printk(KERN_WARNING "%s: IDE controller MMIO ports not available.\n", DRV_NAME);
-+		goto fail_0;
-+	}
-+
-+	if (!request_mem_region(dma_addr, dma_size, name)) {
-+		printk(KERN_WARNING "%s: IDE controller MMIO ports not available.\n", DRV_NAME);
-+		goto fail_1;
-+	}
-+
-+	if ((ctl_base = ioremap(ctl_addr, ctl_size)) == NULL)
-+		goto fail_2;
-+
-+	if ((dma_base = ioremap(dma_addr, dma_size)) == NULL)
-+		goto fail_3;
-+
-+	pci_set_master(pdev);
-+	scc_port->ctl_base = ctl_base;
-+	scc_port->dma_base = dma_base;
-+	pci_set_drvdata(pdev, (void *)scc_port);
-+
-+	return 0;
-+
-+fail_3:
-+	iounmap(ctl_base);
-+fail_2:
-+	release_mem_region(dma_addr, dma_size);
-+fail_1:
-+	release_mem_region(ctl_addr, ctl_size);
-+fail_0:
-+	kfree(scc_port);
-+	return -ENOMEM;
-+}
-+
-+static struct scsi_host_template scc_sht = {
-+	.module			= THIS_MODULE,
-+	.name			= DRV_NAME,
-+	.ioctl			= ata_scsi_ioctl,
-+	.queuecommand		= ata_scsi_queuecmd,
-+	.can_queue		= ATA_DEF_QUEUE,
-+	.this_id		= ATA_SHT_THIS_ID,
-+	.sg_tablesize		= LIBATA_MAX_PRD,
-+	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
-+	.emulated		= ATA_SHT_EMULATED,
-+	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-+	.proc_name		= DRV_NAME,
-+	.dma_boundary		= ATA_DMA_BOUNDARY,
-+	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
-+	.bios_param		= ata_std_bios_param,
-+	.resume			= ata_scsi_device_resume,
-+	.suspend		= ata_scsi_device_suspend,
-+};
-+
-+static const struct ata_port_operations scc_pata_ops = {
-+	.port_disable		= ata_port_disable,
-+	.set_piomode		= scc_set_piomode,
-+	.set_dmamode		= scc_set_dmamode,
-+	.mode_filter		= ata_pci_default_filter,
-+
-+	.tf_load		= scc_tf_load,
-+	.tf_read		= scc_tf_read,
-+	.exec_command		= scc_exec_command,
-+	.check_status		= scc_check_status,
-+	.check_altstatus	= scc_check_altstatus,
-+	.dev_select		= scc_std_dev_select,
-+
-+	.bmdma_setup		= scc_bmdma_setup,
-+	.bmdma_start		= scc_bmdma_start,
-+	.bmdma_stop		= scc_bmdma_stop,
-+	.bmdma_status		= scc_bmdma_status,
-+	.data_xfer		= scc_data_xfer,
-+
-+	.qc_prep		= ata_qc_prep,
-+	.qc_issue		= ata_qc_issue_prot,
-+
-+	.freeze			= scc_bmdma_freeze,
-+	.error_handler		= scc_error_handler,
-+	.post_internal_cmd	= scc_bmdma_stop,
-+
-+	.irq_handler		= ata_interrupt,
-+	.irq_clear		= scc_bmdma_irq_clear,
-+	.irq_on			= scc_irq_on,
-+	.irq_ack		= scc_irq_ack,
-+
-+	.port_start		= scc_port_start,
-+	.port_stop		= scc_port_stop,
-+	.host_stop		= scc_host_stop,
-+};
-+
-+static struct ata_port_info scc_port_info[] = {
-+	{
-+		.sht		= &scc_sht,
-+		.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_MMIO | ATA_FLAG_NO_LEGACY,
-+		.pio_mask	= 0x1f,	/* pio0-4 */
-+		.mwdma_mask	= 0x00,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &scc_pata_ops,
-+	},
-+};
-+
-+/**
-+ *	scc_init_one - Register SCC PATA device with kernel services
-+ *	@pdev: PCI device to register
-+ *	@ent: Entry in scc_pci_tbl matching with @pdev
-+ *
-+ *	LOCKING:
-+ *	Inherited from PCI layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	Zero on success, or -ERRNO value.
-+ */
-+
-+static int scc_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
-+{
-+	static int printed_version;
-+	struct ata_port_info port_info[2];
-+	struct ata_port_info *ppinfo[2] = { &port_info[0], &port_info[1] };
-+	struct scc_ports *ports;
-+	unsigned long port_flags;
-+	int rc;
-+	void __iomem *cckctrl_port, *intmask_port, *mode_port, *ecmode_port;
-+	u32 reg = 0;
-+
-+	if (!printed_version++)
-+		dev_printk(KERN_DEBUG, &pdev->dev,
-+			   "version " DRV_VERSION "\n");
-+
-+	rc = setup_mmio_scc(pdev, DRV_NAME);
-+	if (rc < 0)
-+		return rc;
-+
-+	ports = pci_get_drvdata(pdev);
-+	cckctrl_port = ports->ctl_base + SCC_CTL_CCKCTRL;
-+	mode_port = ports->ctl_base + SCC_CTL_MODEREG;
-+	ecmode_port = ports->ctl_base + SCC_CTL_ECMODE;
-+	intmask_port = ports->dma_base + SCC_DMA_INTMASK;
-+
-+	/* controller initialization */
-+	reg = 0;
-+	out_be32(cckctrl_port, reg);
-+	reg |= CCKCTRL_ATACLKOEN;
-+	out_be32(cckctrl_port, reg);
-+	reg |= CCKCTRL_LCLKEN | CCKCTRL_OCLKEN;
-+	out_be32(cckctrl_port, reg);
-+	reg |= CCKCTRL_CRST;
-+	out_be32(cckctrl_port, reg);
-+
-+	for (;;) {
-+		reg = in_be32(cckctrl_port);
-+		if (reg & CCKCTRL_CRST)
-+			break;
-+		udelay(5000);
-+	}
-+
-+	reg |= CCKCTRL_ATARESET;
-+	out_be32(cckctrl_port, reg);
-+	out_be32(ecmode_port, ECMODE_VALUE);
-+	out_be32(mode_port, MODE_JCUSFEN);
-+	out_be32(intmask_port, INTMASK_MSK);
-+
-+	if (in_be32(ports->dma_base + SCC_DMA_STATUS) & QCHSD_STPDIAG) {
-+		printk(KERN_WARNING "%s: failed to detect 80c cable. (PDIAG# is high)\n", DRV_NAME);
-+		remove_mmio_scc(pdev);
-+		kfree(ports);
-+		return -EIO;
-+	}
-+
-+	port_info[0] = scc_port_info[ent->driver_data];
-+	port_info[1] = scc_port_info[ent->driver_data];
-+	port_info[0].private_data = ports;
-+	port_info[1].private_data = ports;
-+
-+	port_flags = port_info[0].flags;
-+
-+	return scc_pci_init_one(pdev, ppinfo, 1);	/* n_ports must be 1 */
-+}
-+
-+static struct pci_driver scc_pci_driver = {
-+	.name			= DRV_NAME,
-+	.id_table		= scc_pci_tbl,
-+	.probe			= scc_init_one,
-+	.remove			= ata_pci_remove_one,
-+#ifdef CONFIG_PM
-+	.suspend		= ata_pci_device_suspend,
-+	.resume			= ata_pci_device_resume,
-+#endif
-+};
-+
-+static int __init scc_init (void)
-+{
-+	int rc;
-+
-+	DPRINTK("pci_register_driver\n");
-+	rc = pci_register_driver(&scc_pci_driver);
-+	if (rc)
-+		return rc;
-+
-+	DPRINTK("done\n");
-+	return 0;
-+}
-+
-+static void __exit scc_exit (void)
-+{
-+	pci_unregister_driver(&scc_pci_driver);
-+}
-+
-+module_init(scc_init);
-+module_exit(scc_exit);
-+
-+MODULE_AUTHOR("Toshiba corp");
-+MODULE_DESCRIPTION("SCSI low-level driver for Toshiba SCC PATA controller");
-+MODULE_LICENSE("GPL");
-+MODULE_DEVICE_TABLE(pci, scc_pci_tbl);
-+MODULE_VERSION(DRV_VERSION);
+Sorry for the delayed reply: Holidays attacked before I could apply the
+patch. 
+
+> I got confused between your report and Jan's.  Yours (not so sure about
+> Jan's) seems to be drive firmware bug which hald was successful to
+> undiscover.  Does hald clear CDO_USE_FFLAGS using ioctl
+> CDROM_CLEAR_OPTIONS?  The failed commands seem to be from cdrom
+> open_for_data().  Considering general quality of ATAPI devices, I
+> wouldn't be too surprised if some device fails after hours of repeated
+> poll sequence containing READ_TOC and ALLOW_MEDIUM_REMOVAL.
+
+Hmmm. I think I might have slightly different symptoms: Heavy disk use
+definitely causes the bug to appear more frequently. Compiling often
+causes it to kick in after about 15 minutes. I also get slightly
+different error messages.
+
+With the latest patch set (2.6.19-gentoo-r4 + cocktail) the resets still
+occur, but at least the drive doesn't go down to PIO so soon anymore.
+I'll keep watching it for the rest of the day. Attached dmesg of the
+first hour or so. (If Evolution borks this mail, I'll resort to telnet and 
+SMTP ;-)
+
+Thanks for the feedback, and hope the sucker gets nailed.
+
+Jan
+
+--=-qf2oXkogm+dftBTG5SeV
+Content-Disposition: attachment; filename=cocktail-2.6.19-dmesg.txt
+Content-Type: text/plain; name=cocktail-2.6.19-dmesg.txt; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Linux version 2.6.19-gentoo-r4 (root@wookie) (gcc version 4.1.1 (Gentoo 4.1.1-r3)) #1 SMP PREEMPT Tue Jan 16 12:05:48 SAST 2007
+BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009f800 (usable)
+ BIOS-e820: 000000000009f800 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000dc000 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 000000003fe90000 (usable)
+ BIOS-e820: 000000003fe90000 - 000000003ff00000 (ACPI NVS)
+ BIOS-e820: 000000003ff00000 - 0000000040000000 (reserved)
+ BIOS-e820: 00000000e0000000 - 00000000f0000000 (reserved)
+ BIOS-e820: 00000000fec00000 - 00000000fec10000 (reserved)
+ BIOS-e820: 00000000fed00000 - 00000000fed00400 (reserved)
+ BIOS-e820: 00000000fed14000 - 00000000fed1a000 (reserved)
+ BIOS-e820: 00000000fed1c000 - 00000000fed90000 (reserved)
+ BIOS-e820: 00000000fee00000 - 00000000fee01000 (reserved)
+ BIOS-e820: 00000000ff000000 - 0000000100000000 (reserved)
+126MB HIGHMEM available.
+896MB LOWMEM available.
+found SMP MP-table at 000f5c80
+Entering add_active_range(0, 0, 261776) 0 entries of 256 used
+Zone PFN ranges:
+  DMA             0 ->     4096
+  Normal       4096 ->   229376
+  HighMem    229376 ->   261776
+early_node_map[1] active PFN ranges
+    0:        0 ->   261776
+On node 0 totalpages: 261776
+  DMA zone: 32 pages used for memmap
+  DMA zone: 0 pages reserved
+  DMA zone: 4064 pages, LIFO batch:0
+  Normal zone: 1760 pages used for memmap
+  Normal zone: 223520 pages, LIFO batch:31
+  HighMem zone: 253 pages used for memmap
+  HighMem zone: 32147 pages, LIFO batch:7
+DMI present.
+ACPI: RSDP (v000 PTLTD                                 ) @ 0x000f5ae0
+ACPI: RSDT (v001 PTLTD    RSDT   0x06040000  LTP 0x00000000) @ 0x3fe9515a
+ACPI: FADT (v001 INTEL  CALISTGA 0x06040000 LOHR 0x0000005a) @ 0x3fe9ddee
+ACPI: MADT (v001 INTEL  CALISTGA 0x06040000 LOHR 0x0000005a) @ 0x3fe9de62
+ACPI: HPET (v001 INTEL  CALISTGA 0x06040000 LOHR 0x0000005a) @ 0x3fe9deca
+ACPI: MCFG (v001 INTEL  CALISTGA 0x06040000 LOHR 0x0000005a) @ 0x3fe9df02
+ACPI: TCPA (v001 PTLTD  CALISTGA 0x06040000  PTL 0x00000001) @ 0x3fe9df3e
+ACPI: MADT (v001 PTLTD  	 APIC   0x06040000  LTP 0x00000000) @ 0x3fe9df70
+ACPI: BOOT (v001 PTLTD  $SBFTBL$ 0x06040000  LTP 0x00000001) @ 0x3fe9dfd8
+ACPI: SSDT (v001 SataRe  SataPri 0x00001000 INTL 0x20050624) @ 0x3fe96862
+ACPI: SSDT (v001 SataRe  SataSec 0x00001000 INTL 0x20050624) @ 0x3fe961d0
+ACPI: SSDT (v001  PmRef  Cpu0Tst 0x00003000 INTL 0x20050624) @ 0x3fe9573a
+ACPI: SSDT (v001  PmRef  Cpu1Tst 0x00003000 INTL 0x20050624) @ 0x3fe95694
+ACPI: SSDT (v001  PmRef    CpuPm 0x00003000 INTL 0x20050624) @ 0x3fe951ae
+ACPI: DSDT (v001 INTEL  CALISTGA 0x06040000 MSFT 0x0100000e) @ 0x00000000
+ACPI: PM-Timer IO Port: 0x1008
+ACPI: Local APIC address 0xfee00000
+ACPI: 2 duplicate APIC table ignored.
+ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
+Processor #0 6:15 APIC version 20
+ACPI: LAPIC (acpi_id[0x01] lapic_id[0x01] enabled)
+Processor #1 6:15 APIC version 20
+ACPI: IOAPIC (id[0x01] address[0xfec00000] gsi_base[0])
+IOAPIC[0]: apic_id 1, version 32, address 0xfec00000, GSI 0-23
+ACPI: IOAPIC (id[0x02] address[0xfec28000] gsi_base[24])
+IOAPIC[1]: apic_id 2, version 255, address 0xfec28000, GSI 24-279
+ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
+ACPI: IRQ0 used by override.
+ACPI: IRQ2 used by override.
+ACPI: IRQ9 used by override.
+Enabling APIC mode:  Flat.  Using 2 I/O APICs
+ACPI: HPET id: 0x8086a201 base: 0xfed00000
+Using ACPI (MADT) for SMP configuration information
+Allocating PCI resources starting at 50000000 (gap: 40000000:a0000000)
+Detected 1662.718 MHz processor.
+Built 1 zonelists.  Total pages: 259731
+Kernel command line: root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=/dev/sda7 udev video=vesafb:ywrap,1440x900-24@65 combined_mode=libata
+mapped APIC to ffffd000 (fee00000)
+mapped IOAPIC to ffffc000 (fec00000)
+mapped IOAPIC to ffffb000 (fec28000)
+Enabling fast FPU save and restore... done.
+Enabling unmasked SIMD FPU exception support... done.
+Initializing CPU#0
+PID hash table entries: 4096 (order: 12, 16384 bytes)
+Console: colour VGA+ 80x25
+Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+Memory: 1024416k/1047104k available (2910k kernel code, 21964k reserved, 1419k data, 256k init, 129600k highmem)
+virtual kernel memory layout:
+    fixmap  : 0xfff4f000 - 0xfffff000   ( 704 kB)
+    pkmap   : 0xff800000 - 0xffc00000   (4096 kB)
+    vmalloc : 0xf8800000 - 0xff7fe000   ( 111 MB)
+    lowmem  : 0xc0000000 - 0xf8000000   ( 896 MB)
+      .init : 0xc05a0000 - 0xc05e0000   ( 256 kB)
+      .data : 0xc03d7bb1 - 0xc053aaf4   (1419 kB)
+      .text : 0xc0100000 - 0xc03d7bb1   (2910 kB)
+Checking if this processor honours the WP bit even in supervisor mode... Ok.
+hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0
+hpet0: 3 64-bit timers, 14318180 Hz
+Using HPET for base-timer
+Calibrating delay using timer specific routine.. 3328.76 BogoMIPS (lpj=1664383)
+Mount-cache hash table entries: 512
+CPU: After generic identify, caps: bfebfbff 20100000 00000000 00000000 0000e39d 00000000 00000001
+monitor/mwait feature present.
+using mwait in idle threads.
+CPU: L1 I cache: 32K, L1 D cache: 32K
+CPU: L2 cache: 2048K
+CPU: Physical Processor ID: 0
+CPU: Processor Core ID: 0
+CPU: After all inits, caps: bfebfbff 20100000 00000000 00000940 0000e39d 00000000 00000001
+Compat vDSO mapped to ffffe000.
+Checking 'hlt' instruction... OK.
+Freeing SMP alternatives: 16k freed
+ACPI: Core revision 20060707
+CPU0: Intel(R) Core(TM)2 CPU         T5500  @ 1.66GHz stepping 06
+Booting processor 1/1 eip 2000
+Initializing CPU#1
+Calibrating delay using timer specific routine.. 3325.37 BogoMIPS (lpj=1662688)
+CPU: After generic identify, caps: bfebfbff 20100000 00000000 00000000 0000e39d 00000000 00000001
+monitor/mwait feature present.
+CPU: L1 I cache: 32K, L1 D cache: 32K
+CPU: L2 cache: 2048K
+CPU: Physical Processor ID: 0
+CPU: Processor Core ID: 1
+CPU: After all inits, caps: bfebfbff 20100000 00000000 00000940 0000e39d 00000000 00000001
+CPU1: Intel(R) Core(TM)2 CPU         T5500  @ 1.66GHz stepping 06
+Total of 2 processors activated (6654.14 BogoMIPS).
+ENABLING IO-APIC IRQs
+..TIMER: vector=0x31 apic1=0 pin1=2 apic2=-1 pin2=-1
+checking TSC synchronization across 2 CPUs: passed.
+Brought up 2 CPUs
+migration_cost=44
+checking if image is initramfs... it is
+Freeing initrd memory: 7411k freed
+NET: Registered protocol family 16
+ACPI: bus type pci registered
+PCI: Using MMCONFIG
+Setting up standard PCI resources
+ACPI: Interpreter enabled
+ACPI: Using IOAPIC for interrupt routing
+ACPI: PCI Root Bridge [PCI0] (0000:00)
+PCI: Probing PCI hardware (bus 00)
+PCI quirk: region 1000-107f claimed by ICH6 ACPI/GPIO/TCO
+PCI quirk: region 1180-11bf claimed by ICH6 GPIO
+PCI: Ignoring BAR0-3 of IDE controller 0000:00:1f.2
+Boot video device is 0000:01:00.0
+PCI: Transparent bridge - 0000:00:1e.0
+PCI: Bus #0b (-#0e) is hidden behind transparent bridge #0a (-#0a) (try 'pci=assign-busses')
+Please report the result to linux-kernel to fix this permanently
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PEGP._PRT]
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.RP01._PRT]
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.RP02._PRT]
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.RP03._PRT]
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.RP04._PRT]
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCIB._PRT]
+ACPI: PCI Interrupt Link [LNKA] (IRQs 10 *11)
+ACPI: PCI Interrupt Link [LNKB] (IRQs 10 *11)
+ACPI: PCI Interrupt Link [LNKC] (IRQs *10 11)
+ACPI: PCI Interrupt Link [LNKD] (IRQs *10 11)
+ACPI: PCI Interrupt Link [LNKE] (IRQs 10 11) *0, disabled.
+ACPI: PCI Interrupt Link [LNKF] (IRQs 10 11) *0, disabled.
+ACPI: PCI Interrupt Link [LNKG] (IRQs *10 11)
+ACPI: PCI Interrupt Link [LNKH] (IRQs 10 *11)
+Linux Plug and Play Support v0.97 (c) Adam Belay
+pnp: PnP ACPI init
+pnp: PnP ACPI: found 11 devices
+SCSI subsystem initialized
+libata version 2.00 loaded.
+PCI: Using ACPI for IRQ routing
+PCI: If a device doesn't work, try "pci=routeirq".  If it helps, post a report
+pnp: 00:07: ioport range 0x6a0-0x6af has been reserved
+pnp: 00:07: ioport range 0x6b0-0x6ff has been reserved
+PCI: Failed to allocate mem resource #6:20000@c0000000 for 0000:01:00.0
+PCI: Bridge: 0000:00:01.0
+  IO window: disabled.
+  MEM window: d0000000-d1ffffff
+  PREFETCH window: b0000000-bfffffff
+PCI: Bridge: 0000:00:1c.0
+  IO window: 2000-2fff
+  MEM window: c8000000-c9ffffff
+  PREFETCH window: c0000000-c1ffffff
+PCI: Bridge: 0000:00:1c.1
+  IO window: 3000-3fff
+  MEM window: ca000000-cbffffff
+  PREFETCH window: c2000000-c3ffffff
+PCI: Bridge: 0000:00:1c.2
+  IO window: 4000-4fff
+  MEM window: cc000000-cdffffff
+  PREFETCH window: c4000000-c5ffffff
+PCI: Bridge: 0000:00:1c.3
+  IO window: 5000-5fff
+  MEM window: ce000000-cfffffff
+  PREFETCH window: c6000000-c7ffffff
+PCI: Bus 11, cardbus bridge: 0000:0a:06.0
+  IO window: 00006000-000060ff
+  IO window: 00006400-000064ff
+  PREFETCH window: 50000000-51ffffff
+  MEM window: 52000000-53ffffff
+PCI: Bridge: 0000:00:1e.0
+  IO window: 6000-6fff
+  MEM window: d2000000-d20fffff
+  PREFETCH window: 50000000-51ffffff
+ACPI: PCI Interrupt 0000:00:01.0[A] -> GSI 16 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:01.0 to 64
+ACPI: PCI Interrupt 0000:00:1c.0[A] -> GSI 17 (level, low) -> IRQ 17
+PCI: Setting latency timer of device 0000:00:1c.0 to 64
+ACPI: PCI Interrupt 0000:00:1c.1[B] -> GSI 16 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:1c.1 to 64
+ACPI: PCI Interrupt 0000:00:1c.2[C] -> GSI 18 (level, low) -> IRQ 18
+PCI: Setting latency timer of device 0000:00:1c.2 to 64
+ACPI: PCI Interrupt 0000:00:1c.3[D] -> GSI 19 (level, low) -> IRQ 19
+PCI: Setting latency timer of device 0000:00:1c.3 to 64
+PCI: Enabling device 0000:00:1e.0 (0104 -> 0107)
+PCI: Setting latency timer of device 0000:00:1e.0 to 64
+ACPI: PCI Interrupt 0000:0a:06.0[A] -> GSI 22 (level, low) -> IRQ 20
+NET: Registered protocol family 2
+IP route cache hash table entries: 32768 (order: 5, 131072 bytes)
+TCP established hash table entries: 131072 (order: 8, 1572864 bytes)
+TCP bind hash table entries: 65536 (order: 7, 786432 bytes)
+TCP: Hash tables configured (established 131072 bind 65536)
+TCP reno registered
+Simple Boot Flag at 0x36 set to 0x1
+cpufreq: No nForce2 chipset.
+IA-32 Microcode Update Driver: v1.14a <tigran@veritas.com>
+audit: initializing netlink socket (disabled)
+audit(1168951397.737:1): initialized
+highmem bounce pool size: 64 pages
+SGI XFS with ACLs, security attributes, realtime, large block numbers, no debug enabled
+SGI XFS Quota Management subsystem
+io scheduler noop registered
+io scheduler anticipatory registered
+io scheduler deadline registered
+io scheduler cfq registered (default)
+PCI: Setting latency timer of device 0000:00:01.0 to 64
+assign_interrupt_mode Found MSI capability
+Allocate Port Service[0000:00:01.0:pcie00]
+Allocate Port Service[0000:00:01.0:pcie03]
+PCI: Setting latency timer of device 0000:00:1c.0 to 64
+assign_interrupt_mode Found MSI capability
+Allocate Port Service[0000:00:1c.0:pcie00]
+Allocate Port Service[0000:00:1c.0:pcie02]
+Allocate Port Service[0000:00:1c.0:pcie03]
+PCI: Setting latency timer of device 0000:00:1c.1 to 64
+assign_interrupt_mode Found MSI capability
+Allocate Port Service[0000:00:1c.1:pcie00]
+Allocate Port Service[0000:00:1c.1:pcie02]
+Allocate Port Service[0000:00:1c.1:pcie03]
+PCI: Setting latency timer of device 0000:00:1c.2 to 64
+assign_interrupt_mode Found MSI capability
+Allocate Port Service[0000:00:1c.2:pcie00]
+Allocate Port Service[0000:00:1c.2:pcie02]
+Allocate Port Service[0000:00:1c.2:pcie03]
+PCI: Setting latency timer of device 0000:00:1c.3 to 64
+assign_interrupt_mode Found MSI capability
+Allocate Port Service[0000:00:1c.3:pcie00]
+Allocate Port Service[0000:00:1c.3:pcie02]
+Allocate Port Service[0000:00:1c.3:pcie03]
+toshiba: not a supported Toshiba laptop
+vesafb: NVIDIA Corporation, G72 Board - e463h0v , Chip Rev    (OEM: NVIDIA)
+vesafb: VBE version: 3.0
+vesafb: protected mode interface info at c000:d4f0
+vesafb: pmi: set display start = c00cd526, set palette = c00cd590
+vesafb: pmi: ports = 3b4 3b5 3ba 3c0 3c1 3c4 3c5 3c6 3c7 3c8 3c9 3cc 3ce 3cf 3d0 3d1 3d2 3d3 3d4 3d5 3da 
+vesafb: VBIOS/hardware doesn't support DDC transfers
+vesafb: no monitor limits have been set
+vesafb: scrolling: ywrap using protected mode interface, yres_virtual=1536
+Console: switching to colour frame buffer device 128x48
+vesafb: framebuffer at 0xb0000000, mapped to 0xf8880000, using 6144k, total 131072k
+fb0: VESA VGA frame buffer device
+ACPI: AC Adapter [ADP1] (on-line)
+ACPI: Battery Slot [BAT0] (battery present)
+ACPI: Power Button (FF) [PWRF]
+ACPI: Lid Switch [LID0]
+ACPI: Sleep Button (CM) [SLPB]
+ACPI: Video Device [VGA] (multi-head: yes  rom: no  post: no)
+ACPI: Video Device [GFX0] (multi-head: yes  rom: no  post: no)
+ACPI (exconfig-0455): Dynamic SSDT Load - OemId [ PmRef] OemTableId [ Cpu0Ist] [20060707]
+ACPI (exconfig-0455): Dynamic SSDT Load - OemId [ PmRef] OemTableId [ Cpu0Cst] [20060707]
+Monitor-Mwait will be used to enter C-1 state
+Monitor-Mwait will be used to enter C-2 state
+Monitor-Mwait will be used to enter C-3 state
+ACPI: CPU0 (power states: C1[C1] C2[C2] C3[C3])
+ACPI (exconfig-0455): Dynamic SSDT Load - OemId [ PmRef] OemTableId [ Cpu1Ist] [20060707]
+ACPI (exconfig-0455): Dynamic SSDT Load - OemId [ PmRef] OemTableId [ Cpu1Cst] [20060707]
+ACPI: CPU1 (power states: C1[C1] C2[C2] C3[C3])
+ACPI: Thermal Zone [TZS0] (48 C)
+ACPI: Thermal Zone [TZS1] (49 C)
+ibm_acpi: ec object not found
+Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing enabled
+RAMDISK driver initialized: 16 RAM disks of 8192K size 1024 blocksize
+loop: loaded (max 8 devices)
+ata_piix 0000:00:1f.2: version 2.00ac6
+ata_piix 0000:00:1f.2: MAP [ IDE IDE P1 P3 ]
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: PATA max UDMA/100:PIO4 cmd 0x1F0 ctl 0x3F6 bmdma 0x18B0 irq 14
+ata2: SATA max UDMA/133:PIO4 cmd 0x170 ctl 0x376 bmdma 0x18B8 irq 15
+scsi0 : ata_piix
+ata1.00: ATA-6, max UDMA/100:PIO4, 234441648 sectors: LBA48 
+ata1.00: ata1: dev 0 multi count 16
+ata1.01: ATAPI, max UDMA/33:PIO4
+ata1.00: configured for UDMA/100:PIO0
+ata1.01: configured for UDMA/33:PIO0
+scsi1 : ata_piix
+ATA: abnormal status 0x7F on port 0x177
+scsi 0:0:0:0: Direct-Access     ATA      TOSHIBA MK1234GA AC00 PQ: 0 ANSI: 5
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 >
+sd 0:0:0:0: Attached scsi disk sda
+scsi 0:0:1:0: CD-ROM            TSSTcorp CD/DVDW TS-L632D ac00 PQ: 0 ANSI: 5
+sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
+sr 0:0:1:0: Attached scsi CD-ROM sr0
+PNP: PS/2 Controller [PNP0303:KBD0,PNP0f13:PS2M] at 0x60,0x64 irq 1,12
+i8042.c: Detected active multiplexing controller, rev 1.1.
+serio: i8042 KBD port at 0x60,0x64 irq 1
+serio: i8042 AUX0 port at 0x60,0x64 irq 12
+serio: i8042 AUX1 port at 0x60,0x64 irq 12
+serio: i8042 AUX2 port at 0x60,0x64 irq 12
+serio: i8042 AUX3 port at 0x60,0x64 irq 12
+mice: PS/2 mouse device common for all mice
+input: AT Translated Set 2 keyboard as /class/input/input0
+dcdbas dcdbas: Dell Systems Management Base Driver (version 5.6.0-3.2)
+padlock: No VIA PadLock drivers have been loaded.
+padlock: VIA PadLock not detected.
+padlock: VIA PadLock Hash Engine not detected.
+TCP cubic registered
+NET: Registered protocol family 1
+NET: Registered protocol family 17
+Starting balanced_irq
+Using IPI Shortcut mode
+Time: tsc clocksource has been installed.
+Freeing unused kernel memory: 256k freed
+Time: hpet clocksource has been installed.
+ata1: soft resetting port
+usbcore: registered new interface driver usbfs
+usbcore: registered new interface driver hub
+usbcore: registered new device driver usb
+ACPI: PCI Interrupt 0000:00:1d.7[A] -> GSI 23 (level, low) -> IRQ 21
+PCI: Setting latency timer of device 0000:00:1d.7 to 64
+ehci_hcd 0000:00:1d.7: EHCI Host Controller
+ehci_hcd 0000:00:1d.7: new USB bus registered, assigned bus number 1
+ehci_hcd 0000:00:1d.7: debug port 1
+PCI: cache line size of 32 is not supported by device 0000:00:1d.7
+ehci_hcd 0000:00:1d.7: irq 21, io mem 0xd2304000
+ehci_hcd 0000:00:1d.7: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
+usb usb1: configuration #1 chosen from 1 choice
+hub 1-0:1.0: USB hub found
+hub 1-0:1.0: 8 ports detected
+Initializing USB Mass Storage driver...
+ata1.00: configured for UDMA/100:PIO0
+usb 1-7: new high speed USB device using ehci_hcd and address 2
+ata1.01: configured for UDMA/33:PIO0
+ata1: EH complete
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+usb 1-7: configuration #1 chosen from 1 choice
+usbcore: registered new interface driver usb-storage
+USB Mass Storage support registered.
+USB Universal Host Controller Interface driver v3.0
+ACPI: PCI Interrupt 0000:00:1d.0[A] -> GSI 23 (level, low) -> IRQ 21
+PCI: Setting latency timer of device 0000:00:1d.0 to 64
+uhci_hcd 0000:00:1d.0: UHCI Host Controller
+uhci_hcd 0000:00:1d.0: new USB bus registered, assigned bus number 2
+uhci_hcd 0000:00:1d.0: irq 21, io base 0x00001800
+usb usb2: configuration #1 chosen from 1 choice
+hub 2-0:1.0: USB hub found
+hub 2-0:1.0: 2 ports detected
+ACPI: PCI Interrupt 0000:00:1d.1[B] -> GSI 19 (level, low) -> IRQ 19
+PCI: Setting latency timer of device 0000:00:1d.1 to 64
+uhci_hcd 0000:00:1d.1: UHCI Host Controller
+uhci_hcd 0000:00:1d.1: new USB bus registered, assigned bus number 3
+uhci_hcd 0000:00:1d.1: irq 19, io base 0x00001820
+usb usb3: configuration #1 chosen from 1 choice
+hub 3-0:1.0: USB hub found
+hub 3-0:1.0: 2 ports detected
+ACPI: PCI Interrupt 0000:00:1d.2[C] -> GSI 18 (level, low) -> IRQ 18
+PCI: Setting latency timer of device 0000:00:1d.2 to 64
+uhci_hcd 0000:00:1d.2: UHCI Host Controller
+uhci_hcd 0000:00:1d.2: new USB bus registered, assigned bus number 4
+uhci_hcd 0000:00:1d.2: irq 18, io base 0x00001840
+usb usb4: configuration #1 chosen from 1 choice
+hub 4-0:1.0: USB hub found
+hub 4-0:1.0: 2 ports detected
+Synaptics Touchpad, model: 1, fw: 6.2, id: 0x12a0b1, caps: 0xa04713/0x204000
+input: SynPS/2 Synaptics TouchPad as /class/input/input1
+psmouse.c: TouchPad at isa0060/serio4/input0 lost sync at byte 1
+ACPI: PCI Interrupt 0000:00:1d.3[D] -> GSI 16 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:1d.3 to 64
+uhci_hcd 0000:00:1d.3: UHCI Host Controller
+uhci_hcd 0000:00:1d.3: new USB bus registered, assigned bus number 5
+uhci_hcd 0000:00:1d.3: irq 16, io base 0x00001860
+usb usb5: configuration #1 chosen from 1 choice
+hub 5-0:1.0: USB hub found
+hub 5-0:1.0: 2 ports detected
+ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver (PCI)
+usbcore: registered new interface driver hiddev
+usbcore: registered new interface driver usbhid
+drivers/usb/input/hid-core.c: v2.6:USB HID core driver
+sl811: driver sl811-hcd, 19 May 2005
+ieee1394: Initialized config rom entry `ip1394'
+ieee1394: sbp2: Driver forced to serialize I/O (serialize_io=1)
+ieee1394: sbp2: Try serialize_io=0 for better performance
+device-mapper: ioctl: 4.10.0-ioctl (2006-09-14) initialised: dm-devel@redhat.com
+md: raid0 personality registered for level 0
+md: raid1 personality registered for level 1
+JFS: nTxBlock = 8065, nTxLock = 64527
+Synaptics Touchpad, model: 1, fw: 6.2, id: 0x12a0b1, caps: 0xa04713/0x204000
+input: SynPS/2 Synaptics TouchPad as /class/input/input2
+kjournald starting.  Commit interval 5 seconds
+EXT3-fs: mounted filesystem with ordered data mode.
+input: PC Speaker as /class/input/input3
+ACPI: PCI Interrupt 0000:00:1f.3[B] -> GSI 19 (level, low) -> IRQ 19
+ACPI: PCI Interrupt 0000:00:1b.0[A] -> GSI 22 (level, low) -> IRQ 20
+PCI: Setting latency timer of device 0000:00:1b.0 to 64
+ieee80211_crypt: registered algorithm 'NULL'
+ieee80211: 802.11 data/management/control stack, 1.2.16
+ieee80211: Copyright (C) 2004-2005 Intel Corporation <jketreno@linux.intel.com>
+ACPI: PCI Interrupt 0000:0a:06.2[A] -> GSI 22 (level, low) -> IRQ 20
+ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 16 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:02:00.0 to 64
+eth0: Identified chip type is 'RTL8168B/8111B'.
+eth0: r10001.04, the Linux device driver for Realtek Ethernet Controllers at 0x2000, 00:16:d3:47:66:2e, IRQ 16
+ipw3945: Intel(R) PRO/Wireless 3945 Network Connection driver for Linux, 1.2.0d
+ipw3945: Copyright(c) 2003-2006 Intel Corporation
+sdhci: Secure Digital Host Controller Interface driver, 0.12
+sdhci: Copyright(c) Pierre Ossman
+nvidia: module license 'NVIDIA' taints kernel.
+Realtek RTL8168/8111 Family PCI-E Gigabit Ethernet Network Adapter
+Driver version:1.04
+Released date:2006/07/07
+Link Status:Linked
+Link Speed:100Mbps
+Duplex mode:Full-Duplex
+I/O Base:0x2000(I/O port)
+IRQ:16
+Yenta: CardBus bridge found at 0000:0a:06.0 [1025:0107]
+Yenta: Using CSCINT to route CSC interrupts to PCI
+Yenta: Routing CardBus interrupts to PCI
+Yenta TI: socket 0000:0a:06.0, mfunc 0x01aa1b22, devctl 0x64
+Yenta: ISA IRQ mask 0x0cf8, PCI irq 20
+Socket status: 30000006
+Yenta: Raising subordinate bus# of parent bus (#0a) from #0a to #0e
+pcmcia: parent PCI bridge I/O window: 0x6000 - 0x6fff
+pcmcia: parent PCI bridge Memory window: 0xd2000000 - 0xd20fffff
+pcmcia: parent PCI bridge Memory window: 0x50000000 - 0x51ffffff
+sdhci: SDHCI controller found at 0000:0a:06.3 [104c:803c] (rev 0)
+ACPI: PCI Interrupt 0000:0a:06.3[A] -> GSI 22 (level, low) -> IRQ 20
+mmc0: SDHCI at 0xd2005800 irq 20 PIO
+ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 18 (level, low) -> IRQ 18
+PCI: Setting latency timer of device 0000:05:00.0 to 64
+ipw3945: Detected Intel PRO/Wireless 3945ABG Network Connection
+ACPI: PCI Interrupt 0000:01:00.0[A] -> GSI 16 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:01:00.0 to 64
+NVRM: loading NVIDIA UNIX x86 Kernel Module  1.0-9746  Fri Dec 15 09:54:45 PST 2006
+EXT3 FS on sda7, internal journal
+fuse init (API version 7.8)
+fuse distribution version: 2.6.1
+Adding 2104472k swap on /dev/sda6.  Priority:-1 extents:1 across:2104472k
+Real Time Clock Driver v1.12ac
+ipw3945: Detected geography ABG (13 802.11bg channels, 23 802.11a channels)
+ipw3945: Error sending SCAN_ABORT_CMD: time out after 500ms.
+ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.01: (BMDMA stat 0x60)
+ata1.01: tag 0 cmd 0xa0 Emask 0x4 stat 0x40 err 0x0 (timeout)
+ata1: port is slow to respond, please be patient (Status 0xd0)
+ata1: port failed to respond (30 secs, Status 0xd0)
+ata1: soft resetting port
+ata1.00: configured for UDMA/100:PIO0
+ata1.01: configured for UDMA/33:PIO0
+ata1: EH complete
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.01: (BMDMA stat 0x60)
+ata1.01: tag 0 cmd 0xa0 Emask 0x4 stat 0x40 err 0x0 (timeout)
+ata1: port is slow to respond, please be patient (Status 0xd0)
+ata1: port failed to respond (30 secs, Status 0xd0)
+ata1: soft resetting port
+ata1.00: configured for UDMA/100:PIO0
+ata1.01: configured for UDMA/33:PIO0
+ata1: EH complete
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.01: (BMDMA stat 0x60)
+ata1.01: tag 0 cmd 0xa0 Emask 0x4 stat 0x40 err 0x0 (timeout)
+ata1: port is slow to respond, please be patient (Status 0xd0)
+ata1: port failed to respond (30 secs, Status 0xd0)
+ata1: soft resetting port
+ata1.00: configured for UDMA/100:PIO0
+ata1.01: configured for UDMA/33:PIO0
+ata1: EH complete
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+
+--=-qf2oXkogm+dftBTG5SeV--
+
