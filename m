@@ -1,35 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ICH7m problem using libata
-Date: Wed, 17 Jan 2007 22:41:35 +0900
-Message-ID: <45AE278F.5060004@gmail.com>
-References: <1165253799.16504.37.camel@laundromat.jangutter.com>	 <200701100817.28738.matthew4196@gmail.com> <45AB0F07.5020705@gmail.com>	 <200701160958.33561.matthew4196@gmail.com>  <45AC933B.1000201@gmail.com>	 <1168947105.14636.11.camel@laundromat.jangutter.com>	 <45ACBA1F.6030007@gmail.com>	 <1168955594.14636.19.camel@laundromat.jangutter.com>	 <45ADB011.6000906@gmail.com> <1169040316.16103.18.camel@laundromat.jangutter.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] libata: initialize qc->dma_dir to DMA_NONE
+Date: Wed, 17 Jan 2007 08:37:03 -0600
+Message-ID: <45AE348F.4050003@linux.vnet.ibm.com>
+References: <45AD50AD.2040700@linux.vnet.ibm.com> <20070116224115.50d29cf7@localhost.localdomain> <45AD55A4.50208@pobox.com> <1168989094.2789.20.camel@mulgrave.il.steeleye.com> <45AD5D27.8020004@linux.vnet.ibm.com> <45AD60B9.3030501@linux.vnet.ibm.com> <20070117023402.GP10987@htj.dyndns.org> <45AD9B7F.4090608@us.ibm.com> <45AD9F1C.2050808@pobox.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:63742 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932158AbXAQNlr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jan 2007 08:41:47 -0500
-Received: by wr-out-0506.google.com with SMTP id i22so549256wra
-        for <linux-ide@vger.kernel.org>; Wed, 17 Jan 2007 05:41:46 -0800 (PST)
-In-Reply-To: <1169040316.16103.18.camel@laundromat.jangutter.com>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:49749 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932438AbXAQOhO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Jan 2007 09:37:14 -0500
+In-Reply-To: <45AD9F1C.2050808@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Gutter <jangutter@gmail.com>
-Cc: Matthew Stapleton <matthew4196@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Brian King <brking@us.ibm.com>, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Alan <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Jan Gutter wrote:
-> If it's a firmware bug and implementing a workaround in hald helps it,
-> would other userspace apps (k3b, cdrecord, etc.) also be affected?
+Jeff Garzik wrote:
+> Brian King wrote:
+>> ACK
+> 
+> Does this response mean that you've tested it, and successfully verified
+> your problem is gone?
 
-Quite some number of ODDs don't seem to like the way hald polls them.  I
-don't think other apps will be affected by this.  I dunno much about
-hald and don't have enough time to chase it down myself but feel free to
-cc me when reporting this to hald people.  I'll try to help as much as I
-can.
+Yes, I have tested it, but all my problems are not gone with this
+one patch. This fixes the problem I was seeing where the data direction
+was set incorrectly, but I still have some other issues I am
+working through. I'll be sending out additional patches shortly.
 
-Thanks.
+Brian
+
 
 -- 
-tejun
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
