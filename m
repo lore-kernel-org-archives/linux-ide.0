@@ -1,41 +1,64 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] libata: initialize qc->dma_dir to DMA_NONE
-Date: Wed, 17 Jan 2007 12:35:06 -0600
-Message-ID: <45AE6C5A.3030800@linux.vnet.ibm.com>
-References: <45AD50AD.2040700@linux.vnet.ibm.com> <20070116224115.50d29cf7@localhost.localdomain> <45AD55A4.50208@pobox.com> <1168989094.2789.20.camel@mulgrave.il.steeleye.com> <45AD5D27.8020004@linux.vnet.ibm.com> <45AD60B9.3030501@linux.vnet.ibm.com> <20070117023402.GP10987@htj.dyndns.org> <45AD9B7F.4090608@us.ibm.com> <45AD9F1C.2050808@pobox.com> <45AE348F.4050003@linux.vnet.ibm.com>
-Reply-To: brking@linux.vnet.ibm.com
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH 2/4] libata-core.c: add another IRQ calls
+Date: Wed, 17 Jan 2007 21:31:55 +0100
+Message-ID: <17838.34747.222649.93821@alkaid.it.uu.se>
+References: <200701170924.l0H9OsdG002754@harpo.it.uu.se>
+	<45AE539E.2040600@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <45AE348F.4050003@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: brking@linux.vnet.ibm.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, Brian King <brking@us.ibm.com>, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Alan <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from aun.it.uu.se ([130.238.12.36]:38089 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932740AbXAQUhz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Jan 2007 15:37:55 -0500
+In-Reply-To: <45AE539E.2040600@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, akira2.iguchi@toshiba.co.jp, arnd@arndb.de, kou.ishizaki@toshiba.co.jp, linas@austin.ibm.com, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, paulus@samba.org
 
-Brian King wrote:
-> Jeff Garzik wrote:
->> Brian King wrote:
->>> ACK
->> Does this response mean that you've tested it, and successfully verified
->> your problem is gone?
-> 
-> Yes, I have tested it, but all my problems are not gone with this
-> one patch. This fixes the problem I was seeing where the data direction
-> was set incorrectly, but I still have some other issues I am
-> working through. I'll be sending out additional patches shortly.
+Jeff Garzik writes:
+ > Mikael Pettersson wrote:
+ > > If there is a highly common case, the code for that case
+ > > is available, and the code is cheap to execute (doesn't
+ > > require too many additional variables), then having an
+ > > explicit test + inline code is preferred. If any of these
+ > > conditions isn't met, then I wouldn't bother converting
+ > > the call to the if/inline/call combo.
+ > 
+ > 
+ > To be a bit more specific, the branch being taken, or not, depends on 
+ > the system setup.  For example, in sata_promise's case, with no other 
+ > SATA controllers in use,
+ > 
+ > 	if (ap->ops->irq_on)
+ > 		ap->ops->irq_on(ap);
+ > 	else
+ > 		ata_irq_on(ap);
+ > 
+ > the direct function call will ALWAYS be called.  But if you had a weird 
+ > system with both Cell and Promise PDC203xx, then the branch is dependent 
+ > on whether the activity comes from the Cell SATA or Promise SATA.
+ > 
+ > So it's highly predictable in a great many cases.
+ > 
+ > And it should be noted that it is a direct function call not inline, 
+ > thus its if/indirect/direct not if/indirect/inline.
+ > 
+ > Does that change the answer at all?
 
-I just sent three small libata patches to linux-ide which fix the problems
-I was seeing. I am still running additional tests to make sure there are
-not any other issues, but everything looks pretty good so far.
+The real benefits from identifying a common case is to inline
+the code for it. So the fact that the common case is still a
+full-blown function call here and not inline code means that
+there's much less benefit from rewriting an indirect call as
+an if/indirect/direct sequence.
 
-Thanks,
+There is some branch prediction benefit from having
+if/call-indirect/call-direct-to-common-case instead of a
+single call-indirect, but only if the common case really is
+much more common than other cases, or if the other cases
+are limited to just one (so there's two common cases).
 
-Brian
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+I wouldn't change a call-indirect to if/call-indirect/call-direct
+unless it's on a very hot path with a known dominant common case.
