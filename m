@@ -1,30 +1,28 @@
 From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: Re: [PATCH 2/4] libata-core.c: add another IRQ calls
 Date: Thu, 18 Jan 2007 09:55:59 +0900
-Message-ID: <200701180055.l0I0tl6M021051@toshiba.co.jp>
+Message-ID: <200701180055.l0I0tqaW026382@toshiba.co.jp>
 References: <200701170924.l0H9OsdG002754@harpo.it.uu.se>
- <45AE539E.2040600@garzik.org> <17838.34747.222649.93821@alkaid.it.uu.se>
+	<45AE539E.2040600@garzik.org>
+	<17838.34747.222649.93821@alkaid.it.uu.se>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imx12.toshiba.co.jp ([61.202.160.132]:46793 "EHLO
-	imx12.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751854AbXARAzv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jan 2007 19:55:51 -0500
-Received: from wall11.toshiba.co.jp (wall11 [133.199.90.149])
-	by imx12.toshiba.co.jp  with ESMTP id l0I0tmnv029983
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 09:55:48 +0900 (JST)
-Received: (from root@localhost)
-	by wall11.toshiba.co.jp  id l0I0tmwx013752
-	for linux-ide@vger.kernel.org; Thu, 18 Jan 2007 09:55:48 +0900 (JST)
-Received: from mx11.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp11.toshiba.co.jp  with ESMTP id l0I0tl7B019998
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 09:55:47 +0900 (JST)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
 In-Reply-To: (Your message of "Wed, 17 Jan 2007 21:31:55 +0100")
-  <17838.34747.222649.93821@alkaid.it.uu.se>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+	<17838.34747.222649.93821@alkaid.it.uu.se>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Jeff Garzik <jeff@garzik.org>, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, arnd@arndb.de, kou.ishizaki@toshiba.co.jp, linas@austin.ibm.com, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, paulus@samba.org
+Cc: Jeff Garzik <jeff@garzik.org>, arnd@arndb.de, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, paulus@samba.org, alan@lxorguk.ukuu.org.uk
+List-Id: linux-ide@vger.kernel.org
 
 
 >The real benefits from identifying a common case is to inline
@@ -1201,4 +1199,3 @@ diff -uprN -X linux-2.6.20-rc4/Documentation/dontdiff linux-2.6.20-rc4/include/l
  static inline int ata_try_flush_cache(const struct ata_device *dev)
  {
  	return ata_id_wcache_enabled(dev->id) ||
-
