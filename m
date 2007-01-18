@@ -1,69 +1,122 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH] ide: Fix ATAPI DMA lost irq problem with CDB intr devices
-Date: Thu, 18 Jan 2007 19:19:26 +0800
-Message-ID: <45AF57BE.7060505@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: "Dailey, Nate" <Nate.Dailey@stratus.com>
+Subject: RE: sata_vsc.c cache line size question
+Date: Thu, 18 Jan 2007 09:42:44 -0500
+Message-ID: <92952AEF1F064042B6EF2522E0EEF43703EE318A@EXNA.corp.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C73B0E.E9C3E351"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:37556 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024AbXARLTn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jan 2007 06:19:43 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0IBJgYX030077
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 06:19:42 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0IBJfIm536352
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 04:19:41 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0IBJfFK020752
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 04:19:41 -0700
+Received: from mailhub.stratus.com ([134.111.1.18]:35658 "EHLO
+	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbXAROmp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jan 2007 09:42:45 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>
-Cc: "Adam W. Hawks" <awhawks@us.ibm.com>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: linux-ide@vger.kernel.org
 
-Problem: IDE ATAPI DMA lost irq with CDB intr devices on Intel ICHx machines.
+This is a multi-part message in MIME format.
 
-This patch clears the INTR and ERROR bits of DMA status before starting BMDMA
-to fix the problem.
+------_=_NextPart_001_01C73B0E.E9C3E351
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
-ATAPI DMA irq lost when testing Intel ICHx with CDB-intr CD-ROM drives:
+Okay, trying again as an attachment...
 
-Jan 18 18:08:48 p4ht-s kernel: ide-cd: cmd 0x28 timed out
-Jan 18 18:08:48 p4ht-s kernel: hdc: DMA interrupt recovery
-Jan 18 18:08:48 p4ht-s kernel: hdc: lost interrupt
-Jan 18 18:08:48 p4ht-s kernel: hdc: status timeout: status=0xd0 { Busy }
-Jan 18 18:08:48 p4ht-s kernel: ide: failed opcode was: unknown
-Jan 18 18:08:48 p4ht-s kernel: hdc: DMA disabled
-Jan 18 18:08:48 p4ht-s kernel: hdc: drive not ready for command
-Jan 18 18:08:48 p4ht-s kernel: hdc: ATAPI reset complete
+Nate
 
-The problem is reported by Adam Hawks.
-It seems the the INTR bit was set to 1 by the CDB-intr before the DMA is started.
-ICHx doesn't like it and causes the DMA irq lost later.
+=20
 
-The patch is against 2.6.20-rc5. Tested ok on ICH4.
-====================================================================
+-----Original Message-----
+From: Jeremy Higdon [mailto:jeremy@sgi.com]=20
+Sent: Thursday, January 18, 2007 2:12 AM
+To: Dailey, Nate
+Cc: linux-ide@vger.kernel.org
+Subject: Re: sata_vsc.c cache line size question
 
---- ide-dma.ori/drivers/ide/ide-dma.c	2006-11-30 05:57:37.000000000 +0800
-+++ ide-dma/drivers/ide/ide-dma.c	2007-01-18 18:40:18.000000000 +0800
-@@ -591,6 +591,12 @@ void ide_dma_start(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	u8 dma_cmd		= hwif->INB(hwif->dma_command);
-+	u8 dma_stat		= hwif->INB(hwif->dma_status);
-+
-+	/* The intr bit of dma_status might has been set by the CDB interrupt.
-+	 * Clear the INTR & ERROR bits here to prevent DMA irq lost later.
-+	 */
-+	hwif->OUTB(dma_stat|6, hwif->dma_status);
- 
- 	/* Note that this is done *after* the cmd has
- 	 * been issued to the drive, as per the BM-IDE spec.
+On Mon, Jan 15, 2007 at 11:26:59AM -0500, Dailey, Nate wrote:
+> Here's a patch that does what you suggest.
+>=20
+> Because the default cache line size on my system is 0x10, I tested the
+> patch by checking against this value rather than 0... it worked as
+> expected.
+>=20
+> This patch is against 2.6.19.2 that I just downloaded from kernel.org.
+I
+> actually tested on RHEL4 update 4, a 2.6.9 kernel, but I'll try
+building
+> the 2.6.19.2 on my system to make sure it works in that version as
+well.
+>=20
+> Nate
 
+Hi Nate,
 
+The patch looks fine, except that your mailer wrapped the lines.
+Try sending it as a text attachment instead.
+
+Thanks
+
+jeremy
+
+>=20
+> --- sata_vsc.c.orig     2007-01-15 11:06:17.000000000 -0500
+> +++ sata_vsc.c  2007-01-15 11:10:29.000000000 -0500
+> @@ -340,6 +340,7 @@ static int __devinit vsc_sata_init_one (
+>         int pci_dev_busy =3D 0;
+>         void __iomem *mmio_base;
+>         int rc;
+> +       u8 cls;
+>=20
+>         if (!printed_version++)
+>                 dev_printk(KERN_DEBUG, &pdev->dev, "version "
+> DRV_VERSION "\n");
+> @@ -389,9 +390,13 @@ static int __devinit vsc_sata_init_one (
+>         base =3D (unsigned long) mmio_base;
+>=20
+>         /*
+> -        * Due to a bug in the chip, the default cache line size can't
+> be used
+> +        * Due to a bug in the chip, the default cache line size can't
+> be
+> +        * used (unless the default is non-zero).
+>          */
+> -       pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
+> +       pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cls);
+> +       if (cls =3D=3D 0x00) {
+> +               pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE,
+0x80);
+> +       }
+>=20
+>         probe_ent->sht =3D &vsc_sata_sht;
+>         probe_ent->port_flags =3D ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+
+------_=_NextPart_001_01C73B0E.E9C3E351
+Content-Type: application/octet-stream;
+	name="sata_vsc_cls.patch"
+Content-Transfer-Encoding: base64
+Content-Description: sata_vsc_cls.patch
+Content-Disposition: attachment;
+	filename="sata_vsc_cls.patch"
+
+LS0tIHNhdGFfdnNjLmMub3JpZwkyMDA3LTAxLTE4IDA5OjE3OjAwLjAwMDAwMDAwMCAtMDUwMAor
+Kysgc2F0YV92c2MuYwkyMDA3LTAxLTE4IDA5OjMxOjQ4LjAwMDAwMDAwMCAtMDUwMApAQCAtMzQw
+LDYgKzM0MCw3IEBAIHN0YXRpYyBpbnQgX19kZXZpbml0IHZzY19zYXRhX2luaXRfb25lICgKIAlp
+bnQgcGNpX2Rldl9idXN5ID0gMDsKIAl2b2lkIF9faW9tZW0gKm1taW9fYmFzZTsKIAlpbnQgcmM7
+CisJdTggY2xzOwogCiAJaWYgKCFwcmludGVkX3ZlcnNpb24rKykKIAkJZGV2X3ByaW50ayhLRVJO
+X0RFQlVHLCAmcGRldi0+ZGV2LCAidmVyc2lvbiAiIERSVl9WRVJTSU9OICJcbiIpOwpAQCAtMzg5
+LDkgKzM5MCwxMyBAQCBzdGF0aWMgaW50IF9fZGV2aW5pdCB2c2Nfc2F0YV9pbml0X29uZSAoCiAJ
+YmFzZSA9ICh1bnNpZ25lZCBsb25nKSBtbWlvX2Jhc2U7CiAKIAkvKgotCSAqIER1ZSB0byBhIGJ1
+ZyBpbiB0aGUgY2hpcCwgdGhlIGRlZmF1bHQgY2FjaGUgbGluZSBzaXplIGNhbid0IGJlIHVzZWQK
+KwkgKiBEdWUgdG8gYSBidWcgaW4gdGhlIGNoaXAsIHRoZSBkZWZhdWx0IGNhY2hlIGxpbmUgc2l6
+ZSBjYW4ndCBiZQorCSAqIHVzZWQgKHVubGVzcyB0aGUgZGVmYXVsdCBpcyBub24temVybykuCiAJ
+ICovCi0JcGNpX3dyaXRlX2NvbmZpZ19ieXRlKHBkZXYsIFBDSV9DQUNIRV9MSU5FX1NJWkUsIDB4
+ODApOworCXBjaV9yZWFkX2NvbmZpZ19ieXRlKHBkZXYsIFBDSV9DQUNIRV9MSU5FX1NJWkUsICZj
+bHMpOworCWlmIChjbHMgPT0gMHgwMCkgeworCQlwY2lfd3JpdGVfY29uZmlnX2J5dGUocGRldiwg
+UENJX0NBQ0hFX0xJTkVfU0laRSwgMHg4MCk7CisJfQogCiAJcHJvYmVfZW50LT5zaHQgPSAmdnNj
+X3NhdGFfc2h0OwogCXByb2JlX2VudC0+cG9ydF9mbGFncyA9IEFUQV9GTEFHX1NBVEEgfCBBVEFf
+RkxBR19OT19MRUdBQ1kgfAo=
+
+------_=_NextPart_001_01C73B0E.E9C3E351--
