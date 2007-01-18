@@ -2,31 +2,29 @@ From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCH] driver/ata: PATA driver
 	for Celleb
 Date: Thu, 18 Jan 2007 10:29:33 +0900
-Message-ID: <200701180129.l0I1TL48013407@toshiba.co.jp>
+Message-ID: <200701180129.l0I1TLRV026354@toshiba.co.jp>
 References: <200701170924.l0H9OsdG002754@harpo.it.uu.se>
- <45AE539E.2040600@garzik.org> <17838.34747.222649.93821@alkaid.it.uu.se>
- <200701180055.l0I0tl6M021051@toshiba.co.jp>
+	<45AE539E.2040600@garzik.org>
+	<17838.34747.222649.93821@alkaid.it.uu.se>
+	<200701180055.l0I0tl6M021051@toshiba.co.jp>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:58704 "EHLO
-	inet-tsb5.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762AbXARB3Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jan 2007 20:29:25 -0500
-Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
-	by inet-tsb5.toshiba.co.jp  with ESMTP id l0I1TMgf019455
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 10:29:22 +0900 (JST)
-Received: (from root@localhost)
-	by tsb-wall.toshiba.co.jp  id l0I1TMvU019377
-	for linux-ide@vger.kernel.org; Thu, 18 Jan 2007 10:29:22 +0900 (JST)
-Received: from mx12.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp1.toshiba.co.jp  with ESMTP id l0I1TLqH011384
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 10:29:21 +0900 (JST)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
 In-Reply-To: (Your message of "Thu, 18 Jan 2007 09:55:59 +0900")
-  <200701180055.l0I0tl6M021051@toshiba.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+	<200701180055.l0I0tl6M021051@toshiba.co.jp>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, arnd@arndb.de, kou.ishizaki@toshiba.co.jp, linas@austin.ibm.com, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, paulus@samba.org
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>, arnd@arndb.de, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, paulus@samba.org, alan@lxorguk.ukuu.org.uk
+List-Id: linux-ide@vger.kernel.org
 
 This is the patch for PATA controller of Celleb.
 It depends on the previous "add another IRQ calls" patch.
@@ -1453,4 +1451,3 @@ diff -uprN -X linux-2.6.20-rc4/Documentation/dontdiff linux-2.6.20-rc4/include/l
  
  /*
   * Default driver ops implementations
-
