@@ -1,85 +1,51 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc5: knwon unfixed regressions (v2) (part1)
-Date: Thu, 18 Jan 2007 20:47:56 +0100
-Message-ID: <20070118194756.GA9093@stusta.de>
-References: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2/3] libata: Initialize nbytes for internal sg commands
+Date: Thu, 18 Jan 2007 13:58:09 -0600
+Message-ID: <45AFD151.7050800@linux.vnet.ibm.com>
+References: <11690587311891-patch-mail.ibm.com> <200701171832.l0HIWMB7025070@d03av04.boulder.ibm.com> <45AECEEF.6020008@gmail.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Randy Dunlap <rdunlap@xenotime.net>, sct@redhat.com, adilger@clusterfs.com, linux-ext4@vger.kernel.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, =?iso-8859-1?Q?Fran=E7ois?= Valenduc <francois.valenduc@skynet.be>, Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Prakash Punnoor <prakash@punnoor.de>, Oliver Neukum <oliver@neukum.org>, Duncan <1i5t5.duncan@cox.net>, mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org, gd@spherenet.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, petero2@telia.com, Uwe Bugla <uwe.bugla@gmx.de>, B.Zolnierkiewicz@elka.pw.edu.pl, =?iso-8859-1?Q?Bj=F6rn?= Steinbrink <B.Steinbrink@gmx.de>, Robert Hancock <hancockr@shaw.ca>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:37791 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932446AbXART6T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Jan 2007 14:58:19 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0IJwCqD023322
+	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 14:58:12 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0IJwCDs238418
+	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 14:58:12 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0IJwCs9017378
+	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 14:58:12 -0500
+In-Reply-To: <45AECEEF.6020008@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-This email lists some known regressions in 2.6.20-rc5 compared to 2.6.1=
-9.
+Tejun Heo wrote:
+> Brian King wrote:
+>> Some LLDDs, like ipr, use nbytes and pad_len to determine
+>> the total data transfer length of a command. Make sure
+>> nbytes gets initialized for internally generated commands.
+> 
+> I think it's better to apply the following patch instead of this one.
+> 
+> http://article.gmane.org/gmane.linux.ide/14792
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possib=
-ly
-involved with one or more of these issues.
+Works for me. I loaded that patch in place of this one and verified
+it solved my problem as well. I still need the other two patches in
+this series, however.
 
-Due to the huge amount of recipients, please trim the Cc when answering=
-=2E
+Thanks,
 
+Brian
 
-Subject    : ext3 with data=3Djournal hangs when running fsx-linux sinc=
-e -rc2
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7844
-Submitter  : Randy Dunlap <rdunlap@xenotime.net>
-Status     : unknown
-
-
-Subject    : reboot instead of powerdown  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2006/12/25/40
-             http://bugzilla.kernel.org/show_bug.cgi?id=3D7828
-Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
-             Fran=E7ois Valenduc <francois.valenduc@skynet.be>
-Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com=
->
-Status     : problem is being debugged
-
-
-Subject    : usb somehow broken  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2007/1/11/146
-Submitter  : Prakash Punnoor <prakash@punnoor.de>
-Handled-By : Oliver Neukum <oliver@neukum.org>
-Status     : problem is being debugged
-
-
-Subject    : RAID-6 chunk_aligned_read problem
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7835
-Submitter  : Duncan <1i5t5.duncan@cox.net>
-Status     : unknown
-
-
-Subject    : pktcdvd fails with pata_amd
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7810
-Submitter  : gd@spherenet.de
-Status     : unknown
-
-
-Subject    : problems with CD burning
-References : http://www.spinics.net/lists/linux-ide/msg06545.html
-Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
-Status     : unknown
-
-
-Subject    : sata_nv: SATA exceptions
-References : http://lkml.org/lkml/2007/1/14/108
-Submitter  : Bj=F6rn Steinbrink <B.Steinbrink@gmx.de>
-Caused-By  : Robert Hancock <hancockr@shaw.ca>
-             commit 2dec7555e6bf2772749113ea0ad454fcdb8cf861
-Handled-By : Robert Hancock <hancockr@shaw.ca>
-Status     : problem is being debugged
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
