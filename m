@@ -1,50 +1,71 @@
-From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Subject: Celleb cannot exit from ata_host_intr()
-Date: Thu, 18 Jan 2007 15:52:33 +0900
-Message-ID: <200701180652.l0I6qKSE018982@toshiba.co.jp>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: sata_vsc.c cache line size question
+Date: Wed, 17 Jan 2007 23:11:49 -0800
+Message-ID: <20070118071149.GB72618@sgi.com>
+References: <92952AEF1F064042B6EF2522E0EEF43703EE3171@EXNA.corp.stratus.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imx12.toshiba.co.jp ([61.202.160.132]:63286 "EHLO
-	imx12.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023AbXARGwX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jan 2007 01:52:23 -0500
-Received: from wall11.toshiba.co.jp (wall11 [133.199.90.149])
-	by imx12.toshiba.co.jp  with ESMTP id l0I6qLC2003591
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 15:52:21 +0900 (JST)
-Received: (from root@localhost)
-	by wall11.toshiba.co.jp  id l0I6qLxR018920
-	for linux-ide@vger.kernel.org; Thu, 18 Jan 2007 15:52:21 +0900 (JST)
-Received: from mx.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp11.toshiba.co.jp  with ESMTP id l0I6qKgk013878
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 15:52:20 +0900 (JST)
+Received: from omx2-ext.sgi.com ([192.48.171.19]:36937 "EHLO omx2.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751980AbXARHLv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Jan 2007 02:11:51 -0500
+Content-Disposition: inline
+In-Reply-To: <92952AEF1F064042B6EF2522E0EEF43703EE3171@EXNA.corp.stratus.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: kou.ishizaki@toshiba.co.jp
+To: "Dailey, Nate" <Nate.Dailey@stratus.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+On Mon, Jan 15, 2007 at 11:26:59AM -0500, Dailey, Nate wrote:
+> Here's a patch that does what you suggest.
+> 
+> Because the default cache line size on my system is 0x10, I tested the
+> patch by checking against this value rather than 0... it worked as
+> expected.
+> 
+> This patch is against 2.6.19.2 that I just downloaded from kernel.org. I
+> actually tested on RHEL4 update 4, a 2.6.9 kernel, but I'll try building
+> the 2.6.19.2 on my system to make sure it works in that version as well.
+> 
+> Nate
 
-I have a problem that our hardware (Celleb) cannot exit from
-ata_host_intr() when ATAPI DMA data read fails.
+Hi Nate,
 
-This PATA controller sets bit2 (ATA_DMA_INTR) of BMDMA status register
-after it finished DMA data read. If ATAPI DMA data read fails
-due to no CDROM, it doesn't transfer data and generates an interrupt.
-In this case, bit2 of BMDMA status register is not set.
+The patch looks fine, except that your mailer wrapped the lines.
+Try sending it as a text attachment instead.
 
-libata ISR (ata_host_intr()) checks this bit by the following code:
+Thanks
 
-			/* if it's not our irq... */
-			if (!(host_stat & ATA_DMA_INTR))
-				goto idle_irq;
+jeremy
 
-
-Our driver always hits this check. As a result, ISR loops forever.
-I temporarily use libata by removing this check.
-
-I wonder if this check is necessary. In drivers/ide, cdrom_decode_status()
-seems to check IDE STATUS register instead of BMDMA status register.
-If there is no problem, I hope this check will be removed.
-
-Best regards,
-Akira Iguchi
+> 
+> --- sata_vsc.c.orig     2007-01-15 11:06:17.000000000 -0500
+> +++ sata_vsc.c  2007-01-15 11:10:29.000000000 -0500
+> @@ -340,6 +340,7 @@ static int __devinit vsc_sata_init_one (
+>         int pci_dev_busy = 0;
+>         void __iomem *mmio_base;
+>         int rc;
+> +       u8 cls;
+> 
+>         if (!printed_version++)
+>                 dev_printk(KERN_DEBUG, &pdev->dev, "version "
+> DRV_VERSION "\n");
+> @@ -389,9 +390,13 @@ static int __devinit vsc_sata_init_one (
+>         base = (unsigned long) mmio_base;
+> 
+>         /*
+> -        * Due to a bug in the chip, the default cache line size can't
+> be used
+> +        * Due to a bug in the chip, the default cache line size can't
+> be
+> +        * used (unless the default is non-zero).
+>          */
+> -       pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
+> +       pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cls);
+> +       if (cls == 0x00) {
+> +               pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
+> +       }
+> 
+>         probe_ent->sht = &vsc_sata_sht;
+>         probe_ent->port_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
