@@ -1,39 +1,85 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: [PATCH] IDE Driver for Delkin/Lexar/etc.. cardbus CF adapter
-Date: Thu, 18 Jan 2007 19:56:45 +0100
-Message-ID: <58cb370e0701181056v7765f219n7d62a3d28d1310c@mail.gmail.com>
-References: <20070112041720.28755.49663.sendpatchset@localhost.localdomain>
-	 <200701131125.38882.liml@rtr.ca>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc5: knwon unfixed regressions (v2) (part1)
+Date: Thu, 18 Jan 2007 20:47:56 +0100
+Message-ID: <20070118194756.GA9093@stusta.de>
+References: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932229AbXARS4s@vger.kernel.org>
-In-Reply-To: <200701131125.38882.liml@rtr.ca>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Randy Dunlap <rdunlap@xenotime.net>, sct@redhat.com, adilger@clusterfs.com, linux-ext4@vger.kernel.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, =?iso-8859-1?Q?Fran=E7ois?= Valenduc <francois.valenduc@skynet.be>, Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Prakash Punnoor <prakash@punnoor.de>, Oliver Neukum <oliver@neukum.org>, Duncan <1i5t5.duncan@cox.net>, mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org, gd@spherenet.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, petero2@telia.com, Uwe Bugla <uwe.bugla@gmx.de>, B.Zolnierkiewicz@elka.pw.edu.pl, =?iso-8859-1?Q?Bj=F6rn?= Steinbrink <B.Steinbrink@gmx.de>, Robert Hancock <hancockr@shaw.ca>
 List-Id: linux-ide@vger.kernel.org
 
-On 1/13/07, Mark Lord <liml@rtr.ca> wrote:
-> On Thursday 11 January 2007 23:17, Bartlomiej Zolnierkiewicz wrote:
-> >
-> > My working IDE tree (against Linus' tree) now resides here:
-> >
-> >       http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/patches/
->
-> Bart, here's a driver I've been keeping out-of-tree for the past couple of years.
-> This is for the Delking/Lexar/ASKA/etc.. 32-bit cardbus IDE CompactFlash adapter card.
->
-> It's probably way out of sync with the latest driver model (??), but it still builds/works.
-> I'm not interested in doing much of a rewrite, other than for libata someday,
-> as I no longer use the card myself.
->
-> But lots of other people do seem to use it, so it might be nice to see it "in-tree".
->
-> Signed-off-by:  Mark Lord <mlord@pobox.com>
+This email lists some known regressions in 2.6.20-rc5 compared to 2.6.1=
+9.
 
-Thanks, I applied it to IDE tree.
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possib=
+ly
+involved with one or more of these issues.
 
-[ I must have been really somehow fixated on IDE unregistering/ordering mess
-  not to merge it earlier.  Sorry for that. ]
+Due to the huge amount of recipients, please trim the Cc when answering=
+=2E
+
+
+Subject    : ext3 with data=3Djournal hangs when running fsx-linux sinc=
+e -rc2
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7844
+Submitter  : Randy Dunlap <rdunlap@xenotime.net>
+Status     : unknown
+
+
+Subject    : reboot instead of powerdown  (CONFIG_USB_SUSPEND)
+References : http://lkml.org/lkml/2006/12/25/40
+             http://bugzilla.kernel.org/show_bug.cgi?id=3D7828
+Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
+             Fran=E7ois Valenduc <francois.valenduc@skynet.be>
+Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com=
+>
+Status     : problem is being debugged
+
+
+Subject    : usb somehow broken  (CONFIG_USB_SUSPEND)
+References : http://lkml.org/lkml/2007/1/11/146
+Submitter  : Prakash Punnoor <prakash@punnoor.de>
+Handled-By : Oliver Neukum <oliver@neukum.org>
+Status     : problem is being debugged
+
+
+Subject    : RAID-6 chunk_aligned_read problem
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7835
+Submitter  : Duncan <1i5t5.duncan@cox.net>
+Status     : unknown
+
+
+Subject    : pktcdvd fails with pata_amd
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7810
+Submitter  : gd@spherenet.de
+Status     : unknown
+
+
+Subject    : problems with CD burning
+References : http://www.spinics.net/lists/linux-ide/msg06545.html
+Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+Status     : unknown
+
+
+Subject    : sata_nv: SATA exceptions
+References : http://lkml.org/lkml/2007/1/14/108
+Submitter  : Bj=F6rn Steinbrink <B.Steinbrink@gmx.de>
+Caused-By  : Robert Hancock <hancockr@shaw.ca>
+             commit 2dec7555e6bf2772749113ea0ad454fcdb8cf861
+Handled-By : Robert Hancock <hancockr@shaw.ca>
+Status     : problem is being debugged
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
