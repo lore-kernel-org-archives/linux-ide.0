@@ -1,124 +1,50 @@
-From: Matthew Stapleton <matthew4196@gmail.com>
-Subject: Re: ICH7m problem using libata
-Date: Thu, 18 Jan 2007 12:13:52 +1000
-Message-ID: <200701181213.52934.matthew4196@gmail.com>
-References: <1165253799.16504.37.camel@laundromat.jangutter.com> <1169040316.16103.18.camel@laundromat.jangutter.com> <45AE278F.5060004@gmail.com>
+From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Subject: Celleb cannot exit from ata_host_intr()
+Date: Thu, 18 Jan 2007 15:52:33 +0900
+Message-ID: <200701180652.l0I6qKSE018982@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_gftrF4R/Li+we0/"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:24384 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901AbXARCOA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jan 2007 21:14:00 -0500
-Received: by an-out-0708.google.com with SMTP id b33so34397ana
-        for <linux-ide@vger.kernel.org>; Wed, 17 Jan 2007 18:14:00 -0800 (PST)
-In-Reply-To: <45AE278F.5060004@gmail.com>
+Received: from imx12.toshiba.co.jp ([61.202.160.132]:63286 "EHLO
+	imx12.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbXARGwX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jan 2007 01:52:23 -0500
+Received: from wall11.toshiba.co.jp (wall11 [133.199.90.149])
+	by imx12.toshiba.co.jp  with ESMTP id l0I6qLC2003591
+	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 15:52:21 +0900 (JST)
+Received: (from root@localhost)
+	by wall11.toshiba.co.jp  id l0I6qLxR018920
+	for linux-ide@vger.kernel.org; Thu, 18 Jan 2007 15:52:21 +0900 (JST)
+Received: from mx.toshiba.co.jp (localhost [127.0.0.1])
+	by ovp11.toshiba.co.jp  with ESMTP id l0I6qKgk013878
+	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 15:52:20 +0900 (JST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jan Gutter <jangutter@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: kou.ishizaki@toshiba.co.jp
 
---Boundary-00=_gftrF4R/Li+we0/
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Hi,
 
-Tejun Heo wrote:
-> Quite some number of ODDs don't seem to like the way hald polls them.  I
-> don't think other apps will be affected by this.  I dunno much about
-> hald and don't have enough time to chase it down myself but feel free to
-> cc me when reporting this to hald people.  I'll try to help as much as I
-> can.
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-> 
+I have a problem that our hardware (Celleb) cannot exit from
+ata_host_intr() when ATAPI DMA data read fails.
 
-I've attached the test programs that I wrote about earlier.  cdstatus.c causes 
-a timeout after a few hours but cdstatus_working.c doesn't seem to get a 
-timeout.  The timeout always occurs during open.
+This PATA controller sets bit2 (ATA_DMA_INTR) of BMDMA status register
+after it finished DMA data read. If ATAPI DMA data read fails
+due to no CDROM, it doesn't transfer data and generates an interrupt.
+In this case, bit2 of BMDMA status register is not set.
 
--- 
-Matthew Stapleton
+libata ISR (ata_host_intr()) checks this bit by the following code:
 
---Boundary-00=_gftrF4R/Li+we0/
-Content-Type: text/x-csrc;
-  charset="iso-8859-1";
-  name="cdstatus.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="cdstatus.c"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <linux/cdrom.h>
-
-int main(void) {
-	int fd, capabilities, drive;
-	char *cddrive = "/dev/cdrom";
-
-	while (1) {
-		printf("Opening %s\n", cddrive);
-		fd = open (cddrive, O_RDONLY | O_NONBLOCK);
-		if (fd < 0) {
-			printf("Error\n");
-			return 1;
-		}
-		printf("Sleeping\n");
-		sleep(1);
-		printf("Closing %s\n", cddrive);
-		close(fd);
-		printf("Sleeping\n");
-		sleep(1);
-	}
-	return 0;
-}
+			/* if it's not our irq... */
+			if (!(host_stat & ATA_DMA_INTR))
+				goto idle_irq;
 
 
---Boundary-00=_gftrF4R/Li+we0/
-Content-Type: text/x-csrc;
-  charset="iso-8859-1";
-  name="cdstatus_working.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="cdstatus_working.c"
+Our driver always hits this check. As a result, ISR loops forever.
+I temporarily use libata by removing this check.
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <linux/cdrom.h>
+I wonder if this check is necessary. In drivers/ide, cdrom_decode_status()
+seems to check IDE STATUS register instead of BMDMA status register.
+If there is no problem, I hope this check will be removed.
 
-int main(void) {
-	int fd, capabilities, drive;
-	char *cddrive = "/dev/cdrom";
-
-	printf("Opening %s\n", cddrive);
-	fd = open (cddrive, O_RDONLY | O_NONBLOCK);
-	if (fd < 0) {
-		printf("Error\n");
-		return 1;
-	}
-	while (1) {
-		ioctl (fd, CDROM_SET_OPTIONS, CDO_USE_FFLAGS);
-		capabilities = ioctl (fd, CDROM_GET_CAPABILITY, 0);
-		drive = ioctl (fd, CDROM_DRIVE_STATUS, CDSL_CURRENT);
-		printf("capabilities=0x%08X, drive=0x%08X\n", capabilities, drive);
-		sleep(1);
-	}
-	close(fd);
-	return 0;
-}
-
-
---Boundary-00=_gftrF4R/Li+we0/--
+Best regards,
+Akira Iguchi
