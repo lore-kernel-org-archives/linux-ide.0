@@ -1,58 +1,76 @@
-From: Mike Accetta <maccetta@laurelnetworks.com>
-Subject: ICH6-M libata disk timeouts in 2.6.19 (except with small queue depth)
-Date: Thu, 18 Jan 2007 21:49:37 -0500
-Message-ID: <798.1169174977@mdt.dhcp.pit.laurelnetworks.com>
-References: <27103.1168657787@mdt.dhcp.pit.laurelnetworks.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: Celleb cannot exit from ata_host_intr()
+Date: Fri, 19 Jan 2007 18:48:35 +0800
+Message-ID: <45B0A203.1090508@tw.ibm.com>
+References: <200701180652.l0I6qKSE018982@toshiba.co.jp>
+Reply-To: albertl@mail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from staple.laurelnetworks.com ([63.94.127.68]:42862 "EHLO
-	staple.laurelnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932858AbXASCti (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jan 2007 21:49:38 -0500
-Received: from postit.laurelnetworks.com (postit.laurelnetworks.com [63.94.127.21])
-	by staple.laurelnetworks.com (ECI-DND/ECI-DND) with ESMTP id l0J2nbR1004534
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 21:49:38 -0500
-Received: from mdt.dhcp.pit.laurelnetworks.com (mdt.dhcp.pit.laurelnetworks.com [10.0.21.56])
-	by postit.laurelnetworks.com (ECI-DND/ECI-DND) with ESMTP id l0J2nbda000420
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 21:49:37 -0500
-Received: from mdt.dhcp.pit.laurelnetworks.com (localhost.localdomain [127.0.0.1])
-	by mdt.dhcp.pit.laurelnetworks.com (8.13.8/8.13.4) with ESMTP id l0J2nbd0000799
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2007 21:49:37 -0500
-In-reply-to: Your message of "Fri, 12 Jan 2007 22:09:47 EST."
-             <27103.1168657787@mdt.dhcp.pit.laurelnetworks.com>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:42802 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965044AbXASKsy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jan 2007 05:48:54 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0JAlQY6031448
+	for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 05:47:26 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0JAmq8O540270
+	for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 03:48:52 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0JAmqUF014441
+	for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 03:48:52 -0700
+In-Reply-To: <200701180652.l0I6qKSE018982@toshiba.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Cc: linux-ide@vger.kernel.org, kou.ishizaki@toshiba.co.jp
+
+Akira Iguchi wrote:
+> 
+> I have a problem that our hardware (Celleb) cannot exit from
+> ata_host_intr() when ATAPI DMA data read fails.
+> 
+> This PATA controller sets bit2 (ATA_DMA_INTR) of BMDMA status register
+> after it finished DMA data read. If ATAPI DMA data read fails
+> due to no CDROM, it doesn't transfer data and generates an interrupt.
+> In this case, bit2 of BMDMA status register is not set.
+
+This behavior is different from other adapters. For other adapters,
+ATA_DMA_INTR bit of BMDMA status is set whenever the drive raises INTRQ.
+
+> 
+> libata ISR (ata_host_intr()) checks this bit by the following code:
+> 
+> 			/* if it's not our irq... */
+> 			if (!(host_stat & ATA_DMA_INTR))
+> 				goto idle_irq;
+> 
+> 
+> Our driver always hits this check. As a result, ISR loops forever.
+> I temporarily use libata by removing this check.
+> 
+> I wonder if this check is necessary. In drivers/ide, cdrom_decode_status()
+> seems to check IDE STATUS register instead of BMDMA status register.
+> If there is no problem, I hope this check will be removed.
+> 
+
+This check is needed to make sure it is "my irq". Otherwise we might
+- incorrectly stop BMDMA if another PCI adapter raise the same shared irq 
+- incorrectly read ALT_STATUS when DD0-DD15 being used for DMA transfer
+
+Is the irq of Celleb IDE shared with other adapters?
+If the irq is non-shared, could you check if the following code works
+for Celleb:
+
+			/* if it's not our irq... */
+			if ((host_stat & ATA_DMA_ACTIVE) &&
+			    !(host_stat & ATA_DMA_INTR))
+				goto idle_irq;
 
 
-The subject of this thread has been adjusted to reflect my revised
-understanding of the problem.  I had previously thought the problem
-with a RAID1 re-sync generating timeout errors on the active (reading)
-disk appeared with 2.6.19 but it turns out the problem was also present
-in 2.6.18.  I was running the 2.6.18 tests with a modular kernel and
-hadn't loaded the ahci module in that scenario (so there was no queueing)
-but was using a kernel with SATA built in for the 2.6.19 test (which
-enabled queueing).  When ahci is loaded with 2.6.18, the same timeout
-problem appears.
-
-The distinguishing factor appears to be the queue depth (4 works, 5
-and various values up to and including 31 fail) not the kernel version.
-I am going to try running with the queue depth clamped at 4 to see if
-this consistently masks the problem.  I may also try some more experiments
-if I have the time, like instrumenting what command was issued right
-before the group that all time out or increasing the SCSI timeout,
-in order to get some more insight into what is going on at the time of
-the failure.
-
-I'd be happy to run any tests people with expertise in this area can
-suggest to help better understand what is going on.  I guess this problem
-looks like the disk becomes wedged somehow at this point.  For what its
-worth, it is usually possible to regain control of the system if I stop
-the RAID re-sync after the first timeout is reported but when I let it
-try to run to completion, the SATA sub-system system usually eventually
-gets stuck issuing reset after reset with no success and a power-cycle
-is the only recourse.
 --
-Mike Accetta
+albert
 
-ECI Telecom Ltd.
-Data Networking Division (previously Laurel Networks)
+
