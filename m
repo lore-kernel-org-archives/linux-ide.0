@@ -1,153 +1,176 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sd: implement stop_on_shutdown
-Date: Sat, 20 Jan 2007 02:01:22 +0900
-Message-ID: <20070119170122.GS10987@htj.dyndns.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 8/15] ide: disable DMA in ->ide_dma_check for "no IORDY"
+ case
+Date: Fri, 19 Jan 2007 20:11:16 +0100
+Message-ID: <45B117D4.7050406@gmail.com>
+References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	 <20070119003154.14846.87217.sendpatchset@localhost.localdomain>	 <45B0F12B.3000202@ru.mvista.com> <58cb370e0701191047h524434eobdb9d86ed614bc71@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [221.139.199.108] ([221.139.199.108]:46375 "EHLO htj.dyndns.org"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S932735AbXASRB1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Jan 2007 12:01:27 -0500
-Content-Disposition: inline
+Received: from ug-out-1314.google.com ([66.249.92.171]:44589 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932846AbXASTH3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jan 2007 14:07:29 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so529273uga
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 11:07:27 -0800 (PST)
+In-Reply-To: <58cb370e0701191047h524434eobdb9d86ed614bc71@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, hmh@hmh.eng.br
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-sd doesn't stop (unload head) on shutdown.  This behavior is necessary
-for multi initiator cases.  Unloading head by powering off stresses
-the drive and sometimes produces distinct clunking noise which
-apparently disturbs users considering multiple reports on different
-distributions.  halt(8) usually puts the drives to sleep prior to
-shutdown but the implementation is fragile and it doesn't work with
-sleep-to-disk.
 
-This patch implements sd attribute stop_on_shutdown.  If set to 1, sd
-stops the drive on non-restarting shutdown.  stop_on_shutdown is
-initialized from sd parameter stop_on_shutdown_default which defaults
-to 0.  So, this patch does not change the default behavior.
+Sergei Shtylyov wrote:
+> Hello.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Hi,
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 978bfc1..f21e5fe 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -90,6 +90,12 @@ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK13_MAJOR);
- MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK14_MAJOR);
- MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK15_MAJOR);
- 
-+static int sd_stop_on_shutdown_dfl = 0;
-+module_param_named(stop_on_shutdown_default, sd_stop_on_shutdown_dfl,
-+		   bool, 0644);
-+MODULE_PARM_DESC(stop_on_shutdown_default, "Default setting for stopping "
-+		 "disk on shutdown (0=disable, 1=enable)");
-+
- /*
-  * This is limited by the naming scheme enforced in sd_probe,
-  * add another character to it if you really need more disks.
-@@ -126,6 +132,7 @@ struct scsi_disk {
- 	unsigned	WCE : 1;	/* state of disk WCE bit */
- 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
- 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
-+	unsigned	stop_on_shutdown : 1; /* stop on device shutdown */
- };
- #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,cdev)
- 
-@@ -207,6 +214,19 @@ static ssize_t sd_store_cache_type(struct class_device *cdev, const char *buf,
- 	return count;
- }
- 
-+static ssize_t sd_store_stop_on_shutdown(struct class_device *cdev,
-+					 const char *buf, size_t count)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	sdkp->stop_on_shutdown = simple_strtoul(buf, NULL, 10);
-+
-+	return count;
-+}
-+
- static ssize_t sd_store_allow_restart(struct class_device *cdev, const char *buf,
- 				      size_t count)
- {
-@@ -239,6 +259,13 @@ static ssize_t sd_show_fua(struct class_device *cdev, char *buf)
- 	return snprintf(buf, 20, "%u\n", sdkp->DPOFUA);
- }
- 
-+static ssize_t sd_show_stop_on_shutdown(struct class_device *cdev, char *buf)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-+
-+	return snprintf(buf, 20, "%u\n", sdkp->stop_on_shutdown);
-+}
-+
- static ssize_t sd_show_allow_restart(struct class_device *cdev, char *buf)
- {
- 	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-@@ -252,6 +279,8 @@ static struct class_device_attribute sd_disk_attrs[] = {
- 	__ATTR(FUA, S_IRUGO, sd_show_fua, NULL),
- 	__ATTR(allow_restart, S_IRUGO|S_IWUSR, sd_show_allow_restart,
- 	       sd_store_allow_restart),
-+	__ATTR(stop_on_shutdown, S_IRUGO|S_IWUSR, sd_show_stop_on_shutdown,
-+	       sd_store_stop_on_shutdown),
- 	__ATTR_NULL,
- };
- 
-@@ -1662,6 +1691,7 @@ static int sd_probe(struct device *dev)
- 	sdkp->disk = gd;
- 	sdkp->index = index;
- 	sdkp->openers = 0;
-+	sdkp->stop_on_shutdown = sd_stop_on_shutdown_dfl;
- 
- 	if (!sdp->timeout) {
- 		if (sdp->type != TYPE_MOD)
-@@ -1766,6 +1796,29 @@ static void scsi_disk_release(struct class_device *cdev)
- 	kfree(sdkp);
- }
- 
-+static int sd_stop_device(struct scsi_device *sdp)
-+{
-+	unsigned char cmd[6] = { START_STOP }; /* START_VALID and START == 0 */
-+	struct scsi_sense_hdr sshdr;
-+	int res;
-+
-+	if (!scsi_device_online(sdp))
-+		return -ENODEV;
-+
-+	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+			       SD_TIMEOUT, SD_MAX_RETRIES);
-+	if (res) {
-+		printk(KERN_WARNING "FAILED\n  status = %x, message = %02x, "
-+		       "host = %d, driver = %02x\n  ",
-+		       status_byte(res), msg_byte(res),
-+		       host_byte(res), driver_byte(res));
-+		if (driver_byte(res) & DRIVER_SENSE)
-+			scsi_print_sense_hdr("sd", &sshdr);
-+	}
-+
-+	return res;
-+}
-+
- /*
-  * Send a SYNCHRONIZE CACHE instruction down to the device through
-  * the normal SCSI command structure.  Wait for the command to
-@@ -1784,6 +1837,13 @@ static void sd_shutdown(struct device *dev)
- 				sdkp->disk->disk_name);
- 		sd_sync_cache(sdp);
- 	}
-+
-+	if (system_state != SYSTEM_RESTART && sdkp->stop_on_shutdown) {
-+ 		printk(KERN_NOTICE "Stopping disk %s: \n",
-+		       sdkp->disk->disk_name);
-+		sd_stop_device(sdp);
-+	}
-+
- 	scsi_disk_put(sdkp);
- }
- 
+> Bartlomiej Zolnierkiewicz wrote:
+>> [PATCH] ide: disable DMA in ->ide_dma_check for "no IORDY" case
+> 
+>    I've looked thru the code, and found more issues with the PIO fallback
+> there. Will try to cook up patches for at least some drivers...
+
+Great, if possible please base them on top of the IDE tree...
+
+>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+>> Index: b/drivers/ide/pci/aec62xx.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/aec62xx.c
+>> +++ b/drivers/ide/pci/aec62xx.c
+>> @@ -214,12 +214,10 @@ static int aec62xx_config_drive_xfer_rat
+>>       if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+>>               return hwif->ide_dma_on(drive);
+>>
+>> -     if (ide_use_fast_pio(drive)) {
+>> +     if (ide_use_fast_pio(drive))
+>>               aec62xx_tune_drive(drive, 5);
+> 
+>    This function looks like it's working (thouugh having the wrong limit of
+> PIO5 on auto-tuning) but is unnecassary complex.
+
+Yes, it seems that there are actually two bugs here:
+* the maximum allowed PIO mode should be PIO4 not PIO5
+* for auto-tuning ("pio" == 255) it incorrectly sets PIO0
+  (255 fails to the default case in the switch statement)
+
+>    Heh, the driver is certainly a rip-off form hpt366.c. What a doubtful
+> example they have chosen... :-)
+
+hehe
+
+>> Index: b/drivers/ide/pci/atiixp.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/atiixp.c
+>> +++ b/drivers/ide/pci/atiixp.c
+>> @@ -264,10 +264,9 @@ static int atiixp_dma_check(ide_drive_t
+>>               tspeed = ide_get_best_pio_mode(drive, 255, 5, NULL);
+>>               speed = atiixp_dma_2_pio(XFER_PIO_0 + tspeed) + XFER_PIO_0;
+> 
+>    It's simply stupid to convert PIO mode to PIO mode. The whole idea is
+> doubtful as well..
+
+It is side-effect of basing atiixp on piix driver.  Fixing it will allow PIO1
+to be used (good) because atiixp_dma_2_pio() always downgrades PIO1 to PIO0
+(leftover from piix - on Intel chipsets same timings are used for PIO0/1).
+
+>>               hwif->speedproc(drive, speed);
+> 
+>    Well, well, the tuneproc() method can't ahndle auto-tunuing here
+> (255)...
+
+Yes, definitely a bug.
+
+> And it also doesn't set up drive's own speed. The code seem to be another
+> rip-off from piix.c, repeating all its mistakes... :-)
+
+:)
+
+>> Index: b/drivers/ide/pci/cmd64x.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/cmd64x.c
+>> +++ b/drivers/ide/pci/cmd64x.c
+>> @@ -479,12 +479,10 @@ static int cmd64x_config_drive_for_dma (
+>>       if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+>>               return hwif->ide_dma_on(drive);
+>>
+>> -     if (ide_use_fast_pio(drive)) {
+>> +     if (ide_use_fast_pio(drive))
+>>               config_chipset_for_pio(drive, 1);
+> 
+>    This function will always set PIO mode 4. Mess.
+
+Yep.
+
+>> Index: b/drivers/ide/pci/cs5535.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/cs5535.c
+>> +++ b/drivers/ide/pci/cs5535.c
+>> @@ -206,10 +206,9 @@ static int cs5535_dma_check(ide_drive_t
+>>       if (ide_use_fast_pio(drive)) {
+>>               speed = ide_get_best_pio_mode(drive, 255, 4, NULL);
+>>               cs5535_set_drive(drive, speed);
+> 
+>    Could be folded into tuneproc() method call.
+
+Using ->tuneproc() will also set the PIO mode on the drive
+which is not done currently... 
+
+>> Index: b/drivers/ide/pci/pdc202xx_old.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/pdc202xx_old.c
+>> +++ b/drivers/ide/pci/pdc202xx_old.c
+>> @@ -339,12 +339,10 @@ static int pdc202xx_config_drive_xfer_ra
+>>       if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+>>               return hwif->ide_dma_on(drive);
+>>
+>> -     if (ide_use_fast_pio(drive)) {
+>> +     if (ide_use_fast_pio(drive))
+>>               hwif->tuneproc(drive, 5);
+> 
+>    This driver's tuneproc() method always auto-tunes here instead of
+> setting
+> what it's told too -- I'll send a patch...
+
+Please do...
+
+>> Index: b/drivers/ide/pci/siimage.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/siimage.c
+>> +++ b/drivers/ide/pci/siimage.c
+>> @@ -420,12 +420,10 @@ static int siimage_config_drive_for_dma
+>>       if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+>>               return hwif->ide_dma_on(drive);
+>>
+>> -     if (ide_use_fast_pio(drive)) {
+>> +     if (ide_use_fast_pio(drive))
+>>               config_chipset_for_pio(drive, 1);
+> 
+>    This function will also always set PIO mode 4. More mess.
+
+Yep, same bug as in cmd64x.c.
+
+>> Index: b/drivers/ide/pci/sis5513.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/sis5513.c
+>> +++ b/drivers/ide/pci/sis5513.c
+>> @@ -678,12 +678,10 @@ static int sis5513_config_xfer_rate(ide_
+>>       if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+>>               return hwif->ide_dma_on(drive);
+>>
+>> -     if (ide_use_fast_pio(drive)) {
+>> +     if (ide_use_fast_pio(drive))
+>>               sis5513_tune_drive(drive, 5);
+> 
+>     Ugh, PIO fallback effectively always tries to set mode 4 here (thanks
+> it's not 5). Mess.
+
+Yep, but it seems to be even more complicated since config_art_rwp_pio()
+is a mess^2 - chipset is programmed to the best PIO mode while the
+device is set to PIO4... *sigh*...
+
+Thanks,
+Bart
+
