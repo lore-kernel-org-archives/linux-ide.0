@@ -1,288 +1,874 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/15] ide: convert ide_hwif_t.mmio into flag
-Date: Fri, 19 Jan 2007 01:31:24 +0100
-Message-ID: <20070119003124.14846.24392.sendpatchset@localhost.localdomain>
+Subject: [PATCH 10/15] ide: add ide_set_dma() helper
+Date: Fri, 19 Jan 2007 01:32:06 +0100
+Message-ID: <20070119003206.14846.59852.sendpatchset@localhost.localdomain>
 References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932786AbXASA1f@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932826AbXASA2m@vger.kernel.org>
 In-Reply-To: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-[PATCH] ide: convert ide_hwif_t.mmio into flag
+[PATCH] ide: add ide_set_dma() helper
 
-All users of ->mmio == 1 are gone so convert ->mmio into flag.
-
-Noticed by Alan Cox.
+* add ide_set_dma() helper and make ide_hwif_t.ide_dma_check return
+  -1 when DMA needs to be disabled (== need to call ->ide_dma_off_quietly)
+   0 when DMA needs to be enabled  (== need to call ->ide_dma_on)
+   1 when DMA setting shouldn't be changed
+* fix IDE code to use ide_set_dma() instead if using ->ide_dma_check directly
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 ---
- drivers/ide/arm/icside.c      |    2 +-
- drivers/ide/arm/rapide.c      |    2 +-
- drivers/ide/cris/ide-cris.c   |    2 +-
- drivers/ide/h8300/ide-h8300.c |    2 +-
- drivers/ide/ide-dma.c         |    8 ++++----
- drivers/ide/ide.c             |    5 ++---
- drivers/ide/legacy/buddha.c   |    2 +-
- drivers/ide/legacy/gayle.c    |    2 +-
- drivers/ide/legacy/macide.c   |    2 +-
- drivers/ide/legacy/q40ide.c   |    2 +-
- drivers/ide/mips/au1xxx-ide.c |    3 ++-
- drivers/ide/mips/swarm.c      |    2 +-
- drivers/ide/pci/sgiioc4.c     |    2 +-
- drivers/ide/pci/siimage.c     |    3 ++-
- drivers/ide/ppc/pmac.c        |    2 +-
- include/linux/ide.h           |    2 +-
- 16 files changed, 22 insertions(+), 21 deletions(-)
+ drivers/ide/arm/icside.c       |    5 +----
+ drivers/ide/cris/ide-cris.c    |    6 ++----
+ drivers/ide/ide-dma.c          |   37 ++++++++++++++++++++++++++++++-------
+ drivers/ide/ide-io.c           |    2 +-
+ drivers/ide/ide-probe.c        |    2 +-
+ drivers/ide/ide.c              |    3 ++-
+ drivers/ide/mips/au1xxx-ide.c  |    4 ++--
+ drivers/ide/pci/aec62xx.c      |    6 ++----
+ drivers/ide/pci/alim15x3.c     |   11 +++++------
+ drivers/ide/pci/amd74xx.c      |    5 +++--
+ drivers/ide/pci/atiixp.c       |    7 +++----
+ drivers/ide/pci/cmd64x.c       |    6 ++----
+ drivers/ide/pci/cs5520.c       |    5 ++---
+ drivers/ide/pci/cs5530.c       |    5 +----
+ drivers/ide/pci/cs5535.c       |    5 ++---
+ drivers/ide/pci/hpt34x.c       |    8 +++-----
+ drivers/ide/pci/hpt366.c       |    6 ++----
+ drivers/ide/pci/it8213.c       |   14 ++++++--------
+ drivers/ide/pci/it821x.c       |   12 +++++-------
+ drivers/ide/pci/jmicron.c      |   10 ++++------
+ drivers/ide/pci/ns87415.c      |    3 ++-
+ drivers/ide/pci/pdc202xx_new.c |    8 +++-----
+ drivers/ide/pci/pdc202xx_old.c |    8 +++-----
+ drivers/ide/pci/piix.c         |   10 ++++------
+ drivers/ide/pci/sc1200.c       |    5 +----
+ drivers/ide/pci/serverworks.c  |    6 ++----
+ drivers/ide/pci/sgiioc4.c      |    4 ++--
+ drivers/ide/pci/siimage.c      |    6 ++----
+ drivers/ide/pci/sis5513.c      |    6 ++----
+ drivers/ide/pci/sl82c105.c     |    6 +++---
+ drivers/ide/pci/slc90e66.c     |   10 ++++------
+ drivers/ide/pci/tc86c001.c     |    6 ++----
+ drivers/ide/pci/triflex.c      |    9 ++++-----
+ drivers/ide/pci/via82cxxx.c    |    5 +++--
+ include/linux/ide.h            |    2 ++
+ 35 files changed, 118 insertions(+), 135 deletions(-)
 
 Index: b/drivers/ide/arm/icside.c
 ===================================================================
 --- a/drivers/ide/arm/icside.c
 +++ b/drivers/ide/arm/icside.c
-@@ -556,7 +556,7 @@ icside_setup(void __iomem *base, struct 
- 		 * Ensure we're using MMIO
- 		 */
- 		default_hwif_mmiops(hwif);
--		hwif->mmio = 2;
-+		hwif->mmio = 1;
+@@ -365,10 +365,7 @@ static int icside_dma_check(ide_drive_t 
+ out:
+ 	on = icside_set_speed(drive, xfer_mode);
  
- 		for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
- 			hwif->hw.io_ports[i] = port;
-Index: b/drivers/ide/arm/rapide.c
-===================================================================
---- a/drivers/ide/arm/rapide.c
-+++ b/drivers/ide/arm/rapide.c
-@@ -46,7 +46,7 @@ rapide_locate_hwif(void __iomem *base, v
- 	hwif->hw.io_ports[IDE_CONTROL_OFFSET] = (unsigned long)ctrl;
- 	hwif->io_ports[IDE_CONTROL_OFFSET] = (unsigned long)ctrl;
- 	hwif->hw.irq = hwif->irq = irq;
--	hwif->mmio = 2;
-+	hwif->mmio = 1;
- 	default_hwif_mmiops(hwif);
+-	if (on)
+-		return icside_dma_on(drive);
+-	else
+-		return icside_dma_off_quietly(drive);
++	return on ? 0 : -1;
+ }
  
- 	return hwif;
+ static int icside_dma_end(ide_drive_t *drive)
 Index: b/drivers/ide/cris/ide-cris.c
 ===================================================================
 --- a/drivers/ide/cris/ide-cris.c
 +++ b/drivers/ide/cris/ide-cris.c
-@@ -795,7 +795,7 @@ init_e100_ide (void)
- 		                0, 0, cris_ide_ack_intr,
- 		                ide_default_irq(0));
- 		ide_register_hw(&hw, &hwif);
--		hwif->mmio = 2;
-+		hwif->mmio = 1;
- 		hwif->chipset = ide_etrax100;
- 		hwif->tuneproc = &tune_cris_ide;
- 		hwif->speedproc = &speed_cris_ide;
-Index: b/drivers/ide/h8300/ide-h8300.c
-===================================================================
---- a/drivers/ide/h8300/ide-h8300.c
-+++ b/drivers/ide/h8300/ide-h8300.c
-@@ -76,7 +76,7 @@ static inline void hwif_setup(ide_hwif_t
- {
- 	default_hwif_iops(hwif);
+@@ -1048,12 +1048,10 @@ static ide_startstop_t cris_dma_intr (id
  
--	hwif->mmio  = 2;
-+	hwif->mmio  = 1;
- 	hwif->OUTW  = mm_outw;
- 	hwif->OUTSW = mm_outsw;
- 	hwif->INW   = mm_inw;
+ static int cris_dma_check(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = drive->hwif;
+-
+ 	if (ide_use_dma(drive) && cris_config_drive_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static int cris_dma_end(ide_drive_t *drive)
 Index: b/drivers/ide/ide-dma.c
 ===================================================================
 --- a/drivers/ide/ide-dma.c
 +++ b/drivers/ide/ide-dma.c
-@@ -565,7 +565,7 @@ int ide_dma_setup(ide_drive_t *drive)
+@@ -348,15 +348,14 @@ EXPORT_SYMBOL_GPL(ide_destroy_dmatable);
+ static int config_drive_for_dma (ide_drive_t *drive)
+ {
+ 	struct hd_driveid *id = drive->id;
+-	ide_hwif_t *hwif = HWIF(drive);
+ 
+-	if ((id->capability & 1) && hwif->autodma) {
++	if ((id->capability & 1) && drive->hwif->autodma) {
+ 		/*
+ 		 * Enable DMA on any drive that has
+ 		 * UltraDMA (mode 0/1/2/3/4/5/6) enabled
+ 		 */
+ 		if ((id->field_valid & 4) && ((id->dma_ultra >> 8) & 0x7f))
+-			return hwif->ide_dma_on(drive);
++			return 0;
+ 		/*
+ 		 * Enable DMA on any drive that has mode2 DMA
+ 		 * (multi or single) enabled
+@@ -364,14 +363,14 @@ static int config_drive_for_dma (ide_dri
+ 		if (id->field_valid & 2)	/* regular DMA */
+ 			if ((id->dma_mword & 0x404) == 0x404 ||
+ 			    (id->dma_1word & 0x404) == 0x404)
+-				return hwif->ide_dma_on(drive);
++				return 0;
+ 
+ 		/* Consult the list of known "good" drives */
+ 		if (__ide_dma_good_drive(drive))
+-			return hwif->ide_dma_on(drive);
++			return 0;
  	}
- 
- 	/* PRD table */
--	if (hwif->mmio == 2)
-+	if (hwif->mmio)
- 		writel(hwif->dmatable_dma, (void __iomem *)hwif->dma_prdtable);
- 	else
- 		outl(hwif->dmatable_dma, hwif->dma_prdtable);
-@@ -815,7 +815,7 @@ int ide_release_dma(ide_hwif_t *hwif)
- {
- 	ide_release_dma_engine(hwif);
- 
--	if (hwif->mmio == 2)
-+	if (hwif->mmio)
- 		return 1;
- 	else
- 		return ide_release_iomio_dma(hwif);
-@@ -884,9 +884,9 @@ static int ide_iomio_dma(ide_hwif_t *hwi
- 
- static int ide_dma_iobase(ide_hwif_t *hwif, unsigned long base, unsigned int ports)
- {
--	if (hwif->mmio == 2)
-+	if (hwif->mmio)
- 		return ide_mapped_mmio_dma(hwif, base,ports);
--	BUG_ON(hwif->mmio == 1);
+-//	if (hwif->tuneproc != NULL) hwif->tuneproc(drive, 255);
+-	return hwif->ide_dma_off_quietly(drive);
 +
- 	return ide_iomio_dma(hwif, base, ports);
++	return -1;
  }
  
+ /**
+@@ -765,6 +764,30 @@ bug_dma_off:
+ 
+ EXPORT_SYMBOL(ide_dma_verbose);
+ 
++int ide_set_dma(ide_drive_t *drive)
++{
++	ide_hwif_t *hwif = drive->hwif;
++	int rc;
++
++	rc = hwif->ide_dma_check(drive);
++
++	switch(rc) {
++	case -1: /* DMA needs to be disabled */
++		return hwif->ide_dma_off_quietly(drive);
++	case  0: /* DMA needs to be enabled */
++		return hwif->ide_dma_on(drive);
++	case  1: /* DMA setting cannot be changed */
++		break;
++	default:
++		BUG();
++		break;
++	}
++
++	return rc;
++}
++
++EXPORT_SYMBOL_GPL(ide_set_dma);
++
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+ int __ide_dma_lostirq (ide_drive_t *drive)
+ {
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -226,7 +226,7 @@ static ide_startstop_t ide_start_power_s
+ 			break;
+ 		if (drive->hwif->ide_dma_check == NULL)
+ 			break;
+-		drive->hwif->ide_dma_check(drive);
++		ide_set_dma(drive);
+ 		break;
+ 	}
+ 	pm->pm_step = ide_pm_state_completed;
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -857,7 +857,7 @@ static void probe_hwif(ide_hwif_t *hwif)
+ #ifdef CONFIG_IDEDMA_ONLYDISK
+ 				if (drive->media == ide_disk)
+ #endif
+-					hwif->ide_dma_check(drive);
++					ide_set_dma(drive);
+ 			}
+ 		}
+ 	}
 Index: b/drivers/ide/ide.c
 ===================================================================
 --- a/drivers/ide/ide.c
 +++ b/drivers/ide/ide.c
-@@ -389,9 +389,8 @@ int ide_hwif_request_regions(ide_hwif_t 
- 	unsigned long addr;
- 	unsigned int i;
- 
--	if (hwif->mmio == 2)
-+	if (hwif->mmio)
- 		return 0;
--	BUG_ON(hwif->mmio == 1);
- 	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
- 	if (addr && !hwif_request_region(hwif, addr, 1))
- 		goto control_region_busy;
-@@ -438,7 +437,7 @@ void ide_hwif_release_regions(ide_hwif_t
- {
- 	u32 i = 0;
- 
--	if (hwif->mmio == 2)
-+	if (hwif->mmio)
- 		return;
- 	if (hwif->io_ports[IDE_CONTROL_OFFSET])
- 		release_region(hwif->io_ports[IDE_CONTROL_OFFSET], 1);
-Index: b/drivers/ide/legacy/buddha.c
-===================================================================
---- a/drivers/ide/legacy/buddha.c
-+++ b/drivers/ide/legacy/buddha.c
-@@ -215,7 +215,7 @@ fail_base2:
- 			
- 			index = ide_register_hw(&hw, &hwif);
- 			if (index != -1) {
--				hwif->mmio = 2;
-+				hwif->mmio = 1;
- 				printk("ide%d: ", index);
- 				switch(type) {
- 				case BOARD_BUDDHA:
-Index: b/drivers/ide/legacy/gayle.c
-===================================================================
---- a/drivers/ide/legacy/gayle.c
-+++ b/drivers/ide/legacy/gayle.c
-@@ -167,7 +167,7 @@ found:
- 
- 	index = ide_register_hw(&hw, &hwif);
- 	if (index != -1) {
--	    hwif->mmio = 2;
-+	    hwif->mmio = 1;
- 	    switch (i) {
- 		case 0:
- 		    printk("ide%d: Gayle IDE interface (A%d style)\n", index,
-Index: b/drivers/ide/legacy/macide.c
-===================================================================
---- a/drivers/ide/legacy/macide.c
-+++ b/drivers/ide/legacy/macide.c
-@@ -141,7 +141,7 @@ void macide_init(void)
- 	}
- 
-         if (index != -1) {
--		hwif->mmio = 2;
-+		hwif->mmio = 1;
- 		if (macintosh_config->ide_type == MAC_IDE_QUADRA)
- 			printk(KERN_INFO "ide%d: Macintosh Quadra IDE interface\n", index);
- 		else if (macintosh_config->ide_type == MAC_IDE_PB)
-Index: b/drivers/ide/legacy/q40ide.c
-===================================================================
---- a/drivers/ide/legacy/q40ide.c
-+++ b/drivers/ide/legacy/q40ide.c
-@@ -145,7 +145,7 @@ void q40ide_init(void)
- 	index = ide_register_hw(&hw, &hwif);
- 	// **FIXME**
- 	if (index != -1)
--		hwif->mmio = 2;
-+		hwif->mmio = 1;
-     }
- }
- 
+@@ -1134,7 +1134,8 @@ static int set_using_dma (ide_drive_t *d
+ 	if (HWIF(drive)->ide_dma_check == NULL)
+ 		return -EPERM;
+ 	if (arg) {
+-		if (HWIF(drive)->ide_dma_check(drive)) return -EIO;
++		if (ide_set_dma(drive))
++			return -EIO;
+ 		if (HWIF(drive)->ide_dma_on(drive)) return -EIO;
+ 	} else {
+ 		if (__ide_dma_off(drive))
 Index: b/drivers/ide/mips/au1xxx-ide.c
 ===================================================================
 --- a/drivers/ide/mips/au1xxx-ide.c
 +++ b/drivers/ide/mips/au1xxx-ide.c
-@@ -708,7 +708,8 @@ static int au_ide_probe(struct device *d
+@@ -414,9 +414,9 @@ static int auide_dma_check(ide_drive_t *
+ 	speed = ide_find_best_mode(drive, XFER_PIO | XFER_MWDMA);
+ 	
+ 	if (drive->autodma && (speed & XFER_MODE) != XFER_PIO)
+-		return HWIF(drive)->ide_dma_on(drive);
++		return 0;
  
- 	/* hold should be on in all cases */
- 	hwif->hold                      = 1;
--	hwif->mmio                      = 2;
-+
-+	hwif->mmio  = 1;
+-	return HWIF(drive)->ide_dma_off_quietly(drive);
++	return -1;
+ }
  
- 	/* If the user has selected DDMA assisted copies,
- 	   then set up a few local I/O function entry points 
-Index: b/drivers/ide/mips/swarm.c
+ static int auide_dma_test_irq(ide_drive_t *drive)
+Index: b/drivers/ide/pci/aec62xx.c
 ===================================================================
---- a/drivers/ide/mips/swarm.c
-+++ b/drivers/ide/mips/swarm.c
-@@ -115,7 +115,7 @@ static int __devinit swarm_ide_probe(str
- 	/* Setup MMIO ops.  */
- 	default_hwif_mmiops(hwif);
- 	/* Prevent resource map manipulation.  */
--	hwif->mmio = 2;
-+	hwif->mmio = 1;
- 	hwif->noprobe = 0;
+--- a/drivers/ide/pci/aec62xx.c
++++ b/drivers/ide/pci/aec62xx.c
+@@ -209,15 +209,13 @@ static void aec62xx_tune_drive (ide_driv
  
- 	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++)
+ static int aec62xx_config_drive_xfer_rate (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+ 		aec62xx_tune_drive(drive, 5);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static int aec62xx_irq_timeout (ide_drive_t *drive)
+Index: b/drivers/ide/pci/alim15x3.c
+===================================================================
+--- a/drivers/ide/pci/alim15x3.c
++++ b/drivers/ide/pci/alim15x3.c
+@@ -507,17 +507,15 @@ static int config_chipset_for_dma (ide_d
+  *
+  *	Configure a drive for DMA operation. If DMA is not possible we
+  *	drop the drive into PIO mode instead.
+- *
+- *	FIXME: exactly what are we trying to return here
+  */
+- 
++
+ static int ali15x3_config_drive_for_dma(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	struct hd_driveid *id	= drive->id;
+ 
+ 	if ((m5229_revision<=0x20) && (drive->media!=ide_disk))
+-		return hwif->ide_dma_off_quietly(drive);
++		goto no_dma_set;
+ 
+ 	drive->init_speed = 0;
+ 
+@@ -552,9 +550,10 @@ try_dma_modes:
+ ata_pio:
+ 		hwif->tuneproc(drive, 255);
+ no_dma_set:
+-		return hwif->ide_dma_off_quietly(drive);
++		return -1;
+ 	}
+-	return hwif->ide_dma_on(drive);
++
++	return 0;
+ }
+ 
+ /**
+Index: b/drivers/ide/pci/amd74xx.c
+===================================================================
+--- a/drivers/ide/pci/amd74xx.c
++++ b/drivers/ide/pci/amd74xx.c
+@@ -304,8 +304,9 @@ static int amd74xx_ide_dma_check(ide_dri
+ 	amd_set_drive(drive, speed);
+ 
+ 	if (drive->autodma && (speed & XFER_MODE) != XFER_PIO)
+-		return HWIF(drive)->ide_dma_on(drive);
+-	return HWIF(drive)->ide_dma_off_quietly(drive);
++		return 0;
++
++	return -1;
+ }
+ 
+ /*
+Index: b/drivers/ide/pci/atiixp.c
+===================================================================
+--- a/drivers/ide/pci/atiixp.c
++++ b/drivers/ide/pci/atiixp.c
+@@ -252,21 +252,20 @@ static int atiixp_config_drive_for_dma(i
+ 
+ static int atiixp_dma_check(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+ 	u8 tspeed, speed;
+ 
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && atiixp_config_drive_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive)) {
+ 		tspeed = ide_get_best_pio_mode(drive, 255, 5, NULL);
+ 		speed = atiixp_dma_2_pio(XFER_PIO_0 + tspeed) + XFER_PIO_0;
+-		hwif->speedproc(drive, speed);
++		atiixp_speedproc(drive, speed);
+ 	}
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ /**
+Index: b/drivers/ide/pci/cmd64x.c
+===================================================================
+--- a/drivers/ide/pci/cmd64x.c
++++ b/drivers/ide/pci/cmd64x.c
+@@ -474,15 +474,13 @@ static int config_chipset_for_dma (ide_d
+ 
+ static int cmd64x_config_drive_for_dma (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+ 		config_chipset_for_pio(drive, 1);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static int cmd64x_alt_dma_status (struct pci_dev *dev)
+Index: b/drivers/ide/pci/cs5520.c
+===================================================================
+--- a/drivers/ide/pci/cs5520.c
++++ b/drivers/ide/pci/cs5520.c
+@@ -132,12 +132,11 @@ static void cs5520_tune_drive(ide_drive_
+ 
+ static int cs5520_config_drive_xfer_rate(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-
+ 	/* Tune the drive for PIO modes up to PIO 4 */	
+ 	cs5520_tune_drive(drive, 4);
++
+ 	/* Then tell the core to use DMA operations */
+-	return hwif->ide_dma_on(drive);
++	return 0;
+ }
+ 
+ /*
+Index: b/drivers/ide/pci/cs5530.c
+===================================================================
+--- a/drivers/ide/pci/cs5530.c
++++ b/drivers/ide/pci/cs5530.c
+@@ -196,10 +196,7 @@ static int cs5530_config_dma (ide_drive_
+ 		outl(timings, basereg + 12);	/* write drive1 config register */
+ 	}
+ 
+-	/*
+-	 * Finally, turn DMA on in software, and exit.
+-	 */
+-	return hwif->ide_dma_on(drive);	/* success */
++	return 0;	/* success */
+ }
+ 
+ /**
+Index: b/drivers/ide/pci/cs5535.c
+===================================================================
+--- a/drivers/ide/pci/cs5535.c
++++ b/drivers/ide/pci/cs5535.c
+@@ -195,20 +195,19 @@ static int cs5535_config_drive_for_dma(i
+ 
+ static int cs5535_dma_check(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= drive->hwif;
+ 	u8 speed;
+ 
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && cs5535_config_drive_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive)) {
+ 		speed = ide_get_best_pio_mode(drive, 255, 4, NULL);
+ 		cs5535_set_drive(drive, speed);
+ 	}
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static u8 __devinit cs5535_cable_detect(struct pci_dev *dev)
+Index: b/drivers/ide/pci/hpt34x.c
+===================================================================
+--- a/drivers/ide/pci/hpt34x.c
++++ b/drivers/ide/pci/hpt34x.c
+@@ -109,21 +109,19 @@ static int config_chipset_for_dma (ide_d
+ 
+ static int hpt34x_config_drive_xfer_rate (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+ #ifndef CONFIG_HPT34X_AUTODMA
+-		return hwif->ide_dma_off_quietly(drive);
++		return -1;
+ #else
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ #endif
+ 
+ 	if (ide_use_fast_pio(drive))
+ 		hpt34x_tune_drive(drive, 255);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ /*
+Index: b/drivers/ide/pci/hpt366.c
+===================================================================
+--- a/drivers/ide/pci/hpt366.c
++++ b/drivers/ide/pci/hpt366.c
+@@ -736,17 +736,15 @@ static void hpt3xx_maskproc(ide_drive_t 
+ 
+ static int hpt366_config_drive_xfer_rate(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+ 		hpt3xx_tune_drive(drive, 255);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ /*
+Index: b/drivers/ide/pci/it8213.c
+===================================================================
+--- a/drivers/ide/pci/it8213.c
++++ b/drivers/ide/pci/it8213.c
+@@ -244,17 +244,15 @@ static int config_chipset_for_dma (ide_d
+ 
+ static int it8213_config_drive_for_dma (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = drive->hwif;
++	u8 pio;
+ 
+-	if (ide_use_dma(drive)) {
+-		if (config_chipset_for_dma(drive))
+-			return hwif->ide_dma_on(drive);
+-	}
++	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
++		return 0;
+ 
+-	hwif->speedproc(drive, XFER_PIO_0
+-			+ ide_get_best_pio_mode(drive, 255, 4, NULL));
++	pio = ide_get_best_pio_mode(drive, 255, 4, NULL);
++	it8213_tune_chipset(drive, XFER_PIO_0 + pio);
+ 
+- 	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ /**
+Index: b/drivers/ide/pci/it821x.c
+===================================================================
+--- a/drivers/ide/pci/it821x.c
++++ b/drivers/ide/pci/it821x.c
+@@ -520,14 +520,12 @@ static int config_chipset_for_dma (ide_d
+ 
+ static int it821x_config_drive_for_dma (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= drive->hwif;
++	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
++		return 0;
+ 
+-	if (ide_use_dma(drive)) {
+-		if (config_chipset_for_dma(drive))
+-			return hwif->ide_dma_on(drive);
+-	}
+ 	config_it821x_chipset_for_pio(drive, 1);
+-	return hwif->ide_dma_off_quietly(drive);
++
++	return -1;
+ }
+ 
+ /**
+@@ -612,7 +610,7 @@ static void __devinit it821x_fixups(ide_
+ #ifdef CONFIG_IDEDMA_ONLYDISK
+ 			if (drive->media == ide_disk)
+ #endif
+-				hwif->ide_dma_check(drive);
++				ide_set_dma(drive);
+ 		} else {
+ 			/* Non RAID volume. Fixups to stop the core code
+ 			   doing unsupported things */
+Index: b/drivers/ide/pci/jmicron.c
+===================================================================
+--- a/drivers/ide/pci/jmicron.c
++++ b/drivers/ide/pci/jmicron.c
+@@ -164,14 +164,12 @@ static int config_chipset_for_dma (ide_d
+ 
+ static int jmicron_config_drive_for_dma (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= drive->hwif;
++	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
++		return 0;
+ 
+-	if (ide_use_dma(drive)) {
+-		if (config_chipset_for_dma(drive))
+-			return hwif->ide_dma_on(drive);
+-	}
+ 	config_jmicron_chipset_for_pio(drive, 1);
+-	return hwif->ide_dma_off_quietly(drive);
++
++	return -1;
+ }
+ 
+ /**
+Index: b/drivers/ide/pci/ns87415.c
+===================================================================
+--- a/drivers/ide/pci/ns87415.c
++++ b/drivers/ide/pci/ns87415.c
+@@ -190,7 +190,8 @@ static int ns87415_ide_dma_setup(ide_dri
+ static int ns87415_ide_dma_check (ide_drive_t *drive)
+ {
+ 	if (drive->media != ide_disk)
+-		return HWIF(drive)->ide_dma_off_quietly(drive);
++		return -1;
++
+ 	return __ide_dma_check(drive);
+ }
+ 
+Index: b/drivers/ide/pci/pdc202xx_new.c
+===================================================================
+--- a/drivers/ide/pci/pdc202xx_new.c
++++ b/drivers/ide/pci/pdc202xx_new.c
+@@ -281,17 +281,15 @@ static int config_chipset_for_dma(ide_dr
+ 
+ static int pdcnew_config_drive_xfer_rate(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+-		hwif->tuneproc(drive, 255);
++		pdcnew_tune_drive(drive, 255);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static int pdcnew_quirkproc(ide_drive_t *drive)
+Index: b/drivers/ide/pci/pdc202xx_old.c
+===================================================================
+--- a/drivers/ide/pci/pdc202xx_old.c
++++ b/drivers/ide/pci/pdc202xx_old.c
+@@ -332,17 +332,15 @@ chipset_is_set:
+ 
+ static int pdc202xx_config_drive_xfer_rate (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+-		hwif->tuneproc(drive, 5);
++		config_chipset_for_pio(drive, 5);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static int pdc202xx_quirkproc (ide_drive_t *drive)
+Index: b/drivers/ide/pci/piix.c
+===================================================================
+--- a/drivers/ide/pci/piix.c
++++ b/drivers/ide/pci/piix.c
+@@ -386,20 +386,18 @@ static int piix_config_drive_for_dma (id
+  
+ static int piix_config_drive_xfer_rate (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && piix_config_drive_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive)) {
+ 		/* Find best PIO mode. */
+-		(void) hwif->speedproc(drive, XFER_PIO_0 +
+-				       ide_get_best_pio_mode(drive, 255, 4, NULL));
++		u8 pio = ide_get_best_pio_mode(drive, 255, 4, NULL);
++		(void)piix_tune_chipset(drive, XFER_PIO_0 + pio);
+ 	}
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ /**
+Index: b/drivers/ide/pci/sc1200.c
+===================================================================
+--- a/drivers/ide/pci/sc1200.c
++++ b/drivers/ide/pci/sc1200.c
+@@ -241,10 +241,7 @@ static int sc1200_config_dma2 (ide_drive
+ 
+ 	outb(inb(hwif->dma_base+2)|(unit?0x40:0x20), hwif->dma_base+2);	/* set DMA_capable bit */
+ 
+-	/*
+-	 * Finally, turn DMA on in software, and exit.
+-	 */
+-	return hwif->ide_dma_on(drive);	/* success */
++	return 0;	/* success */
+ }
+ 
+ /*
+Index: b/drivers/ide/pci/serverworks.c
+===================================================================
+--- a/drivers/ide/pci/serverworks.c
++++ b/drivers/ide/pci/serverworks.c
+@@ -315,17 +315,15 @@ static int config_chipset_for_dma (ide_d
+ 
+ static int svwks_config_drive_xfer_rate (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+ 		config_chipset_for_pio(drive);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static unsigned int __devinit init_chipset_svwks (struct pci_dev *dev, const char *name)
 Index: b/drivers/ide/pci/sgiioc4.c
 ===================================================================
 --- a/drivers/ide/pci/sgiioc4.c
 +++ b/drivers/ide/pci/sgiioc4.c
-@@ -593,7 +593,7 @@ static int sgiioc4_ide_dma_setup(ide_dri
- static void __devinit
- ide_init_sgiioc4(ide_hwif_t * hwif)
- {
--	hwif->mmio = 2;
-+	hwif->mmio = 1;
- 	hwif->autodma = 1;
- 	hwif->atapi_dma = 1;
- 	hwif->ultra_mask = 0x0;	/* Disable Ultra DMA */
+@@ -296,9 +296,9 @@ static int sgiioc4_ide_dma_check(ide_dri
+ 	if (ide_config_drive_speed(drive, XFER_MW_DMA_2) != 0) {
+ 		printk(KERN_WARNING "%s: couldn't set MWDMA2 mode, "
+ 				    "using PIO instead\n", drive->name);
+-		return sgiioc4_ide_dma_off_quietly(drive);
++		return -1;
+ 	} else
+-		return sgiioc4_ide_dma_on(drive);
++		return 0;
+ }
+ 
+ /* returns 1 if dma irq issued, 0 otherwise */
 Index: b/drivers/ide/pci/siimage.c
 ===================================================================
 --- a/drivers/ide/pci/siimage.c
 +++ b/drivers/ide/pci/siimage.c
-@@ -889,7 +889,8 @@ static void __devinit init_mmio_iops_sii
-        	base = (unsigned long) addr;
+@@ -415,15 +415,13 @@ static int config_chipset_for_dma (ide_d
+  
+ static int siimage_config_drive_for_dma (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
  
- 	hwif->dma_base			= base + (ch ? 0x08 : 0x00);
--	hwif->mmio			= 2;
-+
-+	hwif->mmio = 1;
+ 	if (ide_use_fast_pio(drive))
+ 		config_chipset_for_pio(drive, 1);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
  }
  
- static int is_dev_seagate_sata(ide_drive_t *drive)
-Index: b/drivers/ide/ppc/pmac.c
+ /* returns 1 if dma irq issued, 0 otherwise */
+Index: b/drivers/ide/pci/sis5513.c
 ===================================================================
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1238,7 +1238,7 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
-        	hwif->OUTBSYNC = pmac_outbsync;
+--- a/drivers/ide/pci/sis5513.c
++++ b/drivers/ide/pci/sis5513.c
+@@ -669,19 +669,17 @@ static int config_chipset_for_dma (ide_d
  
- 	/* Tell common code _not_ to mess with resources */
--	hwif->mmio = 2;
-+	hwif->mmio = 1;
- 	hwif->hwif_data = pmif;
- 	pmac_ide_init_hwif_ports(&hwif->hw, pmif->regbase, 0, &hwif->irq);
- 	memcpy(hwif->io_ports, hwif->hw.io_ports, sizeof(hwif->io_ports));
+ static int sis5513_config_xfer_rate(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	config_art_rwp_pio(drive, 5);
+ 
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+ 		sis5513_tune_drive(drive, 5);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ /* Chip detection and general config */
+Index: b/drivers/ide/pci/sl82c105.c
+===================================================================
+--- a/drivers/ide/pci/sl82c105.c
++++ b/drivers/ide/pci/sl82c105.c
+@@ -161,14 +161,14 @@ static int sl82c105_check_drive (ide_dri
+ 		if (id->field_valid & 2) {
+ 			if ((id->dma_mword & hwif->mwdma_mask) ||
+ 			    (id->dma_1word & hwif->swdma_mask))
+-				return hwif->ide_dma_on(drive);
++				return 0;
+ 		}
+ 
+ 		if (__ide_dma_good_drive(drive))
+-			return hwif->ide_dma_on(drive);
++			return 0;
+ 	} while (0);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ /*
+Index: b/drivers/ide/pci/slc90e66.c
+===================================================================
+--- a/drivers/ide/pci/slc90e66.c
++++ b/drivers/ide/pci/slc90e66.c
+@@ -179,19 +179,17 @@ static int slc90e66_config_drive_for_dma
+ 
+ static int slc90e66_config_drive_xfer_rate (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_use_dma(drive) && slc90e66_config_drive_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive)) {
+-		(void) hwif->speedproc(drive, XFER_PIO_0 +
+-				       ide_get_best_pio_mode(drive, 255, 4, NULL));
++		u8 pio = ide_get_best_pio_mode(drive, 255, 4, NULL);
++		(void)slc90e66_tune_chipset(drive, XFER_PIO_0 + pio);
+ 	}
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static void __devinit init_hwif_slc90e66 (ide_hwif_t *hwif)
+Index: b/drivers/ide/pci/tc86c001.c
+===================================================================
+--- a/drivers/ide/pci/tc86c001.c
++++ b/drivers/ide/pci/tc86c001.c
+@@ -185,15 +185,13 @@ static int config_chipset_for_dma(ide_dr
+ 
+ static int tc86c001_config_drive_xfer_rate(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+ 		tc86c001_tune_drive(drive, 255);
+ 
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static void __devinit init_hwif_tc86c001(ide_hwif_t *hwif)
+Index: b/drivers/ide/pci/triflex.c
+===================================================================
+--- a/drivers/ide/pci/triflex.c
++++ b/drivers/ide/pci/triflex.c
+@@ -113,13 +113,12 @@ static int triflex_config_drive_for_dma(
+ 
+ static int triflex_config_drive_xfer_rate(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+ 	if (ide_use_dma(drive) && triflex_config_drive_for_dma(drive))
+-		return hwif->ide_dma_on(drive);
++		return 0;
++
++	triflex_tune_drive(drive, 255);
+ 
+-	hwif->tuneproc(drive, 255);
+-	return hwif->ide_dma_off_quietly(drive);
++	return -1;
+ }
+ 
+ static void __devinit init_hwif_triflex(ide_hwif_t *hwif)
+Index: b/drivers/ide/pci/via82cxxx.c
+===================================================================
+--- a/drivers/ide/pci/via82cxxx.c
++++ b/drivers/ide/pci/via82cxxx.c
+@@ -240,8 +240,9 @@ static int via82cxxx_ide_dma_check (ide_
+ 	via_set_drive(drive, speed);
+ 
+ 	if (drive->autodma && (speed & XFER_MODE) != XFER_PIO)
+-		return hwif->ide_dma_on(drive);
+-	return hwif->ide_dma_off_quietly(drive);
++		return 0;
++
++	return -1;
+ }
+ 
+ static struct via_isa_bridge *via_config_find(struct pci_dev **isa)
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -771,7 +771,6 @@ typedef struct hwif_s {
- 	unsigned int cursg;
- 	unsigned int cursg_ofs;
+@@ -1278,6 +1278,7 @@ int __ide_dma_good_drive(ide_drive_t *);
+ int ide_use_dma(ide_drive_t *);
+ int __ide_dma_off(ide_drive_t *);
+ void ide_dma_verbose(ide_drive_t *);
++int ide_set_dma(ide_drive_t *);
+ ide_startstop_t ide_dma_intr(ide_drive_t *);
  
--	int		mmio;		/* hosts iomio (0) or custom (2) select */
- 	int		rqsize;		/* max sectors per request */
- 	int		irq;		/* our irq number */
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+@@ -1303,6 +1304,7 @@ extern int __ide_dma_timeout(ide_drive_t
+ static inline int ide_use_dma(ide_drive_t *drive) { return 0; }
+ static inline int __ide_dma_off(ide_drive_t *drive) { return 0; }
+ static inline void ide_dma_verbose(ide_drive_t *drive) { ; }
++static inline int ide_set_dma(ide_drive_t *drive) { return 1; }
+ #endif /* CONFIG_BLK_DEV_IDEDMA */
  
-@@ -804,6 +803,7 @@ typedef struct hwif_s {
- 	unsigned	no_io_32bit : 1; /* 1 = can not do 32-bit IO ops */
- 	unsigned	err_stops_fifo : 1; /* 1=data FIFO is cleared by an error */
- 	unsigned	atapi_irq_bogon : 1; /* Generates spurious DMA interrupts in PIO mode */
-+	unsigned	mmio       : 1; /* host uses MMIO */
- 
- 	struct device	gendev;
- 	struct completion gendev_rel_comp; /* To deal with device release() */
+ #ifndef CONFIG_BLK_DEV_IDEDMA_PCI
