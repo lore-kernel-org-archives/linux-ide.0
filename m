@@ -1,81 +1,94 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: Fix ATAPI DMA lost irq problem with CDB intr devices
-Date: Fri, 19 Jan 2007 20:59:20 +0100
-Message-ID: <45B12318.9000704@gmail.com>
-References: <45AF57BE.7060505@tw.ibm.com> <58cb370e0701191133m3dd584ffna5b231b00392c13d@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] (2.6.20-rc4-mm1) pdc202xx_old: fix PIO mode setup
+Date: Fri, 19 Jan 2007 23:37:52 +0300
+Message-ID: <200701192337.52502.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:42380 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932854AbXASTzW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jan 2007 14:55:22 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so538949uga
-        for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 11:55:21 -0800 (PST)
-In-Reply-To: <58cb370e0701191133m3dd584ffna5b231b00392c13d@mail.gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:19007 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S964852AbXASUhx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Jan 2007 15:37:53 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertl@mail.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, "Adam W. Hawks" <awhawks@us.ibm.com>
+To: akpm@osdl.org, bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
+Fix the driver's tuneproc() method to always set the PIO mode requested and not
+pick the best possible one, rename it to pdc202xx_tune_drive(), and change the
+calls to it accordingly; remove the preceding comment which has nothing to do
+with the code.
 
-Hi,
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Albert Lee wrote:
-> Problem: IDE ATAPI DMA lost irq with CDB intr devices on Intel ICHx
-> machines.
-> 
-> This patch clears the INTR and ERROR bits of DMA status before starting
-> BMDMA to fix the problem.
+ drivers/ide/pci/pdc202xx_old.c |   24 +++++++-----------------
+ 1 files changed, 7 insertions(+), 17 deletions(-)
 
-[PATCH] ide-cd: Handle strange interrupt on the Intel ESB2
-http://lkml.org/lkml/2006/12/4/201
-
-The above patch was already merged so it seems that the list
-of PCI IDs requiring ->atapi_irq_bogon needs to be expanded...
-
-Adam, which ICH version is it?
-
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> ---
-> ATAPI DMA irq lost when testing Intel ICHx with CDB-intr CD-ROM drives:
-> 
-> Jan 18 18:08:48 p4ht-s kernel: ide-cd: cmd 0x28 timed out
-> Jan 18 18:08:48 p4ht-s kernel: hdc: DMA interrupt recovery
-> Jan 18 18:08:48 p4ht-s kernel: hdc: lost interrupt
-> Jan 18 18:08:48 p4ht-s kernel: hdc: status timeout: status=0xd0 { Busy }
-> Jan 18 18:08:48 p4ht-s kernel: ide: failed opcode was: unknown
-> Jan 18 18:08:48 p4ht-s kernel: hdc: DMA disabled
-> Jan 18 18:08:48 p4ht-s kernel: hdc: drive not ready for command
-> Jan 18 18:08:48 p4ht-s kernel: hdc: ATAPI reset complete
-> 
-> The problem is reported by Adam Hawks.
-> It seems the the INTR bit was set to 1 by the CDB-intr before the DMA is started.
-> ICHx doesn't like it and causes the DMA irq lost later.
-> 
-> The patch is against 2.6.20-rc5. Tested ok on ICH4.
-
-Does the problem also happen on ICH4?
-
-> ====================================================================
-> 
-> --- ide-dma.ori/drivers/ide/ide-dma.c   2006-11-30 05:57:37.000000000 +0800
-> +++ ide-dma/drivers/ide/ide-dma.c       2007-01-18 18:40:18.000000000 +0800
-> @@ -591,6 +591,12 @@ void ide_dma_start(ide_drive_t *drive)
-> {
->        ide_hwif_t *hwif        = HWIF(drive);
->        u8 dma_cmd              = hwif->INB(hwif->dma_command);
-> +       u8 dma_stat             = hwif->INB(hwif->dma_status);
-> +
-> +       /* The intr bit of dma_status might has been set by the CDB interrupt.
-> +        * Clear the INTR & ERROR bits here to prevent DMA irq lost later.
-> +        */
-> +       hwif->OUTB(dma_stat|6, hwif->dma_status);
-> 
->        /* Note that this is done *after* the cmd has
->         * been issued to the drive, as per the BM-IDE spec.
-
-Thanks,
-Bart
+Index: linux-2.6/drivers/ide/pci/pdc202xx_old.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/pdc202xx_old.c
++++ linux-2.6/drivers/ide/pci/pdc202xx_old.c
+@@ -2,6 +2,7 @@
+  *  linux/drivers/ide/pci/pdc202xx_old.c	Version 0.36	Sept 11, 2002
+  *
+  *  Copyright (C) 1998-2002		Andre Hedrick <andre@linux-ide.org>
++ *  Copyright (C) 2006-2007		MontaVista Software, Inc.
+  *
+  *  Promise Ultra33 cards with BIOS v1.20 through 1.28 will need this
+  *  compiled into the kernel if you have more than one card installed.
+@@ -216,21 +217,10 @@ static int pdc202xx_tune_chipset (ide_dr
+ }
+ 
+ 
+-/*   0    1    2    3    4    5    6   7   8
+- * 960, 480, 390, 300, 240, 180, 120, 90, 60
+- *           180, 150, 120,  90,  60
+- * DMA_Speed
+- * 180, 120,  90,  90,  90,  60,  30
+- *  11,   5,   4,   3,   2,   1,   0
+- */
+-static void config_chipset_for_pio (ide_drive_t *drive, u8 pio)
++static void pdc202xx_tune_drive(ide_drive_t *drive, u8 pio)
+ {
+-	u8 speed = 0;
+-
+-	if (pio == 5) pio = 4;
+-	speed = XFER_PIO_0 + ide_get_best_pio_mode(drive, 255, pio, NULL);
+-        
+-	pdc202xx_tune_chipset(drive, speed);
++	pio = ide_get_best_pio_mode(drive, pio, 4, NULL);
++	pdc202xx_tune_chipset(drive, XFER_PIO_0 + pio);
+ }
+ 
+ static u8 pdc202xx_old_cable_detect (ide_hwif_t *hwif)
+@@ -348,7 +338,7 @@ static int pdc202xx_config_drive_xfer_ra
+ 
+ 	} else if ((id->capability & 8) || (id->field_valid & 2)) {
+ fast_ata_pio:
+-		hwif->tuneproc(drive, 5);
++		pdc202xx_tune_drive(drive, 255);
+ 		return hwif->ide_dma_off_quietly(drive);
+ 	}
+ 	/* IORDY not supported */
+@@ -463,7 +453,7 @@ static void pdc202xx_reset (ide_drive_t 
+ 	
+ 	pdc202xx_reset_host(hwif);
+ 	pdc202xx_reset_host(mate);
+-	hwif->tuneproc(drive, 5);
++	pdc202xx_tune_drive(drive, 255);
+ }
+ 
+ static unsigned int __devinit init_chipset_pdc202xx(struct pci_dev *dev,
+@@ -490,7 +480,7 @@ static void __devinit init_hwif_pdc202xx
+ 		hwif->rqsize = 256;
+ 
+ 	hwif->autodma = 0;
+-	hwif->tuneproc  = &config_chipset_for_pio;
++	hwif->tuneproc  = &pdc202xx_tune_drive;
+ 	hwif->quirkproc = &pdc202xx_quirkproc;
+ 
+ 	if (hwif->pci_dev->device != PCI_DEVICE_ID_PROMISE_20246)
 
