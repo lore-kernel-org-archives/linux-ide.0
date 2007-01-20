@@ -1,33 +1,84 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_promise: kill qc->nsect
-Date: Sat, 20 Jan 2007 13:12:46 +0900
-Message-ID: <20070120041246.GT10987@htj.dyndns.org>
+Subject: [PATCH] libata: fix compile warning caused by ignoring __must_check results
+Date: Sat, 20 Jan 2007 14:23:29 +0900
+Message-ID: <20070120052329.GB24749@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [221.139.199.108] ([221.139.199.108]:45319 "EHLO htj.dyndns.org"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S965133AbXATEMt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Jan 2007 23:12:49 -0500
+Received: from nz-out-0506.google.com ([64.233.162.231]:7859 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965003AbXATFXf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jan 2007 00:23:35 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so554594nze
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 21:23:35 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Merge order left qc->nsect usage in sata_promise dangling.  Kill it.
+Fix compile warnings in pata_cs5530, sata_inic162x and sata_nv which
+are caused by throwing away return values marked with __must_check.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/pata_cs5530.c   |    6 +++++-
+ drivers/ata/sata_inic162x.c |    4 +++-
+ drivers/ata/sata_nv.c       |    5 ++++-
+ 3 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index 551644a..32ae03e 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -502,8 +502,6 @@ static void pdc_atapi_pkt(struct ata_queued_cmd *qc)
- 		feature = PDC_FEATURE_ATAPI_PIO;
- 		/* set byte counter register to real transfer byte count */
- 		nbytes = qc->nbytes;
--		if (!nbytes)
--			nbytes = qc->nsect << 9;
- 		if (nbytes > 0xffff)
- 			nbytes = 0xffff;
- 	} else {
+Index: work/drivers/ata/pata_cs5530.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5530.c
++++ work/drivers/ata/pata_cs5530.c
+@@ -251,6 +251,7 @@ static int cs5530_is_palmax(void)
+ static int cs5530_init_chip(void)
+ {
+ 	struct pci_dev *master_0 = NULL, *cs5530_0 = NULL, *dev = NULL;
++	int rc;
+ 
+ 	while ((dev = pci_get_device(PCI_VENDOR_ID_CYRIX, PCI_ANY_ID, dev)) != NULL) {
+ 		switch (dev->device) {
+@@ -272,7 +273,10 @@ static int cs5530_init_chip(void)
+ 	}
+ 
+ 	pci_set_master(cs5530_0);
+-	pci_set_mwi(cs5530_0);
++	rc = pci_set_mwi(cs5530_0);
++	if (rc)
++		dev_printk(KERN_WARNING, &cs5530_0->dev,
++			   "WARNING: failed to set MWI\n");
+ 
+ 	/*
+ 	 * Set PCI CacheLineSize to 16-bytes:
+Index: work/drivers/ata/sata_inic162x.c
+===================================================================
+--- work.orig/drivers/ata/sata_inic162x.c
++++ work/drivers/ata/sata_inic162x.c
+@@ -649,7 +649,9 @@ static int inic_pci_device_resume(struct
+ 	void __iomem *mmio_base = host->mmio_base;
+ 	int rc;
+ 
+-	ata_pci_device_do_resume(pdev);
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 
+ 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
+ 		printk("XXX\n");
+Index: work/drivers/ata/sata_nv.c
+===================================================================
+--- work.orig/drivers/ata/sata_nv.c
++++ work/drivers/ata/sata_nv.c
+@@ -1554,8 +1554,11 @@ static int nv_pci_device_resume(struct p
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	struct nv_host_priv *hpriv = host->private_data;
++	int rc;
+ 
+-	ata_pci_device_do_resume(pdev);
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 
+ 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
+ 		if(hpriv->type >= CK804) {
