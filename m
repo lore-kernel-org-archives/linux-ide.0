@@ -1,26 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: fix compile warning caused by ignoring __must_check results
-Date: Sat, 20 Jan 2007 15:45:54 +0900
-Message-ID: <20070120064554.GC24749@htj.dyndns.org>
+Subject: [PATCH RESEND] libata: fix compile warning caused by ignoring __must_check results
+Date: Sat, 20 Jan 2007 15:50:48 +0900
+Message-ID: <20070120065048.GD24749@htj.dyndns.org>
+References: <20070120064554.GC24749@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:21428 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965094AbXATGqH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jan 2007 01:46:07 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so560287nze
-        for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 22:46:06 -0800 (PST)
+Received: from wx-out-0506.google.com ([66.249.82.234]:5113 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965098AbXATGuz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jan 2007 01:50:55 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so728130wxd
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 22:50:54 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <20070120064554.GC24749@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Fix compile warnings in pata_cs5530, sata_inic162x and sata_nv which
-are caused by throwing away return values marked with __must_check.
+* Fix compile warnings in pata_cs5530, sata_inic162x and sata_nv which
+  are caused by throwing away return values marked with __must_check.
+
+* pci_request_region() is marked with __must_check.
+  ata_pci_init_one() didn't check return value for legacy devices
+  triggering warning message.  This patch adds dummy assignment to rc
+  to remove the warnings.  Ignoring the return value is intentional.
+  Acquiring regions for legacy ctl and bmdma areas is recently added
+  and we don't wanna fail initialization even if it fails (at least
+  not yet).
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
+Sorry, forgot to update description after adding sff changes.
+Otherwise, the patch is identical.
+
  drivers/ata/libata-sff.c    |   10 +++++++---
  drivers/ata/pata_cs5530.c   |    6 +++++-
  drivers/ata/sata_inic162x.c |    4 +++-
@@ -109,5 +122,4 @@ index cc10e43..9d8db97 100644
  		if(hpriv->type >= CK804) {
 -- 
 1.4.4.3
-
 
