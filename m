@@ -1,42 +1,34 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] RESPIN: libata: add atapi_passthru=1 parameter
-Date: Fri, 19 Jan 2007 19:08:05 -0500
-Message-ID: <45B15D65.1060203@garzik.org>
-References: <200701021939.10496.liml@rtr.ca> <459B438A.8070601@rtr.ca> <200701030101.09838.liml@rtr.ca> <200701030124.19568.liml@rtr.ca>
+Subject: Re: [PATCH 2.6.20-rc4] sata_promise: ATAPI cleanup
+Date: Fri, 19 Jan 2007 19:12:47 -0500
+Message-ID: <45B15E7F.1080005@garzik.org>
+References: <200701100832.l0A8WYat017411@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53685 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53716 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932810AbXATAIH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Jan 2007 19:08:07 -0500
-In-Reply-To: <200701030124.19568.liml@rtr.ca>
+	id S932617AbXATAMu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Jan 2007 19:12:50 -0500
+In-Reply-To: <200701100832.l0A8WYat017411@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> On Wednesday 03 January 2007 01:01, Mark Lord wrote:
->> ..
->> This patch isn't really needed, but it might provide an "out"
->> just in case somebody has some really non-compliant hardware
->> out there someday.
->>
->> Add a boot/module parameter for libata to force the ATA_16
->> SCSI opcode to not be interpreted as a standards-compliant
->> ATA passthrough mechanism when used on an ATAPI device
->>  -- instead, it gets passed directly to the ATAPI device.
+Mikael Pettersson wrote:
+> Here's a cleanup for yesterday's sata_promise ATAPI patch:
+> - add and use a symbolic constant for the altstatus register
+> - check return status from ata_busy_wait()
+> - add missing newline in a warning printk()
+> - update comment in pdc_issue_atapi_pkt_cmd() to clarify
+>   that the maybe-wait-for-INT issue cannot occur in the
+>   current driver, but may occur if the driver starts issuing
+>   ATAPI non-DMA commands as PDC packets
 > 
-> This version of the patch leaves ATA_16 enabled for non-ATAPI
-> regardless of the setting of the new module parm.  Take your pick.
-> 
-> Signed-off-by:  Mark Lord <mlord@pobox.com>
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
-ACK this version of the patch, but it does not apply to #upstream...
-
-	Jeff
-
+applied
 
 
