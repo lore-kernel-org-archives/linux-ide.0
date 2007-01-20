@@ -1,34 +1,48 @@
-From: Tejun Heo <htejun@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] sd: implement stop_on_shutdown
-Date: Sat, 20 Jan 2007 18:59:59 +0900
-Message-ID: <45B1E81F.5060107@gmail.com>
-References: <20070119170122.GS10987@htj.dyndns.org> <45B1574D.1090502@us.ibm.com> <45B18AE2.3010503@gmail.com> <45B1E5D3.90101@pobox.com>
+Date: Sat, 20 Jan 2007 08:39:29 -0600
+Message-ID: <1169303969.2842.10.camel@mulgrave.il.steeleye.com>
+References: <20070119170122.GS10987@htj.dyndns.org>
+	 <45B1574D.1090502@us.ibm.com>  <45B18AE2.3010503@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <45B1E5D3.90101@pobox.com>
+In-Reply-To: <45B18AE2.3010503@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Darrick J. Wong" <djwong@us.ibm.com>, James.Bottomley@SteelEye.com, hmh@hmh.eng.br, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hmh@hmh.eng.br, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> For ATA, it's currently being done inside libata proper (a bit ugly).
->> It would be nice to have those implemented at sd layer but I wonder how
->> useful it's going to be for actual SCSI devices.  Do people actually
->> suspend using SCSI?  If it's useful at the SCSI layer, I can implement
->> and test it with SATA devices here.
+On Sat, 2007-01-20 at 12:22 +0900, Tejun Heo wrote:
+> Darrick J. Wong wrote:
+> > Tejun Heo wrote:
+> >> sd doesn't stop (unload head) on shutdown.  This behavior is necessary
+> >> for multi initiator cases.  Unloading head by powering off stresses
+> >> the drive and sometimes produces distinct clunking noise which
+> >> apparently disturbs users considering multiple reports on different
+> >> distributions.  halt(8) usually puts the drives to sleep prior to
+> >> shutdown but the implementation is fragile and it doesn't work with
+> >> sleep-to-disk.
+> > 
+> > I wonder if this sort of thing (cache flush + spin down) is the sort of
+> > thing that ought to be done to near-line storage at suspend time too,
+> > though one would want allow_restart = 1 before doing such a thing.
 > 
-> There is always the open question for multi-initiator SCSI devices, as
-> to who "owns" the SCSI device.  Some devices should be suspended/stopped
-> when the machine is suspended/stopped, others not.
+> For ATA, it's currently being done inside libata proper (a bit ugly).
+> It would be nice to have those implemented at sd layer but I wonder how
+> useful it's going to be for actual SCSI devices.  Do people actually
+> suspend using SCSI?  If it's useful at the SCSI layer, I can implement
+> and test it with SATA devices here.
 
-I think that can be handled similarly as stop_on_shutdown on kernel side
-and let udev and friends deal with the specifics.
+There are practical problems to handling this in sd, namely that the
+power handling commands and state model are part of the ATA command set,
+not part of the SCSI command set.  SAT really only covers the basics of
+mapping the different power management models.
 
-Thanks.
+However, I suppose if we're going to allow stop on shutdown, it does
+make sense to use it on suspend as well.
 
--- 
-tejun
+James
+
+
