@@ -1,16 +1,16 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: [PATCH] libata: fix compile warning caused by ignoring __must_check results
-Date: Sat, 20 Jan 2007 14:23:29 +0900
-Message-ID: <20070120052329.GB24749@htj.dyndns.org>
+Date: Sat, 20 Jan 2007 15:45:54 +0900
+Message-ID: <20070120064554.GC24749@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:7859 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.231]:21428 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965003AbXATFXf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jan 2007 00:23:35 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so554594nze
-        for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 21:23:35 -0800 (PST)
+	with ESMTP id S965094AbXATGqH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jan 2007 01:46:07 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so560287nze
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jan 2007 22:46:06 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -21,15 +21,40 @@ are caused by throwing away return values marked with __must_check.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
+ drivers/ata/libata-sff.c    |   10 +++++++---
  drivers/ata/pata_cs5530.c   |    6 +++++-
  drivers/ata/sata_inic162x.c |    4 +++-
  drivers/ata/sata_nv.c       |    5 ++++-
- 3 files changed, 12 insertions(+), 3 deletions(-)
+ 4 files changed, 19 insertions(+), 6 deletions(-)
 
-Index: work/drivers/ata/pata_cs5530.c
-===================================================================
---- work.orig/drivers/ata/pata_cs5530.c
-+++ work/drivers/ata/pata_cs5530.c
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 69a5910..c7acbe9 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1096,12 +1096,16 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
+ 		} else
+ 			legacy_mode |= ATA_PORT_SECONDARY;
+ 
++		/* For backward-compatibility reasons, we don't care
++		 * whether the followings succeed or fail.  Throw away
++		 * return value explicitly to override __must_check.
++		 */
+ 		if (legacy_mode & ATA_PORT_PRIMARY)
+-			pci_request_region(pdev, 1, DRV_NAME);
++			rc = pci_request_region(pdev, 1, DRV_NAME);
+ 		if (legacy_mode & ATA_PORT_SECONDARY)
+-			pci_request_region(pdev, 3, DRV_NAME);
++			rc = pci_request_region(pdev, 3, DRV_NAME);
+ 		/* If there is a DMA resource, allocate it */
+-		pci_request_region(pdev, 4, DRV_NAME);
++		rc = pci_request_region(pdev, 4, DRV_NAME);
+ 	}
+ 
+ 	/* we have legacy mode, but all ports are unavailable */
+diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+index 611d90f..d0e542c 100644
+--- a/drivers/ata/pata_cs5530.c
++++ b/drivers/ata/pata_cs5530.c
 @@ -251,6 +251,7 @@ static int cs5530_is_palmax(void)
  static int cs5530_init_chip(void)
  {
@@ -50,11 +75,11 @@ Index: work/drivers/ata/pata_cs5530.c
  
  	/*
  	 * Set PCI CacheLineSize to 16-bytes:
-Index: work/drivers/ata/sata_inic162x.c
-===================================================================
---- work.orig/drivers/ata/sata_inic162x.c
-+++ work/drivers/ata/sata_inic162x.c
-@@ -649,7 +649,9 @@ static int inic_pci_device_resume(struct
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index b67817e..6cd1fe9 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -649,7 +649,9 @@ static int inic_pci_device_resume(struct pci_dev *pdev)
  	void __iomem *mmio_base = host->mmio_base;
  	int rc;
  
@@ -65,11 +90,11 @@ Index: work/drivers/ata/sata_inic162x.c
  
  	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
  		printk("XXX\n");
-Index: work/drivers/ata/sata_nv.c
-===================================================================
---- work.orig/drivers/ata/sata_nv.c
-+++ work/drivers/ata/sata_nv.c
-@@ -1554,8 +1554,11 @@ static int nv_pci_device_resume(struct p
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index cc10e43..9d8db97 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1554,8 +1554,11 @@ static int nv_pci_device_resume(struct pci_dev *pdev)
  {
  	struct ata_host *host = dev_get_drvdata(&pdev->dev);
  	struct nv_host_priv *hpriv = host->private_data;
@@ -82,3 +107,7 @@ Index: work/drivers/ata/sata_nv.c
  
  	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
  		if(hpriv->type >= CK804) {
+-- 
+1.4.4.3
+
+
