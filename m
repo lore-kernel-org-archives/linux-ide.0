@@ -1,167 +1,245 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 8/15] ide: disable DMA in ->ide_dma_check for "no IORDY"
- case
-Date: Sat, 20 Jan 2007 21:41:18 +0300
-Message-ID: <45B2624E.4030900@ru.mvista.com>
-References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	 <20070119003154.14846.87217.sendpatchset@localhost.localdomain>	 <45B0F12B.3000202@ru.mvista.com>	 <58cb370e0701191047h524434eobdb9d86ed614bc71@mail.gmail.com>	 <45B117D4.7050406@gmail.com> <45B11D8D.8070105@ru.mvista.com>	 <58cb370e0701191200i10119313i4aacae9c504a02e4@mail.gmail.com>	 <45B13B8D.2020402@gmail.com> <45B24CBA.8080900@ru.mvista.com> <58cb370e0701200947p578f4d74g1fee511ded6c9a77@mail.gmail.com> <45B25DB7.8050903@gmail.com>
+Subject: Re: [PATCH 10/15] ide: add ide_set_dma() helper
+Date: Sat, 20 Jan 2007 23:22:06 +0300
+Message-ID: <45B279EE.5080807@ru.mvista.com>
+References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain> <20070119003206.14846.59852.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:23478 "EHLO
+Received: from homer.mvista.com ([63.81.120.155]:23849 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965339AbXATSlU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jan 2007 13:41:20 -0500
-In-Reply-To: <45B25DB7.8050903@gmail.com>
+	with ESMTP id S965381AbXATUWJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jan 2007 15:22:09 -0500
+In-Reply-To: <20070119003206.14846.59852.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+Hello again. :-)
 
 Bartlomiej Zolnierkiewicz wrote:
+> [PATCH] ide: add ide_set_dma() helper
 
->>>The other advantage of doing cleanups is that code becomes cleaner/simpler
->>>which matters a lot for this codebase, i.e. ide-dma-off-void.patch exposed
->>>(yet to be fixed) bug in set_using_dma() (->ide_dma_off_quietly always returns
->>>0 which is passed by ->ide_dma_check to set_using_dma() which incorrectly
->>>then calls ->ide_dma_on).
+> * add ide_set_dma() helper and make ide_hwif_t.ide_dma_check return
+>   -1 when DMA needs to be disabled (== need to call ->ide_dma_off_quietly)
+>    0 when DMA needs to be enabled  (== need to call ->ide_dma_on)
+>    1 when DMA setting shouldn't be changed
+> * fix IDE code to use ide_set_dma() instead if using ->ide_dma_check directly
 
->>   Well, this seems a newly intruduced bug.
+    Here are a few comments related to the code being patched:
 
-> The old code is so convulted that it is hard to see it w/o cleanup. :)
+> Index: b/drivers/ide/pci/alim15x3.c
+> ===================================================================
+> --- a/drivers/ide/pci/alim15x3.c
+> +++ b/drivers/ide/pci/alim15x3.c
+> @@ -507,17 +507,15 @@ static int config_chipset_for_dma (ide_d
+>   *
+>   *	Configure a drive for DMA operation. If DMA is not possible we
+>   *	drop the drive into PIO mode instead.
+> - *
+> - *	FIXME: exactly what are we trying to return here
+>   */
+> - 
+> +
+>  static int ali15x3_config_drive_for_dma(ide_drive_t *drive)
+>  {
+>  	ide_hwif_t *hwif	= HWIF(drive);
+>  	struct hd_driveid *id	= drive->id;
+>  
+>  	if ((m5229_revision<=0x20) && (drive->media!=ide_disk))
+> -		return hwif->ide_dma_off_quietly(drive);
+> +		goto no_dma_set;
 
-> ->ide_dma_check implementations often do
+    Isn't it better to just return -1?
 
-> 		return hwif->ide_dma_off_quietly(drive);
+> @@ -552,9 +550,10 @@ try_dma_modes:
+>  ata_pio:
+>  		hwif->tuneproc(drive, 255);
+>  no_dma_set:
+> -		return hwif->ide_dma_off_quietly(drive);
+> +		return -1;
+>  	}
+> -	return hwif->ide_dma_on(drive);
+> +
+> +	return 0;
+>  }
 
-> so the return value of ide_dma_off_quietly() (which is always 0) is passed to
+    Ugh, this code looks like it's asking to be converted into calling 
+ide_use_dma(). instead all of that...
 
-> 			if (HWIF(drive)->ide_dma_check(drive)) return -EIO;
+> Index: b/drivers/ide/pci/cs5520.c
+> ===================================================================
+> --- a/drivers/ide/pci/cs5520.c
+> +++ b/drivers/ide/pci/cs5520.c
+> @@ -132,12 +132,11 @@ static void cs5520_tune_drive(ide_drive_
+>  
+>  static int cs5520_config_drive_xfer_rate(ide_drive_t *drive)
+>  {
+> -	ide_hwif_t *hwif = HWIF(drive);
+> -
+>  	/* Tune the drive for PIO modes up to PIO 4 */	
+>  	cs5520_tune_drive(drive, 4);
 
-> in ide.c:set_using_dma() -> as a result the next line is executed
+    Ugh. Why not ask drive? :-/
 
-> 			if (HWIF(drive)->ide_dma_on(drive)) return -EIO;
+>  	/* Then tell the core to use DMA operations */
+> -	return hwif->ide_dma_on(drive);
+> +	return 0;
 
-    Ah, indeed! Nice. :-)
+    That must be the famous VDMA thing... :-)
+    I wonder if it *actually* works on HPT36x/37x which seem to have support 
+for it...
 
->>   It's all fine but goes somewhat against Linus' policy as far as I
->>understnad it: fixes are merged all the time while cleanups (along with new
->>code) are merged mostly duting the merge window.
+> Index: b/drivers/ide/pci/jmicron.c
+> ===================================================================
+> --- a/drivers/ide/pci/jmicron.c
+> +++ b/drivers/ide/pci/jmicron.c
+> @@ -164,14 +164,12 @@ static int config_chipset_for_dma (ide_d
+>  
+>  static int jmicron_config_drive_for_dma (ide_drive_t *drive)
+>  {
+> -	ide_hwif_t *hwif	= drive->hwif;
+> +	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+> +		return 0;
+>  
+> -	if (ide_use_dma(drive)) {
+> -		if (config_chipset_for_dma(drive))
+> -			return hwif->ide_dma_on(drive);
+> -	}
+>  	config_jmicron_chipset_for_pio(drive, 1);
 
->>>Moreover I don't find the current tree to be more of cleanups than fixes,
->>>here is the analysis of current series file:
+    The 2nd argument of that funtion is useless -- it basically does nothing 
+if 0 is passed. Another case of mindless copy-paste. :-)
 
->>   Maybe I slightly exaggerated, being impressed by the volume of your recent
->>changes. :-)
->>   But still...
+> Index: b/drivers/ide/pci/pdc202xx_old.c
+> ===================================================================
+> --- a/drivers/ide/pci/pdc202xx_old.c
+> +++ b/drivers/ide/pci/pdc202xx_old.c
+> @@ -332,17 +332,15 @@ chipset_is_set:
+>  
+>  static int pdc202xx_config_drive_xfer_rate (ide_drive_t *drive)
+>  {
+> -	ide_hwif_t *hwif	= HWIF(drive);
+> -
+>  	drive->init_speed = 0;
+>  
+>  	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+> -		return hwif->ide_dma_on(drive);
+> +		return 0;
+>  
+>  	if (ide_use_fast_pio(drive))
+> -		hwif->tuneproc(drive, 5);
+> +		config_chipset_for_pio(drive, 5);
 
->>>#
->>># IDE patches from 2.6.20-rc3-mm1
->>>#
->>>toshiba-tc86c001-ide-driver-take-2.patch
->>>toshiba-tc86c001-ide-driver-take-2-fix.patch
->>>toshiba-tc86c001-ide-driver-take-2-fix-2.patch
->>>      -- new driver
+    That part is obsoleted by my recent fix...
 
->>    I'd count that as cleanup, since it's definitely not fix. ;-)
+> Index: b/drivers/ide/pci/piix.c
+> ===================================================================
+> --- a/drivers/ide/pci/piix.c
+> +++ b/drivers/ide/pci/piix.c
+> @@ -386,20 +386,18 @@ static int piix_config_drive_for_dma (id
+>   
+>  static int piix_config_drive_xfer_rate (ide_drive_t *drive)
+>  {
+> -	ide_hwif_t *hwif	= HWIF(drive);
+> -
+>  	drive->init_speed = 0;
+>  
+>  	if (ide_use_dma(drive) && piix_config_drive_for_dma(drive))
+> -		return hwif->ide_dma_on(drive);
+> +		return 0;
+>  
+>  	if (ide_use_fast_pio(drive)) {
+>  		/* Find best PIO mode. */
+> -		(void) hwif->speedproc(drive, XFER_PIO_0 +
+> -				       ide_get_best_pio_mode(drive, 255, 4, NULL));
+> +		u8 pio = ide_get_best_pio_mode(drive, 255, 4, NULL);
+> +		(void)piix_tune_chipset(drive, XFER_PIO_0 + pio);
+>  	}
 
->>>hpt3xx-rework-rate-filtering.patch
->>>hpt3xx-rework-rate-filtering-tidy.patch
->>>hpt3xx-print-the-real-chip-name-at-startup.patch
->>>hpt3xx-switch-to-using-pci_get_slot.patch
->>>hpt3xx-cache-channels-mcr-address.patch
->>>hpt3x7-merge-speedproc-handlers.patch
->>>hpt370-clean-up-dma-timeout-handling.patch
->>>hpt3xx-init-code-rewrite.patch
->>>piix-fix-82371mx-enablebits.patch
->>>piix-tuneproc-fixes-cleanups.patch
->>>slc90e66-carry-over-fixes-from-piix-driver.patch
->>>hpt36x-pci-clock-detection-fix.patch
->>>jmicron-warning-fix.patch
->>>      -- fixes (but most have cleanups mixed in)
+    Will try to fix the tuneproc() nuisance RSN. :-)
 
->>   Yeah, but not that those came in from the -mm tree.
+> Index: b/drivers/ide/pci/serverworks.c
+> ===================================================================
+> --- a/drivers/ide/pci/serverworks.c
+> +++ b/drivers/ide/pci/serverworks.c
+> @@ -315,17 +315,15 @@ static int config_chipset_for_dma (ide_d
+>  
+>  static int svwks_config_drive_xfer_rate (ide_drive_t *drive)
+>  {
+> -	ide_hwif_t *hwif	= HWIF(drive);
+> -
+>  	drive->init_speed = 0;
+>  
+>  	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
+> -		return hwif->ide_dma_on(drive);
+> +		return 0;
+>  
+>  	if (ide_use_fast_pio(drive))
+>  		config_chipset_for_pio(drive);
 
-    Oops, "not that" didn't make sense here :-)
+    I have no idea why that function is so huge in this driver, i.e. why all 
+this code is not in svwks_tune_chipset()...
 
->>>ide-mmio-flag.patch
->>>      -- cleanup
->>>hpt34x-tune-chipset-fix.patch
->>>      -- fix
->>>ide-fix-pio-fallback.patch
->>>      -- fix
+> -	return hwif->ide_dma_off_quietly(drive);
+> +	return -1;
+>  }
+>  
+>  static unsigned int __devinit init_chipset_svwks (struct pci_dev *dev, const char *name)
+> Index: b/drivers/ide/pci/sl82c105.c
+> ===================================================================
+> --- a/drivers/ide/pci/sl82c105.c
+> +++ b/drivers/ide/pci/sl82c105.c
+> @@ -161,14 +161,14 @@ static int sl82c105_check_drive (ide_dri
+>  		if (id->field_valid & 2) {
+>  			if ((id->dma_mword & hwif->mwdma_mask) ||
+>  			    (id->dma_1word & hwif->swdma_mask))
 
->>   Those 2 are seem more of a cleanup to me...
+    Ugh. This driver claims the full MW/SW DMA support while actually only 
+supports MWDMA2.
 
-> They fix real but quite hard to hit bugs.
-> I'll put them at the end of the fixes series.
+> -				return hwif->ide_dma_on(drive);
+> +				return 0;
+>  		}
+>  
+>  		if (__ide_dma_good_drive(drive))
+> -			return hwif->ide_dma_on(drive);
+> +			return 0;
+>  	} while (0);
 
-    Well, most of the recent fixes were for such issues.  Nobody had screamed 
-about them, it took a code review to find them. :-)
+    This also asks to be converted into ide_use_dma() call. The patch is 
+cooking...
 
->>>ide-set-dma-helper.patch
->>>ide-dma-off-void.patch
->>>ide-dma-host-on-void.patch
->>>ide-fix-dma-masks.patch
->>>ide-max-dma-mode.patch
->>>ide-tune-dma-helper.patch
->>>      -- cleanups
+> -	return hwif->ide_dma_off_quietly(drive);
+> +	return -1;
+>  }
+>  
+>  /*
+> Index: b/drivers/ide/pci/slc90e66.c
+> ===================================================================
+> --- a/drivers/ide/pci/slc90e66.c
+> +++ b/drivers/ide/pci/slc90e66.c
+> @@ -179,19 +179,17 @@ static int slc90e66_config_drive_for_dma
+>  
+>  static int slc90e66_config_drive_xfer_rate (ide_drive_t *drive)
+>  {
+> -	ide_hwif_t *hwif	= HWIF(drive);
+> -
+>  	drive->init_speed = 0;
+>  
+>  	if (ide_use_dma(drive) && slc90e66_config_drive_for_dma(drive))
+> -		return hwif->ide_dma_on(drive);
+> +		return 0;
+>  
+>  	if (ide_use_fast_pio(drive)) {
+> -		(void) hwif->speedproc(drive, XFER_PIO_0 +
+> -				       ide_get_best_pio_mode(drive, 255, 4, NULL));
+> +		u8 pio = ide_get_best_pio_mode(drive, 255, 4, NULL);
+> +		(void)slc90e66_tune_chipset(drive, XFER_PIO_0 + pio);
+>  	}
 
->>   Would make sense to keep those last in the tail of queue because of the
->>amount of changes they introduce.  Possibly even IDE subsystem wide cleanups
+    The same promise about tuneproc() in this driver... :-)
 
-> They are at the end already - no problem here. :)
-
-    I meant "in the future"...
-
->>>and if you would like me to shuffle ordering of the patches (but without
->>>need of rewritting them) it also OK
-
->>   Erm, no talking about the rewrite but that way you may have to rebase
->>cleanups on top of fixes.  This seems unavoidble though due to the way the
->>kernel patch acceptance process is working, as far as I understand it...
-
-> I'll change the ordering of the patches based on your suggestions
-> and generally try to keep such order of fixes first and cleanups later.
-
-    Thanks. :-)
-
->>>>>>>Index: b/drivers/ide/pci/cmd64x.c
->>>>>>>===================================================================
->>>>>>>--- a/drivers/ide/pci/cmd64x.c
->>>>>>>+++ b/drivers/ide/pci/cmd64x.c
->>>>>>>@@ -479,12 +479,10 @@ static int cmd64x_config_drive_for_dma (
->>>>>>>    if (ide_use_dma(drive) && config_chipset_for_dma(drive))
->>>>>>>            return hwif->ide_dma_on(drive);
-
->>>>>>>-     if (ide_use_fast_pio(drive)) {
->>>>>>>+     if (ide_use_fast_pio(drive))
->>>>>>>            config_chipset_for_pio(drive, 1);
-
->>>>>> This function will always set PIO mode 4. Mess.
-
->>>>>Yep.
-
->>>>  I'm going to send the patch for both this and siimage.c...
-
->>>OK
-
->>   Not sure if I'll be able to find a card to test it soon though (I prefer
->>to test my stuff before submitting, even the simple changes :-).
-
-> Please send it anyway.
-
-    Ugh, this one is more tough than pdc202xx_old.c -- since tuneproc() is 
-also borken (doesn't set drive's own transfer mode).
-    And... I looked into speedproc() handler, then into PCI0646U datasheet for 
-reference and was really terrified: the code for SW/DW DMA setup us utter 
-nonsense!  It writes to some reserved bits of BMIDE status reg. instead of 
-doinf the real setup, and twiddles the drive 0/1 DMA capable bit which nobody 
-asks it to do... Really messy mess. :-(
-
-> Thanks,
-> Bart
-
-WBR, Sergei
+MBR, Sergei
