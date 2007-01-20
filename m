@@ -1,36 +1,40 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_via: add PCI ID 0x5337
-Date: Fri, 19 Jan 2007 19:19:13 -0500
-Message-ID: <45B16001.9020205@pobox.com>
-References: <200701110943.50988.luca.pedrielli@barradev.it> <20070116035504.GM10987@htj.dyndns.org>
+Subject: Re: [PATCH] libata: initialize qc->dma_dir to DMA_NONE
+Date: Fri, 19 Jan 2007 19:19:23 -0500
+Message-ID: <45B1600B.4000806@pobox.com>
+References: <45AD50AD.2040700@linux.vnet.ibm.com> <20070116224115.50d29cf7@localhost.localdomain> <45AD55A4.50208@pobox.com> <1168989094.2789.20.camel@mulgrave.il.steeleye.com> <45AD5D27.8020004@linux.vnet.ibm.com> <45AD60B9.3030501@linux.vnet.ibm.com> <20070117023402.GP10987@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53777 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53788 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932825AbXATATQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Jan 2007 19:19:16 -0500
-In-Reply-To: <20070116035504.GM10987@htj.dyndns.org>
+	id S964930AbXATAT2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Jan 2007 19:19:28 -0500
+In-Reply-To: <20070117023402.GP10987@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: luca pedrielli <luca.pedrielli@barradev.it>, linux-ide@vger.kernel.org
+Cc: Brian King <brking@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Alan <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 Tejun Heo wrote:
-> From: Luca Pedrielli <luca.pedrielli@barradev.it>
+> libata didn't used to init qc->dma_dir to any specific value on qc
+> initialization and command translation path didn't set qc->dma_dir if
+> the command doesn't need data transfer.  This made non-data commands
+> to have random qc->dma_dir.
 > 
-> Add PCI ID 0x5337 to supported PCI ID.  This is VT8237 in IDE mode.
+> This usually doesn't cause problem because LLDs usually check
+> qc->protocol first and look at qc->dma_dir iff the command needs data
+> transfer but this doesn't hold for all LLDs.
 > 
-> Signed-off-by: Luca Pedrielli <luca.pedrielli@barradev.it>
+> It might be worthwhile to rename qc->dma_dir to qc->data_dir as we use
+> the field to tag data direction for both PIO and DMA protocols.
+> 
+> This problem has been spotted by James Bottomley.
+> 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> 
-> Luca, I formatted the patch in the form Jeff can take.  Please format
-> patches like this next time.
-> 
-> This was verified by another bug reporter too.
+> Cc: James Bottomley <James.Bottomley@SteelEye.com>
 
-applied
+applied to #upstream-fixes
 
 
