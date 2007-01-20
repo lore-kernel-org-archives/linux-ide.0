@@ -1,50 +1,33 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_uli: ignore SIMPLEX
-Date: Fri, 19 Jan 2007 23:05:29 -0500
-Message-ID: <45B19509.6080606@pobox.com>
-References: <20070116055551.GN10987@htj.dyndns.org> <45B15F7E.2080807@pobox.com> <45B18F7F.7000900@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] sata_promise: kill qc->nsect
+Date: Sat, 20 Jan 2007 13:12:46 +0900
+Message-ID: <20070120041246.GT10987@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54995 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965158AbXATEFf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Jan 2007 23:05:35 -0500
-In-Reply-To: <45B18F7F.7000900@gmail.com>
+Received: from [221.139.199.108] ([221.139.199.108]:45319 "EHLO htj.dyndns.org"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S965133AbXATEMt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Jan 2007 23:12:49 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Some uli controllers have stuck SIMPLEX bit which can't be cleared
->>> with ata_pci_clear_simplex(), but the controller is capable of doing
->>> DMAs on both channels simultaneously.  Ignore it.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> This is going to be the common case going forward.  Please create an
->> 'ignore simplex bit' flag, and set it in sata_uli
-> 
-> I'm a little bit hesitant to do that.
-> 
-> 1. I don't think we're gonna have a lot of drivers which need this.
-> Just a few.  We've just found one now.
-> 
-> 2. I think libata core layer (sff included) is burdened with too much
-> already.  Also, now that devres is acked, we can easily transition to
-> alloc - init - register model which gives LLDs much more flexibility and
-> this kind of stuff can easily be done in init_one()'s.  It just fits there.
+Merge order left qc->nsect usage in sata_promise dangling.  Kill it.
 
-We need to correct a false assumption in the core.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-The PCI IDE spec specifies the simplex bit, but a /vast majority/ of 
-controllers, PATA as well as SATA, hardwire the bit, or program it to a 
-value set by BIOS.  As such, most drivers really should /just know/ that 
-their hardware need never worry about this odd simplex concept.
-
-	Jeff
-
-
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index 551644a..32ae03e 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -502,8 +502,6 @@ static void pdc_atapi_pkt(struct ata_queued_cmd *qc)
+ 		feature = PDC_FEATURE_ATAPI_PIO;
+ 		/* set byte counter register to real transfer byte count */
+ 		nbytes = qc->nbytes;
+-		if (!nbytes)
+-			nbytes = qc->nsect << 9;
+ 		if (nbytes > 0xffff)
+ 			nbytes = 0xffff;
+ 	} else {
