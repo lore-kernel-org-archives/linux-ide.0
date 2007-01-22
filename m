@@ -1,62 +1,29 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: [DISSCUSS] Iinux raid striped aligned write over xfs
-Date: Mon, 22 Jan 2007 13:49:46 +0200
-Message-ID: <5d96567b0701220349r1e3386beib30f46bc3b635cb9@mail.gmail.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide: Fix ATAPI DMA lost irq problem with CDB intr
+ devices
+Date: Mon, 22 Jan 2007 14:47:18 +0000
+Message-ID: <20070122144718.137ce8eb@localhost.localdomain>
+References: <45AF57BE.7060505@tw.ibm.com>
+	<58cb370e0701191133m3dd584ffna5b231b00392c13d@mail.gmail.com>
+	<45B12318.9000704@gmail.com>
+	<45B467A9.6040404@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:12677 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751705AbXAVLtr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jan 2007 06:49:47 -0500
-Received: by py-out-1112.google.com with SMTP id a29so622230pyi
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 03:49:47 -0800 (PST)
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34726 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751841AbXAVOte (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jan 2007 09:49:34 -0500
+In-Reply-To: <45B467A9.6040404@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: albertl@mail.com
+Cc: albertcc@tw.ibm.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, "Adam W. Hawks" <awhawks@us.ibm.com>
 
-Jan hello
-I am referring to xfs awareness over linux software raid .
-I noticed that though all single file extents beginnings are aligned
-over a raid
-stripe unit, they do not end aligned. this thing degrades a sequential read
-performance over a raid.
-I have fixed the code as follows:
+> Instead of adding PCI IDs to the blacklist, could we just unconditionally
+> clear the dma_status:INTR in ide_dma_start()?
 
---- linux-2.6.17-SMP/fs/xfs/xfs_iomap.c 2007-01-16 08:53:52.000000000 +0000
-+++ linux-2.6.17-Vanilla/fs/xfs/xfs_iomap.c     2006-06-18
-01:49:35.000000000 +0000
-@@ -441,8 +441,8 @@ xfs_iomap_write_direct(
-        if (unlikely(rt)) {
-                if (!(extsz = ip->i_d.di_extsize))
-                        extsz = mp->m_sb.sb_rextsize;
--       } else {
--        extsz =  mp->m_dalign; // raz fix alignment to raid stripe unit
-+       } else {
-+               extsz = ip->i_d.di_extsize;
-        }
-
-        isize = ip->i_d.di_size;
-@@ -663,7 +663,7 @@ xfs_iomap_write_delay(
-                if (!(extsz = ip->i_d.di_extsize))
-                        extsz = mp->m_sb.sb_rextsize;
-        } else {
--               extsz =  mp->m_dalign; //  raz fix alignment to raid stripe unit
-+               extsz = ip->i_d.di_extsize;
-        }
-
-        offset_fsb = XFS_B_TO_FSBT(mp, offset);
-
-
-
-This seems to work.
-My question is , is there a mistake that i have made which i do not
-see ?
-
-I would realy appreciate any comment .
-thank you
--- 
-Raz
+Possibly. I did the patch to be as safe as possible close to an actual
+release. If someone wants to do the general legacy IDE layer testing with
+assorted controllers/drives then it would probably be the best approach.
