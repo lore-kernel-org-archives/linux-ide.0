@@ -1,57 +1,38 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/3] libata: Initialize nbytes for internal sg commands
-Date: Mon, 22 Jan 2007 15:00:17 -0600
-Message-ID: <45B525E1.8040502@linux.vnet.ibm.com>
-References: <11690587311891-patch-mail.ibm.com> <200701171832.l0HIWMB7025070@d03av04.boulder.ibm.com> <45AECEEF.6020008@gmail.com> <45AFD151.7050800@linux.vnet.ibm.com>
-Reply-To: brking@linux.vnet.ibm.com
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 13/15] ide: fix UDMA/MWDMA/SWDMA masks
+Date: Mon, 22 Jan 2007 21:31:09 +0000
+Message-ID: <20070122213109.21e4e805@localhost.localdomain>
+References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>
+	<20070119003226.14846.87052.sendpatchset@localhost.localdomain>
+	<45B4FFBD.40507@ru.mvista.com>
+	<20070122184620.1c8b87ac@localhost.localdomain>
+	<45B51E83.1010904@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:32894 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932515AbXAVVA3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Jan 2007 16:00:29 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0ML0RMb027942
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 16:00:27 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0ML0JfL066352
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 16:00:19 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0ML0IaH005814
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 16:00:19 -0500
-In-Reply-To: <45AFD151.7050800@linux.vnet.ibm.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51464 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932786AbXAVVUE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jan 2007 16:20:04 -0500
+In-Reply-To: <45B51E83.1010904@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: brking@linux.vnet.ibm.com
-Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Brian King wrote:
-> Tejun Heo wrote:
->> Brian King wrote:
->>> Some LLDDs, like ipr, use nbytes and pad_len to determine
->>> the total data transfer length of a command. Make sure
->>> nbytes gets initialized for internally generated commands.
->> I think it's better to apply the following patch instead of this one.
->>
->> http://article.gmane.org/gmane.linux.ide/14792
+> >>    Ugh, I'm not seeing any *actual* support for MW/SW DMA in this driver... 
 > 
-> Works for me. I loaded that patch in place of this one and verified
-> it solved my problem as well. I still need the other two patches in
-> this series, however.
+> > Thats long been broken. Should be correct in the libata driver
+> 
+>     Here's a surprise for you. pata_cmd64x copied the SW/MW DMA setup code 
+> from the IDE driver.  No way it could be working.  You may check against the 
+> PC64x datasheets (if you have them -- if you don't I think I may share) and 
+> see for yourself -- it's abolutely idiotic.
 
-Jeff,
+Not a suprise to be honest. I fixed some of the ALi stuff when I did it
+and I think that was pushed back into drivers/ide. The CMD64x hasn't had
+much love really.
 
-Do you plan to pull this patch series into upstream-fixes? Without these
-three patches (or 1 & 3 plus Tejun's patch referenced above), ipr SATA
-is broken in 2.6.20.
+Wouldn't mind the older 64x (not 640) data sheets if they are sharable.
 
-Thanks,
-
-Brian
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
