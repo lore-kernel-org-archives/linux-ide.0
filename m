@@ -1,29 +1,114 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide: Fix ATAPI DMA lost irq problem with CDB intr
- devices
-Date: Mon, 22 Jan 2007 14:47:18 +0000
-Message-ID: <20070122144718.137ce8eb@localhost.localdomain>
-References: <45AF57BE.7060505@tw.ibm.com>
-	<58cb370e0701191133m3dd584ffna5b231b00392c13d@mail.gmail.com>
-	<45B12318.9000704@gmail.com>
-	<45B467A9.6040404@tw.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Mike Accetta <maccetta@laurelnetworks.com>
+Subject: Re: ICH6-M libata disk timeouts in 2.6.19 (except with small queue depth)
+Date: Mon, 22 Jan 2007 11:04:50 -0500
+Message-ID: <19543.1169481890@mdt.dhcp.pit.laurelnetworks.com>
+References: <45B25DBC.4020102@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34726 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751841AbXAVOte (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jan 2007 09:49:34 -0500
-In-Reply-To: <45B467A9.6040404@tw.ibm.com>
+Received: from staple.laurelnetworks.com ([63.94.127.68]:52884 "EHLO
+	staple.laurelnetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834AbXAVQEv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jan 2007 11:04:51 -0500
+Received: from notepad.laurelnetworks.com (notepad.laurelnetworks.com [63.94.127.20])
+	by staple.laurelnetworks.com (ECI-DND/ECI-DND) with ESMTP id l0MG4oFA010675
+	for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 11:04:50 -0500
+Received: from mdt.dhcp.pit.laurelnetworks.com (mdt.dhcp.pit.laurelnetworks.com [10.0.21.56])
+	by notepad.laurelnetworks.com (ECI-DND/ECI-DND) with ESMTP id l0MG4odr017089
+	for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 11:04:50 -0500
+Received: from mdt.dhcp.pit.laurelnetworks.com (localhost.localdomain [127.0.0.1])
+	by mdt.dhcp.pit.laurelnetworks.com (8.13.8/8.13.4) with ESMTP id l0MG4ovL019544
+	for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 11:04:50 -0500
+In-reply-to: Your message of "Sun, 21 Jan 2007 03:21:48 +0900."
+             <45B25DBC.4020102@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: albertcc@tw.ibm.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, "Adam W. Hawks" <awhawks@us.ibm.com>
+To: linux-ide@vger.kernel.org
 
-> Instead of adding PCI IDs to the blacklist, could we just unconditionally
-> clear the dma_status:INTR in ide_dma_start()?
+Tejun Heo writes:
+> Mike Accetta wrote:
+> > The distinguishing factor appears to be the queue depth (4 works, 5
+> > and various values up to and including 31 fail) not the kernel version.
+> > I am going to try running with the queue depth clamped at 4 to see if
+> > this consistently masks the problem.  I may also try some more experiments
+> > if I have the time, like instrumenting what command was issued right
+> > before the group that all time out or increasing the SCSI timeout,
+> > in order to get some more insight into what is going on at the time of
+> > the failure.
+> 
+> Please report the result of 'hdparm -I /dev/sdX' where sdX is the
+> problematic disk.  Quite a few drives have problem with NCQ and we have
+> to blacklist them.
 
-Possibly. I did the patch to be as safe as possible close to an actual
-release. If someone wants to do the general legacy IDE layer testing with
-assorted controllers/drives then it would probably be the best approach.
+This was reported last week in a earlier post to this thread.  Here it
+is again:
+
+The version of hdparm on this box gives
+    dev/sdb:
+     operation not supported on SCSI disks
+against the SCSI disk name.  With the controller in compatible mode,
+here is the 'hdparm -I /dev/hdb' output on the same disk:
+
+ATA device, with non-removable media
+        Model Number:       FUJITSU MHT2060BH
+        Serial Number:      NR0YT53258G8
+        Firmware Revision:  0000104A
+Standards:
+        Supported: 7 6 5 4
+        Likely used: 7
+Configuration:
+        Logical         max     current
+        cylinders       16383   65535
+        heads           16      1
+        sectors/track   63      63
+        --
+        CHS current addressable sectors:    4128705
+        LBA    user addressable sectors:  117210240
+        LBA48  user addressable sectors:  117210240
+        device size with M = 1024*1024:       57231 MBytes
+        device size with M = 1000*1000:       60011 MBytes (60 GB)
+Capabilities:
+        LBA, IORDY(can be disabled)
+        Queue depth: 32
+        Standby timer values: spec'd by Standard, no device specific minimum
+        R/W multiple sector transfer: Max = 16  Current = 16
+        Advanced power management level: 128 (0x80)
+        Recommended acoustic management value: 254, current value: 254
+        DMA: mdma0 mdma1 *mdma2 udma0 udma1 udma2 udma3 udma4 udma5
+             Cycle time: min=120ns recommended=120ns
+        PIO: pio0 pio1 pio2 pio3 pio4
+             Cycle time: no flow control=240ns  IORDY flow control=120ns
+Commands/features:
+        Enabled Supported:
+           *    READ BUFFER cmd
+           *    WRITE BUFFER cmd
+           *    Host Protected Area feature set
+           *    Look-ahead
+           *    Write cache
+           *    Power Management feature set
+                Security Mode feature set
+           *    SMART feature set
+           *    FLUSH CACHE EXT command
+           *    Mandatory FLUSH CACHE command
+           *    Device Configuration Overlay feature set
+           *    48-bit Address feature set
+           *    Automatic Acoustic Management feature set
+                SET MAX security extension
+           *    Advanced Power Management feature set
+           *    DOWNLOAD MICROCODE cmd
+           *    General Purpose Logging feature set
+           *    SMART self-test
+           *    SMART error logging
+Security:
+        Master password revision code = 65534
+                supported
+        not     enabled
+        not     locked
+        not     frozen
+        not     expired: security count
+        not     supported: enhanced erase
+        60min for SECURITY ERASE UNIT.
+Checksum: correct
+--
+Mike Accetta
+
+ECI Telecom Ltd.
+Data Networking Division (previously Laurel Networks)
