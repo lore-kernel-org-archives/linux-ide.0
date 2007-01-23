@@ -1,41 +1,51 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ahci: make ULi M5288 ignore interface fatal error bit
-Date: Tue, 23 Jan 2007 15:13:39 +0900
-Message-ID: <20070123061339.GA8673@htj.dyndns.org>
+Subject: Re: PATA ATAPI detection debug
+Date: Tue, 23 Jan 2007 15:30:03 +0900
+Message-ID: <45B5AB6B.5070903@gmail.com>
+References: <45AB36B0.2050702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.230]:1288 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933036AbXAWGNp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jan 2007 01:13:45 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1128820nze
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 22:13:44 -0800 (PST)
-Content-Disposition: inline
+Received: from wx-out-0506.google.com ([66.249.82.239]:53340 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933073AbXAWGaL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jan 2007 01:30:11 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1595686wxd
+        for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2007 22:30:11 -0800 (PST)
+In-Reply-To: <45AB36B0.2050702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: ahaas@airmail.net, fragabr@gmail.com, j.taimr@chello.nl, ben@atomnet.co.uk, acb@h2h.de, tkrah@fachschaft.imn.htwk-leipzig.de, sero4linux@freenet.de, Alan Cox <alan@lxorguk.ukuu.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-As with JMicron controllers, ULi M5288 sets interface fatal error bit
-on device error including ATAPI CC.  This makes libata hardreset the
-port on ATAPI CC thus making it impossible to use.  Ignore interface
-fatal error bit on ULi M5288.  This fixes bugzilla bug #7837.
+Tejun Heo wrote:
+> Hello, all.
+> 
+> Many people have been reporting libata PATA ATAPI detection problem.  In
+> many but not all cases, the ATAPI device was occupying the slave slot
+> while a disk drive occupies the master slot.  Based on that and J.
+> Taimr's nullify freeze on via fix, I made a cocktail patch which
+> contained four different fixes and it seemed to have fixed the problem
+> for (at least) several people, but the reports are not all consistent.
+> 
+> The attached patches contain the same four fixes but has a selector
+> parameter to enable each fix separately.  Both are equivalent but using
+> 2.6.20-rc5 is recommended to rule out detection problems fixed by
+> polling IDENTIFY.
+> 
+> If your libata driver is compiled into the kernel, add
+> 'libata.debug_cocktail=N' to your kernel parameter.  If you compile
+> libata.ko as module, add 'debug_cocktail=N' module parameter to the
+> module parameter.  e.g. 'modprobe libata.ko debug_cocktail=1'.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-Jeff, this is a regression.  Please commit to both #upstream and
-#upstream-fixes.  Thanks.
+Daniel Fraga and Sero's cases are different issue while I can't
+determine whether J. Taimr's case is limted on via chipset.  So, I need
+more input to proceed.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 5998f74..4fb41a1 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -361,7 +361,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x27c1), board_ahci }, /* ICH7 */
- 	{ PCI_VDEVICE(INTEL, 0x27c5), board_ahci }, /* ICH7M */
- 	{ PCI_VDEVICE(INTEL, 0x27c3), board_ahci }, /* ICH7R */
--	{ PCI_VDEVICE(AL, 0x5288), board_ahci }, /* ULi M5288 */
-+	{ PCI_VDEVICE(AL, 0x5288), board_ahci_ign_iferr }, /* ULi M5288 */
- 	{ PCI_VDEVICE(INTEL, 0x2681), board_ahci }, /* ESB2 */
- 	{ PCI_VDEVICE(INTEL, 0x2682), board_ahci }, /* ESB2 */
- 	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
+*Please* test and report the results.
+
+Thanks.
+
+-- 
+tejun
