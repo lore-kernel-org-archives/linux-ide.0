@@ -1,73 +1,101 @@
-From: =?iso-8859-1?Q?Oddbj=F8rn?= Kvalsund <oddbjorn@nixx.no>
-Subject: Re: Possible performance issue with sata_sil og Gigabyte i-Ram
-Date: Wed, 24 Jan 2007 12:17:01 +0100
-Message-ID: <20070124111700.GL1054@nixx.no>
-References: <20070123205301.GK1054@nixx.no> <20070123232113.0d6e8b4e@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2] ide: clear bmdma status in ide_intr()
+Date: Wed, 24 Jan 2007 16:04:47 +0300
+Message-ID: <45B7596F.6080504@ru.mvista.com>
+References: <45AF57BE.7060505@tw.ibm.com>	 <58cb370e0701191133m3dd584ffna5b231b00392c13d@mail.gmail.com>	 <45B12318.9000704@gmail.com> <45B467A9.6040404@tw.ibm.com>	 <45B479C2.7090300@tw.ibm.com> <58cb370e0701220805i783dddafse768e500b27fff36@mail.gmail.com> <45B6D386.3030104@tw.ibm.com> <45B6D5A7.6080700@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nixx.no ([80.68.92.62]:34375 "EHLO nixx.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751195AbXAXLVn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Jan 2007 06:21:43 -0500
-Content-Disposition: inline
-In-Reply-To: <20070123232113.0d6e8b4e@localhost.localdomain>
+Received: from h155.mvista.com ([63.81.120.155]:54711 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751410AbXAXNEz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Jan 2007 08:04:55 -0500
+In-Reply-To: <45B6D5A7.6080700@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, "Adam W. Hawks" <awhawks@us.ibm.com>
 
-On Tue 23 Jan 23:21, Alan wrote:
-> > Other people using this device report of read/write speeds constant=
-ly
-> > maxing out their SATA150 or PCI-bus. Is this my sil3114 being the
-> > bottleneck? Other devices on the PCI-bus? My general system (see li=
-nk to
->=20
-> Possibly. 80Mbytes/sec seems to be about all you get from PCI bus wit=
-h
-> many machines. Remember the SATA150, UDMA/133 and PCI bus limits are
-> largely theoretical, especially as most ATA controllers have signific=
-ant
-> turn around time between commands and cannot queue.
+Hello.
 
-Ah, alright. I'll try to remove the other cards on the PCI-bus to see i=
-f
-that makes a difference, if not; well I guess 80 MB/s isn't that bad :)
+Albert Lee wrote:
+> patch 2/2:
+>   Do the dma status clearing in ide_intr() and add a new hwif->ide_dma_clear_irq such that LLDD could override it.
 
-> > from what I can tell from dmesg (U)DMA should be enabled for this d=
-rive.
-> > I have tried enabling UDMA/133 for the controller (in sata_sil.c), =
-giving this
-> > output on boot:
->=20
-> If you are getting 80Mb/sec then UDMA is enabled 8)
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> ---
+> Tested ok on ICH4 and pdc20275. Not sure if this would have bad effect for other adapters.
 
-Good!
+> Patch against 2.6.20-rc5, for your review, thanks.
 
-> > I'm using the old piix-driver (not libata) for the IBM-disk, as I w=
-as
-> > having some problems getting it to work with the libata-driver. I m=
-ight
->=20
-> What sort of problems ? I've got an iRAM here for debugging/testing
-> courtesy of a company using them and the one I have seems to pass all=
- the
-> testing I've thrown at it.
+> diff -Nrup 01_remove_from_ide_cd/drivers/ide/ide-dma.c 02_add_to_ide_intr/drivers/ide/ide-dma.c
+> --- 01_remove_from_ide_cd/drivers/ide/ide-dma.c	2006-11-30 05:57:37.000000000 +0800
+> +++ 02_add_to_ide_intr/drivers/ide/ide-dma.c	2007-01-24 11:07:58.000000000 +0800
+> @@ -650,6 +650,22 @@ static int __ide_dma_test_irq(ide_drive_
+>  			drive->name, __FUNCTION__);
+>  	return 0;
+>  }
+> +
+> +/* returns 1 on error, 0 otherwise */
 
-Sorry, I was cramming too much information into that sentence.
+    Why? Do you check the result?
 
-I was having problems getting the _IBM IDE-disk_, not the i-Ram, workin=
-g
-with the ata_piix. I haven't really dug deep into this, but I suspect
-it's probably something silly like the drive changing identifier
-(hda -> sda) or something like that.
+> +int __ide_dma_clear_irq(ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif = HWIF(drive);
+> +	u8 dma_stat;
+> +
+> +	/* clear the INTR & ERROR bits */
+> +	if (hwif->dma_status) {
 
-Do you thing this (using the regular piix-driver for the IBM system dis=
-k
-and the sata_sil-driver for the i-Ram) could be causing any performance
-problems?
+    hwif->dma_status should always be set, else ide-dma.c just won't work. The 
+check seems superfluous.
 
---=20
-Oddbj=F8rn Kvalsund
+> +		dma_stat = hwif->INB(hwif->dma_status);
+> +		/* Should we force the bit as well ? */
+
+    Good idea.
+
+> +		hwif->OUTB(dma_stat, hwif->dma_status);
+
+    I'm afraid this would break __ide_dma_end() function which tests the error 
+conditions and returns failure if (dma_stat & 7) != 4...
+
+> +	}
+> +
+> +	return 0;
+> +}
+>  #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
+>  
+>  int __ide_dma_bad_drive (ide_drive_t *drive)
+> diff -Nrup 01_remove_from_ide_cd/drivers/ide/ide-io.c 02_add_to_ide_intr/drivers/ide/ide-io.c
+> --- 01_remove_from_ide_cd/drivers/ide/ide-io.c	2006-11-30 05:57:37.000000000 +0800
+> +++ 02_add_to_ide_intr/drivers/ide/ide-io.c	2007-01-24 11:21:41.000000000 +0800
+> @@ -1644,6 +1644,18 @@ irqreturn_t ide_intr (int irq, void *dev
+>  	}
+>  	hwgroup->handler = NULL;
+>  	del_timer(&hwgroup->timer);
+> +
+> +	/* Some controllers might set DMA INTR no matter DMA or PIO;
+> +	 * bmdma status might need to be cleared even for
+> +	 * PIO interrupts to prevent spurious irq or irq lost.
+> +	 */
+
+    Either "being lost" or "loss". Sorry for grammar nitpicking. :-)
+
+> +	if (hwif->ide_dma_clear_irq && !(hwif->dma))
+> +		/* ide_dma_end() needs bmdma status for error checking.
+> +		 * So, skip clearing bmdma status here and leave it
+> +		 * to ide_dma_end() if this is dma interrupt.
+> +		 */
+> +		hwif->ide_dma_clear_irq(drive);
+> +
+>  	spin_unlock(&ide_lock);
+
+    Ah, you're only calling this when hwif->dma == 0... Well, that's probably 
+fine. Although, once introduced, this method asks for more use...
+
+>  	if (drive->unmask)
+
+MBR, Sergei
