@@ -1,166 +1,130 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Wed, 24 Jan 2007 02:19:20 -0500
-Message-ID: <20070124071920.GA32055@havoc.gtf.org>
+Subject: What's in libata-dev.git
+Date: Wed, 24 Jan 2007 02:26:43 -0500
+Message-ID: <20070124072643.GA32298@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:55405 "EHLO havoc.gtf.org"
+Received: from havoc.gtf.org ([69.61.125.42]:55419 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932968AbXAXHTp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Jan 2007 02:19:45 -0500
+	id S933104AbXAXH0o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Jan 2007 02:26:44 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 
-All fixes for ugly bugs and/or regressions.
+This is a summary and diffstat of all the changes pending in branch
+libata-dev.git#upstream for kernel 2.6.21.  Items of note:
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+* major sata_promise improvements, including PATA and ATAPI support
+* new drivers sata_inic162x, pata_it8213, MPC52xx
+* sata_via PATA port support
+* other minor improvements
 
-to receive the following updates:
+Patchsets ACK'd and about to be merged:
 
- drivers/ata/ahci.c        |   39 +++++++++++----------------------------
- drivers/ata/libata-scsi.c |    2 +-
- drivers/ata/sata_nv.c     |   14 ++++++--------
- include/linux/libata.h    |    2 ++
- 4 files changed, 20 insertions(+), 37 deletions(-)
+* Tejun's devres stuff
+* Cell ATA driver
+* sata_sis PATA port support
 
-Brian King (2):
-      libata: Fixup n_elem initialization
-      libata: Initialize qc->pad_len
+
+Adrian Bunk (1):
+      drivers/ata/: make 4 functions static
+
+Alan (5):
+      pata_it8213: Add new driver for the IT8213 card
+      sata_via: PATA support
+      libata-sff: Don't try and activate channels which are not in use
+      ahci: Remove jmicron fixup
+      libata: PIIX3 support
+
+Alan Cox (1):
+      pci: Move PCI_VDEVICE from libata to core
+
+Andrew Morton (1):
+      libata piix3 support warning fix
+
+Arjan van de Ven (1):
+      user of the jiffies rounding patch: ATA subsystem
+
+Conke Hu (1):
+      Add pci class code for SATA & AHCI, and replace some magic numbers.
+
+Dan Wolstenholme (1):
+      [libata] sata_vsc: support PCI MSI
+
+J J (1):
+      ata_piix: add ICH7 on Acer 3682WLMi to laptop list
+
+Jakub W. Jozwicki J (1):
+      pata_sis: implement laptop list and add ASUS A6K/A6U
+
+Jeff Garzik (2):
+      [libata] trim trailing whitespace
+      [libata] sata_vsc: build fix after PCI MSI feature addition
+
+Mikael Pettersson (5):
+      sata_promise: TX2plus PATA support
+      sata_promise: ATAPI support
+      sata_promise: ATAPI cleanup
+      sata_promise: issue ATAPI commands as normal packets
+      sata_promise: handle ATAPI_NODATA ourselves
 
 Robert Hancock (1):
-      sata_nv: don't rely on NV_INT_DEV indication with ADMA
+      sata_nv: add suspend/resume support v3 (Resubmit)
 
-Tejun Heo (2):
-      ahci: make ULi M5288 ignore interface fatal error bit
-      ahci: don't enter slumber on power down
+Sylvain Munaut (1):
+      libata: Add support for the MPC52xx ATA controller
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index b517d24..e3c7b31 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -361,7 +361,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x27c1), board_ahci }, /* ICH7 */
- 	{ PCI_VDEVICE(INTEL, 0x27c5), board_ahci }, /* ICH7M */
- 	{ PCI_VDEVICE(INTEL, 0x27c3), board_ahci }, /* ICH7R */
--	{ PCI_VDEVICE(AL, 0x5288), board_ahci }, /* ULi M5288 */
-+	{ PCI_VDEVICE(AL, 0x5288), board_ahci_ign_iferr }, /* ULi M5288 */
- 	{ PCI_VDEVICE(INTEL, 0x2681), board_ahci }, /* ESB2 */
- 	{ PCI_VDEVICE(INTEL, 0x2682), board_ahci }, /* ESB2 */
- 	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
-@@ -586,35 +586,18 @@ static void ahci_power_down(void __iomem *port_mmio, u32 cap)
- {
- 	u32 cmd, scontrol;
- 
--	cmd = readl(port_mmio + PORT_CMD) & ~PORT_CMD_ICC_MASK;
--
--	if (cap & HOST_CAP_SSC) {
--		/* enable transitions to slumber mode */
--		scontrol = readl(port_mmio + PORT_SCR_CTL);
--		if ((scontrol & 0x0f00) > 0x100) {
--			scontrol &= ~0xf00;
--			writel(scontrol, port_mmio + PORT_SCR_CTL);
--		}
--
--		/* put device into slumber mode */
--		writel(cmd | PORT_CMD_ICC_SLUMBER, port_mmio + PORT_CMD);
--
--		/* wait for the transition to complete */
--		ata_wait_register(port_mmio + PORT_CMD, PORT_CMD_ICC_SLUMBER,
--				  PORT_CMD_ICC_SLUMBER, 1, 50);
--	}
-+	if (!(cap & HOST_CAP_SSS))
-+		return;
- 
--	/* put device into listen mode */
--	if (cap & HOST_CAP_SSS) {
--		/* first set PxSCTL.DET to 0 */
--		scontrol = readl(port_mmio + PORT_SCR_CTL);
--		scontrol &= ~0xf;
--		writel(scontrol, port_mmio + PORT_SCR_CTL);
-+	/* put device into listen mode, first set PxSCTL.DET to 0 */
-+	scontrol = readl(port_mmio + PORT_SCR_CTL);
-+	scontrol &= ~0xf;
-+	writel(scontrol, port_mmio + PORT_SCR_CTL);
- 
--		/* then set PxCMD.SUD to 0 */
--		cmd &= ~PORT_CMD_SPIN_UP;
--		writel(cmd, port_mmio + PORT_CMD);
--	}
-+	/* then set PxCMD.SUD to 0 */
-+	cmd = readl(port_mmio + PORT_CMD) & ~PORT_CMD_ICC_MASK;
-+	cmd &= ~PORT_CMD_SPIN_UP;
-+	writel(cmd, port_mmio + PORT_CMD);
- }
- 
- static void ahci_init_port(void __iomem *port_mmio, u32 cap,
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 836947d..7cc5a4a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -372,7 +372,7 @@ struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
- 		if (cmd->use_sg) {
- 			qc->__sg = (struct scatterlist *) cmd->request_buffer;
- 			qc->n_elem = cmd->use_sg;
--		} else {
-+		} else if (cmd->request_bufflen) {
- 			qc->__sg = &qc->sgent;
- 			qc->n_elem = 1;
- 		}
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index f6d498e..f7a963e 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -700,7 +700,6 @@ static void nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
- static int nv_host_intr(struct ata_port *ap, u8 irq_stat)
- {
- 	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
--	int handled;
- 
- 	/* freeze if hotplugged */
- 	if (unlikely(irq_stat & (NV_INT_ADDED | NV_INT_REMOVED))) {
-@@ -719,13 +718,7 @@ static int nv_host_intr(struct ata_port *ap, u8 irq_stat)
- 	}
- 
- 	/* handle interrupt */
--	handled = ata_host_intr(ap, qc);
--	if (unlikely(!handled)) {
--		/* spurious, clear it */
--		ata_check_status(ap);
--	}
--
--	return 1;
-+	return ata_host_intr(ap, qc);
- }
- 
- static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance)
-@@ -752,6 +745,11 @@ static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance)
- 			if (pp->flags & NV_ADMA_PORT_REGISTER_MODE) {
- 				u8 irq_stat = readb(host->mmio_base + NV_INT_STATUS_CK804)
- 					>> (NV_INT_PORT_SHIFT * i);
-+				if(ata_tag_valid(ap->active_tag))
-+					/** NV_INT_DEV indication seems unreliable at times
-+					    at least in ADMA mode. Force it on always when a
-+					    command is active, to prevent losing interrupts. */
-+					irq_stat |= NV_INT_DEV;
- 				handled += nv_host_intr(ap, irq_stat);
- 				continue;
- 			}
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index e53a13b..f7f268e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1149,7 +1149,9 @@ static inline void ata_qc_reinit(struct ata_queued_cmd *qc)
- 	qc->cursect = qc->cursg = qc->cursg_ofs = 0;
- 	qc->nsect = 0;
- 	qc->nbytes = qc->curbytes = 0;
-+	qc->n_elem = 0;
- 	qc->err_mask = 0;
-+	qc->pad_len = 0;
- 
- 	ata_tf_init(qc->dev, &qc->tf);
- 
+Tejun Heo (6):
+      libata: straighten out ATA_ID_* constants
+      libata: use ata_id_c_string()
+      libata: handle pci_enable_device() failure while resuming
+      libata: kill qc->nsect and cursect
+      sata_inic162x: finally, driver for initio 162x SATA controllers, take #2
+      sata_promise: kill qc->nsect
+
+Uwe Koziolek (1):
+      sata_sis: support SiS966/966L
+
+ drivers/ata/Kconfig             |   26 +
+ drivers/ata/Makefile            |    3 
+ drivers/ata/ahci.c              |   20 
+ drivers/ata/ata_piix.c          |   23 -
+ drivers/ata/libata-core.c       |   81 +---
+ drivers/ata/libata-eh.c         |    7 
+ drivers/ata/libata-scsi.c       |   52 +-
+ drivers/ata/libata-sff.c        |   22 +
+ drivers/ata/pata_ali.c          |    8 
+ drivers/ata/pata_cs5520.c       |    2 
+ drivers/ata/pata_cs5530.c       |    8 
+ drivers/ata/pata_hpt366.c       |   20 
+ drivers/ata/pata_hpt37x.c       |   23 -
+ drivers/ata/pata_hpt3x3.c       |    2 
+ drivers/ata/pata_it8213.c       |  354 +++++++++++++++++
+ drivers/ata/pata_it821x.c       |   20 
+ drivers/ata/pata_jmicron.c      |    2 
+ drivers/ata/pata_marvell.c      |    4 
+ drivers/ata/pata_mpc52xx.c      |  563 +++++++++++++++++++++++++++
+ drivers/ata/pata_pdc202xx_old.c |    5 
+ drivers/ata/pata_serverworks.c  |   19 
+ drivers/ata/pata_sil680.c       |    2 
+ drivers/ata/pata_sis.c          |   34 +
+ drivers/ata/pata_via.c          |   10 
+ drivers/ata/pata_winbond.c      |   16 
+ drivers/ata/sata_inic162x.c     |  809 ++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/sata_nv.c           |  239 ++++++++---
+ drivers/ata/sata_promise.c      |  226 ++++++++++-
+ drivers/ata/sata_qstor.c        |    2 
+ drivers/ata/sata_sil.c          |   10 
+ drivers/ata/sata_sil24.c        |    5 
+ drivers/ata/sata_sis.c          |   79 ++-
+ drivers/ata/sata_via.c          |  110 +++++
+ drivers/ata/sata_vsc.c          |   44 ++
+ drivers/pci/quirks.c            |    2 
+ include/linux/ata.h             |   11 
+ include/linux/libata.h          |   14 
+ include/linux/pci_ids.h         |    3 
+ 38 files changed, 2554 insertions(+), 326 deletions(-)
