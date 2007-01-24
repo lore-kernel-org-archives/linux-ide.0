@@ -1,62 +1,31 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc5: known regressions with patches (v3)
-Date: Wed, 24 Jan 2007 16:50:53 +0100
-Message-ID: <20070124155053.GL17836@stusta.de>
-References: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: 2.6.20-rc5: known unfixed regressions (v3) (part 2)
+Date: Wed, 24 Jan 2007 11:06:31 -0500
+Message-ID: <20070124160631.GE7582@csclub.uwaterloo.ca>
+References: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org> <20070124154725.GK17836@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750910AbXAXQGd@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
-Sender: netdev-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, =?utf-8?B?QmrDtnJu?= Steinbrink <B.Steinbrink@gmx.de>, Robert Hancock <hancockr@shaw.ca>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Michael Gernoth <gernoth@informatik.uni-erlangen.de>, Daniel Drake <dsd@gentoo.org>, David L Stevens <dlstevens@us.ibm.com>, YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>, davem@davemloft.net, netdev@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Dave Jones <davej@redhat.com>, cpufreq@lists.linux.org.uk, lenb@kernel.org, linux-acpi@vger.kernel.org
+In-Reply-To: <20070124154725.GK17836@stusta.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, gd@spherenet.de, petero2@telia.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, Uwe Bugla <uwe.bugla@gmx.de>, alan@lxorguk.ukuu.org.uk, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, Nick Piggin <nickpiggin@yahoo.com.au>, ttb@tentacle.dhs.org, rml@novell.com, Livio Soares <livio@eecg.toronto.edu>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, Malte Schr??der <MalteSch@gmx.de>, "Vladimir V. Saveliev" <vs@namesys.com>, reiserfs-dev@namesys.com, Sami Farin <7atbggg02@sneakemail.com>, David Chinner <dgc@sgi.com>, xfs-masters@oss.sgi.com, takada <takada@mbf.nifty.com>, Jordan Crouse <jordan.crouse@amd.com>, Andrew Clayton <andrew@digital-domain.net>, Trond Myklebust <trond.myklebust@fys.uio.no>
 List-Id: linux-ide@vger.kernel.org
 
-This email lists some known regressions in 2.6.20-rc5 compared to 2.6.1=
-9
-with patches available.
+On Wed, Jan 24, 2007 at 04:47:25PM +0100, Adrian Bunk wrote:
+> Subject    : fix geode_configure()
+> References : http://lkml.org/lkml/2007/1/9/216
+> Submitter  : Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+> Caused-By  : takada <takada@mbf.nifty.com>
+>              commit e4f0ae0ea63caceff37a13f281a72652b7ea71ba
+> Handled-By : takada <takada@mbf.nifty.com>
+>              Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+> Status     : patches are being discussed
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possib=
-ly
-involved with one or more of these issues.
+I wouldn't call this a regression.  It appears to go way back.  I also
+didn't find it, I just commented on it since it does affect the platform
+I work on.
 
-Due to the huge amount of recipients, please trim the Cc when answering=
-=2E
-
-
-Subject    : sata_nv: SATA exceptions
-References : http://lkml.org/lkml/2007/1/14/108
-Submitter  : Bj=C3=B6rn Steinbrink <B.Steinbrink@gmx.de>
-Caused-By  : Robert Hancock <hancockr@shaw.ca>
-             commit 2dec7555e6bf2772749113ea0ad454fcdb8cf861
-Handled-By : Robert Hancock <hancockr@shaw.ca>
-Patch      : http://lkml.org/lkml/2007/1/23/280
-Status     : patch available
-
-
-Subject    : does not pickup ipv6 addresses
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7817
-             http://lkml.org/lkml/2007/1/14/146
-Submitter  : Michael Gernoth <gernoth@informatik.uni-erlangen.de>
-             Daniel Drake <dsd@gentoo.org>
-Caused-By  : David L Stevens <dlstevens@us.ibm.com>
-             commit 30c4cf577fb5b68c16e5750d6bdbd7072e42b279
-Handled-By : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
-Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=3D7817
-Status     : patch available
-
-
-Subject    : ACPI: fix cpufreq regression
-References : http://lkml.org/lkml/2007/1/16/120
-Submitter  : Ingo Molnar <mingo@elte.hu>
-Caused-By  : Dave Jones <davej@redhat.com>
-             commit 0916bd3ebb7cefdd0f432e8491abe24f4b5a101e
-Handled-By : Ingo Molnar <mingo@elte.hu>
-Patch      : http://lkml.org/lkml/2007/1/16/120
-Status     : patch available
-
-
+--
+Len Sorensen
