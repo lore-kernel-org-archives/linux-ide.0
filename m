@@ -1,46 +1,62 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 8/15] ide: disable DMA in ->ide_dma_check for "no IORDY"
- case
-Date: Thu, 25 Jan 2007 20:03:17 +0300
-Message-ID: <45B8E2D5.1030508@ru.mvista.com>
-References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	 <20070119003154.14846.87217.sendpatchset@localhost.localdomain>	 <45B0F12B.3000202@ru.mvista.com>	 <58cb370e0701191047h524434eobdb9d86ed614bc71@mail.gmail.com>	 <45B117D4.7050406@gmail.com> <45B11D8D.8070105@ru.mvista.com>	 <58cb370e0701191200i10119313i4aacae9c504a02e4@mail.gmail.com>	 <45B13B8D.2020402@gmail.com> <45B24CBA.8080900@ru.mvista.com> <58cb370e0701200947p578f4d74g1fee511ded6c9a77@mail.gmail.com> <45B25DB7.8050903@gmail.com>
+From: John Williams <john@pond-weed.com>
+Subject: Failed to set xfermode on LITE-ON  LTR-40125S
+Date: Thu, 25 Jan 2007 20:17:50 +0000
+Message-ID: <20070125201750.2adbd57c@buffy.scoobygang>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030447AbXAYRDU@vger.kernel.org>
-In-Reply-To: <45B25DB7.8050903@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from john-and-mon.demon.co.uk ([62.49.18.13]:3977 "EHLO
+	pond-weed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030561AbXAYUog (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Jan 2007 15:44:36 -0500
+Received: from buffy.scoobygang ([192.168.156.102])
+	by pond-weed.com with esmtps (TLS-1.0:DHE_RSA_AES_256_CBC_SHA:32)
+	(Exim 4.50)
+	id 1HAB2h-00067d-4i
+	for linux-ide@vger.kernel.org; Thu, 25 Jan 2007 20:17:55 +0000
+Received: from buffy.scoobygang (localhost [127.0.0.1])
+	by buffy.scoobygang (8.13.8/8.13.5) with ESMTP id l0PKHowL002670
+	for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 20:17:50 GMT
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+Hello,
 
-Bartlomiej Zolnierkiewicz wrote:
+I just tried the libata support for PATA in kernel 2.6.20-rc5 and I got
+this:
 
->>>The other advantage of doing cleanups is that code becomes cleaner/simpler
->>>which matters a lot for this codebase, i.e. ide-dma-off-void.patch exposed
->>>(yet to be fixed) bug in set_using_dma() (->ide_dma_off_quietly always returns
->>>0 which is passed by ->ide_dma_check to set_using_dma() which incorrectly
->>>then calls ->ide_dma_on).
+scsi1 : pata_sis
+ata2.00: ATAPI, max UDMA/66
+ata2.01: ATAPI, max UDMA/33
+ata2.00: configured for UDMA/33
+ata2.01: qc timeout (cmd 0xef)
+ata2.01: failed to set xfermode (err_mask=0x4)
+ata2.01: limiting speed to UDMA/25
+ata2: failed to recover some devices, retrying in 5 secs
+ata2.00: configured for UDMA/33
+ata2.01: qc timeout (cmd 0xef)
+ata2.01: failed to set xfermode (err_mask=0x4)
+ata2.01: limiting speed to PIO0
+ata2: failed to recover some devices, retrying in 5 secs
+ata2.00: configured for UDMA/33
+ata2.01: qc timeout (cmd 0xef)
+ata2.01: failed to set xfermode (err_mask=0x4)
+ata2.01: disabled
+ata2: failed to recover some devices, retrying in 5 secs
+ata2.00: failed to set xfermode (err_mask=0x40)
+ata2.00: limiting speed to UDMA/25
+ata2: failed to recover some devices, retrying in 5 secs
+ata2.00: configured for UDMA/25
 
->>   Well, this seems a newly intruduced bug.
+The offending device is a LITE-ON LTR-40125S CDRW attached to SIS 513
+IDE (rev d0)
 
-> The old code is so convulted that it is hard to see it w/o cleanup. :)
+I found a patch here:
+http://readlist.com/lists/vger.kernel.org/linux-kernel/45/228948.html
+which cures the problem for me. Is this the recommended patch for this
+problem? If not, I would be happy to test alternative solutions.
 
-> ->ide_dma_check implementations often do
-
-> 		return hwif->ide_dma_off_quietly(drive);
-
-> so the return value of ide_dma_off_quietly() (which is always 0) is passed to
-
-> 			if (HWIF(drive)->ide_dma_check(drive)) return -EIO;
-
-> in ide.c:set_using_dma() -> as a result the next line is executed
-
-> 			if (HWIF(drive)->ide_dma_on(drive)) return -EIO;
-
-    So, the error seems to call hwif->ide_dma_on() after hwif->ide_dma_check() 
-since hwif->ide_dma_check() must've already called that.
-
-MBR, Sergei
+Thanks,
+John Williams
