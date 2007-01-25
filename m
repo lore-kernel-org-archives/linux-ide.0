@@ -1,66 +1,75 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: share PIO limits among devices sharing a channel
-Date: Thu, 25 Jan 2007 20:29:47 +0900
-Message-ID: <20070125112947.GC8606@htj.dyndns.org>
+Subject: [PATCH] sata_via: don't diddle with ATA_NIEN in ->freeze
+Date: Thu, 25 Jan 2007 20:46:59 +0900
+Message-ID: <20070125114659.GD8606@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:27622 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbXAYL3z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 06:29:55 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so428060uga
-        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 03:29:54 -0800 (PST)
+Received: from wr-out-0506.google.com ([64.233.184.232]:28540 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbXAYLrH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 06:47:07 -0500
+Received: by wr-out-0506.google.com with SMTP id 68so420525wra
+        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 03:47:07 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, j.taimr@chello.nl
 
-PIO xfermask limits should be shared by all devices on the same
-channel to avoid violating device selection timing.  libata used to
-guarantee this at core level but I mistakenly dropped the code during
-conversion to new EH.  This patch revives that guarantee.
+vt6420 completely loses its ability to raise IRQ for ATAPI devices if
+ATA_NIEN is diddled with in ->freeze.  Further investigation is
+necessary to determine whether this problem is shared on other
+controllers but it doesn't seem to be at this point.
+
+Make vt6420's ->freeze only clear IRQ to fix this problem.  This makes
+vt6420 relatively more prone to IRQ storms but the controller is way
+too braindamaged to worry about that anyway.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-Jeff, IMHO, this is a regression and should go into #upstream-fixes.
-Thanks.
+Jeff, this fix is verified to fix J. Taimr's case and a few other
+reported that 2.6.20-rc5 fixed their ATAPI detection problems too.  We
+still have several case to hunt down but getting verified fixes in
+early helps separating different causes.  Please include this in
+#upstream-fixes.  Thanks.
 
- drivers/ata/libata-core.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/ata/sata_via.c |   12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-Index: work/drivers/ata/libata-core.c
+Index: work/drivers/ata/sata_via.c
 ===================================================================
---- work.orig/drivers/ata/libata-core.c
-+++ work/drivers/ata/libata-core.c
-@@ -3390,6 +3390,7 @@ static void ata_dev_xfermask(struct ata_
- 	struct ata_port *ap = dev->ap;
- 	struct ata_host *host = ap->host;
- 	unsigned long xfer_mask;
-+	int i;
+--- work.orig/drivers/ata/sata_via.c
++++ work/drivers/ata/sata_via.c
+@@ -74,6 +74,7 @@ enum {
+ static int svia_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+ static u32 svia_scr_read (struct ata_port *ap, unsigned int sc_reg);
+ static void svia_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
++static void svia_noop_freeze(struct ata_port *ap);
+ static void vt6420_error_handler(struct ata_port *ap);
  
- 	/* controller modes available */
- 	xfer_mask = ata_pack_xfermask(ap->pio_mask,
-@@ -3412,6 +3413,22 @@ static void ata_dev_xfermask(struct ata_
- 				       dev->mwdma_mask, dev->udma_mask);
- 	xfer_mask &= ata_id_xfermask(dev->id);
+ static const struct pci_device_id svia_pci_tbl[] = {
+@@ -128,7 +129,7 @@ static const struct ata_port_operations 
+ 	.qc_issue		= ata_qc_issue_prot,
+ 	.data_xfer		= ata_pio_data_xfer,
  
-+	/* PIO xfermask limits are shared by all devices on the same
-+	 * channel to avoid violating device selection timing.
+-	.freeze			= ata_bmdma_freeze,
++	.freeze			= svia_noop_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= vt6420_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+@@ -204,6 +205,15 @@ static void svia_scr_write (struct ata_p
+ 	outl(val, ap->ioaddr.scr_addr + (4 * sc_reg));
+ }
+ 
++static void svia_noop_freeze(struct ata_port *ap)
++{
++	/* Some VIA controllers choke if ATA_NIEN is manipulated in
++	 * certain way.  Leave it alone and just clear pending IRQ.
 +	 */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *d = &ap->device[i];
-+		unsigned int pio_mask;
++	ata_chk_status(ap);
++	ap->ops->irq_clear(ap);
++}
 +
-+		if (ata_dev_absent(d))
-+			continue;
-+
-+		ata_unpack_xfermask(ata_id_xfermask(d->id),
-+				    &pio_mask, NULL, NULL);
-+		pio_mask &= d->pio_mask;
-+		xfer_mask &= ata_pack_xfermask(pio_mask, UINT_MAX, UINT_MAX);
-+	}
-+
- 	/*
- 	 *	CFA Advanced TrueIDE timings are not allowed on a shared
- 	 *	cable
+ /**
+  *	vt6420_prereset - prereset for vt6420
+  *	@ap: target ATA port
