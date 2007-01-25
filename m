@@ -1,30 +1,36 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] sata_via: don't diddle with ATA_NIEN in ->freeze
-Date: Thu, 25 Jan 2007 12:32:32 +0000
-Message-ID: <20070125123232.064f1a49@localhost.localdomain>
-References: <20070125114659.GD8606@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Linux 2.6 SATA NCQ support
+Date: Thu, 25 Jan 2007 21:28:35 +0900
+Message-ID: <45B8A273.9030501@gmail.com>
+References: <25b3869e0701250407q7fc6996eua411aeaec5a67444@mail.gmail.com>	 <45B89EC8.8060602@gmail.com> <25b3869e0701250419p7bcd41a4g38c05722df416115@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56659 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933174AbXAYMVF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 07:21:05 -0500
-In-Reply-To: <20070125114659.GD8606@htj.dyndns.org>
+Received: from an-out-0708.google.com ([209.85.132.245]:36959 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965114AbXAYM2p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 07:28:45 -0500
+Received: by an-out-0708.google.com with SMTP id b33so308975ana
+        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 04:28:43 -0800 (PST)
+In-Reply-To: <25b3869e0701250419p7bcd41a4g38c05722df416115@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, j.taimr@chello.nl
+To: V VS <v.vvsrini@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 25 Jan 2007 20:46:59 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+V VS wrote:
+> Thanks for your immediate response. Really appreciate it very much.
+> 
+> With the kind of output that 2.16.19.1 <http://2.16.19.1> has displayed,
+> should we be suspecting lack of NCQ support in the on-board SATA port or
+> the hard disk or anywhere else?
 
-> vt6420 completely loses its ability to raise IRQ for ATAPI devices if
-> ATA_NIEN is diddled with in ->freeze.  Further investigation is
-> necessary to determine whether this problem is shared on other
-> controllers but it doesn't seem to be at this point.
+Nope, just driver bug, I think.
 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Have started the download of 2.6.20 now...
 
-Acked-by: Alan Cox <alan@redhat.com>
+Good luck.
+
+-- 
+tejun
