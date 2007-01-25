@@ -1,148 +1,126 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 2/2] ide: clear bmdma status in ide_intr() (revised)
-Date: Thu, 25 Jan 2007 17:31:28 +0800
-Message-ID: <45B878F0.7060707@tw.ibm.com>
-References: <45AF57BE.7060505@tw.ibm.com>	 <58cb370e0701191133m3dd584ffna5b231b00392c13d@mail.gmail.com>	 <45B12318.9000704@gmail.com> <45B467A9.6040404@tw.ibm.com>	 <45B479C2.7090300@tw.ibm.com> <58cb370e0701220805i783dddafse768e500b27fff36@mail.gmail.com> <45B6D386.3030104@tw.ibm.com> <45B6D5A7.6080700@tw.ibm.com> <45B7596F.6080504@ru.mvista.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: ahci: improve and limit spurious interrupt messages, take#3
+Date: Thu, 25 Jan 2007 19:16:28 +0900
+Message-ID: <20070125101628.GA8606@htj.dyndns.org>
+References: <20070115090117.GL10987@htj.dyndns.org> <20070116065239.GO10987@htj.dyndns.org> <45B806DA.1050107@pobox.com> <45B8626B.9090002@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:55611 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965736AbXAYJbo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 04:31:44 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id l0ONU5tF008887
-	for <linux-ide@vger.kernel.org>; Wed, 24 Jan 2007 18:30:05 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0P9VhsN467686
-	for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 02:31:43 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0P9Vg2v023787
-	for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 02:31:43 -0700
-In-Reply-To: <45B7596F.6080504@ru.mvista.com>
+Received: from nz-out-0506.google.com ([64.233.162.238]:35755 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965757AbXAYKQe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 05:16:34 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so376399nze
+        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 02:16:34 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <45B8626B.9090002@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, "Adam W. Hawks" <awhawks@us.ibm.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-patch 2/2 (revised):
-- Do the dma status clearing in ide_intr() and add a new hwif->ide_dma_clear_irq such that LLDD can override it.
-- Fix drive->waiting_for_dma to work with CDB-intr devices.
+We're still seeing a lot of issues with NCQ implementation in drive
+firmwares.  Sprious FISes during NCQ command phase occur on many
+drives and some of them seem potentially dangerous (at least to me).
+Until we find the solution, spurious messages can give us more info.
+Improve and limit them such that more info can be reported while not
+disturbing users too much.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-hwif->dma is not reliable: ide_intr() races with dma_start(). Sometimes we got hwif->dma == 0
-in ide_intr() even though it is actually a DMA interrupt. So, drive->waiting_for_dma is used instead.
+Fixed as advised.  Thanks.
 
-Also revised per Sergei's comments and let ide_dma_clear_irq return "void".
-The "if (hwif->dma_status)" check in __ide_dma_clear_irq() is kept as is since I think
-it would be safer for the old ISA/VESA IDE devices that has no BMDMA registers.
-
-For your review, thanks.
-
-
-diff -Nrup 01_remove_from_ide_cd/drivers/ide/ide-cd.c 02_add_to_ide_intr/drivers/ide/ide-cd.c
---- 01_remove_from_ide_cd/drivers/ide/ide-cd.c	2007-01-24 11:00:03.000000000 +0800
-+++ 02_add_to_ide_intr/drivers/ide/ide-cd.c	2007-01-25 16:52:20.000000000 +0800
-@@ -923,6 +923,10 @@ static ide_startstop_t cdrom_start_packe
- 		HWIF(drive)->OUTB(drive->ctl, IDE_CONTROL_REG);
-  
- 	if (CDROM_CONFIG_FLAGS (drive)->drq_interrupt) {
-+		/* waiting for CDB interrupt, not DMA yet. */
-+		if (info->dma)
-+			drive->waiting_for_dma = 0;
-+
- 		/* packet command */
- 		ide_execute_command(drive, WIN_PACKETCMD, handler, ATAPI_WAIT_PC, cdrom_timer_expiry);
- 		return ide_started;
-@@ -965,6 +969,10 @@ static ide_startstop_t cdrom_transfer_pa
- 		/* Check for errors. */
- 		if (cdrom_decode_status(drive, DRQ_STAT, NULL))
- 			return ide_stopped;
-+
-+		/* Ok, next interrupt will be dma interrupt. */
-+		if (info->dma)
-+			drive->waiting_for_dma = 1;
- 	} else {
- 		/* Otherwise, we must wait for DRQ to get set. */
- 		if (ide_wait_stat(&startstop, drive, DRQ_STAT,
-diff -Nrup 01_remove_from_ide_cd/drivers/ide/ide-dma.c 02_add_to_ide_intr/drivers/ide/ide-dma.c
---- 01_remove_from_ide_cd/drivers/ide/ide-dma.c	2006-11-30 05:57:37.000000000 +0800
-+++ 02_add_to_ide_intr/drivers/ide/ide-dma.c	2007-01-25 16:37:24.000000000 +0800
-@@ -650,6 +650,19 @@ static int __ide_dma_test_irq(ide_drive_
- 			drive->name, __FUNCTION__);
- 	return 0;
- }
-+
-+static void __ide_dma_clear_irq(ide_drive_t *drive)
-+{
-+	ide_hwif_t *hwif = HWIF(drive);
-+	u8 dma_stat;
-+
-+	/* clear the INTR & ERROR bits */
-+	if (hwif->dma_status) {
-+		dma_stat = hwif->INB(hwif->dma_status);
-+		/* Should we force the bit as well ? */
-+		hwif->OUTB(dma_stat, hwif->dma_status);
-+	}
-+}
- #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5998f74..659949a 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -75,6 +75,7 @@ enum {
+ 	AHCI_CMD_CLR_BUSY	= (1 << 10),
  
- int __ide_dma_bad_drive (ide_drive_t *drive)
-@@ -928,6 +941,8 @@ void ide_setup_dma (ide_hwif_t *hwif, un
- 		hwif->ide_dma_end = &__ide_dma_end;
- 	if (!hwif->ide_dma_test_irq)
- 		hwif->ide_dma_test_irq = &__ide_dma_test_irq;
-+	if (!hwif->ide_dma_clear_irq)
-+		hwif->ide_dma_clear_irq = &__ide_dma_clear_irq;
- 	if (!hwif->ide_dma_timeout)
- 		hwif->ide_dma_timeout = &__ide_dma_timeout;
- 	if (!hwif->ide_dma_lostirq)
-diff -Nrup 01_remove_from_ide_cd/drivers/ide/ide-io.c 02_add_to_ide_intr/drivers/ide/ide-io.c
---- 01_remove_from_ide_cd/drivers/ide/ide-io.c	2006-11-30 05:57:37.000000000 +0800
-+++ 02_add_to_ide_intr/drivers/ide/ide-io.c	2007-01-25 16:27:21.000000000 +0800
-@@ -1644,6 +1644,18 @@ irqreturn_t ide_intr (int irq, void *dev
- 	}
- 	hwgroup->handler = NULL;
- 	del_timer(&hwgroup->timer);
-+
-+	/* Some controllers might set DMA INTR no matter DMA or PIO;
-+	 * bmdma status might need to be cleared even for
-+	 * PIO interrupts to prevent spurious/lost irq.
+ 	RX_FIS_D2H_REG		= 0x40,	/* offset of D2H Register FIS data */
++	RX_FIS_SDB		= 0x58, /* offset of SDB FIS data */
+ 	RX_FIS_UNK		= 0x60, /* offset of Unknown FIS data */
+ 
+ 	board_ahci		= 0,
+@@ -202,6 +203,10 @@ struct ahci_port_priv {
+ 	dma_addr_t		cmd_tbl_dma;
+ 	void			*rx_fis;
+ 	dma_addr_t		rx_fis_dma;
++	/* for NCQ spurious interrupt analysis */
++	int			ncq_saw_spurious_sdb_cnt;
++	unsigned int		ncq_saw_d2h:1;
++	unsigned int		ncq_saw_dmas:1;
+ };
+ 
+ static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg);
+@@ -1126,8 +1131,9 @@ static void ahci_host_intr(struct ata_port *ap)
+ 	void __iomem *mmio = ap->host->mmio_base;
+ 	void __iomem *port_mmio = ahci_port_base(mmio, ap->port_no);
+ 	struct ata_eh_info *ehi = &ap->eh_info;
++	struct ahci_port_priv *pp = ap->private_data;
+ 	u32 status, qc_active;
+-	int rc;
++	int rc, known_irq = 0;
+ 
+ 	status = readl(port_mmio + PORT_IRQ_STAT);
+ 	writel(status, port_mmio + PORT_IRQ_STAT);
+@@ -1154,17 +1160,52 @@ static void ahci_host_intr(struct ata_port *ap)
+ 
+ 	/* hmmm... a spurious interupt */
+ 
+-	/* some devices send D2H reg with I bit set during NCQ command phase */
+-	if (ap->sactive && (status & PORT_IRQ_D2H_REG_FIS))
++	/* if !NCQ, ignore.  No modern ATA device has broken HSM
++	 * implementation for non-NCQ commands.
 +	 */
-+	if (hwif->ide_dma_clear_irq && !(drive->waiting_for_dma))
-+		/* ide_dma_end() needs bmdma status for error checking.
-+		 * So, skip clearing bmdma status here and leave it
-+		 * to ide_dma_end() if this is dma interrupt.
-+		 */
-+		hwif->ide_dma_clear_irq(drive);
-+
- 	spin_unlock(&ide_lock);
++	if (!ap->sactive)
+ 		return;
  
- 	if (drive->unmask)
-diff -Nrup 01_remove_from_ide_cd/drivers/ide/ide.c 02_add_to_ide_intr/drivers/ide/ide.c
---- 01_remove_from_ide_cd/drivers/ide/ide.c	2007-01-23 11:47:42.000000000 +0800
-+++ 02_add_to_ide_intr/drivers/ide/ide.c	2007-01-24 11:00:48.000000000 +0800
-@@ -503,6 +503,7 @@ static void ide_hwif_restore(ide_hwif_t 
- 	hwif->ide_dma_on		= tmp_hwif->ide_dma_on;
- 	hwif->ide_dma_off_quietly	= tmp_hwif->ide_dma_off_quietly;
- 	hwif->ide_dma_test_irq		= tmp_hwif->ide_dma_test_irq;
-+	hwif->ide_dma_clear_irq		= tmp_hwif->ide_dma_clear_irq;
- 	hwif->ide_dma_host_on		= tmp_hwif->ide_dma_host_on;
- 	hwif->ide_dma_host_off		= tmp_hwif->ide_dma_host_off;
- 	hwif->ide_dma_lostirq		= tmp_hwif->ide_dma_lostirq;
-diff -Nrup 01_remove_from_ide_cd/include/linux/ide.h 02_add_to_ide_intr/include/linux/ide.h
---- 01_remove_from_ide_cd/include/linux/ide.h	2007-01-24 11:00:03.000000000 +0800
-+++ 02_add_to_ide_intr/include/linux/ide.h	2007-01-25 16:10:42.000000000 +0800
-@@ -727,6 +727,7 @@ typedef struct hwif_s {
- 	int (*ide_dma_on)(ide_drive_t *drive);
- 	int (*ide_dma_off_quietly)(ide_drive_t *drive);
- 	int (*ide_dma_test_irq)(ide_drive_t *drive);
-+	void (*ide_dma_clear_irq)(ide_drive_t *drive);
- 	int (*ide_dma_host_on)(ide_drive_t *drive);
- 	int (*ide_dma_host_off)(ide_drive_t *drive);
- 	int (*ide_dma_lostirq)(ide_drive_t *drive);
-
-
+-	/* ignore interim PIO setup fis interrupts */
+-	if (ata_tag_valid(ap->active_tag) && (status & PORT_IRQ_PIOS_FIS))
+-		return;
++	if (status & PORT_IRQ_D2H_REG_FIS) {
++		if (!pp->ncq_saw_d2h)
++			ata_port_printk(ap, KERN_INFO,
++				"D2H reg with I during NCQ, "
++				"this message won't be printed again\n");
++		pp->ncq_saw_d2h = 1;
++		known_irq = 1;
++	}
++
++	if (status & PORT_IRQ_DMAS_FIS) {
++		if (!pp->ncq_saw_dmas)
++			ata_port_printk(ap, KERN_INFO,
++				"DMAS FIS during NCQ, "
++				"this message won't be printed again\n");
++		pp->ncq_saw_dmas = 1;
++		known_irq = 1;
++	}
++
++	if (status & PORT_IRQ_SDB_FIS &&
++		   pp->ncq_saw_spurious_sdb_cnt < 10) {
++		/* SDB FIS containing spurious completions might be
++		 * dangerous, we need to know more about them.  Print
++		 * more of it.
++		 */
++		const u32 *f = pp->rx_fis + RX_FIS_SDB;
++
++		ata_port_printk(ap, KERN_INFO, "Spurious SDB FIS during NCQ "
++				"issue=0x%x SAct=0x%x FIS=%08x:%08x%s\n",
++				readl(port_mmio + PORT_CMD_ISSUE),
++				readl(port_mmio + PORT_SCR_ACT), f[0], f[1],
++				pp->ncq_saw_spurious_sdb_cnt < 10 ?
++				"" : ", shutting up");
++
++		pp->ncq_saw_spurious_sdb_cnt++;
++		known_irq = 1;
++	}
+ 
+-	if (ata_ratelimit())
++	if (!known_irq)
+ 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
+-				"(irq_stat 0x%x active_tag %d sactive 0x%x)\n",
++				"(irq_stat 0x%x active_tag 0x%x sactive 0x%x)\n",
+ 				status, ap->active_tag, ap->sactive);
+ }
+ 
