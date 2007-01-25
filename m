@@ -1,62 +1,44 @@
-From: John Williams <john@pond-weed.com>
-Subject: Failed to set xfermode on LITE-ON  LTR-40125S
-Date: Thu, 25 Jan 2007 20:17:50 +0000
-Message-ID: <20070125201750.2adbd57c@buffy.scoobygang>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Updated SiI h/w docs (was Re: [PATCH 13/15] ide: fix UDMA/MWDMA/SWDMA
+ masks)
+Date: Thu, 25 Jan 2007 17:20:27 -0500
+Message-ID: <45B92D2B.4070302@garzik.org>
+References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	<20070119003226.14846.87052.sendpatchset@localhost.localdomain>	<45B4FFBD.40507@ru.mvista.com>	<20070122184620.1c8b87ac@localhost.localdomain>	<45B51E83.1010904@ru.mvista.com> <20070122213109.21e4e805@localhost.localdomain> <45B53D05.1010807@garzik.org> <45B6071C.90703@ru.mvista.com> <45B761F8.1060505@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from john-and-mon.demon.co.uk ([62.49.18.13]:3977 "EHLO
-	pond-weed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030561AbXAYUog (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Jan 2007 15:44:36 -0500
-Received: from buffy.scoobygang ([192.168.156.102])
-	by pond-weed.com with esmtps (TLS-1.0:DHE_RSA_AES_256_CBC_SHA:32)
-	(Exim 4.50)
-	id 1HAB2h-00067d-4i
-	for linux-ide@vger.kernel.org; Thu, 25 Jan 2007 20:17:55 +0000
-Received: from buffy.scoobygang (localhost [127.0.0.1])
-	by buffy.scoobygang (8.13.8/8.13.5) with ESMTP id l0PKHowL002670
-	for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 20:17:50 GMT
+Received: from srv5.dvmed.net ([207.36.208.214]:40531 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030631AbXAYWU3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Jan 2007 17:20:29 -0500
+In-Reply-To: <45B761F8.1060505@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
+Sergei Shtylyov wrote:
+>    Now, the site seems to have 2 versions of the PCI-648/9 specs. :-)
+> I looked into those in specs/sii and noted that PCI-648 spec was newer 
+> than mine, but PCI-649 was older.
+>    It's probably a good idea to put all the CMD/SiI files in the single 
+> directory, so there's no dupes.
+> 
+>> PS: I certainly used to have a newer spec for PCI0646U2 but it's not 
+>> at hand for some reason...
+> 
+>    Oops, this chip is named differently, without 0 -- that's why I 
+> didn't notice the file locally. Sending rev 1.3 now...
 
-I just tried the libata support for PATA in kernel 2.6.20-rc5 and I got
-this:
+(added linux-ide to CC and SiI folks to BCC)
 
-scsi1 : pata_sis
-ata2.00: ATAPI, max UDMA/66
-ata2.01: ATAPI, max UDMA/33
-ata2.00: configured for UDMA/33
-ata2.01: qc timeout (cmd 0xef)
-ata2.01: failed to set xfermode (err_mask=0x4)
-ata2.01: limiting speed to UDMA/25
-ata2: failed to recover some devices, retrying in 5 secs
-ata2.00: configured for UDMA/33
-ata2.01: qc timeout (cmd 0xef)
-ata2.01: failed to set xfermode (err_mask=0x4)
-ata2.01: limiting speed to PIO0
-ata2: failed to recover some devices, retrying in 5 secs
-ata2.00: configured for UDMA/33
-ata2.01: qc timeout (cmd 0xef)
-ata2.01: failed to set xfermode (err_mask=0x4)
-ata2.01: disabled
-ata2: failed to recover some devices, retrying in 5 secs
-ata2.00: failed to set xfermode (err_mask=0x40)
-ata2.00: limiting speed to UDMA/25
-ata2: failed to recover some devices, retrying in 5 secs
-ata2.00: configured for UDMA/25
+All the docs are now at
 
-The offending device is a LITE-ON LTR-40125S CDRW attached to SIS 513
-IDE (rev d0)
+	http://gkernel.sourceforge.net/specs/sii/
 
-I found a patch here:
-http://readlist.com/lists/vger.kernel.org/linux-kernel/45/228948.html
-which cures the problem for me. Is this the recommended patch for this
-problem? If not, I would be happy to test alternative solutions.
+including the one you just sent.
 
-Thanks,
-John Williams
+	Jeff
+
+
