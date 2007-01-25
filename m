@@ -1,54 +1,46 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2] ide: clear bmdma status in ide_intr() (revised)
-Date: Thu, 25 Jan 2007 19:40:36 +0300
-Message-ID: <45B8DD84.3090700@ru.mvista.com>
-References: <45AF57BE.7060505@tw.ibm.com>	 <58cb370e0701191133m3dd584ffna5b231b00392c13d@mail.gmail.com>	 <45B12318.9000704@gmail.com> <45B467A9.6040404@tw.ibm.com>	 <45B479C2.7090300@tw.ibm.com> <58cb370e0701220805i783dddafse768e500b27fff36@mail.gmail.com> <45B6D386.3030104@tw.ibm.com> <45B6D5A7.6080700@tw.ibm.com> <45B7596F.6080504@ru.mvista.com> <45B878F0.7060707@tw.ibm.com> <45B8CA02.4050701@ru.mvista.com>
+Subject: Re: [PATCH 8/15] ide: disable DMA in ->ide_dma_check for "no IORDY"
+ case
+Date: Thu, 25 Jan 2007 20:03:17 +0300
+Message-ID: <45B8E2D5.1030508@ru.mvista.com>
+References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	 <20070119003154.14846.87217.sendpatchset@localhost.localdomain>	 <45B0F12B.3000202@ru.mvista.com>	 <58cb370e0701191047h524434eobdb9d86ed614bc71@mail.gmail.com>	 <45B117D4.7050406@gmail.com> <45B11D8D.8070105@ru.mvista.com>	 <58cb370e0701191200i10119313i4aacae9c504a02e4@mail.gmail.com>	 <45B13B8D.2020402@gmail.com> <45B24CBA.8080900@ru.mvista.com> <58cb370e0701200947p578f4d74g1fee511ded6c9a77@mail.gmail.com> <45B25DB7.8050903@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:1880 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030304AbXAYQkl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 11:40:41 -0500
-In-Reply-To: <45B8CA02.4050701@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030447AbXAYRDU@vger.kernel.org>
+In-Reply-To: <45B25DB7.8050903@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, "Adam W. Hawks" <awhawks@us.ibm.com>
 
 Hello.
 
-Sergei Shtylyov wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
->> diff -Nrup 01_remove_from_ide_cd/drivers/ide/ide-cd.c 02_add_to_ide_intr/drivers/ide/ide-cd.c
->> --- 01_remove_from_ide_cd/drivers/ide/ide-cd.c    2007-01-24 11:00:03.000000000 +0800
->> +++ 02_add_to_ide_intr/drivers/ide/ide-cd.c    2007-01-25 16:52:20.000000000 +0800
->> @@ -923,6 +923,10 @@ static ide_startstop_t cdrom_start_packe
->>          HWIF(drive)->OUTB(drive->ctl, IDE_CONTROL_REG);
->>        if (CDROM_CONFIG_FLAGS (drive)->drq_interrupt) {
->> +        /* waiting for CDB interrupt, not DMA yet. */
->> +        if (info->dma)
->> +            drive->waiting_for_dma = 0;
->> +
->>          /* packet command */
->>          ide_execute_command(drive, WIN_PACKETCMD, handler, ATAPI_WAIT_PC, cdrom_timer_expiry);
->>          return ide_started;
->> @@ -965,6 +969,10 @@ static ide_startstop_t cdrom_transfer_pa
->>          /* Check for errors. */
->>          if (cdrom_decode_status(drive, DRQ_STAT, NULL))
->>              return ide_stopped;
->> +
->> +        /* Ok, next interrupt will be dma interrupt. */
->> +        if (info->dma)
->> +            drive->waiting_for_dma = 1;
->>      } else {
->>          /* Otherwise, we must wait for DRQ to get set. */
->>          if (ide_wait_stat(&startstop, drive, DRQ_STAT,
+>>>The other advantage of doing cleanups is that code becomes cleaner/simpler
+>>>which matters a lot for this codebase, i.e. ide-dma-off-void.patch exposed
+>>>(yet to be fixed) bug in set_using_dma() (->ide_dma_off_quietly always returns
+>>>0 which is passed by ->ide_dma_check to set_using_dma() which incorrectly
+>>>then calls ->ide_dma_on).
 
->    Erm... shouldn't we set drive->waiting_for_dma in hwif->dma_start() 
-> then?  Why it's set in hwif->dma_setup() at all I wonder?
+>>   Well, this seems a newly intruduced bug.
 
-    Well, it'll become raicy as well then... Isn't it ugly. :-/
+> The old code is so convulted that it is hard to see it w/o cleanup. :)
+
+> ->ide_dma_check implementations often do
+
+> 		return hwif->ide_dma_off_quietly(drive);
+
+> so the return value of ide_dma_off_quietly() (which is always 0) is passed to
+
+> 			if (HWIF(drive)->ide_dma_check(drive)) return -EIO;
+
+> in ide.c:set_using_dma() -> as a result the next line is executed
+
+> 			if (HWIF(drive)->ide_dma_on(drive)) return -EIO;
+
+    So, the error seems to call hwif->ide_dma_on() after hwif->ide_dma_check() 
+since hwif->ide_dma_check() must've already called that.
 
 MBR, Sergei
