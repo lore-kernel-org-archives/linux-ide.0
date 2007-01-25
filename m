@@ -1,49 +1,52 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: implement HDIO_GET_IDENTITY
-Date: Thu, 25 Jan 2007 02:42:05 -0500
-Message-ID: <45B85F4D.40004@pobox.com>
-References: <20070102111849.GD10987@htj.dyndns.org> <20070102111940.GE10987@htj.dyndns.org> <20070102112007.GF10987@htj.dyndns.org> <45B80666.3090708@pobox.com> <45B83CD1.9010801@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ahci: improve and limit spurious interrupt messages,
+ take#2
+Date: Thu, 25 Jan 2007 16:55:23 +0900
+Message-ID: <45B8626B.9090002@gmail.com>
+References: <20070115090117.GL10987@htj.dyndns.org> <20070116065239.GO10987@htj.dyndns.org> <45B806DA.1050107@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34828 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965677AbXAYHmP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Jan 2007 02:42:15 -0500
-In-Reply-To: <45B83CD1.9010801@rtr.ca>
+Received: from nz-out-0506.google.com ([64.233.162.226]:54002 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965685AbXAYHz3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 02:55:29 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so348555nze
+        for <linux-ide@vger.kernel.org>; Wed, 24 Jan 2007 23:55:29 -0800 (PST)
+In-Reply-To: <45B806DA.1050107@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> 'hdparm -I' doesn't work with ATAPI devices and sg_sat is not widely
->>> spread yet leaving no easy way to access ATAPI IDENTIFY data.
->>> Implement HDIO_GET_IDENTITY such that at least 'hdparm -i' works.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>
->> applied
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> -    /* ignore interim PIO setup fis interrupts */
+>> -    if (ata_tag_valid(ap->active_tag) && (status & PORT_IRQ_PIOS_FIS))
+>> -        return;
+>> +    if ((status & PORT_IRQ_D2H_REG_FIS) &&
+>> +        !(pp->seen_status & PORT_IRQ_D2H_REG_FIS)) {
+>> +        ata_port_printk(ap, KERN_INFO, "D2H reg with I during NCQ, "
+>> +                "this message won't be printed again\n");
+>> +        pp->seen_status |= PORT_IRQ_D2H_REG_FIS;
+>> +    } else if ((status & PORT_IRQ_DMAS_FIS) &&
+>> +           !(pp->seen_status & PORT_IRQ_DMAS_FIS)) {
+>> +        ata_port_printk(ap, KERN_INFO, "DMAS FIS during NCQ, "
+>> +                "this message won't be printed again\n");
+>> +        pp->seen_status |= PORT_IRQ_DMAS_FIS;
+>> +    } else if (status & PORT_IRQ_SDB_FIS && pp->spurious_sdb_cnt < 10) {
+>> +        /* SDB FIS containing spurious completions might be
+>> +         * dangerous, we need to know more about them.  Print
+>> +         * more of it.
+>> +         */
+>> +        const u32 *f = pp->rx_fis + RX_FIS_SDB;
 > 
-> This patch is not necessary -- The SG_IO/ATA16 support patches replace it.
 > 
-> I believe Tejun and I were in agreement that proper
-> ATA16 support for ATAPI was the better way to go.
+> This if/else/else tree does not take into account the possiblity that
+> more than one bit may be set.
 
-I like both approaches.  I think direct support of HDIO_GET_IDENTITY can 
-reduce the number of failure points, while making old tools work a bit 
-better.
+Thought it wouldn't really matter.  Will fix.
 
-
-> I'll regenerate that one last (boot/modparm) patch
-> that failed on upstream for you -- later this week.
-
-Thanks,
-
-	Jeff
-
-
-
+-- 
+tejun
