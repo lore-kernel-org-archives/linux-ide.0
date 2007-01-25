@@ -1,31 +1,58 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Linux 2.6 SATA NCQ support
-Date: Thu, 25 Jan 2007 07:44:14 -0500
-Message-ID: <45B8A61E.4010504@garzik.org>
-References: <25b3869e0701250407q7fc6996eua411aeaec5a67444@mail.gmail.com> <45B89EC8.8060602@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: share PIO limits among devices sharing a channel
+Date: Thu, 25 Jan 2007 07:44:47 -0500
+Message-ID: <45B8A63F.8060305@pobox.com>
+References: <20070125112947.GC8606@htj.dyndns.org> <20070125123030.3093fb32@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36315 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:36324 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965275AbXAYMoS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Jan 2007 07:44:18 -0500
-In-Reply-To: <45B89EC8.8060602@gmail.com>
+	id S965278AbXAYMox (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Jan 2007 07:44:53 -0500
+In-Reply-To: <20070125123030.3093fb32@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: V VS <v.vvsrini@gmail.com>, linux-ide@vger.kernel.org
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> V VS wrote:
->> Can you  please give us your inputs on why the NCQ depth is not getting
->> set correctly? Should we be looking at any other place for fixing this
->> problem?
+Alan wrote:
+> On Thu, 25 Jan 2007 20:29:47 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
-> Please give a shot at 2.6.20-rc5.  There was a related bug fix for ahci.
+>> PIO xfermask limits should be shared by all devices on the same
+>> channel to avoid violating device selection timing.  libata used to
+> 
+> NAK, this is totally wrong
+> 
+>> +	/* PIO xfermask limits are shared by all devices on the same
+>> +	 * channel to avoid violating device selection timing.
+>> +	 */
+>> +	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+>> +		struct ata_device *d = &ap->device[i];
+>> +		unsigned int pio_mask;
+>> +
+>> +		if (ata_dev_absent(d))
+>> +			continue;
+>> +
+>> +		ata_unpack_xfermask(ata_id_xfermask(d->id),
+>> +				    &pio_mask, NULL, NULL);
+>> +		pio_mask &= d->pio_mask;
+>> +		xfer_mask &= ata_pack_xfermask(pio_mask, UINT_MAX, UINT_MAX);
+>> +	}
+> 
+> NAK
+> 
+> This "guarantee" was deliberately removed long ago and is completely
+> bogus.
+> 
+> The good ATA chipsets do not suffer from selection timing limits of this
+> form. The less smart ones do and the drivers correctly merge the timing
 
-2.6.20-rc6 also has a couple fixes, and is worth a try.
+Agreed.
+
+I'm curious what the motivation of this patch was?
 
 	Jeff
 
