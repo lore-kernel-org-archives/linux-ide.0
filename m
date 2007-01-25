@@ -1,100 +1,66 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: implement ATA_FLAG_IGN_SIMPLEX and use it in sata_uli
-Date: Thu, 25 Jan 2007 19:40:05 +0900
-Message-ID: <20070125104005.GB8606@htj.dyndns.org>
-References: <20070116055551.GN10987@htj.dyndns.org>
+Subject: [PATCH] libata: share PIO limits among devices sharing a channel
+Date: Thu, 25 Jan 2007 20:29:47 +0900
+Message-ID: <20070125112947.GC8606@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.236]:43660 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965761AbXAYKkL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 05:40:11 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so381335nze
-        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 02:40:11 -0800 (PST)
+Received: from ug-out-1314.google.com ([66.249.92.174]:27622 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbXAYL3z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 06:29:55 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so428060uga
+        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 03:29:54 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20070116055551.GN10987@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Some uli controllers have stuck SIMPLEX bit which can't be cleared
-with ata_pci_clear_simplex(), but the controller is capable of doing
-DMAs on both channels simultaneously.  Implement ATA_FLAG_IGN_SIMPLEX
-which makes libata ignore the simplex bit and use it in sata_uli.
+PIO xfermask limits should be shared by all devices on the same
+channel to avoid violating device selection timing.  libata used to
+guarantee this at core level but I mistakenly dropped the code during
+conversion to new EH.  This patch revives that guarantee.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-Jeff, implemented as ATA_FLAG_* as requested.  The patch is against
-#upstream-fixes and should probably included in 2.6.20.  Thanks.
+Jeff, IMHO, this is a regression and should go into #upstream-fixes.
+Thanks.
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 623cec9..71e6ddd 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -870,7 +870,8 @@ ata_pci_init_native_mode(struct pci_dev *pdev, struct ata_port_info **port, int
- 			pci_resource_start(pdev, 1) | ATA_PCI_CTL_OFS;
- 		bmdma = pci_resource_start(pdev, 4);
- 		if (bmdma) {
--			if (inb(bmdma + 2) & 0x80)
-+			if (!(port[p]->flags & ATA_FLAG_IGN_SIMPLEX) &&
-+			    inb(bmdma + 2) & 0x80)
- 				probe_ent->_host_flags |= ATA_HOST_SIMPLEX;
- 			probe_ent->port[p].bmdma_addr = bmdma;
- 		}
-@@ -886,7 +887,8 @@ ata_pci_init_native_mode(struct pci_dev *pdev, struct ata_port_info **port, int
- 		bmdma = pci_resource_start(pdev, 4);
- 		if (bmdma) {
- 			bmdma += 8;
--			if(inb(bmdma + 2) & 0x80)
-+			if (!(port[p]->flags & ATA_FLAG_IGN_SIMPLEX) &&
-+			    inb(bmdma + 2) & 0x80)
- 				probe_ent->_host_flags |= ATA_HOST_SIMPLEX;
- 			probe_ent->port[p].bmdma_addr = bmdma;
- 		}
-@@ -920,7 +922,8 @@ static struct ata_probe_ent *ata_pci_init_legacy_port(struct pci_dev *pdev,
- 		probe_ent->port[0].ctl_addr = ATA_PRIMARY_CTL;
- 		if (bmdma) {
- 			probe_ent->port[0].bmdma_addr = bmdma;
--			if (inb(bmdma + 2) & 0x80)
-+			if (!(port[0]->flags & ATA_FLAG_IGN_SIMPLEX) &&
-+			    inb(bmdma + 2) & 0x80)
- 				probe_ent->_host_flags |= ATA_HOST_SIMPLEX;
- 		}
- 		ata_std_ports(&probe_ent->port[0]);
-@@ -937,7 +940,8 @@ static struct ata_probe_ent *ata_pci_init_legacy_port(struct pci_dev *pdev,
- 		probe_ent->port[1].ctl_addr = ATA_SECONDARY_CTL;
- 		if (bmdma) {
- 			probe_ent->port[1].bmdma_addr = bmdma + 8;
--			if (inb(bmdma + 10) & 0x80)
-+			if (!(port[1]->flags & ATA_FLAG_IGN_SIMPLEX) &&
-+			    inb(bmdma + 10) & 0x80)
- 				probe_ent->_host_flags |= ATA_HOST_SIMPLEX;
- 		}
- 		ata_std_ports(&probe_ent->port[1]);
-diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
-index 5c603ca..a43aec6 100644
---- a/drivers/ata/sata_uli.c
-+++ b/drivers/ata/sata_uli.c
-@@ -128,7 +128,8 @@ static const struct ata_port_operations uli_ops = {
+ drivers/ata/libata-core.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -3390,6 +3390,7 @@ static void ata_dev_xfermask(struct ata_
+ 	struct ata_port *ap = dev->ap;
+ 	struct ata_host *host = ap->host;
+ 	unsigned long xfer_mask;
++	int i;
  
- static struct ata_port_info uli_port_info = {
- 	.sht            = &uli_sht,
--	.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
-+	.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-+			  ATA_FLAG_IGN_SIMPLEX,
- 	.pio_mask       = 0x1f,		/* pio0-4 */
- 	.udma_mask      = 0x7f,		/* udma0-6 */
- 	.port_ops       = &uli_ops,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index df76fc4..22aa69e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -177,6 +177,7 @@ enum {
- 					      * Register FIS clearing BSY */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
- 	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
-+	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	/* controller modes available */
+ 	xfer_mask = ata_pack_xfermask(ap->pio_mask,
+@@ -3412,6 +3413,22 @@ static void ata_dev_xfermask(struct ata_
+ 				       dev->mwdma_mask, dev->udma_mask);
+ 	xfer_mask &= ata_id_xfermask(dev->id);
  
- 	/* The following flag belongs to ap->pflags but is kept in
- 	 * ap->flags because it's referenced in many LLDs and will be
++	/* PIO xfermask limits are shared by all devices on the same
++	 * channel to avoid violating device selection timing.
++	 */
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		struct ata_device *d = &ap->device[i];
++		unsigned int pio_mask;
++
++		if (ata_dev_absent(d))
++			continue;
++
++		ata_unpack_xfermask(ata_id_xfermask(d->id),
++				    &pio_mask, NULL, NULL);
++		pio_mask &= d->pio_mask;
++		xfer_mask &= ata_pack_xfermask(pio_mask, UINT_MAX, UINT_MAX);
++	}
++
+ 	/*
+ 	 *	CFA Advanced TrueIDE timings are not allowed on a shared
+ 	 *	cable
