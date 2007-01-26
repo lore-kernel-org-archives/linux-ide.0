@@ -2,26 +2,23 @@ From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCHSET] libata: PATA driver
 	for Celleb
 Date: Fri, 26 Jan 2007 16:24:46 +0900
-Message-ID: <200701260724.l0Q7OISY027645@toshiba.co.jp>
+Message-ID: <200701260724.l0Q7OIBB016333@toshiba.co.jp>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imx12.toshiba.co.jp ([61.202.160.132]:32830 "EHLO
-	imx12.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030719AbXAZHYW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jan 2007 02:24:22 -0500
-Received: from wall11.toshiba.co.jp (wall11 [133.199.90.149])
-	by imx12.toshiba.co.jp  with ESMTP id l0Q7OJNg018438
-	for <linux-ide@vger.kernel.org>; Fri, 26 Jan 2007 16:24:19 +0900 (JST)
-Received: (from root@localhost)
-	by wall11.toshiba.co.jp  id l0Q7OJCl028595
-	for linux-ide@vger.kernel.org; Fri, 26 Jan 2007 16:24:19 +0900 (JST)
-Received: from mx11.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp11.toshiba.co.jp  with ESMTP id l0Q7OIKF010891
-	for <linux-ide@vger.kernel.org>; Fri, 26 Jan 2007 16:24:18 +0900 (JST)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, benh@kernel.crashing.org, arnd@arndb.de, paulus@samba.org, linas@austin.ibm.com, jeff@garzik.org, alan@lxorguk.ukuu.org.uk
+Cc: jeff@garzik.org, arnd@arndb.de, linuxppc-dev@ozlabs.org, paulus@samba.org, alan@lxorguk.ukuu.org.uk
+List-Id: linux-ide@vger.kernel.org
 
 Dear everyone.
 
@@ -43,4 +40,3 @@ http://htj.dyndns.org/git/?p=libata-tj.git;a=commit;h=efc6607aefe728b2721f6a0126
 
 Best regards,
 Akira Iguchi
-
