@@ -1,133 +1,140 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] RESPIN: libata: add atapi_passthru=1 parameter
-Date: Thu, 25 Jan 2007 21:39:02 -0500
-Message-ID: <200701252139.04383.liml@rtr.ca>
-References: <200701021939.10496.liml@rtr.ca> <200701030124.19568.liml@rtr.ca> <45B15D65.1060203@garzik.org>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: Failed to set xfermode on LITE-ON  LTR-40125S
+Date: Fri, 26 Jan 2007 11:50:11 +0800
+Message-ID: <45B97A73.6050703@tw.ibm.com>
+References: <20070125201750.2adbd57c@buffy.scoobygang>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1620 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030710AbXAZCjH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Jan 2007 21:39:07 -0500
-In-Reply-To: <45B15D65.1060203@garzik.org>
-Content-Disposition: inline
+Received: from e36.co.us.ibm.com ([32.97.110.154]:55909 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030735AbXAZDuU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jan 2007 22:50:20 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0Q3oH5l012779
+	for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 22:50:17 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0Q3oHTY548030
+	for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 20:50:17 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0Q3oHYs028300
+	for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 20:50:17 -0700
+In-Reply-To: <20070125201750.2adbd57c@buffy.scoobygang>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: John Williams <john@pond-weed.com>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->..
->> I believe Tejun and I were in agreement that proper
->> ATA16 support for ATAPI was the better way to go.
+John Williams wrote:
+> Hello,
 > 
-> I like both approaches.  I think direct support of HDIO_GET_IDENTITY can 
-> reduce the number of failure points, while making old tools work a bit 
-> better.
+> I just tried the libata support for PATA in kernel 2.6.20-rc5 and I got
+> this:
+> 
+> scsi1 : pata_sis
+> ata2.00: ATAPI, max UDMA/66
+> ata2.01: ATAPI, max UDMA/33
+> ata2.00: configured for UDMA/33
+> ata2.01: qc timeout (cmd 0xef)
+> ata2.01: failed to set xfermode (err_mask=0x4)
+> ata2.01: limiting speed to UDMA/25
+> ata2: failed to recover some devices, retrying in 5 secs
+> ata2.00: configured for UDMA/33
+> ata2.01: qc timeout (cmd 0xef)
+> ata2.01: failed to set xfermode (err_mask=0x4)
+> ata2.01: limiting speed to PIO0
+> ata2: failed to recover some devices, retrying in 5 secs
+> ata2.00: configured for UDMA/33
+> ata2.01: qc timeout (cmd 0xef)
+> ata2.01: failed to set xfermode (err_mask=0x4)
+> ata2.01: disabled
+> ata2: failed to recover some devices, retrying in 5 secs
+> ata2.00: failed to set xfermode (err_mask=0x40)
+> ata2.00: limiting speed to UDMA/25
+> ata2: failed to recover some devices, retrying in 5 secs
+> ata2.00: configured for UDMA/25
+> 
+> The offending device is a LITE-ON LTR-40125S CDRW attached to SIS 513
+> IDE (rev d0)
+> 
+> I found a patch here:
+> http://readlist.com/lists/vger.kernel.org/linux-kernel/45/228948.html
+> which cures the problem for me. Is this the recommended patch for this
+> problem? If not, I would be happy to test alternative solutions.
+> 
 
-Okay.  It just seemed like a bit of cruft from my old drivers
-that we could leave behind at this point.  But that's fine,
-it'll keep more folks off my back regarding hdparm.  :)
+Tejun fixed the problem by ATA_FLAG_SETXFER_POLLING for pata_via.
+Maybe the same fix works for pata_sis.
 
-Jeff:  I just did this here from scratch:
+Could you please try the attached patch, thanks.
+--
+albert
 
-   git clone rsync://rsync2.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git libata-dev
-   cd libata-dev
-   git-checkout upstream
-
-And then applied my patches for ATAPI-ATA16 support to them.
-They appear to have applied 100% cleanly as-is.
-
-Do I have the correct "upstream" repo ?
-
-Here is the unified patch.
-This adds ATA16 command support to libata for ATAPI drives,
-permitting issuing of ATA (not ATAPI packet) commands to
-ATAPI devices (eg. "hdparm -I" and "hdparm -C").
-
- libata-core.c |    4 ++++
- libata-scsi.c |   23 ++++++++++++-----------
- libata.h      |    1 +
- 3 files changed, 17 insertions(+), 11 deletions(-)
-
-Signed-off-by:  Mark Lord <mlord@pobox.com>
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 5117577..509d04a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -78,6 +78,10 @@ int atapi_enabled = 1;
- module_param(atapi_enabled, int, 0444);
- MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+--- linux-2.6.20-rc5-mod/drivers/ata/pata_sis.c~	2007-01-23 11:47:40.000000000 +0800
++++ linux-2.6.20-rc5-mod/drivers/ata/pata_sis.c	2007-01-26 11:43:54.000000000 +0800
+@@ -718,7 +718,7 @@ static const struct ata_port_operations 
  
-+int atapi_passthru = 0;
-+module_param(atapi_passthru, int, 0444);
-+MODULE_PARM_DESC(atapi_passthru, "Enable passthru of SCSI opcode 0x85 to ATAPI devices");
-+
- int atapi_dmadir = 0;
- module_param(atapi_dmadir, int, 0444);
- MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a39d100..4c60d16 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2690,6 +2690,12 @@ static unsigned int ata_scsi_pass_thru(s
- 
- static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- {
-+	if (cmd == ATA_16 && !atapi_passthru)
-+		return ata_scsi_pass_thru;
-+
-+	if (dev->class == ATA_DEV_ATAPI)
-+		return atapi_xlat;
-+
- 	switch (cmd) {
- 	case READ_6:
- 	case READ_10:
-@@ -2748,6 +2754,7 @@ static inline int __ata_scsi_queuecmd(st
- 				      void (*done)(struct scsi_cmnd *),
- 				      struct ata_device *dev)
- {
-+	ata_xlat_func_t xlat_func;
- 	int rc = 0;
- 
- 	if (unlikely(!scmd->cmd_len)) {
-@@ -2757,17 +2764,11 @@ static inline int __ata_scsi_queuecmd(st
- 		return 0;
- 	}
- 
--	if (dev->class == ATA_DEV_ATA) {
--		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
--							      scmd->cmnd[0]);
--
--		if (xlat_func)
--			rc = ata_scsi_translate(dev, scmd, done, xlat_func);
--		else
--			ata_scsi_simulate(dev, scmd, done);
--	} else
--		rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
--
-+	xlat_func = ata_get_xlat_func(dev, scmd->cmnd[0]);
-+	if (xlat_func)
-+		rc = ata_scsi_translate(dev, scmd, done, xlat_func);
-+	else
-+		ata_scsi_simulate(dev, scmd, done);
- 	return rc;
- }
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 81ae41d..89981b4 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -46,6 +46,7 @@ enum {
- 
- extern struct workqueue_struct *ata_aux_wq;
- extern int atapi_enabled;
-+extern int atapi_passthru;
- extern int atapi_dmadir;
- extern int libata_fua;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
+ static struct ata_port_info sis_info = {
+ 	.sht		= &sis_sht,
+-	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_SETXFER_POLLING,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.mwdma_mask	= 0x07,
+ 	.udma_mask	= 0,
+@@ -726,7 +726,7 @@ static struct ata_port_info sis_info = {
+ };
+ static struct ata_port_info sis_info33 = {
+ 	.sht		= &sis_sht,
+-	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_SETXFER_POLLING,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.mwdma_mask	= 0x07,
+ 	.udma_mask	= ATA_UDMA2,	/* UDMA 33 */
+@@ -734,35 +734,35 @@ static struct ata_port_info sis_info33 =
+ };
+ static struct ata_port_info sis_info66 = {
+ 	.sht		= &sis_sht,
+-	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_SETXFER_POLLING,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.udma_mask	= ATA_UDMA4,	/* UDMA 66 */
+ 	.port_ops	= &sis_66_ops,
+ };
+ static struct ata_port_info sis_info100 = {
+ 	.sht		= &sis_sht,
+-	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_SETXFER_POLLING,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.udma_mask	= ATA_UDMA5,
+ 	.port_ops	= &sis_100_ops,
+ };
+ static struct ata_port_info sis_info100_early = {
+ 	.sht		= &sis_sht,
+-	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_SETXFER_POLLING,
+ 	.udma_mask	= ATA_UDMA5,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.port_ops	= &sis_66_ops,
+ };
+ static struct ata_port_info sis_info133 = {
+ 	.sht		= &sis_sht,
+-	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_SETXFER_POLLING,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.udma_mask	= ATA_UDMA6,
+ 	.port_ops	= &sis_133_ops,
+ };
+ static struct ata_port_info sis_info133_early = {
+ 	.sht		= &sis_sht,
+-	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_SETXFER_POLLING,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.udma_mask	= ATA_UDMA6,
+ 	.port_ops	= &sis_133_early_ops,
+
+
+
+
+
