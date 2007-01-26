@@ -1,39 +1,44 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_via: style clean up, no indirect method call in LLD
-Date: Fri, 26 Jan 2007 14:57:31 +0900
-Message-ID: <20070126055731.GF8606@htj.dyndns.org>
-References: <20070125114659.GD8606@htj.dyndns.org> <45B92E07.2040904@pobox.com>
+Subject: [PATCH] ahci: use 0x80 as wait stat value instead of 0xff
+Date: Fri, 26 Jan 2007 15:37:20 +0900
+Message-ID: <20070126063720.GG8606@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.225]:59515 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030764AbXAZF5h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jan 2007 00:57:37 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so740736wxd
-        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 21:57:37 -0800 (PST)
+Received: from nz-out-0506.google.com ([64.233.162.225]:13671 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030801AbXAZGh1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jan 2007 01:37:27 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so621233nze
+        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 22:37:26 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <45B92E07.2040904@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, j.taimr@chello.nl
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Call ata_bmdma_irq_clear() directly instead of through
-ap->ops->irq_clear() according to libata style guideline.
+Before hardreset, ahci initialized stat part of received FIS area to
+0xff to wait for the first D2H Reg FIS which would change the value to
+device ready state.  This used to work but now libata considers status
+value of 0xff as device not present making this wait prone to failure.
+
+This patch makes ahci use 0x80 for the wait stat value instead of
+0xff to fix the above problem.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 55b0123..d3d5c0d 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -211,7 +211,7 @@ static void svia_noop_freeze(struct ata_port *ap)
- 	 * certain way.  Leave it alone and just clear pending IRQ.
- 	 */
- 	ata_chk_status(ap);
--	ap->ops->irq_clear(ap);
-+	ata_bmdma_irq_clear(ap);
- }
+ drivers/ata/ahci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: work/drivers/ata/ahci.c
+===================================================================
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -915,7 +915,7 @@ static int ahci_hardreset(struct ata_por
  
- /**
+ 	/* clear D2H reception area to properly wait for D2H FIS */
+ 	ata_tf_init(ap->device, &tf);
+-	tf.command = 0xff;
++	tf.command = 0x80;
+ 	ata_tf_to_fis(&tf, d2h_fis, 0);
+ 
+ 	rc = sata_std_hardreset(ap, class);
