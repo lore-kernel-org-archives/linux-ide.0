@@ -1,39 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ahci: fix endianness in spurious interrupt message
-Date: Fri, 26 Jan 2007 14:47:38 +0900
-Message-ID: <20070126054738.GE8606@htj.dyndns.org>
-References: <20070115090117.GL10987@htj.dyndns.org> <20070116065239.GO10987@htj.dyndns.org> <45B806DA.1050107@pobox.com> <45B8626B.9090002@gmail.com> <20070125101628.GA8606@htj.dyndns.org> <45B961C4.10404@pobox.com>
+Subject: [PATCH] sata_via: style clean up, no indirect method call in LLD
+Date: Fri, 26 Jan 2007 14:57:31 +0900
+Message-ID: <20070126055731.GF8606@htj.dyndns.org>
+References: <20070125114659.GD8606@htj.dyndns.org> <45B92E07.2040904@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.232]:65105 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030776AbXAZFro (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jan 2007 00:47:44 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so613943nze
-        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 21:47:43 -0800 (PST)
+Received: from wx-out-0506.google.com ([66.249.82.225]:59515 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030764AbXAZF5h (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jan 2007 00:57:37 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so740736wxd
+        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2007 21:57:37 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <45B961C4.10404@pobox.com>
+In-Reply-To: <45B92E07.2040904@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, j.taimr@chello.nl
 
-Fix endianness in spurious interrupt message.
+Call ata_bmdma_irq_clear() directly instead of through
+ap->ops->irq_clear() according to libata style guideline.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 2fe5a58..d8f0ce9 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1178,7 +1178,8 @@ static void ahci_host_intr(struct ata_port *ap)
- 		ata_port_printk(ap, KERN_INFO, "Spurious SDB FIS during NCQ "
- 				"issue=0x%x SAct=0x%x FIS=%08x:%08x%s\n",
- 				readl(port_mmio + PORT_CMD_ISSUE),
--				readl(port_mmio + PORT_SCR_ACT), f[0], f[1],
-+				readl(port_mmio + PORT_SCR_ACT),
-+				le32_to_cpu(f[0]), le32_to_cpu(f[1]),
- 				pp->ncq_saw_spurious_sdb_cnt < 10 ?
- 				"" : ", shutting up");
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 55b0123..d3d5c0d 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -211,7 +211,7 @@ static void svia_noop_freeze(struct ata_port *ap)
+ 	 * certain way.  Leave it alone and just clear pending IRQ.
+ 	 */
+ 	ata_chk_status(ap);
+-	ap->ops->irq_clear(ap);
++	ata_bmdma_irq_clear(ap);
+ }
  
+ /**
