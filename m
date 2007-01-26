@@ -1,26 +1,30 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_via: style clean up, no indirect method call in
- LLD
-Date: Fri, 26 Jan 2007 17:24:32 -0500
-Message-ID: <45BA7FA0.8070909@pobox.com>
-References: <20070125114659.GD8606@htj.dyndns.org> <45B92E07.2040904@pobox.com> <20070126055731.GF8606@htj.dyndns.org>
+Subject: Re: [PATCH] ahci: use 0x80 as wait stat value instead of 0xff
+Date: Fri, 26 Jan 2007 17:24:43 -0500
+Message-ID: <45BA7FAB.5010900@pobox.com>
+References: <20070126063720.GG8606@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48956 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48966 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751710AbXAZWYe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Jan 2007 17:24:34 -0500
-In-Reply-To: <20070126055731.GF8606@htj.dyndns.org>
+	id S1751712AbXAZWYp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 Jan 2007 17:24:45 -0500
+In-Reply-To: <20070126063720.GG8606@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, j.taimr@chello.nl
+Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> Call ata_bmdma_irq_clear() directly instead of through
-> ap->ops->irq_clear() according to libata style guideline.
+> Before hardreset, ahci initialized stat part of received FIS area to
+> 0xff to wait for the first D2H Reg FIS which would change the value to
+> device ready state.  This used to work but now libata considers status
+> value of 0xff as device not present making this wait prone to failure.
+> 
+> This patch makes ahci use 0x80 for the wait stat value instead of
+> 0xff to fix the above problem.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 
