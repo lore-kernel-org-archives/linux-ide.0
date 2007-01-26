@@ -1,69 +1,133 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] remove duplicate ids from ata_piix
-Date: Thu, 25 Jan 2007 21:21:58 -0500
-Message-ID: <45B965C6.5090604@pobox.com>
-References: <20070126021228.GA3444@kroah.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] RESPIN: libata: add atapi_passthru=1 parameter
+Date: Thu, 25 Jan 2007 21:39:02 -0500
+Message-ID: <200701252139.04383.liml@rtr.ca>
+References: <200701021939.10496.liml@rtr.ca> <200701030124.19568.liml@rtr.ca> <45B15D65.1060203@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41832 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([64.26.128.89]:1620 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030604AbXAZCWE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Jan 2007 21:22:04 -0500
-In-Reply-To: <20070126021228.GA3444@kroah.com>
+	id S1030710AbXAZCjH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Jan 2007 21:39:07 -0500
+In-Reply-To: <45B15D65.1060203@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-ide@vger.kernel.org, kay.sievers@suse.de, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Greg KH wrote:
-> From: Greg Kroah-Hartman <gregkh@suse.de>
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>..
+>> I believe Tejun and I were in agreement that proper
+>> ATA16 support for ATAPI was the better way to go.
 > 
-> It seems that the ata_piix driver has two duplicate ids, one of them
-> with a different 'private' field in it, which was never being used due
-> to the match for the device happening on an earlier entry.
-> 
-> This patch removes the duplicates, if this is the correct thing to do in
-> this case for the ICH5 device or not, I'll leave to you :)
-> 
-> This duplication was pointed out to me by Kay Sievers <kay.sievers@suse.de>
-> 
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> 
-> ---
->  drivers/ata/ata_piix.c |    4 ----
->  1 file changed, 4 deletions(-)
-> 
-> --- gregkh-2.6.orig/drivers/ata/ata_piix.c
-> +++ gregkh-2.6/drivers/ata/ata_piix.c
-> @@ -191,12 +191,8 @@ static const struct pci_device_id piix_p
->  	/* Intel ICH4 (i845GV, i845E, i852, i855) UDMA 100 */
->  	{ 0x8086, 0x24CA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
->  	{ 0x8086, 0x24CB, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-> -	/* Intel ICH5 */
-> -	{ 0x8086, 0x24DB, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
->  	/* C-ICH (i810E2) */
->  	{ 0x8086, 0x245B, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-> -	/* ESB (855GME/875P + 6300ESB) UDMA 100  */
-> -	{ 0x8086, 0x25A2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
->  	/* ICH6 (and 6) (i915) UDMA 100 */
->  	{ 0x8086, 0x266F, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
->  	/* ICH7/7-R (i945, i975) UDMA 100*/
+> I like both approaches.  I think direct support of HDIO_GET_IDENTITY can 
+> reduce the number of failure points, while making old tools work a bit 
+> better.
 
-Both IDs are clearly dups, but ICH5 should support ich_pata_133, so 
-you're removing the wrong entry there.
+Okay.  It just seemed like a bit of cruft from my old drivers
+that we could leave behind at this point.  But that's fine,
+it'll keep more folks off my back regarding hdparm.  :)
 
-I think the right thing to do is remove the entries that appear near the 
-top of the list, but I would like Alan (Mr. PATA) to confirm...
+Jeff:  I just did this here from scratch:
 
-	/* Also PIIX4E (fn3 rev 2) and PIIX4M (fn3 rev 3) */
-	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
--	{ 0x8086, 0x24db, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
--	{ 0x8086, 0x25a2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+   git clone rsync://rsync2.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git libata-dev
+   cd libata-dev
+   git-checkout upstream
 
-Regards,
+And then applied my patches for ATAPI-ATA16 support to them.
+They appear to have applied 100% cleanly as-is.
 
-	Jeff
+Do I have the correct "upstream" repo ?
 
+Here is the unified patch.
+This adds ATA16 command support to libata for ATAPI drives,
+permitting issuing of ATA (not ATAPI packet) commands to
+ATAPI devices (eg. "hdparm -I" and "hdparm -C").
 
+ libata-core.c |    4 ++++
+ libata-scsi.c |   23 ++++++++++++-----------
+ libata.h      |    1 +
+ 3 files changed, 17 insertions(+), 11 deletions(-)
+
+Signed-off-by:  Mark Lord <mlord@pobox.com>
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 5117577..509d04a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -78,6 +78,10 @@ int atapi_enabled = 1;
+ module_param(atapi_enabled, int, 0444);
+ MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+ 
++int atapi_passthru = 0;
++module_param(atapi_passthru, int, 0444);
++MODULE_PARM_DESC(atapi_passthru, "Enable passthru of SCSI opcode 0x85 to ATAPI devices");
++
+ int atapi_dmadir = 0;
+ module_param(atapi_dmadir, int, 0444);
+ MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a39d100..4c60d16 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2690,6 +2690,12 @@ static unsigned int ata_scsi_pass_thru(s
+ 
+ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+ {
++	if (cmd == ATA_16 && !atapi_passthru)
++		return ata_scsi_pass_thru;
++
++	if (dev->class == ATA_DEV_ATAPI)
++		return atapi_xlat;
++
+ 	switch (cmd) {
+ 	case READ_6:
+ 	case READ_10:
+@@ -2748,6 +2754,7 @@ static inline int __ata_scsi_queuecmd(st
+ 				      void (*done)(struct scsi_cmnd *),
+ 				      struct ata_device *dev)
+ {
++	ata_xlat_func_t xlat_func;
+ 	int rc = 0;
+ 
+ 	if (unlikely(!scmd->cmd_len)) {
+@@ -2757,17 +2764,11 @@ static inline int __ata_scsi_queuecmd(st
+ 		return 0;
+ 	}
+ 
+-	if (dev->class == ATA_DEV_ATA) {
+-		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
+-							      scmd->cmnd[0]);
+-
+-		if (xlat_func)
+-			rc = ata_scsi_translate(dev, scmd, done, xlat_func);
+-		else
+-			ata_scsi_simulate(dev, scmd, done);
+-	} else
+-		rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
+-
++	xlat_func = ata_get_xlat_func(dev, scmd->cmnd[0]);
++	if (xlat_func)
++		rc = ata_scsi_translate(dev, scmd, done, xlat_func);
++	else
++		ata_scsi_simulate(dev, scmd, done);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 81ae41d..89981b4 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -46,6 +46,7 @@ enum {
+ 
+ extern struct workqueue_struct *ata_aux_wq;
+ extern int atapi_enabled;
++extern int atapi_passthru;
+ extern int atapi_dmadir;
+ extern int libata_fua;
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
