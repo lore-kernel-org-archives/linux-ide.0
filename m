@@ -1,50 +1,89 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Updated SiI h/w docs (was Re: [PATCH 13/15] ide: fix UDMA/MWDMA/SWDMA
- masks)
-Date: Fri, 26 Jan 2007 16:14:51 +0300
-Message-ID: <45B9FECB.2020806@ru.mvista.com>
-References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	<20070119003226.14846.87052.sendpatchset@localhost.localdomain>	<45B4FFBD.40507@ru.mvista.com>	<20070122184620.1c8b87ac@localhost.localdomain>	<45B51E83.1010904@ru.mvista.com> <20070122213109.21e4e805@localhost.localdomain> <45B53D05.1010807@garzik.org> <45B6071C.90703@ru.mvista.com> <45B761F8.1060505@ru.mvista.com> <45B92D2B.4070302@garzik.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc6: known unfixed regressions (part 2)
+Date: Fri, 26 Jan 2007 19:11:32 +0100
+Message-ID: <20070126181132.GN17836@stusta.de>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:7868 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965668AbXAZNOy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Jan 2007 08:14:54 -0500
-In-Reply-To: <45B92D2B.4070302@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161131AbXAZSL3@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Uwe Bugla <uwe.bugla@gmx.de>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, Gerhard Dirschl <gd@spherenet.de>, Christoph Hellwig <hch@lst.de>, petero2@telia.com, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Venkat Yekkirala <vyekkirala@TrustedCS.com>, David Miller <davem@davemloft.net>, sds@tycho.nsa.gov, jmorris@namei.org, netdev@vger.kernel.org, Livio Soares <livio@eecg.toronto.edu>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, Nick Piggin <nickpiggin@yahoo.com.au>, ttb@tentacle.dhs.org, rml@novell.com, Malte =?utf-8?B?U2NocsO2ZGVy?= <MalteSch@gmx.de>, "Vladimir V. Saveliev" <vs@namesys.com>, reiserfs-dev@namesys.com, Sami Farin <7atbggg02@sneakemail.com>, David Chinner <dgc@sgi.com>, xfs-masters@oss.s
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello.
+This email lists some known regressions in 2.6.20-rc6 compared to 2.6.1=
+9
+that are not yet fixed in Linus' tree.
 
-Jeff Garzik wrote:
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possib=
+ly
+involved with one or more of these issues.
 
->>    Now, the site seems to have 2 versions of the PCI-648/9 specs. :-)
->> I looked into those in specs/sii and noted that PCI-648 spec was newer 
->> than mine, but PCI-649 was older.
->>    It's probably a good idea to put all the CMD/SiI files in the 
->> single directory, so there's no dupes.
+Due to the huge amount of recipients, please trim the Cc when answering=
+=2E
 
->>> PS: I certainly used to have a newer spec for PCI0646U2 but it's not 
->>> at hand for some reason...
 
->>    Oops, this chip is named differently, without 0 -- that's why I 
->> didn't notice the file locally. Sending rev 1.3 now...
+Subject    : problems with CD burning
+References : http://www.spinics.net/lists/linux-ide/msg06545.html
+Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+Status     : unknown
 
-> (added linux-ide to CC and SiI folks to BCC)
 
-> All the docs are now at
+Subject    : pktcdvd fails with pata_amd
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7810
+             http://lkml.org/lkml/2007/1/25/128
+Submitter  : Gerhard Dirschl <gd@spherenet.de>
+Caused-By  : Christoph Hellwig <hch@lst.de>
+             commit 406c9b605cbc45151c03ac9a3f95e9acf050808c
+             commit 3b00315799d78f76531b71435fbc2643cd71ae4c
+Status     : problem is being debugged
 
->     http://gkernel.sourceforge.net/specs/sii/
 
-> including the one you just sent.
+Subject    : SELinux compile error with CONFIG_XFRM=3Dn
+References : http://lkml.org/lkml/2007/1/25/233
+Submitter  : Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Caused-By  : Venkat Yekkirala <vyekkirala@TrustedCS.com>
+             commit 334c85569b8adeaa820c0f2fab3c8f0a9dc8b92e
+Handled-By : Venkat Yekkirala <vyekkirala@TrustedCS.com>
+             David Miller <davem@davemloft.net>
+Status     : problem is being discussed
 
-    Well, the purpose of avoiding dupes still not achieved. :-)
-    Though maybe having several revisions of one spec is worth it...
 
-     Jeff
+Subject    : powerpc64: performance monitor exception
+References : http://ozlabs.org/pipermail/linuxppc-dev/2007-January/0300=
+45.html
+Submitter  : Livio Soares <livio@eecg.toronto.edu>
+Caused-By  : Paul Mackerras <paulus@samba.org>
+             commit d04c56f73c30a5e593202ecfcf25ed43d42363a2
+Status     : problem is being discussed
 
-MBR, Sergei
+
+Subject    : BUG: at fs/inotify.c:172 set_dentry_child_flags()
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7785
+Submitter  : Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
+Handled-By : Nick Piggin <nickpiggin@yahoo.com.au>
+Status     : problem is being debugged
+
+
+Subject    : BUG: at mm/truncate.c:60 cancel_dirty_page()  (reiserfs)
+References : http://lkml.org/lkml/2007/1/7/117
+             http://lkml.org/lkml/2007/1/10/202
+Submitter  : Malte Schr=C3=B6der <MalteSch@gmx.de>
+Handled-By : Vladimir V. Saveliev <vs@namesys.com>
+             Nick Piggin <nickpiggin@yahoo.com.au>
+Patch      : http://lkml.org/lkml/2007/1/10/202
+Status     : problem is being discussed
+
+
+Subject    : BUG: at mm/truncate.c:60 cancel_dirty_page()  (XFS)
+References : http://lkml.org/lkml/2007/1/5/308
+             http://lkml.org/lkml/2007/1/23/190
+             http://lkml.org/lkml/2007/1/23/192
+Submitter  : Sami Farin <7atbggg02@sneakemail.com>
+Handled-By : David Chinner <dgc@sgi.com>
+Status     : patches are being discussed
