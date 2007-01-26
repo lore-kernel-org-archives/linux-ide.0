@@ -1,35 +1,50 @@
-From: Andrew Clayton <andrew@digital-domain.net>
-Subject: Re: 2.6.20-rc5: known unfixed regressions (v3) (part 2)
-Date: Fri, 26 Jan 2007 11:13:09 +0000
-Message-ID: <20070126111309.1732d727@zeus.pccl.info>
-References: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
-	<20070124154725.GK17836@stusta.de>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: Updated SiI h/w docs (was Re: [PATCH 13/15] ide: fix UDMA/MWDMA/SWDMA
+ masks)
+Date: Fri, 26 Jan 2007 16:14:51 +0300
+Message-ID: <45B9FECB.2020806@ru.mvista.com>
+References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	<20070119003226.14846.87052.sendpatchset@localhost.localdomain>	<45B4FFBD.40507@ru.mvista.com>	<20070122184620.1c8b87ac@localhost.localdomain>	<45B51E83.1010904@ru.mvista.com> <20070122213109.21e4e805@localhost.localdomain> <45B53D05.1010807@garzik.org> <45B6071C.90703@ru.mvista.com> <45B761F8.1060505@ru.mvista.com> <45B92D2B.4070302@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.aaisp.net.uk ([81.187.81.51]:44312 "EHLO smtp.aaisp.net.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965092AbXAZLtJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Jan 2007 06:49:09 -0500
-In-Reply-To: <20070124154725.GK17836@stusta.de>
+Received: from h155.mvista.com ([63.81.120.155]:7868 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965668AbXAZNOy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 Jan 2007 08:14:54 -0500
+In-Reply-To: <45B92D2B.4070302@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, gd@spherenet.de, petero2@telia.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, Uwe Bugla <uwe.bugla@gmx.de>, alan@lxorguk.ukuu.org.uk, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, Nick Piggin <nickpiggin@yahoo.com.au>, ttb@tentacle.dhs.org, rml@novell.com, Livio Soares <livio@eecg.toronto.edu>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, Malte =?UTF-8?B?U2NocsO2ZGVy?= <MalteSch@gmx.de>, "Vladimir V. Saveliev" <vs@namesys.com>, reiserfs-dev@namesys.com, Sami Farin <7atbggg02@sneakemail.com>, David Chinner <dgc@sgi.com>, xfs-masters@oss.sgi.com, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, takada <takada@mbf.nifty.com>, Jordan Crouse <jordan.crouse@amd.com>, Trond Myklebust <trond.myklebust@fys.uio.no>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, 24 Jan 2007 16:47:25 +0100, Adrian Bunk wrote:
+Hello.
 
-> 
-> 
-> Subject    : NFS triggers WARN_ON() in invalidate_inode_pages2_range()
-> References : http://bugzilla.kernel.org/show_bug.cgi?id=7826
-> Submitter  : Andrew Clayton <andrew@digital-domain.net>
-> Caused-By  : Andrew Morton <akpm@osdl.org>
->              commit 8258d4a574d3a8c01f0ef68aa26b969398a0e140
-> Handled-By : Trond Myklebust <trond.myklebust@fys.uio.no>
-> Status     : Trond: the WARN_ON() needs to be thrown out
-> 
+Jeff Garzik wrote:
 
-Still present in -rc6
+>>    Now, the site seems to have 2 versions of the PCI-648/9 specs. :-)
+>> I looked into those in specs/sii and noted that PCI-648 spec was newer 
+>> than mine, but PCI-649 was older.
+>>    It's probably a good idea to put all the CMD/SiI files in the 
+>> single directory, so there's no dupes.
 
+>>> PS: I certainly used to have a newer spec for PCI0646U2 but it's not 
+>>> at hand for some reason...
+
+>>    Oops, this chip is named differently, without 0 -- that's why I 
+>> didn't notice the file locally. Sending rev 1.3 now...
+
+> (added linux-ide to CC and SiI folks to BCC)
+
+> All the docs are now at
+
+>     http://gkernel.sourceforge.net/specs/sii/
+
+> including the one you just sent.
+
+    Well, the purpose of avoiding dupes still not achieved. :-)
+    Though maybe having several revisions of one spec is worth it...
+
+     Jeff
+
+MBR, Sergei
