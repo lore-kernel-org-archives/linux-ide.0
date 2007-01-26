@@ -1,47 +1,38 @@
-From: John Williams <john@pond-weed.com>
-Subject: Re: Failed to set xfermode on LITE-ON  LTR-40125S
-Date: Fri, 26 Jan 2007 08:15:38 +0000
-Message-ID: <20070126081538.7f4c2c85@buffy.scoobygang>
-References: <20070125201750.2adbd57c@buffy.scoobygang>
-	<45B97A73.6050703@tw.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: fix ata_eh_suspend() return value
+Date: Fri, 26 Jan 2007 20:10:25 +0900
+Message-ID: <20070126111025.GH8606@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from john-and-mon.demon.co.uk ([62.49.18.13]:1844 "EHLO
-	pond-weed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030817AbXAZIPp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Jan 2007 03:15:45 -0500
-In-Reply-To: <45B97A73.6050703@tw.ibm.com>
+Received: from nz-out-0506.google.com ([64.233.162.226]:32420 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933158AbXAZLKb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jan 2007 06:10:31 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so669108nze
+        for <linux-ide@vger.kernel.org>; Fri, 26 Jan 2007 03:10:30 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Fri, 26 Jan 2007 11:50:11 +0800
-Albert Lee <albertcc@tw.ibm.com> wrote:
+ata_eh_suspend() was returning 0 regardless of failure.  This bug has
+potential to lose data on suspend.  Fix it.
 
-> John Williams wrote:
-> > Hello,
-> > 
-> > I just tried the libata support for PATA in kernel 2.6.20-rc5 and I got
-> > this:
-> > 
-> > scsi1 : pata_sis
-> > ata2.00: ATAPI, max UDMA/66
-> > ata2.01: ATAPI, max UDMA/33
-> > ata2.00: configured for UDMA/33
-> > ata2.01: qc timeout (cmd 0xef)
-> > ata2.01: failed to set xfermode (err_mask=0x4)
-> > ...
-> 
-> Tejun fixed the problem by ATA_FLAG_SETXFER_POLLING for pata_via.
-> Maybe the same fix works for pata_sis.
-> 
-> Could you please try the attached patch, thanks.
-> --
-> albert
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Jeff, this one is definitely for 2.6.20.  Thanks.
 
-Yes, that fixed it.
-Thanks,
-John
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index eee3525..52c85af 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1791,7 +1791,7 @@ static int ata_eh_suspend(struct ata_port *ap, struct ata_device **r_failed_dev)
+ 		*r_failed_dev = dev;
+ 
+ 	DPRINTK("EXIT\n");
+-	return 0;
++	return rc;
+ }
+ 
+ /**
