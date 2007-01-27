@@ -1,42 +1,43 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: Norco DS-1220 (sil3726+sil3124) / libata-tj bug report
-Date: Fri, 26 Jan 2007 20:08:00 -0500
-Message-ID: <20070127010800.GA21341@jim.sh>
-References: <Pine.LNX.4.58.0701050332200.26166@mailx> <45A1AD84.5060202@gmail.com> <Pine.LNX.4.58.0701130214230.17363@mailx> <Pine.LNX.4.58.0701132336370.17363@mailx>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ahci: use 0x80 as wait stat value instead of 0xff
+Date: Sat, 27 Jan 2007 10:33:16 +0900
+Message-ID: <45BAABDC.1040606@gmail.com>
+References: <20070126063720.GG8606@htj.dyndns.org> <45BA8091.1080509@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:55427 "EHLO neurosis.jim.sh"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751819AbXA0BIJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Jan 2007 20:08:09 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0701132336370.17363@mailx>
+Received: from ug-out-1314.google.com ([66.249.92.173]:46774 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243AbXA0BdY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jan 2007 20:33:24 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so862208uga
+        for <linux-ide@vger.kernel.org>; Fri, 26 Jan 2007 17:33:23 -0800 (PST)
+In-Reply-To: <45BA8091.1080509@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Fitzpatrick <brad@danga.com>
-Cc: Tejun Heo <htejun@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Brad Fitzpatrick wrote:
-> Conclusion to this story, for posterity:
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Before hardreset, ahci initialized stat part of received FIS area to
+>> 0xff to wait for the first D2H Reg FIS which would change the value to
+>> device ready state.  This used to work but now libata considers status
+>> value of 0xff as device not present making this wait prone to failure.
+>>
+>> This patch makes ahci use 0x80 for the wait stat value instead of
+>> 0xff to fix the above problem.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>
+>>  drivers/ata/ahci.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Seems to be the disk type.
-> 
-> I have six Western Digital WD2500JD-00GBB0.  Tried two both direct and
-> PMP, no success.
-> 
-> Went and bought a new Segate ST3500630AS 500GB and it hotplugged both
-> direct and PMP without problems.
-> 
-> So I guess the old WD2500JD-00GBB0 aren't compatible?
+> For the future, please make sure to include the "---" terminator prior
+> to the diffstat, otherwise it will get copied into the kernel changelog.
 
-Hi Brad,
+Argh... sure.  My mistake.  Sorry.
 
-I came across a WD2500KS-00MJB0, and recalling this thread I gave it a
-try on my system.  It worked fine connected through the PMP on my
-kernel (2.6.17.4 + libata-tj-2.6.17.4-20060710).  This disk is a newer
-revision, so perhaps bugs were fixed, but it's also possible that you
-just got unlucky with bad disks.  At the very least the entire WD2500
-line isn't necessarily bad.
-
--jim
+-- 
+tejun
