@@ -1,32 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ahci: Marvell 6145 SATA support (preliminary)
-Date: Sat, 27 Jan 2007 11:56:12 -0500
-Message-ID: <45BB842C.4030303@garzik.org>
-References: <20070127034023.GA25959@havoc.gtf.org> <20070127134346.71d8ecf4@localhost.localdomain>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
+Date: Sat, 27 Jan 2007 18:42:30 +0100
+Message-ID: <20070127174230.GN6017@stusta.de>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53645 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751634AbXA0Q4P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Jan 2007 11:56:15 -0500
-In-Reply-To: <20070127134346.71d8ecf4@localhost.localdomain>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:39694 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752286AbXA0RmW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Jan 2007 12:42:22 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Uwe Bugla <uwe.bugla@gmx.de>, B.Zolnierkiewicz@elka.pw.edu.pl, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, Gerhard Dirschl <gd@spherenet.de>, Christoph Hellwig <hch@lst.de>, petero2@telia.com, Livio Soares <livio@eecg.toronto.edu>, Paul Mackerras <paulus@samba.org>, anton@samba.org, linuxppc-dev@ozlabs.org, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, Nick Piggin <nickpiggin@yahoo.com.au>, ttb@tentacle.dhs.org, rml@novell.com
 
-Alan wrote:
->> Were it not for the PATA and interrupt storm bits, I would say that
->> Marvell 6145 works with a simple PCI ID addition.
-> 
-> 
-> The 6101 driver should drive the 6145 pata port via the legacy registers
+This email lists some known regressions in 2.6.20-rc6 compared to 2.6.19
+that are not yet fixed in Linus' tree.
 
-They cannot co-exist, unfortunately.
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possibly
+involved with one or more of these issues.
 
-	Jeff
+Due to the huge amount of recipients, please trim the Cc when answering.
 
+
+Subject    : problems with CD burning
+References : http://www.spinics.net/lists/linux-ide/msg06545.html
+Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+Status     : unknown
+
+
+Subject    : pktcdvd fails with pata_amd
+References : http://bugzilla.kernel.org/show_bug.cgi?id=7810
+             http://lkml.org/lkml/2007/1/25/128
+Submitter  : Gerhard Dirschl <gd@spherenet.de>
+Caused-By  : Christoph Hellwig <hch@lst.de>
+             commit 3b00315799d78f76531b71435fbc2643cd71ae4c
+             commit 406c9b605cbc45151c03ac9a3f95e9acf050808c
+Status     : problem is being debugged
+
+
+Subject    : powerpc64: performance monitor exception
+References : http://ozlabs.org/pipermail/linuxppc-dev/2007-January/030045.html
+Submitter  : Livio Soares <livio@eecg.toronto.edu>
+Caused-By  : Paul Mackerras <paulus@samba.org>
+             commit d04c56f73c30a5e593202ecfcf25ed43d42363a2
+Status     : problem is being discussed
+
+
+Subject    : BUG: at fs/inotify.c:172 set_dentry_child_flags()
+References : http://bugzilla.kernel.org/show_bug.cgi?id=7785
+Submitter  : Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
+Handled-By : Nick Piggin <nickpiggin@yahoo.com.au>
+Status     : problem is being debugged
 
 
