@@ -1,87 +1,100 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] libata: add a dummy set_mode() in pata_pcmcia
-Date: Sun, 28 Jan 2007 11:34:01 +0100
-Message-ID: <200701281134.02218.arnd@arndb.de>
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: [patch] use __u8 rather than u8 in userspace SIZE defines in hdreg.h
+Date: Sun, 28 Jan 2007 07:17:47 -0500
+Message-ID: <200701280717.48776.vapier@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_sRJvFzs44WlYfJn"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.177]:64882 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932523AbXA1KeO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Jan 2007 05:34:14 -0500
-Content-Disposition: inline
+Received: from smtp.gentoo.org ([140.211.166.183]:42152 "EHLO smtp.gentoo.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751927AbXA1MRJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Jan 2007 07:17:09 -0500
+Received: from home.wh0rd.org (pool-151-203-5-76.bos.east.verizon.net [151.203.5.76])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp.gentoo.org (Postfix) with ESMTP id 781A864C69
+	for <linux-ide@vger.kernel.org>; Sun, 28 Jan 2007 12:17:07 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: wkl@informatik.uni-kiel.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-CompactFlash cards in a passive PCMCIA adapter don't seem
-to like the ATA_CMD_SET_FEATURES command, which causes
-libata device probing to fail.
+--Boundary-00=_sRJvFzs44WlYfJn
+Content-Type: multipart/signed;
+  boundary="nextPart10451067.z3RKCag94U";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Since PCMCIA only allows PIO mode 0 anyway, there is no
-point in ever setting a higher speed. Adding the dummy
-function seems to do the right thing.
+--nextPart10451067.z3RKCag94U
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+the hdreg.h exports some SIZE defines to userspace but it utilizes sizeof(u=
+8)=20
+in its definition ... that's no good so the trivial attached patch changes=
+=20
+that to sizeof(__u8)
+=2Dmike
 
----
+--nextPart10451067.z3RKCag94U
+Content-Type: application/pgp-signature
 
-This bug was reported earlier in 
-http://bugzilla.kernel.org/show_bug.cgi?id=7711 by 
-wkl@informatik.uni-kiel.de.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.1 (GNU/Linux)
 
-I have not been able to find out _why_ all my CF cards reject
-the SETFEATURES_XFER command, but I have verified that the
-same happens when trying to use hdparm with ide_cs.
+iQIVAwUARbyUbEFjO5/oN/WBAQJHrxAAzudDzqQLAzGrWjB9AyQ4cytrKdIFyjyV
+BVOOggsHcBc+7G437iU8GL+1914cxNJoDPFHTOtfyvlowKzu4nzb8h3BEbb4oSLh
+7iOJ1cTyEnSrPaQiz6QuYdxOhD7pXcei4Bk9XDFL+NkmSKReOMzRQnN2DhEGc746
+YZXRXVrwASEm9pc3hdIsZhImOyBdAvXqAoyqSOtFYfmD84bClwWDY7TZ9ZVVwFDX
+K0o0bPxdhfV97yvQl6HXhV1AzFXptFqoDzONjbjQKRk138wgcy9n7BekvfEk5PiA
+INSsGKnhnt1gV+g8D0AT+fA6bEhe/8LEKcZviFMUkBZpfCZzOSnxvn/U/PhFG07m
+ZzadCgd7tLMJqW21BVKAQWOibj8Oq/yPq+zdRXcoexnlTBQrBhxavumvU2BXz+hP
+WvcLWwg7Or8dpdCWL6mN89MdhGrVT0oGiPqhVlfWJNZJ5rJ4QPlQJPuhU/JNgTZS
+ZzctN/Ilz21zMNzH42rH7y0YGXsda2PVaNzVcZet4APqh9RYHFTyephDK9a4gygW
+EowZoGJBMY46H8hgB4VQ+vR/DCo0q4a9XK2KVZMZSKswXqYoVlX5XBMo43kdZdxA
+8dnvePV8SFPflbXEfd24lqgukMxMJbj3tYWdf+xoq9C6oiH/A96bw6FmtiT5CSvO
+IV1RYPzJ9mc=
+=PGUv
+-----END PGP SIGNATURE-----
 
-Note that none of my cards are CF-4.0 compliant, so they
-also don't do UDMA modes. The highest mode claimed to be
-supported by one of my cards is PIO-4, but I can't set
-it into any of the modes it likes.
+--nextPart10451067.z3RKCag94U--
 
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index 9ed7f58..642753c 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -44,6 +44,30 @@
- #define DRV_NAME "pata_pcmcia"
- #define DRV_VERSION "0.2.11"
+--Boundary-00=_sRJvFzs44WlYfJn
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="linux-use-__-types-in-hdreg-header.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+	filename="linux-use-__-types-in-hdreg-header.patch"
+
+Use __u8 rather than u8 in SIZE defines exported to userspace.
+
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+
+--- a/include/linux/hdreg.h
++++ b/include/linux/hdreg.h
+@@ -60,13 +60,15 @@
+ #define TAG_MASK		0xf8
+ #endif /* __KERNEL__ */
  
-+/**
-+ *	legacy_set_mode		-	mode setting
-+ *	@ap: IDE interface
-+ *
-+ *	Use a non standard set_mode function. We don't want to be tuned.
-+ *
-+ *	PCMCIA support only PIO0 transfers and cards may return an error
-+ *	if you attempt to set that explicitly.
-+ */
++#include <linux/types.h>
 +
-+static void pcmcia_set_mode(struct ata_port *ap)
-+{
-+	int i;
-+
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+		if (ata_dev_enabled(dev)) {
-+			dev->pio_mode = XFER_PIO_0;
-+			dev->xfer_mode = XFER_PIO_0;
-+			dev->xfer_shift = ATA_SHIFT_PIO;
-+			dev->flags |= ATA_DFLAG_PIO;
-+		}
-+	}
-+}
  /*
-  *	Private data structure to glue stuff together
+  * Command Header sizes for IOCTL commands
   */
-@@ -79,6 +103,7 @@ static struct ata_port_operations pcmcia_port_ops = {
- 	.check_status 	= ata_check_status,
- 	.exec_command	= ata_exec_command,
- 	.dev_select 	= ata_std_dev_select,
-+	.set_mode	= pcmcia_set_mode,
  
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
+-#define HDIO_DRIVE_CMD_HDR_SIZE		(4 * sizeof(u8))
+-#define HDIO_DRIVE_HOB_HDR_SIZE		(8 * sizeof(u8))
+-#define HDIO_DRIVE_TASK_HDR_SIZE	(8 * sizeof(u8))
++#define HDIO_DRIVE_CMD_HDR_SIZE		(4 * sizeof(__u8))
++#define HDIO_DRIVE_HOB_HDR_SIZE		(8 * sizeof(__u8))
++#define HDIO_DRIVE_TASK_HDR_SIZE	(8 * sizeof(__u8))
+ 
+ #define IDE_DRIVE_TASK_INVALID		-1
+ #define IDE_DRIVE_TASK_NO_DATA		0
+
+--Boundary-00=_sRJvFzs44WlYfJn--
