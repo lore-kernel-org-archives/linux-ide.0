@@ -1,52 +1,105 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [RFC] libata IORDY handling
-Date: Sun, 28 Jan 2007 22:00:43 +0300
-Message-ID: <45BCF2DB.3090400@ru.mvista.com>
-References: <200701282024.17518.sshtylyov@ru.mvista.com>	<45BCEA03.8070901@ru.mvista.com> <20070128190325.7ba9af66@localhost.localdomain>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] fix CONFIG_SATA_SIS=y compile error
+Date: Sun, 28 Jan 2007 20:04:26 +0100
+Message-ID: <20070128190426.GU6017@stusta.de>
+References: <20070127234928.64d8e437.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:16289 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752476AbXA1TAu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Jan 2007 14:00:50 -0500
-In-Reply-To: <20070128190325.7ba9af66@localhost.localdomain>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:42022 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932437AbXA1TEU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Jan 2007 14:04:20 -0500
+Content-Disposition: inline
+In-Reply-To: <20070127234928.64d8e437.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, htejun@gmail.com
+To: Andrew Morton <akpm@osdl.org>, jgarzik@pobox.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello.
+On Sat, Jan 27, 2007 at 11:49:28PM -0800, Andrew Morton wrote:
+>...
+> Changes since 2.6.20-rc4-mm1:
+>...
+>  git-libata-all.patch
+>...
+>  git trees.
+>...
 
-Alan wrote:
+Static code shouldn't be used from other modules.
 
->>    I looked into fixing this but had a feeling that the thing wasn't right 
->>from the very start, including ata_pio_need_iordy().  In my understanding of 
->>the ANSI T13 stadrads, when one issues Set Features subcommand Set Transfer 
->>Mode with sector count register of 0x8 thru 0xC this means that IORDY *must* 
->>be enabled. 
+This patch fixes the following compile error:
 
-> Yes. It is more complex than the current code handles. That's one reason
-> I added ata_pio_need_iordy(), because it would need to change and
+<--  snip  -->
 
-    I also meant this function: if IORDY *must* be enabled even for PIO mode 0 
-(being set the way liabata sets it, via the mentioned subcommand), what's the 
-point of checking if we need to enable IORDY?  The only reason for this 
-function as it seems is to check if we can do *without* IORDY still...
-    Even if so, we must check if any of these both drives need IORDY to decide 
-whether we need to enable IORDY checking on taskfile accesses or not -- which 
-this function fails to do...
+...
+  LD      .tmp_vmlinux1
+drivers/built-in.o: In function `sis_init_one':
+sata_sis.c:(.text+0x7634cd): undefined reference to `sis_info133'
+sata_sis.c:(.text+0x7634d6): undefined reference to `sis_info133'
+make[1]: *** [.tmp_vmlinux1] Error 1
 
-> hardcoding it would be particularly ugly.
+<--  snip  -->
 
-    Yeah, hardcoding is ugly, no doubt about it. This is still a problem with 
-both pdc202xx_new and pata_pdc2027x, for example...
+While I was at it, I also moved the prototype of this struct to a header
+file.
 
-> This will matter for supporting some utterly ancient junk.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-    Well, SiI680 seemed to me quite well designed. :-)
+---
 
-> Alan
+ drivers/ata/libata.h   |    3 +++
+ drivers/ata/pata_sis.c |    3 ++-
+ drivers/ata/sata_sis.c |    4 +---
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
-MBR, Sergei
+--- linux-2.6.20-rc6-mm1/drivers/ata/libata.h.old	2007-01-28 16:01:41.000000000 +0100
++++ linux-2.6.20-rc6-mm1/drivers/ata/libata.h	2007-01-28 16:02:10.000000000 +0100
+@@ -151,4 +151,7 @@
+ /* libata-sff.c */
+ extern u8 ata_irq_on(struct ata_port *ap);
+ 
++/* pata_sis.c */
++extern struct ata_port_info sis_info133;
++
+ #endif /* __LIBATA_H__ */
+--- linux-2.6.20-rc6-mm1/drivers/ata/pata_sis.c.old	2007-01-28 16:08:26.000000000 +0100
++++ linux-2.6.20-rc6-mm1/drivers/ata/pata_sis.c	2007-01-28 16:02:51.000000000 +0100
+@@ -32,6 +32,7 @@
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ #include <linux/ata.h>
++#include "libata.h"
+ 
+ #define DRV_NAME	"pata_sis"
+ #define DRV_VERSION	"0.4.5"
+@@ -781,7 +782,7 @@
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.port_ops	= &sis_66_ops,
+ };
+-static struct ata_port_info sis_info133 = {
++struct ata_port_info sis_info133 = {
+ 	.sht		= &sis_sht,
+ 	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+--- linux-2.6.20-rc6-mm1/drivers/ata/sata_sis.c.old	2007-01-28 16:05:31.000000000 +0100
++++ linux-2.6.20-rc6-mm1/drivers/ata/sata_sis.c	2007-01-28 16:05:49.000000000 +0100
+@@ -40,6 +40,7 @@
+ #include <linux/device.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
++#include "libata.h"
+ 
+ #define DRV_NAME	"sata_sis"
+ #define DRV_VERSION	"0.7"
+@@ -254,9 +255,6 @@
+ 
+ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+-	/* Provided by the PATA driver */
+-	extern struct ata_port_info sis_info133;
+-
+ 	static int printed_version;
+ 	struct ata_probe_ent *probe_ent = NULL;
+ 	int rc;
+
