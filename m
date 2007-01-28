@@ -1,57 +1,61 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: Boot problems with pata_via driver
-Date: Mon, 29 Jan 2007 00:11:47 +0100
-Message-ID: <20070128231147.GA6017@stusta.de>
-References: <8d158e1f0701280347l1d778528la0d69647726485d6@mail.gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
+Date: Sun, 28 Jan 2007 15:21:31 -0800
+Message-ID: <20070128152131.a4354c91.akpm@osdl.org>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+	<20070127174230.GN6017@stusta.de>
+	<20070128133344.214070@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:42668 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932970AbXA1XLj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Jan 2007 18:11:39 -0500
-Content-Disposition: inline
-In-Reply-To: <8d158e1f0701280347l1d778528la0d69647726485d6@mail.gmail.com>
+Received: from smtp.osdl.org ([65.172.181.24]:41471 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932973AbXA1XYx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Jan 2007 18:24:53 -0500
+In-Reply-To: <20070128133344.214070@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patrick Ale <patrick.ale@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel-announce@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Adrian Bunk <bunk@stusta.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Sun, Jan 28, 2007 at 12:47:18PM +0100, Patrick Ale wrote:
+On Sun, 28 Jan 2007 14:33:44 +0100
+"Uwe Bugla" <uwe.bugla@gmx.de> wrote:
 
-> Hi,
+> > Subject    : problems with CD burning
+> > References : http://www.spinics.net/lists/linux-ide/msg06545.html
+> > Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+> > Status     : unknown
+> >=20
+> >=20
+>=20
+> ...
+>
+> Hi everybody,
+> the problem I already reported for earlier release candidates of kern=
+el 2.6.20
+> (rc1 =E2=80=93 5) unfortunately stills persists.
+>=20
+> The regression has become more extreme: While in earlier release cand=
+idates nerolinux recognized my burning devices at least after the first=
+ start and then never again after all following starts the situation in=
+ rc6 is different from that:
+>=20
+> The CD and DVD burning devices aren=C2=B4t recognized even once and t=
+he drive seek errors I already reported are still there.
+>=20
+> nerolinux runs excellently with kernel 2.6.19.2, but only shows an =E2=
+=80=9Cimage recorder=E2=80=9D (i. e. no burning device at all) in kerne=
+l 2.6.20-rc6.
+>=20
+> Still hope that this terrible bug will not be part of the final versi=
+on of 2.6.20!
+>=20
 
-Hi Patrick,
+Not sure what to do about this.  It looks like a failure in the IDE dri=
+ver.
+Perhaps you could start by telling us about the IDE hardware, which dri=
+ver
+is in use, etc.
 
-> With kernel 2.6.19 I was able to boot using the pata_via driver
-> I tried to compile 2.6.20-rc6 and now I get a "unknown device: sda3"
-> error when I try to boot.
-> 
-> I compiled 2.6.20-rc6 by copying over the .config from the 2.6.19 tree
-> and running a make oldconfig && make
-> 
-> Am I doing something wrong?
-
-Both kernels are self-compiled or is 2.6.19 a distribution kernel?
-
-It could be that 2.6.20-rc6 has a bug and therefore no longer is able to 
-use your controller.
-It's also possible that the enumeration changed (e.g. sda is now an 
-external hard disk).
-
-During boot, there should be some messages prefixed with ata: and sda: 
-describing what your kernel found and how it enumerated them.
-What do they print with 2.6.20-rc6?
-
-> Patrick
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Is the floppy-disk bug still there?
