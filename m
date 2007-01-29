@@ -1,41 +1,37 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: sata_promise TX2/TX4 cards rejecting smart auto-offline & auto-save ata cmds?
-Date: Mon, 29 Jan 2007 02:48:44 -0500
-Message-ID: <20070129074844.GA15177@jim.sh>
-References: <76366b180610292250n400fff81s76a2a9cd84d61366@mail.gmail.com> <4545A74E.8020604@gmail.com> <76366b180610292331t6827f0ddl54ffe24be39dea2c@mail.gmail.com> <4545AD0B.1030903@gmail.com>
+From: Mike Galbraith <efault@gmx.de>
+Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
+Date: Mon, 29 Jan 2007 11:01:44 +0100
+Message-ID: <1170064904.6322.3.camel@Homer.simpson.net>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+	 <20070127174230.GN6017@stusta.de>  <20070128133344.214070@gmx.net>
+	 <1170051963.6454.7.camel@Homer.simpson.net>
+	 <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:53951 "EHLO neurosis.jim.sh"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933118AbXA2Hs7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jan 2007 02:48:59 -0500
-Content-Disposition: inline
-In-Reply-To: <4545AD0B.1030903@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:46007 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750857AbXA2KBy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Jan 2007 05:01:54 -0500
+In-Reply-To: <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>
-Cc: Andrew Paprocki <andrew@ishiboo.com>, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Uwe Bugla <uwe.bugla@gmx.de>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@SteelEye.com>
 
-Tejun Heo wrote:
-> Andrew Paprocki wrote:
-> >On 10/30/06, Tejun Heo <htejun@gmail.com> wrote:
-> >>Please read the following thread.
-> >>
-> >>http://thread.gmane.org/gmane.linux.ide/13222/focus=13235
-> >
-> >Worked like a charm! Just patched up smartmontools now and I don't get
-> >the failed cmds anymore. Hope Bruce takes that patch soon.
+On Sun, 2007-01-28 at 23:04 -0800, Linus Torvalds wrote:
 > 
-> Bruce took the patch and it will be included in the next version of 
-> smartmontools.  :-)
+> [ Added Jeff, Jens and Mike Christie to Cc. I would _guess_ this is 
+>   associated with the "larger block pc request" stuff: Mike, Jens? James B 
+>   added for good luck.
+> 
+>   It apparently started happening somewhere between 2.6.19 and 2.6.20-rc2, 
 
-Hello Tejun, Bruce,
+2.6.20-rc1 is bad for me.  Ripping the diff apart manually is proving
+challenging, so I suppose I'll bite the bullet and do the git clone.  No
+idea how long that'll take at ~45KB/S, but I'll do the bisect if nobody
+beats me to it.
 
-Sorry to bring up an old thread, but it looks like this patch did not
-actually make it into smartmontools 5.37 or CVS.  Tejun, could you
-please take another look and update the patch?  There's a new user of
-STRANGE_BUFFER_LENGTH and I don't know enough about the code to fix
-it properly.
+	-Mike
 
--jim
