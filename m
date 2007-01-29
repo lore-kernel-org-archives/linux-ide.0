@@ -1,48 +1,47 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
-Date: Mon, 29 Jan 2007 10:43:21 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0701291036540.3611@woody.linux-foundation.org>
-References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
- <20070127174230.GN6017@stusta.de>  <20070128133344.214070@gmx.net>
- <1170051963.6454.7.camel@Homer.simpson.net>
- <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org>
- <1170064904.6322.3.camel@Homer.simpson.net> <1170094599.6691.12.camel@Homer.simpson.net>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: sil_24 PMP performance issue.
+Date: Tue, 30 Jan 2007 10:01:27 +1300
+Message-ID: <45BE60A7.6060003@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:50583 "EHLO smtp.osdl.org"
+Received: from smtp.sauce.co.nz ([210.48.49.72]:32828 "EHLO smtp.sauce.co.nz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752539AbXA2Sxx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jan 2007 13:53:53 -0500
-In-Reply-To: <1170094599.6691.12.camel@Homer.simpson.net>
+	id S1752604AbXA2UjF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Jan 2007 15:39:05 -0500
+Received: from [192.168.4.111] (unknown [192.168.4.111])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp22.sauce.co.nz (Postfix) with ESMTP id 696EA28825B
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 09:39:01 +1300 (NZDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Galbraith <efault@gmx.de>
-Cc: Uwe Bugla <uwe.bugla@gmx.de>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@SteelEye.com>
+To: linux-ide@vger.kernel.org
 
 
+Hi Tejun,
 
-On Mon, 29 Jan 2007, Mike Galbraith wrote:
-> 
-> The extremely unlikely winner is:
-> 
-> 29b08d2bae854f66d3cfd5f57aaf2e7c2c7fce32 is first bad commit
+Did you get any response back from Silicon Image?
 
-Yeah, that's not going to be it. You probably had a bad kernel there 
-somewhere that you called "good". 
 
-Git bisect is wonderful for figuring out (reasonably quickly) where 
-problems are, but exactly because it zeroes in on the bug so quickly, if 
-you give it faulty data, it zeroes in on something *else* very quickly and 
-without any kind of sense. 
+Reference this thread:
 
-There's just no redundancy there, so one small bit error in the input, and 
-you get a totally wrong end result ;)
+http://marc.theaimsgroup.com/?l=linux-ide&m=116727812518914&w=2
 
-I'm trying to narrow it down myself. It all *seemed* to work with the 
-commit I suspected initially (the "support larger block pc requests" one).
 
-But yes, I haven't actually tried to burn anything either. I also just 
-started up "nero" and looked whether I'd get the error messages in dmesg.
+ >> While dmesg claims that 3.0Gbps was negotiated, the combined
+ >> performance of the
+ >> 5 disks never exceeds 1.5Gbps, no matter how I combine them. Is
+ >> something in
+ >> the driver overriding the 3Gbps speed bits somewhere?
+ >
+ > Nope.  I'll ask SIMG.
+ >
+ > --
+ > tejun
+ > -
 
-		Linus
+Regards,
+
+Richard
