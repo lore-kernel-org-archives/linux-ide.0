@@ -1,37 +1,36 @@
-From: Mike Galbraith <efault@gmx.de>
-Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
-Date: Mon, 29 Jan 2007 11:01:44 +0100
-Message-ID: <1170064904.6322.3.camel@Homer.simpson.net>
-References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
-	 <20070127174230.GN6017@stusta.de>  <20070128133344.214070@gmx.net>
-	 <1170051963.6454.7.camel@Homer.simpson.net>
-	 <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org>
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: [PATCH] ata_if_xfermask() word 51 fix
+Date: Mon, 29 Jan 2007 13:28:47 +0100
+Message-ID: <20070129122847.GC11895@xi.wantstofly.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46007 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750857AbXA2KBy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jan 2007 05:01:54 -0500
-In-Reply-To: <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org>
+Received: from alephnull.demon.nl ([83.160.184.112]:45524 "EHLO
+	xi.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751252AbXA2M2u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jan 2007 07:28:50 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Uwe Bugla <uwe.bugla@gmx.de>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-On Sun, 2007-01-28 at 23:04 -0800, Linus Torvalds wrote:
-> 
-> [ Added Jeff, Jens and Mike Christie to Cc. I would _guess_ this is 
->   associated with the "larger block pc request" stuff: Mike, Jens? James B 
->   added for good luck.
-> 
->   It apparently started happening somewhere between 2.6.19 and 2.6.20-rc2, 
+If word 53 bit 1 isn't set, the maximum PIO mode is indicated by
+the upper 8 bits of word 51, not the lower 8 bits.  Fixes PIO mode
+detection on old Compact Flash cards.
 
-2.6.20-rc1 is bad for me.  Ripping the diff apart manually is proving
-challenging, so I suppose I'll bite the bullet and do the git clone.  No
-idea how long that'll take at ~45KB/S, but I'll do the bisect if nobody
-beats me to it.
+Signed-off-by: Lennert Buytenhek <buytenh@wantstofly.org>
 
-	-Mike
-
+Index: linux-2.6.19/drivers/ata/libata-core.c
+===================================================================
+--- linux-2.6.19.orig/drivers/ata/libata-core.c
++++ linux-2.6.19/drivers/ata/libata-core.c
+@@ -1037,7 +1048,7 @@ static unsigned int ata_id_xfermask(cons
+ 		 * the PIO timing number for the maximum. Turn it into
+ 		 * a mask.
+ 		 */
+-		u8 mode = id[ATA_ID_OLD_PIO_MODES] & 0xFF;
++		u8 mode = (id[ATA_ID_OLD_PIO_MODES] >> 8) & 0xFF;
+ 		if (mode < 5)	/* Valid PIO range */
+                 	pio_mask = (2 << mode) - 1;
+ 		else
