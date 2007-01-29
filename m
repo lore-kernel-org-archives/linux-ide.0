@@ -1,46 +1,41 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
-Date: Sun, 28 Jan 2007 23:13:09 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0701282310120.3611@woody.linux-foundation.org>
-References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
- <20070127174230.GN6017@stusta.de> <20070128133344.214070@gmx.net>
- <1170051963.6454.7.camel@Homer.simpson.net>  <20070128224834.37482553.akpm@osdl.org>
- <1170054495.6521.1.camel@Homer.simpson.net>
+From: Jim Paris <jim@jtan.com>
+Subject: Re: sata_promise TX2/TX4 cards rejecting smart auto-offline & auto-save ata cmds?
+Date: Mon, 29 Jan 2007 02:48:44 -0500
+Message-ID: <20070129074844.GA15177@jim.sh>
+References: <76366b180610292250n400fff81s76a2a9cd84d61366@mail.gmail.com> <4545A74E.8020604@gmail.com> <76366b180610292331t6827f0ddl54ffe24be39dea2c@mail.gmail.com> <4545AD0B.1030903@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:52285 "EHLO smtp.osdl.org"
+Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:53951 "EHLO neurosis.jim.sh"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933247AbXA2HYK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jan 2007 02:24:10 -0500
-In-Reply-To: <1170054495.6521.1.camel@Homer.simpson.net>
+	id S933118AbXA2Hs7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Jan 2007 02:48:59 -0500
+Content-Disposition: inline
+In-Reply-To: <4545AD0B.1030903@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Galbraith <efault@gmx.de>
-Cc: Andrew Morton <akpm@osdl.org>, Uwe Bugla <uwe.bugla@gmx.de>, Adrian Bunk <bunk@stusta.de>, rml@novell.com, ttb@tentacle.dhs.org, nickpiggin@yahoo.com.au, cijoml@volny.cz, linuxppc-dev@ozlabs.org, anton@samba.org, paulus@samba.org, livio@eecg.toronto.edu, petero2@telia.com, hch@lst.de, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>
+Cc: Andrew Paprocki <andrew@ishiboo.com>, linux-ide@vger.kernel.org
 
-
-
-On Mon, 29 Jan 2007, Mike Galbraith wrote:
+Tejun Heo wrote:
+> Andrew Paprocki wrote:
+> >On 10/30/06, Tejun Heo <htejun@gmail.com> wrote:
+> >>Please read the following thread.
+> >>
+> >>http://thread.gmane.org/gmane.linux.ide/13222/focus=13235
+> >
+> >Worked like a charm! Just patched up smartmontools now and I don't get
+> >the failed cmds anymore. Hope Bruce takes that patch soon.
 > 
-> Unfortunately, I'm git impaired.  I am rummaging as we speak though.
+> Bruce took the patch and it will be included in the next version of 
+> smartmontools.  :-)
 
-Ok, I'm personally heading to bed, but it rally should be as simple as
+Hello Tejun, Bruce,
 
- - get the git tree in the first place
- - do
+Sorry to bring up an old thread, but it looks like this patch did not
+actually make it into smartmontools 5.37 or CVS.  Tejun, could you
+please take another look and update the patch?  There's a new user of
+STRANGE_BUFFER_LENGTH and I don't know enough about the code to fix
+it properly.
 
-	git bisect good v2.6.19
-	git bisect bad v2.6.20-rc2
-	.. it will pick a point for you to try ..
-	.. compile, boot, test ..
-
-	"git bisect {good|bad}" depending on results
-
- - until (found)
-
-(Of course, you should check that -rc2 really is bad to make sure. I think 
-that's what Uwe reported, though. And I don't think we've done anything 
-after -rc2 that could impact this, so I don't doubt it).
-
-		Linus
+-jim
