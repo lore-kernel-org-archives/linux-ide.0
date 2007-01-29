@@ -1,132 +1,89 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH RFC] sd: spin down disks on removal or power-down
-Date: Sun, 28 Jan 2007 19:47:27 -0600
-Message-ID: <45BD522F.3070706@shaw.ca>
+From: Mike Galbraith <efault@gmx.de>
+Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
+Date: Mon, 29 Jan 2007 07:26:03 +0100
+Message-ID: <1170051963.6454.7.camel@Homer.simpson.net>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+	 <20070127174230.GN6017@stusta.de>  <20070128133344.214070@gmx.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=------------010202060101020305060103
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:54220 "EHLO
-	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933090AbXA2BsN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Jan 2007 20:48:13 -0500
+Received: from mail.gmx.net ([213.165.64.20]:50792 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S933214AbXA2G0Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Jan 2007 01:26:16 -0500
+In-Reply-To: <20070128133344.214070@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Cc: Adrian Bunk <bunk@stusta.de>, akpm@osdl.org, torvalds@linux-foundation.org, rml@novell.com, ttb@tentacle.dhs.org, nickpiggin@yahoo.com.au, cijoml@volny.cz, linuxppc-dev@ozlabs.org, anton@samba.org, paulus@samba.org, livio@eecg.toronto.edu, petero2@telia.com, hch@lst.de, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010202060101020305060103
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Sun, 2007-01-28 at 14:33 +0100, Uwe Bugla wrote:
+> -------- Original-Nachricht --------
+> Datum: Sat, 27 Jan 2007 18:42:30 +0100
+> Von: Adrian Bunk <bunk@stusta.de>
+> An: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <ak=
+pm@osdl.org>
+> Betreff: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
+>=20
+> > This email lists some known regressions in 2.6.20-rc6 compared to 2=
+=2E6.19
+> > that are not yet fixed in Linus' tree.
+> >=20
+> > If you find your name in the Cc header, you are either submitter of=
+ one
+> > of the bugs, maintainer of an affectected subsystem or driver, a pa=
+tch
+> > of you caused a breakage or I'm considering you in any other way po=
+ssibly
+> > involved with one or more of these issues.
+> >=20
+> > Due to the huge amount of recipients, please trim the Cc when answe=
+ring.
+> >=20
+> >=20
+> > Subject    : problems with CD burning
+> > References : http://www.spinics.net/lists/linux-ide/msg06545.html
+> > Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+> > Status     : unknown
+=20
+<snip>
 
-Here's a patch for sd.c I've cooked up which issues a START STOP UNIT
-command to stop the drive when the SCSI disk is removed or the machine
-is powered down. The rationale behind this is that apparently on many
-drives, simply cutting power to the spinning disk forces it to do an
-emergency head park/unload which creates more wear on the drive then a
-controlled park/unload with power still applied. This change ensures
-that the drive will be spun down if the user shuts down the machine or
-if they are about to hot-unplug the drive and have done "scsiadd -r" first.
+> Hi everybody,
+> the problem I already reported for earlier release candidates of kern=
+el 2.6.20
+> (rc1 =E2=80=93 5) unfortunately stills persists.
+>=20
+> The regression has become more extreme: While in earlier release cand=
+idates nerolinux recognized my burning devices at least after the first=
+ start and then never again after all following starts the situation in=
+ rc6 is different from that:
+>=20
+> The CD and DVD burning devices aren=C2=B4t recognized even once and t=
+he drive seek errors I already reported are still there.
+>=20
+> nerolinux runs excellently with kernel 2.6.19.2, but only shows an =E2=
+=80=9Cimage recorder=E2=80=9D (i. e. no burning device at all) in kerne=
+l 2.6.20-rc6.
+>=20
+> Still hope that this terrible bug will not be part of the final versi=
+on of 2.6.20!
+>=20
+> Regards
+>=20
+> Uwe
 
-The main potential concern I have about this implementation is that if
-the drive is used in a multi-initiator, iSCSI, etc. environment,
-stopping the drive may be undesirable as another initiator may still be
-accessing it. I'm not familiar enough with these setups to know if this
-problem is likely to come up or not. For this and other reasons we may
-want to make this behavior controllable - I'm open to suggestions on how
-to do this or whether it's needed.
+=46WIW, I just tried it with 2.6.20-rc6, and can confirm.  Once nero is
+run, the kernel never gives up retrying whatever command failed, so I
+get...
 
-I've tested that this does work on SATA disks through libata (with my
-patch "libata: fix translation for START STOP UNIT" applied). I also
-tested with some external USB-to-IDE drive enclosures. The support for
-START STOP UNIT on those seems rather poor though, on one enclosure with
-a Genesys bridge chip it returned a check condition with "Invalid field
-in CDB", and on another with a JMicron chip the request succeeded but it
-didn't actually spin the drive down.
+[ 4362.972995] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te
+DataRequest }
+[ 4362.981475] ide: failed opcode was: unknown
+[ 4362.986183] hdd: drive not ready for command
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+endlessly.
 
-
-
-
-
---------------010202060101020305060103
-Content-Type: text/plain;
- name="sd-stop-unit-on-shutdown.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sd-stop-unit-on-shutdown.patch"
-
---- linux-2.6.20-rc6nv/drivers/scsi/sd.c	2007-01-28 17:00:00.000000000 -0600
-+++ linux-2.6.20-rc6nvedit/drivers/scsi/sd.c	2007-01-28 18:08:53.000000000 -0600
-@@ -821,6 +821,39 @@ static int sd_sync_cache(struct scsi_dev
- 	return res;
- }
- 
-+static int sd_stop_unit(struct scsi_device *sdp, struct scsi_disk* sdkp)
-+{
-+	int res;
-+	struct scsi_sense_hdr sshdr;
-+	unsigned char cmd[10] = { 0 };
-+
-+	if (!scsi_device_online(sdp))
-+		return -ENODEV;
-+
-+	cmd[0] = START_STOP;
-+	/*
-+	 * Leave the rest of the command zero to indicate
-+	 * transition to stopped power condition and return
-+	 * on completion.
-+	 */
-+	printk(KERN_NOTICE "Stopping SCSI disk %s\n",
-+		sdkp->disk->disk_name);
-+	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+			       SD_TIMEOUT, SD_MAX_RETRIES);
-+
-+	if (res) {
-+		printk(KERN_WARNING "sd stop failed: status = %x, message = %02x, "
-+				    "host = %d, driver = %02x\n",
-+				    status_byte(res), msg_byte(res),
-+				    host_byte(res), driver_byte(res));
-+		if (driver_byte(res) & DRIVER_SENSE)
-+			scsi_print_sense_hdr("sd", &sshdr);
-+	}
-+	
-+	return res;
-+}
-+
-+
- static int sd_issue_flush(struct device *dev, sector_t *error_sector)
- {
- 	int ret = 0;
-@@ -1727,11 +1760,13 @@ static int sd_probe(struct device *dev)
-  **/
- static int sd_remove(struct device *dev)
- {
-+	struct scsi_device *sdp = to_scsi_device(dev);
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
- 	class_device_del(&sdkp->cdev);
- 	del_gendisk(sdkp->disk);
- 	sd_shutdown(dev);
-+	sd_stop_unit(sdp,sdkp);
- 
- 	mutex_lock(&sd_ref_mutex);
- 	dev_set_drvdata(dev, NULL);
-@@ -1784,6 +1819,9 @@ static void sd_shutdown(struct device *d
- 				sdkp->disk->disk_name);
- 		sd_sync_cache(sdp);
- 	}
-+	if(system_state == SYSTEM_POWER_OFF)
-+		sd_stop_unit(sdp,sdkp);
-+		
- 	scsi_disk_put(sdkp);
- }
- 
-
-
-
---------------010202060101020305060103--
+	-Mike
 
