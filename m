@@ -1,57 +1,37 @@
-From: Steven Scholz <steven.scholz@imc-berlin.de>
-Subject: HPA and failed opcode was: 0x37 ?
-Date: Tue, 30 Jan 2007 15:02:43 +0100
-Message-ID: <45BF5003.3000503@imc-berlin.de>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH] libata: fix translation for START STOP UNIT
+Date: Tue, 30 Jan 2007 08:36:26 -0600
+Message-ID: <45BF57EA.6060201@shaw.ca>
+References: <45BD4E0A.7060501@shaw.ca> <45BF5525.5040709@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:4517 "EHLO
-	mail.imc-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965511AbXA3ObI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jan 2007 09:31:08 -0500
-Received: from mailserver.berlin.imc-berlin.de (mailserver.berlin.imc-berlin.de [10.0.0.19])
-	by mail.imc-berlin.de (Postfix) with ESMTP id 91B4C2F02C
-	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 15:57:02 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id 57B5410946
-	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 15:02:44 +0100 (CET)
-Received: from [10.0.2.10] (scholz.berlin.imc-berlin.de [10.0.2.10])
-	by mailserver.berlin.imc-berlin.de (Postfix) with ESMTP id 6D102A071
-	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 15:02:43 +0100 (CET)
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965515AbXA3Ogj@vger.kernel.org>
+In-reply-to: <45BF5525.5040709@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hi all,
+Jeff Garzik wrote:
+> * Include the patch inline rather than as an attachment.  Even a 
+> text/plain attachment is very difficult to review and quote in popular 
+> email programs.
+> 
+>     Jeff
 
-I get the following lines when starting my ide driver:
+I'd love to, but unfortunately nobody seems to have come up with a way 
+of doing this in Thunderbird that keeps it from mangling whitespace 
+without a ton of hassle. I was able to get it to cooperate once (sort 
+of, anyway, I think it may have still damaged something on the first 
+try), but it required mangling a bunch of settings that made using it 
+for normal mail impossible.
 
-Probing IDE interface ide0...
-hda: probing with STATUS(0x50) instead of ALTSTATUS(0xff)
-hda: ST940813AM, ATA DISK drive
-ide0 at 0xc3866000-0xc3866007,0xc3866010 on irq 30
-hda: max request size: 1024KiB
-hda: Host Protected Area detected.
-        current capacity is 78140160 sectors (40007 MB)
-        native  capacity is 185074430006016 sectors (94758108163 MB)
-hda: task_no_data_intr: status=0x51 { DriveReady SeekComplete Error }
-hda: task_no_data_intr: error=0x04 { DriveStatusError }
-ide: failed opcode was: 0x37
-hda: 78140160 sectors (40007 MB) w/8192KiB Cache, CHS=16383/255/63
-hda: cache flushes supported
- hda: hda1
+The last time I looked, the main "how-to" page I found had an addendum 
+that "I gave up on this, it's too hard, I just attach the patches". If 
+anyone has gotten any new insight..
 
-
-My quetsions are:
-
-1. what's that 185074430006016 sectors native capacity about?
-2. Opcode 0x37 seems to be WIN_SET_MAX_EXT.
-   What does it mean if it fails?
-
-Thanks a million.
-
-(I am uisng linux 2.6.14 on an embedded ARM9 system.)
-
-Steven
-
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
