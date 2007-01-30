@@ -1,166 +1,147 @@
-From: Luca Tettamanti <kronos.it@gmail.com>
-Subject: Re: [2.6.20-rc6] pktcdvd doesn't work
-Date: Wed, 31 Jan 2007 00:16:23 +0100
-Message-ID: <20070130231623.GA7648@dreamland.darkstar.lan>
-References: <20070130195319.GA10994@dreamland.darkstar.lan> <Pine.LNX.4.61.0701302100370.13737@yvahk01.tjqt.qr> <20070130203601.GB15067@dreamland.darkstar.lan> <Pine.LNX.4.61.0701302141420.13737@yvahk01.tjqt.qr>
+From: Gary Hade <garyhade@us.ibm.com>
+Subject: Re: [2.6.18,19] SATA boot problems (ICH6/ICH6W)
+Date: Tue, 30 Jan 2007 15:37:36 -0800
+Message-ID: <20070130233735.GA7483@us.ibm.com>
+References: <200612111003.39928.kovid@theory.caltech.edu> <4588877D.1000400@gmail.com> <20061220032941.GA8903@us.ibm.com> <4588B3D5.4030406@gmail.com> <20061221171035.GC6171@us.ibm.com> <20070130015507.GA30069@us.ibm.com> <45BEF492.9000000@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:64192 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbXA3XQY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jan 2007 18:16:24 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so357822nfa
-        for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 15:16:23 -0800 (PST)
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:54617 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752047AbXA3Xhj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Jan 2007 18:37:39 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l0UNcGGa000457
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 18:38:16 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0UNbchp234000
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 18:37:38 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0UNbb4U010642
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 18:37:38 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0701302141420.13737@yvahk01.tjqt.qr>
+In-Reply-To: <45BEF492.9000000@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Peter Osterlund <petero2@telia.com>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Gary Hade <garyhade@us.ibm.com>, Kovid Goyal <kovid@theory.caltech.edu>, linux-ide@vger.kernel.org, lcm@us.ibm.com, Jeff Garzik <jgarzik@pobox.com>, konradr@us.ibm.com
 
-Hi Jeff, linux-ide,
-I'm having troubles with libata and UDF on RW media. See below.
-
-Il Tue, Jan 30, 2007 at 09:42:34PM +0100, Jan Engelhardt ha scritto: 
-> On Jan 30 2007 21:36, Luca Tettamanti wrote:
-> >Il Tue, Jan 30, 2007 at 09:02:20PM +0100, Jan Engelhardt ha scritto: 
-> >> 
-> >> On Jan 30 2007 20:53, Luca Tettamanti wrote:
-> >> >Hi,
-> >> >pktcdvd on kernel 2.6.20-rc6 is not working as expected. Any file that
-> >> 
-> >> Did it work previously?
-> >
-> >Yup, It used to work but since I rarely use it I don't remember which
-> >kernel version worked for me.
+On Tue, Jan 30, 2007 at 04:32:34PM +0900, Tejun Heo wrote:
+> Hello, Gary.
 > 
-> Hm, maybe you can take a guess.
+> Gary Hade wrote:
+> >>> If they verify your fix (ie,
+> >>> GoVault sometimes take more than 150ms to transmit the first D2H Reg FIs
+> >>> after SRST), I'll push similar patch upstream.
+> >> Thanks.  If you think that changes to increase the delays are
+> >> the way to go (at least until we can find a better solution)
+> >> I can provide patches.
+> > 
+> > Tejun, 
+> > I haven't heard anything from you on this so I'm including a delay
+> > increase patch against 2.6.20-rc6 for the 'ata-piix' case below.  
+> > I hope that you, Jeff, and others find this acceptable.
+> 
+> Sorry about being unresponsive.  The thing is that the change adds
+> unnecessary 2 secs of delay to a lot of other normal device-not-present
+> cases, so I was hesitant to ack the patch.  I'll give it more thoughts
+> (and respond timely this time :-)
 
-I can bisect pktcdvd.c if necessary, but it seems that it's innocent.
+Thanks!  My followup was untimely so we're even. :-)
+
+Some of my random thoughts:
+There does appear to be this invalid assumption that 0xFF status 
+always implies device-not-present.  The status register access 
+restrictions in ATA/ATAPI-7 V1 5.14.2 include the statement "The 
+contents of this register, except for BSY, shall be ignored when 
+BSY is set to one." which the code does not honor.  There is apparently 
+past experience that 0xFF status implies device-not-present for some
+controllers (the odd clowns :) but I have no idea how common these are.
+We obviously can't get rid of the check but since we cannot clear
+the read-only status register and there appears to be no specification 
+dictated upper limit on how long it should take for a software reset to 
+complete it just seems like we need to wait long enough to support the 
+slowest known device which may be the GoVault.
+
+> 
+> > With respect to the 'ahci' case w/2.6.20-rc6 the GoVault device is 
+> > useable following boot although the below messages are being logged 
+> > during initialization.  Please let me know if you have any thoughts 
+> > on this.  
+> >   scsi1 : ahci
+> >   ata2: softreset failed (port busy but CLO unavailable)
+> >   ata2: softreset failed, retrying in 5 secs
+> >   ata2: port is slow to respond, please be patient (Status 0x80)
+> >   ata2: port failed to respond (30 secs, Status 0x80)
+> >   ata2: COMRESET failed (device not ready)
+> >   ata2: hardreset failed, retrying in 5 secs
+> >   ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> >   ata2.00: ATAPI, max UDMA/66
+> >   ata2.00: configured for UDMA/66
+> 
+> The above should have been fixed in 2.6.20-rc6.  Please test it.  It was
+> caused by the ahci driver incorrectly clearing ahci CAP register and
+> fixed recently.
+
+I'm clearly seeing this with 2.6.20-rc6 but unlike the ata-piix
+issue it does not appear to be dependent on the port to which the
+device is attached.  I've been playing around with this today and
+found that it could be solved by inserting a delay between the 
+ahci_stop_engine() call and BSY/DRQ check.
+
+This change:
+--- linux-2.6.20-rc6/drivers/ata/ahci.c.orig	2007-01-30 11:01:20.000000000 -0800
++++ linux-2.6.20-rc6/drivers/ata/ahci.c	2007-01-30 12:59:38.000000000 -0800
+@@ -804,6 +804,19 @@ static int ahci_softreset(struct ata_por
+ 		goto fail_restart;
+ 	}
  
-> >> >is written to the device is lost after umount.
-> >> >I rarely use pktcdvd but at some point it used to work on my system.
-> >> >
-> >> >This is what I'm doing:
-> >> >
-> >> >root@dreamland:/tmp# cdrwtool -d /dev/scd0 -q
-> >> >scsi 8:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-4167B DL13 PQ: 0 ANSI: 5
-> >> 
-> >> In case you are using ide-scsi: try without.
-> >
-> >It's libata jmicron driver. Shall I try the "old" PATA driver on the
-> >next reboot?
-> 
-> If you have lots of CDRs/DVDRs to spare (or a CDRW/DVDRW), every test is
-> welcome.
++	{
++		int delay;
++		u8 stat;
++		for (delay = 0; delay < 2000; delay+=100) {
++			if (!(ahci_check_status(ap) & (ATA_BUSY | ATA_DRQ)))
++				break;
++			msleep(100);
++			stat = ahci_check_status(ap);
++			ata_port_printk(ap, KERN_INFO, "delay=%d BSY=%d DRQ=%d\n",
++				delay, (stat & ATA_BUSY)?1:0, (stat & ATA_DRQ)?1:0);
++		}
++	}
++
+ 	/* check BUSY/DRQ, perform Command List Override if necessary */
+ 	if (ahci_check_status(ap) & (ATA_BUSY | ATA_DRQ)) {
+ 		rc = ahci_clo(ap);
 
-With the legacy IDE driver it works fine.
-The unit is DVD-RAM capable so the firmware should handle random writes
-fine; I've tried mounting /dev/scd0 rw *without* pktcdvd and I still
-lose files. So I guess it has something to do with libata.
+Yielded this output both with and without the RDC inserted:
+scsi1 : ahci
+ata2: delay=0 BSY=1 DRQ=0
+ata2: delay=100 BSY=1 DRQ=0
+ata2: delay=200 BSY=1 DRQ=0
+ata2: delay=300 BSY=1 DRQ=0
+ata2: delay=400 BSY=1 DRQ=0
+ata2: delay=500 BSY=1 DRQ=0
+ata2: delay=600 BSY=1 DRQ=0
+ata2: delay=700 BSY=1 DRQ=0
+ata2: delay=800 BSY=1 DRQ=0
+ata2: delay=900 BSY=1 DRQ=0
+ata2: delay=1000 BSY=1 DRQ=0
+ata2: delay=1100 BSY=1 DRQ=0
+ata2: delay=1200 BSY=0 DRQ=0
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata2.00: ATAPI, max UDMA/66
+ata2.00: configured for UDMA/66
 
-So to recap, after formatting the disk with UDF:
+So it appears that we may also have a similar device slowness issue 
+with this driver.
 
-* libata
-  - mount with pktcdvd: all files are lost upon umount
-  - mount scd0 w/out pktcdvd: all files are lost upon umount
-  - write the disk with cdrecord: OK
+Gary
 
-  pktcdvd reports wrong capacity:
-  
-  pktcdvd: Fixed packets, 32 blocks, Mode-2 disc
-  pktcdvd: Max. media speed: 4
-  pktcdvd: write speed 4x
-  pktcdvd: 0kB available on disc
-  UDF-fs INFO UDF 0.9.8.1 (2004/29/09) Mounting volume 'LinuxUDF', timestamp 2007/01/30 18:18 (103c)
-
-* legacy IDE driver
-  - mount with pktcdvd: OK
-  - mount hda w/out pktcdvd: corrupts FS (duh)
-  - write the disk with cdrecord: OK
-
-  pktcdvd reports correct capacity:
-  
-  pktcdvd: writer pktcdvd0 mapped to hda
-  pktcdvd: Fixed packets, 32 blocks, Mode-2 disc
-  pktcdvd: Max. media speed: 4
-  pktcdvd: write speed 4x
-  pktcdvd: 551232kB available on disc
-  UDF-fs INFO UDF 0.9.8.1 (2004/29/09) Mounting volume 'LinuxUDF', timestamp 2007/01/30 22:19 (103c)
-
-The HW is a JMicron controller:
-02:00.0 IDE interface: JMicron Technologies, Inc. JMicron 20360/20363 AHCI Controller (rev 02)
-02:00.1 IDE interface: JMicron Technologies, Inc. JMicron 20360/20363 AHCI Controller (rev 02)
-
-(one of the 2 has PATA ports)
-
-driven either by libata (CONFIG_PATA_JMICRON):
-
-PCI: Enabling device 0000:02:00.1 (0000 -> 0001)
-ACPI: PCI Interrupt 0000:02:00.1[B] -> GSI 17 (level, low) -> IRQ 19
-PCI: Setting latency timer of device 0000:02:00.1 to 64
-ata9: PATA max UDMA/100 cmd 0xAC00 ctl 0xA882 bmdma 0xA400 irq 19
-ata10: PATA max UDMA/100 cmd 0xA800 ctl 0xA482 bmdma 0xA408 irq 19
-scsi8 : pata_jmicron
-ata9.00: ATAPI, max UDMA/33
-ata9.01: ATAPI, max UDMA/33
-ata9.00: configured for UDMA/33
-ata9.01: configured for UDMA/33
-scsi9 : pata_jmicron
-ATA: abnormal status 0x7F on port 0xA807
-scsi 8:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-4167B DL13 PQ: 0 ANSI: 5
-sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-sr 8:0:0:0: Attached scsi CD-ROM sr0
-sr 8:0:0:0: Attached scsi generic sg1 type 5
-scsi 8:0:1:0: CD-ROM            WAITEC   ALADAR/1         B1.5 PQ: 0 ANSI: 5
-sr1: scsi3-mmc drive: 16x/40x writer cd/rw xa/form2 cdda tray
-sr 8:0:1:0: Attached scsi CD-ROM sr1
-sr 8:0:1:0: Attached scsi generic sg2 type 5
-
-or by the legacy driver (CONFIG_BLK_DEV_JMICRON):
-
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-JMB361: IDE controller at PCI slot 0000:02:00.1
-PCI: Enabling device 0000:02:00.1 (0000 -> 0001)
-ACPI: PCI Interrupt 0000:02:00.1[B] -> GSI 17 (level, low) -> IRQ 18
-JMB361: chipset revision 2
-JMB361: 100% native mode on irq 18
-PCI: Setting latency timer of device 0000:02:00.1 to 64
-    ide0: BM-DMA at 0xa400-0xa407, BIOS settings: hda:pio, hdb:pio
-    ide1: BM-DMA at 0xa408-0xa40f, BIOS settings: hdc:pio, hdd:pio
-Probing IDE interface ide0...
-hda: HL-DT-ST DVDRAM GSA-4167B, ATAPI CD/DVD-ROM drive
-hdb: WAITEC ALADAR/1, ATAPI CD/DVD-ROM drive
-ide0 at 0xac00-0xac07,0xa882 on irq 18
-Probing IDE interface ide1...
-JMB361: IDE controller at PCI slot 0000:02:00.0
-PCI: Device 0000:02:00.0 not available because of resource collisions
-ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 16 (level, low) -> IRQ 16
-JMB361: BIOS configuration fixed.
-JMB361: chipset revision 2
-JMB361: 100% native mode on irq 16
-JMB361: dma_base is invalid
-ide2: JMB361 Bus-Master DMA disabled (BIOS)
-JMB361: dma_base is invalid
-ide3: JMB361 Bus-Master DMA disabled (BIOS)
-Probing IDE interface ide2...
-Probing IDE interface ide3...
-ALI15X3: IDE controller at PCI slot 0000:05:02.1
-ACPI: PCI Interrupt 0000:05:02.1[A] -> GSI 23 (level, low) -> IRQ 19
-ALI15X3: chipset revision 198
-ALI15X3: 100% native mode on irq 19
-ALI15X3: too many IDE interfaces, no room in table
-ALI15X3: too many IDE interfaces, no room in table
-(hum, must increase MAX_HWIF)
-ALI15X3: neither IDE port enabled (BIOS)
-hda: ATAPI 40X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache, UDMA(33)
-Uniform CD-ROM driver Revision: 3.20
-hdb: ATAPI 40X CD-ROM CD-R/RW drive, 8192kB Cache, UDMA(33)
-
-
-Luca
 -- 
-Not an editor command: Wq
+Gary Hade
+System x Enablement
+IBM Linux Technology Center
+503-578-4503  IBM T/L: 775-4503
+garyhade@us.ibm.com
+http://www.ibm.com/linux/ltc
+
