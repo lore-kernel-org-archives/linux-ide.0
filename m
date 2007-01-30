@@ -1,61 +1,52 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
-Date: Mon, 29 Jan 2007 23:14:29 -0500
-Message-ID: <45BEC625.9010400@pobox.com>
-References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>  <20070127174230.GN6017@stusta.de>  <20070128133344.214070@gmx.net> <1170051963.6454.7.camel@Homer.simpson.net> <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org> <45BE5AF0.3030005@cs.wisc.edu>
+Date: Mon, 29 Jan 2007 20:44:33 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0701292034470.3611@woody.linux-foundation.org>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+ <20070127174230.GN6017@stusta.de> <20070128133344.214070@gmx.net>
+ <1170051963.6454.7.camel@Homer.simpson.net>
+ <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org>
+ <45BE5AF0.3030005@cs.wisc.edu>  <Pine.LNX.4.64.0701291250420.3611@woody.linux-foundation.org>
+  <Pine.LNX.4.64.0701291414410.3611@woody.linux-foundation.org>
+ <Pine.LNX.4.64.0701291453230.3611@woody.linux-foundation.org>
+ <Pine.LNX.4.64.0701291532050.3611@woody.linux-foundation.org>
+ <45BE864A.2050907@cs.wisc.edu>  <Pine.LNX.4.64.0701291614020.3611@woody.linux-foundation.org>
+  <45BE9774.20105@cs.wisc.edu> <45BE99A4.9080503@cs.wisc.edu>
+ <Pine.LNX.4.64.0701291736550.3611@woody.linux-foundation.org>
+ <45BEB292.7060008@cs.wisc.edu>  <20070129190847.6ef1191f.akpm@osdl.org>
+ <1170123518.2376.2.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42717 "EHLO mail.dvmed.net"
+Received: from smtp.osdl.org ([65.172.181.24]:42385 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965125AbXA3EPA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jan 2007 23:15:00 -0500
-In-Reply-To: <45BE5AF0.3030005@cs.wisc.edu>
+	id S965021AbXA3EzI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Jan 2007 23:55:08 -0500
+In-Reply-To: <1170123518.2376.2.camel@max>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Mike Galbraith <efault@gmx.de>, Uwe Bugla <uwe.bugla@gmx.de>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>, Tejun Heo <htejun@gmail.com>
+Cc: Andrew Morton <akpm@osdl.org>, Mike Galbraith <efault@gmx.de>, Uwe Bugla <uwe.bugla@gmx.de>, Adrian Bunk <bunk@stusta.de>, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>
 
-Mike Christie wrote:
-> Strangely, if I use the sata driver, then nero uses the sg driver
-> (drivers/scsi/sg.c) instead of the block layer sg io code. But the sata
-> code spits out:
+
+
+On Mon, 29 Jan 2007, Mike Christie wrote:
 > 
-> Jan 29 12:03:21 madmax kernel: ata1.00: ATAPI check failed
-> Jan 29 12:03:21 madmax kernel: ata1.00: exception Emask 0x0 SAct 0x0
-> SErr 0x0 action 0x2 frozen
-> Jan 29 12:03:21 madmax kernel: ata1.00: cmd
-> a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0xac data 808 in
-> Jan 29 12:03:21 madmax kernel:          res
-> 51/51:03:00:00:20/00:00:00:00:00/a0 Emask 0x3 (HSM violation)
-> Jan 29 12:03:21 madmax kernel: ata1: soft resetting port
-> Jan 29 12:03:21 madmax kernel: ATA: abnormal status 0xD0 on port 0x1F7
-> Jan 29 12:03:21 madmax kernel: ata1.00: failed to IDENTIFY (I/O error,
-> err_mask=0x2)
-> Jan 29 12:03:21 madmax kernel: ata1.00: revalidation failed (errno=-5)
+> Ok. here is a fix with the overflow check sg.c has. Patch
+> was made against Linus's tree and tested with nero.
+> 
+> Userspace does not send us jiffies. Use msecs_to_jiffies
+> and check for overflow like sg.c
+> 
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
--5 == EIO
+Thanks. Fixed the ',' that Andrew pointed out, committed and pushed out.
 
+What a stupid bug. And I even _looked_ at that patch, since there weren't 
+that many that changed anything in this area, and it looked just subtly 
+right enough that no warning bells ever went off.
 
-> Jan 29 12:03:21 madmax kernel: ata1: failed to recover some devices,
-> retrying in 5 secs
-> Jan 29 12:03:33 madmax kernel: ata1: port is slow to respond, please be
-> patient (Status 0xd0)
-> Jan 29 12:03:56 madmax kernel: ata1: port failed to respond (30 secs,
-> Status 0xd0)
-> Jan 29 12:03:56 madmax kernel: ata1: soft resetting port
-> Jan 29 12:03:57 madmax kernel: ata1.00: configured for PIO4
-> Jan 29 12:03:57 madmax kernel: ata1: EH complete
+Thanks to everybody, but especially Mike for showing us the errors of our 
+ways.
 
-
-It's not critical for 2.6.20, since the default recommendation for PATA 
-is still "use drivers/ide", but Alan Cox (and Tejun and me) should be 
-aware of cases where drivers/ide works but libata does not.
-
-So, if you could post some machine and .config info regarding this to 
-linux-ide (CC'ing Alan), that would be appreciated.
-
-	Jeff
-
-
+		Linus
