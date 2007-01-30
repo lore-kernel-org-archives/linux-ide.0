@@ -1,55 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_sl82c105: wrong assumptions about compatible PIO modes
-Date: Tue, 30 Jan 2007 20:40:30 +0300
-Message-ID: <200701302040.30895.sshtylyov@ru.mvista.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: HPA and failed opcode was: 0x37 ?
+Date: Tue, 30 Jan 2007 18:07:27 +0000
+Message-ID: <20070130180727.594b35d0@localhost.localdomain>
+References: <45BF5003.3000503@imc-berlin.de>
+	<20070130164401.295f9913@localhost.localdomain>
+	<45BF7658.1090204@imc-berlin.de>
+	<20070130172629.70ad628d@localhost.localdomain>
+	<45BF7E21.7010605@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:34092 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965642AbXA3Rke (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jan 2007 12:40:34 -0500
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55192 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965656AbXA3Rze (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jan 2007 12:55:34 -0500
+In-Reply-To: <45BF7E21.7010605@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Steven Scholz <steven.scholz@imc-berlin.de>
+Cc: linux-ide@vger.kernel.org
 
-Fix the wrong "compatible" PIO mode choices: MWDMA0 has 480 ns cycle while PIO1
-only has 383 ns cycle, and MWDMA2 timings matchs those of PIO4 exactly.
+> Hmm. Don't think so. Since the use of ioremap() I think the MMU treats the
+> area as none-cacheable, right?
 
----
-Frankly speaking, I'm not sure this function is useful or correct at all --
-with the DMA timings being actually programmed in sl82c105_bmdma_start()...
+Thats only the first half of the story. If you don't decode byte level
+fetches in the FPGA or the code is doing something like
 
-And the issue of the same registers being used for both PIO and DMA timings is
-not specific for this driver at all but seems to be addressed only by it...
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+		read 16 bit value
+		shift 8
+		return half
 
- drivers/ata/pata_sl82c105.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+for 8 bit reads you'll get wrong answers.
 
-Index: linux-2.6/drivers/ata/pata_sl82c105.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_sl82c105.c
-+++ linux-2.6/drivers/ata/pata_sl82c105.c
-@@ -139,13 +139,13 @@ static void sl82c105_set_dmamode(struct 
- {
- 	switch(adev->dma_mode) {
- 		case XFER_MW_DMA_0:
--			sl82c105_configure_piomode(ap, adev, 1);
-+			sl82c105_configure_piomode(ap, adev, 0);
- 			break;
- 		case XFER_MW_DMA_1:
- 			sl82c105_configure_piomode(ap, adev, 3);
- 			break;
- 		case XFER_MW_DMA_2:
--			sl82c105_configure_piomode(ap, adev, 3);
-+			sl82c105_configure_piomode(ap, adev, 4);
- 			break;
- 		default:
- 			BUG();
-
+Alan
