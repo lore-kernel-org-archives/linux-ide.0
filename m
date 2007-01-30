@@ -1,47 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_promise TX2/TX4 cards rejecting smart auto-offline & auto-save
- ata cmds?
-Date: Tue, 30 Jan 2007 10:57:23 +0900
-Message-ID: <45BEA603.5000502@gmail.com>
-References: <76366b180610292250n400fff81s76a2a9cd84d61366@mail.gmail.com> <4545A74E.8020604@gmail.com> <76366b180610292331t6827f0ddl54ffe24be39dea2c@mail.gmail.com> <4545AD0B.1030903@gmail.com> <20070129074844.GA15177@jim.sh>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 0/2] ide: clear bmdma status in ide_intr for Intel controllers
+ (revised #3)
+Date: Tue, 30 Jan 2007 10:49:38 +0800
+Message-ID: <45BEB242.7070506@tw.ibm.com>
+References: <45AF57BE.7060505@tw.ibm.com>	 <58cb370e0701191133m3dd584ffna5b231b00392c13d@mail.gmail.com>	 <45B12318.9000704@gmail.com> <45B467A9.6040404@tw.ibm.com>	 <45B479C2.7090300@tw.ibm.com> <58cb370e0701220805i783dddafse768e500b27fff36@mail.gmail.com> <45B6D386.3030104@tw.ibm.com> <45B6D5A7.6080700@tw.ibm.com> <45B7596F.6080504@ru.mvista.com> <45B878F0.7060707@tw.ibm.com> <45B8CA02.4050701@ru.mvista.com> <45B8DD84.3090700@ru.mvista.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:26701 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630AbXA3B5d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jan 2007 20:57:33 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1514880nze
-        for <linux-ide@vger.kernel.org>; Mon, 29 Jan 2007 17:57:33 -0800 (PST)
-In-Reply-To: <20070129074844.GA15177@jim.sh>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:41526 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526AbXA3Ct7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jan 2007 21:49:59 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0U2nqVR022521
+	for <linux-ide@vger.kernel.org>; Mon, 29 Jan 2007 21:49:52 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0U2nqou552914
+	for <linux-ide@vger.kernel.org>; Mon, 29 Jan 2007 19:49:52 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0U2np3N017134
+	for <linux-ide@vger.kernel.org>; Mon, 29 Jan 2007 19:49:51 -0700
+In-Reply-To: <45B8DD84.3090700@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jim Paris <jim@jtan.com>
-Cc: Bruce Allen <ballen@gravity.phys.uwm.edu>, Andrew Paprocki <andrew@ishiboo.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, "Adam W. Hawks" <awhawks@us.ibm.com>
 
-Jim Paris wrote:
-> Tejun Heo wrote:
->> Andrew Paprocki wrote:
->>> On 10/30/06, Tejun Heo <htejun@gmail.com> wrote:
->>>> Please read the following thread.
->>>>
->>>> http://thread.gmane.org/gmane.linux.ide/13222/focus=13235
->>> Worked like a charm! Just patched up smartmontools now and I don't get
->>> the failed cmds anymore. Hope Bruce takes that patch soon.
->> Bruce took the patch and it will be included in the next version of 
->> smartmontools.  :-)
-> 
-> Hello Tejun, Bruce,
-> 
-> Sorry to bring up an old thread, but it looks like this patch did not
-> actually make it into smartmontools 5.37 or CVS.  Tejun, could you
-> please take another look and update the patch?  There's a new user of
-> STRANGE_BUFFER_LENGTH and I don't know enough about the code to fix
-> it properly.
+patch 1/2: remove clearing bmdma status from cdrom_decode_status() since ATA devices might need it as well.
 
-I definitely can do that but I guess we need Bruce's confirmation about
-the patch first.  Bruce?
+patch 2/2: clear bmdma status in ide_intr() and add a new hwif->ide_dma_clear_irq for piix.c to use.
 
--- 
-tejun
