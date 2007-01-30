@@ -1,37 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sil_24 PMP performance issue.
-Date: Tue, 30 Jan 2007 12:22:13 +0900
-Message-ID: <45BEB9E5.9050203@gmail.com>
-References: <45BE60A7.6060003@sauce.co.nz>
+From: Mike Galbraith <efault@gmx.de>
+Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
+Date: Tue, 30 Jan 2007 04:25:22 +0100
+Message-ID: <1170127522.6741.6.camel@Homer.simpson.net>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+	 <20070127174230.GN6017@stusta.de>  <20070128133344.214070@gmx.net>
+	 <1170051963.6454.7.camel@Homer.simpson.net>
+	 <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org>
+	 <45BE5AF0.3030005@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:51092 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752108AbXA3DWc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jan 2007 22:22:32 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1529682nze
-        for <linux-ide@vger.kernel.org>; Mon, 29 Jan 2007 19:22:31 -0800 (PST)
-In-Reply-To: <45BE60A7.6060003@sauce.co.nz>
+Received: from mail.gmx.net ([213.165.64.20]:59035 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752108AbXA3DZa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Jan 2007 22:25:30 -0500
+In-Reply-To: <45BE5AF0.3030005@cs.wisc.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: linux-ide@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Uwe Bugla <uwe.bugla@gmx.de>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>
 
-Richard Scobie wrote:
+On Mon, 2007-01-29 at 14:37 -0600, Mike Christie wrote:
+> Linus Torvalds wrote:
+> >>
+> >> [ 4362.972995] hdd: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> >> [ 4362.981475] ide: failed opcode was: unknown
+> >> [ 4362.986183] hdd: drive not ready for command
+> > 
 > 
-> Hi Tejun,
-> 
-> Did you get any response back from Silicon Image?
-> 
-> 
-> Reference this thread:
-> 
-> http://marc.theaimsgroup.com/?l=linux-ide&m=116727812518914&w=2
+> What chipsets are you guys using?
 
-Haven't found the time to work on PMP yet.  Sorry but you need to me
-more patient.  :-)
+ICH5 here.
 
--- 
-tejun
