@@ -1,87 +1,47 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
-Date: Mon, 29 Jan 2007 17:45:49 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0701291736550.3611@woody.linux-foundation.org>
-References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
- <20070127174230.GN6017@stusta.de>  <20070128133344.214070@gmx.net>
- <1170051963.6454.7.camel@Homer.simpson.net>
- <Pine.LNX.4.64.0701282247070.3611@woody.linux-foundation.org>
- <45BE5AF0.3030005@cs.wisc.edu> <Pine.LNX.4.64.0701291250420.3611@woody.linux-foundation.org>
- <Pine.LNX.4.64.0701291414410.3611@woody.linux-foundation.org>
- <Pine.LNX.4.64.0701291453230.3611@woody.linux-foundation.org>
- <Pine.LNX.4.64.0701291532050.3611@woody.linux-foundation.org>
- <45BE864A.2050907@cs.wisc.edu> <Pine.LNX.4.64.0701291614020.3611@woody.linux-foundation.org>
- <45BE9774.20105@cs.wisc.edu> <45BE99A4.9080503@cs.wisc.edu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_promise TX2/TX4 cards rejecting smart auto-offline & auto-save
+ ata cmds?
+Date: Tue, 30 Jan 2007 10:57:23 +0900
+Message-ID: <45BEA603.5000502@gmail.com>
+References: <76366b180610292250n400fff81s76a2a9cd84d61366@mail.gmail.com> <4545A74E.8020604@gmail.com> <76366b180610292331t6827f0ddl54ffe24be39dea2c@mail.gmail.com> <4545AD0B.1030903@gmail.com> <20070129074844.GA15177@jim.sh>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:37713 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932856AbXA3B4P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jan 2007 20:56:15 -0500
-In-Reply-To: <45BE99A4.9080503@cs.wisc.edu>
+Received: from nz-out-0506.google.com ([64.233.162.233]:26701 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630AbXA3B5d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jan 2007 20:57:33 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so1514880nze
+        for <linux-ide@vger.kernel.org>; Mon, 29 Jan 2007 17:57:33 -0800 (PST)
+In-Reply-To: <20070129074844.GA15177@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Mike Galbraith <efault@gmx.de>, Uwe Bugla <uwe.bugla@gmx.de>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, gd@spherenet.de, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>
+To: Jim Paris <jim@jtan.com>
+Cc: Bruce Allen <ballen@gravity.phys.uwm.edu>, Andrew Paprocki <andrew@ishiboo.com>, linux-ide@vger.kernel.org
 
-
-
-On Mon, 29 Jan 2007, Mike Christie wrote:
+Jim Paris wrote:
+> Tejun Heo wrote:
+>> Andrew Paprocki wrote:
+>>> On 10/30/06, Tejun Heo <htejun@gmail.com> wrote:
+>>>> Please read the following thread.
+>>>>
+>>>> http://thread.gmane.org/gmane.linux.ide/13222/focus=13235
+>>> Worked like a charm! Just patched up smartmontools now and I don't get
+>>> the failed cmds anymore. Hope Bruce takes that patch soon.
+>> Bruce took the patch and it will be included in the next version of 
+>> smartmontools.  :-)
 > 
-> Actually, I do not think we did this in 2.6.19. Tomo added a bug when he
-> ported a patch and mixed up some things so we did something weird for
-> 2.6.20-rc1.
-
-Ah, ok. Warring bugs.  Have you pinpointed the original one? Is it your 
-original "block: support larger block pc requests" after all? It looks 
-like yours is the one that did the big changes, with Tomo then fixing some 
-of the fallout?
-
-In fact, now that I look closer, I see that it's definitely your first 
-patch that first removes the old code:
-
-> In 2.6.19, we did:
+> Hello Tejun, Bruce,
 > 
-> bio = rq->bio;
-> blk_execute_rq() <- the execution sets rq->bio to null so that is why we
-> save a bio pointer.
-> blk_rq_unmap_user(bio);
+> Sorry to bring up an old thread, but it looks like this patch did not
+> actually make it into smartmontools 5.37 or CVS.  Tejun, could you
+> please take another look and update the patch?  There's a new user of
+> STRANGE_BUFFER_LENGTH and I don't know enough about the code to fix
+> it properly.
 
-And then your patch introduces the bug:
+I definitely can do that but I guess we need Bruce's confirmation about
+the patch first.  Bruce?
 
-> For a while in 2.6.20-rc1, we basically did
-> 
-> blk_execute_rq()
-> blk_rq_unmap_user(rq->bio) <- this was a bug that caused the mem leak
-> and caused data to not be copied because rq->bio was null.
-
-.. and perhaps introduced somethign else too?
-
-and thus:
-
-> Tomo and Jens then fixes this in 2.6.20-rc2 or rc3 to what we have in rc6:
-> 
-> bio = rq->bio;
-> blk_execute_rq() <- the execution sets rq->bio to null so that is why we
-> save a bio pointer.
-> blk_rq_unmap_user(bio);
-
-didn't actually help, because if fixed the bio leak, but it didn't fix 
-whatever else went wrong..
-
-Mike, with (a) you being attributed as the author of that original 
-"support larger block pc requests" and (b) Jens apparently off gallivating 
-somewhere, I really hope we you can find this, because otherwise I get the 
-feeling that I have to revert that series if I'm to release a 2.6.20 in 
-any kind of timely manner.
-
-(Not that I haven't held up releases before, but this seems to be the main 
-remaining thing, and in that light I think I'd probably end up 
-reverting..)
-
-No pressure ;)
-
-(But it certainly doesn't have to be "today", so don't take it that way)
-
-		Linus
+-- 
+tejun
