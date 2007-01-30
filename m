@@ -1,36 +1,61 @@
-From: Steven Scholz <steven.scholz@imc-berlin.de>
-Subject: Re: HPA and failed opcode was: 0x37 ?
-Date: Tue, 30 Jan 2007 18:19:29 +0100
-Message-ID: <45BF7E21.7010605@imc-berlin.de>
-References: <45BF5003.3000503@imc-berlin.de>	<20070130164401.295f9913@localhost.localdomain>	<45BF7658.1090204@imc-berlin.de> <20070130172629.70ad628d@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] libata: Initialize nbytes for internal sg commands
+Date: Tue, 30 Jan 2007 11:32:26 -0600
+Message-ID: <27101.1048964739$1170178371@news.gmane.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:2739 "EHLO
-	mail.imc-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965635AbXA3RTb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jan 2007 12:19:31 -0500
-In-Reply-To: <20070130172629.70ad628d@localhost.localdomain>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:34913 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965445AbXA3Rca (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Jan 2007 12:32:30 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0UHWSnB030128
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 12:32:28 -0500
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0UHWSCB158886
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 12:32:28 -0500
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0UHWSod013767
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 12:32:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, brazilnut@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-Alan wrote:
->>> Is your IDE controller LBA48 capable ?
->> Well TBH I have no contoller. As I said I am using an embedded ARM board.
->> The HDD is connected via a FPGA. The internal HDD registers simply memory
->> mapped. Works fine. Usually. By now we seem to have trouble with that
->> Seagate drive...
-> 
-> The reason I ask is that the stuff which is going wrong is the stuff
-> which requires two fetches from the drive registers. Could that be a
-> caching bug (eg caching it, prefetching and thus reading a register too
-> many times etc) - it seems more likely than the drive given that nobody
-> else is seeing anything like this.
 
-Hmm. Don't think so. Since the use of ioremap() I think the MMU treats the
-area as none-cacheable, right?
+Some LLDDs, like ipr, use nbytes and pad_len to determine
+the total data transfer length of a command. Make sure
+nbytes gets initialized for internally generated commands.
 
-Steven
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+Jeff,
+
+This bug is already fixed in #upstream, with Tejun's patch,
+which does away with nsect, but it is still broken in 2.6.20.
+This is a resend of my original, 1 line patch. If this doesn't
+make 2.6.20, it might be a candidate for -stable, since without
+it, libata is not able to find SATA devices attached with ipr.
+
+Thanks,
+
+Brian
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ linux-2.6-bjking1/drivers/ata/libata-core.c |    1 +
+ 1 files changed, 1 insertion(+)
+
+diff -puN drivers/ata/libata-core.c~libata_fix_nbytes drivers/ata/libata-core.c
+--- linux-2.6/drivers/ata/libata-core.c~libata_fix_nbytes	2007-01-30 11:24:20.000000000 -0600
++++ linux-2.6-bjking1/drivers/ata/libata-core.c	2007-01-30 11:24:20.000000000 -0600
+@@ -1250,6 +1250,7 @@ unsigned ata_exec_internal_sg(struct ata
+ 
+ 		ata_sg_init(qc, sg, n_elem);
+ 		qc->nsect = buflen / ATA_SECT_SIZE;
++		qc->nbytes = buflen;
+ 	}
+ 
+ 	qc->private_data = &wait;
+_
