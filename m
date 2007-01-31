@@ -1,44 +1,145 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Wed, 31 Jan 2007 11:35:14 -0500
-Message-ID: <45C0C542.2090609@emc.com>
-References: <200701301947.08478.liml@rtr.ca>	<1170206199.10890.13.camel@mulgrave.il.steeleye.com>	<311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>	<45BFF3D6.9050605@rtr.ca>	<45C00AEE.1090708@emc.com>	<45C0B0DC.8030501@rtr.ca> <20070131152301.19a8a5ac@localhost.localdomain>
-Reply-To: ric@emc.com
+From: Jose Alberto Reguero <jareguero@telefonica.net>
+Subject: Re: Add suport for Marvell 88SE6121 in ahci
+Date: Wed, 31 Jan 2007 17:43:12 +0100
+Message-ID: <200701311743.13091.jareguero@telefonica.net>
+References: <200701311504.40277.jareguero@telefonica.net> <45C0AFB6.5010907@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_hcMwFBihoYRst7o"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:41616 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030243AbXAaQfe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 11:35:34 -0500
-In-Reply-To: <20070131152301.19a8a5ac@localhost.localdomain>
+Received: from smtp.telefonica.net ([213.4.149.66]:22695 "EHLO
+	ctsmtpout2.frontal.correo" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1030261AbXAaQn1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 11:43:27 -0500
+In-Reply-To: <45C0AFB6.5010907@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, "Eric D. Mudama" <edmudama@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, dougg@torque.net
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Jay Cliburn <jacliburn@bellsouth.net>
 
+--Boundary-00=_hcMwFBihoYRst7o
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+El Mi=E9rcoles, 31 de Enero de 2007 16:03, Jeff Garzik escribi=F3:
+> Jose Alberto Reguero wrote:
+> > This work for kernel 2.6.20-rc6
+> >
+> > First apply this patch:
+> >
+> > http://marc.theaimsgroup.com/?l=3Dlinux-ide&m=3D116986924301674&w=3D2
+> >
+> > Then apply the patch attached.
+> >
+> > Comments:
+> >
+> > The Marvell 88SE6121 has three ports (0,1,2). The PATA port is port 2.
+> > (PATA port for 6141 is port 4). In M2V Motherboard(Marvell 88SE6121)
+> > there is only two SATA ports, one of them is external SATA. This two
+> > ports work well with this patch.
+> >
+> > With this part:
+> >
+> > <       if (pci_enable_msi(pdev) =3D=3D 0)
+> > ---
+> >
+> >>       if ((pdev->vendor !=3D PCI_VENDOR_ID_MARVELL) &&
+> >> (pci_enable_msi(pdev)
+> >
+> > =3D=3D 0))
+> >
+> > you don't need to disable MSI in kernel.
+> > MMCONFIG is disabled at startup in M2V.
+> >
+> > dmesg:
+> > ........
+> > PCI: Not using MMCONFIG.
+>
+> Very useful data points, thanks!
+>
+> For the future, please make sure to create patches using "diff -u",
+> otherwise the patches are very difficult to read and apply.
+>
+> I've attached your patch as a "diff -u" patch so that others can check
+> it out.
+>
+> 	Jeff
 
-Alan wrote:
->> When libata reports a MEDIUM_ERROR to us, we *know* it's non-recoverable,
->> as the drive itself has already done internal retries (libata uses the
->> "with retry" ATA opcodes for this).
-> 
-> This depends on the firmware. Some of the "raid firmware" drives don't
-> appear to do retries in firmware.
+Thanks.
+I have another question. When attaching a external SATA disk to the externa=
+l=20
+SATA PORT, the driver take som seconds, and recognize de disk, and work wel=
+l,=20
+but there are some errors in dmesg.=20
 
-I think that even for these devices, the actual drives behind the controller 
-will do retries. In any case, it would be reasonable to be able to set this 
-retry/no-retry via /sys to handle exceptional cases...
+dmesg1 is after attaching de disk
 
-> 
->> But meanwhile, we still have the original issue too, where a single stray
->> bad sector can blow a system out of the water, because the mid-layer
->> currently aborts everything after it from a large merged request.
->>
->> Thus the original patch from this thread.  :)
-> 
-> Agreed
+dmesg2 is after detaching the disk
 
+Can you look them?
+They are important?
 
+Jose Alberto
+
+--Boundary-00=_hcMwFBihoYRst7o
+Content-Type: text/plain;
+  charset="iso-8859-15";
+  name="dmesg1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="dmesg1"
+
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata4: (irq_stat 0x02400000, PHY RDY changed)
+ata4: waiting for device to spin up (8 secs)
+ata4: soft resetting port
+ata4: softreset failed (port busy but CLO unavailable)
+ata4: softreset failed, retrying in 5 secs
+ata4: hard resetting port
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: ATA-7, max UDMA/133, 586072368 sectors: LBA48 NCQ (depth 31/32)
+ata4.00: Drive reports diagnostics failure. This may indicate a drive
+ata4.00: fault or invalid emulation. Contact drive vendor for information.
+ata4.00: configured for UDMA/133
+ata4: EH complete
+scsi 3:0:0:0: Direct-Access     ATA      ST3300831AS      3.03 PQ: 0 ANSI: 5
+SCSI device sdd: 586072368 512-byte hdwr sectors (300069 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+SCSI device sdd: 586072368 512-byte hdwr sectors (300069 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdd: sdd1
+sd 3:0:0:0: Attached scsi disk sdd
+sd 3:0:0:0: Attached scsi generic sg3 type 0
+
+--Boundary-00=_hcMwFBihoYRst7o
+Content-Type: text/plain;
+  charset="iso-8859-15";
+  name="dmesg2"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="dmesg2"
+
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata4: (irq_stat 0x04400000, PHY RDY changed)
+ata4: soft resetting port
+ata4: SATA link down (SStatus 0 SControl 300)
+ata4: failed to recover some devices, retrying in 5 secs
+ata4: hard resetting port
+ata4: SATA link down (SStatus 0 SControl 300)
+ata4: failed to recover some devices, retrying in 5 secs
+ata4: hard resetting port
+ata4: SATA link down (SStatus 0 SControl 300)
+ata4.00: disabled
+ata4: EH complete
+ata4.00: detaching (SCSI 3:0:0:0)
+Synchronizing SCSI cache for disk sdd:
+FAILED
+  status = 0, message = 00, host = 4, driver = 00
+
+--Boundary-00=_hcMwFBihoYRst7o--
