@@ -1,32 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] iomap: iomap should be in obj-y not in lib-y
-Date: Wed, 31 Jan 2007 12:35:48 -0500
-Message-ID: <45C0D374.6080304@pobox.com>
-References: <20070131134806.GJ8606@htj.dyndns.org> <45C0B170.8050901@pobox.com> <45C0D0AD.1090703@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Wed, 31 Jan 2007 12:57:53 -0500
+Message-ID: <45C0D8A1.2030506@rtr.ca>
+References: <200701301947.08478.liml@rtr.ca>	<1170206199.10890.13.camel@mulgrave.il.steeleye.com>	<311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>	<45BFF3D6.9050605@rtr.ca>	<45C00AEE.1090708@emc.com>	<45C0B0DC.8030501@rtr.ca> <20070131152301.19a8a5ac@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58994 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([64.26.128.89]:2034 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030447AbXAaRfv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Jan 2007 12:35:51 -0500
-In-Reply-To: <45C0D0AD.1090703@gmail.com>
+	id S1030239AbXAaR54 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Jan 2007 12:57:56 -0500
+In-Reply-To: <20070131152301.19a8a5ac@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Ric Wheeler <ric@emc.com>, "Eric D. Mudama" <edmudama@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, dougg@torque.net
 
-Tejun Heo wrote:
-> Also, you can avoid that by configuring aliases to the thunderbird
-> account.  It's in account setting -> Manage Identities.  Thungerbird is
-> pretty neat.  :-)
+Alan wrote:
+>> When libata reports a MEDIUM_ERROR to us, we *know* it's non-recoverable,
+>> as the drive itself has already done internal retries (libata uses the
+>> "with retry" ATA opcodes for this).
+> 
+> This depends on the firmware. Some of the "raid firmware" drives don't
+> appear to do retries in firmware.
 
-Already done that, it doesn't seem to work :/
+One way to tell if this is true, is simply to time how long
+the failed operation takes.  If the drive truly does not do retries,
+then the media error should be reported more or less instantly
+(assuming drive was already spun up).
 
-If you ever see JGarzik@DunveganMedia.com in a From line, that's 
-Thunderbird screwing up and I didn't catch it.
+If the failure takes more than a few hundred milliseconds to be reported,
+or in this case 4-7 seconds typically, then we know the drive was doing
+retries before it reported back.
 
-	Jeff
+I haven't seen any drive fail instantly yet.
+Can anyone with those newfangled "RAID edition" drives try it
+and report back?  Oh.. you'll need a way to create a bad sector.
+I've got patches and a command-line utility for the job.
 
+If your drive supports "WRITE UNCORRECTABLE" ("hdparm -I", w/latest hdparm),
+then the patches aren't needed.
 
+>> But meanwhile, we still have the original issue too, where a single stray
+>> bad sector can blow a system out of the water, because the mid-layer
+>> currently aborts everything after it from a large merged request.
+>>
+>> Thus the original patch from this thread.  :)
+> 
+> Agreed
