@@ -1,37 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] iomap: iomap should be in obj-y not in lib-y
-Date: Wed, 31 Jan 2007 10:10:40 -0500
-Message-ID: <45C0B170.8050901@pobox.com>
-References: <20070131134806.GJ8606@htj.dyndns.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Wed, 31 Jan 2007 10:13:21 -0500
+Message-ID: <45C0B211.2030305@rtr.ca>
+References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>	 <311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>	 <45BFF3D6.9050605@rtr.ca>  <45C00AEE.1090708@emc.com> <1170217288.10890.37.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57398 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([64.26.128.89]:3573 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964852AbXAaPKn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Jan 2007 10:10:43 -0500
-In-Reply-To: <20070131134806.GJ8606@htj.dyndns.org>
+	id S965007AbXAaPNX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Jan 2007 10:13:23 -0500
+In-Reply-To: <1170217288.10890.37.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ric Wheeler <ric@emc.com>, "Eric D. Mudama" <edmudama@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, dougg@torque.net
 
-Tejun Heo wrote:
-> devres change moved iomap.o from obj-$(CONFIG_GENERIC_IOMAP) to lib-y
-> making it not linked if no in-kernel driver uses it.  Fix it.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+James Bottomley wrote:
+>
+> For the MD case, this is what REQ_FAILFAST is for.
 
-applied
+I cannot find where SCSI honours that flag.  James?
 
-BTW can you update your scripts to email jeff@garzik.org ?  That's the 
-primary email address I signoff with, etc.
+And for that matter, even when I patch SCSI so that it *does* honour it,
+I don't actually see the flag making it into the SCSI layer from above.
 
-jgarzik@pobox.com will continue to work for all eternity, but it makes 
-Mozilla Thunderbird stupidly add an unneeded CC.
+And I don't see where/how the block layer takes care when considering
+merge FAILFAST/READA requests with non FAILFAST/READA requests.
+To me, it looks perfectly happy to add non-FAILFAST/READA bios
+to a FAILFAST request, risking data loss if a lower-layer decides
+to honour the FAILFAST/READA flags.
 
-	Jeff
-
-
+So it's a pretty Good Thing(tm) that SCSI doesn't currently honour it. ;)
+ 
 
