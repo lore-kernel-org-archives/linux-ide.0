@@ -1,37 +1,32 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: Fix (hopefully) all the remaining problems with
- devices failing setup/identify
-Date: Wed, 31 Jan 2007 17:47:24 +0000
-Message-ID: <20070131174724.7b17153a@localhost.localdomain>
-References: <20070131172605.2c5dfc78@localhost.localdomain>
-	<45C0D050.4030302@garzik.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] iomap: iomap should be in obj-y not in lib-y
+Date: Wed, 31 Jan 2007 12:35:48 -0500
+Message-ID: <45C0D374.6080304@pobox.com>
+References: <20070131134806.GJ8606@htj.dyndns.org> <45C0B170.8050901@pobox.com> <45C0D0AD.1090703@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030449AbXAaRfL@vger.kernel.org>
-In-Reply-To: <45C0D050.4030302@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:58994 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030447AbXAaRfv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Jan 2007 12:35:51 -0500
+In-Reply-To: <45C0D0AD.1090703@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-> Looks like you should use ata_busy_wait() here, rather than reproducing 
-> the same code again.
+Tejun Heo wrote:
+> Also, you can avoid that by configuring aliases to the thunderbird
+> account.  It's in account setting -> Manage Identities.  Thungerbird is
+> pretty neat.  :-)
 
-It waits in 10uS chunks while 1uS chunks were used in the workaround.
-Could indeed do that once I know the fix is right. While I'm at it the
-ata_busy_wait kerneldoc is borked so here's a fix
+Already done that, it doesn't seem to work :/
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+If you ever see JGarzik@DunveganMedia.com in a From line, that's 
+Thunderbird screwing up and I didn't catch it.
 
---- linux.vanilla-2.6.20-rc6-mm3/include/linux/libata.h	2007-01-31 14:20:43.000000000 +0000
-+++ linux-2.6.20-rc6-mm3/include/linux/libata.h	2007-01-31 17:19:04.703229512 +0000
-@@ -1052,6 +1053,8 @@
- /**
-  *	ata_busy_wait - Wait for a port status register
-  *	@ap: Port to wait for.
-+ *	@bits: bits that must be clear
-+ *	@max: number of 10uS waits to perform
-  *
-  *	Waits up to max*10 microseconds for the selected bits in the port's
-  *	status register to be cleared.
+	Jeff
+
+
