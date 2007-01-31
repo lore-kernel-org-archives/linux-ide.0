@@ -1,70 +1,150 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Wed, 31 Jan 2007 09:36:53 -0500
-Message-ID: <45C0A985.7010402@emc.com>
-References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com> <311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com> <45BFF3D6.9050605@rtr.ca> <45C061C3.8030006@garzik.org>
-Reply-To: ric@emc.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Add suport for Marvell 88SE6121 in ahci
+Date: Wed, 31 Jan 2007 10:03:18 -0500
+Message-ID: <45C0AFB6.5010907@garzik.org>
+References: <200701311504.40277.jareguero@telefonica.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------010808060203070002030001"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:52906 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933298AbXAaOhL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 09:37:11 -0500
-In-Reply-To: <45C061C3.8030006@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:57318 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933332AbXAaPDW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Jan 2007 10:03:22 -0500
+In-Reply-To: <200701311504.40277.jareguero@telefonica.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, "Eric D. Mudama" <edmudama@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jose Alberto Reguero <jareguero@telefonica.net>
+Cc: linux-ide@vger.kernel.org, Jay Cliburn <jacliburn@bellsouth.net>
 
+This is a multi-part message in MIME format.
+--------------010808060203070002030001
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Eric D. Mudama wrote:
->>>
->>> Actually, it's possibly worse, since each failure in libata will 
->>> generate 3-4 retries.  With existing ATA error recovery in the 
->>> drives, that's about 3 seconds per retry on average, or 12 seconds 
->>> per failure.  Multiply that by the number of blocks past the error to 
->>> complete the request..
->>
->> It really beats the alternative of a forced reboot
->> due to, say, superblock I/O failing because it happened
->> to get merged with an unrelated I/O which then failed..
->> Etc..
+Jose Alberto Reguero wrote:
+> This work for kernel 2.6.20-rc6
 > 
+> First apply this patch:
 > 
-> FWIW -- speaking generally -- I think there are inevitable areas where 
-> libata error handling combined with SCSI error handling results in 
-> suboptimal error handling.
+> http://marc.theaimsgroup.com/?l=linux-ide&m=116986924301674&w=2
 > 
-> Just creating a list of "<this behavior> should be handled <this way>, 
-> but in reality is handled in <this silly way>" would be very helpful.
-
-I agree - Tejun has done a great job at giving us a great base. Next step is to 
-get clarity on what the types of errors are and how to differentiate between 
-them (and maybe how that would change by class of device?).
-
+> Then apply the patch attached.
 > 
-> Error handling is tough to get right, because the code is exercised so 
-> infrequently.  Tejun has actually done an above-average job here, by 
-> making device probe, hotplug and other "exceptions" go through the 
-> libata EH code, thereby exercising the EH code more than one might 
-> normally assume.
+> Comments:
 > 
-> Some errors in libata probably should not be retried more than once, 
-> when we have a definitive diagnosis.  Suggestions for improvements are 
-> welcome.
+> The Marvell 88SE6121 has three ports (0,1,2). The PATA port is port 2. (PATA 
+> port for 6141 is port 4). In M2V Motherboard(Marvell 88SE6121) there is only 
+> two SATA ports, one of them is external SATA. This two ports work well with 
+> this patch.
 > 
->     Jeff
+> With this part:
+> 
+> <       if (pci_enable_msi(pdev) == 0)
+> ---
+>>       if ((pdev->vendor != PCI_VENDOR_ID_MARVELL) && (pci_enable_msi(pdev) 
+> == 0))
+> 
+> you don't need to disable MSI in kernel.
+> MMCONFIG is disabled at startup in M2V.
+> 
+> dmesg:
+> ........
+> PCI: Not using MMCONFIG.
 
-One thing that we find really useful is to inject real errors into devices. Mark 
-has some patches that let us inject media errors, we also bring back failed 
-drives and run them through testing and occasionally get to use analyzers, etc 
-to inject odd ball errors.
+Very useful data points, thanks!
 
-Hopefully, we will get some time to brainstorm about this at the workshop,
+For the future, please make sure to create patches using "diff -u", 
+otherwise the patches are very difficult to read and apply.
 
-ric
+I've attached your patch as a "diff -u" patch so that others can check 
+it out.
+
+	Jeff
+
+
+
+
+--------------010808060203070002030001
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ab7ea55..c1925b2 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -439,6 +439,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 
+ 	/* SiS */
+ 	{ PCI_VDEVICE(SI, 0x1184), board_ahci }, /* SiS 966 */
++	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
+ 	{ PCI_VDEVICE(SI, 0x1185), board_ahci }, /* SiS 966 */
+ 	{ PCI_VDEVICE(SI, 0x0186), board_ahci }, /* SiS 968 */
+ 
+@@ -716,7 +717,10 @@ static void ahci_init_controller(void __iomem *mmio, struct pci_dev *pdev,
+ 	u32 tmp;
+ 
+ 	if (port_flags & AHCI_FLAG_MV_PATA) {
+-		port_mmio = ahci_port_base(mmio, 4);
++		if (pdev->device == 0x6121)
++			port_mmio = ahci_port_base(mmio, 2);
++		else
++			port_mmio = ahci_port_base(mmio, 4);
+ 
+ 		writel(0, port_mmio + PORT_IRQ_MASK);
+ 
+@@ -1570,16 +1574,30 @@ static int ahci_host_init(struct ata_probe_ent *probe_ent)
+ 	 * presence register, as bit 4 (counting from 0)
+ 	 */
+ 	if (probe_ent->port_flags & AHCI_FLAG_MV_PATA) {
+-		dev_printk(KERN_ERR, &pdev->dev,
+-			   "MV_AHCI HACK: port_map %x -> %x, cap_n %u -> %u\n",
+-			   hpriv->port_map,
+-			   hpriv->port_map & 0xf,
+-			   cap_n_ports,
+-			   (cap_n_ports > 4) ? 4 : cap_n_ports);
+-
+-		hpriv->port_map &= 0xf;
+-		if (cap_n_ports > 4)
+-			cap_n_ports = 4;
++		if (pdev->device == 0x6121) {
++			dev_printk(KERN_ERR, &pdev->dev,
++				   "MV_AHCI HACK: port_map %x -> %x, cap_n %u -> %u\n",
++				   hpriv->port_map,
++				   hpriv->port_map & 0x3,
++				   cap_n_ports,
++				   (cap_n_ports > 2) ? 2 : cap_n_ports);
++
++			hpriv->port_map &= 0x3;
++			if (cap_n_ports > 2)
++				cap_n_ports = 2;
++		}
++		else {
++			dev_printk(KERN_ERR, &pdev->dev,
++				   "MV_AHCI HACK: port_map %x -> %x, cap_n %u -> %u\n",
++				   hpriv->port_map,
++				   hpriv->port_map & 0xf,
++				   cap_n_ports,
++				   (cap_n_ports > 4) ? 4 : cap_n_ports);
++
++			hpriv->port_map &= 0xf;
++			if (cap_n_ports > 4)
++				cap_n_ports = 4;
++		}
+ 	}
+ 
+ 	VPRINTK("cap 0x%x  port_map 0x%x  n_ports %d\n",
+@@ -1757,7 +1775,7 @@ static int ahci_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		goto err_out;
+ 	}
+ 
+-	if (pci_enable_msi(pdev) == 0)
++	if ((pdev->vendor != PCI_VENDOR_ID_MARVELL) && (pci_enable_msi(pdev) == 0))
+ 		have_msi = 1;
+ 	else {
+ 		pci_intx(pdev, 1);
+
+--------------010808060203070002030001--
