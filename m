@@ -1,7 +1,7 @@
-From: "Fabio Comolli" <fabio.comolli@gmail.com>
+From: Luca <kronos.it@gmail.com>
 Subject: Re: [2.6.20-rc6] pktcdvd doesn't work
-Date: Wed, 31 Jan 2007 14:17:37 -0500
-Message-ID: <b637ec0b0701311117x6e19715eme49ba85b2a570d31@mail.gmail.com>
+Date: Wed, 31 Jan 2007 20:59:51 +0100
+Message-ID: <68676e00701311159j27bd9ad7kfe6fd6725ce89209@mail.gmail.com>
 References: <20070130195319.GA10994@dreamland.darkstar.lan>
 	 <Pine.LNX.4.61.0701302100370.13737@yvahk01.tjqt.qr>
 	 <20070130203601.GB15067@dreamland.darkstar.lan>
@@ -12,38 +12,18 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:63731 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030553AbXAaTRi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 14:17:38 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so301322wxd
-        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 11:17:37 -0800 (PST)
+Received: from nz-out-0506.google.com ([64.233.162.232]:25068 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567AbXAaT7w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 14:59:52 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so295474nze
+        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 11:59:51 -0800 (PST)
 In-Reply-To: <45C0764B.8060906@pobox.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Luca Tettamanti <kronos.it@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Peter Osterlund <petero2@telia.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, justin@jmicron.com
-
-Hi all.
-I don't know if this report can be useful, but this problem does not
-show up in my setup.
-
-I tried multiple times to copy 10MB files (unmounting and remounting
-every time) and verified with md5sum the results and everything is
-correct.
-
-Details:
-
-* kernel version: 2.6.20-rc6-g93544047
-* driver: ata_piix (only a PATA hard disk and a DVD writer)
-* writer: TSSTcorp CD/DVDW TS-L532M HR08 PQ: 0 ANSI: 5).
-* udftools version: udftools-1.0.0b3-7.fc6
-
-Regards,
-Fabio
-
-
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Peter Osterlund <petero2@telia.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, justin@jmicron.com
 
 On 1/31/07, Jeff Garzik <jgarzik@pobox.com> wrote:
 > Luca Tettamanti wrote:
@@ -117,16 +97,8 @@ On 1/31/07, Jeff Garzik <jgarzik@pobox.com> wrote:
 > hmmm, definitely interesting behavior.
 >
 > Would you mind putting this info into a bugzilla.kernel.org report, so
-> that it is not lost?  This bug will likely go into a heavy ATAPI
-> debugging session that is coming in a few weeks, but not immediately :/
->
->         Jeff
->
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+> that it is not lost?
+
+Done, ID is 7910.
+
+Luca
