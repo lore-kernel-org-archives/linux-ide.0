@@ -1,75 +1,62 @@
-From: Steven Scholz <steven.scholz@imc-berlin.de>
-Subject: Re: HPA and failed opcode was: 0x37 ?
-Date: Wed, 31 Jan 2007 10:51:36 +0100
-Message-ID: <45C066A8.2090500@imc-berlin.de>
-References: <45BF5003.3000503@imc-berlin.de>	<20070130164401.295f9913@localhost.localdomain>	<45BF7658.1090204@imc-berlin.de>	<20070130172629.70ad628d@localhost.localdomain>	<45BF7E21.7010605@imc-berlin.de> <20070130180727.594b35d0@localhost.localdomain> <45BF88B9.3050802@imc-berlin.de> <45BF8F33.3070008@ru.mvista.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [2.6.18,19] SATA boot problems (ICH6/ICH6W)
+Date: Wed, 31 Jan 2007 19:44:43 +0900
+Message-ID: <45C0731B.2030608@gmail.com>
+References: <200612111003.39928.kovid@theory.caltech.edu> <4588877D.1000400@gmail.com> <20061220032941.GA8903@us.ibm.com> <4588B3D5.4030406@gmail.com> <20061221171035.GC6171@us.ibm.com> <20070130015507.GA30069@us.ibm.com> <45BEF492.9000000@gmail.com> <20070130233735.GA7483@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:1521 "EHLO
-	mail.imc-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932857AbXAaJvj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 04:51:39 -0500
-In-Reply-To: <45BF8F33.3070008@ru.mvista.com>
+Received: from nz-out-0506.google.com ([64.233.162.237]:58175 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932981AbXAaKov (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 05:44:51 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so153449nze
+        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 02:44:50 -0800 (PST)
+In-Reply-To: <20070130233735.GA7483@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Gary Hade <garyhade@us.ibm.com>
+Cc: Kovid Goyal <kovid@theory.caltech.edu>, linux-ide@vger.kernel.org, lcm@us.ibm.com, Jeff Garzik <jgarzik@pobox.com>, konradr@us.ibm.com
 
-Sergei,
+Gary Hade wrote:
+> Some of my random thoughts:
+> There does appear to be this invalid assumption that 0xFF status 
+> always implies device-not-present.  The status register access 
+> restrictions in ATA/ATAPI-7 V1 5.14.2 include the statement "The 
+> contents of this register, except for BSY, shall be ignored when 
+> BSY is set to one." which the code does not honor.  There is apparently 
+> past experience that 0xFF status implies device-not-present for some
+> controllers (the odd clowns :) but I have no idea how common these are.
 
->> How could one then explain
-> 
->> current capacity is 78140160 sectors would be           0x000004A85300
->> native  capacity is 185074430006016 sectors would be    0xA852FFA85300
->>
->> ? First three bytes ok, then the other three bytes rubbish?
-> 
->    Note that they're not complete garbage but equal the value of the
-> lower 3 bytes minus 1. What is clear is that Read Native Max Address Ext
-> command must be mistreating the HOB bit... :-)
+The 0xff is the value we get when there is no device present and the
+motherboard manufacturer forgot to pull down the ATA bus.  It's not very
+uncommon in cheap PATA world and, following the weird tradition, some
+SATA controllers choose to emulate 0xff if there is no device attached
+(link not established).  Not sure how many of them does it but intel's
+SATA chipset is one of them, so we're pretty much stuck with it.
 
-Well this results from
+ie. In many P/SATA setups, your patch would add 2 extra secs of waiting
+for empty ports.
 
-	addr++;	/* since the return value is (maxlba - 1), we add 1 */
+> We obviously can't get rid of the check but since we cannot clear
+> the read-only status register and there appears to be no specification 
+> dictated upper limit on how long it should take for a software reset to 
+> complete it just seems like we need to wait long enough to support the 
+> slowest known device which may be the GoVault.
 
-in idedisk_read_native_max_address_ext().
+Agreed but still hesitant to ack the patch.  :-)
 
-Apparently on my system
+I'm gonna work on parallel probing for libata.  I think we can easily
+hide extra 2 secs of waiting with parallel probing.  It will take some
+time but that seems to be the 'right' thing to do especially considering
+the fact that 150ms sleep has been enough for gazillions of ATA devices
+during last decade except for this GoVault drive.
 
-		u32 high = (args.hobRegister[IDE_HCYL_OFFSET] << 16) |
-			   (args.hobRegister[IDE_LCYL_OFFSET] <<  8) |
-			    args.hobRegister[IDE_SECTOR_OFFSET];
-		u32 low  = ((args.tfRegister[IDE_HCYL_OFFSET])<<16) |
-			   ((args.tfRegister[IDE_LCYL_OFFSET])<<8) |
-			    (args.tfRegister[IDE_SECTOR_OFFSET]);
+I'll leave this thread in my to-do folder and apply your patch after
+parallel probing is in place (optimistic ETA 1 month).  How does that sound?
 
-high and low contain the same values! :-(
+Thanks.
 
-I "hardcoded" set_max = capacity, now I get
-
-hda: Host Protected Area detected.
-        current capacity is 78140160 sectors (40007 MB)
-        native  capacity is 78140160 sectors (40007 MB)
-hda: Host Protected Area disabled.
-hda: 4289221376 sectors (2196081 MB) w/8192KiB Cache, CHS=65535/255/63
-
-;-)
-
-But still something must go terribly wrong.
-
-smartctl shows
-
-  7 Seek_Error_Rate         0x000f   061   060   030     -       1513926
-195 Hardware_ECC_Recovered  0x001a   100   066   000     -       104721680
-
-And after just doing a "mke2fs /dev/hda1" I see
-
-  7 Seek_Error_Rate         0x000f   061   060   030     -       1516919
-195 Hardware_ECC_Recovered  0x001a   095   066   000     -       104791382
-
-:-(
-
---
-Steven
+-- 
+tejun
