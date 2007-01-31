@@ -1,40 +1,89 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [2.6.18,19] SATA boot problems (ICH6/ICH6W)
-Date: Wed, 31 Jan 2007 12:20:34 +0000
-Message-ID: <20070131122034.5b457c68@localhost.localdomain>
-References: <200612111003.39928.kovid@theory.caltech.edu>
-	<4588877D.1000400@gmail.com>
-	<20061220032941.GA8903@us.ibm.com>
-	<4588B3D5.4030406@gmail.com>
-	<20061221171035.GC6171@us.ibm.com>
-	<20070130015507.GA30069@us.ibm.com>
-	<45BEF492.9000000@gmail.com>
-	<20070130233735.GA7483@us.ibm.com>
-	<45BFE8BC.3000906@pobox.com>
-	<45C076B9.3030106@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: HPA and failed opcode was: 0x37 ?
+Date: Wed, 31 Jan 2007 15:50:17 +0300
+Message-ID: <45C09089.7070300@ru.mvista.com>
+References: <45BF5003.3000503@imc-berlin.de>	<20070130164401.295f9913@localhost.localdomain>	<45BF7658.1090204@imc-berlin.de>	<20070130172629.70ad628d@localhost.localdomain>	<45BF7E21.7010605@imc-berlin.de> <20070130180727.594b35d0@localhost.localdomain> <45BF88B9.3050802@imc-berlin.de> <45BF8F33.3070008@ru.mvista.com> <45C066A8.2090500@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40807 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933139AbXAaMSa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 07:18:30 -0500
-In-Reply-To: <45C076B9.3030106@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:43946 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933198AbXAaMu0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Jan 2007 07:50:26 -0500
+In-Reply-To: <45C066A8.2090500@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Gary Hade <garyhade@us.ibm.com>, Kovid Goyal <kovid@theory.caltech.edu>, linux-ide@vger.kernel.org, lcm@us.ibm.com, konradr@us.ibm.com
+To: Steven Scholz <steven.scholz@imc-berlin.de>
+Cc: linux-ide@vger.kernel.org
 
-> Some SATA controllers use 0xff to indicate empty port.  This seldomly
-> matters as we have the almighty SStatus register to check device
-> presence (there is a bug regarding this, patch pending).
+Hello.
+
+Steven Scholz wrote:
+
+>>>How could one then explain
+
+>>>current capacity is 78140160 sectors would be           0x000004A85300
+>>>native  capacity is 185074430006016 sectors would be    0xA852FFA85300
+
+>>>? First three bytes ok, then the other three bytes rubbish?
+
+>>   Note that they're not complete garbage but equal the value of the
+>>lower 3 bytes minus 1. What is clear is that Read Native Max Address Ext
+>>command must be mistreating the HOB bit... :-)
+
+> Well this results from
+
+> 	addr++;	/* since the return value is (maxlba - 1), we add 1 */
+
+> in idedisk_read_native_max_address_ext().
+
+> Apparently on my system
 > 
-> This GoVault drive fails because ata_piix doesn't have SCR while using
-> 0xff to indicate port not ready (dunno exact which state causes 0xff
-> status tho) while the GoVault drive fails to clear that state in 150ms
-> (not 30s).  The libata sees 0xff after SRST if GoVault drive is attached
+> 		u32 high = (args.hobRegister[IDE_HCYL_OFFSET] << 16) |
+> 			   (args.hobRegister[IDE_LCYL_OFFSET] <<  8) |
+> 			    args.hobRegister[IDE_SECTOR_OFFSET];
+> 		u32 low  = ((args.tfRegister[IDE_HCYL_OFFSET])<<16) |
+> 			   ((args.tfRegister[IDE_LCYL_OFFSET])<<8) |
+> 			    (args.tfRegister[IDE_SECTOR_OFFSET]);
+> 
+> high and low contain the same values! :-(
 
-So we can also cut this down by only doing the extra polling on a device
-which is SATA and lacks SCR ?
+    Right.
+    I also have doubts about IDE_CONTROL_REG being properly decoded/handled in 
+your FPGA.
 
+> I "hardcoded" set_max = capacity, now I get
+
+> hda: Host Protected Area detected.
+>         current capacity is 78140160 sectors (40007 MB)
+>         native  capacity is 78140160 sectors (40007 MB)
+> hda: Host Protected Area disabled.
+> hda: 4289221376 sectors (2196081 MB) w/8192KiB Cache, CHS=65535/255/63
+
+> ;-)
+
+> But still something must go terribly wrong.
+
+    Erm, the resulting capacity still seems wrong, so you need to also change 
+idedisk_set_max_address_ext().
+
+> smartctl shows
+
+>   7 Seek_Error_Rate         0x000f   061   060   030     -       1513926
+> 195 Hardware_ECC_Recovered  0x001a   100   066   000     -       104721680
+
+> And after just doing a "mke2fs /dev/hda1" I see
+
+>   7 Seek_Error_Rate         0x000f   061   060   030     -       1516919
+> 195 Hardware_ECC_Recovered  0x001a   095   066   000     -       104791382
+
+> :-(
+
+    I'm not sure smartctl names these attributes corectly -- they're vendor 
+specific, after all... :-)
+
+> --
+> Steven
+
+MBR, Sergei
