@@ -1,80 +1,73 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Implement the technote about promise/maxtor drives
-Date: Wed, 31 Jan 2007 17:12:51 +0000
-Message-ID: <20070131171251.4210bcdb@localhost.localdomain>
+Subject: [PATCH] libata: Fix (hopefully) all the remaining problems with
+ devices failing setup/identify
+Date: Wed, 31 Jan 2007 17:26:05 +0000
+Message-ID: <20070131172605.2c5dfc78@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48165 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41422 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932969AbXAaRAe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 12:00:34 -0500
+	with ESMTP id S1030302AbXAaRNo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 12:13:44 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-I don't have the hardware combination to test this one so would
-appreciate people testing it before it goes anywhere further
+Two fixes in this test patch. One of them allows old CF cards to refuse
+pio mode setting, and one to wait for the drive to settle after a set
+features changes the speed settings, which is based upon the workarounds
+used by drivers/ide.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.20-rc6-mm3/drivers/ata/pata_pdc2027x.c linux-2.6.20-rc6-mm3/drivers/ata/pata_pdc2027x.c
---- linux.vanilla-2.6.20-rc6-mm3/drivers/ata/pata_pdc2027x.c	2007-01-31 14:20:39.000000000 +0000
-+++ linux-2.6.20-rc6-mm3/drivers/ata/pata_pdc2027x.c	2007-01-31 14:31:02.000000000 +0000
-@@ -68,6 +68,7 @@
- static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- static void pdc2027x_post_set_mode(struct ata_port *ap);
- static int pdc2027x_check_atapi_dma(struct ata_queued_cmd *qc);
-+static unsigned long pdc2027x_mode_filter(const struct ata_port *ap, struct ata_device *adev, unsigned long mask);
+Please test and report back if you have an afflicted system. This patch
+isn't for merging just testing.
+
+The CF card fix will still display errors when the card works (got fixes
+for that once I know the cure works) but should then be found/usable.
+
+Not signed off by anyone, not for merging
+
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.20-rc6-mm3/drivers/ata/libata-core.c linux-2.6.20-rc6-mm3/drivers/ata/libata-core.c
+--- linux.vanilla-2.6.20-rc6-mm3/drivers/ata/libata-core.c	2007-01-31 14:20:39.000000000 +0000
++++ linux-2.6.20-rc6-mm3/drivers/ata/libata-core.c	2007-01-31 16:25:43.000000000 +0000
+@@ -2404,6 +2418,10 @@
+ 		dev->flags |= ATA_DFLAG_PIO;
  
- /*
-  * ATA Timing Tables based on 133MHz controller clock.
-@@ -146,6 +147,7 @@
- 
- static struct ata_port_operations pdc2027x_pata100_ops = {
- 	.port_disable		= ata_port_disable,
-+	.mode_filter		= ata_pci_default_filter,
- 
- 	.tf_load		= ata_tf_load,
- 	.tf_read		= ata_tf_read,
-@@ -180,6 +182,7 @@
- 	.set_piomode		= pdc2027x_set_piomode,
- 	.set_dmamode		= pdc2027x_set_dmamode,
- 	.post_set_mode		= pdc2027x_post_set_mode,
-+	.mode_filter		= pdc2027x_mode_filter,
- 
- 	.tf_load		= ata_tf_load,
- 	.tf_read		= ata_tf_read,
-@@ -334,6 +337,33 @@
- }
- 
- /**
-+ *	pdc2720x_mode_filter	-	mode selection filter
-+ *	@ap: ATA interface
-+ *	@adev: ATA device
-+ *
-+ *	Block UDMA on devices that cause trouble with this controller.
-+ */
+ 	err_mask = ata_dev_set_xfermode(dev);
++	/* Old CFA may refuse this command, which is just fine */
++	if (dev->xfer_shift == ATA_SHIFT_PIO && ata_id_is_cfa(dev->id))
++        	err_mask &= ~AC_ERR_DEV;
 +
-+static unsigned long pdc2027x_mode_filter(const struct ata_port *ap, struct ata_device *adev, unsigned long mask)
-+{
-+	unsigned char model_num[ATA_ID_PROD_LEN + 1];
-+	struct ata_device *pair = ata_dev_pair(adev);
-+	
-+	if (adev->class != ATA_DEV_ATA || adev->devno == 0 || pair == NULL)
-+		return ata_pci_default_filter(ap, adev, mask);
-+
-+	/* Check for slave of a Maxtor at UDMA6 */
-+	ata_id_c_string(pair->id, model_num, ATA_ID_PROD,
-+			  ATA_ID_PROD_LEN + 1);
-+	/* If the master is a maxtor in UDMA6 then the slave should not use UDMA 6 */
-+	if(strstr(model_num, "Maxtor") == 0 && pair->dma_mode == XFER_UDMA_6)
-+		mask &= ~ (1 << (6 + ATA_SHIFT_UDMA));
-+	
-+	return ata_pci_default_filter(ap, adev, mask);
-+}
-+
-+
-+/**
-  *	pdc2027x_set_piomode - Initialize host controller PATA PIO timings
-  *	@ap: Port to configure
-  *	@adev: um
+ 	if (err_mask) {
+ 		ata_dev_printk(dev, KERN_ERR, "failed to set xfermode "
+ 			       "(err_mask=0x%x)\n", err_mask);
+@@ -5088,6 +5119,7 @@
+ {
+ 	struct ata_eh_info *ehi = &ap->eh_info;
+ 	u8 status, host_stat = 0;
++	int i;
+ 
+ 	VPRINTK("ata%u: protocol %d task_state %d\n",
+ 		ap->id, qc->tf.protocol, ap->hsm_task_state);
+@@ -5142,6 +5174,20 @@
+ 	status = ata_chk_status(ap);
+ 	if (unlikely(status & ATA_BUSY))
+ 		goto idle_irq;
++		
++	if (unlikely(qc->tf.command == ATA_CMD_SET_FEATURES && 
++			qc->tf.feature == SETFEATURES_XFER)) {
++		/* Let the timings change settle and the drive catch up as
++		   some hardware needs up to 10uS to get its brain back in
++		   gear. Taken from the workarounds in drivers/ide done by
++		   Matthew Faupel/Niccolo Rigacci */
++		for (i = 0; i < 10; i++) {
++			if ((status & (ATA_BUSY | ATA_DRQ | ATA_ERR)) == 0)
++				break;
++			udelay(1);
++			status = ata_chk_status(ap);
++		}
++	}
+ 
+ 	/* ack bmdma irq events */
+ 	ap->ops->irq_clear(ap);
