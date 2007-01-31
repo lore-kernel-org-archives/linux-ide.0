@@ -1,53 +1,50 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] libata: rearrange dmesg info to add full ATA revision
-Date: Wed, 31 Jan 2007 04:16:25 -0500
-Message-ID: <45C05E69.8060208@garzik.org>
-References: <20070131021051.GA3403@bounceswoosh.org> <45C013B8.8030600@gmail.com> <45C020F7.7000305@gmail.com>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Wed, 31 Jan 2007 04:30:43 -0500
+Message-ID: <45C061C3.8030006@garzik.org>
+References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com> <311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com> <45BFF3D6.9050605@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55042 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932522AbXAaJQ2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Jan 2007 04:16:28 -0500
-In-Reply-To: <45C020F7.7000305@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <45BFF3D6.9050605@rtr.ca>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>, "Eric D. Mudama" <edmudama@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Eric D. Mudama" <edmudama@gmail.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> [The previous replay mysteriously didn't include Eric in To:, sorry,
-> quoting whole message here.]
-> 
-> Tejun Heo wrote:
->> Hello, Eric.
+Mark Lord wrote:
+> Eric D. Mudama wrote:
 >>
->> Eric D. Mudama wrote:
->>> Per Jeff's suggestion, this patch rearranges the info printed for ATA
->>> drives into dmesg to add the full ATA firmware revision and model
->>> information, while keeping the output to 2 lines.
->>>
->>> Signed-off-by: Eric D. Mudama <edmudama@gmail.com>
->> The patch is formatted and applies perfectly.  I'm glad to see this
->> change.  Just a few nits below.
->>
->>>  	char revbuf[7];		/* XYZ-99\0 */
->>> +	char fwrevbuf[9];
->>> +	char modelbuf[41];
->> Please use ATA_ID_FW_REV_LEN + 1 and ATA_ID_PROD_LEN + 1.
+>> Actually, it's possibly worse, since each failure in libata will 
+>> generate 3-4 retries.  With existing ATA error recovery in the drives, 
+>> that's about 3 seconds per retry on average, or 12 seconds per 
+>> failure.  Multiply that by the number of blocks past the error to 
+>> complete the request..
 > 
-> This depends on to which version this patch applies.  For
-> #upstream-fixes (2.6.20-rc6), you have to use raw numbers as you did.
-> For #upstream, there are above two constants to use.  I think this patch
-> is good for 2.6.20 as it's safe && will help us analyzing bug reports
-> for 2.6.20.  So, ignore this part of the comment.
+> It really beats the alternative of a forced reboot
+> due to, say, superblock I/O failing because it happened
+> to get merged with an unrelated I/O which then failed..
+> Etc..
 
-We have time to revise.  I only want to commit true bug fixes at this 
-point, to 2.6.20.
+
+FWIW -- speaking generally -- I think there are inevitable areas where 
+libata error handling combined with SCSI error handling results in 
+suboptimal error handling.
+
+Just creating a list of "<this behavior> should be handled <this way>, 
+but in reality is handled in <this silly way>" would be very helpful.
+
+Error handling is tough to get right, because the code is exercised so 
+infrequently.  Tejun has actually done an above-average job here, by 
+making device probe, hotplug and other "exceptions" go through the 
+libata EH code, thereby exercising the EH code more than one might 
+normally assume.
+
+Some errors in libata probably should not be retried more than once, 
+when we have a definitive diagnosis.  Suggestions for improvements are 
+welcome.
 
 	Jeff
-
 
 
