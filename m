@@ -1,58 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Wed, 31 Jan 2007 09:24:30 -0600
-Message-ID: <1170257071.3402.6.camel@mulgrave.il.steeleye.com>
-References: <200701301947.08478.liml@rtr.ca>
-	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
-	 <311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>
-	 <45BFF3D6.9050605@rtr.ca>  <45C00AEE.1090708@emc.com>
-	 <1170217288.10890.37.camel@mulgrave.il.steeleye.com>
-	 <45C0B211.2030305@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/1] libata: rearrange dmesg info to add full ATA revision
+Date: Wed, 31 Jan 2007 10:23:24 -0500
+Message-ID: <45C0B46C.5080905@garzik.org>
+References: <20070131021051.GA3403@bounceswoosh.org> <20070131060040.GA3361@bounceswoosh.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030205AbXAaPYi@vger.kernel.org>
-In-Reply-To: <45C0B211.2030305@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Ric Wheeler <ric@emc.com>, "Eric D. Mudama" <edmudama@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, dougg@torque.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:57623 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030201AbXAaPX0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Jan 2007 10:23:26 -0500
+In-Reply-To: <20070131060040.GA3361@bounceswoosh.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Eric D. Mudama" <edmudama@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 2007-01-31 at 10:13 -0500, Mark Lord wrote:
-> James Bottomley wrote:
-> >
-> > For the MD case, this is what REQ_FAILFAST is for.
-
-> I cannot find where SCSI honours that flag.  James?
-
-Er, it's in scsi_error.c:scsi_decide_disposition():
-
-      maybe_retry:
-
-	/* we requeue for retry because the error was retryable, and
-	 * the request was not marked fast fail.  Note that above,
-	 * even if the request is marked fast fail, we still requeue
-	 * for queue congestion conditions (QUEUE_FULL or BUSY) */
-	if ((++scmd->retries) <= scmd->allowed
-	    && !blk_noretry_request(scmd->request)) {
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-		return NEEDS_RETRY;
-	} else {
-		/*
-		 * no more retries - report this one back to upper level.
-		 */
-		return SUCCESS;
-	}
-
-> And for that matter, even when I patch SCSI so that it *does* honour it,
-> I don't actually see the flag making it into the SCSI layer from above.
+Eric D. Mudama wrote:
+> Per Jeff's suggestion, this patch rearranges the info printed for ATA
+> drives into dmesg to add the full ATA firmware revision and model
+> information, while keeping the output to 2 lines.
 > 
-> And I don't see where/how the block layer takes care when considering
-> merge FAILFAST/READA requests with non FAILFAST/READA requests.
-> To me, it looks perfectly happy to add non-FAILFAST/READA bios
-> to a FAILFAST request, risking data loss if a lower-layer decides
-> to honour the FAILFAST/READA flags.
+> Signed-off-by: Eric D. Mudama <edmudama@gmail.com>
 > 
-> So it's a pretty Good Thing(tm) that SCSI doesn't currently honour it. ;)
+> ---
+> 
+> This extra information is helpful for debugging drive-related issues
+> on ATA drives connected with libata, especially when the user can't
+> easily run hdparm.
+> 
+> Update: added Tejun's formatting requests, and created the constants
+> necessary.
+> 
+> Diff is against 2.6.20-rc6 (roughly).  Here's a snippet of my new
+> dmesg with this patch, showing the full and truncated firmware
+> revision information:
 
-James
+Looks pretty good to me at first glance.  I'll review it again tonight 
+or tomorrow, when I make the next "apply SATA patches" pass.
+
+FWIW, since this is not a bug fix, it will be going into 2.6.21 rather 
+than 2.6.20.  As such, it will be applied to 
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git 
+branch 'upstream' rather than branch 'upstream-fixes'.
+
+Or, in shorthand, libata-dev.git#upstream.
+
+Cheers and thanks,
+
+	Jeff
+
+
+
