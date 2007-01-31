@@ -1,44 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [2.6.18,19] SATA boot problems (ICH6/ICH6W)
-Date: Wed, 31 Jan 2007 22:16:49 +0900
-Message-ID: <45C096C1.1030905@gmail.com>
-References: <200612111003.39928.kovid@theory.caltech.edu>	<4588877D.1000400@gmail.com>	<20061220032941.GA8903@us.ibm.com>	<4588B3D5.4030406@gmail.com>	<20061221171035.GC6171@us.ibm.com>	<20070130015507.GA30069@us.ibm.com>	<45BEF492.9000000@gmail.com>	<20070130233735.GA7483@us.ibm.com>	<45BFE8BC.3000906@pobox.com>	<45C076B9.3030106@gmail.com> <20070131122034.5b457c68@localhost.localdomain>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: HPA and failed opcode was: 0x37 ?
+Date: Wed, 31 Jan 2007 13:33:22 +0000
+Message-ID: <20070131133322.475a2273@localhost.localdomain>
+References: <45BF5003.3000503@imc-berlin.de>
+	<20070130164401.295f9913@localhost.localdomain>
+	<45BF7658.1090204@imc-berlin.de>
+	<20070130172629.70ad628d@localhost.localdomain>
+	<45BF7E21.7010605@imc-berlin.de>
+	<20070130180727.594b35d0@localhost.localdomain>
+	<45BF88B9.3050802@imc-berlin.de>
+	<45BF8F33.3070008@ru.mvista.com>
+	<45C066A8.2090500@imc-berlin.de>
+	<45C09089.7070300@ru.mvista.com>
+	<45C093CF.3020702@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.230]:45773 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933247AbXAaNQ5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 08:16:57 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so186149nze
-        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 05:16:57 -0800 (PST)
-In-Reply-To: <20070131122034.5b457c68@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40551 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933248AbXAaNVe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 08:21:34 -0500
+In-Reply-To: <45C093CF.3020702@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Gary Hade <garyhade@us.ibm.com>, Kovid Goyal <kovid@theory.caltech.edu>, linux-ide@vger.kernel.org, lcm@us.ibm.com, konradr@us.ibm.com
+To: Steven Scholz <steven.scholz@imc-berlin.de>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-Alan wrote:
->> Some SATA controllers use 0xff to indicate empty port.  This seldomly
->> matters as we have the almighty SStatus register to check device
->> presence (there is a bug regarding this, patch pending).
->>
->> This GoVault drive fails because ata_piix doesn't have SCR while using
->> 0xff to indicate port not ready (dunno exact which state causes 0xff
->> status tho) while the GoVault drive fails to clear that state in 150ms
->> (not 30s).  The libata sees 0xff after SRST if GoVault drive is attached
-> 
-> So we can also cut this down by only doing the extra polling on a device
-> which is SATA and lacks SCR ?
+> I just connected the HDD in question to a PC and the kernel there DID NOT
+> detect a HPA! Funny enough the output of cat /proc/ide/hdb/identify is
+> different. Shouldn't it be the same!?
 
-That's true but the offending one is ata_piix, so the cutting down is
-not as effective.  If we can live with the extra two secs per empty port
-for some of ata_piix for the time being (maybe two or three releases),
-the delay can be added now.  One more thing to consider is GoVault is
-the only known device to show this behavior till now.
+No they will be different because the PC hardware works properly. We'll
+read both sizes realize they are the same and thus not report an HPA.
 
-Hmm... What do you (Alan and Jeff) think?
+This essentially confirms your hardware or driver is bust.
 
--- 
-tejun
+Alan
