@@ -1,74 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Mark Lord <lkml@rtr.ca>
 Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Tue, 30 Jan 2007 19:16:39 -0600
-Message-ID: <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
-References: <200701301947.08478.liml@rtr.ca>
+Date: Tue, 30 Jan 2007 20:36:02 -0500
+Message-ID: <45BFF282.4050305@rtr.ca>
+References: <200701301947.08478.liml@rtr.ca> <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932095AbXAaBQo@vger.kernel.org>
-In-Reply-To: <200701301947.08478.liml@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:3399 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932268AbXAaBgF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Jan 2007 20:36:05 -0500
+In-Reply-To: <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-First off, please send SCSI patches to the SCSI list:
-<linux-scsi@vger.kernel.org>
+James Bottomley wrote:
+> First off, please send SCSI patches to the SCSI list:
+> <linux-scsi@vger.kernel.org>
 
-On Tue, 2007-01-30 at 19:47 -0500, Mark Lord wrote:
-> In ancient kernels, the SCSI disk code used to continue after
-> encountering a MEDIUM_ERROR.  It would "complete" the good
-> sectors before the error, fail the bad sector/block, and then
-> continue with the rest of the request.
+Fixed already, thanks!
+
+>> This patch fixes the behaviour to be similar to what we had originally.
+>>
+>> When a bad sector is encounted, SCSI will now work around it again,
+>> failing *only* the bad sector itself.
 > 
-> Kernels since about 2.6.16 or so have been broken in this regard.
-> They "complete" the good sectors before the error,
-> and then fail the entire remaining portions of the request.
+> Erm, but the corollary is that if we get a large read failure because of
+> a bad track, you're going to try and chunk up it a sector at a time
 
-What was the commit that introduced the change? ... I have a vague
-memory of it being deliberate.
+That's better than the huge data-loss scenario that we currently
+have for single-sector errors.  MUCH better.
 
-> This is very risky behaviour, as a request is often a merge
-> of several bios, and just because one application hits a bad sector
-> is no reason to pretend that (for example) an adjacent directly lookup also failed.
-> 
-> This patch fixes the behaviour to be similar to what we had originally.
-> 
-> When a bad sector is encounted, SCSI will now work around it again,
-> failing *only* the bad sector itself.
+> forcing an individual error for each sector is going to annoy some
+> people ... particularly removable medium ones which return this error if
+> the medium isn't present ... Are you sure this is really what we want to
+> do?
 
-Erm, but the corollary is that if we get a large read failure because of
-a bad track, you're going to try and chunk up it a sector at a time
-forcing an individual error for each sector is going to annoy some
-people ... particularly removable medium ones which return this error if
-the medium isn't present ... Are you sure this is really what we want to
-do?
+No, for removed-medium everything just fails right away.
+This patch is *only* for media errors, not any other failures.
 
-> Signed-off-by:  Mark Lord <mlord@pobox.com>
-> ---
-> diff -u --recursive --new-file --exclude-from=linux_17//Documentation/dontdiff old/drivers/scsi/scsi_lib.c linux/drivers/scsi/scsi_lib.c
-> --- old/drivers/scsi/scsi_lib.c	2007-01-30 13:58:05.000000000 -0500
-> +++ linux/drivers/scsi/scsi_lib.c	2007-01-30 18:30:01.000000000 -0500
-> @@ -865,6 +865,12 @@
->  	 */
->  	if (sense_valid && !sense_deferred) {
->  		switch (sshdr.sense_key) {
-> +		case MEDIUM_ERROR:
-> +			// Bad sector.  Fail it, and then continue the rest of the request:
-> +			if (scsi_end_request(cmd, 0, cmd->device->sector_size, 1) == NULL) {
-
-The sense key may have come with additional information  I think we want
-to parse that (if it exists) rather than just blindly failing the first
-sector of the request.
-
-> +				cmd->retries = 0;	// go around again..
-> +				return;
-> +			}
-
-This would drop through to the UNIT_ATTENTION case if scsi_end_request()
-fails ... I don't think that's correct.
-
->  		case UNIT_ATTENTION:
->  			if (cmd->device->removable) {
->  				/* Detected disc change.  Set a bit
+Cheers
