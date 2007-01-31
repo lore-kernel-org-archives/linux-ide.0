@@ -1,134 +1,42 @@
 From: Steven Scholz <steven.scholz@imc-berlin.de>
 Subject: Re: HPA and failed opcode was: 0x37 ?
-Date: Wed, 31 Jan 2007 14:04:15 +0100
-Message-ID: <45C093CF.3020702@imc-berlin.de>
-References: <45BF5003.3000503@imc-berlin.de>	<20070130164401.295f9913@localhost.localdomain>	<45BF7658.1090204@imc-berlin.de>	<20070130172629.70ad628d@localhost.localdomain>	<45BF7E21.7010605@imc-berlin.de> <20070130180727.594b35d0@localhost.localdomain> <45BF88B9.3050802@imc-berlin.de> <45BF8F33.3070008@ru.mvista.com> <45C066A8.2090500@imc-berlin.de> <45C09089.7070300@ru.mvista.com>
+Date: Wed, 31 Jan 2007 14:08:55 +0100
+Message-ID: <45C094E7.7040500@imc-berlin.de>
+References: <45BF5003.3000503@imc-berlin.de>	 <20070130164401.295f9913@localhost.localdomain>	 <45BF7658.1090204@imc-berlin.de>	 <20070130172629.70ad628d@localhost.localdomain>	 <45BF7E21.7010605@imc-berlin.de>	 <20070130180727.594b35d0@localhost.localdomain>	 <45BF88B9.3050802@imc-berlin.de> <45BF8F33.3070008@ru.mvista.com> <311601c90701301156nb135de6g996eaff8b2f95a6c@mail.gmail.com> <45C0536F.5020005@imc-berlin.de> <45C09172.1030304@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020204090300010202040805"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:3880 "EHLO
+Received: from mail.imc-berlin.de ([217.110.46.186]:4324 "EHLO
 	mail.imc-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933217AbXAaNER (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 08:04:17 -0500
-In-Reply-To: <45C09089.7070300@ru.mvista.com>
+	with ESMTP id S933238AbXAaNI5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 08:08:57 -0500
+In-Reply-To: <45C09172.1030304@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------020204090300010202040805
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Cc: "Eric D. Mudama" <edmudama@gmail.com>, linux-ide@vger.kernel.org
 
 Sergei,
 
->    I also have doubts about IDE_CONTROL_REG being properly
-> decoded/handled in your FPGA.
-Hmm. We just verified and are convinced to do it the right way. ;-)
-
->> hda: Host Protected Area detected.
->>         current capacity is 78140160 sectors (40007 MB)
->>         native  capacity is 78140160 sectors (40007 MB)
->> hda: Host Protected Area disabled.
->> hda: 4289221376 sectors (2196081 MB) w/8192KiB Cache, CHS=65535/255/63
+>> The FPGA does nothing except decoding adresseses from the ARM cpu,
+>> controlling the A[2..0], CS[1..0], IOR, IOW lines of the HDD.
 > 
->    Erm, the resulting capacity still seems wrong, so you need to also
-> change idedisk_set_max_address_ext().
+>    I've not seen you quoting the code that sets ofsset for the
+> IDE_CONTROL_REG, BTW... Without this register, LBA48 is completely broken
 
-I noticed as well.
+        for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
+                hw.io_ports[i] = ide_virt_base + (i << 1);
+        }
 
-I just connected the HDD in question to a PC and the kernel there DID NOT
-detect a HPA! Funny enough the output of cat /proc/ide/hdb/identify is
-different. Shouldn't it be the same!?
-I'll attach them.
+        hw.io_ports[IDE_CONTROL_OFFSET] = ide_virt_base + 0x10;
 
-Thanks for any hints!
+Thus it has an offset 0x10 from the base address.
 
+ide0 at 0xc3856000-0xc3856007,0xc3856010 on irq 27
+
+But I just noticed that A[2..0] should look like "110" when accessing the
+"Device Control Register". Thus the offset should be 0x16 instead! Right?
+
+--
 Steven
-
-
---------------020204090300010202040805
-Content-Type: text/plain;
- name="identify.arm"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="identify.arm"
-
-0c5a 3fff c837 0010 0000 0000 003f 0000
-0000 0000 2020 2020 2020 2020 2020 2020
-3551 4230 3052 4d30 0000 4000 0004 332e
-3032 2020 2020 5354 3934 3038 3133 414d
-2020 2020 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 ffff 0001
-003f ffc1 003e 0110 5300 04a8 0000 0407
-0003 0078 0078 00f0 0078 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-007e 001b 346b 7d09 6003 3469 3c09 6003
-003f 0000 0000 8080 fffe 604d fe00 0000
-0000 0000 0000 0000 5300 04a8 0000 0000
-0000 0000 4000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0100 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0001 5300 04a8 5300 04a8 2020 0002 82b6
-0000 008a 01ff 3cff ffff 07c6 0100 0800
-0f0f 1800 0002 0080 0000 0000 60a0 0000
-0000 0000 0000 0000 0000 0000 0900 000b
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0001 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 15a5
-
-
---------------020204090300010202040805
-Content-Type: text/plain;
- name="identify.x86"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="identify.x86"
-
-0c5a 3fff c837 0010 0000 0000 003f 0000
-0000 0000 2020 2020 2020 2020 2020 2020
-3551 4230 3052 4d30 0000 4000 0004 332e
-3032 2020 2020 5354 3934 3038 3133 414d
-2020 2020 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 ffff 0001
-003f ffc1 003e 0110 5300 04a8 0000 0007
-0003 0078 0078 00f0 0078 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-007e 001b 346b 7d09 6003 3469 3c09 6003
-043f 0000 0000 8080 fffe 6d00 fe00 0000
-0000 0000 0000 0000 5300 04a8 0000 0000
-0000 0000 4000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0100 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0009 5300 04a8 5300 04a8 2020 0002 82b6
-0000 008a 01ff 3cff ffff 07c6 0100 0800
-0f0f 1800 0002 0080 0000 0000 60a0 0000
-0000 0000 0000 0000 0000 0000 0900 000b
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0001 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 4da5
-
-
---------------020204090300010202040805--
