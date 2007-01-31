@@ -1,55 +1,28 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] libata: rearrange dmesg info to add full ATA revision
-Date: Wed, 31 Jan 2007 10:23:24 -0500
-Message-ID: <45C0B46C.5080905@garzik.org>
-References: <20070131021051.GA3403@bounceswoosh.org> <20070131060040.GA3361@bounceswoosh.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Wed, 31 Jan 2007 10:22:04 -0500
+Message-ID: <45C0B41C.4030608@rtr.ca>
+References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>	 <311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>	 <45BFF3D6.9050605@rtr.ca>  <45C00AEE.1090708@emc.com> <1170217288.10890.37.camel@mulgrave.il.steeleye.com> <45C0B211.2030305@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57623 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030201AbXAaPX0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Jan 2007 10:23:26 -0500
-In-Reply-To: <20070131060040.GA3361@bounceswoosh.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030181AbXAaPWK@vger.kernel.org>
+In-Reply-To: <45C0B211.2030305@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ric Wheeler <ric@emc.com>, "Eric D. Mudama" <edmudama@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, dougg@torque.net
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Eric D. Mudama wrote:
-> Per Jeff's suggestion, this patch rearranges the info printed for ATA
-> drives into dmesg to add the full ATA firmware revision and model
-> information, while keeping the output to 2 lines.
+Mark Lord wrote:
+> James Bottomley wrote:
+>>
+>> For the MD case, this is what REQ_FAILFAST is for.
 > 
-> Signed-off-by: Eric D. Mudama <edmudama@gmail.com>
-> 
-> ---
-> 
-> This extra information is helpful for debugging drive-related issues
-> on ATA drives connected with libata, especially when the user can't
-> easily run hdparm.
-> 
-> Update: added Tejun's formatting requests, and created the constants
-> necessary.
-> 
-> Diff is against 2.6.20-rc6 (roughly).  Here's a snippet of my new
-> dmesg with this patch, showing the full and truncated firmware
-> revision information:
+> I cannot find where SCSI honours that flag.  James?
 
-Looks pretty good to me at first glance.  I'll review it again tonight 
-or tomorrow, when I make the next "apply SATA patches" pass.
+Scratch that thought.. SCSI honours it in scsi_end_request().
 
-FWIW, since this is not a bug fix, it will be going into 2.6.21 rather 
-than 2.6.20.  As such, it will be applied to 
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git 
-branch 'upstream' rather than branch 'upstream-fixes'.
+But I'm not certain that the block layer handles it correctly,
+at least not in the 2.6.16/2.6.18 kernel that I'm working with today.
 
-Or, in shorthand, libata-dev.git#upstream.
-
-Cheers and thanks,
-
-	Jeff
-
-
-
+Cheers
