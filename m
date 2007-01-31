@@ -1,39 +1,69 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 13/15] ide: fix UDMA/MWDMA/SWDMA masks
-Date: Wed, 31 Jan 2007 23:38:08 +0300
-Message-ID: <45C0FE30.4000800@ru.mvista.com>
-References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	<20070119003226.14846.87052.sendpatchset@localhost.localdomain>	<45B4FFBD.40507@ru.mvista.com> <20070122184620.1c8b87ac@localhost.localdomain>
+From: Simon Farnsworth <simon@farnz.org.uk>
+Subject: VIA AHCI NCQ [was: Re: Recent AHCI drivers do not work with VIA VT8251 controllers (regression in 2.6.19 from 2.6.18)]
+Date: Wed, 31 Jan 2007 20:34:34 +0000
+Message-ID: <200701312034.36499.simon@farnz.org.uk>
+References: <20070130155355.GB12475@reddwarf.farnz.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1889014.kOgU2BCKBh";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:46964 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030446AbXAaUiN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 15:38:13 -0500
-In-Reply-To: <20070122184620.1c8b87ac@localhost.localdomain>
+Received: from mail.farnz.org.uk ([81.187.250.194]:43032 "EHLO
+	mail.farnz.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030579AbXAaVF2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 16:05:28 -0500
+Received: from lister.farnz.org.uk (lister.farnz.org.uk [IPv6:2001:8b0:104:2:204:61ff:fe42:f592])
+	by mail.farnz.org.uk (Postfix) with ESMTP id 23A8539581
+	for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 20:34:46 +0000 (GMT)
+In-Reply-To: <20070130155355.GB12475@reddwarf.farnz.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+--nextPart1889014.kOgU2BCKBh
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Alan wrote:
+On Tuesday 30 January 2007 15:53, Simon Farnsworth wrote:
+> Hello,
+>
+> I've got a VIA VT8251 AHCI controller, driving two Maxtor SATA disks.
+> Under Linux 2.6.18.5, it works; using 2.6.19.1, it fails to work (bug
+> report at http://bugzilla.kernel.org/show_bug.cgi?id=3D7589 - note that
+> pci=3Dnomsi does not fix things for me, as I still get no interrupts).
+>
+I've been going through 2.6.20-rc releases this evening. 2.6.20-rc7 resolve=
+s=20
+my AHCI fault (although not the MSI problem); it looks like Tejun Heo's fix=
+=20
+to ahci_thaw() in a718728f9e40ec79c0879ec6509a54fee214f5b2 fixes things for=
+=20
+my setup.
 
->>    Ugh, I'm not seeing any *actual* support for MW/SW DMA in this driver... 
+Of course, I'm now curious as to why NCQ is disabled on VIA AHCI controller=
+s.=20
+Is there a known hardware bug I should be wary of, or is it just a case of=
+=20
+being cautious due to the other issues with the VT8251 (in which case I'll=
+=20
+try enabling it and reporting back)?
+=2D-=20
+Thanks for the code and the fix,
+Simon Farnsworth
 
-> Thats long been broken. Should be correct in the libata driver
+--nextPart1889014.kOgU2BCKBh
+Content-Type: application/pgp-signature
 
-    I've looked thru the specs and it seemed to me that ULi hardware is much 
-broken PIO wise: their max active time is 8 cycles even on taskfile access 
-which gives 240 ns while standard requeires 290 ns for modes 0 thru 2...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.1 (GNU/Linux)
 
-    I've also noted that the tuneproc() method in both cmd64x.c and alim15x3.c 
-seems to misdo recovery calculation, taking address setup into account -- that 
-should be slightly overclocking PIO modes 0/1 (ULi docs don't shed much light 
-on how it should be calculated)... Well, this seems fixed in libata drivers.
+iD8DBQBFwP1cSWe+XpRKvi0RAn+LAJ9VA0J1EpP6o/mSfX7oQs8LdmTOhgCfd8YI
+4xFjXu3v2zcQvWauKNN5rGI=
+=6Hq1
+-----END PGP SIGNATURE-----
 
-> Alan
-
-MBR, Sergei
+--nextPart1889014.kOgU2BCKBh--
