@@ -1,97 +1,56 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [2.6.20-rc6] pktcdvd doesn't work
-Date: Wed, 31 Jan 2007 05:58:19 -0500
-Message-ID: <45C0764B.8060906@pobox.com>
-References: <20070130195319.GA10994@dreamland.darkstar.lan> <Pine.LNX.4.61.0701302100370.13737@yvahk01.tjqt.qr> <20070130203601.GB15067@dreamland.darkstar.lan> <Pine.LNX.4.61.0701302141420.13737@yvahk01.tjqt.qr> <20070130231623.GA7648@dreamland.darkstar.lan>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [2.6.18,19] SATA boot problems (ICH6/ICH6W)
+Date: Wed, 31 Jan 2007 20:00:09 +0900
+Message-ID: <45C076B9.3030106@gmail.com>
+References: <200612111003.39928.kovid@theory.caltech.edu> <4588877D.1000400@gmail.com> <20061220032941.GA8903@us.ibm.com> <4588B3D5.4030406@gmail.com> <20061221171035.GC6171@us.ibm.com> <20070130015507.GA30069@us.ibm.com> <45BEF492.9000000@gmail.com> <20070130233735.GA7483@us.ibm.com> <45BFE8BC.3000906@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55792 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933019AbXAaK61 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Jan 2007 05:58:27 -0500
-In-Reply-To: <20070130231623.GA7648@dreamland.darkstar.lan>
+Received: from ug-out-1314.google.com ([66.249.92.174]:54679 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933011AbXAaLAU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 06:00:20 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so137730uga
+        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 03:00:19 -0800 (PST)
+In-Reply-To: <45BFE8BC.3000906@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Luca Tettamanti <kronos.it@gmail.com>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Peter Osterlund <petero2@telia.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, justin@jmicron.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Gary Hade <garyhade@us.ibm.com>, Kovid Goyal <kovid@theory.caltech.edu>, linux-ide@vger.kernel.org, lcm@us.ibm.com, konradr@us.ibm.com
 
-Luca Tettamanti wrote:
-> Hi Jeff, linux-ide,
-> I'm having troubles with libata and UDF on RW media. See below.
+Jeff Garzik wrote:
+> SRST is specified to take no longer than 31 seconds from the clearing to
+> the SRST bit to the clearing of the BSY bit.
 > 
-> Il Tue, Jan 30, 2007 at 09:42:34PM +0100, Jan Engelhardt ha scritto: 
->> On Jan 30 2007 21:36, Luca Tettamanti wrote:
->>> Il Tue, Jan 30, 2007 at 09:02:20PM +0100, Jan Engelhardt ha scritto: 
->>>> On Jan 30 2007 20:53, Luca Tettamanti wrote:
->>>>> Hi,
->>>>> pktcdvd on kernel 2.6.20-rc6 is not working as expected. Any file that
->>>> Did it work previously?
->>> Yup, It used to work but since I rarely use it I don't remember which
->>> kernel version worked for me.
->> Hm, maybe you can take a guess.
-> 
-> I can bisect pktcdvd.c if necessary, but it seems that it's innocent.
->  
->>>>> is written to the device is lost after umount.
->>>>> I rarely use pktcdvd but at some point it used to work on my system.
->>>>>
->>>>> This is what I'm doing:
->>>>>
->>>>> root@dreamland:/tmp# cdrwtool -d /dev/scd0 -q
->>>>> scsi 8:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-4167B DL13 PQ: 0 ANSI: 5
->>>> In case you are using ide-scsi: try without.
->>> It's libata jmicron driver. Shall I try the "old" PATA driver on the
->>> next reboot?
->> If you have lots of CDRs/DVDRs to spare (or a CDRW/DVDRW), every test is
->> welcome.
-> 
-> With the legacy IDE driver it works fine.
-> The unit is DVD-RAM capable so the firmware should handle random writes
-> fine; I've tried mounting /dev/scd0 rw *without* pktcdvd and I still
-> lose files. So I guess it has something to do with libata.
-> 
-> So to recap, after formatting the disk with UDF:
-> 
-> * libata
->   - mount with pktcdvd: all files are lost upon umount
->   - mount scd0 w/out pktcdvd: all files are lost upon umount
->   - write the disk with cdrecord: OK
-> 
->   pktcdvd reports wrong capacity:
->   
->   pktcdvd: Fixed packets, 32 blocks, Mode-2 disc
->   pktcdvd: Max. media speed: 4
->   pktcdvd: write speed 4x
->   pktcdvd: 0kB available on disc
->   UDF-fs INFO UDF 0.9.8.1 (2004/29/09) Mounting volume 'LinuxUDF', timestamp 2007/01/30 18:18 (103c)
-> 
-> * legacy IDE driver
->   - mount with pktcdvd: OK
->   - mount hda w/out pktcdvd: corrupts FS (duh)
->   - write the disk with cdrecord: OK
-> 
->   pktcdvd reports correct capacity:
->   
->   pktcdvd: writer pktcdvd0 mapped to hda
->   pktcdvd: Fixed packets, 32 blocks, Mode-2 disc
->   pktcdvd: Max. media speed: 4
->   pktcdvd: write speed 4x
->   pktcdvd: 551232kB available on disc
->   UDF-fs INFO UDF 0.9.8.1 (2004/29/09) Mounting volume 'LinuxUDF', timestamp 2007/01/30 22:19 (103c)
-> 
-> The HW is a JMicron controller:
-> 02:00.0 IDE interface: JMicron Technologies, Inc. JMicron 20360/20363 AHCI Controller (rev 02)
-> 02:00.1 IDE interface: JMicron Technologies, Inc. JMicron 20360/20363 AHCI Controller (rev 02)
+> Look through the software reset protocol documentation (ATA/ATAPI-7
+> volume 2), mainly the device state machines.
 
-hmmm, definitely interesting behavior.
+Jeff, this is different delay.  We're short circuiting the 31sec wait
+when the reported status is 0xff to avoid wasting half a minute on port
+which has no device but is showing 0xff because bus datalines are not
+pulled down (PATA) or the specific controller is made to emulate 0xff
+when link isn't established yet (SATA).
 
-Would you mind putting this info into a bugzilla.kernel.org report, so 
-that it is not lost?  This bug will likely go into a heavy ATAPI 
-debugging session that is coming in a few weeks, but not immediately :/
+This never matters for PATA devices because no sane device reports 0xff
+as the status register value regardless of its state - 0xff is the
+special value indicating no device attached and data bus is floating,
+and 150ms is more than enough to allow the device to report its status
+register value (the spec says >= 2ms).
 
-	Jeff
+Some SATA controllers use 0xff to indicate empty port.  This seldomly
+matters as we have the almighty SStatus register to check device
+presence (there is a bug regarding this, patch pending).
 
+This GoVault drive fails because ata_piix doesn't have SCR while using
+0xff to indicate port not ready (dunno exact which state causes 0xff
+status tho) while the GoVault drive fails to clear that state in 150ms
+(not 30s).  The libata sees 0xff after SRST if GoVault drive is attached
+and thinks that the port is empty.  So, I'm afraid there is no easy way
+out here but to wait longer for 0xff to clear.  As Kovid suggested just
+a few secs should be enough.
 
+Thanks.
 
+-- 
+tejun
