@@ -1,67 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] libata: dump full ATA firmware revision to dmesg
-Date: Tue, 30 Jan 2007 19:43:08 -0500
-Message-ID: <45BFE61C.4050209@garzik.org>
-References: <311601c90701301221o4cee44cat34547cf8891189ed@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Tue, 30 Jan 2007 19:47:08 -0500
+Message-ID: <200701301947.08478.liml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52060 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([64.26.128.89]:1079 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932101AbXAaAnK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Jan 2007 19:43:10 -0500
-In-Reply-To: <311601c90701301221o4cee44cat34547cf8891189ed@mail.gmail.com>
+	id S1752061AbXAaArJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Jan 2007 19:47:09 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-Eric D. Mudama wrote:
-> SCSI only supports a 4-character firmware revision string, while ATA
-> uses 8 characters.  Since it can be useful for debugging drive/host
-> issues, and because not everyone has a working hdparm on their system,
-> dump the full ATA firmware revision into dmesg at drive detection.
-> Only affects ATA devices connected via libata, and not ATAPI (since
-> they likely use SCSI conventions anyway).
-> 
-> Sample output from my dmesg:
-> 
-> ata1.00: ATA-7, max UDMA/133, 488395055 sectors: LBA48 NCQ (depth 0/32)
-> ata1.00: ata1: dev 0 multi count 16
-> ata1.00: ata1: Firmware Revision: 3.AAC
-> ata1.00: configured for UDMA/133
-> ata2.00: ATA-7, max UDMA/133, 195813072 sectors: LBA48 NCQ (depth 0/32)
-> ata2.00: ata2: dev 0 multi count 16
-> ata2.00: ata2: Firmware Revision: VA111910
-> ata2.00: configured for UDMA/133
-> scsi 0:0:0:0: Direct-Access     ATA      ST3250820AS      3.AA PQ: 0 
-> ANSI: 5
-> scsi 1:0:0:0: Direct-Access     ATA      Maxtor 6V100E0   VA11 PQ: 0 
-> ANSI: 5
-> 
-> Signed-off-by: Eric D. Mudama <edmudama@gmail.com>
+In ancient kernels, the SCSI disk code used to continue after
+encountering a MEDIUM_ERROR.  It would "complete" the good
+sectors before the error, fail the bad sector/block, and then
+continue with the rest of the request.
 
-hmmmm.  While I agree that exposing the full firmware rev is a good 
-thing to do, I'm a bit embarrassed as it is about libata's dmesg spam, 
-and I try to resist increasing it.  As such, I think that firmware rev 
-on a line all by itself is a bit "greedy" by those standards.
+Kernels since about 2.6.16 or so have been broken in this regard.
+They "complete" the good sectors before the error,
+and then fail the entire remaining portions of the request.
 
-Additionally -- and this is not your fault since the previous line is 
-the same -- the "ata2.00: ata2: [dev 0]" is redundant.  The "ata2.00" is 
-all we really need to know which bus and device we're referring to.
+This is very risky behaviour, as a request is often a merge
+of several bios, and just because one application hits a bad sector
+is no reason to pretend that (for example) an adjacent directly lookup also failed.
 
-I would rather revamp things to look something like
+This patch fixes the behaviour to be similar to what we had originally.
 
-	...
-	ata2.00: ATA-7, Maxtor 6V100E0, VA111910, max UDMA/133
-	ata2.00: 195813072 sectors, multi 16, LBA48 NCQ (depth 0/32)
-	...
+When a bad sector is encounted, SCSI will now work around it again,
+failing *only* the bad sector itself.
 
-I realize that's more work than just a simple addition, alas...
-
-Regards,
-
-	Jeff
-
-
+Signed-off-by:  Mark Lord <mlord@pobox.com>
+---
+diff -u --recursive --new-file --exclude-from=linux_17//Documentation/dontdiff old/drivers/scsi/scsi_lib.c linux/drivers/scsi/scsi_lib.c
+--- old/drivers/scsi/scsi_lib.c	2007-01-30 13:58:05.000000000 -0500
++++ linux/drivers/scsi/scsi_lib.c	2007-01-30 18:30:01.000000000 -0500
+@@ -865,6 +865,12 @@
+ 	 */
+ 	if (sense_valid && !sense_deferred) {
+ 		switch (sshdr.sense_key) {
++		case MEDIUM_ERROR:
++			// Bad sector.  Fail it, and then continue the rest of the request:
++			if (scsi_end_request(cmd, 0, cmd->device->sector_size, 1) == NULL) {
++				cmd->retries = 0;	// go around again..
++				return;
++			}
+ 		case UNIT_ATTENTION:
+ 			if (cmd->device->removable) {
+ 				/* Detected disc change.  Set a bit
