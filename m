@@ -1,54 +1,44 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Tue, 30 Jan 2007 19:47:08 -0500
-Message-ID: <200701301947.08478.liml@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [2.6.18,19] SATA boot problems (ICH6/ICH6W)
+Date: Tue, 30 Jan 2007 19:54:20 -0500
+Message-ID: <45BFE8BC.3000906@pobox.com>
+References: <200612111003.39928.kovid@theory.caltech.edu> <4588877D.1000400@gmail.com> <20061220032941.GA8903@us.ibm.com> <4588B3D5.4030406@gmail.com> <20061221171035.GC6171@us.ibm.com> <20070130015507.GA30069@us.ibm.com> <45BEF492.9000000@gmail.com> <20070130233735.GA7483@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1079 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:52191 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752061AbXAaArJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Jan 2007 19:47:09 -0500
-Content-Disposition: inline
+	id S1752162AbXAaAy1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Jan 2007 19:54:27 -0500
+In-Reply-To: <20070130233735.GA7483@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: Gary Hade <garyhade@us.ibm.com>
+Cc: Tejun Heo <htejun@gmail.com>, Kovid Goyal <kovid@theory.caltech.edu>, linux-ide@vger.kernel.org, lcm@us.ibm.com, konradr@us.ibm.com
 
-In ancient kernels, the SCSI disk code used to continue after
-encountering a MEDIUM_ERROR.  It would "complete" the good
-sectors before the error, fail the bad sector/block, and then
-continue with the rest of the request.
+Gary Hade wrote:
+> Some of my random thoughts:
+> There does appear to be this invalid assumption that 0xFF status 
+> always implies device-not-present.  The status register access 
+> restrictions in ATA/ATAPI-7 V1 5.14.2 include the statement "The 
+> contents of this register, except for BSY, shall be ignored when 
+> BSY is set to one." which the code does not honor.  There is apparently 
+> past experience that 0xFF status implies device-not-present for some
+> controllers (the odd clowns :) but I have no idea how common these are.
+> We obviously can't get rid of the check but since we cannot clear
+> the read-only status register and there appears to be no specification 
+> dictated upper limit on how long it should take for a software reset to 
+> complete it just seems like we need to wait long enough to support the 
+> slowest known device which may be the GoVault.
 
-Kernels since about 2.6.16 or so have been broken in this regard.
-They "complete" the good sectors before the error,
-and then fail the entire remaining portions of the request.
 
-This is very risky behaviour, as a request is often a merge
-of several bios, and just because one application hits a bad sector
-is no reason to pretend that (for example) an adjacent directly lookup also failed.
+SRST is specified to take no longer than 31 seconds from the clearing to 
+the SRST bit to the clearing of the BSY bit.
 
-This patch fixes the behaviour to be similar to what we had originally.
+Look through the software reset protocol documentation (ATA/ATAPI-7 
+volume 2), mainly the device state machines.
 
-When a bad sector is encounted, SCSI will now work around it again,
-failing *only* the bad sector itself.
+	Jeff
 
-Signed-off-by:  Mark Lord <mlord@pobox.com>
----
-diff -u --recursive --new-file --exclude-from=linux_17//Documentation/dontdiff old/drivers/scsi/scsi_lib.c linux/drivers/scsi/scsi_lib.c
---- old/drivers/scsi/scsi_lib.c	2007-01-30 13:58:05.000000000 -0500
-+++ linux/drivers/scsi/scsi_lib.c	2007-01-30 18:30:01.000000000 -0500
-@@ -865,6 +865,12 @@
- 	 */
- 	if (sense_valid && !sense_deferred) {
- 		switch (sshdr.sense_key) {
-+		case MEDIUM_ERROR:
-+			// Bad sector.  Fail it, and then continue the rest of the request:
-+			if (scsi_end_request(cmd, 0, cmd->device->sector_size, 1) == NULL) {
-+				cmd->retries = 0;	// go around again..
-+				return;
-+			}
- 		case UNIT_ATTENTION:
- 			if (cmd->device->removable) {
- 				/* Detected disc change.  Set a bit
+
