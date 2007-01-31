@@ -1,102 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/1] libata: rearrange dmesg info to add full ATA revision
-Date: Wed, 31 Jan 2007 12:57:44 +0900
-Message-ID: <45C013B8.8030600@gmail.com>
-References: <20070131021051.GA3403@bounceswoosh.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Tue, 30 Jan 2007 22:21:28 -0600
+Message-ID: <1170217288.10890.37.camel@mulgrave.il.steeleye.com>
+References: <200701301947.08478.liml@rtr.ca>
+	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
+	 <311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>
+	 <45BFF3D6.9050605@rtr.ca>  <45C00AEE.1090708@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:10058 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932846AbXAaD6L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jan 2007 22:58:11 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so68437uga
-        for <linux-ide@vger.kernel.org>; Tue, 30 Jan 2007 19:58:10 -0800 (PST)
-In-Reply-To: <20070131021051.GA3403@bounceswoosh.org>
+Received: from accolon.hansenpartnership.com ([64.109.89.108]:47342 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751987AbXAaEVd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jan 2007 23:21:33 -0500
+In-Reply-To: <45C00AEE.1090708@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Ric Wheeler <ric@emc.com>
+Cc: Mark Lord <liml@rtr.ca>, "Eric D. Mudama" <edmudama@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello, Eric.
+On Tue, 2007-01-30 at 22:20 -0500, Ric Wheeler wrote:
+> Mark Lord wrote:
+> > The number of retries is an entirely separate issue.
+> > If we really care about it, then we should fix SD_MAX_RETRIES.
+> >
+> > The current value of 5 is *way* too high.  It should be zero or one.
+> >
+> > Cheers
+> >
+> I think that drives retry enough, we should leave retry at zero for 
+> normal (non-removable) drives. Should this  be a policy we can set like 
+> we do with NCQ queue depth via /sys ?
 
-Eric D. Mudama wrote:
-> Per Jeff's suggestion, this patch rearranges the info printed for ATA
-> drives into dmesg to add the full ATA firmware revision and model
-> information, while keeping the output to 2 lines.
-> 
-> Signed-off-by: Eric D. Mudama <edmudama@gmail.com>
+I don't disagree that it should be settable.  However, retries occur for
+other reasons than failures inside the device.  The most standard ones
+are unit attentions generated because of other activity (target reset
+etc).  The key to the problem is retrying only operations that are
+genuinely retryable, which the mid-layer doesn't do such a good job on.
 
-The patch is formatted and applies perfectly.  I'm glad to see this
-change.  Just a few nits below.
+> We need to be able to layer things like MD on top of normal drive errors 
+> in a way that will produce a system that provides reasonable response 
+> time despite any possible IO error on a single component.  Another case 
+> that we end up doing on a regular basis is drive recovery. Errors need 
+> to be limited in scope to just the impacted area and dispatched up to 
+> the application layer as quickly as we can so that you don't spend days 
+> watching a copy of  huge drive (think 750GB or more) ;-)
 
->  	char revbuf[7];		/* XYZ-99\0 */
-> +	char fwrevbuf[9];
-> +	char modelbuf[41];
+For the MD case, this is what REQ_FAILFAST is for.
 
-Please use ATA_ID_FW_REV_LEN + 1 and ATA_ID_PROD_LEN + 1.
+James
 
-> @@ -1680,13 +1692,18 @@ int ata_dev_configure(struct ata_device *dev)
->  			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
->  
->  			/* print device info to dmesg */
-> -			if (ata_msg_drv(ap) && print_info)
-> -				ata_dev_printk(dev, KERN_INFO, "%s, "
-> -					"max %s, %Lu sectors: %s %s\n",
-> +			if (ata_msg_drv(ap) && print_info) {
-> +				ata_dev_printk(dev, KERN_INFO,
-> +					"%s: %s, %s, max %s\n",
->  					revbuf,
-> -					ata_mode_string(xfer_mask),
-> +					modelbuf, fwrevbuf,
 
-Please merge the above line with the line above it.
-
-> +					ata_mode_string(xfer_mask));
-> +				ata_dev_printk(dev, KERN_INFO,
-> +					"%Lu sectors, multi %u: %s %s\n",
->  					(unsigned long long)dev->n_sectors,
-> +					dev->multi_count,
->  					lba_desc, ncq_desc);
-
-Ditto.
-
-> +			}
->  		} else {
->  			/* CHS */
->  
-> @@ -1703,22 +1720,19 @@ int ata_dev_configure(struct ata_device *dev)
->  			}
->  
->  			/* print device info to dmesg */
-> -			if (ata_msg_drv(ap) && print_info)
-> -				ata_dev_printk(dev, KERN_INFO, "%s, "
-> -					"max %s, %Lu sectors: CHS %u/%u/%u\n",
-> +			if (ata_msg_drv(ap) && print_info) {
-> +				ata_dev_printk(dev, KERN_INFO,
-> +					"%s: %s, %s, max %s\n",
->  					revbuf,
-> -					ata_mode_string(xfer_mask),
-> +					modelbuf, fwrevbuf,
-
-Ditto.
-
-> +					ata_mode_string(xfer_mask));
-> +				ata_dev_printk(dev, KERN_INFO, 
-> +					"%Lu sectors, multi %u, CHS %u/%u/%u\n",
->  					(unsigned long long)dev->n_sectors,
-> +					dev->multi_count,
->  					dev->cylinders, dev->heads,
->  					dev->sectors);
-
-I would prefer
-
-dev->multi_count, dev->cylinders,
-dev->heads, dev->sectors
-
-Other than these,
-
-Acked-by: Tejun Heo <htejun@gmail.com>
-
--- 
-tejun
