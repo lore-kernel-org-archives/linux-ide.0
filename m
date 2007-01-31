@@ -1,44 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] iomap: iomap should be in obj-y not in lib-y
-Date: Thu, 01 Feb 2007 02:23:57 +0900
-Message-ID: <45C0D0AD.1090703@gmail.com>
-References: <20070131134806.GJ8606@htj.dyndns.org> <45C0B170.8050901@pobox.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ide-floppy: Fix unformatted media crash
+Date: Wed, 31 Jan 2007 17:41:23 +0000
+Message-ID: <20070131174123.17aba9d1@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:29531 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030443AbXAaRYD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 12:24:03 -0500
-Received: by an-out-0708.google.com with SMTP id b33so149844ana
-        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 09:24:02 -0800 (PST)
-In-Reply-To: <45C0B170.8050901@pobox.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55590 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030377AbXAaR3E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 12:29:04 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, bzolnier@google.com
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> devres change moved iomap.o from obj-$(CONFIG_GENERIC_IOMAP) to lib-y
->> making it not linked if no in-kernel driver uses it.  Fix it.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> applied
-> 
-> BTW can you update your scripts to email jeff@garzik.org ?  That's the
-> primary email address I signoff with, etc.
+A ZIP or similar with unformatted media will cause crashes when attempts
+are made to read/write it in some cases. This is because bs_factor is
+zero and we divide by it causing an oops.
 
-Okay, done.
+As the size of a non-accessible/non-existant media is really a bit of a
+zen question it doesn't matter if non-existant media is 512 bytes per
+sector or zero. Setting it to 1 causes us to generate 512 bytes/sector
+accesses and error properly.
 
-> jgarzik@pobox.com will continue to work for all eternity, but it makes
-> Mozilla Thunderbird stupidly add an unneeded CC.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-Also, you can avoid that by configuring aliases to the thunderbird
-account.  It's in account setting -> Manage Identities.  Thungerbird is
-pretty neat.  :-)
+Based on a fix found lurking in an ancient bugzilla entry since about 2004 (ugghhh)
 
--- 
-tejun
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.20-rc6-mm3/drivers/ide/ide-floppy.c linux-2.6.20-rc6-mm3/drivers/ide/ide-floppy.c
+--- linux.vanilla-2.6.20-rc6-mm3/drivers/ide/ide-floppy.c	2007-01-31 14:20:40.000000000 +0000
++++ linux-2.6.20-rc6-mm3/drivers/ide/ide-floppy.c	2007-01-31 14:33:42.000000000 +0000
+@@ -1434,7 +1434,8 @@
+ 	
+ 	drive->bios_cyl = 0;
+ 	drive->bios_head = drive->bios_sect = 0;
+-	floppy->blocks = floppy->bs_factor = 0;
++	floppy->blocks = 0;
++	floppy->bs_factor = 1;
+ 	set_capacity(floppy->disk, 0);
+ 
+ 	idefloppy_create_read_capacity_cmd(&pc);
+
