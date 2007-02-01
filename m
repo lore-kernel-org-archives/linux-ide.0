@@ -1,43 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH] RESEND: SCSI, libata: add support for ATA_16 commands
  to libata ATAPI devices
-Date: Thu, 01 Feb 2007 03:30:10 -0500
-Message-ID: <45C1A512.8070602@garzik.org>
-References: <200701021935.07840.liml@rtr.ca> <200701311346.26644.liml@rtr.ca> <45C1356B.6000907@gmail.com> <45C1377F.6070001@rtr.ca> <45C138E8.1040706@gmail.com> <45C13BCD.8080003@rtr.ca>
+Date: Thu, 01 Feb 2007 17:35:53 +0900
+Message-ID: <45C1A669.5000206@gmail.com>
+References: <200701021935.07840.liml@rtr.ca> <200701311346.26644.liml@rtr.ca> <45C1356B.6000907@gmail.com> <45C1377F.6070001@rtr.ca> <45C1A424.5040805@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37065 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422666AbXBAIaN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Feb 2007 03:30:13 -0500
-In-Reply-To: <45C13BCD.8080003@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <45C1A424.5040805@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> Anyways, this has never been guaranteed because
->> the limit is host wide.
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>> For example, I think all existing ATAPI drives only speak 12-byte packet
+>> protocols, and so if we tell SCSI we're good for 16-byte, then won't the
+>> SCSI layer suddenly start sending us READ_16 and the like?
 > 
-> But until very very recently, "host wide" meant just a single device
-> for libata.  I was just assuming we did all of the fiddling to ensure
-> a minimal value there for some real reason.
+> Speaking strictly about the device, IDENTIFY PACKET DEVICE data page
+> tells us whether the device supports 12-byte or 16-byte CDBs.  No need
+> to guess.
 > 
-> But, yes, now we have PATA (2 drives per host), and PMP (many more
-> drives per host), so just maxing out the limit seems sensible.
+> Some host controllers only support 12-byte, but I think that most should
+> support 16-byte.
 
-No, we can't just assume that all host controller CDB FIFOs (if indeed 
-that's the implementation) support 16-byte CDBs.
+Out of curiosity, does ATA controllers which don't allow 16byte CDB
+actually exist?  It's transferred using PIO protocol anyway.
 
-Gotta do a controller-by-controller check.
-
-There are both /host/ and /device/ limits.
-
-	Jeff
-
-
-
+-- 
+tejun
