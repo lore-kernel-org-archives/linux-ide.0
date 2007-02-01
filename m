@@ -1,36 +1,77 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Problem with Samsung SH-183A and VIA Sata Controller
-Date: Thu, 1 Feb 2007 20:30:25 +0000
-Message-ID: <20070201203025.707f3954@localhost.localdomain>
-References: <f0b738400702011031m1d457f5fucd07b5ed4cb711f7@mail.gmail.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] RESEND: SCSI, libata: add support for ATA_16 commands
+ to libata ATAPI devices
+Date: Thu, 01 Feb 2007 15:21:25 -0500
+Message-ID: <45C24BC5.6060305@torque.net>
+References: <200701021935.07840.liml@rtr.ca>	 <200701311346.26644.liml@rtr.ca> <45C1356B.6000907@gmail.com>	 <45C1377F.6070001@rtr.ca> <45C138E8.1040706@gmail.com>	 <45C1A4BD.3030909@garzik.org> <45C1A823.30008@gmail.com>	 <45C1B8D4.1070209@garzik.org> <1170342565.3388.4.camel@mulgrave.il.steeleye.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46023 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1422979AbXBAUSD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Feb 2007 15:18:03 -0500
-In-Reply-To: <f0b738400702011031m1d457f5fucd07b5ed4cb711f7@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1170342565.3388.4.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nils Lavesson <nils.lavesson@gmail.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-> version 2.6.18, 2.6.19.1 and they give the same result. If I connect
-> the drive to my SiI 3114 controller and boot 2.6.20-rc6 the drive
-> works perfectly.
-
-Very interesting it is tied to the controller, but that fits what Tejun
-was seeing.
-
-> I also tried booting kernel version 2.6.17. It gives an error message
-> and stalls for a while during boot, but the drive is working somewhat.
-> I managed to read the contents of a cd a few days ago, but when I
-> tried the same thing today my computer hung half way through. I
-> haven't been able to play dvds.
+James Bottomley wrote:
+> On Thu, 2007-02-01 at 04:54 -0500, Jeff Garzik wrote:
+>> Agreed... but that doesn't make it the /right/ thing to do ;-)
+>>
+>> The logic behind the current code, which limits to the maximum size 
+>> allowed by an attached device on the port, is mainly to leverage the 
+>> SCSI layer as a filter for bad CDB lengths.
+>>
+>> IOW, it's called "being lazy" ;-)
 > 
-> Any ideas?
+> But you're requesting code changes in the SCSI layer because of this
+> incorrect usage.  max_cdb is supposed to be the *host* limit.  The mid
+> layer finds out and respects device limits separately from this.
 
-I posted a patch to the IDE list yesterday for testing which performs the
-workarounds the old IDE layer does for this. I'll forward you a copy
+To be more pedantic:
+  actual_max_cdb = min(MAX_COMMAND_SIZE, host_limit)
+
+Since the host is a bridge, that could be a limit on
+near side (i.e. PCI (unlikely)) or the outer side (i.e.
+transport initiator (port)). In modern HBAs the
+host_limit is likely to be greater than 16, to allow
+for advanced SBC and OSD commands. However currently
+MAX_COMMAND_SIZE (defined in scsi/scsi_cmnd.h) is 16.
+
+It is the ATAPI _transport_ that has the 12 byte cdb
+limit *** (at least according to MMC-5 rev Annex A;
+is S-ATAPI any better?).
+Other MMC transports referred to in MMC-5 are
+SPI, SBP(IEEE 1394) and USB mass storage; and no mention
+is made of cdb length limits for them. Since ATAPI is
+the dominant transport for cd/dvd drives, MMC doesn't
+define any commands over 12 bytes in length, but both
+SPC (which MMC should honour) and SSC-3 (think tape
+drives, ATAPI connected) do.
+
+My point is that the linux block layer and scsi mid
+level should get out of the business of putting hard
+limits place. Why?
+Since kernel limits are at best necessary but not
+sufficient, the upper layers still need to be able to
+cope with errors associated with that limit.
+So why have the limit?
+Does the kernel do analysis to find out whether a USB
+connected DVD drive has a USB to ATAPI bridge externally?
+I don't think so. There is a role to fetch information
+that may act as a guide when a ULD has a choice of commands
+to build (e.g. sd deciding between READ(10) and READ(16)).
+Let the cdb size bottleneck (or whatever) report an error
+and upper layers that are impacted, including user space
+programs, can act accordingly.
+
+If the kernel really wants to offload complexity to the
+user space, the kernel needs to get out of the business
+of trying to foresee errors. It needs to get better at
+coping with errors and if possible adapting its behaviour.
+
+
+*** not the host nor the device
+
+Doug Gilbert
