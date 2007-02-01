@@ -1,61 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Thu, 01 Feb 2007 15:55:20 -0600
-Message-ID: <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
-References: <200701301947.08478.liml@rtr.ca>
-	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
-	 <45C2474E.9030306@rtr.ca>
+From: Florian Effenberger <florian@effenberger.org>
+Subject: Re: Serious bug in sata_sil module in 2.6.19.2?
+Date: Fri, 02 Feb 2007 00:39:57 +0100
+Message-ID: <45C27A4D.8070802@effenberger.org>
+References: <45C1BFE0.4080004@effenberger.org> <45C1FBFF.3050706@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:37763 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751037AbXBAVzZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Feb 2007 16:55:25 -0500
-In-Reply-To: <45C2474E.9030306@rtr.ca>
+Received: from garfield.effenberger.org ([85.214.43.221]:36354 "EHLO
+	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422901AbXBAXkE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Feb 2007 18:40:04 -0500
+In-Reply-To: <45C1FBFF.3050706@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Thu, 2007-02-01 at 15:02 -0500, Mark Lord wrote:
-> I believe you made the first change in response to my prodding at the time,
-> when libata was not returning valid sense data (no LBA) for media errors.
-> The SCSI EH handling of that was rather poor at the time,
-> and so having it not retry the remaining sectors was actually
-> a very good fix at the time.
-> 
-> But now, libata *does* return valid sense data for LBA/DMA drives,
-> and the workaround from circa 2.6.16 is no longer the best we can do.
-> Now that we know which sector failed, we ought to be able to skip
-> over it, and continue with the rest of the merged request.
+Hi there,
 
-We can ... the big concern with your approach, which you haven't
-addressed is the time factor.  For most SCSI devices, returning a fatal
-MEDIUM ERROR means we're out of remapping table, and also that there's
-probably a bunch of sectors on the track that are now out.  Thus, there
-are almost always multiple sector failures.  In linux, the average
-request size on a filesystem is around 64-128kb; thats 128-256 sectors.
-If we fail at the initial sector, we have to go through another 128-256
-attempts, with the internal device retries, before we fail the entire
-request.  Some devices can take a second or so for each read before they
-finally give up and decide they really can't read the sector, so you're
-looking at 2-5 minutes before the machine finally fails this one
-request ... and much worse for devices that retry more times.
+> sata_sil hasn't seen as much change as other drivers and is one of
+> the more stable ones.  I'm definitely interested.  Please post the
+> pics.  If the video contains useful info, can you host it somewhere?
 
-> One thing that could be even better than the patch below,
-> would be to have it perhaps skip the entire bio that includes
-> the failed sector, rather than only the bad sector itself.
+I've uploaded the image at
 
-Er ... define "skip over the bio".  A bio is simply a block
-representation for a bunch of sg elements coming in to the elevator.
-Mostly what we see in SCSI is a single bio per request, so skipping the
-bio is really the current behaviour (to fail the rest of the request).
+http://img482.imageshack.us/img482/6677/img0149rh5.jpg
 
-> I think doing that might address most concerns expressed here.
-> Have you got an alternate suggestion, James?
+and the video at
 
-James
+http://video.google.de/videoplay?docid=-3785898339758585695
+
+Can anyone detect something on the images?
+
+(If you reply, please put me in Cc, I am not subscribed to the list. 
+Thanks!)
+
+Thanks!
+Florian
+
+
+
+
+
+
 
 
