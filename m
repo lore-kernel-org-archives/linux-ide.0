@@ -1,44 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: fix translation for START STOP UNIT
-Date: Thu, 01 Feb 2007 09:27:21 +0900
-Message-ID: <45C133E9.1000600@gmail.com>
-References: <45BD4E0A.7060501@shaw.ca> <45BF5525.5040709@garzik.org> <45BF57EA.6060201@shaw.ca> <45BFE50B.7040103@rtr.ca>
+Subject: Re: [PATCH] RESEND: SCSI, libata: add support for ATA_16 commands
+ to libata ATAPI devices
+Date: Thu, 01 Feb 2007 09:33:47 +0900
+Message-ID: <45C1356B.6000907@gmail.com>
+References: <200701021935.07840.liml@rtr.ca> <200701311346.26644.liml@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:61333 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161117AbXBAA1j (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 19:27:39 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so354809nze
-        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 16:27:39 -0800 (PST)
-In-Reply-To: <45BFE50B.7040103@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200701311346.26644.liml@rtr.ca>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Robert Hancock <hancockr@shaw.ca>, Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Linux IDE <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 Mark Lord wrote:
-> Robert Hancock wrote:
->> I'd love to, but unfortunately nobody seems to have come up with a way
->> of doing this in Thunderbird that keeps it from mangling whitespace 
+> In an ideal world, we would use the existing ATA_12 opcode
+> to issue 12-byte ATA passthrough commands for libata ATAPI drives
+> from userspace.
 > 
-> Yup, major nuisance.  I have to fire up Kmail whenever I'm posting patches,
-> and then go back to Thunderbird again afterwards.
+> But ATA_12 happens to have the same SCSI opcode value as the older
+> CD/RW "BLANK" command, widely used by cdrecord and friends.
+> 
+> So, to achieve ATA passthru capability for libata ATAPI,
+> we have to instead use the ATA_16 opcode: a 16-byte command.
+> 
+> SCSI normally disallows issuing 16-byte commands to 12-byte devices,
+> so special support has to be added for this.
+> 
+> Introduce an "allow_ata_16" boolean to the scsi_host struct.
+> This provides a means for libata to signal that 16-byte ATA_16
+> commands should be permitted even for 12-byte ATAPI devices.
+> 
+> There are companion patches submitted separately
+> to add ATAPI ATA_16 capability to libata.
+> 
+> Signed-off-by:  Mark Lord <mlord@pobox.com>
 
-A much better solution with thunderbird is using external editor
-extension.
+I might have missed the discussion but can't we just set
+host->max_cmd_len to 16 unconditionally?  libata is emulating a SCSI
+device anyway and, from SCSI's POV, the situation is that any libata
+ATAPI device can do both 12 and 16 byte commands while some of them only
+allow allow ATA_16 for 16 byte command.
 
-http://globs.org/articles.php?lng=en&pg=2
+Also, it's not like host->max_cmd_len gives any guaranteed protection
+against CDB length.  Being a 'host' limit, it's set to the highest
+number in the host.  In that respect, it should be set to 16 too.  All
+ATA hosts can do 16 byte CDBs.
 
-Install the extension.  Configure it with your favorite editor.
-Thunderbird won't do a thing about your message if you turn off
-linewrap.
-
-	 For example, this line starts with a tab and a space and (double tab)		is very long and I'm writing in emacs fired up from thunderbird. (double space)  
-
-Cheers.
+Thanks.
 
 -- 
 tejun
