@@ -1,40 +1,49 @@
-From: Florian Effenberger <florian@effenberger.org>
-Subject: Serious bug in sata_sil module in 2.6.19.2?
-Date: Thu, 01 Feb 2007 11:24:32 +0100
-Message-ID: <45C1BFE0.4080004@effenberger.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: no DRQ after issuing MULTWRITE_EXT ?
+Date: Thu, 01 Feb 2007 16:06:21 +0300
+Message-ID: <45C1E5CD.8010707@ru.mvista.com>
+References: <45C1B079.3080704@imc-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from garfield.effenberger.org ([85.214.43.221]:34107 "EHLO
-	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422777AbXBAKmU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Feb 2007 05:42:20 -0500
+Received: from gateway-1237.mvista.com ([63.81.120.155]:53913 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1422849AbXBANGZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Feb 2007 08:06:25 -0500
+In-Reply-To: <45C1B079.3080704@imc-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: Steven Scholz <steven.scholz@imc-berlin.de>
 Cc: linux-ide@vger.kernel.org
 
-Hi there,
+Hello.
 
-I am not sure if the sata_sil-Module is the culprit, but I think so. We 
-ran a 2.6.15.1 kernel for months without any problems. Now I tried to 
-switch to 2.6.19.2, and every night when our backup routine runs, the 
-machine locks up. No log entry, no automatic reboot 
-(/proc/sys/kernel/panic is set to 30 [sec]).
+Steven Scholz wrote:
 
-The display looks like if there was a video error, lots of bad and 
-flickering characters, but it is pretty hard to read the error message. 
-I have an image and a video of that, if you need it. The only thing I 
-could read is something with "ata". After the reboot, the RAID devices 
-are out of sync and need to resync again.
+> I am seeing kernel messages like
 
-Booting up 2.6.15.1 on the same machine cures the problem, everything 
-works just fine, no lockups.
+> [ 1284.480000] hda: status timeout: status=0xd0 { Busy }
+> [ 1284.480000] ide: failed opcode was: unknown
+> [ 1284.480000] hda: no DRQ after issuing MULTWRITE_EXT
+> [ 1284.490000] ide0: unexpected interrupt, status=0x80, count=1
+> [ 1284.830000] ide0: reset: success
 
-Is there any chance of debugging that problem, of finding the culprit?
+    Looks like a spurious interrupt... Is your IDE IRQ shared with other devices?
 
-Any help would be greatly appreciated!
+> with a 2.5" Seagate ST940813AM on my embedded ARM system (linux 2.6.14, no
+> IDE controller. HDD registers just memory mapped).
 
-Thanks
-Florian
+> HDD is used in PIO4 with MultSect=16.
+
+> What exactly does that mean? Only that the HDD is to slow to answer this
+> request with 100ms (WAIT_DRQ=(HZ/10))?
+
+    Doubt it. The old ATA standard specified the maximum DRQ assertion time of 
+20 ms.
+
+> And will the request issued again after the reset of the drive?
+
+    It should be.
+
+MBR, Sergei
