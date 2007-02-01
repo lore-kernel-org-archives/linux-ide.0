@@ -1,32 +1,51 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCH] libata: check cdb len per dev instead of per host
-Date: Thu, 1 Feb 2007 17:16:13 +0000
-Message-ID: <20070201171613.72091b81@localhost.localdomain>
-References: <45C21C21.2060800@rtr.ca>
+Date: Thu, 01 Feb 2007 12:28:57 -0500
+Message-ID: <45C22359.8060701@rtr.ca>
+References: <45C21C21.2060800@rtr.ca> <20070201171613.72091b81@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41957 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751823AbXBAREN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Feb 2007 12:04:13 -0500
-In-Reply-To: <45C21C21.2060800@rtr.ca>
+Received: from rtr.ca ([64.26.128.89]:3667 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751897AbXBAR27 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Feb 2007 12:28:59 -0500
+In-Reply-To: <20070201171613.72091b81@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
+To: Alan <alan@lxorguk.ukuu.org.uk>
 Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Thu, 01 Feb 2007 11:58:09 -0500
-Mark Lord <liml@rtr.ca> wrote:
+Alan wrote:
+> On Thu, 01 Feb 2007 11:58:09 -0500
+> Mark Lord <liml@rtr.ca> wrote:
+> 
+>> Fix libata to perform CDB len validation per device
+>> rather than per host.  This way, validation still works
+>> when we have a mix of 12-byte and 16-byte devices on
+>> a common host interface.#
+> 
+> Users can pass 16byte commands in the "safe" list of commands so can spam
+> the log via the printk
 
-> Fix libata to perform CDB len validation per device
-> rather than per host.  This way, validation still works
-> when we have a mix of 12-byte and 16-byte devices on
-> a common host interface.#
+That's nothing new.
+We can do that already today with the original existing printk().
 
-Users can pass 16byte commands in the "safe" list of commands so can spam
-the log via the printk
+This patch (below) gets rid of the offending printk(),
+replacing it instead with DPRINTK.
 
-NAK
-
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
+--- linux/drivers/ata/libata-scsi.c.orig	2007-02-01 12:26:03.000000000 -0500
++++ linux/drivers/ata/libata-scsi.c	2007-02-01 12:26:54.000000000 -0500
+@@ -2762,8 +2762,7 @@
+ 		max_len = dev->cdb_len;
+  
+ 	if (unlikely(!scmd->cmd_len || scmd->cmd_len > max_len)) {
+- 		ata_dev_printk(dev, KERN_WARNING,
+- 			"WARNING: bad CDB len=%u, max=%u\n",
++ 		DPRINTK("bad CDB len=%u, max=%u\n",
+  			scmd->cmd_len, max_len);
+ 		scmd->result = DID_ERROR << 16;
+ 		done(scmd);
