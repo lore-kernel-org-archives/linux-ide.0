@@ -1,111 +1,32 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] libata: (round 4) add support for ATA_16 on ATAPI
-Date: Thu, 01 Feb 2007 12:01:18 -0500
-Message-ID: <45C21CDE.7030601@rtr.ca>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: check cdb len per dev instead of per host
+Date: Thu, 1 Feb 2007 17:16:13 +0000
+Message-ID: <20070201171613.72091b81@localhost.localdomain>
+References: <45C21C21.2060800@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2625 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422732AbXBARBT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Feb 2007 12:01:19 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41957 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751823AbXBAREN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Feb 2007 12:04:13 -0500
+In-Reply-To: <45C21C21.2060800@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-This patch adds support for issuing ATA_16 passthru commands
-to ATAPI devices managed by libata.  It requires the previous
-CDB length fix patch.
+On Thu, 01 Feb 2007 11:58:09 -0500
+Mark Lord <liml@rtr.ca> wrote:
 
-A boot/module parameter, "ata16_passthru=1" can be used to
-globally disable this feature, if ever desired.
+> Fix libata to perform CDB len validation per device
+> rather than per host.  This way, validation still works
+> when we have a mix of 12-byte and 16-byte devices on
+> a common host interface.#
 
-Signed-Off-By: Mark :ord <mlord@pobox.com>
----
-diff -u --recursive --new-file --exclude-from=old//Documentation/dontdiff old/drivers/ata/libata-core.c linux/drivers/ata/libata-core.c
---- old/drivers/ata/libata-core.c	2007-02-01 11:33:40.000000000 -0500
-+++ linux/drivers/ata/libata-core.c	2007-02-01 11:28:22.000000000 -0500
-@@ -82,6 +82,10 @@
- module_param(atapi_dmadir, int, 0444);
- MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
- 
-+int ata16_passthru = 1;
-+module_param(ata16_passthru, int, 0444);
-+MODULE_PARM_DESC(ata16_passthru, "Enable passthru of SCSI opcode 0x85 to ATAPI devices (0=off, 1=on)");
-+
- int libata_fua = 0;
- module_param_named(fua, libata_fua, int, 0444);
- MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
-diff -u --recursive --new-file --exclude-from=old//Documentation/dontdiff old/drivers/ata/libata-scsi.c linux/drivers/ata/libata-scsi.c
---- old/drivers/ata/libata-scsi.c	2007-02-01 11:33:40.000000000 -0500
-+++ linux/drivers/ata/libata-scsi.c	2007-02-01 11:32:21.000000000 -0500
-@@ -2690,6 +2690,10 @@
- 
- static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- {
-+	if (dev->class == ATA_DEV_ATAPI)
-+		if (cmd != ATA_16 || ata16_passthru)
-+			return atapi_xlat;
-+
- 	switch (cmd) {
- 	case READ_6:
- 	case READ_10:
-@@ -2748,28 +2752,29 @@
- 				      void (*done)(struct scsi_cmnd *),
- 				      struct ata_device *dev)
- {
--	int rc = 0;
--
--	if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len)) {
--		ata_dev_printk(dev, KERN_WARNING,
--			"WARNING: bad CDB len=%u, max=%u\n",
--			scmd->cmd_len, dev->cdb_len);
-+	ata_xlat_func_t xlat_func;
-+	int rc = 0, max_len;
-+	u8 scsi_op = scmd->cmnd[0];
-+
-+	if (scsi_op == ATA_16 && dev->class == ATA_DEV_ATAPI && ata16_passthru)
-+		max_len = 16;
-+	else
-+		max_len = dev->cdb_len;
-+ 
-+	if (unlikely(!scmd->cmd_len || scmd->cmd_len > max_len)) {
-+ 		ata_dev_printk(dev, KERN_WARNING,
-+ 			"WARNING: bad CDB len=%u, max=%u\n",
-+ 			scmd->cmd_len, max_len);
- 		scmd->result = DID_ERROR << 16;
- 		done(scmd);
- 		return 0;
- 	}
- 
--	if (dev->class == ATA_DEV_ATA) {
--		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
--							      scmd->cmnd[0]);
--
--		if (xlat_func)
--			rc = ata_scsi_translate(dev, scmd, done, xlat_func);
--		else
--			ata_scsi_simulate(dev, scmd, done);
--	} else
--		rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
--
-+	xlat_func = ata_get_xlat_func(dev, scsi_op);
-+	if (xlat_func)
-+		rc = ata_scsi_translate(dev, scmd, done, xlat_func);
-+	else
-+		ata_scsi_simulate(dev, scmd, done);
- 	return rc;
- }
- 
-diff -u --recursive --new-file --exclude-from=old//Documentation/dontdiff old/drivers/ata/libata.h linux/drivers/ata/libata.h
---- old/drivers/ata/libata.h	2007-02-01 11:19:58.000000000 -0500
-+++ linux/drivers/ata/libata.h	2007-02-01 11:33:10.000000000 -0500
-@@ -47,6 +47,7 @@
- extern struct workqueue_struct *ata_aux_wq;
- extern int atapi_enabled;
- extern int atapi_dmadir;
-+extern int ata16_passthru;
- extern int libata_fua;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+Users can pass 16byte commands in the "safe" list of commands so can spam
+the log via the printk
+
+NAK
+
