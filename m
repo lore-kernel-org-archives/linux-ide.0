@@ -1,41 +1,44 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH RFC] sd: spin down disks on removal or power-down
-Date: Wed, 31 Jan 2007 17:45:41 -0600
-Message-ID: <45C12A25.8080805@shaw.ca>
-References: <45BD522F.3070706@shaw.ca> <20070129154706.dfb3edab.akpm@osdl.org>
- <1170116201.3378.29.camel@mulgrave.il.steeleye.com> <45BE9252.3040108@shaw.ca>
- <45C0FA3B.5030508@s5r6.in-berlin.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: fix translation for START STOP UNIT
+Date: Thu, 01 Feb 2007 09:27:21 +0900
+Message-ID: <45C133E9.1000600@gmail.com>
+References: <45BD4E0A.7060501@shaw.ca> <45BF5525.5040709@garzik.org> <45BF57EA.6060201@shaw.ca> <45BFE50B.7040103@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:21373 "EHLO
-	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161022AbXAaXtU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 18:49:20 -0500
-In-reply-to: <45C0FA3B.5030508@s5r6.in-berlin.de>
+Received: from nz-out-0506.google.com ([64.233.162.235]:61333 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161117AbXBAA1j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jan 2007 19:27:39 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so354809nze
+        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2007 16:27:39 -0800 (PST)
+In-Reply-To: <45BFE50B.7040103@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com
+To: Mark Lord <liml@rtr.ca>
+Cc: Robert Hancock <hancockr@shaw.ca>, Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Stefan Richter wrote:
+Mark Lord wrote:
 > Robert Hancock wrote:
->>> http://marc.theaimsgroup.com/?t=116922621200002
->> It looks like Tejun's patch essentially does the same thing as mine with
->> the addition of the control from userspace. There is one exception
->> though, my patch also does the stop on removal of the SCSI disk (i.e.
->> writing 1 to its "delete" file in sysfs, what scsiadd -r does).
+>> I'd love to, but unfortunately nobody seems to have come up with a way
+>> of doing this in Thunderbird that keeps it from mangling whitespace 
 > 
-> Isn't sd_shutdown called at this occasion?
+> Yup, major nuisance.  I have to fire up Kmail whenever I'm posting patches,
+> and then go back to Thunderbird again afterwards.
 
-Ah, indeed it is. I was thinking of the way I had written my patch, 
-where it only does the spindown if the system state is SYSTEM_POWER_OFF 
-so I needed an extra call to force this on removal. Tejun's patch just 
-checks for not SYSTEM_RESTART, so it should happen on removal as well.
+A much better solution with thunderbird is using external editor
+extension.
+
+http://globs.org/articles.php?lng=en&pg=2
+
+Install the extension.  Configure it with your favorite editor.
+Thunderbird won't do a thing about your message if you turn off
+linewrap.
+
+	 For example, this line starts with a tab and a space and (double tab)		is very long and I'm writing in emacs fired up from thunderbird. (double space)  
+
+Cheers.
 
 -- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+tejun
