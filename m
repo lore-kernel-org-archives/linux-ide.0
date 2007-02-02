@@ -1,62 +1,90 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't
- apply)
-Date: Fri, 02 Feb 2007 22:04:00 +0300
-Message-ID: <45C38B20.50102@ru.mvista.com>
-References: <20070202151856.GD1625@htj.dyndns.org>	<45C359FC.2000601@ru.mvista.com>	<45C369C5.5000201@gmail.com> <20070202184928.4229f99a@localhost.localdomain>
+From: juergen.metzdorf@telelev-dsl.de
+Subject: Re: Problem: 2.6.20-rc7 sata_via: SATA-DVD-Writer doesn't work
+	properly
+Date: Fri, 02 Feb 2007 20:34:44 +0100
+Message-ID: <20070202203444.hcnx8efmifswosws@webmail.citykom.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:1530 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1423055AbXBBTEH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Feb 2007 14:04:07 -0500
-In-Reply-To: <20070202184928.4229f99a@localhost.localdomain>
+Received: from muemailc.citykom.de ([195.202.32.25]:39783 "EHLO
+	muemailc.citykom.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423079AbXBBTew (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 14:34:52 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <htejun@gmail.com>, ahaas@airmail.net, linux-ide@vger.kernel.org
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-Hello.
+Zitat von Alan <alan@lxorguk.ukuu.org.uk>:
 
-Alan wrote:
+> On Thu, 01 Feb 2007 19:22:31 +0100
+> juergen.metzdorf@telelev-dsl.de wrote:
+>
+>> Hello,
+>>
+>> I'm experiencing problems with an SATA-DVD-Writer (Samsung SH-S183a)
+>> connected
+>> to a VIA8237 motherboard chipset. As you can see in the attached
+>> boot.log, the
+>> system is reducing the DMA-Mode from DMA33 to DMA25 then to DMA16 to
+>> end up as
+>> PIO4. As a result the dvds that are written are corrupt. During the writing
+>> process the messages log shows repeating entries like this:
+>
+> Please try the patch I posted to the kernel list and ide list yesterday
+> which allows settle time on DMA changes.
+>
 
->>>   Actually, I think ata_timing_merge() should just be performed when
->>>setting MWDMA mode... This should be the right thing to do in most cases
->>>(however, this hardware has some complications in the form of only 2-bit
->>>wide active/recovery counts and 2 fast timing bank select bits)...
+Hi,
 
->>Yeap, that'll be nice.  Dunno whether modifying piix/ata_piix too much
->>would be a good idea tho considering the wide usage.
+I've applied your patch and the patch by Jeff Garzik that he posted today.
+Unfortunately that hasn't change the problem. Still the drive ends up at PIO4:
 
-> If I remember rightly the 2bits is ok because you can set the bit to say
-> that timings are for DMA only,
+<3>ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+<3>ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x43 data 12 in
+<4>         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+<6>ata2: soft resetting port
+<4>ATA: abnormal status 0x7F on port 0xB007
+<4>ATA: abnormal status 0x7F on port 0xB007
+<6>ata2.00: configured for UDMA/33
+<6>ata2: EH complete
+<4>ata2.00: limiting speed to UDMA/25
+<3>ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+<3>ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x43 data 12 in
+<4>         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+<6>ata2: soft resetting port
+<4>ATA: abnormal status 0x7F on port 0xB007
+<4>ATA: abnormal status 0x7F on port 0xB007
+<6>ata2.00: configured for UDMA/25
+<6>ata2: EH complete
+<3>sr0: CDROM (ioctl) error, command: <6>Read TOC/PMA/ATIP 43 00 00 00 00 00 00
+00 0c 40
+<6>sr: Current [descriptor]: sense key: Aborted Command
+<6>    Additional sense: No additional sense information
+<4>ata2.00: limiting speed to UDMA/16
+<3>ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+<3>ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x43 data 12 in
+<4>         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+<6>ata2: soft resetting port
+<4>ATA: abnormal status 0x7F on port 0xB007
+<4>ATA: abnormal status 0x7F on port 0xB007
+<6>ata2.00: configured for UDMA/16
+<6>ata2: EH complete
+<4>ata2.00: limiting speed to PIO4
+<3>ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+<3>ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x43 data 12 in
+<4>         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+<6>ata2: soft resetting port
+<4>ATA: abnormal status 0x7F on port 0xB007
+<4>ATA: abnormal status 0x7F on port 0xB007
+<6>ata2.00: configured for PIO4
+<6>ata2: EH complete
 
-    Yeah, after thinking a bit more, the current logic seems good enough, i. 
-e. it's better to slow down PIO to mode 0 than further slow down DMA to match 
-the current PIO speed -- however, this is already happening with MWDMA1 which 
-is actually faster than PIO3 (150 vs 180 ns).  But well, who cares... :-)
+BTW: In function ata_dev_set_mode in libata_core.c the variable err_mask is not
+initialized (line 2386). I changed that and initialized err_mask with 0, but
+that did'nt solve my problem. I did'nt expect to :-)
 
-> the device then uses slower than PIO0 for all other cycles.
-
-    Well, thankfully, compatible mode is PIO0 exactly (except for taskfile 
-accesses which are way slower indeed).
-
->>In both mwdma and pio cases, they're just turning off UDMA.  Don't know
->>whether it's actually necessary but still afraid to change it unless
->>there is a good reason.
-
-> The tuning manual I have does it, so I do it 8)
-
-    Do you mean 29860004.pdf?  Actually, I'm not seeing anything alike here.
-It would've been stupid idea to couple UDMA to PIO but well... after looking 
-at the HighPoint datasheets, one becomes hard to surprise. :-)
-
-> Alan
-
-    Well, after looking at do_pata_set_dmamode(), I have another question:
-why IORDY enable is forced here?  It has *nothing* to do with the IDE DMA 
-protocol. (This also seems to be an issue with piix.c...)
-
-MBR, Sergei
+Juergen Metzdorf
