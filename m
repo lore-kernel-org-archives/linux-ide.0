@@ -1,89 +1,262 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: reduce ATA command timeout to 7secs
-Date: Fri, 2 Feb 2007 15:37:48 +0900
-Message-ID: <20070202063748.GC1625@htj.dyndns.org>
+Subject: [PATCH 1/5] libata: improve ata_down_xfermask_limit()
+Date: Fri, 2 Feb 2007 16:09:30 +0900
+Message-ID: <11704001701192-git-send-email-htejun@gmail.com>
+References: <11704001701015-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.228]:57585 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423150AbXBBGiQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 01:38:16 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so779769nze
-        for <linux-ide@vger.kernel.org>; Thu, 01 Feb 2007 22:38:15 -0800 (PST)
-Content-Disposition: inline
+Received: from wx-out-0506.google.com ([66.249.82.229]:48480 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423165AbXBBHJg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 02:09:36 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so810584wxd
+        for <linux-ide@vger.kernel.org>; Thu, 01 Feb 2007 23:09:36 -0800 (PST)
+In-Reply-To: <11704001701015-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, ric@emc.com, edmudama@gmail.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Both ATA and ATAPI devices used the default timeouts defined by SCSI
-high level driver.  For both disks and ODDs, it was 30secs, which was
-way too long for disks.  This patch makes most ATA commands time out
-after 7secs - the de facto ATA command timeout, while leaving ATAPI
-timeout at 30secs.
+Make ata_down_xfermask_limit() accept @sel instead of @force_pio0.
+@sel selects how the xfermask limit will be adjusted.  The following
+selectors are defined.
 
-Note that both normal commands and EH commands timeouts are adjusted
-to 7 secs, but cache flushses still have 30sec timeout.  This is a
-side effect of the way sd makes use of sdev->timeout, but this is a
-good side effect in that ATA spec requires cache flushes are given
-longer timeout.
+* ATA_DNXFER_PIO	: only speed down PIO
+* ATA_DNXFER_DMA	: only speed down DMA, don't cause transfer mode change
+* ATA_DNXFER_40C	: apply 40c cable limit
+* ATA_DNXFER_FORCE_PIO	: force PIO
+* ATA_DNXFER_FORCE_PIO0	: force PIO0 (same as original with @force_pio0 == 1)
+* ATA_DNXFER_ANY	: same as original with @force_pio0 == 0
+
+Currently, only ANY and FORCE_PIO0 are used to maintain the original
+behavior.  Other selectors will be used later to improve EH speed down
+sequence.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-I think we've waited enough.  Combined with EH updates which will soon
-be posted, this should make life much easier (well, at least
-responsive) when something goes wrong with ATA.
-
- drivers/ata/libata-core.c |    2 +-
- drivers/ata/libata-scsi.c |    6 ++++++
- include/linux/libata.h    |    4 ++--
- 3 files changed, 9 insertions(+), 3 deletions(-)
+ drivers/ata/libata-core.c |  105 ++++++++++++++++++++++++++++++++++-----------
+ drivers/ata/libata-eh.c   |    9 +++-
+ drivers/ata/libata.h      |   12 +++++-
+ 3 files changed, 96 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 582e44d..a441c75 100644
+index a441c75..417394b 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -89,7 +89,7 @@ int libata_fua = 0;
- module_param_named(fua, libata_fua, int, 0444);
- MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
+@@ -1747,6 +1747,7 @@ int ata_bus_probe(struct ata_port *ap)
+ 	int tries[ATA_MAX_DEVICES];
+ 	int i, rc, down_xfermask;
+ 	struct ata_device *dev;
++	int dnxfer_sel;
  
--static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
-+static int ata_probe_timeout = ATA_TMOUT_CMD / HZ;
- module_param(ata_probe_timeout, int, 0444);
- MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+ 	ata_port_probe(ap);
  
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0009818..dc2157c 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -903,6 +903,12 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
- 		depth = min(ATA_MAX_QUEUE - 1, depth);
- 		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
+@@ -1828,13 +1829,15 @@ int ata_bus_probe(struct ata_port *ap)
+ 		/* fall through */
+ 	default:
+ 		tries[dev->devno]--;
+-		if (down_xfermask &&
+-		    ata_down_xfermask_limit(dev, tries[dev->devno] == 1))
++		dnxfer_sel = ATA_DNXFER_ANY;
++		if (tries[dev->devno] == 1)
++			dnxfer_sel = ATA_DNXFER_FORCE_PIO0;
++		if (down_xfermask && ata_down_xfermask_limit(dev, dnxfer_sel))
+ 			tries[dev->devno] = 0;
  	}
+ 
+ 	if (!tries[dev->devno]) {
+-		ata_down_xfermask_limit(dev, 1);
++		ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0);
+ 		ata_dev_disable(dev);
+ 	}
+ 
+@@ -2267,7 +2270,7 @@ int ata_timing_compute(struct ata_device *adev, unsigned short speed,
+ /**
+  *	ata_down_xfermask_limit - adjust dev xfer masks downward
+  *	@dev: Device to adjust xfer masks
+- *	@force_pio0: Force PIO0
++ *	@sel: ATA_DNXFER_* selector
+  *
+  *	Adjust xfer masks of @dev downward.  Note that this function
+  *	does not apply the change.  Invoking ata_set_mode() afterwards
+@@ -2279,37 +2282,87 @@ int ata_timing_compute(struct ata_device *adev, unsigned short speed,
+  *	RETURNS:
+  *	0 on success, negative errno on failure
+  */
+-int ata_down_xfermask_limit(struct ata_device *dev, int force_pio0)
++int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel)
+ {
+-	unsigned long xfer_mask;
+-	int highbit;
++	char buf[32];
++	unsigned int orig_mask, xfer_mask;
++	unsigned int pio_mask, mwdma_mask, udma_mask;
++	int quiet, highbit;
+ 
+-	xfer_mask = ata_pack_xfermask(dev->pio_mask, dev->mwdma_mask,
+-				      dev->udma_mask);
++	quiet = !!(sel & ATA_DNXFER_QUIET);
++	sel &= ~ATA_DNXFER_QUIET;
+ 
+-	if (!xfer_mask)
+-		goto fail;
+-	/* don't gear down to MWDMA from UDMA, go directly to PIO */
+-	if (xfer_mask & ATA_MASK_UDMA)
+-		xfer_mask &= ~ATA_MASK_MWDMA;
++	xfer_mask = orig_mask = ata_pack_xfermask(dev->pio_mask,
++						  dev->mwdma_mask,
++						  dev->udma_mask);
++	ata_unpack_xfermask(xfer_mask, &pio_mask, &mwdma_mask, &udma_mask);
+ 
+-	highbit = fls(xfer_mask) - 1;
+-	xfer_mask &= ~(1 << highbit);
+-	if (force_pio0)
+-		xfer_mask &= 1 << ATA_SHIFT_PIO;
+-	if (!xfer_mask)
+-		goto fail;
++	switch (sel) {
++	case ATA_DNXFER_PIO:
++		highbit = fls(pio_mask) - 1;
++		pio_mask &= ~(1 << highbit);
++		break;
 +
-+	/* setup command timeout */
-+	if (dev->class == ATA_DEV_ATA)
-+		sdev->timeout = ATA_TMOUT_CMD;
-+	else
-+		sdev->timeout = ATAPI_TMOUT_CMD;
++	case ATA_DNXFER_DMA:
++		if (udma_mask) {
++			highbit = fls(udma_mask) - 1;
++			udma_mask &= ~(1 << highbit);
++			if (!udma_mask)
++				return -ENOENT;
++		} else if (mwdma_mask) {
++			highbit = fls(mwdma_mask) - 1;
++			mwdma_mask &= ~(1 << highbit);
++			if (!mwdma_mask)
++				return -ENOENT;
++		}
++		break;
++
++	case ATA_DNXFER_40C:
++		udma_mask &= ATA_UDMA_MASK_40C;
++		break;
++
++	case ATA_DNXFER_FORCE_PIO0:
++		pio_mask &= 1;
++	case ATA_DNXFER_FORCE_PIO:
++		mwdma_mask = 0;
++		udma_mask = 0;
++		break;
++
++	case ATA_DNXFER_ANY:
++		/* don't gear down to MWDMA from UDMA, go directly to PIO */
++		if (xfer_mask & ATA_MASK_UDMA)
++			xfer_mask &= ~ATA_MASK_MWDMA;
++
++		highbit = fls(xfer_mask) - 1;
++		xfer_mask &= ~(1 << highbit);
++		break;
++
++	default:
++		BUG();
++	}
++
++	xfer_mask &= ata_pack_xfermask(pio_mask, mwdma_mask, udma_mask);
++
++	if (!(xfer_mask & ATA_MASK_PIO) || xfer_mask == orig_mask)
++		return -ENOENT;
++
++	if (!quiet) {
++		if (xfer_mask & (ATA_MASK_MWDMA | ATA_MASK_UDMA))
++			snprintf(buf, sizeof(buf), "%s:%s",
++				 ata_mode_string(xfer_mask),
++				 ata_mode_string(xfer_mask & ATA_MASK_PIO));
++		else
++			snprintf(buf, sizeof(buf), "%s",
++				 ata_mode_string(xfer_mask));
++
++		ata_dev_printk(dev, KERN_WARNING,
++			       "limiting speed to %s\n", buf);
++	}
+ 
+ 	ata_unpack_xfermask(xfer_mask, &dev->pio_mask, &dev->mwdma_mask,
+ 			    &dev->udma_mask);
+ 
+-	ata_dev_printk(dev, KERN_WARNING, "limiting speed to %s\n",
+-		       ata_mode_string(xfer_mask));
+-
+ 	return 0;
+-
+- fail:
+-	return -EINVAL;
  }
  
- /**
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 305e95f..4c3ed59 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -214,8 +214,8 @@ enum {
- 	/* various lengths of time */
- 	ATA_TMOUT_BOOT		= 30 * HZ,	/* heuristic */
- 	ATA_TMOUT_BOOT_QUICK	= 7 * HZ,	/* heuristic */
--	ATA_TMOUT_INTERNAL	= 30 * HZ,
--	ATA_TMOUT_INTERNAL_QUICK = 5 * HZ,
-+	ATA_TMOUT_CMD		= 7 * HZ,	/* de facto ATA cmd timeout */
-+	ATAPI_TMOUT_CMD		= 30 * HZ,
+ static int ata_dev_set_mode(struct ata_device *dev)
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 52c85af..7b61562 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1276,7 +1276,7 @@ static int ata_eh_speed_down(struct ata_device *dev, int is_io,
+ 		return ATA_EH_HARDRESET;
  
- 	/* ATA bus states */
- 	BUS_UNKNOWN		= 0,
+ 	/* lower transfer mode */
+-	if (ata_down_xfermask_limit(dev, 0) == 0)
++	if (ata_down_xfermask_limit(dev, ATA_DNXFER_ANY) == 0)
+ 		return ATA_EH_SOFTRESET;
+ 
+ 	ata_dev_printk(dev, KERN_ERR,
+@@ -1965,6 +1965,7 @@ static int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+ 	struct ata_device *dev;
+ 	int down_xfermask, i, rc;
++	int dnxfer_sel;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+@@ -2064,8 +2065,10 @@ static int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		sata_down_spd_limit(ap);
+ 	default:
+ 		ehc->tries[dev->devno]--;
+-		if (down_xfermask &&
+-		    ata_down_xfermask_limit(dev, ehc->tries[dev->devno] == 1))
++		dnxfer_sel = ATA_DNXFER_ANY;
++		if (ehc->tries[dev->devno] == 1)
++			dnxfer_sel = ATA_DNXFER_FORCE_PIO0;
++		if (down_xfermask && ata_down_xfermask_limit(dev, dnxfer_sel))
+ 			ehc->tries[dev->devno] = 0;
+ 	}
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 06ccf23..36e08d2 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -41,6 +41,16 @@ struct ata_scsi_args {
+ enum {
+ 	/* flags for ata_dev_read_id() */
+ 	ATA_READID_POSTRESET	= (1 << 0), /* reading ID after reset */
++
++	/* selector for ata_down_xfermask_limit() */
++	ATA_DNXFER_PIO		= 0,	/* speed down PIO */
++	ATA_DNXFER_DMA		= 1,	/* speed down DMA */
++	ATA_DNXFER_40C		= 2,	/* apply 40c cable limit */
++	ATA_DNXFER_FORCE_PIO	= 3,	/* force PIO */
++	ATA_DNXFER_FORCE_PIO0	= 4,	/* force PIO0 */
++	ATA_DNXFER_ANY		= 5,	/* speed down any */
++
++	ATA_DNXFER_QUIET	= (1 << 31),
+ };
+ 
+ extern struct workqueue_struct *ata_aux_wq;
+@@ -68,7 +78,7 @@ extern int ata_dev_revalidate(struct ata_device *dev, unsigned int flags);
+ extern int ata_dev_configure(struct ata_device *dev);
+ extern int sata_down_spd_limit(struct ata_port *ap);
+ extern int sata_set_spd_needed(struct ata_port *ap);
+-extern int ata_down_xfermask_limit(struct ata_device *dev, int force_pio0);
++extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
+ extern int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev);
+ extern void ata_sg_clean(struct ata_queued_cmd *qc);
+ extern void ata_qc_free(struct ata_queued_cmd *qc);
 -- 
 1.4.4.4
+
 
