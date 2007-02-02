@@ -1,69 +1,66 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: asdf
-Date: Fri, 2 Feb 2007 16:22:30 +0900
-Message-ID: <11704009502014-git-send-email-htejun@gmail.com>
+Subject: [PATCH 4/5] libata: kill ATA_DNXFER_ANY
+Date: Fri, 2 Feb 2007 16:22:31 +0900
+Message-ID: <11704009512121-git-send-email-htejun@gmail.com>
+References: <11704009502014-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.236]:53501 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423179AbXBBHWj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 02:22:39 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so813324wxd
-        for <linux-ide@vger.kernel.org>; Thu, 01 Feb 2007 23:22:37 -0800 (PST)
-In-Reply-To: 
+Received: from nz-out-0506.google.com ([64.233.162.237]:7283 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423169AbXBBHW7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 02:22:59 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so788962nze
+        for <linux-ide@vger.kernel.org>; Thu, 01 Feb 2007 23:22:59 -0800 (PST)
+In-Reply-To: <11704009502014-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, ric@emc.com, edmudama@gmail.com, linux-ide@vger.kernel.org, htejun@gmail.com
+To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, ric@emc.com, edmudama@gmail.com, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello,
+ATA_DNXFER_ANY isn't used anymore.  Kill it.
 
-The current EH speed down code is more of a feature demonstration and
-goes through rdiculously many meaningless steps when condition is met.
-This patchset tries to put some intelligence into speed down sequence.
-The goal is to achieve reasonable number of speed down steps
-reasonably spaced from one another and consider NCQ, cable type and
-the current protocol when determining speed down steps, while not
-bloating the code too much with nitty gritty details.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |    9 ---------
+ drivers/ata/libata.h      |    1 -
+ 2 files changed, 0 insertions(+), 10 deletions(-)
 
-Roughly, the rules are...
-
-1. If NCQ and protocol/timeout/unknown dev errors occur, turn off NCQ
-
-2. If excessive transfer errors occur, speed down within the current
-   transfer mode (UDMA/MWDMA/PIO).  If UDMA, it's first adjusted down
-   a step, if error conditions persist, 40c limit is applied.  Speed
-   down is done only twice.
-
-3. If PATA && used up all DMA speed down steps && a LOT of
-   transmission/unknown errors occur, switch to PIO.  So, we never
-   automatically step down to PIO on SATA.  This is intended.  Some
-   SATA hdd even seems to have problem with PIO data transfer
-   commands.
-
-The last patch makes ahci report HSM violation error on spurious
-completion of NCQ commands, thus causing NCQ off after several such
-incidents.  These drives should be blacklisted for DMA eventually.
-
-This patchset is against...
-
-  upstream (eb0e63cca36a3389f0ccab4584f6d479b983fad5)
-+ [1] pata_platform-fix-devres-conversion
-+ [2] libata-convert-to-iomap
-
-Ric, I guess this resolves the to-do item from you which has been
-sitting in my mailbox for way too long.  What do you think about the
-rules?
-
-Thanks.
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.kernel/488509
-[2] hmm.. can't find it any archive.  Might have been ignored due to
-    size.  Jeff, did you receive it?
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index cbd4bf1..651ab4b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2327,15 +2327,6 @@ int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel)
+ 		udma_mask = 0;
+ 		break;
+ 
+-	case ATA_DNXFER_ANY:
+-		/* don't gear down to MWDMA from UDMA, go directly to PIO */
+-		if (xfer_mask & ATA_MASK_UDMA)
+-			xfer_mask &= ~ATA_MASK_MWDMA;
+-
+-		highbit = fls(xfer_mask) - 1;
+-		xfer_mask &= ~(1 << highbit);
+-		break;
+-
+ 	default:
+ 		BUG();
+ 	}
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 36e08d2..6fc6260 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -48,7 +48,6 @@ enum {
+ 	ATA_DNXFER_40C		= 2,	/* apply 40c cable limit */
+ 	ATA_DNXFER_FORCE_PIO	= 3,	/* force PIO */
+ 	ATA_DNXFER_FORCE_PIO0	= 4,	/* force PIO0 */
+-	ATA_DNXFER_ANY		= 5,	/* speed down any */
+ 
+ 	ATA_DNXFER_QUIET	= (1 << 31),
+ };
+-- 
+1.4.4.4
 
 
