@@ -1,34 +1,30 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata fixes
-Date: Fri, 2 Feb 2007 14:41:12 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0702021440150.15057@woody.linux-foundation.org>
-References: <20070202165842.GA6412@havoc.gtf.org>
- <Pine.LNX.4.64.0702020911560.15057@woody.linux-foundation.org>
- <20070202134359.e744fee1.akpm@linux-foundation.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Fri, 02 Feb 2007 17:58:04 -0500
+Message-ID: <45C3C1FC.8020500@rtr.ca>
+References: <200701301947.08478.liml@rtr.ca> <1170206199.10890.13.camel@mulgrave.il.steeleye.com> <45C2474E.9030306@rtr.ca> <1170366920.3388.62.camel@mulgrave.il.steeleye.com> <45C32C7F.9050706@emc.com> <20070202145003.525bd682@localhost.localdomain> <45C3617B.2020400@rtr.ca> <20070202194956.GF16722@waste.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:43427 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946124AbXBBWlW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Feb 2007 17:41:22 -0500
-In-Reply-To: <20070202134359.e744fee1.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070202194956.GF16722@waste.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matt Mackall <mpm@selenic.com>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Ric Wheeler <ric@emc.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
+Matt Mackall wrote:
+> ..
+> Also worth considering is that spending minutes trying to reread
+> damaged sectors is likely to accelerate your death spiral. More data
+> may be recoverable if you give up quickly in a first pass, then go
+> back and manually retry damaged bits with smaller I/Os.
 
+All good input.  But what was being debated here is not so much
+the retrying of known-bad sectors, but rather what to do about
+the kiBs or MiBs of sectors remaining in a merged request after
+hitting a single bad sector mid-way.
 
-On Fri, 2 Feb 2007, Andrew Morton wrote:
-> 
-> http://www.google.com/search?hl=en&q=torvalds+schenario&btnG=Google+Search
+Currently, SCSI just abandons the entire remaining workload.
 
-I know. But since people pointed it out, I've actually tried to mend my 
-broken ways.
-
-And the fact that people always point out that _same_ misspelled word 
-actually makes me happy. I can't be spelling too many words badly if they 
-all just react to the same one.
-
-		Linus
+Cheers
