@@ -1,63 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't
- apply)
-Date: Sat, 03 Feb 2007 01:41:41 +0900
-Message-ID: <45C369C5.5000201@gmail.com>
-References: <20070202151856.GD1625@htj.dyndns.org> <45C359FC.2000601@ru.mvista.com>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
+Date: Fri, 2 Feb 2007 09:43:49 -0700
+Message-ID: <311601c90702020843w16a67db8j5ead05f107161ec9@mail.gmail.com>
+References: <20070202063748.GC1625@htj.dyndns.org> <45C33BCF.2040506@emc.com>
+	 <45C354CF.1020500@gmail.com>
+	 <20070202153929.33f4a806@localhost.localdomain>
+	 <45C36338.60803@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:22883 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945950AbXBBQlr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 11:41:47 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so919271nze
-        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 08:41:46 -0800 (PST)
-In-Reply-To: <45C359FC.2000601@ru.mvista.com>
+Received: from wr-out-0506.google.com ([64.233.184.234]:16185 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945963AbXBBQnu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 11:43:50 -0500
+Received: by wr-out-0506.google.com with SMTP id i22so782343wra
+        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 08:43:49 -0800 (PST)
+In-Reply-To: <45C36338.60803@rtr.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: ahaas@airmail.net, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Sergei Shtylyov wrote:
->> +    /* PIO configuration clears DTE unconditionally.  It will be
->> +     * programmed in set_dmamode which is guaranteed to be called
->> +     * after set_piomode if any DMA mode is available.
->> +     */
-> 
->    Actually, I think ata_timing_merge() should just be performed when
-> setting MWDMA mode... This should be the right thing to do in most cases
-> (however, this hardware has some complications in the form of only 2-bit
-> wide active/recovery counts and 2 fast timing bank select bits)...
+On 2/2/07, Mark Lord <liml@rtr.ca> wrote:
+> 7 seconds is not enough for current drives to report back.
+> Adding another (8 seconds total) is enough, but I prefer to
+> see a little margin there, so call it 10 seconds.
 
-Yeap, that'll be nice.  Dunno whether modifying piix/ata_piix too much
-would be a good idea tho considering the wide usage.
+If you're going to allow 30 seconds (or more) for a cache flush, you
+probably want to allow 30 seconds (or more) for any command that might
+implicitly cause a cache flush.
 
->>      pci_read_config_word(dev, master_port, &master_data);
->>      if (is_slave) {
->> +        /* clear TIME1|IE1|PPE1|DTE1 */
->> +        master_data &= 0xff0f;
-> 
->    Yeah, I've fixed this oversight in piix.c...
+Things like EXECUTE DEVICE DIAGNOSTICS, IDENTIFY DEVICE, NOP,
+STANDBY/IDLE IMMEDIATE, both "soft" and "hard" reset, most SMART
+commands, etc.
 
-Great, please consider updating ata_piix together next time.  libata can
-really use some help from a someone who knows a lot about PATA including
-mode programming.
+In fact, my understanding is that many devices will flush their write
+caches to disk when receiving non-data commands, so those commands may
+take a while if they occur immediately following heavy write activity,
+even without errors being present.
 
->> +        if (ap->udma_mask) {
->> +            udma_enable &= ~(1 << devid);
->> +            pci_write_config_word(dev, master_port, master_data);
->> +        }
-> 
->    I've also noticed that this is done at the end of piix_set_piomode()
-> and I see no reason why.  Isn't it just a leftover from the piix.c
-> brokenness?  This driver coupled PIO and UDMA timing updates for no
-> conceivable reason?
+While sure, a reset should function fine being issued in the middle of
+a command, and bring the drive back to a ready state, I don't know if
+these assumptions about 7s vs 8s vs 10s are always going to be valid
+for disk drives purchased through distribution channels or in the
+generic PC market, as opposed to "RAID edition" or "MaxLine" or
+similar branding from other vendors, where the firmware may have been
+specifically optimized for quicker command completion, quicker status
+reporting and less exhaustive error recovery.  Many linux users I
+assume are buying/borrowing/stealing cheap old gear from whatever
+source they can, and I don't want to unnecessarilly risk compounding
+the issue in their environments.
 
-In both mwdma and pio cases, they're just turning off UDMA.  Don't know
-whether it's actually necessary but still afraid to change it unless
-there is a good reason.
-
--- 
-tejun
+--eric
