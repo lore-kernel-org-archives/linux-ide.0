@@ -1,95 +1,82 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc7: known regressions
-Date: Fri, 2 Feb 2007 06:49:16 +0100
-Message-ID: <20070202054916.GA3754@stusta.de>
-References: <Pine.LNX.4.64.0701302019530.11095@woody.linux-foundation.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH libata-dev#upstream-fixes] ahci/pata_jmicron: fix JMicron quirk
+Date: Fri, 2 Feb 2007 14:51:09 +0900
+Message-ID: <20070202055109.GM8606@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:57314 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1423112AbXBBFtJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 00:49:09 -0500
+Received: from nz-out-0506.google.com ([64.233.162.226]:42590 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423119AbXBBFvZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 00:51:25 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so770420nze
+        for <linux-ide@vger.kernel.org>; Thu, 01 Feb 2007 21:51:22 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701302019530.11095@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jens Axboe <jens.axboe@oracle.com>, Gerhard Dirschl <gd@spherenet.de>, Luca Tettamanti <kronos.it@gmail.com>, Christoph Hellwig <hch@lst.de>, petero2@telia.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, Livio Soares <livio@eecg.toronto.edu>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, =?utf-8?B?RnJhbsOnb2lz?= Valenduc <francois.valenduc@skynet.be>, Alan Stern <stern@rowland.harvard.edu>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Prakash Punnoor <prakash@punnoor.de>, Oliver Neukum <oliver@neukum.org>, Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>, Nick Piggin <nickpiggin@yahoo.com.au>, ttb@tentacle.dhs.org, rml@novell.com, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, justin@jmicron.com
 
-This email lists some known regressions in 2.6.20-rc7 compared to 2.6.1=
-9
-that are not yet fixed in Linus' tree.
+For all JMicrons except for 361 and 368, AHCI mode enable bits in the
+Control(1) should be set.  This used to be done in both ahci and
+pata_jmicron but while moving programming to PCI quirk, it was removed
+from ahci part while still left in pata_jmicron.
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possib=
-ly
-involved with one or more of these issues.
+The implemented JMicron PCI quirk was incorrect in that it didn't
+program AHCI mode enable bits.  If pata_jmicron is loaded first and
+programs those bits, the ahci ports work; otherwise, ahci device
+detection fails miserably.
 
-Due to the huge amount of recipients, please trim the Cc when answering=
-=2E
+This patch makes JMicron PCI quirk clear SATA IDE mode bits and set
+AHCI mode bits and remove the respective part from pata_jmicron.
+Tested on JMB361, 363 and 368.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Jeff, gotta be included in 2.6.20.
+Justin, is this the problem you were seeing on suse?
 
-Subject    : NULL pointer dereference at as_move_to_dispatch()
-References : http://lkml.org/lkml/2007/1/22/141
-Submitter  : Andrew Vasquez <andrew.vasquez@qlogic.com>
-Status     : unknown
-
-
-Subject    : pktcdvd doesn't work with libata pata drivers
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7810
-             http://lkml.org/lkml/2007/1/25/128
-             http://bugzilla.kernel.org/show_bug.cgi?id=3D7910
-             http://lkml.org/lkml/2007/1/30/289
-Submitter  : Gerhard Dirschl <gd@spherenet.de>
-             Luca Tettamanti <kronos.it@gmail.com>
-Caused-By  : Christoph Hellwig <hch@lst.de>
-             commit 3b00315799d78f76531b71435fbc2643cd71ae4c
-             commit 406c9b605cbc45151c03ac9a3f95e9acf050808c
-Status     : unknown
-
-
-Subject    : powerpc64: performance monitor exception
-References : http://ozlabs.org/pipermail/linuxppc-dev/2007-January/0300=
-45.html
-Submitter  : Livio Soares <livio@eecg.toronto.edu>
-Caused-By  : Paul Mackerras <paulus@samba.org>
-             commit d04c56f73c30a5e593202ecfcf25ed43d42363a2
-Status     : unknown
-
-
-Subject    : reboot instead of powerdown  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2006/12/25/40
-             http://bugzilla.kernel.org/show_bug.cgi?id=3D7828
-Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
-             Fran=C3=A7ois Valenduc <francois.valenduc@skynet.be>
-Handled-By : Alan Stern <stern@rowland.harvard.edu>
-Status     : problem is being debugged
-
-
-Subject    : usb somehow broken  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2007/1/11/146
-Submitter  : Prakash Punnoor <prakash@punnoor.de>
-Handled-By : Oliver Neukum <oliver@neukum.org>
-             Alan Stern <stern@rowland.harvard.edu>
-Status     : problem is being debugged
-
-
-Subject    : BUG: at fs/inotify.c:172 set_dentry_child_flags()
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7785
-Submitter  : Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
-Handled-By : Nick Piggin <nickpiggin@yahoo.com.au>
-Status     : problem is being debugged
-
-
-Subject    : fix geode_configure()
-References : http://lkml.org/lkml/2007/1/9/216
-Submitter  : Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Caused-By  : takada <takada@mbf.nifty.com>
-             commit e4f0ae0ea63caceff37a13f281a72652b7ea71ba
-Handled-By : takada <takada@mbf.nifty.com>
-             Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Status     : patches are being discussed
-
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 2d406a7..26365c1 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -202,20 +202,12 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+ 
+ 	u32 reg;
+ 
+-	if (id->driver_data != 368) {
+-		/* Put the controller into AHCI mode in case the AHCI driver
+-		   has not yet been loaded. This can be done with either
+-		   function present */
++	/* PATA controller is fn 1, AHCI is fn 0 */
++	if (id->driver_data != 368 && PCI_FUNC(pdev->devfn) != 1)
++		return -ENODEV;
+ 
+-		/* FIXME: We may want a way to override this in future */
+-		pci_write_config_byte(pdev, 0x41, 0xa1);
+-
+-		/* PATA controller is fn 1, AHCI is fn 0 */
+-		if (PCI_FUNC(pdev->devfn) != 1)
+-			return -ENODEV;
+-	}
+-	if ( id->driver_data == 365 || id->driver_data == 366) {
+-		/* The 365/66 have two PATA channels, redirect the second */
++	/* The 365/66 have two PATA channels, redirect the second */
++	if (id->driver_data == 365 || id->driver_data == 366) {
+ 		pci_read_config_dword(pdev, 0x80, &reg);
+ 		reg |= (1 << 24);	/* IDE1 to PATA IDE secondary */
+ 		pci_write_config_dword(pdev, 0x80, reg);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 5c34379..6f3e1bf 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1260,8 +1260,8 @@ static void quirk_jmicron_dualfn(struct pci_dev *pdev)
+ 			pci_read_config_dword(pdev, 0x40, &conf);
+ 			/* Enable dual function mode, AHCI on fn 0, IDE fn1 */
+ 			/* Set the class codes correctly and then direct IDE 0 */
+-			conf &= ~0x000F0200;	/* Clear bit 9 and 16-19 */
+-			conf |=  0x00C20002;	/* Set bit 1, 17, 22, 23 */
++			conf &= ~0x000FF200; /* Clear bit 9 and 12-19 */
++			conf |=  0x00C2A102; /* Set 1, 8, 13, 15, 17, 22, 23 */
+ 			pci_write_config_dword(pdev, 0x40, conf);
+ 
+ 			/* Reconfigure so that the PCI scanner discovers the
