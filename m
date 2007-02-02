@@ -1,52 +1,64 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Fri, 02 Feb 2007 08:53:27 -0600
-Message-ID: <1170428007.3380.4.camel@mulgrave.il.steeleye.com>
-References: <200701301947.08478.liml@rtr.ca>
-	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
-	 <45C2474E.9030306@rtr.ca>
-	 <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
-	 <45C32C7F.9050706@emc.com>  <20070202144211.5a2d2365@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
+Date: Sat, 03 Feb 2007 00:12:15 +0900
+Message-ID: <45C354CF.1020500@gmail.com>
+References: <20070202063748.GC1625@htj.dyndns.org> <45C33BCF.2040506@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:39686 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161150AbXBBOxe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 09:53:34 -0500
-In-Reply-To: <20070202144211.5a2d2365@localhost.localdomain>
+Received: from wx-out-0506.google.com ([66.249.82.237]:51433 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945928AbXBBPMW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 10:12:22 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so921110wxd
+        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 07:12:21 -0800 (PST)
+In-Reply-To: <45C33BCF.2040506@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Ric Wheeler <ric@emc.com>, Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Ric Wheeler <ric@emc.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Fri, 2007-02-02 at 14:42 +0000, Alan wrote:
-> > The interesting point of this question is about the typically pattern of 
-> > IO errors. On a read, it is safe to assume that you will have issues 
-> > with some bounded numbers of adjacent sectors.
+Ric Wheeler wrote:
 > 
-> Which in theory you can get by asking the drive for the real sector size
-> from the ATA7 info. (We ought to dig this out more as its relevant for
-> partition layout too).
+> Tejun Heo wrote:
 > 
-> > I really like the idea of being able to set this kind of policy on a per 
-> > drive instance since what you want here will change depending on what 
-> > your system requirements are, what the system is trying to do (i.e., 
-> > when trying to recover a failing but not dead yet disk, IO errors should 
-> > be as quick as possible and we should choose an IO scheduler that does 
-> > not combine IO's).
+>> Both ATA and ATAPI devices used the default timeouts defined by SCSI
+>> high level driver.  For both disks and ODDs, it was 30secs, which was
+>> way too long for disks.  This patch makes most ATA commands time out
+>> after 7secs - the de facto ATA command timeout, while leaving ATAPI
+>> timeout at 30secs.
+>>
+>> Note that both normal commands and EH commands timeouts are adjusted
+>> to 7 secs, but cache flushses still have 30sec timeout.  This is a
+>> side effect of the way sd makes use of sdev->timeout, but this is a
+>> good side effect in that ATA spec requires cache flushes are given
+>> longer timeout.
+>>
+>>
+>>  
+>>
+> I am not sure that this is really a requirement that ATA (or S-ATA)
+> drives can meet.  There are definitely error conditions that will exceed
+> 7 seconds and take that 30 second time to respond.
 > 
-> That seems to be arguing for a bounded "live" time including retry run
-> time for a command. That's also more intuitive for real time work and for
-> end user setup. "Either work or fail within n seconds"
+> If the drive is stuck in recovery mode and we retry too soon, we are
+> going to be likely to write off a perfectly good disk which would be a
+> huge downside ;-)
 
-Actually, then I think perhaps we use the allowed retries for this ...
+Hmm... I'm hearing different stories here.  Some say 7sec is good enough
+and the supporting argument that the other os is using 7 sec timeout is
+pretty convincing.
 
-So you would fail a single sector and count it against the retries.
-When you've done this allowed retries times, you fail the rest of the
-request.
+After command timeout, EH will kick in, reset and revalidate then return
+the control to SCSI HLD, sd in this case which will retry the command
+several times.  Would the reset make the drive to exit recovery mode
+such that it has to start all over again when the command is retried?
+Or does the drive stop responding to resets while in recovery mode?  The
+latter would be fine.  libata gives and will continue to give more than
+30 secs for drive to respond to reset.
 
-James
+Ideas?
 
-
+-- 
+tejun
