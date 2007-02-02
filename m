@@ -1,71 +1,89 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_inic162x: fix a few glitches in hardreset
-Date: Fri, 2 Feb 2007 15:29:52 +0900
-Message-ID: <20070202062952.GB1625@htj.dyndns.org>
+Subject: [PATCH] libata: reduce ATA command timeout to 7secs
+Date: Fri, 2 Feb 2007 15:37:48 +0900
+Message-ID: <20070202063748.GC1625@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.226]:33726 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423144AbXBBGaF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 01:30:05 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so802068wxd
-        for <linux-ide@vger.kernel.org>; Thu, 01 Feb 2007 22:30:02 -0800 (PST)
+Received: from nz-out-0506.google.com ([64.233.162.228]:57585 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423150AbXBBGiQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 01:38:16 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so779769nze
+        for <linux-ide@vger.kernel.org>; Thu, 01 Feb 2007 22:38:15 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-* Hardreset must not exit without actually performing reset regardless
-  of link status.  We're resetting the link after all.
+Both ATA and ATAPI devices used the default timeouts defined by SCSI
+high level driver.  For both disks and ODDs, it was 30secs, which was
+way too long for disks.  This patch makes most ATA commands time out
+after 7secs - the de facto ATA command timeout, while leaving ATAPI
+timeout at 30secs.
 
-* Minor message update.
-
-* 150ms delay is meaningful iff link is online after reset is
-  complete.
+Note that both normal commands and EH commands timeouts are adjusted
+to 7 secs, but cache flushses still have 30sec timeout.  This is a
+side effect of the way sd makes use of sdev->timeout, but this is a
+good side effect in that ATA spec requires cache flushes are given
+longer timeout.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/sata_inic162x.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+I think we've waited enough.  Combined with EH updates which will soon
+be posted, this should make life much easier (well, at least
+responsive) when something goes wrong with ATA.
 
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index b2a6f77..fad2bd3 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -429,11 +429,6 @@ static int inic_hardreset(struct ata_port *ap, unsigned int *class)
- 	/* hammer it into sane state */
- 	inic_reset_port(port_base);
+ drivers/ata/libata-core.c |    2 +-
+ drivers/ata/libata-scsi.c |    6 ++++++
+ include/linux/libata.h    |    4 ++--
+ 3 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 582e44d..a441c75 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -89,7 +89,7 @@ int libata_fua = 0;
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
  
--	if (ata_port_offline(ap)) {
--		*class = ATA_DEV_NONE;
--		return 0;
--	}
--
- 	val = readw(idma_ctl);
- 	writew(val | IDMA_CTL_RST_ATA, idma_ctl);
- 	readw(idma_ctl);	/* flush */
-@@ -443,16 +438,17 @@ static int inic_hardreset(struct ata_port *ap, unsigned int *class)
- 	rc = sata_phy_resume(ap, timing);
- 	if (rc) {
- 		ata_port_printk(ap, KERN_WARNING, "failed to resume "
--				"link for reset (errno=%d)\n", rc);
-+				"link after reset (errno=%d)\n", rc);
- 		return rc;
+-static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
++static int ata_probe_timeout = ATA_TMOUT_CMD / HZ;
+ module_param(ata_probe_timeout, int, 0444);
+ MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+ 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0009818..dc2157c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -903,6 +903,12 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
+ 		depth = min(ATA_MAX_QUEUE - 1, depth);
+ 		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
  	}
- 
--	msleep(150);
--
- 	*class = ATA_DEV_NONE;
- 	if (ata_port_online(ap)) {
- 		struct ata_taskfile tf;
- 
-+		/* wait a while before checking status */
-+		msleep(150);
 +
- 		if (ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT)) {
- 			ata_port_printk(ap, KERN_WARNING,
- 					"device busy after hardreset\n");
++	/* setup command timeout */
++	if (dev->class == ATA_DEV_ATA)
++		sdev->timeout = ATA_TMOUT_CMD;
++	else
++		sdev->timeout = ATAPI_TMOUT_CMD;
+ }
+ 
+ /**
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 305e95f..4c3ed59 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -214,8 +214,8 @@ enum {
+ 	/* various lengths of time */
+ 	ATA_TMOUT_BOOT		= 30 * HZ,	/* heuristic */
+ 	ATA_TMOUT_BOOT_QUICK	= 7 * HZ,	/* heuristic */
+-	ATA_TMOUT_INTERNAL	= 30 * HZ,
+-	ATA_TMOUT_INTERNAL_QUICK = 5 * HZ,
++	ATA_TMOUT_CMD		= 7 * HZ,	/* de facto ATA cmd timeout */
++	ATAPI_TMOUT_CMD		= 30 * HZ,
+ 
+ 	/* ATA bus states */
+ 	BUS_UNKNOWN		= 0,
 -- 
 1.4.4.4
 
