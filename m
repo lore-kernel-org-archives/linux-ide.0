@@ -1,64 +1,97 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
-Date: Sat, 03 Feb 2007 00:12:15 +0900
-Message-ID: <45C354CF.1020500@gmail.com>
-References: <20070202063748.GC1625@htj.dyndns.org> <45C33BCF.2040506@emc.com>
+Subject: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't apply)
+Date: Sat, 3 Feb 2007 00:18:56 +0900
+Message-ID: <20070202151856.GD1625@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:51433 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945928AbXBBPMW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 10:12:22 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so921110wxd
-        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 07:12:21 -0800 (PST)
-In-Reply-To: <45C33BCF.2040506@emc.com>
+Received: from nz-out-0506.google.com ([64.233.162.226]:51902 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945932AbXBBPTC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 10:19:02 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so896279nze
+        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 07:19:01 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: ahaas@airmail.net, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Ric Wheeler wrote:
-> 
-> Tejun Heo wrote:
-> 
->> Both ATA and ATAPI devices used the default timeouts defined by SCSI
->> high level driver.  For both disks and ODDs, it was 30secs, which was
->> way too long for disks.  This patch makes most ATA commands time out
->> after 7secs - the de facto ATA command timeout, while leaving ATAPI
->> timeout at 30secs.
->>
->> Note that both normal commands and EH commands timeouts are adjusted
->> to 7 secs, but cache flushses still have 30sec timeout.  This is a
->> side effect of the way sd makes use of sdev->timeout, but this is a
->> good side effect in that ATA spec requires cache flushes are given
->> longer timeout.
->>
->>
->>  
->>
-> I am not sure that this is really a requirement that ATA (or S-ATA)
-> drives can meet.  There are definitely error conditions that will exceed
-> 7 seconds and take that 30 second time to respond.
-> 
-> If the drive is stuck in recovery mode and we retry too soon, we are
-> going to be likely to write off a perfectly good disk which would be a
-> huge downside ;-)
+Hello, Art Haas, Alan.
 
-Hmm... I'm hearing different stories here.  Some say 7sec is good enough
-and the supporting argument that the other os is using 7 sec timeout is
-pretty convincing.
+Okay, here's another try at fixing the detection bug.  I went through
+intel ich docs and compared with the ide piix driver.  This patch
+fixes the following problems.
 
-After command timeout, EH will kick in, reset and revalidate then return
-the control to SCSI HLD, sd in this case which will retry the command
-several times.  Would the reset make the drive to exit recovery mode
-such that it has to start all over again when the command is retried?
-Or does the drive stop responding to resets while in recovery mode?  The
-latter would be fine.  libata gives and will continue to give more than
-30 secs for drive to respond to reset.
+* Control bits in the timing register wasn't cleared properly while
+  programming PIO mode.
 
-Ideas?
+* MWDMA mode programming cleared the wrong part of control bits.  I
+  think this can fix your problem.
 
--- 
-tejun
+* MWDMA mode programming cleared udma_mask even when the controller
+  doesn't support UDMA.  This doesn't matter for your case.
+
+Please test and report the result.  Thanks.
+
+FOR TESTING. DO NOT APPLY.
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index c6bf1a3..51f55a0 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -728,8 +728,14 @@ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ 	if (adev->class == ATA_DEV_ATA)
+ 		control |= 4;	/* PPE enable */
+ 
++	/* PIO configuration clears DTE unconditionally.  It will be
++	 * programmed in set_dmamode which is guaranteed to be called
++	 * after set_piomode if any DMA mode is available.
++	 */
+ 	pci_read_config_word(dev, master_port, &master_data);
+ 	if (is_slave) {
++		/* clear TIME1|IE1|PPE1|DTE1 */
++		master_data &= 0xff0f;
+ 		/* Enable SITRE (seperate slave timing register) */
+ 		master_data |= 0x4000;
+ 		/* enable PPE1, IE1 and TIME1 as needed */
+@@ -737,12 +743,14 @@ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ 		pci_read_config_byte(dev, slave_port, &slave_data);
+ 		slave_data &= (ap->port_no ? 0x0f : 0xf0);
+ 		/* Load the timing nibble for this slave */
+-		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
++		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
++						<< (ap->port_no ? 4 : 0);
+ 	} else {
+-		/* Master keeps the bits in a different format */
+-		master_data &= 0xccf8;
++		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
++		master_data &= 0xccf0;
+ 		/* Enable PPE, IE and TIME as appropriate */
+ 		master_data |= control;
++		/* load ISP and RCT */
+ 		master_data |=
+ 			(timings[pio][0] << 12) |
+ 			(timings[pio][1] << 8);
+@@ -859,7 +867,7 @@ static void do_pata_set_dmamode (struct ata_port *ap, struct ata_device *adev, i
+ 			master_data &= 0xFF4F;  /* Mask out IORDY|TIME1|DMAONLY */
+ 			master_data |= control << 4;
+ 			pci_read_config_byte(dev, 0x44, &slave_data);
+-			slave_data &= (0x0F + 0xE1 * ap->port_no);
++			slave_data &= (ap->port_no ? 0x0f : 0xf0);
+ 			/* Load the matching timing */
+ 			slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
+ 			pci_write_config_byte(dev, 0x44, slave_data);
+@@ -871,8 +879,11 @@ static void do_pata_set_dmamode (struct ata_port *ap, struct ata_device *adev, i
+ 				(timings[pio][0] << 12) |
+ 				(timings[pio][1] << 8);
+ 		}
+-		udma_enable &= ~(1 << devid);
+-		pci_write_config_word(dev, master_port, master_data);
++
++		if (ap->udma_mask) {
++			udma_enable &= ~(1 << devid);
++			pci_write_config_word(dev, master_port, master_data);
++		}
+ 	}
+ 	/* Don't scribble on 0x48 if the controller does not support UDMA */
+ 	if (ap->udma_mask)
