@@ -1,28 +1,37 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Implement the technote about promise/maxtor drives
-Date: Fri, 2 Feb 2007 19:27:14 +0100 (MET)
-Message-ID: <200702021827.l12IRErU013412@harpo.it.uu.se>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't
+ apply)
+Date: Fri, 02 Feb 2007 21:34:54 +0300
+Message-ID: <45C3844E.4070802@ru.mvista.com>
+References: <20070202151856.GD1625@htj.dyndns.org> <45C359FC.2000601@ru.mvista.com> <45C368F5.4090201@garzik.org> <45C36D85.4060300@rtr.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:56980 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946020AbXBBS1l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Feb 2007 13:27:41 -0500
+Received: from h155.mvista.com ([63.81.120.155]:1393 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1946020AbXBBSfL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Feb 2007 13:35:11 -0500
+In-Reply-To: <45C36D85.4060300@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk, jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, mikpe@it.uu.se
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, ahaas@airmail.net, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-On Fri, 02 Feb 2007 11:49:17 -0500, Jeff Garzik wrote:
->Alan wrote:
->> I don't have the hardware combination to test this one so would
->> appreciate people testing it before it goes anywhere further
->
->I wonder if sata_promise PATA support needs this too?
+Hello.
 
-Hmm, I saw Alan's post but ignored it because I assumed
-it applied only to older HW. Can someone give me a pointer
-to the technote?
+Mark Lord wrote:
 
-I don't have any Maxtor disks for testing, alas.
+>> It's amazing how poorly we have programmed PIIX, for the lifespan of 
+>> Linux...
 
-/Mikael
+> Actually, we've only been fiddling timings on PIIX since 1998 or so,
+> when AH began taking over Linux IDE.  Still, 10 years is an eternity.
+
+   The most funny thing is that despite being called piix.c the driver seems 
+to have always been broken for the original PIIX which didn't have separate 
+mastre/slave timings. :-)
+
+> Cheers
+
+MBR, Sergei
