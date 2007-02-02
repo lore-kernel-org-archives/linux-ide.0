@@ -1,97 +1,65 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't apply)
-Date: Sat, 3 Feb 2007 00:18:56 +0900
-Message-ID: <20070202151856.GD1625@htj.dyndns.org>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
+Date: Fri, 2 Feb 2007 15:39:29 +0000
+Message-ID: <20070202153929.33f4a806@localhost.localdomain>
+References: <20070202063748.GC1625@htj.dyndns.org>
+	<45C33BCF.2040506@emc.com>
+	<45C354CF.1020500@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:51902 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945932AbXBBPTC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 10:19:02 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so896279nze
-        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 07:19:01 -0800 (PST)
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53873 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1945911AbXBBP1K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 10:27:10 -0500
+In-Reply-To: <45C354CF.1020500@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ahaas@airmail.net, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Ric Wheeler <ric@emc.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Hello, Art Haas, Alan.
+> Hmm... I'm hearing different stories here.  Some say 7sec is good enough
+> and the supporting argument that the other os is using 7 sec timeout is
+> pretty convincing.
 
-Okay, here's another try at fixing the detection bug.  I went through
-intel ich docs and compared with the ide piix driver.  This patch
-fixes the following problems.
+Firstly what is your goal ?
 
-* Control bits in the timing register wasn't cleared properly while
-  programming PIO mode.
+> 
+> After command timeout, EH will kick in, reset and revalidate then return
+> the control to SCSI HLD, sd in this case which will retry the command
+> several times.  Would the reset make the drive to exit recovery mode
+> such that it has to start all over again when the command is retried?
+> Or does the drive stop responding to resets while in recovery mode?  The
+> latter would be fine.  libata gives and will continue to give more than
+> 30 secs for drive to respond to reset.
+> 
+> Ideas?
 
-* MWDMA mode programming cleared the wrong part of control bits.  I
-  think this can fix your problem.
+Some thinking based on discussion so far:
 
-* MWDMA mode programming cleared udma_mask even when the controller
-  doesn't support UDMA.  This doesn't matter for your case.
+Give it 7 seconds for a command to complete. At that point you need to
+have a chat with the drive since its probably gone AWOL. If you get an
+error within 7 seconds then its different.
 
-Please test and report the result.  Thanks.
+For a reported error within 7 seconds (CRC excepted)
+	 do fast error cleanup (not a reset) when we can
+	 if need be reset
 
-FOR TESTING. DO NOT APPLY.
+On the first media error/timeout , retry the command but with the segment
+list inverted
+On the second reset retry each block individually
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index c6bf1a3..51f55a0 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -728,8 +728,14 @@ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 	if (adev->class == ATA_DEV_ATA)
- 		control |= 4;	/* PPE enable */
- 
-+	/* PIO configuration clears DTE unconditionally.  It will be
-+	 * programmed in set_dmamode which is guaranteed to be called
-+	 * after set_piomode if any DMA mode is available.
-+	 */
- 	pci_read_config_word(dev, master_port, &master_data);
- 	if (is_slave) {
-+		/* clear TIME1|IE1|PPE1|DTE1 */
-+		master_data &= 0xff0f;
- 		/* Enable SITRE (seperate slave timing register) */
- 		master_data |= 0x4000;
- 		/* enable PPE1, IE1 and TIME1 as needed */
-@@ -737,12 +743,14 @@ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 		pci_read_config_byte(dev, slave_port, &slave_data);
- 		slave_data &= (ap->port_no ? 0x0f : 0xf0);
- 		/* Load the timing nibble for this slave */
--		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
-+		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
-+						<< (ap->port_no ? 4 : 0);
- 	} else {
--		/* Master keeps the bits in a different format */
--		master_data &= 0xccf8;
-+		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
-+		master_data &= 0xccf0;
- 		/* Enable PPE, IE and TIME as appropriate */
- 		master_data |= control;
-+		/* load ISP and RCT */
- 		master_data |=
- 			(timings[pio][0] << 12) |
- 			(timings[pio][1] << 8);
-@@ -859,7 +867,7 @@ static void do_pata_set_dmamode (struct ata_port *ap, struct ata_device *adev, i
- 			master_data &= 0xFF4F;  /* Mask out IORDY|TIME1|DMAONLY */
- 			master_data |= control << 4;
- 			pci_read_config_byte(dev, 0x44, &slave_data);
--			slave_data &= (0x0F + 0xE1 * ap->port_no);
-+			slave_data &= (ap->port_no ? 0x0f : 0xf0);
- 			/* Load the matching timing */
- 			slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
- 			pci_write_config_byte(dev, 0x44, slave_data);
-@@ -871,8 +879,11 @@ static void do_pata_set_dmamode (struct ata_port *ap, struct ata_device *adev, i
- 				(timings[pio][0] << 12) |
- 				(timings[pio][1] << 8);
- 		}
--		udma_enable &= ~(1 << devid);
--		pci_write_config_word(dev, master_port, master_data);
-+
-+		if (ap->udma_mask) {
-+			udma_enable &= ~(1 << devid);
-+			pci_write_config_word(dev, master_port, master_data);
-+		}
- 	}
- 	/* Don't scribble on 0x48 if the controller does not support UDMA */
- 	if (ap->udma_mask)
+User specified time (allowing for recovery/queueing time) later, if we
+haven't got the drive back running then give up on those blocks.
+
+The reason I suggest issuing the segment list inverted is that its
+statistically likely we only hit one bad area. It's also likey that bad
+area is adjacent blocks (it might not be for some failures I grant). So
+if we retry from the other end of the list we have a good chance that a
+typical list of blocks (say 1-4, 300-305, 380-383, 440-456, 511, 535)
+that blows up in the middle somewhere is going to run through the other
+good segments and get them on disk or off disk and stuff up and going
+again before stalling at the other end of the faulty area.
+
+Alan
