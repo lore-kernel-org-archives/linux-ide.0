@@ -1,49 +1,44 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
-Date: Fri, 02 Feb 2007 08:25:35 -0500
-Message-ID: <45C33BCF.2040506@emc.com>
-References: <20070202063748.GC1625@htj.dyndns.org>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Fri, 2 Feb 2007 14:42:11 +0000
+Message-ID: <20070202144211.5a2d2365@localhost.localdomain>
+References: <200701301947.08478.liml@rtr.ca>
+	<1170206199.10890.13.camel@mulgrave.il.steeleye.com>
+	<45C2474E.9030306@rtr.ca>
+	<1170366920.3388.62.camel@mulgrave.il.steeleye.com>
+	<45C32C7F.9050706@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:25914 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161122AbXBBNZp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 08:25:45 -0500
-In-Reply-To: <20070202063748.GC1625@htj.dyndns.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40811 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1423150AbXBBO3w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 09:29:52 -0500
+In-Reply-To: <45C32C7F.9050706@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Ric Wheeler <ric@emc.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+
+> The interesting point of this question is about the typically pattern of 
+> IO errors. On a read, it is safe to assume that you will have issues 
+> with some bounded numbers of adjacent sectors.
+
+Which in theory you can get by asking the drive for the real sector size
+from the ATA7 info. (We ought to dig this out more as its relevant for
+partition layout too).
+
+> I really like the idea of being able to set this kind of policy on a per 
+> drive instance since what you want here will change depending on what 
+> your system requirements are, what the system is trying to do (i.e., 
+> when trying to recover a failing but not dead yet disk, IO errors should 
+> be as quick as possible and we should choose an IO scheduler that does 
+> not combine IO's).
+
+That seems to be arguing for a bounded "live" time including retry run
+time for a command. That's also more intuitive for real time work and for
+end user setup. "Either work or fail within n seconds"
 
 
-Tejun Heo wrote:
-
->Both ATA and ATAPI devices used the default timeouts defined by SCSI
->high level driver.  For both disks and ODDs, it was 30secs, which was
->way too long for disks.  This patch makes most ATA commands time out
->after 7secs - the de facto ATA command timeout, while leaving ATAPI
->timeout at 30secs.
->
->Note that both normal commands and EH commands timeouts are adjusted
->to 7 secs, but cache flushses still have 30sec timeout.  This is a
->side effect of the way sd makes use of sdev->timeout, but this is a
->good side effect in that ATA spec requires cache flushes are given
->longer timeout.
->
->
->  
->
-I am not sure that this is really a requirement that ATA (or S-ATA) 
-drives can meet.  There are definitely error conditions that will exceed 
-7 seconds and take that 30 second time to respond.
-
-If the drive is stuck in recovery mode and we retry too soon, we are 
-going to be likely to write off a perfectly good disk which would be a 
-huge downside ;-)
-
-ric
-
-
-
+Alan
