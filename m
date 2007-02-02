@@ -1,33 +1,28 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] RESEND: SCSI, libata: add support for ATA_16 commands to libata ATAPI devices
-Date: Fri, 2 Feb 2007 09:11:16 +0000
-Message-ID: <20070202091116.GB27907@infradead.org>
-References: <200701021935.07840.liml@rtr.ca> <200701311346.26644.liml@rtr.ca> <45C1356B.6000907@gmail.com> <45C1377F.6070001@rtr.ca> <45C138E8.1040706@gmail.com> <45C1A4BD.3030909@garzik.org> <45C1A823.30008@gmail.com> <45C1B8D4.1070209@garzik.org> <1170342565.3388.4.camel@mulgrave.il.steeleye.com> <45C24BC5.6060305@torque.net>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH libata-dev#upstream-fixes] ahci/pata_jmicron: fix
+ JMicron quirk
+Date: Fri, 2 Feb 2007 10:03:19 +0000
+Message-ID: <20070202100319.54080e1a@localhost.localdomain>
+References: <20070202055109.GM8606@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35686 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751717AbXBBJLW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 04:11:22 -0500
-Content-Disposition: inline
-In-Reply-To: <45C24BC5.6060305@torque.net>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44627 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751873AbXBBJxz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 04:53:55 -0500
+In-Reply-To: <20070202055109.GM8606@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, justin@jmicron.com
 
-On Thu, Feb 01, 2007 at 03:21:25PM -0500, Douglas Gilbert wrote:
-> My point is that the linux block layer and scsi mid
-> level should get out of the business of putting hard
-> limits place. Why?
+> This patch makes JMicron PCI quirk clear SATA IDE mode bits and set
+> AHCI mode bits and remove the respective part from pata_jmicron.
+> Tested on JMB361, 363 and 368.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Both of them never have been in the business of putting hard
-limits in place.  We currently have a hard limit in place
-because the storage for the cdb is allocated statically.  This
-is a desin decision done more than ten years ago that we're
-slowly trying to fix.  Second we have a facility to allow
-LLDDs limit the size of the cdb they receive.  It's not
-mandatory in any way, but very useful for those "smart"
-HBAs that can't deal with larger dbs due to hardware limitations.
+Acked-by: Alan Cox <alan@redhat.com>
 
