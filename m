@@ -1,39 +1,43 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
-Date: Fri, 2 Feb 2007 18:47:43 +0000
-Message-ID: <20070202184743.1516d1f9@localhost.localdomain>
-References: <20070202063748.GC1625@htj.dyndns.org>
-	<45C33BCF.2040506@emc.com>
-	<45C354CF.1020500@gmail.com>
-	<20070202153929.33f4a806@localhost.localdomain>
-	<45C36338.60803@rtr.ca>
-	<311601c90702020843w16a67db8j5ead05f107161ec9@mail.gmail.com>
+Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't
+ apply)
+Date: Fri, 2 Feb 2007 18:49:28 +0000
+Message-ID: <20070202184928.4229f99a@localhost.localdomain>
+References: <20070202151856.GD1625@htj.dyndns.org>
+	<45C359FC.2000601@ru.mvista.com>
+	<45C369C5.5000201@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45610 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45615 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946026AbXBBSf2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 13:35:28 -0500
-In-Reply-To: <311601c90702020843w16a67db8j5ead05f107161ec9@mail.gmail.com>
+	with ESMTP id S1946028AbXBBShL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 13:37:11 -0500
+In-Reply-To: <45C369C5.5000201@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, ahaas@airmail.net, linux-ide@vger.kernel.org
 
-> generic PC market, as opposed to "RAID edition" or "MaxLine" or
-> similar branding from other vendors, where the firmware may have been
-> specifically optimized for quicker command completion, quicker status
-> reporting and less exhaustive error recovery.  Many linux users I
+On Sat, 03 Feb 2007 01:41:41 +0900
+Tejun Heo <htejun@gmail.com> wrote:
+> >    Actually, I think ata_timing_merge() should just be performed when
+> > setting MWDMA mode... This should be the right thing to do in most cases
+> > (however, this hardware has some complications in the form of only 2-bit
+> > wide active/recovery counts and 2 fast timing bank select bits)...
+> 
+> Yeap, that'll be nice.  Dunno whether modifying piix/ata_piix too much
+> would be a good idea tho considering the wide usage.
 
-Is there a way to detect RAID drives with this kind of timing, or does
-someone need to take a baseball bat into the standards committee meeting
-and add an identify field that gives command and "long command" timeouts
-in seconds ?
+If I remember rightly the 2bits is ok because you can set the bit to say
+that timings are for DMA only, the device then uses slower than PIO0 for
+all other cycles.
 
-If we can detect the "fast fail" drives (initially by say ident string
-components) lets do it and the people who care can buy the right product
-for the job.
+> In both mwdma and pio cases, they're just turning off UDMA.  Don't know
+> whether it's actually necessary but still afraid to change it unless
+> there is a good reason.
+
+The tuning manual I have does it, so I do it 8)
 
 Alan
