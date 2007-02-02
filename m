@@ -1,43 +1,50 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] sl82c105: DMA support fixes
-Date: Sat, 03 Feb 2007 00:04:18 +0100
-Message-ID: <45C3C372.90400@gmail.com>
-References: <200701302332.22543.sshtylyov@ru.mvista.com> <58cb370e0702021350h7aa08ddbo11a4cb0bb3e8e148@mail.gmail.com>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
+Date: Fri, 2 Feb 2007 16:00:20 -0700
+Message-ID: <311601c90702021500g74cd1241u43068cb81f0942a9@mail.gmail.com>
+References: <20070202063748.GC1625@htj.dyndns.org> <45C33BCF.2040506@emc.com>
+	 <45C354CF.1020500@gmail.com>
+	 <20070202153929.33f4a806@localhost.localdomain>
+	 <45C36338.60803@rtr.ca>
+	 <311601c90702020843w16a67db8j5ead05f107161ec9@mail.gmail.com>
+	 <20070202184743.1516d1f9@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:45422 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946124AbXBBW71 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 17:59:27 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1389272nfa
-        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 14:59:26 -0800 (PST)
-In-Reply-To: <58cb370e0702021350h7aa08ddbo11a4cb0bb3e8e148@mail.gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.174]:50748 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946120AbXBBXAV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 18:00:21 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so895365uga
+        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 15:00:20 -0800 (PST)
+In-Reply-To: <20070202184743.1516d1f9@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
+On 2/2/07, Alan <alan@lxorguk.ukuu.org.uk> wrote:
+> Is there a way to detect RAID drives with this kind of timing, or does
+> someone need to take a baseball bat into the standards committee meeting
+> and add an identify field that gives command and "long command" timeouts
+> in seconds ?
+>
+> If we can detect the "fast fail" drives (initially by say ident string
+> components) lets do it and the people who care can buy the right product
+> for the job.
 
-Sergei Shtylyov wrote:
-> 
-> Fix a number of issues with the DMA support code:
-> 
-> - driver claims support for all SW/MW DMA modes while supporting only MWDMA2;
-> 
-> - ide_dma_check() method tries to enable DMA on the "known good" drives which
->  don't support MWDMA2;
-> 
-> - ide_dma_on() method upon failure to set drive to MWDMA2 re-tunes already
->  tuned PIO mode and calls ide_dma_off() method instead of returning error;
-> 
-> - ide_dma_off() method sets drive->current_speed while it doesn't actually
->  change (only the PIO timings are re-loaded into the chip's registers);
-> 
-> - init_hwif() method forcibly sets/resets both "drive DMA capable" bits while
->  this is properly handled by ide_dma_{on,off}() methods being called later...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Like many new features in disk drives or other products, they're often
+driven by a single or small set of large, paying customers to prove
+them out prior to being standardized.  Given time, most eventually
+settle on common interfaces to reduce costs.
 
-applied
+This is a continuous process, the "concept -> development -> one
+customer -> standard feature" path.  Unfortunately, you're right, it's
+very difficult for individuals to interact with some of the standards
+committees, and the exact working details (including detection) of
+these features are often not made public for competitive reasons in
+their initial offerings.
+
+--eric
