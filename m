@@ -1,101 +1,92 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Fri, 02 Feb 2007 07:20:15 -0500
-Message-ID: <45C32C7F.9050706@emc.com>
-References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>	 <45C2474E.9030306@rtr.ca> <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
+From: "Uwe Bugla" <uwe.bugla@gmx.de>
+Subject: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
+Date: Fri, 02 Feb 2007 13:58:13 +0100
+Message-ID: <20070202125813.185480@gmx.net>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+	<20070127174230.GN6017@stusta.de>	<20070128133344.214070@gmx.net>
+ <20070128152131.a4354c91.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:16308 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933358AbXBBMUW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 07:20:22 -0500
-In-Reply-To: <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
+Received: from mail.gmx.net ([213.165.64.20]:40392 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1422973AbXBBM6P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Feb 2007 07:58:15 -0500
+In-Reply-To: <20070128152131.a4354c91.akpm@osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: bzolnier@gmail.com, bunk@stusta.de, axboe@kernel.dk, linux-kernel-announce@vger.kernel.org, linux-ide@vger.kernel.org
 
 
+-------- Original-Nachricht --------
+Datum: Sun, 28 Jan 2007 15:21:31 -0800
+Von: Andrew Morton <akpm@osdl.org>
+An: "Uwe Bugla" <uwe.bugla@gmx.de>
+CC: linux-ide@vger.kernel.org, linux-kernel-announce@vger.kernel.org, "=
+Jens Axboe" <axboe@kernel.dk>, Adrian Bunk <bunk@stusta.de>, "Bartlomie=
+j Zolnierkiewicz" <bzolnier@gmail.com>
+Betreff: Re: 2.6.20-rc6: known unfixed regressions (v2) (part 2)
 
-James Bottomley wrote:
+> On Sun, 28 Jan 2007 14:33:44 +0100
+> "Uwe Bugla" <uwe.bugla@gmx.de> wrote:
+>=20
+> > > Subject    : problems with CD burning
+> > > References : http://www.spinics.net/lists/linux-ide/msg06545.html
+> > > Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+> > > Status     : unknown
+> > >=20
+> > >=20
+> >=20
+> > ...
+> >
+> > Hi everybody,
+> > the problem I already reported for earlier release candidates of ke=
+rnel
+> 2.6.20
+> > (rc1 =E2=80=93 5) unfortunately stills persists.
+> >=20
+> > The regression has become more extreme: While in earlier release
+> candidates nerolinux recognized my burning devices at least after the=
+ first start
+> and then never again after all following starts the situation in rc6 =
+is
+> different from that:
+> >=20
+> > The CD and DVD burning devices aren=C2=B4t recognized even once and=
+ the
+> drive seek errors I already reported are still there.
+> >=20
+> > nerolinux runs excellently with kernel 2.6.19.2, but only shows an
+> =E2=80=9Cimage recorder=E2=80=9D (i. e. no burning device at all) in =
+kernel 2.6.20-rc6.
+> >=20
+> > Still hope that this terrible bug will not be part of the final ver=
+sion
+> of 2.6.20!
+> >=20
+>=20
+> Not sure what to do about this.  It looks like a failure in the IDE
+> driver.
+> Perhaps you could start by telling us about the IDE hardware, which d=
+river
+> is in use, etc.
+>=20
+> Is the floppy-disk bug still there?
 
->On Thu, 2007-02-01 at 15:02 -0500, Mark Lord wrote:
->  
->
->>I believe you made the first change in response to my prodding at the time,
->>when libata was not returning valid sense data (no LBA) for media errors.
->>The SCSI EH handling of that was rather poor at the time,
->>and so having it not retry the remaining sectors was actually
->>a very good fix at the time.
->>
->>But now, libata *does* return valid sense data for LBA/DMA drives,
->>and the workaround from circa 2.6.16 is no longer the best we can do.
->>Now that we know which sector failed, we ought to be able to skip
->>over it, and continue with the rest of the merged request.
->>    
->>
->
->We can ... the big concern with your approach, which you haven't
->addressed is the time factor.  For most SCSI devices, returning a fatal
->MEDIUM ERROR means we're out of remapping table, and also that there's
->probably a bunch of sectors on the track that are now out.  Thus, there
->are almost always multiple sector failures.  In linux, the average
->request size on a filesystem is around 64-128kb; thats 128-256 sectors.
->If we fail at the initial sector, we have to go through another 128-256
->attempts, with the internal device retries, before we fail the entire
->request.  Some devices can take a second or so for each read before they
->finally give up and decide they really can't read the sector, so you're
->looking at 2-5 minutes before the machine finally fails this one
->request ... and much worse for devices that retry more times.
->  
->
+Hi Andrew and all others,
+1. The floppy bug does not exist anymore. Congretulations!
+My IDE hardware is Intel north and south bridge, the standard idecd dri=
+ver is in use.
+As I was all the time suspecting a timing error I'm looking forward to =
+testing Mike=C2=B4s patch and I guess the bug will be absent then.
+Lots of thanks for Mikes work!
+Big regards and thanks for the late reply
 
-This is not the case on a read error - we commonly see transient errors 
-on reads from disks.  What we push our vendors to do is to try to keep 
-the "worst case" response down to tens of seconds as they retry, etc 
-internally with a device. When they take that long (and they do), adding 
-retries up the stack can translate into minutes per sector.
+Uwe
 
-The interesting point of this question is about the typically pattern of 
-IO errors. On a read, it is safe to assume that you will have issues 
-with some bounded numbers of adjacent sectors.
-
->  
->
->>One thing that could be even better than the patch below,
->>would be to have it perhaps skip the entire bio that includes
->>the failed sector, rather than only the bad sector itself.
->>    
->>
->
->Er ... define "skip over the bio".  A bio is simply a block
->representation for a bunch of sg elements coming in to the elevator.
->Mostly what we see in SCSI is a single bio per request, so skipping the
->bio is really the current behaviour (to fail the rest of the request).
->  
->
-This is really a tricky one - what can happen when we fail merged IO 
-requests is really unpredictable behavior up at the application level 
-since the IO error might not be at all relevant to my part of the 
-request.  Merging can produce a request that is much larger than any 
-normal drive error.
-
-I really like the idea of being able to set this kind of policy on a per 
-drive instance since what you want here will change depending on what 
-your system requirements are, what the system is trying to do (i.e., 
-when trying to recover a failing but not dead yet disk, IO errors should 
-be as quick as possible and we should choose an IO scheduler that does 
-not combine IO's).
-
->  
->
->>I think doing that might address most concerns expressed here.
->>Have you got an alternate suggestion, James?
->>    
->>
->
->James
->  
->
+--=20
+"Feel free" - 10 GB Mailbox, 100 FreeSMS/Monat ...
+Jetzt GMX TopMail testen: http://www.gmx.net/de/go/topmail?ac=3DOM.GX.G=
+X003K11713T4783a
