@@ -1,47 +1,30 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Fri, 02 Feb 2007 15:16:55 -0500
-Message-ID: <45C39C37.8060201@torque.net>
-References: <200701301947.08478.liml@rtr.ca>	<1170206199.10890.13.camel@mulgrave.il.steeleye.com>	<45C2474E.9030306@rtr.ca>	<1170366920.3388.62.camel@mulgrave.il.steeleye.com>	<45C32C7F.9050706@emc.com> <20070202144211.5a2d2365@localhost.localdomain>
-Reply-To: dougg@torque.net
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 0/2] ide: clear bmdma status in ide_intr for Intel controllers
+ (revised #4)
+Date: Fri, 02 Feb 2007 22:14:56 +0100
+Message-ID: <45C3A9D0.80805@gmail.com>
+References: <45AF57BE.7060505@tw.ibm.com> <45B7596F.6080504@ru.mvista.com>	 <45B878F0.7060707@tw.ibm.com> <45B8CA02.4050701@ru.mvista.com>	 <45B8DD84.3090700@ru.mvista.com> <45BEB242.7070506@tw.ibm.com>	 <45BEB52B.4070307@tw.ibm.com>	 <58cb370e0701301117n316a9efax1e0b6299a8f8594a@mail.gmail.com>	 <45BFA8B6.9010902@gmail.com> <45C02DD1.7040907@tw.ibm.com> <58cb370e0702021307i3d275e84qbeb3b44f58ad6b51@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070202144211.5a2d2365@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Ric Wheeler <ric@emc.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:53735 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946080AbXBBVKK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 16:10:10 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so872008uga
+        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 13:10:07 -0800 (PST)
+In-Reply-To: <58cb370e0702021307i3d275e84qbeb3b44f58ad6b51@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, "Adam W. Hawks" <awhawks@us.ibm.com>
 
-Alan wrote:
->> The interesting point of this question is about the typically pattern of 
->> IO errors. On a read, it is safe to assume that you will have issues 
->> with some bounded numbers of adjacent sectors.
-> 
-> Which in theory you can get by asking the drive for the real sector size
-> from the ATA7 info. (We ought to dig this out more as its relevant for
-> partition layout too).
-> 
->> I really like the idea of being able to set this kind of policy on a per 
->> drive instance since what you want here will change depending on what 
->> your system requirements are, what the system is trying to do (i.e., 
->> when trying to recover a failing but not dead yet disk, IO errors should 
->> be as quick as possible and we should choose an IO scheduler that does 
->> not combine IO's).
-> 
-> That seems to be arguing for a bounded "live" time including retry run
-> time for a command. That's also more intuitive for real time work and for
-> end user setup. "Either work or fail within n seconds"
 
-Which is more or less the "streaming" feature set in recent
-ATA standards. [Alas, streaming and NCQ/TCQ can't be done
-with the same access.] SCSI has its Read Write Error Recovery
-mode page which doesn't have timeouts but does have Read
-and Write Retry Counts amongst other fields that control
-the amount (and indirectly the time) of attempted error
-recovery.
+Albert Lee wrote:
+> patch 1/2: clear bmdma status in ide_intr() and add a new hwif->ide_dma_clear_irq for piix.c to use.
+> patch 2/2: remove clearing bmdma status from cdrom_decode_status() since ATA devices might need it as well.
 
-Doug Gilbert
+applied both patches, thanks
 
 
