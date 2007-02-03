@@ -1,63 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
-Date: Sat, 03 Feb 2007 13:45:21 +0900
-Message-ID: <45C41361.3060409@gmail.com>
-References: <20070202063748.GC1625@htj.dyndns.org> <45C362ED.3040600@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [ANNOUNCE] IDE quilt tree updated
+Date: Sat, 03 Feb 2007 14:44:11 +0100
+Message-ID: <20070203134411.2491.57713.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.235]:43274 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946321AbXBCEp1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 23:45:27 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1040673wxd
-        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 20:45:26 -0800 (PST)
-In-Reply-To: <45C362ED.3040600@rtr.ca>
+Received: from ug-out-1314.google.com ([66.249.92.172]:1462 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752110AbXBCNjS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Feb 2007 08:39:18 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so974778uga
+        for <linux-ide@vger.kernel.org>; Sat, 03 Feb 2007 05:39:17 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <axboe@suse.de>
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-[cc'ing Jens, hello]
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> Both ATA and ATAPI devices used the default timeouts defined by SCSI
->> high level driver.  For both disks and ODDs, it was 30secs, which was
->> way too long for disks.  This patch makes most ATA commands time out
->> after 7secs - the de facto ATA command timeout, while leaving ATAPI
->> timeout at 30secs.
-> 
-> Good patch, LONG overdue.
-> 
-> But 7 seconds is too short.  I have drives here now that
-> take slightly more than 7 seconds to report media errors.
-> 
-> With this patch, libata will timeout/reset the drive just before
-> it had a chance to tell us why it was taking too long.
-> 
-> The result would be that we might lose data unnecessarily,
-> especially in combination with the current SCSI policy of
-> blindly failing the entire request when only one sector was bad.
+Hi,
 
-Timeout doesn't indicate media error, so SCSI will retry the command
-several times.  So, those two don't interact.
+I've just updated IDE quilt tree:
+	http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/patches/
 
-> I've used 10 second timeouts with 100% success over the past 14 years,
-> which allows just enough margin (+2) for drives to finish their internal
-> retries and report back.
-> 
-> NACK to 7, ACK to 10 seconds.
 
-Hmmm... I don't care whether 7 or 10.  The biggest reason I chose 7 was
-because somebody told me that that's the de-facto default ATA command
-timeout && the other os is using it.  I faintly remembers that it was
-yourself or Jens.  Or I might be just imagining things again.  :-)
+New patches:
 
-Jens, what do you think about this?
+* ide-floppy: Fix unformatted media crash
+  (Alan Cox <alan@redhat.com>)
 
-Thanks.
+* ide: clear bmdma status in ide_intr() for ICHx controllers (revised #4)
+* ide: remove clearing bmdma status from cdrom_decode_status() (rev #4)
+  (Albert Lee <albertcc@tw.ibm.com>)
 
--- 
-tejun
+* siimage: PIO1/2 taskfile transfer overclocking fix
+* pdc202xx_old: fix PIO mode setup
+* sl82c105: DMA support fixes
+  (Sergei Shtylyov <sshtylyov@ru.mvista.com>)
+
++ some patches got fixed according to the feedback from Sergei
+
+Also the order of the patches in the series file was changed to be more
+like this: fixes first, then new drivers/features and cleanups at the end.
+
+diffstat:
+ 62 files changed, 3349 insertions(+), 2496 deletions(-)
+
+If you would like to see the full quilt series (or to get combined patch)
+against 2.6.20-rc7, they are available here:
+
+       http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/releases/
+
+Oh, and IDE tree TODO is now available here:
+
+	http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/TODO
+
+Thanks,
+Bart
