@@ -1,70 +1,68 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't
  apply)
-Date: Sat, 03 Feb 2007 10:40:00 +0900
-Message-ID: <45C3E7F0.6000506@gmail.com>
-References: <20070202151856.GD1625@htj.dyndns.org> <20070202174235.14b13f3e@localhost.localdomain>
+Date: Sat, 03 Feb 2007 11:09:19 +0900
+Message-ID: <45C3EECF.2080100@gmail.com>
+References: <20070202151856.GD1625@htj.dyndns.org> <20070202211441.GA2933@artsapartment.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.229]:44646 "EHLO
+Received: from wx-out-0506.google.com ([66.249.82.229]:54741 "EHLO
 	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946213AbXBCBkH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 20:40:07 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1003258wxd
-        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 17:40:05 -0800 (PST)
-In-Reply-To: <20070202174235.14b13f3e@localhost.localdomain>
+	with ESMTP id S1946219AbXBCCJZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 21:09:25 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1009165wxd
+        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 18:09:24 -0800 (PST)
+In-Reply-To: <20070202211441.GA2933@artsapartment.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: ahaas@airmail.net, linux-ide@vger.kernel.org
+To: Art Haas <ahaas@airmail.net>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Alan wrote:
->> * Control bits in the timing register wasn't cleared properly while
->>   programming PIO mode.
-> 
-> Yep and if the BIOS programmed the slave into DMA that might not be ideal.
+(cc'ing Albert, Mark and Sergei.  Hi!)
 
-How so?  The bit will be programmed by set_dmamode() right after
-set_piomode() is complete.
+Art Haas wrote:
+> Hi. Sorry to say the CD-ROM is still not found. Full 'dmesg' output
+> listed below in hopes it provides clues.
 
->> * MWDMA mode programming cleared the wrong part of control bits.  I
->>   think this can fix your problem.
-> 
-> Your change does nothing here.
-> 
-> 	0x0F + 1 * 0xE1 = 0xF0
-> 
-> It's just a construct to avoid the use of the ugly C "?" operator. The
-> rest of the code uses ? so the change makes sense for style, but it
-> doesn't appear to be a bug.
+Erggghh.. I'm sorry too.  I thought I found it this time.
 
-(0x0F + 0xE1 * ap->port_no)
+> ata_piix 0000:00:07.1: version 2.00ac7
+> ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xF008 irq 15
 
-1. when ap->port_no == 0
-	(0x0f + 0xe1 * 0) == 0x0f
-2. when ap->port-no == 1
-	(0x0f + 0xe1 * 1) == 0xf0
+You have UDMA/33 PATA port.
 
-(ap->port_no ? 0x0f : 0xf0)
+> ata2.00: ATAPI, max MWDMA1
 
-1. when ap->port_no == 0
-	(0 ? 0x0f : 0xf0) == 0xf0
-2. when ap->port_no == 1
-	(1 ? 0x0f : 0xf0) == 0x0f
+The initial reset and PACKET_IDENTIFY went well.
 
-See the difference?  Smart one liners are dangerous.  ?* is _much_
-better than cryptic arithmetic.
+> ata2.00: revalidation failed (errno=-2)
 
->> * MWDMA mode programming cleared udma_mask even when the controller
->>   doesn't support UDMA.  This doesn't matter for your case.
-> 
-> Or on the actual hardware.
+Then, PACKET_IDENTIFY after configuring transfer mode fails with
+-ENOENT.  Meaning it saw (status & (ATA_BUSY|ATA_DRQ|ATA_ERR|ATA_DF)) ==
+0 in HSM_ST.
 
-I was trying to make it more consistent with pio counterpart.  We can
-remove if() from set_piomode too.  Let's just keep things in sync
-between stuff including ide piix driver.
+libata resets silently and tries to revalidate the device.
+
+> ata2.00: limiting speed to PIO4
+> ata2: failed to recover some devices, retrying in 5 secs
+> ata2.00: revalidation failed (errno=-2)
+> ata2.00: limiting speed to PIO0
+> ata2: failed to recover some devices, retrying in 5 secs
+> ata2.00: revalidation failed (errno=-2)
+> ata2.00: disabled
+
+All of those tries fail and libata gives up the device.
+
+* Something went wrong with mode programming.  It seems pretty old
+(reporting max UDMA/33).  Art, can you post the result of 'lspci -nn'?
+
+* After mode programming, it might need some delay between clearing
+ATA_BUSY and setting ATA_DRQ.  Dunno if this is possible.  Just throwing
+out thoughts here.
+
+So, PATA gurus, can you bless us with enlightenment?  :-)
 
 -- 
 tejun
