@@ -1,37 +1,106 @@
-From: alan <alan@clueserver.org>
-Subject: Re: [git patches] libata fixes
-Date: Fri, 2 Feb 2007 16:05:30 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0702021603390.2027@blackbox.fnordora.org>
-References: <20070202165842.GA6412@havoc.gtf.org>
- <Pine.LNX.4.64.0702020911560.15057@woody.linux-foundation.org>
- <20070202134359.e744fee1.akpm@linux-foundation.org>
- <Pine.LNX.4.64.0702021440150.15057@woody.linux-foundation.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 13/15] ide: fix UDMA/MWDMA/SWDMA masks
+Date: Sat, 03 Feb 2007 01:39:42 +0100
+Message-ID: <45C3D9CE.8020202@gmail.com>
+References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain>	 <20070119003226.14846.87052.sendpatchset@localhost.localdomain>	 <45B4E401.6070208@ru.mvista.com> <58cb370e0702021606v4efa6143lf060e6aab9782c35@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933393AbXBCAFc@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0702021440150.15057@woody.linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.170]:18331 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933403AbXBCAev (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2007 19:34:51 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so911134uga
+        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2007 16:34:49 -0800 (PST)
+In-Reply-To: <58cb370e0702021606v4efa6143lf060e6aab9782c35@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2 Feb 2007, Linus Torvalds wrote:
 
->
->
-> On Fri, 2 Feb 2007, Andrew Morton wrote:
+Hi,
+
+Sergei Shtylyov wrote:
+> 
+> Hello.
+> 
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+>> [PATCH] ide: fix UDMA/MWDMA/SWDMA masks
+> 
+>> * use 0x00 instead of 0x80 to disable ->{ultra,mwdma,swdma}_mask
+>> * add udma_mask field to ide_pci_device_t and use it to initialize
+>>   ->ultra_mask in aec62xx, pdc202xx_new and pdc202xx_old drivers
+>> * fix UDMA masks to match with chipset specific *_ratemask()
+>>   (alim15x3, hpt366, serverworks and siimage drivers need UDMA mask
+>>    filtering method - done in the next patch)
+> 
+>    More nit picking (-:
+> 
+>> Index: b/drivers/ide/pci/cmd64x.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/cmd64x.c
+>> +++ b/drivers/ide/pci/cmd64x.c
+>> @@ -695,9 +695,10 @@ static void __devinit init_hwif_cmd64x(i
+>>       hwif->swdma_mask = 0x07;
 >>
->> http://www.google.com/search?hl=en&q=torvalds+schenario&btnG=Google+Search
->
-> I know. But since people pointed it out, I've actually tried to mend my
-> broken ways.
->
-> And the fact that people always point out that _same_ misspelled word
-> actually makes me happy. I can't be spelling too many words badly if they
-> all just react to the same one.
+>>       if (dev->device == PCI_DEVICE_ID_CMD_643)
+>> -             hwif->ultra_mask = 0x80;
+>> +             hwif->ultra_mask = 0x00;
+>>       if (dev->device == PCI_DEVICE_ID_CMD_646)
+>> -             hwif->ultra_mask = (class_rev > 0x04) ? 0x07 : 0x80;
+>> +             hwif->ultra_mask =
+>> +                     (class_rev == 0x05 || class_rev == 0x07) ? 0x07 : 0x00;
+>>       if (dev->device == PCI_DEVICE_ID_CMD_648)
+>>               hwif->ultra_mask = 0x1f;
+> 
+>    Hm, well, this doesn't look consistent with the changes in other drivers.
+> This driver asks for explicit hwif->cds->ultra_mask initializers, IMO...
+>    You'd only have to check for PCI-646 revisions < 5 then...
 
-I just thought you meant a scenario involving schedenfreud.
+reworked
 
--- 
-"Invoking the supernatural can explain anything, and hence explains nothing."
-                   - University of Utah bioengineering professor Gregory Clark
+>> Index: b/drivers/ide/pci/piix.c
+>> ===================================================================
+>> --- a/drivers/ide/pci/piix.c
+>> +++ b/drivers/ide/pci/piix.c
+>> @@ -493,7 +493,7 @@ static void __devinit init_hwif_piix(ide
+>>               case PCI_DEVICE_ID_INTEL_82371FB_0:
+>>               case PCI_DEVICE_ID_INTEL_82371FB_1:
+>>               case PCI_DEVICE_ID_INTEL_82371SB_1:
+>> -                     hwif->ultra_mask = 0x80;
+>> +                     hwif->ultra_mask = 0x00;
+>>                       break;
+>>               case PCI_DEVICE_ID_INTEL_82371AB:
+>>               case PCI_DEVICE_ID_INTEL_82443MX_1:
+>> @@ -501,6 +501,10 @@ static void __devinit init_hwif_piix(ide
+>>               case PCI_DEVICE_ID_INTEL_82801AB_1:
+>>                       hwif->ultra_mask = 0x07;
+>>                       break;
+>> +             case PCI_DEVICE_ID_INTEL_82801AA_1:
+>> +             case PCI_DEVICE_ID_INTEL_82372FB_1:
+>> +                     hwif->ultra_mask = 0x1f;
+>> +                     break;
+> 
+>    Alas, I'm afraid this part is wrong!
+>    At least, the cable detection should work for 82801AA the same way as for
+> the 82801Bx and newer chips, if Intel's datasheet is to be trusted... I think
+> we should fall thru here.
+
+yes (extra "break:" shouldn't be there), fixed
+
+>>               default:
+>>                       if (!hwif->udma_four)
+>>                               hwif->udma_four = piix_cable_detect(hwif);
+> 
+>    This one also certainly asks for explicit hwif->cds->ultra_mask
+> initializers... Thus almost all of this switch statement could go away...
+	
+Alas doing it now would make the nice DECLARE_PIIX_DEV() macro go away
+(=> a lot of duplicated code)... could be done in the future...
+
+Thanks,
+Bart
+
