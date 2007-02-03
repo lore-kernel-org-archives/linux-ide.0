@@ -1,185 +1,295 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] (2.6.20-rc7) cmd64x: fix PIO mode setup (take 2)
-Date: Sat, 03 Feb 2007 23:25:35 +0100
-Message-ID: <45C50BDF.6070702@gmail.com>
-References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com>
+From: Fredrik Rinnestam <fredrik@obra.se>
+Subject: Re: SIL3512 lockup problem using driver verion 0.9 and Linux 2.6.14
+Date: Sun, 4 Feb 2007 00:17:57 +0100
+Message-ID: <20070203231757.GA2035@useful.obra.se>
+References: <74342.74582.qm@web52304.mail.yahoo.com> <457E040D.2020707@gmail.com> <20070203201449.GA1222@useful.obra.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:21715 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649AbXBCWUl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Feb 2007 17:20:41 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so1040472uga
-        for <linux-ide@vger.kernel.org>; Sat, 03 Feb 2007 14:20:40 -0800 (PST)
-In-Reply-To: <200702040004.24918.sshtylyov@ru.mvista.com>
+Received: from mxfep01.bredband.com ([195.54.107.70]:42541 "EHLO
+	mxfep01.bredband.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841AbXBCXTI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Feb 2007 18:19:08 -0500
+Received: from ironport2.bredband.com ([195.54.107.84] [195.54.107.84])
+          by mxfep01.bredband.com with ESMTP
+          id <20070203231850.TDNC3634.mxfep01.bredband.com@ironport2.bredband.com>
+          for <linux-ide@vger.kernel.org>; Sun, 4 Feb 2007 00:18:50 +0100
+Content-Disposition: inline
+In-Reply-To: <20070203201449.GA1222@useful.obra.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-
-Hi,
-
-Sergei Shtylyov wrote:
-> [Finally forgot to stamp MV's copyright on the driver, so here's take #2...]
 > 
-> The driver's tuneproc() method fails to set the drive's own speed -- fix this
-> by renaming the function to cmd64x_tune_pio(), making it return the mode set,
-> and "wrapping" the new tuneproc() method around it; while at it, also get rid
-> of the non-working prefetch control code, remove redundant PIO5 mode limitation,
-> and make cmdprintk() give more sensible mode info.  Also, get rid of the broken
-> config_chipset_for_pio() which always tried to set PIO4 instead auto-tuning PIO.
-> Note that removing a call from config_chipset_for_dma() breaks "rudimentary"
-> MWDMA2 support which can only work because of the timing registers being pre-
-> setup for PIO4 since the code in the speedproc() method which sets up the chip
-> for SW/MW DMA is completely bogus (!) and I'm going to remove it for the time
-> being in the next patch.
-> Oh, and add the missing PIO5 support to the speedproc() method while at it. :-)
-
-Generally looks fine, some comments below.
-
-> Warning: compile tested only -- getting to the real hardware isn't that easy...
+> I get very similar error-messages with my SiI 3512 controller. I just
+> noticed this while connecting a second drive and moving data from sdb to
+> sda. Copying stuff from the internal ide-controller (nvidia) to sda does
+> not produce any errors. I've also tried diffrent cables without any
+> luck. Kernel is 2.6.19.2
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
->  drivers/ide/pci/cmd64x.c |   95 ++++++++++++++++-------------------------------
->  1 files changed, 34 insertions(+), 61 deletions(-)
-> 
-> Index: linux-2.6/drivers/ide/pci/cmd64x.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/ide/pci/cmd64x.c
-> +++ linux-2.6/drivers/ide/pci/cmd64x.c
-> @@ -1,6 +1,6 @@
->  /* $Id: cmd64x.c,v 1.21 2000/01/30 23:23:16
->   *
-> - * linux/drivers/ide/pci/cmd64x.c		Version 1.30	Sept 10, 2002
-> + * linux/drivers/ide/pci/cmd64x.c		Version 1.41	Feb 3, 2007
->   *
->   * cmd64x.c: Enable interrupts at initialization time on Ultra/PCI machines.
->   *           Note, this driver is not used at all on other systems because
-> @@ -12,6 +12,7 @@
->   * Copyright (C) 1998		David S. Miller (davem@redhat.com)
->   *
->   * Copyright (C) 1999-2002	Andre Hedrick <andre@linux-ide.org>
-> + * Copyright (C) 2007		MontaVista Software, Inc. <source@mvista.com>
->   */
->  
->  #include <linux/module.h>
-> @@ -262,43 +263,25 @@ static void program_drive_counts (ide_dr
->  }
->  
->  /*
-> - * Attempts to set the interface PIO mode.
-> - * The preferred method of selecting PIO modes (e.g. mode 4) is 
-> - * "echo 'piomode:4' > /proc/ide/hdx/settings".  Special cases are
-> - * 8: prefetch off, 9: prefetch on, 255: auto-select best mode.
-> - * Called with 255 at boot time.
-> + * This routine selects drive's best PIO mode, calculates setup/active/recovery
-> + * counts, and writes them into the chipset registers.
->   */
-> -
-> -static void cmd64x_tuneproc (ide_drive_t *drive, u8 mode_wanted)
-> +static u8 cmd64x_tune_pio (ide_drive_t *drive, u8 mode_wanted)
->  {
->  	int setup_time, active_time, recovery_time;
->  	int clock_time, pio_mode, cycle_time;
->  	u8 recovery_count2, cycle_count;
->  	int setup_count, active_count, recovery_count;
->  	int bus_speed = system_bus_clock();
-> -	/*byte b;*/
->  	ide_pio_data_t  d;
->  
-> -	switch (mode_wanted) {
-> -		case 8: /* set prefetch off */
-> -		case 9: /* set prefetch on */
-> -			mode_wanted &= 1;
-> -			/*set_prefetch_mode(index, mode_wanted);*/
-> -			cmdprintk("%s: %sabled cmd640 prefetch\n",
-> -				drive->name, mode_wanted ? "en" : "dis");
-> -			return;
-> -	}
-> -
-> -	mode_wanted = ide_get_best_pio_mode (drive, mode_wanted, 5, &d);
-> -	pio_mode = d.pio_mode;
-> +	pio_mode = ide_get_best_pio_mode(drive, mode_wanted, 5, &d);
->  	cycle_time = d.cycle_time;
+uhm, scratch that:
 
-After this change if an unaware user passes "8" or "9" to enable/disable
-prefetch (user doesn't know that it has never worked) it will result
-in PIO5 being programmed.
+this is from normal operation on the second drive (fileserver):
 
-I don't think that this is a real world issue but for paranoia reasons
-please add pio == 8/9 check to cmd64x_tune_drive(), something like:
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: failed to recover some devices, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: failed to recover some devices, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2.00: disabled
+ata2: soft resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH pending after completion, repeating EH (cnt=4)
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x1
+ata2: soft resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2.00: detaching (SCSI 1:0:0:0)
+Synchronizing SCSI cache for disk sdb: 
+FAILED
+  status = 0, message = 00, host = 4, driver = 00
+  <3>ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link down (SStatus 0 SControl 310)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2 frozen
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: hard resetting port
+ata2: COMRESET failed (device not ready)
+ata2: reset failed, giving up
+ata2: EH complete
+scsi 1:0:0:0: rejecting I/O to dead device
+scsi 1:0:0:0: rejecting I/O to dead device
+scsi 1:0:0:0: rejecting I/O to dead device
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+EXT3-fs error (device sdb1): ext3_find_entry: reading directory #2
+offset 0
+scsi 1:0:0:0: rejecting I/O to dead device
+Buffer I/O error on device sdb1, logical block 0
+lost page write due to I/O error on sdb1
+scsi 1:0:0:0: rejecting I/O to dead device
+scsi 1:0:0:0: rejecting I/O to dead device
+scsi 1:0:0:0: rejecting I/O to dead device
+scsi 1:0:0:0: rejecting I/O to dead device
+scsi 1:0:0:0: rejecting I/O to dead device
 
-	/*
-	 * letf-over from prefetch setting (pio == 8/9),
-	 * needed to prevent PIO5 from being programmed
-	 */
-	if (pio == 8 || pio == 9)
-		return;
-
-This will vanish when core code will do filtering of user space
-PIO mode change requests...
-
-[ ... ]
-> +/*
-> + * Attempts to set drive's PIO mode.
-> + * The preferred method of selecting PIO modes (e.g. mode 4) is
-> + * "echo 'piomode:4' > /proc/ide/hdx/settings".
-> + * Special case is 255: auto-select best mode (used at boot time).
-> + */
-
-The preferred method is to let the driver do the tuning and if for some
-reason somebody wants to change the PIO mode, the ioctl interface is
-preferred over the deprecated "/proc/ide/hdx/settings".
-
-Therefore please remove this comment while at it.
-
-> +static void cmd64x_tune_drive (ide_drive_t *drive, u8 pio)
-> +{
-> +	pio = cmd64x_tune_pio(drive, pio);
-> +	(void) ide_config_drive_speed(drive, XFER_PIO_0 + pio);
->  }
->  
->  static u8 cmd64x_ratemask (ide_drive_t *drive)
-> @@ -387,22 +375,6 @@ static u8 cmd64x_ratemask (ide_drive_t *
->  	return mode;
->  }
->  
-> -static void config_cmd64x_chipset_for_pio (ide_drive_t *drive, u8 set_speed)
-> -{
-> -	u8 speed	= 0x00;
-> -	u8 set_pio	= ide_get_best_pio_mode(drive, 4, 5, NULL);
-> -
-> -	cmd64x_tuneproc(drive, set_pio);
-> -	speed = XFER_PIO_0 + set_pio;
-> -	if (set_speed)
-> -		(void) ide_config_drive_speed(drive, speed);
-> -}
-> -
-> -static void config_chipset_for_pio (ide_drive_t *drive, u8 set_speed)
-> -{
-> -	config_cmd64x_chipset_for_pio(drive, set_speed);
-> -}
-
-[ ... ]
-
-> @@ -461,8 +436,6 @@ static int config_chipset_for_dma (ide_d
->  {
->  	u8 speed	= ide_dma_speed(drive, cmd64x_ratemask(drive));
->  
-> -	config_chipset_for_pio(drive, !speed);
-> -
-
-While this was always incorrectly setting PIO4, the PIO4 is "the usual" case
-and for this driver we need to program PIO explicitly even when using DMA.
-The core code doesn't program PIO mode unless told to (->autotune flag == 1)
-so after the above change PIO mode won't be programmed et all.
-
-I think that we now need to set ->autotune unconditionally in init_hwif_cmd64x().
-
-Thanks,
-Bart
-
+-- 
+Fredrik Rinnestam
