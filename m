@@ -1,83 +1,144 @@
-From: "Uwe Bugla" <uwe.bugla@gmx.de>
-Subject: green light for kernel 2.6.20-rc7-git1
-Date: Sun, 04 Feb 2007 17:16:24 +0100
-Message-ID: <20070204161624.291480@gmx.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH] sata_promise: new EH conversion for 20619 chips
+Date: Sun, 4 Feb 2007 22:44:54 +0100 (MET)
+Message-ID: <200702042144.l14LisBO003772@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37266 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752429AbXBDQQ0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Feb 2007 11:16:26 -0500
+Received: from aun.it.uu.se ([130.238.12.36]:38216 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752571AbXBDVpI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Feb 2007 16:45:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@osdl.org, bunk@stusta.de, michaelc@cs.wisc.edu, jens.axboe@oracle.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, efault@gmx.de
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Hi everybody,
+This patch updates the sata_promise driver to use new-style
+libata error handling for 20619 (TX4000) chips. sata_promise
+already uses new EH for the other chips it supports, so the
+patch is quite simple:
 
-I can confirm that nerolinux is running excellent again with 2.6.20-rc7=
--git1.
-I want to thank everyone mentioned in the address header, especially Li=
-nus himself and Mike Christie who did an excellent job. Fantastic!
+* remove ->phy_reset and ->eng_timeout ops from pdc_pata_ops,
+  and instead bind ->freeze, ->thaw, ->error_handler, and
+  ->post_internal_cmd to existing new EH functions
+* drop ATA_FLAG_SRST from board_20619's flags
+* remove now unused pdc_pata_phy_reset() and pdc_eng_timeout()
+* pdc_pata_cbl_detect() is now unused, but it contains a cable
+  detection procedure that I don't think is mentioned in public
+  documentation, so for now I just wrapped it with #if 0/#endif
 
-My proposition to avoid terrible bugs like that one in the future is:
-Every material, every change, even produced by Linus himself, should pa=
-ss the mm-tree before being pushed into vanilla mainline.
-I believe in quality, and quality needs manpower and testing. Manpower =
-and testing need time. I=C2=B4ve spent waiting 7 weeks to get this bug =
-fixed.
-In other words: If you keep on pushing out kernel release candidates wi=
-th rat race speed nobody takes advantage of. So I=C2=B4d appreciate you=
- to reflect this criticism for a moment. My apologies for reacting that=
- late. I should have reacted immediately after publishing of 2.6.20-rc1=
- instead of after 2.6.20-rc2.
+Tested on a TX4000 with both modern working disks and old/quirky
+disks. Also used a CD-RW drive to test reading and writing CDs.
 
-Linus Torvalds wrote on Sunday, January 28th, 23:04:49 -0800
-=E2=80=9CI've never used it before, but it triggers: ...........
-However, it appears to be rather hard to debug, with nerolinux being so=
-me=20
-closed black box. Does anybody who knows nero know if there is some way=
- to=20
-get debug information out of it to see what it tried to do?
-Can somebody try to bisect this?=E2=80=9C
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
-I feel sorry about the restrictive policy of some software companies av=
-oiding to publish the sourcecode of their products. They publish Debian=
- (my preferred distro) and Redhat packages and that=C2=B4s it! It must =
-be horrible to debug this.
-My deep respect for everybody who managed to fix this in spite of that =
-hindrance policy! And the case of nerolinux is not the first one I stum=
-ble over:
+---
 
-A very good application called mainactor (published by main concept cor=
-poration) does not run on AMD CPUs with VIA onboard chipset. You are fo=
-rced to use Intel ICH hardware, or, if you don=C2=B4t, you cannot cut D=
-VB movie material to prepare DVD videos!
-Can anybody reading this tell me whether there is an open source altern=
-ative that can compete with mainactor being able to cut mpeg2 movie str=
-eams? I would be very thankful for a hint!
+ drivers/ata/sata_promise.c |   58 +++++----------------------------------------
+ 1 files changed, 7 insertions(+), 51 deletions(-)
 
-Has anybody reading this ever tried to produce a multisession DVD or CD=
- with two different systems (f. ex. Windoze and Linux) and two differen=
-t applications (f. ex. k3b on Linux and Nero on Windoze), using rewrita=
-ble raw material?
-That=C2=B4s a disease, as you are running into the following trouble: D=
-ifferent sessions cannot be recognized by the specific =E2=80=9Cother=E2=
-=80=9D system.
-But if I use nero on both different platforms my practical experiences =
-have ever been fine ones.
-
-Question: What does =E2=80=9Cbisecting=E2=80=9D mean please? Is it just=
- a synonym for debugging or does it describe another technique to fix b=
-ugs? In case of the latter: What is the technique behind that expressio=
-n?
-
-Best regards and a thousands of thanks
-
-Uwe
-
---=20
-Der GMX SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen!=20
-Ideal f=C3=BCr Modem und ISDN: http://www.gmx.net/de/go/smartsurfer
+--- linux-2.6.20-rc7.upstream/drivers/ata/sata_promise.c.~1~	2007-02-04 15:12:46.000000000 +0100
++++ linux-2.6.20-rc7.upstream/drivers/ata/sata_promise.c	2007-02-04 15:43:53.000000000 +0100
+@@ -120,9 +120,7 @@ static u32 pdc_sata_scr_read (struct ata
+ static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static int pdc_ata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+ static irqreturn_t pdc_interrupt (int irq, void *dev_instance);
+-static void pdc_eng_timeout(struct ata_port *ap);
+ static int pdc_port_start(struct ata_port *ap);
+-static void pdc_pata_phy_reset(struct ata_port *ap);
+ static void pdc_qc_prep(struct ata_queued_cmd *qc);
+ static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
+ static void pdc_exec_command_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
+@@ -212,12 +210,13 @@ static const struct ata_port_operations 
+ 	.dev_select		= ata_std_dev_select,
+ 	.check_atapi_dma	= pdc_check_atapi_dma,
+ 
+-	.phy_reset		= pdc_pata_phy_reset,
+-
+ 	.qc_prep		= pdc_qc_prep,
+ 	.qc_issue		= pdc_qc_issue_prot,
++	.freeze			= pdc_freeze,
++	.thaw			= pdc_thaw,
++	.error_handler		= pdc_error_handler,
++	.post_internal_cmd	= pdc_post_internal_cmd,
+ 	.data_xfer		= ata_data_xfer,
+-	.eng_timeout		= pdc_eng_timeout,
+ 	.irq_handler		= pdc_interrupt,
+ 	.irq_clear		= pdc_irq_clear,
+ 
+@@ -248,7 +247,7 @@ static const struct ata_port_info pdc_po
+ 	/* board_20619 */
+ 	{
+ 		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SRST | ATA_FLAG_SLAVE_POSS,
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -370,6 +369,7 @@ static void pdc_reset_port(struct ata_po
+ 	readl(mmio);	/* flush */
+ }
+ 
++#if 0 /* unused, but potentially useful? */
+ static void pdc_pata_cbl_detect(struct ata_port *ap)
+ {
+ 	u8 tmp;
+@@ -383,14 +383,7 @@ static void pdc_pata_cbl_detect(struct a
+ 	} else
+ 		ap->cbl = ATA_CBL_PATA80;
+ }
+-
+-static void pdc_pata_phy_reset(struct ata_port *ap)
+-{
+-	pdc_pata_cbl_detect(ap);
+-	pdc_reset_port(ap);
+-	ata_port_probe(ap);
+-	ata_bus_reset(ap);
+-}
++#endif
+ 
+ static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+ {
+@@ -587,43 +580,6 @@ static void pdc_post_internal_cmd(struct
+ 		pdc_reset_port(ap);
+ }
+ 
+-static void pdc_eng_timeout(struct ata_port *ap)
+-{
+-	struct ata_host *host = ap->host;
+-	u8 drv_stat;
+-	struct ata_queued_cmd *qc;
+-	unsigned long flags;
+-
+-	DPRINTK("ENTER\n");
+-
+-	spin_lock_irqsave(&host->lock, flags);
+-
+-	qc = ata_qc_from_tag(ap, ap->active_tag);
+-
+-	switch (qc->tf.protocol) {
+-	case ATA_PROT_DMA:
+-	case ATA_PROT_NODATA:
+-		ata_port_printk(ap, KERN_ERR, "command timeout\n");
+-		drv_stat = ata_wait_idle(ap);
+-		qc->err_mask |= __ac_err_mask(drv_stat);
+-		break;
+-
+-	default:
+-		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+-
+-		ata_port_printk(ap, KERN_ERR,
+-				"unknown timeout, cmd 0x%x stat 0x%x\n",
+-				qc->tf.command, drv_stat);
+-
+-		qc->err_mask |= ac_err_mask(drv_stat);
+-		break;
+-	}
+-
+-	spin_unlock_irqrestore(&host->lock, flags);
+-	ata_eh_qc_complete(qc);
+-	DPRINTK("EXIT\n");
+-}
+-
+ static inline unsigned int pdc_host_intr( struct ata_port *ap,
+                                           struct ata_queued_cmd *qc)
+ {
