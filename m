@@ -1,54 +1,52 @@
-From: Bob Stewart <bob@evoria.net>
-Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Sat, 3 Feb 2007 18:46:58 -0800 (PST)
-Message-ID: <752079.2468.qm@web801.biz.mail.mud.yahoo.com>
-References: <45C54692.3070809@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't
+ apply)
+Date: Sun, 04 Feb 2007 11:47:32 +0900
+Message-ID: <45C54944.9040109@gmail.com>
+References: <20070202151856.GD1625@htj.dyndns.org>	<20070202174235.14b13f3e@localhost.localdomain>	<45C3E7F0.6000506@gmail.com> <20070203200428.4a7a5682@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web801.biz.mail.mud.yahoo.com ([209.191.90.74]:21913 "HELO
-	web801.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751967AbXBDCq7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Feb 2007 21:46:59 -0500
-In-Reply-To: <45C54692.3070809@gmail.com>
+Received: from an-out-0708.google.com ([209.85.132.244]:2151 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968AbXBDCrj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Feb 2007 21:47:39 -0500
+Received: by an-out-0708.google.com with SMTP id b33so850024ana
+        for <linux-ide@vger.kernel.org>; Sat, 03 Feb 2007 18:47:38 -0800 (PST)
+In-Reply-To: <20070203200428.4a7a5682@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: ahaas@airmail.net, linux-ide@vger.kernel.org
 
---- Tejun Heo <htejun@gmail.com> wrote:
-
-> [this thread is regarding sata_inic162x, misplaced reply]
+Alan wrote:
+>>> Yep and if the BIOS programmed the slave into DMA that might not be ideal.
+>> How so?  The bit will be programmed by set_dmamode() right after
+>> set_piomode() is complete.
 > 
-> Bob Stewart wrote:
-> > There is still something else bad going on in your driver.  I've tried
-> > everything I can think of (timing changes, flushes, and whatnot)
-> > but I still get random timeouts and random results from md5sum
-> > on large files.  Even in the case where I don't get a timeout on a large
-> > iso file, the md5sum is still random.  Strangely enough, though, 
-> > the files may be good on-disk, since totem seems to play the DVD.iso
-> > that I'm testing with without a problem.  I'm using debian with a 2.6.19.2
-> > kernel.
-> 
-> Yeap, I'm aware of the problem.  That's why the driver is marked HIGHLY
-> EXPERIMENTAL.  Maybe I should change it to broken.  :-(  Anyways, one of
-> the known problems is mishandling of LBA48 commands which is cause of
-> timeouts and wrong md5sums on large disks.  I just couldn't find any
-> time to work on it in recent weeks.  Please be patient a bit.  I'll get
-> back to sata_ini162x in a few days.
-> 
-> -- 
-> tejun
-> 
+> IFF we also put the device into a DMA mode. A blacklisted device would be
+> wrong.
 
-Thanks Tejun,
+Hmmm... I might be misunderstanding, but if libata is going to put the
+device into PIO mode, why does it matter what BIOS configured slave to?
+ The slave is going to be put into PIO mode libata selected so the
+control bits should match, no?
 
-I'm trying to use this as a learning tool, so I'm not putting pressure on you
-to fix it.  Well, at least I've learned a bit about libata etc while digging
-through 
-this, even if I wasn't able to figure out what the problem was.  :)  By the
-way, 
-the drive I'm using to play with this now is only an 80GB drive.
+[--snip--]
+>>>> * MWDMA mode programming cleared udma_mask even when the controller
+>>>>   doesn't support UDMA.  This doesn't matter for your case.
+>>> Or on the actual hardware.
+>> I was trying to make it more consistent with pio counterpart.  We can
+>> remove if() from set_piomode too.  Let's just keep things in sync
+>> between stuff including ide piix driver.
+> 
+> The one you must not touch is the UDMA register rather than added UDMA
+> bits in older registers.
 
-Bob
+OIC.  I was confused there.
+
+Thanks.
+
+-- 
+tejun
