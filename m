@@ -1,45 +1,43 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [PATCH] libata: reduce ATA command timeout to 7secs
-Date: Sat, 03 Feb 2007 18:34:40 -0500
-Message-ID: <45C51C10.3010801@emc.com>
-References: <20070202063748.GC1625@htj.dyndns.org>	<45C33BCF.2040506@emc.com>	<45C354CF.1020500@gmail.com>	<20070202153929.33f4a806@localhost.localdomain>	<45C36338.60803@rtr.ca>	<311601c90702020843w16a67db8j5ead05f107161ec9@mail.gmail.com> <20070202184743.1516d1f9@localhost.localdomain>
-Reply-To: ric@emc.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: add 150ms between completion of hardreset and
+ status checking
+Date: Sun, 04 Feb 2007 11:36:02 +0900
+Message-ID: <45C54692.3070809@gmail.com>
+References: <653885.83039.qm@web807.biz.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:39142 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864AbXBCXet (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Feb 2007 18:34:49 -0500
-In-Reply-To: <20070202184743.1516d1f9@localhost.localdomain>
+Received: from py-out-1112.google.com ([64.233.166.181]:60220 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbXBDCgI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Feb 2007 21:36:08 -0500
+Received: by py-out-1112.google.com with SMTP id a29so619036pyi
+        for <linux-ide@vger.kernel.org>; Sat, 03 Feb 2007 18:36:08 -0800 (PST)
+In-Reply-To: <653885.83039.qm@web807.biz.mail.mud.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: "Eric D. Mudama" <edmudama@gmail.com>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Bob Stewart <bob@evoria.net>
+Cc: linux-ide@vger.kernel.org
 
+[this thread is regarding sata_inic162x, misplaced reply]
 
+Bob Stewart wrote:
+> There is still something else bad going on in your driver.  I've tried
+> everything I can think of (timing changes, flushes, and whatnot)
+> but I still get random timeouts and random results from md5sum
+> on large files.  Even in the case where I don't get a timeout on a large
+> iso file, the md5sum is still random.  Strangely enough, though, 
+> the files may be good on-disk, since totem seems to play the DVD.iso
+> that I'm testing with without a problem.  I'm using debian with a 2.6.19.2
+> kernel.
 
-Alan wrote:
->> generic PC market, as opposed to "RAID edition" or "MaxLine" or
->> similar branding from other vendors, where the firmware may have been
->> specifically optimized for quicker command completion, quicker status
->> reporting and less exhaustive error recovery.  Many linux users I
-> 
-> Is there a way to detect RAID drives with this kind of timing, or does
-> someone need to take a baseball bat into the standards committee meeting
-> and add an identify field that gives command and "long command" timeouts
-> in seconds ?
+Yeap, I'm aware of the problem.  That's why the driver is marked HIGHLY
+EXPERIMENTAL.  Maybe I should change it to broken.  :-(  Anyways, one of
+the known problems is mishandling of LBA48 commands which is cause of
+timeouts and wrong md5sums on large disks.  I just couldn't find any
+time to work on it in recent weeks.  Please be patient a bit.  I'll get
+back to sata_ini162x in a few days.
 
-We figure it out by testing lots & lots of drives ;-)
-
-> 
-> If we can detect the "fast fail" drives (initially by say ident string
-> components) lets do it and the people who care can buy the right product
-> for the job.
-
-I don't think that there is any kind of feature field...
-
-> 
-> Alan
-> 
+-- 
+tejun
