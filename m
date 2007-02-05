@@ -1,41 +1,38 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] sd: implement stop_on_shutdown
-Date: Mon, 05 Feb 2007 18:43:33 +0900
-Message-ID: <45C6FC45.4050603@gmail.com>
-References: <20070119170122.GS10987@htj.dyndns.org>	 <45B1574D.1090502@us.ibm.com>  <45B18AE2.3010503@gmail.com> <1169303969.2842.10.camel@mulgrave.il.steeleye.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH libata-dev#upstream-fixes] libata: fix drive side 80c
+ cable check
+Date: Mon, 5 Feb 2007 10:57:44 +0000
+Message-ID: <20070205105744.6f22fc7d@localhost.localdomain>
+References: <20070205074535.GE1625@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1169303969.2842.10.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hmh@hmh.eng.br, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46807 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751448AbXBEKqN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 05:46:13 -0500
+In-Reply-To: <20070205074535.GE1625@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org
 
-James Bottomley wrote:
-> There are practical problems to handling this in sd, namely that the
-> power handling commands and state model are part of the ATA command set,
-> not part of the SCSI command set.  SAT really only covers the basics of
-> mapping the different power management models.
+On Mon, 5 Feb 2007 16:45:35 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-I see.  I think what's currently described in SAT-r09 is enough for most
-cases this is necessary - ATA and USB disks.
+> The 80c wire bit is bit 13, not 14.  Bit 14 is always 1 if word93 is
+> implemented.  This increases the chance of incorrect wire detection
+> especially because host side cable detection is often unreliable and
+> we sometimes soley depend on drive side cable detection.  Fix it.
 
-> However, I suppose if we're going to allow stop on shutdown, it does
-> make sense to use it on suspend as well.
+NAK to the fix but not the report
 
-Yeah, it does.  Issuing STOP on suspend and START (possibly with
-IMMED=1) on resume should do the trick.  libata currently does this
-using sht->resume/suspend callbacks but it fits much better in sd in
-that it's also useful for other SCSI disks.
+We must check bits 15 and 14 to know if bit 13 is valid. The old code is
+wrong (follows the old IDE bits) but your change is probably no better as
+you remove the needed validity check.
 
-James, do you think such change to sd is acceptable?  As the original
-patch, the default behavior won't be changed, so unless specifically
-configured (probably during boot by dist) there won't be any behavior
-change.
+	if ((dev_id[93] & 0xC000) == 0x4000) && (dev_id[93] & 0x2000))
+		return 0;
 
-Thanks.
-
--- 
-tejun
+Alan
