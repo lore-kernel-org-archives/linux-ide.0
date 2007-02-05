@@ -1,81 +1,30 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (2.6.20) pata_mpiix: fix PIO setup issues
-Date: Mon, 5 Feb 2007 20:24:57 +0300
-Message-ID: <200702052024.57511.sshtylyov@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Mon, 05 Feb 2007 12:29:18 -0500
+Message-ID: <45C7696E.3000907@rtr.ca>
+References: <752079.2468.qm@web801.biz.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:16232 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752037AbXBERZF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 12:25:05 -0500
-Content-Disposition: inline
+Received: from rtr.ca ([64.26.128.89]:1816 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752088AbXBER3U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Feb 2007 12:29:20 -0500
+In-Reply-To: <752079.2468.qm@web801.biz.mail.mud.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Bob Stewart <bob@evoria.net>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Fix clearing/setting the wrong TIME/IE/PPE bits for a slave drive caused by a
-wrong shift count.
-Fix the PIO mode 1 being overclocked by wrongly selecting the fast timing bank.
-Also, fix/rephrase some comments while at it.
+Bob Stewart wrote:
+> By the way, 
+> the drive I'm using to play with this now is only an 80GB drive.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Most newer drives are still capable of LBA48, even when they are
+small enough to not require it for sector addressing.
 
----
- drivers/ata/pata_mpiix.c |   19 ++++++++++---------
- 1 files changed, 10 insertions(+), 9 deletions(-)
+If a large enough I/O (more than 256 sectors) is generated,
+then libata may use LBA48 to complete a request on such drives.
 
-Index: linux-2.6/drivers/ata/pata_mpiix.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_mpiix.c
-+++ linux-2.6/drivers/ata/pata_mpiix.c
-@@ -35,7 +35,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_mpiix"
--#define DRV_VERSION "0.7.3"
-+#define DRV_VERSION "0.7.4"
- 
- enum {
- 	IDETIM = 0x6C,		/* IDE control register */
-@@ -80,8 +80,8 @@ static void mpiix_error_handler(struct a
-  *	@adev: ATA device
-  *
-  *	Called to do the PIO mode setup. The MPIIX allows us to program the
-- *	IORDY sample point (2-5 clocks), recovery 1-4 clocks and whether
-- *	prefetching or iordy are used.
-+ *	IORDY sample point (2-5 clocks), recovery (1-4 clocks) and whether
-+ *	prefetching or IORDY are used.
-  *
-  *	This would get very ugly because we can only program timing for one
-  *	device at a time, the other gets PIO0. Fortunately libata calls
-@@ -103,18 +103,19 @@ static void mpiix_set_piomode(struct ata
- 			    { 2, 3 }, };
- 
- 	pci_read_config_word(pdev, IDETIM, &idetim);
--	/* Mask the IORDY/TIME/PPE0 bank for this device */
-+
-+	/* Mask the IORDY/TIME/PPE for this device */
- 	if (adev->class == ATA_DEV_ATA)
--		control |= PPE;		/* PPE enable for disk */
-+		control |= PPE;		/* Enable prefetch/posting for disk */
- 	if (ata_pio_need_iordy(adev))
--		control |= IORDY;	/* IORDY */
--	if (pio > 0)
-+		control |= IORDY;
-+	if (pio > 1)
- 		control |= FTIM;	/* This drive is on the fast timing bank */
- 
- 	/* Mask out timing and clear both TIME bank selects */
- 	idetim &= 0xCCEE;
--	idetim &= ~(0x07  << (2 * adev->devno));
--	idetim |= (control << (2 * adev->devno));
-+	idetim &= ~(0x07  << (4 * adev->devno));
-+	idetim |= control << (4 * adev->devno);
- 
- 	idetim |= (timings[pio][0] << 12) | (timings[pio][1] << 8);
- 	pci_write_config_word(pdev, IDETIM, idetim);
-
+Cheers
