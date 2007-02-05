@@ -1,53 +1,97 @@
-From: "Andrew Lyon" <andrew.lyon@gmail.com>
-Subject: Re: Problem with Samsung SH-183A and VIA Sata Controller
-Date: Mon, 5 Feb 2007 00:53:30 +0000
-Message-ID: <f4527be0702041653g2c691863p5bfaee3dd4922816@mail.gmail.com>
-References: <f0b738400702011031m1d457f5fucd07b5ed4cb711f7@mail.gmail.com>
-	 <20070201203025.707f3954@localhost.localdomain>
-	 <f0b738400702030615k4fbf2566q6ae0325dbe9ca860@mail.gmail.com>
-	 <f4527be0702030957s599eb0f5n8441d87e0927e2c6@mail.gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH -mm] sata_nv: wait for response on entering/leaving ADMA mode
+Date: Sun, 04 Feb 2007 23:15:51 -0600
+Message-ID: <45C6BD87.90802@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:29413 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752626AbXBEAxb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Feb 2007 19:53:31 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1469181nze
-        for <linux-ide@vger.kernel.org>; Sun, 04 Feb 2007 16:53:31 -0800 (PST)
-In-Reply-To: <f4527be0702030957s599eb0f5n8441d87e0927e2c6@mail.gmail.com>
-Content-Disposition: inline
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:54915 "EHLO
+	pd5mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752710AbXBEFTG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 00:19:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nils Lavesson <nils.lavesson@gmail.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>
 
-On 2/3/07, Andrew Lyon <andrew.lyon@gmail.com> wrote:
-> On 2/3/07, Nils Lavesson <nils.lavesson@gmail.com> wrote:
-> > > I posted a patch to the IDE list yesterday for testing which performs the
-> > > workarounds the old IDE layer does for this. I'll forward you a copy
-> >
-> > I applied the patch, but unfortunately I get the same error messages
-> > as before and the drive doesn't work.
-> >
-> > Regards,
-> > Nils
-> >
-> >
->
-> Looks similar to the problems I have with a samsung dvdrw connected to
-> jmicron sata controller, see bugzilla 7893
->
-> I also tried the patch, it didnt help :(.
->
-> Andy
->
->
+Update sata_nv to wait for the controller to indicate via the status register
+that it has entered the requested state when switching between ADMA mode and
+register mode. This issue came up recently when debugging some problems with
+cache flush command timeouts and while it didn't appear to fix that problem,
+this is something we should likely be doing in any case.
 
-My sincere apologies, the file attached to my previous posting was not
-mine! It was the same file that nils attached, I was not aware that
-"reply to all" in gmail included the attachments.
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-Sorry for any confusion
-Andy
+--- linux-2.6.20-rc6-mm3/drivers/ata/sata_nv.c	2007-02-04 21:48:25.000000000 -0600
++++ linux-2.6.20-rc6-mm3edit/drivers/ata/sata_nv.c	2007-02-04 22:13:36.000000000 -0600
+@@ -507,14 +507,38 @@ static void nv_adma_register_mode(struct
+{
+	struct nv_adma_port_priv *pp = ap->private_data;
+	void __iomem *mmio = pp->ctl_block;
+-	u16 tmp;
++	u16 tmp, status;
++	int count = 0;
+
+	if (pp->flags & NV_ADMA_PORT_REGISTER_MODE)
+		return;
+
++	status = readw(mmio + NV_ADMA_STAT);
++	while(!(status & NV_ADMA_STAT_IDLE) && count < 20) {
++		ndelay(50);
++		status = readw(mmio + NV_ADMA_STAT);
++		count++;
++	}
++	if(count == 20)
++		ata_port_printk(ap, KERN_WARNING,
++			"timeout waiting for ADMA IDLE, stat=0x%hx\n",
++			status);
++
+	tmp = readw(mmio + NV_ADMA_CTL);
+	writew(tmp & ~NV_ADMA_CTL_GO, mmio + NV_ADMA_CTL);
+
++	count = 0;
++	status = readw(mmio + NV_ADMA_STAT);
++	while(!(status & NV_ADMA_STAT_LEGACY) && count < 20) {
++		ndelay(50);
++		status = readw(mmio + NV_ADMA_STAT);
++		count++;
++	}
++	if(count == 20)
++		ata_port_printk(ap, KERN_WARNING,
++			 "timeout waiting for ADMA LEGACY, stat=0x%hx\n",
++			 status);
++
+	pp->flags |= NV_ADMA_PORT_REGISTER_MODE;
+}
+
+@@ -522,7 +546,8 @@ static void nv_adma_mode(struct ata_port
+{
+	struct nv_adma_port_priv *pp = ap->private_data;
+	void __iomem *mmio = pp->ctl_block;
+-	u16 tmp;
++	u16 tmp, status;
++	int count = 0;
+
+	if (!(pp->flags & NV_ADMA_PORT_REGISTER_MODE))
+		return;
+@@ -532,6 +557,18 @@ static void nv_adma_mode(struct ata_port
+	tmp = readw(mmio + NV_ADMA_CTL);
+	writew(tmp | NV_ADMA_CTL_GO, mmio + NV_ADMA_CTL);
+
++	status = readw(mmio + NV_ADMA_STAT);
++	while(((status & NV_ADMA_STAT_LEGACY) ||
++	      !(status & NV_ADMA_STAT_IDLE)) && count < 20) {
++		ndelay(50);
++		status = readw(mmio + NV_ADMA_STAT);
++		count++;
++	}
++	if(count == 20)
++		ata_port_printk(ap, KERN_WARNING,
++			"timeout waiting for ADMA LEGACY clear and IDLE, stat=0x%hx\n",
++			status);
++
+	pp->flags &= ~NV_ADMA_PORT_REGISTER_MODE;
+}
+
+
+
