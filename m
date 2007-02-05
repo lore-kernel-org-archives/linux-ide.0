@@ -1,73 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Nvidia cable detection problems (was [PATCH] amd74xx: don't configure
- udma mode higher than BIOS did)
-Date: Mon, 05 Feb 2007 23:50:55 +0900
-Message-ID: <45C7444F.4070500@gmail.com>
-References: <20070205075836.GG1625@htj.dyndns.org>	<20070205112410.5a3c3182@localhost.localdomain>	<45C72012.7050605@gmail.com>	<20070205132247.6f611e3c@localhost.localdomain>	<45C73A3E.6080700@gmail.com> <20070205143439.6962c076@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] sd: implement stop_on_shutdown
+Date: Mon, 05 Feb 2007 08:55:10 -0600
+Message-ID: <1170687310.3387.2.camel@mulgrave.il.steeleye.com>
+References: <20070119170122.GS10987@htj.dyndns.org>
+	 <45B1574D.1090502@us.ibm.com>  <45B18AE2.3010503@gmail.com>
+	 <1169303969.2842.10.camel@mulgrave.il.steeleye.com>
+	 <45C6FC45.4050603@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.238]:62190 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932948AbXBEOvA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 09:51:00 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1612702wxd
-        for <linux-ide@vger.kernel.org>; Mon, 05 Feb 2007 06:51:00 -0800 (PST)
-In-Reply-To: <20070205143439.6962c076@localhost.localdomain>
+Received: from hancock.steeleye.com ([71.30.118.248]:54105 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932993AbXBEPEI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 10:04:08 -0500
+In-Reply-To: <45C6FC45.4050603@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hmh@hmh.eng.br, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Alan wrote:
-[--snip--]
->> CK804 IDE, at least mine, reports 80c in a lot of cases where it
->> shouldn't.  I dunno the reason but it also makes drives confused about
->> cable type.  Maybe it has the wrong capacitor attached or something.
->> This is A8N-E from ASUS, probably one of the popular ones using nf4.
-> 
-> I take it this was how you came to find every cable related bug while
-> trying to work out what was going on ?
+On Mon, 2007-02-05 at 18:43 +0900, Tejun Heo wrote:
+> James, do you think such change to sd is acceptable?  As the original
+> patch, the default behavior won't be changed, so unless specifically
+> configured (probably during boot by dist) there won't be any behavior
+> change.
 
-Yeap, pretty much.  I thought fixing drive side cable detection would
-fix it, but hell no.
+Yes, as long as the default is off and it's configurable per disk, I
+think the power management software can find the root disks and adjust
+the settings if necessary.
 
->> When that happens, libata EH does its job and slows the interface to
->> udma33 after quite a few error messages.  On IDE, if this happens, the
->> drive is put into PIO mode making the machine painful to use.
-> 
-> No the IDE layer does DMA changedown fine, well apart from all the
-> error/timer races in the old IDE code.
+James
 
-I dunno.  It always ended up in PIO mode in my case.  I can post the log
-if necessary.
 
-[--snip--]
->> I agree with you that this is a hack and ugly as hell.  I don't like it
->> either, but it solves an existing problem which could have and possibly
->> will hit many users.  So, I think this problem should at least be
->> verified.  If it's just my BIOS/motherboard that's crazy, I have no
->> problem forgetting about this.
-> 
-> It certainly seems to be Nvidia specific, so perhaps Nvidia can provide
-> more details on the Nforce4 cable detection ? As with a lot of Nvidia
-> stuff there was much reverse engineering involved in the original code
-> base.
-
-Hmmm... Anyone happen to have working nvidia contact?
-
-> And if its a specific board or couple of boards then we should perhaps
-> use DMI to match them specifically.
-> 
->> So, anyone with CK804 (a.k.a NF4) up for some testing?
-> 
-> If it still goes I've got a rather iffy NF3 but not an NF4 handy.
-
-Yeah, please.  If I connect a hdd at the end of 40c cable and leaving
-the middle connector empty, the 80c bit is always one and the drive says
-it's 80c cable while the BIOS configured mode is correctly udma33.  This
-is the same for SAMSUNG SP0802N, Maxtor 91301U3 and HITACHI_DK23BA-20.
-
--- 
-tejun
