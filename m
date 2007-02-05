@@ -1,136 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (2.6.20) pata_mpiix: probing cleanup (resend)
-Date: Mon, 5 Feb 2007 21:08:55 +0300
-Message-ID: <200702052108.55763.sshtylyov@ru.mvista.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Nvidia cable detection problems (was [PATCH] amd74xx: don't configure
+ udma mode higher than BIOS did)
+Date: Tue, 06 Feb 2007 03:36:17 +0900
+Message-ID: <45C77921.4020808@gmail.com>
+References: <20070205075836.GG1625@htj.dyndns.org>	<20070205112410.5a3c3182@localhost.localdomain>	<45C72012.7050605@gmail.com>	<20070205132247.6f611e3c@localhost.localdomain>	<45C73A3E.6080700@gmail.com>	<20070205143439.6962c076@localhost.localdomain>	<45C7444F.4070500@gmail.com>	<58cb370e0702050709w1b7682dr5dff9e7ce69465a@mail.gmail.com>	<DBFABB80F7FD3143A911F9E6CFD477B01EC0DD7D@hqemmail02.nvidia.com> <20070205181224.3319d6c3@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:16438 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752154AbXBESJB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 13:09:01 -0500
-Content-Disposition: inline
+Received: from nz-out-0506.google.com ([64.233.162.225]:43065 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933021AbXBESgX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 13:36:23 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so1682025nze
+        for <linux-ide@vger.kernel.org>; Mon, 05 Feb 2007 10:36:23 -0800 (PST)
+In-Reply-To: <20070205181224.3319d6c3@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Allen Martin <AMartin@nvidia.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-[Cr*p, forgot both the sign-off and cut-off! :-)]
+Alan wrote:
+>> The *real* solution is to use the BIOS ACPI _GTM _STM methods for this.
+>> Then you can remove all chipset specific knowledge from the IDE driver.
+>> This is what the MS driver does on Windows, so you know it's received a
+>> lot of testing from NVIDIA and board vendors.
+> 
+> Well we can certainly do some of that if ACPI is present and active. In
+> particular since _GTM will give us current modes allowing for hotplug and
+> post BIOS boot kexec etc it ought to be safe to do Tejun's hack that way.
+> We could even probe UDMA3+ capable devices by doing _STM to a high mode
+> and _GTM to determine the cable type 8)
 
-MPIIX has only single channel IDE which can be configured for either primary or
-secondary legacy I/O ports and IRQ.  So, get rid of the unneeded second probe
-entry in mpiix_init_one() and of the invalid (but unused anyway) enable bits in
-mpiix_pre_reset().
+Glad to see the problem getting solved.  Now that we know the solution,
+any volunteers?  :-)
 
-Warning: this cleanup has only been compile-tested...
-
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
----
- drivers/ata/pata_mpiix.c |   63 ++++++++++++++++++++---------------------------
- 1 files changed, 27 insertions(+), 36 deletions(-)
-
-Index: linux-2.6/drivers/ata/pata_mpiix.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_mpiix.c
-+++ linux-2.6/drivers/ata/pata_mpiix.c
-@@ -35,7 +35,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_mpiix"
--#define DRV_VERSION "0.7.4"
-+#define DRV_VERSION "0.7.5"
- 
- enum {
- 	IDETIM = 0x6C,		/* IDE control register */
-@@ -49,12 +49,9 @@ enum {
- static int mpiix_pre_reset(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	static const struct pci_bits mpiix_enable_bits[] = {
--		{ 0x6D, 1, 0x80, 0x80 },
--		{ 0x6F, 1, 0x80, 0x80 }
--	};
-+	static const struct pci_bits mpiix_enable_bits = { 0x6D, 1, 0x80, 0x80 };
- 
--	if (!pci_test_config_bits(pdev, &mpiix_enable_bits[ap->port_no]))
-+	if (!pci_test_config_bits(pdev, &mpiix_enable_bits))
- 		return -ENOENT;
- 	ap->cbl = ATA_CBL_PATA40;
- 	return ata_std_prereset(ap);
-@@ -202,10 +199,9 @@ static struct ata_port_operations mpiix_
- static int mpiix_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
- 	/* Single threaded by the PCI probe logic */
--	static struct ata_probe_ent probe[2];
-+	static struct ata_probe_ent probe;
- 	static int printed_version;
- 	u16 idetim;
--	int enabled;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &dev->dev, "version " DRV_VERSION "\n");
-@@ -224,37 +220,32 @@ static int mpiix_init_one(struct pci_dev
- 	   without BARs set fools the setup.  #2 If you pci_disable_device
- 	   the MPIIX your box goes castors up */
- 
--	INIT_LIST_HEAD(&probe[0].node);
--	probe[0].dev = pci_dev_to_dev(dev);
--	probe[0].port_ops = &mpiix_port_ops;
--	probe[0].sht = &mpiix_sht;
--	probe[0].pio_mask = 0x1F;
--	probe[0].irq = 14;
--	probe[0].irq_flags = SA_SHIRQ;
--	probe[0].port_flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST;
--	probe[0].n_ports = 1;
--	probe[0].port[0].cmd_addr = 0x1F0;
--	probe[0].port[0].ctl_addr = 0x3F6;
--	probe[0].port[0].altstatus_addr = 0x3F6;
--
--	/* The secondary lurks at different addresses but is otherwise
--	   the same beastie */
--
--	INIT_LIST_HEAD(&probe[1].node);
--	probe[1] = probe[0];
--	probe[1].irq = 15;
--	probe[1].port[0].cmd_addr = 0x170;
--	probe[1].port[0].ctl_addr = 0x376;
--	probe[1].port[0].altstatus_addr = 0x376;
-+	INIT_LIST_HEAD(&probe.node);
-+	probe.dev = pci_dev_to_dev(dev);
-+	probe.port_ops = &mpiix_port_ops;
-+	probe.sht = &mpiix_sht;
-+	probe.pio_mask = 0x1F;
-+	probe.irq_flags = SA_SHIRQ;
-+	probe.port_flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST;
-+	probe.n_ports = 1;
-+
-+	/* See if it's primary or secondary channel... */
-+	if (idetim & SECONDARY) {
-+		probe.irq = 15;
-+		probe.port[0].cmd_addr = 0x170;
-+		probe.port[0].ctl_addr = 0x376;
-+		probe.port[0].altstatus_addr = 0x376;
-+	} else {
-+		probe.irq = 14;
-+		probe.port[0].cmd_addr = 0x1F0;
-+		probe.port[0].ctl_addr = 0x3F6;
-+		probe.port[0].altstatus_addr = 0x3F6;
-+	}
- 
- 	/* Let libata fill in the port details */
--	ata_std_ports(&probe[0].port[0]);
--	ata_std_ports(&probe[1].port[0]);
-+	ata_std_ports(&probe.port[0]);
- 
--	/* Now add the port that is active */
--	enabled = (idetim & SECONDARY) ? 1 : 0;
--
--	if (ata_device_add(&probe[enabled]))
-+	if (ata_device_add(&probe))
- 		return 0;
- 	return -ENODEV;
- }
-
+-- 
+tejun
