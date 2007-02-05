@@ -1,78 +1,128 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: Re: SATA PMP for 2.6.20
-Date: Mon, 5 Feb 2007 10:42:51 -0800
-Message-ID: <20070205184251.GT23455@curie-int.orbis-terrarum.net>
-References: <e532144c0702050923p3f699325k7fd805550508ba06@mail.gmail.com> <45C76B00.4070806@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] libata: IORDY handling, quiet handling
+Date: Mon, 05 Feb 2007 21:52:39 +0300
+Message-ID: <45C77CF7.60201@ru.mvista.com>
+References: <20070205162544.5e55cff0@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="UsbkURXZxe2ekgES"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from b01.ext.isohunt.com ([208.71.112.51]:32781 "EHLO
-	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933329AbXBEStT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 13:49:19 -0500
-Content-Disposition: inline
-In-Reply-To: <45C76B00.4070806@gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:16701 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933344AbXBESwq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 13:52:46 -0500
+In-Reply-To: <20070205162544.5e55cff0@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: John Eckhart <jweckhart@gmail.com>, linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
+Alan wrote:
+> For further review
 
---UsbkURXZxe2ekgES
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Turn on the IORDY handling logic.
 
-On Tue, Feb 06, 2007 at 02:36:00AM +0900, Tejun Heo wrote:
-> John Eckhart wrote:
-> > Tejun,
-> >    Is there any update to the PMP support you have posted on your site
-> > for 2.6.19 or 2.6.20 kernels? I have an SI controller and PMP card and
-> > would like to try them out using the latest kernels. I was also
-> > considering forward porting your patches if necessary, but don't want to
-> > duplicate any work if you or someone else has already completed this.
-> No not yet from me.  Forward-porting will be a lot of work.  I think
-> somebody did it already, searching...  eeek, can't find it at the
-> moment.  ISTR the message was posted to linux-ide, you'll have to search
-> yourself.  :-P
-I did it for 2.6.20-rc2:
-http://dev.gentoo.org/~robbat2/libata-development/
+> If a controller doesnt support IORDY don't try and use it
 
-The original message id with instructions is:
-<20061228113446.GI28939@curie-int.orbis-terrarum.net>
+> If a device doesn't support IORDY don't try and use it
 
-There are 5 sets of patches in total of Tejun's work, named the same as
-Tejun's branches:
-hp_poll
-vt8261_ahci
-link
-pmp_prep
-pmp
+    Looks like we shouldn't change it default PIO mode at all in this case. 
+See below why...
 
-I do have it in my git tree, so I should be able to rebase against
-2.6.20 and export again.
+> Otherwise use it whenever possible.
+> Always use IORDY for PIO3 and higher (it's mandatory)
 
-Is there an actual merge plan for this stuff, esp. the hp_poll and
-ata_link stuff?
+> Send the correct set_features command if operating without IORDY
 
---=20
-Robin Hugh Johnson
-Gentoo Linux Developer
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+> 
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.20-rc6-mm3/drivers/ata/libata-core.c linux-2.6.20-rc6-mm3/drivers/ata/libata-core.c
+> --- linux.vanilla-2.6.20-rc6-mm3/drivers/ata/libata-core.c	2007-01-31 14:20:39.000000000 +0000
+> +++ linux-2.6.20-rc6-mm3/drivers/ata/libata-core.c	2007-02-01 16:14:01.000000000 +0000
+> @@ -1404,30 +1446,44 @@
+>   *	Check if the current speed of the device requires IORDY. Used
+>   *	by various controllers for chip configuration.
+>   */
+> -
+> + 
+>  unsigned int ata_pio_need_iordy(const struct ata_device *adev)
+>  {
+> -	int pio;
+> -	int speed = adev->pio_mode - XFER_PIO_0;
+> -
+> -	if (speed < 2)
+> +	/* Controller doesn't support  IORDY. Probably a pointless check
+> +	   as the caller should know this */
+> +	if (adev->ap->flags & ATA_FLAG_NO_IORDY)
+>  		return 0;
+> -	if (speed > 2)
+> +	/* PIO3 and higher it is mandatory */
+> +	if (adev->pio_mode > XFER_PIO_2)
+>  		return 1;
+> +	/* We turn it on when possible */
+> +	if (ata_id_has_iordy(adev->id))
+> +		return 1;
+> +	return 0;
+> +}
+>  
+> +/**
+> + *	ata_pio_mask_no_iordy	-	Return the non IORDY mask
+> + *	@adev: ATA device
+> + *
+> + *	Compute the highest mode possible if we are not using iordy. Return
+> + *	-1 if no iordy mode is available.
+> + */
+> + 
+> +static u32 ata_pio_mask_no_iordy(const struct ata_device *adev)
+> +{
+>  	/* If we have no drive specific rule, then PIO 2 is non IORDY */
+> -
+>  	if (adev->id[ATA_ID_FIELD_VALID] & 2) {	/* EIDE */
+> -		pio = adev->id[ATA_ID_EIDE_PIO];
+> +		u16 pio = adev->id[ATA_ID_EIDE_PIO];
+>  		/* Is the speed faster than the drive allows non IORDY ? */
+>  		if (pio) {
+>  			/* This is cycle times not frequency - watch the logic! */
+>  			if (pio > 240)	/* PIO2 is 240nS per cycle */
+> -				return 1;
+> -			return 0;
+> +				return 3 << ATA_SHIFT_PIO;
+> +			return 7 << ATA_SHIFT_PIO;
+>  		}
+>  	}
+> -	return 0;
+> +	return 3 << ATA_SHIFT_PIO;
+>  }
 
---UsbkURXZxe2ekgES
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+    Well, after looking into ATA-1, it seems that the logic may have been and 
+may be still is somewhat wrong here.  There was PIO2 already defined but no 
+EIDE fields yet (and yet optional IORDY line already here).  We probably 
+should always consider PIO2 non-IORDY indeed (unless told not to by the word 
+67) but go figure... :-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6-ecc01.6 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+> @@ -3466,8 +3529,18 @@
+>  	tf.command = ATA_CMD_SET_FEATURES;
+>  	tf.feature = SETFEATURES_XFER;
+>  	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+> +
+> +	/* Older CFA may not support this command */
+> +	if (ata_id_is_cfa(dev->id))
+> +        	tf.flags |= ATA_TFLAG_QUIET;
+> +
+>  	tf.protocol = ATA_PROT_NODATA;
+> -	tf.nsect = dev->xfer_mode;
+> +
+> +	/* Ancient devices may need us to avoid IORDY */
+> +	if (ata_pio_need_iordy(dev))
+> +		tf.nsect = dev->xfer_mode;
+> +	else
+> +		tf.nsect = 0x01;
 
-iD8DBQFFx3qrPpIsIjIzwiwRAi0LAJ9WwXyys/T4w0z5Rl0fldBnoRBaSgCdGhaL
-UTijfogzNrPJuHYkuATYmvM=
-=mRVg
------END PGP SIGNATURE-----
+    Note that ATA-1 did *not* yet define this subcode (only 0 for "block 
+transfer"). I think that we should not change the PIO modes at all on 
+non-IORDY drives, otherwise it's becoming pointless and messy -- you're not 
+setting what you're told here and force the drive's default mode instead... 
+why then change it at all?
 
---UsbkURXZxe2ekgES--
+MBR, Sergei
