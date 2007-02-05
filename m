@@ -1,29 +1,29 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH libata-dev#upstream 2/2] pata_amd: don't configure udma
- mode faster than BIOS did
-Date: Mon, 5 Feb 2007 11:25:33 +0000
-Message-ID: <20070205112533.611558c2@localhost.localdomain>
-References: <20070205080518.GI1625@htj.dyndns.org>
-	<20070205080801.GJ1625@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev#upstream-fixes] pata_amd: fix an obvious bug
+ in cable detection
+Date: Mon, 5 Feb 2007 11:28:45 +0000
+Message-ID: <20070205112845.4fc6e80a@localhost.localdomain>
+References: <20070205080128.GH1625@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33323 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59346 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752289AbXBELMm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 06:12:42 -0500
-In-Reply-To: <20070205080801.GJ1625@htj.dyndns.org>
+	with ESMTP id S932096AbXBELRL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 06:17:11 -0500
+In-Reply-To: <20070205080128.GH1625@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org
 
-> This patch implements mode_filter for pata_amd which makes it avoid
-> configuring udma mode higher than BIOS did.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+On Mon, 5 Feb 2007 17:01:28 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-NAK, wrong for the same reason as it is wrong on the IDE one, and even
-more so as we will support hotplug and the like in time too.
+> 80c test mask is at bits 18 and 19 of EIDE Controller Configuration
+> not 22 and 23.  Fix it.
 
+ACK - verified against data sheet.
+
+Alan
