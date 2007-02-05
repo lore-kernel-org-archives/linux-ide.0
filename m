@@ -1,44 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ide: fix drive side 80c cable check, take 2
-Date: Mon, 5 Feb 2007 21:47:13 +0900
-Message-ID: <20070205124713.GL1625@htj.dyndns.org>
-References: <20070205074713.GF1625@htj.dyndns.org> <20070205111837.1981bda2@localhost.localdomain>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] amd74xx: don't configure udma mode higher than BIOS did
+Date: Mon, 5 Feb 2007 13:22:47 +0000
+Message-ID: <20070205132247.6f611e3c@localhost.localdomain>
+References: <20070205075836.GG1625@htj.dyndns.org>
+	<20070205112410.5a3c3182@localhost.localdomain>
+	<45C72012.7050605@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:9361 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932300AbXBEMrU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 07:47:20 -0500
-Received: by an-out-0708.google.com with SMTP id b33so1008757ana
-        for <linux-ide@vger.kernel.org>; Mon, 05 Feb 2007 04:47:18 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20070205111837.1981bda2@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39015 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932371AbXBENJx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Feb 2007 08:09:53 -0500
+In-Reply-To: <45C72012.7050605@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: bzolnier@gmail.com, stable@kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-eighty_ninty_three() had word 93 validitity check but not the 80c bit
-test itself (bit 12).  This increases the chance of incorrect wire
-detection especially because host side cable detection is often
-unreliable and we sometimes soley depend on drive side cable
-detection.  Fix it.
+> If BIOS hasn't run, UDMA timing wouldn't have been programmed and as
+> such the speed won't be limited.  So, there should be no harm done in
+> that case.  Even if something goes really wrong, the worst happens is
+> capping speed to udma33.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-Ah... thanks.  That explains the code much better.  Fixed accordingly.
+Which is bad and leaves people with mysterious performance problems that
+randomly appear in a new release. You have error handling code that will
+do UDMA change down, you've fixed the disk side detect. We don't need to
+destroy the pata_amd driver as well nor the IDE AMD driver.
 
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index badde63..6558055 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -607,6 +607,8 @@ u8 eighty_ninty_three (ide_drive_t *drive)
- 	if(!(drive->id->hw_config & 0x4000))
- 		return 0;
- #endif /* CONFIG_IDEDMA_IVB */
-+	if (!(drive->id->hw_config & 0x2000))
-+		return 0;
- 	return 1;
- }
- 
+You get whatever the chip has loaded. The BIOS may pick PIO modes only,
+the BIOS may not have been run so the UDMA bits could be arbitary. You
+may even get wrongly capped values.
+
+Also another case you broke is kexec.
+
+> So, I think the benefit (correct configuration on most machines) easily
+> outweighs the danger (incorrectly capping speed to working udma33 on
+> non-PC).
+
+Yours is the first complaint I've seen about this hardware detection in
+*THREE* years. Its a bigger problem with libata but thats because of the
+drive side detect and also because currently we work on the basis in
+libata that host side detect defines cable, while old ide (when behaving
+and correctly working) works on the basis that if the host says 80wire and
+the drive says 40 wire (or vice versa) then its 40.
+
+Alan
