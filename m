@@ -1,15 +1,15 @@
 From: info@pitor.hu
 Subject: Highpoint 2220
-Date: Tue,  6 Feb 2007 15:01:52 +0100 (CET)
-Message-ID: <20070206140152.313D2690044@pitor.hu>
+Date: Tue,  6 Feb 2007 15:01:53 +0100 (CET)
+Message-ID: <20070206140153.2829A690044@pitor.hu>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pitor.hu ([193.9.26.1]:1959 "EHLO pitor.hu"
+Received: from pitor.hu ([193.9.26.1]:1962 "EHLO pitor.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752037AbXBFOCN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1752119AbXBFOCN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Tue, 6 Feb 2007 09:02:13 -0500
 Received: from majom.hu (localhost.localdomain [127.0.0.1])
-	by pitor.hu (Postfix) with SMTP id 313D2690044
-	for <linux-ide@vger.kernel.org>; Tue,  6 Feb 2007 15:01:52 +0100 (CET)
+	by pitor.hu (Postfix) with SMTP id 2829A690044
+	for <linux-ide@vger.kernel.org>; Tue,  6 Feb 2007 15:01:53 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
