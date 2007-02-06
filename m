@@ -1,52 +1,248 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Serious bug in sata_sil module in 2.6.19.2?
-Date: Tue, 06 Feb 2007 23:44:50 +0900
-Message-ID: <45C89462.2090904@gmail.com>
-References: <45C1BFE0.4080004@effenberger.org> <45C1FBFF.3050706@gmail.com> <45C27A4D.8070802@effenberger.org> <45C82071.5080808@gmail.com> <45C85C3B.4060303@effenberger.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] (2.6.20) cmd64x: fix PIO mode setup (take 3)
+Date: Tue, 6 Feb 2007 17:45:37 +0300
+Message-ID: <200702061745.37517.sshtylyov@ru.mvista.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.224]:15715 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751998AbXBFOo5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Feb 2007 09:44:57 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1896072wxd
-        for <linux-ide@vger.kernel.org>; Tue, 06 Feb 2007 06:44:56 -0800 (PST)
-In-Reply-To: <45C85C3B.4060303@effenberger.org>
+Received: from ns2.mvista.com ([63.81.120.155]:24724 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752183AbXBFOpu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Feb 2007 09:45:50 -0500
+In-Reply-To: <200702040004.24918.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Florian Effenberger <florian@effenberger.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Florian Effenberger wrote:
-> Hi there,
-> 
->> That definitely looks like libata error messages but can't tell anything
->> other than that from it.  It could be cause of system hang and the weird
->> screen or just another symptom of another problem.
->>
->> Is it possible for you to connect a serial console or configure
->> netconsole (Documentation/networking/netconsole.txt) such that the
->> messages are preserved after such hang occurs?  Also, please turn on
->> PRINTK_TIME (Kernel Hacking -> Show timing information on printks) so
->> that we can tell what happens when.  To make the info more useful, you
->> can log into the machine from another machine and run something like
->> "while true; do sleep 1; date; done" on it such that you can tel exactly
->> when the machine went down.
-> 
-> thanks a lot for your feedback. It seems we solved the problem: it was
-> the power supplying unit! We change some stuff (memory, cleaned the
-> machine and so on), but after changing the power supplying unit,
-> everything worked fine. So I guess the new kernel just had a little bit
-> more power consumption than the previous one.
-> 
-> Thanks a lot for your kind help, and sorry for the false alert! :-)
+The driver's tuneproc() method fails to set the drive's own speed -- fix this
+by renaming the function to cmd64x_tune_pio(), making it return the mode set,
+and "wrapping" the new tuneproc() method around it; while at it, also get rid
+of the non-working prefetch control code (filtering out related argument values
+in the "wrapper"), remove redundant PIO5 mode limitation, make cmdprintk() give
+more sensible mode info, and remove mention about the obsolete /proc/ interface.
+Get rid of the broken config_chipset_for_pio() which always tried to set PIO4,
+switch to always auto-tuning PIO instead.
+Oh, and add the missing PIO5 support to the speedproc() method while at it. :-)
 
-Yeap, when power quality degrades, the first thing that breaks is SATA,
-so that explains the error message.  There have been several SATA bug
-reports which turned out to be PSU problems.  Good to have another
-obvious data point on that.  :-)
+Warning: compile tested only -- getting to the real hardware isn't that easy...
 
--- 
-tejun
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+ drivers/ide/pci/cmd64x.c |  108 ++++++++++++++++++-----------------------------
+ 1 files changed, 43 insertions(+), 65 deletions(-)
+
+Index: linux-2.6/drivers/ide/pci/cmd64x.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/cmd64x.c
++++ linux-2.6/drivers/ide/pci/cmd64x.c
+@@ -1,6 +1,6 @@
+ /* $Id: cmd64x.c,v 1.21 2000/01/30 23:23:16
+  *
+- * linux/drivers/ide/pci/cmd64x.c		Version 1.30	Sept 10, 2002
++ * linux/drivers/ide/pci/cmd64x.c		Version 1.41	Feb 3, 2007
+  *
+  * cmd64x.c: Enable interrupts at initialization time on Ultra/PCI machines.
+  *           Note, this driver is not used at all on other systems because
+@@ -12,6 +12,7 @@
+  * Copyright (C) 1998		David S. Miller (davem@redhat.com)
+  *
+  * Copyright (C) 1999-2002	Andre Hedrick <andre@linux-ide.org>
++ * Copyright (C) 2007		MontaVista Software, Inc. <source@mvista.com>
+  */
+ 
+ #include <linux/module.h>
+@@ -262,43 +263,25 @@ static void program_drive_counts (ide_dr
+ }
+ 
+ /*
+- * Attempts to set the interface PIO mode.
+- * The preferred method of selecting PIO modes (e.g. mode 4) is 
+- * "echo 'piomode:4' > /proc/ide/hdx/settings".  Special cases are
+- * 8: prefetch off, 9: prefetch on, 255: auto-select best mode.
+- * Called with 255 at boot time.
++ * This routine selects drive's best PIO mode, calculates setup/active/recovery
++ * counts, and then writes them into the chipset registers.
+  */
+-
+-static void cmd64x_tuneproc (ide_drive_t *drive, u8 mode_wanted)
++static u8 cmd64x_tune_pio (ide_drive_t *drive, u8 mode_wanted)
+ {
+ 	int setup_time, active_time, recovery_time;
+ 	int clock_time, pio_mode, cycle_time;
+ 	u8 recovery_count2, cycle_count;
+ 	int setup_count, active_count, recovery_count;
+ 	int bus_speed = system_bus_clock();
+-	/*byte b;*/
+ 	ide_pio_data_t  d;
+ 
+-	switch (mode_wanted) {
+-		case 8: /* set prefetch off */
+-		case 9: /* set prefetch on */
+-			mode_wanted &= 1;
+-			/*set_prefetch_mode(index, mode_wanted);*/
+-			cmdprintk("%s: %sabled cmd640 prefetch\n",
+-				drive->name, mode_wanted ? "en" : "dis");
+-			return;
+-	}
+-
+-	mode_wanted = ide_get_best_pio_mode (drive, mode_wanted, 5, &d);
+-	pio_mode = d.pio_mode;
++	pio_mode = ide_get_best_pio_mode(drive, mode_wanted, 5, &d);
+ 	cycle_time = d.cycle_time;
+ 
+ 	/*
+ 	 * I copied all this complicated stuff from cmd640.c and made a few
+ 	 * minor changes.  For now I am just going to pray that it is correct.
+ 	 */
+-	if (pio_mode > 5)
+-		pio_mode = 5;
+ 	setup_time  = ide_pio_timings[pio_mode].setup_time;
+ 	active_time = ide_pio_timings[pio_mode].active_time;
+ 	recovery_time = cycle_time - (setup_time + active_time);
+@@ -320,22 +303,33 @@ static void cmd64x_tuneproc (ide_drive_t
+ 	if (active_count > 16)
+ 		active_count = 16; /* maximum allowed by cmd646 */
+ 
+-	/*
+-	 * In a perfect world, we might set the drive pio mode here
+-	 * (using WIN_SETFEATURE) before continuing.
+-	 *
+-	 * But we do not, because:
+-	 *	1) this is the wrong place to do it
+-	 *		(proper is do_special() in ide.c)
+-	 * 	2) in practice this is rarely, if ever, necessary
+-	 */
+ 	program_drive_counts (drive, setup_count, active_count, recovery_count);
+ 
+-	cmdprintk("%s: selected cmd646 PIO mode%d : %d (%dns)%s, "
++	cmdprintk("%s: PIO mode wanted %d, selected %d (%dns)%s, "
+ 		"clocks=%d/%d/%d\n",
+-		drive->name, pio_mode, mode_wanted, cycle_time,
++		drive->name, mode_wanted, pio_mode, cycle_time,
+ 		d.overridden ? " (overriding vendor mode)" : "",
+ 		setup_count, active_count, recovery_count);
++
++	return pio_mode;
++}
++
++/*
++ * Attempts to set drive's PIO mode.
++ * Special cases are 8: prefetch off, 9: prefetch on (both never worked),
++ * and 255: auto-select best mode (used at boot time).
++ */
++static void cmd64x_tune_drive (ide_drive_t *drive, u8 pio)
++{
++	/*
++	 * Filter out the prefetch control values
++	 * to prevent PIO5 from being programmed
++	 */
++	if (pio == 8 || pio == 9)
++		return;
++
++	pio = cmd64x_tune_pio(drive, pio);
++	(void) ide_config_drive_speed(drive, XFER_PIO_0 + pio);
+ }
+ 
+ static u8 cmd64x_ratemask (ide_drive_t *drive)
+@@ -387,22 +381,6 @@ static u8 cmd64x_ratemask (ide_drive_t *
+ 	return mode;
+ }
+ 
+-static void config_cmd64x_chipset_for_pio (ide_drive_t *drive, u8 set_speed)
+-{
+-	u8 speed	= 0x00;
+-	u8 set_pio	= ide_get_best_pio_mode(drive, 4, 5, NULL);
+-
+-	cmd64x_tuneproc(drive, set_pio);
+-	speed = XFER_PIO_0 + set_pio;
+-	if (set_speed)
+-		(void) ide_config_drive_speed(drive, speed);
+-}
+-
+-static void config_chipset_for_pio (ide_drive_t *drive, u8 set_speed)
+-{
+-	config_cmd64x_chipset_for_pio(drive, set_speed);
+-}
+-
+ static int cmd64x_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+@@ -414,7 +392,7 @@ static int cmd64x_tune_chipset (ide_driv
+ 
+ 	u8 speed	= ide_rate_filter(cmd64x_ratemask(drive), xferspeed);
+ 
+-	if (speed > XFER_PIO_4) {
++	if (speed >= XFER_SW_DMA_0) {
+ 		(void) pci_read_config_byte(dev, pciD, &regD);
+ 		(void) pci_read_config_byte(dev, pciU, &regU);
+ 		regD &= ~(unit ? 0x40 : 0x20);
+@@ -438,17 +416,20 @@ static int cmd64x_tune_chipset (ide_driv
+ 		case XFER_SW_DMA_2:	regD |= (unit ? 0x40 : 0x10); break;
+ 		case XFER_SW_DMA_1:	regD |= (unit ? 0x80 : 0x20); break;
+ 		case XFER_SW_DMA_0:	regD |= (unit ? 0xC0 : 0x30); break;
+-		case XFER_PIO_4:	cmd64x_tuneproc(drive, 4); break;
+-		case XFER_PIO_3:	cmd64x_tuneproc(drive, 3); break;
+-		case XFER_PIO_2:	cmd64x_tuneproc(drive, 2); break;
+-		case XFER_PIO_1:	cmd64x_tuneproc(drive, 1); break;
+-		case XFER_PIO_0:	cmd64x_tuneproc(drive, 0); break;
++		case XFER_PIO_5:
++		case XFER_PIO_4:
++		case XFER_PIO_3:
++		case XFER_PIO_2:
++		case XFER_PIO_1:
++		case XFER_PIO_0:
++			(void) cmd64x_tune_pio(drive, speed - XFER_PIO_0);
++			break;
+ 
+ 		default:
+ 			return 1;
+ 	}
+ 
+-	if (speed > XFER_PIO_4) {
++	if (speed >= XFER_SW_DMA_0) {
+ 		(void) pci_write_config_byte(dev, pciU, regU);
+ 		regD |= (unit ? 0x40 : 0x20);
+ 		(void) pci_write_config_byte(dev, pciD, regD);
+@@ -461,8 +442,6 @@ static int config_chipset_for_dma (ide_d
+ {
+ 	u8 speed	= ide_dma_speed(drive, cmd64x_ratemask(drive));
+ 
+-	config_chipset_for_pio(drive, !speed);
+-
+ 	if (!speed)
+ 		return 0;
+ 
+@@ -491,7 +470,7 @@ static int cmd64x_config_drive_for_dma (
+ 
+ 	} else if ((id->capability & 8) || (id->field_valid & 2)) {
+ fast_ata_pio:
+-		config_chipset_for_pio(drive, 1);
++		cmd64x_tune_drive(drive, 255);
+ 		return hwif->ide_dma_off_quietly(drive);
+ 	}
+ 	/* IORDY not supported */
+@@ -694,14 +673,13 @@ static void __devinit init_hwif_cmd64x(i
+ 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
+ 	class_rev &= 0xff;
+ 
+-	hwif->tuneproc  = &cmd64x_tuneproc;
++	hwif->tuneproc  = &cmd64x_tune_drive;
+ 	hwif->speedproc = &cmd64x_tune_chipset;
+ 
+-	if (!hwif->dma_base) {
+-		hwif->drives[0].autotune = 1;
+-		hwif->drives[1].autotune = 1;
++	hwif->drives[0].autotune = hwif->drives[1].autotune = 1;
++
++	if (!hwif->dma_base)
+ 		return;
+-	}
+ 
+ 	hwif->atapi_dma = 1;
+ 
+
