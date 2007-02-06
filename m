@@ -1,225 +1,390 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (pata-2.6 fix queue) piix/slc90e66: more tuneproc() fixing
-Date: Tue, 6 Feb 2007 22:14:28 +0300
-Message-ID: <200702062214.28136.sshtylyov@ru.mvista.com>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [QUESTION] ATA: abnormal status 0x80 on port 0xCC07
+Date: Tue, 06 Feb 2007 21:53:01 +0100
+Message-ID: <45C8EAAD.5000905@googlemail.com>
+References: <6bffcb0e0702031044v601e4fc3icf859544af292789@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:26112 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752215AbXBFTOd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Feb 2007 14:14:33 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965457AbXBFUxU@vger.kernel.org>
+In-Reply-To: <6bffcb0e0702031044v601e4fc3icf859544af292789@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-The tuneproc() method in both these drivers failed to set the drive's own speed.
-Fix this by renaming the function and "wrapping around it" the new tuneproc()
-method.  While at it, convert the rest of the PIO setup code into proper C. :-)
+Michal Piotrowski napisa=C5=82(a):
+> Hi Jeff,
+>=20
+> What does this mean?
+>=20
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd c8/00:08:67:40:68/00:00:00:00:00/e3 tag 0 cdb 0x0 data 4=
+096 in
+>         res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1: soft resetting port
+> ata1.00: configured for UDMA/133
+> ata1: EH complete
+> SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 00 3a 00 00
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd c8/00:00:c3:52:43/00:00:00:00:00/ea tag 0 cdb 0x0 data
+> 131072 in
+>         res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1: soft resetting port
+> ata1.00: configured for UDMA/133
+> ata1: EH complete
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd c8/00:00:c3:52:43/00:00:00:00:00/ea tag 0 cdb 0x0 data
+> 131072 in
+>         res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1: soft resetting port
+> ata1.00: configured for UDMA/133
+> ata1: EH complete
+> SCSI device sda: write cache: enabled, read cache: enabled, doesn't
+> support DPO
+> or FUA
+> SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 00 3a 00 00
+> SCSI device sda: write cache: enabled, read cache: enabled, doesn't
+> support DPO
+> or FUA
+> ATA: abnormal status 0x80 on port 0xCC07
+> ATA: abnormal status 0x80 on port 0xCC07
+> ATA: abnormal status 0x80 on port 0xCC07
+> ata1.00: limiting speed to UDMA/100
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd ca/00:38:8f:7a:01/00:00:00:00:00/e0 tag 0 cdb 0x0 data
+> 28672 out
+>         res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1: soft resetting port
+> ata1.00: configured for UDMA/100
+> ata1: EH complete
+> SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 00 3a 00 00
+> SCSI device sda: write cache: enabled, read cache: enabled, doesn't
+> support DPO                                             or FUA
+> ATA: abnormal status 0x80 on port 0xCC07
+> ATA: abnormal status 0x80 on port 0xCC07
+> ATA: abnormal status 0x80 on port 0xCC07
+> ata1.00: limiting speed to UDMA/66
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd ca/00:40:ab:e2:4a/00:00:00:00:00/ea tag 0 cdb 0x0 data
+> 32768 out
+>         res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1: soft resetting port
+> ata1.00: configured for UDMA/66
+> ata1: EH complete
+> SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 00 3a 00 00
+> SCSI device sda: write cache: enabled, read cache: enabled, doesn't
+> support DPO                                             or FUA
+>=20
+> Is this a hardware problem?
+>=20
 
-Warning: this has only been compile tested (but we are in the merge window
-already anyway :-).
+CONFIG_ATA=3Dy
+CONFIG_ATA_PIIX=3Dy
+CONFIG_SATA_INTEL_COMBINED=3Dy
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+This might be an ata driver problem, 2.6.19-1.2895.fc6 works fine, 2.6.=
+20-rc6 was fine.
 
- drivers/ide/pci/piix.c     |   45 +++++++++++++++++++++++++++++----------------
- drivers/ide/pci/slc90e66.c |   35 +++++++++++++++++++----------------
- 2 files changed, 48 insertions(+), 32 deletions(-)
+This was the latest working kernel
+=46eb  3 00:53:49 euridica kernel: Linux version 2.6.20-rc7 (michal@eur=
+idica.enternet.net.pl) (gcc version 4.1.1 20070105 (Red Hat 4.1.1-51)) =
+#27 SMP PREEMPT Thu Feb 1 11:57:34 CET 2007
 
-Index: linux-2.6/drivers/ide/pci/piix.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/piix.c
-+++ linux-2.6/drivers/ide/pci/piix.c
-@@ -1,10 +1,10 @@
- /*
-- *  linux/drivers/ide/pci/piix.c	Version 0.46	December 3, 2006
-+ *  linux/drivers/ide/pci/piix.c	Version 0.47	February 5, 2007
-  *
-  *  Copyright (C) 1998-1999 Andrzej Krzysztofowicz, Author and Maintainer
-  *  Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
-  *  Copyright (C) 2003 Red Hat Inc <alan@redhat.com>
-- *  Copyright (C) 2006 MontaVista Software, Inc. <source@mvista.com>
-+ *  Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
-  *
-  *  May be copied or modified under the terms of the GNU General Public License
-  *
-@@ -205,14 +205,13 @@ static u8 piix_dma_2_pio (u8 xfer_rate) 
- }
- 
- /**
-- *	piix_tune_drive		-	tune a drive attached to a PIIX
-+ *	piix_tune_pio		-	tune PIIX for PIO mode
-  *	@drive: drive to tune
-  *	@pio: desired PIO mode
-  *
-- *	Set the interface PIO mode based upon  the settings done by AMI BIOS
-- *	(might be useful if drive is not registered in CMOS for any reason).
-+ *	Set the interface PIO mode based upon the settings done by AMI BIOS.
-  */
--static void piix_tune_drive (ide_drive_t *drive, u8 pio)
-+static void piix_tune_pio (ide_drive_t *drive, u8 pio)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= hwif->pci_dev;
-@@ -233,8 +232,6 @@ static void piix_tune_drive (ide_drive_t
- 					{ 2, 1 },
- 					{ 2, 3 }, };
- 
--	pio = ide_get_best_pio_mode(drive, pio, 4, NULL);
--
- 	/*
- 	 * Master vs slave is synchronized above us but the slave register is
- 	 * shared by the two hwifs so the corner case of two slave timeouts in
-@@ -253,19 +250,20 @@ static void piix_tune_drive (ide_drive_t
- 		master_data |=  0x4000;
- 		master_data &= ~0x0070;
- 		if (pio > 1) {
--			/* enable PPE, IE and TIME */
--			master_data = master_data | (control << 4);
-+			/* Set PPE, IE and TIME */
-+			master_data |= control << 4;
- 		}
- 		pci_read_config_byte(dev, slave_port, &slave_data);
--		slave_data = slave_data & (hwif->channel ? 0x0f : 0xf0);
--		slave_data = slave_data | (((timings[pio][0] << 2) | timings[pio][1]) << (hwif->channel ? 4 : 0));
-+		slave_data &= hwif->channel ? 0x0f : 0xf0;
-+		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) <<
-+			       (hwif->channel ? 4 : 0);
- 	} else {
- 		master_data &= ~0x3307;
- 		if (pio > 1) {
- 			/* enable PPE, IE and TIME */
--			master_data = master_data | control;
-+			master_data |= control;
- 		}
--		master_data = master_data | (timings[pio][0] << 12) | (timings[pio][1] << 8);
-+		master_data |= (timings[pio][0] << 12) | (timings[pio][1] << 8);
- 	}
- 	pci_write_config_word(dev, master_port, master_data);
- 	if (is_slave)
-@@ -274,6 +272,21 @@ static void piix_tune_drive (ide_drive_t
- }
- 
- /**
-+ *	piix_tune_drive		-	tune a drive attached to PIIX
-+ *	@drive: drive to tune
-+ *	@pio: desired PIO mode
-+ *
-+ *	Set the drive's PIO mode (might be useful if drive is not registered
-+ *	in CMOS for any reason).
-+ */
-+static void piix_tune_drive (ide_drive_t *drive, u8 pio)
-+{
-+	pio = ide_get_best_pio_mode(drive, pio, 4, NULL);
-+	piix_tune_pio(drive, pio);
-+	(void) ide_config_drive_speed(drive, XFER_PIO_0 + pio);
-+}
-+
-+/**
-  *	piix_tune_chipset	-	tune a PIIX interface
-  *	@drive: IDE drive to tune
-  *	@xferspeed: speed to configure
-@@ -348,8 +361,8 @@ static int piix_tune_chipset (ide_drive_
- 			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
- 	}
- 
--	piix_tune_drive(drive, piix_dma_2_pio(speed));
--	return (ide_config_drive_speed(drive, speed));
-+	piix_tune_pio(drive, piix_dma_2_pio(speed));
-+	return ide_config_drive_speed(drive, speed);
- }
- 
- /**
-Index: linux-2.6/drivers/ide/pci/slc90e66.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/slc90e66.c
-+++ linux-2.6/drivers/ide/pci/slc90e66.c
-@@ -1,8 +1,8 @@
- /*
-- *  linux/drivers/ide/pci/slc90e66.c	Version 0.13	December 30, 2006
-+ *  linux/drivers/ide/pci/slc90e66.c	Version 0.14	February 5, 2007
-  *
-  *  Copyright (C) 2000-2002 Andre Hedrick <andre@linux-ide.org>
-- *  Copyright (C) 2006 MontaVista Software, Inc. <source@mvista.com>
-+ *  Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
-  *
-  * This is a look-alike variation of the ICH0 PIIX4 Ultra-66,
-  * but this keeps the ISA-Bridge and slots alive.
-@@ -57,11 +57,7 @@ static u8 slc90e66_dma_2_pio (u8 xfer_ra
- 	}
- }
- 
--/*
-- *  Based on settings done by AMI BIOS
-- *  (might be useful if drive is not registered in CMOS for any reason).
-- */
--static void slc90e66_tune_drive (ide_drive_t *drive, u8 pio)
-+static void slc90e66_tune_pio (ide_drive_t *drive, u8 pio)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= hwif->pci_dev;
-@@ -80,7 +76,6 @@ static void slc90e66_tune_drive (ide_dri
- 					{ 2, 1 },
- 					{ 2, 3 }, };
- 
--	pio = ide_get_best_pio_mode(drive, pio, 4, NULL);
- 	spin_lock_irqsave(&ide_lock, flags);
- 	pci_read_config_word(dev, master_port, &master_data);
- 
-@@ -94,19 +89,20 @@ static void slc90e66_tune_drive (ide_dri
- 		master_data |=  0x4000;
- 		master_data &= ~0x0070;
- 		if (pio > 1) {
--			/* enable PPE, IE and TIME */
--			master_data = master_data | (control << 4);
-+			/* Set PPE, IE and TIME */
-+			master_data |= control << 4;
- 		}
- 		pci_read_config_byte(dev, slave_port, &slave_data);
--		slave_data = slave_data & (hwif->channel ? 0x0f : 0xf0);
--		slave_data = slave_data | (((timings[pio][0] << 2) | timings[pio][1]) << (hwif->channel ? 4 : 0));
-+		slave_data &= hwif->channel ? 0x0f : 0xf0;
-+		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) <<
-+			       (hwif->channel ? 4 : 0);
- 	} else {
- 		master_data &= ~0x3307;
- 		if (pio > 1) {
- 			/* enable PPE, IE and TIME */
--			master_data = master_data | control;
-+			master_data |= control;
- 		}
--		master_data = master_data | (timings[pio][0] << 12) | (timings[pio][1] << 8);
-+		master_data |= (timings[pio][0] << 12) | (timings[pio][1] << 8);
- 	}
- 	pci_write_config_word(dev, master_port, master_data);
- 	if (is_slave)
-@@ -114,6 +110,13 @@ static void slc90e66_tune_drive (ide_dri
- 	spin_unlock_irqrestore(&ide_lock, flags);
- }
- 
-+static void slc90e66_tune_drive (ide_drive_t *drive, u8 pio)
-+{
-+	pio = ide_get_best_pio_mode(drive, pio, 4, NULL);
-+	slc90e66_tune_pio(drive, pio);
-+	(void) ide_config_drive_speed(drive, XFER_PIO_0 + pio);
-+}
-+
- static int slc90e66_tune_chipset (ide_drive_t *drive, u8 xferspeed)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
-@@ -162,8 +165,8 @@ static int slc90e66_tune_chipset (ide_dr
- 			pci_write_config_word(dev, 0x4a, reg4a & ~a_speed);
- 	}
- 
--	slc90e66_tune_drive(drive, slc90e66_dma_2_pio(speed));
--	return (ide_config_drive_speed(drive, speed));
-+	slc90e66_tune_pio(drive, slc90e66_dma_2_pio(speed));
-+	return ide_config_drive_speed(drive, speed);
- }
- 
- static int slc90e66_config_drive_for_dma (ide_drive_t *drive)
+This was the first bad one
+=46eb  3 18:26:07 euridica kernel: Linux version 2.6.20-rc7 (michal@eur=
+idica.enternet.net.pl) (gcc version 4.1.1 20070105 (Red Hat 4.1.1-51)) =
+#28 SMP PREEMPT Sat Feb 3 02:07:08 CET 2007
 
+I'll revert this patch.
+
+commit 7a0f1c8a4b1052da7efc7715e2e557255b632712
+Author: Lennert Buytenhek <buytenh@wantstofly.org>
+Date:   Mon Jan 29 13:28:47 2007 +0100
+
+    ata_if_xfermask() word 51 fix
+
+    If word 53 bit 1 isn't set, the maximum PIO mode is indicated by
+    the upper 8 bits of word 51, not the lower 8 bits.  Fixes PIO mode
+    detection on old Compact Flash cards.
+
+    Signed-off-by: Lennert Buytenhek <buytenh@wantstofly.org>
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index a388a8d..cf70702 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1037,7 +1037,7 @@ static unsigned int ata_id_xfermask(cons
+                 * the PIO timing number for the maximum. Turn it into
+                 * a mask.
+                 */
+-               u8 mode =3D id[ATA_ID_OLD_PIO_MODES] & 0xFF;
++               u8 mode =3D (id[ATA_ID_OLD_PIO_MODES] >> 8) & 0xFF;
+                if (mode < 5)   /* Valid PIO range */
+                        pio_mask =3D (2 << mode) - 1;
+                else
+
+There are 55 per cent chances that this is a hardware problem and 45 % =
+that this is a software bug.
+
+uptime
+ 21:36:36 up  4:48,  0 users,  load average: 0.62, 0.71, 0.65
+
+on 2.6.19-1.2895.fc6 without any hdd related problems.
+
+http://www.stardust.webpages.pl/files/tbf/euridica/2.6.20-rc7/messages
+
+sudo /usr/sbin/smartctl -a -d ata /dev/sda
+smartctl version 5.36 [i386-redhat-linux-gnu] Copyright (C) 2002-6 Bruc=
+e Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+Device Model:     ST3160811AS
+Serial Number:    5PT0KRNR
+=46irmware Version: 3.AAE
+User Capacity:    160,041,885,696 bytes
+Device is:        Not in smartctl database [for details use: -P showall=
+]
+ATA Version is:   7
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Tue Feb  6 21:50:32 2007 CET
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
+SMART overall-health self-assessment test result: PASSED
+
+General SMART Values:
+Offline data collection status:  (0x82) Offline data collection activit=
+y
+                                        was completed without error.
+                                        Auto Offline Data Collection: E=
+nabled.
+Self-test execution status:      (   0) The previous self-test routine =
+completed
+                                        without error or no self-test h=
+as ever
+                                        been run.
+Total time to complete Offline
+data collection:                 ( 430) seconds.
+Offline data collection
+capabilities:                    (0x5b) SMART execute Offline immediate=
+=2E
+                                        Auto Offline data collection on=
+/off support.
+                                        Suspend Offline collection upon=
+ new
+                                        command.
+                                        Offline surface scan supported.
+                                        Self-test supported.
+                                        No Conveyance Self-test support=
+ed.
+                                        Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before enterin=
+g
+                                        power-saving mode.
+                                        Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+                                        General Purpose Logging support=
+ed.
+Short self-test routine
+recommended polling time:        (   1) minutes.
+Extended self-test routine
+recommended polling time:        (  54) minutes.
+
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDAT=
+ED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000f   119   100   006    Pre-fail  Alway=
+s       -       231824575
+  3 Spin_Up_Time            0x0003   099   096   000    Pre-fail  Alway=
+s       -       0
+  4 Start_Stop_Count        0x0032   100   100   020    Old_age   Alway=
+s       -       309
+  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Alway=
+s       -       0
+  7 Seek_Error_Rate         0x000f   075   060   030    Pre-fail  Alway=
+s       -       29962423
+  9 Power_On_Hours          0x0032   098   098   000    Old_age   Alway=
+s       -       2207
+ 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Alway=
+s       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Alway=
+s       -       520
+187 Unknown_Attribute       0x0032   100   100   000    Old_age   Alway=
+s       -       0
+189 Unknown_Attribute       0x003a   100   100   000    Old_age   Alway=
+s       -       0
+190 Unknown_Attribute       0x0022   057   053   045    Old_age   Alway=
+s       -       724107307
+194 Temperature_Celsius     0x0022   043   047   000    Old_age   Alway=
+s       -       43 (Lifetime Min/Max 0/17)
+195 Hardware_ECC_Recovered  0x001a   061   043   000    Old_age   Alway=
+s       -       190459272
+197 Current_Pending_Sector  0x0012   001   001   000    Old_age   Alway=
+s       -       4294967294
+198 Offline_Uncorrectable   0x0010   001   001   000    Old_age   Offli=
+ne      -       4294967294
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Alway=
+s       -       0
+200 Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age   Offli=
+ne      -       0
+202 TA_Increase_Count       0x0032   100   253   000    Old_age   Alway=
+s       -       0
+
+SMART Error Log Version: 1
+ATA Error Count: 6 (device log contains only the most recent five error=
+s)
+        CR =3D Command Register [HEX]
+        FR =3D Features Register [HEX]
+        SC =3D Sector Count Register [HEX]
+        SN =3D Sector Number Register [HEX]
+        CL =3D Cylinder Low Register [HEX]
+        CH =3D Cylinder High Register [HEX]
+        DH =3D Device/Head Register [HEX]
+        DC =3D Device Command Register [HEX]
+        ER =3D Error register [HEX]
+        ST =3D Status register [HEX]
+Powered_Up_Time is measured from power on, and printed as
+DDd+hh:mm:SS.sss where DD=3Ddays, hh=3Dhours, mm=3Dminutes,
+SS=3Dsec, and sss=3Dmillisec. It "wraps" after 49.710 days.
+
+Error 6 occurred at disk power-on lifetime: 2202 hours (91 days + 18 ho=
+urs)
+  When the command that caused the error occurred, the device was activ=
+e or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  40 51 00 bc 0c 02 e0  Error: UNC at LBA =3D 0x00020cbc =3D 134332
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 00 00 2f 0c 02 e0 00      00:01:07.193  READ DMA
+  ec 03 46 00 00 00 a0 02      00:01:07.192  IDENTIFY DEVICE
+  ef 03 46 00 00 00 a0 00      00:01:07.180  SET FEATURES [Set transfer=
+ mode]
+  ec 00 00 bc 0c 02 a0 02      00:01:05.100  IDENTIFY DEVICE
+  c8 00 00 2f 0c 02 e0 00      00:01:05.096  READ DMA
+
+Error 5 occurred at disk power-on lifetime: 2202 hours (91 days + 18 ho=
+urs)
+  When the command that caused the error occurred, the device was activ=
+e or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  40 51 00 bc 0c 02 e0  Error: UNC at LBA =3D 0x00020cbc =3D 134332
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 00 00 2f 0c 02 e0 00      00:01:07.193  READ DMA
+  ec 03 46 00 00 00 a0 02      00:01:07.192  IDENTIFY DEVICE
+  ef 03 46 00 00 00 a0 00      00:01:07.180  SET FEATURES [Set transfer=
+ mode]
+  ec 00 00 bc 0c 02 a0 02      00:01:05.100  IDENTIFY DEVICE
+  c8 00 00 2f 0c 02 e0 00      00:01:05.096  READ DMA
+
+Error 4 occurred at disk power-on lifetime: 2202 hours (91 days + 18 ho=
+urs)
+  When the command that caused the error occurred, the device was activ=
+e or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  40 51 00 bc 0c 02 e0  Error: UNC at LBA =3D 0x00020cbc =3D 134332
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 00 00 2f 0c 02 e0 00      00:01:07.193  READ DMA
+  ec 03 46 00 00 00 a0 02      00:01:07.192  IDENTIFY DEVICE
+  ef 03 46 00 00 00 a0 00      00:01:07.180  SET FEATURES [Set transfer=
+ mode]
+  ec 00 00 bc 0c 02 a0 02      00:01:05.100  IDENTIFY DEVICE
+  c8 00 00 2f 0c 02 e0 00      00:01:05.096  READ DMA
+
+Error 3 occurred at disk power-on lifetime: 2202 hours (91 days + 18 ho=
+urs)
+  When the command that caused the error occurred, the device was activ=
+e or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  40 51 00 bc 0c 02 e0  Error: UNC at LBA =3D 0x00020cbc =3D 134332
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 00 00 2f 0c 02 e0 00      00:01:00.301  READ DMA
+  ec 03 46 00 00 00 a0 02      00:01:00.299  IDENTIFY DEVICE
+  ef 03 46 00 00 00 a0 00      00:01:00.296  SET FEATURES [Set transfer=
+ mode]
+  ec 00 00 bc 0c 02 a0 02      00:01:05.100  IDENTIFY DEVICE
+  c8 00 00 2f 0c 02 e0 00      00:01:05.096  READ DMA
+
+Error 2 occurred at disk power-on lifetime: 2202 hours (91 days + 18 ho=
+urs)
+  When the command that caused the error occurred, the device was activ=
+e or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  40 51 00 bc 0c 02 e0  Error: UNC at LBA =3D 0x00020cbc =3D 134332
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 00 00 2f 0c 02 e0 00      00:01:00.301  READ DMA
+  ec 03 46 00 00 00 a0 02      00:01:00.299  IDENTIFY DEVICE
+  ef 03 46 00 00 00 a0 00      00:01:00.296  SET FEATURES [Set transfer=
+ mode]
+  ec 00 00 bc 0c 02 a0 02      00:01:00.294  IDENTIFY DEVICE
+  c8 00 00 2f 0c 02 e0 00      00:01:00.293  READ DMA
+
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(ho=
+urs)  LBA_of_first_error
+# 1  Extended offline    Completed without error       00%      2180   =
+      -
+# 2  Extended offline    Completed without error       00%       390   =
+      -
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute de=
+lay.
+
+
+Regards,
+Michal
+
+--=20
+Michal K. K. Piotrowski
+LTG - Linux Testers Group
+(http://www.stardust.webpages.pl/ltg/)
