@@ -1,48 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_promise: new EH conversion for 20619 chips
-Date: Tue, 06 Feb 2007 16:19:58 -0500
-Message-ID: <45C8F0FE.90201@garzik.org>
-References: <200702042144.l14LisBO003772@harpo.it.uu.se>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: fix drive side 80c cable check, take 2
+Date: Wed, 07 Feb 2007 00:09:48 +0100
+Message-ID: <45C90ABC.9060205@gmail.com>
+References: <20070205074713.GF1625@htj.dyndns.org>	 <20070205111837.1981bda2@localhost.localdomain>	 <20070205124713.GL1625@htj.dyndns.org>	 <20070205132849.484e97a1@localhost.localdomain> <58cb370e0702061454j1dfe2492w240ca06c028043b7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54638 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965514AbXBFVUA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Feb 2007 16:20:00 -0500
-In-Reply-To: <200702042144.l14LisBO003772@harpo.it.uu.se>
+Received: from ug-out-1314.google.com ([66.249.92.171]:22953 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030513AbXBFXEt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Feb 2007 18:04:49 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so28398uga
+        for <linux-ide@vger.kernel.org>; Tue, 06 Feb 2007 15:04:48 -0800 (PST)
+In-Reply-To: <58cb370e0702061454j1dfe2492w240ca06c028043b7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, stable@kernel.org, linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> This patch updates the sata_promise driver to use new-style
-> libata error handling for 20619 (TX4000) chips. sata_promise
-> already uses new EH for the other chips it supports, so the
-> patch is quite simple:
+
+Alan wrote:
+> On Mon, 5 Feb 2007 21:47:13 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
-> * remove ->phy_reset and ->eng_timeout ops from pdc_pata_ops,
->   and instead bind ->freeze, ->thaw, ->error_handler, and
->   ->post_internal_cmd to existing new EH functions
-> * drop ATA_FLAG_SRST from board_20619's flags
-> * remove now unused pdc_pata_phy_reset() and pdc_eng_timeout()
-> * pdc_pata_cbl_detect() is now unused, but it contains a cable
->   detection procedure that I don't think is mentioned in public
->   documentation, so for now I just wrapped it with #if 0/#endif
+>> eighty_ninty_three() had word 93 validitity check but not the 80c bit
+>> test itself (bit 12).  This increases the chance of incorrect wire
+>> detection especially because host side cable detection is often
+>> unreliable and we sometimes soley depend on drive side cable
+>> detection.  Fix it.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ---
+>> Ah... thanks.  That explains the code much better.  Fixed accordingly.
+>>
+>> diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+>> index badde63..6558055 100644
+>> --- a/drivers/ide/ide-iops.c
+>> +++ b/drivers/ide/ide-iops.c
+>> @@ -607,6 +607,8 @@ u8 eighty_ninty_three (ide_drive_t *drive)
+>>       if(!(drive->id->hw_config & 0x4000))
+>>               return 0;
+>>  #endif /* CONFIG_IDEDMA_IVB */
+>> +     if (!(drive->id->hw_config & 0x2000))
+>> +             return 0;
+>>       return 1;
 > 
-> Tested on a TX4000 with both modern working disks and old/quirky
-> disks. Also used a CD-RW drive to test reading and writing CDs.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Acked-by: Alan Cox <alan@redhat.com>
 
-The lack of cable detection definitely sounds like a bug...?
-
-The standard procedure is to set ap->cbl in your 'prereset' EH hook, as 
-is done in drivers/ata/pata_sil680.c.
-
-	Jeff
-
-
-
+applied
