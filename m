@@ -1,43 +1,49 @@
-From: Florian Effenberger <florian@effenberger.org>
-Subject: Re: Serious bug in sata_sil module in 2.6.19.2?
-Date: Tue, 06 Feb 2007 11:45:15 +0100
-Message-ID: <45C85C3B.4060303@effenberger.org>
-References: <45C1BFE0.4080004@effenberger.org> <45C1FBFF.3050706@gmail.com> <45C27A4D.8070802@effenberger.org> <45C82071.5080808@gmail.com>
+From: Haavard Skinnemoen <hskinnemoen@atmel.com>
+Subject: Re: [PATCH] libata: Fix (hopefully) all the remaining problems with
+ devices failing setup/identify
+Date: Tue, 6 Feb 2007 14:42:30 +0100
+Message-ID: <20070206144230.5421c01d@dhcp-252-105.norway.atmel.com>
+References: <20070131172605.2c5dfc78@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from garfield.effenberger.org ([85.214.43.221]:51935 "EHLO
-	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938AbXBFKpW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Feb 2007 05:45:22 -0500
-In-Reply-To: <45C82071.5080808@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752180AbXBFNmk@vger.kernel.org>
+In-Reply-To: <20070131172605.2c5dfc78@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi there,
+On Wed, 31 Jan 2007 17:26:05 +0000
+Alan <alan@lxorguk.ukuu.org.uk> wrote:
 
-> That definitely looks like libata error messages but can't tell anything
-> other than that from it.  It could be cause of system hang and the weird
-> screen or just another symptom of another problem.
+> Two fixes in this test patch. One of them allows old CF cards to refuse
+> pio mode setting, and one to wait for the drive to settle after a set
+> features changes the speed settings, which is based upon the workarounds
+> used by drivers/ide.
 > 
-> Is it possible for you to connect a serial console or configure
-> netconsole (Documentation/networking/netconsole.txt) such that the
-> messages are preserved after such hang occurs?  Also, please turn on
-> PRINTK_TIME (Kernel Hacking -> Show timing information on printks) so
-> that we can tell what happens when.  To make the info more useful, you
-> can log into the machine from another machine and run something like
-> "while true; do sleep 1; date; done" on it such that you can tel exactly
-> when the machine went down.
+> Please test and report back if you have an afflicted system. This patch
+> isn't for merging just testing.
 
-thanks a lot for your feedback. It seems we solved the problem: it was 
-the power supplying unit! We change some stuff (memory, cleaned the 
-machine and so on), but after changing the power supplying unit, 
-everything worked fine. So I guess the new kernel just had a little bit 
-more power consumption than the previous one.
+Just ran into the CF problem you describe when implementing support for
+CompactFlash on AVR32 using an old 32 MB TwinMos card. Works fine with
+this patch applied; without it, libata gives up after failing to set
+xfermode (err_mask=0x1).
 
-Thanks a lot for your kind help, and sorry for the false alert! :-)
+> The CF card fix will still display errors when the card works (got fixes
+> for that once I know the cure works) but should then be found/usable.
 
-Florian
+Actually, I don't see any errors, but the card comes up in PIO0 mode
+(which is correct behaviour as far as I can tell):
+
+ata1: PATA max PIO0 cmd 0xA4800000 ctl 0xA480000E bmdma 0x0 irq 67
+scsi0 : pata_pcmcia
+ata1.00: CFA, max PIO0, 62592 sectors: LBA
+ata1.00: ata1: dev 0 multi count 0
+ata1.00: configured for PIO0
+scsi 0:0:0:0: Direct-Access     ATA      32MB CHH         Rev  PQ: 0 ANSI: 5
+
+Thanks for the patch. I would probably have spent a long time debugging
+this without it.
+
+Haavard
