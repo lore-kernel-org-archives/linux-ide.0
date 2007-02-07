@@ -1,38 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_sl82c105: wrong assumptions about compatible PIO
- modes
-Date: Tue, 06 Feb 2007 19:37:19 -0500
-Message-ID: <45C91F3F.1010300@garzik.org>
-References: <200701302040.30895.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/1] libata: rearrange dmesg info to add full ATA revision
+Date: Tue, 06 Feb 2007 19:42:20 -0500
+Message-ID: <45C9206C.10202@garzik.org>
+References: <20070131021051.GA3403@bounceswoosh.org> <20070131060040.GA3361@bounceswoosh.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56899 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56930 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030352AbXBGAhW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Feb 2007 19:37:22 -0500
-In-Reply-To: <200701302040.30895.sshtylyov@ru.mvista.com>
+	id S933113AbXBGAmW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Feb 2007 19:42:22 -0500
+In-Reply-To: <20070131060040.GA3361@bounceswoosh.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: edmudama@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Sergei Shtylyov wrote:
-> Fix the wrong "compatible" PIO mode choices: MWDMA0 has 480 ns cycle while PIO1
-> only has 383 ns cycle, and MWDMA2 timings matchs those of PIO4 exactly.
+Eric D. Mudama wrote:
+> Per Jeff's suggestion, this patch rearranges the info printed for ATA
+> drives into dmesg to add the full ATA firmware revision and model
+> information, while keeping the output to 2 lines.
 > 
-> ---
-> Frankly speaking, I'm not sure this function is useful or correct at all --
-> with the DMA timings being actually programmed in sl82c105_bmdma_start()...
-> 
-> And the issue of the same registers being used for both PIO and DMA timings is
-> not specific for this driver at all but seems to be addressed only by it...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
->  drivers/ata/pata_sl82c105.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+> Signed-off-by: Eric D. Mudama <edmudama@gmail.com>
 
-applied
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index 1df9416..aa9c1fd 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -60,6 +60,8 @@ enum {
+>  
+>  	ATA_PCI_CTL_OFS		= 2,
+>  	ATA_SERNO_LEN		= 20,
+> +	ATA_ID_PROD_LEN         = 40,
+> +	ATA_ID_FW_REV_LEN       = 16,
+>  	ATA_UDMA0		= (1 << 0),
+>  	ATA_UDMA1		= ATA_UDMA0 | (1 << 1),
+>  	ATA_UDMA2		= ATA_UDMA1 | (1 << 2),
+
+applied to netdev#upstream, sans the above part.  I'm not sure where you 
+got 16 there?  It's 8 ASCII chars in the spec.
+
+	Jeff
+
 
