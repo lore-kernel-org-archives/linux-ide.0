@@ -1,33 +1,76 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] (2.6.20) pata_oldpiix: fix PIO2 underclocking
-Date: Tue, 06 Feb 2007 19:54:10 -0500
-Message-ID: <45C92332.3090607@garzik.org>
-References: <200702051945.38972.sshtylyov@ru.mvista.com>
+From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [QUESTION] ATA: abnormal status 0x80 on port 0xCC07
+Date: Wed, 7 Feb 2007 01:54:32 +0100
+Message-ID: <6bffcb0e0702061654x4ed237c1mdb619b9ab513283c@mail.gmail.com>
+References: <6bffcb0e0702031044v601e4fc3icf859544af292789@mail.gmail.com>
+	 <45C8EAAD.5000905@googlemail.com>
+	 <6bffcb0e0702061557r2ba51186ra33a428e1a1f051@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57058 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030479AbXBGAyM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Feb 2007 19:54:12 -0500
-In-Reply-To: <200702051945.38972.sshtylyov@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030481AbXBGAyf@vger.kernel.org>
+In-Reply-To: <6bffcb0e0702061557r2ba51186ra33a428e1a1f051@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Sergei Shtylyov wrote:
-> Fix the PIO mode 2 using mode 0 timings -- this driver should enable the
-> fast timing bank starting with PIO2, just like the ata_piix driver does.
-> Also, fix/rephrase some comments while at it.
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
-> ---
->  drivers/ata/pata_oldpiix.c |   18 ++++++++++--------
->  1 files changed, 10 insertions(+), 8 deletions(-)
+On 07/02/07, Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
+> On 06/02/07, Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
+[..]
+> > I'll revert this patch.
+> >
+> > commit 7a0f1c8a4b1052da7efc7715e2e557255b632712
+> > Author: Lennert Buytenhek <buytenh@wantstofly.org>
+> > Date:   Mon Jan 29 13:28:47 2007 +0100
+> >
+> >     ata_if_xfermask() word 51 fix
+> >
+> >     If word 53 bit 1 isn't set, the maximum PIO mode is indicated by
+> >     the upper 8 bits of word 51, not the lower 8 bits.  Fixes PIO mode
+> >     detection on old Compact Flash cards.
+> >
+> >     Signed-off-by: Lennert Buytenhek <buytenh@wantstofly.org>
+> >     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+> >
+>
+> It's not this patch. Maybe this one?
+>
+> commit 49c8042996c84f0df6c49ea2e28a7ef38cd7d773
+> Author: Brian King <brking@linux.vnet.ibm.com>
+> Date:   Tue Jan 30 11:32:26 2007 -0600
+>
+>     libata: Initialize nbytes for internal sg commands
+>
+>     Some LLDDs, like ipr, use nbytes and pad_len to determine
+>     the total data transfer length of a command. Make sure
+>     nbytes gets initialized for internally generated commands.
+>
+>     Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+>     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index cf70702..667acd2 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1250,6 +1250,7 @@ unsigned ata_exec_internal_sg(struct ata
+>
+>                 ata_sg_init(qc, sg, n_elem);
+>                 qc->nsect = buflen / ATA_SECT_SIZE;
+> +               qc->nbytes = buflen;
+>         }
+>
+>         qc->private_data = &wait;
+>
+> It has something to do with SCSI commands.
 
-applied
+Kernel still hangs...
 
+Regards,
+Michal
 
+-- 
+Michal K. K. Piotrowski
+LTG - Linux Testers Group
+(http://www.stardust.webpages.pl/ltg/)
