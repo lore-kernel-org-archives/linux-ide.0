@@ -1,29 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Add a host flag to indicate lack of IORDY capability
-Date: Tue, 06 Feb 2007 19:47:06 -0500
-Message-ID: <45C9218A.20802@garzik.org>
-References: <20070205161515.38b8107d@localhost.localdomain>
+Subject: Re: [PATCH] (2.6.20) pata_mpiix: probing cleanup (resend)
+Date: Tue, 06 Feb 2007 19:53:48 -0500
+Message-ID: <45C9231C.2020201@garzik.org>
+References: <200702052108.55763.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57010 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:57044 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933285AbXBGArI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Feb 2007 19:47:08 -0500
-In-Reply-To: <20070205161515.38b8107d@localhost.localdomain>
+	id S933318AbXBGAxt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Feb 2007 19:53:49 -0500
+In-Reply-To: <200702052108.55763.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Alan wrote:
-> This is the first preparation to doing the !IORDY cases properly. Further
-> diffs will then add the needed logic to do it right.
+Sergei Shtylyov wrote:
+> [Cr*p, forgot both the sign-off and cut-off! :-)]
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> MPIIX has only single channel IDE which can be configured for either primary or
+> secondary legacy I/O ports and IRQ.  So, get rid of the unneeded second probe
+> entry in mpiix_init_one() and of the invalid (but unused anyway) enable bits in
+> mpiix_pre_reset().
+> 
+> Warning: this cleanup has only been compile-tested...
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-ACK but please rediff&resend, it clashed with some previous driver 
-bombing runs
+applied, on top of Tejun's probing cleanup by way of devres.
+
+warning: this merge has only been compiled-tested... :)
+
+	Jeff
 
 
