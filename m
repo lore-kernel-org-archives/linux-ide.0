@@ -1,33 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Early CFA adapters are not required to support
- mode setting
-Date: Tue, 06 Feb 2007 20:04:42 -0500
-Message-ID: <45C925AA.9050807@garzik.org>
-References: <20070205162830.5f9cff4a@localhost.localdomain>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: [PATCH] (pata-2.6 fix queue) piix/slc90e66: more tuneproc() fixing
+Date: Wed, 7 Feb 2007 02:47:22 +0100
+Message-ID: <58cb370e0702061747u2bf64993ic5feab867f13d628@mail.gmail.com>
+References: <200702062214.28136.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57153 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965616AbXBGBEq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Feb 2007 20:04:46 -0500
-In-Reply-To: <20070205162830.5f9cff4a@localhost.localdomain>
+Received: from nf-out-0910.google.com ([64.233.182.190]:4567 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965608AbXBGBrY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Feb 2007 20:47:24 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so365343nfa
+        for <linux-ide@vger.kernel.org>; Tue, 06 Feb 2007 17:47:23 -0800 (PST)
+In-Reply-To: <200702062214.28136.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-Alan wrote:
-> If we are doing a PIO setup for a CFA card and it blows up with a device
-> error then assume it is an older CFA card which doesn't support this
-> rather than failing the device out of existance.
-> 
-> Stands seperate to the quieting patch but that is obviously useful with
-> this change.
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+On 2/6/07, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> The tuneproc() method in both these drivers failed to set the drive's own speed.
+> Fix this by renaming the function and "wrapping around it" the new tuneproc()
+> method.  While at it, convert the rest of the PIO setup code into proper C. :-)
+>
+> Warning: this has only been compile tested (but we are in the merge window
+> already anyway :-).
+
+I tested it quickly on ICH4.
+
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 applied
-
-
