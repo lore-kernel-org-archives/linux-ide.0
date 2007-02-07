@@ -1,59 +1,35 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Impact of no_lba48{_dma} = 1 ?
-Date: Wed, 7 Feb 2007 11:58:26 +0000
-Message-ID: <20070207115826.2e3609e3@localhost.localdomain>
-References: <45C9A23E.3030201@imc-berlin.de>
+Subject: Re: [BUG?] ata disk running maximum at DMA33 with 2.6.20 and new
+ pata driver, NV CK804 ide controller.
+Date: Wed, 7 Feb 2007 12:20:00 +0000
+Message-ID: <20070207122000.2e17ecb6@localhost.localdomain>
+References: <200702070119.36320.genoni@darkstar.oltrelinux.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42676 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161220AbXBGLpb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Feb 2007 06:45:31 -0500
-In-Reply-To: <45C9A23E.3030201@imc-berlin.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161269AbXBGMHV@vger.kernel.org>
+In-Reply-To: <200702070119.36320.genoni@darkstar.oltrelinux.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luigi Genoni <genoni@sns.it>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, htejun@gmail.com, alan@red-hat.com, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Steven Scholz <steven.scholz@imc-berlin.de>
-Cc: linux-ide@vger.kernel.org
 
-> And wrote a evry simple IDE driver for it. BAsicly the HDD internbal
-> registers are just memory mapped. No DMA is supported by the hardware.
-> But I think it would be capable of 48bit LBA mode (which just means setting
-> the HOB bit in the device control register of the HDD correctly?)
+On Wed, 7 Feb 2007 01:19:36 +0100
+Luigi Genoni <genoni@sns.it> wrote:
 
-And not caching stuff wrongly
+> Hi,
+> since upgrading to kernel 2.6.20 my pata disk, using new pata driver, is
+> initialized maximum  in DMA33 mode (and obviously performances drop 
+> consequently), as you can see from:
 
-> 
-> Now I wonder what the impact of setting
-> 
-> 	hwif->no_lba48 = 1;		/* 1 = cannot do LBA48 */
-> 	hwif->no_lba48_dma = 1;		/* 1 = cannot do LBA48 DMA */
+Interesting.
 
-no_lba48_dma turns off the use of DMA for 48bit commands, the kernel
-tries to issue DMA commands where possible but if it cannot issues LBA48
-PIO commands (eg for the end part of a disk)
+> Willing to test any patch.
 
-no_lba48 disables LBA48 so you won't be able to access the further parts
-of the disk or some newer features.
+Firstly can you see if its consistently the case that booting 2.6.20
+gives UDMA33 and 2.6.19 UDMA100 over a few reboots. If it is please drop
+the 2.6.19 drivers/ata/pamd_amd into 2.6.20 and try that.
 
-> would be.
-> 
-> IIUC then no_lba48 would limit the useable size to 130GB?
-> Will every HDD work with no_lba48 set to 1? Even those which actually
-> support 48bit LBA?
+Thanks
 
-No guarantees, but you ought to be able to use the first part of the disk
-ok.
- 
-> How about performance impact of
-> 
-> 		if (hwif->no_lba48 || hwif->no_lba48_dma)
-> 			hwif->rqsize = 256;
-> 		else
-> 			hwif->rqsize = 65536;
-> 
-> in ide-probe.c ?
-
-Only relevant for DMA really
-
+Alan
