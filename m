@@ -1,99 +1,67 @@
-From: Conke Hu <conke.hu@amd.com>
-Subject: Re: [git patches] libata fixes
-Date: Wed, 07 Feb 2007 15:11:57 +0800
-Message-ID: <1170832317.3787.20.camel@localhost.localdomain>
-References: <20070202165842.GA6412@havoc.gtf.org>
-Reply-To: conke.hu@amd.com
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: sata_vsc.c cache line size question
+Date: Wed, 7 Feb 2007 00:38:50 -0800
+Message-ID: <20070207083850.GA138013@sgi.com>
+References: <92952AEF1F064042B6EF2522E0EEF43703EE318A@EXNA.corp.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-cpk.frontbridge.com ([207.46.163.16]:6024 "EHLO
-	outbound1-cpk-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965645AbXBGHLa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Feb 2007 02:11:30 -0500
-In-Reply-To: <20070202165842.GA6412@havoc.gtf.org>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:52608 "EHLO omx2.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030526AbXBGIiz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Feb 2007 03:38:55 -0500
+Content-Disposition: inline
+In-Reply-To: <92952AEF1F064042B6EF2522E0EEF43703EE318A@EXNA.corp.stratus.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Dailey, Nate" <Nate.Dailey@stratus.com>
+Cc: linux-ide@vger.kernel.org
 
-On Fri, 2007-02-02 at 11:58 -0500, Jeff Garzik wrote:
-> Brian and Tejun's patches fix really ugly bugs, Alan's are of less
-> importance
+On Thu, Jan 18, 2007 at 09:42:44AM -0500, Dailey, Nate wrote:
+> Okay, trying again as an attachment...
 > 
-> Please pull from 'upstream-linus' branch of
-> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-> 
-> to receive the following updates:
-> 
->  drivers/ata/libata-core.c  |    1 +
->  drivers/ata/pata_atiixp.c  |   11 +++++++++--
->  drivers/ata/pata_jmicron.c |   18 +++++-------------
->  drivers/ata/pata_via.c     |    3 ++-
->  drivers/pci/quirks.c       |    4 ++--
->  include/linux/libata.h     |    2 ++
->  6 files changed, 21 insertions(+), 18 deletions(-)
-> 
-> Alan (3):
->       pata_atiixp: propogate cable detection hack from drivers/ide to the new driver
->       pata_via: Correct missing comments
->       libata: Fix ata_busy_wait() kernel docs
-> 
-> Brian King (1):
->       libata: Initialize nbytes for internal sg commands
-> 
-> Tejun Heo (1):
->       ahci/pata_jmicron: fix JMicron quirk
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index cf70702..667acd2 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1250,6 +1250,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
->  
->  		ata_sg_init(qc, sg, n_elem);
->  		qc->nsect = buflen / ATA_SECT_SIZE;
-> +		qc->nbytes = buflen;
->  	}
->  
->  	qc->private_data = &wait;
-> diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-> index 6f6672c..504e1db 100644
-> --- a/drivers/ata/pata_atiixp.c
-> +++ b/drivers/ata/pata_atiixp.c
-> @@ -36,15 +36,22 @@ enum {
->  static int atiixp_pre_reset(struct ata_port *ap)
->  {
->  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-> -	static struct pci_bits atiixp_enable_bits[] = {
-> +	static const struct pci_bits atiixp_enable_bits[] = {
->  		{ 0x48, 1, 0x01, 0x00 },
->  		{ 0x48, 1, 0x08, 0x00 }
->  	};
-> +	u8 udma;
->  
->  	if (!pci_test_config_bits(pdev, &atiixp_enable_bits[ap->port_no]))
->  		return -ENOENT;
->  
-> -	ap->cbl = ATA_CBL_PATA80;
-> +	/* Hack from drivers/ide/pci. Really we want to know how to do the
-> +	   raw detection not play follow the bios mode guess */
-> +	pci_read_config_byte(pdev, ATIIXP_IDE_UDMA_MODE + ap->port_no, &udma);
-> +	if ((udma & 0x07) >= 0x04 || (udma & 0x70) >= 0x40)
-> +		ap->cbl = ATA_CBL_PATA80;
-> +	else
-> +		ap->cbl = ATA_CBL_PATA40;
->  	return ata_std_prereset(ap);
->  }
-> (snip)
->  
+> Nate
 
-Alan's patch is also important. Thank you :)
+Hi Nate, sorry about the delay.  This patch works fine.  Please see
+http://linux.yyz.us/patch-format.html and send a new patch, if you would.
+Then presumably jgarzik will take it, since it's a good fix.
+Or if you want, I could generate the new patch.
 
-Without the patch, OS on 40-pin cable maybe get IDE DMA error (CRC
-error, system hang, or even data crash).
+Thanks,
 
-Conke
+jeremy
 
 
+
+> 
+> -----Original Message-----
+> From: Jeremy Higdon [mailto:jeremy@sgi.com] 
+> Sent: Thursday, January 18, 2007 2:12 AM
+> To: Dailey, Nate
+> Cc: linux-ide@vger.kernel.org
+> Subject: Re: sata_vsc.c cache line size question
+> 
+> On Mon, Jan 15, 2007 at 11:26:59AM -0500, Dailey, Nate wrote:
+> > Here's a patch that does what you suggest.
+> > 
+> > Because the default cache line size on my system is 0x10, I tested the
+> > patch by checking against this value rather than 0... it worked as
+> > expected.
+> > 
+> > This patch is against 2.6.19.2 that I just downloaded from kernel.org.
+> I
+> > actually tested on RHEL4 update 4, a 2.6.9 kernel, but I'll try
+> building
+> > the 2.6.19.2 on my system to make sure it works in that version as
+> well.
+> > 
+> > Nate
+> 
+> Hi Nate,
+> 
+> The patch looks fine, except that your mailer wrapped the lines.
+> Try sending it as a text attachment instead.
+> 
+> Thanks
+> 
+> jeremy
