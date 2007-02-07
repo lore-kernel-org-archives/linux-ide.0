@@ -1,51 +1,41 @@
-From: Steven Scholz <steven.scholz@imc-berlin.de>
+From: Alan <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Impact of no_lba48{_dma} = 1 ?
-Date: Wed, 07 Feb 2007 14:57:27 +0100
-Message-ID: <45C9DAC7.10701@imc-berlin.de>
-References: <45C9A23E.3030201@imc-berlin.de>	<20070207115826.2e3609e3@localhost.localdomain>	<45C9D34E.1060007@imc-berlin.de> <20070207135309.66942d25@localhost.localdomain>
+Date: Wed, 7 Feb 2007 14:11:49 +0000
+Message-ID: <20070207141149.5c0c709b@localhost.localdomain>
+References: <45C9A23E.3030201@imc-berlin.de>
+	<20070207115826.2e3609e3@localhost.localdomain>
+	<45C9D34E.1060007@imc-berlin.de>
+	<20070207135309.66942d25@localhost.localdomain>
+	<45C9D8F8.2000303@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.imc-berlin.de ([217.110.46.186]:35378 "EHLO
-	mx1.imc-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161305AbXBGN53 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Feb 2007 08:57:29 -0500
-In-Reply-To: <20070207135309.66942d25@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43532 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161309AbXBGN6w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Feb 2007 08:58:52 -0500
+In-Reply-To: <45C9D8F8.2000303@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Steven Scholz <steven.scholz@imc-berlin.de>, linux-ide@vger.kernel.org
 
-Alan,
+On Wed, 07 Feb 2007 16:49:44 +0300
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
->>> Only relevant for DMA really
->> So rqsize is only needed for DMA accesses?
+> Hello.
 > 
-> PIO transfers are sector at a time, or multi-sector up to a usual limit
-> of about 16 sectors.
+> Alan wrote:
+> 
+> >>>Only relevant for DMA really
+> 
+> >>So rqsize is only needed for DMA accesses?
+> 
+>     Not really, it affects both PIO and DMA.
 
-So again: rqsize does not matter for PIO transfer?
+Yes but its not relevant. The question was about performance, and your
+performance will suck equally with PIO regardless of the request size
+limit.
 
-Looking at the lines
-
-	if (hwif->no_lba48_dma && lba48 && dma) {
-		if (block + rq->nr_sectors > 1ULL << 28)
-			dma = 0;
-		else
-			lba48 = 0;
-	}
-
-in drivers/ide/ide-disk.c. Does that mean that 48bit LBA adressing using the
-task_ioreg_t stuff is only used for sector numbers larger 1 << 28?
-Thus for small HDDs only LBA28 ist used by
-
-			hwif->OUTB(block, IDE_SECTOR_REG);
-			hwif->OUTB(block>>=8, IDE_LCYL_REG);
-			hwif->OUTB(block>>=8, IDE_HCYL_REG);
-
-???
-
-Thanks a million!!!!
-
-Steven
+Alan
