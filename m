@@ -1,48 +1,98 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problems (and confusions) with Intel ICH7 SATA controller
-Date: Wed, 07 Feb 2007 13:34:18 +0900
-Message-ID: <45C956CA.80709@gmail.com>
-References: <1170536373.7892.5.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git patches] IDE updates for 2.6.20
+Date: Wed, 07 Feb 2007 19:08:14 +0100
+Message-ID: <20070207180814.27444.59159.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:64939 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030632AbXBGRzY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Feb 2007 12:55:24 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so246635nze
-        for <linux-ide@vger.kernel.org>; Wed, 07 Feb 2007 09:55:24 -0800 (PST)
-In-Reply-To: <1170536373.7892.5.camel@localhost>
+Received: from nf-out-0910.google.com ([64.233.182.191]:65514 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161412AbXBGSDU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Feb 2007 13:03:20 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so592582nfa
+        for <linux-ide@vger.kernel.org>; Wed, 07 Feb 2007 10:03:19 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Florian Echtler <floe@butterbrot.org>
-Cc: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Florian Echtler wrote:
-> Hello everybody,
-> 
-> I hope this is the right place to ask.. :-)
-> 
-> I have an Acer Aspire 5550 laptop with Core Solo processor and the Intel
-> ICH7 Chipset. Most of the hardware works fine, with the exception of
-> suspend-to-ram. 
-> 
-> I have a strong suspicion that the SATA controller is to blame for that,
-> as I have tried every possible combination of s2ram parameters and still
-> the display stays black upon resume, only the hard disk LED lights up
-> and stays that way.
-> 
-> I have seen suggestions to try the ahci driver instead of the ata_piix
-> driver, however, as far as I understand this would need switching the
-> controller mode in BIOS. The BIOS is, unfortunately, utterly crippled
-> and gives almost no options to change anything beyond the system clock.
-> 
-> Is this a known problem with ICH7? Can anybody give me some additional
-> hints?
 
-Which version of kernel are you using?
+Hi,
 
--- 
-tejun
+Short summary:
 
+- HPT driver rewrite (has been in -mm for months)
+- driver for Toshiba TC86C001 chipset
+- some fixes for piix/slc90e66/pdc202xx_new drivers
+  (Sergei Shtylyov <sshtylyov@ru.mvista.com>)
+
+- driver for ITE IT8213 chipset
+  (Jack Lee <Jack.Lee@ite.com.tw>, some fixes from Alan Cox and me)
+
+- driver for Delkin/Lexar/.. cardbus CF adapters
+  (Mark Lord <mlord@pobox.com>)
+
+- ACPI support for IDE (has been in SuSE kernels for months)
+  (Hannes Reinecke <hare@suse.de>)
+
+Please pull from:
+
+master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
+
+to receive the following updates:
+
+ drivers/ide/Kconfig            |   24 
+ drivers/ide/Makefile           |    1 
+ drivers/ide/ide-acpi.c         |  697 ++++++++++++++++++
+ drivers/ide/ide-probe.c        |    3 
+ drivers/ide/ide.c              |   36 
+ drivers/ide/pci/Makefile       |    4 
+ drivers/ide/pci/delkin_cb.c    |  140 +++
+ drivers/ide/pci/hpt366.c       | 1583 +++++++++++++++++++++--------------------
+ drivers/ide/pci/it8213.c       |  362 +++++++++
+ drivers/ide/pci/pdc202xx_new.c |   56 -
+ drivers/ide/pci/pdc202xx_old.c |   27 
+ drivers/ide/pci/piix.c         |   31 
+ drivers/ide/pci/slc90e66.c     |   55 -
+ drivers/ide/pci/tc86c001.c     |  309 ++++++++
+ drivers/pci/quirks.c           |   18 
+ include/linux/ide.h            |   27 
+ include/linux/pci_ids.h        |    1 
+ 17 files changed, 2506 insertions(+), 868 deletions(-)
+
+Adrian Bunk (1):
+      tc86c001: init_hwif_tc86c001() can be static
+
+Andrew Morton (3):
+      hpt366: rework rate filtering tidy
+      tc86c001: mark init_chipset_tc86c001() with __devinit tag
+      ide-acpi support warning fix
+
+Bartlomiej Zolnierkiewicz (2):
+      tc86c001: add missing __init tag for tc86c001_ide_init()
+      ide: it8213 IDE driver update (version 2)
+
+Hannes Reinecke (1):
+      ACPI support for IDE devices
+
+Jack Lee (1):
+      ide: add it8213 IDE driver
+
+Mark Lord (1):
+      IDE Driver for Delkin/Lexar/etc.. cardbus CF adapter
+
+Sergei Shtylyov (14):
+      hpt366: rework rate filtering
+      hpt366: print the real chip name at startup
+      hpt366: switch to using pci_get_slot
+      hpt366: cache channel's MCR address
+      hpt366: merge HPT37x speedproc handlers
+      hpt366: clean up DMA timeout handling for HPT370
+      hpt366: init code rewrite
+      hpt366: HPT36x PCI clock detection fix
+      piix: fix 82371MX enablebits
+      piix: tuneproc() fixes/cleanups
+      slc90e66: carry over fixes from piix driver
+      pdc202xx_new: remove useless code
+      pdc202xx_new: remove check_in_drive_lists abomination
+      ide: add Toshiba TC86C001 IDE driver (take 2)
+
+Sorry but no patch this time (it is too big for the mailing list).
