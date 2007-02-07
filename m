@@ -1,38 +1,75 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [git patches] IDE updates for 2.6.20
-Date: Wed, 07 Feb 2007 21:23:18 +0300
-Message-ID: <45CA1916.6020709@ru.mvista.com>
-References: <20070207180814.27444.59159.sendpatchset@localhost.localdomain> <20070207182748.1c0c3588@localhost.localdomain>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Fw: [Bugme-new] [Bug 7958] New: AE_AML_PACKAGE_LIMIT is beyond
+ end of object
+Date: Wed, 7 Feb 2007 10:26:02 -0800
+Message-ID: <20070207102602.43a00724.akpm@linux-foundation.org>
+References: <20070207091034.76b76139.akpm@linux-foundation.org>
+	<45CA18CE.7030300@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:36067 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965706AbXBGSXZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Feb 2007 13:23:25 -0500
-In-Reply-To: <20070207182748.1c0c3588@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <45CA18CE.7030300@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>
+Cc: linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Wed, 07 Feb 2007 21:22:06 +0300 Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com> wrote:
 
-Alan wrote:
-> On Wed, 07 Feb 2007 19:08:14 +0100
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
->>- ACPI support for IDE (has been in SuSE kernels for months)
->>  (Hannes Reinecke <hare@suse.de>)
+> Andrew,
+> This bug seem to be duplicate of 7907, which in turn seem to be caused 
+> by latest libata patches.
 
-> I can find no public copy of this or discussion of it, please post a
+Oh.  Surprised.  Let's tell Jeff about it.
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=116916643921306
-
-> reference to the previous discussion or put the ACPI patch somewhere for
-> review first.
-
-http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/patches/ide-acpi-support.patch
-
-MBR, Sergei
+> Thanks,
+>     Alex.
+> Andrew Morton wrote:
+> > This looks like something which needs attention prior to merging the new ACPI
+> > code?
+> >
+> > Begin forwarded message:
+> >
+> > Date: Wed, 7 Feb 2007 04:57:01 -0800
+> > From: bugme-daemon@bugzilla.kernel.org
+> > To: bugme-new@lists.osdl.org
+> > Subject: [Bugme-new] [Bug 7958] New: AE_AML_PACKAGE_LIMIT is beyond end of object
+> >
+> >
+> > http://bugzilla.kernel.org/show_bug.cgi?id=7958
+> >
+> >            Summary: AE_AML_PACKAGE_LIMIT is beyond end of object
+> >     Kernel Version: 2.6.20-rc6-mm3
+> >             Status: NEW
+> >           Severity: normal
+> >              Owner: acpi_acpica-core@kernel-bugs.osdl.org
+> >          Submitter: jirislaby@gmail.com
+> >
+> >
+> > This occured in dmesg after hw suspend and resume:
+> > Suspending device 0.0
+> > ACPI Exception (exoparg2-0442): AE_AML_PACKAGE_LIMIT, Index (000000007) is beyon
+> > d end of object [20070126]
+> > ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.GTM_]
+> > (Node dfe64fcc), AE_AML_PACKAGE_LIMIT
+> > ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN0._
+> > GTM] (Node dfe649f0), AE_AML_PACKAGE_LIMIT
+> > ...
+> > RESUME
+> > ...
+> > hda: selected mode 0x45
+> > ACPI Error (dsopcode-0481): Attempt to CreateField of length zero [20070126]
+> > ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA]
+> > (Node dfe64ec8), AE_AML_OPERAND_VALUE
+> > ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN0.D
+> > RV1._GTF] (Node dfe64964), AE_AML_OPERAND_VALUE
+> > do_drive_get_GTF: Run _GTF error: status = 0x3006
+> >
+> > ------- You are receiving this mail because: -------
+> > You are on the CC list for the bug, or are watching someone who is.
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >   
