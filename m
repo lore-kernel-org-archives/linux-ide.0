@@ -1,45 +1,54 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming (for testing, don't
- apply)
-Date: Wed, 07 Feb 2007 14:51:27 -0500
-Message-ID: <45CA2DBF.9040403@pobox.com>
-References: <20070202151856.GD1625@htj.dyndns.org> <20070202211441.GA2933@artsapartment.org> <45C3EECF.2080100@gmail.com> <45C4E6BB.6020307@pobox.com> <45C84650.3030703@gmail.com> <20070206163303.GA2185@artsapartment.org> <45C93F1D.8090504@gmail.com> <20070207193513.GA1929@artsapartment.org>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH] sata_promise: new EH conversion for 20619 chips
+Date: Wed, 7 Feb 2007 21:58:32 +0100
+Message-ID: <17866.15736.332271.928733@alkaid.it.uu.se>
+References: <200702042144.l14LisBO003772@harpo.it.uu.se>
+	<45C8F0FE.90201@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rune.pobox.com ([208.210.124.79]:49796 "EHLO rune.pobox.com"
+Received: from aun.it.uu.se ([130.238.12.36]:36560 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422742AbXBGTvh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Feb 2007 14:51:37 -0500
-In-Reply-To: <20070207193513.GA1929@artsapartment.org>
+	id S1030600AbXBGU6w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Feb 2007 15:58:52 -0500
+In-Reply-To: <45C8F0FE.90201@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Art Haas <ahaas@airmail.net>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-Art Haas wrote:
-> On Wed, Feb 07, 2007 at 11:53:17AM +0900, Tejun Heo wrote:
->> Art Haas wrote:
->>>>> Also, zero out the features register before issuing PACKET_IDENTIFY,
->>>>> if the code isn't already doing that.
->>>> Okay.
->>>SUCCESS!!!!!
->> Yay!
-...
->> So, it succeeded without any DRQ wait.  Can you please apply only the 
->> attached patch over vanilla 2.6.20 and see if your problem is fixed?
->>
->> This problem has been around for quite a while now and there probably 
->> have been other users hit by this out there.  Thanks a lot, Mark.
-> 
-> SUCCESS (again)!!!!!
+Jeff Garzik writes:
+ > Mikael Pettersson wrote:
+ > > This patch updates the sata_promise driver to use new-style
+ > > libata error handling for 20619 (TX4000) chips. sata_promise
+ > > already uses new EH for the other chips it supports, so the
+ > > patch is quite simple:
+ > > 
+ > > * remove ->phy_reset and ->eng_timeout ops from pdc_pata_ops,
+ > >   and instead bind ->freeze, ->thaw, ->error_handler, and
+ > >   ->post_internal_cmd to existing new EH functions
+ > > * drop ATA_FLAG_SRST from board_20619's flags
+ > > * remove now unused pdc_pata_phy_reset() and pdc_eng_timeout()
+ > > * pdc_pata_cbl_detect() is now unused, but it contains a cable
+ > >   detection procedure that I don't think is mentioned in public
+ > >   documentation, so for now I just wrapped it with #if 0/#endif
+ > > 
+ > > Tested on a TX4000 with both modern working disks and old/quirky
+ > > disks. Also used a CD-RW drive to test reading and writing CDs.
+ > > 
+ > > Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+ > 
+ > The lack of cable detection definitely sounds like a bug...?
+ > 
+ > The standard procedure is to set ap->cbl in your 'prereset' EH hook, as 
+ > is done in drivers/ata/pata_sil680.c.
 
-Good stuff, guys.
-I'm happy to have been of service.
+Indeed. Scratch this patch. I'm sending a fix to correct this error,
+and will do a revised 20619 new EH patch in a couple of days when I
+have access to a TX4000 card again.
 
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+BTW, the PATA cable detection procedure matches Promise's drivers,
+but the bit it checks is not described in the pdf documents.
+
+/Mikael
