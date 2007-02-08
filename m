@@ -1,47 +1,30 @@
-From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Subject: [PATCH] ATA convert GSI to irq on ia64
-Date: Thu, 08 Feb 2007 15:40:22 +0800
-Message-ID: <1170920422.15989.354.camel@ymzhang>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH] (pata-2.6 fix queue) cmd64x: remove broken SW/MW DMA support
+Date: Thu, 8 Feb 2007 09:58:45 +0100 (MET)
+Message-ID: <200702080858.l188wjmG008432@harpo.it.uu.se>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from aun.it.uu.se ([130.238.12.36]:42027 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423057AbXBHI7M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Feb 2007 03:59:12 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com, sshtylyov@ru.mvista.com
+Cc: linux-ide@vger.kernel.org
 
-If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
-fixed irq number. On ia64 platform, such numbers are GSI and should be converted
-to irq vector.
+On Thu, 8 Feb 2007 00:00:32 +0300, Sergei Shtylyov wrote:
+>Remove the bogus code pretending to set SW/MW DMA timings -- I wonder whether
+>its author really thought that he could achieve that wrtiting to BMIDE status
+>registers?  Stop fiddling with the DMA capable bits in the speedproc() -- they
+>do not enable DMA, and are properly dealt with by the dma_host_{on,off} methods;
+>also, get rid of the duplicate reads/writes of UDIDETCRx registers, and do some
+>coding style and whitespace changes while at it...
+>
+>Unfortunately, fixing the SW/MW DMA support would requre a major driver rewrite
+>along with some more fixing, so I'm putting it off...
+>
+>Warning: this has been compile-tested only.
 
-Below patch against kernel 2.6.20 fixes it.
+Worked fine on my SPARC Ultra5.
 
-Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
-
----
-
-diff -Nraup linux-2.6.20/include/asm-generic/libata-portmap.h linux-2.6.20_fix/include/asm-generic/libata-portmap.h
---- linux-2.6.20/include/asm-generic/libata-portmap.h	2007-02-08 15:13:44.000000000 +0800
-+++ linux-2.6.20_fix/include/asm-generic/libata-portmap.h	2007-02-08 15:20:13.000000000 +0800
-@@ -3,10 +3,20 @@
- 
- #define ATA_PRIMARY_CMD		0x1F0
- #define ATA_PRIMARY_CTL		0x3F6
-+#if defined(__ia64__)
-+#define ATA_PRIMARY_IRQ(dev)	isa_irq_to_vector(14)
-+#else
- #define ATA_PRIMARY_IRQ(dev)	14
-+#endif
-+
- 
- #define ATA_SECONDARY_CMD	0x170
- #define ATA_SECONDARY_CTL	0x376
-+#if defined(__ia64__)
-+#define ATA_SECONDARY_IRQ(dev)	isa_irq_to_vector(15)
-+#else
- #define ATA_SECONDARY_IRQ(dev)	15
-+#endif
-+
- 
- #endif
+/Mikael
