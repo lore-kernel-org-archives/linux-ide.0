@@ -1,63 +1,30 @@
-From: Root Kit <rootkit85@yahoo.it>
-Subject: [PATCH] AHCI PCI ID for MacBook Pro
-Date: Thu, 8 Feb 2007 18:33:07 +0100 (CET)
-Message-ID: <82530.66623.qm@web25412.mail.ukl.yahoo.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] ATA convert GSI to irq on ia64
+Date: Thu, 8 Feb 2007 19:42:04 +0000
+Message-ID: <20070208194204.GC2354@infradead.org>
+References: <1170920422.15989.354.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web25412.mail.ukl.yahoo.com ([217.146.176.230]:46288 "HELO
-	web25412.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1423246AbXBHRdJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Feb 2007 12:33:09 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:57163 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423276AbXBHTmK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Feb 2007 14:42:10 -0500
+Content-Disposition: inline
+In-Reply-To: <1170920422.15989.354.camel@ymzhang>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-hi,
-i have a MacBook pro and i noticed that linux
-(2.6.20)
-binds the ata_piix driver
-to the SATA controller.
-being my SATA controller an AHCI (ICH7M) i added the
-PCI ID to ahci.c
-then tested the system.
-i inline the patch here:
+On Thu, Feb 08, 2007 at 03:40:22PM +0800, Zhang, Yanmin wrote:
+> If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
+> fixed irq number. On ia64 platform, such numbers are GSI and should be converted
+> to irq vector.
+> 
+> Below patch against kernel 2.6.20 fixes it.
 
---- linux-2.6.20/drivers/ata/ahci.c	2007-02-06
-19:11:08.000000000 +0100
-+++ linux-2.6.20/drivers/ata/ahci.c	2007-02-06
-19:13:31.000000000 +0100
-@@ -366,6 +366,7 @@
- 	{ PCI_VDEVICE(INTEL, 0x27c1), board_ahci }, /* ICH7
-*/
- 	{ PCI_VDEVICE(INTEL, 0x27c5), board_ahci }, /* ICH7M
-*/
- 	{ PCI_VDEVICE(INTEL, 0x27c3), board_ahci }, /* ICH7R
-*/
-+	{ PCI_VDEVICE(INTEL, 0x27c4), board_ahci }, /* ICH7M
-*/
- 	{ PCI_VDEVICE(AL, 0x5288), board_ahci_ign_iferr },
-/* ULi M5288 */
- 	{ PCI_VDEVICE(INTEL, 0x2681), board_ahci }, /* ESB2
-*/
- 	{ PCI_VDEVICE(INTEL, 0x2682), board_ahci }, /* ESB2
-*/
+These direct arch ifdefs in core aren't acceptable.  The again I'm
+pretty sure we have patches floating around to turn these two macros
+into architecture-supplied ones, IIRC it came from the powerpc side.
 
-and i also done some benchmarks just to test if it is
-worth it:
-http://teknoraver.campuslife.it/bench/ata_piix_vs_ahci.pdf
-
-Best Regards,
-Matteo Croce
-
-
-
-
-
-	
-
-	
-		
-___________________________________ 
-L'email della prossima generazione? Puoi averla con la nuova Yahoo! Mail: 
-http://it.docs.yahoo.com/nowyoucan.html
