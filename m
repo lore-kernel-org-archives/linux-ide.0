@@ -1,69 +1,71 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: clear TF before IDENTIFYing
-Date: Thu, 08 Feb 2007 09:56:25 -0500
-Message-ID: <45CB3A19.6080205@rtr.ca>
-References: <20070202151856.GD1625@htj.dyndns.org> <20070202211441.GA2933@artsapartment.org> <45C3EECF.2080100@gmail.com> <45C4E6BB.6020307@pobox.com> <45C84650.3030703@gmail.com> <20070206163303.GA2185@artsapartment.org> <45C93F1D.8090504@gmail.com> <20070207193513.GA1929@artsapartment.org> <45CA2DBF.9040403@pobox.com> <45CA3895.5010108@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] sata_promise: fix missing PATA cable detection
+Date: Thu, 08 Feb 2007 10:07:09 -0500
+Message-ID: <45CB3C9D.8060702@garzik.org>
+References: <200702081439.l18EdqfI010278@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4698 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:45836 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030649AbXBHO42 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Feb 2007 09:56:28 -0500
-In-Reply-To: <45CA3895.5010108@gmail.com>
+	id S1423197AbXBHPHM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Feb 2007 10:07:12 -0500
+In-Reply-To: <200702081439.l18EdqfI010278@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Art Haas <ahaas@airmail.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, stable@kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Some devices chock if Feature is not clear when IDENTIFY is issued.
-> Set ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE for IDENTIFY such that whole
-> TF is cleared when reading ID data.
+Mikael Pettersson wrote:
+> On Thu, 08 Feb 2007 08:50:09 -0500, Jeff Garzik wrote:
+>> Mikael Pettersson wrote:
+>>> This patch fixes an oversight which caused sata_promise to
+>>> not perform cable detection on the TX2plus chips' PATA ports.
+>>>
+>>> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+>>>
+>>> ---
+>>>
+>>> This patch adds yet another is-PATA-or-SATA? check, but it's in a
+>>> cold path so shouldn't matter much. This will be cleaned up if/when
+>>> PATA ports and SATA ports start using different ops structures.
+>>>
+>>> --- linux-2.6.20/drivers/ata/sata_promise.c.~1~	2007-02-07 20:30:20.000000000 +0100
+>>> +++ linux-2.6.20/drivers/ata/sata_promise.c	2007-02-07 20:57:34.000000000 +0100
+>>> @@ -601,6 +601,13 @@ static void pdc_thaw(struct ata_port *ap
+>>>  	readl(mmio + PDC_CTLSTAT); /* flush */
+>>>  }
+>>>  
+>>> +static int pdc_pre_reset(struct ata_port *ap)
+>>> +{
+>>> +	if (!sata_scr_valid(ap))
+>>> +		pdc_pata_cbl_detect(ap);
+>>> +	return ata_std_prereset(ap);
+>>> +}
+>>> +
+>> Since it was a bug in the original patch, I just dropped it, waiting for 
+>> you to resend the whole thing.  That keeps the git history much more clean.
 > 
-> Kudos to Art Haas for testing various futile patches over several
-> months and Mark Lord for pointing out the fix.
+> I hope you dropped the 20619 new EH patch but applied this one.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Art Haas <ahaas@airmail.net>
-> Cc: Mark Lord <mlord@pobox.com>
-
-Signed-off-by: Mark Lord <mlord@pobox.com>
-
-> I think this should go into -stable but a little bit hesitant because
-> the code hasn't been tested widely.  This patch should really be
-> harmless but who knows.  Jeff, Mark, what do you think?
-
-If it was up to me, I'd plunk it directly into 2.6.20.1 and earlier.
-But Jeff has his own ways..
-
- 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 667acd2..d6fcf0a 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1478,7 +1478,16 @@ int ata_dev_read_id(struct ata_device *dev, 
-> unsigned int *p_class,
->     }
+> Maybe the patch description was too terse given the broken 20619 patch:
+> This patch corrects TX2plus PATA in current #upstream. It's currently
+> unrelated to 20619 (since 20619 has its own ops and a ->phy_reset which
+> calls pdc_pata_cbl_detect()), but later when 20619 is converted to new EH,
+> it ensures that 20619 continues to do PATA cable detection.
 > 
->     tf.protocol = ATA_PROT_PIO;
-> -    tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
-> +
-> +    /* Some devices choke if TF registers contain garbage.  Make
-> +     * sure those are properly initialized.
-> +     */
-> +    tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-> +
-> +    /* Device presence detection is unreliable on some
-> +     * controllers.  Always poll IDENTIFY if available.
-> +     */
-> +    tf.flags |= ATA_TFLAG_POLLING;
-> 
->     err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
->                      id, sizeof(id[0]) * ATA_ID_WORDS);
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The bug originated in the #promise-sata-pata branch, which added
+> TX2plus PATA support but didn't hook in any cable detection.
+> I failed to observe that omission when reworking #promise-sata-pata
+> into the form that got merged.
+
+Ah, I misunderstood.  I thought it was an incremental patch to your 
+new-EH patch, at first glance.
+
+It is now in my queue.
+
+	Jeff
+
+
 
