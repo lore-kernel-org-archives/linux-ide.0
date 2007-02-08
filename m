@@ -1,53 +1,152 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] ATA convert GSI to irq on ia64
-Date: Thu, 8 Feb 2007 12:46:29 -0800
-Message-ID: <20070208124629.c9c2c09d.akpm@linux-foundation.org>
-References: <1170920422.15989.354.camel@ymzhang>
-	<20070208194204.GC2354@infradead.org>
-	<20070208122539.d9c24ad9.akpm@linux-foundation.org>
-	<20070208203453.GA10122@infradead.org>
+From: Leopold Palomo Avellaneda <lepalom@wol.es>
+Subject: Sata_via problems in a Vintage2-AE1
+Date: Fri, 9 Feb 2007 00:10:06 +0100
+Message-ID: <200702090010.06897.lepalom@wol.es>
+Reply-To: lepalom@wol.es
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:38556 "EHLO smtp.osdl.org"
+Received: (root@vger.kernel.org) by vger.kernel.org id S932952AbXBHXX5
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Feb 2007 18:23:57 -0500
+Received: from aybabtu.com ([69.60.117.155]:51959 "EHLO aybabtu.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423318AbXBHUtu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Feb 2007 15:49:50 -0500
-In-Reply-To: <20070208203453.GA10122@infradead.org>
+	id S1422783AbXBHXK3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Feb 2007 18:10:29 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 8 Feb 2007 20:34:53 +0000
-Christoph Hellwig <hch@infradead.org> wrote:
+Dear people,
 
-> On Thu, Feb 08, 2007 at 12:25:39PM -0800, Andrew Morton wrote:
-> > On Thu, 8 Feb 2007 19:42:04 +0000
-> > Christoph Hellwig <hch@infradead.org> wrote:
-> > 
-> > > On Thu, Feb 08, 2007 at 03:40:22PM +0800, Zhang, Yanmin wrote:
-> > > > If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
-> > > > fixed irq number. On ia64 platform, such numbers are GSI and should be converted
-> > > > to irq vector.
-> > > > 
-> > > > Below patch against kernel 2.6.20 fixes it.
-> > > 
-> > > These direct arch ifdefs in core aren't acceptable.
-> > 
-> > For 2.6.21 that's true.  But this is a suitable fix for 2.6.20.x, no?
-> 
-> Just putting in an #ifndef and allow to to set it up in asm/ata.h
-> is almost as trivial and a lot nice conceptually.
+I have a barebone Asus Vintage2-AE1 [1]. This box has a mobo Asus A8V-MQ. The 
+board has:
+- the Socket 939 for AMD Athlon 64FX/Athlon 64.
+- North Bridge: VIA K8M800  
+- South Bridge: VIA VT8251
+- VIA Graphics Integrated
+- IDE 2 x UltraDMA 133
+- 4 x Serial ATA
+...
 
-Well if that's what the 2.6.21 solution looks like then OK.  Would want to
-see the patch though.
+I'm using the bios version 0206. The 0210 doesn't show me the vga card, so I 
+don't have graphics mode. I think that is a buggy bios.
 
->  Then again
-> what happened to the idea of putting fixes into mainline before
-> -stable?
+The bios is configured with vt8251 in AHCI mode and bios boot up activated, so 
+the hd is recognized in the beginning. I don't have any raid, only one hd. 
+The hd is a Maxtor 6V250F0.
 
-If the preferred mainline patch involves a lot of not-really-needed
-restructuring then an alternative short-but-obvious fix for -stable is
-sometimes more appropriate.
+I'm using a debian etch but the i386 version. The only way that I can use the 
+hd is using a 2.6.16 standard kernel with the modifications explained in this 
+page [2]. Basically you have to use their ahci.c and sata_via.c. The 
+modifications are small from the original code from Mr Jeff Garzik.
+
+I have tried to use the 2.6.18 and 2.6.20rc6 and the result is the same. The  
+kernel boots, but when arrives at the ata3, 
+
+scsi2 : ahci
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata3.00: qc timeout (cmd 0xec)
+ata3.00: failed to IDENTIFY (I/O error, err_mask=0x104)
+.... repeated some times ...
+scsi3 : ahci
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+scsi4 : ahci
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+scsi5 : ahci
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Done.
+Begin: Mounting root file system... ...
+Begin: Running /scripts/local-top
+ide0: I/O resource 0x3F6-0x3F6 not free.
+ide0: ports already in use, skipping probe.
+ide1: I/O resource 0x376-0x376 not free.
+ide1: ports already in use, skipping probe.
+Done.
+Begin: Waiting for root file system ...
+
+.....
+
+but the /dev/sda doesn't exist so I cannot boot.
+
+using the 2.6.16 with lspci -M I obtain the info attached below. Please, could 
+you look on it?
+
+Best regards,
+
+thanks in advance,
+
+Leo
+
+
+[1] http://www.asus.com/products4.aspx?l1=1&l2=1&l3=381&model=1001&modelmenu=1
+[2] http://www.geocities.com/rajahuroman/main.html
+
+lspci -M output:
+----------------------------------------------------------------------
+00:00.0 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
+00:00.1 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
+00:00.2 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
+00:00.3 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
+00:00.4 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
+00:00.7 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
+00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI bridge [K8T800/K8T890 
+South]
+## 00.01:0 is a bridge from 00 to 01-01
+00:0f.0 SATA controller: VIA Technologies, Inc. VT8251 AHCI/SATA 4-Port 
+Controller
+00:0f.1 IDE interface: VIA Technologies, Inc. 
+VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 07)
+00:10.0 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 
+Controller (rev 90)
+00:10.1 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 
+Controller (rev 90)
+00:10.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 
+Controller (rev 90)
+00:10.3 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 
+Controller (rev 90)
+00:10.4 USB Controller: VIA Technologies, Inc. USB 2.0 (rev 90)
+00:11.0 ISA bridge: VIA Technologies, Inc. VT8251 PCI to ISA Bridge
+00:11.5 Multimedia audio controller: VIA Technologies, Inc. VT8233/A/8235/8237 
+AC97 Audio Controller (rev 70)
+00:11.7 Host bridge: VIA Technologies, Inc. VT8251 Ultra VLINK Controller
+00:12.0 Ethernet controller: VIA Technologies, Inc. VT6102 [Rhine-II] (rev 7c)
+00:13.0 PCI bridge: VIA Technologies, Inc. VT8251 Host Bridge
+## 00.13:0 is a bridge from 00 to 02-04
+00:13.1 PCI bridge: VIA Technologies, Inc. VT8251 PCI to PCI Bridge
+## 00.13:1 is a bridge from 00 to 05-05
+00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+HyperTransport Technology Configuration
+00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+Address Map
+00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM 
+Controller
+00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
+Miscellaneous Control
+01:00.0 VGA compatible controller: nVidia Corporation NV43 [GeForce 6200] (rev 
+a1)
+02:00.0 PCI bridge: VIA Technologies, Inc. VT8251 PCIE Root Port
+## 02.00:0 is a bridge from 02 to 03-03
+02:00.1 PCI bridge: VIA Technologies, Inc. VT8251 PCIE Root Port
+## 02.00:1 is a bridge from 02 to 04-04
+
+Summary of buses:
+
+00: Primary host bus
+        13.1 Bridge to 05-05
+        13.0 Bridge to 02-04
+        01.0 Bridge to 01-01
+01: Entered via 00:01.0
+02: Entered via 00:13.0
+        00.1 Bridge to 04-04
+        00.0 Bridge to 03-03
+----------------------------------------------------------------------
+
+
+-- 
+--
+Linux User 152692
+Catalonia
