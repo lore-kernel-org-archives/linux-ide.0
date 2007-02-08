@@ -1,97 +1,31 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (pata-2.6 fix queue) ide_get_best_pio_mode() returns incorrect IORDY setting
-Date: Thu, 8 Feb 2007 16:32:41 +0300
-Message-ID: <200702081632.43844.sshtylyov@ru.mvista.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Problems (and confusions) with Intel ICH7 SATA controller
+Date: Thu, 08 Feb 2007 08:38:14 -0500
+Message-ID: <45CB27C6.9090309@gmail.com>
+References: <1170536373.7892.5.camel@localhost>  <45C956CA.80709@gmail.com> <1170928530.31971.1.camel@lapnavab35.informatik.tu-muenchen.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:44075 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1423013AbXBHNcu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Feb 2007 08:32:50 -0500
-Content-Disposition: inline
+Received: from an-out-0708.google.com ([209.85.132.246]:2271 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423029AbXBHNi1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Feb 2007 08:38:27 -0500
+Received: by an-out-0708.google.com with SMTP id b33so479659ana
+        for <linux-ide@vger.kernel.org>; Thu, 08 Feb 2007 05:38:26 -0800 (PST)
+In-Reply-To: <1170928530.31971.1.camel@lapnavab35.informatik.tu-muenchen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
+To: Florian Echtler <floe@butterbrot.org>
 Cc: linux-ide@vger.kernel.org
 
-The function ide_get_best_pio_mode() fails to return the correct IORDY setting
-for the explicitly specified modes -- fix this along with the heading comment,
-and also remove the long commented out code.
+Florian Echtler wrote:
+> That would be 2.6.18. I've also tried 2.6.19, but it had the same
+> problems and the ipw3945 wireless driver didn't work there, so I kept
+> 2.6.18 for the time being.
 
-Also, while at it, correct the misliading comment about the PIO cycle time in
-<linux/ide.h> -- it actually consists of only the active and recovery periods,
-with only some chips also including the address setup time into equation...
+I see.  Please post '/var/log/boot.msg', the result of 'dmesg' and 
+'lspci -nn'.  Let's see which drivers you're using.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
- drivers/ide/ide-lib.c |   14 ++++----------
- include/linux/ide.h   |    3 ++-
- 2 files changed, 6 insertions(+), 11 deletions(-)
-
-Index: linux-2.6/drivers/ide/ide-lib.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-lib.c
-+++ linux-2.6/drivers/ide/ide-lib.c
-@@ -333,13 +333,13 @@ static int ide_scan_pio_blacklist (char 
-  *	@driver: drive to consider
-  *	@mode_wanted: preferred mode
-  *	@max_mode: highest allowed
-- *	@d: pio data
-+ *	@d: PIO data
-  *
-  *	This routine returns the recommended PIO settings for a given drive,
-  *	based on the drive->id information and the ide_pio_blacklist[].
-- *	This is used by most chipset support modules when "auto-tuning".
-  *
-- *	Drive PIO mode auto selection
-+ *	Drive PIO mode is auto-selected if 255 is passed as mode_wanted.
-+ *	This is used by most chipset support modules when "auto-tuning".
-  */
- 
- u8 ide_get_best_pio_mode (ide_drive_t *drive, u8 mode_wanted, u8 max_mode, ide_pio_data_t *d)
-@@ -353,6 +353,7 @@ u8 ide_get_best_pio_mode (ide_drive_t *d
- 
- 	if (mode_wanted != 255) {
- 		pio_mode = mode_wanted;
-+		use_iordy = (pio_mode > 2);
- 	} else if (!drive->id) {
- 		pio_mode = 0;
- 	} else if ((pio_mode = ide_scan_pio_blacklist(id->model)) != -1) {
-@@ -383,19 +384,12 @@ u8 ide_get_best_pio_mode (ide_drive_t *d
- 			}
- 		}
- 
--#if 0
--		if (drive->id->major_rev_num & 0x0004) printk("ATA-2 ");
--#endif
--
- 		/*
- 		 * Conservative "downgrade" for all pre-ATA2 drives
- 		 */
- 		if (pio_mode && pio_mode < 4) {
- 			pio_mode--;
- 			overridden = 1;
--#if 0
--			use_iordy = (pio_mode > 2);
--#endif
- 			if (cycle_time && cycle_time < ide_pio_timings[pio_mode].cycle_time)
- 				cycle_time = 0; /* use standard timing */
- 		}
-Index: linux-2.6/include/linux/ide.h
-===================================================================
---- linux-2.6.orig/include/linux/ide.h
-+++ linux-2.6/include/linux/ide.h
-@@ -1333,7 +1333,8 @@ u8 ide_dump_status(ide_drive_t *, const 
- typedef struct ide_pio_timings_s {
- 	int	setup_time;	/* Address setup (ns) minimum */
- 	int	active_time;	/* Active pulse (ns) minimum */
--	int	cycle_time;	/* Cycle time (ns) minimum = (setup + active + recovery) */
-+	int	cycle_time;	/* Cycle time (ns) minimum = */
-+				/* active + recovery (+ setup for some chips) */
- } ide_pio_timings_t;
- 
- typedef struct ide_pio_data_s {
-
+-- 
+tejun
