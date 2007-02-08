@@ -1,58 +1,61 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH 2.6.20] sata_vsc: use default cache line size if non-zero
-Date: Thu, 8 Feb 2007 00:59:38 -0800
-Message-ID: <20070208085938.GA142057@sgi.com>
-References: <92952AEF1F064042B6EF2522E0EEF43703EE31CC@EXNA.corp.stratus.com>
+From: "Luming Yu" <luming.yu@gmail.com>
+Subject: Re: [PATCH] ATA convert GSI to irq on ia64
+Date: Thu, 8 Feb 2007 17:15:32 +0800
+Message-ID: <3877989d0702080115o15feb447h73e3fa310bc09fb4@mail.gmail.com>
+References: <1170920422.15989.354.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:41560 "EHLO omx2.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1423085AbXBHI7m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Feb 2007 03:59:42 -0500
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1170920422.15989.354.camel@ymzhang>
 Content-Disposition: inline
-In-Reply-To: <92952AEF1F064042B6EF2522E0EEF43703EE31CC@EXNA.corp.stratus.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: "Dailey, Nate" <Nate.Dailey@stratus.com>
-Cc: linux-ide@vger.kernel.org
 
-On Wed, Feb 07, 2007 at 09:29:28AM -0500, Dailey, Nate wrote:
-> The attached patch modifies drivers/ata/sata_vsc.c to only set the cache
-> line size to 0x80 if the default value is zero. Apparently zero isn't
-> allowed due to a bug in the chip, but I've found performance is much
-> better with the (non-zero) default instead of 0x80.
-> 
-> Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
-Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
+if use ide_default_irq , then I guess the #if defined can be removed.
+#define ATA_PRIMARY_IRQ(dev)   isa_irq_to_vector(0x1F0)
 
-Here is the attachment from Nate, inline.
 
-Content-Description: sata_vsc_CLS.patch
---- old/drivers/ata/sata_vsc.c	2007-02-04 13:44:54.000000000 -0500
-+++ new/drivers/ata/sata_vsc.c	2007-02-07 09:13:17.000000000 -0500
-@@ -345,6 +345,7 @@ static int __devinit vsc_sata_init_one (
- 	int pci_dev_busy = 0;
- 	void __iomem *mmio_base;
- 	int rc;
-+	u8 cls;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-@@ -394,9 +395,13 @@ static int __devinit vsc_sata_init_one (
- 	base = (unsigned long) mmio_base;
- 
- 	/*
--	 * Due to a bug in the chip, the default cache line size can't be used
-+	 * Due to a bug in the chip, the default cache line size can't be
-+	 * used (unless the default is non-zero).
- 	 */
--	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
-+	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cls);
-+	if (cls == 0x00) {
-+		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
-+	}
- 
- 	probe_ent->sht = &vsc_sata_sht;
- 	probe_ent->port_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-
+On 2/8/07, Zhang, Yanmin <yanmin_zhang@linux.intel.com> wrote:
+> If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
+> fixed irq number. On ia64 platform, such numbers are GSI and should be converted
+> to irq vector.
+>
+> Below patch against kernel 2.6.20 fixes it.
+>
+> Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
+>
+> ---
+>
+> diff -Nraup linux-2.6.20/include/asm-generic/libata-portmap.h linux-2.6.20_fix/include/asm-generic/libata-portmap.h
+> --- linux-2.6.20/include/asm-generic/libata-portmap.h   2007-02-08 15:13:44.000000000 +0800
+> +++ linux-2.6.20_fix/include/asm-generic/libata-portmap.h       2007-02-08 15:20:13.000000000 +0800
+> @@ -3,10 +3,20 @@
+>
+>  #define ATA_PRIMARY_CMD                0x1F0
+>  #define ATA_PRIMARY_CTL                0x3F6
+> +#if defined(__ia64__)
+> +#define ATA_PRIMARY_IRQ(dev)   isa_irq_to_vector(14)
+> +#else
+>  #define ATA_PRIMARY_IRQ(dev)   14
+> +#endif
+> +
+>
+>  #define ATA_SECONDARY_CMD      0x170
+>  #define ATA_SECONDARY_CTL      0x376
+> +#if defined(__ia64__)
+> +#define ATA_SECONDARY_IRQ(dev) isa_irq_to_vector(15)
+> +#else
+>  #define ATA_SECONDARY_IRQ(dev) 15
+> +#endif
+> +
+>
+>  #endif
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
