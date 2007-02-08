@@ -1,30 +1,58 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH] (pata-2.6 fix queue) cmd64x: remove broken SW/MW DMA support
-Date: Thu, 8 Feb 2007 09:58:45 +0100 (MET)
-Message-ID: <200702080858.l188wjmG008432@harpo.it.uu.se>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH 2.6.20] sata_vsc: use default cache line size if non-zero
+Date: Thu, 8 Feb 2007 00:59:38 -0800
+Message-ID: <20070208085938.GA142057@sgi.com>
+References: <92952AEF1F064042B6EF2522E0EEF43703EE31CC@EXNA.corp.stratus.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:42027 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423057AbXBHI7M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Feb 2007 03:59:12 -0500
+Received: from omx2-ext.sgi.com ([192.48.171.19]:41560 "EHLO omx2.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1423085AbXBHI7m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Feb 2007 03:59:42 -0500
+Content-Disposition: inline
+In-Reply-To: <92952AEF1F064042B6EF2522E0EEF43703EE31CC@EXNA.corp.stratus.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, sshtylyov@ru.mvista.com
+To: "Dailey, Nate" <Nate.Dailey@stratus.com>
 Cc: linux-ide@vger.kernel.org
 
-On Thu, 8 Feb 2007 00:00:32 +0300, Sergei Shtylyov wrote:
->Remove the bogus code pretending to set SW/MW DMA timings -- I wonder whether
->its author really thought that he could achieve that wrtiting to BMIDE status
->registers?  Stop fiddling with the DMA capable bits in the speedproc() -- they
->do not enable DMA, and are properly dealt with by the dma_host_{on,off} methods;
->also, get rid of the duplicate reads/writes of UDIDETCRx registers, and do some
->coding style and whitespace changes while at it...
->
->Unfortunately, fixing the SW/MW DMA support would requre a major driver rewrite
->along with some more fixing, so I'm putting it off...
->
->Warning: this has been compile-tested only.
+On Wed, Feb 07, 2007 at 09:29:28AM -0500, Dailey, Nate wrote:
+> The attached patch modifies drivers/ata/sata_vsc.c to only set the cache
+> line size to 0x80 if the default value is zero. Apparently zero isn't
+> allowed due to a bug in the chip, but I've found performance is much
+> better with the (non-zero) default instead of 0x80.
+> 
+> Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
+Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
 
-Worked fine on my SPARC Ultra5.
+Here is the attachment from Nate, inline.
 
-/Mikael
+Content-Description: sata_vsc_CLS.patch
+--- old/drivers/ata/sata_vsc.c	2007-02-04 13:44:54.000000000 -0500
++++ new/drivers/ata/sata_vsc.c	2007-02-07 09:13:17.000000000 -0500
+@@ -345,6 +345,7 @@ static int __devinit vsc_sata_init_one (
+ 	int pci_dev_busy = 0;
+ 	void __iomem *mmio_base;
+ 	int rc;
++	u8 cls;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
+@@ -394,9 +395,13 @@ static int __devinit vsc_sata_init_one (
+ 	base = (unsigned long) mmio_base;
+ 
+ 	/*
+-	 * Due to a bug in the chip, the default cache line size can't be used
++	 * Due to a bug in the chip, the default cache line size can't be
++	 * used (unless the default is non-zero).
+ 	 */
+-	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
++	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cls);
++	if (cls == 0x00) {
++		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 0x80);
++	}
+ 
+ 	probe_ent->sht = &vsc_sata_sht;
+ 	probe_ent->port_flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+
