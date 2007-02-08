@@ -1,30 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ATA convert GSI to irq on ia64
-Date: Thu, 8 Feb 2007 19:42:04 +0000
-Message-ID: <20070208194204.GC2354@infradead.org>
-References: <1170920422.15989.354.camel@ymzhang>
+From: Len Brown <lenb@kernel.org>
+Subject: Re: [git patches] IDE updates for 2.6.20
+Date: Thu, 8 Feb 2007 14:47:06 -0500
+Message-ID: <200702081447.07223.lenb@kernel.org>
+References: <20070207180814.27444.59159.sendpatchset@localhost.localdomain> <20070207182748.1c0c3588@localhost.localdomain> <45CA1916.6020709@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:57163 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423276AbXBHTmK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Feb 2007 14:42:10 -0500
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1423298AbXBHTtB@vger.kernel.org>
+In-Reply-To: <45CA1916.6020709@ru.mvista.com>
 Content-Disposition: inline
-In-Reply-To: <1170920422.15989.354.camel@ymzhang>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-acpi@vger.kernel.org
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-On Thu, Feb 08, 2007 at 03:40:22PM +0800, Zhang, Yanmin wrote:
-> If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
-> fixed irq number. On ia64 platform, such numbers are GSI and should be converted
-> to irq vector.
+On Wednesday 07 February 2007 13:23, Sergei Shtylyov wrote:
+> Hello.
 > 
-> Below patch against kernel 2.6.20 fixes it.
+> Alan wrote:
+> > On Wed, 07 Feb 2007 19:08:14 +0100
+> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> > 
+> >>- ACPI support for IDE (has been in SuSE kernels for months)
+> >>  (Hannes Reinecke <hare@suse.de>)
+> 
+> > I can find no public copy of this or discussion of it, please post a
+> 
+> http://marc.theaimsgroup.com/?l=linux-ide&m=116916643921306
+> 
+> > reference to the previous discussion or put the ACPI patch somewhere for
+> > review first.
+> 
+> http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/patches/ide-acpi-support.patch
 
-These direct arch ifdefs in core aren't acceptable.  The again I'm
-pretty sure we have patches floating around to turn these two macros
-into architecture-supplied ones, IIRC it came from the powerpc side.
+So it looks like...
+if (CONFIG_BLK_DEV_IDEACPI=y)
+	suspend uses _GTM
+	resume uses _STM
 
+But it looks like _GTF and using the task file is disabled by default,
+and needs to be enabled by invoking "ide=acpigtf".  Why is that?
+
+Also, what's the story on ide=acpionboot -- when/why is that expected
+to be invoked, and why is it not the default?
+
+thanks,
+-Len
