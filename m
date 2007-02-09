@@ -1,30 +1,104 @@
 From: Matteo Croce <rootkit85@yahoo.it>
 Subject: Re: [PATCH] AHCI PCI ID for MacBook Pro
-Date: Fri, 9 Feb 2007 18:39:52 +0100
-Message-ID: <200702091839.52316.rootkit85@yahoo.it>
-References: <82530.66623.qm@web25412.mail.ukl.yahoo.com> <200702091527.08447.rootkit85@yahoo.it> <1171032893.8134.13.camel@localhost>
+Date: Fri, 9 Feb 2007 18:41:45 +0100
+Message-ID: <200702091841.45125.rootkit85@yahoo.it>
+References: <82530.66623.qm@web25412.mail.ukl.yahoo.com> <45CC3FE5.2010408@gmail.com> <1171035949.23440.4.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out12.alice.it ([85.37.17.107]:2980 "EHLO
-	smtp-out12.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423142AbXBIRjx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Feb 2007 12:39:53 -0500
-In-Reply-To: <1171032893.8134.13.camel@localhost>
+Received: from smtp-out20.alice.it ([85.33.2.20]:3755 "EHLO
+	smtp-out01.alice.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1946549AbXBIR4P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Feb 2007 12:56:15 -0500
+In-Reply-To: <1171035949.23440.4.camel@localhost>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-On Friday 09 February 2007 15:54:53 you wrote:
-> On Fri, 2007-02-09 at 15:27 +0100, Matteo Croce wrote:
-> > +	{ PCI_VDEVICE(INTEL, 0x27c4), board_ahci }, /* ICH7M */
+On Friday 09 February 2007 16:45:49 you wrote:
+> On Fri, 2007-02-09 at 04:33 -0500, Tejun Heo wrote:
+> > Root Kit wrote:
+> > > hi,
+> > > i have a MacBook pro and i noticed that linux
+> > > (2.6.20)
+> > > binds the ata_piix driver
+> > > to the SATA controller.
+> > > being my SATA controller an AHCI (ICH7M) i added the
+> > > PCI ID to ahci.c
+> > > then tested the system.
+> > > i inline the patch here:
+> >
+> > Great.  Care to post a proper patch with leading description and SOB?
+> > Please take a look at the following patch.  You can omit diffstat result.
 >
-> Wasn't this PCI ID proposed for addition a while ago, and subsequently
-> rejected?  Or am I missing something?
+> Hmmhh I cannot really reproduce this benchmark. Matteo, with which
+> benchmarking program did you produce this ?
 >
-> - DML
+> Below is what I get when compiling shogun with make -j 4 (src from
+> www.shogun-toolbox.org) and a bonnie++ run:
+>
+> piix:
+>
+> $ /usr/sbin/bonnie++ -d ./
+> Writing with putc()...done
+> Writing intelligently...done
+> Rewriting...done
+> Reading with getc()...done
+> Reading intelligently...done
+> start 'em...done...done...done...
+> Create files in sequential order...done.
+> Stat files in sequential order...done.
+> Delete files in sequential order...done.
+> Create files in random order...done.
+> Stat files in random order...done.
+> Delete files in random order...done.
+> Version  1.03       ------Sequential Output------ --Sequential Input-
+> --Random- -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec
+> %CP no               4G 23865  57 24221   6 11588   2 26972  60 27942   2 
+> 88.5   0 ------Sequential Create------ --------Random Create--------
+> -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete-- files  /sec %CP
+>  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 16 +++++ +++ +++++ +++
+> +++++ +++ +++++ +++ +++++ +++ +++++ +++
+> no,4G,23865,57,24221,6,11588,2,26972,60,27942,2,88.5,0,16,+++++,+++,+++++,+
+>++,+++++,+++,+++++,+++,+++++,+++,+++++,+++
+>
+> $ time make -j4
+> real    2m40.799s
+> user    4m9.374s
+> sys     0m8.719s
+>
+> ahci:
+> $ /usr/sbin/bonnie++ -d ./
+> Writing with putc()...done
+> Writing intelligently...done
+> Rewriting...done
+> Reading with getc()...done
+> Reading intelligently...done
+> start 'em...done...done...done...
+> Create files in sequential order...done.
+> Stat files in sequential order...done.
+> Delete files in sequential order...done.
+> Create files in random order...done.
+> Stat files in random order...done.
+> Delete files in random order...done.
+> Version  1.03       ------Sequential Output------ --Sequential Input-
+> --Random- -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec
+> %CP no               4G 20872  48 29348   7 11642   2 28080  60 27293   2
+> 126.5   0 ------Sequential Create------ --------Random Create--------
+> -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete-- files  /sec %CP
+>  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 16 +++++ +++ +++++ +++
+> +++++ +++ +++++ +++ +++++ +++ +++++ +++
+> no,4G,20872,48,29348,7,11642,2,28080,60,27293,2,126.5,0,16,+++++,+++,+++++,
+>+++,+++++,+++,+++++,+++,+++++,+++,+++++,+++
+>
+> $ time make -j4
+> real    2m33.293s
+> user    4m1.954s
+> sys     0m8.533s
 
-rejected? why?
+bonnie++ from ubuntu repos
