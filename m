@@ -1,39 +1,132 @@
-From: Timothy Bisson <timbisson@sbcglobal.net>
-Subject: Re: NV Cache Feature Support in libata
-Date: Fri, 9 Feb 2007 11:21:41 -0800
-Message-ID: <36AD3019-C75F-4E3C-AD48-7C51831EC818@sbcglobal.net>
-References: <8202f4270702091025k77c3171fr6bb3b5b6088df85b@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Leopold Palomo Avellaneda <lepalom@wol.es>
+Subject: Re: Sata_via problems in a Vintage2-AE1
+Date: Fri, 9 Feb 2007 21:09:14 +0100
+Message-ID: <200702092109.25029.lepalom@wol.es>
+References: <200702090010.06897.lepalom@wol.es> <45CC42FF.5030507@gmail.com> <200702091814.02530.lepalom@wol.es>
+Reply-To: lepalom@wol.es
+Mime-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1254112.qIsd4vc07o";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from services.cse.ucsc.edu ([128.114.48.10]:36148 "EHLO
-	services.cse.ucsc.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992768AbXBITVr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Feb 2007 14:21:47 -0500
-Received: from [10.34.18.69] (nat-198-95-226-231.netapp.com [198.95.226.231])
-	(authenticated bits=0)
-	by services.cse.ucsc.edu (8.13.6/8.13.1) with ESMTP id l19JLkMX004733
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NO)
-	for <linux-ide@vger.kernel.org>; Fri, 9 Feb 2007 11:21:46 -0800 (PST)
-In-Reply-To: <8202f4270702091025k77c3171fr6bb3b5b6088df85b@mail.gmail.com>
+Received: from aybabtu.com ([69.60.117.155]:52323 "EHLO aybabtu.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423258AbXBIUJw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Feb 2007 15:09:52 -0500
+In-Reply-To: <200702091814.02530.lepalom@wol.es>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+--nextPart1254112.qIsd4vc07o
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Feb 9, 2007, at 10:25 AM, Fajun Chen wrote:
+A Divendres 09 Febrer 2007 18:13, Leopold Palomo Avellaneda va escriure:
+> A Divendres 09 Febrer 2007 10:46, Tejun Heo va escriure:
+> > Leopold Palomo Avellaneda wrote:
+> > > Dear people,
+> > >
+> > > I have a barebone Asus Vintage2-AE1 [1]. This box has a mobo Asus
+> > > A8V-MQ. The board has:
+> > > - the Socket 939 for AMD Athlon 64FX/Athlon 64.
+> > > - North Bridge: VIA K8M800
+> > > - South Bridge: VIA VT8251
+> > > - VIA Graphics Integrated
+> > > - IDE 2 x UltraDMA 133
+> > > - 4 x Serial ATA
+> > > ...
+> > >
+> > > I'm using the bios version 0206. The 0210 doesn't show me the vga car=
+d,
+> > > so I don't have graphics mode. I think that is a buggy bios.
+> > >
+> > > The bios is configured with vt8251 in AHCI mode and bios boot up
+> > > activated, so the hd is recognized in the beginning. I don't have any
+> > > raid, only one hd. The hd is a Maxtor 6V250F0.
+> > >
+> > > I'm using a debian etch but the i386 version. The only way that I can
+> > > use the hd is using a 2.6.16 standard kernel with the modifications
+> > > explained in this page [2]. Basically you have to use their ahci.c and
+> > > sata_via.c. The modifications are small from the original code from Mr
+> > > Jeff Garzik.
+> > >
+> > > I have tried to use the 2.6.18 and 2.6.20rc6 and the result is the
+> > > same. The kernel boots, but when arrives at the ata3,
+> > >
+> > > scsi2 : ahci
+> > > ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > > ata3.00: qc timeout (cmd 0xec)
+> > > ata3.00: failed to IDENTIFY (I/O error, err_mask=3D0x104)
+> > > .... repeated some times ...
+> > > scsi3 : ahci
+> > > ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > > scsi4 : ahci
+> > > ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > > scsi5 : ahci
+> > > ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > > Done.
+> > > Begin: Mounting root file system... ...
+> > > Begin: Running /scripts/local-top
+> > > ide0: I/O resource 0x3F6-0x3F6 not free.
+> > > ide0: ports already in use, skipping probe.
+> > > ide1: I/O resource 0x376-0x376 not free.
+> > > ide1: ports already in use, skipping probe.
+> > > Done.
+> > > Begin: Waiting for root file system ...
+> >
+> > It might be VIA IRQ quirk problem.
+> >
+> > 1. Does giving 'irqpoll' parameter to kernel make any difference?
+>
+> yes. Now it boots. However I'm having a lot of messages:
+> APIC error on CPU0
+> and I begin to have problems with the network card.
+>
+> > 2. Can you give a shot at 2.6.20?
+>
+> yes, I'm doing it now.
+>
+> Thank's a lot. But, why with irqpoll works and without no?
 
-> I'm not aware of any NV cache (vista feature documented in
-> ata-atapi-8) support in libata. Is this supported or any plan to
-> support it in the future?
+well, I summarize.=20
 
-It is already supported through the HDIO_DRIVE_CMD ioctl - pass 0xb6  
-as the command register value.
+With the default options of the kernel I cannot boot in this device with an=
+y=20
+kernel. Only with 2.6.20 and the irqpoll or the 2.6.16 modified files I can=
+=20
+boot.
 
-I think the interesting question is, how can we leverage the NV Cache  
-in the block and file system layers to improve power and performance.  
-One probably obvious option is to enter NV Cache Power Mode when  
-laptop mode is enabled.
+I have a lot of APIC error on CPU0.
 
-Tim
+Regards and thanks a lot. You have opened a windows with fresh air in this=
+=20
+dammed problem.
+
+Regards,
+
+Leo
+
+=2D-=20
+=2D-
+Linux User 152692
+PGP: 0xF944807E
+Catalonia
+
+--nextPart1254112.qIsd4vc07o
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBFzNT1aC7AnPlEgH4RAsDVAJ91emvjugFrpn7Mj8/ztATZ/2HTHQCfX9da
+Qp+HH5AOAAZCyW4NsgFKGIQ=
+=9pJC
+-----END PGP SIGNATURE-----
+
+--nextPart1254112.qIsd4vc07o--
