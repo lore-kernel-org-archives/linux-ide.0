@@ -1,40 +1,39 @@
-From: Matteo Croce <rootkit85@yahoo.it>
-Subject: Re: [PATCH] AHCI PCI ID for MacBook Pro
-Date: Fri, 9 Feb 2007 19:51:32 +0100
-Message-ID: <200702091951.32801.rootkit85@yahoo.it>
-References: <82530.66623.qm@web25412.mail.ukl.yahoo.com> <200702091839.52316.rootkit85@yahoo.it> <1171044940.8134.22.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+From: Timothy Bisson <timbisson@sbcglobal.net>
+Subject: Re: NV Cache Feature Support in libata
+Date: Fri, 9 Feb 2007 11:21:41 -0800
+Message-ID: <36AD3019-C75F-4E3C-AD48-7C51831EC818@sbcglobal.net>
+References: <8202f4270702091025k77c3171fr6bb3b5b6088df85b@mail.gmail.com>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out109.alice.it ([85.37.17.109]:3172 "EHLO
-	smtp-out109.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992454AbXBISvf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Feb 2007 13:51:35 -0500
-In-Reply-To: <1171044940.8134.22.camel@localhost>
-Content-Disposition: inline
+Received: from services.cse.ucsc.edu ([128.114.48.10]:36148 "EHLO
+	services.cse.ucsc.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992768AbXBITVr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Feb 2007 14:21:47 -0500
+Received: from [10.34.18.69] (nat-198-95-226-231.netapp.com [198.95.226.231])
+	(authenticated bits=0)
+	by services.cse.ucsc.edu (8.13.6/8.13.1) with ESMTP id l19JLkMX004733
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NO)
+	for <linux-ide@vger.kernel.org>; Fri, 9 Feb 2007 11:21:46 -0800 (PST)
+In-Reply-To: <8202f4270702091025k77c3171fr6bb3b5b6088df85b@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-On Friday 09 February 2007 19:15:40 you wrote:
-> On Fri, 2007-02-09 at 18:39 +0100, Matteo Croce wrote:
-> > On Friday 09 February 2007 15:54:53 you wrote:
-> > > On Fri, 2007-02-09 at 15:27 +0100, Matteo Croce wrote:
-> > > > +	{ PCI_VDEVICE(INTEL, 0x27c4), board_ahci }, /* ICH7M */
-> > >
-> > > Wasn't this PCI ID proposed for addition a while ago, and subsequently
-> > > rejected?  Or am I missing something?
-> > >
-> > > - DML
-> >
-> > rejected? why?
->
-> Because 0x27C4 is not an AHCI controller.... at least, the one in my
-> Dell laptop isn't.
->
-> - DML
-if so, how could it works with my laptop?
-i also have NCQ enabled...
 
+On Feb 9, 2007, at 10:25 AM, Fajun Chen wrote:
+
+> I'm not aware of any NV cache (vista feature documented in
+> ata-atapi-8) support in libata. Is this supported or any plan to
+> support it in the future?
+
+It is already supported through the HDIO_DRIVE_CMD ioctl - pass 0xb6  
+as the command register value.
+
+I think the interesting question is, how can we leverage the NV Cache  
+in the block and file system layers to improve power and performance.  
+One probably obvious option is to enter NV Cache Power Mode when  
+laptop mode is enabled.
+
+Tim
