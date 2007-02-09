@@ -1,70 +1,33 @@
-From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Subject: Re: [PATCH] ATA convert GSI to irq on ia64
-Date: Fri, 09 Feb 2007 11:29:51 +0800
-Message-ID: <1170991791.15989.364.camel@ymzhang>
-References: <1170920422.15989.354.camel@ymzhang>
-	 <45CBCC31.7070909@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] sata_promise: fix missing PATA cable detection
+Date: Fri, 09 Feb 2007 04:27:35 -0500
+Message-ID: <45CC3E87.3090807@gmail.com>
+References: <200702072129.l17LTujt012924@alkaid.it.uu.se> <45CB2A91.6050208@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <45CBCC31.7070909@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.237]:31913 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946254AbXBIJ1o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Feb 2007 04:27:44 -0500
+Received: by wr-out-0506.google.com with SMTP id 68so839216wri
+        for <linux-ide@vger.kernel.org>; Fri, 09 Feb 2007 01:27:44 -0800 (PST)
+In-Reply-To: <45CB2A91.6050208@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-On Thu, 2007-02-08 at 20:19 -0500, Jeff Garzik wrote:
-> Zhang, Yanmin wrote:
-> > If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
-> > fixed irq number. On ia64 platform, such numbers are GSI and should be converted
-> > to irq vector.
-> > 
-> > Below patch against kernel 2.6.20 fixes it.
-> > 
-> > Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
-> 
-> IA64 should create its own libata-portmap.h, rather than modifying the 
-> one in asm-generic with arch-specific choices.
-> 
-> powerpc is a current example of this (and currently the only 
-> non-asm-generic user) found in kernel 2.6.20.
-Thank Jeff. I worked out a new patch.
+Jeff Garzik wrote:
+>> This patch adds yet another is-PATA-or-SATA? check, but it's in a
+>> cold path so shouldn't matter much. This will be cleaned up if/when
+>> PATA ports and SATA ports start using different ops structures.
+[--snip--]
+> I agree with your comment above -- SATA and PATA ports should use 
+> different ops structures
 
-If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the fixed
-irq number. On ia64 platform, such numbers are GSI and should be converted to irq
-vector.
+Working on it.  It will be done in a few weeks.
 
-Below patch against kernel 2.6.20 fixes it.
- 
-Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
-
----
-
-diff -Nraup linux-2.6.20/arch/ia64/Kconfig linux-2.6.20_fix/arch/ia64/Kconfig
---- linux-2.6.20/arch/ia64/Kconfig	2007-02-08 15:13:41.000000000 +0800
-+++ linux-2.6.20_fix/arch/ia64/Kconfig	2007-02-09 11:19:35.000000000 +0800
-@@ -11,6 +11,7 @@ menu "Processor type and features"
- 
- config IA64
- 	bool
-+	select ATA_NONSTANDARD if ATA
- 	default y
- 	help
- 	  The Itanium Processor Family is Intel's 64-bit successor to
-diff -Nraup linux-2.6.20/include/asm-ia64/libata-portmap.h linux-2.6.20_fix/include/asm-ia64/libata-portmap.h
---- linux-2.6.20/include/asm-ia64/libata-portmap.h	1970-01-01 08:00:00.000000000 +0800
-+++ linux-2.6.20_fix/include/asm-ia64/libata-portmap.h	2007-02-09 11:19:55.000000000 +0800
-@@ -0,0 +1,12 @@
-+#ifndef __ASM_IA64_LIBATA_PORTMAP_H
-+#define __ASM_IA64_LIBATA_PORTMAP_H
-+
-+#define ATA_PRIMARY_CMD		0x1F0
-+#define ATA_PRIMARY_CTL		0x3F6
-+#define ATA_PRIMARY_IRQ(dev)	isa_irq_to_vector(14)
-+
-+#define ATA_SECONDARY_CMD	0x170
-+#define ATA_SECONDARY_CTL	0x376
-+#define ATA_SECONDARY_IRQ(dev)	isa_irq_to_vector(15)
-+
-+#endif
+-- 
+tejun
