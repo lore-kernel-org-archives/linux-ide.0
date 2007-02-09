@@ -1,78 +1,74 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Sata_via problems in a Vintage2-AE1
-Date: Fri, 09 Feb 2007 04:46:39 -0500
-Message-ID: <45CC42FF.5030507@gmail.com>
-References: <200702090010.06897.lepalom@wol.es>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: need help with ata error
+Date: Fri, 09 Feb 2007 20:39:26 +1100
+Message-ID: <45CC414E.1080609@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:32351 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946279AbXBIJqv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Feb 2007 04:46:51 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so743369nze
-        for <linux-ide@vger.kernel.org>; Fri, 09 Feb 2007 01:46:50 -0800 (PST)
-In-Reply-To: <200702090010.06897.lepalom@wol.es>
+Received: from customer-domains.icp-qv1-irony13.iinet.net.au ([203.59.1.163]:33069
+	"EHLO customer-domains.icp-qv1-irony13.iinet.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946278AbXBIJtc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Feb 2007 04:49:32 -0500
+Received: from [192.168.3.7] (really [192.168.3.7]) by eyal.emu.id.au
+	via smail with esmtp
+	id <m1HFSE4-0034HoC@eyal.emu.id.au> (Debian Smail3.2.0.115)
+	for <linux-ide@vger.kernel.org>; Fri, 9 Feb 2007 20:39:28 +1100 (EST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: lepalom@wol.es
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: list linux-ide <linux-ide@vger.kernel.org>
 
-Leopold Palomo Avellaneda wrote:
-> Dear people,
-> 
-> I have a barebone Asus Vintage2-AE1 [1]. This box has a mobo Asus A8V-MQ. The 
-> board has:
-> - the Socket 939 for AMD Athlon 64FX/Athlon 64.
-> - North Bridge: VIA K8M800  
-> - South Bridge: VIA VT8251
-> - VIA Graphics Integrated
-> - IDE 2 x UltraDMA 133
-> - 4 x Serial ATA
-> ...
-> 
-> I'm using the bios version 0206. The 0210 doesn't show me the vga card, so I 
-> don't have graphics mode. I think that is a buggy bios.
-> 
-> The bios is configured with vt8251 in AHCI mode and bios boot up activated, so 
-> the hd is recognized in the beginning. I don't have any raid, only one hd. 
-> The hd is a Maxtor 6V250F0.
-> 
-> I'm using a debian etch but the i386 version. The only way that I can use the 
-> hd is using a 2.6.16 standard kernel with the modifications explained in this 
-> page [2]. Basically you have to use their ahci.c and sata_via.c. The 
-> modifications are small from the original code from Mr Jeff Garzik.
-> 
-> I have tried to use the 2.6.18 and 2.6.20rc6 and the result is the same. The  
-> kernel boots, but when arrives at the ata3, 
-> 
-> scsi2 : ahci
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata3.00: qc timeout (cmd 0xec)
-> ata3.00: failed to IDENTIFY (I/O error, err_mask=0x104)
-> .... repeated some times ...
-> scsi3 : ahci
-> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> scsi4 : ahci
-> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> scsi5 : ahci
-> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> Done.
-> Begin: Mounting root file system... ...
-> Begin: Running /scripts/local-top
-> ide0: I/O resource 0x3F6-0x3F6 not free.
-> ide0: ports already in use, skipping probe.
-> ide1: I/O resource 0x376-0x376 not free.
-> ide1: ports already in use, skipping probe.
-> Done.
-> Begin: Waiting for root file system ...
+I recently added a 6th disk to a RAID5. All disks are WD 320GB SATA, of different
+Caviar models (SE, RE) and this new one is RE16.
 
-It might be VIA IRQ quirk problem.
+It worked well for about 5 days (completed a 20 hour grow OK). I now see the following
+messages logged (see at end). Can someone explain what it means? The raid5 is still
+up and it did not react to this. Being a mythtv repository it gets used regularly.
 
-1. Does giving 'irqpoll' parameter to kernel make any difference?
+Is this a disk issue? A controller issue (the new disk is now the fourth on a
+Promise SATA-II-150-TX4)? A kernel problem (2.6.20 vanilla).
 
-2. Can you give a shot at 2.6.20?
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata6.00: cmd 25/00:b8:3f:c4:b6/00:00:20:00:00/e0 tag 0 cdb 0x0 data 94208 in
+         res 50/00:00:f6:c4:b6/00:00:00:00:00/e0 Emask 0x1 (device error)
+ata6.00: configured for UDMA/133
+ata6: EH complete
+SCSI device sdf: 625142448 512-byte hdwr sectors (320073 MB)
+sdf: Write Protect is off
+sdf: Mode Sense: 00 3a 00 00
+SCSI device sdf: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+
+The disk was detected at bootup as:
+
+sata_promise 0000:03:01.0: version 1.05
+ACPI: PCI Interrupt 0000:03:01.0[A] -> GSI 21 (level, low) -> IRQ 19
+ata3: SATA max UDMA/133 cmd 0xF8CB2200 ctl 0xF8CB2238 bmdma 0x0 irq 19
+ata4: SATA max UDMA/133 cmd 0xF8CB2280 ctl 0xF8CB22B8 bmdma 0x0 irq 19
+ata5: SATA max UDMA/133 cmd 0xF8CB2300 ctl 0xF8CB2338 bmdma 0x0 irq 19
+ata6: SATA max UDMA/133 cmd 0xF8CB2380 ctl 0xF8CB23B8 bmdma 0x0 irq 19
+.....
+scsi5 : sata_promise
+.....
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata6.00: ATA-7, max UDMA/133, 625142448 sectors: LBA48 NCQ (depth 0/1)
+ata6.00: ata6: dev 0 multi count 0
+ata6.00: configured for UDMA/133
+.....
+scsi 5:0:0:0: Direct-Access     ATA      WDC WD3200YS-01P 21.0 PQ: 0 ANSI: 5
+SCSI device sdf: 625142448 512-byte hdwr sectors (320073 MB)
+sdf: Write Protect is off
+sdf: Mode Sense: 00 3a 00 00
+SCSI device sdf: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+SCSI device sdf: 625142448 512-byte hdwr sectors (320073 MB)
+sdf: Write Protect is off
+sdf: Mode Sense: 00 3a 00 00
+SCSI device sdf: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdf: sdf1
+sd 5:0:0:0: Attached scsi disk sdf
+
+TIA
 
 -- 
-tejun
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
