@@ -1,59 +1,68 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_vsc with iq3124h regression in 2.6.20
-Date: Sat, 10 Feb 2007 09:58:36 -0500
-Message-ID: <45CDDD9C.2030301@gmail.com>
-References: <0C7297FA1D2D244A9C7F6959C0BF1E52015235BE@azsmsx413.amr.corp.intel.com> <45CCF6BD.9020404@garzik.org>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: Re: [PATCH] AHCI PCI ID for MacBook Pro
+Date: Sat, 10 Feb 2007 17:03:37 +0100
+Message-ID: <1171123417.31813.4.camel@localhost>
+References: <82530.66623.qm@web25412.mail.ukl.yahoo.com>
+	 <45CC3FE5.2010408@gmail.com> <1171035949.23440.4.camel@localhost>
+	 <200702091841.45125.rootkit85@yahoo.it>
+	 <1171102758.19041.5.camel@localhost>  <45CDC5DF.9060306@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:23611 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932581AbXBJO7A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Feb 2007 09:59:00 -0500
-Received: by wr-out-0506.google.com with SMTP id 68so1205760wri
-        for <linux-ide@vger.kernel.org>; Sat, 10 Feb 2007 06:58:59 -0800 (PST)
-In-Reply-To: <45CCF6BD.9020404@garzik.org>
+Received: from nn7.de ([85.214.94.156]:34836 "EHLO nn7.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932695AbXBJQDk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Feb 2007 11:03:40 -0500
+In-Reply-To: <45CDC5DF.9060306@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, jeremy@sgi.com, Mark Lord <liml@rtr.ca>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Matteo Croce <rootkit85@yahoo.it>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Williams, Dan J wrote:
->> When I fire up 2.6.20 with an iq3124h I get:
->>
->> ata1: SATA max UDMA/133 cmd 0xC8822200 ctl 0xC8822229 bmdma 0xC8822270
->> irq 25
->> ata2: SATA max UDMA/133 cmd 0xC8822400 ctl 0xC8822429 bmdma 0xC8822470
->> irq 25
->> ata3: SATA max UDMA/133 cmd 0xC8822600 ctl 0xC8822629 bmdma 0xC8822670
->> irq 25
->> ata4: SATA max UDMA/133 cmd 0xC8822800 ctl 0xC8822829 bmdma 0xC8822870
->> irq 25
->> scsi0 : sata_vsc
->> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->> irq 25: nobody cared (try booting with the "irqpoll" option)
->> handlers:
->> [<c01796e0>] (vsc_sata_interrupt+0x0/0x194)
->> Disabling IRQ #25
->>
->> I did a git bisect and came up with: [PATCH] libata: always use polling
->> IDENTIFY (800b399669ad495ad4361d134df87401ae36f44f)
->>
->> I could probably cobble together a workaround to use irq-driven IDENTIFY
->> for this card but wanted to see if there was a better way.
+On Sat, 2007-02-10 at 08:17 -0500, Tejun Heo wrote:
+> Soeren Sonnenburg wrote:
+> > On Fri, 2007-02-09 at 18:41 +0100, Matteo Croce wrote:
+> >> On Friday 09 February 2007 16:45:49 you wrote:
+> >>> On Fri, 2007-02-09 at 04:33 -0500, Tejun Heo wrote:
+> >>>> Root Kit wrote:
+> >>> [...]
+> >>> Hmmhh I cannot really reproduce this benchmark. Matteo, with which
+> >>> benchmarking program did you produce this ?
+> >>> [...]
+> >> bonnie++ from ubuntu repos
+> > 
+> > OK, I reran bonnie++ -d /tmp/ on a unencrypted partition - results are
+> > here http://nn7.de/bench/ahci.html . Looks like it is slightly faster
+> > for sequential block write (2MB/s faster) and sequential read using
+> > putc()  (1MB/s faster), though putc() is slowed down by 6MB/s.
 > 
-> As I recall, the 31244 and VSC-7174 always send an interrupt, so the 
-> driver should account for this.  I thought we had code already in the 
-> driver to handle this, but perhaps recent changes stomped that.
+> I suspect the difference is caused by either the io scheduler in use or 
+> disk drive itself.
+
+well I am doing both benchmarks on a macbookpro1,1 -> 32bit mode (matteo
+does it on a macbook pro2, sth so he has a c2d and does it in 64bit ->
+amd64 mode).
+
+So the io scheduler is the same or do you mean inside of ahci/piix ?
+
+> > However what may make it worth is that I don't see any errors on
+> > suspend/resume anymore...
 > 
-> It would be good to standardize the way we handle these sorts of 
-> controllers, because (I think) Mark Lord has the same problem on 
-> sata_qstor (or pdc_adma?).
+> Hmm... So, ata_piix fails to suspend/resume properly on your machine? 
+> It should work.  Can you describe how it fails?
 
-Yeah, it seems we need ATA_FLAG_LISTEN_IRQ_WHILE_POLLING or 
-ATA_FLAG_BROKEN_NIEN or something.
+Well I keep seeing this:
 
+ata3.01: revalidation failed (errno=-2)
+ata3: failed to recover some devices, retrying in 5 secs
+ATA: abnormal status 0x7F on port 0x40DF
+ATA: abnormal status 0x7F on port 0x40DF
+ata3.01: configured for UDMA/133
+
+but I am still on 2.6.20-rc6 ... so sorry if this is now fixed in .20.
+
+Soeren.
 -- 
-tejun
+Sometimes, there's a moment as you're waking, when you become aware of
+the real world around you, but you're still dreaming.
