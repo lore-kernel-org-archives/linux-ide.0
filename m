@@ -1,146 +1,38 @@
-From: Leopold Palomo Avellaneda <lepalom@wol.es>
-Subject: Re: Sata_via problems in a Vintage2-AE1
-Date: Sat, 10 Feb 2007 18:05:10 +0100
-Message-ID: <200702101805.19710.lepalom@wol.es>
-References: <200702090010.06897.lepalom@wol.es> <200702092109.25029.lepalom@wol.es> <45CDDA86.2000607@gmail.com>
-Reply-To: lepalom@wol.es
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] AHCI PCI ID for MacBook Pro
+Date: Sat, 10 Feb 2007 12:10:17 -0500
+Message-ID: <45CDFC79.1040301@gmail.com>
+References: <82530.66623.qm@web25412.mail.ukl.yahoo.com>	 <200702091527.08447.rootkit85@yahoo.it>	 <1171032893.8134.13.camel@localhost>	 <200702091839.52316.rootkit85@yahoo.it>  <45CDD0CB.2070608@gmail.com> <1171123622.31813.9.camel@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1640032.6eA6PmNh3B";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aybabtu.com ([69.60.117.155]:52685 "EHLO aybabtu.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751399AbXBJRGA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Feb 2007 12:06:00 -0500
-In-Reply-To: <45CDDA86.2000607@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.182]:61321 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751393AbXBJRKi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Feb 2007 12:10:38 -0500
+Received: by py-out-1112.google.com with SMTP id a29so580792pyi
+        for <linux-ide@vger.kernel.org>; Sat, 10 Feb 2007 09:10:37 -0800 (PST)
+In-Reply-To: <1171123622.31813.9.camel@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jean Delvare <jdelvare@suse.de>
+To: Soeren Sonnenburg <sonne@nn7.de>
+Cc: Matteo Croce <rootkit85@yahoo.it>, linux-ide@vger.kernel.org
 
---nextPart1640032.6eA6PmNh3B
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Soeren Sonnenburg wrote:
+> I don't get it. Why is it rejected then ? If I'd like to use the ahci
+> mode of the ich7 r/m driver I just compile it into the kernel, else the
+> piix ?!
 
-A Dissabte 10 Febrer 2007 15:45, Tejun Heo va escriure:
-> [cc'ing Alan and Jean, Hi!]
+Well, it's probably okay if you know what you want but when ich's are 
+present, most distributions choose to load both ahci and ata_piix while 
+usually preferring ahci.  That should generally work.  If BIOS didn't 
+set it up properly, ahci will fail to load then ata_piix is loaded 
+instead.  The thing is that BIOSen are weird and it's quite possible 
+that switching to ahci mode might have other side effects.  For one, 
+ACPI methods could have been written assuming certain mode and 
+suspend/resume might choke if the controller is put into different mode 
+from what BIOS has configured.
 
-Hi people!!!
-
-> Leopold Palomo Avellaneda wrote:
-> > A Divendres 09 Febrer 2007 18:13, Leopold Palomo Avellaneda va escriure:
-> >> A Divendres 09 Febrer 2007 10:46, Tejun Heo va escriure:
-> >>> Leopold Palomo Avellaneda wrote:
-> >>>> Dear people,
-> >>>>
-> >>>> I have a barebone Asus Vintage2-AE1 [1]. This box has a mobo Asus
-> >>>> A8V-MQ. The board has:
-> >>>> - the Socket 939 for AMD Athlon 64FX/Athlon 64.
-> >>>> - North Bridge: VIA K8M800
-> >>>> - South Bridge: VIA VT8251
-> >>>> - VIA Graphics Integrated
-> >>>> - IDE 2 x UltraDMA 133
-> >>>> - 4 x Serial ATA
-> >>>> ...
-> >>>>
-> >>>> I'm using the bios version 0206. The 0210 doesn't show me the vga
-> >>>> card, so I don't have graphics mode. I think that is a buggy bios.
-> >>>>
-> >>>> The bios is configured with vt8251 in AHCI mode and bios boot up
-> >>>> activated, so the hd is recognized in the beginning. I don't have any
-> >>>> raid, only one hd. The hd is a Maxtor 6V250F0.
-> >>>>
-> >>>> I'm using a debian etch but the i386 version. The only way that I can
-> >>>> use the hd is using a 2.6.16 standard kernel with the modifications
-> >>>> explained in this page [2]. Basically you have to use their ahci.c a=
-nd
-> >>>> sata_via.c. The modifications are small from the original code from =
-Mr
-> >>>> Jeff Garzik.
-> >>>>
-> >>>> I have tried to use the 2.6.18 and 2.6.20rc6 and the result is the
-> >>>> same. The kernel boots, but when arrives at the ata3,
-> >>>>
-> >>>> scsi2 : ahci
-> >>>> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>>> ata3.00: qc timeout (cmd 0xec)
-> >>>> ata3.00: failed to IDENTIFY (I/O error, err_mask=3D0x104)
-> >>>> .... repeated some times ...
-> >>>> scsi3 : ahci
-> >>>> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>>> scsi4 : ahci
-> >>>> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>>> scsi5 : ahci
-> >>>> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>>> Done.
-> >>>> Begin: Mounting root file system... ...
-> >>>> Begin: Running /scripts/local-top
-> >>>> ide0: I/O resource 0x3F6-0x3F6 not free.
-> >>>> ide0: ports already in use, skipping probe.
-> >>>> ide1: I/O resource 0x376-0x376 not free.
-> >>>> ide1: ports already in use, skipping probe.
-> >>>> Done.
-> >>>> Begin: Waiting for root file system ...
-> >>>
-> >>> It might be VIA IRQ quirk problem.
-> >>>
-> >>> 1. Does giving 'irqpoll' parameter to kernel make any difference?
-> >>
-> >> yes. Now it boots. However I'm having a lot of messages:
-> >> APIC error on CPU0
-> >> and I begin to have problems with the network card.
-> >>
-> >>> 2. Can you give a shot at 2.6.20?
-> >>
-> >> yes, I'm doing it now.
-> >>
-> >> Thank's a lot. But, why with irqpoll works and without no?
-> >
-> > well, I summarize.
-> >
-> > With the default options of the kernel I cannot boot in this device with
-> > any kernel. Only with 2.6.20 and the irqpoll or the 2.6.16 modified fil=
-es
-> > I can boot.
-> >
-> > I have a lot of APIC error on CPU0.
->
-> It seems one of via pci routing quirk problem.  Can you give a shot at
-> 'acpi=3Doff' or 'acpi=3Dnoirq' without 'irqpoll'?
-
-yes, do it. Not boot. The same problem. Only boots with irqpoll.
-
-> I dunno much about what's going on there.  Alan, Jean, any ideas?
-
-:-(
-
-uf, what's the problem of using _always_ irqpoll?
-
-Regards,
-
-Leo
-
-
-=2D-=20
-=2D-
-Linux User 152692
-PGP: 0xF944807E
-Catalonia
-
---nextPart1640032.6eA6PmNh3B
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBFzftPaC7AnPlEgH4RAqu+AJ978uwPLlXn1B3IE6Cki0oiZ5IyoACdGyWw
-FFe22EgVAZMBk8Jm2Gt2+C0=
-=eZM1
------END PGP SIGNATURE-----
-
---nextPart1640032.6eA6PmNh3B--
+-- 
+tejun
