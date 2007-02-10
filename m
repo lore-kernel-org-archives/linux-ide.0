@@ -1,54 +1,40 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] add delay around sl82c105_reset_engine calls
-Date: Sat, 10 Feb 2007 21:36:14 +0100
-Message-ID: <20070210203614.GA25602@aepfle.de>
-References: <20070210203512.GA25586@aepfle.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_vsc with iq3124h regression in 2.6.20
+Date: Sat, 10 Feb 2007 16:08:01 -0500
+Message-ID: <45CE3431.1040209@rtr.ca>
+References: <0C7297FA1D2D244A9C7F6959C0BF1E52015235BE@azsmsx413.amr.corp.intel.com> <45CCF6BD.9020404@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:55587 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751855AbXBJUex (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Feb 2007 15:34:53 -0500
-Content-Disposition: inline
-In-Reply-To: <20070210203512.GA25586@aepfle.de>
+Received: from rtr.ca ([64.26.128.89]:1944 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751898AbXBJVID (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Feb 2007 16:08:03 -0500
+In-Reply-To: <45CCF6BD.9020404@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linuxppc-dev@ozlabs.org, Andrew Morton <akpm@osdl.org>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "Williams, Dan J" <dan.j.williams@intel.com>, htejun@gmail.com, linux-ide@vger.kernel.org, jeremy@sgi.com
 
+Jeff Garzik wrote:
+>
+> As I recall, the 31244 and VSC-7174 always send an interrupt, so the 
+> driver should account for this.  I thought we had code already in the 
+> driver to handle this, but perhaps recent changes stomped that.
+> 
+> It would be good to standardize the way we handle these sorts of 
+> controllers, because (I think) Mark Lord has the same problem on 
+> sata_qstor (or pdc_adma?).
 
-The hald media changed polling does really confuse things.
-Noone knows why the delays are needed, but they give us access to the CD.
+sata_qstor has a different problem.
+For IDENTIFY and other non-R/W commands, it behaves nicely
+as a simple, dumb, PIO style interface.
 
-An udelay(50) will give reliable access to the drive, but there is still
-one (or more) EH reset. The drive works without EH resets with udelay(100).
+For regular block I/O R/W commands, it uses full DMA with
+the internal host queue, depth=1, *but* requires NIEN=1
+during such commands.
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
+It's on my near-term "to fix" list, along with migration to the new EH stuff.
 
----
- drivers/ata/pata_sl82c105.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-Index: linux-2.6/drivers/ata/pata_sl82c105.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_sl82c105.c
-+++ linux-2.6/drivers/ata/pata_sl82c105.c
-@@ -187,7 +187,9 @@ static void sl82c105_bmdma_start(struct 
- {
- 	struct ata_port *ap = qc->ap;
- 
-+	udelay(100);
- 	sl82c105_reset_engine(ap);
-+	udelay(100);
- 
- 	/* Set the clocks for DMA */
- 	sl82c105_configure_dmamode(ap, qc->dev);
-@@ -216,6 +218,7 @@ static void sl82c105_bmdma_stop(struct a
- 
- 	ata_bmdma_stop(qc);
- 	sl82c105_reset_engine(ap);
-+	udelay(100);
- 
- 	/* This will redo the initial setup of the DMA device to matching
- 	   PIO timings */
+Cheers
