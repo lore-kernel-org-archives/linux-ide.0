@@ -1,104 +1,59 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Sata_via problems in a Vintage2-AE1
-Date: Sat, 10 Feb 2007 09:45:26 -0500
-Message-ID: <45CDDA86.2000607@gmail.com>
-References: <200702090010.06897.lepalom@wol.es> <45CC42FF.5030507@gmail.com> <200702091814.02530.lepalom@wol.es> <200702092109.25029.lepalom@wol.es>
+Subject: Re: sata_vsc with iq3124h regression in 2.6.20
+Date: Sat, 10 Feb 2007 09:58:36 -0500
+Message-ID: <45CDDD9C.2030301@gmail.com>
+References: <0C7297FA1D2D244A9C7F6959C0BF1E52015235BE@azsmsx413.amr.corp.intel.com> <45CCF6BD.9020404@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:62985 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932478AbXBJOp7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Feb 2007 09:45:59 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1181920wxd
-        for <linux-ide@vger.kernel.org>; Sat, 10 Feb 2007 06:45:58 -0800 (PST)
-In-Reply-To: <200702092109.25029.lepalom@wol.es>
+Received: from wr-out-0506.google.com ([64.233.184.226]:23611 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932581AbXBJO7A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Feb 2007 09:59:00 -0500
+Received: by wr-out-0506.google.com with SMTP id 68so1205760wri
+        for <linux-ide@vger.kernel.org>; Sat, 10 Feb 2007 06:58:59 -0800 (PST)
+In-Reply-To: <45CCF6BD.9020404@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: lepalom@wol.es
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jean Delvare <jdelvare@suse.de>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "Williams, Dan J" <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, jeremy@sgi.com, Mark Lord <liml@rtr.ca>
 
-[cc'ing Alan and Jean, Hi!]
-
-Leopold Palomo Avellaneda wrote:
-> A Divendres 09 Febrer 2007 18:13, Leopold Palomo Avellaneda va escriure:
->> A Divendres 09 Febrer 2007 10:46, Tejun Heo va escriure:
->>> Leopold Palomo Avellaneda wrote:
->>>> Dear people,
->>>>
->>>> I have a barebone Asus Vintage2-AE1 [1]. This box has a mobo Asus
->>>> A8V-MQ. The board has:
->>>> - the Socket 939 for AMD Athlon 64FX/Athlon 64.
->>>> - North Bridge: VIA K8M800
->>>> - South Bridge: VIA VT8251
->>>> - VIA Graphics Integrated
->>>> - IDE 2 x UltraDMA 133
->>>> - 4 x Serial ATA
->>>> ...
->>>>
->>>> I'm using the bios version 0206. The 0210 doesn't show me the vga card,
->>>> so I don't have graphics mode. I think that is a buggy bios.
->>>>
->>>> The bios is configured with vt8251 in AHCI mode and bios boot up
->>>> activated, so the hd is recognized in the beginning. I don't have any
->>>> raid, only one hd. The hd is a Maxtor 6V250F0.
->>>>
->>>> I'm using a debian etch but the i386 version. The only way that I can
->>>> use the hd is using a 2.6.16 standard kernel with the modifications
->>>> explained in this page [2]. Basically you have to use their ahci.c and
->>>> sata_via.c. The modifications are small from the original code from Mr
->>>> Jeff Garzik.
->>>>
->>>> I have tried to use the 2.6.18 and 2.6.20rc6 and the result is the
->>>> same. The kernel boots, but when arrives at the ata3,
->>>>
->>>> scsi2 : ahci
->>>> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> ata3.00: qc timeout (cmd 0xec)
->>>> ata3.00: failed to IDENTIFY (I/O error, err_mask=0x104)
->>>> .... repeated some times ...
->>>> scsi3 : ahci
->>>> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> scsi4 : ahci
->>>> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> scsi5 : ahci
->>>> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> Done.
->>>> Begin: Mounting root file system... ...
->>>> Begin: Running /scripts/local-top
->>>> ide0: I/O resource 0x3F6-0x3F6 not free.
->>>> ide0: ports already in use, skipping probe.
->>>> ide1: I/O resource 0x376-0x376 not free.
->>>> ide1: ports already in use, skipping probe.
->>>> Done.
->>>> Begin: Waiting for root file system ...
->>> It might be VIA IRQ quirk problem.
->>>
->>> 1. Does giving 'irqpoll' parameter to kernel make any difference?
->> yes. Now it boots. However I'm having a lot of messages:
->> APIC error on CPU0
->> and I begin to have problems with the network card.
+Jeff Garzik wrote:
+> Williams, Dan J wrote:
+>> When I fire up 2.6.20 with an iq3124h I get:
 >>
->>> 2. Can you give a shot at 2.6.20?
->> yes, I'm doing it now.
+>> ata1: SATA max UDMA/133 cmd 0xC8822200 ctl 0xC8822229 bmdma 0xC8822270
+>> irq 25
+>> ata2: SATA max UDMA/133 cmd 0xC8822400 ctl 0xC8822429 bmdma 0xC8822470
+>> irq 25
+>> ata3: SATA max UDMA/133 cmd 0xC8822600 ctl 0xC8822629 bmdma 0xC8822670
+>> irq 25
+>> ata4: SATA max UDMA/133 cmd 0xC8822800 ctl 0xC8822829 bmdma 0xC8822870
+>> irq 25
+>> scsi0 : sata_vsc
+>> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> irq 25: nobody cared (try booting with the "irqpoll" option)
+>> handlers:
+>> [<c01796e0>] (vsc_sata_interrupt+0x0/0x194)
+>> Disabling IRQ #25
 >>
->> Thank's a lot. But, why with irqpoll works and without no?
+>> I did a git bisect and came up with: [PATCH] libata: always use polling
+>> IDENTIFY (800b399669ad495ad4361d134df87401ae36f44f)
+>>
+>> I could probably cobble together a workaround to use irq-driven IDENTIFY
+>> for this card but wanted to see if there was a better way.
 > 
-> well, I summarize. 
+> As I recall, the 31244 and VSC-7174 always send an interrupt, so the 
+> driver should account for this.  I thought we had code already in the 
+> driver to handle this, but perhaps recent changes stomped that.
 > 
-> With the default options of the kernel I cannot boot in this device with any 
-> kernel. Only with 2.6.20 and the irqpoll or the 2.6.16 modified files I can 
-> boot.
-> 
-> I have a lot of APIC error on CPU0.
+> It would be good to standardize the way we handle these sorts of 
+> controllers, because (I think) Mark Lord has the same problem on 
+> sata_qstor (or pdc_adma?).
 
-It seems one of via pci routing quirk problem.  Can you give a shot at 
-'acpi=off' or 'acpi=noirq' without 'irqpoll'?
-
-I dunno much about what's going on there.  Alan, Jean, any ideas?
-
-Thanks.
+Yeah, it seems we need ATA_FLAG_LISTEN_IRQ_WHILE_POLLING or 
+ATA_FLAG_BROKEN_NIEN or something.
 
 -- 
 tejun
