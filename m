@@ -1,26 +1,43 @@
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: [git patches] libata updates 1 of 3
-Date: Sat, 10 Feb 2007 06:46:29 +0100
-Message-ID: <20070210054629.GA4395@gentoox2.trippelsdorf.de>
-References: <20070210010914.GA19717@havoc.gtf.org>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: Re: [PATCH] AHCI PCI ID for MacBook Pro
+Date: Sat, 10 Feb 2007 11:19:18 +0100
+Message-ID: <1171102758.19041.5.camel@localhost>
+References: <82530.66623.qm@web25412.mail.ukl.yahoo.com>
+	 <45CC3FE5.2010408@gmail.com> <1171035949.23440.4.camel@localhost>
+	 <200702091841.45125.rootkit85@yahoo.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out-45.synserver.de ([217.119.50.45]:60080 "HELO
-	smtp-out-45.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752711AbXBJFxX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Feb 2007 00:53:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20070210010914.GA19717@havoc.gtf.org>
+Received: from nn7.de ([85.214.94.156]:33687 "EHLO nn7.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753094AbXBJKTV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Feb 2007 05:19:21 -0500
+In-Reply-To: <200702091841.45125.rootkit85@yahoo.it>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Matteo Croce <rootkit85@yahoo.it>
+Cc: linux-ide@vger.kernel.org
 
-This update breaks sata_via on my VIA K8T800Pro machine:
- 
- sata_via 0000:00:0f.0 : failed to iomap PCI BAR 0
- sata_via 0000:00:0f.0 : out of memory
- sata_via probe of 0000:00:0f.0 failed with error -12
+On Fri, 2007-02-09 at 18:41 +0100, Matteo Croce wrote:
+> On Friday 09 February 2007 16:45:49 you wrote:
+> > On Fri, 2007-02-09 at 04:33 -0500, Tejun Heo wrote:
+> > > Root Kit wrote:
+> >[...]
+> > Hmmhh I cannot really reproduce this benchmark. Matteo, with which
+> > benchmarking program did you produce this ?
+> >[...]
+> bonnie++ from ubuntu repos
+
+OK, I reran bonnie++ -d /tmp/ on a unencrypted partition - results are
+here http://nn7.de/bench/ahci.html . Looks like it is slightly faster
+for sequential block write (2MB/s faster) and sequential read using
+putc()  (1MB/s faster), though putc() is slowed down by 6MB/s.
+
+However what may make it worth is that I don't see any errors on
+suspend/resume anymore...
+
+Soeren
 -- 
-Markus
+Sometimes, there's a moment as you're waking, when you become aware of
+the real world around you, but you're still dreaming.
