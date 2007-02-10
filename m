@@ -1,57 +1,41 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: RE: sata_vsc with iq3124h regression in 2.6.20
-Date: Fri, 09 Feb 2007 16:26:49 -0700
-Message-ID: <1171063609.29541.6.camel@dwillia2-linux.ch.intel.com>
-Reply-To: 45CCF6BD.9020404@garzik.org
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] (pata-2.6 fix queue) cmd64x: remove broken SW/MW DMA support
+Date: Sat, 10 Feb 2007 01:11:55 +0100
+Message-ID: <200702100111.55257.bzolnier@gmail.com>
+References: <200702080858.l188wjmG008432@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:36074 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752512AbXBIX0y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Feb 2007 18:26:54 -0500
+Received: from nf-out-0910.google.com ([64.233.182.187]:36423 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423377AbXBJAGr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Feb 2007 19:06:47 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1386506nfa
+        for <linux-ide@vger.kernel.org>; Fri, 09 Feb 2007 16:06:46 -0800 (PST)
+In-Reply-To: <200702080858.l188wjmG008432@harpo.it.uu.se>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org, jeremy@sgi.com, liml@rtr.ca
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: sshtylyov@ru.mvista.com, linux-ide@vger.kernel.org
 
-> As I recall, the 31244 and VSC-7174 always send an interrupt, so the
-> driver should account for this.  I thought we had code already in the
-> driver to handle this, but perhaps recent changes stomped that.
+
+On Thursday 08 February 2007 09:58, Mikael Pettersson wrote:
+> On Thu, 8 Feb 2007 00:00:32 +0300, Sergei Shtylyov wrote:
+> >Remove the bogus code pretending to set SW/MW DMA timings -- I wonder whether
+> >its author really thought that he could achieve that wrtiting to BMIDE status
+> >registers?  Stop fiddling with the DMA capable bits in the speedproc() -- they
+> >do not enable DMA, and are properly dealt with by the dma_host_{on,off} methods;
+> >also, get rid of the duplicate reads/writes of UDIDETCRx registers, and do some
+> >coding style and whitespace changes while at it...
+> >
+> >Unfortunately, fixing the SW/MW DMA support would requre a major driver rewrite
+> >along with some more fixing, so I'm putting it off...
+> >
+> >Warning: this has been compile-tested only.
 > 
-> It would be good to standardize the way we handle these sorts of
-> controllers, because (I think) Mark Lord has the same problem on
-> sata_qstor (or pdc_adma?).
-> 
-> 	Jeff
+> Worked fine on my SPARC Ultra5.
 
-The error interrupt handling code is still in there and is working.  The
-following patch works for me.
-
----
-sata_vsc: handle unexpected interrupts when executing a polled IDENTIFY
-
-From: Dan Williams <dan.j.williams@intel.com>
-
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- drivers/ata/sata_vsc.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
-index 0fa1b89..7425d62 100644
---- a/drivers/ata/sata_vsc.c
-+++ b/drivers/ata/sata_vsc.c
-@@ -258,7 +258,9 @@ static irqreturn_t vsc_sata_interrupt (int irq, void *dev_instance)
- 					/* Clear interrupt status */
- 					ata_chk_status(ap);
- 					handled++;
--				}
-+				} else if (qc->tf.command == ATA_CMD_ID_ATA)
-+					/* 31244 interrupts on polled IDENTIFY commands */
-+					ata_chk_status(ap);
- 			}
- 		}
- 	}
+thanks, applied
