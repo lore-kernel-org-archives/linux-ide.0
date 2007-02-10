@@ -1,52 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] AHCI PCI ID for MacBook Pro
-Date: Sat, 10 Feb 2007 12:17:46 -0500
-Message-ID: <45CDFE3A.3020005@gmail.com>
-References: <82530.66623.qm@web25412.mail.ukl.yahoo.com>	 <45CC3FE5.2010408@gmail.com> <1171035949.23440.4.camel@localhost>	 <200702091841.45125.rootkit85@yahoo.it>	 <1171102758.19041.5.camel@localhost>  <45CDC5DF.9060306@gmail.com> <1171123417.31813.4.camel@localhost>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: [PATCH] add delay around sl82c105_reset_engine calls
+Date: Sat, 10 Feb 2007 21:36:14 +0100
+Message-ID: <20070210203614.GA25602@aepfle.de>
+References: <20070210203512.GA25586@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.226]:49820 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439AbXBJRSN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Feb 2007 12:18:13 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1215736wxd
-        for <linux-ide@vger.kernel.org>; Sat, 10 Feb 2007 09:18:13 -0800 (PST)
-In-Reply-To: <1171123417.31813.4.camel@localhost>
+Received: from mail-out.m-online.net ([212.18.0.9]:55587 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855AbXBJUex (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Feb 2007 15:34:53 -0500
+Content-Disposition: inline
+In-Reply-To: <20070210203512.GA25586@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Soeren Sonnenburg <kernel@nn7.de>
-Cc: Matteo Croce <rootkit85@yahoo.it>, linux-ide@vger.kernel.org
+To: linuxppc-dev@ozlabs.org, Andrew Morton <akpm@osdl.org>
+Cc: linux-ide@vger.kernel.org
 
-Soeren Sonnenburg wrote:
-> well I am doing both benchmarks on a macbookpro1,1 -> 32bit mode (matteo
-> does it on a macbook pro2, sth so he has a c2d and does it in 64bit ->
-> amd64 mode).
-> 
-> So the io scheduler is the same or do you mean inside of ahci/piix ?
 
-I meant the iosched (cfq/as/deadline...).
+The hald media changed polling does really confuse things.
+Noone knows why the delays are needed, but they give us access to the CD.
 
->>> However what may make it worth is that I don't see any errors on
->>> suspend/resume anymore...
->> Hmm... So, ata_piix fails to suspend/resume properly on your machine? 
->> It should work.  Can you describe how it fails?
-> 
-> Well I keep seeing this:
-> 
-> ata3.01: revalidation failed (errno=-2)
-> ata3: failed to recover some devices, retrying in 5 secs
-> ATA: abnormal status 0x7F on port 0x40DF
-> ATA: abnormal status 0x7F on port 0x40DF
-> ata3.01: configured for UDMA/133
-> 
-> but I am still on 2.6.20-rc6 ... so sorry if this is now fixed in .20.
+An udelay(50) will give reliable access to the drive, but there is still
+one (or more) EH reset. The drive works without EH resets with udelay(100).
 
-Yeap, please give a shot at 2.6.20.  Maybe the TF clearing for IDENTIFY 
-fixed the problem.
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
-Thanks.
+---
+ drivers/ata/pata_sl82c105.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
--- 
-tejun
+Index: linux-2.6/drivers/ata/pata_sl82c105.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_sl82c105.c
++++ linux-2.6/drivers/ata/pata_sl82c105.c
+@@ -187,7 +187,9 @@ static void sl82c105_bmdma_start(struct 
+ {
+ 	struct ata_port *ap = qc->ap;
+ 
++	udelay(100);
+ 	sl82c105_reset_engine(ap);
++	udelay(100);
+ 
+ 	/* Set the clocks for DMA */
+ 	sl82c105_configure_dmamode(ap, qc->dev);
+@@ -216,6 +218,7 @@ static void sl82c105_bmdma_stop(struct a
+ 
+ 	ata_bmdma_stop(qc);
+ 	sl82c105_reset_engine(ap);
++	udelay(100);
+ 
+ 	/* This will redo the initial setup of the DMA device to matching
+ 	   PIO timings */
