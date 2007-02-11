@@ -1,36 +1,74 @@
-From: Philip Langdale <philipl@overt.org>
-Subject: Status of Hotplug polling patches?
-Date: Sat, 10 Feb 2007 18:29:33 -0800
-Message-ID: <45CE7F8D.60507@overt.org>
+From: Grzegorz Kulewski <kangur@polcom.net>
+Subject: Re: libata_uli puts second channel to PIO4 on 2.6.18
+Date: Sun, 11 Feb 2007 05:14:26 +0100 (CET)
+Message-ID: <Pine.LNX.4.63.0702110512010.15871@alpha.polcom.net>
+References: <Pine.LNX.4.63.0702030231150.6097@alpha.polcom.net>
+ <45C96174.2030407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:35917 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752627AbXBKCfQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Feb 2007 21:35:16 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752654AbXBKEOa@vger.kernel.org>
+In-Reply-To: <45C96174.2030407@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-Hi TeJun,
+On Wed, 7 Feb 2007, Tejun Heo wrote:
+> Grzegorz Kulewski wrote:
+>>  It worked very well for half a year but with one disk (IIRC it was even
+>>  plugged into second channel but I wont bet on it). Now I have second disk
+>>  (very similar) and it is always put into PIO4 mode:
+>>
+>>  [   17.404451] libata version 2.00 loaded.
+>>  [   17.404916] sata_uli 0000:00:04.0: version 1.0
+>>  [   17.405009] ACPI: PCI Interrupt 0000:00:04.0[A] -> GSI 18 (level, low)
+>>  -> IRQ 185
+>>  [   17.405223] ata1: SATA max UDMA/133 cmd 0xD400 ctl 0xD002 bmdma 0xB000
+>>  irq 185
+>>  [   17.405385] ata2: SATA max UDMA/133 cmd 0xB800 ctl 0xB402 bmdma 0xB008
+>>  irq 185
+>>  [   17.405519] scsi2 : sata_uli
+>>  [   17.858803] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>>  [   17.880541] ata1.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ
+>>  (depth 0/32)
+>>  [   17.880660] ata1.00: ata1: dev 0 multi count 16
+>>  [   17.888858] ata1.00: configured for UDMA/133
+>>  [   17.888941] scsi3 : sata_uli
+>>  [   18.342469] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>>  [   18.343573] ata2.00: ATA-7, max UDMA/133, 488397168 sectors: LBA48 NCQ
+>>  (depth 0/32)
+>>  [   18.343691] ata2.00: ata2: dev 0 multi count 16
+>>  [   18.344972] ata2.00: configured for PIO4
+>
+> Some uli controllers have simplex bit stuck high indicating that they
+> can't perform DMA transfers simultaneously on both channels.  In this
+> case, libata configures the second channel as PIO only.  This has been
+> worked around by the following commit.
+>
+> commit b2a8bbe67d73631c71492fd60b757fc50a87f182
+> Author: Tejun Heo <htejun@gmail.com>
+> Date:   Thu Jan 25 19:40:05 2007 +0900
+>
+>   libata: implement ATA_FLAG_IGN_SIMPLEX and use it in sata_uli
+>
+>    Some uli controllers have stuck SIMPLEX bit which can't be cleared
+>    with ata_pci_clear_simplex(), but the controller is capable of doing
+>    DMAs on both channels simultaneously.  Implement ATA_FLAG_IGN_SIMPLEX
+>    which makes libata ignore the simplex bit and use it in sata_uli.
+>
+>    Signed-off-by: Tejun Heo <htejun@gmail.com>
+>    Signed-off-by: Jeff Garzik <jeff@garzik.org>
+>
+> For quick fix, just comment out lines which set ATA_HOST_SIMPLEX in
+> drivers/scsi/libata-bmdma.c.  e.g.
+>
+> 	 /*if (inb(bmdma + 2) & 0x80)
+> 		 probe_ent->host_set_flags |= ATA_HOST_SIMPLEX;*/
 
-I have a machine that I've been using 2.6.19 and your hotplug
-polling patches on with great success and I just upgraded it
-to 2.6.20 and it appears that getting those patches working
-again will be non-trivial. As far as I can see, these patches
-are not in Jeff's tree or even yours. Have they been discarded,
-or am I looking in the wrong place? I certainly don't see
-equivalent functionality in the current kernel.
+Thanks! After this fix it is working ok. Any chance to see the proper fix 
+in -stable kernels for at least 2.6.18.x and 2.6.19.x?
 
-The warmplug sysfs-foo isn't particularly inconvenient as I
-need to explicitly unmount filesystems anyway, but it would
-be nice to see hotplug working again.
-
-(The machine is using an nvidia mcp55)
 
 Thanks,
 
---phil
+Grzegorz Kulewski
