@@ -1,41 +1,32 @@
-From: "David M. Lloyd" <dmlloyd@flurg.com>
-Subject: Re: [PATCH] AHCI PCI ID for MacBook Pro
-Date: Sun, 11 Feb 2007 09:40:37 -0600
-Message-ID: <1171208437.4308.3.camel@localhost>
-References: <82530.66623.qm@web25412.mail.ukl.yahoo.com>
-	 <200702091527.08447.rootkit85@yahoo.it>
-	 <1171032893.8134.13.camel@localhost>
-	 <200702091839.52316.rootkit85@yahoo.it>  <45CDD0CB.2070608@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [git patches] libata updates 1 of 3
+Date: Sun, 11 Feb 2007 17:08:17 -0500
+Message-ID: <45CF93D1.9080009@gmail.com>
+References: <20070210010914.GA19717@havoc.gtf.org> <20070210054629.GA4395@gentoox2.trippelsdorf.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound1.mail.tds.net ([216.170.230.91]:38752 "EHLO
-	outbound1.mail.tds.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696AbXBKPkm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Feb 2007 10:40:42 -0500
-In-Reply-To: <45CDD0CB.2070608@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.232]:4774 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932571AbXBKWIj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Feb 2007 17:08:39 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1603372wxd
+        for <linux-ide@vger.kernel.org>; Sun, 11 Feb 2007 14:08:38 -0800 (PST)
+In-Reply-To: <20070210054629.GA4395@gentoox2.trippelsdorf.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Matteo Croce <rootkit85@yahoo.it>, linux-ide@vger.kernel.org
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Sat, 2007-02-10 at 09:03 -0500, Tejun Heo wrote:
-> Matteo Croce wrote:
-> > On Friday 09 February 2007 15:54:53 you wrote:
-> >> On Fri, 2007-02-09 at 15:27 +0100, Matteo Croce wrote:
-> >>> +	{ PCI_VDEVICE(INTEL, 0x27c4), board_ahci }, /* ICH7M */
-> >> Wasn't this PCI ID proposed for addition a while ago, and subsequently
-> >> rejected?  Or am I missing something?
-> > 
-> > rejected? why?
-> 
-> Ah... right.
-> 
-> All ICH7 R/M silicons can be put into either IDE or AHCI mode. <...>
+Markus Trippelsdorf wrote:
+> This update breaks sata_via on my VIA K8T800Pro machine:
+>  
+>  sata_via 0000:00:0f.0 : failed to iomap PCI BAR 0
+>  sata_via 0000:00:0f.0 : out of memory
+>  sata_via probe of 0000:00:0f.0 failed with error -12
 
-I see... so probably my Dell laptop doesn't (and maybe can't) enable it,
-but Matteo's Macbook does.  That makes sense...
+Please post full dmesg and the result of 'lspci -nnvvvxxx'.
 
-- DML
-
+-- 
+tejun
