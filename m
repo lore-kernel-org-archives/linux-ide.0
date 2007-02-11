@@ -1,134 +1,35 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH] sata_promise: new EH conversion for 20619 chips, take 2
-Date: Sun, 11 Feb 2007 23:19:53 +0100 (MET)
-Message-ID: <200702112219.l1BMJr88026358@harpo.it.uu.se>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH][pata] ide: cable detection fixes
+Date: Sun, 11 Feb 2007 23:08:40 +0000
+Message-ID: <20070211230840.06c1f38b@localhost.localdomain>
+References: <200702112324.21704.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:37485 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932578AbXBKWUF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 11 Feb 2007 17:20:05 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50859 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932845AbXBKWy7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Feb 2007 17:54:59 -0500
+In-Reply-To: <200702112324.21704.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-This patch updates the sata_promise driver to use new-style
-libata error handling for 20619 (TX4000) chips. sata_promise
-already uses new EH for the other chips it supports, so the
-patch is quite simple:
+> * use eighty_ninty_three() in ide_ata66_check(), this actually fixes 3 bugs:
+>   - bit 13 (word 93 validity check) == 1 and bit 12 (80-wire cable test) == 0
+>     configuration was incorrectly treated as a 80-wire cable present
 
-* remove ->phy_reset and ->eng_timeout ops from pdc_pata_ops,
-  and instead bind ->freeze, ->thaw, ->error_handler, and
-  ->post_internal_cmd to existing new EH functions
-* drop ATA_FLAG_SRST from board_20619's flags
-* remove now unused pdc_pata_phy_reset() and pdc_eng_timeout()
+I think you mean bit 14 and bit 13. And for validity you must check bits
+14/15 together as 0x01. Code seems to have the bits right not the
+comment, but doesn't check bit 15.
 
-Tested on a TX4000 with both modern working disks and old/quirky
-disks. Also used a CD-RW drive to test reading and writing CDs.
+You also change the IVB behaviour from assuming drives would set either
+the correct bit and/or the valid bit, to drives must always set the
+correct bit but not neccessarily valid. It would be nice to know if that
+is intentional as the original IVB hack is murky early ATA standard
+history and I am not sure what the drive id error in question actually
+was ?
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
-
----
-
-Changes since first version: pdc_pata_cbl_detect() is not removed
-since it's now called from pdc_error_handler() via pdc_pre_reset().
-
- drivers/ata/sata_promise.c |   55 +++------------------------------------------
- 1 files changed, 4 insertions(+), 51 deletions(-)
-
---- linux-2.6.20.upstream/drivers/ata/sata_promise.c.~1~	2007-02-11 23:08:20.000000000 +0100
-+++ linux-2.6.20.upstream/drivers/ata/sata_promise.c	2007-02-11 23:10:04.000000000 +0100
-@@ -120,9 +120,7 @@ static u32 pdc_sata_scr_read (struct ata
- static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- static int pdc_ata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
- static irqreturn_t pdc_interrupt (int irq, void *dev_instance);
--static void pdc_eng_timeout(struct ata_port *ap);
- static int pdc_port_start(struct ata_port *ap);
--static void pdc_pata_phy_reset(struct ata_port *ap);
- static void pdc_qc_prep(struct ata_queued_cmd *qc);
- static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
- static void pdc_exec_command_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
-@@ -216,12 +214,12 @@ static const struct ata_port_operations 
- 	.dev_select		= ata_std_dev_select,
- 	.check_atapi_dma	= pdc_check_atapi_dma,
- 
--	.phy_reset		= pdc_pata_phy_reset,
--
- 	.qc_prep		= pdc_qc_prep,
- 	.qc_issue		= pdc_qc_issue_prot,
-+	.freeze			= pdc_freeze,
-+	.thaw			= pdc_thaw,
-+	.error_handler		= pdc_error_handler,
- 	.data_xfer		= ata_data_xfer,
--	.eng_timeout		= pdc_eng_timeout,
- 	.irq_handler		= pdc_interrupt,
- 	.irq_clear		= pdc_irq_clear,
- 	.irq_on			= ata_irq_on,
-@@ -254,7 +252,7 @@ static const struct ata_port_info pdc_po
- 	/* board_20619 */
- 	{
- 		.sht		= &pdc_ata_sht,
--		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SRST | ATA_FLAG_SLAVE_POSS,
-+		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-@@ -390,14 +388,6 @@ static void pdc_pata_cbl_detect(struct a
- 		ap->cbl = ATA_CBL_PATA80;
- }
- 
--static void pdc_pata_phy_reset(struct ata_port *ap)
--{
--	pdc_pata_cbl_detect(ap);
--	pdc_reset_port(ap);
--	ata_port_probe(ap);
--	ata_bus_reset(ap);
--}
--
- static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
- {
- 	if (sc_reg > SCR_CONTROL || ap->cbl != ATA_CBL_SATA)
-@@ -600,43 +590,6 @@ static void pdc_post_internal_cmd(struct
- 		pdc_reset_port(ap);
- }
- 
--static void pdc_eng_timeout(struct ata_port *ap)
--{
--	struct ata_host *host = ap->host;
--	u8 drv_stat;
--	struct ata_queued_cmd *qc;
--	unsigned long flags;
--
--	DPRINTK("ENTER\n");
--
--	spin_lock_irqsave(&host->lock, flags);
--
--	qc = ata_qc_from_tag(ap, ap->active_tag);
--
--	switch (qc->tf.protocol) {
--	case ATA_PROT_DMA:
--	case ATA_PROT_NODATA:
--		ata_port_printk(ap, KERN_ERR, "command timeout\n");
--		drv_stat = ata_wait_idle(ap);
--		qc->err_mask |= __ac_err_mask(drv_stat);
--		break;
--
--	default:
--		drv_stat = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
--
--		ata_port_printk(ap, KERN_ERR,
--				"unknown timeout, cmd 0x%x stat 0x%x\n",
--				qc->tf.command, drv_stat);
--
--		qc->err_mask |= ac_err_mask(drv_stat);
--		break;
--	}
--
--	spin_unlock_irqrestore(&host->lock, flags);
--	ata_eh_qc_complete(qc);
--	DPRINTK("EXIT\n");
--}
--
- static inline unsigned int pdc_host_intr( struct ata_port *ap,
-                                           struct ata_queued_cmd *qc)
- {
+Alan
