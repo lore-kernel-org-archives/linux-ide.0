@@ -1,82 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_via: fix resource-managed iomap conversion
-Date: Mon, 12 Feb 2007 10:51:44 -0800
-Message-ID: <45D0B740.9050704@gmail.com>
-References: <20070210010914.GA19717@havoc.gtf.org> <20070210054629.GA4395@gentoox2.trippelsdorf.de> <45CF93D1.9080009@gmail.com> <20070212025843.GA4406@gentoox2.trippelsdorf.de>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [Fedora-ia64-list] Re: The 5th bar of ide controller at legacy
+ mode
+Date: Mon, 12 Feb 2007 19:24:01 +0000
+Message-ID: <20070212192401.59b35794@localhost.localdomain>
+References: <20070212125646.61263751@localhost.localdomain>
+	<617E1C2C70743745A92448908E030B2A011E7BEC@scsmsx411.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:15150 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965299AbXBLSvz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2007 13:51:55 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1959252wxd
-        for <linux-ide@vger.kernel.org>; Mon, 12 Feb 2007 10:51:55 -0800 (PST)
-In-Reply-To: <20070212025843.GA4406@gentoox2.trippelsdorf.de>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53418 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965289AbXBLTKg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2007 14:10:36 -0500
+In-Reply-To: <617E1C2C70743745A92448908E030B2A011E7BEC@scsmsx411.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: ia64 Fedora Core Development <fedora-ia64-list@redhat.com>, "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>, linux-ide@vger.kernel.org
 
-Conversion to resource-managed iomap was buggy causing init failures
-on both vt6420 and 6421 - BAR5 wasn't mapped for both controllers
-while on vt6420 sata_via tried to map BAR0-4 twice.  Fix it.
+> Which sounds sort of plausible ... but perhaps that's because I have
+> not idea what a "Class code programming model" is.  Does that make
+> any sense?
 
-DO NOT APPLY YET.
----
-Markus, does this fix your problem?
+I think they are talking about BAR0 to 3 which are special, not BAR5
+which the ia64 kernel code has somehow ended up assigned at I/O address
+zero. Now whether that is a BIOS/Linux confusion, a BIOS mis-setup or
+something weird that happened post BIOS to OS handover I don't know.
 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index baca6d7..fe9101a 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -423,16 +423,21 @@ static struct ata_probe_ent *vt6420_init_probe_ent(struct pci_dev *pdev)
- {
- 	struct ata_probe_ent *probe_ent;
- 	struct ata_port_info *ppi[2];
--	void __iomem * const *iomap;
-+	void __iomem *bar5;
- 
- 	ppi[0] = ppi[1] = &vt6420_port_info;
- 	probe_ent = ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
- 	if (!probe_ent)
- 		return NULL;
- 
--	iomap = pcim_iomap_table(pdev);
--	probe_ent->port[0].scr_addr = svia_scr_addr(iomap[5], 0);
--	probe_ent->port[1].scr_addr = svia_scr_addr(iomap[5], 1);
-+	bar5 = pcim_iomap(pdev, 5, 0);
-+	if (!bar5) {
-+		dev_printk(KERN_ERR, &pdev->dev, "failed to iomap PCI BAR 5\n");
-+		return NULL;
-+	}
-+
-+	probe_ent->port[0].scr_addr = svia_scr_addr(bar5, 0);
-+	probe_ent->port[1].scr_addr = svia_scr_addr(bar5, 1);
- 
- 	return probe_ent;
- }
-@@ -460,6 +465,13 @@ static struct ata_probe_ent *vt6421_init_probe_ent(struct pci_dev *pdev)
- 	probe_ent->mwdma_mask	= 0x07;
- 	probe_ent->udma_mask	= 0x7f;
- 
-+	for (i = 0; i < 6; i++)
-+		if (!pcim_iomap(pdev, i, 0)) {
-+			dev_printk(KERN_ERR, &pdev->dev,
-+				   "failed to iomap PCI BAR %d\n", i);
-+			return NULL;
-+		}
-+
- 	for (i = 0; i < N_PORTS; i++)
- 		vt6421_init_addrs(probe_ent, pcim_iomap_table(pdev), i);
- 
-@@ -522,7 +534,7 @@ static int svia_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		return rc;
- 
--	rc = pcim_iomap_regions(pdev, 0x1f, DRV_NAME);
-+	rc = pci_request_regions(pdev, DRV_NAME);
- 	if (rc) {
- 		pcim_pin_device(pdev);
- 		return rc;
+I know a similar PPC problem was really about the firmware assigning it
+to zero to mean "not assigned" and the OS interpreting that as Bus
+address 0, assigned.
+
+Alan
