@@ -1,207 +1,79 @@
-From: Jean Delvare <jdelvare@suse.de>
-Subject: Re: Sata_via problems in a Vintage2-AE1
-Date: Mon, 12 Feb 2007 10:11:49 +0100
-Message-ID: <200702121011.49818.jdelvare@suse.de>
-References: <200702090010.06897.lepalom@wol.es> <200702092109.25029.lepalom@wol.es> <45CDDA86.2000607@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: pcim_enable_device BUGs for libata devices in 2.6.20-git6
+Date: Mon, 12 Feb 2007 01:11:55 -0800
+Message-ID: <45D02F5B.801@gmail.com>
+References: <45CFB87F.9060802@shaw.ca>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_V9C0FPOjoOokmzp"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54322 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964801AbXBLJQ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Feb 2007 04:16:27 -0500
-In-Reply-To: <45CDDA86.2000607@gmail.com>
-Content-Disposition: inline
+Received: from wx-out-0506.google.com ([66.249.82.231]:50173 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964812AbXBLJXl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2007 04:23:41 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1761182wxd
+        for <linux-ide@vger.kernel.org>; Mon, 12 Feb 2007 01:23:40 -0800 (PST)
+In-Reply-To: <45CFB87F.9060802@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Leopold Palomo Avellaneda <lepalom@wol.es>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Pavel Machek <pavel@ucw.cz>
 
---Boundary-00=_V9C0FPOjoOokmzp
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+[cc'ing Pavel, Hi!]
 
-Le Samedi 10 F=E9vrier 2007 15:45, Tejun Heo a =E9crit=A0:
-> [cc'ing Alan and Jean, Hi!]
->
-> Leopold Palomo Avellaneda wrote:
-> > A Divendres 09 Febrer 2007 18:13, Leopold Palomo Avellaneda va escriure:
-> >> A Divendres 09 Febrer 2007 10:46, Tejun Heo va escriure:
-> >>> Leopold Palomo Avellaneda wrote:
-> >>>> Dear people,
-> >>>>
-> >>>> I have a barebone Asus Vintage2-AE1 [1]. This box has a mobo Asus
-> >>>> A8V-MQ. The board has:
-> >>>> - the Socket 939 for AMD Athlon 64FX/Athlon 64.
-> >>>> - North Bridge: VIA K8M800
-> >>>> - South Bridge: VIA VT8251
-> >>>> - VIA Graphics Integrated
-> >>>> - IDE 2 x UltraDMA 133
-> >>>> - 4 x Serial ATA
-> >>>> ...
-> >>>>
-> >>>> I'm using the bios version 0206. The 0210 doesn't show me the vga
-> >>>> card, so I don't have graphics mode. I think that is a buggy bios.
+Robert Hancock wrote:
+> I'm seeing BUGs like these on all libata-driven controllers when 
+> suspending to disk on 2.6.20-git6:
+> 
+> sata_nv 0000:00:07.0: resuming
+> BUG: at drivers/pci/pci.c:817 pcim_enable_device()
+> 
+> Call Trace:
+>  [<ffffffff80337d21>] pcim_enable_device+0x8a/0xa5
+>  [<ffffffff88099d18>] :libata:ata_pci_device_do_resume+0x20/0x59
+>  [<ffffffff880bb731>] :sata_nv:nv_pci_device_resume+0x1d/0x100
+>  [<ffffffff8039d2bf>] resume_device+0xcb/0x12c
+>  [<ffffffff8039d3ac>] dpm_resume+0x8c/0xec
+>  [<ffffffff8039d456>] device_resume+0x4a/0x5d
+>  [<ffffffff802a0a33>] pm_suspend_disk+0x160/0x170
+>  [<ffffffff8029f4b6>] enter_state+0x52/0x1da
+>  [<ffffffff8029f69c>] state_store+0x5e/0x79
+>  [<ffffffff802f2b20>] sysfs_write_file+0xe4/0x118
+>  [<ffffffff80214b58>] vfs_write+0xce/0x177
+>  [<ffffffff8021553e>] sys_write+0x45/0x6e
+>  [<ffffffff8025711e>] system_call+0x7e/0x83
+> 
+> It looks like what's happening is that during the "freezing" stage, we 
+> suspend and then resume the controllers. ata_pci_device_do_suspend only 
+> calls pci_disable_device if the event is PM_EVENT_SUSPEND but 
+> ata_pci_device_do_resume calls pcim_enable_device unconditionally. If 
+> the event was something else, then pcim_enable_device complains because 
+> the device was previously enabled and never disabled.
+> 
+> Not sure what the best way to fix this is?
 
-Did you report the problem to Asus? They should fix it. Maybe this new BIOS=
-=20
-actually fixes some other problems you have.
+I think what should happen is either one of the followings.
 
-> >>>> The bios is configured with vt8251 in AHCI mode and bios boot up
-> >>>> activated, so the hd is recognized in the beginning. I don't have any
-> >>>> raid, only one hd. The hd is a Maxtor 6V250F0.
-> >>>>
-> >>>> I'm using a debian etch but the i386 version. The only way that I can
-> >>>> use the hd is using a 2.6.16 standard kernel with the modifications
-> >>>> explained in this page [2]. Basically you have to use their ahci.c a=
-nd
-> >>>> sata_via.c. The modifications are small from the original code from =
-Mr
-> >>>> Jeff Garzik.
-> >>>>
-> >>>> I have tried to use the 2.6.18 and 2.6.20rc6 and the result is the
-> >>>> same. The kernel boots, but when arrives at the ata3,
-> >>>>
-> >>>> scsi2 : ahci
-> >>>> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>>> ata3.00: qc timeout (cmd 0xec)
-> >>>> ata3.00: failed to IDENTIFY (I/O error, err_mask=3D0x104)
-> >>>> .... repeated some times ...
-> >>>> scsi3 : ahci
-> >>>> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>>> scsi4 : ahci
-> >>>> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>>> scsi5 : ahci
-> >>>> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>>> Done.
-> >>>> Begin: Mounting root file system... ...
-> >>>> Begin: Running /scripts/local-top
-> >>>> ide0: I/O resource 0x3F6-0x3F6 not free.
-> >>>> ide0: ports already in use, skipping probe.
-> >>>> ide1: I/O resource 0x376-0x376 not free.
-> >>>> ide1: ports already in use, skipping probe.
-> >>>> Done.
-> >>>> Begin: Waiting for root file system ...
-> >>>
-> >>> It might be VIA IRQ quirk problem.
-> >>>
-> >>> 1. Does giving 'irqpoll' parameter to kernel make any difference?
-> >>
-> >> yes. Now it boots. However I'm having a lot of messages:
-> >> APIC error on CPU0
-> >> and I begin to have problems with the network card.
-> >>
-> >>> 2. Can you give a shot at 2.6.20?
-> >>
-> >> yes, I'm doing it now.
-> >>
-> >> Thank's a lot. But, why with irqpoll works and without no?
-> >
-> > well, I summarize.
-> >
-> > With the default options of the kernel I cannot boot in this device with
-> > any kernel. Only with 2.6.20 and the irqpoll or the 2.6.16 modified fil=
-es
-> > I can boot.
-> >
-> > I have a lot of APIC error on CPU0.
+1. Don't restore power state and re-enable PCI device on resume from 
+freeze just as we don't do the opposite when freezing.
 
-Maybe try booting with noapic and/or nolapic and see if it helps. That's=20
-probably just a workaround and not the right solution though.
+2. Unconditionally disable and power down PCI device on suspend whether 
+it's freeze or not.
 
-> It seems one of via pci routing quirk problem.  Can you give a shot at
-> 'acpi=3Doff' or 'acpi=3Dnoirq' without 'irqpoll'?
->
-> I dunno much about what's going on there.  Alan, Jean, any ideas?
+#2 would be simpler but I'm a bit worried about it.  There might be 
+controllers which choke after such sequence (save state, disable, power 
+down, no actual power removal, power on, restore state, re-enable).
 
-I've read the whole thread, the source code (quickly) and the patches to=20
-ahci.c and sata_via.c, and here are some comments:
+#1 can be easily done by taking a look at the current device power state 
+(gendev->power.power_state).  The problem is that no one in 
+suspend/resume path seems to be setting that variable except for runtime 
+suspend/resume stuff which is scheduled to be removed, right?  Pavel, is 
+there any reason why suspend/resume paths don't set 
+dev->power.power_state?  Is the field going away together with new 
+libata?  Or am I just confused about it.
 
-It looks like support for the VT8251 was added to the ahci driver in kernel=
-=20
-2.6.18, and was then updated in 2.6.20. The code is different from the=20
-patch Leopold is using with 2.6.16. As I am not an expert in this area, I=20
-can't tell whether both versions are equivalent or not, but I'd guess so.
+Thanks.
 
-On the other hand, I do not see VT8251 support in the sata_via driver in th=
-e=20
-kernel, so I'm not surprised that it doesn't work properly for Leopold. But=
-=20
-again I am no expert in the area, so maybe the sata_via driver in the kerne=
-l=20
-is supposed to work for VT8251-based systems. Jeff (cc'd) should know bette=
-r.
+-- 
+tejun
 
-I also see that there were many changes to these drivers post-2.6.20, so ma=
-ybe=20
-Leopold could give a try to Linus' latest kernel (2.6.20-git6 as I speak) a=
-nd=20
-see if there are any improvements.
-
-As for the VIA IRQ quirks, the version we have in 2.6.20 does not handle th=
-e=20
-VIA chips more recent than the VT8237A. If the VT8251 needs it, then we hav=
-e=20
-to add it. Alan?
-
-*If* the VT8251 needs the VIA IRQ quirk, then the attached patch may help.=
-=20
-Leopold, can you give it a try?
-
-=2D-=20
-Jean Delvare
-Suse L3
-
---Boundary-00=_V9C0FPOjoOokmzp
-Content-Type: text/x-diff;
-  charset="iso-8859-1";
-  name="pci-via-irq-quirk-for-VT8251.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="pci-via-irq-quirk-for-VT8251.patch"
-
-Enable the VIA IRQ quirk on the VT8237S and VT8251 south bridges.
-Needs testing.
-
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
----
- drivers/pci/quirks.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
---- linux-2.6.20.orig/drivers/pci/quirks.c
-+++ linux-2.6.20/drivers/pci/quirks.c
-@@ -666,12 +666,14 @@ static void quirk_via_bridge(struct pci_
- 		   that single device. */
- 		via_vlink_dev_lo = PCI_SLOT(dev->devfn);
- 		via_vlink_dev_hi = PCI_SLOT(dev->devfn);
- 		break;
- 	case PCI_DEVICE_ID_VIA_8237:
- 	case PCI_DEVICE_ID_VIA_8237A:
-+	case PCI_DEVICE_ID_VIA_8237S:
-+	case PCI_DEVICE_ID_VIA_8251:
- 		via_vlink_dev_lo = 15;
- 		break;
- 	case PCI_DEVICE_ID_VIA_8235:
- 		via_vlink_dev_lo = 16;
- 		break;
- 	case PCI_DEVICE_ID_VIA_8231:
-@@ -687,12 +689,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_V
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8233_0,	quirk_via_bridge);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8233A,	quirk_via_bridge);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8233C_0,	quirk_via_bridge);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8235,		quirk_via_bridge);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8237,		quirk_via_bridge);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8237A,	quirk_via_bridge);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8237S,	quirk_via_bridge);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8251,		quirk_via_bridge);
- 
- /**
-  *	quirk_via_vlink		-	VIA VLink IRQ number update
-  *	@dev: PCI device
-  *
-  *	If the device we are dealing with is on a PIC IRQ we need to
-
---Boundary-00=_V9C0FPOjoOokmzp--
