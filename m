@@ -1,79 +1,58 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: pcim_enable_device BUGs for libata devices in 2.6.20-git6
-Date: Mon, 12 Feb 2007 01:11:55 -0800
-Message-ID: <45D02F5B.801@gmail.com>
-References: <45CFB87F.9060802@shaw.ca>
+Subject: Re: Sata_via problems in a Vintage2-AE1
+Date: Mon, 12 Feb 2007 01:47:47 -0800
+Message-ID: <45D037C3.3070306@gmail.com>
+References: <200702090010.06897.lepalom@wol.es> <200702092109.25029.lepalom@wol.es> <45CDDA86.2000607@gmail.com> <200702121011.49818.jdelvare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.231]:50173 "EHLO
+Received: from wx-out-0506.google.com ([66.249.82.224]:60293 "EHLO
 	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964812AbXBLJXl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2007 04:23:41 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1761182wxd
-        for <linux-ide@vger.kernel.org>; Mon, 12 Feb 2007 01:23:40 -0800 (PST)
-In-Reply-To: <45CFB87F.9060802@shaw.ca>
+	with ESMTP id S964834AbXBLJsF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2007 04:48:05 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1767719wxd
+        for <linux-ide@vger.kernel.org>; Mon, 12 Feb 2007 01:48:05 -0800 (PST)
+In-Reply-To: <200702121011.49818.jdelvare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Pavel Machek <pavel@ucw.cz>
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Leopold Palomo Avellaneda <lepalom@wol.es>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
 
-[cc'ing Pavel, Hi!]
-
-Robert Hancock wrote:
-> I'm seeing BUGs like these on all libata-driven controllers when 
-> suspending to disk on 2.6.20-git6:
+Jean Delvare wrote:
+> I've read the whole thread, the source code (quickly) and the patches to 
+> ahci.c and sata_via.c, and here are some comments:
 > 
-> sata_nv 0000:00:07.0: resuming
-> BUG: at drivers/pci/pci.c:817 pcim_enable_device()
+> It looks like support for the VT8251 was added to the ahci driver in kernel 
+> 2.6.18, and was then updated in 2.6.20. The code is different from the 
+> patch Leopold is using with 2.6.16. As I am not an expert in this area, I 
+> can't tell whether both versions are equivalent or not, but I'd guess so.
+
+The differences between 2.6.16 and 2.6.20 in ahci are mostly things like 
+detection fixes and hotplug handling fixes which shouldn't affect normal 
+operations too much and irqpoll definitely won't fix the problem.
+
+> On the other hand, I do not see VT8251 support in the sata_via driver in the 
+> kernel, so I'm not surprised that it doesn't work properly for Leopold. But 
+> again I am no expert in the area, so maybe the sata_via driver in the kernel 
+> is supposed to work for VT8251-based systems. Jeff (cc'd) should know better.
+
+vt8251 is an ahci controller so sata_via is irrelevant.
+
+> I also see that there were many changes to these drivers post-2.6.20, so maybe 
+> Leopold could give a try to Linus' latest kernel (2.6.20-git6 as I speak) and 
+> see if there are any improvements.
 > 
-> Call Trace:
->  [<ffffffff80337d21>] pcim_enable_device+0x8a/0xa5
->  [<ffffffff88099d18>] :libata:ata_pci_device_do_resume+0x20/0x59
->  [<ffffffff880bb731>] :sata_nv:nv_pci_device_resume+0x1d/0x100
->  [<ffffffff8039d2bf>] resume_device+0xcb/0x12c
->  [<ffffffff8039d3ac>] dpm_resume+0x8c/0xec
->  [<ffffffff8039d456>] device_resume+0x4a/0x5d
->  [<ffffffff802a0a33>] pm_suspend_disk+0x160/0x170
->  [<ffffffff8029f4b6>] enter_state+0x52/0x1da
->  [<ffffffff8029f69c>] state_store+0x5e/0x79
->  [<ffffffff802f2b20>] sysfs_write_file+0xe4/0x118
->  [<ffffffff80214b58>] vfs_write+0xce/0x177
->  [<ffffffff8021553e>] sys_write+0x45/0x6e
->  [<ffffffff8025711e>] system_call+0x7e/0x83
+> As for the VIA IRQ quirks, the version we have in 2.6.20 does not handle the 
+> VIA chips more recent than the VT8237A. If the VT8251 needs it, then we have 
+> to add it. Alan?
 > 
-> It looks like what's happening is that during the "freezing" stage, we 
-> suspend and then resume the controllers. ata_pci_device_do_suspend only 
-> calls pci_disable_device if the event is PM_EVENT_SUSPEND but 
-> ata_pci_device_do_resume calls pcim_enable_device unconditionally. If 
-> the event was something else, then pcim_enable_device complains because 
-> the device was previously enabled and never disabled.
-> 
-> Not sure what the best way to fix this is?
+> *If* the VT8251 needs the VIA IRQ quirk, then the attached patch may help. 
+> Leopold, can you give it a try?
 
-I think what should happen is either one of the followings.
+This is where I have no clue.  :-)  Leopold, please test Jean's patch.
 
-1. Don't restore power state and re-enable PCI device on resume from 
-freeze just as we don't do the opposite when freezing.
-
-2. Unconditionally disable and power down PCI device on suspend whether 
-it's freeze or not.
-
-#2 would be simpler but I'm a bit worried about it.  There might be 
-controllers which choke after such sequence (save state, disable, power 
-down, no actual power removal, power on, restore state, re-enable).
-
-#1 can be easily done by taking a look at the current device power state 
-(gendev->power.power_state).  The problem is that no one in 
-suspend/resume path seems to be setting that variable except for runtime 
-suspend/resume stuff which is scheduled to be removed, right?  Pavel, is 
-there any reason why suspend/resume paths don't set 
-dev->power.power_state?  Is the field going away together with new 
-libata?  Or am I just confused about it.
-
-Thanks.
+Thanks a lot.
 
 -- 
 tejun
-
