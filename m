@@ -1,80 +1,46 @@
-From: Prarit Bhargava <prarit@redhat.com>
-Subject: Re: [Fedora-ia64-list] The 5th bar of ide controller at legacy mode
-Date: Mon, 12 Feb 2007 07:22:04 -0500
-Message-ID: <45D05BEC.6030502@redhat.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: The 5th bar of ide controller at legacy mode
+Date: Mon, 12 Feb 2007 12:56:46 +0000
+Message-ID: <20070212125646.61263751@localhost.localdomain>
 References: <1171244453.15989.389.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50833 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750930AbXBLMWM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Feb 2007 07:22:12 -0500
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l1CCMAxl011141
-	for <linux-ide@vger.kernel.org>; Mon, 12 Feb 2007 07:22:10 -0500
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l1CCM5oW028312
-	for <linux-ide@vger.kernel.org>; Mon, 12 Feb 2007 07:22:05 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56550 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S964892AbXBLMnM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2007 07:43:12 -0500
 In-Reply-To: <1171244453.15989.389.camel@ymzhang>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ia64 Fedora Core Development <fedora-ia64-list@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, fedora-ia64-list <fedora-ia64-list@redhat.com>
 
-
-Zhang, Yanmin wrote:
-> Hi,
->
-> I am using Fedora Core 7 Test1 on my ia64 box and run into an issue
-> about my cd drive. FC6 works well on my machine, but FC7Test1 couldn't
-> recognise the cd drive.
->
->   
-
-Just an FYI for everyone on linux-ide ... F7 (not FC anymore ;) )
-maps upstream. I think there is a bit of a delta ATM but it's small.
-
-> I checked it and found FC6 uses ide-cd/piix drivers, while FC7Test1
-> replaces them with ata/ata_piix drivers. When drivers call pci_enable_device,
-> the calling will fail if the bar resource is incorrect.
->   
-
-ide-cd/piix drivers are going to be deprecated some time in the future.
-Fedora has already made the switch to ata/ata_piix in order to test the
-"new" driver and catch any potential issues with BIOS, ACPI tables,
-etc..
-> The bar resource of the ide controller on my tiger machine:
-> [root@tigerF 0000:00:1f.1]# pwd
-> /sys/devices/pci0000:00/0000:00:1f.1
-> [root@tigerF 0000:00:1f.1]# cat resource
-> 0x00000000000001f0 0x00000000000001f7 0x0000000000000110
-> 0x00000000000003f6 0x00000000000003f6 0x0000000000000110
-> 0x0000000000000170 0x0000000000000177 0x0000000000000110
-> 0x0000000000000376 0x0000000000000376 0x0000000000000110
-> 0x0000000000001000 0x000000000000100f 0x0000000000000101
-> 0x0000000000000000 0x00000000000003ff 0x0000000000000200
+O> 0x0000000000000000 0x00000000000003ff 0x0000000000000200
 > 0x0000000000000000 0x0000000000000000 0x0000000000000000
->
+> 
 > The 5th bar is incorrect. BIOS initiates ide controllers.
->   
 
-Your BIOS is broken.
+You appear to have a 5th BAR allocated at address 0 with a length of
+0x400. 
+
+> failure, but ide-cd/piix is smarter to recall pci_enable_device_bars
+> directly with parameter bars=(1<<4), so only 0~4th bar resources are checked.
+
+the old IDE code deals only with SFF interfaces in simple modes, and hand
+does all the handling for BAR 0-3 because of old PCI layer flaws and
+weaknesses.
 
 > So my question is: should ata/ata_piix also need to recall pci_enable_device_bars
 > with parameter bars=(1<<4) if pci_enable_device fails like what ide-cd/piix does?
->   
 
-No, ata/ata_piix should not call pci_enable_device, IMO.
+Your platform code or BIOS is buggy. PPC people had a similar problem.
+Zero is not currently taken as "unallocated" by the PCI layer and, while
+Linus suggested it could be, Dave Woodhouse and others pointed out there
+are systems which legitimately use address 0 on the PCI in this way.
 
-You're hitting this issue due to a broken BIOS -- if that BIOS is fixed then
-the system would boot properly.
+Sounds like you need to fix up after your firmware in your boot code,
+perhaps with an arch specific pci header quirk.
 
-IMO, the kernel cannot take care of EVERY single case of a broken BIOS.
-
-Another better approach is to make a Fedora-only
-drivers/pci/quirks.c patch to catch this issue ... but I'm not going to
-guarantee its acceptance into the Fedora tree.
-
-P.
+Alan
