@@ -1,69 +1,52 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH][pata] ide: cable detection fixes
-Date: Mon, 12 Feb 2007 01:37:57 +0100
-Message-ID: <200702120137.57898.bzolnier@gmail.com>
-References: <200702112324.21704.bzolnier@gmail.com> <20070211230840.06c1f38b@localhost.localdomain>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: pcim_enable_device BUGs for libata devices in 2.6.20-git6
+Date: Sun, 11 Feb 2007 18:44:47 -0600
+Message-ID: <45CFB87F.9060802@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:52323 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751015AbXBLAc2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Feb 2007 19:32:28 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so440660uga
-        for <linux-ide@vger.kernel.org>; Sun, 11 Feb 2007 16:32:27 -0800 (PST)
-In-Reply-To: <20070211230840.06c1f38b@localhost.localdomain>
-Content-Disposition: inline
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:27850 "EHLO
+	pd4mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbXBLAou (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Feb 2007 19:44:50 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
+I'm seeing BUGs like these on all libata-driven controllers when 
+suspending to disk on 2.6.20-git6:
 
-On Monday 12 February 2007 00:08, Alan wrote:
-> > * use eighty_ninty_three() in ide_ata66_check(), this actually fixes 3 bugs:
-> >   - bit 13 (word 93 validity check) == 1 and bit 12 (80-wire cable test) == 0
-> >     configuration was incorrectly treated as a 80-wire cable present
-> 
-> I think you mean bit 14 and bit 13. And for validity you must check bits
+sata_nv 0000:00:07.0: resuming
+BUG: at drivers/pci/pci.c:817 pcim_enable_device()
 
-Yes, thanks for catching this, fixed now.
+Call Trace:
+  [<ffffffff80337d21>] pcim_enable_device+0x8a/0xa5
+  [<ffffffff88099d18>] :libata:ata_pci_device_do_resume+0x20/0x59
+  [<ffffffff880bb731>] :sata_nv:nv_pci_device_resume+0x1d/0x100
+  [<ffffffff8039d2bf>] resume_device+0xcb/0x12c
+  [<ffffffff8039d3ac>] dpm_resume+0x8c/0xec
+  [<ffffffff8039d456>] device_resume+0x4a/0x5d
+  [<ffffffff802a0a33>] pm_suspend_disk+0x160/0x170
+  [<ffffffff8029f4b6>] enter_state+0x52/0x1da
+  [<ffffffff8029f69c>] state_store+0x5e/0x79
+  [<ffffffff802f2b20>] sysfs_write_file+0xe4/0x118
+  [<ffffffff80214b58>] vfs_write+0xce/0x177
+  [<ffffffff8021553e>] sys_write+0x45/0x6e
+  [<ffffffff8025711e>] system_call+0x7e/0x83
 
-[ "fix drive side 80c cable check" patch description also needed fixing ]
+It looks like what's happening is that during the "freezing" stage, we 
+suspend and then resume the controllers. ata_pci_device_do_suspend only 
+calls pci_disable_device if the event is PM_EVENT_SUSPEND but 
+ata_pci_device_do_resume calls pcim_enable_device unconditionally. If 
+the event was something else, then pcim_enable_device complains because 
+the device was previously enabled and never disabled.
 
-> 14/15 together as 0x01. Code seems to have the bits right not the
-> comment, but doesn't check bit 15.
-> 
-> You also change the IVB behaviour from assuming drives would set either
-> the correct bit and/or the valid bit, to drives must always set the
-> correct bit but not neccessarily valid. It would be nice to know if that
-> is intentional as the original IVB hack is murky early ATA standard
+Not sure what the best way to fix this is?
 
-For ide_ata66_check() IVB=y/n cases were interchanged when compared to
-eighty_ninty_three():
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
-* for IVB=n (the default setting) the old code required bit 14 or bit 13
-  to be set which is what eighty_ninty_three() required for IVB=y before
-  Tejun's patch
-
-* for IVB=y (IVB hack on) the old code required both bits 14 and 13 to be set,
-  which is what eighty_ninty_three() requires for IVB=n after Tejun's patch
-  (before Tejun's patch only bit 14 was required to be set)
-
-The old code just couldn't work for IVB, this probably has gone unnoticed
-for years because ide_ata66_check() is only used for user space originated
-transfer mode change requests.
-
-> history and I am not sure what the drive id error in question actually
-> was ?
-
-I can't be sure what was the original intent of IVB hack but I have seen
-a few cases when IVB hack was needed for Quantum disks which had only bit 13
-set and bits 15/14 cleared.
-
-[ it is also worth to note here that ATA4 doesn't define word 93 and
-  that the pre-ATA5 proposal for the cable detection came from Quantum ]
-
-Bart
