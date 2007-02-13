@@ -1,52 +1,85 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: pcim_enable_device BUGs for libata devices in 2.6.20-git6
-Date: Tue, 13 Feb 2007 07:30:03 -0800
-Message-ID: <45D1D97B.6010002@gmail.com>
-References: <45CFB87F.9060802@shaw.ca> <45D02F5B.801@gmail.com> <20070212205444.GC18101@elf.ucw.cz>
+From: Leopold Palomo-Avellaneda <lepalom@wol.es>
+Subject: Re: Sata_via problems in a Vintage2-AE1
+Date: Tue, 13 Feb 2007 17:11:10 +0100
+Message-ID: <200702131711.11781.lepalom@wol.es>
+References: <200702090010.06897.lepalom@wol.es> <200702121723.17999.lepalom@wol.es> <200702131220.21690.jdelvare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-13
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.233]:42834 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745AbXBMPaP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 10:30:15 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so2299827wxd
-        for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2007 07:30:15 -0800 (PST)
-In-Reply-To: <20070212205444.GC18101@elf.ucw.cz>
+Received: from dash.upc.es ([147.83.2.50]:47457 "EHLO dash.upc.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750805AbXBMQLc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 11:11:32 -0500
+In-Reply-To: <200702131220.21690.jdelvare@suse.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
 
-Hello, Pavel.
+A Dimarts 13 Febrer 2007 12:20, Jean Delvare va escriure:
+> Hi Leopold,
+>
+> Le Lundi 12 F=E9vrier 2007 17:23, Leopold Palomo-Avellaneda a =E9crit=
+=A0:
+> > A Dilluns 12 Febrer 2007 10:11, Jean Delvare va escriure:
+> > > Did you report the problem to Asus? They should fix it. Maybe thi=
+s new
+> > > BIOS actually fixes some other problems you have.
+> >
+> > no. It's on the todo list. However I'm a bit afraid because I'm not=
+ using
+> > the "official" system so probably they will say that "we do not sup=
+port
+> > ..."
+>
+> That's indeed probable, but if enough people report the same problems=
+, they
+> might still end up looking into it.
+>
+ok, I will try.
 
-Pavel Machek wrote:
->> 1. Don't restore power state and re-enable PCI device on resume from 
->> freeze just as we don't do the opposite when freezing.
->>
->> 2. Unconditionally disable and power down PCI device on suspend whether 
->> it's freeze or not.
->>
->> #2 would be simpler but I'm a bit worried about it.  There might be 
->> controllers which choke after such sequence (save state, disable, power 
->> down, no actual power removal, power on, restore state, re-enable).
-> 
-> I'd just go for #2.
+> > Well in http://via8251.la-evento.com/index.html
+> >
+> > <off topic>
+> > please tell me that I'm not violating any rule about the linux-kern=
+el
+> > list putting this link :-S
+> > </off topic>
+> >
+> > claims that the VT8251 are supported in 2.6.20. As always you nned =
+to see
+> > the official place .... :-(
+>
+> That's quite a bold claim considering that the VT8251 includes many
+> different functions (PATA, SATA, USB, SMBus...) and can be configured
+> differently on different motherboards. Maybe most functions are suppo=
+sedly
+> supported as of 2.6.20, but it doesn't mean everything works for ever=
+yone,
+> as you are experiencing yourself.
 
-I think I've been seeing too many weird ATA controller issues to be bold 
-about this.  I'll chicken out and go for #1.  :-)
+sure, you're right.
 
->> #1 can be easily done by taking a look at the current device power state 
->> (gendev->power.power_state).  The problem is that no one in 
->> suspend/resume path seems to be setting that variable except for
->> runtime 
-> 
-> No, that variable is probably going to go away. If you want to
-> remember that you are resuming from freeze, just store that info in
-> private data structure.
+> > > *If* the VT8251 needs the VIA IRQ quirk, then the attached patch =
+may
+> > > help. Leopold, can you give it a try?
+> >
+> > Well, making your patch to the vanilla 2.6.20 the result is the sam=
+e. The
+> > box doesn't boot. Always the same problem ....
+>
+> If it's not a VIA IRQ problem, then there's nothing more I can do, so=
+rry.
+> Someone else will have to look into the problem.
+>
+> Out of curiosity, with my patch applied, did you see any "VIA VLink I=
+RQ
+> fixup" messages on the console?
 
-I see.  Thanks.
+No :-(
 
--- 
-tejun
+Regards,
+
+Leo
