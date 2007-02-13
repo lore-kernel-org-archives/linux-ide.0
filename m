@@ -1,89 +1,171 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: libata FUA revisited
-Date: Mon, 12 Feb 2007 18:23:15 -0600
-Message-ID: <45D104F3.7040602@shaw.ca>
-References: <fa.S80SRyQbD/hm4SxliPUKU88BaCo@ifi.uio.no>
- <fa.Q/csgyCHkAsD84yi+bN78H1WNNM@ifi.uio.no>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH] libata: add support for READ/WRITE LONG commands
+Date: Mon, 12 Feb 2007 19:58:22 -0500
+Message-ID: <45D10D2E.70408@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:38709 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030582AbXBMAZh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2007 19:25:37 -0500
-In-reply-to: <fa.Q/csgyCHkAsD84yi+bN78H1WNNM@ifi.uio.no>
+Received: from rtr.ca ([64.26.128.89]:1449 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933020AbXBMA6d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Feb 2007 19:58:33 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, edmudama@gmail.com, Nicolas.Mailhot@LaPoste.net
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
->> -Add a new port flag ATA_FLAG_NO_FUA to indicate that a controller 
->> can't handle FUA commands, and add that flag to sata_sil. Force FUA 
->> off on any drive connected to a controller with this bit set.
->>
->> There was some talk that sata_mv might have this problem, but I 
->> believe the conclusion was that it didn't. The only controllers that 
->> would are ones that actually try to interpret the ATA command codes 
->> and don't know about WRITE DMA FUA.
-> 
-> I think it would be better to add ATA_FLAG_FUA instead of ATA_FLAG_NO_FUA.
+The READ/WRITE LONG commands are theoretically obsolete,
+but most (all?) drives to date still implement them.
 
-I'm not sure about that, it appears that the number of controllers that 
-have problems is much lower than the number that don't, so this would 
-just need to be added to almost every driver. Especially since the 
-non-NCQ FUA which was problematic on SiI in the past isn't being 
-switched on by default.
+Of these, WRITE_LONG and WRITE_LONG_ONCE are of particular
+interest for fault injection testing -- eg. creating "media errors"
+at specific locations on a disk.
 
->> -Change the fua module option to control FUA enable/disable to have a 
->> third value, "enable for NCQ-supporting drives only", which would 
->> become the new default. That case seems less likely to cause problems 
->> since FUA on NCQ is just another bit in the command whereas FUA on 
->> non-NCQ is an entirely different, potentially unsupported command.
-> 
-> Not enabling FUA doesn't result in huge performance hit.  I'm not sure 
-> whether we should go such far.  Just supporting FUA on known good 
-> controllers sounds good enough to me.
+The fussy bit is that these commands require a non-standard
+sector size, usually 520 bytes instead of 512.
 
-On the NCQ side, I think it's pretty safe to assume that all controllers 
-will handle it. Obviously I've verified it with sata_nv (at least that 
-it doesn't blow up obviously), and the other two NCQ drivers we have, 
-ahci and sata_sil24 just feed raw FIS data into the controller so there 
-should be no issue with not supporting it.
+This patch adds support to libata for READ/WRITE LONG commands
+issued via SG_IO/ATA_16.
 
-Assuming that we leave FUA off by default for non-NCQ for the 
-foreseeable future, is there really much concern here?
-
-> 
->> Any comments?
->>
->> As an aside, I came across a comment that the Silicon Image Windows 
->> drivers for NCQ-supporting controllers have some blacklist entries for 
->> drives with broken NCQ in their .inf files. We only seem to have one 
->> in the libata NCQ blacklist, we may want to add some more of these. 
->> The ones in the current SiI3124 and 3132 drivers' .inf files for 
->> "DisableSataQueueing" appear to be:
->>
->> Model                Firmware
->> Maxtor 7B250S0            BANC1B70
->> HTS541060G9SA00            MB3OC60D
->> HTS541080G9SA00            MB4OC60D
->> HTS541010G9SA00            MBZOC60D
->>
->> (the latter 3 being Hitachi Travelstar drives)
-> 
-> Yeah, I don't think we need to be too careful about blacklisting NCQ 
-> considering the sorry state of many early NCQ firmwares.  Please submit 
-> a patch.  It would be nice if you add a comment why the drives are added 
-> for documentation.
-
-Will do shortly. Eric, do you have any info on the blacklisting of that 
-Maxtor 7B250S0 drive? I would hope that Silicon Image would have a good 
-reason for blacklisting that one..
-
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+Signed-off-by:  Mark Lord <mlord@pobox.com>
+---
+diff -u --recursive --new-file --exclude='.*' --exclude='*.[osa]' --exclude='*.ko' --exclude='*.mod.c' linux-2.6.20/drivers/ata/libata-core.c new/drivers/ata/libata-core.c
+--- linux-2.6.20/drivers/ata/libata-core.c	2007-02-04 13:44:54.000000000 -0500
++++ new/drivers/ata/libata-core.c	2007-02-12 19:41:55.000000000 -0500
+@@ -1249,7 +1249,7 @@
+ 			buflen += sg[i].length;
+ 
+ 		ata_sg_init(qc, sg, n_elem);
+-		qc->nsect = buflen / ATA_SECT_SIZE;
++		qc->nsect = buflen / qc->sect_size;
+ 		qc->nbytes = buflen;
+ 	}
+ 
+@@ -4004,7 +4004,7 @@
+ 
+ 
+ /**
+- *	ata_pio_sector - Transfer ATA_SECT_SIZE (512 bytes) of data.
++ *	ata_pio_sector - Transfer a "sector" of data.
+  *	@qc: Command on going
+  *
+  *	Transfer ATA_SECT_SIZE of data from/to the ATA device.
+@@ -4021,12 +4021,13 @@
+ 	struct page *page;
+ 	unsigned int offset;
+ 	unsigned char *buf;
++	unsigned int sect_size = qc->sect_size;
+ 
+ 	if (qc->cursect == (qc->nsect - 1))
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 
+ 	page = sg[qc->cursg].page;
+-	offset = sg[qc->cursg].offset + qc->cursg_ofs * ATA_SECT_SIZE;
++	offset = sg[qc->cursg].offset + qc->cursg_ofs * sect_size;
+ 
+ 	/* get the current page and offset */
+ 	page = nth_page(page, (offset >> PAGE_SHIFT));
+@@ -4042,30 +4043,30 @@
+ 		buf = kmap_atomic(page, KM_IRQ0);
+ 
+ 		/* do the actual data transfer */
+-		ap->ops->data_xfer(qc->dev, buf + offset, ATA_SECT_SIZE, do_write);
++		ap->ops->data_xfer(qc->dev, buf + offset, sect_size, do_write);
+ 
+ 		kunmap_atomic(buf, KM_IRQ0);
+ 		local_irq_restore(flags);
+ 	} else {
+ 		buf = page_address(page);
+-		ap->ops->data_xfer(qc->dev, buf + offset, ATA_SECT_SIZE, do_write);
++		ap->ops->data_xfer(qc->dev, buf + offset, sect_size, do_write);
+ 	}
+ 
+ 	qc->cursect++;
+ 	qc->cursg_ofs++;
+ 
+-	if ((qc->cursg_ofs * ATA_SECT_SIZE) == (&sg[qc->cursg])->length) {
++	if ((qc->cursg_ofs * sect_size) == (&sg[qc->cursg])->length) {
+ 		qc->cursg++;
+ 		qc->cursg_ofs = 0;
+ 	}
+ }
+ 
+ /**
+- *	ata_pio_sectors - Transfer one or many 512-byte sectors.
++ *	ata_pio_sectors - Transfer one or many sectors.
+  *	@qc: Command on going
+  *
+- *	Transfer one or many ATA_SECT_SIZE of data from/to the
+- *	ATA device for the DRQ request.
++ *	Transfer one or many qc->sect_size chunks of data
++ *	from/to the ATA device for the DRQ request.
+  *
+  *	LOCKING:
+  *	Inherited from caller.
+diff -u --recursive --new-file --exclude='.*' --exclude='*.[osa]' --exclude='*.ko' --exclude='*.mod.c' linux-2.6.20/drivers/ata/libata-scsi.c new/drivers/ata/libata-scsi.c
+--- linux-2.6.20/drivers/ata/libata-scsi.c	2007-02-04 13:44:54.000000000 -0500
++++ new/drivers/ata/libata-scsi.c	2007-02-12 19:38:55.000000000 -0500
+@@ -2634,6 +2634,19 @@
+ 		tf->device = qc->dev->devno ?
+ 			tf->device | ATA_DEV1 : tf->device & ~ATA_DEV1;
+ 
++	/* READ/WRITE LONG use a non-standard sect_size */
++	qc->sect_size = ATA_SECT_SIZE;
++	switch (tf->command) {
++	case ATA_CMD_READ_LONG:
++	case ATA_CMD_READ_LONG_ONCE:
++	case ATA_CMD_WRITE_LONG:
++	case ATA_CMD_WRITE_LONG_ONCE:
++		if (tf->protocol != ATA_PROT_PIO
++		 || tf->nsect != 1)
++			goto invalid_fld;
++		qc->sect_size = cmd->request_bufflen;
++	}
++
+ 	/*
+ 	 * Filter SET_FEATURES - XFER MODE command -- otherwise,
+ 	 * SET_FEATURES - XFER MODE must be preceded/succeeded
+@@ -2661,7 +2674,7 @@
+ 	 * TODO: find out if we need to do more here to
+ 	 *       cover scatter/gather case.
+ 	 */
+-	qc->nsect = scmd->request_bufflen / ATA_SECT_SIZE;
++	qc->nsect = scmd->request_bufflen / qc->sect_size;
+ 
+ 	/* request result TF */
+ 	qc->flags |= ATA_QCFLAG_RESULT_TF;
+diff -u --recursive --new-file --exclude='.*' --exclude='*.[osa]' --exclude='*.ko' --exclude='*.mod.c' linux-2.6.20/include/linux/ata.h new/include/linux/ata.h
+--- linux-2.6.20/include/linux/ata.h	2007-02-04 13:44:54.000000000 -0500
++++ new/include/linux/ata.h	2007-02-12 19:34:30.000000000 -0500
+@@ -160,6 +160,12 @@
+ 	/* READ_LOG_EXT pages */
+ 	ATA_LOG_SATA_NCQ	= 0x10,
+ 
++	/* READ/WRITE LONG (obsolete) */
++	ATA_CMD_READ_LONG	= 0x22,
++	ATA_CMD_READ_LONG_ONCE	= 0x23,
++	ATA_CMD_WRITE_LONG	= 0x32,
++	ATA_CMD_WRITE_LONG_ONCE	= 0x33,
++
+ 	/* SETFEATURES stuff */
+ 	SETFEATURES_XFER	= 0x03,
+ 	XFER_UDMA_7		= 0x47,
+diff -u --recursive --new-file --exclude='.*' --exclude='*.[osa]' --exclude='*.ko' --exclude='*.mod.c' linux-2.6.20/include/linux/libata.h new/include/linux/libata.h
+--- linux-2.6.20/include/linux/libata.h	2007-02-04 13:44:54.000000000 -0500
++++ new/include/linux/libata.h	2007-02-12 19:32:57.000000000 -0500
+@@ -430,6 +430,7 @@
+ 	int			dma_dir;
+ 
+ 	unsigned int		pad_len;
++	unsigned int		sect_size;
+ 
+ 	unsigned int		nsect;
+ 	unsigned int		cursect;
+@@ -1155,6 +1156,7 @@
+ 	qc->n_elem = 0;
+ 	qc->err_mask = 0;
+ 	qc->pad_len = 0;
++	qc->sect_size = 512;
+ 
+ 	ata_tf_init(qc->dev, &qc->tf);
+ 
