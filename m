@@ -1,191 +1,83 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (pata-2.6 fix queue) sl82c105: rework PIO support
-Date: Wed, 14 Feb 2007 01:01:26 +0300
-Message-ID: <200702140101.26639.sshtylyov@ru.mvista.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: libata FUA revisited
+Date: Tue, 13 Feb 2007 18:07:41 -0600
+Message-ID: <45D252CD.5010303@shaw.ca>
+References: <fa.S80SRyQbD/hm4SxliPUKU88BaCo@ifi.uio.no>
+ <fa.Q/csgyCHkAsD84yi+bN78H1WNNM@ifi.uio.no> <45D104F3.7040602@shaw.ca>
+ <45D1D72D.9020509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:21195 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751324AbXBMWBg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Feb 2007 17:01:36 -0500
-Content-Disposition: inline
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:2553 "EHLO
+	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932078AbXBNAO0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 19:14:26 -0500
+In-reply-to: <45D1D72D.9020509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, edmudama@gmail.com, Nicolas.Mailhot@LaPoste.net
 
-Get rid of the 'pio_speed' member of 'ide_drive_t' that was only used by this
-driver by storing the PIO mode timings in the 'drive_data' instead -- this
-allows us to greatly simplify the process  of "reloading" of the chip's timing
-register and do in right in the ide_dma_off_quietly() and to turn the former
-config_for_pio() into the tuneproc() method.
+Tejun Heo wrote:
+>> On the NCQ side, I think it's pretty safe to assume that all 
+>> controllers will handle it. Obviously I've verified it with sata_nv 
+>> (at least that it doesn't blow up obviously), and the other two NCQ 
+>> drivers we have, ahci and sata_sil24 just feed raw FIS data into the 
+>> controller so there should be no issue with not supporting it.
+> 
+> FWIW, ICH6/7/8 ahci's clear PMP field when transmitting FIS.  The reason 
+> why I'm hesitant is because there is no way to tell whether the FUA bit 
+> got honored or ignored.  With extra opcode, it's okay because barrier 
+> explicitly fails but if NCQ FUA is not supported, it will succeed 
+> silently as normal write.  Everything will be okay generally but the 
+> barrier is done incorrectly and on a really bad day it will lead to 
+> journal corruption.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Well, we should be able to determine that experimentally (at least on 
+specific controllers) with a little test program that just writes little 
+bits of data and fsyncs repeatedly (assuming that does in fact trigger 
+FUAs currently..) If it runs faster than the drive could possibly be 
+rewriting the physical disk then obviously the FUA bit is not getting 
+through and/or not respected and we can blacklist FUA on that controller.
 
----
-This patch has also been actually tested at last. :-)
+Also, the FUA bit in the NCQ commands is in the device register, so it's 
+not like the PMP fields where it's not used for anything else and so the 
+controller messing with it wouldn't be otherwise noticed..
 
- drivers/ide/pci/sl82c105.c |   90 +++++++++++++++++----------------------------
- include/linux/ide.h        |    1 
- 2 files changed, 34 insertions(+), 57 deletions(-)
+> 
+> So, actually, I was thinking about *always* using the non-NCQ FUA 
+> opcode.  As currently implemented, FUA request is always issued by 
+> itself, so NCQ doesn't make any difference there.  So, I think it would 
+> be better to turn on FUA on driver-by-driver basis whether the 
+> controller supports NCQ or not.
 
-Index: linux-2.6/drivers/ide/pci/sl82c105.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/sl82c105.c
-+++ linux-2.6/drivers/ide/pci/sl82c105.c
-@@ -77,42 +77,43 @@ static unsigned int get_timing_sl82c105(
- /*
-  * Configure the drive and chipset for PIO
-  */
--static void config_for_pio(ide_drive_t *drive, int pio, int report, int chipset_only)
-+static void sl82c105_tune_drive(ide_drive_t *drive, u8 pio)
- {
--	ide_hwif_t *hwif = HWIF(drive);
--	struct pci_dev *dev = hwif->pci_dev;
-+	ide_hwif_t *hwif	= HWIF(drive);
-+	struct pci_dev *dev	= hwif->pci_dev;
-+	int reg			= 0x44 + drive->dn * 4;
- 	ide_pio_data_t p;
--	u16 drv_ctrl = 0x909;
--	unsigned int xfer_mode, reg;
-+	u16 drv_ctrl;
-+	u8  xfer_mode;
- 
--	DBG(("config_for_pio(drive:%s, pio:%d, report:%d, chipset_only:%d)\n",
--		drive->name, pio, report, chipset_only));
-+	DBG(("sl82c105_tune_drive(drive:%s, pio:%u)\n", drive->name, pio));
- 		
--	reg = (hwif->channel ? 0x4c : 0x44) + (drive->select.b.unit ? 4 : 0);
--
--	pio = ide_get_best_pio_mode(drive, pio, 5, &p);
-+	xfer_mode = ide_get_best_pio_mode(drive, pio, 5, &p) + XFER_PIO_0;
- 
--	xfer_mode = XFER_PIO_0 + pio;
-+	if (ide_config_drive_speed(drive, xfer_mode))
-+		return;
- 
--	if (chipset_only || ide_config_drive_speed(drive, xfer_mode) == 0) {
--		drv_ctrl = get_timing_sl82c105(&p);
--		drive->pio_speed = xfer_mode;
--	} else
--		drive->pio_speed = XFER_PIO_0;
-+	drive->drive_data = drv_ctrl = get_timing_sl82c105(&p);
- 
--	if (drive->using_dma == 0) {
-+	if (!drive->using_dma) {
- 		/*
- 		 * If we are actually using MW DMA, then we can not
- 		 * reprogram the interface drive control register.
- 		 */
--		pci_write_config_word(dev, reg, drv_ctrl);
--		pci_read_config_word(dev, reg, &drv_ctrl);
-+		pci_write_config_word(dev, reg,  drv_ctrl);
-+		pci_read_config_word (dev, reg, &drv_ctrl);
- 
--		if (report) {
--			printk("%s: selected %s (%dns) (%04X)\n", drive->name,
--			       ide_xfer_verbose(xfer_mode), p.cycle_time, drv_ctrl);
--		}
- 	}
-+
-+	printk(KERN_DEBUG "%s: selected %s (%dns) (%04X)\n", drive->name,
-+	       ide_xfer_verbose(xfer_mode), p.cycle_time, drv_ctrl);
-+
-+	/*
-+	 * We support 32-bit I/O on this interface, and it
-+	 * doesn't have problems with interrupts.
-+	 */
-+	drive->io_32bit = 1;
-+	drive->unmask	= 1;
- }
- 
- /*
-@@ -248,17 +249,14 @@ static int sl82c105_ide_dma_on (ide_driv
- 
- static int sl82c105_ide_dma_off_quietly (ide_drive_t *drive)
- {
--	u8 speed = XFER_PIO_0;
--	int rc;
--	
-+	struct pci_dev *dev	= HWIF(drive)->pci_dev;
-+	int reg 		= 0x44 + drive->dn * 4;
-+
- 	DBG(("sl82c105_ide_dma_off_quietly(drive:%s)\n", drive->name));
- 
--	rc = __ide_dma_off_quietly(drive);
--	if (drive->pio_speed)
--		speed = drive->pio_speed - XFER_PIO_0;
--	config_for_pio(drive, speed, 0, 1);
-+	pci_write_config_word(dev, reg, drive->drive_data);
- 
--	return rc;
-+	return __ide_dma_off_quietly(drive);
- }
- 
- /*
-@@ -304,24 +302,6 @@ static void sl82c105_resetproc(ide_drive
- }
- 	
- /*
-- * We only deal with PIO mode here - DMA mode 'using_dma' is not
-- * initialised at the point that this function is called.
-- */
--static void tune_sl82c105(ide_drive_t *drive, u8 pio)
--{
--	DBG(("tune_sl82c105(drive:%s)\n", drive->name));
--
--	config_for_pio(drive, pio, 1, 0);
--
--	/*
--	 * We support 32-bit I/O on this interface, and it
--	 * doesn't have problems with interrupts.
--	 */
--	drive->io_32bit = 1;
--	drive->unmask = 1;
--}
--
--/*
-  * Return the revision of the Winbond bridge
-  * which this function is part of.
-  */
-@@ -385,19 +365,17 @@ static void __devinit init_hwif_sl82c105
- 
- 	DBG(("init_hwif_sl82c105(hwif: ide%d)\n", hwif->index));
- 
--	hwif->tuneproc = tune_sl82c105;
--	hwif->selectproc = sl82c105_selectproc;
--	hwif->resetproc = sl82c105_resetproc;
-+	hwif->tuneproc		= sl82c105_tune_drive;
-+	hwif->selectproc	= sl82c105_selectproc;
-+	hwif->resetproc 	= sl82c105_resetproc;
- 
- 	/*
- 	 * Default to PIO 0 for fallback unless tuned otherwise.
- 	 * We always autotune PIO,  this is done before DMA is checked,
- 	 * so there's no risk of accidentally disabling DMA
- 	 */
--	hwif->drives[0].pio_speed = XFER_PIO_0;
--	hwif->drives[0].autotune = 1;
--	hwif->drives[1].pio_speed = XFER_PIO_0;
--	hwif->drives[1].autotune = 1;
-+	hwif->drives[0].drive_data = hwif->drives[1].drive_data = 0x0909;
-+	hwif->drives[0].autotune   = hwif->drives[1].autotune   = 1;
- 
- 	if (!hwif->dma_base)
- 		return;
-Index: linux-2.6/include/linux/ide.h
-===================================================================
---- linux-2.6.orig/include/linux/ide.h
-+++ linux-2.6/include/linux/ide.h
-@@ -613,7 +613,6 @@ typedef struct ide_drive_s {
- 
-         u8	quirk_list;	/* considered quirky, set for a specific host */
-         u8	init_speed;	/* transfer rate set at boot */
--        u8	pio_speed;      /* unused by core, used by some drivers for fallback from DMA */
-         u8	current_speed;	/* current transfer rate set */
-         u8	dn;		/* now wide spread use */
-         u8	wcache;		/* status of write cache */
+Unfortunately not all drives that support NCQ support the non-NCQ FUA 
+commands (my Seagates are like this).
+
+There's definitely a potential advantage to FUA with NCQ - if you have 
+non-synchronous accesses going on concurrently with synchronous ones, if 
+you have to use non-NCQ FUA or flush cache commands, you have to wait 
+for all the IOs of both types to drain out before you can issue the 
+flush (since those can't be overlapped with the NCQ read/writes). And if 
+you can only use flush cache, then you're forcing all the writes to be 
+flushed including the non-synchronous ones you didn't care about. 
+Whether or not the block layer currently exploits this I don't know, but 
+it definitely could.
+
+> Well, I might be being too paranoid but silent FUA failure would be 
+> really hard to diagnose if that ever happens (and I'm fairly certain 
+> that it will on some firmwares).
+
+Well, there are also probably drives that ignore flush cache commands or 
+  fail to do other things that they should. There's only so far we can 
+go in coping if the firmware authors are being retarded. If any drive is 
+broken like that we should likely just blacklist NCQ on it entirely as 
+obviously little thought or testing went into the implementation..
+
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
+
 
