@@ -1,84 +1,159 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/8] pdc202xx_new: use ide_tune_dma()
-Date: Wed, 14 Feb 2007 02:56:16 +0100
-Message-ID: <20070214015616.4619.66530.sendpatchset@localhost.localdomain>
+Subject: [PATCH 4/8] ide: remove some obsoleted kernel params
+Date: Wed, 14 Feb 2007 02:56:52 +0100
+Message-ID: <20070214015652.4619.2752.sendpatchset@localhost.localdomain>
 References: <20070214015603.4619.41923.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ug-out-1314.google.com ([66.249.92.172]:47958 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbXBNBvF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 20:51:05 -0500
+	with ESMTP id S1751116AbXBNBvM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 20:51:12 -0500
 Received: by ug-out-1314.google.com with SMTP id 44so28283uga
-        for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2007 17:51:04 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2007 17:51:10 -0800 (PST)
 In-Reply-To: <20070214015603.4619.41923.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-[PATCH] pdc202xx_new: use ide_tune_dma()
+[PATCH] ide: remove some obsoleted kernel params
 
-* remove code enabling IORDY and prefetch from config_chipset_for_dma(),
-  as the comment states it has no real effect because these settings are
-  overriden when the PIO mode is set (and for this driver ->autotune == 1
-  so PIO mode is always programmed)
+Remove
 
-* remove the check for drive->media != ide_disk from config_chipset_for_dma(),
-  it is not needed because ide_max_dma_mode() returns 0 when ->atapi_dma == 0
+* "hdx=serialize"
+* "idex=noautotune"
+* "idex=autotune"
 
-* use ide_tune_dma() in pdcnew_config_drive_xfer_rate() and remove no longer
-  needed config_chipset_for_dma()
+kernel params, they have been obsoleted for ages.
+
+"idex=serialize", "hdx=noautotune" and "hdx=autotune" are still available
+so there is no funcionality loss caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 ---
- drivers/ide/pci/pdc202xx_new.c |   32 +-------------------------------
- 1 file changed, 1 insertion(+), 31 deletions(-)
+ Documentation/ide.txt       |   15 +++------------
+ drivers/ide/ide.c           |   18 ++++--------------
+ drivers/ide/legacy/qd65xx.c |    4 ++--
+ drivers/ide/pci/opti621.c   |    2 +-
+ 4 files changed, 10 insertions(+), 29 deletions(-)
 
-Index: b/drivers/ide/pci/pdc202xx_new.c
+Index: b/Documentation/ide.txt
 ===================================================================
---- a/drivers/ide/pci/pdc202xx_new.c
-+++ b/drivers/ide/pci/pdc202xx_new.c
-@@ -228,41 +228,11 @@ static u8 pdcnew_cable_detect(ide_hwif_t
- 	return get_indexed_reg(hwif, 0x0b) & 0x04;
- }
+--- a/Documentation/ide.txt
++++ b/Documentation/ide.txt
+@@ -232,7 +232,9 @@ Summary of ide driver parameters for ker
  
--static int config_chipset_for_dma(ide_drive_t *drive)
--{
--	struct hd_driveid *id	= drive->id;
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 speed;
--
--	if (drive->media != ide_disk)
--		return 0;
--
--	if (id->capability & 4) {
--		/*
--		 * Set IORDY_EN & PREFETCH_EN (this seems to have
--		 * NO real effect since this register is reloaded
--		 * by hardware when the transfer mode is selected)
--		 */
--		u8 tmp, adj = (drive->dn & 1) ? 0x08 : 0x00;
--
--		tmp = get_indexed_reg(hwif, 0x13 + adj);
--		set_indexed_reg(hwif, 0x13 + adj, tmp | 0x03);
--	}
--
--	speed = ide_max_dma_mode(drive);
--
--	if (!speed)
--		return 0;
--
--	(void) hwif->speedproc(drive, speed);
--	return ide_dma_enable(drive);
--}
--
- static int pdcnew_config_drive_xfer_rate(ide_drive_t *drive)
- {
- 	drive->init_speed = 0;
+  "hdx=remap63"		: remap the drive: add 63 to all sector numbers
+ 			  (for DM OnTrack)
+- 
++
++ "idex=noautotune"	: driver will NOT attempt to tune interface speed
++
+  "hdx=autotune"		: driver will attempt to tune interface speed
+ 			  to the fastest PIO mode supported,
+ 			  if possible for this drive only.
+@@ -267,17 +269,6 @@ Summary of ide driver parameters for ker
+  "idex=base,ctl"	: specify both base and ctl
  
--	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
-+	if (ide_tune_dma(drive))
- 		return 0;
+  "idex=base,ctl,irq"	: specify base, ctl, and irq number
+- 
+- "idex=autotune"	: driver will attempt to tune interface speed
+-			  to the fastest PIO mode supported,
+-			  for all drives on this interface.
+-			  Not fully supported by all chipset types,
+-			  and quite likely to cause trouble with
+-			  older/odd IDE drives.
+-
+- "idex=noautotune"	: driver will NOT attempt to tune interface speed 
+-			  This is the default for most chipsets,
+-			  except the cmd640.
  
- 	if (ide_use_fast_pio(drive))
+  "idex=serialize"	: do not overlap operations on idex. Please note
+ 			  that you will have to specify this option for
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -1346,7 +1346,7 @@ static int __init ide_setup(char *s)
+ 	 */
+ 	if (s[0] == 'h' && s[1] == 'd' && s[2] >= 'a' && s[2] <= max_drive) {
+ 		const char *hd_words[] = {
+-			"none", "noprobe", "nowerr", "cdrom", "serialize",
++			"none", "noprobe", "nowerr", "cdrom", "minus5",
+ 			"autotune", "noautotune", "minus8", "swapdata", "bswap",
+ 			"noflush", "remap", "remap63", "scsi", NULL };
+ 		unit = s[2] - 'a';
+@@ -1374,9 +1374,6 @@ static int __init ide_setup(char *s)
+ 				drive->ready_stat = 0;
+ 				hwif->noprobe = 0;
+ 				goto done;
+-			case -5: /* "serialize" */
+-				printk(" -- USE \"ide%d=serialize\" INSTEAD", hw);
+-				goto do_serialize;
+ 			case -6: /* "autotune" */
+ 				drive->autotune = IDE_TUNE_AUTO;
+ 				goto obsolete_option;
+@@ -1437,7 +1434,7 @@ static int __init ide_setup(char *s)
+ 		 * (-8, -9, -10) are reserved to ease the hardcoding.
+ 		 */
+ 		static const char *ide_words[] = {
+-			"noprobe", "serialize", "autotune", "noautotune", 
++			"noprobe", "serialize", "minus3", "minus4",
+ 			"reset", "dma", "ata66", "minus8", "minus9",
+ 			"minus10", "four", "qd65xx", "ht6560b", "cmd640_vlb",
+ 			"dtc2278", "umc8672", "ali14xx", NULL };
+@@ -1514,6 +1511,8 @@ static int __init ide_setup(char *s)
+ 			case -10: /* minus10 */
+ 			case -9: /* minus9 */
+ 			case -8: /* minus8 */
++			case -4:
++			case -3:
+ 				goto bad_option;
+ 			case -7: /* ata66 */
+ #ifdef CONFIG_BLK_DEV_IDEPCI
+@@ -1528,16 +1527,7 @@ static int __init ide_setup(char *s)
+ 			case -5: /* "reset" */
+ 				hwif->reset = 1;
+ 				goto obsolete_option;
+-			case -4: /* "noautotune" */
+-				hwif->drives[0].autotune = IDE_TUNE_NOAUTO;
+-				hwif->drives[1].autotune = IDE_TUNE_NOAUTO;
+-				goto obsolete_option;
+-			case -3: /* "autotune" */
+-				hwif->drives[0].autotune = IDE_TUNE_AUTO;
+-				hwif->drives[1].autotune = IDE_TUNE_AUTO;
+-				goto obsolete_option;
+ 			case -2: /* "serialize" */
+-			do_serialize:
+ 				hwif->mate = &ide_hwifs[hw^1];
+ 				hwif->mate->mate = hwif;
+ 				hwif->serialized = hwif->mate->serialized = 1;
+Index: b/drivers/ide/legacy/qd65xx.c
+===================================================================
+--- a/drivers/ide/legacy/qd65xx.c
++++ b/drivers/ide/legacy/qd65xx.c
+@@ -16,8 +16,8 @@
+  * Please set local bus speed using kernel parameter idebus
+  * 	for example, "idebus=33" stands for 33Mhz VLbus
+  * To activate controller support, use "ide0=qd65xx"
+- * To enable tuning, use "ide0=autotune"
+- * To enable second channel tuning (qd6580 only), use "ide1=autotune"
++ * To enable tuning, use "hda=autotune hdb=autotune"
++ * To enable 2nd channel tuning (qd6580 only), use "hdc=autotune hdd=autotune"
+  */
+ 
+ /*
+Index: b/drivers/ide/pci/opti621.c
+===================================================================
+--- a/drivers/ide/pci/opti621.c
++++ b/drivers/ide/pci/opti621.c
+@@ -57,7 +57,7 @@
+  * There is a 25/33MHz switch in configuration
+  * register, but driver is written for use at any frequency which get
+  * (use idebus=xx to select PCI bus speed).
+- * Use ide0=autotune for automatical tune of the PIO modes.
++ * Use hda=autotune and hdb=autotune for automatical tune of the PIO modes.
+  * If you get strange results, do not use this and set PIO manually
+  * by hdparm.
+  *
