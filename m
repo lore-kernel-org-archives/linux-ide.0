@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (pata-2.6 fix queue) cmd64x: interrupt status fixes
-Date: Thu, 15 Feb 2007 00:42:29 +0300
-Message-ID: <200702150042.29647.sshtylyov@ru.mvista.com>
+Subject: [PATCH] (pata-2.6 fix queue) cmd64x: add/fix enablebits
+Date: Thu, 15 Feb 2007 01:35:28 +0300
+Message-ID: <200702150135.28934.sshtylyov@ru.mvista.com>
 References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:32640 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:32868 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S964773AbXBNVmj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Feb 2007 16:42:39 -0500
+	id S932625AbXBNWff (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Feb 2007 17:35:35 -0500
 In-Reply-To: <200702040004.24918.sshtylyov@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
@@ -19,18 +19,20 @@ List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org
 
-The driver's ide_dma_test_irq() method was reading the MRDMODE register even on
-PCI0643/6 where it was write-only -- fix this by always reading the "backward-
-compatible" interrupt bits, renaming dma_alt_stat to irq_stat as these interrupt
-status bits are not coupled to DMA.
-In addition, wrong interrupt bit was tested/cleared for the primary channel --
-it's bit 2 in all the chip specs and the driver used bit 1... :-/
+The IDE core looks at the wrong bit when checking if the secondary channel is
+enabled on PCI0646 -- CFR bit 8 is read-ahead disable, bit 3 is the correct one.
+Starting with PCI0646U chip, the primary channel can also be enbled/disabled --
+so, add 'enablebits' initializers to each 'ide_pci_device_t' structure, handling
+the original PCI0646 via adding the init_setup() method and clearing the 'reg'
+field there if necessary...
+
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
-Warning: as usual, this has only been compile-tested. :-)
+Warning: compile-tested only, use on your own risk! ;-)
 
- drivers/ide/pci/cmd64x.c |   24 ++++++++++++------------
- 1 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/ide/pci/cmd64x.c |   39 ++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 36 insertions(+), 3 deletions(-)
 
 Index: linux-2.6/drivers/ide/pci/cmd64x.c
 ===================================================================
@@ -39,48 +41,87 @@ Index: linux-2.6/drivers/ide/pci/cmd64x.c
 @@ -1,6 +1,6 @@
  /* $Id: cmd64x.c,v 1.21 2000/01/30 23:23:16
   *
-- * linux/drivers/ide/pci/cmd64x.c		Version 1.43	Feb 8, 2007
-+ * linux/drivers/ide/pci/cmd64x.c		Version 1.44	Feb 13, 2007
+- * linux/drivers/ide/pci/cmd64x.c		Version 1.44	Feb 13, 2007
++ * linux/drivers/ide/pci/cmd64x.c		Version 1.45	Feb 14, 2007
   *
   * cmd64x.c: Enable interrupts at initialization time on Ultra/PCI machines.
   *           Note, this driver is not used at all on other systems because
-@@ -39,7 +39,7 @@
-  * CMD64x specific registers definition.
-  */
- #define CFR		0x50
--#define   CFR_INTR_CH0		0x02
-+#define   CFR_INTR_CH0		0x04
- #define CNTRL		0x51
- #define	  CNTRL_DIS_RA0		0x40
- #define   CNTRL_DIS_RA1		0x80
-@@ -510,19 +510,19 @@ static int cmd64x_ide_dma_end (ide_drive
+@@ -705,42 +705,75 @@ static void __devinit init_hwif_cmd64x(i
+ 	hwif->drives[1].autodma = hwif->autodma;
+ }
  
- static int cmd64x_ide_dma_test_irq (ide_drive_t *drive)
- {
--	ide_hwif_t *hwif		= HWIF(drive);
--	struct pci_dev *dev		= hwif->pci_dev;
--        u8 dma_alt_stat = 0, mask	= (hwif->channel) ? MRDMODE_INTR_CH1 :
--							    MRDMODE_INTR_CH0;
--	u8 dma_stat = hwif->INB(hwif->dma_status);
-+	ide_hwif_t *hwif	= HWIF(drive);
-+	struct pci_dev *dev	= hwif->pci_dev;
-+	u8 irq_reg		= hwif->channel ? ARTTIM23 : CFR;
-+	u8 irq_stat = 0, mask	= hwif->channel ? ARTTIM23_INTR_CH1 : CFR_INTR_CH0;
-+	u8 dma_stat		= hwif->INB(hwif->dma_status);
++static int __devinit init_setup_cmd64x(struct pci_dev *dev, ide_pci_device_t *d)
++{
++	return ide_setup_pci_device(dev, d);
++}
 +
-+	(void) pci_read_config_byte(dev, irq_reg, &irq_stat);
++static int __devinit init_setup_cmd646(struct pci_dev *dev, ide_pci_device_t *d)
++{
++	u8 rev = 0;
++
++	/*
++	 * The original PCI0646 didn't have the primary channel enable bit,
++	 * it appeared starting with PCI0646U (i.e. revision ID 3).
++	 */
++	pci_read_config_byte(dev, PCI_REVISION_ID, &rev);
++	if (rev < 3)
++		d->enablebits[0].reg = 0;
++
++	return ide_setup_pci_device(dev, d);
++}
++
+ static ide_pci_device_t cmd64x_chipsets[] __devinitdata = {
+ 	{	/* 0 */
+ 		.name		= "CMD643",
++		.init_setup	= init_setup_cmd64x,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.init_hwif	= init_hwif_cmd64x,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
++		.enablebits	= {{0x00,0x00,0x00}, {0x51,0x08,0x08}},
+ 		.bootable	= ON_BOARD,
+ 	},{	/* 1 */
+ 		.name		= "CMD646",
++		.init_setup	= init_setup_cmd646,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.init_hwif	= init_hwif_cmd64x,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
+-		.enablebits	= {{0x00,0x00,0x00}, {0x51,0x80,0x80}},
++		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+ 		.bootable	= ON_BOARD,
+ 	},{	/* 2 */
+ 		.name		= "CMD648",
++		.init_setup	= init_setup_cmd64x,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.init_hwif	= init_hwif_cmd64x,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
++		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+ 		.bootable	= ON_BOARD,
+ 	},{	/* 3 */
+ 		.name		= "CMD649",
++		.init_setup	= init_setup_cmd64x,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.init_hwif	= init_hwif_cmd64x,
+ 		.channels	= 2,
+ 		.autodma	= AUTODMA,
++		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+ 		.bootable	= ON_BOARD,
+ 	}
+ };
  
--	(void) pci_read_config_byte(dev, MRDMODE, &dma_alt_stat);
- #ifdef DEBUG
--	printk("%s: dma_stat: 0x%02x dma_alt_stat: "
--		"0x%02x mask: 0x%02x\n", drive->name,
--		dma_stat, dma_alt_stat, mask);
-+	printk("%s: dma_stat: 0x%02x irq_stat: 0x%02x mask: 0x%02x\n",
-+	       drive->name, dma_stat, irq_stat, mask);
- #endif
--	if (!(dma_alt_stat & mask))
-+	if (!(irq_stat & mask))
- 		return 0;
++/*
++ * We may have to modify enablebits for PCI0646, so we'd better pass
++ * a local copy of the ide_pci_device_t structure down the call chain...
++ */
+ static int __devinit cmd64x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ {
+-	return ide_setup_pci_device(dev, &cmd64x_chipsets[id->driver_data]);
++	ide_pci_device_t d = cmd64x_chipsets[id->driver_data];
++
++	return d.init_setup(dev, &d);
+ }
  
- 	/* return 1 if INTR asserted */
+ static struct pci_device_id cmd64x_pci_tbl[] = {
 
