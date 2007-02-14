@@ -1,106 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata FUA revisited
-Date: Tue, 13 Feb 2007 16:50:58 -0800
-Message-ID: <45D25CF2.5030508@gmail.com>
-References: <fa.S80SRyQbD/hm4SxliPUKU88BaCo@ifi.uio.no> <fa.Q/csgyCHkAsD84yi+bN78H1WNNM@ifi.uio.no> <45D104F3.7040602@shaw.ca> <45D1D72D.9020509@gmail.com> <45D252CD.5010303@shaw.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/8] alim15x3: PIO fallback fix
+Date: Wed, 14 Feb 2007 02:56:03 +0100
+Message-ID: <20070214015603.4619.41923.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:55440 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbXBNAvN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 19:51:13 -0500
-Received: by wr-out-0506.google.com with SMTP id i31so18736wra
-        for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2007 16:51:13 -0800 (PST)
-In-Reply-To: <45D252CD.5010303@shaw.ca>
+Received: from ug-out-1314.google.com ([66.249.92.173]:46567 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbXBNBu0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 20:50:26 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so28107uga
+        for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2007 17:50:22 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, edmudama@gmail.com, Nicolas.Mailhot@LaPoste.net, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-[cc'ing Jeff, Alan, Mark and Jens.  Hi!]
+[PATCH] alim15x3: PIO fallback fix
 
-Hello, Robert.
+If DMA tuning fails always set the best PIO mode.
 
-Robert Hancock wrote:
-> Well, we should be able to determine that experimentally (at least on 
-> specific controllers) with a little test program that just writes little 
-> bits of data and fsyncs repeatedly (assuming that does in fact trigger 
-> FUAs currently..) If it runs faster than the drive could possibly be 
-> rewriting the physical disk then obviously the FUA bit is not getting 
-> through and/or not respected and we can blacklist FUA on that controller.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-That's right.
+---
+ drivers/ide/pci/alim15x3.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-> Also, the FUA bit in the NCQ commands is in the device register, so it's 
-> not like the PMP fields where it's not used for anything else and so the 
-> controller messing with it wouldn't be otherwise noticed..
-
-Yeap, I just wanted to point out (so the FWIW) that seemingly innocent 
-ahci does mangle with some part of the FIS given in the memory.  I agree 
-that this is much unlikely with the FUA bit.
-
->> So, actually, I was thinking about *always* using the non-NCQ FUA 
->> opcode.  As currently implemented, FUA request is always issued by 
->> itself, so NCQ doesn't make any difference there.  So, I think it 
->> would be better to turn on FUA on driver-by-driver basis whether the 
->> controller supports NCQ or not.
-> 
-> Unfortunately not all drives that support NCQ support the non-NCQ FUA 
-> commands (my Seagates are like this).
-
-And I'm a bit scared to set FUA bit on such drives and trust that it 
-will actually do FUA, so our opinions aren't too far away from each 
-other.  :-)
-
-> There's definitely a potential advantage to FUA with NCQ - if you have 
-> non-synchronous accesses going on concurrently with synchronous ones, if 
-> you have to use non-NCQ FUA or flush cache commands, you have to wait 
-> for all the IOs of both types to drain out before you can issue the 
-> flush (since those can't be overlapped with the NCQ read/writes). And if 
-> you can only use flush cache, then you're forcing all the writes to be 
-> flushed including the non-synchronous ones you didn't care about. 
-> Whether or not the block layer currently exploits this I don't know, but 
-> it definitely could.
-
-The current barrier implementation uses the following sequences for 
-no-FUA and FUA cases.
-
-1. w/o FUA
-
-normal operation -> barrier issued -> drain IO -> flush -> barrier 
-written -> flush -> normal operation resumes
-
-2. w/ FUA
-
-normal operation -> barrier issued -> drain IO -> flush -> barrier 
-written / FUA -> normal operation resumes
-
-So, the FUA write is issued by itself.  This isn't really efficient and 
-frequent barriers impact the performance badly.  If we can change that 
-NCQ FUA will be certainly beneficial.
-
->> Well, I might be being too paranoid but silent FUA failure would be 
->> really hard to diagnose if that ever happens (and I'm fairly certain 
->> that it will on some firmwares).
-> 
-> Well, there are also probably drives that ignore flush cache commands or 
->  fail to do other things that they should. There's only so far we can go 
-> in coping if the firmware authors are being retarded. If any drive is 
-> broken like that we should likely just blacklist NCQ on it entirely as 
-> obviously little thought or testing went into the implementation..
-
-FLUSH has been around quite long time now and most drives don't have 
-problem with that.  FUA on ATA is still quite new and libata will be the 
-first major user of it if we enable it by default.  It just seems too 
-easy to ignore that bit and successfully complete the write - there 
-isn't any safety net as opposed to using a separate opcode.  So, I'm a 
-bit nervous.
-
-Any comments, people?
-
-Thanks.
-
--- 
-tejun
+Index: b/drivers/ide/pci/alim15x3.c
+===================================================================
+--- a/drivers/ide/pci/alim15x3.c
++++ b/drivers/ide/pci/alim15x3.c
+@@ -491,7 +491,7 @@ static int ali15x3_config_drive_for_dma(
+ 	struct hd_driveid *id	= drive->id;
+ 
+ 	if ((m5229_revision<=0x20) && (drive->media!=ide_disk))
+-		goto no_dma_set;
++		goto ata_pio;
+ 
+ 	drive->init_speed = 0;
+ 
+@@ -512,20 +512,19 @@ try_dma_modes:
+ 			    (id->dma_1word & hwif->swdma_mask)) {
+ 				/* Force if Capable regular DMA modes */
+ 				if (!config_chipset_for_dma(drive))
+-					goto no_dma_set;
++					goto ata_pio;
+ 			}
+ 		} else if (__ide_dma_good_drive(drive) &&
+ 			   (id->eide_dma_time < 150)) {
+ 			/* Consult the list of known "good" drives */
+ 			if (!config_chipset_for_dma(drive))
+-				goto no_dma_set;
++				goto ata_pio;
+ 		} else {
+ 			goto ata_pio;
+ 		}
+ 	} else {
+ ata_pio:
+ 		hwif->tuneproc(drive, 255);
+-no_dma_set:
+ 		return -1;
+ 	}
+ 
