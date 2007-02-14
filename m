@@ -1,83 +1,51 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: libata FUA revisited
-Date: Tue, 13 Feb 2007 18:07:41 -0600
-Message-ID: <45D252CD.5010303@shaw.ca>
-References: <fa.S80SRyQbD/hm4SxliPUKU88BaCo@ifi.uio.no>
- <fa.Q/csgyCHkAsD84yi+bN78H1WNNM@ifi.uio.no> <45D104F3.7040602@shaw.ca>
- <45D1D72D.9020509@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] SATA: use NULL for ptrs
+Date: Tue, 13 Feb 2007 16:11:41 -0800
+Message-ID: <20070213161141.d5ac00fe.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:2553 "EHLO
-	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078AbXBNAO0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 19:14:26 -0500
-In-reply-to: <45D1D72D.9020509@gmail.com>
+Received: from rgminet01.oracle.com ([148.87.113.118]:35889 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932101AbXBNATE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2007 19:19:04 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, edmudama@gmail.com, Nicolas.Mailhot@LaPoste.net
+To: ide <linux-ide@vger.kernel.org>
+Cc: jgarzik <jgarzik@pobox.com>, akpm <akpm@osdl.org>
 
-Tejun Heo wrote:
->> On the NCQ side, I think it's pretty safe to assume that all 
->> controllers will handle it. Obviously I've verified it with sata_nv 
->> (at least that it doesn't blow up obviously), and the other two NCQ 
->> drivers we have, ahci and sata_sil24 just feed raw FIS data into the 
->> controller so there should be no issue with not supporting it.
-> 
-> FWIW, ICH6/7/8 ahci's clear PMP field when transmitting FIS.  The reason 
-> why I'm hesitant is because there is no way to tell whether the FUA bit 
-> got honored or ignored.  With extra opcode, it's okay because barrier 
-> explicitly fails but if NCQ FUA is not supported, it will succeed 
-> silently as normal write.  Everything will be okay generally but the 
-> barrier is done incorrectly and on a really bad day it will lead to 
-> journal corruption.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Well, we should be able to determine that experimentally (at least on 
-specific controllers) with a little test program that just writes little 
-bits of data and fsyncs repeatedly (assuming that does in fact trigger 
-FUAs currently..) If it runs faster than the drive could possibly be 
-rewriting the physical disk then obviously the FUA bit is not getting 
-through and/or not respected and we can blacklist FUA on that controller.
+Fix sparse warnings in SATA:
+drivers/ata/sata_sil.c:342:9: warning: Using plain integer as NULL pointer
+drivers/ata/sata_mv.c:2056:55: warning: Using plain integer as NULL pointer
 
-Also, the FUA bit in the NCQ commands is in the device register, so it's 
-not like the PMP fields where it's not used for anything else and so the 
-controller messing with it wouldn't be otherwise noticed..
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/ata/sata_mv.c  |    2 +-
+ drivers/ata/sata_sil.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> 
-> So, actually, I was thinking about *always* using the non-NCQ FUA 
-> opcode.  As currently implemented, FUA request is always issued by 
-> itself, so NCQ doesn't make any difference there.  So, I think it would 
-> be better to turn on FUA on driver-by-driver basis whether the 
-> controller supports NCQ or not.
-
-Unfortunately not all drives that support NCQ support the non-NCQ FUA 
-commands (my Seagates are like this).
-
-There's definitely a potential advantage to FUA with NCQ - if you have 
-non-synchronous accesses going on concurrently with synchronous ones, if 
-you have to use non-NCQ FUA or flush cache commands, you have to wait 
-for all the IOs of both types to drain out before you can issue the 
-flush (since those can't be overlapped with the NCQ read/writes). And if 
-you can only use flush cache, then you're forcing all the writes to be 
-flushed including the non-synchronous ones you didn't care about. 
-Whether or not the block layer currently exploits this I don't know, but 
-it definitely could.
-
-> Well, I might be being too paranoid but silent FUA failure would be 
-> really hard to diagnose if that ever happens (and I'm fairly certain 
-> that it will on some firmwares).
-
-Well, there are also probably drives that ignore flush cache commands or 
-  fail to do other things that they should. There's only so far we can 
-go in coping if the firmware authors are being retarded. If any drive is 
-broken like that we should likely just blacklist NCQ on it entirely as 
-obviously little thought or testing went into the implementation..
-
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
-
+--- linux-2.6.20-git9.orig/drivers/ata/sata_mv.c
++++ linux-2.6.20-git9/drivers/ata/sata_mv.c
+@@ -2053,7 +2053,7 @@ static void mv_port_init(struct ata_iopo
+ 	port->altstatus_addr = port->ctl_addr = shd_base + SHD_CTL_AST_OFS;
+ 
+ 	/* unused: */
+-	port->cmd_addr = port->bmdma_addr = port->scr_addr = 0;
++	port->cmd_addr = port->bmdma_addr = port->scr_addr = NULL;
+ 
+ 	/* Clear any currently outstanding port interrupt conditions */
+ 	serr_ofs = mv_scr_offset(SCR_ERROR);
+--- linux-2.6.20-git9.orig/drivers/ata/sata_sil.c
++++ linux-2.6.20-git9/drivers/ata/sata_sil.c
+@@ -339,7 +339,7 @@ static inline void __iomem *sil_scr_addr
+ 		break;
+ 	}
+ 
+-	return 0;
++	return NULL;
+ }
+ 
+ static u32 sil_scr_read (struct ata_port *ap, unsigned int sc_reg)
