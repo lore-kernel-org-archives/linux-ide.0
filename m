@@ -1,32 +1,66 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_nv ADMA controller lockup investigation
-Date: Thu, 15 Feb 2007 05:46:15 -0500
-Message-ID: <45D439F7.3030604@garzik.org>
-References: <45D3E1FF.3080606@shaw.ca>
+From: Leopold Palomo-Avellaneda <lepalom@wol.es>
+Subject: Re: Sata_via problems in a Vintage2-AE1: Resume
+Date: Thu, 15 Feb 2007 12:23:18 +0100
+Message-ID: <200702151223.19333.lepalom@wol.es>
+References: <200702090010.06897.lepalom@wol.es> <200702131711.11781.lepalom@wol.es> <200702131719.47507.jdelvare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-13
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54868 "EHLO mail.dvmed.net"
+Received: from violet.upc.es ([147.83.2.51]:34856 "EHLO violet.upc.es"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965843AbXBOKqS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Feb 2007 05:46:18 -0500
-In-Reply-To: <45D3E1FF.3080606@shaw.ca>
+	id S965885AbXBOLXj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Feb 2007 06:23:39 -0500
+In-Reply-To: <200702131719.47507.jdelvare@suse.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Allen Martin <AMartin@nvidia.com>, nas@arctrix.com, B.Steinbrink@gmx.de
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
 
-Robert Hancock wrote:
-> It's curious that only the post-cache-flush command is having issues,
-> and normal NCQ operation seems fine. Maybe it's related to that tag 0
-> being reused repeatedly?
+A Dimarts 13 Febrer 2007 17:19, Jean Delvare va escriure:
+> Le Mardi 13 F=E9vrier 2007 17:11, Leopold Palomo-Avellaneda a =E9crit=
+=A0:
+> > A Dimarts 13 Febrer 2007 12:20, Jean Delvare va escriure:
+> > (...)
+> >
+> > > > > *If* the VT8251 needs the VIA IRQ quirk, then the attached pa=
+tch
+> > > > > may help. Leopold, can you give it a try?
+> > > >
+> > > > Well, making your patch to the vanilla 2.6.20 the result is the=
+ same.
+> > > > The box doesn't boot. Always the same problem ....
+> > >
+> > > If it's not a VIA IRQ problem, then there's nothing more I can do=
+,
+> > > sorry. Someone else will have to look into the problem.
+> > >
+> > > Out of curiosity, with my patch applied, did you see any "VIA VLi=
+nk IRQ
+> > > fixup" messages on the console?
+> >
+> > No :-(
+>
+> OK, so maybe the VT8251 actually no longer needs the quirk. Thanks fo=
+r
+> testing and reporting.
 
 
-If you take cache flush out of the equation, what happens when NCQ is 
-enabled with a queue depth of 1 (to reproduce tag-0-used-repeatedly 
-condition)?
+Hi people,
+=20
+arriving to this state. What do you recommend?
 
-	Jeff
+I have the box more or less working with irqpoll but with a lot of mess=
+ages:
+APIC error on CPU0: 08(08)
 
+and the box doesn't boot without the irqpoll option. Do you think that =
+the=20
+2.6.21 have some kind of changes in this area?
 
+Thank's for all for you patience and your messages.
+
+Best regards,
+
+Leo
