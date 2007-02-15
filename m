@@ -1,29 +1,36 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata updates (mostly fixes)
-Date: Thu, 15 Feb 2007 15:51:35 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0702151550380.20368@woody.linux-foundation.org>
-References: <20070215233411.GA10782@havoc.gtf.org>
- <Pine.LNX.4.64.0702151546130.20368@woody.linux-foundation.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: BUG in libata from ata_sas_port_alloc
+Date: Thu, 15 Feb 2007 15:54:41 -0800
+Message-ID: <45D4F2C1.4050306@us.ibm.com>
+References: <1171575405.3412.45.camel@mulgrave.il.steeleye.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:39213 "EHLO smtp.osdl.org"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:35255 "EHLO e6.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422693AbXBOXvn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Feb 2007 18:51:43 -0500
-In-Reply-To: <Pine.LNX.4.64.0702151546130.20368@woody.linux-foundation.org>
+	id S1422742AbXBOXyo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Feb 2007 18:54:44 -0500
+In-Reply-To: <1171575405.3412.45.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
+James Bottomley wrote:
 
+> The problem is that memory obtained by devm_kzalloc() cannot be returned
+> by kfree() ... they come from different allocation lists.  The solution
+> is probably to have a corresponding ata_probe_ent_free(), I just don't
+> exactly see how to tell if the object came from the devm_kzalloc or not
+> (unless it gets marked).
 
-On Thu, 15 Feb 2007, Linus Torvalds wrote:
-> 
-> Ok, this is just _strange_.
+Just a shot in the dark, but could we simply make whatever changes are
+necessary to make all sas-ata LLDDs managed and then use devm_kzalloc?
+Though (and I may be totally wrong here) if it's the case that
+devres_head is made (or not made) to be part of a list _only_ before we
+reach ata_probe_ent_alloc, we could put a similar if check into the free
+function.
 
-Btw, I did pull, but I still think we shouldn't do those kinds of strange 
-Kconfig file games.
-
-		Linus
+--D
