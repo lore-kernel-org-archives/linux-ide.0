@@ -1,33 +1,37 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_promise: fix missing PATA cable detection
-Date: Thu, 15 Feb 2007 18:09:05 -0500
-Message-ID: <45D4E811.1060407@garzik.org>
-References: <200702072129.l17LTujt012924@alkaid.it.uu.se>
+Subject: Re: [PATCH] libata: clear TF before IDENTIFYing
+Date: Thu, 15 Feb 2007 18:08:58 -0500
+Message-ID: <45D4E80A.1010300@garzik.org>
+References: <20070202151856.GD1625@htj.dyndns.org> <20070202211441.GA2933@artsapartment.org> <45C3EECF.2080100@gmail.com> <45C4E6BB.6020307@pobox.com> <45C84650.3030703@gmail.com> <20070206163303.GA2185@artsapartment.org> <45C93F1D.8090504@gmail.com> <20070207193513.GA1929@artsapartment.org> <45CA2DBF.9040403@pobox.com> <45CA3895.5010108@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60285 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:60275 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161665AbXBOXJI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Feb 2007 18:09:08 -0500
-In-Reply-To: <200702072129.l17LTujt012924@alkaid.it.uu.se>
+	id S1161668AbXBOXJG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Feb 2007 18:09:06 -0500
+In-Reply-To: <45CA3895.5010108@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <mlord@pobox.com>, Art Haas <ahaas@airmail.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, stable@kernel.org
 
-Mikael Pettersson wrote:
-> This patch fixes an oversight which caused sata_promise to
-> not perform cable detection on the TX2plus chips' PATA ports.
+Tejun Heo wrote:
+> Some devices chock if Feature is not clear when IDENTIFY is issued.
+> Set ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE for IDENTIFY such that whole
+> TF is cleared when reading ID data.
 > 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Kudos to Art Haas for testing various futile patches over several
+> months and Mark Lord for pointing out the fix.
 > 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Art Haas <ahaas@airmail.net>
+> Cc: Mark Lord <mlord@pobox.com>
 > ---
-> 
-> This patch adds yet another is-PATA-or-SATA? check, but it's in a
-> cold path so shouldn't matter much. This will be cleaned up if/when
-> PATA ports and SATA ports start using different ops structures.
+> I think this should go into -stable but a little bit hesitant because
+> the code hasn't been tested widely.  This patch should really be
+> harmless but who knows.  Jeff, Mark, what do you think?
 
 applied
 
