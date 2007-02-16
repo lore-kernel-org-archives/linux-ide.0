@@ -1,75 +1,47 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] use winbond libata instead of ide driver for pseries CD drives
-Date: Fri, 16 Feb 2007 10:20:46 +0100
-Message-ID: <20070216092046.GA2572@aepfle.de>
-References: <20070210203512.GA25586@aepfle.de> <20070210203614.GA25602@aepfle.de> <45D4E82B.7020403@garzik.org>
+From: "Patrick Ale" <patrick.ale@gmail.com>
+Subject: Re: Fwd: [LIBATA] drives not detected
+Date: Fri, 16 Feb 2007 10:48:36 +0100
+Message-ID: <8d158e1f0702160148v366ce96bm8e3ff3e7c64a7198@mail.gmail.com>
+References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>
+	 <8d158e1f0702150052l25fb03fnf17ba315dc6f912d@mail.gmail.com>
+	 <8d158e1f0702160010k2ed986ddtaccf8d2678ae1231@mail.gmail.com>
+	 <45D56FE4.3090900@tw.ibm.com>
+	 <8d158e1f0702160056j11ab6df1v99b4d72866f3e1b2@mail.gmail.com>
+	 <45D574B1.8080109@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:53338 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423463AbXBPJUi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 04:20:38 -0500
+Received: from wr-out-0506.google.com ([64.233.184.233]:1046 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423526AbXBPJsi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 04:48:38 -0500
+Received: by wr-out-0506.google.com with SMTP id i31so1042305wra
+        for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 01:48:37 -0800 (PST)
+In-Reply-To: <45D574B1.8080109@tw.ibm.com>
 Content-Disposition: inline
-In-Reply-To: <45D4E82B.7020403@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Paul Mackeras <paulus@samba.org>
-Cc: Andrew Morton <akpm@osdl.org>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: linux-ide@vger.kernel.org
+
+On 2/16/07, Albert Lee <albertcc@tw.ibm.com> wrote:
+> Maybe the Promise BIOS set the adapter as disabled...
+> Could you please try the attached patch?
+
+This patch is against what? I get a hunk rejected.
+patching file drivers/ata/pata_pdc2027x.c
+Hunk #1 FAILED at 315.
+1 out of 1 hunk FAILED -- saving rejects to file drivers/ata/pata_pdc2027x.c.rej
+
+Can you make a patch against the libata-dev tree that I pulled last night?
+It's impossible for me to reboot at the moment since my grub gives me
+an attitude.
+
+If it's too much work, don't worry, I can test it when I am at home :)
 
 
-Change the default for the built-in IDE on p610/p615/p630 from
-ide to libata. libata has better error handling and the drive can
-recover when hald does its CD media polling.
+Thanks for your time so far.
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
----
- arch/powerpc/configs/ppc64_defconfig   |    4 ++--
- arch/powerpc/configs/pseries_defconfig |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-Index: linux-2.6.20/arch/powerpc/configs/ppc64_defconfig
-===================================================================
---- linux-2.6.20.orig/arch/powerpc/configs/ppc64_defconfig
-+++ linux-2.6.20/arch/powerpc/configs/ppc64_defconfig
-@@ -500,7 +500,7 @@ CONFIG_BLK_DEV_AMD74XX=y
- # CONFIG_BLK_DEV_PDC202XX_NEW is not set
- # CONFIG_BLK_DEV_SVWKS is not set
- # CONFIG_BLK_DEV_SIIMAGE is not set
--CONFIG_BLK_DEV_SL82C105=y
-+# CONFIG_BLK_DEV_SL82C105 is not set
- # CONFIG_BLK_DEV_SLC90E66 is not set
- # CONFIG_BLK_DEV_TRM290 is not set
- # CONFIG_BLK_DEV_VIA82CXXX is not set
-@@ -646,7 +646,7 @@ CONFIG_SATA_SVW=y
- # CONFIG_PATA_SIL680 is not set
- # CONFIG_PATA_SIS is not set
- # CONFIG_PATA_VIA is not set
--# CONFIG_PATA_WINBOND is not set
-+CONFIG_PATA_WINBOND=y
- 
- #
- # Multi-device support (RAID and LVM)
-Index: linux-2.6.20/arch/powerpc/configs/pseries_defconfig
-===================================================================
---- linux-2.6.20.orig/arch/powerpc/configs/pseries_defconfig
-+++ linux-2.6.20/arch/powerpc/configs/pseries_defconfig
-@@ -483,7 +483,7 @@ CONFIG_BLK_DEV_AMD74XX=y
- # CONFIG_BLK_DEV_PDC202XX_NEW is not set
- # CONFIG_BLK_DEV_SVWKS is not set
- # CONFIG_BLK_DEV_SIIMAGE is not set
--CONFIG_BLK_DEV_SL82C105=y
-+# CONFIG_BLK_DEV_SL82C105 is not set
- # CONFIG_BLK_DEV_SLC90E66 is not set
- # CONFIG_BLK_DEV_TRM290 is not set
- # CONFIG_BLK_DEV_VIA82CXXX is not set
-@@ -628,7 +628,7 @@ CONFIG_ATA=y
- # CONFIG_PATA_SIL680 is not set
- # CONFIG_PATA_SIS is not set
- # CONFIG_PATA_VIA is not set
--# CONFIG_PATA_WINBOND is not set
-+CONFIG_PATA_WINBOND=y
- 
- #
- # Multi-device support (RAID and LVM)
+Patrick
