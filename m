@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (pata-2.6 fix queue) cmd64x:
-Date: Fri, 16 Feb 2007 23:15:27 +0300
-Message-ID: <200702162315.27745.sshtylyov@ru.mvista.com>
+Subject: [PATCH] (pata-2.6 fix queue) cmd64x: use interrupt status from MRDMODE register
+Date: Fri, 16 Feb 2007 23:21:40 +0300
+Message-ID: <200702162321.40813.sshtylyov@ru.mvista.com>
 References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:53808 "EHLO
+Received: from gateway-1237.mvista.com ([63.81.120.155]:53839 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946107AbXBPUPe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 15:15:34 -0500
+	with ESMTP id S1946120AbXBPUVu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 15:21:50 -0500
 In-Reply-To: <200702040004.24918.sshtylyov@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
@@ -40,6 +40,8 @@ Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Warning: this is derived from the specs and completely untested.  Shouldn't
 harm though, as those interrupt bits don't seem to really affect anything,
 being mere IDE INTR signal latches...
+
+Argh! Forgot the summary -- resending... :-<
 
  drivers/ide/pci/cmd64x.c |  151 ++++++++++++++++++++++++-----------------------
  1 files changed, 80 insertions(+), 71 deletions(-)
