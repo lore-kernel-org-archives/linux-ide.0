@@ -1,39 +1,44 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] (pata-2.6 fix queue) cmd64x: remove broken SW/MW DMA
- support
-Date: Fri, 16 Feb 2007 18:06:12 +0300
-Message-ID: <45D5C864.80009@ru.mvista.com>
-References: <200702080858.l188wjmG008432@harpo.it.uu.se> <45D5AD8B.1060702@ru.mvista.com> <45D5B420.7040509@ru.mvista.com> <200702161542.16883.bzolnier@gmail.com>
+Subject: Re: [PATCH] use winbond libata instead of ide driver for pseries
+ CD drives
+Date: Fri, 16 Feb 2007 18:06:03 +0300
+Message-ID: <45D5C85B.7070201@ru.mvista.com>
+References: <20070210203512.GA25586@aepfle.de> <200702161553.54550.bzolnier@gmail.com> <45D5C5CC.9070406@ru.mvista.com> <200702161609.07899.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:51254 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:51247 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932415AbXBPPGX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Feb 2007 10:06:23 -0500
-In-Reply-To: <200702161542.16883.bzolnier@gmail.com>
+	id S932403AbXBPPGW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Feb 2007 10:06:22 -0500
+In-Reply-To: <200702161609.07899.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Olaf Hering <olaf@aepfle.de>, Jeff Garzik <jeff@garzik.org>, Paul Mackeras <paulus@samba.org>, Andrew Morton <akpm@osdl.org>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
 Hello.
 
 Bartlomiej Zolnierkiewicz wrote:
 
->>>   The intent of the patch was exactly to *remove* broken DMA support 
->>>until it's fixed (which requires more work).  It only worked by chance 
->>>-- because MWDMA2 timings are the same as of PIO4.  Have patience please.
+>>>>   I'm sorry, how those 2 drivers can be equivalent?! The pata_winbond driver 
+>>>>is for VLB only, sl81c105 was for PCI only -- you certainly want to use 
+>>>>pata_sl82c105 (indeed better version of sl82c105 driver).
 
->>    You may also consider switching to the libata driver -- Alan said he fixed 
->>DMA support there after I frisrt reported the breakage (however, I' still not 
->>seeing it fixed in the mainline)...
+>>>I was under the impression that with your fixes these drivers
+>>>(sl82c105 and pata_sl82c105) are functionally equivalent.
 
-> I've just checked 2.6.20-mm1 (contains libata tree) and it is not fixed.
+>>    They're not yet equivalent. pata_sl82c105 supports all MWDMA modes, 
+>>sl82c105 still supports only MWDMA2.
 
-    I was saying exatly that. So, that's a question to Alan. :-)
+> Indeed and it seems that IDE core needs ->dma_mode to fix this.
 
+    Not really.  It just needs the proper DMA timings to be set by adding the 
+missing speedproc() method (and also DMA timings possibly merged with PIO like 
+libata does generally -- except in this driver).
+
+> Thanks,
 > Bart
 
-WBR, Sergei
+MBR, Sergei
