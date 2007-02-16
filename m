@@ -1,67 +1,24 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [git patches] libata updates (mostly fixes)
-Date: Fri, 16 Feb 2007 13:03:12 +0100
-Message-ID: <20070216120312.GL13958@stusta.de>
-References: <20070215233411.GA10782@havoc.gtf.org> <Pine.LNX.4.64.0702151546130.20368@woody.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: Re: Patch: slight shrink of vt6421_init_addrs()
+Date: Fri, 16 Feb 2007 19:52:09 +0800
+Message-ID: <200702161152.l1GBq9nm018148@freya.yggdrasil.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:59049 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751300AbXBPMDK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 07:03:10 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0702151546130.20368@woody.linux-foundation.org>
+Received: from [221.217.24.227] ([221.217.24.227]:51302 "EHLO
+	freya.yggdrasil.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932143AbXBPMa4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 07:30:56 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: htejun@gmail.com, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Feb 15, 2007 at 03:48:04PM -0800, Linus Torvalds wrote:
-> 
-> 
-> On Thu, 15 Feb 2007, Jeff Garzik wrote:
-> > 
-> > diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-> > index db185f3..d51f0f1 100644
-> > --- a/arch/ia64/Kconfig
-> > +++ b/arch/ia64/Kconfig
-> > @@ -22,6 +22,7 @@ config IA64
-> >  
-> >  config 64BIT
-> >  	bool
-> > +	select ATA_NONSTANDARD if ATA
-> >  	default y
-> 
-> Ok, this is just _strange_.
-> 
-> Tying ATA_NONSTANDARD into ia64 by tying it to the 64BIT config variable 
-> may work (well, I _assume_ it does), but it's just psychedelic.
-> 
-> How about adding a separate config entry like
-> 
-> 	config IA64_ATA
-> 		bool
-> 		depends on ATA
-> 		select ATA_NONSTANDARD
-> 		default y
-> 
-> which kind of makes sense when you squint just the right way..
+I wrote in haste:
+>        If it looks OK to everyone, please forward it upstream as
+>appropriate.
 
+	I should have written that if it looks OK to everyone _and_
+when it has been tested to your satisfaction, then please forward it
+upstream.  I didn't mean to suggest that it should reach Linus
+untested.
 
-What about simply providing asm/libata-portmap.h on all architectures 
-instead of this ATA_NONSTANDARD trickery?
-
-
-> 		Linus
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Adam Richter
