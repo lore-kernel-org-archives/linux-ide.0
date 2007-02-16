@@ -1,36 +1,52 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: [PATCH] use winbond libata instead of ide driver for pseries CD drives
-Date: Fri, 16 Feb 2007 18:37:44 +0100
-Message-ID: <20070216173744.GA7520@aepfle.de>
-References: <20070210203512.GA25586@aepfle.de> <45D4E82B.7020403@garzik.org> <20070216092046.GA2572@aepfle.de> <200702161546.01159.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: libata FUA revisited
+Date: Fri, 16 Feb 2007 13:14:56 -0500
+Message-ID: <45D5F4A0.4050000@garzik.org>
+References: <45CFDE27.5030607@shaw.ca> <45D025CB.6070205@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:52097 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932579AbXBPRhf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 12:37:35 -0500
-Content-Disposition: inline
-In-Reply-To: <200702161546.01159.bzolnier@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:39837 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946180AbXBPSPA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Feb 2007 13:15:00 -0500
+In-Reply-To: <45D025CB.6070205@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Paul Mackeras <paulus@samba.org>, Andrew Morton <akpm@osdl.org>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, edmudama@gmail.com, Nicolas.Mailhot@LaPoste.net
 
-On Fri, Feb 16, Bartlomiej Zolnierkiewicz wrote:
+Tejun Heo wrote:
+> Hello,
+> 
+> Robert Hancock wrote:
+> [--correct summary snipped--]
+>> Given the above, what I'm proposing to do is:
+>>
+>> -Remove the blacklisting of Maxtor BANC1G10 firmware for FUA. If we 
+>> need to FUA-blacklist any drives this should likely be added to the 
+>> existing "horkage" mechanism we now have. However, at this point I 
+>> don't think that's needed, considering that I've seen no conclusive 
+>> evidence that any drive has ever been established to have broken FUA.
+> 
+> Agreed.
+> 
+>> -Add a new port flag ATA_FLAG_NO_FUA to indicate that a controller 
+>> can't handle FUA commands, and add that flag to sata_sil. Force FUA 
+>> off on any drive connected to a controller with this bit set.
+>>
+>> There was some talk that sata_mv might have this problem, but I 
+>> believe the conclusion was that it didn't. The only controllers that 
+>> would are ones that actually try to interpret the ATA command codes 
+>> and don't know about WRITE DMA FUA.
+> 
+> I think it would be better to add ATA_FLAG_FUA instead of ATA_FLAG_NO_FUA.
 
-> 
-> Hi,
-> 
-> On Friday 16 February 2007 10:20, Olaf Hering wrote:
-> > 
-> > Change the default for the built-in IDE on p610/p615/p630 from
-> > ide to libata. libata has better error handling and the drive can
-> > recover when hald does its CD media polling.
-> > 
-> > Signed-off-by: Olaf Hering <olaf@aepfle.de>
-> 
-> Does IDE sl82c105 need the same udelay() fix patch as done for
-> pata_winbond?
+This is an interesting (if small) problem.  I would propose a third 
+option:  add ATA_FLAG_NO_FUA to applicable /SATA/ drivers, but leave 
+those without ATA_FLAG_SATA alone.
 
-I dont know, but I suspect a delay is required somewhere.
+	Jeff
+
+
