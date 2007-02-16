@@ -1,50 +1,81 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: [PATCHSET] spidernet, sungem_phy: consolidated patch series
-Date: Thu, 15 Feb 2007 18:18:57 -0600
-Message-ID: <20070216001857.GC923@austin.ibm.com>
-References: <200701260724.l0Q7OISY027645@toshiba.co.jp> <45D3EAA7.80805@garzik.org> <1171525923.20192.243.camel@localhost.localdomain> <200702151141.49708.jens@de.ibm.com> <20070215171414.GU923@austin.ibm.com> <1171572392.5644.15.camel@localhost.localdomain>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: Re: SiI 3114 and sata_sil
+Date: Thu, 15 Feb 2007 17:11:17 -0800
+Message-ID: <20070216011117.GA10679@curie-int.orbis-terrarum.net>
+References: <45D4A705.4050407@andrei.myip.org> <45D4A98A.7070705@pobox.com> <45D4AB9C.9050808@andrei.myip.org> <45D4B43E.2040807@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:40763 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422829AbXBPATB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Feb 2007 19:19:01 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l1G0J0V3016461
-	for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2007 19:19:00 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l1G0J0w7285184
-	for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2007 19:19:00 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l1G0IwaE004861
-	for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2007 19:19:00 -0500
+Received: from b01.ext.isohunt.com ([208.71.112.51]:60557 "EHLO
+	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751829AbXBPBLU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Feb 2007 20:11:20 -0500
 Content-Disposition: inline
-In-Reply-To: <1171572392.5644.15.camel@localhost.localdomain>
+In-Reply-To: <45D4B43E.2040807@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Jens Osterkamp <jens@de.ibm.com>, linuxppc-dev@ozlabs.org, Jeff Garzik <jeff@garzik.org>, arnd@arndb.de, linux-ide@vger.kernel.org, paulus@samba.org, Andrew Morton <akpm@linux-foundation.org>, alan@lxorguk.ukuu.org.uk, James K Lewis <jim@jklewis.com>, Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Florin Andrei <florin@andrei.myip.org>, linux-ide@vger.kernel.org
 
-On Fri, Feb 16, 2007 at 07:46:32AM +1100, Benjamin Herrenschmidt wrote:
-> 
-> > I can send a tested patch series (merging all three sources)
-> 
-> Just send the blast to our list first so I can verify that the
-> sungem_phy doesn't adversely affect sungem and everybody 
 
-By "our list", I assume you mean "linuxppc-dev@ozlabs.org". 
-I'm going to severely trim the cc list at this point, and 
-send a patch series of 12 shortly.  I'm going to pretend
-as if I was maintainer (formalities on this side pending)
-and attach a "signed-off-by" to each.  Ben, it'll be up to 
-you to go/no-go; if you say "go", I'll repost to eff Garzik
-(right?)
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> (especially Kou
-> sine you dn't have the Toshiba hardware, do you ?) can verify it all
-> works fine.
+On Thu, Feb 15, 2007 at 02:27:58PM -0500, Jeff Garzik wrote:
+> >So that means that the FC5 system is not actually on RAID? Even though=
+=20
+> >it seems so? (using /dev/dm-* for filesystem volumes)
+> >
+> ># lspci | grep -i sata
+> >03:05.0 RAID bus controller: Silicon Image, Inc. SiI 3114=20
+> >[SATALink/SATARaid] Serial ATA Controller (rev 02)
+> ># df -m
+> >Filesystem           1M-blocks      Used Available Use% Mounted on
+> >/dev/dm-6               125931      2999    116432   3% /
+> >/dev/dm-1                   99        13        81  14% /boot
+> >tmpfs                     1012         0      1012   0% /dev/shm
+> >/dev/dm-2                 9917       151      9254   2% /tmp
+> >/dev/dm-3                 9917       237      9168   3% /var
+> ># lsmod | grep ata
+> >sata_sil               13897  2
+> >libata                 58321  1 sata_sil
+> >scsi_mod              129641  3 sg,libata,sd_mod
+> ># cat /etc/modprobe.conf | tail -n 1
+> >alias scsi_hostadapter sata_sil
+> >
+> >So in fact /dev/dm-* are just on one disk each (not RAID1), or what is=
+=20
+> >going on here?
+> The's dmraid providing /software/ RAID as noted in=20
+> http://linux-ata.org/faq-sata-raid.html#dmraid
+No, that's not a correct assertion. We can only say that device-mapper
+is being used somehow. It could be LVM, EVMS2, dmraid, or a few other
+things.
 
-I don't have Toshiba hardware. FWIW, I also don't have a ps3. 
+Use dmsetup (info,ls,status,targets) as well as the sysfs block slave
+entries on dm-* to figure it out from scratch. (or at a higher level,
+try the LVM tools etc).
 
---linas
+--=20
+Robin Hugh Johnson
+Gentoo Linux Developer
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+
+--1yeeQ81UyVL57Vl7
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6-ecc01.6 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+
+iD8DBQFF1QS1PpIsIjIzwiwRAnZpAJ0eo56kXr//HkoLMxckRIRDAxlGzACeOR4y
++dJcyiyMeiyFL0P5VpstjDM=
+=o9Ct
+-----END PGP SIGNATURE-----
+
+--1yeeQ81UyVL57Vl7--
