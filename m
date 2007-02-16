@@ -1,84 +1,108 @@
-From: Albert Lee <albertcc@tw.ibm.com>
+From: "Patrick Ale" <patrick.ale@gmail.com>
 Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Fri, 16 Feb 2007 16:48:36 +0800
-Message-ID: <45D56FE4.3090900@tw.ibm.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>	 <8d158e1f0702150052l25fb03fnf17ba315dc6f912d@mail.gmail.com> <8d158e1f0702160010k2ed986ddtaccf8d2678ae1231@mail.gmail.com>
-Reply-To: albertl@mail.com
+Date: Fri, 16 Feb 2007 09:56:30 +0100
+Message-ID: <8d158e1f0702160056j11ab6df1v99b4d72866f3e1b2@mail.gmail.com>
+References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>
+	 <8d158e1f0702150052l25fb03fnf17ba315dc6f912d@mail.gmail.com>
+	 <8d158e1f0702160010k2ed986ddtaccf8d2678ae1231@mail.gmail.com>
+	 <45D56FE4.3090900@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_1897_19845934.1171616190258"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:59213 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932256AbXBPIsp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 03:48:45 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l1G8miFr028242
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 03:48:44 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l1G8mi2e487238
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 01:48:44 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l1G8miMf022007
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 01:48:44 -0700
-In-Reply-To: <8d158e1f0702160010k2ed986ddtaccf8d2678ae1231@mail.gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.230]:43661 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932991AbXBPI4b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 03:56:31 -0500
+Received: by wr-out-0506.google.com with SMTP id i31so1030105wra
+        for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 00:56:31 -0800 (PST)
+In-Reply-To: <45D56FE4.3090900@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patrick Ale <patrick.ale@gmail.com>
+To: albertl@mail.com
 Cc: linux-ide@vger.kernel.org
 
-Patrick Ale wrote:
-> Hi All,
-> 
-> I got asked to forward this email I sent to the lkml to here :)
-> So that's what I do.
-> 
-> 
-> The problem below exists with 2.6.20-git11 and the Jeff's libata-dev
-> linus-upstream tree, which I cloned yesterday evening at the unholy
-> hour of 00:10 GMT
-> 
-> I am not on the ide list, so if you could CC me in anything regarding
-> my problem I'd be very thankfull :)
-> 
-> 
-> I attached a complete dmesg output.
-> 
-> 
-> Patrick
-> 
-> ---------- Forwarded message ----------
-> From: Patrick Ale <patrick.ale@gmail.com>
-> Date: Feb 15, 2007 9:52 AM
-> Subject: Re: [LIBATA] drives not detected
-> To: linux-kernel <linux-kernel@vger.kernel.org>
-> 
-> 
-> On 2/15/07, Patrick Ale <patrick.ale@gmail.com> wrote:
-> 
->> Good morning all,
-> 
-> 
->> Now, when I boot up, I miss two drives, exactly the two connected to
->> this promise card.
->> I have another onboard Promise controller which works just fine, so
->> the driver gets loaded properly, and since i see all my other disks
->> but these two I think we can rule out a misconfiguration of the kernel
->> config this time ;-)
-> 
-> 
-> It would be nice if I'd also mention the kernel I use eh.
-> It's linux-2.6-git8
-> 
-> 
+------=_Part_1897_19845934.1171616190258
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-It's strange that your on-board Promise adapter works but the add-on
-adapter detects no devices.
+On 2/16/07, Albert Lee <albertcc@tw.ibm.com> wrote:
+:
 
-Could you please try reloading the pata_pdc2027x driver by
-"rmmod pata_pdc2027x; modprobe pata_pdc2027x" and send the dmesg.
+> It's strange that your on-board Promise adapter works but the add-on
+> adapter detects no devices.
+>
+> Could you please try reloading the pata_pdc2027x driver by
+> "rmmod pata_pdc2027x; modprobe pata_pdc2027x" and send the dmesg.
 
-Thanks,
+Ofcourse I can :)
 
-Albert
+The output is attached as dmesg-reprobe.txt
 
+Maybe this it totaly unrelated, but I remember that in the IDE drivers
+there was an option to force the card online, even when the BIOS was
+disabled. I *do* see the drives being detected and it tells me the
+BIOS is installed on boot time, but you never know :)
+
+The controller with problems is scsi11 if I see correctly. Since on
+that channel no disks are attached and no "abnormal status" is
+outputted, you do see this "error" twice tho, since i have nothing
+connected to the secundary channel on both controllers.
+
+
+Patrick
+
+------=_Part_1897_19845934.1171616190258
+Content-Type: text/plain; name=dmesg-reprobe.txt; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ey8dtw9b
+Content-Disposition: attachment; filename="dmesg-reprobe.txt"
+
+YXRhOS4wMDogZGlzYWJsZWQNCmF0YTkuMDE6IGRpc2FibGVkDQpTeW5jaHJvbml6aW5nIFNDU0kg
+Y2FjaGUgZm9yIGRpc2sgc2RmOg0KRkFJTEVEDQogIHN0YXR1cyA9IDAsIG1lc3NhZ2UgPSAwMCwg
+aG9zdCA9IDQsIGRyaXZlciA9IDAwDQogIDw1PlN5bmNocm9uaXppbmcgU0NTSSBjYWNoZSBmb3Ig
+ZGlzayBzZGc6DQpGQUlMRUQNCiAgc3RhdHVzID0gMCwgbWVzc2FnZSA9IDAwLCBob3N0ID0gNCwg
+ZHJpdmVyID0gMDANCiAgPDY+QUNQSTogUENJIGludGVycnVwdCBmb3IgZGV2aWNlIDAwMDA6MDA6
+MGYuMCBkaXNhYmxlZA0KQUNQSTogUENJIGludGVycnVwdCBmb3IgZGV2aWNlIDAwMDA6MDA6MGIu
+MCBkaXNhYmxlZA0KcGF0YV9wZGMyMDI3eCAwMDAwOjAwOjBiLjA6IHZlcnNpb24gMC43NC1hYzUN
+CkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowMDowYi4wW0FdIC0+IEdTSSAxOSAobGV2ZWwsIGxv
+dykgLT4gSVJRIDIwDQpwYXRhX3BkYzIwMjd4IDAwMDA6MDA6MGIuMDogUExMIGlucHV0IGNsb2Nr
+IDE2NzU0IGtIeg0KYXRhMTE6IFBBVEEgbWF4IFVETUEvMTMzIGNtZCAweGY4ODU5N2MwIGN0bCAw
+eGY4ODU5ZmRhIGJtZG1hIDB4Zjg4NTkwMDAgaXJxIDIwDQphdGExMjogUEFUQSBtYXggVURNQS8x
+MzMgY21kIDB4Zjg4NTk1YzAgY3RsIDB4Zjg4NTlkZGEgYm1kbWEgMHhmODg1OTAwOCBpcnEgMjAN
+CnNjc2kxMSA6IHBhdGFfcGRjMjAyN3gNCnNjc2kxMiA6IHBhdGFfcGRjMjAyN3gNCkFUQTogYWJu
+b3JtYWwgc3RhdHVzIDB4OCBvbiBwb3J0IDB4Zjg4NTk1ZGYNCkFDUEk6IFBDSSBJbnRlcnJ1cHQg
+MDAwMDowMDowZi4wW0FdIC0+IEdTSSAxOSAobGV2ZWwsIGxvdykgLT4gSVJRIDIwDQpwYXRhX3Bk
+YzIwMjd4IDAwMDA6MDA6MGYuMDogUExMIGlucHV0IGNsb2NrIDMzNTA4IGtIeg0KYXRhMTM6IFBB
+VEEgbWF4IFVETUEvMTMzIGNtZCAweGY5OGE5N2MwIGN0bCAweGY5OGE5ZmRhIGJtZG1hIDB4Zjk4
+YTkwMDAgaXJxIDIwDQphdGExNDogUEFUQSBtYXggVURNQS8xMzMgY21kIDB4Zjk4YTk1YzAgY3Rs
+IDB4Zjk4YTlkZGEgYm1kbWEgMHhmOThhOTAwOCBpcnEgMjANCnNjc2kxMyA6IHBhdGFfcGRjMjAy
+N3gNCmF0YTEzLjAwOiBBVEEtNzogTWF4dG9yIDZZMTYwUDAsIFlBUjQxQlcwLCBtYXggVURNQS8x
+MzMNCmF0YTEzLjAwOiAzMjAxNzMwNTYgc2VjdG9ycywgbXVsdGkgMTY6IExCQTQ4DQphdGExMy4w
+MTogQVRBLTY6IFdEQyBXRDEyMDBKQi0wMERVQTMsIDc1LjEzQjc1LCBtYXggVURNQS8xMDANCmF0
+YTEzLjAxOiAyMzQ0NDE2NDggc2VjdG9ycywgbXVsdGkgMTY6IExCQTQ4DQphdGExMy4wMDogY29u
+ZmlndXJlZCBmb3IgVURNQS8xMzMNCmF0YTEzLjAxOiBjb25maWd1cmVkIGZvciBVRE1BLzEwMA0K
+c2NzaTE0IDogcGF0YV9wZGMyMDI3eA0KQVRBOiBhYm5vcm1hbCBzdGF0dXMgMHg3OCBvbiBwb3J0
+IDB4Zjk4YTk1ZGYNCnNjc2kgMTM6MDowOjA6IERpcmVjdC1BY2Nlc3MgICAgIEFUQSAgICAgIE1h
+eHRvciA2WTE2MFAwICAgWUFSNCBQUTogMCBBTlNJOiA1DQpTQ1NJIGRldmljZSBzZGY6IDMyMDE3
+MzA1NiA1MTItYnl0ZSBoZHdyIHNlY3RvcnMgKDE2MzkyOSBNQikNCnNkZjogV3JpdGUgUHJvdGVj
+dCBpcyBvZmYNCnNkZjogTW9kZSBTZW5zZTogMDAgM2EgMDAgMDANClNDU0kgZGV2aWNlIHNkZjog
+d3JpdGUgY2FjaGU6IGVuYWJsZWQsIHJlYWQgY2FjaGU6IGVuYWJsZWQsIGRvZXNuJ3Qgc3VwcG9y
+dCBEUE8gb3IgRlVBDQpTQ1NJIGRldmljZSBzZGY6IDMyMDE3MzA1NiA1MTItYnl0ZSBoZHdyIHNl
+Y3RvcnMgKDE2MzkyOSBNQikNCnNkZjogV3JpdGUgUHJvdGVjdCBpcyBvZmYNCnNkZjogTW9kZSBT
+ZW5zZTogMDAgM2EgMDAgMDANClNDU0kgZGV2aWNlIHNkZjogd3JpdGUgY2FjaGU6IGVuYWJsZWQs
+IHJlYWQgY2FjaGU6IGVuYWJsZWQsIGRvZXNuJ3Qgc3VwcG9ydCBEUE8gb3IgRlVBDQogc2RmOiBz
+ZGYxDQpzZCAxMzowOjA6MDogQXR0YWNoZWQgc2NzaSBkaXNrIHNkZg0Kc2QgMTM6MDowOjA6IEF0
+dGFjaGVkIHNjc2kgZ2VuZXJpYyBzZzUgdHlwZSAwDQpzY3NpIDEzOjA6MTowOiBEaXJlY3QtQWNj
+ZXNzICAgICBBVEEgICAgICBXREMgV0QxMjAwSkItMDBEIDc1LjEgUFE6IDAgQU5TSTogNQ0KU0NT
+SSBkZXZpY2Ugc2RnOiAyMzQ0NDE2NDggNTEyLWJ5dGUgaGR3ciBzZWN0b3JzICgxMjAwMzQgTUIp
+DQpzZGc6IFdyaXRlIFByb3RlY3QgaXMgb2ZmDQpzZGc6IE1vZGUgU2Vuc2U6IDAwIDNhIDAwIDAw
+DQpTQ1NJIGRldmljZSBzZGc6IHdyaXRlIGNhY2hlOiBlbmFibGVkLCByZWFkIGNhY2hlOiBlbmFi
+bGVkLCBkb2Vzbid0IHN1cHBvcnQgRFBPIG9yIEZVQQ0KU0NTSSBkZXZpY2Ugc2RnOiAyMzQ0NDE2
+NDggNTEyLWJ5dGUgaGR3ciBzZWN0b3JzICgxMjAwMzQgTUIpDQpzZGc6IFdyaXRlIFByb3RlY3Qg
+aXMgb2ZmDQpzZGc6IE1vZGUgU2Vuc2U6IDAwIDNhIDAwIDAwDQpTQ1NJIGRldmljZSBzZGc6IHdy
+aXRlIGNhY2hlOiBlbmFibGVkLCByZWFkIGNhY2hlOiBlbmFibGVkLCBkb2Vzbid0IHN1cHBvcnQg
+RFBPIG9yIEZVQQ0KIHNkZzogc2RnMQ0Kc2QgMTM6MDoxOjA6IEF0dGFjaGVkIHNjc2kgZGlzayBz
+ZGcNCnNkIDEzOjA6MTowOiBBdHRhY2hlZCBzY3NpIGdlbmVyaWMgc2c2IHR5cGUgMA0K
+------=_Part_1897_19845934.1171616190258--
