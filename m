@@ -1,62 +1,74 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata updates (mostly fixes)
-Date: Thu, 15 Feb 2007 21:09:12 -0500
-Message-ID: <45D51248.5070408@garzik.org>
-References: <20070215233411.GA10782@havoc.gtf.org> <Pine.LNX.4.64.0702151546130.20368@woody.linux-foundation.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: sata_nv ADMA controller lockup investigation
+Date: Thu, 15 Feb 2007 22:52:46 -0600
+Message-ID: <45D5389E.70300@shaw.ca>
+References: <45D3E1FF.3080606@shaw.ca> <45D439F7.3030604@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33491 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932491AbXBPCJO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Feb 2007 21:09:14 -0500
-In-Reply-To: <Pine.LNX.4.64.0702151546130.20368@woody.linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1423226AbXBPEww@vger.kernel.org>
+In-reply-to: <45D439F7.3030604@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Allen Martin <AMartin@nvidia.com>, nas@arctrix.com, B.Steinbrink@gmx.de
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Luck, Tony" <tony.luck@intel.com>, Zhang Yanmin <yanmin.zhang@intel.com>
 
-Linus Torvalds wrote:
+Jeff Garzik wrote:
+> Robert Hancock wrote:
+>> It's curious that only the post-cache-flush command is having issues,
+>> and normal NCQ operation seems fine. Maybe it's related to that tag 0
+>> being reused repeatedly?
 > 
-> On Thu, 15 Feb 2007, Jeff Garzik wrote:
->> diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
->> index db185f3..d51f0f1 100644
->> --- a/arch/ia64/Kconfig
->> +++ b/arch/ia64/Kconfig
->> @@ -22,6 +22,7 @@ config IA64
->>  
->>  config 64BIT
->>  	bool
->> +	select ATA_NONSTANDARD if ATA
->>  	default y
 > 
-> Ok, this is just _strange_.
-
-Agreed.
-
-
-> Tying ATA_NONSTANDARD into ia64 by tying it to the 64BIT config variable 
-> may work (well, I _assume_ it does), but it's just psychedelic.
-
-AFAICT it's an attempt to do an unconditional 'select'.  I'm /not/ 
-disputing its psychedilic properties, certainly, just figured that was 
-the way that IA64 arch folks did stuff like this.
-
-
-> How about adding a separate config entry like
+> If you take cache flush out of the equation, what happens when NCQ is 
+> enabled with a queue depth of 1 (to reproduce tag-0-used-repeatedly 
+> condition)?
 > 
-> 	config IA64_ATA
-> 		bool
-> 		depends on ATA
-> 		select ATA_NONSTANDARD
-> 		default y
-> 
-> which kind of makes sense when you squint just the right way..
+>     Jeff
 
-Either way, that seems sane to me.  I'd love to have some IA64 folks to 
-comment though.
+I was able to reproduce it in my same test case with NCQ depth set to 1.
+Of course, there were still some cache flushes going on there, so I'm not
+certain that test really told us anything new. I'm rather doutbful that it's
+related to reusing the same tag now, though, based on the tests I've been
+doing. It may be something to do with switching between NCQ and non-NCQ
+commands, maybe the controller isn't able to handle doing that too rapidly.
+This patch seems to fix the problem - or at least it hasn't failed the tests that
+I've run so far. It's not really ideal though, so I'd like to do some more
+investigation/testing before proclaiming it as a fix. Experimentally, it
+appears that 10 microseconds is not enough delay, but 20 seems to work better.
 
-	Jeff
+Hints from the peanut gallery remain welcome.
 
-
+--- linux-2.6.20-git6edit/drivers/ata/sata_nv.c.before_hacking	2007-02-15 18:19:13.000000000 -0600
++++ linux-2.6.20-git6edit/drivers/ata/sata_nv.c	2007-02-15 22:36:02.000000000 -0600
+@@ -219,6 +219,7 @@
+ 	void __iomem *		gen_block;
+ 	void __iomem *		notifier_clear_block;
+ 	u8			flags;
++	int			last_issue_ncq;
+ };
+ 
+ struct nv_host_priv {
+@@ -1260,6 +1261,7 @@
+ {
+ 	struct nv_adma_port_priv *pp = qc->ap->private_data;
+ 	void __iomem *mmio = pp->ctl_block;
++	int curr_ncq = (qc->tf.protocol == ATA_PROT_NCQ);
+ 
+ 	VPRINTK("ENTER\n");
+ 
+@@ -1274,6 +1276,14 @@
+ 	/* write append register, command tag in lower 8 bits
+ 	   and (number of cpbs to append -1) in top 8 bits */
+ 	wmb();
++
++	if(curr_ncq != pp->last_issue_ncq) {
++	   	/* Seems to need some delay before switching between NCQ and non-NCQ
++		   commands, else we get command timeouts and such. */
++		udelay(20);
++		pp->last_issue_ncq = curr_ncq;
++	}
++
+ 	writew(qc->tag, mmio + NV_ADMA_APPEND);
+ 
+ 	DPRINTK("Issued tag %u\n",qc->tag);
