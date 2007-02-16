@@ -1,72 +1,122 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Fri, 16 Feb 2007 18:07:44 +0800
-Message-ID: <45D58270.4080909@tw.ibm.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>	 <8d158e1f0702150052l25fb03fnf17ba315dc6f912d@mail.gmail.com>	 <8d158e1f0702160010k2ed986ddtaccf8d2678ae1231@mail.gmail.com>	 <45D56FE4.3090900@tw.ibm.com>	 <8d158e1f0702160056j11ab6df1v99b4d72866f3e1b2@mail.gmail.com>	 <45D574B1.8080109@tw.ibm.com> <8d158e1f0702160148v366ce96bm8e3ff3e7c64a7198@mail.gmail.com>
-Reply-To: albertl@mail.com
+From: Sigmund Scheinbar <sigmund.lkml@synflood.homelinux.org>
+Subject: SATA Problem: port is slow to respond
+Date: Fri, 16 Feb 2007 10:50:51 +0100
+Message-ID: <200702161050.51523.sigmund.lkml@synflood.homelinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:55424 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423531AbXBPKHt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 05:07:49 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l1GA7ncB011391
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 05:07:49 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l1GA7mvu521132
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 03:07:48 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l1GA7mSf032334
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 03:07:48 -0700
-In-Reply-To: <8d158e1f0702160148v366ce96bm8e3ff3e7c64a7198@mail.gmail.com>
+Received: from synflood.homelinux.org ([193.80.11.44]:4084 "EHLO
+	synflood.homelinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423541AbXBPKK0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 05:10:26 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patrick Ale <patrick.ale@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Patrick Ale wrote:
-> On 2/16/07, Albert Lee <albertcc@tw.ibm.com> wrote:
-> 
->> Maybe the Promise BIOS set the adapter as disabled...
->> Could you please try the attached patch?
-> 
-> 
-> This patch is against what? I get a hunk rejected.
-> patching file drivers/ata/pata_pdc2027x.c
-> Hunk #1 FAILED at 315.
-> 1 out of 1 hunk FAILED -- saving rejects to file
-> drivers/ata/pata_pdc2027x.c.rej
-> 
-> Can you make a patch against the libata-dev tree that I pulled last night?
-> It's impossible for me to reboot at the moment since my grub gives me
-> an attitude.
-> 
+[1.] One line summary of the problem:
 
-1. Hmm, the patch looks useless: if the port is disabled, there should
-be a error message saying "port disabled. ignoring". But we don't see such
-message. So, please disregard the patch. If you have time, please try if any
-previous kernel version like 2.6.17 to 2.6.19 works.
+SATA Problem: port is slow to respond
 
-2. 
->From the dmesg, 
+[2.] Full description of the problem/report:
 
-pata_pdc2027x 0000:00:0b.0: version 0.74-ac5
-ACPI: PCI Interrupt 0000:00:0b.0[A] -> GSI 19 (level, low) -> IRQ 20
-pata_pdc2027x 0000:00:0b.0: PLL input clock 16754 kHz
-ata11: PATA max UDMA/133 cmd 0xf88597c0 ctl 0xf8859fda bmdma 0xf8859000 irq 20
-ata12: PATA max UDMA/133 cmd 0xf88595c0 ctl 0xf8859dda bmdma 0xf8859008 irq 20
-scsi11 : pata_pdc2027x
-(==> There should be some boot probe activities here... )
-scsi12 : pata_pdc2027x
-ATA: abnormal status 0x8 on port 0xf88595df
+The following messages appear while booting/in dmesg [1]: 
 
-It seems scsi_add_host() is completed for scsi11. But the boot probe
-detects nothing. Adding Tejun to the cc list for advice.
+[...]
+ata2: port is slow to respond, please be patient (Status 0x80)
+ata2: port failed to respond (30 secs, Status 0x80)
+ata2: softreset failed (device not ready)
+ata2: softreset failed, retrying in 5 secs
+ata2: port is slow to respond, please be patient (Status 0x80)
+ata2: port failed to respond (30 secs, Status 0x80)
+ata2: COMRESET failed (device not ready)
+ata2: hardreset failed, retrying in 5 secs
+ata2: port is slow to respond, please be patient (Status 0x80)
+ata2: port failed to respond (30 secs, Status 0x80)
+ata2: COMRESET failed (device not ready)
+ata2: reset failed, giving up
+scsi2 : ahci
+[...]
 
---
-albert
+This of course means extra long booting time :(
+[1] http://wieland.homelinux.org/hp_dc5750/dmesg_2.6.19.3.txt
 
+A further issue which -  imho is coupled w/ this one - is that my 
+cd/dvd+rw (also sata) combo drive does not work: 
+firstly there is no indication in dmesg that it was found and 
+secondly it behaves like dead: it does not open if i press the 
+button and it does not blink; it can be opened until
+these message appear on the screen. I need to unplug and the replug
+it after shutting down/reboot so that on the next bootup the bios 
+is able to find it (else it would still behave like dead)! 
+The drive itself is ok i guess (a least it works fine on a differen OS).
 
+I found a debian bug report where the problem (but unfortunately 
+not a solution that worked for me) is described:
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=391867
+
+[3.] Keywords (i.e., modules, networking, kernel):
+
+SATA, ATA
+
+[4.] Kernel version (from /proc/version):
+
+Linux version 2.6.19.3 (root@kvpc31) (gcc version 4.1.2 20061115 
+(prerelease) (Debian 4.1.1-21)) #2 SMP Thu Feb 15 02:59:14 CET 2007
+
+[8.1.] Software (add the output of the ver_linux script here)
+
+http://wieland.homelinux.org/hp_dc5750/ver_linux.txt
+
+[8.2.] Processor information (from /proc/cpuinfo):
+
+http://wieland.homelinux.org/hp_dc5750/proc_cpuinfo.txt
+
+[8.3.] Module information (from /proc/modules):
+
+http://wieland.homelinux.org/hp_dc5750/proc_modules.txt
+
+[8.4.] Loaded driver and hardware information (/proc/ioports, /proc/iomem)
+
+http://wieland.homelinux.org/hp_dc5750/proc_iomem.txt
+http://wieland.homelinux.org/hp_dc5750/proc_ioports.txt
+
+[8.5.] PCI information ('lspci -vvv' as root)
+
+http://wieland.homelinux.org/hp_dc5750/lspci-vvv.txt
+
+[8.6.] SCSI information (from /proc/scsi/scsi)
+
+http://wieland.homelinux.org/hp_dc5750/proc_scsi_scsi.txt
+
+[X.] Other notes, patches, fixes, workarounds:
+
+Also it seems that the System is not capeable of recongnizing 
+the HDD:
+hdparm -i /dev/sda
+HDIO_GET_IDENTITY failed: Inappropriate ioctl for device
+
+On lkml I found similar report, but no solution:
+http://lkml.org/lkml/2007/1/2/107
+
+A user on an German mailinglist suggest to uses pata_atiixp 
+instead of atiixp but yet again this does not work for me: 
+http://lists.opensuse.org/archive/opensuse-mobile-de/
+2007-01/msg00001.html
+
+All the information i collection can be found at:
+http://wieland.homelinux.org/hp_dc5750/
+
+I tried several kernel version in the meantime, starting w/
+the standard debian testing i386 kernel, then tried different 
+vanilla versions 2.6.18.6, 2.6.19, 2.6.19.3 which are all 
+affected in the same way. However 2.6.20 behaves 
+differtly: there is another error message which scrolls over
+the screen so fast that i'm not able to read it, the only 
+thing i was able to catch that it also concerns (s)ata, looking like
+'ata2.0: [...] failed [...]' 
+
+Greetings,
+Sigmund
