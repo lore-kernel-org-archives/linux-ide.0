@@ -1,76 +1,75 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Fri, 16 Feb 2007 17:09:05 +0800
-Message-ID: <45D574B1.8080109@tw.ibm.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>	 <8d158e1f0702150052l25fb03fnf17ba315dc6f912d@mail.gmail.com>	 <8d158e1f0702160010k2ed986ddtaccf8d2678ae1231@mail.gmail.com>	 <45D56FE4.3090900@tw.ibm.com> <8d158e1f0702160056j11ab6df1v99b4d72866f3e1b2@mail.gmail.com>
-Reply-To: albertl@mail.com
+From: Olaf Hering <olaf@aepfle.de>
+Subject: [PATCH] use winbond libata instead of ide driver for pseries CD drives
+Date: Fri, 16 Feb 2007 10:20:46 +0100
+Message-ID: <20070216092046.GA2572@aepfle.de>
+References: <20070210203512.GA25586@aepfle.de> <20070210203614.GA25602@aepfle.de> <45D4E82B.7020403@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:38693 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966248AbXBPJJK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 04:09:10 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l1G999F1025733
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 04:09:09 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l1G9992Q486006
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 02:09:09 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l1G9996d026880
-	for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 02:09:09 -0700
-In-Reply-To: <8d158e1f0702160056j11ab6df1v99b4d72866f3e1b2@mail.gmail.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:53338 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423463AbXBPJUi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 04:20:38 -0500
+Content-Disposition: inline
+In-Reply-To: <45D4E82B.7020403@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patrick Ale <patrick.ale@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Paul Mackeras <paulus@samba.org>
+Cc: Andrew Morton <akpm@osdl.org>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-Patrick Ale wrote:
-> On 2/16/07, Albert Lee <albertcc@tw.ibm.com> wrote:
-> :
-> 
->> It's strange that your on-board Promise adapter works but the add-on
->> adapter detects no devices.
->>
->> Could you please try reloading the pata_pdc2027x driver by
->> "rmmod pata_pdc2027x; modprobe pata_pdc2027x" and send the dmesg.
-> 
-> 
-> Ofcourse I can :)
-> 
-> The output is attached as dmesg-reprobe.txt
-> 
-> Maybe this it totaly unrelated, but I remember that in the IDE drivers
-> there was an option to force the card online, even when the BIOS was
-> disabled. I *do* see the drives being detected and it tells me the
-> BIOS is installed on boot time, but you never know :)
-> 
-> The controller with problems is scsi11 if I see correctly. Since on
-> that channel no disks are attached and no "abnormal status" is
-> outputted, you do see this "error" twice tho, since i have nothing
-> connected to the secundary channel on both controllers.
-> 
-> 
 
-Maybe the Promise BIOS set the adapter as disabled...
-Could you please try the attached patch?
+Change the default for the built-in IDE on p610/p615/p630 from
+ide to libata. libata has better error handling and the drive can
+recover when hald does its CD media polling.
 
---
-albert
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
---- linux-2.6.20-git11/drivers/ata/pata_pdc2027x.c~	2007-02-16 13:35:31.000000000 +0800
-+++ linux-2.6.20-git11/drivers/ata/pata_pdc2027x.c	2007-02-16 17:02:02.000000000 +0800
-@@ -315,8 +315,8 @@ static inline int pdc2027x_port_enabled(
- static int pdc2027x_prereset(struct ata_port *ap)
- {
- 	/* Check whether port enabled */
--	if (!pdc2027x_port_enabled(ap))
--		return -ENOENT;
-+	//if (!pdc2027x_port_enabled(ap))
-+		//return -ENOENT;
- 	pdc2027x_cbl_detect(ap);
- 	return ata_std_prereset(ap);
- }
+---
+ arch/powerpc/configs/ppc64_defconfig   |    4 ++--
+ arch/powerpc/configs/pseries_defconfig |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
+Index: linux-2.6.20/arch/powerpc/configs/ppc64_defconfig
+===================================================================
+--- linux-2.6.20.orig/arch/powerpc/configs/ppc64_defconfig
++++ linux-2.6.20/arch/powerpc/configs/ppc64_defconfig
+@@ -500,7 +500,7 @@ CONFIG_BLK_DEV_AMD74XX=y
+ # CONFIG_BLK_DEV_PDC202XX_NEW is not set
+ # CONFIG_BLK_DEV_SVWKS is not set
+ # CONFIG_BLK_DEV_SIIMAGE is not set
+-CONFIG_BLK_DEV_SL82C105=y
++# CONFIG_BLK_DEV_SL82C105 is not set
+ # CONFIG_BLK_DEV_SLC90E66 is not set
+ # CONFIG_BLK_DEV_TRM290 is not set
+ # CONFIG_BLK_DEV_VIA82CXXX is not set
+@@ -646,7 +646,7 @@ CONFIG_SATA_SVW=y
+ # CONFIG_PATA_SIL680 is not set
+ # CONFIG_PATA_SIS is not set
+ # CONFIG_PATA_VIA is not set
+-# CONFIG_PATA_WINBOND is not set
++CONFIG_PATA_WINBOND=y
+ 
+ #
+ # Multi-device support (RAID and LVM)
+Index: linux-2.6.20/arch/powerpc/configs/pseries_defconfig
+===================================================================
+--- linux-2.6.20.orig/arch/powerpc/configs/pseries_defconfig
++++ linux-2.6.20/arch/powerpc/configs/pseries_defconfig
+@@ -483,7 +483,7 @@ CONFIG_BLK_DEV_AMD74XX=y
+ # CONFIG_BLK_DEV_PDC202XX_NEW is not set
+ # CONFIG_BLK_DEV_SVWKS is not set
+ # CONFIG_BLK_DEV_SIIMAGE is not set
+-CONFIG_BLK_DEV_SL82C105=y
++# CONFIG_BLK_DEV_SL82C105 is not set
+ # CONFIG_BLK_DEV_SLC90E66 is not set
+ # CONFIG_BLK_DEV_TRM290 is not set
+ # CONFIG_BLK_DEV_VIA82CXXX is not set
+@@ -628,7 +628,7 @@ CONFIG_ATA=y
+ # CONFIG_PATA_SIL680 is not set
+ # CONFIG_PATA_SIS is not set
+ # CONFIG_PATA_VIA is not set
+-# CONFIG_PATA_WINBOND is not set
++CONFIG_PATA_WINBOND=y
+ 
+ #
+ # Multi-device support (RAID and LVM)
