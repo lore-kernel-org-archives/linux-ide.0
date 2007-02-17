@@ -1,41 +1,39 @@
-From: "Eric D. Mudama" <edmudama@gmail.com>
-Subject: Re: Implement the technote about promise/maxtor drives
-Date: Sat, 17 Feb 2007 10:59:53 -0700
-Message-ID: <311601c90702170959v74544d5cybb8feaa53033b9eb@mail.gmail.com>
-References: <20070131171251.4210bcdb@localhost.localdomain>
-	 <45D55003.6030307@tw.ibm.com> <45D55502.2020702@tw.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] libata: fix probe_ent alloc/free bugs
+Date: Sat, 17 Feb 2007 12:09:30 -0600
+Message-ID: <1171735771.3379.18.camel@mulgrave.il.steeleye.com>
+References: <45D710E8.3090104@gmail.com>
+	 <1171725374.3379.15.camel@mulgrave.il.steeleye.com>
+	 <45D73A55.90008@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:17390 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993005AbXBQR7z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Feb 2007 12:59:55 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1910691nfa
-        for <linux-ide@vger.kernel.org>; Sat, 17 Feb 2007 09:59:54 -0800 (PST)
-In-Reply-To: <45D55502.2020702@tw.ibm.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <45D73A55.90008@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
 
-On 2/15/07, Albert Lee <albertcc@tw.ibm.com> wrote:
-> Some Maxtor drives have "Maxtor" and others have "MAXTOR" in the identify device data.
-> If the slave is a "MAXTOR" one, the following code segment doesn't work.
+On Sun, 2007-02-18 at 02:24 +0900, Tejun Heo wrote:
+> ata_probe_ent_alloc() had a temporary hack such that devm_kzalloc()
+> was used for allocation if devres had been previously initialized on
+> the device; otherwise, plain kzalloc() was used.  This was to make the
+> code useable from both the old and devres-aware libata drivers during
+> transition.  This hack made ata_sas_port_alloc() unable to determine
+> how the probe_ent is allocated, causing double free in some cases.
+> 
+> Remove the now-unneeded hack and make ata_sas_port_alloc() use
+> devm_kfree().
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: James Bottomley <James.Bottomley@SteelEye.com>
+> ---
+> James, thanks for the diagnosis and please ack if this fixes the
+> problem.
 
-The 6L drive is a design brought over from Maxtor's purchase of
-Quantum, the 6Y is a Maxtor local design.
+Yes, it fixes all the problems.
 
-> Maybe we should check both "Maxtor" and "MAXTOR"?
+James
 
-It will have to... or maybe not...
 
-Since I think Maxtor was the only vendor doing ATA133, maybe just
-limit slave port on those adapters to UDMA100?  (Just checked newegg,
-and Hitachi lists theirs as ATA133, while Samsung list theirs as
-ATA133 compatible (default ATA100))
-
-Were there enough other vendors doing ATA133 at the time the technote
-was written to know if other brands were also affected?
