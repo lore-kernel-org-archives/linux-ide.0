@@ -1,57 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata: fix probe_ent alloc/free bugs
-Date: Sat, 17 Feb 2007 20:43:48 +0300
-Message-ID: <45D73ED4.80505@ru.mvista.com>
-References: <45D710E8.3090104@gmail.com> <1171725374.3379.15.camel@mulgrave.il.steeleye.com> <45D73A55.90008@gmail.com>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: Implement the technote about promise/maxtor drives
+Date: Sat, 17 Feb 2007 10:59:53 -0700
+Message-ID: <311601c90702170959v74544d5cybb8feaa53033b9eb@mail.gmail.com>
+References: <20070131171251.4210bcdb@localhost.localdomain>
+	 <45D55003.6030307@tw.ibm.com> <45D55502.2020702@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:58144 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S2992971AbXBQRoA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 17 Feb 2007 12:44:00 -0500
-In-Reply-To: <45D73A55.90008@gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.187]:17390 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993005AbXBQR7z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Feb 2007 12:59:55 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1910691nfa
+        for <linux-ide@vger.kernel.org>; Sat, 17 Feb 2007 09:59:54 -0800 (PST)
+In-Reply-To: <45D55502.2020702@tw.ibm.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: albertl@mail.com
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
 
-Hello.
+On 2/15/07, Albert Lee <albertcc@tw.ibm.com> wrote:
+> Some Maxtor drives have "Maxtor" and others have "MAXTOR" in the identify device data.
+> If the slave is a "MAXTOR" one, the following code segment doesn't work.
 
-Tejun Heo wrote:
-> ata_probe_ent_alloc() had a temporary hack such that devm_kzalloc()
-> was used for allocation if devres had been previously initialized on
-> the device; otherwise, plain kzalloc() was used.  This was to make the
-> code useable from both the old and devres-aware libata drivers during
-> transition.  This hack made ata_sas_port_alloc() unable to determine
-> how the probe_ent is allocated, causing double free in some cases.
-> 
-> Remove the now-unneeded hack and make ata_sas_port_alloc() use
-> devm_kfree().
+The 6L drive is a design brought over from Maxtor's purchase of
+Quantum, the 6Y is a Maxtor local design.
 
-[...]
+> Maybe we should check both "Maxtor" and "MAXTOR"?
 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 2cf8251..c34e0b4 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5891,11 +5891,7 @@ ata_probe_ent_alloc(struct device *dev, const 
-> struct ata_port_info *port)
-> {
->     struct ata_probe_ent *probe_ent;
-> 
-> -    /* XXX - the following if can go away once all LLDs are managed */
-> -    if (!list_empty(&dev->devres_head))
-> -        probe_ent = devm_kzalloc(dev, sizeof(*probe_ent), GFP_KERNEL);
-> -    else
-> -        probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
-> +    probe_ent = devm_kzalloc(dev, sizeof(*probe_ent), GFP_KERNEL);
->     if (!probe_ent) {
->         printk(KERN_ERR DRV_NAME "(%s): out of memory\n",
->                kobject_name(&(dev->kobj)));
-[...]
+It will have to... or maybe not...
 
-    The patch certainly looks mangled tab-wise. :-)
+Since I think Maxtor was the only vendor doing ATA133, maybe just
+limit slave port on those adapters to UDMA100?  (Just checked newegg,
+and Hitachi lists theirs as ATA133, while Samsung list theirs as
+ATA133 compatible (default ATA100))
 
-MBR, Sergei
+Were there enough other vendors doing ATA133 at the time the technote
+was written to know if other brands were also affected?
