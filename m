@@ -1,140 +1,251 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] more IDE updates
-Date: Sat, 17 Feb 2007 03:25:02 +0100
-Message-ID: <200702170325.02337.bzolnier@gmail.com>
+From: Tobias Diedrich <ranma+kernel@tdiedrich.de>
+Subject: Re: pata_amd dropping to PIO on resume
+Date: Sat, 17 Feb 2007 10:49:19 +0100
+Message-ID: <20070217094919.GA24506@melchior.yamamaya.is-a-geek.org>
+References: <fa.q7ZuddHInqn2dVlS+EWjXjPvFC8@ifi.uio.no> <45D63BCE.2080700@shaw.ca> <45D6436C.4060209@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:3921 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946335AbXBQCT2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2007 21:19:28 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so323419uga
-        for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2007 18:19:26 -0800 (PST)
+Received: from yumi.tdiedrich.de ([85.10.210.183]:1334 "EHLO yumi.tdiedrich.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946575AbXBQJt0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Feb 2007 04:49:26 -0500
 Content-Disposition: inline
+In-Reply-To: <45D6436C.4060209@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Robert Hancock <hancockr@shaw.ca>, Linux Kernel ML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan <alan@lxorguk.ukuu.org.uk>
+
+Jeff Garzik wrote:
+> Robert Hancock wrote:
+> >Yes, the fact that it's going into simplex mode is the problem, it=20
+> >wasn't in simplex to start with. It looks like pata_amd does an=20
+> >ata_pci_clear_simplex only for certain chip models, maybe this model=
+=20
+> >needs it as well?
+>=20
+> Deleting the ata_pci_clear_simplex() call, then adding=20
+> ATA_FLAG_IGN_SIMPLEX to the ata_port_info info[] array, is also worth=
+=20
+> trying.
+
+I tried the latter option and it works fine.
+I didn't delete the ata_pci_clear_simplex call, since it is not
+called for this model.
+
+BTW, this the nVidia MCP55 IDE controller:
+00:04.0 IDE interface: nVidia Corporation MCP55 IDE (rev a1)
+00:04.0 0101: 10de:036e (rev a1)
+
+Index: linux-2.6.20/drivers/ata/pata_amd.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-2.6.20.orig/drivers/ata/pata_amd.c	2007-02-17 10:27:59.000000=
+000 +0100
++++ linux-2.6.20/drivers/ata/pata_amd.c	2007-02-17 10:28:14.000000000 +=
+0100
+@@ -611,7 +611,7 @@
+ 		},
+ 		{	/* 8: Nvidia Nforce2 and later */
+ 			.sht =3D &amd_sht,
+-			.flags =3D ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++			.flags =3D ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_IGN_SIMPL=
+EX,
+ 			.pio_mask =3D 0x1f,
+ 			.mwdma_mask =3D 0x07,
+ 			.udma_mask =3D 0x7f,	/* UDMA 133, no swdma */
 
 
-Contains: IRQ-ack fix for ICH chipsets (Albert Lee), ide-floppy unformatted
-media fix (Alan Cox), more fixes for IDE PCI drivers (Sergei Shtylyov),
-new driver for Toshiba Cell Reference Board (Kou Ishizaki <kou.ishizaki
-at toshiba.co.jp>) and a bunch of rather obvious cleanups/improvements (me).
+[ 1087.954496] ata5.00: disabled
+[ 1087.954500] ata5.01: disabled
+[ 1087.958725] Trying to free nonexistent resource <00000000000001f0-00=
+000000000001f7>
+[ 1087.958730] Trying to free nonexistent resource <0000000000000170-00=
+00000000000177>
+[ 1089.559228] pata_amd 0000:00:04.0: version 0.2.7
+[ 1089.559240] PCI: Setting latency timer of device 0000:00:04.0 to 64
+[ 1089.560866] ata7: PATA max UDMA/133 cmd 0x1F0 ctl 0x3F6 bmdma 0xF000=
+ irq 14
+[ 1089.561118] ata8: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xF008=
+ irq 15
+[ 1089.561133] scsi8 : pata_amd
+[ 1089.717718] ata7.00: ATAPI, max UDMA/33
+[ 1089.797629] ata7.01: ATAPI, max UDMA/66
+[ 1089.877519] ata7.00: configured for UDMA/33
+[ 1089.957429] ata7.01: configured for UDMA/33
+[ 1089.957948] scsi9 : pata_amd
+[ 1089.957996] ata8: port disabled. ignoring.
+[ 1089.957998] ata8: reset failed, giving up
+[ 1089.960193] scsi 8:0:0:0: CD-ROM            _NEC     DVD_RW ND-3500A=
+G 2.1A PQ: 0 ANSI: 5
+[ 1089.962400] sr0: scsi3-mmc drive: 48x/48x writer cd/rw xa/form2 cdda=
+ tray
+[ 1089.962442] sr 8:0:0:0: Attached scsi CD-ROM sr0
+[ 1089.962474] sr 8:0:0:0: Attached scsi generic sg1 type 5
+[ 1089.963938] scsi 8:0:1:0: CD-ROM            PIONEER  DVD-ROM DVD-106=
+  1.22 PQ: 0 ANSI: 5
+[ 1089.966730] sr1: scsi3-mmc drive: 40x/40x cd/rw xa/form2 cdda tray
+[ 1089.966769] sr 8:0:1:0: Attached scsi CD-ROM sr1
+[ 1089.966802] sr 8:0:1:0: Attached scsi generic sg2 type 5
+[ 1096.079852] Stopping tasks ... done.
+[ 1096.126558] Shrinking memory...  =08-=08\=08|=08/=08-=08done (51275 =
+pages freed)
+[ 1097.076333] Freed 205100 kbytes in 1.63 seconds (125.82 MB/s)
+[ 1097.076336] Suspending console(s)
+[ 1097.080211] ACPI: PCI interrupt for device 0000:01:08.0 disabled
+[ 1097.092133] ata8: port disabled. ignoring.
+[ 1097.092135] ata8: reset failed, giving up
+[ 1097.092153] ACPI: PCI interrupt for device 0000:00:02.1 disabled
+[ 1097.098774] ACPI: PCI interrupt for device 0000:00:02.0 disabled
+[ 1097.105558] Extended CMOS year: 20
+[ 1097.105562] swsusp: critical section:=20
+[ 1097.119909] swsusp: Need to copy 120019 pages
+[   46.569060] Extended CMOS year: 20
+[   46.586207] ACPI: Unable to turn cooling device [ffff81003fe90890] '=
+on'
+[   46.599040] PCI: Enabling device 0000:00:02.0 (0000 -> 0002)
+[   46.599044] ACPI: PCI Interrupt 0000:00:02.0[A] -> Link [APCF] -> GS=
+I 22 (level, low) -> IRQ 22
+[   46.599050] PCI: Setting latency timer of device 0000:00:02.0 to 64
+[   46.599055] PM: Writing back config space on device 0000:00:02.0 at =
+offset f (was 1030100, writing 103010a)
+[   46.599062] PM: Writing back config space on device 0000:00:02.0 at =
+offset 4 (was 0, writing fe02f000)
+[   46.599066] PM: Writing back config space on device 0000:00:02.0 at =
+offset 1 (was b00006, writing b00007)
+[   46.612354] ACPI: PCI Interrupt 0000:00:02.1[B] -> Link [APCL] -> GS=
+I 23 (level, low) -> IRQ 23
+[   46.612358] PCI: Setting latency timer of device 0000:00:02.1 to 64
+[   46.612371] usb usb1: root hub lost power or was reset
+[   46.612378] ehci_hcd 0000:00:02.1: debug port 1
+[   46.612380] PCI: cache line size of 64 is not supported by device 00=
+00:00:02.1
+[   46.612390] PM: Writing back config space on device 0000:00:04.0 at =
+offset b (was 82391043, writing 8239f043)
+[   46.612397] PCI: Setting latency timer of device 0000:00:04.0 to 64
+[   46.612409] PCI: Setting latency timer of device 0000:00:06.0 to 64
+[   46.612441] ata8: port disabled. ignoring.
+[   46.612443] ata8: reset failed, giving up
+[   46.626342] PCI: Setting latency timer of device 0000:00:0a.0 to 64
+[   46.626357] PCI: Setting latency timer of device 0000:00:0b.0 to 64
+[   46.626369] PCI: Setting latency timer of device 0000:00:0c.0 to 64
+[   46.626382] PCI: Setting latency timer of device 0000:00:0d.0 to 64
+[   46.626395] PCI: Setting latency timer of device 0000:00:0e.0 to 64
+[   46.626408] PCI: Setting latency timer of device 0000:00:0f.0 to 64
+[   46.638998] PM: Writing back config space on device 0000:01:08.0 at =
+offset 1 (was 2900005, writing 2900001)
+[   46.639008] ACPI: PCI Interrupt 0000:01:08.0[A] -> Link [APC3] -> GS=
+I 18 (level, low) -> IRQ 18
+[   46.646863] PCI: Setting latency timer of device 0000:06:00.0 to 64
+[   46.646918] ACPI: PCI Interrupt 0000:07:00.0[A] -> Link [APC6] -> GS=
+I 16 (level, low) -> IRQ 16
+[   46.646933] PM: Writing back config space on device 0000:07:00.1 at =
+offset 1 (was 100000, writing 100004)
+[   46.678942] usb usb2: root hub lost power or was reset
+[   46.745556]  usbdev1.28_ep00: PM: resume from 0, parent 1-2 still 1
+[   46.745558] hub 1-2:1.0: PM: resume from 1, parent 1-2 still 1
+[   46.745561]  usbdev1.28_ep81: PM: resume from 0, parent 1-2:1.0 stil=
+l 1
+[   46.745564]  usbdev1.30_ep00: PM: resume from 0, parent 1-5 still 1
+[   46.745567] usb-storage 1-5:1.0: PM: resume from 1, parent 1-5 still=
+ 1
+[   46.745570]  host7: PM: resume from 0, parent 1-5:1.0 still 1
+[   46.745573]  usbdev1.30_ep01: PM: resume from 0, parent 1-5:1.0 stil=
+l 1
+[   46.745575]  usbdev1.30_ep82: PM: resume from 0, parent 1-5:1.0 stil=
+l 1
+[   46.745578]  usbdev2.12_ep00: PM: resume from 0, parent 2-3 still 1
+[   46.745581] usb 2-3:1.0: PM: resume from 1, parent 2-3 still 1
+[   46.745584]  usbdev2.12_ep81: PM: resume from 0, parent 2-3:1.0 stil=
+l 1
+[   46.745586]  usbdev2.12_ep02: PM: resume from 0, parent 2-3:1.0 stil=
+l 1
+[   46.745589] usb 1-2.3: PM: resume from 1, parent 1-2 still 1
+[   46.745592]  usbdev1.31_ep00: PM: resume from 0, parent 1-2.3 still =
+1
+[   46.745595] usbhid 1-2.3:1.0: PM: resume from 1, parent 1-2.3 still =
+1
+[   46.745597]  usbdev1.31_ep81: PM: resume from 0, parent 1-2.3:1.0 st=
+ill 1
+[   46.745600] usb 1-2.4: PM: resume from 1, parent 1-2 still 1
+[   46.745603]  usbdev1.32_ep00: PM: resume from 0, parent 1-2.4 still =
+1
+[   46.745606] usbhid 1-2.4:1.0: PM: resume from 1, parent 1-2.4 still =
+1
+[   46.745608]  usbdev1.32_ep81: PM: resume from 0, parent 1-2.4:1.0 st=
+ill 1
+[   46.748609] Restarting tasks ... done.
+[   46.978564] ata1: SATA link down (SStatus 0 SControl 300)
+[   46.988548] usb 2-3: USB disconnect, address 12
+[   47.772562] usb 1-2: USB disconnect, address 28
+[   47.772566] usb 1-2.3: USB disconnect, address 31
+[   47.772751] usb 1-2.4: USB disconnect, address 32
+[   47.877433] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[   47.885748] usb 1-2: new high speed USB device using ehci_hcd and ad=
+dress 33
+[   47.894989] ata2.00: configured for UDMA/133
+[   47.895035] SCSI device sda: 488397168 512-byte hdwr sectors (250059=
+ MB)
+[   47.895043] sda: Write Protect is off
+[   47.895045] sda: Mode Sense: 00 3a 00 00
+[   47.895055] SCSI device sda: write cache: enabled, read cache: enabl=
+ed, doesn't support DPO or FUA
+[   47.927453] ata7.00: configured for UDMA/33
+[   47.948020] usb 1-2: configuration #1 chosen from 1 choice
+[   47.948171] hub 1-2:1.0: USB hub found
+[   47.948340] hub 1-2:1.0: 4 ports detected
+[   48.007363] ata7.01: configured for UDMA/33
+[   48.087186] usb 1-5: USB disconnect, address 30
+[   48.200356] usb 1-5: new high speed USB device using ehci_hcd and ad=
+dress 35
+[   48.263383] usb 1-5: configuration #1 chosen from 1 choice
+[   48.263755] scsi10 : SCSI emulation for USB Mass Storage devices
+[   48.263856] usb-storage: device found at 35
+[   48.263858] usb-storage: waiting for device to settle before scannin=
+g
+[   48.383455] usb 2-3: new full speed USB device using ohci_hcd and ad=
+dress 13
+[   48.458433] usb 2-3: configuration #1 chosen from 1 choice
+[   48.553393] usb 1-2.3: new low speed USB device using ehci_hcd and a=
+ddress 36
+[   48.597647] usb 1-2.3: configuration #1 chosen from 1 choice
+[   48.599177] input: Logitech USB-PS/2 Optical Mouse as /class/input/i=
+nput14
+[   48.599206] input: USB HID v1.10 Mouse [Logitech USB-PS/2 Optical Mo=
+use] on usb-0000:00:02.1-2.3
+[   48.693218] usb 1-2.4: new low speed USB device using ehci_hcd and a=
+ddress 37
+[   48.743343] usb 1-2.4: configuration #1 chosen from 1 choice
+[   48.745447] input: HID 046a:0001 as /class/input/input15
+[   48.745474] input: USB HID v1.00 Keyboard [HID 046a:0001] on usb-000=
+0:00:02.1-2.4
+[   50.761266] scsi 10:0:0:0: Direct-Access     Generic  CF Reader     =
+   1.01 PQ: 0 ANSI: 0
+[   50.762291] sd 10:0:0:0: Attached scsi removable disk sdb
+[   50.762324] sd 10:0:0:0: Attached scsi generic sg3 type 0
+[   50.762761] scsi 10:0:0:1: Direct-Access     Generic  SM/SD/MS Reade=
+r  1.00 PQ: 0 ANSI: 0
+[   50.987471] SCSI device sdc: 1984000 512-byte hdwr sectors (1016 MB)
+[   50.988530] sdc: Write Protect is off
+[   50.988533] sdc: Mode Sense: 03 00 00 00
+[   50.988535] sdc: assuming drive cache: write through
+[   50.991339] SCSI device sdc: 1984000 512-byte hdwr sectors (1016 MB)
+[   50.992774] sdc: Write Protect is off
+[   50.992777] sdc: Mode Sense: 03 00 00 00
+[   50.992779] sdc: assuming drive cache: write through
+[   50.992784]  sdc: sdc1
+[   50.993510] sd 10:0:0:1: Attached scsi removable disk sdc
+[   50.993545] sd 10:0:0:1: Attached scsi generic sg4 type 0
+[   50.994196] usb-storage: device scan complete
+[   51.419715] [drm] Loading R300 Microcode
+[   96.950745] usb 1-5: USB disconnect, address 35
 
-There are still some bugfix patches in my tree which should go into 2.6.21
-but since they are quite fresh and there have already been a lot of IDE
-changes since the merge window was opened I will wait for -rc1 to push
-them upstream.
-
-[ Andrew, IDE quilt tree has already been updated wrt to this update ]
-
-Linus, please pull from:
-
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-
-to receive the following updates:
-
- drivers/ide/Kconfig            |    8 
- drivers/ide/Makefile           |    1 
- drivers/ide/arm/icside.c       |   25 -
- drivers/ide/arm/rapide.c       |    2 
- drivers/ide/cris/ide-cris.c    |   34 -
- drivers/ide/h8300/ide-h8300.c  |    4 
- drivers/ide/ide-cd.c           |   44 --
- drivers/ide/ide-disk.c         |   14 
- drivers/ide/ide-dma.c          |  105 +++--
- drivers/ide/ide-floppy.c       |   29 -
- drivers/ide/ide-io.c           |   15 
- drivers/ide/ide-iops.c         |   34 -
- drivers/ide/ide-lib.c          |   20 
- drivers/ide/ide-probe.c        |    4 
- drivers/ide/ide-tape.c         |   12 
- drivers/ide/ide.c              |   24 -
- drivers/ide/legacy/buddha.c    |    2 
- drivers/ide/legacy/gayle.c     |    2 
- drivers/ide/legacy/ht6560b.c   |   14 
- drivers/ide/legacy/macide.c    |    2 
- drivers/ide/legacy/q40ide.c    |    2 
- drivers/ide/mips/au1xxx-ide.c  |   41 --
- drivers/ide/mips/swarm.c       |    2 
- drivers/ide/pci/aec62xx.c      |   32 -
- drivers/ide/pci/alim15x3.c     |   15 
- drivers/ide/pci/amd74xx.c      |    5 
- drivers/ide/pci/atiixp.c       |   41 --
- drivers/ide/pci/cmd64x.c       |   47 --
- drivers/ide/pci/cs5520.c       |    5 
- drivers/ide/pci/cs5530.c       |   41 --
- drivers/ide/pci/cs5535.c       |   19 
- drivers/ide/pci/cy82c693.c     |   33 -
- drivers/ide/pci/hpt34x.c       |   42 --
- drivers/ide/pci/hpt366.c       |   24 -
- drivers/ide/pci/it8213.c       |   14 
- drivers/ide/pci/it821x.c       |   14 
- drivers/ide/pci/jmicron.c      |   14 
- drivers/ide/pci/ns87415.c      |   13 
- drivers/ide/pci/opti621.c      |   63 +--
- drivers/ide/pci/pdc202xx_new.c |   28 -
- drivers/ide/pci/pdc202xx_old.c |  104 +----
- drivers/ide/pci/piix.c         |  119 +++--
- drivers/ide/pci/sc1200.c       |   11 
- drivers/ide/pci/serverworks.c  |   59 --
- drivers/ide/pci/sgiioc4.c      |  125 ++----
- drivers/ide/pci/siimage.c      |  113 ++---
- drivers/ide/pci/sis5513.c      |   59 --
- drivers/ide/pci/sl82c105.c     |   39 -
- drivers/ide/pci/slc90e66.c     |   22 -
- drivers/ide/pci/tc86c001.c     |   46 --
- drivers/ide/pci/triflex.c      |   24 -
- drivers/ide/pci/trm290.c       |   42 --
- drivers/ide/pci/via82cxxx.c    |    5 
- drivers/ide/ppc/pmac.c         |   16 
- drivers/ide/ppc/scc_pata.c     |  831 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ide-scsi.c        |    8 
- include/linux/ide.h            |   28 -
- 57 files changed, 1523 insertions(+), 1018 deletions(-)
-
-Alan Cox (1):
-      ide-floppy: Fix unformatted media crash
-
-Albert Lee (2):
-      ide: clear bmdma status in ide_intr() for ICHx controllers (revised #4)
-      ide: remove clearing bmdma status from cdrom_decode_status() (rev #4)
-
-Bartlomiej Zolnierkiewicz (23):
-      hpt34x: hpt34x_tune_chipset() (->speedproc) fix
-      atiixp/jmicron/triflex: fix PIO fallback
-      pdc202xx_old: remove dead code
-      au1xxx-ide: remove dead code
-      trm290: remove redundant CONFIG_BLK_DEV_IDEDMA #ifdef-s
-      hpt366: remove redundant check from init_dma_hpt366()
-      cs5530: small cleanup
-      svwks: small cleanup
-      piix: cleanup
-      sis5513: sis5513_config_xfer_rate() cleanup
-      ide: remove write-only ide_pio_data_t.blacklisted
-      ide: remove write-only ide_hwif_t.no_dsc flag
-      ide: remove ide_pci_device_t tables with only one entry
-      ide: remove ide_drive_t.usage
-      ide: unexport ide_set_xfer_rate() (v2)
-      ide: add ide_use_fast_pio() helper (v3)
-      ide: use PIO/MMIO operations directly where possible (v2)
-      ide: convert ide_hwif_t.mmio into flag (v2)
-      ide: disable DMA in ->ide_dma_check for "no IORDY" case (v2)
-      sgiioc4: fix sgiioc4_ide_dma_check() to enable/disable DMA properly
-      ide: add ide_set_dma() helper (v2)
-      ide: make ide_hwif_t.ide_dma_{host_off,off_quietly} void (v2)
-      ide: make ide_hwif_t.ide_dma_host_on void (v2)
-
-Kou Ishizaki (1):
-      drivers/ide: PATA driver for Celleb
-
-Sergei Shtylyov (3):
-      siimage: PIO1/2 taskfile transfer overclocking fix
-      pdc202xx_old: fix PIO mode setup
-      sl82c105: DMA support fixes
-
-...and once again patch is too big for the mailing list
+--=20
+Tobias						PGP: http://9ac7e0bc.uguu.de
+=E3=81=93=E3=81=AE=E3=83=A1=E3=83=BC=E3=83=AB=E3=81=AF=E5=8D=81=E5=89=B2=
+=E5=86=8D=E5=88=A9=E7=94=A8=E3=81=95=E3=82=8C=E3=81=9F=E3=83=93=E3=83=83=
+=E3=83=88=E3=81=A7=E4=BD=9C=E3=82=89=E3=82=8C=E3=81=A6=E3=81=84=E3=81=BE=
+=E3=81=99=E3=80=82
