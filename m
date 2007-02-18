@@ -1,50 +1,101 @@
-From: "Patrick Ale" <patrick.ale@gmail.com>
-Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Sun, 18 Feb 2007 15:50:06 +0100
-Message-ID: <8d158e1f0702180650s6d1a6671tc6a2d6a0ce696add@mail.gmail.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>
-	 <8d158e1f0702150052l25fb03fnf17ba315dc6f912d@mail.gmail.com>
-	 <8d158e1f0702160010k2ed986ddtaccf8d2678ae1231@mail.gmail.com>
-	 <45D56FE4.3090900@tw.ibm.com>
-	 <8d158e1f0702160056j11ab6df1v99b4d72866f3e1b2@mail.gmail.com>
-	 <45D574B1.8080109@tw.ibm.com>
-	 <8d158e1f0702160148v366ce96bm8e3ff3e7c64a7198@mail.gmail.com>
-	 <45D58270.4080909@tw.ibm.com>
-	 <8d158e1f0702170236h51756aadh6539f5d782774764@mail.gmail.com>
-	 <8d158e1f0702170829m6b57b0d3y51d69431983346d3@mail.gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.20-mm2
+Date: Sun, 18 Feb 2007 11:43:26 -0800
+Message-ID: <20070218114326.35d7645b.akpm@linux-foundation.org>
+References: <20070217215146.30e7ffa3.akpm@linux-foundation.org>
+	<200702181344.54959.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.234]:50879 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234AbXBROuH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Feb 2007 09:50:07 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1421592wxd
-        for <linux-ide@vger.kernel.org>; Sun, 18 Feb 2007 06:50:07 -0800 (PST)
-In-Reply-To: <8d158e1f0702170829m6b57b0d3y51d69431983346d3@mail.gmail.com>
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.24]:53019 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751937AbXBRToG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Feb 2007 14:44:06 -0500
+In-Reply-To: <200702181344.54959.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On 2/17/07, Patrick Ale <patrick.ale@gmail.com> wrote:
+On Sun, 18 Feb 2007 13:44:54 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
 
-> I can't even calculate how many terrabyte that'd be on just hde but I
-> can only wish I had that amount of diskspace.
+> On Sunday, 18 February 2007 06:51, Andrew Morton wrote:
+> > 
+> > Temporarily at
+> > 
+> >   http://userweb.kernel.org/~akpm/2.6.20-mm2/
+> > 
+> > Will appear later at
+> > 
+> >  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.20/2.6.20-mm2/
+> 
+> Two problems:
+> 
+> 1) A showstopper with the root partition on RAID1:
+> 
+> md: raid1 personality registered for level 1
+> [--snip--]
+> md: multipath personality registered for level -4
+> register_blkdev: failed to get major for mdp
+> [--snip--]
+> VFS: Cannot open root device "md1" or unknown-block(0,0)
 
-More updates;
+Someone else reported that against mainline.  Can you please debug it a bit?
 
-Either my controller is totaly borked or the driver doesn't totaly
-like my PCI card.
-When resyncing my md0 device, which is attached to the card, it stops
-at 0.4%, gives lots of DMA timeouts and hde becomes unavailable.
+I'd suggested reverting the recent changes in there:
 
-Now, I attached the two drives to the onboard promise controller
-(which had still one bus free) and all works fine, disks gets detected
-properly (now testing with the legacy IDE drivers since that is what
-at least detected my disks).
+--- a/block/genhd.c~a
++++ a/block/genhd.c
+@@ -61,14 +61,6 @@ int register_blkdev(unsigned int major, 
+ 	/* temporary */
+ 	if (major == 0) {
+ 		for (index = ARRAY_SIZE(major_names)-1; index > 0; index--) {
+-			/*
+-			 * Disallow the LANANA-assigned LOCAL/EXPERIMENTAL
+-			 * majors
+-			 */
+-			if ((60 <= index && index <= 63) ||
+-					(120 <= index && index <= 127) ||
+-					(240 <= index && index <= 254))
+-				continue;
+ 			if (major_names[index] == NULL)
+ 				break;
+ 		}
+_
+
+but I don't see how they could cause this.
 
 
-Patrick
+> At the moment I have no serial console attached to the box, so I had to rewrite
+> the messages manually.
+
+netconsole is good.
+
+> 2) On HPC nx6325 I get the following 100% of the time during the resume from
+> disk:
+> 
+> BUG: at drivers/pci/pci.c:823 pcim_enable_device()
+> 
+> Call Trace:
+>  [<ffffffff80325ff8>] pcim_enable_device+0x93/0xb3
+>  [<ffffffff803a974a>] ata_pci_device_do_resume+0x21/0x5e
+>  [<ffffffff803b5e6c>] sil_pci_device_resume+0x1c/0x51
+>  [<ffffffff8032800d>] pci_device_resume+0x22/0x53
+>  [<ffffffff8039ae58>] resume_device+0xca/0x131
+>  [<ffffffff8039af40>] dpm_resume+0x81/0xd3
+>  [<ffffffff8039afc2>] device_resume+0x30/0x45
+>  [<ffffffff802a0792>] snapshot_ioctl+0x245/0x63e
+>  [<ffffffff8023cfcc>] do_ioctl+0x5e/0x77
+>  [<ffffffff8022d2b3>] vfs_ioctl+0x25c/0x279
+>  [<ffffffff80246a80>] sys_ioctl+0x5f/0x82
+>  [<ffffffff80215586>] sys_write+0x47/0x70
+>  [<ffffffff8025711e>] system_call+0x7e/0x83
+> 
+> Nevertheless, the system seems to be fully functional after the resume.
+> 
+> [I've been observing it since 2.6.20-git10 and have reported it for a couple
+> of times, but apparently nobody cares. :-(]
+
+This is a Tejun thing - apparently it's due to swsusp calling suspend once
+and resume twice (or is it vice versa).  He'll be looking into it soon.
