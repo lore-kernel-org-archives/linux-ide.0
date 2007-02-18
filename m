@@ -1,36 +1,72 @@
-From: Magnus Damm <damm@opensource.se>
-Subject: [PATCH] libata: Remove duplicate dma blacklist entry
-Date: Sun, 18 Feb 2007 17:53:32 +0900
-Message-ID: <20070218085332.623.18005.sendpatchset@va-lsv.local.valinux.co.jp>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.20-mm2
+Date: Sun, 18 Feb 2007 13:44:54 +0100
+Message-ID: <200702181344.54959.rjw@sisk.pl>
+References: <20070217215146.30e7ffa3.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fms-01.valinux.co.jp ([210.128.90.1]:36992 "EHLO
-	mail.valinux.co.jp" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161184AbXBRIxd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Feb 2007 03:53:33 -0500
+Received: from ogre.sisk.pl ([217.79.144.158]:48607 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750978AbXBRMuh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Feb 2007 07:50:37 -0500
+In-Reply-To: <20070217215146.30e7ffa3.akpm@linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Magnus Damm <damm@opensource.se>, bzolnier@gmail.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-libata: Remove duplicate dma blacklist entry
+On Sunday, 18 February 2007 06:51, Andrew Morton wrote:
+> 
+> Temporarily at
+> 
+>   http://userweb.kernel.org/~akpm/2.6.20-mm2/
+> 
+> Will appear later at
+> 
+>  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.20/2.6.20-mm2/
 
-The exact same entry is already present.
+Two problems:
 
-Signed-off-by: Magnus Damm <damm@opensource.se>
----
+1) A showstopper with the root partition on RAID1:
 
- Applies to 2.6.20-git14.
+md: raid1 personality registered for level 1
+[--snip--]
+md: multipath personality registered for level -4
+register_blkdev: failed to get major for mdp
+[--snip--]
+VFS: Cannot open root device "md1" or unknown-block(0,0)
 
- libata-core.c |    1 -
- 1 file changed, 1 deletion(-)
+At the moment I have no serial console attached to the box, so I had to rewrite
+the messages manually.
 
---- 0002/drivers/ata/libata-core.c
-+++ work/drivers/ata/libata-core.c	2007-02-18 16:40:27.000000000 +0900
-@@ -3242,7 +3242,6 @@ static const struct ata_blacklist_entry 
- 	{ "WPI CDD-820", 	NULL,		ATA_HORKAGE_NODMA },
- 	{ "SAMSUNG CD-ROM SC-148C", NULL,	ATA_HORKAGE_NODMA },
- 	{ "SAMSUNG CD-ROM SC",	NULL,		ATA_HORKAGE_NODMA },
--	{ "SanDisk SDP3B-64", 	NULL,		ATA_HORKAGE_NODMA },
- 	{ "ATAPI CD-ROM DRIVE 40X MAXIMUM",NULL,ATA_HORKAGE_NODMA },
- 	{ "_NEC DV5800A", 	NULL,		ATA_HORKAGE_NODMA },
- 	{ "SAMSUNG CD-ROM SN-124","N001",	ATA_HORKAGE_NODMA },
+2) On HPC nx6325 I get the following 100% of the time during the resume from
+disk:
+
+BUG: at drivers/pci/pci.c:823 pcim_enable_device()
+
+Call Trace:
+ [<ffffffff80325ff8>] pcim_enable_device+0x93/0xb3
+ [<ffffffff803a974a>] ata_pci_device_do_resume+0x21/0x5e
+ [<ffffffff803b5e6c>] sil_pci_device_resume+0x1c/0x51
+ [<ffffffff8032800d>] pci_device_resume+0x22/0x53
+ [<ffffffff8039ae58>] resume_device+0xca/0x131
+ [<ffffffff8039af40>] dpm_resume+0x81/0xd3
+ [<ffffffff8039afc2>] device_resume+0x30/0x45
+ [<ffffffff802a0792>] snapshot_ioctl+0x245/0x63e
+ [<ffffffff8023cfcc>] do_ioctl+0x5e/0x77
+ [<ffffffff8022d2b3>] vfs_ioctl+0x25c/0x279
+ [<ffffffff80246a80>] sys_ioctl+0x5f/0x82
+ [<ffffffff80215586>] sys_write+0x47/0x70
+ [<ffffffff8025711e>] system_call+0x7e/0x83
+
+Nevertheless, the system seems to be fully functional after the resume.
+
+[I've been observing it since 2.6.20-git10 and have reported it for a couple
+of times, but apparently nobody cares. :-(]
+
+Greetings,
+Rafael
