@@ -1,90 +1,33 @@
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: 2.6.20-mm2
-Date: Mon, 19 Feb 2007 00:39:04 +0100
-Message-ID: <6bffcb0e0702181539r66d6784ay36ca4cddc749588e@mail.gmail.com>
+Date: Sun, 18 Feb 2007 16:00:26 -0800
+Message-ID: <20070218160026.2988d59f.akpm@linux-foundation.org>
 References: <20070217215146.30e7ffa3.akpm@linux-foundation.org>
-	 <200702181344.54959.rjw@sisk.pl>
-	 <20070218114326.35d7645b.akpm@linux-foundation.org>
-	 <200702190025.49273.rjw@sisk.pl>
+	<200702181344.54959.rjw@sisk.pl>
+	<20070218114326.35d7645b.akpm@linux-foundation.org>
+	<200702190025.49273.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.238]:4494 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487AbXBRXjG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Feb 2007 18:39:06 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1525494nze
-        for <linux-ide@vger.kernel.org>; Sun, 18 Feb 2007 15:39:05 -0800 (PST)
+Received: from smtp.osdl.org ([65.172.181.24]:33791 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752538AbXBSABB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Feb 2007 19:01:01 -0500
 In-Reply-To: <200702190025.49273.rjw@sisk.pl>
-Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On 19/02/07, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Sunday, 18 February 2007 20:43, Andrew Morton wrote:
-> > On Sun, 18 Feb 2007 13:44:54 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> >
-> > > On Sunday, 18 February 2007 06:51, Andrew Morton wrote:
-> > > >
-> > > > Temporarily at
-> > > >
-> > > >   http://userweb.kernel.org/~akpm/2.6.20-mm2/
-> > > >
-> > > > Will appear later at
-> > > >
-> > > >  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.20/2.6.20-mm2/
-> > >
-> > > Two problems:
-> > >
-> > > 1) A showstopper with the root partition on RAID1:
-> > >
-> > > md: raid1 personality registered for level 1
-> > > [--snip--]
-> > > md: multipath personality registered for level -4
-> > > register_blkdev: failed to get major for mdp
-> > > [--snip--]
-> > > VFS: Cannot open root device "md1" or unknown-block(0,0)
-> >
-> > Someone else reported that against mainline.  Can you please debug it a bit?
->
-> Sure, tomorrow I will.
->
-> > I'd suggested reverting the recent changes in there:
-> >
-> > --- a/block/genhd.c~a
-> > +++ a/block/genhd.c
-> > @@ -61,14 +61,6 @@ int register_blkdev(unsigned int major,
-> >       /* temporary */
-> >       if (major == 0) {
-> >               for (index = ARRAY_SIZE(major_names)-1; index > 0; index--) {
-> > -                     /*
-> > -                      * Disallow the LANANA-assigned LOCAL/EXPERIMENTAL
-> > -                      * majors
-> > -                      */
-> > -                     if ((60 <= index && index <= 63) ||
-> > -                                     (120 <= index && index <= 127) ||
-> > -                                     (240 <= index && index <= 254))
-> > -                             continue;
-> >                       if (major_names[index] == NULL)
-> >                               break;
-> >               }
-> > _
-> >
-> > but I don't see how they could cause this.
-> >
-> >
-> > > At the moment I have no serial console attached to the box, so I had to rewrite
-> > > the messages manually.
-> >
+On Mon, 19 Feb 2007 00:25:48 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+
 > > netconsole is good.
->
+> 
 > I know. :-)
->
+> 
 > In the meantime, I've got something worse on another x86_64 box:
->
+> 
 > Asus Laptop ACPI Extras version 0.30
 >   L5D model detected, supported
 > audit(1171831698.918:2): audit_pid=4281 old=0 by auid=4294967295
@@ -110,58 +53,5 @@ On 19/02/07, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 > Call Trace:
 >  [<ffffffff8026be21>] mempool_alloc_slab+0x11/0x20
 >  [<ffffffff80348e7c>] generic_make_request+0x1ec/0x230
->  [<ffffffff8034b7e6>] submit_bio+0xf6/0x110
->  [<ffffffff802b60f0>] submit_bh+0x100/0x130
->  [<ffffffff802b788a>] __block_write_full_page+0x1ca/0x2e0
->  [<ffffffff802bc040>] blkdev_get_block+0x0/0x70
->  [<ffffffff802bc040>] blkdev_get_block+0x0/0x70
->  [<ffffffff802b7a93>] block_write_full_page+0xf3/0x110
->  [<ffffffff802baeb3>] blkdev_writepage+0x13/0x20
->  [<ffffffff8026eb85>] __writepage+0x15/0x40
->  [<ffffffff8026f1e3>] write_cache_pages+0x1f3/0x360
->  [<ffffffff8026eb70>] __writepage+0x0/0x40
->  [<ffffffff8026f372>] generic_writepages+0x22/0x30
->  [<ffffffff8026f3c6>] do_writepages+0x46/0x80
->  [<ffffffff802b1f67>] __writeback_single_inode+0x1d7/0x370
->  [<ffffffff802b2355>] generic_sync_sb_inodes+0x35/0x2b0
->  [<ffffffff802b24f9>] generic_sync_sb_inodes+0x1d9/0x2b0
->  [<ffffffff802b29f2>] writeback_inodes+0x82/0x100
->  [<ffffffff802b25f5>] sync_sb_inodes+0x25/0x30
->  [<ffffffff802b2a08>] writeback_inodes+0x98/0x100
->  [<ffffffff8026fd40>] pdflush+0x0/0x1e0
->  [<ffffffff8026f934>] wb_kupdate+0x94/0x110
->  [<ffffffff8026fe68>] pdflush+0x128/0x1e0
->  [<ffffffff8026f8a0>] wb_kupdate+0x0/0x110
->  [<ffffffff8026fd40>] pdflush+0x0/0x1e0
->  [<ffffffff80240863>] kthread+0xd3/0x110
->  [<ffffffff80240700>] keventd_create_kthread+0x0/0x90
->  [<ffffffff8020a3f8>] child_rip+0xa/0x12
->  [<ffffffff80483e5b>] _spin_unlock_irq+0x2b/0x60
->  [<ffffffff80209fb0>] restore_args+0x0/0x30
->  [<ffffffff80240790>] kthread+0x0/0x110
->  [<ffffffff8020a3ee>] child_rip+0x0/0x12
->
->
-> Code: 48 8b 43 08 0f 18 08 49 39 dd 75 a2 49 8b be 38 02 00 00 e8
-> RIP  [<ffffffff8034bce4>] __make_request+0x134/0x370
->  RSP <ffff81005ed659a0>
-> PM: Adding info for No Bus:vcs10
-> PM: Adding info for No Bus:vcsa10
->
-> It looks _really_ bad to me. :-(
->
 
-It looks familiar to me
-
-http://www.ussg.iu.edu/hypermail/linux/kernel/0702.2/0646.html
-http://www.ussg.iu.edu/hypermail/linux/kernel/0702.2/0821.html
-
-Regards,
-Michal
-
--- 
-Michal K. K. Piotrowski
-LTG - Linux Testers Group (PL)
-(http://www.stardust.webpages.pl/ltg/)
-LTG - Linux Testers Group (EN)
-(http://www.stardust.webpages.pl/linux_testers_group_en/)
+yeah. everyone except me is hitting that.
