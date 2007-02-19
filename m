@@ -1,42 +1,51 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCHSET] libata: PATA driver for Celleb
-Date: Tue, 20 Feb 2007 00:17:32 +0100
-Message-ID: <200702200017.32924.bzolnier@gmail.com>
-References: <200701260724.l0Q7OISY027645@toshiba.co.jp> <1171920081.18571.77.camel@localhost.localdomain> <20070219234651.4a19a912@localhost.localdomain>
+Subject: Re: [PATCH 12/15] ide: make ide_hwif_t.ide_dma_host_on void
+Date: Tue, 20 Feb 2007 00:21:07 +0100
+Message-ID: <200702200021.07419.bzolnier@gmail.com>
+References: <20070203135301.2546.54884.sendpatchset@localhost.localdomain> <20070203135307.2546.94874.sendpatchset@localhost.localdomain> <20070219222028.GA9297@aepfle.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:58011 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965524AbXBSXLa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 18:11:30 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so601453muf
-        for <linux-ide@vger.kernel.org>; Mon, 19 Feb 2007 15:11:28 -0800 (PST)
-In-Reply-To: <20070219234651.4a19a912@localhost.localdomain>
+Received: from nf-out-0910.google.com ([64.233.182.191]:51071 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965529AbXBSXPE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 18:15:04 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so2558616nfa
+        for <linux-ide@vger.kernel.org>; Mon, 19 Feb 2007 15:15:02 -0800 (PST)
+In-Reply-To: <20070219222028.GA9297@aepfle.de>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Arnd Bergmann <arnd@arndb.de>, Linas Vepstas <linas@austin.ibm.com>, Jens Osterkamp <jens@de.ibm.com>, linuxppc-dev@ozlabs.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, paulus@samba.org, Andrew Morton <akpm@linux-foundation.org>, James K Lewis <jim@jklewis.com>
+To: Olaf Hering <olaf@aepfle.de>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-On Tuesday 20 February 2007 00:46, Alan wrote:
-> > > into one in drivers/ide but really want splitting for libata with some
-> > > kind of libata-pmac owning the shared stuff
-> > 
-> > You meand driver/ide/ppc/pmac.c ?
+On Monday 19 February 2007 23:20, Olaf Hering wrote:
+> On Sat, Feb 03, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Yes
+> > [PATCH] ide: make ide_hwif_t.ide_dma_host_on void
 > 
-> > moving them out of the macio_asic to a PCI device at one point, so yes,
-> > maybe you are right, I should move the DMA bits to some "common" file
-> > and split the various implementations.
+> > +++ b/drivers/ide/ppc/pmac.c
+> > @@ -1984,10 +1984,8 @@ static void pmac_ide_dma_host_off(ide_dr
+> >  {
+> >  }
+> >  
+> > -static int
+> > -pmac_ide_dma_host_on (ide_drive_t *drive)
+> > +static int pmac_ide_dma_host_on(ide_drive_t *drive)
+> >  {
+> > -	return 0;
+> >  }
+> >  
+> >  static int
 > 
-> I suspect it is worth doing when moving to libata at least, even if not
-> for the older driver.
+> This missed the s/int/void/
 
-fully agreed, the way to go for both drivers
+yes, sorry for that
+
+akpm has fixed this along with other things in pmac driver
+and the patch is already in the IDE quilt tree
 
 Bart
