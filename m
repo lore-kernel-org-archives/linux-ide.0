@@ -1,51 +1,42 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] (pata-2.6 fix queue) cmd64x: procfs code fixes/cleanups
-Date: Tue, 20 Feb 2007 00:10:31 +0100
-Message-ID: <200702200010.31793.bzolnier@gmail.com>
-References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com> <200702152217.08984.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCHSET] libata: PATA driver for Celleb
+Date: Tue, 20 Feb 2007 00:17:32 +0100
+Message-ID: <200702200017.32924.bzolnier@gmail.com>
+References: <200701260724.l0Q7OISY027645@toshiba.co.jp> <1171920081.18571.77.camel@localhost.localdomain> <20070219234651.4a19a912@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:41544 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965513AbXBSXE2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 18:04:28 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so2556666nfa
-        for <linux-ide@vger.kernel.org>; Mon, 19 Feb 2007 15:04:27 -0800 (PST)
-In-Reply-To: <200702152217.08984.sshtylyov@ru.mvista.com>
+Received: from mu-out-0910.google.com ([209.85.134.191]:58011 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965524AbXBSXLa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 18:11:30 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so601453muf
+        for <linux-ide@vger.kernel.org>; Mon, 19 Feb 2007 15:11:28 -0800 (PST)
+In-Reply-To: <20070219234651.4a19a912@localhost.localdomain>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Arnd Bergmann <arnd@arndb.de>, Linas Vepstas <linas@austin.ibm.com>, Jens Osterkamp <jens@de.ibm.com>, linuxppc-dev@ozlabs.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, paulus@samba.org, Andrew Morton <akpm@linux-foundation.org>, James K Lewis <jim@jklewis.com>
 
 
-On Thursday 15 February 2007 20:17, Sergei Shtylyov wrote:
-> Fix several issues with the driver's procfs output:
+On Tuesday 20 February 2007 00:46, Alan wrote:
+> > > into one in drivers/ide but really want splitting for libata with some
+> > > kind of libata-pmac owning the shared stuff
+> > 
+> > You meand driver/ide/ppc/pmac.c ?
 > 
-> - when testing if channel is enabled, the code looks at the "simplex" bits, not
->   at the real enable bits -- add #define for the primary channel enable bit;
+> Yes
 > 
-> - UltraDMA modes 0, 1, 3 for slave drive reported incorrectly due to using the
->   master drive's clock cycle resolution bit.
+> > moving them out of the macio_asic to a PCI device at one point, so yes,
+> > maybe you are right, I should move the DMA bits to some "common" file
+> > and split the various implementations.
 > 
-> While at it, also perform some cleanups:
-> 
-> - don't read from the registers which are not used for dump;
-> 
-> - correct the chipset names (from CMDxxx to PCI-xxx);
-> 
-> - rework UltraDMA mode dump code;
-> 
-> - remove PIO mode dump code that has never been finished;
-> 
-> - remove the duplicate interrupt status dump (the MRDMODE register bits mirror
->   those in the CFR and ARTTIM23 registers);
-> 
-> - add spaces in the ?: operators...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> I suspect it is worth doing when moving to libata at least, even if not
+> for the older driver.
 
-applied
+fully agreed, the way to go for both drivers
+
+Bart
