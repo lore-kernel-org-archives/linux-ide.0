@@ -1,83 +1,39 @@
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: Re: 2.6.20-mm2
-Date: Mon, 19 Feb 2007 12:45:47 +0100
-Message-ID: <6bffcb0e0702190345p33f4832epec92656fff087f57@mail.gmail.com>
-References: <20070217215146.30e7ffa3.akpm@linux-foundation.org>
-	 <200702190025.49273.rjw@sisk.pl>
-	 <20070218160026.2988d59f.akpm@linux-foundation.org>
-	 <200702191228.30599.rjw@sisk.pl>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [git patches] more IDE updates
+Date: Mon, 19 Feb 2007 18:18:42 +0300
+Message-ID: <45D9BFD2.6030509@ru.mvista.com>
+References: <200702170325.02337.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:35597 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932142AbXBSLpt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 06:45:49 -0500
-Received: by wr-out-0506.google.com with SMTP id i31so1639342wra
-        for <linux-ide@vger.kernel.org>; Mon, 19 Feb 2007 03:45:48 -0800 (PST)
-In-Reply-To: <200702191228.30599.rjw@sisk.pl>
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:1823 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932344AbXBSPSw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 10:18:52 -0500
+In-Reply-To: <200702170325.02337.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 19/02/07, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Monday, 19 February 2007 01:00, Andrew Morton wrote:
-> > On Mon, 19 Feb 2007 00:25:48 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> >
-> > > > netconsole is good.
-> > >
-> > > I know. :-)
-> > >
-> > > In the meantime, I've got something worse on another x86_64 box:
-> > >
-> > > Asus Laptop ACPI Extras version 0.30
-> > >   L5D model detected, supported
-> > > audit(1171831698.918:2): audit_pid=4281 old=0 by auid=4294967295
-> > > general protection fault: 0000 [2] PREEMPT
-> > > last sysfs file: /class/net/eth2/carrier
-> > > CPU 0
-> > > Modules linked in: af_packet ipv6 snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device asus_acpi backlight button battery ac dm_mod pcmr
-> > > Pid: 178, comm: pdflush Not tainted 2.6.20-mm2 #1
-> > > RIP: 0010:[<ffffffff8034bce4>]  [<ffffffff8034bce4>] __make_request+0x134/0x370
-> > > RSP: 0000:ffff81005ed659a0  EFLAGS: 00010297
-> > > RAX: 00000000ffffffff RBX: 6b6b6b6b6b6b6b6b RCX: 000000000203396a
-> > > RDX: 0000000100000000 RSI: ffff810037b4dbb0 RDI: ffff81004683d8c0
-> > > RBP: ffff81005ed659f0 R08: ffff81004683d070 R09: ffff81003d333cc0
-> > > R10: 0000000000000000 R11: 0000000000000000 R12: ffff810037b4dbb0
-> > > R13: ffff81005daba3f0 R14: ffff810037daca90 R15: ffff81005daba3d0
-> > > FS:  00002ad4a29e6d00(0000) GS:ffffffff805db000(0000) knlGS:0000000000000000
-> > > CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> > > CR2: 00002b6a345aa000 CR3: 0000000056585000 CR4: 00000000000006e0
-> > > Process pdflush (pid: 178, threadinfo ffff81005ed64000, task ffff810037b060c0)
-> > > Stack:  ffff810002852540 0000000000000001 ffff810037b4dbb0 ffffffff8026be21
-> > >  ffff81005ed65a40 0000000000000008 ffff810037b4dbb0 0000000000000800
-> > >  0000000000000008 ffff8100021d94e0 ffff81005ed65a40 ffffffff80348e7c
-> > > Call Trace:
-> > >  [<ffffffff8026be21>] mempool_alloc_slab+0x11/0x20
-> > >  [<ffffffff80348e7c>] generic_make_request+0x1ec/0x230
-> >
-> > yeah. everyone except me is hitting that.
->
-> FWIW, I don't see it on an SMP machine.
->
+Hello.
 
-I can reproduce this on my SMT P4.
+Bartlomiej Zolnierkiewicz wrote:
+> Contains: IRQ-ack fix for ICH chipsets (Albert Lee), ide-floppy unformatted
+> media fix (Alan Cox), more fixes for IDE PCI drivers (Sergei Shtylyov),
+> new driver for Toshiba Cell Reference Board (Kou Ishizaki <kou.ishizaki
+> at toshiba.co.jp>) and a bunch of rather obvious cleanups/improvements (me).
+> 
+> There are still some bugfix patches in my tree which should go into 2.6.21
+> but since they are quite fresh and there have already been a lot of IDE
+> changes since the merge window was opened I will wait for -rc1 to push
+> them upstream.
+> 
+> [ Andrew, IDE quilt tree has already been updated wrt to this update ]
 
-CONFIG_SMP=y
-CONFIG_X86_PC=y
-CONFIG_MPENTIUM4=y
-CONFIG_NR_CPUS=2
-CONFIG_SCHED_SMT=y
+    Which quilt tree do you mean? I've noticed that in 
+http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/ the series file 
+itself hasn't been updated, so this tree appears broken currently.
 
-Regards,
-Michal
-
--- 
-Michal K. K. Piotrowski
-LTG - Linux Testers Group (PL)
-(http://www.stardust.webpages.pl/ltg/)
-LTG - Linux Testers Group (EN)
-(http://www.stardust.webpages.pl/linux_testers_group_en/)
+WBR, Sergei
