@@ -1,39 +1,32 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCHSET] libata: PATA driver for Celleb
-Date: Mon, 19 Feb 2007 23:46:51 +0000
-Message-ID: <20070219234651.4a19a912@localhost.localdomain>
-References: <200701260724.l0Q7OISY027645@toshiba.co.jp>
-	<200702151141.49708.jens@de.ibm.com>
-	<20070215171414.GU923@austin.ibm.com>
-	<200702151909.26082.arnd@arndb.de>
-	<20070219215659.15539fb3@localhost.localdomain>
-	<1171920081.18571.77.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-cs: Update device table
+Date: Tue, 20 Feb 2007 00:04:06 +0100
+Message-ID: <200702200004.06881.bzolnier@gmail.com>
+References: <20070218084930.31156.80938.sendpatchset@va-lsv.local.valinux.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45137 "EHLO
-	localhost.localdomain" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965136AbXBSWoT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 17:44:19 -0500
-In-Reply-To: <1171920081.18571.77.camel@localhost.localdomain>
+Received: from nf-out-0910.google.com ([64.233.182.185]:34455 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965149AbXBSW6G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 17:58:06 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so2555377nfa
+        for <linux-ide@vger.kernel.org>; Mon, 19 Feb 2007 14:58:05 -0800 (PST)
+In-Reply-To: <20070218084930.31156.80938.sendpatchset@va-lsv.local.valinux.co.jp>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Linas Vepstas <linas@austin.ibm.com>, Jens Osterkamp <jens@de.ibm.com>, linuxppc-dev@ozlabs.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, paulus@samba.org, Andrew Morton <akpm@linux-foundation.org>, James K Lewis <jim@jklewis.com>
+To: Magnus Damm <damm@opensource.se>
+Cc: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-> > into one in drivers/ide but really want splitting for libata with some
-> > kind of libata-pmac owning the shared stuff
+
+On Sunday 18 February 2007 09:49, Magnus Damm wrote:
+> ide-cs: Update device table
 > 
-> You meand driver/ide/ppc/pmac.c ?
+> Add CFA devices from I-O Data, Mitsubishi and Viking. Add SanDisk comment.
+> 
+> Signed-off-by: Magnus Damm <damm@opensource.se>
 
-Yes
-
-> moving them out of the macio_asic to a PCI device at one point, so yes,
-> maybe you are right, I should move the DMA bits to some "common" file
-> and split the various implementations.
-
-I suspect it is worth doing when moving to libata at least, even if not
-for the older driver.
-
-Alan
+applied, thanks
