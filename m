@@ -1,71 +1,78 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH 2/5] sata_nv: cleanup CPB and APRD initialization
-Date: Mon, 19 Feb 2007 19:02:27 -0600
-Message-ID: <45DA48A3.9000107@shaw.ca>
+Subject: [PATCH 5/5] sata_nv: enable hotplug interrupt and fix some readl/readw
+ mismatches
+Date: Mon, 19 Feb 2007 19:03:27 -0600
+Message-ID: <45DA48DF.8010906@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932966AbXBTBE6@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:47560 "EHLO
+	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932974AbXBTBFV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 20:05:21 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>
 
-Clean up the initialization of the CPB and APRD structures so that we
-strictly follow the rules for ordering of writes to the CPB flags and
-response flags, and prevent duplicate initialization.
+We already have code that handles hotplug interrupt indications in ADMA
+mode, this turns on the control flag that actually enables these interrupts.
+Also fixes some cases in the same functions where a 16-bit register was read
+using a readl instead of a readw.
 
 Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
 --- linux-2.6.20-git6edit/drivers/ata/sata_nv.c	2007-02-15 22:36:02.000000000 -0600
 +++ linux-2.6.20-git6edit/drivers/ata/sata_nv.c.delayandfixes	2007-02-19 17:00:14.000000000 -0600
-@@ -1164,11 +1159,7 @@ static void nv_adma_fill_aprd(struct ata
- 			      int idx,
- 			      struct nv_adma_prd *aprd)
- {
--	u8 flags;
--
--	memset(aprd, 0, sizeof(struct nv_adma_prd));
--
--	flags = 0;
-+	u8 flags = 0;
- 	if (qc->tf.flags & ATA_TFLAG_WRITE)
- 		flags |= NV_APRD_WRITE;
- 	if (idx == qc->n_elem - 1)
-@@ -1179,6 +1170,7 @@ static void nv_adma_fill_aprd(struct ata
- 	aprd->addr  = cpu_to_le64(((u64)sg_dma_address(sg)));
- 	aprd->len   = cpu_to_le32(((u32)sg_dma_len(sg))); /* len in bytes */
- 	aprd->flags = flags;
-+	aprd->packet_len = 0;
- }
+@@ -1041,14 +1034,15 @@ static int nv_adma_port_start(struct ata
  
- static void nv_adma_fill_sg(struct ata_queued_cmd *qc, struct nv_adma_cpb *cpb)
-@@ -1199,6 +1191,8 @@ static void nv_adma_fill_sg(struct ata_q
+ 	/* clear GO for register mode, enable interrupt */
+ 	tmp = readw(mmio + NV_ADMA_CTL);
+-	writew( (tmp & ~NV_ADMA_CTL_GO) | NV_ADMA_CTL_AIEN, mmio + NV_ADMA_CTL);
++	writew( (tmp & ~NV_ADMA_CTL_GO) | NV_ADMA_CTL_AIEN |
++		 NV_ADMA_CTL_HOTPLUG_IEN, mmio + NV_ADMA_CTL);
+ 
+ 	tmp = readw(mmio + NV_ADMA_CTL);
+ 	writew(tmp | NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
+-	readl( mmio + NV_ADMA_CTL );	/* flush posted write */
++	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
+ 	udelay(1);
+ 	writew(tmp & ~NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
+-	readl( mmio + NV_ADMA_CTL );	/* flush posted write */
++	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
+ 
+ 	return 0;
+ }
+@@ -1100,14 +1094,15 @@ static int nv_adma_port_resume(struct at
+ 
+ 	/* clear GO for register mode, enable interrupt */
+ 	tmp = readw(mmio + NV_ADMA_CTL);
+-	writew((tmp & ~NV_ADMA_CTL_GO) | NV_ADMA_CTL_AIEN, mmio + NV_ADMA_CTL);
++	writew( (tmp & ~NV_ADMA_CTL_GO) | NV_ADMA_CTL_AIEN |
++		 NV_ADMA_CTL_HOTPLUG_IEN, mmio + NV_ADMA_CTL);
+ 
+ 	tmp = readw(mmio + NV_ADMA_CTL);
+ 	writew(tmp | NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
+-	readl( mmio + NV_ADMA_CTL );	/* flush posted write */
++	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
+ 	udelay(1);
+ 	writew(tmp & ~NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
+-	readl( mmio + NV_ADMA_CTL );	/* flush posted write */
++	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
+ 
+ 	return 0;
+ }
+@@ -1490,10 +1493,10 @@ static void nv_adma_error_handler(struct
+ 		/* Reset channel */
+ 		tmp = readw(mmio + NV_ADMA_CTL);
+ 		writew(tmp | NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
+-		readl( mmio + NV_ADMA_CTL );	/* flush posted write */
++		readw( mmio + NV_ADMA_CTL );	/* flush posted write */
+ 		udelay(1);
+ 		writew(tmp & ~NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
+-		readl( mmio + NV_ADMA_CTL );	/* flush posted write */
++		readw( mmio + NV_ADMA_CTL );	/* flush posted write */
  	}
- 	if (idx > 5)
- 		cpb->next_aprd = cpu_to_le64(((u64)(pp->aprd_dma + NV_ADMA_SGTBL_SZ * qc->tag)));
-+	else
-+		cpb->next_aprd = cpu_to_le64(0);
- }
  
- static int nv_adma_use_reg_mode(struct ata_queued_cmd *qc)
-@@ -1231,7 +1225,10 @@ static void nv_adma_qc_prep(struct ata_q
- 		return;
- 	}
- 
--	memset(cpb, 0, sizeof(struct nv_adma_cpb));
-+	cpb->resp_flags = NV_CPB_RESP_DONE;
-+	wmb();
-+	cpb->ctl_flags = 0;
-+	wmb();
- 
- 	cpb->len		= 3;
- 	cpb->tag		= qc->tag;
-@@ -1255,6 +1252,8 @@ static void nv_adma_qc_prep(struct ata_q
- 	   finished filling in all of the contents */
- 	wmb();
- 	cpb->ctl_flags = ctl_flags;
-+	wmb();
-+	cpb->resp_flags = 0;
- }
- 
- static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
+ 	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
+
