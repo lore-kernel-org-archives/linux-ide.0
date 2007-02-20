@@ -1,44 +1,30 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata bugfix: HDIO_DRIVE_TASK
-Date: Tue, 20 Feb 2007 10:49:05 -0500
-Message-ID: <45DB1871.7050607@garzik.org>
-References: <45CA00EC.7070507@rtr.ca>
+Subject: Re: [PATCH] sata_nv: add back some verbosity into ADMA error_handler
+Date: Tue, 20 Feb 2007 10:52:29 -0500
+Message-ID: <45DB193D.3070402@garzik.org>
+References: <45CFB624.9020201@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43999 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44059 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965172AbXBTPtI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Feb 2007 10:49:08 -0500
-In-Reply-To: <45CA00EC.7070507@rtr.ca>
+	id S965176AbXBTPwb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Feb 2007 10:52:31 -0500
+In-Reply-To: <45CFB624.9020201@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Mark Lord wrote:
-> I was trying to use HDIO_DRIVE_TASK for something today,
-> and discovered that the libata implementation does not copy
-> over the upper four LBA bits from args[6].
+Robert Hancock wrote:
+> Some debug output in the ADMA error_handler function was removed recently,
+> but it may be useful in certain cases, like NCQ commands timing out. Add it
+> back in, but make it a bit more intelligent so that it only prints if
+> command(s) are active and only prints the CPBs for those commands.
+> That way it won't spew at inappropriate times like suspend/resume.
 > 
-> This is serious, as any tools using this ioctl would have their
-> commands applied to the wrong sectors on the drive, possibly resulting
-> in disk corruption.
-> 
-> Ideally, newer apps should use SG_IO/ATA_16 directly,
-> avoiding this bug.  But with libata poised to displace drivers/ide,
-> better compatibility here is a must.
-> 
-> This patch fixes libata to use the upper four LBA bits passed
-> in from the ioctl.
-> 
-> The original drivers/ide implementation copies over all bits
-> except for the master/slave select bit.  With this patch,
-> libata will copy only the four high-order LBA bits,
-> just in case there are assumptions elsewhere in libata (?).
-> 
-> Signed-Off-By:  Mark Lord <mlord@pobox.com>
+> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
 applied
 
