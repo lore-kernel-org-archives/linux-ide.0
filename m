@@ -1,70 +1,81 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH]: pcmcia - spot slave decode flaws (for testing)
-Date: Tue, 20 Feb 2007 18:18:36 +0000
-Message-ID: <20070220181836.524e5f9a@localhost.localdomain>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.20-mm2
+Date: Tue, 20 Feb 2007 22:16:02 +0100
+Message-ID: <200702202216.03744.rjw@sisk.pl>
+References: <20070217215146.30e7ffa3.akpm@linux-foundation.org> <6bffcb0e0702190345p33f4832epec92656fff087f57@mail.gmail.com> <200702200104.57200.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030319AbXBTROw@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:34133 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030425AbXBTVVi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Feb 2007 16:21:38 -0500
+In-Reply-To: <200702200104.57200.rjw@sisk.pl>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-If you've got a CF adapter or PCMCIA disc which shows up twice in libata
-pata_pcmcia can you try this patch on top of the updates posted. It tries
-to spot when the slave is a mirror of the master and to fix up problems
-that causes.
+On Tuesday, 20 February 2007 01:04, Rafael J. Wysocki wrote:
+> On Monday, 19 February 2007 12:45, Michal Piotrowski wrote:
+> > On 19/02/07, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > On Monday, 19 February 2007 01:00, Andrew Morton wrote:
+> > > > On Mon, 19 Feb 2007 00:25:48 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+> > > >
+> > > > > > netconsole is good.
+> > > > >
+> > > > > I know. :-)
+> > > > >
+> > > > > In the meantime, I've got something worse on another x86_64 box:
+> > > > >
+> > > > > Asus Laptop ACPI Extras version 0.30
+> > > > >   L5D model detected, supported
+> > > > > audit(1171831698.918:2): audit_pid=4281 old=0 by auid=4294967295
+> > > > > general protection fault: 0000 [2] PREEMPT
+> > > > > last sysfs file: /class/net/eth2/carrier
+> > > > > CPU 0
+> > > > > Modules linked in: af_packet ipv6 snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device asus_acpi backlight button battery ac dm_mod pcmr
+> > > > > Pid: 178, comm: pdflush Not tainted 2.6.20-mm2 #1
+> > > > > RIP: 0010:[<ffffffff8034bce4>]  [<ffffffff8034bce4>] __make_request+0x134/0x370
+> > > > > RSP: 0000:ffff81005ed659a0  EFLAGS: 00010297
+> > > > > RAX: 00000000ffffffff RBX: 6b6b6b6b6b6b6b6b RCX: 000000000203396a
+> > > > > RDX: 0000000100000000 RSI: ffff810037b4dbb0 RDI: ffff81004683d8c0
+> > > > > RBP: ffff81005ed659f0 R08: ffff81004683d070 R09: ffff81003d333cc0
+> > > > > R10: 0000000000000000 R11: 0000000000000000 R12: ffff810037b4dbb0
+> > > > > R13: ffff81005daba3f0 R14: ffff810037daca90 R15: ffff81005daba3d0
+> > > > > FS:  00002ad4a29e6d00(0000) GS:ffffffff805db000(0000) knlGS:0000000000000000
+> > > > > CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> > > > > CR2: 00002b6a345aa000 CR3: 0000000056585000 CR4: 00000000000006e0
+> > > > > Process pdflush (pid: 178, threadinfo ffff81005ed64000, task ffff810037b060c0)
+> > > > > Stack:  ffff810002852540 0000000000000001 ffff810037b4dbb0 ffffffff8026be21
+> > > > >  ffff81005ed65a40 0000000000000008 ffff810037b4dbb0 0000000000000800
+> > > > >  0000000000000008 ffff8100021d94e0 ffff81005ed65a40 ffffffff80348e7c
+> > > > > Call Trace:
+> > > > >  [<ffffffff8026be21>] mempool_alloc_slab+0x11/0x20
+> > > > >  [<ffffffff80348e7c>] generic_make_request+0x1ec/0x230
+> > > >
+> > > > yeah. everyone except me is hitting that.
+> > >
+> > > FWIW, I don't see it on an SMP machine.
+> > >
+> > 
+> > I can reproduce this on my SMT P4.
+> > 
+> > CONFIG_SMP=y
+> > CONFIG_X86_PC=y
+> > CONFIG_MPENTIUM4=y
+> > CONFIG_NR_CPUS=2
+> > CONFIG_SCHED_SMT=y
+> 
+> It may be related to preemption.  The box I'm not seeing it on runs a
+> non-preemptible kernel (CONFIG_PREEMPT_VOLUNTARY is set).
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+FWIW, with CONFIG_PREEMPT unset (CONFIG_PREEMPT_VOLUNTARY is set instead), I'm
+unable to reproduce this problem on the box on which it is readily reproducible with
+CONFIG_PREEMPT set.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.20-mm2/drivers/ata/pata_pcmcia.c linux-2.6.20-mm2/drivers/ata/pata_pcmcia.c
---- linux.vanilla-2.6.20-mm2/drivers/ata/pata_pcmcia.c	2007-02-20 13:37:58.000000000 +0000
-+++ linux-2.6.20-mm2/drivers/ata/pata_pcmcia.c	2007-02-20 14:28:13.000000000 +0000
-@@ -54,6 +54,39 @@
- 	dev_node_t	node;
- };
- 
-+/**
-+ *	pcmcia_set_mode	-	PCMCIA specific mode setup
-+ *	@ap: Port
-+ *	@r_failed_dev: Return pointer for failed device
-+ *
-+ *	Perform the tuning and setup of the devices and timings, which
-+ *	for PCMCIA is the same as any other controller. We wrap it however
-+ *	as we need to spot hardware with incorrect or missing master/slave
-+ *	decode, which alas is embarrassingly common in the PC world
-+ */
-+ 
-+static int pcmcia_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
-+{
-+	struct ata_device *master = &ap->device[0];
-+	struct ata_device *slave = &ap->device[1];
-+	
-+	if (!ata_dev_enabled(master) || !ata_dev_enabled(slave))
-+		return ata_do_set_mode(ap, r_failed_dev);
-+		
-+	if (memcmp(master->id + ATA_ID_FW_REV,  slave->id + ATA_ID_FW_REV,
-+			   ATA_ID_FW_REV_LEN + ATA_ID_PROD_LEN) == 0)
-+	{
-+		/* Suspicious match, but could be two cards from
-+		   the same vendor - check serial */
-+		if (memcmp(master->id + ATA_ID_SERNO, slave->id + ATA_ID_SERNO,
-+			   ATA_ID_SERNO_LEN) == 0 && master->id[ATA_ID_SERNO] >> 8) {
-+			ata_dev_printk(slave, KERN_WARNING, "is a ghost device, ignoring.\n");
-+			ata_dev_disable(slave);
-+		}	 
-+	}
-+	return ata_do_set_mode(ap, r_failed_dev);
-+}
-+
- static struct scsi_host_template pcmcia_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-@@ -73,6 +106,7 @@
- };
- 
- static struct ata_port_operations pcmcia_port_ops = {
-+	.set_mode	= pcmcia_set_mode,
- 	.port_disable	= ata_port_disable,
- 	.tf_load	= ata_tf_load,
- 	.tf_read	= ata_tf_read,
+Greetings,
+Rafael
