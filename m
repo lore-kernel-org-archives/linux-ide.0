@@ -1,64 +1,45 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.20-mm2
-Date: Tue, 20 Feb 2007 23:12:29 +0100
-Message-ID: <200702202312.30067.rjw@sisk.pl>
-References: <20070217215146.30e7ffa3.akpm@linux-foundation.org> <200702200220.22721.rjw@sisk.pl> <20070219223151.b3fbe18e.akpm@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [git patches] libata ACPI support
+Date: Tue, 20 Feb 2007 18:49:17 -0500
+Message-ID: <45DB88FD.5020509@garzik.org>
+References: <20070220214716.GA3690@mail.muni.cz> <45DB74D9.206@garzik.org> <20070220232633.GA3598@mail.muni.cz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:34377 "EHLO ogre.sisk.pl"
+Received: from srv5.dvmed.net ([207.36.208.214]:48963 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030487AbXBTWRm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Feb 2007 17:17:42 -0500
-In-Reply-To: <20070219223151.b3fbe18e.akpm@linux-foundation.org>
-Content-Disposition: inline
+	id S1161091AbXBTXtT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Feb 2007 18:49:19 -0500
+In-Reply-To: <20070220232633.GA3598@mail.muni.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Lukas Hejtmanek <xhejtman@mail.muni.cz>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tuesday, 20 February 2007 07:31, Andrew Morton wrote:
-> On Tue, 20 Feb 2007 02:20:21 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+Lukas Hejtmanek wrote:
+> On Tue, Feb 20, 2007 at 05:23:21PM -0500, Jeff Garzik wrote:
+>>> introducing SATA ACPI does not work for me (I've filled the bug
+>>> report: http://bugzilla.kernel.org/show_bug.cgi?id=8046) beside those error
+>>> messages, IDE performance is decreased. libata.noacpi=1 option works ok but
+>>> the performance is still slightly degraded (about 10%).
+>> Does performance come back if you also use acpi=off ?
 > 
-> > On Sunday, 18 February 2007 20:43, Andrew Morton wrote:
-> > > On Sun, 18 Feb 2007 13:44:54 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> > > 
-> > > > On Sunday, 18 February 2007 06:51, Andrew Morton wrote:
-> > > > > 
-> > > > > Temporarily at
-> > > > > 
-> > > > >   http://userweb.kernel.org/~akpm/2.6.20-mm2/
-> > > > > 
-> > > > > Will appear later at
-> > > > > 
-> > > > >  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.20/2.6.20-mm2/
-> > > > 
-> > > > Two problems:
-> > > > 
-> > > > 1) A showstopper with the root partition on RAID1:
-> > > > 
-> > > > md: raid1 personality registered for level 1
-> > > > [--snip--]
-> > > > md: multipath personality registered for level -4
-> > > > register_blkdev: failed to get major for mdp
-> > > > [--snip--]
-> > > > VFS: Cannot open root device "md1" or unknown-block(0,0)
-> > > 
-> > > Someone else reported that against mainline.  Can you please debug it a bit?
-> > 
-> > For now I can only say 2.6.20 + origin.patch breaks.
-> > 
-> > However, it's a SUSE 10.1 system with gcc 4.1.0 and this may be the reason.
-> > I'll check that tomorrow.
+> It does not.
 > 
-> Yes, Rolf says this goes away when you stop using gcc-4.1.0.
-> 
-> I'm hoping that churning the code around like below makes things work
-> right.
+> With 2.6.20-git15, hdparm -t /dev/sda says 28MB/s, 
+> with 2.6.20, hdparm -t /dev/sda says 32MB/s.
 
-Yes, that helps.
+Can you narrow down the -gitX release further?  i.e. does 2.6.20-git13 
+perform at full speed?  -git13 includes several libata changes, but does 
+not include the ACPI additions.
 
-Thanks,
-Rafael
+Since this is an ACPI execution error in the bug, that would tend to 
+point to bad BIOS tables.  But since there is a performance drop that 
+does not disappear with acpi=off, there might also be another factor, 
+unrelated to ACPI, at play here.
+
+	Jeff
+
+
+
