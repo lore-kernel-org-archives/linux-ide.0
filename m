@@ -1,72 +1,51 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH 3/5] sata_nv: Cleanup taskfile setup
-Date: Mon, 19 Feb 2007 19:02:46 -0600
-Message-ID: <45DA48B6.5020807@shaw.ca>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.20-mm2
+Date: Tue, 20 Feb 2007 02:20:21 +0100
+Message-ID: <200702200220.22721.rjw@sisk.pl>
+References: <20070217215146.30e7ffa3.akpm@linux-foundation.org> <200702181344.54959.rjw@sisk.pl> <20070218114326.35d7645b.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933029AbXBTBGP@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:56334 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932770AbXBTB0G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Feb 2007 20:26:06 -0500
+In-Reply-To: <20070218114326.35d7645b.akpm@linux-foundation.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-This edits the taskfile setup to more closely match the way that libata
-sends the taskfile for other controllers. This avoids putting taskfile writes
-into the CPB buffer that are not needed according to the taskfile flags.
+On Sunday, 18 February 2007 20:43, Andrew Morton wrote:
+> On Sun, 18 Feb 2007 13:44:54 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+> 
+> > On Sunday, 18 February 2007 06:51, Andrew Morton wrote:
+> > > 
+> > > Temporarily at
+> > > 
+> > >   http://userweb.kernel.org/~akpm/2.6.20-mm2/
+> > > 
+> > > Will appear later at
+> > > 
+> > >  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.20/2.6.20-mm2/
+> > 
+> > Two problems:
+> > 
+> > 1) A showstopper with the root partition on RAID1:
+> > 
+> > md: raid1 personality registered for level 1
+> > [--snip--]
+> > md: multipath personality registered for level -4
+> > register_blkdev: failed to get major for mdp
+> > [--snip--]
+> > VFS: Cannot open root device "md1" or unknown-block(0,0)
+> 
+> Someone else reported that against mainline.  Can you please debug it a bit?
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+For now I can only say 2.6.20 + origin.patch breaks.
 
---- linux-2.6.20-git6edit/drivers/ata/sata_nv.c	2007-02-15 22:36:02.000000000 -0600
-+++ linux-2.6.20-git6edit/drivers/ata/sata_nv.c.delayandfixes	2007-02-19 17:00:14.000000000 -0600
-@@ -662,29 +662,30 @@ static unsigned int nv_adma_tf_to_cpb(st
- {
- 	unsigned int idx = 0;
- 
--	cpb[idx++] = cpu_to_le16((ATA_REG_DEVICE << 8) | tf->device | WNB);
--
--	if ((tf->flags & ATA_TFLAG_LBA48) == 0) {
--		cpb[idx++] = cpu_to_le16(IGN);
--		cpb[idx++] = cpu_to_le16(IGN);
--		cpb[idx++] = cpu_to_le16(IGN);
--		cpb[idx++] = cpu_to_le16(IGN);
--		cpb[idx++] = cpu_to_le16(IGN);
--	}
--	else {
--		cpb[idx++] = cpu_to_le16((ATA_REG_ERR   << 8) | tf->hob_feature);
--		cpb[idx++] = cpu_to_le16((ATA_REG_NSECT << 8) | tf->hob_nsect);
--		cpb[idx++] = cpu_to_le16((ATA_REG_LBAL  << 8) | tf->hob_lbal);
--		cpb[idx++] = cpu_to_le16((ATA_REG_LBAM  << 8) | tf->hob_lbam);
--		cpb[idx++] = cpu_to_le16((ATA_REG_LBAH  << 8) | tf->hob_lbah);
--	}
--	cpb[idx++] = cpu_to_le16((ATA_REG_ERR    << 8) | tf->feature);
--	cpb[idx++] = cpu_to_le16((ATA_REG_NSECT  << 8) | tf->nsect);
--	cpb[idx++] = cpu_to_le16((ATA_REG_LBAL   << 8) | tf->lbal);
--	cpb[idx++] = cpu_to_le16((ATA_REG_LBAM   << 8) | tf->lbam);
--	cpb[idx++] = cpu_to_le16((ATA_REG_LBAH   << 8) | tf->lbah);
-+	if(tf->flags & ATA_TFLAG_ISADDR) {
-+		if (tf->flags & ATA_TFLAG_LBA48) {
-+			cpb[idx++] = cpu_to_le16((ATA_REG_ERR   << 8) | tf->hob_feature | WNB);
-+			cpb[idx++] = cpu_to_le16((ATA_REG_NSECT << 8) | tf->hob_nsect);
-+			cpb[idx++] = cpu_to_le16((ATA_REG_LBAL  << 8) | tf->hob_lbal);
-+			cpb[idx++] = cpu_to_le16((ATA_REG_LBAM  << 8) | tf->hob_lbam);
-+			cpb[idx++] = cpu_to_le16((ATA_REG_LBAH  << 8) | tf->hob_lbah);
-+			cpb[idx++] = cpu_to_le16((ATA_REG_ERR    << 8) | tf->feature);
-+		} else
-+			cpb[idx++] = cpu_to_le16((ATA_REG_ERR    << 8) | tf->feature | WNB);
-+			
-+		cpb[idx++] = cpu_to_le16((ATA_REG_NSECT  << 8) | tf->nsect);
-+		cpb[idx++] = cpu_to_le16((ATA_REG_LBAL   << 8) | tf->lbal);
-+		cpb[idx++] = cpu_to_le16((ATA_REG_LBAM   << 8) | tf->lbam);
-+		cpb[idx++] = cpu_to_le16((ATA_REG_LBAH   << 8) | tf->lbah);
-+	}
-+	
-+	if(tf->flags & ATA_TFLAG_DEVICE)
-+		cpb[idx++] = cpu_to_le16((ATA_REG_DEVICE << 8) | tf->device);
- 
- 	cpb[idx++] = cpu_to_le16((ATA_REG_CMD    << 8) | tf->command | CMDEND);
-+	
-+	while(idx < 12)
-+		cpb[idx++] = cpu_to_le16(IGN);
- 
- 	return idx;
- }
+However, it's a SUSE 10.1 system with gcc 4.1.0 and this may be the reason.
+I'll check that tomorrow.
