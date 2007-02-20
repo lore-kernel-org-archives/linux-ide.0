@@ -1,78 +1,57 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH 5/5] sata_nv: enable hotplug interrupt and fix some readl/readw
- mismatches
-Date: Mon, 19 Feb 2007 19:03:27 -0600
-Message-ID: <45DA48DF.8010906@shaw.ca>
+Subject: [PATCH 4/5] sata_nv: Use notifier for completion checks
+Date: Mon, 19 Feb 2007 19:03:08 -0600
+Message-ID: <45DA48CC.3090704@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:47560 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932974AbXBTBFV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 20:05:21 -0500
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:56367 "EHLO
+	pd3mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932844AbXBTBFs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 20:05:48 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>
 
-We already have code that handles hotplug interrupt indications in ADMA
-mode, this turns on the control flag that actually enables these interrupts.
-Also fixes some cases in the same functions where a 16-bit register was read
-using a readl instead of a readw.
+The hardware provides us a notifier register that indicates what command
+tags have completed. Use this to determine which CPBs to check, rather
+than blindly checking all active CPBs. This should provide a minor
+performance win, since if the controller has touched some of these
+incomplete CPBs, accessing them will likely result in a cache miss.
 
 Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
 --- linux-2.6.20-git6edit/drivers/ata/sata_nv.c	2007-02-15 22:36:02.000000000 -0600
 +++ linux-2.6.20-git6edit/drivers/ata/sata_nv.c.delayandfixes	2007-02-19 17:00:14.000000000 -0600
-@@ -1041,14 +1034,15 @@ static int nv_adma_port_start(struct ata
+@@ -853,22 +854,14 @@ static irqreturn_t nv_adma_interrupt(int
  
- 	/* clear GO for register mode, enable interrupt */
- 	tmp = readw(mmio + NV_ADMA_CTL);
--	writew( (tmp & ~NV_ADMA_CTL_GO) | NV_ADMA_CTL_AIEN, mmio + NV_ADMA_CTL);
-+	writew( (tmp & ~NV_ADMA_CTL_GO) | NV_ADMA_CTL_AIEN |
-+		 NV_ADMA_CTL_HOTPLUG_IEN, mmio + NV_ADMA_CTL);
- 
- 	tmp = readw(mmio + NV_ADMA_CTL);
- 	writew(tmp | NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
--	readl( mmio + NV_ADMA_CTL );	/* flush posted write */
-+	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
- 	udelay(1);
- 	writew(tmp & ~NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
--	readl( mmio + NV_ADMA_CTL );	/* flush posted write */
-+	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
- 
- 	return 0;
- }
-@@ -1100,14 +1094,15 @@ static int nv_adma_port_resume(struct at
- 
- 	/* clear GO for register mode, enable interrupt */
- 	tmp = readw(mmio + NV_ADMA_CTL);
--	writew((tmp & ~NV_ADMA_CTL_GO) | NV_ADMA_CTL_AIEN, mmio + NV_ADMA_CTL);
-+	writew( (tmp & ~NV_ADMA_CTL_GO) | NV_ADMA_CTL_AIEN |
-+		 NV_ADMA_CTL_HOTPLUG_IEN, mmio + NV_ADMA_CTL);
- 
- 	tmp = readw(mmio + NV_ADMA_CTL);
- 	writew(tmp | NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
--	readl( mmio + NV_ADMA_CTL );	/* flush posted write */
-+	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
- 	udelay(1);
- 	writew(tmp & ~NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
--	readl( mmio + NV_ADMA_CTL );	/* flush posted write */
-+	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
- 
- 	return 0;
- }
-@@ -1490,10 +1493,10 @@ static void nv_adma_error_handler(struct
- 		/* Reset channel */
- 		tmp = readw(mmio + NV_ADMA_CTL);
- 		writew(tmp | NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
--		readl( mmio + NV_ADMA_CTL );	/* flush posted write */
-+		readw( mmio + NV_ADMA_CTL );	/* flush posted write */
- 		udelay(1);
- 		writew(tmp & ~NV_ADMA_CTL_CHANNEL_RESET, mmio + NV_ADMA_CTL);
--		readl( mmio + NV_ADMA_CTL );	/* flush posted write */
-+		readw( mmio + NV_ADMA_CTL );	/* flush posted write */
- 	}
- 
- 	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
+ 			if (status & (NV_ADMA_STAT_DONE |
+ 				      NV_ADMA_STAT_CPBERR)) {
++				u32 check_commands = notifier | notifier_error;
++				int pos, error = 0;
+ 				/** Check CPBs for completed commands */
+-
+-				if (ata_tag_valid(ap->active_tag)) {
+-					/* Non-NCQ command */
+-					nv_adma_check_cpb(ap, ap->active_tag,
+-						notifier_error & (1 << ap->active_tag));
+-				} else {
+-					int pos, error = 0;
+-					u32 active = ap->sactive;
+-
+-					while ((pos = ffs(active)) && !error) {
+-						pos--;
+-						error = nv_adma_check_cpb(ap, pos,
+-							notifier_error & (1 << pos) );
+-						active &= ~(1 << pos );
+-					}
++				while ((pos = ffs(check_commands)) && !error) {
++					pos--;
++					error = nv_adma_check_cpb(ap, pos,
++						notifier_error & (1 << pos) );
++					check_commands &= ~(1 << pos );
+ 				}
+ 			}
+ 		}
 
