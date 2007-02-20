@@ -1,47 +1,56 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: fix probe_ent alloc/free bugs
-Date: Tue, 20 Feb 2007 17:37:47 +0900
-Message-ID: <45DAB35B.50005@gmail.com>
-References: <45D710E8.3090104@gmail.com> <1171725374.3379.15.camel@mulgrave.il.steeleye.com> <45D73A55.90008@gmail.com>
+Subject: [PATCH] libata: disable pdev on all suspend events
+Date: Tue, 20 Feb 2007 18:14:48 +0900
+Message-ID: <45DABC08.9030607@gmail.com>
+References: <20070216213153.f6704ff5.akpm@linux-foundation.org> <45D6FE5A.1080603@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:11119 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.226]:20960 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965303AbXBTIhu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Feb 2007 03:37:50 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1893451nze
-        for <linux-ide@vger.kernel.org>; Tue, 20 Feb 2007 00:37:49 -0800 (PST)
-In-Reply-To: <45D73A55.90008@gmail.com>
+	with ESMTP id S1750954AbXBTJOv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Feb 2007 04:14:51 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so1900548nze
+        for <linux-ide@vger.kernel.org>; Tue, 20 Feb 2007 01:14:50 -0800 (PST)
+In-Reply-To: <45D6FE5A.1080603@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Greg KH <greg@kroah.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, pavel@suse.cz
 
-Tejun Heo wrote:
-> ata_probe_ent_alloc() had a temporary hack such that devm_kzalloc()
-> was used for allocation if devres had been previously initialized on
-> the device; otherwise, plain kzalloc() was used.  This was to make the
-> code useable from both the old and devres-aware libata drivers during
-> transition.  This hack made ata_sas_port_alloc() unable to determine
-> how the probe_ent is allocated, causing double free in some cases.
-> 
-> Remove the now-unneeded hack and make ata_sas_port_alloc() use
-> devm_kfree().
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: James Bottomley <James.Bottomley@SteelEye.com>
-> ---
-> James, thanks for the diagnosis and please ack if this fixes the
-> problem.
-> 
-> Jeff, after James' ack, can you please verify this works with a libata
-> driver?  Just loading and unloading a libata LLD should be enough.
-> I'm visiting my hometown for lunar new year's day, so I can't do it
-> till Tuesday.
+libata used disable pdev only on PM_EVENT_SUSPEND while re-enable pdev
+unconditionally.  This was okay before ref-counted pdev enable update
+but it now makes the pdev pinned after swsusp cycle (enabled twice but
+disabled only once) and devres sanity check whines about it.
 
-Okay, verified.  Please apply.
+Fix it by unconditionally disabling pdev on all suspend events.
 
--- 
-tejun
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Pavel, I took your advice and chose to disable unconditionally rather
+than recording the status separately, but I still think it would be
+nice if we can tell the status we're waking from from either the mesg
+itself (say, PM_EVENT_THAW) or recorded prev state.
+
+Both STM and STD are tested.  Please apply.  Thanks.
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 2cf8251..12bde4b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6001,11 +6001,10 @@ int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits)
+ void ata_pci_device_do_suspend(struct pci_dev *pdev, pm_message_t mesg)
+ {
+ 	pci_save_state(pdev);
++	pci_disable_device(pdev);
+ 
+-	if (mesg.event == PM_EVENT_SUSPEND) {
+-		pci_disable_device(pdev);
++	if (mesg.event == PM_EVENT_SUSPEND)
+ 		pci_set_power_state(pdev, PCI_D3hot);
+-	}
+ }
+ 
+ int ata_pci_device_do_resume(struct pci_dev *pdev)
+
