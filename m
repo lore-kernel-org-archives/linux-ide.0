@@ -1,29 +1,32 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_nv: delay on switching between NCQ and non-NCQ commands
-Date: Tue, 20 Feb 2007 11:02:49 -0500
-Message-ID: <45DB1BA9.20501@garzik.org>
-References: <45DA43F6.80201@shaw.ca>
+Subject: Re: [PATCH] sata_via: fix resource-managed iomap conversion
+Date: Tue, 20 Feb 2007 11:03:39 -0500
+Message-ID: <45DB1BDB.3070901@garzik.org>
+References: <20070210010914.GA19717@havoc.gtf.org> <20070210054629.GA4395@gentoox2.trippelsdorf.de> <45CF93D1.9080009@gmail.com> <20070212025843.GA4406@gentoox2.trippelsdorf.de> <45D0B740.9050704@gmail.com> <20070220110153.GO1625@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44219 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44237 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965223AbXBTQCv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Feb 2007 11:02:51 -0500
-In-Reply-To: <45DA43F6.80201@shaw.ca>
+	id S965256AbXBTQDn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Feb 2007 11:03:43 -0500
+In-Reply-To: <20070220110153.GO1625@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Allen Martin <AMartin@nvidia.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Markus Trippelsdorf <markus@trippelsdorf.de>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Robert Hancock wrote:
-> This patch appears to solve some problems with commands timing out in
-> cases where an NCQ command is immediately followed by a non-NCQ command
-> (or possibly vice versa). This is a rather ugly solution, but until we
-> know more about why this is needed, this is about all we can do.
+Tejun Heo wrote:
+> Conversion to resource-managed iomap was buggy causing init failures
+> on both vt6420 and 6421 - BAR5 wasn't mapped for both controllers
+> while on vt6420 sata_via tried to map BAR0-4 twice.  Fix it.
 > 
-> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> I thought I have a vt6421 but mine too was a vt6420.  So, the patch is
+> verified only for vt6420 but, the vt6421 path is pretty obvious and
+> should be correct.  Please apply.
 
 applied
 
