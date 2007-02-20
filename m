@@ -1,54 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/3] libata: fix ata_scmd_need_defer()
-Date: Tue, 20 Feb 2007 23:27:06 +0900
-Message-ID: <20070220142706.GQ1625@htj.dyndns.org>
-References: <20070220142027.GP1625@htj.dyndns.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] (pata-2.6 fix queue) cmd64x: add/fix enablebits
+Date: Tue, 20 Feb 2007 17:28:35 +0300
+Message-ID: <45DB0593.8060500@ru.mvista.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com> <200702150135.28934.sshtylyov@ru.mvista.com> <200702200009.38168.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:31001 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964923AbXBTO1J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Feb 2007 09:27:09 -0500
-Received: by an-out-0708.google.com with SMTP id b33so361758ana
-        for <linux-ide@vger.kernel.org>; Tue, 20 Feb 2007 06:27:09 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20070220142027.GP1625@htj.dyndns.org>
+Received: from h155.mvista.com ([63.81.120.155]:8804 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S964928AbXBTO2p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Feb 2007 09:28:45 -0500
+In-Reply-To: <200702200009.38168.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
-Cc: haebler@gmail.com, lkml@fliagreco.com.ar
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Fix ata_scmd_need_defer() such that...
+Hello.
 
-* whether NCQ is used or not is exactly determined using the same
-  criteria as the issue path.
+Bartlomiej Zolnierkiewicz wrote:
 
-* defer-check is performed in all cases.
+>>The IDE core looks at the wrong bit when checking if the secondary channel is
+>>enabled on PCI0646 -- CFR bit 8 is read-ahead disable, bit 3 is the correct one.
 
-This fixes race condition where turning off NCQ on the fly causes
-non-NCQ commands sneak into NCQ phase.
+> I guess that you meant CNTRL here?
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-scsi.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+    Yeah, and bit 7. :-<
 
-Index: work/drivers/ata/libata-scsi.c
-===================================================================
---- work.orig/drivers/ata/libata-scsi.c
-+++ work/drivers/ata/libata-scsi.c
-@@ -1495,11 +1495,9 @@ static void ata_scsi_qc_complete(struct 
- static int ata_scmd_need_defer(struct ata_device *dev, int is_io)
- {
- 	struct ata_port *ap = dev->ap;
-+	int is_ncq = is_io && ata_ncq_enabled(dev);
- 
--	if (!(dev->flags & ATA_DFLAG_NCQ))
--		return 0;
--
--	if (is_io) {
-+	if (is_ncq) {
- 		if (!ata_tag_valid(ap->active_tag))
- 			return 0;
- 	} else {
+> [ I corrected this in the applied patch ]
+
+>>Starting with PCI0646U chip, the primary channel can also be enbled/disabled --
+>>so, add 'enablebits' initializers to each 'ide_pci_device_t' structure, handling
+>>the original PCI0646 via adding the init_setup() method and clearing the 'reg'
+>>field there if necessary...
+>>
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> applied
+
+    Thanks!
+
+MBR, Sergei
