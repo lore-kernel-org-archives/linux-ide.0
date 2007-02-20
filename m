@@ -1,117 +1,171 @@
-From: "Marc Marais" <marcm@liquid-nexus.net>
-Subject: Re: sata_promise: random/intermittent errors
-Date: Tue, 20 Feb 2007 12:48:12 +0800
-Message-ID: <20070220043735.M42954@liquid-nexus.net>
-References: <200702191026.l1JAQOUV018985@harpo.it.uu.se>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.20-mm2
+Date: Mon, 19 Feb 2007 22:31:51 -0800
+Message-ID: <20070219223151.b3fbe18e.akpm@linux-foundation.org>
+References: <20070217215146.30e7ffa3.akpm@linux-foundation.org>
+	<200702181344.54959.rjw@sisk.pl>
+	<20070218114326.35d7645b.akpm@linux-foundation.org>
+	<200702200220.22721.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from customer-domains.icp-qv1-irony7.iinet.net.au ([203.59.1.128]:45468
-	"EHLO customer-domains.icp-qv1-irony7.iinet.net.au"
+Received: from smtp.osdl.org ([65.172.181.24]:51258 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965104AbXBTEsT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Feb 2007 23:48:19 -0500
-In-Reply-To: <200702191026.l1JAQOUV018985@harpo.it.uu.se>
+	id S1750933AbXBTGcn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Feb 2007 01:32:43 -0500
+In-Reply-To: <200702200220.22721.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Mon, 19 Feb 2007 11:26:24 +0100 (MET), Mikael Pettersson wrote
-> On Mon, 19 Feb 2007 12:43:50 +0800, Marc Marais wrote:
-> > I've decided to post this to the linux-ide list to see if I can get to the
-> > bottom of this problem I'm experiencing with sata_promise and my PATA drives.
+On Tue, 20 Feb 2007 02:20:21 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+
+> On Sunday, 18 February 2007 20:43, Andrew Morton wrote:
+> > On Sun, 18 Feb 2007 13:44:54 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
 > > 
-> > I've pasted a thread from the linux-raid list where I was trying to
-> > troubleshoot/recover a destroyed raid5 array.
+> > > On Sunday, 18 February 2007 06:51, Andrew Morton wrote:
+> > > > 
+> > > > Temporarily at
+> > > > 
+> > > >   http://userweb.kernel.org/~akpm/2.6.20-mm2/
+> > > > 
+> > > > Will appear later at
+> > > > 
+> > > >  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.20/2.6.20-mm2/
+> > > 
+> > > Two problems:
+> > > 
+> > > 1) A showstopper with the root partition on RAID1:
+> > > 
+> > > md: raid1 personality registered for level 1
+> > > [--snip--]
+> > > md: multipath personality registered for level -4
+> > > register_blkdev: failed to get major for mdp
+> > > [--snip--]
+> > > VFS: Cannot open root device "md1" or unknown-block(0,0)
 > > 
-> > First a full history:
-> > 
-> > 1) 2.6.17.13: 3 drive PATA raid5 array with one drive starting to give read
-> > errors (legitimate according to SMART logs).
-> > 2) System lockups (no kernel panic seen) during load - I suspect due to the
-> > read error on the failing drive. 
-> > 3) Decide to upgrade to 2.6.20
-> > 4) Raid5 issues occur (handling of read errors caused md device to die). 
-> > 5) Patch from Neil to fix raid-5 error handling
-> > 6) Replace failed drive and add a new drive at the same time to create a 4
-> > drive PATA array.
-> > 7) Attempt to grow the array from 3 -> 4 devices which failed due to an error
-> > similar to this:
-> > 
-> > ata3: command timeout
-> > ata3: no sense translation for status: 0x40
-> > ata3: translated ATA stat/err 0x40/00 to SCSI SK/ASC/ASCQ 0xb/00/00
-> > ata4: status=0x40 { DriveReady }
-> > sd 3:0:0:0: SCSI error: return code = 0x08000002
-> > sdd: Current [descriptor]: sense key: Aborted Command
-> >      Additional sense: No additional sense information
-> > Descriptor sense data with sense descriptors (in hex):
-> >          72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-> >          00 00 00 00
-> > end_request: I/O error, dev sdc, sector 260419647
-> > 
-> > 8) Raid array is trashed, rebuild array and restore from backup.
-> > 9) From this point on the system is up and running - restored to working
-> > state. However, I'm still getting errors similar to the above during array
-> > accesses (read/write). Not related to load. The array (being synced) manages
-> > to continue operation using another drive. My concern is that this may happen
-> > on a degraded array in future.
-> > 
-> > Note that the error I'm getting (shown above) has happened on sdc and sdd and
-> > at different sectors (i.e. not a consistent read error). Also, the SMART logs
-> > for both drives show NO error at all, short and long SMART tests complete
-> > successfully. I suspect this is an issue in the driver and/or my physical
-> > TX4000 card.
+> > Someone else reported that against mainline.  Can you please debug it a bit?
 > 
-> In the 2.6.20 kernel, 20619/TX4000 is still using the same driver
-> code and (old) error handling code it's been using for ages,
-> i.e., any 20619/TX4000 issues are unrelated to the SATAII and
-> new EH changes that I've done. Therefore I strongly suspect
-> either an old driver bug, or some hardware issue.
+> For now I can only say 2.6.20 + origin.patch breaks.
 > 
-> >From your dmesg log it seems you have at least 7 disks and a DVD
-> drive on two different controllers, an unused AIC7XXX, and an e1000
-> NIC, on a mainboard with a pair of Athlon MPs and 2GB RAM. All that
-> screams "power consumption" and "heat generation". Please make
-> absolutely sure that the PSU and cooling solutions are up to the job.
-> It doesn't hurt to check the cables and that the card is properly
-> seated as well. I'm assuming each drive is jumpered as master and
-> is connected at the far end of its cable?
+> However, it's a SUSE 10.1 system with gcc 4.1.0 and this may be the reason.
+> I'll check that tomorrow.
 
-I have been running this server for several years now in the same
-configuration. I was originally running 4 80G drives and the only difference
-now is they have been upgraded to 4 160G drives. The system is very well
-cooled (CM Stacker case) and has a decent power supply which has been running
-it for some time now.
+Yes, Rolf says this goes away when you stop using gcc-4.1.0.
 
-However, I did reseat all cables and cards and also switched the IDE channels
-around on the TX4000 card. I haven't had an error yet but, like I mentioned,
-they are intermittent.
+I'm hoping that churning the code around like below makes things work
+right.
+
+
+
+From: Andrew Morton <akpm@linux-foundation.org>
+
+Several people have reported failures in dynamic major device number handling
+due to the recent changes in there to avoid handing out the local/experimental
+majors.
+
+Rolf reports that this is due to a gcc-4.1.0 bug.
+
+The patch refactors that code a lot in an attempt to provoke the compiler into
+behaving.
+
+Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ block/genhd.c          |    9 ++-------
+ drivers/base/core.c    |   14 ++++++++++++++
+ fs/char_dev.c          |    8 ++------
+ include/linux/kdev_t.h |    1 +
+ 4 files changed, 19 insertions(+), 13 deletions(-)
+
+diff -puN block/genhd.c~rework-reserved-major-handling block/genhd.c
+--- a/block/genhd.c~rework-reserved-major-handling
++++ a/block/genhd.c
+@@ -5,6 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/fs.h>
+ #include <linux/genhd.h>
++#include <linux/kdev_t.h>
+ #include <linux/kernel.h>
+ #include <linux/blkdev.h>
+ #include <linux/init.h>
+@@ -61,13 +62,7 @@ int register_blkdev(unsigned int major, 
+ 	/* temporary */
+ 	if (major == 0) {
+ 		for (index = ARRAY_SIZE(major_names)-1; index > 0; index--) {
+-			/*
+-			 * Disallow the LANANA-assigned LOCAL/EXPERIMENTAL
+-			 * majors
+-			 */
+-			if ((60 <= index && index <= 63) ||
+-					(120 <= index && index <= 127) ||
+-					(240 <= index && index <= 254))
++			if (is_lanana_major(index))
+ 				continue;
+ 			if (major_names[index] == NULL)
+ 				break;
+diff -puN fs/char_dev.c~rework-reserved-major-handling fs/char_dev.c
+--- a/fs/char_dev.c~rework-reserved-major-handling
++++ a/fs/char_dev.c
+@@ -6,6 +6,7 @@
  
-> It would be very useful if you could move the drives around,
-> so the sdc/sdd drives that experienced errors are moved to the
-> ports now used by sda/sdb. That should tell us if the errors
-> are tied to the drives or the ports.
+ #include <linux/init.h>
+ #include <linux/fs.h>
++#include <linux/kdev_t.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ 
+@@ -108,12 +109,7 @@ __register_chrdev_region(unsigned int ma
+ 	/* temporary */
+ 	if (major == 0) {
+ 		for (i = ARRAY_SIZE(chrdevs)-1; i > 0; i--) {
+-			/*
+-			 * Disallow the LANANA-assigned LOCAL/EXPERIMENTAL
+-			 * majors
+-			 */
+-			if ((60 <= i && i <= 63) || (120 <= i && i <= 127) ||
+-					(240 <= i && i <= 254))
++			if (is_lanana_major(i))
+ 				continue;
+ 			if (chrdevs[i] == NULL)
+ 				break;
+diff -puN drivers/base/core.c~rework-reserved-major-handling drivers/base/core.c
+--- a/drivers/base/core.c~rework-reserved-major-handling
++++ a/drivers/base/core.c
+@@ -28,6 +28,20 @@ int (*platform_notify)(struct device * d
+ int (*platform_notify_remove)(struct device * dev) = NULL;
+ 
+ /*
++ * Detect the LANANA-assigned LOCAL/EXPERIMENTAL majors
++ */
++bool is_lanana_major(unsigned int major)
++{
++	if (major >= 60 && major <= 63)
++		return 1;
++	if (major >= 120 && major <= 127)
++		return 1;
++	if (major >= 240 && major <= 254)
++		return 1;
++	return 0;
++}
++
++/*
+  * sysfs bindings for devices.
+  */
+ 
+diff -puN include/linux/kdev_t.h~rework-reserved-major-handling include/linux/kdev_t.h
+--- a/include/linux/kdev_t.h~rework-reserved-major-handling
++++ a/include/linux/kdev_t.h
+@@ -87,6 +87,7 @@ static inline unsigned sysv_minor(u32 de
+ 	return dev & 0x3ffff;
+ }
+ 
++bool is_lanana_major(unsigned int major);
+ 
+ #else /* __KERNEL__ */
+ 
+_
 
-I will keep monitoring and check if the errors occur on the sda/sdb drives
-since moving the drives around. 
-
-Also, I saw a post on linux-kernel regarding another user seeing these
-'command timeouts' (is that what they are?). If nothing can be done to prevent
-occassional timeouts then at least they need to handled property by retrying
-or whatever is best (I don't proclaim to have much inside knowledge of the
-kernel so have no idea how libata handles errors). In my case, the md layer
-was seeing the error and getting the data off another drive in the array which
-could potential cause a problem if an array is already degraded when this happens.
-
-Oh, and the aic7xxxx card IS being used - by an AIC tape drive ;) 
-
-> /Mikael
-> -
-
-Thanks.
-
-Regards,
-Marc
---
