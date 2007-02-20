@@ -1,33 +1,44 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 3/3] libata: PATA driver	for Celleb
-Date: Tue, 20 Feb 2007 10:47:22 -0500
-Message-ID: <45DB180A.5020302@garzik.org>
-References: <200701260727.l0Q7Rovv019682@toshiba.co.jp>
+Subject: Re: [PATCH] libata bugfix: HDIO_DRIVE_TASK
+Date: Tue, 20 Feb 2007 10:49:05 -0500
+Message-ID: <45DB1871.7050607@garzik.org>
+References: <45CA00EC.7070507@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43980 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:43999 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965171AbXBTPra (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Feb 2007 10:47:30 -0500
-In-Reply-To: <200701260727.l0Q7Rovv019682@toshiba.co.jp>
+	id S965172AbXBTPtI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Feb 2007 10:49:08 -0500
+In-Reply-To: <45CA00EC.7070507@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp, benh@kernel.crashing.org, arnd@arndb.de, paulus@samba.org, linas@austin.ibm.com, jeff@garzik.org, alan@lxorguk.ukuu.org.uk
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Akira Iguchi wrote:
-> This is the patch for PATA controller of Celleb.
+Mark Lord wrote:
+> I was trying to use HDIO_DRIVE_TASK for something today,
+> and discovered that the libata implementation does not copy
+> over the upper four LBA bits from args[6].
 > 
-> This driver uses the managed iomap (devres).
+> This is serious, as any tools using this ioctl would have their
+> commands applied to the wrong sectors on the drive, possibly resulting
+> in disk corruption.
 > 
-> Because this driver needs special taskfile accesses, there is
-> a copy of ata_std_softreset(). ata_dev_try_classify() is exported
-> so that it can be used in this function.
+> Ideally, newer apps should use SG_IO/ATA_16 directly,
+> avoiding this bug.  But with libata poised to displace drivers/ide,
+> better compatibility here is a must.
 > 
-> Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-> Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+> This patch fixes libata to use the upper four LBA bits passed
+> in from the ioctl.
+> 
+> The original drivers/ide implementation copies over all bits
+> except for the master/slave select bit.  With this patch,
+> libata will copy only the four high-order LBA bits,
+> just in case there are assumptions elsewhere in libata (?).
+> 
+> Signed-Off-By:  Mark Lord <mlord@pobox.com>
 
 applied
 
