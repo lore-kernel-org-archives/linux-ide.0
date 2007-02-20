@@ -1,58 +1,71 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH] sata_nv: delay on switching between NCQ and non-NCQ commands
-Date: Mon, 19 Feb 2007 18:42:30 -0600
-Message-ID: <45DA43F6.80201@shaw.ca>
+Subject: [PATCH] libata: warn if speed limited due to 40-wire cable (v2)
+Date: Mon, 19 Feb 2007 18:45:40 -0600
+Message-ID: <45DA44B4.6000209@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:10999 "EHLO
-	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965835AbXBTBAe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Feb 2007 20:00:34 -0500
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965860AbXBTBBX@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Allen Martin <AMartin@nvidia.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+List-Id: linux-ide@vger.kernel.org
 
-This patch appears to solve some problems with commands timing out in
-cases where an NCQ command is immediately followed by a non-NCQ command
-(or possibly vice versa). This is a rather ugly solution, but until we
-know more about why this is needed, this is about all we can do.
+Here's a revised version of my previous patch to warn the user if a
+drive's transfer rate is limited because of a 40-wire cable detection.
+This one hopefully addresses Alan's previous comments - we now do this
+at the very end of the function, and the ugly if condition has been
+cleaned up somewhat. Also, it's been inadvertently tested (it seems that
+pata_amd Nvidia cable detection is broken in current -git..)
 
 Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
---- linux-2.6.20-git6edit/drivers/ata/sata_nv.c.before_hacking	2007-02-15 18:19:13.000000000 -0600
-+++ linux-2.6.20-git6edit/drivers/ata/sata_nv.c	2007-02-15 22:36:02.000000000 -0600
-@@ -219,6 +219,7 @@
- 	void __iomem *		gen_block;
- 	void __iomem *		notifier_clear_block;
- 	u8			flags;
-+	int			last_issue_ncq;
- };
+--- linux-2.6.20-git6/drivers/ata/libata-core.c	2007-02-11 17:31:19.000000000 -0600
++++ linux-2.6.20-git6edit/drivers/ata/libata-core.c	2007-02-13 19:15:58.000000000 -0600
+@@ -3305,19 +3305,7 @@ static void ata_dev_xfermask(struct ata_
+ 	xfer_mask = ata_pack_xfermask(ap->pio_mask,
+ 				      ap->mwdma_mask, ap->udma_mask);
  
- struct nv_host_priv {
-@@ -1260,6 +1261,7 @@
- {
- 	struct nv_adma_port_priv *pp = qc->ap->private_data;
- 	void __iomem *mmio = pp->ctl_block;
-+	int curr_ncq = (qc->tf.protocol == ATA_PROT_NCQ);
+-	/* Apply cable rule here.  Don't apply it early because when
+-	 * we handle hot plug the cable type can itself change.
+-	 */
+-	if (ap->cbl == ATA_CBL_PATA40)
+-		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+-	/* Apply drive side cable rule. Unknown or 80 pin cables reported
+-	 * host side are checked drive side as well. Cases where we know a
+-	 * 40wire cable is used safely for 80 are not checked here.
+-	 */
+-        if (ata_drive_40wire(dev->id) && (ap->cbl == ATA_CBL_PATA_UNK || ap->cbl == ATA_CBL_PATA80))
+-		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+-
+-
++	/* drive modes available */
+ 	xfer_mask &= ata_pack_xfermask(dev->pio_mask,
+ 				       dev->mwdma_mask, dev->udma_mask);
+ 	xfer_mask &= ata_id_xfermask(dev->id);
+@@ -3348,6 +3336,25 @@ static void ata_dev_xfermask(struct ata_
+ 	if (ap->ops->mode_filter)
+ 		xfer_mask = ap->ops->mode_filter(ap, dev, xfer_mask);
  
- 	VPRINTK("ENTER\n");
- 
-@@ -1274,6 +1276,14 @@
- 	/* write append register, command tag in lower 8 bits
- 	   and (number of cpbs to append -1) in top 8 bits */
- 	wmb();
++	/* Apply cable rule here.  Don't apply it early because when
++	 * we handle hot plug the cable type can itself change.
++	 * Check this last so that we know if the transfer rate was
++	 * solely limited by the cable.
++	 * Unknown or 80 wire cables reported host side are checked
++	 * drive side as well. Cases where we know a 40wire cable
++	 * is used safely for 80 are not checked here.
++	 */
++	if (xfer_mask & (0xF8 << ATA_SHIFT_UDMA))
++		/* UDMA/44 or higher would be available */
++		if((ap->cbl == ATA_CBL_PATA40) ||
++   		    (ata_drive_40wire(dev->id) &&
++		     (ap->cbl == ATA_CBL_PATA_UNK ||
++                     ap->cbl == ATA_CBL_PATA80))) {
++		      	ata_dev_printk(dev, KERN_WARNING,
++				 "limited to UDMA/33 due to 40-wire cable\n");
++			xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
++		}
 +
-+	if(curr_ncq != pp->last_issue_ncq) {
-+	   	/* Seems to need some delay before switching between NCQ and non-NCQ
-+		   commands, else we get command timeouts and such. */
-+		udelay(20);
-+		pp->last_issue_ncq = curr_ncq;
-+	}
-+
- 	writew(qc->tag, mmio + NV_ADMA_APPEND);
- 
- 	DPRINTK("Issued tag %u\n",qc->tag);
-
+ 	ata_unpack_xfermask(xfer_mask, &dev->pio_mask,
+ 			    &dev->mwdma_mask, &dev->udma_mask);
+ }
