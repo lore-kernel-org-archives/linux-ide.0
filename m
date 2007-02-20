@@ -1,40 +1,70 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: s/ap->id/ap->print_id/g
-Date: Tue, 20 Feb 2007 11:39:46 -0500
-Message-ID: <45DB2452.9070603@garzik.org>
-References: <20070220160651.GS1625@htj.dyndns.org>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH]: pcmcia - spot slave decode flaws (for testing)
+Date: Tue, 20 Feb 2007 18:18:36 +0000
+Message-ID: <20070220181836.524e5f9a@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44844 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030218AbXBTQjs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Feb 2007 11:39:48 -0500
-In-Reply-To: <20070220160651.GS1625@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030319AbXBTROw@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> ata_port has two different id fields - id and port_no.  id is
-> system-wide 1-based unique id for the port while port_no is 0-based
-> host-wide port number.  The former is primarily used to identify the
-> ATA port to the user in printk messages while the latter is used in
-> various places in libata core and LLDs to index the port inside the
-> host.
-> 
-> The two fields feel quite similar and sometimes ap->id is used in
-> place of ap->port_no, which is very difficult to spot.  This patch
-> renames ap->id to ap->print_id to reduce the possibility of such bugs.
-> 
-> Some printk messages are adjusted such that id string (ata%u[.%u])
-> isn't printed twice and/or to use ata_*_printk() instead of hardcoded
-> id format.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+If you've got a CF adapter or PCMCIA disc which shows up twice in libata
+pata_pcmcia can you try this patch on top of the updates posted. It tries
+to spot when the slave is a mirror of the master and to fix up problems
+that causes.
 
-applied
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.20-mm2/drivers/ata/pata_pcmcia.c linux-2.6.20-mm2/drivers/ata/pata_pcmcia.c
+--- linux.vanilla-2.6.20-mm2/drivers/ata/pata_pcmcia.c	2007-02-20 13:37:58.000000000 +0000
++++ linux-2.6.20-mm2/drivers/ata/pata_pcmcia.c	2007-02-20 14:28:13.000000000 +0000
+@@ -54,6 +54,39 @@
+ 	dev_node_t	node;
+ };
+ 
++/**
++ *	pcmcia_set_mode	-	PCMCIA specific mode setup
++ *	@ap: Port
++ *	@r_failed_dev: Return pointer for failed device
++ *
++ *	Perform the tuning and setup of the devices and timings, which
++ *	for PCMCIA is the same as any other controller. We wrap it however
++ *	as we need to spot hardware with incorrect or missing master/slave
++ *	decode, which alas is embarrassingly common in the PC world
++ */
++ 
++static int pcmcia_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
++{
++	struct ata_device *master = &ap->device[0];
++	struct ata_device *slave = &ap->device[1];
++	
++	if (!ata_dev_enabled(master) || !ata_dev_enabled(slave))
++		return ata_do_set_mode(ap, r_failed_dev);
++		
++	if (memcmp(master->id + ATA_ID_FW_REV,  slave->id + ATA_ID_FW_REV,
++			   ATA_ID_FW_REV_LEN + ATA_ID_PROD_LEN) == 0)
++	{
++		/* Suspicious match, but could be two cards from
++		   the same vendor - check serial */
++		if (memcmp(master->id + ATA_ID_SERNO, slave->id + ATA_ID_SERNO,
++			   ATA_ID_SERNO_LEN) == 0 && master->id[ATA_ID_SERNO] >> 8) {
++			ata_dev_printk(slave, KERN_WARNING, "is a ghost device, ignoring.\n");
++			ata_dev_disable(slave);
++		}	 
++	}
++	return ata_do_set_mode(ap, r_failed_dev);
++}
++
+ static struct scsi_host_template pcmcia_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -73,6 +106,7 @@
+ };
+ 
+ static struct ata_port_operations pcmcia_port_ops = {
++	.set_mode	= pcmcia_set_mode,
+ 	.port_disable	= ata_port_disable,
+ 	.tf_load	= ata_tf_load,
+ 	.tf_read	= ata_tf_read,
