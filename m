@@ -1,51 +1,141 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
-Date: Wed, 21 Feb 2007 03:42:20 +0100
-Message-ID: <200702210342.20775.bzolnier@gmail.com>
-References: <20070221011922.GA1777@freefall.freebsd.org> <200702210244.53514.bzolnier@gmail.com> <3063A690-4E3D-4A6E-A7DC-3E624121FBB8@freebsd.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH] sata_nv: kill old private BMDMA helper functions
+Date: Tue, 20 Feb 2007 21:49:10 -0600
+Message-ID: <45DBC136.9060103@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:13467 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932317AbXBUCgO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Feb 2007 21:36:14 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so954138uga
-        for <linux-ide@vger.kernel.org>; Tue, 20 Feb 2007 18:36:13 -0800 (PST)
-In-Reply-To: <3063A690-4E3D-4A6E-A7DC-3E624121FBB8@freebsd.org>
-Content-Disposition: inline
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:23494 "EHLO
+	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965126AbXBUDvq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Feb 2007 22:51:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suleiman Souhlal <ssouhlal@freebsd.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>
 
+sata_nv implemented its own copies of the BMDMA helper functions for ADMA,
+since the ADMA BMDMA status registers are PIO while the other registers
+are MMIO, and this was the only way to handle this previously. Now that
+we have iomap support, the standard routines should just work, so use them.
+The only thing we need to override as far as ADMA and BMDMA is the
+post_internal_cmd callback, where we should only call ata_post_internal_cmd
+if we are in port-register mode.
 
-Hi,
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-On Wednesday 21 February 2007 03:13, Suleiman Souhlal wrote:
-> 
-> On Feb 20, 2007, at 5:44 PM, Bartlomiej Zolnierkiewicz wrote:
-> 
-> >
-> > On Wednesday 21 February 2007 02:19, Suleiman Souhlal wrote:
-> >> It can be changed via /proc/ide/hd?/settings.
-> >
-> > Why do we need to change IDE DMA timeout dynamically?
-> 
-> I've used it to test error recovery (for example).
+--- linux-2.6.20-git14edit/drivers/ata/sata_nv.c.before_cleanup	2007-02-20 19:42:32.000000000 -0600
++++ linux-2.6.20-git14edit/drivers/ata/sata_nv.c	2007-02-20 19:45:44.000000000 -0600
+@@ -255,10 +255,7 @@
+ static int nv_adma_port_resume(struct ata_port *ap);
+ static void nv_adma_error_handler(struct ata_port *ap);
+ static void nv_adma_host_stop(struct ata_host *host);
+-static void nv_adma_bmdma_setup(struct ata_queued_cmd *qc);
+-static void nv_adma_bmdma_start(struct ata_queued_cmd *qc);
+-static void nv_adma_bmdma_stop(struct ata_queued_cmd *qc);
+-static u8 nv_adma_bmdma_status(struct ata_port *ap);
++static void nv_adma_post_internal_cmd(struct ata_queued_cmd *qc);
+ 
+ enum nv_host_type
+ {
+@@ -433,16 +430,16 @@
+ 	.exec_command		= ata_exec_command,
+ 	.check_status		= ata_check_status,
+ 	.dev_select		= ata_std_dev_select,
+-	.bmdma_setup		= nv_adma_bmdma_setup,
+-	.bmdma_start		= nv_adma_bmdma_start,
+-	.bmdma_stop		= nv_adma_bmdma_stop,
+-	.bmdma_status		= nv_adma_bmdma_status,
++	.bmdma_setup		= ata_bmdma_setup,
++	.bmdma_start		= ata_bmdma_start,
++	.bmdma_stop		= ata_bmdma_stop,
++	.bmdma_status		= ata_bmdma_status,
+ 	.qc_prep		= nv_adma_qc_prep,
+ 	.qc_issue		= nv_adma_qc_issue,
+ 	.freeze			= nv_ck804_freeze,
+ 	.thaw			= nv_ck804_thaw,
+ 	.error_handler		= nv_adma_error_handler,
+-	.post_internal_cmd	= nv_adma_bmdma_stop,
++	.post_internal_cmd	= nv_adma_post_internal_cmd,
+ 	.data_xfer		= ata_data_xfer,
+ 	.irq_handler		= nv_adma_interrupt,
+ 	.irq_clear		= nv_adma_irq_clear,
+@@ -899,73 +896,12 @@
+ 	iowrite8(ioread8(dma_stat_addr), dma_stat_addr);
+ }
+ 
+-static void nv_adma_bmdma_setup(struct ata_queued_cmd *qc)
+-{
+-	struct ata_port *ap = qc->ap;
+-	unsigned int rw = (qc->tf.flags & ATA_TFLAG_WRITE);
+-	struct nv_adma_port_priv *pp = ap->private_data;
+-	u8 dmactl;
+-
+-	if(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE)) {
+-		WARN_ON(1);
+-		return;
+-	}
+-
+-	/* load PRD table addr. */
+-	iowrite32(ap->prd_dma, ap->ioaddr.bmdma_addr + ATA_DMA_TABLE_OFS);
+-
+-	/* specify data direction, triple-check start bit is clear */
+-	dmactl = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+-	dmactl &= ~(ATA_DMA_WR | ATA_DMA_START);
+-	if (!rw)
+-		dmactl |= ATA_DMA_WR;
+-
+-	iowrite8(dmactl, ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+-
+-	/* issue r/w command */
+-	ata_exec_command(ap, &qc->tf);
+-}
+-
+-static void nv_adma_bmdma_start(struct ata_queued_cmd *qc)
+-{
+-	struct ata_port *ap = qc->ap;
+-	struct nv_adma_port_priv *pp = ap->private_data;
+-	u8 dmactl;
+-
+-	if(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE)) {
+-		WARN_ON(1);
+-		return;
+-	}
+-
+-	/* start host DMA transaction */
+-	dmactl = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+-	iowrite8(dmactl | ATA_DMA_START,
+-		 ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+-}
+-
+-static void nv_adma_bmdma_stop(struct ata_queued_cmd *qc)
++static void nv_adma_post_internal_cmd(struct ata_queued_cmd *qc)
+ {
+-	struct ata_port *ap = qc->ap;
+-	struct nv_adma_port_priv *pp = ap->private_data;
+-
+-	if(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE))
+-		return;
+-
+-	/* clear start/stop bit */
+-	iowrite8(ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD) & ~ATA_DMA_START,
+-		 ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+-
+-	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
+-	ata_altstatus(ap);        /* dummy read */
+-}
+-
+-static u8 nv_adma_bmdma_status(struct ata_port *ap)
+-{
+-	struct nv_adma_port_priv *pp = ap->private_data;
+-
+-	WARN_ON(!(pp->flags & NV_ADMA_PORT_REGISTER_MODE));
++	struct nv_adma_port_priv *pp = qc->ap->private_data;
+ 
+-	return ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
++	if(pp->flags & NV_ADMA_PORT_REGISTER_MODE)
++		ata_bmdma_post_internal_cmd(qc);
+ }
+ 
+ static int nv_adma_port_start(struct ata_port *ap)
 
-Seems quite useable for developers but I would prefer not to
-expose it in production kernels for end users.
-
-> > BTW /proc/ide/hd?/settings is obsoleted
-> 
-> What's the preferred way of changing such settings, these days?
-
-sysfs
-
-ide.c:ide_dev_attrs[] for generic attributes valid for all devices
-
-Thanks,
-Bart
