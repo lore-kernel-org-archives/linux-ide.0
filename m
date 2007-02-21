@@ -1,46 +1,83 @@
-From: Greg KH <greg@kroah.com>
-Subject: [patch 10/21] ide: fix drive side 80c cable check
-Date: Tue, 20 Feb 2007 17:37:41 -0800
-Message-ID: <20070221013741.GK30227@kroah.com>
-References: <20070221012758.925122216@mini.kroah.org>
+From: Suleiman Souhlal <ssouhlal@FreeBSD.org>
+Subject: [PATCH 1/3] Make the IDE DMA timeout modifiable
+Date: Wed, 21 Feb 2007 01:19:22 +0000
+Message-ID: <20070221011922.GA1777@freefall.freebsd.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751083AbXBUBkB@vger.kernel.org>
-Content-Disposition: inline; filename="ide-fix-drive-side-80c-cable-check.patch"
-In-Reply-To: <20070221013619.GA30227@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, Tejun Heo <htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hub.freebsd.org ([69.147.83.54]:25181 "EHLO hub.freebsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751090AbXBUBmh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Feb 2007 20:42:37 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
--stable review patch.  If anyone has any objections, please let us know.
+It can be changed via /proc/ide/hd?/settings.
 
-------------------
-
-eighty_ninty_three() had word 93 validitity check but not the 80c bit
-test itself (bit 12).  This increases the chance of incorrect wire
-detection especially because host side cable detection is often
-unreliable and we sometimes soley depend on drive side cable
-detection.  Fix it.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Acked-by: Alan <alan@lxorguk.ukuu.org.uk>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Signed-off-by:	Ed Falk <efalk@google.com>
 
 ---
- drivers/ide/ide-iops.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ide/ide-dma.c |    3 ++-
+ drivers/ide/ide.c     |    2 ++
+ include/linux/ide.h   |    3 +++
+ 3 files changed, 7 insertions(+), 1 deletions(-)
 
---- linux-2.6.19.4.orig/drivers/ide/ide-iops.c
-+++ linux-2.6.19.4/drivers/ide/ide-iops.c
-@@ -607,6 +607,8 @@ u8 eighty_ninty_three (ide_drive_t *driv
- 	if(!(drive->id->hw_config & 0x4000))
- 		return 0;
- #endif /* CONFIG_IDEDMA_IVB */
-+	if (!(drive->id->hw_config & 0x2000))
-+		return 0;
- 	return 1;
+diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
+index 08e7cd0..a8da725 100644
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -579,7 +579,8 @@ EXPORT_SYMBOL_GPL(ide_dma_setup);
+ static void ide_dma_exec_cmd(ide_drive_t *drive, u8 command)
+ {
+ 	/* issue cmd to drive */
+-	ide_execute_command(drive, command, &ide_dma_intr, 2*WAIT_CMD, dma_timer_expiry);
++	ide_execute_command(drive, command, &ide_dma_intr, drive->dma_timeout,
++	    dma_timer_expiry);
  }
  
+ void ide_dma_start(ide_drive_t *drive)
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+index b3c0818..ca841f2 100644
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -245,6 +245,7 @@ static void init_hwif_data(ide_hwif_t *h
+ 		drive->name[1]			= 'd';
+ 		drive->name[2]			= 'a' + (index * MAX_DRIVES) + unit;
+ 		drive->max_failures		= IDE_DEFAULT_MAX_FAILURES;
++		drive->dma_timeout		= WAIT_DMA;
+ 		drive->using_dma		= 0;
+ 		drive->vdma			= 0;
+ 		INIT_LIST_HEAD(&drive->list);
+@@ -1197,6 +1198,7 @@ void ide_add_generic_settings (ide_drive
+ 	__ide_add_setting(drive,	"init_speed",		SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	70,				1,		1,		&drive->init_speed,		NULL,		0);
+ 	__ide_add_setting(drive,	"current_speed",	SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	70,				1,		1,		&drive->current_speed,		set_xfer_rate,	0);
+ 	__ide_add_setting(drive,	"number",		SETTING_RW,					-1,			-1,			TYPE_BYTE,	0,	3,				1,		1,		&drive->dn,			NULL,		0);
++	__ide_add_setting(drive,	"dma_timeout",		SETTING_RW,					-1,			-1,			TYPE_INT,	0,	2000000000,			1,		1,		&drive->dma_timeout,		NULL,		0);
+ }
+ 
+ /**
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 79c0282..3861753 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -183,6 +183,7 @@ #define WAIT_READY	(5*HZ)		/* 5sec - som
+ #define WAIT_PIDENTIFY	(10*HZ)	/* 10sec  - should be less than 3ms (?), if all ATAPI CD is closed at boot */
+ #define WAIT_WORSTCASE	(30*HZ)	/* 30sec  - worst case when spinning up */
+ #define WAIT_CMD	(10*HZ)	/* 10sec  - maximum wait for an IRQ to happen */
++#define WAIT_DMA	(20*HZ)	/* 20sec  - maximum wait for an IRQ to happen */
+ #define WAIT_MIN_SLEEP	(2*HZ/100)	/* 20msec - minimum sleep time */
+ 
+ /*
+@@ -638,6 +639,8 @@ typedef struct ide_drive_s {
+ 	unsigned int	drive_data;	/* use by tuneproc/selectproc */
+ 	unsigned int	failures;	/* current failure count */
+ 	unsigned int	max_failures;	/* maximum allowed failure count */
++	int		dma_timeout;	/* number of jiffies to wait for a
++					  dma to complete */
+ 	u64		probed_capacity;/* initial reported media capacity (ide-cd only currently) */
+ 
+ 	u64		capacity64;	/* total number of sectors */
 
---
