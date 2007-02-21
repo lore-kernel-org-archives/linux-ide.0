@@ -1,98 +1,68 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: fix remaining ap->id
-Date: Wed, 21 Feb 2007 16:36:33 +0900
-Message-ID: <20070221073633.GW1625@htj.dyndns.org>
+Subject: Re: [PATCH RFC] libata: FUA updates
+Date: Wed, 21 Feb 2007 16:57:54 +0900
+Message-ID: <45DBFB82.3090504@gmail.com>
+References: <45DA4E13.10700@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.225]:42716 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161034AbXBUHgg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 02:36:36 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so2161911nze
-        for <linux-ide@vger.kernel.org>; Tue, 20 Feb 2007 23:36:35 -0800 (PST)
-Content-Disposition: inline
+Received: from py-out-1112.google.com ([64.233.166.183]:9706 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbXBUH56 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 02:57:58 -0500
+Received: by py-out-1112.google.com with SMTP id a29so1131838pyi
+        for <linux-ide@vger.kernel.org>; Tue, 20 Feb 2007 23:57:57 -0800 (PST)
+In-Reply-To: <45DA4E13.10700@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Merge order left libata-acpi and pata_scc with remainling usage of
-ap->id.  Kill superflous id printing and substitute the remaining ones
-with ap->print_id.
+Robert Hancock wrote:
+> This updates libata FUA support to be more more in line with reality.
+> FUA support remains off by default.
+> 
+> Add a setting for the fua command-line parameter on libata which enables
+> FUA only on NCQ-supporting disks.
+> 
+> Update the ata_dev_supports_fua function to remove the blacklisting of
+> Maxtor BANC1G10 firmware, as there is no conclusive evidence it was ever
+> needed.
+> 
+> Centralize all of the FUA on/off decisions in this function.
+> 
+> Bypass the checks for FUA command support bit for NCQ disks, since that
+> bit only applies to non-NCQ FUA, and FUA is part of the spec for NCQ
+> commands.
+> 
+> When queue depth is set by the user resulting in enabling/disabling
+> NCQ, trigger a revalidate so that the FUA state will be rechecked,
+> since disabling/enabling NCQ may also affect FUA support on some disks.
+> 
+> Add a controller flag to indicate it doesn't support FUA commands, and
+> set this flag for Silicon Image 311x (since that one is known to have
+> problems) as well as for ITE821x when in smart mode.
+> 
+> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Yeap, I like the clean up.  Just a few comments.
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index b4e8be5..1bdf7a2 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -294,9 +294,8 @@ static int do_drive_get_GTF(struct ata_port *ap, int ix,
- 		return 0;
- 
- 	if (ata_msg_probe(ap))
--		ata_dev_printk(atadev, KERN_DEBUG,
--			"%s: ENTER: ap->id: %d, port#: %d\n",
--			__FUNCTION__, ap->id, ap->port_no);
-+		ata_dev_printk(atadev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
-+			       __FUNCTION__, ap->port_no);
- 
- 	if (!ata_dev_enabled(atadev) || (ap->flags & ATA_FLAG_DISABLED)) {
- 		if (ata_msg_probe(ap))
-@@ -521,9 +520,8 @@ static int do_drive_set_taskfiles(struct ata_port *ap,
- 	struct taskfile_array	*gtf;
- 
- 	if (ata_msg_probe(ap))
--		ata_dev_printk(atadev, KERN_DEBUG,
--			"%s: ENTER: ap->id: %d, port#: %d\n",
--			__FUNCTION__, ap->id, ap->port_no);
-+		ata_dev_printk(atadev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
-+			       __FUNCTION__, ap->port_no);
- 
- 	if (noacpi || !(ap->cbl == ATA_CBL_SATA))
- 		return 0;
-@@ -627,9 +625,8 @@ int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
- 		return 0;
- 
- 	if (ata_msg_probe(ap))
--		ata_dev_printk(atadev, KERN_DEBUG,
--			"%s: ap->id: %d, ix = %d, port#: %d\n",
--			__FUNCTION__, ap->id, ix, ap->port_no);
-+		ata_dev_printk(atadev, KERN_DEBUG, "%s: ix = %d, port#: %d\n",
-+			       __FUNCTION__, ix, ap->port_no);
- 
- 	/* Don't continue if not a SATA device. */
- 	if (!(ap->cbl == ATA_CBL_SATA)) {
-@@ -685,9 +682,8 @@ int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
- 	if (err < 0) {
- 		if (ata_msg_probe(ap))
- 			ata_dev_printk(atadev, KERN_DEBUG,
--				"ata%u(%u): %s _SDD error: status = 0x%x\n",
--				ap->id, ap->device->devno,
--				__FUNCTION__, status);
-+				       "%s _SDD error: status = 0x%x\n",
-+				       __FUNCTION__, status);
- 	}
- 
- 	/* always return success */
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index 049a3a2..de04042 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -366,7 +366,7 @@ static void scc_tf_read (struct ata_port *ap, struct ata_taskfile *tf)
- static void scc_exec_command (struct ata_port *ap,
- 			      const struct ata_taskfile *tf)
- {
--	DPRINTK("ata%u: cmd 0x%X\n", ap->id, tf->command);
-+	DPRINTK("ata%u: cmd 0x%X\n", ap->print_id, tf->command);
- 
- 	out_be32(ap->ioaddr.command_addr, tf->command);
- 	ata_pause(ap);
-@@ -542,7 +542,7 @@ static unsigned int scc_bus_softreset (struct ata_port *ap,
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
--	DPRINTK("ata%u: bus reset via SRST\n", ap->id);
-+	DPRINTK("ata%u: bus reset via SRST\n", ap->print_id);
- 
- 	/* software reset.  causes dev0 to be selected */
- 	out_be32(ioaddr->ctl_addr, ap->ctl);
+* s/if(/if (/
+
+* The patch adds a number of trailing white spaces.  I suggest using git
+or quilt for patch management.  They complain when they see such things.
+
+I'm still not so sure about NCQ FUA.  I still think that separate opcode
+for FUA ops is the right thing to do (tm), well, or the safer thing to
+do (tm).  Regarding drives which support NCQ but not separate opcode for
+FUA, unless many drives are like that, I don't think the loss is too
+great.  Also, I'm more uncomfortable with trusting those drives doing
+NCQ FUA properly.
+
+Let's talk about this on the other thread.
+
+Thanks.
+
+-- 
+tejun
