@@ -1,43 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Wed, 21 Feb 2007 22:19:27 +0900
-Message-ID: <45DC46DF.8030704@gmail.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>	 <8d158e1f0702160056j11ab6df1v99b4d72866f3e1b2@mail.gmail.com>	 <45D574B1.8080109@tw.ibm.com>	 <8d158e1f0702160148v366ce96bm8e3ff3e7c64a7198@mail.gmail.com>	 <45D58270.4080909@tw.ibm.com>	 <8d158e1f0702170236h51756aadh6539f5d782774764@mail.gmail.com>	 <45DAD8DA.4000108@gmail.com>	 <8d158e1f0702200405w6a0e817bx3d809540d28b843d@mail.gmail.com>	 <8d158e1f0702201400w622bbcb2lc7711b5c8974bfcd@mail.gmail.com>	 <45DBEB63.3010905@gmail.com> <8d158e1f0702210447q4ee8526cke05a76f895ad824c@mail.gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: libata FUA revisited
+Date: Wed, 21 Feb 2007 08:06:07 -0600
+Message-ID: <45DC51CF.7090202@shaw.ca>
+References: <fa.S80SRyQbD/hm4SxliPUKU88BaCo@ifi.uio.no>
+ <fa.Q/csgyCHkAsD84yi+bN78H1WNNM@ifi.uio.no> <45D104F3.7040602@shaw.ca>
+ <45D1D72D.9020509@gmail.com> <45D252CD.5010303@shaw.ca>
+ <45D25CF2.5030508@gmail.com> <20070215180023.GA4438@kernel.dk>
+ <45D9FE7B.60909@shaw.ca> <45DC04DF.8040002@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.239]:15495 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161213AbXBUNTa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 08:19:30 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so2338276wxd
-        for <linux-ide@vger.kernel.org>; Wed, 21 Feb 2007 05:19:29 -0800 (PST)
-In-Reply-To: <8d158e1f0702210447q4ee8526cke05a76f895ad824c@mail.gmail.com>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:20999 "EHLO
+	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161248AbXBUOHJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 09:07:09 -0500
+In-reply-to: <45DC04DF.8040002@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patrick Ale <patrick.ale@gmail.com>
-Cc: albertl@mail.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, edmudama@gmail.com, Nicolas.Mailhot@LaPoste.net, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Ric Wheeler <ric@emc.com>, Dongjun Shin <d.j.shin@samsung.com>, Hannes Reinecke <hare@suse.de>
 
-Patrick Ale wrote:
-> On 2/21/07, Tejun Heo <htejun@gmail.com> wrote:
+Tejun Heo wrote:
+>> Aside from the issue above, as I mentioned elsewhere, lots of NCQ drives
+>> don't support non-NCQ FUA writes..
 > 
->>
->> That's normal but your drives are failing classification.  Can you
->> please apply the attached patch and report what the kernel says.  You
->> can turn off DEBUG options.
-> 
-> Hi,
-> 
-> The patch fails on both 2.6.20 and the linus-upstream source.
-> patching file drivers/ata/libata-core.c
-> Hunk #1 FAILED at 716.
-> 1 out of 1 hunk FAILED -- saving rejects to file
-> drivers/ata/libata-core.c.rej
-> 
-> I see only two lines have to be added, can I do this manualy?
+> To me, using the NCQ FUA bit on such drives doesn't seem to be a good
+> idea.  Maybe I'm just too chicken but it's not like we can gain a lot
+> from doing FUA at this point.  Are there a lot of drives which support
+> NCQ but not FUA opcodes?
 
-Sure.  Thanks.
+Well, it's hard to say whether "lots" have this issue, but the ones I 
+have in my machine, Seagate 7200.7 NCQ 160GB (ST3160827AS) and 7200.10 
+320GB (ST3320620AS), both support NCQ and don't support non-NCQ FUA, and 
+those (especially the latter) seem to be very popular models.
+
+Likely Seagate didn't implement that command since they figured nobody 
+would use that if they had NCQ..
 
 -- 
-tejun
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
+
