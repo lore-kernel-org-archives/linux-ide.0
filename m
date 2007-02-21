@@ -1,89 +1,98 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/5] ahci: consider SDB FIS containing spurious NCQ completions HSM violation (regenerated)
-Date: Wed, 21 Feb 2007 16:34:25 +0900
-Message-ID: <20070221073425.GV1625@htj.dyndns.org>
-References: <11704009511903-git-send-email-htejun@gmail.com> <45DB17F2.5000707@garzik.org>
+Subject: [PATCH] libata: fix remaining ap->id
+Date: Wed, 21 Feb 2007 16:36:33 +0900
+Message-ID: <20070221073633.GW1625@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:64575 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161023AbXBUHei (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 02:34:38 -0500
-Received: by py-out-1112.google.com with SMTP id a29so1129258pyi
-        for <linux-ide@vger.kernel.org>; Tue, 20 Feb 2007 23:34:38 -0800 (PST)
+Received: from nz-out-0506.google.com ([64.233.162.225]:42716 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161034AbXBUHgg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 02:36:36 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so2161911nze
+        for <linux-ide@vger.kernel.org>; Tue, 20 Feb 2007 23:36:35 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <45DB17F2.5000707@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: alan@lxorguk.ukuu.org.uk, ric@emc.com, edmudama@gmail.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-SDB FIS containing spurious NCQ completions is a clear protocol
-violation.  Currently, only some Maxtors with early firmware revisions
-are showing this problem.  Those firmwares have other NCQ related
-problems including buggy NCQ error reporting and occasional lock up
-after NCQ errors.
-
-Consider spurious NCQ completions HSM violation and freeze the port
-after it.  EH will turn off NCQ after this happens several times.
-Eventually drives which show this behavior should be blacklisted for
-NCQ.
+Merge order left libata-acpi and pata_scc with remainling usage of
+ap->id.  Kill superflous id printing and substitute the remaining ones
+with ap->print_id.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-Regenerated against the current #upstream
-(b216f3f887bb3e73808250841035a6fc4f6fc9e0).
 
-Thanks.
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 6a3543e..334f54c 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -198,7 +198,6 @@ struct ahci_port_priv {
- 	void			*rx_fis;
- 	dma_addr_t		rx_fis_dma;
- 	/* for NCQ spurious interrupt analysis */
--	int			ncq_saw_spurious_sdb_cnt;
- 	unsigned int		ncq_saw_d2h:1;
- 	unsigned int		ncq_saw_dmas:1;
- };
-@@ -1160,23 +1159,24 @@ static void ahci_host_intr(struct ata_port *ap)
- 		known_irq = 1;
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index b4e8be5..1bdf7a2 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -294,9 +294,8 @@ static int do_drive_get_GTF(struct ata_port *ap, int ix,
+ 		return 0;
+ 
+ 	if (ata_msg_probe(ap))
+-		ata_dev_printk(atadev, KERN_DEBUG,
+-			"%s: ENTER: ap->id: %d, port#: %d\n",
+-			__FUNCTION__, ap->id, ap->port_no);
++		ata_dev_printk(atadev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
++			       __FUNCTION__, ap->port_no);
+ 
+ 	if (!ata_dev_enabled(atadev) || (ap->flags & ATA_FLAG_DISABLED)) {
+ 		if (ata_msg_probe(ap))
+@@ -521,9 +520,8 @@ static int do_drive_set_taskfiles(struct ata_port *ap,
+ 	struct taskfile_array	*gtf;
+ 
+ 	if (ata_msg_probe(ap))
+-		ata_dev_printk(atadev, KERN_DEBUG,
+-			"%s: ENTER: ap->id: %d, port#: %d\n",
+-			__FUNCTION__, ap->id, ap->port_no);
++		ata_dev_printk(atadev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
++			       __FUNCTION__, ap->port_no);
+ 
+ 	if (noacpi || !(ap->cbl == ATA_CBL_SATA))
+ 		return 0;
+@@ -627,9 +625,8 @@ int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
+ 		return 0;
+ 
+ 	if (ata_msg_probe(ap))
+-		ata_dev_printk(atadev, KERN_DEBUG,
+-			"%s: ap->id: %d, ix = %d, port#: %d\n",
+-			__FUNCTION__, ap->id, ix, ap->port_no);
++		ata_dev_printk(atadev, KERN_DEBUG, "%s: ix = %d, port#: %d\n",
++			       __FUNCTION__, ix, ap->port_no);
+ 
+ 	/* Don't continue if not a SATA device. */
+ 	if (!(ap->cbl == ATA_CBL_SATA)) {
+@@ -685,9 +682,8 @@ int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
+ 	if (err < 0) {
+ 		if (ata_msg_probe(ap))
+ 			ata_dev_printk(atadev, KERN_DEBUG,
+-				"ata%u(%u): %s _SDD error: status = 0x%x\n",
+-				ap->id, ap->device->devno,
+-				__FUNCTION__, status);
++				       "%s _SDD error: status = 0x%x\n",
++				       __FUNCTION__, status);
  	}
  
--	if (status & PORT_IRQ_SDB_FIS &&
--		   pp->ncq_saw_spurious_sdb_cnt < 10) {
-+	if (status & PORT_IRQ_SDB_FIS) {
- 		/* SDB FIS containing spurious completions might be
--		 * dangerous, we need to know more about them.  Print
--		 * more of it.
--		 */
-+		 * dangerous, whine and fail commands with HSM
-+		 * violation.  EH will turn off NCQ after several such
-+		 * failures.
-+  		 */
- 		const __le32 *f = pp->rx_fis + RX_FIS_SDB;
+ 	/* always return success */
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index 049a3a2..de04042 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -366,7 +366,7 @@ static void scc_tf_read (struct ata_port *ap, struct ata_taskfile *tf)
+ static void scc_exec_command (struct ata_port *ap,
+ 			      const struct ata_taskfile *tf)
+ {
+-	DPRINTK("ata%u: cmd 0x%X\n", ap->id, tf->command);
++	DPRINTK("ata%u: cmd 0x%X\n", ap->print_id, tf->command);
  
--		ata_port_printk(ap, KERN_INFO, "Spurious SDB FIS during NCQ "
--				"issue=0x%x SAct=0x%x FIS=%08x:%08x%s\n",
--				readl(port_mmio + PORT_CMD_ISSUE),
--				readl(port_mmio + PORT_SCR_ACT),
--				le32_to_cpu(f[0]), le32_to_cpu(f[1]),
--				pp->ncq_saw_spurious_sdb_cnt < 10 ?
--				"" : ", shutting up");
-+		ata_ehi_push_desc(ehi, "spurious completion during NCQ "
-+				  "issue=0x%x SAct=0x%x FIS=%08x:%08x",
-+				  readl(port_mmio + PORT_CMD_ISSUE),
-+				  readl(port_mmio + PORT_SCR_ACT),
-+				  le32_to_cpu(f[0]), le32_to_cpu(f[1]));
-+
-+		ehi->err_mask |= AC_ERR_HSM;
-+		ehi->action |= ATA_EH_SOFTRESET;
-+		ata_port_freeze(ap);
+ 	out_be32(ap->ioaddr.command_addr, tf->command);
+ 	ata_pause(ap);
+@@ -542,7 +542,7 @@ static unsigned int scc_bus_softreset (struct ata_port *ap,
+ {
+ 	struct ata_ioports *ioaddr = &ap->ioaddr;
  
--		pp->ncq_saw_spurious_sdb_cnt++;
- 		known_irq = 1;
- 	}
+-	DPRINTK("ata%u: bus reset via SRST\n", ap->id);
++	DPRINTK("ata%u: bus reset via SRST\n", ap->print_id);
  
+ 	/* software reset.  causes dev0 to be selected */
+ 	out_be32(ioaddr->ctl_addr, ap->ctl);
