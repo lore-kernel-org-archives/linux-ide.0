@@ -1,31 +1,27 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_pcmcia: Update device table
-Date: Wed, 21 Feb 2007 15:38:07 +0000
-Message-ID: <20070221153807.71e34cde@lxorguk.ukuu.org.uk>
-References: <20070218085225.447.95141.sendpatchset@va-lsv.local.valinux.co.jp>
+Subject: Re: [PATCH] libata: Remove duplicate dma blacklist entry
+Date: Wed, 21 Feb 2007 15:38:29 +0000
+Message-ID: <20070221153829.4c880577@lxorguk.ukuu.org.uk>
+References: <20070218085332.623.18005.sendpatchset@va-lsv.local.valinux.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20070218085225.447.95141.sendpatchset@va-lsv.local.valinux.co.jp>
-List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, Magnus Damm <damm@opensource.se>, linux-pcmcia@lists.infradead.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34141 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751262AbXBUOfl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 09:35:41 -0500
+In-Reply-To: <20070218085332.623.18005.sendpatchset@va-lsv.local.valinux.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, akpm@osdl.org, Magnus Damm <damm@opensource.se>, bzolnier@gmail.com
 
-On Sun, 18 Feb 2007 17:52:25 +0900
+On Sun, 18 Feb 2007 17:53:32 +0900
 Magnus Damm <damm@opensource.se> wrote:
 
-> pata_pcmcia: Update device table
+> libata: Remove duplicate dma blacklist entry
 > 
-> Add CFA devices from I-O Data, Mitsubishi and Viking. Add SanDisk comment.
+> The exact same entry is already present.
 > 
 > Signed-off-by: Magnus Damm <damm@opensource.se>
 
