@@ -1,45 +1,82 @@
-From: "Patrick Ale" <patrick.ale@gmail.com>
-Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Wed, 21 Feb 2007 16:36:45 +0100
-Message-ID: <8d158e1f0702210736m43ebcbf0r6c50647f8ff92137@mail.gmail.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>
-	 <45D58270.4080909@tw.ibm.com>
-	 <8d158e1f0702170236h51756aadh6539f5d782774764@mail.gmail.com>
-	 <45DAD8DA.4000108@gmail.com>
-	 <8d158e1f0702200405w6a0e817bx3d809540d28b843d@mail.gmail.com>
-	 <8d158e1f0702201400w622bbcb2lc7711b5c8974bfcd@mail.gmail.com>
-	 <45DBEB63.3010905@gmail.com>
-	 <8d158e1f0702210447q4ee8526cke05a76f895ad824c@mail.gmail.com>
-	 <45DC46DF.8030704@gmail.com>
-	 <8d158e1f0702210725u2f7d8d54nc5036e496d51b9d0@mail.gmail.com>
+From: Leopold Palomo-Avellaneda <lepalom@wol.es>
+Subject: Re: Sata_via problems in a Vintage2-AE1: Resume
+Date: Wed, 21 Feb 2007 16:56:18 +0100
+Message-ID: <200702211656.20120.lepalom@wol.es>
+References: <200702090010.06897.lepalom@wol.es> <200702151223.19333.lepalom@wol.es> <45DC3018.7010704@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:40246 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161297AbXBUPgr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 10:36:47 -0500
-Received: by wr-out-0506.google.com with SMTP id i21so2222847wra
-        for <linux-ide@vger.kernel.org>; Wed, 21 Feb 2007 07:36:46 -0800 (PST)
-In-Reply-To: <8d158e1f0702210725u2f7d8d54nc5036e496d51b9d0@mail.gmail.com>
+Received: from violet.upc.es ([147.83.2.51]:49206 "EHLO violet.upc.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161310AbXBUP4g convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Feb 2007 10:56:36 -0500
+In-Reply-To: <45DC3018.7010704@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: albertl@mail.com, linux-ide@vger.kernel.org
+Cc: Jean Delvare <jdelvare@suse.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
 
-On 2/21/07, Patrick Ale <patrick.ale@gmail.com> wrote:
-> On 2/21/07, Tejun Heo <htejun@gmail.com> wrote:
-
-[snippet]
-> sd 7:0:1:0: Attached scsi generic sg6 type 0
+A Dimecres 21 Febrer 2007 12:42, Tejun Heo va escriure:
+> Leopold Palomo-Avellaneda wrote:
+> > A Dimarts 13 Febrer 2007 17:19, Jean Delvare va escriure:
+> >> Le Mardi 13 F=E9vrier 2007 17:11, Leopold Palomo-Avellaneda a =E9c=
+rit :
+> >>> A Dimarts 13 Febrer 2007 12:20, Jean Delvare va escriure:
+> >>> (...)
+> >>>
+> >>>>>> *If* the VT8251 needs the VIA IRQ quirk, then the attached pat=
+ch
+> >>>>>> may help. Leopold, can you give it a try?
+> >>>>>
+> >>>>> Well, making your patch to the vanilla 2.6.20 the result is the=
+ same.
+> >>>>> The box doesn't boot. Always the same problem ....
+> >>>>
+> >>>> If it's not a VIA IRQ problem, then there's nothing more I can d=
+o,
+> >>>> sorry. Someone else will have to look into the problem.
+> >>>>
+> >>>> Out of curiosity, with my patch applied, did you see any "VIA VL=
+ink
+> >>>> IRQ fixup" messages on the console?
+> >>>
+> >>> No :-(
+> >>
+> >> OK, so maybe the VT8251 actually no longer needs the quirk. Thanks=
+ for
+> >> testing and reporting.
+> >
+> > Hi people,
+> >
+> > arriving to this state. What do you recommend?
+> >
+> > I have the box more or less working with irqpoll but with a lot of
+> > messages: APIC error on CPU0: 08(08)
+> >
+> > and the box doesn't boot without the irqpoll option. Do you think t=
+hat
+> > the 2.6.21 have some kind of changes in this area?
+> >
+> > Thank's for all for you patience and your messages.
 >
+> I'm sorry but I'm clueless other than that it seems to be an irq rout=
+ing
+> problem.
 >
-> Patrick
->
+> Any ideas, people?
 
-Should I start worrying allready? I mean.. does this mean both disks
-are (soon to be) dead?
+Now, I have tested the 2.6.21-rc1 with the same result. Not boot....
+I have one doubt, and maybe Mr Garzik could answer it. The changes in t=
+he=20
+ahci.c and sata_via.c for the 2.6.16 that I commented in a previous mai=
+ls are=20
+incorporated in the next versions?=20
+Because all of us has presumed that yes, are equal and maybe not .....
 
-Patrick
+Regards,
+
+Thank's for all your patience ....
+
+Leo
