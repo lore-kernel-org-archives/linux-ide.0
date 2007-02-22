@@ -1,50 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: add NCQ blacklist entries from Silicon Image
- Windows driver
-Date: Thu, 22 Feb 2007 01:57:11 -0500
-Message-ID: <45DD3EC7.3050801@garzik.org>
-References: <45DD2EC9.4050403@shaw.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] sata_nv: complain on spurious completion notifiers
+Date: Thu, 22 Feb 2007 16:09:07 +0900
+Message-ID: <45DD4193.6020802@gmail.com>
+References: <45DD2FBF.1040808@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34446 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751448AbXBVG5R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Feb 2007 01:57:17 -0500
-In-Reply-To: <45DD2EC9.4050403@shaw.ca>
+Received: from py-out-1112.google.com ([64.233.166.178]:19109 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbXBVHJP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Feb 2007 02:09:15 -0500
+Received: by py-out-1112.google.com with SMTP id a29so44032pyi
+        for <linux-ide@vger.kernel.org>; Wed, 21 Feb 2007 23:09:14 -0800 (PST)
+In-Reply-To: <45DD2FBF.1040808@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>
 
 Robert Hancock wrote:
-> This patch adds in some NCQ blacklist entries taken from the Silicon
-> Image Windows drivers' .inf files for the 3124 and 3132 controllers.
-> These entries were marked as ""DisableSataQueueing". Assume these are
-> in their blacklist for a reason and disable NCQ on these drives.
+> Recently Tejun wrote a patch to ahci.c to make it raise a HSM violation
+> if the drive attempted to complete a tag that wasn't outstanding. We could
+> run into the same problem with sata_nv ADMA. This adds code to raise a HSM
+> violation error if the controller gives us a notifier tag that isn't
+> outstanding, since the drive may be issuing spurious completions.
 > 
 > Signed-off-by: Robert Hancock <hancockr@shaw.ca>
-> 
-> --- linux-2.6.21-rc1edit/drivers/ata/libata-core.c.prev    2007-02-21 
-> 22:23:05.000000000 -0600
-> +++ linux-2.6.21-rc1edit/drivers/ata/libata-core.c    2007-02-21 
-> 22:25:44.000000000 -0600
-> @@ -3269,6 +3269,13 @@ static const struct ata_blacklist_entry
->     /* Devices with NCQ limits */
-> 
-> +    /* The following blacklist entries are taken from the Windows
-> +       driver .inf files for the Silicon Image 3124 and 3132. */
-> +    { "Maxtor 7B250S0",    "BANC1B70",    ATA_HORKAGE_NONCQ, },
-> +    { "HTS541060G9SA00",    "MB3OC60D",    ATA_HORKAGE_NONCQ, },
-> +    { "HTS541080G9SA00",    "MB4OC60D",    ATA_HORKAGE_NONCQ, },
-> +    { "HTS541010G9SA00",    "MBZOC60D",    ATA_HORKAGE_NONCQ, },
 
-Do we have information that these drives fail on non-SiI controllers?
+Acked-by: Tejun Heo <htejun@gmail.com>
 
-Sometimes the problem can be related to a single family of controllers.
-
-	Jeff
-
-
-
+-- 
+tejun
