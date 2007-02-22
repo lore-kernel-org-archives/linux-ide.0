@@ -1,46 +1,28 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] libata: add NCQ blacklist entries from Silicon Image   Windows driver
-Date: Thu, 22 Feb 2007 16:41:56 +0100
-Message-ID: <20070222154156.GB4740@kernel.dk>
-References: <45DD2EC9.4050403@shaw.ca> <45DD3EC7.3050801@garzik.org> <20070222113226.GI5549@kernel.dk> <45DDAB95.6070903@rtr.ca>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Question about PATA Sil680 Cache Line Size and Performance
+ Degradation on ARM XScale
+Date: Thu, 22 Feb 2007 18:52:02 +0000
+Message-ID: <20070222185202.03121afc@lxorguk.ukuu.org.uk>
+References: <8202f4270702211456h52498bbdk560d9d47e2e319d7@mail.gmail.com>
+	<20070222000400.2c220b8f@lxorguk.ukuu.org.uk>
+	<8202f4270702211721o1629aa63q3670823b7348df1f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:4985 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751653AbXBVPmA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Feb 2007 10:42:00 -0500
-Content-Disposition: inline
-In-Reply-To: <45DDAB95.6070903@rtr.ca>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51989 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751732AbXBVRsM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Feb 2007 12:48:12 -0500
+In-Reply-To: <8202f4270702211721o1629aa63q3670823b7348df1f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Tejun Heo <htejun@gmail.com>
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-On Thu, Feb 22 2007, Mark Lord wrote:
-> Jens Axboe wrote:
-> >>Robert Hancock wrote:
-> >..
-> >>>+    /* The following blacklist entries are taken from the Windows
-> >>>+       driver .inf files for the Silicon Image 3124 and 3132. */
-> >>>+    { "Maxtor 7B250S0",    "BANC1B70",    ATA_HORKAGE_NONCQ, },
-> >>>+    { "HTS541060G9SA00",    "MB3OC60D",    ATA_HORKAGE_NONCQ, },
-> >>>+    { "HTS541080G9SA00",    "MB4OC60D",    ATA_HORKAGE_NONCQ, },
-> >>>+    { "HTS541010G9SA00",    "MBZOC60D",    ATA_HORKAGE_NONCQ, },
-> >>Do we have information that these drives fail on non-SiI controllers?
-> >>
-> >>Sometimes the problem can be related to a single family of controllers.
-> >
-> >I don't know about the Hitachi's, but the Maxtor with that firmware is
-> >definitely broken. It _appeared_ to work if the depth was limited to 4,
-> >but I didn't test it long enough to be absolutely certain. So the safest
-> >is indeed to blacklist it.
-> 
-> Yes, broken on the Silicon Image controllers for sure.
-> But what type of controller did you observe the failures on, Jens ?
+> Since Sil3124 has better PCI read/write performance, as a reference,
+> could someone explain or point me to the PCI configuration code for
+> Sil3124? I couldn't find it in sata_sil24.c.
 
-achi
-
--- 
-Jens Axboe
+Are you sure the values used are not the power on ones in this case ?
 
