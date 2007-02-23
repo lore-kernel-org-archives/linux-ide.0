@@ -1,225 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (pata-2.6 fix queue) sl82c105: DMA support code cleanup (take 3)
-Date: Fri, 23 Feb 2007 19:13:55 +0300
-Message-ID: <200702231913.55522.sshtylyov@ru.mvista.com>
-References: <200702140043.25244.sshtylyov@ru.mvista.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFT] libata hpa support
+Date: Fri, 23 Feb 2007 18:19:59 +0000
+Message-ID: <20070223181959.56502bf2@lxorguk.ukuu.org.uk>
+References: <20070223170625.GA29931@athena.road.mcmartin.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:41558 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933125AbXBWQOD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Feb 2007 11:14:03 -0500
-In-Reply-To: <200702140043.25244.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60191 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933142AbXBWRQ1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Feb 2007 12:16:27 -0500
+In-Reply-To: <20070223170625.GA29931@athena.road.mcmartin.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Kyle McMartin <kyle@canonical.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, mjg59@ubuntu.com
 
-Fold the now equivalent code in the ide_dma_check() method into a mere call to
-ide_use_dma().  Make config_for_dma() return non-zero if DMA mode has been set
-and call it from the ide_dma_check() method instead of ide_dma_on().
-Also, defer writing the DMA timings to the chip registers until DMA is actually
-turned on (and do not enable IORDY for DMA).  Remove unnecessary code from the
-init_hwif() method, improve its looks overall, and also rename the driver's
-ide_dma_check() and dma_start() methods.
+> A few questions are raised, libata SATA hasn't been resizing disks in the
+> past, should we only disable HPA on PATA only, a la drivers/ide? In any
 
----
-This version takes into account that the ide-use-fast-pio.patch had been merged
-to mainline...
+drivers/ide disable HPA on SATA ports it manages too.
 
-Argh! Where those extra pluses camen from in the second hunk?!
+> event, supporting HPA lets people who had partitions which extend beyond
+> the protected area boot with libata PATA. Some policy decision needs to be
+> made too... Right now, I'm just disabling it unilaterally.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Last time we had a Red Hat bitching session about it the main thing the
+installer guys wanted was a way to find out what size the disk thought it
+was before we twiddled with it, so that they can make an intelligent
+attempt to handle partitioning in the case where for example a disk is
+unpartitioned. A partitioned disk isn't so much of a problem as the
+partitioning itself tells you the a lot about the state of disk and
+intended HPA.
 
- drivers/ide/pci/sl82c105.c |  112 ++++++++++++++++-----------------------------
- 1 files changed, 41 insertions(+), 71 deletions(-)
+What do the Ubuntu installer/partitioning folk think ?
 
-Index: linux-2.6/drivers/ide/pci/sl82c105.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/sl82c105.c
-+++ linux-2.6/drivers/ide/pci/sl82c105.c
-@@ -11,6 +11,8 @@
-  * Merge in Russell's HW workarounds, fix various problems
-  * with the timing registers setup.
-  *  -- Benjamin Herrenschmidt (01/11/03) benh@kernel.crashing.org
-+ *
-+ * Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
-  */
- 
- #include <linux/types.h>
-@@ -115,59 +117,28 @@ static void sl82c105_tune_drive(ide_driv
- }
- 
- /*
-- * Configure the drive and the chipset for DMA
-+ * Configure the drive for DMA.
-+ * We'll program the chipset only when DMA is actually turned on.
-  */
- static int config_for_dma (ide_drive_t *drive)
- {
--	ide_hwif_t *hwif = HWIF(drive);
--	struct pci_dev *dev = hwif->pci_dev;
--	unsigned int reg;
--
- 	DBG(("config_for_dma(drive:%s)\n", drive->name));
- 
--	reg = (hwif->channel ? 0x4c : 0x44) + (drive->select.b.unit ? 4 : 0);
--
- 	if (ide_config_drive_speed(drive, XFER_MW_DMA_2) != 0)
--		return 1;
--
--	pci_write_config_word(dev, reg, 0x0240);
-+		return 0;
- 
--	return 0;
-+	return ide_dma_enable(drive);
- }
- 
- /*
-- * Check to see if the drive and
-- * chipset is capable of DMA mode
-+ * Check to see if the drive and chipset are capable of DMA mode.
-  */
--
--static int sl82c105_check_drive (ide_drive_t *drive)
-+static int sl82c105_ide_dma_check (ide_drive_t *drive)
- {
--	ide_hwif_t *hwif	= HWIF(drive);
--
--	DBG(("sl82c105_check_drive(drive:%s)\n", drive->name));
--
--	do {
--		struct hd_driveid *id = drive->id;
--
--		if (!drive->autodma)
--			break;
-+	DBG(("sl82c105_ide_dma_check(drive:%s)\n", drive->name));
- 
--		if (!id || !(id->capability & 1))
--			break;
--
--		/* Consult the list of known "bad" drives */
--		if (__ide_dma_bad_drive(drive))
--			break;
--
--		if (id->field_valid & 2) {
--			if ((id->dma_mword & hwif->mwdma_mask) ||
--			    (id->dma_1word & hwif->swdma_mask))
--				return 0;
--		}
--
--		if (__ide_dma_good_drive(drive) && id->eide_dma_time < 150)
--			return 0;
--	} while (0);
-+	if (ide_use_dma(drive) && config_for_dma(drive))
-+		return 0;
- 
- 	return -1;
- }
-@@ -236,7 +207,7 @@ static int sl82c105_ide_dma_lost_irq(ide
-  * The generic IDE core will have disabled the BMEN bit before this
-  * function is called.
-  */
--static void sl82c105_ide_dma_start(ide_drive_t *drive)
-+static void sl82c105_dma_start(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = HWIF(drive);
- 	struct pci_dev *dev = hwif->pci_dev;
-@@ -258,12 +229,18 @@ static int sl82c105_ide_dma_timeout(ide_
- 
- static int sl82c105_ide_dma_on (ide_drive_t *drive)
- {
-+	struct pci_dev *dev	= HWIF(drive)->pci_dev;
-+	int rc, reg 		= 0x44 + drive->dn * 4;
-+
- 	DBG(("sl82c105_ide_dma_on(drive:%s)\n", drive->name));
- 
--	if (config_for_dma(drive))
--		return 1;
--	printk(KERN_INFO "%s: DMA enabled\n", drive->name);
--	return __ide_dma_on(drive);
-+	rc = __ide_dma_on(drive);
-+	if (rc == 0) {
-+		pci_write_config_word(dev, reg, 0x0200);
-+
-+		printk(KERN_INFO "%s: DMA enabled\n", drive->name);
-+	}
-+	return rc;
- }
- 
- static void sl82c105_dma_off_quietly(ide_drive_t *drive)
-@@ -376,7 +353,7 @@ static unsigned int __devinit init_chips
- }
- 
- /*
-- * Initialise the chip
-+ * Initialise IDE channel
-  */
- static void __devinit init_hwif_sl82c105(ide_hwif_t *hwif)
- {
-@@ -396,11 +373,6 @@ static void __devinit init_hwif_sl82c105
- 	hwif->drives[0].drive_data = hwif->drives[1].drive_data = 0x0909;
- 	hwif->drives[0].autotune   = hwif->drives[1].autotune   = 1;
- 
--	hwif->atapi_dma = 0;
--	hwif->mwdma_mask = 0;
--	hwif->swdma_mask = 0;
--	hwif->autodma = 0;
--
- 	if (!hwif->dma_base)
- 		return;
- 
-@@ -410,27 +382,27 @@ static void __devinit init_hwif_sl82c105
- 		 * Never ever EVER under any circumstances enable
- 		 * DMA when the bridge is this old.
- 		 */
--		printk("    %s: Winbond 553 bridge revision %d, BM-DMA disabled\n",
--		       hwif->name, rev);
--	} else {
--		hwif->atapi_dma = 1;
--		hwif->mwdma_mask = 0x04;
--
--		hwif->ide_dma_check = &sl82c105_check_drive;
--		hwif->ide_dma_on = &sl82c105_ide_dma_on;
--		hwif->dma_off_quietly = &sl82c105_dma_off_quietly;
--		hwif->ide_dma_lostirq = &sl82c105_ide_dma_lost_irq;
--		hwif->dma_start = &sl82c105_ide_dma_start;
--		hwif->ide_dma_timeout = &sl82c105_ide_dma_timeout;
--
--		if (!noautodma)
--			hwif->autodma = 1;
--		hwif->drives[0].autodma = hwif->autodma;
--		hwif->drives[1].autodma = hwif->autodma;
--
--		if (hwif->mate)
--			hwif->serialized = hwif->mate->serialized = 1;
-+		printk("    %s: Winbond W83C553 bridge revision %d, "
-+		       "BM-DMA disabled\n", hwif->name, rev);
-+		return;
- 	}
-+
-+	hwif->atapi_dma  = 1;
-+	hwif->mwdma_mask = 0x04;
-+
-+	hwif->ide_dma_check		= &sl82c105_ide_dma_check;
-+	hwif->ide_dma_on		= &sl82c105_ide_dma_on;
-+	hwif->dma_off_quietly		= &sl82c105_dma_off_quietly;
-+	hwif->ide_dma_lostirq		= &sl82c105_ide_dma_lost_irq;
-+	hwif->dma_start			= &sl82c105_dma_start;
-+	hwif->ide_dma_timeout		= &sl82c105_ide_dma_timeout;
-+
-+	if (!noautodma)
-+		hwif->autodma = 1;
-+	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
-+
-+	if (hwif->mate)
-+		hwif->serialized = hwif->mate->serialized = 1;
- }
- 
- static ide_pci_device_t sl82c105_chipset __devinitdata = {
-
+Alan
