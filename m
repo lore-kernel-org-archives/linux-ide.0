@@ -1,216 +1,38 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2.6.21-rc1] sata_vsc: refactor vsc_sata_interrupt and hook up
-	error handling
-Date: Fri, 23 Feb 2007 16:36:43 -0700
-Message-ID: <20070223233643.8535.1788.stgit@dwillia2-linux.ch.intel.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] (pata-2.6 fix queue) sl82c105: DMA support code cleanup (take 3)
+Date: Sat, 24 Feb 2007 00:42:59 +0100
+Message-ID: <200702240042.59737.bzolnier@gmail.com>
+References: <200702140043.25244.sshtylyov@ru.mvista.com> <200702231913.55522.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:47417 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932746AbXBWXgo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Feb 2007 18:36:44 -0500
+Received: from nf-out-0910.google.com ([64.233.182.191]:14425 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932777AbXBWXgt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Feb 2007 18:36:49 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1006410nfa
+        for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2007 15:36:48 -0800 (PST)
+In-Reply-To: <200702231913.55522.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jeremy@sgi.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Separate sata_vsc interrupt handling into a normal (per-port) path and an
-error path with the addition of vsc_port_intr and vsc_error_intr
-respectively.  The error path handles interrupt based
-hotplug events which requires the definition of vsc_freeze and vsc_thaw.
 
-Note: vsc_port_intr has a workaround for unexpected interrupts that occur
-during polled commands.  This fixes a regression between 2.6.19 and 2.6.20.
+On Friday 23 February 2007, Sergei Shtylyov wrote:
+> Fold the now equivalent code in the ide_dma_check() method into a mere call to
+> ide_use_dma().  Make config_for_dma() return non-zero if DMA mode has been set
+> and call it from the ide_dma_check() method instead of ide_dma_on().
+> Also, defer writing the DMA timings to the chip registers until DMA is actually
+> turned on (and do not enable IORDY for DMA).  Remove unnecessary code from the
+> init_hwif() method, improve its looks overall, and also rename the driver's
+> ide_dma_check() and dma_start() methods.
+> 
+> ---
+> This version takes into account that the ide-use-fast-pio.patch had been merged
+> to mainline...
 
-Changes in take2:
-* removed definition of invalid fis bit
-* let standard ata-error-handling handle the serror register
-* clear all unhandled interrupts
-* revert changes to vsc_intr_mask_update (vsc_thaw enables all interrupts)
-* use unlikely() for the pci-abort and not-our-interrupt cases in vsc_sata_interrupt
-
-Changes in take3:
-* Unify the "add" + "hook-up" patches into this single patch
-
-[htejun@gmail.com: clean up comments and suggestions]
-Cc: Jeremy Higdon <jeremy@sgi.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- drivers/ata/sata_vsc.c |  123 +++++++++++++++++++++++++++++-------------------
- 1 files changed, 74 insertions(+), 49 deletions(-)
-
-diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
-index 2fd037b..f0d86cb 100644
---- a/drivers/ata/sata_vsc.c
-+++ b/drivers/ata/sata_vsc.c
-@@ -98,10 +98,6 @@ enum {
- 			      VSC_SATA_INT_PHY_CHANGE),
- };
- 
--#define is_vsc_sata_int_err(port_idx, int_status) \
--	 (int_status & (VSC_SATA_INT_ERROR << (8 * port_idx)))
--
--
- static u32 vsc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
- {
- 	if (sc_reg > SCR_CONTROL)
-@@ -119,6 +115,28 @@ static void vsc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg,
- }
- 
- 
-+static void vsc_freeze(struct ata_port *ap)
-+{
-+	void __iomem *mask_addr;
-+
-+	mask_addr = ap->host->iomap[VSC_MMIO_BAR] +
-+		VSC_SATA_INT_MASK_OFFSET + ap->port_no;
-+
-+	writeb(0, mask_addr);
-+}
-+
-+
-+static void vsc_thaw(struct ata_port *ap)
-+{
-+	void __iomem *mask_addr;
-+
-+	mask_addr = ap->host->iomap[VSC_MMIO_BAR] +
-+		VSC_SATA_INT_MASK_OFFSET + ap->port_no;
-+
-+	writeb(0xff, mask_addr);
-+}
-+
-+
- static void vsc_intr_mask_update(struct ata_port *ap, u8 ctl)
- {
- 	void __iomem *mask_addr;
-@@ -203,6 +221,36 @@ static void vsc_sata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-         }
- }
- 
-+static inline void vsc_error_intr(u8 port_status, struct ata_port *ap)
-+{
-+	if (port_status & (VSC_SATA_INT_PHY_CHANGE | VSC_SATA_INT_ERROR_M))
-+		ata_port_freeze(ap);
-+	else
-+		ata_port_abort(ap);
-+}
-+
-+static void vsc_port_intr(u8 port_status, struct ata_port *ap)
-+{
-+	struct ata_queued_cmd *qc;
-+	int handled = 0;
-+
-+	if (unlikely(port_status & VSC_SATA_INT_ERROR)) {
-+		vsc_error_intr(port_status, ap);
-+		return;
-+	}
-+
-+	qc = ata_qc_from_tag(ap, ap->active_tag);
-+	if (qc && likely(!(qc->tf.flags & ATA_TFLAG_POLLING)))
-+		handled = ata_host_intr(ap, qc);
-+
-+	/* We received an interrupt during a polled command,
-+	 * or some other spurious condition.  Interrupt reporting
-+	 * with this hardware is fairly reliable so it is safe to
-+	 * simply clear the interrupt
-+	 */
-+	if (unlikely(!handled))
-+		ata_chk_status(ap);
-+}
- 
- /*
-  * vsc_sata_interrupt
-@@ -214,59 +262,36 @@ static irqreturn_t vsc_sata_interrupt (int irq, void *dev_instance)
- 	struct ata_host *host = dev_instance;
- 	unsigned int i;
- 	unsigned int handled = 0;
--	u32 int_status;
--
--	spin_lock(&host->lock);
-+	u32 status;
- 
--	int_status = readl(host->iomap[VSC_MMIO_BAR] +
--			   VSC_SATA_INT_STAT_OFFSET);
-+	status = readl(host->iomap[VSC_MMIO_BAR] + VSC_SATA_INT_STAT_OFFSET);
- 
--	for (i = 0; i < host->n_ports; i++) {
--		if (int_status & ((u32) 0xFF << (8 * i))) {
--			struct ata_port *ap;
-+	if (unlikely(status == 0xffffffff || status == 0)) {
-+		if (status)
-+			dev_printk(KERN_ERR, host->dev,
-+				": IRQ status == 0xffffffff, "
-+				"PCI fault or device removal?\n");
-+		goto out;
-+	}
- 
--			ap = host->ports[i];
-+	spin_lock(&host->lock);
- 
--			if (is_vsc_sata_int_err(i, int_status)) {
--				u32 err_status;
--				printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
--				err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
--				vsc_sata_scr_write(ap, SCR_ERROR, err_status);
--				handled++;
--			}
-+	for (i = 0; i < host->n_ports; i++) {
-+		u8 port_status = (status >> (8 * i)) & 0xff;
-+		if (port_status) {
-+			struct ata_port *ap = host->ports[i];
- 
- 			if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
--				struct ata_queued_cmd *qc;
--
--				qc = ata_qc_from_tag(ap, ap->active_tag);
--				if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
--					handled += ata_host_intr(ap, qc);
--				else if (is_vsc_sata_int_err(i, int_status)) {
--					/*
--					 * On some chips (i.e. Intel 31244), an error
--					 * interrupt will sneak in at initialization
--					 * time (phy state changes).  Clearing the SCR
--					 * error register is not required, but it prevents
--					 * the phy state change interrupts from recurring
--					 * later.
--					 */
--					u32 err_status;
--					err_status = vsc_sata_scr_read(ap, SCR_ERROR);
--					printk(KERN_DEBUG "%s: clearing interrupt, "
--					       "status %x; sata err status %x\n",
--					       __FUNCTION__,
--					       int_status, err_status);
--					vsc_sata_scr_write(ap, SCR_ERROR, err_status);
--					/* Clear interrupt status */
--					ata_chk_status(ap);
--					handled++;
--				}
--			}
-+				vsc_port_intr(port_status, ap);
-+				handled++;
-+			} else
-+				dev_printk(KERN_ERR, host->dev,
-+					": interrupt from disabled port %d\n", i);
- 		}
- 	}
- 
- 	spin_unlock(&host->lock);
--
-+out:
- 	return IRQ_RETVAL(handled);
- }
- 
-@@ -304,8 +329,8 @@ static const struct ata_port_operations vsc_sata_ops = {
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.data_xfer		= ata_data_xfer,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
-+	.freeze			= vsc_freeze,
-+	.thaw			= vsc_thaw,
- 	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.irq_handler		= vsc_sata_interrupt,
+applied
