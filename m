@@ -1,81 +1,223 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: end to end error recovery musings
-Date: Fri, 23 Feb 2007 09:15:11 -0500
-Message-ID: <45DEF6EF.3020509@emc.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] (pata-2.6 fix queue) sl82c105: DMA support code cleanup (take 2)
+Date: Fri, 23 Feb 2007 19:10:39 +0300
+Message-ID: <200702231910.39783.sshtylyov@ru.mvista.com>
+References: <200702140043.25244.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>Mark Lord <mlord@pobox.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:41534 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933120AbXBWQKu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Feb 2007 11:10:50 -0500
+In-Reply-To: <200702140043.25244.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-In the IO/FS workshop, one idea we kicked around is the need to provide 
-better and more specific error messages between the IO stack and the 
-file system layer.
+Fold the now equivalent code in the ide_dma_check() method into a mere call to
+ide_use_dma().  Make config_for_dma() return non-zero if DMA mode has been set
+and call it from the ide_dma_check() method instead of ide_dma_on().
+Also, defer writing the DMA timings to the chip registers until DMA is actually
+turned on (and do not enable IORDY for DMA).  Remove unnecessary code from the
+init_hwif() method, improve its looks overall, and also rename the driver's
+ide_dma_check() and dma_start() methods.
 
-My group has been working to stabilize a relatively up to date libata + 
-MD based box, so I can try to lay out at least one "appliance like" 
-typical configuration to help frame the issue. We are working on a 
-relatively large appliance, but you can buy similar home appliance (or 
-build them) that use linux to provide a NAS in a box for end users.
+---
+This version takes into account that the ide-use-fast-pio.patch had been merged
+to mainline...
 
-The use case that we have is on an ICH6R/AHCI box with 4 large (500+ GB) 
-drives, with some of the small system partitions on a 4-way RAID1 
-device. The libata version we have is back port of 2.6.18 onto SLES10, 
-so the error handling at the libata level is a huge improvement over 
-what we had before.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Each box has a watchdog timer that can be set to fire after at most 2 
-minutes.
+ drivers/ide/pci/sl82c105.c |  112 ++++++++++++++++-----------------------------
+ 1 files changed, 41 insertions(+), 71 deletions(-)
 
-(We have a second flavor of this box with an ICH5 and P-ATA drives using 
-the non-libata drivers that has a similar use case).
-
-Using the patches that Mark sent around recently for error injection, we 
-inject media errors into one or more drives and try to see how smoothly 
-error handling runs and, importantly, whether or not the error handling 
-will complete before the watchdog fires and reboots the box.  If you 
-want to be especially mean, inject errors into the RAID superblocks on 3 
-out of the 4 drives.
-
-We still have the following challenges:
-
-    (1) read-ahead often means that we will  retry every bad sector at 
-least twice from the file system level. The first time, the fs read 
-ahead request triggers a speculative read that includes the bad sector 
-(triggering the error handling mechanisms) right before the real 
-application triggers a read does the same thing.  Not sure what the 
-answer is here since read-ahead is obviously a huge win in the normal case.
-
-    (2) the patches that were floating around on how to make sure that 
-we effectively handle single sector errors in a large IO request are 
-critical. On one hand, we want to combine adjacent IO requests into 
-larger IO's whenever possible. On the other hand, when the combined IO 
-fails, we need to isolate the error to the correct range, avoid 
-reissuing a request that touches that sector again and communicate up 
-the stack to file system/MD what really failed.  All of this needs to 
-complete in tens of seconds, not multiple minutes.
-
-    (3) The timeout values on the failed IO's need to be tuned well (as 
-was discussed in an earlier linux-ide thread). We cannot afford to hang 
-for 30 seconds, especially in the MD case, since you might need to fail 
-more than one device for a single IO.  Prompt error prorogation (say 
-that 4 times quickly!) can allow MD to mask the underlying errors as you 
-would hope, hanging on too long will almost certainly cause a watchdog 
-reboot...
-
-    (4) The newish libata+SCSI stack is pretty good at handling disk 
-errors, but adding in MD actually can reduce the reliability of your 
-system unless you tune the error handling correctly.
-
-We will follow up with specific issues as they arise, but I wanted to 
-lay out a use case that can help frame part of the discussion.  I also 
-want to encourage people to inject real disk errors with the Mark 
-patches so we can share the pain ;-)
-
-ric
-
-
+Index: linux-2.6/drivers/ide/pci/sl82c105.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/sl82c105.c
++++ linux-2.6/drivers/ide/pci/sl82c105.c
+@@ -11,6 +11,8 @@
+  * Merge in Russell's HW workarounds, fix various problems
+  * with the timing registers setup.
+  *  -- Benjamin Herrenschmidt (01/11/03) benh@kernel.crashing.org
++ *
++ * Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
+  */
+ 
+ #include <linux/types.h>
+@@ -115,59 +117,28 @@ static void sl82c105_tune_drive(ide_driv
+ }
+ 
+ /*
+- * Configure the drive and the chipset for DMA
+++  * Configure the drive for DMA.
+++  * We'll program the chipset only when DMA is actually turned on.
+  */
+ static int config_for_dma (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-	struct pci_dev *dev = hwif->pci_dev;
+-	unsigned int reg;
+-
+ 	DBG(("config_for_dma(drive:%s)\n", drive->name));
+ 
+-	reg = (hwif->channel ? 0x4c : 0x44) + (drive->select.b.unit ? 4 : 0);
+-
+ 	if (ide_config_drive_speed(drive, XFER_MW_DMA_2) != 0)
+-		return 1;
+-
+-	pci_write_config_word(dev, reg, 0x0240);
++		return 0;
+ 
+-	return 0;
++	return ide_dma_enable(drive);
+ }
+ 
+ /*
+- * Check to see if the drive and
+- * chipset is capable of DMA mode
++ * Check to see if the drive and chipset are capable of DMA mode.
+  */
+-
+-static int sl82c105_check_drive (ide_drive_t *drive)
++static int sl82c105_ide_dma_check (ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+-	DBG(("sl82c105_check_drive(drive:%s)\n", drive->name));
+-
+-	do {
+-		struct hd_driveid *id = drive->id;
+-
+-		if (!drive->autodma)
+-			break;
++	DBG(("sl82c105_ide_dma_check(drive:%s)\n", drive->name));
+ 
+-		if (!id || !(id->capability & 1))
+-			break;
+-
+-		/* Consult the list of known "bad" drives */
+-		if (__ide_dma_bad_drive(drive))
+-			break;
+-
+-		if (id->field_valid & 2) {
+-			if ((id->dma_mword & hwif->mwdma_mask) ||
+-			    (id->dma_1word & hwif->swdma_mask))
+-				return 0;
+-		}
+-
+-		if (__ide_dma_good_drive(drive) && id->eide_dma_time < 150)
+-			return 0;
+-	} while (0);
++	if (ide_use_dma(drive) && config_for_dma(drive))
++		return 0;
+ 
+ 	return -1;
+ }
+@@ -236,7 +207,7 @@ static int sl82c105_ide_dma_lost_irq(ide
+  * The generic IDE core will have disabled the BMEN bit before this
+  * function is called.
+  */
+-static void sl82c105_ide_dma_start(ide_drive_t *drive)
++static void sl82c105_dma_start(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+ 	struct pci_dev *dev = hwif->pci_dev;
+@@ -258,12 +229,18 @@ static int sl82c105_ide_dma_timeout(ide_
+ 
+ static int sl82c105_ide_dma_on (ide_drive_t *drive)
+ {
++	struct pci_dev *dev	= HWIF(drive)->pci_dev;
++	int rc, reg 		= 0x44 + drive->dn * 4;
++
+ 	DBG(("sl82c105_ide_dma_on(drive:%s)\n", drive->name));
+ 
+-	if (config_for_dma(drive))
+-		return 1;
+-	printk(KERN_INFO "%s: DMA enabled\n", drive->name);
+-	return __ide_dma_on(drive);
++	rc = __ide_dma_on(drive);
++	if (rc == 0) {
++		pci_write_config_word(dev, reg, 0x0200);
++
++		printk(KERN_INFO "%s: DMA enabled\n", drive->name);
++	}
++	return rc;
+ }
+ 
+ static void sl82c105_dma_off_quietly(ide_drive_t *drive)
+@@ -376,7 +353,7 @@ static unsigned int __devinit init_chips
+ }
+ 
+ /*
+- * Initialise the chip
++ * Initialise IDE channel
+  */
+ static void __devinit init_hwif_sl82c105(ide_hwif_t *hwif)
+ {
+@@ -396,11 +373,6 @@ static void __devinit init_hwif_sl82c105
+ 	hwif->drives[0].drive_data = hwif->drives[1].drive_data = 0x0909;
+ 	hwif->drives[0].autotune   = hwif->drives[1].autotune   = 1;
+ 
+-	hwif->atapi_dma = 0;
+-	hwif->mwdma_mask = 0;
+-	hwif->swdma_mask = 0;
+-	hwif->autodma = 0;
+-
+ 	if (!hwif->dma_base)
+ 		return;
+ 
+@@ -410,27 +382,27 @@ static void __devinit init_hwif_sl82c105
+ 		 * Never ever EVER under any circumstances enable
+ 		 * DMA when the bridge is this old.
+ 		 */
+-		printk("    %s: Winbond 553 bridge revision %d, BM-DMA disabled\n",
+-		       hwif->name, rev);
+-	} else {
+-		hwif->atapi_dma = 1;
+-		hwif->mwdma_mask = 0x04;
+-
+-		hwif->ide_dma_check = &sl82c105_check_drive;
+-		hwif->ide_dma_on = &sl82c105_ide_dma_on;
+-		hwif->dma_off_quietly = &sl82c105_dma_off_quietly;
+-		hwif->ide_dma_lostirq = &sl82c105_ide_dma_lost_irq;
+-		hwif->dma_start = &sl82c105_ide_dma_start;
+-		hwif->ide_dma_timeout = &sl82c105_ide_dma_timeout;
+-
+-		if (!noautodma)
+-			hwif->autodma = 1;
+-		hwif->drives[0].autodma = hwif->autodma;
+-		hwif->drives[1].autodma = hwif->autodma;
+-
+-		if (hwif->mate)
+-			hwif->serialized = hwif->mate->serialized = 1;
++		printk("    %s: Winbond W83C553 bridge revision %d, "
++		       "BM-DMA disabled\n", hwif->name, rev);
++		return;
+ 	}
++
++	hwif->atapi_dma  = 1;
++	hwif->mwdma_mask = 0x04;
++
++	hwif->ide_dma_check		= &sl82c105_ide_dma_check;
++	hwif->ide_dma_on		= &sl82c105_ide_dma_on;
++	hwif->dma_off_quietly		= &sl82c105_dma_off_quietly;
++	hwif->ide_dma_lostirq		= &sl82c105_ide_dma_lost_irq;
++	hwif->dma_start			= &sl82c105_dma_start;
++	hwif->ide_dma_timeout		= &sl82c105_ide_dma_timeout;
++
++	if (!noautodma)
++		hwif->autodma = 1;
++	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
++
++	if (hwif->mate)
++		hwif->serialized = hwif->mate->serialized = 1;
+ }
+ 
+ static ide_pci_device_t sl82c105_chipset __devinitdata = {
 
