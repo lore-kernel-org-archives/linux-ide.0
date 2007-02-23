@@ -1,35 +1,31 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH]: pcmcia - spot slave decode flaws (for testing)
-Date: Fri, 23 Feb 2007 12:08:45 +0000
-Message-ID: <20070223120845.19203fcb@lxorguk.ukuu.org.uk>
-References: <20070220181836.524e5f9a@localhost.localdomain>
-	<45DEC5A0.7050107@garzik.org>
+Subject: Re: [PATCH] libata-eh: Add a simple mechanism for silencing error
+ reporting
+Date: Fri, 23 Feb 2007 12:10:40 +0000
+Message-ID: <20070223121040.3c67b16f@lxorguk.ukuu.org.uk>
+References: <20070205161124.48bf16c6@localhost.localdomain>
+	<45DEC179.1080308@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59282 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59286 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932279AbXBWLFJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Feb 2007 06:05:09 -0500
-In-Reply-To: <45DEC5A0.7050107@garzik.org>
+	with ESMTP id S932281AbXBWLGz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Feb 2007 06:06:55 -0500
+In-Reply-To: <45DEC179.1080308@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
-> Code looks OK. Not applied due to "for testing" note.
-> 
-> General comment:  it might be nice to do this in the core, just as a 
-> sanity check for a variety of problems, past, present and future.
+> I would rather pass an ok-to-fail-without-recovery type flag to EH. 
+> This TFLAG_QUIET approach is poorly defined, probably temporary, and not 
+> really interesting for upstream
 
-We tried that with old IDE and all hell broke loose. Lots of virtual disk
-stuff and raid volumes have non-unique serial numbers. We even found a
-case of identically serial numbered Maxtor drives.
-
-It needs to stay in pcmcia, which is the only place we've seen the
-duplication.
-
-
+Fail without recovery flags make sense, but then we also need to ensure
+it is a fail without recovery messages. We could add qc->ignore_mask to
+mirror qc->err_mask ?
 
 Alan
+
