@@ -1,60 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Question about PATA Sil680 Cache Line Size and Performance Degradation
- on ARM XScale
-Date: Thu, 22 Feb 2007 18:23:06 -0500
-Message-ID: <45DE25DA.6080308@garzik.org>
-References: <8202f4270702211456h52498bbdk560d9d47e2e319d7@mail.gmail.com>	 <20070222000400.2c220b8f@lxorguk.ukuu.org.uk>	 <8202f4270702211721o1629aa63q3670823b7348df1f@mail.gmail.com>	 <20070222185202.03121afc@lxorguk.ukuu.org.uk>	 <45DDDE68.8070609@garzik.org> <8202f4270702221514v680bb78byf5dd840e1ef861ca@mail.gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: libata FUA revisited
+Date: Thu, 22 Feb 2007 18:04:05 -0600
+Message-ID: <45DE2F75.2030700@shaw.ca>
+References: <fa.S80SRyQbD/hm4SxliPUKU88BaCo@ifi.uio.no>
+ <fa.Q/csgyCHkAsD84yi+bN78H1WNNM@ifi.uio.no> <45D104F3.7040602@shaw.ca>
+ <45D1D72D.9020509@gmail.com> <45D252CD.5010303@shaw.ca>
+ <45D25CF2.5030508@gmail.com> <20070215180023.GA4438@kernel.dk>
+ <"45D9FE7B <45DC04DF.8040002"@gmail.com> <45DE1A7C.1030500@emc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41544 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752037AbXBVXXL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Feb 2007 18:23:11 -0500
-In-Reply-To: <8202f4270702221514v680bb78byf5dd840e1ef861ca@mail.gmail.com>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:42013 "EHLO
+	pd4mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055AbXBWAEz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Feb 2007 19:04:55 -0500
+In-reply-to: <45DE1A7C.1030500@emc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: ric@emc.com
+Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, edmudama@gmail.com, Nicolas.Mailhot@LaPoste.net, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Dongjun Shin <d.j.shin@samsung.com>, Hannes Reinecke <hare@suse.de>
 
-Fajun Chen wrote:
-> On 2/22/07, Jeff Garzik <jeff@garzik.org> wrote:
->> Alan wrote:
->> >> Since Sil3124 has better PCI read/write performance, as a reference,
->> >> could someone explain or point me to the PCI configuration code for
->> >> Sil3124? I couldn't find it in sata_sil24.c.
->> >
->> > Are you sure the values used are not the power on ones in this case ?
->>
->> The values used, most likely, are BIOS-programmed.
->>
->> sata_sil24.c does not call pci_set_mwi(), which is the only code in the
->> kernel (besides driver-specific, hand-coded stuff) that adjusts the PCI
->> cacheline register value.
->>
+Ric Wheeler wrote:
+>>> I think that FUA was designed for a different use case than what Linux
+>>> is using barriers for currently. The advantage with FUA is when you have
+>>> "before barrier", "after barrier" and "don't care" sets, where only the
+>>> specific things you care about ordering are in the before/after barrier
+>>> sets. Then you can do this:
+>>>
+>>> Issue all before barrier requests with FUA bit set
+>>> Wait for all those to complete
+>>> Issue all after barrier requests with FUA bit set
+>>> Wait for all those to complete
 > 
-> I traced the latency timer and cache line size setup in  SATA Sil3124.
-> Latency timer is set to 0x40 and cache line size is set to 0.  For
-> PATA Sil680, latency timer is set to 0 and cache line size is set to
-> 1.  If Sil3124 is a good reference for performance, we probably should
-> set latency timer to 0x40 and cache line size to 0 or 8 for Sil680.
-> Both Sil3124 and Sil680 specs recommend using Read Multiple as a PCI
+> A couple of issues with this would be in how to support our current 
+> semantics of fsync().  Today, the flush behavior of the barrier/fsync 
+> combination means that applications can have a hard promise of data on 
+> platter for any file after a successful fsync command.
+> 
+> If I understand correctly, to get a similar semantic from a pure FUA 
+> implementation would require us to tag all file IO as FUA.
+> 
+> I suspect that this would actually be less efficient since it would not 
+> allow the drives to reorder IO's up to the point that we actually care 
+> (fsync time).
 
-If you are going to be using PCI transactions that operate on cacheline 
-size-based quantities of data, you should definitely program the PCI 
-config register to a non-zero value.
+I think for the fsync case a cache flush would likely still be needed, 
+unless the app was only writing small amounts of data in between the 
+syncs (it may be complicated to figure out when to do that, though).
 
+> The other big user of barriers is the internal transaction of journaled 
+> file systems.  It would seem that we would need to tag each write from 
+> the journal with a FUA IO as well.  Again, we might actually go more 
+> slowly in some cases as you mention below.
+> 
+> The limited queue depth of NCQ would seem to make it much harder to have 
+> a win in this case...
 
-> master, ARM XScale cache line is 32 bytes, so it is probably better to
-> set cache line size to 8 for ARM XScale.   I tested both
-> configurations(cache line of 0 vs 8) though, no big difference in IO
-> performance but both are much better than default configuration in
-> Sil680.
+I think the journal write case is less problematic as there are likely 
+to be much fewer/smaller requests involved which would be more likely to 
+fit inside the queue..
 
-Read pci_set_cacheline_size() in drivers/pci/pci.c for the proper method 
-of programming.
-
-	Jeff
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
 
