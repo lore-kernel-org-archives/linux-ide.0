@@ -1,32 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_nv: kill old private BMDMA helper functions
-Date: Fri, 23 Feb 2007 05:37:25 -0500
-Message-ID: <45DEC3E5.6030004@garzik.org>
-References: <45DBC136.9060103@shaw.ca>
+Subject: Re: [PATCH 5/5] ahci: consider SDB FIS containing spurious NCQ completions
+ HSM violation (regenerated)
+Date: Fri, 23 Feb 2007 05:37:33 -0500
+Message-ID: <45DEC3ED.9020909@garzik.org>
+References: <11704009511903-git-send-email-htejun@gmail.com> <45DB17F2.5000707@garzik.org> <20070221073425.GV1625@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44894 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44906 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932207AbXBWKh1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Feb 2007 05:37:27 -0500
-In-Reply-To: <45DBC136.9060103@shaw.ca>
+	id S932203AbXBWKhh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Feb 2007 05:37:37 -0500
+In-Reply-To: <20070221073425.GV1625@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, ric@emc.com, edmudama@gmail.com, linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> sata_nv implemented its own copies of the BMDMA helper functions for ADMA,
-> since the ADMA BMDMA status registers are PIO while the other registers
-> are MMIO, and this was the only way to handle this previously. Now that
-> we have iomap support, the standard routines should just work, so use them.
-> The only thing we need to override as far as ADMA and BMDMA is the
-> post_internal_cmd callback, where we should only call ata_post_internal_cmd
-> if we are in port-register mode.
+Tejun Heo wrote:
+> SDB FIS containing spurious NCQ completions is a clear protocol
+> violation.  Currently, only some Maxtors with early firmware revisions
+> are showing this problem.  Those firmwares have other NCQ related
+> problems including buggy NCQ error reporting and occasional lock up
+> after NCQ errors.
 > 
-> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+> Consider spurious NCQ completions HSM violation and freeze the port
+> after it.  EH will turn off NCQ after this happens several times.
+> Eventually drives which show this behavior should be blacklisted for
+> NCQ.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> Regenerated against the current #upstream
+> (b216f3f887bb3e73808250841035a6fc4f6fc9e0).
 
 applied
 
