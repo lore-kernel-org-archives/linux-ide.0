@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] (pata-2.6 fix queue) sl82c105: DMA support code cleanup (take 2)
-Date: Fri, 23 Feb 2007 19:10:39 +0300
-Message-ID: <200702231910.39783.sshtylyov@ru.mvista.com>
+Subject: [PATCH] (pata-2.6 fix queue) sl82c105: DMA support code cleanup (take 3)
+Date: Fri, 23 Feb 2007 19:13:55 +0300
+Message-ID: <200702231913.55522.sshtylyov@ru.mvista.com>
 References: <200702140043.25244.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:41534 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:41558 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933120AbXBWQKu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Feb 2007 11:10:50 -0500
+	id S933125AbXBWQOD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Feb 2007 11:14:03 -0500
 In-Reply-To: <200702140043.25244.sshtylyov@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
@@ -30,6 +30,8 @@ ide_dma_check() and dma_start() methods.
 ---
 This version takes into account that the ide-use-fast-pio.patch had been merged
 to mainline...
+
+Argh! Where those extra pluses camen from in the second hunk?!
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -55,8 +57,8 @@ Index: linux-2.6/drivers/ide/pci/sl82c105.c
  
  /*
 - * Configure the drive and the chipset for DMA
-++  * Configure the drive for DMA.
-++  * We'll program the chipset only when DMA is actually turned on.
++ * Configure the drive for DMA.
++ * We'll program the chipset only when DMA is actually turned on.
   */
  static int config_for_dma (ide_drive_t *drive)
  {
