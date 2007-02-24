@@ -1,41 +1,49 @@
-From: Theodore Tso <tytso@mit.edu>
-Subject: Re: end to end error recovery musings
-Date: Fri, 23 Feb 2007 21:32:29 -0500
-Message-ID: <20070224023229.GB4380@thunk.org>
-References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.21-rc1] sata_vsc: refactor vsc_sata_interrupt and
+ hook up	error handling
+Date: Sat, 24 Feb 2007 13:06:16 +0900
+Message-ID: <45DFB9B8.60905@gmail.com>
+References: <20070223233643.8535.1788.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from thunk.org ([69.25.196.29]:55513 "EHLO thunker.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933348AbXBXCc7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Feb 2007 21:32:59 -0500
-Content-Disposition: inline
-In-Reply-To: <20070224003723.GS10715@schatzie.adilger.int>
+Received: from nz-out-0506.google.com ([64.233.162.232]:62897 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933363AbXBXEGS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Feb 2007 23:06:18 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so651501nze
+        for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2007 20:06:18 -0800 (PST)
+In-Reply-To: <20070223233643.8535.1788.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jeremy@sgi.com
 
-On Fri, Feb 23, 2007 at 05:37:23PM -0700, Andreas Dilger wrote:
-> > Probably the only sane thing to do is to remember the bad sectors and 
-> > avoid attempting reading them; that would mean marking "automatic" 
-> > versus "explicitly requested" requests to determine whether or not to 
-> > filter them against a list of discovered bad blocks.
+Dan Williams wrote:
+> Separate sata_vsc interrupt handling into a normal (per-port) path and an
+> error path with the addition of vsc_port_intr and vsc_error_intr
+> respectively.  The error path handles interrupt based
+> hotplug events which requires the definition of vsc_freeze and vsc_thaw.
 > 
-> And clearing this list when the sector is overwritten, as it will almost
-> certainly be relocated at the disk level.  For that matter, a huge win
-> would be to have the MD RAID layer rewrite only the bad sector (in hopes
-> of the disk relocating it) instead of failing the whiole disk.  Otherwise,
-> a few read errors on different disks in a RAID set can take the whole
-> system offline.  Apologies if this is already done in recent kernels...
+> Note: vsc_port_intr has a workaround for unexpected interrupts that occur
+> during polled commands.  This fixes a regression between 2.6.19 and 2.6.20.
+> 
+> Changes in take2:
+> * removed definition of invalid fis bit
+> * let standard ata-error-handling handle the serror register
+> * clear all unhandled interrupts
+> * revert changes to vsc_intr_mask_update (vsc_thaw enables all interrupts)
+> * use unlikely() for the pci-abort and not-our-interrupt cases in vsc_sata_interrupt
+> 
+> Changes in take3:
+> * Unify the "add" + "hook-up" patches into this single patch
+> 
+> [htejun@gmail.com: clean up comments and suggestions]
+> Cc: Jeremy Higdon <jeremy@sgi.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-And having a way of making this list available to both the filesystem
-and to a userspace utility, so they can more easily deal with doing a
-forced rewrite of the bad sector, after determining which file is
-involved and perhaps doing something intelligent (up to and including
-automatically requesting a backup system to fetch a backup version of
-the file, and if it can be determined that the file shouldn't have
-been changed since the last backup, automatically fixing up the
-corrupted data block :-).
+Acked-by: Tejun Heo <htejun@gmail.com>
 
-						- Ted
+-- 
+tejun
