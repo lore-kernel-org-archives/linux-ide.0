@@ -1,57 +1,55 @@
-From: Kyle McMartin <kyle@canonical.com>
-Subject: Re: [RFT] libata hpa support
-Date: Sat, 24 Feb 2007 13:00:47 -0500
-Message-ID: <20070224180047.GA6204@athena.road.mcmartin.ca>
-References: <20070223170625.GA29931@athena.road.mcmartin.ca> <20070223181959.56502bf2@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Fwd: [LIBATA] drives not detected
+Date: Sat, 24 Feb 2007 19:11:20 +0100
+Message-ID: <200702241911.21030.bzolnier@gmail.com>
+References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com> <200702241833.00199.bzolnier@gmail.com> <8d158e1f0702240937p1a8b5706u951b4fa21f6e2f67@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from stout.engsoc.carleton.ca ([134.117.69.22]:36241 "EHLO
-	stout.engsoc.carleton.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933525AbXBXSAv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 13:00:51 -0500
+Received: from ug-out-1314.google.com ([66.249.92.173]:4381 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932433AbXBXSFW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 13:05:22 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so569874uga
+        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 10:05:21 -0800 (PST)
+In-Reply-To: <8d158e1f0702240937p1a8b5706u951b4fa21f6e2f67@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20070223181959.56502bf2@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Kyle McMartin <kyle@canonical.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, mjg59@ubuntu.com
+To: Patrick Ale <patrick.ale@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, albertl@mail.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-On Fri, Feb 23, 2007 at 06:19:59PM +0000, Alan wrote:
-> > A few questions are raised, libata SATA hasn't been resizing disks in the
-> > past, should we only disable HPA on PATA only, a la drivers/ide? In any
+
+On Saturday 24 February 2007, Patrick Ale wrote:
+> > Thanks,
 > 
-> drivers/ide disable HPA on SATA ports it manages too.
+> Hey,
 > 
-
-Right, so we can leave the policy to be just disabling it by 40p/80p cable
-type for now... Sigh.
-
-> > event, supporting HPA lets people who had partitions which extend beyond
-> > the protected area boot with libata PATA. Some policy decision needs to be
-> > made too... Right now, I'm just disabling it unilaterally.
+> Being serious has never been one of my strongest sides ;-)
 > 
-> Last time we had a Red Hat bitching session about it the main thing the
-> installer guys wanted was a way to find out what size the disk thought it
-> was before we twiddled with it, so that they can make an intelligent
-> attempt to handle partitioning in the case where for example a disk is
-> unpartitioned. A partitioned disk isn't so much of a problem as the
-> partitioning itself tells you the a lot about the state of disk and
-> intended HPA.
+> Anyway, I will do the tests tomorrow, even tho I doubt if I'll run
+> into the problems I had, cause really.. since i changed the cable this
+> morning everything seems to work like a charm :)
+
+OK but please give it a try anyway.
+
+> Assuming by your name you're either in Poland, Croatia or a country
+> near, which makes us a maximum of one timezone away (I'm in a city
+> near Amsterdam), so when I write a mail with my findings we wont
+> suffer from big timezone delays which makes you read the mails 12
+> hours later or something.
+
+Poland here so yes exactly the same timezone.
+
+> Unless you have a *gasp* real like, in which case I envy you and wish
+> I were you :P
+
+s/real like/real life/ ?  [ or did you mean something else ]
+
+I'm trying hard to still have some. :)
+
+> Thanks for all your help guys and girls,
 > 
-
-I suspect Fedora is getting fairly late in the F7 development cycle and this
-kind of intrusive change to the installer, etc., would be frowned upon?
-
-One thought I had was to read the native max size, stow it away somewhere,
-and not resize the drive. [Disclaimer, I know almost nothing about the block
-layer at this point...] Then, when a bio gets rejected by the drive because
-the LBA is out of range, check if it's between the native capacity, and the
-current capacity, if it is, disable HPA and re-submit.
-
-That approach, while hackish, might be sufficient to keep people who've been
-using drivers/ide from being unable to boot if they're got partitions
-overlapping the HPA.
-
-Cheers,
-	Kyle M.
+> Patrick
