@@ -1,33 +1,39 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: clear drvdata in ata_host_release()
-Date: Sat, 24 Feb 2007 13:57:54 +0000
-Message-ID: <20070224135754.6b64d662@lxorguk.ukuu.org.uk>
-References: <20070224074823.GA20322@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Fwd: [LIBATA] drives not detected
+Date: Sat, 24 Feb 2007 22:05:32 +0900
+Message-ID: <45E0381C.3030706@gmail.com>
+References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>	 <8d158e1f0702201400w622bbcb2lc7711b5c8974bfcd@mail.gmail.com>	 <45DBEB63.3010905@gmail.com>	 <8d158e1f0702210447q4ee8526cke05a76f895ad824c@mail.gmail.com>	 <45DC46DF.8030704@gmail.com>	 <8d158e1f0702211030p542a8332w5b20318ca6b922e9@mail.gmail.com>	 <45DE74CA.2010603@gmail.com>	 <8d158e1f0702230041i7d3c28a4r202d9f8f628120f4@mail.gmail.com>	 <45DEB600.8060109@garzik.org>	 <8d158e1f0702230216qb72e7a8nbf5f41b91ae2c81@mail.gmail.com> <8d158e1f0702240424p1c6204afi6c4e6700403f156b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59419 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752272AbXBXMyD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 07:54:03 -0500
-In-Reply-To: <20070224074823.GA20322@htj.dyndns.org>
+Received: from py-out-1112.google.com ([64.233.166.183]:5483 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932438AbXBXNFe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 08:05:34 -0500
+Received: by py-out-1112.google.com with SMTP id a29so408261pyi
+        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 05:05:34 -0800 (PST)
+In-Reply-To: <8d158e1f0702240424p1c6204afi6c4e6700403f156b@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Patrick Ale <patrick.ale@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, albertl@mail.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-On Sat, 24 Feb 2007 16:48:23 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> ata_host_release() uses drvdata to determine ata_host to release and
-> clearing drvdata in ->remove_one causes NULL pointer deference.  Clear
-> drvdata only in ata_host_release() after all resources are freed.
+Patrick Ale wrote:
+> I can't believe this sh*t, I tried 3 sets of cables, non of them
+> worked, now I buy a new cable and things get detected at once?
 > 
-> This bug was first analyzed by Alan Cox for pata_pcmcia.
+> *sigh*
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
->
+> Thanks for your help all, I really appriciate it... it still looks
+> very weird to me but a fact is, with this new cable things do seem to
+> work.
 
-Acked-by: Alan Cox <alan@redhat.com>
+Hmmm.. Is your new cable 80c while the older ones are 40c?
+
+  http://upload.wikimedia.org/wikipedia/commons/2/26/ATA_cables.jpg
+
+The upper one is 40c while the other one is 80c.
+
+-- 
+tejun
