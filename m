@@ -1,39 +1,52 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Sat, 24 Feb 2007 22:05:32 +0900
-Message-ID: <45E0381C.3030706@gmail.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>	 <8d158e1f0702201400w622bbcb2lc7711b5c8974bfcd@mail.gmail.com>	 <45DBEB63.3010905@gmail.com>	 <8d158e1f0702210447q4ee8526cke05a76f895ad824c@mail.gmail.com>	 <45DC46DF.8030704@gmail.com>	 <8d158e1f0702211030p542a8332w5b20318ca6b922e9@mail.gmail.com>	 <45DE74CA.2010603@gmail.com>	 <8d158e1f0702230041i7d3c28a4r202d9f8f628120f4@mail.gmail.com>	 <45DEB600.8060109@garzik.org>	 <8d158e1f0702230216qb72e7a8nbf5f41b91ae2c81@mail.gmail.com> <8d158e1f0702240424p1c6204afi6c4e6700403f156b@mail.gmail.com>
+Subject: [PATCH] sata_sil: ignore and clear spurious IRQs while executing commands by polling
+Date: Sat, 24 Feb 2007 22:30:36 +0900
+Message-ID: <20070224133036.GB20322@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:5483 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438AbXBXNFe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 08:05:34 -0500
-Received: by py-out-1112.google.com with SMTP id a29so408261pyi
-        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 05:05:34 -0800 (PST)
-In-Reply-To: <8d158e1f0702240424p1c6204afi6c4e6700403f156b@mail.gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.229]:45480 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932763AbXBXNaj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 08:30:39 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so751975nze
+        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 05:30:38 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patrick Ale <patrick.ale@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, albertl@mail.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+Cc: stable@kernel.org
 
-Patrick Ale wrote:
-> I can't believe this sh*t, I tried 3 sets of cables, non of them
-> worked, now I buy a new cable and things get detected at once?
-> 
-> *sigh*
-> 
-> Thanks for your help all, I really appriciate it... it still looks
-> very weird to me but a fact is, with this new cable things do seem to
-> work.
+sata_sil used to trigger HSM error if IRQ occurs during polling
+command.  This didn't matter because polling wasn't used in sata_sil.
+However, as of 2.6.20, all IDENTIFYs are performed by polling and
+device detection sometimes fails due to spurious IRQ.  This patch
+makes sata_sil ignore and clear spurious IRQ while executing commands
+by polling.
 
-Hmmm.. Is your new cable 80c while the older ones are 40c?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+This fixes bug#7996 and IMHO should also be included in -stable.
+Thanks.
 
-  http://upload.wikimedia.org/wikipedia/commons/2/26/ATA_cables.jpg
-
-The upper one is 40c while the other one is 80c.
-
--- 
-tejun
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 1487255..aaff357 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -386,9 +386,15 @@ static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
+ 		goto freeze;
+ 	}
+ 
+-	if (unlikely(!qc || qc->tf.ctl & ATA_NIEN))
++	if (unlikely(!qc))
+ 		goto freeze;
+ 
++	if (unlikely(qc->tf.flags & ATA_TFLAG_POLLING)) {
++		/* this sometimes happens, just clear IRQ */
++		ata_chk_status(ap);
++		return;
++	}
++
+ 	/* Check whether we are expecting interrupt in this state */
+ 	switch (ap->hsm_task_state) {
+ 	case HSM_ST_FIRST:
