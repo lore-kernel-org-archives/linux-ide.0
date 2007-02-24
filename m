@@ -1,55 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Sat, 24 Feb 2007 19:11:20 +0100
-Message-ID: <200702241911.21030.bzolnier@gmail.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com> <200702241833.00199.bzolnier@gmail.com> <8d158e1f0702240937p1a8b5706u951b4fa21f6e2f67@mail.gmail.com>
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: end to end error recovery musings
+Date: Sat, 24 Feb 2007 10:39:15 -0800
+Message-ID: <20070224183915.GB13940@tuatara.stupidest.org>
+References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int> <20070224023229.GB4380@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:4381 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932433AbXBXSFW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 13:05:22 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so569874uga
-        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 10:05:21 -0800 (PST)
-In-Reply-To: <8d158e1f0702240937p1a8b5706u951b4fa21f6e2f67@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20070224023229.GB4380@thunk.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-ide@vger.kernel.org
-To: Patrick Ale <patrick.ale@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, albertl@mail.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
+On Fri, Feb 23, 2007 at 09:32:29PM -0500, Theodore Tso wrote:
 
-On Saturday 24 February 2007, Patrick Ale wrote:
-> > Thanks,
-> 
-> Hey,
-> 
-> Being serious has never been one of my strongest sides ;-)
-> 
-> Anyway, I will do the tests tomorrow, even tho I doubt if I'll run
-> into the problems I had, cause really.. since i changed the cable this
-> morning everything seems to work like a charm :)
+> And having a way of making this list available to both the
+> filesystem and to a userspace utility, so they can more easily deal
+> with doing a forced rewrite of the bad sector, after determining
+> which file is involved and perhaps doing something intelligent (up
+> to and including automatically requesting a backup system to fetch a
+> backup version of the file, and if it can be determined that the
+> file shouldn't have been changed since the last backup,
+> automatically fixing up the corrupted data block :-).
 
-OK but please give it a try anyway.
+i had a small c program + perl script that would take a badblocks list
+and figure out which files on an xfs filesystem were trashed, though
+in the case of xfs it's somewhat easier because you can dump the
+extents for a file something more generic wouldn't be hard to make
+work, it also wouldn't be hard to extend this to inodes in some cases
+though im not sure that there is much you can do there beyond fsck
 
-> Assuming by your name you're either in Poland, Croatia or a country
-> near, which makes us a maximum of one timezone away (I'm in a city
-> near Amsterdam), so when I write a mail with my findings we wont
-> suffer from big timezone delays which makes you read the mails 12
-> hours later or something.
-
-Poland here so yes exactly the same timezone.
-
-> Unless you have a *gasp* real like, in which case I envy you and wish
-> I were you :P
-
-s/real like/real life/ ?  [ or did you mean something else ]
-
-I'm trying hard to still have some. :)
-
-> Thanks for all your help guys and girls,
-> 
-> Patrick
