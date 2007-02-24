@@ -1,32 +1,43 @@
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: end to end error recovery musings
-Date: Sat, 24 Feb 2007 10:39:15 -0800
-Message-ID: <20070224183915.GB13940@tuatara.stupidest.org>
-References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int> <20070224023229.GB4380@thunk.org>
+From: "Eric D. Mudama" <edmudama@gmail.com>
+Subject: Re: [PATCH]: pcmcia - spot slave decode flaws (for testing)
+Date: Sat, 24 Feb 2007 14:23:40 -0700
+Message-ID: <311601c90702241323i22215a63l33b30e0f0fb009f0@mail.gmail.com>
+References: <20070220181836.524e5f9a@localhost.localdomain>
+	 <45DEC5A0.7050107@garzik.org>
+	 <20070223120845.19203fcb@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.226]:60522 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932697AbXBXVXl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 16:23:41 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so829472nze
+        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 13:23:41 -0800 (PST)
+In-Reply-To: <20070223120845.19203fcb@lxorguk.ukuu.org.uk>
 Content-Disposition: inline
-In-Reply-To: <20070224023229.GB4380@thunk.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, Feb 23, 2007 at 09:32:29PM -0500, Theodore Tso wrote:
+On 2/23/07, Alan <alan@lxorguk.ukuu.org.uk> wrote:
+> > Code looks OK. Not applied due to "for testing" note.
+> >
+> > General comment:  it might be nice to do this in the core, just as a
+> > sanity check for a variety of problems, past, present and future.
+>
+> We tried that with old IDE and all hell broke loose. Lots of virtual disk
+> stuff and raid volumes have non-unique serial numbers. We even found a
+> case of identically serial numbered Maxtor drives.
+>
+> It needs to stay in pcmcia, which is the only place we've seen the
+> duplication.
 
-> And having a way of making this list available to both the
-> filesystem and to a userspace utility, so they can more easily deal
-> with doing a forced rewrite of the bad sector, after determining
-> which file is involved and perhaps doing something intelligent (up
-> to and including automatically requesting a backup system to fetch a
-> backup version of the file, and if it can be determined that the
-> file shouldn't have been changed since the last backup,
-> automatically fixing up the corrupted data block :-).
+I don't think the maxtor drives actually had duplicate serial numbers.
+ They were coming back as "M0000000000000000000" or something like
+that to the limit of the strlen.  It looked more like buffer
+corruption or something, and only happened with one or two people...
 
-i had a small c program + perl script that would take a badblocks list
-and figure out which files on an xfs filesystem were trashed, though
-in the case of xfs it's somewhat easier because you can dump the
-extents for a file something more generic wouldn't be hard to make
-work, it also wouldn't be hard to extend this to inodes in some cases
-though im not sure that there is much you can do there beyond fsck
-
+--eric
