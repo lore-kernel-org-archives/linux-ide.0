@@ -1,38 +1,33 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] (pata-2.6 fix queue) sl82c105: DMA support code cleanup (take 3)
-Date: Sat, 24 Feb 2007 00:42:59 +0100
-Message-ID: <200702240042.59737.bzolnier@gmail.com>
-References: <200702140043.25244.sshtylyov@ru.mvista.com> <200702231913.55522.sshtylyov@ru.mvista.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: end to end error recovery musings
+Date: Fri, 23 Feb 2007 16:03:21 -0800
+Message-ID: <45DF80C9.5080606@zytor.com>
+References: <45DEF6EF.3020509@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:14425 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932777AbXBWXgt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Feb 2007 18:36:49 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1006410nfa
-        for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2007 15:36:48 -0800 (PST)
-In-Reply-To: <200702231913.55522.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <45DEF6EF.3020509@emc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Ric Wheeler <ric@emc.com>
+Cc: Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-
-On Friday 23 February 2007, Sergei Shtylyov wrote:
-> Fold the now equivalent code in the ide_dma_check() method into a mere call to
-> ide_use_dma().  Make config_for_dma() return non-zero if DMA mode has been set
-> and call it from the ide_dma_check() method instead of ide_dma_on().
-> Also, defer writing the DMA timings to the chip registers until DMA is actually
-> turned on (and do not enable IORDY for DMA).  Remove unnecessary code from the
-> init_hwif() method, improve its looks overall, and also rename the driver's
-> ide_dma_check() and dma_start() methods.
+Ric Wheeler wrote:
 > 
-> ---
-> This version takes into account that the ide-use-fast-pio.patch had been merged
-> to mainline...
+> We still have the following challenges:
+> 
+>    (1) read-ahead often means that we will  retry every bad sector at 
+> least twice from the file system level. The first time, the fs read 
+> ahead request triggers a speculative read that includes the bad sector 
+> (triggering the error handling mechanisms) right before the real 
+> application triggers a read does the same thing.  Not sure what the 
+> answer is here since read-ahead is obviously a huge win in the normal case.
+> 
 
-applied
+Probably the only sane thing to do is to remember the bad sectors and 
+avoid attempting reading them; that would mean marking "automatic" 
+versus "explicitly requested" requests to determine whether or not to 
+filter them against a list of discovered bad blocks.
+
+	-hpa
