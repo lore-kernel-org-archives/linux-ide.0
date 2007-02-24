@@ -1,70 +1,55 @@
-From: "Patrick Ale" <patrick.ale@gmail.com>
-Subject: Re: Fwd: [LIBATA] drives not detected
-Date: Sat, 24 Feb 2007 15:13:11 +0000
-Message-ID: <8d158e1f0702240713u606ce010n712c20b8f4b23d27@mail.gmail.com>
-References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>
-	 <45E0381C.3030706@gmail.com>
-	 <8d158e1f0702240556s52a79202g974ad8208ee7e306@mail.gmail.com>
-	 <200702241556.19089.bzolnier@gmail.com>
+From: Andreas Arens <ari@goron.de>
+Subject: Re: hdb: irq timeout: status=0xd0 { Busy }
+Date: Sat, 24 Feb 2007 16:36:27 +0100
+Message-ID: <erpm1a$muc$1@sea.gmane.org>
+References: <2fa647f60702230519u4dc178b8s6c28948cd824272d@mail.gmail.com> <20070223142840.7c771453@lxorguk.ukuu.org.uk> <2fa647f60702230530x48e5d558o422825892e428d1d@mail.gmail.com> <20070223151709.3b819367@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.230]:12847 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932806AbXBXPNN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 10:13:13 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so769468nze
-        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 07:13:12 -0800 (PST)
-In-Reply-To: <200702241556.19089.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:32917 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932954AbXBXPzN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Feb 2007 10:55:13 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1HKzEk-0003oy-Dw
+	for linux-ide@vger.kernel.org; Sat, 24 Feb 2007 16:55:02 +0100
+Received: from p50917152.dip.t-dialin.net ([80.145.113.82])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 16:55:02 +0100
+Received: from ari by p50917152.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 16:55:02 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, albertl@mail.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: linux-ide@vger.kernel.org
 
-Haha,
+Alan wrote:
 
-Well, I am not sure if they "work" as in, do the right thing.
-I don't know if you had a chance to look at my dmesg-es but acording
-to the legacy IDE drivers my both disks were 2048 Peta byte each, I
-wish I had this kind of storage :P
+>> Would it be possible for the kernel to realize that the drive stopped
+>> responding? And make sure that it doesn't make the whole computer
+>> unresponsive...
+> 
+> libata should eventually get rid of the drive. The old ide isn't quite so
+> smart.
+> 
 
-Btw, I just bought myself 2 500GB sata disks, care for any tests to be
-executed? Are there things in particulair you guys would like to have
-tested?
+I see the same happening with a non-udma capable cdrw drive since
+2.6.19-rc1. 2.6.18.x was ok.
 
-Patrick
+Unfortunately libata was not a solution (at least in 2.6.19). It took
+the hard drive sharing the bus with the mwdma cdrw down from UDMA100
+to PIO0 the entire chain and finally offline in steps each time
+it detected trouble on the bus.
+I suspect the genirq changes (I'm on x86_64) which went in at that
+point to be the cause. The ide irq's are edge triggered, and changes to
+the fragile timing there might have made it miss.
+I solved this by replacing the drive against an UDMA capable on
+(but still have the old one around for testing, if need be).
+In 2.6.19 (after trying libata on it) I saw errors of command time
+outs etc. 2.6.20 was even worse as it failed silently.
 
-On 2/24/07, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
->
-> On Saturday 24 February 2007, Patrick Ale wrote:
-> > On 2/24/07, Tejun Heo <htejun@gmail.com> wrote:
-> > > Patrick Ale wrote:
-> >
-> >
-> > >
-> > > The upper one is 40c while the other one is 80c.
-> >
-> > No, they are all 80 , two of them came with the mainboard, the so
-> > called "green" connectors as gigabyte calls them, the other one was an
-> > 80c with blue connector.
-> >
-> > I dunno, I guess I should review my "spare" parts and see what's
-> > really useable from this pile of hardware I have here.
-> >
-> > But hey, one thing is for sure, and I think it's a positive thing.
-> > If libata sees problems or seems to have problems, you can be 99% sure
-> > there IS a problem, where the legacy drivers just act all happy and
-> > keep you thinking everything is peachy and all.
->
-> I'm really sorry that legacy drivers just work.  I will try harder. ;-)
->
-> The real problem is that while legacy drivers contain a ton of workarounds
-> and fixes for problems like that they often lacks the documentation about
-> it.
->
-> > So again, thumbs up for libata.
-> >
-> > Patrick
->
+Andy
+
+
