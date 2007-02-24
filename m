@@ -1,49 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.21-rc1] sata_vsc: refactor vsc_sata_interrupt and
- hook up	error handling
-Date: Sat, 24 Feb 2007 13:06:16 +0900
-Message-ID: <45DFB9B8.60905@gmail.com>
-References: <20070223233643.8535.1788.stgit@dwillia2-linux.ch.intel.com>
+Subject: Re: Disk stuck in error recovery loop with AHCI
+Date: Sat, 24 Feb 2007 13:22:50 +0900
+Message-ID: <45DFBD9A.6090204@gmail.com>
+References: <20070221052022.GA15964@jim.sh> <20070223072826.GA2763@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.232]:62897 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933363AbXBXEGS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Feb 2007 23:06:18 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so651501nze
-        for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2007 20:06:18 -0800 (PST)
-In-Reply-To: <20070223233643.8535.1788.stgit@dwillia2-linux.ch.intel.com>
+Received: from py-out-1112.google.com ([64.233.166.179]:44150 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933379AbXBXEWv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Feb 2007 23:22:51 -0500
+Received: by py-out-1112.google.com with SMTP id a29so352851pyi
+        for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2007 20:22:51 -0800 (PST)
+In-Reply-To: <20070223072826.GA2763@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jeremy@sgi.com
+To: Jim Paris <jim@jtan.com>
+Cc: linux-ide@vger.kernel.org
 
-Dan Williams wrote:
-> Separate sata_vsc interrupt handling into a normal (per-port) path and an
-> error path with the addition of vsc_port_intr and vsc_error_intr
-> respectively.  The error path handles interrupt based
-> hotplug events which requires the definition of vsc_freeze and vsc_thaw.
-> 
-> Note: vsc_port_intr has a workaround for unexpected interrupts that occur
-> during polled commands.  This fixes a regression between 2.6.19 and 2.6.20.
-> 
-> Changes in take2:
-> * removed definition of invalid fis bit
-> * let standard ata-error-handling handle the serror register
-> * clear all unhandled interrupts
-> * revert changes to vsc_intr_mask_update (vsc_thaw enables all interrupts)
-> * use unlikely() for the pci-abort and not-our-interrupt cases in vsc_sata_interrupt
-> 
-> Changes in take3:
-> * Unify the "add" + "hook-up" patches into this single patch
-> 
-> [htejun@gmail.com: clean up comments and suggestions]
-> Cc: Jeremy Higdon <jeremy@sgi.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Jim Paris wrote:
+> Still, it seems that some improvements could be made to the EH when
+> this sort of thing happens.  For example, after "speed down requested
+> but no transfer mode left" a few times in a row, maybe it would make
+> sense to just fail the disk and give up.  That would have allowed
+> higher layers like MD to recover.
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+That's SD retrying sector-by-sector a large request as libata doesn't
+report proper failed sector info.  Please try 2.6.20.  md will fail the
+drive after a few errors.
+
+Patches to improve EH behavior further went into 2.6.21 devel tree and
+some are pending.
+
+Thanks.
 
 -- 
 tejun
