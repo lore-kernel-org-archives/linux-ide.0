@@ -1,43 +1,51 @@
-From: "Eric D. Mudama" <edmudama@gmail.com>
-Subject: Re: [PATCH]: pcmcia - spot slave decode flaws (for testing)
-Date: Sat, 24 Feb 2007 14:23:40 -0700
-Message-ID: <311601c90702241323i22215a63l33b30e0f0fb009f0@mail.gmail.com>
-References: <20070220181836.524e5f9a@localhost.localdomain>
-	 <45DEC5A0.7050107@garzik.org>
-	 <20070223120845.19203fcb@lxorguk.ukuu.org.uk>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: 2.6.20-git10 (and -git13): BUG at drivers/pci/pci.c:817 during resume from disk
+Date: Sun, 25 Feb 2007 00:02:59 +0100
+Message-ID: <20070224230259.GU12392@stusta.de>
+References: <200702150016.24865.rjw@sisk.pl> <200702151223.44846.rjw@sisk.pl> <200702171100.39114.rjw@sisk.pl> <45DA6E6D.5030700@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:60522 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932697AbXBXVXl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 16:23:41 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so829472nze
-        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 13:23:41 -0800 (PST)
-In-Reply-To: <20070223120845.19203fcb@lxorguk.ukuu.org.uk>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:43368 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933583AbXBXXC7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 18:02:59 -0500
 Content-Disposition: inline
+In-Reply-To: <45DA6E6D.5030700@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>, Alan <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>
 
-On 2/23/07, Alan <alan@lxorguk.ukuu.org.uk> wrote:
-> > Code looks OK. Not applied due to "for testing" note.
-> >
-> > General comment:  it might be nice to do this in the core, just as a
-> > sanity check for a variety of problems, past, present and future.
->
-> We tried that with old IDE and all hell broke loose. Lots of virtual disk
-> stuff and raid volumes have non-unique serial numbers. We even found a
-> case of identically serial numbered Maxtor drives.
->
-> It needs to stay in pcmcia, which is the only place we've seen the
-> duplication.
+On Tue, Feb 20, 2007 at 12:43:41PM +0900, Tejun Heo wrote:
+> Rafael J. Wysocki wrote:
+> > Update:
+> > 
+> > I get the same BUG with 2.6.20-git13 100% of the time during the resume.
+> > The system seems to be fully functional nonetheless.
+> 
+> Known bug, will be fixed soon.
 
-I don't think the maxtor drives actually had duplicate serial numbers.
- They were coming back as "M0000000000000000000" or something like
-that to the limit of the strlen.  It looked more like buffer
-corruption or something, and only happened with one or two people...
+Is this a variation of
 
---eric
+Subject    : HP nx6325: usb mouse stops working after resume from ram
+References : http://lkml.org/lkml/2007/2/21/413
+Submitter  : Arkadiusz Miskiewicz <arekm@maven.pl>
+Caused-By  : Konstantin Karasyov <konstantin.a.karasyov@intel.com>
+             commit 0a6139027f3986162233adc17285151e78b39cac
+Status     : unknown
+
+or one of the other ACPI problems in 2.6.21-rc1?
+
+> tejun
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
