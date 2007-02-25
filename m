@@ -1,36 +1,41 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.21-rc1] sata_promise: fix 20619 new EH merge error
-Date: Sun, 25 Feb 2007 12:44:39 +0100 (MET)
-Message-ID: <200702251144.l1PBidUj003214@harpo.it.uu.se>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: clear drvdata in ata_host_release()
+Date: Sun, 25 Feb 2007 13:28:55 +0000
+Message-ID: <20070225132855.324a0b36@lxorguk.ukuu.org.uk>
+References: <20070224074823.GA20322@htj.dyndns.org>
+	<45E0EB9F.3050001@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:36885 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964801AbXBYLov (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Feb 2007 06:44:51 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43313 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S964844AbXBYMZN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Feb 2007 07:25:13 -0500
+In-Reply-To: <45E0EB9F.3050001@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Komuro <komurojun-mbn@nifty.com>
 
-When I merged my 20619 new EH conversion with #libata-upstream
-I had to manually resolve a conflict, and inadvertently lost
-pdc_pata_ops' ->post_internal_cmd binding. Corrected by this patch.
+On Sat, 24 Feb 2007 20:51:27 -0500
+Jeff Garzik <jeff@garzik.org> wrote:
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Tejun Heo wrote:
+> > ata_host_release() uses drvdata to determine ata_host to release and
+> > clearing drvdata in ->remove_one causes NULL pointer deference.  Clear
+> > drvdata only in ata_host_release() after all resources are freed.
+> > 
+> > This bug was first analyzed by Alan Cox for pata_pcmcia.
+> > 
+> > Signed-off-by: Tejun Heo <htejun@gmail.com>
+> > Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> > ---
+> > Alan, this is the bug you talked about, right?  I took the fix from
+> > "[BUG] PATA_PCMCIA does not work" and expanded it.  If this isn't the
+> > one, please let me know.  Thanks.
+> 
+> Has a tester confirmed that this patch fixes the problem, and supercedes 
+> Alan's patch?
 
----
-
- drivers/ata/sata_promise.c |    1 +
- 1 files changed, 1 insertion(+)
-
-diff -rupN linux-2.6.21-rc1/drivers/ata/sata_promise.c linux-2.6.21-rc1.sata_promise-20619-newEH-fix/drivers/ata/sata_promise.c
---- linux-2.6.21-rc1/drivers/ata/sata_promise.c	2007-02-24 22:32:42.000000000 +0100
-+++ linux-2.6.21-rc1.sata_promise-20619-newEH-fix/drivers/ata/sata_promise.c	2007-02-24 23:05:08.000000000 +0100
-@@ -218,6 +218,7 @@ static const struct ata_port_operations 
- 	.freeze			= pdc_freeze,
- 	.thaw			= pdc_thaw,
- 	.error_handler		= pdc_error_handler,
-+	.post_internal_cmd	= pdc_post_internal_cmd,
- 	.data_xfer		= ata_data_xfer,
- 	.irq_handler		= pdc_interrupt,
- 	.irq_clear		= pdc_irq_clear,
+It doesn't appear to, instead it fixes further cases.
