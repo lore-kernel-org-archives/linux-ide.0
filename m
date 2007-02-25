@@ -1,35 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH libata-dev#upstream-fixes] pata_amd: fix an obvious bug in cable detection
-Date: Sun, 25 Feb 2007 19:50:41 +0100
-Message-ID: <200702251950.41867.bzolnier@gmail.com>
-References: <20070205080128.GH1625@htj.dyndns.org> <200702251839.36205.bzolnier@gmail.com> <45E1CA42.6070707@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2.6.21-rc1] sata_promise: fix 20619 new EH merge error
+Date: Sun, 25 Feb 2007 15:53:58 -0500
+Message-ID: <45E1F766.1070800@garzik.org>
+References: <200702251144.l1PBidUj003214@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:17738 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965088AbXBYSo0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Feb 2007 13:44:26 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so644686uga
-        for <linux-ide@vger.kernel.org>; Sun, 25 Feb 2007 10:44:24 -0800 (PST)
-In-Reply-To: <45E1CA42.6070707@gmail.com>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:34772 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751088AbXBYUyA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Feb 2007 15:54:00 -0500
+In-Reply-To: <200702251144.l1PBidUj003214@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-On Sunday 25 February 2007, Tejun Heo wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > Why can't libata do the right thing and just send IDENTIFY command
-> > to the slave device first?
+Mikael Pettersson wrote:
+> When I merged my 20619 new EH conversion with #libata-upstream
+> I had to manually resolve a conflict, and inadvertently lost
+> pdc_pata_ops' ->post_internal_cmd binding. Corrected by this patch.
 > 
-> That's my plan B.  I'm just not sure whether it would do any good, would it?
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> 
+> ---
+> 
+>  drivers/ata/sata_promise.c |    1 +
+>  1 files changed, 1 insertion(+)
 
-Probably it would but to know for sure you would need to verify it on some
-of the affected system (shouldn't be problem given number of the bugreports).
+applied both patches
 
-Bart
+
