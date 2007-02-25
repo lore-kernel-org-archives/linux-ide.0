@@ -1,49 +1,76 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.20-git10 (and -git13): BUG at drivers/pci/pci.c:817 during
- resume from disk
-Date: Sun, 25 Feb 2007 13:28:42 +0900
-Message-ID: <45E1107A.2040708@gmail.com>
-References: <200702150016.24865.rjw@sisk.pl> <200702151223.44846.rjw@sisk.pl> <200702171100.39114.rjw@sisk.pl> <45DA6E6D.5030700@gmail.com> <20070224230259.GU12392@stusta.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] sata_mv: clean up EDMA config register usage
+Date: Sun, 25 Feb 2007 02:59:13 -0500
+Message-ID: <20070225075913.GA27150@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:10792 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309AbXBYE2p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 23:28:45 -0500
-Received: by py-out-1112.google.com with SMTP id a29so499106pyi
-        for <linux-ide@vger.kernel.org>; Sat, 24 Feb 2007 20:28:44 -0800 (PST)
-In-Reply-To: <20070224230259.GU12392@stusta.de>
+Received: from havoc.gtf.org ([69.61.125.42]:35004 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933675AbXBYH7O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Feb 2007 02:59:14 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>, Alan <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 
-Hello, Adrian.
 
-Adrian Bunk wrote:
-> On Tue, Feb 20, 2007 at 12:43:41PM +0900, Tejun Heo wrote:
->> Rafael J. Wysocki wrote:
->>> Update:
->>>
->>> I get the same BUG with 2.6.20-git13 100% of the time during the resume.
->>> The system seems to be fully functional nonetheless.
->> Known bug, will be fixed soon.
-> 
-> Is this a variation of
-> 
-> Subject    : HP nx6325: usb mouse stops working after resume from ram
-> References : http://lkml.org/lkml/2007/2/21/413
-> Submitter  : Arkadiusz Miskiewicz <arekm@maven.pl>
-> Caused-By  : Konstantin Karasyov <konstantin.a.karasyov@intel.com>
->              commit 0a6139027f3986162233adc17285151e78b39cac
-> Status     : unknown
-> 
-> or one of the other ACPI problems in 2.6.21-rc1?
+commit 346e14262ff04e5c85f069eb95f0bb7a64d7b062
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Sun Feb 25 02:53:41 2007 -0500
 
-No, it's not related to ACPI.  It's caused by devres changes and fixed
-in libata-dev tree.
+    [libata] sata_mv: don't touch reserved bits in EDMA config register
+    
+    The code in mv_edma_cfg() reflected its 60xx origins, by doing things
+    [slightly] incorrectly on the older 50xx and newer 6042/7042 chips.
+    
+    Clean up the EDMA configuration setup such that, each chip family
+    carefully initializes its own EDMA setup.
+    
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
--- 
-tejun
+ drivers/ata/sata_mv.c |   20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+346e14262ff04e5c85f069eb95f0bb7a64d7b062
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index d689df5..137ff4e 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -814,23 +814,27 @@ static void mv_edma_cfg(struct mv_host_priv *hpriv, void __iomem *port_mmio)
+ 	u32 cfg = readl(port_mmio + EDMA_CFG_OFS);
+ 
+ 	/* set up non-NCQ EDMA configuration */
+-	cfg &= ~0x1f;		/* clear queue depth */
+-	cfg &= ~EDMA_CFG_NCQ;	/* clear NCQ mode */
+ 	cfg &= ~(1 << 9);	/* disable equeue */
+ 
+-	if (IS_GEN_I(hpriv))
++	if (IS_GEN_I(hpriv)) {
++		cfg &= ~0x1f;		/* clear queue depth */
+ 		cfg |= (1 << 8);	/* enab config burst size mask */
++	}
+ 
+-	else if (IS_GEN_II(hpriv))
++	else if (IS_GEN_II(hpriv)) {
++		cfg &= ~0x1f;		/* clear queue depth */
+ 		cfg |= EDMA_CFG_RD_BRST_EXT | EDMA_CFG_WR_BUFF_LEN;
++		cfg &= ~(EDMA_CFG_NCQ | EDMA_CFG_NCQ_GO_ON_ERR); /* clear NCQ */
++	}
+ 
+ 	else if (IS_GEN_IIE(hpriv)) {
+-		cfg |= (1 << 23);	/* dis RX PM port mask */
+-		cfg &= ~(1 << 16);	/* dis FIS-based switching (for now) */
++		cfg |= (1 << 23);	/* do not mask PM field in rx'd FIS */
++		cfg |= (1 << 22);	/* enab 4-entry host queue cache */
+ 		cfg &= ~(1 << 19);	/* dis 128-entry queue (for now?) */
+ 		cfg |= (1 << 18);	/* enab early completion */
+-		cfg |= (1 << 17);	/* enab host q cache */
+-		cfg |= (1 << 22);	/* enab cutthrough */
++		cfg |= (1 << 17);	/* enab cut-through (dis stor&forwrd) */
++		cfg &= ~(1 << 16);	/* dis FIS-based switching (for now) */
++		cfg &= ~(EDMA_CFG_NCQ | EDMA_CFG_NCQ_GO_ON_ERR); /* clear NCQ */
+ 	}
+ 
+ 	writelfl(cfg, port_mmio + EDMA_CFG_OFS);
