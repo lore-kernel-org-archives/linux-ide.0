@@ -1,39 +1,56 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: clear drvdata in ata_host_release()
-Date: Sat, 24 Feb 2007 20:51:27 -0500
-Message-ID: <45E0EB9F.3050001@garzik.org>
-References: <20070224074823.GA20322@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev#upstream-fixes] pata_amd: fix an obvious bug
+ in cable detection
+Date: Sat, 24 Feb 2007 20:52:22 -0500
+Message-ID: <45E0EBD6.2010008@garzik.org>
+References: <20070205080128.GH1625@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58306 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58320 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933618AbXBYBva (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Feb 2007 20:51:30 -0500
-In-Reply-To: <20070224074823.GA20322@htj.dyndns.org>
+	id S933624AbXBYBwZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Feb 2007 20:52:25 -0500
+In-Reply-To: <20070205080128.GH1625@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Komuro <komurojun-mbn@nifty.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, stable@kernel.org
 
 Tejun Heo wrote:
-> ata_host_release() uses drvdata to determine ata_host to release and
-> clearing drvdata in ->remove_one causes NULL pointer deference.  Clear
-> drvdata only in ata_host_release() after all resources are freed.
-> 
-> This bug was first analyzed by Alan Cox for pata_pcmcia.
+> 80c test mask is at bits 18 and 19 of EIDE Controller Configuration
+> not 22 and 23.  Fix it.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 > ---
-> Alan, this is the bug you talked about, right?  I took the fix from
-> "[BUG] PATA_PCMCIA does not work" and expanded it.  If this isn't the
-> one, please let me know.  Thanks.
+> This makes unreliable cable detection even more unreliable.  Please
+> consider for -stable.  Thanks.
+> 
+>  drivers/ata/pata_amd.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: work/drivers/ata/pata_amd.c
+> ===================================================================
+> --- work.orig/drivers/ata/pata_amd.c
+> +++ work/drivers/ata/pata_amd.c
+> @@ -128,7 +128,7 @@ static void timing_setup(struct ata_port
+>  
+>  static int amd_pre_reset(struct ata_port *ap)
+>  {
+> -	static const u32 bitmask[2] = {0x03, 0xC0};
+> +	static const u32 bitmask[2] = {0x03, 0x0C};
+>  	static const struct pci_bits amd_enable_bits[] = {
+>  		{ 0x40, 1, 0x02, 0x02 },
+>  		{ 0x40, 1, 0x01, 0x01 }
+> @@ -247,7 +247,7 @@ static void amd133_set_dmamode(struct at
+>   */
+>  
+>  static int nv_pre_reset(struct ata_port *ap) {
+> -	static const u8 bitmask[2] = {0x03, 0xC0};
+> +	static const u8 bitmask[2] = {0x03, 0x0C};
+>  	static const struct pci_bits nv_enable_bits[] = {
 
-Has a tester confirmed that this patch fixes the problem, and supercedes 
-Alan's patch?
-
-	Jeff
+applied
 
 
