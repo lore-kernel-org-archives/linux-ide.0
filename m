@@ -1,68 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [BUG]  PATA_PCMCIA does not work
-Date: Sat, 24 Feb 2007 20:45:18 -0500
-Message-ID: <45E0EA2E.5050004@garzik.org>
-References: <20061217212752.d93816b4.komurojun-mbn@nifty.com>	<20061217040222.GD17561@ftp.linux.org.uk>	<20070211101537.e40fa309.komurojun-mbn@nifty.com>	<20070211114013.65b2be2c.komurojun-mbn@nifty.com>	<20070218110914.888de729.komurojun-mbn@nifty.com>	<20070221153729.5eab83b6@lxorguk.ukuu.org.uk> <20070225081407.8ebce421.komurojun-mbn@nifty.com>
+Subject: Re: [PATCH] libata: clear drvdata in ata_host_release()
+Date: Sat, 24 Feb 2007 20:51:27 -0500
+Message-ID: <45E0EB9F.3050001@garzik.org>
+References: <20070224074823.GA20322@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58270 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58306 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932945AbXBYBp0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Feb 2007 20:45:26 -0500
-In-Reply-To: <20070225081407.8ebce421.komurojun-mbn@nifty.com>
+	id S933618AbXBYBva (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Feb 2007 20:51:30 -0500
+In-Reply-To: <20070224074823.GA20322@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Komuro <komurojun-mbn@nifty.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Komuro <komurojun-mbn@nifty.com>
 
-Komuro wrote:
-> Hi,
+Tejun Heo wrote:
+> ata_host_release() uses drvdata to determine ata_host to release and
+> clearing drvdata in ->remove_one causes NULL pointer deference.  Clear
+> drvdata only in ata_host_release() after all resources are freed.
 > 
-> The pata_pcmcia problem is fixed. Thanks!
-> (I tested it on kernel 2.6.20-git14)
+> This bug was first analyzed by Alan Cox for pata_pcmcia.
 > 
-> But kernel 2.6.20-mm2 introduced new oops
-> when I insert the pata_pcmcia device.
-> 
-> 
-> pcmcia: registering new device pcmcia1.0
-> SCSI subsystem initialized
-> libata version 2.10 loaded.
-> ata1: PATA max PIO0 cmd 0x0001d100 ctl 0x0001d10e bmdma 0x00000000 irq 3
-> scsi0 : pata_pcmcia
-> BUG: unable to handle kernel NULL pointer dereference at virtual address 0000004d
->  printing eip:
-> d8a1b10e
-> *pde = 00000000
-> Oops: 0000 [#1]
-> last sysfs file: /block/hda/size
-> Modules linked in: pata_pcmcia libata scsi_mod dm_mirror dm_multipath dm_mod pcmcia yenta_socket rsrc_nonstatic pcmcia_core
-> CPU:    0
-> EIP:    0060:[<d8a1b10e>]    Not tainted VLI
-> EFLAGS: 00010296   (2.6.20-mm2 #1)
-> EIP is at ata_acpi_exec_tfs+0x157/0x8ad [libata]
-> eax: 00000001   ebx: 00000000   ecx: d6d43c84   edx: d6d43c84
-> esi: d51f4514   edi: 00000000   ebp: d51f438c   esp: d6f2bcdc
-> ds: 007b   es: 007b   fs: 00d8  gs: 0000  ss: 0068
-> Process scsi_eh_0 (pid: 1647, ti=d6f2a000 task=c13c9a70 task.ti=d6f2a000)
-> Stack: d51f6190 00000246 00000246 00000000 d8a130b7 00000000 00000000 00000000 
->        00000000 d6f2bd48 d6f2bdf0 d51f4514 ec000000 d51f6190 00000000 00000000 
->        00000000 00000246 d6d43c84 00000000 00000000 00000000 00000000 ffffffff 
-> Call Trace:
->  [<d8a130b7>] ata_exec_internal_sg+0x3ae/0x3b8 [libata]
->  [<d8a125f8>] ata_dev_configure+0xc1/0x7d2 [libata]
->  [<d8a10e87>] ata_dev_select+0xce/0x11a [libata]
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> ---
+> Alan, this is the bug you talked about, right?  I took the fix from
+> "[BUG] PATA_PCMCIA does not work" and expanded it.  If this isn't the
+> one, please let me know.  Thanks.
 
-Any chance you could insert some printk() calls into ata_apci_exec_tfs? 
-  ata_exec_internal_sg() never calls that function, so I'm curious if 
-something corrupted memory a bit, or what happened.
-
-In any case, I'm surprised that ACPI would be executing taskfiles on 
-PCMCIA anyway.
+Has a tester confirmed that this patch fixes the problem, and supercedes 
+Alan's patch?
 
 	Jeff
-
 
 
