@@ -1,51 +1,30 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: 2.6.20-git10 (and -git13): BUG at drivers/pci/pci.c:817 during resume from disk
-Date: Sun, 25 Feb 2007 00:02:59 +0100
-Message-ID: <20070224230259.GU12392@stusta.de>
-References: <200702150016.24865.rjw@sisk.pl> <200702151223.44846.rjw@sisk.pl> <200702171100.39114.rjw@sisk.pl> <45DA6E6D.5030700@gmail.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFT] libata hpa support
+Date: Sun, 25 Feb 2007 00:09:34 +0000
+Message-ID: <20070225000934.71253b30@lxorguk.ukuu.org.uk>
+References: <20070223170625.GA29931@athena.road.mcmartin.ca>
+	<20070223181959.56502bf2@lxorguk.ukuu.org.uk>
+	<20070224180047.GA6204@athena.road.mcmartin.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:43368 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933583AbXBXXC7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 18:02:59 -0500
-Content-Disposition: inline
-In-Reply-To: <45DA6E6D.5030700@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49690 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933584AbXBXXFv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Feb 2007 18:05:51 -0500
+In-Reply-To: <20070224180047.GA6204@athena.road.mcmartin.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>, Alan <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>
+Cc: Kyle McMartin <kyle@canonical.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, mjg59@ubuntu.com
 
-On Tue, Feb 20, 2007 at 12:43:41PM +0900, Tejun Heo wrote:
-> Rafael J. Wysocki wrote:
-> > Update:
-> > 
-> > I get the same BUG with 2.6.20-git13 100% of the time during the resume.
-> > The system seems to be fully functional nonetheless.
-> 
-> Known bug, will be fixed soon.
+> Right, so we can leave the policy to be just disabling it by 40p/80p cable
+> type for now... Sigh.
 
-Is this a variation of
+The only compatible policy is always act on it.
 
-Subject    : HP nx6325: usb mouse stops working after resume from ram
-References : http://lkml.org/lkml/2007/2/21/413
-Submitter  : Arkadiusz Miskiewicz <arekm@maven.pl>
-Caused-By  : Konstantin Karasyov <konstantin.a.karasyov@intel.com>
-             commit 0a6139027f3986162233adc17285151e78b39cac
-Status     : unknown
+> I suspect Fedora is getting fairly late in the F7 development cycle and this
+> kind of intrusive change to the installer, etc., would be frowned upon?
 
-or one of the other ACPI problems in 2.6.21-rc1?
-
-> tejun
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+HPA is needed by FC7, which is one reason I'm glad you are doing it ;)
 
