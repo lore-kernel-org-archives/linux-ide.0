@@ -1,68 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev#upstream-fixes] pata_amd: fix an obvious bug
- in cable detection
-Date: Sun, 25 Feb 2007 23:19:19 +0900
-Message-ID: <45E19AE7.2020206@gmail.com>
-References: <20070205080128.GH1625@htj.dyndns.org>	<45E0EBD6.2010008@garzik.org> <20070225132945.44299b0c@lxorguk.ukuu.org.uk>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: 2.6.20-git10 (and -git13): BUG at drivers/pci/pci.c:817 during resume from disk
+Date: Sun, 25 Feb 2007 17:32:00 +0100
+Message-ID: <20070225163200.GZ12392@stusta.de>
+References: <200702150016.24865.rjw@sisk.pl> <200702151223.44846.rjw@sisk.pl> <200702171100.39114.rjw@sisk.pl> <45DA6E6D.5030700@gmail.com> <20070224230259.GU12392@stusta.de> <45E1107A.2040708@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.224]:22873 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964856AbXBYOTc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Feb 2007 09:19:32 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1070763wxd
-        for <linux-ide@vger.kernel.org>; Sun, 25 Feb 2007 06:19:32 -0800 (PST)
-In-Reply-To: <20070225132945.44299b0c@lxorguk.ukuu.org.uk>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:43849 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751118AbXBYQcB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Feb 2007 11:32:01 -0500
+Content-Disposition: inline
+In-Reply-To: <45E1107A.2040708@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, Mark Lord <mlord@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>, Alan <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>
 
-[cc'ing Mark, Bart and Sergei. Hi]
-
-Alan wrote:
->>> This makes unreliable cable detection even more unreliable.  Please
->>> consider for -stable.  Thanks.
+On Sun, Feb 25, 2007 at 01:28:42PM +0900, Tejun Heo wrote:
+> Hello, Adrian.
 > 
-> At minimum you also need to stop doing drive side detect for PATA_CBL_80
-> as many controllers don't do both so if you've got host side detect that
-> is what you must trust.
+> Adrian Bunk wrote:
+> > On Tue, Feb 20, 2007 at 12:43:41PM +0900, Tejun Heo wrote:
+> >> Rafael J. Wysocki wrote:
+> >>> Update:
+> >>>
+> >>> I get the same BUG with 2.6.20-git13 100% of the time during the resume.
+> >>> The system seems to be fully functional nonetheless.
+> >> Known bug, will be fixed soon.
+> > 
+> > Is this a variation of
+> > 
+> > Subject    : HP nx6325: usb mouse stops working after resume from ram
+> > References : http://lkml.org/lkml/2007/2/21/413
+> > Submitter  : Arkadiusz Miskiewicz <arekm@maven.pl>
+> > Caused-By  : Konstantin Karasyov <konstantin.a.karasyov@intel.com>
+> >              commit 0a6139027f3986162233adc17285151e78b39cac
+> > Status     : unknown
+> > 
+> > or one of the other ACPI problems in 2.6.21-rc1?
 > 
-> Fixed that in my internal tree and it seems happier
+> No, it's not related to ACPI.  It's caused by devres changes and fixed
+> in libata-dev tree.
 
-It seems libata is wrong about device side cable detection.  Device side
-cable detection tries to detect host side capacitor connected to PDIAG-,
-depends on the slave device releasing PDIAG- signal.
+I'm currently a bit lost with all the ATA/ACPI/suspend regression 
+reports...
 
-According to Annex B of ATA/ATAPI-5, IDENTIFY should be issued to the
-slave device first to ensure that it releases PDIAG- and then use the
-cable detection result from the master device.  As we IDENTIFY master
-first right after reset, slave if present is driving PDIAG-, so the
-master on IDENTIFY always thinks the capacitor is present and 40c limit
-is always applied.
+Which patch fixes this regression?
 
-IDE is better off because it doesn't reset before IDENTIFYing and it's
-likely that BIOS has issued some commands to the slave device prior to
-passing control to OS thus making it release PDIAG-.
+> tejun
 
-1. Device side cable detection can only be used to limit speed because
-if motherboard doesn't have capacitor attached to PDIAG-, the test
-result always indicates 80c.
-
-2. Host side detection involves issuing commands to attached devices
-because it depends on the slave device releasing PDIAG-, so most
-controllers do cable detection in BIOS and just put the result in PCI
-config region or wherever.  We dunno how BIOS does it exactly but many
-of them probably consider device side detection result as well.
-
-So, considering #1 and #2, it might be best to just believe what the
-controller (BIOS) says and not bother about device side detection.  In
-fact, we've been effectively ignoring device side detection result
-before my "fix" for device side cable detection.
-
-What do you think?
+cu
+Adrian
 
 -- 
-tejun
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
