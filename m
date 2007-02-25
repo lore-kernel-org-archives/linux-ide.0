@@ -1,107 +1,50 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.21-rc1: known regressions (part 1)
-Date: Sun, 25 Feb 2007 18:52:47 +0100
-Message-ID: <20070225175247.GB12392@stusta.de>
-References: <Pine.LNX.4.64.0702202043280.4043@woody.linux-foundation.org>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH libata-dev#upstream-fixes] pata_amd: fix an obvious bug
+ in cable detection
+Date: Sun, 25 Feb 2007 19:13:19 +0000
+Message-ID: <20070225191319.33d928c9@lxorguk.ukuu.org.uk>
+References: <20070205080128.GH1625@htj.dyndns.org>
+	<45E0EBD6.2010008@garzik.org>
+	<20070225132945.44299b0c@lxorguk.ukuu.org.uk>
+	<45E19AE7.2020206@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0702202043280.4043@woody.linux-foundation.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Pavel Machek <pavel@ucw.cz>, Marcel Holtmann <marcel@holtmann.org>, linux-pm@lists.osdl.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>, lenb@kernel.org, linux-acpi@vger.kernel.org, luming.yu@intel.com, Arkadiusz Miskiewicz <arekm@maven.pl>, Konstantin Karasyov <konstantin.a.karasyov@intel.com>, linux-usb-devel@lists.sourceforge.net, Thomas Meyer <thomas.mey@web.de>, Andrew <andrew@nelless.net>, Janosch Machowinski <jmachowinski@gmx.de>, vladimir.p.lebedev@intel.com, Lukas Hejtmanek <xhejtman@fi.muni.cz>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Meelis Roos <mroos@linux.ee>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Fabio Comolli <fabio.comolli@gmail.com>, Jean-Luc Coulon <jean.luc.coulon@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Tejun Heo <htejun@gmail.com>, Rafae
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55740 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932103AbXBYSLM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Feb 2007 13:11:12 -0500
+In-Reply-To: <45E19AE7.2020206@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, Mark Lord <mlord@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-This email lists some known regressions in 2.6.21-rc1 compared to 2.6.20
-that are not yet fixed in Linus' tree.
+> According to Annex B of ATA/ATAPI-5, IDENTIFY should be issued to the
+> slave device first to ensure that it releases PDIAG- and then use the
+> cable detection result from the master device.  As we IDENTIFY master
+> first right after reset, slave if present is driving PDIAG-, so the
+> master on IDENTIFY always thinks the capacitor is present and 40c limit
+> is always applied.
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possibly
-involved with one or more of these issues.
+I had to go read this and its news to me but nice to know what is going
+on.
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+> So, considering #1 and #2, it might be best to just believe what the
+> controller (BIOS) says and not bother about device side detection.  In
 
+The BIOS is run once at boot, on an x86 box, maybe only for some
+controllers.
 
-Subject    : resume: slab error in verify_redzone_free(): cache `size-512':
-                     memory outside object was overwritten
-References : http://lkml.org/lkml/2007/2/24/41
-Submitter  : Pavel Machek <pavel@ucw.cz>
-Handled-By : Marcel Holtmann <marcel@holtmann.org>
-Status     : unknown
+> What do you think?
 
+I think we need to do the identify first. We could actually tidy up a lot
+of duplicate driver code if there was a ->cable_detect() method, as many
+of them could use the standard ata error handler without hooks. Right now
+it is mostly hooked just to do cable type setup.
 
-Subject    : ThinkPad T60: no screen after suspend to RAM
-References : http://lkml.org/lkml/2007/2/22/391
-Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
-Handled-By : Ingo Molnar <mingo@elte.hu>
-Status     : unknown
+There are far too many cases from non-x86 through to hotplug we can't
+trust any BIOS bits.
 
-
-Subject    : HP nx6325 notebook: usb mouse stops working after suspend to ram
-References : http://lkml.org/lkml/2007/2/21/413
-Submitter  : Arkadiusz Miskiewicz <arekm@maven.pl>
-Caused-By  : Konstantin Karasyov <konstantin.a.karasyov@intel.com>
-             commit 0a6139027f3986162233adc17285151e78b39cac
-Status     : unknown
-
-
-Subject    : MacBook: AE_NOT_FOUND ACPI messages
-References : http://bugzilla.kernel.org/show_bug.cgi?id=8066
-Submitter  : Thomas Meyer <thomas.mey@web.de>
-Status     : unknown
-
-
-Subject    : Asus A8N-VM motherboard: boot failure (ACPI related)
-References : http://lkml.org/lkml/2007/2/23/132
-Submitter  : Andrew <andrew@nelless.net>
-Status     : unknown
-
-
-Subject    : Asus M6Ne notebook: ACPI: First battery is not detected
-References : http://bugzilla.kernel.org/show_bug.cgi?id=8080
-Submitter  : Janosch Machowinski <jmachowinski@gmx.de>
-Status     : unknown
-
-
-Subject    : Asus M6Ne/M6A notebooks: SATA_ACPI errors during kernel boot
-References : http://bugzilla.kernel.org/show_bug.cgi?id=8080
-             http://bugzilla.kernel.org/show_bug.cgi?id=8046
-Submitter  : Janosch Machowinski <jmachowinski@gmx.de>
-             Lukas Hejtmanek <xhejtman@fi.muni.cz>
-Status     : unknown
-
-
-Subject    : ata-piix ACPI errors (40/80 pin cable mix)
-References : http://lkml.org/lkml/2007/2/22/159
-Submitter  : Meelis Roos <mroos@linux.ee>
-Handled-By : Alan Cox <alan@lxorguk.ukuu.org.uk>
-Status     : unknown
-
-
-Subject    : ata_piix: PATA UDMA/100 configured as UDMA/33
-References : http://lkml.org/lkml/2007/2/20/294
-Submitter  : Fabio Comolli <fabio.comolli@gmail.com>
-Status     : unknown
-
-
-Subject    : sata_via failure
-References : http://bugzilla.kernel.org/show_bug.cgi?id=8025
-Submitter  : Jean-Luc Coulon <jean.luc.coulon@gmail.com>
-             Markus Trippelsdorf <markus@trippelsdorf.de>
-Handled-By : Tejun Heo <htejun@gmail.com>
-Patch      : http://www.mail-archive.com/linux-ide@vger.kernel.org/msg03945.html
-Status     : patch available
-
-
-Subject    : BUG: at drivers/pci/pci.c:817 pcim_enable_device() (suspend, ata)
-References : http://lkml.org/lkml/2007/2/14/275
-             http://lkml.org/lkml/2007/2/22/367
-Submitter  : Rafael J. Wysocki <rjw@sisk.pl>
-             Lukas Hejtmanek <xhejtman@mail.muni.cz>
-Handled-By : Tejun Heo <htejun@gmail.com>
-Patch      : http://lkml.org/lkml/2007/2/25/102
-Status     : patch available
-
-
+Alan
