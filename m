@@ -1,106 +1,44 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.21-rc1] sata_promise: simplify port setup
-Date: Sun, 25 Feb 2007 17:51:15 +0100 (MET)
-Message-ID: <200702251651.l1PGpFmD004379@harpo.it.uu.se>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Fwd: [LIBATA] drives not detected
+Date: Sun, 25 Feb 2007 18:22:47 +0100
+Message-ID: <200702251822.47387.bzolnier@gmail.com>
+References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com> <200702241911.21030.bzolnier@gmail.com> <8d158e1f0702250546lddf9748r3c210504f3e94304@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:39187 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752355AbXBYQv0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Feb 2007 11:51:26 -0500
+Received: from ug-out-1314.google.com ([66.249.92.168]:19316 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964981AbXBYRQb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Feb 2007 12:16:31 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so635645uga
+        for <linux-ide@vger.kernel.org>; Sun, 25 Feb 2007 09:16:30 -0800 (PST)
+In-Reply-To: <8d158e1f0702250546lddf9748r3c210504f3e94304@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Patrick Ale <patrick.ale@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, albertl@mail.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Each place in pdc_ata_init_one() that initialises a SATA
-port first calls pdc_ata_setup_port(), and then manually
-assigns the port's ->scr_addr. Simplify the code by extending
-pdc_ata_setup_port() to also handle scr_addr initialisation;
-for PATA ports we pass NULL as scr_addr.
 
-The initialisation of the PATA-only 20619 redundantly set
-up scr_addr for the ports. Remove this.
+On Sunday 25 February 2007, Patrick Ale wrote:
+> On 2/24/07, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
+> Hoi and good afternoon :)
 
-Tested on 20619, 20575, and 20775 chips.
+Hey!
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Okay so... this is my dmesg with the legacy IDE drivers loaded.
+> Please note that I still use libata for my boot drive but that the
+> current vs native capacity errors disapeared *sniff*, no petabytes
+> after all!
 
----
+Could you verify that loading pata_pdc2027xx module first,
+then unloading it and loading pdc2027xx_new driver also works?
 
- drivers/ata/sata_promise.c |   29 ++++++++++-------------------
- 1 files changed, 10 insertions(+), 19 deletions(-)
+If it does then we can probably blame the bad capacity problem on
+some hardware problem fixed by replacing cables...
 
-diff -rupN linux-2.6.21-rc1/drivers/ata/sata_promise.c linux-2.6.21-rc1.sata_promise-setup_port-cleanup/drivers/ata/sata_promise.c
---- linux-2.6.21-rc1/drivers/ata/sata_promise.c	2007-02-25 14:24:09.000000000 +0100
-+++ linux-2.6.21-rc1.sata_promise-setup_port-cleanup/drivers/ata/sata_promise.c	2007-02-25 14:24:30.000000000 +0100
-@@ -777,7 +777,8 @@ static int pdc_old_check_atapi_dma(struc
- 	return pdc_check_atapi_dma(qc);
- }
- 
--static void pdc_ata_setup_port(struct ata_ioports *port, void __iomem *base)
-+static void pdc_ata_setup_port(struct ata_ioports *port, void __iomem *base,
-+			       void __iomem *scr_addr)
- {
- 	port->cmd_addr		= base;
- 	port->data_addr		= base;
-@@ -792,6 +793,7 @@ static void pdc_ata_setup_port(struct at
- 	port->status_addr	= base + 0x1c;
- 	port->altstatus_addr	=
- 	port->ctl_addr		= base + 0x38;
-+	port->scr_addr		= scr_addr;
- }
- 
- 
-@@ -904,11 +906,8 @@ static int pdc_ata_init_one (struct pci_
- 
- 	base = probe_ent->iomap[PDC_MMIO_BAR];
- 
--	pdc_ata_setup_port(&probe_ent->port[0], base + 0x200);
--	pdc_ata_setup_port(&probe_ent->port[1], base + 0x280);
--
--	probe_ent->port[0].scr_addr = base + 0x400;
--	probe_ent->port[1].scr_addr = base + 0x500;
-+	pdc_ata_setup_port(&probe_ent->port[0], base + 0x200, base + 0x400);
-+	pdc_ata_setup_port(&probe_ent->port[1], base + 0x280, base + 0x500);
- 
- 	/* notice 4-port boards */
- 	switch (board_idx) {
-@@ -917,12 +916,8 @@ static int pdc_ata_init_one (struct pci_
- 		/* Fall through */
- 	case board_20319:
-        		probe_ent->n_ports = 4;
--
--		pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
--		pdc_ata_setup_port(&probe_ent->port[3], base + 0x380);
--
--		probe_ent->port[2].scr_addr = base + 0x600;
--		probe_ent->port[3].scr_addr = base + 0x700;
-+		pdc_ata_setup_port(&probe_ent->port[2], base + 0x300, base + 0x600);
-+		pdc_ata_setup_port(&probe_ent->port[3], base + 0x380, base + 0x700);
- 		break;
- 	case board_2057x:
- 		hp->flags |= PDC_FLAG_GEN_II;
-@@ -932,7 +927,7 @@ static int pdc_ata_init_one (struct pci_
- 		tmp = readb(base + PDC_FLASH_CTL+1);
- 		if (!(tmp & 0x80)) {
- 			probe_ent->n_ports = 3;
--			pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
-+			pdc_ata_setup_port(&probe_ent->port[2], base + 0x300, NULL);
- 			hp->port_flags[2] = ATA_FLAG_SLAVE_POSS;
- 			printk(KERN_INFO DRV_NAME " PATA port found\n");
- 		} else
-@@ -942,12 +937,8 @@ static int pdc_ata_init_one (struct pci_
- 		break;
- 	case board_20619:
- 		probe_ent->n_ports = 4;
--
--		pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
--		pdc_ata_setup_port(&probe_ent->port[3], base + 0x380);
--
--		probe_ent->port[2].scr_addr = base + 0x600;
--		probe_ent->port[3].scr_addr = base + 0x700;
-+		pdc_ata_setup_port(&probe_ent->port[2], base + 0x300, NULL);
-+		pdc_ata_setup_port(&probe_ent->port[3], base + 0x380, NULL);
- 		break;
- 	default:
- 		BUG();
+Thanks,
+Bart
