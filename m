@@ -1,133 +1,43 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.21-rc1: known regressions (v2) (part 1)
-Date: Mon, 26 Feb 2007 23:01:52 +0100
-Message-ID: <20070226220152.GA29575@stusta.de>
-References: <Pine.LNX.4.64.0702202043280.4043@woody.linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: end to end error recovery musings
+Date: Mon, 26 Feb 2007 17:46:38 -0500
+Message-ID: <45E3634E.9000505@garzik.org>
+References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int> <20070224023229.GB4380@thunk.org> <17890.28977.989203.938339@notabene.brown> <20070226132511.GB8154@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0702202043280.4043@woody.linux-foundation.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Pavel Machek <pavel@ucw.cz>, Marcel Holtmann <marcel@holtmann.org>, linux-pm@lists.osdl.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>, lenb@kernel.org, linux-acpi@vger.kernel.org, luming.yu@intel.com, Arkadiusz Miskiewicz <arekm@maven.pl>, Konstantin Karasyov <konstantin.a.karasyov@intel.com>, linux-usb-devel@lists.sourceforge.net, Ismail =?utf-8?Q?D=C3=B6nmez?= <ismail@pardus.org.tr>, Fabio Comolli <fabio.comolli@gmail.com>, Thomas Meyer <thomas.mey@web.de>, Andrew Nelless <andrew@nelless.net>, "Antonino A. Daplas" <adaplas@gmail.com>, Janosch Machowinski <jmachowinski@gmx.de>, vladimir.p.lebedev@intel.com, Lukas Hejtmanek <xhejtman@fi.muni.cz>, Meelis Roos <mroos@linux.ee>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Jean-Luc Coulon <jean.luc.co>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20070226132511.GB8154@thunk.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-ide@vger.kernel.org
 
-This email lists some known regressions in 2.6.21-rc1 compared to 2.6.2=
-0
-that are not yet fixed in Linus' tree.
-
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possib=
-ly
-involved with one or more of these issues.
-
-Due to the huge amount of recipients, please trim the Cc when answering=
-=2E
+Theodore Tso wrote:
+> Can someone with knowledge of current disk drive behavior confirm that
+> for all drives that support bad block sparing, if an attempt to write
+> to a particular spot on disk results in an error due to bad media at
+> that spot, the disk drive will automatically rewrite the sector to a
+> sector in its spare pool, and automatically redirect that sector to
+> the new location.  I believe this should be always true, so presumably
+> with all modern disk drives a write error should mean something very
+> serious has happend.  
 
 
-Subject    : resume: slab error in verify_redzone_free(): cache `size-5=
-12':
-                     memory outside object was overwritten
-References : http://lkml.org/lkml/2007/2/24/41
-Submitter  : Pavel Machek <pavel@ucw.cz>
-Handled-By : Marcel Holtmann <marcel@holtmann.org>
-Status     : unknown
+This is what will /probably/ happen.  The drive should indeed find a 
+spare sector and remap it, if the write attempt encounters a bad spot on 
+the media.
+
+However, with a large enough write, large enough bad-spot-on-media, and 
+a firmware programmed to never take more than X seconds to complete 
+their enterprise customers' I/O, it might just fail.
 
 
-Subject    : ThinkPad T60: no screen after suspend to RAM
-References : http://lkml.org/lkml/2007/2/22/391
-Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
-Handled-By : Ingo Molnar <mingo@elte.hu>
-Status     : unknown
+IMO, somewhere in the kernel, when we receive a read-op or write-op 
+media error, we should immediately try to plaster that area with small 
+writes.  Sure, if it's a read-op you lost data, but this method will 
+maximize the chance that you can refresh/reuse the logical sectors in 
+question.
+
+	Jeff
 
 
-Subject    : HP nx6325 notebook: usb mouse stops working after suspend =
-to ram
-References : http://lkml.org/lkml/2007/2/21/413
-Submitter  : Arkadiusz Miskiewicz <arekm@maven.pl>
-Caused-By  : Konstantin Karasyov <konstantin.a.karasyov@intel.com>
-             commit 0a6139027f3986162233adc17285151e78b39cac
-Status     : unknown
-
-
-Subject    : ACPI update breaks kpowersave
-References : http://lkml.org/lkml/2007/2/10/7
-Submitter  : Ismail D=C3=B6nmez <ismail@pardus.org.tr>
-             Fabio Comolli <fabio.comolli@gmail.com>
-Status     : unknown
-
-
-Subject    : MacBook: AE_NOT_FOUND ACPI messages
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8066
-Submitter  : Thomas Meyer <thomas.mey@web.de>
-Status     : unknown
-
-
-Subject    : Asus A8N-VM motherboard:
-             framebuffer/console boot failure boot failure (ACPI relate=
-d)
-References : http://lkml.org/lkml/2007/2/23/132
-Submitter  : Andrew Nelless <andrew@nelless.net>
-Handled-By : Antonino A. Daplas <adaplas@gmail.com>
-Status     : problem is being debugged
-
-
-Subject    : Asus M6Ne notebook: ACPI: First battery is not detected
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8080
-Submitter  : Janosch Machowinski <jmachowinski@gmx.de>
-Status     : unknown
-
-
-Subject    : Asus M6Ne/M6A notebooks: SATA_ACPI errors during kernel bo=
-ot
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8080
-             http://bugzilla.kernel.org/show_bug.cgi?id=3D8046
-Submitter  : Janosch Machowinski <jmachowinski@gmx.de>
-             Lukas Hejtmanek <xhejtman@fi.muni.cz>
-Status     : unknown
-
-
-Subject    : ata-piix ACPI errors (40/80 pin cable mix)
-References : http://lkml.org/lkml/2007/2/22/159
-Submitter  : Meelis Roos <mroos@linux.ee>
-Status     : unknown
-
-
-Subject    : libata: PATA UDMA/100 configured as UDMA/33
-References : http://lkml.org/lkml/2007/2/20/294
-             http://www.mail-archive.com/linux-ide@vger.kernel.org/msg0=
-4115.html
-Submitter  : Fabio Comolli <fabio.comolli@gmail.com>
-Handled-By : Tejun Heo <htejun@gmail.com>
-Status     : problem is being discussed
-
-
-Subject    : sata_via failure
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8025
-Submitter  : Jean-Luc Coulon <jean.luc.coulon@gmail.com>
-             Markus Trippelsdorf <markus@trippelsdorf.de>
-Handled-By : Tejun Heo <htejun@gmail.com>
-Patch      : http://www.mail-archive.com/linux-ide@vger.kernel.org/msg0=
-3945.html
-Status     : patch available
-
-
-Subject    : BUG: at drivers/pci/pci.c:817 pcim_enable_device() (libata=
-)
-References : http://lkml.org/lkml/2007/2/14/275
-             http://lkml.org/lkml/2007/2/22/367
-Submitter  : Rafael J. Wysocki <rjw@sisk.pl>
-             Lukas Hejtmanek <xhejtman@mail.muni.cz>
-Handled-By : Tejun Heo <htejun@gmail.com>
-Patch      : http://lkml.org/lkml/2007/2/25/102
-Status     : patch available
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
