@@ -1,60 +1,31 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git patches] more IDE updates
-Date: Mon, 26 Feb 2007 19:19:12 +0100
-Message-ID: <200702261919.12944.bzolnier@gmail.com>
-References: <200702170325.02337.bzolnier@gmail.com> <45D9C0DD.6070500@ru.mvista.com> <45E31D0E.6070906@ru.mvista.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: end to end error recovery musings
+Date: Mon, 26 Feb 2007 10:59:50 -0800
+Message-ID: <45E32E26.1050000@zytor.com>
+References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int> <20070224023229.GB4380@thunk.org> <17890.28977.989203.938339@notabene.brown> <20070226132511.GB8154@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:57064 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030392AbXBZSNn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Feb 2007 13:13:43 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1841317nfa
-        for <linux-ide@vger.kernel.org>; Mon, 26 Feb 2007 10:13:41 -0800 (PST)
-In-Reply-To: <45E31D0E.6070906@ru.mvista.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070226132511.GB8154@thunk.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Theodore Tso wrote:
+> 
+> In any case, the reason why I bring this up is that it would be really
+> nice if there was a way with a single laptop drive to be able to do
+> snapshots and background fsck's without having to use initrd's with
+> device mapper.
+> 
 
-On Monday 26 February 2007, Sergei Shtylyov wrote:
-> Hello, I wrote:
-> 
-> >>> Contains: IRQ-ack fix for ICH chipsets (Albert Lee), ide-floppy 
-> >>> unformatted
-> >>> media fix (Alan Cox), more fixes for IDE PCI drivers (Sergei Shtylyov),
-> >>> new driver for Toshiba Cell Reference Board (Kou Ishizaki <kou.ishizaki
-> >>> at toshiba.co.jp>) and a bunch of rather obvious 
-> >>> cleanups/improvements (me).
-> 
-> >>> There are still some bugfix patches in my tree which should go into 
-> >>> 2.6.21
-> >>> but since they are quite fresh and there have already been a lot of IDE
-> >>> changes since the merge window was opened I will wait for -rc1 to push
-> >>> them upstream.
-> 
-> >>> [ Andrew, IDE quilt tree has already been updated wrt to this update ]
-> 
-> >>    Which quilt tree do you mean? I've noticed that in 
-> >> http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/ the series 
-> >> file itself hasn't been updated, so this tree appears broken currently.
-> 
-> >    Begging your pardon, it's all browser caching. :-<
-> 
->    Now it's *actually* borken since rtying to read 
-> delkin_cb-pci_module_init-to-pci_register_driver.patch gets you "403 Forbidden"...
+This is a major part of why I've been trying to push integrated klibc to 
+have all that stuff as a unified "kernel" deliverable.  Unfortunately, 
+as you know, Linus apparently rejected the concept "at least for now" at 
+LKS last year.
 
-Doh, wrong permission (600 instead of 644) - I've fixed this once already but
-only in the public tree and not in my private mirror so during last re-sync it
-got broken again.   I corrected this in both trees this time :) but it will
-take some time for the change to propagate to kernel.org mirrors.
+With klibc this stuff could still be in one single wrapper without funny 
+dependencies, but wouldn't have to be ported to kernel space.
 
-[ Thankfully this patch is the last one in the series. ]
-
-Thanks,
-Bart
+	-hpa
