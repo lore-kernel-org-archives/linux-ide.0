@@ -1,47 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_sil24: kill unused local variable idx in sil24_fill_sg()
-Date: Mon, 26 Feb 2007 16:11:00 +0900
-Message-ID: <20070226071100.GC20322@htj.dyndns.org>
+From: "Patrick Ale" <patrick.ale@gmail.com>
+Subject: Re: Fwd: [LIBATA] drives not detected
+Date: Mon, 26 Feb 2007 09:18:16 +0100
+Message-ID: <8d158e1f0702260018y53f8dc18veacadbfdead22ce9@mail.gmail.com>
+References: <8d158e1f0702150048x4eb73acawc3c3b87d0d80a6d4@mail.gmail.com>
+	 <200702241911.21030.bzolnier@gmail.com>
+	 <8d158e1f0702250546lddf9748r3c210504f3e94304@mail.gmail.com>
+	 <200702251822.47387.bzolnier@gmail.com>
+	 <8d158e1f0702251302yc22ef88pca50e171a4d89fb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:4466 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933781AbXBZHLD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Feb 2007 02:11:03 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1174825nze
-        for <linux-ide@vger.kernel.org>; Sun, 25 Feb 2007 23:11:02 -0800 (PST)
+Received: from an-out-0708.google.com ([209.85.132.241]:57194 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933793AbXBZIST (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Feb 2007 03:18:19 -0500
+Received: by an-out-0708.google.com with SMTP id b33so740652ana
+        for <linux-ide@vger.kernel.org>; Mon, 26 Feb 2007 00:18:17 -0800 (PST)
+In-Reply-To: <8d158e1f0702251302yc22ef88pca50e171a4d89fb@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, albertl@mail.com, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Kill unused local variable idx in sil24_fill_sg().
+On 2/25/07, Patrick Ale <patrick.ale@gmail.com> wrote:
+> On 2/25/07, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Spotted by Jeff Garzik.
+Dobri dan (I think, I am learning croatian and got told by a friend
+this is the polish way of saying it).
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>
+Anyway,
 
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index e65e8d5..06413e8 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -647,7 +647,6 @@ static inline void sil24_fill_sg(struct ata_queued_cmd *qc,
- 				 struct sil24_sge *sge)
- {
- 	struct scatterlist *sg;
--	unsigned int idx = 0;
- 
- 	ata_for_each_sg(sg, qc) {
- 		sge->addr = cpu_to_le64(sg_dma_address(sg));
-@@ -656,9 +655,7 @@ static inline void sil24_fill_sg(struct ata_queued_cmd *qc,
- 			sge->flags = cpu_to_le32(SGE_TRM);
- 		else
- 			sge->flags = 0;
--
- 		sge++;
--		idx++;
- 	}
- }
- 
+I guess it will take a bit before I can do this test for you,
+regarding the loading pata_pdc207x and all.
+
+md3 : active raid1 sdc1[2] sdb1[0]
+      117218176 blocks [2/1] [U_]
+      [======>..............]  recovery = 31.8% (37313792/117218176)
+finish=2503.2min speed=531K/sec
+
+
+A while a go I had a southbridge that wasnt too happy about the fact
+that the fan wasnt running for some weeks allready, I guess I am
+feeling the pain for it now. Lot's of "Port is slow, please be
+patient" warnings.
+
+Good thing is: the disk stays in UDMA100 now, instead of dropping to
+PIO mode 1. As soon as i can replace the disk, I will do the tests for
+you.
+
+So as the dmesg says: be patient :P
+
+
+Thanks again for all your help,
+
+Patrick
