@@ -1,127 +1,78 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/3] ahci/pata_jmicron: match class not function number
-Date: Mon, 26 Feb 2007 20:24:03 +0900
-Message-ID: <20070226112403.GF20322@htj.dyndns.org>
-References: <20070226110902.GD20322@htj.dyndns.org> <20070226111613.GE20322@htj.dyndns.org>
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: end to end error recovery musings
+Date: Mon, 26 Feb 2007 08:25:11 -0500
+Message-ID: <20070226132511.GB8154@thunk.org>
+References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int> <20070224023229.GB4380@thunk.org> <17890.28977.989203.938339@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:18725 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932813AbXBZLYN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Feb 2007 06:24:13 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1221506nze
-        for <linux-ide@vger.kernel.org>; Mon, 26 Feb 2007 03:24:06 -0800 (PST)
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20070226111613.GE20322@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <17890.28977.989203.938339@notabene.brown>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, justin@jmicron.com
 
-Make jmiron_ata quirk update pdev->class after programming the device
-and update ahci and pata_jmicron such that they match class code
-instead of checking function number manually.  For ahci, it matches
-for vendor and class.  For pata_jmicron, it matches vendor, device and
-class as IDE class isn't as well defined as AHCI class.
+On Mon, Feb 26, 2007 at 04:33:37PM +1100, Neil Brown wrote:
+> Do we want a path in the other direction to handle write errors?  The
+> file system could say "Don't worry to much if this block cannot be
+> written, just return an error and I will write it somewhere else"?
+> This might allow md not to fail a whole drive if there is a single
+> write error.
 
-This makes jmicron device matching more conventional and script
-friendly.
+Can someone with knowledge of current disk drive behavior confirm that
+for all drives that support bad block sparing, if an attempt to write
+to a particular spot on disk results in an error due to bad media at
+that spot, the disk drive will automatically rewrite the sector to a
+sector in its spare pool, and automatically redirect that sector to
+the new location.  I believe this should be always true, so presumably
+with all modern disk drives a write error should mean something very
+serious has happend.  
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/ahci.c         |   16 +++-------------
- drivers/ata/pata_jmicron.c |   19 ++++++++++---------
- drivers/pci/quirks.c       |    5 ++++-
- 3 files changed, 17 insertions(+), 23 deletions(-)
+(Or that someone was in the middle of reconfiguring a FC network and
+they're running a kernel that doesn't understand why short-duration FC
+timeouts should be retried.  :-)
 
-Index: work/drivers/pci/quirks.c
-===================================================================
---- work.orig/drivers/pci/quirks.c
-+++ work/drivers/pci/quirks.c
-@@ -1220,7 +1220,7 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_V
-  */
- static void quirk_jmicron_ata(struct pci_dev *pdev)
- {
--	u32 conf1, conf5;
-+	u32 conf1, conf5, class;
- 	u8 hdr;
- 
- 	/* Only poke fn 0 */
-@@ -1264,6 +1264,9 @@ static void quirk_jmicron_ata(struct pci
- 	pci_read_config_byte(pdev, PCI_HEADER_TYPE, &hdr);
- 	pdev->hdr_type = hdr & 0x7f;
- 	pdev->multifunction = !!(hdr & 0x80);
-+
-+	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class);
-+	pdev->class = class >> 8;
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB360, quirk_jmicron_ata);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361, quirk_jmicron_ata);
-Index: work/drivers/ata/ahci.c
-===================================================================
---- work.orig/drivers/ata/ahci.c
-+++ work/drivers/ata/ahci.c
-@@ -385,12 +385,9 @@ static const struct pci_device_id ahci_p
- 	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
- 	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
- 
--	/* JMicron */
--	{ PCI_VDEVICE(JMICRON, 0x2360), board_ahci_ign_iferr }, /* JMB360 */
--	{ PCI_VDEVICE(JMICRON, 0x2361), board_ahci_ign_iferr }, /* JMB361 */
--	{ PCI_VDEVICE(JMICRON, 0x2363), board_ahci_ign_iferr }, /* JMB363 */
--	{ PCI_VDEVICE(JMICRON, 0x2365), board_ahci_ign_iferr }, /* JMB365 */
--	{ PCI_VDEVICE(JMICRON, 0x2366), board_ahci_ign_iferr }, /* JMB366 */
-+	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
-+	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-+	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
- 
- 	/* ATI */
- 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci }, /* ATI SB600 non-raid */
-@@ -1665,13 +1662,6 @@ static int ahci_init_one(struct pci_dev 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
- 
--	if (pdev->vendor == PCI_VENDOR_ID_JMICRON) {
--		/* Function 1 is the PATA controller except on the 368, where
--		   we are not AHCI anyway */
--		if (PCI_FUNC(pdev->devfn))
--			return -ENODEV;
--	}
--
- 	rc = pcim_enable_device(pdev);
- 	if (rc)
- 		return rc;
-Index: work/drivers/ata/pata_jmicron.c
-===================================================================
---- work.orig/drivers/ata/pata_jmicron.c
-+++ work/drivers/ata/pata_jmicron.c
-@@ -202,19 +202,20 @@ static int jmicron_init_one (struct pci_
- 	};
- 	struct ata_port_info *port_info[2] = { &info, &info };
- 
--	/* PATA controller is fn 1, AHCI is fn 0 */
--	if (id->driver_data != 368 && PCI_FUNC(pdev->devfn) != 1)
--		return -ENODEV;
--
- 	return ata_pci_init_one(pdev, port_info, 2);
- }
- 
- static const struct pci_device_id jmicron_pci_tbl[] = {
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB361), 361},
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB363), 363},
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB365), 365},
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB366), 366},
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB368), 368},
-+	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361,
-+	  PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 361 },
-+	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB363,
-+	  PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 363 },
-+	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB365,
-+	  PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 365 },
-+	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB366,
-+	  PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 366 },
-+	{ PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB368,
-+	  PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 368 },
- 
- 	{ }	/* terminate list */
- };
+> Or is that completely un-necessary as all modern devices do bad-block
+> relocation for us?
+> Is there any need for a bad-block-relocating layer in md or dm?
+
+That's the question.  It wouldn't be that hard for filesystems to be
+able to remap a data block, but (a) it would be much more difficult
+for fundamental metadata (for example, the inode table), and (b) it's
+unnecessary complexity if the lower levels in the storage stack should
+always be doing this for us in the case of media errors anyway.
+
+> What about corrected-error counts?  Drives provide them with SMART.
+> The SCSI layer could provide some as well.  Md can do a similar thing
+> to some extent.  Where these are actually useful predictors of pending
+> failure is unclear, but there could be some value.
+> e.g. after a certain number of recovered errors raid5 could trigger a
+> background consistency check, or a filesystem could trigger a
+> background fsck should it support that.
+
+Somewhat off-topic, but my one big regret with how the dm vs. evms
+competition settled out was that evms had the ability to perform block
+device snapshots using a non-LVM volume as the base --- and that EVMS
+allowed a single drive to be partially managed by the LVM layer, and
+partially managed by evms.  
+
+What this allowed is the ability to do device snapshots and therefore
+background fsck's without needing to convert the entire laptop disk to
+using a LVM solution (since to this day I still don't trust initrd's
+to always do the right thing when I am constantly replacing the kernel
+for kernel development).
+
+I know, I'm weird, distro users have initrd that seem to mostly work,
+and it's only wierd developers that try to use bleeding edge kernels
+with a RHEL4 userspace that suffer, but it's one of the reasons why
+I've avoided initrd's like the plague --- I've wasted entire days
+trying to debug problems with the userspace-provided initrd being too
+old to support newer 2.6 development kernels.
+
+In any case, the reason why I bring this up is that it would be really
+nice if there was a way with a single laptop drive to be able to do
+snapshots and background fsck's without having to use initrd's with
+device mapper.
+
+						- Ted
