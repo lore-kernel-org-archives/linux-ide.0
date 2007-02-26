@@ -1,31 +1,46 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: end to end error recovery musings
-Date: Mon, 26 Feb 2007 11:42:07 -0500
-Message-ID: <45E30DDF.9090902@emc.com>
-References: <45DEF6EF.3020509@emc.com>	<45DF80C9.5080606@zytor.com>	<20070224003723.GS10715@schatzie.adilger.int>	<20070224023229.GB4380@thunk.org>	<17890.28977.989203.938339@notabene.brown>	<20070226132511.GB8154@thunk.org>	<20070226151507.13a1701e@lxorguk.ukuu.org.uk>	<45E2FA3E.3040201@emc.com> <20070226170118.54371f1e@lxorguk.ukuu.org.uk>
-Reply-To: ric@emc.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [git patches] more IDE updates
+Date: Mon, 26 Feb 2007 20:46:54 +0300
+Message-ID: <45E31D0E.6070906@ru.mvista.com>
+References: <200702170325.02337.bzolnier@gmail.com> <45D9BFD2.6030509@ru.mvista.com> <45D9C0DD.6070500@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070226170118.54371f1e@lxorguk.ukuu.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:59154 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030371AbXBZRrI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Feb 2007 12:47:08 -0500
+In-Reply-To: <45D9C0DD.6070500@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hello, I wrote:
 
-Alan wrote:
->> I think that this is mostly true, but we also need to balance this against the 
->> need for higher levels to get a timely response.  In a really large IO, a naive 
->> retry of a very large write could lead to a non-responsive system for a very 
->> large time...
-> 
-> And losing the I/O could result in a system that is non responsive until
-> the tape restore completes two days later....
+>>> Contains: IRQ-ack fix for ICH chipsets (Albert Lee), ide-floppy 
+>>> unformatted
+>>> media fix (Alan Cox), more fixes for IDE PCI drivers (Sergei Shtylyov),
+>>> new driver for Toshiba Cell Reference Board (Kou Ishizaki <kou.ishizaki
+>>> at toshiba.co.jp>) and a bunch of rather obvious 
+>>> cleanups/improvements (me).
 
-Which brings us back to a recent discussion at the file system workshop on being 
-more repair oriented in file system design so we can survive situations like 
-this a bit more reliably ;-)
+>>> There are still some bugfix patches in my tree which should go into 
+>>> 2.6.21
+>>> but since they are quite fresh and there have already been a lot of IDE
+>>> changes since the merge window was opened I will wait for -rc1 to push
+>>> them upstream.
 
-ric
+>>> [ Andrew, IDE quilt tree has already been updated wrt to this update ]
+
+>>    Which quilt tree do you mean? I've noticed that in 
+>> http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/ the series 
+>> file itself hasn't been updated, so this tree appears broken currently.
+
+>    Begging your pardon, it's all browser caching. :-<
+
+   Now it's *actually* borken since rtying to read 
+delkin_cb-pci_module_init-to-pci_register_driver.patch gets you "403 Forbidden"...
+
+WBR, Sergei
