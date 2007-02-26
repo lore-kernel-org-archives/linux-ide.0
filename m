@@ -1,84 +1,84 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: nonzero mismatch_cnt with no earlier error
-Date: Mon, 26 Feb 2007 19:18:45 +1100
-Message-ID: <45E297E5.50303@eyal.emu.id.au>
-References: <45DF859B.2050108@eyal.emu.id.au>	<Pine.LNX.4.64.0702231929380.31611@p34.internal.lan>	<45DF8DE3.2050903@eyal.emu.id.au> <17890.25524.465403.130119@notabene.brown>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 1/3] pata_jmicron: drop unnecessary device programming in [re]init
+Date: Mon, 26 Feb 2007 20:09:02 +0900
+Message-ID: <20070226110902.GD20322@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from webmail.icp-qv1-irony2.iinet.net.au ([203.59.1.107]:12448 "EHLO
-	webmail.icp-qv1-irony2.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933794AbXBZIS7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Feb 2007 03:18:59 -0500
-Received: from [192.168.3.7] (really [192.168.3.7]) by eyal.emu.id.au
-	via smail with esmtp
-	id <m1HLb4J-001IKZC@eyal.emu.id.au> (Debian Smail3.2.0.115)
-	for <linux-ide@vger.kernel.org>; Mon, 26 Feb 2007 19:18:47 +1100 (EST)
-In-Reply-To: <17890.25524.465403.130119@notabene.brown>
+Received: from py-out-1112.google.com ([64.233.166.179]:58605 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbXBZLJF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Feb 2007 06:09:05 -0500
+Received: by py-out-1112.google.com with SMTP id a29so686422pyi
+        for <linux-ide@vger.kernel.org>; Mon, 26 Feb 2007 03:09:04 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid list <linux-raid@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, justin@jmicron.com
 
-I CC'ed linux-ide to see if they think the reported error was really innocent:
+Channel redirect and AHCI mode enable programmings are done via PCI
+quirk for both probe and resume paths.  Drop duplicate and possibly
+unsafe device programming from pata_jmicron().
 
-Question: does this error report suggest that a disk could be corrupted?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/pata_jmicron.c |   32 +-------------------------------
+ 1 file changed, 1 insertion(+), 31 deletions(-)
 
-This SATA disk is part of an md raid and no error was reported by md.
-
-[937567.332751] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4190002 action 0x2
-[937567.354094] ata3.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 512 in
-[937567.354096]          res 51/04:83:45:00:00/00:00:00:00:00/a0 Emask 0x10 (ATA bus error)
-[937568.120783] ata3: soft resetting port
-[937568.282450] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[937568.306693] ata3.00: configured for UDMA/100
-[937568.319733] ata3: EH complete
-[937568.361223] SCSI device sdc: 625142448 512-byte hdwr sectors (320073 MB)
-[937568.397207] sdc: Write Protect is off
-[937568.408620] sdc: Mode Sense: 00 3a 00 00
-[937568.453522] SCSI device sdc: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-
-Neil Brown wrote:
-> On Saturday February 24, eyal@eyal.emu.id.au wrote:
-> 
->>But is this not a good opportunity to repair the bad stripe for a very
->>low cost (no complete resync required)?
-> 
-> 
-> In this case, 'md' knew nothing about an error.  The SCSI layer
-> detected something and thought it had fixed it itself.  Nothing for md
-> to do.
-
-I expected this. So either the scsi layer incorrectly held back the error
-report of the mismatch_cnt is due to something unrelated to the disk
-i/o failure.
-
->>At time of error we actually know which disk failed and can re-write
->>it, something we do not know at resync time, so I assume we always
->>write to the parity disk.
-
-Again, as I expected, resync cannot correct a problem, effectively
-"blaming" the parity block. To know which block to correct one needs
-a higher level parity code (can raid6 correct single bit/disk read
-errors?).
-
-> md only knows of a 'problem' if the lower level driver reports one.
-> If it reports a problem for a write request, md will fail the device.
-> If it reports a problem for a read request, md will try to over-write
-> correct data on the failed block. 
-> But if the driver doesn't report the failure, there is nothing md can
-> do.
-> 
-> When performing a check/repair md looks for consistencies and fixes
-> the 'arbitrarily'.  For raid5/6, it just 'corrects' the parity.  For
-> raid1/10, it chooses one block and over-writes the other(s) with it.
-> 
-> Mapping these corrections back to blocks in files in the filesystem is
-> extremely non-trivial.
-> 
-> NeilBrown
-
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
+Index: work/drivers/ata/pata_jmicron.c
+===================================================================
+--- work.orig/drivers/ata/pata_jmicron.c
++++ work/drivers/ata/pata_jmicron.c
+@@ -202,43 +202,13 @@ static int jmicron_init_one (struct pci_
+ 	};
+ 	struct ata_port_info *port_info[2] = { &info, &info };
+ 
+-	u32 reg;
+-
+ 	/* PATA controller is fn 1, AHCI is fn 0 */
+ 	if (id->driver_data != 368 && PCI_FUNC(pdev->devfn) != 1)
+ 		return -ENODEV;
+ 
+-	/* The 365/66 have two PATA channels, redirect the second */
+-	if (id->driver_data == 365 || id->driver_data == 366) {
+-		pci_read_config_dword(pdev, 0x80, &reg);
+-		reg |= (1 << 24);	/* IDE1 to PATA IDE secondary */
+-		pci_write_config_dword(pdev, 0x80, reg);
+-	}
+-
+ 	return ata_pci_init_one(pdev, port_info, 2);
+ }
+ 
+-static int jmicron_reinit_one(struct pci_dev *pdev)
+-{
+-	u32 reg;
+-
+-	switch(pdev->device) {
+-		case PCI_DEVICE_ID_JMICRON_JMB368:
+-			break;
+-		case PCI_DEVICE_ID_JMICRON_JMB365:
+-		case PCI_DEVICE_ID_JMICRON_JMB366:
+-			/* Restore mapping or disks swap and boy does it get ugly */
+-			pci_read_config_dword(pdev, 0x80, &reg);
+-			reg |= (1 << 24);	/* IDE1 to PATA IDE secondary */
+-			pci_write_config_dword(pdev, 0x80, reg);
+-			/* Fall through */
+-		default:
+-			/* Make sure AHCI is turned back on */
+-			pci_write_config_byte(pdev, 0x41, 0xa1);
+-	}
+-	return ata_pci_device_resume(pdev);
+-}
+-
+ static const struct pci_device_id jmicron_pci_tbl[] = {
+ 	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB361), 361},
+ 	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB363), 363},
+@@ -255,7 +225,7 @@ static struct pci_driver jmicron_pci_dri
+ 	.probe			= jmicron_init_one,
+ 	.remove			= ata_pci_remove_one,
+ 	.suspend		= ata_pci_device_suspend,
+-	.resume			= jmicron_reinit_one,
++	.resume			= ata_pci_device_resume,
+ };
+ 
+ static int __init jmicron_init(void)
