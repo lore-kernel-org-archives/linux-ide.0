@@ -1,68 +1,55 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: end to end error recovery musings
-Date: Tue, 27 Feb 2007 14:07:12 -0500
-Message-ID: <yq1r6sb7733.fsf@sermon.lab.mkp.net>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
-	<yq14pp78rze.fsf@sermon.lab.mkp.net>
-	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070227190236.58323a40@lxorguk.ukuu.org.uk> (alan@lxorguk.ukuu.org.uk's message of "Tue, 27 Feb 2007 19:02:36 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+From: Mike Accetta <maccetta@laurelnetworks.com>
+Subject: Re: ICH6-M libata disk timeouts 2.6.18 -> 2.6.19
+Date: Tue, 27 Feb 2007 14:37:40 -0500
+Message-ID: <2172.1172605060@mdt.dhcp.pit.laurelnetworks.com>
+References: <45E44626.6060800@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from paperclip.laurelnetworks.com ([63.94.127.69]:33465 "EHLO
+	paperclip.laurelnetworks.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751793AbXB0Tqi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Feb 2007 14:46:38 -0500
+In-reply-to: Your message of "Tue, 27 Feb 2007 23:54:30 +0900."
+             <45E44626.6060800@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
->>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
+Tejun Heo writes:
+> Mike Accetta wrote:
+> > The version of hdparm on this box gives
+> >     dev/sdb:
+> >      operation not supported on SCSI disks
+> > against the SCSI disk name.  With the controller in compatible mode,
+> > here is the 'hdparm -I /dev/hdb' output on the same disk:
+> > 
+> > ATA device, with non-removable media
+> >         Model Number:       FUJITSU MHT2060BH
+> >         Serial Number:      NR0YT53258G8
+> >         Firmware Revision:  0000104A
+> 
+> Sorry about late late late response.  :-)
+> 
+> 2.6.21 will behave better and turn off NCQ automatically in such cases.
+>  It also reports proper model and firmware revision, so we'll be able to
+> blacklist it from info contained in the dmesg.
+> 
+> Does your drive always work reliably if queue depth is set to one?  And
+> often fails when queue depth is 31?
 
->> These features make the most sense in terms of WRITE.  Disks
->> already have plenty of CRC on the data so if a READ fails on a
->> regular drive we already know about it.
+Hey, better late than never :-)
 
-Alan> Don't bet on it. 
+The drive actually seems to work fine at queue depth 4 and that is
+what we are currently running it at.  I stopped at 4 when that worked and
+never went any lower.  It always fails above 4 eventually.  The larger
+the number, the quicker it seems to fail.  A raid re-resync operation
+was the trigger.  On a 60Gb disk, I don't think I ever saw it complete
+without error at NCQ > 4.  Sometimes the re-sync would logically succeed,
+but with timeout errors, retries and downshifts logged to the console.
+Other times, it would get the timeouts and do the retry/downshift until
+it ran out of modes and then seem to get stuck in a retry loop.
+--
+Mike Accetta
 
-This is why I mentioned that I want to expose the protection data to
-the host.  As written, DIF only protects the path between initiator
-and target.
-
-See below...
-
-
-Alan> If you want to do this seriously you need an end to end (media
-Alan> to host ram) checksum. We do see bizarre and quite evil things
-Alan> happen to people occasionally because they rely on bus level
-Alan> protection - both faulty network cards and faulty disk or
-Alan> controller RAM can cause very bad things to happen in a critical
-Alan> environment and are very very hard to detect and test for.
-
-Not sure you're up-to-date on the T10 data integrity feature.
-Essentially it's an extension of the 520 byte sectors common in disk
-arrays.  For each 512 byte sector (or 4KB ditto) you get 8 bytes of
-protection data.  There's a 2 byte CRC (GUARD tag), a 2 byte
-user-defined tag (APP) and a 4-byte reference tag (REF).  Depending on
-how the drive is formatted, the REF tag usually needs to match the
-lower 32-bits of the target sector #.
-
-For each sector coming in the disk firmware verifies that the CRC and
-the reference tags are in accordance with the contents of the sector
-and the CDB start sector + offset.  If they don't match the drive will
-reject the request.
-
-If an HBA is capable of exposing the protection tuples to the host we
-can precalculate the checksum and the LBA when submitting a WRITE.  My
-current proposal involves passing them down in two separate buffers to
-minimize the risk of in-memory corruption (Besides, it would suck if
-you had to interleave data and protection data.  The scatterlists
-would become long and twisted).
-
-And that's when the READ case becomes interesting.  Because then the
-fs can verify that the checksum of the in-buffer matches of the GUARD
-tag.  In that case we'll know there's been no corruption in the
-middle.
-
-And of course this also opens up using the APP field to tag sector
-contents.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+ECI Telecom Ltd.
+Data Networking Division (previously Laurel Networks)
