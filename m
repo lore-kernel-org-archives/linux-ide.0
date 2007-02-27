@@ -1,51 +1,68 @@
-From: Dale Blount <linux-kernel@dale.us>
-Subject: Re: sata_sil problems with recent kernels
-Date: Tue, 27 Feb 2007 13:54:04 -0500
-Message-ID: <1172602444.5420.17.camel@dale.velocity.net>
-References: <1172250027.15179.16.camel@dale.velocity.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: end to end error recovery musings
+Date: Tue, 27 Feb 2007 14:07:12 -0500
+Message-ID: <yq1r6sb7733.fsf@sermon.lab.mkp.net>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+	<yq14pp78rze.fsf@sermon.lab.mkp.net>
+	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752500AbXB0SyH@vger.kernel.org>
-In-Reply-To: <1172250027.15179.16.camel@dale.velocity.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070227190236.58323a40@lxorguk.ukuu.org.uk> (alan@lxorguk.ukuu.org.uk's message of "Tue, 27 Feb 2007 19:02:36 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, 2007-02-23 at 12:00 -0500, Dale Blount wrote:
-> Hi,
-> 
-> Excuse me if this has been covered or fixed, I couldn't find anything in
-> the archives.
-> 
-> I upgraded from 2.6.11.7 to 2.6.20.1 today and found all the drives
-> connected to 2 brands of sata_sil sata controllers not working.  The
-> drives are also (now) of various brands, Maxtor 300GB and 500GB
-> Seagates.
+>>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
+
+>> These features make the most sense in terms of WRITE.  Disks
+>> already have plenty of CRC on the data so if a READ fails on a
+>> regular drive we already know about it.
+
+Alan> Don't bet on it. 
+
+This is why I mentioned that I want to expose the protection data to
+the host.  As written, DIF only protects the path between initiator
+and target.
+
+See below...
 
 
-I have some additional information coming from more testing and I also
-CC'd linux-ide and Jeff Garzik.
-Original message (with BUG) can be found here: 
-http://permalink.gmane.org/gmane.linux.kernel/497140
+Alan> If you want to do this seriously you need an end to end (media
+Alan> to host ram) checksum. We do see bizarre and quite evil things
+Alan> happen to people occasionally because they rely on bus level
+Alan> protection - both faulty network cards and faulty disk or
+Alan> controller RAM can cause very bad things to happen in a critical
+Alan> environment and are very very hard to detect and test for.
 
+Not sure you're up-to-date on the T10 data integrity feature.
+Essentially it's an extension of the 520 byte sectors common in disk
+arrays.  For each 512 byte sector (or 4KB ditto) you get 8 bytes of
+protection data.  There's a 2 byte CRC (GUARD tag), a 2 byte
+user-defined tag (APP) and a 4-byte reference tag (REF).  Depending on
+how the drive is formatted, the REF tag usually needs to match the
+lower 32-bits of the target sector #.
 
-I'm using my distro's modular kernel (ArchLinux).  The 2.6.19.x kernels
-from the distro also have the problem.  However, Knoppix 5.1.1 which
-ships with 2.6.19.1 detects all the drives on sata_sil controllers
-without errors, and PLD linux live rescue CD (2.6.19.2) detects 2 of the
-3 currently connected, the third is just absent, no BUG like when using
-Arch.
+For each sector coming in the disk firmware verifies that the CRC and
+the reference tags are in accordance with the contents of the sector
+and the CDB start sector + offset.  If they don't match the drive will
+reject the request.
 
-I noticed Knoppix had sata_sil=y, so I tried building it in as well with
-the same BUG results.
+If an HBA is capable of exposing the protection tuples to the host we
+can precalculate the checksum and the LBA when submitting a WRITE.  My
+current proposal involves passing them down in two separate buffers to
+minimize the risk of in-memory corruption (Besides, it would suck if
+you had to interleave data and protection data.  The scatterlists
+would become long and twisted).
 
-My .config (distro standard) can be found here:
-http://tinyurl.com/yul8eu
+And that's when the READ case becomes interesting.  Because then the
+fs can verify that the checksum of the in-buffer matches of the GUARD
+tag.  In that case we'll know there's been no corruption in the
+middle.
 
-I will be happy to test/provide more information on request.
+And of course this also opens up using the APP field to tag sector
+contents.
 
-Thanks again,
-
-Dale
+-- 
+Martin K. Petersen	Oracle Linux Engineering
