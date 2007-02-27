@@ -1,328 +1,217 @@
-From: Sigmund Scheinbar <sigmund.lkml@synflood.homelinux.org>
-Subject: Re: SATA Problem: port is slow to respond
-Date: Tue, 27 Feb 2007 22:26:47 +0100
-Message-ID: <45E4A217.7090909@synflood.homelinux.org>
-References: <200702161050.51523.sigmund.lkml@synflood.homelinux.org> <45E4436B.9090102@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] (pata-2.6 fix queue) cmd64x: fix primary channel address setup time
+Date: Wed, 28 Feb 2007 00:49:36 +0300
+Message-ID: <200702280049.36593.sshtylyov@ru.mvista.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040009020906080908020609"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from synflood.homelinux.org ([193.80.11.44]:4354 "EHLO
-	synflood.homelinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561AbXB0V0w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Feb 2007 16:26:52 -0500
-In-Reply-To: <45E4436B.9090102@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:7846 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750869AbXB0Vts (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Feb 2007 16:49:48 -0500
+In-Reply-To: <200702040004.24918.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040009020906080908020609
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+The driver used to merge the address setup timing for the secondary channel but
+this must have been done for both channels actually despite the primary channel
+had separate registers for each drive (I'afraid that this is too common mistake
+in both hardware and software -- address setup timing must be the same accross
+an IDE channel).  Thus, do a number of changes to the program_drive_counts():
 
-Tejun Heo wrote:
-> It seems whatever device connected to that ata2 went out for lunch and
-> never returned.
+- store the address setup count in the 'drive_data' to select the slowest one
+  for the primary channel's drives, and write the selected value into *both*
+  ARRTIM0 and ARTTIM1 registers (just writing 0 to their reserved bits 0 to 5);
 
-Well nice, but its not supposed to do that ;).
+- when writing to ARTTIM23 register for the secondary channel, preserve the
+  interrupt status bit; elminate the local_irq_{save|restore}() calls as there
+  is *no* race with the interrupt handler;
 
-> Is it happen to be a samsung one?
+- make drwtim_regs[] single-dimensional, indexing it with drive->dn, eliminate
+  now useless index variables;
 
-No the cd/dvd+-rw drive (GSA-H31L) seems to be LG made [1] although it
-has a HP sticker on it at.
+- replace 'temp_b' variable with 'arttim' and 'drwtim';
 
-[1] http://forums.driverguide.com/showthread.php?t=22969
+- rename {setup|recovery}_counts[] into more fitting {setup|recovery}_values[];
 
-The HDD is a Seagate Product (ST3160812AS).
+- replace the multiple HWIF() invocation with a single one...
 
-More details on the hardware can be found at:
-http://wieland.homelinux.org/hp_dc5750/lshw.txt
+And in addition to those changes also do remove:
 
->> http://wieland.homelinux.org/hp_dc5750/lspci-vvv.txt
-> 
-> Your webserver is timing out.
+- needless and misplaced timing registers initialization in the init_chipset()
+  method;
 
-It should be working find by now, but just to be sure I've attached the
-file.
+- meaningless register #define's...
 
-> Any chance you can post dmesg from 2.6.20? 
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-http://wieland.homelinux.org/hp_dc5750/dmesg_2.6.20.txt
+---
+Warning: this has only been compile-tested, as usual.
 
-Accidentally I discovered that if I press C-c the boot process
-continues. However, I only can boot into runlevel 1 else the box would
-reboot a few seconds after pressing C-c.
-I also noticed that the very strange cd-drive behavior is not present in
-2.6.20.
+I've finally decided to make this a separate patch, so the MWDMA support
+restoring patch is delayed again. :-<
 
-Btw.: I've add a bugreport to the bugzilla:
-http://bugzilla.kernel.org/show_bug.cgi?id=8044
+ drivers/ide/pci/cmd64x.c |  106 +++++++++++++++++------------------------------
+ 1 files changed, 40 insertions(+), 66 deletions(-)
 
-Cheers,
-Sigmund
+Index: linux-2.6/drivers/ide/pci/cmd64x.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/cmd64x.c
++++ linux-2.6/drivers/ide/pci/cmd64x.c
+@@ -1,6 +1,6 @@
+ /* $Id: cmd64x.c,v 1.21 2000/01/30 23:23:16
+  *
+- * linux/drivers/ide/pci/cmd64x.c		Version 1.47	Feb 16, 2007
++ * linux/drivers/ide/pci/cmd64x.c		Version 1.48	Feb 26, 2007
+  *
+  * cmd64x.c: Enable interrupts at initialization time on Ultra/PCI machines.
+  *           Note, this driver is not used at all on other systems because
+@@ -55,9 +55,6 @@
+ #define   ARTTIM23_DIS_RA2	0x04
+ #define   ARTTIM23_DIS_RA3	0x08
+ #define   ARTTIM23_INTR_CH1	0x10
+-#define ARTTIM2		0x57
+-#define ARTTIM3		0x57
+-#define DRWTIM23	0x58
+ #define DRWTIM2		0x58
+ #define BRST		0x59
+ #define DRWTIM3		0x5b
+@@ -172,73 +169,62 @@ static int cmd64x_get_info (char *buffer
+  * This routine writes the prepared setup/active/recovery counts
+  * for a drive into the cmd646 chipset registers to active them.
+  */
+-static void program_drive_counts (ide_drive_t *drive, int setup_count, int active_count, int recovery_count)
++static void program_drive_counts (ide_drive_t *drive, int setup_count,
++				  int active_count, int recovery_count)
+ {
+-	unsigned long flags;
+-	struct pci_dev *dev = HWIF(drive)->pci_dev;
+-	ide_drive_t *drives = HWIF(drive)->drives;
+-	u8 temp_b;
+-	static const u8 setup_counts[] = {0x40, 0x40, 0x40, 0x80, 0, 0xc0};
+-	static const u8 recovery_counts[] =
++	ide_hwif_t *hwif	= HWIF(drive);
++	struct pci_dev *dev	= hwif->pci_dev;
++	ide_drive_t *drives	= hwif->drives;
++	u8 drwtim, arttim	= 0;
++	static const u8 setup_values[] = {0x40, 0x40, 0x40, 0x80, 0, 0xc0};
++	static const u8 recovery_values[] =
+ 		{15, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0};
+-	static const u8 arttim_regs[2][2] = {
+-			{ ARTTIM0, ARTTIM1 },
+-			{ ARTTIM23, ARTTIM23 }
+-		};
+-	static const u8 drwtim_regs[2][2] = {
+-			{ DRWTIM0, DRWTIM1 },
+-			{ DRWTIM2, DRWTIM3 }
+-		};
+-	int channel = (int) HWIF(drive)->channel;
+-	int slave = (drives != drive);  /* Is this really the best way to determine this?? */
++	static const u8 drwtim_regs[] = {DRWTIM0, DRWTIM1, DRWTIM2, DRWTIM3};
+ 
+ 	cmdprintk("program_drive_count parameters = s(%d),a(%d),r(%d),p(%d)\n",
+ 		setup_count, active_count, recovery_count, drive->present);
++
+ 	/*
+-	 * Set up address setup count registers.
+-	 * Primary interface has individual count/timing registers for
+-	 * each drive.  Secondary interface has one common set of registers,
+-	 * for address setup so we merge these timings, using the slowest
+-	 * value.
++	 * The primary channel has individual address setup timing registers
++	 * for each drive, while the secondary channel has one common register.
++	 * We must merge these timings in any case and use the slowest value.
+ 	 */
+-	if (channel) {
+-		drive->drive_data = setup_count;
+-		setup_count = max(drives[0].drive_data,
+-					drives[1].drive_data);
+-		cmdprintk("Secondary interface, setup_count = %d\n",
+-					setup_count);
+-	}
++	drive->drive_data = setup_count;
++	setup_count = max(drives[0].drive_data,	drives[1].drive_data);
++	cmdprintk("Slowest address setup count = %d\n", setup_count);
+ 
+ 	/*
+ 	 * Convert values to internal chipset representation
+ 	 */
+-	setup_count = (setup_count > 5) ? 0xc0 : (int) setup_counts[setup_count];
++	setup_count = (setup_count > 5) ? 0xc0 : setup_values[setup_count];
+ 	active_count &= 0xf; /* Remember, max value is 16 */
+-	recovery_count = (int) recovery_counts[recovery_count];
+-
++	recovery_count = recovery_values[recovery_count];
+ 	cmdprintk("Final values = %d,%d,%d\n",
+ 		setup_count, active_count, recovery_count);
+ 
+ 	/*
+-	 * Now that everything is ready, program the new timings
++	 * Program the address setup clocks into the ARTTIM registers.
++	 * Avoid clearing the secondary channel's interrupt bit.
+ 	 */
+-	local_irq_save(flags);
+-	/*
+-	 * Program the address_setup clocks into ARTTIM reg,
+-	 * and then the active/recovery counts into the DRWTIM reg
+-	 */
+-	(void) pci_read_config_byte(dev, arttim_regs[channel][slave], &temp_b);
+-	(void) pci_write_config_byte(dev, arttim_regs[channel][slave],
+-		((u8) setup_count) | (temp_b & 0x3f));
+-	(void) pci_write_config_byte(dev, drwtim_regs[channel][slave],
+-		(u8) ((active_count << 4) | recovery_count));
+-	cmdprintk ("Write %x to %x\n",
+-		((u8) setup_count) | (temp_b & 0x3f),
+-		arttim_regs[channel][slave]);
+-	cmdprintk ("Write %x to %x\n",
+-		(u8) ((active_count << 4) | recovery_count),
+-		drwtim_regs[channel][slave]);
+-	local_irq_restore(flags);
++	if (hwif->channel) {
++		(void) pci_read_config_byte (dev, ARTTIM23, &arttim);
++		arttim &= ~ARTTIM23_INTR_CH1;
++		arttim &= ~0xc0;
++		arttim |= setup_count;
++		(void) pci_write_config_byte(dev, ARTTIM23, arttim);
++		cmdprintk ("Write %x to %x\n", arttim, ARTTIM23);
++	} else {
++		arttim = setup_count;
++		(void) pci_write_config_byte(dev, ARTTIM0, arttim);
++		cmdprintk ("Write %x to %x\n", arttim, ARTTIM0);
++		(void) pci_write_config_byte(dev, ARTTIM1, arttim);
++		cmdprintk ("Write %x to %x\n", arttim, ARTTIM1);
++	}
++
++	/* Program the active/recovery counts into the DRWTIM register */
++	drwtim = (active_count << 4) | recovery_count;
++	(void) pci_write_config_byte(dev, drwtim_regs[drive->dn], drwtim);
++	cmdprintk ("Write %x to %x\n", drwtim, drwtim_regs[drive->dn]);
+ }
+ 
+ static u8 quantize_timing(int timing, int quant)
+@@ -575,18 +561,6 @@ static unsigned int __devinit init_chips
+ 	 */
+ 	(void) pci_write_config_byte(dev, MRDMODE, mrdmode | 0x02);
+ 
+-	/* Set reasonable active/recovery/address-setup values. */
+-	(void) pci_write_config_byte(dev, ARTTIM0,  0x40);
+-	(void) pci_write_config_byte(dev, DRWTIM0,  0x3f);
+-	(void) pci_write_config_byte(dev, ARTTIM1,  0x40);
+-	(void) pci_write_config_byte(dev, DRWTIM1,  0x3f);
+-#ifdef __i386__
+-	(void) pci_write_config_byte(dev, ARTTIM23, 0x1c);
+-#else
+-	(void) pci_write_config_byte(dev, ARTTIM23, 0x5c);
+-#endif
+-	(void) pci_write_config_byte(dev, DRWTIM23, 0x3f);
+-	(void) pci_write_config_byte(dev, DRWTIM3,  0x3f);
+ #ifdef CONFIG_PPC
+ 	(void) pci_write_config_byte(dev, UDIDETCR0, 0xf0);
+ #endif /* CONFIG_PPC */
 
---------------040009020906080908020609
-Content-Type: text/plain;
- name="lspci-vvv.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="lspci-vvv.txt"
-
-00:00.0 Host bridge: ATI Technologies Inc RS480 Host Bridge (rev 10)
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR-
-	Latency: 32
-
-00:01.0 PCI bridge: ATI Technologies Inc RS480 PCI Bridge (prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=32
-	I/O behind bridge: 00001000-00001fff
-	Memory behind bridge: d8500000-d87fffff
-	Prefetchable memory behind bridge: 00000000c8000000-00000000d81fffff
-	Secondary status: 66MHz+ FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR+ NoISA- VGA+ MAbort- >Reset- FastB2B-
-	Capabilities: [44] HyperTransport: MSI Mapping
-	Capabilities: [b0] Subsystem: Hewlett-Packard Company Unknown device 280a
-
-00:07.0 PCI bridge: ATI Technologies Inc RS480 PCI Bridge (prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0, Cache Line Size: 64 bytes
-	Bus: primary=00, secondary=3f, subordinate=3f, sec-latency=0
-	I/O behind bridge: 0000f000-00000fff
-	Memory behind bridge: d8200000-d84fffff
-	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-	BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-	Capabilities: [50] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [58] Express Root Port (Slot+) IRQ 0
-		Device: Supported: MaxPayload 128 bytes, PhantFunc 0, ExtTag+
-		Device: Latency L0s <64ns, L1 <1us
-		Device: Errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-		Device: RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-		Device: MaxPayload 128 bytes, MaxReadReq 128 bytes
-		Link: Supported Speed 2.5Gb/s, Width x1, ASPM L0s L1, Port 4
-		Link: Latency L0s <64ns, L1 <1us
-		Link: ASPM Disabled RCB 64 bytes CommClk+ ExtSynch-
-		Link: Speed 2.5Gb/s, Width x1
-		Slot: AtnBtn- PwrCtrl- MRL- AtnInd- PwrInd- HotPlug- Surpise-
-		Slot: Number 6, PowerLimit 25.000000
-		Slot: Enabled AtnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq-
-		Slot: AttnInd Off, PwrInd Off, Power-
-		Root: Correctable- Non-Fatal- Fatal- PME-
-	Capabilities: [80] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable+
-		Address: fee0300c  Data: 41a9
-	Capabilities: [b0] Subsystem: ATI Technologies Inc Unknown device 5950
-	Capabilities: [b8] HyperTransport: MSI Mapping
-	Capabilities: [100] Advanced Error Reporting
-	Capabilities: [140] Virtual Channel
-
-00:12.0 IDE interface: ATI Technologies Inc SB600 Non-Raid-5 SATA (prog-if 8f [Master SecP SecO PriP PriO])
-	Subsystem: Hewlett-Packard Company Unknown device 2813
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 20
-	Region 0: I/O ports at 2130 [size=8]
-	Region 1: I/O ports at 2150 [size=4]
-	Region 2: I/O ports at 2138 [size=8]
-	Region 3: I/O ports at 2154 [size=4]
-	Region 4: I/O ports at 2100 [size=16]
-	Region 5: Memory at d8a09000 (32-bit, non-prefetchable) [size=1K]
-	Capabilities: [60] Power Management version 2
-		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [70] #12 [0010]
-
-00:13.0 USB Controller: ATI Technologies Inc SB600 USB (OHCI0) (prog-if 10 [OHCI])
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 16
-	Region 0: Memory at d8a04000 (32-bit, non-prefetchable) [size=4K]
-
-00:13.1 USB Controller: ATI Technologies Inc SB600 USB (OHCI1) (prog-if 10 [OHCI])
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin B routed to IRQ 17
-	Region 0: Memory at d8a05000 (32-bit, non-prefetchable) [size=4K]
-
-00:13.2 USB Controller: ATI Technologies Inc SB600 USB (OHCI2) (prog-if 10 [OHCI])
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin C routed to IRQ 18
-	Region 0: Memory at d8a06000 (32-bit, non-prefetchable) [size=4K]
-
-00:13.3 USB Controller: ATI Technologies Inc SB600 USB (OHCI3) (prog-if 10 [OHCI])
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin B routed to IRQ 17
-	Region 0: Memory at d8a07000 (32-bit, non-prefetchable) [size=4K]
-
-00:13.4 USB Controller: ATI Technologies Inc SB600 USB (OHCI4) (prog-if 10 [OHCI])
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin C routed to IRQ 18
-	Region 0: Memory at d8a08000 (32-bit, non-prefetchable) [size=4K]
-
-00:13.5 USB Controller: ATI Technologies Inc SB600 USB Controller (EHCI) (prog-if 20 [EHCI])
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin D routed to IRQ 19
-	Region 0: Memory at d8a09800 (32-bit, non-prefetchable) [size=256]
-	Capabilities: [c0] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-		Bridge: PM- B3+
-	Capabilities: [e4] Debug port
-
-00:14.0 SMBus: ATI Technologies Inc SB600 SMBus (rev 13)
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Region 0: I/O ports at fc00 [size=16]
-	Region 1: Memory at d8a09400 (32-bit, non-prefetchable) [size=1K]
-	Capabilities: [b0] HyperTransport: MSI Mapping
-
-00:14.1 IDE interface: ATI Technologies Inc SB600 IDE (prog-if 8f [Master SecP SecO PriP PriO])
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 16
-	Region 0: I/O ports at 2140 [size=8]
-	Region 1: I/O ports at 2158 [size=4]
-	Region 2: I/O ports at 2148 [size=8]
-	Region 3: I/O ports at 215c [size=4]
-	Region 4: I/O ports at 2120 [size=16]
-	Capabilities: [70] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable-
-		Address: 00000000  Data: 0000
-
-00:14.2 Audio device: ATI Technologies Inc SB600 Azalia
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32, Cache Line Size: 64 bytes
-	Interrupt: pin ? routed to IRQ 16
-	Region 0: Memory at d8a00000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: [50] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [60] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
-		Address: 0000000000000000  Data: 0000
-
-00:14.3 ISA bridge: ATI Technologies Inc SB600 PCI to LPC Bridge
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0
-
-00:14.4 PCI bridge: ATI Technologies Inc SB600 PCI to PCI Bridge (prog-if 01 [Subtractive decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop+ ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64
-	Bus: primary=00, secondary=07, subordinate=07, sec-latency=64
-	I/O behind bridge: 0000f000-00000fff
-	Memory behind bridge: fff00000-000fffff
-	Prefetchable memory behind bridge: fff00000-000fffff
-	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-
-00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Capabilities: [80] HyperTransport: Host or Secondary Interface
-		!!! Possibly incomplete decoding
-		Command: WarmRst+ DblEnd-
-		Link Control: CFlE- CST- CFE- <LkFail- Init+ EOC- TXO- <CRCErr=0
-		Link Config: MLWI=16bit MLWO=16bit LWI=16bit LWO=16bit
-		Revision ID: 1.02
-
-00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-
-00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-
-00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Capabilities: [f0] #0f [0010]
-
-01:05.0 VGA compatible controller: ATI Technologies Inc RS482 [Radeon Xpress 200] (prog-if 00 [VGA])
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32 (2000ns min), Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 10
-	Region 0: Memory at c8000000 (32-bit, prefetchable) [size=128M]
-	Region 1: I/O ports at 1100 [size=256]
-	Region 2: Memory at d8500000 (32-bit, non-prefetchable) [size=64K]
-	[virtual] Expansion ROM at d8000000 [disabled] [size=128K]
-	Capabilities: [50] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-01:05.1 Display controller: ATI Technologies Inc Unknown device 5874
-	Subsystem: Hewlett-Packard Company Unknown device 280b
-	Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 32 (2000ns min), Cache Line Size: 64 bytes
-	Region 0: Memory at d0000000 (32-bit, prefetchable) [disabled] [size=128M]
-	Region 1: Memory at d8510000 (32-bit, non-prefetchable) [disabled] [size=64K]
-	Capabilities: [50] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-3f:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5755 Gigabit Ethernet PCI Express (rev 02)
-	Subsystem: Hewlett-Packard Company Unknown device 280a
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 222
-	Region 0: Memory at d8400000 (64-bit, non-prefetchable) [size=64K]
-	Capabilities: [48] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=1 PME-
-	Capabilities: [50] Vital Product Data
-	Capabilities: [58] Vendor Specific Information
-	Capabilities: [e8] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable+
-		Address: 00000000fee0300c  Data: 41d9
-	Capabilities: [d0] Express Endpoint IRQ 0
-		Device: Supported: MaxPayload 128 bytes, PhantFunc 0, ExtTag+
-		Device: Latency L0s <4us, L1 unlimited
-		Device: AtnBtn- AtnInd- PwrInd-
-		Device: Errors: Correctable- Non-Fatal- Fatal- Unsupported-
-		Device: RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-		Device: MaxPayload 128 bytes, MaxReadReq 4096 bytes
-		Link: Supported Speed 2.5Gb/s, Width x1, ASPM L0s, Port 0
-		Link: Latency L0s <4us, L1 <64us
-		Link: ASPM Disabled RCB 64 bytes CommClk+ ExtSynch-
-		Link: Speed 2.5Gb/s, Width x1
-	Capabilities: [100] Advanced Error Reporting
-	Capabilities: [13c] Virtual Channel
-	Capabilities: [160] Device Serial Number eb-52-5f-fe-ff-bb-19-00
-	Capabilities: [16c] Power Budgeting
-
-
---------------040009020906080908020609--
