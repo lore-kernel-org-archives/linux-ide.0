@@ -1,48 +1,86 @@
-From: Ismail =?utf-8?q?D=C3=B6nmez?= <ismail@pardus.org.tr>
-Subject: Re: 2.6.21-rc1: known regressions (v2) (part 1)
-Date: Tue, 27 Feb 2007 15:25:45 +0200
-Message-ID: <200702271525.48645.ismail@pardus.org.tr>
-References: <Pine.LNX.4.64.0702202043280.4043@woody.linux-foundation.org>
-	<20070226220152.GA29575@stusta.de>
-	<200702271450.19080.caglar@pardus.org.tr>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: clear drvdata in ata_host_release(), take#2
+Date: Tue, 27 Feb 2007 22:33:21 +0900
+Message-ID: <20070227133321.GH20322@htj.dyndns.org>
+References: <20070224074823.GA20322@htj.dyndns.org> <45E0EB9F.3050001@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-pm-bounces@lists.osdl.org>
-In-Reply-To: <200702271450.19080.caglar@pardus.org.tr>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wx-out-0506.google.com ([66.249.82.228]:23805 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559AbXB0NdZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Feb 2007 08:33:25 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1693941wxd
+        for <linux-ide@vger.kernel.org>; Tue, 27 Feb 2007 05:33:24 -0800 (PST)
 Content-Disposition: inline
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.osdl.org>
-List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.osdl.org
-Errors-To: linux-pm-bounces@lists.osdl.org
-To: caglar@pardus.org.tr
-Cc: Tejun Heo <htejun@gmail.com>, Arkadiusz Miskiewicz <arekm@maven.pl>, "Antonino A. Daplas" <adaplas@gmail.com>, linux-pm@lists.osdl.org, Marcel Holtmann <marcel@holtmann.org>, linux-ide@vger.kernel.org, Pavel Machek <pavel@ucw.cz>, Lukas Hejtmanek <xhejtman@fi.muni.cz>, Jean-Luc Coulon <jean.luc.coulon@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-usb-devel@lists.sourceforge.net, Andrew Nelless <andrew@nelless.net>, jgarzik@pobox.com, Meelis Roos <mroos@linux.ee>, Janosch Machowinski <jmachowinski@gmx.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, Fabio Comolli <fabio.comolli@gmail.com>, Thomas Meyer <thomas.mey@web.de>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Markus
+In-Reply-To: <45E0EB9F.3050001@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Komuro <komurojun-mbn@nifty.com>
 
-T24gVHVlc2RheSAyNyBGZWJydWFyeSAyMDA3IDE0OjUwOjE3IFMuw4dhxJ9sYXIgT251ciB3cm90
-ZToKPiAyNyDFnnViIDIwMDcgU2FsIHRhcmloaW5kZSwgQWRyaWFuIEJ1bmsgxZ91bmxhcsSxIHlh
-em3EscWfdMSxOgo+ID4gVGhpcyBlbWFpbCBsaXN0cyBzb21lIGtub3duIHJlZ3Jlc3Npb25zIGlu
-IDIuNi4yMS1yYzEgY29tcGFyZWQgdG8gMi42LjIwCj4gPiB0aGF0IGFyZSBub3QgeWV0IGZpeGVk
-IGluIExpbnVzJyB0cmVlLgo+ID4KPiA+IElmIHlvdSBmaW5kIHlvdXIgbmFtZSBpbiB0aGUgQ2Mg
-aGVhZGVyLCB5b3UgYXJlIGVpdGhlciBzdWJtaXR0ZXIgb2Ygb25lCj4gPiBvZiB0aGUgYnVncywg
-bWFpbnRhaW5lciBvZiBhbiBhZmZlY3RlY3RlZCBzdWJzeXN0ZW0gb3IgZHJpdmVyLCBhIHBhdGNo
-Cj4gPiBvZiB5b3UgY2F1c2VkIGEgYnJlYWthZ2Ugb3IgSSdtIGNvbnNpZGVyaW5nIHlvdSBpbiBh
-bnkgb3RoZXIgd2F5IHBvc3NpYmx5Cj4gPiBpbnZvbHZlZCB3aXRoIG9uZSBvciBtb3JlIG9mIHRo
-ZXNlIGlzc3Vlcy4KPgo+IC4uLgo+Cj4gPiBTdWJqZWN0ICAgIDogQUNQSSB1cGRhdGUgYnJlYWtz
-IGtwb3dlcnNhdmUKPiA+IFJlZmVyZW5jZXMgOiBodHRwOi8vbGttbC5vcmcvbGttbC8yMDA3LzIv
-MTAvNwo+ID4gU3VibWl0dGVyICA6IElzbWFpbCBEw7ZubWV6IDxpc21haWxAcGFyZHVzLm9yZy50
-cj4KPiA+ICAgICAgICAgICAgICBGYWJpbyBDb21vbGxpIDxmYWJpby5jb21vbGxpQGdtYWlsLmNv
-bT4KPiA+IFN0YXR1cyAgICAgOiB1bmtub3duCj4KPiBUaGF0IHJlZ3Jlc3Npb24gZml4ZWQgYnkg
-YzJiNjcwNWI3NWQ5YzdhZmY5OGE0NjAyYTMyMjMwNjM5ZTEwODkxYyBhY2NvcmRpbmcKPiB0byDE
-sHNtYWlsIFsxXQo+Cj4gWzFdIGh0dHA6Ly9sa21sLm9yZy9sa21sLzIwMDcvMi8xMy8xMDUKCk5v
-dCBxdWl0ZSwgbXkgbGFwdG9wIGRpZWQgdGhlIHNhbWUgZGF5LiBTbyBJIGNhbid0IGRvIGFueSBy
-ZWxpYWJsZSB0ZXN0LiBBbHNvIApGYWJpbyBzZWVtcyB0byByZXByb2R1Y2UgaXQgd2l0aCAyLjYu
-MjEtcmMxLgoKUmVnYXJkcywKaXNtYWlsCgoKLS0gCkluIEdvZCBXZSBUcnVzdCBPdGhlcnMgV2Ug
-TW9uaXRvcgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-bGludXgtcG0gbWFpbGluZyBsaXN0CmxpbnV4LXBtQGxpc3RzLm9zZGwub3JnCmh0dHBzOi8vbGlz
-dHMub3NkbC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1wbQo=
+Clearing drvdata in ->remove_one causes NULL pointer deference.  Clear
+drvdata only in ata_host_release() after all resources are freed.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+pata_pcmcia is fixed by Alan's patch.  This fixes other drivers and
+make libata always clear drvdata after detach.
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index bdde327..3bdb509 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5680,6 +5680,8 @@ static void ata_host_release(struct device *gendev, void *res)
+ 
+ 	if (host->ops->host_stop)
+ 		host->ops->host_stop(host);
++
++	dev_set_drvdata(gendev, NULL);
+ }
+ 
+ /**
+@@ -5902,7 +5904,6 @@ int ata_device_add(const struct ata_probe_ent *ent)
+ 
+  err_out:
+ 	devres_release_group(dev, ata_device_add);
+-	dev_set_drvdata(dev, NULL);
+ 	VPRINTK("EXIT, returning %d\n", rc);
+ 	return 0;
+ }
+diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
+index c1334c6..8ff2d58 100644
+--- a/drivers/ata/pata_cs5520.c
++++ b/drivers/ata/pata_cs5520.c
+@@ -306,7 +306,6 @@ static void __devexit cs5520_remove_one(struct pci_dev *pdev)
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 
+ 	ata_host_detach(host);
+-	dev_set_drvdata(dev, NULL);
+ }
+ 
+ /**
+diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
+index d5f2e85..1a61cc8 100644
+--- a/drivers/ata/pata_isapnp.c
++++ b/drivers/ata/pata_isapnp.c
+@@ -128,7 +128,6 @@ static void isapnp_remove_one(struct pnp_dev *idev)
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 
+ 	ata_host_detach(host);
+-	dev_set_drvdata(dev, NULL);
+ }
+ 
+ static struct pnp_device_id isapnp_devices[] = {
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 02ea95f..4b82a54 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -228,7 +228,6 @@ static int __devexit pata_platform_remove(struct platform_device *pdev)
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 
+ 	ata_host_detach(host);
+-	dev_set_drvdata(dev, NULL);
+ 
+ 	return 0;
+ }
