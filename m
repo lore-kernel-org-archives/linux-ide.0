@@ -1,58 +1,49 @@
-From: James Ray <j.ray@qmul.ac.uk>
-Subject: Re: Bug? ahci.c
-Date: Tue, 27 Feb 2007 15:56:05 +0000
-Message-ID: <45E45495.2020800@qmul.ac.uk>
-References: <45B0B7C6.3030206@qmul.ac.uk> <45E44C26.2010207@gmail.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: end to end error recovery musings
+Date: Tue, 27 Feb 2007 19:02:36 +0000
+Message-ID: <20070227190236.58323a40@lxorguk.ukuu.org.uk>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+	<yq14pp78rze.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail2.qmul.ac.uk ([138.37.6.6]:63377 "EHLO mail2.qmul.ac.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751892AbXB0RE4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Feb 2007 12:04:56 -0500
-In-Reply-To: <45E44C26.2010207@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <yq14pp78rze.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> James Ray wrote:
->> Jeff, All,
->> 	We have just started using some new machines with The Intel ESB2
->> chipset in them (PCI Id: 8086:2681) for the SATA Controller.
->> With any kernels above 2.6.15 (as far as I can tell from my testing at
->> least) we are getting problems with them.
->>
->> This is the output I have managed to collect from the server (Its hard
->> to get much more since the system gets more and more unresponsive as
->> these errors progress):
->> <3>ata2.00: exception Emask 0x10 SAct 0x0 SErr 0x80002 action 0x2 frozen
->> <3>ata2.00: (irq_stat 0x08000000, interface fatal error)
->> <3>ata2.00: tag 0 cmd 0x35 Emask 0x10 stat 0x50 err 0x0 (ATA bus error)
->> <6>ata2: soft resetting port
->> <3>ata2: softreset failed (1st FIS failed)
->> <4>ata2: softreset failed, retrying in 5 secs
->> <6>ata2: hard resetting port
->> <4>ata2: port is slow to respond, please be patient
-> 
-> Can you test 2.6.20.1 and report full dmesg?  Thanks.
-> 
+> These features make the most sense in terms of WRITE.  Disks already
+> have plenty of CRC on the data so if a READ fails on a regular drive
+> we already know about it.
 
-I managed to get a response from Jeff on the linux-kernel list which I 
-have yet to respond to (sorry!).
+Don't bet on it. If you want to do this seriously you need an end to end
+(media to host ram) checksum. We do see bizarre and quite evil things
+happen to people occasionally because they rely on bus level protection -
+both faulty network cards and faulty disk or controller RAM can cause very
+bad things to happen in a critical environment and are very very hard to
+detect and test for.
 
-This problem was fixed by dodgy NCQ on the disk itself, S/N: 
-WMANM2828677 P/N: WD1600JS-60MHB1 (Western Digital 160Gb). If I disabled 
-the disk it worked fine, or replaced the disks with Some Seagates it 
-worked fine also!
+IDE has another hideously evil feature in this area. Command blocks are
+sent by PIO cycles, and are therefore unprotected from corruption. So
+while a data burst with corruption will error and retry and command which
+corrupts the block number although very very much less likely (less bits
+and much lower speed) will not be caught on a PATA system for read or for
+write and will hit the wrong block.
 
-I am running a 2.6.19 at the moment quite happily. Still want me to test 
-a 2.6.20.1? I might be able to get a bit of time later on this week.
+With networking you can turn off hardware IP checksumming (and many
+cluster people do) with disks we don't yet have a proper end to end
+checksum to media system in the fs or block layers.
 
+> It would be great if the app tag was more than 16 bits.  Ted mentioned
+> that ideally he'd like to store the inode number in the app tag.  But
+> as it stands there isn't room.
 
--- 
-James Ray.                          <j.ray@qmul.ac.uk>
-Computing Services
-Queen Mary, University of London
+The lowest few bits are the most important with ext2/ext3 because you
+normally lose a sector of inodes which means you've got dangly bits
+associated with a sequence of inodes with the same upper bits. More
+problematic is losing indirect blocks, and being able to keep some kind
+of [inode low bits/block index] would help put stuff back together.
+
+Alan
