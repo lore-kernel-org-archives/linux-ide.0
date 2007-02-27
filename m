@@ -1,37 +1,55 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Bug? ahci.c
-Date: Wed, 28 Feb 2007 01:05:24 +0900
-Message-ID: <45E456C4.1050102@gmail.com>
-References: <45B0B7C6.3030206@qmul.ac.uk> <45E44C26.2010207@gmail.com> <45E45495.2020800@qmul.ac.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: end to end error recovery musings
+Date: Tue, 27 Feb 2007 11:50:29 -0500
+Message-ID: <yq14pp78rze.fsf@sermon.lab.mkp.net>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.230]:32117 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933071AbXB0QF0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Feb 2007 11:05:26 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1739130wxd
-        for <linux-ide@vger.kernel.org>; Tue, 27 Feb 2007 08:05:25 -0800 (PST)
-In-Reply-To: <45E45495.2020800@qmul.ac.uk>
+Received: from agminet01.oracle.com ([141.146.126.228]:35020 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751686AbXB0Qz1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Feb 2007 11:55:27 -0500
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com> (Eric Moore's message of "Mon, 26 Feb 2007 18:10:57 -0700")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Ray <j.ray@qmul.ac.uk>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: ric@emc.com, Alan <alan@lxorguk.ukuu.org.uk>, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 
-James Ray wrote:
-> I managed to get a response from Jeff on the linux-kernel list which I
-> have yet to respond to (sorry!).
-> 
-> This problem was fixed by dodgy NCQ on the disk itself, S/N:
-> WMANM2828677 P/N: WD1600JS-60MHB1 (Western Digital 160Gb). If I disabled
-> the disk it worked fine, or replaced the disks with Some Seagates it
-> worked fine also!
-> 
-> I am running a 2.6.19 at the moment quite happily. Still want me to test
-> a 2.6.20.1? I might be able to get a bit of time later on this week.
+>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
 
-Nope, as long as you're happy.  :-)
+Eric> Martin K. Petersen on Data Intergrity Feature, which is also
+Eric> called EEDP(End to End Data Protection), which he presented some
+Eric> ideas/suggestions of adding an API in linux for this.  
+
+T10 DIF is interesting for a few things: 
+
+ - Ensuring that the data integrity is preserved when writing a buffer
+   to disk
+
+ - Ensuring that the write ends up on the right hardware sector
+
+These features make the most sense in terms of WRITE.  Disks already
+have plenty of CRC on the data so if a READ fails on a regular drive
+we already know about it.
+
+We can, however, leverage DIF with my proposal to expose the
+protection data to host memory.  This will allow us to verify the data
+integrity information before passing it to the filesystem or
+application.  We can say "this is really the information the disk
+sent. It hasn't been mangled along the way".
+
+And by using the APP tag we can mark a sector as - say - metadata or
+data to ease putting the recovery puzzle back together.
+
+It would be great if the app tag was more than 16 bits.  Ted mentioned
+that ideally he'd like to store the inode number in the app tag.  But
+as it stands there isn't room.
+
+In any case this is all slightly orthogonal to Ric's original post
+about finding the right persistence heuristics in the error handling
+path...
 
 -- 
-tejun
+Martin K. Petersen	Oracle Linux Engineering
+
