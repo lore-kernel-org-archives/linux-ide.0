@@ -1,55 +1,68 @@
-From: Mike Accetta <maccetta@laurelnetworks.com>
-Subject: Re: ICH6-M libata disk timeouts 2.6.18 -> 2.6.19
-Date: Tue, 27 Feb 2007 14:37:40 -0500
-Message-ID: <2172.1172605060@mdt.dhcp.pit.laurelnetworks.com>
-References: <45E44626.6060800@gmail.com>
+From: Thomas Kraemmer <thomas.kraemmer@nefkom.net>
+Subject: sata_sx4 driver
+Date: Tue, 27 Feb 2007 21:23:35 +0100
+Message-ID: <45E49347.9080108@nefkom.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from paperclip.laurelnetworks.com ([63.94.127.69]:33465 "EHLO
-	paperclip.laurelnetworks.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751793AbXB0Tqi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Feb 2007 14:46:38 -0500
-In-reply-to: Your message of "Tue, 27 Feb 2007 23:54:30 +0900."
-             <45E44626.6060800@gmail.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:35006 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbXB0UUD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Feb 2007 15:20:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
-Tejun Heo writes:
-> Mike Accetta wrote:
-> > The version of hdparm on this box gives
-> >     dev/sdb:
-> >      operation not supported on SCSI disks
-> > against the SCSI disk name.  With the controller in compatible mode,
-> > here is the 'hdparm -I /dev/hdb' output on the same disk:
-> > 
-> > ATA device, with non-removable media
-> >         Model Number:       FUJITSU MHT2060BH
-> >         Serial Number:      NR0YT53258G8
-> >         Firmware Revision:  0000104A
-> 
-> Sorry about late late late response.  :-)
-> 
-> 2.6.21 will behave better and turn off NCQ automatically in such cases.
->  It also reports proper model and firmware revision, so we'll be able to
-> blacklist it from info contained in the dmesg.
-> 
-> Does your drive always work reliably if queue depth is set to one?  And
-> often fails when queue depth is 31?
+Hi Jeff,
 
-Hey, better late than never :-)
 
-The drive actually seems to work fine at queue depth 4 and that is
-what we are currently running it at.  I stopped at 4 when that worked and
-never went any lower.  It always fails above 4 eventually.  The larger
-the number, the quicker it seems to fail.  A raid re-resync operation
-was the trigger.  On a 60Gb disk, I don't think I ever saw it complete
-without error at NCQ > 4.  Sometimes the re-sync would logically succeed,
-but with timeout errors, retries and downshifts logged to the console.
-Other times, it would get the timeouts and do the retry/downshift until
-it ran out of modes and then seem to get stuck in a retry loop.
---
-Mike Accetta
+I'd be very grateful to get your advice on the following issue:
 
-ECI Telecom Ltd.
-Data Networking Division (previously Laurel Networks)
+My Promise Sata150 SX4  adapter doesn't work with the sata_sx4 driver 
+versions 0.7, 0.8 and 0.9. The card is properly shown by lspci:
+0000:04:02.0 RAID bus controller: Promise Technology, Inc. PDC20621 
+[SATA150 SX4] 4 Channel IDE RAID Controller (rev 01)
+
+Booting leads to the following error in versions 0.7, 0.8, 0.9 (tried 
+different kernels, e.g. Kernel 2.6.20.1 with 0.9):
+Feb 24 21:54:55 gatekeeper kernel: libata version 1.12 loaded.
+Feb 24 21:54:55 gatekeeper kernel: sata_sx4 version 0.7
+Feb 24 21:54:55 gatekeeper kernel: ACPI: PCI Interrupt 0000:04:02.0[A] 
+-> GSI 28 (level, low) -> IRQ 19
+Feb 24 21:54:55 gatekeeper kernel: Detect Local DIMM Fail
+Feb 24 21:54:55 gatekeeper kernel: ACPI: PCI interrupt for device 
+0000:04:02.0 disabled
+Feb 24 21:54:55 gatekeeper kernel: sata_sx4: probe of 0000:04:02.0 
+failed with error -12
+
+Booting with driver version 0.5 works (kernel 2.6.9) and yields the 
+following log:
+Feb 27 19:53:32 gatekeeper kernel: sata_sx4 version 0.50
+Feb 27 19:53:32 gatekeeper kernel: ACPI: PCI interrupt 0000:04:02.0[A] 
+-> GSI 28 (level, low) -> IRQ 28
+Feb 27 19:53:32 gatekeeper kernel: ata1: SATA max UDMA/133 cmd 
+0xF8EC0200 ctl 0xF8EC0238 bmdma 0x0 irq 28
+Feb 27 19:53:32 gatekeeper kernel: ata2: SATA max UDMA/133 cmd 
+0xF8EC0280 ctl 0xF8EC02B8 bmdma 0x0 irq 28
+Feb 27 19:53:32 gatekeeper kernel: ata3: SATA max UDMA/133 cmd 
+0xF8EC0300 ctl 0xF8EC0338 bmdma 0x0 irq 28
+Feb 27 19:53:32 gatekeeper kernel: ata4: SATA max UDMA/133 cmd 
+0xF8EC0380 ctl 0xF8EC03B8 bmdma 0x0 irq 28
+
+
+Any ideas or advice how to further analyse that problem with the driver 
+versions above 0.5 ?
+
+
+Many thanks in advance and best regards,
+Thomas
+
+
+-- 
+Thomas Kraemmer
+Sonnenstrasse 7
+91058 Erlangen
+mailto:thomas.kraemmer@nefkom.net
+
