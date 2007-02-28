@@ -1,44 +1,121 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: Silicon Image 3124 problems with Norco DS-1220 (Sil3726 port multipliers?)
-Date: Tue, 27 Feb 2007 23:26:47 -0500
-Message-ID: <20070228042647.GA30930@jim.sh>
-References: <200702272343.l1RNh7tY018807@tenet.verdasys.com> <A5F9EDF3C51A884B8732C10154F10209010467F3@ilsaw03.corp.incentivelogic.com> <45DE756B.2050201@gmail.com> <A5F9EDF3C51A884B8732C10154F10209060401@ilsaw03.corp.incentivelogic.com> <A5F9EDF3C51A884B8732C10154F10209060409@ilsaw03.corp.incentivelogic.com> <45E3A632.20204@gmail.com> <A5F9EDF3C51A884B8732C10154F1020906040B@ilsaw03.corp.incentivelogic.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SATA Problem: port is slow to respond
+Date: Wed, 28 Feb 2007 15:02:50 +0900
+Message-ID: <45E51B0A.5040605@gmail.com>
+References: <200702161050.51523.sigmund.lkml@synflood.homelinux.org> <45E4436B.9090102@gmail.com> <45E4A217.7090909@synflood.homelinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------020909070609070202090308"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:36791 "EHLO neurosis.jim.sh"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751544AbXB1E13 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Feb 2007 23:27:29 -0500
-Content-Disposition: inline
-In-Reply-To: <200702272343.l1RNh7tY018807@tenet.verdasys.com> <A5F9EDF3C51A884B8732C10154F1020906040B@ilsaw03.corp.incentivelogic.com>
+Received: from nz-out-0506.google.com ([64.233.162.226]:19756 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821AbXB1GCw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Feb 2007 01:02:52 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so47362nze
+        for <linux-ide@vger.kernel.org>; Tue, 27 Feb 2007 22:02:51 -0800 (PST)
+In-Reply-To: <45E4A217.7090909@synflood.homelinux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gregory Youngblood <gyoungblood@incentivelogic.com>, Marc Bejarano <list.linux-ide@beej.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Sigmund Scheinbar <sigmund.lkml@synflood.homelinux.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Gregory Youngblood wrote:
-> I'm seeing several problems with a Silicon Image 3124 and Norco
-> DS-1220 external sata shelf with two Silicon Image 3726 port
-> multipliers and 8 500gb 7200.10 Seagate sata hard drives. The
-> hardware is known to be good. Or at least the Dell server is. The
-> only new hardware added to this server is the Norco DS-1220, Norco
-> 4618 (Sil3124) controller, and the 8 drives. These problems are
-> causing file operations with remote servers (via Samba) to fail
-> intermittently.
+This is a multi-part message in MIME format.
+--------------020909070609070202090308
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Marc Bejarano wrote:
-> otherwise, find someone who wants to beat tejun's existing 
-> PMP-enabled driver into submission.  i'll buy you a beer if you 
-> succeed in that :D  like you, i've had little luck with it in it's 
-> current state.
+Please apply the attached patch over 2.6.20.1 and report how it works.
 
-I'm using libata-tj-2.6.17.4-20060710 with a SiI3124+DS-1220+SiI3726
-with great success.  I haven't tried newer kernels.  You might try
-going back to that one to see if it helps.
+Thanks.
 
-Mine is full of 300gb 7200.9 Seagate disks (ST3300822AS).  I'll be
-getting some 500gb 7200.9 Seagate disks (ST3500641AS) soon and can let
-you know if I see any different results.
+-- 
+tejun
 
--jim
+--------------020909070609070202090308
+Content-Type: text/x-patch;
+ name="sb600-ign-serr-internal.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sb600-ign-serr-internal.patch"
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6d93240..2d7d97d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -80,6 +80,7 @@ enum {
+ 	board_ahci_pi		= 1,
+ 	board_ahci_vt8251	= 2,
+ 	board_ahci_ign_iferr	= 3,
++	board_ahci_ign_interr	= 4,
+ 
+ 	/* global controller registers */
+ 	HOST_CAP		= 0x00, /* host capabilities */
+@@ -168,6 +169,7 @@ enum {
+ 	AHCI_FLAG_NO_NCQ		= (1 << 24),
+ 	AHCI_FLAG_IGN_IRQ_IF_ERR	= (1 << 25), /* ignore IRQ_IF_ERR */
+ 	AHCI_FLAG_HONOR_PI		= (1 << 26), /* honor PORTS_IMPL */
++	AHCI_FLAG_IGN_SERR_INTERNAL	= (1 << 27), /* ignore SERR_INTERNAL */
+ };
+ 
+ struct ahci_cmd_hdr {
+@@ -353,6 +355,17 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &ahci_ops,
+ 	},
++	/* board_ahci_ign_interr */
++	{
++		.sht		= &ahci_sht,
++		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
++				  ATA_FLAG_SKIP_D2H_BSY |
++				  AHCI_FLAG_IGN_SERR_INTERNAL,
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
++		.port_ops	= &ahci_ops,
++	},
+ };
+ 
+ static const struct pci_device_id ahci_pci_tbl[] = {
+@@ -392,8 +405,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(JMICRON, 0x2366), board_ahci_ign_iferr }, /* JMB366 */
+ 
+ 	/* ATI */
+-	{ PCI_VDEVICE(ATI, 0x4380), board_ahci }, /* ATI SB600 non-raid */
+-	{ PCI_VDEVICE(ATI, 0x4381), board_ahci }, /* ATI SB600 raid */
++	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_ign_interr }, /* SB600 non-raid */
++	{ PCI_VDEVICE(ATI, 0x4381), board_ahci_ign_interr }, /* SB600 raid */
+ 
+ 	/* VIA */
+ 	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
+@@ -454,9 +467,10 @@ static inline void __iomem *ahci_port_base(void __iomem *base,
+ 	return base + 0x100 + (port * 0x80);
+ }
+ 
+-static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
++static u32 ahci_scr_read(struct ata_port *ap, unsigned int sc_reg_in)
+ {
+ 	unsigned int sc_reg;
++	u32 serr;
+ 
+ 	switch (sc_reg_in) {
+ 	case SCR_STATUS:	sc_reg = 0; break;
+@@ -467,12 +481,13 @@ static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
+ 		return 0xffffffffU;
+ 	}
+ 
+-	return readl(ap->ioaddr.scr_addr + (sc_reg * 4));
++	serr = readl(ap->ioaddr.scr_addr + (sc_reg * 4));
++	if (ap->flags & AHCI_FLAG_IGN_SERR_INTERNAL)
++		serr &= ~SERR_INTERNAL;
++	return serr;
+ }
+ 
+-
+-static void ahci_scr_write (struct ata_port *ap, unsigned int sc_reg_in,
+-			       u32 val)
++static void ahci_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val)
+ {
+ 	unsigned int sc_reg;
+ 
+
+--------------020909070609070202090308--
