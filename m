@@ -1,40 +1,38 @@
-From: "Morrison, Tom" <tmorrison@empirix.com>
-Subject: [PATCH]Support for Marvell 7042 Chip
-Date: Wed, 28 Feb 2007 10:53:22 -0500
-Message-ID: <BD261180E6D35F4D9D32F3E44FD3D90106ADB2B9@EMPBEDEX.empirix.com>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: end to end error recovery musings
+Date: Wed, 28 Feb 2007 12:16:35 -0500
+Message-ID: <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+	<yq14pp78rze.fsf@sermon.lab.mkp.net>
+	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
+	<yq1r6sb7733.fsf@sermon.lab.mkp.net>
+	<20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
+	<yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from empbedex1.empirix.com ([12.38.203.54]:1647 "EHLO
-	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928AbXB1QHk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Feb 2007 11:07:40 -0500
-Content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <45E587C2.5010209@torque.net> (Douglas Gilbert's message of "Wed, 28 Feb 2007 08:46:42 -0500")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: dougg@torque.net
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Added Support for Marvell 7042 Chip - 7042 has same 
-capabilities & behavior as 6042.
+>>>>> "Doug" == Douglas Gilbert <dougg@torque.net> writes:
 
-Patch based upon stable Linux 2.6.20.1 Kernel Tree...
+Doug> Work on SAT-2 is now underway and one of the agenda items is
+Doug> "end to end data protection" and is in the hands of the t13
+Doug> ATA8-ACS technical editor. So it looks like data integrity is on
+Doug> the radar in the SATA world.
 
-Signed-off-by: Thomas A. Morrison <tmorrison@empirix.com>
+It's cool that it's on the radar in terms of the protocol.  
 
-----
+That doesn't mean that drive manufacturers are going to implement it,
+though.  The ones I've talked to were unwilling to sacrifice capacity
+because that's the main competitive factor in the SATA/consumer space.
 
---- drivers/ata/sata_mv.c.orig	2007-02-20 01:34:32.000000000 -0500
-+++ drivers/ata/sata_mv.c	2007-02-28 10:22:03.000000000 -0500
-@@ -546,6 +546,9 @@ static const struct pci_device_id mv_pci
- 
- 	{ PCI_VDEVICE(TTI, 0x2310), chip_7042 },
- 
-+	/* add Marvell 7042 support */
-+	{ PCI_VDEVICE(MARVELL, 0x7042), chip_7042 },
-+
- 	{ }			/* terminate list */
- };
+Maybe we'll see it in the nearline product ranges?  That would be a
+good start...
+
+-- 
+Martin K. Petersen      http://mkp.net/
 
