@@ -1,50 +1,82 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH 2.6.21-rc1] sata_vsc: refactor vsc_sata_interrupt and hook up error handling
-Date: Wed, 28 Feb 2007 00:02:50 -0800
-Message-ID: <20070228080250.GE210096@sgi.com>
-References: <20070223233643.8535.1788.stgit@dwillia2-linux.ch.intel.com>
+From: Manuel Lauss <mano@roarinelk.homelinux.net>
+Subject: pata_pcmcia takes long time to detect certain cf cards
+Date: Wed, 28 Feb 2007 09:16:20 +0100
+Message-ID: <20070228081620.GA24442@roarinelk.homelinux.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:45620 "EHLO
-	netops-testserver-3.corp.sgi.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751286AbXB1IWq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Feb 2007 03:22:46 -0500
+Received: from fnoeppeil48.netpark.at ([217.175.205.176]:3026 "EHLO
+	roarinelk.homelinux.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbXB1IXF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Feb 2007 03:23:05 -0500
 Content-Disposition: inline
-In-Reply-To: <20070223233643.8535.1788.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, Feb 23, 2007 at 04:36:43PM -0700, Dan Williams wrote:
-> Separate sata_vsc interrupt handling into a normal (per-port) path and an
-> error path with the addition of vsc_port_intr and vsc_error_intr
-> respectively.  The error path handles interrupt based
-> hotplug events which requires the definition of vsc_freeze and vsc_thaw.
-> 
-> Note: vsc_port_intr has a workaround for unexpected interrupts that occur
-> during polled commands.  This fixes a regression between 2.6.19 and 2.6.20.
-> 
-> Changes in take2:
-> * removed definition of invalid fis bit
-> * let standard ata-error-handling handle the serror register
-> * clear all unhandled interrupts
-> * revert changes to vsc_intr_mask_update (vsc_thaw enables all interrupts)
-> * use unlikely() for the pci-abort and not-our-interrupt cases in vsc_sata_interrupt
-> 
-> Changes in take3:
-> * Unify the "add" + "hook-up" patches into this single patch
-> 
-> [htejun@gmail.com: clean up comments and suggestions]
-> Cc: Jeremy Higdon <jeremy@sgi.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Hello,
+
+pata_pcmcia takes a very long time to recognize a 1.0GB SanDisk CF card
+(MIPS, Au1200, linux-2.6.21-rc1):
+
+pccard: PCMCIA card inserted into slot 0
+pcmcia: registering new device pcmcia0.0
+ata1: PATA max PIO0 cmd 0xC0054000 ctl 0xC005400E bmdma 0x0 irq 5
+scsi0 : pata_pcmcia
+ata1.00: CFA, max PIO4, 2001888 sectors: LBA
+ata1.00: ata1: dev 0 multi count 0
+< time passes >
+ata1.01: qc timeout (cmd 0xec)
+ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata1: failed to recover some devices, retrying in 5 secs
+< time passes >
+ata1.01: qc timeout (cmd 0xec)
+ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata1: failed to recover some devices, retrying in 5 secs
+< time passes >
+ata1.01: qc timeout (cmd 0xec)
+ata1.01: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata1: failed to recover some devices, retrying in 5 secs
+< time passes >
+ata1.00: configured for PIO0
+isa bounce pool size: 16 pages
+scsi 0:0:0:0: Direct-Access     ATA      SanDisk SDCFB-10 Rev  PQ: 0 ANSI: 5
+SCSI device sda: 2001888 512-byte hdwr sectors (1025 MB)
+sda: Write Protect is off
+SCSI device sda: drive cache: write through
+SCSI device sda: 2001888 512-byte hdwr sectors (1025 MB)
+sda: Write Protect is off
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2
+sd 0:0:0:0: Attached scsi removable disk sda
+sd 0:0:0:0: Attached scsi generic sg0 type 0
 
 
-I checked this on our Altix system using this chip, and it works fine.
-But then 2.6.20 also worked fine on the Altix, but then we never saw
-the interrupt handling problems before, either.
+Another, older SanDisk 32MB card is detected instantly:
 
-Thanks for doing this Dan.
+pccard: PCMCIA card inserted into slot 0
+pcmcia: registering new device pcmcia0.0
+ata2: PATA max PIO0 cmd 0xC0054000 ctl 0xC005400E bmdma 0x0 irq 5
+scsi1 : pata_pcmcia
+ata2.00: CFA, max PIO4, 62720 sectors: LBA
+ata2.00: ata2: dev 0 multi count 0
+ata2.00: configured for PIO0
+scsi 1:0:0:0: Direct-Access     ATA      SanDisk SDCFB-32 Vdg  PQ: 0 ANSI: 5
+SCSI device sda: 62720 512-byte hdwr sectors (32 MB)
+sda: Write Protect is off
+SCSI device sda: drive cache: write through
+SCSI device sda: 62720 512-byte hdwr sectors (32 MB)
+sda: Write Protect is off
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2
+sd 1:0:0:0: Attached scsi removable disk sda
+sd 1:0:0:0: Attached scsi generic sg0 type 0
 
-jeremy
+
+Any help very appreciated!
+
+Thanks,
+
+-- 
+ ml.
+ 
