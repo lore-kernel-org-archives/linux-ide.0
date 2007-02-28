@@ -1,50 +1,40 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: end to end error recovery musings
-Date: Wed, 28 Feb 2007 08:19:17 -0700
-Message-ID: <664A4EBB07F29743873A87CF62C26D705D7112@NAMAIL4.ad.lsil.com>
-References: <yq1r6sb7733.fsf@sermon.lab.mkp.net>
+From: "Morrison, Tom" <tmorrison@empirix.com>
+Subject: [PATCH]Support for Marvell 7042 Chip
+Date: Wed, 28 Feb 2007 10:53:22 -0500
+Message-ID: <BD261180E6D35F4D9D32F3E44FD3D90106ADB2B9@EMPBEDEX.empirix.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from empbedex1.empirix.com ([12.38.203.54]:1647 "EHLO
+	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbXB1QHk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Feb 2007 11:07:40 -0500
 Content-class: urn:content-classes:message
-In-Reply-To: <yq1r6sb7733.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Alan <alan@lxorguk.ukuu.org.uk>
-Cc: ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday, February 27, 2007 12:07 PM, Martin K. Petersen wrote: 
-> 
-> Not sure you're up-to-date on the T10 data integrity feature.
-> Essentially it's an extension of the 520 byte sectors common in disk
-> arrays.  For each 512 byte sector (or 4KB ditto) you get 8 bytes of
-> protection data.  There's a 2 byte CRC (GUARD tag), a 2 byte
-> user-defined tag (APP) and a 4-byte reference tag (REF).  Depending on
-> how the drive is formatted, the REF tag usually needs to match the
-> lower 32-bits of the target sector #.
-> 
+Added Support for Marvell 7042 Chip - 7042 has same 
+capabilities & behavior as 6042.
 
-I from the scsi lld perspective, all we need 32 byte cdbs, and a
-mechinism to pass the tags down from above.  It appears our driver to
-firmware insterface is only providing the reference and application
-tags. It seems the guard tag is not present, so I guess mpt fusion
-controller firmware is setting it(I will have to check with others).   I
-assume that for transfers greater than a sector, that the controller
-firmware updates the tags for all the other sectors within the boundary.
-I'm sure the flags probably tell whether EEDP is enabled or not.   I
-will have to check if there are some manufacturing pages that say
-whether the controller is capable of EEDP(as not all our controllers
-support it).  
+Patch based upon stable Linux 2.6.20.1 Kernel Tree...
 
+Signed-off-by: Thomas A. Morrison <tmorrison@empirix.com>
 
-Here are the EEDP associated fields we provide in our scsi passthru, as
-well as target assist.
+----
 
+--- drivers/ata/sata_mv.c.orig	2007-02-20 01:34:32.000000000 -0500
++++ drivers/ata/sata_mv.c	2007-02-28 10:22:03.000000000 -0500
+@@ -546,6 +546,9 @@ static const struct pci_device_id mv_pci
+ 
+ 	{ PCI_VDEVICE(TTI, 0x2310), chip_7042 },
+ 
++	/* add Marvell 7042 support */
++	{ PCI_VDEVICE(MARVELL, 0x7042), chip_7042 },
++
+ 	{ }			/* terminate list */
+ };
 
-u32 SecondaryReferenceTag
-u16 SecondaryApplicationTag
-u16 EEDPFlags
-u16 ApplicationTagTranslationMask
-u32 EEDPBlockSize
