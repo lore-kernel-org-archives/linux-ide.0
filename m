@@ -1,148 +1,78 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [RFT] sata_promise: decode and report error reasons
-Date: Thu, 1 Mar 2007 02:58:33 +0100 (MET)
-Message-ID: <200703010158.l211wXPS012467@harpo.it.uu.se>
+From: "George T. Joseph \(development\)" <gtj.devel@peakin.com>
+Subject: Marvell 6145 SATA via AHCI
+Date: Wed, 28 Feb 2007 20:30:30 -0700
+Message-ID: <22E26940476D1E48AA6F292B5316C9C337CB@bes1.peakin.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:45039 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932280AbXCAB6h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Feb 2007 20:58:37 -0500
-Received: from harpo.it.uu.se (daemon@harpo.it.uu.se [130.238.12.34])
-	by aun.it.uu.se (8.13.6/8.13.6) with ESMTP id l211wXeh024019
-	for <linux-ide@vger.kernel.org>; Thu, 1 Mar 2007 02:58:33 +0100 (MET)
-Received: (from mikpe@localhost)
-	by harpo.it.uu.se (8.13.8+Sun/8.13.7) id l211wXPS012467
-	for linux-ide@vger.kernel.org; Thu, 1 Mar 2007 02:58:33 +0100 (MET)
+Received: from outmail128144.authsmtp.com ([62.13.128.144]:54344 "EHLO
+	outmail128144.authsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752157AbXCAEEt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Feb 2007 23:04:49 -0500
+Received: from outmail128175.authsmtp.net (outmail128175.authsmtp.net [62.13.128.175])
+	by punt3.authsmtp.com (8.13.8/8.13.8/Kp) with ESMTP id l213V4Zr055487
+	for <linux-ide@vger.kernel.org>; Thu, 1 Mar 2007 03:31:04 GMT
+Received: from bes1.peakin.com (ideasource.cust.viawest.net [216.87.87.33])
+	(authenticated bits=0)
+	by mail.authsmtp.com (8.13.8/8.13.8/Kp) with ESMTP id l213UwrQ072679
+	for <linux-ide@vger.kernel.org>; Thu, 1 Mar 2007 03:30:59 GMT
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-This is a preliminary patch to add error reason decoding
-and reporting to sata_promise. It's fairly simplistic but
-should log all error info the controller is able to provide.
+I'm trying Jeff Garzik's preliminary Marvell 6145 SATA support patch and
+getting nowhere so I'm just checking to see if anyone has got it working
+or if there have been any further developments.
+ 
+Basically,  I'll get "failed to IDENTIFY" messages for each of the
+drives when the module loads.  If I disable MSI (per Jeff's comments) or
+use irqpoll I can get by those but ultimately under any kind of stress,
+the drives throw errors...
+ 
+[  298.335640] ata6.00: exception Emask 0x0 SAct 0x7fffffff SErr 0x0
+action 0x2 frozen
+[  298.335650] ata6.00: cmd 61/08:00:ef:91:7a/00:00:00:00:00/40 tag 0
+cdb 0x0 data 4096 out
+[  298.335652]          res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  298.335661] ata6.00: cmd 60/00:08:87:45:60/01:00:00:00:00/40 tag 1
+cdb 0x0 data 131072 in
+[  298.335663]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+...
+[  298.647119] ata6: soft resetting port
+[  299.147026] ata6: softreset failed (1st FIS failed)
+[  299.147032] ata6: softreset failed, retrying in 5 secs
+[  304.144189] ata6: hard resetting port
+[  304.965800] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[  334.919509] ata6.00: qc timeout (cmd 0xec)
+[  335.418808] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x104)
+[  335.418813] ata6.00: revalidation failed (errno=-5)
+[  335.418817] ata6: failed to recover some devices, retrying in 5 secs
+[  340.415950] ata6: hard resetting port
+[  341.237601] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+...
+[  407.463893] ata6.00: qc timeout (cmd 0xec)
+[  407.963253] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x104)
+[  407.963257] ata6.00: revalidation failed (errno=-5)
+[  407.963261] ata6.00: disabled
+[  408.466655] ata6: EH complete
 
-Works for me, but my test rig hardly ever throws any errors.
-Testing by those that experience frequent errors would be
-most welcome.
-
-libata experts may want to check if my mapping to libata
-error codes and eh actions is OK.
-
-/Mikael
-
---- linux-2.6.21-rc2/drivers/ata/sata_promise.c.~1~	2007-02-28 13:32:46.000000000 +0100
-+++ linux-2.6.21-rc2/drivers/ata/sata_promise.c	2007-03-01 01:52:35.000000000 +0100
-@@ -70,8 +70,37 @@ enum {
- 	PDC_TBG_MODE		= 0x41C, /* TBG mode (not SATAII) */
- 	PDC_SLEW_CTL		= 0x470, /* slew rate control reg (not SATAII) */
+Drives and cables are fine.  I can plug them into the ICH7 ports and
+beat them up for hours.  I can also boot to Windows and run the drives
+flat out on the Marvell without problem.  Jumpering the drives back to
+1.5g doesn't help.
  
--	PDC_ERR_MASK		= (1<<19) | (1<<20) | (1<<21) | (1<<22) |
--				  (1<<8) | (1<<9) | (1<<10),
-+	/* PDC_GLOBAL_CTL bit definitions */
-+	PDC_PH_ERR		= (1 << 8),
-+	PDC_SH_ERR		= (1 << 9),
-+	PDC_DH_ERR		= (1 << 10),
-+	PDC2_HTO_ERR		= (1 << 12),
-+	PDC2_ATA_HBA_ERR	= (1 << 13),
-+	PDC2_ATA_DMA_CNT_ERR	= (1 << 14),
-+	PDC_OVERRUN_ERR		= (1 << 19),
-+	PDC_UNDERRUN_ERR	= (1 << 20),
-+	PDC_DRIVE_ERR		= (1 << 21),
-+	PDC_PCI_SYS_ERR		= (1 << 22),
-+	PDC1_PCI_PARITY_ERR	= (1 << 23),	/* 1st gen only */
-+	PDC1_ERR_MASK		= PDC1_PCI_PARITY_ERR,
-+	PDC2_ERR_MASK		= PDC2_HTO_ERR | PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR,
-+	PDC_ERR_MASK		= (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC_OVERRUN_ERR
-+				   | PDC_UNDERRUN_ERR | PDC_DRIVE_ERR | PDC_PCI_SYS_ERR
-+				   | PDC2_ERR_MASK | PDC1_ERR_MASK),
-+
-+	/* Promise-specific SError bit definitions */
-+	PDC_SERR_COMWAKE	= (1 << 18),
-+	PDC_SERR_10BTO8B	= (1 << 19),
-+	PDC_SERR_DISPARITY	= (1 << 20),
-+	PDC_SERR_CRC		= (1 << 21),
-+	PDC_SERR_HANDSHAKE	= (1 << 22),
-+	PDC_SERR_LINK_SEQ	= (1 << 23),
-+	PDC2_SERR_STATE_TRANS	= (1 << 24),
-+	PDC_SERR_FIS_TYPE	= (1 << 25),
-+	PDC2_SERR_MASK		= PDC2_SERR_STATE_TRANS,
-+	PDC_SERR_MASK		= (PDC_SERR_COMWAKE | PDC_SERR_10BTO8B | PDC_SERR_DISPARITY
-+				   | PDC_SERR_CRC | PDC_SERR_HANDSHAKE | PDC_SERR_LINK_SEQ
-+				   | PDC_SERR_FIS_TYPE | PDC2_SERR_MASK),
+Any ideas or am I just jumping the gun trying to get this to work now?
  
- 	board_2037x		= 0,	/* FastTrak S150 TX2plus */
- 	board_20319		= 1,	/* FastTrak S150 TX4 */
-@@ -590,17 +619,67 @@ static void pdc_post_internal_cmd(struct
- 		pdc_reset_port(ap);
- }
+Thanks...george
  
-+static void pdc_error_intr(struct ata_port *ap, struct ata_queued_cmd *qc, u32 port_status)
-+{
-+	struct pdc_host_priv *hp = ap->host->private_data;
-+	struct ata_eh_info *ehi = &ap->eh_info;
-+	unsigned int err_mask = 0, action = 0;
-+	u32 serror;
-+
-+	ata_ehi_clear_desc(ehi);
-+
-+	serror = 0;
-+	if (sata_scr_valid(ap)) {
-+		serror = pdc_sata_scr_read(ap, SCR_ERROR);
-+		if (!(hp->flags & PDC_FLAG_GEN_II))
-+			serror &= ~PDC2_SERR_MASK;
-+	}
-+
-+	printk("%s: port_status 0x%08x serror 0x%08x\n", __FUNCTION__, port_status, serror);
-+
-+	ata_ehi_push_desc(ehi, "port_status 0x%08x", port_status);
-+
-+	if (serror & PDC_SERR_MASK) {
-+		err_mask |= AC_ERR_ATA_BUS;
-+		ata_ehi_push_desc(ehi, ", serror 0x%08x", serror);
-+	}
-+	if (port_status & PDC_DRIVE_ERR)
-+		err_mask |= AC_ERR_DEV;
-+	if (port_status & PDC2_HTO_ERR)
-+		err_mask |= AC_ERR_TIMEOUT;
-+	if (port_status & (PDC_UNDERRUN_ERR | PDC_OVERRUN_ERR | PDC2_ATA_DMA_CNT_ERR
-+			   | PDC2_ATA_HBA_ERR))
-+		err_mask |= AC_ERR_ATA_BUS;
-+	if (port_status & (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC_PCI_SYS_ERR
-+			   | PDC1_PCI_PARITY_ERR))
-+		err_mask |= AC_ERR_HOST_BUS;
-+
-+	action |= ATA_EH_SOFTRESET;
-+
-+	ehi->serror |= serror;
-+	ehi->action |= action;
-+
-+	qc->err_mask |= err_mask;
-+
-+	ata_port_freeze(ap);
-+}
-+
- static inline unsigned int pdc_host_intr( struct ata_port *ap,
-                                           struct ata_queued_cmd *qc)
- {
- 	unsigned int handled = 0;
--	u32 tmp;
--	void __iomem *mmio = ap->ioaddr.cmd_addr + PDC_GLOBAL_CTL;
-+	void __iomem *port_mmio = ap->ioaddr.cmd_addr;
-+	struct pdc_host_priv *hp = ap->host->private_data;
-+	u32 port_status;
+MB: Intel 975XBX2
+Marvell 88SE6145 running 1.1.0.34 firmware
+Kernel 2.6.20 with Jeff's ahci patch from 1/27/07
+WD2500JS drives
  
--	tmp = readl(mmio);
--	if (tmp & PDC_ERR_MASK) {
--		qc->err_mask |= AC_ERR_DEV;
--		pdc_reset_port(ap);
-+	port_status = readl(port_mmio + PDC_GLOBAL_CTL);
-+	if (hp->flags & PDC_FLAG_GEN_II)
-+		port_status &= ~PDC1_ERR_MASK;
-+	else
-+		port_status &= ~PDC2_ERR_MASK;
-+	if (unlikely(port_status & PDC_ERR_MASK)) {
-+		pdc_error_intr(ap, qc, port_status);
-+		return 1;
- 	}
- 
- 	switch (qc->tf.protocol) {
