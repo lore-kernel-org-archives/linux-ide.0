@@ -1,45 +1,178 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: end to end error recovery musings
-Date: Thu, 01 Mar 2007 09:25:22 -0500
-Message-ID: <1172759123.3624.3.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
-	 <yq14pp78rze.fsf@sermon.lab.mkp.net>
-	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>
-	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>
-	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
-	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>
-	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
-	 <1172683822.3374.13.camel@mulgrave.il.steeleye.com>
-	 <yq1hct641s0.fsf@sermon.lab.mkp.net>
-	 <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
-	 <45E62C3C.5090906@zytor.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] libata: Cable detection fixes
+Date: Thu, 1 Mar 2007 17:30:03 +0000
+Message-ID: <20070301173003.5d5ab4a6@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:57036 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965083AbXCAO1X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 09:27:23 -0500
-In-Reply-To: <45E62C3C.5090906@zytor.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49493 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965330AbXCAQ0L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 11:26:11 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dougg@torque.net, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
-
-On Wed, 2007-02-28 at 17:28 -0800, H. Peter Anvin wrote:
-> James Bottomley wrote:
-> > On Wed, 2007-02-28 at 12:42 -0500, Martin K. Petersen wrote:
-> >> 4104.  It's 8 bytes per hardware sector.  At least for T10...
-> > 
-> > Er ... that won't look good to the 512 ATA compatibility remapping ...
-> > 
-> 
-> Well, in that case you'd only see 8x512 data bytes, no metadata...
-
-i.e. no support for block guard in the 512 byte sector emulation
-mode ...
-
-James
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com, torvalds@osdl.org
 
 
+2.6.21-rc has horrible problems with libata and PATA cable types (and
+thus speeds). This occurs because Tejun fixed a pile of other bugs and
+we now do cable detect enforcement for drive side detection properly.
+
+Unfortunately we don't do the process around cable detection right. Tejun
+identified the problem and pointed to the right Annex in the spec, this patch
+implements the needed changes.
+
+The basic requirement is that we have to identify the slave before the
+master.
+
+The patch switches the identify order so that we can do the drive side
+detection correctly. 
+
+Secondly we add a ->cable_detect() method called after the identify
+sequence which allows a host to do host side detection at this point
+should it wish, or to modify the results of the drive side identify.
+
+This separate ->cable_detect method also cleans up a lot of code because
+many drivers have their own error_handler methods which really just set
+the cable type.
+
+If there is no ->cable_detect method the cable type is left alone so a
+driver setting it earlier (eg because it has the SATA flags set or
+because it uses the old error_handler approach) will still do the right
+thing (or at least the same thing) as before.
+
+This patch simply adds the cable_detect method and helpers it doesn't use
+them but other follow up patches will (ie Adrian please don't submit
+patches to unexport them ;))
+
+Alan
+
+
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/libata-core.c linux-2.6.21-rc2/drivers/ata/libata-core.c
+--- linux.vanilla-2.6.21-rc2/drivers/ata/libata-core.c	2007-03-01 13:36:03.000000000 +0000
++++ linux-2.6.21-rc2/drivers/ata/libata-core.c	2007-03-01 15:49:21.853448880 +0000
+@@ -1800,6 +1800,56 @@
+ }
+ 
+ /**
++ *	ata_cable_40wire	-	return 40pin cable type
++ *	@ap: port
++ *
++ *	Helper method for drivers which want to hardwire 40 pin cable
++ *	detection.
++ */
++ 
++int ata_cable_40wire(struct ata_port *ap)
++{
++	return ATA_CBL_PATA40;
++}
++
++/**
++ *	ata_cable_80wire	-	return 40pin cable type
++ *	@ap: port
++ *
++ *	Helper method for drivers which want to hardwire 80 pin cable
++ *	detection.
++ */
++ 
++int ata_cable_80wire(struct ata_port *ap)
++{
++	return ATA_CBL_PATA80;
++}
++
++/**
++ *	ata_cable_unknown	-	return unknown PATA cable.
++ *	@ap: port
++ *
++ *	Helper method for drivers which have no PATA cable detection.
++ */
++ 
++int ata_cable_unknown(struct ata_port *ap)
++{
++	return ATA_CBL_PATA_UNK;
++}
++
++/**
++ *	ata_cable_sata	-	return SATA cable type
++ *	@ap: port
++ *
++ *	Helper method for drivers which have SATA cables
++ */
++ 
++int ata_cable_sata(struct ata_port *ap)
++{
++	return ATA_CBL_SATA;
++}
++
++/**
+  *	ata_bus_probe - Reset and probe ATA bus
+  *	@ap: Bus to probe
+  *
+@@ -1850,8 +1900,11 @@
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++)
+ 		ap->device[i].pio_mode = XFER_PIO_0;
+ 
+-	/* read IDENTIFY page and configure devices */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++	/* read IDENTIFY page and configure devices. We have to do the identify
++	   specific sequence bass-ackwards so that PDIAG- is released by
++	   the slave device */
++
++	for (i = ATA_MAX_DEVICES - 1; i >=  0; i--) {
+ 		dev = &ap->device[i];
+ 
+ 		if (tries[i])
+@@ -1864,6 +1917,19 @@
+ 				     dev->id);
+ 		if (rc)
+ 			goto fail;
++	}
++
++	/* Now ask for the cable type as PDIAG- should have been released */
++	if (ap->ops->cable_detect)
++		ap->cbl = ap->ops->cable_detect(ap);
++
++	/* After the identify sequence we can now set up the devices. We do
++	   this in the normal order so that the user doesn't get confused */
++
++	for(i = 0; i < ATA_MAX_DEVICES; i++) {
++		dev = &ap->device[i];
++		if (!ata_dev_enabled(dev))
++			continue;
+ 
+ 		ap->eh_context.i.flags |= ATA_EHI_PRINTINFO;
+ 		rc = ata_dev_configure(dev);
+@@ -6391,3 +6456,8 @@
+ EXPORT_SYMBOL_GPL(ata_irq_ack);
+ EXPORT_SYMBOL_GPL(ata_dummy_irq_ack);
+ EXPORT_SYMBOL_GPL(ata_dev_try_classify);
++
++EXPORT_SYMBOL_GPL(ata_cable_40wire);
++EXPORT_SYMBOL_GPL(ata_cable_80wire);
++EXPORT_SYMBOL_GPL(ata_cable_unknown);
++EXPORT_SYMBOL_GPL(ata_cable_sata);
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/include/linux/libata.h linux-2.6.21-rc2/include/linux/libata.h
+--- linux.vanilla-2.6.21-rc2/include/linux/libata.h	2007-03-01 13:36:13.000000000 +0000
++++ linux-2.6.21-rc2/include/linux/libata.h	2007-03-01 14:27:53.363612296 +0000
+@@ -615,6 +614,8 @@
+ 
+ 	void (*post_set_mode) (struct ata_port *ap);
+ 
++	int (*cable_detect) (struct ata_port *ap);
++
+ 	int  (*check_atapi_dma) (struct ata_queued_cmd *qc);
+ 
+ 	void (*bmdma_setup) (struct ata_queued_cmd *qc);
+@@ -828,6 +829,11 @@
+ extern u8 ata_irq_ack(struct ata_port *ap, unsigned int chk_drq);
+ extern u8 ata_dummy_irq_ack(struct ata_port *ap, unsigned int chk_drq);
+ 
++extern int ata_cable_40wire(struct ata_port *ap);
++extern int ata_cable_80wire(struct ata_port *ap);
++extern int ata_cable_sata(struct ata_port *ap);
++extern int ata_cable_unknown(struct ata_port *ap);
++
+ /*
+  * Timing helpers
+  */
