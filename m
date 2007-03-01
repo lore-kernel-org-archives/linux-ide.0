@@ -1,149 +1,45 @@
-From: Sigmund Scheinbar <sigmund.debian@synflood.homelinux.org>
-Subject: Re: SATA Problem: port is slow to respond
-Date: Thu, 01 Mar 2007 09:13:24 +0100
-Message-ID: <45E68B24.5030006@synflood.homelinux.org>
-References: <200702161050.51523.sigmund.lkml@synflood.homelinux.org> <45E4436B.9090102@gmail.com> <45E4A217.7090909@synflood.homelinux.org> <45E51B0A.5040605@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: end to end error recovery musings
+Date: Thu, 01 Mar 2007 09:25:22 -0500
+Message-ID: <1172759123.3624.3.camel@mulgrave.il.steeleye.com>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+	 <yq14pp78rze.fsf@sermon.lab.mkp.net>
+	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>
+	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>
+	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
+	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>
+	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
+	 <1172683822.3374.13.camel@mulgrave.il.steeleye.com>
+	 <yq1hct641s0.fsf@sermon.lab.mkp.net>
+	 <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
+	 <45E62C3C.5090906@zytor.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040202060404070002070408"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from synflood.homelinux.org ([193.80.11.44]:2736 "EHLO
-	synflood.homelinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933125AbXCAIqj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 03:46:39 -0500
-In-Reply-To: <45E51B0A.5040605@gmail.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:57036 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965083AbXCAO1X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 09:27:23 -0500
+In-Reply-To: <45E62C3C.5090906@zytor.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Sigmund Scheinbar <sigmund.lkml@synflood.homelinux.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dougg@torque.net, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 
-This is a multi-part message in MIME format.
---------------040202060404070002070408
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Wed, 2007-02-28 at 17:28 -0800, H. Peter Anvin wrote:
+> James Bottomley wrote:
+> > On Wed, 2007-02-28 at 12:42 -0500, Martin K. Petersen wrote:
+> >> 4104.  It's 8 bytes per hardware sector.  At least for T10...
+> > 
+> > Er ... that won't look good to the 512 ATA compatibility remapping ...
+> > 
+> 
+> Well, in that case you'd only see 8x512 data bytes, no metadata...
 
-Tejun Heo wrote:
-> Please apply the attached patch over 2.6.20.1 and report how it works.
+i.e. no support for block guard in the 512 byte sector emulation
+mode ...
 
-I'm afraid that something went wrong while patching:
-
-pc31:/usr/src/linux-2.6.20.1# cat /root/sb600-ign-serr-internal.patch |
-patch --verbose -p1 --dry-run
-Hmm...  Looks like a unified diff to me...
-The text leading up to this was:
---------------------------
-|diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-|index 6d93240..2d7d97d 100644
-|--- a/drivers/ata/ahci.c
-|+++ b/drivers/ata/ahci.c
---------------------------
-Patching file drivers/ata/ahci.c using Plan A...
-Hunk #1 succeeded at 82 (offset 2 lines).
-Hunk #2 succeeded at 174 (offset 5 lines).
-Hunk #3 succeeded at 359 (offset 4 lines).
-Hunk #4 succeeded at 409 (offset 4 lines).
-Hunk #5 succeeded at 475 with fuzz 1 (offset 8 lines).
-Hunk #6 FAILED at 489.
-1 out of 6 hunks FAILED -- saving rejects to file drivers/ata/ahci.c.rej
-done
-pc31:/usr/src/linux-2.6.20.1# md5sum /root/sb600-ign-serr-internal.patch
-2946379300b1010bc2e8101391b3f9d6  /root/sb600-ign-serr-internal.patch
-
-BTW.: I'm just curious, what's the "purpose" of this patch, it looks to
-me like it is just going to ignore the problem? Or do you think that the
-hardware is faulty?
-
-Greetings,
-Sigmund
+James
 
 
---------------040202060404070002070408
-Content-Type: text/x-diff;
- name="sb600-ign-serr-internal.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sb600-ign-serr-internal.patch"
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 6d93240..2d7d97d 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -80,6 +80,7 @@ enum {
- 	board_ahci_pi		= 1,
- 	board_ahci_vt8251	= 2,
- 	board_ahci_ign_iferr	= 3,
-+	board_ahci_ign_interr	= 4,
- 
- 	/* global controller registers */
- 	HOST_CAP		= 0x00, /* host capabilities */
-@@ -168,6 +169,7 @@ enum {
- 	AHCI_FLAG_NO_NCQ		= (1 << 24),
- 	AHCI_FLAG_IGN_IRQ_IF_ERR	= (1 << 25), /* ignore IRQ_IF_ERR */
- 	AHCI_FLAG_HONOR_PI		= (1 << 26), /* honor PORTS_IMPL */
-+	AHCI_FLAG_IGN_SERR_INTERNAL	= (1 << 27), /* ignore SERR_INTERNAL */
- };
- 
- struct ahci_cmd_hdr {
-@@ -353,6 +355,17 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
- 	},
-+	/* board_ahci_ign_interr */
-+	{
-+		.sht		= &ahci_sht,
-+		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-+				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
-+				  ATA_FLAG_SKIP_D2H_BSY |
-+				  AHCI_FLAG_IGN_SERR_INTERNAL,
-+		.pio_mask	= 0x1f, /* pio0-4 */
-+		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-+		.port_ops	= &ahci_ops,
-+	},
- };
- 
- static const struct pci_device_id ahci_pci_tbl[] = {
-@@ -392,8 +405,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(JMICRON, 0x2366), board_ahci_ign_iferr }, /* JMB366 */
- 
- 	/* ATI */
--	{ PCI_VDEVICE(ATI, 0x4380), board_ahci }, /* ATI SB600 non-raid */
--	{ PCI_VDEVICE(ATI, 0x4381), board_ahci }, /* ATI SB600 raid */
-+	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_ign_interr }, /* SB600 non-raid */
-+	{ PCI_VDEVICE(ATI, 0x4381), board_ahci_ign_interr }, /* SB600 raid */
- 
- 	/* VIA */
- 	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
-@@ -454,9 +467,10 @@ static inline void __iomem *ahci_port_base(void __iomem *base,
- 	return base + 0x100 + (port * 0x80);
- }
- 
--static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
-+static u32 ahci_scr_read(struct ata_port *ap, unsigned int sc_reg_in)
- {
- 	unsigned int sc_reg;
-+	u32 serr;
- 
- 	switch (sc_reg_in) {
- 	case SCR_STATUS:	sc_reg = 0; break;
-@@ -467,12 +481,13 @@ static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg_in)
- 		return 0xffffffffU;
- 	}
- 
--	return readl(ap->ioaddr.scr_addr + (sc_reg * 4));
-+	serr = readl(ap->ioaddr.scr_addr + (sc_reg * 4));
-+	if (ap->flags & AHCI_FLAG_IGN_SERR_INTERNAL)
-+		serr &= ~SERR_INTERNAL;
-+	return serr;
- }
- 
--
--static void ahci_scr_write (struct ata_port *ap, unsigned int sc_reg_in,
--			       u32 val)
-+static void ahci_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val)
- {
- 	unsigned int sc_reg;
- 
-
-
-
---------------040202060404070002070408--
