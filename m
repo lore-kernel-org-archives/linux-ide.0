@@ -1,58 +1,37 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_hpt3x3: clean up by using cable method
-Date: Thu, 1 Mar 2007 18:03:24 +0000
-Message-ID: <20070301180324.72065df3@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_qdi: set cable type
+Date: Thu, 1 Mar 2007 18:20:14 +0000
+Message-ID: <20070301182014.51389528@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50168 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35756 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965061AbXCARAU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 12:00:20 -0500
+	with ESMTP id S965421AbXCARQI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 12:16:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/pata_hpt3x3.c linux-2.6.21-rc2/drivers/ata/pata_hpt3x3.c
---- linux.vanilla-2.6.21-rc2/drivers/ata/pata_hpt3x3.c	2007-03-01 13:36:03.000000000 +0000
-+++ linux-2.6.21-rc2/drivers/ata/pata_hpt3x3.c	2007-03-01 15:37:02.236887688 +0000
-@@ -25,25 +25,6 @@
- #define DRV_NAME	"pata_hpt3x3"
- #define DRV_VERSION	"0.4.2"
- 
--static int hpt3x3_probe_init(struct ata_port *ap)
--{
--	ap->cbl = ATA_CBL_PATA40;
--	return ata_std_prereset(ap);
--}
--
--/**
-- *	hpt3x3_probe_reset	-	reset the hpt3x3 bus
-- *	@ap: ATA port to reset
-- *
-- *	Perform the housekeeping when doing an ATA bus reeset. We just
-- *	need to force the cable type.
-- */
--
--static void hpt3x3_error_handler(struct ata_port *ap)
--{
--	return ata_bmdma_drive_eh(ap, hpt3x3_probe_init, ata_std_softreset, NULL, ata_std_postreset);
--}
--
- /**
-  *	hpt3x3_set_piomode		-	PIO setup
-  *	@ap: ATA interface
-@@ -137,8 +118,9 @@
- 
- 	.freeze		= ata_bmdma_freeze,
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/pata_qdi.c linux-2.6.21-rc2/drivers/ata/pata_qdi.c
+--- linux.vanilla-2.6.21-rc2/drivers/ata/pata_qdi.c	2007-03-01 13:36:03.000000000 +0000
++++ linux-2.6.21-rc2/drivers/ata/pata_qdi.c	2007-03-01 15:04:58.956270784 +0000
+@@ -183,6 +183,7 @@
  	.thaw		= ata_bmdma_thaw,
--	.error_handler	= hpt3x3_error_handler,
-+	.error_handler	= ata_bmdma_error_handler,
+ 	.error_handler	= ata_bmdma_error_handler,
  	.post_internal_cmd = ata_bmdma_post_internal_cmd,
 +	.cable_detect	= ata_cable_40wire,
  
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
+ 	.qc_prep 	= ata_qc_prep,
+ 	.qc_issue	= qdi_qc_issue_prot,
+@@ -211,6 +212,7 @@
+ 	.thaw		= ata_bmdma_thaw,
+ 	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= ata_cable_40wire,
+ 
+ 	.qc_prep 	= ata_qc_prep,
+ 	.qc_issue	= qdi_qc_issue_prot,
