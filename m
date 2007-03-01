@@ -1,20 +1,29 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [ignore] am I still subscribed?
-Date: Wed, 28 Feb 2007 20:07:48 -0500
-Message-ID: <45E62764.9020805@rtr.ca>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: end to end error recovery musings
+Date: Wed, 28 Feb 2007 17:28:28 -0800
+Message-ID: <45E62C3C.5090906@zytor.com>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>	 <yq14pp78rze.fsf@sermon.lab.mkp.net>	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>	 <1172683822.3374.13.camel@mulgrave.il.steeleye.com>	 <yq1hct641s0.fsf@sermon.lab.mkp.net> <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3651 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932881AbXCABHw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Feb 2007 20:07:52 -0500
-Received: from [10.0.0.14] (silvy.localnet [10.0.0.14])
-	by mail.rtr.ca (Postfix) with ESMTP id ABA2D25C301
-	for <linux-ide@vger.kernel.org>; Wed, 28 Feb 2007 20:07:50 -0500 (EST)
+Received: from terminus.zytor.com ([192.83.249.54]:60872 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932910AbXCAB3A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Feb 2007 20:29:00 -0500
+In-Reply-To: <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dougg@torque.net, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 
-test (our mail server has been dead for 5 days..)
+James Bottomley wrote:
+> On Wed, 2007-02-28 at 12:42 -0500, Martin K. Petersen wrote:
+>> 4104.  It's 8 bytes per hardware sector.  At least for T10...
+> 
+> Er ... that won't look good to the 512 ATA compatibility remapping ...
+> 
+
+Well, in that case you'd only see 8x512 data bytes, no metadata...
+
+	-hpa
