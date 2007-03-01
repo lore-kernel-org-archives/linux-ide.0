@@ -1,32 +1,43 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: end to end error recovery musings
-Date: Thu, 01 Mar 2007 09:19:39 -0800
-Message-ID: <45E70B2B.9050401@zytor.com>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>	 <yq14pp78rze.fsf@sermon.lab.mkp.net>	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>	 <1172683822.3374.13.camel@mulgrave.il.steeleye.com>	 <yq1hct641s0.fsf@sermon.lab.mkp.net>	 <1172685161.3374.18.camel@mulgrave.il.steeleye.com>	 <45E62C3C.5090906@zytor.com> <1172759123.3624.3.camel@mulgrave.il.steeleye.com>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_sl82c105: Missing methods, cable
+Date: Thu, 1 Mar 2007 18:27:26 +0000
+Message-ID: <20070301182726.5b93435d@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1172759123.3624.3.camel@mulgrave.il.steeleye.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dougg@torque.net, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47938 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965447AbXCARXT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 12:23:19 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-James Bottomley wrote:
-> On Wed, 2007-02-28 at 17:28 -0800, H. Peter Anvin wrote:
->> James Bottomley wrote:
->>> On Wed, 2007-02-28 at 12:42 -0500, Martin K. Petersen wrote:
->>>> 4104.  It's 8 bytes per hardware sector.  At least for T10...
->>> Er ... that won't look good to the 512 ATA compatibility remapping ...
->>>
->> Well, in that case you'd only see 8x512 data bytes, no metadata...
-> 
-> i.e. no support for block guard in the 512 byte sector emulation
-> mode ...
-> 
+Missing freeze, thaw, post_internal methods, also switch to new cable method in passing.
 
-That makes sense, though... if the raw sector size is 4096 bytes, that 
-metadata would presumably not exist on a per-sector basis.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-	-hpa
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/pata_sl82c105.c linux-2.6.21-rc2/drivers/ata/pata_sl82c105.c
+--- linux.vanilla-2.6.21-rc2/drivers/ata/pata_sl82c105.c	2007-03-01 13:36:03.000000000 +0000
++++ linux-2.6.21-rc2/drivers/ata/pata_sl82c105.c	2007-03-01 15:14:28.670661032 +0000
+@@ -58,7 +58,6 @@
+ 
+ 	if (ap->port_no && !pci_test_config_bits(pdev, &sl82c105_enable_bits[ap->port_no]))
+ 		return -ENOENT;
+-	ap->cbl = ATA_CBL_PATA40;
+ 	return ata_std_prereset(ap);
+ }
+ 
+@@ -234,7 +233,11 @@
+ 	.exec_command	= ata_exec_command,
+ 	.dev_select 	= ata_std_dev_select,
+ 
++	.freeze		= ata_bmdma_freeze,
++	.thaw		= ata_bmdma_thaw,
+ 	.error_handler	= sl82c105_error_handler,
++	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= ata_cable_40wire,
+ 
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= sl82c105_bmdma_start,
