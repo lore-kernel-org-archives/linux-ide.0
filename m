@@ -1,43 +1,72 @@
-From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_sl82c105: Missing methods, cable
-Date: Thu, 1 Mar 2007 18:27:26 +0000
-Message-ID: <20070301182726.5b93435d@lxorguk.ukuu.org.uk>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] pata_sil680 suspend/resume
+Date: Thu, 1 Mar 2007 23:11:54 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0703012305030.7351@poirot.grange>
+References: <20061122172841.0b90f042@localhost.localdomain>
+ <Pine.LNX.4.60.0702262150460.5079@poirot.grange> <Pine.LNX.4.60.0702282201250.8832@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47938 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965447AbXCARXT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 12:23:19 -0500
+Received: from mail.gmx.net ([213.165.64.20]:50239 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1030427AbXCAWL5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Mar 2007 17:11:57 -0500
+In-Reply-To: <Pine.LNX.4.60.0702282201250.8832@poirot.grange>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-pm@lists.osdl.org, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Missing freeze, thaw, post_internal methods, also switch to new cable method in passing.
+Tejun,
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+I tracked this change down to your patch: 
+http://marc.theaimsgroup.com/?t=115012763500002&r=1&w=2 (approximately). 
+(Interestingly, Jeff submitted the respective cumulative libata patch last 
+year on my birthday:-( ) Also, there's a Ubuntu bug report: 
+https://launchpad.net/ubuntu/+source/linux-source-2.6.20/+bug/76431 
+identical to what I see, although I cannot check if it worked before 
+2.6.20. Could you, please, comment how is this supposed to work? In 
+particular, what shoud trigger the EH action, leading to setting the 
+ATA_DFLAG_SUSPENDED flag? Below again my earlier post for reference.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/pata_sl82c105.c linux-2.6.21-rc2/drivers/ata/pata_sl82c105.c
---- linux.vanilla-2.6.21-rc2/drivers/ata/pata_sl82c105.c	2007-03-01 13:36:03.000000000 +0000
-+++ linux-2.6.21-rc2/drivers/ata/pata_sl82c105.c	2007-03-01 15:14:28.670661032 +0000
-@@ -58,7 +58,6 @@
- 
- 	if (ap->port_no && !pci_test_config_bits(pdev, &sl82c105_enable_bits[ap->port_no]))
- 		return -ENOENT;
--	ap->cbl = ATA_CBL_PATA40;
- 	return ata_std_prereset(ap);
- }
- 
-@@ -234,7 +233,11 @@
- 	.exec_command	= ata_exec_command,
- 	.dev_select 	= ata_std_dev_select,
- 
-+	.freeze		= ata_bmdma_freeze,
-+	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= sl82c105_error_handler,
-+	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= sl82c105_bmdma_start,
+Thanks
+Guennadi
+
+On Wed, 28 Feb 2007, Guennadi Liakhovetski wrote:
+
+> On Mon, 26 Feb 2007, Guennadi Liakhovetski wrote:
+> 
+> > With a post 2.6.20 kernel from powerpc.git I cannot suspend at all:
+> > 
+> > pata_sil680 0000:00:0c.0: suspend
+> > ata1: suspend failed, device 0 still active
+> > pci_device_suspend(): ata_pci_device_suspend+0x0/0x74() returns -16
+> > suspend_device(): pci_device_suspend+0x0/0xac() returns -16
+> > Could not suspend device 0000:00:0c.0: error -16
+> 
+> AFAICS, "still active" is printed from ata_host_suspend() if a device 
+> (disk) on the host to be suspended doesn't have ATA_DFLAG_SUSPENDED flag 
+> set. This flag is only set in ata_eh_suspend(), which is only called from 
+> ata_eh_recover(), like this:
+> 
+> generic_error_handler()
+> ata_bmdma_drive_eh()
+> ata_do_eh()
+> ata_eh_recover()
+> ata_eh_suspend()
+> dev->flags |= ATA_DFLAG_SUSPENDED;
+> 
+> but I don't understand why the error handler should be envoked? Should the 
+> "disk" be suspended before the host and is it when the eh should set the 
+> flag? If my guess is right - why doesn't the disk get suspended on my 
+> machine? Shall I suspend it explicitely from userspace? I do "hdparm -Y", 
+> and it does stop spinning", but I still get the error.
+> 
+> Thanks
+> Guennadi
+> ---
+> Guennadi Liakhovetski
+> 
+
+---
+Guennadi Liakhovetski
