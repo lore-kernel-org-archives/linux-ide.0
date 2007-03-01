@@ -1,67 +1,73 @@
 From: Alan <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_netcell: remove lots of crud by using the cable method
-Date: Thu, 1 Mar 2007 17:50:28 +0000
-Message-ID: <20070301175028.6c603eab@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_radisys - switch to cable method to cleanup code,
+ correct cable type
+Date: Thu, 1 Mar 2007 17:52:40 +0000
+Message-ID: <20070301175240.4930ba27@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34882 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965367AbXCAQqU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2007 11:46:20 -0500
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965378AbXCAQsd@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+List-Id: linux-ide@vger.kernel.org
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/pata_netcell.c linux-2.6.21-rc2/drivers/ata/pata_netcell.c
---- linux.vanilla-2.6.21-rc2/drivers/ata/pata_netcell.c	2007-03-01 13:36:03.000000000 +0000
-+++ linux-2.6.21-rc2/drivers/ata/pata_netcell.c	2007-03-01 14:59:02.698430208 +0000
-@@ -16,33 +16,7 @@
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/pata_radisys.c linux-2.6.21-rc2/drivers/ata/pata_radisys.c
+--- linux.vanilla-2.6.21-rc2/drivers/ata/pata_radisys.c	2007-03-01 13:36:03.000000000 +0000
++++ linux-2.6.21-rc2/drivers/ata/pata_radisys.c	2007-03-01 15:05:41.102863528 +0000
+@@ -24,40 +24,12 @@
  #include <linux/ata.h>
  
- #define DRV_NAME	"pata_netcell"
--#define DRV_VERSION	"0.1.6"
+ #define DRV_NAME	"pata_radisys"
+-#define DRV_VERSION	"0.4.1"
 -
 -/**
-- *	netcell_probe_init	-	check for 40/80 pin
-- *	@ap: Port
+- *	radisys_probe_init		-	probe begin
+- *	@ap: ATA port
 - *
-- *	Cables are handled by the RAID controller. Report 80 pin.
+- *	Set up cable type and use generic probe init
 - */
 -
--static int netcell_pre_reset(struct ata_port *ap)
+-static int radisys_pre_reset(struct ata_port *ap)
 -{
 -	ap->cbl = ATA_CBL_PATA80;
 -	return ata_std_prereset(ap);
 -}
 -
+-
 -/**
-- *	netcell_probe_reset - Probe specified port on PATA host controller
+- *	radisys_pata_error_handler - Probe specified port on PATA host controller
 - *	@ap: Port to probe
+- *	@classes:
 - *
 - *	LOCKING:
 - *	None (inherited from caller).
 - */
 -
--static void netcell_error_handler(struct ata_port *ap)
+-static void radisys_pata_error_handler(struct ata_port *ap)
 -{
--	return ata_bmdma_drive_eh(ap, netcell_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-	ata_bmdma_drive_eh(ap, radisys_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
 -}
-+#define DRV_VERSION	"0.1.7"
++#define DRV_VERSION	"0.4.4"
  
- /* No PIO or DMA methods needed for this device */
- 
-@@ -79,8 +53,9 @@
+ /**
+  *	radisys_set_piomode - Initialize host controller PATA PIO timings
+- *	@ap: Port whose timings we are configuring
+- *	@adev: um
++ *	@ap: ATA port
++ *	@adev: Device whose timings we are configuring
+  *
+  *	Set PIO mode for device, in host controller PCI config space.
+  *
+@@ -246,8 +218,9 @@
  
  	.freeze			= ata_bmdma_freeze,
  	.thaw			= ata_bmdma_thaw,
--	.error_handler		= netcell_error_handler,
+-	.error_handler		= radisys_pata_error_handler,
 +	.error_handler		= ata_bmdma_error_handler,
  	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.cable_detect		= ata_cable_80wire,
++	.cable_detect		= ata_cable_unknown,
  
- 	/* BMDMA handling is PCI ATA format, use helpers */
  	.bmdma_setup		= ata_bmdma_setup,
+ 	.bmdma_start		= ata_bmdma_start,
