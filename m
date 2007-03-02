@@ -1,84 +1,53 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: warn if speed limited due to 40-wire cable (v2)
-Date: Fri, 02 Mar 2007 18:33:02 -0500
-Message-ID: <45E8B42E.7010900@garzik.org>
-References: <45DA44B4.6000209@shaw.ca>
+Subject: Re: [PATCH 4/4] libata: improve media error handling
+Date: Fri, 02 Mar 2007 18:37:11 -0500
+Message-ID: <45E8B527.7090903@garzik.org>
+References: <11635120303772-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54714 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54756 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992740AbXCBXdE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 18:33:04 -0500
-In-Reply-To: <45DA44B4.6000209@shaw.ca>
+	id S2992753AbXCBXhO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 18:37:14 -0500
+In-Reply-To: <11635120303772-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> Here's a revised version of my previous patch to warn the user if a
-> drive's transfer rate is limited because of a 40-wire cable detection.
-> This one hopefully addresses Alan's previous comments - we now do this
-> at the very end of the function, and the ugly if condition has been
-> cleaned up somewhat. Also, it's been inadvertently tested (it seems that
-> pata_amd Nvidia cable detection is broken in current -git..)
+Tejun Heo wrote:
+> The ATA spec says "The amount of data transferred is indeterminate"
+> when READ/WRITE commands fail with error status.  TF regs contain the
+> address of the first sector which failed, but that's it.  libata
+> reports the reported sector to sd which assumes data upto the first
+> failed sector was transferred successfully.  This can result in data
+> corruption.
 > 
-> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+> This patch implements highlevel command-aware recovery which currently
+> has only one recovery action - ata_eh_do_partial().  If the device
+> reports the first failed block, it tries to transfer upto that block.
 > 
-> --- linux-2.6.20-git6/drivers/ata/libata-core.c    2007-02-11 
-> 17:31:19.000000000 -0600
-> +++ linux-2.6.20-git6edit/drivers/ata/libata-core.c    2007-02-13 
-> 19:15:58.000000000 -0600
-> @@ -3305,19 +3305,7 @@ static void ata_dev_xfermask(struct ata_
->     xfer_mask = ata_pack_xfermask(ap->pio_mask,
->                       ap->mwdma_mask, ap->udma_mask);
+> SCSI sense generation is updated such that the first failed block is
+> reported to SCSI layer iff partial IO occurred.
 > 
-> -    /* Apply cable rule here.  Don't apply it early because when
-> -     * we handle hot plug the cable type can itself change.
-> -     */
-> -    if (ap->cbl == ATA_CBL_PATA40)
-> -        xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
-> -    /* Apply drive side cable rule. Unknown or 80 pin cables reported
-> -     * host side are checked drive side as well. Cases where we know a
-> -     * 40wire cable is used safely for 80 are not checked here.
-> -     */
-> -        if (ata_drive_40wire(dev->id) && (ap->cbl == ATA_CBL_PATA_UNK 
-> || ap->cbl == ATA_CBL_PATA80))
-> -        xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
-> -
-> -
-> +    /* drive modes available */
->     xfer_mask &= ata_pack_xfermask(dev->pio_mask,
->                        dev->mwdma_mask, dev->udma_mask);
->     xfer_mask &= ata_id_xfermask(dev->id);
-> @@ -3348,6 +3336,25 @@ static void ata_dev_xfermask(struct ata_
->     if (ap->ops->mode_filter)
->         xfer_mask = ap->ops->mode_filter(ap, dev, xfer_mask);
-> 
-> +    /* Apply cable rule here.  Don't apply it early because when
-> +     * we handle hot plug the cable type can itself change.
-> +     * Check this last so that we know if the transfer rate was
-> +     * solely limited by the cable.
-> +     * Unknown or 80 wire cables reported host side are checked
-> +     * drive side as well. Cases where we know a 40wire cable
-> +     * is used safely for 80 are not checked here.
-> +     */
-> +    if (xfer_mask & (0xF8 << ATA_SHIFT_UDMA))
-> +        /* UDMA/44 or higher would be available */
-> +        if((ap->cbl == ATA_CBL_PATA40) ||
-> +               (ata_drive_40wire(dev->id) &&
-> +             (ap->cbl == ATA_CBL_PATA_UNK ||
-> +                     ap->cbl == ATA_CBL_PATA80))) {
-> +                  ata_dev_printk(dev, KERN_WARNING,
-> +                 "limited to UDMA/33 due to 40-wire cable\n");
-> +            xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
-> +        }
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/libata-eh.c   |  143 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/ata/libata-scsi.c |   36 +++++++-----
+>  include/linux/libata.h    |    2 +
+>  3 files changed, 166 insertions(+), 15 deletions(-)
 
-it seems broken to manipulate xfer_mask after returning from the 
-driver's ->mode_filter hook.
+(finally reviewing a patch from a 3 months ago)
 
-this patch is more than just a speed-limited warning printk, afaics
+ACK, please resend at your leisure
+
+In general, I have worries about how solid partial completion really is. 
+  I am mainly thinking of SCSI and VFS not libata, here.  Your patch 
+looks sane enough, so let's see how things go...
+
+	Jeff
+
 
 
