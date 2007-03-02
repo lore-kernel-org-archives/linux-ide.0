@@ -1,38 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Cable detection fixes
-Date: Fri, 02 Mar 2007 17:50:03 -0500
-Message-ID: <45E8AA1B.6000803@garzik.org>
-References: <20070301173003.5d5ab4a6@lxorguk.ukuu.org.uk>	<45E77D60.0@garzik.org> <20070302124534.5fcfec9f@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: implement and use ata_wait_idle_quiet()
+Date: Fri, 02 Mar 2007 17:51:16 -0500
+Message-ID: <45E8AA64.9080207@garzik.org>
+References: <20070227142606.GI20322@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54362 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54395 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992702AbXCBWuE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 17:50:04 -0500
-In-Reply-To: <20070302124534.5fcfec9f@lxorguk.ukuu.org.uk>
+	id S2992701AbXCBWvS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 17:51:18 -0500
+In-Reply-To: <20070227142606.GI20322@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, torvalds@osdl.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> However, given that we are in -rc cycle, and the wide impact of this 
->> change, this patch wants splitting.  The ->cable_detect stuff should be 
->> in a separate patch from the IDENTIFY DEVICE ordering stuff.  This 
->> ensures sanity when git-bisecting changes, and allows fast-tracking of 
->> the identify-ordering change.
+Tejun Heo wrote:
+> ata_wait_idle() complains when the device isn't idle 10ms wait.
+> However, this function sometimes is used on empty ports.  As SATA
+> controllers report arbitrary status on empty ports, this causes
+> spurious warning messages.
 > 
-> Fine by me - I carefully sent Linus the hook but no changes using it and
-> sent those changes just to the list/you.
+> * separate ata_wait_idle_quiet() from ata_wait_idle()
+> * use _quiet version in ata_irq_on()
+> * fix warning message in ata_wait_idle() to use ata_port_printk()
+>   while at it
+> 
+> This makes spurious abnormal status messages seen in many sff
+> controllers.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-The implication was that you should revise, sign-off, and resend, like 
-all the other kernel developers do when they receive feedback during 
-engineering review...
-
-Nonetheless, I extracted and applied the patch I mention above, and will 
-send it upstream today.
+My feeling is that this will also hide bugs, such as in the AHCI case
 
 	Jeff
 
