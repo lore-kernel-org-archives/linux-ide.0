@@ -1,40 +1,37 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH 1/2 -stable] libata: add missing PM callbacks
-Date: Fri, 2 Mar 2007 23:42:27 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0703022334550.6467@poirot.grange>
-References: <20061122172841.0b90f042@localhost.localdomain>
- <Pine.LNX.4.60.0702262150460.5079@poirot.grange> <Pine.LNX.4.60.0702282201250.8832@poirot.grange>
- <Pine.LNX.4.60.0703012305030.7351@poirot.grange> <20070302084530.GN20322@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata-core: Fix simplex handling
+Date: Fri, 02 Mar 2007 17:42:59 -0500
+Message-ID: <45E8A873.30604@garzik.org>
+References: <20070301173646.4138981b@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40785 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1422671AbXCBWm3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 17:42:29 -0500
-In-Reply-To: <20070302084530.GN20322@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:54292 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992645AbXCBWnF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 17:43:05 -0500
+In-Reply-To: <20070301173646.4138981b@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-pm@lists.osdl.org, linux-ide@vger.kernel.org, stable@kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
 
-On Fri, 2 Mar 2007, Tejun Heo wrote:
-
-> Some LLDs were missing scsi device PM callbacks while having host/port
-> suspend support.  Add missing ones.
+Alan wrote:
+> The initial simplex handling code is fooled if you suspend and resume.
+> This also causes problems with some single channel controllers which
+> claim to be simplex.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> This should fix the problem you're seeing on sil680.  These patches
-> are against 2.6.20.1.  Patches for libata-dev#upstream is separately
-> posted to linux-ide in the following thread.
+> The fix is fairly simple, instead of keeping a flag to remember if we
+> gave away the simplex channel we remember the actual owner. As the owner
+> is always part of the host_set we don't even need a refcount.
+> 
+> Knowing the owner also means we can reassign simplex DMA channels in
+> future hotplug code etc if we need to
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> (and a signed-off for the patch I sent before while I remember)
 
-Yep, this looks good now, I think, thanks! I still have to fix some 
-badness, but it looks unrelated. The disk switches off and on now 
-automatically as expected. I'll do further tests, but, it looks quite good 
-as it stands.
+applied
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+
