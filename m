@@ -1,46 +1,40 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] (pata-2.6 fix queue) cmd64x: fix recovery time calculation (take 2)
-Date: Fri, 2 Mar 2007 21:34:07 +0100
-Message-ID: <200703022134.07371.bzolnier@gmail.com>
-References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com> <200702262332.31751.sshtylyov@ru.mvista.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH 1/2 -stable] libata: add missing PM callbacks
+Date: Fri, 2 Mar 2007 23:42:27 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0703022334550.6467@poirot.grange>
+References: <20061122172841.0b90f042@localhost.localdomain>
+ <Pine.LNX.4.60.0702262150460.5079@poirot.grange> <Pine.LNX.4.60.0702282201250.8832@poirot.grange>
+ <Pine.LNX.4.60.0703012305030.7351@poirot.grange> <20070302084530.GN20322@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:44199 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030622AbXCBWUJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2007 17:20:09 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1443570nfa
-        for <linux-ide@vger.kernel.org>; Fri, 02 Mar 2007 14:20:07 -0800 (PST)
-In-Reply-To: <200702262332.31751.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from mail.gmx.net ([213.165.64.20]:40785 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1422671AbXCBWm3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 17:42:29 -0500
+In-Reply-To: <20070302084530.GN20322@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-pm@lists.osdl.org, linux-ide@vger.kernel.org, stable@kernel.org
 
+On Fri, 2 Mar 2007, Tejun Heo wrote:
 
-On Monday 26 February 2007, Sergei Shtylyov wrote:
-> The driver wrongly takes the address setup time into account when calculating
-> the PIO recovery time -- this leads to slight overclocking of the PIO modes 0
-> and 1 (so, the prayers failed to help, as usual :-).  Rework the code to be
-> calculating recovery clock count as a difference between the total cycle count
-> and the active count (we don't need to calculate the recovery time itself since
-> it's not specified for the PIO modes 0 to 2, and for modes 3 and 4 this formula
-> gives enough recovery time anyway in the chip's supported PCI frequency range).
+> Some LLDs were missing scsi device PM callbacks while having host/port
+> suspend support.  Add missing ones.
 > 
-> This patch has been inspired by reading the datasheets and looking at what the
-> libata driver does; it has been compile-tested only (as usual :-) but anyway,
-> the new code gives the same or longer recovery times than the old one...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > ---
-> Just discovered a missed rename in this patch -- it's always a good idea to
-> enable a debugging option when compiling. :-)
-> The later patches should be still applying without issues...
+> This should fix the problem you're seeing on sil680.  These patches
+> are against 2.6.20.1.  Patches for libata-dev#upstream is separately
+> posted to linux-ide in the following thread.
 
-I replaced the old patch with this one, thanks
+Yep, this looks good now, I think, thanks! I still have to fix some 
+badness, but it looks unrelated. The disk switches off and on now 
+automatically as expected. I'll do further tests, but, it looks quite good 
+as it stands.
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
