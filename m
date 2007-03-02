@@ -1,45 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/3] libata: add missing CONFIG_PM in LLDs
-Date: Fri, 02 Mar 2007 21:22:54 +0900
-Message-ID: <45E8171E.70205@gmail.com>
-References: <20070302083001.GK20322@htj.dyndns.org>	<20070302083126.GL20322@htj.dyndns.org>	<20070302125732.2eb9e67e@lxorguk.ukuu.org.uk>	<45E81266.3060108@gmail.com> <20070302131925.78b00f7d@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [RFT] sata_promise: intermittent errors bug hunting
+Date: Fri, 2 Mar 2007 13:52:11 +0100 (MET)
+Message-ID: <200703021252.l22CqB7I026196@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:56983 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423052AbXCBMWz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2007 07:22:55 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so834876nze
-        for <linux-ide@vger.kernel.org>; Fri, 02 Mar 2007 04:22:55 -0800 (PST)
-In-Reply-To: <20070302131925.78b00f7d@lxorguk.ukuu.org.uk>
+Received: from aun.it.uu.se ([130.238.12.36]:35680 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945905AbXCBMwQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 07:52:16 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Tomi.Orava@ncircle.nullnet.fi
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Fri, 02 Mar 2007 21:02:46 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
+On Fri, 2 Mar 2007 13:51:19 +0200 (EET), Tomi Orava wrote:
+> > There have been some reports of intermittent errors
+> > with sata_promise, especially with newer disks.
+> > My theory is that the driver isn't initialisating the
+> > controller properly for SATAII 3Gbps transfer speeds.
 > 
->> Alan Cox wrote:
->>> Ughhhhhhhhh...
->>>
->>> Can we not just provide dummy methods ?
->> I agree that it's ugly but LDDs often wrap standard routines and with
->> the third patch all standard routines are gone thus forcing LLDs to omit
->> PM functions if !CONFIG_PM.  If we supply dummy core functions, forcing
->> LLDs to skip private PM functions is difficult.
+> I did a test run with 2.6.21-rc2-git1 & your patch and
+> still got similar errors as without your patch ...
 > 
-> If CONFIG_PM is not defined then they will not get called and they
-> generally wrap the functions that would become dummies ?
+> My hardware consists of Promise PDC40718 (SATA 300 TX4)
+> 4-port sata-card & 2 older 7200.7 Seagates (200GB) and
+> 2 newer 7200.10 Seagates (500GB).
 > 
-> Am I missing something ?
+> It's only the 7200.10 models which creates the following type of
+> complaints in the system logs:
+> 
+> Mar  2 11:13:40 alderan kernel: ata2.00: exception Emask 0x0 SAct 0x0 SEr=
+> r
+> 0x0 action 0x0
+> Mar  2 11:13:40 alderan kernel: ata2.00: cmd
+> 25/00:00:3f:6f:a1/00:02:07:00:00/e0 tag 0 cdb 0x0 data 262144 in
+> Mar  2 11:13:40 alderan kernel:          res
+> 50/00:00:3e:71:a1/00:00:9e:03:76/e0 Emask 0x1 (device error)
+etc
 
-The PM codes in LLDs would still be compiled and linked in.  Some people
-(understandably) seem to be quite concerned about that.  If we determine
-that's okay, we can kill CONFIG_PM's in all LLDs.
+Thanks for testing. Did you see my second patch to improve
+error decoding and reporting in sata_promise? It would be very
+interesting to see what additional information it logs.
 
--- 
-tejun
+<http://marc.theaimsgroup.com/?l=linux-ide&m=117271432801920&w=2>
+is the patch I'm referring to.
+
+/Mikael
