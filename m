@@ -1,37 +1,67 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata-core: Fix simplex handling
-Date: Fri, 02 Mar 2007 17:42:59 -0500
-Message-ID: <45E8A873.30604@garzik.org>
-References: <20070301173646.4138981b@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: Cable detection fixes
+Date: Fri, 02 Mar 2007 17:48:16 -0500
+Message-ID: <45E8A9B0.2070205@garzik.org>
+References: <20070301173003.5d5ab4a6@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54292 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54329 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992645AbXCBWnF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 17:43:05 -0500
-In-Reply-To: <20070301173646.4138981b@lxorguk.ukuu.org.uk>
+	id S2992669AbXCBWsS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 17:48:18 -0500
+In-Reply-To: <20070301173003.5d5ab4a6@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
 Alan wrote:
-> The initial simplex handling code is fooled if you suspend and resume.
-> This also causes problems with some single channel controllers which
-> claim to be simplex.
+> 2.6.21-rc has horrible problems with libata and PATA cable types (and
+> thus speeds). This occurs because Tejun fixed a pile of other bugs and
+> we now do cable detect enforcement for drive side detection properly.
 > 
-> The fix is fairly simple, instead of keeping a flag to remember if we
-> gave away the simplex channel we remember the actual owner. As the owner
-> is always part of the host_set we don't even need a refcount.
+> Unfortunately we don't do the process around cable detection right. Tejun
+> identified the problem and pointed to the right Annex in the spec, this patch
+> implements the needed changes.
 > 
-> Knowing the owner also means we can reassign simplex DMA channels in
-> future hotplug code etc if we need to
+> The basic requirement is that we have to identify the slave before the
+> master.
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> (and a signed-off for the patch I sent before while I remember)
+> The patch switches the identify order so that we can do the drive side
+> detection correctly. 
 
-applied
+> @@ -1850,8 +1900,11 @@
+>  	for (i = 0; i < ATA_MAX_DEVICES; i++)
+>  		ap->device[i].pio_mode = XFER_PIO_0;
+>  
+> -	/* read IDENTIFY page and configure devices */
+> -	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+> +	/* read IDENTIFY page and configure devices. We have to do the identify
+> +	   specific sequence bass-ackwards so that PDIAG- is released by
+> +	   the slave device */
+> +
+> +	for (i = ATA_MAX_DEVICES - 1; i >=  0; i--) {
+>  		dev = &ap->device[i];
+>  
+>  		if (tries[i])
+> @@ -1864,6 +1917,19 @@
+>  				     dev->id);
+>  		if (rc)
+>  			goto fail;
+> +	}
+> +
+> +	/* After the identify sequence we can now set up the devices. We do
+> +	   this in the normal order so that the user doesn't get confused */
+> +
+> +	for(i = 0; i < ATA_MAX_DEVICES; i++) {
+> +		dev = &ap->device[i];
+> +		if (!ata_dev_enabled(dev))
+> +			continue;
+>  
+>  		ap->eh_context.i.flags |= ATA_EHI_PRINTINFO;
+>  		rc = ata_dev_configure(dev);
 
+applied this part
 
