@@ -1,52 +1,30 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH, RFT, v2] sata_mv: convert to new EH
-Date: Thu, 01 Mar 2007 20:11:24 -0500
-Message-ID: <45E779BC.7020605@garzik.org>
-References: <20070225233454.GA31282@havoc.gtf.org> <45E775DC.9080405@tomt.net>
+Subject: Re: [PATCH] sata_sil24: kill unused local variable idx in sil24_fill_sg()
+Date: Thu, 01 Mar 2007 20:16:38 -0500
+Message-ID: <45E77AF6.1010702@garzik.org>
+References: <20070226071100.GC20322@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46206 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46223 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964790AbXCBBL2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Mar 2007 20:11:28 -0500
-In-Reply-To: <45E775DC.9080405@tomt.net>
+	id S1161155AbXCBBQk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Mar 2007 20:16:40 -0500
+In-Reply-To: <20070226071100.GC20322@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Andre Tomt wrote:
-> Jeff Garzik wrote:
->> Just got sata_mv working under the new EH, on my 6041.
->>
->> It probes and talks to disks just fine (chip doesn't support ATAPI),
->> and hotplug actually has a chance of working.
->>
->> The 'mv-eh' branch of
->> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git 
->> mv-eh
->>   
+Tejun Heo wrote:
+> Kill unused local variable idx in sil24_fill_sg().
 > 
-> It's great to see this driver getting some more love. On a 6041 I'm 
-> seeing very bad behaviour when encountering errors using the 2.6.19 
-> driver. If a disk gets the fits, the port dies and 500000 interrupts/s 
-> gets fired until the server gets rebooted. Good thing it only pegs one 
-> of four available cpu cores.. I hope the new EH is more robust in this 
-> regard ;-)
+> Spotted by Jeff Garzik.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Jeff Garzik <jeff@garzik.org>
 
-So, does this patch work for you?  :)  It's against 2.6.21-rc1 IIRC.
-
-
-> Ramblings aside; I see there is a mv-ncq head in libata-dev.git, do you 
-> have it working? Is there a timeframe for NCQ support?
-
-No and no.  All this Marvell work is spare-time work for me, nobody's 
-paying for it, so who knows.  I'll have it working eventually, if 
-someone else doesn't beat me to it.
-
-	Jeff
-
+applied
 
 
