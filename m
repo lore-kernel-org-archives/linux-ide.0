@@ -1,40 +1,73 @@
-From: Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-Subject: Re: [PATCH] libata: Cable detection fixes
-Date: Thu, 1 Mar 2007 23:35:07 -0700
-Message-ID: <20070302063507.GA8345@ellpspace.math.ualberta.ca>
-References: <20070301173003.5d5ab4a6@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0703011723270.12485@woody.linux-foundation.org> <45E77EDD.3010205@garzik.org>
-Reply-To: michal@harddata.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 1/3] libata: add missing PM callbacks
+Date: Fri, 2 Mar 2007 17:30:01 +0900
+Message-ID: <20070302083001.GK20322@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ellpspace.math.ualberta.ca ([129.128.207.67]:58246 "EHLO
-	ellpspace.math.ualberta.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161141AbXCBHTT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2007 02:19:19 -0500
+Received: from nz-out-0506.google.com ([64.233.162.239]:45199 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422654AbXCBIaD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2007 03:30:03 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so781111nze
+        for <linux-ide@vger.kernel.org>; Fri, 02 Mar 2007 00:30:01 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <45E77EDD.3010205@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Alan <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Thu, Mar 01, 2007 at 08:33:17PM -0500, Jeff Garzik wrote:
-> 
-> That little change, buried in the middle of Alan's patch, changes the 
-> probing order for a /lot/ of devices, possibly millions, when you 
-> consider that it changes behavior of ata_piix (Intel SATA) as well as 
-> all the not-yet-default PATA controllers.
+Some LLDs were missing scsi device PM callbacks while having host/port
+suspend support.  Add missing ones.
 
-Hm, I got recently hands on a hardware where 2.6.21-rc1 based
-kernels from Fedora rawhide simply do not boot as there is no
-way to get to disks.  I would not mind some change in behavior
-although so far I can boot at least some earlier kernels.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/pata_jmicron.c |    4 ++++
+ drivers/ata/pata_mpc52xx.c |    4 ++++
+ drivers/ata/pata_sil680.c  |    4 ++++
+ 3 files changed, 12 insertions(+)
 
-This looks like ATIIXP issue and details are here:
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
-Changelogs for kernels in question have this:
-
-* Wed Feb 21 2007 Dave Jones <davej@redhat.com>
-- 2.6.21-rc1
-
-   Michal
+Index: work/drivers/ata/pata_mpc52xx.c
+===================================================================
+--- work.orig/drivers/ata/pata_mpc52xx.c
++++ work/drivers/ata/pata_mpc52xx.c
+@@ -280,6 +280,10 @@ static struct scsi_host_template mpc52xx
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+ 	.slave_configure	= ata_scsi_slave_config,
+ 	.bios_param		= ata_std_bios_param,
++#ifdef CONFIG_PM
++	.suspend		= ata_scsi_device_suspend,
++	.resume			= ata_scsi_device_resume,
++#endif
+ };
+ 
+ static struct ata_port_operations mpc52xx_ata_port_ops = {
+Index: work/drivers/ata/pata_sil680.c
+===================================================================
+--- work.orig/drivers/ata/pata_sil680.c
++++ work/drivers/ata/pata_sil680.c
+@@ -236,6 +236,10 @@ static struct scsi_host_template sil680_
+ 	.slave_configure	= ata_scsi_slave_config,
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
++#ifdef CONFIG_PM
++	.suspend		= ata_scsi_device_suspend,
++	.resume			= ata_scsi_device_resume,
++#endif
+ };
+ 
+ static struct ata_port_operations sil680_port_ops = {
+Index: work/drivers/ata/pata_jmicron.c
+===================================================================
+--- work.orig/drivers/ata/pata_jmicron.c
++++ work/drivers/ata/pata_jmicron.c
+@@ -137,6 +137,10 @@ static struct scsi_host_template jmicron
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	/* Use standard CHS mapping rules */
+ 	.bios_param		= ata_std_bios_param,
++#ifdef CONFIG_PM
++	.suspend		= ata_scsi_device_suspend,
++	.resume			= ata_scsi_device_resume,
++#endif
+ };
+ 
+ static const struct ata_port_operations jmicron_ops = {
