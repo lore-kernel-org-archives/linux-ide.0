@@ -1,47 +1,57 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [RFT] sata_promise: intermittent errors bug hunting
-Date: Fri, 2 Mar 2007 13:52:11 +0100 (MET)
-Message-ID: <200703021252.l22CqB7I026196@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_qdi: Fix initialisation
+Date: Fri, 2 Mar 2007 14:56:35 +0000
+Message-ID: <20070302145635.1fc6fac7@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:35680 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1945905AbXCBMwQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 07:52:16 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46710 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933357AbXCBNwm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2007 08:52:42 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomi.Orava@ncircle.nullnet.fi
-Cc: linux-ide@vger.kernel.org
+To: akpm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2 Mar 2007 13:51:19 +0200 (EET), Tomi Orava wrote:
-> > There have been some reports of intermittent errors
-> > with sata_promise, especially with newer disks.
-> > My theory is that the driver isn't initialisating the
-> > controller properly for SATAII 3Gbps transfer speeds.
-> 
-> I did a test run with 2.6.21-rc2-git1 & your patch and
-> still got similar errors as without your patch ...
-> 
-> My hardware consists of Promise PDC40718 (SATA 300 TX4)
-> 4-port sata-card & 2 older 7200.7 Seagates (200GB) and
-> 2 newer 7200.10 Seagates (500GB).
-> 
-> It's only the 7200.10 models which creates the following type of
-> complaints in the system logs:
-> 
-> Mar  2 11:13:40 alderan kernel: ata2.00: exception Emask 0x0 SAct 0x0 SEr=
-> r
-> 0x0 action 0x0
-> Mar  2 11:13:40 alderan kernel: ata2.00: cmd
-> 25/00:00:3f:6f:a1/00:02:07:00:00/e0 tag 0 cdb 0x0 data 262144 in
-> Mar  2 11:13:40 alderan kernel:          res
-> 50/00:00:3e:71:a1/00:00:9e:03:76/e0 Emask 0x1 (device error)
-etc
+The QDI init code contains some bugs which mean it only works if you have
+a test setup that causes both a successful and failed probe. Fix this
 
-Thanks for testing. Did you see my second patch to improve
-error decoding and reporting in sata_promise? It would be very
-interesting to see what additional information it logs.
+Found by Philip Guo
 
-<http://marc.theaimsgroup.com/?l=linux-ide&m=117271432801920&w=2>
-is the patch I'm referring to.
+(Who found it working on code analysis tools not running VLB IDE
+controllers)
 
-/Mikael
+Signed-off-by: Alan Cox <alan@redhat.com>diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/pata_qdi.c linux-2.6.21-rc2/drivers/ata/pata_qdi.c
+--- linux.vanilla-2.6.21-rc2/drivers/ata/pata_qdi.c	2007-03-01 13:36:03.000000000 +0000
++++ linux-2.6.21-rc2/drivers/ata/pata_qdi.c	2007-03-02 13:20:27.000000000 +0000
+@@ -363,7 +365,8 @@
+ 					release_region(port, 2);
+ 					continue;
+ 				}
+-				ct += qdi_init_one(port, 6500, ide_port[r & 0x01], ide_irq[r & 0x01], r & 0x04);
++				if (qdi_init_one(port, 6500, ide_port[r & 0x01], ide_irq[r & 0x01], r & 0x04) == 0)
++					ct++;
+ 			}
+ 			if (((r & 0xF0) == 0xA0) || (r & 0xF0) == 0x50) {
+ 				/* QD6580: dual channel */
+@@ -375,11 +378,14 @@
+ 				res = inb(port + 3);
+ 				if (res & 1) {
+ 					/* Single channel mode */
+-					ct += qdi_init_one(port, 6580, ide_port[r & 0x01], ide_irq[r & 0x01], r & 0x04);
++					if (qdi_init_one(port, 6580, ide_port[r & 0x01], ide_irq[r & 0x01], r & 0x04))
++						ct++;
+ 				} else {
+ 					/* Dual channel mode */
+-					ct += qdi_init_one(port, 6580, 0x1F0, 14, r & 0x04);
+-					ct += qdi_init_one(port + 2, 6580, 0x170, 15, r & 0x04);
++					if (qdi_init_one(port, 6580, 0x1F0, 14, r & 0x04) == 0)
++						ct++;
++					if (qdi_init_one(port + 2, 6580, 0x170, 15, r & 0x04) == 0)
++						ct++;
+ 				}
+ 			}
+ 		}
+
+
