@@ -1,30 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ahci: improve spurious SDB FIS handling
-Date: Thu, 01 Mar 2007 20:20:02 -0500
-Message-ID: <45E77BC2.3060400@garzik.org>
-References: <20070227042419.GG20322@htj.dyndns.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] libata: Cable detection fixes
+Date: Thu, 1 Mar 2007 17:24:11 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0703011723270.12485@woody.linux-foundation.org>
+References: <20070301173003.5d5ab4a6@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46276 "EHLO mail.dvmed.net"
+Received: from smtp.osdl.org ([65.172.181.24]:33940 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422673AbXCBBUE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Mar 2007 20:20:04 -0500
-In-Reply-To: <20070227042419.GG20322@htj.dyndns.org>
+	id S1422679AbXCBBXv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Mar 2007 20:23:51 -0500
+In-Reply-To: <20070301173003.5d5ab4a6@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, jgarzik@pobox.com
 
-Tejun Heo wrote:
-> Spurious SDB FIS during NCQ might not contain spurious completions.
-> It could be spurious TF update or invalid async notification.  Treat
-> as HSM violation iff a spurious SDB FIS contains spurious completions;
-> otherwise, just whine once about it.
+
+
+On Thu, 1 Mar 2007, Alan wrote:
+>
+> The patch switches the identify order so that we can do the drive side
+> detection correctly. 
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Secondly we add a ->cable_detect() method called after the identify
+> sequence which allows a host to do host side detection at this point
+> should it wish, or to modify the results of the drive side identify.
 
-applied
+Alan, sign-offs?
 
+Jeff, should I just expect to get these things through you?
 
+		Linus
