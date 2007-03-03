@@ -1,40 +1,43 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.21-rc2] pmac ide: fix pmac_ide_dma_host_on() declaration
-Date: Sat, 3 Mar 2007 14:24:31 +0100 (MET)
-Message-ID: <200703031324.l23DOVjO003638@harpo.it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata build fix
+Date: Sat, 3 Mar 2007 10:39:17 -0500
+Message-ID: <20070303153917.GA8938@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:46172 "EHLO aun.it.uu.se"
+Received: from havoc.gtf.org ([69.61.125.42]:36825 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965540AbXCCNY7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Mar 2007 08:24:59 -0500
+	id S1030434AbXCCPjT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Mar 2007 10:39:19 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: benh@kernel.crashing.org, bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Building 2.6.21-rc2 on a PowerMac, I get:
 
-drivers/ide/ppc/pmac.c: In function 'pmac_ide_setup_dma':
-drivers/ide/ppc/pmac.c:2042: warning: assignment from incompatible pointer type
-drivers/ide/ppc/pmac.c: In function 'pmac_ide_dma_host_on':
-drivers/ide/ppc/pmac.c:1988: warning: control reaches end of non-void function
+A merge mistake slipped upstream.
 
-These occur because ->dma_host_on should be a function
-returning void, but pmac.c bogusly declares it as returning
-int, and furthermore fails to return a value from it.
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-Correcting the return type to void fixes both warnings.
+to receive the following updates:
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+ drivers/ata/pata_jmicron.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
---- linux-2.6.21-rc2/drivers/ide/ppc/pmac.c.~1~	2007-03-03 12:31:07.000000000 +0100
-+++ linux-2.6.21-rc2/drivers/ide/ppc/pmac.c	2007-03-03 13:18:56.000000000 +0100
-@@ -1983,7 +1983,7 @@ static void pmac_ide_dma_host_off(ide_dr
+Jeff Garzik (1):
+      [libata] pata_jmicron: build fix
+
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 033319e..43763c9 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -244,7 +244,6 @@ static void __exit jmicron_exit(void)
  {
+ 	pci_unregister_driver(&jmicron_pci_driver);
  }
+-#endif
  
--static int pmac_ide_dma_host_on(ide_drive_t *drive)
-+static void pmac_ide_dma_host_on(ide_drive_t *drive)
- {
- }
- 
+ module_init(jmicron_init);
+ module_exit(jmicron_exit);
