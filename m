@@ -1,53 +1,30 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 4/4] libata: improve media error handling
-Date: Fri, 02 Mar 2007 18:37:11 -0500
-Message-ID: <45E8B527.7090903@garzik.org>
-References: <11635120303772-git-send-email-htejun@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: implement and use ata_wait_idle_quiet()
+Date: Sat, 3 Mar 2007 00:48:01 +0000
+Message-ID: <20070303004801.30fc7fed@lxorguk.ukuu.org.uk>
+References: <20070227142606.GI20322@htj.dyndns.org>
+	<45E8AA64.9080207@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54756 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992753AbXCBXhO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 18:37:14 -0500
-In-Reply-To: <11635120303772-git-send-email-htejun@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46134 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S2992763AbXCBXn5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2007 18:43:57 -0500
+In-Reply-To: <45E8AA64.9080207@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> The ATA spec says "The amount of data transferred is indeterminate"
-> when READ/WRITE commands fail with error status.  TF regs contain the
-> address of the first sector which failed, but that's it.  libata
-> reports the reported sector to sd which assumes data upto the first
-> failed sector was transferred successfully.  This can result in data
-> corruption.
+> > This makes spurious abnormal status messages seen in many sff
+> > controllers.
+> > 
+> > Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
-> This patch implements highlevel command-aware recovery which currently
-> has only one recovery action - ata_eh_do_partial().  If the device
-> reports the first failed block, it tries to transfer upto that block.
-> 
-> SCSI sense generation is updated such that the first failed block is
-> reported to SCSI layer iff partial IO occurred.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/libata-eh.c   |  143 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/ata/libata-scsi.c |   36 +++++++-----
->  include/linux/libata.h    |    2 +
->  3 files changed, 166 insertions(+), 15 deletions(-)
+> My feeling is that this will also hide bugs, such as in the AHCI case
 
-(finally reviewing a patch from a 3 months ago)
-
-ACK, please resend at your leisure
-
-In general, I have worries about how solid partial completion really is. 
-  I am mainly thinking of SCSI and VFS not libata, here.  Your patch 
-looks sane enough, so let's see how things go...
-
-	Jeff
-
-
-
+I think its the right thing to do in the end at least for the SFF cases
+(can't comment on AHCI). Perhaps we should make that version printk to a
+different printk level for now or if ATA_DEBUG is enabled ?
