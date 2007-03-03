@@ -1,116 +1,40 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: (round 5) add support for ATA_16 on ATAPI
-Date: Fri, 02 Mar 2007 19:31:00 -0500
-Message-ID: <45E8C1C4.4050104@garzik.org>
-References: <45C376F1.5060103@rtr.ca>
+Subject: Re: [PATCH 2.6.20] libata: Support HDIO_DRIVE_TASKFILE ioctl
+Date: Fri, 02 Mar 2007 19:32:56 -0500
+Message-ID: <45E8C238.5030704@garzik.org>
+References: <31e4e9500702211813g6d3d6431oda1f6191f056a02e@mail.gmail.com> <45DFBF27.1060707@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55130 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:55161 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992795AbXCCAbC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 19:31:02 -0500
-In-Reply-To: <45C376F1.5060103@rtr.ca>
+	id S2992801AbXCCAdA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 19:33:00 -0500
+In-Reply-To: <45DFBF27.1060707@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: anand.kulkarni.remove.this@banashankari.net, linux-ide@vger.kernel.org, Anand.Kulkarni@hitachigst.com
 
-Mark Lord wrote:
-> Resending, with a bug fixed, and default ata16_passthru=0.
+Tejun Heo wrote:
+> Hello,
 > 
-> This patch adds support for issuing ATA_16 passthru commands
-> to ATAPI devices managed by libata.  It requires the previous
-> CDB length fix patch.
+> Anand Kulkarni wrote:
+>> Hi,
+>>
+>> Attached is a patch to allow HDIO_DRIVE_TASKFILE ioctl calls to libata
+>> devices so that arbitrary ATA commands that need PIO data transfers in
+>> either direction can be issued. I have tested it with linux kernel
+>> 2.6.20. The format of the input arguments is the same as for the
+>> regular ATA HDIO_DRIVE_TASKFILE ioctl : Code that makes ioctl calls to
+>> ATA devices on /dev/hda can be sent as is to SATA devices on /dev/sda.
+>>
+>> Since this is the first time I am sending a patch, please let me know
+>> if I should do anything differently.
 > 
-> A boot/module parameter, "ata16_passthru=1" can be used to
-> globally disable this feature, if ever desired.
-> 
-> Signed-Off-By: Mark :ord <mlord@pobox.com>
-> ---
-> diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff 
-> old/drivers/ata/libata-core.c new/drivers/ata/libata-core.c
-> --- old/drivers/ata/libata-core.c    2007-02-02 12:29:10.000000000 -0500
-> +++ new/drivers/ata/libata-core.c    2007-02-02 12:29:03.000000000 -0500
-> @@ -82,6 +82,10 @@
-> module_param(atapi_dmadir, int, 0444);
-> MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support 
-> (0=off, 1=on)");
-> 
-> +int ata16_passthru = 0;
-> +module_param(ata16_passthru, int, 0444);
-> +MODULE_PARM_DESC(ata16_passthru, "Enable passthru of SCSI opcode 0x85 
-> to ATAPI devices (0=off, 1=on)");
-> +
-> int libata_fua = 0;
-> module_param_named(fua, libata_fua, int, 0444);
-> MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
-> diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff 
-> old/drivers/ata/libata-scsi.c new/drivers/ata/libata-scsi.c
-> --- old/drivers/ata/libata-scsi.c    2007-02-02 12:29:10.000000000 -0500
-> +++ new/drivers/ata/libata-scsi.c    2007-02-02 12:29:25.000000000 -0500
-> @@ -2688,6 +2688,10 @@
-> 
-> static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, 
-> u8 cmd)
-> {
-> +    if (dev->class == ATA_DEV_ATAPI)
-> +        if (cmd != ATA_16 || ata16_passthru)
-> +            return atapi_xlat;
-> +
->     switch (cmd) {
->     case READ_6:
->     case READ_10:
-> @@ -2746,27 +2750,28 @@
->                       void (*done)(struct scsi_cmnd *),
->                       struct ata_device *dev)
-> {
-> -    int rc = 0;
-> -
-> -    if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len)) {
-> -        DPRINTK("bad CDB len=%u, max=%u\n",
-> -            scmd->cmd_len, dev->cdb_len);
-> +    ata_xlat_func_t xlat_func;
-> +    int rc = 0, max_len;
-> +    u8 scsi_op = scmd->cmnd[0];
-> +
-> +    if (scsi_op == ATA_16 && dev->class == ATA_DEV_ATAPI && 
-> !ata16_passthru)
-> +        max_len = 16;
-> +    else
-> +        max_len = dev->cdb_len;
-> + +    if (unlikely(!scmd->cmd_len || scmd->cmd_len > max_len)) {
-> +         DPRINTK("bad CDB len=%u, max=%u\n",
-> +             scmd->cmd_len, max_len);
+> I was kind of hoping we could drop HDIO_DRIVE_TASKFILE.  Please take a
 
-looks like a chompified patch (double '+')
+I tend to agree
 
-
->         scmd->result = DID_ERROR << 16;
->         done(scmd);
->         return 0;
->     }
-> 
-> -    if (dev->class == ATA_DEV_ATA) {
-> -        ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
-> -                                  scmd->cmnd[0]);
-> -
-> -        if (xlat_func)
-> -            rc = ata_scsi_translate(dev, scmd, done, xlat_func);
-> -        else
-> -            ata_scsi_simulate(dev, scmd, done);
-> -    } else
-> -        rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
-> -
-> +    xlat_func = ata_get_xlat_func(dev, scsi_op);
-> +    if (xlat_func)
-> +        rc = ata_scsi_translate(dev, scmd, done, xlat_func);
-> +    else
-> +        ata_scsi_simulate(dev, scmd, done);
->     return rc;
-
-
-this looks like a bug?  ata_scsi_simulate() should not be called for 
-ATAPI devices.
 
