@@ -1,31 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: warn if speed limited due to 40-wire cable (v2)
-Date: Sat, 3 Mar 2007 00:54:33 +0000
-Message-ID: <20070303005433.714d75ad@lxorguk.ukuu.org.uk>
-References: <45DA44B4.6000209@shaw.ca>
-	<45E8B42E.7010900@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata Kconfig: Update the various experimentality levels
+Date: Fri, 02 Mar 2007 19:13:27 -0500
+Message-ID: <45E8BDA7.3070800@garzik.org>
+References: <20070302150512.281af8d3@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S2992775AbXCBXua@vger.kernel.org>
-In-Reply-To: <45E8B42E.7010900@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55020 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992785AbXCCANc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 19:13:32 -0500
+In-Reply-To: <20070302150512.281af8d3@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> it seems broken to manipulate xfer_mask after returning from the 
-> driver's ->mode_filter hook.
+Alan Cox wrote:
+> Signed-off-by: Alan Cox <alan@redhat.com>
 > 
-> this patch is more than just a speed-limited warning printk, afaics
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2/drivers/ata/Kconfig linux-2.6.21-rc2/drivers/ata/Kconfig
+> --- linux.vanilla-2.6.21-rc2/drivers/ata/Kconfig	2007-03-01 13:36:03.000000000 +0000
+> +++ linux-2.6.21-rc2/drivers/ata/Kconfig	2007-03-02 13:30:50.535164824 +0000
+> @@ -184,7 +184,7 @@
+>  	  If unsure, say N.
+>  
+>  config PATA_AMD
+> -	tristate "AMD/NVidia PATA support (Experimental)"
+> +	tristate "AMD/NVidia PATA support"
+>  	depends on PCI
+>  	help
+>  	  This option enables support for the AMD and NVidia PATA
+> @@ -273,7 +283,7 @@
+>  	  If unsure, say N.
+>  
+>  config PATA_HPT366
+> -	tristate "HPT 366/368 PATA support (Very Experimental)"
+> +	tristate "HPT 366/368 PATA support (Experimental)"
+>  	depends on PCI && EXPERIMENTAL
 
-I actually suggested that order because the only way the printk can be
-done correctly is for it to be the very last test made. Since the mode
-filter is not told what mode will be used but just subtracts modes that
-are not allowed this should be safe.
+ACK the changes you've presented, but please do resend combined with a 
+patch that updates the CONFIG_EXPERIMENTAL dependencies at the same time
 
-I don't otherwise see how we deal with the case where a 40wire cable is
-used and the mode filter function decides itself to drop to UDMA33 or
-lower due to incompatibilities or errata.
 
-Alan
