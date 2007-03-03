@@ -1,43 +1,139 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch] libata build fix
-Date: Sat, 3 Mar 2007 10:39:17 -0500
-Message-ID: <20070303153917.GA8938@havoc.gtf.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] pata_cmd640: CMD640 PCI support
+Date: Sat, 03 Mar 2007 20:12:11 +0300
+Message-ID: <45E9AC6B.50701@ru.mvista.com>
+References: <20070302150306.368e24b9@lxorguk.ukuu.org.uk> <45E8B28D.7030500@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:36825 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030434AbXCCPjT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Mar 2007 10:39:19 -0500
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:45797 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030325AbXCCRMX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Mar 2007 12:12:23 -0500
+In-Reply-To: <45E8B28D.7030500@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hello.
 
-A merge mistake slipped upstream.
+Jeff Garzik wrote:
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+>> +    /* The second channel has shared timings and the setup timing is
+>> +       messy to switch to merge it for worst case */
+>> +    if (ap->port_no && pair) {
+>> +        struct ata_timing p;
+>> +        ata_timing_compute(pair, pair->pio_mode, &p, T, 1);
+>> +        ata_timing_merge(&p, &t, &t, ATA_TIMING_SETUP);
+>> +    }
+>> +
+>> +    /* Make the timings fit */
+>> +    if (t.recover > 16) {
+>> +        t.active += t.recover - 16;
+>> +        t.recover = 16;
+>> +    }
 
-to receive the following updates:
+    This code makes perfect sense in any driver, BTW... but I'm not sure any 
+other drivers have anything alike -- what they do seem to just clamp clock 
+count at its maximum...
 
- drivers/ata/pata_jmicron.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+>> +    if (t.active > 16)
+>> +        t.active = 16;
 
-Jeff Garzik (1):
-      [libata] pata_jmicron: build fix
+    Erm, clamping active time is not a right thing to do. Right thing to do 
+was to bail out. I didn't do it in the legacy driver rewrite though...
 
-diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-index 033319e..43763c9 100644
---- a/drivers/ata/pata_jmicron.c
-+++ b/drivers/ata/pata_jmicron.c
-@@ -244,7 +244,6 @@ static void __exit jmicron_exit(void)
- {
- 	pci_unregister_driver(&jmicron_pci_driver);
- }
--#endif
- 
- module_init(jmicron_init);
- module_exit(jmicron_exit);
+>> +
+>> +    /* Now convert the clocks into values we can actually stuff into
+>> +       the chip */
+>> +
+>> +    if (t.recover > 1)
+>> +        t.recover--;    /* 640B only */
+>> +    else
+>> +        t.recover = 15;
+>> +
+>> +    if (t.setup > 4)
+>> +        t.setup = 0xC0;
+>> +    else
+>> +        t.setup = setup_data[t.setup];
+>> +
+>> +    if (ap->port_no == 0) {
+>> +        t.active &= 0x0F;    /* 0 = 16 */
+>> +
+>> +        /* Load setup timing */
+>> +        pci_read_config_byte(pdev, arttim, &reg);
+>> +        reg &= 0x3F;
+>> +        reg |= t.setup;
+>> +        pci_write_config_byte(pdev, arttim, reg);
+>> +
+>> +        /* Load active/recovery */
+>> +        pci_write_config_byte(pdev, arttim + 1, (t.active << 4) | 
+>> t.recover);
+>> +    } else {
+>> +        /* Save the shared timings for channel, they will be loaded
+>> +           by qc_issue_prot. Reloading the setup time is expensive 
+>> +           so we keep a merged one loaded */
+>> +        pci_read_config_byte(pdev, ARTIM23, &reg);
+
+    It's not even expensive, it may be just unsafe.
+
+>> +        reg &= 0x3F;
+>> +        reg |= t.setup;
+>> +        pci_write_config_byte(pdev, ARTIM23, reg);
+>> +        timing->reg58[adev->devno] = (t.active << 4) | t.recover;
+>> +    }
+>> +}
+
+>> +static int cmd640_init_one(struct pci_dev *pdev, const struct 
+>> pci_device_id *id)
+>> +{
+>> +    u8 r;
+>> +    u8 ctrl;
+>> +   
+>> +    static struct ata_port_info info = {
+>> +        .sht = &cmd640_sht,
+>> +        .flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
+>> +        .pio_mask = 0x1f,
+
+> I-dont-know-the-hardware question:  does this h/w have no DMA support?
+
+    Exactly. :-) The legacy driver used to support PIO5 though.
+
+>> +    static struct ata_port_info *port_info[2] = { &info, &info };
+>> +
+>> +    /* CMD640 detected, commiserations */
+>> +    pci_write_config_byte(pdev, 0x5C, 0x00);
+
+> magic number
+
+   Indeed, completely undocumented. And I don't even see it in the legacy 
+driver...
+
+>> +    /* Get version info */
+>> +    pci_read_config_byte(pdev, CFR, &r);
+>> +    /* PIO0 command cycles */
+>> +    pci_write_config_byte(pdev, CMDTIM, 0);
+>> +    /* 512 byte bursts (sector) */
+>> +    pci_write_config_byte(pdev, BRST, 0x40);
+>> +    /* +     * A reporter a long time ago
+>> +     * Had problems with the data fifo
+>> +     * So don't run the risk
+>> +     * Of putting crap on the disk
+>> +     * For its better just to go slow
+>> +     */
+>> +    /* Do channel 0 */
+>> +    pci_read_config_byte(pdev, CNTRL, &ctrl);
+>> +    pci_write_config_byte(pdev, CNTRL, ctrl | 0xC0);
+>> +    /* Ditto for channel 1 */
+>> +    pci_read_config_byte(pdev, ARTIM23, &ctrl);
+>> +    ctrl |= 0x0C;
+>> +    pci_write_config_byte(pdev, ARTIM23, ctrl);
+
+    It's used to be a well known fact (soon after Intel put that chip on their 
+motherboards :-) that PCI0640 may return bad data on command block reads if 
+another channel has data port I/O going on. That's why the interrupts needed 
+to be disabled during PIO in the legacy driver (and the channels serialized).
+
+MBR, Sergei
