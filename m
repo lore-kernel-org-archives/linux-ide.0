@@ -1,74 +1,40 @@
-From: Nigel Cunningham <nigel@nigel.suspend2.net>
-Subject: Re: [linux-pm] [PATCH 2/2 -stable] libata: add missing CONFIG_PM
-	in LLDs
-Date: Sat, 03 Mar 2007 16:34:25 +1100
-Message-ID: <1172900065.18544.119.camel@nigel.suspend2.net>
-References: <20061122172841.0b90f042@localhost.localdomain>
-	 <Pine.LNX.4.60.0702262150460.5079@poirot.grange>
-	 <Pine.LNX.4.60.0702282201250.8832@poirot.grange>
-	 <Pine.LNX.4.60.0703012305030.7351@poirot.grange>
-	 <20070302084530.GN20322@htj.dyndns.org>
-	 <20070302084649.GO20322@htj.dyndns.org>
-	 <1172881095.18544.108.camel@nigel.suspend2.net>
-	 <45E8E983.5030109@gmail.com>
-Reply-To: nigel@nigel.suspend2.net
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.21-rc2] pmac ide: fix pmac_ide_dma_host_on() declaration
+Date: Sat, 3 Mar 2007 14:24:31 +0100 (MET)
+Message-ID: <200703031324.l23DOVjO003638@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nigel.suspend2.net ([203.171.70.205]:39370 "EHLO
-	nigel.suspend2.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932403AbXCCFeY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Mar 2007 00:34:24 -0500
-In-Reply-To: <45E8E983.5030109@gmail.com>
+Received: from aun.it.uu.se ([130.238.12.36]:46172 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965540AbXCCNY7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Mar 2007 08:24:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-ide@vger.kernel.org, jgarzik@pobox.com, linux-pm@lists.osdl.org, stable@kernel.org, Alan <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org
+To: benh@kernel.crashing.org, bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Hi.
+Building 2.6.21-rc2 on a PowerMac, I get:
 
-On Sat, 2007-03-03 at 12:20 +0900, Tejun Heo wrote:
-> Hello, Nigel.
-> 
-> Nigel Cunningham wrote:
-> >> Index: work1/drivers/ata/ahci.c
-> >> ===================================================================
-> >> --- work1.orig/drivers/ata/ahci.c
-> >> +++ work1/drivers/ata/ahci.c
-> >> @@ -225,10 +225,12 @@ static void ahci_thaw(struct ata_port *a
-> >>  static void ahci_error_handler(struct ata_port *ap);
-> >>  static void ahci_vt8251_error_handler(struct ata_port *ap);
-> >>  static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
-> >> +#ifdef CONFIG_PM
-> >>  static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg);
-> >>  static int ahci_port_resume(struct ata_port *ap);
-> >>  static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
-> >>  static int ahci_pci_device_resume(struct pci_dev *pdev);
-> > 
-> > Wouldn't it be simpler to add
-> > 
-> > #else
-> > #define ahci_port_suspend(port, message) (NULL)
-> > 
-> > etc (or something similar)?
-> 
-> ahci_port_suspend() is used to fill ata_port_ops vector, so it needs to
-> be a function.  If you're talking about defining NULL function, yeah,
-> that will remove half of CONFIG_PMs but would require dummy definitions
-> for all functions.  I think both are ugly.  :-)
+drivers/ide/ppc/pmac.c: In function 'pmac_ide_setup_dma':
+drivers/ide/ppc/pmac.c:2042: warning: assignment from incompatible pointer type
+drivers/ide/ppc/pmac.c: In function 'pmac_ide_dma_host_on':
+drivers/ide/ppc/pmac.c:1988: warning: control reaches end of non-void function
 
-Yeah, I didn't look really carefully; an empty static function would
-have been what I'd have written if I'd paid more attention.
+These occur because ->dma_host_on should be a function
+returning void, but pmac.c bogusly declares it as returning
+int, and furthermore fails to return a value from it.
 
-> I'm working on a linker trick.  Please take a look at the following thread.
-> 
->   http://thread.gmane.org/gmane.linux.ide/16475
+Correcting the return type to void fixes both warnings.
 
-Not familiar with fancy things like that, so I'll just pipe down and
-leave you to it :).
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
-Regards,
-
-Nigel
-
+--- linux-2.6.21-rc2/drivers/ide/ppc/pmac.c.~1~	2007-03-03 12:31:07.000000000 +0100
++++ linux-2.6.21-rc2/drivers/ide/ppc/pmac.c	2007-03-03 13:18:56.000000000 +0100
+@@ -1983,7 +1983,7 @@ static void pmac_ide_dma_host_off(ide_dr
+ {
+ }
+ 
+-static int pmac_ide_dma_host_on(ide_drive_t *drive)
++static void pmac_ide_dma_host_on(ide_drive_t *drive)
+ {
+ }
+ 
