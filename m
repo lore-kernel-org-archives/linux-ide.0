@@ -1,33 +1,103 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: warn if speed limited due to 40-wire cable (v2)
-Date: Fri, 02 Mar 2007 19:14:09 -0500
-Message-ID: <45E8BDD1.5000804@garzik.org>
-References: <45DA44B4.6000209@shaw.ca>	<45E8B42E.7010900@garzik.org> <20070303005433.714d75ad@lxorguk.ukuu.org.uk>
+From: Nigel Cunningham <nigel@nigel.suspend2.net>
+Subject: Re: [PATCH 2/2 -stable] libata: add missing CONFIG_PM	in
+	LLDs
+Date: Sat, 03 Mar 2007 11:18:14 +1100
+Message-ID: <1172881095.18544.108.camel@nigel.suspend2.net>
+References: <20061122172841.0b90f042@localhost.localdomain>
+	<Pine.LNX.4.60.0702262150460.5079@poirot.grange>
+	<Pine.LNX.4.60.0702282201250.8832@poirot.grange>
+	<Pine.LNX.4.60.0703012305030.7351@poirot.grange>
+	<20070302084530.GN20322@htj.dyndns.org>
+	<20070302084649.GO20322@htj.dyndns.org>
+Reply-To: nigel@nigel.suspend2.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55038 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992784AbXCCAOM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 19:14:12 -0500
-In-Reply-To: <20070303005433.714d75ad@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.osdl.org>
+In-Reply-To: <20070302084649.GO20322@htj.dyndns.org>
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.osdl.org>
+List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.osdl.org
+Errors-To: linux-pm-bounces@lists.osdl.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@lists.osdl.org, jgarzik@pobox.com, stable@kernel.org, Alan <alan@lxorguk.ukuu.org.uk>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Alan Cox wrote:
->> it seems broken to manipulate xfer_mask after returning from the 
->> driver's ->mode_filter hook.
->>
->> this patch is more than just a speed-limited warning printk, afaics
-> 
-> I actually suggested that order because the only way the printk can be
-> done correctly is for it to be the very last test made. Since the mode
-> filter is not told what mode will be used but just subtracts modes that
-> are not allowed this should be safe.
+Hi.
 
-OK
+On Fri, 2007-03-02 at 17:46 +0900, Tejun Heo wrote:
+> Add missing #ifdef CONFIG_PM conditionals around all PM related parts
+> in libata LLDs.
+> =
 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/ahci.c              |   14 ++++++++++++++
+>  drivers/ata/ata_generic.c       |    4 ++++
+>  drivers/ata/ata_piix.c          |    4 ++++
+>  drivers/ata/pata_ali.c          |    6 ++++++
+>  drivers/ata/pata_amd.c          |    6 ++++++
+>  drivers/ata/pata_atiixp.c       |    4 ++++
+>  drivers/ata/pata_cmd64x.c       |    6 ++++++
+>  drivers/ata/pata_cs5520.c       |    7 +++++++
+>  drivers/ata/pata_cs5530.c       |    6 ++++++
+>  drivers/ata/pata_cs5535.c       |    4 ++++
+>  drivers/ata/pata_cypress.c      |    4 ++++
+>  drivers/ata/pata_efar.c         |    4 ++++
+>  drivers/ata/pata_hpt366.c       |    7 ++++++-
+>  drivers/ata/pata_hpt3x3.c       |    6 ++++++
+>  drivers/ata/pata_it821x.c       |    6 ++++++
+>  drivers/ata/pata_jmicron.c      |    4 ++++
+>  drivers/ata/pata_marvell.c      |    4 ++++
+>  drivers/ata/pata_mpiix.c        |    4 ++++
+>  drivers/ata/pata_netcell.c      |    4 ++++
+>  drivers/ata/pata_ns87410.c      |    4 ++++
+>  drivers/ata/pata_oldpiix.c      |    4 ++++
+>  drivers/ata/pata_opti.c         |    4 ++++
+>  drivers/ata/pata_optidma.c      |    4 ++++
+>  drivers/ata/pata_pdc202xx_old.c |    4 ++++
+>  drivers/ata/pata_radisys.c      |    4 ++++
+>  drivers/ata/pata_rz1000.c       |    6 ++++++
+>  drivers/ata/pata_sc1200.c       |    4 ++++
+>  drivers/ata/pata_serverworks.c  |    6 ++++++
+>  drivers/ata/pata_sil680.c       |    4 ++++
+>  drivers/ata/pata_sis.c          |    4 ++++
+>  drivers/ata/pata_triflex.c      |    4 ++++
+>  drivers/ata/pata_via.c          |    6 ++++++
+>  drivers/ata/sata_sil.c          |    2 ++
+>  drivers/ata/sata_sil24.c        |    2 ++
+>  34 files changed, 165 insertions(+), 1 deletion(-)
+> =
 
+> Index: work1/drivers/ata/ahci.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- work1.orig/drivers/ata/ahci.c
+> +++ work1/drivers/ata/ahci.c
+> @@ -225,10 +225,12 @@ static void ahci_thaw(struct ata_port *a
+>  static void ahci_error_handler(struct ata_port *ap);
+>  static void ahci_vt8251_error_handler(struct ata_port *ap);
+>  static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
+> +#ifdef CONFIG_PM
+>  static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg);
+>  static int ahci_port_resume(struct ata_port *ap);
+>  static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t me=
+sg);
+>  static int ahci_pci_device_resume(struct pci_dev *pdev);
+
+Wouldn't it be simpler to add
+
+#else
+#define ahci_port_suspend(port, message) (NULL)
+
+etc (or something similar)?
+
+Regards,
+
+Nigel
