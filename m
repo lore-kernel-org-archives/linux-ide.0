@@ -1,71 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: fix SCSI/ATA device association during hotplug,
- take 2
-Date: Fri, 02 Mar 2007 18:44:05 -0500
-Message-ID: <45E8B6C5.9010103@garzik.org>
-References: <20061120092534.GP2184@htj.dyndns.org> <456C43BF.4060807@rtr.ca> <456C6E93.9040203@gmail.com> <20061212042431.GD18947@htj.dyndns.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_cmd640: CMD640 PCI support
+Date: Sat, 3 Mar 2007 00:52:19 +0000
+Message-ID: <20070303005219.3d870c84@lxorguk.ukuu.org.uk>
+References: <20070302150306.368e24b9@lxorguk.ukuu.org.uk>
+	<45E8B28D.7030500@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54842 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992764AbXCBXoK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Mar 2007 18:44:10 -0500
-In-Reply-To: <20061212042431.GD18947@htj.dyndns.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37257 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S2992746AbXCBXsN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2007 18:48:13 -0500
+In-Reply-To: <45E8B28D.7030500@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Two subtle hotplug related bugs are found.
+> > +	if (ap->port_no != 0 && adev->devno != timing->last) {
+> > +		pci_write_config_byte(pdev, DRWTIM23, timing->reg58[adev->devno]);
+> > +		timing->last = adev->devno;
+> > +	}
 > 
-> * SCSI didn't use to issue commands to devices in SDEV_CANCEL state
->   but now it does.  For ATA devices, it means that SYNCHRONIZE_CACHE
->   is issued even after libata tells SCSI midlayer that the SCSI device
->   is offline now.  When devices are swapped, SYNCHRONIZE_CACHE for the
->   previous device can be issued to the later device.
-> 
-> * Devices can be swapped while SCSI probing is in progress.  SCSI
->   device used to get associated with ATA device only after probing is
->   complete, which means that SCSI device detaching is not performed
->   while probing.  This can result in mismatch between SCSI device and
->   ATA device (e.g. sd attached to ATAPI device) if devices are
->   swapped after INQUIRY but before probing is complete.
-> 
-> This patch makes libata associate new SCSI device with ATA device
-> before INQUIRY is issued and check whether SCSI device issuing a
-> command matches dev->sdev on each command.  Both bugs are fixed by
-> this tighter coupling between SCSI device and ATA device.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Mark Lord <liml@rtr.ca>
-> ---
-> 
-> scsi_dev <-> ata_dev association is moved to ->slave_alloc as Mark
-> suggested.
-[...]
-> +		/* Try to attach new SCSI device.  SCSI midlayer
-> +		 * doesn't supply separate interfaces for allocating
-> +		 * and probing, so in this function, we can associate
-> +		 * new SCSI device with its target ATA device only
-> +		 * after probing is complete.
-> +		 *
-> +		 * However, hotplug event may occur during probing and
-> +		 * we might have to detach a SCSI device which is in
-> +		 * the middle of probing.  So, we need to associate
-> +		 * new SCSI device with its target ATA device before
-> +		 * the first INQUIRY is complete.
-> +		 *
-> +		 * This is achieved by attaching the device in
-> +		 * ->slave_alloc().
-> +		 */
-> +		scsi_add_device(ap->scsi_host, 0, i, 0);
+> It might be worth looking into whether ->dev_select is a better place 
+> for this sort of code
 
-ACK
+It isn't, for any driver because ->dev_select() is used extremely early
+before all the setup of modes is even begun. This is why all the PATA
+drivers hook qc_issue_prot instead.
 
-The above quoted comment serves to reinforce that libata eventually 
-needs to have an ATA transport class
+> > +	static struct ata_port_info *port_info[2] = { &info, &info };
+> > +
+> > +	/* CMD640 detected, commiserations */
+> > +	pci_write_config_byte(pdev, 0x5C, 0x00);
+> 
+> magic number
 
+Indeed. Its undocumented magic.
 
+> > +static int cmd640_reinit_one(struct pci_dev *pdev)
+> > +{
+> > +	return ata_pci_device_resume(pdev);
+> > +}
+> 
+> appears to be useless wrapper
+
+To remind me to add the resume path, which I've now done. Basically the
+FIFO fixes go away on a resume ...
+
+Alan
