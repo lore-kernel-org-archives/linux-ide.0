@@ -1,37 +1,38 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [PATCH 2.6.21-rc2] pata_legacy: fix io/irq mismatch
-Date: Sat, 3 Mar 2007 17:59:59 -0500
-Message-ID: <20070303225959.GA29420@devserv.devel.redhat.com>
-References: <200703031957.l23JviQQ005254@harpo.it.uu.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: [PATCH 2.6.21-rc2-git3] ata: fix pata_jmicron compile failure
+Date: Sun, 4 Mar 2007 07:30:32 +0800
+Message-ID: <200703032330.l23NUW1L009889@freya.yggdrasil.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48318 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933154AbXCCXAF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Mar 2007 18:00:05 -0500
-Content-Disposition: inline
-In-Reply-To: <200703031957.l23JviQQ005254@harpo.it.uu.se>
+Received: from [221.216.57.249] ([221.216.57.249]:23671 "EHLO
+	freya.yggdrasil.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750925AbXCCX6c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Mar 2007 18:58:32 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: alan@redhat.com, linux-ide@vger.kernel.org
+To: alan@redhat.com, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Sat, Mar 03, 2007 at 08:57:44PM +0100, Mikael Pettersson wrote:
-> pata_legacy fails to detect the disk on my old ISA/VLB 486:
-> it starts to probe io=0x1f0 ctr=0x3f6 irq=15, complains
-> loudly about IDENTIFYs timing out, and finally fails.
-> (Sorry I couldn't capture the kernel's boot messages.)
-> 
-> It turns out that the driver's mapping from io to irq in
-> legacy_irq[] is wrong: index 0 for io=0x1f0 has irq=15 but
-> should have irq=14, and index 1 for io=0x170 has irq=14 but
-> should have irq=15. This is confirmed by a comparison with
-> include/asm-i386/ide.h:ide_default_irq().
-> 
-> This patch swaps the first two elements in legacy_irq[],
-> which makes pata_legacy work on my 486.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+	linux-2.6.21-rc2-git3/drivers/ata/pata_jmicron.c has an extra
+#endif.  The 2.6.21-rc2-git2 version compiled fine.  Here is a patch
+that removes the offending line.
 
-Acked-by: Alan Cox <alan@redhat.com>
+	I do not have hardware to test this change.  I can verify that
+the resulting driver compiles to a binary that successfully loads and
+unloads with insmod and rmmod.
+
+---
+
+Signed-off-by: adam@yggdrasil.com <Adam J. Richter>
+
+--- a/drivers/ata/pata_jmicron.c	2007-03-04 05:36:08.000000000 +0800
++++ b/drivers/ata/pata_jmicron.c	2007-03-04 07:04:45.000000000 +0800
+@@ -243,9 +243,8 @@ static int __init jmicron_init(void)
+ static void __exit jmicron_exit(void)
+ {
+ 	pci_unregister_driver(&jmicron_pci_driver);
+ }
+-#endif
+ 
+ module_init(jmicron_init);
+ module_exit(jmicron_exit);
+ 
