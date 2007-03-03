@@ -1,52 +1,31 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_cmd640: CMD640 PCI support
-Date: Sat, 3 Mar 2007 00:52:19 +0000
-Message-ID: <20070303005219.3d870c84@lxorguk.ukuu.org.uk>
-References: <20070302150306.368e24b9@lxorguk.ukuu.org.uk>
-	<45E8B28D.7030500@garzik.org>
+Subject: Re: [PATCH] libata: warn if speed limited due to 40-wire cable (v2)
+Date: Sat, 3 Mar 2007 00:54:33 +0000
+Message-ID: <20070303005433.714d75ad@lxorguk.ukuu.org.uk>
+References: <45DA44B4.6000209@shaw.ca>
+	<45E8B42E.7010900@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37257 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S2992746AbXCBXsN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2007 18:48:13 -0500
-In-Reply-To: <45E8B28D.7030500@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S2992775AbXCBXua@vger.kernel.org>
+In-Reply-To: <45E8B42E.7010900@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+List-Id: linux-ide@vger.kernel.org
 
-> > +	if (ap->port_no != 0 && adev->devno != timing->last) {
-> > +		pci_write_config_byte(pdev, DRWTIM23, timing->reg58[adev->devno]);
-> > +		timing->last = adev->devno;
-> > +	}
+> it seems broken to manipulate xfer_mask after returning from the 
+> driver's ->mode_filter hook.
 > 
-> It might be worth looking into whether ->dev_select is a better place 
-> for this sort of code
+> this patch is more than just a speed-limited warning printk, afaics
 
-It isn't, for any driver because ->dev_select() is used extremely early
-before all the setup of modes is even begun. This is why all the PATA
-drivers hook qc_issue_prot instead.
+I actually suggested that order because the only way the printk can be
+done correctly is for it to be the very last test made. Since the mode
+filter is not told what mode will be used but just subtracts modes that
+are not allowed this should be safe.
 
-> > +	static struct ata_port_info *port_info[2] = { &info, &info };
-> > +
-> > +	/* CMD640 detected, commiserations */
-> > +	pci_write_config_byte(pdev, 0x5C, 0x00);
-> 
-> magic number
-
-Indeed. Its undocumented magic.
-
-> > +static int cmd640_reinit_one(struct pci_dev *pdev)
-> > +{
-> > +	return ata_pci_device_resume(pdev);
-> > +}
-> 
-> appears to be useless wrapper
-
-To remind me to add the resume path, which I've now done. Basically the
-FIFO fixes go away on a resume ...
+I don't otherwise see how we deal with the case where a 40wire cable is
+used and the mode filter function decides itself to drop to UDMA33 or
+lower due to incompatibilities or errata.
 
 Alan
