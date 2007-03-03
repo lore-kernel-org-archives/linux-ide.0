@@ -1,103 +1,34 @@
-From: Nigel Cunningham <nigel@nigel.suspend2.net>
-Subject: Re: [PATCH 2/2 -stable] libata: add missing CONFIG_PM	in
-	LLDs
-Date: Sat, 03 Mar 2007 11:18:14 +1100
-Message-ID: <1172881095.18544.108.camel@nigel.suspend2.net>
-References: <20061122172841.0b90f042@localhost.localdomain>
-	<Pine.LNX.4.60.0702262150460.5079@poirot.grange>
-	<Pine.LNX.4.60.0702282201250.8832@poirot.grange>
-	<Pine.LNX.4.60.0703012305030.7351@poirot.grange>
-	<20070302084530.GN20322@htj.dyndns.org>
-	<20070302084649.GO20322@htj.dyndns.org>
-Reply-To: nigel@nigel.suspend2.net
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] RESEND: libata: check cdb len per dev instead of per
+ host
+Date: Fri, 02 Mar 2007 19:26:33 -0500
+Message-ID: <45E8C0B9.4050402@garzik.org>
+References: <45C37699.7000306@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.osdl.org>
-In-Reply-To: <20070302084649.GO20322@htj.dyndns.org>
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.osdl.org>
-List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.osdl.org
-Errors-To: linux-pm-bounces@lists.osdl.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@lists.osdl.org, jgarzik@pobox.com, stable@kernel.org, Alan <alan@lxorguk.ukuu.org.uk>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55112 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992796AbXCCA0f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Mar 2007 19:26:35 -0500
+In-Reply-To: <45C37699.7000306@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Hi.
+Mark Lord wrote:
+> Resending, with s/printk/DPRINTK/ as pointed out by Alan.
+> 
+> Fix libata to perform CDB len validation per device
+> rather than per host.  This way, validation still works
+> when we have a mix of 12-byte and 16-byte devices on
+> a common host interface.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
 
-On Fri, 2007-03-02 at 17:46 +0900, Tejun Heo wrote:
-> Add missing #ifdef CONFIG_PM conditionals around all PM related parts
-> in libata LLDs.
-> =
+applied, though I am disappointed that we had to add this check (as well 
+as another one in an unrelated Tejun patch) to the fast path
 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/ahci.c              |   14 ++++++++++++++
->  drivers/ata/ata_generic.c       |    4 ++++
->  drivers/ata/ata_piix.c          |    4 ++++
->  drivers/ata/pata_ali.c          |    6 ++++++
->  drivers/ata/pata_amd.c          |    6 ++++++
->  drivers/ata/pata_atiixp.c       |    4 ++++
->  drivers/ata/pata_cmd64x.c       |    6 ++++++
->  drivers/ata/pata_cs5520.c       |    7 +++++++
->  drivers/ata/pata_cs5530.c       |    6 ++++++
->  drivers/ata/pata_cs5535.c       |    4 ++++
->  drivers/ata/pata_cypress.c      |    4 ++++
->  drivers/ata/pata_efar.c         |    4 ++++
->  drivers/ata/pata_hpt366.c       |    7 ++++++-
->  drivers/ata/pata_hpt3x3.c       |    6 ++++++
->  drivers/ata/pata_it821x.c       |    6 ++++++
->  drivers/ata/pata_jmicron.c      |    4 ++++
->  drivers/ata/pata_marvell.c      |    4 ++++
->  drivers/ata/pata_mpiix.c        |    4 ++++
->  drivers/ata/pata_netcell.c      |    4 ++++
->  drivers/ata/pata_ns87410.c      |    4 ++++
->  drivers/ata/pata_oldpiix.c      |    4 ++++
->  drivers/ata/pata_opti.c         |    4 ++++
->  drivers/ata/pata_optidma.c      |    4 ++++
->  drivers/ata/pata_pdc202xx_old.c |    4 ++++
->  drivers/ata/pata_radisys.c      |    4 ++++
->  drivers/ata/pata_rz1000.c       |    6 ++++++
->  drivers/ata/pata_sc1200.c       |    4 ++++
->  drivers/ata/pata_serverworks.c  |    6 ++++++
->  drivers/ata/pata_sil680.c       |    4 ++++
->  drivers/ata/pata_sis.c          |    4 ++++
->  drivers/ata/pata_triflex.c      |    4 ++++
->  drivers/ata/pata_via.c          |    6 ++++++
->  drivers/ata/sata_sil.c          |    2 ++
->  drivers/ata/sata_sil24.c        |    2 ++
->  34 files changed, 165 insertions(+), 1 deletion(-)
-> =
 
-> Index: work1/drivers/ata/ahci.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- work1.orig/drivers/ata/ahci.c
-> +++ work1/drivers/ata/ahci.c
-> @@ -225,10 +225,12 @@ static void ahci_thaw(struct ata_port *a
->  static void ahci_error_handler(struct ata_port *ap);
->  static void ahci_vt8251_error_handler(struct ata_port *ap);
->  static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
-> +#ifdef CONFIG_PM
->  static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg);
->  static int ahci_port_resume(struct ata_port *ap);
->  static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t me=
-sg);
->  static int ahci_pci_device_resume(struct pci_dev *pdev);
-
-Wouldn't it be simpler to add
-
-#else
-#define ahci_port_suspend(port, message) (NULL)
-
-etc (or something similar)?
-
-Regards,
-
-Nigel
