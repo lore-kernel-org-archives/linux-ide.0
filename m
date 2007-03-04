@@ -1,153 +1,48 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH][libata] pata_pdc202xx_old: fix data corruption and other problems
-Date: Sun, 4 Mar 2007 04:48:08 +0100
-Message-ID: <200703040448.08578.bzolnier@gmail.com>
-References: <200703040158.43471.bzolnier@gmail.com>
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Subject: Re: [PATCH] libata: warn if speed limited due to 40-wire cable (v2)
+Date: Sun, 04 Mar 2007 13:14:45 -0500
+Message-ID: <45EB0C95.1070505@seclark.us>
+References: <45DA44B4.6000209@shaw.ca>	<45E8B42E.7010900@garzik.org> <20070303005433.714d75ad@lxorguk.ukuu.org.uk> <45E9DA80.2080109@tmr.com>
+Reply-To: Stephen.Clark@seclark.us
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:22037 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030515AbXCDDlc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Mar 2007 22:41:32 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so1005168uga
-        for <linux-ide@vger.kernel.org>; Sat, 03 Mar 2007 19:41:31 -0800 (PST)
-In-Reply-To: <200703040158.43471.bzolnier@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752179AbXCDSOq@vger.kernel.org>
+In-Reply-To: <45E9DA80.2080109@tmr.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Bill Davidsen wrote:
 
-Hi,
+>Alan Cox wrote:
+>  
+>
+>>>it seems broken to manipulate xfer_mask after returning from the 
+>>>driver's ->mode_filter hook.
+>>>
+>>>this patch is more than just a speed-limited warning printk, afaics
+>>>      
+>>>
+>>I actually suggested that order because the only way the printk can be
+>>done correctly is for it to be the very last test made. Since the mode
+>>filter is not told what mode will be used but just subtracts modes that
+>>are not allowed this should be safe.
+>>    
+>>
+>
+>Far better to have a drive which works slowly than one which works 
+>unreliably.
+>
+>  
+>
+That would be true if the 40 wire detection was 100% accurate!
 
-This version has improved patch description
-(on the second thought the original patch description was too vague).
+-- 
 
-Bart
+"They that give up essential liberty to obtain temporary safety, 
+deserve neither liberty nor safety."  (Ben Franklin)
 
-[PATCH] pata_pdc202xx_old: fix possible data corruption and other problems
-
-Fix wrong "port" calculations in pdc202xx_{configure_piomode,set_dmamode}()
-They were broken for all configurations except one (master device on primary
-channel, no other devices) and as a result device settings + PIO/DMA timings
-were being programmed into the wrong PCI registers.  This could result in
-a large variety of problems including data corruption, hangs etc. (depending
-on devices used and your luck :-).
-
-  ap->port_no   ap->devno   used PCI registers   correct PCI registers
-            0           0            0x60-0x62               0x60-0x62
-            0           1            0x62-0x64               0x64-0x66
-            1           0            0x64-0x66               0x68-0x6a
-            1           1            0x66-0x68               0x6c-0x6e
-
-Also forward port recent fixes from drivers/ide pdc202xx_old driver:
-
-* fix XFER_MW_DMA0 timings (they were overclocked, use the official ones)
-
-* fix bitmasks for clearing bits of register B:
-
-  - when programming DMA mode bit 0x10 of register B was cleared which
-    resulted in overclocked PIO timing setting (iff PIO0 was used)
-
-  - when programming PIO mode bits 0x18 weren't cleared so suboptimal
-    timings were used for PIO1-4 if PIO0 was previously set (bit 0x10)
-    and for PIO0/3/4 if PIO1/2 was previously set (bit 0x08)
-
-and finally bump driver version.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-
- drivers/ata/pata_pdc202xx_old.c |   22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
-
-Index: b/drivers/ata/pata_pdc202xx_old.c
-===================================================================
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -2,13 +2,14 @@
-  * pata_pdc202xx_old.c 	- Promise PDC202xx PATA for new ATA layer
-  *			  (C) 2005 Red Hat Inc
-  *			  Alan Cox <alan@redhat.com>
-+ *			  (C) 2007 Bartlomiej Zolnierkiewicz
-  *
-  * Based in part on linux/drivers/ide/pci/pdc202xx_old.c
-  *
-  * First cut with LBA48/ATAPI
-  *
-  * TODO:
-- *	Channel interlock/reset on both required ?
-+ *	Channel interlock/reset on both required
-  */
- 
- #include <linux/kernel.h>
-@@ -21,7 +22,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_pdc202xx_old"
--#define DRV_VERSION "0.3.0"
-+#define DRV_VERSION "0.4.0"
- 
- /**
-  *	pdc2024x_pre_reset		-	probe begin
-@@ -76,7 +77,7 @@ static void pdc2026x_error_handler(struc
- static void pdc202xx_configure_piomode(struct ata_port *ap, struct ata_device *adev, int pio)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	int port = 0x60 + 4 * ap->port_no + 2 * adev->devno;
-+	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
- 	static u16 pio_timing[5] = {
- 		0x0913, 0x050C , 0x0308, 0x0206, 0x0104
- 	};
-@@ -85,7 +86,7 @@ static void pdc202xx_configure_piomode(s
- 	pci_read_config_byte(pdev, port, &r_ap);
- 	pci_read_config_byte(pdev, port + 1, &r_bp);
- 	r_ap &= ~0x3F;	/* Preserve ERRDY_EN, SYNC_IN */
--	r_bp &= ~0x07;
-+	r_bp &= ~0x1F;
- 	r_ap |= (pio_timing[pio] >> 8);
- 	r_bp |= (pio_timing[pio] & 0xFF);
- 
-@@ -123,7 +124,7 @@ static void pdc202xx_set_piomode(struct 
- static void pdc202xx_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	int port = 0x60 + 4 * ap->port_no + 2 * adev->devno;
-+	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
- 	static u8 udma_timing[6][2] = {
- 		{ 0x60, 0x03 },	/* 33 Mhz Clock */
- 		{ 0x40, 0x02 },
-@@ -132,12 +133,17 @@ static void pdc202xx_set_dmamode(struct 
- 		{ 0x20, 0x01 },
- 		{ 0x20, 0x01 }
- 	};
-+	static u8 mdma_timing[3][2] = {
-+		{ 0x60, 0x03 },
-+		{ 0x60, 0x04 },
-+		{ 0xe0, 0x0f },
-+	};
- 	u8 r_bp, r_cp;
- 
- 	pci_read_config_byte(pdev, port + 1, &r_bp);
- 	pci_read_config_byte(pdev, port + 2, &r_cp);
- 
--	r_bp &= ~0xF0;
-+	r_bp &= ~0xE0;
- 	r_cp &= ~0x0F;
- 
- 	if (adev->dma_mode >= XFER_UDMA_0) {
-@@ -147,8 +153,8 @@ static void pdc202xx_set_dmamode(struct 
- 
- 	} else {
- 		int speed = adev->dma_mode - XFER_MW_DMA_0;
--		r_bp |= 0x60;
--		r_cp |= (5 - speed);
-+		r_bp |= mdma_timing[speed][0];
-+		r_cp |= mdma_timing[speed][1];
- 	}
- 	pci_write_config_byte(pdev, port + 1, r_bp);
- 	pci_write_config_byte(pdev, port + 2, r_cp);
+"The course of history shows that as a government grows, liberty 
+decreases."  (Thomas Jefferson)
