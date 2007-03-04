@@ -1,77 +1,65 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH/RFC]: recovery from power-up-in-standby feature
-Date: Sun, 04 Mar 2007 18:37:09 -0500
-Message-ID: <45EB5825.501@garzik.org>
-References: <45EB2F6D.7050407@rtr.ca>
+Subject: Re: CK804 SATA Errors (still got them)
+Date: Sun, 04 Mar 2007 18:46:26 -0500
+Message-ID: <45EB5A52.1020907@garzik.org>
+References: <200703011339.52895.s0348365@sms.ed.ac.uk> <200703020120.52879.s0348365@sms.ed.ac.uk> <45E78E8A.2090202@shaw.ca> <200703021547.09121.s0348365@sms.ed.ac.uk> <45EB555C.9050606@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38998 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:39077 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750874AbXCDXhQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Mar 2007 18:37:16 -0500
-In-Reply-To: <45EB2F6D.7050407@rtr.ca>
+	id S1752527AbXCDXqa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Mar 2007 18:46:30 -0500
+In-Reply-To: <45EB555C.9050606@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Alistair John Strachan <s0348365@sms.ed.ac.uk>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> ATA/SATA drives can be set to not spinup automatically at power-on,
-> for use in staggered spin-up applications where frying power supplies
-> is to be avoided.
+Robert Hancock wrote:
+> Alistair John Strachan wrote:
+>>> Can you try reverting commit 721449bf0d51213fe3abf0ac3e3561ef9ea7827a
+>>> (link below) and see what effect that has?
+>>>
+>>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h 
+>>>
+>>> =721449bf0d51213fe3abf0ac3e3561ef9ea7827a
+>>
+>> Obviously, I'll let you know if it happens again, but I've reverted 
+>> this commit and transferred 22.5GB over 45 minutes onto a RAID5 with 4 
+>> HDs on an NVIDIA sata controller, and this error hasn't appeared.
+>>
+>> So I'm inclined to (very unscientifically) say that this brings it 
+>> back to 2.6.20's level of stability.
 > 
-> These drives may return incomplete IDENTIFY responses
-> until they have been spun-up first by the device driver.
+> Interesting. Can you try un-reverting that patch, and applying this one?
 > 
-> There are two ways this happens, and the drive lets us know
-> which it expects based on the initial, partial IDENTIFY response.
-> 
-> (1) The old method (34GB WD Raptor drives) will spin up on receipt of
-> any media-access command.  The trick here being, we that don't have
-> full IDENTIFY info to properly issue just *any* media command,
-> so this has to be controlled carefully.
-> 
-> (2) The more common method is for the drive to require an explicit
-> set-features "spin-up" subcommand after the IDENTIFY.
-> 
-> The patch below implements the latter method (tested, works for me).
-
-I think we would want to test bit 6 of IDENTIFY DEVICE word 83, issue 
-SET FEATURES - SPIN UP command if set, otherwise do a READ VERIFY or 
-some other media access command.
+> The reading of the status register is something that was part of the 
+> original
+> NVidia code, which I'm not really sure why is there. Given that reading
+> the status register clears the drive's interrupt status, that might be
+> causing some wierd interaction with the ADMA controller. Also, I added in
+> a printk for cases where notifiers are triggered but the command doesn't
+> indicate completion - if you still get problems, let me know if you see
+> that message.
 
 
-> But as you can see, there is an "#if 0 FIXME" section around
-> the code which attempts to deal with the "spin up on any media access"
-> variant of this protocol.  That code just doesn't work for me,
-> and I'm hoping Jeff/Tejun might be able to point out where it's gone silly.
-> +#if 0
-> +    /*
-> +     * FIXME: this always fails with AC_ERR_DEV,
-> +     * even when issued on a spun-up drive
-> +     * (accomplished by commenting out the if-stmt below).
-> +     *
-> +     * What's wrong here???
-> +     */
-> +    if (!tried_spinup && id[2] == 0x8c73)
-> +    {
-> +        tried_spinup = 1;
-> +        /*
-> +         * Drive powered up in standby mode, and returned only
-> +         * partial IDENTIFY data.  This requires a media access
-> +         * command (to force a spin-up) before the drive can
-> +         * return a complete set of IDENTIFY data.
-> +         * Here, we use READ_VERIFY(LBA=0) to force the spin-up.
-> +         */
+AFAICS, when in ADMA mode, you absolutely should not touch the ATA 
+shadow registers at all.
 
-ata_exec_internal() passes ATA_QCFLAG_RESULT_TF to the queued cmd.  So, 
-what values are returned by the device in the taskfile registers?
+This is normal for all controllers with both a "legacy mode" and an 
+"enhanced DMA mode" of some sort:  the internal silicon state machines 
+"own" the ATA shadow registers while in enhanced DMA mode.  Reading or 
+writing the ATA shadow registers while in enhanced DMA mode can lead to 
+undefined results, running the gamut from no-op to data corruption and 
+hardware lock-ups.
 
-AC_ERR_DEV means the command made it all the way to the device, which 
-then spit back the command with ERR=1 in the Status shadow register.
+You may only access the ATA shadow registers when NV_ADMA_CTL_GO is 
+cleared, and then NV_ADMA_STAT_LEGACY is set, indicating the NVIDIA chip 
+is in register mode (aka legacy mode).
 
 	Jeff
+
 
 
