@@ -1,145 +1,108 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH][libata] pata_pdc202xx_old: fix data corruption and other problems
-Date: Sun, 4 Mar 2007 01:58:43 +0100
-Message-ID: <200703040158.43471.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [BUG] pata_legacy reserves too many io/irq resources
+Date: Sun, 4 Mar 2007 01:56:18 +0100 (MET)
+Message-ID: <200703040056.l240uIvu006511@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:61365 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343AbXCDAwF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Mar 2007 19:52:05 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so997380uga
-        for <linux-ide@vger.kernel.org>; Sat, 03 Mar 2007 16:52:04 -0800 (PST)
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:50777 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751345AbXCDA40 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Mar 2007 19:56:26 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: alan@redhat.com
+Cc: linux-ide@vger.kernel.org
 
+pata_legacy probes 6 io/ctr/irq combinations for devices.
+Or rather, it loops, claims an io/ctr/irq combination, does
+an ata_device_add(), and libata then does the probing.
 
-[PATCH] pata_pdc202xx_old: fix data corruption and other problems
+However, the io/ctr/irq resource combinations aren't released
+after failed probes (as in: no devices found). The result is
+that other devices that need those resources fail to initialise.
 
-Fix wrong "port" calculations in pdc202xx_configure_piomode()
-and pdc202xx_set_dmamode(), it was horribly broken which resulted
-in major havoc on all configurations except one (master device on
-primary channel, no other devices) as code was writing PIO/DMA
-timings and device settings to wrong registers (including
-reserved ones),
+On my ISA/VLB 486, pata_legacy leaves /proc/interrupts as follows:
 
-ap->port_no / ap->devno / used regs / correct regs:
+           CPU0       
+  0:      19918    XT-PIC-XT        timer
+  1:        363    XT-PIC-XT        i8042
+  2:          0    XT-PIC-XT        cascade
+  6:          5    XT-PIC-XT        floppy
+  8:          1    XT-PIC-XT        rtc
+ 10:          3    XT-PIC-XT        libata
+ 11:          0    XT-PIC-XT        libata
+ 12:          0    XT-PIC-XT        libata
+ 14:       4865    XT-PIC-XT        libata
+ 15:          0    XT-PIC-XT        libata
+NMI:          0 
+ERR:          0
 
-0 0 0x60-0x62 0x60-0x62
-0 1 0x62-0x64 0x64-0x66
-1 0 0x64-0x66 0x68-0x6a
-1 1 0x66-0x68 0x6c-0x6e
+and /proc/ioports as follows:
 
-Also forward port recent fixes from drivers/ide pdc202xx_old driver:
+0000-001f : dma1
+0020-0021 : pic1
+0040-0043 : timer0
+0050-0053 : timer1
+0060-006f : keyboard
+0070-0077 : rtc
+0080-008f : dma page reg
+00a0-00a1 : pic2
+00c0-00df : dma2
+00f0-00ff : fpu
+c1bc6c40-0000 : <BAD>
+0168-016f : pata_legacy
+0170-0177 : pata_legacy
+01e0-01e7 : pata_legacy
+01e8-01ef : pata_legacy
+01f0-01f7 : pata_legacy
+0366-0366 : pata_legacy
+036e-036e : pata_legacy
+0376-0376 : pata_legacy
+03c0-03df : vga+
+03e6-03e6 : pata_legacy
+03ee-03ee : pata_legacy
+03f2-03f5 : floppy
+03f6-03f6 : pata_legacy
+03f7-03f7 : floppy DIR
 
-* fix XFER_MW_DMA0 timings (they were overclocked, use the official ones)
+This later prevents the ne driver from finding the machine's
+NE2000 network card (at io=0x300 irq=10):
 
-* fix bitmasks for clearing bits of register B:
+ata1: PATA max PIO4 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x00000000 irq 14
+scsi0 : pata_legacy
+ata1.00: ATA-0: WDC AC32500H, 10.07H11, max MWDMA2
+ata1.00: 4999680 sectors, multi 8: LBA 
+ata1.00: configured for PIO
+scsi 0:0:0:0: Direct-Access     ATA      WDC AC32500H     10.0 PQ: 0 ANSI: 5
+SCSI device sda: 4999680 512-byte hdwr sectors (2560 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+SCSI device sda: 4999680 512-byte hdwr sectors (2560 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 sda3 sda4 < sda5 >
+sd 0:0:0:0: Attached scsi disk sda
+ata2: PATA max PIO4 cmd 0x00010170 ctl 0x00010376 bmdma 0x00000000 irq 15
+scsi1 : pata_legacy
+ata3: PATA max PIO4 cmd 0x000101e8 ctl 0x000103ee bmdma 0x00000000 irq 11
+scsi2 : pata_legacy
+ata4: PATA max PIO4 cmd 0x00010168 ctl 0x0001036e bmdma 0x00000000 irq 10
+scsi3 : pata_legacy
+ata5: PATA max PIO4 cmd 0x000101e0 ctl 0x000103e6 bmdma 0x00000000 irq 8
+platform pata_legacy.4: irq 8 request failed: -16
+ata6: PATA max PIO4 cmd 0x00010160 ctl 0x00010366 bmdma 0x00000000 irq 12
+scsi5 : pata_legacy
+...
+ne.c:v1.10 9/23/94 Donald Becker (becker@scyld.com)
+Last modified Nov 1, 2000 by Paul Gortmaker
+NE*000 ethercard probe at 0x300: failed to detect IRQ line.
+ne.c: No NE*000 card found at i/o = 0x300
 
-  - when programming DMA mode bit 0x10 of register B was cleared which
-    resulted in overclocked PIO timing setting (iff PIO0 was used)
+I think that pata_legacy.c:legacy_init_one() should have a test
+after its ata_device_add(), so that if no devices were discovered
+there is a 'goto fail;' to free the resources.
 
-  - when programming PIO mode bits 0x18 weren't cleared so suboptimal
-    timings were used for PIO1-4 if PIO0 was previously set (bit 0x10)
-    and for PIO0/3/4 if PIO1/2 was previously set (bit 0x08)
+Apart from this issue, pata_legacy is working very well on this machine.
 
-and finally bump driver version.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-
- drivers/ata/pata_pdc202xx_old.c |   22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
-
-Index: b/drivers/ata/pata_pdc202xx_old.c
-===================================================================
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -2,13 +2,14 @@
-  * pata_pdc202xx_old.c 	- Promise PDC202xx PATA for new ATA layer
-  *			  (C) 2005 Red Hat Inc
-  *			  Alan Cox <alan@redhat.com>
-+ *			  (C) 2007 Bartlomiej Zolnierkiewicz
-  *
-  * Based in part on linux/drivers/ide/pci/pdc202xx_old.c
-  *
-  * First cut with LBA48/ATAPI
-  *
-  * TODO:
-- *	Channel interlock/reset on both required ?
-+ *	Channel interlock/reset on both required
-  */
- 
- #include <linux/kernel.h>
-@@ -21,7 +22,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_pdc202xx_old"
--#define DRV_VERSION "0.3.0"
-+#define DRV_VERSION "0.4.0"
- 
- /**
-  *	pdc2024x_pre_reset		-	probe begin
-@@ -76,7 +77,7 @@ static void pdc2026x_error_handler(struc
- static void pdc202xx_configure_piomode(struct ata_port *ap, struct ata_device *adev, int pio)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	int port = 0x60 + 4 * ap->port_no + 2 * adev->devno;
-+	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
- 	static u16 pio_timing[5] = {
- 		0x0913, 0x050C , 0x0308, 0x0206, 0x0104
- 	};
-@@ -85,7 +86,7 @@ static void pdc202xx_configure_piomode(s
- 	pci_read_config_byte(pdev, port, &r_ap);
- 	pci_read_config_byte(pdev, port + 1, &r_bp);
- 	r_ap &= ~0x3F;	/* Preserve ERRDY_EN, SYNC_IN */
--	r_bp &= ~0x07;
-+	r_bp &= ~0x1F;
- 	r_ap |= (pio_timing[pio] >> 8);
- 	r_bp |= (pio_timing[pio] & 0xFF);
- 
-@@ -123,7 +124,7 @@ static void pdc202xx_set_piomode(struct 
- static void pdc202xx_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	int port = 0x60 + 4 * ap->port_no + 2 * adev->devno;
-+	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
- 	static u8 udma_timing[6][2] = {
- 		{ 0x60, 0x03 },	/* 33 Mhz Clock */
- 		{ 0x40, 0x02 },
-@@ -132,12 +133,17 @@ static void pdc202xx_set_dmamode(struct 
- 		{ 0x20, 0x01 },
- 		{ 0x20, 0x01 }
- 	};
-+	static u8 mdma_timing[3][2] = {
-+		{ 0x60, 0x03 },
-+		{ 0x60, 0x04 },
-+		{ 0xe0, 0x0f },
-+	};
- 	u8 r_bp, r_cp;
- 
- 	pci_read_config_byte(pdev, port + 1, &r_bp);
- 	pci_read_config_byte(pdev, port + 2, &r_cp);
- 
--	r_bp &= ~0xF0;
-+	r_bp &= ~0xE0;
- 	r_cp &= ~0x0F;
- 
- 	if (adev->dma_mode >= XFER_UDMA_0) {
-@@ -147,8 +153,8 @@ static void pdc202xx_set_dmamode(struct 
- 
- 	} else {
- 		int speed = adev->dma_mode - XFER_MW_DMA_0;
--		r_bp |= 0x60;
--		r_cp |= (5 - speed);
-+		r_bp |= mdma_timing[speed][0];
-+		r_cp |= mdma_timing[speed][1];
- 	}
- 	pci_write_config_byte(pdev, port + 1, r_bp);
- 	pci_write_config_byte(pdev, port + 2, r_cp);
+/Mikael
