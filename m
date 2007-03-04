@@ -1,54 +1,77 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH] libata: warn if speed limited due to 40-wire cable (v2)
-Date: Sun, 04 Mar 2007 18:00:49 -0500
-Message-ID: <45EB4FA1.7020305@tmr.com>
-References: <45DA44B4.6000209@shaw.ca>	<45E8B42E.7010900@garzik.org> <20070303005433.714d75ad@lxorguk.ukuu.org.uk> <45E9DA80.2080109@tmr.com> <45EB0C95.1070505@seclark.us>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH/RFC]: recovery from power-up-in-standby feature
+Date: Sun, 04 Mar 2007 18:37:09 -0500
+Message-ID: <45EB5825.501@garzik.org>
+References: <45EB2F6D.7050407@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:57398 "EHLO gaimboi.tmr.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:38998 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135AbXCDW7K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Mar 2007 17:59:10 -0500
-In-Reply-To: <45EB0C95.1070505@seclark.us>
+	id S1750874AbXCDXhQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Mar 2007 18:37:16 -0500
+In-Reply-To: <45EB2F6D.7050407@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephen.Clark@seclark.us
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Stephen Clark wrote:
-> Bill Davidsen wrote:
->
->> Alan Cox wrote:
->>  
->>
->>>> it seems broken to manipulate xfer_mask after returning from the 
->>>> driver's ->mode_filter hook.
->>>>
->>>> this patch is more than just a speed-limited warning printk, afaics
->>>>     
->>> I actually suggested that order because the only way the printk can be
->>> done correctly is for it to be the very last test made. Since the mode
->>> filter is not told what mode will be used but just subtracts modes that
->>> are not allowed this should be safe.
->>>   
->>
->> Far better to have a drive which works slowly than one which works 
->> unreliably.
->>
->>  
->>
-> That would be true if the 40 wire detection was 100% accurate!
-The statement is completely correct, even though the detection may not 
-be. ;-)
+Mark Lord wrote:
+> ATA/SATA drives can be set to not spinup automatically at power-on,
+> for use in staggered spin-up applications where frying power supplies
+> is to be avoided.
+> 
+> These drives may return incomplete IDENTIFY responses
+> until they have been spun-up first by the device driver.
+> 
+> There are two ways this happens, and the drive lets us know
+> which it expects based on the initial, partial IDENTIFY response.
+> 
+> (1) The old method (34GB WD Raptor drives) will spin up on receipt of
+> any media-access command.  The trick here being, we that don't have
+> full IDENTIFY info to properly issue just *any* media command,
+> so this has to be controlled carefully.
+> 
+> (2) The more common method is for the drive to require an explicit
+> set-features "spin-up" subcommand after the IDENTIFY.
+> 
+> The patch below implements the latter method (tested, works for me).
 
-With the current set(s) of patches to do better detection, cable 
-evaluation should be better. But even if not, a slow system is more 
-useful than one which doesn't work, crashes because of swap i/o errors, etc.
+I think we would want to test bit 6 of IDENTIFY DEVICE word 83, issue 
+SET FEATURES - SPIN UP command if set, otherwise do a READ VERIFY or 
+some other media access command.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+
+> But as you can see, there is an "#if 0 FIXME" section around
+> the code which attempts to deal with the "spin up on any media access"
+> variant of this protocol.  That code just doesn't work for me,
+> and I'm hoping Jeff/Tejun might be able to point out where it's gone silly.
+> +#if 0
+> +    /*
+> +     * FIXME: this always fails with AC_ERR_DEV,
+> +     * even when issued on a spun-up drive
+> +     * (accomplished by commenting out the if-stmt below).
+> +     *
+> +     * What's wrong here???
+> +     */
+> +    if (!tried_spinup && id[2] == 0x8c73)
+> +    {
+> +        tried_spinup = 1;
+> +        /*
+> +         * Drive powered up in standby mode, and returned only
+> +         * partial IDENTIFY data.  This requires a media access
+> +         * command (to force a spin-up) before the drive can
+> +         * return a complete set of IDENTIFY data.
+> +         * Here, we use READ_VERIFY(LBA=0) to force the spin-up.
+> +         */
+
+ata_exec_internal() passes ATA_QCFLAG_RESULT_TF to the queued cmd.  So, 
+what values are returned by the device in the taskfile registers?
+
+AC_ERR_DEV means the command made it all the way to the device, which 
+then spit back the command with ERR=1 in the Status shadow register.
+
+	Jeff
+
 
