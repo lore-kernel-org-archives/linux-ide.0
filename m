@@ -1,65 +1,85 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: CK804 SATA Errors (still got them)
-Date: Sun, 04 Mar 2007 18:46:26 -0500
-Message-ID: <45EB5A52.1020907@garzik.org>
-References: <200703011339.52895.s0348365@sms.ed.ac.uk> <200703020120.52879.s0348365@sms.ed.ac.uk> <45E78E8A.2090202@shaw.ca> <200703021547.09121.s0348365@sms.ed.ac.uk> <45EB555C.9050606@shaw.ca>
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Subject: Re: [PATCH] libata: warn if speed limited due to 40-wire cable (v2)
+Date: Sun, 04 Mar 2007 18:50:18 -0500
+Message-ID: <45EB5B3A.2040009@seclark.us>
+References: <45DA44B4.6000209@shaw.ca>	<45E8B42E.7010900@garzik.org> <20070303005433.714d75ad@lxorguk.ukuu.org.uk> <45E9DA80.2080109@tmr.com> <45EB0C95.1070505@seclark.us> <45EB4FA1.7020305@tmr.com>
+Reply-To: Stephen.Clark@seclark.us
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39077 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752527AbXCDXqa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Mar 2007 18:46:30 -0500
-In-Reply-To: <45EB555C.9050606@shaw.ca>
+Received: from smtpauth02.prod.mesa1.secureserver.net ([64.202.165.182]:56395
+	"HELO smtpauth02.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752543AbXCDXuV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Mar 2007 18:50:21 -0500
+In-Reply-To: <45EB4FA1.7020305@tmr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Alistair John Strachan <s0348365@sms.ed.ac.uk>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Robert Hancock wrote:
-> Alistair John Strachan wrote:
->>> Can you try reverting commit 721449bf0d51213fe3abf0ac3e3561ef9ea7827a
->>> (link below) and see what effect that has?
->>>
->>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h 
->>>
->>> =721449bf0d51213fe3abf0ac3e3561ef9ea7827a
+Bill Davidsen wrote:
+
+>Stephen Clark wrote:
+>  
+>
+>>Bill Davidsen wrote:
 >>
->> Obviously, I'll let you know if it happens again, but I've reverted 
->> this commit and transferred 22.5GB over 45 minutes onto a RAID5 with 4 
->> HDs on an NVIDIA sata controller, and this error hasn't appeared.
+>>    
 >>
->> So I'm inclined to (very unscientifically) say that this brings it 
->> back to 2.6.20's level of stability.
-> 
-> Interesting. Can you try un-reverting that patch, and applying this one?
-> 
-> The reading of the status register is something that was part of the 
-> original
-> NVidia code, which I'm not really sure why is there. Given that reading
-> the status register clears the drive's interrupt status, that might be
-> causing some wierd interaction with the ADMA controller. Also, I added in
-> a printk for cases where notifiers are triggered but the command doesn't
-> indicate completion - if you still get problems, let me know if you see
-> that message.
+>>>Alan Cox wrote:
+>>> 
+>>>
+>>>      
+>>>
+>>>>>it seems broken to manipulate xfer_mask after returning from the 
+>>>>>driver's ->mode_filter hook.
+>>>>>
+>>>>>this patch is more than just a speed-limited warning printk, afaics
+>>>>>    
+>>>>>          
+>>>>>
+>>>>I actually suggested that order because the only way the printk can be
+>>>>done correctly is for it to be the very last test made. Since the mode
+>>>>filter is not told what mode will be used but just subtracts modes that
+>>>>are not allowed this should be safe.
+>>>>  
+>>>>        
+>>>>
+>>>Far better to have a drive which works slowly than one which works 
+>>>unreliably.
+>>>
+>>> 
+>>>
+>>>      
+>>>
+>>That would be true if the 40 wire detection was 100% accurate!
+>>    
+>>
+>The statement is completely correct, even though the detection may not 
+>be. ;-)
+>
+>With the current set(s) of patches to do better detection, cable 
+>evaluation should be better. But even if not, a slow system is more 
+>useful than one which doesn't work, crashes because of swap i/o errors, etc.
+>
+>  
+>
+I have had problems with cable detection on my previous laptop and my 
+current laptop. It almost made
+my systems unusable. On my current laptop I was getting a thruput of a 
+little over 1 mbps instead
+of the 44 mbps I get with udma set to the correct value. It took hours 
+to upgrade my laptop from
+fc5 to fc6 because of this mis detection.
 
+-- 
 
-AFAICS, when in ADMA mode, you absolutely should not touch the ATA 
-shadow registers at all.
+"They that give up essential liberty to obtain temporary safety, 
+deserve neither liberty nor safety."  (Ben Franklin)
 
-This is normal for all controllers with both a "legacy mode" and an 
-"enhanced DMA mode" of some sort:  the internal silicon state machines 
-"own" the ATA shadow registers while in enhanced DMA mode.  Reading or 
-writing the ATA shadow registers while in enhanced DMA mode can lead to 
-undefined results, running the gamut from no-op to data corruption and 
-hardware lock-ups.
-
-You may only access the ATA shadow registers when NV_ADMA_CTL_GO is 
-cleared, and then NV_ADMA_STAT_LEGACY is set, indicating the NVIDIA chip 
-is in register mode (aka legacy mode).
-
-	Jeff
+"The course of history shows that as a government grows, liberty 
+decreases."  (Thomas Jefferson)
 
 
 
