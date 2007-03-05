@@ -1,43 +1,43 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 06 Mar 2007 00:45:00 +0900
-Message-ID: <45EC3AFC.1050101@gmail.com>
-References: <00a001c75f0c$47f19750$4b00a8c0@donald>
+Subject: Re: [PATA] Failed to set xfermode on LITE-ON LTR-48246S
+Date: Tue, 06 Mar 2007 00:46:07 +0900
+Message-ID: <45EC3B3F.7020509@gmail.com>
+References: <Pine.LNX.4.64.0702041057090.8424@woody.linux-foundation.org> <20070227135838.GA4328@titan.lahn.de> <45EB9822.40300@gmail.com> <20070305103840.GA4381@titan.lahn.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.225]:8519 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbXCEPpC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Mar 2007 10:45:02 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1798187nze
-        for <linux-ide@vger.kernel.org>; Mon, 05 Mar 2007 07:45:01 -0800 (PST)
-In-Reply-To: <00a001c75f0c$47f19750$4b00a8c0@donald>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933548AbXCEPqK@vger.kernel.org>
+In-Reply-To: <20070305103840.GA4381@titan.lahn.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: rol@as2917.net
-Cc: 'Jeff Garzik' <jeff@garzik.org>, 'Andrew Morton' <akpm@linux-foundation.org>, 'Linus Torvalds' <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
 
-Paul Rolland wrote:
-> Hello,
+Philipp Matthias Hahn wrote:
+> On Mon, Mar 05, 2007 at 01:10:10PM +0900, Tejun Heo wrote:
+>> Philipp Matthias Hahn wrote:
+>>> As reported by John Williams and others like in
+>>> http://www.mail-archive.com/linux-ide@vger.kernel.org/msg03088.html
+>>> I too have a problem with 2.6.20.1 using ata_piix not detecting the
+>>> CD-ROM any more. Applying the patch from
+>>> http://lkml.org/lkml/2007/2/12/24 did not help, but additionally
+>>> applying
+>>> http://readlist.com/lists/vger.kernel.org/linux-kernel/45/228948.html
+>>> made it work. Here's the relevant extra debugging output:
+>> * Did it work with previous kernels?
 > 
->> Your drive has some issues with NCQ and is scheduled to be blacklisted
->> such that it isn't enabled.  libata used to ignore the 
->> condition but now
->> considers it NCQ protocol violation and fails all pending commands.
+> Previously I was using the old IDE modules just fine, it was only with
+> 2.6.20 that I did the switch to libata and encountered the problem.
 > 
-> OK, do you need an hdparm report to fully identify the disk ?
-
-Nope, we already know.
-
->> libata EH should turn NCQ off automatically after a few of the above
->> errors.  I'd love to see how that actually works in the field (full
->> dmesg please).  If it doesn't, it needs fixing.
+>> * Does applying the attached patch over unpatched 2.6.20.1 fix the problem?
 > 
-> I'll get you one tonite, I don't have access to the machine right now.
+> Yes, it seems to fix it. (testes on top of the first patch mentioned
+> above, but witheout the second one.).
+> If I should test it as the sole patche, just mail me again please.
 
-Great. Thanks.
+Yeap, please test it on top of vanilla kernel to verify that the patch
+proper fixes the problem.
+
+Thanks.
 
 -- 
 tejun
