@@ -1,52 +1,109 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: nonzero mismatch_cnt with no earlier error
-Date: Tue, 06 Mar 2007 01:00:51 +0900
-Message-ID: <45EC3EB3.10407@suse.de>
-References: <45DF859B.2050108@eyal.emu.id.au>	<Pine.LNX.4.64.0702231929380.31611@p34.internal.lan>	<45DF8DE3.2050903@eyal.emu.id.au> <17890.25524.465403.130119@notabene.brown> <45E297E5.50303@eyal.emu.id.au> <45EB95EF.9030702@suse.de> <45EBCC43.9010709@eyal.emu.id.au>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH][pata-2.6 tree] pdc202xx_old: rewrite mode programming
+ code
+Date: Mon, 05 Mar 2007 20:30:22 +0300
+Message-ID: <45EC53AE.30808@ru.mvista.com>
+References: <200703040149.46186.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jericho.provo.novell.com ([137.65.248.124]:33017 "EHLO
-	jericho.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933584AbXCEQBA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Mar 2007 11:01:00 -0500
-In-Reply-To: <45EBCC43.9010709@eyal.emu.id.au>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752821AbXCERac@vger.kernel.org>
+In-Reply-To: <200703040149.46186.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: list linux-ide <linux-ide@vger.kernel.org>
 
-Eyal Lebedinsky wrote:
-> It is in the original thread on linux-raid, but here it is for this list.
-> This is the full dmesg. There were only MARKs in between.
+Hello.
+
+Bartlomiej Zolnierkiewicz wrote:
+> [PATCH] pdc202xx_old: rewrite mode programming code
+
+> This patch is based on the documentation (I would like to thank Promise
+> for it) and also partially on the older vendor driver.
+
+> Rewrite mode programming code:
+
+> * fix XFER_MW_DMA0 timings (they were overclocked, use the official ones)
+
+    Erm, those look a bit doubtful...
+
+> * fix bitmasks for clearing bits of register B:
 > 
-> I run a raid 'check' every Friday (cron). The last one reported some parity errors.
-> 
-> *** last week check start:
-> [927080.617744] md: data-check of RAID array md0
-> [927080.630783] md: minimum _guaranteed_  speed: 24000 KB/sec/disk.
-> [927080.648734] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
-> [927080.678103] md: using 128k window, over a total of 312568576 blocks.
-> 	*** last week error:
-> [937567.332751] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4190002 action 0x2
-> [937567.354094] ata3.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 512 in
-> [937567.354096]          res 51/04:83:45:00:00/00:00:00:00:00/a0 Emask 0x10 (ATA bus error)
+>   - when programming DMA mode bit 0x10 of register B was cleared which
+>     resulted in overclocked PIO timing setting (iff PIO0 was used)
 
-I need full kernel log including the boot messages so that I can tell
-which controller/driver is involved here and also the result of 'hdparm
--I /dev/sdX' of your drives would be nice.
+>   - when programming PIO mode bits 0x18 weren't cleared so suboptimal
+>     timings were used for PIO1-4 if PIO0 was previously set (bit 0x10)
+>     and for PIO0/3/4 if PIO1/2 was previously set (bit 0x08)
 
-BTW, this is SMART read log for page 09 which is SMART self-test log.
-The device aborted it.  Dunno who issued it or why it got aborted.  As I
-wrote in the previous mail, EH discovered that SError has accumulated
-link level errors and thus treated it as ATA bus error.  All
-transmissions over SATA are checksummed and link errors supposedly don't
-cause data corruption, so, in theory, the above error message should be
-irrelevant to your problem.
+   I'm glad that somebody fixed those pesky masks at last. :-)
+   I've noticed that issue more than a year ago but lacking time, 
+documentation and access to hardware, have never got to really fixing it... :-(
 
-Ah.. please also post the result of 'smartctl -d ata -a /dev/sdX' for
-your drives.  That might reveal something.
+> Index: b/drivers/ide/pci/pdc202xx_old.c
+> ===================================================================
+> --- a/drivers/ide/pci/pdc202xx_old.c
+> +++ b/drivers/ide/pci/pdc202xx_old.c
+[...]
+> @@ -107,52 +70,23 @@ static int pdc202xx_tune_chipset (ide_dr
+>  	u8 drive_pci		= 0x60 + (drive->dn << 2);
+>  	u8 speed		= ide_rate_filter(drive, xferspeed);
+>  
+> -	u32			drive_conf;
+> -	u8			AP, BP, CP, DP;
+> +	u32			drive_conf = 0;
+> +	u8			AP = 0, BP = 0, CP = 0;
+>  	u8			TA = 0, TB = 0, TC = 0;
+>  
+> -	if (drive->media != ide_disk &&
+> -		drive->media != ide_cdrom && speed < XFER_SW_DMA_0)
+> -		return -1;
+> +	/*
+> +	 * TODO: do this once per channel
+> +	 */
+> +	if (dev->device != PCI_DEVICE_ID_PROMISE_20246)
+> +		pdc_old_disable_66MHz_clock(hwif);
+>  
+>  	pci_read_config_dword(dev, drive_pci, &drive_conf);
 
--- 
-tejun
+    This function never uses it as u32 entity, I wonder why read it? Just to 
+hush a warning? :-)
+
+>  	switch(speed) {
+> -		case XFER_UDMA_6:	speed = XFER_UDMA_5;
+>  		case XFER_UDMA_5:
+>  		case XFER_UDMA_4:	TB = 0x20; TC = 0x01; break;
+
+    The same clocks for UDMA4/5... I wonder if PDC20265/7 indeed supported 
+UDMA5 (as I'm not seeing any extra clock switching for this mode)?
+
+>  		case XFER_UDMA_2:	TB = 0x20; TC = 0x01; break;
+> @@ -161,7 +95,7 @@ static int pdc202xx_tune_chipset (ide_dr
+>  		case XFER_UDMA_0:
+>  		case XFER_MW_DMA_2:	TB = 0x60; TC = 0x03; break;
+>  		case XFER_MW_DMA_1:	TB = 0x60; TC = 0x04; break;
+> -		case XFER_MW_DMA_0:
+> +		case XFER_MW_DMA_0:	TB = 0xE0; TC = 0x0F; break;
+
+    This seems even slower than SWDMA0!
+    Let's assume that means 7 active cycles and 15 recovery cycles (MWDMA1/2 
+settings seem to confirm this hypothesis) -- this would give us 720 ns vs the 
+specified 480. Could you shed some light on what these fields mean? :-/
+
+>  		case XFER_SW_DMA_2:	TB = 0x60; TC = 0x05; break;
+
+    Well, this don't look right to me -- we need longer active time (given 
+that my hypothesis is true)
+
+>  		case XFER_SW_DMA_1:	TB = 0x80; TC = 0x06; break;
+
+    This looks more fitting for SWDMA1 -- however, the recovery time seems to 
+be overly long. It certainly doesn't look like SWDMA1 unless the 
+active/recover times are not in clock cycles (should be 8 cycles, not 4 or 6).
+
+>  		case XFER_SW_DMA_0:	TB = 0xC0; TC = 0x0B; break;
+
+    Same here -- should be 16 cycles both for active and recovery...
+
+MBR, Sergei
