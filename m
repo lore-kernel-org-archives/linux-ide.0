@@ -1,36 +1,29 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFT] libata hpa support
-Date: Mon, 05 Mar 2007 12:47:17 +0900
-Message-ID: <45EB92C5.7010305@gmail.com>
-References: <20070223170625.GA29931@athena.road.mcmartin.ca>	<20070223181959.56502bf2@lxorguk.ukuu.org.uk>	<20070224180047.GA6204@athena.road.mcmartin.ca> <20070225000934.71253b30@lxorguk.ukuu.org.uk> <45E0C780.7000805@garzik.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH/RFC]: recovery from power-up-in-standby feature
+Date: Sun, 04 Mar 2007 22:55:12 -0500
+Message-ID: <45EB94A0.4010603@rtr.ca>
+References: <45EB2F6D.7050407@rtr.ca> <45EB5825.501@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:34108 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016AbXCEDrU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Mar 2007 22:47:20 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1633013nze
-        for <linux-ide@vger.kernel.org>; Sun, 04 Mar 2007 19:47:20 -0800 (PST)
-In-Reply-To: <45E0C780.7000805@garzik.org>
+Received: from rtr.ca ([64.26.128.89]:4356 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752618AbXCEDzO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Mar 2007 22:55:14 -0500
+In-Reply-To: <45EB5825.501@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Kyle McMartin <kyle@canonical.com>, linux-ide@vger.kernel.org, mjg59@ubuntu.com
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Alan wrote:
->>> Right, so we can leave the policy to be just disabling it by 40p/80p
->>> cable
->>> type for now... Sigh.
->>
->> The only compatible policy is always act on it.
-> 
-> Agreed.
+Jeff wrote:
+> I think we would want to test bit 6 of IDENTIFY DEVICE word 83, issue SET FEATURES - SPIN UP command if set,
+> otherwise do a READ VERIFY or some other media access command
 
-The problem here is that "always acting" is incompatible with the
-"current behavior".  So, we're screwed either way.
+The word-2 signature values already give us that information,
+and I'm not certain that we can rely upon word 83 even being
+"present" when a drive has not spun up.  I see lots of zeros
+in the upper words of the IDENTIFY info from drives in this state.
 
--- 
-tejun
+Cheers
