@@ -1,55 +1,73 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_nv: "abnormal status 0x7F on port 0xE407"
-Date: Mon, 05 Mar 2007 14:04:28 +0900
-Message-ID: <45EBA4DC.3030201@gmail.com>
-References: <kjmob4-j82.ln1@tux.abusar.org>
+Subject: Re: [git patches] libata fixes
+Date: Mon, 05 Mar 2007 14:13:10 +0900
+Message-ID: <45EBA6E6.10907@gmail.com>
+References: <00e201c75dc3$4da9d490$2101a8c0@donald>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.236]:53300 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.234]:55107 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752679AbXCEFEb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Mar 2007 00:04:31 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1648358nze
-        for <linux-ide@vger.kernel.org>; Sun, 04 Mar 2007 21:04:31 -0800 (PST)
-In-Reply-To: <kjmob4-j82.ln1@tux.abusar.org>
+	with ESMTP id S1752682AbXCEFNP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Mar 2007 00:13:15 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so1650045nze
+        for <linux-ide@vger.kernel.org>; Sun, 04 Mar 2007 21:13:15 -0800 (PST)
+In-Reply-To: <00e201c75dc3$4da9d490$2101a8c0@donald>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: rol@as2917.net
+Cc: 'Jeff Garzik' <jeff@garzik.org>, 'Andrew Morton' <akpm@linux-foundation.org>, 'Linus Torvalds' <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "Eric D. Mudama" <edmudama@gmail.com>
 
-D=E2niel Fraga wrote:
-> Linux 2.6.20
-> x86_64
-> nforce 410 chipset
-> ST3160811AS (Seagate 160GB SATA 2)
->=20
-> sata_nv 0000:00:0e.0: version 3.2
-> ACPI: PCI Interrupt Link [LSA0] enabled at IRQ 23
-> ACPI: PCI Interrupt 0000:00:0e.0[A] -> Link [LSA0] -> GSI 23 (level, =
-low) -> IRQ 23
-> PCI: Setting latency timer of device 0000:00:0e.0 to 64
-> ata1: SATA max UDMA/133 cmd 0xE800 ctl 0xE482 bmdma 0xE000 irq 23
-> ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE082 bmdma 0xE008 irq 23
-> scsi0 : sata_nv
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: ATA-7, max UDMA/133, 312581808 sectors: LBA48 NCQ (depth 0/3=
-2)
-> ata1.00: ata1: dev 0 multi count 16
+[cc'ing Eric D. Mudama. Hi!]
+
+Paul Rolland wrote:
+> ata1.00: exception Emask 0x2 SAct 0xffe0 SErr 0x0 action 0x2 frozen
+> ata1.00: (spurious completions during NCQ issue=0x0 SAct=0xffe0
+> FIS=004040a1:00000010)
+> ata1.00: cmd 60/02:28:52:ec:c4/00:00:0e:00:00/40 tag 5 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:30:54:ec:c4/00:00:0e:00:00/40 tag 6 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:38:56:ec:c4/00:00:0e:00:00/40 tag 7 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:40:58:ec:c4/00:00:0e:00:00/40 tag 8 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:48:5a:ec:c4/00:00:0e:00:00/40 tag 9 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:50:5c:ec:c4/00:00:0e:00:00/40 tag 10 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:58:5e:ec:c4/00:00:0e:00:00/40 tag 11 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:60:60:ec:c4/00:00:0e:00:00/40 tag 12 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:68:62:ec:c4/00:00:0e:00:00/40 tag 13 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:70:64:ec:c4/00:00:0e:00:00/40 tag 14 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: cmd 60/02:78:66:ec:c4/00:00:0e:00:00/40 tag 15 cdb 0x0 data 1024 in
+>          res 40/00:78:66:ec:c4/00:00:0e:00:00/40 Emask 0x2 (HSM violation)
+> ata1: soft resetting port
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
 > ata1.00: configured for UDMA/133
-> scsi1 : sata_nv
-> ata2: SATA link down (SStatus 0 SControl 300)
-> ATA: abnormal status 0x7F on port 0xE407
->=20
-> 	I bought this HD today and it is working perfectly, but it's
-> strange the last message. Should I worry about it?
->=20
-> 	I saw many similar logs on Google, so I think it's harmless,
-> right? Thanks!
+> ata1: EH complete
+> SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 00 3a 00 00
+> SCSI device sda: write cache: enabled, read cache: enabled, doesn't support
+> DPO or FUA
+>
+> This last part was not present when booting stock 2.6.21-rc1
 
-Yeap, it's harmless and the message is being removed in the devel tree.
- Thanks.
+Your drive has some issues with NCQ and is scheduled to be blacklisted
+such that it isn't enabled.  libata used to ignore the condition but now
+considers it NCQ protocol violation and fails all pending commands.
 
---=20
+libata EH should turn NCQ off automatically after a few of the above
+errors.  I'd love to see how that actually works in the field (full
+dmesg please).  If it doesn't, it needs fixing.
+
+Thanks.
+
+-- 
 tejun
