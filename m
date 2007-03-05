@@ -1,84 +1,90 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git patches] libata fixes
-Date: Mon, 05 Mar 2007 14:19:08 +0900
-Message-ID: <45EBA84C.2020304@gmail.com>
-References: <00e301c75dc5$693f3900$2101a8c0@donald>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: nonzero mismatch_cnt with no earlier error
+Date: Mon, 05 Mar 2007 18:52:35 +1100
+Message-ID: <45EBCC43.9010709@eyal.emu.id.au>
+References: <45DF859B.2050108@eyal.emu.id.au>	<Pine.LNX.4.64.0702231929380.31611@p34.internal.lan>	<45DF8DE3.2050903@eyal.emu.id.au> <17890.25524.465403.130119@notabene.brown> <45E297E5.50303@eyal.emu.id.au> <45EB95EF.9030702@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090301020000010200050802"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:13595 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687AbXCEFTJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Mar 2007 00:19:09 -0500
-Received: by py-out-1112.google.com with SMTP id a29so796351pyi
-        for <linux-ide@vger.kernel.org>; Sun, 04 Mar 2007 21:19:09 -0800 (PST)
-In-Reply-To: <00e301c75dc5$693f3900$2101a8c0@donald>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: rol@as2917.net
-Cc: 'Jeff Garzik' <jeff@garzik.org>, 'Andrew Morton' <akpm@linux-foundation.org>, 'Linus Torvalds' <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------090301020000010200050802
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ihug-mail.icp-qv1-irony16.iinet.net.au ([203.59.1.182]:16449
+	"EHLO mail-ihug.icp-qv1-irony16.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932133AbXCEHwn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Mar 2007 02:52:43 -0500
+In-Reply-To: <45EB95EF.9030702@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <teheo@suse.de>
+Cc: list linux-ide <linux-ide@vger.kernel.org>
 
-Hello,
-
-Paul Rolland wrote:
-> Hello,
+Tejun Heo wrote:
+> Eyal Lebedinsky wrote:
 > 
-> Applied this on top of 2.6.21-rc1 and your previous patch (see my previous
-> mail). 
-> Still booting, no more the weird error I've reported minutes ago.
+>>I CC'ed linux-ide to see if they think the reported error was really innocent:
+>>
+>>Question: does this error report suggest that a disk could be corrupted?
+>>
+>>This SATA disk is part of an md raid and no error was reported by md.
+>>
+>>[937567.332751] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4190002 action 0x2
+>>[937567.354094] ata3.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 512 in
+>>[937567.354096]          res 51/04:83:45:00:00/00:00:00:00:00/a0 Emask 0x10 (ATA bus error)
 > 
-> pata_jmicron still unable to detect my DVD-RW :
-> scsi8 : pata_jmicron
-> ata9.00: ATAPI, max UDMA/66
-> ata9.00: qc timeout (cmd 0xef)
-> ata9.00: failed to set xfermode (err_mask=0x4)
-> ata9.00: limiting speed to UDMA/44
-> ata9: failed to recover some devices, retrying in 5 secs
-> ata9.00: qc timeout (cmd 0xef)
-> ata9.00: failed to set xfermode (err_mask=0x4)
-> ata9.00: limiting speed to PIO0
-> ata9: failed to recover some devices, retrying in 5 secs
-> ata9.00: qc timeout (cmd 0xef)
-> ata9.00: failed to set xfermode (err_mask=0x4)
-> ata9.00: disabled
-> scsi9 : pata_jmicron
-> ATA: abnormal status 0x7F on port 0x0000000000019807
+> 
+> Command 0xb0 is SMART.  The device failed some subcommand of SMART, so,
+> no, it isn't related to data integrity, but your link is reporting
+> recovered data transmission error and PHY ready status changed and some
+> other conditions making libata EH mark the failure as ATA bus error.
+> Care to post full dmesg?
 
-1. Has it ever worked with the previous kernels?
+It is in the original thread on linux-raid, but here it is for this list.
+This is the full dmesg. There were only MARKs in between.
 
-2. If you connect a harddisk to pata_jmicron, does it work?
+I run a raid 'check' every Friday (cron). The last one reported some parity errors.
 
-3. Does applying the attached patch fix your problem?
+*** last week check start:
+[927080.617744] md: data-check of RAID array md0
+[927080.630783] md: minimum _guaranteed_  speed: 24000 KB/sec/disk.
+[927080.648734] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+[927080.678103] md: using 128k window, over a total of 312568576 blocks.
+	*** last week error:
+[937567.332751] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4190002 action 0x2
+[937567.354094] ata3.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 512 in
+[937567.354096]          res 51/04:83:45:00:00/00:00:00:00:00/a0 Emask 0x10 (ATA bus error)
+[937568.120783] ata3: soft resetting port
+[937568.282450] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[937568.306693] ata3.00: configured for UDMA/100
+[937568.319733] ata3: EH complete
+[937568.361223] SCSI device sdc: 625142448 512-byte hdwr sectors (320073 MB)
+[937568.397207] sdc: Write Protect is off
+[937568.408620] sdc: Mode Sense: 00 3a 00 00
+[937568.453522] SCSI device sdc: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+	*** last week check end:
+[941696.843935] md: md0: data-check done.
+[941697.246454] RAID5 conf printout:
+[941697.256366]  --- rd:6 wd:6
+[941697.264718]  disk 0, o:1, dev:sda1
+[941697.275146]  disk 1, o:1, dev:sdb1
+[941697.285575]  disk 2, o:1, dev:sdc1
+[941697.296003]  disk 3, o:1, dev:sdd1
+[941697.306432]  disk 4, o:1, dev:sde1
+[941697.316862]  disk 5, o:1, dev:sdf1
+	*** this week check start:
+[1530647.746383] md: data-check of RAID array md0
+[1530647.759677] md: minimum _guaranteed_  speed: 24000 KB/sec/disk.
+[1530647.778041] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+[1530647.807663] md: using 128k window, over a total of 312568576 blocks.
+	*** this week check end:
+[1545248.680745] md: md0: data-check done.
+[1545249.266727] RAID5 conf printout:
+[1545249.276930]  --- rd:6 wd:6
+[1545249.285542]  disk 0, o:1, dev:sda1
+[1545249.296228]  disk 1, o:1, dev:sdb1
+[1545249.306923]  disk 2, o:1, dev:sdc1
+[1545249.317613]  disk 3, o:1, dev:sdd1
+[1545249.328292]  disk 4, o:1, dev:sde1
+[1545249.338981]  disk 5, o:1, dev:sdf1
 
 -- 
-tejun
-
---------------090301020000010200050802
-Content-Type: text/x-patch;
- name="pata_jmicron-polling-xfer.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="pata_jmicron-polling-xfer.patch"
-
-diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-index 43763c9..8a95a56 100644
---- a/drivers/ata/pata_jmicron.c
-+++ b/drivers/ata/pata_jmicron.c
-@@ -196,7 +196,8 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
- {
- 	static struct ata_port_info info = {
- 		.sht		= &jmicron_sht,
--		.flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST |
-+			  ATA_FLAG_SETXFER_POLLING,
- 
- 		.pio_mask	= 0x1f,
- 		.mwdma_mask	= 0x07,
-
---------------090301020000010200050802--
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
