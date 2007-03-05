@@ -1,29 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH/RFC]: recovery from power-up-in-standby feature
-Date: Sun, 04 Mar 2007 22:55:12 -0500
-Message-ID: <45EB94A0.4010603@rtr.ca>
-References: <45EB2F6D.7050407@rtr.ca> <45EB5825.501@garzik.org>
+From: Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+Subject: Re: [3/6] 2.6.21-rc2: known regressions
+Date: Sun, 4 Mar 2007 20:58:59 -0700
+Message-ID: <20070305035859.GA29234@ellpspace.math.ualberta.ca>
+References: <Pine.LNX.4.64.0702272105220.12485@woody.linux-foundation.org> <20070305015036.GH3441@stusta.de>
+Reply-To: michal@harddata.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4356 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752618AbXCEDzO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Mar 2007 22:55:14 -0500
-In-Reply-To: <45EB5825.501@garzik.org>
+Received: from ellpspace.math.ualberta.ca ([129.128.207.67]:33708 "EHLO
+	ellpspace.math.ualberta.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752622AbXCEEDo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Mar 2007 23:03:44 -0500
+Content-Disposition: inline
+In-Reply-To: <20070305015036.GH3441@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mathieu =?iso-8859-1?Q?B=E9rard?= <Mathieu.Berard@crans.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Fabio Comolli <fabio.comolli@gmail.com>, Tejun Heo <htejun@gmail.com>, Janosch Machowinski <jmachowinski@gmx.de>, Lukas Hejtmanek <xhejtman@fi.muni.cz>, Meelis Roos <mroos@linux.ee>, Olivier Mondoloni <darkcore71@yahoo.fr>, Thomas Renninger <trenn@suse.de>, Robert Moore <robert.moore@intel.com>, lenb@kernel.org, linux-acpi@vger.kernel.org
 
-Jeff wrote:
-> I think we would want to test bit 6 of IDENTIFY DEVICE word 83, issue SET FEATURES - SPIN UP command if set,
-> otherwise do a READ VERIFY or some other media access command
+On Mon, Mar 05, 2007 at 02:50:36AM +0100, Adrian Bunk wrote:
+> This email lists some known regressions in 2.6.21-rc2 compared to 2.6.20
+> that are not yet fixed in Linus' tree.
+....
+> Subject    : kernels fail to boot with drives on ATIIXP controller
+> References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
+> Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+> Status     : unknown
 
-The word-2 signature values already give us that information,
-and I'm not certain that we can rely upon word 83 even being
-"present" when a drive has not spun up.  I see lots of zeros
-in the upper words of the IDENTIFY info from drives in this state.
+Alan added comment to my posting that my problems are caused by
+messed up IRQ routing on that box I tried.  Indeed, I can boot
+kernel 2.6.20-1.2962.fc7, which really is 2.6.21-rc2, provided
+I will use 'acpi=off irqpoll'.  Anything else and a boot silently
+dies if 'acpi=off' is skipped or is not finding disk if 'irqpoll'
+is missing.
 
-Cheers
+Somehow 2.6.19 is booting on the same hardware without "valliant
+efforts"; OTOH 'ahci' driver was not used there.
+
+    Michal
