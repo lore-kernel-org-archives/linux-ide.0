@@ -1,40 +1,70 @@
-From: Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-Subject: Re: [3/6] 2.6.21-rc2: known regressions
-Date: Sun, 4 Mar 2007 20:58:59 -0700
-Message-ID: <20070305035859.GA29234@ellpspace.math.ualberta.ca>
-References: <Pine.LNX.4.64.0702272105220.12485@woody.linux-foundation.org> <20070305015036.GH3441@stusta.de>
-Reply-To: michal@harddata.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATA] Failed to set xfermode on LITE-ON LTR-48246S
+Date: Mon, 05 Mar 2007 13:10:10 +0900
+Message-ID: <45EB9822.40300@gmail.com>
+References: <Pine.LNX.4.64.0702041057090.8424@woody.linux-foundation.org> <20070227135838.GA4328@titan.lahn.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------020905040601020300000706"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ellpspace.math.ualberta.ca ([129.128.207.67]:33708 "EHLO
-	ellpspace.math.ualberta.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752622AbXCEEDo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Mar 2007 23:03:44 -0500
-Content-Disposition: inline
-In-Reply-To: <20070305015036.GH3441@stusta.de>
+Received: from py-out-1112.google.com ([64.233.166.177]:47396 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628AbXCEEKN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Mar 2007 23:10:13 -0500
+Received: by py-out-1112.google.com with SMTP id a29so790280pyi
+        for <linux-ide@vger.kernel.org>; Sun, 04 Mar 2007 20:10:12 -0800 (PST)
+In-Reply-To: <20070227135838.GA4328@titan.lahn.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mathieu =?iso-8859-1?Q?B=E9rard?= <Mathieu.Berard@crans.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Fabio Comolli <fabio.comolli@gmail.com>, Tejun Heo <htejun@gmail.com>, Janosch Machowinski <jmachowinski@gmx.de>, Lukas Hejtmanek <xhejtman@fi.muni.cz>, Meelis Roos <mroos@linux.ee>, Olivier Mondoloni <darkcore71@yahoo.fr>, Thomas Renninger <trenn@suse.de>, Robert Moore <robert.moore@intel.com>, lenb@kernel.org, linux-acpi@vger.kernel.org
+To: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Mon, Mar 05, 2007 at 02:50:36AM +0100, Adrian Bunk wrote:
-> This email lists some known regressions in 2.6.21-rc2 compared to 2.6.20
-> that are not yet fixed in Linus' tree.
-....
-> Subject    : kernels fail to boot with drives on ATIIXP controller
-> References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
-> Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-> Status     : unknown
+This is a multi-part message in MIME format.
+--------------020905040601020300000706
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Alan added comment to my posting that my problems are caused by
-messed up IRQ routing on that box I tried.  Indeed, I can boot
-kernel 2.6.20-1.2962.fc7, which really is 2.6.21-rc2, provided
-I will use 'acpi=off irqpoll'.  Anything else and a boot silently
-dies if 'acpi=off' is skipped or is not finding disk if 'irqpoll'
-is missing.
+Philipp Matthias Hahn wrote:
+> Hello!
+> 
+> As reported by John Williams and others like in
+> http://www.mail-archive.com/linux-ide@vger.kernel.org/msg03088.html
+> I too have a problem with 2.6.20.1 using ata_piix not detecting the
+> CD-ROM any more. Applying the patch from
+> http://lkml.org/lkml/2007/2/12/24 did not help, but additionally
+> applying
+> http://readlist.com/lists/vger.kernel.org/linux-kernel/45/228948.html
+> made it work. Here's the relevant extra debugging output:
 
-Somehow 2.6.19 is booting on the same hardware without "valliant
-efforts"; OTOH 'ahci' driver was not used there.
+* Did it work with previous kernels?
 
-    Michal
+* Does applying the attached patch over unpatched 2.6.20.1 fix the problem?
+
+-- 
+tejun
+
+--------------020905040601020300000706
+Content-Type: text/x-patch;
+ name="ata_piix-polling-xfer.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ata_piix-polling-xfer.patch"
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index dc42ba1..78e6ac5 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -105,8 +105,10 @@ enum {
+ 	PIIX_FLAG_AHCI		= (1 << 27), /* AHCI possible */
+ 	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
+ 
+-	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS,
+-	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
++	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS |
++				  ATA_FLAG_SETXFER_POLLING,
++	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR |
++				  ATA_FLAG_SETXFER_POLLING,
+ 
+ 	/* combined mode.  if set, PATA is channel 0.
+ 	 * if clear, PATA is channel 1.
+
+--------------020905040601020300000706--
