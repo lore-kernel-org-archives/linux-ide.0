@@ -1,49 +1,46 @@
-From: Philipp Matthias Hahn <pmhahn@titan.lahn.de>
-Subject: Re: [PATA] Failed to set xfermode on LITE-ON LTR-48246S
-Date: Mon, 5 Mar 2007 11:38:40 +0100
-Message-ID: <20070305103840.GA4381@titan.lahn.de>
-References: <Pine.LNX.4.64.0702041057090.8424@woody.linux-foundation.org> <20070227135838.GA4328@titan.lahn.de> <45EB9822.40300@gmail.com>
+From: "Patrick Ale" <patrick.ale@gmail.com>
+Subject: Re: sata_sil problems with recent kernels
+Date: Mon, 5 Mar 2007 13:24:16 +0000
+Message-ID: <8d158e1f0703050524w6e376cd3hffda0b05da9c78af@mail.gmail.com>
+References: <1172250027.15179.16.camel@dale.velocity.net>
+	 <1172602444.5420.17.camel@dale.velocity.net>
+	 <1172698758.30931.18.camel@dale.velocity.net>
+	 <45EB98E4.9070307@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ip-svs-1.Informatik.Uni-Oldenburg.DE ([134.106.12.126]:47927
-	"EHLO schlidder.svs.informatik.uni-oldenburg.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933051AbXCEKin (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Mar 2007 05:38:43 -0500
+Received: from ug-out-1314.google.com ([66.249.92.169]:63588 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933479AbXCENYS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Mar 2007 08:24:18 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so1233482uga
+        for <linux-ide@vger.kernel.org>; Mon, 05 Mar 2007 05:24:17 -0800 (PST)
+In-Reply-To: <45EB98E4.9070307@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <45EB9822.40300@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Dale Blount <linux-kernel@dale.us>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Helo Tejun!
+On 3/5/07, Tejun Heo <htejun@gmail.com> wrote:
+> Dale Blount wrote:
 
-On Mon, Mar 05, 2007 at 01:10:10PM +0900, Tejun Heo wrote:
-> Philipp Matthias Hahn wrote:
-> > As reported by John Williams and others like in
-> > http://www.mail-archive.com/linux-ide@vger.kernel.org/msg03088.html
-> > I too have a problem with 2.6.20.1 using ata_piix not detecting the
-> > CD-ROM any more. Applying the patch from
-> > http://lkml.org/lkml/2007/2/12/24 did not help, but additionally
-> > applying
-> > http://readlist.com/lists/vger.kernel.org/linux-kernel/45/228948.html
-> > made it work. Here's the relevant extra debugging output:
-> 
-> * Did it work with previous kernels?
+>
+> This will probably included in the next -stable iteration.  Thanks.
+>
+> --
+> tejun
 
-Previously I was using the old IDE modules just fine, it was only with
-2.6.20 that I did the switch to libata and encountered the problem.
 
-> * Does applying the attached patch over unpatched 2.6.20.1 fix the problem?
+I can confirm that sata_sil is working great under 2.6.21-rc1.
+I have an onboard Silicon Image SATA RAID controller and a PCI Add-on
+card, also with silicon image chipset.
 
-Yes, it seems to fix it. (testes on top of the first patch mentioned
-above, but witheout the second one.).
-If I should test it as the sole patche, just mail me again please.
+2x500GB Samsung
+1x400GB Samsung
 
-BYtE
-Philipp
--- 
-  / /  (_)__  __ ____  __ Philipp Hahn
- / /__/ / _ \/ // /\ \/ /
-/____/_/_//_/\_,_/ /_/\_\ pmhahn@titan.lahn.de
+I am getting maximum troughput and no errors of any kind.
+
+
+Patrick
