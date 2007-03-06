@@ -1,119 +1,80 @@
 From: akpm@linux-foundation.org
-Subject: [patch 03/30] pata: expose set_mode method so it can be wrapped
-Date: Tue, 06 Mar 2007 02:37:52 -0800
-Message-ID: <200703061037.l26Abq2S019460@shell0.pdx.osdl.net>
+Subject: [patch 05/30] pcmcia - spot slave decode flaws (for testing)
+Date: Tue, 06 Mar 2007 02:37:54 -0800
+Message-ID: <200703061037.l26AbsJI019466@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34411 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34429 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934034AbXCFKiM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:38:12 -0500
+	id S934035AbXCFKiP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:38:15 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
 
 From: Alan <alan@lxorguk.ukuu.org.uk>
 
-This splits set_mode into do_set_mode and the wrapper so that a driver can
-call the standard method inside its own.  This in theory also obsoletes
-->post_set_mode().
-
-Needed for ACPI driver.
+If you've got a CF adapter or PCMCIA disc which shows up twice in libata
+pata_pcmcia can you try this patch on top of the updates posted.  It tries
+to spot when the slave is a mirror of the master and to fix up problems
+that causes.
 
 Signed-off-by: Alan Cox <alan@redhat.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-core.c |   37 +++++++++++++++++++++++++++++-------
- include/linux/libata.h    |    1 
- 2 files changed, 31 insertions(+), 7 deletions(-)
+ drivers/ata/pata_pcmcia.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-diff -puN drivers/ata/libata-core.c~expose-set_mode-method-so-it-can-be-wrapped drivers/ata/libata-core.c
---- a/drivers/ata/libata-core.c~expose-set_mode-method-so-it-can-be-wrapped
-+++ a/drivers/ata/libata-core.c
-@@ -2458,12 +2458,13 @@ static int ata_dev_set_mode(struct ata_d
- }
+diff -puN drivers/ata/pata_pcmcia.c~pcmcia-spot-slave-decode-flaws-for-testing drivers/ata/pata_pcmcia.c
+--- a/drivers/ata/pata_pcmcia.c~pcmcia-spot-slave-decode-flaws-for-testing
++++ a/drivers/ata/pata_pcmcia.c
+@@ -54,6 +54,39 @@ struct ata_pcmcia_info {
+ 	dev_node_t	node;
+ };
  
- /**
-- *	ata_set_mode - Program timings and issue SET FEATURES - XFER
-+ *	ata_do_set_mode - Program timings and issue SET FEATURES - XFER
-  *	@ap: port on which timings will be programmed
-  *	@r_failed_dev: out paramter for failed device
-  *
-- *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
-- *	ata_set_mode() fails, pointer to the failing device is
-+ *	Standard implementation of the function used to tune and set
-+ *	ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
-+ *	ata_dev_set_mode() fails, pointer to the failing device is
-  *	returned in @r_failed_dev.
-  *
-  *	LOCKING:
-@@ -2472,14 +2473,12 @@ static int ata_dev_set_mode(struct ata_d
-  *	RETURNS:
-  *	0 on success, negative errno otherwise
-  */
--int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
-+
-+int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
- {
- 	struct ata_device *dev;
- 	int i, rc = 0, used_dma = 0, found = 0;
- 
--	/* has private set_mode? */
--	if (ap->ops->set_mode)
--		return ap->ops->set_mode(ap, r_failed_dev);
- 
- 	/* step 1: calculate xfer_mask */
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-@@ -2564,6 +2563,29 @@ int ata_set_mode(struct ata_port *ap, st
- }
- 
- /**
-+ *	ata_set_mode - Program timings and issue SET FEATURES - XFER
-+ *	@ap: port on which timings will be programmed
-+ *	@r_failed_dev: out paramter for failed device
++/**
++ *	pcmcia_set_mode	-	PCMCIA specific mode setup
++ *	@ap: Port
++ *	@r_failed_dev: Return pointer for failed device
 + *
-+ *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
-+ *	ata_set_mode() fails, pointer to the failing device is
-+ *	returned in @r_failed_dev.
-+ *
-+ *	LOCKING:
-+ *	PCI/etc. bus probe sem.
-+ *
-+ *	RETURNS:
-+ *	0 on success, negative errno otherwise
++ *	Perform the tuning and setup of the devices and timings, which
++ *	for PCMCIA is the same as any other controller. We wrap it however
++ *	as we need to spot hardware with incorrect or missing master/slave
++ *	decode, which alas is embarrassingly common in the PC world
 + */
-+int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
++
++static int pcmcia_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
 +{
-+	/* has private set_mode? */
-+	if (ap->ops->set_mode)
-+		return ap->ops->set_mode(ap, r_failed_dev);
++	struct ata_device *master = &ap->device[0];
++	struct ata_device *slave = &ap->device[1];
++
++	if (!ata_dev_enabled(master) || !ata_dev_enabled(slave))
++		return ata_do_set_mode(ap, r_failed_dev);
++
++	if (memcmp(master->id + ATA_ID_FW_REV,  slave->id + ATA_ID_FW_REV,
++			   ATA_ID_FW_REV_LEN + ATA_ID_PROD_LEN) == 0)
++	{
++		/* Suspicious match, but could be two cards from
++		   the same vendor - check serial */
++		if (memcmp(master->id + ATA_ID_SERNO, slave->id + ATA_ID_SERNO,
++			   ATA_ID_SERNO_LEN) == 0 && master->id[ATA_ID_SERNO] >> 8) {
++			ata_dev_printk(slave, KERN_WARNING, "is a ghost device, ignoring.\n");
++			ata_dev_disable(slave);
++		}
++	}
 +	return ata_do_set_mode(ap, r_failed_dev);
 +}
 +
-+/**
-  *	ata_tf_to_host - issue ATA taskfile to host controller
-  *	@ap: port to which command is being issued
-  *	@tf: ATA taskfile register set
-@@ -6314,6 +6336,7 @@ EXPORT_SYMBOL_GPL(ata_altstatus);
- EXPORT_SYMBOL_GPL(ata_exec_command);
- EXPORT_SYMBOL_GPL(ata_port_start);
- EXPORT_SYMBOL_GPL(ata_interrupt);
-+EXPORT_SYMBOL_GPL(ata_do_set_mode);
- EXPORT_SYMBOL_GPL(ata_data_xfer);
- EXPORT_SYMBOL_GPL(ata_data_xfer_noirq);
- EXPORT_SYMBOL_GPL(ata_qc_prep);
-diff -puN include/linux/libata.h~expose-set_mode-method-so-it-can-be-wrapped include/linux/libata.h
---- a/include/linux/libata.h~expose-set_mode-method-so-it-can-be-wrapped
-+++ a/include/linux/libata.h
-@@ -827,6 +827,7 @@ extern void ata_scsi_slave_destroy(struc
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
- 				       int queue_depth);
- extern struct ata_device *ata_dev_pair(struct ata_device *adev);
-+extern int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev);
- extern u8 ata_irq_on(struct ata_port *ap);
- extern u8 ata_dummy_irq_on(struct ata_port *ap);
- extern u8 ata_irq_ack(struct ata_port *ap, unsigned int chk_drq);
+ static struct scsi_host_template pcmcia_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -73,6 +106,7 @@ static struct scsi_host_template pcmcia_
+ };
+ 
+ static struct ata_port_operations pcmcia_port_ops = {
++	.set_mode	= pcmcia_set_mode,
+ 	.port_disable	= ata_port_disable,
+ 	.tf_load	= ata_tf_load,
+ 	.tf_read	= ata_tf_read,
 _
