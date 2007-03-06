@@ -1,38 +1,34 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [patch 04/30] ACPI driver support for pata
-Date: Tue, 6 Mar 2007 09:29:10 -0500
-Message-ID: <20070306142910.GB3732@devserv.devel.redhat.com>
-References: <200703061037.l26AbrtB019463@shell0.pdx.osdl.net> <45ED649A.20207@gmail.com> <20070306151415.45db1d52@lxorguk.ukuu.org.uk> <45ED783C.6060604@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [patch 25/30] pata_hpt3x3: clean up by using cable method
+Date: Tue, 6 Mar 2007 16:27:30 +0000
+Message-ID: <20070306162730.6ece1ec9@lxorguk.ukuu.org.uk>
+References: <200703061038.l26AcAVD019539@shell0.pdx.osdl.net>
+	<45ED57BA.4000800@garzik.org>
+	<20070306151959.2c30b606@lxorguk.ukuu.org.uk>
+	<45ED79DE.7000702@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:32866 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752266AbXCFObE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 09:31:04 -0500
-Content-Disposition: inline
-In-Reply-To: <45ED783C.6060604@gmail.com>
+Received: from [81.2.110.250] ([81.2.110.250]:45611 "EHLO lxorguk.ukuu.org.uk"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965916AbXCFPXz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 10:23:55 -0500
+In-Reply-To: <45ED79DE.7000702@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, alan@redhat.com, lenb@kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, alan@redhat.com
 
-On Tue, Mar 06, 2007 at 11:18:36PM +0900, Tejun Heo wrote:
-> Actually, I have.  I was thinking of higher level helpers.  e.g.
-> pacpi_cable_detect() in libata-acpi.c such that sata_nv's cable_detect
-> can do.
+On Tue, 06 Mar 2007 09:25:34 -0500
+Jeff Garzik <jeff@garzik.org> wrote:
 
-There is no cable detect feature in ACPI, you try and set a mode and if it
-lets you then the cable is probably there. That means you can't do
-"pacpi_cable_detect"  easily as a helper because you will corrupt all the timing
-set up so far, and potentially on both drives.
+> through intuition and simple observation, without having to resort to 
+> git bisect.
 
-I guess we could carefully set PIO 0 back on both and stick big warning signs
-on the function about where to use it.
+Well if you want one patch you can have one patch. It'll be a while as
+I'm still converting drivers over and I'll feed them one by one for real
+world testing/verifying to Andrew first. Some like the Jmicron and
+pata_sis aren't so trivial although are well worth doing.
 
-> So that it's more robust && we don't have to alternate between sata_nv,
-> pata_acpi depending on BIOS/kernel configuration, and possibly combine
-> other low level features with ACPI support.
-
-Makes sense and its easy to move the code around once you are ready to do so.
-
+Alan
