@@ -1,79 +1,77 @@
 From: akpm@linux-foundation.org
-Subject: [patch 02/30] libata: warn if speed limited due to 40-wire cable
-Date: Tue, 06 Mar 2007 02:37:51 -0800
-Message-ID: <200703061037.l26AbpOo019457@shell0.pdx.osdl.net>
+Subject: [patch 01/30] sata_nv: add back some verbosity into ADMA error_handler
+Date: Tue, 06 Mar 2007 02:37:50 -0800
+Message-ID: <200703061037.l26AboQk019454@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34371 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34364 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934032AbXCFKiF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S934031AbXCFKiF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Tue, 6 Mar 2007 05:38:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca, alan@lxorguk.ukuu.org.uk
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca, htejun@gmail.com
 
 From: Robert Hancock <hancockr@shaw.ca>
 
-Warn the user if a drive's transfer rate is limited because of a 40-wire
-cable detection.
+Some debug output in the ADMA error_handler function was removed recently,
+but it may be useful in certain cases, like NCQ commands timing out.  Add
+it back in, but make it a bit more intelligent so that it only prints if
+command(s) are active and only prints the CPBs for those commands.  That
+way it won't spew at inappropriate times like suspend/resume.
 
+[akpm@osdl.org: cleanup]
 Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-core.c |   33 ++++++++++++++++++++-------------
- 1 file changed, 20 insertions(+), 13 deletions(-)
+ drivers/ata/sata_nv.c |   31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
 
-diff -puN drivers/ata/libata-core.c~libata-warn-if-speed-limited-due-to-40-wire-cable-v2 drivers/ata/libata-core.c
---- a/drivers/ata/libata-core.c~libata-warn-if-speed-limited-due-to-40-wire-cable-v2
-+++ a/drivers/ata/libata-core.c
-@@ -3405,19 +3405,7 @@ static void ata_dev_xfermask(struct ata_
- 	xfer_mask = ata_pack_xfermask(ap->pio_mask,
- 				      ap->mwdma_mask, ap->udma_mask);
+diff -puN drivers/ata/sata_nv.c~sata_nv-add-back-some-verbosity-into-adma-error_handler drivers/ata/sata_nv.c
+--- a/drivers/ata/sata_nv.c~sata_nv-add-back-some-verbosity-into-adma-error_handler
++++ a/drivers/ata/sata_nv.c
+@@ -1441,11 +1441,38 @@ static void nv_adma_error_handler(struct
+ 			}
+ 		}
  
--	/* Apply cable rule here.  Don't apply it early because when
--	 * we handle hot plug the cable type can itself change.
--	 */
--	if (ap->cbl == ATA_CBL_PATA40)
--		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
--	/* Apply drive side cable rule. Unknown or 80 pin cables reported
--	 * host side are checked drive side as well. Cases where we know a
--	 * 40wire cable is used safely for 80 are not checked here.
--	 */
--        if (ata_drive_40wire(dev->id) && (ap->cbl == ATA_CBL_PATA_UNK || ap->cbl == ATA_CBL_PATA80))
--		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
--
--
-+	/* drive modes available */
- 	xfer_mask &= ata_pack_xfermask(dev->pio_mask,
- 				       dev->mwdma_mask, dev->udma_mask);
- 	xfer_mask &= ata_id_xfermask(dev->id);
-@@ -3448,6 +3436,25 @@ static void ata_dev_xfermask(struct ata_
- 	if (ap->ops->mode_filter)
- 		xfer_mask = ap->ops->mode_filter(ap, dev, xfer_mask);
- 
-+	/* Apply cable rule here.  Don't apply it early because when
-+	 * we handle hot plug the cable type can itself change.
-+	 * Check this last so that we know if the transfer rate was
-+	 * solely limited by the cable.
-+	 * Unknown or 80 wire cables reported host side are checked
-+	 * drive side as well. Cases where we know a 40wire cable
-+	 * is used safely for 80 are not checked here.
-+	 */
-+	if (xfer_mask & (0xF8 << ATA_SHIFT_UDMA))
-+		/* UDMA/44 or higher would be available */
-+		if((ap->cbl == ATA_CBL_PATA40) ||
-+   		    (ata_drive_40wire(dev->id) &&
-+		     (ap->cbl == ATA_CBL_PATA_UNK ||
-+                     ap->cbl == ATA_CBL_PATA80))) {
-+		      	ata_dev_printk(dev, KERN_WARNING,
-+				 "limited to UDMA/33 due to 40-wire cable\n");
-+			xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
++		if (ata_tag_valid(ap->active_tag) || ap->sactive) {
++			u32 notifier = readl(mmio + NV_ADMA_NOTIFIER);
++			u32 notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
++			u32 gen_ctl = readl(pp->gen_block + NV_ADMA_GEN_CTL);
++			u32 status = readw(mmio + NV_ADMA_STAT);
++
++			ata_port_printk(ap, KERN_ERR, "EH in ADMA mode, "
++				"notifier 0x%X notifier_error 0x%X gen_ctl "
++				"0x%X status 0x%X\n",
++				notifier, notifier_error, gen_ctl, status);
++
++			for (i = 0; i < NV_ADMA_MAX_CPBS; i++) {
++				struct nv_adma_cpb *cpb = &pp->cpb[i];
++				if ((ata_tag_valid(ap->active_tag) &&
++						i == ap->active_tag) ||
++						ap->sactive & (1 << i))
++					ata_port_printk(ap, KERN_ERR, "CPB %d: "
++						"ctl_flags 0x%x, resp_flags "
++						"0x%x\n",
++						i, cpb->ctl_flags,
++						cpb->resp_flags);
++			}
 +		}
 +
- 	ata_unpack_xfermask(xfer_mask, &dev->pio_mask,
- 			    &dev->mwdma_mask, &dev->udma_mask);
- }
+ 		/* Push us back into port register mode for error handling. */
+ 		nv_adma_register_mode(ap);
+ 
+-		/* Mark all of the CPBs as invalid to prevent them from being executed */
+-		for( i=0;i<NV_ADMA_MAX_CPBS;i++)
++		/*
++		 * Mark all of the CPBs as invalid to prevent them from being
++		 * executed
++		*/
++		for (i = 0; i< NV_ADMA_MAX_CPBS; i++)
+ 			pp->cpb[i].ctl_flags &= ~NV_CPB_CTL_CPB_VALID;
+ 
+ 		/* clear CPB fetch count */
 _
