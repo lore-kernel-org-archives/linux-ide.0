@@ -1,40 +1,79 @@
-From: "Andrew Grover" <andy.grover@gmail.com>
-Subject: Re: [PATCH 1/3] libata: add missing PM callbacks
-Date: Tue, 6 Mar 2007 02:20:37 -0800
-Message-ID: <c0a09e5c0703060220l18246d19kd1645a16067d1b3d@mail.gmail.com>
-References: <20070302083001.GK20322@htj.dyndns.org>
-	 <45E8B3C8.2090009@garzik.org> <45E8E749.4030406@gmail.com>
-	 <20070306080509.GA2040@elf.ucw.cz> <45ED22AB.4090901@gmail.com>
-	 <20070306082212.GC2040@elf.ucw.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 02/30] libata: warn if speed limited due to 40-wire cable
+Date: Tue, 06 Mar 2007 02:37:51 -0800
+Message-ID: <200703061037.l26AbpOo019457@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.234]:63357 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933213AbXCFKUi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Mar 2007 05:20:38 -0500
-Received: by wr-out-0506.google.com with SMTP id 37so1832994wra
-        for <linux-ide@vger.kernel.org>; Tue, 06 Mar 2007 02:20:38 -0800 (PST)
-In-Reply-To: <20070306082212.GC2040@elf.ucw.cz>
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.24]:34371 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934032AbXCFKiF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:38:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca, alan@lxorguk.ukuu.org.uk
 
-On 3/6/07, Pavel Machek <pavel@ucw.cz> wrote:
-> > 1. drop !CONFIG_PM configuration
-> > 2. continue to sprinkle #ifdef's over device drivers
-> > 3. find out prettier way to mark PM functions
->
-> ...of 3., and code is nicely generic and fairly simple. I thought it
-> would be too much work to implemente it, and it would get too messy.
->
-> Given that it is so simple, I believe 3. is the best option. We can
-> still do 1. in future if we feel like so...
+From: Robert Hancock <hancockr@shaw.ca>
 
-How much room does it actually save? And, can we maybe have some
-actual embedded people saying they need this special treatment?
+Warn the user if a drive's transfer rate is limited because of a 40-wire
+cable detection.
 
--- Andy
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/ata/libata-core.c |   33 ++++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
+
+diff -puN drivers/ata/libata-core.c~libata-warn-if-speed-limited-due-to-40-wire-cable-v2 drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~libata-warn-if-speed-limited-due-to-40-wire-cable-v2
++++ a/drivers/ata/libata-core.c
+@@ -3405,19 +3405,7 @@ static void ata_dev_xfermask(struct ata_
+ 	xfer_mask = ata_pack_xfermask(ap->pio_mask,
+ 				      ap->mwdma_mask, ap->udma_mask);
+ 
+-	/* Apply cable rule here.  Don't apply it early because when
+-	 * we handle hot plug the cable type can itself change.
+-	 */
+-	if (ap->cbl == ATA_CBL_PATA40)
+-		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+-	/* Apply drive side cable rule. Unknown or 80 pin cables reported
+-	 * host side are checked drive side as well. Cases where we know a
+-	 * 40wire cable is used safely for 80 are not checked here.
+-	 */
+-        if (ata_drive_40wire(dev->id) && (ap->cbl == ATA_CBL_PATA_UNK || ap->cbl == ATA_CBL_PATA80))
+-		xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+-
+-
++	/* drive modes available */
+ 	xfer_mask &= ata_pack_xfermask(dev->pio_mask,
+ 				       dev->mwdma_mask, dev->udma_mask);
+ 	xfer_mask &= ata_id_xfermask(dev->id);
+@@ -3448,6 +3436,25 @@ static void ata_dev_xfermask(struct ata_
+ 	if (ap->ops->mode_filter)
+ 		xfer_mask = ap->ops->mode_filter(ap, dev, xfer_mask);
+ 
++	/* Apply cable rule here.  Don't apply it early because when
++	 * we handle hot plug the cable type can itself change.
++	 * Check this last so that we know if the transfer rate was
++	 * solely limited by the cable.
++	 * Unknown or 80 wire cables reported host side are checked
++	 * drive side as well. Cases where we know a 40wire cable
++	 * is used safely for 80 are not checked here.
++	 */
++	if (xfer_mask & (0xF8 << ATA_SHIFT_UDMA))
++		/* UDMA/44 or higher would be available */
++		if((ap->cbl == ATA_CBL_PATA40) ||
++   		    (ata_drive_40wire(dev->id) &&
++		     (ap->cbl == ATA_CBL_PATA_UNK ||
++                     ap->cbl == ATA_CBL_PATA80))) {
++		      	ata_dev_printk(dev, KERN_WARNING,
++				 "limited to UDMA/33 due to 40-wire cable\n");
++			xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
++		}
++
+ 	ata_unpack_xfermask(xfer_mask, &dev->pio_mask,
+ 			    &dev->mwdma_mask, &dev->udma_mask);
+ }
+_
