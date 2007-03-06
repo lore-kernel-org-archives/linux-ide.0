@@ -1,160 +1,138 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/30] libata: cable detection fixes
-Date: Tue, 06 Mar 2007 02:37:56 -0800
-Message-ID: <200703061037.l26AbuCk019481@shell0.pdx.osdl.net>
+Subject: [patch 30/30] pata_pdc202xx_old: fix data corruption and other problems
+Date: Tue, 06 Mar 2007 02:38:14 -0800
+Message-ID: <200703061038.l26AcECx019556@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34485 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34500 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934049AbXCFKib (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:38:31 -0500
+	id S934058AbXCFKih (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:38:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, bzolnier@gmail.com, alan@redhat.com
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-2.6.21-rc has horrible problems with libata and PATA cable types (and
-thus speeds). This occurs because Tejun fixed a pile of other bugs and
-we now do cable detect enforcement for drive side detection properly.
+Fix wrong "port" calculations in pdc202xx_{configure_piomode,set_dmamode}()
+They were broken for all configurations except one (master device on
+primary channel, no other devices) and as a result device settings +
+PIO/DMA timings were being programmed into the wrong PCI registers.  This
+could result in a large variety of problems including data corruption,
+hangs etc.  (depending on devices used and your luck :-).
 
-Unfortunately we don't do the process around cable detection right. Tejun
-identified the problem and pointed to the right Annex in the spec, this patch
-implements the needed changes.
+  ap->port_no   ap->devno   used PCI registers   correct PCI registers
+            0           0            0x60-0x62               0x60-0x62
+            0           1            0x62-0x64               0x64-0x66
+            1           0            0x64-0x66               0x68-0x6a
+            1           1            0x66-0x68               0x6c-0x6e
 
-The basic requirement is that we have to identify the slave before the
-master.
+Also forward port recent fixes from drivers/ide pdc202xx_old driver:
 
-The patch switches the identify order so that we can do the drive side
-detection correctly.
+* fix XFER_MW_DMA0 timings (they were overclocked, use the official ones)
 
-Secondly we add a ->cable_detect() method called after the identify
-sequence which allows a host to do host side detection at this point
-should it wish, or to modify the results of the drive side identify.
+* fix bitmasks for clearing bits of register B:
 
-This separate ->cable_detect method also cleans up a lot of code because
-many drivers have their own error_handler methods which really just set
-the cable type.
+  - when programming DMA mode bit 0x10 of register B was cleared which
+    resulted in overclocked PIO timing setting (iff PIO0 was used)
 
-If there is no ->cable_detect method the cable type is left alone so a
-driver setting it earlier (eg because it has the SATA flags set or
-because it uses the old error_handler approach) will still do the right
-thing (or at least the same thing) as before.
+  - when programming PIO mode bits 0x18 weren't cleared so suboptimal
+    timings were used for PIO1-4 if PIO0 was previously set (bit 0x10)
+    and for PIO0/3/4 if PIO1/2 was previously set (bit 0x08)
 
-This patch simply adds the cable_detect method and helpers it doesn't use
-them but other follow up patches will (ie Adrian please don't submit
-patches to unexport them ;))
+and finally bump driver version.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Acked-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-core.c |   59 ++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |    7 ++++
- 2 files changed, 66 insertions(+)
+ drivers/ata/pata_pdc202xx_old.c |   22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-diff -puN drivers/ata/libata-core.c~libata-cable-detection-fixes drivers/ata/libata-core.c
---- a/drivers/ata/libata-core.c~libata-cable-detection-fixes
-+++ a/drivers/ata/libata-core.c
-@@ -1784,6 +1784,56 @@ err_out_nosup:
- }
+diff -puN drivers/ata/pata_pdc202xx_old.c~pata_pdc202xx_old-fix-data-corruption-and-other-problems drivers/ata/pata_pdc202xx_old.c
+--- a/drivers/ata/pata_pdc202xx_old.c~pata_pdc202xx_old-fix-data-corruption-and-other-problems
++++ a/drivers/ata/pata_pdc202xx_old.c
+@@ -2,13 +2,14 @@
+  * pata_pdc202xx_old.c 	- Promise PDC202xx PATA for new ATA layer
+  *			  (C) 2005 Red Hat Inc
+  *			  Alan Cox <alan@redhat.com>
++ *			  (C) 2007 Bartlomiej Zolnierkiewicz
+  *
+  * Based in part on linux/drivers/ide/pci/pdc202xx_old.c
+  *
+  * First cut with LBA48/ATAPI
+  *
+  * TODO:
+- *	Channel interlock/reset on both required ?
++ *	Channel interlock/reset on both required
+  */
+ 
+ #include <linux/kernel.h>
+@@ -21,7 +22,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME "pata_pdc202xx_old"
+-#define DRV_VERSION "0.3.0"
++#define DRV_VERSION "0.4.0"
  
  /**
-+ *	ata_cable_40wire	-	return 40pin cable type
-+ *	@ap: port
-+ *
-+ *	Helper method for drivers which want to hardwire 40 pin cable
-+ *	detection.
-+ */
-+
-+int ata_cable_40wire(struct ata_port *ap)
-+{
-+	return ATA_CBL_PATA40;
-+}
-+
-+/**
-+ *	ata_cable_80wire	-	return 40pin cable type
-+ *	@ap: port
-+ *
-+ *	Helper method for drivers which want to hardwire 80 pin cable
-+ *	detection.
-+ */
-+
-+int ata_cable_80wire(struct ata_port *ap)
-+{
-+	return ATA_CBL_PATA80;
-+}
-+
-+/**
-+ *	ata_cable_unknown	-	return unknown PATA cable.
-+ *	@ap: port
-+ *
-+ *	Helper method for drivers which have no PATA cable detection.
-+ */
-+
-+int ata_cable_unknown(struct ata_port *ap)
-+{
-+	return ATA_CBL_PATA_UNK;
-+}
-+
-+/**
-+ *	ata_cable_sata	-	return SATA cable type
-+ *	@ap: port
-+ *
-+ *	Helper method for drivers which have SATA cables
-+ */
-+
-+int ata_cable_sata(struct ata_port *ap)
-+{
-+	return ATA_CBL_SATA;
-+}
-+
-+/**
-  *	ata_bus_probe - Reset and probe ATA bus
-  *	@ap: Bus to probe
-  *
-@@ -1853,6 +1903,10 @@ int ata_bus_probe(struct ata_port *ap)
- 			goto fail;
+  *	pdc2024x_pre_reset		-	probe begin
+@@ -76,7 +77,7 @@ static void pdc2026x_error_handler(struc
+ static void pdc202xx_configure_piomode(struct ata_port *ap, struct ata_device *adev, int pio)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	int port = 0x60 + 4 * ap->port_no + 2 * adev->devno;
++	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
+ 	static u16 pio_timing[5] = {
+ 		0x0913, 0x050C , 0x0308, 0x0206, 0x0104
+ 	};
+@@ -85,7 +86,7 @@ static void pdc202xx_configure_piomode(s
+ 	pci_read_config_byte(pdev, port, &r_ap);
+ 	pci_read_config_byte(pdev, port + 1, &r_bp);
+ 	r_ap &= ~0x3F;	/* Preserve ERRDY_EN, SYNC_IN */
+-	r_bp &= ~0x07;
++	r_bp &= ~0x1F;
+ 	r_ap |= (pio_timing[pio] >> 8);
+ 	r_bp |= (pio_timing[pio] & 0xFF);
+ 
+@@ -123,7 +124,7 @@ static void pdc202xx_set_piomode(struct 
+ static void pdc202xx_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	int port = 0x60 + 4 * ap->port_no + 2 * adev->devno;
++	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
+ 	static u8 udma_timing[6][2] = {
+ 		{ 0x60, 0x03 },	/* 33 Mhz Clock */
+ 		{ 0x40, 0x02 },
+@@ -132,12 +133,17 @@ static void pdc202xx_set_dmamode(struct 
+ 		{ 0x20, 0x01 },
+ 		{ 0x20, 0x01 }
+ 	};
++	static u8 mdma_timing[3][2] = {
++		{ 0x60, 0x03 },
++		{ 0x60, 0x04 },
++		{ 0xe0, 0x0f },
++	};
+ 	u8 r_bp, r_cp;
+ 
+ 	pci_read_config_byte(pdev, port + 1, &r_bp);
+ 	pci_read_config_byte(pdev, port + 2, &r_cp);
+ 
+-	r_bp &= ~0xF0;
++	r_bp &= ~0xE0;
+ 	r_cp &= ~0x0F;
+ 
+ 	if (adev->dma_mode >= XFER_UDMA_0) {
+@@ -147,8 +153,8 @@ static void pdc202xx_set_dmamode(struct 
+ 
+ 	} else {
+ 		int speed = adev->dma_mode - XFER_MW_DMA_0;
+-		r_bp |= 0x60;
+-		r_cp |= (5 - speed);
++		r_bp |= mdma_timing[speed][0];
++		r_cp |= mdma_timing[speed][1];
  	}
- 
-+	/* Now ask for the cable type as PDIAG- should have been released */
-+	if (ap->ops->cable_detect)
-+		ap->cbl = ap->ops->cable_detect(ap);
-+
- 	/* After the identify sequence we can now set up the devices. We do
- 	   this in the normal order so that the user doesn't get confused */
- 
-@@ -6438,3 +6492,8 @@ EXPORT_SYMBOL_GPL(ata_dummy_irq_on);
- EXPORT_SYMBOL_GPL(ata_irq_ack);
- EXPORT_SYMBOL_GPL(ata_dummy_irq_ack);
- EXPORT_SYMBOL_GPL(ata_dev_try_classify);
-+
-+EXPORT_SYMBOL_GPL(ata_cable_40wire);
-+EXPORT_SYMBOL_GPL(ata_cable_80wire);
-+EXPORT_SYMBOL_GPL(ata_cable_unknown);
-+EXPORT_SYMBOL_GPL(ata_cable_sata);
-diff -puN include/linux/libata.h~libata-cable-detection-fixes include/linux/libata.h
---- a/include/linux/libata.h~libata-cable-detection-fixes
-+++ a/include/linux/libata.h
-@@ -614,6 +614,8 @@ struct ata_port_operations {
- 
- 	void (*post_set_mode) (struct ata_port *ap);
- 
-+	int (*cable_detect) (struct ata_port *ap);
-+
- 	int  (*check_atapi_dma) (struct ata_queued_cmd *qc);
- 
- 	void (*bmdma_setup) (struct ata_queued_cmd *qc);
-@@ -833,6 +835,11 @@ extern u8 ata_dummy_irq_on(struct ata_po
- extern u8 ata_irq_ack(struct ata_port *ap, unsigned int chk_drq);
- extern u8 ata_dummy_irq_ack(struct ata_port *ap, unsigned int chk_drq);
- 
-+extern int ata_cable_40wire(struct ata_port *ap);
-+extern int ata_cable_80wire(struct ata_port *ap);
-+extern int ata_cable_sata(struct ata_port *ap);
-+extern int ata_cable_unknown(struct ata_port *ap);
-+
- /*
-  * Timing helpers
-  */
+ 	pci_write_config_byte(pdev, port + 1, r_bp);
+ 	pci_write_config_byte(pdev, port + 2, r_cp);
 _
