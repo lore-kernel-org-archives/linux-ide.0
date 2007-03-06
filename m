@@ -1,11 +1,11 @@
 From: akpm@linux-foundation.org
-Subject: [patch 20/30] pata_radisys - switch to cable method to cleanup code, correct cable type
-Date: Tue, 06 Mar 2007 02:38:06 -0800
-Message-ID: <200703061038.l26Ac65W019521@shell0.pdx.osdl.net>
+Subject: [patch 15/30] pata_cypress: clean up by using cable_detect method
+Date: Tue, 06 Mar 2007 02:38:02 -0800
+Message-ID: <200703061038.l26Ac2Zb019503@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34466 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34467 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934044AbXCFKiX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S934042AbXCFKiX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Tue, 6 Mar 2007 05:38:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,65 +18,39 @@ Signed-off-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/pata_radisys.c |   37 ++++-------------------------------
- 1 file changed, 5 insertions(+), 32 deletions(-)
+ drivers/ata/pata_cypress.c |   14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-diff -puN drivers/ata/pata_radisys.c~pata_radisys-switch-to-cable-method-to-cleanup-code drivers/ata/pata_radisys.c
---- a/drivers/ata/pata_radisys.c~pata_radisys-switch-to-cable-method-to-cleanup-code
-+++ a/drivers/ata/pata_radisys.c
-@@ -24,40 +24,12 @@
- #include <linux/ata.h>
+diff -puN drivers/ata/pata_cypress.c~pata_cypress-clean-up-by-using-cable_detect-method drivers/ata/pata_cypress.c
+--- a/drivers/ata/pata_cypress.c~pata_cypress-clean-up-by-using-cable_detect-method
++++ a/drivers/ata/pata_cypress.c
+@@ -41,17 +41,6 @@ enum {
+ 	CY82_INDEX_TIMEOUT	= 0x32
+ };
  
- #define DRV_NAME	"pata_radisys"
--#define DRV_VERSION	"0.4.1"
--
--/**
-- *	radisys_probe_init		-	probe begin
-- *	@ap: ATA port
-- *
-- *	Set up cable type and use generic probe init
-- */
--
--static int radisys_pre_reset(struct ata_port *ap)
+-static int cy82c693_pre_reset(struct ata_port *ap)
 -{
--	ap->cbl = ATA_CBL_PATA80;
+-	ap->cbl = ATA_CBL_PATA40;
 -	return ata_std_prereset(ap);
 -}
 -
--
--/**
-- *	radisys_pata_error_handler - Probe specified port on PATA host controller
-- *	@ap: Port to probe
-- *	@classes:
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void radisys_pata_error_handler(struct ata_port *ap)
+-static void cy82c693_error_handler(struct ata_port *ap)
 -{
--	ata_bmdma_drive_eh(ap, radisys_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-	ata_bmdma_drive_eh(ap, cy82c693_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
 -}
-+#define DRV_VERSION	"0.4.4"
- 
+-
  /**
-  *	radisys_set_piomode - Initialize host controller PATA PIO timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: um
-+ *	@ap: ATA port
-+ *	@adev: Device whose timings we are configuring
-  *
-  *	Set PIO mode for device, in host controller PCI config space.
-  *
-@@ -248,8 +220,9 @@ static const struct ata_port_operations 
+  *	cy82c693_set_piomode	-	set initial PIO mode data
+  *	@ap: ATA interface
+@@ -156,8 +145,9 @@ static struct ata_port_operations cy82c6
  
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
--	.error_handler		= radisys_pata_error_handler,
-+	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.cable_detect		= ata_cable_unknown,
+ 	.freeze		= ata_bmdma_freeze,
+ 	.thaw		= ata_bmdma_thaw,
+-	.error_handler	= cy82c693_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= ata_cable_40wire,
  
- 	.bmdma_setup		= ata_bmdma_setup,
- 	.bmdma_start		= ata_bmdma_start,
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= ata_bmdma_start,
 _
