@@ -1,59 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 04/30] ACPI driver support for pata
-Date: Tue, 06 Mar 2007 21:54:50 +0900
-Message-ID: <45ED649A.20207@gmail.com>
-References: <200703061037.l26AbrtB019463@shell0.pdx.osdl.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 26/30] Support for Marvell 7042 Chip
+Date: Tue, 06 Mar 2007 08:10:02 -0500
+Message-ID: <45ED682A.9040408@garzik.org>
+References: <200703061038.l26AcBaO019542@shell0.pdx.osdl.net> <45ED5825.2000605@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.238]:40590 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933875AbXCFMyx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Mar 2007 07:54:53 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1892796wxd
-        for <linux-ide@vger.kernel.org>; Tue, 06 Mar 2007 04:54:52 -0800 (PST)
-In-Reply-To: <200703061037.l26AbrtB019463@shell0.pdx.osdl.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:54203 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934107AbXCFNKF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 08:10:05 -0500
+In-Reply-To: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, lenb@kernel.org
+To: "Morrison, Tom" <tmorrison@empirix.com>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org
 
-Hello,
+Morrison, Tom wrote:
+> I have tested with generic 2.6.20.2 on on x86 (XEON)
+> platform and a similiar (but not exactly same) 2.6.20.x 
+> (git tree from Freescale) for my target CPU: MPC8548E
+> 
+> Its exactly the same SATA chip - the only difference
+> between 7042 & 6042 is the PCI bridge interface.
+> 
+> In the case of 6042 - its a PCI to PCI Bridge
+> In the case of 7042 - its a PCI to PCI Express Bridge
+> 
+> I do not believe there is any other difference - except
+> the physical bus interface.
+> 
+> I should have 'said' this in the patch request...
 
-akpm@linux-foundation.org wrote:
-> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> 
-> - Add a driver for motherboard ACPI method devices
-> 
-> - Link it after normal drivers so ACPI is not preferred
-> 
-> - Hook the AMD driver to prefer ACPI for the Nvidia devices if ACPI is
->   active
-> 
-> - While we are at it fix up the simplex clear the AMD driver.
-> 
-> Depends upon the set_mode -> do_set_mode wrapper patch
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Cc: Tejun Heo <htejun@gmail.com>
-> Cc: Len Brown <lenb@kernel.org>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
+Check the Marvell GPL driver and errata for the chip.  Grep for 'isPEX' 
+to see all the PCI-Express-specific code and workarounds.  sata_mv does 
+not have a lot of those, which was the reason why I only added the 6042 
+PCI ID to the driver.
 
-Can't find the original posting, so replying here.  Alan, Jeff, can you
-guys hold a bit with pata_acpi?  I think it's better to implement
-helpers in libata-acpi and use them as necessary in sata_nv rather than
-using separate pata_acpi driver (we can definitely implement pata_acpi
-using the helpers).  It will reduce general confusion and allow
-combining acpi cable detection with specialized device handling (e.g.
-ACPI cable detection combined with ADMA command operation).
+	Jeff
 
-libata-acpi also needs quite some amount of other improvements.  I'll
-post prototype code and things to discuss about later this week.
 
-Thanks.
 
--- 
-tejun
