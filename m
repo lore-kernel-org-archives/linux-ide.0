@@ -1,12 +1,12 @@
 From: akpm@linux-foundation.org
-Subject: [patch 22/30] pata_rz1000: remove lots of crap by using cable method
-Date: Tue, 06 Mar 2007 02:38:07 -0800
-Message-ID: <200703061038.l26Ac7u7019530@shell0.pdx.osdl.net>
+Subject: [patch 11/30] pata_sl82c105: Missing methods, cable
+Date: Tue, 06 Mar 2007 02:37:59 -0800
+Message-ID: <200703061037.l26AbxRq019490@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34493 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34497 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934054AbXCFKic (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:38:32 -0500
+	id S934056AbXCFKig (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:38:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
@@ -14,62 +14,33 @@ Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.
 
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
+Missing freeze, thaw, post_internal methods, also switch to new cable method
+in passing.
+
 Signed-off-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/pata_rz1000.c |   30 +++---------------------------
- 1 file changed, 3 insertions(+), 27 deletions(-)
+ drivers/ata/pata_sl82c105.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/ata/pata_rz1000.c~pata_rz1000-remove-lots-of-crap-by-using-cable-method drivers/ata/pata_rz1000.c
---- a/drivers/ata/pata_rz1000.c~pata_rz1000-remove-lots-of-crap-by-using-cable-method
-+++ a/drivers/ata/pata_rz1000.c
-@@ -21,35 +21,10 @@
- #include <linux/libata.h>
+diff -puN drivers/ata/pata_sl82c105.c~pata_sl82c105-missing-methods-cable drivers/ata/pata_sl82c105.c
+--- a/drivers/ata/pata_sl82c105.c~pata_sl82c105-missing-methods-cable
++++ a/drivers/ata/pata_sl82c105.c
+@@ -58,7 +58,6 @@ static int sl82c105_pre_reset(struct ata
  
- #define DRV_NAME	"pata_rz1000"
--#define DRV_VERSION	"0.2.3"
-+#define DRV_VERSION	"0.2.4"
- 
- 
- /**
-- *	rz1000_prereset		-	probe begin
-- *	@ap: ATA port
-- *
-- *	Set up cable type and use generics
-- */
--
--static int rz1000_prereset(struct ata_port *ap)
--{
+ 	if (ap->port_no && !pci_test_config_bits(pdev, &sl82c105_enable_bits[ap->port_no]))
+ 		return -ENOENT;
 -	ap->cbl = ATA_CBL_PATA40;
--	return ata_std_prereset(ap);
--}
--
--/**
-- *	rz1000_error_handler		-	probe reset
-- *	@ap: ATA port
-- *
-- *	Perform the ATA standard reset sequence
-- */
--
--static void rz1000_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, rz1000_prereset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	rz1000_set_mode		-	mode setting function
-  *	@ap: ATA interface
-  *	@unused: returned device on set_mode failure
-@@ -122,8 +97,9 @@ static struct ata_port_operations rz1000
+ 	return ata_std_prereset(ap);
+ }
  
- 	.freeze		= ata_bmdma_freeze,
+@@ -238,6 +237,7 @@ static struct ata_port_operations sl82c1
  	.thaw		= ata_bmdma_thaw,
--	.error_handler	= rz1000_error_handler,
-+	.error_handler	= ata_bmdma_error_handler,
+ 	.error_handler	= sl82c105_error_handler,
  	.post_internal_cmd = ata_bmdma_post_internal_cmd,
 +	.cable_detect	= ata_cable_40wire,
  
- 	.irq_handler	= ata_interrupt,
- 	.irq_clear	= ata_bmdma_irq_clear,
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= sl82c105_bmdma_start,
 _
