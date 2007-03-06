@@ -1,77 +1,46 @@
 From: akpm@linux-foundation.org
-Subject: [patch 01/30] sata_nv: add back some verbosity into ADMA error_handler
-Date: Tue, 06 Mar 2007 02:37:50 -0800
-Message-ID: <200703061037.l26AboQk019454@shell0.pdx.osdl.net>
+Subject: [patch 07/30] libata: add NCQ blacklist entries from Silicon Image Windows driver
+Date: Tue, 06 Mar 2007 02:37:55 -0800
+Message-ID: <200703061037.l26AbtT4019472@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34364 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34410 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934031AbXCFKiF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:38:05 -0500
+	id S934033AbXCFKiM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:38:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca, htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca
 
 From: Robert Hancock <hancockr@shaw.ca>
 
-Some debug output in the ADMA error_handler function was removed recently,
-but it may be useful in certain cases, like NCQ commands timing out.  Add
-it back in, but make it a bit more intelligent so that it only prints if
-command(s) are active and only prints the CPBs for those commands.  That
-way it won't spew at inappropriate times like suspend/resume.
+This patch adds in some NCQ blacklist entries taken from the Silicon Image
+Windows drivers' .inf files for the 3124 and 3132 controllers.  These
+entries were marked as ""DisableSataQueueing".  Assume these are in their
+blacklist for a reason and disable NCQ on these drives.
 
-[akpm@osdl.org: cleanup]
 Signed-off-by: Robert Hancock <hancockr@shaw.ca>
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/sata_nv.c |   31 +++++++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
+ drivers/ata/libata-core.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff -puN drivers/ata/sata_nv.c~sata_nv-add-back-some-verbosity-into-adma-error_handler drivers/ata/sata_nv.c
---- a/drivers/ata/sata_nv.c~sata_nv-add-back-some-verbosity-into-adma-error_handler
-+++ a/drivers/ata/sata_nv.c
-@@ -1441,11 +1441,38 @@ static void nv_adma_error_handler(struct
- 			}
- 		}
+diff -puN drivers/ata/libata-core.c~libata-add-ncq-blacklist-entries-from-silicon-image-windows drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~libata-add-ncq-blacklist-entries-from-silicon-image-windows
++++ a/drivers/ata/libata-core.c
+@@ -3368,6 +3368,13 @@ static const struct ata_blacklist_entry 
  
-+		if (ata_tag_valid(ap->active_tag) || ap->sactive) {
-+			u32 notifier = readl(mmio + NV_ADMA_NOTIFIER);
-+			u32 notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
-+			u32 gen_ctl = readl(pp->gen_block + NV_ADMA_GEN_CTL);
-+			u32 status = readw(mmio + NV_ADMA_STAT);
-+
-+			ata_port_printk(ap, KERN_ERR, "EH in ADMA mode, "
-+				"notifier 0x%X notifier_error 0x%X gen_ctl "
-+				"0x%X status 0x%X\n",
-+				notifier, notifier_error, gen_ctl, status);
-+
-+			for (i = 0; i < NV_ADMA_MAX_CPBS; i++) {
-+				struct nv_adma_cpb *cpb = &pp->cpb[i];
-+				if ((ata_tag_valid(ap->active_tag) &&
-+						i == ap->active_tag) ||
-+						ap->sactive & (1 << i))
-+					ata_port_printk(ap, KERN_ERR, "CPB %d: "
-+						"ctl_flags 0x%x, resp_flags "
-+						"0x%x\n",
-+						i, cpb->ctl_flags,
-+						cpb->resp_flags);
-+			}
-+		}
-+
- 		/* Push us back into port register mode for error handling. */
- 		nv_adma_register_mode(ap);
+ 	/* Devices with NCQ limits */
  
--		/* Mark all of the CPBs as invalid to prevent them from being executed */
--		for( i=0;i<NV_ADMA_MAX_CPBS;i++)
-+		/*
-+		 * Mark all of the CPBs as invalid to prevent them from being
-+		 * executed
-+		*/
-+		for (i = 0; i< NV_ADMA_MAX_CPBS; i++)
- 			pp->cpb[i].ctl_flags &= ~NV_CPB_CTL_CPB_VALID;
- 
- 		/* clear CPB fetch count */
++	/* The following blacklist entries are taken from the Windows
++	   driver .inf files for the Silicon Image 3124 and 3132. */
++	{ "Maxtor 7B250S0",	"BANC1B70",	ATA_HORKAGE_NONCQ, },
++	{ "HTS541060G9SA00",	"MB3OC60D",	ATA_HORKAGE_NONCQ, },
++	{ "HTS541080G9SA00",	"MB4OC60D",	ATA_HORKAGE_NONCQ, },
++	{ "HTS541010G9SA00",	"MBZOC60D",	ATA_HORKAGE_NONCQ, },
++
+ 	/* End Marker */
+ 	{ }
+ };
 _
