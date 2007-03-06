@@ -1,38 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.21-rc2] pata_legacy: fix io/irq mismatch
-Date: Tue, 06 Mar 2007 04:05:45 -0500
-Message-ID: <45ED2EE9.1070809@garzik.org>
-References: <200703031957.l23JviQQ005254@harpo.it.uu.se>
+Subject: Re: [PATCH 2.6.21-rc2] ahci: RAID mode SATA patch for Intel ICH9M
+Date: Tue, 06 Mar 2007 04:05:54 -0500
+Message-ID: <45ED2EF2.5080002@garzik.org>
+References: <200611211655.58451.jason.d.gaston@intel.com> <200703021739.47147.jason.d.gaston@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51810 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:51817 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933102AbXCFJFt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 04:05:49 -0500
-In-Reply-To: <200703031957.l23JviQQ005254@harpo.it.uu.se>
+	id S933114AbXCFJF4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 04:05:56 -0500
+In-Reply-To: <200703021739.47147.jason.d.gaston@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: alan@redhat.com, linux-ide@vger.kernel.org
+To: Jason Gaston <jason.d.gaston@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mikael Pettersson wrote:
-> pata_legacy fails to detect the disk on my old ISA/VLB 486:
-> it starts to probe io=0x1f0 ctr=0x3f6 irq=15, complains
-> loudly about IDENTIFYs timing out, and finally fails.
-> (Sorry I couldn't capture the kernel's boot messages.)
+Jason Gaston wrote:
+> This patch adds the Intel ICH9M RAID controller DID for SATA support.
 > 
-> It turns out that the driver's mapping from io to irq in
-> legacy_irq[] is wrong: index 0 for io=0x1f0 has irq=15 but
-> should have irq=14, and index 1 for io=0x170 has irq=14 but
-> should have irq=15. This is confirmed by a comparison with
-> include/asm-i386/ide.h:ide_default_irq().
+> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
 > 
-> This patch swaps the first two elements in legacy_irq[],
-> which makes pata_legacy work on my 486.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> --- linux-2.6.21-rc2/drivers/ata/ahci.c.orig	2007-03-02 17:28:00.000000000 
+> -0800
+> +++ linux-2.6.21-rc2/drivers/ata/ahci.c	2007-03-02 17:28:30.000000000 -0800
+> @@ -380,6 +380,7 @@
+>  	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci_pi }, /* ICH9M */
+>  	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci_pi }, /* ICH9M */
+>  	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci_pi }, /* ICH9M */
+> +	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci_pi }, /* ICH9M */
+>  	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
+>  	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
+>  	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
 
 applied
 
