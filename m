@@ -1,78 +1,238 @@
 From: akpm@linux-foundation.org
-Subject: [patch 27/30] pata_cmd640: CMD640 PCI support
-Date: Tue, 06 Mar 2007 02:38:11 -0800
-Message-ID: <200703061038.l26AcBSc019545@shell0.pdx.osdl.net>
+Subject: [patch 04/30] ACPI driver support for pata
+Date: Tue, 06 Mar 2007 02:37:53 -0800
+Message-ID: <200703061037.l26AbrtB019463@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34503 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34564 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934055AbXCFKik (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:38:40 -0500
+	id S1752677AbXCFKkR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:40:17 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, htejun@gmail.com, lenb@kernel.org
 
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Support for the PCI CMD640 (not VLB)
+- Add a driver for motherboard ACPI method devices
+
+- Link it after normal drivers so ACPI is not preferred
+
+- Hook the AMD driver to prefer ACPI for the Nvidia devices if ACPI is
+  active
+
+- While we are at it fix up the simplex clear the AMD driver.
+
+Depends upon the set_mode -> do_set_mode wrapper patch
 
 Signed-off-by: Alan Cox <alan@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>
+Cc: Len Brown <lenb@kernel.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/Kconfig       |   10 +
- drivers/ata/Makefile      |    1 
- drivers/ata/pata_cmd640.c |  298 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 309 insertions(+)
+ drivers/ata/Kconfig       |    9 
+ drivers/ata/Makefile      |    2 
+ drivers/ata/libata-acpi.c |   87 +++++++
+ drivers/ata/libata-acpi.h |   47 ++++
+ drivers/ata/pata_acpi.c   |  392 ++++++++++++++++++++++++++++++++++++
+ drivers/ata/pata_amd.c    |   13 -
+ 6 files changed, 544 insertions(+), 6 deletions(-)
 
-diff -puN drivers/ata/Kconfig~pata_cmd640-cmd640-pci-support drivers/ata/Kconfig
---- a/drivers/ata/Kconfig~pata_cmd640-cmd640-pci-support
+diff -puN drivers/ata/Kconfig~acpi-driver-support-for-pata drivers/ata/Kconfig
+--- a/drivers/ata/Kconfig~acpi-driver-support-for-pata
 +++ a/drivers/ata/Kconfig
-@@ -218,6 +218,16 @@ config PATA_ATIIXP
+@@ -174,6 +174,15 @@ config SATA_ACPI
+ 	  You can disable this at kernel boot time by using the
+ 	  option libata.noacpi=1
  
- 	  If unsure, say N.
- 
-+config PATA_CMD640_PCI
-+	tristate "CMD640 PCI PATA support (Very Experimental)"
-+	depends on PCI && EXPERIMENTAL
++config PATA_ACPI
++	tristate "ACPI firmware driver for PATA"
++	depends on ACPI && PCI && SATA_ACPI
 +	help
-+	  This option enables support for the CMD640 PCI IDE
-+	  interface chip. Only the primary channel is currently
-+	  supported.
++	  This option enables an ACPI method driver which drives
++	  motherboard PATA controller interfaces through the ACPI
++	  firmware in the BIOS. This driver can sometimes handle
++	  otherwise unsupported hardware.
 +
-+	  If unsure, say N.
-+
- config PATA_CMD64X
- 	tristate "CMD64x PATA support (Very Experimental)"
- 	depends on PCI&& EXPERIMENTAL
-diff -puN drivers/ata/Makefile~pata_cmd640-cmd640-pci-support drivers/ata/Makefile
---- a/drivers/ata/Makefile~pata_cmd640-cmd640-pci-support
+ config PATA_ALI
+ 	tristate "ALi PATA support (Experimental)"
+ 	depends on PCI && EXPERIMENTAL
+diff -puN drivers/ata/Makefile~acpi-driver-support-for-pata drivers/ata/Makefile
+--- a/drivers/ata/Makefile~acpi-driver-support-for-pata
 +++ a/drivers/ata/Makefile
-@@ -22,6 +22,7 @@ obj-$(CONFIG_PATA_ALI)		+= pata_ali.o
- obj-$(CONFIG_PATA_AMD)		+= pata_amd.o
- obj-$(CONFIG_PATA_ARTOP)	+= pata_artop.o
- obj-$(CONFIG_PATA_ATIIXP)	+= pata_atiixp.o
-+obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
- obj-$(CONFIG_PATA_CMD64X)	+= pata_cmd64x.o
- obj-$(CONFIG_PATA_CS5520)	+= pata_cs5520.o
- obj-$(CONFIG_PATA_CS5530)	+= pata_cs5530.o
-diff -puN /dev/null drivers/ata/pata_cmd640.c
+@@ -61,6 +61,8 @@ obj-$(CONFIG_PATA_TRIFLEX)	+= pata_trifl
+ obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
+ obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
+ obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
++# Should be last but two libata driver
++obj-$(CONFIG_PATA_ACPI)		+= pata_acpi.o
+ # Should be last but one libata driver
+ obj-$(CONFIG_ATA_GENERIC)	+= ata_generic.o
+ # Should be last libata driver
+diff -puN drivers/ata/libata-acpi.c~acpi-driver-support-for-pata drivers/ata/libata-acpi.c
+--- a/drivers/ata/libata-acpi.c~acpi-driver-support-for-pata
++++ a/drivers/ata/libata-acpi.c
+@@ -15,7 +15,7 @@
+ #include <linux/libata.h>
+ #include <linux/pci.h>
+ #include "libata.h"
+-
++#include "libata-acpi.h"
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acnames.h>
+ #include <acpi/acnamesp.h>
+@@ -685,3 +685,88 @@ out:
+ }
+ 
+ 
++int ata_acpi_gtm(const struct ata_port *ap, void *handle, struct acpi_gtm *gtm)
++{
++	acpi_status status;
++	struct acpi_buffer output;
++
++	output.length = ACPI_ALLOCATE_BUFFER;
++	output.pointer = NULL;
++
++	status = acpi_evaluate_object(handle, "_GTM", NULL, &output);
++
++	if (ACPI_FAILURE(status)) {
++		ata_port_printk(ap, KERN_ERR, "ACPI get timing mode failed.\n");
++		return -EINVAL;
++	}
++	if (output.length < sizeof(struct acpi_gtm) || output.pointer == NULL) {
++		ata_port_printk(ap, KERN_ERR, "ACPI get timing provided invalid data.\n");
++		return -EINVAL;
++	}
++	memcpy(gtm, output.pointer, sizeof(struct acpi_gtm));
++	kfree(output.pointer);
++	return 0;
++}
++
++int ata_acpi_stm(const struct ata_port *ap, void *handle, struct acpi_gtm *stm)
++{
++	acpi_status status;
++	struct acpi_object_list         input;
++	union acpi_object               in_params[3];
++
++	in_params[0].type = ACPI_TYPE_BUFFER;
++	in_params[0].buffer.length = sizeof(struct acpi_gtm);
++	in_params[0].buffer.pointer = (u8 *)stm;
++	/* Buffers for id may need byteswapping ? */
++	in_params[1].type = ACPI_TYPE_BUFFER;
++	in_params[1].buffer.length = 512;
++	in_params[1].buffer.pointer = (u8 *)ap->device[0].id;
++	in_params[2].type = ACPI_TYPE_BUFFER;
++	in_params[2].buffer.length = 512;
++	in_params[2].buffer.pointer = (u8 *)ap->device[1].id;
++
++	input.count = 3;
++	input.pointer = in_params;
++
++	status = acpi_evaluate_object(handle, "_STM", &input, NULL);
++
++	if (ACPI_FAILURE(status)) {
++		ata_port_printk(ap, KERN_ERR, "ACPI set timing mode failed.\n");
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static void *ata_pata_find_handle(struct device *dev, int port)
++{
++	acpi_handle handle;
++	acpi_integer devfn;
++
++	if (noacpi)
++		return NULL;
++	if (pata_get_dev_handle(dev, &handle, &devfn) < 0)
++		return NULL;
++	return acpi_get_child(handle, port);
++}
++
++void *ata_pata_acpi_handle(const struct ata_port *ap)
++{
++	return ata_pata_find_handle(ap->host->dev, ap->port_no);
++}
++
++int ata_pata_acpi_present(struct pci_dev *pdev)
++{
++	int present = 0;
++
++	if(ata_pata_find_handle(&pdev->dev, 0))
++		present |= 1;
++	if(ata_pata_find_handle(&pdev->dev, 1))
++		present |= 2;
++	return present;
++}
++
++
++EXPORT_SYMBOL_GPL(ata_acpi_gtm);
++EXPORT_SYMBOL_GPL(ata_acpi_stm);
++EXPORT_SYMBOL_GPL(ata_pata_acpi_handle);
++EXPORT_SYMBOL_GPL(ata_pata_acpi_present);
+diff -puN /dev/null drivers/ata/libata-acpi.h
 --- /dev/null
-+++ a/drivers/ata/pata_cmd640.c
-@@ -0,0 +1,298 @@
++++ a/drivers/ata/libata-acpi.h
+@@ -0,0 +1,47 @@
 +/*
-+ * pata_cmd640.c 	- CMD640 PCI PATA for new ATA layer
-+ *			  (C) 2007 Red Hat Inc
-+ *			  Alan Cox <alan@redhat.com>
++ *  libata-acpi.h - helper library for ATA ACPI drivers
 + *
-+ * Based upon
-+ *  linux/drivers/ide/pci/cmd640.c		Version 1.02  Sep 01, 1996
++ *  Copyright 2007 Red Hat, Inc.  All rights reserved.
++ *  Copyright 2007 Alan Cox
 + *
-+ *  Copyright (C) 1995-1996  Linus Torvalds & authors (see driver)
 + *
-+ *	This drives only the PCI version of the controller. If you have a
-+ *	VLB one then we have enough docs to support it but you can write
-+ *	your own code.
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2, or (at your option)
++ *  any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; see the file COPYING.  If not, write to
++ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ *
++ *  libata documentation is available via 'make {ps|pdf}docs',
++ *  as Documentation/DocBook/libata.*
++ *
++ */
++
++#ifndef __LIBATA_ACPI_H__
++#define __LIBATA_ACPI_H__
++
++struct acpi_drive
++{
++	u32 pio;
++	u32 dma;
++};
++
++struct acpi_gtm {
++	struct acpi_drive drive[2];
++	u32 flags;
++};
++
++extern int ata_acpi_gtm(const struct ata_port *p, void *handle, struct acpi_gtm *gtm);
++extern int ata_acpi_stm(const struct ata_port *ap, void *handle, struct acpi_gtm *stm);
++extern void *ata_pata_acpi_handle(const struct ata_port *ap);
++extern int ata_pata_acpi_present(struct pci_dev *pdev);
++
++#endif
+diff -puN /dev/null drivers/ata/pata_acpi.c
+--- /dev/null
++++ a/drivers/ata/pata_acpi.c
+@@ -0,0 +1,392 @@
++/*
++ *	ACPI PATA driver
++ *
++ *	(c) 2007 Red Hat  <alan@redhat.com>
++ *
++ *	TODO - restore modes after mode_filter chews them up
 + */
 +
 +#include <linux/kernel.h>
@@ -81,152 +241,260 @@ diff -puN /dev/null drivers/ata/pata_cmd640.c
 +#include <linux/init.h>
 +#include <linux/blkdev.h>
 +#include <linux/delay.h>
++#include <linux/device.h>
 +#include <scsi/scsi_host.h>
++#include <acpi/acpi_bus.h>
++#include <acpi/acnames.h>
++#include <acpi/acnamesp.h>
++#include <acpi/acparser.h>
++#include <acpi/acexcep.h>
++#include <acpi/acmacros.h>
++#include <acpi/actypes.h>
++
 +#include <linux/libata.h>
++#include <linux/ata.h>
 +
-+#define DRV_NAME "pata_cmd640"
-+#define DRV_VERSION "0.0.3"
++#include "libata-acpi.h"
 +
-+struct cmd640_reg {
-+	int last;
-+	u8 reg58[ATA_MAX_DEVICES];
-+};
++#define DRV_NAME	"pata_acpi"
++#define DRV_VERSION	"0.0.3"
 +
-+enum {
-+	CFR = 0x50,
-+	CNTRL = 0x51,
-+	CMDTIM = 0x52,
-+	ARTIM0 = 0x53,
-+	DRWTIM0 = 0x54,
-+	ARTIM23 = 0x57,
-+	DRWTIM23 = 0x58,
-+	BRST = 0x59
++struct pata_acpi {
++	void *handle;
++	struct acpi_gtm gtm;
++	void *last;
 +};
 +
 +/**
-+ *	cmd640_set_piomode	-	set initial PIO mode data
-+ *	@adev: ATA device
++ *	pacpi_pre_reset	-	check for 40/80 pin
++ *	@ap: Port
 + *
-+ *	Called to do the PIO mode setup.
++ *	Perform the PATA port setup we need.
 + */
 +
-+static void cmd640_set_piomode(struct ata_port *ap, struct ata_device *adev)
++static int pacpi_pre_reset(struct ata_port *ap)
 +{
-+	struct cmd640_reg *timing = ap->private_data;
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	struct ata_timing t;
-+	const unsigned long T = 1000000 / 33;
-+	const u8 setup_data[] = { 0x40, 0x40, 0x40, 0x80, 0x00 };
-+	u8 reg;
-+	int arttim = ARTIM0 + 2 * adev->devno;
-+	struct ata_device *pair = ata_dev_pair(adev);
++	struct pata_acpi *acpi = ap->private_data;
++	int i;
 +
-+	if (ata_timing_compute(adev, adev->pio_mode, &t, T, 0) < 0) {
-+		printk(KERN_ERR DRV_NAME ": mode computation failed.\n");
-+		return;
++	if (acpi->handle == NULL || ata_acpi_gtm(ap, acpi->handle, &acpi->gtm) < 0)
++		return -ENODEV;
++	ap->cbl = ATA_CBL_PATA40;
++
++	/* If the firmware proposed mode is UDMA3 or better then we know
++	   it is 80wire, or 40wire short */
++	for (i = 0; i < 2; i++) {
++		if (acpi->gtm.flags & (1 << 2 * i))	/* UDMA in use ? */
++			if (acpi->gtm.drive[i].dma < 55)	/* 60nS is UDMA2 */
++				ap->cbl = ATA_CBL_PATA80;
 +	}
-+
-+	/* The second channel has shared timings and the setup timing is
-+	   messy to switch to merge it for worst case */
-+	if (ap->port_no && pair) {
-+		struct ata_timing p;
-+		ata_timing_compute(pair, pair->pio_mode, &p, T, 1);
-+		ata_timing_merge(&p, &t, &t, ATA_TIMING_SETUP);
-+	}
-+
-+	/* Make the timings fit */
-+	if (t.recover > 16) {
-+		t.active += t.recover - 16;
-+		t.recover = 16;
-+	}
-+	if (t.active > 16)
-+		t.active = 16;
-+
-+	/* Now convert the clocks into values we can actually stuff into
-+	   the chip */
-+
-+	if (t.recover > 1)
-+		t.recover--;	/* 640B only */
-+	else
-+		t.recover = 15;
-+
-+	if (t.setup > 4)
-+		t.setup = 0xC0;
-+	else
-+		t.setup = setup_data[t.setup];
-+
-+	if (ap->port_no == 0) {
-+		t.active &= 0x0F;	/* 0 = 16 */
-+
-+		/* Load setup timing */
-+		pci_read_config_byte(pdev, arttim, &reg);
-+		reg &= 0x3F;
-+		reg |= t.setup;
-+		pci_write_config_byte(pdev, arttim, reg);
-+
-+		/* Load active/recovery */
-+		pci_write_config_byte(pdev, arttim + 1, (t.active << 4) | t.recover);
-+	} else {
-+		/* Save the shared timings for channel, they will be loaded
-+		   by qc_issue_prot. Reloading the setup time is expensive
-+		   so we keep a merged one loaded */
-+		pci_read_config_byte(pdev, ARTIM23, &reg);
-+		reg &= 0x3F;
-+		reg |= t.setup;
-+		pci_write_config_byte(pdev, ARTIM23, reg);
-+		timing->reg58[adev->devno] = (t.active << 4) | t.recover;
-+	}
++	return ata_std_prereset(ap);
 +}
 +
-+
 +/**
-+ *	cmd640_qc_issue_prot	-	command preparation hook
-+ *	@qc: Command to be issued
++ *	pacpi_error_handler - Setup and error handler
++ *	@ap: Port to handle
 + *
-+ *	Channel 1 has shared timings. We must reprogram the
-+ *	clock each drive 2/3 switch we do.
++ *	LOCKING:
++ *	None (inherited from caller).
 + */
 +
-+static unsigned int cmd640_qc_issue_prot(struct ata_queued_cmd *qc)
++static void pacpi_error_handler(struct ata_port *ap)
++{
++	return ata_bmdma_drive_eh(ap, pacpi_pre_reset, ata_std_softreset,
++				  NULL, ata_std_postreset);
++}
++
++/* Welcome to ACPI, bring a bucket */
++static const unsigned int pio_cycle[7] = {
++	600, 383, 240, 180, 120, 100, 80
++};
++static const unsigned int mwdma_cycle[5] = {
++	480, 150, 120, 100, 80
++};
++static const unsigned int udma_cycle[7] = {
++	120, 80, 60, 45, 30, 20, 15
++};
++
++/**
++ *	pacpi_mode_filter	-	filter non ACPI modes
++ *	@adev: ATA device
++ *	@mask: proposed modes
++ *
++ *	Try the modes available and see which ones the ACPI method will
++ *	set up sensibly. From this we get a mask of ACPI modes we can use
++ */
++
++static unsigned long pacpi_mode_filter(const struct ata_port *ap, struct ata_device *adev, unsigned long mask)
++{
++	int unit = adev->devno;
++	struct pata_acpi *acpi = ap->private_data;
++	int i;
++	u32 t;
++
++	struct acpi_gtm probe;
++
++	probe = acpi->gtm;
++
++	/* We always use the 0 slot for crap hardware */
++	if (!(probe.flags & 0x10))
++		unit = 0;
++
++
++	/* In order to generate a valid mode mask as we need cycle through
++	   trying each proposed speed in turn */
++
++	/* Start by scanning for PIO modes */
++	for (i = 0; i < 7; i++) {
++		probe.drive[unit].pio = pio_cycle[i];
++		ata_acpi_stm(ap, acpi->handle, &probe);
++		ata_acpi_gtm(ap, acpi->handle, &probe);
++		t = probe.drive[unit].pio;
++		if (t == 0xFFFFFFFF || (i &&  t >= pio_cycle[i-1]))
++			mask &= ~(1 << (i + ATA_SHIFT_PIO));
++	}
++
++	/* Select MWDMA */
++	probe.flags &= ~(1 << (2 * unit));
++
++	/* Scan for MWDMA modes */
++	for (i = 0; i < 5; i++) {
++		u32 t;
++		probe.drive[unit].dma = mwdma_cycle[i];
++		ata_acpi_stm(ap, acpi->handle, &probe);
++		ata_acpi_gtm(ap, acpi->handle, &probe);
++
++		t = probe.drive[unit].dma;
++
++		if (t == 0xFFFFFFFF || (i && t >= mwdma_cycle[i-1]))
++			mask &= ~ (1 << (i + ATA_SHIFT_MWDMA));
++	}
++
++	/* Select UDMA */
++	probe.flags |= (1 << (2 * unit));
++
++	/* Scan for UDMA modes */
++	for (i = 0; i < 7; i++) {
++		u32 t;
++		probe.drive[unit].dma = udma_cycle[i];
++		ata_acpi_stm(ap, acpi->handle, &probe);
++		ata_acpi_gtm(ap, acpi->handle, &probe);
++
++		t = probe.drive[unit].dma;
++
++		if (t == 0xFFFFFFFF || (i && t >= udma_cycle[i-1]))
++			mask &= ~ (1 << (i + ATA_SHIFT_UDMA));
++	}
++
++	/* Restore the programmed timings */
++	ata_acpi_stm(ap, acpi->handle, &acpi->gtm);
++	/* And finally we can hand back the list of speeds that actually are
++	   supported by the BIOS */
++	return ata_pci_default_filter(ap, adev, mask);
++}
++
++/**
++ *	pacpi_set_piomode	-	set initial PIO mode data
++ *	@ap: ATA interface
++ *	@adev: ATA device
++ */
++
++static void pacpi_set_piomode(struct ata_port *ap, struct ata_device *adev)
++{
++	int unit = adev->devno;
++	struct pata_acpi *acpi = ap->private_data;
++
++	if(!(acpi->gtm.flags & 0x10))
++		unit = 0;
++
++	/* Now stuff the nS values into the structure */
++	acpi->gtm.drive[unit].pio = pio_cycle[adev->pio_mode - XFER_PIO_0];
++	ata_acpi_stm(ap, acpi->handle, &acpi->gtm);
++	/* See what mode we actually got */
++	ata_acpi_gtm(ap, acpi->handle, &acpi->gtm);
++}
++
++/**
++ *	pacpi_set_dmamode	-	set initial DMA mode data
++ *	@ap: ATA interface
++ *	@adev: ATA device
++ */
++
++static void pacpi_set_dmamode(struct ata_port *ap, struct ata_device *adev)
++{
++	int unit = adev->devno;
++	struct pata_acpi *acpi = ap->private_data;
++
++	if(!(acpi->gtm.flags & 0x10))
++		unit = 0;
++
++	/* Now stuff the nS values into the structure */
++	if (adev->dma_mode >= XFER_UDMA_0) {
++		acpi->gtm.drive[unit].dma = udma_cycle[adev->dma_mode - XFER_UDMA_0];
++		acpi->gtm.flags |= (1 << (2 * unit));
++	} else {
++		acpi->gtm.drive[unit].dma = mwdma_cycle[adev->dma_mode - XFER_MW_DMA_0];
++		acpi->gtm.flags &= ~(1 << (2 * unit));
++	}
++	ata_acpi_stm(ap, acpi->handle, &acpi->gtm);
++	/* See what mode we actually got */
++	ata_acpi_gtm(ap, acpi->handle, &acpi->gtm);
++}
++
++/**
++ *	pacpi_qc_issue_prot	-	command issue
++ *	@qc: command pending
++ *
++ *	Called when the libata layer is about to issue a command. We wrap
++ *	this interface so that we can load the correct ATA timings if
++ *	neccessary.
++ */
++
++static unsigned int pacpi_qc_issue_prot(struct ata_queued_cmd *qc)
 +{
 +	struct ata_port *ap = qc->ap;
 +	struct ata_device *adev = qc->dev;
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	struct cmd640_reg *timing = ap->private_data;
++	struct pata_acpi *acpi = ap->private_data;
 +
-+	if (ap->port_no != 0 && adev->devno != timing->last) {
-+		pci_write_config_byte(pdev, DRWTIM23, timing->reg58[adev->devno]);
-+		timing->last = adev->devno;
++	if (acpi->gtm.flags & 0x10)
++		return ata_qc_issue_prot(qc);
++
++	if (adev != acpi->last) {
++		pacpi_set_piomode(ap, adev);
++		if (adev->dma_mode)
++			pacpi_set_dmamode(ap, adev);
++		acpi->last = adev;
 +	}
 +	return ata_qc_issue_prot(qc);
 +}
 +
 +/**
-+ *	cmd640_port_start	-	port setup
++ *	pacpi_port_start	-	port setup
 + *	@ap: ATA port being set up
 + *
-+ *	The CMD640 needs to maintain private data structures so we
-+ *	allocate space here.
++ *	Use the port_start hook to maintain private control structures
 + */
 +
-+static int cmd640_port_start(struct ata_port *ap)
++static int pacpi_port_start(struct ata_port *ap)
 +{
 +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	struct cmd640_reg *timing;
++	struct pata_acpi *acpi;
 +
-+	int ret = ata_port_start(ap);
++	int ret;
++
++	acpi = ap->private_data = devm_kzalloc(&pdev->dev, sizeof(struct pata_acpi), GFP_KERNEL);
++	if (ap->private_data == NULL)
++		return -ENOMEM;
++	acpi->handle = ata_pata_acpi_handle(ap);
++
++	ret = ata_port_start(ap);
 +	if (ret < 0)
 +		return ret;
 +
-+	timing = devm_kzalloc(&pdev->dev, sizeof(struct cmd640_reg), GFP_KERNEL);
-+	if (timing == NULL)
-+		return -ENOMEM;
-+	timing->last = -1;	/* Force a load */
-+	ap->private_data = timing;
 +	return ret;
 +}
 +
-+static struct scsi_host_template cmd640_sht = {
++static struct scsi_host_template pacpi_sht = {
 +	.module			= THIS_MODULE,
 +	.name			= DRV_NAME,
 +	.ioctl			= ata_scsi_ioctl,
@@ -241,121 +509,158 @@ diff -puN /dev/null drivers/ata/pata_cmd640.c
 +	.dma_boundary		= ATA_DMA_BOUNDARY,
 +	.slave_configure	= ata_scsi_slave_config,
 +	.slave_destroy		= ata_scsi_slave_destroy,
++	/* Use standard CHS mapping rules */
 +	.bios_param		= ata_std_bios_param,
 +	.resume			= ata_scsi_device_resume,
 +	.suspend		= ata_scsi_device_suspend,
 +};
 +
-+static struct ata_port_operations cmd640_port_ops = {
-+	.port_disable	= ata_port_disable,
-+	.set_piomode	= cmd640_set_piomode,
-+	.mode_filter	= ata_pci_default_filter,
-+	.tf_load	= ata_tf_load,
-+	.tf_read	= ata_tf_read,
-+	.check_status 	= ata_check_status,
-+	.exec_command	= ata_exec_command,
-+	.dev_select 	= ata_std_dev_select,
++static const struct ata_port_operations pacpi_ops = {
++	.port_disable		= ata_port_disable,
++	.set_piomode		= pacpi_set_piomode,
++	.set_dmamode		= pacpi_set_dmamode,
++	.mode_filter		= pacpi_mode_filter,
 +
-+	.freeze		= ata_bmdma_freeze,
-+	.thaw		= ata_bmdma_thaw,
-+	.error_handler	= ata_bmdma_error_handler,
-+	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
++	/* Task file is PCI ATA format, use helpers */
++	.tf_load		= ata_tf_load,
++	.tf_read		= ata_tf_read,
++	.check_status		= ata_check_status,
++	.exec_command		= ata_exec_command,
++	.dev_select		= ata_std_dev_select,
 +
-+	.bmdma_setup 	= ata_bmdma_setup,
-+	.bmdma_start 	= ata_bmdma_start,
-+	.bmdma_stop	= ata_bmdma_stop,
-+	.bmdma_status 	= ata_bmdma_status,
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++	.error_handler		= pacpi_error_handler,
++	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
 +
-+	.qc_prep 	= ata_qc_prep,
-+	.qc_issue	= cmd640_qc_issue_prot,
++	/* BMDMA handling is PCI ATA format, use helpers */
++	.bmdma_setup		= ata_bmdma_setup,
++	.bmdma_start		= ata_bmdma_start,
++	.bmdma_stop		= ata_bmdma_stop,
++	.bmdma_status		= ata_bmdma_status,
++	.qc_prep		= ata_qc_prep,
++	.qc_issue		= pacpi_qc_issue_prot,
++	.data_xfer		= ata_data_xfer,
 +
-+	/* In theory this is not needed once we kill the prefetcher */
-+	.data_xfer	= ata_data_xfer_noirq,
++	/* Timeout handling */
++	.irq_handler		= ata_interrupt,
++	.irq_clear		= ata_bmdma_irq_clear,
++	.irq_on			= ata_irq_on,
++	.irq_ack		= ata_irq_ack,
 +
-+	.irq_handler	= ata_interrupt,
-+	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_on		= ata_irq_on,
-+	.irq_ack	= ata_irq_ack,
-+
-+	.port_start	= cmd640_port_start,
++	/* Generic PATA PCI ATA helpers */
++	.port_start		= pacpi_port_start,
 +};
 +
-+static int cmd640_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-+{
-+	u8 r;
-+	u8 ctrl;
 +
++/**
++ *	pacpi_init_one - Register ACPI ATA PCI device with kernel services
++ *	@pdev: PCI device to register
++ *	@ent: Entry in pacpi_pci_tbl matching with @pdev
++ *
++ *	Called from kernel PCI layer.
++ *
++ *	LOCKING:
++ *	Inherited from PCI layer (may sleep).
++ *
++ *	RETURNS:
++ *	Zero on success, or -ERRNO value.
++ */
++
++static int pacpi_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
++{
 +	static struct ata_port_info info = {
-+		.sht = &cmd640_sht,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.pio_mask = 0x1f,
-+		.port_ops = &cmd640_port_ops
++		.sht		= &pacpi_sht,
++		.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++
++		.pio_mask	= 0x1f,
++		.mwdma_mask	= 0x07,
++		.udma_mask 	= 0x3f,
++
++		.port_ops	= &pacpi_ops,
 +	};
++	struct ata_port_info *port_info[1] = { &info };
 +
-+	static struct ata_port_info *port_info[2] = { &info, &info };
-+
-+	/* CMD640 detected, commiserations */
-+	pci_write_config_byte(pdev, 0x5C, 0x00);
-+	/* Get version info */
-+	pci_read_config_byte(pdev, CFR, &r);
-+	/* PIO0 command cycles */
-+	pci_write_config_byte(pdev, CMDTIM, 0);
-+	/* 512 byte bursts (sector) */
-+	pci_write_config_byte(pdev, BRST, 0x40);
-+	/*
-+	 * A reporter a long time ago
-+	 * Had problems with the data fifo
-+	 * So don't run the risk
-+	 * Of putting crap on the disk
-+	 * For its better just to go slow
-+	 */
-+	/* Do channel 0 */
-+	pci_read_config_byte(pdev, CNTRL, &ctrl);
-+	pci_write_config_byte(pdev, CNTRL, ctrl | 0xC0);
-+	/* Ditto for channel 1 */
-+	pci_read_config_byte(pdev, ARTIM23, &ctrl);
-+	ctrl |= 0x0C;
-+	pci_write_config_byte(pdev, ARTIM23, ctrl);
-+
-+	return ata_pci_init_one(pdev, port_info, 2);
++	if (!ata_pata_acpi_present(pdev))
++		return -ENODEV;
++	return ata_pci_init_one(pdev, port_info, 1);
 +}
 +
-+static int cmd640_reinit_one(struct pci_dev *pdev)
-+{
-+	return ata_pci_device_resume(pdev);
-+}
-+
-+static const struct pci_device_id cmd640[] = {
-+	{ PCI_VDEVICE(CMD, 0x640), 0 },
-+	{ },
++static const struct pci_device_id pacpi_pci_tbl[] = {
++	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 1},
++	{ }	/* terminate list */
 +};
 +
-+static struct pci_driver cmd640_pci_driver = {
-+	.name 		= DRV_NAME,
-+	.id_table	= cmd640,
-+	.probe 		= cmd640_init_one,
-+	.remove		= ata_pci_remove_one,
-+	.suspend	= ata_pci_device_suspend,
-+	.resume		= cmd640_reinit_one,
++static struct pci_driver pacpi_pci_driver = {
++	.name			= DRV_NAME,
++	.id_table		= pacpi_pci_tbl,
++	.probe			= pacpi_init_one,
++	.remove			= ata_pci_remove_one,
++	.suspend		= ata_pci_device_suspend,
++	.resume			= ata_pci_device_resume,
 +};
 +
-+static int __init cmd640_init(void)
++static int __init pacpi_init(void)
 +{
-+	return pci_register_driver(&cmd640_pci_driver);
++	return pci_register_driver(&pacpi_pci_driver);
 +}
 +
-+static void __exit cmd640_exit(void)
++static void __exit pacpi_exit(void)
 +{
-+	pci_unregister_driver(&cmd640_pci_driver);
++	pci_unregister_driver(&pacpi_pci_driver);
 +}
++
++module_init(pacpi_init);
++module_exit(pacpi_exit);
 +
 +MODULE_AUTHOR("Alan Cox");
-+MODULE_DESCRIPTION("low-level driver for CMD640 PATA controllers");
++MODULE_DESCRIPTION("SCSI low-level driver for ATA in ACPI mode");
 +MODULE_LICENSE("GPL");
-+MODULE_DEVICE_TABLE(pci, cmd640);
++MODULE_DEVICE_TABLE(pci, pacpi_pci_tbl);
 +MODULE_VERSION(DRV_VERSION);
 +
-+module_init(cmd640_init);
-+module_exit(cmd640_exit);
+diff -puN drivers/ata/pata_amd.c~acpi-driver-support-for-pata drivers/ata/pata_amd.c
+--- a/drivers/ata/pata_amd.c~acpi-driver-support-for-pata
++++ a/drivers/ata/pata_amd.c
+@@ -25,7 +25,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME "pata_amd"
+-#define DRV_VERSION "0.2.8"
++#define DRV_VERSION "0.2.9"
+ 
+ /**
+  *	timing_setup		-	shared timing computation and load
+@@ -644,6 +644,11 @@ static int amd_init_one(struct pci_dev *
+ 	if (type == 1 && rev > 0x7)
+ 		type = 2;
+ 
++#if defined(CONFIG_ATA_ACPI)
++	/* Prefer the ACPI driver for Nvidia hardware */
++	if (pdev->vendor == PCI_VENDOR_ID_NVIDIA && ata_pata_acpi_present(pdev))
++		return -ENODEV;
++#endif
+ 	/* Check for AMD7411 */
+ 	if (type == 3)
+ 		/* FIFO is broken */
+@@ -656,7 +661,7 @@ static int amd_init_one(struct pci_dev *
+ 			 pdev->subsystem_device == PCI_DEVICE_ID_AMD_SERENADE)
+ 		type = 6;	/* UDMA 100 only */
+ 
+-	if (type < 3)
++	if (type < 7)
+ 		ata_pci_clear_simplex(pdev);
+ 
+ 	/* And fire it up */
+@@ -676,9 +681,7 @@ static int amd_reinit_one(struct pci_dev
+ 			pci_write_config_byte(pdev, 0x41, fifo & 0x0F);
+ 		else
+ 			pci_write_config_byte(pdev, 0x41, fifo | 0xF0);
+-		if (pdev->device == PCI_DEVICE_ID_AMD_VIPER_7409 ||
+-		    pdev->device == PCI_DEVICE_ID_AMD_COBRA_7401)
+-		    	ata_pci_clear_simplex(pdev);
++	    	ata_pci_clear_simplex(pdev);
+ 	}
+ 	return ata_pci_device_resume(pdev);
+ }
 _
