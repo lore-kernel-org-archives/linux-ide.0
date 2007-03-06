@@ -1,46 +1,119 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/30] libata: add NCQ blacklist entries from Silicon Image Windows driver
-Date: Tue, 06 Mar 2007 02:37:55 -0800
-Message-ID: <200703061037.l26AbtT4019472@shell0.pdx.osdl.net>
+Subject: [patch 03/30] pata: expose set_mode method so it can be wrapped
+Date: Tue, 06 Mar 2007 02:37:52 -0800
+Message-ID: <200703061037.l26Abq2S019460@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34410 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34411 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934033AbXCFKiM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S934034AbXCFKiM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Tue, 6 Mar 2007 05:38:12 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, htejun@gmail.com
 
-From: Robert Hancock <hancockr@shaw.ca>
+From: Alan <alan@lxorguk.ukuu.org.uk>
 
-This patch adds in some NCQ blacklist entries taken from the Silicon Image
-Windows drivers' .inf files for the 3124 and 3132 controllers.  These
-entries were marked as ""DisableSataQueueing".  Assume these are in their
-blacklist for a reason and disable NCQ on these drives.
+This splits set_mode into do_set_mode and the wrapper so that a driver can
+call the standard method inside its own.  This in theory also obsoletes
+->post_set_mode().
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+Needed for ACPI driver.
+
+Signed-off-by: Alan Cox <alan@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-core.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/ata/libata-core.c |   37 +++++++++++++++++++++++++++++-------
+ include/linux/libata.h    |    1 
+ 2 files changed, 31 insertions(+), 7 deletions(-)
 
-diff -puN drivers/ata/libata-core.c~libata-add-ncq-blacklist-entries-from-silicon-image-windows drivers/ata/libata-core.c
---- a/drivers/ata/libata-core.c~libata-add-ncq-blacklist-entries-from-silicon-image-windows
+diff -puN drivers/ata/libata-core.c~expose-set_mode-method-so-it-can-be-wrapped drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~expose-set_mode-method-so-it-can-be-wrapped
 +++ a/drivers/ata/libata-core.c
-@@ -3368,6 +3368,13 @@ static const struct ata_blacklist_entry 
+@@ -2458,12 +2458,13 @@ static int ata_dev_set_mode(struct ata_d
+ }
  
- 	/* Devices with NCQ limits */
- 
-+	/* The following blacklist entries are taken from the Windows
-+	   driver .inf files for the Silicon Image 3124 and 3132. */
-+	{ "Maxtor 7B250S0",	"BANC1B70",	ATA_HORKAGE_NONCQ, },
-+	{ "HTS541060G9SA00",	"MB3OC60D",	ATA_HORKAGE_NONCQ, },
-+	{ "HTS541080G9SA00",	"MB4OC60D",	ATA_HORKAGE_NONCQ, },
-+	{ "HTS541010G9SA00",	"MBZOC60D",	ATA_HORKAGE_NONCQ, },
+ /**
+- *	ata_set_mode - Program timings and issue SET FEATURES - XFER
++ *	ata_do_set_mode - Program timings and issue SET FEATURES - XFER
+  *	@ap: port on which timings will be programmed
+  *	@r_failed_dev: out paramter for failed device
+  *
+- *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
+- *	ata_set_mode() fails, pointer to the failing device is
++ *	Standard implementation of the function used to tune and set
++ *	ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
++ *	ata_dev_set_mode() fails, pointer to the failing device is
+  *	returned in @r_failed_dev.
+  *
+  *	LOCKING:
+@@ -2472,14 +2473,12 @@ static int ata_dev_set_mode(struct ata_d
+  *	RETURNS:
+  *	0 on success, negative errno otherwise
+  */
+-int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
 +
- 	/* End Marker */
- 	{ }
- };
++int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
+ {
+ 	struct ata_device *dev;
+ 	int i, rc = 0, used_dma = 0, found = 0;
+ 
+-	/* has private set_mode? */
+-	if (ap->ops->set_mode)
+-		return ap->ops->set_mode(ap, r_failed_dev);
+ 
+ 	/* step 1: calculate xfer_mask */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+@@ -2564,6 +2563,29 @@ int ata_set_mode(struct ata_port *ap, st
+ }
+ 
+ /**
++ *	ata_set_mode - Program timings and issue SET FEATURES - XFER
++ *	@ap: port on which timings will be programmed
++ *	@r_failed_dev: out paramter for failed device
++ *
++ *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
++ *	ata_set_mode() fails, pointer to the failing device is
++ *	returned in @r_failed_dev.
++ *
++ *	LOCKING:
++ *	PCI/etc. bus probe sem.
++ *
++ *	RETURNS:
++ *	0 on success, negative errno otherwise
++ */
++int ata_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
++{
++	/* has private set_mode? */
++	if (ap->ops->set_mode)
++		return ap->ops->set_mode(ap, r_failed_dev);
++	return ata_do_set_mode(ap, r_failed_dev);
++}
++
++/**
+  *	ata_tf_to_host - issue ATA taskfile to host controller
+  *	@ap: port to which command is being issued
+  *	@tf: ATA taskfile register set
+@@ -6314,6 +6336,7 @@ EXPORT_SYMBOL_GPL(ata_altstatus);
+ EXPORT_SYMBOL_GPL(ata_exec_command);
+ EXPORT_SYMBOL_GPL(ata_port_start);
+ EXPORT_SYMBOL_GPL(ata_interrupt);
++EXPORT_SYMBOL_GPL(ata_do_set_mode);
+ EXPORT_SYMBOL_GPL(ata_data_xfer);
+ EXPORT_SYMBOL_GPL(ata_data_xfer_noirq);
+ EXPORT_SYMBOL_GPL(ata_qc_prep);
+diff -puN include/linux/libata.h~expose-set_mode-method-so-it-can-be-wrapped include/linux/libata.h
+--- a/include/linux/libata.h~expose-set_mode-method-so-it-can-be-wrapped
++++ a/include/linux/libata.h
+@@ -827,6 +827,7 @@ extern void ata_scsi_slave_destroy(struc
+ extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+ 				       int queue_depth);
+ extern struct ata_device *ata_dev_pair(struct ata_device *adev);
++extern int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev);
+ extern u8 ata_irq_on(struct ata_port *ap);
+ extern u8 ata_dummy_irq_on(struct ata_port *ap);
+ extern u8 ata_irq_ack(struct ata_port *ap, unsigned int chk_drq);
 _
