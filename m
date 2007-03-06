@@ -1,108 +1,73 @@
 From: akpm@linux-foundation.org
-Subject: [patch 29/30] sata_nv: don't read shadow registers when in ADMA mode
-Date: Tue, 06 Mar 2007 02:38:13 -0800
-Message-ID: <200703061038.l26AcD3M019553@shell0.pdx.osdl.net>
+Subject: [patch 19/30] pata_netcell: remove lots of crud by using the cable method
+Date: Tue, 06 Mar 2007 02:38:05 -0800
+Message-ID: <200703061038.l26Ac5Eo019518@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34464 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34461 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934043AbXCFKiW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:38:22 -0500
+	id S934037AbXCFKiV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:38:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
 
-From: Robert Hancock <hancockr@shaw.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Reading from the ATA shadow registers while we are in ADMA mode may cause
-undefined behavior.  Don't read the ATA status register when completing
-commands for this reason, it shouldn't be needed as the controller will
-notify us if the command failed.  Also, don't allow commands with result
-taskfile requested to execute in ADMA mode, since that requires accessing
-the shadow registers.  We also still need to override tf_read since libata
-will read the result taskfile on a command failure, and we need to go into
-port register mode before allowing this.
-
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+Signed-off-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/sata_nv.c |   33 ++++++++++++++++++++-------------
- 1 file changed, 20 insertions(+), 13 deletions(-)
+ drivers/ata/pata_netcell.c |   31 +++----------------------------
+ 1 file changed, 3 insertions(+), 28 deletions(-)
 
-diff -puN drivers/ata/sata_nv.c~sata_nv-dont-read-shadow-registers-when-in-adma-mode drivers/ata/sata_nv.c
---- a/drivers/ata/sata_nv.c~sata_nv-dont-read-shadow-registers-when-in-adma-mode
-+++ a/drivers/ata/sata_nv.c
-@@ -260,6 +260,7 @@ static int nv_adma_port_resume(struct at
- static void nv_adma_error_handler(struct ata_port *ap);
- static void nv_adma_host_stop(struct ata_host *host);
- static void nv_adma_post_internal_cmd(struct ata_queued_cmd *qc);
-+static void nv_adma_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+diff -puN drivers/ata/pata_netcell.c~pata_netcell-remove-lots-of-crud-by-using-the-cable-method drivers/ata/pata_netcell.c
+--- a/drivers/ata/pata_netcell.c~pata_netcell-remove-lots-of-crud-by-using-the-cable-method
++++ a/drivers/ata/pata_netcell.c
+@@ -16,33 +16,7 @@
+ #include <linux/ata.h>
  
- enum nv_host_type
- {
-@@ -435,7 +436,7 @@ static const struct ata_port_operations 
- static const struct ata_port_operations nv_adma_ops = {
- 	.port_disable		= ata_port_disable,
- 	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
-+	.tf_read		= nv_adma_tf_read,
- 	.check_atapi_dma	= nv_adma_check_atapi_dma,
- 	.exec_command		= ata_exec_command,
- 	.check_status		= ata_check_status,
-@@ -667,6 +668,18 @@ static int nv_adma_check_atapi_dma(struc
- 	return !(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE);
- }
+ #define DRV_NAME	"pata_netcell"
+-#define DRV_VERSION	"0.1.6"
+-
+-/**
+- *	netcell_probe_init	-	check for 40/80 pin
+- *	@ap: Port
+- *
+- *	Cables are handled by the RAID controller. Report 80 pin.
+- */
+-
+-static int netcell_pre_reset(struct ata_port *ap)
+-{
+-	ap->cbl = ATA_CBL_PATA80;
+-	return ata_std_prereset(ap);
+-}
+-
+-/**
+- *	netcell_probe_reset - Probe specified port on PATA host controller
+- *	@ap: Port to probe
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-
+-static void netcell_error_handler(struct ata_port *ap)
+-{
+-	return ata_bmdma_drive_eh(ap, netcell_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
++#define DRV_VERSION	"0.1.7"
  
-+static void nv_adma_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-+{
-+	/* Since commands where a result TF is requested are not
-+	   executed in ADMA mode, the only time this function will be called
-+	   in ADMA mode will be if a command fails. In this case we
-+	   don't care about going into register mode with ADMA commands
-+	   pending, as the commands will all shortly be aborted anyway. */
-+	nv_adma_register_mode(ap);
-+
-+	ata_tf_read(ap, tf);
-+}
-+
- static unsigned int nv_adma_tf_to_cpb(struct ata_taskfile *tf, __le16 *cpb)
- {
- 	unsigned int idx = 0;
-@@ -738,19 +751,11 @@ static int nv_adma_check_cpb(struct ata_
- 		return 1;
- 	}
+ /* No PIO or DMA methods needed for this device */
  
--	if (flags & NV_CPB_RESP_DONE) {
-+	if (likely(flags & NV_CPB_RESP_DONE)) {
- 		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, cpb_num);
- 		VPRINTK("CPB flags done, flags=0x%x\n", flags);
- 		if (likely(qc)) {
--			/* Grab the ATA port status for non-NCQ commands.
--			   For NCQ commands the current status may have nothing to do with
--			   the command just completed. */
--			if (qc->tf.protocol != ATA_PROT_NCQ) {
--				u8 ata_status = readb(pp->ctl_block + (ATA_REG_STATUS * 4));
--				qc->err_mask |= ac_err_mask(ata_status);
--			}
--			DPRINTK("Completing qc from tag %d with err_mask %u\n",cpb_num,
--				qc->err_mask);
-+			DPRINTK("Completing qc from tag %d\n",cpb_num);
- 			ata_qc_complete(qc);
- 		} else {
- 			struct ata_eh_info *ehi = &ap->eh_info;
-@@ -1161,9 +1166,11 @@ static int nv_adma_use_reg_mode(struct a
- 	struct nv_adma_port_priv *pp = qc->ap->private_data;
+@@ -81,8 +55,9 @@ static const struct ata_port_operations 
  
- 	/* ADMA engine can only be used for non-ATAPI DMA commands,
--	   or interrupt-driven no-data commands. */
-+	   or interrupt-driven no-data commands, where a result taskfile
-+	   is not required. */
- 	if((pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) ||
--	   (qc->tf.flags & ATA_TFLAG_POLLING))
-+	   (qc->tf.flags & ATA_TFLAG_POLLING) ||
-+	   (qc->flags & ATA_QCFLAG_RESULT_TF))
- 		return 1;
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+-	.error_handler		= netcell_error_handler,
++	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.cable_detect		= ata_cable_80wire,
  
- 	if((qc->flags & ATA_QCFLAG_DMAMAP) ||
+ 	/* BMDMA handling is PCI ATA format, use helpers */
+ 	.bmdma_setup		= ata_bmdma_setup,
 _
