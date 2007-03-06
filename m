@@ -1,12 +1,12 @@
 From: akpm@linux-foundation.org
-Subject: [patch 28/30] libata Kconfig: Update the various experimentality levels
-Date: Tue, 06 Mar 2007 02:38:12 -0800
-Message-ID: <200703061038.l26AcCtO019550@shell0.pdx.osdl.net>
+Subject: [patch 13/30] pata_ali: remove lots of code by using the cable_detect method
+Date: Tue, 06 Mar 2007 02:38:00 -0800
+Message-ID: <200703061038.l26Ac0Bc019496@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34502 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34495 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934061AbXCFKii (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:38:38 -0500
+	id S934055AbXCFKig (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:38:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
@@ -18,99 +18,114 @@ Signed-off-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/Kconfig |   24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/ata/pata_ali.c |   65 ++++-----------------------------------
+ 1 file changed, 8 insertions(+), 57 deletions(-)
 
-diff -puN drivers/ata/Kconfig~libata-kconfig-update-the-various-experimentality-levels drivers/ata/Kconfig
---- a/drivers/ata/Kconfig~libata-kconfig-update-the-various-experimentality-levels
-+++ a/drivers/ata/Kconfig
-@@ -193,7 +193,7 @@ config PATA_ALI
- 	  If unsure, say N.
+diff -puN drivers/ata/pata_ali.c~pata_ali-remove-lots-of-code-by-using-the-cable_detect drivers/ata/pata_ali.c
+--- a/drivers/ata/pata_ali.c~pata_ali-remove-lots-of-code-by-using-the-cable_detect
++++ a/drivers/ata/pata_ali.c
+@@ -90,59 +90,6 @@ static int ali_c2_cable_detect(struct at
+ }
  
- config PATA_AMD
--	tristate "AMD/NVidia PATA support (Experimental)"
-+	tristate "AMD/NVidia PATA support"
- 	depends on PCI
- 	help
- 	  This option enables support for the AMD and NVidia PATA
-@@ -292,7 +292,7 @@ config ATA_GENERIC
- 	  If unsure, say N.
+ /**
+- *	ali_early_error_handler	-	reset for eary chip
+- *	@ap: ATA port
+- *
+- *	Handle the reset callback for the later chips with cable detect
+- */
+-
+-static int ali_c2_pre_reset(struct ata_port *ap)
+-{
+-	ap->cbl = ali_c2_cable_detect(ap);
+-	return ata_std_prereset(ap);
+-}
+-
+-static void ali_c2_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, ali_c2_pre_reset,
+-			       ata_std_softreset, NULL,
+-			       ata_std_postreset);
+-}
+-
+-/**
+- *	ali_early_cable_detect	-	cable detection
+- *	@ap: ATA port
+- *
+- *	Perform cable detection for older chipsets. This turns out to be
+- *	rather easy to implement
+- */
+-
+-static int ali_early_cable_detect(struct ata_port *ap)
+-{
+-	return ATA_CBL_PATA40;
+-}
+-
+-/**
+- *	ali_early_probe_init	-	reset for early chip
+- *	@ap: ATA port
+- *
+- *	Handle the reset callback for the early (pre cable detect) chips.
+- */
+-
+-static int ali_early_pre_reset(struct ata_port *ap)
+-{
+-	ap->cbl = ali_early_cable_detect(ap);
+-	return ata_std_prereset(ap);
+-}
+-
+-static void ali_early_error_handler(struct ata_port *ap)
+-{
+-	return ata_bmdma_drive_eh(ap, ali_early_pre_reset,
+-				     ata_std_softreset, NULL,
+-				     ata_std_postreset);
+-}
+-
+-/**
+  *	ali_20_filter		-	filter for earlier ALI DMA
+  *	@ap: ALi ATA port
+  *	@adev: attached device
+@@ -366,8 +313,9 @@ static struct ata_port_operations ali_ea
  
- config PATA_HPT366
--	tristate "HPT 366/368 PATA support (Very Experimental)"
-+	tristate "HPT 366/368 PATA support (Experimental)"
- 	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the HPT 366 and 368
-@@ -301,7 +301,7 @@ config PATA_HPT366
- 	  If unsure, say N.
+ 	.freeze		= ata_bmdma_freeze,
+ 	.thaw		= ata_bmdma_thaw,
+-	.error_handler	= ali_early_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= ata_cable_40wire,
  
- config PATA_HPT37X
--	tristate "HPT 370/370A/371/372/374/302 PATA support (Very Experimental)"
-+	tristate "HPT 370/370A/371/372/374/302 PATA support (Experimental)"
- 	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the majority of the later HPT
-@@ -328,7 +328,7 @@ config PATA_HPT3X3
- 	  If unsure, say N.
+ 	.qc_prep 	= ata_qc_prep,
+ 	.qc_issue	= ata_qc_issue_prot,
+@@ -402,8 +350,9 @@ static struct ata_port_operations ali_20
  
- config PATA_ISAPNP
--	tristate "ISA Plug and Play PATA support (Very Experimental)"
-+	tristate "ISA Plug and Play PATA support (Experimental)"
- 	depends on EXPERIMENTAL && ISAPNP
- 	help
- 	  This option enables support for ISA plug & play ATA
-@@ -337,8 +337,8 @@ config PATA_ISAPNP
- 	  If unsure, say N.
+ 	.freeze		= ata_bmdma_freeze,
+ 	.thaw		= ata_bmdma_thaw,
+-	.error_handler	= ali_early_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= ata_cable_40wire,
  
- config PATA_IT821X
--	tristate "IT8211/2 PATA support (Experimental)"
--	depends on PCI && EXPERIMENTAL
-+	tristate "IT8211/2 PATA support"
-+	depends on PCI
- 	help
- 	  This option enables support for the ITE 8211 and 8212
- 	  PATA controllers via the new ATA layer, including RAID
-@@ -409,10 +409,10 @@ config PATA_MPIIX
- 	  If unsure, say N.
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= ata_bmdma_start,
+@@ -440,8 +389,9 @@ static struct ata_port_operations ali_c2
  
- config PATA_OLDPIIX
--	tristate "Intel PATA old PIIX support (Experimental)"
-+	tristate "Intel PATA support for the original PIIX"
- 	depends on PCI && EXPERIMENTAL
- 	help
--	  This option enables support for old(?) PIIX PATA support.
-+	  This option enables support for early Intel PIIX PATA support.
+ 	.freeze		= ata_bmdma_freeze,
+ 	.thaw		= ata_bmdma_thaw,
+-	.error_handler	= ali_c2_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= ali_c2_cable_detect,
  
- 	  If unsure, say N.
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= ata_bmdma_start,
+@@ -477,8 +427,9 @@ static struct ata_port_operations ali_c5
  
-@@ -463,7 +463,7 @@ config PATA_PCMCIA
- 	  If unsure, say N.
+ 	.freeze		= ata_bmdma_freeze,
+ 	.thaw		= ata_bmdma_thaw,
+-	.error_handler	= ali_c2_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= ali_c2_cable_detect,
  
- config PATA_PDC_OLD
--	tristate "Older Promise PATA controller support (Very Experimental)"
-+	tristate "Older Promise PATA controller support (Experimental)"
- 	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the Promise 20246, 20262, 20263,
-@@ -496,7 +496,7 @@ config PATA_RZ1000
- 	  If unsure, say N.
- 
- config PATA_SC1200
--	tristate "SC1200 PATA support (Raving Lunatic)"
-+	tristate "SC1200 PATA support (Very Experimental)"
- 	depends on PCI && EXPERIMENTAL
- 	help
- 	  This option enables support for the NatSemi/AMD SC1200 SoC
-@@ -505,8 +505,8 @@ config PATA_SC1200
- 	  If unsure, say N.
- 
- config PATA_SERVERWORKS
--	tristate "SERVERWORKS OSB4/CSB5/CSB6/HT1000 PATA support (Experimental)"
--	depends on PCI && EXPERIMENTAL
-+	tristate "SERVERWORKS OSB4/CSB5/CSB6/HT1000 PATA support"
-+	depends on PCI
- 	help
- 	  This option enables support for the Serverworks OSB4/CSB5/CSB6 and
- 	  HT1000 PATA controllers, via the new ATA layer.
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= ata_bmdma_start,
 _
