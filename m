@@ -1,52 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 04/30] ACPI driver support for pata
-Date: Tue, 06 Mar 2007 23:18:36 +0900
-Message-ID: <45ED783C.6060604@gmail.com>
-References: <200703061037.l26AbrtB019463@shell0.pdx.osdl.net>	<45ED649A.20207@gmail.com> <20070306151415.45db1d52@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [patch 25/30] pata_hpt3x3: clean up by using cable method
+Date: Tue, 6 Mar 2007 15:19:59 +0000
+Message-ID: <20070306151959.2c30b606@lxorguk.ukuu.org.uk>
+References: <200703061038.l26AcAVD019539@shell0.pdx.osdl.net>
+	<45ED57BA.4000800@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:39393 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965052AbXCFOSj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Mar 2007 09:18:39 -0500
-Received: by an-out-0708.google.com with SMTP id b33so1768559ana
-        for <linux-ide@vger.kernel.org>; Tue, 06 Mar 2007 06:18:38 -0800 (PST)
-In-Reply-To: <20070306151415.45db1d52@lxorguk.ukuu.org.uk>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39199 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965057AbXCFOT3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Mar 2007 09:19:29 -0500
+In-Reply-To: <45ED57BA.4000800@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, alan@redhat.com, lenb@kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, alan@redhat.com
 
-Alan Cox wrote:
->> using separate pata_acpi driver (we can definitely implement pata_acpi
->> using the helpers).  It will reduce general confusion and allow
->> combining acpi cable detection with specialized device handling (e.g.
->> ACPI cable detection combined with ADMA command operation).
+> dropped patches 9-25.
 > 
-> Read the code Tejun, I did exactly that. pata_acpi is a driver which uses
-> a nice clean set of helper methods I added to libata-acpi. pata_acpi
-> itself knows nothing about ACPI other than calling into libata-acpi.
+> they should all be rolled up into a single "update ->cable_detect hook" 
+> patch, as discussed.
 
-Actually, I have.  I was thinking of higher level helpers.  e.g.
-pacpi_cable_detect() in libata-acpi.c such that sata_nv's cable_detect
-can do.
+Strongly disagree. Each cable detect for a driver is testable alone which
+means each one is a git bisect point and you can find which driver has
+broken that way.
 
-int nv_cable_detect(struct ata_port *ap)
-{
-	if (ck804) {
-		if (pacpi_cable_detect(ap) == 0)
-			return 0;
-	}
-
-	/* do original nv cable detection */
-	return rc;
-}
-
-So that it's more robust && we don't have to alternate between sata_nv,
-pata_acpi depending on BIOS/kernel configuration, and possibly combine
-other low level features with ACPI support.
-
--- 
-tejun
+Alan
