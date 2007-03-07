@@ -1,99 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_atiixp: Switch to cable_detect method
-Date: Wed, 7 Mar 2007 17:06:51 +0000
-Message-ID: <20070307170651.46de680d@lxorguk.ukuu.org.uk>
+From: "Paul Rolland" <rol@as2917.net>
+Subject: RE: 30 second timeout on bootup with Intel ICH7 and AHCI(2.6.21-rc2)
+Date: Wed, 7 Mar 2007 17:03:03 +0100
+Message-ID: <007201c760d2$191ae4a0$4b00a8c0@donald>
+References: <20070306211914.3e983a93@oldman>
+Reply-To: <rol@as2917.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45620 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932234AbXCGQDC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Mar 2007 11:03:02 -0500
+Received: from tag.witbe.net ([81.88.96.48]:58543 "EHLO tag.witbe.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932283AbXCGQDM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Mar 2007 11:03:12 -0500
+In-Reply-To: <20070306211914.3e983a93@oldman>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: 'Stephen Hemminger' <shemminger@linux-foundation.org>
+Cc: 'Jeff Garzik' <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Not clear we should keep this ugly BIOS mode hack, but for now it can
-stay. Possibly an ACPI based solution will work, or just doing drive side
-detection now that is hopefully fixed.
+Hello,
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+> Could it be the additional RAID controller (not used). I turned it
+> off in BIOS as well. Maybe if I turned the other ports on, but then
+> it would have to probe them.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2-mm2/drivers/ata/pata_via.c linux-2.6.21-rc2-mm2/drivers/ata/pata_via.c
---- linux.vanilla-2.6.21-rc2-mm2/drivers/ata/pata_via.c	2007-03-06 23:09:46.000000000 +0000
-+++ linux-2.6.21-rc2-mm2/drivers/ata/pata_via.c	2007-03-06 23:36:26.000000000 +0000
-@@ -62,7 +62,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_via"
--#define DRV_VERSION "0.2.1"
-+#define DRV_VERSION "0.3.1"
- 
- /*
-  *	The following comes directly from Vojtech Pavlik's ide/pci/via82cxxx
-@@ -135,16 +135,23 @@
-  */
- 
- static int via_cable_detect(struct ata_port *ap) {
-+	const struct via_isa_bridge *config = ap->host->private_data;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u32 ata66;
- 
-+	/* Early chips are 40 wire */
-+	if ((config->flags & VIA_UDMA) < VIA_UDMA_66)
-+		return ATA_CBL_PATA40;
-+	/* UDMA 66 chips have only drive side logic */
-+	else if((config->flags & VIA_UDMA) < VIA_UDMA_100)
-+		return ATA_CBL_PATA_UNK;
-+	/* UDMA 100 or later */
- 	pci_read_config_dword(pdev, 0x50, &ata66);
- 	/* Check both the drive cable reporting bits, we might not have
- 	   two drives */
- 	if (ata66 & (0x10100000 >> (16 * ap->port_no)))
- 		return ATA_CBL_PATA80;
--	else
--		return ATA_CBL_PATA40;
-+	return ATA_CBL_PATA40;
- }
- 
- static int via_pre_reset(struct ata_port *ap)
-@@ -156,22 +163,10 @@
- 			{ 0x40, 1, 0x02, 0x02 },
- 			{ 0x40, 1, 0x01, 0x01 }
- 		};
--
- 		struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--
- 		if (!pci_test_config_bits(pdev, &via_enable_bits[ap->port_no]))
- 			return -ENOENT;
- 	}
--
--	if ((config->flags & VIA_UDMA) >= VIA_UDMA_100)
--		ap->cbl = via_cable_detect(ap);
--	/* The UDMA66 series has no cable detect so do drive side detect */
--	else if ((config->flags & VIA_UDMA) < VIA_UDMA_66)
--		ap->cbl = ATA_CBL_PATA40;
--	else
--		ap->cbl = ATA_CBL_PATA_UNK;
--
--
- 	return ata_std_prereset(ap);
- }
- 
-@@ -327,6 +322,7 @@
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= via_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= via_cable_detect,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -362,6 +358,7 @@
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= via_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= via_cable_detect,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
+Yes, that's it !
+
+I tried to use : ata2=noprobe in the boot parameters, but that seems
+to be a no-op... Too bad, 'cos' I know for sure I don't want to connect
+something on this raid controller, and that would help me gain at least
+30s at boot time...
+
+Or maybe the syntax is wrong ?
+
+Regards,
+Paul
+
