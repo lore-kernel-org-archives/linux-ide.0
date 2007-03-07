@@ -1,98 +1,373 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: sata_promise SATA300TX4 "intermittent problems"
-Date: Wed, 7 Mar 2007 21:12:54 +0100
-Message-ID: <17903.7366.875191.751728@alkaid.it.uu.se>
-References: <45EECD12.1000506@how.dk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [patch 5/7] xenon: add SATA support
+Date: Thu, 08 Mar 2007 00:02:20 +0300
+Message-ID: <45EF285C.1090800@ru.mvista.com>
+References: <20070307180144.812594000@elitedvb.net>> <20070307180526.194853000@elitedvb.net>>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:33769 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965589AbXCGUNB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Mar 2007 15:13:01 -0500
-In-Reply-To: <45EECD12.1000506@how.dk>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:22656 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1422987AbXCGVCc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Mar 2007 16:02:32 -0500
+In-Reply-To: <20070307180526.194853000@elitedvb.net>>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Favrholdt <linux-ide@how.dk>
-Cc: linux-ide@vger.kernel.org
+To: Felix Domke <tmbinc@elitedvb.net>
+Cc: Linuxppc-dev@ozlabs.org, Linux IDE <linux-ide@vger.kernel.org>
 
-Peter Favrholdt writes:
- > Hi,
- > 
- > I've seen "intermittent problems" with Promise SATA300 TX4 controllers
- > and Linux kernel 2.6.19 (through 2.6.20-rc2 with some additional
- > patches).
- > 
- > Sometimes the TX4 will loose a port - a reboot brings the drive back up 
- > again. I'm quite sure the harddrives are not at fault.
- > 
- > I have experienced this using "plain vanilla" Linux 2.6.19.2 and 
- > 2.6.20.1. Today I have tested using Linux 2.6.21-rc2 with Mikael 
- > Petterson's patches (more on that further down).
- > 
- > Yesterday (using 2.6.20.1) I could fail two out of four drives by doing:
- > dd if=/dev/sda of=/dev/null bs=1M &
- > dd if=/dev/sdb of=/dev/null bs=1M &
- > dd if=/dev/sdc of=/dev/null bs=1M &
- > dd if=/dev/sdd of=/dev/null bs=1M &
- > 
- > sdd would fail first then after a while sdc, here is the dmesg output 
- > when sdd failed:
- > 
- > [14895.092650] ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x1380000 
- > action 0x2 frozen
+Felix Domke wrote:
+> This adds support for the HDD and DVD SATA controller on the xenon southbridge.
 
-SErr 0x01380000 would indicate:
-transport state transmission error (bit 24)
-CRC error (bit 21)
-disparity error (bit 20) [whatever that is]
-10b_to_8b decoding error (bit 19)
+   Pleas post this to linux-ide@vger.kernel.org in the future.
 
-I.e., serious transmission issues.
+> It also disables ATA_TFLAG_POLLING in libata-core, which prevented the DVD drive
+> from being detected. It needs to be investigated what exactly is wrong here. 
 
- > [52849.930755] pdc_error_intr: port_status 0x00001000 serror 0x00000000
- > [52849.930880] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 
- > frozen
- > [52849.930883] ata2.00: (port_status 0x00001000)
+> Signed-off-by: Felix Domke <tmbinc@elitedvb.net>
 
-"host bus timeout error" (bit 12).
-I wonder why SError was clear now.
+> ---
+>  drivers/ata/Kconfig       |    8 +
+>  drivers/ata/Makefile      |    1 
+>  drivers/ata/libata-core.c |    2 
+>  drivers/ata/sata_xenon.c  |  272 ++++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 282 insertions(+), 1 deletion(-)
+> 
+> Index: linux-2.6.20/drivers/ata/Kconfig
+> ===================================================================
+> --- linux-2.6.20.orig/drivers/ata/Kconfig	2007-03-07 19:01:12.000000000 +0100
+> +++ linux-2.6.20/drivers/ata/Kconfig	2007-03-07 19:01:22.000000000 +0100
+> @@ -123,6 +123,14 @@
+>  
+>  	  If unsure, say N.
+>  
+> +config SATA_XENON
+> +	tristate "Xenon SATA support"
+> +	depends on PCI
+> +	help
+> +	  This option enables support for Xenon southbridge.
+> +
+> +	  If unsure, say N.
+> +
+>  config SATA_ULI
+>  	tristate "ULi Electronics SATA support"
+>  	depends on PCI
+> Index: linux-2.6.20/drivers/ata/Makefile
+> ===================================================================
+> --- linux-2.6.20.orig/drivers/ata/Makefile	2007-03-07 19:01:12.000000000 +0100
+> +++ linux-2.6.20/drivers/ata/Makefile	2007-03-07 19:01:22.000000000 +0100
+> @@ -11,6 +11,7 @@
+>  obj-$(CONFIG_SATA_VIA)		+= sata_via.o
+>  obj-$(CONFIG_SATA_VITESSE)	+= sata_vsc.o
+>  obj-$(CONFIG_SATA_SIS)		+= sata_sis.o
+> +obj-$(CONFIG_SATA_XENON)	+= sata_xenon.o
+>  obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
+>  obj-$(CONFIG_SATA_NV)		+= sata_nv.o
+>  obj-$(CONFIG_SATA_ULI)		+= sata_uli.o
+> Index: linux-2.6.20/drivers/ata/libata-core.c
+> ===================================================================
+> --- linux-2.6.20.orig/drivers/ata/libata-core.c	2007-03-07 19:01:12.000000000 +0100
+> +++ linux-2.6.20/drivers/ata/libata-core.c	2007-03-07 19:01:22.000000000 +0100
+> @@ -1478,7 +1478,7 @@
+>  	}
+>  
+>  	tf.protocol = ATA_PROT_PIO;
+> -	tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
+> +//	tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
 
- > I would be very happy to help debug this issue. Any suggestions on what 
- > I should try next?
+    I doubt that this could *ever* get accepted.
 
-Well, at the moment I have only one possible cure: to forcibly
-limit 3Gbps drives to 1.5Gbps operation, as the patch below does.
+>  	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+>  				     id, sizeof(id[0]) * ATA_ID_WORDS);
+> Index: linux-2.6.20/drivers/ata/sata_xenon.c
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ linux-2.6.20/drivers/ata/sata_xenon.c	2007-03-07 19:01:22.000000000 +0100
+> @@ -0,0 +1,272 @@
+> +/*
+> + *  sata_xenon.c - SATA support for xenon southbridge
+> + *
+> + *  based on sata_sis.c, modifications by anonymous xbox360 hacker,
+> + *
+> + *  		    Please ALWAYS copy linux-ide@vger.kernel.org
+> + *		    on emails.
+> + *
+> + *  This program is free software; you can redistribute it and/or modify
+> + *  it under the terms of the GNU General Public License as published by
+> + *  the Free Software Foundation; either version 2, or (at your option)
+> + *  any later version.
+> + *
+> + *  This program is distributed in the hope that it will be useful,
+> + *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + *  GNU General Public License for more details.
+> + *
+> + *  You should have received a copy of the GNU General Public License
+> + *  along with this program; see the file COPYING.  If not, write to
+> + *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+> + *
+> + *
+> + *  libata documentation is available via 'make {ps|pdf}docs',
+> + *  as Documentation/DocBook/libata.*
+> + *
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/pci.h>
+> +#include <linux/init.h>
+> +#include <linux/blkdev.h>
+> +#include <linux/delay.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/device.h>
+> +#include <scsi/scsi_host.h>
+> +#include <linux/libata.h>
+> +
+> +#define DRV_NAME	"sata_xenon"
+> +#define DRV_VERSION	"0.1"
+> +
+> +	/* small note: it's completely unknown whether the xenon southbridge sata
+> +	   is really based on SiS technology.
+> +	   Most of SATA is standardized anyway.
+> +
+> +
+> +	   So, we have these two pci devices, one for each port.
+> +
+> +	   They have two BARs, one for the IDE registers (0..7,
+> +	   altstatus/devctl is +0xA), and one for the BMDMA.
+> +
+> +	   SCR seem to be sis-like in pci config space, but that should
+> +	   be verified!
+> +
+> +	   Note on the DVD-ROM part:
+> +
+> +	   The drives usually require some tweaks to be usable under linux.
+> +
+> +	   You either need to hack the scsi layer, or, in case of the GDR3120L,
+> +	   set 'modeB' in the bootloader.
+> +	*/
+> +
+> +enum {
+> +	/* PCI configuration registers */
+> +	SIS_SCR_BASE		= 0xc0, /* sata0 phy SCR registers */
+> +};
+> +
+> +extern struct ata_probe_ent *ata_probe_ent_alloc(struct device *dev,
+> +						 const struct ata_port_info *port);
+> +
+> +static int xenon_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+> +static u32 xenon_scr_read (struct ata_port *ap, unsigned int sc_reg);
+> +static void xenon_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+> +
+> +static const struct pci_device_id xenon_pci_tbl[] = {
+> +	{ PCI_VDEVICE(MICROSOFT, 0x5803), 0 },
+> +	{ PCI_VDEVICE(MICROSOFT, 0x5802), 0 },
+> +
+> +	{ }	/* terminate list */
+> +};
+> +
+> +static struct pci_driver xenon_pci_driver = {
+> +	.name			= DRV_NAME,
+> +	.id_table		= xenon_pci_tbl,
+> +	.probe			= xenon_init_one,
+> +	.remove			= ata_pci_remove_one,
+> +};
+> +
+> +static struct scsi_host_template xenon_sht = {
+> +	.module			= THIS_MODULE,
+> +	.name			= DRV_NAME,
+> +	.ioctl			= ata_scsi_ioctl,
+> +	.queuecommand		= ata_scsi_queuecmd,
+> +	.can_queue		= ATA_DEF_QUEUE,
+> +	.this_id		= ATA_SHT_THIS_ID,
+> +	.sg_tablesize		= ATA_MAX_PRD,
+> +	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+> +	.emulated		= ATA_SHT_EMULATED,
+> +	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+> +	.proc_name		= DRV_NAME,
+> +	.dma_boundary		= ATA_DMA_BOUNDARY,
+> +	.slave_configure	= ata_scsi_slave_config,
+> +	.slave_destroy		= ata_scsi_slave_destroy,
+> +	.bios_param		= ata_std_bios_param,
+> +};
+> +
+> +static const struct ata_port_operations xenon_ops = {
+> +	.port_disable		= ata_port_disable,
+> +	.tf_load		= ata_tf_load,
+> +	.tf_read		= ata_tf_read,
+> +	.check_status		= ata_check_status,
+> +	.exec_command		= ata_exec_command,
+> +	.dev_select		= ata_std_dev_select,
+> +	.bmdma_setup            = ata_bmdma_setup,
+> +	.bmdma_start            = ata_bmdma_start,
+> +	.bmdma_stop		= ata_bmdma_stop,
+> +	.bmdma_status		= ata_bmdma_status,
+> +	.qc_prep		= ata_qc_prep,
+> +	.qc_issue		= ata_qc_issue_prot,
+> +	.data_xfer		= ata_pio_data_xfer,
+> +	.freeze			= ata_bmdma_freeze,
+> +	.thaw			= ata_bmdma_thaw,
+> +	.error_handler		= ata_bmdma_error_handler,
+> +	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+> +	.irq_handler		= ata_interrupt,
+> +	.irq_clear		= ata_bmdma_irq_clear,
+> +	.scr_read		= xenon_scr_read,
+> +	.scr_write		= xenon_scr_write,
+> +	.port_start		= ata_port_start,
+> +	.port_stop		= ata_port_stop,
+> +	.host_stop		= ata_host_stop,
+> +};
+> +
+> +static struct ata_port_info xenon_port_info = {
+> +	.sht		= &xenon_sht,
+> +	.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
+> +	.pio_mask	= 0x1f,
+> +	.mwdma_mask	= 0x7,
+> +	.udma_mask	= 0x7f,
+> +	.port_ops	= &xenon_ops,
+> +};
+> +
+> +
+> +MODULE_DESCRIPTION("low-level driver for Xenon Southbridge SATA controller");
+> +MODULE_LICENSE("GPL");
+> +MODULE_DEVICE_TABLE(pci, xenon_pci_tbl);
+> +MODULE_VERSION(DRV_VERSION);
+> +
+> +static unsigned int get_scr_cfg_addr(unsigned int port_no, unsigned int sc_reg, int device)
+> +{
+> +	unsigned int addr = SIS_SCR_BASE + (4 * sc_reg);
+> +
 
-On one of my test machines (an old UltraSPARC), a SATA300 TX2plus
-with a Seagate 3Gbps drive (don't have the model number handy),
-will quickly experience "DMA S/G overrun" errors during an fsck
-of a large but clean ext3 partition. With the patch below things
-work solidly on that particular machine. OTOH, on another test
-machine (a 440BX chipset Intel PIII), the same card/cable/disk
-combination works flawlessly at 3Gbps. Mysterious.
+    Why we need device and port_no arguments here?
 
-/Mikael
+> +	return addr;
+> +}
+> +
+> +static u32 xenon_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+> +	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, sc_reg, pdev->device);
+> +	u32 val;
+> +
+> +	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
+> +		return 0; /* assume no error */
 
---- linux-2.6.21-rc2/drivers/ata/sata_promise.c.~1~	2007-03-06 22:17:21.000000000 +0100
-+++ linux-2.6.21-rc2/drivers/ata/sata_promise.c	2007-03-06 23:21:36.000000000 +0100
-@@ -378,6 +378,18 @@ static int pdc_port_start(struct ata_por
- 		writel(tmp, mmio + 0x014);
- 	}
- 
-+	/* hack SControl to limit speed to 1.5Gbps */
-+	if ((hp->flags & PDC_FLAG_GEN_II) && sata_scr_valid(ap)) {
-+		void __iomem *mmio = (void __iomem *) ap->ioaddr.scr_addr;
-+		unsigned int tmp1, tmp2;
-+
-+		tmp1 = readl(mmio + 0x008);
-+		tmp2 = (tmp1 & 0xffffff00) | 0x00000011;
-+		writel(tmp2, mmio + 0x008);
-+		readl(mmio + 0x008); /* flush */
-+		printk("%s(port %u): adjusted SControl from 0x%08x to 0x%08x\n", __FUNCTION__, ap->port_no, tmp1, tmp2);
-+	}
-+
- 	return 0;
- }
- 
+    Since SCR_ERROR == 1, this check seems broken.
+
+> +
+> +	pci_read_config_dword(pdev, cfg_addr, &val);
+> +
+> +	return val;
+> +}
+> +
+> +static void xenon_scr_cfg_write (struct ata_port *ap, unsigned int scr, u32 val)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+> +	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, scr, pdev->device);
+> +
+> +	if (scr == SCR_ERROR) /* doesn't exist in PCI cfg space */
+> +		return;
+
+    Same here.
+
+> +
+> +	pci_write_config_dword(pdev, cfg_addr, val);
+> +}
+> +
+> +static u32 xenon_scr_read (struct ata_port *ap, unsigned int sc_reg)
+> +{
+> +	if (sc_reg > SCR_CONTROL)
+> +		return 0xffffffffU;
+> +
+> +	return xenon_scr_cfg_read(ap, sc_reg);
+> +}
+> +
+> +static void xenon_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val)
+> +{
+> +	if (sc_reg > SCR_CONTROL)
+> +		return;
+> +
+> +	xenon_scr_cfg_write(ap, sc_reg, val);
+> +}
+> +
+
+    Reading SATA regs via config. space... isn't that ugly? :-]
+
+> +static int xenon_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+> +{
+> +	static int printed_version;
+> +	struct ata_probe_ent *probe_ent = NULL;
+> +	int rc;
+> +	int pci_dev_busy = 0;
+> +
+> +	if (!printed_version++)
+> +		dev_printk(KERN_INFO, &pdev->dev, "version " DRV_VERSION "\n");
+> +
+> +	rc = pci_enable_device(pdev);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = pci_request_regions(pdev, DRV_NAME);
+> +	if (rc) {
+> +		pci_dev_busy = 1;
+> +		goto err_out;
+> +	}
+> +
+> +	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
+> +	if (rc)
+> +		goto err_out_regions;
+> +	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
+> +	if (rc)
+> +		goto err_out_regions;
+> +
+> +	probe_ent = ata_probe_ent_alloc(pci_dev_to_dev(pdev), &xenon_port_info);
+> +	if (!probe_ent) {
+> +		rc = -ENOMEM;
+> +		goto err_out_regions;
+> +	}
+> +
+> +	probe_ent->irq = pdev->irq;
+> +	probe_ent->irq_flags = IRQF_SHARED;
+> +
+> +	probe_ent->port->cmd_addr = (long)ioremap(pci_resource_start(pdev, 0), PAGE_SIZE);
+> +	probe_ent->port->altstatus_addr = probe_ent->port->cmd_addr + 0xa;
+> +	probe_ent->port->ctl_addr = probe_ent->port->cmd_addr + 0xa;
+> +	probe_ent->port->bmdma_addr = (long)ioremap(pci_resource_start(pdev, 1), PAGE_SIZE);
+> +	ata_std_ports(probe_ent->port);
+> +	probe_ent->n_ports = 1;
+> +
+> +	pci_set_master(pdev);
+> +	pci_intx(pdev, 1);
+> +
+> +	/* FIXME: check ata_device_add return value */
+> +	ata_device_add(probe_ent);
+> +	kfree(probe_ent);
+> +
+> +	return 0;
+> +
+> +err_out_regions:
+> +	pci_release_regions(pdev);
+> +
+> +err_out:
+> +	if (!pci_dev_busy)
+> +		pci_disable_device(pdev);
+> +	return rc;
+> +
+> +}
+> +
+> +static int __init xenon_init(void)
+> +{
+> +	return pci_register_driver(&xenon_pci_driver);
+> +}
+> +
+> +static void __exit xenon_exit(void)
+> +{
+> +	pci_unregister_driver(&xenon_pci_driver);
+> +}
+> +
+> +module_init(xenon_init);
+> +module_exit(xenon_exit);
+> +
+
+MBR, Sergei
