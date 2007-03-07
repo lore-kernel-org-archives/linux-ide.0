@@ -1,110 +1,88 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_cmd640: Multiple updates
-Date: Wed, 7 Mar 2007 16:43:29 +0000
-Message-ID: <20070307164329.752993ff@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_efar: Switch to cable_detect method
+Date: Wed, 7 Mar 2007 16:44:58 +0000
+Message-ID: <20070307164458.77202dfc@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752005AbXCGPjP@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: akpm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55684 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752017AbXCGPkm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Mar 2007 10:40:42 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: akpm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Add suspend/resume support
-Write 0x5B to 0 not 0x5C
-
-The former is important as we must kill the FIFO on a resume
+Unfortunately the device differs also in the higher speeds mode setup so
+we can't merge it into ata_piix even though its a sort of clone.
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2-mm2/drivers/ata/pata_cmd640.c linux-2.6.21-rc2-mm2/drivers/ata/pata_cmd640.c
---- linux.vanilla-2.6.21-rc2-mm2/drivers/ata/pata_cmd640.c	2007-03-06 23:09:46.000000000 +0000
-+++ linux-2.6.21-rc2-mm2/drivers/ata/pata_cmd640.c	2007-03-06 23:52:21.000000000 +0000
-@@ -23,7 +23,7 @@
- #include <linux/libata.h>
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2-mm2/drivers/ata/pata_efar.c linux-2.6.21-rc2-mm2/drivers/ata/pata_efar.c
+--- linux.vanilla-2.6.21-rc2-mm2/drivers/ata/pata_efar.c	2007-03-06 23:09:46.000000000 +0000
++++ linux-2.6.21-rc2-mm2/drivers/ata/pata_efar.c	2007-03-06 23:35:15.000000000 +0000
+@@ -22,10 +22,10 @@
+ #include <linux/ata.h>
  
- #define DRV_NAME "pata_cmd640"
--#define DRV_VERSION "0.0.3"
-+#define DRV_VERSION "0.0.5"
- 
- struct cmd640_reg {
- 	int last;
-@@ -43,6 +43,7 @@
+ #define DRV_NAME	"pata_efar"
+-#define DRV_VERSION	"0.4.3"
++#define DRV_VERSION	"0.4.4"
  
  /**
-  *	cmd640_set_piomode	-	set initial PIO mode data
-+ *	@ap: ATA port
-  *	@adev: ATA device
+- *	efar_pre_reset	-	check for 40/80 pin
++ *	efar_pre_reset	-	Enable bits
+  *	@ap: Port
   *
-  *	Called to do the PIO mode setup.
-@@ -106,7 +107,7 @@
- 		pci_write_config_byte(pdev, arttim + 1, (t.active << 4) | t.recover);
- 	} else {
- 		/* Save the shared timings for channel, they will be loaded
--		   by qc_issue_prot. Reloading the setup time is expensive
-+		   by qc_issue_prot. Reloading the setup time is expensive 
- 		   so we keep a merged one loaded */
- 		pci_read_config_byte(pdev, ARTIM23, &reg);
- 		reg &= 0x3F;
-@@ -219,30 +220,21 @@
- 	.port_start	= cmd640_port_start,
- };
+  *	Perform cable detection for the EFAR ATA interface. This is
+@@ -40,16 +40,8 @@
+ 	};
  
--static int cmd640_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-+static void cmd640_hardware_init(struct pci_dev *pdev)
- {
- 	u8 r;
- 	u8 ctrl;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	u8 tmp;
+-
+ 	if (!pci_test_config_bits(pdev, &efar_enable_bits[ap->port_no]))
+ 		return -ENOENT;
+-
+-	pci_read_config_byte(pdev, 0x47, &tmp);
+-	if (tmp & (2 >> ap->port_no))
+-		ap->cbl = ATA_CBL_PATA40;
+-	else
+-		ap->cbl = ATA_CBL_PATA80;
+ 	return ata_std_prereset(ap);
+ }
  
--	static struct ata_port_info info = {
--		.sht = &cmd640_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
--		.pio_mask = 0x1f,
--		.port_ops = &cmd640_port_ops
--	};
--
--	static struct ata_port_info *port_info[2] = { &info, &info };
--
- 	/* CMD640 detected, commiserations */
--	pci_write_config_byte(pdev, 0x5C, 0x00);
-+	pci_write_config_byte(pdev, 0x5B, 0x00);
- 	/* Get version info */
- 	pci_read_config_byte(pdev, CFR, &r);
- 	/* PIO0 command cycles */
- 	pci_write_config_byte(pdev, CMDTIM, 0);
- 	/* 512 byte bursts (sector) */
- 	pci_write_config_byte(pdev, BRST, 0x40);
--	/*
--	 * A reporter a long time ago
-+	/* 
-+	 * A reporter a long time ago
- 	 * Had problems with the data fifo
- 	 * So don't run the risk
- 	 * Of putting crap on the disk
-@@ -255,12 +247,26 @@
- 	pci_read_config_byte(pdev, ARTIM23, &ctrl);
- 	ctrl |= 0x0C;
- 	pci_write_config_byte(pdev, ARTIM23, ctrl);
+@@ -67,6 +59,25 @@
+ }
+ 
+ /**
++ *	efar_cable_detect	-	check for 40/80 pin
++ *	@ap: Port
++ *
++ *	Perform cable detection for the EFAR ATA interface. This is
++ *	different to the PIIX arrangement
++ */
++
++static int efar_cable_detect(struct ata_port *ap)
++{
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	u8 tmp;
++
++	pci_read_config_byte(pdev, 0x47, &tmp);
++	if (tmp & (2 >> ap->port_no))
++		return ATA_CBL_PATA40;
++	return ATA_CBL_PATA80;
 +}
 +
-+static int cmd640_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-+{
-+	static struct ata_port_info info = {
-+		.sht = &cmd640_sht,
-+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
-+		.pio_mask = 0x1f,
-+		.port_ops = &cmd640_port_ops
-+	};
-+
-+	static struct ata_port_info *port_info[2] = { &info, &info };
++/**
+  *	efar_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: um
+@@ -256,6 +267,7 @@
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= efar_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.cable_detect		= efar_cable_detect,
  
-+	cmd640_hardware_init(pdev);
- 	return ata_pci_init_one(pdev, port_info, 2);
- }
- 
- static int cmd640_reinit_one(struct pci_dev *pdev)
- {
-+	cmd640_hardware_init(pdev);
- 	return ata_pci_device_resume(pdev);
- }
- 
+ 	.bmdma_setup		= ata_bmdma_setup,
+ 	.bmdma_start		= ata_bmdma_start,
