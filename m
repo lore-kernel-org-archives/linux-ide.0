@@ -1,55 +1,49 @@
 From: Greg KH <gregkh@suse.de>
-Subject: [patch 055/101] sata_sil: ignore and clear spurious IRQs while executing commands by polling
-Date: Wed, 07 Mar 2007 09:11:30 -0800
-Message-ID: <20070307171420.085896145@mini.kroah.org>
+Subject: [patch 005/101] pata_amd: fix an obvious bug in cable detection
+Date: Wed, 07 Mar 2007 09:10:40 -0800
+Message-ID: <20070307171133.656578650@mini.kroah.org>
 References: <20070307171035.150802805@mini.kroah.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43954 "EHLO mx1.suse.de"
+Received: from ns2.suse.de ([195.135.220.15]:42674 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422821AbXCGRP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Mar 2007 12:15:57 -0500
-Content-Disposition: inline; filename=sata_sil-ignore-and-clear-spurious-irqs-while-executing-commands-by-polling.patch
+	id S1422759AbXCGRNb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Mar 2007 12:13:31 -0500
+Content-Disposition: inline; filename=pata_amd-fix-an-obvious-bug-in-cable-detection.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Tejun Heo <htejun@gmail.com>
+To: linux-kernel@vger.kernel.org, stable@kernel.org, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, Tejun Heo <htejun@gmail.com>
 
 
-sata_sil used to trigger HSM error if IRQ occurs during polling
-command.  This didn't matter because polling wasn't used in sata_sil.
-However, as of 2.6.20, all IDENTIFYs are performed by polling and
-device detection sometimes fails due to spurious IRQ.  This patch
-makes sata_sil ignore and clear spurious IRQ while executing commands
-by polling.
-
-This fixes bug#7996 and IMHO should also be included in -stable.
+80c test mask is at bits 18 and 19 of EIDE Controller Configuration
+not 22 and 23.  Fix it.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 ---
- drivers/ata/sata_sil.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/ata/pata_amd.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- linux-2.6.20.1.orig/drivers/ata/sata_sil.c
-+++ linux-2.6.20.1/drivers/ata/sata_sil.c
-@@ -383,9 +383,15 @@ static void sil_host_intr(struct ata_por
- 		goto freeze;
- 	}
+--- linux-2.6.20.1.orig/drivers/ata/pata_amd.c
++++ linux-2.6.20.1/drivers/ata/pata_amd.c
+@@ -128,7 +128,7 @@ static void timing_setup(struct ata_port
  
--	if (unlikely(!qc || qc->tf.ctl & ATA_NIEN))
-+	if (unlikely(!qc))
- 		goto freeze;
+ static int amd_pre_reset(struct ata_port *ap)
+ {
+-	static const u32 bitmask[2] = {0x03, 0xC0};
++	static const u32 bitmask[2] = {0x03, 0x0C};
+ 	static const struct pci_bits amd_enable_bits[] = {
+ 		{ 0x40, 1, 0x02, 0x02 },
+ 		{ 0x40, 1, 0x01, 0x01 }
+@@ -247,7 +247,7 @@ static void amd133_set_dmamode(struct at
+  */
  
-+	if (unlikely(qc->tf.flags & ATA_TFLAG_POLLING)) {
-+		/* this sometimes happens, just clear IRQ */
-+		ata_chk_status(ap);
-+		return;
-+	}
-+
- 	/* Check whether we are expecting interrupt in this state */
- 	switch (ap->hsm_task_state) {
- 	case HSM_ST_FIRST:
+ static int nv_pre_reset(struct ata_port *ap) {
+-	static const u8 bitmask[2] = {0x03, 0xC0};
++	static const u8 bitmask[2] = {0x03, 0x0C};
+ 	static const struct pci_bits nv_enable_bits[] = {
+ 		{ 0x50, 1, 0x02, 0x02 },
+ 		{ 0x50, 1, 0x01, 0x01 }
 
 --
