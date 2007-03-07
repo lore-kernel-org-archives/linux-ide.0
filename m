@@ -1,49 +1,37 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: NVIDIA MCP55 NCQ
-Date: Thu, 08 Mar 2007 10:56:30 +1300
-Message-ID: <45EF350E.9040205@sauce.co.nz>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Libata Pass Through PIO Multi Support
+Date: Wed, 07 Mar 2007 17:33:35 -0500
+Message-ID: <45EF3DBF.1010400@garzik.org>
+References: <8202f4270703071357h1020d9bam511891325c4b0117@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.sauce.co.nz ([210.48.49.72]:35064 "EHLO smtp.sauce.co.nz"
+Received: from srv5.dvmed.net ([207.36.208.214]:41324 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992452AbXCGWBv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Mar 2007 17:01:51 -0500
-Received: from [192.168.4.111] (unknown [192.168.4.111])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp22.sauce.co.nz (Postfix) with ESMTP id AF20D28825B
-	for <linux-ide@vger.kernel.org>; Thu,  8 Mar 2007 10:55:08 +1300 (NZDT)
+	id S2992672AbXCGWdi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Mar 2007 17:33:38 -0500
+In-Reply-To: <8202f4270703071357h1020d9bam511891325c4b0117@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Am running a Redhat FC6 machine with kernel 2.6.19-1.2911.6.5 and 
-wondering if there is not yet support for the NCQ feature of sata_nv on 
-boards using the NVIDIA MCP55 chipset.
+Fajun Chen wrote:
+> Hi Folks,
+> 
+> In ata_scsi_pass_thru() function in libata-scsi.c, the following code
+> is in place:
+>        if (scsicmd[1] & 0xe0)
+>                /* PIO multi not supported yet */
+>                goto invalid_fld;
+> Could someone explain why the PIO multi is not supported in libata pass 
+> through?
 
-ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata4.00: ATA-7, max UDMA/133, 976773168 sectors: LBA48 NCQ (depth 0/32)
-ata4.00: ata4: dev 0 multi count 1
-ata4.00: configured for UDMA/133
-scsi 2:0:0:0: Direct-Access     ATA      WDC WD5000YS-01M 09.0 PQ: 0 ANSI: 5
-SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
+That's just code left over from before we merged Albert Lee's patches 
+adding PIO-multi support.  That check should probably just be removed.
 
-The drive is NCQ capable and when I attempt to:
+	Jeff
 
-echo 31 > /sys/block/sdc/device/queue_depth
 
-I get a "permission denied", (as root) and am reluctant to force the 
-issue, as I understand it should all just work, (depth 31/3), if 
-everything is OK.
 
-Regards,
-
-Richard
