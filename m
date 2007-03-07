@@ -1,98 +1,110 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] sata_via: cable detection
-Date: Wed, 7 Mar 2007 16:34:10 +0000
-Message-ID: <20070307163410.230a87e1@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_cmd640: Multiple updates
+Date: Wed, 7 Mar 2007 16:43:29 +0000
+Message-ID: <20070307164329.752993ff@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33751 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751885AbXCGP3y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Mar 2007 10:29:54 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752005AbXCGPjP@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Because the sata_via driver handles PATA and SATA ports on the 6421 it
-also ends up with duplicated chunks of code that can be eliminated using
-the cable_detect method. Generally SATA drivers don't need/want this as
-they are set correctly by libata simply because they declare themselves
-as SATA.
+Add suspend/resume support
+Write 0x5B to 0 not 0x5C
+
+The former is important as we must kill the FIFO on a resume
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2-mm2/drivers/ata/sata_via.c linux-2.6.21-rc2-mm2/drivers/ata/sata_via.c
---- linux.vanilla-2.6.21-rc2-mm2/drivers/ata/sata_via.c	2007-03-06 23:06:26.000000000 +0000
-+++ linux-2.6.21-rc2-mm2/drivers/ata/sata_via.c	2007-03-06 18:23:21.000000000 +0000
-@@ -78,8 +78,7 @@
- static void svia_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- static void svia_noop_freeze(struct ata_port *ap);
- static void vt6420_error_handler(struct ata_port *ap);
--static void vt6421_sata_error_handler(struct ata_port *ap);
--static void vt6421_pata_error_handler(struct ata_port *ap);
-+static int vt6421_pata_cable_detect(struct ata_port *ap);
- static void vt6421_set_pio_mode(struct ata_port *ap, struct ata_device *adev);
- static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev);
- static int vt6421_port_start(struct ata_port *ap);
-@@ -172,8 +171,9 @@
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2-mm2/drivers/ata/pata_cmd640.c linux-2.6.21-rc2-mm2/drivers/ata/pata_cmd640.c
+--- linux.vanilla-2.6.21-rc2-mm2/drivers/ata/pata_cmd640.c	2007-03-06 23:09:46.000000000 +0000
++++ linux-2.6.21-rc2-mm2/drivers/ata/pata_cmd640.c	2007-03-06 23:52:21.000000000 +0000
+@@ -23,7 +23,7 @@
+ #include <linux/libata.h>
  
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
--	.error_handler		= vt6421_pata_error_handler,
-+	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.cable_detect		= vt6421_pata_cable_detect,
+ #define DRV_NAME "pata_cmd640"
+-#define DRV_VERSION "0.0.3"
++#define DRV_VERSION "0.0.5"
  
- 	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-@@ -203,8 +203,9 @@
+ struct cmd640_reg {
+ 	int last;
+@@ -43,6 +43,7 @@
  
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
--	.error_handler		= vt6421_sata_error_handler,
-+	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.cable_detect		= ata_cable_sata,
+ /**
+  *	cmd640_set_piomode	-	set initial PIO mode data
++ *	@ap: ATA port
+  *	@adev: ATA device
+  *
+  *	Called to do the PIO mode setup.
+@@ -106,7 +107,7 @@
+ 		pci_write_config_byte(pdev, arttim + 1, (t.active << 4) | t.recover);
+ 	} else {
+ 		/* Save the shared timings for channel, they will be loaded
+-		   by qc_issue_prot. Reloading the setup time is expensive
++		   by qc_issue_prot. Reloading the setup time is expensive 
+ 		   so we keep a merged one loaded */
+ 		pci_read_config_byte(pdev, ARTIM23, &reg);
+ 		reg &= 0x3F;
+@@ -219,30 +220,21 @@
+ 	.port_start	= cmd640_port_start,
+ };
  
- 	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-@@ -330,35 +331,15 @@
- 				  NULL, ata_std_postreset);
- }
- 
--static int vt6421_pata_prereset(struct ata_port *ap)
-+static int vt6421_pata_cable_detect(struct ata_port *ap)
+-static int cmd640_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
++static void cmd640_hardware_init(struct pci_dev *pdev)
  {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u8 tmp;
+ 	u8 r;
+ 	u8 ctrl;
  
- 	pci_read_config_byte(pdev, PATA_UDMA_TIMING, &tmp);
- 	if (tmp & 0x10)
--		ap->cbl = ATA_CBL_PATA40;
--	else
--		ap->cbl = ATA_CBL_PATA80;
--	return 0;
--}
+-	static struct ata_port_info info = {
+-		.sht = &cmd640_sht,
+-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
+-		.pio_mask = 0x1f,
+-		.port_ops = &cmd640_port_ops
+-	};
 -
--static void vt6421_pata_error_handler(struct ata_port *ap)
--{
--	return ata_bmdma_drive_eh(ap, vt6421_pata_prereset, ata_std_softreset,
--				  NULL, ata_std_postreset);
--}
+-	static struct ata_port_info *port_info[2] = { &info, &info };
 -
--static int vt6421_sata_prereset(struct ata_port *ap)
--{
--	ap->cbl = ATA_CBL_SATA;
--	return 0;
--}
--
--static void vt6421_sata_error_handler(struct ata_port *ap)
--{
--	return ata_bmdma_drive_eh(ap, vt6421_sata_prereset, ata_std_softreset,
--				  NULL, ata_std_postreset);
-+		return ATA_CBL_PATA40;
-+	return ATA_CBL_PATA80;
+ 	/* CMD640 detected, commiserations */
+-	pci_write_config_byte(pdev, 0x5C, 0x00);
++	pci_write_config_byte(pdev, 0x5B, 0x00);
+ 	/* Get version info */
+ 	pci_read_config_byte(pdev, CFR, &r);
+ 	/* PIO0 command cycles */
+ 	pci_write_config_byte(pdev, CMDTIM, 0);
+ 	/* 512 byte bursts (sector) */
+ 	pci_write_config_byte(pdev, BRST, 0x40);
+-	/*
+-	 * A reporter a long time ago
++	/* 
++	 * A reporter a long time ago
+ 	 * Had problems with the data fifo
+ 	 * So don't run the risk
+ 	 * Of putting crap on the disk
+@@ -255,12 +247,26 @@
+ 	pci_read_config_byte(pdev, ARTIM23, &ctrl);
+ 	ctrl |= 0x0C;
+ 	pci_write_config_byte(pdev, ARTIM23, ctrl);
++}
++
++static int cmd640_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
++{
++	static struct ata_port_info info = {
++		.sht = &cmd640_sht,
++		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++		.pio_mask = 0x1f,
++		.port_ops = &cmd640_port_ops
++	};
++
++	static struct ata_port_info *port_info[2] = { &info, &info };
+ 
++	cmd640_hardware_init(pdev);
+ 	return ata_pci_init_one(pdev, port_info, 2);
  }
  
- static void vt6421_set_pio_mode(struct ata_port *ap, struct ata_device *adev)
+ static int cmd640_reinit_one(struct pci_dev *pdev)
+ {
++	cmd640_hardware_init(pdev);
+ 	return ata_pci_device_resume(pdev);
+ }
+ 
