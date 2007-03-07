@@ -1,105 +1,98 @@
 From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [RFT] sata_promise: decode and report error reasons
-Date: Wed, 7 Mar 2007 20:53:45 +0100
-Message-ID: <17903.6217.992304.800959@alkaid.it.uu.se>
-References: <200703010158.l211wXPS012467@harpo.it.uu.se>
-	<45EB9DF4.20402@gmail.com>
+Subject: Re: sata_promise SATA300TX4 "intermittent problems"
+Date: Wed, 7 Mar 2007 21:12:54 +0100
+Message-ID: <17903.7366.875191.751728@alkaid.it.uu.se>
+References: <45EECD12.1000506@how.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:33558 "EHLO aun.it.uu.se"
+Received: from aun.it.uu.se ([130.238.12.36]:33769 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992535AbXCGTxz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Mar 2007 14:53:55 -0500
-In-Reply-To: <45EB9DF4.20402@gmail.com>
+	id S965589AbXCGUNB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Mar 2007 15:13:01 -0500
+In-Reply-To: <45EECD12.1000506@how.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Peter Favrholdt <linux-ide@how.dk>
 Cc: linux-ide@vger.kernel.org
 
-Tejun,
-
-Tejun Heo writes:
- > Hello, Mikael.
+Peter Favrholdt writes:
+ > Hi,
  > 
- > Mikael Pettersson wrote:
- > > +static void pdc_error_intr(struct ata_port *ap, struct ata_queued_cmd *qc, u32 port_status)
- > > +{
- > > +	struct pdc_host_priv *hp = ap->host->private_data;
- > > +	struct ata_eh_info *ehi = &ap->eh_info;
- > > +	unsigned int err_mask = 0, action = 0;
- > > +	u32 serror;
- > > +
- > > +	ata_ehi_clear_desc(ehi);
- > > +
- > > +	serror = 0;
- > > +	if (sata_scr_valid(ap)) {
- > > +		serror = pdc_sata_scr_read(ap, SCR_ERROR);
- > > +		if (!(hp->flags & PDC_FLAG_GEN_II))
- > > +			serror &= ~PDC2_SERR_MASK;
- > > +	}
- > > +
- > > +	printk("%s: port_status 0x%08x serror 0x%08x\n", __FUNCTION__, port_status, serror);
- > > +
- > > +	ata_ehi_push_desc(ehi, "port_status 0x%08x", port_status);
- > > +
- > > +	if (serror & PDC_SERR_MASK) {
- > > +		err_mask |= AC_ERR_ATA_BUS;
+ > I've seen "intermittent problems" with Promise SATA300 TX4 controllers
+ > and Linux kernel 2.6.19 (through 2.6.20-rc2 with some additional
+ > patches).
  > 
- > 1. It might be that decoding PDC specific bits is unnecessary if it sets
- > the standard bits correctly.  Also, SError bits above bit16 are
- > diagnostic bits and don't necessarily indicate error condition.
-
-Which SErrror bits are standard?
-It is true that some of the SError bits are diagnostic rather than
-actual error indicators, as Promise's driver only checks a subset
-of them. I'll fix that.
-
- > 2. PDC_SERR_FIS_TYPE is more close to AC_ERR_HSM.
-
-FIS_TYPE is described as reception of a FIS with a good CRC but
-unrecognised type field. I can make it AC_ERR_HSM if that's more
-appropriate.
-
- > > +		ata_ehi_push_desc(ehi, ", serror 0x%08x", serror);
- > > +	}
- > > +	if (port_status & PDC_DRIVE_ERR)
- > > +		err_mask |= AC_ERR_DEV;
- > > +	if (port_status & PDC2_HTO_ERR)
- > > +		err_mask |= AC_ERR_TIMEOUT;
+ > Sometimes the TX4 will loose a port - a reboot brings the drive back up 
+ > again. I'm quite sure the harddrives are not at fault.
  > 
- > What does HTO mean?  Host time out?  Until now, AC_ERR_TIMEOUT has been
- > used to indicate that driver side timeout has expired and I'd like to
- > keep it that way.
-
-Yes, HTO is "host bus timeout" which is described as the host bus being
-busy more than 256 clock (I guess PCI) cycles for an ATA I/O transfer.
-
-If not AC_ERR_TIMEOUT, then what? AC_ERR_HOST_BUS?
-
- > > +	if (port_status & (PDC_UNDERRUN_ERR | PDC_OVERRUN_ERR | PDC2_ATA_DMA_CNT_ERR
- > > +			   | PDC2_ATA_HBA_ERR))
- > > +		err_mask |= AC_ERR_ATA_BUS;
+ > I have experienced this using "plain vanilla" Linux 2.6.19.2 and 
+ > 2.6.20.1. Today I have tested using Linux 2.6.21-rc2 with Mikael 
+ > Petterson's patches (more on that further down).
  > 
- > AC_ERR_ATA_BUS indicates transmission errors on the ATA bus.  AC_ERR_HSM
- > (host state machine/protocol violation), AC_ERR_HOST_BUS (host/PCI BUS
- > error) or AC_ERR_SYSTEM (other system errors) seems more appropriate for
- > the above error conditions.
+ > Yesterday (using 2.6.20.1) I could fail two out of four drives by doing:
+ > dd if=/dev/sda of=/dev/null bs=1M &
+ > dd if=/dev/sdb of=/dev/null bs=1M &
+ > dd if=/dev/sdc of=/dev/null bs=1M &
+ > dd if=/dev/sdd of=/dev/null bs=1M &
+ > 
+ > sdd would fail first then after a while sdc, here is the dmesg output 
+ > when sdd failed:
+ > 
+ > [14895.092650] ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x1380000 
+ > action 0x2 frozen
 
-UNDERRUN and OVERRUN occur when DMA S/G byte count differs from what the
-device accepts or delivers as checked when the device asserts INTRQ.
-I can make them AC_ERR_HSM instead. (HOST_BUS or SYSTEM seem inappropriate.)
+SErr 0x01380000 would indicate:
+transport state transmission error (bit 24)
+CRC error (bit 21)
+disparity error (bit 20) [whatever that is]
+10b_to_8b decoding error (bit 19)
 
-ATA_HBA_ERR is any FIS transmission error on SATA interface. AC_ERR_ATA_BUS
-seems appropriate for that one.
+I.e., serious transmission issues.
 
-ATA_DMA_CNT_ERR is when a DMA FIS data size differs from total DMA S/G size.
-I think AC_ERR_ATA_BUS is the correct choice for this one too.
+ > [52849.930755] pdc_error_intr: port_status 0x00001000 serror 0x00000000
+ > [52849.930880] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 
+ > frozen
+ > [52849.930883] ata2.00: (port_status 0x00001000)
 
-I will add more explanatory text to the error bit definitions, and
-perhaps also a table-driven error logger (a bit like sata_sil24).
+"host bus timeout error" (bit 12).
+I wonder why SError was clear now.
 
-Thanks for the review.
+ > I would be very happy to help debug this issue. Any suggestions on what 
+ > I should try next?
+
+Well, at the moment I have only one possible cure: to forcibly
+limit 3Gbps drives to 1.5Gbps operation, as the patch below does.
+
+On one of my test machines (an old UltraSPARC), a SATA300 TX2plus
+with a Seagate 3Gbps drive (don't have the model number handy),
+will quickly experience "DMA S/G overrun" errors during an fsck
+of a large but clean ext3 partition. With the patch below things
+work solidly on that particular machine. OTOH, on another test
+machine (a 440BX chipset Intel PIII), the same card/cable/disk
+combination works flawlessly at 3Gbps. Mysterious.
 
 /Mikael
+
+--- linux-2.6.21-rc2/drivers/ata/sata_promise.c.~1~	2007-03-06 22:17:21.000000000 +0100
++++ linux-2.6.21-rc2/drivers/ata/sata_promise.c	2007-03-06 23:21:36.000000000 +0100
+@@ -378,6 +378,18 @@ static int pdc_port_start(struct ata_por
+ 		writel(tmp, mmio + 0x014);
+ 	}
+ 
++	/* hack SControl to limit speed to 1.5Gbps */
++	if ((hp->flags & PDC_FLAG_GEN_II) && sata_scr_valid(ap)) {
++		void __iomem *mmio = (void __iomem *) ap->ioaddr.scr_addr;
++		unsigned int tmp1, tmp2;
++
++		tmp1 = readl(mmio + 0x008);
++		tmp2 = (tmp1 & 0xffffff00) | 0x00000011;
++		writel(tmp2, mmio + 0x008);
++		readl(mmio + 0x008); /* flush */
++		printk("%s(port %u): adjusted SControl from 0x%08x to 0x%08x\n", __FUNCTION__, ap->port_no, tmp1, tmp2);
++	}
++
+ 	return 0;
+ }
+ 
