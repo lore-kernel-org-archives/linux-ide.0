@@ -1,15 +1,15 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_sl82c105: Restore cable detect method
-Date: Thu, 8 Mar 2007 23:02:52 +0000
-Message-ID: <20070308230252.1b83a6a2@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_triflex: Restore cable method
+Date: Thu, 8 Mar 2007 23:03:39 +0000
+Message-ID: <20070308230339.4c02698f@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54287 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54290 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030696AbXCHV6g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 16:58:36 -0500
+	with ESMTP id S1030658AbXCHV7X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 16:59:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: akpm@osdl.org, linux-ide@vger.kernel.org
