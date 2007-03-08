@@ -1,73 +1,119 @@
-From: Russ Weeks <rweeks@razorwire.ca>
-Subject: sata-nv hotplug feature
-Date: Wed, 7 Mar 2007 20:39:18 -0800
-Message-ID: <200703072039.18588.rweeks@razorwire.ca>
-Reply-To: rweeks@razorwire.ca
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 5/7] [RFC] xenon: add SATA support
+Date: Thu, 08 Mar 2007 16:54:51 +0900
+Message-ID: <45EFC14B.3090906@gmail.com>
+References: <20070307180144.812594000@elitedvb.net>> <45EF2899.2030508@elitedvb.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from defout.telus.net ([199.185.220.240]:47232 "EHLO
-	defout.telus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778AbXCHEjW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Mar 2007 23:39:22 -0500
-Received: from priv-edtnaa05.telusplanet.net ([205.250.220.187])
-          by priv-edtnes90.telusplanet.net
-          (InterMail vM.7.08.02.00 201-2186-121-20061213) with ESMTP
-          id <20070308043921.GZKL28795.priv-edtnes90.telusplanet.net@priv-edtnaa05.telusplanet.net>
-          for <linux-ide@vger.kernel.org>; Wed, 7 Mar 2007 21:39:21 -0700
-Received: from [192.168.0.102] (d205-250-220-187.bchsia.telus.net [205.250.220.187])
-	by priv-edtnaa05.telusplanet.net (BorderWare MXtreme Infinity Mail Firewall) with ESMTP id 0CSNEXKERX
-	for <linux-ide@vger.kernel.org>; Wed,  7 Mar 2007 21:39:20 -0700 (MST)
-Content-Disposition: inline
+Received: from nz-out-0506.google.com ([64.233.162.224]:12579 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965010AbXCHHyw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 02:54:52 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so323329nze
+        for <linux-ide@vger.kernel.org>; Wed, 07 Mar 2007 23:54:51 -0800 (PST)
+In-Reply-To: <45EF2899.2030508@elitedvb.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Felix Domke <tmbinc@elitedvb.net>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+Hello,
 
-First off, please let me know if I should repost this to a support mailing 
-list.  Or, if the answer is 'rtfm', please just point me to the manual.  I 
-checked the libata FAQ but can't find what I need.
+Generally looks good.  Some questions and suggestions follow.
 
-I'd like some more information regarding the device hotplug feature for the 
-sata-nv driver.  The FAQ indicates that 'device hotplug' == 'yank the drive': 
-this seems more like 'hot-unplug' to me.  Can I then plug the drive back in 
-after I've unplugged it?
+Felix Domke wrote:
+> Index: linux-2.6.20/drivers/ata/libata-core.c
+> ===================================================================
+> --- linux-2.6.20.orig/drivers/ata/libata-core.c	2007-03-07
+> 19:01:12.000000000 +0100
+> +++ linux-2.6.20/drivers/ata/libata-core.c	2007-03-07 19:01:22.000000000
+> +0100
+> @@ -1478,7 +1478,7 @@
+>  	}
+> 
+>  	tf.protocol = ATA_PROT_PIO;
+> -	tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
+> +//	tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
 
-This thread:
-http://www.mail-archive.com/ubuntu-server@lists.ubuntu.com/msg00182.html
+Polling IDENTIFY doesn't work for you?  Care to explain how it's broken?
 
-Seems to indicate that I can do it, but I may need to refresh the SCSI device 
-system somehow.  This suits my needs just fine, as long as a plug doesn't 
-necessitate a reboot.  But running rescan-scsi-bus.sh doesn't seem to work.
+> Index: linux-2.6.20/drivers/ata/sata_xenon.c
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ linux-2.6.20/drivers/ata/sata_xenon.c	2007-03-07 19:01:22.000000000
+> +0100
+> +	   Note on the DVD-ROM part:
+> +
+> +	   The drives usually require some tweaks to be usable under linux.
+> +
+> +	   You either need to hack the scsi layer, or, in case of the GDR3120L,
+> +	   set 'modeB' in the bootloader.
 
-uname -a:
-Linux backfire 2.6.19.2-smp #2 SMP Sat Mar 3 13:06:28 PST 2007 x86_64 x86_64 
-x86_64 GNU/Linux
+Care to explain it further?  Or is it some cryptic embedded stuff?
 
-lspci shows this:
-00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev f2)
-00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
-00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
+> +extern struct ata_probe_ent *ata_probe_ent_alloc(struct device *dev,
+> +						 const struct ata_port_info *port);
 
-lsmod shows that libata and sata-nv are present.
+This is an internal function and if you do this, your driver won't build
+as a kernel module.  Please do as other drivers do.  probe_ent is in the
+process of being removed, so looking ugly is okay for the time being.
 
-rescan-scsi-bus.sh shows this (after I boot with 1 drive plugged in and then 
-try to plug in the other 2):
-OLD: Host: scsi2 Channel: 00 Id: 00 Lun: 00
-      Vendor: ATA      Model: ST3250824AS      Rev: 3.AA
-      Type:   Direct-Access                    ANSI SCSI revision: 05
+> +static u32 xenon_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+> +	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, sc_reg,
+> pdev->device);
+> +	u32 val;
+> +
+> +	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
+> +		return 0; /* assume no error */
 
-(this seems correct, just that 2 other drives are missing)
+Interesting, SError isn't there while other regs are?
 
-The hardware is a Tyan Thunder K8W 2895 motherboard with an onboard 
-controller.  3 250Gb Seagate Barracudas are attached, 2 are in removable 
-drive trays made by some company called 'ByteCC'.
+> +static u32 xenon_scr_read (struct ata_port *ap, unsigned int sc_reg)
+> +{
+> +	if (sc_reg > SCR_CONTROL)
+> +		return 0xffffffffU;
+> +
+> +	return xenon_scr_cfg_read(ap, sc_reg);
+> +}
 
-_Any_ advice is appreciated.  I'm really in the dark here.
+Just collapse xenon_scr_cfg_read() into xenon_scr_read().
 
-Thanks,
+> +static void xenon_scr_write (struct ata_port *ap, unsigned int sc_reg,
+> u32 val)
+> +{
+> +	if (sc_reg > SCR_CONTROL)
+> +		return;
+> +
+> +	xenon_scr_cfg_write(ap, sc_reg, val);
+> +}
 
-Russ
+Ditto for write.
+
+> +static int xenon_init_one (struct pci_dev *pdev, const struct
+> pci_device_id *ent)
+> +{
+> +	static int printed_version;
+> +	struct ata_probe_ent *probe_ent = NULL;
+> +	int rc;
+> +	int pci_dev_busy = 0;
+> +
+> +	if (!printed_version++)
+> +		dev_printk(KERN_INFO, &pdev->dev, "version " DRV_VERSION "\n");
+> +
+> +	rc = pci_enable_device(pdev);
+> +	if (rc)
+> +		return rc;
+
+New drivers are generally accepted into libata-dev#upstream branch, and
+it looks a bit different in the init path.  If you're a gitter, please
+generate patch against libata-dev#upstream, if not the latest -mm should
+be good enough.
+
+Thanks.
+
+-- 
+tejun
