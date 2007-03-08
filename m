@@ -1,96 +1,63 @@
-From: Suleiman Souhlal <ssouhlal@freebsd.org>
-Subject: Re: [PATCH 3/3] Use correct IDE error recovery
-Date: Thu, 8 Mar 2007 12:53:07 -0800
-Message-ID: <AD2A17AC-83C6-4CCB-9452-A07DF2F8D821@freebsd.org>
-References: <20070221012304.GC1777@freefall.freebsd.org> <200703072216.08295.bzolnier@gmail.com> <B2D4536E-D449-4D10-B745-30D25CAC40A4@freebsd.org> <200703082134.47530.bzolnier@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: sata_nv error with smartctl access
+Date: Fri, 09 Mar 2007 09:59:28 +1300
+Message-ID: <45F07930.6000102@sauce.co.nz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elvis.mu.org ([192.203.228.196]:53441 "EHLO elvis.mu.org"
+Received: from smtp.sauce.co.nz ([210.48.49.72]:54858 "EHLO smtp.sauce.co.nz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933310AbXCHUxj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Mar 2007 15:53:39 -0500
-In-Reply-To: <200703082134.47530.bzolnier@gmail.com>
+	id S933315AbXCHU6D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Mar 2007 15:58:03 -0500
+Received: from [192.168.4.111] (unknown [192.168.4.111])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp22.sauce.co.nz (Postfix) with ESMTP id 10A3428825B
+	for <linux-ide@vger.kernel.org>; Fri,  9 Mar 2007 09:57:57 +1300 (NZDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+Hi,
 
-On Mar 8, 2007, at 12:34 PM, Bartlomiej Zolnierkiewicz wrote:
+This may already be addressed, but in case anyone is interested.
 
->
-> Hi,
->
-> On Thursday 08 March 2007, Suleiman Souhlal wrote:
->>
->> On Mar 7, 2007, at 1:16 PM, Bartlomiej Zolnierkiewicz wrote:
->>
->>>
->>> Hi,
->>>
->>> (sorry for the long delay)
->>>
->>> On Wednesday 21 February 2007, Suleiman Souhlal wrote:
->>>> IDE error recovery is using WIN_IDLEIMMEDIATE which was only  
->>>> valid for
->>>> IDE V1 and IDE V2.  Modern drives will not be able to recover using
->>>> this error handling.  The correct thing to do is issue a SRST  
->>>> followed
->>>> by a SET_FEATURES.
->>>
->>> This change looks fine, indeed we are better of using SRST +
->>> SET_FEATURES than IDLE_IMMEDIATE.
->>>
->>>> Signed-off-by:	Suleiman Souhlal <suleiman@google.com>
->>>>
->>>> ---
->>>>  drivers/ide/ide-io.c   |   35 +++++++++++-----
->>>>  drivers/ide/ide-iops.c |  105 +++++++++++++++++++++++++++ 
->>>> +--------------------
->>>>  include/linux/ide.h    |    2 +
->>>>  3 files changed, 88 insertions(+), 54 deletions(-)
->>>>
->>>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
->>>> index c193553..2f05b4d 100644
->>>> --- a/drivers/ide/ide-io.c
->>>> +++ b/drivers/ide/ide-io.c
->>>> @@ -519,21 +519,21 @@ static ide_startstop_t ide_ata_error(ide
->>>>  	if ((stat & DRQ_STAT) && rq_data_dir(rq) == READ && hwif-
->>>>> err_stops_fifo == 0)
->>>>  		try_to_flush_leftover_data(drive);
->>>>
->>>> +	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq)) {
->>>> +		ide_kill_rq(drive, rq);
->>>> +		return ide_stopped;
->>>> +	}
->>>> +
->>>>  	if (hwif->INB(IDE_STATUS_REG) & (BUSY_STAT|DRQ_STAT))
->>>> -		/* force an abort */
->>>> -		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
->>>> +		rq->errors |= ERROR_RESET;
->>>>
->>>> -	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq))
->>>> -		ide_kill_rq(drive, rq);
->>>> -	else {
->>>> -		if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
->>>> -			++rq->errors;
->>>> -			return ide_do_reset(drive);
->>>> -		}
->>>> -		if ((rq->errors & ERROR_RECAL) == ERROR_RECAL)
->>>> -			drive->special.b.recalibrate = 1;
->>>
->>> Is the removal of ERROR_RECAL handling intentional?
->>> There is nothing about it in the patch description...
->>
->> Yes, it was intentional, but I forgot to add "while there remove some
->
-> Why is it useless?  What am I missing?
+Fedora Core 6 2.6.19-1.2911.6.5, NVIDIA MCP55 based board using sata_nv.
 
-I thought the recalibration code didn't do anything, but upon  
-rereading the code I'm not so sure anymore..
+When querying a drive using smartctl and SMART is not enabled on the 
+drive, I get the following error:
 
--- Suleiman
+ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata3.00: tag 0 cmd 0xb0 Emask 0x1 stat 0x51 err 0x4 (device error)
+ata3: EH complete
+ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata3.00: tag 0 cmd 0xb0 Emask 0x1 stat 0x51 err 0x4 (device error)
+ata3: EH complete
+ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata3.00: tag 0 cmd 0xb0 Emask 0x1 stat 0x51 err 0x4 (device error)
+ata3: EH complete
+ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata3.00: tag 0 cmd 0xb0 Emask 0x1 stat 0x51 err 0x4 (device error)
+ata3: EH complete
+ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata3.00: tag 0 cmd 0xb0 Emask 0x1 stat 0x51 err 0x4 (device error)
+ata3: EH complete
+ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata3.00: tag 0 cmd 0xb0 Emask 0x1 stat 0x51 err 0x4 (device error)
+ata3: EH complete
+SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back
+SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back
 
+This does not seem to cause any problems and once SMART is enabled, 
+there are no more errors.
 
+Regards,
+
+Richard
