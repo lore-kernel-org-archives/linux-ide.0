@@ -1,29 +1,91 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_sc1200: restore cable type
-Date: Thu, 8 Mar 2007 22:58:03 +0000
-Message-ID: <20070308225803.61e2fb4d@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_serverworks: Re-remove crap, restore cable detect
+Date: Thu, 8 Mar 2007 22:59:52 +0000
+Message-ID: <20070308225952.68cb10c7@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50095 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50100 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030695AbXCHVxq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 16:53:46 -0500
+	with ESMTP id S1030694AbXCHVzg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 16:55:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: akpm@osdl.org, linux-ide@vger.kernel.org
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_sc1200.c linux-2.6.21-rc3-mm2/drivers/ata/pata_sc1200.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_sc1200.c	2007-03-08 15:59:20.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/pata_sc1200.c	2007-03-08 16:47:20.000000000 +0000
-@@ -216,6 +216,7 @@
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_serverworks.c linux-2.6.21-rc3-mm2/drivers/ata/pata_serverworks.c
+--- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_serverworks.c	2007-03-08 16:01:10.000000000 +0000
++++ linux-2.6.21-rc3-mm2/drivers/ata/pata_serverworks.c	2007-03-08 16:35:59.000000000 +0000
+@@ -1,5 +1,5 @@
+ /*
+- * ata-serverworks.c 	- Serverworks PATA for new ATA layer
++ * pata_serverworks.c 	- Serverworks PATA for new ATA layer
+  *			  (C) 2005 Red Hat Inc
+  *			  Alan Cox <alan@redhat.com>
+  *
+@@ -137,16 +137,14 @@
+ };
+ 
+ /**
+- *	serverworks_pre_reset		-	cable detection
++ *	serverworks_cable_detect	-	cable detection
+  *	@ap: ATA port
+- *	@deadline: deadline jiffies for the operation
+  *
+  *	Perform cable detection according to the device and subvendor
+  *	identifications
+  */
+ 
+-static int serverworks_pre_reset(struct ata_port *ap, unsigned long deadline)
+-{
++static int serverworks_cable_detect(struct ata_port *ap) {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	struct sv_cable_table *cb = cable_detect;
+ 
+@@ -154,8 +152,7 @@
+ 		if (cb->device == pdev->device &&
+ 		    (cb->subvendor == pdev->subsystem_vendor ||
+ 		      cb->subvendor == PCI_ANY_ID)) {
+-			ap->cbl = cb->cable_detect(ap);
+-			return ata_std_prereset(ap, deadline);
++			return cb->cable_detect(ap);
+ 		}
+ 		cb++;
+ 	}
+@@ -164,11 +161,6 @@
+ 	return -1;	/* kill compiler warning */
+ }
+ 
+-static void serverworks_error_handler(struct ata_port *ap)
+-{
+-	return ata_bmdma_drive_eh(ap, serverworks_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+ /**
+  *	serverworks_is_csb	-	Check for CSB or OSB
+  *	@pdev: PCI device to check
+@@ -341,8 +333,9 @@
+ 
+ 	.freeze		= ata_bmdma_freeze,
  	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ata_bmdma_error_handler,
+-	.error_handler	= serverworks_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
  	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
++	.cable_detect	= serverworks_cable_detect,
+ 
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= ata_bmdma_start,
+@@ -376,8 +369,9 @@
+ 
+ 	.freeze		= ata_bmdma_freeze,
+ 	.thaw		= ata_bmdma_thaw,
+-	.error_handler	= serverworks_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= serverworks_cable_detect,
  
  	.bmdma_setup 	= ata_bmdma_setup,
  	.bmdma_start 	= ata_bmdma_start,
