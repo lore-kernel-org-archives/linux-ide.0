@@ -1,77 +1,71 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_legacy: Restore cable methods
-Date: Thu, 8 Mar 2007 19:40:21 +0000
-Message-ID: <20070308194021.1e329208@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_marvell: Restore cable methods and reapply lost bug
+ fix
+Date: Thu, 8 Mar 2007 19:41:27 +0000
+Message-ID: <20070308194127.4439331c@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59149 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59152 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932964AbXCHSgN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 13:36:13 -0500
+	with ESMTP id S932936AbXCHShS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 13:37:18 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: akpm@osdl.org, linux-ide@vger.kernel.org
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_legacy.c linux-2.6.21-rc3-mm2/drivers/ata/pata_legacy.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_legacy.c	2007-03-08 15:59:20.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/pata_legacy.c	2007-03-08 16:46:43.000000000 +0000
-@@ -162,6 +162,7 @@
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_marvell.c linux-2.6.21-rc3-mm2/drivers/ata/pata_marvell.c
+--- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_marvell.c	2007-03-08 16:01:10.000000000 +0000
++++ linux-2.6.21-rc3-mm2/drivers/ata/pata_marvell.c	2007-03-08 16:28:50.000000000 +0000
+@@ -20,7 +20,7 @@
+ #include <linux/ata.h>
  
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= ata_qc_issue_prot,
-@@ -185,6 +186,7 @@
- 	.check_status 	= ata_check_status,
- 	.exec_command	= ata_exec_command,
- 	.dev_select 	= ata_std_dev_select,
-+	.cable_detect	= ata_cable_40wire,
+ #define DRV_NAME	"pata_marvell"
+-#define DRV_VERSION	"0.1.1"
++#define DRV_VERSION	"0.1.4"
  
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
-@@ -305,6 +307,7 @@
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
+ /**
+  *	marvell_pre_reset	-	check for 40/80 pin
+@@ -53,22 +53,23 @@
+ 	if ((pdev->device == 0x6145) && (ap->port_no == 0) &&
+ 	    (!(devices & 0x10)))	/* PATA enable ? */
+ 		return -ENOENT;
++	return ata_std_prereset(ap, deadline);
++}
  
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= ata_qc_issue_prot,
-@@ -360,6 +363,7 @@
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
++static int marvell_cable_detect(struct ata_port *ap)
++{
+ 	/* Cable type */
+ 	switch(ap->port_no)
+ 	{
+ 	case 0:
+ 		if (ioread8(ap->ioaddr.bmdma_addr + 1) & 1)
+-			ap->cbl = ATA_CBL_PATA40;
+-		else
+-			ap->cbl = ATA_CBL_PATA80;
+-		break;
+-
++			return ATA_CBL_PATA40;
++		return ATA_CBL_PATA80;
+ 	case 1: /* Legacy SATA port */
+-		ap->cbl = ATA_CBL_SATA;
+-		break;
++		return ATA_CBL_SATA;
+ 	}
+-	return ata_std_prereset(ap, deadline);
++	BUG();
++	return 0;	/* Our BUG macro needs the right markup */
+ }
  
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= ata_qc_issue_prot,
-@@ -426,6 +430,7 @@
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
+ /**
+@@ -124,6 +125,7 @@
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= marvell_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.cable_detect		= marvell_cable_detect,
  
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= ata_qc_issue_prot,
-@@ -547,6 +552,7 @@
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
- 
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= ata_qc_issue_prot,
-@@ -680,6 +686,7 @@
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
- 
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= opti82c46x_qc_issue_prot,
+ 	/* BMDMA handling is PCI ATA format, use helpers */
+ 	.bmdma_setup		= ata_bmdma_setup,
