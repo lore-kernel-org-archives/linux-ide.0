@@ -1,42 +1,57 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [RFT] sata_promise: decode and report error reasons
-Date: Thu, 8 Mar 2007 11:09:37 +0100
-Message-ID: <17903.57569.139263.798351@alkaid.it.uu.se>
-References: <200703010158.l211wXPS012467@harpo.it.uu.se>
-	<45EB9DF4.20402@gmail.com>
-	<17903.6217.992304.800959@alkaid.it.uu.se>
-	<45EF40A5.70208@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Fix simplex adapters with libata
+Date: Thu, 8 Mar 2007 13:02:50 +0000
+Message-ID: <20070308130250.5647ce5c@lxorguk.ukuu.org.uk>
+References: <20070308091211.GA7257@vana.vc.cvut.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:39958 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932574AbXCHKJ5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Mar 2007 05:09:57 -0500
-In-Reply-To: <45EF40A5.70208@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34194 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751497AbXCHL6f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 06:58:35 -0500
+In-Reply-To: <20070308091211.GA7257@vana.vc.cvut.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Petr Vandrovec <petr@vandrovec.name>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Jeff Garzik writes:
- > > ATA_DMA_CNT_ERR is when a DMA FIS data size differs from total DMA S/G size.
- > > I think AC_ERR_ATA_BUS is the correct choice for this one too.
- > 
- > Where is this in the Promise docs, so that I can take a closer look?
+> And as xfermask stripped out DMA bits, host->simplex_claimed
+> is always NULL with current implementation.
+> 
+> By allowing DMA either if simplex_claimed is NULL or if it
+> points to current port DMA can be finally used - it gets
+> assigned to first port which contains any DMA capable
+> device.
 
-Pages 38-39 in the PDC205xx development guide (my primary source),
-page 32 in the PDC2037x guide, and pages 35-36 in the PDC20319 guide.
+Doh, sorry I should have caught that when testing.
 
- > This condition sounds like overrun/underrun, something that would not 
- > occur outside of a driver bug?
+> Signed-off-by: Petr Vandrovec <petr@vandrovec.name>
 
-I got overruns (or was it underruns?) when running a SATA300 TX2plus
-with a 3Gbps disk in an UltraSPARC box, which were "cured" by hacking
-SControl to limit speeds to 1.5Gbps. These issues did not occur when
-the same card/cable/disk combo sat in an x86 PC, which makes me think
-that the chip's x86 BIOS did some initialisation that never occurred
-on the UltraSPARC box. I intend to investigate that this evening.
+Acked-by: Alan Cox <alan@redhat.com>
 
-/Mikael
+> 
+> diff -uprdN linux/drivers/ata/libata-core.c linux/drivers/ata/libata-core.c
+> --- linux/drivers/ata/libata-core.c	2007-03-07 22:13:24.000000000 -0800
+> +++ linux/drivers/ata/libata-core.c	2007-03-08 00:15:37.000000000 -0800
+> @@ -3455,7 +3455,8 @@ static void ata_dev_xfermask(struct ata_
+>  			       "device is on DMA blacklist, disabling DMA\n");
+>  	}
+>  
+> -	if ((host->flags & ATA_HOST_SIMPLEX) && host->simplex_claimed != ap) {
+> +	if ((host->flags & ATA_HOST_SIMPLEX) &&
+> +            host->simplex_claimed && host->simplex_claimed != ap) {
+>  		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+>  		ata_dev_printk(dev, KERN_WARNING, "simplex DMA is claimed by "
+>  			       "other device, disabling DMA\n");
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+--
+Sick of rip off UK rail fares ? Learn how to get far cheaper fares
+		http://zeniv.linux.org.uk/~alan/GTR/
