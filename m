@@ -1,240 +1,482 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] libata: Change prototype of mode_filter to remove ata_port
- *
-Date: Thu, 8 Mar 2007 23:45:42 +0000
-Message-ID: <20070308234542.01176a18@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_acpi: Restore driver
+Date: Thu, 8 Mar 2007 23:47:56 +0000
+Message-ID: <20070308234756.60e5527e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52165 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60504 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030824AbXCHWlg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 17:41:36 -0500
+	with ESMTP id S1030824AbXCHWnn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 17:43:43 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: akpm@osdl.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-With Tejun having added adev->ap some time ago we can get rid of the
-almost unused port being passed to mode filters. And while we are doing filters,
-lets turn on the !IORDY filter as well.
-
-(Versus -mm tree and queued diffs so may not 100% match your tree Jeff
-but cc'd so you can comment on if this is a good idea or
-not)
+This patch assumes the mode filter patches were applied, if not then ping
+me and I'll send the trivially different patch (extra argument to
+mode_filter)
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/include/linux/libata.h linux-2.6.21-rc3-mm2/include/linux/libata.h
---- linux.vanilla-2.6.21-rc3-mm2/include/linux/libata.h	2007-03-08 16:01:12.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/include/linux/libata.h	2007-03-08 16:09:00.000000000 +0000
-@@ -589,7 +590,7 @@
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/Kconfig linux-2.6.21-rc3-mm2/drivers/ata/Kconfig
+--- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/Kconfig	2007-03-08 16:01:10.000000000 +0000
++++ linux-2.6.21-rc3-mm2/drivers/ata/Kconfig	2007-03-08 16:41:36.000000000 +0000
+@@ -174,6 +174,15 @@
+ 	  You can disable this at kernel boot time by using the
+ 	  option libata.noacpi=1
  
- 	void (*set_piomode) (struct ata_port *, struct ata_device *);
- 	void (*set_dmamode) (struct ata_port *, struct ata_device *);
--	unsigned long (*mode_filter) (const struct ata_port *, struct ata_device *, unsigned long);
-+	unsigned long (*mode_filter) (struct ata_device *, unsigned long);
- 
- 	void (*tf_load) (struct ata_port *ap, const struct ata_taskfile *tf);
- 	void (*tf_read) (struct ata_port *ap, struct ata_taskfile *tf);
-@@ -875,7 +874,7 @@
- extern struct ata_probe_ent *
- ata_pci_init_native_mode(struct pci_dev *pdev, struct ata_port_info **port, int portmask);
- extern int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits);
--extern unsigned long ata_pci_default_filter(const struct ata_port *, struct ata_device *, unsigned long);
-+extern unsigned long ata_pci_default_filter(struct ata_device *, unsigned long);
- #endif /* CONFIG_PCI */
- 
- /*
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/libata-core.c linux-2.6.21-rc3-mm2/drivers/ata/libata-core.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/libata-core.c	2007-03-08 16:01:10.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/libata-core.c	2007-03-08 16:02:52.000000000 +0000
-@@ -3559,8 +3577,11 @@
- 			       "other device, disabling DMA\n");
- 	}
- 
-+	if (ap->flags & ATA_FLAG_NO_IORDY)
-+		xfer_mask &= ata_pio_mask_no_iordy(dev);
++config PATA_ACPI
++	tristate "ACPI firmware driver for PATA"
++	depends on ACPI && PCI && SATA_ACPI
++	help
++	  This option enables an ACPI method driver which drives
++	  motherboard PATA controller interfaces through the ACPI
++	  firmware in the BIOS. This driver can sometimes handle
++	  otherwise unsupported hardware.
 +
- 	if (ap->ops->mode_filter)
--		xfer_mask = ap->ops->mode_filter(ap, dev, xfer_mask);
-+		xfer_mask = ap->ops->mode_filter(dev, xfer_mask);
- 
- 	/* Apply cable rule here.  Don't apply it early because when
- 	 * we handle hot plug the cable type can itself change.
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_hpt37x.c linux-2.6.21-rc3-mm2/drivers/ata/pata_hpt37x.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_hpt37x.c	2007-03-08 16:01:10.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/pata_hpt37x.c	2007-03-08 17:08:53.000000000 +0000
-@@ -397,13 +272,12 @@
- 
- /**
-  *	hpt370_filter	-	mode selection filter
-- *	@ap: ATA interface
-  *	@adev: ATA device
-  *
-  *	Block UDMA on devices that cause trouble with this controller.
-  */
- 
--static unsigned long hpt370_filter(const struct ata_port *ap, struct ata_device *adev, unsigned long mask)
-+static unsigned long hpt370_filter(struct ata_device *adev, unsigned long mask)
- {
- 	if (adev->class == ATA_DEV_ATA) {
- 		if (hpt_dma_blacklisted(adev, "UDMA", bad_ata33))
-@@ -411,24 +285,23 @@
- 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
- 			mask &= ~(0x1F << ATA_SHIFT_UDMA);
- 	}
--	return ata_pci_default_filter(ap, adev, mask);
-+	return ata_pci_default_filter(adev, mask);
- }
- 
- /**
-  *	hpt370a_filter	-	mode selection filter
-- *	@ap: ATA interface
-  *	@adev: ATA device
-  *
-  *	Block UDMA on devices that cause trouble with this controller.
-  */
- 
--static unsigned long hpt370a_filter(const struct ata_port *ap, struct ata_device *adev, unsigned long mask)
-+static unsigned long hpt370a_filter(struct ata_device *adev, unsigned long mask)
- {
- 	if (adev->class != ATA_DEV_ATA) {
- 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
- 			mask &= ~ (0x1F << ATA_SHIFT_UDMA);
- 	}
--	return ata_pci_default_filter(ap, adev, mask);
-+	return ata_pci_default_filter(adev, mask);
- }
- 
- /**
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_pdc2027x.c linux-2.6.21-rc3-mm2/drivers/ata/pata_pdc2027x.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_pdc2027x.c	2007-03-08 16:01:10.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/pata_pdc2027x.c	2007-03-08 16:34:56.000000000 +0000
-@@ -179,7 +183,8 @@
- 	.port_disable		= ata_port_disable,
- 	.set_piomode		= pdc2027x_set_piomode,
- 	.set_dmamode		= pdc2027x_set_dmamode,
--	.post_set_mode		= pdc2027x_post_set_mode,
-+	.set_mode		= pdc2027x_set_mode,
-+	.mode_filter		= pdc2027x_mode_filter,
- 
- 	.tf_load		= ata_tf_load,
- 	.tf_read		= ata_tf_read,
-@@ -200,6 +205,7 @@
- 	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= pdc2027x_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.cable_detect		= pdc2027x_cable_detect,
- 
- 	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-@@ -445,17 +473,22 @@
- }
- 
- /**
-- *	pdc2027x_post_set_mode - Set the timing registers back to correct values.
-+ *	pdc2027x_set_mode - Set the timing registers back to correct values.
-  *	@ap: Port to configure
-+ *	@r_failed: Returned device for failure
-  *
-  *	The pdc2027x hardware will look at "SET FEATURES" and change the timing registers
-  *	automatically. The values set by the hardware might be incorrect, under 133Mhz PLL.
-  *	This function overwrites the possibly incorrect values set by the hardware to be correct.
-  */
--static void pdc2027x_post_set_mode(struct ata_port *ap)
-+static int pdc2027x_set_mode(struct ata_port *ap, struct ata_device **r_failed)
- {
- 	int i;
- 
-+	i = ata_do_set_mode(ap, r_failed);
-+	if (i < 0)
-+		return i;
+ config PATA_ALI
+ 	tristate "ALi PATA support (Experimental)"
+ 	depends on PCI && EXPERIMENTAL
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/Makefile linux-2.6.21-rc3-mm2/drivers/ata/Makefile
+--- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/Makefile	2007-03-08 16:01:10.000000000 +0000
++++ linux-2.6.21-rc3-mm2/drivers/ata/Makefile	2007-03-08 16:45:03.000000000 +0000
+@@ -62,6 +62,8 @@
+ obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
+ obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
+ obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
++# Should be last but two libata driver
++obj-$(CONFIG_PATA_ACPI)		+= pata_acpi.o
+ # Should be last but one libata driver
+ obj-$(CONFIG_ATA_GENERIC)	+= ata_generic.o
+ # Should be last libata driver
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_acpi.c linux-2.6.21-rc3-mm2/drivers/ata/pata_acpi.c
+--- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_acpi.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.21-rc3-mm2/drivers/ata/pata_acpi.c	2007-03-08 16:16:19.000000000 +0000
+@@ -0,0 +1,425 @@
++/*
++ *	ACPI PATA driver
++ *
++ *	(c) 2007 Red Hat  <alan@redhat.com>
++ *
++ *	TODO - restore modes after mode_filter chews them up
++ */
 +
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
- 
-@@ -477,6 +510,7 @@
- 			}
- 		}
- 	}
-+	return 0;
- }
- 
- /**
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_serverworks.c linux-2.6.21-rc3-mm2/drivers/ata/pata_serverworks.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_serverworks.c	2007-03-08 16:01:10.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/pata_serverworks.c	2007-03-08 16:35:59.000000000 +0000
-@@ -193,31 +185,31 @@
- 
- /**
-  *	serverworks_osb4_filter	-	mode selection filter
-- *	@ap: ATA interface
-  *	@adev: ATA device
-+ *	@mask: Mask of proposed modes
-  *
-  *	Filter the offered modes for the device to apply controller
-  *	specific rules. OSB4 requires no UDMA for disks due to a FIFO
-  *	bug we hit.
-  */
- 
--static unsigned long serverworks_osb4_filter(const struct ata_port *ap, struct ata_device *adev, unsigned long mask)
-+static unsigned long serverworks_osb4_filter(struct ata_device *adev, unsigned long mask)
- {
- 	if (adev->class == ATA_DEV_ATA)
- 		mask &= ~ATA_MASK_UDMA;
--	return ata_pci_default_filter(ap, adev, mask);
-+	return ata_pci_default_filter(adev, mask);
- }
- 
- 
- /**
-  *	serverworks_csb_filter	-	mode selection filter
-- *	@ap: ATA interface
-  *	@adev: ATA device
-+ *	@mask: Mask of proposed modes
-  *
-  *	Check the blacklist and disable UDMA5 if matched
-  */
- 
--static unsigned long serverworks_csb_filter(const struct ata_port *ap, struct ata_device *adev, unsigned long mask)
-+static unsigned long serverworks_csb_filter(struct ata_device *adev, unsigned long mask)
- {
- 	const char *p;
- 	char model_num[ATA_ID_PROD_LEN + 1];
-@@ -225,7 +217,7 @@
- 
- 	/* Disk, UDMA */
- 	if (adev->class != ATA_DEV_ATA)
--		return ata_pci_default_filter(ap, adev, mask);
-+		return ata_pci_default_filter(adev, mask);
- 
- 	/* Actually do need to check */
- 	ata_id_c_string(adev->id, model_num, ATA_ID_PROD, sizeof(model_num));
-@@ -234,7 +226,7 @@
- 		if (!strcmp(p, model_num))
- 			mask &= ~(0x1F << ATA_SHIFT_UDMA);
- 	}
--	return ata_pci_default_filter(ap, adev, mask);
-+	return ata_pci_default_filter(adev, mask);
- }
- 
- 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/libata-sff.c linux-2.6.21-rc3-mm2/drivers/ata/libata-sff.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/libata-sff.c	2007-03-08 15:59:20.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/libata-sff.c	2007-03-08 16:03:01.000000000 +0000
-@@ -893,12 +893,12 @@
- 	return 0;
- }
- 
--unsigned long ata_pci_default_filter(const struct ata_port *ap, struct ata_device *adev, unsigned long xfer_mask)
-+unsigned long ata_pci_default_filter(struct ata_device *adev, unsigned long xfer_mask)
- {
- 	/* Filter out DMA modes if the device has been configured by
- 	   the BIOS as PIO only */
- 
--	if (ap->ioaddr.bmdma_addr == 0)
-+	if (adev->ap->ioaddr.bmdma_addr == 0)
- 		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
- 	return xfer_mask;
- }
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/init.h>
++#include <linux/blkdev.h>
++#include <linux/delay.h>
++#include <linux/device.h>
++#include <scsi/scsi_host.h>
++#include <acpi/acpi_bus.h>
++#include <acpi/acnames.h>
++#include <acpi/acnamesp.h>
++#include <acpi/acparser.h>
++#include <acpi/acexcep.h>
++#include <acpi/acmacros.h>
++#include <acpi/actypes.h>
++
++#include <linux/libata.h>
++#include <linux/ata.h>
++
++#include "libata-acpi.h"
++
++#define DRV_NAME	"pata_acpi"
++#define DRV_VERSION	"0.1.1"
++
++struct pata_acpi {
++	void *handle;
++	struct acpi_gtm gtm;
++	void *last;
++	unsigned long mask[2];
++};
++
++/**
++ *	pacpi_pre_reset	-	check for 40/80 pin
++ *	@ap: Port
++ *	@deadline: deadline jiffies for the operation
++ *
++ *	Perform the PATA port setup we need.
++ */
++
++static int pacpi_pre_reset(struct ata_port *ap, unsigned long deadline)
++{
++	struct pata_acpi *acpi = ap->private_data;
++	
++	if (acpi->handle == NULL || ata_acpi_gtm(ap, acpi->handle, &acpi->gtm) < 0)
++		return -ENODEV;
++
++	return ata_std_prereset(ap, deadline);
++}
++
++/**
++ *	pacpi_cable_detect	-	cable type detection
++ *	@ap: port to detect
++ *
++ *	Perform device specific cable detection
++ */
++ 
++static int pacpi_cable_detect(struct ata_port *ap)
++{
++	struct pata_acpi *acpi = ap->private_data;
++	
++	if ((acpi->mask[0] | acpi->mask[1]) & (0xF8 << ATA_SHIFT_UDMA))
++		return ATA_CBL_PATA80;
++	else
++		return ATA_CBL_PATA40;
++}
++
++/**
++ *	pacpi_error_handler - Setup and error handler
++ *	@ap: Port to handle
++ *
++ *	LOCKING:
++ *	None (inherited from caller).
++ */
++
++static void pacpi_error_handler(struct ata_port *ap)
++{
++	return ata_bmdma_drive_eh(ap, pacpi_pre_reset, ata_std_softreset,
++				  NULL, ata_std_postreset);
++}
++
++/* Welcome to ACPI, bring a bucket */
++static const unsigned int pio_cycle[7] = {
++	600, 383, 240, 180, 120, 100, 80
++};
++static const unsigned int mwdma_cycle[5] = {
++	480, 150, 120, 100, 80
++};
++static const unsigned int udma_cycle[7] = {
++	120, 80, 60, 45, 30, 20, 15
++};
++
++/**
++ *	pacpi_discover_modes	-	filter non ACPI modes
++ *	@adev: ATA device
++ *	@mask: proposed modes
++ *
++ *	Try the modes available and see which ones the ACPI method will
++ *	set up sensibly. From this we get a mask of ACPI modes we can use
++ */
++
++static unsigned long pacpi_discover_modes(struct ata_port *ap, struct ata_device *adev)
++{
++	int unit = adev->devno;
++	struct pata_acpi *acpi = ap->private_data;
++	int i;
++	u32 t;
++	unsigned long mask = (0x7f << ATA_SHIFT_UDMA) | (0x7 << ATA_SHIFT_MWDMA) | (0x1F << ATA_SHIFT_PIO);
++
++	struct acpi_gtm probe;
++
++	probe = acpi->gtm;
++
++	/* We always use the 0 slot for crap hardware */
++	if (!(probe.flags & 0x10))
++		unit = 0;
++
++
++	/* In order to generate a valid mode mask as we need cycle through
++	   trying each proposed speed in turn */
++
++	/* Start by scanning for PIO modes */
++	for (i = 0; i < 7; i++) {
++		probe.drive[unit].pio = pio_cycle[i];
++		ata_acpi_stm(ap, acpi->handle, &probe);
++		ata_acpi_gtm(ap, acpi->handle, &probe);
++		t = probe.drive[unit].pio;
++		if (t == 0xFFFFFFFF || (i &&  t >= pio_cycle[i-1]))
++			mask &= ~(1 << (i + ATA_SHIFT_PIO));
++	}
++
++	/* Select MWDMA */
++	probe.flags &= ~(1 << (2 * unit));
++
++	/* Scan for MWDMA modes */
++	for (i = 0; i < 5; i++) {
++		u32 t;
++		probe.drive[unit].dma = mwdma_cycle[i];
++		ata_acpi_stm(ap, acpi->handle, &probe);
++		ata_acpi_gtm(ap, acpi->handle, &probe);
++
++		t = probe.drive[unit].dma;
++
++		if (t == 0xFFFFFFFF || (i && t >= mwdma_cycle[i-1]))
++			mask &= ~ (1 << (i + ATA_SHIFT_MWDMA));
++	}
++
++	/* Select UDMA */
++	probe.flags |= (1 << (2 * unit));
++
++	/* Scan for UDMA modes */
++	for (i = 0; i < 7; i++) {
++		u32 t;
++		probe.drive[unit].dma = udma_cycle[i];
++		ata_acpi_stm(ap, acpi->handle, &probe);
++		ata_acpi_gtm(ap, acpi->handle, &probe);
++
++		t = probe.drive[unit].dma;
++
++		if (t == 0xFFFFFFFF || (i && t >= udma_cycle[i-1]))
++			mask &= ~ (1 << (i + ATA_SHIFT_UDMA));
++	}
++
++	if (mask & (0xF8 << ATA_SHIFT_UDMA))
++		ap->cbl = ATA_CBL_PATA80;
++	
++	/* Restore the programmed timings */
++	ata_acpi_stm(ap, acpi->handle, &acpi->gtm);
++	/* And finally we can hand back the list of speeds that actually are
++	   supported by the BIOS */
++	return mask;
++}
++
++/**
++ *	pacpi_mode_filter	-	mode filter for ACPI
++ *	@adev: device
++ *	@mask: mask of valid modes
++ *
++ *	Filter the valid mode list according to our own specific rules, in
++ *	this case the list of discovered valid modes obtained by ACPI probing
++ */
++
++static unsigned long pacpi_mode_filter(struct ata_device *adev, unsigned long mask)
++{
++	struct pata_acpi *acpi = adev->ap->private_data;
++	return ata_pci_default_filter(adev, mask & acpi->mask[adev->devno]);
++}
++
++/**
++ *	pacpi_set_piomode	-	set initial PIO mode data
++ *	@ap: ATA interface
++ *	@adev: ATA device
++ */
++
++static void pacpi_set_piomode(struct ata_port *ap, struct ata_device *adev)
++{
++	int unit = adev->devno;
++	struct pata_acpi *acpi = ap->private_data;
++
++	if(!(acpi->gtm.flags & 0x10))
++		unit = 0;
++
++	/* Now stuff the nS values into the structure */
++	acpi->gtm.drive[unit].pio = pio_cycle[adev->pio_mode - XFER_PIO_0];
++	ata_acpi_stm(ap, acpi->handle, &acpi->gtm);
++	/* See what mode we actually got */
++	ata_acpi_gtm(ap, acpi->handle, &acpi->gtm);
++}
++
++/**
++ *	pacpi_set_dmamode	-	set initial DMA mode data
++ *	@ap: ATA interface
++ *	@adev: ATA device
++ */
++
++static void pacpi_set_dmamode(struct ata_port *ap, struct ata_device *adev)
++{
++	int unit = adev->devno;
++	struct pata_acpi *acpi = ap->private_data;
++
++	if(!(acpi->gtm.flags & 0x10))
++		unit = 0;
++
++	/* Now stuff the nS values into the structure */
++	if (adev->dma_mode >= XFER_UDMA_0) {
++		acpi->gtm.drive[unit].dma = udma_cycle[adev->dma_mode - XFER_UDMA_0];
++		acpi->gtm.flags |= (1 << (2 * unit));
++	} else {
++		acpi->gtm.drive[unit].dma = mwdma_cycle[adev->dma_mode - XFER_MW_DMA_0];
++		acpi->gtm.flags &= ~(1 << (2 * unit));
++	}
++	ata_acpi_stm(ap, acpi->handle, &acpi->gtm);
++	/* See what mode we actually got */
++	ata_acpi_gtm(ap, acpi->handle, &acpi->gtm);
++}
++
++/**
++ *	pacpi_qc_issue_prot	-	command issue
++ *	@qc: command pending
++ *
++ *	Called when the libata layer is about to issue a command. We wrap
++ *	this interface so that we can load the correct ATA timings if
++ *	neccessary. 
++ */
++
++static unsigned int pacpi_qc_issue_prot(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct ata_device *adev = qc->dev;
++	struct pata_acpi *acpi = ap->private_data;
++
++	if (acpi->gtm.flags & 0x10)
++		return ata_qc_issue_prot(qc);
++
++	if (adev != acpi->last) {
++		pacpi_set_piomode(ap, adev);
++		if (adev->dma_mode)
++			pacpi_set_dmamode(ap, adev);
++		acpi->last = adev;
++	}
++	return ata_qc_issue_prot(qc);
++}
++
++/**
++ *	pacpi_port_start	-	port setup
++ *	@ap: ATA port being set up
++ *
++ *	Use the port_start hook to maintain private control structures
++ */
++
++static int pacpi_port_start(struct ata_port *ap)
++{
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	struct pata_acpi *acpi;
++
++	int ret;
++
++	acpi = ap->private_data = devm_kzalloc(&pdev->dev, sizeof(struct pata_acpi), GFP_KERNEL);
++	if (ap->private_data == NULL)
++		return -ENOMEM;
++	acpi->handle = ata_pata_acpi_handle(ap);
++	
++	acpi->mask[0] = pacpi_discover_modes(ap, &ap->device[0]);
++	acpi->mask[1] = pacpi_discover_modes(ap, &ap->device[1]);
++
++	ret = ata_port_start(ap);
++	if (ret < 0)
++		return ret;
++
++	return ret;
++}
++
++static struct scsi_host_template pacpi_sht = {
++	.module			= THIS_MODULE,
++	.name			= DRV_NAME,
++	.ioctl			= ata_scsi_ioctl,
++	.queuecommand		= ata_scsi_queuecmd,
++	.can_queue		= ATA_DEF_QUEUE,
++	.this_id		= ATA_SHT_THIS_ID,
++	.sg_tablesize		= LIBATA_MAX_PRD,
++	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
++	.emulated		= ATA_SHT_EMULATED,
++	.use_clustering		= ATA_SHT_USE_CLUSTERING,
++	.proc_name		= DRV_NAME,
++	.dma_boundary		= ATA_DMA_BOUNDARY,
++	.slave_configure	= ata_scsi_slave_config,
++	.slave_destroy		= ata_scsi_slave_destroy,
++	/* Use standard CHS mapping rules */
++	.bios_param		= ata_std_bios_param,
++	.resume			= ata_scsi_device_resume,
++	.suspend		= ata_scsi_device_suspend,
++};
++
++static const struct ata_port_operations pacpi_ops = {
++	.port_disable		= ata_port_disable,
++	.set_piomode		= pacpi_set_piomode,
++	.set_dmamode		= pacpi_set_dmamode,
++	.mode_filter		= pacpi_mode_filter,
++
++	/* Task file is PCI ATA format, use helpers */
++	.tf_load		= ata_tf_load,
++	.tf_read		= ata_tf_read,
++	.check_status		= ata_check_status,
++	.exec_command		= ata_exec_command,
++	.dev_select		= ata_std_dev_select,
++
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++	.error_handler		= pacpi_error_handler,
++	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.cable_detect		= pacpi_cable_detect,
++
++	/* BMDMA handling is PCI ATA format, use helpers */
++	.bmdma_setup		= ata_bmdma_setup,
++	.bmdma_start		= ata_bmdma_start,
++	.bmdma_stop		= ata_bmdma_stop,
++	.bmdma_status		= ata_bmdma_status,
++	.qc_prep		= ata_qc_prep,
++	.qc_issue		= pacpi_qc_issue_prot,
++	.data_xfer		= ata_data_xfer,
++
++	/* Timeout handling */
++	.irq_handler		= ata_interrupt,
++	.irq_clear		= ata_bmdma_irq_clear,
++	.irq_on			= ata_irq_on,
++	.irq_ack		= ata_irq_ack,
++
++	/* Generic PATA PCI ATA helpers */
++	.port_start		= pacpi_port_start,
++};
++
++
++/**
++ *	pacpi_init_one - Register ACPI ATA PCI device with kernel services
++ *	@pdev: PCI device to register
++ *	@ent: Entry in pacpi_pci_tbl matching with @pdev
++ *
++ *	Called from kernel PCI layer.
++ *
++ *	LOCKING:
++ *	Inherited from PCI layer (may sleep).
++ *
++ *	RETURNS:
++ *	Zero on success, or -ERRNO value.
++ */
++
++static int pacpi_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
++{
++	static struct ata_port_info info = {
++		.sht		= &pacpi_sht,
++		.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++
++		.pio_mask	= 0x1f,
++		.mwdma_mask	= 0x07,
++		.udma_mask 	= 0x7f,
++
++		.port_ops	= &pacpi_ops,
++	};
++	struct ata_port_info *port_info[1] = { &info };
++
++	if (!ata_pata_acpi_present(pdev))
++		return -ENODEV;
++	return ata_pci_init_one(pdev, port_info, 1);
++}
++
++static const struct pci_device_id pacpi_pci_tbl[] = {
++	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 1},
++	{ }	/* terminate list */
++};
++
++static struct pci_driver pacpi_pci_driver = {
++	.name			= DRV_NAME,
++	.id_table		= pacpi_pci_tbl,
++	.probe			= pacpi_init_one,
++	.remove			= ata_pci_remove_one,
++	.suspend		= ata_pci_device_suspend,
++	.resume			= ata_pci_device_resume,
++};
++
++static int __init pacpi_init(void)
++{
++	return pci_register_driver(&pacpi_pci_driver);
++}
++
++static void __exit pacpi_exit(void)
++{
++	pci_unregister_driver(&pacpi_pci_driver);
++}
++
++module_init(pacpi_init);
++module_exit(pacpi_exit);
++
++MODULE_AUTHOR("Alan Cox");
++MODULE_DESCRIPTION("SCSI low-level driver for ATA in ACPI mode");
++MODULE_LICENSE("GPL");
++MODULE_DEVICE_TABLE(pci, pacpi_pci_tbl);
++MODULE_VERSION(DRV_VERSION);
++
