@@ -1,94 +1,155 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_pdc202xx_old: Re-remove crap, restore cable methods
-Date: Thu, 8 Mar 2007 19:48:28 +0000
-Message-ID: <20070308194828.5cf5b39a@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Suleiman Souhlal <ssouhlal@freebsd.org>
+Subject: Re: [PATCH 3/3] Use correct IDE error recovery
+Date: Thu, 8 Mar 2007 12:16:10 -0800
+Message-ID: <B2D4536E-D449-4D10-B745-30D25CAC40A4@freebsd.org>
+References: <20070221012304.GC1777@freefall.freebsd.org> <200703072216.08295.bzolnier@gmail.com>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35425 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933029AbXCHSoV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 13:44:21 -0500
+Received: from elvis.mu.org ([192.203.228.196]:53261 "EHLO elvis.mu.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752630AbXCHUQm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Mar 2007 15:16:42 -0500
+In-Reply-To: <200703072216.08295.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_pdc202xx_old.c linux-2.6.21-rc3-mm2/drivers/ata/pata_pdc202xx_old.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_pdc202xx_old.c	2007-03-08 16:01:10.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/pata_pdc202xx_old.c	2007-03-08 16:35:22.000000000 +0000
-@@ -22,46 +22,17 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_pdc202xx_old"
--#define DRV_VERSION "0.4.0"
-+#define DRV_VERSION "0.4.2"
- 
--/**
-- *	pdc2024x_pre_reset		-	probe begin
-- *	@ap: ATA port
-- *	@deadline: deadline jiffies for the operation
-- *
-- *	Set up cable type and use generic probe init
-- */
--
--static int pdc2024x_pre_reset(struct ata_port *ap, unsigned long deadline)
--{
--	ap->cbl = ATA_CBL_PATA40;
--	return ata_std_prereset(ap, deadline);
--}
--
--
--static void pdc2024x_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, pdc2024x_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--
--static int pdc2026x_pre_reset(struct ata_port *ap, unsigned long deadline)
-+static int pdc2026x_cable_detect(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u16 cis;
- 
- 	pci_read_config_word(pdev, 0x50, &cis);
- 	if (cis & (1 << (10 + ap->port_no)))
--		ap->cbl = ATA_CBL_PATA80;
--	else
--		ap->cbl = ATA_CBL_PATA40;
--
--	return ata_std_prereset(ap, deadline);
--}
--
--static void pdc2026x_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, pdc2026x_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
-+		return ATA_CBL_PATA80;
-+	return ATA_CBL_PATA40;
- }
- 
- /**
-@@ -292,8 +263,9 @@
- 
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
--	.error_handler	= pdc2024x_error_handler,
-+	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -326,8 +298,9 @@
- 
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
--	.error_handler	= pdc2026x_error_handler,
-+	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= pdc2026x_cable_detect,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= pdc2026x_bmdma_start,
+On Mar 7, 2007, at 1:16 PM, Bartlomiej Zolnierkiewicz wrote:
+
+>
+> Hi,
+>
+> (sorry for the long delay)
+>
+> On Wednesday 21 February 2007, Suleiman Souhlal wrote:
+>> IDE error recovery is using WIN_IDLEIMMEDIATE which was only valid  
+>> for
+>> IDE V1 and IDE V2.  Modern drives will not be able to recover using
+>> this error handling.  The correct thing to do is issue a SRST  
+>> followed
+>> by a SET_FEATURES.
+>
+> This change looks fine, indeed we are better of using SRST +  
+> SET_FEATURES
+> than IDLE_IMMEDIATE.
+>
+>> Signed-off-by:	Suleiman Souhlal <suleiman@google.com>
+>>
+>> ---
+>>  drivers/ide/ide-io.c   |   35 +++++++++++-----
+>>  drivers/ide/ide-iops.c |  105 +++++++++++++++++++++++++++ 
+>> +--------------------
+>>  include/linux/ide.h    |    2 +
+>>  3 files changed, 88 insertions(+), 54 deletions(-)
+>>
+>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+>> index c193553..2f05b4d 100644
+>> --- a/drivers/ide/ide-io.c
+>> +++ b/drivers/ide/ide-io.c
+>> @@ -519,21 +519,21 @@ static ide_startstop_t ide_ata_error(ide
+>>  	if ((stat & DRQ_STAT) && rq_data_dir(rq) == READ && hwif- 
+>> >err_stops_fifo == 0)
+>>  		try_to_flush_leftover_data(drive);
+>>
+>> +	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq)) {
+>> +		ide_kill_rq(drive, rq);
+>> +		return ide_stopped;
+>> +	}
+>> +
+>>  	if (hwif->INB(IDE_STATUS_REG) & (BUSY_STAT|DRQ_STAT))
+>> -		/* force an abort */
+>> -		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
+>> +		rq->errors |= ERROR_RESET;
+>>
+>> -	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq))
+>> -		ide_kill_rq(drive, rq);
+>> -	else {
+>> -		if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
+>> -			++rq->errors;
+>> -			return ide_do_reset(drive);
+>> -		}
+>> -		if ((rq->errors & ERROR_RECAL) == ERROR_RECAL)
+>> -			drive->special.b.recalibrate = 1;
+>
+> Is the removal of ERROR_RECAL handling intentional?
+> There is nothing about it in the patch description...
+
+Yes, it was intentional, but I forgot to add "while there remove some  
+useless code" to the description. Maybe it's better if I send this as  
+a separate patch.
+
+>
+>> +	if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
+>>  		++rq->errors;
+>> +		return ide_do_reset(drive);
+>>  	}
+>> +
+>> +	++rq->errors;
+>> +
+>>  	return ide_stopped;
+>>  }
+>>
+>> @@ -586,6 +586,13 @@ EXPORT_SYMBOL_GPL(__ide_error);
+>>   *	both new-style (taskfile) and old style command handling here.
+>>   *	In the case of taskfile command handling there is work left to
+>>   *	do
+>> + *	This used to send a idle immediate to the drive if the drive was
+>> + *	busy or had drq set.  This violates the ATA spec (can only  
+>> send IDLE
+>> + *	immediate when drive is not busy) and really hoses up some  
+>> drives.
+>
+> Could this part of the comment be merged into the patch description?
+> We don't want to clutter the code with the history of the changes.
+>
+>> + *	We've changed it to just do a SRST followed by a set features  
+>> (set
+>> + *	udma mode) it those cases.  This is what Western Digital  
+>> recommends
+>
+> hmm, it doesn't have to be UDMA mode,
+> ->current_speed can also be PIO/SWDMA/MWDMA
+>
+>> + *	for error recovery and what Western Digital says Windows  
+>> does.  It
+>> + *	also does not violate the ATA spec as far as I can tell.
+>>   */
+>
+> The patch fixes code in ide_ata_error() and updates the comment
+> for ide_error() but ide_atapi_error() is not left untouched
+> (it still uses IDLE IMMEDIATE).
+>
+> I suppose that ide_atapi_error() (for ATAPI devices) needs similar  
+> fix?
+
+I'm not sure.. I don't have any ATAPI hardware to test this on  
+either, so I preferred not to touch it.
+
+>>  ide_startstop_t ide_error (ide_drive_t *drive, const char *msg,  
+>> u8 stat)
+>> @@ -1004,6 +1011,12 @@ #endif
+>>  		goto kill_rq;
+>>  	}
+>>
+>> +	/* We reset the drive so we need to issue a SETFEATURES. */
+>> +	if ((drive->current_speed == 0xff) &&
+>> +	    ((rq->cmd_type == REQ_TYPE_ATA_CMD) ||
+>> +	    (rq->cmd_type == REQ_TYPE_ATA_TASK)))
+>> +		ide_config_drive_speed_irq(drive, drive->desired_speed);
+>
+> Please update the patch to not depend on ide_config_drive_speed()  
+> fixes
+> [PATCH 2/3] which need more work (shouldn't be a problem as the  
+> code here
+> uses _irq variant anyway).
+>
+> Please respin the patch so I could merge it.
+
+Ok.
+
+-- Suleiman
+
