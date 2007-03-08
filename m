@@ -1,98 +1,75 @@
-From: Petr Vandrovec <petr@vandrovec.name>
-Subject: [PATCH] Fix simplex adapters with libata
-Date: Thu, 8 Mar 2007 10:12:12 +0100
-Message-ID: <20070308091211.GA7257@vana.vc.cvut.cz>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: OOPS with 2.6.21rc2-git (ata: conflict with ide0/1)
+Date: Thu, 08 Mar 2007 05:01:26 -0500
+Message-ID: <45EFDEF6.7000909@garzik.org>
+References: <45EC9A67.8070204@intel.com> <45EFC3D1.208@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vana.vc.cvut.cz ([147.32.240.58]:38960 "EHLO vana.vc.cvut.cz"
+Received: from srv5.dvmed.net ([207.36.208.214]:45014 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030505AbXCHJpG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Mar 2007 04:45:06 -0500
-Content-Disposition: inline
+	id S1030586AbXCHKBa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Mar 2007 05:01:30 -0500
+In-Reply-To: <45EFC3D1.208@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Kok, Auke" <auke-jan.h.kok@intel.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Greg KH <gregkh@suse.de>
 
-Hello Jeff,
+Tejun Heo wrote:
+> [cc'ing Greg, Hi]
+> 
+> Kok, Auke wrote:
+>> Attached dmesg. config.gz. here's the OOPS part.
+>>
+>> ata_piix 0000:00:1f.2: version 2.10
+>> ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+>> ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+>> ata: 0x1F0 IDE port busy
+>> ata: conflict with ide0
+>> BUG: at drivers/pci/pci.c:846 pcim_pin_device()
+>>  [<c023838c>] pcim_pin_device+0x4c/0x60
+>>  [<c0371af6>] ata_pci_init_one+0x2d6/0x380
+>>  [<c023b968>] pci_get_device+0x18/0x20
+>>  [<c0378651>] piix_check_450nx_errata+0x31/0x110
+>>  [<c0238b90>] pci_intx+0x20/0x90
+>>  [<c0378a97>] piix_init_one+0x117/0x200
+>>  [<c023afca>] pci_call_probe+0xa/0x10
+>>  [<c023b01e>] __pci_device_probe+0x4e/0x60
+>>  [<c023b056>] pci_device_probe+0x26/0x60
+>>  [<c0295a94>] really_probe+0xb4/0x170
+>>  [<c023afa8>] pci_match_device+0xa8/0xc0
+>>  [<c0295c28>] driver_probe_device+0xc8/0xd0
+>>  [<c0465521>] klist_next+0x61/0xc0
+>>  [<c0295d30>] __driver_attach+0x80/0x90
+>>  [<c0294d0a>] bus_for_each_dev+0x3a/0x60
+>>  [<c0295d56>] driver_attach+0x16/0x20
+>>  [<c0295cb0>] __driver_attach+0x0/0x90
+>>  [<c029532f>] bus_add_driver+0x5f/0x110
+>>  [<c023b3d2>] __pci_register_driver+0x82/0xc0
+>>  [<c05c0b91>] piix_init+0x11/0x20
+>>  [<c059ab11>] do_initcalls+0x41/0x130
+>>  [<c0158acc>] register_irq_proc+0x9c/0xc0
+>>  [<c01b4462>] proc_mkdir_mode+0x42/0x60
+>>  [<c059ac30>] init+0x0/0xa0
+>>  [<c059ac7c>] init+0x4c/0xa0
+>>  [<c0104e7f>] kernel_thread_helper+0x7/0x18
+>>  =======================
+>> ata: 0x170 IDE port busy
+>> ata: conflict with ide1
+>> ata_piix: probe of 0000:00:1f.2 failed with error -16
+>> ata_piix 0000:00:1f.5: MAP [ P0 P2 P1 P3 ]
+> 
+> Patch pending in Greg's queue.
 
-[please cc me, I'm not subscribed to linux-ide]
+Which patch?
 
-Recently I got my hands on nVidia's MCP61 PM-AM board, and
-it contains IDE chip configured by BIOS with only primary
-channel enabled.  This confuses code which probes for
-device DMA capabilities - it gets 0x60 (happy duplex
-device) from primary channel BMDMA, but 0xFF (nobody here)
-from secondary channel BMDMA.  Due to this code then believes
-that chip is simplex.  I do not address this problem in
-my patch, as I'm not sure how to handle this.  Probably
-ata_pci_init_one should have bitmap of enabled/possible
-interfaces instead of their count, but it looks like
-quite intrusive change, and maybe we do not care - for device
-with only one channel simplex and regular DMA engines are
-same.
+Since this affects libata directly, and since devres came in via libata, 
+I would rather that libata bugs not get /too/ blocked by patches in 
+other trees.
 
-But making device simplex pointed out that support for
-DMA on simplex devices is currently broken - ata_dev_xfermask
-tests whether device is simplex and if it is whether DMA
-engine was assigned to this port.  If not then it strips
-out DMA bits from device.  Problem is that code which assigns
-DMA engine to port in ata_set_mode first detect device
-mode and assigns DMA engine to channel only if some DMA
-capable device was found.
+	Jeff
 
-And as xfermask stripped out DMA bits, host->simplex_claimed
-is always NULL with current implementation.
 
-By allowing DMA either if simplex_claimed is NULL or if it
-points to current port DMA can be finally used - it gets
-assigned to first port which contains any DMA capable
-device.
 
-Patch is for current Linus git tree (post 2.6.21-rc3).
-				Thanks,
-					Petr Vandrovec
-
-Before:
-pata_amd 0000:00:06.0: version 0.2.8
-PCI: Setting latency timer of device 0000:00:06.0 to 64
-ata5: PATA max UDMA/133 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001f000 irq 14
-ata6: PATA max UDMA/133 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001f008 irq 15
-scsi4 : pata_amd
-ata5.00: ATAPI, max UDMA/66
-ata5.00: simplex DMA is claimed by other device, disabling DMA
-ata5.00: configured for PIO4
-scsi5 : pata_amd
-ata6: port disabled. ignoring.
-ata6: reset failed, giving up
-scsi 4:0:0:0: CD-ROM            ATAPI    DVD W  DH16W1P   LG12 PQ: 0 ANSI: 5
-
-After:
-pata_amd 0000:00:06.0: version 0.2.8
-PCI: Setting latency timer of device 0000:00:06.0 to 64
-ata5: PATA max UDMA/133 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001f000 irq 14
-ata6: PATA max UDMA/133 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001f008 irq 15
-scsi4 : pata_amd
-ata5.00: ATAPI, max UDMA/66
-ata5.00: configured for UDMA/33
-scsi5 : pata_amd
-ata6: port disabled. ignoring.
-ata6: reset failed, giving up
-scsi 4:0:0:0: CD-ROM            ATAPI    DVD W  DH16W1P   LG12 PQ: 0 ANSI: 5
-
-Signed-off-by: Petr Vandrovec <petr@vandrovec.name>
-
-diff -uprdN linux/drivers/ata/libata-core.c linux/drivers/ata/libata-core.c
---- linux/drivers/ata/libata-core.c	2007-03-07 22:13:24.000000000 -0800
-+++ linux/drivers/ata/libata-core.c	2007-03-08 00:15:37.000000000 -0800
-@@ -3455,7 +3455,8 @@ static void ata_dev_xfermask(struct ata_
- 			       "device is on DMA blacklist, disabling DMA\n");
- 	}
- 
--	if ((host->flags & ATA_HOST_SIMPLEX) && host->simplex_claimed != ap) {
-+	if ((host->flags & ATA_HOST_SIMPLEX) &&
-+            host->simplex_claimed && host->simplex_claimed != ap) {
- 		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
- 		ata_dev_printk(dev, KERN_WARNING, "simplex DMA is claimed by "
- 			       "other device, disabling DMA\n");
