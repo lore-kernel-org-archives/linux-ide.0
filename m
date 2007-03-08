@@ -1,38 +1,94 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_pcmcia: restore cable reporting
-Date: Thu, 8 Mar 2007 19:47:33 +0000
-Message-ID: <20070308194733.60072363@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_pdc202xx_old: Re-remove crap, restore cable methods
+Date: Thu, 8 Mar 2007 19:48:28 +0000
+Message-ID: <20070308194828.5cf5b39a@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35421 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35425 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933017AbXCHSnZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 13:43:25 -0500
+	with ESMTP id S933029AbXCHSoV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 13:44:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: akpm@osdl.org, linux-ide@vger.kernel.org
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_pcmcia.c linux-2.6.21-rc3-mm2/drivers/ata/pata_pcmcia.c
---- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_pcmcia.c	2007-03-08 16:01:10.000000000 +0000
-+++ linux-2.6.21-rc3-mm2/drivers/ata/pata_pcmcia.c	2007-03-08 16:33:12.000000000 +0000
-@@ -42,7 +42,7 @@
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_pdc202xx_old.c linux-2.6.21-rc3-mm2/drivers/ata/pata_pdc202xx_old.c
+--- linux.vanilla-2.6.21-rc3-mm2/drivers/ata/pata_pdc202xx_old.c	2007-03-08 16:01:10.000000000 +0000
++++ linux-2.6.21-rc3-mm2/drivers/ata/pata_pdc202xx_old.c	2007-03-08 16:35:22.000000000 +0000
+@@ -22,46 +22,17 @@
+ #include <linux/libata.h>
  
+ #define DRV_NAME "pata_pdc202xx_old"
+-#define DRV_VERSION "0.4.0"
++#define DRV_VERSION "0.4.2"
  
- #define DRV_NAME "pata_pcmcia"
--#define DRV_VERSION "0.3.0"
-+#define DRV_VERSION "0.3.1"
+-/**
+- *	pdc2024x_pre_reset		-	probe begin
+- *	@ap: ATA port
+- *	@deadline: deadline jiffies for the operation
+- *
+- *	Set up cable type and use generic probe init
+- */
+-
+-static int pdc2024x_pre_reset(struct ata_port *ap, unsigned long deadline)
+-{
+-	ap->cbl = ATA_CBL_PATA40;
+-	return ata_std_prereset(ap, deadline);
+-}
+-
+-
+-static void pdc2024x_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, pdc2024x_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-
+-static int pdc2026x_pre_reset(struct ata_port *ap, unsigned long deadline)
++static int pdc2026x_cable_detect(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u16 cis;
  
- /*
-  *	Private data structure to glue stuff together
-@@ -118,6 +118,7 @@
+ 	pci_read_config_word(pdev, 0x50, &cis);
+ 	if (cis & (1 << (10 + ap->port_no)))
+-		ap->cbl = ATA_CBL_PATA80;
+-	else
+-		ap->cbl = ATA_CBL_PATA40;
+-
+-	return ata_std_prereset(ap, deadline);
+-}
+-
+-static void pdc2026x_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, pdc2026x_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
++		return ATA_CBL_PATA80;
++	return ATA_CBL_PATA40;
+ }
+ 
+ /**
+@@ -292,8 +263,9 @@
+ 
+ 	.freeze		= ata_bmdma_freeze,
  	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ata_bmdma_error_handler,
+-	.error_handler	= pdc2024x_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
  	.post_internal_cmd = ata_bmdma_post_internal_cmd,
 +	.cable_detect	= ata_cable_40wire,
  
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= ata_qc_issue_prot,
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= ata_bmdma_start,
+@@ -326,8 +298,9 @@
+ 
+ 	.freeze		= ata_bmdma_freeze,
+ 	.thaw		= ata_bmdma_thaw,
+-	.error_handler	= pdc2026x_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
++	.cable_detect	= pdc2026x_cable_detect,
+ 
+ 	.bmdma_setup 	= ata_bmdma_setup,
+ 	.bmdma_start 	= pdc2026x_bmdma_start,
