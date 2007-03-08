@@ -1,117 +1,69 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 5/7] [RFC] xenon: add SATA support
-Date: Thu, 08 Mar 2007 16:54:51 +0900
-Message-ID: <45EFC14B.3090906@gmail.com>
-References: <20070307180144.812594000@elitedvb.net>> <45EF2899.2030508@elitedvb.net>
+Subject: Re: OOPS with 2.6.21rc2-git (ata: conflict with ide0/1)
+Date: Thu, 08 Mar 2007 17:05:37 +0900
+Message-ID: <45EFC3D1.208@gmail.com>
+References: <45EC9A67.8070204@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.224]:12579 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.231]:15135 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965010AbXCHHyw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 02:54:52 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so323329nze
-        for <linux-ide@vger.kernel.org>; Wed, 07 Mar 2007 23:54:51 -0800 (PST)
-In-Reply-To: <45EF2899.2030508@elitedvb.net>
+	with ESMTP id S965211AbXCHIFh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 03:05:37 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so325733nze
+        for <linux-ide@vger.kernel.org>; Thu, 08 Mar 2007 00:05:37 -0800 (PST)
+In-Reply-To: <45EC9A67.8070204@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Felix Domke <tmbinc@elitedvb.net>
-Cc: linux-ide@vger.kernel.org
+To: "Kok, Auke" <auke-jan.h.kok@intel.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Greg KH <gregkh@suse.de>
 
-Hello,
+[cc'ing Greg, Hi]
 
-Generally looks good.  Some questions and suggestions follow.
-
-Felix Domke wrote:
-> Index: linux-2.6.20/drivers/ata/libata-core.c
-> ===================================================================
-> --- linux-2.6.20.orig/drivers/ata/libata-core.c	2007-03-07
-> 19:01:12.000000000 +0100
-> +++ linux-2.6.20/drivers/ata/libata-core.c	2007-03-07 19:01:22.000000000
-> +0100
-> @@ -1478,7 +1478,7 @@
->  	}
+Kok, Auke wrote:
 > 
->  	tf.protocol = ATA_PROT_PIO;
-> -	tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
-> +//	tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
+> Attached dmesg. config.gz. here's the OOPS part.
+> 
+> ata_piix 0000:00:1f.2: version 2.10
+> ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+> ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+> ata: 0x1F0 IDE port busy
+> ata: conflict with ide0
+> BUG: at drivers/pci/pci.c:846 pcim_pin_device()
+>  [<c023838c>] pcim_pin_device+0x4c/0x60
+>  [<c0371af6>] ata_pci_init_one+0x2d6/0x380
+>  [<c023b968>] pci_get_device+0x18/0x20
+>  [<c0378651>] piix_check_450nx_errata+0x31/0x110
+>  [<c0238b90>] pci_intx+0x20/0x90
+>  [<c0378a97>] piix_init_one+0x117/0x200
+>  [<c023afca>] pci_call_probe+0xa/0x10
+>  [<c023b01e>] __pci_device_probe+0x4e/0x60
+>  [<c023b056>] pci_device_probe+0x26/0x60
+>  [<c0295a94>] really_probe+0xb4/0x170
+>  [<c023afa8>] pci_match_device+0xa8/0xc0
+>  [<c0295c28>] driver_probe_device+0xc8/0xd0
+>  [<c0465521>] klist_next+0x61/0xc0
+>  [<c0295d30>] __driver_attach+0x80/0x90
+>  [<c0294d0a>] bus_for_each_dev+0x3a/0x60
+>  [<c0295d56>] driver_attach+0x16/0x20
+>  [<c0295cb0>] __driver_attach+0x0/0x90
+>  [<c029532f>] bus_add_driver+0x5f/0x110
+>  [<c023b3d2>] __pci_register_driver+0x82/0xc0
+>  [<c05c0b91>] piix_init+0x11/0x20
+>  [<c059ab11>] do_initcalls+0x41/0x130
+>  [<c0158acc>] register_irq_proc+0x9c/0xc0
+>  [<c01b4462>] proc_mkdir_mode+0x42/0x60
+>  [<c059ac30>] init+0x0/0xa0
+>  [<c059ac7c>] init+0x4c/0xa0
+>  [<c0104e7f>] kernel_thread_helper+0x7/0x18
+>  =======================
+> ata: 0x170 IDE port busy
+> ata: conflict with ide1
+> ata_piix: probe of 0000:00:1f.2 failed with error -16
+> ata_piix 0000:00:1f.5: MAP [ P0 P2 P1 P3 ]
 
-Polling IDENTIFY doesn't work for you?  Care to explain how it's broken?
-
-> Index: linux-2.6.20/drivers/ata/sata_xenon.c
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ linux-2.6.20/drivers/ata/sata_xenon.c	2007-03-07 19:01:22.000000000
-> +0100
-> +	   Note on the DVD-ROM part:
-> +
-> +	   The drives usually require some tweaks to be usable under linux.
-> +
-> +	   You either need to hack the scsi layer, or, in case of the GDR3120L,
-> +	   set 'modeB' in the bootloader.
-
-Care to explain it further?  Or is it some cryptic embedded stuff?
-
-> +extern struct ata_probe_ent *ata_probe_ent_alloc(struct device *dev,
-> +						 const struct ata_port_info *port);
-
-This is an internal function and if you do this, your driver won't build
-as a kernel module.  Please do as other drivers do.  probe_ent is in the
-process of being removed, so looking ugly is okay for the time being.
-
-> +static u32 xenon_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-> +	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, sc_reg,
-> pdev->device);
-> +	u32 val;
-> +
-> +	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
-> +		return 0; /* assume no error */
-
-Interesting, SError isn't there while other regs are?
-
-> +static u32 xenon_scr_read (struct ata_port *ap, unsigned int sc_reg)
-> +{
-> +	if (sc_reg > SCR_CONTROL)
-> +		return 0xffffffffU;
-> +
-> +	return xenon_scr_cfg_read(ap, sc_reg);
-> +}
-
-Just collapse xenon_scr_cfg_read() into xenon_scr_read().
-
-> +static void xenon_scr_write (struct ata_port *ap, unsigned int sc_reg,
-> u32 val)
-> +{
-> +	if (sc_reg > SCR_CONTROL)
-> +		return;
-> +
-> +	xenon_scr_cfg_write(ap, sc_reg, val);
-> +}
-
-Ditto for write.
-
-> +static int xenon_init_one (struct pci_dev *pdev, const struct
-> pci_device_id *ent)
-> +{
-> +	static int printed_version;
-> +	struct ata_probe_ent *probe_ent = NULL;
-> +	int rc;
-> +	int pci_dev_busy = 0;
-> +
-> +	if (!printed_version++)
-> +		dev_printk(KERN_INFO, &pdev->dev, "version " DRV_VERSION "\n");
-> +
-> +	rc = pci_enable_device(pdev);
-> +	if (rc)
-> +		return rc;
-
-New drivers are generally accepted into libata-dev#upstream branch, and
-it looks a bit different in the init path.  If you're a gitter, please
-generate patch against libata-dev#upstream, if not the latest -mm should
-be good enough.
+Patch pending in Greg's queue.
 
 Thanks.
 
