@@ -1,38 +1,52 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 3/3] Use correct IDE error recovery
-Date: Thu, 8 Mar 2007 01:05:33 +0000
-Message-ID: <20070308010533.4cef7934@lxorguk.ukuu.org.uk>
-References: <20070221012304.GC1777@freefall.freebsd.org>
-	<200703072216.08295.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFT] sata_promise: decode and report error reasons
+Date: Thu, 08 Mar 2007 11:44:27 +0900
+Message-ID: <45EF788B.3080300@gmail.com>
+References: <200703010158.l211wXPS012467@harpo.it.uu.se>	<45EB9DF4.20402@gmail.com> <17903.6217.992304.800959@alkaid.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35375 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S2992778AbXCHABO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Mar 2007 19:01:14 -0500
-In-Reply-To: <200703072216.08295.bzolnier@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.177]:46663 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882AbXCHCo2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Mar 2007 21:44:28 -0500
+Received: by py-out-1112.google.com with SMTP id a29so125489pyi
+        for <linux-ide@vger.kernel.org>; Wed, 07 Mar 2007 18:44:27 -0800 (PST)
+In-Reply-To: <17903.6217.992304.800959@alkaid.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
 
-> On Wednesday 21 February 2007, Suleiman Souhlal wrote:
-> > IDE error recovery is using WIN_IDLEIMMEDIATE which was only valid for
-> > IDE V1 and IDE V2.  Modern drives will not be able to recover using
-> > this error handling.  The correct thing to do is issue a SRST followed
-> > by a SET_FEATURES.
-> 
-> This change looks fine, indeed we are better of using SRST + SET_FEATURES
-> than IDLE_IMMEDIATE.
-> 
-> > Signed-off-by:	Suleiman Souhlal <suleiman@google.com>
+Hello,
 
-Acked-by: Alan Cox <alan@redhat.com>
+Jeff clarified most things.  Just few more things.
 
-And this is well worth doing - IDLEIMMEDIATE blows the mind of some later
-drive firmware that doesn't expect to be treated in an IDE v1 manner.
+Mikael Pettersson wrote:
+> Which SErrror bits are standard?
+> It is true that some of the SError bits are diagnostic rather than
+> actual error indicators, as Promise's driver only checks a subset
+> of them. I'll fix that.
 
+Pretty much most of them.  Just take a look at SError section in
+serialATA spec.  libata EH decodes most of error and some of diagnostic
+bits in ata_eh_analyze_serror().
 
-Alan
+> ATA_DMA_CNT_ERR is when a DMA FIS data size differs from total DMA S/G size.
+> I think AC_ERR_ATA_BUS is the correct choice for this one too.
+
+AC_ERR_ATA_BUS is a bit special in that if it happens repeatedly it will
+trigger transfer speed adjustment pretty quickly.  The error should be
+set iff the error is a transmission error on the wire which is likely to
+be fixed by slowing down the transfer rate.  Maybe it should have been
+named AC_ERR_ATA_TRANSMISSION or something.
+
+As Jeff pointed out, AC_ERR_HSM is usually used when we can receive the
+FIS correctly but it doesn't make sense.  This is usually caused by
+driver error or seriously brain damaged firmware.  :-)
+
+Thanks.
+
+-- 
+tejun
