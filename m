@@ -1,47 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 29/30] sata_nv: don't read shadow registers when in ADMA
- mode
-Date: Fri, 09 Mar 2007 07:35:52 -0500
-Message-ID: <45F154A8.1050606@garzik.org>
-References: <200703061038.l26AcD3M019553@shell0.pdx.osdl.net>
+From: Tejun Heo <teheo@suse.de>
+Subject: Re: nonzero mismatch_cnt with no earlier error
+Date: Fri, 09 Mar 2007 21:36:06 +0900
+Message-ID: <45F154B6.4060109@suse.de>
+References: <45DF859B.2050108@eyal.emu.id.au>	<Pine.LNX.4.64.0702231929380.31611@p34.internal.lan>	<45DF8DE3.2050903@eyal.emu.id.au> <17890.25524.465403.130119@notabene.brown> <45E297E5.50303@eyal.emu.id.au> <45EB95EF.9030702@suse.de> <45EBCC43.9010709@eyal.emu.id.au> <45EC3EB3.10407@suse.de> <45EC933C.8010004@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55546 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422770AbXCIMfy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 07:35:54 -0500
-In-Reply-To: <200703061038.l26AcD3M019553@shell0.pdx.osdl.net>
+Received: from jericho.provo.novell.com ([137.65.248.124]:5872 "EHLO
+	jericho.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422770AbXCIMgL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 07:36:11 -0500
+In-Reply-To: <45EC933C.8010004@eyal.emu.id.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org, hancockr@shaw.ca
-Cc: linux-ide@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: list linux-ide <linux-ide@vger.kernel.org>
 
-akpm@linux-foundation.org wrote:
-> From: Robert Hancock <hancockr@shaw.ca>
+Hello, sorry about the long delay.
+
+Eyal Lebedinsky wrote:
+>> BTW, this is SMART read log for page 09 which is SMART self-test log.
+>> The device aborted it.  Dunno who issued it or why it got aborted.  As I
+>> wrote in the previous mail, EH discovered that SError has accumulated
+>> link level errors and thus treated it as ATA bus error.  All
+>> transmissions over SATA are checksummed and link errors supposedly don't
+>> cause data corruption, so, in theory, the above error message should be
+>> irrelevant to your problem.
+>>
+>> Ah.. please also post the result of 'smartctl -d ata -a /dev/sdX' for
+>> your drives.  That might reveal something.
 > 
-> Reading from the ATA shadow registers while we are in ADMA mode may cause
-> undefined behavior.  Don't read the ATA status register when completing
-> commands for this reason, it shouldn't be needed as the controller will
-> notify us if the command failed.  Also, don't allow commands with result
-> taskfile requested to execute in ADMA mode, since that requires accessing
-> the shadow registers.  We also still need to override tf_read since libata
-> will read the result taskfile on a command failure, and we need to go into
-> port register mode before allowing this.
+> sd[ab] are on the motherboard, sd[cdef] are on a Promise SATA-II-150-TX4.
 > 
-> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/ata/sata_nv.c |   33 ++++++++++++++++++++-------------
->  1 file changed, 20 insertions(+), 13 deletions(-)
+> In smartd.conf all the disks run a full selftest once a week which may have
+> coincided with the time of the reported error.
 
-Robert, do you think this should be pushed into #upstream-fixes (2.6.21-rc)?
+All the logs look fine.  No driver recorded any error condition in smart
+logs.  The SMART command abort is really fishy.  There is no reason the
+device would abort that command unless something weird is going on.  I'm
+afraid I can't tell much at this point.  It might be a good idea to
+schedule SMART self test and RAID checksumming at different time slot.
 
-I lean towards "yes", since it is a needed-by-hardware fix, but I also 
-am interested in testing feedback since it is so late in the 2.6.21-rc game.
-
-	Jeff
-
-
+-- 
+tejun
