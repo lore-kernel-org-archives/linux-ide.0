@@ -1,46 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Marvell SATA AHCI 0x6141
-Date: Fri, 09 Mar 2007 17:31:08 -0500
-Message-ID: <45F1E02C.2020203@pobox.com>
-References: <20070309220200.GA17323@emard>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH 08/12] libata: convert drivers with combined SATA/PATA ports to new init model
+Date: Fri, 9 Mar 2007 23:35:47 +0100 (MET)
+Message-ID: <200703092235.l29MZlMx007319@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60254 "EHLO mail.dvmed.net"
+Received: from aun.it.uu.se ([130.238.12.36]:58674 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767561AbXCIWbL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 17:31:11 -0500
-In-Reply-To: <20070309220200.GA17323@emard>
+	id S1767574AbXCIWgG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 17:36:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Davor <vordah@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: alan@lxorguk.ukuu.org.uk, htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org
 
-Davor wrote:
-> HI
+On Fri, 9 Mar 2007 20:15:36 +0900, Tejun Heo wrote:
+> Convert sata_via and sata_promise to nwe init model.  Both controllers
+> can have combined configuration (SATA + PATA) and used twisted
+> initialization method (modifying port in ->port_start) to overcome
+> probe_ent limitations.
 > 
-> I have onboard 
-> 02:00.0 SATA controller: Marvell Technology Group Ltd. Unknown device 6141 (rev 01)
-> 02:00.0 0106: 11ab:6141 (rev 01)
+> This patch converts both drivers to new init model in which such
+> configuration is natively supported.
 > 
-> and it's an AHCI compatible device so a simple patch makes it work 
-> (patch agains linux-2.6.20.2)
+> * promise: Combined pata port now uses separate port_info entry right
+>   after the sata counterpart entry.
 > 
-> --- drivers/ata/ahci.c.orig	2007-03-09 21:58:26.000000000 +0100
-> +++ drivers/ata/ahci.c	2007-03-09 22:38:20.000000000 +0100
-> @@ -437,6 +437,9 @@ static const struct pci_device_id ahci_p
->  	{ PCI_VDEVICE(SI, 0x1185), board_ahci }, /* SiS 966 */
->  	{ PCI_VDEVICE(SI, 0x0186), board_ahci }, /* SiS 968 */
->  
-> +	/* Marvell */
-> +	{ PCI_VDEVICE(MARVELL, 0x6141), board_ahci },	/* 6141 */
+> * promise: Controller configuration is discerned using ap->flags.
+>   This simplifies init path and makes it look more like other LLDs.
+> 
+> * promise: SATA/PATA branches are converted into separate ops.
+>   Remaining ones are converted to more standard ap->cbl ==
+>   ATA_CBL_SATA check.
 
-Yep, though you want the more-complete patch from libata-dev.git#mv-ahci 
-or akpm's -mm.
+I don't object to the new init model in principle.
+My only reservation here is that you are folding what
+logically are separate changes into one big change to
+sata_promise, and that makes the patch more difficult
+to review (and regressions more difficult to trace).
 
-	Jeff
+I would like to do the SATA/PATA splitup into distinct
+operations as a separate first step, with you doing the
+new init model adaptation in a followup step.
 
+Also, at least the error handler changes would seem to
+be in conflict with Alan's cable type changes.
 
-
-
+/Mikael
