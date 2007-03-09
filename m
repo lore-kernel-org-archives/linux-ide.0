@@ -1,34 +1,36 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 08/12] libata: convert drivers with combined SATA/PATA
- ports to new init model
-Date: Fri, 9 Mar 2007 12:46:30 +0000
-Message-ID: <20070309124630.50f1471c@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 11/12] libata: convert the remaining PATA drivers to new
+ init model
+Date: Fri, 9 Mar 2007 12:49:15 +0000
+Message-ID: <20070309124915.444fa871@lxorguk.ukuu.org.uk>
 References: <1173438935540-git-send-email-htejun@gmail.com>
-	<11734389362943-git-send-email-htejun@gmail.com>
+	<11734389363614-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60925 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39002 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1767202AbXCILmZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 06:42:25 -0500
-In-Reply-To: <11734389362943-git-send-email-htejun@gmail.com>
+	with ESMTP id S932184AbXCILpI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 06:45:08 -0500
+In-Reply-To: <11734389363614-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-> * promise: SATA/PATA branches are converted into separate ops.
->   Remaining ones are converted to more standard ap->cbl ==
->   ATA_CBL_SATA check.
+> Tested pdc_adma and pata_legacy.  Both are as broken as before.  The
+> rest are compile tested only.
 
-NAK this specifically
+pata_legacy should be working. If you are using the Jeff/Linus tree
+you'll need to remove the buggy crap for ACPI and then test.
 
-I've got some pending and needed patches to spot where drives report SATA
-and the host is doing PATA cables. This is needed for various warped PATA
-controller and glue variants and means that the PATA port probe may end
-up returning with ap->cbl == ATA_CBL_SATA if it finds SATA devices on a
-supposedly PATA port.
+It does still leave ports around and I need to find a sane way to probe
+for an ATA port presence before using libata (or have a 'no drives go
+away' action)
 
-Alan
+
+Other than the one noted NAK point the rest of the core changes look good
+to me and the PATA ones sane, as well as good cleanups.
+
+Acked-by: Alan Cox <alan@redhat.com>
