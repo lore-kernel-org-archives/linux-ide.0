@@ -1,38 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH]: libata-core: Add support for ATA_HORKAGE_DIAGNOSTIC
-Date: Fri, 9 Mar 2007 14:03:18 +0000
-Message-ID: <20070309140318.174a95b3@lxorguk.ukuu.org.uk>
-References: <20070308231804.110f76a0@lxorguk.ukuu.org.uk>
-	<45F15781.7090402@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] pata_cmd640: Multiple updates
+Date: Fri, 09 Mar 2007 08:01:56 -0500
+Message-ID: <45F15AC4.7080600@garzik.org>
+References: <20070307164329.752993ff@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37988 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1767247AbXCIM7o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 07:59:44 -0500
-In-Reply-To: <45F15781.7090402@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55814 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767245AbXCINB7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 08:01:59 -0500
+In-Reply-To: <20070307164329.752993ff@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> > -                if (print_info) {
-> > +                if (print_info && !(ata_device_blacklisted(dev) & ATA_HORKAGE_DIAGNOSTIC)) {
-> >  			ata_dev_printk(dev, KERN_WARNING,
-> >  "Drive reports diagnostics failure. This may indicate a drive\n");
-> >  			ata_dev_printk(dev, KERN_WARNING,
+Alan Cox wrote:
+> Add suspend/resume support
+> Write 0x5B to 0 not 0x5C
 > 
-> I don't understand this one at all.
+> The former is important as we must kill the FIFO on a resume
 > 
-> The original point of the message was to poke people so that they poke 
-> their vendors into fixing the firmware, which is indeed non-spec.  I 
-> would rather not silence a "your device is operating out-of-spec" warning.
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-The moment it goes near a business oriented distribution this becomes a
-problem because the flack all lands on either the system vendor or the OS
-product vendor both of whom will simply delete the check. At least this
-way it stays in for cases that actually matter.
+applied
 
-Alan
+
