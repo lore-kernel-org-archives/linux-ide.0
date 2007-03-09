@@ -1,29 +1,59 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata-core: Fix the iordy methods
-Date: Fri, 09 Mar 2007 09:23:15 -0500
-Message-ID: <45F16DD3.6080703@garzik.org>
-References: <20070308232259.661e1564@lxorguk.ukuu.org.uk>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [patch 29/30] sata_nv: don't read shadow registers when in ADMA
+ mode
+Date: Fri, 09 Mar 2007 08:27:47 -0600
+Message-ID: <45F16EE3.40602@shaw.ca>
+References: <200703061038.l26AcD3M019553@shell0.pdx.osdl.net>
+ <45F154A8.1050606@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56599 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767319AbXCIOXR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 09:23:17 -0500
-In-Reply-To: <20070308232259.661e1564@lxorguk.ukuu.org.uk>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:13970 "EHLO
+	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767313AbXCIO1t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 09:27:49 -0500
+In-reply-to: <45F154A8.1050606@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> This alone isn't sufficient to save the universe from prehistoric disks
-> and controllers but it is a first important step. Split off a separate
-> function to provide a mode filter when controller iordy is not available.
+Jeff Garzik wrote:
+> akpm@linux-foundation.org wrote:
+>> From: Robert Hancock <hancockr@shaw.ca>
+>>
+>> Reading from the ATA shadow registers while we are in ADMA mode may cause
+>> undefined behavior.  Don't read the ATA status register when completing
+>> commands for this reason, it shouldn't be needed as the controller will
+>> notify us if the command failed.  Also, don't allow commands with result
+>> taskfile requested to execute in ADMA mode, since that requires accessing
+>> the shadow registers.  We also still need to override tf_read since 
+>> libata
+>> will read the result taskfile on a command failure, and we need to go 
+>> into
+>> port register mode before allowing this.
+>>
+>> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>> ---
+>>
+>>  drivers/ata/sata_nv.c |   33 ++++++++++++++++++++-------------
+>>  1 file changed, 20 insertions(+), 13 deletions(-)
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> Robert, do you think this should be pushed into #upstream-fixes 
+> (2.6.21-rc)?
+> 
+> I lean towards "yes", since it is a needed-by-hardware fix, but I also 
+> am interested in testing feedback since it is so late in the 2.6.21-rc 
+> game.
 
-applied patch and associated trailing whitespace
+I would lean toward that as well, but it would be good to get some 
+testing from some sata_nv ADMA users to make sure it doesn't do anything 
+funny for them..
 
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
