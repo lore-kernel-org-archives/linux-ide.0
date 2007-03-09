@@ -1,26 +1,27 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_radisys: Re-remove all the crap and switch back
- to cable methods
-Date: Fri, 09 Mar 2007 08:02:16 -0500
-Message-ID: <45F15AD8.8070507@garzik.org>
-References: <20070308225607.4fbb0cf7@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ata_piix: Remove ugly layering violation
+Date: Fri, 9 Mar 2007 14:06:29 +0000
+Message-ID: <20070309140629.321da9f6@lxorguk.ukuu.org.uk>
+References: <20070307161307.37b1e36f@lxorguk.ukuu.org.uk>
+	<45F15336.9040707@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55834 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767238AbXCINCU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 08:02:20 -0500
-In-Reply-To: <20070308225607.4fbb0cf7@lxorguk.ukuu.org.uk>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37993 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1767253AbXCINC0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 08:02:26 -0500
+In-Reply-To: <45F15336.9040707@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Signed-off-by: Alan Cox <number6@the-village.bc.nu>
+> please don't add "acX" suffixes.  that's like spraypainting "alan wuz 
+> here" graphitti ;-)  Just increment to the next numeric version, like 
+> you do with the other PATA drivers.
 
-applied
-
+Ok - I just didn't want to clash with other allocated numbers or vendor
+ones, so I've always taken acX onto stuff.
 
