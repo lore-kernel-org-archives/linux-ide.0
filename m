@@ -1,48 +1,52 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH] sata_nv: revert use of notifiers for now
-Date: Thu, 08 Mar 2007 18:02:18 -0600
-Message-ID: <45F0A40A.4050508@shaw.ca>
+From: vandrove@vc.cvut.cz
+Subject: Re: [PATCH] Fix simplex adapters with libata
+Date: Fri,  9 Mar 2007 02:47:31 +0100
+Message-ID: <1173404851.45f0bcb38d69d@imap.vc.cvut.cz>
+References: <20070308091211.GA7257@vana.vc.cvut.cz> <20070308130250.5647ce5c@lxorguk.ukuu.org.uk> <45F0227D.5010905@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:33462 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbXCIACw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Mar 2007 19:02:52 -0500
+Received: from imap.vc.cvut.cz ([147.32.240.222]:59662 "EHLO imap.vc.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992888AbXCICQG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Mar 2007 21:16:06 -0500
+In-Reply-To: <45F0227D.5010905@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
-Cc: s0348365@sms.ed.ac.uk
+To: Mark Lord <liml@rtr.ca>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Petr Vandrovec <petr@vandrovec.name>, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Commit 721449bf0d51213fe3abf0ac3e3561ef9ea7827a added support for using the
-ADMA notifier bits to determine which commands to check for completion.
-However there have been reports that this causes command timeouts in certain
-cases. This is still being investigated. In addition, apparently the notifiers
-won't work if ADMA is disabled on the other port as a result of an ATAPI device
-being connected, and we don't handle this case properly.
+Quoting Mark Lord <liml@rtr.ca>:
 
-For now, just restore the previous behavior of checking all active commands
-to see if they are complete, without relying on the notifiers.
+> Alan Cox wrote:
+> >
+> >> diff -uprdN linux/drivers/ata/libata-core.c
+> linux/drivers/ata/libata-core.c
+> >> --- linux/drivers/ata/libata-core.c	2007-03-07 22:13:24.000000000 -0800
+> >> +++ linux/drivers/ata/libata-core.c	2007-03-08 00:15:37.000000000 -0800
+> >> @@ -3455,7 +3455,8 @@ static void ata_dev_xfermask(struct ata_
+> >>  			       "device is on DMA blacklist, disabling DMA\n");
+> >>  	}
+> >>  
+> >> -	if ((host->flags & ATA_HOST_SIMPLEX) && host->simplex_claimed != ap) {
+> >> +	if ((host->flags & ATA_HOST_SIMPLEX) &&
+> >> +            host->simplex_claimed && host->simplex_claimed != ap) {
+> 
+> A different version of this fix just went upstream for 2.6.21 via Jeff.
+> Which of the two is correct?
+> 
+> I believe the other one looks like this:
+> 
+> >> -	if ((host->flags & ATA_HOST_SIMPLEX) && host->simplex_claimed != ap) {
+> >> +	if ((host->flags & ATA_HOST_SIMPLEX) && host->simplex_claimed == ap) {
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+This one does not look correct to me.  It will not disable DMA for anything, as
+simplex_claimed will be NULL on first pass, and either NULL or first port on
+second pass, so it will never match currently tested port, and so it will leave
+DMA enabled for both channels, which is deadly for real simplex controllers.
 
---- linux-2.6.21-rc3-git3/drivers/ata/sata_nv.c	2007-03-08 17:15:25.000000000 -0600
-+++ linux-2.6.21-rc3-git3edit/drivers/ata/sata_nv.c	2007-03-08 17:19:42.000000000 -0600
-@@ -874,8 +874,14 @@
- 
- 			if (status & (NV_ADMA_STAT_DONE |
- 				      NV_ADMA_STAT_CPBERR)) {
--				u32 check_commands = notifier | notifier_error;
-+				u32 check_commands;
- 				int pos, error = 0;
-+
-+				if(ata_tag_valid(ap->active_tag))
-+					check_commands = 1 << ap->active_tag;
-+				else
-+					check_commands = ap->sactive;
-+
- 				/** Check CPBs for completed commands */
- 				while ((pos = ffs(check_commands)) && !error) {
- 					pos--;
+Petr
+
+
 
