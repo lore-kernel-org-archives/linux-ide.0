@@ -1,65 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: fix ata_host_release() free order
-Date: Fri, 9 Mar 2007 19:36:12 +0900
-Message-ID: <20070309103612.GC32687@htj.dyndns.org>
+From: Tejun Heo <teheo@suse.de>
+Subject: Re: [PATCH] devres: release resources on device_del()
+Date: Fri, 09 Mar 2007 19:36:56 +0900
+Message-ID: <45F138C8.40409@suse.de>
+References: <20070309103419.GB32687@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.233]:56668 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993106AbXCIKgN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 05:36:13 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so813564wxd
-        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 02:36:12 -0800 (PST)
-Content-Disposition: inline
+Received: from jericho.provo.novell.com ([137.65.248.124]:53640 "EHLO
+	jericho.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993111AbXCIKhN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 05:37:13 -0500
+In-Reply-To: <20070309103419.GB32687@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: gregkh@suse.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-host->ops->host_stop() might access ports.  Free ports after
-host_stop.
+Tejun Heo wrote:
+> Some platform devices are driven without driver attached, so managed
+> resources can be acquired without driver attached.  Make sure such
+> resources are released by calling devres_release_all() in
+> device_del().
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> This one fixes oops on pata_platform and pata_legacy unload.  libata
+> being the only user of devres at the moment.  I think this can go
+> through libata-dev#upstream.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-This one fixes oops on pdc_adma unloading and needs to go to
-libata-dev#upstream-fixes.
+I meant libata-dev#upstream-fixes.  This needs to be fixed in 2.6.21.
 
- drivers/ata/libata-core.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index cd0ce65..0520950 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5668,18 +5668,22 @@ static void ata_host_release(struct device *gendev, void *res)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 
--		if (!ap)
--			continue;
--
--		if (ap->ops->port_stop)
-+		if (ap && ap->ops->port_stop)
- 			ap->ops->port_stop(ap);
--
--		scsi_host_put(ap->scsi_host);
- 	}
- 
- 	if (host->ops->host_stop)
- 		host->ops->host_stop(host);
- 
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		if (ap)
-+			scsi_host_put(ap->scsi_host);
-+
-+		host->ports[i] = NULL;
-+	}
-+
- 	dev_set_drvdata(gendev, NULL);
- }
- 
 -- 
-1.5.0.1
-
+tejun
