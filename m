@@ -1,335 +1,359 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 2.6.22] remove Intel combined mode quirk
-Date: Fri, 9 Mar 2007 11:01:28 -0500
-Message-ID: <20070309160127.GA10226@havoc.gtf.org>
+Subject: Re: [patch 5/7] [RFC] xenon: add SATA support
+Date: Fri, 09 Mar 2007 11:06:29 -0500
+Message-ID: <45F18605.1020800@garzik.org>
+References: <20070307180144.812594000@elitedvb.net>> <45EF2899.2030508@elitedvb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:33678 "EHLO havoc.gtf.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:57305 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767333AbXCIQBe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 11:01:34 -0500
-Content-Disposition: inline
+	id S1767338AbXCIQGe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 11:06:34 -0500
+In-Reply-To: <45EF2899.2030508@elitedvb.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Felix Domke <tmbinc@elitedvb.net>
+Cc: linux-ide@vger.kernel.org
+
+Felix Domke wrote:
+> This adds support for the HDD and DVD SATA controller on the xenon
+> southbridge.
+> 
+> It also disables ATA_TFLAG_POLLING in libata-core, which prevented the
+> DVD drive
+> from being detected. It needs to be investigated what exactly is wrong
+> here.
+
+It sounds like everyone agrees this needs to be investigated, so I won't 
+belabor the point :)
 
 
-Discussed for 2.6.21, but pushed back because the current SATA code
-had enough fun stuff to debug already.  Thus, just queued the following
-for 2.6.22 in libata-dev.git#upstream.
+> ---
+>  drivers/ata/Kconfig       |    8 +
+>  drivers/ata/Makefile      |    1
+>  drivers/ata/libata-core.c |    2
+>  drivers/ata/sata_xenon.c  |  272
+> ++++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 282 insertions(+), 1 deletion(-)
+> 
+> Index: linux-2.6.20/drivers/ata/Kconfig
+> ===================================================================
+> --- linux-2.6.20.orig/drivers/ata/Kconfig	2007-03-07 19:01:12.000000000
+> +0100
+> +++ linux-2.6.20/drivers/ata/Kconfig	2007-03-07 19:01:22.000000000 +0100
+> @@ -123,6 +123,14 @@
+> 
+>  	  If unsure, say N.
+> 
+> +config SATA_XENON
+> +	tristate "Xenon SATA support"
+> +	depends on PCI
+> +	help
+> +	  This option enables support for Xenon southbridge.
+> +
+> +	  If unsure, say N.
+> +
+>  config SATA_ULI
+>  	tristate "ULi Electronics SATA support"
+>  	depends on PCI
+> Index: linux-2.6.20/drivers/ata/Makefile
+> ===================================================================
+> --- linux-2.6.20.orig/drivers/ata/Makefile	2007-03-07 19:01:12.000000000
+> +0100
+> +++ linux-2.6.20/drivers/ata/Makefile	2007-03-07 19:01:22.000000000 +0100
+> @@ -11,6 +11,7 @@
+>  obj-$(CONFIG_SATA_VIA)		+= sata_via.o
+>  obj-$(CONFIG_SATA_VITESSE)	+= sata_vsc.o
+>  obj-$(CONFIG_SATA_SIS)		+= sata_sis.o
+> +obj-$(CONFIG_SATA_XENON)	+= sata_xenon.o
+>  obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
+>  obj-$(CONFIG_SATA_NV)		+= sata_nv.o
+>  obj-$(CONFIG_SATA_ULI)		+= sata_uli.o
+> Index: linux-2.6.20/drivers/ata/libata-core.c
+> ===================================================================
+> --- linux-2.6.20.orig/drivers/ata/libata-core.c	2007-03-07
+> 19:01:12.000000000 +0100
+> +++ linux-2.6.20/drivers/ata/libata-core.c	2007-03-07 19:01:22.000000000
+> +0100
+> @@ -1478,7 +1478,7 @@
+>  	}
+> 
+>  	tf.protocol = ATA_PROT_PIO;
+> -	tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
+> +//	tf.flags |= ATA_TFLAG_POLLING; /* for polling presence detection */
+> 
+>  	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+>  				     id, sizeof(id[0]) * ATA_ID_WORDS);
+> Index: linux-2.6.20/drivers/ata/sata_xenon.c
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ linux-2.6.20/drivers/ata/sata_xenon.c	2007-03-07 19:01:22.000000000
+> +0100
+> @@ -0,0 +1,272 @@
+> +/*
+> + *  sata_xenon.c - SATA support for xenon southbridge
+> + *
+> + *  based on sata_sis.c, modifications by anonymous xbox360 hacker,
+> + *
+> + *  		    Please ALWAYS copy linux-ide@vger.kernel.org
+> + *		    on emails.
+> + *
+> + *  This program is free software; you can redistribute it and/or modify
+> + *  it under the terms of the GNU General Public License as published by
+> + *  the Free Software Foundation; either version 2, or (at your option)
+> + *  any later version.
+> + *
+> + *  This program is distributed in the hope that it will be useful,
+> + *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + *  GNU General Public License for more details.
+> + *
+> + *  You should have received a copy of the GNU General Public License
+> + *  along with this program; see the file COPYING.  If not, write to
+> + *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+> + *
+> + *
+> + *  libata documentation is available via 'make {ps|pdf}docs',
+> + *  as Documentation/DocBook/libata.*
+> + *
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/pci.h>
+> +#include <linux/init.h>
+> +#include <linux/blkdev.h>
+> +#include <linux/delay.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/device.h>
+> +#include <scsi/scsi_host.h>
+> +#include <linux/libata.h>
+> +
+> +#define DRV_NAME	"sata_xenon"
+> +#define DRV_VERSION	"0.1"
+> +
+> +	/* small note: it's completely unknown whether the xenon southbridge sata
+> +	   is really based on SiS technology.
+> +	   Most of SATA is standardized anyway.
+> +
+> +
+> +	   So, we have these two pci devices, one for each port.
+> +
+> +	   They have two BARs, one for the IDE registers (0..7,
+> +	   altstatus/devctl is +0xA), and one for the BMDMA.
+> +
+> +	   SCR seem to be sis-like in pci config space, but that should
+> +	   be verified!
+> +
+> +	   Note on the DVD-ROM part:
+> +
+> +	   The drives usually require some tweaks to be usable under linux.
+> +
+> +	   You either need to hack the scsi layer, or, in case of the GDR3120L,
+> +	   set 'modeB' in the bootloader.
+> +	*/
+> +
+> +enum {
+> +	/* PCI configuration registers */
+> +	SIS_SCR_BASE		= 0xc0, /* sata0 phy SCR registers */
+> +};
+> +
+> +extern struct ata_probe_ent *ata_probe_ent_alloc(struct device *dev,
+> +						 const struct ata_port_info *port);
+> +
+> +static int xenon_init_one (struct pci_dev *pdev, const struct
+> pci_device_id *ent);
+> +static u32 xenon_scr_read (struct ata_port *ap, unsigned int sc_reg);
+> +static void xenon_scr_write (struct ata_port *ap, unsigned int sc_reg,
+> u32 val);
+> +
+> +static const struct pci_device_id xenon_pci_tbl[] = {
+> +	{ PCI_VDEVICE(MICROSOFT, 0x5803), 0 },
+> +	{ PCI_VDEVICE(MICROSOFT, 0x5802), 0 },
+> +
+> +	{ }	/* terminate list */
+> +};
+> +
+> +static struct pci_driver xenon_pci_driver = {
+> +	.name			= DRV_NAME,
+> +	.id_table		= xenon_pci_tbl,
+> +	.probe			= xenon_init_one,
+> +	.remove			= ata_pci_remove_one,
+> +};
+> +
+> +static struct scsi_host_template xenon_sht = {
+> +	.module			= THIS_MODULE,
+> +	.name			= DRV_NAME,
+> +	.ioctl			= ata_scsi_ioctl,
+> +	.queuecommand		= ata_scsi_queuecmd,
+> +	.can_queue		= ATA_DEF_QUEUE,
+> +	.this_id		= ATA_SHT_THIS_ID,
+> +	.sg_tablesize		= ATA_MAX_PRD,
+> +	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+> +	.emulated		= ATA_SHT_EMULATED,
+> +	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+> +	.proc_name		= DRV_NAME,
+> +	.dma_boundary		= ATA_DMA_BOUNDARY,
+> +	.slave_configure	= ata_scsi_slave_config,
+> +	.slave_destroy		= ata_scsi_slave_destroy,
+> +	.bios_param		= ata_std_bios_param,
+> +};
+> +
+> +static const struct ata_port_operations xenon_ops = {
+> +	.port_disable		= ata_port_disable,
+> +	.tf_load		= ata_tf_load,
+> +	.tf_read		= ata_tf_read,
+> +	.check_status		= ata_check_status,
+> +	.exec_command		= ata_exec_command,
+> +	.dev_select		= ata_std_dev_select,
+> +	.bmdma_setup            = ata_bmdma_setup,
+> +	.bmdma_start            = ata_bmdma_start,
+> +	.bmdma_stop		= ata_bmdma_stop,
+> +	.bmdma_status		= ata_bmdma_status,
+> +	.qc_prep		= ata_qc_prep,
+> +	.qc_issue		= ata_qc_issue_prot,
+> +	.data_xfer		= ata_pio_data_xfer,
+> +	.freeze			= ata_bmdma_freeze,
+> +	.thaw			= ata_bmdma_thaw,
+> +	.error_handler		= ata_bmdma_error_handler,
+> +	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+> +	.irq_handler		= ata_interrupt,
+> +	.irq_clear		= ata_bmdma_irq_clear,
+> +	.scr_read		= xenon_scr_read,
+> +	.scr_write		= xenon_scr_write,
+> +	.port_start		= ata_port_start,
+> +	.port_stop		= ata_port_stop,
+> +	.host_stop		= ata_host_stop,
+> +};
+> +
+> +static struct ata_port_info xenon_port_info = {
+> +	.sht		= &xenon_sht,
+> +	.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
+> +	.pio_mask	= 0x1f,
+> +	.mwdma_mask	= 0x7,
+> +	.udma_mask	= 0x7f,
+> +	.port_ops	= &xenon_ops,
+> +};
+> +
+> +
+> +MODULE_DESCRIPTION("low-level driver for Xenon Southbridge SATA
+> controller");
+> +MODULE_LICENSE("GPL");
+> +MODULE_DEVICE_TABLE(pci, xenon_pci_tbl);
+> +MODULE_VERSION(DRV_VERSION);
+> +
+> +static unsigned int get_scr_cfg_addr(unsigned int port_no, unsigned int
+> sc_reg, int device)
+> +{
+> +	unsigned int addr = SIS_SCR_BASE + (4 * sc_reg);
+> +
+> +	return addr;
+> +}
+> +
+> +static u32 xenon_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+> +	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, sc_reg,
+> pdev->device);
+> +	u32 val;
+> +
+> +	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
+> +		return 0; /* assume no error */
+> +
+> +	pci_read_config_dword(pdev, cfg_addr, &val);
+> +
+> +	return val;
+> +}
+> +
+> +static void xenon_scr_cfg_write (struct ata_port *ap, unsigned int scr,
+> u32 val)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+> +	unsigned int cfg_addr = get_scr_cfg_addr(ap->port_no, scr, pdev->device);
+> +
+> +	if (scr == SCR_ERROR) /* doesn't exist in PCI cfg space */
+> +		return;
+> +
+> +	pci_write_config_dword(pdev, cfg_addr, val);
+> +}
+> +
+> +static u32 xenon_scr_read (struct ata_port *ap, unsigned int sc_reg)
+> +{
+> +	if (sc_reg > SCR_CONTROL)
+> +		return 0xffffffffU;
+> +
+> +	return xenon_scr_cfg_read(ap, sc_reg);
+> +}
+> +
+> +static void xenon_scr_write (struct ata_port *ap, unsigned int sc_reg,
+> u32 val)
+> +{
+> +	if (sc_reg > SCR_CONTROL)
+> +		return;
+> +
+> +	xenon_scr_cfg_write(ap, sc_reg, val);
+> +}
 
-The nasty ____request_resource hack is finally gone.
+as noted, there is no need for two levels of scr_read/write functions. 
+collapse each into a single read and single write function.
 
-In practical terms, this usually means that some combined mode users
-will have their SATA devices driven by the old-IDE driver rather than
-libata (because old-IDE is often non-modular, and thus probes first).
 
-But really, these same users will IMO cheer the removal of the
-performance-killing split-driver configuration, so its a net win.
-And the code is smaller and more clean, with one less special case
-hack.
+> +static int xenon_init_one (struct pci_dev *pdev, const struct
+> pci_device_id *ent)
+> +{
+> +	static int printed_version;
+> +	struct ata_probe_ent *probe_ent = NULL;
+> +	int rc;
+> +	int pci_dev_busy = 0;
+> +
+> +	if (!printed_version++)
+> +		dev_printk(KERN_INFO, &pdev->dev, "version " DRV_VERSION "\n");
+> +
+> +	rc = pci_enable_device(pdev);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = pci_request_regions(pdev, DRV_NAME);
+> +	if (rc) {
+> +		pci_dev_busy = 1;
+> +		goto err_out;
+> +	}
 
-    libata/IDE: remove combined mode quirk
-    
-    Both old-IDE and libata should be able handle all controllers and
-    devices found using normal resource reservation methods.
-    
-    This eliminates the awful, low-performing split-driver configuration
-    where old-IDE drove the PATA portion of a PCI device, in PIO-only mode,
-    and libata drove the SATA portion of the /same/ PCI device, in DMA mode.
-    Typically vendors would ship SATA hard drive / PATA optical
-    configuration, which would lend itself to slow (PIO-only) CD-ROM
-    performance.
-    
-    For Intel users running in combined mode, it is now wholly dependent on
-    your driver choice (potentially link order, if you compile both drivers
-    in) whether old-IDE or libata will drive your hardware.
-    
-    In either case, you will get full performance from both SATA and PATA
-    ports now, without having to pass a kernel command line parameter.
-    
-    Signed-off-by: Jeff Garzik <jeff@garzik.org>
+would be nice for you to update these against iomap, as found in 2.6.21-rc
 
- arch/i386/defconfig                 |    1 
- arch/parisc/configs/c3000_defconfig |    1 
- arch/x86_64/defconfig               |    1 
- drivers/ata/Kconfig                 |    5 -
- drivers/ata/libata-sff.c            |   36 +----------
- drivers/pci/quirks.c                |  113 ------------------------------------
- include/linux/ioport.h              |    1 
- kernel/resource.c                   |   21 ------
- 8 files changed, 6 insertions(+), 173 deletions(-)
 
-diff --git a/arch/i386/defconfig b/arch/i386/defconfig
-index 5ae1e0b..0b92a95 100644
---- a/arch/i386/defconfig
-+++ b/arch/i386/defconfig
-@@ -678,7 +678,6 @@ CONFIG_SATA_SIL=y
- CONFIG_SATA_VIA=y
- # CONFIG_SATA_VITESSE is not set
- # CONFIG_SATA_INIC162X is not set
--CONFIG_SATA_INTEL_COMBINED=y
- # CONFIG_PATA_ALI is not set
- # CONFIG_PATA_AMD is not set
- # CONFIG_PATA_ARTOP is not set
-diff --git a/arch/parisc/configs/c3000_defconfig b/arch/parisc/configs/c3000_defconfig
-index 782906b..eb2f9a3 100644
---- a/arch/parisc/configs/c3000_defconfig
-+++ b/arch/parisc/configs/c3000_defconfig
-@@ -435,7 +435,6 @@ CONFIG_SCSI_SATA_SIL=m
- # CONFIG_SCSI_SATA_ULI is not set
- CONFIG_SCSI_SATA_VIA=m
- # CONFIG_SCSI_SATA_VITESSE is not set
--CONFIG_SCSI_SATA_INTEL_COMBINED=y
- # CONFIG_SCSI_DMX3191D is not set
- # CONFIG_SCSI_FUTURE_DOMAIN is not set
- # CONFIG_SCSI_IPS is not set
-diff --git a/arch/x86_64/defconfig b/arch/x86_64/defconfig
-index 293a4a4..6fe4635 100644
---- a/arch/x86_64/defconfig
-+++ b/arch/x86_64/defconfig
-@@ -622,7 +622,6 @@ CONFIG_SATA_SIL=y
- CONFIG_SATA_VIA=y
- # CONFIG_SATA_VITESSE is not set
- # CONFIG_SATA_INIC162X is not set
--CONFIG_SATA_INTEL_COMBINED=y
- # CONFIG_PATA_ALI is not set
- # CONFIG_PATA_AMD is not set
- # CONFIG_PATA_ARTOP is not set
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 131a9f7..54ee50b 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -156,11 +156,6 @@ config SATA_INIC162X
- 	help
- 	  This option enables support for Initio 162x Serial ATA.
- 
--config SATA_INTEL_COMBINED
--	bool
--	depends on IDE=y && !BLK_DEV_IDE_SATA && (SATA_AHCI || ATA_PIIX)
--	default y
--
- config SATA_ACPI
- 	bool
- 	depends on ACPI && PCI
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 066689c..0a19466 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -779,40 +779,16 @@ int ata_pci_init_one (struct pci_dev *pdev, struct ata_port_info **port_info,
- 		/* Deal with combined mode hack. This side of the logic all
- 		   goes away once the combined mode hack is killed in 2.6.21 */
- 		if (!devm_request_region(dev, ATA_PRIMARY_CMD, 8, "libata")) {
--			struct resource *conflict, res;
--			res.start = ATA_PRIMARY_CMD;
--			res.end = ATA_PRIMARY_CMD + 8 - 1;
--			conflict = ____request_resource(&ioport_resource, &res);
--			while (conflict->child)
--				conflict = ____request_resource(conflict, &res);
--			if (!strcmp(conflict->name, "libata"))
--				legacy_mode |= ATA_PORT_PRIMARY;
--			else {
--				pcim_pin_device(pdev);
--				printk(KERN_WARNING "ata: 0x%0X IDE port busy\n" \
--						    "ata: conflict with %s\n",
--						    ATA_PRIMARY_CMD,
--						    conflict->name);
--			}
-+			pcim_pin_device(pdev);
-+			printk(KERN_WARNING "ata: 0x%0X IDE port busy\n",
-+					    ATA_PRIMARY_CMD);
- 		} else
- 			legacy_mode |= ATA_PORT_PRIMARY;
- 
- 		if (!devm_request_region(dev, ATA_SECONDARY_CMD, 8, "libata")) {
--			struct resource *conflict, res;
--			res.start = ATA_SECONDARY_CMD;
--			res.end = ATA_SECONDARY_CMD + 8 - 1;
--			conflict = ____request_resource(&ioport_resource, &res);
--			while (conflict->child)
--				conflict = ____request_resource(conflict, &res);
--			if (!strcmp(conflict->name, "libata"))
--				legacy_mode |= ATA_PORT_SECONDARY;
--			else {
--				pcim_pin_device(pdev);
--				printk(KERN_WARNING "ata: 0x%X IDE port busy\n" \
--						    "ata: conflict with %s\n",
--						    ATA_SECONDARY_CMD,
--						    conflict->name);
--			}
-+			pcim_pin_device(pdev);
-+			printk(KERN_WARNING "ata: 0x%X IDE port busy\n",
-+					    ATA_SECONDARY_CMD);
- 		} else
- 			legacy_mode |= ATA_PORT_SECONDARY;
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7f94fc0..75dedc7 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1307,119 +1307,6 @@ static void __init quirk_alder_ioapic(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_EESSC,	quirk_alder_ioapic );
- #endif
- 
--enum ide_combined_type { COMBINED = 0, IDE = 1, LIBATA = 2 };
--/* Defaults to combined */
--static enum ide_combined_type combined_mode;
--
--static int __init combined_setup(char *str)
--{
--	if (!strncmp(str, "ide", 3))
--		combined_mode = IDE;
--	else if (!strncmp(str, "libata", 6))
--		combined_mode = LIBATA;
--	else /* "combined" or anything else defaults to old behavior */
--		combined_mode = COMBINED;
--
--	return 1;
--}
--__setup("combined_mode=", combined_setup);
--
--#ifdef CONFIG_SATA_INTEL_COMBINED
--static void __devinit quirk_intel_ide_combined(struct pci_dev *pdev)
--{
--	u8 prog, comb, tmp;
--	int ich = 0;
--
--	/*
--	 * Narrow down to Intel SATA PCI devices.
--	 */
--	switch (pdev->device) {
--	/* PCI ids taken from drivers/scsi/ata_piix.c */
--	case 0x24d1:
--	case 0x24df:
--	case 0x25a3:
--	case 0x25b0:
--		ich = 5;
--		break;
--	case 0x2651:
--	case 0x2652:
--	case 0x2653:
--	case 0x2680:	/* ESB2 */
--		ich = 6;
--		break;
--	case 0x27c0:
--	case 0x27c4:
--		ich = 7;
--		break;
--	case 0x2828:	/* ICH8M */
--		ich = 8;
--		break;
--	default:
--		/* we do not handle this PCI device */
--		return;
--	}
--
--	/*
--	 * Read combined mode register.
--	 */
--	pci_read_config_byte(pdev, 0x90, &tmp);	/* combined mode reg */
--
--	if (ich == 5) {
--		tmp &= 0x6;  /* interesting bits 2:1, PATA primary/secondary */
--		if (tmp == 0x4)		/* bits 10x */
--			comb = (1 << 0);	/* SATA port 0, PATA port 1 */
--		else if (tmp == 0x6)	/* bits 11x */
--			comb = (1 << 2);	/* PATA port 0, SATA port 1 */
--		else
--			return;			/* not in combined mode */
--	} else {
--		WARN_ON((ich != 6) && (ich != 7) && (ich != 8));
--		tmp &= 0x3;  /* interesting bits 1:0 */
--		if (tmp & (1 << 0))
--			comb = (1 << 2);	/* PATA port 0, SATA port 1 */
--		else if (tmp & (1 << 1))
--			comb = (1 << 0);	/* SATA port 0, PATA port 1 */
--		else
--			return;			/* not in combined mode */
--	}
--
--	/*
--	 * Read programming interface register.
--	 * (Tells us if it's legacy or native mode)
--	 */
--	pci_read_config_byte(pdev, PCI_CLASS_PROG, &prog);
--
--	/* if SATA port is in native mode, we're ok. */
--	if (prog & comb)
--		return;
--
--	/* Don't reserve any so the IDE driver can get them (but only if
--	 * combined_mode=ide).
--	 */
--	if (combined_mode == IDE)
--		return;
--
--	/* Grab them both for libata if combined_mode=libata. */
--	if (combined_mode == LIBATA) {
--		request_region(0x1f0, 8, "libata");	/* port 0 */
--		request_region(0x170, 8, "libata");	/* port 1 */
--		return;
--	}
--
--	/* SATA port is in legacy mode.  Reserve port so that
--	 * IDE driver does not attempt to use it.  If request_region
--	 * fails, it will be obvious at boot time, so we don't bother
--	 * checking return values.
--	 */
--	if (comb == (1 << 0))
--		request_region(0x1f0, 8, "libata");	/* port 0 */
--	else
--		request_region(0x170, 8, "libata");	/* port 1 */
--}
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,    PCI_ANY_ID,	  quirk_intel_ide_combined );
--#endif /* CONFIG_SATA_INTEL_COMBINED */
--
--
- int pcie_mch_quirk;
- EXPORT_SYMBOL(pcie_mch_quirk);
- 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 6859a3b..71ea923 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -99,7 +99,6 @@ extern struct resource ioport_resource;
- extern struct resource iomem_resource;
- 
- extern int request_resource(struct resource *root, struct resource *new);
--extern struct resource * ____request_resource(struct resource *root, struct resource *new);
- extern int release_resource(struct resource *new);
- extern int insert_resource(struct resource *parent, struct resource *new);
- extern int allocate_resource(struct resource *root, struct resource *new,
-diff --git a/kernel/resource.c b/kernel/resource.c
-index bdb55a3..9bd14fd 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -213,27 +213,6 @@ int request_resource(struct resource *root, struct resource *new)
- EXPORT_SYMBOL(request_resource);
- 
- /**
-- * ____request_resource - reserve a resource, with resource conflict returned
-- * @root: root resource descriptor
-- * @new: resource descriptor desired by caller
-- *
-- * Returns:
-- * On success, NULL is returned.
-- * On error, a pointer to the conflicting resource is returned.
-- */
--struct resource *____request_resource(struct resource *root, struct resource *new)
--{
--	struct resource *conflict;
--
--	write_lock(&resource_lock);
--	conflict = __request_resource(root, new);
--	write_unlock(&resource_lock);
--	return conflict;
--}
--
--EXPORT_SYMBOL(____request_resource);
--
--/**
-  * release_resource - release a previously reserved resource
-  * @old: resource pointer
-  */
+> +	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
+> +	if (rc)
+> +		goto err_out_regions;
+> +	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
+> +	if (rc)
+> +		goto err_out_regions;
+
+shouldn't be needed, this is default
+
+
+> +	probe_ent = ata_probe_ent_alloc(pci_dev_to_dev(pdev), &xenon_port_info);
+> +	if (!probe_ent) {
+> +		rc = -ENOMEM;
+> +		goto err_out_regions;
+> +	}
+> +
+> +	probe_ent->irq = pdev->irq;
+> +	probe_ent->irq_flags = IRQF_SHARED;
+> +
+> +	probe_ent->port->cmd_addr = (long)ioremap(pci_resource_start(pdev, 0),
+> PAGE_SIZE);
+> +	probe_ent->port->altstatus_addr = probe_ent->port->cmd_addr + 0xa;
+> +	probe_ent->port->ctl_addr = probe_ent->port->cmd_addr + 0xa;
+> +	probe_ent->port->bmdma_addr = (long)ioremap(pci_resource_start(pdev,
+> 1), PAGE_SIZE);
+
+this needs updating for 2.6.21-rc, to get rid of the nasty casts and 
+lack of ioremap() error handling
+
+
+otherwise, seems pretty small and straightforward
+
+
