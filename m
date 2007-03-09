@@ -1,56 +1,41 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git patches] libata fixes
-Date: Fri, 09 Mar 2007 21:49:07 +0900
-Message-ID: <45F157C3.4090604@gmail.com>
-References: <01bd01c75fc2$57e70300$4b00a8c0@donald>
+Subject: Re: [PATA] Failed to set xfermode on LITE-ON LTR-48246S
+Date: Fri, 09 Mar 2007 21:50:07 +0900
+Message-ID: <45F157FF.50801@gmail.com>
+References: <Pine.LNX.4.64.0702041057090.8424@woody.linux-foundation.org> <20070227135838.GA4328@titan.lahn.de> <45EB9822.40300@gmail.com> <20070305103840.GA4381@titan.lahn.de> <45EC3B3F.7020509@gmail.com> <20070306092339.GA3803@titan.lahn.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.231]:56925 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767221AbXCIMtP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 07:49:15 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so846359wxd
-        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 04:49:14 -0800 (PST)
-In-Reply-To: <01bd01c75fc2$57e70300$4b00a8c0@donald>
+Received: from nz-out-0506.google.com ([64.233.162.238]:5114 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767228AbXCIMuJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 07:50:09 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so760363nze
+        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 04:50:08 -0800 (PST)
+In-Reply-To: <20070306092339.GA3803@titan.lahn.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rol@as2917.net
-Cc: 'Jeff Garzik' <jeff@garzik.org>, 'Andrew Morton' <akpm@linux-foundation.org>, 'Linus Torvalds' <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Paul Rolland wrote:
-> Hell Tejun,
+Philipp Matthias Hahn wrote:
+> Hello Tejun!
 > 
-> I've boot-tested this yesterday, with no real luck... 
+> On Tue, Mar 06, 2007 at 12:46:07AM +0900, Tejun Heo wrote:
+>> Philipp Matthias Hahn wrote:
+>>> On Mon, Mar 05, 2007 at 01:10:10PM +0900, Tejun Heo wrote:
+>>>> * Does applying the attached patch over unpatched 2.6.20.1 fix the problem?
+>>> Yes, it seems to fix it. (testes on top of the first patch mentioned
+>>> above, but witheout the second one.).
+>>> If I should test it as the sole patche, just mail me again please.
+>> Yeap, please test it on top of vanilla kernel to verify that the patch
+>> proper fixes the problem.
 > 
-> 1 - Tested on top of 2.6.21-rc2 (hope it's fine for you),
-> 2 - Collected a full dmesg before and after
-> 
-> Extract is :
-> ata7: PATA max UDMA/100 cmd 0x0000000000019c00 ctl 0x0000000000019882 bmdma
-> 0x00
-> 00000000019400 irq 16
-> ata8: PATA max UDMA/100 cmd 0x0000000000019800 ctl 0x0000000000019482 bmdma
-> 0x00
-> 00000000019408 irq 16
-> scsi6 : pata_jmicron
-> ata7.00: ATAPI, max UDMA/66
-> ata7.00: configured for UDMA/66
-> scsi7 : pata_jmicron
-> ATA: abnormal status 0x7F on port 0x0000000000019807
-> ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata7.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 36 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Yes, applying only this patch does fix the problem.
+> Thank you for your support.
 
-It seems like IRQ is not getting through.  The first IRQ driven command
-is failing for you.
-
-* Does giving 'acpi=off' or 'irqpoll' make any difference?
-
-* Can you connect a harddisk to the channel and see whether that works?
-
-Thanks.
+Okay, it seems we'll have to default to polling SETXFER.  I'll forward
+it upstream soon.  Thanks.
 
 -- 
 tejun
