@@ -1,39 +1,57 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: implement and use DMA mask configuration helper
-Date: Fri, 09 Mar 2007 22:03:34 +0900
-Message-ID: <45F15B26.3030006@gmail.com>
-References: <20070309104945.GG32687@htj.dyndns.org> <45F155E3.9040604@garzik.org>
+Subject: Re: [PATCH 08/12] libata: convert drivers with combined SATA/PATA
+ ports to new init model
+Date: Fri, 09 Mar 2007 22:04:45 +0900
+Message-ID: <45F15B6D.90207@gmail.com>
+References: <1173438935540-git-send-email-htejun@gmail.com>	<11734389362943-git-send-email-htejun@gmail.com> <20070309124630.50f1471c@lxorguk.ukuu.org.uk> <45F14B1A.5020605@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:64407 "EHLO
+Received: from wx-out-0506.google.com ([66.249.82.238]:65053 "EHLO
 	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767242AbXCINDi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 08:03:38 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so850412wxd
-        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 05:03:37 -0800 (PST)
-In-Reply-To: <45F155E3.9040604@garzik.org>
+	with ESMTP id S1767258AbXCINEp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 08:04:45 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so850728wxd
+        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 05:04:44 -0800 (PST)
+In-Reply-To: <45F14B1A.5020605@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Implement and use DMA mask configuration helper.
+> Alan Cox wrote:
+>>> * promise: SATA/PATA branches are converted into separate ops.
+>>>   Remaining ones are converted to more standard ap->cbl ==
+>>>   ATA_CBL_SATA check.
 >>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> ---
->> This function probably belongs to pci layer.  Put it in libata with
->> pci_test_bits() for the time being.
+>> NAK this specifically
+>>
+>> I've got some pending and needed patches to spot where drives report SATA
+>> and the host is doing PATA cables. This is needed for various warped PATA
+>> controller and glue variants and means that the PATA port probe may end
+>> up returning with ap->cbl == ATA_CBL_SATA if it finds SATA devices on a
+>> supposedly PATA port.
 > 
-> AFAIK the default DMA mask is always 32-bit.  Code (often written by me)
-> that sets it to a 32-bit mask was just paranoia, and not really needed.
+> Indeed.
 > 
-> Hence, the pci_go_64() function I added, found in #upstream.
+> With the new init model, testing for ATA_FLAG_SATA should be the
+> preferred test, as it makes all the mixed PATA/SATA ->port_start hackery
+> and tests go away.
+> 
+> With the new init model, the LLDD and core should now /always/ know
+> whether the port is PATA or SATA.  The LLDD will set it up that way.
+> 
+> Now that different ->ops for PATA and SATA is supported (with Tejun's
+> patches), I would expect the number of "is this port SATA?" tests to
+> drop dramatically, for reasons mentioned in the previous paragraph and
+> also because you can create separate hooks for PATA and SATA that
+> permits the killing of "is this SATA?" or "is this PATA?" tests.
 
-Cool.
+I see.  I'll drop that part.
+
+Thanks.
 
 -- 
 tejun
