@@ -1,117 +1,81 @@
-From: "Guido Diepen" <guido@jcwodan.nl>
-Subject: Re: Again problems with PDC20268 and vol_id
-Date: Fri, 9 Mar 2007 17:51:25 +0100 (CET)
-Message-ID: <2144.131.211.80.61.1173459085.squirrel@hammerhead.dyndns.org>
-References: <4964.131.211.80.61.1173446203.squirrel@hammerhead.dyndns.org>
-	<20070309190856.c86efd73.vsu@altlinux.ru>
+From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+Subject: 2.6.21-rc3-git4 ata1.00: qc timeout (cmd 0xef) (crashdump kernel)
+Date: Fri, 9 Mar 2007 17:57:32 +0100
+Message-ID: <6bffcb0e0703090857r14eda34bj92f3fd1d0008edb8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20070309190856.c86efd73.vsu@altlinux.ru>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: Sergey Vlasov <vsu@altlinux.ru>
-Cc: linux-ide@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.233]:52525 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767409AbXCIQ5j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 11:57:39 -0500
+Received: by wr-out-0506.google.com with SMTP id 71so1376062wri
+        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 08:57:38 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
+Hi Jeff,
 
-Sergey Vlasov wrote:
->
-> However, that value is important - together with the kernel messages
-> printed during detection of drivers.  Most likely the sector number is
-> out of range for your disk, and the disk replies to such access with
-> the SectorIdNotFound error.
+I've got some problems with my SATA controller on crashdump kernel.
 
-Unfortunately it means I will have to crash my system once more :) I will
-do that this weekend, after unmounting everything.
+Calling initcall 0xc1916081: fc_transport_init+0x0/0x35()
+Calling initcall 0xc19160b6: init_sd+0x0/0xbc()
+Calling initcall 0xc19161ec: piix_init+0x0/0x27()
+ata_piix 0000:00:1f.2: version 2.10
+ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ]
+ACPI: PCI Interrupt 0000:00:1f.2[A] -> Link [LNKC] -> GSI 5 (level,
+low) -> IRQ 5
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: SATA max UDMA/133 cmd 0x0001cc00 ctl 0x0001c882 bmdma 0x0001c400 irq 5
+ata2: SATA max UDMA/133 cmd 0x0001c800 ctl 0x0001c482 bmdma 0x0001c408 irq 5
+scsi0 : ata_piix
+PM: Adding info for No Bus:host0
+ata1.00: ATA-7: ST3160811AS, 3.AAE, max UDMA/133
+ata1.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata1.00: qc timeout (cmd 0xef)
+ata1.00: failed to set xfermode (err_mask=0x4)
+ata1: failed to recover some devices, retrying in 5 secs
+ata1.00: qc timeout (cmd 0xef)
+ata1.00: failed to set xfermode (err_mask=0x4)
+ata1.00: limiting speed to UDMA/133:PIO3
+ata1: failed to recover some devices, retrying in 5 secs
+ata1.00: qc timeout (cmd 0xef)
+ata1.00: failed to set xfermode (err_mask=0x4)
+ata1.00: disabled
+scsi1 : ata_piix
+PM: Adding info for No Bus:host1
+ata2.00: ATA-7: Maxtor 6Y200M0, YAR51BW0, max UDMA/133
+ata2.00: 398297088 sectors, multi 16: LBA48
 
->
-> Just provide the full dmesg output if you are unsure which lines are
-> relevant for the problem.
+/sbin/lspci  -vvv
+00:1f.2 IDE interface: Intel Corporation 82801EB (ICH5) SATA
+Controller (rev 02) (prog-if 8f [Master SecP SecO PriP PriO])
+        Subsystem: ASUSTeK Computer Inc. P4P800 SE Mainboard
+        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B-
+        Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium
+>TAbort- <TAbort- <MAbort- >SERR- <PERR-
+        Latency: 0
+        Interrupt: pin A routed to IRQ 19
+        Region 0: I/O ports at cc00 [size=8]
+        Region 1: I/O ports at c880 [size=4]
+        Region 2: I/O ports at c800 [size=8]
+        Region 3: I/O ports at c480 [size=4]
+        Region 4: I/O ports at c400 [size=16]
 
-Relevant dmesg output:
-...
-Probing IDE interface ide3...
-hdg: Maxtor 4G120J6, ATA DISK drive
-...
-hdg: max request size: 512KiB
-hdg: 240121728 sectors (122942 MB) w/2048KiB Cache, CHS=16383/255/63,
-UDMA(100)
-hdg: cache flushes not supported
- hdg: hdg1 hdg2
-
-
-
-
->
-> Please provide also the "fdisk -l -u /dev/hdg" output.
-
-cartman:/home/guido# fdisk -l -u /dev/hdg
-
-Disk /dev/hdg: 122.9 GB, 122942324736 bytes
-16 heads, 63 sectors/track, 238216 cylinders, total 240121728 sectors
-Units = sectors of 1 * 512 = 512 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hdg1   *          63   120060863    60030400+  83  Linux
-/dev/hdg2       120060896   240121759    60030432   83  Linux
-
-
->
-> Is the partition table correct?  Maybe the partition extends beyond
-> the end of physical disk for some reason, and when the kernel tries to
-> access last blocks of the partition, it actually tries to read sectors
-> beyond the actual drive capacity, which fails and exposes broken error
-> handling in the Promise IDE driver.
-
-I don't know how to verify that the partition table is correct, hopefully
-you can extract this from the supplied data. (If partition table is not
-correct, would I be able to update that dynamically, or must I move all
-data to different disks, reset the partition table and copy data back?)
-
-
->
-> I have added the linux-ide mailing list to Cc: - problems related to
-> IDE/ATA drivers (both old IDE, which you are using currently, and
-> newer libata) should be discussed there.
->
->> I started looking more into the problem and found out that the vol_id
->> program would only crash IF it was looking for raid. If I rain the
->> vol_id
->> program with the option --skip-raid, everything worked flawless.
->
-> With --skip-raid vol_id does not look for Linux software RAID
-> superblocks, which are located at the end of device.
-
-Ok, now that part is clear to me also :)
-
-Hope you have enough of info with this, if not, I can crash my system this
-weekend again and supply you with more relevant data :)
+http://www.stardust.webpages.pl/files/tbf/bitis-gabonica/2.6.21-rc3-git4-kdump/console.log
+http://www.stardust.webpages.pl/files/tbf/bitis-gabonica/2.6.21-rc3-git4-kdump/git-config
 
 Regards,
-
-Guido Diepen
-
-
-
+Michal
 
 -- 
-Aviation is proof that given the will, we have the capacity to achieve
-the impossible.
-          --Eddie Rickenbacker
-
-
-
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys-and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
+Michal K. K. Piotrowski
+LTG - Linux Testers Group (PL)
+(http://www.stardust.webpages.pl/ltg/)
+LTG - Linux Testers Group (EN)
+(http://www.stardust.webpages.pl/linux_testers_group_en/)
