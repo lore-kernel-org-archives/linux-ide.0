@@ -1,46 +1,91 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: nonzero mismatch_cnt with no earlier error
-Date: Fri, 09 Mar 2007 21:36:06 +0900
-Message-ID: <45F154B6.4060109@suse.de>
-References: <45DF859B.2050108@eyal.emu.id.au>	<Pine.LNX.4.64.0702231929380.31611@p34.internal.lan>	<45DF8DE3.2050903@eyal.emu.id.au> <17890.25524.465403.130119@notabene.brown> <45E297E5.50303@eyal.emu.id.au> <45EB95EF.9030702@suse.de> <45EBCC43.9010709@eyal.emu.id.au> <45EC3EB3.10407@suse.de> <45EC933C.8010004@eyal.emu.id.au>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Fix simplex adapters with libata
+Date: Fri, 09 Mar 2007 07:39:08 -0500
+Message-ID: <45F1556C.3000505@garzik.org>
+References: <20070308091211.GA7257@vana.vc.cvut.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jericho.provo.novell.com ([137.65.248.124]:5872 "EHLO
-	jericho.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422770AbXCIMgL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 07:36:11 -0500
-In-Reply-To: <45EC933C.8010004@eyal.emu.id.au>
+Received: from srv5.dvmed.net ([207.36.208.214]:55581 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964935AbXCIMjL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 07:39:11 -0500
+In-Reply-To: <20070308091211.GA7257@vana.vc.cvut.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: list linux-ide <linux-ide@vger.kernel.org>
+To: Petr Vandrovec <petr@vandrovec.name>
+Cc: linux-ide@vger.kernel.org
 
-Hello, sorry about the long delay.
-
-Eyal Lebedinsky wrote:
->> BTW, this is SMART read log for page 09 which is SMART self-test log.
->> The device aborted it.  Dunno who issued it or why it got aborted.  As I
->> wrote in the previous mail, EH discovered that SError has accumulated
->> link level errors and thus treated it as ATA bus error.  All
->> transmissions over SATA are checksummed and link errors supposedly don't
->> cause data corruption, so, in theory, the above error message should be
->> irrelevant to your problem.
->>
->> Ah.. please also post the result of 'smartctl -d ata -a /dev/sdX' for
->> your drives.  That might reveal something.
+Petr Vandrovec wrote:
+> Hello Jeff,
 > 
-> sd[ab] are on the motherboard, sd[cdef] are on a Promise SATA-II-150-TX4.
+> [please cc me, I'm not subscribed to linux-ide]
 > 
-> In smartd.conf all the disks run a full selftest once a week which may have
-> coincided with the time of the reported error.
+> Recently I got my hands on nVidia's MCP61 PM-AM board, and
+> it contains IDE chip configured by BIOS with only primary
+> channel enabled.  This confuses code which probes for
+> device DMA capabilities - it gets 0x60 (happy duplex
+> device) from primary channel BMDMA, but 0xFF (nobody here)
+> from secondary channel BMDMA.  Due to this code then believes
+> that chip is simplex.  I do not address this problem in
+> my patch, as I'm not sure how to handle this.  Probably
+> ata_pci_init_one should have bitmap of enabled/possible
+> interfaces instead of their count, but it looks like
+> quite intrusive change, and maybe we do not care - for device
+> with only one channel simplex and regular DMA engines are
+> same.
+> 
+> But making device simplex pointed out that support for
+> DMA on simplex devices is currently broken - ata_dev_xfermask
+> tests whether device is simplex and if it is whether DMA
+> engine was assigned to this port.  If not then it strips
+> out DMA bits from device.  Problem is that code which assigns
+> DMA engine to port in ata_set_mode first detect device
+> mode and assigns DMA engine to channel only if some DMA
+> capable device was found.
+> 
+> And as xfermask stripped out DMA bits, host->simplex_claimed
+> is always NULL with current implementation.
+> 
+> By allowing DMA either if simplex_claimed is NULL or if it
+> points to current port DMA can be finally used - it gets
+> assigned to first port which contains any DMA capable
+> device.
+> 
+> Patch is for current Linus git tree (post 2.6.21-rc3).
+> 				Thanks,
+> 					Petr Vandrovec
+> 
+> Before:
+> pata_amd 0000:00:06.0: version 0.2.8
+> PCI: Setting latency timer of device 0000:00:06.0 to 64
+> ata5: PATA max UDMA/133 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001f000 irq 14
+> ata6: PATA max UDMA/133 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001f008 irq 15
+> scsi4 : pata_amd
+> ata5.00: ATAPI, max UDMA/66
+> ata5.00: simplex DMA is claimed by other device, disabling DMA
+> ata5.00: configured for PIO4
+> scsi5 : pata_amd
+> ata6: port disabled. ignoring.
+> ata6: reset failed, giving up
+> scsi 4:0:0:0: CD-ROM            ATAPI    DVD W  DH16W1P   LG12 PQ: 0 ANSI: 5
+> 
+> After:
+> pata_amd 0000:00:06.0: version 0.2.8
+> PCI: Setting latency timer of device 0000:00:06.0 to 64
+> ata5: PATA max UDMA/133 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001f000 irq 14
+> ata6: PATA max UDMA/133 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001f008 irq 15
+> scsi4 : pata_amd
+> ata5.00: ATAPI, max UDMA/66
+> ata5.00: configured for UDMA/33
+> scsi5 : pata_amd
+> ata6: port disabled. ignoring.
+> ata6: reset failed, giving up
+> scsi 4:0:0:0: CD-ROM            ATAPI    DVD W  DH16W1P   LG12 PQ: 0 ANSI: 5
+> 
+> Signed-off-by: Petr Vandrovec <petr@vandrovec.name>
 
-All the logs look fine.  No driver recorded any error condition in smart
-logs.  The SMART command abort is really fishy.  There is no reason the
-device would abort that command unless something weird is going on.  I'm
-afraid I can't tell much at this point.  It might be a good idea to
-schedule SMART self test and RAID checksumming at different time slot.
+applied to #upstream-fixes
 
--- 
-tejun
+
