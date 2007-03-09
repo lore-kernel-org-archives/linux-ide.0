@@ -1,36 +1,27 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 11/12] libata: convert the remaining PATA drivers to new
- init model
-Date: Fri, 9 Mar 2007 12:49:15 +0000
-Message-ID: <20070309124915.444fa871@lxorguk.ukuu.org.uk>
-References: <1173438935540-git-send-email-htejun@gmail.com>
-	<11734389363614-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH] libata: implement and use DMA mask configuration helper
+Date: Fri, 9 Mar 2007 12:51:27 +0000
+Message-ID: <20070309125127.12985646@lxorguk.ukuu.org.uk>
+References: <20070309104945.GG32687@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39002 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39006 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932184AbXCILpI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 06:45:08 -0500
-In-Reply-To: <11734389363614-git-send-email-htejun@gmail.com>
+	with ESMTP id S1030188AbXCILrT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 06:47:19 -0500
+In-Reply-To: <20070309104945.GG32687@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-> Tested pdc_adma and pata_legacy.  Both are as broken as before.  The
-> rest are compile tested only.
+On Fri, 9 Mar 2007 19:49:45 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-pata_legacy should be working. If you are using the Jeff/Linus tree
-you'll need to remove the buggy crap for ACPI and then test.
-
-It does still leave ports around and I need to find a sane way to probe
-for an ATA port presence before using libata (or have a 'no drives go
-away' action)
-
-
-Other than the one noted NAK point the rest of the core changes look good
-to me and the PATA ones sane, as well as good cleanups.
+> Implement and use DMA mask configuration helper.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
 Acked-by: Alan Cox <alan@redhat.com>
