@@ -1,46 +1,30 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH 08/12] libata: convert drivers with combined SATA/PATA ports to new init model
-Date: Fri, 9 Mar 2007 23:35:47 +0100 (MET)
-Message-ID: <200703092235.l29MZlMx007319@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [git patches] libata (and devres) fixes
+Date: Fri, 9 Mar 2007 23:48:39 +0000
+Message-ID: <20070309234839.2070a265@lxorguk.ukuu.org.uk>
+References: <20070309163148.GA12848@havoc.gtf.org>
+	<b637ec0b0703091324q7f15fddbpc8c24b4e1131e3f4@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:58674 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767574AbXCIWgG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 17:36:06 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44608 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1767583AbXCIWow (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 17:44:52 -0500
+In-Reply-To: <b637ec0b0703091324q7f15fddbpc8c24b4e1131e3f4@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk, htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On Fri, 9 Mar 2007 20:15:36 +0900, Tejun Heo wrote:
-> Convert sata_via and sata_promise to nwe init model.  Both controllers
-> can have combined configuration (SATA + PATA) and used twisted
-> initialization method (modifying port in ->port_start) to overcome
-> probe_ent limitations.
+> scsi1 : ata_piix
+> ata2: port disabled. ignoring.
+> ata2: reset failed, giving up    <--- THIS IS NEW.
 > 
-> This patch converts both drivers to new init model in which such
-> configuration is natively supported.
-> 
-> * promise: Combined pata port now uses separate port_info entry right
->   after the sata counterpart entry.
-> 
-> * promise: Controller configuration is discerned using ap->flags.
->   This simplifies init path and makes it look more like other LLDs.
-> 
-> * promise: SATA/PATA branches are converted into separate ops.
->   Remaining ones are converted to more standard ap->cbl ==
->   ATA_CBL_SATA check.
+> However, I think it's just bogus as there is ata2 is disabled on this laptop.
 
-I don't object to the new init model in principle.
-My only reservation here is that you are folding what
-logically are separate changes into one big change to
-sata_promise, and that makes the patch more difficult
-to review (and regressions more difficult to trace).
+This is expected behaviour and it is what every controller except the
+PIIX has done for some time. I'm not sure its perfect but we could return
+0 from the -ENOENT case in ata_eh_reset() if that is preferred.
 
-I would like to do the SATA/PATA splitup into distinct
-operations as a separate first step, with you doing the
-new init model adaptation in a followup step.
-
-Also, at least the error handler changes would seem to
-be in conflict with Alan's cable type changes.
-
-/Mikael
