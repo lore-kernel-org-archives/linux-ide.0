@@ -1,41 +1,38 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATA] Failed to set xfermode on LITE-ON LTR-48246S
-Date: Fri, 09 Mar 2007 21:50:07 +0900
-Message-ID: <45F157FF.50801@gmail.com>
-References: <Pine.LNX.4.64.0702041057090.8424@woody.linux-foundation.org> <20070227135838.GA4328@titan.lahn.de> <45EB9822.40300@gmail.com> <20070305103840.GA4381@titan.lahn.de> <45EC3B3F.7020509@gmail.com> <20070306092339.GA3803@titan.lahn.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] sata_nv: revert use of notifiers for now
+Date: Fri, 09 Mar 2007 07:50:53 -0500
+Message-ID: <45F1582D.2050005@garzik.org>
+References: <45F0A40A.4050508@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.238]:5114 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767228AbXCIMuJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 07:50:09 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so760363nze
-        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 04:50:08 -0800 (PST)
-In-Reply-To: <20070306092339.GA3803@titan.lahn.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:55690 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767230AbXCIMu6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 07:50:58 -0500
+In-Reply-To: <45F0A40A.4050508@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, s0348365@sms.ed.ac.uk
 
-Philipp Matthias Hahn wrote:
-> Hello Tejun!
+Robert Hancock wrote:
+> Commit 721449bf0d51213fe3abf0ac3e3561ef9ea7827a added support for using the
+> ADMA notifier bits to determine which commands to check for completion.
+> However there have been reports that this causes command timeouts in 
+> certain
+> cases. This is still being investigated. In addition, apparently the 
+> notifiers
+> won't work if ADMA is disabled on the other port as a result of an ATAPI 
+> device
+> being connected, and we don't handle this case properly.
 > 
-> On Tue, Mar 06, 2007 at 12:46:07AM +0900, Tejun Heo wrote:
->> Philipp Matthias Hahn wrote:
->>> On Mon, Mar 05, 2007 at 01:10:10PM +0900, Tejun Heo wrote:
->>>> * Does applying the attached patch over unpatched 2.6.20.1 fix the problem?
->>> Yes, it seems to fix it. (testes on top of the first patch mentioned
->>> above, but witheout the second one.).
->>> If I should test it as the sole patche, just mail me again please.
->> Yeap, please test it on top of vanilla kernel to verify that the patch
->> proper fixes the problem.
+> For now, just restore the previous behavior of checking all active commands
+> to see if they are complete, without relying on the notifiers.
 > 
-> Yes, applying only this patch does fix the problem.
-> Thank you for your support.
+> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-Okay, it seems we'll have to default to polling SETXFER.  I'll forward
-it upstream soon.  Thanks.
+applied to #upstream-fixes
 
--- 
-tejun
+
