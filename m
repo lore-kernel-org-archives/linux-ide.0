@@ -1,57 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 08/12] libata: convert drivers with combined SATA/PATA
- ports to new init model
-Date: Fri, 09 Mar 2007 22:04:45 +0900
-Message-ID: <45F15B6D.90207@gmail.com>
-References: <1173438935540-git-send-email-htejun@gmail.com>	<11734389362943-git-send-email-htejun@gmail.com> <20070309124630.50f1471c@lxorguk.ukuu.org.uk> <45F14B1A.5020605@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH]: libata-core: Add support for ATA_HORKAGE_DIAGNOSTIC
+Date: Fri, 09 Mar 2007 08:05:24 -0500
+Message-ID: <45F15B94.7050208@garzik.org>
+References: <20070308231804.110f76a0@lxorguk.ukuu.org.uk>	<45F15781.7090402@garzik.org> <20070309140318.174a95b3@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.238]:65053 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767258AbXCINEp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 08:04:45 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so850728wxd
-        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 05:04:44 -0800 (PST)
-In-Reply-To: <45F14B1A.5020605@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55944 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767262AbXCINF0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 08:05:26 -0500
+In-Reply-To: <20070309140318.174a95b3@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andrew Morton <akpm@osdl.org>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Alan Cox wrote:
->>> * promise: SATA/PATA branches are converted into separate ops.
->>>   Remaining ones are converted to more standard ap->cbl ==
->>>   ATA_CBL_SATA check.
+Alan Cox wrote:
+>>> -                if (print_info) {
+>>> +                if (print_info && !(ata_device_blacklisted(dev) & ATA_HORKAGE_DIAGNOSTIC)) {
+>>>  			ata_dev_printk(dev, KERN_WARNING,
+>>>  "Drive reports diagnostics failure. This may indicate a drive\n");
+>>>  			ata_dev_printk(dev, KERN_WARNING,
+>> I don't understand this one at all.
 >>
->> NAK this specifically
->>
->> I've got some pending and needed patches to spot where drives report SATA
->> and the host is doing PATA cables. This is needed for various warped PATA
->> controller and glue variants and means that the PATA port probe may end
->> up returning with ap->cbl == ATA_CBL_SATA if it finds SATA devices on a
->> supposedly PATA port.
+>> The original point of the message was to poke people so that they poke 
+>> their vendors into fixing the firmware, which is indeed non-spec.  I 
+>> would rather not silence a "your device is operating out-of-spec" warning.
 > 
-> Indeed.
-> 
-> With the new init model, testing for ATA_FLAG_SATA should be the
-> preferred test, as it makes all the mixed PATA/SATA ->port_start hackery
-> and tests go away.
-> 
-> With the new init model, the LLDD and core should now /always/ know
-> whether the port is PATA or SATA.  The LLDD will set it up that way.
-> 
-> Now that different ->ops for PATA and SATA is supported (with Tejun's
-> patches), I would expect the number of "is this port SATA?" tests to
-> drop dramatically, for reasons mentioned in the previous paragraph and
-> also because you can create separate hooks for PATA and SATA that
-> permits the killing of "is this SATA?" or "is this PATA?" tests.
+> The moment it goes near a business oriented distribution this becomes a
+> problem because the flack all lands on either the system vendor or the OS
+> product vendor both of whom will simply delete the check. At least this
+> way it stays in for cases that actually matter.
 
-I see.  I'll drop that part.
+Maybe, but it's also possible the vendor and user will know that their 
+device is operating out-of-spec.
 
-Thanks.
+libata will default to the more-information setting, and distros are 
+free to change it if they wish.
 
--- 
-tejun
+	Jeff
+
+
+
