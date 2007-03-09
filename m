@@ -1,32 +1,52 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: fix native mode disabled port handling
-Date: Fri, 9 Mar 2007 12:52:35 +0000
-Message-ID: <20070309125235.0ff63053@lxorguk.ukuu.org.uk>
-References: <20070309104335.GD32687@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 08/12] libata: convert drivers with combined SATA/PATA
+ ports to new init model
+Date: Fri, 09 Mar 2007 06:55:06 -0500
+Message-ID: <45F14B1A.5020605@garzik.org>
+References: <1173438935540-git-send-email-htejun@gmail.com>	<11734389362943-git-send-email-htejun@gmail.com> <20070309124630.50f1471c@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41046 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932657AbXCILs3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 06:48:29 -0500
-In-Reply-To: <20070309104335.GD32687@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55238 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965182AbXCILzJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 06:55:09 -0500
+In-Reply-To: <20070309124630.50f1471c@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Fri, 9 Mar 2007 19:43:35 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> Disabled port handling in ata_pci_init_native_mode() is slightly
-> broken in that it may end up using the wrong port_info.  This patch
-> updates it such that disables ports are made dummy as done in the
-> legacy and other cases.
+Alan Cox wrote:
+>> * promise: SATA/PATA branches are converted into separate ops.
+>>   Remaining ones are converted to more standard ap->cbl ==
+>>   ATA_CBL_SATA check.
 > 
-> While at it, fix indentation in ata_resources_present().
+> NAK this specifically
+> 
+> I've got some pending and needed patches to spot where drives report SATA
+> and the host is doing PATA cables. This is needed for various warped PATA
+> controller and glue variants and means that the PATA port probe may end
+> up returning with ap->cbl == ATA_CBL_SATA if it finds SATA devices on a
+> supposedly PATA port.
 
-"Fix" 8)
+Indeed.
 
-Acked-by: Alan Cox <alan@redhat.com>
+With the new init model, testing for ATA_FLAG_SATA should be the 
+preferred test, as it makes all the mixed PATA/SATA ->port_start hackery 
+and tests go away.
+
+With the new init model, the LLDD and core should now /always/ know 
+whether the port is PATA or SATA.  The LLDD will set it up that way.
+
+Now that different ->ops for PATA and SATA is supported (with Tejun's 
+patches), I would expect the number of "is this port SATA?" tests to 
+drop dramatically, for reasons mentioned in the previous paragraph and 
+also because you can create separate hooks for PATA and SATA that 
+permits the killing of "is this SATA?" or "is this PATA?" tests.
+
+	Jeff
+
+
+
