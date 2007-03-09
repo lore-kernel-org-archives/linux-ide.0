@@ -1,53 +1,65 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] devres: release resources on device_del()
-Date: Fri, 9 Mar 2007 19:34:19 +0900
-Message-ID: <20070309103419.GB32687@htj.dyndns.org>
+Subject: [PATCH] libata: fix ata_host_release() free order
+Date: Fri, 9 Mar 2007 19:36:12 +0900
+Message-ID: <20070309103612.GC32687@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:52183 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993106AbXCIKeU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 05:34:20 -0500
-Received: by wr-out-0506.google.com with SMTP id 71so1250763wri
-        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 02:34:19 -0800 (PST)
+Received: from wx-out-0506.google.com ([66.249.82.233]:56668 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993106AbXCIKgN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2007 05:36:13 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so813564wxd
+        for <linux-ide@vger.kernel.org>; Fri, 09 Mar 2007 02:36:12 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gregkh@suse.de, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Some platform devices are driven without driver attached, so managed
-resources can be acquired without driver attached.  Make sure such
-resources are released by calling devres_release_all() in
-device_del().
+host->ops->host_stop() might access ports.  Free ports after
+host_stop.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-This one fixes oops on pata_platform and pata_legacy unload.  libata
-being the only user of devres at the moment.  I think this can go
-through libata-dev#upstream.
+This one fixes oops on pdc_adma unloading and needs to go to
+libata-dev#upstream-fixes.
 
- drivers/base/core.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/ata/libata-core.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index cf2a398..89ebe36 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -787,6 +787,13 @@ void device_del(struct device * dev)
- 	device_remove_attrs(dev);
- 	bus_remove_device(dev);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index cd0ce65..0520950 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5668,18 +5668,22 @@ static void ata_host_release(struct device *gendev, void *res)
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
  
-+	/*
-+	 * Some platform devices are driven without driver attached
-+	 * and managed resources may have been acquired.  Make sure
-+	 * all resources are released.
-+	 */
-+	devres_release_all(dev);
+-		if (!ap)
+-			continue;
+-
+-		if (ap->ops->port_stop)
++		if (ap && ap->ops->port_stop)
+ 			ap->ops->port_stop(ap);
+-
+-		scsi_host_put(ap->scsi_host);
+ 	}
+ 
+ 	if (host->ops->host_stop)
+ 		host->ops->host_stop(host);
+ 
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
 +
- 	/* Notify the platform of the removal, in case they
- 	 * need to do anything...
- 	 */
++		if (ap)
++			scsi_host_put(ap->scsi_host);
++
++		host->ports[i] = NULL;
++	}
++
+ 	dev_set_drvdata(gendev, NULL);
+ }
+ 
 -- 
 1.5.0.1
 
