@@ -1,36 +1,52 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Change prototype of mode_filter to remove ata_port
- *
-Date: Fri, 09 Mar 2007 09:34:43 -0500
-Message-ID: <45F17083.6030702@garzik.org>
-References: <20070308234542.01176a18@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 01/12] libata: allocate ap separately from shost
+Date: Fri, 09 Mar 2007 10:00:16 -0500
+Message-ID: <45F17680.9010006@garzik.org>
+References: <11734389351381-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56670 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56767 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767312AbXCIOeq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 09:34:46 -0500
-In-Reply-To: <20070308234542.01176a18@lxorguk.ukuu.org.uk>
+	id S2992824AbXCIPAU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 10:00:20 -0500
+In-Reply-To: <11734389351381-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> With Tejun having added adev->ap some time ago we can get rid of the
-> almost unused port being passed to mode filters. And while we are doing filters,
-> lets turn on the !IORDY filter as well.
+Tejun Heo wrote:
+> Don't embed ap inside shost.  Allocate it separately and point it back
+> from shosts's hostdata.  This makes port allocation more flexible and
+> allows regular ATA and SAS share host alloc/init paths.
 > 
-> (Versus -mm tree and queued diffs so may not 100% match your tree Jeff
-> but cc'd so you can comment on if this is a good idea or
-> not)
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/libata-core.c |   15 +++++++++++----
+>  include/linux/libata.h    |    2 +-
+>  2 files changed, 12 insertions(+), 5 deletions(-)
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 6e124bd..fab488c 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5646,14 +5646,17 @@ static struct ata_port * ata_port_add(const struct ata_probe_ent *ent,
+>  		return NULL;
+>  	}
+>  
+> -	shost = scsi_host_alloc(ent->sht, sizeof(struct ata_port));
+> +	ap = kzalloc(sizeof(struct ata_port), GFP_KERNEL);
+> +	if (!ap)
+> +		return NULL;
+> +
+> +	shost = scsi_host_alloc(ent->sht, sizeof(struct ata_port *));
+>  	if (!shost)
+>  		return NULL;
 
-applied by hand.  pdc2027x got dropped in the mess, as you might have 
-guessed from my last reply relating to that driver
+memory leak on error
 
+otherwise OK
 
 
