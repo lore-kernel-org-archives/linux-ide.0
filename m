@@ -1,29 +1,40 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_hpt37x: Updates from drivers/ide work
-Date: Fri, 09 Mar 2007 09:17:17 -0500
-Message-ID: <45F16C6D.2040609@garzik.org>
-References: <20070308232852.37b0ed54@lxorguk.ukuu.org.uk>
+Subject: Re: [patch 03/30] pata: expose set_mode method so it can be wrapped
+Date: Fri, 09 Mar 2007 09:19:48 -0500
+Message-ID: <45F16D04.8030002@garzik.org>
+References: <200703061037.l26Abq2S019460@shell0.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56547 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56567 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767304AbXCIORU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 09:17:20 -0500
-In-Reply-To: <20070308232852.37b0ed54@lxorguk.ukuu.org.uk>
+	id S1767315AbXCIOTu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 09:19:50 -0500
+In-Reply-To: <200703061037.l26Abq2S019460@shell0.pdx.osdl.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, htejun@gmail.com
 
-Alan Cox wrote:
-> Drag pata_hpt37x kicking and screaming in the direction of
-> drivers/ide/pci/hpt366.c and all the work that Sergei has been doing
-> there. Plenty left to be done but this is a good snapshot for folks to
-> work on and to review
+akpm@linux-foundation.org wrote:
+> From: Alan <alan@lxorguk.ukuu.org.uk>
+> 
+> This splits set_mode into do_set_mode and the wrapper so that a driver can
+> call the standard method inside its own.  This in theory also obsoletes
+> ->post_set_mode().
+> 
+> Needed for ACPI driver.
 > 
 > Signed-off-by: Alan Cox <alan@redhat.com>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Cc: Tejun Heo <htejun@gmail.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/ata/libata-core.c |   37 +++++++++++++++++++++++++++++-------
+>  include/linux/libata.h    |    1 
+>  2 files changed, 31 insertions(+), 7 deletions(-)
 
 applied
 
