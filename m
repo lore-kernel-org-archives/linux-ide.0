@@ -1,41 +1,32 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 03/30] pata: expose set_mode method so it can be wrapped
-Date: Fri, 09 Mar 2007 09:19:48 -0500
-Message-ID: <45F16D04.8030002@garzik.org>
-References: <200703061037.l26Abq2S019460@shell0.pdx.osdl.net>
+Subject: Re: [PATCH] sata_sil:  First step to removing ->post_set_mode
+Date: Fri, 09 Mar 2007 09:22:58 -0500
+Message-ID: <45F16DC2.3020901@garzik.org>
+References: <20070308230912.4ce2e943@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56567 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56590 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767315AbXCIOTu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Mar 2007 09:19:50 -0500
-In-Reply-To: <200703061037.l26Abq2S019460@shell0.pdx.osdl.net>
+	id S1767318AbXCIOXB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Mar 2007 09:23:01 -0500
+In-Reply-To: <20070308230912.4ce2e943@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, htejun@gmail.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-akpm@linux-foundation.org wrote:
-> From: Alan <alan@lxorguk.ukuu.org.uk>
+Alan Cox wrote:
+> Now that we have ata_do_set_mode() available for drivers to use we don't
+> actually need ->post_set_mode() as the driver can wrap set_mode nicely
+> and do stuff before or after (eg PCMCIA needs before), so we can kill off
+> a method in all the structs
 > 
-> This splits set_mode into do_set_mode and the wrapper so that a driver can
-> call the standard method inside its own.  This in theory also obsoletes
-> ->post_set_mode().
-> 
-> Needed for ACPI driver.
+> While I was at it I added kernel-doc to the function involved.
 > 
 > Signed-off-by: Alan Cox <alan@redhat.com>
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Cc: Tejun Heo <htejun@gmail.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/ata/libata-core.c |   37 +++++++++++++++++++++++++++++-------
->  include/linux/libata.h    |    1 
->  2 files changed, 31 insertions(+), 7 deletions(-)
 
-applied
+applied, but wish you would quit adding trailing whitespace
 
 
