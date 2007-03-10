@@ -1,50 +1,76 @@
-From: Guido Diepen <guido@jcwodan.nl>
-Subject: Re: Again problems with PDC20268 and vol_id
-Date: Sat, 10 Mar 2007 10:57:28 +0100
-Message-ID: <200703101057.32631.guido@jcwodan.nl>
-References: <4964.131.211.80.61.1173446203.squirrel@hammerhead.dyndns.org> <20070309190856.c86efd73.vsu@altlinux.ru>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: libata-acpi: allow _GTF on SATA, but disable on PATA for now
+Date: Sat, 10 Mar 2007 06:30:01 -0500
+Message-ID: <45F296B9.7000005@garzik.org>
+References: <200703100559.l2A5x6kP017578@hera.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp20.nijmegen.internl.net ([217.149.192.18]:42089 "EHLO
-	smtp20.nijmegen.internl.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751461AbXCJJ5x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 04:57:53 -0500
-In-Reply-To: <20070309190856.c86efd73.vsu@altlinux.ru>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:36123 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1766669AbXCJLaE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Mar 2007 06:30:04 -0500
+In-Reply-To: <200703100559.l2A5x6kP017578@hera.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Vlasov <vsu@altlinux.ru>
-Cc: linux-hotplug-devel@lists.sourceforge.net, linux-ide@vger.kernel.org
+To: kristen.c.accardi@intel.com, len.brown@intel.com
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alan <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Hi Sergey,
+Linux Kernel Mailing List wrote:
+> Gitweb:     http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=df33c77e3981e71afc8727ee5c432ba1a1bba68c
+> Commit:     df33c77e3981e71afc8727ee5c432ba1a1bba68c
+> Parent:     908e0a8a265fe8057604a9a30aec3f0be7bb5ebb
+> Author:     Kristen Accardi <kristen.c.accardi@intel.com>
+> AuthorDate: Fri Mar 9 18:15:33 2007 -0500
+> Committer:  Len Brown <len.brown@intel.com>
+> CommitDate: Fri Mar 9 18:15:33 2007 -0500
+> 
+>     libata-acpi: allow _GTF on SATA, but disable on PATA for now
+>     
+>     The ACPI specification states, and BIOS implementations depend on,
+>     _STM being called before _GTF.
+>     
+>     SATA does this, but PATA does not.  So for now, simply
+>     prevent execution of _GTF on PATA devices.  Longer term we
+>     should implement ACPI support for PATA devices in libata.
+>     
+>     Signed-off-by: Kristen Accardi <kristen.c.accardi@intel.com>
+>     Signed-off-by: Len Brown <len.brown@intel.com>
+> ---
+>  drivers/ata/libata-acpi.c |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index d14a48e..89aaf74 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -561,6 +561,13 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+>  
+>  	if (noacpi)
+>  		return 0;
+> +	/*
+> +	 * TBD - implement PATA support.  For now,
+> +	 * we should not run GTF on PATA devices since some
+> +	 * PATA require execution of GTM/STM before GTF.
+> +	 */
+> +	if (!(ap->cbl == ATA_CBL_SATA))
+> +		return 0;
+>  
+>  	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
+>  		if (!ata_dev_enabled(&ap->device[ix]))
 
-> Is the partition table correct?  Maybe the partition extends beyond
-> the end of physical disk for some reason, and when the kernel tries to
-> access last blocks of the partition, it actually tries to read sectors
-> beyond the actual drive capacity, which fails and exposes broken error
-> handling in the Promise IDE driver.
->
-> I have added the linux-ide mailing list to Cc: - problems related to
-> IDE/ATA drivers (both old IDE, which you are using currently, and
-> newer libata) should be discussed there.
+Grumble!
 
-Last night I copied all data on the /dev/hdg2 partition to other partitions, 
-removed the /dev/hdg2 partition and recreated it. Currently everything works 
-flawless !!!
+This /really/ should have gone through me and linux-ide first.
 
-Apparently there is a bug in the promise IDE pdc202xx_new.c driver :)
+Alan has been actively working on PATA ACPI, and we have been debugging 
+ACPI issues as well.  PLEASE coordinate with the maintainer, when 
+touching code outside of drivers/acpi!
 
-Thank you very much for the help!!!
+AFAICS this patch went in with zero appearance on LKML or another 
+related list, until submission.  This is /not/ how we do Linux development.
 
-Regards,
-
-Guido Diepen
+	Jeff
 
 
--- 
-Aviation is proof that given the will, we have the 
-capacity to achieve the impossible.
-     --Eddie Rickenbacker
