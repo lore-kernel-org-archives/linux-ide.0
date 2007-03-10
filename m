@@ -1,99 +1,66 @@
-From: "Russ Weeks" <rweeks@razorwire.ca>
-Subject: RE: sata-nv hotplug feature
-Date: Fri, 9 Mar 2007 22:36:49 -0800
-Message-ID: <000401c762de$7baf5b60$6400a8c0@foxbat>
-References: <20070308093810.GA19929@jim.sh>
-Reply-To: <rweeks@razorwire.ca>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH/RFC] implement __attribute_discard_text/data__ and use it to leave out PM functions if !CONFIG_PM
+Date: Sat, 10 Mar 2007 08:21:25 +0000
+Message-ID: <20070310082124.GA6771@ucw.cz>
+References: <20070305033819.GA32687@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from defout.telus.net ([199.185.220.240]:56286 "EHLO
-	defout.telus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752815AbXCJGgv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 01:36:51 -0500
-In-Reply-To: <20070308093810.GA19929@jim.sh>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:4629 "EHLO spitz.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933539AbXCJIVf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Mar 2007 03:21:35 -0500
+Content-Disposition: inline
+In-Reply-To: <20070305033819.GA32687@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Jim Paris' <jim@jtan.com>
-Cc: linux-ide@vger.kernel.org, htejun@gmail.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, linux-kernel@vger.kernel.org
 
-Thanks, Jim, Tejun.  Upgrading to 2.6.20 solved all my problems.
+Hi!
 
-What I observe now is that once the drive is plugged in again, 2-3
-minutes may pass before the device entry appears in /dev.  This isn't a
-problem for me, but if you have time to explain I'd be interested to
-know why.
-
-Also, if you have any tips on 'best practices' for drive yanking, I'd
-appreciate 'em.  So far I'm just doing 'sdparm --command=stop'.
-
-Thanks again for the great drivers!
-
-Russ
-
-> -----Original Message-----
-> From: linux-ide-owner@vger.kernel.org 
-> [mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Jim Paris
-> Sent: Thursday, March 08, 2007 1:38 AM
-> To: Russ Weeks
-> Cc: linux-ide@vger.kernel.org; htejun@gmail.com
-> Subject: Re: sata-nv hotplug feature
+> This patch is the result from the following discussion.
 > 
+>   http://thread.gmane.org/gmane.linux.ide/16475
 > 
-> > I'd like some more information regarding the device hotplug feature 
-> > for the
-> > sata-nv driver.  The FAQ indicates that 'device hotplug' == 
-> 'yank the drive': 
-> > this seems more like 'hot-unplug' to me.  Can I then plug 
-> the drive back in 
-> > after I've unplugged it?
-> > 
-> > This thread: 
-> > 
-> http://www.mail-archive.com/ubuntu->
-server@lists.ubuntu.com/msg00182.ht
-> > ml
-> > 
-> > Seems to indicate that I can do it, but I may need to 
-> refresh the SCSI 
-> > device
-> > system somehow.  This suits my needs just fine, as long as 
-> a plug doesn't 
-> > necessitate a reboot.  But running rescan-scsi-bus.sh 
-> doesn't seem to work.
-> > 
-> > uname -a:
-> > Linux backfire 2.6.19.2-smp #2 SMP Sat Mar 3 13:06:28 PST 
-> 2007 x86_64 
-> > x86_64
-> > x86_64 GNU/Linux
-> > 
-> > lspci shows this:
-> > 00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev 
-> f2) 00:07.0 
-> > IDE interface: nVidia Corporation CK804 Serial ATA 
-> Controller (rev f3) 
-> > 00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA 
-> Controller 
-> > (rev f3)
+> The problem is that CONFIG_PM affects a lot of low level drivers and
+> scattering CONFIG_PM all over the place is too ugly.  This patch...
 > 
-> Hi Russ,
+> * implements __attribute_discard_text__ and __attribute_discard_data__
+>   (not implemented for modules yet, only for built-ins)
+> * uses them to implement __pm and __pmdata markers
+> * convert libata midlayer and ahci to use it instead of CONFIG_PM
 > 
-> I believe you need this patch from Tejun:
+> __attribute_discard_text/data__ puts the marked symbols in separate
+> sections which are located from VMA 0 and discarded when generating
+> the final image.  It's similar to putting those into /DISCARD/ section
+> but won't complain even if the discarded symbols are referenced by
+> active sections.  As the discard sections are located from VMA 0,
+> actually dereferencing such symbols will result in OOPS.
 > 
- 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-t;h=722420fe6e2ab63bebc5a9ea346016b59076d75d
+> This trick certainly makes LLDs cleaner but there are also some
+> downsides, so here are the cons.
+> 
+> * Cannot depend on the compiler to detect illegal dereferences to
+>   discarded symbols.  We probably can do this using sparse.
+> 
+> * Cannot use the compiler to detect unused but unmarked symbols.  This
+>   also probably can be done with sparse.
+> 
+> * EXPORT_SYMBOL() is nullified, so it will take extra bytes for
+>   each symbol marked with __pm.  (insignificant)
+> 
+> * Implementation involves modifying kernel image, module build process
+>   and possibly sparse.  It might be too expensive to achieve device
+>   driver prettiness, but there are a lot of device drivers out there
+>   and a lot of CONFIG_PM's to be added.  Also, discard attributes can
+>   be used for other purposes too.
+> 
+> Any better ideas?  Comments?
 
-which is in kernel 2.6.20.  Original thread is here:
-  
-  http://thread.gmane.org/gmane.linux.ide/13219
+Seems ok to me. Certainly better than config_pm...
 
--jim
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
-
+							Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
