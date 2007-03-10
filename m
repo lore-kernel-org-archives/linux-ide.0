@@ -1,90 +1,116 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/13] siimage: fix wrong ->swdma_mask
-Date: Sat, 10 Mar 2007 22:12:49 +0100
-Message-ID: <200703102212.49447.bzolnier@gmail.com>
+Subject: [PATCH 13/13] ide: remove ide_use_dma()
+Date: Sat, 10 Mar 2007 22:12:10 +0100
+Message-ID: <200703102212.10920.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:47335 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.175]:46174 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932339AbXCJVJX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 16:09:23 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so1749164uga
-        for <linux-ide@vger.kernel.org>; Sat, 10 Mar 2007 13:09:21 -0800 (PST)
+	with ESMTP id S932289AbXCJVJV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 16:09:21 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so1749114uga
+        for <linux-ide@vger.kernel.org>; Sat, 10 Mar 2007 13:09:19 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-[PATCH] siimage: fix wrong ->swdma_mask
+[PATCH] ide: remove ide_use_dma()
 
-This driver doesn't support SWDMA so use the correct ->swdma_mask.
+ide_use_dma() duplicates a lot of ide_max_dma_mode() functionality
+and as all users of ide_use_dma() were converted to use ide_tune_dma()
+now it is possible to add missing checks to ide_tune_dma() and remove
+ide_use_dma() completely, so do it.
 
-While at it:
-
-* no need to call config_chipset_for_pio() in config_chipset_for_dma(),
-  if DMA is not available config_chipset_for_pio() will be called
-  by siimage_config_drive_for_dma() and if DMA is available
-  config_siimage_chipset_for_pio() will be called by siimage_tune_chipset()
-
-* remove needless config_chipset_for_pio() wrapper
-
-* bump driver version
+There should be no functionality changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
 
- drivers/ide/pci/siimage.c |   12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ drivers/ide/ide-dma.c |   42 +++++-------------------------------------
+ include/linux/ide.h   |    2 --
+ 2 files changed, 5 insertions(+), 39 deletions(-)
 
-Index: b/drivers/ide/pci/siimage.c
+Index: b/drivers/ide/ide-dma.c
 ===================================================================
---- a/drivers/ide/pci/siimage.c
-+++ b/drivers/ide/pci/siimage.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/siimage.c		Version 1.11	Jan 27, 2007
-+ * linux/drivers/ide/pci/siimage.c		Version 1.12	Mar 10 2007
-  *
-  * Copyright (C) 2001-2002	Andre Hedrick <andre@linux-ide.org>
-  * Copyright (C) 2003		Red Hat <alan@redhat.com>
-@@ -283,11 +283,6 @@ static void config_siimage_chipset_for_p
- 		(void) ide_config_drive_speed(drive, speed);
- }
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -670,41 +670,6 @@ int __ide_dma_good_drive (ide_drive_t *d
  
--static void config_chipset_for_pio (ide_drive_t *drive, byte set_speed)
+ EXPORT_SYMBOL(__ide_dma_good_drive);
+ 
+-int ide_use_dma(ide_drive_t *drive)
 -{
--	config_siimage_chipset_for_pio(drive, set_speed);
+-	struct hd_driveid *id = drive->id;
+-	ide_hwif_t *hwif = drive->hwif;
+-
+-	if ((id->capability & 1) == 0 || drive->autodma == 0)
+-		return 0;
+-
+-	/* consult the list of known "bad" drives */
+-	if (__ide_dma_bad_drive(drive))
+-		return 0;
+-
+-	/* capable of UltraDMA modes */
+-	if (id->field_valid & 4) {
+-		if (hwif->ultra_mask & id->dma_ultra)
+-			return 1;
+-	}
+-
+-	/* capable of regular DMA modes */
+-	if (id->field_valid & 2) {
+-		if (hwif->mwdma_mask & id->dma_mword)
+-			return 1;
+-		if (hwif->swdma_mask & id->dma_1word)
+-			return 1;
+-	}
+-
+-	/* consult the list of known "good" drives */
+-	if (__ide_dma_good_drive(drive) && id->eide_dma_time < 150)
+-		return 1;
+-
+-	return 0;
 -}
 -
- /**
-  *	siimage_tune_chipset	-	set controller timings
-  *	@drive: Drive to set up
-@@ -392,8 +387,6 @@ static int config_chipset_for_dma (ide_d
- {
- 	u8 speed = ide_max_dma_mode(drive);
- 
--	config_chipset_for_pio(drive, !speed);
+-EXPORT_SYMBOL_GPL(ide_use_dma);
 -
- 	if (!speed)
+ static const u8 xfer_mode_bases[] = {
+ 	XFER_UDMA_0,
+ 	XFER_MW_DMA_0,
+@@ -785,8 +750,11 @@ int ide_tune_dma(ide_drive_t *drive)
+ {
+ 	u8 speed;
+ 
+-	/* TODO: use only ide_max_dma_mode() */
+-	if (!ide_use_dma(drive))
++	if ((drive->id->capability & 1) == 0 || drive->autodma == 0)
++		return 0;
++
++	/* consult the list of known "bad" drives */
++	if (__ide_dma_bad_drive(drive))
  		return 0;
  
-@@ -419,7 +412,7 @@ static int siimage_config_drive_for_dma 
- 		return 0;
+ 	speed = ide_max_dma_mode(drive);
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1278,7 +1278,6 @@ struct drive_list_entry {
+ int ide_in_drive_list(struct hd_driveid *, const struct drive_list_entry *);
+ int __ide_dma_bad_drive(ide_drive_t *);
+ int __ide_dma_good_drive(ide_drive_t *);
+-int ide_use_dma(ide_drive_t *);
+ u8 ide_max_dma_mode(ide_drive_t *);
+ int ide_tune_dma(ide_drive_t *);
+ void ide_dma_off(ide_drive_t *);
+@@ -1306,7 +1305,6 @@ extern int __ide_dma_timeout(ide_drive_t
+ #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
  
- 	if (ide_use_fast_pio(drive))
--		config_chipset_for_pio(drive, 1);
-+		config_siimage_chipset_for_pio(drive, 1);
- 
- 	return -1;
- }
-@@ -1012,7 +1005,6 @@ static void __devinit init_hwif_siimage(
- 
- 	hwif->ultra_mask = 0x7f;
- 	hwif->mwdma_mask = 0x07;
--	hwif->swdma_mask = 0x07;
- 
- 	if (!is_sata(hwif))
- 		hwif->atapi_dma = 1;
+ #else
+-static inline int ide_use_dma(ide_drive_t *drive) { return 0; }
+ static inline u8 ide_max_dma_mode(ide_drive_t *drive) { return 0; }
+ static inline int ide_tune_dma(ide_drive_t *drive) { return 0; }
+ static inline void ide_dma_off(ide_drive_t *drive) { ; }
