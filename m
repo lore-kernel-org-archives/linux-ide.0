@@ -1,161 +1,145 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/13] ide: use ide_tune_dma() part #2
-Date: Sat, 10 Mar 2007 22:08:19 +0100
-Message-ID: <200703102208.19952.bzolnier@gmail.com>
+Subject: [PATCH 8/13] cs5530/sc1200: DMA support cleanup
+Date: Sat, 10 Mar 2007 22:09:02 +0100
+Message-ID: <200703102209.02467.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:46174 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.171]:47143 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932256AbXCJVJN (ORCPT
+	with ESMTP id S932286AbXCJVJN (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 16:09:13 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so1749114uga
-        for <linux-ide@vger.kernel.org>; Sat, 10 Mar 2007 13:09:11 -0800 (PST)
+Received: by ug-out-1314.google.com with SMTP id 44so1749117uga
+        for <linux-ide@vger.kernel.org>; Sat, 10 Mar 2007 13:09:12 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-[PATCH] ide: use ide_tune_dma() part #2
+[PATCH] cs5530/sc1200: DMA support cleanup
 
-Use ide_tune_dma() in ide-cris/it821x/pdc202xx_old/serverworks drivers.
+sc1200.c:
+
+* remove open-coded variant of ide_dma_host_off() (== ->dma_host_off),
+  it is not needed because ->dma_off_quietly calls ->dma_host_off
+
+* use ->dma_host_on (== ide_dma_host_on() for this driver) instead of
+  open-coded variant, call it from the users of sc1200_config_dma2()
+
+  [ there is no need to call ->dma_host_on in sc1200_config_dma() because
+    core code takes care of calling ->ide_dma_on on successful execution
+    of ->ide_dma_check ]
+
+* add comment about ->tuneproc interface abuse
+
+cs5530.c/sc1200.c:
+
+* core code takes care of calling ->dma_off_quietly before calling
+  ->ide_dma_check so there is no need to call it in ->ide_dma_check methods
+
+* bump driver version
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
 
- drivers/ide/cris/ide-cris.c    |   14 +-------------
- drivers/ide/pci/it821x.c       |   21 +--------------------
- drivers/ide/pci/pdc202xx_old.c |   14 +-------------
- drivers/ide/pci/serverworks.c  |   13 +------------
- 4 files changed, 4 insertions(+), 58 deletions(-)
+ drivers/ide/pci/cs5530.c |    7 +------
+ drivers/ide/pci/sc1200.c |   27 ++++++++++++---------------
+ 2 files changed, 13 insertions(+), 21 deletions(-)
 
-Index: b/drivers/ide/cris/ide-cris.c
+Index: b/drivers/ide/pci/cs5530.c
 ===================================================================
---- a/drivers/ide/cris/ide-cris.c
-+++ b/drivers/ide/cris/ide-cris.c
-@@ -1002,18 +1002,6 @@ static int cris_ide_build_dmatable (ide_
- 	return 1;	/* let the PIO routines handle this weirdness */
- }
- 
--static int cris_config_drive_for_dma (ide_drive_t *drive)
--{
--	u8 speed = ide_max_dma_mode(drive);
--
--	if (!speed)
--		return 0;
--
--	speed_cris_ide(drive, speed);
--
--	return ide_dma_enable(drive);
--}
--
+--- a/drivers/ide/pci/cs5530.c
++++ b/drivers/ide/pci/cs5530.c
+@@ -1,5 +1,5 @@
  /*
-  * cris_dma_intr() is the handler for disk read/write DMA interrupts
-  */
-@@ -1043,7 +1031,7 @@ static ide_startstop_t cris_dma_intr (id
- 
- static int cris_dma_check(ide_drive_t *drive)
- {
--	if (ide_use_dma(drive) && cris_config_drive_for_dma(drive))
-+	if (ide_tune_dma(drive))
- 		return 0;
- 
- 	return -1;
-Index: b/drivers/ide/pci/it821x.c
-===================================================================
---- a/drivers/ide/pci/it821x.c
-+++ b/drivers/ide/pci/it821x.c
-@@ -464,25 +464,6 @@ static int it821x_tune_chipset (ide_driv
- }
- 
- /**
-- *	config_chipset_for_dma	-	configure for DMA
-- *	@drive: drive to configure
-- *
-- *	Called by the IDE layer when it wants the timings set up.
-- */
--
--static int config_chipset_for_dma (ide_drive_t *drive)
--{
--	u8 speed = ide_max_dma_mode(drive);
--
--	if (speed == 0)
--		return 0;
--
--	it821x_tune_chipset(drive, speed);
--
--	return ide_dma_enable(drive);
--}
--
--/**
-  *	it821x_configure_drive_for_dma	-	set up for DMA transfers
-  *	@drive: drive we are going to set up
+- * linux/drivers/ide/pci/cs5530.c		Version 0.71	Mar 10 2007
++ * linux/drivers/ide/pci/cs5530.c		Version 0.72	Mar 10 2007
   *
-@@ -494,7 +475,7 @@ static int config_chipset_for_dma (ide_d
+  * Copyright (C) 2000			Andre Hedrick <andre@linux-ide.org>
+  * Copyright (C) 2000			Mark Lord <mlord@pobox.com>
+@@ -141,11 +141,6 @@ static int cs5530_config_dma(ide_drive_t
+ 	unsigned long basereg;
+ 	u8 unit = drive->dn & 1, mode = 0;
  
- static int it821x_config_drive_for_dma (ide_drive_t *drive)
- {
--	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
-+	if (ide_tune_dma(drive))
- 		return 0;
+-	/*
+-	 * Default to DMA-off in case we run into trouble here.
+-	 */
+-	hwif->dma_off_quietly(drive);
+-
+ 	if (ide_use_dma(drive))
+ 		mode = ide_max_dma_mode(drive);
  
- 	it821x_tuneproc(drive, 255);
-Index: b/drivers/ide/pci/pdc202xx_old.c
+Index: b/drivers/ide/pci/sc1200.c
 ===================================================================
---- a/drivers/ide/pci/pdc202xx_old.c
-+++ b/drivers/ide/pci/pdc202xx_old.c
-@@ -181,23 +181,11 @@ static void pdc_old_disable_66MHz_clock(
- 	outb(clock & ~(hwif->channel ? 0x08 : 0x02), clock_reg);
+--- a/drivers/ide/pci/sc1200.c
++++ b/drivers/ide/pci/sc1200.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/sc1200.c		Version 0.92	Mar 10 2007
++ * linux/drivers/ide/pci/sc1200.c		Version 0.93	Mar 10 2007
+  *
+  * Copyright (C) 2000-2002		Mark Lord <mlord@pobox.com>
+  * Copyright (C)      2007		Bartlomiej Zolnierkiewicz
+@@ -137,12 +137,6 @@ static int sc1200_config_dma2 (ide_drive
+ 	unsigned int		basereg = hwif->channel ? 0x50 : 0x40;
+ 
+ 	/*
+-	 * Default to DMA-off in case we run into trouble here.
+-	 */
+-	hwif->dma_off_quietly(drive);	/* turn off DMA while we fiddle */
+-	outb(inb(hwif->dma_base+2)&~(unit?0x40:0x20), hwif->dma_base+2); /* clear DMA_capable bit */
+-
+-	/*
+ 	 * Tell the drive to switch to the new mode; abort on failure.
+ 	 */
+ 	if (!mode || sc1200_set_xfer_mode(drive, mode)) {
+@@ -217,8 +211,6 @@ static int sc1200_config_dma2 (ide_drive
+ 		pci_write_config_dword(hwif->pci_dev, basereg+12, timings);
+ 	}
+ 
+-	outb(inb(hwif->dma_base+2)|(unit?0x40:0x20), hwif->dma_base+2);	/* set DMA_capable bit */
+-
+ 	return 0;	/* success */
  }
  
--static int config_chipset_for_dma (ide_drive_t *drive)
--{
--	u8 speed = ide_max_dma_mode(drive);
--
--	if (!speed)
--		return 0;
--
--	(void)pdc202xx_tune_chipset(drive, speed);
--
--	return ide_dma_enable(drive);
--}
--
- static int pdc202xx_config_drive_xfer_rate (ide_drive_t *drive)
- {
- 	drive->init_speed = 0;
+@@ -277,6 +269,9 @@ static void sc1200_tuneproc (ide_drive_t
+ 	static byte	modes[5] = {XFER_PIO_0, XFER_PIO_1, XFER_PIO_2, XFER_PIO_3, XFER_PIO_4};
+ 	int		mode = -1;
  
--	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
-+	if (ide_tune_dma(drive))
- 		return 0;
++	/*
++	 * bad abuse of ->tuneproc interface
++	 */
+ 	switch (pio) {
+ 		case 200: mode = XFER_UDMA_0;	break;
+ 		case 201: mode = XFER_UDMA_1;	break;
+@@ -287,7 +282,9 @@ static void sc1200_tuneproc (ide_drive_t
+ 	}
+ 	if (mode != -1) {
+ 		printk("SC1200: %s: changing (U)DMA mode\n", drive->name);
+-		(void)sc1200_config_dma2(drive, mode);
++		hwif->dma_off_quietly(drive);
++		if (sc1200_config_dma2(drive, mode) == 0)
++			hwif->dma_host_on(drive);
+ 		return;
+ 	}
  
- 	if (ide_use_fast_pio(drive))
-Index: b/drivers/ide/pci/serverworks.c
-===================================================================
---- a/drivers/ide/pci/serverworks.c
-+++ b/drivers/ide/pci/serverworks.c
-@@ -270,22 +270,11 @@ static void svwks_tune_drive (ide_drive_
- 	(void)svwks_tune_chipset(drive, XFER_PIO_0 + pio);
- }
- 
--static int config_chipset_for_dma (ide_drive_t *drive)
--{
--	u8 speed = ide_max_dma_mode(drive);
--
--	if (!speed)
--		return 0;
--
--	(void) svwks_tune_chipset(drive, speed);
--	return ide_dma_enable(drive);
--}
--
- static int svwks_config_drive_xfer_rate (ide_drive_t *drive)
- {
- 	drive->init_speed = 0;
- 
--	if (ide_use_dma(drive) && config_chipset_for_dma(drive))
-+	if (ide_tune_dma(drive))
- 		return 0;
- 
- 	if (ide_use_fast_pio(drive))
+@@ -421,12 +418,12 @@ static int sc1200_resume (struct pci_dev
+ 		for (d = 0; d < MAX_DRIVES; ++d) {
+ 			ide_drive_t *drive = &(hwif->drives[d]);
+ 			if (drive->present && !__ide_dma_bad_drive(drive)) {
+-				int was_using_dma = drive->using_dma;
++				int enable_dma = drive->using_dma;
+ 				hwif->dma_off_quietly(drive);
+-				sc1200_config_dma(drive);
+-				if (!was_using_dma && drive->using_dma) {
+-					hwif->dma_off_quietly(drive);
+-				}
++				if (sc1200_config_dma(drive))
++					enable_dma = 0;
++				if (enable_dma)
++					hwif->dma_host_on(drive);
+ 			}
+ 		}
+ 	}
