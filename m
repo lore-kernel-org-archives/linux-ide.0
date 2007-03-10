@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/13] siimage: fix wrong ->swdma_mask
-Date: Sun, 11 Mar 2007 00:22:36 +0300
-Message-ID: <45F3219C.5040500@ru.mvista.com>
-References: <200703102212.49447.bzolnier@gmail.com>
+Subject: Re: [PATCH 10/13] sl82c105: add ->speedproc support
+Date: Sun, 11 Mar 2007 00:51:28 +0300
+Message-ID: <45F32860.8040901@ru.mvista.com>
+References: <200703102209.59918.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:50880 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750726AbXCJVWq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 16:22:46 -0500
-In-Reply-To: <200703102212.49447.bzolnier@gmail.com>
+Received: from ns2.mvista.com ([63.81.120.155]:50932 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751122AbXCJVvj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Mar 2007 16:51:39 -0500
+In-Reply-To: <200703102209.59918.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -20,82 +20,114 @@ Cc: linux-ide@vger.kernel.org
 Hello.
 
 Bartlomiej Zolnierkiewicz wrote:
+> [PATCH] sl82c105: add ->speedproc support
 
-> [PATCH] siimage: fix wrong ->swdma_mask
+> * add sl82c105_tunepio() wrapper for sl82c105_tune_drive()
+>   (just to get the error value)
 
-> This driver doesn't support SWDMA so use the correct ->swdma_mask.
+> * add sl82c105_tune_chipset() (->speedproc method) for setting
+>   transfer mode
 
-> While at it:
-
-> * no need to call config_chipset_for_pio() in config_chipset_for_dma(),
->   if DMA is not available config_chipset_for_pio() will be called
->   by siimage_config_drive_for_dma() and if DMA is available
->   config_siimage_chipset_for_pio() will be called by siimage_tune_chipset()
-
-    Ugh, this driver has such a messy code PIO-wise!  There seems to be 
-completely no point in calling config_siimage_chipset_for_pio() from 
-siimage_tune_chipset().  Not mentioning that tuneproc() method fails to 
-actually control IORDY (it only twiddles IORDY bits for taskfile access). Ah, 
-and tuneproc() fails to set the drive's own mode (as usual)... :-)
-    I was going to post patches but then figured out that we don't actually 
-support this driver, so the priority has significatly dropped. :-)
-
-> * remove needless config_chipset_for_pio() wrapper
-
-> * bump driver version
+    Thanks for the patch!
 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
-> 
->  drivers/ide/pci/siimage.c |   12 ++----------
->  1 file changed, 2 insertions(+), 10 deletions(-)
-> 
-> Index: b/drivers/ide/pci/siimage.c
+
+  > Index: b/drivers/ide/pci/sl82c105.c
 > ===================================================================
-> --- a/drivers/ide/pci/siimage.c
-> +++ b/drivers/ide/pci/siimage.c
-> @@ -1,5 +1,5 @@
+> --- a/drivers/ide/pci/sl82c105.c
+> +++ b/drivers/ide/pci/sl82c105.c
+> @@ -77,7 +77,7 @@ static unsigned int get_timing_sl82c105(
 >  /*
-> - * linux/drivers/ide/pci/siimage.c		Version 1.11	Jan 27, 2007
-> + * linux/drivers/ide/pci/siimage.c		Version 1.12	Mar 10 2007
->   *
->   * Copyright (C) 2001-2002	Andre Hedrick <andre@linux-ide.org>
->   * Copyright (C) 2003		Red Hat <alan@redhat.com>
-> @@ -283,11 +283,6 @@ static void config_siimage_chipset_for_p
->  		(void) ide_config_drive_speed(drive, speed);
->  }
->  
-> -static void config_chipset_for_pio (ide_drive_t *drive, byte set_speed)
-> -{
-> -	config_siimage_chipset_for_pio(drive, set_speed);
-> -}
-> -
->  /**
->   *	siimage_tune_chipset	-	set controller timings
->   *	@drive: Drive to set up
-> @@ -392,8 +387,6 @@ static int config_chipset_for_dma (ide_d
+>   * Configure the drive and chipset for PIO
+>   */
+> -static void sl82c105_tune_drive(ide_drive_t *drive, u8 pio)
+> +static int sl82c105_tunepio(ide_drive_t *drive, u8 pio)
+
+    The name sl82c105_tune_pio() would have been more in line with the other 
+drivers but well, that's your patch (and the function behaves somewhat 
+differently anyway :-)
+
 >  {
->  	u8 speed = ide_max_dma_mode(drive);
+>  	ide_hwif_t *hwif	= HWIF(drive);
+>  	struct pci_dev *dev	= hwif->pci_dev;
+> @@ -91,7 +91,7 @@ static void sl82c105_tune_drive(ide_driv
+>  	xfer_mode = ide_get_best_pio_mode(drive, pio, 5, &p) + XFER_PIO_0;
 >  
-> -	config_chipset_for_pio(drive, !speed);
-> -
->  	if (!speed)
->  		return 0;
+>  	if (ide_config_drive_speed(drive, xfer_mode))
+> -		return;
+> +		return 1;
 >  
-> @@ -419,7 +412,7 @@ static int siimage_config_drive_for_dma 
->  		return 0;
+>  	drive->drive_data = drv_ctrl = get_timing_sl82c105(&p);
 >  
->  	if (ide_use_fast_pio(drive))
-> -		config_chipset_for_pio(drive, 1);
-> +		config_siimage_chipset_for_pio(drive, 1);
->  
->  	return -1;
+> @@ -114,17 +114,45 @@ static void sl82c105_tune_drive(ide_driv
+>  	 */
+>  	drive->io_32bit = 1;
+>  	drive->unmask	= 1;
+> +
+> +	return 0;
+> +}
+> +
+> +static void sl82c105_tune_drive(ide_drive_t *drive, u8 pio)
+> +{
+> +	/*
+> +	 * TODO: find best PIO mode and set device speed here
+> +	 *       (requires adding helper function for getting PIO cycle time)
+> +	 */
+
+   I thought we were doing it by calling ide_get_best_pio_mode() above...
+
+> +	(void)sl82c105_tunepio(drive, pio);
+
+    Erm, I thought afterwards that I vainly folded one into another. I think 
+it's worth moving those io_32bit and unmask flag assignments above back 
+there... May also recast my patch. :-)
+
+> +}
+> +
+> +static int sl82c105_tune_chipset(ide_drive_t *drive, u8 mode)
+> +{
+> +	mode = ide_rate_filter(drive, mode);
+> +
+> +	if (mode >= XFER_PIO_0 && mode <= XFER_PIO_5)
+> +		return sl82c105_tunepio(drive, mode - XFER_PIO_0);
+> +
+> +	/*
+> +	 * TODO: add MWDMA0/1 support
+> +	 */
+> +	BUG_ON(mode != XFER_MW_DMA_2);
+
+    Well, the other drivers just return non-zero in this case...
+
+> +	/*
+> +	 * Configure the drive for DMA.
+> +	 * We'll program the chipset only when DMA is actually turned on.
+> +	 */
+> +	return ide_config_drive_speed(drive, mode);
 >  }
-> @@ -1012,7 +1005,6 @@ static void __devinit init_hwif_siimage(
 >  
->  	hwif->ultra_mask = 0x7f;
->  	hwif->mwdma_mask = 0x07;
-> -	hwif->swdma_mask = 0x07;
+> -/*
+> - * Configure the drive for DMA.
+> - * We'll program the chipset only when DMA is actually turned on.
+> - */
+>  static int config_for_dma (ide_drive_t *drive)
+>  {
+> +	u8 mode = ide_max_dma_mode(drive);
+> +
+>  	DBG(("config_for_dma(drive:%s)\n", drive->name));
 >  
->  	if (!is_sata(hwif))
->  		hwif->atapi_dma = 1;
+> -	if (ide_config_drive_speed(drive, XFER_MW_DMA_2) != 0)
+> +	if (mode == 0 || sl82c105_tune_chipset(drive, mode))
+>  		return 0;
+>  
+>  	return ide_dma_enable(drive);
+> @@ -387,6 +415,8 @@ static void __devinit init_hwif_sl82c105
+>  		return;
+>  	}
+>  
+> +	hwif->speedproc			= &sl82c105_tune_chipset;
+> +
+>  	hwif->atapi_dma  = 1;
+>  	hwif->mwdma_mask = 0x04;
+
+MBR, Sergei
