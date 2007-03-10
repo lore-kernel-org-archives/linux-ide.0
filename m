@@ -1,53 +1,82 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/13] siimage: fix wrong ->swdma_mask
-Date: Sat, 10 Mar 2007 23:37:47 +0100
-Message-ID: <200703102337.47122.bzolnier@gmail.com>
-References: <200703102212.49447.bzolnier@gmail.com> <45F3219C.5040500@ru.mvista.com>
+From: "Russell Howe" <rhowe@siksai.co.uk>
+Subject: IDE/ATAPI timeouts & lost interrupts on alpha with 2.6.20.2
+Date: Sat, 10 Mar 2007 22:56:43 +0000
+Message-ID: <20070310225643.GB21407@xiao.rsnet>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:9670 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbXCJWar (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 17:30:47 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so1762887uga
-        for <linux-ide@vger.kernel.org>; Sat, 10 Mar 2007 14:30:45 -0800 (PST)
-In-Reply-To: <45F3219C.5040500@ru.mvista.com>
+Received: from youju.siksai.co.uk ([87.127.14.180]:4722 "EHLO
+	youju.siksai.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751404AbXCJXjc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 18:39:32 -0500
+Received: from xiao.siksai.co.uk ([87.127.14.179] ident=rhowe)
+	by youju.siksai.co.uk with smtp (Exim 4.50)
+	id 1HQAUV-0000gG-EQ
+	for linux-ide@vger.kernel.org; Sat, 10 Mar 2007 22:56:53 +0000
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+Evening all,
 
-On Saturday 10 March 2007, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > [PATCH] siimage: fix wrong ->swdma_mask
-> 
-> > This driver doesn't support SWDMA so use the correct ->swdma_mask.
-> 
-> > While at it:
-> 
-> > * no need to call config_chipset_for_pio() in config_chipset_for_dma(),
-> >   if DMA is not available config_chipset_for_pio() will be called
-> >   by siimage_config_drive_for_dma() and if DMA is available
-> >   config_siimage_chipset_for_pio() will be called by siimage_tune_chipset()
-> 
->     Ugh, this driver has such a messy code PIO-wise!  There seems to be 
-> completely no point in calling config_siimage_chipset_for_pio() from 
-> siimage_tune_chipset().  Not mentioning that tuneproc() method fails to 
-> actually control IORDY (it only twiddles IORDY bits for taskfile access). Ah, 
-> and tuneproc() fails to set the drive's own mode (as usual)... :-)
->     I was going to post patches but then figured out that we don't actually 
-> support this driver, so the priority has significatly dropped. :-)
+I just built a 2.6.20.2 kernel for my alpha (a digital personal
+workstation 500AU), and on bootup noticed the messages below, which took
+a long time to print. There was no media in the CDROM, and there's
+nothing else hanging off the IDE controller. The messages took several
+minutes to appear, stalling the boot process.
 
-Does it mean that I should expect more patches for other drivers? ;-)
+Unrelated, no doubt, but the output from the init scripts doesn't seem
+to have made it to the serial console, so I'm not sure what processes
+were running at the time.
 
-If so I could take care of this one... :-)
+The last kernel I ran on this thing was 2.6.17.11, which I appreciate is
+a long time ago, so if anyone could suggest a starting point for a
+binary search to determine the change which caused this regression, I'm
+all ears! Kernels take a while to build on this box, and I haven't got a
+crosscompiling toolchain setup...
 
-Bart
+What's the best way to go about debugging this?
+
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+[...]
+CY82C693: IDE controller at PCI slot 0000:00:07.1
+CY82C693: chipset revision 0
+CY82C693: not 100% native mode: will probe irqs later
+CY82C693U driver v0.34 99-13-12 Andreas S. Krebs (akrebs@altavista.net)
+    ide0: BM-DMA at 0x9080-0x9087, BIOS settings: hda:pio, hdb:pio
+PCI: Enabling device: (0000:00:07.2), cmd 47
+CY82C693: port 0x01f0 already claimed by ide0
+CY82C693: neither IDE port enabled (BIOS)
+Probing IDE interface ide0...
+hda: TOSHIBA CD-ROM XM-6202B, ATAPI CD/DVD-ROM drive
+hda: IRQ probe failed (0xfffffffff73bfeea)
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide-cd: cmd 0x5a timed out
+hda: lost interrupt
+ide-cd: cmd 0x5a timed out
+hda: lost interrupt
+ide-cd: cmd 0x5a timed out
+hda: lost interrupt
+hda: ATAPI 32X CD-ROM drive, 256kB Cache, DMA
+Uniform CD-ROM driver Revision: 3.20
+hda: lost interrupt
+ide-cd: cmd 0x3 timed out
+hda: lost interrupt
+ide-cd: cmd 0x3 timed out
+hda: lost interrupt
+hda: lost interrupt
+ide-cd: cmd 0x3 timed out
+hda: lost interrupt
+ide-cd: cmd 0x3 timed out
+hda: lost interrupt
+hda: lost interrupt
+ide-cd: cmd 0x3 timed out
+hda: lost interrupt
+ide-cd: cmd 0x3 timed out
+hda: lost interrupt
+
+-- 
+Russell Howe       | Why be just another cog in the machine,
+rhowe@siksai.co.uk | when you can be the spanner in the works?
