@@ -1,39 +1,40 @@
-From: "Fabio Comolli" <fabio.comolli@gmail.com>
-Subject: Re: [git patches] libata (and devres) fixes
-Date: Sat, 10 Mar 2007 16:28:52 +0100
-Message-ID: <b637ec0b0703100728i5a38e17boe370c86c02791e02@mail.gmail.com>
-References: <20070309163148.GA12848@havoc.gtf.org>
-	 <b637ec0b0703091324q7f15fddbpc8c24b4e1131e3f4@mail.gmail.com>
-	 <20070309234839.2070a265@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata-acpi: allow _GTF on SATA, but disable on PATA for now
+Date: Sat, 10 Mar 2007 16:40:59 +0000
+Message-ID: <20070310164059.4ba68bcc@lxorguk.ukuu.org.uk>
+References: <200703100559.l2A5x6kP017578@hera.kernel.org>
+	<45F296B9.7000005@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.226]:9049 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161071AbXCJP2x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 10:28:53 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1188061wxd
-        for <linux-ide@vger.kernel.org>; Sat, 10 Mar 2007 07:28:53 -0800 (PST)
-In-Reply-To: <20070309234839.2070a265@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44201 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161041AbXCJPhX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 10:37:23 -0500
+In-Reply-To: <45F296B9.7000005@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: kristen.c.accardi@intel.com, len.brown@intel.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Maybe KERN_DEBUG instead of KERN_ERR?
+> Alan has been actively working on PATA ACPI, and we have been debugging 
+> ACPI issues as well.  PLEASE coordinate with the maintainer, when 
+> touching code outside of drivers/acpi!
 
+ap->cbl is not a reliable way to tell SATA from PATA at the moment. We
+need to fix the real crashes too - right now no non PCI controller
+actually works at all (crash on boot) because of the ACPI crap.
 
-On 3/10/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> > scsi1 : ata_piix
-> > ata2: port disabled. ignoring.
-> > ata2: reset failed, giving up    <--- THIS IS NEW.
-> >
-> > However, I think it's just bogus as there is ata2 is disabled on this laptop.
->
-> This is expected behaviour and it is what every controller except the
-> PIIX has done for some time. I'm not sure its perfect but we could return
-> 0 from the -ENOENT case in ata_eh_reset() if that is preferred.
->
->
+Please drop this patch as it will cause regressions on systems that do
+not need the extra methods. Instead merge the one that fixe the non PCI
+crashes and we might get further.
+
+> AFAICS this patch went in with zero appearance on LKML or another 
+> related list, until submission.  This is /not/ how we do Linux development.
+
+Agreed.
+
+NAK the patch likewise.
+
+Alan
