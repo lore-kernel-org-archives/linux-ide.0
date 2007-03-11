@@ -1,52 +1,115 @@
-From: "Russell Howe" <rhowe@siksai.co.uk>
-Subject: Re: IDE/ATAPI timeouts & lost interrupts on alpha with 2.6.20.2
-Date: Sun, 11 Mar 2007 01:29:20 +0000
-Message-ID: <20070311012919.GA1517@xiao.rsnet>
-References: <20070310225643.GB21407@xiao.rsnet> <200703110102.13652.bzolnier@gmail.com>
+From: Len Brown <lenb@kernel.org>
+Subject: Re: libata-acpi: allow _GTF on SATA, but disable on PATA for now
+Date: Sat, 10 Mar 2007 22:14:14 -0500
+Message-ID: <200703102214.14881.lenb@kernel.org>
+References: <200703100559.l2A5x6kP017578@hera.kernel.org> <45F296B9.7000005@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youju.siksai.co.uk ([87.127.14.180]:3632 "EHLO
-	youju.siksai.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932207AbXCKB3l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2007 20:29:41 -0500
-Received: from xiao.siksai.co.uk ([87.127.14.179] ident=rhowe)
-	by youju.siksai.co.uk with smtp (Exim 4.50)
-	id 1HQCsD-0000yI-2N
-	for linux-ide@vger.kernel.org; Sun, 11 Mar 2007 01:29:38 +0000
+Received: from hera.kernel.org ([140.211.167.34]:34313 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932770AbXCKDPz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Mar 2007 22:15:55 -0500
+In-Reply-To: <45F296B9.7000005@garzik.org>
 Content-Disposition: inline
-In-Reply-To: <200703110102.13652.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: kristen.c.accardi@intel.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alan <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Sun, Mar 11, 2007 at 01:02:13AM +0100, Bartlomiej Zolnierkiewicz wrote:
+On Saturday 10 March 2007 06:30, Jeff Garzik wrote:
+> Linux Kernel Mailing List wrote:
+> > Gitweb:     http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=df33c77e3981e71afc8727ee5c432ba1a1bba68c
+> > Commit:     df33c77e3981e71afc8727ee5c432ba1a1bba68c
+> > Parent:     908e0a8a265fe8057604a9a30aec3f0be7bb5ebb
+> > Author:     Kristen Accardi <kristen.c.accardi@intel.com>
+> > AuthorDate: Fri Mar 9 18:15:33 2007 -0500
+> > Committer:  Len Brown <len.brown@intel.com>
+> > CommitDate: Fri Mar 9 18:15:33 2007 -0500
 > > 
-> > Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> > ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> > [...]
-> > CY82C693: IDE controller at PCI slot 0000:00:07.1
-> > CY82C693: chipset revision 0
-> > CY82C693: not 100% native mode: will probe irqs later
-> > CY82C693U driver v0.34 99-13-12 Andreas S. Krebs (akrebs@altavista.net)
-> >     ide0: BM-DMA at 0x9080-0x9087, BIOS settings: hda:pio, hdb:pio
-> > PCI: Enabling device: (0000:00:07.2), cmd 47
-> > CY82C693: port 0x01f0 already claimed by ide0
-> > CY82C693: neither IDE port enabled (BIOS)
+> >     libata-acpi: allow _GTF on SATA, but disable on PATA for now
+> >     
+> >     The ACPI specification states, and BIOS implementations depend on,
+> >     _STM being called before _GTF.
+> >     
+> >     SATA does this, but PATA does not.  So for now, simply
+> >     prevent execution of _GTF on PATA devices.  Longer term we
+> >     should implement ACPI support for PATA devices in libata.
+> >     
+> >     Signed-off-by: Kristen Accardi <kristen.c.accardi@intel.com>
+> >     Signed-off-by: Len Brown <len.brown@intel.com>
+> > ---
+> >  drivers/ata/libata-acpi.c |    7 +++++++
+> >  1 files changed, 7 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> > index d14a48e..89aaf74 100644
+> > --- a/drivers/ata/libata-acpi.c
+> > +++ b/drivers/ata/libata-acpi.c
+> > @@ -561,6 +561,13 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+> >  
+> >  	if (noacpi)
+> >  		return 0;
+> > +	/*
+> > +	 * TBD - implement PATA support.  For now,
+> > +	 * we should not run GTF on PATA devices since some
+> > +	 * PATA require execution of GTM/STM before GTF.
+> > +	 */
+> > +	if (!(ap->cbl == ATA_CBL_SATA))
+> > +		return 0;
+> >  
+> >  	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
+> >  		if (!ata_dev_enabled(&ap->device[ix]))
 > 
-> It seems that the generic IDE host driver is loaded first
-> (CONFIG_IDE_GENERIC=y/m) and "steals" resources needed by cy82c693.
+> Grumble!
 > 
-> Please try again without the generic IDE host driver so the proper
-> driver could be used.
+> This /really/ should have gone through me and linux-ide first.
 
-OK thanks.. new kernel building as I send this.
+Back at you Jeff,
+This feature /really/ should have never gone upstream in the first place,
+as this failure was reported and isolated to git-libata-all.patch
+back in 2.6.20-rc6-mm3:
 
-Could that be why the cy82c693 driver reports both IDE ports as disabled by
-the BIOS, because the generic IDE layer 'stole' them?
+http://bugzilla.kernel.org/show_bug.cgi?id=7907
 
-... I suppose I'll find out soon enough :)
+It then went on to become the most widely reported "ACPI related"
+regression in the 2.6.21-rc series -- for which ACPI gets smeared.
+Thank you ATA...
 
--- 
-Russell Howe       | Why be just another cog in the machine,
-rhowe@siksai.co.uk | when you can be the spanner in the works?
+> Alan has been actively working on PATA ACPI, and we have been debugging 
+> ACPI issues as well.  PLEASE coordinate with the maintainer, when 
+> touching code outside of drivers/acpi!
+
+And PLEASE coordinate with the maintainer when invoking methods
+that provoke errors in other sub-systems!
+
+Re: "debugging ACPI issues as well"
+
+What issues?
+Why haven't I see any mention of them on linux-acpi?
+Coordination and communication is a two-way street, Jeff.
+
+> AFAICS this patch went in with zero appearance on LKML or another 
+> related list, until submission.  This is /not/ how we do Linux development.
+
+I proudly take credit+blame for shipping Kristen's patch with no delay.
+It did appear on linux-acpi, as do all the patches I ship -- though
+I admit it was the same day it went upstream.
+I'm sorry I didn't CC linux-ide -- I'll get that part right next time.
+
+However, I believe that late -rc3 is _well_ past the time to be developing
+new code real-time in the upstream tree; and is instead time to
+shut the damn thing off and set sights on the next release.
+
+If you disagree with me, I'm not going to object
+when you send a better fix to Linus for 2.6.21-rc4.
+
+However, I do request that you first either start responding
+to bugzilla traffic, or delete your account from bugzilla
+so that people don't get the false impression that you're
+paying attention.
+
+thanks,
+-Len
