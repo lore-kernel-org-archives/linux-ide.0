@@ -1,115 +1,111 @@
-From: Len Brown <lenb@kernel.org>
-Subject: Re: libata-acpi: allow _GTF on SATA, but disable on PATA for now
-Date: Sat, 10 Mar 2007 22:14:14 -0500
-Message-ID: <200703102214.14881.lenb@kernel.org>
-References: <200703100559.l2A5x6kP017578@hera.kernel.org> <45F296B9.7000005@garzik.org>
+From: Sergio Monteiro Basto <sergio@sergiomb.no-ip.org>
+Subject: Re: and try remove another quirk on this computers Re: [3/6]
+	2.6.21-rc2: known regressions
+Date: Sun, 11 Mar 2007 04:32:55 +0000
+Message-ID: <1173587575.11759.8.camel@localhost.localdomain>
+References: <Pine.LNX.4.64.0702272105220.12485@woody.linux-foundation.org>
+	 <20070305015036.GH3441@stusta.de> <45EE9E39.3010800@garzik.org>
+	 <45F20541.9090208@crans.org>
+	 <1173499896.21891.34.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0703092134330.10832@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-eI40XrYQEOkMDQcihixK"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34313 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932770AbXCKDPz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Mar 2007 22:15:55 -0500
-In-Reply-To: <45F296B9.7000005@garzik.org>
-Content-Disposition: inline
+Received: from relay1.ptmail.sapo.pt ([212.55.154.21]:55935 "HELO sapo.pt"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S933089AbXCKEca (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Mar 2007 23:32:30 -0500
+In-Reply-To: <Pine.LNX.4.64.0703092134330.10832@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: kristen.c.accardi@intel.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alan <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Mathieu =?ISO-8859-1?Q?B=E9rard?= <Mathieu.Berard@crans.org>, Jeff Garzik <jeff@garzik.org>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, Fabio Comolli <fabio.comolli@gmail.com>, Tejun Heo <htejun@gmail.com>, Janosch Machowinski <jmachowinski@gmx.de>, Lukas Hejtmanek <xhejtman@fi.muni.cz>, Meelis Roos <mroos@linux.ee>, Olivier Mondoloni <darkcore71@yahoo.fr>, Thomas Renninger <trenn@suse.de>, Robert Moore <robert.moore@intel.com>, lenb@kernel.org, linux-acpi@vger.kernel.org
 
-On Saturday 10 March 2007 06:30, Jeff Garzik wrote:
-> Linux Kernel Mailing List wrote:
-> > Gitweb:     http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=df33c77e3981e71afc8727ee5c432ba1a1bba68c
-> > Commit:     df33c77e3981e71afc8727ee5c432ba1a1bba68c
-> > Parent:     908e0a8a265fe8057604a9a30aec3f0be7bb5ebb
-> > Author:     Kristen Accardi <kristen.c.accardi@intel.com>
-> > AuthorDate: Fri Mar 9 18:15:33 2007 -0500
-> > Committer:  Len Brown <len.brown@intel.com>
-> > CommitDate: Fri Mar 9 18:15:33 2007 -0500
-> > 
-> >     libata-acpi: allow _GTF on SATA, but disable on PATA for now
-> >     
-> >     The ACPI specification states, and BIOS implementations depend on,
-> >     _STM being called before _GTF.
-> >     
-> >     SATA does this, but PATA does not.  So for now, simply
-> >     prevent execution of _GTF on PATA devices.  Longer term we
-> >     should implement ACPI support for PATA devices in libata.
-> >     
-> >     Signed-off-by: Kristen Accardi <kristen.c.accardi@intel.com>
-> >     Signed-off-by: Len Brown <len.brown@intel.com>
-> > ---
-> >  drivers/ata/libata-acpi.c |    7 +++++++
-> >  1 files changed, 7 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> > index d14a48e..89aaf74 100644
-> > --- a/drivers/ata/libata-acpi.c
-> > +++ b/drivers/ata/libata-acpi.c
-> > @@ -561,6 +561,13 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
-> >  
-> >  	if (noacpi)
-> >  		return 0;
-> > +	/*
-> > +	 * TBD - implement PATA support.  For now,
-> > +	 * we should not run GTF on PATA devices since some
-> > +	 * PATA require execution of GTM/STM before GTF.
-> > +	 */
-> > +	if (!(ap->cbl == ATA_CBL_SATA))
-> > +		return 0;
-> >  
-> >  	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
-> >  		if (!ata_dev_enabled(&ap->device[ix]))
-> 
-> Grumble!
-> 
-> This /really/ should have gone through me and linux-ide first.
 
-Back at you Jeff,
-This feature /really/ should have never gone upstream in the first place,
-as this failure was reported and isolated to git-libata-all.patch
-back in 2.6.20-rc6-mm3:
+--=-eI40XrYQEOkMDQcihixK
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-http://bugzilla.kernel.org/show_bug.cgi?id=7907
+On Fri, 2007-03-09 at 21:41 -0800, Linus Torvalds wrote:
+>=20
+> On Sat, 10 Mar 2007, Sergio Monteiro Basto wrote:
+> >=20
+> > With this quirk I got this oops on hibernate (but computer still
+> > working)=20
+>=20
+> Well, strictly speaking it's a warning, not an oops per se.=20
+>=20
+> What happens is that the quirk wants to do an "ioremap_nocache()", which=20
+> allocates memory, and that happens very early during initialization when=20
+> interrupts are disabled.
+>=20
+> And you're really not supposed to allocate memory, except using=20
+> GFP_ATOMIC. But we've always been lax about that during early boot, so we=
+=20
+> have stuff that does. And resume ends up doing a lot of the same things=20
+> early boot does, and shows issues like this.
+>=20
+> So the quirk is probably still a good idea, and the warning message is=20
+> just that - a very scary warning message, but not an indicator that=20
+> anything is seriously screwed up for you.
+>=20
+> (It is an indication of a real bug, though, even though it's harmless in=20
+> practice in this case)
 
-It then went on to become the most widely reported "ACPI related"
-regression in the 2.6.21-rc series -- for which ACPI gets smeared.
-Thank you ATA...
+Hi, thanks=20
+Just to write, I test last fedora kernel(2.6.20-1.2981.fc7) which is
+based on 2.6.21-rc3-git5, without any problem, less than the scary
+warning, talked in this email :)
 
-> Alan has been actively working on PATA ACPI, and we have been debugging 
-> ACPI issues as well.  PLEASE coordinate with the maintainer, when 
-> touching code outside of drivers/acpi!
+Best regards,
+--=20
+S=C3=A9rgio M. B.
 
-And PLEASE coordinate with the maintainer when invoking methods
-that provoke errors in other sub-systems!
+--=-eI40XrYQEOkMDQcihixK
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
 
-Re: "debugging ACPI issues as well"
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGVjCCAw8w
+ggJ4oAMCAQICEGne8YrzxxgYAeyxZxmiO+owDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UEBhMCWkEx
+JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
+ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA2MTAxMTEwMjAzOVoXDTA3MTAxMTEwMjAz
+OVowSzEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEoMCYGCSqGSIb3DQEJARYZc2Vy
+Z2lvQHNlcmdpb21iLm5vLWlwLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAN9R
+ix9koyWSNQDmAHxcSeWXdFO1osqg2yeNgBBl+fz8FLYyROsDGpZMcnOd/Df6tWwMZpMSYDNIksiZ
+5VkCWaWIzIBccHX3wIkqrkcq3v1OcPGW9adXClXSbSZ0Hb4V4+bQ9LMAOjaMlH/dKLVkln6qmbko
+NOxgPotdVxCGcUy1Pqa4dT1zFo5+nIv1NAUNqKpq63X/+3nILNG4JGAvLIL8wcYs0cETGS6vISgd
+YFN/JlIqekWUGGUmc+SJcyyTWjXGN+2G0SDS8K3a9NFCo7a1Y0FyHQxikQRtB9sCcpQCoXiqaWsT
+npSrNJ0Od4w1sHZz09uEdhWKqXEmJsKKwi8CAwEAAaNZMFcwDgYDVR0PAQH/BAQDAgSQMBEGCWCG
+SAGG+EIBAQQEAwIFoDAkBgNVHREEHTAbgRlzZXJnaW9Ac2VyZ2lvbWIubm8taXAub3JnMAwGA1Ud
+EwEB/wQCMAAwDQYJKoZIhvcNAQEFBQADgYEAwVE8/kY82qYG7I2+gW0NhSyn+DR0uAWYbSxB2NgP
+16QOrzXt2HazlXkl2Bc+NKQEqEGKOu5fPPg2GoJ3zDO1Y8GUNGtJH0sX+63RGoUNOAv+bAK1Nxhb
+illDUUCjW3OqA/hRyBwjU9kHJPYhl1EbAUGpAhfENHjkS/S7b1REBLMwggM/MIICqKADAgECAgEN
+MA0GCSqGSIb3DQEBBQUAMIHRMQswCQYDVQQGEwJaQTEVMBMGA1UECBMMV2VzdGVybiBDYXBlMRIw
+EAYDVQQHEwlDYXBlIFRvd24xGjAYBgNVBAoTEVRoYXd0ZSBDb25zdWx0aW5nMSgwJgYDVQQLEx9D
+ZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9uMSQwIgYDVQQDExtUaGF3dGUgUGVyc29uYWwg
+RnJlZW1haWwgQ0ExKzApBgkqhkiG9w0BCQEWHHBlcnNvbmFsLWZyZWVtYWlsQHRoYXd0ZS5jb20w
+HhcNMDMwNzE3MDAwMDAwWhcNMTMwNzE2MjM1OTU5WjBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
+VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
+ZWVtYWlsIElzc3VpbmcgQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMSmPFVzVftOucqZ
+Wh5owHUEcJ3f6f+jHuy9zfVb8hp2vX8MOmHyv1HOAdTlUAow1wJjWiyJFXCO3cnwK4Vaqj9xVsuv
+PAsH5/EfkTYkKhPPK9Xzgnc9A74r/rsYPge/QIACZNenprufZdHFKlSFD0gEf6e20TxhBEAeZBly
+YLf7AgMBAAGjgZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBDBgNVHR8EPDA6MDigNqA0hjJodHRw
+Oi8vY3JsLnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVlbWFpbENBLmNybDALBgNVHQ8EBAMC
+AQYwKQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVMYWJlbDItMTM4MA0GCSqGSIb3DQEB
+BQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0whuPg2H6otnzYvwPQcUCCTcDz9reFh
+YsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo05RAaWzVN
+d+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIB/DCCAfgCAQEwdjBiMQswCQYDVQQGEwJaQTElMCMGA1UE
+ChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFs
+IEZyZWVtYWlsIElzc3VpbmcgQ0ECEGne8YrzxxgYAeyxZxmiO+owCQYFKw4DAhoFAKBdMBgGCSqG
+SIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA3MDMxMTA0MzI0OVowIwYJKoZI
+hvcNAQkEMRYEFKJQ2BgB6gHc+s4orpsiDpk2ZDIsMA0GCSqGSIb3DQEBAQUABIIBACUNQgue/sIb
+NvCY/lgu8VZMfHVJiDDVmoxSmd3JN/18MPv4HIoSq15KxI/m3ixYXy35+ym6H5xeQxUAV094Dmvz
+FySDyoIl6vzoZvW8gV0+hzfMxRB7rkl+nZRWmsg3yIjYpN+SE+2fRbQAt8c4ApiIM0TbIm818/F6
+a0AoZru6Os/2cj2Bg0skzMlobtecLezeV0tMOzRqaJqXq2EQsUFsE/NGw2Xzkp9pYUY89hCBPTcL
+spIWx7W6tfAB9A/jn1NkCpQ9FI0tfHdE0n0cWYMi7diCDmM4wyk/b9bJTG+2+pajLUi0m4h6KZP/
+frPK3KdtuNetGKzpn2xt0/RDTWoAAAAAAAA=
 
-What issues?
-Why haven't I see any mention of them on linux-acpi?
-Coordination and communication is a two-way street, Jeff.
 
-> AFAICS this patch went in with zero appearance on LKML or another 
-> related list, until submission.  This is /not/ how we do Linux development.
+--=-eI40XrYQEOkMDQcihixK--
 
-I proudly take credit+blame for shipping Kristen's patch with no delay.
-It did appear on linux-acpi, as do all the patches I ship -- though
-I admit it was the same day it went upstream.
-I'm sorry I didn't CC linux-ide -- I'll get that part right next time.
-
-However, I believe that late -rc3 is _well_ past the time to be developing
-new code real-time in the upstream tree; and is instead time to
-shut the damn thing off and set sights on the next release.
-
-If you disagree with me, I'm not going to object
-when you send a better fix to Linus for 2.6.21-rc4.
-
-However, I do request that you first either start responding
-to bugzilla traffic, or delete your account from bugzilla
-so that people don't get the false impression that you're
-paying attention.
-
-thanks,
--Len
