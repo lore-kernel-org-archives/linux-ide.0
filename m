@@ -1,51 +1,51 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: RE: [git patches] libata fixes
-Date: Sun, 11 Mar 2007 13:04:28 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0703111257180.9690@woody.linux-foundation.org>
-References: <017f01c7640b$fbcafab0$2101a8c0@donald>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH libata#upstream 1/2] sata_promise: add missing cable_detect hooks
+Date: Sun, 11 Mar 2007 21:19:27 +0100 (MET)
+Message-ID: <200703112019.l2BKJRQ7018662@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:57211 "EHLO smtp.osdl.org"
+Received: from aun.it.uu.se ([130.238.12.36]:41535 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751597AbXCKUEi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 11 Mar 2007 16:04:38 -0400
-In-Reply-To: <017f01c7640b$fbcafab0$2101a8c0@donald>
+	id S1751185AbXCKUTf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 11 Mar 2007 16:19:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Rolland <rol@as2917.net>
-Cc: 'Tejun Heo' <htejun@gmail.com>, 'Jeff Garzik' <jeff@garzik.org>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
+The recent change which moved cable detection from
+pdc_pre_reset() to the new ->cable_detect hook only
+added the hook for SATAII chips, leaving SATAI chips
+and the 20619 without the hook. Fixed by this patch.
 
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+---
+ drivers/ata/sata_promise.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletion(-)
 
-On Sun, 11 Mar 2007, Paul Rolland wrote:
-> 
-> Nope... I tried several patches from Tejun, and also some that Jeff posted
-> to linux-ide, but no luck. The only way to have this DVD-RW working is to
-> use irqpoll on the command line...
-
-So it has *never* worked? That's what I'm trying to see - you had a 
-"before" and "after" dmesg in one of your posts, and the "before" one 
-looked fine (as if it was working) because it didn't have the error 
-messages.
-
-So I'm just trying to figure out where the regression started...
-
-> To complete, here are some more output from the machine : 
-
-What happens if you disable MSI entirely? Use "pci=nomsi" on the command 
-line.
-
-The
-
-	ata2.00: qc timeout (cmd 0xec)
-	ata2.00: failed to IDENTIFY (I/O error, err_mask=0x104)
-
-messages happen for you on the controller that claims MSI:
-
-	ata2: SATA max UDMA/133 cmd 0xffffc2000008a980 ctl 0x0000000000000000 bmdma 0x0000000000000000 irq 504
-
-and quite frankly, we've had lots of bugs with MSI, both in hardware and 
-in software.
-
-		Linus
+--- linux-2.6.21-rc3/drivers/ata/sata_promise.c.~1~	2007-03-11 18:44:04.000000000 +0100
++++ linux-2.6.21-rc3/drivers/ata/sata_promise.c	2007-03-11 18:44:56.000000000 +0100
+@@ -45,7 +45,7 @@
+ #include "sata_promise.h"
+ 
+ #define DRV_NAME	"sata_promise"
+-#define DRV_VERSION	"2.01"
++#define DRV_VERSION	"2.02"
+ 
+ 
+ enum {
+@@ -194,6 +194,7 @@ static const struct ata_port_operations 
+ 	.thaw			= pdc_thaw,
+ 	.error_handler		= pdc_error_handler,
+ 	.post_internal_cmd	= pdc_post_internal_cmd,
++	.cable_detect		= pdc_cable_detect,
+ 	.data_xfer		= ata_data_xfer,
+ 	.irq_handler		= pdc_interrupt,
+ 	.irq_clear		= pdc_irq_clear,
+@@ -220,6 +221,7 @@ static const struct ata_port_operations 
+ 	.thaw			= pdc_thaw,
+ 	.error_handler		= pdc_error_handler,
+ 	.post_internal_cmd	= pdc_post_internal_cmd,
++	.cable_detect		= pdc_cable_detect,
+ 	.data_xfer		= ata_data_xfer,
+ 	.irq_handler		= pdc_interrupt,
+ 	.irq_clear		= pdc_irq_clear,
