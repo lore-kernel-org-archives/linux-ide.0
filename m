@@ -1,37 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: regarding ACPI support in 2.6.21
-Date: Mon, 12 Mar 2007 23:32:44 +0900
-Message-ID: <45F5648C.7020506@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: impact of 4k sector size on the IO & FS stack
+Date: Mon, 12 Mar 2007 10:36:57 -0400
+Message-ID: <45F56589.1020209@garzik.org>
+References: <45F48809.2060908@emc.com> <Pine.LNX.4.61.0703120013340.18623@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-acpi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.61.0703120013340.18623@yvahk01.tjqt.qr>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: Ric Wheeler <ric@emc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hello, all.
+Jan Engelhardt wrote:
+> On Mar 11 2007 18:51, Ric Wheeler wrote:
+>> During the recent IO/FS workshop, we spoke briefly about the
+>> coming change to a 4k sector size for disks on linux. If I
+>> recall correctly, the general feeling was that the impact was
+>> not significant since we already do most file system IO in 4k
+>> page sizes and should be fine as long as we partition drives
+>> correctly and avoid non-4k aligned partitions.
+> 
+> Sorry about jumping right in, but what about an 'old-style'
+> partition table that relies on 512 as a unit?
 
-Currently, libata-acpi has the following problems.
+For 1K/4K physical sector size, where logical sector size remains 512-b, 
+nothing changes.  DOS partitions start partitions on odd-numbered 
+sectors, so presuming you have odd-aligned disks, life is good.
 
-1. Matching controller/device to ACPI node.  It currently uses ap->cbl
-== ATA_CBL_SATA test to choose between two formats - the traditional ATA
-nodes with master/slave devices and new native SATA nodes.  This is
-incorrect as ata_piix even if it's SATA should map to traditional ATA
-nodes while in ahci 00 _ADR in traditional format shouldn't trigger
-"don't know how to handle SATA port multiplier".
+For 1K/4K logical sector sizes, who knows.  EFI?  <grins and runs>
 
-2. Although this isn't very clear in the spec, but some methods seem to
-be designed to be used only over suspend/resume cycle.  SATA aware
-methods (w/ _SDD) should probably called after every PHY event (device
-might have been hardreset), but _GTM/_STM/_GTF combination does look
-like they should be used only over suspend/resume cycles.  This is caus
+Certainly seems incompatible with the current popular DOS partition format.
 
-I think it might be better to give up ACPI support in 2.6.21 and target
-2.6.22.  What do you think?
+	Jeff
 
-Thanks.
 
--- 
-tejun
+
