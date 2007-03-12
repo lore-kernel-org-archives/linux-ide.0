@@ -1,33 +1,63 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: impact of 4k sector size on the IO & FS stack
-Date: Mon, 12 Mar 2007 08:18:51 +0000
-Message-ID: <20070312081851.GA14831@infradead.org>
-References: <45F48809.2060908@emc.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: don't whine if ->prereset() returns -ENOENT
+Date: Mon, 12 Mar 2007 17:24:08 +0900
+Message-ID: <45F50E28.7010509@gmail.com>
+References: <20070309163148.GA12848@havoc.gtf.org>	<b637ec0b0703091324q7f15fddbpc8c24b4e1131e3f4@mail.gmail.com> <20070309234839.2070a265@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <45F48809.2060908@emc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Ric Wheeler <ric@emc.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.239]:42753 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965292AbXCLIYI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 04:24:08 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so1302804nze
+        for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 01:24:08 -0700 (PDT)
+In-Reply-To: <20070309234839.2070a265@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Fabio Comolli <fabio.comolli@gmail.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On Sun, Mar 11, 2007 at 06:51:53PM -0400, Ric Wheeler wrote:
-> 
-> During the recent IO/FS workshop, we spoke briefly about the coming 
-> change to a 4k sector size for disks on linux. If I recall correctly, 
-> the general feeling was that the impact was not significant since we 
-> already do most file system IO in 4k page sizes and should be fine as 
-> long as we partition drives correctly and avoid non-4k aligned partitions.
-> 
-> Are there other concerns in the IO or FS stack that we should bring up 
-> with vendors?  I have been asked to summarize the impact of 4k sectors 
-> on linux  for a disk vendor gathering and want to make sure that I put 
-> all of our linux specific items into that summary...
+->prereset() returns -ENOENT to tell libata that the port is empty and
+reset sequencing should be stopped.  This is not an error condition.
+Update ata_eh_reset() such that it sets device classes to ATA_DEV_NONE
+and return success in on -ENOENT.  This makes spurious error message
+go away.
 
-The FS stack and higher levels of the I/O stack should be mostly ready.
-The S/390 DASDs are commonly used with 4k sector sizes, and we've had
-the occasional 2k sector SCSI MO device aswell.  It would be nice to
-get samples of large sector size ATA devices into the hands of developers
-to do real world testing of the whole stack.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+
+This should do it and better fits the intention of the return value.
+Two things to note.
+
+1. I think these ports should be made dummy instead of returning
+-ENOENT on prereset().  -ENOENT from prereset() was a hack to keep
+ata_piix's behavior unchanged while converting it to new EH.  If no
+one objcts, I'll convert similar usages to use dummy ports after new
+init model and drop -ENOENT hack in #upstream.
+
+2. -ENODEV sounds more appropriate.  Why have I used -ENOENT.  :-)
+
+Thanks.
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 7349c3d..361953a 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1625,8 +1625,14 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 		rc = prereset(ap);
+ 		if (rc) {
+ 			if (rc == -ENOENT) {
+-				ata_port_printk(ap, KERN_DEBUG, "port disabled. ignoring.\n");
++				ata_port_printk(ap, KERN_DEBUG,
++						"port disabled. ignoring.\n");
+ 				ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
++
++				for (i = 0; i < ATA_MAX_DEVICES; i++)
++					classes[i] = ATA_DEV_NONE;
++
++				rc = 0;
+ 			} else
+ 				ata_port_printk(ap, KERN_ERR,
+ 					"prereset failed (errno=%d)\n", rc);
