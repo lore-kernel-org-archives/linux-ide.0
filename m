@@ -1,29 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: regarding ACPI support in 2.6.21
-Date: Mon, 12 Mar 2007 15:46:49 +0000
-Message-ID: <20070312154649.5f661a39@lxorguk.ukuu.org.uk>
-References: <45F5648C.7020506@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: impact of 4k sector size on the IO & FS stack
+Date: Mon, 12 Mar 2007 10:45:16 -0400
+Message-ID: <45F5677C.40602@garzik.org>
+References: <45F48809.2060908@emc.com> <20070312081851.GA14831@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32911 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030230AbXCLOnS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 10:43:18 -0400
-In-Reply-To: <45F5648C.7020506@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:50796 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030220AbXCLOp0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Mar 2007 10:45:26 -0400
+In-Reply-To: <20070312081851.GA14831@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-acpi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ric Wheeler <ric@emc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
 
-> I think it might be better to give up ACPI support in 2.6.21 and target
-> 2.6.22.  What do you think?
+Christoph Hellwig wrote:
+> the occasional 2k sector SCSI MO device aswell.  It would be nice to
+> get samples of large sector size ATA devices into the hands of developers
+> to do real world testing of the whole stack.
 
-I removed it from my tree already so that I can actually use libata and
-do real work. The "crash every non PCI controller" feature in the current
-ACPI hacks means PCMCIA and ISAPnP do not work any more with libata.
+"hands of developers" meaning you specifically?  :)
 
-In its current state it should be disabled, its broken, its wrong.
+I've had a 512b-logical/1K-physical ATA test drive for a few months now, 
+and another couple arrived today.
 
-Alan
+Hopefully people can parse what I've been posting, since I cannot give 
+out raw numbers or data at this time.
+
+Of course, with RMW drives that leave the 512-b logical interface 
+untouched, I had expected that they would Just Work(tm) and that is 
+pretty much what happened.
+
+	Jeff
+
+
