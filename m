@@ -1,44 +1,48 @@
-From: "Russell Howe" <rhowe@siksai.co.uk>
-Subject: Re: IDE/ATAPI timeouts & lost interrupts on alpha with 2.6.20.2
-Date: Mon, 12 Mar 2007 01:07:59 +0000
-Message-ID: <20070312010758.GA1439@xiao.rsnet>
-References: <20070310225643.GB21407@xiao.rsnet> <200703110102.13652.bzolnier@gmail.com>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: impact of 4k sector size on the IO & FS stack
+Date: Sun, 11 Mar 2007 22:37:04 -0400
+Message-ID: <45F4BCD0.3040601@emc.com>
+References: <45F48809.2060908@emc.com> <20070312000253.20eab1a3@lxorguk.ukuu.org.uk> <45F4A268.3000405@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youju.siksai.co.uk ([87.127.14.180]:4543 "EHLO
-	youju.siksai.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933623AbXCLBIN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Mar 2007 21:08:13 -0400
-Received: from xiao.siksai.co.uk ([87.127.14.179] ident=rhowe)
-	by youju.siksai.co.uk with smtp (Exim 4.50)
-	id 1HQZ15-000141-BX
-	for linux-ide@vger.kernel.org; Mon, 12 Mar 2007 01:08:11 +0000
-Content-Disposition: inline
-In-Reply-To: <200703110102.13652.bzolnier@gmail.com>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:45287 "EHLO
+	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964771AbXCLChO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Mar 2007 22:37:14 -0400
+In-Reply-To: <45F4A268.3000405@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
 
-On Sun, Mar 11, 2007 at 01:02:13AM +0100, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi,
-> 
-> It seems that the generic IDE host driver is loaded first
-> (CONFIG_IDE_GENERIC=y/m) and "steals" resources needed by cy82c693.
-> 
-> Please try again without the generic IDE host driver so the proper
-> driver could be used.
 
-$ zgrep IDE_GENERIC /proc/config.gz
-# CONFIG_IDE_GENERIC is not set
 
-.. and I get the same behaviour
+Jeff Garzik wrote:
+> Alan Cox wrote:
+>> I would be interested to know what the disk vendors intend to use as
+>> their strategy when (with ATA) they have a 512 byte write from an older
+>> file system/setup into a 4K block. The case where errors magically 
+>> appear
+>
+> Well, you have logical and physical sector size changes.
+>
+> First generation of 1K sector drives will continue to use the same 
+> 512-byte ATA sector size you are familiar with.  A single 512-byte 
+> write will cause the drive to perform a read-modify-write cycle.  This 
+> configuration is physical 1K sector, logical 512b sector.
+It would seem that most writes would avoid this - hopefully the drive 
+firmware could use the write cache to coalesce contiguous IO's into 1k 
+multiples when getting streams of 512 byte write requests.
+>
+> A future configuration will change the logical ATA interface away from 
+> 512-byte sectors to 1K or 4K.  Here, it is impossible to read a 
+> quantity smaller than 1K or 4K, whatever the sector size is.
+>
+>     Jeff
+I will try and see if I can get some specific information on when the 
+various flavors of this are going to appear...
 
-> If it doesn't help I think that the best way to chase it is git bisect
+ric
 
-git-bisect, here I come..
-
--- 
-Russell Howe       | Why be just another cog in the machine,
-rhowe@siksai.co.uk | when you can be the spanner in the works?
