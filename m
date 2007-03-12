@@ -1,47 +1,34 @@
-From: "Paul Rolland" <rol@as2917.net>
-Subject: RE: [git patches] libata fixes
-Date: Mon, 12 Mar 2007 09:00:54 +0100
-Message-ID: <001b01c7647c$921ced00$4b00a8c0@donald>
-References: <45F4F30F.9010603@gmail.com>
-Reply-To: <rol@as2917.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [git patches] libata fixes
+Date: Mon, 12 Mar 2007 17:04:55 +0900
+Message-ID: <45F509A7.8030705@gmail.com>
+References: <001b01c7647c$921ced00$4b00a8c0@donald>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tag.witbe.net ([81.88.96.48]:52724 "EHLO tag.witbe.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965283AbXCLIB1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Mar 2007 04:01:27 -0400
-In-Reply-To: <45F4F30F.9010603@gmail.com>
+Received: from an-out-0708.google.com ([209.85.132.249]:24911 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965309AbXCLIEz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 04:04:55 -0400
+Received: by an-out-0708.google.com with SMTP id b33so1345915ana
+        for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 01:04:55 -0700 (PDT)
+In-Reply-To: <001b01c7647c$921ced00$4b00a8c0@donald>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Tejun Heo' <htejun@gmail.com>, 'Linus Torvalds' <torvalds@linux-foundation.org>
-Cc: 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
+To: rol@as2917.net
+Cc: 'Linus Torvalds' <torvalds@linux-foundation.org>, 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
 
-Hello,
+Paul Rolland wrote:
+>> I keep forgetting about this.  I'll ask SIMG how to deal with 
+>> this.  For
+>> the time being, connecting a device to the PMP port should remove the
+>> timeouts.
+> 
+> That sounds a quite expensive solution ;)
 
-> It involves a long timeout, so it's bothersome.  This is caused by
-> Silicon Image 4726/3726 storage processor (SATA Port Multiplier with
-> extra features) attached to one of the ICH ports.
+You should be able to just move the drive attached at ata1 to ata2.
+Please report whether that works.
 
-Yes, I think this is the part Asus is using for it's EZ-Raid feature
-on this motherboard, and they seem to like their EZ-Raid, so it's likely
-to become more and more common.
- 
-> If the first  downstream port in the PMP is empty and it gets reset in
-I confirm it is empty in my config.
-
-> work very well with the current ATA reset sequence and gets identified
-> only after a few failures thus causing long timeout.
-30s to 1min ;(
- 
-> I keep forgetting about this.  I'll ask SIMG how to deal with 
-> this.  For
-> the time being, connecting a device to the PMP port should remove the
-> timeouts.
-
-That sounds a quite expensive solution ;)
-
-Paul
-
+-- 
+tejun
