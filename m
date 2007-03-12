@@ -1,48 +1,79 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 03/12] libata: separate out ata_host_alloc() and ata_host_attach()
-Date: Mon, 12 Mar 2007 17:25:32 -0500
-Message-ID: <45F5D35C.6000408@linux.vnet.ibm.com>
-References: <11734389353424-git-send-email-htejun@gmail.com>
-Reply-To: brking@linux.vnet.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Phil Kaslo <phil@cs.arizona.edu>
+Subject: Asus P5B-VM motherboard:  cd drive malfunctions if internal nic in use.
+Date: Mon, 12 Mar 2007 15:12:36 -0700
+Message-ID: <200703122212.l2CMCaxm032601@osprey.cs.arizona.edu>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:48718 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932963AbXCLWZh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Mar 2007 18:25:37 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2CMQMqf009780
-	for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 18:26:22 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2CMPZsL278782
-	for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 18:25:35 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2CMPZ3K020088
-	for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 18:25:35 -0400
-In-Reply-To: <11734389353424-git-send-email-htejun@gmail.com>
+Received: from cheltenham.cs.arizona.edu ([192.12.69.60]:4954 "EHLO
+	cheltenham.cs.arizona.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932954AbXCLW0V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 18:26:21 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> * ipr is now the only user of ata_host_init().  Either kill it by
->   converting ipr to use ata_host_alloc() and friends or rename and
->   move it to libata-scsi.c
 
-One of the problems with converting ipr to use ata_host_alloc and
-friends is that it then forces ipr to tell libata how many "SATA ports"
-are possible. On SAS, this number can't really be calculated, since
-the maximum number of SATA devices which can possibly be cabled to a
-SAS adapter, particularly with SAS expanders, is a very large number
-and is not practical for how this is being used in the current
-implementation. My guess is that aic94xx will have similar issues/concerns.
+Hello,
 
-Brian
+I have a new machine, Asus motherboard, in which the cd drive malfunctions 
+if the internal nic on the mb (RealTek RTL8168b/8111b) is actively in use.   
+The cd drive, on ide2, is, as per dmesg, a Sony:
+ ide2: BM-DMA at 0xa400-0xa407, BIOS settings: hde:pio, hdf:pio
+ hde: SONY DVD RW AW-Q170A, ATAPI CD/DVD-ROM drive
+ hde: ATAPI 48X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(66)
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+I've seen this on 3 of these new machines so far.  One has a LITE-ON cdrom: 
+ hde: LITE-ON DVDRW LH-20A1H, ATAPI CD/DVD-ROM drive
+so this is not unique to the Sony.
+
+Motherboard:  Asus P5B-VM  G965 775  BIOS Revision : 613
+CPU: Intel Core 2 CPU 6300 1.86GHz
+
+Fedora Core 6, x86_64, Linux version 2.6.19-1.2911.6.4.fc6.
+Also, with Linux kernel version 2.6.20.1, from source.
+With nic kernel module r1000.ko, version 1.05, from RealTek.
+Also with kernel module r8169.ko, from kernel version 2.6.20.1.
+
+>From /proc/interrupts:  ide2/hde/cdrom and eth0 are both on irq 17:
+ 17:      10602      44763   IO-APIC-fasteoi   ide2, uhci_hcd:usb2, eth0
+
+When i first brought the system up, i got continual messages saying the 
+cdrom seemed confused.  Turning off haldaemon quieted those.
+
+Reproduce by bringing up a Fedora 6 or kernel version 2.6.20.1 system 
+as above, using the internal nic. Start up an scp of 1 gb file from another 
+machine to this machine.  In another window, attempt to mount a data cd, 
+or play a music cd.  See it not work, and see error output from dmesg.  
+Sample output:
+
+ hde: cdrom_pc_intr: The drive appears confused (ireason = 0x01). Trying to 
+ recover by ending request.
+ hde: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ ide: failed opcode was: unknown
+ hde: drive not ready for command
+ ...
+ hde: status timeout: status=0xd8 { Busy }
+ hde: DMA disabled
+ hde: drive not ready for command
+ hde: ATAPI reset complete
+ end_request: I/O error, dev hde, sector 64
+ isofs_fill_super: bread failed, dev=hde, iso_blknum=16, block=16
+
+Workaround - disable the internal nic in the bios.  Use a pci nic card, 
+such as an Intel Pro 1000 (kernel module e1000).  Try the above test, and 
+see the cd drive work.  Get no error output from dmesg.
+
+>From /proc/interrupts with pci nic: eth1, e1000, is on irq 16 and ide2 is on 17:
+ 16:      11907    2833837   IO-APIC-fasteoi   uhci_hcd:usb1, eth1, nvidia
+ 17:         48      84696   IO-APIC-fasteoi   ide2, uhci_hcd:usb2
+
+I do not know if this is a bios problem on this motherboard,
+a problem in the r1000 and r8169 drivers for the Realtek nic,
+or a problem in the ide drivers that drive the cdrom.
+
+Thanks for any help or clues.
+
+Phil Kaslo
+Dept. of Computer Science  520-621/2760
+University of Arizona      phil@cs.arizona.edu
+Tucson, Ariz. 85721
