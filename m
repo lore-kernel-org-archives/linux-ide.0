@@ -1,29 +1,29 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: impact of 4k sector size on the IO & FS stack
-Date: Mon, 12 Mar 2007 15:45:07 +0000
-Message-ID: <20070312154507.69863c4c@lxorguk.ukuu.org.uk>
-References: <45F48809.2060908@emc.com>
-	<Pine.LNX.4.61.0703120013340.18623@yvahk01.tjqt.qr>
-	<45F56589.1020209@garzik.org>
+Subject: Re: regarding ACPI support in 2.6.21
+Date: Mon, 12 Mar 2007 15:46:49 +0000
+Message-ID: <20070312154649.5f661a39@lxorguk.ukuu.org.uk>
+References: <45F5648C.7020506@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32907 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32911 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030218AbXCLOlv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 10:41:51 -0400
-In-Reply-To: <45F56589.1020209@garzik.org>
+	with ESMTP id S1030230AbXCLOnS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 10:43:18 -0400
+In-Reply-To: <45F5648C.7020506@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Ric Wheeler <ric@emc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-acpi@vger.kernel.org
 
-> For 1K/4K logical sector sizes, who knows.  EFI?  <grins and runs>
-> Certainly seems incompatible with the current popular DOS partition format.
+> I think it might be better to give up ACPI support in 2.6.21 and target
+> 2.6.22.  What do you think?
 
-Its a bit messier than that. There are two interpretations of "DOS"
-partition formats found on 2K sector size magneto opticals. One is that
-everything is the same as before (as if sectors were 512 byte), the other
-is a different "everything is the same" which scales by the 2K sector
-size. The two are of course wonderfully incompatible
+I removed it from my tree already so that I can actually use libata and
+do real work. The "crash every non PCI controller" feature in the current
+ACPI hacks means PCMCIA and ISAPnP do not work any more with libata.
+
+In its current state it should be disabled, its broken, its wrong.
+
+Alan
