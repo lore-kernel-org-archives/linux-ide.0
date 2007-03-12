@@ -1,60 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.21-rc3-git4 ata1.00: qc timeout (cmd 0xef) (crashdump	kernel)
-Date: Tue, 13 Mar 2007 01:56:36 +0900
-Message-ID: <45F58644.1070905@gmail.com>
-References: <6bffcb0e0703090857r14eda34bj92f3fd1d0008edb8@mail.gmail.com>	 <45F51218.9030907@gmail.com>  <45F5805A.5080509@googlemail.com> <1173718012.13341.95.camel@localhost.localdomain>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: libata-acpi: allow _GTF on SATA, but disable on PATA for now
+Date: Mon, 12 Mar 2007 09:55:28 -0700
+Message-ID: <20070312095528.3dd7a693.kristen.c.accardi@intel.com>
+References: <200703100559.l2A5x6kP017578@hera.kernel.org>
+	<45F296B9.7000005@garzik.org>
+	<20070310164059.4ba68bcc@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1173718012.13341.95.camel@localhost.localdomain>
-Sender: netdev-owner@vger.kernel.org
-To: tglx@linutronix.de
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Stephen Hemminger <shemminger@linux-foundation.org>, netdev@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:34277 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030673AbXCLQ6W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Mar 2007 12:58:22 -0400
+In-Reply-To: <20070310164059.4ba68bcc@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, len.brown@intel.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Thomas Gleixner wrote:
-> On Mon, 2007-03-12 at 17:31 +0100, Michal Piotrowski wrote:
->> Calling initcall 0xc19154d8: piix_ide_init+0x0/0xbb()
->> Calling initcall 0xc19155b6: generic_ide_init+0x0/0x16()
->> Calling initcall 0xc191572e: ide_init+0x0/0x81()
->> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
->> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
->> ICH5: IDE controller at PCI slot 0000:00:1f.1
->> irq 5: nobody cared (try booting with the "irqpoll" option)
->>  [<c1604556>] show_trace_log_lvl+0x1a/0x2f
->>  [<c1604c2c>] show_trace+0x12/0x14
->>  [<c1604cde>] dump_stack+0x16/0x18
->>  [<c164341c>] __report_bad_irq+0x39/0x79
->>  [<c16435eb>] note_interrupt+0x18f/0x1c8
->>  [<c1643ec6>] handle_level_irq+0x95/0xcb
->>  [<c1605dd8>] do_IRQ+0xb4/0xe0
->>  =======================
->> handlers:
->> [<c174f55e>] (skge_intr+0x0/0x3ff)
->> Disabling IRQ #5
-> 
-> I know this one :( 
-> 
-> It seems to be related to the BIOS spinning up the CDROM and leaving the
-> IDE controller in some weird state. When we come back the interrupt is
-> screaming and nobody cares, so it gets disabled. I have no clue yet, how
-> to handle this.
-> 
-> Disabling the interrupt across suspend/resume helps, but does not work,
-> when the interrupt is shared with some other device.
+On Sat, 10 Mar 2007 16:40:59 +0000
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-Similar thing can happen during initialization.  I haven't actually
-instrumented the code but I think what happens is
+> Instead merge the one that fixe the non PCI
+> crashes and we might get further.
 
-1. the controller has IRQ stuck high (infrequent but possible)
-2. the IRQ is already requested by another device
-3. the IRQ gets disabled due to screaming interrupts at the moment
-ata_piix does pci_enable_device().
+In bugzilla #7907 you could post your patch and see if the reporters there
+can at least confirm that it fixes their problem.
 
-I think we can be much more resilient to screaming interrupts if we
-enable device with IRQ disabled and enable it after the device is
-initialized to some level, possibly when requesting IRQ.
+Meanwhile, to solve the problem for these people, and without introducing
+a lot of new code at this stage in the release, perhaps you can suggest 
+a more accurate way to detect PATA vs. SATA so we can fix the bug?  Either 
+that or Len should drop the ATA ACPI support from 2.6.21 altogether and
+we should try to coordinate our efforts better for 2.6.22.  The alternative
+to dropping the ACPI support is to set the default for libata.acpi to off.
 
--- 
-tejun
+Thanks,
+Kristen
