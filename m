@@ -1,63 +1,49 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: don't whine if ->prereset() returns -ENOENT
-Date: Mon, 12 Mar 2007 17:24:08 +0900
-Message-ID: <45F50E28.7010509@gmail.com>
-References: <20070309163148.GA12848@havoc.gtf.org>	<b637ec0b0703091324q7f15fddbpc8c24b4e1131e3f4@mail.gmail.com> <20070309234839.2070a265@lxorguk.ukuu.org.uk>
+Subject: Re: 2.6.21-rc3-git4 ata1.00: qc timeout (cmd 0xef) (crashdump kernel)
+Date: Mon, 12 Mar 2007 17:40:56 +0900
+Message-ID: <45F51218.9030907@gmail.com>
+References: <6bffcb0e0703090857r14eda34bj92f3fd1d0008edb8@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.239]:42753 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.230]:45221 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965292AbXCLIYI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 04:24:08 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so1302804nze
-        for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 01:24:08 -0700 (PDT)
-In-Reply-To: <20070309234839.2070a265@lxorguk.ukuu.org.uk>
+	with ESMTP id S965349AbXCLIk4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 04:40:56 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so1304575nze
+        for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 01:40:55 -0700 (PDT)
+In-Reply-To: <6bffcb0e0703090857r14eda34bj92f3fd1d0008edb8@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Fabio Comolli <fabio.comolli@gmail.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-->prereset() returns -ENOENT to tell libata that the port is empty and
-reset sequencing should be stopped.  This is not an error condition.
-Update ata_eh_reset() such that it sets device classes to ATA_DEV_NONE
-and return success in on -ENOENT.  This makes spurious error message
-go away.
+Michal Piotrowski wrote:
+> Hi Jeff,
+> 
+> I've got some problems with my SATA controller on crashdump kernel.
+> 
+> Calling initcall 0xc1916081: fc_transport_init+0x0/0x35()
+> Calling initcall 0xc19160b6: init_sd+0x0/0xbc()
+> Calling initcall 0xc19161ec: piix_init+0x0/0x27()
+> ata_piix 0000:00:1f.2: version 2.10
+> ata_piix 0000:00:1f.2: MAP [ P0 -- P1 -- ]
+> ACPI: PCI Interrupt 0000:00:1f.2[A] -> Link [LNKC] -> GSI 5 (level,
+> low) -> IRQ 5
+> PCI: Setting latency timer of device 0000:00:1f.2 to 64
+> ata1: SATA max UDMA/133 cmd 0x0001cc00 ctl 0x0001c882 bmdma 0x0001c400
+> irq 5
+> ata2: SATA max UDMA/133 cmd 0x0001c800 ctl 0x0001c482 bmdma 0x0001c408
+> irq 5
+> scsi0 : ata_piix
+> PM: Adding info for No Bus:host0
+> ata1.00: ATA-7: ST3160811AS, 3.AAE, max UDMA/133
+> ata1.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> ata1.00: qc timeout (cmd 0xef)
+> ata1.00: failed to set xfermode (err_mask=0x4)
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
+Does giving 'irqpoll' boot parameter fix the problem?
 
-This should do it and better fits the intention of the return value.
-Two things to note.
-
-1. I think these ports should be made dummy instead of returning
--ENOENT on prereset().  -ENOENT from prereset() was a hack to keep
-ata_piix's behavior unchanged while converting it to new EH.  If no
-one objcts, I'll convert similar usages to use dummy ports after new
-init model and drop -ENOENT hack in #upstream.
-
-2. -ENODEV sounds more appropriate.  Why have I used -ENOENT.  :-)
-
-Thanks.
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 7349c3d..361953a 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1625,8 +1625,14 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
- 		rc = prereset(ap);
- 		if (rc) {
- 			if (rc == -ENOENT) {
--				ata_port_printk(ap, KERN_DEBUG, "port disabled. ignoring.\n");
-+				ata_port_printk(ap, KERN_DEBUG,
-+						"port disabled. ignoring.\n");
- 				ap->eh_context.i.action &= ~ATA_EH_RESET_MASK;
-+
-+				for (i = 0; i < ATA_MAX_DEVICES; i++)
-+					classes[i] = ATA_DEV_NONE;
-+
-+				rc = 0;
- 			} else
- 				ata_port_printk(ap, KERN_ERR,
- 					"prereset failed (errno=%d)\n", rc);
+-- 
+tejun
