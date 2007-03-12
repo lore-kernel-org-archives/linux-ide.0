@@ -1,37 +1,48 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: add support for READ/WRITE LONG
-Date: Mon, 12 Mar 2007 18:23:22 -0400
-Message-ID: <45F5D2DA.20407@rtr.ca>
-References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	<45F56800.3040104@rtr.ca>	<3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com>	<45F5A523.1080500@rtr.ca> <20070312221351.6c3db1fa@lxorguk.ukuu.org.uk>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 03/12] libata: separate out ata_host_alloc() and ata_host_attach()
+Date: Mon, 12 Mar 2007 17:25:32 -0500
+Message-ID: <45F5D35C.6000408@linux.vnet.ibm.com>
+References: <11734389353424-git-send-email-htejun@gmail.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2283 "EHLO mail.rtr.ca"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:48718 "EHLO e6.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932932AbXCLWXZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Mar 2007 18:23:25 -0400
-In-Reply-To: <20070312221351.6c3db1fa@lxorguk.ukuu.org.uk>
+	id S932963AbXCLWZh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Mar 2007 18:25:37 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2CMQMqf009780
+	for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 18:26:22 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2CMPZsL278782
+	for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 18:25:35 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2CMPZ3K020088
+	for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 18:25:35 -0400
+In-Reply-To: <11734389353424-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Vitaliyi <imgrey@gmail.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Mon, 12 Mar 2007 15:08:19 -0400
-> Mark Lord <liml@rtr.ca> wrote:
-> 
->> The READ/WRITE LONG commands are theoretically obsolete,
->> but the majority of drives in existance still implement them.
->>
->> The WRITE_LONG and WRITE_LONG_ONCE commands are of particular
->> interest for fault injection testing -- eg. creating "media errors"
->> at specific locations on a disk.
-> 
-> Do you still get hangs with ata_piix if you use R/W LONG and these
-> changes ?
+Tejun Heo wrote:
+> * ipr is now the only user of ata_host_init().  Either kill it by
+>   converting ipr to use ata_host_alloc() and friends or rename and
+>   move it to libata-scsi.c
 
-Err.. I *never* got hangs with ata_piix and these patches.
-Either that, or the Alzheimer's is getting worse.  ;)
+One of the problems with converting ipr to use ata_host_alloc and
+friends is that it then forces ipr to tell libata how many "SATA ports"
+are possible. On SAS, this number can't really be calculated, since
+the maximum number of SATA devices which can possibly be cabled to a
+SAS adapter, particularly with SAS expanders, is a very large number
+and is not practical for how this is being used in the current
+implementation. My guess is that aic94xx will have similar issues/concerns.
 
-???
+Brian
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
