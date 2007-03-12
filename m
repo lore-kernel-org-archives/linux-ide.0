@@ -1,43 +1,34 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: libata extension
-Date: Mon, 12 Mar 2007 10:47:28 -0400
-Message-ID: <45F56800.3040104@rtr.ca>
-References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: impact of 4k sector size on the IO & FS stack
+Date: Mon, 12 Mar 2007 14:57:27 +0000
+Message-ID: <20070312145727.GA31815@infradead.org>
+References: <45F48809.2060908@emc.com> <20070312081851.GA14831@infradead.org> <45F5677C.40602@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2718 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030295AbXCLOrZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Mar 2007 10:47:25 -0400
-In-Reply-To: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:38524 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030321AbXCLO5d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 10:57:33 -0400
+Content-Disposition: inline
+In-Reply-To: <45F5677C.40602@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vitaliyi <imgrey@gmail.com>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Ric Wheeler <ric@emc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
 
-Vitaliyi wrote:
-> Good Day
+On Mon, Mar 12, 2007 at 10:45:16AM -0400, Jeff Garzik wrote:
+> Christoph Hellwig wrote:
+> >the occasional 2k sector SCSI MO device aswell.  It would be nice to
+> >get samples of large sector size ATA devices into the hands of developers
+> >to do real world testing of the whole stack.
 > 
-> Say i want to implement extended set of ATA commands available to
-> userspace for building diagnostic tools.
-> I need 0x40 -- read verify and 0x32 -- write long with error handling,
-> for example. I was trying ide driver through ioctl's, but seems it
-> lack of functionality and full of gotchas. Furthermore it oopses
-> sometimes.
+> "hands of developers" meaning you specifically?  :)
 
-Use the SCSI SG_IO ioctl() with opcode=ATA_16,
-which gives you access to the ATA Passthrough mechanism.
-This will work for most ATA commands.
+No.  I probably wouldn't have time to deal with it aswell.
 
-I already use it in hdparm and in some other utilities
-for scanning/repairing drives.
+> I've had a 512b-logical/1K-physical ATA test drive for a few months now, 
+> and another couple arrived today.
 
-A notable exeception are the READ/WRITE LONG opcodes,
-which require an extra kernel patch from me,
-awaiting merge into libata some year.
+Ok, that's exactly what I meant.
 
-Cheers
-
--ml
