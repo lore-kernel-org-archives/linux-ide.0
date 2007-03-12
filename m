@@ -1,39 +1,49 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: libata-acpi: allow _GTF on SATA, but disable on PATA for now
-Date: Mon, 12 Mar 2007 09:55:28 -0700
-Message-ID: <20070312095528.3dd7a693.kristen.c.accardi@intel.com>
-References: <200703100559.l2A5x6kP017578@hera.kernel.org>
-	<45F296B9.7000005@garzik.org>
-	<20070310164059.4ba68bcc@lxorguk.ukuu.org.uk>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Adaptec 1220SA (Sil3132) & sata_sil24 question
+Date: Tue, 13 Mar 2007 02:26:39 +0900
+Message-ID: <45F58D4F.5030408@gmail.com>
+References: <45E65540.6090308@metaparadigm.com> <45F533F8.3050401@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34277 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030673AbXCLQ6W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Mar 2007 12:58:22 -0400
-In-Reply-To: <20070310164059.4ba68bcc@lxorguk.ukuu.org.uk>
+Received: from wx-out-0506.google.com ([66.249.82.230]:34630 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750827AbXCLR0j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 13:26:39 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1741590wxd
+        for <linux-ide@vger.kernel.org>; Mon, 12 Mar 2007 10:26:38 -0700 (PDT)
+In-Reply-To: <45F533F8.3050401@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, len.brown@intel.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: James Clark <jclark@metaparadigm.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 10 Mar 2007 16:40:59 +0000
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+Tejun Heo wrote:
+> Hello,
+> 
+> James Clark wrote:
+>> I have an Adaptec 1220SA which I originally thought was just a re-badged
+>> Sil3132 design. Externally it appears that way (the stamp on the chip
+>> reads 3132), however it identifies as a Silicon Image type 0x0242
+>> according to lspci.  sata_sil24 does not attach.
+>>
+>> I made the trivial addition to sata_sil24 device id table and it appears
+>> to work. Performance is about the same as I get with the same drives on
+>> the onboard sata_via (about 78MB/s sequential read, 72MB/s write) and
+>> md mirror resyncing reflects this.
+> 
+> I'll ask SIMG about it.
 
-> Instead merge the one that fixe the non PCI
-> crashes and we might get further.
+Okay, SIMG verified it.  Can you please post the patch with proper
+subject, description and Signed-off-by?  The following is a good example.
 
-In bugzilla #7907 you could post your patch and see if the reporters there
-can at least confirm that it fixes their problem.
+  http://article.gmane.org/gmane.linux.ide/16956
 
-Meanwhile, to solve the problem for these people, and without introducing
-a lot of new code at this stage in the release, perhaps you can suggest 
-a more accurate way to detect PATA vs. SATA so we can fix the bug?  Either 
-that or Len should drop the ATA ACPI support from 2.6.21 altogether and
-we should try to coordinate our efforts better for 2.6.22.  The alternative
-to dropping the ACPI support is to set the default for libata.acpi to off.
+Anything from --- to the start of the patch is optional (including ---
+itself).
 
-Thanks,
-Kristen
+Thanks.
+
+-- 
+tejun
