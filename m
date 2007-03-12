@@ -1,35 +1,38 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: impact of 4k sector size on the IO & FS stack
-Date: Mon, 12 Mar 2007 13:52:42 -0700
-Message-ID: <OF72A6C80A.A5EC4A9A-ON8825729C.007161FD-8825729C.0072AF6A@us.ibm.com>
-References: <45F59DF7.2070603@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata-acpi: allow _GTF on SATA, but disable on PATA for now
+Date: Mon, 12 Mar 2007 22:00:15 +0000
+Message-ID: <20070312220015.094b7759@lxorguk.ukuu.org.uk>
+References: <200703100559.l2A5x6kP017578@hera.kernel.org>
+	<45F296B9.7000005@garzik.org>
+	<20070310164059.4ba68bcc@lxorguk.ukuu.org.uk>
+	<20070312095528.3dd7a693.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:37851 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932240AbXCLUxW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Mar 2007 16:53:22 -0400
-In-Reply-To: <45F59DF7.2070603@ru.mvista.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40780 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752917AbXCLU5e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2007 16:57:34 -0400
+In-Reply-To: <20070312095528.3dd7a693.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ric Wheeler <ric@emc.com>
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: Jeff Garzik <jeff@garzik.org>, len.brown@intel.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
->> I don't get this.  If you mean partitions defined by the classic DOS 
->> partition table format, then AFAICS, such a partition can start in any 
->> sector.
->
->    Only at "logical cylinder boundary" (except for the first partition).
+> Meanwhile, to solve the problem for these people, and without introducing
+> a lot of new code at this stage in the release, perhaps you can suggest 
+> a more accurate way to detect PATA vs. SATA so we can fix the bug?  
 
-That's a requirement in ancient DOS systems that use CHS addressing 
-(physical CHS, no less), isn't it  (so you can properly convert a 
-within-partition address to a within-disk address)?
+I think the problem starts with the question. It supposes the BIOS knows
+the answer to the question in the first place. It also supposes we
+haven't reconfigured the port in some cases I believe.
 
-While I would guess most people still partition disks that way (Even 
-linux-util fdisk seems to do it by default), they don't have to.
+My guess is the problem needs approaching from the other end. Ask the
+question "What does the ACPI BIOS expect it to be ?". If I follow the
+spec correctly we can answer that question by asking what methods (_SDD,
+_GTF etc) it provides.
 
-Doesn't matter for this discussion, though.  As Doug demonstrated, even 
-when you do start at cylinder boundaries, half your partitions start on an 
-even sector, because typical cylinders have an odd number of sectors.
+I don't think anything else is reliable.
 
+Alan
