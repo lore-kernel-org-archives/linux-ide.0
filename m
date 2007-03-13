@@ -1,35 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PATA Sil680 Command Timeout on ARM XScale
-Date: Tue, 13 Mar 2007 19:39:57 +0000
-Message-ID: <20070313193957.396d7d1d@lxorguk.ukuu.org.uk>
-References: <8202f4270703131134x68c028fbv7fb536c694a6b898@mail.gmail.com>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: Asus P5B-VM motherboard:  cd drive malfunctions if internal nic in use.
+Date: Tue, 13 Mar 2007 14:54:05 -0400
+Message-ID: <20070313185405.GI22464@csclub.uwaterloo.ca>
+References: <200703122212.l2CMCaxm032601@osprey.cs.arizona.edu> <45F5D59E.10304@rtr.ca> <20070313153252.GC22466@csclub.uwaterloo.ca> <45F6CFEA.4060009@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37710 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932081AbXCMSgm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Mar 2007 14:36:42 -0400
-In-Reply-To: <8202f4270703131134x68c028fbv7fb536c694a6b898@mail.gmail.com>
+Received: from caffeine.uwaterloo.ca ([129.97.134.17]:47923 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932566AbXCMSyF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Mar 2007 14:54:05 -0400
+Content-Disposition: inline
+In-Reply-To: <45F6CFEA.4060009@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Phil Kaslo <phil@cs.arizona.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> above 1.5.   Two timers are used to track command timeout in our test
-> software.  The one in the user space is set to 6 seconds using alarm()
-> call while the one in the kernel (scsi timer) is set to 5 seconds.
-> These timeout values are probably too low to be realistic,  but the
-> issue here is not about the timeout itself but to understand why it is
+On Tue, Mar 13, 2007 at 12:23:06PM -0400, Mark Lord wrote:
+> That's nice.
+> 
+> But the P5B-VM board does not have any such jumper for USB,
+> nor does it have any obvious combination of BIOS-setup options
+> to accomplish it.
 
-A lot of drive commands seem to be set up on a seven second worst case
+Well it could only be done by hardware.  The P5B has those jumpers.  I
+figured the P5B-VM while a budget micro board would still have those.  I
+guess not.  Without jumper settings for it there is nothing you can do
+about it.  A quick look through the manual certainly only mentions
+standby power for the keyboard connector and not for the USB ports.
 
-> always user space timer expired before kernel timer.   Since kernel
-> timer uses jiffies to track time, does this imply a kernel bug where
-> the time interrupts were lost or delay somehow?  Do you know any know
-> problems related to command timeout in PATA Sil680?
-
-Alarm() is also handled by the same jiffies logic, so I suspect a bug in
-your test environment ?
-
+--
+Len Sorensen
