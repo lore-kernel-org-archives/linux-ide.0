@@ -1,39 +1,35 @@
-From: smurf@smurf.noris.de
-Subject: Re: Timeout error, disk gone
-Date: Tue, 13 Mar 2007 16:18:37 +0100
-Message-ID: <20070313151837.GB1527@smurf.noris.de>
-References: <et5nhr$3ul$1@sea.gmane.org> <20070313130450.489f9e86@lxorguk.ukuu.org.uk> <20070313132115.GY1527@smurf.noris.de> <45F6B22A.80500@gmail.com>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: Asus P5B-VM motherboard:  cd drive malfunctions if internal nic in use.
+Date: Tue, 13 Mar 2007 11:32:52 -0400
+Message-ID: <20070313153252.GC22466@csclub.uwaterloo.ca>
+References: <200703122212.l2CMCaxm032601@osprey.cs.arizona.edu> <45F5D59E.10304@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smurf.noris.de ([192.109.102.42]:48553 "EHLO smurf.noris.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753259AbXCMPTE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Mar 2007 11:19:04 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753281AbXCMPcy@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <45F6B22A.80500@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <45F5D59E.10304@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: Phil Kaslo <phil@cs.arizona.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Hi,
-
-Tejun Heo:
-> > Samsung SP2004C, firmware version unknown -- how do I find out?
+On Mon, Mar 12, 2007 at 06:35:10PM -0400, Mark Lord wrote:
+> Is that a PATA cd-drive?  If so, then you must have hooked it up
+> to the JMicron IDE controller.  That driver is just plain buggy.
 > 
-> Please post the result of 'lspci -nn' and full boot log.  Samsung
-> firmwares tend to be pretty good but I've seen earlier ones occasionally
-> lock up after certain PHY events.  Removing power and reapplying puts it
-> back into sane state.
+> I gave up on it for my own P5B-VM.  The libata version works better
+> than the drivers/ide, but I gave up on it and got a SATA DVD/RW drive.
 > 
-Not this one, as reported in my earlier mail -- unless you redefine "sane".
+> Off topic:  do your USB ports power off when the system shuts down?
+> Mine don't -- the +5V continues on them.. I'd love a tip on how to
+> turn them off completely at shutdown.
 
-I'll try to elucidate something from it after it's replaced.
+Most Asus boards have jumpers for the USB ports to select between +5V
+and +5VSB (stand by power).  The reason to provide standby power is so
+that keyboards with power buttons can remain powered so that you can
+turn the system on using the usb keyboard.  If you want to power off the
+ports entirely, jumper them to the +5V line instead which only has power
+when the system is on.
 
--- 
-Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
-Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
- - -
-When the polls are overwhelmingly unfavorable, (a) ridicule and dismiss them
-or (b) stress the volatility of public opinion.
+--
+Len Sorensen
