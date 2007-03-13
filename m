@@ -1,84 +1,73 @@
-From: =?UTF-8?B?TWF0aGlldSBCw6lyYXJk?= <Mathieu.Berard@crans.org>
-Subject: Re: [3/6] 2.6.21-rc2: known regressions
-Date: Tue, 13 Mar 2007 21:56:35 +0100
-Message-ID: <45F71003.4030003@crans.org>
-References: <Pine.LNX.4.64.0702272105220.12485@woody.linux-foundation.org> <20070305015036.GH3441@stusta.de> <45EE9E39.3010800@garzik.org> <45F20541.9090208@crans.org> <45F53B60.8020908@gmail.com> <45F69989.70702@crans.org> <45F69C02.2020206@gmail.com>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Re: PATA Sil680 Command Timeout on ARM XScale
+Date: Tue, 13 Mar 2007 14:17:49 -0700
+Message-ID: <8202f4270703131417t3daacf1tf361e0449ad1f93b@mail.gmail.com>
+References: <8202f4270703131134x68c028fbv7fb536c694a6b898@mail.gmail.com>
+	 <20070313193957.396d7d1d@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933333AbXCMU4n@vger.kernel.org>
-In-Reply-To: <45F69C02.2020206@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, Fabio Comolli <fabio.comolli@gmail.com>, Janosch Machowinski <jmachowinski@gmx.de>, Lukas Hejtmanek <xhejtman@fi.muni.cz>, Meelis Roos <mroos@linux.ee>, Olivier Mondoloni <darkcore71@yahoo.fr>, Thomas Renninger <trenn@suse.de>, Robert Moore <robert.moore@intel.com>, lenb@kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.233]:40351 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933334AbXCMVRu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Mar 2007 17:17:50 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so1623164nze
+        for <linux-ide@vger.kernel.org>; Tue, 13 Mar 2007 14:17:49 -0700 (PDT)
+In-Reply-To: <20070313193957.396d7d1d@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Tejun Heo a =C3=A9crit :
-> Can you apply the attached patch and report what the kernel says with
-> ACPI turned on?
+On 3/13/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> > above 1.5.   Two timers are used to track command timeout in our test
+> > software.  The one in the user space is set to 6 seconds using alarm()
+> > call while the one in the kernel (scsi timer) is set to 5 seconds.
+> > These timeout values are probably too low to be realistic,  but the
+> > issue here is not about the timeout itself but to understand why it is
 >
->  =20
-Hi,
-I got this:
-[   13.523816] SCSI subsystem initialized
-[   13.528914] ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level,
-low) -> IRQ 19
-[   14.529383] ahci 0000:00:1f.2: AHCI 0001.0000 32 slots 4 ports 1.5
-Gbps 0x5 impl IDE mode
-[   14.529439] ahci 0000:00:1f.2: flags: 64bit ncq pm led slum part
-[   14.529565] ata1: SATA max UDMA/133 cmd 0xf8824d00 ctl 0x00000000
-bmdma 0x00000000 irq 19
-[   14.529683] ata2: SATA max UDMA/133 cmd 0xf8824d80 ctl 0x00000000
-bmdma 0x00000000 irq 19
-[   14.529801] ata3: SATA max UDMA/133 cmd 0xf8824e00 ctl 0x00000000
-bmdma 0x00000000 irq 19
-[   14.529921] ata4: SATA max UDMA/133 cmd 0xf8824e80 ctl 0x00000000
-bmdma 0x00000000 irq 19
-[   14.529984] scsi0 : ahci
-[   14.987273] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[   15.031823] ata1.00: taskfile_load_raw: (0x1f1-1f7): hex: 10 03 00 0=
-0
-00 a0 ef
-[   15.032119] ata1.00: ATA-7: HTS541010G9SA00, MBZOC60D, max UDMA/100
-[   15.032168] ata1.00: 195371568 sectors, multi 0: LBA48 NCQ (depth 31=
-/32)
-[   15.034170] ata1.00: taskfile_load_raw: (0x1f1-1f7): hex: 10 03 00 0=
-0
-00 a0 ef
-[   15.034464] ata1.00: configured for UDMA/100
-[   15.034515] scsi1 : ahci
-[   15.337188] ata2: SATA link down (SStatus 0 SControl 0)
-[   15.337241] scsi2 : ahci
-[   15.640125] ata3: SATA link down (SStatus 0 SControl 300)
-[   15.640178] scsi3 : ahci
-[   15.943062] ata4: SATA link down (SStatus 0 SControl 0)
-[   15.943191] scsi 0:0:0:0: Direct-Access     ATA      HTS541010G9SA00=
-=20
-MBZO PQ: 0 ANSI: 5
+> A lot of drive commands seem to be set up on a seven second worst case
+>
+> > always user space timer expired before kernel timer.   Since kernel
+> > timer uses jiffies to track time, does this imply a kernel bug where
+> > the time interrupts were lost or delay somehow?  Do you know any know
+> > problems related to command timeout in PATA Sil680?
+>
+> Alarm() is also handled by the same jiffies logic, so I suspect a bug in
+> your test environment ?
+>
+>
+I enabled ata_irq_trap and did the same test again. The kernel timer
+caught the timeout (10 seconds) this time along with the irq trap
+traces below.  What's the cause of these idle irqs?
 
-and for each ata errors:
-[   47.089624] ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x=
-2
-frozen
-[   47.089682] ata1.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0
-cdb 0x0 data 4096 in
-[   47.089684]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-[   47.392549] ata1: soft resetting port
-[   47.547533] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[   47.549756] ata1.00: taskfile_load_raw: (0x1f1-1f7): hex: 10 03 00 0=
-0
-00 a0 ef
-[   47.552600] ata1.00: taskfile_load_raw: (0x1f1-1f7): hex: 10 03 00 0=
-0
-00 a0 ef
-[   47.552969] ata1.00: configured for UDMA/100
-[   47.553022] ata1: EH complete
-[   47.553104] SCSI device sda: 195371568 512-byte hdwr sectors (100030=
- MB)
-[   47.553160] sda: Write Protect is off
-[   47.553226] SCSI device sda: write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
+[42949560.150000] SCSI device sdb: drive cache: write back
+[   85.570000] ata1: irq trap
+[   85.820000] ata2: irq trap
+[   92.120000] abnormal status 0xD0
+[   92.120000] ata1: irq trap
+[   92.920000] ata2: irq trap
+[   98.750000] ata1: irq trap
+[  100.260000] abnormal status 0xD0
+[  100.260000] ata2: irq trap
+[  105.540000] ata1: irq trap
+[  108.050000] ata1: irq trap
+[  110.620000] ata1: irq trap
+[  113.130000] ata1: irq trap
+[  115.530000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+[  115.530000] ata1.00: (BMDMA stat 0x0)
+[  115.530000] ata1.00: tag 0 cmd 0xc8 Emask 0x4 stat 0x40 err 0x0 (timeout)
+[  115.530000] ata1: soft resetting port
+[  115.570000] ata1.00: configured for UDMA/100
+[  115.570000] sg_cmd_done: sg0, pack_id=2706, res=0x8000002, dur=10040 ms
+[  115.570000] ata1: EH complete
+[  115.580000] SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+[  115.580000] sda: Write Protect is off
+[  115.580000] sda: Mode Sense: 00 3a 00 00
+[  115.580000] SCSI device sda: drive cache: write back
+...
 
---=20
-Mathieu
+Thanks,
+Fajun
