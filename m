@@ -1,28 +1,33 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [3/6] 2.6.21-rc3: known regressions
-Date: Tue, 13 Mar 2007 14:03:23 +0000
-Message-ID: <20070313140323.6ee03eee@lxorguk.ukuu.org.uk>
-References: <Pine.LNX.4.64.0703062050570.5963@woody.linux-foundation.org>
-	<20070313125006.GT18731@stusta.de>
+From: smurf@smurf.noris.de
+Subject: Re: Timeout error, disk gone
+Date: Tue, 13 Mar 2007 14:21:15 +0100
+Message-ID: <20070313132115.GY1527@smurf.noris.de>
+References: <et5nhr$3ul$1@sea.gmane.org> <20070313130450.489f9e86@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20070313125006.GT18731@stusta.de>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Vladimir Brik <no.hope@gmail.com>, Andi Kleen <ak@muc.de>, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Randy Dunlap <randy.dunlap@oracle.com>, lenb@kernel.org, linux-acpi@vger.kernel.org, Ray Lee <ray-lk@madrabbit.org>, Colchao <colchaodemola@gmail.com>, Mathieu =?UTF-8?B?QsOpcmFyZA==?= <Mathieu.Berard@crans.org>, Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, Fabio Comolli <fabio.comolli@gmail.com>, Plamen Petrov <plamen.petrov@tk.ru.acad.bg>, Laurent Riffard <laurent.riffard@free.fr>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smurf.noris.de ([192.109.102.42]:44922 "EHLO smurf.noris.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965730AbXCMNn7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Mar 2007 09:43:59 -0400
+Content-Disposition: inline
+In-Reply-To: <20070313130450.489f9e86@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-> Subject    : libata: PATA UDMA/100 configured as UDMA/33
-> References : http://lkml.org/lkml/2007/2/20/294
->              http://www.mail-archive.com/linux-ide@vger.kernel.org/msg04115.html
->              http://bugzilla.kernel.org/show_bug.cgi?id=8133
->              http://bugzilla.kernel.org/show_bug.cgi?id=8164
-> Submitter  : Fabio Comolli <fabio.comolli@gmail.com>
->              Plamen Petrov <plamen.petrov@tk.ru.acad.bg>
->              Laurent Riffard <laurent.riffard@free.fr>
-> Handled-By : Tejun Heo <htejun@gmail.com>
-> Status     : patch available
+Hi,
 
-Some cases should be fixed now but probably not all (eg the Nvidia one)
+Alan Cox:
+> What model and what firmware ? There are some problem firmware releases
+> around with older SATA drives
+
+Samsung SP2004C, firmware version unknown -- how do I find out?
+
+-- 
+Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
+Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
+ - -
+It is all right to hold a conversation, but you should let go of it now
+and then.
