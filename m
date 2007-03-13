@@ -1,73 +1,72 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Re: PATA Sil680 Command Timeout on ARM XScale
-Date: Tue, 13 Mar 2007 14:17:49 -0700
-Message-ID: <8202f4270703131417t3daacf1tf361e0449ad1f93b@mail.gmail.com>
-References: <8202f4270703131134x68c028fbv7fb536c694a6b898@mail.gmail.com>
-	 <20070313193957.396d7d1d@lxorguk.ukuu.org.uk>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 03/12] libata: separate out ata_host_alloc() and ata_host_attach()
+Date: Tue, 13 Mar 2007 17:34:46 -0500
+Message-ID: <45F72706.7070606@linux.vnet.ibm.com>
+References: <11734389353424-git-send-email-htejun@gmail.com> <45F5D35C.6000408@linux.vnet.ibm.com> <45F63F4A.9090607@gmail.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:40351 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933334AbXCMVRu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Mar 2007 17:17:50 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so1623164nze
-        for <linux-ide@vger.kernel.org>; Tue, 13 Mar 2007 14:17:49 -0700 (PDT)
-In-Reply-To: <20070313193957.396d7d1d@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:47564 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933774AbXCMWev (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Mar 2007 18:34:51 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2DMYnKo010802
+	for <linux-ide@vger.kernel.org>; Tue, 13 Mar 2007 18:34:49 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2DMYnRf298218
+	for <linux-ide@vger.kernel.org>; Tue, 13 Mar 2007 18:34:49 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2DMYnQB028518
+	for <linux-ide@vger.kernel.org>; Tue, 13 Mar 2007 18:34:49 -0400
+In-Reply-To: <45F63F4A.9090607@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-On 3/13/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> > above 1.5.   Two timers are used to track command timeout in our test
-> > software.  The one in the user space is set to 6 seconds using alarm()
-> > call while the one in the kernel (scsi timer) is set to 5 seconds.
-> > These timeout values are probably too low to be realistic,  but the
-> > issue here is not about the timeout itself but to understand why it is
->
-> A lot of drive commands seem to be set up on a seven second worst case
->
-> > always user space timer expired before kernel timer.   Since kernel
-> > timer uses jiffies to track time, does this imply a kernel bug where
-> > the time interrupts were lost or delay somehow?  Do you know any know
-> > problems related to command timeout in PATA Sil680?
->
-> Alarm() is also handled by the same jiffies logic, so I suspect a bug in
-> your test environment ?
->
->
-I enabled ata_irq_trap and did the same test again. The kernel timer
-caught the timeout (10 seconds) this time along with the irq trap
-traces below.  What's the cause of these idle irqs?
+Tejun Heo wrote:
+> Association to SCSI host is done via pointer now even for native ATA
+> case, so this should be easier for SAS.  What I'm worried about is how
+> EH gets invoked.  libata depends on EH to do a lot of things including
+> probing, requesting sense data, etc.  How should this work?
 
-[42949560.150000] SCSI device sdb: drive cache: write back
-[   85.570000] ata1: irq trap
-[   85.820000] ata2: irq trap
-[   92.120000] abnormal status 0xD0
-[   92.120000] ata1: irq trap
-[   92.920000] ata2: irq trap
-[   98.750000] ata1: irq trap
-[  100.260000] abnormal status 0xD0
-[  100.260000] ata2: irq trap
-[  105.540000] ata1: irq trap
-[  108.050000] ata1: irq trap
-[  110.620000] ata1: irq trap
-[  113.130000] ata1: irq trap
-[  115.530000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-[  115.530000] ata1.00: (BMDMA stat 0x0)
-[  115.530000] ata1.00: tag 0 cmd 0xc8 Emask 0x4 stat 0x40 err 0x0 (timeout)
-[  115.530000] ata1: soft resetting port
-[  115.570000] ata1.00: configured for UDMA/100
-[  115.570000] sg_cmd_done: sg0, pack_id=2706, res=0x8000002, dur=10040 ms
-[  115.570000] ata1: EH complete
-[  115.580000] SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-[  115.580000] sda: Write Protect is off
-[  115.580000] sda: Mode Sense: 00 3a 00 00
-[  115.580000] SCSI device sda: drive cache: write back
-...
+For SAS, the scsi_host pointer in the ata port is NULL today, since libata
+is really not managing the scsi host, the LLDD is. I think the initialization
+model we want for SAS is a little different than the one you are heading
+towards on SATA. For SAS, I think we just want to be able to alloc/init
+and delete/destroy a SATA device a they show up on the transport,
+without tying it to initialization of the ata host. And this set of
+patches doesn't necessarily prevent that...
 
-Thanks,
-Fajun
+> SAS attached libata port shares EH with the SAS SCSI host, right?  How can
+
+Right.
+
+> we connect SAS EH with libata EH and would it be okay for libata EH hold
+> the SCSI EH (thus holding all command execution on the host) to handle
+> ATA exceptions?
+
+Currently, ipr calls ata_do_eh from its eh_device_reset_handler function.
+This seems to work well enough with the testing that I've done, but it
+would certainly be nice to get to a more layered EH approach, where we
+could possibly have pluggable error handlers for different device types.
+
+Regarding holding all command execution on the host while performing eh,
+that doesn't seem to be a huge issue from my perspective, not sure if
+this would have a larger negative impact on others... Generally speaking,
+we shouldn't be entering eh very often, and it should only be happening
+if something went wrong. The biggest issue here might be ATAPI devices,
+since they tend to report more errors during normal running. The request
+sense for these devices for SAS is done without entering eh today. Would
+you want to move this into eh as well?
+
+Brian
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
