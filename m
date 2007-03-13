@@ -1,58 +1,45 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [PATCH] libata: add support for READ/WRITE LONG
-Date: Tue, 13 Mar 2007 06:46:27 -0400
-Message-ID: <45F68103.7070509@emc.com>
-References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	 <45F56800.3040104@rtr.ca> <3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com> <45F5A523.1080500@rtr.ca> <45F64765.10805@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Fwd: libata extension
+Date: Tue, 13 Mar 2007 07:23:45 -0400
+Message-ID: <45F689C1.9070900@garzik.org>
+References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	 <3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com>	 <3aac340703121007q35c7acf7t648e0ed7608be04d@mail.gmail.com>	 <200703122106.39669.bzolnier@gmail.com> <3aac340703121936k51df425dg7e1a74688a67075@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:53116 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217AbXCMKqg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Mar 2007 06:46:36 -0400
-In-Reply-To: <45F64765.10805@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:58966 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753234AbXCMLXr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Mar 2007 07:23:47 -0400
+In-Reply-To: <3aac340703121936k51df425dg7e1a74688a67075@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Vitaliyi <imgrey@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Vitaliyi <imgrey@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+Vitaliyi wrote:
+>> Why is the access to Control register needed?
+> 
+> To execute soft reset for example.
+> 
+>> > In the perfect case i would like to be able to execute vendor command
+>> > set (reverse engineered).
+>>
+>> Sounds interesting. :-)
+>>
+>> Could you give some more details on what are you going to implement?
+> 
+> Reading/writing service area, uploading, downloading modules, working
+> with flash etc.
+
+SAT (aka ATA passthru) defines how to do soft-reset.
+
+SG_IO supports the ATA_12 and ATA_16 commands which permit soft-reset 
+and similar tasks.  libata supports this interface, but does not yet 
+support soft-reset and similar non-comment-oriented tasks.  This would 
+be the best area to add such features, though.
+
+	Jeff
 
 
-
-Tejun Heo wrote:
-> Mark Lord wrote:
->   
->> The READ/WRITE LONG commands are theoretically obsolete,
->> but the majority of drives in existance still implement them.
->>
->> The WRITE_LONG and WRITE_LONG_ONCE commands are of particular
->> interest for fault injection testing -- eg. creating "media errors"
->> at specific locations on a disk.
->>
->> The fussy bit is that these commands require a non-standard
->> sector size, usually 520 bytes instead of 512.
->>
->> This patch adds support to libata for READ/WRITE LONG commands
->> issued via SG_IO/ATA_16.
->>
->> This patch was generated against a 2.6.21-rc3-git7 base:
->>     
->
-> I think it would be better if this comes in two patches.  One to add
-> qc->sect_size and convert all users of ATA_SECT_SIZE to qc->sect_size
-> and the other one to implement READ/WRITE LONG.  Another question is
-> whether this needs to be included into mainline.  This is definitely
-> useful but it is mostly for debugging/testing.
->
-> Hmmm... But we're gonna need qc->sect_size anyway for devices with
-> larger sector sizes and overhead for supporting READ/WRITE LONG is
-> nearly nill, so I'm voting for inclusion.
->
-> Thanks.
->   
-I just want to add that this patch has been incredibly useful for us in 
-testing the error handling & RAID. Nothing like "real" media errors on 
-demand to validate your assumptions ;-)
-
-ric
 
