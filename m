@@ -1,35 +1,39 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Subject: Re: Asus P5B-VM motherboard:  cd drive malfunctions if internal nic in use.
-Date: Tue, 13 Mar 2007 11:32:52 -0400
-Message-ID: <20070313153252.GC22466@csclub.uwaterloo.ca>
-References: <200703122212.l2CMCaxm032601@osprey.cs.arizona.edu> <45F5D59E.10304@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: hardreset on SERR_INTERNAL
+Date: Wed, 14 Mar 2007 01:20:51 +0900
+Message-ID: <20070313162051.GH32687@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753281AbXCMPcy@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.168]:3379 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030763AbXCMQVB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Mar 2007 12:21:01 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so337021uga
+        for <linux-ide@vger.kernel.org>; Tue, 13 Mar 2007 09:20:57 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <45F5D59E.10304@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Phil Kaslo <phil@cs.arizona.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Mon, Mar 12, 2007 at 06:35:10PM -0400, Mark Lord wrote:
-> Is that a PATA cd-drive?  If so, then you must have hooked it up
-> to the JMicron IDE controller.  That driver is just plain buggy.
-> 
-> I gave up on it for my own P5B-VM.  The libata version works better
-> than the drivers/ide, but I gave up on it and got a SATA DVD/RW drive.
-> 
-> Off topic:  do your USB ports power off when the system shuts down?
-> Mine don't -- the +5V continues on them.. I'd love a tip on how to
-> turn them off completely at shutdown.
+There was a rare report where SB600 reported SERR_INTERNAL and SRST
+couldn't get it out of the failure mode.  Hardreset on SERR_INTERNAL.
+As the problem is intermittent, whether this fixes the problem or not
+hasn't been verified yet, but hardresetting the channel on internal
+error is a good idea anyway.
 
-Most Asus boards have jumpers for the USB ports to select between +5V
-and +5VSB (stand by power).  The reason to provide standby power is so
-that keyboards with power buttons can remain powered so that you can
-turn the system on using the usb keyboard.  If you want to power off the
-ports entirely, jumper them to the +5V line instead which only has power
-when the system is on.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
---
-Len Sorensen
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 7349c3d..fc11bb3 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1055,7 +1055,7 @@ static void ata_eh_analyze_serror(struct ata_port *ap)
+ 	}
+ 	if (serror & SERR_INTERNAL) {
+ 		err_mask |= AC_ERR_SYSTEM;
+-		action |= ATA_EH_SOFTRESET;
++		action |= ATA_EH_HARDRESET;
+ 	}
+ 	if (serror & (SERR_PHYRDY_CHG | SERR_DEV_XCHG))
+ 		ata_ehi_hotplugged(&ehc->i);
