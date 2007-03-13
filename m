@@ -1,39 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: hardreset on SERR_INTERNAL
-Date: Wed, 14 Mar 2007 01:20:51 +0900
-Message-ID: <20070313162051.GH32687@htj.dyndns.org>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: Asus P5B-VM motherboard:  cd drive malfunctions if internal nic
+ in use.
+Date: Tue, 13 Mar 2007 12:23:06 -0400
+Message-ID: <45F6CFEA.4060009@rtr.ca>
+References: <200703122212.l2CMCaxm032601@osprey.cs.arizona.edu> <45F5D59E.10304@rtr.ca> <20070313153252.GC22466@csclub.uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:3379 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030763AbXCMQVB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Mar 2007 12:21:01 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so337021uga
-        for <linux-ide@vger.kernel.org>; Tue, 13 Mar 2007 09:20:57 -0700 (PDT)
-Content-Disposition: inline
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:4440 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030763AbXCMQXI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Mar 2007 12:23:08 -0400
+In-Reply-To: <20070313153252.GC22466@csclub.uwaterloo.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: Phil Kaslo <phil@cs.arizona.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-There was a rare report where SB600 reported SERR_INTERNAL and SRST
-couldn't get it out of the failure mode.  Hardreset on SERR_INTERNAL.
-As the problem is intermittent, whether this fixes the problem or not
-hasn't been verified yet, but hardresetting the channel on internal
-error is a good idea anyway.
+> On Mon, Mar 12, 2007 at 06:35:10PM -0400, Mark Lord wrote:>
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> Off topic:  do your USB ports power off when the system shuts down?
+>> Mine don't -- the +5V continues on them.. I'd love a tip on how to
+>> turn them off completely at shutdown.
+> 
+> Most Asus boards have jumpers for the USB ports to select between +5V
+> and +5VSB (stand by power).  The reason to provide standby power is so
+> that keyboards with power buttons can remain powered so that you can
+> turn the system on using the usb keyboard.  If you want to power off the
+> ports entirely, jumper them to the +5V line instead which only has power
+> when the system is on.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 7349c3d..fc11bb3 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1055,7 +1055,7 @@ static void ata_eh_analyze_serror(struct ata_port *ap)
- 	}
- 	if (serror & SERR_INTERNAL) {
- 		err_mask |= AC_ERR_SYSTEM;
--		action |= ATA_EH_SOFTRESET;
-+		action |= ATA_EH_HARDRESET;
- 	}
- 	if (serror & (SERR_PHYRDY_CHG | SERR_DEV_XCHG))
- 		ata_ehi_hotplugged(&ehc->i);
+That's nice.
+
+But the P5B-VM board does not have any such jumper for USB,
+nor does it have any obvious combination of BIOS-setup options
+to accomplish it.
+
