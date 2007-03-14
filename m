@@ -1,17 +1,17 @@
 From: YUP <yupadmin@gmail.com>
 Subject: Re: CDROM drive not found when booting using new libata code
-Date: Wed, 14 Mar 2007 20:33:13 +0100
-Message-ID: <45F84DF9.8000208@gmail.com>
+Date: Wed, 14 Mar 2007 20:59:28 +0100
+Message-ID: <45F85420.1000402@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1251; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:53719 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.168]:29169 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932929AbXCNTdX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Mar 2007 15:33:23 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so37696uga
-        for <linux-ide@vger.kernel.org>; Wed, 14 Mar 2007 12:33:21 -0700 (PDT)
+	with ESMTP id S933043AbXCNT7j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Mar 2007 15:59:39 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so45797uga
+        for <linux-ide@vger.kernel.org>; Wed, 14 Mar 2007 12:59:37 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
