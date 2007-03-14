@@ -1,41 +1,39 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: [IDE] au1xxx: Fix use of mixed declarations and code
-Date: Wed, 14 Mar 2007 15:26:03 +0000
-Message-ID: <20070314152603.GA5934@linux-mips.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ide-layer troubles with cd burning devices in kernels 2.6.20 and 2.6.21 rc1 + rc2
+Date: Wed, 14 Mar 2007 17:07:38 +0100
+Message-ID: <200703141707.38671.bzolnier@gmail.com>
+References: <20070314150853.97280@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751033AbXCNP27@vger.kernel.org>
-Received: from localhost.localdomain ([127.0.0.1]:52681 "EHLO
-	dl5rb.ham-radio-op.net") by ftp.linux-mips.org with ESMTP
-	id S20022456AbXCNP2T (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Wed, 14 Mar 2007 15:28:19 +0000
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:23318 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095AbXCNQAb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Mar 2007 12:00:31 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so634516uga
+        for <linux-ide@vger.kernel.org>; Wed, 14 Mar 2007 09:00:28 -0700 (PDT)
+In-Reply-To: <20070314150853.97280@gmx.net>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-drivers/ide/mips/au1xxx-ide.c:684: warning: ISO C90 forbids mixed declarations and code
 
-Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+Ok, thanks for reporting back - I'm crossing out this item from my TODO. :-)
 
-diff --git a/drivers/ide/mips/au1xxx-ide.c b/drivers/ide/mips/au1xxx-ide.c
-index b2dc028..d54d9fe 100644
---- a/drivers/ide/mips/au1xxx-ide.c
-+++ b/drivers/ide/mips/au1xxx-ide.c
-@@ -639,6 +639,7 @@ static int au_ide_probe(struct device *dev)
- 	_auide_hwif *ahwif = &auide_hwif;
- 	ide_hwif_t *hwif;
- 	struct resource *res;
-+	hw_regs_t *hw;
- 	int ret = 0;
- 
- #if defined(CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA)
-@@ -681,7 +682,7 @@ static int au_ide_probe(struct device *dev)
- 	/* FIXME:  This might possibly break PCMCIA IDE devices */
- 
- 	hwif                            = &ide_hwifs[pdev->id];
--	hw_regs_t *hw 			= &hwif->hw;
-+	hw 				= &hwif->hw;
- 	hwif->irq = hw->irq             = ahwif->irq;
- 	hwif->chipset                   = ide_au1xxx;
- 
+Bart
+
+On Wednesday 14 March 2007, Uwe Bugla wrote:
+> Hi Linus, Bart, Andrew, Alan,
+> 
+> all ide-layer bugs I reported in connection with reinitialization oopses using a TEAC CDRW54 are gone in 2.6.21-rc3-git4.
+> This is a good kernel, and at least I have not found any regressions in it.
+> 
+> To whoever fixed that: A thousand thanks! Very good work!
+> 
+> Yours sincerely
+> 
+> Uwe
