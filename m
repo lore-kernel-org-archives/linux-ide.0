@@ -1,53 +1,32 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Subject: Re: [PATCH] kernel-parameters.txt: ATAPI enabled by default
-Date: Wed, 14 Mar 2007 10:03:09 -0400
-Message-ID: <20070314140309.GH22466@csclub.uwaterloo.ca>
-References: <200703141107.41168.faik@pardus.org.tr>
+From: "Uwe Bugla" <uwe.bugla@gmx.de>
+Subject: ide-layer troubles with cd burning devices in kernels 2.6.20 and
+ 2.6.21 rc1 + rc2
+Date: Wed, 14 Mar 2007 16:08:53 +0100
+Message-ID: <20070314150853.97280@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030862AbXCNODL@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200703141107.41168.faik@pardus.org.tr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Faik Uygur <faik@pardus.org.tr>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:60336 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1161331AbXCNPIz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Mar 2007 11:08:55 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk
 
-On Wed, Mar 14, 2007 at 11:07:40AM +0200, Faik Uygur wrote:
-> In case of libata, discovery of ATAPI devices is the default behaviour.
-> 
-> Signed-off-by: Faik Uygur <faik@pardus.org.tr>
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 856c8b1..96b6ec5 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -695,11 +695,9 @@ and is between 256 and 4096 characters. It is defined in the file
->  			Format: <irq>
->  
->  	combined_mode=	[HW] control which driver uses IDE ports in combined
-> -			mode: legacy IDE driver, libata, or both
-> -			(in the libata case, libata.atapi_enabled=1 may be
-> -			useful as well).  Note that using the ide or libata
-> -			options may affect your device naming (e.g. by
-> -			changing hdc to sdb).
-> +			mode: legacy IDE driver, libata, or both. Note that
-> +			using the ide or libata options may affect your device
-> +			naming (e.g. by changing hdc to sdb).
->  			Format: combined (default), ide, or libata
+Hi Linus, Bart, Andrew, Alan,
 
-I am having trouble parsing this one. 
+all ide-layer bugs I reported in connection with reinitialization oopses using a TEAC CDRW54 are gone in 2.6.21-rc3-git4.
+This is a good kernel, and at least I have not found any regressions in it.
 
-Does combined_mode=combined mean both?
+To whoever fixed that: A thousand thanks! Very good work!
 
-What does using both legacy and libata at the same time mean?
+Yours sincerely
 
-Who runs the PATA ports?
+Uwe
 
-Please don't use the term IDE ports, since I have no idea what that
-means anymore.
-
-This message is really not very helpful right now.
-
---
-Len Sorensen
+-- 
+"Feel free" - 5 GB Mailbox, 50 FreeSMS/Monat ...
+Jetzt GMX ProMail testen: www.gmx.net/de/go/mailfooter/promail-out
