@@ -1,46 +1,72 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH libata#upstream] sata_promise: decode and report error reasons
-Date: Wed, 14 Mar 2007 10:30:37 +0100 (MET)
-Message-ID: <200703140930.l2E9Ub4c006713@harpo.it.uu.se>
+From: "Stanislav Brabec" <sbrabec@novell.com>
+Subject: Re: regression: ide-floppy doesn't work with IOMEGA IDE ZIP
+	drive
+Date: Wed, 14 Mar 2007 11:19:07 +0100
+Message-ID: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:63720 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030816AbXCNJat (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Mar 2007 05:30:49 -0400
+Received: from charybdis-ext.suse.de ([195.135.221.2]:44701 "EHLO
+	emea5-mh.id5.novell.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161049AbXCNKTS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Mar 2007 06:19:18 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: jeff@garzik.org, bzolnier@gmail.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
 
-On Wed, 14 Mar 2007 05:06:11 -0400, Jeff Garzik wrote:
-> > -	tmp = readl(mmio);
-> > -	if (tmp & PDC_ERR_MASK) {
-> > -		qc->err_mask |= AC_ERR_DEV;
-> > -		pdc_reset_port(ap);
-> 
-> AFAICS pdc_reset_port() will no longer be called, after this change.
-> 
-> Since you are freezing the port with ata_port_freeze() before 
-> pdc_error_handler() is called, the one remaining call to 
-> pdc_reset_port() never occurs:
-> 
->          if (!(ap->pflags & ATA_PFLAG_FROZEN))
->                  pdc_reset_port(ap);
-> 
-> And Promise hardware definitely needs to be "kicked" by pdc_reset_port() 
-> after most errors.
+Albert Lee wrote:
+> Tejun Heo wrote:
 
-There's also a conditional pdc_reset_port() in pdc_post_internal_cmd().
+> > Hmmm... weird.  Your drive bears the same model name as Stanislav's.  I
+> > don't think the low level driver is causing the difference.  They both
+> > use the standard libata HSM implementation.  Any ideas?  Stanislav, can
+> > you try to connect that zip drive to another IDE controller?
 
-I'll reinvestigate the reset logic.
+> Maybe it's also worth a try to replace the medium, cable or even the
+> drive itself to rule out the possibility of hardware problem.
 
-> Also, PCI error are controller-wide, so ideally you should presume that 
-> all transactions on all ports are bad, and reset everything.  See 
-> mv_pci_error() in sata_mv.c in libata-dev.git#mv-eh for mostly-generic 
-> code that initiates error handling on all ports, rather than just one.
+I'll try it. I cannot replace the drive, I don't have any spare one, but
+my colleague has. He will try it on his machine. So let's wait for
+result.
 
-Agreed.
+Looking at the syslog in Novell bug 232086 in detail, following line may
+indicate hardware failure:
+usb 5-1: string descriptor 0 read error: -22
 
-Thanks,
+My drive is a slave on bus, where master is a modern Seagate ST3160812A.
 
-/Mikael
+On my system I see two regressions:
+- One between year 2002 kernels and SuSE Linux 10.0:
+  Delay with "packet command initiated yet DRQ isn't asserted" before
+  first read access, then the read will succeed.
+  I did not yet reproduce this regression just now on my hardware.
+- Second between SuSE 10.1 and 10.2:
+  Delay with "packet command initiated yet DRQ isn't asserted" before
+  any attempt to access, then it will fail.
+  This regression is reproducible just now on my hardware, but still may
+  be caused by hardware problems raised by a slightly different
+  initialization order.
+
+Tejun Heo wrote:
+> [libata]
+> And, as the device requires custom high level driver, libata fails
+> miserably.  Would it be worth to try support these devices?  Or are
+> they just too outdated to put the effort in?
+
+As far as I remember, it was working without any special driver with
+ide-scsi.
+
+-- 
+Best Regards,
+
+Stanislav Brabec
+software developer
+---------------------------------------------------------------------
+SUSE LINUX, s. r. o.                          e-mail: sbrabec@suse.cz
+Lihovarska 1060/12                            tel: +420 284 028 966
+190 00 Praha 9                                fax: +420 284 028 951
+Czech Republic                                http://www.suse.cz/
+
