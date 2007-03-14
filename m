@@ -1,37 +1,38 @@
-From: =?UTF-8?B?TWF0aGlldSBCw6lyYXJk?= <Mathieu.Berard@crans.org>
-Subject: Re: [3/6] 2.6.21-rc2: known regressions
-Date: Wed, 14 Mar 2007 11:49:45 +0100
-Message-ID: <45F7D349.10006@crans.org>
-References: <Pine.LNX.4.64.0702272105220.12485@woody.linux-foundation.org> <20070305015036.GH3441@stusta.de> <45EE9E39.3010800@garzik.org> <45F20541.9090208@crans.org> <45F53B60.8020908@gmail.com> <45F69989.70702@crans.org> <45F69C02.2020206@gmail.com> <45F71003.4030003@crans.org> <45F7910C.6060502@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: hardreset on SERR_INTERNAL
+Date: Wed, 14 Mar 2007 20:50:31 +0900
+Message-ID: <45F7E187.7040306@gmail.com>
+References: <20070313162051.GH32687@htj.dyndns.org> <45F7C0B6.4010205@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx-b.polytechnique.fr ([129.104.30.15]:40885 "EHLO
-	mx-b.polytechnique.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161095AbXCNKtu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Mar 2007 06:49:50 -0400
-In-Reply-To: <45F7910C.6060502@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.227]:49178 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161162AbXCNLug (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Mar 2007 07:50:36 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so141761wxd
+        for <linux-ide@vger.kernel.org>; Wed, 14 Mar 2007 04:50:35 -0700 (PDT)
+In-Reply-To: <45F7C0B6.4010205@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo a =C3=A9crit :
-> Hello,
->
->
-> Due to blacklisting, NCQ
-> won't be turned on your drive in future kernels.
->
->  =20
-Hello thanks.
-I have found on Hitachi website the technical datasheets of my drive
-model:
-http://www.hitachigst.com/tech/techlib.nsf/techdocs/28DCCB17E0EEC5A0862=
-56F4E006E2F5B/$file/5K100_SATA_sp1.2.pdf
-It seems to state that the drive does not support NCQ...
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> There was a rare report where SB600 reported SERR_INTERNAL and SRST
+>> couldn't get it out of the failure mode.  Hardreset on SERR_INTERNAL.
+>> As the problem is intermittent, whether this fixes the problem or not
+>> hasn't been verified yet, but hardresetting the channel on internal
+>> error is a good idea anyway.
+> 
+> How does this interact with the patch ATI just posted, which prefers to
+> treat the SB600 SERR_INTERNAL differently?
 
---
-Mathieu
+Gee... That looks like the correct fix.  Raising SERR_INTERNAL on ATAPI
+CC never occurred to me.  I still think hardresetting on SERR_INTERNAL
+is better than softresetting tho.
 
+-- 
+tejun
