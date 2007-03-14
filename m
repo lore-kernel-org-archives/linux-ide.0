@@ -1,42 +1,139 @@
-From: Faik Uygur <faik@pardus.org.tr>
-Subject: [PATCH] kernel-parameters.txt: ATAPI enabled by default
-Date: Wed, 14 Mar 2007 11:07:40 +0200
-Message-ID: <200703141107.41168.faik@pardus.org.tr>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH libata#upstream] sata_promise: decode and report error
+ reasons
+Date: Wed, 14 Mar 2007 05:06:11 -0400
+Message-ID: <45F7BB03.3010203@pobox.com>
+References: <200703140851.l2E8pZ8A006182@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:41346 "EHLO uludag.org.tr"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965268AbXCNJGU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Mar 2007 05:06:20 -0400
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:38500 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965217AbXCNJGP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Mar 2007 05:06:15 -0400
+In-Reply-To: <200703140851.l2E8pZ8A006182@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
 
-In case of libata, discovery of ATAPI devices is the default behaviour.
+Mikael Pettersson wrote:
+> This patch adds much needed error reason decoding and
+> reporting to sata_promise. It's simplistic but should
+> log all relevant error info the controller provides.
+> 
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> ---
+>  drivers/ata/sata_promise.c |   64 ++++++++++++++++++++++++++++++++++++++-------
+>  1 files changed, 55 insertions(+), 9 deletions(-)
+> 
+> Changes since the preliminary version:
+> * dropped SError decoding, as all bits there are standard
+> * PDC2_HTO_ERR is mapped to AC_ERR_HOST_BUS not AC_ERR_TIMEOUT
+> * PDC_UNDERRUN_ERR and PDC_OVERRUN_ERR are mapped to AC_ERR_HSM
+>   not AC_ERR_ATA_BUS
+> * added brief explanations to error constant declarations
+> * some cleanups and simplifications
+> 
+> --- linux-2.6.21-rc3+upstream/drivers/ata/sata_promise.c.~1~	2007-03-13 23:41:43.000000000 +0100
+> +++ linux-2.6.21-rc3+upstream/drivers/ata/sata_promise.c	2007-03-14 00:48:49.000000000 +0100
+> @@ -45,7 +45,7 @@
+>  #include "sata_promise.h"
+>  
+>  #define DRV_NAME	"sata_promise"
+> -#define DRV_VERSION	"2.03"
+> +#define DRV_VERSION	"2.04"
+>  
+>  
+>  enum {
+> @@ -70,8 +70,23 @@ enum {
+>  	PDC_TBG_MODE		= 0x41C, /* TBG mode (not SATAII) */
+>  	PDC_SLEW_CTL		= 0x470, /* slew rate control reg (not SATAII) */
+>  
+> -	PDC_ERR_MASK		= (1<<19) | (1<<20) | (1<<21) | (1<<22) |
+> -				  (1<<8) | (1<<9) | (1<<10),
+> +	/* PDC_GLOBAL_CTL bit definitions */
+> +	PDC_PH_ERR		= (1 <<  8), /* PCI error while loading packet */
+> +	PDC_SH_ERR		= (1 <<  9), /* PCI error while loading S/G table */
+> +	PDC_DH_ERR		= (1 << 10), /* PCI error while loading data */
+> +	PDC2_HTO_ERR		= (1 << 12), /* host bus timeout */
+> +	PDC2_ATA_HBA_ERR	= (1 << 13), /* error during SATA DATA FIS transmission */
+> +	PDC2_ATA_DMA_CNT_ERR	= (1 << 14), /* DMA DATA FIS size differs from S/G count */
+> +	PDC_OVERRUN_ERR		= (1 << 19), /* S/G byte count larger than HD requires */
+> +	PDC_UNDERRUN_ERR	= (1 << 20), /* S/G byte count less than HD requires */
+> +	PDC_DRIVE_ERR		= (1 << 21), /* drive error */
+> +	PDC_PCI_SYS_ERR		= (1 << 22), /* PCI system error */
+> +	PDC1_PCI_PARITY_ERR	= (1 << 23), /* PCI parity error (from SATA150 driver) */
+> +	PDC1_ERR_MASK		= PDC1_PCI_PARITY_ERR,
+> +	PDC2_ERR_MASK		= PDC2_HTO_ERR | PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR,
+> +	PDC_ERR_MASK		= (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC_OVERRUN_ERR
+> +				   | PDC_UNDERRUN_ERR | PDC_DRIVE_ERR | PDC_PCI_SYS_ERR
+> +				   | PDC1_ERR_MASK | PDC2_ERR_MASK),
+>  
+>  	board_2037x		= 0,	/* FastTrak S150 TX2plus */
+>  	board_20319		= 1,	/* FastTrak S150 TX4 */
+> @@ -615,17 +630,48 @@ static void pdc_post_internal_cmd(struct
+>  		pdc_reset_port(ap);
+>  }
+>  
+> +static void pdc_error_intr(struct ata_port *ap, struct ata_queued_cmd *qc,
+> +			   u32 port_status, u32 err_mask)
+> +{
+> +	struct ata_eh_info *ehi = &ap->eh_info;
+> +	unsigned int ac_err_mask = 0;
+> +
+> +	ata_ehi_clear_desc(ehi);
+> +	ata_ehi_push_desc(ehi, "port_status 0x%08x", port_status);
+> +	port_status &= err_mask;
+> +
+> +	if (port_status & PDC_DRIVE_ERR)
+> +		ac_err_mask |= AC_ERR_DEV;
+> +	if (port_status & (PDC_OVERRUN_ERR | PDC_UNDERRUN_ERR))
+> +		ac_err_mask |= AC_ERR_HSM;
+> +	if (port_status & (PDC2_ATA_HBA_ERR | PDC2_ATA_DMA_CNT_ERR))
+> +		ac_err_mask |= AC_ERR_ATA_BUS;
+> +	if (port_status & (PDC_PH_ERR | PDC_SH_ERR | PDC_DH_ERR | PDC2_HTO_ERR
+> +			   | PDC_PCI_SYS_ERR | PDC1_PCI_PARITY_ERR))
+> +		ac_err_mask |= AC_ERR_HOST_BUS;
+> +
+> +	ehi->action |= ATA_EH_SOFTRESET;
+> +	qc->err_mask |= ac_err_mask;
+> +	ata_port_freeze(ap);
+> +}
+> +
+>  static inline unsigned int pdc_host_intr( struct ata_port *ap,
+>                                            struct ata_queued_cmd *qc)
+>  {
+>  	unsigned int handled = 0;
+> -	u32 tmp;
+> -	void __iomem *mmio = ap->ioaddr.cmd_addr + PDC_GLOBAL_CTL;
+> +	void __iomem *port_mmio = ap->ioaddr.cmd_addr;
+> +	struct pdc_host_priv *hp = ap->host->private_data;
+> +	u32 port_status, err_mask;
+>  
+> -	tmp = readl(mmio);
+> -	if (tmp & PDC_ERR_MASK) {
+> -		qc->err_mask |= AC_ERR_DEV;
+> -		pdc_reset_port(ap);
 
-Signed-off-by: Faik Uygur <faik@pardus.org.tr>
+AFAICS pdc_reset_port() will no longer be called, after this change.
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 856c8b1..96b6ec5 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -695,11 +695,9 @@ and is between 256 and 4096 characters. It is defined in the file
- 			Format: <irq>
- 
- 	combined_mode=	[HW] control which driver uses IDE ports in combined
--			mode: legacy IDE driver, libata, or both
--			(in the libata case, libata.atapi_enabled=1 may be
--			useful as well).  Note that using the ide or libata
--			options may affect your device naming (e.g. by
--			changing hdc to sdb).
-+			mode: legacy IDE driver, libata, or both. Note that
-+			using the ide or libata options may affect your device
-+			naming (e.g. by changing hdc to sdb).
- 			Format: combined (default), ide, or libata
- 
- 	inttest=	[IA64]
+Since you are freezing the port with ata_port_freeze() before 
+pdc_error_handler() is called, the one remaining call to 
+pdc_reset_port() never occurs:
+
+         if (!(ap->pflags & ATA_PFLAG_FROZEN))
+                 pdc_reset_port(ap);
+
+And Promise hardware definitely needs to be "kicked" by pdc_reset_port() 
+after most errors.
+
+Also, PCI error are controller-wide, so ideally you should presume that 
+all transactions on all ports are bad, and reset everything.  See 
+mv_pci_error() in sata_mv.c in libata-dev.git#mv-eh for mostly-generic 
+code that initiates error handling on all ports, rather than just one.
+
+	Jeff
+
+
