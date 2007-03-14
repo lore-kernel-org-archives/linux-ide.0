@@ -1,37 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: regression: ide-floppy doesn't work with IOMEGA IDE ZIP	drive
-Date: Wed, 14 Mar 2007 13:42:35 -0400
-Message-ID: <45F8340B.5030401@garzik.org>
-References: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com> <45F7E34B.6020206@gmail.com> <45F7F90B.6070709@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: regression: ide-floppy doesn't work with IOMEGA IDE ZIP drive
+Date: Wed, 14 Mar 2007 14:27:49 -0400
+Message-ID: <45F83EA5.6080505@rtr.ca>
+References: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com> <200703141442.09754.bzolnier@gmail.com> <45F7FC3C.1000203@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42470 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752633AbXCNRnI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Mar 2007 13:43:08 -0400
-In-Reply-To: <45F7F90B.6070709@rtr.ca>
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:3018 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932425AbXCNS1x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Mar 2007 14:27:53 -0400
+In-Reply-To: <45F7FC3C.1000203@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Stanislav Brabec <sbrabec@novell.com>, albertl@mail.com, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Stanislav Brabec <sbrabec@novell.com>, albertl@mail.com, jeff@garzik.org, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun wrote:
->> If that's the case, libata should work too as long as the HSM problem is
->> fixed.
+Tejun Heo wrote:
 > 
-> Really?  I didn't notice when libata gained ATAPI-disk support.
+> Yeap, agreed but I think getting more info on the libata HSM violation
+> can help diagnosing ide problem too.  Anyways, Stanislav, can you bisect
+> as Bartlomiej requested?
+> 
 
-ATAPI just passes through to SCSI.  There is no limitation on the 
-peripheral device types supported, except in the SCSI midlayer itself.
+Tejun, do you have a Zip100 (ATAPI) drive to play with there?
 
-Some rare ATAPI devices are even pure SCSI bridges, allowing you to hook 
-up any SCSI-2 device to the bridge, and in turn, to any ATA/ATAPI 
-controller.
-
-	Jeff
+Cheers
 
 
 
