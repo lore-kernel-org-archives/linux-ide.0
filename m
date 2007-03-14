@@ -1,32 +1,37 @@
-From: YUP <yupadmin@gmail.com>
-Subject: Re: CDROM drive not found when booting using new libata code
-Date: Wed, 14 Mar 2007 20:59:28 +0100
-Message-ID: <45F85420.1000402@gmail.com>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH/RFC] PCI prepare/activate instead of enable to avoid IRQ storm and rogue DMA access
+Date: 14 Mar 2007 22:46:47 +0100
+Message-ID: <p73fy878pmg.fsf@bingen.suse.de>
+References: <20070314152302.GB15600@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:29169 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933043AbXCNT7j (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Mar 2007 15:59:39 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so45797uga
-        for <linux-ide@vger.kernel.org>; Wed, 14 Mar 2007 12:59:37 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:44540 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161264AbXCNUrm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Mar 2007 16:47:42 -0400
+In-Reply-To: <20070314152302.GB15600@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: gregkh@suse.de, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, michal.k.k.piotrowski@gmail.com, linux-ide@vger.kernel.org, tglx@linutronix.de, shemminger@linux-foundation.org, mlord@pobox.com, linux-pm@lists.osdl.org
 
-Hi,
+Tejun Heo <htejun@gmail.com> writes:
+> 
+> Let's assume there's a device which shares its INTX IRQ line with
+> another device and the other one is already initialized.  During boot,
+> due to BIOS's fault, bad hardware design or sheer bad luck, the device
+> has got a pending IRQ.
 
-I found that I have a similar problem. I'm running kubuntu box with 
-2.6.20-10 kernel with ubuntu patches and my cdrom as well as dvd drive 
-doesn't recognized at all. I've already reported this on kubuntu forum, 
-but nobody can answer me. The link is here: 
-http://kubuntuforums.net/forums/index.php?topic=3080227.0
-I also tried to compile generic kernels from kernel.org with the same 
-result. Can anybody say what is gonig on with my hardware? Before 2.6.20 
-everything ran smoothly.
+This seems to be also common after kexec during kexec crashdumps
+where the device just continues doing what it did before the crash.
 
-Regards,
+> This patch expands the pci_set_master() approach.  Instead of enabling
+> the device in one go, it's done in two steps - prepare and activate.
+> 'prepare' enables access to PCI configuration,
 
-Yarema
+I hope there aren't any new erratas triggered by this. Perhaps it would
+make sense to add some paranoia sleeps at least before touching other
+state? 
+
+-Andi
