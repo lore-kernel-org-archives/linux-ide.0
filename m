@@ -1,37 +1,100 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH/RFC] PCI prepare/activate instead of enable to avoid IRQ storm and rogue DMA access
-Date: 14 Mar 2007 22:46:47 +0100
-Message-ID: <p73fy878pmg.fsf@bingen.suse.de>
-References: <20070314152302.GB15600@htj.dyndns.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 10/13] sl82c105: add ->speedproc support
+Date: Wed, 14 Mar 2007 23:51:36 +0300
+Message-ID: <45F86058.6090509@ru.mvista.com>
+References: <200703102209.59918.bzolnier@gmail.com> <45F32860.8040901@ru.mvista.com> <200703102332.12716.bzolnier@gmail.com> <45F551E5.8010904@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44540 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161264AbXCNUrm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Mar 2007 16:47:42 -0400
-In-Reply-To: <20070314152302.GB15600@htj.dyndns.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:18607 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161332AbXCNUvr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Mar 2007 16:51:47 -0400
+In-Reply-To: <45F551E5.8010904@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: gregkh@suse.de, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, michal.k.k.piotrowski@gmail.com, linux-ide@vger.kernel.org, tglx@linutronix.de, shemminger@linux-foundation.org, mlord@pobox.com, linux-pm@lists.osdl.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo <htejun@gmail.com> writes:
-> 
-> Let's assume there's a device which shares its INTX IRQ line with
-> another device and the other one is already initialized.  During boot,
-> due to BIOS's fault, bad hardware design or sheer bad luck, the device
-> has got a pending IRQ.
+Hello, I wrote:
 
-This seems to be also common after kexec during kexec crashdumps
-where the device just continues doing what it did before the crash.
+>>> Bartlomiej Zolnierkiewicz wrote:
 
-> This patch expands the pci_set_master() approach.  Instead of enabling
-> the device in one go, it's done in two steps - prepare and activate.
-> 'prepare' enables access to PCI configuration,
+>>>> [PATCH] sl82c105: add ->speedproc support
 
-I hope there aren't any new erratas triggered by this. Perhaps it would
-make sense to add some paranoia sleeps at least before touching other
-state? 
+>>>> * add sl82c105_tunepio() wrapper for sl82c105_tune_drive()
+>>>>  (just to get the error value)
 
--Andi
+>>>> * add sl82c105_tune_chipset() (->speedproc method) for setting
+>>>>  transfer mode
+
+>>>    Thanks for the patch!
+
+>>>  > Index: b/drivers/ide/pci/sl82c105.c
+
+>>>> ===================================================================
+>>>> --- a/drivers/ide/pci/sl82c105.c
+>>>> +++ b/drivers/ide/pci/sl82c105.c
+
+> [...]
+
+>>>> @@ -114,17 +114,45 @@ static void sl82c105_tune_drive(ide_driv
+>>>>      */
+>>>>     drive->io_32bit = 1;
+>>>>     drive->unmask    = 1;
+>>>> +
+>>>> +    return 0;
+>>>> +}
+>>>> +
+>>>> +static void sl82c105_tune_drive(ide_drive_t *drive, u8 pio)
+>>>> +{
+>>>> +    /*
+>>>> +     * TODO: find best PIO mode and set device speed here
+>>>> +     *       (requires adding helper function for getting PIO cycle 
+>>>> time)
+>>>> +     */
+
+>>>   I thought we were doing it by calling ide_get_best_pio_mode() above...
+
+>> We are also using ide_get_best_pio_mode() to get PIO cycle time
+>> so we can't move it here ATM.
+
+>   I've found/used quite convenient workaround for that -- return PIO 
+> mode actually selected from xxx_tune_pio(), then call 
+> ide_config_drive_speed() from the real tuneproc() method.
+
+    Works like charm with ignoring the result, since ide_get_best_pio_mode() 
+returns the same explicit mode as was passed to it -- so is good for the 
+speedproc() methods also...
+
+>>>> +    (void)sl82c105_tunepio(drive, pio);
+
+>>>    Erm, I thought afterwards that I vainly folded one into another. I 
+>>> think it's worth moving those io_32bit and unmask flag assignments 
+>>> above back there... May also recast my patch. :-)
+
+>> Moving them to ->init_hwif where they belong would be even better... ;-)
+
+>    Well, I wasn't sure where they belong... :-)
+>    So, OK to recast that patch?
+
+   Recasted it and reworked your patch atop of it (adding MWDMA 0/1 support as 
+a bonus! :-) -- now need to conduct some testing on a remote target...
+
+>>>> +static int sl82c105_tune_chipset(ide_drive_t *drive, u8 mode)
+>>>> +{
+>>>> +    mode = ide_rate_filter(drive, mode);
+>>>> +
+>>>> +    if (mode >= XFER_PIO_0 && mode <= XFER_PIO_5)
+>>>> +        return sl82c105_tunepio(drive, mode - XFER_PIO_0);
+>>>> +
+>>>> +    /*
+>>>> +     * TODO: add MWDMA0/1 support
+>>>> +     */
+>>>> +    BUG_ON(mode != XFER_MW_DMA_2);
+
+   I wonder is there are some W83C554 users anywhere -- that chipset also 
+supports UltraDMA...
+
+MBR, Sergei
