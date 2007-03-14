@@ -1,37 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH/RFC] PCI prepare/activate instead of enable to avoid IRQ
- storm and rogue DMA access
-Date: Wed, 14 Mar 2007 18:34:11 -0400
-Message-ID: <45F87863.9040408@garzik.org>
-References: <20070314152302.GB15600@htj.dyndns.org> <20070314215605.GA7194@flint.arm.linux.org.uk>
+Subject: Re: PATA Sil680 Command Timeout on ARM XScale
+Date: Wed, 14 Mar 2007 18:36:13 -0400
+Message-ID: <45F878DD.9000404@garzik.org>
+References: <8202f4270703131134x68c028fbv7fb536c694a6b898@mail.gmail.com>	 <20070313193957.396d7d1d@lxorguk.ukuu.org.uk>	 <8202f4270703131417t3daacf1tf361e0449ad1f93b@mail.gmail.com> <8202f4270703141527g459165dah647a8ad4116b96bb@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44873 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44896 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422704AbXCNWeY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Mar 2007 18:34:24 -0400
-In-Reply-To: <20070314215605.GA7194@flint.arm.linux.org.uk>
+	id S1752043AbXCNWgQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Mar 2007 18:36:16 -0400
+In-Reply-To: <8202f4270703141527g459165dah647a8ad4116b96bb@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rmk+lkml@arm.linux.org.uk
-Cc: Tejun Heo <htejun@gmail.com>, gregkh@suse.de, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, michal.k.k.piotrowski@gmail.com, linux-ide@vger.kernel.org, tglx@linutronix.de, shemminger@linux-foundation.org, mlord@pobox.com, linux-pm@lists.osdl.org
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Russell King wrote:
-> pci_enable_device() doesn't deal with this; in most PCI setups I've
-> seen, there is no control at PCI level over whether a device generates
-> an interrupt on the bus.  Certainly the memory and io command enables
+Fajun Chen wrote:
+> Since primary channel and secondary channel share the same IRQ,  the
+> ISR could be called to service one or both channels. So I would think
+> it's normal to see "irq trap" traces when both channels are in IO
+> operation, correct?
 
-PCI grew an interrupt enable while you weren't looking: 
-PCI_COMMAND_INTX_DISABLE
+The irq trap code only occurs after a certain number of unhandled 
+interrupts.
 
-No idea about ARM, but almost all PCI devices made in the past few years 
-support that bit.
 
-Unless you are using a PCI Express device (maybe PCI-X too?), though, 
-you cannot count on the bit's presence.  It was added in PCI 2.3 I 
-think.  Older PCI devices certainly do not have this standardized bit.
+> I have another question in regard to ata_host_intr() function in
+> libata-core.c. For PIO read/write, the status of interrupt pin was not
+> checked before moving the host state machine.  Sil680 spec. recommend
+> checking IDE channel interupt (bit 11 in the IDEx Task File Timing and
+> Config + Status register) though.  Could someone explain why interrupt
+> status does not need to be checked for PIO?
+
+Reading the Status register (as opposed to AltStatus) should clear the 
+interrupt condition, on standard hardware.
 
 	Jeff
 
