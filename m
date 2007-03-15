@@ -1,95 +1,75 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH/RFC] PCI prepare/activate instead of enable
- to avoid IRQ storm and rogue DMA access
-Date: Thu, 15 Mar 2007 14:47:42 +0900
-Message-ID: <45F8DDFE.4080504@gmail.com>
-References: <20070314152302.GB15600@htj.dyndns.org>
-	<20070314215605.GA7194@flint.arm.linux.org.uk>
-	<45F87863.9040408@garzik.org>
-	<20070314225818.GB7194@flint.arm.linux.org.uk>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH] pata_pdc2027x: Restore various updates done on the driver
+Date: Thu, 15 Mar 2007 14:04:54 +0800
+Message-ID: <45F8E206.2000206@tw.ibm.com>
+References: <20070308233920.7371d07d@lxorguk.ukuu.org.uk>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.osdl.org>
-In-Reply-To: <20070314225818.GB7194@flint.arm.linux.org.uk>
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.osdl.org>
-List-Help: <mailto:linux-pm-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.osdl.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.osdl.org
-Errors-To: linux-pm-bounces@lists.osdl.org
-To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, gregkh@suse.de, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, michal.k.k.piotrowski@gmail.com, linux-ide@vger.kernel.org, tglx@linutronix.de, shemminger@linux-foundation.org, mlord@pobox.com, linux-pm@lists.osdl.org
-Cc: Andi Kleen <ak@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:48865 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422824AbXCOGFN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 02:05:13 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l2F63fSx006471
+	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 02:03:41 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2F65D5t044456
+	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 00:05:13 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2F65BAg001298
+	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 00:05:11 -0600
+In-Reply-To: <20070308233920.7371d07d@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-[cc'ing Andi, Hi!]
+Alan Cox wrote:
+> - Use of cable_detect method
+> - ata_pci_default_filter needed on PATA100 ops
+> - Filter for UDMA 133 errata from vendor (not enabled in this diff but
+> added ready)
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+ <snip>
+>  
+>  /**
+> + *	pdc2720x_mode_filter	-	mode selection filter
+> + *	@adev: ATA device
+> + *	@mask: list of modes proposed
+> + *
+> + *	Block UDMA on devices that cause trouble with this controller.
+> + */
+> +
+> +static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long mask)
+> +{
+> +	unsigned char model_num[ATA_ID_PROD_LEN + 1];
+> +	struct ata_device *pair = ata_dev_pair(adev);
+> +	
+> +	if (adev->class != ATA_DEV_ATA || adev->devno == 0 || pair == NULL)
+> +		return ata_pci_default_filter(adev, mask);
+> +
+> +	/* Check for slave of a Maxtor at UDMA6 */
+> +	ata_id_c_string(pair->id, model_num, ATA_ID_PROD,
+> +			  ATA_ID_PROD_LEN + 1);
+> +	/* If the master is a maxtor in UDMA6 then the slave should not use UDMA 6 */
+> +	if(strstr(model_num, "Maxtor") == 0 && pair->dma_mode == XFER_UDMA_6)
+> +		mask &= ~ (1 << (6 + ATA_SHIFT_UDMA));
 
-Hello,
+Some Maxtor drives have "Maxtor" while others have "MAXTOR" in the IDENTIFY data.
+Should we check both "Maxtor" and "MAXTOR" here?
 
-Russell King wrote:
-> On Wed, Mar 14, 2007 at 06:34:11PM -0400, Jeff Garzik wrote:
->> Russell King wrote:
->>> pci_enable_device() doesn't deal with this; in most PCI setups I've
->>> seen, there is no control at PCI level over whether a device generates
->>> an interrupt on the bus.  Certainly the memory and io command enables
->> PCI grew an interrupt enable while you weren't looking: =
+--
+albert
 
->> PCI_COMMAND_INTX_DISABLE
-> =
+> +	
+> +	return ata_pci_default_filter(adev, mask);
+> +}
+> +
+> +/**
 
-> That's fine for devices which conform to the later PCI specs, but not
-> all do.
-> =
 
->> It was added in PCI 2.3 I think.
-> =
-
-> Correct.
-> =
-
->> Older PCI devices certainly do not have this standardized bit.
-> =
-
-> No PCI device that I have has that bit - including the raid card I
-> bought last year...
-
-Many recent ATA and network controllers do and most new ones will
-probably do.
-
-> In any case, relying on such a new control bit to implement this kind
-> of functionality would result in a very hit and miss result; Linux
-> tends to get used on things other than the bleeding edge of hardware
-> technology.
-
-I don't think INTX_DISABLE is on the bleeding edge of hardware
-technology and many common cases will benefit from using it (just think
-about the number of newish notebook users).  The problem with
-INTX_DISABLE is that there doesn't seem to be any way to tell whether
-writing to that bit is safe or not.
-
-You are right in that turning off IRQ mechanisms in pci_enable_device()
-doesn't fix all the problems as PCI-wise it only enables IO and memory
-address space access, but to some extent it does because in the arch
-code, it enables the IRQ line and the physical IRQ line might not be
-shared even if the final IRQ number is shared (Andi, am I correct)?
-
-Anyways, I think the proper solution is to make sure all generic IRQ
-controls including INTX turned off early in the boot during PCI
-subsystem initialization (ie. do the disable part of
-pcim_prepare_device() early in the boot before any IRQ line is
-requested) and let each driver enable after initialization as necessary
-and do similar things during resume.  Note that drivers still need to be
-modified to signify when the device is initialized enough to enable IRQ,
-and bus mastering.
-
-We can also arch-dep IRQ enabling to the activation time.  That will
-give us more protection even when INTX_DISABLE is not available.
-
-Thanks.
-
--- =
-
-tejun
