@@ -1,46 +1,51 @@
-From: Bob Stewart <bob@evoria.net>
-Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Thu, 15 Mar 2007 11:20:05 -0700 (PDT)
-Message-ID: <20070315182005.944.qmail@web812.biz.mail.mud.yahoo.com>
-References: <45F9851E.8000709@gmail.com>
+From: Jim Paris <jim@jtan.com>
+Subject: Re: timeout errors on sata_sil24 with port multiplier & PCI-X
+Date: Thu, 15 Mar 2007 15:36:13 -0400
+Message-ID: <20070315193612.GA24099@jim.sh>
+References: <20070309221628.GA12330@jim.sh> <20070309233151.GD14319@curie-int.orbis-terrarum.net> <20070309221628.GA12330@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web812.biz.mail.mud.yahoo.com ([209.191.90.85]:41352 "HELO
-	web812.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751316AbXCOS0r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 14:26:47 -0400
-In-Reply-To: <45F9851E.8000709@gmail.com>
+Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:45566 "EHLO neurosis.jim.sh"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932985AbXCOTg0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Mar 2007 15:36:26 -0400
+Content-Disposition: inline
+In-Reply-To: <20070309233151.GD14319@curie-int.orbis-terrarum.net> <20070309221628.GA12330@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: htejun@gmail.com, "Robin H. Johnson" <robbat2@gentoo.org>
+Cc: linux-ide@vger.kernel.org
 
---- Tejun Heo <htejun@gmail.com> wrote:
+I wrote:
+> I have a SiI3124 PCI-X controller
+..
+> I have been using this configuration with a DS-1220 external
+> enclosure + port multiplier:
+..
+> Occasionally, I get an error like this:
+> 
+> Mar  9 12:53:18 localhost kernel: ata8.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x2 frozen
+> Mar  9 12:53:18 localhost kernel: ata8.00: tag 0 cmd 0x61 Emask 0x4 stat 0x40 err 0x0 (timeout)
+> Mar  9 12:53:18 localhost kernel: ata8.15: hard resetting port
 
-> The driver is seriously broken regarding LBA48 support.  The timeout
-> goes away if max_sectors is decreased to ATA_MAX_SECTORS - 1, doh.  But
-> both the reading and writing are seriously broken.  I can't tell whether
-> they end up in the wrong sectors or garbage is transferred to/from the
-> right sectors.
+After moving the port multiplier from the PCI-X SiI3124 to a PCIe
+SiI3132, the timeouts are gone.  No errors at all while moving 1T back
+and forth and resyncing the RAID.  I wonder if it's a bad card
+(Norco 4618, came with the enclosure) or a driver issue.
 
-I couldn't figure it out, either.  There were some times early on that I
-failed it all the way down to PIO4 and it worked just fine.  But, with DMA
-forget it.  
 
-> I'm really close to marking this device broken or we'll need to
-> implement a mechanism to veto LBA48 device from LLD (may be negative
-> return from ->dev_config).
+Robin H. Johnson wrote:
+> Also, afaik there has been no resolution of the performance issue - while the
+> controller shows 3Gb, the actual combined speeds I get are only at the 1.5Gb
+> level.
 
-Are you sure it's an LBA48 issue?  I was never sure how to check
-this but in my banging around, I never saw anything in the HOB fields.
- 
-> Reading the sunix driver, I can't find any relevant workaround.  It
-> never seems to initialize ctl address.  I'm curious whether the sunix
-> driver can do LBA48.  Bob, are you interested in testing this?
+I agree, on a single port combined speeds are right around 150MB/sec.
+On two ports it hits 180MB/sec.  I guess that's approaching the PCIe x1
+limit.
 
-Sure.  I'll need to reorganize hardware again, but it'll give me something
-to do till the steelhead start their spring run.  :)
+One interesting note is that the original SiI3124 controller always
+reported the host->PMP link as 1.5Gb.  The SiI3132 reports it as
+3.0Gb.
 
-Bob
+-jim
