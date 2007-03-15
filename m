@@ -1,42 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 10/13] sl82c105: add ->speedproc support
-Date: Thu, 15 Mar 2007 20:40:18 +0300
-Message-ID: <45F98502.50509@ru.mvista.com>
-References: <45F86058.6090509@ru.mvista.com> <45F956B4.1060309@xandros.com> <20070315173633.GA26160@flint.arm.linux.org.uk>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Fri, 16 Mar 2007 02:40:46 +0900
+Message-ID: <45F9851E.8000709@gmail.com>
+References: <354573.23811.qm@web803.biz.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:26596 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932223AbXCORkd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Mar 2007 13:40:33 -0400
-In-Reply-To: <20070315173633.GA26160@flint.arm.linux.org.uk>
+Received: from wr-out-0506.google.com ([64.233.184.224]:14829 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932265AbXCORkw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 13:40:52 -0400
+Received: by wr-out-0506.google.com with SMTP id 41so220595wry
+        for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 10:40:52 -0700 (PDT)
+In-Reply-To: <354573.23811.qm@web803.biz.mail.mud.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: Woody Suwalski <woodys@xandros.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bob Stewart <bob@evoria.net>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-Hello.
+Hello,
 
-Russell King wrote:
+Bob Stewart wrote:
+> Is there an easy way to tell whether the command was sent as 
+> LBA48, say, in the driver's bmdma_start function or even in the 
+> hardreset function after the fact?  One of my tests was using a 64 
+> sector limit, with pretty much the same results.  I always test against 
+> the same file, and the results, including the number of timeouts, are 
+> different from test to test.
 
->>> I wonder is there are some W83C554 users anywhere -- that chipset 
->>>also supports UltraDMA...
+The driver is seriously broken regarding LBA48 support.  The timeout
+goes away if max_sectors is decreased to ATA_MAX_SECTORS - 1, doh.  But
+both the reading and writing are seriously broken.  I can't tell whether
+they end up in the wrong sectors or garbage is transferred to/from the
+right sectors.
 
->>Sergei,
+I'm really close to marking this device broken or we'll need to
+implement a mechanism to veto LBA48 device from LLD (may be negative
+return from ->dev_config).
 
->>ARM Netwinder machines are running hard disk IDE on SL82c105.
->>Could you send me the actual source file to try (or a patch)?
+Reading the sunix driver, I can't find any relevant workaround.  It
+never seems to initialize ctl address.  I'm curious whether the sunix
+driver can do LBA48.  Bob, are you interested in testing this?
 
-> That's actually a W83C553 which does not support UDMA in any shape or
-> form according to the documents.
+Thanks.
 
-> I guess it's an enhancement found on W83C554, and in that case any
-> attempt to add UDMA support to the SL82C105 driver should be done
-> such that these older chipsets continue to work.
-
-    I had no plans of adding it so far since there seemed to be no designs 
-using that chip but decided to ask if somebody is interested just in case...
-
-MBR, Sergei
+-- 
+tejun
