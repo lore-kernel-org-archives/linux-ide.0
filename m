@@ -1,99 +1,48 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: IOMEGA IDE ZIP (ATAPI) drive
-Date: Thu, 15 Mar 2007 18:12:02 -0400
-Message-ID: <45F9C4B2.20906@rtr.ca>
-References: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com> <45F7E34B.6020206@gmail.com> <45F7F90B.6070709@rtr.ca> <45F7FD13.2070907@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH pata-2.6 fix queue] cmd64x: fix recovery time calculation (take 3)
+Date: Thu, 15 Mar 2007 21:29:04 +0100
+Message-ID: <200703152129.04688.bzolnier@gmail.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702262332.31751.sshtylyov@ru.mvista.com> <200703032317.10173.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:2976 "EHLO
-	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753395AbXCOWMH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Mar 2007 18:12:07 -0400
-In-Reply-To: <45F7FD13.2070907@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.174]:38153 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395AbXCOWMd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 18:12:33 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so515765uga
+        for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 15:12:32 -0700 (PDT)
+In-Reply-To: <200703032317.10173.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Stanislav Brabec <sbrabec@novell.com>, albertl@mail.com, jeff@garzik.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Mark Lord wrote:
->> Really?  I didn't notice when libata gained ATAPI-disk support.
->>
->> Are you *sure* about that??
+
+On Saturday 03 March 2007, Sergei Shtylyov wrote:
+> [PATCH] cmd64x: fix recovery time calculation
 > 
-> Not sure sure but almost sure.  :-)  What ide-scsi does is borrowing
-> SCSI mid and high level drivers while using ide as SCSI low level
-> driver.  To SCSI, libata and ide-scsi aren't very different except that
-> libata also exports SBC device to it.  So, if SCSI could handle ATAPI
-> disk via ide-scsi, I don't think there is any reason it can't with libata.
+> The driver wrongly takes the address setup time into account when calculating
+> the PIO recovery time -- this leads to slight overclocking of the PIO modes 0
+> and 1 (so, the prayers failed to help, as usual :-).  Rework the code to be
+> calculating recovery clock count as a difference between the total cycle count
+> and the active count (we don't need to calculate the recovery time itself since
+> it's not specified for the PIO modes 0 to 2, and for modes 3 and 4 this formula
+> gives enough recovery time anyway in the chip's supported PCI frequency range).
+> 
+> This patch has been inspired by reading the datasheets and looking at what the
+> libata driver does; it has been compile-tested only (as usual :-) but anyway,
+> the new code gives the same or longer recovery times than the old one...
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> ---
+> This patch has been changed in accordance to the pending reordering as DMA
+> support removal and addition patches are going to be merged.  In addition,
+> I've put quantize_timing() to its proper place to avoid moving it later...
 
-Okay, I dusted off one of my old (actually, I believe *the oldest*)
-Zip100 drives in the collection, and tried it out here with both
-2.6.20 and 2.6.21-rc3-git9.   It works mostly fine with each.
-
-A couple of minor issues, though.
-
-(1) When ejecting a disk, either with the "eject /dev/sdc" command
-or using the front-panel soft-eject button on the drive,
-I get the following in syslog from libata:
-
-sdc: Spinning up disk...<3>ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-         res 00/00:03:00:00:20/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
-ata4: soft resetting port
-ATA: abnormal status 0x7F on port 0x00010177
-ATA: abnormal status 0x7F on port 0x00010177
-ata4.00: configured for PIO2
-ata4: EH complete
-
-
-(2) The above log says PIO2, but the IDENTIFY data for this drive,
-which I had to patch the kernel to get (ATAPI ATA_16 support),
-indicates max PIO0 for this unit.  I suppose maybe the chipset
-doesn't go that low, but no big deal since IORDY handshakes it anyway.
-
-Chipset is VIA, PCI ID 1106:0571, Rev.6.
-
-
-Tejun, if you want one for your testbed, then email me shipping
-info (again) and I'll send you this exact unit, with one disc.
-
-Here's the IDENTIFY data, for anyone else here who collects antiques:
-
-/dev/sdc:
-80a0 0000 0000 0000 0000 0000 0000 0000
-0000 0000 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 0000 0000 0000 3233
-2e44 2020 2020 494f 4d45 4741 2020 5a49
-5020 3130 3020 2020 2020 2020 4154 4150
-4920 2020 2020 2020 2020 2020 2020 0000
-0000 0e00 0000 0000 0000 0002 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 01f4 01f4 0000 0000 0000
-0000 0006 0009 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0101
-2863 2920 436f 7079 7269 6768 7420 494f
-4d45 4741 2031 3939 3720 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-
-Cheers
-
+thanks, I replaced the old patch with this one
