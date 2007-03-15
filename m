@@ -1,173 +1,64 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/2] ide: remove CONFIG_IDEDMA_{ICS,PCI}_AUTO config options
-Date: Thu, 15 Mar 2007 21:46:48 +0100
-Message-ID: <200703152146.48352.bzolnier@gmail.com>
+From: Bob Stewart <bob@evoria.net>
+Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Thu, 15 Mar 2007 13:43:36 -0700 (PDT)
+Message-ID: <248173.18921.qm@web806.biz.mail.mud.yahoo.com>
+References: <45F9851E.8000709@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:19211 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753354AbXCOUjg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 16:39:36 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so487356uga
-        for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 13:39:34 -0700 (PDT)
-Content-Disposition: inline
+Received: from web806.biz.mail.mud.yahoo.com ([209.191.90.79]:43243 "HELO
+	web806.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753356AbXCOUnh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 16:43:37 -0400
+In-Reply-To: <45F9851E.8000709@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Patrick Horn <phrh@yahoo.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Russell King <rmk+lkml@arm.linux.org.uk>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-[PATCH] ide: remove CONFIG_IDEDMA_{ICS,PCI}_AUTO config options
+--- Tejun Heo <htejun@gmail.com> wrote:
 
-All modern distributions have been setting these options to "y" for ages.
-(additionally "n" cases have been obsoleted for few years).  Therefore use
-DMA by default and remove CONFIG_IDEDMA_{ICS,PCI}_AUTO (also remove no longer
-needed CONFIG_IDEDMA_AUTO).  This fixes DMA support for rare configurations
-where CONFIG_IDEDMA_{ICS,PCI}_AUTO was set to "n" but "hdparm -d 1" was used
-to enable DMA support and which were forced to PIO mode by "ide: don't allow
-DMA to be enabled if CONFIG_IDEDMA_{ICS,PCI}_AUTO=n" patch.  There is no
-functionality loss because "ide=nodma" kernel option is still available.
+> The driver is seriously broken regarding LBA48 support.  The timeout
+> goes away if max_sectors is decreased to ATA_MAX_SECTORS - 1, doh.
 
-Cc: Patrick Horn <phrh@yahoo.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Russell King <rmk+lkml@arm.linux.org.uk>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
+Tejun,
 
- drivers/ide/Kconfig      |   32 --------------------------------
- drivers/ide/arm/icside.c |   13 +------------
- drivers/ide/ide.c        |    4 ----
- drivers/ide/setup-pci.c  |    5 -----
- 4 files changed, 1 insertion(+), 53 deletions(-)
+I should have commented on this earlier.  I still get occasional timeouts
+regardless of the max_sectors settings.  Yes, it's much much lower with
+some settings vs others, but they're still there.
 
-Index: b/drivers/ide/Kconfig
-===================================================================
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -434,24 +434,8 @@ config BLK_DEV_IDEDMA_FORCED
- 
- 	  Generally say N here.
- 
--config IDEDMA_PCI_AUTO
--	bool "Use PCI DMA by default when available"
--	---help---
--	  Prior to kernel version 2.1.112, Linux used to automatically use
--	  DMA for IDE drives and chipsets which support it. Due to concerns
--	  about a couple of cases where buggy hardware may have caused damage,
--	  the default is now to NOT use DMA automatically. To revert to the
--	  previous behaviour, say Y to this question.
--
--	  If you suspect your hardware is at all flakey, say N here.
--	  Do NOT email the IDE kernel people regarding this issue!
--
--	  It is normally safe to answer Y to this question unless your
--	  motherboard uses a VIA VP2 chipset, in which case you should say N.
--
- config IDEDMA_ONLYDISK
- 	bool "Enable DMA only for disks "
--	depends on IDEDMA_PCI_AUTO
- 	help
- 	  This is used if you know your ATAPI Devices are going to fail DMA
- 	  Transfers.
-@@ -851,19 +835,6 @@ config BLK_DEV_IDEDMA_ICS
- 	  Say Y here if you want to add DMA (Direct Memory Access) support to
- 	  the ICS IDE driver.
- 
--config IDEDMA_ICS_AUTO
--	bool "Use ICS DMA by default"
--	depends on BLK_DEV_IDEDMA_ICS
--	help
--	  Prior to kernel version 2.1.112, Linux used to automatically use
--	  DMA for IDE drives and chipsets which support it. Due to concerns
--	  about a couple of cases where buggy hardware may have caused damage,
--	  the default is now to NOT use DMA automatically. To revert to the
--	  previous behaviour, say Y to this question.
--
--	  If you suspect your hardware is at all flakey, say N here.
--	  Do NOT email the IDE kernel people regarding this issue!
--
- config BLK_DEV_IDE_RAPIDE
- 	tristate "RapIDE interface support"
- 	depends on ARM && ARCH_ACORN
-@@ -1086,9 +1057,6 @@ config IDEDMA_IVB
- 
- 	  It is normally safe to answer Y; however, the default is N.
- 
--config IDEDMA_AUTO
--	def_bool IDEDMA_PCI_AUTO || IDEDMA_ICS_AUTO
--
- endif
- 
- config BLK_DEV_HD_ONLY
-Index: b/drivers/ide/arm/icside.c
-===================================================================
---- a/drivers/ide/arm/icside.c
-+++ b/drivers/ide/arm/icside.c
-@@ -196,11 +196,6 @@ static void icside_maskproc(ide_drive_t 
- }
- 
- #ifdef CONFIG_BLK_DEV_IDEDMA_ICS
--
--#ifndef CONFIG_IDEDMA_ICS_AUTO
--#warning CONFIG_IDEDMA_ICS_AUTO=n support is obsolete, and will be removed soon.
--#endif
--
- /*
-  * SG-DMA support.
-  *
-@@ -474,12 +469,6 @@ static int icside_dma_lostirq(ide_drive_
- 
- static void icside_dma_init(ide_hwif_t *hwif)
- {
--	int autodma = 0;
--
--#ifdef CONFIG_IDEDMA_ICS_AUTO
--	autodma = 1;
--#endif
--
- 	printk("    %s: SG-DMA", hwif->name);
- 
- 	hwif->atapi_dma		= 1;
-@@ -489,7 +478,7 @@ static void icside_dma_init(ide_hwif_t *
- 	hwif->dmatable_cpu	= NULL;
- 	hwif->dmatable_dma	= 0;
- 	hwif->speedproc		= icside_set_speed;
--	hwif->autodma		= autodma;
-+	hwif->autodma		= 1;
- 
- 	hwif->ide_dma_check	= icside_dma_check;
- 	hwif->dma_host_off	= icside_dma_host_off;
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -177,11 +177,7 @@ DECLARE_MUTEX(ide_cfg_sem);
- static int ide_scan_direction; /* THIS was formerly 2.2.x pci=reverse */
- #endif
- 
--#ifdef CONFIG_IDEDMA_AUTO
- int noautodma = 0;
--#else
--int noautodma = 1;
--#endif
- 
- EXPORT_SYMBOL(noautodma);
- 
-Index: b/drivers/ide/setup-pci.c
-===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -505,11 +505,6 @@ static void ide_hwif_setup_dma(struct pc
- 		}
- 	}
- }
--
--#ifndef CONFIG_IDEDMA_PCI_AUTO
--#warning CONFIG_IDEDMA_PCI_AUTO=n support is obsolete, and will be removed soon.
--#endif
--
- #endif /* CONFIG_BLK_DEV_IDEDMA_PCI*/
- 
- /**
+I was just messing around and did this.  I still got the occasional timeouts.
+
+#define BOBSEGS 64
+static int inic_slave_config(struct scsi_device *sdev)
+{
+        /* This controller is braindamaged.  dma_boundary is 0xffff
+         * like others but it will lock up the whole machine HARD if
+         * 65536 byte PRD entry is fed.  Reduce maximum segment size.
+         */
+        struct ata_port *ap = ata_shost_to_port(sdev->host);
+        ata_sas_slave_configure(sdev,ap);
+        blk_queue_max_phys_segments(sdev->request_queue, BOBSEGS);
+        blk_queue_max_hw_segments(sdev->request_queue, BOBSEGS);
+        blk_queue_max_sectors(sdev->request_queue, BOBSEGS);
+        blk_queue_max_segment_size(sdev->request_queue, BOBSEGS*512);
+        return 0;
+}
+
+
+static struct scsi_host_template inic_sht = {
+        .sg_tablesize           = BOBSEGS,
+...
+
+static void inic_dev_config(struct ata_port *ap, struct ata_device *dev)
+{
+        /* inic can only handle upto LBA28 max sectors */
+        dev->max_sectors = BOBSEGS;
+
+
+Sorry this isn't in diff format, but I think you can see what I did,
+nonetheless.
+Eventually, maybe I'll learn enough about something to be able to contribute.
+
+Bob
