@@ -1,75 +1,135 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH] pata_pdc2027x: Restore various updates done on the driver
-Date: Thu, 15 Mar 2007 14:04:54 +0800
-Message-ID: <45F8E206.2000206@tw.ibm.com>
-References: <20070308233920.7371d07d@lxorguk.ukuu.org.uk>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: DVD drive fails in 2.6.20.2
+Date: Thu, 15 Mar 2007 15:22:32 +0900
+Message-ID: <45F8E628.2010004@gmail.com>
+References: <45F631F7.6020106@mail.utexas.edu> <45F7760B.10102@gmail.com> <45F81177.9070106@mail.utexas.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090006090001080103020601"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:48865 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422824AbXCOGFN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 02:05:13 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l2F63fSx006471
-	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 02:03:41 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2F65D5t044456
-	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 00:05:13 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2F65BAg001298
-	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 00:05:11 -0600
-In-Reply-To: <20070308233920.7371d07d@lxorguk.ukuu.org.uk>
+Received: from ik-out-1112.google.com ([66.249.90.177]:21685 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965425AbXCOGWj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 02:22:39 -0400
+Received: by ik-out-1112.google.com with SMTP id c21so43243ika
+        for <linux-ide@vger.kernel.org>; Wed, 14 Mar 2007 23:22:38 -0700 (PDT)
+In-Reply-To: <45F81177.9070106@mail.utexas.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Vlad Codrea <VladCodrea@mail.utexas.edu>
+Cc: linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
 
-Alan Cox wrote:
-> - Use of cable_detect method
-> - ata_pci_default_filter needed on PATA100 ops
-> - Filter for UDMA 133 errata from vendor (not enabled in this diff but
-> added ready)
+This is a multi-part message in MIME format.
+--------------090006090001080103020601
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+[cc'ing Albert Lee.  Hi!]
+
+Vlad Codrea wrote:
+>> Okay, now that you're on libata driver, it's easier for me to debug.
+>> Can you apply the attached patch over 2.6.20 and report what the kernel
+>> says? (the patch will apply with some noise, it's okay)
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
- <snip>
->  
->  /**
-> + *	pdc2720x_mode_filter	-	mode selection filter
-> + *	@adev: ATA device
-> + *	@mask: list of modes proposed
-> + *
-> + *	Block UDMA on devices that cause trouble with this controller.
-> + */
-> +
-> +static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long mask)
-> +{
-> +	unsigned char model_num[ATA_ID_PROD_LEN + 1];
-> +	struct ata_device *pair = ata_dev_pair(adev);
-> +	
-> +	if (adev->class != ATA_DEV_ATA || adev->devno == 0 || pair == NULL)
-> +		return ata_pci_default_filter(adev, mask);
-> +
-> +	/* Check for slave of a Maxtor at UDMA6 */
-> +	ata_id_c_string(pair->id, model_num, ATA_ID_PROD,
-> +			  ATA_ID_PROD_LEN + 1);
-> +	/* If the master is a maxtor in UDMA6 then the slave should not use UDMA 6 */
-> +	if(strstr(model_num, "Maxtor") == 0 && pair->dma_mode == XFER_UDMA_6)
-> +		mask &= ~ (1 << (6 + ATA_SHIFT_UDMA));
+> I've applied your patch and recompiled the kernel, but the new dmesg
+> (attached as dmesg_2.txt) doesn't seem to have changed much.
 
-Some Maxtor drives have "Maxtor" while others have "MAXTOR" in the IDENTIFY data.
-Should we check both "Maxtor" and "MAXTOR" here?
+Hmmm.. that's weird, can you please try the attached patch?
 
---
-albert
+Albert, can you take a look at this one?  I'm pretty sure you know much
+better about this than me.  The whole thread can be read at...
 
-> +	
-> +	return ata_pci_default_filter(adev, mask);
-> +}
-> +
-> +/**
+  http://thread.gmane.org/gmane.linux.ide/17052
 
+Thanks.
 
+-- 
+tejun
+
+--------------090006090001080103020601
+Content-Type: text/x-patch;
+ name="hsm-debug.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="hsm-debug.patch"
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 14629a3..855d33a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4382,6 +4382,12 @@ static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
+ 			 */
+ 			qc = ata_qc_from_tag(ap, qc->tag);
+ 			if (qc) {
++				if ((qc->flags & ATA_QCFLAG_FAILED) ||
++				    qc->err_mask)
++					ata_port_printk(ap, KERN_WARNING,
++						"hsm_qc_complete: "
++						"flags=0x%lx err_mask=0x%x\n",
++						qc->flags, qc->err_mask);
+ 				if (likely(!(qc->err_mask & AC_ERR_HSM))) {
+ 					ap->ops->irq_on(ap);
+ 					ata_qc_complete(qc);
+@@ -4453,9 +4459,13 @@ fsm_start:
+ 			if (likely(status & (ATA_ERR | ATA_DF)))
+ 				/* device stops HSM for abort/error */
+ 				qc->err_mask |= AC_ERR_DEV;
+-			else
++			else {
+ 				/* HSM violation. Let EH handle this */
++				ata_port_printk(ap, KERN_WARNING,
++						"!DRQ on HSM_ST_FIRST (0x%x)\n",
++						status);
+ 				qc->err_mask |= AC_ERR_HSM;
++			}
+ 
+ 			ap->hsm_task_state = HSM_ST_ERR;
+ 			goto fsm_start;
+@@ -4547,13 +4557,17 @@ fsm_start:
+ 				if (likely(status & (ATA_ERR | ATA_DF)))
+ 					/* device stops HSM for abort/error */
+ 					qc->err_mask |= AC_ERR_DEV;
+-				else
++				else {
++					ata_port_printk(ap, KERN_WARNING,
++						"!DRQ on HSM_ST (0x%x)\n",
++						status);
+ 					/* HSM violation. Let EH handle this.
+ 					 * Phantom devices also trigger this
+ 					 * condition.  Mark hint.
+ 					 */
+ 					qc->err_mask |= AC_ERR_HSM |
+ 							AC_ERR_NODEV_HINT;
++				}
+ 
+ 				ap->hsm_task_state = HSM_ST_ERR;
+ 				goto fsm_start;
+@@ -4579,8 +4593,12 @@ fsm_start:
+ 					status = ata_wait_idle(ap);
+ 				}
+ 
+-				if (status & (ATA_BUSY | ATA_DRQ))
++				if (status & (ATA_BUSY | ATA_DRQ)) {
++					ata_port_printk(ap, KERN_WARNING,
++						"BUSY|DRQ on ERR|DF (0x%x)\n",
++						status);
+ 					qc->err_mask |= AC_ERR_HSM;
++				}
+ 
+ 				/* ata_pio_sectors() might change the
+ 				 * state to HSM_ST_LAST. so, the state
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 7349c3d..a956aaa 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1146,6 +1146,8 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
+ 	u8 stat = tf->command, err = tf->feature;
+ 
+ 	if ((stat & (ATA_BUSY | ATA_DRQ | ATA_DRDY)) != ATA_DRDY) {
++		ata_dev_printk(qc->dev, KERN_WARNING,
++			       "ata_eh_analyze_tf, AC_ERR_HSM, 0x%x\n", stat);
+ 		qc->err_mask |= AC_ERR_HSM;
+ 		return ATA_EH_SOFTRESET;
+ 	}
+
+--------------090006090001080103020601--
