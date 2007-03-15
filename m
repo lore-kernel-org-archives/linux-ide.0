@@ -1,117 +1,44 @@
-From: Woody Suwalski <woodys@xandros.com>
-Subject: Re: [PATCH 10/13] sl82c105: add ->speedproc support
-Date: Thu, 15 Mar 2007 10:22:44 -0400
-Message-ID: <45F956B4.1060309@xandros.com>
-References: <200703102209.59918.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] sata_inic162x: kill double region requests
+Date: Fri, 16 Mar 2007 01:59:42 +0900
+Message-ID: <20070315165942.GC15600@htj.dyndns.org>
+References: <20070310205636.GA14704@movealong.org> <45F4F483.9080302@gmail.com> <20070312220656.GA5457@movealong.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1";
-	format="flowed"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from scalix.xandros.com ([142.46.212.37]:35254 "EHLO
-	scalix.xandros.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422726AbXCOOcI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 10:32:08 -0400
-In-Reply-To: <45F86058.6090509@ru.mvista.com>
-References: <45F32860.8040901@ru.mvista.com>
-References: <200703102332.12716.bzolnier@gmail.com>
-References: <45F551E5.8010904@ru.mvista.com>
-References: <45F86058.6090509@ru.mvista.com>
+Received: from wr-out-0506.google.com ([64.233.184.228]:54976 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030603AbXCOQ7u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 12:59:50 -0400
+Received: by wr-out-0506.google.com with SMTP id 41so201443wry
+        for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 09:59:49 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <20070312220656.GA5457@movealong.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Nate Riffe <inkblot@movealong.org>
+Cc: linux-ide@vger.kernel.org, kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Sergei Shtylyov wrote:
-> Hello, I wrote:
->
->>>> Bartlomiej Zolnierkiewicz wrote:
->
->>>>> [PATCH] sl82c105: add ->speedproc support
->
->>>>> * add sl82c105_tunepio() wrapper for sl82c105_tune_drive()
->>>>>  (just to get the error value)
->
->>>>> * add sl82c105_tune_chipset() (->speedproc method) for setting
->>>>>  transfer mode
->
->>>>    Thanks for the patch!
->
->>>>  > Index: b/drivers/ide/pci/sl82c105.c
->
->>>>> ===================================================================
->>>>> --- a/drivers/ide/pci/sl82c105.c
->>>>> +++ b/drivers/ide/pci/sl82c105.c
->
->> [...]
->
->>>>> @@ -114,17 +114,45 @@ static void sl82c105_tune_drive(ide_driv
->>>>>      */
->>>>>     drive->io_32bit = 1;
->>>>>     drive->unmask    = 1;
->>>>> +
->>>>> +    return 0;
->>>>> +}
->>>>> +
->>>>> +static void sl82c105_tune_drive(ide_drive_t *drive, u8 pio)
->>>>> +{
->>>>> +    /*
->>>>> +     * TODO: find best PIO mode and set device speed here
->>>>> +     *       (requires adding helper function for getting PIO 
->>>>> cycle time)
->>>>> +     */
->
->>>>   I thought we were doing it by calling ide_get_best_pio_mode() 
->>>> above...
->
->>> We are also using ide_get_best_pio_mode() to get PIO cycle time
->>> so we can't move it here ATM.
->
->>   I've found/used quite convenient workaround for that -- return PIO 
->> mode actually selected from xxx_tune_pio(), then call 
->> ide_config_drive_speed() from the real tuneproc() method.
->
->    Works like charm with ignoring the result, since 
-> ide_get_best_pio_mode() returns the same explicit mode as was passed 
-> to it -- so is good for the speedproc() methods also...
->
->>>>> +    (void)sl82c105_tunepio(drive, pio);
->
->>>>    Erm, I thought afterwards that I vainly folded one into another. 
->>>> I think it's worth moving those io_32bit and unmask flag 
->>>> assignments above back there... May also recast my patch. :-)
->
->>> Moving them to ->init_hwif where they belong would be even better... 
->>> ;-)
->
->>    Well, I wasn't sure where they belong... :-)
->>    So, OK to recast that patch?
->
->   Recasted it and reworked your patch atop of it (adding MWDMA 0/1 
-> support as a bonus! :-) -- now need to conduct some testing on a 
-> remote target...
->
->>>>> +static int sl82c105_tune_chipset(ide_drive_t *drive, u8 mode)
->>>>> +{
->>>>> +    mode = ide_rate_filter(drive, mode);
->>>>> +
->>>>> +    if (mode >= XFER_PIO_0 && mode <= XFER_PIO_5)
->>>>> +        return sl82c105_tunepio(drive, mode - XFER_PIO_0);
->>>>> +
->>>>> +    /*
->>>>> +     * TODO: add MWDMA0/1 support
->>>>> +     */
->>>>> +    BUG_ON(mode != XFER_MW_DMA_2);
->
->   I wonder is there are some W83C554 users anywhere -- that chipset 
-> also supports UltraDMA...
->
-> MBR, Sergei
-Sergei,
+Regions are requested twice during initialization causing the second
+one to fail.  This is regression introduced during iomap conversion.
 
-ARM Netwinder machines are running hard disk IDE on SL82c105.
-Could you send me the actual source file to try (or a patch)?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Nate, this should fix it.  But LBA48 support is broken on the
+controller.
 
-Thanks, Woody
-
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index dcf5fe5..11c3079 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -674,10 +674,6 @@ static int inic_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = pci_request_regions(pdev, DRV_NAME);
+-	if (rc)
+-		return rc;
+-
+ 	rc = pcim_iomap_regions(pdev, 0x3f, DRV_NAME);
+ 	if (rc)
+ 		return rc;
