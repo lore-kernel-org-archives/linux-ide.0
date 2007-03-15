@@ -1,89 +1,66 @@
-From: Daniel Mack <daniel@caiaq.de>
-Subject: [PATCH] removed static prototypes from include/asm-mips/mach-au1x00/au1xxx_ide.h
-Date: Thu, 15 Mar 2007 21:14:26 +0100
-Message-ID: <20070315201426.GA16573@ipxXXXXX>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/2] ide: don't allow DMA to be enabled if CONFIG_IDEDMA_{ICS,PCI}_AUTO=n
+Date: Thu, 15 Mar 2007 21:45:40 +0100
+Message-ID: <200703152145.40644.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="OXfL5xGRrasGEqWY"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:4555 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003AbXCOUcV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 16:32:21 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by buzzloop.caiaq.de (Postfix) with ESMTP id E5AEE7F402B
-	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 21:14:32 +0100 (CET)
-Received: from buzzloop.caiaq.de ([127.0.0.1])
-	by localhost (buzzloop [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 16565-09 for <linux-ide@vger.kernel.org>;
-	Thu, 15 Mar 2007 21:14:26 +0100 (CET)
+Received: from ug-out-1314.google.com ([66.249.92.175]:17829 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752151AbXCOUiu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 16:38:50 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so487107uga
+        for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 13:38:45 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Patrick Horn <phrh@yahoo.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Russell King <rmk+lkml@arm.linux.org.uk>
 
 
---OXfL5xGRrasGEqWY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+[PATCH] ide: don't allow DMA to be enabled if CONFIG_IDEDMA_{ICS,PCI}_AUTO=n
 
-Hi,
+For CONFIG_IDEDMA_{ICS,PCI}_AUTO=n and/or "ide=nodma" option the host/device
+are not programmed for DMA and it is also explicitly disabled by ide_set_dma()
+(->ide_dma_check returns "-1").  However the code responsible for manually
+enabling DMA ("hdparm -d 1") has a bug which results in DMA being erroneously
+enabled - ide_set_dma() incorrectly passes "0" return value to set_using_dma().
+This may work if BIOS/firmware configured the host/device for DMA and chipset
+allows independent configuration of DMA/PIO modes but won't work after suspend
+and is generally unsafe on many chipsets (possibly including data corruption
+if the same registers are used for DMA/PIO timings).
 
-This patch removes the static prototypes from the au1xxx_ide.h, some of
-them were not even implemented. Also, they caused build breakage since
-they differed from the functions actually implemented in
-drivers/ide/mips/au1xxx-ide.c.
+This patch fixes kernel bugzilla bug #8169 (piix host driver fixes for
+setting PIO mode exposed the problem described above).  The side-effect of
+the fix is that some rare configuration may be forced to PIO mode when DMA
+mode was previously used - this is addressed by the next patch which removes
+CONFIG_IDEDMA_{PCI,ICS}_AUTO config option completely.
 
-Signed-off-by: Daniel Mack <daniel@caiaq.de>
+Thanks goes out to Patrick Horn for reporting the issue, narrowing it down
+to the specific commit and testing the fix.  Also thanks to Sergei Shtylyov
+for help in debugging the problem.
 
+Cc: Patrick Horn <phrh@yahoo.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Russell King <rmk+lkml@arm.linux.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
 
---OXfL5xGRrasGEqWY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="au1xxx_ide.h.patch"
+ drivers/ide/ide-dma.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/asm-mips/mach-au1x00/au1xxx_ide.h b/include/asm-mips/mach-au1x00/au1xxx_ide.h
-index e9fa252..8fcae21 100644
---- a/include/asm-mips/mach-au1x00/au1xxx_ide.h
-+++ b/include/asm-mips/mach-au1x00/au1xxx_ide.h
-@@ -141,40 +141,6 @@ static int auide_ddma_init( _auide_hwif *auide );
- static void auide_setup_ports(hw_regs_t *hw, _auide_hwif *ahwif);
- int __init auide_probe(void);
- 
--#ifdef CONFIG_PM
--        int au1200ide_pm_callback( au1xxx_power_dev_t *dev,
--                                   au1xxx_request_t request, void *data);
--        static int au1xxxide_pm_standby( au1xxx_power_dev_t *dev );
--        static int au1xxxide_pm_sleep( au1xxx_power_dev_t *dev );
--        static int au1xxxide_pm_resume( au1xxx_power_dev_t *dev );
--        static int au1xxxide_pm_getstatus( au1xxx_power_dev_t *dev );
--        static int au1xxxide_pm_access( au1xxx_power_dev_t *dev );
--        static int au1xxxide_pm_idle( au1xxx_power_dev_t *dev );
--        static int au1xxxide_pm_cleanup( au1xxx_power_dev_t *dev );
--#endif
--
--
--/*
-- * Multi-Word DMA + DbDMA functions
-- */
--#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
--        static int auide_build_sglist(ide_drive_t *drive,  struct request *rq);
--        static int auide_build_dmatable(ide_drive_t *drive);
--        static int auide_dma_end(ide_drive_t *drive);
--        ide_startstop_t auide_dma_intr (ide_drive_t *drive);
--        static void auide_dma_exec_cmd(ide_drive_t *drive, u8 command);
--        static int auide_dma_setup(ide_drive_t *drive);
--        static int auide_dma_check(ide_drive_t *drive);
--        static int auide_dma_test_irq(ide_drive_t *drive);
--        static int auide_dma_host_off(ide_drive_t *drive);
--        static int auide_dma_host_on(ide_drive_t *drive);
--        static int auide_dma_lostirq(ide_drive_t *drive);
--        static int auide_dma_on(ide_drive_t *drive);
--        static void auide_ddma_tx_callback(int irq, void *param);
--        static void auide_ddma_rx_callback(int irq, void *param);
--        static int auide_dma_off_quietly(ide_drive_t *drive);
--#endif /* end CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA */
--
- /*******************************************************************************
- * PIO Mode timing calculation :                                                *
- *                                                                              *
-
---OXfL5xGRrasGEqWY--
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -767,7 +767,7 @@ int ide_set_dma(ide_drive_t *drive)
+ 	switch(rc) {
+ 	case -1: /* DMA needs to be disabled */
+ 		hwif->dma_off_quietly(drive);
+-		return 0;
++		return -1;
+ 	case  0: /* DMA needs to be enabled */
+ 		return hwif->ide_dma_on(drive);
+ 	case  1: /* DMA setting cannot be changed */
