@@ -1,26 +1,23 @@
 From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCH] drivers/ata/Kconfig: PATA_SCC depends on wrong platform
 Date: Thu, 15 Mar 2007 14:32:58 +0900
-Message-ID: <200703150530.l2F5Uwel024855@toshiba.co.jp>
+Message-ID: <200703150530.l2F5Uwbo024856@toshiba.co.jp>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:37191 "EHLO
-	inet-tsb5.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965345AbXCOFbF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 01:31:05 -0400
-Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
-	by inet-tsb5.toshiba.co.jp  with ESMTP id l2F5Uxe6006922
-	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 14:30:59 +0900 (JST)
-Received: (from root@localhost)
-	by tsb-wall.toshiba.co.jp  id l2F5V0c1002450
-	for linux-ide@vger.kernel.org; Thu, 15 Mar 2007 14:31:00 +0900 (JST)
-Received: from mx12.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp1.toshiba.co.jp  with ESMTP id l2F5UxLB001801
-	for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 14:30:59 +0900 (JST)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp
+Cc: linuxppc-dev@ozlabs.org
+List-Id: linux-ide@vger.kernel.org
 
 PATA_SCC depends on PPC_CELLEB. (not PPC_IBM_CELL_BLADE)
 
@@ -40,4 +37,3 @@ diff -Nrpu -X linux-2.6.21-rc3/Documentation/dontdiff linux-2.6.21-rc3/drivers/a
  	help
  	  This option enables support for the built-in IDE controller on
  	  Toshiba Cell Reference Board.
-
