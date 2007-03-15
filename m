@@ -1,100 +1,58 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] IDE/DMA for au1xxx
-Date: Thu, 15 Mar 2007 21:07:26 +0100
-Message-ID: <200703152107.26545.bzolnier@gmail.com>
-References: <20070315122012.GA8612@ipxXXXXX> <45F9520A.2000804@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Thu, 15 Mar 2007 16:16:00 -0400
+Message-ID: <45F9A980.1090107@garzik.org>
+References: <354573.23811.qm@web803.biz.mail.mud.yahoo.com> <45F9851E.8000709@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:11234 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933620AbXCOUAU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 16:00:20 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so473133uga
-        for <linux-ide@vger.kernel.org>; Thu, 15 Mar 2007 13:00:15 -0700 (PDT)
-In-Reply-To: <45F9520A.2000804@ru.mvista.com>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:52412 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933790AbXCOUQF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Mar 2007 16:16:05 -0400
+In-Reply-To: <45F9851E.8000709@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Daniel Mack <daniel@caiaq.de>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Bob Stewart <bob@evoria.net>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Thursday 15 March 2007, Sergei Shtylyov wrote:
-> Daniel Mack wrote:
-> > Hi,
+Tejun Heo wrote:
+> Hello,
 > 
-> > this makes the DMA part of Au1xxx's IDE interface compile again.
+> Bob Stewart wrote:
+>> Is there an easy way to tell whether the command was sent as 
+>> LBA48, say, in the driver's bmdma_start function or even in the 
+>> hardreset function after the fact?  One of my tests was using a 64 
+>> sector limit, with pretty much the same results.  I always test against 
+>> the same file, and the results, including the number of timeouts, are 
+>> different from test to test.
 > 
-> > Signed-of-by: Daniel Mack <daniel@caiaq.de>
+> The driver is seriously broken regarding LBA48 support.  The timeout
+> goes away if max_sectors is decreased to ATA_MAX_SECTORS - 1, doh.  But
+> both the reading and writing are seriously broken.  I can't tell whether
+> they end up in the wrong sectors or garbage is transferred to/from the
+> right sectors.
 > 
-> > ------------------------------------------------------------------------
-> 
-> > diff --git a/drivers/ide/mips/au1xxx-ide.c b/drivers/ide/mips/au1xxx-ide.c
-> > index b2dc028..806b6d1 100644
-> > --- a/drivers/ide/mips/au1xxx-ide.c
-> > +++ b/drivers/ide/mips/au1xxx-ide.c
-> > @@ -443,7 +443,6 @@ static void auide_dma_host_on(ide_drive_t *drive)
-> >  static int auide_dma_on(ide_drive_t *drive)
-> >  {
-> >  	drive->using_dma = 1;
-> > -
-> >  	return 0;
-> >  }
-> >  
-> > @@ -638,6 +637,7 @@ static int au_ide_probe(struct device *dev)
-> >  	struct platform_device *pdev = to_platform_device(dev);
-> >  	_auide_hwif *ahwif = &auide_hwif;
-> >  	ide_hwif_t *hwif;
-> > +	hw_regs_t *hw;
-> >  	struct resource *res;
-> >  	int ret = 0;
-> >  
-> > @@ -681,7 +681,7 @@ static int au_ide_probe(struct device *dev)
-> >  	/* FIXME:  This might possibly break PCMCIA IDE devices */
-> >  
-> >  	hwif                            = &ide_hwifs[pdev->id];
-> > -	hw_regs_t *hw 			= &hwif->hw;
-> > +	hw 				= &hwif->hw;
-> >  	hwif->irq = hw->irq             = ahwif->irq;
-> >  	hwif->chipset                   = ide_au1xxx;
-> 
->     The patch consisting of these 2 hunks has been already posted to linux-ide 
-> by Ralf... Your patch looks more complete though.
+> I'm really close to marking this device broken or we'll need to
+> implement a mechanism to veto LBA48 device from LLD (may be negative
+> return from ->dev_config).
 
-I applied Ralf's one and I would merge this one but I'm not on linux-mips ML.
+AFAICS you just need to use the ADMA-like DMA engine, to achieve LBA48.
 
-Daniel, please resend the original patch to linux-ide ML.
+It's just a guess that the HOB bit is supported by the Device Control 
+shadow register on the INIC chips.  The only actual mention in the 
+datasheets is in the ADMA CPB data structure definition.
 
-> > diff --git a/include/asm-mips/mach-au1x00/au1xxx_ide.h b/include/asm-mips/mach-au1x00/au1xxx_ide.h
-> > index e9fa252..e747814 100644
-> > --- a/include/asm-mips/mach-au1x00/au1xxx_ide.h
-> > +++ b/include/asm-mips/mach-au1x00/au1xxx_ide.h
-> > @@ -166,13 +166,13 @@ int __init auide_probe(void);
-> >          static int auide_dma_setup(ide_drive_t *drive);
-> >          static int auide_dma_check(ide_drive_t *drive);
-> >          static int auide_dma_test_irq(ide_drive_t *drive);
-> > -        static int auide_dma_host_off(ide_drive_t *drive);
-> > -        static int auide_dma_host_on(ide_drive_t *drive);
-> > +        static void auide_dma_host_off(ide_drive_t *drive);
-> > +        static void auide_dma_host_on(ide_drive_t *drive);
-> >          static int auide_dma_lostirq(ide_drive_t *drive);
-> >          static int auide_dma_on(ide_drive_t *drive);
-> >          static void auide_ddma_tx_callback(int irq, void *param);
-> >          static void auide_ddma_rx_callback(int irq, void *param);
-> > -        static int auide_dma_off_quietly(ide_drive_t *drive);
-> > +        static void auide_dma_off_quietly(ide_drive_t *drive);
-> >  #endif /* end CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA */
-> 
->     WTF these protos are doing in include/asm-mips/ -- being purely IDE 
-> subsystem specific?! :-O
->     Could you move them into the driver (if they are indeed necessary)?
+BTW, all my infos came off their public website, let me know if anybody 
+is missing these docs:
+INIC1622.PDF
+Initio INIC-1620TA2_1622TA2_1623TA2 Databook v1.4.pdf
+Initio INIC-1623 Databook v1.3.pdf
 
-seconded, this is a good idea
+Regards,
 
-Thanks,
-Bart
+	Jeff
+
+
+
