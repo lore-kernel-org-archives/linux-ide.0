@@ -1,135 +1,80 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: DVD drive fails in 2.6.20.2
-Date: Thu, 15 Mar 2007 15:22:32 +0900
-Message-ID: <45F8E628.2010004@gmail.com>
-References: <45F631F7.6020106@mail.utexas.edu> <45F7760B.10102@gmail.com> <45F81177.9070106@mail.utexas.edu>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: [PATCH/RFC] PCI prepare/activate instead of enable to avoid IRQ storm and rogue DMA access
+Date: Thu, 15 Mar 2007 00:45:45 -0600
+Message-ID: <20070315064545.GC14839@colo.lackof.org>
+References: <20070314152302.GB15600@htj.dyndns.org> <20070314100716.5965dca1@freekitty> <45F8B160.6010603@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090006090001080103020601"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.177]:21685 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965425AbXCOGWj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 02:22:39 -0400
-Received: by ik-out-1112.google.com with SMTP id c21so43243ika
-        for <linux-ide@vger.kernel.org>; Wed, 14 Mar 2007 23:22:38 -0700 (PDT)
-In-Reply-To: <45F81177.9070106@mail.utexas.edu>
+Received: from colo.lackof.org ([198.49.126.79]:54247 "EHLO colo.lackof.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422841AbXCOGpx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Mar 2007 02:45:53 -0400
+Content-Disposition: inline
+In-Reply-To: <45F8B160.6010603@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vlad Codrea <VladCodrea@mail.utexas.edu>
-Cc: linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Stephen Hemminger <shemminger@linux-foundation.org>, gregkh@suse.de, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, michal.k.k.piotrowski@gmail.com, linux-ide@vger.kernel.org, tglx@linutronix.de, mlord@pobox.com, linux-pm@lists.osdl.org
 
-This is a multi-part message in MIME format.
---------------090006090001080103020601
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Thu, Mar 15, 2007 at 11:37:20AM +0900, Tejun Heo wrote:
+...
+> Also, the current implementation doesn't have any arch independent part. 
 
-[cc'ing Albert Lee.  Hi!]
+I thnk you meant "arch dependent" here.
 
-Vlad Codrea wrote:
->> Okay, now that you're on libata driver, it's easier for me to debug.
->> Can you apply the attached patch over 2.6.20 and report what the kernel
->> says? (the patch will apply with some noise, it's okay)
+>  It's wholly contained in arch independent PCI layer, but it might be 
+> beneficial to have arch dependent hooks (IRQ line enable/disable?) in 
+> the future.
 > 
-> I've applied your patch and recompiled the kernel, but the new dmesg
-> (attached as dmesg_2.txt) doesn't seem to have changed much.
+> >What if the device with the IRQ problem is never loaded? Sometimes
+> >devices aren't loaded until after boot.
+> 
+> What do you mean by loading a device?  Do you mean loading driver for 
+> the device?
 
-Hmmm.. that's weird, can you please try the attached patch?
+Yes, I think that's what he meant.
 
-Albert, can you take a look at this one?  I'm pretty sure you know much
-better about this than me.  The whole thread can be read at...
+> >Any change like this has to be done without changing device drivers.
+> >Changing the skge/sky2 drivers as special case is not acceptable.
 
-  http://thread.gmane.org/gmane.linux.ide/17052
+I don't like the idead of changing the driver API for PCI device setup.
+But if it's necessary to solve this class of problem, I think it's ok.
 
-Thanks.
+> I dunno about that.  What I'm proposing is alternative two-step PCI 
+> initialization step - the first step enables the device just enough for 
+> initialization/reset and the second one enables full access.  We're 
+> doing part of it already for bus master.  I'm proposing to expand that 
+> approach and make them handled by generic PCI layer.  As you can see, it 
+> doesn't add noticeable complexity to drivers.  I think it's even clearer 
+> than doing pci_set_master() explicitly.
 
--- 
-tejun
+Please update Documentation/pci.txt to reflect the API changes too.
 
---------------090006090001080103020601
-Content-Type: text/x-patch;
- name="hsm-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="hsm-debug.patch"
+> If this way of solving the problem is chosen, eventually most drivers 
+> should be converted to new initialization steps.  And there is no way to 
+> do this without modifying low level driver.  Only low level driver knows 
+> when full blown access can be enabled and such thing must happen before 
+> registering the device to upper layer (e.g. ATA/SCSI, netif).
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 14629a3..855d33a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4382,6 +4382,12 @@ static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
- 			 */
- 			qc = ata_qc_from_tag(ap, qc->tag);
- 			if (qc) {
-+				if ((qc->flags & ATA_QCFLAG_FAILED) ||
-+				    qc->err_mask)
-+					ata_port_printk(ap, KERN_WARNING,
-+						"hsm_qc_complete: "
-+						"flags=0x%lx err_mask=0x%x\n",
-+						qc->flags, qc->err_mask);
- 				if (likely(!(qc->err_mask & AC_ERR_HSM))) {
- 					ap->ops->irq_on(ap);
- 					ata_qc_complete(qc);
-@@ -4453,9 +4459,13 @@ fsm_start:
- 			if (likely(status & (ATA_ERR | ATA_DF)))
- 				/* device stops HSM for abort/error */
- 				qc->err_mask |= AC_ERR_DEV;
--			else
-+			else {
- 				/* HSM violation. Let EH handle this */
-+				ata_port_printk(ap, KERN_WARNING,
-+						"!DRQ on HSM_ST_FIRST (0x%x)\n",
-+						status);
- 				qc->err_mask |= AC_ERR_HSM;
-+			}
- 
- 			ap->hsm_task_state = HSM_ST_ERR;
- 			goto fsm_start;
-@@ -4547,13 +4557,17 @@ fsm_start:
- 				if (likely(status & (ATA_ERR | ATA_DF)))
- 					/* device stops HSM for abort/error */
- 					qc->err_mask |= AC_ERR_DEV;
--				else
-+				else {
-+					ata_port_printk(ap, KERN_WARNING,
-+						"!DRQ on HSM_ST (0x%x)\n",
-+						status);
- 					/* HSM violation. Let EH handle this.
- 					 * Phantom devices also trigger this
- 					 * condition.  Mark hint.
- 					 */
- 					qc->err_mask |= AC_ERR_HSM |
- 							AC_ERR_NODEV_HINT;
-+				}
- 
- 				ap->hsm_task_state = HSM_ST_ERR;
- 				goto fsm_start;
-@@ -4579,8 +4593,12 @@ fsm_start:
- 					status = ata_wait_idle(ap);
- 				}
- 
--				if (status & (ATA_BUSY | ATA_DRQ))
-+				if (status & (ATA_BUSY | ATA_DRQ)) {
-+					ata_port_printk(ap, KERN_WARNING,
-+						"BUSY|DRQ on ERR|DF (0x%x)\n",
-+						status);
- 					qc->err_mask |= AC_ERR_HSM;
-+				}
- 
- 				/* ata_pio_sectors() might change the
- 				 * state to HSM_ST_LAST. so, the state
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 7349c3d..a956aaa 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1146,6 +1146,8 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
- 	u8 stat = tf->command, err = tf->feature;
- 
- 	if ((stat & (ATA_BUSY | ATA_DRQ | ATA_DRDY)) != ATA_DRDY) {
-+		ata_dev_printk(qc->dev, KERN_WARNING,
-+			       "ata_eh_analyze_tf, AC_ERR_HSM, 0x%x\n", stat);
- 		qc->err_mask |= AC_ERR_HSM;
- 		return ATA_EH_SOFTRESET;
- 	}
+Agreed. ISTR this has been discussed before but don't recall
+the exact context. I'll try to find the previous thread.
 
---------------090006090001080103020601--
+When I started the parisc port on 2.4 kernels, the policy was to
+leave all interrupts enabled even if no interrupt handler was registered.
+This is useful for debugging misconfigured IRQ routing.
+Did the policy already change or is this a proposal to change the policy?
+
+thanks,
+grant
+
+> sky2/skge aren't exceptions.  If this way of solving the problem is 
+> chosen, eventually most if not all drivers should be converted to new 
+> model.  It may take two years, maybe five, but as a start just 
+> converting ATA and network drivers shouldn't take too long and that 
+> would help a lot of cases.
+> 
+> Thanks.
+> 
+> -- 
+> tejun
