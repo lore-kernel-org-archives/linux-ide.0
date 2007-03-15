@@ -1,85 +1,117 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] IDE/DMA for au1xxx
-Date: Thu, 15 Mar 2007 17:02:50 +0300
-Message-ID: <45F9520A.2000804@ru.mvista.com>
-References: <20070315122012.GA8612@ipxXXXXX>
+From: Woody Suwalski <woodys@xandros.com>
+Subject: Re: [PATCH 10/13] sl82c105: add ->speedproc support
+Date: Thu, 15 Mar 2007 10:22:44 -0400
+Message-ID: <45F956B4.1060309@xandros.com>
+References: <200703102209.59918.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="ISO-8859-1";
+	format="flowed"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:25542 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1422688AbXCOODE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Mar 2007 10:03:04 -0400
-In-Reply-To: <20070315122012.GA8612@ipxXXXXX>
+Received: from scalix.xandros.com ([142.46.212.37]:35254 "EHLO
+	scalix.xandros.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422726AbXCOOcI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 10:32:08 -0400
+In-Reply-To: <45F86058.6090509@ru.mvista.com>
+References: <45F32860.8040901@ru.mvista.com>
+References: <200703102332.12716.bzolnier@gmail.com>
+References: <45F551E5.8010904@ru.mvista.com>
+References: <45F86058.6090509@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Mack <daniel@caiaq.de>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Daniel Mack wrote:
-> Hi,
+Sergei Shtylyov wrote:
+> Hello, I wrote:
+>
+>>>> Bartlomiej Zolnierkiewicz wrote:
+>
+>>>>> [PATCH] sl82c105: add ->speedproc support
+>
+>>>>> * add sl82c105_tunepio() wrapper for sl82c105_tune_drive()
+>>>>>  (just to get the error value)
+>
+>>>>> * add sl82c105_tune_chipset() (->speedproc method) for setting
+>>>>>  transfer mode
+>
+>>>>    Thanks for the patch!
+>
+>>>>  > Index: b/drivers/ide/pci/sl82c105.c
+>
+>>>>> ===================================================================
+>>>>> --- a/drivers/ide/pci/sl82c105.c
+>>>>> +++ b/drivers/ide/pci/sl82c105.c
+>
+>> [...]
+>
+>>>>> @@ -114,17 +114,45 @@ static void sl82c105_tune_drive(ide_driv
+>>>>>      */
+>>>>>     drive->io_32bit = 1;
+>>>>>     drive->unmask    = 1;
+>>>>> +
+>>>>> +    return 0;
+>>>>> +}
+>>>>> +
+>>>>> +static void sl82c105_tune_drive(ide_drive_t *drive, u8 pio)
+>>>>> +{
+>>>>> +    /*
+>>>>> +     * TODO: find best PIO mode and set device speed here
+>>>>> +     *       (requires adding helper function for getting PIO 
+>>>>> cycle time)
+>>>>> +     */
+>
+>>>>   I thought we were doing it by calling ide_get_best_pio_mode() 
+>>>> above...
+>
+>>> We are also using ide_get_best_pio_mode() to get PIO cycle time
+>>> so we can't move it here ATM.
+>
+>>   I've found/used quite convenient workaround for that -- return PIO 
+>> mode actually selected from xxx_tune_pio(), then call 
+>> ide_config_drive_speed() from the real tuneproc() method.
+>
+>    Works like charm with ignoring the result, since 
+> ide_get_best_pio_mode() returns the same explicit mode as was passed 
+> to it -- so is good for the speedproc() methods also...
+>
+>>>>> +    (void)sl82c105_tunepio(drive, pio);
+>
+>>>>    Erm, I thought afterwards that I vainly folded one into another. 
+>>>> I think it's worth moving those io_32bit and unmask flag 
+>>>> assignments above back there... May also recast my patch. :-)
+>
+>>> Moving them to ->init_hwif where they belong would be even better... 
+>>> ;-)
+>
+>>    Well, I wasn't sure where they belong... :-)
+>>    So, OK to recast that patch?
+>
+>   Recasted it and reworked your patch atop of it (adding MWDMA 0/1 
+> support as a bonus! :-) -- now need to conduct some testing on a 
+> remote target...
+>
+>>>>> +static int sl82c105_tune_chipset(ide_drive_t *drive, u8 mode)
+>>>>> +{
+>>>>> +    mode = ide_rate_filter(drive, mode);
+>>>>> +
+>>>>> +    if (mode >= XFER_PIO_0 && mode <= XFER_PIO_5)
+>>>>> +        return sl82c105_tunepio(drive, mode - XFER_PIO_0);
+>>>>> +
+>>>>> +    /*
+>>>>> +     * TODO: add MWDMA0/1 support
+>>>>> +     */
+>>>>> +    BUG_ON(mode != XFER_MW_DMA_2);
+>
+>   I wonder is there are some W83C554 users anywhere -- that chipset 
+> also supports UltraDMA...
+>
+> MBR, Sergei
+Sergei,
 
-> this makes the DMA part of Au1xxx's IDE interface compile again.
+ARM Netwinder machines are running hard disk IDE on SL82c105.
+Could you send me the actual source file to try (or a patch)?
 
-> Signed-of-by: Daniel Mack <daniel@caiaq.de>
+Thanks, Woody
 
-> ------------------------------------------------------------------------
-
-> diff --git a/drivers/ide/mips/au1xxx-ide.c b/drivers/ide/mips/au1xxx-ide.c
-> index b2dc028..806b6d1 100644
-> --- a/drivers/ide/mips/au1xxx-ide.c
-> +++ b/drivers/ide/mips/au1xxx-ide.c
-> @@ -443,7 +443,6 @@ static void auide_dma_host_on(ide_drive_t *drive)
->  static int auide_dma_on(ide_drive_t *drive)
->  {
->  	drive->using_dma = 1;
-> -
->  	return 0;
->  }
->  
-> @@ -638,6 +637,7 @@ static int au_ide_probe(struct device *dev)
->  	struct platform_device *pdev = to_platform_device(dev);
->  	_auide_hwif *ahwif = &auide_hwif;
->  	ide_hwif_t *hwif;
-> +	hw_regs_t *hw;
->  	struct resource *res;
->  	int ret = 0;
->  
-> @@ -681,7 +681,7 @@ static int au_ide_probe(struct device *dev)
->  	/* FIXME:  This might possibly break PCMCIA IDE devices */
->  
->  	hwif                            = &ide_hwifs[pdev->id];
-> -	hw_regs_t *hw 			= &hwif->hw;
-> +	hw 				= &hwif->hw;
->  	hwif->irq = hw->irq             = ahwif->irq;
->  	hwif->chipset                   = ide_au1xxx;
-
-    The patch consisting of these 2 hunks has been already posted to linux-ide 
-by Ralf... Your patch looks more complete though.
-
-> diff --git a/include/asm-mips/mach-au1x00/au1xxx_ide.h b/include/asm-mips/mach-au1x00/au1xxx_ide.h
-> index e9fa252..e747814 100644
-> --- a/include/asm-mips/mach-au1x00/au1xxx_ide.h
-> +++ b/include/asm-mips/mach-au1x00/au1xxx_ide.h
-> @@ -166,13 +166,13 @@ int __init auide_probe(void);
->          static int auide_dma_setup(ide_drive_t *drive);
->          static int auide_dma_check(ide_drive_t *drive);
->          static int auide_dma_test_irq(ide_drive_t *drive);
-> -        static int auide_dma_host_off(ide_drive_t *drive);
-> -        static int auide_dma_host_on(ide_drive_t *drive);
-> +        static void auide_dma_host_off(ide_drive_t *drive);
-> +        static void auide_dma_host_on(ide_drive_t *drive);
->          static int auide_dma_lostirq(ide_drive_t *drive);
->          static int auide_dma_on(ide_drive_t *drive);
->          static void auide_ddma_tx_callback(int irq, void *param);
->          static void auide_ddma_rx_callback(int irq, void *param);
-> -        static int auide_dma_off_quietly(ide_drive_t *drive);
-> +        static void auide_dma_off_quietly(ide_drive_t *drive);
->  #endif /* end CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA */
-
-    WTF these protos are doing in include/asm-mips/ -- being purely IDE 
-subsystem specific?! :-O
-    Could you move them into the driver (if they are indeed necessary)?
-
-MBR, Sergei
