@@ -1,26 +1,23 @@
 From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCH 1/2] scc_pata: dependency fix
 Date: Fri, 16 Mar 2007 11:05:27 +0900
-Message-ID: <200703160203.l2G23QNH008038@toshiba.co.jp>
+Message-ID: <200703160203.l2G23QKp022195@toshiba.co.jp>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:55006 "EHLO
-	inet-tsb5.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbXCPCD3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 22:03:29 -0400
-Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
-	by inet-tsb5.toshiba.co.jp  with ESMTP id l2G23R0s009540
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 11:03:27 +0900 (JST)
-Received: (from root@localhost)
-	by tsb-wall.toshiba.co.jp  id l2G23RCC003995
-	for linux-ide@vger.kernel.org; Fri, 16 Mar 2007 11:03:27 +0900 (JST)
-Received: from mx2.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp1.toshiba.co.jp  with ESMTP id l2G23Q0D011356
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 11:03:26 +0900 (JST)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: bzolnier@gmail.com, torvalds@linux-foundation.org
-Cc: Al Viro <viro@ftp.linux.org.uk>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>
+List-Id: linux-ide@vger.kernel.org
 
 This patch fixes:
 * the dependency of scc_pata on BLK_DEV_IDEDMA_PCI
