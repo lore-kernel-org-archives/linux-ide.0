@@ -1,22 +1,12 @@
 From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCH 1/2] scc_pata: dependency fix
 Date: Fri, 16 Mar 2007 11:05:27 +0900
-Message-ID: <200703160203.l2G23QKp022195@toshiba.co.jp>
+Message-ID: <200703160203.l2G23QGg021264@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752366AbXCPCDa@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: bzolnier@gmail.com, torvalds@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>
+Cc: Al Viro <viro@ftp.linux.org.uk>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 This patch fixes:
