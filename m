@@ -1,121 +1,93 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: DVD drive fails in 2.6.20.2
-Date: Sat, 17 Mar 2007 00:34:04 +0800
-Message-ID: <45FAC6FC.4020105@tw.ibm.com>
-References: <45F631F7.6020106@mail.utexas.edu> <45F7760B.10102@gmail.com> <45F81177.9070106@mail.utexas.edu> <45F8E628.2010004@gmail.com> <45F9516D.4090008@mail.utexas.edu> <45F98923.1040601@tw.ibm.com> <45FA07E2.6080008@mail.utexas.edu>
+Subject: Re: IOMEGA IDE ZIP (ATAPI) drive
+Date: Sat, 17 Mar 2007 01:21:08 +0800
+Message-ID: <45FAD204.2060700@tw.ibm.com>
+References: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com> <45F7E34B.6020206@gmail.com> <45F7F90B.6070709@rtr.ca> <45F7FD13.2070907@gmail.com> <45F9C4B2.20906@rtr.ca> <45FAAA22.7060000@tw.ibm.com> <45FAB418.2070402@rtr.ca>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:44617 "EHLO
+Received: from e32.co.us.ibm.com ([32.97.110.150]:43534 "EHLO
 	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965571AbXCPQeW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 12:34:22 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l2GGWlfo010494
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 12:32:47 -0400
+	with ESMTP id S965711AbXCPRV3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 13:21:29 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l2GHJs9c030814
+	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 13:19:54 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2GGYMIO040962
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 10:34:22 -0600
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2GHLS0f062272
+	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 11:21:28 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2GGYLnj028537
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 10:34:21 -0600
-In-Reply-To: <45FA07E2.6080008@mail.utexas.edu>
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2GHLRdP020874
+	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 11:21:28 -0600
+In-Reply-To: <45FAB418.2070402@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vlad Codrea <VladCodrea@mail.utexas.edu>
-Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, Stanislav Brabec <sbrabec@novell.com>, jeff@garzik.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
 
-Vlad Codrea wrote:
-
+Mark Lord wrote:
+> Albert Lee wrote:
 > 
-> Hi,
+>> Could you please apply the attached debugging patch for clue about
+>> what caused the HSM violation, thanks.
 > 
-> I've attached the full dmesg after applying Albert's patch. The new
-> messages seem to be:
 > 
-> ata2: protocol 7 task_state 4
-> ata2: protocol 7 task_state 4 (dev_stat 0x58)
-> ata2: protocol 7 task_state 2
-> ata2: protocol 7 task_state 2 (dev_stat 0x58)
-> ata2: protocol 7 task_state 3 (dev_stat 0x58)
+> I had to edit the patch to get it to apply on 2.6.21-rc3-git9,
+> but here (attached) is the output from syslog.
 > 
- 
-<snip>
+> zip_insert.txt :: response to inserting a disc into the drive.
+> zip_button.txt :: response to pressing the eject button.
+> zip_eject.txt  :: response to using "eject /dev/sdc".
+> 
+> Enjoy!
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> 11:08:57: sdc: Spinning up disk...<3>ata port 1: protocol 6 task_state 4
+> 11:08:57:          res 00/00:03:00:00:20/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+> 11:08:57: ata4: soft resetting port
+> 11:08:57: ATA: abnormal status 0x7F on port 0x00010177
+> 11:08:57: ATA: abnormal status 0x7F on port 0x00010177
+> 11:08:58: ata4.00: configured for PIO2
+> 11:08:58: ata4: EH complete
 
-> libata version 2.00 loaded.
-> ata_piix 0000:00:07.1: version 2.00ac7
-> ata1: PATA max UDMA/33 cmd 0x1F0 ctl 0x3F6 bmdma 0xFCF0 irq 14
-> ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xFCF8 irq 15
-> scsi0 : ata_piix
-> PM: Adding info for No Bus:host0
-> usbcore: registered new interface driver usbfs
-> usbcore: registered new interface driver hub
-> usbcore: registered new device driver usb
-> USB Universal Host Controller Interface driver v3.0
-> ata1.00: ATA-4, max UDMA/33, 12685680 sectors: LBA 
-> ata1.00: ata1: dev 0 multi count 16
-> ata1.00: configured for UDMA/33
-> scsi1 : ata_piix
-> PM: Adding info for No Bus:host1
-> ata2.00: ATAPI, max MWDMA2, CDB intr
-> ata2.00: configured for MWDMA2
-> PM: Adding info for No Bus:target0:0:0
-> scsi 0:0:0:0: Direct-Access     ATA      IBM-DADA-26480   AD6O PQ: 0 ANSI: 5
-> PM: Adding info for scsi:0:0:0:0
-> PM: Adding info for No Bus:target1:0:0
-> ata2: protocol 7 task_state 4
-> ata2: protocol 7 task_state 4 (dev_stat 0x58)
-> ata2: protocol 7 task_state 2
-> ata2: protocol 7 task_state 2 (dev_stat 0x58)
-> ata2: protocol 7 task_state 3 (dev_stat 0x58)
-> ata2.00: ata_eh_analyze_tf, AC_ERR_HSM, 0x58
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: (BMDMA stat 0x5)
-> ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 36 in
->          res 58/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
-> ata2: soft resetting port
-> ata2: port is slow to respond, please be patient (Status 0xd8)
-> ata2: port failed to respond (30 secs, Status 0xd8)
-> ATA: abnormal status 0xD8 on port 0x177
-> ATA: abnormal status 0xD8 on port 0x177
-> ATA: abnormal status 0xD8 on port 0x177
-> ATA: abnormal status 0xD8 on port 0x177
-> ATA: abnormal status 0xD8 on port 0x177
+Thanks for this good clue.
 
-ata2: protocol 7 task_state 4   <=== The device interrupts to receive CDB
-ata2: protocol 7 task_state 4 (dev_stat 0x58)  <== Good, DRQ seen. CDB sent.
-ata2: protocol 7 task_state 2   <=== interrupt. We expect DMA complete.
-ata2: protocol 7 task_state 2 (dev_stat 0x58) <== What? DRQ set? No good.
-ata2: protocol 7 task_state 3 (dev_stat 0x58) <== HSM violation.
-(BMDMA stat 0x5) <=== Interrupted, DMA active.
+<3>ata port 1: protocol 6 task_state 4
+11:08:57:          res 00/00:03:00:00:20/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
 
-Still no clue why the device wrongly sets DRQ here for a DMA transfer...
-Possibilities:
-1. HSM sent all CDB to the device, but the device is waiting for more CDB data?
-2. HSM asked the drive to do ATAPI DMA, but the drive is doing PIO?
+>From the trace, the zip 100 drive clears BSY and raises irq to tell libata
+when it is ready to transfer the CDB. However, the DRQ is not set yet. The status
+0x00 causes libata HSM violation.
 
-Hi Vlad,
-
-Could you please turn off ATAPI DMA and see if the drive works under PIO,
-thanks.
-
+Maybe we can wait a moment and give the slow ATAPI devices some time to set DRQ.
+Could you please try if the attached patch works, thanks.
 --
 albert
 
-(This is not a patch. Please edit drivers/ata/libata-core.c as below.)
-
-int ata_check_atapi_dma(struct ata_queued_cmd *qc)
-{
-	struct ata_port *ap = qc->ap;
-	int rc = 0; /* Assume ATAPI DMA is OK by default */
-
-	if (ap->ops->check_atapi_dma)
-		rc = ap->ops->check_atapi_dma(qc);
-
- rc = 1; (<==== Please add "rc = 1;" here to turn off ATAPI DMA. )
-
-	return rc;
-}
+--- linux-2.6.20.3/drivers/ata/libata-core.c	2007-03-15 18:03:27.000000000 +0800
++++ linux-2.6.20.3-mod2/drivers/ata/libata-core.c	2007-03-17 01:12:53.000000000 +0800
+@@ -4384,6 +4384,19 @@ fsm_start:
+ 		 */
+ 		poll_next = (qc->tf.flags & ATA_TFLAG_POLLING);
+ 
++		/* wait for some slow ATAPI devices to set DRQ */
++		if (unlikely((status & ATA_DRQ) == 0) &&
++		    is_atapi_taskfile(&qc->tf)) {
++			int max = 100;
++
++			do {
++				udelay(10);
++				status = ata_chk_status(ap);
++				max--;
++				ata_port_printk(ap, KERN_ERR, "wait for DRQ %d\n", 100-max);	
++			} while (((status & ATA_DRQ) == 0) && (max > 0));
++		}
++
+ 		/* check device status */
+ 		if (unlikely((status & ATA_DRQ) == 0)) {
+ 			/* handle BSY=0, DRQ=0 as error */
 
