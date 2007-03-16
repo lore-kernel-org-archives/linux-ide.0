@@ -1,54 +1,115 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata: add support for READ/WRITE LONG
-Date: Fri, 16 Mar 2007 17:23:40 +0300
-Message-ID: <45FAA86C.5080607@ru.mvista.com>
-References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	<45F56800.3040104@rtr.ca>	<3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com>	<45F5A523.1080500@rtr.ca>	<45FA8D7A.3040504@rtr.ca> <20070316150129.5bd65c9d@lxorguk.ukuu.org.uk> <45FAA692.8080507@rtr.ca>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: IOMEGA IDE ZIP (ATAPI) drive
+Date: Fri, 16 Mar 2007 22:30:58 +0800
+Message-ID: <45FAAA22.7060000@tw.ibm.com>
+References: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com> <45F7E34B.6020206@gmail.com> <45F7F90B.6070709@rtr.ca> <45F7FD13.2070907@gmail.com> <45F9C4B2.20906@rtr.ca>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:33285 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965138AbXCPOXz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Mar 2007 10:23:55 -0400
-In-Reply-To: <45FAA692.8080507@rtr.ca>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:35651 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965287AbXCPObX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 10:31:23 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2GEVNmb013475
+	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 10:31:23 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2GEVM5c041634
+	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 08:31:22 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2GEVK3X001158
+	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 08:31:22 -0600
+In-Reply-To: <45F9C4B2.20906@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Vitaliyi <imgrey@gmail.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Tejun Heo <htejun@gmail.com>, Stanislav Brabec <sbrabec@novell.com>, albertl@mail.com, jeff@garzik.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
 
 Mark Lord wrote:
-> Alan Cox wrote:
+> Tejun Heo wrote:
 > 
->>> The fussy bit is that these commands require a non-standard
->>> sector size, usually 520 bytes instead of 512.
+>> Mark Lord wrote:
+>>
+>>> Really?  I didn't notice when libata gained ATAPI-disk support.
+>>>
+>>> Are you *sure* about that??
+>>
+>>
+>> Not sure sure but almost sure.  :-)  What ide-scsi does is borrowing
+>> SCSI mid and high level drivers while using ide as SCSI low level
+>> driver.  To SCSI, libata and ide-scsi aren't very different except that
+>> libata also exports SBC device to it.  So, if SCSI could handle ATAPI
+>> disk via ide-scsi, I don't think there is any reason it can't with
+>> libata.
+> 
+> 
+> Okay, I dusted off one of my old (actually, I believe *the oldest*)
+> Zip100 drives in the collection, and tried it out here with both
+> 2.6.20 and 2.6.21-rc3-git9.   It works mostly fine with each.
+> 
+> A couple of minor issues, though.
+> 
+> (1) When ejecting a disk, either with the "eject /dev/sdc" command
+> or using the front-panel soft-eject button on the drive,
+> I get the following in syslog from libata:
+> 
+> sdc: Spinning up disk...<3>ata4.00: exception Emask 0x0 SAct 0x0 SErr
+> 0x0 action 0x2
+>         res 00/00:03:00:00:20/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+> ata4: soft resetting port
+> ATA: abnormal status 0x7F on port 0x00010177
+> ATA: abnormal status 0x7F on port 0x00010177
+> ata4.00: configured for PIO2
+> ata4: EH complete
 
->> Do we always know the worst case here as this breaks my pending patch to
->> use bounce buffers for PIO so we transfer with IRQ enabled and I need to
->> know the correct new worst case size.
+The device status of 0x00 looks strange.
+Could you please apply the attached debugging patch for 
+clue about what caused the HSM violation, thanks.
 
-> Ugh.  The drives default to 520 bytes (always),
+> 
+> 
+> (2) The above log says PIO2, but the IDENTIFY data for this drive,
+> which I had to patch the kernel to get (ATAPI ATA_16 support),
+> indicates max PIO0 for this unit.  I suppose maybe the chipset
+> doesn't go that low, but no big deal since IORDY handshakes it anyway.
+> 
 
-    The old IDE drives used to have 4 and 7 byte ECC (seen in ancient Phoenix 
-BIOS).
+I saw this strange behavior, too.
+The Promise BIOS identified my zip 100 drive as "PIO 0" during boot,
+but libata identified it as "PIO2":
 
-> but can specify a different, preferred, length in
-> the IDENTIFY data.  A SETFEATURES command is required
-> to change the setting from the default of 520.
+ata4.00: ATAPI, max PIO2, CDB intr
+ata4.00: configured for PIO2
 
-    You're wrong here (which is explainable by your patch bneing boken 
-protocol wise) -- there used to be two subcodes, one to selecyt vendor spcific 
-length (0x44), and one to selectt 4-byte ECC (0xBB). Not 8-byte!
+--
+albert
 
-> In practice, I only ever use 520, because (1) it always works,
-> and (2) I'm only trying to corrupt drives, not write correct stuff. ;)
+--- linux-2.6.20.3/drivers/ata/libata-core.c	2007-03-15 12:13:12.000000000 +0800
++++ linux-2.6.20.3-mod/drivers/ata/libata-core.c	2007-03-15 12:13:55.000000000 +0800
+@@ -4371,8 +4371,9 @@ int ata_hsm_move(struct ata_port *ap, st
+ 	WARN_ON(in_wq != ata_hsm_ok_in_wq(ap, qc));
+ 
+ fsm_start:
+-	DPRINTK("ata%u: protocol %d task_state %d (dev_stat 0x%X)\n",
+-		ap->id, qc->tf.protocol, ap->hsm_task_state, status);
++	if (is_atapi_taskfile(&qc->tf))
++		printk(KERN_ERR "ata%u: protocol %d task_state %d (dev_stat 0x%X)\n",
++		       ap->id, qc->tf.protocol, ap->hsm_task_state, status);
+ 
+ 	switch (ap->hsm_task_state) {
+ 	case HSM_ST_FIRST:
+@@ -5091,8 +5092,9 @@ inline unsigned int ata_host_intr (struc
+ 	struct ata_eh_info *ehi = &ap->eh_info;
+ 	u8 status, host_stat = 0;
+ 
+-	VPRINTK("ata%u: protocol %d task_state %d\n",
+-		ap->id, qc->tf.protocol, ap->hsm_task_state);
++	if (is_atapi_taskfile(&qc->tf))
++		printk(KERN_ERR "ata%u: protocol %d task_state %d\n",
++		       ap->id, qc->tf.protocol, ap->hsm_task_state);
+ 
+ 	/* Check whether we are expecting interrupt in this state */
+ 	switch (ap->hsm_task_state) {
 
-> So we could modify the patch to limit it to a specific maximum,
-> or always require exactly 520 bytes without any hardship.
-
-> ???
-
-    Certainly not the second. Vendor ECC length is indicated in the word 22 
-identify device info. Not sure how this gets translated to SCSI...
-
-WBR, Sergei
