@@ -1,48 +1,55 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: IOMEGA IDE ZIP (ATAPI) drive
-Date: Fri, 16 Mar 2007 10:37:25 -0400
-Message-ID: <45FAABA5.1000700@rtr.ca>
-References: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com> <45F7E34B.6020206@gmail.com> <45F7F90B.6070709@rtr.ca> <45F7FD13.2070907@gmail.com> <45F9C4B2.20906@rtr.ca> <45FAAA22.7060000@tw.ibm.com>
+Subject: Re: [PATCH] libata: add support for READ/WRITE LONG
+Date: Fri, 16 Mar 2007 10:42:28 -0400
+Message-ID: <45FAACD4.6000709@rtr.ca>
+References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	 <45F56800.3040104@rtr.ca> <3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com> <45F5A523.1080500@rtr.ca> <45FA8D7A.3040504@rtr.ca> <45FAA35C.2090902@ru.mvista.com> <45FAA822.7050208@rtr.ca> <45FAAACE.6000503@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:3728 "EHLO
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:1844 "EHLO
 	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965316AbXCPOh1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Mar 2007 10:37:27 -0400
-In-Reply-To: <45FAAA22.7060000@tw.ibm.com>
+	id S965277AbXCPOma (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Mar 2007 10:42:30 -0400
+In-Reply-To: <45FAAACE.6000503@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Tejun Heo <htejun@gmail.com>, Stanislav Brabec <sbrabec@novell.com>, jeff@garzik.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Vitaliyi <imgrey@gmail.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Albert Lee wrote:
-> Mark Lord wrote:
->..
->> (1) When ejecting a disk, either with the "eject /dev/sdc" command
->> or using the front-panel soft-eject button on the drive,
->> I get the following in syslog from libata:
->>
->> sdc: Spinning up disk...<3>ata4.00: exception Emask 0x0 SAct 0x0 SErr
->> 0x0 action 0x2
->>         res 00/00:03:00:00:20/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
->> ata4: soft resetting port
->> ATA: abnormal status 0x7F on port 0x00010177
->> ATA: abnormal status 0x7F on port 0x00010177
->> ata4.00: configured for PIO2
->> ata4: EH complete
+Sergei Shtylyov wrote:
+> Hello.
 > 
-> The device status of 0x00 looks strange.
+> Mark Lord wrote:
+..
+>>>    Again, ata_data_xfer() doesn't seem capable of performing ECC 
+>>> read/writes
+>>> -- the ECC bytes must be transferred in 8-bit mode, AFAIR. 
+>>> ata_data_xfer()
+>>> can oinly do that for optionally trailing odd byte.
+> 
+>> I have no idea what that was all about.  Care to explain again?
+> 
+>    Care to read the standards? :-/
+> 
+>> RWLONG transfer the ECC info 8-bits at a time, using 16-bit words
+>> to do so, no different from normal.  ???
+> 
+>    From ATA-1:
+> 
+>    "The transfer of the vendor specific bytes shall be one byte at a 
+> time over bits DD0-7 only (8-bits wide)."
 
-Not to me.  The device likely generated an unsolicitied interrupt,
-and status==0x00 is correct for a few seconds here:  the drive is
-not busy with a command, not in an error state, and not ready
-for a new command since it is busy ejecting a disc.
+> Yes, I said that already.  8-bits at a time, but using 16-bit transfers.
+> Kinda like it says here, in ATA-3 section 7.16:
 
-> Could you please apply the attached debugging patch for 
-> clue about what caused the HSM violation, thanks.
+> The transfer of the vendor specifc bytes shall be 16 bit transfers
+> with the vendor specific byte in bits 7 through 0.  Bits 15 through 8
+> shall be ignored by the host.
 
-I'll unpack the drive and hook it up again.
+But if we really want to be 100% compliant, we could consider dropping
+to PIO0 for the command.  Not worth it, though, as in practice this is
+not necessary, and it would mess up libata far more than is worthwhile
+for this effort.
 
 Cheers
