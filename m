@@ -1,89 +1,51 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCH] libata: add support for READ/WRITE LONG
-Date: Fri, 16 Mar 2007 17:33:50 +0300
-Message-ID: <45FAAACE.6000503@ru.mvista.com>
-References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	 <45F56800.3040104@rtr.ca> <3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com> <45F5A523.1080500@rtr.ca> <45FA8D7A.3040504@rtr.ca> <45FAA35C.2090902@ru.mvista.com> <45FAA822.7050208@rtr.ca>
+Date: Fri, 16 Mar 2007 10:33:49 -0400
+Message-ID: <45FAAACD.9000902@rtr.ca>
+References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	<45F56800.3040104@rtr.ca>	<3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com>	<45F5A523.1080500@rtr.ca>	<45FA8D7A.3040504@rtr.ca> <20070316150129.5bd65c9d@lxorguk.ukuu.org.uk> <45FAA692.8080507@rtr.ca> <45FAA86C.5080607@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:33363 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965330AbXCPOeC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Mar 2007 10:34:02 -0400
-In-Reply-To: <45FAA822.7050208@rtr.ca>
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:3673 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964978AbXCPOdv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Mar 2007 10:33:51 -0400
+In-Reply-To: <45FAA86C.5080607@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Vitaliyi <imgrey@gmail.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Vitaliyi <imgrey@gmail.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello.
+Sergei Shtylyov wrote:
+> Mark Lord wrote:
+>
+>> Ugh.  The drives default to 520 bytes (always),
+> 
+>    The old IDE drives used to have 4 and 7 byte ECC (seen in ancient 
+> Phoenix BIOS).
 
-Mark Lord wrote:
+Yes -- 4-bytes means a 520-byte transfer when using 16-bit words.
 
->>> The fussy bit is that these commands require a non-standard
->>> sector size, usually 520 bytes instead of 512.
+The ATA standard specifies a default of 520 bytes,
+or a SETFEATURES command to enable a different length.
 
->>    Which requires from the drivers to be able to turn off IDE prefetch 
->> (and maybe posting too).  I don't see that in this patch (or are you 
->> expecting them to just "snoop' the commands and do it automagically?).
+Here it is from ATA-1:
 
-> Most controllers seem to be behave well enough
-> and just not muck up.  And if it fails on any "too clever" controllers,
-> then no big deal -- we just switch to a controller that works instead.
+> 9.9.8 Word 22: ECC bytes available on read/write long commands
+> 
+> If the contents of this field are set to a value other than 4, the only way
+> to use this information is via the Set Features commands.
 
-   IDE controllers are generally not known as "clever" -- and that's what's 
-frightening me... :-)
+And again from ATA-3:
 
-> This is not an essential command for normal operation.
-> What it is for, is injecting errors so that we can experience
-> firsthand the (excellent or crappy) error handling in the kernel
-> and in applications.  And then work out and test better strategies.
+> Section 2.1.7:  ... The default length of the vendor specific bytpes associated
+> with the READ LONG and WRITE LONG commands is four bytes, but may be changed
+> by use of the SET FEATURES command.
 
-> So 100% working everywhere, for an obsolete opcode, isn't really
-> essential to me.  But it should work most places, and it does.
+It helps to verify stuff like this.   The best ways to do
+that are (1) to read the specs, and (2) actually implement
+and test the code using both ancient and modern drives on
+multiple controllers.  All of which has been done here.
 
-    I don't think it should *correctly* work anywhere w/prefetch on, IDE bus 
-wise.  Maybe that just doesn't show up on host side (but well might have been).
-
->>    Again, ata_data_xfer() doesn't seem capable of performing ECC 
->> read/writes
->> -- the ECC bytes must be transferred in 8-bit mode, AFAIR. 
->> ata_data_xfer()
->> can oinly do that for optionally trailing odd byte.
-
-> I have no idea what that was all about.  Care to explain again?
-
-    Care to read the standards? :-/
-
-> RWLONG transfer the ECC info 8-bits at a time, using 16-bit words
-> to do so, no different from normal.  ???
-
-    From ATA-1:
-
-    "The transfer of the vendor specific bytes shall be one byte at a time 
-over bits DD0-7 only (8-bits wide)."
-
-> Here it is again with the whitespace not so messed up.
-
-   I'm sorry, it seems only being messed on my side, due to format=flowed. :-/
-
-> The READ/WRITE LONG commands are theoretically obsolete,
-> but the majority of drives in existance still implement them.
-
-> The WRITE_LONG and WRITE_LONG_ONCE commands are of particular
-> interest for fault injection testing -- eg. creating "media errors"
-> at specific locations on a disk.
-
-> The fussy bit is that these commands require a non-standard
-> sector size, usually 520 bytes instead of 512.
-
-    It's 516 bytes, not 512 as you claim. Well, maybe the extra odd bytes 
-don't matter anyway in this GIGO case... :-)
-
-> This patch adds support to libata for READ/WRITE LONG commands
-> issued via SG_IO/ATA_16.
-
-> This patch was generated against a 2.6.21-rc3-git7 base:
-
-MBR, Sergei
+Cheers
