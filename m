@@ -1,32 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata: add support for READ/WRITE LONG
-Date: Sat, 17 Mar 2007 00:05:45 +0300
-Message-ID: <45FB06A9.7080301@ru.mvista.com>
-References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	<45F56800.3040104@rtr.ca>	<3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com>	<45F5A523.1080500@rtr.ca>	<45FA8D7A.3040504@rtr.ca>	<45FAA35C.2090902@ru.mvista.com>	<45FAA822.7050208@rtr.ca>	<45FAAACE.6000503@ru.mvista.com>	<45FAACD4.6000709@rtr.ca>	<45FAAD11.9010905@rtr.ca>	<45FAB662.2040901@ru.mvista.com> <20070316170802.227ff58b@lxorguk.ukuu.org.uk> <45FAE7F3.7050201@pobox.com> <45FAFB24.2050800@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: IOMEGA IDE ZIP (ATAPI) drive
+Date: Fri, 16 Mar 2007 17:17:19 -0400
+Message-ID: <45FB095F.1020009@rtr.ca>
+References: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com> <45F7E34B.6020206@gmail.com> <45F7F90B.6070709@rtr.ca> <45F7FD13.2070907@gmail.com> <45F9C4B2.20906@rtr.ca> <45FAAA22.7060000@tw.ibm.com> <45FAB418.2070402@rtr.ca> <45FAD204.2060700@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:35714 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965927AbXCPVGE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 17:06:04 -0400
-In-Reply-To: <45FAFB24.2050800@rtr.ca>
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:4145 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965949AbXCPVRW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Mar 2007 17:17:22 -0400
+In-Reply-To: <45FAD204.2060700@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Vitaliyi <imgrey@gmail.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mikael Pettersson <mikpe@it.uu.se>
+To: albertl@mail.com
+Cc: Tejun Heo <htejun@gmail.com>, Stanislav Brabec <sbrabec@novell.com>, jeff@garzik.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
 
-Hello.
+Albert Lee wrote:
+>..
+> Maybe we can wait a moment and give the slow ATAPI devices some time to set DRQ.
+> Could you please try if the attached patch works, thanks.
+> --
+> albert
+> 
+> --- linux-2.6.20.3/drivers/ata/libata-core.c	2007-03-15 18:03:27.000000000 +0800
+> +++ linux-2.6.20.3-mod2/drivers/ata/libata-core.c	2007-03-17 01:12:53.000000000 +0800
+> @@ -4384,6 +4384,19 @@ fsm_start:
+>  		 */
+>  		poll_next = (qc->tf.flags & ATA_TFLAG_POLLING);
+>  
+> +		/* wait for some slow ATAPI devices to set DRQ */
+> +		if (unlikely((status & ATA_DRQ) == 0) &&
+> +		    is_atapi_taskfile(&qc->tf)) {
+> +			int max = 100;
+> +
+> +			do {
+> +				udelay(10);
+> +				status = ata_chk_status(ap);
+> +				max--;
+> +				ata_port_printk(ap, KERN_ERR, "wait for DRQ %d\n", 100-max);	
+> +			} while (((status & ATA_DRQ) == 0) && (max > 0));
+> +		}
+> +
+>  		/* check device status */
+>  		if (unlikely((status & ATA_DRQ) == 0)) {
+>  			/* handle BSY=0, DRQ=0 as error */
+> 
 
-Mark Lord wrote:
+I patched the above in, and it was NEVER hit.
 
-> I've tested ATA1 and newer PATA drives, and various SATA drives
-> with these commands without bothering to drop to PIO0,
-> and none of them had issues.
-
-    Of course -- that PIO0 warning was for the sake of "some ATA-1 drives". :-)
-
-> Cheers
-
-MBR, Sergei
+-ml
