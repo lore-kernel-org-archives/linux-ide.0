@@ -1,32 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Fri, 16 Mar 2007 11:23:04 -0400
-Message-ID: <45FAB658.70408@garzik.org>
-References: <354573.23811.qm@web803.biz.mail.mud.yahoo.com>	<45F9851E.8000709@gmail.com> <20070315191639.7aadf9a3@lxorguk.ukuu.org.uk> <45F9A9A3.8050800@garzik.org> <45FA29C6.4070601@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] libata: add support for READ/WRITE LONG
+Date: Fri, 16 Mar 2007 18:23:14 +0300
+Message-ID: <45FAB662.2040901@ru.mvista.com>
+References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	 <45F56800.3040104@rtr.ca> <3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com> <45F5A523.1080500@rtr.ca> <45FA8D7A.3040504@rtr.ca> <45FAA35C.2090902@ru.mvista.com> <45FAA822.7050208@rtr.ca> <45FAAACE.6000503@ru.mvista.com> <45FAACD4.6000709@rtr.ca> <45FAAD11.9010905@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59543 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753534AbXCPPXI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Mar 2007 11:23:08 -0400
-In-Reply-To: <45FA29C6.4070601@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:33627 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753540AbXCPPX0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Mar 2007 11:23:26 -0400
+In-Reply-To: <45FAAD11.9010905@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bob Stewart <bob@evoria.net>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Vitaliyi <imgrey@gmail.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> nudge the controller into the ADMA mode.  Is ADMA some kind of
-> standardized programming interface?
+Hello.
 
-Yes.  Search for "ADMA" on the linux-ata.org developer resources page: 
-http://linux-ata.org/devel.html
+Mark Lord wrote:
 
-Both PDC and NVIDIA based their stuff off of ADMA.  PDC's is closer to 
-the standard, though both are pretty darn close.
+> But if we really want to be 100% compliant, we could consider dropping
+> to PIO0 for the command.  Not worth it, though, as in practice this is
+> not necessary, and it would mess up libata far more than is worthwhile
+> for this effort.
 
-	Jeff
+    I think it only requires the *host* to drop to PIO0 timings.  In which 
+case it should be achievable w/o libata modification -- if the driver has to 
+"snoop" command and turn off prefetch, why not switch to PIO0 temporarily?
 
+> Cheers
 
+MBR, Sergei
