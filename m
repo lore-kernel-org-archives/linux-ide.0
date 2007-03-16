@@ -1,111 +1,33 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] libata: add support for ATA_16 on ATAPI
-Date: Fri, 16 Mar 2007 08:33:26 -0400
-Message-ID: <45FA8E96.20909@rtr.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Fri, 16 Mar 2007 14:55:25 +0000
+Message-ID: <20070316145525.6d81acbb@lxorguk.ukuu.org.uk>
+References: <354573.23811.qm@web803.biz.mail.mud.yahoo.com>
+	<45F9851E.8000709@gmail.com>
+	<20070315191639.7aadf9a3@lxorguk.ukuu.org.uk>
+	<45F9A9A3.8050800@garzik.org>
+	<45FA29C6.4070601@gmail.com>
+	<45FA8C4B.4010101@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:4881 "EHLO
-	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751956AbXCPMd2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Mar 2007 08:33:28 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52247 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933773AbXCPNwX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 09:52:23 -0400
+In-Reply-To: <45FA8C4B.4010101@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Bob Stewart <bob@evoria.net>, linux-ide@vger.kernel.org
 
-(many months and hours of wasted effort later, still resending..)
+On Fri, 16 Mar 2007 08:23:39 -0400
+Mark Lord <liml@rtr.ca> wrote:
 
-This patch adds support for issuing ATA_16 passthru commands
-to ATAPI devices managed by libata.  It requires the previous
-CDB length fix patch.
+> Tejun Heo wrote:
+> > IIRC, I couldn't nudge the controller into the ADMA mode.
+> > Is ADMA some kind of standardized programming interface?
 
-A boot/module parameter, "ata16_passthru=1" can be used to
-globally disable this feature, if ever desired.
-
-Signed-Off-By: Mark Lord <mlord@pobox.com> 
----
-diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff old/drivers/ata/libata-core.c new/drivers/ata/libata-core.c
---- old/drivers/ata/libata-core.c	2007-02-02 12:29:10.000000000 -0500
-+++ new/drivers/ata/libata-core.c	2007-02-02 12:29:03.000000000 -0500
-@@ -82,6 +82,10 @@
- module_param(atapi_dmadir, int, 0444);
- MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
- 
-+int ata16_passthru = 0;
-+module_param(ata16_passthru, int, 0444);
-+MODULE_PARM_DESC(ata16_passthru, "Enable passthru of SCSI opcode 0x85 to ATAPI devices (0=off, 1=on)");
-+
- int libata_fua = 0;
- module_param_named(fua, libata_fua, int, 0444);
- MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
-diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff old/drivers/ata/libata-scsi.c new/drivers/ata/libata-scsi.c
---- old/drivers/ata/libata-scsi.c	2007-02-02 12:29:10.000000000 -0500
-+++ new/drivers/ata/libata-scsi.c	2007-02-02 12:29:25.000000000 -0500
-@@ -2688,6 +2688,10 @@
- 
- static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- {
-+	if (dev->class == ATA_DEV_ATAPI)
-+		if (cmd != ATA_16 || ata16_passthru)
-+			return atapi_xlat;
-+
- 	switch (cmd) {
- 	case READ_6:
- 	case READ_10:
-@@ -2746,27 +2750,28 @@
- 				      void (*done)(struct scsi_cmnd *),
- 				      struct ata_device *dev)
- {
--	int rc = 0;
--
--	if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len)) {
--		DPRINTK("bad CDB len=%u, max=%u\n",
--			scmd->cmd_len, dev->cdb_len);
-+	ata_xlat_func_t xlat_func;
-+	int rc = 0, max_len;
-+	u8 scsi_op = scmd->cmnd[0];
-+
-+	if (scsi_op == ATA_16 && dev->class == ATA_DEV_ATAPI && !ata16_passthru)
-+		max_len = 16;
-+	else
-+		max_len = dev->cdb_len;
-+ 
-+	if (unlikely(!scmd->cmd_len || scmd->cmd_len > max_len)) {
-+ 		DPRINTK("bad CDB len=%u, max=%u\n",
-+ 			scmd->cmd_len, max_len);
- 		scmd->result = DID_ERROR << 16;
- 		done(scmd);
- 		return 0;
- 	}
- 
--	if (dev->class == ATA_DEV_ATA) {
--		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
--							      scmd->cmnd[0]);
--
--		if (xlat_func)
--			rc = ata_scsi_translate(dev, scmd, done, xlat_func);
--		else
--			ata_scsi_simulate(dev, scmd, done);
--	} else
--		rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
--
-+	xlat_func = ata_get_xlat_func(dev, scsi_op);
-+	if (xlat_func)
-+		rc = ata_scsi_translate(dev, scmd, done, xlat_func);
-+	else
-+		ata_scsi_simulate(dev, scmd, done);
- 	return rc;
- }
- 
-diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff old/drivers/ata/libata.h new/drivers/ata/libata.h
---- old/drivers/ata/libata.h	2007-02-02 12:26:28.000000000 -0500
-+++ new/drivers/ata/libata.h	2007-02-02 12:29:03.000000000 -0500
-@@ -47,6 +47,7 @@
- extern struct workqueue_struct *ata_aux_wq;
- extern int atapi_enabled;
- extern int atapi_dmadir;
-+extern int ata16_passthru;
- extern int libata_fua;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ADMA is documented in the same place as the SFF PCI interface and you'll
+find it on the t13 website if I remember rightly
