@@ -1,26 +1,13 @@
 From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCH 2/2] scc_pata: move from ide/ppc to ide/pci
 Date: Fri, 16 Mar 2007 11:05:31 +0900
-Message-ID: <200703160203.l2G23Uh2022274@toshiba.co.jp>
+Message-ID: <200703160203.l2G23UxN028190@toshiba.co.jp>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:55029 "EHLO
-	inet-tsb5.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752386AbXCPCDj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Mar 2007 22:03:39 -0400
-Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
-	by inet-tsb5.toshiba.co.jp  with ESMTP id l2G23Xla009591
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 11:03:33 +0900 (JST)
-Received: (from root@localhost)
-	by tsb-wall.toshiba.co.jp  id l2G23X8d004176
-	for linux-ide@vger.kernel.org; Fri, 16 Mar 2007 11:03:33 +0900 (JST)
-Received: from mx.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp1.toshiba.co.jp  with ESMTP id l2G23XBb011447
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 11:03:33 +0900 (JST)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S2992434AbXCPCDk@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: bzolnier@gmail.com, torvalds@linux-foundation.org
 Cc: Al Viro <viro@ftp.linux.org.uk>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 This patch moves scc_pata from ide/ppc to ide/pci in order to
 build it in normal module.
@@ -1753,4 +1740,3 @@ diff -Nrpu -X linux-2.6.21-rc3/Documentation/dontdiff linux-2.6.21-rc3/drivers/i
 -
 -MODULE_DESCRIPTION("PCI driver module for Toshiba SCC IDE");
 -MODULE_LICENSE("GPL");
-
