@@ -1,115 +1,89 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: IOMEGA IDE ZIP (ATAPI) drive
-Date: Fri, 16 Mar 2007 22:30:58 +0800
-Message-ID: <45FAAA22.7060000@tw.ibm.com>
-References: <45F7DA2B0200002D0001585E@emea5-mh.id5.novell.com> <45F7E34B.6020206@gmail.com> <45F7F90B.6070709@rtr.ca> <45F7FD13.2070907@gmail.com> <45F9C4B2.20906@rtr.ca>
-Reply-To: albertl@mail.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] libata: add support for READ/WRITE LONG
+Date: Fri, 16 Mar 2007 17:33:50 +0300
+Message-ID: <45FAAACE.6000503@ru.mvista.com>
+References: <3aac340703102322p362998b9labedc13503702d2b@mail.gmail.com>	 <45F56800.3040104@rtr.ca> <3aac340703121003l43685599t8dbffe6247879a91@mail.gmail.com> <45F5A523.1080500@rtr.ca> <45FA8D7A.3040504@rtr.ca> <45FAA35C.2090902@ru.mvista.com> <45FAA822.7050208@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:35651 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965287AbXCPObX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 10:31:23 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2GEVNmb013475
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 10:31:23 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2GEVM5c041634
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 08:31:22 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2GEVK3X001158
-	for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 08:31:22 -0600
-In-Reply-To: <45F9C4B2.20906@rtr.ca>
+Received: from h155.mvista.com ([63.81.120.155]:33363 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965330AbXCPOeC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Mar 2007 10:34:02 -0400
+In-Reply-To: <45FAA822.7050208@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Stanislav Brabec <sbrabec@novell.com>, albertl@mail.com, jeff@garzik.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk, paul@paulbristow.net, chrubis@suse.cz, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Vitaliyi <imgrey@gmail.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+
+Hello.
 
 Mark Lord wrote:
-> Tejun Heo wrote:
-> 
->> Mark Lord wrote:
->>
->>> Really?  I didn't notice when libata gained ATAPI-disk support.
->>>
->>> Are you *sure* about that??
->>
->>
->> Not sure sure but almost sure.  :-)  What ide-scsi does is borrowing
->> SCSI mid and high level drivers while using ide as SCSI low level
->> driver.  To SCSI, libata and ide-scsi aren't very different except that
->> libata also exports SBC device to it.  So, if SCSI could handle ATAPI
->> disk via ide-scsi, I don't think there is any reason it can't with
->> libata.
-> 
-> 
-> Okay, I dusted off one of my old (actually, I believe *the oldest*)
-> Zip100 drives in the collection, and tried it out here with both
-> 2.6.20 and 2.6.21-rc3-git9.   It works mostly fine with each.
-> 
-> A couple of minor issues, though.
-> 
-> (1) When ejecting a disk, either with the "eject /dev/sdc" command
-> or using the front-panel soft-eject button on the drive,
-> I get the following in syslog from libata:
-> 
-> sdc: Spinning up disk...<3>ata4.00: exception Emask 0x0 SAct 0x0 SErr
-> 0x0 action 0x2
->         res 00/00:03:00:00:20/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
-> ata4: soft resetting port
-> ATA: abnormal status 0x7F on port 0x00010177
-> ATA: abnormal status 0x7F on port 0x00010177
-> ata4.00: configured for PIO2
-> ata4: EH complete
 
-The device status of 0x00 looks strange.
-Could you please apply the attached debugging patch for 
-clue about what caused the HSM violation, thanks.
+>>> The fussy bit is that these commands require a non-standard
+>>> sector size, usually 520 bytes instead of 512.
 
-> 
-> 
-> (2) The above log says PIO2, but the IDENTIFY data for this drive,
-> which I had to patch the kernel to get (ATAPI ATA_16 support),
-> indicates max PIO0 for this unit.  I suppose maybe the chipset
-> doesn't go that low, but no big deal since IORDY handshakes it anyway.
-> 
+>>    Which requires from the drivers to be able to turn off IDE prefetch 
+>> (and maybe posting too).  I don't see that in this patch (or are you 
+>> expecting them to just "snoop' the commands and do it automagically?).
 
-I saw this strange behavior, too.
-The Promise BIOS identified my zip 100 drive as "PIO 0" during boot,
-but libata identified it as "PIO2":
+> Most controllers seem to be behave well enough
+> and just not muck up.  And if it fails on any "too clever" controllers,
+> then no big deal -- we just switch to a controller that works instead.
 
-ata4.00: ATAPI, max PIO2, CDB intr
-ata4.00: configured for PIO2
+   IDE controllers are generally not known as "clever" -- and that's what's 
+frightening me... :-)
 
---
-albert
+> This is not an essential command for normal operation.
+> What it is for, is injecting errors so that we can experience
+> firsthand the (excellent or crappy) error handling in the kernel
+> and in applications.  And then work out and test better strategies.
 
---- linux-2.6.20.3/drivers/ata/libata-core.c	2007-03-15 12:13:12.000000000 +0800
-+++ linux-2.6.20.3-mod/drivers/ata/libata-core.c	2007-03-15 12:13:55.000000000 +0800
-@@ -4371,8 +4371,9 @@ int ata_hsm_move(struct ata_port *ap, st
- 	WARN_ON(in_wq != ata_hsm_ok_in_wq(ap, qc));
- 
- fsm_start:
--	DPRINTK("ata%u: protocol %d task_state %d (dev_stat 0x%X)\n",
--		ap->id, qc->tf.protocol, ap->hsm_task_state, status);
-+	if (is_atapi_taskfile(&qc->tf))
-+		printk(KERN_ERR "ata%u: protocol %d task_state %d (dev_stat 0x%X)\n",
-+		       ap->id, qc->tf.protocol, ap->hsm_task_state, status);
- 
- 	switch (ap->hsm_task_state) {
- 	case HSM_ST_FIRST:
-@@ -5091,8 +5092,9 @@ inline unsigned int ata_host_intr (struc
- 	struct ata_eh_info *ehi = &ap->eh_info;
- 	u8 status, host_stat = 0;
- 
--	VPRINTK("ata%u: protocol %d task_state %d\n",
--		ap->id, qc->tf.protocol, ap->hsm_task_state);
-+	if (is_atapi_taskfile(&qc->tf))
-+		printk(KERN_ERR "ata%u: protocol %d task_state %d\n",
-+		       ap->id, qc->tf.protocol, ap->hsm_task_state);
- 
- 	/* Check whether we are expecting interrupt in this state */
- 	switch (ap->hsm_task_state) {
+> So 100% working everywhere, for an obsolete opcode, isn't really
+> essential to me.  But it should work most places, and it does.
 
+    I don't think it should *correctly* work anywhere w/prefetch on, IDE bus 
+wise.  Maybe that just doesn't show up on host side (but well might have been).
+
+>>    Again, ata_data_xfer() doesn't seem capable of performing ECC 
+>> read/writes
+>> -- the ECC bytes must be transferred in 8-bit mode, AFAIR. 
+>> ata_data_xfer()
+>> can oinly do that for optionally trailing odd byte.
+
+> I have no idea what that was all about.  Care to explain again?
+
+    Care to read the standards? :-/
+
+> RWLONG transfer the ECC info 8-bits at a time, using 16-bit words
+> to do so, no different from normal.  ???
+
+    From ATA-1:
+
+    "The transfer of the vendor specific bytes shall be one byte at a time 
+over bits DD0-7 only (8-bits wide)."
+
+> Here it is again with the whitespace not so messed up.
+
+   I'm sorry, it seems only being messed on my side, due to format=flowed. :-/
+
+> The READ/WRITE LONG commands are theoretically obsolete,
+> but the majority of drives in existance still implement them.
+
+> The WRITE_LONG and WRITE_LONG_ONCE commands are of particular
+> interest for fault injection testing -- eg. creating "media errors"
+> at specific locations on a disk.
+
+> The fussy bit is that these commands require a non-standard
+> sector size, usually 520 bytes instead of 512.
+
+    It's 516 bytes, not 512 as you claim. Well, maybe the extra odd bytes 
+don't matter anyway in this GIGO case... :-)
+
+> This patch adds support to libata for READ/WRITE LONG commands
+> issued via SG_IO/ATA_16.
+
+> This patch was generated against a 2.6.21-rc3-git7 base:
+
+MBR, Sergei
