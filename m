@@ -1,170 +1,37 @@
-From: YUP <yupadmin@gmail.com>
-Subject: Re: libata: CD and dvd devices not recognized
-Date: Fri, 16 Mar 2007 23:37:24 +0100
-Message-ID: <45FB1C24.1000502@gmail.com>
-References: <45F873AC.6010204@gmail.com> <45F8C3E1.3080805@tw.ibm.com> <45F9460E.7020701@gmail.com> <45F98343.3060703@tw.ibm.com> <45FA6E8A.5070507@gmail.com> <45FAB270.8090909@tw.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Sat, 17 Mar 2007 11:09:55 +0900
+Message-ID: <45FB4DF3.9080803@gmail.com>
+References: <354573.23811.qm@web803.biz.mail.mud.yahoo.com>	<45F9851E.8000709@gmail.com> <20070315191639.7aadf9a3@lxorguk.ukuu.org.uk> <45F9A9A3.8050800@garzik.org> <45FA29C6.4070601@gmail.com> <45FAB604.5070801@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:54239 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965999AbXCPWhc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 18:37:32 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so420684nfa
-        for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 15:37:30 -0700 (PDT)
-In-Reply-To: <45FAB270.8090909@tw.ibm.com>
+Received: from wr-out-0506.google.com ([64.233.184.232]:40489 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933943AbXCQCKB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 22:10:01 -0400
+Received: by wr-out-0506.google.com with SMTP id 41so738367wry
+        for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 19:10:00 -0700 (PDT)
+In-Reply-To: <45FAB604.5070801@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bob Stewart <bob@evoria.net>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-Hi Albert,
-
-I think my cdrom drive is broken. I did some test under windows by means 
-of nero-info tool and it shows that cdrom drive has not available 
-read/write speed. Here is summary:
-
-Nero InfoTool 4.2.1.0
-
-Drive Information
-------------------
-Drive                      : HP       DVD Writer 200j
-Type                       : DVD+R/RW Recorder
-Firmware Version           : 1.36
-Buffer Size                : 2 MB
-Date                       : 02-07-24
-Serial Number              : DA33 110484
-Vendor Specific            :  020724
-Drive Letter               : E:\
-Location                   : 0:0
-Mechanism                  : Tray
-Read Speed                 : 32 , 20 , 12 , 10 , 8 , 4 , 2  X
-Write Speed                : 12 , 8 , 4 , 2  X
-
-Read CD Text               : Yes
-Return C2 Pointers         : Yes
-Read CD-R                  : Yes
-Read CD-RW                 : Yes
-Read DVD-ROM               : Yes
-Read DVD-RAM               : No
-Read DVD-R                 : No
-Read DVD-RW                : No
-Read DVD-R DL              : No
-Read DVD+R                 : Yes
-Read DVD+RW                : Yes
-Read DVD+R DL              : No
-Read BD-ROM                : No
-Read BD-R                  : No
-Read BD-RE                 : No
-Read HD DVD-ROM            : No
-Read HD DVD-R              : No
-Read HD DVD-RW             : No
-Read HD-BURN               : No
-Read Digital Audio         : Yes
-Read CD+G                  : Yes
-Read VideoCD               : Yes
-
-Write CD-R                 : Yes
-Write CD-RW                : Yes
-Write DVD-R                : No
-Write DVD-RW               : No
-Write DVD-R DL             : No
-Write DVD+R                : Yes
-Write DVD+RW               : Yes
-Write DVD+R DL             : No
-Write DVD-RAM              : No
-Write BD-R                 : No
-Write BD-RE                : No
-Write HD DVD-R             : No
-Write HD DVD-RW            : No
-Write HD-BURN-R            : No
-Write HD-BURN-RW           : No
-Buffer Underrun Protection : Yes
-Mount Rainier              : No
-SolidBurn                  : No
-Labelflash                 : No
-Modes                      : Packet, TAO, DAO, SAO, RAW SAO, RAW SAO 16, 
-RAW SAO 96, RAW DAO 96
-
-Region Protection Control  : RPC II
-Region                     : 2
-Changes User               : 4
-Changes Vendor             : 4
-
-
-Drive Information
-------------------
-Drive                      : E-IDE    CD-ROM 56X/AKH
-Type                       : CD-ROM Drive
-Firmware Version           : A80
-Buffer Size                : 192 KB
-Date                       : ?
-Serial Number
-Vendor Specific            :
-Drive Letter               : D:\
-Location                   : 1:1
-Mechanism                  : Tray
-Read Speed                 :  n/a
-Write Speed                :  n/a
-
-Read CD Text               : No
-Return C2 Pointers         : No
-Read CD-R                  : Yes
-Read CD-RW                 : Yes
-Read DVD-ROM               : No
-Read DVD-RAM               : No
-Read DVD-R                 : No
-Read DVD-RW                : No
-Read DVD-R DL              : No
-Read DVD+R                 : No
-Read DVD+RW                : No
-Read DVD+R DL              : No
-Read BD-ROM                : No
-Read BD-R                  : No
-Read BD-RE                 : No
-Read HD DVD-ROM            : No
-Read HD DVD-R              : No
-Read HD DVD-RW             : No
-Read HD-BURN               : No
-Read Digital Audio         : Yes
-Read CD+G                  : No
-Read VideoCD               : Yes
-
-Write CD-R                 : No
-Write CD-RW                : No
-Write DVD-R                : No
-Write DVD-RW               : No
-Write DVD-R DL             : No
-Write DVD+R                : No
-Write DVD+RW               : No
-Write DVD+R DL             : No
-Write DVD-RAM              : No
-Write BD-R                 : No
-Write BD-RE                : No
-Write HD DVD-R             : No
-Write HD DVD-RW            : No
-Write HD-BURN-R            : No
-Write HD-BURN-RW           : No
-Buffer Underrun Protection : No
-Mount Rainier              : No
-SolidBurn                  : No
-Labelflash                 : No
-Modes                      : n/a
-
-Regards,
-
-Yarema
-
-
-> Could you please check whether the IDE driver work for it? (Please configure the
-> IDE pdc202xx_new and deconfig the libata pata_pdc2027x driver, recompile/reboot
-> the kernel and try read some cd using the IDE driver.) Thanks.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Oh well, I never got around to get the ADMA mode working.  The sunix
+>> driver is TF/quasi-BMDMA based (w/o CONTROL register so I'm pretty sure
+>> they have some problem with LBA48).  The docs[1] I have only have
+>> register description and nothing about the programming model.  Me being
 > 
-> --
-> albert
-> 
-> 
-> 
-> 
+> Does this missing reference "[1]" coincide with the docs list I posted
+> yesterday?  Do you have all the docs I listed?
 
+Yeap, I have...
+
+Initio 1622.pdf and two others.  Those are all similar tho.
+
+-- 
+tejun
