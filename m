@@ -1,31 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: kernel-doc fix
-Date: Sat, 17 Mar 2007 15:17:54 +0000
-Message-ID: <20070317151754.50b69287@lxorguk.ukuu.org.uk>
-References: <20070316195547.cd3bb5ca.randy.dunlap@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Isak Styf <isak@styfsoftware.se>
+Subject: Via VT6421 PATA support
+Date: Sat, 17 Mar 2007 15:03:40 +0100
+Message-ID: <BA4CEFA0-4132-412E-815C-687B253AF6A2@styfsoftware.se>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46003 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965555AbXCQOOv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Mar 2007 10:14:51 -0400
-In-Reply-To: <20070316195547.cd3bb5ca.randy.dunlap@oracle.com>
+Received: from mailrelay1.bredband.net ([195.54.107.83]:45335 "EHLO
+	mailrelay1.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965583AbXCQOa2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Mar 2007 10:30:28 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: ide <linux-ide@vger.kernel.org>, jgarzik <jgarzik@pobox.com>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Fri, 16 Mar 2007 19:55:47 -0700
-Randy Dunlap <randy.dunlap@oracle.com> wrote:
+Hi!
 
-> From: Randy Dunlap <randy.dunlap@oracle.com>
-> 
-> Warning(linux-2621-rc3g7/drivers/ata/libata-core.c:842): No description found for parameter 'unknown'
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+I am wondering why VT6421 PATA support is still on the todo list in  
+sata_via.c although patches have been posted that makes it work?
 
-Acked-by: Alan Cox <alan@redhat.com>
+I am currently looking at 2.6.20-1.2925.fc6. I had hoped that the  
+support would be added in that kernel, but unfortunately it seems to  
+have been left out. Why is this? Have you been notified about any  
+stability issues?
 
+I am now running a manually patched 2.6.19-1.2895, but i would of  
+course prefer to have this functionality in the stock kernel.
+
+The patch i am currently using is this one:
+
+http://linux.derkeiler.com/Mailing-Lists/Kernel/2006-12/msg00985.html
+
+     /// Isak Styf
 
