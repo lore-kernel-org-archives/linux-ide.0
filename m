@@ -1,43 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: libata reports bogus addresses for everything (was PATA_PCMCIA  cmd
- port)
-Date: Sat, 17 Mar 2007 15:43:33 +0000
-Message-ID: <20070317154333.088d77d4@lxorguk.ukuu.org.uk>
-References: <20061217212752.d93816b4.komurojun-mbn@nifty.com>
-	<20061217040222.GD17561@ftp.linux.org.uk>
-	<20070211101537.e40fa309.komurojun-mbn@nifty.com>
-	<20070317220050.380d9f51.komurojun-mbn@nifty.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: libata: CD and dvd devices not recognized
+Date: Sat, 17 Mar 2007 16:00:55 +0100
+Message-ID: <200703171600.55863.bzolnier@gmail.com>
+References: <45F873AC.6010204@gmail.com> <200703171429.49646.bzolnier@gmail.com> <45FBFD89.3080308@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54597 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965639AbXCQOkS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Mar 2007 10:40:18 -0400
-In-Reply-To: <20070317220050.380d9f51.komurojun-mbn@nifty.com>
+Received: from wx-out-0506.google.com ([66.249.82.226]:38218 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbXCQOxh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Mar 2007 10:53:37 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so810282wxd
+        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 07:53:36 -0700 (PDT)
+In-Reply-To: <45FBFD89.3080308@tw.ibm.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Komuro <komurojun-mbn@nifty.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: YUP <yupadmin@gmail.com>, linux-ide@vger.kernel.org
 
-On Sat, 17 Mar 2007 22:00:50 +0900
-Komuro <komurojun-mbn@nifty.com> wrote:
 
+On Saturday 17 March 2007, Albert Lee wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > Hi,
+> > 
+> > Any news about this test?  ide-cd driver is much more forgiving for
+> > quirky hardware than libata+sr so please give it a try...
+> > 
 > 
-> Hi,
->  
-> The pata_pcmcia driver reports the cmd port is 0x00010100,
-> but actually the cmd port is 0x0100.
-> 
-> Is this corect?
+> Hi Bart,
+> Yarema did the run test, but the AOpen drive was connected to the PIIX
+> controller, which is driven by libata:
 
-When the pci_iomap patches were applied the ports reported for every
-device went strange.  It appears to display the wrong information
-nowdays. I see the same but I've got many more important things to work
-on before I even bother to look at it.
+Which unfortunately says us nothing besides that pdc202xx_new works great
+on this system... ;-)
 
-My guess is someone is now printing the iomap virtual addresses not the
-bus ones.
+Yarema, could you disable ata_piix, enable drivers/ide piix driver and retest?
 
-Alan
+Thanks,
+Bart
