@@ -1,43 +1,43 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: libata: CD and dvd devices not recognized
-Date: Sat, 17 Mar 2007 16:00:55 +0100
-Message-ID: <200703171600.55863.bzolnier@gmail.com>
-References: <45F873AC.6010204@gmail.com> <200703171429.49646.bzolnier@gmail.com> <45FBFD89.3080308@tw.ibm.com>
+From: "Paul Rolland" <rol@as2917.net>
+Subject: RE: [git patches] libata fixes
+Date: Sat, 17 Mar 2007 18:56:37 +0100
+Message-ID: <00a601c768bd$9c897430$2101a8c0@donald>
+References: <Pine.LNX.4.64.0703111750010.9690@woody.linux-foundation.org>
+Reply-To: <rol@as2917.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="windows-1251"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.226]:38218 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700AbXCQOxh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Mar 2007 10:53:37 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so810282wxd
-        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 07:53:36 -0700 (PDT)
-In-Reply-To: <45FBFD89.3080308@tw.ibm.com>
-Content-Disposition: inline
+Received: from tag.witbe.net ([81.88.96.48]:47947 "EHLO tag.witbe.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752833AbXCQR5I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Mar 2007 13:57:08 -0400
+In-Reply-To: <Pine.LNX.4.64.0703111750010.9690@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: YUP <yupadmin@gmail.com>, linux-ide@vger.kernel.org
+To: 'Linus Torvalds' <torvalds@linux-foundation.org>
+Cc: 'Tejun Heo' <htejun@gmail.com>, 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
 
 
-On Saturday 17 March 2007, Albert Lee wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > Hi,
-> > 
-> > Any news about this test?  ide-cd driver is much more forgiving for
-> > quirky hardware than libata+sr so please give it a try...
-> > 
+> > PS : I'd like to try 2.6.21-rc3, but it seems that this is 
+> breaking my
+> > config : disk naming is no more the same, and I end up with a panic
+> > Warning: unable to open an initial console
+> > though i've been compiling with the same .config I was 
+> using for 2.6.21-rc2
 > 
-> Hi Bart,
-> Yarema did the run test, but the AOpen drive was connected to the PIIX
-> controller, which is driven by libata:
+> Gaah. Can you get a log through serial console or netconsole 
+> to see what changed?
+> 
 
-Which unfortunately says us nothing besides that pdc202xx_new works great
-on this system... ;-)
+Sorry, I've had no time this week for that.
+I've just switch to 2.6.21-rc4, and carefully restored config from 2.6.21-rc2,
+and boot is Ok...
 
-Yarema, could you disable ata_piix, enable drivers/ide piix driver and retest?
+So, I must have done something bad when building 2.6.21-rc3, sorry for the
+noise.
 
-Thanks,
-Bart
+Regards,
+Paul
+
