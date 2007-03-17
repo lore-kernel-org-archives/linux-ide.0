@@ -1,54 +1,29 @@
-From: YUP <yupadmin@gmail.com>
-Subject: Re: libata: CD and dvd devices not recognized
-Date: Sat, 17 Mar 2007 19:38:09 +0100
-Message-ID: <45FC3591.40404@gmail.com>
-References: <45F873AC.6010204@gmail.com> <200703171429.49646.bzolnier@gmail.com> <45FBFD89.3080308@tw.ibm.com> <200703171600.55863.bzolnier@gmail.com>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [git patches] libata fixes
+Date: Sat, 17 Mar 2007 14:44:09 -0400
+Message-ID: <20070317184409.GA18870@devserv.devel.redhat.com>
+References: <45F509A7.8030705@gmail.com> <00a701c768bd$f8abe130$2101a8c0@donald>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:35182 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926AbXCQSiN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Mar 2007 14:38:13 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so608682nfa
-        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 11:38:12 -0700 (PDT)
-In-Reply-To: <200703171600.55863.bzolnier@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:40367 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752856AbXCQSoS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Mar 2007 14:44:18 -0400
+Content-Disposition: inline
+In-Reply-To: <00a701c768bd$f8abe130$2101a8c0@donald>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: albertl@mail.com, linux-ide@vger.kernel.org
+To: Paul Rolland <rol@as2917.net>
+Cc: 'Tejun Heo' <htejun@gmail.com>, 'Linus Torvalds' <torvalds@linux-foundation.org>, 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
 
-Sorry for delay I was a little bit busy. I'll do this tests today and=20
-let you know about results.
+On Sat, Mar 17, 2007 at 06:59:12PM +0100, Paul Rolland wrote:
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: ATA-7: Maxtor 6L250S0, BANC1G10, max UDMA/133
 
-Regards,
+That drive isn't in our current block list for NCQ but some close
+relatives are in the one I've compiled so far (7B250S0). If you add it to 
+the blacklist it behave ?
 
-Yarema
-
-
-Bartlomiej Zolnierkiewicz =EF=E8=F8=E5:
-> On Saturday 17 March 2007, Albert Lee wrote:
->> Bartlomiej Zolnierkiewicz wrote:
->>> Hi,
->>>
->>> Any news about this test?  ide-cd driver is much more forgiving for
->>> quirky hardware than libata+sr so please give it a try...
->>>
->> Hi Bart,
->> Yarema did the run test, but the AOpen drive was connected to the PI=
-IX
->> controller, which is driven by libata:
->=20
-> Which unfortunately says us nothing besides that pdc202xx_new works g=
-reat
-> on this system... ;-)
->=20
-> Yarema, could you disable ata_piix, enable drivers/ide piix driver an=
-d retest?
->=20
-> Thanks,
-> Bart
->=20
+Also what controller ?
 
