@@ -1,37 +1,37 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Sat, 17 Mar 2007 11:09:55 +0900
-Message-ID: <45FB4DF3.9080803@gmail.com>
-References: <354573.23811.qm@web803.biz.mail.mud.yahoo.com>	<45F9851E.8000709@gmail.com> <20070315191639.7aadf9a3@lxorguk.ukuu.org.uk> <45F9A9A3.8050800@garzik.org> <45FA29C6.4070601@gmail.com> <45FAB604.5070801@garzik.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] libata: kernel-doc fix
+Date: Fri, 16 Mar 2007 19:55:47 -0700
+Message-ID: <20070316195547.cd3bb5ca.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:40489 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933943AbXCQCKB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 22:10:01 -0400
-Received: by wr-out-0506.google.com with SMTP id 41so738367wry
-        for <linux-ide@vger.kernel.org>; Fri, 16 Mar 2007 19:10:00 -0700 (PDT)
-In-Reply-To: <45FAB604.5070801@garzik.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:39482 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753709AbXCQC4D (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2007 22:56:03 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bob Stewart <bob@evoria.net>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>
+Cc: jgarzik <jgarzik@pobox.com>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Oh well, I never got around to get the ADMA mode working.  The sunix
->> driver is TF/quasi-BMDMA based (w/o CONTROL register so I'm pretty sure
->> they have some problem with LBA48).  The docs[1] I have only have
->> register description and nothing about the programming model.  Me being
-> 
-> Does this missing reference "[1]" coincide with the docs list I posted
-> yesterday?  Do you have all the docs I listed?
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Yeap, I have...
+Warning(linux-2621-rc3g7/drivers/ata/libata-core.c:842): No description found for parameter 'unknown'
 
-Initio 1622.pdf and two others.  Those are all similar tho.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/ata/libata-core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--- 
-tejun
+--- linux-2621-rc4.orig/drivers/ata/libata-core.c
++++ linux-2621-rc4/drivers/ata/libata-core.c
+@@ -826,7 +826,7 @@ static u64 ata_id_n_sectors(const u16 *i
+ /**
+  *	ata_id_to_dma_mode	-	Identify DMA mode from id block
+  *	@dev: device to identify
+- *	@mode: mode to assume if we cannot tell
++ *	@unknown: mode to assume if we cannot tell
+  *
+  *	Set up the timing values for the device based upon the identify
+  *	reported values for the DMA mode. This function is used by drivers
