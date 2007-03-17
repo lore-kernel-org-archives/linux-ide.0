@@ -1,82 +1,44 @@
-From: YUP <yupadmin@gmail.com>
-Subject: Re: libata: CD and dvd devices not recognized
-Date: Sat, 17 Mar 2007 19:47:59 +0100
-Message-ID: <45FC37DF.3010805@gmail.com>
-References: <45F873AC.6010204@gmail.com> <200703171429.49646.bzolnier@gmail.com> <45FBFD89.3080308@tw.ibm.com> <200703171600.55863.bzolnier@gmail.com>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [git patches] libata fixes
+Date: Sat, 17 Mar 2007 14:56:07 -0400
+Message-ID: <20070317185607.GC18870@devserv.devel.redhat.com>
+References: <00a701c768bd$f8abe130$2101a8c0@donald> <00ae01c768c4$a673e3c0$2101a8c0@donald>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:37212 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752864AbXCQSsH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Mar 2007 14:48:07 -0400
-Received: by an-out-0708.google.com with SMTP id b33so980503ana
-        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 11:48:06 -0700 (PDT)
-In-Reply-To: <200703171600.55863.bzolnier@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:43730 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752875AbXCQS4Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Mar 2007 14:56:16 -0400
+Content-Disposition: inline
+In-Reply-To: <00ae01c768c4$a673e3c0$2101a8c0@donald>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: albertl@mail.com, linux-ide@vger.kernel.org
+To: Paul Rolland <rol@as2917.net>
+Cc: 'Tejun Heo' <htejun@gmail.com>, 'Linus Torvalds' <torvalds@linux-foundation.org>, 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
 
-BTW, maybe I didn't understand you well, stupid question- what is=20
-Promise controller? Is it normal ide controler on my motherboard or=20
-attached ultra ATA  133/ PCI controller?
+On Sat, Mar 17, 2007 at 07:47:01PM +0100, Paul Rolland wrote:
+> Hello,
+> 
+> Here is a patch to avoid these pesky messages for the Maxtor disk :
+> 
 
+Please match the firmware version as well for the Maxtor drives
 
-00:00.0 Host bridge: Intel Corporation 82845 845 (Brookdale) Chipset=20
-Host Bridge (rev 03)
-00:01.0 PCI bridge: Intel Corporation 82845 845 (Brookdale) Chipset AGP=
-=20
-Bridge (rev 03)
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 12)
-00:1f.0 ISA bridge: Intel Corporation 82801BA ISA Bridge (LPC) (rev 12)
-00:1f.1 IDE interface: Intel Corporation 82801BA IDE U100 (rev 12)
-00:1f.2 USB Controller: Intel Corporation 82801BA/BAM USB (Hub #1) (rev=
- 12)
-00:1f.3 SMBus: Intel Corporation 82801BA/BAM SMBus (rev 12)
-00:1f.4 USB Controller: Intel Corporation 82801BA/BAM USB (Hub #2) (rev=
- 12)
-00:1f.5 Multimedia audio controller: Intel Corporation 82801BA/BAM AC'9=
-7=20
-Audio (rev 12)
-01:00.0 VGA compatible controller: ATI Technologies Inc Radeon RV200 QW=
-=20
-[Radeon 7500]
+> --- linux-2.6.21-rc4/drivers/ata/libata-core.c  2007-03-17 19:29:45.000000000
+> +0100
+> +++ linux-2.6.21-rc4-Maxtor/drivers/ata/libata-core.c   2007-03-17
+> 19:37:28.000000000 +0100
+> @@ -3359,6 +3359,8 @@
+>          { "WDC WD740ADFD-00",   NULL,          ATA_HORKAGE_NONCQ },
+>         /* http://thread.gmane.org/gmane.linux.ide/14907 */
+>         { "FUJITSU MHT2060BH",  NULL,           ATA_HORKAGE_NONCQ },
+> +       /* NCQ is broken */
+> +       { "Maxtor 6L250S0",     NULL,           ATA_HORKAGE_NONCQ }, 
+>  
+>         /* Devices with NCQ limits */
+>  
+> 
+> Signed-off-by: Paul Rolland <rol@as2917.net>
 
-This one?
-
-02:01.0 Mass storage controller: Promise Technology, Inc. 20269 (rev 02=
-)
-
-
-02:05.0 Ethernet controller: ADMtek NC100 Network Everywhere Fast=20
-Ethernet 10/100 (rev 11)
-
-
-
-Bartlomiej Zolnierkiewicz =EF=E8=F8=E5:
-> On Saturday 17 March 2007, Albert Lee wrote:
->> Bartlomiej Zolnierkiewicz wrote:
->>> Hi,
->>>
->>> Any news about this test?  ide-cd driver is much more forgiving for
->>> quirky hardware than libata+sr so please give it a try...
->>>
->> Hi Bart,
->> Yarema did the run test, but the AOpen drive was connected to the PI=
-IX
->> controller, which is driven by libata:
->=20
-> Which unfortunately says us nothing besides that pdc202xx_new works g=
-reat
-> on this system... ;-)
->=20
-> Yarema, could you disable ata_piix, enable drivers/ide piix driver an=
-d retest?
->=20
-> Thanks,
-> Bart
->=20
-
+NAK - but add the firmware to the match and you can have an Ack 8)
