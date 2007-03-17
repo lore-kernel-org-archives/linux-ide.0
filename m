@@ -1,53 +1,30 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [git patches] libata fixes
-Date: Sat, 17 Mar 2007 15:56:25 -0400
-Message-ID: <20070317195625.GB21441@devserv.devel.redhat.com>
-References: <20070317185607.GC18870@devserv.devel.redhat.com> <00b701c768ca$a3919ca0$2101a8c0@donald>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: libata: CD and dvd devices not recognized
+Date: Sat, 17 Mar 2007 21:07:42 +0100
+Message-ID: <200703172107.42107.bzolnier@gmail.com>
+References: <45F873AC.6010204@gmail.com> <200703172012.39295.bzolnier@gmail.com> <45FC400D.8090700@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:35328 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753832AbXCQT4f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 17 Mar 2007 15:56:35 -0400
+Received: from ug-out-1314.google.com ([66.249.92.170]:56782 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753852AbXCQUAZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Mar 2007 16:00:25 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so980019uga
+        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 13:00:23 -0700 (PDT)
+In-Reply-To: <45FC400D.8090700@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <00b701c768ca$a3919ca0$2101a8c0@donald>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Rolland <rol@as2917.net>
-Cc: 'Alan Cox' <alan@redhat.com>, 'Tejun Heo' <htejun@gmail.com>, 'Linus Torvalds' <torvalds@linux-foundation.org>, 'Jeff Garzik' <jeff@garzik.org>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
+To: YUP <yupadmin@gmail.com>
+Cc: albertl@mail.com, linux-ide@vger.kernel.org
 
-> > >  
-> > > 
-> > > Signed-off-by: Paul Rolland <rol@as2917.net>
-> > 
-> > NAK - but add the firmware to the match and you can have an Ack 8)
-> 
-> Second try, compiled _and_ boot tested, of course.
-> 
-> dmesg says :
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata1.00: ATA-7: Maxtor 6L250S0, BANC1G10, max UDMA/133
-> ata1.00: 490234752 sectors, multi 0: LBA48 NCQ (not used)
-> ata1.00: configured for UDMA/133
-> 
-> --- linux-2.6.21-rc4/drivers/ata/libata-core.c  2007-03-17 19:47:49.000000000
-> +0100
-> +++ linux-2.6.21-rc4-Maxtor/drivers/ata/libata-core.c   2007-03-17
-> 20:24:01.000000000 +0100
-> @@ -3359,6 +3359,8 @@
->          { "WDC WD740ADFD-00",   NULL,          ATA_HORKAGE_NONCQ },
->         /* http://thread.gmane.org/gmane.linux.ide/14907 */
->         { "FUJITSU MHT2060BH",  NULL,           ATA_HORKAGE_NONCQ },
-> +       /* NCQ is broken */
-> +       { "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ }, 
->  
->         /* Devices with NCQ limits */
-> 
-> Signed-off-by: Paul Rolland <rol@as2917.net>
 
-Acked-by: Alan Cox <alan@redhat.com>
+On Saturday 17 March 2007, YUP wrote:
+> Just to check up can you recheck my config?
 
---
-  'YKYHBRTFDriverSTLW: you catch yourself saying "enough horrors for today"
-	and picking Lovecraft to relax...' -- Al Viro
+Looks fine but please set CONFIG_ATA_PIIX to "n" (just in case).
+
+Bart
