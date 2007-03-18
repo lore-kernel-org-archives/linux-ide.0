@@ -1,45 +1,44 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Add suport for Marvell 88SE6121 in ahci
-Date: Sun, 18 Mar 2007 22:48:32 +0900
-Message-ID: <45FD4330.1020108@gmail.com>
-References: <200701311504.40277.jareguero@telefonica.net> <200703161521.29461.jareguero@telefonica.net> <45FCCDFA.8050800@gmail.com> <200703181335.41988.jareguero@telefonica.net>
+Subject: Re: [PATCH] libata: implement and use DMA mask configuration helper
+Date: Sun, 18 Mar 2007 23:48:52 +0900
+Message-ID: <45FD5154.9040603@gmail.com>
+References: <20070309104945.GG32687@htj.dyndns.org> <45F155E3.9040604@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:60307 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751068AbXCRNsi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 09:48:38 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1084406uga
-        for <linux-ide@vger.kernel.org>; Sun, 18 Mar 2007 06:48:37 -0700 (PDT)
-In-Reply-To: <200703181335.41988.jareguero@telefonica.net>
+Received: from py-out-1112.google.com ([64.233.166.182]:25080 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752789AbXCROs5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 10:48:57 -0400
+Received: by py-out-1112.google.com with SMTP id a29so207988pyi
+        for <linux-ide@vger.kernel.org>; Sun, 18 Mar 2007 07:48:57 -0700 (PDT)
+In-Reply-To: <45F155E3.9040604@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jose Alberto Reguero <jareguero@telefonica.net>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Jose Alberto Reguero wrote:
->> The flag is there primarily for ICH ahci's.  Marvell might be different.
->>  Care to remove SKIP_D2H_BSY and test a LOT of hotplugging with several
->> different devices?  :-)
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Implement and use DMA mask configuration helper.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ---
+>> This function probably belongs to pci layer.  Put it in libata with
+>> pci_test_bits() for the time being.
 > 
-> With  SKIP_D2H_BSY I have a old dmesg -> dmesg1 (2.6.20 I think)
-> I test with and a external sata disk without SKIP_D2H_BSY -> dmes2 
-> (2.6.21-rc4)
-> Both takes ~8 seconds.
+> AFAIK the default DMA mask is always 32-bit.  Code (often written by me)
+> that sets it to a 32-bit mask was just paranoia, and not really needed.
+> 
+> Hence, the pci_go_64() function I added, found in #upstream.
 
-I see.  Was the disk spun up when you hotplugged it?  The condition
-doesn't trigger always and more importantly, there is no way to reliably
-wait for the condition in ahci.  ahci's TF status register is read from
-the received D2H Reg FIS area and there is no mechanism to set the BSY
-bit on a PHY event, so no matter what we do in the driver, there is an
-inherent race.
-
-ie. we can try to set the BSY bit in the interrupt handler right after a
-PHY event but the hardware can always beat us and when that happens we
-set BSY after the first D2H Reg FIS is received which will in turn cause
-wait timeout, so I'm voting for keeping the flag.
+It isn't in #upstream yet.  Also, at the second thought, there is a
+problem with pci_go_64().  DMA masks are not reset after driver is
+detached.  Even if the device starts with 32bit DMA masks, after a 64bit
+enabled driver is attached and detached, the device's DMA masks are
+64bit.  I'm refreshing new-init-model patchset and keeping
+pci_configure_dma_masks() for now.
 
 Thanks.
 
