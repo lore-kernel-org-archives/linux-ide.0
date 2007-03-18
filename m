@@ -1,27 +1,48 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: CONFIG_IBM_BAY
-Date: Sun, 18 Mar 2007 16:00:18 -0300
-Message-ID: <20070318190018.GC29422@khazad-dum.debian.net>
-References: <20070315133900.GC26862@khazad-dum.debian.net> <20070315080644.c73db24a.kristen.c.accardi@intel.com> <20070315175505.GB6596@khazad-dum.debian.net> <20070315110156.09e80b99.kristen.c.accardi@intel.com> <20070315193123.GB14394@khazad-dum.debian.net> <20070315125037.3e82e0c4.kristen.c.accardi@intel.com> <45FCD062.3050001@gmail.com> <20070318082751.GA28591@homac2> <20070318183652.GB29422@khazad-dum.debian.net> <20070318185529.GA14885@homac2>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: Loading both the pata_atiixp and the ahci driver causes problems
+Date: Sun, 18 Mar 2007 17:21:56 -0400
+Message-ID: <45FDAD74.9010402@redhat.com>
+References: <45F9C3F5.4070906@redhat.com> <45F9F5F0.3090508@jonmasters.org> <45FCD0FB.70507@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070318185529.GA14885@homac2>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:48537 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753280AbXCRVWf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Mar 2007 17:22:35 -0400
+In-Reply-To: <45FCD0FB.70507@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jon Masters <jonathan@jonmasters.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Conke Hu <conke.hu@gmail.com>
 
-On Sun, 18 Mar 2007, Holger Macht wrote:
-> It doesn't work, I've already tried. The bay driver only emits an event if
-> you really try to remove the bay, but not on docking/undocking.
+Tejun Heo wrote:
+> Jon Masters wrote:
+>> Chuck Ebbert wrote:
+>>
+>>> If you try to load both the pata_atiixp and the ahci driver
+>>> (for the same ATI SB600 adapter), very strange things happen.
+>>> The AHCI driver churns for three minutes or so, spewing
+>>> messages like this, then nothing works:
+>>>
+>>> <6>ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>> <4>ata3.00: qc timeout (cmd 0xec)
+>>> <4>ata3.00: failed to IDENTIFY (I/O error, err_mask=0x104)
+>>> Shouldn't it be able to tell the device has already been
+>>> claimed by some other driver?
+>> One would assume it'd fail to grab the PCI IO ranges twice? I haven't
+>> looked at the code but I have seen this bug mentioned elsewhere so I
+>> might well end up having to do that yet :-)
+> 
+> Dunno much about sb600 but ahci and pata_atiixp are probably using
+> separate IO regions && separate PCI functions.
+> 
+> Conke, care to educate us a bit here?
+> 
 
-Ah, now I understand what you mean.
+The really funny part is that it works for some if they use:
 
-Looks like we really need the dock driver to sort of like act as a bus.
+  pci=noacpi,irqpoll
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+
