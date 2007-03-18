@@ -1,52 +1,47 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: CONFIG_IBM_BAY
-Date: Sun, 18 Mar 2007 14:38:42 +0900
-Message-ID: <45FCD062.3050001@gmail.com>
-References: <11736588493609-git-send-email-hmh@hmh.eng.br>	<20070315031015.GA6292@khazad-dum.debian.net>	<20070315031251.GB6292@khazad-dum.debian.net>	<200703150206.05811.lenb@kernel.org>	<20070315133900.GC26862@khazad-dum.debian.net>	<20070315080644.c73db24a.kristen.c.accardi@intel.com>	<20070315175505.GB6596@khazad-dum.debian.net>	<20070315110156.09e80b99.kristen.c.accardi@intel.com>	<20070315193123.GB14394@khazad-dum.debian.net> <20070315125037.3e82e0c4.kristen.c.accardi@intel.com>
+Subject: Re: Loading both the pata_atiixp and the ahci driver causes problems
+Date: Sun, 18 Mar 2007 14:41:15 +0900
+Message-ID: <45FCD0FB.70507@gmail.com>
+References: <45F9C3F5.4070906@redhat.com> <45F9F5F0.3090508@jonmasters.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.237]:32983 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.234]:33304 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593AbXCRFis (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 01:38:48 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so455133nze
-        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 22:38:47 -0700 (PDT)
-In-Reply-To: <20070315125037.3e82e0c4.kristen.c.accardi@intel.com>
+	with ESMTP id S1753026AbXCRFlV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 01:41:21 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so455260nze
+        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 22:41:21 -0700 (PDT)
+In-Reply-To: <45F9F5F0.3090508@jonmasters.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net, linux-ide@vger.kernel.org
+To: Jon Masters <jonathan@jonmasters.org>
+Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Conke Hu <conke.hu@gmail.com>
 
-Hello,
-
-Kristen Carlson Accardi wrote:
->> 1. It will handle all device types (ATAPI, PATA, SATA, batteries);
+Jon Masters wrote:
+> Chuck Ebbert wrote:
+> 
+>> If you try to load both the pata_atiixp and the ahci driver
+>> (for the same ATI SB600 adapter), very strange things happen.
+>> The AHCI driver churns for three minutes or so, spewing
+>> messages like this, then nothing works:
 >>
->> 2. It will do the right thing on plug and unplug.  This means telling the
->> rest of the kernel to disable the device in the bay, for example.  Right now
->> we shutdown one end of the PATA/SATA link on ThinkPads eletrically, and
->> leave libata to scream blood murder until it disables its end due to too
->> many retries, for example;
+>> <6>ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>> <4>ata3.00: qc timeout (cmd 0xec)
+>> <4>ata3.00: failed to IDENTIFY (I/O error, err_mask=0x104)
+> 
+>> Shouldn't it be able to tell the device has already been
+>> claimed by some other driver?
+> 
+> One would assume it'd fail to grab the PCI IO ranges twice? I haven't
+> looked at the code but I have seen this bug mentioned elsewhere so I
+> might well end up having to do that yet :-)
 
-:-)
+Dunno much about sb600 but ahci and pata_atiixp are probably using
+separate IO regions && separate PCI functions.
 
-> Personally - I think tighter integration to libata here would be beneficial.
-> Once libata acpi support is straightened out, if we can store acpi handles
-> associated with libata devices, we can perhaps have a mechanism of obtaining
-> ata_device structs so that we can have a nice way of telling libata to 
-> delete devices etc.  I am hoping libata-acpi will be straightened out for
-> 2.6.22.
-
-I dunno what the thread is really about but can't this be dealt within
-acpid?  Finding out the correct scsi host node can be tricky but I think
-it can be done reliably by jumping through some sysfs whoops.  Once
-you're there, telling libata to kill or probe is really easy.
-
-  http://www.thinkwiki.org/wiki/How_to_hotswap_UltraBay_devices
-
-Thanks.
+Conke, care to educate us a bit here?
 
 -- 
 tejun
