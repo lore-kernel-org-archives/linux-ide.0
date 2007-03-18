@@ -1,49 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata reports bogus addresses for everything (was PATA_PCMCIA
-  cmd port)
-Date: Sun, 18 Mar 2007 14:48:31 +0900
-Message-ID: <45FCD2AF.90909@gmail.com>
-References: <20061217212752.d93816b4.komurojun-mbn@nifty.com>	<20061217040222.GD17561@ftp.linux.org.uk>	<20070211101537.e40fa309.komurojun-mbn@nifty.com>	<20070317220050.380d9f51.komurojun-mbn@nifty.com> <20070317154333.088d77d4@lxorguk.ukuu.org.uk>
+From: Jon Masters <jonathan@jonmasters.org>
+Subject: Re: Loading both the pata_atiixp and the ahci driver causes problems
+Date: Sun, 18 Mar 2007 02:28:10 -0400
+Message-ID: <45FCDBFA.702@jonmasters.org>
+References: <45F9C3F5.4070906@redhat.com> <45F9F5F0.3090508@jonmasters.org> <45FCD0FB.70507@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:34138 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753049AbXCRFsh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 01:48:37 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so455622nze
-        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 22:48:36 -0700 (PDT)
-In-Reply-To: <20070317154333.088d77d4@lxorguk.ukuu.org.uk>
+Received: from dallas.jonmasters.org ([72.29.103.172]:1421 "EHLO
+	dallas.jonmasters.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbXCRG26 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 02:28:58 -0400
+In-Reply-To: <45FCD0FB.70507@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Komuro <komurojun-mbn@nifty.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Conke Hu <conke.hu@gmail.com>
 
-Alan Cox wrote:
-> On Sat, 17 Mar 2007 22:00:50 +0900
-> Komuro <komurojun-mbn@nifty.com> wrote:
-> 
->> Hi,
->>  
->> The pata_pcmcia driver reports the cmd port is 0x00010100,
->> but actually the cmd port is 0x0100.
+Tejun Heo wrote:
+> Jon Masters wrote:
+>> Chuck Ebbert wrote:
 >>
->> Is this corect?
+>>> If you try to load both the pata_atiixp and the ahci driver
+>>> (for the same ATI SB600 adapter), very strange things happen.
+>>> The AHCI driver churns for three minutes or so, spewing
+>>> messages like this, then nothing works:
+>>>
+>>> <6>ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>> <4>ata3.00: qc timeout (cmd 0xec)
+>>> <4>ata3.00: failed to IDENTIFY (I/O error, err_mask=0x104)
+>>> Shouldn't it be able to tell the device has already been
+>>> claimed by some other driver?
+>> One would assume it'd fail to grab the PCI IO ranges twice? I haven't
+>> looked at the code but I have seen this bug mentioned elsewhere so I
+>> might well end up having to do that yet :-)
 > 
-> When the pci_iomap patches were applied the ports reported for every
-> device went strange.  It appears to display the wrong information
-> nowdays. I see the same but I've got many more important things to work
-> on before I even bother to look at it.
-> 
-> My guess is someone is now printing the iomap virtual addresses not the
-> bus ones.
+> Dunno much about sb600 but ahci and pata_atiixp are probably using
+> separate IO regions && separate PCI functions.
 
-Yes, we're printing the ioaddr.* directly and those are all iomapped
-addressed now.  I wonder whether we should fix this or push the port
-printing to LLDs (with sff helpers in libata-sff).  ahci and
-pata_generic sharing one format doesn't sound like a too good idea.
-I'll fix it after new init model.
+Yeah. I actually thought about this whole issue a bit more recently - 
+things like SATA/PATA interference when you've got a part that emulates 
+legacy functionality so can appear as two different kinds of device - 
+since I don't think my brain was really bothering to listen before. 
+Words were going in, but it chose to ignore what was being said.
 
--- 
-tejun
+Only thing that comes to mind is in-driver logic/driver loading ordering 
+hack combinations. At least if you've got loadable modules, you've got a 
+fighting chance of fixing this kind of situation - built-in and you need 
+to fight with whatever ordering exists in the array of init functions.
+
+Jon.
+
+P.S. Guess this means I need to admit I was wrong and apologize to 
+Zaitcev sometime too in relation to another discussion...bah :P
+
