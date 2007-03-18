@@ -1,47 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Loading both the pata_atiixp and the ahci driver causes problems
-Date: Sun, 18 Mar 2007 14:41:15 +0900
-Message-ID: <45FCD0FB.70507@gmail.com>
-References: <45F9C3F5.4070906@redhat.com> <45F9F5F0.3090508@jonmasters.org>
+Subject: Re: Via VT6421 PATA support
+Date: Sun, 18 Mar 2007 14:45:46 +0900
+Message-ID: <45FCD20A.3070100@gmail.com>
+References: <BA4CEFA0-4132-412E-815C-687B253AF6A2@styfsoftware.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:33304 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026AbXCRFlV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 01:41:21 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so455260nze
-        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 22:41:21 -0700 (PDT)
-In-Reply-To: <45F9F5F0.3090508@jonmasters.org>
+Received: from wr-out-0506.google.com ([64.233.184.228]:31156 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045AbXCRFpv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 01:45:51 -0400
+Received: by wr-out-0506.google.com with SMTP id 41so1026169wry
+        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 22:45:50 -0700 (PDT)
+In-Reply-To: <BA4CEFA0-4132-412E-815C-687B253AF6A2@styfsoftware.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jon Masters <jonathan@jonmasters.org>
-Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Conke Hu <conke.hu@gmail.com>
+To: Isak Styf <isak@styfsoftware.se>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Jon Masters wrote:
-> Chuck Ebbert wrote:
+Isak Styf wrote:
+> Hi!
 > 
->> If you try to load both the pata_atiixp and the ahci driver
->> (for the same ATI SB600 adapter), very strange things happen.
->> The AHCI driver churns for three minutes or so, spewing
->> messages like this, then nothing works:
->>
->> <6>ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->> <4>ata3.00: qc timeout (cmd 0xec)
->> <4>ata3.00: failed to IDENTIFY (I/O error, err_mask=0x104)
+> I am wondering why VT6421 PATA support is still on the todo list in
+> sata_via.c although patches have been posted that makes it work?
 > 
->> Shouldn't it be able to tell the device has already been
->> claimed by some other driver?
+> I am currently looking at 2.6.20-1.2925.fc6. I had hoped that the
+> support would be added in that kernel, but unfortunately it seems to
+> have been left out. Why is this? Have you been notified about any
+> stability issues?
 > 
-> One would assume it'd fail to grab the PCI IO ranges twice? I haven't
-> looked at the code but I have seen this bug mentioned elsewhere so I
-> might well end up having to do that yet :-)
+> I am now running a manually patched 2.6.19-1.2895, but i would of course
+> prefer to have this functionality in the stock kernel.
 
-Dunno much about sb600 but ahci and pata_atiixp are probably using
-separate IO regions && separate PCI functions.
-
-Conke, care to educate us a bit here?
+Will be in 2.6.21.
 
 -- 
 tejun
