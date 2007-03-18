@@ -1,39 +1,49 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Via VT6421 PATA support
-Date: Sun, 18 Mar 2007 14:45:46 +0900
-Message-ID: <45FCD20A.3070100@gmail.com>
-References: <BA4CEFA0-4132-412E-815C-687B253AF6A2@styfsoftware.se>
+Subject: Re: libata reports bogus addresses for everything (was PATA_PCMCIA
+  cmd port)
+Date: Sun, 18 Mar 2007 14:48:31 +0900
+Message-ID: <45FCD2AF.90909@gmail.com>
+References: <20061217212752.d93816b4.komurojun-mbn@nifty.com>	<20061217040222.GD17561@ftp.linux.org.uk>	<20070211101537.e40fa309.komurojun-mbn@nifty.com>	<20070317220050.380d9f51.komurojun-mbn@nifty.com> <20070317154333.088d77d4@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:31156 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045AbXCRFpv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 01:45:51 -0400
-Received: by wr-out-0506.google.com with SMTP id 41so1026169wry
-        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 22:45:50 -0700 (PDT)
-In-Reply-To: <BA4CEFA0-4132-412E-815C-687B253AF6A2@styfsoftware.se>
+Received: from nz-out-0506.google.com ([64.233.162.227]:34138 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753049AbXCRFsh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 01:48:37 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so455622nze
+        for <linux-ide@vger.kernel.org>; Sat, 17 Mar 2007 22:48:36 -0700 (PDT)
+In-Reply-To: <20070317154333.088d77d4@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Isak Styf <isak@styfsoftware.se>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Komuro <komurojun-mbn@nifty.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Isak Styf wrote:
-> Hi!
+Alan Cox wrote:
+> On Sat, 17 Mar 2007 22:00:50 +0900
+> Komuro <komurojun-mbn@nifty.com> wrote:
 > 
-> I am wondering why VT6421 PATA support is still on the todo list in
-> sata_via.c although patches have been posted that makes it work?
+>> Hi,
+>>  
+>> The pata_pcmcia driver reports the cmd port is 0x00010100,
+>> but actually the cmd port is 0x0100.
+>>
+>> Is this corect?
 > 
-> I am currently looking at 2.6.20-1.2925.fc6. I had hoped that the
-> support would be added in that kernel, but unfortunately it seems to
-> have been left out. Why is this? Have you been notified about any
-> stability issues?
+> When the pci_iomap patches were applied the ports reported for every
+> device went strange.  It appears to display the wrong information
+> nowdays. I see the same but I've got many more important things to work
+> on before I even bother to look at it.
 > 
-> I am now running a manually patched 2.6.19-1.2895, but i would of course
-> prefer to have this functionality in the stock kernel.
+> My guess is someone is now printing the iomap virtual addresses not the
+> bus ones.
 
-Will be in 2.6.21.
+Yes, we're printing the ioaddr.* directly and those are all iomapped
+addressed now.  I wonder whether we should fix this or push the port
+printing to LLDs (with sff helpers in libata-sff).  ahci and
+pata_generic sharing one format doesn't sound like a too good idea.
+I'll fix it after new init model.
 
 -- 
 tejun
