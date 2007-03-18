@@ -1,108 +1,135 @@
-From: "Paul Rolland" <rol@as2917.net>
-Subject: RE: [git patches] libata fixes
-Date: Sun, 18 Mar 2007 12:06:40 +0100
-Message-ID: <00f401c7694d$81a80920$2101a8c0@donald>
-References: <00ee01c7694b$382b6460$2101a8c0@donald>
-Reply-To: <rol@as2917.net>
+From: Jose Alberto Reguero <jareguero@telefonica.net>
+Subject: Re: Add suport for Marvell 88SE6121 in ahci
+Date: Sun, 18 Mar 2007 13:35:41 +0100
+Message-ID: <200703181335.41988.jareguero@telefonica.net>
+References: <200701311504.40277.jareguero@telefonica.net> <200703161521.29461.jareguero@telefonica.net> <45FCCDFA.8050800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_dIT/FrQzeXHyHeG"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tag.witbe.net ([81.88.96.48]:36406 "EHLO tag.witbe.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964788AbXCRLGw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 18 Mar 2007 07:06:52 -0400
-In-Reply-To: <00ee01c7694b$382b6460$2101a8c0@donald>
+Received: from smtp.telefonica.net ([213.4.149.66]:54502 "EHLO
+	ctsmtpout2.frontal.correo" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750957AbXCRMfz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 08:35:55 -0400
+In-Reply-To: <45FCCDFA.8050800@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rol@as2917.net, 'Tejun Heo' <htejun@gmail.com>
-Cc: 'Linus Torvalds' <torvalds@linux-foundation.org>, 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Doh ! Got that :
+--Boundary-00=_dIT/FrQzeXHyHeG
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-....
-ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 23 (level, low) -> IRQ 23
-ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl SATA mode
-ahci 0000:00:1f.2: flags: 64bit ncq led clo pio slum part 
-ata1: SATA max UDMA/133 cmd 0xffffc2000008e900 ctl 0x0000000000000000 bmdma
-0x0000000000000000 irq 504
-ata2: SATA max UDMA/133 cmd 0xffffc2000008e980 ctl 0x0000000000000000 bmdma
-0x0000000000000000 irq 504
-ata3: SATA max UDMA/133 cmd 0xffffc2000008ea00 ctl 0x0000000000000000 bmdma
-0x0000000000000000 irq 504
-ata4: SATA max UDMA/133 cmd 0xffffc2000008ea80 ctl 0x0000000000000000 bmdma
-0x0000000000000000 irq 504
-scsi0 : ahci
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: ATA-7: Maxtor 6L250S0, BANC1G10, max UDMA/133
-ata1.00: 490234752 sectors, multi 0: LBA48 NCQ (not used)
-ata1.00: configured for UDMA/133
-scsi1 : ahci
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: ATA-6: External Disk 0, RGL10364, max UDMA/133
-ata2.00: 1 sectors, multi 1: LBA48 
-ata2.00: configured for UDMA/133
-scsi2 : ahci
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata3.00: ATA-7: Maxtor 6L250S0, BANC1G10, max UDMA/133
-ata3.00: 490234752 sectors, multi 0: LBA48 NCQ (not used)
-ata3.00: configured for UDMA/133
-scsi3 : ahci
-ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata4.00: ATA-7: ST3500641AS, 3.AAB, max UDMA/133
-ata4.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+El Domingo, 18 de Marzo de 2007, Tejun Heo escribi=F3:
+> Jose Alberto Reguero wrote:
+> > I found that the driver work well for Marvel 6121 without the flag
+> > ATA_FLAG_SKIP_D2H_BSY.
+> > What is the meaning of this flag?
+>
+> This is usually meaningful with hotplug.  The problem is that, on some
+> SATA controllers including ahci and sata_sil24, the wait for the first
+> D2H Reg FIS indicating device readiness isn't reliable.  It's supposed
+> to work like the following (sata_sil behaves pretty good on this regard).
+>
+> 1. User hotplug device to port and PHY event interrupt raised, the
+> controller should set BSY status bit.
+>
+> 2. libata EH kicks in and waits for BSY to clear (current timeout 30s).
+>  Done by the first D2H Reg FIS.  Drives usually send this after spinup
+> is complete.
+>
+> 3. After BSY is cleared, the device is reset.
+>
+> The problem with ahci and sata_sil24 is that there really is no TF
+> status register is non-existent or emulated in some way and they doesn't
+> let us reliably wait for !BSY after hotplug event.  This often makes the
+> wait in #2 timeout and that's 30 seconds.  :-(
+>
+> So, the flag makes libata EH skip #2.  Post-reset waiting is reliable,
+> so there is no timeout.  But this causes problems on some devices (the
+> Quantum GoVault thing) which takes a looooong time to get ready and
+> don't respond correctly to phy reset while it's busy initializing.
+>
+> The flag is there primarily for ICH ahci's.  Marvell might be different.
+>  Care to remove SKIP_D2H_BSY and test a LOT of hotplugging with several
+> different devices?  :-)
+
+With  SKIP_D2H_BSY I have a old dmesg -> dmesg1 (2.6.20 I think)
+I test with and a external sata disk without SKIP_D2H_BSY -> dmes2=20
+(2.6.21-rc4)
+Both takes ~8 seconds.
+
+Thanks
+Jose Alberto
+
+
+
+--Boundary-00=_dIT/FrQzeXHyHeG
+Content-Type: text/plain;
+  charset="iso-8859-15";
+  name="dmesg1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="dmesg1"
+
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata4: (irq_stat 0x02400000, PHY RDY changed)
+ata4: waiting for device to spin up (8 secs)
+ata4: soft resetting port
+ata4: softreset failed (port busy but CLO unavailable)
+ata4: softreset failed, retrying in 5 secs
+ata4: hard resetting port
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: ATA-7, max UDMA/133, 586072368 sectors: LBA48 NCQ (depth 31/32)
+ata4.00: Drive reports diagnostics failure. This may indicate a drive
+ata4.00: fault or invalid emulation. Contact drive vendor for information.
 ata4.00: configured for UDMA/133
-scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L250S0   BANC PQ: 0 ANSI: 5
-SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
-sda: Write Protect is off
-SCSI device sda: write cache: enabled, read cache: enabled, doesn't support
-DPO or FUA
-SCSI device sda: 490234752 512-byte hdwr sectors (251000 MB)
-sda: Write Protect is off
-SCSI device sda: write cache: enabled, read cache: enabled, doesn't support
-DPO or FUA
- sda: sda1 sda2 sda3
-sd 0:0:0:0: Attached scsi disk sda
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-scsi 1:0:0:0: Direct-Access     ATA      External Disk 0  RGL1 PQ: 0 ANSI: 5
-SCSI device sdb: 1 512-byte hdwr sectors (0 MB)
-sdb: Write Protect is off
-SCSI device sdb: write cache: enabled, read cache: enabled, doesn't support
-DPO or FUA
-SCSI device sdb: 1 512-byte hdwr sectors (0 MB)
-sdb: Write Protect is off
-SCSI device sdb: write cache: enabled, read cache: enabled, doesn't support
-DPO or FUA
- sdb:<3>irq 504: nobody cared (try booting with the "irqpoll" option)
+ata4: EH complete
+scsi 3:0:0:0: Direct-Access     ATA      ST3300831AS      3.03 PQ: 0 ANSI: 5
+SCSI device sdd: 586072368 512-byte hdwr sectors (300069 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+SCSI device sdd: 586072368 512-byte hdwr sectors (300069 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdd: sdd1
+sd 3:0:0:0: Attached scsi disk sdd
+sd 3:0:0:0: Attached scsi generic sg3 type 0
 
-Call Trace:
- <IRQ>  [<ffffffff802b0245>] __report_bad_irq+0x35/0x90
- [<ffffffff802b04ba>] note_interrupt+0x21a/0x270
- [<ffffffff802b128f>] handle_edge_irq+0x10f/0x150
- [<ffffffff8026f3eb>] do_IRQ+0x7b/0xf0
- [<ffffffff80259e70>] mwait_idle+0x0/0x50
- [<ffffffff802612d1>] ret_from_intr+0x0/0xa
- <EOI>  [<ffffffff8042bff0>] vgacon_cursor+0x0/0x1d0
- [<ffffffff80259eb6>] mwait_idle+0x46/0x50
- [<ffffffff8024aebc>] cpu_idle+0x5c/0xa0
- [<ffffffff808b984a>] start_kernel+0x2aa/0x2c0
- [<ffffffff808b9176>] _sinittext+0x176/0x180
+--Boundary-00=_dIT/FrQzeXHyHeG
+Content-Type: text/plain;
+  charset="iso-8859-15";
+  name="dmesg2"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="dmesg2"
 
-handlers:
-[<ffffffff804e1c90>] (ahci_interrupt+0x0/0x590)
-Disabling IRQ #504
- unknown partition table
-sd 1:0:0:0: Attached scsi disk sdb
-sd 1:0:0:0: Attached scsi generic sg1 type 0
-scsi 2:0:0:0: Direct-Access     ATA      Maxtor 6L250S0   BANC PQ: 0 ANSI: 5
-SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
-sdc: Write Protect is off
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata4: (irq_stat 0x02400000, PHY RDY changed)
+ata4: port is slow to respond, please be patient (Status 0x80)
+ata4: soft resetting port
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: ATA-7: ST3300831AS, 3.03, max UDMA/133
+ata4.00: 586072368 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata4.00: configured for UDMA/133
+ata4: EH complete
+scsi 3:0:0:0: Direct-Access     ATA      ST3300831AS      3.03 PQ: 0 ANSI: 5
+SCSI device sdd: 586072368 512-byte hdwr sectors (300069 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+SCSI device sdd: 586072368 512-byte hdwr sectors (300069 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdd:<6>ata4: D2H reg with I during NCQ, this message won't be printed again
+ sdd1
+sd 3:0:0:0: Attached scsi disk sdd
+sd 3:0:0:0: Attached scsi generic sg5 type 0
 
-
-and though it said :
- sdb:<3>irq 504: nobody cared (try booting with the "irqpoll" option)
-I _am_ booting with the irqpoll option !
-
-Paul
-
+--Boundary-00=_dIT/FrQzeXHyHeG--
