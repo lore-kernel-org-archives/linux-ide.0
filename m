@@ -1,60 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git patches] libata fixes
-Date: Sun, 18 Mar 2007 19:28:57 +0900
-Message-ID: <45FD1469.8020803@gmail.com>
-References: <00e001c76945$7f2157e0$2101a8c0@donald>
+From: "Paul Rolland" <rol@as2917.net>
+Subject: RE: [git patches] libata fixes
+Date: Sun, 18 Mar 2007 11:33:22 +0100
+Message-ID: <00e801c76948$da7f0df0$2101a8c0@donald>
+References: <45FD1469.8020803@gmail.com>
+Reply-To: <rol@as2917.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:7399 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932128AbXCRK3F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Mar 2007 06:29:05 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so474691nze
-        for <linux-ide@vger.kernel.org>; Sun, 18 Mar 2007 03:29:04 -0700 (PDT)
-In-Reply-To: <00e001c76945$7f2157e0$2101a8c0@donald>
+Received: from tag.witbe.net ([81.88.96.48]:35822 "EHLO tag.witbe.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932203AbXCRKdc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Mar 2007 06:33:32 -0400
+In-Reply-To: <45FD1469.8020803@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rol@as2917.net
+To: 'Tejun Heo' <htejun@gmail.com>
 Cc: 'Linus Torvalds' <torvalds@linux-foundation.org>, 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
 
-Paul Rolland wrote:
-> Hello,
-> 
->> Can you put the harddisk under high load and see what happens?  How
->> often do those errors occur?  Care to post full dmesg?
-> 
-> I started again a stock 2.6.21-rc4, and ran that :
-> while (/bin/true); do tar jxf linux-2.6.19.1.tar.bz2; rm -rf linux-2.6.19.1;
-> echo -n "."; done      
-> 
-> After several minutes (I waited more than 300 loops to be completed), and
-> a lot of errors, I finally managed to see :
-> Mar 18 10:32:47 riri kernel: ata1.00: NCQ disabled due to excessive errors
-> 
-> Mar 18 10:23:26 riri kernel:          res 40/00:58:53:6e:31/00:00:0d:00:00/40
-> Emask 0x2 (HSM violation)
-> Mar 18 10:25:07 riri kernel:          res 40/00:d8:db:b0:2e/00:00:0d:00:00/40
-> Emask 0x2 (HSM violation)
-> Mar 18 10:32:42 riri kernel:          res 40/00:c0:7b:6a:2a/00:00:0d:00:00/40
-> Em
-> ask 0x2 (HSM violation)
-> Mar 18 10:32:47 riri kernel: ata1.00: NCQ disabled due to excessive errors
-> Mar 18 10:32:47 riri kernel:          res 40/00:b8:63:0d:2d/00:00:0d:00:00/40
-> Em
-> ask 0x2 (HSM violation)
-> 
-> Is this what you were expecting ?
+Hello,
 
-Yeap, more than three HSM violations in ten minutes.  That's the
-criteria for turning off NCQ.  Good to see it working.  It look like a
-lot because libata reports all active commands (can't help as on HSM
-failure, there's no way to determine which caused it) and the SCSI
-prints revalidation messages, but it's still only three errors.
+> Yeap, more than three HSM violations in ten minutes.  That's the
+> criteria for turning off NCQ.  Good to see it working.  It look like a
+> lot because libata reports all active commands (can't help as on HSM
+> failure, there's no way to determine which caused it) and the SCSI
+> prints revalidation messages, but it's still only three errors.
+> 
+> Thanks for verifying that.  I wanted to verify it works in 
+> the field as expected.
 
-Thanks for verifying that.  I wanted to verify it works in the field as
-expected.
+Glad to help !
 
--- 
-tejun
+Anyhow, how should I consider these "errors" ? Are they real failure that
+can affect data integrity on the disk, or some kind of "protocol" errors
+with the disk, that are covered by soft (retry or so), and don't affect
+data ?
+
+Regards,
+Paul
+
