@@ -1,31 +1,36 @@
-From: Tony Vroon <chainsaw@gentoo.org>
-Subject: [PATCH 2.6.22 3/3] Add LED trigger to libata core
-Date: Mon, 19 Mar 2007 21:49:06 +0000 (GMT)
-Message-ID: <20070319214907.094B65B80F2@ganymede.vroon.org>
+From: YUP <yupadmin@gmail.com>
+Subject: Re: libata: CD and dvd devices not recognized
+Date: Tue, 20 Mar 2007 00:02:03 +0100
+Message-ID: <45FF166B.8000303@gmail.com>
+References: <45F873AC.6010204@gmail.com> <200703172107.42107.bzolnier@gmail.com> <45FD0F68.7090207@gmail.com> <200703181610.33714.bzolnier@gmail.com> <45FE7DCC.3000507@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ganymede.vroon.org ([195.66.242.11]:56007 "EHLO
-	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030684AbXCSVtT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Mar 2007 17:49:19 -0400
+Received: from ug-out-1314.google.com ([66.249.92.171]:59811 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965388AbXCSXCQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Mar 2007 19:02:16 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1424400uga
+        for <linux-ide@vger.kernel.org>; Mon, 19 Mar 2007 16:02:14 -0700 (PDT)
+In-Reply-To: <45FE7DCC.3000507@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: htejun@gmail.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, albertl@mail.com, linux-ide@vger.kernel.org
 
-The first user of ata_ac_issue_prot_with_ledtrigger, the ServerWorks Frodo/
-Apple K2 driver. Used by the IDE LED trigger on G5 towers.
-Respin of an earlier patch, based on comments by Tejun Heo & Alan Cox.
+Hi Sergei,
 
-Signed-off-by: Tony Vroon <chainsaw@gentoo.org>
+Well, I checked pata_pdc2027x.c code and found that code completely 
+rewrited. For unexperienced user it is not so easy to apply.
 
---- linux-2.6/drivers/ata/sata_svw.c.orig	2007-03-19 20:58:20.000000000 +0000
-+++ linux-2.6/drivers/ata/sata_svw.c	2007-03-19 20:58:35.000000000 +0000
-@@ -348,7 +348,7 @@
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
- 	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
-+	.qc_issue		= ata_qc_issue_prot_with_ledtrigger,
- 	.data_xfer		= ata_data_xfer,
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
+
+Yarema
+
+
+>    There used to be Albert's patch enabling ATAPIT DMA in this driver:
+> 
+>    http://marc.info/?l=linux-ide&m=111027913608663
+> 
+> Oh my, that was 2 years ago, and all slipped thru the cracks... :-)
+
