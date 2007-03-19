@@ -1,41 +1,48 @@
-From: Vlad Codrea <VladCodrea@mail.utexas.edu>
-Subject: Re: DVD drive fails in 2.6.20.2
-Date: Mon, 19 Mar 2007 08:22:09 -0500
-Message-ID: <45FE8E81.3050102@mail.utexas.edu>
-References: <45F631F7.6020106@mail.utexas.edu> <45F7760B.10102@gmail.com> <45F81177.9070106@mail.utexas.edu> <45F8E628.2010004@gmail.com> <45F9516D.4090008@mail.utexas.edu> <45F98923.1040601@tw.ibm.com> <45FA07E2.6080008@mail.utexas.edu> <45FAC6FC.4020105@tw.ibm.com> <45FADD53.5030500@mail.utexas.edu> <45FB71EA.7070602@tw.ibm.com> <45FC952C.1040708@mail.utexas.edu> <45FD1B35.2090607@tw.ibm.com> <45FE2680.9050702@mail.utexas.edu> <45FE324B.8070001@tw.ibm.com> <45FE3563.9040306@tw.ibm.com>
+From: Holger Macht <hmacht@suse.de>
+Subject: Re: CONFIG_IBM_BAY
+Date: Mon, 19 Mar 2007 15:37:46 +0100
+Message-ID: <20070319143746.GC4885@homac2.suse.de>
+References: <20070315080644.c73db24a.kristen.c.accardi@intel.com> <20070315175505.GB6596@khazad-dum.debian.net> <20070315110156.09e80b99.kristen.c.accardi@intel.com> <20070315193123.GB14394@khazad-dum.debian.net> <20070315125037.3e82e0c4.kristen.c.accardi@intel.com> <45FCD062.3050001@gmail.com> <20070318082751.GA28591@homac2> <20070319132243.GA2869@srcf.ucam.org> <20070319134822.GA4885@homac2.suse.de> <20070319140403.GA3697@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironman.mail.utexas.edu ([128.83.32.51]:35702 "EHLO
-	ironman.mail.utexas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbXCSOWQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Mar 2007 10:22:16 -0400
-In-Reply-To: <45FE3563.9040306@tw.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070319140403.GA3697@srcf.ucam.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Tejun Heo <htejun@gmail.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
->> From the following trace, it is not clear what happened right before the crash.
->> Could you please sent me the full dmesg.
->> (If it is too big for the mailing list, please gzip and send to my e-mail
->> address as attachment.)
->>
->>     
->
-> Ah, just saw this on bugzilla (bug 6710):
-> (http://bugzilla.kernel.org/show_bug.cgi?id=6710).
->
-> So, if ok, please attach the full dmesg to the bugzilla to keep record,
->
->   
+On Mon 19. Mar - 14:04:03, Matthew Garrett wrote:
+> On Mon, Mar 19, 2007 at 02:48:22PM +0100, Holger Macht wrote:
+> 
+> >   1. libata integration into the bay driver
+> 
+> It actually makes sense to tie all PATA/SATA devices to their ACPI 
+> handles where appropriate - there's already code to do that in 
+> libata-acpi.c, but it would be nicer if it was integrated in the same 
+> way that PCI devices are.
+> 
+> >   2. The dock station driver has to inform the bay driver that an undock
+> >      event took place, right?
+> 
+> Yeah.
+> 
+> > But you still have to deal with mounted filesystems, no matter if it a
+> > cardbus or a cdrom. Wouldn't we need something like 'save removal'
+> > triggered from userspace like you maybe know from 'the other' operating
+> > system?
+> 
+> Yes, there's a need for a mechanism to deal with all of this safely, but 
+> the same is true of any storage device that can be hotplugged (USB, 
+> firewire, anything in a hotplug bay...)
 
+Sure. What actually bothers me is that in its current state, the dock
+station driver signals 'green' on the dock station as soon as the user
+presses the hardware undock button, but regardlessly of anything else. I
+think it would be ok to let the ACPI undock event up to userspace because
+in many situations it knows best when it is save to undock.
 
-I've attached the full dmesg at:
+Regards,
+	Holger
 
-http://bugzilla.kernel.org/show_bug.cgi?id=6710#c11
-
-Thank you,
-Vlad
