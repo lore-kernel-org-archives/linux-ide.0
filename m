@@ -1,37 +1,28 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [git patches] libata fixes
-Date: Mon, 19 Mar 2007 16:55:25 +0900
-Message-ID: <45FE41ED.20100@gmail.com>
-References: <005501c769fa$ee402470$4b00a8c0@donald>
+From: YUP <yupadmin@gmail.com>
+Subject: Re: libata: CD and dvd devices not recognized
+Date: Mon, 19 Mar 2007 09:22:20 +0100
+Message-ID: <45FE483C.9050207@gmail.com>
+References: <45F873AC.6010204@gmail.com> <200703181610.33714.bzolnier@gmail.com> <45FD5927.7080104@gmail.com> <200703181654.00829.bzolnier@gmail.com> <45FE0417.8040200@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.237]:10570 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965790AbXCSHzc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Mar 2007 03:55:32 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so578329nze
-        for <linux-ide@vger.kernel.org>; Mon, 19 Mar 2007 00:55:31 -0700 (PDT)
-In-Reply-To: <005501c769fa$ee402470$4b00a8c0@donald>
+Received: from nf-out-0910.google.com ([64.233.182.185]:17551 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752036AbXCSIXj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Mar 2007 04:23:39 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so986056nfa
+        for <linux-ide@vger.kernel.org>; Mon, 19 Mar 2007 01:23:38 -0700 (PDT)
+In-Reply-To: <45FE0417.8040200@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rol@as2917.net
-Cc: 'Linus Torvalds' <torvalds@linux-foundation.org>, 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
+To: albertl@mail.com
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-Paul Rolland wrote:
->> Oh... that's just weird.  It seems you'll have to continue 
->> boot with the
->> timeouts for the time being.  Sorry about that.
+What about ata_piix, have I enable this?
+
+
 > 
-> Would you agree to a patch to add a kernel boot parameter to skip some
-> ata ports ?
-> I found some archives refering to some "ataX=noprobe", but it seems
-> to have no effect, and I'd like to resurrect it for libata, at least to
-> help me support my configuration ?
-> If no, I'll just cook it for me, without posting it...
-
-Why not cook it and share it?  :-)
-
--- 
-tejun
+> 2. Reconfigure the kernel.
+>    Remove the IDE pdc202xx_new and add the libata pata_pdc2027x driver for debugging.
+> 
