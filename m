@@ -1,43 +1,32 @@
-From: Tony Vroon <chainsaw@gentoo.org>
-Subject: Re: [PATCH 2.6.22] Add LED trigger to libata core
-Date: Mon, 19 Mar 2007 12:12:52 +0000
-Message-ID: <45FE7E44.6040805@gentoo.org>
-References: <20070318170605.3751D5B80F1@ganymede.vroon.org>	<45FE14BD.5090701@gmail.com> <20070319124616.2fb7494b@lxorguk.ukuu.org.uk>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: CONFIG_IBM_BAY
+Date: Mon, 19 Mar 2007 13:22:43 +0000
+Message-ID: <20070319132243.GA2869@srcf.ucam.org>
+References: <20070315031251.GB6292@khazad-dum.debian.net> <200703150206.05811.lenb@kernel.org> <20070315133900.GC26862@khazad-dum.debian.net> <20070315080644.c73db24a.kristen.c.accardi@intel.com> <20070315175505.GB6596@khazad-dum.debian.net> <20070315110156.09e80b99.kristen.c.accardi@intel.com> <20070315193123.GB14394@khazad-dum.debian.net> <20070315125037.3e82e0c4.kristen.c.accardi@intel.com> <45FCD062.3050001@gmail.com> <20070318082751.GA28591@homac2>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ganymede.vroon.org ([195.66.242.11]:42473 "EHLO
-	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933238AbXCSMgp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Mar 2007 08:36:45 -0400
-In-Reply-To: <20070319124616.2fb7494b@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070318082751.GA28591@homac2>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+On Sun, Mar 18, 2007 at 09:27:51AM +0100, Holger Macht wrote:
 
-Alan Cox wrote:
-> Gak. I'd rather it stayed out of ata_qc_issue() which is a critical path
-> for performance. Our command issu is already too heavy and not all
-> controllers have queueing to absorb that. How many controllers actually
-> need this hook and can we not have ata_qc_issue_with_led() helpers for
-> them ?
-We're talking about just sata_svw (Apple K2) right now. I'll have a go
-at implementing it conditionally like you suggested. Consider the
-patch withdrawn for now.
+> I don't prefer any solution, whether doing it inside the kernel, or doing
+> it in userspace. What would be good would be to know what's the 'right'
+> way to go, or at least what both kernel people and userspace people can
+> agree on so that we can find a solution across distributions, whatever.
+> I'm currently just looking how to integrate the generic dock and bay
+> driver into the openSUSE distribution, and this seems to be quite hard,
+> especially because of the above mentioned already working solution ;-)
 
-Regards,
-Tony V.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.3 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+If the kernel knows that a bay device has just been added or removed, it 
+makes sense for the device removal to take place in the kernel rather 
+than bouncing it out to userspace and then back into the kernel. Pulling 
+out a cardbus card doesn't require us to run a userspace helper to 
+detach the hardware.
 
-iD8DBQFF/n5Dp5vW4rUFj5oRCJbzAJ4+rkkqdA21If03WLFT6jquX+np+QCgwSGX
-UV41rt4ZimQvf0kXLwkuFqo=
-=Ar6p
------END PGP SIGNATURE-----
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
