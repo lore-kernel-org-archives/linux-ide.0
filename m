@@ -1,74 +1,65 @@
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-Subject: Re: Errors with AHCI and 10K Raptor drive
-Date: Mon, 19 Mar 2007 14:17:14 -0700
-Message-ID: <20070319141714.1632cee4@freekitty>
-References: <20070319075321.444c241e@freebird>
-	<45FEA5D1.20101@pobox.com>
-	<20070319131608.6d93fbf4@freekitty>
-	<45FEF6B0.6020502@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Tony Vroon <chainsaw@gentoo.org>
+Subject: [PATCH 2.6.22 1/3] Add LED trigger to libata core
+Date: Mon, 19 Mar 2007 21:48:05 +0000 (GMT)
+Message-ID: <20070319214805.41D0A5B80F1@ganymede.vroon.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:56716 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964960AbXCSVRR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Mar 2007 17:17:17 -0400
-In-Reply-To: <45FEF6B0.6020502@garzik.org>
+Received: from ganymede.vroon.org ([195.66.242.11]:55971 "EHLO
+	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030657AbXCSVsO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Mar 2007 17:48:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: htejun@gmail.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 19 Mar 2007 16:46:40 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+This adds an optional wrapper around ata_ac_issue_prot that triggers the LED layer.
+I plan to use this by allowing PMU LED control on G5 towers. My test platform 
+is a PowerMac 7,3 (Dual G5 2.0GHz, June 2004) with a K2 (sata_svw) controller.
+Respin of an earlier patch, based on comments by Tejun Heo & Alan Cox.
 
-> Stephen Hemminger wrote:
-> > On Mon, 19 Mar 2007 11:01:37 -0400
-> > Jeff Garzik <jgarzik@pobox.com> wrote:
-> > 
-> >> Stephen Hemminger wrote:
-> >>> This is a new drive, so I suspect some driver incompatibility between the
-> >>> driver (AHCI) and the hard drive (WD Raptor 10K 74G).
-> >> Driver incompatibilities between the driver (LLDD or libata-core) and a 
-> >> hard drive are extremely rare.
-> >>
-> >> The most common problem on modern SATA drives is drive firmware bugs, at 
-> >> the moment.
-> >>
-> > 
-> > I moved the drive to another machine with ICH7 and it seems to work fine
-> > there. Strange?
-> 
-> Does dmesg reflect any difference in AHCI version or PHY speed, on 
-> either machine?  Did you use the same cables in both tests?
-> 
-> AHCI version ("0001.0100" == AHCI 1.1):
-> ...
-> ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl SATA mode
-> ...
+Signed-off-by: Tony Vroon <chainsaw@gentoo.org>
 
-On the good machine:
-
-[   30.728849] ata1: SATA max UDMA/133 cmd 0x000000000001e400 ctl 0x000000000001e082 bmdma 0x000000000001d880 irq 23
-[   30.890918] ata1.00: ATA-7: WDC WD740ADFD-00NLR1, 20.07P20, max UDMA/133
-[   30.890966] ata1.00: 145226112 sectors, multi 16: LBA48 NCQ (depth 0/32)
-[   30.900957] ata1.00: configured for UDMA/133
-
-Maybe since AHCI isn't enabled in the BIOS on the good machine,
-we aren't doing NCQ?
-
-> PHY configuration and speed:
-> ...
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ...
-> 
-> SATA headers (ports) on the motherboard and SATA cables are known to be 
-> weak links in the chain, commonly.
-
-I tried a port and cable swap on the bad machine. The good machine
-had a new cable, so it still could be the cable.
-
-
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+--- linux-2.6/drivers/ata/libata-core.c.orig	2007-03-19 20:03:07.000000000 +0000
++++ linux-2.6/drivers/ata/libata-core.c	2007-03-19 21:05:50.000000000 +0000
+@@ -49,6 +49,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/jiffies.h>
+ #include <linux/scatterlist.h>
++#include <linux/leds.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
+@@ -5050,6 +5051,25 @@
+ }
+ 
+ /**
++ *	ata_qc_issue_prot_with_ledtrigger - trigger LED core
++ *	@qc: command to issue to device
++ *
++ *	This triggers the LED core and then calls the
++ *	regular ata_qc_issue_prot function.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	Zero on success, AC_ERR_* mask on failure
++ */
++unsigned int ata_qc_issue_prot_with_ledtrigger(struct ata_queued_cmd *qc)
++{
++	ledtrig_ide_activity();	
++	return ata_qc_issue_prot(qc);
++}
++
++/**
+  *	ata_host_intr - Handle host interrupt for given (port, task)
+  *	@ap: Port on which interrupt arrived (possibly...)
+  *	@qc: Taskfile currently active in engine
+@@ -6316,6 +6336,7 @@
+ EXPORT_SYMBOL_GPL(ata_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_qc_complete_multiple);
+ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
++EXPORT_SYMBOL_GPL(ata_qc_issue_prot_with_ledtrigger);
+ EXPORT_SYMBOL_GPL(ata_tf_load);
+ EXPORT_SYMBOL_GPL(ata_tf_read);
+ EXPORT_SYMBOL_GPL(ata_noop_dev_select);
