@@ -1,31 +1,36 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [git patches] libata fixes
-Date: Mon, 19 Mar 2007 07:05:29 -0400
-Message-ID: <20070319110529.GC24026@devserv.devel.redhat.com>
-References: <45FE137D.8000300@gmail.com> <005501c769fa$ee402470$4b00a8c0@donald>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2.6.22] Add LED trigger to libata core
+Date: Mon, 19 Mar 2007 12:46:16 +0000
+Message-ID: <20070319124616.2fb7494b@lxorguk.ukuu.org.uk>
+References: <20070318170605.3751D5B80F1@ganymede.vroon.org>
+	<45FE14BD.5090701@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:36551 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752827AbXCSLFk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Mar 2007 07:05:40 -0400
-Content-Disposition: inline
-In-Reply-To: <005501c769fa$ee402470$4b00a8c0@donald>
+Received: from [81.2.110.250] ([81.2.110.250]:42683 "EHLO lxorguk.ukuu.org.uk"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753468AbXCSLo3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Mar 2007 07:44:29 -0400
+In-Reply-To: <45FE14BD.5090701@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Rolland <rol@as2917.net>
-Cc: 'Tejun Heo' <htejun@gmail.com>, 'Linus Torvalds' <torvalds@linux-foundation.org>, 'Jeff Garzik' <jeff@garzik.org>, 'Alan Cox' <alan@redhat.com>, 'Andrew Morton' <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>, "'Eric D. Mudama'" <edmudama@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Tony Vroon <chainsaw@gentoo.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Mar 19, 2007 at 08:48:00AM +0100, Paul Rolland wrote:
-> Would you agree to a patch to add a kernel boot parameter to skip some
-> ata ports ?
+On Mon, 19 Mar 2007 13:42:37 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-It should in theory not be neccessary
+> Tony Vroon wrote:
+> > This duplicates the IDE core LED trigger in the libata core.
+> > I plan to use this by allowing PMU LED control on G5 towers. My test platform 
+> > is a PowerMac 7,3 (Dual G5 2.0GHz, June 2004) with a K2 (sata_svw) controller.
+> 
+> I think this fits better in libata-core.c::ata_qc_issue().  Can you move
+> it to there?
 
-> I found some archives refering to some "ataX=noprobe", but it seems
-> to have no effect, and I'd like to resurrect it for libata, at least to
-> help me support my configuration ?
-> If no, I'll just cook it for me, without posting it...
-
-If you get it working please post patches - theory and practice rarely agree 8)
+Gak. I'd rather it stayed out of ata_qc_issue() which is a critical path
+for performance. Our command issu is already too heavy and not all
+controllers have queueing to absorb that. How many controllers actually
+need this hook and can we not have ata_qc_issue_with_led() helpers for
+them ?
