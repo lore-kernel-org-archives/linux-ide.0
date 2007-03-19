@@ -1,42 +1,37 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: don't whine if ->prereset() returns -ENOENT
-Date: Mon, 19 Mar 2007 12:03:54 -0400
-Message-ID: <45FEB46A.7040602@garzik.org>
-References: <20070309163148.GA12848@havoc.gtf.org>	<b637ec0b0703091324q7f15fddbpc8c24b4e1131e3f4@mail.gmail.com> <20070309234839.2070a265@lxorguk.ukuu.org.uk> <45F50E28.7010509@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_sil24: Add Adaptec 1220SA PCI ID
+Date: Mon, 19 Mar 2007 12:04:03 -0400
+Message-ID: <45FEB473.7050501@pobox.com>
+References: <45F62D00.9060902@metaparadigm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53761 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53766 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030295AbXCSQEB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Mar 2007 12:04:01 -0400
-In-Reply-To: <45F50E28.7010509@gmail.com>
+	id S1030295AbXCSQEJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Mar 2007 12:04:09 -0400
+In-Reply-To: <45F62D00.9060902@metaparadigm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Fabio Comolli <fabio.comolli@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: Jamie Clark <jamie@metaparadigm.com>
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
-Tejun Heo wrote:
-> ->prereset() returns -ENOENT to tell libata that the port is empty and
-> reset sequencing should be stopped.  This is not an error condition.
-> Update ata_eh_reset() such that it sets device classes to ATA_DEV_NONE
-> and return success in on -ENOENT.  This makes spurious error message
-> go away.
+Jamie Clark wrote:
+> Add Adaptec 1220SA (SIL3132) to devices claimed by sata_sil24
+> Patch generated against 2.6.20.2
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
+> Signed-off-by: Jamie Clark <jclark@metaparadigm.com>
 > 
-> This should do it and better fits the intention of the return value.
-> Two things to note.
-> 
-> 1. I think these ports should be made dummy instead of returning
-> -ENOENT on prereset().  -ENOENT from prereset() was a hack to keep
-> ata_piix's behavior unchanged while converting it to new EH.  If no
-> one objcts, I'll convert similar usages to use dummy ports after new
-> init model and drop -ENOENT hack in #upstream.
-> 
-> 2. -ENODEV sounds more appropriate.  Why have I used -ENOENT.  :-)
+> --- drivers/ata/sata_sil24.c.orig    2007-03-10 02:58:04.000000000 +0800
+> +++ drivers/ata/sata_sil24.c    2007-03-12 20:41:02.000000000 +0800
+> @@ -352,6 +352,7 @@
+>     { PCI_VDEVICE(CMD, 0x3124), BID_SIL3124 },
+>     { PCI_VDEVICE(INTEL, 0x3124), BID_SIL3124 },
+>     { PCI_VDEVICE(CMD, 0x3132), BID_SIL3132 },
+> +    { PCI_VDEVICE(CMD, 0x0242), BID_SIL3132 },
+>     { PCI_VDEVICE(CMD, 0x3131), BID_SIL3131 },
+>     { PCI_VDEVICE(CMD, 0x3531), BID_SIL3131 },
 
 applied
 
