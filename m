@@ -1,41 +1,43 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] drivers/ata/Kconfig: PATA_SCC depends on wrong platform
-Date: Mon, 19 Mar 2007 12:04:13 -0400
-Message-ID: <45FEB47D.1090906@garzik.org>
-References: <200703150530.l2F5Uwel024855@toshiba.co.jp>
+Subject: Re: [PATCH] libata: don't whine if ->prereset() returns -ENOENT
+Date: Mon, 19 Mar 2007 12:03:54 -0400
+Message-ID: <45FEB46A.7040602@garzik.org>
+References: <20070309163148.GA12848@havoc.gtf.org>	<b637ec0b0703091324q7f15fddbpc8c24b4e1131e3f4@mail.gmail.com> <20070309234839.2070a265@lxorguk.ukuu.org.uk> <45F50E28.7010509@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53771 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53761 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030300AbXCSQER (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Mar 2007 12:04:17 -0400
-In-Reply-To: <200703150530.l2F5Uwel024855@toshiba.co.jp>
+	id S1030295AbXCSQEB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Mar 2007 12:04:01 -0400
+In-Reply-To: <45F50E28.7010509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Fabio Comolli <fabio.comolli@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-Akira Iguchi wrote:
-> PATA_SCC depends on PPC_CELLEB. (not PPC_IBM_CELL_BLADE)
+Tejun Heo wrote:
+> ->prereset() returns -ENOENT to tell libata that the port is empty and
+> reset sequencing should be stopped.  This is not an error condition.
+> Update ata_eh_reset() such that it sets device classes to ATA_DEV_NONE
+> and return success in on -ENOENT.  This makes spurious error message
+> go away.
 > 
-> Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-> Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > ---
 > 
-> diff -Nrpu -X linux-2.6.21-rc3/Documentation/dontdiff linux-2.6.21-rc3/drivers/ata/Kconfig linux-2.6.21-rc3.mod/drivers/ata/Kconfig
-> --- linux-2.6.21-rc3/drivers/ata/Kconfig	2007-03-07 13:41:20.000000000 +0900
-> +++ linux-2.6.21-rc3.mod/drivers/ata/Kconfig	2007-03-15 23:04:14.000000000 +0900
-> @@ -564,7 +564,7 @@ config PATA_IXP4XX_CF
->  
->  config PATA_SCC
->  	tristate "Toshiba's Cell Reference Set IDE support"
-> -	depends on PCI && PPC_IBM_CELL_BLADE
-> +	depends on PCI && PPC_CELLEB
->  	help
->  	  This option enables support for the built-in IDE controller on
+> This should do it and better fits the intention of the return value.
+> Two things to note.
+> 
+> 1. I think these ports should be made dummy instead of returning
+> -ENOENT on prereset().  -ENOENT from prereset() was a hack to keep
+> ata_piix's behavior unchanged while converting it to new EH.  If no
+> one objcts, I'll convert similar usages to use dummy ports after new
+> init model and drop -ENOENT hack in #upstream.
+> 
+> 2. -ENODEV sounds more appropriate.  Why have I used -ENOENT.  :-)
 
-aplied
+applied
 
 
