@@ -1,94 +1,31 @@
-From: Holger Macht <hmacht-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: CONFIG_IBM_BAY
-Date: Tue, 20 Mar 2007 17:34:53 +0100
-Message-ID: <20070320163453.GA4058@homac2.suse.de>
-References: <20070315110156.09e80b99.kristen.c.accardi@intel.com>
-	<20070315193123.GB14394@khazad-dum.debian.net>
-	<20070315125037.3e82e0c4.kristen.c.accardi@intel.com>
-	<45FCD062.3050001@gmail.com> <20070318082751.GA28591@homac2>
-	<20070318183652.GB29422@khazad-dum.debian.net>
-	<20070318185529.GA14885@homac2>
-	<20070319110412.ea6f4363.kristen.c.accardi@intel.com>
-	<20070320155321.GA6079@homac2.suse.de>
-	<20070320091932.f61bbdcc.kristen.c.accardi@intel.com>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [PATCH 3/4] libata: reimplement suspend/resume support using sdev->manage_start_stop
+Date: Tue, 20 Mar 2007 17:15:06 +0100
+Message-ID: <200703201715.08114.oliver@neukum.org>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320152533.GH6152@htj.dyndns.org> <20070320163919.222ae79d@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <ibm-acpi-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070320163919.222ae79d@lxorguk.ukuu.org.uk>
 Content-Disposition: inline
-In-Reply-To: <20070320091932.f61bbdcc.kristen.c.accardi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/ibm-acpi-devel>,
-	<mailto:ibm-acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=ibm-acpi-devel>
-List-Post: <mailto:ibm-acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:ibm-acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/ibm-acpi-devel>,
-	<mailto:ibm-acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Sender: ibm-acpi-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-Errors-To: ibm-acpi-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: Kristen Carlson Accardi <kristen.c.accardi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ibm-acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Henrique de Moraes Holschuh <hmh-N3TV7GIv+o9fyO9Q7EP/yw@public.gmane.org>, Len Brown <lenb-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
 List-Id: linux-ide@vger.kernel.org
 
+Am Dienstag, 20. M=E4rz 2007 17:39 schrieb Alan Cox:
+> > * sdev->manage_start_stop is set to 1 in ata_scsi_slave_config().
+> > =A0 This fixes spindown on shutdown and suspend-to-disk.
+>=20
+> Yay!!!!
 
-On Tue 20. Mar - 09:19:32, Kristen Carlson Accardi wrote:
-> On Tue, 20 Mar 2007 16:53:21 +0100
-> Holger Macht <hmacht-l3A5Bk7waGM@public.gmane.org> wrote:
-> 
-> > On Mon 19. Mar - 11:04:12, Kristen Carlson Accardi wrote:
-> > > On Sun, 18 Mar 2007 19:55:30 +0100
-> > > Holger Macht <hmacht-l3A5Bk7waGM@public.gmane.org> wrote:
-> > > 
-> > > > On Sun 18. Mar - 15:36:52, Henrique de Moraes Holschuh wrote:
-> > > > > On Sun, 18 Mar 2007, Holger Macht wrote:
-> > > > > > those ThinkPads where it is needed. Afterwards it does the corresponding
-> > > > > > dock/undock request on ibm_acpi. And this works reliably good what I can
-> > > > > > see from the feedback I already got. But for this to work, userspace would
-> > > > > 
-> > > > > It should work with the generic bay device too, but I have no ideas about
-> > > > > dock.  But you'll need to deal with udev with the new bay device, something
-> > > > > I am not too happy about.  These things are ACPI events, they should remain
-> > > > > so unless all other ACPI events are going to become uevents.
-> > > > 
-> > > > It doesn't work, I've already tried. The bay driver only emits an event if
-> > > > you really try to remove the bay, but not on docking/undocking.
-> > > > 
-> > > > Regards,
-> > > > 	Holger
-> > > > 
-> > > 
-> > > this *should* work.  The Bay driver registers with the dock driver to get
-> > > dock events:
-> > > 
-> > >         /* if we are on a dock station, we should register for dock
-> > >          * notifications.
-> > >          */
-> > >         if (bay_is_dock_device(handle)) {
-> > >                 bay_dprintk(handle, "Is dependent on dock\n");
-> > >                 register_hotplug_dock_device(handle, bay_notify, new_bay);
-> > >         }
-> > >  
-> > 
-> > But is_dock_device(...) for both the bay and for the parent handle return
-> > false. I'm using an X60 here, so bay_notify is never registered. I
-> > couldn't find the reason in the short time I was looking at it, though.
-> > 
-> > Regards,
-> > 	Holger
-> > 
-> 
-> Works for me on my X60 - have you tested on the latest rc kernel?  Also,
-> let me know what your BIOS sets your SATA controller to.  I can try to 
-> duplicate your issue and get it to work.
+Which kernel version is this?
 
-Tried with Linus' git tree from today. SATA is set to AHCI if that's the
-information you're asking for.
-
-Thanks,
-  Holger
-
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys-and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
+	Regards
+		Oliver
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
