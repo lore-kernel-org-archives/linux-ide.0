@@ -1,263 +1,38 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/3] sd: implement START/STOP management
-Date: Wed, 21 Mar 2007 00:13:59 +0900
-Message-ID: <20070320151359.GG6152@htj.dyndns.org>
-References: <20070320150718.GF6152@htj.dyndns.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: libata: CD and dvd devices not recognized
+Date: Tue, 20 Mar 2007 18:23:23 +0300
+Message-ID: <45FFFC6B.2060000@ru.mvista.com>
+References: <45F873AC.6010204@gmail.com> <200703172107.42107.bzolnier@gmail.com> <45FD0F68.7090207@gmail.com> <200703181610.33714.bzolnier@gmail.com> <45FE7DCC.3000507@ru.mvista.com> <45FF166B.8000303@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070320150718.GF6152@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:58732 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933606AbXCTPWu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Mar 2007 11:22:50 -0400
+In-Reply-To: <45FF166B.8000303@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: YUP <yupadmin@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, albertl@mail.com, linux-ide@vger.kernel.org
 
-Implement SBC START/STOP management.  sdev->mange_start_stop is added.
-When it's set to one, sd STOPs the device on suspend and shutdown and
-STARTs it on resume.  sdev->manage_start_stop defaults is in sdev
-instead of scsi_disk cdev to allow ->slave_config() override the
-default configuration but is exported under scsi_disk sysfs node as
-sdev->allow_restart is.
+Hello.
 
-When manage_start_stop is zero (the default value), this patch doesn't
-introduce any behavior change.
+YUP wrote:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/scsi/scsi_sysfs.c  |   31 +++++++++++--
- drivers/scsi/sd.c          |  102 +++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_device.h |    1 
- 3 files changed, 130 insertions(+), 4 deletions(-)
+> Well, I checked pata_pdc2027x.c code and found that code completely 
+> rewrited. For unexperienced user it is not so easy to apply.
 
-Index: work/drivers/scsi/sd.c
-===================================================================
---- work.orig/drivers/scsi/sd.c
-+++ work/drivers/scsi/sd.c
-@@ -142,6 +142,8 @@ static void sd_rw_intr(struct scsi_cmnd 
- static int sd_probe(struct device *);
- static int sd_remove(struct device *);
- static void sd_shutdown(struct device *dev);
-+static int sd_suspend(struct device *dev, pm_message_t state);
-+static int sd_resume(struct device *dev);
- static void sd_rescan(struct device *);
- static int sd_init_command(struct scsi_cmnd *);
- static int sd_issue_flush(struct device *, sector_t *);
-@@ -206,6 +208,20 @@ static ssize_t sd_store_cache_type(struc
- 	return count;
- }
- 
-+static ssize_t sd_store_manage_start_stop(struct class_device *cdev,
-+					  const char *buf, size_t count)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-+	struct scsi_device *sdp = sdkp->device;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	sdp->manage_start_stop = simple_strtoul(buf, NULL, 10);
-+
-+	return count;
-+}
-+
- static ssize_t sd_store_allow_restart(struct class_device *cdev, const char *buf,
- 				      size_t count)
- {
-@@ -238,6 +254,14 @@ static ssize_t sd_show_fua(struct class_
- 	return snprintf(buf, 20, "%u\n", sdkp->DPOFUA);
- }
- 
-+static ssize_t sd_show_manage_start_stop(struct class_device *cdev, char *buf)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-+	struct scsi_device *sdp = sdkp->device;
-+
-+	return snprintf(buf, 20, "%u\n", sdp->manage_start_stop);
-+}
-+
- static ssize_t sd_show_allow_restart(struct class_device *cdev, char *buf)
- {
- 	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-@@ -251,6 +275,8 @@ static struct class_device_attribute sd_
- 	__ATTR(FUA, S_IRUGO, sd_show_fua, NULL),
- 	__ATTR(allow_restart, S_IRUGO|S_IWUSR, sd_show_allow_restart,
- 	       sd_store_allow_restart),
-+	__ATTR(manage_start_stop, S_IRUGO|S_IWUSR, sd_show_manage_start_stop,
-+	       sd_store_manage_start_stop),
- 	__ATTR_NULL,
- };
- 
-@@ -267,6 +293,8 @@ static struct scsi_driver sd_template = 
- 		.name		= "sd",
- 		.probe		= sd_probe,
- 		.remove		= sd_remove,
-+		.suspend	= sd_suspend,
-+		.resume		= sd_resume,
- 		.shutdown	= sd_shutdown,
- 	},
- 	.rescan			= sd_rescan,
-@@ -1776,6 +1804,32 @@ static void scsi_disk_release(struct cla
- 	kfree(sdkp);
- }
- 
-+static int sd_start_stop_device(struct scsi_device *sdp, int start)
-+{
-+	unsigned char cmd[6] = { START_STOP };	/* START_VALID */
-+	struct scsi_sense_hdr sshdr;
-+	int res;
-+
-+	if (start)
-+		cmd[4] |= 1;	/* START */
-+
-+	if (!scsi_device_online(sdp))
-+		return -ENODEV;
-+
-+	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+			       SD_TIMEOUT, SD_MAX_RETRIES);
-+	if (res) {
-+		printk(KERN_WARNING "FAILED\n  status = %x, message = %02x, "
-+		       "host = %d, driver = %02x\n  ",
-+		       status_byte(res), msg_byte(res),
-+		       host_byte(res), driver_byte(res));
-+		if (driver_byte(res) & DRIVER_SENSE)
-+			scsi_print_sense_hdr("sd", &sshdr);
-+	}
-+
-+	return res;
-+}
-+
- /*
-  * Send a SYNCHRONIZE CACHE instruction down to the device through
-  * the normal SCSI command structure.  Wait for the command to
-@@ -1794,9 +1848,57 @@ static void sd_shutdown(struct device *d
- 				sdkp->disk->disk_name);
- 		sd_sync_cache(sdp);
- 	}
-+
-+	if (system_state != SYSTEM_RESTART && sdp->manage_start_stop) {
-+ 		printk(KERN_NOTICE "Stopping disk %s: \n",
-+		       sdkp->disk->disk_name);
-+		sd_start_stop_device(sdp, 0);
-+	}
-+
- 	scsi_disk_put(sdkp);
- }
- 
-+static int sd_suspend(struct device *dev, pm_message_t mesg)
-+{
-+	struct scsi_device *sdp = to_scsi_device(dev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	int ret;
-+
-+	if (!sdkp)
-+		return 0;	/* this can happen */
-+
-+	if (sdkp->WCE) {
-+		printk(KERN_NOTICE "Synchronizing SCSI cache for disk %s: \n",
-+				sdkp->disk->disk_name);
-+		ret = sd_sync_cache(sdp);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	if (mesg.event == PM_EVENT_SUSPEND && sdp->manage_start_stop) {
-+		printk(KERN_NOTICE "Stopping disk %s: \n",
-+		       sdkp->disk->disk_name);
-+		ret = sd_start_stop_device(sdp, 0);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int sd_resume(struct device *dev)
-+{
-+	struct scsi_device *sdp = to_scsi_device(dev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+
-+	if (!sdp->manage_start_stop)
-+		return 0;
-+
-+	printk(KERN_NOTICE "Starting disk %s: \n", sdkp->disk->disk_name);
-+
-+	return sd_start_stop_device(sdp, 1);
-+}
-+
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-  *	a module).
-Index: work/include/scsi/scsi_device.h
-===================================================================
---- work.orig/include/scsi/scsi_device.h
-+++ work/include/scsi/scsi_device.h
-@@ -119,6 +119,7 @@ struct scsi_device {
- 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
- 	unsigned no_start_on_add:1;	/* do not issue start on add */
- 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
-+	unsigned manage_start_stop:1;	/* Let HLD (sd) manage start/stop */
- 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
- 	unsigned select_no_atn:1;
- 	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
-Index: work/drivers/scsi/scsi_sysfs.c
-===================================================================
---- work.orig/drivers/scsi/scsi_sysfs.c
-+++ work/drivers/scsi/scsi_sysfs.c
-@@ -278,6 +278,7 @@ static int scsi_bus_match(struct device 
- 
- static int scsi_bus_suspend(struct device * dev, pm_message_t state)
- {
-+	struct device_driver *drv = dev->driver;
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct scsi_host_template *sht = sdev->host->hostt;
- 	int err;
-@@ -286,23 +287,45 @@ static int scsi_bus_suspend(struct devic
- 	if (err)
- 		return err;
- 
--	if (sht->suspend)
-+	/* call HLD suspend first */
-+	if (drv && drv->suspend) {
-+		err = drv->suspend(dev, state);
-+		if (err)
-+			return err;
-+	}
-+
-+	/* then, call host suspend */
-+	if (sht->suspend) {
- 		err = sht->suspend(sdev, state);
-+		if (err) {
-+			if (drv && drv->resume)
-+				drv->resume(dev);
-+			return err;
-+		}
-+	}
- 
--	return err;
-+	return 0;
- }
- 
- static int scsi_bus_resume(struct device * dev)
- {
-+	struct device_driver *drv = dev->driver;
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct scsi_host_template *sht = sdev->host->hostt;
--	int err = 0;
-+	int err = 0, err2 = 0;
- 
-+	/* call host resume first */
- 	if (sht->resume)
- 		err = sht->resume(sdev);
- 
-+	/* then, call HLD resume */
-+	if (drv && drv->resume)
-+		err2 = drv->resume(dev);
-+
- 	scsi_device_resume(sdev);
--	return err;
-+
-+	/* favor LLD failure */
-+	return err ? err : err2;;
- }
- 
- struct bus_type scsi_bus_type = {
+    This patch was to drivers/ide/pci/pdc202xx_new.c -- and I thought libata 
+driver had this enabled since then... wait, it *is* enabled there.
+
+> Yarema
+
+>>    There used to be Albert's patch enabling ATAPIT DMA in this driver:
+
+>>    http://marc.info/?l=linux-ide&m=111027913608663
+
+>> Oh my, that was 2 years ago, and all slipped thru the cracks... :-)
+
+MBR, Sergei
