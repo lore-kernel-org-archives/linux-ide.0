@@ -1,55 +1,146 @@
-From: Holger Macht <hmacht@suse.de>
-Subject: Re: CONFIG_IBM_BAY
-Date: Tue, 20 Mar 2007 16:53:21 +0100
-Message-ID: <20070320155321.GA6079@homac2.suse.de>
-References: <20070315080644.c73db24a.kristen.c.accardi@intel.com> <20070315175505.GB6596@khazad-dum.debian.net> <20070315110156.09e80b99.kristen.c.accardi@intel.com> <20070315193123.GB14394@khazad-dum.debian.net> <20070315125037.3e82e0c4.kristen.c.accardi@intel.com> <45FCD062.3050001@gmail.com> <20070318082751.GA28591@homac2> <20070318183652.GB29422@khazad-dum.debian.net> <20070318185529.GA14885@homac2> <20070319110412.ea6f4363.kristen.c.accardi@intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 4/4] libata: implement libata.spindown_compat
+Date: Wed, 21 Mar 2007 00:55:48 +0900
+Message-ID: <20070320155548.GI6152@htj.dyndns.org>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <20070320152533.GH6152@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20070319110412.ea6f4363.kristen.c.accardi@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net, linux-ide@vger.kernel.org
+In-Reply-To: <20070320152533.GH6152@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
 List-Id: linux-ide@vger.kernel.org
 
-On Mon 19. Mar - 11:04:12, Kristen Carlson Accardi wrote:
-> On Sun, 18 Mar 2007 19:55:30 +0100
-> Holger Macht <hmacht@suse.de> wrote:
-> 
-> > On Sun 18. Mar - 15:36:52, Henrique de Moraes Holschuh wrote:
-> > > On Sun, 18 Mar 2007, Holger Macht wrote:
-> > > > those ThinkPads where it is needed. Afterwards it does the corresponding
-> > > > dock/undock request on ibm_acpi. And this works reliably good what I can
-> > > > see from the feedback I already got. But for this to work, userspace would
-> > > 
-> > > It should work with the generic bay device too, but I have no ideas about
-> > > dock.  But you'll need to deal with udev with the new bay device, something
-> > > I am not too happy about.  These things are ACPI events, they should remain
-> > > so unless all other ACPI events are going to become uevents.
-> > 
-> > It doesn't work, I've already tried. The bay driver only emits an event if
-> > you really try to remove the bay, but not on docking/undocking.
-> > 
-> > Regards,
-> > 	Holger
-> > 
-> 
-> this *should* work.  The Bay driver registers with the dock driver to get
-> dock events:
-> 
->         /* if we are on a dock station, we should register for dock
->          * notifications.
->          */
->         if (bay_is_dock_device(handle)) {
->                 bay_dprintk(handle, "Is dependent on dock\n");
->                 register_hotplug_dock_device(handle, bay_notify, new_bay);
->         }
->  
+Now that libata uses sd->manage_start_stop, libata spins down disk on
+shutdown.  In an attempt to compensate libata's previous shortcoming,
+shutdown(8) syncs and spins down disks attached via libata.  Some
+disks spin back up just to spin down again on STANDBYNOW1 if the
+command is issued when the disk is spun down, so this double spinning
+down causes problem.
 
-But is_dock_device(...) for both the bay and for the parent handle return
-false. I'm using an X60 here, so bay_notify is never registered. I
-couldn't find the reason in the short time I was looking at it, though.
+This patch implements module parameter libata.spindown_compat which,
+when set to one (default value), prevents libata from spinning down
+disks on shutdown thus avoiding double spinning down.  Note that
+libata spins down disks for suspend to mem and disk, so with
+libata.spindown_compat set to one, disks should be properly spun down
+in all cases without modifying shutdown(8).
 
-Regards,
-	Holger
+shutdown(8) should be fixed eventually tho.  Some drive do spin up on
+SYNCHRONZE_CACHE even when their cache is clean.  Those disks
+currently spin up briefly when sd tries to shutdown the device and
+then the machine powers off immediately, which can't be good for the
+head.  We can't skip SYNCHRONIZE_CACHE during shudown as it can be
+dangerous data integrity-wise.
+
+So, this spindown_compat parameter is already scheduled for removal by
+the end of the next year and here's what shutdown(8) should do.
+
+  1. Check whether /sys/modules/libata/parameters/spindown_compat
+     exists.  If it does, write 0 to it.
+
+  For each libata harddisk {
+
+    2. Check whether /sys/class/scsi_disk/h:c:i:l/manage_start_stop
+       exists.  If so, write 1 to it and continue; otherwise, fall
+       through to #3.
+
+    3. Synchronize cache and spin down as before.
+
+  }
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Henrique, does it look good enough?  How do we coordinate this with
+distributions?  I can take care of suse and I guess Alan/Jeff can do
+so for redhat.  So, that leaves us with Debian, Ubuntu, Gentoo...
+
+ Documentation/feature-removal-schedule.txt |   19 +++++++++++++++++++
+ drivers/ata/libata-core.c                  |    6 ++++++
+ drivers/ata/libata-scsi.c                  |   14 +++++++++++++-
+ drivers/ata/libata.h                       |    1 +
+ 4 files changed, 39 insertions(+), 1 deletion(-)
+
+Index: work/Documentation/feature-removal-schedule.txt
+===================================================================
+--- work.orig/Documentation/feature-removal-schedule.txt
++++ work/Documentation/feature-removal-schedule.txt
+@@ -324,3 +324,22 @@ Why:	the i8xx_tco watchdog driver has be
+ Who:	Wim Van Sebroeck <wim@iguana.be>
+ 
+ ---------------------------
++
++What:	libata.spindown_compat module parameter
++When:	Dec 2008
++Why:	halt(8) synchronizes caches for and spins down libata disks
++	because libata didn't use to spin down disk on system halt
++	(only synchronized caches).
++	Spin down on system halt is now implemented and can be tested
++	using sysfs node /sys/class/scsi_disk/h:c:i:l/manage_start_stop.
++	Because issuing spin down command to an already spun down disk
++	makes some disks spin up just to spin down again, the old
++	behavior needs to be maintained till userspace tool is updated
++	to check the sysfs node and not to spin down disks with the
++	node set to one.
++	This module parameter is to give userspace tool the time to
++	get updated and should be removed after userspace is
++	reasonably updated.
++Who:	Tejun Heo <htejun@gmail.com>
++
++---------------------------
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -97,6 +97,12 @@ int noacpi;
+ module_param(noacpi, int, 0444);
+ MODULE_PARM_DESC(noacpi, "Disables the use of ACPI in suspend/resume when set");
+ 
++int ata_spindown_compat = 1;
++module_param_named(spindown_compat, ata_spindown_compat, int, 0644);
++MODULE_PARM_DESC(spindown_compat, "Enable backward compatible spindown "
++		 "behavior.  Will be removed.  More info can be found in "
++		 "Documentation/feature-removal-schedule.txt\n");
++
+ MODULE_AUTHOR("Jeff Garzik");
+ MODULE_DESCRIPTION("Library module for ATA devices");
+ MODULE_LICENSE("GPL");
+Index: work/drivers/ata/libata-scsi.c
+===================================================================
+--- work.orig/drivers/ata/libata-scsi.c
++++ work/drivers/ata/libata-scsi.c
+@@ -944,9 +944,21 @@ static unsigned int ata_scsi_start_stop_
+ 		}
+ 
+ 		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
+-	} else
++	} else {
++		/* XXX: This is for backward compatibility, will be
++		 * removed.  Read Documentation/feature-removal-schedule.txt
++		 * for more info.
++		 */
++		if (ata_spindown_compat &&
++		    (system_state == SYSTEM_HALT ||
++		     system_state == SYSTEM_POWER_OFF)) {
++			scmd->result = SAM_STAT_GOOD;
++			return 1;
++		}
++
+ 		/* Issue ATA STANDBY IMMEDIATE command */
+ 		tf->command = ATA_CMD_STANDBYNOW1;
++	}
+ 
+ 	/*
+ 	 * Standby and Idle condition timers could be implemented but that
+Index: work/drivers/ata/libata.h
+===================================================================
+--- work.orig/drivers/ata/libata.h
++++ work/drivers/ata/libata.h
+@@ -57,6 +57,7 @@ extern int atapi_enabled;
+ extern int atapi_dmadir;
+ extern int libata_fua;
+ extern int noacpi;
++extern int ata_spindown_compat;
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
