@@ -1,89 +1,33 @@
-From: Tony Vroon <chainsaw@gentoo.org>
-Subject: [PATCH 2.6.22 RESEND] Optional LED trigger for libata
-Date: Tue, 20 Mar 2007 09:26:12 +0000 (GMT)
-Message-ID: <20070320092612.82EF65B80F1@ganymede.vroon.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.22 RESEND] Optional LED trigger for libata
+Date: Tue, 20 Mar 2007 18:30:45 +0900
+Message-ID: <45FFA9C5.1090403@gmail.com>
+References: <20070320092612.82EF65B80F1@ganymede.vroon.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ganymede.vroon.org ([195.66.242.11]:42288 "EHLO
-	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933413AbXCTJ0V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Mar 2007 05:26:21 -0400
+Received: from nz-out-0506.google.com ([64.233.162.230]:17405 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933410AbXCTJav (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Mar 2007 05:30:51 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so821632nze
+        for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 02:30:50 -0700 (PDT)
+In-Reply-To: <20070320092612.82EF65B80F1@ganymede.vroon.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: htejun@gmail.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tony Vroon <chainsaw@gentoo.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This adds an optional wrapper around ata_ac_issue_prot that triggers the LED layer.
-This is used for the PMU LED on G5 towers (IDE trigger). My test platform is a 
-PowerMac 7,3 (Dual G5 2.0GHz, June 2004) with a K2 (sata_svw) controller.
-Now respun as a single patch, and the function name shortened as requested.
+Tony Vroon wrote:
+> This adds an optional wrapper around ata_ac_issue_prot that triggers the LED layer.
+> This is used for the PMU LED on G5 towers (IDE trigger). My test platform is a 
+> PowerMac 7,3 (Dual G5 2.0GHz, June 2004) with a K2 (sata_svw) controller.
+> Now respun as a single patch, and the function name shortened as requested.
+> 
+> Signed-off-by: Tony Vroon <chainsaw@gentoo.org>
 
-Signed-off-by: Tony Vroon <chainsaw@gentoo.org>
+Acked-by: Tejun Heo <htejun@gmail.com>
 
-diff -uNr linux-2.6.ORIG/drivers/ata/libata-core.c linux-2.6/drivers/ata/libata-core.c
---- linux-2.6.ORIG/drivers/ata/libata-core.c	2007-03-20 09:10:44.000000000 +0000
-+++ linux-2.6/drivers/ata/libata-core.c	2007-03-20 09:17:53.000000000 +0000
-@@ -49,6 +49,7 @@
- #include <linux/workqueue.h>
- #include <linux/jiffies.h>
- #include <linux/scatterlist.h>
-+#include <linux/leds.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -5050,6 +5051,25 @@
- }
- 
- /**
-+ *	ata_qc_issue_prot_ledtrigger - trigger LED core
-+ *	@qc: command to issue to device
-+ *
-+ *	This triggers the LED core and then calls the
-+ *	regular ata_qc_issue_prot function.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	Zero on success, AC_ERR_* mask on failure
-+ */
-+unsigned int ata_qc_issue_prot_ledtrigger(struct ata_queued_cmd *qc)
-+{
-+	ledtrig_ide_activity();	
-+	return ata_qc_issue_prot(qc);
-+}
-+
-+/**
-  *	ata_host_intr - Handle host interrupt for given (port, task)
-  *	@ap: Port on which interrupt arrived (possibly...)
-  *	@qc: Taskfile currently active in engine
-@@ -6316,6 +6336,7 @@
- EXPORT_SYMBOL_GPL(ata_qc_complete);
- EXPORT_SYMBOL_GPL(ata_qc_complete_multiple);
- EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
-+EXPORT_SYMBOL_GPL(ata_qc_issue_prot_ledtrigger);
- EXPORT_SYMBOL_GPL(ata_tf_load);
- EXPORT_SYMBOL_GPL(ata_tf_read);
- EXPORT_SYMBOL_GPL(ata_noop_dev_select);
-diff -uNr linux-2.6.ORIG/drivers/ata/sata_svw.c linux-2.6/drivers/ata/sata_svw.c
---- linux-2.6.ORIG/drivers/ata/sata_svw.c	2007-03-20 09:10:44.000000000 +0000
-+++ linux-2.6/drivers/ata/sata_svw.c	2007-03-20 09:17:17.000000000 +0000
-@@ -348,7 +348,7 @@
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
- 	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
-+	.qc_issue		= ata_qc_issue_prot_ledtrigger,
- 	.data_xfer		= ata_data_xfer,
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
-diff -uNr linux-2.6.ORIG/include/linux/libata.h linux-2.6/include/linux/libata.h
---- linux-2.6.ORIG/include/linux/libata.h	2007-03-20 09:11:46.000000000 +0000
-+++ linux-2.6/include/linux/libata.h	2007-03-20 09:17:32.000000000 +0000
-@@ -786,6 +786,7 @@
- extern void ata_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
- extern unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc);
-+extern unsigned int ata_qc_issue_prot_ledtrigger(struct ata_queued_cmd *qc);
- extern void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf,
- 		unsigned int buflen);
- extern void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
+-- 
+tejun
