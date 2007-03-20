@@ -1,97 +1,89 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: libata: CD and dvd devices not recognized
-Date: Tue, 20 Mar 2007 17:07:35 +0800
-Message-ID: <45FFA457.4000305@tw.ibm.com>
-References: <45F873AC.6010204@gmail.com> <200703172107.42107.bzolnier@gmail.com> <45FD0F68.7090207@gmail.com> <200703181610.33714.bzolnier@gmail.com> <45FE7DCC.3000507@ru.mvista.com> <45FEE5EB.9020909@gmail.com> <45FF8CE7.4040905@tw.ibm.com>
-Reply-To: albertl@mail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Tony Vroon <chainsaw@gentoo.org>
+Subject: [PATCH 2.6.22 RESEND] Optional LED trigger for libata
+Date: Tue, 20 Mar 2007 09:26:12 +0000 (GMT)
+Message-ID: <20070320092612.82EF65B80F1@ganymede.vroon.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:44109 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932418AbXCTJHm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Mar 2007 05:07:42 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l2K95xck032005
-	for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 05:05:59 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2K97fL2069898
-	for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 03:07:41 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2K97fJ3031099
-	for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 03:07:41 -0600
-In-Reply-To: <45FF8CE7.4040905@tw.ibm.com>
+Received: from ganymede.vroon.org ([195.66.242.11]:42288 "EHLO
+	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933413AbXCTJ0V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Mar 2007 05:26:21 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: YUP <yupadmin@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: htejun@gmail.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Albert Lee wrote:
-> YUP wrote:
-> 
->>Hi Sergei, Albert and Bartek,
->>
->>Thanks for the patch. If you dealt with it, could you please apply this
->>patch to 2.6.20.3 kernel and send me diff? I'm just afraid that I
->>couldn't do it right.
->>
->>Albert and Bartek,
->>
->>please find latest dmsg output with Albert's patch. I quoted here only
->>output after the first "qc timeout" as Albert requested (see below).
->>Hope it will help you.
->>
-> 
-> 
-> Thanks for the help. Your trace is valuable.
-> It seems we have identified the cause.
-> 
-> The AOpen drive returned 0x51 (check condition) on INQUIRY of 254 bytes,
-> and it seems to mess up when REQUEST SENSE was issued:
-> 
-> [  105.480046] CDB (4:0,1,0) 12 01 00 00 fe 00 00 00 00
-> [  105.480101] ata4: protocol 5 task_state 4 (dev_stat 0x58) <== INQUIRY
-> [  105.480551] ata4: protocol 5 task_state 1
-> [  105.480555] ata4: host_stat 0x4
-> [  105.480561] ata4: protocol 5 task_state 1 (dev_stat 0x51)
-> [  105.480564] ata4: protocol 5 task_state 2 (dev_stat 0x51)
-> [  105.480567] ata4: protocol 5 task_state 3 (dev_stat 0x51) <= check condition
-> [  105.480644] ata4: protocol 5 task_state 4 (dev_stat 0x58)  <== REQUEST SENSE
-> [  113.509692] ata4: protocol 5 task_state 1 <== interrupt. device BSY.
-> [  113.509703] ata4: host_stat 0x0           <== device messed up
-> [  113.510276] ata4: protocol 5 task_state 1
-> [  113.510280] ata4: host_stat 0x0
-> [  113.510890] ata4: protocol 5 task_state 1
-> [  113.510894] ata4: host_stat 0x0
-> [  113.512120] ata4: protocol 5 task_state 1 <== .. loop until time out
-> 
-> This INQUIRY problem can be reliable reproduced:
+This adds an optional wrapper around ata_ac_issue_prot that triggers the LED layer.
+This is used for the PMU LED on G5 towers (IDE trigger). My test platform is a 
+PowerMac 7,3 (Dual G5 2.0GHz, June 2004) with a K2 (sata_svw) controller.
+Now respun as a single patch, and the function name shortened as requested.
 
-Hi Yarema,
+Signed-off-by: Tony Vroon <chainsaw@gentoo.org>
 
-Could you please apply the attached patch (which adds the AOpen 56X/AKH to
-the BLIST_INQUIRY_36 blacklist) on top of previous patches.
-
-(Please keep using the libata + pata_pdc2027x to drive the AOpen 56X.)
-
-Let's see if this can fix the INQUIRY time out problem of the AOpen 56X/AKH.
-
---
-Thanks,
-
-Albert
-
---- linux-2.6.20.3/drivers/scsi/scsi_devinfo.c	2007-03-14 02:27:08.000000000 +0800
-+++ linux-2.6.20.3-patch/drivers/scsi/scsi_devinfo.c	2007-03-20 16:52:29.000000000 +0800
-@@ -236,6 +236,7 @@ static struct {
- 	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
- 	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
-+	{"E-IDE", "CD-ROM 56X/AKH", NULL, BLIST_INQUIRY_36},
- 	{ NULL, NULL, NULL, 0 },
- };
+diff -uNr linux-2.6.ORIG/drivers/ata/libata-core.c linux-2.6/drivers/ata/libata-core.c
+--- linux-2.6.ORIG/drivers/ata/libata-core.c	2007-03-20 09:10:44.000000000 +0000
++++ linux-2.6/drivers/ata/libata-core.c	2007-03-20 09:17:53.000000000 +0000
+@@ -49,6 +49,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/jiffies.h>
+ #include <linux/scatterlist.h>
++#include <linux/leds.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
+@@ -5050,6 +5051,25 @@
+ }
  
-
-
-
+ /**
++ *	ata_qc_issue_prot_ledtrigger - trigger LED core
++ *	@qc: command to issue to device
++ *
++ *	This triggers the LED core and then calls the
++ *	regular ata_qc_issue_prot function.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	Zero on success, AC_ERR_* mask on failure
++ */
++unsigned int ata_qc_issue_prot_ledtrigger(struct ata_queued_cmd *qc)
++{
++	ledtrig_ide_activity();	
++	return ata_qc_issue_prot(qc);
++}
++
++/**
+  *	ata_host_intr - Handle host interrupt for given (port, task)
+  *	@ap: Port on which interrupt arrived (possibly...)
+  *	@qc: Taskfile currently active in engine
+@@ -6316,6 +6336,7 @@
+ EXPORT_SYMBOL_GPL(ata_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_qc_complete_multiple);
+ EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
++EXPORT_SYMBOL_GPL(ata_qc_issue_prot_ledtrigger);
+ EXPORT_SYMBOL_GPL(ata_tf_load);
+ EXPORT_SYMBOL_GPL(ata_tf_read);
+ EXPORT_SYMBOL_GPL(ata_noop_dev_select);
+diff -uNr linux-2.6.ORIG/drivers/ata/sata_svw.c linux-2.6/drivers/ata/sata_svw.c
+--- linux-2.6.ORIG/drivers/ata/sata_svw.c	2007-03-20 09:10:44.000000000 +0000
++++ linux-2.6/drivers/ata/sata_svw.c	2007-03-20 09:17:17.000000000 +0000
+@@ -348,7 +348,7 @@
+ 	.bmdma_stop		= ata_bmdma_stop,
+ 	.bmdma_status		= ata_bmdma_status,
+ 	.qc_prep		= ata_qc_prep,
+-	.qc_issue		= ata_qc_issue_prot,
++	.qc_issue		= ata_qc_issue_prot_ledtrigger,
+ 	.data_xfer		= ata_data_xfer,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+diff -uNr linux-2.6.ORIG/include/linux/libata.h linux-2.6/include/linux/libata.h
+--- linux-2.6.ORIG/include/linux/libata.h	2007-03-20 09:11:46.000000000 +0000
++++ linux-2.6/include/linux/libata.h	2007-03-20 09:17:32.000000000 +0000
+@@ -786,6 +786,7 @@
+ extern void ata_qc_prep(struct ata_queued_cmd *qc);
+ extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
+ extern unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc);
++extern unsigned int ata_qc_issue_prot_ledtrigger(struct ata_queued_cmd *qc);
+ extern void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf,
+ 		unsigned int buflen);
+ extern void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
