@@ -1,167 +1,30 @@
-From: =?ISO-8859-1?Q?Mathieu_B=E9rard?= <Mathieu.Berard@crans.org>
-Subject: Re: [PATCH] libata: add NCQ blacklist entries from Silicon Image
- Windows driver
-Date: Wed, 21 Mar 2007 13:52:35 +0100
-Message-ID: <46012A93.7000302@crans.org>
-References: <45DD2EC9.4050403@shaw.ca> <45DF67C4.8090802@garzik.org> <4600DF90.3030902@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH scsi-misc-2.6] SCSI: kill sht->suspend/resume
+Date: Wed, 21 Mar 2007 14:19:39 +0000
+Message-ID: <20070321141939.GA20117@infradead.org>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <20070320152533.GH6152@htj.dyndns.org> <20070320152919.GA28403@infradead.org> <20070321070516.GJ6152@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx-a.polytechnique.fr ([129.104.30.14]:50664 "EHLO
-	mx-a.polytechnique.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752720AbXCUMxW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Mar 2007 08:53:22 -0400
-In-Reply-To: <4600DF90.3030902@gmail.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:51804 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752886AbXCUOUB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Mar 2007 10:20:01 -0400
+Content-Disposition: inline
+In-Reply-To: <20070321070516.GJ6152@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Jens Axboe <jens.axboe@oracle.com>, "Eric D. Mudama" <edmudama@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
 
-Tejun Heo a =E9crit :
-> Jeff Garzik wrote:
->
-> Mathieu, just to be sure, can you post the result of 'hdparm -I
-> /dev/sdX' and 'lspci -nn'?
->
-Hi,
-no problem :
+On Wed, Mar 21, 2007 at 04:05:16PM +0900, Tejun Heo wrote:
+> With libata converted to use sdev->manage_start_stop for suspend and
+> resume, sht->suspend/resume() has no user left and low level
+> suspend/ressume should be taken care of by low level driver's
+> suspend/resume callbacks (e.g. PCI or PCMCIA driver callbacks).  This
+> patch removes sht->suspend/resume() callbacks.
+> 
+> This change is suggested by Christoph Hellwig.
 
-lspci -nn:
-00:00.0 Host bridge [0600]: Intel Corporation Mobile 915GM/PM/GMS/910GM=
-L
-Express Processor to DRAM Controller [8086:2590] (rev 03)
-00:01.0 PCI bridge [0604]: Intel Corporation Mobile 915GM/PM Express PC=
-I
-Express Root Port [8086:2591] (rev 03)
-00:1c.0 PCI bridge [0604]: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH=
-6
-=46amily) PCI Express Port 1 [8086:2660] (rev 03)
-00:1c.1 PCI bridge [0604]: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH=
-6
-=46amily) PCI Express Port 2 [8086:2662] (rev 03)
-00:1d.0 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB UHCI #1 [8086:2658] (rev 03)
-00:1d.1 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB UHCI #2 [8086:2659] (rev 03)
-00:1d.2 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB UHCI #3 [8086:265a] (rev 03)
-00:1d.3 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB UHCI #4 [8086:265b] (rev 03)
-00:1d.7 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) USB2 EHCI Controller [8086:265c] (rev 03)
-00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge
-[8086:2448] (rev d3)
-00:1e.2 Multimedia audio controller [0401]: Intel Corporation
-82801FB/FBM/FR/FW/FRW (ICH6 Family) AC'97 Audio Controller [8086:266e]
-(rev 03)
-00:1e.3 Modem [0703]: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
-=46amily) AC'97 Modem Controller [8086:266d] (rev 03)
-00:1f.0 ISA bridge [0601]: Intel Corporation 82801FBM (ICH6M) LPC
-Interface Bridge [8086:2641] (rev 03)
-00:1f.1 IDE interface [0101]: Intel Corporation 82801FB/FBM/FR/FW/FRW
-(ICH6 Family) IDE Controller [8086:266f] (rev 03)
-00:1f.2 IDE interface [0101]: Intel Corporation 82801FBM (ICH6M) SATA
-Controller [8086:2653] (rev 03)
-00:1f.3 SMBus [0c05]: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
-=46amily) SMBus Controller [8086:266a] (rev 03)
-01:00.0 VGA compatible controller [0300]: ATI Technologies Inc M24
-[Radeon Mobility X600] [1002:5462]
-06:01.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-RTL-8139/8139C/8139C+ [10ec:8139] (rev 10)
-06:02.0 Network controller [0280]: Intel Corporation PRO/Wireless 2200B=
-G
-Network Connection [8086:4220] (rev 05)
-06:04.0 CardBus bridge [0607]: Texas Instruments PCIxx21/x515 Cardbus
-Controller [104c:8031]
-06:04.2 FireWire (IEEE 1394) [0c00]: Texas Instruments OHCI Compliant
-IEEE 1394 Host Controller [104c:8032]
-06:04.3 Mass storage controller [0180]: Texas Instruments PCIxx21
-Integrated FlashMedia Controller [104c:8033]
-06:04.4 Generic system peripheral [0805]: Texas Instruments
-PCI6411/6421/6611/6621/7411/7421/7611/7621 Secure Digital Controller
-[104c:8034]
-
-hdparm -I /dev/sda:
-
-/dev/sda:
-
-ATA device, with non-removable media
-        Model Number:       HTS541010G9SA00                       =20
-        Serial Number:      MP2ZM4X0GSWJKR
-        Firmware Revision:  MBZOC60D
-Standards:
-        Used: ATA/ATAPI-7 T13 1532D revision 1
-        Supported: 7 6 5 4
-Configuration:
-        Logical         max     current
-        cylinders       16383   16383
-        heads           16      16
-        sectors/track   63      63
-        --
-        CHS current addressable sectors:   16514064
-        LBA    user addressable sectors:  195371568
-        LBA48  user addressable sectors:  195371568
-        device size with M =3D 1024*1024:       95396 MBytes
-        device size with M =3D 1000*1000:      100030 MBytes (100 GB)
-Capabilities:
-        LBA, IORDY(can be disabled)
-        Queue depth: 32
-        Standby timer values: spec'd by Vendor, no device specific mini=
-mum
-        R/W multiple sector transfer: Max =3D 16  Current =3D 0
-        Advanced power management level: 128 (0x80)
-        Recommended acoustic management value: 128, current value: 254
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
-             Cycle time: min=3D120ns recommended=3D120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=3D240ns  IORDY flow control=3D=
-120ns
-Commands/features:
-        Enabled Supported:
-           *    SMART feature set
-                Security Mode feature set
-           *    Power Management feature set
-           *    Write cache
-           *    Look-ahead
-           *    Host Protected Area feature set
-           *    WRITE_BUFFER command
-           *    READ_BUFFER command
-           *    NOP cmd
-           *    DOWNLOAD_MICROCODE
-           *    Advanced Power Management feature set
-                Power-Up In Standby feature set
-           *    SET_FEATURES required to spinup after power up
-                SET_MAX security extension
-                Automatic Acoustic Management feature set
-           *    48-bit Address feature set
-           *    Device Configuration Overlay feature set
-           *    Mandatory FLUSH_CACHE
-           *    FLUSH_CACHE_EXT
-           *    SMART error logging
-           *    SMART self-test
-           *    General Purpose Logging feature set
-           *    WRITE_{DMA|MULTIPLE}_FUA_EXT
-           *    IDLE_IMMEDIATE with UNLOAD
-           *    SATA-I signaling speed (1.5Gb/s)
-           *    Native Command Queueing (NCQ)
-           *    Host-initiated interface power management
-                Non-Zero buffer offsets in DMA Setup FIS
-                DMA Setup Auto-Activate optimization
-                Device-initiated interface power management
-                In-order data delivery
-           *    Software settings preservation
-Security:
-        Master password revision code =3D 65534
-                supported
-        not     enabled
-        not     locked
-        not     frozen
-        not     expired: security count
-        not     supported: enhanced erase
-        64min for SECURITY ERASE UNIT.
-Checksum: correct
-
---=20
-Mathieu
+Very nice, as the rest of the series.  Thanks a lot Tejun.
 
