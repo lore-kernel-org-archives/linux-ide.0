@@ -1,32 +1,28 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6] SCSI: kill sht->suspend/resume
-Date: Wed, 21 Mar 2007 09:16:23 -0600
-Message-ID: <1174490184.3618.11.camel@mulgrave.il.steeleye.com>
-References: <20070320150718.GF6152@htj.dyndns.org>
-	 <20070320151359.GG6152@htj.dyndns.org>
-	 <20070320152533.GH6152@htj.dyndns.org>
-	 <20070320152919.GA28403@infradead.org>
-	 <20070321070516.GJ6152@htj.dyndns.org>
+From: Kyle McMartin <kyle@canonical.com>
+Subject: Re: [RFT] libata hpa support
+Date: Wed, 21 Mar 2007 09:01:41 -0400
+Message-ID: <20070321130140.GA4328@athena.road.mcmartin.ca>
+References: <20070223170625.GA29931@athena.road.mcmartin.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070321070516.GJ6152@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from stout.engsoc.carleton.ca ([134.117.69.22]:40210 "EHLO
+	stout.engsoc.carleton.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932853AbXCUQ2H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Mar 2007 12:28:07 -0400
+Content-Disposition: inline
+In-Reply-To: <20070223170625.GA29931@athena.road.mcmartin.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kyle McMartin <kyle@canonical.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, mjg59@ubuntu.com
 
-On Wed, 2007-03-21 at 16:05 +0900, Tejun Heo wrote:
-> This patch breaks the existing libata suspend/resume support and thus
-> should not be applied before libata is updated.  So, please don't
-> apply it yet.
+On Fri, Feb 23, 2007 at 12:06:25PM -0500, Kyle McMartin wrote:
+> 
 
-I don't have a git tree for this, but I'll  mark it in my email, just
-say the word.
+Bummer. It appears to fail horribly on a MacBook. Unfortunately I have
+no clue what's special (but I assume something to do with EFI bringup) about
+them, nor any hardware. Alan, Jeff, any ideas?
 
-Thanks for doing this,
-
-James
-
-
+Cheers,
+	Kyle
