@@ -1,44 +1,116 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: libata: CD and dvd devices not recognized
-Date: Wed, 21 Mar 2007 12:52:44 +0800
-Message-ID: <4600BA1C.7060300@tw.ibm.com>
-References: <45F873AC.6010204@gmail.com> <200703172107.42107.bzolnier@gmail.com> <45FD0F68.7090207@gmail.com> <200703181610.33714.bzolnier@gmail.com> <45FE7DCC.3000507@ru.mvista.com> <45FEE5EB.9020909@gmail.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH scsi-misc-2.6] SCSI: kill sht->suspend/resume
+Date: Wed, 21 Mar 2007 16:05:16 +0900
+Message-ID: <20070321070516.GJ6152@htj.dyndns.org>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <20070320152533.GH6152@htj.dyndns.org> <20070320152919.GA28403@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:57916 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566AbXCUExB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Mar 2007 00:53:01 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2L4r1uS012822
-	for <linux-ide@vger.kernel.org>; Wed, 21 Mar 2007 00:53:01 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2L4r0J1068674
-	for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 22:53:01 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2L4r0c0005996
-	for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 22:53:00 -0600
-In-Reply-To: <45FEE5EB.9020909@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.170]:58145 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932487AbXCUHFY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Mar 2007 03:05:24 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so187731uga
+        for <linux-ide@vger.kernel.org>; Wed, 21 Mar 2007 00:05:23 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20070320152919.GA28403@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: YUP <yupadmin@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, albertl@mail.com, linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
 
-Hi Yarema,
+With libata converted to use sdev->manage_start_stop for suspend and
+resume, sht->suspend/resume() has no user left and low level
+suspend/ressume should be taken care of by low level driver's
+suspend/resume callbacks (e.g. PCI or PCMCIA driver callbacks).  This
+patch removes sht->suspend/resume() callbacks.
 
-Thanks for the help.
+This change is suggested by Christoph Hellwig.
 
-Some of the dmesgs you sent were truncated by the mailer, etc.
-We know it is INQUIRY, but we still have no clue why/how the
-INQUIRY or something caused the problem.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+---
+This patch breaks the existing libata suspend/resume support and thus
+should not be applied before libata is updated.  So, please don't
+apply it yet.
 
-Could you please open a bug on http://bugzilla.kernel.org/ and
-attach the dmesg there for easier tracking of the problem.
+Thanks.
 
-Thanks,
-
-Albert
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 96db51c..ec64aff 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -280,30 +280,18 @@ static int scsi_bus_suspend(struct device * dev, pm_message_t state)
+ {
+ 	struct device_driver *drv = dev->driver;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct scsi_host_template *sht = sdev->host->hostt;
+ 	int err;
+ 
+ 	err = scsi_device_quiesce(sdev);
+ 	if (err)
+ 		return err;
+ 
+-	/* call HLD suspend first */
+ 	if (drv && drv->suspend) {
+ 		err = drv->suspend(dev, state);
+ 		if (err)
+ 			return err;
+ 	}
+ 
+-	/* then, call host suspend */
+-	if (sht->suspend) {
+-		err = sht->suspend(sdev, state);
+-		if (err) {
+-			if (drv && drv->resume)
+-				drv->resume(dev);
+-			return err;
+-		}
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -311,21 +299,14 @@ static int scsi_bus_resume(struct device * dev)
+ {
+ 	struct device_driver *drv = dev->driver;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct scsi_host_template *sht = sdev->host->hostt;
+-	int err = 0, err2 = 0;
+-
+-	/* call host resume first */
+-	if (sht->resume)
+-		err = sht->resume(sdev);
++	int err = 0;
+ 
+-	/* then, call HLD resume */
+ 	if (drv && drv->resume)
+-		err2 = drv->resume(dev);
++		err = drv->resume(dev);
+ 
+ 	scsi_device_resume(sdev);
+ 
+-	/* favor LLD failure */
+-	return err ? err : err2;;
++	return err;
+ }
+ 
+ struct bus_type scsi_bus_type = {
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 68f461b..4a2e490 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -339,12 +339,6 @@ struct scsi_host_template {
+ 	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
+ 
+ 	/*
+-	 * suspend support
+-	 */
+-	int (*resume)(struct scsi_device *);
+-	int (*suspend)(struct scsi_device *, pm_message_t state);
+-
+-	/*
+ 	 * Name of proc directory
+ 	 */
+ 	char *proc_name;
 
