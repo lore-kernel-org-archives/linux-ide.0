@@ -1,97 +1,167 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: fix locking for manual DMA enable/disable ("hdparm -d")
-Date: Wed, 21 Mar 2007 11:09:48 +0100
-Message-ID: <200703211109.48414.bzolnier@gmail.com>
+From: =?ISO-8859-1?Q?Mathieu_B=E9rard?= <Mathieu.Berard@crans.org>
+Subject: Re: [PATCH] libata: add NCQ blacklist entries from Silicon Image
+ Windows driver
+Date: Wed, 21 Mar 2007 13:52:35 +0100
+Message-ID: <46012A93.7000302@crans.org>
+References: <45DD2EC9.4050403@shaw.ca> <45DF67C4.8090802@garzik.org> <4600DF90.3030902@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:42763 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751284AbXCUKCS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Mar 2007 06:02:18 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so239876uga
-        for <linux-ide@vger.kernel.org>; Wed, 21 Mar 2007 03:02:17 -0700 (PDT)
-Content-Disposition: inline
+Received: from mx-a.polytechnique.fr ([129.104.30.14]:50664 "EHLO
+	mx-a.polytechnique.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720AbXCUMxW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Mar 2007 08:53:22 -0400
+In-Reply-To: <4600DF90.3030902@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Jens Axboe <jens.axboe@oracle.com>, "Eric D. Mudama" <edmudama@gmail.com>
 
+Tejun Heo a =E9crit :
+> Jeff Garzik wrote:
+>
+> Mathieu, just to be sure, can you post the result of 'hdparm -I
+> /dev/sdX' and 'lspci -nn'?
+>
+Hi,
+no problem :
 
-I would like to merge it for 2.6.21-final because this issue become quite
-urgent thanks to /etc/udev/scripts/hdparm.conf (the race is triggered
-by udev/hdparm tuning master device while the slave device is still being
-probed by the driver).  Reviews/comments are greatly appreciated.
+lspci -nn:
+00:00.0 Host bridge [0600]: Intel Corporation Mobile 915GM/PM/GMS/910GM=
+L
+Express Processor to DRAM Controller [8086:2590] (rev 03)
+00:01.0 PCI bridge [0604]: Intel Corporation Mobile 915GM/PM Express PC=
+I
+Express Root Port [8086:2591] (rev 03)
+00:1c.0 PCI bridge [0604]: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH=
+6
+=46amily) PCI Express Port 1 [8086:2660] (rev 03)
+00:1c.1 PCI bridge [0604]: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH=
+6
+=46amily) PCI Express Port 2 [8086:2662] (rev 03)
+00:1d.0 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB UHCI #1 [8086:2658] (rev 03)
+00:1d.1 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB UHCI #2 [8086:2659] (rev 03)
+00:1d.2 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB UHCI #3 [8086:265a] (rev 03)
+00:1d.3 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB UHCI #4 [8086:265b] (rev 03)
+00:1d.7 USB Controller [0c03]: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) USB2 EHCI Controller [8086:265c] (rev 03)
+00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge
+[8086:2448] (rev d3)
+00:1e.2 Multimedia audio controller [0401]: Intel Corporation
+82801FB/FBM/FR/FW/FRW (ICH6 Family) AC'97 Audio Controller [8086:266e]
+(rev 03)
+00:1e.3 Modem [0703]: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
+=46amily) AC'97 Modem Controller [8086:266d] (rev 03)
+00:1f.0 ISA bridge [0601]: Intel Corporation 82801FBM (ICH6M) LPC
+Interface Bridge [8086:2641] (rev 03)
+00:1f.1 IDE interface [0101]: Intel Corporation 82801FB/FBM/FR/FW/FRW
+(ICH6 Family) IDE Controller [8086:266f] (rev 03)
+00:1f.2 IDE interface [0101]: Intel Corporation 82801FBM (ICH6M) SATA
+Controller [8086:2653] (rev 03)
+00:1f.3 SMBus [0c05]: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
+=46amily) SMBus Controller [8086:266a] (rev 03)
+01:00.0 VGA compatible controller [0300]: ATI Technologies Inc M24
+[Radeon Mobility X600] [1002:5462]
+06:01.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
+RTL-8139/8139C/8139C+ [10ec:8139] (rev 10)
+06:02.0 Network controller [0280]: Intel Corporation PRO/Wireless 2200B=
+G
+Network Connection [8086:4220] (rev 05)
+06:04.0 CardBus bridge [0607]: Texas Instruments PCIxx21/x515 Cardbus
+Controller [104c:8031]
+06:04.2 FireWire (IEEE 1394) [0c00]: Texas Instruments OHCI Compliant
+IEEE 1394 Host Controller [104c:8032]
+06:04.3 Mass storage controller [0180]: Texas Instruments PCIxx21
+Integrated FlashMedia Controller [104c:8033]
+06:04.4 Generic system peripheral [0805]: Texas Instruments
+PCI6411/6421/6611/6621/7411/7421/7611/7621 Secure Digital Controller
+[104c:8034]
 
-[PATCH] ide: fix locking for manual DMA enable/disable ("hdparm -d")
+hdparm -I /dev/sda:
 
-Since hwif->ide_dma_check and hwif->ide_dma_on never queue any commands
-(ide_config_drive_speed() sets transfer mode using polling and has no error
-recovery) we are safe with setting hwgroup->busy for the time while DMA
-setting for a drive is changed (so it won't race against I/O commands in fly).
+/dev/sda:
 
-I audited briefly all ->ide_dma_check/->ide_dma_on/->tuneproc/->speedproc
-implementations and they all look OK wrt to this change.
+ATA device, with non-removable media
+        Model Number:       HTS541010G9SA00                       =20
+        Serial Number:      MP2ZM4X0GSWJKR
+        Firmware Revision:  MBZOC60D
+Standards:
+        Used: ATA/ATAPI-7 T13 1532D revision 1
+        Supported: 7 6 5 4
+Configuration:
+        Logical         max     current
+        cylinders       16383   16383
+        heads           16      16
+        sectors/track   63      63
+        --
+        CHS current addressable sectors:   16514064
+        LBA    user addressable sectors:  195371568
+        LBA48  user addressable sectors:  195371568
+        device size with M =3D 1024*1024:       95396 MBytes
+        device size with M =3D 1000*1000:      100030 MBytes (100 GB)
+Capabilities:
+        LBA, IORDY(can be disabled)
+        Queue depth: 32
+        Standby timer values: spec'd by Vendor, no device specific mini=
+mum
+        R/W multiple sector transfer: Max =3D 16  Current =3D 0
+        Advanced power management level: 128 (0x80)
+        Recommended acoustic management value: 128, current value: 254
+        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+             Cycle time: min=3D120ns recommended=3D120ns
+        PIO: pio0 pio1 pio2 pio3 pio4
+             Cycle time: no flow control=3D240ns  IORDY flow control=3D=
+120ns
+Commands/features:
+        Enabled Supported:
+           *    SMART feature set
+                Security Mode feature set
+           *    Power Management feature set
+           *    Write cache
+           *    Look-ahead
+           *    Host Protected Area feature set
+           *    WRITE_BUFFER command
+           *    READ_BUFFER command
+           *    NOP cmd
+           *    DOWNLOAD_MICROCODE
+           *    Advanced Power Management feature set
+                Power-Up In Standby feature set
+           *    SET_FEATURES required to spinup after power up
+                SET_MAX security extension
+                Automatic Acoustic Management feature set
+           *    48-bit Address feature set
+           *    Device Configuration Overlay feature set
+           *    Mandatory FLUSH_CACHE
+           *    FLUSH_CACHE_EXT
+           *    SMART error logging
+           *    SMART self-test
+           *    General Purpose Logging feature set
+           *    WRITE_{DMA|MULTIPLE}_FUA_EXT
+           *    IDLE_IMMEDIATE with UNLOAD
+           *    SATA-I signaling speed (1.5Gb/s)
+           *    Native Command Queueing (NCQ)
+           *    Host-initiated interface power management
+                Non-Zero buffer offsets in DMA Setup FIS
+                DMA Setup Auto-Activate optimization
+                Device-initiated interface power management
+                In-order data delivery
+           *    Software settings preservation
+Security:
+        Master password revision code =3D 65534
+                supported
+        not     enabled
+        not     locked
+        not     frozen
+        not     expired: security count
+        not     supported: enhanced erase
+        64min for SECURITY ERASE UNIT.
+Checksum: correct
 
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
+--=20
+Mathieu
 
- drivers/ide/ide.c |   37 ++++++++++++++++++++++++++++++-------
- 1 file changed, 30 insertions(+), 7 deletions(-)
-
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -1124,17 +1124,40 @@ static int set_io_32bit(ide_drive_t *dri
- static int set_using_dma (ide_drive_t *drive, int arg)
- {
- #ifdef CONFIG_BLK_DEV_IDEDMA
-+	ide_hwif_t *hwif = drive->hwif;
-+	int err = -EPERM;
-+
- 	if (!drive->id || !(drive->id->capability & 1))
--		return -EPERM;
--	if (HWIF(drive)->ide_dma_check == NULL)
--		return -EPERM;
-+		goto out;
-+
-+	if (hwif->ide_dma_check == NULL)
-+		goto out;
-+
-+	err = -EBUSY;
-+	if (ide_spin_wait_hwgroup(drive))
-+		goto out;
-+	/*
-+	 * set ->busy flag, unlock and let it ride
-+	 */
-+	hwif->hwgroup->busy = 1;
-+	spin_unlock_irq(&ide_lock);
-+
-+	err = 0;
-+
- 	if (arg) {
--		if (ide_set_dma(drive))
--			return -EIO;
--		if (HWIF(drive)->ide_dma_on(drive)) return -EIO;
-+		if (ide_set_dma(drive) || hwif->ide_dma_on(drive))
-+			err = -EIO;
- 	} else
- 		ide_dma_off(drive);
--	return 0;
-+
-+	/*
-+	 * lock, clear ->busy flag and unlock before leaving
-+	 */
-+	spin_lock_irq(&ide_lock);
-+	hwif->hwgroup->busy = 0;
-+	spin_unlock_irq(&ide_lock);
-+out:
-+	return err;
- #else
- 	return -EPERM;
- #endif
