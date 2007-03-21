@@ -1,54 +1,70 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] ide: revert "ide: fix drive side 80c cable check, take
- 2" for now
-Date: Wed, 21 Mar 2007 11:15:33 +0900
-Message-ID: <46009545.6060908@gmail.com>
-References: <200703202154.13211.bzolnier@gmail.com>
+Subject: Re: [PATCH 2/3] sd: implement START/STOP management
+Date: Wed, 21 Mar 2007 11:35:09 +0900
+Message-ID: <460099DD.2050706@gmail.com>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <460020DF.6090203@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:56172 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbXCUCPi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Mar 2007 22:15:38 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so64976nze
-        for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 19:15:37 -0700 (PDT)
-In-Reply-To: <200703202154.13211.bzolnier@gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.228]:59825 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932133AbXCUCfP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Mar 2007 22:35:15 -0400
+Received: by wr-out-0506.google.com with SMTP id 41so135335wry
+        for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 19:35:14 -0700 (PDT)
+In-Reply-To: <460020DF.6090203@torque.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: dougg@torque.net
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
 
-Bartlomiej Zolnierkiewicz wrote:
-> [PATCH] ide: revert "ide: fix drive side 80c cable check, take 2" for now
-> 
-> "ide: fix drive side 80c cable check, take 2" patch from Tejun Heo (commit
-> fab59375b9543f84d1714f7dd00f5d11e531bd3e) fixed 80c bit test (bit13 of word93)
-> but we also need to fix master/slave IDENTIFY order (slave device should be
-> probed first in order to make it release PDIAG- signal) and we should also
-> check for pre-ATA3 slave devices (which may not release PDIAG- signal).
-> 
-> [ Unfortunately the fact that IDE driver doesn't reset devices itself helps
->   only a bit as it seems that some BIOS-es reset ATA devices after programming
->   the chipset, some BIOS-es can be set to not probe/configure selected devices,
->   there may be no BIOS in case of add-on cards etc. ]
-> 
-> Since we are quite late in the release cycle and the required changes will
-> affect a lot of systems just revert the fix for now.
-> 
-> [ Please also see libata commit f31f0cc2f0b7527072d94d02da332d9bb8d7d94c. ]
-> 
-> Thanks goes out to Fernando Mitio Yamada for reporting the problem
-> and patiently testing patches.
-> 
-> Cc: Tejun Heo <htejun@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Hello, Douglas.
 
-Ackec-by: Tejun Heo <htejun@gmail.com>
+Douglas Gilbert wrote:
+> Tejun,
+> I note at this point that the IMMED bit in the
+> START STOP UNIT cdb is clear. [The code might
+> note that as well.] All SCSI disks that I have
+> seen, implement the IMMED bit and according to
+> the SAT standard, so should SAT layers like the
+> one in libata.
+> 
+> With the IMMED bit clear:
+>   - on spin up, it will wait until disk is ready.
+>     Okay unless there are a lot of disks, in
+>     which case we could ask Matthew Wilcox for help
+>   - on spin down, will wait until media is
+>     stopped. That could be 20 seconds, and if there
+>     were multiple disks ....
+> 
+> I guess the question is do we need to wait until a
+> disk is spun down before dropping power to it
+> and suspending.
 
-Never suspected it could cause this much problem.  :-(
+I think we do.  As we're issuing SYNCHRONIZE CACHE prior to spinning
+down disks, it's probably okay to drop power early data-integrity-wise
+but still...
+
+We can definitely use IMMED=1 during resume (needs to be throttled
+somehow tho).  This helps even when there is only one disk.  We can let
+the disk spin up in the background and proceed with the rest of resuming
+process.  Unfortunately, libata SAT layer doesn't do IMMED and even if
+it does (I've tried and have a patch available) it doesn't really work
+because during host resume each port enters EH and resets and
+revalidates each device.  Many if not most ATA harddisks don't respond
+to reset or IDENTIFY till it's fully spun up meaning libata EH has to
+wait for all drives to spin up.  libata EH runs inside SCSI EH thread
+meaning SCSI comman issue blocks till libata EH finishes resetting the
+port.  So, IMMED or not, sd gotta wait for libata disks.
+
+If we want to do parallel spin down, PM core needs to be updated such
+that there are two events - issue and done - somewhat similar to what
+SCSI is doing to probe devices parallelly.  If we're gonna do that, we
+maybe can apply the same mechanism to resume path so that we can do
+things parallelly IMMED or not.
+
+Thanks.
 
 -- 
 tejun
