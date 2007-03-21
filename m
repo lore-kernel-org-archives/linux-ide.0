@@ -1,40 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/3] sd: implement START/STOP management
-Date: Wed, 21 Mar 2007 12:42:11 +0900
-Message-ID: <4600A993.90801@gmail.com>
-References: <20070320150718.GF6152@htj.dyndns.org>	 <20070320151359.GG6152@htj.dyndns.org>	 <1174409899.3522.16.camel@mulgrave.il.steeleye.com>	 <460014FB.1050703@gmail.com> <1174411563.3522.22.camel@mulgrave.il.steeleye.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: libata: CD and dvd devices not recognized
+Date: Wed, 21 Mar 2007 12:52:44 +0800
+Message-ID: <4600BA1C.7060300@tw.ibm.com>
+References: <45F873AC.6010204@gmail.com> <200703172107.42107.bzolnier@gmail.com> <45FD0F68.7090207@gmail.com> <200703181610.33714.bzolnier@gmail.com> <45FE7DCC.3000507@ru.mvista.com> <45FEE5EB.9020909@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:20545 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932286AbXCUDmS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Mar 2007 23:42:18 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so126350uga
-        for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 20:42:17 -0700 (PDT)
-In-Reply-To: <1174411563.3522.22.camel@mulgrave.il.steeleye.com>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:57916 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751566AbXCUExB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Mar 2007 00:53:01 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2L4r1uS012822
+	for <linux-ide@vger.kernel.org>; Wed, 21 Mar 2007 00:53:01 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2L4r0J1068674
+	for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 22:53:01 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2L4r0c0005996
+	for <linux-ide@vger.kernel.org>; Tue, 20 Mar 2007 22:53:00 -0600
+In-Reply-To: <45FEE5EB.9020909@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
+To: YUP <yupadmin@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, albertl@mail.com, linux-ide@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2007-03-21 at 02:08 +0900, Tejun Heo wrote:
->> I got too comfortable with libata-dev#upstream and forgot to verify
->> patches against scsi-misc-2.6.  Sorry about that.  If you don't have
->> objection against the content, I'll resubmit the SCSI part against
->> scsi-misc-2.6.  Once it's in scsi-misc-2.6, we can pull it into
->> libata-dev#upstream and do the libata part there.  As the SCSI change
->> doesn't break libata, they can be done separately.
-> 
-> I should already have it in scsi-misc-2.6 ... you could verify I got the
-> merge right ...
-> 
-> There'll be an additional piece to put the new sd_printk helpers into
-> the routines, which I attach below.
+Hi Yarema,
 
-Yeap, everything looks fine.  Thanks.
+Thanks for the help.
 
--- 
-tejun
+Some of the dmesgs you sent were truncated by the mailer, etc.
+We know it is INQUIRY, but we still have no clue why/how the
+INQUIRY or something caused the problem.
+
+Could you please open a bug on http://bugzilla.kernel.org/ and
+attach the dmesg there for easier tracking of the problem.
+
+Thanks,
+
+Albert
+
