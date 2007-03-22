@@ -1,37 +1,46 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH 2/3] sd: implement START/STOP management
-Date: Thu, 22 Mar 2007 18:14:44 +0300
-Message-ID: <46029D64.6040206@vlnb.net>
-References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <460020DF.6090203@torque.net> <460099DD.2050706@gmail.com> <460258BD.9080606@vlnb.net> <20070322122940.GA29824@khazad-dum.debian.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH libata-dev#upstream-fixes] libata: IDENTIFY backwards
+ for drive side cable detection
+Date: Fri, 23 Mar 2007 00:44:09 +0900
+Message-ID: <4602A449.2070009@gmail.com>
+References: <20070322132419.GK6152@htj.dyndns.org> <20070322143712.64551edf@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([85.249.135.242]:53689 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933142AbXCVPPG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Mar 2007 11:15:06 -0400
-In-Reply-To: <20070322122940.GA29824@khazad-dum.debian.net>
+Received: from ug-out-1314.google.com ([66.249.92.169]:44600 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933298AbXCVPoQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Mar 2007 11:44:16 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so731809uga
+        for <linux-ide@vger.kernel.org>; Thu, 22 Mar 2007 08:44:14 -0700 (PDT)
+In-Reply-To: <20070322143712.64551edf@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Tejun Heo <htejun@gmail.com>, dougg@torque.net, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, xhejtman@mail.muni.cz
 
-Henrique de Moraes Holschuh wrote:
-> On Thu, 22 Mar 2007, Vladislav Bolkhovitin wrote:
+Alan Cox wrote:
+> On Thu, 22 Mar 2007 22:24:19 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
->>Seems, there is another way of doing a bank spin up / spin down: doing 
->>it in two passes. On the first pass START_STOP will be issued with 
->>IMMED=1 on all devices, then on the second pass START_STOP will be 
->>issued with IMMED=0. So the devices will spin up / spin down in the 
->>parallel, but synchronously, hence the needed result will be achieved 
+>> For drive side cable detection to work correctly, drives need to be
+>> identified backwards such that the slave device releases PDIAG- before
+>> the mater drive tries to detect cable type.  ata_bus_probe() was fixed
+>> by commit f31f0cc2f0b7527072d94d02da332d9bb8d7d94c but the new EH path
+>> wasn't fixed.  This patch makes new EH path do IDENTIFY backwards.
+>>
+>> ata_dev_configure() for new devices are still performed master first.
+>> This is to keep the detection messages in forward order.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
+> Acked-by: Alan Cox <alan@redhat.com>
 > 
-> And maybe trip the PSU's overcurrent defenses?  There is a reason to default
-> to sequential spin-up for disks... 
+> Why do we have two implementations of the same code ?
 
-But on spin down there is no such problem
+ata_bus_probe() is scheduled to be killed once all old-EH code is
+removed.  That's the old probe path.
 
-> Of course, it can be user-selectable. But should it be the default?
-> 
-
+-- 
+tejun
