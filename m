@@ -1,35 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: libata: CD and dvd devices not recognized
-Date: Thu, 22 Mar 2007 17:50:07 +0300
-Message-ID: <4602979F.80002@ru.mvista.com>
-References: <45F873AC.6010204@gmail.com> <200703172107.42107.bzolnier@gmail.com> <45FD0F68.7090207@gmail.com> <200703181610.33714.bzolnier@gmail.com> <45FE7DCC.3000507@ru.mvista.com> <45FEE5EB.9020909@gmail.com> <4600BA1C.7060300@tw.ibm.com> <4600F45C.3000303@gmail.com> <46021CDA.3070807@tw.ibm.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH 2/3] sd: implement START/STOP management
+Date: Thu, 22 Mar 2007 18:14:44 +0300
+Message-ID: <46029D64.6040206@vlnb.net>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <460020DF.6090203@torque.net> <460099DD.2050706@gmail.com> <460258BD.9080606@vlnb.net> <20070322122940.GA29824@khazad-dum.debian.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:12917 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933041AbXCVOtf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Mar 2007 10:49:35 -0400
-In-Reply-To: <46021CDA.3070807@tw.ibm.com>
+Received: from mail-relay-01.mailcluster.net ([85.249.135.242]:53689 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933142AbXCVPPG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Mar 2007 11:15:06 -0400
+In-Reply-To: <20070322122940.GA29824@khazad-dum.debian.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: YUP <yupadmin@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Tejun Heo <htejun@gmail.com>, dougg@torque.net, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com
 
-Hello.
+Henrique de Moraes Holschuh wrote:
+> On Thu, 22 Mar 2007, Vladislav Bolkhovitin wrote:
+> 
+>>Seems, there is another way of doing a bank spin up / spin down: doing 
+>>it in two passes. On the first pass START_STOP will be issued with 
+>>IMMED=1 on all devices, then on the second pass START_STOP will be 
+>>issued with IMMED=0. So the devices will spin up / spin down in the 
+>>parallel, but synchronously, hence the needed result will be achieved 
+> 
+> 
+> And maybe trip the PSU's overcurrent defenses?  There is a reason to default
+> to sequential spin-up for disks... 
 
-Albert Lee wrote:
+But on spin down there is no such problem
 
-> Thanks for the detailed log.
-> It looks like the bad INQUIRY command
->   "CDB (4:0,1,0) 12 01 00 00 fe 00 00 00 00" (INQUIRY, length=254, EVPD=1)
-> is coming from the user space, not the SCSI mid-layer.
+> Of course, it can be user-selectable. But should it be the default?
+> 
 
-> I guess two problems together caused this bug:
-> 1. Ubuntu Linux issues an incorrect INQUIRY command to the drive.
->    (Other distros seem to have the INQUIRY correct.)
-
-    But what is incorrect about sending INQUIRY with EVPD bit?
-
-MBR, Sergei
