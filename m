@@ -1,45 +1,35 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata: CD and dvd devices not recognized
-Date: Thu, 22 Mar 2007 12:37:29 +0000
-Message-ID: <20070322123729.14f11b96@lxorguk.ukuu.org.uk>
-References: <45F873AC.6010204@gmail.com>
-	<200703172107.42107.bzolnier@gmail.com>
-	<45FD0F68.7090207@gmail.com>
-	<200703181610.33714.bzolnier@gmail.com>
-	<45FE7DCC.3000507@ru.mvista.com>
-	<45FEE5EB.9020909@gmail.com>
-	<4600BA1C.7060300@tw.ibm.com>
-	<4600F45C.3000303@gmail.com>
-	<46021CDA.3070807@tw.ibm.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 2/3] sd: implement START/STOP management
+Date: Thu, 22 Mar 2007 09:29:40 -0300
+Message-ID: <20070322122940.GA29824@khazad-dum.debian.net>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <460020DF.6090203@torque.net> <460099DD.2050706@gmail.com> <460258BD.9080606@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52366 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030519AbXCVLmW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Mar 2007 07:42:22 -0400
-In-Reply-To: <46021CDA.3070807@tw.ibm.com>
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:54702 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965645AbXCVM3o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Mar 2007 08:29:44 -0400
+Content-Disposition: inline
+In-Reply-To: <460258BD.9080606@vlnb.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: albertcc@tw.ibm.com, YUP <yupadmin@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Jeff Garzik <jeff@garzik.org>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Tejun Heo <htejun@gmail.com>, dougg@torque.net, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com
 
-> We have two possible solutions here:
-> a. Patch Ubuntu, such that the incorrect INQUIRY is fixed.
-> b. Patch kernel, such that the AOpen drives are blacklisted.
->    Each INQUIRY is inspected for the blacklisted drives.
->    If the INQUIRY looks wrong, the INQUIRY is rejected.
-> 
-> I guess a. is the preferred solution...
+On Thu, 22 Mar 2007, Vladislav Bolkhovitin wrote:
+> Seems, there is another way of doing a bank spin up / spin down: doing 
+> it in two passes. On the first pass START_STOP will be issued with 
+> IMMED=1 on all devices, then on the second pass START_STOP will be 
+> issued with IMMED=0. So the devices will spin up / spin down in the 
+> parallel, but synchronously, hence the needed result will be achieved 
 
-We have two problems here
+And maybe trip the PSU's overcurrent defenses?  There is a reason to default
+to sequential spin-up for disks...  Of course, it can be user-selectable.
+But should it be the default?
 
-#1 Ubuntu got the inquiry command wrong
-
-#2 Until now we considered "INQUIRY" a safe command for SG_IO passthrough.
-
-We can't really take INQUIRY out of SG_IO so do we decide its the
-hardware vendors problem or do something cleverer in the filters ?
-
-Alan
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
