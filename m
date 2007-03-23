@@ -1,93 +1,53 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: HPA patches
-Date: Fri, 23 Mar 2007 13:03:15 -0700
-Message-ID: <20070323130315.7ed48121.randy.dunlap@oracle.com>
-References: <20070323191321.5d00887a@lxorguk.ukuu.org.uk>
-	<20070323112411.f6a8a762.randy.dunlap@oracle.com>
-	<20070323200819.4e734f4f@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: request_queue_t depends on CONFIG_BLOCK
+Date: Fri, 23 Mar 2007 21:29:29 +0100
+Message-ID: <200703232129.29331.bzolnier@gmail.com>
+References: <20070322215234.GA13219@aepfle.de> <200703231929.19406.bzolnier@gmail.com> <20070323191428.GA23413@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:26354 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992547AbXCWUDF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2007 16:03:05 -0400
-In-Reply-To: <20070323200819.4e734f4f@lxorguk.ukuu.org.uk>
+Received: from ug-out-1314.google.com ([66.249.92.170]:7797 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410AbXCWUVq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2007 16:21:46 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1132413uga
+        for <linux-ide@vger.kernel.org>; Fri, 23 Mar 2007 13:21:45 -0700 (PDT)
+In-Reply-To: <20070323191428.GA23413@aepfle.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kyle@canonical.com
+To: Olaf Hering <olaf@aepfle.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 23 Mar 2007 20:08:19 +0000 Alan Cox wrote:
 
-> > > +static int ata_ignore_hpa = 0;
+On Friday 23 March 2007, Olaf Hering wrote:
+> On Fri, Mar 23, Bartlomiej Zolnierkiewicz wrote:
+> 
+> > > Because it is needed in a few places.
 > > 
-> > Don't init to 0.  Not needed, bloats binary files.
-> 
-> It'll be one for the final release 8)
-> 
-> > > +module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
-> > > +MODULE_PARM_DESC(ignore_hpa, "Ignore HPA (0=off 1=on)");
-> > 
-> > So 1 = on = ignore, right?
-> 
-> Yes.
-> 
-> > > +	tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
-> > > +	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
-> > > +	tf.protocol |= ATA_PROT_NODATA;
-> > > +	tf.device = 0x40;
-> > 
-> > What is 0x40?  can it be #defined (or enum-ed) instead of a magic
-> > value?  please?  (more of same below)
-> 
-> It's 0x40. Its a "command dependant bit" - no useful name.
+> > Is there really any PPC64 specific code which needs <linux/ide.h>
+> > (ppc_ide_md is used only by PPC32)?
 
-dependent.  OK, thanks.
+I suspect that the answer to my question is "not really", if so then
+shouldn't the problem that you've encountered be fixed with a one-line patch
+which removes <linux/ide.h> include from arch/powerpc/kernel/setup_64.c?
 
-> > > +	u64 sectors = dev->n_sectors;
-> > > +	u64 hpa_sectors;
-> > > +	
-> > > +	if (ata_id_has_lba48(dev->id))
-> > > +		hpa_sectors = ata_read_native_max_address_ext(dev);
-> > > +	else
-> > > +		hpa_sectors = ata_read_native_max_address(dev);
-> > > +
-> > > +	/* if no hpa, both should be equal */
-> > > +	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, hpa_sectors = %lld\n",
-> > > +		__FUNCTION__, sectors, hpa_sectors);
-> > 
-> > (long long) or (unsigned long long) on sectors and hpa_sectors...
-> 
-> u64 is always unsigned long long (and its debug anyway)
-> 
-> > 
-> > > +
-> > > +	if (hpa_sectors > sectors) {
-> > > +		ata_dev_printk(dev, KERN_INFO,
-> > > +			"Host Protected Area detected:\n"
-> > > +			"\tcurrent size: %lld sectors\n"
-> > > +			"\tnative size: %lld sectors\n",
-> > > +			sectors, hpa_sectors);
-> > 
-> > printk format types ok?
-> 
-> Yes
-> 
-> > > +			if (hpa_sectors) {
-> > > +				ata_dev_printk(dev, KERN_INFO,
-> > > +					"native size increased to %lld sectors\n", hpa_sectors);
-> > 
-> > Line lengths < 80 and printk format types?
-> 
-> See above, and the 80 column fascists can suffer in the name of
-> readability. 
+Please try it.
 
-Already corrected (printk types).  And putting
-					hpa_sectors);
-on a separate line doesn't hurt readability.
+> This is about CONFIG_BLOCK=n, not about arch/... Is all non-driver
+> code which has to poke into ide code supposed to put an #ifdef
+> CONFIG_IDE around #include <linux/ide.h>?
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Such code is _broken_ (as you've just found out) by _implicitly_ depending
+on CONFIG_IDE specific data structures and functions.  Please note that
+<linux/ide.h> is CONFIG_IDE specific and CONFIG_IDE depends on CONFIG_BLOCK=y
+so <linux/ide.h> should _not_ be included et all for CONFIG_BLOCK=n case...
+
+PS IDE subsystem has allowed per arch/platform host drivers for years and if
+somebody needs help in fixing the existing arch/... (ab)users of <linux/ide.h>
+I'll be glad to provide it.
+
+Thanks,
+Bart
