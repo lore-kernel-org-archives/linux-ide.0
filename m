@@ -1,50 +1,30 @@
-From: Maxim <maximlevitsky@gmail.com>
-Subject: Re: [3/5] 2.6.21-rc4: known regressions (v2)
-Date: Fri, 23 Mar 2007 21:07:33 +0200
-Message-ID: <200703232107.34020.maximlevitsky@gmail.com>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org> <20070323185022.GQ752@stusta.de>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: request_queue_t depends on CONFIG_BLOCK
+Date: Fri, 23 Mar 2007 20:14:28 +0100
+Message-ID: <20070323191428.GA23413@aepfle.de>
+References: <20070322215234.GA13219@aepfle.de> <20070322215351.GA7216@infradead.org> <20070323001002.GA14583@aepfle.de> <200703231929.19406.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20070323185022.GQ752@stusta.de>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.9]:43198 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409AbXCWTOT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2007 15:14:19 -0400
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeremy Fitzhardinge <jeremy@goop.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.c, pavel@suse.cz, linux-pm@lists.osdl.org, =?utf-8?q?Fr=C3=A9d=C3=A9ric_RISS?= <frederic.riss@gmail.com>, Tino Keitel <tino.keitel@gmx.de>, Bob Moore <robert.moore@intel.com>, lenb@kernel.org, linux-acpi@vger.kernel.org, Tobias Doerffel <tobias.doerffel@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, Jeff Chua <jeff.chua.linux@gmail.com>, Mike Harris <atarimike@wavecable.com>, Marcus Better <marcus@better.se>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Thomas Meyer <thomas@m3y3r.de>, Thomas Gleixner <tglx@linutronix.de>S
+In-Reply-To: <200703231929.19406.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Friday 23 March 2007 20:50:22 Adrian Bunk wrote:
+On Fri, Mar 23, Bartlomiej Zolnierkiewicz wrote:
 
-> Subject    : suspend to disk hangs
-> References : http://lkml.org/lkml/2007/3/16/126
-> Submitter  : Maxim Levitsky <maximlevitsky@gmail.com>
-> Caused-By  : Rafael J. Wysocki <rjw@sisk.pl>
->              commit e3c7db621bed4afb8e231cb005057f2feb5db557
->              commit ed746e3b18f4df18afa3763155972c5835f284c5
->              commit 259130526c267550bc365d3015917d90667732f1
-> Status     : unknown
+> > Because it is needed in a few places.
 > 
-> 
+> Is there really any PPC64 specific code which needs <linux/ide.h>
+> (ppc_ide_md is used only by PPC32)?
 
-Hello, 
-	It is fixed
+This is about CONFIG_BLOCK=n, not about arch/... Is all non-driver
+code which has to poke into ide code supposed to put an #ifdef
+CONFIG_IDE around #include <linux/ide.h>?
 
-	The problem is that now cpu_up/cpu_down is called with tasks frozen,
-	and this can lead to deadlock if some driver that registered cpu up/down notifier, sleeps,
-
-	On my system it froze in two places, one in XFS due to freezable workqueues, and in
-	microcode update driver that ask the "frozen" userspace for firmware.
-
-	Fix for XFS is already in mainline, and Rafael J. Wysocki. already posted a patch that fixes microcode issue,
-	I will test it.
-
-	But I feel that there are more drivers that can deadlock system in same way, on my system S3/S4 works perfect :-)
-	Even the weird  hang i had disappeared.
-
-	Big thanks to Rafael J. Wysocki.
-
-
-	Best regards,
-		Maxim Levitsky
