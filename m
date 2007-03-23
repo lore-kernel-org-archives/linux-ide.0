@@ -1,233 +1,75 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: HPA patches
-Date: Fri, 23 Mar 2007 11:24:11 -0700
-Message-ID: <20070323112411.f6a8a762.randy.dunlap@oracle.com>
-References: <20070323191321.5d00887a@lxorguk.ukuu.org.uk>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2/5] 2.6.21-rc4: known regressions (v2)
+Date: Fri, 23 Mar 2007 19:48:28 +0100
+Message-ID: <20070323184828.GP752@stusta.de>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:33739 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753285AbXCWSX3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2007 14:23:29 -0400
-In-Reply-To: <20070323191321.5d00887a@lxorguk.ukuu.org.uk>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:32864 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753317AbXCWSsZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2007 14:48:25 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kyle@canonical.com
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, lenb@kernel.org, linux-acpi@vger.kernel.org, Ray Lee <ray-lk@madrabbit.org>, Thomas Gleixner <tglx@linutronix.de>, Mathieu =?utf-8?Q?B=C3=A9rard?= <Mathieu.Berard@crans.org>, Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Fabio Comolli <fabio.comolli@gmail.com>, Plamen Petrov <plamen.petrov@tk.ru.acad.bg>, Laurent Riffard <laurent.riffard@free.fr>, Lukas Hejtmanek <xhejtman@mail.muni.cz>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Fri, 23 Mar 2007 19:13:21 +0000 Alan Cox wrote:
+This email lists some known regressions in Linus' tree compared to 2.6.=
+20.
 
-> For reference this is what I am currently using with 2.6.21-rc4-mm1 and
-> it is working for all my test cases so far: Its basically Kyle's patch
-> with a libata switch to turn it on/off and some minor fixups from
-> the original patch as posted
-> 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc4-mm1/drivers/ata/libata-core.c linux-2.6.21-rc4-mm1/drivers/ata/libata-core.c
-> --- linux.vanilla-2.6.21-rc4-mm1/drivers/ata/libata-core.c	2007-03-23 11:49:49.000000000 +0000
-> +++ linux-2.6.21-rc4-mm1/drivers/ata/libata-core.c	2007-03-23 13:05:15.000000000 +0000
-> @@ -89,6 +89,10 @@
->  module_param_named(fua, libata_fua, int, 0444);
->  MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
->  
-> +static int ata_ignore_hpa = 0;
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way
+possibly involved with one or more of these issues.
 
-Don't init to 0.  Not needed, bloats binary files.
-
-> +module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
-> +MODULE_PARM_DESC(ignore_hpa, "Ignore HPA (0=off 1=on)");
-
-So 1 = on = ignore, right?
-
-> +
->  static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
->  module_param(ata_probe_timeout, int, 0444);
->  MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
-> @@ -808,6 +812,202 @@
->  	*p = '\0';
->  }
->  
-> +
-> +/**
-> + *	ata_read_native_max_address_ext	-	LBA48 native max query
-> + *	@dev: Device to query
-> + *
-> + *	Performa an LBA48 size query upon the device in question. Return the
-
-	Perform
-
-> + *	actual LBA48 size or zero if the command fails.
-> + */
-> +
-> +static u64 ata_read_native_max_address_ext(struct ata_device *dev)
-> +{
-> +	unsigned int err;
-> +	struct ata_taskfile tf;
-> +
-> +	ata_tf_init(dev, &tf);
-> +
-> +	tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
-> +	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
-> +	tf.protocol |= ATA_PROT_NODATA;
-> +	tf.device = 0x40;
-
-What is 0x40?  can it be #defined (or enum-ed) instead of a magic
-value?  please?  (more of same below)
-
-> +
-> +	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-> +	if (err)
-> +		return 0;
-> +
-> +	return ata_tf_to_lba48(&tf);
-> +}
-> +
-> +/**
-> + *	ata_read_native_max_address	-	LBA28 native max query
-> + *	@dev: Device to query
-> + *
-> + *	Performa an LBA28 size query upon the device in question. Return the
-
-	Perform
-
-> + *	actual LBA28 size or zero if the command fails.
-> + */
-> +
-> +static u64 ata_read_native_max_address(struct ata_device *dev)
-> +{
-> +	unsigned int err;
-> +	struct ata_taskfile tf;
-> +
-> +	ata_tf_init(dev, &tf);
-> +
-> +	tf.command = ATA_CMD_READ_NATIVE_MAX;
-> +	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-> +	tf.protocol |= ATA_PROT_NODATA;
-> +	tf.device = 0x40;
-> +
-> +	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-> +	if (err)
-> +		return 0;
-> +
-> +	return ata_tf_to_lba(&tf);
-> +}
-> +
-> +/**
-> + *	ata_set_native_max_address_ext	-	LBA48 native max set
-> + *	@dev: Device to query
-> + *
-> + *	Perform an LBA48 size set max upon the device in question. Return the
-> + *	actual LBA48 size or zero if the command fails.
-> + */
-> +
-> +static u64 ata_set_native_max_address_ext(struct ata_device *dev, u64 new_sectors)
-> +{
-...
-> +}
-> +
-> +/**
-> + *	ata_set_native_max_address	-	LBA28 native max set
-> + *	@dev: Device to query
-> + *
-> + *	Perform an LBA28 size set max upon the device in question. Return the
-> + *	actual LBA28 size or zero if the command fails.
-> + */
-> +
-> +static u64 ata_set_native_max_address(struct ata_device *dev, u64 new_sectors)
-> +{
-...
-> +}
-> +
-> +/**
-> + *	ata_hpa_resize		-	Resize a device with an HPA set
-> + *	@dev: Device to resize
-> + *
-> + *	Read the size of an LBA28 or LBA48 disk with HPA features and resize
-> + *	it if required to the full size of the media. The caller must check
-> + *	the drive has the HPA feature set enabled.
-> + */
-> +
-> +static u64 ata_hpa_resize(struct ata_device *dev)
-> +{
-> +	u64 sectors = dev->n_sectors;
-> +	u64 hpa_sectors;
-> +	
-> +	if (ata_id_has_lba48(dev->id))
-> +		hpa_sectors = ata_read_native_max_address_ext(dev);
-> +	else
-> +		hpa_sectors = ata_read_native_max_address(dev);
-> +
-> +	/* if no hpa, both should be equal */
-> +	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, hpa_sectors = %lld\n",
-> +		__FUNCTION__, sectors, hpa_sectors);
-
-(long long) or (unsigned long long) on sectors and hpa_sectors...
-
-> +
-> +	if (hpa_sectors > sectors) {
-> +		ata_dev_printk(dev, KERN_INFO,
-> +			"Host Protected Area detected:\n"
-> +			"\tcurrent size: %lld sectors\n"
-> +			"\tnative size: %lld sectors\n",
-> +			sectors, hpa_sectors);
-
-printk format types ok?
-
-> +
-> +		if (ata_ignore_hpa) {
-> +			if (ata_id_has_lba48(dev->id))
-> +				hpa_sectors = ata_set_native_max_address_ext(dev, hpa_sectors);
-> +			else
-> +				hpa_sectors = ata_set_native_max_address(dev, hpa_sectors);
-> +
-> +			if (hpa_sectors) {
-> +				ata_dev_printk(dev, KERN_INFO,
-> +					"native size increased to %lld sectors\n", hpa_sectors);
-
-Line lengths < 80 and printk format types?
-
-> +				return hpa_sectors;
-> +			}
-> +		}
-> +	}
-> +	return sectors;
-> +}
-> +
->  static u64 ata_id_n_sectors(const u16 *id)
->  {
->  	if (ata_id_has_lba(id)) {
-> @@ -1658,6 +1858,7 @@
->  			snprintf(revbuf, 7, "ATA-%d",  ata_id_major_version(id));
->  
->  		dev->n_sectors = ata_id_n_sectors(id);
-> +		dev->n_sectors_boot = dev->n_sectors;
->  
->  		/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
->  		ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
-> @@ -1684,6 +1885,9 @@
->  					dev->flags |= ATA_DFLAG_FLUSH_EXT;
->  			}
->  
-> +			if (ata_id_hpa_enabled(dev->id))
-> +				dev->n_sectors = ata_hpa_resize(dev);
-> +
->  			/* config NCQ */
->  			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
->  
-> @@ -3384,6 +3595,11 @@
->  			       "%llu != %llu\n",
->  			       (unsigned long long)dev->n_sectors,
->  			       (unsigned long long)new_n_sectors);
-> +		/* Are we the boot time size - if so we appear to be the
-> +		   same disk at this point and our HPA got reapplied */
-> +		if (ata_ignore_hpa && dev->n_sectors_boot == new_n_sectors 
-> +		    && ata_id_hpa_enabled(new_id))
-> +			return 1;
->  		return 0;
->  	}
+Due to the huge amount of recipients, please trim the Cc when answering=
+=2E
 
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Subject    : kernels fail to boot with drives on ATIIXP controller
+             (ACPI/IRQ related)
+References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=3D229=
+621
+             http://lkml.org/lkml/2007/3/4/257
+Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+Status     : unknown
+
+
+Subject    : x86_64: ACPI regression with noapic  (APICTIMER_STOPS_ON_C=
+3?)
+References : http://lkml.org/lkml/2007/3/8/468
+             http://lkml.org/lkml/2007/3/22/156
+Submitter  : Ray Lee <ray-lk@madrabbit.org>
+Handled-By : Thomas Gleixner <tglx@linutronix.de>
+Status     : problem is being debugged
+
+
+Subject    : NCQ problem with ahci and Hitachi drive  (ACPI related)
+References : http://lkml.org/lkml/2007/3/4/178
+             http://lkml.org/lkml/2007/3/9/475
+Submitter  : Mathieu B=C3=A9rard <Mathieu.Berard@crans.org>
+Handled-By : Tejun Heo <htejun@gmail.com>
+Status     : problem is being debugged
+
+
+Subject    : libata: PATA UDMA/100 configured as UDMA/33
+References : http://lkml.org/lkml/2007/2/20/294
+             http://www.mail-archive.com/linux-ide@vger.kernel.org/msg0=
+4115.html
+             http://bugzilla.kernel.org/show_bug.cgi?id=3D8133
+             http://bugzilla.kernel.org/show_bug.cgi?id=3D8164
+             http://lkml.org/lkml/2007/3/21/330
+Submitter  : Fabio Comolli <fabio.comolli@gmail.com>
+             Plamen Petrov <plamen.petrov@tk.ru.acad.bg>
+             Laurent Riffard <laurent.riffard@free.fr>
+             Lukas Hejtmanek <xhejtman@mail.muni.cz>
+Handled-By : Tejun Heo <htejun@gmail.com>
+             Alan Cox <alan@lxorguk.ukuu.org.uk>
+Status     : Alan: Some cases should be fixed now but probably not all
+                   (eg the Nvidia one)
+
+
