@@ -1,22 +1,18 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2/5] 2.6.21-rc4: known regressions (v2)
-Date: Fri, 23 Mar 2007 19:48:28 +0100
-Message-ID: <20070323184828.GP752@stusta.de>
+Subject: [3/5] 2.6.21-rc4: known regressions (v2)
+Date: Fri, 23 Mar 2007 19:50:22 +0100
+Message-ID: <20070323185022.GQ752@stusta.de>
 References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:32864 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753317AbXCWSsZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2007 14:48:25 -0400
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, lenb@kernel.org, linux-acpi@vger.kernel.org, Ray Lee <ray-lk@madrabbit.org>, Thomas Gleixner <tglx@linutronix.de>, Mathieu =?utf-8?Q?B=C3=A9rard?= <Mathieu.Berard@crans.org>, Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Fabio Comolli <fabio.comolli@gmail.com>, Plamen Petrov <plamen.petrov@tk.ru.acad.bg>, Laurent Riffard <laurent.riffard@free.fr>, Lukas Hejtmanek <xhejtman@mail.muni.cz>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeremy Fitzhardinge <jeremy@goop.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.c, pavel@suse.cz, linux-pm@lists.osdl.org, =?utf-8?B?RnLDqWTDqXJpYw==?= RISS <frederic.riss@gmail.com>, Tino Keitel <tino.keitel@gmx.de>, Bob Moore <robert.moore@intel.com>, lenb@kernel.org, linux-acpi@vger.kernel.org, Tobias Doerffel <tobias.doerffel@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, Jeff Chua <jeff.chua.linux@gmail.com>, Maxim Levitsky <maximlevitsky@gmail.com>, Mike Harris <atarimike@wavecable.com>, Marcus Better <marcus@better.se>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Thomas Meyer <thomas@m3y3r.de>, Thomas Gleixner <tglx@linutronix.de>, Soeren Sonnenburg <kernel@nn7.de>, jgarzik@pobox.com
+List-Id: linux-ide@vger.kernel.org
 
 This email lists some known regressions in Linus' tree compared to 2.6.=
 20.
@@ -30,46 +26,99 @@ Due to the huge amount of recipients, please trim the Cc when answering=
 =2E
 
 
-Subject    : kernels fail to boot with drives on ATIIXP controller
-             (ACPI/IRQ related)
-References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=3D229=
-621
-             http://lkml.org/lkml/2007/3/4/257
-Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+Subject    : ThinkPad X60: resume no longer works  (PCI related?)
+References : http://lkml.org/lkml/2007/3/13/3
+Submitter  : Dave Jones <davej@redhat.com>
+             Jeremy Fitzhardinge <jeremy@goop.org>
+Caused-By  : PCI merge
+             commit 78149df6d565c36675463352d0bfe0000b02b7a7
+Handled-By : Eric W. Biederman <ebiederm@xmission.com>
+             Rafael J. Wysocki <rjw@sisk.pl>
+Status     : problem is being debugged
+
+
+Subject    : MacMini: doesn't come out of suspend to ram
+References : http://lkml.org/lkml/2007/3/21/374
+Submitter  : Fr=C3=A9d=C3=A9ric RISS <frederic.riss@gmail.com>
+             Tino Keitel <tino.keitel@gmx.de>
+Caused-By  : Bob Moore <robert.moore@intel.com>
+             commit c5a7156959e89b32260ad6072bbf5077bcdfbeee
 Status     : unknown
 
 
-Subject    : x86_64: ACPI regression with noapic  (APICTIMER_STOPS_ON_C=
-3?)
-References : http://lkml.org/lkml/2007/3/8/468
-             http://lkml.org/lkml/2007/3/22/156
-Submitter  : Ray Lee <ray-lk@madrabbit.org>
-Handled-By : Thomas Gleixner <tglx@linutronix.de>
+Subject    : Suspend to RAM doesn't work anymore  (ACPI?)
+References : http://lkml.org/lkml/2007/3/19/128
+             http://bugzilla.kernel.org/show_bug.cgi?id=3D8247
+Submitter  : Tobias Doerffel <tobias.doerffel@gmail.com>
+Handled-By : Rafael J. Wysocki <rjw@sisk.pl>
 Status     : problem is being debugged
 
 
-Subject    : NCQ problem with ahci and Hitachi drive  (ACPI related)
-References : http://lkml.org/lkml/2007/3/4/178
-             http://lkml.org/lkml/2007/3/9/475
-Submitter  : Mathieu B=C3=A9rard <Mathieu.Berard@crans.org>
-Handled-By : Tejun Heo <htejun@gmail.com>
-Status     : problem is being debugged
+Subject    : s2ram autowake regression  (ACPI?)
+References : http://lkml.org/lkml/2007/3/20/96
+Submitter  : Pavel Machek <pavel@ucw.cz>
+Handled-By : Len Brown <lenb@kernel.org>
+Status     : submitter was asked to test a patch
 
 
-Subject    : libata: PATA UDMA/100 configured as UDMA/33
-References : http://lkml.org/lkml/2007/2/20/294
-             http://www.mail-archive.com/linux-ide@vger.kernel.org/msg0=
-4115.html
-             http://bugzilla.kernel.org/show_bug.cgi?id=3D8133
-             http://bugzilla.kernel.org/show_bug.cgi?id=3D8164
-             http://lkml.org/lkml/2007/3/21/330
-Submitter  : Fabio Comolli <fabio.comolli@gmail.com>
-             Plamen Petrov <plamen.petrov@tk.ru.acad.bg>
-             Laurent Riffard <laurent.riffard@free.fr>
-             Lukas Hejtmanek <xhejtman@mail.muni.cz>
-Handled-By : Tejun Heo <htejun@gmail.com>
-             Alan Cox <alan@lxorguk.ukuu.org.uk>
-Status     : Alan: Some cases should be fixed now but probably not all
-                   (eg the Nvidia one)
+Subject    : ThinkPad doesn't resume from suspend to RAM
+References : http://lkml.org/lkml/2007/2/27/80
+             http://lkml.org/lkml/2007/2/28/348
+Submitter  : Jens Axboe <jens.axboe@oracle.com>
+             Jeff Chua <jeff.chua.linux@gmail.com>
+Status     : unknown
 
 
+Subject    : suspend to disk hangs
+References : http://lkml.org/lkml/2007/3/6/142
+Submitter  : Jeff Chua <jeff.chua.linux@gmail.com>
+Status     : unknown
+
+
+Subject    : suspend to disk hangs
+References : http://lkml.org/lkml/2007/3/16/126
+Submitter  : Maxim Levitsky <maximlevitsky@gmail.com>
+Caused-By  : Rafael J. Wysocki <rjw@sisk.pl>
+             commit e3c7db621bed4afb8e231cb005057f2feb5db557
+             commit ed746e3b18f4df18afa3763155972c5835f284c5
+             commit 259130526c267550bc365d3015917d90667732f1
+Status     : unknown
+
+
+Subject    : suspend to disk hangs
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8224
+Submitter  : Mike Harris <atarimike@wavecable.com>
+Status     : unknown
+
+
+Subject    : ThinkPad R60: suspend to disk broken
+References : http://lkml.org/lkml/2007/3/23/74
+Submitter  : Marcus Better <marcus@better.se>
+Status     : submitter tries to bisect
+
+
+Subject    : after resume: X hangs after drawing a couple of windows
+References : http://lkml.org/lkml/2007/3/8/117
+Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
+Status     : unknown
+
+
+Subject    : second suspend to disk in a row results in an oops  (libat=
+a?)
+References : http://lkml.org/lkml/2007/3/17/43
+Submitter  : Thomas Meyer <thomas@m3y3r.de>
+Status     : unknown
+
+
+Subject    : SATA breakage on resume
+References : http://lkml.org/lkml/2007/3/7/233
+Submitter  : Thomas Gleixner <tglx@linutronix.de>
+             Soeren Sonnenburg <kernel@nn7.de>
+Status     : unknown
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
