@@ -1,90 +1,82 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [4/5] 2.6.21-rc4: known regressions (v2)
-Date: Fri, 23 Mar 2007 19:50:28 +0100
-Message-ID: <20070323185028.GR752@stusta.de>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: HPA patches
+Date: Fri, 23 Mar 2007 20:08:19 +0000
+Message-ID: <20070323200819.4e734f4f@lxorguk.ukuu.org.uk>
+References: <20070323191321.5d00887a@lxorguk.ukuu.org.uk>
+	<20070323112411.f6a8a762.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:32899 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753339AbXCWSuZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2007 14:50:25 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+Received: from [81.2.110.250] ([81.2.110.250]:60147 "EHLO lxorguk.ukuu.org.uk"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932067AbXCWTFF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Mar 2007 15:05:05 -0400
+In-Reply-To: <20070323112411.f6a8a762.randy.dunlap@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Soeren Sonnenburg <kernel@nn7.de>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>, Tejun Heo <htejun@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Stephane Casset <sept@logidee.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, David L <idht4n@hotmail.com>, Bob Tracy <rct@gherkin.frus.com>, John Stultz <johnstul@us.ibm.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org, Emil Karlson <jkarlson@cc.hut.fi>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kyle@canonical.com
 
-This email lists some known regressions in Linus' tree compared to 2.6.20.
+> > +static int ata_ignore_hpa = 0;
+> 
+> Don't init to 0.  Not needed, bloats binary files.
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way
-possibly involved with one or more of these issues.
+It'll be one for the final release 8)
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+> > +module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
+> > +MODULE_PARM_DESC(ignore_hpa, "Ignore HPA (0=off 1=on)");
+> 
+> So 1 = on = ignore, right?
 
+Yes.
 
-Subject    : system doesn't come out of suspend  (CONFIG_NO_HZ)
-References : http://lkml.org/lkml/2007/2/22/391
-Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
-             Soeren Sonnenburg <kernel@nn7.de>
-Handled-By : Thomas Gleixner <tglx@linutronix.de>
-             Ingo Molnar <mingo@elte.hu>
-             Tejun Heo <htejun@gmail.com>
-             Rafael J. Wysocki <rjw@sisk.pl>
-Status     : problem is being debugged
+> > +	tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
+> > +	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
+> > +	tf.protocol |= ATA_PROT_NODATA;
+> > +	tf.device = 0x40;
+> 
+> What is 0x40?  can it be #defined (or enum-ed) instead of a magic
+> value?  please?  (more of same below)
 
+It's 0x40. Its a "command dependant bit" - no useful name.
 
-Subject    : first disk access after resume takes several minutes
-             ('date' does not advance after resume from RAM, CONFIG_NO_HZ=n)
-References : http://lkml.org/lkml/2007/3/8/117
-Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
-Handled-By : Thomas Gleixner <tglx@linutronix.de>
-             Ingo Molnar <mingo@elte.hu>
-Status     : problem is being debugged
+> > +	u64 sectors = dev->n_sectors;
+> > +	u64 hpa_sectors;
+> > +	
+> > +	if (ata_id_has_lba48(dev->id))
+> > +		hpa_sectors = ata_read_native_max_address_ext(dev);
+> > +	else
+> > +		hpa_sectors = ata_read_native_max_address(dev);
+> > +
+> > +	/* if no hpa, both should be equal */
+> > +	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, hpa_sectors = %lld\n",
+> > +		__FUNCTION__, sectors, hpa_sectors);
+> 
+> (long long) or (unsigned long long) on sectors and hpa_sectors...
 
+u64 is always unsigned long long (and its debug anyway)
 
-Subject    : Dynticks and High resolution Timer hanging the system
-             workaround: clocksource=acpi_pm
-References : http://lkml.org/lkml/2007/3/7/504
-Submitter  : Stephane Casset <sept@logidee.com>
-Caused-By  : Thomas Gleixner <tglx@linutronix.de>
-Status     : unknown
+> 
+> > +
+> > +	if (hpa_sectors > sectors) {
+> > +		ata_dev_printk(dev, KERN_INFO,
+> > +			"Host Protected Area detected:\n"
+> > +			"\tcurrent size: %lld sectors\n"
+> > +			"\tnative size: %lld sectors\n",
+> > +			sectors, hpa_sectors);
+> 
+> printk format types ok?
 
+Yes
 
-Subject    : soft lockup detected on CPU#0
-References : http://lkml.org/lkml/2007/3/3/152
-Submitter  : Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Handled-By : Thomas Gleixner <tglx@linutronix.de>
-             Ingo Molnar <mingo@elte.hu>
-Status     : unknown
+> > +			if (hpa_sectors) {
+> > +				ata_dev_printk(dev, KERN_INFO,
+> > +					"native size increased to %lld sectors\n", hpa_sectors);
+> 
+> Line lengths < 80 and printk format types?
 
+See above, and the 80 column fascists can suffer in the name of
+readability. 
 
-Subject    : gettimeofday increments too slowly
-References : http://bugzilla.kernel.org/show_bug.cgi?id=8027
-Submitter  : David L <idht4n@hotmail.com>
-Caused-By  : Thomas Gleixner <tglx@linutronix.de>
-             commit 92c7e00254b2d0efc1e36ac3e45474ce1871b6b2
-Handled-By : Thomas Gleixner <tglx@linutronix.de>
-Status     : problem is being debugged
-
-
-Subject    : boot hangs during IDE detection  (clocksource)
-References : http://lkml.org/lkml/2007/3/19/465
-Submitter  : Bob Tracy <rct@gherkin.frus.com>
-Caused-By  : John Stultz <johnstul@us.ibm.com>
-             commit 6bb74df481223731af6c7e0ff3adb31f6442cfcd
-Handled-By : John Stultz <johnstul@us.ibm.com>
-Status     : problem is being debugged
-
-
-Subject    : dynticks makes ksoftirqd1 use unreasonable amount of cpu time
-References : http://bugzilla.kernel.org/show_bug.cgi?id=8100
-Submitter  : Emil Karlson <jkarlson@cc.hut.fi>
-Handled-By : Thomas Gleixner <tglx@linutronix.de>
-Status     : problem is being debugged
-
-
+Alan
