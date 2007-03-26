@@ -1,7 +1,7 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] Add _GTM and _STM support to libata
-Date: Mon, 26 Mar 2007 11:58:07 +0100
-Message-ID: <20070326115807.0c89ee21@the-village.bc.nu>
+Date: Mon, 26 Mar 2007 12:02:00 +0100
+Message-ID: <20070326120200.2c5d5125@the-village.bc.nu>
 References: <20070326032222.GA13113@srcf.ucam.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,17 +13,29 @@ To: Matthew Garrett <mjg59@srcf.ucam.org>
 Cc: linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, kristen.c.accardi@intel.com
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, 26 Mar 2007 04:22:23 +0100
-Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> should they be attached to the scsi code rather than the ata host code? 
+> Anyway, this fixes suspend/resume on nc6220, which is what I was aiming 
+> for...
+> 
+> Signed-off-by: Matthew Garrett <mjg59@srcf.ucam.org>
 
-> I've ported the drivers/ide code for handling _GTM and _STM to libata. 
-> I'm not utterly convinced that I'm doing the calls in the right place - 
+NAK - there is code to do the _gtm/_stm parts in the -mm tree already
+used by pata_acpi, waiting to be merged and it's a lot cleaner. It does
+want hooking to the suspend/resume paths as well as to pata_acpi but that
+is all.
 
-Please see the various patches I've posted or the -mm tree. I did that
-some time ago and the pata_acpi driver makes full use of them already.
+This code also has bugs
 
-All there, all done.
+> +
+> +	if (ap->cbl == ATA_CBL_SATA)
+> +		return;
 
-Alan
+Bangs head against wall. As I keep saying you *CANNOT* do any PATA v SATA
+decisions based upon cable type. It just doesn't work. The kernel
+sometimes doesn't know. The hardware sometimes turns up in weird formats
+with ATA bridges.
 
+You *MUST* see if the device has GTF/GTM or SATA methods in its ACPI
+space and decide based upon that alone what the BIOS thinks should be
+used.
 
