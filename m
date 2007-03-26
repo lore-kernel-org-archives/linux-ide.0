@@ -1,33 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Wrong IDE cable detection in libata [Re: 2.6.21-rc4-mm1]
-Date: Mon, 26 Mar 2007 20:01:52 +0900
-Message-ID: <4607A820.60103@gmail.com>
-References: <20070319205623.299d0378.akpm@linux-foundation.org> <20070326022420.224cc4f2@werewolf-wl>
+From: rct@gherkin.frus.com (Bob Tracy)
+Subject: Re: 2.6.21-rc4: known regressions with patches (v2)
+Date: Mon, 26 Mar 2007 07:37:22 -0500 (CDT)
+Message-ID: <20070326123722.4C17FDBA1@gherkin.frus.com>
+References: <20070324112544.GB752@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:10995 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965148AbXCZLB7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Mar 2007 07:01:59 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1460341wra
-        for <linux-ide@vger.kernel.org>; Mon, 26 Mar 2007 04:01:58 -0700 (PDT)
-In-Reply-To: <20070326022420.224cc4f2@werewolf-wl>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752449AbXCZMhZ@vger.kernel.org>
+In-Reply-To: <20070324112544.GB752@stusta.de> "from Adrian Bunk at Mar 24, 2007
+ 12:25:44 pm"
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tglx@linutronix.de, johnstul@us.ibm.com, bzolnier@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?=22J=2EA=2E_Magall=F3n=22?= <jamagallon@ono.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-J.A. Magall=F3n wrote:
-> Libata seems to misdetect my cable.
-> I have double-checked and the cable is 80 pin...
+Adrian Bunk wrote:
+> Subject    : boot hangs during IDE detection  (clocksource)
+> References : http://lkml.org/lkml/2007/3/19/465
+> Submitter  : Bob Tracy <rct@gherkin.frus.com>
+> Caused-By  : John Stultz <johnstul@us.ibm.com>
+>              commit 6bb74df481223731af6c7e0ff3adb31f6442cfcd
+> Handled-By : John Stultz <johnstul@us.ibm.com>
+> Patch      : http://lkml.org/lkml/2007/3/22/287
+> Status     : workaround-patch available
 
-Does the following patch fix your problem?
+The subject problem is fixed *without* the workaround patch in
+2.6.21-rc5.  The acpi_pm clocksource patch for the case where the
+PIIX4 bug is present should probably be included anyway.
 
-  http://article.gmane.org/gmane.linux.ide/17444
-
-(You can get the raw message by appending /raw to the URL).
-
---=20
-tejun
+-- 
+-----------------------------------------------------------------------
+Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
+rct@frus.com
+-----------------------------------------------------------------------
