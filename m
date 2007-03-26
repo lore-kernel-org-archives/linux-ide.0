@@ -1,71 +1,43 @@
-From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
-Subject: Re: Wrong IDE cable detection in libata [Re: 2.6.21-rc4-mm1]
-Date: Mon, 26 Mar 2007 22:18:44 +0200
-Message-ID: <20070326221844.38bf8840@werewolf-wl>
-References: <20070319205623.299d0378.akpm@linux-foundation.org>
-	<20070326022420.224cc4f2@werewolf-wl>
-	<4607A820.60103@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Add _GTM and _STM support to libata
+Date: Mon, 26 Mar 2007 22:40:06 +0100
+Message-ID: <20070326224006.2e9b1cdb@the-village.bc.nu>
+References: <20070326032222.GA13113@srcf.ucam.org>
+	<20070326115807.0c89ee21@the-village.bc.nu>
+	<20070326201514.GA27284@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ono.com ([62.42.230.12]:15339 "EHLO resmaa05.ono.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752691AbXCZUTG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Mar 2007 16:19:06 -0400
-In-Reply-To: <4607A820.60103@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20070326201514.GA27284@srcf.ucam.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, kristen.c.accardi@intel.com
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, 26 Mar 2007 20:01:52 +0900, Tejun Heo <htejun@gmail.com> wrote:
+> Ok, missed that. How about something like the following? I've changed 
+> some of the interfaces slightly, so the pata_acpi driver would need to 
+> be altered to match. This gets rid of the CABLE_SATA checking in 
 
-> J.A. Magall=C3=B3n wrote:
-> > Libata seems to misdetect my cable.
-> > I have double-checked and the cable is 80 pin...
->=20
-> Does the following patch fix your problem?
->=20
->   http://article.gmane.org/gmane.linux.ide/17444
->=20
-> (You can get the raw message by appending /raw to the URL).
->=20
+Close but no cigar. The pata_acpi driver needs to be able to pass its own
+pointer for gtf as it wants to keep multiple states to hand.
 
-Yes it works !!
 
-Disk is back at nice speed of 50 Mb/s.
+>  	acpi_status status;
+>  	struct acpi_buffer output;
+>  
+> +	if (!ap->acpi_port_link || !ap->acpi_port_link->is_pata)
+> +		return -ENODEV;
 
-dmesg:
+Make ap->acpi_port_link a local variable and it is easier to read and
+smaller and faster, need to pass the struct to gtm/stm from the caller -
+easily pushed up a layer.
 
-ata_piix 0000:00:1f.1: version 2.10ac1
-ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 18
-PCI: Setting latency timer of device 0000:00:1f.1 to 64
-ata1: PATA max UDMA/133 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001f000 =
-irq 14
-ata2: PATA max UDMA/133 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001f008 =
-irq 15
-scsi0 : ata_piix
-ata1.00: ATAPI, max UDMA/33
-ata1.01: ATAPI, max MWDMA0, CDB intr
-ata1.00: configured for UDMA/33
-ata1.01: configured for PIO3
-scsi1 : ata_piix
-ata2.00: ATA-6: ST3120022A, 3.06, max UDMA/100
-ata2.00: 234441648 sectors, multi 16: LBA48=20
-ata2.01: ATAPI, max UDMA/33
-ata2.00: configured for UDMA/100    <=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-ata2.01: configured for UDMA/33     <=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
 
-Thanks !!
+> -int ata_acpi_stm(const struct ata_port *ap, void *handle, struct acpi_gtm *stm)
+> +int ata_acpi_stm(const struct ata_port *ap)
 
---
-J.A. Magallon <jamagallon()ono!com>     \               Software is lik=
-e sex:
-                                         \         It's better when it'=
-s free
-Mandriva Linux release 2007.1 (Cooker) for i586
-Linux 2.6.20-jam05 (gcc 4.1.2 20070302 (prerelease) (4.1.2-1mdv2007.1))=
- #2 SMP PREEMPT
+Ditto 
+
+Otherwise looks good.
+
