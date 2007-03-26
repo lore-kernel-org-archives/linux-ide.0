@@ -1,236 +1,438 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] IDE fixes for 2.6.21-rc5
-Date: Mon, 26 Mar 2007 23:11:55 +0200
-Message-ID: <200703262311.55728.bzolnier@gmail.com>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH] Add _GTM and _STM support to libata
+Date: Mon, 26 Mar 2007 22:48:00 +0100
+Message-ID: <20070326214800.GA29268@srcf.ucam.org>
+References: <20070326032222.GA13113@srcf.ucam.org> <20070326115807.0c89ee21@the-village.bc.nu> <20070326201514.GA27284@srcf.ucam.org> <20070326224006.2e9b1cdb@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:33595 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388AbXCZVEw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Mar 2007 17:04:52 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1714833uga
-        for <linux-ide@vger.kernel.org>; Mon, 26 Mar 2007 14:04:51 -0700 (PDT)
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20070326224006.2e9b1cdb@the-village.bc.nu>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, kristen.c.accardi@intel.com
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Ok. How about this? Couple of cleanups, and leaves the possibility for 
+drivers to pass in their own gtf structure.
 
-Please pull from:
-
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-
-to receive the following updates:
-
- drivers/ide/Kconfig            |    6 ++++--
- drivers/ide/ide-io.c           |   32 +++++++++++++++++++++-----------
- drivers/ide/ide-iops.c         |   11 +++++++++--
- drivers/ide/ide.c              |   37 ++++++++++++++++++++++++++++++-------
- drivers/ide/pci/pdc202xx_new.c |    3 ++-
- include/linux/ide.h            |    1 +
- 6 files changed, 67 insertions(+), 23 deletions(-)
-
-
-Albert Lee (1):
-      pdc202xx_new: Enable ATAPI DMA
-
-Bartlomiej Zolnierkiewicz (2):
-      ide: revert "ide: fix drive side 80c cable check, take 2" for now
-      ide: fix locking for manual DMA enable/disable ("hdparm -d")
-
-Patrick Ringl (1):
-      ide: cosmetic adaption of drivers/ide/Kconfig concerning SATA
-
-Suleiman Souhlal (1):
-      ide: use correct IDE error recovery
-
-
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 8f1fd01..ca2e4f8 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -103,8 +103,10 @@ config BLK_DEV_IDE_SATA
- 	---help---
- 	  There are two drivers for Serial ATA controllers.
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 0bd4789..b434c39 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -291,13 +291,12 @@ static int do_drive_get_GTF(struct ata_port *ap, int ix,
+ 			unsigned long *obj_loc)
+ {
+ 	acpi_status			status;
+-	acpi_handle			dev_handle = NULL;
+-	acpi_handle			chan_handle, drive_handle;
+-	acpi_integer			pcidevfn = 0;
++	acpi_handle			drive_handle;
+ 	u32				dev_adr;
+ 	struct acpi_buffer		output;
+ 	union acpi_object 		*out_obj;
+ 	struct device			*dev = ap->host->dev;
++	struct ata_acpi_port_link           *acpidata = ap->acpi_port_link;
+ 	struct ata_device		*atadev = &ap->device[ix];
+ 	int				err = -ENODEV;
  
--	  The main driver, "libata", exists inside the SCSI subsystem
--	  and supports most modern SATA controllers.
-+	  The main driver, "libata", uses the SCSI subsystem
-+	  and supports most modern SATA controllers. In order to use it
-+	  you may take a look at "Serial ATA (prod) and Parallel ATA
-+	  (experimental) drivers".
+@@ -321,47 +320,12 @@ static int do_drive_get_GTF(struct ata_port *ap, int ix,
+ 		goto out;
+ 	}
  
- 	  The IDE driver (which you are currently configuring) supports
- 	  a few first-generation SATA controllers.
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index c193553..0e02800 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -519,21 +519,24 @@ static ide_startstop_t ide_ata_error(ide_drive_t *drive, struct request *rq, u8
- 	if ((stat & DRQ_STAT) && rq_data_dir(rq) == READ && hwif->err_stops_fifo == 0)
- 		try_to_flush_leftover_data(drive);
+-	/* Don't continue if device has no _ADR method.
+-	 * _GTF is intended for known motherboard devices. */
+-	if (!(ap->cbl == ATA_CBL_SATA)) {
+-		err = pata_get_dev_handle(dev, &dev_handle, &pcidevfn);
+-		if (err < 0) {
+-			if (ata_msg_probe(ap))
+-				ata_dev_printk(atadev, KERN_DEBUG,
+-					"%s: pata_get_dev_handle failed (%d)\n",
+-					__FUNCTION__, err);
+-			goto out;
+-		}
+-	} else {
+-		err = sata_get_dev_handle(dev, &dev_handle, &pcidevfn);
+-		if (err < 0) {
+-			if (ata_msg_probe(ap))
+-				ata_dev_printk(atadev, KERN_DEBUG,
+-					"%s: sata_get_dev_handle failed (%d\n",
+-					__FUNCTION__, err);
+-			goto out;
+-		}
+-	}
+-
+ 	/* Get this drive's _ADR info. if not already known. */
+ 	if (!atadev->obj_handle) {
+-		if (!(ap->cbl == ATA_CBL_SATA)) {
+-			/* get child objects of dev_handle == channel objects,
+-	 		 * + _their_ children == drive objects */
+-			/* channel is ap->port_no */
+-			chan_handle = acpi_get_child(dev_handle,
+-						ap->port_no);
+-			if (ata_msg_probe(ap))
+-				ata_dev_printk(atadev, KERN_DEBUG,
+-					"%s: chan adr=%d: chan_handle=0x%p\n",
+-					__FUNCTION__, ap->port_no,
+-					chan_handle);
+-			if (!chan_handle) {
+-				err = -ENODEV;
+-				goto out;
+-			}
++		if (acpidata->is_pata) {
+ 			/* TBD: could also check ACPI object VALID bits */
+-			drive_handle = acpi_get_child(chan_handle, ix);
++			drive_handle = 
++				acpi_get_child(acpidata->handle, ix);
+ 			if (!drive_handle) {
+ 				err = -ENODEV;
+ 				goto out;
+@@ -370,8 +334,9 @@ static int do_drive_get_GTF(struct ata_port *ap, int ix,
+ 			atadev->obj_handle = drive_handle;
+ 		} else {	/* for SATA mode */
+ 			dev_adr = SATA_ADR_RSVD;
+-			err = get_sata_adr(dev, dev_handle, pcidevfn, 0,
+-					ap, atadev, &dev_adr);
++			err = get_sata_adr(dev, acpidata->handle, 
++					   acpidata->devfn, 0, ap, atadev, 
++					   &dev_adr);
+ 		}
+ 		if (err < 0 || dev_adr == SATA_ADR_RSVD ||
+ 		    !atadev->obj_handle) {
+@@ -526,12 +491,13 @@ static int do_drive_set_taskfiles(struct ata_port *ap,
+ 	int			gtf_count = gtf_length / REGS_PER_GTF;
+ 	int			ix;
+ 	struct taskfile_array	*gtf;
++	struct ata_acpi_port_link   *acpidata = ap->acpi_port_link;
  
-+	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq)) {
-+		ide_kill_rq(drive, rq);
-+		return ide_stopped;
+ 	if (ata_msg_probe(ap))
+ 		ata_dev_printk(atadev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
+ 			       __FUNCTION__, ap->port_no);
+ 
+-	if (noacpi || !(ap->cbl == ATA_CBL_SATA))
++	if (noacpi || !acpidata || acpidata->is_pata)
+ 		return 0;
+ 
+ 	if (!ata_dev_enabled(atadev) || (ap->flags & ATA_FLAG_DISABLED))
+@@ -573,6 +539,7 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+ 	unsigned int	gtf_length;
+ 	unsigned long	gtf_address;
+ 	unsigned long	obj_loc;
++	struct ata_acpi_port_link *acpidata = ap->acpi_port_link;
+ 
+ 	if (noacpi)
+ 		return 0;
+@@ -581,7 +548,7 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+ 	 * we should not run GTF on PATA devices since some
+ 	 * PATA require execution of GTM/STM before GTF.
+ 	 */
+-	if (!(ap->cbl == ATA_CBL_SATA))
++	if (!acpidata || acpidata->is_pata)
+ 		return 0;
+ 
+ 	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
+@@ -626,8 +593,6 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+  */
+ int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
+ {
+-	acpi_handle                     handle;
+-	acpi_integer                    pcidevfn;
+ 	int                             err;
+ 	struct device                   *dev = ap->host->dev;
+ 	struct ata_device               *atadev = &ap->device[ix];
+@@ -635,38 +600,20 @@ int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
+ 	acpi_status                     status;
+ 	struct acpi_object_list         input;
+ 	union acpi_object               in_params[1];
++	struct ata_acpi_port_link           *acpidata = ap->acpi_port_link;
+ 
+-	if (noacpi)
++	if (noacpi || !acpidata || acpidata->is_pata)
+ 		return 0;
+ 
+ 	if (ata_msg_probe(ap))
+ 		ata_dev_printk(atadev, KERN_DEBUG, "%s: ix = %d, port#: %d\n",
+ 			       __FUNCTION__, ix, ap->port_no);
+ 
+-	/* Don't continue if not a SATA device. */
+-	if (!(ap->cbl == ATA_CBL_SATA)) {
+-		if (ata_msg_probe(ap))
+-			ata_dev_printk(atadev, KERN_DEBUG,
+-				"%s: Not a SATA device\n", __FUNCTION__);
+-		goto out;
+-	}
+-
+-	/* Don't continue if device has no _ADR method.
+-	 * _SDD is intended for known motherboard devices. */
+-	err = sata_get_dev_handle(dev, &handle, &pcidevfn);
+-	if (err < 0) {
+-		if (ata_msg_probe(ap))
+-			ata_dev_printk(atadev, KERN_DEBUG,
+-				"%s: sata_get_dev_handle failed (%d\n",
+-				__FUNCTION__, err);
+-		goto out;
+-	}
+-
+ 	/* Get this drive's _ADR info, if not already known */
+ 	if (!atadev->obj_handle) {
+ 		dev_adr = SATA_ADR_RSVD;
+-		err = get_sata_adr(dev, handle, pcidevfn, ix, ap, atadev,
+-					&dev_adr);
++		err = get_sata_adr(dev, acpidata->handle, acpidata->devfn, ix,
++				   ap, atadev, &dev_adr);
+ 		if (err < 0 || dev_adr == SATA_ADR_RSVD ||
+ 			!atadev->obj_handle) {
+ 			if (ata_msg_probe(ap))
+@@ -706,16 +653,19 @@ out:
+ 	return 0;
+ }
+ 
+-
+-int ata_acpi_gtm(const struct ata_port *ap, void *handle, struct acpi_gtm *gtm)
++int ata_acpi_gtm(const struct ata_port *ap, struct acpi_gtm *gtm)
+ {
+ 	acpi_status status;
+ 	struct acpi_buffer output;
++	struct ata_acpi_port_link *acpidata = ap->acpi_port_link;
++
++	if (!acpidata || !acpidata->is_pata)
++		return -ENODEV;
+ 
+ 	output.length = ACPI_ALLOCATE_BUFFER;
+ 	output.pointer = NULL;
+ 
+-	status = acpi_evaluate_object(handle, "_GTM", NULL, &output);
++	status = acpi_evaluate_object(acpidata->handle, "_GTM", NULL, &output);
+ 
+ 	if (ACPI_FAILURE(status)) {
+ 		ata_port_printk(ap, KERN_ERR, "ACPI get timing mode failed.\n");
+@@ -730,11 +680,15 @@ int ata_acpi_gtm(const struct ata_port *ap, void *handle, struct acpi_gtm *gtm)
+ 	return 0;
+ }
+ 
+-int ata_acpi_stm(const struct ata_port *ap, void *handle, struct acpi_gtm *stm)
++int ata_acpi_stm(const struct ata_port *ap, struct acpi_gtm *stm)
+ {
+ 	acpi_status status;
+ 	struct acpi_object_list         input;
+ 	union acpi_object               in_params[3];
++	struct ata_acpi_port_link       *acpidata = ap->acpi_port_link;
++
++	if (!acpidata || !acpidata->is_pata)
++		return -ENODEV;
+ 
+ 	in_params[0].type = ACPI_TYPE_BUFFER;
+ 	in_params[0].buffer.length = sizeof(struct acpi_gtm);
+@@ -750,7 +704,7 @@ int ata_acpi_stm(const struct ata_port *ap, void *handle, struct acpi_gtm *stm)
+ 	input.count = 3;
+ 	input.pointer = in_params;
+ 
+-	status = acpi_evaluate_object(handle, "_STM", &input, NULL);
++	status = acpi_evaluate_object(acpidata->handle, "_STM", &input, NULL);
+ 
+ 	if (ACPI_FAILURE(status)) {
+ 		ata_port_printk(ap, KERN_ERR, "ACPI set timing mode failed.\n");
+@@ -787,8 +741,61 @@ int ata_pata_acpi_present(struct pci_dev *pdev)
+ 	return present;
+ }
+ 
++static void *ata_sata_find_handle(struct device *dev, int port)
++{
++	acpi_handle handle;
++	acpi_integer devfn;
++
++	if (noacpi)
++		return NULL;
++	if (sata_get_dev_handle(dev, &handle, &devfn) < 0)
++		return NULL;
++	return acpi_get_child(handle, port);
++}
++
++int ata_sata_acpi_present(struct pci_dev *pdev)
++{
++	if (ata_sata_find_handle(&pdev->dev, 0))
++		return 1;
++	return 0;
++}
++
++void ata_acpi_setup(struct ata_port *ap)
++{
++	struct device *dev = ap->host->dev;	
++	struct pci_dev *pci_dev;
++	struct ata_acpi_port_link *acpidata;
++	int pata;
++
++	if (!is_pci_dev (dev))
++		return;
++
++	pci_dev = to_pci_dev(dev);
++
++	if (ata_pata_acpi_present(pci_dev))
++		pata = 1;
++	else if (ata_sata_acpi_present(pci_dev)) 
++		pata = 0;
++	else
++		return;
++
++	acpidata = kzalloc(sizeof(struct ata_acpi_port_link), GFP_KERNEL);
++	acpidata->is_pata = pata;
++	acpidata->devfn = (PCI_SLOT(pci_dev->devfn) << 16) | 
++		PCI_FUNC(pci_dev->devfn);
++	if (pata) {
++		acpidata->handle = 
++			ata_pata_find_handle(ap->host->dev, ap->port_no);
++		ap->gtm = kzalloc(sizeof(struct acpi_gtm), GFP_KERNEL);
++	} else
++		acpidata->handle = 
++			ata_sata_find_handle(ap->host->dev, ap->port_no);
++
++	ap->acpi_port_link = acpidata;
++}
+ 
+ EXPORT_SYMBOL_GPL(ata_acpi_gtm);
+ EXPORT_SYMBOL_GPL(ata_acpi_stm);
+ EXPORT_SYMBOL_GPL(ata_pata_acpi_handle);
+ EXPORT_SYMBOL_GPL(ata_pata_acpi_present);
++EXPORT_SYMBOL_GPL(ata_acpi_setup);
+diff --git a/drivers/ata/libata-acpi.h b/drivers/ata/libata-acpi.h
+index d630ec3..5948310 100644
+--- a/drivers/ata/libata-acpi.h
++++ b/drivers/ata/libata-acpi.h
+@@ -39,9 +39,48 @@ struct acpi_gtm {
+ 	u32 flags;
+ };
+ 
+-extern int ata_acpi_gtm(const struct ata_port *p, void *handle, struct acpi_gtm *gtm);
+-extern int ata_acpi_stm(const struct ata_port *ap, void *handle, struct acpi_gtm *stm);
++struct ata_acpi_port_link {
++	int is_pata;
++	acpi_handle *handle;
++	acpi_integer devfn;
++};
++
++#ifdef CONFIG_SATA_ACPI
++extern int ata_acpi_exec_tfs(struct ata_port *ap);
++extern int ata_acpi_push_id(struct ata_port *ap, unsigned int ix);
++extern int ata_acpi_gtm(const struct ata_port *p, struct acpi_gtm *gtm);
++extern int ata_acpi_stm(const struct ata_port *ap, struct acpi_gtm *stm);
+ extern void *ata_pata_acpi_handle(const struct ata_port *ap);
+ extern int ata_pata_acpi_present(struct pci_dev *pdev);
+-
++extern void ata_acpi_setup(struct ata_port *ap);
++#else
++static inline int ata_acpi_exec_tfs(struct ata_port *ap)
++{
++        return 0;
++}
++static inline int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
++{
++        return 0;
++}
++extern inline int ata_acpi_gtm(const struct ata_port *p, struct acpi_gtm *gtm)
++{
++	return 0;
++}
++extern inline int ata_acpi_stm(const struct ata_port *ap, struct acpi_gtm *stm)
++{
++	return 0;
++}
++extern inline void *ata_pata_acpi_handle(const struct ata_port *ap)
++{
++	return 0;
++}
++extern inline int ata_pata_acpi_present(struct pci_dev *pdev)
++{
++	return 0;
++}
++extern inline void ata_acpi_setup(struct ata_port *ap)
++{
++	return;
++}
++#endif /* CONFIG_SATA_ACPI */
+ #endif
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index bf327d4..a7258b6 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -58,6 +58,7 @@
+ #include <asm/byteorder.h>
+ 
+ #include "libata.h"
++#include "libata-acpi.h"
+ 
+ #define DRV_VERSION	"2.20"	/* must be exactly four chars */
+ 
+@@ -5444,6 +5445,8 @@ int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
+ 				goto fail;
+ 			}
+ 		}
++
++		ata_acpi_gtm(ap, ap->gtm);
+ 	}
+ 
+ 	host->dev->power.power_state = mesg;
+@@ -5467,6 +5470,12 @@ int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
+  */
+ void ata_host_resume(struct ata_host *host)
+ {
++	int i;
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++		ata_acpi_stm(ap, ap->gtm);
 +	}
 +
- 	if (hwif->INB(IDE_STATUS_REG) & (BUSY_STAT|DRQ_STAT))
--		/* force an abort */
--		hwif->OUTB(WIN_IDLEIMMEDIATE, IDE_COMMAND_REG);
-+		rq->errors |= ERROR_RESET;
+ 	ata_host_request_pm(host, PMSG_ON, ATA_EH_SOFTRESET,
+ 			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 0);
+ 	host->dev->power.power_state = PMSG_ON;
+@@ -5917,6 +5926,7 @@ int ata_device_add(const struct ata_probe_ent *ent)
+ 		struct ata_port *ap = host->ports[i];
  
--	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq))
--		ide_kill_rq(drive, rq);
--	else {
--		if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
--			++rq->errors;
--			return ide_do_reset(drive);
--		}
--		if ((rq->errors & ERROR_RECAL) == ERROR_RECAL)
--			drive->special.b.recalibrate = 1;
-+	if ((rq->errors & ERROR_RESET) == ERROR_RESET) {
- 		++rq->errors;
-+		return ide_do_reset(drive);
+ 		ata_scsi_scan_host(ap);
++		ata_acpi_setup(ap);
  	}
-+
-+	if ((rq->errors & ERROR_RECAL) == ERROR_RECAL)
-+		drive->special.b.recalibrate = 1;
-+
-+	++rq->errors;
-+
- 	return ide_stopped;
- }
  
-@@ -1025,6 +1028,13 @@ static ide_startstop_t start_request (ide_drive_t *drive, struct request *rq)
- 	if (!drive->special.all) {
- 		ide_driver_t *drv;
+ 	VPRINTK("EXIT, returning %u\n", ent->n_ports);
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index c426714..eb41263 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -97,21 +97,6 @@ extern void ata_port_init(struct ata_port *ap, struct ata_host *host,
+ extern struct ata_probe_ent *ata_probe_ent_alloc(struct device *dev,
+ 						 const struct ata_port_info *port);
  
-+		/*
-+		 * We reset the drive so we need to issue a SETFEATURES.
-+		 * Do it _after_ do_special() restored device parameters.
-+		 */
-+		if (drive->current_speed == 0xff)
-+			ide_config_drive_speed(drive, drive->desired_speed);
-+
- 		if (rq->cmd_type == REQ_TYPE_ATA_CMD ||
- 		    rq->cmd_type == REQ_TYPE_ATA_TASK ||
- 		    rq->cmd_type == REQ_TYPE_ATA_TASKFILE)
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index bd513f5..1ee53a5 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -583,8 +583,12 @@ u8 eighty_ninty_three (ide_drive_t *drive)
- 	if(!(drive->id->hw_config & 0x4000))
- 		return 0;
- #endif /* CONFIG_IDEDMA_IVB */
--	if (!(drive->id->hw_config & 0x2000))
--		return 0;
-+	/*
-+	 * FIXME:
-+	 * - change master/slave IDENTIFY order
-+	 * - force bit13 (80c cable present) check
-+	 *   (unless the slave device is pre-ATA3)
-+	 */
- 	return 1;
- }
- 
-@@ -1090,6 +1094,9 @@ static void pre_reset(ide_drive_t *drive)
- 	if (HWIF(drive)->pre_reset != NULL)
- 		HWIF(drive)->pre_reset(drive);
- 
-+	if (drive->current_speed != 0xff)
-+		drive->desired_speed = drive->current_speed;
-+	drive->current_speed = 0xff;
- }
- 
- /*
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index 695610f..a6f098f 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -1124,17 +1124,40 @@ static int set_io_32bit(ide_drive_t *drive, int arg)
- static int set_using_dma (ide_drive_t *drive, int arg)
- {
- #ifdef CONFIG_BLK_DEV_IDEDMA
-+	ide_hwif_t *hwif = drive->hwif;
-+	int err = -EPERM;
-+
- 	if (!drive->id || !(drive->id->capability & 1))
--		return -EPERM;
--	if (HWIF(drive)->ide_dma_check == NULL)
--		return -EPERM;
-+		goto out;
-+
-+	if (hwif->ide_dma_check == NULL)
-+		goto out;
-+
-+	err = -EBUSY;
-+	if (ide_spin_wait_hwgroup(drive))
-+		goto out;
-+	/*
-+	 * set ->busy flag, unlock and let it ride
-+	 */
-+	hwif->hwgroup->busy = 1;
-+	spin_unlock_irq(&ide_lock);
-+
-+	err = 0;
-+
- 	if (arg) {
--		if (ide_set_dma(drive))
--			return -EIO;
--		if (HWIF(drive)->ide_dma_on(drive)) return -EIO;
-+		if (ide_set_dma(drive) || hwif->ide_dma_on(drive))
-+			err = -EIO;
- 	} else
- 		ide_dma_off(drive);
+-/* libata-acpi.c */
+-#ifdef CONFIG_SATA_ACPI
+-extern int ata_acpi_exec_tfs(struct ata_port *ap);
+-extern int ata_acpi_push_id(struct ata_port *ap, unsigned int ix);
+-#else
+-static inline int ata_acpi_exec_tfs(struct ata_port *ap)
+-{
 -	return 0;
-+
-+	/*
-+	 * lock, clear ->busy flag and unlock before leaving
-+	 */
-+	spin_lock_irq(&ide_lock);
-+	hwif->hwgroup->busy = 0;
-+	spin_unlock_irq(&ide_lock);
-+out:
-+	return err;
- #else
- 	return -EPERM;
- #endif
-diff --git a/drivers/ide/pci/pdc202xx_new.c b/drivers/ide/pci/pdc202xx_new.c
-index 6ceb25b..ace9892 100644
---- a/drivers/ide/pci/pdc202xx_new.c
-+++ b/drivers/ide/pci/pdc202xx_new.c
-@@ -255,7 +255,7 @@ static int config_chipset_for_dma(ide_drive_t *drive)
- 		printk(KERN_WARNING "%s reduced to Ultra33 mode.\n", drive->name);
- 	}
+-}
+-static inline int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
+-{
+-	return 0;
+-}
+-#endif
+-
+ /* libata-scsi.c */
+ extern struct scsi_transport_template ata_scsi_transport_template;
  
--	if (drive->media != ide_disk)
-+	if (drive->media != ide_disk && drive->media != ide_cdrom)
- 		return 0;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index e3f32f3..4774c08 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -590,6 +590,10 @@ struct ata_port {
+ 	void			*private_data;
  
- 	if (id->capability & 4) {
-@@ -545,6 +545,7 @@ static void __devinit init_hwif_pdc202new(ide_hwif_t *hwif)
+ 	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
++	struct acpi_gtm         *gtm;
++#ifdef CONFIG_SATA_ACPI
++	struct ata_acpi_port_link *acpi_port_link;
++#endif
+ };
  
- 	hwif->drives[0].autotune = hwif->drives[1].autotune = 1;
- 
-+	hwif->atapi_dma  = 1;
- 	hwif->ultra_mask = 0x7f;
- 	hwif->mwdma_mask = 0x07;
- 
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 34f2676..58564a1 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -615,6 +615,7 @@ typedef struct ide_drive_s {
-         u8	init_speed;	/* transfer rate set at boot */
-         u8	pio_speed;      /* unused by core, used by some drivers for fallback from DMA */
-         u8	current_speed;	/* current transfer rate set */
-+	u8	desired_speed;	/* desired transfer rate set */
-         u8	dn;		/* now wide spread use */
-         u8	wcache;		/* status of write cache */
- 	u8	acoustic;	/* acoustic management */
+ struct ata_port_operations {
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
