@@ -1,64 +1,33 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [3/6] 2.6.21-rc4: known regressions
-Date: Mon, 26 Mar 2007 18:26:47 +0200
-Message-ID: <1174926407.7911.1.camel@chaos>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	 <20070318184919.GW752@stusta.de>
-	 <b6a2187b0703251825l2b2ab9d3j43e17523cbca87ac@mail.gmail.com>
-	 <20070326040509.GU16477@stusta.de>
-	 <b6a2187b0703252237l4f662fb3n7f57dfb10360c4f6@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 12/15] ide: make ide_hwif_t.ide_dma_host_on void
+Date: Mon, 26 Mar 2007 21:19:36 +0400
+Message-ID: <460800A8.4050501@ru.mvista.com>
+References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain> <20070119003220.14846.14258.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <b6a2187b0703252237l4f662fb3n7f57dfb10360c4f6@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Jeff Chua <jeff.chua.linux@gmail.com>
-Cc: Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:47647 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753277AbXCZRS4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Mar 2007 13:18:56 -0400
+In-Reply-To: <20070119003220.14846.14258.sendpatchset@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2007-03-26 at 13:37 +0800, Jeff Chua wrote:
-> On 3/26/07, Adrian Bunk <bunk@stusta.de> wrote:
-> 
-> > > Resume from RAM (s2ram) still broke (tried with or without
-> > > CONFIG_NO_HZ). Suspend to RAM seems ok, but upon resume, the screen
-> > > will only display "inu" and only after pressing the power button will
-> > > the system return to console. But "date" still doesn't advance.
-> >
-> > This might be related to the following regression:
-> >
-> > Subject    : first disk access after resume takes several minutes
-> >              ('date' does not advance after resume from RAM, CONFIG_NO_HZ=n)
-> > References : http://lkml.org/lkml/2007/3/8/117
-> >              http://lkml.org/lkml/2007/3/25/20
-> > Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
-> > Handled-By : Thomas Gleixner <tglx@linutronix.de>
-> >              Ingo Molnar <mingo@elte.hu>
-> > Status     : problem is being debugged
-> 
-> Adrian,
-> 
-> It's related. I tested without CONFIG_HPET_TIMER, and now my X60 can
-> suspend and resume from RAM (s2ram). Even better, it works
-> with/without CONFIG_NO_HZ.
+Hello.
 
-Does the patch below fix the HPET_TIMER=y case ?
+Bartlomiej Zolnierkiewicz wrote:
+> [PATCH] ide: make ide_hwif_t.ide_dma_host_on void
 
-	tglx
+> * since ide_hwif_t.ide_dma_host_on is called either when drive->using_dma == 1
+>   or when return value is discarded make it void, also drop "ide_" prefix
+> * make __ide_dma_host_on() void and drop "__" prefix
 
-diff --git a/arch/i386/kernel/hpet.c b/arch/i386/kernel/hpet.c
-index f3ab61e..76afea6 100644
---- a/arch/i386/kernel/hpet.c
-+++ b/arch/i386/kernel/hpet.c
-@@ -197,7 +197,7 @@ static int hpet_next_event(unsigned long delta,
- 	cnt += delta;
- 	hpet_writel(cnt, HPET_T0_CMP);
- 
--	return ((long)(hpet_readl(HPET_COUNTER) - cnt ) > 0);
-+	return ((long)(hpet_readl(HPET_COUNTER) - cnt ) > 0) ? -ETIME : 0;
- }
- 
- /*
+    BTW, it would also make sense to make hwif->ide_dma_timeout() and 
+hwif->ide_dma_lostirq void too (and possibly drop the ide_ prefix). Their 
+results are *explicitly* ignored.
 
-
-
+MBR, Sergei
