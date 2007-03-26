@@ -1,37 +1,74 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] Add _GTM and _STM support to libata
-Date: Mon, 26 Mar 2007 04:39:44 +0100
-Message-ID: <20070326033944.GA13395@srcf.ucam.org>
-References: <20070326032222.GA13113@srcf.ucam.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [3/6] 2.6.21-rc4: known regressions
+Date: Mon, 26 Mar 2007 06:05:09 +0200
+Message-ID: <20070326040509.GU16477@stusta.de>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org> <20070318184919.GW752@stusta.de> <b6a2187b0703251825l2b2ab9d3j43e17523cbca87ac@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:53955 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933504AbXCZDj5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Mar 2007 23:39:57 -0400
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:34500 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933158AbXCZEFG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Mar 2007 00:05:06 -0400
 Content-Disposition: inline
-In-Reply-To: <20070326032222.GA13113@srcf.ucam.org>
+In-Reply-To: <b6a2187b0703251825l2b2ab9d3j43e17523cbca87ac@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
-Cc: kristen.c.accardi@intel.com
+To: Jeff Chua <jeff.chua.linux@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>
 
-> +                printk(KERN_ERR
-> +                        "%s: unexpected _GTM length (0x%x)[should be 0x%zx] or \
-> +"
-> +		       "addr (0x%p)\n",
-> +		       __FUNCTION__, out_obj->buffer.length,
-> +		       sizeof(struct GTM_buffer), out_obj->buffer.pointer);
+On Mon, Mar 26, 2007 at 09:25:51AM +0800, Jeff Chua wrote:
+> On 3/19/07, Adrian Bunk <bunk@stusta.de> wrote:
+> 
+> >Subject    : ThinkPad doesn't resume from suspend to RAM
+> >References : http://lkml.org/lkml/2007/2/27/80
+> >             http://lkml.org/lkml/2007/2/28/348
+> >Submitter  : Jens Axboe <jens.axboe@oracle.com>
+> >             Jeff Chua <jeff.chua.linux@gmail.com>
+> >Status     : unknown
+> >
+> >
+> >Subject    : suspend to disk hangs
+> >References : http://lkml.org/lkml/2007/3/6/142
+> >Submitter  : Jeff Chua <jeff.chua.linux@gmail.com>
+> >Status     : unknown
+> 
+> The good news is on 2.6.21-rc5, suspend to disk, and resume from disk works.
+> But, it only works with CONFIG_NO_HZ unset.
 
-Yeah, erm.
+Thanks for this information.
 
-> + * _STM requires Identify Drive data, which has to passed as an argument.
-> + * Unfortunately hd_driveid is a mangled version which we can't readily
-> + * use; hence we'll get the information afresh.
+> Setting CONFIG_NO_HZ will cause suspend to disk to hang just before
+> saving memory to disk.
 
-And clearly this doesn't actually match reality either. I'll send a 
-tidied up patch when I've actually slept.
+Thanks, noted.
+
+> Resume from RAM (s2ram) still broke (tried with or without
+> CONFIG_NO_HZ). Suspend to RAM seems ok, but upon resume, the screen
+> will only display "inu" and only after pressing the power button will
+> the system return to console. But "date" still doesn't advance.
+
+This might be related to the following regression:
+
+Subject    : first disk access after resume takes several minutes
+             ('date' does not advance after resume from RAM, CONFIG_NO_HZ=n)
+References : http://lkml.org/lkml/2007/3/8/117
+             http://lkml.org/lkml/2007/3/25/20
+Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
+Handled-By : Thomas Gleixner <tglx@linutronix.de>
+             Ingo Molnar <mingo@elte.hu>
+Status     : problem is being debugged
+
+> Thanks,
+> Jeff.
+
+cu
+Adrian
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
