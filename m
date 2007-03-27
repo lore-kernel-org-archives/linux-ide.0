@@ -1,58 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ATA ACPI (was Re: Linux 2.6.21-rc5)
-Date: Tue, 27 Mar 2007 14:54:42 +0900
-Message-ID: <4608B1A2.3040305@gmail.com>
-References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org> <4608B0CA.1040005@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
+Date: Tue, 27 Mar 2007 01:59:21 -0400
+Message-ID: <4608B2B9.7090503@garzik.org>
+References: <Pine.LNX.4.64.0703241232580.11608@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.236]:1150 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934049AbXC0Fyu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Mar 2007 01:54:50 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1810040wra
-        for <linux-ide@vger.kernel.org>; Mon, 26 Mar 2007 22:54:49 -0700 (PDT)
-In-Reply-To: <4608B0CA.1040005@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:33172 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934057AbXC0F7X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Mar 2007 01:59:23 -0400
+In-Reply-To: <Pine.LNX.4.64.0703241232580.11608@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alan <alan@lxorguk.ukuu.org.uk>, Len Brown <lenb@kernel.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Linus Torvalds wrote:
->> There's various fixes here, ranging from some architecture updates 
->> (ia64, ARM, MIPS, SH, Sparc64) to KVM, networking and network drivers.
->>
->> And random one-liners.
->>
->> But probably more important, and likely much more visible to most 
->> people is the fixes for the fallout from the hrtimers and no-HZ 
->> changes, and some of the ACPI regressions.
->>
->> Those timer changes ended up much more painful than anybody wished 
->> for, but big thanks to Thomas Gleixner for being on it like a weasel 
->> on a dead rat, and the regression list has kept shrinking.
->>
->> So if you have reported a regression in the 2.6.21-rc series, please 
->> check 2.6.21-rc5, and update your report as appropriate (whether fixed 
->> or "still problems with xyzzy").
->>
->>         Linus
-> 
-> 
-> [just got back from vacation, or would have sent this earlier]
-> 
-> FWIW, I'm still leaning towards disabling libata ACPI support by default 
-> for 2.6.21.
-> 
-> Upstream has Alan's fix for the worst PATA problems, but for different 
-> reasons, I think PATA ACPI and SATA ACPI support in libata does not feel 
-> quite ready for prime time in 2.6.21.
-> 
-> Scream now, or hold your peace until 2.6.22... :)
+Justin Piszcz wrote:
+> Without NCQ, performance is MUCH better on almost every operation, with 
+> the exception of 2-3 items.
 
-I second disabling ACPI for 2.6.21.
+Variables to take into account:
 
--- 
-tejun
+* the drive (NCQ performance wildly varies)
+* the IO scheduler
+* the filesystem (if not measuring direct to blkdev)
+* application workload (or in your case, benchmark tool)
+	* in particular, the threaded-ness of the apps
+
+For the overwhelming majority of combinations, NCQ should not /hurt/ 
+performance.
+
+For the majority of combinations, NCQ helps (though it may not be often 
+that you use more than 4-8 tags).
+
+In some cases, NCQ firmware may be broken.  There is a Maxtor firmware 
+id, and some Hitachi ids that people are leaning towards recommending be 
+added to the libata 'horkage' list.
+
+	Jeff
+
+
