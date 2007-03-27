@@ -1,36 +1,38 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Tue, 27 Mar 2007 10:23:39 -0400
-Message-ID: <460928EB.8010605@rtr.ca>
-References: <20070324064814.38720.qmail@web802.biz.mail.mud.yahoo.com> <4604D564.9010806@gmail.com> <4608A42D.6080403@garzik.org>
+Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
+Date: Tue, 27 Mar 2007 10:26:59 -0400
+Message-ID: <460929B3.60303@rtr.ca>
+References: <Pine.LNX.4.64.0703241232580.11608@p34.internal.lan> <4608B2B9.7090503@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:2381 "EHLO
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:2430 "EHLO
 	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753879AbXC0OXm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Mar 2007 10:23:42 -0400
-In-Reply-To: <4608A42D.6080403@garzik.org>
+	id S1753881AbXC0O1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Mar 2007 10:27:00 -0400
+In-Reply-To: <4608B2B9.7090503@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, Bob Stewart <bob@evoria.net>, linux-ide@vger.kernel.org, Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Jeff Garzik wrote:
->..
-> Broken, or LBA28-only?
-> 
-> I would think that we have other controllers that need an LBA28-only 
-> flag.  (note: don't be fooled by ATA_FLAG_PIO_LBA48, that doesn't quite 
-> do what we want)
-> 
-> Alan, Mark, surely some ancient controller simply can't do LBA48 at all, 
-> even in PIO mode?
+>
+> In some cases, NCQ firmware may be broken.  There is a Maxtor firmware 
+> id, and some Hitachi ids that people are leaning towards recommending be 
+> added to the libata 'horkage' list.
 
-Mmm.. Alan has more docs in his possession than I do for those,
-but I'd expect such beasts to be somewhat rare.
+Western Digital "Raptor" drives (the 10K rpm things) are also somewhat
+borked in NCQ mode, depending on the application.
 
-I haven't run into any here, but they do exist.
+Their firmware turns off all drive readahead during NCQ.
+This makes them very good for an email/news server application,
+but also causes them to suck for regular desktop applications.
+
+Because of this, they use special software drivers under MSwin
+which detect large sequential accesses, and avoid NCQ during such times.
 
 Cheers
+
+-ml
