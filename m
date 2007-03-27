@@ -1,47 +1,82 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Tue, 27 Mar 2007 17:24:21 +0100
-Message-ID: <20070327172421.5838c99f@the-village.bc.nu>
-References: <20070324064814.38720.qmail@web802.biz.mail.mud.yahoo.com>
-	<4604D564.9010806@gmail.com>
-	<4608A42D.6080403@garzik.org>
-	<460928EB.8010605@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
+Date: 27 Mar 2007 12:16:16 -0400
+Message-ID: <20070327161616.31448.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35826 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753897AbXC0PU4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Mar 2007 11:20:56 -0400
-In-Reply-To: <460928EB.8010605@rtr.ca>
+Received: from science.horizon.com ([192.35.100.1]:17072 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932953AbXC0QQT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Mar 2007 12:16:19 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Bob Stewart <bob@evoria.net>, linux-ide@vger.kernel.org
+To: htejun@gmail.com, jeff@garzik.org, jpiszcz@lucidpixels.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux@horizon.com
 
-> > Alan, Mark, surely some ancient controller simply can't do LBA48 at all, 
-> > even in PIO mode?
-> 
-> Mmm.. Alan has more docs in his possession than I do for those,
-> but I'd expect such beasts to be somewhat rare.
+Here's some more data.
 
-The dumb controllers are generally ok. It's the "almost smart" ones and
-the "I had some space left on my fpga and .." type controllers that tend
-to break horribly.
+6x ST3400832AS (Seagate 7200.8) 400 GB drives.
+3x SiI3232 PCIe SATA controllers
+2.2 GHz Athlon 64, 1024k cache (3700+), 2 GB RAM
+Linux 2.6.20.4, 64-bit kernel
 
-Older promise needs ugly hacks to do LBA48 at all  (basically we lie to
-the controller and set up for ATAPI), the Inic I suspect from the docs
-does get it right in ADMAish mode as it has LBA48 sized command blocks.
+Tested able to sustain reads at 60 MB/sec/drive simultaneously.
 
-One or two embedded devices just don't get the HOB stuff and the double
-register feed right at all. LBA48 commands work but you get only half the
-reply etc.
+RAID-10 is across 6 drives, first part of drive.
+RAID-5 most of the drive, so depending on allocation policies,
+may be a bit slower.
 
-Older ALi just can't cope with LBA48 DMA as its own intelligence is just
-the right level of half-smart (or half-dumb) to break. 
+The test sequence actually was:
+1) raid5ncq
+2) raid5noncq
+3) raid10noncq
+4) raid10ncq
+5) raid5ncq
+6) raid5noncq
+but I rearranged things to make it easier to compare.
 
-Also on the related TODO list is to add an "I'm too dumb to do DMA except
-in sector size chunks" check_atapi_dma helper which should fix up old
-promise a bit and perhaps ALi (whose FIFO engine also from playing
-seems to need all the registers writing each command)
+Note that NCQ makes writes faster (oh... I have write cacheing turned off;
+perhaps I should turn it on and do another round), but no-NCQ seems to have
+a read advantage.  %$%@#$@#ing bonnie++ overflows and won't print file
+read times; I haven't bothered to fix that yet.
+
+NCQ seems to have a pretty significant effect on the file operations,
+especially deletes.
+
+Update: added
+7) wcache5noncq - RAID 5 with no NCQ but write cache enabled
+8) wcache5ncq - RAID 5 with NCQ and write cache enabled
+
+
+RAID=5, NCQ
+Version  1.03       ------Sequential Output------ --Sequential Input- --Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+raid5ncq      7952M 31688  53  34760 10 25327   4 57908  86 167680 13 292.2   0
+raid5ncq      7952M 30357  50  34154 10 24876   4 59692  89 165663 13 285.6   0
+raid5noncq    7952M 29015  48  31627  9 24263   4 61154  91 185389 14 286.6   0
+raid5noncq    7952M 28447  47  31163  9 23306   4 60456  89 198624 15 293.4   0
+wcache5ncq    7952M 32433  54  35413 10 26139   4 59898  89 168032 13 303.6   0
+wcache5noncq  7952M 31768  53  34597 10 25849   4 61049  90 193351 14 304.8   0
+raid10ncq     7952M 54043  89 110804 32 48859   9 58809  87 142140 12 363.8   0
+raid10noncq   7952M 48912  81  68428 21 38906   7 57824  87 146030 12 358.2   0
+
+                    ------Sequential Create------ --------Random Create--------
+                    -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+files:max:min        /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+    16:100000:16/64  1351  25 +++++ +++   941   3  2887  42 31526  96   382   1
+    16:100000:16/64  1400  18 +++++ +++   386   1  4959  69 32118  95   570   2
+    16:100000:16/64   636   8 +++++ +++   176   0  1649  23 +++++ +++   245   1
+    16:100000:16/64   715  12 +++++ +++   164   0   156   2 11023  32  2161   8
+    16:100000:16/64  1291  26 +++++ +++  2778  10  2424  33 31127  93   483   2
+    16:100000:16/64  1236  26 +++++ +++   840   3  2519  37 30366  91   445   2
+    16:100000:16/64  1714  37 +++++ +++  1652   6   789  11  4700  14 12264  48
+    16:100000:16/64   634  11 +++++ +++  1035   3   338   4 +++++ +++  1349   5
+
+raid5ncq,7952M,31688,53,34760,10,25327,4,57908,86,167680,13,292.2,0,16:100000:16/64,1351,25,+++++,+++,941,3,2887,42,31526,96,382,1
+raid5ncq,7952M,30357,50,34154,10,24876,4,59692,89,165663,13,285.6,0,16:100000:16/64,1400,18,+++++,+++,386,1,4959,69,32118,95,570,2
+raid5noncq,7952M,29015,48,31627,9,24263,4,61154,91,185389,14,286.6,0,16:100000:16/64,636,8,+++++,+++,176,0,1649,23,+++++,+++,245,1
+raid5noncq,7952M,28447,47,31163,9,23306,4,60456,89,198624,15,293.4,0,16:100000:16/64,715,12,+++++,+++,164,0,156,2,11023,32,2161,8
+wcache5ncq,7952M,32433,54,35413,10,26139,4,59898,89,168032,13,303.6,0,16:100000:16/64,1291,26,+++++,+++,2778,10,2424,33,31127,93,483,2
+wcache5noncq,7952M,31768,53,34597,10,25849,4,61049,90,193351,14,304.8,0,16:100000:16/64,1236,26,+++++,+++,840,3,2519,37,30366,91,445,2
+raid10ncq,7952M,54043,89,110804,32,48859,9,58809,87,142140,12,363.8,0,16:100000:16/64,1714,37,+++++,+++,1652,6,789,11,4700,14,12264,48
+raid10noncq,7952M,48912,81,68428,21,38906,7,57824,87,146030,12,358.2,0,16:100000:16/64,634,11,+++++,+++,1035,3,338,4,+++++,+++,1349,5
