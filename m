@@ -1,16 +1,31 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: linux@horizon.com
 Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
-Date: Tue, 27 Mar 2007 12:25:52 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0703271224400.5965@p34.internal.lan>
-References: <20070327161616.31448.qmail@science.horizon.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933083AbXC0Q0L@vger.kernel.org>
-In-Reply-To: <20070327161616.31448.qmail@science.horizon.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux@horizon.com
-Cc: htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: 27 Mar 2007 12:41:22 -0400
+Message-ID: <20070327164122.7677.qmail@science.horizon.com>
+References: <Pine.LNX.4.64.0703271224400.5965@p34.internal.lan>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from science.horizon.com ([192.35.100.1]:12444 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933143AbXC0QlY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Mar 2007 12:41:24 -0400
+In-Reply-To: <Pine.LNX.4.64.0703271224400.5965@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jpiszcz@lucidpixels.com, linux@horizon.com
+Cc: htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+>From jpiszcz@lucidpixels.com Tue Mar 27 16:25:58 2007
+Date: Tue, 27 Mar 2007 12:25:52 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+X-X-Sender: jpiszcz@p34.internal.lan
+To: linux@horizon.com
+cc: htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org, 
+    linux-kernel@vger.kernel.org
+Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
+In-Reply-To: <20070327161616.31448.qmail@science.horizon.com>
+References: <20070327161616.31448.qmail@science.horizon.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 
 On Tue, 27 Mar 2007, linux@horizon.com wrote:
 
@@ -84,11 +99,24 @@ On Tue, 27 Mar 2007, linux@horizon.com wrote:
 > raid10noncq,7952M,48912,81,68428,21,38906,7,57824,87,146030,12,358.2,0,16:100000:16/64,634,11,+++++,+++,1035,3,338,4,+++++,+++,1349,5
 >
 
-I would try with write-caching enabled.
-Also, the RAID5/RAID10 you mention seems like each volume is on part of
-the platter, a strange setup you got there :)
+> I would try with write-caching enabled.
 
-Also you are disabling NCQ on/off via the /sys/block device, e.g., setting 
-it to 1 (off) and 31 (on) during testing, yes?
+I did.  See the "wcache5" lines?
 
-Justin.
+> Also, the RAID5/RAID10 you mention seems like each volume is on part of
+> the platter, a strange setup you got there :)
+
+I don't quite understand.  "Each volume is on part of the platter" -
+yes, it's called partitioning, and it's pretty common.
+
+Basically, the first 50G of each drive is assembled with RAID-10 to make
+a 150G "system" file system, where I appreciate the speed and greater
+redundancy of RAID-10, and the last 250G are combined with RAID-5 to make
+a 1.75 TB RAID-5 "data" file system.
+
+> Also you are disabling NCQ on/off via the /sys/block device, e.g., setting 
+> it to 1 (off) and 31 (on) during testing, yes?
+
+Yes, it's
+for i in /sys/block/sd?/device/queue_depth; do echo 1 > $i ; done
+for i in /sys/block/sd?/device/queue_depth; do echo 31 > $i ; done
