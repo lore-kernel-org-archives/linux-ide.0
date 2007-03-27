@@ -1,33 +1,54 @@
-From: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
-Subject: Re: SATA SB600 works in 2.6.20.4 but not in 2.6.21-rc5 with irqpoll
- parameter
-Date: Tue, 27 Mar 2007 01:42:37 -0300
-Message-ID: <4608A0BD.2010209@gmail.com>
-References: <4608807F.6040202@gmail.com> <4608820D.2000203@gmail.com> <46088328.8070601@gmail.com> <460883FB.1030000@gmail.com> <460896D8.8040203@gmail.com> <460899D4.6070708@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Tue, 27 Mar 2007 00:57:17 -0400
+Message-ID: <4608A42D.6080403@garzik.org>
+References: <20070324064814.38720.qmail@web802.biz.mail.mud.yahoo.com> <4604D564.9010806@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.234]:38663 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933971AbXC0Emn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Mar 2007 00:42:43 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so2362703wxd
-        for <linux-ide@vger.kernel.org>; Mon, 26 Mar 2007 21:42:42 -0700 (PDT)
-In-Reply-To: <460899D4.6070708@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:60801 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964826AbXC0E5V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Mar 2007 00:57:21 -0400
+In-Reply-To: <4604D564.9010806@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: Bob Stewart <bob@evoria.net>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Alan <alan@lxorguk.ukuu.org.uk>
 
-CORRECTION:
+Tejun Heo wrote:
+> Bob Stewart wrote:
+>> I wonder if this card of mine is what's bad.  I loaded Sarge 2.4 and the
+>> Sunix driver and a new disk onto my test whore.  I got essentially the 
+>> same sort of errors as with your driver (see below) but in this case,
+>> abolutely nothing was ever reliable, including the partition table.  I'm
+>> not sure I want to buy another card to test this out, though.  Maybe 
+>> I'll put the card in my other machine just to verify it's not a mobo 
+>> issue, though.   crapcrapcrap!
+>>
+>> Sample errors:
+>>
+>> drive not ready for command
+>> status timeout: status = 0x80 { busy }
+>>
+>> error = 0x00 { }
+>> dma_intr: status = 0x51 {drive ready SeekComplete error}
+> 
+> My bet is on broken driver.  sunix driver doesn't seem like it was 
+> written carefully.  Anyways, thanks for testing.  It seems we'll either 
+> have to implement adma mode.  I'll mark the driver broken for 2.6.21. 
 
-I tried with the irqpoll parameter (used in the right way) and the sata 
-disk is detected but lots of "unexpected IRQ trap at vector a0" are 
-displayed. When the pci=nomsi flag is set, no warning/error is shown and 
-the SATA disk is detected properly.
+
+Broken, or LBA28-only?
+
+I would think that we have other controllers that need an LBA28-only 
+flag.  (note: don't be fooled by ATA_FLAG_PIO_LBA48, that doesn't quite 
+do what we want)
+
+Alan, Mark, surely some ancient controller simply can't do LBA48 at all, 
+even in PIO mode?
+
+	Jeff
 
 
-This is for kernel version 2.6.17, I must be falling asleep.
-
-Matias
