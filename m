@@ -1,58 +1,234 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [3/6] 2.6.21-rc4: known regressions
-Date: Wed, 28 Mar 2007 09:38:48 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0703280931520.6730@woody.linux-foundation.org>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	<200703281543.47049.maximlevitsky@gmail.com>
-	<20070328144148.GA16244@elte.hu>
-	<200703281701.23876.maximlevitsky@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH pata-2.6] sl82c105: rework PIO support (take 2)
+Date: Wed, 28 Mar 2007 21:47:41 +0400
+Message-ID: <200703282147.41696.sshtylyov@ru.mvista.com>
+References: <200702140101.26639.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <200703281701.23876.maximlevitsky@gmail.com>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: Maxim <maximlevitsky@gmail.com>
-Cc: Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Thomas Gleixner <tglx@linutronix.de>, jgarzik@pobox.com, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:10633 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752368AbXC1RrF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 13:47:05 -0400
+In-Reply-To: <200702140101.26639.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
+Get rid of the 'pio_speed' member of 'ide_drive_t' that was only used by this
+driver by storing the PIO mode timings in the 'drive_data' instead -- this
+allows us to greatly  simplify the process of "reloading" of the chip's timing
+register and do it right in sl82c150_dma_off_quietly() and to get rid of two
+extra arguments to config_for_pio() -- which got renamed to sl82c105_tune_pio()
+and now returns a PIO mode selected, with ide_config_drive_speed() call moved
+into the tuneproc() method, now called sl82c105_tune_drive() with the code to
+set drive's 'io_32bit' and 'unmask' flags in its turn moved to its proper place
+in the init_hwif() method.
+Also, while at it, rename get_timing_sl82c105() into get_pio_timings() and get
+rid of the code in it clamping cycle counts to 32 which was both incorrect and
+never executed anyway...
 
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Wed, 28 Mar 2007, Maxim wrote:
-> =
+---
+The patch has been actually tested at last. :-)
 
-> 	Now I don't have a clue how to set those bits if only HPET is used as cl=
-ock source because now clocksources
-> 	don't have _any_ resume hook.
+ drivers/ide/pci/sl82c105.c |   99 ++++++++++++++++++---------------------------
+ include/linux/ide.h        |    1 
+ 2 files changed, 41 insertions(+), 59 deletions(-)
 
-One thing that drives me wild about that "clocksource resume" thing is =
+Index: linux-2.6/drivers/ide/pci/sl82c105.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/sl82c105.c
++++ linux-2.6/drivers/ide/pci/sl82c105.c
+@@ -11,6 +11,8 @@
+  * Merge in Russell's HW workarounds, fix various problems
+  * with the timing registers setup.
+  *  -- Benjamin Herrenschmidt (01/11/03) benh@kernel.crashing.org
++ *
++ * Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
+  */
+ 
+ #include <linux/types.h>
+@@ -47,25 +49,19 @@
+ #define CTRL_P0EN       (1 << 0)
+ 
+ /*
+- * Convert a PIO mode and cycle time to the required on/off
+- * times for the interface.  This has protection against run-away
+- * timings.
++ * Convert a PIO mode and cycle time to the required on/off times
++ * for the interface.  This has protection against runaway timings.
+  */
+-static unsigned int get_timing_sl82c105(ide_pio_data_t *p)
++static unsigned int get_pio_timings(ide_pio_data_t *p)
+ {
+-	unsigned int cmd_on;
+-	unsigned int cmd_off;
++	unsigned int cmd_on, cmd_off;
+ 
+-	cmd_on = (ide_pio_timings[p->pio_mode].active_time + 29) / 30;
++	cmd_on  = (ide_pio_timings[p->pio_mode].active_time + 29) / 30;
+ 	cmd_off = (p->cycle_time - 30 * cmd_on + 29) / 30;
+ 
+-	if (cmd_on > 32)
+-		cmd_on = 32;
+ 	if (cmd_on == 0)
+ 		cmd_on = 1;
+ 
+-	if (cmd_off > 32)
+-		cmd_off = 32;
+ 	if (cmd_off == 0)
+ 		cmd_off = 1;
+ 
+@@ -73,44 +69,34 @@ static unsigned int get_timing_sl82c105(
+ }
+ 
+ /*
+- * Configure the drive and chipset for PIO
++ * Configure the chipset for PIO mode.
+  */
+-static void config_for_pio(ide_drive_t *drive, int pio, int report, int chipset_only)
++static u8 sl82c105_tune_pio(ide_drive_t *drive, u8 pio)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-	struct pci_dev *dev = hwif->pci_dev;
++	struct pci_dev *dev	= HWIF(drive)->pci_dev;
++	int reg			= 0x44 + drive->dn * 4;
+ 	ide_pio_data_t p;
+-	u16 drv_ctrl = 0x909;
+-	unsigned int xfer_mode, reg;
++	u16 drv_ctrl;
+ 
+-	DBG(("config_for_pio(drive:%s, pio:%d, report:%d, chipset_only:%d)\n",
+-		drive->name, pio, report, chipset_only));
+-		
+-	reg = (hwif->channel ? 0x4c : 0x44) + (drive->select.b.unit ? 4 : 0);
++	DBG(("sl82c105_tune_pio(drive:%s, pio:%u)\n", drive->name, pio));
+ 
+ 	pio = ide_get_best_pio_mode(drive, pio, 5, &p);
+ 
+-	xfer_mode = XFER_PIO_0 + pio;
++	drive->drive_data = drv_ctrl = get_pio_timings(&p);
+ 
+-	if (chipset_only || ide_config_drive_speed(drive, xfer_mode) == 0) {
+-		drv_ctrl = get_timing_sl82c105(&p);
+-		drive->pio_speed = xfer_mode;
+-	} else
+-		drive->pio_speed = XFER_PIO_0;
+-
+-	if (drive->using_dma == 0) {
++	if (!drive->using_dma) {
+ 		/*
+ 		 * If we are actually using MW DMA, then we can not
+ 		 * reprogram the interface drive control register.
+ 		 */
+-		pci_write_config_word(dev, reg, drv_ctrl);
+-		pci_read_config_word(dev, reg, &drv_ctrl);
+-
+-		if (report) {
+-			printk("%s: selected %s (%dns) (%04X)\n", drive->name,
+-			       ide_xfer_verbose(xfer_mode), p.cycle_time, drv_ctrl);
+-		}
++		pci_write_config_word(dev, reg,  drv_ctrl);
++		pci_read_config_word (dev, reg, &drv_ctrl);
+ 	}
++
++	printk(KERN_DEBUG "%s: selected %s (%dns) (%04X)\n", drive->name,
++	       ide_xfer_verbose(pio + XFER_PIO_0), p.cycle_time, drv_ctrl);
++
++	return pio;
+ }
+ 
+ /*
+@@ -267,14 +253,14 @@ static int sl82c105_ide_dma_on (ide_driv
+ 
+ static void sl82c105_dma_off_quietly(ide_drive_t *drive)
+ {
+-	u8 speed = XFER_PIO_0;
++	struct pci_dev *dev	= HWIF(drive)->pci_dev;
++	int reg 		= 0x44 + drive->dn * 4;
+ 
+ 	DBG(("sl82c105_dma_off_quietly(drive:%s)\n", drive->name));
+ 
++	pci_write_config_word(dev, reg, drive->drive_data);
++
+ 	ide_dma_off_quietly(drive);
+-	if (drive->pio_speed)
+-		speed = drive->pio_speed - XFER_PIO_0;
+-	config_for_pio(drive, speed, 0, 1);
+ }
+ 
+ /*
+@@ -323,18 +309,12 @@ static void sl82c105_resetproc(ide_drive
+  * We only deal with PIO mode here - DMA mode 'using_dma' is not
+  * initialised at the point that this function is called.
+  */
+-static void tune_sl82c105(ide_drive_t *drive, u8 pio)
++static void sl82c105_tune_drive(ide_drive_t *drive, u8 pio)
+ {
+-	DBG(("tune_sl82c105(drive:%s)\n", drive->name));
++	DBG(("sl82c105_tune_drive(drive:%s, pio:%u)\n", drive->name, pio));
+ 
+-	config_for_pio(drive, pio, 1, 0);
+-
+-	/*
+-	 * We support 32-bit I/O on this interface, and it
+-	 * doesn't have problems with interrupts.
+-	 */
+-	drive->io_32bit = 1;
+-	drive->unmask = 1;
++	pio = sl82c105_tune_pio(drive, pio);
++	(void) ide_config_drive_speed(drive, XFER_PIO_0 + pio);
+ }
+ 
+ /*
+@@ -401,19 +381,22 @@ static void __devinit init_hwif_sl82c105
+ 
+ 	DBG(("init_hwif_sl82c105(hwif: ide%d)\n", hwif->index));
+ 
+-	hwif->tuneproc = tune_sl82c105;
+-	hwif->selectproc = sl82c105_selectproc;
+-	hwif->resetproc = sl82c105_resetproc;
++	hwif->tuneproc		= &sl82c105_tune_drive;
++	hwif->selectproc	= &sl82c105_selectproc;
++	hwif->resetproc 	= &sl82c105_resetproc;
++
++	/*
++	 * We support 32-bit I/O on this interface, and
++	 * it doesn't have problems with interrupts.
++	 */
++	hwif->drives[0].io_32bit = hwif->drives[1].io_32bit = 1;
++	hwif->drives[0].unmask   = hwif->drives[1].unmask   = 1;
+ 
+ 	/*
+-	 * Default to PIO 0 for fallback unless tuned otherwise.
+ 	 * We always autotune PIO,  this is done before DMA is checked,
+ 	 * so there's no risk of accidentally disabling DMA
+ 	 */
+-	hwif->drives[0].pio_speed = XFER_PIO_0;
+-	hwif->drives[0].autotune = 1;
+-	hwif->drives[1].pio_speed = XFER_PIO_0;
+-	hwif->drives[1].autotune = 1;
++	hwif->drives[0].autotune = hwif->drives[1].autotune = 1;
+ 
+ 	hwif->atapi_dma = 0;
+ 	hwif->mwdma_mask = 0;
+Index: linux-2.6/include/linux/ide.h
+===================================================================
+--- linux-2.6.orig/include/linux/ide.h
++++ linux-2.6/include/linux/ide.h
+@@ -613,7 +613,6 @@ typedef struct ide_drive_s {
+ 
+         u8	quirk_list;	/* considered quirky, set for a specific host */
+         u8	init_speed;	/* transfer rate set at boot */
+-        u8	pio_speed;      /* unused by core, used by some drivers for fallback from DMA */
+         u8	current_speed;	/* current transfer rate set */
+         u8	dn;		/* now wide spread use */
+         u8	wcache;		/* status of write cache */
 
-that it seems to think that clocksources are somehow different from any =
-
-other system devices..
-
-Why isn't the HPET considered a "device", and has it's own *device* =
-
-"suspend" and "resume"? Why do we seem to think that only "set_mode()" =
-
-etc should wake up clock sources?
-
-It's a *device*, dammit. It should save and resume like one (probably as a =
-
-system device). The "set_mode()" etc stuff is at a completely different =
-
-(higher) conceptual level.
-
-Thomas? It does seem like Maxim has hit the nail on the head (at least =
-
-partly) on the HPET timer resume problems..
-
-		Linus
