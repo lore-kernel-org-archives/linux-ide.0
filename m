@@ -1,39 +1,39 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [3/6] 2.6.21-rc4: known regressions
-Date: Wed, 28 Mar 2007 16:41:48 +0200
-Message-ID: <20070328144148.GA16244@elte.hu>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	<b6a2187b0703261046r46782eedv64464ceddb44bc27@mail.gmail.com>
-	<1175065468.4017.1.camel@chaos>
-	<200703281543.47049.maximlevitsky@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
+Date: Wed, 28 Mar 2007 10:48:51 -0400
+Message-ID: <460A8053.3040209@garzik.org>
+References: <20070327161616.31448.qmail@science.horizon.com> <Pine.LNX.4.64.0703271224400.5965@p34.internal.lan> <460A7EE7.5070101@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <200703281543.47049.maximlevitsky@gmail.com>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: Maxim <maximlevitsky@gmail.com>
-Cc: Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:45301 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752237AbXC1Ot1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Mar 2007 10:49:27 -0400
+In-Reply-To: <460A7EE7.5070101@cfl.rr.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux@horizon.com, htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Phillip Susi wrote:
+> Justin Piszcz wrote:
+>> I would try with write-caching enabled.
+>> Also, the RAID5/RAID10 you mention seems like each volume is on part of
+>> the platter, a strange setup you got there :)
+> 
+> Shouldn't NCQ only help write performance if write caching is 
+> _disabled_?  Since write cache essentially is just non tagged command 
+> queuing?
+
+NCQ provides for a more asynchronous flow.  It helps greatly with reads 
+(of which most are, by nature, synchronous at the app level) from 
+multiple threads or apps.  It helps with writes, even with write cache 
+on, by allowing multiple commands to be submitted and/or retired at the 
+same time.
+
+	Jeff
 
 
-* Maxim <maximlevitsky@gmail.com> wrote:
 
-> I almost sure I know why this happens,
-
-cool! Your patch is a definite improvement on my t60 (where =
-
-suspend/resume never worked with hpet enabled). But it does not fix =
-
-everything - for example the timings are way off after resume. Thomas?
-
-	Ingo
