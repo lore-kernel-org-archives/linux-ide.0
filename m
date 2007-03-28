@@ -1,37 +1,122 @@
 From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: [patch 0/3] Asynchronous Notification for SATA ATAPI devices
-Date: Wed, 28 Mar 2007 16:44:28 -0700
-Message-ID: <20070328164428.716b4eae.kristen.c.accardi@intel.com>
+Subject: [patch 2/3] libata: expose AN support to user space via sysfs
+Date: Wed, 28 Mar 2007 16:44:50 -0700
+Message-ID: <20070328164450.b89d5156.kristen.c.accardi@intel.com>
+References: <20070328230108.597741522@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:1696 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:26884 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932853AbXC1Xq5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Mar 2007 19:46:57 -0400
+	id S934046AbXC1XrT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Mar 2007 19:47:19 -0400
+In-Reply-To: <20070328230108.597741522@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-This patch series implements Asynchronous Notification (AN) for SATA ATAPI
-devices as defined in SATA 2.5 and AHCI 1.1.  Drives which support this
-feature will send a notification when new media is inserted into the
-drive, preventing the need for user space to poll for new media.  This
-support is exposed to user space via a file in sysfs (/sys/block/sr*)
-called "media_change_events".  If the drive supports AN, this file will
-read 1, otherwise 0.  User space can disable polling for new media if this
-file reads 1.  When new media is inserted into the ATAPI drive, the ahci
-driver will send a KOBJ_CHANGE event.
+Allow user space to determine if an ATAPI device supports
+async notification (AN) of media changes.  This is done by
+adding a new sysfs file "async_notification" to genhd.
+If the file reads 1, then the device supports async 
+notification.  If the file reads 0, it does not.  
 
-I would really like feedback on the user interface - both the location
-of the sysfs file which indicates AN support, as well as the type of
-uevent etc.  I have not yet tested AN on eject (I assume it doesn't require
-anything special) as my test drive which supports AN is a bit "quirky" in 
-this respect.  Please take a look and let me know what you think.
+A flag is set in the generic disk to indicate whether
+or not AN is supported.  This flag is set by the SCSI
+subsystem when it registers with add_disk.  The SCSI
+system gets information from libata on whether the
+device supports AN during dev_configure. 
 
-Thanks,
-Kristen
+Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+
+Index: 2.6-mm/block/genhd.c
+===================================================================
+--- 2.6-mm.orig/block/genhd.c
++++ 2.6-mm/block/genhd.c
+@@ -372,6 +372,11 @@ static ssize_t disk_size_read(struct gen
+ {
+ 	return sprintf(page, "%llu\n", (unsigned long long)get_capacity(disk));
+ }
++static ssize_t disk_AN_read(struct gendisk * disk, char *page)
++{
++	return sprintf(page, "%d\n",
++		(disk->flags & GENHD_FL_ASYNC_NOTIFICATION ? 1 : 0));
++}
+ 
+ static ssize_t disk_stats_read(struct gendisk * disk, char *page)
+ {
+@@ -419,6 +424,10 @@ static struct disk_attribute disk_attr_s
+ 	.attr = {.name = "stat", .mode = S_IRUGO },
+ 	.show	= disk_stats_read
+ };
++static struct disk_attribute disk_attr_AN = {
++	.attr = {.name = "media_change_events", .mode = S_IRUGO },
++	.show	= disk_AN_read
++};
+ 
+ #ifdef CONFIG_FAIL_MAKE_REQUEST
+ 
+@@ -455,6 +464,7 @@ static struct attribute * default_attrs[
+ 	&disk_attr_removable.attr,
+ 	&disk_attr_size.attr,
+ 	&disk_attr_stat.attr,
++	&disk_attr_AN.attr,
+ #ifdef CONFIG_FAIL_MAKE_REQUEST
+ 	&disk_attr_fail.attr,
+ #endif
+Index: 2.6-mm/include/linux/genhd.h
+===================================================================
+--- 2.6-mm.orig/include/linux/genhd.h
++++ 2.6-mm/include/linux/genhd.h
+@@ -94,6 +94,7 @@ struct hd_struct {
+ 
+ #define GENHD_FL_REMOVABLE			1
+ #define GENHD_FL_DRIVERFS			2
++#define GENHD_FL_ASYNC_NOTIFICATION		4
+ #define GENHD_FL_CD				8
+ #define GENHD_FL_UP				16
+ #define GENHD_FL_SUPPRESS_PARTITION_INFO	32
+Index: 2.6-mm/include/scsi/scsi_device.h
+===================================================================
+--- 2.6-mm.orig/include/scsi/scsi_device.h
++++ 2.6-mm/include/scsi/scsi_device.h
+@@ -126,7 +126,7 @@ struct scsi_device {
+ 	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
+ 	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
+ 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
+-
++	unsigned async_notification:1;	/* device supports async notification */
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
+ 
+ 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
+Index: 2.6-mm/drivers/ata/libata-scsi.c
+===================================================================
+--- 2.6-mm.orig/drivers/ata/libata-scsi.c
++++ 2.6-mm/drivers/ata/libata-scsi.c
+@@ -899,6 +899,9 @@ static void ata_scsi_dev_config(struct s
+ 		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
+ 	}
+ 
++	if (dev->flags & ATA_DFLAG_AN)
++		sdev->async_notification = 1;
++
+ 	if (dev->flags & ATA_DFLAG_NCQ) {
+ 		int depth;
+ 
+Index: 2.6-mm/drivers/scsi/sr.c
+===================================================================
+--- 2.6-mm.orig/drivers/scsi/sr.c
++++ 2.6-mm/drivers/scsi/sr.c
+@@ -603,6 +603,8 @@ static int sr_probe(struct device *dev)
+ 
+ 	dev_set_drvdata(dev, cd);
+ 	disk->flags |= GENHD_FL_REMOVABLE;
++	if (sdev->async_notification)
++		disk->flags |= GENHD_FL_ASYNC_NOTIFICATION;
+ 	add_disk(disk);
+ 
+ 	sdev_printk(KERN_DEBUG, sdev,
 
 -- 
