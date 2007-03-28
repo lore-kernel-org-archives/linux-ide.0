@@ -1,205 +1,313 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: libata-acpi: summary, problems, questions and proposal
-Date: Wed, 28 Mar 2007 16:30:02 +0900
-Message-ID: <460A197A.9000708@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Wed, 28 Mar 2007 03:32:19 -0400
+Message-ID: <20070328073219.GA26024@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "\"Randy.Dunlap\" y" <rdunlap@xenotime.net>, trenn@suse.de, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, forrest.zhao@gmail.com, mjg59@srcf.ucam.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Len Brown <lenb@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:45841 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752323AbXC1HcV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Mar 2007 03:32:21 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Hello, ATA and ACPI crowd.
-
-This mail tries to summarize the current state of libata ACPI support
-and establish consensus how it should be improved.  If you're familiar
-with ACPI or the current libata-acpi implementation, please try to
-answer questions in section 3.
-
-Table of Contents
-
-  1. Summary of the current libata ACPI support
-  2. Problems of the current implementation
-  3. Questions regarding ATA ACPI spec and the current implementation
-  4. Proposal for improvements
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
-1. Summary of the current libata ACPI support
+This disables libata ACPI, among other things.
 
-Currently there are two branches of acpi support.  One in git tree
-libata-dev (also merged into mainline) the other in -mm tree.  The one
-in -mm tree contains additional _GTM/_STM support and pata_acpi.c
-implementation by Alan Cox.  The additional part currently only in the
--mm tree is necessary and needs to be merged but there is a
-disagreement regarding how pata_acpi should be done.
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-ACPI support implementation in libata-dev supports both IDE and SATA
-ACPI object layouts and subset of ATA ACPI methods - _SDD and _GTF.
-It incorrectly uses ap->cbl (the port's cable type) to choose between
-the two ACPI layouts.  Association between the host and its ACPI
-object is performed every time ACPI methods are invoked but the
-association between an ATA device and its ACPI object is cached in
-ata_device object.
+to receive the following updates:
 
-If ap->cbl indicates SATA cable type, _SDD is invoked every time the
-associated ATA device is configured (after reset and during
-revalidation).  Also, _GTF and the resulting TFs are executed right
-after each _SDD.
+ drivers/ata/ahci.c              |   21 +++++++++++-
+ drivers/ata/libata-acpi.c       |    8 ++--
+ drivers/ata/libata-core.c       |    6 ++-
+ drivers/ata/libata-eh.c         |   66 ++++++++++++++++++++++++--------------
+ drivers/ata/libata.h            |    2 +-
+ drivers/ata/pata_pdc202xx_old.c |    2 +-
+ 6 files changed, 71 insertions(+), 34 deletions(-)
 
-If ap->cbl does not indicate SATA cable type, ACPI support in
-libata-dev currently doesn't do anything because in some cases _GTF
-depends on _STM being called before it and executing _GTF before _STM
-causes errors in ACPI layer.  As _GTM/_STM support in -mm is only used
-with pata_acpi yet, the situation is similar there too.  Nothing is
-done if cable type isn't SATA.
+Alan Cox (1):
+      pata_pdc202xx_old: LBA48 bug
 
+Conke Hu (1):
+      ahci.c: walkaround for SB600 SATA internal error issue
 
-2. Problems of the current implementation
+Jeff Garzik (1):
+      [libata] Disable ACPI by default; fix namespace problems
 
-2-1. Associating ATA host/device with their ACPI objects is broken.
-     For one, it uses ap->cbl to determine which layout to use but
-     this isn't dependent on cable type.  This is dependent on the
-     programming interface of the controller.  If it implements or
-     emulates SFF IDE interface, the IDE ACPI layout should be used.
-     If the controller implements its own native SATA aware
-     programming interface such as ahci or sil24, it should use SATA
-     native layout.
+Paul Rolland (1):
+      ata: NCQ is broken on Maxtor 6L250S0
 
-2-2. Missing proper _GTM/_STM support.  As stated above, although -mm
-     contains _GTM/_STM support, it does not hook it to regular
-     exception handling path and thus _GTF cannot be used in a lot of
-     cases.
+Tejun Heo (1):
+      libata: IDENTIFY backwards for drive side cable detection
 
-2-3. Misplaced _GTF hook.  _GTF currently is called prior to every
-     device configuration.  This is unnecessary and incorrect.  The
-     ACPI spec specifies that _GTM/_STM and _GTF should be executed
-     during suspend/resume cycles not on every reset or
-     reconfiguration.  This, for example, causes the following
-     problem.
-
-     _STM should be called before _GTF and, in turn, _GTF should be
-     called before _STM, so, during initial detection, we should be
-     doing _GTM -> _STM -> _GTF sequence.
-
-
-3. Questions regarding ATA ACPI spec and the current implementation
-
-Please feel free to point out errors and it would be great if you can
-include or point to example .dat/.dsl files when answering.
-
-3-1. In all ACPI specs form 1.0 to 3.0a, the example IDE hierarchy
-     looks like the following.
-
-     \_SB\PCI0\IDE1\{_ADR,_GTM,_STM,_PR0}
-                   \DRV1\{_ADR,_GTF}
-                   \DRV2\{_ADR,_GTF}
-              \IDE2\{_ADR,_GTM,_STM,_PR0}
-                   \DRV1\{_ADR,_GTF}
-                   \DRV2\{_ADR,_GTF}
-
-     Where the description of IDEx\_ADR is "Indicates address of the
-     channel on the PCI bus".  But actual IDE ACPI hierarchy looks
-     like the following.
-
-     \_SB\PCI0\PCIDEVX\_ADR
-                      \IDE1\{_ADR,_GTM,_STM,_PR0}
-                           \DRV1\{_ADR,_GTF}
-                           \DRV2\{_ADR,_GTF}
-                      \IDE2\{_ADR,_GTM,_STM,_PR0}
-                           \DRV1\{_ADR,_GTF}
-                           \DRV2\{_ADR,_GTF}
-
-     Where PCIDEVX\_ADR indicates the address of PCI device on the PCI
-     bus while IDEx\_ADR indicates the channel number on the PCI
-     device not the PCI bus.  Is this a mistake in the spec or am I
-     misreading it?
-
-3-2. sata_get_dev_handle() looks for the ACPI object associated with
-     the PCI host of the given ATA host by matching the PCI device's
-     _ADR in the containing PCI bus, but pata_get_dev_handle() gets
-     the ACPI device handle for the PCI device by simply invoking
-     DEVICE_ACPI_HANDLE() on the generic device for the host device
-     and verifies the ACPI object for the containing bus has the
-     matching bus number in its _ADR.
-
-     a. Why can't we just use DEVICE_ACPI_HANDLE() on host->dev in
-        SATA case?  What's the difference between IDE and SATA ACPI
-        objects?  AFAICS, they are the same PCI device object.
-
-     b. In IDE case, why verify the parent object has matching BUS ID?
-        When can it have mismatching one?  That means
-        DEVICE_ACPI_HANDLE() may return the wrong acpi_handle for the
-        given device.  Shouldn't we be fixing DEVICE_ACPI_HANDLE()
-        instead?  Or is IDE ACPI object somehow special?
-
-3-3. When associating an ata_device with its ACPI counterpart, IDE and
-     SATA do things differently.  If IDE, it first looks for the ACPI
-     object representing the channel under the ACPI object for the
-     host by matching _ADR against the port number.  If the channel
-     object is found, ACPI object with matching drive number in _ADR
-     is looked up under the ACPI object.  This object is the ACPI
-     object for the ATA device.
-
-     For SATA, depth first walk is performed below the ACPI object
-     representing the host.  Each object under the host object is
-     examined for matching _ADR.
-
-     Why can't we just look for matching _ADR below the ACPI object
-     for the host PCI device?  The SATA hierarchy has been introduced
-     only in ACPI3.0 and I don't see any reason why the recursive walk
-     should be done in either 3.0 or 3.0a.  Any special reason?
-
-
-4. Proposal for improvements
-
-4-1. Depending on how questions in section 3 are answered, fix and
-     clean up ATA host/device <-> ACPI object association.  Whether
-     IDE or SATA native style hierarchy is used should be determined
-     by driver flag not cable type.  e.g. ahci and sata_sil24 should
-     use SATA native style hierarchy while ata_piix should use IDE
-     hierarchy whether the port is SATA or PATA.
-
-     On controllers which support both modes are supported (many
-     BIOSen allow switching between ata_piix and ahci modes), it isn't
-     very clear because in many such cases ACPI tree doesn't change
-     depending on configuration.  ie. you get the same IDE hierarchy
-     whether you're in ata_piix mode or ahci mode.
-
-     We can try to fall back mechanism but that isn't gonna cover all
-     cases either - e.g. in ICH8, the same ports use one PCI function
-     in AHCI mode while splits into two functions in ata_piix mode.
-     It can also be dangerous as IDE _STM/_GTM might touch disabled
-     IDE registers when the controller is in AHCI mode.  So, IMHO, we
-     shouldn't bother.  Most notebooks BIOSen which implement ATA
-     password protection seem to limit the controller into one
-     specific mode anyway.
-
-4-2. Only associate once during initialization.  There is no reason to
-     try to associate hosts and devices with ACPI objects at each try.
-     Do it once during host initialization and use it if available or
-     forget about ACPI if not available.
-
-4-3. Integrate _GTM/_STM support and invoke methods only when the spec
-     specifies to.  For IDE object, do _GTM during suspend and _STM
-     followed by _GTF during resume.  There is no reason to call them
-     anytime else.  For SATA native object, do _SDD followed by _GTF
-     after every hardreset.
-
-4-4. Implement helpers for cable detection using _GTM/_STM and use it
-     in sata_nv if CK804.  This is to substitute independent pata_acpi
-     driver.  Low level driver should know when _GTM/_STM should be
-     used for cable detection and/or device programming and doing it
-     this way reduces user confusion (sata_nv also supports ck804 but
-     you probably need to load pata_acpi if ACPI is available) and
-     allows better integration with the rest of the low level driver
-     (e.g. ADMA mode + _GTM/_STM cable detection).
-
-For 4-3 and 4-4, most code is already there in -mm tree.  Shamelessly
-stealing and reorganizing Alan's code should do it.  :-)
-
-Thanks.
-
---
-tejun
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index dc7b562..fd27227 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -80,6 +80,7 @@ enum {
+ 	board_ahci_pi		= 1,
+ 	board_ahci_vt8251	= 2,
+ 	board_ahci_ign_iferr	= 3,
++	board_ahci_sb600	= 4,
+ 
+ 	/* global controller registers */
+ 	HOST_CAP		= 0x00, /* host capabilities */
+@@ -168,6 +169,7 @@ enum {
+ 	AHCI_FLAG_NO_NCQ		= (1 << 24),
+ 	AHCI_FLAG_IGN_IRQ_IF_ERR	= (1 << 25), /* ignore IRQ_IF_ERR */
+ 	AHCI_FLAG_HONOR_PI		= (1 << 26), /* honor PORTS_IMPL */
++	AHCI_FLAG_IGN_SERR_INTERNAL	= (1 << 27), /* ignore SERR_INTERNAL */
+ };
+ 
+ struct ahci_cmd_hdr {
+@@ -362,6 +364,18 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &ahci_ops,
+ 	},
++	/* board_ahci_sb600 */
++	{
++		.sht		= &ahci_sht,
++		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
++				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
++				  ATA_FLAG_SKIP_D2H_BSY |
++				  AHCI_FLAG_IGN_SERR_INTERNAL,
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
++		.port_ops	= &ahci_ops,
++	},
++
+ };
+ 
+ static const struct pci_device_id ahci_pci_tbl[] = {
+@@ -399,7 +413,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
+ 
+ 	/* ATI */
+-	{ PCI_VDEVICE(ATI, 0x4380), board_ahci }, /* ATI SB600 non-raid */
++	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 non-raid */
+ 	{ PCI_VDEVICE(ATI, 0x4381), board_ahci }, /* ATI SB600 raid */
+ 
+ 	/* VIA */
+@@ -1067,8 +1081,11 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
+ 	if (ap->flags & AHCI_FLAG_IGN_IRQ_IF_ERR)
+ 		irq_stat &= ~PORT_IRQ_IF_ERR;
+ 
+-	if (irq_stat & PORT_IRQ_TF_ERR)
++	if (irq_stat & PORT_IRQ_TF_ERR) {
+ 		err_mask |= AC_ERR_DEV;
++		if (ap->flags & AHCI_FLAG_IGN_SERR_INTERNAL)
++			serror &= ~SERR_INTERNAL;
++	}
+ 
+ 	if (irq_stat & (PORT_IRQ_HBUS_ERR | PORT_IRQ_HBUS_DATA_ERR)) {
+ 		err_mask |= AC_ERR_HOST_BUS;
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index c428a56..03a0acf 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -305,7 +305,7 @@ static int do_drive_get_GTF(struct ata_port *ap, int ix,
+ 	*gtf_address = 0UL;
+ 	*obj_loc = 0UL;
+ 
+-	if (noacpi)
++	if (libata_noacpi)
+ 		return 0;
+ 
+ 	if (ata_msg_probe(ap))
+@@ -531,7 +531,7 @@ static int do_drive_set_taskfiles(struct ata_port *ap,
+ 		ata_dev_printk(atadev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
+ 			       __FUNCTION__, ap->port_no);
+ 
+-	if (noacpi || !(ap->cbl == ATA_CBL_SATA))
++	if (libata_noacpi || !(ap->cbl == ATA_CBL_SATA))
+ 		return 0;
+ 
+ 	if (!ata_dev_enabled(atadev) || (ap->flags & ATA_FLAG_DISABLED))
+@@ -574,7 +574,7 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+ 	unsigned long	gtf_address;
+ 	unsigned long	obj_loc;
+ 
+-	if (noacpi)
++	if (libata_noacpi)
+ 		return 0;
+ 	/*
+ 	 * TBD - implement PATA support.  For now,
+@@ -636,7 +636,7 @@ int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
+ 	struct acpi_object_list         input;
+ 	union acpi_object               in_params[1];
+ 
+-	if (noacpi)
++	if (libata_noacpi)
+ 		return 0;
+ 
+ 	if (ata_msg_probe(ap))
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index bf327d4..f1f595f 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -93,8 +93,8 @@ static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
+ module_param(ata_probe_timeout, int, 0444);
+ MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+ 
+-int noacpi;
+-module_param(noacpi, int, 0444);
++int libata_noacpi = 1;
++module_param_named(noacpi, libata_noacpi, int, 0444);
+ MODULE_PARM_DESC(noacpi, "Disables the use of ACPI in suspend/resume when set");
+ 
+ MODULE_AUTHOR("Jeff Garzik");
+@@ -3359,6 +3359,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+         { "WDC WD740ADFD-00",   NULL,		ATA_HORKAGE_NONCQ },
+ 	/* http://thread.gmane.org/gmane.linux.ide/14907 */
+ 	{ "FUJITSU MHT2060BH",	NULL,		ATA_HORKAGE_NONCQ },
++	/* NCQ is broken */
++	{ "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
+ 
+ 	/* Devices with NCQ limits */
+ 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 361953a..c89664a 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1743,12 +1743,17 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ {
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+ 	struct ata_device *dev;
++	unsigned int new_mask = 0;
+ 	unsigned long flags;
+ 	int i, rc = 0;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++	/* For PATA drive side cable detection to work, IDENTIFY must
++	 * be done backwards such that PDIAG- is released by the slave
++	 * device before the master device is identified.
++	 */
++	for (i = ATA_MAX_DEVICES - 1; i >= 0; i--) {
+ 		unsigned int action, readid_flags = 0;
+ 
+ 		dev = &ap->device[i];
+@@ -1760,13 +1765,13 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 		if (action & ATA_EH_REVALIDATE && ata_dev_ready(dev)) {
+ 			if (ata_port_offline(ap)) {
+ 				rc = -EIO;
+-				break;
++				goto err;
+ 			}
+ 
+ 			ata_eh_about_to_do(ap, dev, ATA_EH_REVALIDATE);
+ 			rc = ata_dev_revalidate(dev, readid_flags);
+ 			if (rc)
+-				break;
++				goto err;
+ 
+ 			ata_eh_done(ap, dev, ATA_EH_REVALIDATE);
+ 
+@@ -1784,40 +1789,53 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 
+ 			rc = ata_dev_read_id(dev, &dev->class, readid_flags,
+ 					     dev->id);
+-			if (rc == 0) {
+-				ehc->i.flags |= ATA_EHI_PRINTINFO;
+-				rc = ata_dev_configure(dev);
+-				ehc->i.flags &= ~ATA_EHI_PRINTINFO;
+-			} else if (rc == -ENOENT) {
++			switch (rc) {
++			case 0:
++				new_mask |= 1 << i;
++				break;
++			case -ENOENT:
+ 				/* IDENTIFY was issued to non-existent
+ 				 * device.  No need to reset.  Just
+ 				 * thaw and kill the device.
+ 				 */
+ 				ata_eh_thaw_port(ap);
+ 				dev->class = ATA_DEV_UNKNOWN;
+-				rc = 0;
+-			}
+-
+-			if (rc) {
+-				dev->class = ATA_DEV_UNKNOWN;
+ 				break;
++			default:
++				dev->class = ATA_DEV_UNKNOWN;
++				goto err;
+ 			}
++		}
++	}
+ 
+-			if (ata_dev_enabled(dev)) {
+-				spin_lock_irqsave(ap->lock, flags);
+-				ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
+-				spin_unlock_irqrestore(ap->lock, flags);
++	/* Configure new devices forward such that user doesn't see
++	 * device detection messages backwards.
++	 */
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		dev = &ap->device[i];
+ 
+-				/* new device discovered, configure xfermode */
+-				ehc->i.flags |= ATA_EHI_SETMODE;
+-			}
+-		}
++		if (!(new_mask & (1 << i)))
++			continue;
++
++		ehc->i.flags |= ATA_EHI_PRINTINFO;
++		rc = ata_dev_configure(dev);
++		ehc->i.flags &= ~ATA_EHI_PRINTINFO;
++		if (rc)
++			goto err;
++
++		spin_lock_irqsave(ap->lock, flags);
++		ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
++		spin_unlock_irqrestore(ap->lock, flags);
++
++		/* new device discovered, configure xfermode */
++		ehc->i.flags |= ATA_EHI_SETMODE;
+ 	}
+ 
+-	if (rc)
+-		*r_failed_dev = dev;
++	return 0;
+ 
+-	DPRINTK("EXIT\n");
++ err:
++	*r_failed_dev = dev;
++	DPRINTK("EXIT rc=%d\n", rc);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index c426714..1f1e3a5 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -56,7 +56,7 @@ extern struct workqueue_struct *ata_aux_wq;
+ extern int atapi_enabled;
+ extern int atapi_dmadir;
+ extern int libata_fua;
+-extern int noacpi;
++extern int libata_noacpi;
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
+diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
+index acdc52c..0a14933 100644
+--- a/drivers/ata/pata_pdc202xx_old.c
++++ b/drivers/ata/pata_pdc202xx_old.c
+@@ -195,7 +195,7 @@ static void pdc2026x_bmdma_start(struct ata_queued_cmd *qc)
+ 	/* Cases the state machine will not complete correctly without help */
+ 	if ((tf->flags & ATA_TFLAG_LBA48) ||  tf->protocol == ATA_PROT_ATAPI_DMA)
+ 	{
+-		len = qc->nbytes;
++		len = qc->nbytes / 2;
+ 
+ 		if (tf->flags & ATA_TFLAG_WRITE)
+ 			len |= 0x06000000;
