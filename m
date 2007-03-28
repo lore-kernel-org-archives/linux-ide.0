@@ -1,65 +1,43 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [git patches] libata fixes
-Date: Wed, 28 Mar 2007 14:15:39 -0700
-Message-ID: <20070328141539.353203a1.akpm@linux-foundation.org>
-References: <20070328073219.GA26024@havoc.gtf.org>
-	<460A1A3D.6050501@garzik.org>
-	<Pine.LNX.4.64.0703281346060.6730@woody.linux-foundation.org>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [linux-pm] [3/6] 2.6.21-rc4: known regressions
+Date: Wed, 28 Mar 2007 13:59:26 -0700
+Message-ID: <200703281359.29009.david-b@pacbell.net>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org> <200703281238.57811.david-b@pacbell.net> <200703282220.00199.maximlevitsky@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:59744 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752995AbXC1VPn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Mar 2007 17:15:43 -0400
-In-Reply-To: <Pine.LNX.4.64.0703281346060.6730@woody.linux-foundation.org>
+Received: from smtp111.sbc.mail.mud.yahoo.com ([68.142.198.210]:41828 "HELO
+	smtp111.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753014AbXC1VTH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 17:19:07 -0400
+In-Reply-To: <200703282220.00199.maximlevitsky@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Maxim <maximlevitsky@gmail.com>
+Cc: linux-pm@lists.linux-foundation.org, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Thomas Gleixner <tglx@linutronix.de>, jgarzik@pobox.com, Andrew Morton <akpm@linux-foundation.org>
 
-On Wed, 28 Mar 2007 13:53:10 -0700 (PDT)
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
+On Wednesday 28 March 2007 1:19 pm, Maxim wrote:
+> On Wednesday 28 March 2007 21:38:55 David Brownell wrote:
 
-> 
-> 
-> On Wed, 28 Mar 2007, Jeff Garzik wrote:
-> >
-> > Jeff Garzik wrote:
-> > > This disables libata ACPI, among other things.
 > > 
-> > If a -rc6 is possible, that would be quite nice...
-> 
-> Heh. I don't think -rc6 is "possible" - it's "inevitable". We have too 
-> much fallout from the timer changes still outstanding. It looks people 
-> finally figured out a big issue with the HPET timer, and that hopefully 
-> resolves most of the remaining timer-related regressions, but yes, we most 
-> definitely _will_ have an -rc6.
+> > Also, making HPET use the legacy mode seems like a step backwards.
 
-yup.
+> 	It is not 'legacy' mode,
+> It is a legacy replacement mode.
 
-> Andrew, what's your feeling apart from the timer fallout?
-
-There are two main metrics:
-
-a) the number of bugs which Adrian is tracking.  I think this still
-   exceeds 25, which is a lot.
-
-b) the rate at which fixes are arriving.  I have accumulated 15-20
-   since the last batch (40 hours ago), which is still a pretty high rate.
-
-Based on that, we're still quite a long way from -final.
-
-(But you know me - I'd be happy releasing 2.6.21 in July)
-(Don't ask me what year I'm referring to, either)
+Typo, sorry.
 
 
-There is another metric to look at, too: the number of fixes which are
-going into 2.6.x.y.  If that fix count is high, and if those fixes fix bugs
-which were not present in 2.6.x-1 then this is an indication that something
-is wrong - many regressions are sneaking through the -rc process.
+> It this mode HPET takes over IRQ0 and IRQ 8 and provides this way
+> replacement for PIT and RTC periodic function 
 
-And I haven't run the numbers, but I get the impression that 2.6.20.x has
-an unusually large number of fixes in it.
+It's that RTC periodic thing that bothers me, I don't mind about
+the PIT.  Remember that IRQ8 is also used for other RTC functions.
 
+Now, if there were a way to tell rtc-cmos that HPET is active,
+and arrange some kind of handshake ... that would be different.
+
+- Dave
