@@ -1,89 +1,103 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: libata-acpi: summary, problems, questions and proposal
-Date: Wed, 28 Mar 2007 18:57:12 +0100
-Message-ID: <20070328175712.GA10293@srcf.ucam.org>
-References: <460A197A.9000708@gmail.com>
+From: "Michael S. Tsirkin" <mst@dev.mellanox.co.il>
+Subject: Re: [3/6] 2.6.21-rc4: known regressions
+Date: Wed, 28 Mar 2007 20:04:57 +0200
+Message-ID: <20070328180457.GA4253@mellanox.co.il>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	<b6a2187b0703261046r46782eedv64464ceddb44bc27@mail.gmail.com>
+	<1175065468.4017.1.camel@chaos>
+	<200703281543.47049.maximlevitsky@gmail.com>
+Reply-To: "Michael S. Tsirkin" <mst@dev.mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <460A197A.9000708@gmail.com>
+In-Reply-To: <200703281543.47049.maximlevitsky@gmail.com>
 Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Randy.Dunlap y" <rdunlap@xenotime.net>, trenn@suse.de, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, forrest.zhao@gmail.com, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Len Brown <lenb@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-acpi@vger.kernel.org
+To: Maxim <maximlevitsky@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Jeff Chua <jeff.chua.linux@gmail.com>, Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Ingo Molnar <mingo@elte.hu>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Mar 28, 2007 at 04:30:02PM +0900, Tejun Heo wrote:
+> Subject    : first disk access after resume takes several minutes
+>              ('date' does not advance after resume from RAM, CONFIG_NO_HZ=n)
+> References : http://lkml.org/lkml/2007/3/8/117
+>              http://lkml.org/lkml/2007/3/25/20
+> Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
 
-Hi Tejun,
+...
 
-Firstly, could I ask you to take a look at the patch in 
-http://permalink.gmane.org/gmane.linux.acpi.devel/22066/ ? It deals with 
-some of these issues.
+> Subject    : after resume: X hangs after drawing a couple of windows
+> References : http://lkml.org/lkml/2007/3/8/117
+> Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
+> Status     : unknown
 
-> ACPI support implementation in libata-dev supports both IDE and SATA
-> ACPI object layouts and subset of ATA ACPI methods - _SDD and _GTF.
-> It incorrectly uses ap->cbl (the port's cable type) to choose between
-> the two ACPI layouts.  Association between the host and its ACPI
-> object is performed every time ACPI methods are invoked but the
-> association between an ATA device and its ACPI object is cached in
-> ata_device object.
+...
 
-These issues are both fixed in my patch, I believe.
+> > > > From: Jeff Chua <jeff.chua.linux@gmail.com>
+> > > > > It's related. I tested without CONFIG_HPET_TIMER, and now my X60 can
+> > > > > suspend and resume from RAM (s2ram). Even better, it works
+> > > > > with/without CONFIG_NO_HZ.
+> 
+> Quoting Maxim <maximlevitsky@gmail.com>:
+> 
+> Hi,
+> 	I almost sure Iknow why this happens,
+> 			The problem is that both hpet clock source
+> 	and hpet clockevents doesn't have a suspend/resume function
+> 	On resume we should enable the main counter _and_ enable
+> 	legacy replacement mode, On my system main counter in
+> 	enabled, by I think by bios, but legacy replacement mode is
+> 	not, so if a system doesn't use lapic as a tick source, but
+> 	use hpet+broadcast, it will hang for sure on resume, and i
+> 	tested it
+> 	
+> 			The patch below is a temporally fix, until
+> 	clock-events and clocksources will get proper suspend/resume
+> 	hooks:
+> 
+> 		Regards,
+> 			Maxim Levitsky
 
-> 2-2. Missing proper _GTM/_STM support.  As stated above, although -mm
->     contains _GTM/_STM support, it does not hook it to regular
->     exception handling path and thus _GTF cannot be used in a lot of
->     cases.
+Bingo!
 
-I've added _GTM and _STM support over suspend/resume. Right now they're 
-in the host power management code - I'm not sure whether they should be 
-here or the SCSI glue layer?
+The patch below fixes the two problems (listed above) with
+resume from RAM that I have observed on my T60 with
+2.6.21-rc5: with this patch applied, and with CONFIG_NO_HZ
+unset, date advances correctly, X functions properly and
+there is no delay on first disk access.
 
-> 2-3. Misplaced _GTF hook.  _GTF currently is called prior to every
->     device configuration.  This is unnecessary and incorrect.  The
->     ACPI spec specifies that _GTM/_STM and _GTF should be executed
->     during suspend/resume cycles not on every reset or
->     reconfiguration.  This, for example, causes the following
->     problem.
+Thanks very much.
 
-That should be quite easily fixable with the above patch.
+---
+> Add suspend/resume for HPET
+> Signed-off-by: Maxim Levitsky <maximlevisky@gmail.com>
 
-> 4-1. Depending on how questions in section 3 are answered, fix and
->     clean up ATA host/device <-> ACPI object association.  Whether
->     IDE or SATA native style hierarchy is used should be determined
->     by driver flag not cable type.  e.g. ahci and sata_sil24 should
->     use SATA native style hierarchy while ata_piix should use IDE
->     hierarchy whether the port is SATA or PATA.
+Maxim, do you plan to send this upstream?
 
-I think this is just a matter of making sure that the sata and pata 
-handle matching code matches reality now :)
+Acked-by: Michael S. Tsirkin <mst@dev.mellanox.co.il>
 
-> 4-2. Only associate once during initialization.  There is no reason to
->     try to associate hosts and devices with ACPI objects at each try.
->     Do it once during host initialization and use it if available or
->     forget about ACPI if not available.
+---
 
-Fixed.
-
-> 4-3. Integrate _GTM/_STM support and invoke methods only when the spec
->     specifies to.  For IDE object, do _GTM during suspend and _STM
->     followed by _GTF during resume.  There is no reason to call them
->     anytime else.  For SATA native object, do _SDD followed by _GTF
->     after every hardreset.
-
-Patrially fixed.
-
-> 4-4. Implement helpers for cable detection using _GTM/_STM and use it
->     in sata_nv if CK804.  This is to substitute independent pata_acpi
->     driver.  Low level driver should know when _GTM/_STM should be
->     used for cable detection and/or device programming and doing it
->     this way reduces user confusion (sata_nv also supports ck804 but
->     you probably need to load pata_acpi if ACPI is available) and
->     allows better integration with the rest of the low level driver
->     (e.g. ADMA mode + _GTM/_STM cable detection).
-
-Not done.
+diff --git a/arch/i386/kernel/hpet.c b/arch/i386/kernel/hpet.c
+index 0fd9fba..a1ec79e 100644
+--- a/arch/i386/kernel/hpet.c
++++ b/arch/i386/kernel/hpet.c
+@@ -152,6 +152,16 @@ static void hpet_set_mode(enum clock_event_mode mode,
+ 	unsigned long cfg, cmp, now;
+ 	uint64_t delta;
+ 
++
++	if ( mode != CLOCK_EVT_MODE_UNUSED && mode != CLOCK_EVT_MODE_SHUTDOWN)
++	{
++		unsigned long cfg = hpet_readl(HPET_CFG);
++		cfg |= HPET_CFG_ENABLE | HPET_CFG_LEGACY;
++		hpet_writel(cfg, HPET_CFG);
++		
++	}
++		
++
+ 	switch(mode) {
+ 	case CLOCK_EVT_MODE_PERIODIC:
+ 		delta = ((uint64_t)(NSEC_PER_SEC/HZ)) * hpet_clockevent.mult;
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+MST
