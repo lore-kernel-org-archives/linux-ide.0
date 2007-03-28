@@ -1,48 +1,45 @@
-From: Luciano De Dominicis <luciano@rhesus.com>
-Subject: VT8251 on RedHat Enterprise Linux 4 Update 4 - ahci.c / sata_via.c
-Date: Wed, 28 Mar 2007 14:51:55 -0300
-Message-ID: <1175104315.1630.8.camel@luciano.rhesus.com>
-Reply-To: luciano@rhesus.com
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [3/6] 2.6.21-rc4: known regressions
+Date: Wed, 28 Mar 2007 12:38:55 -0700
+Message-ID: <200703281238.57811.david-b@pacbell.net>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	<200703281701.23876.maximlevitsky@gmail.com>
+	<Pine.LNX.4.64.0703280931520.6730@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail2.rhesus.com ([200.211.83.4]:46415 "EHLO serv2.rhesus.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965672AbXC1S60 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 14:58:26 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <Pine.LNX.4.64.0703280931520.6730@woody.linux-foundation.org>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: linux-pm@lists.linux-foundation.org
+Cc: Maxim <maximlevitsky@gmail.com>, Jeff Chua <jeff.chua.linux@gmail.com>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Adrian Bunk <bunk@stusta.de>, linux-ide@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, linux-pci@atrey.karlin.mff.cuni.cz, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-Hi Jeff Garzik and linux-ide ...
+On Wednesday 28 March 2007 9:38 am, Linus Torvalds wrote:
 
-We need a NEW ahci.c and sata_via.c for use with the VIA VT8251 (SATA)
+> It's a *device*, dammit. It should save and resume like one (probably as =
+a =
 
-Using Red Hat Enterprise Linux 4 Update 4
-      Kernel 2.6.9-42.EL-x86_64 and 2.6.9-42-smp-.EL-x86_64
+> system device). The "set_mode()" etc stuff is at a completely different =
 
-I found and use some patch for FC4 and FC5 and they works fine ... but
-none work on RHEL4 ...
+> (higher) conceptual level.
 
-Please We need you help
+Agreed, except about "probably as a system device".
 
-Tks Luciano
+Last I checked, there was no good reason to use sysdev suspend()/resume()
+rather than platform_device suspend_late()/early_resume().  Which more
+or less means no good reason to use sysdev in new code...
 
-________________________________________________
-Luciano De Dominicis
-E-mail : luciano@rhesus.com dominicis@gmail.com
-MSN    : dominicis@hotmail.com
-Tel    : 11 6676-9024
-Nextel : 11 7846-3132  Radio : 55*5*27649
 
-Rhesus Medicina Auxiliar
-Av. Dr. Eduardo Cotching, 804
-Vila Formosa - S=E3o Paulo - SP
-CEP 03356-000 - Brasil
-=46one: (11) 6674-0733 / (11) 6676-9000
-http://www.rhesus.com/
+Also, making HPET use the legacy mode seems like a step backwards.
 
-"ECONOMIZE PAPEL - PENSE ANTES DE IMPRIMIR!"
-
+- Dave
