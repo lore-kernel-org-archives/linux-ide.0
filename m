@@ -1,27 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata fixes
-Date: Wed, 28 Mar 2007 03:33:17 -0400
-Message-ID: <460A1A3D.6050501@garzik.org>
-References: <20070328073219.GA26024@havoc.gtf.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: HPA patches
+Date: Wed, 28 Mar 2007 10:57:54 +0100
+Message-ID: <20070328105754.72b578bd@the-village.bc.nu>
+References: <20070323191321.5d00887a@lxorguk.ukuu.org.uk>
+	<20070328000851.GA25551@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42777 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933753AbXC1HdT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Mar 2007 03:33:19 -0400
-In-Reply-To: <20070328073219.GA26024@havoc.gtf.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47748 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933662AbXC1JLr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 05:11:47 -0400
+In-Reply-To: <20070328000851.GA25551@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kyle@canonical.com
 
-Jeff Garzik wrote:
-> This disables libata ACPI, among other things.
+On Wed, 28 Mar 2007 01:08:52 +0100
+Matthew Garrett <mjg59@srcf.ucam.org> wrote:
 
-If a -rc6 is possible, that would be quite nice...
+> On Fri, Mar 23, 2007 at 07:13:21PM +0000, Alan Cox wrote:
+> > For reference this is what I am currently using with 2.6.21-rc4-mm1 and
+> > it is working for all my test cases so far: Its basically Kyle's patch
+> > with a libata switch to turn it on/off and some minor fixups from
+> > the original patch as posted
+> 
+> Fails for me on a Macbook Pro with:
 
-	Jeff
-
-
+Ok thanks. This is interesting as the only thing new it is doing is
+asking for the HPA size. Does I think explain the problem however: Can
+you move the HPA setting call to after the mode has been set and see if
+that makes the problem vanish ?
