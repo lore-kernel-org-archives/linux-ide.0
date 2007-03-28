@@ -1,145 +1,287 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [3/6] 2.6.21-rc4: known regressions
-Date: Wed, 28 Mar 2007 11:35:55 -0700
-Message-ID: <20070328113555.c17bc1da.randy.dunlap@oracle.com>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	<b6a2187b0703261046r46782eedv64464ceddb44bc27@mail.gmail.com>
-	<1175065468.4017.1.camel@chaos>
-	<200703281543.47049.maximlevitsky@gmail.com>
-	<20070328180457.GA4253@mellanox.co.il>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH pata-2.6] sl82c105: DMA support code cleanup (take 4)
+Date: Wed, 28 Mar 2007 22:50:02 +0400
+Message-ID: <200703282250.02679.sshtylyov@ru.mvista.com>
+References: <200702140043.25244.sshtylyov@ru.mvista.com> <200702231913.55522.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <20070328180457.GA4253@mellanox.co.il>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@dev.mellanox.co.il>
-Cc: jgarzik@pobox.com, Maxim <maximlevitsky@gmail.com>, Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, Torvalds <torvalds@linux-foundation.org>, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Len@smtp.osdl.org, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, Thomas Gleixner <tglx@linutronix.de>, Linus@smtp.osdl.org, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:11221 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965656AbXC1St0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Mar 2007 14:49:26 -0400
+In-Reply-To: <200702231913.55522.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On Wed, 28 Mar 2007 20:04:57 +0200 Michael S. Tsirkin wrote:
-
-> > Subject    : first disk access after resume takes several minutes
-> >              ('date' does not advance after resume from RAM, CONFIG_NO_=
-HZ=3Dn)
-> > References : http://lkml.org/lkml/2007/3/8/117
-> >              http://lkml.org/lkml/2007/3/25/20
-> > Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
-> =
-
-> ...
-> =
-
-> > Subject    : after resume: X hangs after drawing a couple of windows
-> > References : http://lkml.org/lkml/2007/3/8/117
-> > Submitter  : Michael S. Tsirkin <mst@mellanox.co.il>
-> > Status     : unknown
-> =
-
-> ...
-> =
-
-> > > > > From: Jeff Chua <jeff.chua.linux@gmail.com>
-> > > > > > It's related. I tested without CONFIG_HPET_TIMER, and now my X6=
-0 can
-> > > > > > suspend and resume from RAM (s2ram). Even better, it works
-> > > > > > with/without CONFIG_NO_HZ.
-> > =
-
-> > Quoting Maxim <maximlevitsky@gmail.com>:
-> > =
-
-> > Hi,
-> > 	I almost sure Iknow why this happens,
-> > 			The problem is that both hpet clock source
-> > 	and hpet clockevents doesn't have a suspend/resume function
-> > 	On resume we should enable the main counter _and_ enable
-> > 	legacy replacement mode, On my system main counter in
-> > 	enabled, by I think by bios, but legacy replacement mode is
-> > 	not, so if a system doesn't use lapic as a tick source, but
-> > 	use hpet+broadcast, it will hang for sure on resume, and i
-> > 	tested it
-> > 	=
-
-> > 			The patch below is a temporally fix, until
-> > 	clock-events and clocksources will get proper suspend/resume
-> > 	hooks:
-> > =
-
-> > 		Regards,
-> > 			Maxim Levitsky
-> =
-
-> Bingo!
-> =
-
-> The patch below fixes the two problems (listed above) with
-> resume from RAM that I have observed on my T60 with
-> 2.6.21-rc5: with this patch applied, and with CONFIG_NO_HZ
-> unset, date advances correctly, X functions properly and
-> there is no delay on first disk access.
-> =
-
-> Thanks very much.
-> =
-
-> ---
-> > Add suspend/resume for HPET
-> > Signed-off-by: Maxim Levitsky <maximlevisky@gmail.com>
-> =
-
-> Maxim, do you plan to send this upstream?
-
-with whitespace fixes, please...
-
-
-> Acked-by: Michael S. Tsirkin <mst@dev.mellanox.co.il>
-> =
-
-> ---
-> =
-
-> diff --git a/arch/i386/kernel/hpet.c b/arch/i386/kernel/hpet.c
-> index 0fd9fba..a1ec79e 100644
-> --- a/arch/i386/kernel/hpet.c
-> +++ b/arch/i386/kernel/hpet.c
-> @@ -152,6 +152,16 @@ static void hpet_set_mode(enum clock_event_mode mode,
->  	unsigned long cfg, cmp, now;
->  	uint64_t delta;
->  =
-
-> +
-> +	if ( mode !=3D CLOCK_EVT_MODE_UNUSED && mode !=3D CLOCK_EVT_MODE_SHUTDO=
-WN)
-> +	{
-
-	if (mode !=3D CLOCK_EVT_MODE_UNUSED && mode !=3D CLOCK_EVT_MODE_SHUTDOWN) {
-
-> +		unsigned long cfg =3D hpet_readl(HPET_CFG);
-> +		cfg |=3D HPET_CFG_ENABLE | HPET_CFG_LEGACY;
-> +		hpet_writel(cfg, HPET_CFG);
-> +		=
-
-
-delete above line.
-
-> +	}
-> +		=
-
-> +
->  	switch(mode) {
->  	case CLOCK_EVT_MODE_PERIODIC:
->  		delta =3D ((uint64_t)(NSEC_PER_SEC/HZ)) * hpet_clockevent.mult;
-
+Fold the now equivalent code in the ide_dma_check() method into a mere call to
+ide_use_dma().  Make config_for_dma() return non-zero if DMA mode has been set
+and call it from the ide_dma_check() method instead of ide_dma_on().
+Defer writing the DMA timings to the chip registers until DMA is really turned
+on (and do not enable IORDY for DMA).
+Remove unneeded code from the init_hwif() method, improve its overall looks.
+Rename the dma_start(), ide_dma_check(), and ide_dma_lostirq() methods, and
+also use more proper hwif->dma_command, fix printk() and comment in the latter
+one as well.  While at it, cleanup style in several places.
 
 ---
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+This patch has also been actually tested at last. :-)
+
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+ drivers/ide/pci/sl82c105.c |  148 +++++++++++++++++----------------------------
+ 1 files changed, 59 insertions(+), 89 deletions(-)
+
+Index: linux-2.6/drivers/ide/pci/sl82c105.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/sl82c105.c
++++ linux-2.6/drivers/ide/pci/sl82c105.c
+@@ -100,59 +100,28 @@ static u8 sl82c105_tune_pio(ide_drive_t 
+ }
+ 
+ /*
+- * Configure the drive and the chipset for DMA
++ * Configure the drive for DMA.
++ * We'll program the chipset only when DMA is actually turned on.
+  */
+-static int config_for_dma (ide_drive_t *drive)
++static int config_for_dma(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-	struct pci_dev *dev = hwif->pci_dev;
+-	unsigned int reg;
+-
+ 	DBG(("config_for_dma(drive:%s)\n", drive->name));
+ 
+-	reg = (hwif->channel ? 0x4c : 0x44) + (drive->select.b.unit ? 4 : 0);
+-
+ 	if (ide_config_drive_speed(drive, XFER_MW_DMA_2) != 0)
+-		return 1;
+-
+-	pci_write_config_word(dev, reg, 0x0240);
++		return 0;
+ 
+-	return 0;
++	return ide_dma_enable(drive);
+ }
+ 
+ /*
+- * Check to see if the drive and
+- * chipset is capable of DMA mode
++ * Check to see if the drive and chipset are capable of DMA mode.
+  */
+-
+-static int sl82c105_check_drive (ide_drive_t *drive)
++static int sl82c105_ide_dma_check(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif	= HWIF(drive);
+-
+-	DBG(("sl82c105_check_drive(drive:%s)\n", drive->name));
++	DBG(("sl82c105_ide_dma_check(drive:%s)\n", drive->name));
+ 
+-	do {
+-		struct hd_driveid *id = drive->id;
+-
+-		if (!drive->autodma)
+-			break;
+-
+-		if (!id || !(id->capability & 1))
+-			break;
+-
+-		/* Consult the list of known "bad" drives */
+-		if (__ide_dma_bad_drive(drive))
+-			break;
+-
+-		if (id->field_valid & 2) {
+-			if ((id->dma_mword & hwif->mwdma_mask) ||
+-			    (id->dma_1word & hwif->swdma_mask))
+-				return 0;
+-		}
+-
+-		if (__ide_dma_good_drive(drive) && id->eide_dma_time < 150)
+-			return 0;
+-	} while (0);
++	if (ide_use_dma(drive) && config_for_dma(drive))
++		return 0;
+ 
+ 	return -1;
+ }
+@@ -181,14 +150,14 @@ static inline void sl82c105_reset_host(s
+  * This function is called when the IDE timer expires, the drive
+  * indicates that it is READY, and we were waiting for DMA to complete.
+  */
+-static int sl82c105_ide_dma_lost_irq(ide_drive_t *drive)
++static int sl82c105_ide_dma_lostirq(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-	struct pci_dev *dev = hwif->pci_dev;
+-	u32 val, mask = hwif->channel ? CTRL_IDE_IRQB : CTRL_IDE_IRQA;
+-	unsigned long dma_base = hwif->dma_base;
++	ide_hwif_t *hwif	= HWIF(drive);
++	struct pci_dev *dev	= hwif->pci_dev;
++	u32 val, mask		= hwif->channel ? CTRL_IDE_IRQB : CTRL_IDE_IRQA;
++	u8 dma_cmd;
+ 
+-	printk("sl82c105: lost IRQ: resetting host\n");
++	printk("sl82c105: lost IRQ, resetting host\n");
+ 
+ 	/*
+ 	 * Check the raw interrupt from the drive.
+@@ -201,15 +170,15 @@ static int sl82c105_ide_dma_lost_irq(ide
+ 	 * Was DMA enabled?  If so, disable it - we're resetting the
+ 	 * host.  The IDE layer will be handling the drive for us.
+ 	 */
+-	val = inb(dma_base);
+-	if (val & 1) {
+-		outb(val & ~1, dma_base);
++	dma_cmd = inb(hwif->dma_command);
++	if (dma_cmd & 1) {
++		outb(dma_cmd & ~1, hwif->dma_command);
+ 		printk("sl82c105: DMA was enabled\n");
+ 	}
+ 
+ 	sl82c105_reset_host(dev);
+ 
+-	/* ide_dmaproc would return 1, so we do as well */
++	/* __ide_dma_lostirq would return 1, so we do as well */
+ 	return 1;
+ }
+ 
+@@ -221,10 +190,10 @@ static int sl82c105_ide_dma_lost_irq(ide
+  * The generic IDE core will have disabled the BMEN bit before this
+  * function is called.
+  */
+-static void sl82c105_ide_dma_start(ide_drive_t *drive)
++static void sl82c105_dma_start(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-	struct pci_dev *dev = hwif->pci_dev;
++	ide_hwif_t *hwif	= HWIF(drive);
++	struct pci_dev *dev	= hwif->pci_dev;
+ 
+ 	sl82c105_reset_host(dev);
+ 	ide_dma_start(drive);
+@@ -232,8 +201,8 @@ static void sl82c105_ide_dma_start(ide_d
+ 
+ static int sl82c105_ide_dma_timeout(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-	struct pci_dev *dev = hwif->pci_dev;
++	ide_hwif_t *hwif	= HWIF(drive);
++	struct pci_dev *dev	= hwif->pci_dev;
+ 
+ 	DBG(("sl82c105_ide_dma_timeout(drive:%s)\n", drive->name));
+ 
+@@ -241,14 +210,20 @@ static int sl82c105_ide_dma_timeout(ide_
+ 	return __ide_dma_timeout(drive);
+ }
+ 
+-static int sl82c105_ide_dma_on (ide_drive_t *drive)
++static int sl82c105_ide_dma_on(ide_drive_t *drive)
+ {
++	struct pci_dev *dev	= HWIF(drive)->pci_dev;
++	int rc, reg 		= 0x44 + drive->dn * 4;
++
+ 	DBG(("sl82c105_ide_dma_on(drive:%s)\n", drive->name));
+ 
+-	if (config_for_dma(drive))
+-		return 1;
+-	printk(KERN_INFO "%s: DMA enabled\n", drive->name);
+-	return __ide_dma_on(drive);
++	rc = __ide_dma_on(drive);
++	if (rc == 0) {
++		pci_write_config_word(dev, reg, 0x0200);
++
++		printk(KERN_INFO "%s: DMA enabled\n", drive->name);
++	}
++	return rc;
+ }
+ 
+ static void sl82c105_dma_off_quietly(ide_drive_t *drive)
+@@ -272,8 +247,8 @@ static void sl82c105_dma_off_quietly(ide
+  */
+ static void sl82c105_selectproc(ide_drive_t *drive)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-	struct pci_dev *dev = hwif->pci_dev;
++	ide_hwif_t *hwif	= HWIF(drive);
++	struct pci_dev *dev	= hwif->pci_dev;
+ 	u32 val, old, mask;
+ 
+ 	//DBG(("sl82c105_selectproc(drive:%s)\n", drive->name));
+@@ -373,7 +348,7 @@ static unsigned int __devinit init_chips
+ }
+ 
+ /*
+- * Initialise the chip
++ * Initialise IDE channel
+  */
+ static void __devinit init_hwif_sl82c105(ide_hwif_t *hwif)
+ {
+@@ -398,11 +373,6 @@ static void __devinit init_hwif_sl82c105
+ 	 */
+ 	hwif->drives[0].autotune = hwif->drives[1].autotune = 1;
+ 
+-	hwif->atapi_dma = 0;
+-	hwif->mwdma_mask = 0;
+-	hwif->swdma_mask = 0;
+-	hwif->autodma = 0;
+-
+ 	if (!hwif->dma_base)
+ 		return;
+ 
+@@ -412,27 +382,27 @@ static void __devinit init_hwif_sl82c105
+ 		 * Never ever EVER under any circumstances enable
+ 		 * DMA when the bridge is this old.
+ 		 */
+-		printk("    %s: Winbond 553 bridge revision %d, BM-DMA disabled\n",
+-		       hwif->name, rev);
+-	} else {
+-		hwif->atapi_dma = 1;
+-		hwif->mwdma_mask = 0x04;
+-
+-		hwif->ide_dma_check = &sl82c105_check_drive;
+-		hwif->ide_dma_on = &sl82c105_ide_dma_on;
+-		hwif->dma_off_quietly = &sl82c105_dma_off_quietly;
+-		hwif->ide_dma_lostirq = &sl82c105_ide_dma_lost_irq;
+-		hwif->dma_start = &sl82c105_ide_dma_start;
+-		hwif->ide_dma_timeout = &sl82c105_ide_dma_timeout;
+-
+-		if (!noautodma)
+-			hwif->autodma = 1;
+-		hwif->drives[0].autodma = hwif->autodma;
+-		hwif->drives[1].autodma = hwif->autodma;
+-
+-		if (hwif->mate)
+-			hwif->serialized = hwif->mate->serialized = 1;
++		printk("    %s: Winbond W83C553 bridge revision %d, "
++		       "BM-DMA disabled\n", hwif->name, rev);
++		return;
+ 	}
++
++	hwif->atapi_dma  = 1;
++	hwif->mwdma_mask = 0x04;
++
++	hwif->ide_dma_check		= &sl82c105_ide_dma_check;
++	hwif->ide_dma_on		= &sl82c105_ide_dma_on;
++	hwif->dma_off_quietly		= &sl82c105_dma_off_quietly;
++	hwif->ide_dma_lostirq		= &sl82c105_ide_dma_lostirq;
++	hwif->dma_start			= &sl82c105_dma_start;
++	hwif->ide_dma_timeout		= &sl82c105_ide_dma_timeout;
++
++	if (!noautodma)
++		hwif->autodma = 1;
++	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
++
++	if (hwif->mate)
++		hwif->serialized = hwif->mate->serialized = 1;
+ }
+ 
+ static ide_pci_device_t sl82c105_chipset __devinitdata = {
+
