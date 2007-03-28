@@ -1,45 +1,46 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: Re: [3/6] 2.6.21-rc4: known regressions
-Date: Wed, 28 Mar 2007 12:38:55 -0700
-Message-ID: <200703281238.57811.david-b@pacbell.net>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	<200703281701.23876.maximlevitsky@gmail.com>
-	<Pine.LNX.4.64.0703280931520.6730@woody.linux-foundation.org>
+From: Laurent Riffard <laurent.riffard@free.fr>
+Subject: Re: [2/5] 2.6.21-rc5: known regressions
+Date: Wed, 28 Mar 2007 21:46:30 +0200
+Message-ID: <460AC616.3050207@free.fr>
+References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org> <20070327015936.GZ16477@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <Pine.LNX.4.64.0703280931520.6730@woody.linux-foundation.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: linux-pm@lists.linux-foundation.org
-Cc: Maxim <maximlevitsky@gmail.com>, Jeff Chua <jeff.chua.linux@gmail.com>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Adrian Bunk <bunk@stusta.de>, linux-ide@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, linux-pci@atrey.karlin.mff.cuni.cz, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp23.orange.fr ([193.252.22.30]:29694 "EHLO smtp23.orange.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965712AbXC1Tq0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Mar 2007 15:46:26 -0400
+In-Reply-To: <20070327015936.GZ16477@stusta.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Fabio Comolli <fabio.comolli@gmail.com>, Plamen Petrov <plamen.petrov@tk.ru.acad.bg>, Lukas Hejtmanek <xhejtman@mail.muni.cz>
 
-On Wednesday 28 March 2007 9:38 am, Linus Torvalds wrote:
+Le 27.03.2007 03:59, Adrian Bunk a =C3=A9crit :
+> This email lists some known regressions in Linus' tree compared to 2.=
+6.20.
+=2E..=20
+> Subject    : libata: PATA UDMA/100 configured as UDMA/33
+> References : http://lkml.org/lkml/2007/2/20/294
+>              http://www.mail-archive.com/linux-ide@vger.kernel.org/ms=
+g04115.html
+>              http://bugzilla.kernel.org/show_bug.cgi?id=3D8133
+>              http://bugzilla.kernel.org/show_bug.cgi?id=3D8164
+>              http://lkml.org/lkml/2007/3/21/330
+> Submitter  : Fabio Comolli <fabio.comolli@gmail.com>
+>              Plamen Petrov <plamen.petrov@tk.ru.acad.bg>
+>              Laurent Riffard <laurent.riffard@free.fr>
+>              Lukas Hejtmanek <xhejtman@mail.muni.cz>
+> Handled-By : Tejun Heo <htejun@gmail.com>
+> Patch      : http://thread.gmane.org/gmane.linux.ide/17444
+> Status     : patch available
 
-> It's a *device*, dammit. It should save and resume like one (probably as =
-a =
+pata-via case is fixed for me in 2.6.21-rc5-mm2 (was already fixed in 2=
+=2E6.21-rc4-mm1).
 
-> system device). The "set_mode()" etc stuff is at a completely different =
+thanks
+~~
+laurent
 
-> (higher) conceptual level.
-
-Agreed, except about "probably as a system device".
-
-Last I checked, there was no good reason to use sysdev suspend()/resume()
-rather than platform_device suspend_late()/early_resume().  Which more
-or less means no good reason to use sysdev in new code...
-
-
-Also, making HPET use the legacy mode seems like a step backwards.
-
-- Dave
