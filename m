@@ -1,38 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH pata-2.6] sl82c105: rework PIO support (take 2)
-Date: Wed, 28 Mar 2007 22:06:29 +0400
-Message-ID: <460AAEA5.40008@ru.mvista.com>
-References: <200702140101.26639.sshtylyov@ru.mvista.com> <200703282147.41696.sshtylyov@ru.mvista.com>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [3/6] 2.6.21-rc4: known regressions
+Date: Wed, 28 Mar 2007 20:32:26 +0200
+Message-ID: <20070328183226.GA16415@elte.hu>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	<b6a2187b0703261046r46782eedv64464ceddb44bc27@mail.gmail.com>
+	<1175065468.4017.1.camel@chaos>
+	<200703281543.47049.maximlevitsky@gmail.com>
+	<20070328180457.GA4253@mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:10780 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965578AbXC1SFt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 14:05:49 -0400
-In-Reply-To: <200703282147.41696.sshtylyov@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20070328180457.GA4253@mellanox.co.il>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@dev.mellanox.co.il>
+Cc: Maxim <maximlevitsky@gmail.com>, Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Hello, I wrote:
 
-> Index: linux-2.6/include/linux/ide.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/ide.h
-> +++ linux-2.6/include/linux/ide.h
-> @@ -613,7 +613,6 @@ typedef struct ide_drive_s {
->  
->          u8	quirk_list;	/* considered quirky, set for a specific host */
->          u8	init_speed;	/* transfer rate set at boot */
-> -        u8	pio_speed;      /* unused by core, used by some drivers for fallback from DMA */
->          u8	current_speed;	/* current transfer rate set */
->          u8	dn;		/* now wide spread use */
->          u8	wcache;		/* status of write cache */
+* Michael S. Tsirkin <mst@dev.mellanox.co.il> wrote:
 
-    Oops, forgot to pull the recent kernel before sending out, so this part 
-won't apply bacause of the desired_speed nuisance. Do I need to resend?
+> Bingo!
+> =
 
-MBR, Sergei
+> The patch below fixes the two problems (listed above) with resume from =
+
+> RAM that I have observed on my T60 with 2.6.21-rc5: with this patch =
+
+> applied, and with CONFIG_NO_HZ unset, date advances correctly, X =
+
+> functions properly and there is no delay on first disk access.
+> =
+
+> Thanks very much.
+[...]
+> =
+
+> Maxim, do you plan to send this upstream?
+
+we'll fix this the right way tomorrow, by adding a proper suspend/resume =
+
+sysdev handler - the lapic clockevents driver already has that. Maxim =
+
+definitely deserves alot of kudos for having found this bug!
+
+	Ingo
