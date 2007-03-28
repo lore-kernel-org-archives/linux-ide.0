@@ -1,32 +1,34 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: ata_piix can't drive Mac hardware properly
-Date: Wed, 28 Mar 2007 05:07:35 +0100
-Message-ID: <20070328040735.GA28824@srcf.ucam.org>
-References: <20070323191321.5d00887a@lxorguk.ukuu.org.uk> <20070328000851.GA25551@srcf.ucam.org> <20070328001610.GB25551@srcf.ucam.org> <20070328011608.GA26913@srcf.ucam.org>
+From: Bob Stewart <bob@evoria.net>
+Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Tue, 27 Mar 2007 22:21:30 -0700 (PDT)
+Message-ID: <20070328052130.94467.qmail@web809.biz.mail.mud.yahoo.com>
+References: <20070328012012.72879.qmail@web802.biz.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:48366 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753905AbXC1EHr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 00:07:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20070328011608.GA26913@srcf.ucam.org>
+Received: from web809.biz.mail.mud.yahoo.com ([209.191.90.82]:34805 "HELO
+	web809.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753942AbXC1FVb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 01:21:31 -0400
+In-Reply-To: <20070328012012.72879.qmail@web802.biz.mail.mud.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kyle@canonical.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Mar 28, 2007 at 02:16:08AM +0100, Matthew Garrett wrote:
+--- Bob Stewart <bob@evoria.net> wrote:
+> Tejun,
+> 
+> I did some more testing.  I limited the driver to PIO4 with the changes
+> shown below.  I copied a 2.2GB gzipped file from a local disk and a 7.9GB
+> iso file over my network onto the drive and then ran md5sum on both.  
+> The sums were fine under PIO4.  It's slow as hell, but at least it worked.  
+> If you have any suggestions for me to mess with in the driver, I'm up for it.
 
-> It's ata_read_native_max_address_ext failing, and it's fine if I use 
-> ahci rather than ata_piix, so I'll just chalk this up to Apple's 
-> firmware being broken (again) and putting the hardware into some sort of 
-> "I can't believe it's not piix" mode and see what I can do about 
-> ensuring we use ahci instead.
+Just one more bit of info.  I ran an md5sum against the 2.2G file in WMDMA2
+mode and actually got the right result once.  Doesn't this, along with the
+PIO4 working fine, and the driver working fine under light load, imply that
+there's a race being lost somewhere?
 
-Slightly oddly, with ata_piix it seems to be failing with AC_ERR_HSM. 
-Any idea why that might be?
-
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Bob
