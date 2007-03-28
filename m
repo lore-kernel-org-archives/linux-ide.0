@@ -1,34 +1,41 @@
-From: Bob Stewart <bob@evoria.net>
-Subject: Re: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Tue, 27 Mar 2007 22:21:30 -0700 (PDT)
-Message-ID: <20070328052130.94467.qmail@web809.biz.mail.mud.yahoo.com>
-References: <20070328012012.72879.qmail@web802.biz.mail.mud.yahoo.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [3/6] 2.6.21-rc4: known regressions
+Date: Wed, 28 Mar 2007 09:04:28 +0200
+Message-ID: <1175065468.4017.1.camel@chaos>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	 <20070318184919.GW752@stusta.de>
+	 <b6a2187b0703251825l2b2ab9d3j43e17523cbca87ac@mail.gmail.com>
+	 <20070326040509.GU16477@stusta.de>
+	 <b6a2187b0703252237l4f662fb3n7f57dfb10360c4f6@mail.gmail.com>
+	 <1174926407.7911.1.camel@chaos>
+	 <b6a2187b0703261046r46782eedv64464ceddb44bc27@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web809.biz.mail.mud.yahoo.com ([209.191.90.82]:34805 "HELO
-	web809.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753942AbXC1FVb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 01:21:31 -0400
-In-Reply-To: <20070328012012.72879.qmail@web802.biz.mail.mud.yahoo.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <b6a2187b0703261046r46782eedv64464ceddb44bc27@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Jeff Chua <jeff.chua.linux@gmail.com>
+Cc: Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
---- Bob Stewart <bob@evoria.net> wrote:
-> Tejun,
+On Tue, 2007-03-27 at 01:46 +0800, Jeff Chua wrote:
+> On 3/27/07, Thomas Gleixner <tglx@linutronix.de> wrote:
 > 
-> I did some more testing.  I limited the driver to PIO4 with the changes
-> shown below.  I copied a 2.2GB gzipped file from a local disk and a 7.9GB
-> iso file over my network onto the drive and then ran md5sum on both.  
-> The sums were fine under PIO4.  It's slow as hell, but at least it worked.  
-> If you have any suggestions for me to mess with in the driver, I'm up for it.
+> > > It's related. I tested without CONFIG_HPET_TIMER, and now my X60 can
+> > > suspend and resume from RAM (s2ram). Even better, it works
+> > > with/without CONFIG_NO_HZ.
+> >
+> > Does the patch below fix the HPET_TIMER=y case ?
+> 
+> Thomas, I tried, but it didn't help. Upon resume from ram, "date"
+> still didn't advance.
 
-Just one more bit of info.  I ran an md5sum against the 2.2G file in WMDMA2
-mode and actually got the right result once.  Doesn't this, along with the
-PIO4 working fine, and the driver working fine under light load, imply that
-there's a race being lost somewhere?
+Can you please issue a SysRq-Q in this situation and provide the dmesg
+output ?
 
-Bob
+Thanks,
+
+	tglx
+
+
