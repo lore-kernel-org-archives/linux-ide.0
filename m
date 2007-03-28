@@ -1,27 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: HPA patches
-Date: Wed, 28 Mar 2007 22:54:31 +0100
-Message-ID: <20070328225431.69d0a3cc@the-village.bc.nu>
-References: <20070323191321.5d00887a@lxorguk.ukuu.org.uk>
-	<20070328000851.GA25551@srcf.ucam.org>
-	<20070328105754.72b578bd@the-village.bc.nu>
-	<20070328200829.GA12776@srcf.ucam.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata fixes
+Date: Wed, 28 Mar 2007 13:53:10 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0703281346060.6730@woody.linux-foundation.org>
+References: <20070328073219.GA26024@havoc.gtf.org> <460A1A3D.6050501@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933264AbXC1UvV@vger.kernel.org>
-In-Reply-To: <20070328200829.GA12776@srcf.ucam.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kyle@canonical.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.24]:59355 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752804AbXC1UxS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Mar 2007 16:53:18 -0400
+In-Reply-To: <460A1A3D.6050501@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-> Hm. I tried adding it in the eh code after ata_set_mode() in 
-> ata_eh_recover(), which alters the problem slightly - hpa_sectors is 
-> still 0, so the taskfile call is still failing, but now the system just 
-> stops at around the time that anything attempts to access sda with no 
-> errors other than
 
-I wonder if the firmware is dying when we ask the disk to go zero sized
-rather than erroring politely. I'm not sure hth HPA sectors can come back
-as zero but we can be fairly sure 0 means "no HPA" in this case I guess ?
+
+On Wed, 28 Mar 2007, Jeff Garzik wrote:
+>
+> Jeff Garzik wrote:
+> > This disables libata ACPI, among other things.
+> 
+> If a -rc6 is possible, that would be quite nice...
+
+Heh. I don't think -rc6 is "possible" - it's "inevitable". We have too 
+much fallout from the timer changes still outstanding. It looks people 
+finally figured out a big issue with the HPET timer, and that hopefully 
+resolves most of the remaining timer-related regressions, but yes, we most 
+definitely _will_ have an -rc6.
+
+Andrew, what's your feeling apart from the timer fallout?
+
+		Linus
