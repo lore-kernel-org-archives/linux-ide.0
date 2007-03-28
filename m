@@ -1,48 +1,58 @@
-From: "Andy Warner" <andyw@pobox.com>
-Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
-Date: Wed, 28 Mar 2007 10:22:33 -0500
-Message-ID: <19106af40703280822t185fb405n8d57f555c5a29ee6@mail.gmail.com>
-References: <20070327161616.31448.qmail@science.horizon.com>
-	 <Pine.LNX.4.64.0703271224400.5965@p34.internal.lan>
-	 <460A7EE7.5070101@cfl.rr.com> <460A8053.3040209@garzik.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [3/6] 2.6.21-rc4: known regressions
+Date: Wed, 28 Mar 2007 09:38:48 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0703280931520.6730@woody.linux-foundation.org>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	<200703281543.47049.maximlevitsky@gmail.com>
+	<20070328144148.GA16244@elte.hu>
+	<200703281701.23876.maximlevitsky@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:42502 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932274AbXC1PWf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 11:22:35 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so122947nfa
-        for <linux-ide@vger.kernel.org>; Wed, 28 Mar 2007 08:22:34 -0700 (PDT)
-In-Reply-To: <460A8053.3040209@garzik.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <200703281701.23876.maximlevitsky@gmail.com>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Maxim <maximlevitsky@gmail.com>
+Cc: Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Thomas Gleixner <tglx@linutronix.de>, jgarzik@pobox.com, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-On 3/28/07, Jeff Garzik <jeff@garzik.org> wrote:
-> [...]
-> NCQ provides for a more asynchronous flow.  It helps greatly with reads
-> (of which most are, by nature, synchronous at the app level) from
-> multiple threads or apps.  It helps with writes, even with write cache
-> on, by allowing multiple commands to be submitted and/or retired at the
-> same time.
 
-Since people are looking under this rock, more
-black/not-whitelist fodder:
 
-  Seagate ST3500641 (500G NL35.2 SATA) with firmware
-  revisions earlier than 3.AEQ and ST3750640 (750G Barracuda
-  ES SATA) with firmware ealier than 3.AEE exhibit pathological
-  NCQ write behaviour at queue depths <= 2 when write cache
-  is disabled. Writes will take 3 seconds to complete. That's
-  not a typo, I really do mean 0.3 IOPS.
+On Wed, 28 Mar 2007, Maxim wrote:
+> =
 
-  As long as you can keep the write queue depth above 2,
-  you'll be OK.
+> 	Now I don't have a clue how to set those bits if only HPET is used as cl=
+ock source because now clocksources
+> 	don't have _any_ resume hook.
 
-For the record, I'm not slamming SATA or NCQ, just
-pointing out something to be aware of.
--- 
-Andy
+One thing that drives me wild about that "clocksource resume" thing is =
+
+that it seems to think that clocksources are somehow different from any =
+
+other system devices..
+
+Why isn't the HPET considered a "device", and has it's own *device* =
+
+"suspend" and "resume"? Why do we seem to think that only "set_mode()" =
+
+etc should wake up clock sources?
+
+It's a *device*, dammit. It should save and resume like one (probably as a =
+
+system device). The "set_mode()" etc stuff is at a completely different =
+
+(higher) conceptual level.
+
+Thomas? It does seem like Maxim has hit the nail on the head (at least =
+
+partly) on the HPET timer resume problems..
+
+		Linus
