@@ -1,58 +1,86 @@
-From: Rodney Padgett <rodney.padgett@nuth.nhs.uk>
-Subject: Re: SATA Problem: port is slow to respond
-Date: Wed, 28 Mar 2007 10:15:04 +0000 (UTC)
-Message-ID: <loom.20070328T121013-913@post.gmane.org>
-References: <200702161050.51523.sigmund.lkml@synflood.homelinux.org> <45E4436B.9090102@gmail.com> <45E4A217.7090909@synflood.homelinux.org> <45E51B0A.5040605@gmail.com> <45E68B24.5030006@synflood.homelinux.org> <45E69196.4070409@gmail.com>
+From: Maxim <maximlevitsky@gmail.com>
+Subject: Re: [3/6] 2.6.21-rc4: known regressions
+Date: Wed, 28 Mar 2007 15:43:46 +0200
+Message-ID: <200703281543.47049.maximlevitsky@gmail.com>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org> <b6a2187b0703261046r46782eedv64464ceddb44bc27@mail.gmail.com> <1175065468.4017.1.camel@chaos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:43430 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934266AbXC1LZG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Mar 2007 07:25:06 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1HWWH0-0006I2-Vu
-	for linux-ide@vger.kernel.org; Wed, 28 Mar 2007 13:25:03 +0200
-Received: from 194.176.105.37 ([194.176.105.37])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 28 Mar 2007 13:25:02 +0200
-Received: from rodney.padgett by 194.176.105.37 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 28 Mar 2007 13:25:02 +0200
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1175065468.4017.1.camel@chaos>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jeff Chua <jeff.chua.linux@gmail.com>, Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Tejun Heo <htejun <at> gmail.com> writes:
-
-> 
-> Sigmund Scheinbar wrote:
-> > Tejun Heo wrote:
-> >> Please apply the attached patch over 2.6.20.1 and report how it works.
+On Wednesday 28 March 2007 09:04:28 Thomas Gleixner wrote:
+> On Tue, 2007-03-27 at 01:46 +0800, Jeff Chua wrote:
+> > On 3/27/07, Thomas Gleixner <tglx@linutronix.de> wrote:
 > > 
-> > I'm afraid that something went wrong while patching:
+> > > > It's related. I tested without CONFIG_HPET_TIMER, and now my X60 can
+> > > > suspend and resume from RAM (s2ram). Even better, it works
+> > > > with/without CONFIG_NO_HZ.
+> > >
+> > > Does the patch below fix the HPET_TIMER=y case ?
+> > 
+> > Thomas, I tried, but it didn't help. Upon resume from ram, "date"
+> > still didn't advance.
 > 
-> Sorry, it was generated against the wrong tree.  Regenerated patch attached.
+> Can you please issue a SysRq-Q in this situation and provide the dmesg
+> output ?
 > 
-> > BTW.: I'm just curious, what's the "purpose" of this patch, it looks to
-> > me like it is just going to ignore the problem? Or do you think that the
-> > hardware is faulty?
+> Thanks,
 > 
-> ATAPI devices use error conditions regularly to report all sorts of
-> things including media not present.  In some variants of ahci's, this
-> sets seemingly unrelated error bits - JMBs set interface error and
-> sb600s seem to set internal error.  These errors when interpreted
-> literally require device reset to recover from thus ATAPI devices never
-> get through device ready check.  So, the patch makes ahci driver
-> suppress those spurious errors.
+> 	tglx
 > 
-I had the same problem with kernel 2.6.20.3 (from kernel.org) on the same
-machine (HP dc5750). I applied your patch, and the cd drive now works! dmesg
-shows no errors logged, and I can access the drive without any problem.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
-Thanks,
+Hi,
+	I almost sure Iknow why this happens,
+		The problem is that both hpet clock source and hpet clockevents doesn't have a suspend/resume function
+		On resume we should enable the main counter _and_ enable legacy replacement mode,
+		On my system main counter in enabled, by I think by bios, but legacy replacement mode is not, so if
+		a system doesn't use lapic as a tick source, but use hpet+broadcast, it will hang for sure on resume, and i tested it
 
-Rod.
+		The patch below is a temporally fix, until clock-events and clocksources will get proper suspend/resume hooks:
+
+		Regards,
+			Maxim Levitsky
+
+---
+
+Add suspend/resume for HPET
+Signed-off-by: Maxim Levitsky <maximlevisky@gmail.com>
+
+---
+
+diff --git a/arch/i386/kernel/hpet.c b/arch/i386/kernel/hpet.c
+index 0fd9fba..a1ec79e 100644
+--- a/arch/i386/kernel/hpet.c
++++ b/arch/i386/kernel/hpet.c
+@@ -152,6 +152,16 @@ static void hpet_set_mode(enum clock_event_mode mode,
+ 	unsigned long cfg, cmp, now;
+ 	uint64_t delta;
+ 
++
++	if ( mode != CLOCK_EVT_MODE_UNUSED && mode != CLOCK_EVT_MODE_SHUTDOWN)
++	{
++		unsigned long cfg = hpet_readl(HPET_CFG);
++		cfg |= HPET_CFG_ENABLE | HPET_CFG_LEGACY;
++		hpet_writel(cfg, HPET_CFG);
++		
++	}
++		
++
+ 	switch(mode) {
+ 	case CLOCK_EVT_MODE_PERIODIC:
+ 		delta = ((uint64_t)(NSEC_PER_SEC/HZ)) * hpet_clockevent.mult;
 
