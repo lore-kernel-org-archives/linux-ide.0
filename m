@@ -1,36 +1,74 @@
-From: Geoff Rivell <grivell@comcast.net>
-Subject: Re: Problems with VIA VT8251 SATA and kernels above 2.6.18.x
-Date: Wed, 28 Mar 2007 17:02:11 -0500
-Message-ID: <200703281802.11613.grivell@comcast.net>
-References: <20070326012754.598fa923@snoodles.holzweg.net>
+From: Maxim <maximlevitsky@gmail.com>
+Subject: Re: [linux-pm] [3/6] 2.6.21-rc4: known regressions
+Date: Thu, 29 Mar 2007 00:26:18 +0200
+Message-ID: <200703290026.18555.maximlevitsky@gmail.com>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org> <200703281238.57811.david-b@pacbell.net> <Pine.LNX.4.64.0703281336280.6730@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rwcrmhc13.comcast.net ([204.127.192.83]:65071 "EHLO
-	rwcrmhc13.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933669AbXC1WLK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 18:11:10 -0400
-In-Reply-To: <20070326012754.598fa923@snoodles.holzweg.net>
+Received: from hu-out-0506.google.com ([72.14.214.233]:10401 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753191AbXC1W0e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 18:26:34 -0400
+Received: by hu-out-0506.google.com with SMTP id 31so12082586huc
+        for <linux-ide@vger.kernel.org>; Wed, 28 Mar 2007 15:26:32 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.64.0703281336280.6730@woody.linux-foundation.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?iso-8859-15?q?R=FCdiger_Otte?= <best-before-2007-07-01@gmx.net>
-Cc: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: David Brownell <david-b@pacbell.net>, linux-pm@lists.linux-foundation.org, Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Thomas Gleixner <tglx@linutronix.de>, jgarzik@pobox.com, Andrew Morton <akpm@linux-foundation.org>
 
-On Sunday 25 March 2007 19:27, R=FCdiger Otte wrote:
-> Dear Linux ATA people,
->
-> the SATA-Controller on Asus A8V-MX mainboard (VIA VT8251) doesn't
-> recognize an attached SATA-Harddisk (Western Digital WD3200AAKS in
-> my case) with kernels 2.6.19 and above. I get the error with 2.6.19,
-> 2.6.20 and 2.6.21-rc4, but when switching back to 2.6.18.8 everything
-> works fine. Also there are several identical reports of this problem
-> on VIA arena and other sites, so maybe someone could fix this.
-> Appended is the kernel output of ahci-driver both with working and
-> with non working kernels.
+On Wednesday 28 March 2007 22:42:00 Linus Torvalds wrote:
+> 
+> On Wed, 28 Mar 2007, David Brownell wrote:
+> >
+> > On Wednesday 28 March 2007 9:38 am, Linus Torvalds wrote:
+> > 
+> > > It's a *device*, dammit. It should save and resume like one (probably as a 
+> > > system device). The "set_mode()" etc stuff is at a completely different 
+> > > (higher) conceptual level.
+> > 
+> > Agreed, except about "probably as a system device".
+> > 
+> > Last I checked, there was no good reason to use sysdev suspend()/resume()
+> > rather than platform_device suspend_late()/early_resume().  Which more
+> > or less means no good reason to use sysdev in new code...
+> 
+> I won't disagree - it might well be much nicer to just show it in the 
+> "real" device tree. I'm not 100% sure where in the tree it would go, 
+> though. It should probably be "inside" the root entry, before any of the 
+> PCI buses. It's generally what we've used those "system device" things 
+> for, but I agree that it would be better to just make system devices show 
+> up early on the regular device list than it is to have them be special 
+> cases.
+> 
+> Bit I think that's a separate (and fairly small) issue compared to the 
+> "don't use the clocksource infrastructure as a make-believe suspend/resume 
+> mechanism" problem that Maxim's patch had.
+> 
+> (Maxim, don't take that the wrong way - I think your analysis and patch 
+> were great, I just think another organization would be better)
 
-You need to add pci=3Dnomsi to your kernel boot line.
+Exactly, I agree completely
+I said that my patch was a  temporary fix, and I agree that the best way is to create a new system device
+and use its suspend/resume hooks to bring HPET back to life on resume.
 
---=20
-=2E..."Have you mooed today?"...
+> 
+> > Also, making HPET use the legacy mode seems like a step backwards.
+> 
+> I don't think that's actually "legacy" in any sense but the interrupt 
+> delivery, where the "legacy mode" bit is not so much that the HPET itself 
+> is "legacy" but that it *replaces* legacy devices.
+> 
+> But I may have misunderstood the thing. I'm an old fart, so I know the old 
+> timers much better than I know the new ones ;). Somebody feel free to hit 
+> me with the clue-2x4.
+> 
+> 			Linus
+> 
+
+Best regards,
+	Maxim Levitsky
