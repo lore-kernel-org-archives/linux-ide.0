@@ -1,74 +1,37 @@
-From: Maxim <maximlevitsky@gmail.com>
-Subject: Re: [linux-pm] [3/6] 2.6.21-rc4: known regressions
-Date: Thu, 29 Mar 2007 00:26:18 +0200
-Message-ID: <200703290026.18555.maximlevitsky@gmail.com>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org> <200703281238.57811.david-b@pacbell.net> <Pine.LNX.4.64.0703281336280.6730@woody.linux-foundation.org>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch 0/3] Asynchronous Notification for SATA ATAPI devices
+Date: Wed, 28 Mar 2007 16:44:28 -0700
+Message-ID: <20070328164428.716b4eae.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.233]:10401 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753191AbXC1W0e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Mar 2007 18:26:34 -0400
-Received: by hu-out-0506.google.com with SMTP id 31so12082586huc
-        for <linux-ide@vger.kernel.org>; Wed, 28 Mar 2007 15:26:32 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0703281336280.6730@woody.linux-foundation.org>
-Content-Disposition: inline
+Received: from mga03.intel.com ([143.182.124.21]:1696 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932853AbXC1Xq5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Mar 2007 19:46:57 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Brownell <david-b@pacbell.net>, linux-pm@lists.linux-foundation.org, Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Thomas Gleixner <tglx@linutronix.de>, jgarzik@pobox.com, Andrew Morton <akpm@linux-foundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Wednesday 28 March 2007 22:42:00 Linus Torvalds wrote:
-> 
-> On Wed, 28 Mar 2007, David Brownell wrote:
-> >
-> > On Wednesday 28 March 2007 9:38 am, Linus Torvalds wrote:
-> > 
-> > > It's a *device*, dammit. It should save and resume like one (probably as a 
-> > > system device). The "set_mode()" etc stuff is at a completely different 
-> > > (higher) conceptual level.
-> > 
-> > Agreed, except about "probably as a system device".
-> > 
-> > Last I checked, there was no good reason to use sysdev suspend()/resume()
-> > rather than platform_device suspend_late()/early_resume().  Which more
-> > or less means no good reason to use sysdev in new code...
-> 
-> I won't disagree - it might well be much nicer to just show it in the 
-> "real" device tree. I'm not 100% sure where in the tree it would go, 
-> though. It should probably be "inside" the root entry, before any of the 
-> PCI buses. It's generally what we've used those "system device" things 
-> for, but I agree that it would be better to just make system devices show 
-> up early on the regular device list than it is to have them be special 
-> cases.
-> 
-> Bit I think that's a separate (and fairly small) issue compared to the 
-> "don't use the clocksource infrastructure as a make-believe suspend/resume 
-> mechanism" problem that Maxim's patch had.
-> 
-> (Maxim, don't take that the wrong way - I think your analysis and patch 
-> were great, I just think another organization would be better)
+This patch series implements Asynchronous Notification (AN) for SATA ATAPI
+devices as defined in SATA 2.5 and AHCI 1.1.  Drives which support this
+feature will send a notification when new media is inserted into the
+drive, preventing the need for user space to poll for new media.  This
+support is exposed to user space via a file in sysfs (/sys/block/sr*)
+called "media_change_events".  If the drive supports AN, this file will
+read 1, otherwise 0.  User space can disable polling for new media if this
+file reads 1.  When new media is inserted into the ATAPI drive, the ahci
+driver will send a KOBJ_CHANGE event.
 
-Exactly, I agree completely
-I said that my patch was a  temporary fix, and I agree that the best way is to create a new system device
-and use its suspend/resume hooks to bring HPET back to life on resume.
+I would really like feedback on the user interface - both the location
+of the sysfs file which indicates AN support, as well as the type of
+uevent etc.  I have not yet tested AN on eject (I assume it doesn't require
+anything special) as my test drive which supports AN is a bit "quirky" in 
+this respect.  Please take a look and let me know what you think.
 
-> 
-> > Also, making HPET use the legacy mode seems like a step backwards.
-> 
-> I don't think that's actually "legacy" in any sense but the interrupt 
-> delivery, where the "legacy mode" bit is not so much that the HPET itself 
-> is "legacy" but that it *replaces* legacy devices.
-> 
-> But I may have misunderstood the thing. I'm an old fart, so I know the old 
-> timers much better than I know the new ones ;). Somebody feel free to hit 
-> me with the clue-2x4.
-> 
-> 			Linus
-> 
+Thanks,
+Kristen
 
-Best regards,
-	Maxim Levitsky
+-- 
