@@ -1,44 +1,33 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH v2] Add suspend/resume for HPET
-Date: 29 Mar 2007 22:46:46 +0200
-Message-ID: <p734po33hhl.fsf@bingen.suse.de>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	<460BBD1B.4040308@ru.mvista.com>
-	<200703291531.18253.maximlevitsky@gmail.com>
-	<200703291546.48996.maximlevitsky@gmail.com>
-	<Pine.LNX.4.64.0703290949060.6730@woody.linux-foundation.org>
-	<20070329175117.GA5521@elte.hu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
+Date: Thu, 29 Mar 2007 22:35:05 +0100
+Message-ID: <20070329223505.481a4f5e@the-village.bc.nu>
+References: <20070327161616.31448.qmail@science.horizon.com>
+	<Pine.LNX.4.64.0703271224400.5965@p34.internal.lan>
+	<460A7EE7.5070101@cfl.rr.com>
+	<460A8053.3040209@garzik.org>
+	<460BF73C.5070707@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <20070329175117.GA5521@elte.hu>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>, Jeff Chua <jeff.chua.linux@gmail.com>, linux-acpi@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, jgarzik@pobox.com, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Adrian Bunk <bunk@stusta.de>, linux-ide@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, linux-pci@atrey.karlin.mff.cuni.cz, Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40378 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030684AbXC2UcS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Mar 2007 16:32:18 -0400
+In-Reply-To: <460BF73C.5070707@cfl.rr.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux@horizon.com, htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Ingo Molnar <mingo@elte.hu> writes:
-> =
+O> writes, and sending down multiple untagged cached writes that complete 
+> immediately and actually hit the disk later?  Either way the host keeps 
+> sending writes to the disk until it's buffers are full, and the disk is 
+> constantly trying to commit those buffers to the media in the most 
+> optimal order.
 
-> there's no fundamental reason. x86_64 COW-ed hpet_timer.c and =
-
-> time_hpet.c years ago and drifted off into different areas.
-
-Not quite -- x86-64 did HPET long before i386; the only stuff cowed
-was the character driver support code. But the core HPET code
-was always totally different code streams. We never did the complicated =
-
-pluggable clock code i386 did though -- i never quite saw the point of that
-because there aren't that many timers there.
-Of course it is already obsolete with clocksources now.
-
--Andi
+On the controller side primarily you get to queue commands which means
+you don't have a dead time period between the completion interrupt and
+the next command being issued. Those times add up even when there is a
+disk cache buffering the output
