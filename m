@@ -1,34 +1,64 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Why is NCQ enabled by default by libata? (2.6.20)
-Date: Thu, 29 Mar 2007 13:28:28 -0400
-Message-ID: <460BF73C.5070707@cfl.rr.com>
-References: <20070327161616.31448.qmail@science.horizon.com> <Pine.LNX.4.64.0703271224400.5965@p34.internal.lan> <460A7EE7.5070101@cfl.rr.com> <460A8053.3040209@garzik.org>
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+Subject: Re: [PATCH v2] Add suspend/resume for HPET
+Date: Thu, 29 Mar 2007 19:28:41 +0200
+Message-ID: <200703291928.42122.maximlevitsky@gmail.com>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org> <200703291546.48996.maximlevitsky@gmail.com> <Pine.LNX.4.64.0703290949060.6730@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iriserv.iradimed.com ([72.242.190.170]:37927 "EHLO iradimed.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1030360AbXC2R2a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Mar 2007 13:28:30 -0400
-In-Reply-To: <460A8053.3040209@garzik.org>
+Received: from hu-out-0506.google.com ([72.14.214.227]:48401 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030519AbXC2R24 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Mar 2007 13:28:56 -0400
+Received: by hu-out-0506.google.com with SMTP id 36so12578273hui
+        for <linux-ide@vger.kernel.org>; Thu, 29 Mar 2007 10:28:54 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.64.0703290949060.6730@woody.linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux@horizon.com, htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Jeff Chua <jeff.chua.linux@gmail.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>
 
-Jeff Garzik wrote:
-> NCQ provides for a more asynchronous flow.  It helps greatly with reads 
-> (of which most are, by nature, synchronous at the app level) from 
-> multiple threads or apps.  It helps with writes, even with write cache 
-> on, by allowing multiple commands to be submitted and/or retired at the 
-> same time.
+On Thursday 29 March 2007 18:53:37 Linus Torvalds wrote:
+> 
+> On Thu, 29 Mar 2007, Maxim Levitsky wrote:
+> >
+> > Subject: Add suspend/resume for HPET
+> >
+> > This adds support of suspend/resume on i386 for HPET
+> >
+> > Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+> > 
+> > ---
+> >  arch/i386/kernel/hpet.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++
+> 
+> Btw, what about arch/x86_64/kernel/hpet.c?
+> 
+> That thing seems totally broken. Lookie here:
+> 
+>   arch/x86_64/kernel/hpet.c:irqreturn_t hpet_rtc_interrupt(int irq, void *dev_id, struct pt_regs *regs)
+>   drivers/char/rtc.c:extern irqreturn_t hpet_rtc_interrupt(int irq, void *dev_id);
+> 
+> anybody see a problem? The x86-64 version doesn't seem to be very well 
+> maintained. Is there some fundamental reason why this file isn't shared 
+> across architectures?
+> 
+> 			Linus
+> 
 
-But when writing, what is the difference between queuing multiple tagged 
-writes, and sending down multiple untagged cached writes that complete 
-immediately and actually hit the disk later?  Either way the host keeps 
-sending writes to the disk until it's buffers are full, and the disk is 
-constantly trying to commit those buffers to the media in the most 
-optimal order.
+Hi,
+	I agree with that, there seems to be lot of code duplication between i386 and x86_64.
+	By the way, x86_64 does take care of suspend/resume for hpet, it is done by 
+
+	linux-2.6/arch/x86_64/kernel/time.c:timer_resume(struct sys_device *dev):
+		hpet_reenable()
 
 
+	on i386 PIT driver goes out of way when HPET is detected
+	So it seems that there is lot of work to do to remove redundant code.
+
+
+	Best regards,
+		Maxim Levitsky
