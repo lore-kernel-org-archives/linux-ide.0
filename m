@@ -1,58 +1,67 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
 Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Fri, 30 Mar 2007 13:19:34 -0500
-Message-ID: <1175278774.3760.44.camel@mulgrave.il.steeleye.com>
+Date: Fri, 30 Mar 2007 21:31:01 +0200
+Message-ID: <20070330213101.7aa7babf@gondolin.boeblingen.de.ibm.com>
 References: <460CDBA6.5030608@gmail.com>
-	 <1175257751.3760.19.camel@mulgrave.il.steeleye.com>
-	 <460D12B8.6050101@gmail.com>
+	<20070330151926.18fc12a0@gondolin.boeblingen.de.ibm.com>
+	<460D0E78.3040200@gmail.com>
+	<20070330154042.4c7deb72@gondolin.boeblingen.de.ibm.com>
+	<460D178F.4000500@gmail.com>
+	<20070330165251.7beffc7c@gondolin.boeblingen.de.ibm.com>
+	<460D27E3.2050602@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <460D12B8.6050101@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: gregkh@suse.de, hugh@veritas.com, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:13368 "EHLO
+	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751878AbXC3T3B (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2007 15:29:01 -0400
+In-Reply-To: <460D27E3.2050602@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2007-03-30 at 22:38 +0900, Tejun Heo wrote:
-> My plan was to make sysfs more independent from struct device/kobject.
-> e.g. Something like the following.
+On Sat, 31 Mar 2007 00:08:19 +0900,
+Tejun Heo <htejun@gmail.com> wrote:
 
-That's sort of what I was reaching for too ... it just looks to me that
-all the sysfs glue is in kobject, so they make a good candidate for the
-pure sysfs objects.  Whatever we do, there has to be breakable cross
-linking between the driver's tree and the sysfs representation ... of
-course, nasty things like ksets get in the way of considering the
-objects as separate, sigh.
+> (3) make sure all existing kobjects are released by module exit function.
+> 
+> For example, let's say there is a hypothetical disk device /dev/dk0
+> driven by a hypothetical driver mydrv.  /dev/dk0 is represented like the
+> following in the sysfs tree.
+> 
+> /sys/devices/pci0000:00/0000:00:1f.0/dk0/{myknob0,myknob1}
+> 
+> Owner of both attrs myknob0 and myknob1 is mydrv and opening either
+> increases the reference counts of dk0 and mydrv and closing does the
+> opposite.
+> 
+> * When there is no opener of either knob and the /dev/dk0 isn't used by
+> anyone.  Reference count of dk0 is 1, mydrv 0.
 
-> * kobject_get() on attr/symlink creation
-> * open() doesn't need extra kobject reference
-> * deleting a node makes it release the kobject reference and the kobject
-> pointer is nullified.
+Hm, but as long as dk0 is registered, it can be looked up and someone
+could get a reference on it.
 
-To do this, you'll have to move at least the dentry out of the kobject,
-I think.
+> 
+> * User issues rmmod mydrv.  As mydrv's reference count is zero, unload
+> proceeds and mydrv's exit function is called.
+> 
+> * mydrv's exit function looks like the following.
+> 
+>   mydrv_exit()
+>   {
+> 	sysfs_remove_file(dk0, myknob0);
+> 	sysfs_remove_file(dk1, myknob1);
+> 	device_del(dk0);
+> 	deinit controller;
+> 	release all resources;
+>   }
+> 
+> The device_del(dk0) drops dk0's reference count to zero and its
+> ->release is invoked immediately.
 
-> This way the sysfs reference counting can be put completely out of
-> picture without impacting the rest of code.  Handling symlink and
-> suicidal attributes might need some extra attention but I think they can
-> be done.
-
-True ... but you'll also have to implement something within sysfs to do
-refcounting ... it needs to know how long to keep its nodes around.
-
-> In the long term, I think sysfs should be independent from driver model
-> and kobject such that an entity which wants to use sysfs but is not a
-> device doesn't have to dance with kobject just to use sysfs.
-
-I agree ... the question is just how to do it.
-
-I'd favour trying to separate kobject and struct device for this ...
-move all the sysfs stuff into kobject and device only stuff into struct
-device ... but that would get us into disentangling the ksets, which, on
-balance, isn't going to be fun ...
-
-James
-
-
+And here is the problem if someone else still has a reference. The
+module will be unloaded, but ->release will not be called until the
+"someone else" gives up the reference...
