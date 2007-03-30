@@ -1,161 +1,137 @@
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-Subject: Re: [3/6] 2.6.21-rc4: known regressions
-Date: Fri, 30 Mar 2007 03:48:38 +0300
-Message-ID: <200703300348.38402.maximlevitsky@gmail.com>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	<200703300129.27474.maximlevitsky@gmail.com>
-	<200703291709.17085.david-b@pacbell.net>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: [PATCH] Maxtor 6B250S0/BANC1B70 hangs with NCQ
+Date: Fri, 30 Mar 2007 09:27:58 +0200
+Message-ID: <20070330072757.GC6246@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <200703291709.17085.david-b@pacbell.net>
+Content-Type: multipart/mixed; boundary="J2SCkAp4GZ/dPZZf"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([62.242.22.158]:17882 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751771AbXC3Hc7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Mar 2007 03:32:59 -0400
 Content-Disposition: inline
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Jeff Chua <jeff.chua.linux@gmail.com>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-pm@lists.linux-foundation.org, gregkh@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, Thomas Gleixner <tglx@linutronix.de>, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-On Friday 30 March 2007 03:09:14 David Brownell wrote:
-> On Thursday 29 March 2007 4:29 pm, Maxim Levitsky wrote:
-> > On Friday 30 March 2007 00:33:35 David Brownell wrote:
-> > > On Wednesday 28 March 2007 2:27 pm, Maxim wrote:
-> =
-
-> > > > 	So the only way out is to emulate RTC using HPET,
-> > > > 	It is done this way in old rtc driver, rtc-cmos should do the same.
-> > > =
-
-> > > No.  Patches like
-> > > =
-
-> > >   http://marc.info/?l=3Dlinux-kernel&m=3D117219531503973&w=3D2
-> =
-
-> also:   http://marc.info/?l=3Dlinux-kernel&m=3D117219531526317&w=3D2
-> =
-
-> > > should be merged (I hope they're in the 2.6.22 queue!), making
-> > > HPET run in "Standard Mode" so that HPET can stop sticking its
-> > > fingers in code where they don't belong.
-> > >
-> > > ...
-> >
-> > 	It is not that simple,
-> > =
-
-> > 	Only in legacy replacement mode HPET can be put on IRQ0 (and sadly  IR=
-Q8)
-> > 	At least this is true on some systems, on mine for example
-> =
-
-> Right, that's the entire point of legacy replacement mode.
-> =
-
-> But so what?  In standard mode, HPET just uses other IRQs.
-> Nothing would care about irq0, and irq8 would be used by
-> the RTC as necessary.
-> =
-
-> =
-
-> > 	this will make it difficult to use it as a clockevents source
-> =
-
-> Why?  It's not like the clockevent logic cares what IRQ a given
-> programmable timer uses.  So long as the HPET driver can receive
-> its IRQ, it'll make a fine clockevent.  There's no reason to have
-> HPET prevent other drivers from working, by insisting it use that
-> nasty "prevent other hardware from issuing IRQs" mode.
-> =
-
-> The patches from Venkatesh sure seem to have behaved for him.
-> And while he might have complained about difficulty, I think
-> that'd be more likely due to the SMP issues he also addressed
-> than because of some (historical?) attachment to irq0.
-> =
-
-> =
-
-> > 	Not to mention the fact that current code assumes that BIOS
-> > 	assigned IRQs to all timers which is not true on my system. =
-
-> =
-
-> Getting IRQ routing sorted out is a problem that's been solved
-> numerous times before.  And again, the patches referenced above
-> seem to have resolved any such issues.
-No they don't, =
+To: jeff@garzik.org, htejun@gmail.com, linux-ide@vger.kernel.org
+Cc: Linus Torvalds <torvalds@osdl.org>
 
 
-First patch does that:
-
-                        hd.hd_irq[i] =3D (timer->hpet_config &
-                                        Tn_INT_ROUTE_CNF_MASK) >>          =
-                      =
-
-					Tn_INT_ROUTE_CNF_SHIFT;
-
-This just reads values assigned by BIOS.
-
-
-> =
-
-> =
-
-> > 	What is wrong with relying on HPET to provide RTC IRQ ?
-> =
-
-> For starters, it's not an RTC.  Why in the world would you want to
-> make the OS think it's an RTC ... unless you're Microsoft, and are
-> desperate to get another periodic timer (and don't much care about
-> the other RTC functionality?
-> =
-
-> =
-
-> ... that's all off-topic for 2.6.21 regressions though; it's too
-> late to merge x86_64 clockevent support, or fix HPET issues like
-> not using "standard mode".
-> =
-
-> - Dave
-> =
-
-> =
-
+--J2SCkAp4GZ/dPZZf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
 Hi,
-	I feel that you are right,
 
-	You meant that one of HPET timers will be used as clock source and will be=
- assigned some IRQ (not IRQ0)
-	=
+I've seen this several times on this drive, completely reproducible.
+Once it has hung, power needs to be cut from the drive to recover it, a
+simple reboot is not enough. So I'd suggest disabling NCQ on this
+driver.
 
-	Seems fine,
+Error log attached.
 
-	Only one thing: the kernel must assign IRQs to HPETS , relying on bios is =
-not good,
-	Also the IRQ for clocksource should be not shared, but maybe I am wrong he=
-re =
+Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
-	(I am afraid that latencies might be a problem here)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index f1f595f..ddb3909 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3361,6 +3361,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "FUJITSU MHT2060BH",	NULL,		ATA_HORKAGE_NONCQ },
+ 	/* NCQ is broken */
+ 	{ "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
++	/* NCQ hard hangs device under heavier load, needs hard power cycle */
++	{ "Maxtor 6B250S0",	"BANC1B70",	ATA_HORKAGE_NONCQ },
+ 
+ 	/* Devices with NCQ limits */
+ 
 
-	By the way I never thought about the fact that legacy replacement mode  is=
- a 'virtual legacy'
+-- 
+Jens Axboe
 
-	I mean that it is intended to simulate RTCs and PITs on systems that don't=
- have them, am I right here ?
-	HPET spec says that RTC is still requred to provide all its usial function=
-s except periodic freq.
 
-	Best regards,
-		Maxim Levitsky
+--J2SCkAp4GZ/dPZZf
+Content-Type: text/x-log; charset=us-ascii
+Content-Disposition: attachment; filename="maxtor-ncq-error.log"
+
+ata1.00: exception Emask 0x0 SAct 0x7fffffff SErr 0x0 action 0x2 frozen
+ata1.00: cmd 61/08:00:3f:00:f4/00:00:0c:00:00/40 tag 0 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:08:3f:00:f8/00:00:0c:00:00/40 tag 1 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:10:3f:00:fc/00:00:0c:00:00/40 tag 2 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:18:3f:00:00/00:00:0d:00:00/40 tag 3 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:20:3f:00:04/00:00:0d:00:00/40 tag 4 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:28:3f:00:08/00:00:0d:00:00/40 tag 5 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:30:3f:00:0c/00:00:0d:00:00/40 tag 6 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:38:3f:00:10/00:00:0d:00:00/40 tag 7 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:40:3f:00:14/00:00:0d:00:00/40 tag 8 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:48:3f:00:18/00:00:0d:00:00/40 tag 9 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:50:3f:00:1c/00:00:0d:00:00/40 tag 10 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:58:3f:00:20/00:00:0d:00:00/40 tag 11 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:60:3f:00:24/00:00:0d:00:00/40 tag 12 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:68:3f:00:28/00:00:0d:00:00/40 tag 13 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:70:3f:00:2c/00:00:0d:00:00/40 tag 14 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:78:3f:00:30/00:00:0d:00:00/40 tag 15 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:80:3f:00:34/00:00:0d:00:00/40 tag 16 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:88:3f:00:38/00:00:0d:00:00/40 tag 17 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:90:3f:00:3c/00:00:0d:00:00/40 tag 18 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:98:3f:00:40/00:00:0d:00:00/40 tag 19 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:a0:3f:00:44/00:00:0d:00:00/40 tag 20 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:a8:3f:00:48/00:00:0d:00:00/40 tag 21 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:b0:3f:00:4c/00:00:0d:00:00/40 tag 22 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:b8:3f:00:50/00:00:0d:00:00/40 tag 23 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:c0:3f:00:54/00:00:0d:00:00/40 tag 24 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:c8:3f:00:dc/00:00:0c:00:00/40 tag 25 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:d0:3f:00:e0/00:00:0c:00:00/40 tag 26 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:d8:3f:00:e4/00:00:0c:00:00/40 tag 27 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:e0:3f:00:e8/00:00:0c:00:00/40 tag 28 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:e8:3f:00:ec/00:00:0c:00:00/40 tag 29 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: cmd 61/08:f0:3f:00:f0/00:00:0c:00:00/40 tag 30 cdb 0x0 data 4096 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1: soft resetting port
+ata1: port is slow to respond, please be patient (Status 0xc0)
+ata1: port failed to respond (30 secs, Status 0xc0)
+ata1: softreset failed (device not ready)
+ata1: softreset failed, retrying in 5 secs
+ata1: hard resetting port
+ata1: port is slow to respond, please be patient (Status 0x80)
+ata1: port failed to respond (30 secs, Status 0x80)
+ata1: COMRESET failed (device not ready)
+ata1: hardreset failed, retrying in 5 secs
+ata1: hard resetting port
+ata1: port is slow to respond, please be patient (Status 0x80)
+ata1: port failed to respond (30 secs, Status 0x80)
+ata1: COMRESET failed (device not ready)
+ata1: reset failed, giving up
+ata1.00: disabled
+ata1: EH complete
+
+--J2SCkAp4GZ/dPZZf--
