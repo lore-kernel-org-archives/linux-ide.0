@@ -1,55 +1,55 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Fri, 30 Mar 2007 08:29:10 -0400
-Message-ID: <1175257751.3760.19.camel@mulgrave.il.steeleye.com>
-References: <460CDBA6.5030608@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Libata disk corruptor paths ?
+Date: Fri, 30 Mar 2007 15:15:25 +0100
+Message-ID: <20070330151525.63a5931e@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:55458 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750992AbXC3M3o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2007 08:29:44 -0400
-In-Reply-To: <460CDBA6.5030608@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49788 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751059AbXC3NMQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2007 09:12:16 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: gregkh@suse.de, hugh@veritas.com, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org
 
-On Fri, 2007-03-30 at 18:43 +0900, Tejun Heo wrote:
-> Orphaning sysfs nodes on unregistration is a big step in this
-> direction.  With sysfs reference counting out of the picture,
-> implementing 'disconnect immediate' interface only on a few components
-> (including request_queue) should suffice for most block device
-> drivers.  I'm not familiar with other drivers but I don't think
-> they'll be very different.
+Found these by inspection:
 
-I agree with this statement.  The big question in my mind is how do we
-do it?
+Command issuing goes via ata_qc_reinit() which sets up the device bits
+for the command to include the device select bit.
 
-The essential problem, and the reason why the lifetime rules are
-entangled is that fundamentally, sysfs entries are managed by kobjects.
-The things the device drivers are interested in is struct device, which
-is usually embedded in driver data structures.  Unfortunately, the
-required kobject is usually embedded in struct device meaning that the
-relevant driver structure cannot be freed while the sysfs entry still
-exists.
+If we are using NCQ then the code in ata_build_rw_tf sets bit 6 directly
+without using |= which clears the device select bit and means any NCQ
+command will go to the first device regardless.
 
-It seems to me that the only way to Orphan the sysfs entries is to
-separate the kobject and the struct device so their lifetime rules are
-no longer entangled.  Then we can free the driver structure with the
-embedded struct device while still keeping the necessary kobject around
-to perform orphaned sysfs operations.
+The non NCQ path thankfully doesn't blat the other bits and right now we
+have no slave devices on NCQ supporting hardware I believe.
 
-So it seems to me that what we need to do is to give struct device its
-own kref and a pointer to a kobject.  Then we can manage the separate
-lifetimes independently.  The device would basically allocate and take a
-reference to the kobject on device_add() and relinquish it again (and
-null out the kobject pointer) on device_del().  The complexity here is
-that we now have to allocate the kobject somewhere else ... probably in
-device_add() (it doesn't come for free with the device structures).
+The same bug is present in the libata patches for HPA, and it pulls the
+primary HPA blindly in each case. I've not found any others but they may
+be there and the code is a bit fragile around here. I suspect this is the
+Macintosh problem.
 
-James
+Is there a reason we can't make exec_internel and/or qc_issue BUG() if
+the passed device and tf device bit disagree ?
+
+There is another ugly here too ata_tf_init sets the device bits but
+doesn't set TFLAG_DEVICE. Scarily in fact the qc_reinit path that
+produces new qc structures doesn't touch tf->flags at all but leaves them
+as they were previously (with or without device). Any command issued with
+a device set but the flag forgotten is going to work *until* we issue a
+command to one device and forget the flag, after a command to another
+device, in which case the wrong device will get the command. There are
+other flags that will cause lunacy to occur as well - LBA48 being an
+obvious one that will blow up in our faces.
+
+Follow the path of a start_stop command - we set the device flag but we
+assume the newly allocated command flags started clear, not random. We
+don't clear the LBA48 flag either....
+
+Alan
 
 
+
+	
