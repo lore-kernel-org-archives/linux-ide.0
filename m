@@ -1,40 +1,55 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: libata bugfix: preserve LBA bit for HDIO_DRIVE_TASK
-Date: Fri, 30 Mar 2007 17:45:52 -0400
-Message-ID: <460D8510.1050102@pobox.com>
-References: <20070330205938.984247529@mini.kroah.org> <20070330210659.GK29450@kroah.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
+Date: Fri, 30 Mar 2007 08:29:10 -0400
+Message-ID: <1175257751.3760.19.camel@mulgrave.il.steeleye.com>
+References: <460CDBA6.5030608@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gretel.pobox.com ([208.58.1.197]:34284 "EHLO gretel.pobox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752701AbXC3Wpo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Mar 2007 18:45:44 -0400
-In-Reply-To: <20070330210659.GK29450@kroah.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:55458 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750992AbXC3M3o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2007 08:29:44 -0400
+In-Reply-To: <460CDBA6.5030608@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: gregkh@suse.de, hugh@veritas.com, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Ideally, this would go into linux-2.6.21.
+On Fri, 2007-03-30 at 18:43 +0900, Tejun Heo wrote:
+> Orphaning sysfs nodes on unregistration is a big step in this
+> direction.  With sysfs reference counting out of the picture,
+> implementing 'disconnect immediate' interface only on a few components
+> (including request_queue) should suffice for most block device
+> drivers.  I'm not familiar with other drivers but I don't think
+> they'll be very different.
 
-Preserve the LBA bit in the DevSel/Head register for HDIO_DRIVE_TASK.
+I agree with this statement.  The big question in my mind is how do we
+do it?
 
-Signed-off-by:  Mark Lord <mlord@pobox.com>
----
---- linux/drivers/ata/libata-scsi.c.orig	2007-03-21 13:35:02.000000000 -0400
-+++ linux/drivers/ata/libata-scsi.c	2007-03-30 17:40:58.000000000 -0400
-@@ -333,7 +333,7 @@
- 	scsi_cmd[8]  = args[3];
- 	scsi_cmd[10] = args[4];
- 	scsi_cmd[12] = args[5];
--	scsi_cmd[13] = args[6] & 0x0f;
-+	scsi_cmd[13] = args[6] & 0x4f;
- 	scsi_cmd[14] = args[0];
- 
- 	/* Good values for timeout and retries?  Values below
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+The essential problem, and the reason why the lifetime rules are
+entangled is that fundamentally, sysfs entries are managed by kobjects.
+The things the device drivers are interested in is struct device, which
+is usually embedded in driver data structures.  Unfortunately, the
+required kobject is usually embedded in struct device meaning that the
+relevant driver structure cannot be freed while the sysfs entry still
+exists.
+
+It seems to me that the only way to Orphan the sysfs entries is to
+separate the kobject and the struct device so their lifetime rules are
+no longer entangled.  Then we can free the driver structure with the
+embedded struct device while still keeping the necessary kobject around
+to perform orphaned sysfs operations.
+
+So it seems to me that what we need to do is to give struct device its
+own kref and a pointer to a kobject.  Then we can manage the separate
+lifetimes independently.  The device would basically allocate and take a
+reference to the kobject on device_add() and relinquish it again (and
+null out the kobject pointer) on device_del().  The complexity here is
+that we now have to allocate the kobject somewhere else ... probably in
+device_add() (it doesn't come for free with the device structures).
+
+James
+
+
