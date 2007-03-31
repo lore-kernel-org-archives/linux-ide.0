@@ -1,50 +1,67 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [1/4] 2.6.21-rc5: known regressions (v2)
-Date: Sat, 31 Mar 2007 17:01:23 +0200
-Message-ID: <20070331150123.GU14134@stusta.de>
-References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org> <20070330213209.GM14134@stusta.de> <20070331002310.GA3213@ellpspace.math.ualberta.ca>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH v2] Add suspend/resume for HPET
+Date: Sat, 31 Mar 2007 17:51:11 +0200
+Message-ID: <1175356272.28263.27.camel@localhost.localdomain>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	<460BBD1B.4040308@ru.mvista.com>
+	<200703291531.18253.maximlevitsky@gmail.com>
+	<200703291546.48996.maximlevitsky@gmail.com>
+Reply-To: tglx@linutronix.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070331002310.GA3213@ellpspace.math.ualberta.ca>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <200703291546.48996.maximlevitsky@gmail.com>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, jgarzik@pobox.com, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Mar 30, 2007 at 06:23:10PM -0600, Michal Jaegermann wrote:
-> On Fri, Mar 30, 2007 at 11:32:09PM +0200, Adrian Bunk wrote:
-> > 
-> > Subject    : kernels fail to boot with drives on ATIIXP controller
-> >              (ACPI/IRQ related)
-> > References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
-> >              http://lkml.org/lkml/2007/3/4/257
-> > Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-> > Status     : unknown
-> 
-> I have now even better one with pata_via.  A kernel, which for
-> all practical purposes is 2.6.21-rc5, not only refuses to boot
-> (and I cannot find some option combination which would allow me to
-> do so anyway) but simply refuses to read _any_ data from a media.
-> This included a partitioning information.
-> 
-> Earlier kernel on the same hardware boots without raising any fuss.
-> 
-> Details are collected as
-> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234650
+On Thu, 2007-03-29 at 15:46 +0200, Maxim Levitsky wrote:
+> Subject: Add suspend/resume for HPET
+> This adds support of suspend/resume on i386 for HPET
+> Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+>
+> +static struct sysdev_class hpet_class =3D {
+> +	set_kset_name("hpet"),
+> +	.suspend	=3D hpet_suspend,
+> +	.resume		=3D hpet_resume,
+> +};
+> +
+> +static struct sys_device hpet_device =3D {
+> +	.id		=3D 0,
+> +	.cls		=3D &hpet_class,
+> +};
 
-If I understand this correctly, a plain 2.6.20 kernel is already broken?
+Sorry for being inresponsive. I was travelling and unexpectedly cut off
+from the internet for some days.
 
->    Michal
+While I agree in principle with the patch, I'm a bit uncomfortable. The
+sys device suspend / resume ordering is not guaranteed and relies on the
+registering order.
 
-cu
-Adrian
+Jeff still seems to have problems with CONFIG_NO_HZ=3Dn and it might be
+caused by time keeping / tick management resume happening before the
+HPET resume.
 
--- 
+The required resume order is:
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+clocksources
+timekeeping
+clockevents
+tick management
 
+I'm not sure how to do this properly with the sys device facilities, but
+I look into it.
+
+/me goes off to understand the sys device magic.
+
+	tglx
