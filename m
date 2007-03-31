@@ -1,54 +1,37 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata bugfix: preserve LBA bit for HDIO_DRIVE_TASK
-Date: Sun, 01 Apr 2007 02:05:13 +0900
-Message-ID: <460E94C9.1040509@gmail.com>
-References: <20070330205938.984247529@mini.kroah.org> <20070330210659.GK29450@kroah.com> <460D8510.1050102@pobox.com> <460DD725.1040607@gmail.com> <460E9294.3020005@rtr.ca>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH v2] Add suspend/resume for HPET
+Date: Sat, 31 Mar 2007 10:08:56 -0700
+Message-ID: <20070331170856.GA14959@suse.de>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org> <460BBD1B.4040308@ru.mvista.com> <200703291531.18253.maximlevitsky@gmail.com> <200703291546.48996.maximlevitsky@gmail.com> <1175356272.28263.27.camel@localhost.localdomain> <Pine.LNX.4.64.0703310908160.6730@woody.linux-foundation.org> <1175358800.28263.36.camel@localhost.localdomain> <Pine.LNX.4.64.0703310943190.6730@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753500AbXCaRFW@vger.kernel.org>
-In-Reply-To: <460E9294.3020005@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, IDE/ATA development list <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:39527 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753539AbXCaRIq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 31 Mar 2007 13:08:46 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0703310943190.6730@woody.linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Maxim Levitsky <maximlevitsky@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Ingo Molnar <mingo@elte.hu>, Jeff Chua <jeff.chua.linux@gmail.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> Mark Lord wrote:
->>> Ideally, this would go into linux-2.6.21.
->>>
->>> Preserve the LBA bit in the DevSel/Head register for HDIO_DRIVE_TASK.
->>>
->>> Signed-off-by:  Mark Lord <mlord@pobox.com>
->>> ---
->>> --- linux/drivers/ata/libata-scsi.c.orig    2007-03-21
->>> 13:35:02.000000000 -0400
->>> +++ linux/drivers/ata/libata-scsi.c    2007-03-30 17:40:58.000000000 
->>> -0400
->>> @@ -333,7 +333,7 @@
->>>     scsi_cmd[8]  = args[3];
->>>     scsi_cmd[10] = args[4];
->>>     scsi_cmd[12] = args[5];
->>> -    scsi_cmd[13] = args[6] & 0x0f;
->>> +    scsi_cmd[13] = args[6] & 0x4f;
->>>     scsi_cmd[14] = args[0];
->>>
->>>     /* Good values for timeout and retries?  Values below
->>
->> IDE seems to be just overriding devsel (0x10) and leaving the rest
->> alone.  Maybe we should do (args[6] & ~0x10) here?  Or is it safer 
->> this way?
+On Sat, Mar 31, 2007 at 09:53:43AM -0700, Linus Torvalds wrote:
+> Make them be at the top of the device tree by adding them early. That's 
+> the whole point of the device tree after all - we have an ordering that is 
+> enforced by its topology, and that we sort by when things were added.
 > 
-> Same thoughts here.  I went "conservative" on this one,
-> because the entire field has been all zeros until this patch,
-> and I didn't want to trigger any possible latent bugs in libata.
-> 
-> Whatever.
+> Right now the way things work is (iirc - somebody like Greg should 
+> double-check me) is that we add all devices to the power list at 
+> device_add() time by traversing the devices fromt he root all the way out, 
+> and doing a device_add() which does a device_pm_add(), which in turn adds 
+> it to the power-management list - so that the list is always topologically 
+> sorted.
 
-Yeah, I agree 'whatever' should work here.  :-)
+Yes, this is how it works (or if not, then there's a bug that needs to
+be fixed, as that is how it _should_ work...)
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+thanks,
 
--- 
-tejun
+greg k-h
