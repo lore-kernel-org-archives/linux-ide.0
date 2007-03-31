@@ -1,47 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Sun, 01 Apr 2007 01:14:15 +0900
-Message-ID: <460E88D7.3010702@gmail.com>
-References: <460CDBA6.5030608@gmail.com>	<20070330151926.18fc12a0@gondolin.boeblingen.de.ibm.com>	<460D0E78.3040200@gmail.com>	<20070330154042.4c7deb72@gondolin.boeblingen.de.ibm.com>	<460D178F.4000500@gmail.com>	<20070330165251.7beffc7c@gondolin.boeblingen.de.ibm.com>	<460D27E3.2050602@gmail.com>	<20070330213101.7aa7babf@gondolin.boeblingen.de.ibm.com>	<460DD1B0.4080605@gmail.com> <20070331180806.55d572c8@gondolin.boeblingen.de.ibm.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH v2] Add suspend/resume for HPET
+Date: Sat, 31 Mar 2007 18:33:20 +0200
+Message-ID: <1175358800.28263.36.camel@localhost.localdomain>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	 <460BBD1B.4040308@ru.mvista.com>
+	 <200703291531.18253.maximlevitsky@gmail.com>
+	 <200703291546.48996.maximlevitsky@gmail.com>
+	 <1175356272.28263.27.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0703310908160.6730@woody.linux-foundation.org>
+Reply-To: tglx@linutronix.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.236]:31108 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753312AbXCaQOX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Mar 2007 12:14:23 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so683581nze
-        for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 09:14:22 -0700 (PDT)
-In-Reply-To: <20070331180806.55d572c8@gondolin.boeblingen.de.ibm.com>
+Received: from www.osadl.org ([213.239.205.134]:37348 "EHLO mail.tglx.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752929AbXCaQdV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 31 Mar 2007 12:33:21 -0400
+In-Reply-To: <Pine.LNX.4.64.0703310908160.6730@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Cornelia Huck <cornelia.huck@de.ibm.com>
-Cc: gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Ingo Molnar <mingo@elte.hu>, Jeff Chua <jeff.chua.linux@gmail.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>
 
-Cornelia Huck wrote:
-> On Sat, 31 Mar 2007 12:12:48 +0900,
-> Tejun Heo <htejun@gmail.com> wrote:
+On Sat, 2007-03-31 at 09:09 -0700, Linus Torvalds wrote:
 > 
->>> Hm, but as long as dk0 is registered, it can be looked up and someone
->>> could get a reference on it.
->> Yeah, exactly.  That's why any getting any kobject reference backed by a
->> module must be accompanied by try_module_get().
->>
->> int mydrv_get_dk(struct dk *dk)
->> {
->> 	rc = try_module_get(mydrv);
->> 	if (rc)
->> 		return rc;
->> 	kobject_get(&dk->kobj);
->> 	return 0;
->> }
+> On Sat, 31 Mar 2007, Thomas Gleixner wrote:
+> > 
+> > While I agree in principle with the patch, I'm a bit uncomfortable. The
+> > sys device suspend / resume ordering is not guaranteed and relies on the
+> > registering order.
 > 
-> This works if the caller always knows which module to grab (I was
-> thinking about some tree-walking code).
+> Well, this is why we probably should try to get away from the "system 
+> device" issue, exactly because system devices are totally outside the 
+> normal ordering and only have a random linear order.
+> 
+> If the clocksources were actually in the device tree, you'd get all the 
+> normal guarantees about hierarchical ordering..
 
-Yeah, that's why we have so many ->owner's and getting it wrong results 
-in jumping to non-existent address.
+Right, but clock - sources/events need to be extremly late suspended and
+early resumed. How can we ensure this ?
 
--- 
-tejun
+	tglx
+
+
