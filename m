@@ -1,63 +1,48 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Sat, 31 Mar 2007 12:15:02 +0900
-Message-ID: <460DD236.4030804@gmail.com>
-References: <460CDBA6.5030608@gmail.com>	<20070330151926.18fc12a0@gondolin.boeblingen.de.ibm.com>	<460D0E78.3040200@gmail.com>	<20070330154042.4c7deb72@gondolin.boeblingen.de.ibm.com>	<460D178F.4000500@gmail.com>	<20070330165251.7beffc7c@gondolin.boeblingen.de.ibm.com>	<460D27E3.2050602@gmail.com> <20070330213101.7aa7babf@gondolin.boeblingen.de.ibm.com> <460DD1B0.4080605@gmail.com>
+Subject: Re: libata bugfix: preserve LBA bit for HDIO_DRIVE_TASK
+Date: Sat, 31 Mar 2007 12:36:05 +0900
+Message-ID: <460DD725.1040607@gmail.com>
+References: <20070330205938.984247529@mini.kroah.org> <20070330210659.GK29450@kroah.com> <460D8510.1050102@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:23384 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964785AbXCaDPO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2007 23:15:14 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so905033wra
-        for <linux-ide@vger.kernel.org>; Fri, 30 Mar 2007 20:15:13 -0700 (PDT)
-In-Reply-To: <460DD1B0.4080605@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.237]:57538 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965084AbXCaDgL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2007 23:36:11 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so593037nze
+        for <linux-ide@vger.kernel.org>; Fri, 30 Mar 2007 20:36:09 -0700 (PDT)
+In-Reply-To: <460D8510.1050102@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Cornelia Huck <cornelia.huck@de.ibm.com>
-Cc: gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mark Lord <mlord@pobox.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Cornelia Huck wrote:
->> On Sat, 31 Mar 2007 00:08:19 +0900,
->> Tejun Heo <htejun@gmail.com> wrote:
->>
->>> (3) make sure all existing kobjects are released by module exit function.
->>>
->>> For example, let's say there is a hypothetical disk device /dev/dk0
->>> driven by a hypothetical driver mydrv.  /dev/dk0 is represented like the
->>> following in the sysfs tree.
->>>
->>> /sys/devices/pci0000:00/0000:00:1f.0/dk0/{myknob0,myknob1}
->>>
->>> Owner of both attrs myknob0 and myknob1 is mydrv and opening either
->>> increases the reference counts of dk0 and mydrv and closing does the
->>> opposite.
->>>
->>> * When there is no opener of either knob and the /dev/dk0 isn't used by
->>> anyone.  Reference count of dk0 is 1, mydrv 0.
->> Hm, but as long as dk0 is registered, it can be looked up and someone
->> could get a reference on it.
+Mark Lord wrote:
+> Ideally, this would go into linux-2.6.21.
 > 
-> Yeah, exactly.  That's why any getting any kobject reference backed by a
-> module must be accompanied by try_module_get().
+> Preserve the LBA bit in the DevSel/Head register for HDIO_DRIVE_TASK.
 > 
-> int mydrv_get_dk(struct dk *dk)
-> {
-> 	rc = try_module_get(mydrv);
-> 	if (rc)
-> 		return rc;
-> 	kobject_get(&dk->kobj);
-> 	return 0;
-> }
+> Signed-off-by:  Mark Lord <mlord@pobox.com>
+> ---
+> --- linux/drivers/ata/libata-scsi.c.orig    2007-03-21
+> 13:35:02.000000000 -0400
+> +++ linux/drivers/ata/libata-scsi.c    2007-03-30 17:40:58.000000000 -0400
+> @@ -333,7 +333,7 @@
+>     scsi_cmd[8]  = args[3];
+>     scsi_cmd[10] = args[4];
+>     scsi_cmd[12] = args[5];
+> -    scsi_cmd[13] = args[6] & 0x0f;
+> +    scsi_cmd[13] = args[6] & 0x4f;
+>     scsi_cmd[14] = args[0];
+> 
+>     /* Good values for timeout and retries?  Values below
 
-And one more thing just in case.  In the above code, try_module_get()
-and kobject_get() must be and is atomic w.r.t. try_stop_module().
-That's why we do the following.
+IDE seems to be just overriding devsel (0x10) and leaving the rest
+alone.  Maybe we should do (args[6] & ~0x10) here?  Or is it safer this way?
 
-  stop_machine_run(__try_stop_module, &sref, NR_CPUS);.
+Thanks.
 
 -- 
 tejun
