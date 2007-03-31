@@ -1,48 +1,50 @@
-From: "Jeff Chua" <jeff.chua.linux@gmail.com>
-Subject: Re: [PATCH v2] Add suspend/resume for HPET
-Date: Sun, 1 Apr 2007 00:01:48 +0800
-Message-ID: <b6a2187b0703310901t42fe4752s55eb20d198788b22@mail.gmail.com>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	<460BBD1B.4040308@ru.mvista.com>
-	<200703291531.18253.maximlevitsky@gmail.com>
-	<200703291546.48996.maximlevitsky@gmail.com>
-	<1175356272.28263.27.camel@localhost.localdomain>
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
+Date: Sat, 31 Mar 2007 18:08:06 +0200
+Message-ID: <20070331180806.55d572c8@gondolin.boeblingen.de.ibm.com>
+References: <460CDBA6.5030608@gmail.com>
+	<20070330151926.18fc12a0@gondolin.boeblingen.de.ibm.com>
+	<460D0E78.3040200@gmail.com>
+	<20070330154042.4c7deb72@gondolin.boeblingen.de.ibm.com>
+	<460D178F.4000500@gmail.com>
+	<20070330165251.7beffc7c@gondolin.boeblingen.de.ibm.com>
+	<460D27E3.2050602@gmail.com>
+	<20070330213101.7aa7babf@gondolin.boeblingen.de.ibm.com>
+	<460DD1B0.4080605@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <1175356272.28263.27.camel@localhost.localdomain>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: tglx@linutronix.de
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, jgarzik@pobox.com, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <460DD1B0.4080605@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 3/31/07, Thomas Gleixner <tglx@linutronix.de> wrote:
+On Sat, 31 Mar 2007 12:12:48 +0900,
+Tejun Heo <htejun@gmail.com> wrote:
 
-> Jeff still seems to have problems with CONFIG_NO_HZ=3Dn and it might be
-> caused by time keeping / tick management resume happening before the
-> HPET resume.
+> > Hm, but as long as dk0 is registered, it can be looked up and someone
+> > could get a reference on it.
+> 
+> Yeah, exactly.  That's why any getting any kobject reference backed by a
+> module must be accompanied by try_module_get().
+> 
+> int mydrv_get_dk(struct dk *dk)
+> {
+> 	rc = try_module_get(mydrv);
+> 	if (rc)
+> 		return rc;
+> 	kobject_get(&dk->kobj);
+> 	return 0;
+> }
 
+This works if the caller always knows which module to grab (I was
+thinking about some tree-walking code).
 
-me>Confirmed that suspend/resume disk/ram works on X60s with
-me>CONFIG_HPET_TIMER=3Dy and CONFIG_NO_HZ unset.
-me> But suspend to disk still hang with CONFIG_NO_HZ unset.
+> Exactly, in that case, module reference count must not be zero.  You and
+> I are saying the same thing.  Why are we running in circle?
 
+I hope we're not, it just makes one dizzy :)
 
-Oops, sorry. Typo (as a result copy/paste using mouse)
-    ... I actually meant CONFIG_NO_HZ "set".
-
-Just to be clear, suspend to disk still hang with CONFIG_NO_HZ=3Dy. It
-hang just before you see the percent saving %.
-
-
-Jeff.
+I'll think some more about it...
