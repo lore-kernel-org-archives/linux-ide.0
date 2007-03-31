@@ -1,32 +1,55 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 0/4] libata: Workaround/fixes for ATAPI devices
-Date: Sat, 31 Mar 2007 15:07:27 +0800
-Message-ID: <460E08AF.8070900@tw.ibm.com>
+Subject: [PATCH 1/4] libata: reorder HSM_ST_FIRST for easier decoding
+Date: Sat, 31 Mar 2007 15:13:40 +0800
+Message-ID: <460E0A24.6000105@tw.ibm.com>
+References: <460E08AF.8070900@tw.ibm.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:47900 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804AbXCaHHm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Mar 2007 03:07:42 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2V77fQR018971
-	for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 03:07:41 -0400
+Received: from e31.co.us.ibm.com ([32.97.110.149]:54355 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbXCaHNt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Mar 2007 03:13:49 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2V7Dnoj000719
+	for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 03:13:49 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2V77fde169834
-	for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 01:07:41 -0600
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2V7DmZf200364
+	for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 01:13:48 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2V77er7005026
-	for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 01:07:41 -0600
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2V7Dlm8012543
+	for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 01:13:48 -0600
+In-Reply-To: <460E08AF.8070900@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, YUP <yupadmin@gmail.com>, Vlad Codrea <VladCodrea@mail.utexas.edu>, IDE Linux <linux-ide@vger.kernel.org>
 
-patch 1/4: Reorder HSM_ST_FIRST
-patch 2/4: Clear tf before doing request sense
-patch 3/4: Limit max sector to 240 for TORiSAN DVD drives
-patch 4/4: Limit ATAPI DMA to R/W commands only for TORiSAN DVD drives
+patch 1/4:
+  Reorder HSM_ST_FIRST, such that the task state transition is easier decoded with human eyes.
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+---
+Patch against libata-dev tree, for your review, thanks.
+
+diff -Nrup 00_libata-dev.ori/include/linux/libata.h 01_hsm_st/include/linux/libata.h
+--- 00_libata-dev.ori/include/linux/libata.h	2007-03-23 16:56:24.000000000 +0800
++++ 01_hsm_st/include/linux/libata.h	2007-03-26 12:33:28.000000000 +0800
+@@ -315,11 +315,11 @@ enum {
+ 
+ enum hsm_task_states {
+ 	HSM_ST_IDLE,		/* no command on going */
++	HSM_ST_FIRST,		/* (waiting the device to)
++				   write CDB or first data block */
+ 	HSM_ST,			/* (waiting the device to) transfer data */
+ 	HSM_ST_LAST,		/* (waiting the device to) complete command */
+ 	HSM_ST_ERR,		/* error */
+-	HSM_ST_FIRST,		/* (waiting the device to)
+-				   write CDB or first data block */
+ };
+ 
+ enum ata_completion_errors {
+
 
