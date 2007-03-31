@@ -1,46 +1,80 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH v2] Add suspend/resume for HPET
-Date: Sat, 31 Mar 2007 18:33:20 +0200
-Message-ID: <1175358800.28263.36.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	 <460BBD1B.4040308@ru.mvista.com>
-	 <200703291531.18253.maximlevitsky@gmail.com>
-	 <200703291546.48996.maximlevitsky@gmail.com>
-	 <1175356272.28263.27.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0703310908160.6730@woody.linux-foundation.org>
-Reply-To: tglx@linutronix.de
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Craig Metz <cmetz@inner.net>
+Subject: Linux libata, Sil3124, and SATA staggered spin-up support
+Date: Sat, 31 Mar 2007 12:29:39 -0400
+Message-ID: <20070331162941.93F61582C@rmail.inner.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.osadl.org ([213.239.205.134]:37348 "EHLO mail.tglx.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752929AbXCaQdV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 Mar 2007 12:33:21 -0400
-In-Reply-To: <Pine.LNX.4.64.0703310908160.6730@woody.linux-foundation.org>
+Received: from rmail.inner.net ([199.33.248.12]:4031 "EHLO rmail.inner.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753381AbXCaQiW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 31 Mar 2007 12:38:22 -0400
+Received: from inner.net (eng.inner.net [199.33.248.15])
+	by rmail.inner.net (Postfix) with ESMTP id 93F61582C
+	for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 11:29:41 -0500 (EST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Ingo Molnar <mingo@elte.hu>, Jeff Chua <jeff.chua.linux@gmail.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Jens Axboe <jens.axboe@oracle.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Michael S. Tsirkin" <mst@mellanox.co.il>
+To: linux-ide@vger.kernel.org
 
-On Sat, 2007-03-31 at 09:09 -0700, Linus Torvalds wrote:
-> 
-> On Sat, 31 Mar 2007, Thomas Gleixner wrote:
-> > 
-> > While I agree in principle with the patch, I'm a bit uncomfortable. The
-> > sys device suspend / resume ordering is not guaranteed and relies on the
-> > registering order.
-> 
-> Well, this is why we probably should try to get away from the "system 
-> device" issue, exactly because system devices are totally outside the 
-> normal ordering and only have a random linear order.
-> 
-> If the clocksources were actually in the device tree, you'd get all the 
-> normal guarantees about hierarchical ordering..
+  I have a Sil3124 controller and four drives, and I'm trying to build a
+large JBOD file server (with three or four of those controller+drive sets).
+One of the things I would need to be able to do in order to practically do
+that is to have reasonable staggered spin-up; that is, I need to not have all
+the drives try to start at once - it will put a lot of strain on any power
+supply and require gross oversizing and/or separate supplies.
 
-Right, but clock - sources/events need to be extremly late suspended and
-early resumed. How can we ensure this ?
+  Silicon Image claims to support staggered spin-up, but their BIOS appears
+to do it in the pessimal manner - on boot, it simply spins up all drives at
+once, and there are no settings I could find to change any of that behavior.
+What I could find, though, is a way to simply erase the adapter's flash and 
+thus disable the BIOS entirely.
 
-	tglx
+  I was hoping that Linux would be able to do staggered spin-up itself in a
+reasonable manner. And, if it doesn't today, I am hoping that is just a matter
+of someone writing the code.
 
+  I have done some digging in with the 2.6.20.3 libata code, and one thing I
+have noticed that is specific to the Sil3124 driver is that the controller
+init function starts up all the ports, which spins up all the drives. Does
+anyone know if the Sil3124 hardware really supports the necessary things to do
+staggered spin-up in a rational manner? I have done some digging and some
+playing with the code, and from what I see, the controller likes to either
+cause all the ports to come up (drives to spin up) or not.
 
+  Is this something that folks would be willing to support in libata if
+reasonable code existed? At some level, staggered spin-up should be done in
+the BIOS. However, I expect that Sil3124 is far from the only controller whose
+BIOS does it wrong but could be disabled. So I personally see value in having
+Linux able to do it and do it right, but if you two don't and the patch would
+never go in, then I would be wasting my time continuing to work on this.
+
+  What is the right sequence of events for staggered spin-up? I was thinking
+that the process should as a first cut happen iteratively/serially:
+
+  Init controller
+  Add controller to libata, get resources
+  for each port
+    Init port
+    Add port to libata
+    Tell SCSI layer to identify
+
+  This is a different flow than what libata/Sil3124 currently does:
+
+  Init controller
+  for each port
+    Init port
+  Add controller to libata
+  for each port
+    More init port
+    Add port to libata
+  Get resources
+  for each port 
+    Tell SCSI layer to identify
+
+  I am not an expert on libata, so I don't really understand the design
+decisions that led to the current design. I would greatly appreciate it if
+you had any suggestions or could give me additional clues about what the
+right design should be to implement a feature like this along with everything
+else libata needs to do.
+
+  Thanks,
+
+									-Craig
