@@ -1,42 +1,50 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/4] libata: Workaround/fixes for ATAPI devices (revised)
-Date: Sat, 31 Mar 2007 15:57:26 +0200
-Message-ID: <200703311557.26949.bzolnier@gmail.com>
-References: <460E1586.2000603@tw.ibm.com> <460E321F.2000100@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [1/4] 2.6.21-rc5: known regressions (v2)
+Date: Sat, 31 Mar 2007 17:01:23 +0200
+Message-ID: <20070331150123.GU14134@stusta.de>
+References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org> <20070330213209.GM14134@stusta.de> <20070331002310.GA3213@ellpspace.math.ualberta.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:21085 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753043AbXCaNs7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Mar 2007 09:48:59 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1082957uga
-        for <linux-ide@vger.kernel.org>; Sat, 31 Mar 2007 06:48:58 -0700 (PDT)
-In-Reply-To: <460E321F.2000100@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20070331002310.GA3213@ellpspace.math.ualberta.ca>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, YUP <yupadmin@gmail.com>, Vlad Codrea <VladCodrea@mail.utexas.edu>, Linux IDE <linux-ide@vger.kernel.org>
 
-
-On Saturday 31 March 2007, Tejun Heo wrote:
-> Albert Lee wrote:
-> > patch 1/4: Reorder HSM_ST_FIRST
-> > patch 2/4: Clear tf before doing request sense
-> > patch 3/4: Limit max sector to 240 for TORiSAN DVD drives
-> > patch 4/4: Limit ATAPI DMA to R/W commands only for TORiSAN DVD drives
+On Fri, Mar 30, 2007 at 06:23:10PM -0600, Michal Jaegermann wrote:
+> On Fri, Mar 30, 2007 at 11:32:09PM +0200, Adrian Bunk wrote:
 > > 
-> > (patch 2/4 revised per Tejun's advice.)
-> > 
+> > Subject    : kernels fail to boot with drives on ATIIXP controller
+> >              (ACPI/IRQ related)
+> > References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
+> >              http://lkml.org/lkml/2007/3/4/257
+> > Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+> > Status     : unknown
 > 
-> All four look good to me.  Thanks a lot for tracking this down.
+> I have now even better one with pata_via.  A kernel, which for
+> all practical purposes is 2.6.21-rc5, not only refuses to boot
+> (and I cannot find some option combination which would allow me to
+> do so anyway) but simply refuses to read _any_ data from a media.
+> This included a partitioning information.
+> 
+> Earlier kernel on the same hardware boots without raising any fuss.
+> 
+> Details are collected as
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234650
 
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+If I understand this correctly, a plain 2.6.20 kernel is already broken?
 
-Special thanks for fixing implicit libata vs drivers/ide regressions
-(patch 2/4 and 3/4).
+>    Michal
 
-Bart
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
