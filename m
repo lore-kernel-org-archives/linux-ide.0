@@ -1,31 +1,81 @@
-From: "Jeff Chua" <jeff.chua.linux@gmail.com>
-Subject: Re: [3/4] 2.6.21-rc5: known regressions (v2)
-Date: Sat, 31 Mar 2007 10:52:59 +0800
-Message-ID: <b6a2187b0703301952s6042fbfdu2e15e0f868a958f4@mail.gmail.com>
-References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org>
-	 <20070330213220.GO14134@stusta.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
+Date: Sat, 31 Mar 2007 12:12:48 +0900
+Message-ID: <460DD1B0.4080605@gmail.com>
+References: <460CDBA6.5030608@gmail.com>	<20070330151926.18fc12a0@gondolin.boeblingen.de.ibm.com>	<460D0E78.3040200@gmail.com>	<20070330154042.4c7deb72@gondolin.boeblingen.de.ibm.com>	<460D178F.4000500@gmail.com>	<20070330165251.7beffc7c@gondolin.boeblingen.de.ibm.com>	<460D27E3.2050602@gmail.com> <20070330213101.7aa7babf@gondolin.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20070330213220.GO14134@stusta.de>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeremy Fitzhardinge <jeremy@goop.org>, "Eric W. Biederman" <ebiederm@xmission.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, pavel@suse.cz, linux-pm@lists.osdl.org, gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, Tobias Doerffel <tobias.doerffel@gmail.com>, Len Brown <len.brown@intel.com>, linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Soeren Sonnenburg <kernel@nn7.de>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Marcus Better <marcus@better.se>, adaplas@gmail.com, Jens Axboe <jens.axboe@oracle.com>, Mike Harris <atarimike@wavecable.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Stephen Hemminger <shemminger@linux-foundation.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.231]:22725 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933559AbXCaDM4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2007 23:12:56 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so904640wra
+        for <linux-ide@vger.kernel.org>; Fri, 30 Mar 2007 20:12:55 -0700 (PDT)
+In-Reply-To: <20070330213101.7aa7babf@gondolin.boeblingen.de.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Cornelia Huck <cornelia.huck@de.ibm.com>
+Cc: gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 3/31/07, Adrian Bunk <bunk@stusta.de> wrote:
+Cornelia Huck wrote:
+> On Sat, 31 Mar 2007 00:08:19 +0900,
+> Tejun Heo <htejun@gmail.com> wrote:
+> 
+>> (3) make sure all existing kobjects are released by module exit function.
+>>
+>> For example, let's say there is a hypothetical disk device /dev/dk0
+>> driven by a hypothetical driver mydrv.  /dev/dk0 is represented like the
+>> following in the sysfs tree.
+>>
+>> /sys/devices/pci0000:00/0000:00:1f.0/dk0/{myknob0,myknob1}
+>>
+>> Owner of both attrs myknob0 and myknob1 is mydrv and opening either
+>> increases the reference counts of dk0 and mydrv and closing does the
+>> opposite.
+>>
+>> * When there is no opener of either knob and the /dev/dk0 isn't used by
+>> anyone.  Reference count of dk0 is 1, mydrv 0.
+> 
+> Hm, but as long as dk0 is registered, it can be looked up and someone
+> could get a reference on it.
 
-> Subject    : ThinkPad doesn't resume from suspend to RAM
-> References : http://lkml.org/lkml/2007/2/27/80
->              http://lkml.org/lkml/2007/2/28/348
-> Submitter  : Jens Axboe <jens.axboe@oracle.com>
->              Jeff Chua <jeff.chua.linux@gmail.com>
-> Status     : unknown
+Yeah, exactly.  That's why any getting any kobject reference backed by a
+module must be accompanied by try_module_get().
 
-Fixed with CONFIG_NO_HZ unset and patch from Maxim
-(http://lkml.org/lkml/2007/3/29/108).
+int mydrv_get_dk(struct dk *dk)
+{
+	rc = try_module_get(mydrv);
+	if (rc)
+		return rc;
+	kobject_get(&dk->kobj);
+	return 0;
+}
 
-Thanks,
-Jeff,
+>> * User issues rmmod mydrv.  As mydrv's reference count is zero, unload
+>> proceeds and mydrv's exit function is called.
+>>
+>> * mydrv's exit function looks like the following.
+>>
+>>   mydrv_exit()
+>>   {
+>> 	sysfs_remove_file(dk0, myknob0);
+>> 	sysfs_remove_file(dk1, myknob1);
+>> 	device_del(dk0);
+>> 	deinit controller;
+>> 	release all resources;
+>>   }
+>>
+>> The device_del(dk0) drops dk0's reference count to zero and its
+>> ->release is invoked immediately.
+> 
+> And here is the problem if someone else still has a reference. The
+> module will be unloaded, but ->release will not be called until the
+> "someone else" gives up the reference...
+
+Exactly, in that case, module reference count must not be zero.  You and
+I are saying the same thing.  Why are we running in circle?
+
+-- 
+tejun
