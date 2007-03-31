@@ -1,58 +1,66 @@
-From: Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-Subject: Re: [1/4] 2.6.21-rc5: known regressions (v2)
-Date: Sat, 31 Mar 2007 10:42:21 -0600
-Message-ID: <20070331164221.GA14671@ellpspace.math.ualberta.ca>
-References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org> <20070330213209.GM14134@stusta.de> <20070331002310.GA3213@ellpspace.math.ualberta.ca> <20070331150123.GU14134@stusta.de>
-Reply-To: michal@harddata.com
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH v2] Add suspend/resume for HPET
+Date: Sat, 31 Mar 2007 09:53:43 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0703310943190.6730@woody.linux-foundation.org>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	<460BBD1B.4040308@ru.mvista.com>
+	<200703291531.18253.maximlevitsky@gmail.com>
+	<200703291546.48996.maximlevitsky@gmail.com>
+	<1175356272.28263.27.camel@localhost.localdomain>
+	<Pine.LNX.4.64.0703310908160.6730@woody.linux-foundation.org>
+	<1175358800.28263.36.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ellpspace.math.ualberta.ca ([129.128.207.67]:42700 "EHLO
-	ellpspace.math.ualberta.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753398AbXCaQo1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Mar 2007 12:44:27 -0400
-Content-Disposition: inline
-In-Reply-To: <20070331150123.GU14134@stusta.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <1175358800.28263.36.camel@localhost.localdomain>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>, Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>, jgarzik@pobox.com, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On Sat, Mar 31, 2007 at 05:01:23PM +0200, Adrian Bunk wrote:
-> On Fri, Mar 30, 2007 at 06:23:10PM -0600, Michal Jaegermann wrote:
-> > On Fri, Mar 30, 2007 at 11:32:09PM +0200, Adrian Bunk wrote:
-> > > 
-> > > Subject    : kernels fail to boot with drives on ATIIXP controller
-> > >              (ACPI/IRQ related)
-> > > References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
-> > >              http://lkml.org/lkml/2007/3/4/257
-> > > Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-> > > Status     : unknown
-> > 
-> > I have now even better one with pata_via.  A kernel, which for
-> > all practical purposes is 2.6.21-rc5, not only refuses to boot
-> > (and I cannot find some option combination which would allow me to
-> > do so anyway) but simply refuses to read _any_ data from a media.
-> > This included a partitioning information.
-> > 
-> > Earlier kernel on the same hardware boots without raising any fuss.
-> > 
-> > Details are collected as
-> > https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234650
-> 
-> If I understand this correctly, a plain 2.6.20 kernel is already broken?
 
-You mean that a quoted report talks about 2.6.20-1.3025.fc7 kernel?
-These are vagaries of kernel version numbering in Fedora.
-Changelogs are not that clear but it appears that
-2.6.19-1.2911.6.4.fc6 will be actually closer to 2.6.20.
-That kernel from a bug report is really, for all intents and purposes,
-2.6.21-rc5 (if I am not misreading something).
 
-I am afraid that I do not have at this moment an easy to way to check
-"plain" 2.6.20 on the hardware in question.  It appears that the
-essential difference is that a working kernel is using and old IDE
-driver, and sees the drive - in this case - as /dev/hdc, while the
-current one tries to go through libata and chockes uncontrollably.
+On Sat, 31 Mar 2007, Thomas Gleixner wrote:
+> =
 
-   Michal
+> Right, but clock - sources/events need to be extremly late suspended and
+> early resumed. How can we ensure this ?
+
+Make them be at the top of the device tree by adding them early. That's =
+
+the whole point of the device tree after all - we have an ordering that is =
+
+enforced by its topology, and that we sort by when things were added.
+
+Right now the way things work is (iirc - somebody like Greg should =
+
+double-check me) is that we add all devices to the power list at =
+
+device_add() time by traversing the devices fromt he root all the way out, =
+
+and doing a device_add() which does a device_pm_add(), which in turn adds =
+
+it to the power-management list - so that the list is always topologically =
+
+sorted.
+
+So the only thing that needs to be done is to make sure that we add the =
+
+timer devices early during bootup - something we have to do *anyway*. If a =
+
+device is added early in bootup, that automatically means that it will be =
+
+suspended late, and resumed early - because we maintain that order all the =
+
+way through..
+
+		Linus
