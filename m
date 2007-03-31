@@ -1,66 +1,50 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH v2] Add suspend/resume for HPET
-Date: Sat, 31 Mar 2007 09:53:43 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0703310943190.6730@woody.linux-foundation.org>
-References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
-	<460BBD1B.4040308@ru.mvista.com>
-	<200703291531.18253.maximlevitsky@gmail.com>
-	<200703291546.48996.maximlevitsky@gmail.com>
-	<1175356272.28263.27.camel@localhost.localdomain>
-	<Pine.LNX.4.64.0703310908160.6730@woody.linux-foundation.org>
-	<1175358800.28263.36.camel@localhost.localdomain>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: libata bugfix: preserve LBA bit for HDIO_DRIVE_TASK
+Date: Sat, 31 Mar 2007 12:55:48 -0400
+Message-ID: <460E9294.3020005@rtr.ca>
+References: <20070330205938.984247529@mini.kroah.org> <20070330210659.GK29450@kroah.com> <460D8510.1050102@pobox.com> <460DD725.1040607@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <1175358800.28263.36.camel@localhost.localdomain>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>, Jeff Chua <jeff.chua.linux@gmail.com>, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, gregkh@suse.de, linux-pm@lists.osdl.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-acpi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>, jgarzik@pobox.com, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:1207 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753423AbXCaQzv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 31 Mar 2007 12:55:51 -0400
+In-Reply-To: <460DD725.1040607@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, IDE/ATA development list <linux-ide@vger.kernel.org>
 
+Tejun Heo wrote:
+> Mark Lord wrote:
+>> Ideally, this would go into linux-2.6.21.
+>>
+>> Preserve the LBA bit in the DevSel/Head register for HDIO_DRIVE_TASK.
+>>
+>> Signed-off-by:  Mark Lord <mlord@pobox.com>
+>> ---
+>> --- linux/drivers/ata/libata-scsi.c.orig    2007-03-21
+>> 13:35:02.000000000 -0400
+>> +++ linux/drivers/ata/libata-scsi.c    2007-03-30 17:40:58.000000000 -0400
+>> @@ -333,7 +333,7 @@
+>>     scsi_cmd[8]  = args[3];
+>>     scsi_cmd[10] = args[4];
+>>     scsi_cmd[12] = args[5];
+>> -    scsi_cmd[13] = args[6] & 0x0f;
+>> +    scsi_cmd[13] = args[6] & 0x4f;
+>>     scsi_cmd[14] = args[0];
+>>
+>>     /* Good values for timeout and retries?  Values below
+> 
+> IDE seems to be just overriding devsel (0x10) and leaving the rest
+> alone.  Maybe we should do (args[6] & ~0x10) here?  Or is it safer this way?
 
+Same thoughts here.  I went "conservative" on this one,
+because the entire field has been all zeros until this patch,
+and I didn't want to trigger any possible latent bugs in libata.
 
-On Sat, 31 Mar 2007, Thomas Gleixner wrote:
-> =
+Whatever.
 
-> Right, but clock - sources/events need to be extremly late suspended and
-> early resumed. How can we ensure this ?
-
-Make them be at the top of the device tree by adding them early. That's =
-
-the whole point of the device tree after all - we have an ordering that is =
-
-enforced by its topology, and that we sort by when things were added.
-
-Right now the way things work is (iirc - somebody like Greg should =
-
-double-check me) is that we add all devices to the power list at =
-
-device_add() time by traversing the devices fromt he root all the way out, =
-
-and doing a device_add() which does a device_pm_add(), which in turn adds =
-
-it to the power-management list - so that the list is always topologically =
-
-sorted.
-
-So the only thing that needs to be done is to make sure that we add the =
-
-timer devices early during bootup - something we have to do *anyway*. If a =
-
-device is added early in bootup, that automatically means that it will be =
-
-suspended late, and resumed early - because we maintain that order all the =
-
-way through..
-
-		Linus
+Cheers
