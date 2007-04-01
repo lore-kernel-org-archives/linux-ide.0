@@ -1,47 +1,38 @@
-From: Aaron Lehmann <aaronl@vitelus.com>
-Subject: Re: Silent corruption on AMD64
-Date: Sat, 31 Mar 2007 20:20:42 -0700
-Message-ID: <20070401032042.GU15189@vitelus.com>
-References: <20070401012736.GT15189@vitelus.com> <20070331195236.7c818ed5.akpm@linux-foundation.org>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [PATCH v2] Add suspend/resume for HPET
+Date: Sat, 31 Mar 2007 21:13:51 -0700
+Message-ID: <200703312113.52789.david-b@pacbell.net>
+References: <Pine.LNX.4.64.0703160925270.26106@woody.linux-foundation.org>
+	<200703311232.57505.david-b@pacbell.net>
+	<b6a2187b0703312013o6c305e00v829894f215812550@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vitelus.com ([63.99.9.247]:36158 "EHLO vitelus.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924AbXDADVS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 Mar 2007 23:21:18 -0400
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <b6a2187b0703312013o6c305e00v829894f215812550@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20070331195236.7c818ed5.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Jeff Chua <jeff.chua.linux@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-acpi@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, jgarzik@pobox.com, gregkh@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@stusta.de>, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, Thomas Gleixner <tglx@linutronix.de>, "Eric W. Biederman" <ebiederm@xmission.com>, Jens Axboe <jens.axboe@oracle.com>, "Michael S. Tsirkin" <mst@mellanox.co.il>, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, linux-pm@lists.linux-foundation.org, Maxim Levitsky <maximlevitsky@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, Mar 31, 2007 at 07:52:36PM -0700, Andrew Morton wrote:
-> Are you able to provide us with some before-and-after data so we
-> can see this corruption.
-> 
-> See, if it's dropped-bits or shifted-data or eight-byte-aligned
-> kernel addresses or whatever, that helps us generate theories..
+On Saturday 31 March 2007 8:13 pm, Jeff Chua wrote:
+> On 4/1/07, David Brownell <david-b@pacbell.net> wrote:
+> > for those will all get grouped together ... suspended "very late" and
+> > resumed "very early", regardless of when they get registered.  Pretty
+> > much the driver model parts of what Linus was suggesting; clockevent
+> > bits would still be needed.
+> =
 
-Sure.
+> I tested your patch with CONFIG_NO_HZ=3Dy, but it still hangs while
+> suspending to disk (before the percent saving).
 
-I created a large file containing the repeating ASCII string "abcdefgh",
-and subjected it to the corruption I described earlier. The correct
-hex sequence is:
-
-61 62 63 64 65 66 67 68
-
-Here were some of the permutations that I found in corrupted copies:
-
-61 62 63 64 92 57 5C 0A
-61 62 63 64 A2 2D E1 C7
-61 62 63 64 11 38 0E B6
-61 62 63 64 57 B1 EE 1F
-61 62 63 64 E0 3D 10 21
-61 62 63 64 97 E1 C0 F5
-
-I did not observe any errors other than replacements of four-byte
-blocks. These errors always started at addresses in the file that had
-a remainder of 12 modulo 16 (i.e. the hex addresses always ended in
-'C'). There was an average about one error per 300MB.
+Of course.  No clockevent updates...
