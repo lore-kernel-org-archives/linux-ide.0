@@ -1,61 +1,41 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Silent corruption on AMD64
-Date: 01 Apr 2007 15:58:59 +0200
-Message-ID: <p737iswqjq4.fsf@bingen.suse.de>
-References: <20070401012736.GT15189@vitelus.com>
-	<20070401030315.GA24080@jim.sh> <20070401043905.GV15189@vitelus.com>
+From: =?ISO-8859-15?Q?R=FCdiger?= Otte <best-before-2007-07-01@gmx.net>
+Subject: Re: Problems with VIA VT8251 SATA and kernels above 2.6.18.x
+Date: Sun, 1 Apr 2007 15:50:39 +0200
+Message-ID: <20070401155039.205f4148@snoodles.holzweg.net>
+References: <20070326012754.598fa923@snoodles.holzweg.net>
+	<200703281802.11613.grivell@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20070401043905.GV15189@vitelus.com>
-Sender: netdev-owner@vger.kernel.org
-To: Aaron Lehmann <aaronl@vitelus.com>
-Cc: Jim Paris <jim@jtan.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:47577 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S933063AbXDANun convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Apr 2007 09:50:43 -0400
+In-Reply-To: <200703281802.11613.grivell@comcast.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Aaron Lehmann <aaronl@vitelus.com> writes:
+On Wed, 28 Mar 2007 17:02:11 -0500
+Geoff Rivell wrote:
 
-[adding netdev]
-[meta-comment: I wish people wouldn't use such unnecessarily broad subjects 
--- how is it the x86-64 port's or AMD's fault when you have broken hardware? 
-Would anybody write "Silent corruption on i386" or "Silent corruption 
-on Intel" or "Silent corruption on Linux"?]
+> On Sunday 25 March 2007 19:27, R=FCdiger Otte wrote:
+> > Dear Linux ATA people,
+> >
+> > the SATA-Controller on Asus A8V-MX mainboard (VIA VT8251) doesn't
+> > recognize an attached SATA-Harddisk (Western Digital WD3200AAKS in
+> > my case) with kernels 2.6.19 and above. I get the error with
+> > 2.6.19, 2.6.20 and 2.6.21-rc4, but when switching back to
+> > 2.6.18.8 everything works fine. Also there are several identical
+> > reports of this problem on VIA arena and other sites, so maybe
+> > someone could fix this. Appended is the kernel output of
+> > ahci-driver both with working and with non working kernels.
+>=20
+> You need to add pci=3Dnomsi to your kernel boot line.
 
-> On Sat, Mar 31, 2007 at 08:03:16PM -0700, Jim Paris wrote:
-> > Since it shows up under heavy load that includes unrelated devices, I
-> > think ruling out hardware problems is important.  Some suggestions:
-> 
-> I've been able to narrow it down to the Realtek Ethernet card. I can't
-> reproduce the problem using onboard Ethernet, whereas the Realtek card
-> causes trouble in any slot. However, I still don't know whether it's a
-> hardware or software issue, or whether it's caused directly or
-> indirectly by the Realtek card.
+Thanks for the hint. With this option enabled, the drive can be seen
+from ahci-driver.
 
-You could disable the hardware checksumming support in the card with
-the appended patch. Then hopefully Linux will catch most corruptions
-(but perhaps not all because TCP checksums are not very strong) 
-You can watch failed checksums then with netstat -s
-
--Andi
-
-Index: linux-2.6.21-rc3-net/drivers/net/r8169.c
-===================================================================
---- linux-2.6.21-rc3-net.orig/drivers/net/r8169.c
-+++ linux-2.6.21-rc3-net/drivers/net/r8169.c
-@@ -2477,6 +2477,7 @@ static inline int rtl8169_fragmented_fra
- 
- static inline void rtl8169_rx_csum(struct sk_buff *skb, struct RxDesc *desc)
- {
-+#if 0
- 	u32 opts1 = le32_to_cpu(desc->opts1);
- 	u32 status = opts1 & RxProtoMask;
- 
-@@ -2485,6 +2486,7 @@ static inline void rtl8169_rx_csum(struc
- 	    ((status == RxProtoIP) && !(opts1 & IPFail)))
- 		skb->ip_summed = CHECKSUM_UNNECESSARY;
- 	else
-+#endif
- 		skb->ip_summed = CHECKSUM_NONE;
- }
- 
-
+--=20
+R=FCdiger
