@@ -1,140 +1,201 @@
-From: Maneesh Soni <maneesh@in.ibm.com>
-Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Mon, 2 Apr 2007 17:40:53 +0530
-Message-ID: <20070402121053.GA8450@in.ibm.com>
-References: <460CDBA6.5030608@gmail.com> <1175257751.3760.19.camel@mulgrave.il.steeleye.com> <460D12B8.6050101@gmail.com> <1175278774.3760.44.camel@mulgrave.il.steeleye.com> <20070401195943.GA29627@htj.dyndns.org>
-Reply-To: maneesh@in.ibm.com
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] Add support for asynchronous scans to libata
+Date: Mon, 02 Apr 2007 09:21:54 -0400
+Message-ID: <46110372.4070101@emulex.com>
+References: <20061208211236.GC29763@parisc-linux.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:54908 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933980AbXDBMKf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Apr 2007 08:10:35 -0400
-Content-Disposition: inline
-In-Reply-To: <20070401195943.GA29627@htj.dyndns.org>
+Received: from emulex.emulex.com ([138.239.112.1]:35540 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964868AbXDBNWa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Apr 2007 09:22:30 -0400
+In-Reply-To: <20061208211236.GC29763@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, gregkh@suse.de, hugh@veritas.com, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, oneukum@suse.de, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Mon, Apr 02, 2007 at 04:59:43AM +0900, Tejun Heo wrote:
-> Hello, James, Greg.
-> 
-> On Fri, Mar 30, 2007 at 01:19:34PM -0500, James Bottomley wrote:
-> > That's sort of what I was reaching for too ... it just looks to me that
-> > all the sysfs glue is in kobject, so they make a good candidate for the
-> > pure sysfs objects.  Whatever we do, there has to be breakable cross
-> > linking between the driver's tree and the sysfs representation ... of
-> > course, nasty things like ksets get in the way of considering the
-> > objects as separate, sigh.
-> 
-> The dependency between kobject and sysfs doesn't seem to be that
-> tight.  I managed to break them such that sysfs can disconnect from
-> its kobject on deletion _without_ changing sysfs/kobject API.
-> 
-> > > This way the sysfs reference counting can be put completely out of
-> > > picture without impacting the rest of code.  Handling symlink and
-> > > suicidal attributes might need some extra attention but I think they can
-> > > be done.
-> > 
-> > True ... but you'll also have to implement something within sysfs to do
-> > refcounting ... it needs to know how long to keep its nodes around.
-> 
-> sysfs_dirent already had reference counter and plays that role quite
-> nicely.
-> 
-> Okay, here's preliminary patch.  I've tested it very lightly so it's
-> likely to contain bugs and definitely needs to be splitted.
-> 
-> Dependencies between sysfs/kobject objects are clearer now and I think
-> I got the locking and referencing correct.  This patch immediately
-> fixes 'sysfs attr grabbing the wrong kobject and module' problem -
-> sysfs and module lifetimes are unrelated now.  We can drop
-> half-working attr->owner.
-> 
-> * A sysfs node no longer hold reference to its kobject.  It just
->   attaches itself to the kobject on creation and detaches on deletion.
-> 
+Matt,
 
-Earlier only sysfs leaf nodes held ref to kobject that is also 
-only during open/close for regular files and in create/follow/destroy
-symlinks.
+Have your resolved the unload race conditions yet?
 
-> * For a dir node, sysfs_dirent no longer directly points to kobject.
->   It points to sysfs_dir which contains pointer to kobject and a rwsem
->   to protect it.
-> 
-> * An open file doesn't hold a reference to kobject.  It holds a
->   reference to sysfs_dirent.  kobject pointer is verified and
->   show/store are performed with rwsem read-locked.  Deletion
->   disconnects the sysfs from its kobject while the rwsem is
->   write-locked.  This mechanism replaces buffer orphaning and kobject
->   validation during open.
-> 
-> * attr ops is determined on sysfs node creation not on open.  This is
->   a step toward making kobject opaque in sysfs.
-> 
-> * bin files are handled similarly but mmap makes the open file hold
->   reference to the kobject till it's closed.  Any better ideas?
-> > * symlink is reimplemented in terms of sysfs_dirents instead of
->   kobjects.  sysfs_dirent->s_parent is added and each sysfs_dirent
->   holds reference to its parent.  Currently walking up the tree
->   requires read locking and unlocking sysfs_dir at each level.  This
->   can be removed if name is added to sysfs_dirent.
-> 
-> * As kobject can be disconnected anytime and sysfs code still needs to
->   look follow dentry link in kobject, kobject->dentry is protected by
->   dcache_lock.  Once kobject becomes opaque to sysfs, this hack can go
->   away.  All in all, making kobject completely opaque in sysfs isn't
->   too far away after this patch although it would require mass code
->   update.
-> 
-> What do you think about this approach?  If it's acceptable, I'll test
-> further and split the patch into logical steps to get it reviewed
-> better.
-> 
+We'd like to update lpfc for the async scans, but our testing gets blocked
+very quickly by the bugs. The bugs are not necessarily specific to lpfc
+or to FC.
 
-It does complicate a lot in sysfs code. The code is already quite fragile
-considering the races (akpm is facing a couple of them, and which I am 
-still working on) from VFS/dentry/inode angle. The previous rework of
-sysfs was to make dentries/inodes corresponding to sysfs leaf nodes
-reclaimable, i.e. looking at sysfs from VFS angle and IIUC you are 
-looking at it from the driver layer to solve races between module/driver-
-layer/sysfs, which is a valid purpose.
+Stack traces are below. Simple ismod/rmmod loop can trigger them....
 
-Following are the few rules in short to take care
-1. directory dentries are pinned
-2. regular files and symlink dentries are reclaimable
-3. sysfs_dirent tree is protected using the parent inode's (ie directory 
-   dentry's inode) i_mutex
-4. sysfs rename is protected using a semaphore, sysfs_rename_sem also.
-5. sysfs_dirent starts with refcount of 1 at the time of creation, refcount
-   is incremented/decremented when a dentry is attached or detached. So, the
-   refcount at the max can be 2. 
-6. symlink creation pins the target kobject, so that the corresponding dentry
-   is also pinned and removal releases the kobject.
+-- james s
 
-There were few more additions like sysfs poll and shadow directory support,
-for which respective authors can review and I can review the VFS related
-changes but please split the patches as you like but one possible way
-could be as chunks dealing with changes related to
 
-1. data structure changes
-2. creation/removal of directories
-3. creation/removal of files
-4. creation/removal of symlinks
-5. open/read/write/close of a file
 
-As far as testing is considered, doing insmod/rmmod in a tight loop in
-parallel with working (find, open/read/writhe/close/ file) on /sys, 
-makes a good enough testcase to hit races.
+First one is an rmmod while lpfc is active in it's scan_start function.
+I think we're in a sleep waiting for the board to be ready when the driver
+is yanked out from underneath us.
 
-Thanks
-Manesh
+Second one is an rmmod while do_scsi_scan_host is in a loop calling
+scan_finished.
 
---
-Maneesh Soni
-Linux Technology Center,
-IBM India Systems and Technology Lab, 
-Bangalore, India
+Third one is an rmmod immediately after completion of do_scan_async.
+
+
+STACK TRACE 1
+-------------
+
+BUG: unable to handle kernel paging request at virtual address f8941836
+  printing eip:
+f8941836
+*pde = 37e59067
+Oops: 0000 [#1]
+SMP
+Modules linked in: autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 dm_mirror dm_mod video sbs i2c_e6
+  printing eip:
+f8941836
+*pde = 37e59067
+  chipreg pcspkr tg3 scsi_transport_fc mptspi mptscsih mptbase scsi_transport_spi sd_mod scsi_mod exd
+CPU:    2
+EIP:    0060:[<f8941836>]    Not tainted VLI
+EFLAGS: 00010246   (2.6.20-rc7-jimp #1)
+EIP is at 0xf8941836
+eax: 00000000   ebx: 00000000   ecx: c1900000   edx: 00000286
+esi: f7ab6000   edi: f887158d   ebp: f7ab62e8   esp: ecec9f30
+ds: 007b   es: 007b   ss: 0068
+Process scsi_scan_6 (pid: 15927, ti=ecec9000 task=f2309000 task.ti=ecec9000)
+Stack: c04a2183 f65b6cc4 f8963c80 f8963c80 f71e38d0 ffffffef c04a1cef 00008180
+        00000008 f6e4aa00 00000000 00000046 00000000 f7ab62e8 f7ab6000 f887158d
+        f75fa3e0 f7ab62e8 f7ab6000 f887158d f75fa3e0 f894d6dc f89593e4 f7ab6000
+Call Trace:
+  [<c04a2183>] sysfs_dirent_exist+0x20/0x5f
+  [<c04a1cef>] sysfs_add_file+0x66/0x70
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<f88713e0>] do_scsi_scan_host+0x30/0x8b [scsi_mod]
+  [<f88715aa>] do_scan_async+0x1d/0x126 [scsi_mod]
+  [<c041f7b4>] complete+0x39/0x48
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<c0436924>] kthread+0xb0/0xd8
+  [<c0436874>] kthread+0x0/0xd8
+  [<c0404977>] kernel_thread_helper+0x7/0x10
+  =======================
+Code:  Bad EIP value.
+EIP: [<f8941836>] 0xf8941836 SS:ESP 0068:ecec9f30
+  <0>Oops: 0000 [#2]
+SMP
+Modules linked in: autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 dm_mirror dm_mod video sbs i2c_ed
+CPU:    3
+EIP:    0060:[<f8941836>]    Not tainted VLI
+EFLAGS: 00010246   (2.6.20-rc7-jimp #1)
+EIP is at 0xf8941836
+eax: 00000000   ebx: 00000000   ecx: c1902000   edx: 00000286
+esi: f74ff000   edi: f887158d   ebp: f74ff2e8   esp: ec3c1f30
+ds: 007b   es: 007b   ss: 0068
+Process scsi_scan_5 (pid: 15919, ti=ec3c1000 task=f7b92000 task.ti=ec3c1000)
+Stack: c04a2183 ece3821c f8963c80 f8963c80 f6b3942c ffffffef c04a1cef 00008180
+        00000008 f6efea00 00000000 00000046 00000002 f74ff2e8 f74ff000 f887158d
+        f7897de0 f74ff2e8 f74ff000 f887158d f7897de0 f894d6dc f89593e4 f74ff000
+Call Trace:
+  [<c04a2183>] sysfs_dirent_exist+0x20/0x5f
+  [<c04a1cef>] sysfs_add_file+0x66/0x70
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<f88713e0>] do_scsi_scan_host+0x30/0x8b [scsi_mod]
+  [<f88715aa>] do_scan_async+0x1d/0x126 [scsi_mod]
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<c0436924>] kthread+0xb0/0xd8
+  [<c0436874>] kthread+0x0/0xd8
+  [<c0404977>] kernel_thread_helper+0x7/0x10
+  =======================
+
+STACK TRACE 2
+-------------
+
+BUG: unable to handle kernel NULL pointer dereference at virtual address 00000000
+  printing eip:
+c0548435
+*pde = 00000000
+Oops: 0000 [#3]
+SMP
+Modules linked in: lpfc autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 dm_mirror dm_mod video sbs d
+CPU:    3
+EIP:    0060:[<c0548435>]    Not tainted VLI
+EFLAGS: 00010202   (2.6.20-rc7-jimp #1)
+EIP is at make_class_name+0x27/0x7d
+eax: 00000000   ebx: ffffffff   ecx: ffffffff   edx: 0000000b
+esi: f887c29a   edi: 00000000   ebp: 00000000   esp: edd27ec4
+ds: 007b   es: 007b   ss: 0068
+Process fc_wq_7 (pid: 16050, ti=edd27000 task=f68b4550 task.ti=edd27000)
+Stack: f65d35f8 f8889e20 f65d35f8 f65d35f0 f8889da0 c0548616 00000000 f65d35f0
+        f69f0030 f6fdc000 00000000 c054869c f65d3400 f88720f8 f65d3400 f69f0030
+        f8872152 f65d3400 f69f0000 f88721c9 f6fdc014 f6d1d848 f8872233 f8872247
+Call Trace:
+  [<c0548616>] class_device_del+0x8c/0x10a
+  [<c054869c>] class_device_unregister+0x8/0x10
+  [<f88720f8>] __scsi_remove_device+0x1d/0x60 [scsi_mod]
+  [<f8872152>] scsi_remove_device+0x17/0x20 [scsi_mod]
+  [<f88721c9>] __scsi_remove_target+0x6e/0xa1 [scsi_mod]
+  [<f8872233>] __remove_child+0x0/0x18 [scsi_mod]
+  [<f8872247>] __remove_child+0x14/0x18 [scsi_mod]
+  [<c0545dc0>] device_for_each_child+0x1a/0x3c
+  [<f887222a>] scsi_remove_target+0x2e/0x37 [scsi_mod]
+  [<f88b7ae6>] fc_rport_final_delete+0x51/0x9a [scsi_transport_fc]
+  [<c04339ff>] run_workqueue+0x85/0x125
+  [<c042eb72>] do_sigaction+0x10f/0x149
+  [<f88b7a95>] fc_rport_final_delete+0x0/0x9a [scsi_transport_fc]
+  [<c0434359>] worker_thread+0xf9/0x124
+  [<c0421072>] default_wake_function+0x0/0xc
+  [<c0434260>] worker_thread+0x0/0x124
+  [<c0436924>] kthread+0xb0/0xd8
+  [<c0436874>] kthread+0x0/0xd8
+  [<c0404977>] kernel_thread_helper+0x7/0x10
+  =======================
+Code: 5b 04 5b c3 55 31 ed 57 89 c7 56 89 c6 53 83 cb ff 83 ec 04 89 d9 89 14 24 89 e8 f2 ae f7 d1
+
+STACK TRACE 3
+-------------
+
+BUG: unable to handle kernel NULL pointer dereference at virtual address 00000000
+  printing eip:
+00000000
+*pde = 00000000
+Oops: 0000 [#1]
+SMP
+Modules linked in: lpfc autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 dm_mirror dm_mod video sbs d
+CPU:    0
+EIP:    0060:[<00000000>]    Not tainted VLI
+EFLAGS: 00010206   (2.6.20-rc7-jimp #1)
+EIP is at _stext+0x3fbffc70/0x14
+eax: f64c2830   ebx: f64c2830   ecx: f887181b   edx: f6ee1414
+esi: f6ee1414   edi: f6ee1414   ebp: c054a70a   esp: eb5f4e98
+ds: 007b   es: 007b   ss: 0068
+Process vol_id (pid: 32421, ti=eb5f4000 task=e50c1550 task.ti=eb5f4000)
+Stack: c054a625 00000000 c04daa3e ec23d4c0 e9fa4000 f6ee1400 f6ee1414 e7df8800
+        f887184f e7df8a84 f6ee1400 00000286 e7df8800 c0433bc4 f8871a7c f6ee1414
+        e7df890c c06c44a8 c06c4440 f6ee148c c0433bc4 c0545cc9 ffffffff eb1f8e90
+Call Trace:
+  [<c054a625>] attribute_container_device_trigger+0x33/0xa2
+  [<c04daa3e>] kobject_cleanup+0x3e/0x5e
+  [<f887184f>] scsi_target_reap_usercontext+0x34/0x89 [scsi_mod]
+  [<c0433bc4>] execute_in_process_context+0x16/0x38
+  [<f8871a7c>] scsi_device_dev_release_usercontext+0x92/0xba [scsi_mod]
+  [<c0433bc4>] execute_in_process_context+0x16/0x38
+  [<c0545cc9>] device_release+0x26/0x6b
+  [<c04daa3e>] kobject_cleanup+0x3e/0x5e
+  [<c04daa5e>] kobject_release+0x0/0x8
+  [<c04db507>] kref_put+0x60/0x6d
+  [<c04860fa>] invalidate_bh_lru+0x26/0x37
+  [<f886a0ac>] scsi_device_put+0x16/0x2e [scsi_mod]
+  [<f88322d7>] scsi_disk_put+0x22/0x2e [sd_mod]
+  [<f8832c19>] sd_release+0x69/0x70 [sd_mod]
+  [<c04570bb>] truncate_inode_pages+0x17/0x1c
+  [<c048a4be>] __blkdev_put+0x5b/0x103
+  [<c046c70f>] __fput+0xa5/0x15b
+  [<c046a23b>] filp_close+0x51/0x58
+  [<c046b168>] sys_close+0x6d/0xa3
+  [<c0403d9c>] syscall_call+0x7/0xb
+  =======================
+Code:  Bad EIP value.
+EIP: [<00000000>] _stext+0x3fbffc70/0x14 SS:ESP 0068:eb5f4e98
+
