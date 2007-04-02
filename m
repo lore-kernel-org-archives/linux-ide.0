@@ -1,48 +1,75 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Mon, 2 Apr 2007 12:33:11 -0700 (PDT)
-Message-ID: <824244.95510.qm@web31801.mail.mud.yahoo.com>
-References: <1175278774.3760.44.camel@mulgrave.il.steeleye.com>
-Reply-To: ltuikov@yahoo.com
+From: <Stuart_Hayes@Dell.com>
+Subject: [PATCH] ugly messages trying to open CD drive with no media present
+Date: Mon, 2 Apr 2007 14:51:11 -0500
+Message-ID: <DFEF91B22ED07447AB6AA4B237F913F9524A30@ausx3mpc125.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C77560.43AA2D80"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web31801.mail.mud.yahoo.com ([68.142.207.64]:22039 "HELO
-	web31801.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S965744AbXDBTdM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Apr 2007 15:33:12 -0400
-In-Reply-To: <1175278774.3760.44.camel@mulgrave.il.steeleye.com>
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:47511 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965756AbXDBTvN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Apr 2007 15:51:13 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Tejun Heo <htejun@gmail.com>
-Cc: gregkh@suse.de, hugh@veritas.com, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: alan@lxorguk.ukuu.org.uk
+Cc: linux-ide@vger.kernel.org
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+This is a multi-part message in MIME format.
 
-> I'd favour trying to separate kobject and struct device for this ...
-> move all the sysfs stuff into kobject and device only stuff into struct
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------_=_NextPart_001_01C77560.43AA2D80
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Currently the kobject implementation is pure and well-defined.  It is
-a good implementation [kobject], and I'd hate to see it lost into being
-convoluted with/into another model.
 
-Currently the infrastructure layers are well defined:
-   kobject ->  (A layer with objects, their behavor and implementation)
-          device ->   (--"--)
-                  sysfs.   (--"--)
-This isn't that bad of an infrastructure.
+I get the following error messages when trying to open a CD device
+(specifically, the Teac CD-ROM CD-224E) that has no media present:
 
-It is this well defined layering, i.e. objects, their behavior and
-implementation, that allows different (better/worse) infrastructures
-to be built on top of it.
+hda: packet command error: status=3D0x51 { DriveReady SeekComplete Error =
+}
+hda: packet command error: error=3D0x54 { AbortedCommand
+LastFailedSense=3D0x05 }
+ide: failed opcode was: unknown
 
-It is this well-defined layering which will allow what Tejun wants
-to be implemented.
+This happens when a "start stop unit" command (0x1b 0 0 0 3 0 0 0 0 0)
+is sent to the drive to try to close the CD-ROM tray, but this drive
+doesn't have that capability (it's a slim portable-type CD-ROM), so it
+reports sense key 5 (illegal request) with asc/ascq 24/0.  This is
+exactly how SFF8090i says it should respond.
 
-> device ... but that would get us into disentangling the ksets, which, on
-> balance, isn't going to be fun ...
+But ide-cd.c (in cdrom_decode_status() ) just sees sense key 5 and spews
+out an error.  It then goes on to request sense data, and
+cdrom_log_sense() understands this error and doesn't log it.
 
-     Luben
+The patch, for kernel 2.6.20.4, suppresses this error message.
 
+Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
+
+
+------_=_NextPart_001_01C77560.43AA2D80
+Content-Type: application/octet-stream;
+	name="idecd_suppress_startstop_error_msg_2.6.20.4.patch"
+Content-Transfer-Encoding: base64
+Content-Description: idecd_suppress_startstop_error_msg_2.6.20.4.patch
+Content-Disposition: attachment;
+	filename="idecd_suppress_startstop_error_msg_2.6.20.4.patch"
+
+LS0tIGxpbnV4LTIuNi4yMC40L2RyaXZlcnMvaWRlL2lkZS1jZC5jLm9yaWcJMjAwNy0wMy0yMyAx
+NDo1Mjo1MS4wMDAwMDAwMDAgLTA1MDAKKysrIGxpbnV4LTIuNi4yMC40L2RyaXZlcnMvaWRlL2lk
+ZS1jZC5jCTIwMDctMDQtMDIgMDg6Mjg6MjQuMDAwMDAwMDAwIC0wNTAwCkBAIC03NDIsNiArNzQy
+LDE1IEBAIHN0YXRpYyBpbnQgY2Ryb21fZGVjb2RlX3N0YXR1cyhpZGVfZHJpdmUKIAkJCWNkcm9t
+X3Nhd19tZWRpYV9jaGFuZ2UgKGRyaXZlKTsKIAkJCS8qcHJpbnRrKCIlczogbWVkaWEgY2hhbmdl
+ZFxuIixkcml2ZS0+bmFtZSk7Ki8KIAkJCXJldHVybiAwOworIAkJfSBlbHNlIGlmICgoc2Vuc2Vf
+a2V5ID09IElMTEVHQUxfUkVRVUVTVCkgJiYKKyAJCQkgICAocnEtPmNtZFswXSA9PSBHUENNRF9T
+VEFSVF9TVE9QX1VOSVQpKSB7CisgCQkJLyoKKyAJCQkgKiBEb24ndCBwcmludCBlcnJvciBtZXNz
+YWdlIGZvciB0aGlzIGNvbmRpdGlvbi0tCisgCQkJICogU0ZGODA5MGkgaW5kaWNhdGVzIHRoYXQg
+NS8yNC8wMCBpcyB0aGUgY29ycmVjdAorIAkJCSAqIHJlc3BvbnNlIHRvIGEgcmVxdWVzdCB0byBj
+bG9zZSB0aGUgdHJheSBpZiB0aGUKKyAJCQkgKiBkcml2ZSBkb2Vzbid0IGhhdmUgdGhhdCBjYXBh
+YmlsaXR5LgorIAkJCSAqIGNkcm9tX2xvZ19zZW5zZSgpIGtub3dzIHRoaXMhCisgCQkJICovCiAJ
+CX0gZWxzZSBpZiAoIShycS0+Y21kX2ZsYWdzICYgUkVRX1FVSUVUKSkgewogCQkJLyogT3RoZXJ3
+aXNlLCBwcmludCBhbiBlcnJvci4gKi8KIAkJCWlkZV9kdW1wX3N0YXR1cyhkcml2ZSwgInBhY2tl
+dCBjb21tYW5kIGVycm9yIiwgc3RhdCk7Cg==
+
+------_=_NextPart_001_01C77560.43AA2D80--
