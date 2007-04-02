@@ -1,106 +1,73 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 4/4] libata: Limit ATAPI DMA to R/W commands only for TORiSAN
- DVD drives (take 3)
-Date: Mon, 02 Apr 2007 11:39:25 +0800
-Message-ID: <46107AED.50003@tw.ibm.com>
-References: <461077CC.4040708@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
+Date: Mon, 2 Apr 2007 11:20:48 +0200
+Message-ID: <20070402112048.047867c1@gondolin.boeblingen.de.ibm.com>
+References: <460CDBA6.5030608@gmail.com>
+	<1175257751.3760.19.camel@mulgrave.il.steeleye.com>
+	<460D12B8.6050101@gmail.com>
+	<1175278774.3760.44.camel@mulgrave.il.steeleye.com>
+	<20070401195943.GA29627@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:59252 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752869AbXDBDjb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Apr 2007 23:39:31 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l323dUcB025461
-	for <linux-ide@vger.kernel.org>; Sun, 1 Apr 2007 23:39:30 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l323dUAb194748
-	for <linux-ide@vger.kernel.org>; Sun, 1 Apr 2007 21:39:30 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l323dT5I012007
-	for <linux-ide@vger.kernel.org>; Sun, 1 Apr 2007 21:39:30 -0600
-In-Reply-To: <461077CC.4040708@tw.ibm.com>
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:24634 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933281AbXDBJSo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Apr 2007 05:18:44 -0400
+In-Reply-To: <20070401195943.GA29627@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, YUP <yupadmin@gmail.com>, Vlad Codrea <VladCodrea@mail.utexas.edu>
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-patch 4/4:
+On Mon, 2 Apr 2007 04:59:43 +0900,
+Tejun Heo <htejun@gmail.com> wrote:
 
-  Limit ATAPI DMA to R/W commands only for TORiSAN DRD-N216 DVD-ROM drives
-  (http://bugzilla.kernel.org/show_bug.cgi?id=6710)
+> Okay, here's preliminary patch.  I've tested it very lightly so it's
+> likely to contain bugs and definitely needs to be splitted.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
-Other command like READ_DVD_STRUCTURE seems to work under ATAPI DMA, but
-I am convervative about it. So, only allow ATAPI DMA for Read/Write for safty.
+Cool. However, there's something fishy there (not sure whether it's in
+your patch or a latent bug in the ccw bus code that just has been
+uncovered):
 
-Patch against libata-dev tree, for your review, thanks.
+------------[ cut here ]------------
+kernel BUG at mm/slab.c:607!
+illegal operation: 0001 [#1]
+CPU:    1    Not tainted
+Process kslowcrw (pid: 36, task: 0000000001a80cc0, ksp:
+0000000001a87ce0) Krnl PSW : 0404000180000000 00000000000b21b0
+(kfree+0x144/0x154) R:0 T:1 IO:0 EX:0 Key:0 M:1 W:0 P:0 AS:0 CC:0 PM:0
+EA:3 Krnl GPRS: 0000000000000000 0000000000000000 00000000009836d8
+000003fffd22ffe0 00000000000b20aa 0000000000396ba8 0000000001a6d100
+0000000000986c88 0700000001a879d8 0000000000555428 000000000344a5b0
+0000000001a879c8 000000000344a500 0000000000390ca8 00000000000b20aa
+0000000001a879c8 Krnl Code: 00000000000b21a2: e392c0480024
+stg     %r9,72(%r2,%r12) 00000000000b21a8: a7f4ffc9           brc
+15,1000b213a 00000000000b21ac: a7f40001           brc     15,b21ae
+          >00000000000b21b0: a7f4ff9d           brc     15,1000b20ea
+           00000000000b21b4: e33030100004       lg      %r3,16(%r3)
+           00000000000b21ba: a7f4ff90           brc     15,1000b20da
+           00000000000b21be: 0707               bcr     0,%r7
+           00000000000b21c0: eb8ff0580024       stmg
+%r8,%r15,88(%r15) Call Trace:
+([<00000000000b20aa>] kfree+0x3e/0x154)
+ [<00000000001166f2>] release_sysfs_dirent+0x3e/0xf4
+ [<0000000000114914>] sysfs_hash_and_remove+0x150/0x154
+ [<0000000000118aec>] remove_files+0x48/0x68
+ [<0000000000118b84>] sysfs_remove_group+0x78/0xe8
+ [<00000000001cce3c>] device_remove_groups+0x48/0x68
+ [<00000000001cd4c0>] device_remove_attrs+0x3c/0x7c
+ [<00000000001cd70e>] device_del+0x20e/0x3a8
+ [<00000000001cd8d2>] device_unregister+0x2a/0x44
+ [<000000000022fb2c>] css_sch_device_unregister+0x3c/0x54
+ [<0000000000230124>] css_evaluate_subchannel+0x2f0/0x400
+ [<000000000023041a>] css_trigger_slow_path+0xda/0x154
+ [<0000000000054c9a>] run_workqueue+0x136/0x1fc
+ [<0000000000054e3a>] worker_thread+0xda/0x170
+ [<000000000005b05a>] kthread+0x122/0x15c
+ [<0000000000019912>] kernel_thread_starter+0x6/0xc
+ [<000000000001990c>] kernel_thread_starter+0x0/0xc
 
-diff -Nrup 03_max_sect/drivers/ata/libata-core.c 04_dma_rw_only/drivers/ata/libata-core.c
---- 03_max_sect/drivers/ata/libata-core.c	2007-04-02 10:56:59.000000000 +0800
-+++ 04_dma_rw_only/drivers/ata/libata-core.c	2007-04-02 11:01:18.000000000 +0800
-@@ -1787,6 +1787,10 @@ int ata_dev_configure(struct ata_device 
- 	if (ata_device_blacklisted(dev) & ATA_HORKAGE_MAX_SEC_128)
- 		dev->max_sectors = min(ATA_MAX_SECTORS_128, dev->max_sectors);
- 
-+	/* limit ATAPI DMA to R/W commands only */
-+	if (ata_device_blacklisted(dev) & ATA_HORKAGE_DMA_RW_ONLY)
-+		dev->horkage |= ATA_HORKAGE_DMA_RW_ONLY;
-+
- 	if (ap->ops->dev_config)
- 		ap->ops->dev_config(ap, dev);
- 
-@@ -3356,7 +3360,8 @@ static const struct ata_blacklist_entry 
- 	{ "SAMSUNG CD-ROM SN-124","N001",	ATA_HORKAGE_NODMA },
- 
- 	/* Weird ATAPI devices */
--	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 },
-+	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 |
-+						ATA_HORKAGE_DMA_RW_ONLY },
- 
- 	/* Devices we expect to fail diagnostics */
- 
-@@ -3676,6 +3681,26 @@ int ata_check_atapi_dma(struct ata_queue
- 	struct ata_port *ap = qc->ap;
- 	int rc = 0; /* Assume ATAPI DMA is OK by default */
- 
-+	/* some drives can only do ATAPI DMA on read/write */
-+	if (unlikely(qc->dev->horkage & ATA_HORKAGE_DMA_RW_ONLY)) {
-+		struct scsi_cmnd *cmd = qc->scsicmd;
-+		u8 *scsicmd = cmd->cmnd;
-+
-+		switch (scsicmd[0]) {
-+		case READ_10:
-+		case WRITE_10:
-+		case READ_12:
-+		case WRITE_12:
-+		case READ_6:
-+		case WRITE_6:
-+			/* atapi dma maybe ok */
-+			break;
-+		default:
-+			/* turn off atapi dma */
-+			return 1;
-+		}
-+	}
-+
- 	if (ap->ops->check_atapi_dma)
- 		rc = ap->ops->check_atapi_dma(qc);
- 
-diff -Nrup 03_max_sect/include/linux/libata.h 04_dma_rw_only/include/linux/libata.h
---- 03_max_sect/include/linux/libata.h	2007-04-02 10:56:59.000000000 +0800
-+++ 04_dma_rw_only/include/linux/libata.h	2007-04-02 10:58:04.000000000 +0800
-@@ -312,6 +312,7 @@ enum {
- 	ATA_HORKAGE_NODMA	= (1 << 1),	/* DMA problems */
- 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
- 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
-+	ATA_HORKAGE_DMA_RW_ONLY	= (1 << 4),	/* ATAPI DMA for RW only */
- };
- 
- enum hsm_task_states {
-
-
+This happens when I detach a device (which causes it to be
+unregistered). I'll look at it when I'm fully operational.
