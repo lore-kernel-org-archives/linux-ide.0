@@ -1,50 +1,54 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: 2.6.20.3 AMD64 oops in CFQ code
-Date: Tue, 03 Apr 2007 14:49:16 +0900
-Message-ID: <4611EADC.3000306@suse.de>
-References: <20070323174630.31051.qmail@science.horizon.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] 2.6.21 fix lba48 bug in libata fill_result_tf()
+Date: Tue, 03 Apr 2007 20:54:04 +0900
+Message-ID: <4612405C.1000005@gmail.com>
+References: <46116593.6050609@rtr.ca> <4611792C.1040404@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jericho.provo.novell.com ([137.65.248.124]:52032 "EHLO
-	jericho.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753106AbXDCFts (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Apr 2007 01:49:48 -0400
-In-Reply-To: <20070323174630.31051.qmail@science.horizon.com>
+Received: from wr-out-0506.google.com ([64.233.184.230]:21502 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965565AbXDCLyL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Apr 2007 07:54:11 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so1860120wra
+        for <linux-ide@vger.kernel.org>; Tue, 03 Apr 2007 04:54:10 -0700 (PDT)
+In-Reply-To: <4611792C.1040404@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com
-Cc: dan.j.williams@intel.com, linux-ide@vger.kernel.org, neilb@suse.de, cebbert@redhat.com, jens.axboe@oracle.com, linux-kernel@dale.us, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Jeff Garzik <jgarzik@pobox.com>, Ric Wheeler <ric@emc.com>
 
-[resending.  my mail service was down for more than a week and this
-message didn't get delivered.]
+Mark Lord wrote:
+> Mark Lord wrote:
+>>
+>> This patch corrects fill_result_tf() so that the flags
+>> get copied to result_tf before they are used by tf_read().
+>>
+>> Signed-off-by:  Mark Lord <mlord@pobox.com>
+>> ---
+>> --- linux/drivers/ata/libata-core.c.orig    2007-03-21
+>> 12:46:06.000000000 -0400
+>> +++ linux/drivers/ata/libata-core.c    2007-04-02 16:16:28.000000000
+>> -0400
+>> @@ -4763,8 +4763,8 @@
+>> {
+>>     struct ata_port *ap = qc->ap;
+>>
+>> -    ap->ops->tf_read(ap, &qc->result_tf);
+>>     qc->result_tf.flags = qc->tf.flags;
+>> +    ap->ops->tf_read(ap, &qc->result_tf);
+>> }
+>>
+>> /**
+>>
+> 
+> If I understand this correctly, the impact of (not patching) this
+> is that error-handling for LBA48 accesses is broken.  Right, Tejun?
 
-linux@horizon.com wrote:
-> > Anyway, what's annoying is that I can't figure out how to bring the
-> > drive back on line without resetting the box.  It's in a hot-swap
-enclosure,
-> > but power cycling the drive doesn't seem to help.  I thought libata
-hotplug
-> > was working?  (SiI3132 card, using the sil24 driver.)
+Yes, you're right.  Thanks for fixing this.
 
-Yeah, it's working but failing resets are considered highly dangerous
-(in that the controller status is unknown and may cause something
-dangerous like screaming interrupts) and port is muted after that.  The
-plan is to handle this with polling hotplug such that libata tries to
-revive the port if PHY status change is detected by polling.  Patches
-are available but they need other things to resolved to get integrated.
- I think it'll happen before the summer.
-
-Anyways, you can tell libata to retry the port by manually telling it to
-rescan the port (echo - - - > /sys/class/scsi_host/hostX/scan).
-
-> > (H'm... after rebooting, reallocated sectors jumped from 26 to 39.
-> > Something is up with that drive.)
-
-Yeap, seems like a broken drive to me.
-
-Thanks.
+Acked-by: Tejun Heo <htejun@gmail.com>
 
 -- 
 tejun
