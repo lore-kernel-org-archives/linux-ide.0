@@ -1,35 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: add NCQ blacklist entries from Silicon Image
- Windows driver (v2)
-Date: Tue, 03 Apr 2007 13:13:11 +0900
-Message-ID: <4611D457.5050309@gmail.com>
-References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org> <20070331181940.GV14134@stusta.de> <4611D289.5090209@shaw.ca>
+From: Tejun Heo <teheo@suse.de>
+Subject: Re: 2.6.20.3 AMD64 oops in CFQ code
+Date: Tue, 03 Apr 2007 14:49:16 +0900
+Message-ID: <4611EADC.3000306@suse.de>
+References: <20070323174630.31051.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:55116 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbXDCENT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Apr 2007 00:13:19 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so155628uga
-        for <linux-ide@vger.kernel.org>; Mon, 02 Apr 2007 21:13:17 -0700 (PDT)
-In-Reply-To: <4611D289.5090209@shaw.ca>
+Received: from jericho.provo.novell.com ([137.65.248.124]:52032 "EHLO
+	jericho.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106AbXDCFts (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Apr 2007 01:49:48 -0400
+In-Reply-To: <20070323174630.31051.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, jgarzik@pobox.com
+To: linux@horizon.com
+Cc: dan.j.williams@intel.com, linux-ide@vger.kernel.org, neilb@suse.de, cebbert@redhat.com, jens.axboe@oracle.com, linux-kernel@dale.us, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 
-Robert Hancock wrote:
-> This adds some NCQ blacklist entries taken from the Silicon Image 3124/3132
-> Windows driver .inf files. There are some confirming reports of problems
-> with these drives under Linux (for example
-> http://lkml.org/lkml/2007/3/4/178)
-> so let's disable NCQ on these drives.
-> 
-> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+[resending.  my mail service was down for more than a week and this
+message didn't get delivered.]
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+linux@horizon.com wrote:
+> > Anyway, what's annoying is that I can't figure out how to bring the
+> > drive back on line without resetting the box.  It's in a hot-swap
+enclosure,
+> > but power cycling the drive doesn't seem to help.  I thought libata
+hotplug
+> > was working?  (SiI3132 card, using the sil24 driver.)
+
+Yeah, it's working but failing resets are considered highly dangerous
+(in that the controller status is unknown and may cause something
+dangerous like screaming interrupts) and port is muted after that.  The
+plan is to handle this with polling hotplug such that libata tries to
+revive the port if PHY status change is detected by polling.  Patches
+are available but they need other things to resolved to get integrated.
+ I think it'll happen before the summer.
+
+Anyways, you can tell libata to retry the port by manually telling it to
+rescan the port (echo - - - > /sys/class/scsi_host/hostX/scan).
+
+> > (H'm... after rebooting, reallocated sectors jumped from 26 to 39.
+> > Something is up with that drive.)
+
+Yeap, seems like a broken drive to me.
+
+Thanks.
 
 -- 
 tejun
