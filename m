@@ -1,60 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] 2.6.21 fix lba48 bug in libata fill_result_tf()
-Date: Wed, 04 Apr 2007 02:08:31 -0400
-Message-ID: <461340DF.60508@pobox.com>
-References: <46116593.6050609@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: libata bugfix: preserve LBA bit for HDIO_DRIVE_TASK
+Date: Wed, 04 Apr 2007 02:08:37 -0400
+Message-ID: <461340E5.2070901@garzik.org>
+References: <20070330205938.984247529@mini.kroah.org> <20070330210659.GK29450@kroah.com> <460D8510.1050102@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41616 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41631 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992677AbXDDGIg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Apr 2007 02:08:36 -0400
-In-Reply-To: <46116593.6050609@rtr.ca>
+	id S2992680AbXDDGIu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Apr 2007 02:08:50 -0400
+In-Reply-To: <460D8510.1050102@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, Ric Wheeler <ric@emc.com>
+To: Mark Lord <mlord@pobox.com>
+Cc: linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Mark Lord wrote:
-> Tejun,
+> Ideally, this would go into linux-2.6.21.
 > 
-> Current 2.6.21 libata does the following:
-> 
-> void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-> {
->        struct ata_ioports *ioaddr = &ap->ioaddr;
-> 
->        tf->command = ata_check_status(ap);
->     ...
->        if (tf->flags & ATA_TFLAG_LBA48) {
->                iowrite8(tf->ctl | ATA_HOB, ioaddr->ctl_addr);
->                tf->hob_feature = ioread8(ioaddr->error_addr);
->                ...
->        }
-> }
-> ...
-> static void fill_result_tf(struct ata_queued_cmd *qc)
-> {
->        struct ata_port *ap = qc->ap;
-> 
->        ap->ops->tf_read(ap, &qc->result_tf);
->        qc->result_tf.flags = qc->tf.flags;
-> }
-> 
-> Based on this, those last two statements fill_result_tf()
-> appear to me to be in the wrong order, in that the tf->flags
-> are uninitialized at the point where tf_read() is invoked.
-> So for lba48 commands, tf_read() won't be reading back the
-> full lba48 register contents..
-> 
-> Correct?
-> 
-> This patch corrects fill_result_tf() so that the flags
-> get copied to result_tf before they are used by tf_read().
+> Preserve the LBA bit in the DevSel/Head register for HDIO_DRIVE_TASK.
 > 
 > Signed-off-by:  Mark Lord <mlord@pobox.com>
+> ---
+> --- linux/drivers/ata/libata-scsi.c.orig    2007-03-21 
+> 13:35:02.000000000 -0400
+> +++ linux/drivers/ata/libata-scsi.c    2007-03-30 17:40:58.000000000 -0400
+> @@ -333,7 +333,7 @@
+>     scsi_cmd[8]  = args[3];
+>     scsi_cmd[10] = args[4];
+>     scsi_cmd[12] = args[5];
+> -    scsi_cmd[13] = args[6] & 0x0f;
+> +    scsi_cmd[13] = args[6] & 0x4f;
+>     scsi_cmd[14] = args[0];
 
 applied
 
