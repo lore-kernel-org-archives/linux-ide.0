@@ -1,136 +1,164 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] add correct interrupt property for pegasos ide
-Date: Wed, 4 Apr 2007 18:20:04 +0200
-Message-ID: <20070404162004.GA3016@aepfle.de>
-References: <20070404111635.GA1855@aepfle.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] add correct interrupt property for pegasos ide
+Date: Wed, 4 Apr 2007 20:10:49 +0200
+Message-ID: <200704042010.50088.bzolnier@gmail.com>
+References: <20070404111635.GA1855@aepfle.de> <20070404162004.GA3016@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:41794 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368AbXDDQTt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Apr 2007 12:19:49 -0400
+Received: from ug-out-1314.google.com ([66.249.92.172]:36572 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbXDDSB6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Apr 2007 14:01:58 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so753669uga
+        for <linux-ide@vger.kernel.org>; Wed, 04 Apr 2007 11:01:55 -0700 (PDT)
+In-Reply-To: <20070404162004.GA3016@aepfle.de>
 Content-Disposition: inline
-In-Reply-To: <20070404111635.GA1855@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Paul Mackeras <paulus@samba.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Olaf Hering <olaf@aepfle.de>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Paul Mackeras <paulus@samba.org>, Andrew Morton <akpm@linux-foundation.org>
 
 
-The firmware assigns irq 20/21 to the VIA IDE device on Pegasos.
-But the required interrupt is 14/15.
-Maybe someone confused decimal vs. hexadecimal values.
+Hi,
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
+On Wednesday 04 April 2007, Olaf Hering wrote:
+> 
+> The firmware assigns irq 20/21 to the VIA IDE device on Pegasos.
+> But the required interrupt is 14/15.
+> Maybe someone confused decimal vs. hexadecimal values.
 
----
- arch/powerpc/kernel/prom_init.c |   55 ++++++++++++++++++++++++----------------
- drivers/ide/pci/via82cxxx.c     |   11 --------
- 2 files changed, 33 insertions(+), 33 deletions(-)
+Good to see Pegasos platform being fixed to do the quirk in the proper way.
 
-Index: b/arch/powerpc/kernel/prom_init.c
-===================================================================
---- a/arch/powerpc/kernel/prom_init.c
-+++ b/arch/powerpc/kernel/prom_init.c
-@@ -2035,39 +2035,50 @@ static void __init fixup_device_tree_map
- #endif
- 
- #ifdef CONFIG_PPC_CHRP
--/* Pegasos and BriQ lacks the "ranges" property in the isa node */
-+/*
-+ * Pegasos and BriQ lacks the "ranges" property in the isa node
-+ * Pegasos needs decimal IRQ 14/15, not hexadecimal
-+ */
- static void __init fixup_device_tree_chrp(void)
- {
--	phandle isa;
--	u32 isa_ranges[6];
-+	phandle ph;
-+	u32 prop[6];
- 	u32 rloc = 0x01006000; /* IO space; PCI device = 12 */
- 	char *name;
- 	int rc;
- 
- 	name = "/pci@80000000/isa@c";
--	isa = call_prom("finddevice", 1, 1, ADDR(name));
--	if (!PHANDLE_VALID(isa)) {
-+	ph = call_prom("finddevice", 1, 1, ADDR(name));
-+	if (!PHANDLE_VALID(ph)) {
- 		name = "/pci@ff500000/isa@6";
--		isa = call_prom("finddevice", 1, 1, ADDR(name));
-+		ph = call_prom("finddevice", 1, 1, ADDR(name));
- 		rloc = 0x01003000; /* IO space; PCI device = 6 */
- 	}
--	if (!PHANDLE_VALID(isa))
--		return;
--
--	rc = prom_getproplen(isa, "ranges");
--	if (rc != 0 && rc != PROM_ERROR)
--		return;
--
--	prom_printf("Fixing up missing ISA range on Pegasos...\n");
-+	if (PHANDLE_VALID(ph)) {
-+		rc = prom_getproplen(ph, "ranges");
-+		if (rc == 0 || rc == PROM_ERROR) {
-+			prom_printf("Fixing up missing ISA range on Pegasos...\n");
-+
-+			prop[0] = 0x1;
-+			prop[1] = 0x0;
-+			prop[2] = rloc;
-+			prop[3] = 0x0;
-+			prop[4] = 0x0;
-+			prop[5] = 0x00010000;
-+			prom_setprop(ph, name, "ranges", prop, sizeof(prop));
-+		}
-+	}
- 
--	isa_ranges[0] = 0x1;
--	isa_ranges[1] = 0x0;
--	isa_ranges[2] = rloc;
--	isa_ranges[3] = 0x0;
--	isa_ranges[4] = 0x0;
--	isa_ranges[5] = 0x00010000;
--	prom_setprop(isa, name, "ranges",
--			isa_ranges, sizeof(isa_ranges));
-+	name = "/pci@80000000/ide@C,1";
-+	ph = call_prom("finddevice", 1, 1, ADDR(name));
-+	if (PHANDLE_VALID(ph)) {
-+		prom_printf("Fixing up IDE interrupt on Pegasos...\n");
-+		prop[0] = 14;
-+		prop[1] = 0x0;
-+		prop[2] = 15;
-+		prop[3] = 0x0;
-+		prom_setprop(ph, name, "interrupts", prop, 4*sizeof(u32));
-+	}
- }
- #else
- #define fixup_device_tree_chrp()
-Index: b/drivers/ide/pci/via82cxxx.c
-===================================================================
---- a/drivers/ide/pci/via82cxxx.c
-+++ b/drivers/ide/pci/via82cxxx.c
-@@ -35,10 +35,6 @@
- #include <linux/ide.h>
- #include <asm/io.h>
- 
--#ifdef CONFIG_PPC_CHRP
--#include <asm/processor.h>
--#endif
--
- #include "ide-timing.h"
- 
- #define DISPLAY_VIA_TIMINGS
-@@ -436,13 +432,6 @@ static void __devinit init_hwif_via82cxx
- 	hwif->tuneproc = &via82cxxx_tune_drive;
- 	hwif->speedproc = &via_set_drive;
- 
--
--#ifdef CONFIG_PPC_CHRP
--	if(machine_is(chrp) && _chrp_type == _CHRP_Pegasos) {
--		hwif->irq = hwif->channel ? 15 : 14;
--	}
--#endif
--
- 	for (i = 0; i < 2; i++) {
- 		hwif->drives[i].io_32bit = 1;
- 		hwif->drives[i].unmask = (vdev->via_config->flags & VIA_NO_UNMASK) ? 0 : 1;
+However I fail to see how via82cxxx will continue to work without some other
+modifications to via82cxxx.c or setup-pci.c, namely how will hwif->irq be
+assigned with correct values?
+
+AFAICS:
+* via82cxxx.c:init_chipset_via82cxxx() returns '0' instead of 'dev->irq'
+  (won't help anyway since chipset is in legacy mode using IRQs 14 and 15)
+* on CHRP platform there is no ppc_ide_md.ide_default_irq
+* IRQ probing (used by ide-probe.c as a last resort) is unsupported on PPC
+
+therefore hwif->irq won't be set et all after removing quirk from via82cxxx.c
+
+?
+
+Thanks,
+Bart
+
+> Signed-off-by: Olaf Hering <olaf@aepfle.de>
+> 
+> ---
+>  arch/powerpc/kernel/prom_init.c |   55 ++++++++++++++++++++++++----------------
+>  drivers/ide/pci/via82cxxx.c     |   11 --------
+>  2 files changed, 33 insertions(+), 33 deletions(-)
+> 
+> Index: b/arch/powerpc/kernel/prom_init.c
+> ===================================================================
+> --- a/arch/powerpc/kernel/prom_init.c
+> +++ b/arch/powerpc/kernel/prom_init.c
+> @@ -2035,39 +2035,50 @@ static void __init fixup_device_tree_map
+>  #endif
+>  
+>  #ifdef CONFIG_PPC_CHRP
+> -/* Pegasos and BriQ lacks the "ranges" property in the isa node */
+> +/*
+> + * Pegasos and BriQ lacks the "ranges" property in the isa node
+> + * Pegasos needs decimal IRQ 14/15, not hexadecimal
+> + */
+>  static void __init fixup_device_tree_chrp(void)
+>  {
+> -	phandle isa;
+> -	u32 isa_ranges[6];
+> +	phandle ph;
+> +	u32 prop[6];
+>  	u32 rloc = 0x01006000; /* IO space; PCI device = 12 */
+>  	char *name;
+>  	int rc;
+>  
+>  	name = "/pci@80000000/isa@c";
+> -	isa = call_prom("finddevice", 1, 1, ADDR(name));
+> -	if (!PHANDLE_VALID(isa)) {
+> +	ph = call_prom("finddevice", 1, 1, ADDR(name));
+> +	if (!PHANDLE_VALID(ph)) {
+>  		name = "/pci@ff500000/isa@6";
+> -		isa = call_prom("finddevice", 1, 1, ADDR(name));
+> +		ph = call_prom("finddevice", 1, 1, ADDR(name));
+>  		rloc = 0x01003000; /* IO space; PCI device = 6 */
+>  	}
+> -	if (!PHANDLE_VALID(isa))
+> -		return;
+> -
+> -	rc = prom_getproplen(isa, "ranges");
+> -	if (rc != 0 && rc != PROM_ERROR)
+> -		return;
+> -
+> -	prom_printf("Fixing up missing ISA range on Pegasos...\n");
+> +	if (PHANDLE_VALID(ph)) {
+> +		rc = prom_getproplen(ph, "ranges");
+> +		if (rc == 0 || rc == PROM_ERROR) {
+> +			prom_printf("Fixing up missing ISA range on Pegasos...\n");
+> +
+> +			prop[0] = 0x1;
+> +			prop[1] = 0x0;
+> +			prop[2] = rloc;
+> +			prop[3] = 0x0;
+> +			prop[4] = 0x0;
+> +			prop[5] = 0x00010000;
+> +			prom_setprop(ph, name, "ranges", prop, sizeof(prop));
+> +		}
+> +	}
+>  
+> -	isa_ranges[0] = 0x1;
+> -	isa_ranges[1] = 0x0;
+> -	isa_ranges[2] = rloc;
+> -	isa_ranges[3] = 0x0;
+> -	isa_ranges[4] = 0x0;
+> -	isa_ranges[5] = 0x00010000;
+> -	prom_setprop(isa, name, "ranges",
+> -			isa_ranges, sizeof(isa_ranges));
+> +	name = "/pci@80000000/ide@C,1";
+> +	ph = call_prom("finddevice", 1, 1, ADDR(name));
+> +	if (PHANDLE_VALID(ph)) {
+> +		prom_printf("Fixing up IDE interrupt on Pegasos...\n");
+> +		prop[0] = 14;
+> +		prop[1] = 0x0;
+> +		prop[2] = 15;
+> +		prop[3] = 0x0;
+> +		prom_setprop(ph, name, "interrupts", prop, 4*sizeof(u32));
+> +	}
+>  }
+>  #else
+>  #define fixup_device_tree_chrp()
+> Index: b/drivers/ide/pci/via82cxxx.c
+> ===================================================================
+> --- a/drivers/ide/pci/via82cxxx.c
+> +++ b/drivers/ide/pci/via82cxxx.c
+> @@ -35,10 +35,6 @@
+>  #include <linux/ide.h>
+>  #include <asm/io.h>
+>  
+> -#ifdef CONFIG_PPC_CHRP
+> -#include <asm/processor.h>
+> -#endif
+> -
+>  #include "ide-timing.h"
+>  
+>  #define DISPLAY_VIA_TIMINGS
+> @@ -436,13 +432,6 @@ static void __devinit init_hwif_via82cxx
+>  	hwif->tuneproc = &via82cxxx_tune_drive;
+>  	hwif->speedproc = &via_set_drive;
+>  
+> -
+> -#ifdef CONFIG_PPC_CHRP
+> -	if(machine_is(chrp) && _chrp_type == _CHRP_Pegasos) {
+> -		hwif->irq = hwif->channel ? 15 : 14;
+> -	}
+> -#endif
+> -
+>  	for (i = 0; i < 2; i++) {
+>  		hwif->drives[i].io_32bit = 1;
+>  		hwif->drives[i].unmask = (vdev->via_config->flags & VIA_NO_UNMASK) ? 0 : 1;
