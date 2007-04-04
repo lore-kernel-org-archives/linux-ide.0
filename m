@@ -1,40 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: libata bugfix: preserve LBA bit for HDIO_DRIVE_TASK
-Date: Wed, 04 Apr 2007 02:08:37 -0400
-Message-ID: <461340E5.2070901@garzik.org>
-References: <20070330205938.984247529@mini.kroah.org> <20070330210659.GK29450@kroah.com> <460D8510.1050102@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: add NCQ blacklist entries from Silicon Image
+ Windows driver (v2)
+Date: Wed, 04 Apr 2007 02:09:59 -0400
+Message-ID: <46134137.2010102@pobox.com>
+References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org> <20070331181940.GV14134@stusta.de> <4611D289.5090209@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41631 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41657 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992680AbXDDGIu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Apr 2007 02:08:50 -0400
-In-Reply-To: <460D8510.1050102@pobox.com>
+	id S2992683AbXDDGKC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Apr 2007 02:10:02 -0400
+In-Reply-To: <4611D289.5090209@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Mark Lord wrote:
-> Ideally, this would go into linux-2.6.21.
+Robert Hancock wrote:
+> This adds some NCQ blacklist entries taken from the Silicon Image 3124/3132
+> Windows driver .inf files. There are some confirming reports of problems
+> with these drives under Linux (for example 
+> http://lkml.org/lkml/2007/3/4/178)
+> so let's disable NCQ on these drives.
 > 
-> Preserve the LBA bit in the DevSel/Head register for HDIO_DRIVE_TASK.
+> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 > 
-> Signed-off-by:  Mark Lord <mlord@pobox.com>
-> ---
-> --- linux/drivers/ata/libata-scsi.c.orig    2007-03-21 
-> 13:35:02.000000000 -0400
-> +++ linux/drivers/ata/libata-scsi.c    2007-03-30 17:40:58.000000000 -0400
-> @@ -333,7 +333,7 @@
->     scsi_cmd[8]  = args[3];
->     scsi_cmd[10] = args[4];
->     scsi_cmd[12] = args[5];
-> -    scsi_cmd[13] = args[6] & 0x0f;
-> +    scsi_cmd[13] = args[6] & 0x4f;
->     scsi_cmd[14] = args[0];
+> --- linux-2.6.21-rc5-git9/drivers/ata/libata-core.c    2007-04-02 
+> 21:03:29.000000000 -0600
+> +++ linux-2.6.21-rc5-git9edit/drivers/ata/libata-core.c    2007-04-02 
+> 21:26:23.000000000 -0600
+> @@ -3363,6 +3363,11 @@ static const struct ata_blacklist_entry     { 
+> "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
+>     /* NCQ hard hangs device under heavier load, needs hard power cycle */
+>     { "Maxtor 6B250S0",    "BANC1B70",    ATA_HORKAGE_NONCQ },
+> +    /* Blacklist entries taken from Silicon Image 3124/3132
+> +       Windows driver .inf file - also several Linux problem reports */
+> +    { "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
+> +    { "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
+> +    { "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
 
-applied
+The thread you link to seems like an irq problem, especially because it 
+worked in 2.6.20 and prior?
+
+	Jeff
+
 
 
