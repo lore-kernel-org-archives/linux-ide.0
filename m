@@ -1,38 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH pata-2.6] sl82c105: add speedproc() method and MWDMA0/1
- support
-Date: Wed, 04 Apr 2007 23:53:35 +0400
-Message-ID: <4614023F.90809@ru.mvista.com>
-References: <200702140043.25244.sshtylyov@ru.mvista.com> <200702231913.55522.sshtylyov@ru.mvista.com> <200703290024.32035.sshtylyov@ru.mvista.com> <200704042138.25049.bzolnier@gmail.com>
+From: Aaron Lehmann <aaronl@vitelus.com>
+Subject: Re: Silent corruption with r8169
+Date: Wed, 4 Apr 2007 13:06:04 -0700
+Message-ID: <20070404200603.GX15189@vitelus.com>
+References: <20070401012736.GT15189@vitelus.com> <20070401030315.GA24080@jim.sh> <20070401043905.GV15189@vitelus.com> <p737iswqjq4.fsf@bingen.suse.de> <20070404184504.GB7814@electric-eye.fr.zoreil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:49420 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with SMTP id S2993036AbXDDTwh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Apr 2007 15:52:37 -0400
-In-Reply-To: <200704042138.25049.bzolnier@gmail.com>
+Received: from vitelus.com ([63.99.9.247]:36962 "EHLO vitelus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752347AbXDDUGm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Apr 2007 16:06:42 -0400
+Content-Disposition: inline
+In-Reply-To: <20070404184504.GB7814@electric-eye.fr.zoreil.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Francois Romieu <romieu@fr.zoreil.com>
+Cc: Andi Kleen <andi@firstfloor.org>, Jim Paris <jim@jtan.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org
 
-Hello.
+On Wed, Apr 04, 2007 at 08:45:04PM +0200, Francois Romieu wrote:
+> > [adding netdev]
+> > [meta-comment: I wish people wouldn't use such unnecessarily broad subjects 
+> > -- how is it the x86-64 port's or AMD's fault when you have broken hardware? 
+> > Would anybody write "Silent corruption on i386" or "Silent corruption 
+> > on Intel" or "Silent corruption on Linux"?]
+> 
+> I hope you feel better now that I changed the subject.
+> 
+> Aaron, I see no clear suspect between 2.6.20.1 and current -git
+> that could explain nor fix a corruption in the r8169 driver.
+> 
+> Can you apply on top of latest 2.6.21-rc5-git the patches available at
+> http://www.fr.zoreil.com/linux/kernel/2.6.x/2.6.21-rc5/r8169-20070402
+> 
+> 000[12]-r8169-foo-bar.patch have been committed a few minutes ago: you
+> should check if they apply or not.
 
-Bartlomiej Zolnierkiewicz wrote:
+I'll try to get to testing this, but I'm wondering if people may have
+misunderstood my original post. I don't get any corruption over
+Ethernet; it's just corruption on the filesystem during certain load
+patterns that involve the Realtek ethernet card.
 
->>Add the speedproc() method for setting transfer modes, modify config_for_dma()
->>to call it and use ide_max_dma_mode() to select the best DMA mode.
->>Add support for the multiword DMA modes 0 and 1, using the upper half of the
->>'drive_data' field to store the DMA timings to program into the drive control
->>register when DMA is turned on for real.
-
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> applied
-
-    I now also have almost complete patch to merge PIO/DMA timings and so get 
-rid of selectproc() there... :-)
-
-MBR, Sergei
+Aaron
