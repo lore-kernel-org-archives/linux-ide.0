@@ -1,69 +1,136 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH] libata: add NCQ blacklist entries from Silicon Image
- Windows driver (v2)
-Date: Wed, 04 Apr 2007 08:26:22 -0600
-Message-ID: <4613B58E.5020000@shaw.ca>
-References: <Pine.LNX.4.64.0703251559560.6730@woody.linux-foundation.org>
- <20070331181940.GV14134@stusta.de> <4611D289.5090209@shaw.ca>
- <46134137.2010102@pobox.com>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: [PATCH] add correct interrupt property for pegasos ide
+Date: Wed, 4 Apr 2007 18:20:04 +0200
+Message-ID: <20070404162004.GA3016@aepfle.de>
+References: <20070404111635.GA1855@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:45730 "EHLO
-	pd3mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865AbXDDO0e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Apr 2007 10:26:34 -0400
-In-reply-to: <46134137.2010102@pobox.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:41794 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368AbXDDQTt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Apr 2007 12:19:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20070404111635.GA1855@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Paul Mackeras <paulus@samba.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Jeff Garzik wrote:
-> Robert Hancock wrote:
->> This adds some NCQ blacklist entries taken from the Silicon Image 
->> 3124/3132
->> Windows driver .inf files. There are some confirming reports of problems
->> with these drives under Linux (for example 
->> http://lkml.org/lkml/2007/3/4/178)
->> so let's disable NCQ on these drives.
->>
->> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
->>
->> --- linux-2.6.21-rc5-git9/drivers/ata/libata-core.c    2007-04-02 
->> 21:03:29.000000000 -0600
->> +++ linux-2.6.21-rc5-git9edit/drivers/ata/libata-core.c    2007-04-02 
->> 21:26:23.000000000 -0600
->> @@ -3363,6 +3363,11 @@ static const struct ata_blacklist_entry     { 
->> "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
->>     /* NCQ hard hangs device under heavier load, needs hard power 
->> cycle */
->>     { "Maxtor 6B250S0",    "BANC1B70",    ATA_HORKAGE_NONCQ },
->> +    /* Blacklist entries taken from Silicon Image 3124/3132
->> +       Windows driver .inf file - also several Linux problem reports */
->> +    { "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
->> +    { "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
->> +    { "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
-> 
-> The thread you link to seems like an irq problem, especially because it 
-> worked in 2.6.20 and prior?
-> 
->     Jeff
 
-According to this post:
+The firmware assigns irq 20/21 to the VIA IDE device on Pegasos.
+But the required interrupt is 14/15.
+Maybe someone confused decimal vs. hexadecimal values.
 
-http://lkml.org/lkml/2007/3/9/475
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
-with 2.6.21-rc3, it started working after the kernel disabled NCQ 
-because of too many errors. That seems to point away from it being an 
-IRQ problem, as you'd expect it to not work at all. I don't expect the 
-interrupts would be handled any differently between NCQ and non-NCQ 
-commands. However, apparently disabling ACPI also prevents the problem, 
-which does seem a bit odd.
+---
+ arch/powerpc/kernel/prom_init.c |   55 ++++++++++++++++++++++++----------------
+ drivers/ide/pci/via82cxxx.c     |   11 --------
+ 2 files changed, 33 insertions(+), 33 deletions(-)
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+Index: b/arch/powerpc/kernel/prom_init.c
+===================================================================
+--- a/arch/powerpc/kernel/prom_init.c
++++ b/arch/powerpc/kernel/prom_init.c
+@@ -2035,39 +2035,50 @@ static void __init fixup_device_tree_map
+ #endif
+ 
+ #ifdef CONFIG_PPC_CHRP
+-/* Pegasos and BriQ lacks the "ranges" property in the isa node */
++/*
++ * Pegasos and BriQ lacks the "ranges" property in the isa node
++ * Pegasos needs decimal IRQ 14/15, not hexadecimal
++ */
+ static void __init fixup_device_tree_chrp(void)
+ {
+-	phandle isa;
+-	u32 isa_ranges[6];
++	phandle ph;
++	u32 prop[6];
+ 	u32 rloc = 0x01006000; /* IO space; PCI device = 12 */
+ 	char *name;
+ 	int rc;
+ 
+ 	name = "/pci@80000000/isa@c";
+-	isa = call_prom("finddevice", 1, 1, ADDR(name));
+-	if (!PHANDLE_VALID(isa)) {
++	ph = call_prom("finddevice", 1, 1, ADDR(name));
++	if (!PHANDLE_VALID(ph)) {
+ 		name = "/pci@ff500000/isa@6";
+-		isa = call_prom("finddevice", 1, 1, ADDR(name));
++		ph = call_prom("finddevice", 1, 1, ADDR(name));
+ 		rloc = 0x01003000; /* IO space; PCI device = 6 */
+ 	}
+-	if (!PHANDLE_VALID(isa))
+-		return;
+-
+-	rc = prom_getproplen(isa, "ranges");
+-	if (rc != 0 && rc != PROM_ERROR)
+-		return;
+-
+-	prom_printf("Fixing up missing ISA range on Pegasos...\n");
++	if (PHANDLE_VALID(ph)) {
++		rc = prom_getproplen(ph, "ranges");
++		if (rc == 0 || rc == PROM_ERROR) {
++			prom_printf("Fixing up missing ISA range on Pegasos...\n");
++
++			prop[0] = 0x1;
++			prop[1] = 0x0;
++			prop[2] = rloc;
++			prop[3] = 0x0;
++			prop[4] = 0x0;
++			prop[5] = 0x00010000;
++			prom_setprop(ph, name, "ranges", prop, sizeof(prop));
++		}
++	}
+ 
+-	isa_ranges[0] = 0x1;
+-	isa_ranges[1] = 0x0;
+-	isa_ranges[2] = rloc;
+-	isa_ranges[3] = 0x0;
+-	isa_ranges[4] = 0x0;
+-	isa_ranges[5] = 0x00010000;
+-	prom_setprop(isa, name, "ranges",
+-			isa_ranges, sizeof(isa_ranges));
++	name = "/pci@80000000/ide@C,1";
++	ph = call_prom("finddevice", 1, 1, ADDR(name));
++	if (PHANDLE_VALID(ph)) {
++		prom_printf("Fixing up IDE interrupt on Pegasos...\n");
++		prop[0] = 14;
++		prop[1] = 0x0;
++		prop[2] = 15;
++		prop[3] = 0x0;
++		prom_setprop(ph, name, "interrupts", prop, 4*sizeof(u32));
++	}
+ }
+ #else
+ #define fixup_device_tree_chrp()
+Index: b/drivers/ide/pci/via82cxxx.c
+===================================================================
+--- a/drivers/ide/pci/via82cxxx.c
++++ b/drivers/ide/pci/via82cxxx.c
+@@ -35,10 +35,6 @@
+ #include <linux/ide.h>
+ #include <asm/io.h>
+ 
+-#ifdef CONFIG_PPC_CHRP
+-#include <asm/processor.h>
+-#endif
+-
+ #include "ide-timing.h"
+ 
+ #define DISPLAY_VIA_TIMINGS
+@@ -436,13 +432,6 @@ static void __devinit init_hwif_via82cxx
+ 	hwif->tuneproc = &via82cxxx_tune_drive;
+ 	hwif->speedproc = &via_set_drive;
+ 
+-
+-#ifdef CONFIG_PPC_CHRP
+-	if(machine_is(chrp) && _chrp_type == _CHRP_Pegasos) {
+-		hwif->irq = hwif->channel ? 15 : 14;
+-	}
+-#endif
+-
+ 	for (i = 0; i < 2; i++) {
+ 		hwif->drives[i].io_32bit = 1;
+ 		hwif->drives[i].unmask = (vdev->via_config->flags & VIA_NO_UNMASK) ? 0 : 1;
