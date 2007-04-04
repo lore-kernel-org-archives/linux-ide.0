@@ -1,47 +1,59 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Linux tape drivers
-Date: Wed, 4 Apr 2007 14:43:23 -0700
-Message-ID: <20070404144323.5c87086f.akpm@linux-foundation.org>
-References: <200704031508.37222.kern@sibbald.com>
-	<150283e90704041222v1d8554b6lcb5a6771d4a031b4@mail.gmail.com>
-	<20070404133919.ebcd0ddc.akpm@linux-foundation.org>
-	<200704042331.06105.bzolnier@gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: 2.6.20.3 AMD64 oops in CFQ code
+Date: Wed, 04 Apr 2007 19:22:32 -0400
+Message-ID: <46143338.3020808@tmr.com>
+References: <20070323174630.31051.qmail@science.horizon.com> <4611EADC.3000306@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200704042331.06105.bzolnier@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Willem Riede <wrlk@riede.org>, Kern Sibbald <kern@sibbald.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.tmr.com ([64.65.253.246]:57579 "EHLO gaimboi.tmr.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752817AbXDDXWA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Apr 2007 19:22:00 -0400
+In-Reply-To: <4611EADC.3000306@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <teheo@suse.de>
+Cc: linux@horizon.com, dan.j.williams@intel.com, linux-ide@vger.kernel.org, neilb@suse.de, cebbert@redhat.com, jens.axboe@oracle.com, linux-kernel@dale.us, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 
-On Wed, 4 Apr 2007 23:31:06 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+Tejun Heo wrote:
+> [resending.  my mail service was down for more than a week and this
+> message didn't get delivered.]
+>
+> linux@horizon.com wrote:
+>   
+>>> Anyway, what's annoying is that I can't figure out how to bring the
+>>> drive back on line without resetting the box.  It's in a hot-swap
+>>>       
+> enclosure,
+>   
+>>> but power cycling the drive doesn't seem to help.  I thought libata
+>>>       
+> hotplug
+>   
+>>> was working?  (SiI3132 card, using the sil24 driver.)
+>>>       
+>
+> Yeah, it's working but failing resets are considered highly dangerous
+> (in that the controller status is unknown and may cause something
+> dangerous like screaming interrupts) and port is muted after that.  The
+> plan is to handle this with polling hotplug such that libata tries to
+> revive the port if PHY status change is detected by polling.  Patches
+> are available but they need other things to resolved to get integrated.
+>  I think it'll happen before the summer.
+>
+> Anyways, you can tell libata to retry the port by manually telling it to
+> rescan the port (echo - - - > /sys/class/scsi_host/hostX/scan).
+>   
+I won't say that's voodoo, but if I ever did it I'd wipe down my 
+keyboard with holy water afterward. ;-)
 
-> On Wednesday 04 April 2007, Andrew Morton wrote:
-> > On Wed, 4 Apr 2007 12:22:35 -0700
-> > "Willem Riede" <wrlk@riede.org> wrote:
-> > 
-> > > On 4/4/07, Andrew Morton <akpm@linux-foundation.org> wrote:
-> > > > On Wed, 4 Apr 2007 16:26:14 +0200 Kern Sibbald <kern@sibbald.com> wrote:
-> > > >
-> > > > >  I'm all in favor of deprecating ide-tape if ide-scsi is a viable alternative,
-> > > >
-> > > > ow.  ide-scsi is in very bad shape and nobody is maintaining it or fixing
-> > > > bugs in it or anything.  The only reason we retain ide-scsi at all is, err,
-> 
-> I haven't heard about any major bugs besides well known module unload problem.
-> 
-> What have I missed?
+Well, I did save the message in my tricks file, but it sounds like a 
+last ditch effort after something get very wrong.
 
-oop, caught making unsubstantiatable assertions.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-I've seen an ongoing dribble of doesn't-work and it-crashes reports and I
-simply have not made any record of them, because it's ide-scsi and I don't
-expect there's anything we can do about them :(
-
-Often these reports are from people who are writing CDROMs and the usual
-response is "use cdrecord dev=/dev/hdc".
-
-I think Alan and Jens might have some thoughts on the ide-scsi status?
