@@ -1,37 +1,59 @@
-From: Francois Romieu <romieu@fr.zoreil.com>
-Subject: Re: Silent corruption with r8169
-Date: Wed, 4 Apr 2007 22:45:53 +0200
-Message-ID: <20070404204553.GD7814@electric-eye.fr.zoreil.com>
-References: <20070401012736.GT15189@vitelus.com> <20070401030315.GA24080@jim.sh> <20070401043905.GV15189@vitelus.com> <p737iswqjq4.fsf@bingen.suse.de> <20070404184504.GB7814@electric-eye.fr.zoreil.com> <20070404200603.GX15189@vitelus.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Linux tape drivers
+Date: Wed, 4 Apr 2007 23:31:06 +0200
+Message-ID: <200704042331.06105.bzolnier@gmail.com>
+References: <200704031508.37222.kern@sibbald.com> <150283e90704041222v1d8554b6lcb5a6771d4a031b4@mail.gmail.com> <20070404133919.ebcd0ddc.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:58401 "EHLO
-	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751183AbXDDUss (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Apr 2007 16:48:48 -0400
+Received: from ug-out-1314.google.com ([66.249.92.171]:63559 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbXDDVWR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Apr 2007 17:22:17 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so811713uga
+        for <linux-ide@vger.kernel.org>; Wed, 04 Apr 2007 14:22:10 -0700 (PDT)
+In-Reply-To: <20070404133919.ebcd0ddc.akpm@linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <20070404200603.GX15189@vitelus.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lehmann <aaronl@vitelus.com>
-Cc: Andi Kleen <andi@firstfloor.org>, Jim Paris <jim@jtan.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Willem Riede <wrlk@riede.org>, Kern Sibbald <kern@sibbald.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Aaron Lehmann <aaronl@vitelus.com> :
-[...]
-> I'll try to get to testing this, but I'm wondering if people may have
-> misunderstood my original post. I don't get any corruption over
-> Ethernet; it's just corruption on the filesystem during certain load
-> patterns that involve the Realtek ethernet card.
+On Wednesday 04 April 2007, Andrew Morton wrote:
+> On Wed, 4 Apr 2007 12:22:35 -0700
+> "Willem Riede" <wrlk@riede.org> wrote:
+> 
+> > On 4/4/07, Andrew Morton <akpm@linux-foundation.org> wrote:
+> > > On Wed, 4 Apr 2007 16:26:14 +0200 Kern Sibbald <kern@sibbald.com> wrote:
+> > >
+> > > >  I'm all in favor of deprecating ide-tape if ide-scsi is a viable alternative,
+> > >
+> > > ow.  ide-scsi is in very bad shape and nobody is maintaining it or fixing
+> > > bugs in it or anything.  The only reason we retain ide-scsi at all is, err,
 
-It is too soon to label it a debug feature or a genuine bug in the
-r8169 driver but at least there is a r8169 patchkit to help with
-various annoyances (obscure bug on amd platform for instance).
-It could make a difference.
+I haven't heard about any major bugs besides well known module unload problem.
 
-The disk io + r8169 driver bugs can be very frustrating to debug :o/
+What have I missed?
 
--- 
-Ueimor
-
-Anybody got a battery for my Ultra 10 ?
+> > > because some tape drives need it.
+> > >
+> > > If we have no alternative to using ide-scsi, and if the tape controllers in
+> > > question are not some terribly obscure things which nobody would seriously
+> > > use then we have a bit of a problem.  I don't know of anyone who we can
+> > > turn to to get anything done in ide-scsi.
+> > 
+> > Andrew,
+> > 
+> > Kai suggests that libata should be able to take over from ide-scsi.
+> > Do you concur?
+> 
+> That would be very nice if we can make it happen.  I don't know how close
+> we are to that, but the fine folks on linux-ide might be able tell us.
+> 
+> > That may be a better way forward than ide-scsi.
+> > I know, because I had a hard enough time with it when I needed
+> > to fix it so it worked for osst, at least.
+> > 
+> > Regards, Willem Riede.
