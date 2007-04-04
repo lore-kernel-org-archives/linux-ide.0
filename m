@@ -1,41 +1,42 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH libata#upstream] sata_promise: decode and report error
- reasons
-Date: Wed, 04 Apr 2007 01:43:49 -0400
-Message-ID: <46133B15.9020301@garzik.org>
-References: <200703140851.l2E8pZ8A006182@harpo.it.uu.se>
+Subject: Re: [PATCH] libata: hardreset on SERR_INTERNAL
+Date: Wed, 04 Apr 2007 01:43:58 -0400
+Message-ID: <46133B1E.1030907@garzik.org>
+References: <20070313162051.GH32687@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41459 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41472 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966313AbXDDFnv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Apr 2007 01:43:51 -0400
-In-Reply-To: <200703140851.l2E8pZ8A006182@harpo.it.uu.se>
+	id S966316AbXDDFoB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Apr 2007 01:44:01 -0400
+In-Reply-To: <20070313162051.GH32687@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> This patch adds much needed error reason decoding and
-> reporting to sata_promise. It's simplistic but should
-> log all relevant error info the controller provides.
+Tejun Heo wrote:
+> There was a rare report where SB600 reported SERR_INTERNAL and SRST
+> couldn't get it out of the failure mode.  Hardreset on SERR_INTERNAL.
+> As the problem is intermittent, whether this fixes the problem or not
+> hasn't been verified yet, but hardresetting the channel on internal
+> error is a good idea anyway.
 > 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
-> ---
->  drivers/ata/sata_promise.c |   64 ++++++++++++++++++++++++++++++++++++++-------
->  1 files changed, 55 insertions(+), 9 deletions(-)
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
-> Changes since the preliminary version:
-> * dropped SError decoding, as all bits there are standard
-> * PDC2_HTO_ERR is mapped to AC_ERR_HOST_BUS not AC_ERR_TIMEOUT
-> * PDC_UNDERRUN_ERR and PDC_OVERRUN_ERR are mapped to AC_ERR_HSM
->   not AC_ERR_ATA_BUS
-> * added brief explanations to error constant declarations
-> * some cleanups and simplifications
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 7349c3d..fc11bb3 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -1055,7 +1055,7 @@ static void ata_eh_analyze_serror(struct ata_port *ap)
+>  	}
+>  	if (serror & SERR_INTERNAL) {
+>  		err_mask |= AC_ERR_SYSTEM;
+> -		action |= ATA_EH_SOFTRESET;
+> +		action |= ATA_EH_HARDRESET;
 
-applied
+applied to #upstream
 
 
