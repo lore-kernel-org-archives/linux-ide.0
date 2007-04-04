@@ -1,43 +1,50 @@
-From: Aaron Lehmann <aaronl@vitelus.com>
-Subject: Re: Silent corruption with r8169
-Date: Wed, 4 Apr 2007 13:06:04 -0700
-Message-ID: <20070404200603.GX15189@vitelus.com>
-References: <20070401012736.GT15189@vitelus.com> <20070401030315.GA24080@jim.sh> <20070401043905.GV15189@vitelus.com> <p737iswqjq4.fsf@bingen.suse.de> <20070404184504.GB7814@electric-eye.fr.zoreil.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Linux tape drivers
+Date: Wed, 4 Apr 2007 13:39:19 -0700
+Message-ID: <20070404133919.ebcd0ddc.akpm@linux-foundation.org>
+References: <200704031508.37222.kern@sibbald.com>
+	<20070403145728.d8f83320.akpm@linux-foundation.org>
+	<150283e90704032000p7f447a26pe3752b22024a1b67@mail.gmail.com>
+	<200704041626.15298.kern@sibbald.com>
+	<20070404115536.fd752555.akpm@linux-foundation.org>
+	<150283e90704041222v1d8554b6lcb5a6771d4a031b4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vitelus.com ([63.99.9.247]:36962 "EHLO vitelus.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752347AbXDDUGm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Apr 2007 16:06:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20070404184504.GB7814@electric-eye.fr.zoreil.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <150283e90704041222v1d8554b6lcb5a6771d4a031b4@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Willem Riede <wrlk@riede.org>
+Cc: Kern Sibbald <kern@sibbald.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Francois Romieu <romieu@fr.zoreil.com>
-Cc: Andi Kleen <andi@firstfloor.org>, Jim Paris <jim@jtan.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org
 
-On Wed, Apr 04, 2007 at 08:45:04PM +0200, Francois Romieu wrote:
-> > [adding netdev]
-> > [meta-comment: I wish people wouldn't use such unnecessarily broad subjects 
-> > -- how is it the x86-64 port's or AMD's fault when you have broken hardware? 
-> > Would anybody write "Silent corruption on i386" or "Silent corruption 
-> > on Intel" or "Silent corruption on Linux"?]
-> 
-> I hope you feel better now that I changed the subject.
-> 
-> Aaron, I see no clear suspect between 2.6.20.1 and current -git
-> that could explain nor fix a corruption in the r8169 driver.
-> 
-> Can you apply on top of latest 2.6.21-rc5-git the patches available at
-> http://www.fr.zoreil.com/linux/kernel/2.6.x/2.6.21-rc5/r8169-20070402
-> 
-> 000[12]-r8169-foo-bar.patch have been committed a few minutes ago: you
-> should check if they apply or not.
+On Wed, 4 Apr 2007 12:22:35 -0700
+"Willem Riede" <wrlk@riede.org> wrote:
 
-I'll try to get to testing this, but I'm wondering if people may have
-misunderstood my original post. I don't get any corruption over
-Ethernet; it's just corruption on the filesystem during certain load
-patterns that involve the Realtek ethernet card.
+> On 4/4/07, Andrew Morton <akpm@linux-foundation.org> wrote:
+> > On Wed, 4 Apr 2007 16:26:14 +0200 Kern Sibbald <kern@sibbald.com> wrote:
+> >
+> > >  I'm all in favor of deprecating ide-tape if ide-scsi is a viable alternative,
+> >
+> > ow.  ide-scsi is in very bad shape and nobody is maintaining it or fixing
+> > bugs in it or anything.  The only reason we retain ide-scsi at all is, err,
+> > because some tape drives need it.
+> >
+> > If we have no alternative to using ide-scsi, and if the tape controllers in
+> > question are not some terribly obscure things which nobody would seriously
+> > use then we have a bit of a problem.  I don't know of anyone who we can
+> > turn to to get anything done in ide-scsi.
+> 
+> Andrew,
+> 
+> Kai suggests that libata should be able to take over from ide-scsi.
+> Do you concur?
 
-Aaron
+That would be very nice if we can make it happen.  I don't know how close
+we are to that, but the fine folks on linux-ide might be able tell us.
+
+> That may be a better way forward than ide-scsi.
+> I know, because I had a hard enough time with it when I needed
+> to fix it so it worked for osst, at least.
+> 
+> Regards, Willem Riede.
