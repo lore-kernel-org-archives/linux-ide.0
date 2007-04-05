@@ -1,37 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 2/3] libata: expose AN support to user space via sysfs
-Date: Thu, 05 Apr 2007 04:03:20 -0400
-Message-ID: <4614AD48.1080005@pobox.com>
-References: <20070328230108.597741522@intel.com> <20070328164450.b89d5156.kristen.c.accardi@intel.com> <460B0539.9040103@pobox.com> <460B1F6B.5050108@gmail.com> <460B2249.4010200@pobox.com> <460B26AB.8060307@gmail.com>
+From: Milan =?iso-8859-2?B?S2VyuWzhZ2Vy?= <milan.kerslager-jPq9pNF91Eg@public.gmane.org>
+Subject: Re: sata_mv error recovery issues
+Date: Thu, 5 Apr 2007 11:35:11 +0200
+Message-ID: <20070405093511.GB7072@opteron.pslib.cz>
+References: <20070404132533.GA2339@xi.wantstofly.org>
+Reply-To: "The CentOS developers mailing list." <centos-devel-IFYaIzF+flcdnm+yROfE0A@public.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <460B26AB.8060307@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <centos-devel-bounces-IFYaIzF+flcdnm+yROfE0A@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20070404132533.GA2339-mfnYTeDhw6uOVk/H6u/4e9i2O/JbrIOy@public.gmane.org>
+List-Unsubscribe: <http://lists.centos.org/mailman/listinfo/centos-devel>,
+	<mailto:centos-devel-request-IFYaIzF+flcdnm+yROfE0A@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.centos.org/pipermail/centos-devel>
+List-Post: <mailto:centos-devel-IFYaIzF+flcdnm+yROfE0A@public.gmane.org>
+List-Help: <mailto:centos-devel-request-IFYaIzF+flcdnm+yROfE0A@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.centos.org/mailman/listinfo/centos-devel>,
+	<mailto:centos-devel-request-IFYaIzF+flcdnm+yROfE0A@public.gmane.org?subject=subscribe>
+Sender: centos-devel-bounces-IFYaIzF+flcdnm+yROfE0A@public.gmane.org
+Errors-To: centos-devel-bounces-IFYaIzF+flcdnm+yROfE0A@public.gmane.org
+To: "The CentOS developers mailing list." <centos-devel-IFYaIzF+flcdnm+yROfE0A@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> AN is a generic concept that I feel will propagate elsewhere.
-> 
-> I think SCSI already has it or am I imagining things again?  :-)
-> 
->> Though perhaps it should be in a 'capability_flags' file rather than a 
->> 'media_change_event' file.
-> 
-> IMHO, if it's genhd.capability_flags then the flag should be 
-> MEDIA_CHANGE_NOTIFY not ASYNC_NOTIFICATION because AN itself doesn't 
-> imply any specific event.  It's just a notification mechanism, for ATAPI 
-> devices, it means media change, for PMP it has a different meaning, so I 
-> think we need to export the processed meaning not the specific mechanism 
-> to userland.
+On Wed, Apr 04, 2007 at 03:25:33PM +0200, Lennert Buytenhek wrote:
+> sata_mv (driving two 8-port Supermicro AOC-SAT2-MV8 PCI-X adapters) in
+> 2.6.18-1.2747.el5 (RHEL/CentOS 5 beta kernel) didn't respond too well
+> to one of the attached disks experiencing what seems to be a head crash.
 
-Agreed, sounds good.
+Current sata_mv driver has no EH (Error Reporting) code, so this is
+expected to hang your machine if HW problem occur, see my bugreport for
+more details:
 
-	Jeff
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=233211
 
+[a bunch of lines deleted]
 
-
+-- 
+                            Milan Kerslager
+                            http://www.pslib.cz/ke/
+                            http://www.kai.tul.cz/~kerslage/
