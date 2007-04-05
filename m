@@ -1,45 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] IDE: fix PCI must_checks
-Date: Thu, 5 Apr 2007 21:16:09 +0100
-Message-ID: <20070405211609.5263d627@the-village.bc.nu>
-References: <20070404213704.224128ec.randy.dunlap@oracle.com>
-	<20070405121302.1206e748@the-village.bc.nu>
-	<20070405130330.f5f8a2a6.akpm@linux-foundation.org>
+Subject: Re: [PATCH] HPA support: Revised patch
+Date: Thu, 5 Apr 2007 21:18:03 +0100
+Message-ID: <20070405211804.1f64e515@the-village.bc.nu>
+References: <20070405141352.12fddb6e@the-village.bc.nu>
+	<20070405192421.GB5131@lug-owl.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51740 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51745 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1767284AbXDEUOW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Apr 2007 16:14:22 -0400
-In-Reply-To: <20070405130330.f5f8a2a6.akpm@linux-foundation.org>
+	with ESMTP id S1767285AbXDEUPg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Apr 2007 16:15:36 -0400
+In-Reply-To: <20070405192421.GB5131@lug-owl.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, ide <linux-ide@vger.kernel.org>, bzolnier@gmail.com
+To: Jan-Benedict Glaw <jbglaw@lug-owl.de>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kyle@canonical.com
 
-> pci_set_mwi() is an advisory thing, and on certain platforms it might fail
-> to set the cacheline size to the desired number.  This is not a fatal error
-> and the driver can successfully run at a lesser performance level.
+> > +static int ata_ignore_hpa = 0;
+> > +module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
+> > +MODULE_PARM_DESC(ignore_hpa, "Ignore HPA (0=off 1=on)");
+> > +
+> >  static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
+> >  module_param(ata_probe_timeout, int, 0444);
+> >  MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+> 
+> For ignore_hpa, it would be nice to not go through inverse logic and
+> fix the help text a bit (0=honor HPA, 1=ignore HPA).
 
-Correct.
+Umm.. how about  "preserve_hpa" ?
 
-> If that description is accurate then I'd contend that pci_set_mwi() is
-> misdesigned.  It should not be returning a negative error code for
-> something which is not an error.
-
-It is an error to *some* drivers but not all. Kind of like setting some
-of the other features may be essential for some chips and not others.
-
-> And we *need* to be excessively anal in the PCI setup code.  We have metric
-> shitloads of bugs due to problems in that area, and the more formality and
-> error handling and error reporting we can get in there the better off we
-> will be.
-
-No argument there
-
-If we want to deal with some of the mess we should also remove all direct
-writing of PCI latency timers and replace them with a function to stop
-drivers setting unsafe values and ignoring chip errata the core knows
-about but they dont
+Alan
