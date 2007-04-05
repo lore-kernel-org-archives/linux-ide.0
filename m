@@ -1,35 +1,73 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] HPA support: Revised patch
-Date: Thu, 05 Apr 2007 16:30:08 -0400
-Message-ID: <46155C50.8000003@garzik.org>
-References: <20070405141352.12fddb6e@the-village.bc.nu>	<20070405192421.GB5131@lug-owl.de> <20070405211804.1f64e515@the-village.bc.nu>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] IDE: fix PCI must_checks
+Date: Thu, 5 Apr 2007 14:20:01 -0700
+Message-ID: <20070405142001.6610749a.akpm@linux-foundation.org>
+References: <20070404213704.224128ec.randy.dunlap@oracle.com>
+	<20070405121302.1206e748@the-village.bc.nu>
+	<20070405130330.f5f8a2a6.akpm@linux-foundation.org>
+	<20070405211609.5263d627@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1767300AbXDEUax@vger.kernel.org>
-In-Reply-To: <20070405211804.1f64e515@the-village.bc.nu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jan-Benedict Glaw <jbglaw@lug-owl.de>, akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kyle@canonical.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.24]:52643 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767318AbXDEVUJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Apr 2007 17:20:09 -0400
+In-Reply-To: <20070405211609.5263d627@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, ide <linux-ide@vger.kernel.org>, bzolnier@gmail.com
 
-Alan Cox wrote:
->>> +static int ata_ignore_hpa = 0;
->>> +module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
->>> +MODULE_PARM_DESC(ignore_hpa, "Ignore HPA (0=off 1=on)");
->>> +
->>>  static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
->>>  module_param(ata_probe_timeout, int, 0444);
->>>  MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
->> For ignore_hpa, it would be nice to not go through inverse logic and
->> fix the help text a bit (0=honor HPA, 1=ignore HPA).
+On Thu, 5 Apr 2007 21:16:09 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+
+> > pci_set_mwi() is an advisory thing, and on certain platforms it might fail
+> > to set the cacheline size to the desired number.  This is not a fatal error
+> > and the driver can successfully run at a lesser performance level.
 > 
-> Umm.. how about  "preserve_hpa" ?
+> Correct.
+> 
+> > If that description is accurate then I'd contend that pci_set_mwi() is
+> > misdesigned.  It should not be returning a negative error code for
+> > something which is not an error.
+> 
+> It is an error to *some* drivers but not all. Kind of like setting some
+> of the other features may be essential for some chips and not others.
+> 
+> > And we *need* to be excessively anal in the PCI setup code.  We have metric
+> > shitloads of bugs due to problems in that area, and the more formality and
+> > error handling and error reporting we can get in there the better off we
+> > will be.
+> 
+> No argument there
+> 
+> If we want to deal with some of the mess we should also remove all direct
+> writing of PCI latency timers and replace them with a function to stop
+> drivers setting unsafe values and ignoring chip errata the core knows
+> about but they dont
 
-I think he meant fix the help text?
+hm. Well, what to do?
 
-Regardless, it should be "ignore_hpa" as you have it now, though I feel 
-the help text requires additional human brain parsing, and could be more 
-clear.
+How about we prevail upon Randy to:
 
-	Jeff
+- rename pci_set_mwi() to pci_try_set_mwi()
+
+- make it return 0 on success, 1 if the "try" failed
+
+- make it return -EFOO on error (presently unimplemented)
+
+- review callers
+
+- remove __must_check
+
+?
+
+
+
+I have a feeling that this is "still wrong": even things like
+pci_read_config_foo() can get errors, and there are various PCI-bus error
+handling proposals floating about which might require that callers be more
+careful in what they accept.
+
