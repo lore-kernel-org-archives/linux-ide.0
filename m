@@ -1,44 +1,32 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: [PATCH] add correct interrupt property for pegasos ide
-Date: Thu, 5 Apr 2007 12:32:09 +0200
-Message-ID: <20070405103209.GA15974@aepfle.de>
-References: <20070404111635.GA1855@aepfle.de> <200704042010.50088.bzolnier@gmail.com> <20070404181138.GA6050@aepfle.de> <200704042042.15108.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] IDE: fix PCI must_checks
+Date: Thu, 5 Apr 2007 12:13:02 +0100
+Message-ID: <20070405121302.1206e748@the-village.bc.nu>
+References: <20070404213704.224128ec.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:52035 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966073AbXDEKbs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Apr 2007 06:31:48 -0400
-Content-Disposition: inline
-In-Reply-To: <200704042042.15108.bzolnier@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52317 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S2992481AbXDELKN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Apr 2007 07:10:13 -0400
+In-Reply-To: <20070404213704.224128ec.randy.dunlap@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Paul Mackeras <paulus@samba.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: ide <linux-ide@vger.kernel.org>, bzolnier@gmail.com, akpm <akpm@linux-foundation.org>
 
-On Wed, Apr 04, Bartlomiej Zolnierkiewicz wrote:
+On Wed, 4 Apr 2007 21:37:04 -0700
+Randy Dunlap <randy.dunlap@oracle.com> wrote:
 
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> On Wednesday 04 April 2007, Olaf Hering wrote:
-> > On Wed, Apr 04, Bartlomiej Zolnierkiewicz wrote:
-> > 
-> > > ?
-> > 
-> > You are right, I did not test the ide driver again. pata_via works with
-> > the change. 
-> > I will test the ide driver tomorrow.
+> Check PCI interface function results for errors in drivers/ide/pci.
 > 
-> Thanks.
-> 
-> There might be also the another issue here - the chipset claims fully native
-> mode (prog-if 8f - taken from your previous mail) so driver takes IRQ value
-> from dev->irq (which your patch fixes to be 14 instead of 20 if I'm reading
-> it correctly) but in reality chipset seems to be still using legacy IRQs
-> (14 for the primary port and 15 for the secondary one).  What IRQ value is
-> reported by the libata for the secondary port?  Does the second port work?
+> drivers/ide/pci/cs5530.c:244: warning: ignoring return value of 'pci_set_mwi', declared with attribute warn_unused_result
 
-The second port does not work. My added printks did not trigger. There
-is not enough time to hack on this today.
-I found maple_pci_get_legacy_ide_irq, maybe a similar function can be
-added for pegasos to remove the ifarch code from the IDE driver.
+NAK (again) 
+
+The bug is in pci_set_mwi, it should not force return value checking.
+Please fix that instead.
