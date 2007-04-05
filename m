@@ -1,28 +1,288 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Silent corruption with r8169
-Date: Thu, 5 Apr 2007 13:41:27 +0200
-Message-ID: <20070405114127.GA19143@one.firstfloor.org>
-References: <20070401012736.GT15189@vitelus.com> <20070401030315.GA24080@jim.sh> <20070401043905.GV15189@vitelus.com> <p737iswqjq4.fsf@bingen.suse.de> <20070404184504.GB7814@electric-eye.fr.zoreil.com> <20070404200603.GX15189@vitelus.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] HPA support: Revised patch
+Date: Thu, 5 Apr 2007 14:13:52 +0100
+Message-ID: <20070405141352.12fddb6e@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:33437 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1766832AbXDELla (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Apr 2007 07:41:30 -0400
-Content-Disposition: inline
-In-Reply-To: <20070404200603.GX15189@vitelus.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45356 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753091AbXDENLJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Apr 2007 09:11:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lehmann <aaronl@vitelus.com>
-Cc: Francois Romieu <romieu@fr.zoreil.com>, Andi Kleen <andi@firstfloor.org>, Jim Paris <jim@jtan.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org
+To: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kyle@canonical.com
 
-> I'll try to get to testing this, but I'm wondering if people may have
-> misunderstood my original post. I don't get any corruption over
-> Ethernet; it's just corruption on the filesystem during certain load
-> patterns that involve the Realtek ethernet card.
+This one should fix the problems with slave devices and the Macintosh hang
 
-When disabling hardware checksums helps then you know the corruption
-is on the Ethernetside. Otherwise it's somewhere else.
-
--Andi
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc5-mm4/drivers/ata/libata-core.c linux-2.6.21-rc5-mm4/drivers/ata/libata-core.c
+--- linux.vanilla-2.6.21-rc5-mm4/drivers/ata/libata-core.c	2007-04-03 16:56:32.000000000 +0100
++++ linux-2.6.21-rc5-mm4/drivers/ata/libata-core.c	2007-04-03 17:08:28.000000000 +0100
+@@ -90,6 +90,10 @@
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
+ 
++static int ata_ignore_hpa = 0;
++module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
++MODULE_PARM_DESC(ignore_hpa, "Ignore HPA (0=off 1=on)");
++
+ static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
+ module_param(ata_probe_timeout, int, 0444);
+ MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+@@ -809,6 +813,202 @@
+ 	*p = '\0';
+ }
+ 
++static u64 ata_tf_to_lba48(struct ata_taskfile *tf)
++{
++	u64 sectors = 0;
++
++	sectors |= ((u64)(tf->hob_lbah & 0xff)) << 40;
++	sectors |= ((u64)(tf->hob_lbam & 0xff)) << 32;
++	sectors |= (tf->hob_lbal & 0xff) << 24;
++	sectors |= (tf->lbah & 0xff) << 16;
++	sectors |= (tf->lbam & 0xff) << 8;
++	sectors |= (tf->lbal & 0xff);
++
++	return ++sectors;
++}
++
++static u64 ata_tf_to_lba(struct ata_taskfile *tf)
++{
++	u64 sectors = 0;
++
++	sectors |= (tf->device & 0x0f) << 24;
++	sectors |= (tf->lbah & 0xff) << 16;
++	sectors |= (tf->lbam & 0xff) << 8;
++	sectors |= (tf->lbal & 0xff);
++
++	return ++sectors;
++}
++
++/**
++ *	ata_read_native_max_address_ext	-	LBA48 native max query
++ *	@dev: Device to query
++ *
++ *	Performa an LBA48 size query upon the device in question. Return the
++ *	actual LBA48 size or zero if the command fails.
++ */
++
++static u64 ata_read_native_max_address_ext(struct ata_device *dev)
++{
++	unsigned int err;
++	struct ata_taskfile tf;
++
++	ata_tf_init(dev, &tf);
++
++	tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
++	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
++	tf.protocol |= ATA_PROT_NODATA;
++	tf.device |= 0x40;
++
++	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err)
++		return 0;
++
++	return ata_tf_to_lba48(&tf);
++}
++
++/**
++ *	ata_read_native_max_address	-	LBA28 native max query
++ *	@dev: Device to query
++ *
++ *	Performa an LBA28 size query upon the device in question. Return the
++ *	actual LBA28 size or zero if the command fails.
++ */
++
++static u64 ata_read_native_max_address(struct ata_device *dev)
++{
++	unsigned int err;
++	struct ata_taskfile tf;
++
++	ata_tf_init(dev, &tf);
++
++	tf.command = ATA_CMD_READ_NATIVE_MAX;
++	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
++	tf.protocol |= ATA_PROT_NODATA;
++	tf.device |= 0x40;
++
++	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err)
++		return 0;
++
++	return ata_tf_to_lba(&tf);
++}
++
++/**
++ *	ata_set_native_max_address_ext	-	LBA48 native max set
++ *	@dev: Device to query
++ *
++ *	Perform an LBA48 size set max upon the device in question. Return the
++ *	actual LBA48 size or zero if the command fails.
++ */
++
++static u64 ata_set_native_max_address_ext(struct ata_device *dev, u64 new_sectors)
++{
++	unsigned int err;
++	struct ata_taskfile tf;
++
++	new_sectors--;
++
++	ata_tf_init(dev, &tf);
++
++	tf.command = ATA_CMD_SET_MAX_EXT;
++	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
++	tf.protocol |= ATA_PROT_NODATA;
++	tf.device |= 0x40;
++
++	tf.lbal = (new_sectors >> 0) & 0xff;
++	tf.lbam = (new_sectors >> 8) & 0xff;
++	tf.lbah = (new_sectors >> 16) & 0xff;
++
++	tf.hob_lbal = (new_sectors >> 24) & 0xff;
++	tf.hob_lbam = (new_sectors >> 32) & 0xff;
++	tf.hob_lbah = (new_sectors >> 40) & 0xff;
++
++	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err)
++		return 0;
++
++	return ata_tf_to_lba48(&tf);
++}
++
++/**
++ *	ata_set_native_max_address	-	LBA28 native max set
++ *	@dev: Device to query
++ *
++ *	Perform an LBA28 size set max upon the device in question. Return the
++ *	actual LBA28 size or zero if the command fails.
++ */
++
++static u64 ata_set_native_max_address(struct ata_device *dev, u64 new_sectors)
++{
++	unsigned int err;
++	struct ata_taskfile tf;
++
++	new_sectors--;
++
++	ata_tf_init(dev, &tf);
++
++	tf.command = ATA_CMD_SET_MAX;
++	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
++	tf.protocol |= ATA_PROT_NODATA;
++
++	tf.lbal = (new_sectors >> 0) & 0xff;
++	tf.lbam = (new_sectors >> 8) & 0xff;
++	tf.lbah = (new_sectors >> 16) & 0xff;
++	tf.device |= ((new_sectors >> 24) & 0x0f) | 0x40;
++
++	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err)
++		return 0;
++
++	return ata_tf_to_lba(&tf);
++}
++
++/**
++ *	ata_hpa_resize		-	Resize a device with an HPA set
++ *	@dev: Device to resize
++ *
++ *	Read the size of an LBA28 or LBA48 disk with HPA features and resize
++ *	it if required to the full size of the media. The caller must check
++ *	the drive has the HPA feature set enabled.
++ */
++
++static u64 ata_hpa_resize(struct ata_device *dev)
++{
++	u64 sectors = dev->n_sectors;
++	u64 hpa_sectors;
++	
++	if (ata_id_has_lba48(dev->id))
++		hpa_sectors = ata_read_native_max_address_ext(dev);
++	else
++		hpa_sectors = ata_read_native_max_address(dev);
++
++	/* if no hpa, both should be equal */
++	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, hpa_sectors = %lld\n",
++		__FUNCTION__, sectors, hpa_sectors);
++
++	if (hpa_sectors > sectors) {
++		ata_dev_printk(dev, KERN_INFO,
++			"Host Protected Area detected:\n"
++			"\tcurrent size: %lld sectors\n"
++			"\tnative size: %lld sectors\n",
++			sectors, hpa_sectors);
++
++		if (ata_ignore_hpa) {
++			if (ata_id_has_lba48(dev->id))
++				hpa_sectors = ata_set_native_max_address_ext(dev, hpa_sectors);
++			else
++				hpa_sectors = ata_set_native_max_address(dev, hpa_sectors);
++
++			if (hpa_sectors) {
++				ata_dev_printk(dev, KERN_INFO,
++					"native size increased to %lld sectors\n", hpa_sectors);
++				return hpa_sectors;
++			}
++		}
++	}
++	return sectors;
++}
++
+ static u64 ata_id_n_sectors(const u16 *id)
+ {
+ 	if (ata_id_has_lba(id)) {
+@@ -1659,6 +1859,7 @@
+ 			snprintf(revbuf, 7, "ATA-%d",  ata_id_major_version(id));
+ 
+ 		dev->n_sectors = ata_id_n_sectors(id);
++		dev->n_sectors_boot = dev->n_sectors;
+ 
+ 		/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
+ 		ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
+@@ -1685,6 +1886,9 @@
+ 					dev->flags |= ATA_DFLAG_FLUSH_EXT;
+ 			}
+ 
++			if (ata_id_hpa_enabled(dev->id))
++				dev->n_sectors = ata_hpa_resize(dev);
++
+ 			/* config NCQ */
+ 			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
+ 
+@@ -3335,6 +3546,11 @@
+ 			       "%llu != %llu\n",
+ 			       (unsigned long long)dev->n_sectors,
+ 			       (unsigned long long)new_n_sectors);
++		/* Are we the boot time size - if so we appear to be the
++		   same disk at this point and our HPA got reapplied */
++		if (ata_ignore_hpa && dev->n_sectors_boot == new_n_sectors 
++		    && ata_id_hpa_enabled(new_id))
++			return 1;
+ 		return 0;
+ 	}
+ 
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc5-mm4/include/linux/ata.h linux-2.6.21-rc5-mm4/include/linux/ata.h
+--- linux.vanilla-2.6.21-rc5-mm4/include/linux/ata.h	2007-04-03 16:52:31.000000000 +0100
++++ linux-2.6.21-rc5-mm4/include/linux/ata.h	2007-04-03 17:11:03.000000000 +0100
+@@ -158,6 +158,8 @@
+ 	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
+ 	ATA_CMD_READ_NATIVE_MAX	= 0xF8,
+ 	ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
++	ATA_CMD_SET_MAX		= 0xF9,
++	ATA_CMD_SET_MAX_EXT	= 0x37,
+ 	ATA_CMD_READ_LOG_EXT	= 0x2f,
+ 
+ 	/* READ_LOG_EXT pages */
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc5-mm4/include/linux/libata.h linux-2.6.21-rc5-mm4/include/linux/libata.h
+--- linux.vanilla-2.6.21-rc5-mm4/include/linux/libata.h	2007-04-03 16:56:34.000000000 +0100
++++ linux-2.6.21-rc5-mm4/include/linux/libata.h	2007-04-03 17:11:03.000000000 +0100
+@@ -470,6 +470,7 @@
+ 	struct scsi_device	*sdev;		/* attached SCSI device */
+ 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
+ 	u64			n_sectors;	/* size of device, if ATA */
++	u64			n_sectors_boot;	/* size of ATA device at startup */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
