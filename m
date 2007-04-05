@@ -1,68 +1,76 @@
-From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
-Subject: Re: [PATCH] HPA support: Revised patch
-Date: Thu, 5 Apr 2007 21:24:21 +0200
-Message-ID: <20070405192421.GB5131@lug-owl.de>
-References: <20070405141352.12fddb6e@the-village.bc.nu>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] IDE: fix PCI must_checks
+Date: Thu, 5 Apr 2007 13:03:30 -0700
+Message-ID: <20070405130330.f5f8a2a6.akpm@linux-foundation.org>
+References: <20070404213704.224128ec.randy.dunlap@oracle.com>
+	<20070405121302.1206e748@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bCsyhTFzCvuiizWE"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753195AbXDETYY@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070405141352.12fddb6e@the-village.bc.nu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kyle@canonical.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.24]:49736 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767274AbXDEUDm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Apr 2007 16:03:42 -0400
+In-Reply-To: <20070405121302.1206e748@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, ide <linux-ide@vger.kernel.org>, bzolnier@gmail.com
+
+On Thu, 5 Apr 2007 12:13:02 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+
+> On Wed, 4 Apr 2007 21:37:04 -0700
+> Randy Dunlap <randy.dunlap@oracle.com> wrote:
+> 
+> > From: Randy Dunlap <randy.dunlap@oracle.com>
+> > 
+> > Check PCI interface function results for errors in drivers/ide/pci.
+> > 
+> > drivers/ide/pci/cs5530.c:244: warning: ignoring return value of 'pci_set_mwi', declared with attribute warn_unused_result
+> 
+> NAK (again) 
+
+Disagree.
+
+> The bug is in pci_set_mwi, it should not force return value checking.
+> Please fix that instead.
+
+You don't describe your reasoning, but I will assume that it is as follows:
+
+pci_set_mwi() is an advisory thing, and on certain platforms it might fail
+to set the cacheline size to the desired number.  This is not a fatal error
+and the driver can successfully run at a lesser performance level.
+
+If that description is accurate then I'd contend that pci_set_mwi() is
+misdesigned.  It should not be returning a negative error code for
+something which is not an error.
+
+The changes we should make are
+
+a) rename pci_set_pwi() to pci_try_set_mwi()
+
+b) make pci_try_set_mwi() return a positive, non-zero code when the
+   attempt to set the cacheline size failed.  And make it return a
+   negative error code when fatal errors occur.
+
+This way
+
+a) drivers which _do_ care about whether or not the cacheline size was
+   set successfully can test for it or generate warnings and
+
+b) we can tell when pci_try_set_mwi() encountered a fatal error for
+   other reasons.
 
 
---bCsyhTFzCvuiizWE
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Now this may all sound excessively anal, but it is simply the correct design.
+And one of the reasons for adding the __must_check annotation is to weed out
+design errors.  Simply turning the thing off is a step backwards.
 
-On Thu, 2007-04-05 14:13:52 +0100, Alan Cox <alan@lxorguk.ukuu.org.uk> wrot=
-e:
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vani=
-lla-2.6.21-rc5-mm4/drivers/ata/libata-core.c linux-2.6.21-rc5-mm4/drivers/a=
-ta/libata-core.c
-> --- linux.vanilla-2.6.21-rc5-mm4/drivers/ata/libata-core.c	2007-04-03 16:=
-56:32.000000000 +0100
-> +++ linux-2.6.21-rc5-mm4/drivers/ata/libata-core.c	2007-04-03 17:08:28.00=
-0000000 +0100
-> @@ -90,6 +90,10 @@
->  module_param_named(fua, libata_fua, int, 0444);
->  MODULE_PARM_DESC(fua, "FUA support (0=3Doff, 1=3Don)");
-> =20
-> +static int ata_ignore_hpa =3D 0;
-> +module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
-> +MODULE_PARM_DESC(ignore_hpa, "Ignore HPA (0=3Doff 1=3Don)");
-> +
->  static int ata_probe_timeout =3D ATA_TMOUT_INTERNAL / HZ;
->  module_param(ata_probe_timeout, int, 0444);
->  MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+And we *need* to be excessively anal in the PCI setup code.  We have metric
+shitloads of bugs due to problems in that area, and the more formality and
+error handling and error reporting we can get in there the better off we
+will be.
 
-For ignore_hpa, it would be nice to not go through inverse logic and
-fix the help text a bit (0=3Dhonor HPA, 1=3Dignore HPA).
 
-MfG, JBG
-
---=20
-      Jan-Benedict Glaw      jbglaw@lug-owl.de              +49-172-7608481
-Signature of:            http://www.chiark.greenend.org.uk/~sgtatham/bugs.h=
-tml
-the second  :
-
---bCsyhTFzCvuiizWE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFGFUzlHb1edYOZ4bsRAg10AJ9E4doOUgLzqrA90M6zj3E7hrOlaACfRgX2
-XKTpPvK9gYkzIs7j05z28qY=
-=5BK9
------END PGP SIGNATURE-----
-
---bCsyhTFzCvuiizWE--
