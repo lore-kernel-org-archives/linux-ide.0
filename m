@@ -1,43 +1,84 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: 2.6.20.3 AMD64 oops in CFQ code
-Date: Thu, 05 Apr 2007 13:29:06 +0900
-Message-ID: <46147B12.60109@suse.de>
-References: <20070323174630.31051.qmail@science.horizon.com>	 <4611EADC.3000306@suse.de> <46143338.3020808@tmr.com> <75b66ecd0704042113mebd1275w2fa40bf159416811@mail.gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] IDE: fix PCI must_checks
+Date: Wed, 4 Apr 2007 21:37:04 -0700
+Message-ID: <20070404213704.224128ec.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jericho.provo.novell.com ([137.65.248.124]:34355 "EHLO
-	jericho.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161139AbXDEE3Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Apr 2007 00:29:16 -0400
-In-Reply-To: <75b66ecd0704042113mebd1275w2fa40bf159416811@mail.gmail.com>
+Received: from agminet01.oracle.com ([141.146.126.228]:24514 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161142AbXDEEfO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Apr 2007 00:35:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Revell <rlrevell@joe-job.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux@horizon.com, dan.j.williams@intel.com, linux-ide@vger.kernel.org, neilb@suse.de, cebbert@redhat.com, jens.axboe@oracle.com, linux-kernel@dale.us, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>
+Cc: bzolnier@gmail.com, akpm <akpm@linux-foundation.org>
 
-Lee Revell wrote:
-> On 4/4/07, Bill Davidsen <davidsen@tmr.com> wrote:
->> I won't say that's voodoo, but if I ever did it I'd wipe down my
->> keyboard with holy water afterward. ;-)
->>
->> Well, I did save the message in my tricks file, but it sounds like a
->> last ditch effort after something get very wrong.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Which actually is true.  ATA ports failing to reset indicate something
-is very wrong.  Either the attached device or the controller is broken
-and libata shuts down the port to protect the rest of the system from
-it.  The manual scan requests tell libata to give it one more shot and
-polling hotplug can do that automatically.  Anyways, this shouldn't
-happen unless you have a broken piece of hardware.
+Check PCI interface function results for errors in drivers/ide/pci.
 
-> Would it reallty be an impediment to development if the kernel
-> maintainers simply refuse to merge patches that add new sysfs entries
-> without corresponding documentation?
+drivers/ide/pci/cs5530.c:244: warning: ignoring return value of 'pci_set_mwi', declared with attribute warn_unused_result
 
-SCSI host scan nodes have been there for a long time.  I think it's
-documented somewhere.
+drivers/ide/pci/sc1200.c:397: warning: ignoring return value of 'pci_enable_device', declared with attribute warn_unused_result
 
--- 
-tejun
+drivers/ide/setup-pci.c:861: warning: ignoring return value of '__pci_register_driver', declared with attribute warn_unused_result
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/ide/pci/cs5530.c |    4 +++-
+ drivers/ide/pci/sc1200.c |    8 +++++++-
+ drivers/ide/setup-pci.c  |    6 +++++-
+ 3 files changed, 15 insertions(+), 3 deletions(-)
+
+--- linux-2.6.21-rc5-mm4.orig/drivers/ide/pci/cs5530.c
++++ linux-2.6.21-rc5-mm4/drivers/ide/pci/cs5530.c
+@@ -236,7 +236,9 @@ static unsigned int __devinit init_chips
+ 	 */
+ 
+ 	pci_set_master(cs5530_0);
+-	pci_set_mwi(cs5530_0);
++	if (pci_set_mwi(cs5530_0))
++		printk(KERN_WARNING "%s: error enabling PCI MWI transactions\n",
++			name);
+ 
+ 	/*
+ 	 * Set PCI CacheLineSize to 16-bytes:
+--- linux-2.6.21-rc5-mm4.orig/drivers/ide/pci/sc1200.c
++++ linux-2.6.21-rc5-mm4/drivers/ide/pci/sc1200.c
+@@ -382,10 +382,16 @@ static int sc1200_suspend (struct pci_de
+ static int sc1200_resume (struct pci_dev *dev)
+ {
+ 	ide_hwif_t	*hwif = NULL;
++	int		err;
+ 
+ 	pci_set_power_state(dev, PCI_D0);	// bring chip back from sleep state
+ 	dev->current_state = PM_EVENT_ON;
+-	pci_enable_device(dev);
++	err = pci_enable_device(dev);
++	if (err) {
++		printk(KERN_ERR "SC1200: cannot enable device for resume\n");
++		return err;
++	}
++
+ 	//
+ 	// loop over all interfaces that are part of this pci device:
+ 	//
+--- linux-2.6.21-rc5-mm4.orig/drivers/ide/setup-pci.c
++++ linux-2.6.21-rc5-mm4/drivers/ide/setup-pci.c
+@@ -874,9 +874,13 @@ void __init ide_scan_pcibus (int scan_di
+ 
+ 	list_for_each_safe(l, n, &ide_pci_drivers)
+ 	{
++		int err;
+ 		list_del(l);
+ 		d = list_entry(l, struct pci_driver, node);
+-		__pci_register_driver(d, d->driver.owner, d->driver.mod_name);
++		err = __pci_register_driver(d, d->driver.owner, d->driver.mod_name);
++		if (err)
++			printk(KERN_ERR "%s: failed to register PCI driver\n",
++				d->driver.mod_name);
+ 	}
+ }
+ #endif
