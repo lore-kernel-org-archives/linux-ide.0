@@ -1,107 +1,38 @@
-From: Suleiman Souhlal <ssouhlal@freebsd.org>
-Subject: [PATCH] Correctly prevent IDE timer expiry function to run if request was already handled
-Date: Fri, 6 Apr 2007 17:36:03 +0000
-Message-ID: <20070406173603.GA82722@freefall.freebsd.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] Correctly prevent IDE timer expiry function to run if
+ request was already handled
+Date: Fri, 06 Apr 2007 23:22:02 +0400
+Message-ID: <46169DDA.6020008@ru.mvista.com>
+References: <20070406173603.GA82722@freefall.freebsd.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S2993022AbXDFR7V@vger.kernel.org>
-Content-Disposition: inline
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751857AbXDFT1p@vger.kernel.org>
+In-Reply-To: <20070406173603.GA82722@freefall.freebsd.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Suleiman Souhlal <ssouhlal@freebsd.org>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-It is possible for the timer expiry function to run even though the
-request has already been handled: ide_timer_expiry() only checks that
-the handler is not NULL, but it is possible that we have handled a
-request (thus clearing the handler) and then started a new request
-(thus starting the timer again, and setting a handler). 
+Hello.
 
-A simple way to exhibit this is to set the DMA timeout to 1 jiffy and
-run dd: The kernel will panic after a few minutes because
-ide_timer_expiry() tries to add a timer when it's already active.
+Suleiman Souhlal wrote:
 
-To fix this, we simply add a request generation count that gets
-incremented at every interrupt, and check in ide_timer_expiry() that
-we have not already handled a new interrupt before running the expiry
-function.
+> It is possible for the timer expiry function to run even though the
+> request has already been handled: ide_timer_expiry() only checks that
+> the handler is not NULL, but it is possible that we have handled a
+> request (thus clearing the handler) and then started a new request
+> (thus starting the timer again, and setting a handler). 
 
-Signed-off-by:	Suleiman Souhlal <suleiman@google.com>
+> A simple way to exhibit this is to set the DMA timeout to 1 jiffy and
+> run dd: The kernel will panic after a few minutes because
+> ide_timer_expiry() tries to add a timer when it's already active.
 
----
- drivers/ide/ide-io.c   |    6 +++++-
- drivers/ide/ide-iops.c |    2 ++
- include/linux/ide.h    |    2 ++
- 3 files changed, 9 insertions(+), 1 deletions(-)
+> To fix this, we simply add a request generation count that gets
+> incremented at every interrupt, and check in ide_timer_expiry() that
+> we have not already handled a new interrupt before running the expiry
+> function.
 
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 0e02800..8670112 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -1226,6 +1226,7 @@ #if 1
- #endif
- 				/* so that ide_timer_expiry knows what to do */
- 				hwgroup->sleeping = 1;
-+				hwgroup->req_gen_timer = hwgroup->req_gen;
- 				mod_timer(&hwgroup->timer, sleep);
- 				/* we purposely leave hwgroup->busy==1
- 				 * while sleeping */
-@@ -1411,7 +1412,8 @@ void ide_timer_expiry (unsigned long dat
- 
- 	spin_lock_irqsave(&ide_lock, flags);
- 
--	if ((handler = hwgroup->handler) == NULL) {
-+	if (((handler = hwgroup->handler) == NULL) ||
-+	    (hwgroup->req_gen != hwgroup->req_gen_timer)) {
- 		/*
- 		 * Either a marginal timeout occurred
- 		 * (got the interrupt just as timer expired),
-@@ -1439,6 +1441,7 @@ void ide_timer_expiry (unsigned long dat
- 				if ((wait = expiry(drive)) > 0) {
- 					/* reset timer */
- 					hwgroup->timer.expires  = jiffies + wait;
-+					hwgroup->req_gen_timer = hwgroup->req_gen;
- 					add_timer(&hwgroup->timer);
- 					spin_unlock_irqrestore(&ide_lock, flags);
- 					return;
-@@ -1653,6 +1656,7 @@ #endif /* CONFIG_BLK_DEV_IDEPCI */
- 		printk(KERN_ERR "%s: ide_intr: hwgroup->busy was 0 ??\n", drive->name);
- 	}
- 	hwgroup->handler = NULL;
-+	hwgroup->req_gen++;
- 	del_timer(&hwgroup->timer);
- 	spin_unlock(&ide_lock);
- 
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index 1ee53a5..3caa176 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -889,6 +889,7 @@ static void __ide_set_handler (ide_drive
- 	hwgroup->handler	= handler;
- 	hwgroup->expiry		= expiry;
- 	hwgroup->timer.expires	= jiffies + timeout;
-+	hwgroup->req_gen_timer = hwgroup->req_gen;
- 	add_timer(&hwgroup->timer);
- }
- 
-@@ -929,6 +930,7 @@ void ide_execute_command(ide_drive_t *dr
- 	hwgroup->handler	= handler;
- 	hwgroup->expiry		= expiry;
- 	hwgroup->timer.expires	= jiffies + timeout;
-+	hwgroup->req_gen_timer = hwgroup->req_gen;
- 	add_timer(&hwgroup->timer);
- 	hwif->OUTBSYNC(drive, cmd, IDE_COMMAND_REG);
- 	/* Drive takes 400nS to respond, we must avoid the IRQ being
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 58564a1..d3bbc71 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -861,6 +861,8 @@ typedef struct hwgroup_s {
- 	int (*expiry)(ide_drive_t *);
- 		/* ide_system_bus_speed */
- 	int pio_clock;
-+	int req_gen;
-+	int req_gen_timer;
- 
- 	unsigned char cmd_buf[4];
- } ide_hwgroup_t;
+    Couldn't this be addressed by simply changing add_timer() to mod_timer()?
+
+MBR, Sergei
