@@ -1,40 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata#upstream] sata_promise: fix error decode regression
-Date: Mon, 09 Apr 2007 16:52:53 +0900
-Message-ID: <4619F0D5.1020908@gmail.com>
-References: <200704071229.l37CTp6M010861@harpo.it.uu.se>
+From: Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
+Subject: Re: FUA and DPO unsupported using sata_nv on MCP55?
+Date: Mon, 09 Apr 2007 09:24:21 +0100
+Message-ID: <1176107061.20487.5.camel@ukabzc383.uk.saic.com>
+References: <1175778811.5181.9.camel@ukabzc383.uk.saic.com>
+	 <4619EF07.5090008@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:48572 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753047AbXDIHw7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2007 03:52:59 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so973660nze
-        for <linux-ide@vger.kernel.org>; Mon, 09 Apr 2007 00:52:59 -0700 (PDT)
-In-Reply-To: <200704071229.l37CTp6M010861@harpo.it.uu.se>
+Received: from cpmx2.mail.saic.com ([139.121.17.172]:40681 "EHLO
+	cpmx2.mail.saic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752342AbXDIIYr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2007 04:24:47 -0400
+In-Reply-To: <4619EF07.5090008@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> Promise ATA ports should always be reset by pdc_reset_port()
-> when errors are detected, but the recent error reason decoding
-> update to sata_promise replaced that reset with a freeze.
-> 
-> This patch changes the error detection to do a reset again.
-> This makes the error decoding update safer, as it now only
-> adds error decoding without changing any other behaviour.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+Hi,
 
-Not necessarily NAK'ing but I think it's better to do things like that
-in EH thread not in the interrupt handler.  Isn't freezing enough in the
-interrupt handler?
+I'm glad to hear that my data is looking safe, although my XFS
+filesystem reports "Disabling barriers, not supported by underlying
+device" when I try to mount a RAID-1 of these two disks. I guess it's
+something to do with the software raid code?
 
-Thanks.
+Anyway, thanks for the help, it's always a pleasure :)
+
+Oh, I don't suppose anybody has any idea when the NCQ support might go
+into the sata_nv driver? I seem to recall it was being talked about
+months ago?
+
+Cheers,
+Eamonn
+
 
 -- 
-tejun
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
