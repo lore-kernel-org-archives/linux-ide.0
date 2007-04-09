@@ -1,47 +1,40 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Kernel 2.6.20.4: Software RAID 5: ata13.00: (irq_stat 0x00020002,
- failed to transmit command FIS)
-Date: Mon, 09 Apr 2007 16:48:58 +0900
-Message-ID: <4619EFEA.9030003@gmail.com>
-References: <Pine.LNX.4.64.0704051243080.3810@p34.internal.lan> <Pine.LNX.4.64.0704051339470.3810@p34.internal.lan>
+Subject: Re: [PATCH libata#upstream] sata_promise: fix error decode regression
+Date: Mon, 09 Apr 2007 16:52:53 +0900
+Message-ID: <4619F0D5.1020908@gmail.com>
+References: <200704071229.l37CTp6M010861@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0704051339470.3810@p34.internal.lan>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.235]:48572 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047AbXDIHw7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2007 03:52:59 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so973660nze
+        for <linux-ide@vger.kernel.org>; Mon, 09 Apr 2007 00:52:59 -0700 (PDT)
+In-Reply-To: <200704071229.l37CTp6M010861@harpo.it.uu.se>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Justin Piszcz wrote:
+Mikael Pettersson wrote:
+> Promise ATA ports should always be reset by pdc_reset_port()
+> when errors are detected, but the recent error reason decoding
+> update to sata_promise replaced that reset with a freeze.
 > 
+> This patch changes the error detection to do a reset again.
+> This makes the error decoding update safer, as it now only
+> adds error decoding without changing any other behaviour.
 > 
-> On Thu, 5 Apr 2007, Justin Piszcz wrote:
-> 
->> Had a quick question, this is the first time I have seen this happen,
->> and it was not even under during heavy I/O, hardly anything was going
->> on with the box at the time.
-> 
-> .. snip ..
-> 
-> # /usr/bin/time badblocks -b 512 -s -v -w /dev/sdl
-> Checking for bad blocks in read-write mode
-> From block 0 to 293046768
-> Testing with pattern 0xaa: done
-> Reading and comparing: done
-> 
-> Not a single bad block on the drive so far.  I have not changed anything
-> the box physically, with the exception of the BIOS version to V1666 for
-> an Intel P965 motherboard (DG965WHMKR).  Any idea what or why this
-> happened?  Is it a kernel or actual HW issue?  What caused this to
-> occur?  Any thoughts or ideas?
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
-My bet is on harddisk firmware acting weird.  You can prove this by
-reconnecting the disk to known working port without cutting power.  Or,
-you can prove that the original port works by removing the harddisk and
-putting a different one.  You'll need to issue manual scan using SCSI
-sysfs node.  It's very rare but some drives do choke like that.
+Not necessarily NAK'ing but I think it's better to do things like that
+in EH thread not in the interrupt handler.  Isn't freezing enough in the
+interrupt handler?
+
+Thanks.
 
 -- 
 tejun
