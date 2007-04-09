@@ -1,81 +1,50 @@
-From: <gregkh@suse.de>
-Subject: patch ide-proc-remove-rwsem.patch added to gregkh-2.6 tree
-Date: Mon, 09 Apr 2007 14:13:05 -0700
-Message-ID: <20070409211347.CAFA2C822B6@imap.suse.de>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: [PATCH] HPA support: Revised patch
+Date: Mon, 09 Apr 2007 17:55:15 -0400
+Message-ID: <461AB643.8020509@redhat.com>
+References: <20070405141352.12fddb6e@the-village.bc.nu>	<20070406163707.GA25880@srcf.ucam.org> <20070409222241.6581ecc2@the-village.bc.nu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43521 "EHLO mx1.suse.de"
+Received: from mx1.redhat.com ([66.187.233.31]:58192 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965851AbXDIVNu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Apr 2007 17:13:50 -0400
+	id S1753465AbXDIVzZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Apr 2007 17:55:25 -0400
+In-Reply-To: <20070409222241.6581ecc2@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: greg@kroah.com, bzolnier@gmail.com, gregkh@suse.de, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kyle@canonical.com
 
+Alan Cox wrote:
+> On Fri, 6 Apr 2007 17:37:07 +0100
+> Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> 
+>> On Thu, Apr 05, 2007 at 02:13:52PM +0100, Alan Cox wrote:
+>>> This one should fix the problems with slave devices and the Macintosh hang
+>> Better, but still not happy with ata_piix - I get the following:
+>>
+>> [   10.972000] ata3.01: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 16337840
+>> [   10.972000] ata3.01: ATA-8: FUJITSU MHW2120BH, 00810013, max UDMA/100
+>> [   10.972000] ata3.01: 234441648 sectors, multi 16: LBA48 NCQ (depth 0/32)
+>> [   10.980000] ata3.01: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = -1342616656
+>> [   10.980000] ata3.01: Host Protected Area detected:
+>> [   10.980000] 	current size: 234441648 sectors
+>> [   10.980000] 	native size: -1342616656 sectors
+>>                              ^^^^^^^^^^^!?!?!?!?!?!?!?
+>>
+>> so I'm not especially keen on letting it reprogram stuff. With ahci it 
+>> works fine. Still on a Macbook Pro - fuller logs below.
+> 
+> Please apply Tejun's fix for LBA48 data and try again. Hopefully its just
+> that which is causing the problem.
+> 
 
-This is a note to let you know that I've just added the patch titled
+This?
 
-     Subject: IDE: remove rwsem use from ide-proc core
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=4742d54fa4b391342dfb8f34de14d51da101fb39
 
-to my gregkh-2.6 tree.  Its filename is
+    2.6.21 fix lba48 bug in libata fill_result_tf()
 
-     ide-proc-remove-rwsem.patch
-
-This tree can be found at 
-    http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
-
-
->From foo@baz Tue Apr  9 12:12:43 2002
-Date: Mon, 9 Apr 2007 11:52:31 -0400 (EDT)
-To: Greg KH <greg@kroah.com>
-From: Greg Kroah-Hartman <gregkh@suse.de>
-Subject: IDE: remove rwsem use from ide-proc core
-
-The subsystem rwsem is not used by the driver core at all, so the use of
-it in the ide-proc code of it doesn't make any sense.  Perhaps a local
-lock might be needed, but I do not really think so.
-
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux ide <linux-ide@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/ide/ide-proc.c |    4 ----
- 1 file changed, 4 deletions(-)
-
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -310,14 +310,12 @@ static int proc_ide_read_driver
- 	ide_driver_t	*ide_drv;
- 	int		len;
- 
--	down_read(&dev->bus->subsys.rwsem);
- 	if (dev->driver) {
- 		ide_drv = container_of(dev->driver, ide_driver_t, gen_driver);
- 		len = sprintf(page, "%s version %s\n",
- 				dev->driver->name, ide_drv->version);
- 	} else
- 		len = sprintf(page, "ide-default version 0.9.newide\n");
--	up_read(&dev->bus->subsys.rwsem);
- 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
- }
- 
-@@ -327,7 +325,6 @@ static int ide_replace_subdriver(ide_dri
- 	int ret = 1;
- 	int err;
- 
--	down_write(&dev->bus->subsys.rwsem);
- 	device_release_driver(dev);
- 	/* FIXME: device can still be in use by previous driver */
- 	strlcpy(drive->driver_req, driver, sizeof(drive->driver_req));
-@@ -345,7 +342,6 @@ static int ide_replace_subdriver(ide_dri
- 	}
- 	if (dev->driver && !strcmp(dev->driver->name, driver))
- 		ret = 0;
--	up_write(&dev->bus->subsys.rwsem);
- 
- 	return ret;
- }
-
-
-Patches currently in gregkh-2.6 which might be from greg@kroah.com are
-
+Looks like 2.6.20 material as well.
