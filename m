@@ -1,66 +1,62 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Re: sata_promise ata exceptions (2.6.20.6)
-Date: Sun, 08 Apr 2007 23:13:54 -0700
-Message-ID: <4619D9A2.4090602@ipom.com>
-References: <46182C10.7010703@ipom.com> <4618C766.5080903@gmx.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: implement and use DMA mask configuration helper
+Date: Mon, 09 Apr 2007 16:35:19 +0900
+Message-ID: <4619ECB7.9060601@gmail.com>
+References: <20070309104945.GG32687@htj.dyndns.org> <45F155E3.9040604@garzik.org> <45FD5154.9040603@gmail.com> <45FD7B44.5040509@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig0E85DF964ABF06D4B40559F6"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.ipom.com ([209.40.128.125]:35183 "EHLO
-	uberhacker.sage-inc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753009AbXDIGOL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2007 02:14:11 -0400
-In-Reply-To: <4618C766.5080903@gmx.de>
+Received: from nz-out-0506.google.com ([64.233.162.230]:44371 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615AbXDIHfZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2007 03:35:25 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so971916nze
+        for <linux-ide@vger.kernel.org>; Mon, 09 Apr 2007 00:35:25 -0700 (PDT)
+In-Reply-To: <45FD7B44.5040509@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ansgar Knappheide <ansgar.knappheide@gmx.de>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig0E85DF964ABF06D4B40559F6
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Jeff Garzik wrote:
+>>> Tejun Heo wrote:
+>>>> Implement and use DMA mask configuration helper.
+>>>>
+>>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>>> ---
+>>>> This function probably belongs to pci layer.  Put it in libata with
+>>>> pci_test_bits() for the time being.
+>>> AFAIK the default DMA mask is always 32-bit.  Code (often written by me)
+>>> that sets it to a 32-bit mask was just paranoia, and not really needed.
+>>>
+>>> Hence, the pci_go_64() function I added, found in #upstream.
+>>
+>> It isn't in #upstream yet.  Also, at the second thought, there is a
+>> problem with pci_go_64().  DMA masks are not reset after driver is
+>> detached.  Even if the device starts with 32bit DMA masks, after a 64bit
+>> enabled driver is attached and detached, the device's DMA masks are
+>> 64bit.  I'm refreshing new-init-model patchset and keeping
+>> pci_configure_dma_masks() for now.
+> 
+> That "problem" has existed since day one, and nobody seems to care :)
+> 
+> I can't think of a single 64-bit-capable driver that restores the masks,
+> and can't think of a single bug report that resulted from it.
 
-Ansgar Knappheide wrote:
-> I got similar errors since kernel 2.6.20-xx and the LBA48/EH fix betwee=
-n
-> 2.6.21-rc5-git10 and 2.6.21-rc5-git13 seems to fix it. I'm no developer=
-,
-> but you should perhaps try kernel 2.6.21-rc5-git13 or later.
+Jeff, there are further problems with doing pci_go_64() only on devices
+which support 64bit.  pci_set_dma_mask() is the only place where the PCI
+code can test whether DMA is usable or not, so if we don't configure DMA
+mask on 32bit controllers, there's no way to tell whether DMA is allowed
+on the controller/bus or not.  We end up blindly enabling bus mastering
+without consulting the PCI bus.
 
-I tried 2.6.21-rc6-git1 as I figure it was likely to be a bit more stable=
+I think it's just cleaner to do pci_configure_dma_masks() on all cases
+with proper DMA mask.
 
-(closer to a 'stable' release), but I'm still getting these messages.
+Thanks.
 
-Any other thoughts?
-
---=20
-Phil Dibowitz                             phil@ipom.com
-Open Source software and tech docs        Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
-
-"Never write it in C if you can do it in 'awk';
- Never do it in 'awk' if 'sed' can handle it;
- Never use 'sed' when 'tr' can do the job;
- Never invoke 'tr' when 'cat' is sufficient;
- Avoid using 'cat' whenever possible" -- Taylor's Laws of Programming
-
-
-
---------------enig0E85DF964ABF06D4B40559F6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFGGdmmN5XoxaHnMrsRAkivAJ9faibOgUAVsX9UZ5hZTnHvnSNnigCfd/O1
-eEDfNkT5OHPIE6E1YETcgqg=
-=I1Ju
------END PGP SIGNATURE-----
-
---------------enig0E85DF964ABF06D4B40559F6--
+-- 
+tejun
