@@ -1,62 +1,50 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: implement and use DMA mask configuration helper
-Date: Mon, 09 Apr 2007 16:35:19 +0900
-Message-ID: <4619ECB7.9060601@gmail.com>
-References: <20070309104945.GG32687@htj.dyndns.org> <45F155E3.9040604@garzik.org> <45FD5154.9040603@gmail.com> <45FD7B44.5040509@garzik.org>
+Subject: Re: FUA and DPO unsupported using sata_nv on MCP55?
+Date: Mon, 09 Apr 2007 16:45:11 +0900
+Message-ID: <4619EF07.5090008@gmail.com>
+References: <1175778811.5181.9.camel@ukabzc383.uk.saic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.230]:44371 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615AbXDIHfZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2007 03:35:25 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so971916nze
-        for <linux-ide@vger.kernel.org>; Mon, 09 Apr 2007 00:35:25 -0700 (PDT)
-In-Reply-To: <45FD7B44.5040509@garzik.org>
+Received: from wr-out-0506.google.com ([64.233.184.226]:36942 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751709AbXDIHpT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2007 03:45:19 -0400
+Received: by wr-out-0506.google.com with SMTP id 71so816436wri
+        for <linux-ide@vger.kernel.org>; Mon, 09 Apr 2007 00:45:18 -0700 (PDT)
+In-Reply-To: <1175778811.5181.9.camel@ukabzc383.uk.saic.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
+To: Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
 Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Jeff Garzik wrote:
->>> Tejun Heo wrote:
->>>> Implement and use DMA mask configuration helper.
->>>>
->>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>>> ---
->>>> This function probably belongs to pci layer.  Put it in libata with
->>>> pci_test_bits() for the time being.
->>> AFAIK the default DMA mask is always 32-bit.  Code (often written by me)
->>> that sets it to a 32-bit mask was just paranoia, and not really needed.
->>>
->>> Hence, the pci_go_64() function I added, found in #upstream.
->>
->> It isn't in #upstream yet.  Also, at the second thought, there is a
->> problem with pci_go_64().  DMA masks are not reset after driver is
->> detached.  Even if the device starts with 32bit DMA masks, after a 64bit
->> enabled driver is attached and detached, the device's DMA masks are
->> 64bit.  I'm refreshing new-init-model patchset and keeping
->> pci_configure_dma_masks() for now.
+Eamonn Hamilton wrote:
+> Hi,
 > 
-> That "problem" has existed since day one, and nobody seems to care :)
+> I've got a couple of Samsung HD501LJ drives attached to a KN9 Ultra
+> board using the MCp55 chipset, and I'm getting an NCQ depth of 0
+> reported at boot, which as I understand it is because support for NCQ
+> isn't in the sata_nv driver yet for this chipset.
 > 
-> I can't think of a single 64-bit-capable driver that restores the masks,
-> and can't think of a single bug report that resulted from it.
+> ata1.00: ATA-7, max UDMA7, 976773168 sectors: LBA48 NCQ (depth 0/32)
+> ata2.00: ATA-7, max UDMA7, 976773168 sectors: LBA48 NCQ (depth 0/32)
 
-Jeff, there are further problems with doing pci_go_64() only on devices
-which support 64bit.  pci_set_dma_mask() is the only place where the PCI
-code can test whether DMA is usable or not, so if we don't configure DMA
-mask on 32bit controllers, there's no way to tell whether DMA is allowed
-on the controller/bus or not.  We end up blindly enabling bus mastering
-without consulting the PCI bus.
+Yeap.
 
-I think it's just cleaner to do pci_configure_dma_masks() on all cases
-with proper DMA mask.
+> Later in the boot, however, I get 
+> SCSI device sda: write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> SCSI device sda: write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> 
+> which as I understand it means my data ( plus the wifes picture
+> archive! ) is at risk, as I have write cache enabled and barrier support
+> is disabled because of the lack of FUA. Is this caused by my drives, or
+> is there something I need to enable?
 
-Thanks.
+Nothing is in danger.  FUA just speeds up barrier a tad bit.  Doesn't
+matter really.
 
 -- 
 tejun
