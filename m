@@ -1,31 +1,46 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: adding Pegasus IDE quirk for pata_via
-Date: Tue, 10 Apr 2007 18:22:29 +0200
-Message-ID: <20070410162229.GA508@aepfle.de>
-References: <20070404111635.GA1855@aepfle.de> <461A3C10.3050104@genesi-usa.com> <20070409154026.4d8a0774@the-village.bc.nu>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: [PATCH 03/30] Use menuconfig objects - libata
+Date: Tue, 10 Apr 2007 21:50:30 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0704102149220.32056@yvahk01.tjqt.qr>
+References: <Pine.LNX.4.61.0704102046520.32056@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:50054 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031031AbXDJQVv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Apr 2007 12:21:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20070409154026.4d8a0774@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753833AbXDJTwS@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.61.0704102046520.32056@yvahk01.tjqt.qr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Matt Sealey <matt@genesi-usa.com>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-On Mon, Apr 09, Alan Cox wrote:
 
-> > Again some comments would be appreciated from anyone who has a better idea on how this controller
-> > works. This simple code addition came out of 2 or 3 days of discussion with the Pegasos designer
-> > based on his experiences with the chip and is so simple there cannot be much wrong with it
-> > apart from coding style and a distinct lack of testing.
-> 
-> Seems sane to me - as you said the x86 world relies on the BIOS for this
-> and in fact pretty much never uses native mode anyway.
+Use menuconfigs instead of menus, so the whole menu can be disabled at        
+once instead of going through all options.
 
-The snipped is appearently for drivers/ide.
-Where is the correct place for drivers/ata?
+Signed-off-by: Jan Engelhardt <jengelh@gmx.de>
+
+Index: linux-2.6.21-rc5/drivers/ata/Kconfig
+===================================================================
+--- linux-2.6.21-rc5.orig/drivers/ata/Kconfig
++++ linux-2.6.21-rc5/drivers/ata/Kconfig
+@@ -2,10 +2,8 @@
+ # SATA/PATA driver configuration
+ #
+ 
+-menu "Serial ATA (prod) and Parallel ATA (experimental) drivers"
+-
+-config ATA
+-	tristate "ATA device support"
++menuconfig ATA
++	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
+ 	depends on BLOCK
+ 	depends on !(M32R || M68K) || BROKEN
+ 	depends on !SUN4 || BROKEN
+@@ -571,6 +569,4 @@ config PATA_SCC
+ 
+ 	  If unsure, say N.
+ 
+-endif
+-endmenu
+-
++endif # ATA
+#<EOF>
