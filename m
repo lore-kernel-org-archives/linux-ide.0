@@ -1,38 +1,27 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: AHCI hot replace sdX incrementing
-Date: Tue, 10 Apr 2007 05:50:04 -0400
-Message-ID: <461B5DCC.4010208@garzik.org>
-References: <39B20DF628532344BC7A2692CB6AEE070127216E@orsmsx420.amr.corp.intel.com>
+From: Kyle McMartin <kyle@canonical.com>
+Subject: Re: [PATCH] HPA support: Revised patch
+Date: Tue, 10 Apr 2007 10:07:19 -0400
+Message-ID: <20070410140719.GA18902@athena.road.mcmartin.ca>
+References: <20070405141352.12fddb6e@the-village.bc.nu> <20070406163707.GA25880@srcf.ucam.org> <20070409222241.6581ecc2@the-village.bc.nu> <20070410140617.GA5255@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34173 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753364AbXDJJuF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Apr 2007 05:50:05 -0400
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE070127216E@orsmsx420.amr.corp.intel.com>
+Received: from stout.engsoc.carleton.ca ([134.117.69.22]:40023 "EHLO
+	stout.engsoc.carleton.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821AbXDJOIr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Apr 2007 10:08:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20070410140617.GA5255@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: linux-ide@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kyle@canonical.com
 
-Gaston, Jason D wrote:
-> When I hot-remove a SATA HD in AHCI mode and then hot-plug the drive
-> back in again, the /dev/sdX number changes to the next available number.
-> Is this going to be a problem when using a RAID array that includes that
-> drive?
+On Tue, Apr 10, 2007 at 03:06:18PM +0100, Matthew Garrett wrote:
+> On Mon, Apr 09, 2007 at 10:22:41PM +0100, Alan Cox wrote:
+> 
+> > Please apply Tejun's fix for LBA48 data and try again. Hopefully its just
+> > that which is causing the problem.
+> Yes, that works absolutely fine now.
 
-Well, it's certainly something you have to deal with.  You have to tell 
-the RAID driver you added a component to the system.  Ideally mdadm or 
-udev should take care of that, but I'm not sure it's all there yet.
-
-In any case, it's a new device so, while inconvenient for some 
-scenarios, I think it is best to represent a new device with a new 
-device node.  Various entities are still probably holding references to 
-the old device, and you don't want the system to think that you plugged 
-in the _same_ device again.
-
-	Jeff
-
-
+Thanks Alan, Matthew!
