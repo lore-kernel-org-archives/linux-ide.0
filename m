@@ -1,25 +1,23 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Kyle McMartin <kyle@canonical.com>
 Subject: Re: [PATCH] libata: HPA support
-Date: Tue, 10 Apr 2007 19:36:18 -0400
-Message-ID: <461C1F72.1070902@pobox.com>
+Date: Tue, 10 Apr 2007 19:43:11 -0400
+Message-ID: <20070410234311.GA8517@athena.road.mcmartin.ca>
 References: <20070411002313.29069ca5@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40451 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161105AbXDJXgU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Apr 2007 19:36:20 -0400
+Received: from stout.engsoc.carleton.ca ([134.117.69.22]:36841 "EHLO
+	stout.engsoc.carleton.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161114AbXDJXom (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Apr 2007 19:44:42 -0400
+Content-Disposition: inline
 In-Reply-To: <20070411002313.29069ca5@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
+On Wed, Apr 11, 2007 at 12:23:13AM +0100, Alan Cox wrote:
 > Add support for ignoring the BIOS HPA result (off by default) and setting
 > the disk to the full available size unless already frozen.
 > 
@@ -29,10 +27,11 @@ Alan Cox wrote:
 > 
 > For normal users this brings us, I believe, to feature parity with old IDE
 > (and of course more featured in some areas too).
+> 
 
-Any additional credit for this patch, or was it all you?
+Awesome! Thanks for sheparding this.
 
-	Jeff
+Acked-by: Kyle McMartin <kyle@canonical.com>
 
-
-
+Cheers,
+	Kyle
