@@ -1,42 +1,31 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: IDE driver in polling mode
-Date: Tue, 10 Apr 2007 12:18:15 -0400
-Message-ID: <461BB8C7.9050900@garzik.org>
-References: <1ea6be8e0704100635ydbf1538i782e796c99891e5d@mail.gmail.com>	<461B9D04.2000109@ru.mvista.com> <20070410171125.3aeed29d@the-village.bc.nu>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: adding Pegasus IDE quirk for pata_via
+Date: Tue, 10 Apr 2007 18:22:29 +0200
+Message-ID: <20070410162229.GA508@aepfle.de>
+References: <20070404111635.GA1855@aepfle.de> <461A3C10.3050104@genesi-usa.com> <20070409154026.4d8a0774@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36890 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031017AbXDJQS0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Apr 2007 12:18:26 -0400
-In-Reply-To: <20070410171125.3aeed29d@the-village.bc.nu>
+Received: from mail-out.m-online.net ([212.18.0.9]:50054 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031031AbXDJQVv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Apr 2007 12:21:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20070409154026.4d8a0774@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Michael <michaelzwrk@gmail.com>, linuxppc-embedded@ozlabs.org, linux-ide@vger.kernel.org
+Cc: Matt Sealey <matt@genesi-usa.com>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->>     Ah, no interrupts at all...
->>     The old IDE core in drivers/ide/ certainly doesn't support polling mode 
->> and IRQ-less devices. AFAICS, libata also doesn't support the latter...
+On Mon, Apr 09, Alan Cox wrote:
+
+> > Again some comments would be appreciated from anyone who has a better idea on how this controller
+> > works. This simple code addition came out of 2 or 3 days of discussion with the Pegasos designer
+> > based on his experiences with the chip and is so simple there cannot be much wrong with it
+> > apart from coding style and a distinct lack of testing.
 > 
-> libata has much of the framework to do this as it originally did all of
-> its PIO work much this way. That is probably the most productive place to
-> start hacking.
+> Seems sane to me - as you said the x86 world relies on the BIOS for this
+> and in fact pretty much never uses native mode anyway.
 
-Yep.
-
-The only real restriction in libata is in ata_device_add(), which 
-unconditionally registers an irq handler.  Make a few changes there, add 
-a few flags, and the existing polling code will kick in.
-
-Once we have higher priority stuff sorted, I would like to look into 
-things like activating the polling code when it becomes obvious that the 
-system is not delivering interrupts.
-
-	Jeff
-
-
-
+The snipped is appearently for drivers/ide.
+Where is the correct place for drivers/ata?
