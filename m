@@ -1,530 +1,301 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata: cable methods
-Date: Wed, 11 Apr 2007 00:04:20 +0100
-Message-ID: <20070411000420.2eebcc1d@the-village.bc.nu>
+Subject: [PATCH] libata: HPA support
+Date: Wed, 11 Apr 2007 00:23:13 +0100
+Message-ID: <20070411002313.29069ca5@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:45159 "EHLO the-village.bc.nu"
+Received: from [81.2.110.250] ([81.2.110.250]:40628 "EHLO the-village.bc.nu"
 	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161024AbXDJXBZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Apr 2007 19:01:25 -0400
+	id S1752642AbXDJXUO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Apr 2007 19:20:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Versus upstream as requested
-
-Last of the trivial switches to cable_detect methods.
-
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index d8e7988..92a491d 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -33,35 +33,6 @@
-  */
+Add support for ignoring the BIOS HPA result (off by default) and setting
+the disk to the full available size unless already frozen.
+
+Tested with various platforms/disks and confirmed to work with the
+Macintosh (which broke earlier) and ata_piix (breakage due to the LBA48
+readback that Tejun fixed).
+
+For normal users this brings us, I believe, to feature parity with old IDE
+(and of course more featured in some areas too).
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 735f0b0..e4fc33e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -89,6 +89,10 @@ int libata_fua = 0;
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
  
- /**
-- *	generic_pre_reset		-	probe begin
-- *	@ap: ATA port
-- *
-- *	Set up cable type and use generic probe init
-- */
--
--static int generic_pre_reset(struct ata_port *ap)
--{
--	ap->cbl = ATA_CBL_PATA80;
--	return ata_std_prereset(ap);
--}
--
--
--/**
-- *	generic_error_handler - Probe specified port on PATA host controller
-- *	@ap: Port to probe
-- *	@classes:
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--
--static void generic_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, generic_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	generic_set_mode	-	mode setting
-  *	@ap: interface to set up
-  *	@unused: returned device on error
-@@ -144,8 +115,9 @@ static struct ata_port_operations generi
- 
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
--	.error_handler	= generic_error_handler,
-+	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_unknown,
- 
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= ata_qc_issue_prot,
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index a2c5756..55d306a 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -93,7 +93,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"ata_piix"
--#define DRV_VERSION	"2.10ac1"
-+#define DRV_VERSION	"2.11"
- 
- enum {
- 	PIIX_IOCFG		= 0x54, /* IDE I/O configuration register */
-@@ -155,11 +155,11 @@ struct piix_host_priv {
- static int piix_init_one (struct pci_dev *pdev,
- 				    const struct pci_device_id *ent);
- static void piix_pata_error_handler(struct ata_port *ap);
--static void ich_pata_error_handler(struct ata_port *ap);
- static void piix_sata_error_handler(struct ata_port *ap);
- static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
- static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
- static void ich_set_dmamode (struct ata_port *ap, struct ata_device *adev);
-+static int ich_pata_cable_detect(struct ata_port *ap);
- 
- static unsigned int in_module_init = 1;
- 
-@@ -305,6 +305,7 @@ static const struct ata_port_operations 
- 	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= piix_pata_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.cable_detect		= ata_cable_40wire,
- 
- 	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-@@ -336,8 +337,9 @@ static const struct ata_port_operations 
- 
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ich_pata_error_handler,
-+	.error_handler		= piix_pata_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.cable_detect		= ich_pata_cable_detect,
- 
- 	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
-@@ -586,7 +588,7 @@ static const struct ich_laptop ich_lapto
- };
- 
- /**
-- *	piix_pata_cbl_detect - Probe host controller cable detect info
-+ *	ich_pata_cable_detect - Probe host controller cable detect info
-  *	@ap: Port for which cable detect info is desired
-  *
-  *	Read 80c cable indicator from ATA PCI device's PCI config
-@@ -596,23 +598,18 @@ static const struct ich_laptop ich_lapto
-  *	None (inherited from caller).
-  */
- 
--static void ich_pata_cbl_detect(struct ata_port *ap)
-+static int ich_pata_cable_detect(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	const struct ich_laptop *lap = &ich_laptop[0];
- 	u8 tmp, mask;
- 
--	/* no 80c support in host controller? */
--	if ((ap->udma_mask & ~ATA_UDMA_MASK_40C) == 0)
--		goto cbl40;
--
- 	/* Check for specials - Acer Aspire 5602WLMi */
- 	while (lap->device) {
- 		if (lap->device == pdev->device &&
- 		    lap->subvendor == pdev->subsystem_vendor &&
- 		    lap->subdevice == pdev->subsystem_device) {
--			ap->cbl = ATA_CBL_PATA40_SHORT;
--		    	return;
-+			return ATA_CBL_PATA40_SHORT;
- 		}
- 		lap++;
- 	}
-@@ -621,20 +618,14 @@ static void ich_pata_cbl_detect(struct a
- 	mask = ap->port_no == 0 ? PIIX_80C_PRI : PIIX_80C_SEC;
- 	pci_read_config_byte(pdev, PIIX_IOCFG, &tmp);
- 	if ((tmp & mask) == 0)
--		goto cbl40;
--
--	ap->cbl = ATA_CBL_PATA80;
--	return;
--
--cbl40:
--	ap->cbl = ATA_CBL_PATA40;
-+		return ATA_CBL_PATA40;
-+	return ATA_CBL_PATA80;
- }
- 
- /**
-  *	piix_pata_prereset - prereset for PATA host controller
-  *	@ap: Target port
-  *
-- *
-  *	LOCKING:
-  *	None (inherited from caller).
-  */
-@@ -644,8 +635,6 @@ static int piix_pata_prereset(struct ata
- 
- 	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->port_no]))
- 		return -ENOENT;
--
--	ap->cbl = ATA_CBL_PATA40;
- 	return ata_std_prereset(ap);
- }
- 
-@@ -656,30 +645,6 @@ static void piix_pata_error_handler(stru
- }
- 
- 
--/**
-- *	ich_pata_prereset - prereset for PATA host controller
-- *	@ap: Target port
-- *
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--static int ich_pata_prereset(struct ata_port *ap)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--
--	if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->port_no]))
--		return -ENOENT;
--	ich_pata_cbl_detect(ap);
--	return ata_std_prereset(ap);
--}
--
--static void ich_pata_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ich_pata_prereset, ata_std_softreset, NULL,
--			   ata_std_postreset);
--}
--
- static void piix_sata_error_handler(struct ata_port *ap)
- {
- 	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL,
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index 1838176..5a77e4e 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -25,7 +25,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_amd"
--#define DRV_VERSION "0.2.8"
-+#define DRV_VERSION "0.3.8"
- 
- /**
-  *	timing_setup		-	shared timing computation and load
-@@ -119,32 +119,25 @@ static void timing_setup(struct ata_port
- }
- 
- /**
-- *	amd_probe_init		-	cable detection
-+ *	amd_probe_init		-	perform reset handling
-  *	@ap: ATA port
-  *
-- *	Perform cable detection. The BIOS stores this in PCI config
-- *	space for us.
-+ *	Reset sequence checking enable bits to see which ports are
-+ *	active.
-  */
- 
- static int amd_pre_reset(struct ata_port *ap)
- {
--	static const u32 bitmask[2] = {0x03, 0x0C};
- 	static const struct pci_bits amd_enable_bits[] = {
- 		{ 0x40, 1, 0x02, 0x02 },
- 		{ 0x40, 1, 0x01, 0x01 }
- 	};
- 
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u8 ata66;
- 
- 	if (!pci_test_config_bits(pdev, &amd_enable_bits[ap->port_no]))
- 		return -ENOENT;
- 
--	pci_read_config_byte(pdev, 0x42, &ata66);
--	if (ata66 & bitmask[ap->port_no])
--		ap->cbl = ATA_CBL_PATA80;
--	else
--		ap->cbl = ATA_CBL_PATA40;
- 	return ata_std_prereset(ap);
- 
- }
-@@ -156,28 +149,16 @@ static void amd_error_handler(struct ata
- 				      ata_std_postreset);
- }
- 
--static int amd_early_pre_reset(struct ata_port *ap)
-+static int amd_cable_detect(struct ata_port *ap)
- {
-+	static const u32 bitmask[2] = {0x03, 0x0C};
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	static struct pci_bits amd_enable_bits[] = {
--		{ 0x40, 1, 0x02, 0x02 },
--		{ 0x40, 1, 0x01, 0x01 }
--	};
--
--	if (!pci_test_config_bits(pdev, &amd_enable_bits[ap->port_no]))
--		return -ENOENT;
--
--	/* No host side cable detection */
--	ap->cbl = ATA_CBL_PATA80;
--	return ata_std_prereset(ap);
--
--}
-+	u8 ata66;
- 
--static void amd_early_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, amd_early_pre_reset,
--			       ata_std_softreset, NULL,
--			       ata_std_postreset);
-+	pci_read_config_byte(pdev, 0x42, &ata66);
-+	if (ata66 & bitmask[ap->port_no])
-+		return ATA_CBL_PATA80;
-+	return ATA_CBL_PATA40;
- }
- 
- /**
-@@ -247,31 +228,16 @@ static void amd133_set_dmamode(struct at
-  */
- 
- static int nv_pre_reset(struct ata_port *ap) {
--	static const u8 bitmask[2] = {0x03, 0x0C};
- 	static const struct pci_bits nv_enable_bits[] = {
- 		{ 0x50, 1, 0x02, 0x02 },
- 		{ 0x50, 1, 0x01, 0x01 }
- 	};
- 
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u8 ata66;
--	u16 udma;
- 
- 	if (!pci_test_config_bits(pdev, &nv_enable_bits[ap->port_no]))
- 		return -ENOENT;
- 
--	pci_read_config_byte(pdev, 0x52, &ata66);
--	if (ata66 & bitmask[ap->port_no])
--		ap->cbl = ATA_CBL_PATA80;
--	else
--		ap->cbl = ATA_CBL_PATA40;
--
--	/* We now have to double check because the Nvidia boxes BIOS
--	   doesn't always set the cable bits but does set mode bits */
--
--	pci_read_config_word(pdev, 0x62 - 2 * ap->port_no, &udma);
--	if ((udma & 0xC4) == 0xC4 || (udma & 0xC400) == 0xC400)
--		ap->cbl = ATA_CBL_PATA80;
- 	return ata_std_prereset(ap);
- }
- 
-@@ -281,6 +247,29 @@ static void nv_error_handler(struct ata_
- 			       ata_std_softreset, NULL,
- 			       ata_std_postreset);
- }
++static int ata_ignore_hpa = 0;
++module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
++MODULE_PARM_DESC(ignore_hpa, "Ignore HPA (0=keep BIOS setting 1=ignore it)");
 +
-+static int nv_cable_detect(struct ata_port *ap)
+ static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
+ module_param(ata_probe_timeout, int, 0444);
+ MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+@@ -808,6 +812,202 @@ void ata_id_c_string(const u16 *id, unsi
+ 	*p = '\0';
+ }
+ 
++static u64 ata_tf_to_lba48(struct ata_taskfile *tf)
 +{
-+	static const u8 bitmask[2] = {0x03, 0x0C};
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u8 ata66;
-+	u16 udma;
-+	int cbl;
++	u64 sectors = 0;
 +
-+	pci_read_config_byte(pdev, 0x52, &ata66);
-+	if (ata66 & bitmask[ap->port_no])
-+		cbl = ATA_CBL_PATA80;
-+	else
-+		cbl = ATA_CBL_PATA40;
++	sectors |= ((u64)(tf->hob_lbah & 0xff)) << 40;
++	sectors |= ((u64)(tf->hob_lbam & 0xff)) << 32;
++	sectors |= (tf->hob_lbal & 0xff) << 24;
++	sectors |= (tf->lbah & 0xff) << 16;
++	sectors |= (tf->lbam & 0xff) << 8;
++	sectors |= (tf->lbal & 0xff);
 +
-+ 	/* We now have to double check because the Nvidia boxes BIOS
-+ 	   doesn't always set the cable bits but does set mode bits */
-+ 	pci_read_config_word(pdev, 0x62 - 2 * ap->port_no, &udma);
-+ 	if ((udma & 0xC4) == 0xC4 || (udma & 0xC400) == 0xC400)
-+		cbl = ATA_CBL_PATA80;
-+	return cbl;
++	return ++sectors;
 +}
 +
- /**
-  *	nv100_set_piomode	-	set initial PIO mode data
-  *	@ap: ATA interface
-@@ -353,8 +342,9 @@ static struct ata_port_operations amd33_
- 
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_early_error_handler,
-+	.error_handler	= amd_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -387,8 +377,9 @@ static struct ata_port_operations amd66_
- 
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_early_error_handler,
-+	.error_handler	= amd_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_unknown,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -423,6 +414,7 @@ static struct ata_port_operations amd100
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= amd_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_unknown,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -457,6 +449,7 @@ static struct ata_port_operations amd133
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= amd_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= amd_cable_detect,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -491,6 +484,7 @@ static struct ata_port_operations nv100_
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= nv_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= nv_cable_detect,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -525,6 +519,7 @@ static struct ata_port_operations nv133_
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= nv_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= nv_cable_detect,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -644,6 +639,11 @@ static int amd_init_one(struct pci_dev *
- 	if (type == 1 && rev > 0x7)
- 		type = 2;
- 
-+#if defined(CONFIG_ATA_ACPI)
-+	/* Prefer the ACPI driver for Nvidia hardware */
-+	if (pdev->vendor == PCI_VENDOR_ID_NVIDIA && ata_pata_acpi_present(pdev))
-+		return -ENODEV;
-+#endif
- 	/* Check for AMD7411 */
- 	if (type == 3)
- 		/* FIFO is broken */
-diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
-index 1572e5c..08cccc9 100644
---- a/drivers/ata/pata_cs5535.c
-+++ b/drivers/ata/pata_cs5535.c
-@@ -70,36 +70,23 @@
- #define CS5535_BAD_PIO(timings) ( (timings&~0x80000000UL)==0x00009172 )
- 
- /**
-- *	cs5535_pre_reset	-	detect cable type
-+ *	cs5535_cable_detect	-	detect cable type
-  *	@ap: Port to detect on
-  *
-  *	Perform cable detection for ATA66 capable cable. Return a libata
-  *	cable type.
-  */
- 
--static int cs5535_pre_reset(struct ata_port *ap)
-+static int cs5535_cable_detect(struct ata_port *ap)
++static u64 ata_tf_to_lba(struct ata_taskfile *tf)
++{
++	u64 sectors = 0;
++
++	sectors |= (tf->device & 0x0f) << 24;
++	sectors |= (tf->lbah & 0xff) << 16;
++	sectors |= (tf->lbam & 0xff) << 8;
++	sectors |= (tf->lbal & 0xff);
++
++	return ++sectors;
++}
++
++/**
++ *	ata_read_native_max_address_ext	-	LBA48 native max query
++ *	@dev: Device to query
++ *
++ *	Perform an LBA48 size query upon the device in question. Return the
++ *	actual LBA48 size or zero if the command fails.
++ */
++
++static u64 ata_read_native_max_address_ext(struct ata_device *dev)
++{
++	unsigned int err;
++	struct ata_taskfile tf;
++
++	ata_tf_init(dev, &tf);
++
++	tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
++	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
++	tf.protocol |= ATA_PROT_NODATA;
++	tf.device |= 0x40;
++
++	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err)
++		return 0;
++
++	return ata_tf_to_lba48(&tf);
++}
++
++/**
++ *	ata_read_native_max_address	-	LBA28 native max query
++ *	@dev: Device to query
++ *
++ *	Performa an LBA28 size query upon the device in question. Return the
++ *	actual LBA28 size or zero if the command fails.
++ */
++
++static u64 ata_read_native_max_address(struct ata_device *dev)
++{
++	unsigned int err;
++	struct ata_taskfile tf;
++
++	ata_tf_init(dev, &tf);
++
++	tf.command = ATA_CMD_READ_NATIVE_MAX;
++	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
++	tf.protocol |= ATA_PROT_NODATA;
++	tf.device |= 0x40;
++
++	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err)
++		return 0;
++
++	return ata_tf_to_lba(&tf);
++}
++
++/**
++ *	ata_set_native_max_address_ext	-	LBA48 native max set
++ *	@dev: Device to query
++ *
++ *	Perform an LBA48 size set max upon the device in question. Return the
++ *	actual LBA48 size or zero if the command fails.
++ */
++
++static u64 ata_set_native_max_address_ext(struct ata_device *dev, u64 new_sectors)
++{
++	unsigned int err;
++	struct ata_taskfile tf;
++
++	new_sectors--;
++
++	ata_tf_init(dev, &tf);
++
++	tf.command = ATA_CMD_SET_MAX_EXT;
++	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
++	tf.protocol |= ATA_PROT_NODATA;
++	tf.device |= 0x40;
++
++	tf.lbal = (new_sectors >> 0) & 0xff;
++	tf.lbam = (new_sectors >> 8) & 0xff;
++	tf.lbah = (new_sectors >> 16) & 0xff;
++
++	tf.hob_lbal = (new_sectors >> 24) & 0xff;
++	tf.hob_lbam = (new_sectors >> 32) & 0xff;
++	tf.hob_lbah = (new_sectors >> 40) & 0xff;
++
++	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err)
++		return 0;
++
++	return ata_tf_to_lba48(&tf);
++}
++
++/**
++ *	ata_set_native_max_address	-	LBA28 native max set
++ *	@dev: Device to query
++ *
++ *	Perform an LBA28 size set max upon the device in question. Return the
++ *	actual LBA28 size or zero if the command fails.
++ */
++
++static u64 ata_set_native_max_address(struct ata_device *dev, u64 new_sectors)
++{
++	unsigned int err;
++	struct ata_taskfile tf;
++
++	new_sectors--;
++
++	ata_tf_init(dev, &tf);
++
++	tf.command = ATA_CMD_SET_MAX;
++	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
++	tf.protocol |= ATA_PROT_NODATA;
++
++	tf.lbal = (new_sectors >> 0) & 0xff;
++	tf.lbam = (new_sectors >> 8) & 0xff;
++	tf.lbah = (new_sectors >> 16) & 0xff;
++	tf.device |= ((new_sectors >> 24) & 0x0f) | 0x40;
++
++	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err)
++		return 0;
++
++	return ata_tf_to_lba(&tf);
++}
++
++/**
++ *	ata_hpa_resize		-	Resize a device with an HPA set
++ *	@dev: Device to resize
++ *
++ *	Read the size of an LBA28 or LBA48 disk with HPA features and resize
++ *	it if required to the full size of the media. The caller must check
++ *	the drive has the HPA feature set enabled.
++ */
++
++static u64 ata_hpa_resize(struct ata_device *dev)
++{
++	u64 sectors = dev->n_sectors;
++	u64 hpa_sectors;
++	
++	if (ata_id_has_lba48(dev->id))
++		hpa_sectors = ata_read_native_max_address_ext(dev);
++	else
++		hpa_sectors = ata_read_native_max_address(dev);
++
++	/* if no hpa, both should be equal */
++	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, hpa_sectors = %lld\n",
++		__FUNCTION__, sectors, hpa_sectors);
++
++	if (hpa_sectors > sectors) {
++		ata_dev_printk(dev, KERN_INFO,
++			"Host Protected Area detected:\n"
++			"\tcurrent size: %lld sectors\n"
++			"\tnative size: %lld sectors\n",
++			sectors, hpa_sectors);
++
++		if (ata_ignore_hpa) {
++			if (ata_id_has_lba48(dev->id))
++				hpa_sectors = ata_set_native_max_address_ext(dev, hpa_sectors);
++			else
++				hpa_sectors = ata_set_native_max_address(dev, hpa_sectors);
++
++			if (hpa_sectors) {
++				ata_dev_printk(dev, KERN_INFO,
++					"native size increased to %lld sectors\n", hpa_sectors);
++				return hpa_sectors;
++			}
++		}
++	}
++	return sectors;
++}
++
+ static u64 ata_id_n_sectors(const u16 *id)
  {
- 	u8 cable;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	if (ata_id_has_lba(id)) {
+@@ -1658,6 +1858,7 @@ int ata_dev_configure(struct ata_device 
+ 			snprintf(revbuf, 7, "ATA-%d",  ata_id_major_version(id));
  
- 	pci_read_config_byte(pdev, CS5535_CABLE_DETECT, &cable);
- 	if (cable & 1)
--		ap->cbl = ATA_CBL_PATA80;
-+		return ATA_CBL_PATA80;
- 	else
--		ap->cbl = ATA_CBL_PATA40;
--	return ata_std_prereset(ap);
--}
--
--/**
-- *	cs5535_error_handler		-	reset/probe
-- *	@ap: Port to reset
-- *
-- *	Reset and configure a port
-- */
--
--static void cs5535_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, cs5535_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
-+		return ATA_CBL_PATA40;
- }
+ 		dev->n_sectors = ata_id_n_sectors(id);
++		dev->n_sectors_boot = dev->n_sectors;
  
- /**
-@@ -205,8 +192,9 @@ static struct ata_port_operations cs5535
+ 		/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
+ 		ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
+@@ -1684,6 +1885,9 @@ int ata_dev_configure(struct ata_device 
+ 					dev->flags |= ATA_DFLAG_FLUSH_EXT;
+ 			}
  
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
--	.error_handler	= cs5535_error_handler,
-+	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= cs5535_cable_detect,
++			if (ata_id_hpa_enabled(dev->id))
++				dev->n_sectors = ata_hpa_resize(dev);
++
+ 			/* config NCQ */
+ 			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
  
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-diff --git a/drivers/ata/pata_cypress.c b/drivers/ata/pata_cypress.c
-index f69dde5..6ec049c 100644
---- a/drivers/ata/pata_cypress.c
-+++ b/drivers/ata/pata_cypress.c
-@@ -41,17 +41,6 @@ enum {
- 	CY82_INDEX_TIMEOUT	= 0x32
- };
+@@ -3341,6 +3545,11 @@ static int ata_dev_same_device(struct at
+ 			       "%llu != %llu\n",
+ 			       (unsigned long long)dev->n_sectors,
+ 			       (unsigned long long)new_n_sectors);
++		/* Are we the boot time size - if so we appear to be the
++		   same disk at this point and our HPA got reapplied */
++		if (ata_ignore_hpa && dev->n_sectors_boot == new_n_sectors 
++		    && ata_id_hpa_enabled(new_id))
++			return 1;
+ 		return 0;
+ 	}
  
--static int cy82c693_pre_reset(struct ata_port *ap)
--{
--	ap->cbl = ATA_CBL_PATA40;
--	return ata_std_prereset(ap);
--}
--
--static void cy82c693_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, cy82c693_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
- /**
-  *	cy82c693_set_piomode	-	set initial PIO mode data
-  *	@ap: ATA interface
-@@ -156,8 +145,9 @@ static struct ata_port_operations cy82c6
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index ffb6cdc..f4dc8df 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -159,6 +159,8 @@ enum {
+ 	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
+ 	ATA_CMD_READ_NATIVE_MAX	= 0xF8,
+ 	ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
++	ATA_CMD_SET_MAX		= 0xF9,
++	ATA_CMD_SET_MAX_EXT	= 0x37,
+ 	ATA_CMD_READ_LOG_EXT	= 0x2f,
  
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
--	.error_handler	= cy82c693_error_handler,
-+	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.cable_detect	= ata_cable_40wire,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
-index c3e5ea3..93cfa6d 100644
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -169,7 +169,6 @@ static int hpt_dma_blacklisted(const str
- 
- /**
-  *	hpt366_filter	-	mode selection filter
-- *	@ap: ATA interface
-  *	@adev: ATA device
-  *
-  *	Block UDMA on devices that cause trouble with this controller.
+ 	/* READ_LOG_EXT pages */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 12237d4..b29850b 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -473,6 +473,7 @@ struct ata_device {
+ 	struct scsi_device	*sdev;		/* attached SCSI device */
+ 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
+ 	u64			n_sectors;	/* size of device, if ATA */
++	u64			n_sectors_boot;	/* size of ATA device at startup */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
