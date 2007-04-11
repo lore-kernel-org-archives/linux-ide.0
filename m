@@ -1,44 +1,48 @@
-From: Craig Metz <cmetz@inner.net>
-Subject: Re: Linux libata, Sil3124, and SATA staggered spin-up support
-Date: Wed, 11 Apr 2007 09:53:46 -0400
-Message-ID: <20070411135346.BB560582C@rmail.inner.net>
-References: <20070331162941.93F61582C@rmail.inner.net> <461C9AB2.9070807@gmail.com>
+From: Michael <michaelzwrk@gmail.com>
+Subject: Re: IDE driver in polling mode
+Date: Wed, 11 Apr 2007 17:10:12 +0200
+Message-ID: <1ea6be8e0704110810l205f5dc7gb831603455a883e2@mail.gmail.com>
+References: <1ea6be8e0704100635ydbf1538i782e796c99891e5d@mail.gmail.com>
+	 <461B9D04.2000109@ru.mvista.com>
+	 <20070410171125.3aeed29d@the-village.bc.nu>
+	 <461BB8C7.9050900@garzik.org>
+	 <20070410172942.7f63d49c@the-village.bc.nu>
+	 <1ea6be8e0704110139i140b40b3qb8408fec2e4ff2a7@mail.gmail.com>
+	 <20070411094702.74774d25@the-village.bc.nu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rmail.inner.net ([199.33.248.12]:4279 "EHLO rmail.inner.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752684AbXDKNmd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Apr 2007 09:42:33 -0400
-In-reply-to: <461C9AB2.9070807@gmail.com> 
+Received: from wr-out-0506.google.com ([64.233.184.235]:13228 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752985AbXDKPKN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Apr 2007 11:10:13 -0400
+Received: by wr-out-0506.google.com with SMTP id 71so160439wri
+        for <linux-ide@vger.kernel.org>; Wed, 11 Apr 2007 08:10:13 -0700 (PDT)
+In-Reply-To: <20070411094702.74774d25@the-village.bc.nu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linuxppc-embedded@ozlabs.org, linux-ide@vger.kernel.org
 
-In message <461C9AB2.9070807@gmail.com>, you write:
->Yeah, the silicon can do staggered spin up.  SATA disks shouldn't spin
->up till PHY gets reset.  libata currently probes each port serially, so
->it should sequentially spin up each drive.  Or do they spin up during
->controller initialization?
+I see.
+The problem is I am constrained to 2.6.14 kernel.
+Is it still correct to say it is P-ATA compatible?
 
-  On a cold boot, if I disable the BIOS, all of the drives begin their spin up
-at once (or so close to not be staggered). It appears to be happenning in
-sil24_init_controller(), where it loops through all ports and resets the PHYs.
-
-  So it appears that the control flow there would need to be changed so that
-we go all the way to having libata identify port 1 before we go back and
-initialize the PHY for port 2.
-
-  If I put all the drives into suspend mode (hdparm -z) and warm reboot, the
-drives are spun up in libata's ata_device_add(). In the second loop, the
-drives are all spun up, then in the third loop they're identified. In this
-case a simple change to combine loops 2 ("probe begin") & 3 ("host probe
-begin") in order that they happen more serially seemed to cause a resonable
-staggerring behavior to happen. On my drives, the identify commands seemed to
-complete a bit before the drives were finished spinning up, so there was still
-some overlap in power draw, but over a large population of drives this
-shouldn't be a big deal.
-
-  I don't have any port multipliers handy to play with, but I expect that they
-make this problem a bit more complex and require some thinking about.
-
-									-Craig
+On 4/11/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> On Wed, 11 Apr 2007 10:39:58 +0200
+> Michael <michaelzwrk@gmail.com> wrote:
+>
+> > Doesn't libata have to do with SCSI devices? I'm afraid it wouldn't
+> > work with CF, which is P-ATA compatible.
+>
+> libata drives PATA and SATA devices, including CF.
+>
+> > Wouldn't it work just to call ide_intr() explicitly from some polling
+> > function, as Mark suggested?
+>
+> No. See the ATA spec - polling command issue is subtly different.
+>
+> Alan
+>
