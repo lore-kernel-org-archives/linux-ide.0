@@ -1,41 +1,42 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: HPA support
-Date: Wed, 11 Apr 2007 01:15:34 +0100
-Message-ID: <20070411011534.0aa9d81e@the-village.bc.nu>
-References: <20070411002313.29069ca5@the-village.bc.nu>
-	<461C1F72.1070902@pobox.com>
+Subject: Re: IDE driver in polling mode
+Date: Wed, 11 Apr 2007 09:47:02 +0100
+Message-ID: <20070411094702.74774d25@the-village.bc.nu>
+References: <1ea6be8e0704100635ydbf1538i782e796c99891e5d@mail.gmail.com>
+	<461B9D04.2000109@ru.mvista.com>
+	<20070410171125.3aeed29d@the-village.bc.nu>
+	<461BB8C7.9050900@garzik.org>
+	<20070410172942.7f63d49c@the-village.bc.nu>
+	<1ea6be8e0704110139i140b40b3qb8408fec2e4ff2a7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50364 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933166AbXDKA6x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Apr 2007 20:58:53 -0400
-In-Reply-To: <461C1F72.1070902@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-embedded-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
+In-Reply-To: <1ea6be8e0704110139i140b40b3qb8408fec2e4ff2a7@mail.gmail.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-embedded>,
+	<mailto:linuxppc-embedded-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-embedded>
+List-Post: <mailto:linuxppc-embedded@ozlabs.org>
+List-Help: <mailto:linuxppc-embedded-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-embedded>,
+	<mailto:linuxppc-embedded-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-embedded-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-embedded-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
+To: Michael <michaelzwrk@gmail.com>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linuxppc-embedded@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
 
-On Tue, 10 Apr 2007 19:36:18 -0400
-Jeff Garzik <jgarzik@pobox.com> wrote:
+On Wed, 11 Apr 2007 10:39:58 +0200
+Michael <michaelzwrk@gmail.com> wrote:
 
-> Alan Cox wrote:
-> > Signed-off-by: Alan Cox <alan@redhat.com>
-> > 
-> > Add support for ignoring the BIOS HPA result (off by default) and setting
-> > the disk to the full available size unless already frozen.
-> > 
-> > Tested with various platforms/disks and confirmed to work with the
-> > Macintosh (which broke earlier) and ata_piix (breakage due to the LBA48
-> > readback that Tejun fixed).
-> > 
-> > For normal users this brings us, I believe, to feature parity with old IDE
-> > (and of course more featured in some areas too).
-> 
-> Any additional credit for this patch, or was it all you?
+> Doesn't libata have to do with SCSI devices? I'm afraid it wouldn't
+> work with CF, which is P-ATA compatible.
 
-Good point, where did the other Signoffs go.
+libata drives PATA and SATA devices, including CF.
 
-Original patch: Kyle McMartin <kyle@canonical.com>
+> Wouldn't it work just to call ide_intr() explicitly from some polling
+> function, as Mark suggested?
+
+No. See the ATA spec - polling command issue is subtly different.
+
+Alan
