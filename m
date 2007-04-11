@@ -1,42 +1,23 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: IDE driver in polling mode
-Date: Wed, 11 Apr 2007 09:47:02 +0100
-Message-ID: <20070411094702.74774d25@the-village.bc.nu>
-References: <1ea6be8e0704100635ydbf1538i782e796c99891e5d@mail.gmail.com>
-	<461B9D04.2000109@ru.mvista.com>
-	<20070410171125.3aeed29d@the-village.bc.nu>
-	<461BB8C7.9050900@garzik.org>
-	<20070410172942.7f63d49c@the-village.bc.nu>
-	<1ea6be8e0704110139i140b40b3qb8408fec2e4ff2a7@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ahci.c: remove non-existing SB600 raid id
+Date: Wed, 11 Apr 2007 19:00:17 +0900
+Message-ID: <461CB1B1.9030207@gmail.com>
+References: <5767b9100704110254s16566ce7n147aa578181d84e6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-embedded-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org>
-In-Reply-To: <1ea6be8e0704110139i140b40b3qb8408fec2e4ff2a7@mail.gmail.com>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-embedded>,
-	<mailto:linuxppc-embedded-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-embedded>
-List-Post: <mailto:linuxppc-embedded@ozlabs.org>
-List-Help: <mailto:linuxppc-embedded-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-embedded>,
-	<mailto:linuxppc-embedded-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-embedded-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-embedded-bounces+glppe-linuxppc-embedded-2=m.gmane.org@ozlabs.org
-To: Michael <michaelzwrk@gmail.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linuxppc-embedded@ozlabs.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751943AbXDKKAY@vger.kernel.org>
+In-Reply-To: <5767b9100704110254s16566ce7n147aa578181d84e6@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Conke Hu <conke.hu@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, 11 Apr 2007 10:39:58 +0200
-Michael <michaelzwrk@gmail.com> wrote:
+Conke Hu wrote:
+>    SB600 RAID and SB600 SATA is the same controller and share the
+> same PCI ID 0x4380. There is such PCI ID 0x4381.
 
-> Doesn't libata have to do with SCSI devices? I'm afraid it wouldn't
-> work with CF, which is P-ATA compatible.
+I assume 'no' is missing in the last sentence.  :-)
 
-libata drives PATA and SATA devices, including CF.
-
-> Wouldn't it work just to call ide_intr() explicitly from some polling
-> function, as Mark suggested?
-
-No. See the ATA spec - polling command issue is subtly different.
-
-Alan
+-- 
+tejun
