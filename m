@@ -1,35 +1,47 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+From: Chuck Ebbert <cebbert@redhat.com>
 Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Wed, 11 Apr 2007 23:16:53 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>
-References: <461D4E2C.6000704@redhat.com>
+Date: Wed, 11 Apr 2007 17:35:43 -0400
+Message-ID: <461D54AF.3060706@redhat.com>
+References: <461D4E2C.6000704@redhat.com> <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tmailer.gwdg.de ([134.76.10.23]:47864 "EHLO tmailer.gwdg.de"
+Received: from mx1.redhat.com ([66.187.233.31]:51376 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753675AbXDKVS0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Apr 2007 17:18:26 -0400
-In-Reply-To: <461D4E2C.6000704@redhat.com>
+	id S965292AbXDKVgE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Apr 2007 17:36:04 -0400
+In-Reply-To: <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
+Jan Engelhardt wrote:
+> On Apr 11 2007 17:07, Chuck Ebbert wrote:
+>> When I reboot my notebook, it powers off and powers back on.
+>> On poweroff a loud snapping noise seems to be coming from the
+>> hard drive. Today I noticed there is no "shutdown: hda" on
+>> the console when I reboot. Whne I do a normal poweroff the
+>> message is displayed and there is no noise. Should the IDE
+>> code be changed so it always shuts down the drive?
+> 
+> What sort of notebook? What sort of harddisk?
 
-On Apr 11 2007 17:07, Chuck Ebbert wrote:
->
->When I reboot my notebook, it powers off and powers back on.
->On poweroff a loud snapping noise seems to be coming from the
->hard drive. Today I noticed there is no "shutdown: hda" on
->the console when I reboot. Whne I do a normal poweroff the
->message is displayed and there is no noise. Should the IDE
->code be changed so it always shuts down the drive?
+Compaq Presario V2000 series, with a new Seagate ST9120821A
+120GB 5400RPM drive.
 
-What sort of notebook? What sort of harddisk?
-Is it as loud as `hdparm -y /dev/hdX"?
-Try `smartctl -d ata -a /dev/hdX | grep -i unload` too.
+> Is it as loud as `hdparm -y /dev/hdX"?
 
+That makes no noise at all except normal drive seek noises.
 
-Jan
--- 
+> Try `smartctl -d ata -a /dev/hdX | grep -i unload` too.
+
+Hmm.
+
+Power_Cycle_Count ... 108
+Power-Off_Retract_Count ... 90
+
+I did a normal poweroff and the retract count went to 91.
+There is an almost-unnoticeable click when I do it that way.
+
