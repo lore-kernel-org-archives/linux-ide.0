@@ -1,44 +1,25 @@
-From: Milind Arun Choudhary <milindchoudhary@gmail.com>
-Subject: [KJ][PATCH] SPIN_LOCK_UNLOCKED cleanup in drivers/ata/pata_winbond.c
-Date: Wed, 11 Apr 2007 20:58:46 +0530
-Message-ID: <20070411152846.GA11449@arun.site>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [KJ][PATCH] SPIN_LOCK_UNLOCKED cleanup in drivers/ata/pata_winbond.c
+Date: Wed, 11 Apr 2007 11:38:57 -0400
+Message-ID: <20070411153857.GA19968@devserv.devel.redhat.com>
+References: <20070411152846.GA11449@arun.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:5618 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753023AbXDKP0z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Apr 2007 11:26:55 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so142447uga
-        for <linux-ide@vger.kernel.org>; Wed, 11 Apr 2007 08:26:53 -0700 (PDT)
+Received: from mx1.redhat.com ([66.187.233.31]:48146 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753049AbXDKPjE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Apr 2007 11:39:04 -0400
 Content-Disposition: inline
+In-Reply-To: <20070411152846.GA11449@arun.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kernel-janitors@lists.osdl.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, alan@redhat.com
+To: Milind Arun Choudhary <milindchoudhary@gmail.com>
+Cc: kernel-janitors@lists.osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, alan@redhat.com
 
-remove SPIN_LOCK_UNLOCKED, use DEFINE_SPINLOCK instead
+On Wed, Apr 11, 2007 at 08:58:46PM +0530, Milind Arun Choudhary wrote:
+> remove SPIN_LOCK_UNLOCKED, use DEFINE_SPINLOCK instead
+> 
+> Signed-off-by: Milind Arun Choudhary <milindchoudhary@gmail.com>
 
-Signed-off-by: Milind Arun Choudhary <milindchoudhary@gmail.com>
-
----
- pata_winbond.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-
-diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
-index 6c11103..cfcd2a5 100644
---- a/drivers/ata/pata_winbond.c
-+++ b/drivers/ata/pata_winbond.c
-@@ -36,7 +36,7 @@ static int probe_winbond = 1;
- static int probe_winbond;
- #endif
- 
--static spinlock_t winbond_lock = SPIN_LOCK_UNLOCKED;
-+static DEFINE_SPINLOCK(winbond_lock);
- 
- static void winbond_writecfg(unsigned long port, u8 reg, u8 val)
- {
-
--- 
-Milind Arun Choudhary
+Acked-by: Alan Cox <alan@redhat.com>
