@@ -1,47 +1,44 @@
-From: "Conke Hu" <conke.hu@gmail.com>
-Subject: [PATCH] ahci.c: remove non-existing SB600 raid id (re-send)
-Date: Wed, 11 Apr 2007 18:23:14 +0800
-Message-ID: <5767b9100704110323n600e0a27kcf0a3800e0953296@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752043AbXDKKXQ@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <htejun@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+From: Craig Metz <cmetz@inner.net>
+Subject: Re: Linux libata, Sil3124, and SATA staggered spin-up support
+Date: Wed, 11 Apr 2007 09:53:46 -0400
+Message-ID: <20070411135346.BB560582C@rmail.inner.net>
+References: <20070331162941.93F61582C@rmail.inner.net> <461C9AB2.9070807@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rmail.inner.net ([199.33.248.12]:4279 "EHLO rmail.inner.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752684AbXDKNmd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Apr 2007 09:42:33 -0400
+In-reply-to: <461C9AB2.9070807@gmail.com> 
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-    SB600 RAID and SB600 SATA is the same controller and share the
-same PCI ID 0x4380. There is no such PCI ID 0x4381.
+In message <461C9AB2.9070807@gmail.com>, you write:
+>Yeah, the silicon can do staggered spin up.  SATA disks shouldn't spin
+>up till PHY gets reset.  libata currently probes each port serially, so
+>it should sequentially spin up each drive.  Or do they spin up during
+>controller initialization?
 
-    Signed-off-by: Conke Hu <conke.hu@gmail.com>
- ---------
-diff -Nur linux-2.6.21-rc6-git3.orig/drivers/ata/ahci.c
-linux-2.6.21-rc6-git3/drivers/ata/ahci.c
---- linux-2.6.21-rc6-git3.orig/drivers/ata/ahci.c	2007-04-22
-18:38:39.000000000 +0800
-+++ linux-2.6.21-rc6-git3/drivers/ata/ahci.c	2007-04-22 18:39:12.000000000 +0800
-@@ -413,8 +413,7 @@
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
+  On a cold boot, if I disable the BIOS, all of the drives begin their spin up
+at once (or so close to not be staggered). It appears to be happenning in
+sil24_init_controller(), where it loops through all ports and resets the PHYs.
 
- 	/* ATI */
--	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 non-raid */
--	{ PCI_VDEVICE(ATI, 0x4381), board_ahci }, /* ATI SB600 raid */
-+	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
+  So it appears that the control flow there would need to be changed so that
+we go all the way to having libata identify port 1 before we go back and
+initialize the PHY for port 2.
 
- 	/* VIA */
- 	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
-diff -Nur linux-2.6.21-rc6-git3.orig/include/linux/pci_ids.h
-linux-2.6.21-rc6-git3/include/linux/pci_ids.h
---- linux-2.6.21-rc6-git3.orig/include/linux/pci_ids.h	2007-04-22
-18:38:39.000000000 +0800
-+++ linux-2.6.21-rc6-git3/include/linux/pci_ids.h	2007-04-22
-18:39:35.000000000 +0800
-@@ -368,7 +368,6 @@
- #define PCI_DEVICE_ID_ATI_IXP400_SATA   0x4379
- #define PCI_DEVICE_ID_ATI_IXP400_SATA2	0x437a
- #define PCI_DEVICE_ID_ATI_IXP600_SATA	0x4380
--#define PCI_DEVICE_ID_ATI_IXP600_SRAID	0x4381
- #define PCI_DEVICE_ID_ATI_IXP600_SMBUS	0x4385
- #define PCI_DEVICE_ID_ATI_IXP600_IDE	0x438c
+  If I put all the drives into suspend mode (hdparm -z) and warm reboot, the
+drives are spun up in libata's ata_device_add(). In the second loop, the
+drives are all spun up, then in the third loop they're identified. In this
+case a simple change to combine loops 2 ("probe begin") & 3 ("host probe
+begin") in order that they happen more serially seemed to cause a resonable
+staggerring behavior to happen. On my drives, the identify commands seemed to
+complete a bit before the drives were finished spinning up, so there was still
+some overlap in power draw, but over a large population of drives this
+shouldn't be a big deal.
+
+  I don't have any port multipliers handy to play with, but I expect that they
+make this problem a bit more complex and require some thinking about.
+
+									-Craig
