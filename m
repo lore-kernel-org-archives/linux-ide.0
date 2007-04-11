@@ -1,169 +1,170 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 02/12] libata: separate out ata_host_start()
+Subject: [PATCH 04/12] libata: implement ata_host_alloc_pinfo() and ata_host_register()
 Date: Wed, 11 Apr 2007 15:42:04 +0900
-Message-ID: <11762737243666-git-send-email-htejun@gmail.com>
+Message-ID: <11762737243088-git-send-email-htejun@gmail.com>
 References: <1176273724198-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.238]:13328 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548AbXDKGmK (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.238]:40900 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599AbXDKGmK (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Apr 2007 02:42:10 -0400
-Received: by wr-out-0506.google.com with SMTP id 71so60808wri
-        for <linux-ide@vger.kernel.org>; Tue, 10 Apr 2007 23:42:09 -0700 (PDT)
+Received: by nz-out-0506.google.com with SMTP id s1so57271nze
+        for <linux-ide@vger.kernel.org>; Tue, 10 Apr 2007 23:42:10 -0700 (PDT)
 In-Reply-To: <1176273724198-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, brking@linux.vnet.ibm.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out ata_host_start() from ata_device_add().  ata_host_start()
-calls ->port_start on each port if available and freezes the port.
+Implement ata_host_alloc_pinfo() and ata_host_register().  These helpers
+will be used in the following patches to adopt new init model.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |   74 +++++++++++++++++++++++++++++++++++++--------
- include/linux/libata.h    |    2 +
- 2 files changed, 63 insertions(+), 13 deletions(-)
+ drivers/ata/libata-core.c |   93 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h    |    5 ++
+ 2 files changed, 98 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 542e9ea..cf4a724 100644
+index dd4e178..6d42550 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -5809,11 +5809,14 @@ static void ata_host_release(struct device *gendev, void *res)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 
--		if (ap && ap->ops->port_stop)
-+		if (!ap)
-+			continue;
-+
-+		if ((host->flags & ATA_HOST_STARTED) && ap->ops->port_stop)
- 			ap->ops->port_stop(ap);
- 	}
- 
--	if (host->ops->host_stop)
-+	if ((host->flags & ATA_HOST_STARTED) && host->ops->host_stop)
- 		host->ops->host_stop(host);
- 
- 	for (i = 0; i < host->n_ports; i++) {
-@@ -5833,6 +5836,56 @@ static void ata_host_release(struct device *gendev, void *res)
+@@ -5820,6 +5820,55 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
  }
  
  /**
-+ *	ata_host_start - start and freeze ports of an ATA host
-+ *	@host: ATA host to start ports for
++ *	ata_host_alloc_pinfo - alloc host and init with port_info array
++ *	@dev: generic device this host is associated with
++ *	@ppi: array of ATA port_info to initialize host with
++ *	@n_ports: number of ATA ports attached to this host
 + *
-+ *	Start and then freeze ports of @host.  Started status is
-+ *	recorded in host->flags, so this function can be called
-+ *	multiple times.  Ports are guaranteed to get started only
-+ *	once.
++ *	Allocate ATA host and initialize with info from @ppi.  If NULL
++ *	terminated, @ppi may contain fewer entries than @n_ports.  The
++ *	last entry will be used for the remaining ports.
++ *
++ *	RETURNS:
++ *	Allocate ATA host on success, NULL on failure.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ */
++struct ata_host *ata_host_alloc_pinfo(struct device *dev,
++				      const struct ata_port_info * const * ppi,
++				      int n_ports)
++{
++	const struct ata_port_info *pi;
++	struct ata_host *host;
++	int i, j;
++
++	host = ata_host_alloc(dev, n_ports);
++	if (!host)
++		return NULL;
++
++	for (i = 0, j = 0, pi = NULL; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		if (ppi[j])
++			pi = ppi[j++];
++
++		ap->pio_mask = pi->pio_mask;
++		ap->mwdma_mask = pi->mwdma_mask;
++		ap->udma_mask = pi->udma_mask;
++		ap->flags |= pi->flags;
++		ap->ops = pi->port_ops;
++
++		if (!host->ops && (pi->port_ops != &ata_dummy_port_ops))
++			host->ops = pi->port_ops;
++		if (!host->private_data && pi->private_data)
++			host->private_data = pi->private_data;
++	}
++
++	return host;
++}
++
++/**
+  *	ata_host_start - start and freeze ports of an ATA host
+  *	@host: ATA host to start ports for
+  *
+@@ -6032,6 +6081,48 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ }
+ 
+ /**
++ *	ata_host_activate - start host, request IRQ and register it
++ *	@host: target ATA host
++ *	@irq: IRQ to request
++ *	@irq_handler: irq_handler used when requesting IRQ
++ *	@irq_flags: irq_flags used when requesting IRQ
++ *	@sht: scsi_host_template to use when registering the host
++ *
++ *	After allocating an ATA host and initializing it, most libata
++ *	LLDs perform three steps to activate the host - start host,
++ *	request IRQ and register it.  This helper takes necessasry
++ *	arguments and performs the three steps in one go.
 + *
 + *	LOCKING:
 + *	Inherited from calling layer (may sleep).
 + *
 + *	RETURNS:
-+ *	0 if all ports are started successfully, -errno otherwise.
++ *	0 on success, -errno otherwise.
 + */
-+int ata_host_start(struct ata_host *host)
++int ata_host_activate(struct ata_host *host, int irq,
++		      irq_handler_t irq_handler, unsigned long irq_flags,
++		      struct scsi_host_template *sht)
 +{
-+	int i, rc;
++	int rc;
 +
-+	if (host->flags & ATA_HOST_STARTED)
-+		return 0;
++	rc = ata_host_start(host);
++	if (rc)
++		return rc;
 +
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
++	rc = devm_request_irq(host->dev, irq, irq_handler, irq_flags,
++			      dev_driver_string(host->dev), host);
++	if (rc)
++		return rc;
 +
-+		if (ap->ops->port_start) {
-+			rc = ap->ops->port_start(ap);
-+			if (rc) {
-+				ata_port_printk(ap, KERN_ERR, "failed to "
-+						"start port (errno=%d)\n", rc);
-+				goto err_out;
-+			}
-+		}
++	rc = ata_host_register(host, sht);
++	/* if failed, just free the IRQ and leave ports alone */
++	if (rc)
++		devm_free_irq(host->dev, irq, host);
 +
-+		ata_eh_freeze_port(ap);
-+	}
-+
-+	host->flags |= ATA_HOST_STARTED;
-+	return 0;
-+
-+ err_out:
-+	while (--i >= 0) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		if (ap->ops->port_stop)
-+			ap->ops->port_stop(ap);
-+	}
 +	return rc;
 +}
 +
 +/**
-  *	ata_sas_host_init - Initialize a host struct
-  *	@host:	host to initialize
-  *	@dev:	device host is attached to
-@@ -5921,14 +5974,6 @@ int ata_device_add(const struct ata_probe_ent *ent)
- 			continue;
- 		}
- 
--		/* start port */
--		rc = ap->ops->port_start(ap);
--		if (rc) {
--			host->ports[i] = NULL;
--			scsi_host_put(ap->scsi_host);
--			goto err_out;
--		}
--
- 		/* Report the secondary IRQ for second channel legacy */
- 		if (i == 1 && ent->irq2)
- 			irq_line = ent->irq2;
-@@ -5946,11 +5991,13 @@ int ata_device_add(const struct ata_probe_ent *ent)
- 				ap->ioaddr.ctl_addr,
- 				ap->ioaddr.bmdma_addr,
- 				irq_line);
--
--		/* freeze port before requesting IRQ */
--		ata_eh_freeze_port(ap);
- 	}
- 
-+	/* start ports */
-+	rc = ata_host_start(host);
-+	if (rc)
-+		goto err_out;
-+
- 	/* obtain irq, that may be shared between channels */
- 	rc = devm_request_irq(dev, ent->irq, ent->port_ops->irq_handler,
- 			      ent->irq_flags, DRV_NAME, host);
-@@ -6436,6 +6483,7 @@ EXPORT_SYMBOL_GPL(ata_dummy_port_ops);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
+  *	ata_device_add - Register hardware device with ATA and SCSI layers
+  *	@ent: Probe information describing hardware device to be registered
+  *
+@@ -6537,8 +6628,10 @@ EXPORT_SYMBOL_GPL(ata_std_bios_param);
  EXPORT_SYMBOL_GPL(ata_std_ports);
  EXPORT_SYMBOL_GPL(ata_host_init);
-+EXPORT_SYMBOL_GPL(ata_host_start);
+ EXPORT_SYMBOL_GPL(ata_host_alloc);
++EXPORT_SYMBOL_GPL(ata_host_alloc_pinfo);
+ EXPORT_SYMBOL_GPL(ata_host_start);
+ EXPORT_SYMBOL_GPL(ata_host_register);
++EXPORT_SYMBOL_GPL(ata_host_activate);
  EXPORT_SYMBOL_GPL(ata_device_add);
  EXPORT_SYMBOL_GPL(ata_host_detach);
  EXPORT_SYMBOL_GPL(ata_sg_init);
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index ced9dd5..bda26e8 100644
+index 06cf23f..300daf6 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -210,6 +210,7 @@ enum {
- 
- 	/* host set flags */
- 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
-+	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
- 
- 	/* various lengths of time */
- 	ATA_TMOUT_BOOT		= 30 * HZ,	/* heuristic */
-@@ -732,6 +733,7 @@ extern int ata_pci_device_resume(struct pci_dev *pdev);
- #endif
+@@ -734,9 +734,14 @@ extern int ata_pci_device_resume(struct pci_dev *pdev);
  extern int ata_pci_clear_simplex(struct pci_dev *pdev);
  #endif /* CONFIG_PCI */
-+extern int ata_host_start(struct ata_host *host);
+ extern struct ata_host *ata_host_alloc(struct device *dev, int max_ports);
++extern struct ata_host *ata_host_alloc_pinfo(struct device *dev,
++			const struct ata_port_info * const * ppi, int n_ports);
+ extern int ata_host_start(struct ata_host *host);
+ extern int ata_host_register(struct ata_host *host,
+ 			     struct scsi_host_template *sht);
++extern int ata_host_activate(struct ata_host *host, int irq,
++			     irq_handler_t irq_handler, unsigned long irq_flags,
++			     struct scsi_host_template *sht);
  extern int ata_device_add(const struct ata_probe_ent *ent);
  extern void ata_host_detach(struct ata_host *host);
  extern void ata_host_init(struct ata_host *, struct device *,
