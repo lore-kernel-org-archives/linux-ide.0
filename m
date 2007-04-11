@@ -1,812 +1,813 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/12] libata: separate out ata_host_alloc() and ata_host_register()
-Date: Wed, 11 Apr 2007 15:42:04 +0900
-Message-ID: <1176273724730-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/12] libata: convert drivers with combined SATA/PATA ports to new init model
+Date: Wed, 11 Apr 2007 15:42:05 +0900
+Message-ID: <11762737252386-git-send-email-htejun@gmail.com>
 References: <1176273724198-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:40961 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683AbXDKGmL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Apr 2007 02:42:11 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so57272nze
-        for <linux-ide@vger.kernel.org>; Tue, 10 Apr 2007 23:42:11 -0700 (PDT)
+Received: from wr-out-0506.google.com ([64.233.184.238]:13328 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932079AbXDKGmT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Apr 2007 02:42:19 -0400
+Received: by wr-out-0506.google.com with SMTP id 71so60808wri
+        for <linux-ide@vger.kernel.org>; Tue, 10 Apr 2007 23:42:18 -0700 (PDT)
 In-Reply-To: <1176273724198-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, brking@linux.vnet.ibm.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-Reorganize ata_host_alloc() and its subroutines into the following
-three functions.
+Convert sata_via and sata_promise to new init model.  Both controllers
+can have combined configuration (SATA + PATA) and used twisted
+initialization method (modifying port in ->port_start) to overcome
+probe_ent limitations.
 
-* ata_host_alloc() : allocates host and its ports.  shost is not
-  registered automatically.
+This patch converts both drivers to new init model in which such
+configuration is natively supported.
 
-* ata_scsi_add_hosts() : allocates and adds shosts associated with an
-  ATA host.  Used by ata_host_register().
+* promise: Combined pata port now uses separate port_info entry right
+  after the sata counterpart entry.
 
-* ata_host_register() : takes a fully initialized ata_host structure
-  and registers it to libata layer and probes it.
+* promise: Controller configuration is discerned using ap->flags.
+  This simplifies init path and makes it look more like other LLDs.
 
-Only ata_host_alloc() and ata_host_register() are exported.
-ata_device_add() is rewritten using the above functions.  This patch
-does not introduce any observable behavior change.  Things worth
-mentioning.
+* via: Both SATA and PATA ports in vt6421 are represented in their
+  own port_info structure.
 
-* print_id is assigned at registration time and LLDs are allowed to
-  overallocate ports and reduce host->n_ports during initialization.
-  ata_host_register() will throw away unused ports automatically.
-
-* All SCSI host initialization stuff now resides in
-  ata_scsi_add_hosts() in libata-scsi.c, where it should be.
-
-* ipr is now the only user of ata_host_init().  Either kill it by
-  converting ipr to use ata_host_alloc() and friends or rename and
-  move it to libata-scsi.c
+Tested on PDC20375 (SATA150 TX2plus) [105a:3375] and PDC40775 (SATA
+300 TX2plus) [105a:3d73].  Couldn't test via cuz my c3 won't boot the
+current kernel.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |  471 +++++++++++++++++++++++++--------------------
- drivers/ata/libata-scsi.c |   68 ++++++--
- drivers/ata/libata.h      |    8 +-
- include/linux/libata.h    |    3 +
- 4 files changed, 326 insertions(+), 224 deletions(-)
+ drivers/ata/sata_promise.c |  259 +++++++++++++++++++-------------------------
+ drivers/ata/sata_via.c     |  182 ++++++++++++++-----------------
+ 2 files changed, 189 insertions(+), 252 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index cf4a724..dd4e178 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -72,7 +72,7 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
- static void ata_dev_xfermask(struct ata_device *dev);
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index baa8368..8e8fe59 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -49,6 +49,7 @@
  
--static unsigned int ata_print_id = 1;
-+unsigned int ata_print_id = 1;
- static struct workqueue_struct *ata_wq;
  
- struct workqueue_struct *ata_aux_wq;
-@@ -5656,42 +5656,35 @@ void ata_dev_init(struct ata_device *dev)
- }
+ enum {
++	PDC_MAX_PORTS		= 4,
+ 	PDC_MMIO_BAR		= 3,
  
- /**
-- *	ata_port_init - Initialize an ata_port structure
-- *	@ap: Structure to initialize
-- *	@host: Collection of hosts to which @ap belongs
-- *	@ent: Probe information provided by low-level driver
-- *	@port_no: Port number associated with this ata_port
-+ *	ata_port_alloc - allocate and initialize basic ATA port resources
-+ *	@host: ATA host this allocated port belongs to
-  *
-- *	Initialize a new ata_port structure.
-+ *	Allocate and initialize basic ATA port resources.
-+ *
-+ *	RETURNS:
-+ *	Allocate ATA port on success, NULL on failure.
-  *
-  *	LOCKING:
-- *	Inherited from caller.
-+ *	Inherited from calling layer (may sleep).
-  */
--void ata_port_init(struct ata_port *ap, struct ata_host *host,
--		   const struct ata_probe_ent *ent, unsigned int port_no)
-+struct ata_port *ata_port_alloc(struct ata_host *host)
+ 	/* register offsets */
+@@ -89,10 +90,12 @@ enum {
+ 				   | PDC1_ERR_MASK | PDC2_ERR_MASK),
+ 
+ 	board_2037x		= 0,	/* FastTrak S150 TX2plus */
+-	board_20319		= 1,	/* FastTrak S150 TX4 */
+-	board_20619		= 2,	/* FastTrak TX4000 */
+-	board_2057x		= 3,	/* SATAII150 Tx2plus */
+-	board_40518		= 4,	/* SATAII150 Tx4 */
++	board_2037x_pata	= 1,	/* FastTrak S150 TX2plus PATA port */
++	board_20319		= 2,	/* FastTrak S150 TX4 */
++	board_20619		= 3,	/* FastTrak TX4000 */
++	board_2057x		= 4,	/* SATAII150 Tx2plus */
++	board_2057x_pata	= 5,	/* SATAII150 Tx2plus */
++	board_40518		= 6,	/* SATAII150 Tx4 */
+ 
+ 	PDC_HAS_PATA		= (1 << 1), /* PDC20375/20575 has PATA */
+ 
+@@ -115,8 +118,10 @@ enum {
+ 				  ATA_FLAG_MMIO |
+ 				  ATA_FLAG_PIO_POLLING,
+ 
+-	/* hp->flags bits */
+-	PDC_FLAG_GEN_II		= (1 << 0),
++	/* ap->flags bits */
++	PDC_FLAG_GEN_II		= (1 << 24),
++	PDC_FLAG_SATA_PATA	= (1 << 25), /* supports SATA + PATA */
++	PDC_FLAG_4_PORTS	= (1 << 26), /* 4 ports */
+ };
+ 
+ 
+@@ -125,16 +130,11 @@ struct pdc_port_priv {
+ 	dma_addr_t		pkt_dma;
+ };
+ 
+-struct pdc_host_priv {
+-	unsigned long		flags;
+-	unsigned long		port_flags[ATA_MAX_PORTS];
+-};
+-
+ static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg);
+ static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static int pdc_ata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+-static irqreturn_t pdc_interrupt (int irq, void *dev_instance);
+-static int pdc_port_start(struct ata_port *ap);
++static int pdc_pata_port_start(struct ata_port *ap);
++static int pdc_sata_port_start(struct ata_port *ap);
+ static void pdc_qc_prep(struct ata_queued_cmd *qc);
+ static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
+ static void pdc_exec_command_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
+@@ -185,14 +185,13 @@ static const struct ata_port_operations pdc_sata_ops = {
+ 	.post_internal_cmd	= pdc_post_internal_cmd,
+ 	.cable_detect		= pdc_sata_cable_detect,
+ 	.data_xfer		= ata_data_xfer,
+-	.irq_handler		= pdc_interrupt,
+ 	.irq_clear		= pdc_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_ack		= ata_irq_ack,
+ 
+ 	.scr_read		= pdc_sata_scr_read,
+ 	.scr_write		= pdc_sata_scr_write,
+-	.port_start		= pdc_port_start,
++	.port_start		= pdc_sata_port_start,
+ };
+ 
+ /* First-generation chips need a more restrictive ->check_atapi_dma op */
+@@ -213,14 +212,13 @@ static const struct ata_port_operations pdc_old_sata_ops = {
+ 	.post_internal_cmd	= pdc_post_internal_cmd,
+ 	.cable_detect		= pdc_sata_cable_detect,
+ 	.data_xfer		= ata_data_xfer,
+-	.irq_handler		= pdc_interrupt,
+ 	.irq_clear		= pdc_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_ack		= ata_irq_ack,
+ 
+ 	.scr_read		= pdc_sata_scr_read,
+ 	.scr_write		= pdc_sata_scr_write,
+-	.port_start		= pdc_port_start,
++	.port_start		= pdc_sata_port_start,
+ };
+ 
+ static const struct ata_port_operations pdc_pata_ops = {
+@@ -240,29 +238,37 @@ static const struct ata_port_operations pdc_pata_ops = {
+ 	.post_internal_cmd	= pdc_post_internal_cmd,
+ 	.cable_detect		= pdc_pata_cable_detect,
+ 	.data_xfer		= ata_data_xfer,
+-	.irq_handler		= pdc_interrupt,
+ 	.irq_clear		= pdc_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_ack		= ata_irq_ack,
+ 
+-	.port_start		= pdc_port_start,
++	.port_start		= pdc_pata_port_start,
+ };
+ 
+ static const struct ata_port_info pdc_port_info[] = {
+ 	/* board_2037x */
+ 	{
+-		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS,
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA |
++				  PDC_FLAG_SATA_PATA,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &pdc_old_sata_ops,
+ 	},
+ 
++	/* board_2037x_pata */
++	{
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS,
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
++		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
++		.port_ops	= &pdc_pata_ops,
++	},
++
+ 	/* board_20319 */
+ 	{
+-		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA |
++				  PDC_FLAG_4_PORTS,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -271,8 +277,8 @@ static const struct ata_port_info pdc_port_info[] = {
+ 
+ 	/* board_20619 */
+ 	{
+-		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS,
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS |
++				  PDC_FLAG_4_PORTS,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -281,18 +287,28 @@ static const struct ata_port_info pdc_port_info[] = {
+ 
+ 	/* board_2057x */
+ 	{
+-		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS,
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA |
++				  PDC_FLAG_GEN_II | PDC_FLAG_SATA_PATA,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &pdc_sata_ops,
+ 	},
+ 
++	/* board_2057x_pata */
++	{
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SLAVE_POSS,
++				  PDC_FLAG_GEN_II,
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
++		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
++		.port_ops	= &pdc_pata_ops,
++	},
++
+ 	/* board_40518 */
+ 	{
+-		.sht		= &pdc_ata_sht,
+-		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
++		.flags		= PDC_COMMON_FLAGS | ATA_FLAG_SATA |
++				  PDC_FLAG_GEN_II | PDC_FLAG_4_PORTS,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+@@ -333,7 +349,7 @@ static struct pci_driver pdc_ata_pci_driver = {
+ };
+ 
+ 
+-static int pdc_common_port_start(struct ata_port *ap)
++static int pdc_pata_port_start(struct ata_port *ap)
  {
-+	struct ata_port *ap;
- 	unsigned int i;
+ 	struct device *dev = ap->host->dev;
+ 	struct pdc_port_priv *pp;
+@@ -358,15 +374,14 @@ static int pdc_common_port_start(struct ata_port *ap)
  
-+	DPRINTK("ENTER\n");
-+
-+	ap = kzalloc(sizeof(*ap), GFP_KERNEL);
-+	if (!ap)
-+		return NULL;
-+
- 	ap->lock = &host->lock;
- 	ap->flags = ATA_FLAG_DISABLED;
--	ap->print_id = ata_print_id++;
-+	ap->print_id = -1;
- 	ap->ctl = ATA_DEVCTL_OBS;
- 	ap->host = host;
--	ap->dev = ent->dev;
--	ap->port_no = port_no;
--	if (port_no == 1 && ent->pinfo2) {
--		ap->pio_mask = ent->pinfo2->pio_mask;
--		ap->mwdma_mask = ent->pinfo2->mwdma_mask;
--		ap->udma_mask = ent->pinfo2->udma_mask;
--		ap->flags |= ent->pinfo2->flags;
--		ap->ops = ent->pinfo2->port_ops;
--	} else {
--		ap->pio_mask = ent->pio_mask;
--		ap->mwdma_mask = ent->mwdma_mask;
--		ap->udma_mask = ent->udma_mask;
--		ap->flags |= ent->port_flags;
--		ap->ops = ent->port_ops;
--	}
-+	ap->dev = host->dev;
-+
- 	ap->hw_sata_spd_limit = UINT_MAX;
- 	ap->active_tag = ATA_TAG_POISON;
- 	ap->last_ctl = 0xFF;
-@@ -5711,10 +5704,7 @@ void ata_port_init(struct ata_port *ap, struct ata_host *host,
- 	INIT_LIST_HEAD(&ap->eh_done_q);
- 	init_waitqueue_head(&ap->eh_wait_q);
- 
--	/* set cable type */
- 	ap->cbl = ATA_CBL_NONE;
--	if (ap->flags & ATA_FLAG_SATA)
--		ap->cbl = ATA_CBL_SATA;
- 
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
-@@ -5727,77 +5717,6 @@ void ata_port_init(struct ata_port *ap, struct ata_host *host,
- 	ap->stats.unhandled_irq = 1;
- 	ap->stats.idle_irq = 1;
- #endif
--
--	memcpy(&ap->ioaddr, &ent->port[port_no], sizeof(struct ata_ioports));
--}
--
--/**
-- *	ata_port_init_shost - Initialize SCSI host associated with ATA port
-- *	@ap: ATA port to initialize SCSI host for
-- *	@shost: SCSI host associated with @ap
-- *
-- *	Initialize SCSI host @shost associated with ATA port @ap.
-- *
-- *	LOCKING:
-- *	Inherited from caller.
-- */
--static void ata_port_init_shost(struct ata_port *ap, struct Scsi_Host *shost)
--{
--	ap->scsi_host = shost;
--
--	shost->unique_id = ap->print_id;
--	shost->max_id = 16;
--	shost->max_lun = 1;
--	shost->max_channel = 1;
--	shost->max_cmd_len = 16;
--}
--
--/**
-- *	ata_port_add - Attach low-level ATA driver to system
-- *	@ent: Information provided by low-level driver
-- *	@host: Collections of ports to which we add
-- *	@port_no: Port number associated with this host
-- *
-- *	Attach low-level ATA driver to system.
-- *
-- *	LOCKING:
-- *	PCI/etc. bus probe sem.
-- *
-- *	RETURNS:
-- *	New ata_port on success, for NULL on error.
-- */
--static struct ata_port * ata_port_add(const struct ata_probe_ent *ent,
--				      struct ata_host *host,
--				      unsigned int port_no)
--{
--	struct Scsi_Host *shost;
--	struct ata_port *ap;
--
--	DPRINTK("ENTER\n");
--
--	if (!ent->port_ops->error_handler &&
--	    !(ent->port_flags & (ATA_FLAG_SATA_RESET | ATA_FLAG_SRST))) {
--		printk(KERN_ERR "ata%u: no reset mechanism available\n",
--		       port_no);
--		return NULL;
--	}
--
--	ap = kzalloc(sizeof(struct ata_port), GFP_KERNEL);
--	if (!ap)
--		return NULL;
--
--	shost = scsi_host_alloc(ent->sht, sizeof(struct ata_port *));
--	if (!shost) {
--		kfree(ap);
--		return NULL;
--	}
--
--	*(struct ata_port **)&shost->hostdata[0] = ap;
--	shost->transportt = &ata_scsi_transport_template;
--
--	ata_port_init(ap, host, ent, port_no);
--	ata_port_init_shost(ap, shost);
--
- 	return ap;
- }
- 
-@@ -5836,13 +5755,79 @@ static void ata_host_release(struct device *gendev, void *res)
- }
- 
- /**
-+ *	ata_host_alloc - allocate and init basic ATA host resources
-+ *	@dev: generic device this host is associated with
-+ *	@max_ports: maximum number of ATA ports associated with this host
-+ *
-+ *	Allocate and initialize basic ATA host resources.  LLD calls
-+ *	this function to allocate a host, initializes it fully and
-+ *	attaches it using ata_host_register().
-+ *
-+ *	@max_ports ports are allocated and host->n_ports is
-+ *	initialized to @max_ports.  The caller is allowed to decrease
-+ *	host->n_ports before calling ata_host_register().  The unused
-+ *	ports will be automatically freed on registration.
-+ *
-+ *	RETURNS:
-+ *	Allocate ATA host on success, NULL on failure.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ */
-+struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
-+{
-+	struct ata_host *host;
-+	size_t sz;
-+	int i;
-+
-+	DPRINTK("ENTER\n");
-+
-+	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-+		return NULL;
-+
-+	/* alloc a container for our list of ATA ports (buses) */
-+	sz = sizeof(struct ata_host) + (max_ports + 1) * sizeof(void *);
-+	/* alloc a container for our list of ATA ports (buses) */
-+	host = devres_alloc(ata_host_release, sz, GFP_KERNEL);
-+	if (!host)
-+		goto err_out;
-+
-+	devres_add(dev, host);
-+	dev_set_drvdata(dev, host);
-+
-+	spin_lock_init(&host->lock);
-+	host->dev = dev;
-+	host->n_ports = max_ports;
-+
-+	/* allocate ports bound to this host */
-+	for (i = 0; i < max_ports; i++) {
-+		struct ata_port *ap;
-+
-+		ap = ata_port_alloc(host);
-+		if (!ap)
-+			goto err_out;
-+
-+		ap->port_no = i;
-+		host->ports[i] = ap;
-+	}
-+
-+	devres_remove_group(dev, NULL);
-+	return host;
-+
-+ err_out:
-+	devres_release_group(dev, NULL);
-+	return NULL;
-+}
-+
-+/**
-  *	ata_host_start - start and freeze ports of an ATA host
-  *	@host: ATA host to start ports for
-  *
-  *	Start and then freeze ports of @host.  Started status is
-  *	recorded in host->flags, so this function can be called
-  *	multiple times.  Ports are guaranteed to get started only
-- *	once.
-+ *	once.  If host->ops isn't initialized yet, its set to the
-+ *	first non-dummy port ops.
-  *
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-@@ -5860,6 +5845,9 @@ int ata_host_start(struct ata_host *host)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 
-+		if (!host->ops && !ata_port_is_dummy(ap))
-+			host->ops = ap->ops;
-+
- 		if (ap->ops->port_start) {
- 			rc = ap->ops->port_start(ap);
- 			if (rc) {
-@@ -5896,7 +5884,7 @@ int ata_host_start(struct ata_host *host)
-  *	PCI/etc. bus probe sem.
-  *
-  */
--
-+/* KILLME - the only user left is ipr */
- void ata_host_init(struct ata_host *host, struct device *dev,
- 		   unsigned long flags, const struct ata_port_operations *ops)
+ static int pdc_sata_port_start(struct ata_port *ap)
  {
-@@ -5907,6 +5895,143 @@ void ata_host_init(struct ata_host *host, struct device *dev,
- }
+-	struct pdc_host_priv *hp = ap->host->private_data;
+ 	int rc;
  
- /**
-+ *	ata_host_register - register initialized ATA host
-+ *	@host: ATA host to register
-+ *	@sht: template for SCSI host
-+ *
-+ *	Register initialized ATA host.  @host is allocated using
-+ *	ata_host_alloc() and fully initialized by LLD.  This function
-+ *	starts ports, registers @host with ATA and SCSI layers and
-+ *	probe registered devices.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
-+{
-+	int i, rc;
-+
-+	/* host must have been started */
-+	if (!(host->flags & ATA_HOST_STARTED)) {
-+		dev_printk(KERN_ERR, host->dev,
-+			   "BUG: trying to register unstarted host\n");
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+
-+	/* Blow away unused ports.  This happens when LLD can't
-+	 * determine the exact number of ports to allocate at
-+	 * allocation time.
-+	 */
-+	for (i = host->n_ports; host->ports[i]; i++)
-+		kfree(host->ports[i]);
-+
-+	/* give ports names and add SCSI hosts */
-+	for (i = 0; i < host->n_ports; i++)
-+		host->ports[i]->print_id = ata_print_id++;
-+
-+	rc = ata_scsi_add_hosts(host, sht);
-+	if (rc)
-+		return rc;
-+
-+	/* set cable, sata_spd_limit and report */
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+		int irq_line;
-+		u32 scontrol;
-+		unsigned long xfer_mask;
-+
-+		/* set SATA cable type if still unset */
-+		if (ap->cbl == ATA_CBL_NONE && (ap->flags & ATA_FLAG_SATA))
-+			ap->cbl = ATA_CBL_SATA;
-+
-+		/* init sata_spd_limit to the current value */
-+		if (sata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
-+			int spd = (scontrol >> 4) & 0xf;
-+			ap->hw_sata_spd_limit &= (1 << spd) - 1;
-+		}
-+		ap->sata_spd_limit = ap->hw_sata_spd_limit;
-+
-+		/* report the secondary IRQ for second channel legacy */
-+		irq_line = host->irq;
-+		if (i == 1 && host->irq2)
-+			irq_line = host->irq2;
-+
-+		xfer_mask = ata_pack_xfermask(ap->pio_mask, ap->mwdma_mask,
-+					      ap->udma_mask);
-+
-+		/* print per-port info to dmesg */
-+		if (!ata_port_is_dummy(ap))
-+			ata_port_printk(ap, KERN_INFO, "%cATA max %s cmd 0x%p "
-+					"ctl 0x%p bmdma 0x%p irq %d\n",
-+					ap->cbl == ATA_CBL_SATA ? 'S' : 'P',
-+					ata_mode_string(xfer_mask),
-+					ap->ioaddr.cmd_addr,
-+					ap->ioaddr.ctl_addr,
-+					ap->ioaddr.bmdma_addr,
-+					irq_line);
-+		else
-+			ata_port_printk(ap, KERN_INFO, "DUMMY\n");
-+	}
-+
-+	/* perform each probe synchronously */
-+	DPRINTK("probe begin\n");
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+		int rc;
-+
-+		/* probe */
-+		if (ap->ops->error_handler) {
-+			struct ata_eh_info *ehi = &ap->eh_info;
-+			unsigned long flags;
-+
-+			ata_port_probe(ap);
-+
-+			/* kick EH for boot probing */
-+			spin_lock_irqsave(ap->lock, flags);
-+
-+			ehi->probe_mask = (1 << ATA_MAX_DEVICES) - 1;
-+			ehi->action |= ATA_EH_SOFTRESET;
-+			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-+
-+			ap->pflags |= ATA_PFLAG_LOADING;
-+			ata_port_schedule_eh(ap);
-+
-+			spin_unlock_irqrestore(ap->lock, flags);
-+
-+			/* wait for EH to finish */
-+			ata_port_wait_eh(ap);
-+		} else {
-+			DPRINTK("ata%u: bus probe begin\n", ap->print_id);
-+			rc = ata_bus_probe(ap);
-+			DPRINTK("ata%u: bus probe end\n", ap->print_id);
-+
-+			if (rc) {
-+				/* FIXME: do something useful here?
-+				 * Current libata behavior will
-+				 * tear down everything when
-+				 * the module is removed
-+				 * or the h/w is unplugged.
-+				 */
-+			}
-+		}
-+	}
-+
-+	/* probes are done, now scan each port's disk(s) */
-+	DPRINTK("host probe begin\n");
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		ata_scsi_scan_host(ap);
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-  *	ata_device_add - Register hardware device with ATA and SCSI layers
-  *	@ent: Probe information describing hardware device to be registered
-  *
-@@ -5938,62 +6063,53 @@ int ata_device_add(const struct ata_probe_ent *ent)
- 		return 0;
- 	}
- 
-+	if (!ent->port_ops->error_handler &&
-+	    !(ent->port_flags & (ATA_FLAG_SATA_RESET | ATA_FLAG_SRST))) {
-+		dev_printk(KERN_ERR, dev, "no reset mechanism available\n");
-+		return 0;
-+	}
-+
- 	if (!devres_open_group(dev, ata_device_add, GFP_KERNEL))
- 		return 0;
- 
--	/* alloc a container for our list of ATA ports (buses) */
--	host = devres_alloc(ata_host_release, sizeof(struct ata_host) +
--			    (ent->n_ports * sizeof(void *)), GFP_KERNEL);
--	if (!host)
--		goto err_out;
--	devres_add(dev, host);
--	dev_set_drvdata(dev, host);
-+	/* allocate host */
-+	host = ata_host_alloc(dev, ent->n_ports);
- 
--	ata_host_init(host, dev, ent->_host_flags, ent->port_ops);
--	host->n_ports = ent->n_ports;
- 	host->irq = ent->irq;
- 	host->irq2 = ent->irq2;
- 	host->iomap = ent->iomap;
- 	host->private_data = ent->private_data;
-+	host->ops = ent->port_ops;
-+	host->flags = ent->_host_flags;
- 
--	/* register each port bound to this device */
- 	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap;
--		unsigned long xfer_mode_mask;
--		int irq_line = ent->irq;
--
--		ap = ata_port_add(ent, host, i);
--		host->ports[i] = ap;
--		if (!ap)
--			goto err_out;
-+		struct ata_port *ap = host->ports[i];
- 
- 		/* dummy? */
- 		if (ent->dummy_port_mask & (1 << i)) {
--			ata_port_printk(ap, KERN_INFO, "DUMMY\n");
- 			ap->ops = &ata_dummy_port_ops;
- 			continue;
- 		}
- 
--		/* Report the secondary IRQ for second channel legacy */
--		if (i == 1 && ent->irq2)
--			irq_line = ent->irq2;
--
--		xfer_mode_mask =(ap->udma_mask << ATA_SHIFT_UDMA) |
--				(ap->mwdma_mask << ATA_SHIFT_MWDMA) |
--				(ap->pio_mask << ATA_SHIFT_PIO);
-+		if (ap->port_no == 1 && ent->pinfo2) {
-+			ap->pio_mask = ent->pinfo2->pio_mask;
-+			ap->mwdma_mask = ent->pinfo2->mwdma_mask;
-+			ap->udma_mask = ent->pinfo2->udma_mask;
-+			ap->flags |= ent->pinfo2->flags;
-+			ap->ops = ent->pinfo2->port_ops;
-+		} else {
-+			ap->pio_mask = ent->pio_mask;
-+			ap->mwdma_mask = ent->mwdma_mask;
-+			ap->udma_mask = ent->udma_mask;
-+			ap->flags |= ent->port_flags;
-+			ap->ops = ent->port_ops;
-+		}
- 
--		/* print per-port info to dmesg */
--		ata_port_printk(ap, KERN_INFO, "%cATA max %s cmd 0x%p "
--				"ctl 0x%p bmdma 0x%p irq %d\n",
--				ap->flags & ATA_FLAG_SATA ? 'S' : 'P',
--				ata_mode_string(xfer_mode_mask),
--				ap->ioaddr.cmd_addr,
--				ap->ioaddr.ctl_addr,
--				ap->ioaddr.bmdma_addr,
--				irq_line);
-+		memcpy(&ap->ioaddr, &ent->port[ap->port_no],
-+		       sizeof(struct ata_ioports));
- 	}
- 
--	/* start ports */
-+	/* start and freeze ports before requesting IRQ */
- 	rc = ata_host_start(host);
+-	rc = pdc_common_port_start(ap);
++	rc = pdc_pata_port_start(ap);
  	if (rc)
- 		goto err_out;
-@@ -6026,80 +6142,17 @@ int ata_device_add(const struct ata_probe_ent *ent)
- 	/* resource acquisition complete */
- 	devres_remove_group(dev, ata_device_add);
+ 		return rc;
  
--	/* perform each probe synchronously */
--	DPRINTK("probe begin\n");
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--		u32 scontrol;
--		int rc;
--
--		/* init sata_spd_limit to the current value */
--		if (sata_scr_read(ap, SCR_CONTROL, &scontrol) == 0) {
--			int spd = (scontrol >> 4) & 0xf;
--			ap->hw_sata_spd_limit &= (1 << spd) - 1;
--		}
--		ap->sata_spd_limit = ap->hw_sata_spd_limit;
--
--		rc = scsi_add_host(ap->scsi_host, dev);
--		if (rc) {
--			ata_port_printk(ap, KERN_ERR, "scsi_add_host failed\n");
--			/* FIXME: do something useful here */
--			/* FIXME: handle unconditional calls to
--			 * scsi_scan_host and ata_host_remove, below,
--			 * at the very least
--			 */
--		}
--
--		if (ap->ops->error_handler) {
--			struct ata_eh_info *ehi = &ap->eh_info;
--			unsigned long flags;
--
--			ata_port_probe(ap);
--
--			/* kick EH for boot probing */
--			spin_lock_irqsave(ap->lock, flags);
--
--			ehi->probe_mask = (1 << ATA_MAX_DEVICES) - 1;
--			ehi->action |= ATA_EH_SOFTRESET;
--			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
--
--			ap->pflags |= ATA_PFLAG_LOADING;
--			ata_port_schedule_eh(ap);
--
--			spin_unlock_irqrestore(ap->lock, flags);
--
--			/* wait for EH to finish */
--			ata_port_wait_eh(ap);
--		} else {
--			DPRINTK("ata%u: bus probe begin\n", ap->print_id);
--			rc = ata_bus_probe(ap);
--			DPRINTK("ata%u: bus probe end\n", ap->print_id);
--
--			if (rc) {
--				/* FIXME: do something useful here?
--				 * Current libata behavior will
--				 * tear down everything when
--				 * the module is removed
--				 * or the h/w is unplugged.
--				 */
--			}
--		}
--	}
--
--	/* probes are done, now scan each port's disk(s) */
--	DPRINTK("host probe begin\n");
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--
--		ata_scsi_scan_host(ap);
--	}
-+	/* register */
-+	rc = ata_host_register(host, ent->sht);
-+	if (rc)
-+		goto err_out;
+ 	/* fix up PHYMODE4 align timing */
+-	if (hp->flags & PDC_FLAG_GEN_II) {
++	if (ap->flags & PDC_FLAG_GEN_II) {
+ 		void __iomem *mmio = (void __iomem *) ap->ioaddr.scr_addr;
+ 		unsigned int tmp;
  
--	VPRINTK("EXIT, returning %u\n", ent->n_ports);
--	return ent->n_ports; /* success */
-+	VPRINTK("EXIT, returning %u\n", host->n_ports);
-+	return host->n_ports; /* success */
- 
-  err_out:
- 	devres_release_group(dev, ata_device_add);
--	VPRINTK("EXIT, returning %d\n", rc);
-+	VPRINTK("EXIT, returning 0\n");
+@@ -378,21 +393,6 @@ static int pdc_sata_port_start(struct ata_port *ap)
  	return 0;
  }
  
-@@ -6483,7 +6536,9 @@ EXPORT_SYMBOL_GPL(ata_dummy_port_ops);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
- EXPORT_SYMBOL_GPL(ata_std_ports);
- EXPORT_SYMBOL_GPL(ata_host_init);
-+EXPORT_SYMBOL_GPL(ata_host_alloc);
- EXPORT_SYMBOL_GPL(ata_host_start);
-+EXPORT_SYMBOL_GPL(ata_host_register);
- EXPORT_SYMBOL_GPL(ata_device_add);
- EXPORT_SYMBOL_GPL(ata_host_detach);
- EXPORT_SYMBOL_GPL(ata_sg_init);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 563ef0b..9afba2b 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -104,7 +104,7 @@ static const u8 def_control_mpage[CONTROL_MPAGE_LEN] = {
-  * libata transport template.  libata doesn't do real transport stuff.
-  * It just needs the eh_timed_out hook.
-  */
--struct scsi_transport_template ata_scsi_transport_template = {
-+static struct scsi_transport_template ata_scsi_transport_template = {
- 	.eh_strategy_handler	= ata_scsi_error,
- 	.eh_timed_out		= ata_scsi_timed_out,
- 	.user_scan		= ata_scsi_user_scan,
-@@ -2961,6 +2961,48 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	}
- }
- 
-+int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
-+{
-+	int i, rc;
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+		struct Scsi_Host *shost;
-+
-+		rc = -ENOMEM;
-+		shost = scsi_host_alloc(sht, sizeof(struct ata_port *));
-+		if (!shost)
-+			goto err_alloc;
-+
-+		*(struct ata_port **)&shost->hostdata[0] = ap;
-+		ap->scsi_host = shost;
-+
-+		shost->transportt = &ata_scsi_transport_template;
-+		shost->unique_id = ap->print_id;
-+		shost->max_id = 16;
-+		shost->max_lun = 1;
-+		shost->max_channel = 1;
-+		shost->max_cmd_len = 16;
-+
-+		rc = scsi_add_host(ap->scsi_host, ap->host->dev);
-+		if (rc)
-+			goto err_add;
-+	}
-+
-+	return 0;
-+
-+ err_add:
-+	scsi_host_put(host->ports[i]->scsi_host);
-+ err_alloc:
-+	while (--i >= 0) {
-+		struct Scsi_Host *shost = host->ports[i]->scsi_host;
-+
-+		scsi_remove_host(shost);
-+		scsi_host_put(shost);
-+	}
-+	return rc;
-+}
-+
- void ata_scsi_scan_host(struct ata_port *ap)
- {
- 	unsigned int i;
-@@ -3237,21 +3279,21 @@ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
- 				    struct ata_port_info *port_info,
- 				    struct Scsi_Host *shost)
- {
--	struct ata_port *ap = kzalloc(sizeof(*ap), GFP_KERNEL);
--	struct ata_probe_ent *ent;
-+	struct ata_port *ap;
- 
-+	ap = ata_port_alloc(host);
- 	if (!ap)
- 		return NULL;
- 
--	ent = ata_probe_ent_alloc(host->dev, port_info);
--	if (!ent) {
--		kfree(ap);
--		return NULL;
--	}
+-static int pdc_port_start(struct ata_port *ap)
+-{
+-	struct pdc_host_priv *hp = ap->host->private_data;
 -
--	ata_port_init(ap, host, ent, 0);
-+	ap->port_no = 0;
- 	ap->lock = shost->host_lock;
--	devm_kfree(host->dev, ent);
-+	ap->pio_mask = port_info->pio_mask;
-+	ap->mwdma_mask = port_info->mwdma_mask;
-+	ap->udma_mask = port_info->udma_mask;
-+	ap->flags |= port_info->flags;
-+	ap->ops = port_info->port_ops;
-+	ap->cbl = ATA_CBL_SATA;
-+
- 	return ap;
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
-@@ -3307,8 +3349,10 @@ int ata_sas_port_init(struct ata_port *ap)
+-	/* fix up port flags and cable type for SATA+PATA chips */
+-	ap->flags |= hp->port_flags[ap->port_no];
+-	if (ap->flags & ATA_FLAG_SATA) {
+-		ap->cbl = ATA_CBL_SATA;
+-		return pdc_sata_port_start(ap);
+-	} else {
+-		ap->ops = &pdc_pata_ops;
+-		return pdc_common_port_start(ap);
+-	}
+-}
+-
+ static void pdc_reset_port(struct ata_port *ap)
  {
- 	int rc = ap->ops->port_start(ap);
+ 	void __iomem *mmio = ap->ioaddr.cmd_addr + PDC_CTLSTAT;
+@@ -660,11 +660,10 @@ static inline unsigned int pdc_host_intr( struct ata_port *ap,
+ {
+ 	unsigned int handled = 0;
+ 	void __iomem *port_mmio = ap->ioaddr.cmd_addr;
+-	struct pdc_host_priv *hp = ap->host->private_data;
+ 	u32 port_status, err_mask;
  
--	if (!rc)
-+	if (!rc) {
-+		ap->print_id = ata_print_id++;
- 		rc = ata_bus_probe(ap);
+ 	err_mask = PDC_ERR_MASK;
+-	if (hp->flags & PDC_FLAG_GEN_II)
++	if (ap->flags & PDC_FLAG_GEN_II)
+ 		err_mask &= ~PDC1_ERR_MASK;
+ 	else
+ 		err_mask &= ~PDC2_ERR_MASK;
+@@ -844,34 +843,34 @@ static int pdc_old_sata_check_atapi_dma(struct ata_queued_cmd *qc)
+ 	return 1;
+ }
+ 
+-static void pdc_ata_setup_port(struct ata_ioports *port, void __iomem *base,
+-			       void __iomem *scr_addr)
++static void pdc_ata_setup_port(struct ata_port *ap,
++			       void __iomem *base, void __iomem *scr_addr)
+ {
+-	port->cmd_addr		= base;
+-	port->data_addr		= base;
+-	port->feature_addr	=
+-	port->error_addr	= base + 0x4;
+-	port->nsect_addr	= base + 0x8;
+-	port->lbal_addr		= base + 0xc;
+-	port->lbam_addr		= base + 0x10;
+-	port->lbah_addr		= base + 0x14;
+-	port->device_addr	= base + 0x18;
+-	port->command_addr	=
+-	port->status_addr	= base + 0x1c;
+-	port->altstatus_addr	=
+-	port->ctl_addr		= base + 0x38;
+-	port->scr_addr		= scr_addr;
++	ap->ioaddr.cmd_addr		= base;
++	ap->ioaddr.data_addr		= base;
++	ap->ioaddr.feature_addr		=
++	ap->ioaddr.error_addr		= base + 0x4;
++	ap->ioaddr.nsect_addr		= base + 0x8;
++	ap->ioaddr.lbal_addr		= base + 0xc;
++	ap->ioaddr.lbam_addr		= base + 0x10;
++	ap->ioaddr.lbah_addr		= base + 0x14;
++	ap->ioaddr.device_addr		= base + 0x18;
++	ap->ioaddr.command_addr		=
++	ap->ioaddr.status_addr		= base + 0x1c;
++	ap->ioaddr.altstatus_addr	=
++	ap->ioaddr.ctl_addr		= base + 0x38;
++	ap->ioaddr.scr_addr		= scr_addr;
+ }
+ 
+ 
+-static void pdc_host_init(unsigned int chip_id, struct ata_probe_ent *pe)
++static void pdc_host_init(struct ata_host *host)
+ {
+-	void __iomem *mmio = pe->iomap[PDC_MMIO_BAR];
+-	struct pdc_host_priv *hp = pe->private_data;
++	void __iomem *mmio = host->iomap[PDC_MMIO_BAR];
++	int is_gen2 = host->ports[0]->flags & PDC_FLAG_GEN_II;
+ 	int hotplug_offset;
+ 	u32 tmp;
+ 
+-	if (hp->flags & PDC_FLAG_GEN_II)
++	if (is_gen2)
+ 		hotplug_offset = PDC2_SATA_PLUG_CSR;
+ 	else
+ 		hotplug_offset = PDC_SATA_PLUG_CSR;
+@@ -885,7 +884,7 @@ static void pdc_host_init(unsigned int chip_id, struct ata_probe_ent *pe)
+ 	/* enable BMR_BURST, maybe change FIFO_SHD to 8 dwords */
+ 	tmp = readl(mmio + PDC_FLASH_CTL);
+ 	tmp |= 0x02000;	/* bit 13 (enable bmr burst) */
+-	if (!(hp->flags & PDC_FLAG_GEN_II))
++	if (!is_gen2)
+ 		tmp |= 0x10000;	/* bit 16 (fifo threshold at 8 dw) */
+ 	writel(tmp, mmio + PDC_FLASH_CTL);
+ 
+@@ -898,7 +897,7 @@ static void pdc_host_init(unsigned int chip_id, struct ata_probe_ent *pe)
+ 	writel(tmp | 0xff0000, mmio + hotplug_offset);
+ 
+ 	/* don't initialise TBG or SLEW on 2nd generation chips */
+-	if (hp->flags & PDC_FLAG_GEN_II)
++	if (is_gen2)
+ 		return;
+ 
+ 	/* reduce TBG clock to 133 Mhz. */
+@@ -920,16 +919,16 @@ static void pdc_host_init(unsigned int chip_id, struct ata_probe_ent *pe)
+ static int pdc_ata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version;
+-	struct ata_probe_ent *probe_ent;
+-	struct pdc_host_priv *hp;
++	const struct ata_port_info *pi = &pdc_port_info[ent->driver_data];
++	const struct ata_port_info *ppi[PDC_MAX_PORTS];
++	struct ata_host *host;
+ 	void __iomem *base;
+-	unsigned int board_idx = (unsigned int) ent->driver_data;
+-	int rc;
+-	u8 tmp;
++	int n_ports, i, rc;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
+ 
++	/* enable and acquire resources */
+ 	rc = pcim_enable_device(pdev);
+ 	if (rc)
+ 		return rc;
+@@ -939,89 +938,49 @@ static int pdc_ata_init_one (struct pci_dev *pdev, const struct pci_device_id *e
+ 		pcim_pin_device(pdev);
+ 	if (rc)
+ 		return rc;
++	base = pcim_iomap_table(pdev)[PDC_MMIO_BAR];
+ 
+-	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
+-	if (rc)
+-		return rc;
+-	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
+-	if (rc)
+-		return rc;
+-
+-	probe_ent = devm_kzalloc(&pdev->dev, sizeof(*probe_ent), GFP_KERNEL);
+-	if (probe_ent == NULL)
+-		return -ENOMEM;
++	/* determine port configuration and setup host */
++	n_ports = 2;
++	if (pi->flags & PDC_FLAG_4_PORTS)
++		n_ports = 4;
++	for (i = 0; i < n_ports; i++)
++		ppi[i] = pi;
+ 
+-	probe_ent->dev = pci_dev_to_dev(pdev);
+-	INIT_LIST_HEAD(&probe_ent->node);
++	if (pi->flags & PDC_FLAG_SATA_PATA) {
++		u8 tmp = readb(base + PDC_FLASH_CTL+1);
++		if (!(tmp & 0x80)) {
++			ppi[n_ports++] = pi + 1;
++			dev_printk(KERN_INFO, &pdev->dev, "PATA port found\n");
++		}
 +	}
  
- 	return rc;
+-	hp = devm_kzalloc(&pdev->dev, sizeof(*hp), GFP_KERNEL);
+-	if (hp == NULL)
++	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
++	if (!host) {
++		dev_printk(KERN_ERR, &pdev->dev, "failed to allocate host\n");
+ 		return -ENOMEM;
+-
+-	probe_ent->private_data = hp;
+-
+-	probe_ent->sht		= pdc_port_info[board_idx].sht;
+-	probe_ent->port_flags	= pdc_port_info[board_idx].flags;
+-	probe_ent->pio_mask	= pdc_port_info[board_idx].pio_mask;
+-	probe_ent->mwdma_mask	= pdc_port_info[board_idx].mwdma_mask;
+-	probe_ent->udma_mask	= pdc_port_info[board_idx].udma_mask;
+-	probe_ent->port_ops	= pdc_port_info[board_idx].port_ops;
+-
+-       	probe_ent->irq = pdev->irq;
+-       	probe_ent->irq_flags = IRQF_SHARED;
+-	probe_ent->iomap = pcim_iomap_table(pdev);
+-
+-	base = probe_ent->iomap[PDC_MMIO_BAR];
+-
+-	pdc_ata_setup_port(&probe_ent->port[0], base + 0x200, base + 0x400);
+-	pdc_ata_setup_port(&probe_ent->port[1], base + 0x280, base + 0x500);
+-
+-	/* notice 4-port boards */
+-	switch (board_idx) {
+-	case board_40518:
+-		hp->flags |= PDC_FLAG_GEN_II;
+-		/* Fall through */
+-	case board_20319:
+-       		probe_ent->n_ports = 4;
+-		pdc_ata_setup_port(&probe_ent->port[2], base + 0x300, base + 0x600);
+-		pdc_ata_setup_port(&probe_ent->port[3], base + 0x380, base + 0x700);
+-		break;
+-	case board_2057x:
+-		hp->flags |= PDC_FLAG_GEN_II;
+-		/* Fall through */
+-	case board_2037x:
+-		/* TX2plus boards also have a PATA port */
+-		tmp = readb(base + PDC_FLASH_CTL+1);
+-		if (!(tmp & 0x80)) {
+-			probe_ent->n_ports = 3;
+-			pdc_ata_setup_port(&probe_ent->port[2], base + 0x300, NULL);
+-			hp->port_flags[2] = ATA_FLAG_SLAVE_POSS;
+-			printk(KERN_INFO DRV_NAME " PATA port found\n");
+-		} else
+-			probe_ent->n_ports = 2;
+-		hp->port_flags[0] = ATA_FLAG_SATA;
+-		hp->port_flags[1] = ATA_FLAG_SATA;
+-		break;
+-	case board_20619:
+-		probe_ent->n_ports = 4;
+-		pdc_ata_setup_port(&probe_ent->port[2], base + 0x300, NULL);
+-		pdc_ata_setup_port(&probe_ent->port[3], base + 0x380, NULL);
+-		break;
+-	default:
+-		BUG();
+-		break;
+ 	}
++	host->iomap = pcim_iomap_table(pdev);
+ 
+-	pci_set_master(pdev);
++	for (i = 0; i < host->n_ports; i++)
++		pdc_ata_setup_port(host->ports[i],
++				   base + 0x200 + i * 0x80,
++				   base + 0x400 + i * 0x100);
+ 
+ 	/* initialize adapter */
+-	pdc_host_init(board_idx, probe_ent);
++	pdc_host_init(host);
+ 
+-	if (!ata_device_add(probe_ent))
+-		return -ENODEV;
++	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
++	if (rc)
++		return rc;
++	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
++	if (rc)
++		return rc;
+ 
+-	devm_kfree(&pdev->dev, probe_ent);
+-	return 0;
++	/* start host, request IRQ and attach */
++	pci_set_master(pdev);
++	return ata_host_activate(host, pdev->irq, pdc_interrupt, IRQF_SHARED,
++				 &pdc_ata_sht);
  }
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 1f1e3a5..b4d5253 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -52,6 +52,7 @@ enum {
- 	ATA_DNXFER_QUIET	= (1 << 31),
+ 
+ 
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 842ccf6..1d855f5 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -64,8 +64,6 @@ enum {
+ 	PORT0			= (1 << 1),
+ 	PORT1			= (1 << 0),
+ 	ALL_PORTS		= PORT0 | PORT1,
+-	PATA_PORT		= 2,	/* PATA is port 2 */
+-	N_PORTS			= 3,
+ 
+ 	NATIVE_MODE_ALL		= (1 << 7) | (1 << 6) | (1 << 5) | (1 << 4),
+ 
+@@ -81,7 +79,6 @@ static void vt6420_error_handler(struct ata_port *ap);
+ static int vt6421_pata_cable_detect(struct ata_port *ap);
+ static void vt6421_set_pio_mode(struct ata_port *ap, struct ata_device *adev);
+ static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev);
+-static int vt6421_port_start(struct ata_port *ap);
+ 
+ static const struct pci_device_id svia_pci_tbl[] = {
+ 	{ PCI_VDEVICE(VIA, 0x5337), vt6420 },
+@@ -140,7 +137,6 @@ static const struct ata_port_operations vt6420_sata_ops = {
+ 	.error_handler		= vt6420_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 
+-	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_ack		= ata_irq_ack,
+@@ -175,12 +171,11 @@ static const struct ata_port_operations vt6421_pata_ops = {
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 	.cable_detect		= vt6421_pata_cable_detect,
+ 
+-	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_ack		= ata_irq_ack,
+ 
+-	.port_start		= vt6421_port_start,
++	.port_start		= ata_port_start,
  };
  
-+extern unsigned int ata_print_id;
- extern struct workqueue_struct *ata_aux_wq;
- extern int atapi_enabled;
- extern int atapi_dmadir;
-@@ -92,10 +93,9 @@ extern int ata_flush_cache(struct ata_device *dev);
- extern void ata_dev_init(struct ata_device *dev);
- extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
--extern void ata_port_init(struct ata_port *ap, struct ata_host *host,
--			  const struct ata_probe_ent *ent, unsigned int port_no);
- extern struct ata_probe_ent *ata_probe_ent_alloc(struct device *dev,
- 						 const struct ata_port_info *port);
-+extern struct ata_port *ata_port_alloc(struct ata_host *host);
+ static const struct ata_port_operations vt6421_sata_ops = {
+@@ -207,7 +202,6 @@ static const struct ata_port_operations vt6421_sata_ops = {
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 	.cable_detect		= ata_cable_sata,
  
- /* libata-acpi.c */
- #ifdef CONFIG_SATA_ACPI
-@@ -113,8 +113,8 @@ static inline int ata_acpi_push_id(struct ata_port *ap, unsigned int ix)
- #endif
+-	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_ack		= ata_irq_ack,
+@@ -215,11 +209,10 @@ static const struct ata_port_operations vt6421_sata_ops = {
+ 	.scr_read		= svia_scr_read,
+ 	.scr_write		= svia_scr_write,
  
- /* libata-scsi.c */
--extern struct scsi_transport_template ata_scsi_transport_template;
+-	.port_start		= vt6421_port_start,
++	.port_start		= ata_port_start,
+ };
+ 
+-static struct ata_port_info vt6420_port_info = {
+-	.sht		= &svia_sht,
++static const struct ata_port_info vt6420_port_info = {
+ 	.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
+ 	.pio_mask	= 0x1f,
+ 	.mwdma_mask	= 0x07,
+@@ -227,6 +220,22 @@ static struct ata_port_info vt6420_port_info = {
+ 	.port_ops	= &vt6420_sata_ops,
+ };
+ 
++static struct ata_port_info vt6421_sport_info = {
++	.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++	.pio_mask	= 0x1f,
++	.mwdma_mask	= 0x07,
++	.udma_mask	= 0x7f,
++	.port_ops	= &vt6421_sata_ops,
++};
++
++static struct ata_port_info vt6421_pport_info = {
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_LEGACY,
++	.pio_mask	= 0x1f,
++	.mwdma_mask	= 0,
++	.udma_mask	= 0x7f,
++	.port_ops	= &vt6421_pata_ops,
++};
++
+ MODULE_AUTHOR("Jeff Garzik");
+ MODULE_DESCRIPTION("SCSI low-level driver for VIA SATA controllers");
+ MODULE_LICENSE("GPL");
+@@ -356,16 +365,6 @@ static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev)
+ 	pci_write_config_byte(pdev, PATA_UDMA_TIMING, udma_bits[adev->pio_mode - XFER_UDMA_0]);
+ }
+ 
+-static int vt6421_port_start(struct ata_port *ap)
+-{
+-	if (ap->port_no == PATA_PORT) {
+-		ap->ops = &vt6421_pata_ops;
+-		ap->mwdma_mask = 0;
+-		ap->flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_LEGACY | ATA_FLAG_SRST;
+-	}
+-	return ata_port_start(ap);
+-}
 -
-+extern int ata_scsi_add_hosts(struct ata_host *host,
-+			      struct scsi_host_template *sht);
- extern void ata_scsi_scan_host(struct ata_port *ap);
- extern int ata_scsi_offline_dev(struct ata_device *dev);
- extern void ata_scsi_hotplug(struct work_struct *work);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bda26e8..06cf23f 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -733,7 +733,10 @@ extern int ata_pci_device_resume(struct pci_dev *pdev);
- #endif
- extern int ata_pci_clear_simplex(struct pci_dev *pdev);
- #endif /* CONFIG_PCI */
-+extern struct ata_host *ata_host_alloc(struct device *dev, int max_ports);
- extern int ata_host_start(struct ata_host *host);
-+extern int ata_host_register(struct ata_host *host,
-+			     struct scsi_host_template *sht);
- extern int ata_device_add(const struct ata_probe_ent *ent);
- extern void ata_host_detach(struct ata_host *host);
- extern void ata_host_init(struct ata_host *, struct device *,
+ static const unsigned int svia_bar_sizes[] = {
+ 	8, 4, 8, 4, 16, 256
+ };
+@@ -384,79 +383,78 @@ static void __iomem * vt6421_scr_addr(void __iomem *addr, unsigned int port)
+ 	return addr + (port * 64);
+ }
+ 
+-static void vt6421_init_addrs(struct ata_probe_ent *probe_ent,
+-			      void __iomem * const *iomap, unsigned int port)
++static void vt6421_init_addrs(struct ata_port *ap)
+ {
+-	void __iomem *reg_addr = iomap[port];
+-	void __iomem *bmdma_addr = iomap[4] + (port * 8);
+-
+-	probe_ent->port[port].cmd_addr = reg_addr;
+-	probe_ent->port[port].altstatus_addr =
+-	probe_ent->port[port].ctl_addr = (void __iomem *)
++	void __iomem * const * iomap = ap->host->iomap;
++	void __iomem *reg_addr = iomap[ap->port_no];
++	void __iomem *bmdma_addr = iomap[4] + (ap->port_no * 8);
++	struct ata_ioports *ioaddr = &ap->ioaddr;
++
++	ioaddr->cmd_addr = reg_addr;
++	ioaddr->altstatus_addr =
++	ioaddr->ctl_addr = (void __iomem *)
+ 		((unsigned long)(reg_addr + 8) | ATA_PCI_CTL_OFS);
+-	probe_ent->port[port].bmdma_addr = bmdma_addr;
+-	probe_ent->port[port].scr_addr = vt6421_scr_addr(iomap[5], port);
++	ioaddr->bmdma_addr = bmdma_addr;
++	ioaddr->scr_addr = vt6421_scr_addr(iomap[5], ap->port_no);
+ 
+-	ata_std_ports(&probe_ent->port[port]);
++	ata_std_ports(ioaddr);
+ }
+ 
+-static struct ata_probe_ent *vt6420_init_probe_ent(struct pci_dev *pdev)
++static int vt6420_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
+ {
+-	struct ata_probe_ent *probe_ent;
+-	struct ata_port_info *ppi[2];
+-	void __iomem *bar5;
++	const struct ata_port_info *ppi[] = { &vt6420_port_info, NULL };
++	struct ata_host *host;
++	int rc;
+ 
+-	ppi[0] = ppi[1] = &vt6420_port_info;
+-	probe_ent = ata_pci_init_native_mode(pdev, ppi, ATA_PORT_PRIMARY | ATA_PORT_SECONDARY);
+-	if (!probe_ent)
+-		return NULL;
++	rc = ata_pci_prepare_native_host(pdev, ppi, 2, &host);
++	if (rc)
++		return rc;
++	*r_host = host;
+ 
+-	bar5 = pcim_iomap(pdev, 5, 0);
+-	if (!bar5) {
++	rc = pcim_iomap_regions(pdev, 1 << 5, DRV_NAME);
++	if (rc) {
+ 		dev_printk(KERN_ERR, &pdev->dev, "failed to iomap PCI BAR 5\n");
+-		return NULL;
++		return rc;
+ 	}
+ 
+-	probe_ent->port[0].scr_addr = svia_scr_addr(bar5, 0);
+-	probe_ent->port[1].scr_addr = svia_scr_addr(bar5, 1);
++	host->ports[0]->ioaddr.scr_addr = svia_scr_addr(host->iomap[5], 0);
++	host->ports[1]->ioaddr.scr_addr = svia_scr_addr(host->iomap[5], 1);
+ 
+-	return probe_ent;
++	return 0;
+ }
+ 
+-static struct ata_probe_ent *vt6421_init_probe_ent(struct pci_dev *pdev)
++static int vt6421_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
+ {
+-	struct ata_probe_ent *probe_ent;
+-	unsigned int i;
++	const struct ata_port_info *ppi[] =
++		{ &vt6421_sport_info, &vt6421_sport_info, &vt6421_pport_info };
++	struct ata_host *host;
++	int i, rc;
++
++	*r_host = host = ata_host_alloc_pinfo(&pdev->dev, ppi, ARRAY_SIZE(ppi));
++	if (!host) {
++		dev_printk(KERN_ERR, &pdev->dev, "failed to allocate host\n");
++		return -ENOMEM;
++	}
+ 
+-	probe_ent = devm_kzalloc(&pdev->dev, sizeof(*probe_ent), GFP_KERNEL);
+-	if (!probe_ent)
+-		return NULL;
+-
+-	memset(probe_ent, 0, sizeof(*probe_ent));
+-	probe_ent->dev = pci_dev_to_dev(pdev);
+-	INIT_LIST_HEAD(&probe_ent->node);
+-
+-	probe_ent->sht		= &svia_sht;
+-	probe_ent->port_flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY;
+-	probe_ent->port_ops	= &vt6421_sata_ops;
+-	probe_ent->n_ports	= N_PORTS;
+-	probe_ent->irq		= pdev->irq;
+-	probe_ent->irq_flags	= IRQF_SHARED;
+-	probe_ent->pio_mask	= 0x1f;
+-	probe_ent->mwdma_mask	= 0x07;
+-	probe_ent->udma_mask	= 0x7f;
+-
+-	for (i = 0; i < 6; i++)
+-		if (!pcim_iomap(pdev, i, 0)) {
+-			dev_printk(KERN_ERR, &pdev->dev,
+-				   "failed to iomap PCI BAR %d\n", i);
+-			return NULL;
+-		}
++	rc = pcim_iomap_regions(pdev, 0x1f, DRV_NAME);
++	if (rc) {
++		dev_printk(KERN_ERR, &pdev->dev, "failed to request/iomap "
++			   "PCI BARs (errno=%d)\n", rc);
++		return rc;
++	}
++	host->iomap = pcim_iomap_table(pdev);
+ 
+-	for (i = 0; i < N_PORTS; i++)
+-		vt6421_init_addrs(probe_ent, pcim_iomap_table(pdev), i);
++	for (i = 0; i < host->n_ports; i++)
++		vt6421_init_addrs(host->ports[i]);
+ 
+-	return probe_ent;
++	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
++	if (rc)
++		return rc;
++	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
++	if (rc)
++		return rc;
++
++	return 0;
+ }
+ 
+ static void svia_configure(struct pci_dev *pdev)
+@@ -503,7 +501,7 @@ static int svia_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	static int printed_version;
+ 	unsigned int i;
+ 	int rc;
+-	struct ata_probe_ent *probe_ent;
++	struct ata_host *host;
+ 	int board_id = (int) ent->driver_data;
+ 	const int *bar_sizes;
+ 	u8 tmp8;
+@@ -515,12 +513,6 @@ static int svia_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = pci_request_regions(pdev, DRV_NAME);
+-	if (rc) {
+-		pcim_pin_device(pdev);
+-		return rc;
+-	}
+-
+ 	if (board_id == vt6420) {
+ 		pci_read_config_byte(pdev, SATA_PATA_SHARING, &tmp8);
+ 		if (tmp8 & SATA_2DEV) {
+@@ -546,32 +538,18 @@ static int svia_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			return -ENODEV;
+ 		}
+ 
+-	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
+-	if (rc)
+-		return rc;
+-	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
+-	if (rc)
+-		return rc;
+-
+ 	if (board_id == vt6420)
+-		probe_ent = vt6420_init_probe_ent(pdev);
++		rc = vt6420_prepare_host(pdev, &host);
+ 	else
+-		probe_ent = vt6421_init_probe_ent(pdev);
+-
+-	if (!probe_ent) {
+-		dev_printk(KERN_ERR, &pdev->dev, "out of memory\n");
+-		return -ENOMEM;
+-	}
++		rc = vt6421_prepare_host(pdev, &host);
++	if (rc)
++		return rc;
+ 
+ 	svia_configure(pdev);
+ 
+ 	pci_set_master(pdev);
+-
+-	if (!ata_device_add(probe_ent))
+-		return -ENODEV;
+-
+-	devm_kfree(&pdev->dev, probe_ent);
+-	return 0;
++	return ata_host_activate(host, pdev->irq, ata_interrupt, IRQF_SHARED,
++				 &svia_sht);
+ }
+ 
+ static int __init svia_init(void)
 -- 
 1.5.0.3
 
