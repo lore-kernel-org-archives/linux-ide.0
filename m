@@ -1,53 +1,38 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Wed, 11 Apr 2007 18:07:32 -0400
-Message-ID: <461D5C24.9080506@redhat.com>
-References: <461D4E2C.6000704@redhat.com> <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr> <461D54AF.3060706@redhat.com> <Pine.LNX.4.61.0704112347230.20436@yvahk01.tjqt.qr>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: kill type mismatch compile warning
+Date: Thu, 12 Apr 2007 13:38:11 +0900
+Message-ID: <20070412043811.GG10619@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60768 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161289AbXDKWHi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Apr 2007 18:07:38 -0400
-In-Reply-To: <Pine.LNX.4.61.0704112347230.20436@yvahk01.tjqt.qr>
+Received: from nz-out-0506.google.com ([64.233.162.236]:53297 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965419AbXDLEiU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Apr 2007 00:38:20 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so318886nze
+        for <linux-ide@vger.kernel.org>; Wed, 11 Apr 2007 21:38:19 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com
 
-Jan Engelhardt wrote:
-> On Apr 11 2007 17:35, Chuck Ebbert wrote:
->> Jan Engelhardt wrote:
->>> On Apr 11 2007 17:07, Chuck Ebbert wrote:
->>>> When I reboot my notebook, it powers off and powers back on.
->>>> On poweroff a loud snapping noise seems to be coming from the
->>>> hard drive. Today I noticed there is no "shutdown: hda" on
->>>> the console when I reboot. Whne I do a normal poweroff the
->>>> message is displayed and there is no noise. Should the IDE
->>>> code be changed so it always shuts down the drive?
->>> What sort of notebook? What sort of harddisk?
->> Compaq Presario V2000 series, with a new Seagate ST9120821A
->> 120GB 5400RPM drive.
-> 
-> I specifically hoped you might have a TOSHIBA MK2003GAH,
-> which does a hard unload when left idle for too long.
-> 
-> Only on reboots huh?
-> 
-> What happens if you reboot another OS, freebsd f.ex.? (You can try that off
-> CD1)
+kill the following compile warning.
 
-Now we're getting somewhere. There is some other OS on here because
-it's required for doing BIOS updates. I booted it and shut down.
-The power cycle count increased but the power off retract count did not.
+drivers/ata/libata-core.c:1786: warning: comparison of distinct pointer types lacks a cast
 
-The counts are:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-power cycle ... 111
-power off retract ... 92
-
-The difference is now 19; it was 18 before.
-
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 735f0b0..3556281 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1783,7 +1783,8 @@ int ata_dev_configure(struct ata_device *dev)
+ 	}
+ 
+ 	if (ata_device_blacklisted(dev) & ATA_HORKAGE_MAX_SEC_128)
+-		dev->max_sectors = min(ATA_MAX_SECTORS_128, dev->max_sectors);
++		dev->max_sectors = min_t(unsigned int, ATA_MAX_SECTORS_128,
++					 dev->max_sectors);
+ 
+ 	/* limit ATAPI DMA to R/W commands only */
+ 	if (ata_device_blacklisted(dev) & ATA_HORKAGE_DMA_RW_ONLY)
