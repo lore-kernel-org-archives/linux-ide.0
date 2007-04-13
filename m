@@ -1,28 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: HPA patches
-Date: Fri, 13 Apr 2007 11:56:26 +0100
-Message-ID: <20070413115626.097aadac@the-village.bc.nu>
-References: <20070323191321.5d00887a@lxorguk.ukuu.org.uk>
-	<20070323112411.f6a8a762.randy.dunlap@oracle.com>
-	<20070323200819.4e734f4f@lxorguk.ukuu.org.uk>
-	<20070323130315.7ed48121.randy.dunlap@oracle.com>
-	<20070413031615.GA21061@athena.road.mcmartin.ca>
+From: Kyle McMartin <kyle@canonical.com>
+Subject: Re: [PATCH] libata: HPA support
+Date: Fri, 13 Apr 2007 11:33:44 -0400
+Message-ID: <20070413153343.GA26304@athena.road.mcmartin.ca>
+References: <20070411002313.29069ca5@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52524 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753368AbXDMKxs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Apr 2007 06:53:48 -0400
-In-Reply-To: <20070413031615.GA21061@athena.road.mcmartin.ca>
+Received: from stout.engsoc.carleton.ca ([134.117.69.22]:53920 "EHLO
+	stout.engsoc.carleton.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754048AbXDMPf1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Apr 2007 11:35:27 -0400
+Content-Disposition: inline
+In-Reply-To: <20070411002313.29069ca5@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kyle McMartin <kyle@mcmartin.ca>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kyle@canonical.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-> Pondering about this, it's ATA_LBA according to the docs, specifying
-> that the address is an LBA.
+On Wed, Apr 11, 2007 at 12:23:13AM +0100, Alan Cox wrote:
+> Add support for ignoring the BIOS HPA result (off by default) and setting
+> the disk to the full available size unless already frozen.
+> 
+> Tested with various platforms/disks and confirmed to work with the
+> Macintosh (which broke earlier) and ata_piix (breakage due to the LBA48
+> readback that Tejun fixed).
+> 
+> For normal users this brings us, I believe, to feature parity with old IDE
+> (and of course more featured in some areas too).
+> 
 
-This is true for some commands, but not all. It gets used for other stuff
-too.
+Argh. I'm seeing a show stopper bug on sata_nv here. ata_exec_internal
+is MCE-ing on the READ_NATIVE_MAX_EXT command on both i386 and amd64, with
+top of Linus' tree + this patch. :(
+
+Cheers,
+	Kyle
