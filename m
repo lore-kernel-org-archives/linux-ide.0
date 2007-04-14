@@ -1,204 +1,28 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH pata-2.6] cmd64x: use interrupt status from MRDMODE register (take 2)
-Date: Sat, 14 Apr 2007 23:53:53 +0400
-Message-ID: <200704142353.53115.sshtylyov@ru.mvista.com>
-References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com> <200702162321.40813.sshtylyov@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH pata-2.6] cmd64x: procfs code fixes/cleanups (take 2)
+Date: Sat, 14 Apr 2007 22:11:11 +0200 (MEST)
+Message-ID: <200704142011.l3EKBBhf025590@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:61394 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965104AbXDNTw6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Apr 2007 15:52:58 -0400
-In-Reply-To: <200702162321.40813.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:39736 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751306AbXDNULZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 14 Apr 2007 16:11:25 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
+To: bzolnier@gmail.com, sshtylyov@ru.mvista.com
 Cc: linux-ide@vger.kernel.org
 
-Fold the parts of the ide_dma_end() methods identical to __ide_dma_end() into a
-mere call to it.
-Start using faster versions of the ide_dma_end() and ide_dma_test_irq() methods
-for the PCI0646U and newer chips that have the duplicate interrupt status bits
-in the I/O mapped MRDMODE register, determing what methods to use at the driver
-load time. Do some cleanup/renaming in the "old" ide_dma_test_irq() method too.
+On Sat, 14 Apr 2007 23:41:16 +0400, Sergei Shtylyov wrote:
+> While at it, also perform the following cleanups:
+...
+> - correct the chipset names (from CMDxxx to PCI-xxx)
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Please explain why this rename is a correction.
 
----
-The fixes to PCI0646 chip reporting and some other changes from the older patch
-have been moved into a separate patch (to be posted RSN), otherwise there's a
-couple of style changes added.  The patch have received testing on PCI-649 now.
+Did the company making these chips change name at some point?
+Or did they change the names of the chips?
 
- drivers/ide/pci/cmd64x.c |  117 +++++++++++++++++++++++++++--------------------
- 1 files changed, 69 insertions(+), 48 deletions(-)
+CMD64x is an established name, while PCI-xxx is something
+I've never heard of (and it sounds awfully generic).
 
-Index: linux-2.6/drivers/ide/pci/cmd64x.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/cmd64x.c
-+++ linux-2.6/drivers/ide/pci/cmd64x.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/cmd64x.c		Version 1.46	Mar 16, 2007
-+ * linux/drivers/ide/pci/cmd64x.c		Version 1.47	Mar 19, 2007
-  *
-  * cmd64x.c: Enable interrupts at initialization time on Ultra/PCI machines.
-  *           Due to massive hardware bugs, UltraDMA is only supported
-@@ -425,67 +425,80 @@ static int cmd64x_config_drive_for_dma (
- 	return -1;
- }
- 
--static int cmd64x_alt_dma_status (struct pci_dev *dev)
-+static int cmd648_ide_dma_end (ide_drive_t *drive)
- {
--	switch(dev->device) {
--		case PCI_DEVICE_ID_CMD_648:
--		case PCI_DEVICE_ID_CMD_649:
--			return 1;
--		default:
--			break;
--	}
--	return 0;
-+	ide_hwif_t *hwif	= HWIF(drive);
-+	int err			= __ide_dma_end(drive);
-+	u8  irq_mask		= hwif->channel ? MRDMODE_INTR_CH1 :
-+						  MRDMODE_INTR_CH0;
-+	u8  mrdmode		= inb(hwif->dma_master + 0x01);
-+
-+	/* clear the interrupt bit */
-+	outb(mrdmode | irq_mask, hwif->dma_master + 0x01);
-+
-+	return err;
- }
- 
- static int cmd64x_ide_dma_end (ide_drive_t *drive)
- {
--	u8 dma_stat = 0, dma_cmd = 0;
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= hwif->pci_dev;
-+	int irq_reg		= hwif->channel ? ARTTIM23 : CFR;
-+	u8  irq_mask		= hwif->channel ? ARTTIM23_INTR_CH1 :
-+						  CFR_INTR_CH0;
-+	u8  irq_stat		= 0;
-+	int err			= __ide_dma_end(drive);
- 
--	drive->waiting_for_dma = 0;
--	/* read DMA command state */
--	dma_cmd = inb(hwif->dma_command);
--	/* stop DMA */
--	outb(dma_cmd & ~1, hwif->dma_command);
--	/* get DMA status */
--	dma_stat = inb(hwif->dma_status);
--	/* clear the INTR & ERROR bits */
--	outb(dma_stat | 6, hwif->dma_status);
--	if (cmd64x_alt_dma_status(dev)) {
--		u8 dma_intr	= 0;
--		u8 dma_mask	= (hwif->channel) ? ARTTIM23_INTR_CH1 :
--						    CFR_INTR_CH0;
--		u8 dma_reg	= (hwif->channel) ? ARTTIM2 : CFR;
--		(void) pci_read_config_byte(dev, dma_reg, &dma_intr);
--		/* clear the INTR bit */
--		(void) pci_write_config_byte(dev, dma_reg, dma_intr|dma_mask);
--	}
--	/* purge DMA mappings */
--	ide_destroy_dmatable(drive);
--	/* verify good DMA status */
--	return (dma_stat & 7) != 4;
-+	(void) pci_read_config_byte(dev, irq_reg, &irq_stat);
-+	/* clear the interrupt bit */
-+	(void) pci_write_config_byte(dev, irq_reg, irq_stat | irq_mask);
-+
-+	return err;
-+}
-+
-+static int cmd648_ide_dma_test_irq (ide_drive_t *drive)
-+{
-+	ide_hwif_t *hwif	= HWIF(drive);
-+	u8 irq_mask		= hwif->channel ? MRDMODE_INTR_CH1 :
-+						  MRDMODE_INTR_CH0;
-+	u8 dma_stat		= inb(hwif->dma_status);
-+	u8 mrdmode		= inb(hwif->dma_master + 0x01);
-+
-+#ifdef DEBUG
-+	printk("%s: dma_stat: 0x%02x mrdmode: 0x%02x irq_mask: 0x%02x\n",
-+	       drive->name, dma_stat, mrdmode, irq_mask);
-+#endif
-+	if (!(mrdmode & irq_mask))
-+		return 0;
-+
-+	/* return 1 if INTR asserted */
-+	if (dma_stat & 4)
-+		return 1;
-+
-+	return 0;
- }
- 
- static int cmd64x_ide_dma_test_irq (ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= hwif->pci_dev;
--	u8 irq_reg		= hwif->channel ? ARTTIM23 : CFR;
--	u8 irq_stat = 0, mask	= hwif->channel ? ARTTIM23_INTR_CH1 : CFR_INTR_CH0;
--	u8 dma_stat		= inb(hwif->dma_status);
-+	int irq_reg		= hwif->channel ? ARTTIM23 : CFR;
-+	u8  irq_mask		= hwif->channel ? ARTTIM23_INTR_CH1 :
-+						  CFR_INTR_CH0;
-+	u8  dma_stat		= inb(hwif->dma_status);
-+	u8  irq_stat		= 0;
- 
- 	(void) pci_read_config_byte(dev, irq_reg, &irq_stat);
- 
- #ifdef DEBUG
--	printk("%s: dma_stat: 0x%02x irq_stat: 0x%02x mask: 0x%02x\n",
--	       drive->name, dma_stat, irq_stat, mask);
-+	printk("%s: dma_stat: 0x%02x irq_stat: 0x%02x irq_mask: 0x%02x\n",
-+	       drive->name, dma_stat, irq_stat, irq_mask);
- #endif
--	if (!(irq_stat & mask))
-+	if (!(irq_stat & irq_mask))
- 		return 0;
- 
- 	/* return 1 if INTR asserted */
--	if ((dma_stat & 4) == 4)
-+	if (dma_stat & 4)
- 		return 1;
- 
- 	return 0;
-@@ -645,17 +658,25 @@ static void __devinit init_hwif_cmd64x(i
- 	if (!(hwif->udma_four))
- 		hwif->udma_four = ata66_cmd64x(hwif);
- 
--	if (dev->device == PCI_DEVICE_ID_CMD_646) {
-+	switch(dev->device) {
-+	case PCI_DEVICE_ID_CMD_648:
-+	case PCI_DEVICE_ID_CMD_649:
-+	alt_irq_bits:
-+		hwif->ide_dma_end	= &cmd648_ide_dma_end;
-+		hwif->ide_dma_test_irq	= &cmd648_ide_dma_test_irq;
-+		break;
-+	case PCI_DEVICE_ID_CMD_646:
- 		hwif->chipset = ide_cmd646;
- 		if (class_rev == 0x01) {
- 			hwif->ide_dma_end = &cmd646_1_ide_dma_end;
--		} else {
--			hwif->ide_dma_end = &cmd64x_ide_dma_end;
--			hwif->ide_dma_test_irq = &cmd64x_ide_dma_test_irq;
--		}
--	} else {
--		hwif->ide_dma_end = &cmd64x_ide_dma_end;
--		hwif->ide_dma_test_irq = &cmd64x_ide_dma_test_irq;
-+			break;
-+		} else if (class_rev >= 0x03)
-+			goto alt_irq_bits;
-+		/* fall thru */
-+	default:
-+		hwif->ide_dma_end	= &cmd64x_ide_dma_end;
-+		hwif->ide_dma_test_irq	= &cmd64x_ide_dma_test_irq;
-+		break;
- 	}
- 
- 
-
+/Mikael
