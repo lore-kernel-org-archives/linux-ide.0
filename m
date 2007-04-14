@@ -1,67 +1,64 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH] sata_nv: Don't attempt using ADMA for (READ|SET)_MAX
- commands
-Date: Fri, 13 Apr 2007 16:52:38 -0600
-Message-ID: <462009B6.4030406@shaw.ca>
-References: <20070413170831.GC27674@athena.road.mcmartin.ca>
- <20070413181935.6d60f230@the-village.bc.nu> <461FC892.6020602@rtr.ca>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [1/3] 2.6.21-rc6: known regressions
+Date: Sat, 14 Apr 2007 02:36:25 +0200
+Message-ID: <20070414003625.GS5907@stusta.de>
+References: <Pine.LNX.4.64.0704051944230.6730@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:41041 "EHLO
-	pd4mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965657AbXDMWxl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Apr 2007 18:53:41 -0400
-Received: from pd2mr6so.prod.shaw.ca (pd2mr6so-qfe3.prod.shaw.ca [10.0.141.9])
- by l-daemon (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
- with ESMTP id <0JGG009DCKW45500@l-daemon> for linux-ide@vger.kernel.org; Fri,
- 13 Apr 2007 16:52:52 -0600 (MDT)
-Received: from pn2ml10so.prod.shaw.ca ([10.0.121.80])
- by pd2mr6so.prod.shaw.ca (Sun Java System Messaging Server 6.2-7.05 (built Sep
- 5 2006)) with ESMTP id <0JGG00JVZKW3OIW0@pd2mr6so.prod.shaw.ca> for
- linux-ide@vger.kernel.org; Fri, 13 Apr 2007 16:52:52 -0600 (MDT)
-Received: from [192.168.1.113] ([70.64.1.86])
- by l-daemon (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
- with ESMTP id <0JGG00K5GKW2A3Y1@l-daemon> for linux-ide@vger.kernel.org; Fri,
- 13 Apr 2007 16:52:51 -0600 (MDT)
-In-reply-to: <461FC892.6020602@rtr.ca>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:49934 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752105AbXDNAgT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Apr 2007 20:36:19 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0704051944230.6730@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Kyle McMartin <kyle@canonical.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com, bcollins@ubuntu.com
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Stephen Clark <Stephen.Clark@seclark.us>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, lenb@kernel.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, Dave Jones <davej@redhat.com>, cramerj@intel.com, john.ronciak@intel.com, jeffrey.t.kirsher@intel.com, auke-jan.h.kok@intel.com, e1000-devel@lists.sourceforge.net, Ingo Molnar <mingo@elte.hu>, Ayaz Abdulla <aabdulla@nvidia.com>
 
-Mark Lord wrote:
-> Alan Cox wrote:
->> On Fri, 13 Apr 2007 13:08:31 -0400
->> Kyle McMartin <kyle@canonical.com> wrote:
->>
->>> READ_NATIVE_MAX and SET_MAX were causing timeouts on sata_nv 
->>> controllers.
->>> Disabling ADMA helped, but that is quite a large hammer to use. 
->>> Reverting
->>> 382a6652e91b34d5480cfc0ed840c196650493d4 also helped, but we might as 
->>> well
->>> fix it right, instead of disabling the performance gain on cache flushes
->>> by using ADMA mode.
->>
->> Probably not going to make any performance difference to blacklist all
->> non-data commands or all but a few like cache-flush. 
-> 
-> I agree.  The Pacific Digital ADMA stuff had some quirks for various 
-> non-data
-> commands as well, and the sensible thing was to just not use ADMA for 
-> anything
-> other than READs/WRITEs and possible CACHE FLUSHes.
+This email lists some known regressions in Linus' tree compared to 2.6.20.
 
-I'm told by NVidia that non-data commands should be fine in ADMA mode, 
-except for those that require reading back a result taskfile (which 
-can't be done in ADMA mode). The patch in libata-dev which I mentioned 
-in another email will ensure that we don't try to use ADMA for such 
-commands, so this patch should not be needed.
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way
+possibly involved with one or more of these issues.
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+Due to the huge amount of recipients, please trim the Cc when answering.
+
+
+Subject    : ali_pata: boot from CD fails
+References : http://lkml.org/lkml/2007/3/31/160
+Submitter  : Stephen Clark <Stephen.Clark@seclark.us>
+Status     : unknown
+
+
+Subject    : kernels fail to boot with drives on ATIIXP controller
+             (ACPI/IRQ related)
+References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
+             http://lkml.org/lkml/2007/3/4/257
+Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+Status     : unknown
+
+
+Subject    : boot failure: rtl8139: exception in interrupt routine
+References : http://lkml.org/lkml/2007/3/31/160
+Submitter  : Stephen Clark <Stephen.Clark@seclark.us>
+Status     : unknown
+
+
+Subject    : laptops with e1000: lockups
+References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229603
+Submitter  : Dave Jones <davej@redhat.com>
+Handled-By : Jesse Brandeburg <jesse.brandeburg@intel.com>
+Status     : problem is being debugged
+
+
+Subject    : forcedeth: interface hangs under load
+References : http://lkml.org/lkml/2007/4/3/39
+Submitter  : Ingo Molnar <mingo@elte.hu>
+Handled-By : Ingo Molnar <mingo@elte.hu>
+             Ayaz Abdulla <aabdulla@nvidia.com>
+Status     : problem is being debugged
+
 
