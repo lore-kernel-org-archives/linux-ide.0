@@ -1,46 +1,34 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCH pata-2.6] cmd64x: procfs code fixes/cleanups (take 2)
-Date: Sun, 15 Apr 2007 00:16:47 +0400
-Message-ID: <462136AF.9060505@ru.mvista.com>
-References: <200704142011.l3EKBBhf025590@harpo.it.uu.se>
+Date: Sat, 14 Apr 2007 18:18:47 -0400
+Message-ID: <46215347.2000403@rtr.ca>
+References: <200704142011.l3EKBBhf025590@harpo.it.uu.se> <462136AF.9060505@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:37633 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with SMTP id S1750700AbXDNUPy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Apr 2007 16:15:54 -0400
-In-Reply-To: <200704142011.l3EKBBhf025590@harpo.it.uu.se>
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:2990 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751564AbXDNWSu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 14 Apr 2007 18:18:50 -0400
+In-Reply-To: <462136AF.9060505@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Hello.
+Sergei Shtylyov wrote:
+>>> - correct the chipset names (from CMDxxx to PCI-xxx)
+> 
+>> Please explain why this rename is a correction.
+> 
+>   Because the chips are officially named PCI064[036] and PCI-64[89].
 
-Mikael Pettersson wrote:
+We normally name things with a combination of brand and chip number.
+Lots of companies could have chips with PCI in the name,
+but the CMD64x designator makes it quite clear what we're dealing with here.
 
->>While at it, also perform the following cleanups:
+In the machines I have here with these chips,
+they are clearly labelled as "CMD" and then "PCI646.."
 
-> ...
- 
->>- correct the chipset names (from CMDxxx to PCI-xxx)
- 
-> Please explain why this rename is a correction.
-
-   Because the chips are officially named PCI064[036] and PCI-64[89].
-
-> Did the company making these chips change name at some point?
-> Or did they change the names of the chips?
-
-   It's just that Linux named them differently.
-
-> CMD64x is an established name, while PCI-xxx is something
-> I've never heard of (and it sounds awfully generic).
-
-   Specs are available from http://gkernel.sourceforge.net/specs/ -- you can see the names on the first pages.
-
-> /Mikael
-
-MBR, Sergei
+-ml
