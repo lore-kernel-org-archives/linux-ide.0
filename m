@@ -1,35 +1,71 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+From: emisca <emisca.ml@gmail.com>
 Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Sun, 15 Apr 2007 12:53:43 -0300
-Message-ID: <20070415155343.GA12069@khazad-dum.debian.net>
-References: <461D4E2C.6000704@redhat.com> <20070414105255.GB9157@ucw.cz>
+Date: Sun, 15 Apr 2007 18:07:04 +0200
+Message-ID: <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com>
+References: <461D4E2C.6000704@redhat.com>
+	 <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>
+	 <461D54AF.3060706@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:44625 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752986AbXDOPyB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Apr 2007 11:54:01 -0400
+Received: from ik-out-1112.google.com ([66.249.90.182]:29023 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753025AbXDOQHG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Apr 2007 12:07:06 -0400
+Received: by ik-out-1112.google.com with SMTP id c21so1316216ika
+        for <linux-ide@vger.kernel.org>; Sun, 15 Apr 2007 09:07:05 -0700 (PDT)
+In-Reply-To: <461D54AF.3060706@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <20070414105255.GB9157@ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Sat, 14 Apr 2007, Pavel Machek wrote:
-> How common are notebooks that cut power to disks during reboot?
+I can confirm this, I have a Seagate Momentus 5400.3 sata disk, and it
+spins off, respin up and again off when I halt my notebook.
+I had before this disk an IBM/Hitachi one, and it doesn't have this behaviour.
 
-Not common at all.  Given that it wears the electronics a lot, it must be
-either a defect (of the kinds Brazilian law forces the manufacturer to
-either fix or give you your money back).
+Take a look at this bug report:
+https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.17/+bug/67810
 
-Assuming it also does this when running Windows, I'd report it as a grave
-bug to the vendor and demand it to be fixed, or the machine to be exchanged
-with another model that doesn't have this defect.
+There are some references and some patches against 2.6.20 kernel. This
+bug is confirmed there.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Bye
+
+2007/4/11, Chuck Ebbert <cebbert@redhat.com>:
+> Jan Engelhardt wrote:
+> > On Apr 11 2007 17:07, Chuck Ebbert wrote:
+> >> When I reboot my notebook, it powers off and powers back on.
+> >> On poweroff a loud snapping noise seems to be coming from the
+> >> hard drive. Today I noticed there is no "shutdown: hda" on
+> >> the console when I reboot. Whne I do a normal poweroff the
+> >> message is displayed and there is no noise. Should the IDE
+> >> code be changed so it always shuts down the drive?
+> >
+> > What sort of notebook? What sort of harddisk?
+>
+> Compaq Presario V2000 series, with a new Seagate ST9120821A
+> 120GB 5400RPM drive.
+>
+> > Is it as loud as `hdparm -y /dev/hdX"?
+>
+> That makes no noise at all except normal drive seek noises.
+>
+> > Try `smartctl -d ata -a /dev/hdX | grep -i unload` too.
+>
+> Hmm.
+>
+> Power_Cycle_Count ... 108
+> Power-Off_Retract_Count ... 90
+>
+> I did a normal poweroff and the retract count went to 91.
+> There is an almost-unnoticeable click when I do it that way.
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
