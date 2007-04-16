@@ -1,44 +1,64 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH pata-2.6] cmd64x: procfs code fixes/cleanups (take 2)
-Date: Mon, 16 Apr 2007 16:15:21 +0400
-Message-ID: <462368D9.8060407@ru.mvista.com>
-References: <200704142011.l3EKBBhf025590@harpo.it.uu.se> <462136AF.9060505@ru.mvista.com> <46215347.2000403@rtr.ca>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [BUG] 2.6.21-rc7 hpt366 driver broken
+Date: Mon, 16 Apr 2007 16:36:13 +0200
+Message-ID: <20070416143613.GD10338@stusta.de>
+References: <20070415224846.52a465b6@reforged> <20070416043822.0ea2490e@reforged>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft2.corbina.net ([85.21.88.2]:43527 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with SMTP id S1030493AbXDPMOY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Apr 2007 08:14:24 -0400
-In-Reply-To: <46215347.2000403@rtr.ca>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:52141 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030673AbXDPOgF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Apr 2007 10:36:05 -0400
+Content-Disposition: inline
+In-Reply-To: <20070416043822.0ea2490e@reforged>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Mike Mattie <codermattie@gmail.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Hello.
+[ Cc's added, full bug report was in http://lkml.org/lkml/2007/4/16/18 ]
 
-Mark Lord wrote:
+On Mon, Apr 16, 2007 at 04:38:22AM -0700, Mike Mattie wrote:
+> On Sun, 15 Apr 2007 22:48:46 -0700
+> Mike Mattie <codermattie@gmail.com> wrote:
+> 
+> > Hello,
+> > 
+> > I am testing the 2.6.21-rc7 kernel release. The IDE hpt366 driver is
+> > crashing hanging the boot. I have basically the same config as
+> > 2.6.20.7 which works fine (except for netconsole mentioned in a
+> > previous mail).
+> > 
+> > here is the hand-copied info:
+> > 
+> > * "unable to handle paging request" , null deref
+> > * EIP @ init_chipset_hpt366
+> > 
+> 
+> > I am running a git-bisect to see if I can resolve it to a commit.
+> 
+> This was identified as the first broken commit:
+> 
+> commit 7b73ee05d0acb926923d43d78b61add776ea4bb1
+> Author: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Date:   Wed Feb 7 18:18:16 2007 +0100
+> 
+>     hpt366: init code rewrite
+> 
+> Reverting is conflicted so it will be a bit longer before I pin-point any other build-breaks.
 
->>>> - correct the chipset names (from CMDxxx to PCI-xxx)
+Thanks for your report.
 
->>> Please explain why this rename is a correction.
+Can you use a digital camera for taking a photograph of the crash?
 
->>   Because the chips are officially named PCI064[036] and PCI-64[89].
- 
-> We normally name things with a combination of brand and chip number.
-> Lots of companies could have chips with PCI in the name,
-> but the CMD64x designator makes it quite clear what we're dealing with 
-> here.
+cu
+Adrian
 
-   Note that I'm only changing designator in the procfs output, i.e. not something important to end user.
+--
 
-> In the machines I have here with these chips,
-> they are clearly labelled as "CMD" and then "PCI646.."
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
-   Although I've never seen the chip, I guess that should be logo, not the name.
-
-> -ml
-
-MBR, Sergei
