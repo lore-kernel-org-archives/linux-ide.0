@@ -1,42 +1,86 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] pci-quirks: disable MSI on RS400-200 and RS480
-Date: Mon, 16 Apr 2007 13:59:18 +0900
-Message-ID: <20070416045918.GI10619@htj.dyndns.org>
+From: Phil Dibowitz <phil@ipom.com>
+Subject: Re: sata_promise ata exceptions (2.6.20.6)
+Date: Sun, 15 Apr 2007 23:55:31 -0700
+Message-ID: <46231DE3.8070404@ipom.com>
+References: <200704091018.l39AI9tg020015@harpo.it.uu.se> <38769.194.237.142.7.1176209348.squirrel@ncircle.nullnet.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig9E8F37724C26A3A1C399C372"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:33075 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909AbXDPE71 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Apr 2007 00:59:27 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1414455wra
-        for <linux-ide@vger.kernel.org>; Sun, 15 Apr 2007 21:59:26 -0700 (PDT)
-Content-Disposition: inline
+Received: from mail.ipom.com ([209.40.128.125]:49334 "EHLO
+	uberhacker.sage-inc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754009AbXDPGzf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Apr 2007 02:55:35 -0400
+In-Reply-To: <38769.194.237.142.7.1176209348.squirrel@ncircle.nullnet.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gregkh@suse.de, Jeff Garzik <jeff@garzik.org>, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: torresmat@gmail.com, conke.hu@gmail.com
+To: Tomi Orava <Tomi.Orava@ncircle.nullnet.fi>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-MSI doesn't work on RS400-200 and RS480 requiring pci=nomsi kernel
-boot parameter for ahci to work.  This patch disables MSI on those
-chips.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig9E8F37724C26A3A1C399C372
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-  http://thread.gmane.org/gmane.linux.ide/17820
-  http://thread.gmane.org/gmane.linux.ide/17516
-  https://bugzilla.novell.com/show_bug.cgi?id=263893
+Given that the last one was a hardware issue, I bought a new controller.
+Despite my bad luck, given my price-range promise still seemed to be the =
+one
+with the most good reports, so I went with that. I was going to go with a=
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+sil, but I couldn't find one..
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 65d6f23..3300ff1 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1761,6 +1761,8 @@ static void __devinit quirk_disable_msi(struct pci_dev *dev)
- 	}
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_8131_BRIDGE, quirk_disable_msi);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS400_200, quirk_disable_msi);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS480, quirk_disable_msi);
- 
- /* Go through the list of Hypertransport capabilities and
-  * return 1 if a HT MSI capability is found and enabled */
+Anyway, things are MUCH better now... but about once a week, I get:
+
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata2.00: (port_status 0x00001000)
+ata2.00: cmd c8/00:80:9a:71:d0/00:00:00:00:00/ea tag 0 cdb 0x0 data 65536=
+ in
+         res 40/00:00:06:4f:c2/00:00:00:00:00/00 Emask 0x24 (host bus err=
+or)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/133
+ata2: EH complete
+SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: enabled, read cache: enabled, doesn't suppo=
+rt
+DPO or FUA
+
+
+It's the same port_status and Emask/SAct/SErr/action each time... only th=
+e
+cmd/res and data change (obviously those would change)...
+
+Can anyone tell me what that means?
+
+--=20
+Phil Dibowitz                             phil@ipom.com
+Open Source software and tech docs        Insanity Palace of Metallica
+http://www.phildev.net/                   http://www.ipom.com/
+
+"Never write it in C if you can do it in 'awk';
+ Never do it in 'awk' if 'sed' can handle it;
+ Never use 'sed' when 'tr' can do the job;
+ Never invoke 'tr' when 'cat' is sufficient;
+ Avoid using 'cat' whenever possible" -- Taylor's Laws of Programming
+
+
+
+--------------enig9E8F37724C26A3A1C399C372
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFGIx3jN5XoxaHnMrsRAvUFAJ4hmutqc/7HmKidlhijUqCNkuvYQACgoPhF
+B0QHSSD9n7xqeSDMmdOimys=
+=mxyr
+-----END PGP SIGNATURE-----
+
+--------------enig9E8F37724C26A3A1C399C372--
