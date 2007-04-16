@@ -1,36 +1,46 @@
-From: Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-Subject: Re: [1/2] 2.6.21-rc7: known regressions
-Date: Sun, 15 Apr 2007 20:21:07 -0600
-Message-ID: <20070416022107.GA21432@ellpspace.math.ualberta.ca>
-References: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org> <20070416003714.GL3691@stusta.de>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: [OOPS] 2.6.21-rc6-git5 in cfq_dispatch_insert
+Date: Mon, 16 Apr 2007 07:23:45 +0400
+Message-ID: <4622EC41.40701@wasp.net.au>
+References: <4621FAF0.7000705@wasp.net.au> <46220339.9080205@wasp.net.au> <20070415235348.GJ3691@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070416003714.GL3691@stusta.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754392AbXDPDXz@vger.kernel.org>
+In-Reply-To: <20070415235348.GJ3691@stusta.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Dave Jones <davej@redhat.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, jgarzik@pobox.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Apr 16, 2007 at 02:37:14AM +0200, Adrian Bunk wrote:
+Adrian Bunk wrote:
+> [ Cc's added, additional information is in http://lkml.org/lkml/2007/4/15/32 ]
 > 
-> Subject    : kernels fail to boot with drives on ATIIXP controller
->              (ACPI/IRQ related)
-> References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
-c              http://lkml.org/lkml/2007/3/4/257
-> Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
-> Status     : unknown
+> On Sun, Apr 15, 2007 at 02:49:29PM +0400, Brad Campbell wrote:
+>> Brad Campbell wrote:
+>>> G'day all,
+>>>
+>>> All I have is a digital photo of this oops. (It's 3.5mb). I have serial 
+>>> console configured, but Murphy is watching me carefully and I just can't 
+>>> seem to reproduce it while logging the console output.
+>>>
+>> And as usual, after trying to capture one for 4 days, I get one 10 mins 
+>> after I've sent the E-mail :)
+>>
+>> I think I've just found a way to make this easier to reproduce as /dev/sdd 
+>> was not even mounted this
+>> time. I just cold booted and started an md5sum -c run on a directory of 
+>> about 180GB.
+> 
+> 
+> Is this also present with kernel 2.6.20 or is it a regression?
+> 
 
-Sigh!  Again!  AFAICT the current "rc" kernels should boot
-using 'pata_atiixp' driver _provided_ I will use 'acpi=off'.
-At least on the hardware in question.  More details at
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621#c10
+Yes, I reproduced it with 2.6.20 but appear to be unable to do so with 2.6.19.
 
-OTOH I mentioned few times that another machine, which want
-to use 'pata_via' fails to read _anything_ from a disk.  See
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234650
-Mentioned there 2.6.20-1.3054.fc7 really corresponds to
-2.6.21-rc6-git1 (AFAICT).
 
-   Michal
+
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
