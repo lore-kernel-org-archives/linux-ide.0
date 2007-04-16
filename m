@@ -1,64 +1,74 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [BUG] 2.6.21-rc7 hpt366 driver broken
-Date: Mon, 16 Apr 2007 16:36:13 +0200
-Message-ID: <20070416143613.GD10338@stusta.de>
-References: <20070415224846.52a465b6@reforged> <20070416043822.0ea2490e@reforged>
+From: "Rodrigo Severo" <rodrigo@fabricadeideias.com>
+Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen on SATA hd
+Date: Mon, 16 Apr 2007 11:45:45 -0300
+Message-ID: <a7108f870704160745l4296fe8bt74e94d6c5bf8504e@mail.gmail.com>
+References: <a7108f870704150703p1f0da000k22f7b70605cec595@mail.gmail.com>
+	 <a7108f870704150708g741b7e2fmd52be8b53b358113@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:52141 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030673AbXDPOgF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Apr 2007 10:36:05 -0400
+Received: from nz-out-0506.google.com ([64.233.162.231]:19347 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030669AbXDPOpq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Apr 2007 10:45:46 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so1222341nze
+        for <linux-ide@vger.kernel.org>; Mon, 16 Apr 2007 07:45:45 -0700 (PDT)
+In-Reply-To: <a7108f870704150708g741b7e2fmd52be8b53b358113@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20070416043822.0ea2490e@reforged>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Mattie <codermattie@gmail.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-[ Cc's added, full bug report was in http://lkml.org/lkml/2007/4/16/18 ]
+On 4/15/07, Rodrigo Severo <rodrigo@fabricadeideias.com> wrote:
+>
+> I have this cheap SATA addon card with an ULI chipset.
+>
+> A have a linear raid over 3 disks one PATA, hda and two SATAs, sda and sdb.
+>
+> When copying data to the raid device I get log messages like the following:
+>
+> Apr 15 10:54:20 [kernel] ata1.00: exception Emask 0x0 SAct 0x0 SErr
+> 0x0 action 0x2 frozen
+> Apr 15 10:54:20 [kernel] ata1.00: cmd
+> 35/00:00:df:90:0e/00:04:0b:00:00/e0 tag 0 cdb 0x0 data 524288 out
+> Apr 15 10:54:20 [kernel]          res
+> 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Apr 15 10:54:27 [kernel] ata1: port is slow to respond, please be
+> patient (Status 0xd0)
+> Apr 15 10:54:48 [kernel] ata1: port failed to respond (30 secs, Status 0xd0)
+> Apr 15 10:54:48 [kernel] ata1: soft resetting port
+> Apr 15 10:54:48 [kernel] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> Apr 15 10:54:48 [kernel] ATA: abnormal status 0xD0 on port 0x9007
+>                 - Last output repeated 6 times -
+> Apr 15 10:54:48 [kernel] ata1.00: configured for UDMA/133
+> Apr 15 10:54:48 [kernel] ata1: EH complete
+> Apr 15 10:54:48 [kernel] SCSI device sda: 488397168 512-byte hdwr
+> sectors (250059 MB)
+> Apr 15 10:54:48 [kernel] sda: Write Protect is off
+> Apr 15 10:54:48 [kernel] SCSI device sda: write cache: enabled, read
+> cache: enabled, doesn't support DPO or FUA
+>
+> All references I found to this kind of message where related to some
+> driver issue and not hardware problems. Can this be the case?
 
-On Mon, Apr 16, 2007 at 04:38:22AM -0700, Mike Mattie wrote:
-> On Sun, 15 Apr 2007 22:48:46 -0700
-> Mike Mattie <codermattie@gmail.com> wrote:
-> 
-> > Hello,
-> > 
-> > I am testing the 2.6.21-rc7 kernel release. The IDE hpt366 driver is
-> > crashing hanging the boot. I have basically the same config as
-> > 2.6.20.7 which works fine (except for netconsole mentioned in a
-> > previous mail).
-> > 
-> > here is the hand-copied info:
-> > 
-> > * "unable to handle paging request" , null deref
-> > * EIP @ init_chipset_hpt366
-> > 
-> 
-> > I am running a git-bisect to see if I can resolve it to a commit.
-> 
-> This was identified as the first broken commit:
-> 
-> commit 7b73ee05d0acb926923d43d78b61add776ea4bb1
-> Author: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Date:   Wed Feb 7 18:18:16 2007 +0100
-> 
->     hpt366: init code rewrite
-> 
-> Reverting is conflicted so it will be a bit longer before I pin-point any other build-breaks.
+In search for a solution for this issue I bought a new HD to replace
+the one presenting the problem above.
 
-Thanks for your report.
+Now I have a SAMSUNG HD400LJ in place of the previous ST3250820AS. The
+problem remains the same.
 
-Can you use a digital camera for taking a photograph of the crash?
+When I put a Maxtor 6L300S0 to perform the same hole as the Samsung or
+the Seagate, I couldn't trigger the exception. I bet this happened
+because Maxtor is immune to this issue and the Samsung (which seems to
+be affected) was barely used.
 
-cu
-Adrian
+I'm really out of ideas where to look for an explanation or fix. I
+don't think I'm dealing with a hardware issue.
 
---
+What should be my next step?
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
+Regards,
+
+Rodrigo Severo
