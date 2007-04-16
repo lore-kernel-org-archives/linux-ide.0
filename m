@@ -1,46 +1,42 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: [OOPS] 2.6.21-rc6-git5 in cfq_dispatch_insert
-Date: Mon, 16 Apr 2007 07:23:45 +0400
-Message-ID: <4622EC41.40701@wasp.net.au>
-References: <4621FAF0.7000705@wasp.net.au> <46220339.9080205@wasp.net.au> <20070415235348.GJ3691@stusta.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] pci-quirks: disable MSI on RS400-200 and RS480
+Date: Mon, 16 Apr 2007 13:59:18 +0900
+Message-ID: <20070416045918.GI10619@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754392AbXDPDXz@vger.kernel.org>
-In-Reply-To: <20070415235348.GJ3691@stusta.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.225]:33075 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909AbXDPE71 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Apr 2007 00:59:27 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so1414455wra
+        for <linux-ide@vger.kernel.org>; Sun, 15 Apr 2007 21:59:26 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: gregkh@suse.de, Jeff Garzik <jeff@garzik.org>, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: torresmat@gmail.com, conke.hu@gmail.com
 
-Adrian Bunk wrote:
-> [ Cc's added, additional information is in http://lkml.org/lkml/2007/4/15/32 ]
-> 
-> On Sun, Apr 15, 2007 at 02:49:29PM +0400, Brad Campbell wrote:
->> Brad Campbell wrote:
->>> G'day all,
->>>
->>> All I have is a digital photo of this oops. (It's 3.5mb). I have serial 
->>> console configured, but Murphy is watching me carefully and I just can't 
->>> seem to reproduce it while logging the console output.
->>>
->> And as usual, after trying to capture one for 4 days, I get one 10 mins 
->> after I've sent the E-mail :)
->>
->> I think I've just found a way to make this easier to reproduce as /dev/sdd 
->> was not even mounted this
->> time. I just cold booted and started an md5sum -c run on a directory of 
->> about 180GB.
-> 
-> 
-> Is this also present with kernel 2.6.20 or is it a regression?
-> 
+MSI doesn't work on RS400-200 and RS480 requiring pci=nomsi kernel
+boot parameter for ahci to work.  This patch disables MSI on those
+chips.
 
-Yes, I reproduced it with 2.6.20 but appear to be unable to do so with 2.6.19.
+  http://thread.gmane.org/gmane.linux.ide/17820
+  http://thread.gmane.org/gmane.linux.ide/17516
+  https://bugzilla.novell.com/show_bug.cgi?id=263893
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 65d6f23..3300ff1 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1761,6 +1761,8 @@ static void __devinit quirk_disable_msi(struct pci_dev *dev)
+ 	}
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_8131_BRIDGE, quirk_disable_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS400_200, quirk_disable_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS480, quirk_disable_msi);
+ 
+ /* Go through the list of Hypertransport capabilities and
+  * return 1 if a HT MSI capability is found and enabled */
