@@ -1,40 +1,28 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: HPA support
-Date: Tue, 17 Apr 2007 22:45:22 +0100
-Message-ID: <20070417224522.375b9fbe@the-village.bc.nu>
-References: <20070411002313.29069ca5@the-village.bc.nu>
-	<20070417184139.GB11211@redhat.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Tue, 17 Apr 2007 17:49:01 -0400
+Message-ID: <462540CD.9080406@redhat.com>
+References: <461D4E2C.6000704@redhat.com>	 <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>	 <461D54AF.3060706@redhat.com> <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com> <46253F14.4020304@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40717 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030384AbXDQVmd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 17:42:33 -0400
-In-Reply-To: <20070417184139.GB11211@redhat.com>
+Received: from mx1.redhat.com ([66.187.233.31]:37116 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965030AbXDQVvO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Apr 2007 17:51:14 -0400
+In-Reply-To: <46253F14.4020304@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, jkeating@redhat.com
+To: Mark Lord <liml@rtr.ca>
+Cc: emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
->  > For normal users this brings us, I believe, to feature parity with old IDE
->  > (and of course more featured in some areas too).
+Mark Lord wrote:
 > 
-> This is broken horribly on nvidia chipsets..
+> I'll patch it locally on my own machines, but what about the tens
+> of thousands of other Seagate notebook drive owners out there?
+> 
 
-Your Nvidia driver is out of date.
+This is a problem with Seagate specifically, spinning back up
+on receipt of some command after spindown?
 
-> HARDWARE ERROR
-> CPU 0: Machine Check Exception:                4 Bank 4: b200000000070f0f
-> TSC 5d45fa1400 
-> This is not a software problem!
-> Run through mcelog --ascii to decode and contact your hardware vendor
-> Kernel panic - not syncing: Machine check
-> BUG: warning at kernel/panic.c:137/panic() (Tainted: G   M  )
-
-If you send certain commands via ADMA the chip takes the entire machine
-out. The current Nvidia driver has this cured (and you want it as
-otherwise you can blow up the machine via SG_IO)
-
-Alan
