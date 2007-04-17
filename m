@@ -1,32 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 4/4] libata: implement libata.spindown_compat
-Date: Tue, 17 Apr 2007 10:01:57 -0500
-Message-ID: <1176822118.3671.32.camel@mulgrave.il.steeleye.com>
-References: <20070320150718.GF6152@htj.dyndns.org>
-	 <20070320151359.GG6152@htj.dyndns.org>
-	 <20070320152533.GH6152@htj.dyndns.org>
-	 <20070320155548.GI6152@htj.dyndns.org>  <4624DD95.3070608@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 01/12] libata: allocate ap separately from shost
+Date: Tue, 17 Apr 2007 11:04:06 -0400
+Message-ID: <4624E1E6.7050501@garzik.org>
+References: <1176821046841-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4624DD95.3070608@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:39976 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932274AbXDQPEI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Apr 2007 11:04:08 -0400
+In-Reply-To: <1176821046841-git-send-email-htejun@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Tue, 2007-04-17 at 10:45 -0400, Jeff Garzik wrote:
-> ACK patches 3-4 for upstream.  I'm dropping them, and requesting resend 
-> when patches 1-2 are applied (which I also ACK).  Or, alternately, I 
-> could apply all four patches with the other subsystem owner's assent, or 
-> the other subsystem owner could apply all four patches now that I have 
-> ACK'd them.  Pick any of the three options. :)
+Tejun Heo wrote:
+> Don't embed ap inside shost.  Allocate it separately and point it back
+> from shosts's hostdata.  This makes port allocation more flexible and
+> allows regular ATA and SAS share host alloc/init paths.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/libata-core.c |   19 ++++++++++++++-----
+>  include/linux/libata.h    |    2 +-
+>  2 files changed, 15 insertions(+), 6 deletions(-)
 
-I've got 1 and 2 upstream to -mm via scsi-misc-2.6 already.
-Unfortunately they're not simply separable since there's a bad
-interaction with the sd messages rework that's also in scsi-misc.
+applied patches 1-12 to #upstream.
 
-James
+Yay, libata init model is finally clean!
+
+Thanks,
+
+	Jeff
 
 
