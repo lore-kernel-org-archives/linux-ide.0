@@ -1,28 +1,82 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH pata-2.6] cmd64x: procfs code fixes/cleanups (take 2)
-Date: Tue, 17 Apr 2007 15:07:25 +0100
-Message-ID: <20070417150725.1f675995@the-village.bc.nu>
-References: <200704142011.l3EKBBhf025590@harpo.it.uu.se>
-	<462136AF.9060505@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: 2.6.21-rc6-mm1 ATA HPT37x regression
+Date: Tue, 17 Apr 2007 18:08:03 +0400
+Message-ID: <4624D4C3.9010109@ru.mvista.com>
+References: <17956.12963.163961.762444@smtp.charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49689 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S964796AbXDQOEX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 10:04:23 -0400
-In-Reply-To: <462136AF.9060505@ru.mvista.com>
+Received: from rtsoft2.corbina.net ([85.21.88.2]:60001 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with SMTP id S964873AbXDQOHK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 10:07:10 -0400
+In-Reply-To: <17956.12963.163961.762444@smtp.charter.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> > CMD64x is an established name, while PCI-xxx is something
-> > I've never heard of (and it sounds awfully generic).
-> 
->    Specs are available from http://gkernel.sourceforge.net/specs/ -- you can see the names on the first pages.
+Hello.
 
-End users don't read the specs, they read the box, and they seem to have
-been marketed as CMD PCI-064x. So at least keep the CMD in the name so
-people know what is what and can work out the pointless name change
+John Stoffel wrote:
+
+> I was just testing out 2.6.21-rc6-mm1 to test some Cyclades patches
+> and I noticed that my HPT302 (rev1) controller with a pair of 120gb WD
+> disks are not longer detected and I get the following in the dmesg
+> logs:
+
+>     [  148.121490] hpt37x: DPLL did not stabilize.
+
+> Where before, under 2.6.21-rc6 I got the following:
+
+   For the moment I thought you're reporting another hpt366.c driver breakage but then noticed the next line:
+
+>     [  173.749349] pata_hpt37x: BIOS has not set timing clocks.
+>     [  173.752949] hpt37x: HPT302: Bus clock 33MHz.
+
+   Obviously this was bacause of switching from PCI to DPLL clock. The old and new drivers are different in how they handle DPLL calibration though.  Could you try hpt366.c (there's been report about its failure too recently -- not enought details yet)?
+
+>     [  173.754409] ACPI: PCI Interrupt 0000:03:06.0[A] -> GSI 18 (level,
+>     low) -> IRQ
+>      18
+>     [  173.758403] ata5: PATA max UDMA/133 cmd 0x0001ecf8 ctl 0x0001ecf2
+>     bmdma 0x000
+>     1e800 irq 18
+>     [  173.761396] ata6: PATA max UDMA/133 cmd 0x0001ece0 ctl 0x0001ecda
+>     bmdma 0x000
+>     1e808 irq 18
+>     [  173.764319] scsi6 : pata_hpt37x
+>     [  173.928997] ATA: abnormal status 0x78 on port 0x0001ecff
+>     [  173.930511] scsi7 : pata_hpt37x
+>     [  174.094906] ATA: abnormal status 0x8 on port 0x0001ece7
+ 
+> Here's my lspci infomation on the board, it's an addon.  My apologies
+> for the crappy word wrapping, xterms inside screen, etc. 
+
+>   03:06.0 RAID bus controller: Triones Technologies, Inc. HPT302/302N
+>   (rev 01)
+> 	  Subsystem: Triones Technologies, Inc. Unknown device 0001
+> 	  Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>   ParErr- Step
+>   ping- SERR+ FastB2B-
+> 	  Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
+>   >TAbort- <TAbort
+>   - <MAbort- >SERR- <PERR-
+> 	  Latency: 120 (2000ns min, 2000ns max)
+> 	  Interrupt: pin A routed to IRQ 11
+> 	  Region 0: I/O ports at ecf8 [size=8]
+> 	  Region 1: I/O ports at ecf0 [size=4]
+> 	  Region 2: I/O ports at ece0 [size=8]
+> 	  Region 3: I/O ports at ecd8 [size=4]
+> 	  Region 4: I/O ports at e800 [size=256]
+> 	  Expansion ROM at f9000000 [disabled] [size=128K]
+> 	  Capabilities: [60] Power Management version 2
+> 		  Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
+>   PME(D0-,D1-,D2-,D3hot
+>   -,D3cold-)
+> 		  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+   Yeah, that's a "plain" HPT302 chip with the default 66 MHz DPLL clock.
+
+MBR, Sergei
