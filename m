@@ -1,33 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pci-quirks: disable MSI on RS400-200 and RS480
-Date: Tue, 17 Apr 2007 10:57:28 -0400
-Message-ID: <4624E058.8010808@garzik.org>
-References: <20070416045918.GI10619@htj.dyndns.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 4/4] libata: implement libata.spindown_compat
+Date: Tue, 17 Apr 2007 10:01:57 -0500
+Message-ID: <1176822118.3671.32.camel@mulgrave.il.steeleye.com>
+References: <20070320150718.GF6152@htj.dyndns.org>
+	 <20070320151359.GG6152@htj.dyndns.org>
+	 <20070320152533.GH6152@htj.dyndns.org>
+	 <20070320155548.GI6152@htj.dyndns.org>  <4624DD95.3070608@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39892 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754328AbXDQO5j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Apr 2007 10:57:39 -0400
-In-Reply-To: <20070416045918.GI10619@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4624DD95.3070608@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torresmat@gmail.com, conke.hu@gmail.com
 
-Tejun Heo wrote:
-> MSI doesn't work on RS400-200 and RS480 requiring pci=nomsi kernel
-> boot parameter for ahci to work.  This patch disables MSI on those
-> chips.
-> 
->   http://thread.gmane.org/gmane.linux.ide/17820
->   http://thread.gmane.org/gmane.linux.ide/17516
->   https://bugzilla.novell.com/show_bug.cgi?id=263893
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+On Tue, 2007-04-17 at 10:45 -0400, Jeff Garzik wrote:
+> ACK patches 3-4 for upstream.  I'm dropping them, and requesting resend 
+> when patches 1-2 are applied (which I also ACK).  Or, alternately, I 
+> could apply all four patches with the other subsystem owner's assent, or 
+> the other subsystem owner could apply all four patches now that I have 
+> ACK'd them.  Pick any of the three options. :)
 
-ACK.  Greg will apply, I presume?
+I've got 1 and 2 upstream to -mm via scsi-misc-2.6 already.
+Unfortunately they're not simply separable since there's a bad
+interaction with the sd messages rework that's also in scsi-misc.
+
+James
 
 
