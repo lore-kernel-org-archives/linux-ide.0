@@ -1,32 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 4/4] libata: implement libata.spindown_compat
-Date: Wed, 18 Apr 2007 02:09:47 +0900
-Message-ID: <4624FF5B.9010000@gmail.com>
-References: <20070320150718.GF6152@htj.dyndns.org>	 <20070320151359.GG6152@htj.dyndns.org>	 <20070320152533.GH6152@htj.dyndns.org>	 <20070320155548.GI6152@htj.dyndns.org>  <4624DD95.3070608@garzik.org>	 <1176822118.3671.32.camel@mulgrave.il.steeleye.com>	 <4624E5D8.6080806@garzik.org> <1176823590.3671.35.camel@mulgrave.il.steeleye.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: 2.6.21-rc6-mm1 ATA HPT37x regression
+Date: Tue, 17 Apr 2007 18:13:40 +0100
+Message-ID: <20070417181340.7de99868@the-village.bc.nu>
+References: <17956.12963.163961.762444@smtp.charter.net>
+	<4624D4C3.9010109@ru.mvista.com>
+	<17956.63043.521397.597430@smtp.charter.net>
+	<4624FE88.2010908@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1176823590.3671.35.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40346 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1031246AbXDQRKc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 13:10:32 -0400
+In-Reply-To: <4624FE88.2010908@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: John Stoffel <john@stoffel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-James Bottomley wrote:
-> On Tue, 2007-04-17 at 11:20 -0400, Jeff Garzik wrote:
->> then, unless there are dependencies in libata-dev, how about Tejun 
->> pushes patches 3-4 through scsi-misc as well?
+> > Ok, so do I need to do anything special with the next -mm release and
+> > the next version?
 > 
-> Sure ... as long as there are no dependencies.
+>    Well, let Alan decide that (2Alan: and I said that HPT code is bogus :-).
 
-James, are you going to rebase scsi-misc-2.6 before sending to Linus
-when 2.6.22-rc1 window opens?  If not, Jeff can pull it into libata-dev
-and patch 3 and 4 can go in there.  The difference in libata between
-scsi-misc-2.6 and libata-dev is rather large and applying 3 and 4 to
-scsi-misc-2.6 would cause merging headache later.
+Try drivers/ide/pci/hpt366 - if that works grab a dmesg and let me know.
+It means that Sergei's DPLL sync code seems to work better than the
+vendor code and its time to swap it over.
 
-Thanks.
+Oh how I love highpoint PATA
 
--- 
-tejun
+Alan
