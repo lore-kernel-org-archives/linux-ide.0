@@ -1,73 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Tue, 17 Apr 2007 17:41:40 -0400
-Message-ID: <46253F14.4020304@rtr.ca>
-References: <461D4E2C.6000704@redhat.com>	 <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>	 <461D54AF.3060706@redhat.com> <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: HPA support
+Date: Tue, 17 Apr 2007 22:45:22 +0100
+Message-ID: <20070417224522.375b9fbe@the-village.bc.nu>
+References: <20070411002313.29069ca5@the-village.bc.nu>
+	<20070417184139.GB11211@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:3228 "EHLO
-	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964988AbXDQVlo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Apr 2007 17:41:44 -0400
-In-Reply-To: <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40717 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030384AbXDQVmd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 17:42:33 -0400
+In-Reply-To: <20070417184139.GB11211@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: emisca <emisca.ml@gmail.com>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: Dave Jones <davej@redhat.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, jkeating@redhat.com
 
-emisca wrote:
-> I can confirm this, I have a Seagate Momentus 5400.3 sata disk, and it
-> spins off, respin up and again off when I halt my notebook.
-> I had before this disk an IBM/Hitachi one, and it doesn't have this 
-> behaviour.
+>  > For normal users this brings us, I believe, to feature parity with old IDE
+>  > (and of course more featured in some areas too).
 > 
-> Take a look at this bug report:
-> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.17/+bug/67810
-> 
-> There are some references and some patches against 2.6.20 kernel. This
-> bug is confirmed there.
+> This is broken horribly on nvidia chipsets..
 
-Yup.  Last I heard, Tejun has fixed this, and queued the code
-for 2.6.22 via James B.   But this could be considered a rather
-nasty regression in 2.6.21, in that it does seem to cause
-significant and unnecessary wear and tear on the drive mechanisms.
+Your Nvidia driver is out of date.
 
-I'll patch it locally on my own machines, but what about the tens
-of thousands of other Seagate notebook drive owners out there?
+> HARDWARE ERROR
+> CPU 0: Machine Check Exception:                4 Bank 4: b200000000070f0f
+> TSC 5d45fa1400 
+> This is not a software problem!
+> Run through mcelog --ascii to decode and contact your hardware vendor
+> Kernel panic - not syncing: Machine check
+> BUG: warning at kernel/panic.c:137/panic() (Tainted: G   M  )
 
-Cheers
+If you send certain commands via ADMA the chip takes the entire machine
+out. The current Nvidia driver has this cured (and you want it as
+otherwise you can blow up the machine via SG_IO)
 
-
-> 
-> Bye
-> 
-> 2007/4/11, Chuck Ebbert <cebbert@redhat.com>:
->> Jan Engelhardt wrote:
->> > On Apr 11 2007 17:07, Chuck Ebbert wrote:
->> >> When I reboot my notebook, it powers off and powers back on.
->> >> On poweroff a loud snapping noise seems to be coming from the
->> >> hard drive. Today I noticed there is no "shutdown: hda" on
->> >> the console when I reboot. Whne I do a normal poweroff the
->> >> message is displayed and there is no noise. Should the IDE
->> >> code be changed so it always shuts down the drive?
->> >
->> > What sort of notebook? What sort of harddisk?
->>
->> Compaq Presario V2000 series, with a new Seagate ST9120821A
->> 120GB 5400RPM drive.
->>
->> > Is it as loud as `hdparm -y /dev/hdX"?
->>
->> That makes no noise at all except normal drive seek noises.
->>
->> > Try `smartctl -d ata -a /dev/hdX | grep -i unload` too.
->>
->> Hmm.
->>
->> Power_Cycle_Count ... 108
->> Power-Off_Retract_Count ... 90
->>
->> I did a normal poweroff and the retract count went to 91.
->> There is an almost-unnoticeable click when I do it that way.
+Alan
