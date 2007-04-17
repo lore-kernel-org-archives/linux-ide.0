@@ -1,38 +1,73 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: HPA support
-Date: Tue, 17 Apr 2007 16:42:41 -0400
-Message-ID: <46253141.80509@pobox.com>
-References: <20070411002313.29069ca5@the-village.bc.nu> <46251CCB.9040906@pobox.com> <20070417193057.GB22688@redhat.com> <200704171534.56685.jkeating@redhat.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Tue, 17 Apr 2007 17:41:40 -0400
+Message-ID: <46253F14.4020304@rtr.ca>
+References: <461D4E2C.6000704@redhat.com>	 <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>	 <461D54AF.3060706@redhat.com> <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42769 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932382AbXDQUmp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Apr 2007 16:42:45 -0400
-In-Reply-To: <200704171534.56685.jkeating@redhat.com>
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:3228 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964988AbXDQVlo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Apr 2007 17:41:44 -0400
+In-Reply-To: <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jesse Keating <jkeating@redhat.com>
-Cc: Dave Jones <davej@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: emisca <emisca.ml@gmail.com>
+Cc: Chuck Ebbert <cebbert@redhat.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
-Jesse Keating wrote:
-> On Tuesday 17 April 2007 15:30:57 Dave Jones wrote:
->> jesse, wanna give that a shot? booting with the installer with
->> sata_nv.adma=0 should do the trick.
+emisca wrote:
+> I can confirm this, I have a Seagate Momentus 5400.3 sata disk, and it
+> spins off, respin up and again off when I halt my notebook.
+> I had before this disk an IBM/Hitachi one, and it doesn't have this 
+> behaviour.
 > 
-> That didn't effect anything.  I still saw a message about "using ADMA mode" 
-> right before the panic(s).
+> Take a look at this bug report:
+> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.17/+bug/67810
 > 
-> I added "sata_nv.adma=0" to the kernel arguments.
+> There are some references and some patches against 2.6.20 kernel. This
+> bug is confirmed there.
 
-If you still saw ADMA mode, then it's not seeing the module parameter.
+Yup.  Last I heard, Tejun has fixed this, and queued the code
+for 2.6.22 via James B.   But this could be considered a rather
+nasty regression in 2.6.21, in that it does seem to cause
+significant and unnecessary wear and tear on the drive mechanisms.
 
-It sounds like putting sata_nv.adma on the kernel command line didn't do 
-the trick?
+I'll patch it locally on my own machines, but what about the tens
+of thousands of other Seagate notebook drive owners out there?
 
-	Jeff
+Cheers
 
 
-
+> 
+> Bye
+> 
+> 2007/4/11, Chuck Ebbert <cebbert@redhat.com>:
+>> Jan Engelhardt wrote:
+>> > On Apr 11 2007 17:07, Chuck Ebbert wrote:
+>> >> When I reboot my notebook, it powers off and powers back on.
+>> >> On poweroff a loud snapping noise seems to be coming from the
+>> >> hard drive. Today I noticed there is no "shutdown: hda" on
+>> >> the console when I reboot. Whne I do a normal poweroff the
+>> >> message is displayed and there is no noise. Should the IDE
+>> >> code be changed so it always shuts down the drive?
+>> >
+>> > What sort of notebook? What sort of harddisk?
+>>
+>> Compaq Presario V2000 series, with a new Seagate ST9120821A
+>> 120GB 5400RPM drive.
+>>
+>> > Is it as loud as `hdparm -y /dev/hdX"?
+>>
+>> That makes no noise at all except normal drive seek noises.
+>>
+>> > Try `smartctl -d ata -a /dev/hdX | grep -i unload` too.
+>>
+>> Hmm.
+>>
+>> Power_Cycle_Count ... 108
+>> Power-Off_Retract_Count ... 90
+>>
+>> I did a normal poweroff and the retract count went to 91.
+>> There is an almost-unnoticeable click when I do it that way.
