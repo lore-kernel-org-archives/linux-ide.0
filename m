@@ -1,38 +1,35 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH] pci-quirks: disable MSI on RS400-200 and RS480
-Date: Tue, 17 Apr 2007 08:03:31 -0700
-Message-ID: <20070417150331.GA30372@suse.de>
-References: <20070416045918.GI10619@htj.dyndns.org> <4624E058.8010808@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 4/4] libata: implement libata.spindown_compat
+Date: Tue, 17 Apr 2007 11:20:56 -0400
+Message-ID: <4624E5D8.6080806@garzik.org>
+References: <20070320150718.GF6152@htj.dyndns.org>	 <20070320151359.GG6152@htj.dyndns.org>	 <20070320152533.GH6152@htj.dyndns.org>	 <20070320155548.GI6152@htj.dyndns.org>  <4624DD95.3070608@garzik.org> <1176822118.3671.32.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:52145 "EHLO mx2.suse.de"
+Received: from srv5.dvmed.net ([207.36.208.214]:40144 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932339AbXDQPF5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Apr 2007 11:05:57 -0400
-Content-Disposition: inline
-In-Reply-To: <4624E058.8010808@garzik.org>
+	id S1754461AbXDQPVA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Apr 2007 11:21:00 -0400
+In-Reply-To: <1176822118.3671.32.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torresmat@gmail.com, conke.hu@gmail.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
 
-On Tue, Apr 17, 2007 at 10:57:28AM -0400, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> >MSI doesn't work on RS400-200 and RS480 requiring pci=nomsi kernel
-> >boot parameter for ahci to work.  This patch disables MSI on those
-> >chips.
-> >
-> >  http://thread.gmane.org/gmane.linux.ide/17820
-> >  http://thread.gmane.org/gmane.linux.ide/17516
-> >  https://bugzilla.novell.com/show_bug.cgi?id=263893
-> >
-> >Signed-off-by: Tejun Heo <htejun@gmail.com>
+James Bottomley wrote:
+> On Tue, 2007-04-17 at 10:45 -0400, Jeff Garzik wrote:
+>> ACK patches 3-4 for upstream.  I'm dropping them, and requesting resend 
+>> when patches 1-2 are applied (which I also ACK).  Or, alternately, I 
+>> could apply all four patches with the other subsystem owner's assent, or 
+>> the other subsystem owner could apply all four patches now that I have 
+>> ACK'd them.  Pick any of the three options. :)
 > 
-> ACK.  Greg will apply, I presume?
+> I've got 1 and 2 upstream to -mm via scsi-misc-2.6 already.
+> Unfortunately they're not simply separable since there's a bad
+> interaction with the sd messages rework that's also in scsi-misc.
 
-Yes, I'll add this to my tree.
+then, unless there are dependencies in libata-dev, how about Tejun 
+pushes patches 3-4 through scsi-misc as well?
 
-thanks,
 
-greg k-h
