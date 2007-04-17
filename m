@@ -1,29 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: What's in libata-dev.git?
-Date: Tue, 17 Apr 2007 13:08:03 -0400
-Message-ID: <4624FEF3.3060909@garzik.org>
-References: <20070417170440.GA27992@havoc.gtf.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 4/4] libata: implement libata.spindown_compat
+Date: Wed, 18 Apr 2007 02:09:47 +0900
+Message-ID: <4624FF5B.9010000@gmail.com>
+References: <20070320150718.GF6152@htj.dyndns.org>	 <20070320151359.GG6152@htj.dyndns.org>	 <20070320152533.GH6152@htj.dyndns.org>	 <20070320155548.GI6152@htj.dyndns.org>  <4624DD95.3070608@garzik.org>	 <1176822118.3671.32.camel@mulgrave.il.steeleye.com>	 <4624E5D8.6080806@garzik.org> <1176823590.3671.35.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41050 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031232AbXDQRIG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Apr 2007 13:08:06 -0400
-In-Reply-To: <20070417170440.GA27992@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1176823590.3671.35.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Jeff Garzik wrote:
-> I just checked in some useful improvements, so I thought it would be a
-> good time to review what's queued for 2.6.21 in
-> git://git.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+James Bottomley wrote:
+> On Tue, 2007-04-17 at 11:20 -0400, Jeff Garzik wrote:
+>> then, unless there are dependencies in libata-dev, how about Tejun 
+>> pushes patches 3-4 through scsi-misc as well?
+> 
+> Sure ... as long as there are no dependencies.
 
-Er.  Make that "queued for 2.6.22".
+James, are you going to rebase scsi-misc-2.6 before sending to Linus
+when 2.6.22-rc1 window opens?  If not, Jeff can pull it into libata-dev
+and patch 3 and 4 can go in there.  The difference in libata between
+scsi-misc-2.6 and libata-dev is rather large and applying 3 and 4 to
+scsi-misc-2.6 would cause merging headache later.
 
-	Jeff
+Thanks.
 
-
+-- 
+tejun
