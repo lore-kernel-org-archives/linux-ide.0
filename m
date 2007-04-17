@@ -1,48 +1,47 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Tue, 17 Apr 2007 17:15:30 -0300
-Message-ID: <20070417201530.GA31265@khazad-dum.debian.net>
-References: <461D4E2C.6000704@redhat.com> <20070414105255.GB9157@ucw.cz> <20070415155343.GA12069@khazad-dum.debian.net> <Pine.LNX.4.61.0704152050150.27018@yvahk01.tjqt.qr> <4623F804.3020405@redhat.com>
+From: "Rodrigo Severo" <rodrigo@fabricadeideias.com>
+Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen on SATA hd
+Date: Tue, 17 Apr 2007 17:23:49 -0300
+Message-ID: <a7108f870704171323s3506336cpb46fcb292fd9b689@mail.gmail.com>
+References: <a7108f870704150703p1f0da000k22f7b70605cec595@mail.gmail.com>
+	 <a7108f870704150708g741b7e2fmd52be8b53b358113@mail.gmail.com>
+	 <a7108f870704160745l4296fe8bt74e94d6c5bf8504e@mail.gmail.com>
+	 <a7108f870704160914g22b648bey39a9523a6d8a4800@mail.gmail.com>
+	 <4624FD7F.4070200@gmail.com>
+	 <a7108f870704171030i6076a147lc4580ee720ba3e82@mail.gmail.com>
+	 <462507B4.2010404@gmail.com>
+	 <a7108f870704171056p300ae211x9cf5b4f2020c74a6@mail.gmail.com>
+	 <4625105F.4040502@gmail.com>
+	 <a7108f870704171212r551dff52n21730b67e9ef2c59@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:49414 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161219AbXDQUPg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 16:15:36 -0400
+Received: from nz-out-0506.google.com ([64.233.162.239]:51226 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161260AbXDQUXu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 16:23:50 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so1595397nze
+        for <linux-ide@vger.kernel.org>; Tue, 17 Apr 2007 13:23:49 -0700 (PDT)
+In-Reply-To: <a7108f870704171212r551dff52n21730b67e9ef2c59@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <4623F804.3020405@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Pavel Machek <pavel@ucw.cz>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, 16 Apr 2007, Chuck Ebbert wrote:
-> It looks like there are two problems here:
-> 
-> (1) Some notebooks power off and back on when restarting.
+On 4/17/07, Rodrigo Severo <rodrigo@fabricadeideias.com> wrote:
+> On 4/17/07, Tejun Heo <htejun@gmail.com> wrote:
+> > Rodrigo Severo wrote:
+> > > I have another ULi M5281/M5283 at home. I can bring it to work and try
+> > > to reproduce this issue. Interested?
+> >
+> > Yeap, that will tell us whether the specific card is busted or not.
 
-If it happens just under Linux, this is something that really needs to be
-addressed post-haste.  Maybe someone should open a bug in bugzilla to help
-track it properly?
+The card is busted. I tried to reinstall it now just to see the syslog
+messages again before testing the other ULi board.
 
-If it also happens under Windows, you have been sold defective crap that is
-being damaged every time you reboot it, get in touch with the manufacturer
-and demand a replacement *new* unit with a firmware fix, or your money back.
+It isn't recognized anymore. It's completely dead now.
 
-> (2) Linux (alone) gives a very muted pop on shutdown. This could
 
-Shutdown as in "machine power off", and HDs are under SCSI control (they
-appear as scsi devices to userspace, due to libata for example)? Known
-issue, see http://bugzilla.kernel.org/show_bug.cgi?id=7838 (actually, IMHO
-this fix should have been fast-tracked into 2.6.21, instead of queued for
-2.6.22).
+Thanks for your help,
 
-Shutdown as in reboot/restart?  New bug that needs to be stomped as soon as
-possible, but make sure it is not (1) above.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Rodrigo Severo
