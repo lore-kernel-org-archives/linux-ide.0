@@ -1,36 +1,30 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH libata#upstream] sata_promise: fix error decode regression
-Date: Tue, 17 Apr 2007 10:29:45 -0400
-Message-ID: <4624D9D9.6020502@garzik.org>
-References: <200704071229.l37CTp6M010861@harpo.it.uu.se>
+Subject: Re: [PATCH] pata_pdc2027x: Updates
+Date: Tue, 17 Apr 2007 10:30:22 -0400
+Message-ID: <4624D9FE.8010304@garzik.org>
+References: <20070411001900.58ab4a45@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39442 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:39471 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030302AbXDQO3s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Apr 2007 10:29:48 -0400
-In-Reply-To: <200704071229.l37CTp6M010861@harpo.it.uu.se>
+	id S1030357AbXDQOaX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Apr 2007 10:30:23 -0400
+In-Reply-To: <20070411001900.58ab4a45@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> Promise ATA ports should always be reset by pdc_reset_port()
-> when errors are detected, but the recent error reason decoding
-> update to sata_promise replaced that reset with a freeze.
+Alan Cox wrote:
+> Signed-off-by: Alan Cox <alan@redhat.com>
 > 
-> This patch changes the error detection to do a reset again.
-> This makes the error decoding update safer, as it now only
-> adds error decoding without changing any other behaviour.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
-> ---
->  drivers/ata/sata_promise.c |    9 ++++++---
->  1 files changed, 6 insertions(+), 3 deletions(-)
+> Correct missing modefilter (crash if BAR4 unassigned)
+> Use Cable Detect method
+> Wrap ->set_mode instead ready for ->post_set_mode removal
+> Maxtor errata as per Jeff Garzik report
+> Remove duplicated private udma_mask hacking
 
 applied
-
 
