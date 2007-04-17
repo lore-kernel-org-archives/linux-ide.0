@@ -1,42 +1,42 @@
-From: "Rodrigo Severo" <rodrigo@fabricadeideias.com>
-Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen on SATA hd
-Date: Tue, 17 Apr 2007 16:12:04 -0300
-Message-ID: <a7108f870704171212r551dff52n21730b67e9ef2c59@mail.gmail.com>
-References: <a7108f870704150703p1f0da000k22f7b70605cec595@mail.gmail.com>
-	 <a7108f870704150708g741b7e2fmd52be8b53b358113@mail.gmail.com>
-	 <a7108f870704160745l4296fe8bt74e94d6c5bf8504e@mail.gmail.com>
-	 <a7108f870704160914g22b648bey39a9523a6d8a4800@mail.gmail.com>
-	 <4624FD7F.4070200@gmail.com>
-	 <a7108f870704171030i6076a147lc4580ee720ba3e82@mail.gmail.com>
-	 <462507B4.2010404@gmail.com>
-	 <a7108f870704171056p300ae211x9cf5b4f2020c74a6@mail.gmail.com>
-	 <4625105F.4040502@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: HPA support
+Date: Tue, 17 Apr 2007 15:15:23 -0400
+Message-ID: <46251CCB.9040906@pobox.com>
+References: <20070411002313.29069ca5@the-village.bc.nu> <20070417184139.GB11211@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:13605 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030853AbXDQTMF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 15:12:05 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so1575220nze
-        for <linux-ide@vger.kernel.org>; Tue, 17 Apr 2007 12:12:05 -0700 (PDT)
-In-Reply-To: <4625105F.4040502@gmail.com>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:42148 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030866AbXDQTP2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Apr 2007 15:15:28 -0400
+In-Reply-To: <20070417184139.GB11211@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Dave Jones <davej@redhat.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, jkeating@redhat.com
 
-On 4/17/07, Tejun Heo <htejun@gmail.com> wrote:
-> Rodrigo Severo wrote:
-> > I have another ULi M5281/M5283 at home. I can bring it to work and try
-> > to reproduce this issue. Interested?
->
-> Yeap, that will tell us whether the specific card is busted or not.
+Dave Jones wrote:
+> On Wed, Apr 11, 2007 at 12:23:13AM +0100, Alan Cox wrote:
+>  > Signed-off-by: Alan Cox <alan@redhat.com>
+>  > 
+>  > Add support for ignoring the BIOS HPA result (off by default) and setting
+>  > the disk to the full available size unless already frozen.
+>  > 
+>  > Tested with various platforms/disks and confirmed to work with the
+>  > Macintosh (which broke earlier) and ata_piix (breakage due to the LBA48
+>  > readback that Tejun fixed).
+>  > 
+>  > For normal users this brings us, I believe, to feature parity with old IDE
+>  > (and of course more featured in some areas too).
+> 
+> This is broken horribly on nvidia chipsets..
 
-I expect to have news tomorrow.
+I think this is what Kyle reported?  Try booting with sata_nv module 
+parameter 'adma' set to zero, does that fix the problem?
+
+	Jeff
 
 
-Thanks again for your attention,
 
-Rodrigo Severo
