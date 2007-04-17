@@ -1,99 +1,52 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: 2.6.21-rc6-mm1 ATA HPT37x regression
-Date: Mon, 16 Apr 2007 22:36:19 -0400
-Message-ID: <17956.12963.163961.762444@smtp.charter.net>
+From: emisca <emisca.ml@gmail.com>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Tue, 17 Apr 2007 09:00:33 +0200
+Message-ID: <414cba4e0704170000j9ad6156o256ad40e98f7f3ba@mail.gmail.com>
+References: <461D4E2C.6000704@redhat.com> <20070414105255.GB9157@ucw.cz>
+	 <20070415155343.GA12069@khazad-dum.debian.net>
+	 <Pine.LNX.4.61.0704152050150.27018@yvahk01.tjqt.qr>
+	 <4623F804.3020405@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932078AbXDQCgW@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.231]:20084 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751739AbXDQHAf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 03:00:35 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so1730281wra
+        for <linux-ide@vger.kernel.org>; Tue, 17 Apr 2007 00:00:34 -0700 (PDT)
+In-Reply-To: <4623F804.3020405@redhat.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
+2007/4/17, Chuck Ebbert <cebbert@redhat.com>:
+> Jan Engelhardt wrote:
+> > On Apr 15 2007 12:53, Henrique de Moraes Holschuh wrote:
+> >> On Sat, 14 Apr 2007, Pavel Machek wrote:
+> >>> How common are notebooks that cut power to disks during reboot?
+> >> Assuming it also does this when running Windows, I'd report it as a grave
+> >> bug to the vendor and demand it to be fixed, or the machine to be exchanged
+> >> with another model that doesn't have this defect.
+> >
+> > Given that it does not happen on Windows (IIRC Chuck's post),
+> > then just what is Windows [not] doing that Linux does?
+>
+> It looks like there are two problems here:
+>
+> (1) Some notebooks power off and back on when restarting.
+>     Both Linux and other OS handle that badly because they
+>     assume power is not interrupted on reboot. The noise
+>     emitted is relatively loud.
+>
 
-Hi Jeff and crew,
+I'm affected by this problem, hp nx7400 + Seagate Momentus 5400.3 160gb SATA
 
-I was just testing out 2.6.21-rc6-mm1 to test some Cyclades patches
-and I noticed that my HPT302 (rev1) controller with a pair of 120gb WD
-disks are not longer detected and I get the following in the dmesg
-logs:
+When "drive spins down, acpi_power_off is written on the console, the
+drive spins up again, and 3-4 seconds later the notebook is powered
+off, leaving disk heads not parked I think.
 
-    [  148.121490] hpt37x: DPLL did not stabilize.
-
-Where before, under 2.6.21-rc6 I got the following:
-
-    [  173.749349] pata_hpt37x: BIOS has not set timing clocks.
-    [  173.752949] hpt37x: HPT302: Bus clock 33MHz.
-    [  173.754409] ACPI: PCI Interrupt 0000:03:06.0[A] -> GSI 18 (level,
-    low) -> IRQ
-     18
-    [  173.758403] ata5: PATA max UDMA/133 cmd 0x0001ecf8 ctl 0x0001ecf2
-    bmdma 0x000
-    1e800 irq 18
-    [  173.761396] ata6: PATA max UDMA/133 cmd 0x0001ece0 ctl 0x0001ecda
-    bmdma 0x000
-    1e808 irq 18
-    [  173.764319] scsi6 : pata_hpt37x
-    [  173.928997] ATA: abnormal status 0x78 on port 0x0001ecff
-    [  173.930511] scsi7 : pata_hpt37x
-    [  174.094906] ATA: abnormal status 0x8 on port 0x0001ece7
-
-
-Here's my lspci infomation on the board, it's an addon.  My apologies
-for the crappy word wrapping, xterms inside screen, etc. 
-
-  03:06.0 RAID bus controller: Triones Technologies, Inc. HPT302/302N
-  (rev 01)
-	  Subsystem: Triones Technologies, Inc. Unknown device 0001
-	  Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop-
-  ParErr- Step
-  ping- SERR+ FastB2B-
-	  Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
-  >TAbort- <TAbort
-  - <MAbort- >SERR- <PERR-
-	  Latency: 120 (2000ns min, 2000ns max)
-	  Interrupt: pin A routed to IRQ 11
-	  Region 0: I/O ports at ecf8 [size=8]
-	  Region 1: I/O ports at ecf0 [size=4]
-	  Region 2: I/O ports at ece0 [size=8]
-	  Region 3: I/O ports at ecd8 [size=4]
-	  Region 4: I/O ports at e800 [size=256]
-	  Expansion ROM at f9000000 [disabled] [size=128K]
-	  Capabilities: [60] Power Management version 2
-		  Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
-  PME(D0-,D1-,D2-,D3hot
-  -,D3cold-)
-		  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-  03:0a.0 SCSI storage controller: Adaptec AHA-2940U2/U2W / 7890/7891
-	  Subsystem: Dell Unknown device 0087
-	  Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-	  ParErr- Step
-  ping- SERR+ FastB2B-
-	  Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
-	  >TAbort- <TAbort
-  - <MAbort- >SERR- <PERR-
-	  Latency: 64 (9750ns min, 6250ns max), Cache Line Size: 32
-	  bytes
-	  Interrupt: pin A routed to IRQ 18
-	  BIST result: 00
-	  Region 0: I/O ports at e400 [disabled] [size=256]
-	  Region 1: Memory at f8fff000 (64-bit, non-prefetchable)
-	  [size=4K]
-	  Expansion ROM at f1000000 [disabled] [size=128K]
-	  Capabilities: [dc] Power Management version 1
-		  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-	  PME(D0-,D1-,D2-,D3hot
-  -,D3cold-)
-		  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-
-
-I'm moving to 2.6.21-rc7 now, but I'm willing to test out patches as
-needed.  I suspect it's the move from the 0.6.0 driver to the 0.6.5
-version, and the changes in the hpt_clock hpt37x_timings_* arrays, but
-god knows which ones are affecting me.
-
-Thanks,
-John
+I've not tried any new kernel or patches. I'm using stock debian Etch
+kernel 2.6.18-5-686.
