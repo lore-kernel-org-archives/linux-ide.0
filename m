@@ -1,68 +1,99 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [1/2] 2.6.21-rc7: known regressions
-Date: Mon, 16 Apr 2007 20:41:19 -0400
-Message-ID: <462417AF.50406@pobox.com>
-References: <20070416003714.GL3691@stusta.de> <36D9DB17C6DE9E40B059440DB8D95F5202505C7E@orsmsx418.amr.corp.intel.com> <20070417003212.GB22804@redhat.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: 2.6.21-rc6-mm1 ATA HPT37x regression
+Date: Mon, 16 Apr 2007 22:36:19 -0400
+Message-ID: <17956.12963.163961.762444@smtp.charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34720 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031038AbXDQAmS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Apr 2007 20:42:18 -0400
-In-Reply-To: <20070417003212.GB22804@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932078AbXDQCgW@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: "Brandeburg, Jesse" <jesse.brandeburg@intel.com>, Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Hans-Georg Rist <hg.rist@web.de>, perex@suse.cz, alsa-devel@alsa-project.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Stephen Clark <Stephen.Clark@seclark.us>, linux-ide@vger.kernel.org, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, lenb@kernel.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, Ingo Molnar <mingo@elte.hu>, Ayaz Abdulla <aabdulla@nvidia.com>, David Miller <davem@davemloft.net>, Andi Kleen <ak@suse.de>, Oliver Neukum <oneukum@suse.de>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, CIJOML <cijoml@volny.cz>, Markus Rechberger <markus.rechberger@amd.com>, v4l-dvb-maintainer@linuxtv.org
-
-Dave Jones wrote:
-> On Mon, Apr 16, 2007 at 05:14:40PM -0700, Brandeburg, Jesse wrote:
->  > Adrian Bunk wrote:
->  > > Subject    : laptops with e1000: lockups
->  > > References :
->  > > https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229603 
->  > > Submitter  : Dave Jones <davej@redhat.com>
->  > > Handled-By : Jesse Brandeburg <jesse.brandeburg@intel.com>
->  > > Status     : problem is being debugged
->  > 
->  > this is being actively debugged, here is what we have so far:
->  > o v2.6.20: crashes during boot, unless noacpi and nousb bootparams used
->  > o v2.6.21-rc6: some userspace issue, crashes just after root mount
->  > without init=/bin/bash
->  > o v2.6.2X: serial console in docking station spews goo at all speeds
->  > with console=ttyS0,bbbbn8 . work continues on this, as we don't know if
->  > there are kernel panic messages during the hard lock.
->  > o fedora 7 test kernel 2948: boots okay, have been using this as only
->  > truly working kernel on this machine.
->  > 
->  > one reproduction of the problem was had with scp -l 5000 <file> <remote>
->  > when linked at 100Mb/Full.  Tried probably 20 other times same test with
->  > no repro, ugh.
->  > 
->  > Otherwise, slogging through continues.  We are actively working on this
->  > in case it *is* an e1000 issue.  Right now the repro is so unlikely we
->  > could hardly tell if we fixed it.
-> 
-> FWIW, I can reproduce this pretty much ondemand, on 100M through
-> the ethernet port on a netgear wireless AP.
-> A number of our Fedora7 testers are also able to easily reproduce this.
-> To isolate e1000, for tomorrows test build I've reverted e1000 to
-> the same code that was in 2.6.20.  If that works out without causing
-> hangs, I'll try and narrow down further which of the dozen csets
-> is responsible.
-
-Also, there are e1000 fixes in -mm.  At the time (rc2? rc3?) I felt it 
-was best to get that into -mm for testing, rather than fast-tracking it 
-to 2.6.21.
-
-But hey, see if they help.
-
-It's the netdev-2.6.git#e1000-fixes branch, if you are git-ified.  I was 
-going to push them first thing 2.6.22.
-
-	Jeff
 
 
+Hi Jeff and crew,
 
+I was just testing out 2.6.21-rc6-mm1 to test some Cyclades patches
+and I noticed that my HPT302 (rev1) controller with a pair of 120gb WD
+disks are not longer detected and I get the following in the dmesg
+logs:
+
+    [  148.121490] hpt37x: DPLL did not stabilize.
+
+Where before, under 2.6.21-rc6 I got the following:
+
+    [  173.749349] pata_hpt37x: BIOS has not set timing clocks.
+    [  173.752949] hpt37x: HPT302: Bus clock 33MHz.
+    [  173.754409] ACPI: PCI Interrupt 0000:03:06.0[A] -> GSI 18 (level,
+    low) -> IRQ
+     18
+    [  173.758403] ata5: PATA max UDMA/133 cmd 0x0001ecf8 ctl 0x0001ecf2
+    bmdma 0x000
+    1e800 irq 18
+    [  173.761396] ata6: PATA max UDMA/133 cmd 0x0001ece0 ctl 0x0001ecda
+    bmdma 0x000
+    1e808 irq 18
+    [  173.764319] scsi6 : pata_hpt37x
+    [  173.928997] ATA: abnormal status 0x78 on port 0x0001ecff
+    [  173.930511] scsi7 : pata_hpt37x
+    [  174.094906] ATA: abnormal status 0x8 on port 0x0001ece7
+
+
+Here's my lspci infomation on the board, it's an addon.  My apologies
+for the crappy word wrapping, xterms inside screen, etc. 
+
+  03:06.0 RAID bus controller: Triones Technologies, Inc. HPT302/302N
+  (rev 01)
+	  Subsystem: Triones Technologies, Inc. Unknown device 0001
+	  Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop-
+  ParErr- Step
+  ping- SERR+ FastB2B-
+	  Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium
+  >TAbort- <TAbort
+  - <MAbort- >SERR- <PERR-
+	  Latency: 120 (2000ns min, 2000ns max)
+	  Interrupt: pin A routed to IRQ 11
+	  Region 0: I/O ports at ecf8 [size=8]
+	  Region 1: I/O ports at ecf0 [size=4]
+	  Region 2: I/O ports at ece0 [size=8]
+	  Region 3: I/O ports at ecd8 [size=4]
+	  Region 4: I/O ports at e800 [size=256]
+	  Expansion ROM at f9000000 [disabled] [size=128K]
+	  Capabilities: [60] Power Management version 2
+		  Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
+  PME(D0-,D1-,D2-,D3hot
+  -,D3cold-)
+		  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+  03:0a.0 SCSI storage controller: Adaptec AHA-2940U2/U2W / 7890/7891
+	  Subsystem: Dell Unknown device 0087
+	  Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
+	  ParErr- Step
+  ping- SERR+ FastB2B-
+	  Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
+	  >TAbort- <TAbort
+  - <MAbort- >SERR- <PERR-
+	  Latency: 64 (9750ns min, 6250ns max), Cache Line Size: 32
+	  bytes
+	  Interrupt: pin A routed to IRQ 18
+	  BIST result: 00
+	  Region 0: I/O ports at e400 [disabled] [size=256]
+	  Region 1: Memory at f8fff000 (64-bit, non-prefetchable)
+	  [size=4K]
+	  Expansion ROM at f1000000 [disabled] [size=128K]
+	  Capabilities: [dc] Power Management version 1
+		  Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+	  PME(D0-,D1-,D2-,D3hot
+  -,D3cold-)
+		  Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+
+
+I'm moving to 2.6.21-rc7 now, but I'm willing to test out patches as
+needed.  I suspect it's the move from the 0.6.0 driver to the 0.6.5
+version, and the changes in the hpt_clock hpt37x_timings_* arrays, but
+god knows which ones are affecting me.
+
+Thanks,
+John
