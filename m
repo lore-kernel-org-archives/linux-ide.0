@@ -1,47 +1,44 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Tue, 17 Apr 2007 18:03:02 -0400
-Message-ID: <46254416.6090202@rtr.ca>
-References: <461D4E2C.6000704@redhat.com>	 <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>	 <461D54AF.3060706@redhat.com> <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com> <46253F14.4020304@rtr.ca> <462540CD.9080406@redhat.com>
+From: Kyle McMartin <kyle@mcmartin.ca>
+Subject: Re: [PATCH] libata: HPA support
+Date: Tue, 17 Apr 2007 18:05:46 -0400
+Message-ID: <20070417220546.GE24014@athena.road.mcmartin.ca>
+References: <20070411002313.29069ca5@the-village.bc.nu> <46251CCB.9040906@pobox.com> <20070417193057.GB22688@redhat.com> <200704171534.56685.jkeating@redhat.com> <46253141.80509@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:3126 "EHLO
-	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030908AbXDQWDG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Apr 2007 18:03:06 -0400
-In-Reply-To: <462540CD.9080406@redhat.com>
+Received: from stout.engsoc.carleton.ca ([134.117.69.22]:56335 "EHLO
+	stout.engsoc.carleton.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031280AbXDQWHw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 18:07:52 -0400
+Content-Disposition: inline
+In-Reply-To: <46253141.80509@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jesse Keating <jkeating@redhat.com>, Dave Jones <davej@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Chuck Ebbert wrote:
-> Mark Lord wrote:
->> I'll patch it locally on my own machines, but what about the tens
->> of thousands of other Seagate notebook drive owners out there?
->>
+On Tue, Apr 17, 2007 at 04:42:41PM -0400, Jeff Garzik wrote:
+> Jesse Keating wrote:
+> >On Tuesday 17 April 2007 15:30:57 Dave Jones wrote:
+> >>jesse, wanna give that a shot? booting with the installer with
+> >>sata_nv.adma=0 should do the trick.
+> >
+> >That didn't effect anything.  I still saw a message about "using ADMA 
+> >mode" right before the panic(s).
+> >
+> >I added "sata_nv.adma=0" to the kernel arguments.
 > 
-> This is a problem with Seagate specifically, spinning back up
-> on receipt of some command after spindown?
+> If you still saw ADMA mode, then it's not seeing the module parameter.
+> 
+> It sounds like putting sata_nv.adma on the kernel command line didn't do 
+> the trick?
+> 
 
-No, they just seem to be affected worse by it than some other brands.
-The bug is that libata/SCSI now spin-down the drive before the distro's
-scripts are done with it, so it spins down, and then gets spun up again
-by the distro, and then spun down again by the distro.
+If it's a module, putting it on the kernel command line won't fix it, you
+have to break into the initramfs and add the module param.
 
-And along the way, one/both of the two causes a full mechanism "park",
-which is hard on things if abused (like this).
+I've got a patch to send out later to apply saved_command_line[] checking
+to modules that I really wish I had been able to get into feisty.
 
-Or at least that's what I recall for it.  Tejun?
-
-2007/4/11, Chuck Ebbert <cebbert@redhat.com>:
-> Jan Engelhardt wrote:
-> > On Apr 11 2007 17:07, Chuck Ebbert wrote:
-> >> When I reboot my notebook, it powers off and powers back on.
-> >> On poweroff a loud snapping noise seems to be coming from the
-> >> hard drive. Today I noticed there is no "shutdown: hda" on
-> >> the console when I reboot. Whne I do a normal poweroff the
-> >> message is displayed and there is no noise. Should the IDE
-> >> code be changed so it always shuts down the drive? 
+Cheers,
+	Kyle
