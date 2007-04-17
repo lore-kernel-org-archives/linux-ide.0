@@ -1,56 +1,48 @@
-From: "Rodrigo Severo" <rodrigo@fabricadeideias.com>
-Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen on SATA hd
-Date: Tue, 17 Apr 2007 14:56:12 -0300
-Message-ID: <a7108f870704171056p300ae211x9cf5b4f2020c74a6@mail.gmail.com>
-References: <a7108f870704150703p1f0da000k22f7b70605cec595@mail.gmail.com>
-	 <a7108f870704150708g741b7e2fmd52be8b53b358113@mail.gmail.com>
-	 <a7108f870704160745l4296fe8bt74e94d6c5bf8504e@mail.gmail.com>
-	 <a7108f870704160914g22b648bey39a9523a6d8a4800@mail.gmail.com>
-	 <4624FD7F.4070200@gmail.com>
-	 <a7108f870704171030i6076a147lc4580ee720ba3e82@mail.gmail.com>
-	 <462507B4.2010404@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH pata-2.6] cmd64x: procfs code fixes/cleanups (take 2)
+Date: Tue, 17 Apr 2007 13:59:15 -0400
+Message-ID: <46250AF3.6090105@rtr.ca>
+References: <200704142011.l3EKBBhf025590@harpo.it.uu.se> <462136AF.9060505@ru.mvista.com> <46215347.2000403@rtr.ca> <462368D9.8060407@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.239]:17081 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031221AbXDQR4O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2007 13:56:14 -0400
-Received: by qb-out-0506.google.com with SMTP id z1so3154332qbc
-        for <linux-ide@vger.kernel.org>; Tue, 17 Apr 2007 10:56:13 -0700 (PDT)
-In-Reply-To: <462507B4.2010404@gmail.com>
-Content-Disposition: inline
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:1949 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031256AbXDQR7R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Apr 2007 13:59:17 -0400
+In-Reply-To: <462368D9.8060407@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-On 4/17/07, Tejun Heo <htejun@gmail.com> wrote:
-> Rodrigo Severo wrote:
-> > Please let me know if there is anything else I can do to help debug this
-> > issue.
-> >
-> > I can put the ULi M5281/M5283 back for tests.
->
-> ULi SATA is a fairly standard controller and the driver doesn't do much
-> other than feeding IO addresses to generic ATA layer, so there's nothing
-> much to go wrong there.  It might be a genuine hardware problem on the
-> controller side or driver missing some undocumented magic tweaks.  I
-> think the former is more likely.
->
-> Occasional errors should be okay.  libata EH can recover most conditions
-> and there won't be any data integrity problem.  Too long timeout (30s)
-> can be a problem tho.
->
-> Unfortunately, I don't think we have much to go on here.  Both SError
-> register and SMART log aren't reporting anything useful.  :-(
+Sergei Shtylyov wrote:
+> Mark Lord wrote:
+> 
+>>>>> - correct the chipset names (from CMDxxx to PCI-xxx)
+>>>> Please explain why this rename is a correction.
+> 
+>>>   Because the chips are officially named PCI064[036] and PCI-64[89].
+> 
+>> We normally name things with a combination of brand and chip number.
+>> Lots of companies could have chips with PCI in the name,
+>> but the CMD64x designator makes it quite clear what we're dealing with here.
+> 
+>   Note that I'm only changing designator in the procfs output, i.e. not 
+> something important to end user.
 
-I have another ULi M5281/M5283 at home. I can bring it to work and try
-to reproduce this issue. Interested?
+Err.. in this case, the procfs output *is* there for the end-user.
+Using the name printed on the chip, which matches the cmdxxx.c driver name,
+is by far the least confusing way to do it here.
 
-BTW lspci mentions a M5281 but the chipset is marked M5283. Is this ok?
+>> In the machines I have here with these chips,
+>> they are clearly labelled as "CMD" and then "PCI646.."
+> 
+>   Although I've never seen the chip, I guess that should be logo, not 
+> the name.
 
+Then perhaps you should test the scheme against the real hardware
+before patching it.
 
-Regards,
-
-Rodrigo Severo
+Cheers
