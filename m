@@ -1,58 +1,32 @@
-From: Chuck Ebbert <cebbert@redhat.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Wed, 18 Apr 2007 17:27:03 -0400
-Message-ID: <46268D27.9070809@redhat.com>
-References: <88SeR-5Sf-15@gated-at.bofh.it> <46265307.7060405@rtr.ca> <46265966.1040102@redhat.com> <200704182322.20514.bzolnier@gmail.com>
+Date: Wed, 18 Apr 2007 19:36:23 -0400
+Message-ID: <4626AB77.20709@rtr.ca>
+References: <461D4E2C.6000704@redhat.com>	 <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>	 <461D54AF.3060706@redhat.com> <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com> <46253F14.4020304@rtr.ca> <462540CD.9080406@redhat.com> <46254416.6090202@rtr.ca> <4625AF20.7050904@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53085 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992793AbXDRV3v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Apr 2007 17:29:51 -0400
-In-Reply-To: <200704182322.20514.bzolnier@gmail.com>
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:2856 "EHLO
+	mail.rtr.ca" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S2992986AbXDRXg1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Apr 2007 19:36:27 -0400
+In-Reply-To: <4625AF20.7050904@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Stephen.Clark@seclark.us, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, Stephen.Clark@seclark.us
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 18 April 2007, Chuck Ebbert wrote:
->> Mark Lord wrote:
->>> Mark Lord wrote:
->>>> With the patch applied, I don't see *any* new activity in those
->>>> S.M.A.R.T.
->>>> attributes over multiple hibernates (Linux "suspend-to-disk").
->>> Scratch that -- operator failure.  ;)
->>> The patch makes no difference over hibernates in the SMART logs.
->>>
->>> It's still logging extra Power-Off_Retract_Count pegs,
->>> which it DID NOT USED TO DO not so long ago.
->>>
->> Just to add to the fun, my problems are happening with the "old"
->> IDE drivers...
+Tejun Heo wrote:
 > 
-> The issue you are experiencing results in the same problem (disk doing
-> power off retract) but it has a totally different root cause - your notebook
-> loses power on reboot.  It is actually a hardware problem and as you have
-> reported the same problem is present when using "the other" OS.
-> 
+> 1. shutdown(8) issues SYNCHRONIZE_CACHE followed by STANDBY_NOW
+> 2. kernel shutdown starts
+> 3. libata shutdown issues SYNCHRONIZE_CACHE
+> 4. power goes off
 
-My "power off retract count" increases whether I do a halt/poweroff or
-a reboot. The only difference is the volume of the noise.
+Okay, after some experimentatino, it's the STANDBY_NOW that
+is causing the Power-Off_Retract_Count to increment on my machine.
 
-And I just noticed my "seek error rate" is increasing.
+Tell me again why we think we need to issue that command ?
 
-/me plans purchase of another drive, definitely not Seagate...
-
-> I think that the issue needs to be fixed (by detecting affected notebook(s)
-> using DMI?) in Linux PM handling and not in IDE subsystem because:
->
-> * there may be some other hardware devices affected by the power loss
->   (== they require shutdown sequence)
->
-> * the same problem will bite if somebody decides to use libata (FC7?)
-
-Yeah, this needs fixing too. I've been playing with another notebook and
-the power does stay on during reboot, so I wonder how widespread the problem is?
+Thanks.
