@@ -1,64 +1,116 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata/SATA noprobe
-Date: Thu, 19 Apr 2007 01:28:57 +0900
-Message-ID: <46264749.7080206@gmail.com>
-References: <6.1.1.1.2.20070418164107.02c87a30@192.168.6.12> <462645F6.50702@rtr.ca>
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Wed, 18 Apr 2007 13:04:37 -0400
+Message-ID: <46264FA5.1070304@seclark.us>
+References: <88SeR-5Sf-15@gated-at.bofh.it>	<88Sov-662-3@gated-at.bofh.it>	<88SHV-6uL-29@gated-at.bofh.it>	<8agVk-3wc-81@gated-at.bofh.it>	<8b3IR-4mE-25@gated-at.bofh.it>	<8b3SA-4z3-5@gated-at.bofh.it>	<8b42g-51N-15@gated-at.bofh.it>	<8bbdm-7iS-27@gated-at.bofh.it>	<E1He8dA-0000mw-LI@be1.lrz>	<46260981.1040109@gmail.com>	<20070418132904.3322ba5f@the-village.bc.nu>	<46261337.3010406@gmail.com>	<20070418140346.636879a1@the-village.bc.nu>	<46262C0E.9000103@rtr.ca> <20070418160627.7ab77c30@the-village.bc.nu> <46263650.3080705@rtr.ca>
+Reply-To: Stephen.Clark@seclark.us
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:50503 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754123AbXDRQ3H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2007 12:29:07 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so205727wra
-        for <linux-ide@vger.kernel.org>; Wed, 18 Apr 2007 09:29:06 -0700 (PDT)
-In-Reply-To: <462645F6.50702@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S2992861AbXDRREl@vger.kernel.org>
+In-Reply-To: <46263650.3080705@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, 7eggert@gmx.de, Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Roger While <simrw@sim-basis.de>, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>
 
 Mark Lord wrote:
-> Roger While wrote:
->> Is there any knob/option to prevent libata
->> probing non-existent channels ?
->> Specifically how can I stop the kernel probing
->> the second SATA? -
-> ..
->> <6>ata1.00: ATA-7, max UDMA/133, 490234752 sectors: LBA48 NCQ (depth 0/1)
->> <6>ata1.00: ata1: dev 0 multi count 8
->> <6>ata1.00: configured for UDMA/133
->> <6>scsi1 : ata_piix
->> <4>ata2: port is slow to respond, please be patient (Status 0xff)
->> <3>ata2: port failed to respond (30 secs, Status 0xff)
->> <3>ata2: SRST failed (status 0xFF)
->> <3>ata2: SRST failed (err_mask=0x100)
->> <4>ata2: softreset failed, retrying in 5 secs
->> <3>ata2: SRST failed (status 0xFF)
->> <3>ata2: SRST failed (err_mask=0x100)
->> <4>ata2: softreset failed, retrying in 5 secs
->> <3>ata2: SRST failed (status 0xFF)
->> <3>ata2: SRST failed (err_mask=0x100)
->> <3>ata2: reset failed, giving up
-> ..
-> 
-> Ugh.  That could really slow down system startup.
-> 
-> There is no parameter to avoid it,
-> just one to reduce the delay while it probes.  Not ideal.
-> 
-> But it really could be more clever here, and notice the 0xff patterns,
-> and have an early exit if there's obviously nothing attached.
-> 
-> Or perhaps there's some register it could read to see if the
-> port was disabled in the BIOS (I'm betting it is still "enabled",
-> but it could be good to check if we don't already).
-> 
-> Maybe just do it in the ata_piix subdriver.  Tejun, Alan?
 
-We do consider 0xff as port empty these days.  Roger, which kernel
-version are you using?  Can you give a shot at 2.6.20.7?
+>Alan Cox wrote:
+>  
+>
+>>>+		if (dev->needs_flush && ata_try_flush_cache(dev)) {
+>>> 			return ata_scsi_flush_xlat;
+>>>+			dev->needs_flush = 0;
+>>>      
+>>>
+>>Works better if you swap the dev-> and return lines
+>>    
+>>
+>
+>Heh, yeah, I noticed that!
+>
+>Here it is, *tested* now, with another fix.
+>
+>It would be nice if somebody who can hear the "pop" would also test this,
+>as it will confirm that this is a complete fix for the problem.
+>My "pop" drives are busy elsewhere right now.
+>
+>Tejun might use something like this, or do something better in libata-core,
+>but it's still helpful to have confirmation that we're on the right track.
+>
+>This patch eliminates the redundant "SYNCHRONIZE_CACHE" request at shutdown
+>which is causing undue wear/tear/alarm to various systems.
+>
+>Signed-off-by: Mark Lord <mlord@pobox.com>
+>---
+>--- old/include/linux/libata.h	2007-04-18 10:30:25.000000000 -0400
+>+++ linux/include/linux/libata.h	2007-04-18 10:30:28.000000000 -0400
+>@@ -499,6 +499,7 @@
+> 	struct ata_ering	ering;
+> 	int			spdn_cnt;
+> 	unsigned int		horkage;	/* List of broken features */
+>+	int			needs_sync_cache; /* 0==sync-cache not needed */
+> #ifdef CONFIG_SATA_ACPI
+> 	/* ACPI objects info */
+> 	acpi_handle obj_handle;
+>--- old/drivers/ata/libata-scsi.c	2007-04-18 10:48:34.000000000 -0400
+>+++ linux/drivers/ata/libata-scsi.c	2007-04-18 10:51:09.000000000 -0400
+>@@ -2749,18 +2749,20 @@
+> 			return atapi_xlat;
+> 
+> 	switch (cmd) {
+>-	case READ_6:
+>-	case READ_10:
+>-	case READ_16:
+>-
+> 	case WRITE_6:
+> 	case WRITE_10:
+> 	case WRITE_16:
+>+		dev->needs_sync_cache = 1;
+>+	case READ_6:
+>+	case READ_10:
+>+	case READ_16:
+> 		return ata_scsi_rw_xlat;
+> 
+> 	case SYNCHRONIZE_CACHE:
+>-		if (ata_try_flush_cache(dev))
+>+		if (dev->needs_sync_cache && ata_try_flush_cache(dev)) {
+>+			dev->needs_sync_cache = 0;
+> 			return ata_scsi_flush_xlat;
+>+		}
+> 		break;
+> 
+> 	case VERIFY:
+>@@ -2769,6 +2771,7 @@
+> 
+> 	case ATA_12:
+> 	case ATA_16:
+>+		dev->needs_sync_cache = 1;
+> 		return ata_scsi_pass_thru;
+> 
+> 	case START_STOP:
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
+I tried this on 2.6.20.2 it applied to libata with some fuzz and I had 
+to manually edit libata.h
+When I did a shutdown I still got the click/pop.
+
+I also noticed the last thing displayed on the lcd before it goes blank is
+Synchronizing SCSI Disks - then the click/pop.
+
+HTH,
+Steve
 
 -- 
-tejun
+
+"They that give up essential liberty to obtain temporary safety, 
+deserve neither liberty nor safety."  (Ben Franklin)
+
+"The course of history shows that as a government grows, liberty 
+decreases."  (Thomas Jefferson)
