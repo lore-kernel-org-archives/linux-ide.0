@@ -1,60 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH pata-2.6 fix queue] hpt366: fix kernel oops with HPT302N
-Date: Wed, 18 Apr 2007 23:38:00 +0400
-Message-ID: <200704182338.00604.sshtylyov@ru.mvista.com>
-References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702040004.24918.sshtylyov@ru.mvista.com> <200702162321.40813.sshtylyov@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Wed, 18 Apr 2007 23:22:20 +0200
+Message-ID: <200704182322.20514.bzolnier@gmail.com>
+References: <88SeR-5Sf-15@gated-at.bofh.it> <46265307.7060405@rtr.ca> <46265966.1040102@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:30213 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S2993092AbXDRThI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2007 15:37:08 -0400
-In-Reply-To: <200702162321.40813.sshtylyov@ru.mvista.com>
+Received: from ug-out-1314.google.com ([66.249.92.168]:24675 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992732AbXDRVMY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2007 17:12:24 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so502941uga
+        for <linux-ide@vger.kernel.org>; Wed, 18 Apr 2007 14:12:22 -0700 (PDT)
+In-Reply-To: <46265966.1040102@redhat.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, codermattie@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Mark Lord <liml@rtr.ca>, Stephen.Clark@seclark.us, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
-The driver crashes the kernel on HPT302N chips due to the missing initializer
-for 'hpt302n.settings' having been unfortunately overlooked so far. :-<
 
-Much thanks to Mike Mattie for pin-pointing the reason of crash.
+On Wednesday 18 April 2007, Chuck Ebbert wrote:
+> Mark Lord wrote:
+> > Mark Lord wrote:
+> >>
+> >> With the patch applied, I don't see *any* new activity in those
+> >> S.M.A.R.T.
+> >> attributes over multiple hibernates (Linux "suspend-to-disk").
+> > 
+> > Scratch that -- operator failure.  ;)
+> > The patch makes no difference over hibernates in the SMART logs.
+> > 
+> > It's still logging extra Power-Off_Retract_Count pegs,
+> > which it DID NOT USED TO DO not so long ago.
+> > 
+> 
+> Just to add to the fun, my problems are happening with the "old"
+> IDE drivers...
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+The issue you are experiencing results in the same problem (disk doing
+power off retract) but it has a totally different root cause - your notebook
+loses power on reboot.  It is actually a hardware problem and as you have
+reported the same problem is present when using "the other" OS.
 
----
-Posting at last -- please verify...
+I think that the issue needs to be fixed (by detecting affected notebook(s)
+using DMI?) in Linux PM handling and not in IDE subsystem because:
 
- drivers/ide/pci/hpt366.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+* there may be some other hardware devices affected by the power loss
+  (== they require shutdown sequence)
 
-Index: linux-2.6/drivers/ide/pci/hpt366.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/hpt366.c
-+++ linux-2.6/drivers/ide/pci/hpt366.c
-@@ -1,10 +1,10 @@
- /*
-- * linux/drivers/ide/pci/hpt366.c		Version 1.01	Dec 23, 2006
-+ * linux/drivers/ide/pci/hpt366.c		Version 1.02	Apr 18, 2007
-  *
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-  * Portions Copyright (C) 2003		Red Hat Inc
-- * Portions Copyright (C) 2005-2006	MontaVista Software, Inc.
-+ * Portions Copyright (C) 2005-2007	MontaVista Software, Inc.
-  *
-  * Thanks to HighPoint Technologies for their assistance, and hardware.
-  * Special Thanks to Jon Burchmore in SanDiego for the deep pockets, his
-@@ -494,6 +494,7 @@ static struct hpt_info hpt302n __devinit
- 	.chip_type	= HPT302N,
- 	.max_mode	= HPT302_ALLOW_ATA133_6 ? 4 : 3,
- 	.dpll_clk	= 77,
-+	.settings	= hpt37x_settings
- };
- 
- static struct hpt_info hpt371n __devinitdata = {
+* the same problem will bite if somebody decides to use libata (FC7?)
 
+Bart
