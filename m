@@ -1,58 +1,40 @@
-From: Mark Lord <lkml@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Wed, 18 Apr 2007 13:08:25 -0400
-Message-ID: <46265089.4000409@rtr.ca>
-References: <88SeR-5Sf-15@gated-at.bofh.it>	<88Sov-662-3@gated-at.bofh.it>	<88SHV-6uL-29@gated-at.bofh.it>	<8agVk-3wc-81@gated-at.bofh.it>	<8b3IR-4mE-25@gated-at.bofh.it>	<8b3SA-4z3-5@gated-at.bofh.it>	<8b42g-51N-15@gated-at.bofh.it>	<8bbdm-7iS-27@gated-at.bofh.it>	<E1He8dA-0000mw-LI@be1.lrz>	<46260981.1040109@gmail.com>	<20070418132904.3322ba5f@the-village.bc.nu>	<46261337.3010406@gmail.com>	<20070418140346.636879a1@the-village.bc.nu>	<46262C0E.9000103@rtr.ca> <20070418160627.7ab77c30@the-village.bc.nu> <46263650.3080705@rtr.ca> <46263859.2060309@gmail.com>
+Date: Wed, 18 Apr 2007 13:19:03 -0400
+Message-ID: <46265307.7060405@rtr.ca>
+References: <88SeR-5Sf-15@gated-at.bofh.it>	<88Sov-662-3@gated-at.bofh.it>	<88SHV-6uL-29@gated-at.bofh.it>	<8agVk-3wc-81@gated-at.bofh.it>	<8b3IR-4mE-25@gated-at.bofh.it>	<8b3SA-4z3-5@gated-at.bofh.it>	<8b42g-51N-15@gated-at.bofh.it>	<8bbdm-7iS-27@gated-at.bofh.it>	<E1He8dA-0000mw-LI@be1.lrz>	<46260981.1040109@gmail.com>	<20070418132904.3322ba5f@the-village.bc.nu>	<46261337.3010406@gmail.com>	<20070418140346.636879a1@the-village.bc.nu>	<46262C0E.9000103@rtr.ca> <20070418160627.7ab77c30@the-village.bc.nu> <46263650.3080705@rtr.ca> <46263859.2060309@gmail.com> <46265089.4000409@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:1472 "EHLO
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:1573 "EHLO
 	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753698AbXDRRI0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Apr 2007 13:08:26 -0400
-In-Reply-To: <46263859.2060309@gmail.com>
+	id S2992896AbXDRRTE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Apr 2007 13:19:04 -0400
+In-Reply-To: <46265089.4000409@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: Stephen.Clark@seclark.us
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
-Tejun Heo wrote:
-> Mark Lord wrote:
-> ..
->> It would be nice if somebody who can hear the "pop" would also test this,
->> as it will confirm that this is a complete fix for the problem.
+Mark Lord wrote:
 > 
-> You'll probably be able to here the "pop" on sleep-to-disk.
-> 
->> My "pop" drives are busy elsewhere right now.
+> With the patch applied, I don't see *any* new activity in those S.M.A.R.T.
+> attributes over multiple hibernates (Linux "suspend-to-disk").
 
-The system I do have to test with has a "pop",
-but that's from the speakers not the drive.
+Scratch that -- operator failure.  ;)
+The patch makes no difference over hibernates in the SMART logs.
 
-However, the S.M.A.R.T. data was also shown earlier to provide
-a record of the unnecessary wear and tear.
+It's still logging extra Power-Off_Retract_Count pegs,
+which it DID NOT USED TO DO not so long ago.
 
-Here it is from two hibernates (Linux "suspend-to-disk") before patching:
+Now I'll poke at the shutdown again.
 
--  4 Start_Stop_Count        0x0032   099   099   020    Old_age   Always       -       1711
-+  4 Start_Stop_Count        0x0032   099   099   020    Old_age   Always       -       1712
-..
-- 12 Power_Cycle_Count       0x0032   099   099   020    Old_age   Always       -       1051
-+ 12 Power_Cycle_Count       0x0032   099   099   020    Old_age   Always       -       1053
-..
--192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always       -       126
--193 Load_Cycle_Count        0x0032   015   015   000    Old_age   Always       -       170404
-+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always       -       128
-+193 Load_Cycle_Count        0x0032   015   015   000    Old_age   Always       -       170405
+Meanwhile, Stephen:  Could you try without this line in the patched file:
 
-With the patch applied, I don't see *any* new activity in those S.M.A.R.T.
-attributes over multiple hibernates (Linux "suspend-to-disk").
+        case ATA_16:
++               dev->needs_sync_cache = 1;
 
-Next up, I'll try a few shutdowns and see.
+Ie. comment out that last "dev->needs_sync_cache" line.
 
-But we should still get Stephen Clark or one of the other reporters
-to confirm it on their systems.
-
--ml
-
+Cheers
