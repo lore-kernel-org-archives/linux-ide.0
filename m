@@ -1,80 +1,70 @@
-From: Stephen Clark <Stephen.Clark@seclark.us>
+From: Mark Lord <lkml@rtr.ca>
 Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Wed, 18 Apr 2007 09:39:30 -0400
-Message-ID: <46261F92.2080607@seclark.us>
+Date: Wed, 18 Apr 2007 10:32:46 -0400
+Message-ID: <46262C0E.9000103@rtr.ca>
 References: <88SeR-5Sf-15@gated-at.bofh.it>	<88Sov-662-3@gated-at.bofh.it>	<88SHV-6uL-29@gated-at.bofh.it>	<8agVk-3wc-81@gated-at.bofh.it>	<8b3IR-4mE-25@gated-at.bofh.it>	<8b3SA-4z3-5@gated-at.bofh.it>	<8b42g-51N-15@gated-at.bofh.it>	<8bbdm-7iS-27@gated-at.bofh.it>	<E1He8dA-0000mw-LI@be1.lrz>	<46260981.1040109@gmail.com>	<20070418132904.3322ba5f@the-village.bc.nu>	<46261337.3010406@gmail.com> <20070418140346.636879a1@the-village.bc.nu>
-Reply-To: Stephen.Clark@seclark.us
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpauth05.prod.mesa1.secureserver.net ([64.202.165.99]:56713
-	"HELO smtpauth05.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S2992475AbXDRNjc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2007 09:39:32 -0400
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:2574 "EHLO
+	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992614AbXDROct (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Apr 2007 10:32:49 -0400
 In-Reply-To: <20070418140346.636879a1@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <htejun@gmail.com>, 7eggert@gmx.de, Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
 Alan Cox wrote:
-
->>Thought about that and querying power state before doing shutdown 
->>sequence but things get somewhat ugly because shutdown sequence is 
->>driven from sd->shutdown().  We'll have to snoop both sync and shutdown 
->>commands and check whether the system is shutting down.  Also, I felt 
->>very uneasy about faking successful completion to SYNCHRONIZE_CACHE.
->>    
->>
 >
->If you see a synchronize cache succeed and you then see the drive
->shutdown succeed then you know that a sync cache can be faked as ok
->safely. Any other command in between or after and it doesn't get faked
->
->This seems pretty easy to deal with at command issue.
->
->  
->
->>I dunno.  It's already too late for 2.6.21.  I was hoping we could get 
->>distros to update shutdown utilities in not-too-distant future but I 
->>have no experience with that.  Is that just a wishful thinking?
->>    
->>
->
->Probably not, but it will take a year or so and throughout this time
->period everyone with the wrong combination of shutdown and kernel (which
->will be a lot of people who compile their own kernels) are going to have
->problems caused by what is a very obscure piece of libata internal
->behaviour they'll never even know about.
->
->  
->
-So this is the pop I hear on my new laptop that is using 
-libata=combined_mode
- when I shut my system down. I didn't get the pop with the same disk 
-drive in an older
- laptop that was only ide. It sounds like a relay closing or opening, 
-but is really my
-drive head doing an emergency retract/park?
+> If you see a synchronize cache succeed and you then see the drive
+> shutdown succeed then you know that a sync cache can be faked as ok
+> safely. Any other command in between or after and it doesn't get faked
+> 
+> This seems pretty easy to deal with at command issue.
 
->-
->To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
->
->  
->
+Yup.  It could be as trivial as this (untested, and not as nice
+as Alan's full suggestion).
 
-
--- 
-
-"They that give up essential liberty to obtain temporary safety, 
-deserve neither liberty nor safety."  (Ben Franklin)
-
-"The course of history shows that as a government grows, liberty 
-decreases."  (Thomas Jefferson)
-
-
-
+Signed-off-by:  Mark Lord <mlord@pobox.com>
+---
+--- linux/include/linux/libata.h.orig	2007-04-18 10:30:25.000000000 -0400
++++ linux/include/linux/libata.h	2007-04-18 10:30:28.000000000 -0400
+@@ -499,6 +499,7 @@
+ 	struct ata_ering	ering;
+ 	int			spdn_cnt;
+ 	unsigned int		horkage;	/* List of broken features */
++	int			needs_flush;	/* bool: 1==written since last flush */
+ #ifdef CONFIG_SATA_ACPI
+ 	/* ACPI objects info */
+ 	acpi_handle obj_handle;
+--- linux/drivers/old/libata-scsi.c	2007-04-17 22:11:12.000000000 -0400
++++ linux/drivers/ata/libata-scsi.c	2007-04-18 10:27:29.000000000 -0400
+@@ -2749,18 +2749,20 @@
+ 			return atapi_xlat;
+ 
+ 	switch (cmd) {
+-	case READ_6:
+-	case READ_10:
+-	case READ_16:
+-
+ 	case WRITE_6:
+ 	case WRITE_10:
+ 	case WRITE_16:
++		dev->needs_flush = 1;
++	case READ_6:
++	case READ_10:
++	case READ_16:
+ 		return ata_scsi_rw_xlat;
+ 
+ 	case SYNCHRONIZE_CACHE:
+-		if (ata_try_flush_cache(dev))
++		if (dev->needs_flush && ata_try_flush_cache(dev)) {
+ 			return ata_scsi_flush_xlat;
++			dev->needs_flush = 0;
++		}
+ 		break;
+ 
+ 	case VERIFY:
