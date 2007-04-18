@@ -1,105 +1,63 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] libata: Handle drives that require a spin-up command before
- first access
-Date: Tue, 17 Apr 2007 18:26:07 -0400
-Message-ID: <4625497F.7010109@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Wed, 18 Apr 2007 14:39:44 +0900
+Message-ID: <4625AF20.7050904@gmail.com>
+References: <461D4E2C.6000704@redhat.com>	 <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>	 <461D54AF.3060706@redhat.com> <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com> <46253F14.4020304@rtr.ca> <462540CD.9080406@redhat.com> <46254416.6090202@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:1540 "EHLO
-	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161383AbXDQW0L (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Apr 2007 18:26:11 -0400
+Received: from wr-out-0506.google.com ([64.233.184.228]:35377 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932458AbXDRFj6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2007 01:39:58 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so46244wra
+        for <linux-ide@vger.kernel.org>; Tue, 17 Apr 2007 22:39:53 -0700 (PDT)
+In-Reply-To: <46254416.6090202@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
+Mark Lord wrote:
+> Chuck Ebbert wrote:
+>> Mark Lord wrote:
+>>> I'll patch it locally on my own machines, but what about the tens
+>>> of thousands of other Seagate notebook drive owners out there?
+>>>
+>>
+>> This is a problem with Seagate specifically, spinning back up
+>> on receipt of some command after spindown?
+> 
+> No, they just seem to be affected worse by it than some other brands.
+> The bug is that libata/SCSI now spin-down the drive before the distro's
+> scripts are done with it, so it spins down, and then gets spun up again
+> by the distro, and then spun down again by the distro.
+> 
+> And along the way, one/both of the two causes a full mechanism "park",
+> which is hard on things if abused (like this).
+> 
+> Or at least that's what I recall for it.  Tejun?
 
-(S)ATA drives can be configured for "power-up in standby",
-a mode whereby a specific "spin up now!" command is required
-before the first media access.
+This really isn't a regression.  It's been always like that with libata.
+ libata doesn't make devices go into standby mode and shutdown(8) does
+it for libata.  The problem here is that libata does issue
+SYNCHRONIZE_CACHE on shutdown.  So, the sequence of event is...
 
-Currently, a drive with this feature enabled can not be used at all
-with libata, and once in this mode, the drive becomes a doorstop.
+1. shutdown(8) issues SYNCHRONIZE_CACHE followed by STANDBY_NOW
+2. kernel shutdown starts
+3. libata shutdown issues SYNCHRONIZE_CACHE
+4. power goes off
 
-The older drivers/ide subsystem at least enumerates the drive,
-so that it can be woken up after the fact from a userspace HDIO_*
-command, but not libata.
+Some drives seem to spin up at step #3 even when its cache is clean and
+power goes off right after the disk finishes the command.  So, it's
+really bad when it happens - spin down, spin up followed by immediate
+power off.
 
-This patch adds support to libata for the "power-up in standby"
-mode where a "spin up now!" command (SET_FEATURES) is needed.
-With this, libata will recognize such drives, spin them up,
-and then re-IDENTIFY them if necessary to get a full/complete
-set of drive features data.
+SCSI part of the fix is queued in scsi-misc-2.6 tree and libata-dev part
+is acked and waiting to be merged, so the fix will be available in
+2.6.22.  However, it's disabled by default to remain compatible with the
+current behavior and requires userland change to fully fix the problem.
 
-Drives in this state are determined by looking for
-special values in id[2], as documented in the current ATA specs.
-
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
-diff -u --recursive --new-file --exclude-from=linux-2.6.20//Documentation/dontdiff linux-2.6.20/drivers/ata/libata-core.c linux/drivers/ata/libata-core.c
---- linux-2.6.20/drivers/ata/libata-core.c	2007-02-04 13:44:54.000000000 -0500
-+++ linux/drivers/ata/libata-core.c	2007-02-22 15:19:41.000000000 -0500
-@@ -1453,6 +1453,7 @@
- 	struct ata_taskfile tf;
- 	unsigned int err_mask = 0;
- 	const char *reason;
-+	int tried_spinup = 0;
- 	int rc;
- 
- 	if (ata_msg_ctl(ap))
-@@ -1460,7 +1461,6 @@
- 			       __FUNCTION__, ap->id, dev->devno);
- 
- 	ata_dev_select(ap, dev->devno, 1, 1); /* select device 0/1 */
--
-  retry:
- 	ata_tf_init(dev, &tf);
- 
-@@ -1508,6 +1508,32 @@
- 			goto err_out;
- 	}
- 
-+	if (!tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
-+		tried_spinup = 1;
-+		/*
-+		 * Drive powered-up in standby mode, and requires a specific
-+		 * SET_FEATURES spin-up subcommand before it will accept
-+		 * anything other than the original IDENTIFY command.
-+		 */
-+		ata_tf_init(dev, &tf);
-+		tf.command = ATA_CMD_SET_FEATURES;
-+		tf.feature = SETFEATURES_SPINUP;
-+		tf.protocol = ATA_PROT_NODATA;
-+		tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+		err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-+		if (err_mask) {
-+			rc = -EIO;
-+			reason = "SPINUP failed";
-+			goto err_out;
-+		}
-+		/*
-+		 * If the drive initially returned incomplete IDENTIFY info,
-+		 * we now must reissue the IDENTIFY command.
-+		 */
-+		if (id[2] == 0x37c8)
-+			goto retry;
-+	}
-+
- 	if ((flags & ATA_READID_POSTRESET) && class == ATA_DEV_ATA) {
- 		/*
- 		 * The exact sequence expected by certain pre-ATA4 drives is:
-diff -u --recursive --new-file --exclude-from=linux-2.6.20//Documentation/dontdiff linux-2.6.20/include/linux/ata.h linux/include/linux/ata.h
---- linux-2.6.20/include/linux/ata.h	2007-02-04 13:44:54.000000000 -0500
-+++ linux/include/linux/ata.h	2007-02-22 13:52:45.000000000 -0500
-@@ -190,6 +190,8 @@
- 	SETFEATURES_WC_ON	= 0x02, /* Enable write cache */
- 	SETFEATURES_WC_OFF	= 0x82, /* Disable write cache */
- 
-+	SETFEATURES_SPINUP	= 0x07, /* Spin-up drive */
-+
- 	/* ATAPI stuff */
- 	ATAPI_PKT_DMA		= (1 << 0),
- 	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
+-- 
+tejun
