@@ -1,36 +1,39 @@
 From: Mark Lord <lkml@rtr.ca>
 Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Wed, 18 Apr 2007 10:32:46 -0400
-Message-ID: <46262C0E.9000103@rtr.ca>
-References: <88SeR-5Sf-15@gated-at.bofh.it>	<88Sov-662-3@gated-at.bofh.it>	<88SHV-6uL-29@gated-at.bofh.it>	<8agVk-3wc-81@gated-at.bofh.it>	<8b3IR-4mE-25@gated-at.bofh.it>	<8b3SA-4z3-5@gated-at.bofh.it>	<8b42g-51N-15@gated-at.bofh.it>	<8bbdm-7iS-27@gated-at.bofh.it>	<E1He8dA-0000mw-LI@be1.lrz>	<46260981.1040109@gmail.com>	<20070418132904.3322ba5f@the-village.bc.nu>	<46261337.3010406@gmail.com> <20070418140346.636879a1@the-village.bc.nu>
+Date: Wed, 18 Apr 2007 10:35:35 -0400
+Message-ID: <46262CB7.7020004@rtr.ca>
+References: <88SeR-5Sf-15@gated-at.bofh.it>	<88Sov-662-3@gated-at.bofh.it>	<88SHV-6uL-29@gated-at.bofh.it>	<8agVk-3wc-81@gated-at.bofh.it>	<8b3IR-4mE-25@gated-at.bofh.it>	<8b3SA-4z3-5@gated-at.bofh.it>	<8b42g-51N-15@gated-at.bofh.it>	<8bbdm-7iS-27@gated-at.bofh.it>	<E1He8dA-0000mw-LI@be1.lrz>	<46260981.1040109@gmail.com>	<20070418132904.3322ba5f@the-village.bc.nu>	<46261337.3010406@gmail.com> <20070418140346.636879a1@the-village.bc.nu> <46262C0E.9000103@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:2574 "EHLO
+Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:1338 "EHLO
 	mail.rtr.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992614AbXDROct (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Apr 2007 10:32:49 -0400
-In-Reply-To: <20070418140346.636879a1@the-village.bc.nu>
+	id S2992634AbXDROfh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Apr 2007 10:35:37 -0400
+In-Reply-To: <46262C0E.9000103@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
-Alan Cox wrote:
->
-> If you see a synchronize cache succeed and you then see the drive
-> shutdown succeed then you know that a sync cache can be faked as ok
-> safely. Any other command in between or after and it doesn't get faked
+Mark Lord wrote:
+> Alan Cox wrote:
+>>
+>> If you see a synchronize cache succeed and you then see the drive
+>> shutdown succeed then you know that a sync cache can be faked as ok
+>> safely. Any other command in between or after and it doesn't get faked
+>>
+>> This seems pretty easy to deal with at command issue.
 > 
-> This seems pretty easy to deal with at command issue.
+> Yup.  It could be as trivial as this (untested, and not as nice
+> as Alan's full suggestion).
 
-Yup.  It could be as trivial as this (untested, and not as nice
-as Alan's full suggestion).
+Here it is again, without the borked pathnames.
 
 Signed-off-by:  Mark Lord <mlord@pobox.com>
 ---
---- linux/include/linux/libata.h.orig	2007-04-18 10:30:25.000000000 -0400
+--- old/include/linux/libata.h	2007-04-18 10:30:25.000000000 -0400
 +++ linux/include/linux/libata.h	2007-04-18 10:30:28.000000000 -0400
 @@ -499,6 +499,7 @@
  	struct ata_ering	ering;
@@ -40,7 +43,7 @@ Signed-off-by:  Mark Lord <mlord@pobox.com>
  #ifdef CONFIG_SATA_ACPI
  	/* ACPI objects info */
  	acpi_handle obj_handle;
---- linux/drivers/old/libata-scsi.c	2007-04-17 22:11:12.000000000 -0400
+--- old/drivers/ata/libata-scsi.c	2007-04-17 22:11:12.000000000 -0400
 +++ linux/drivers/ata/libata-scsi.c	2007-04-18 10:27:29.000000000 -0400
 @@ -2749,18 +2749,20 @@
  			return atapi_xlat;
