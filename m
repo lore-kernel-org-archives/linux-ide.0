@@ -1,63 +1,32 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Thu, 19 Apr 2007 13:50:33 -0400
-Message-ID: <4627ABE9.8090906@redhat.com>
-References: <88SeR-5Sf-15@gated-at.bofh.it>	<88Sov-662-3@gated-at.bofh.it>	<88SHV-6uL-29@gated-at.bofh.it>	<8agVk-3wc-81@gated-at.bofh.it>	<8b3IR-4mE-25@gated-at.bofh.it>	<8b3SA-4z3-5@gated-at.bofh.it>	<8b42g-51N-15@gated-at.bofh.it>	<8bbdm-7iS-27@gated-at.bofh.it>	<E1He8dA-0000mw-LI@be1.lrz>	<46260981.1040109@gmail.com>	<20070418132904.3322ba5f@the-village.bc.nu>	<46261337.3010406@gmail.com>	<20070418140346.636879a1@the-village.bc.nu>	<46262C0E.9000103@rtr.ca> <20070418160627.7ab77c30@the-village.bc.nu> <46263650.3080705@rtr.ca> <46263859.2060309@gmail.com> <46265089.4000409@rtr.ca> <46265307.7060405@rtr.ca> <4626596E.4040304@seclark.us>
+From: Roger While <simrw@sim-basis.de>
+Subject: Re: libata/SATA noprobe
+Date: Thu, 19 Apr 2007 20:29:23 +0200
+Message-ID: <6.1.1.1.2.20070419202613.01cc9df0@192.168.6.12>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37315 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1766909AbXDSRw7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Apr 2007 13:52:59 -0400
-In-Reply-To: <4626596E.4040304@seclark.us>
+Received: from mailout05.sul.t-online.com ([194.25.134.82]:33405 "EHLO
+	mailout05.sul.t-online.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1766912AbXDSS3q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Apr 2007 14:29:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephen.Clark@seclark.us
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>, liml@rtr.ca, Tejun Heo <htejun@gmail.com>
 
-Stephen Clark wrote:
-> Mark Lord wrote:
-> 
->> Mark Lord wrote:
->>  
->>
->>> With the patch applied, I don't see *any* new activity in those
->>> S.M.A.R.T.
->>> attributes over multiple hibernates (Linux "suspend-to-disk").
->>>   
->>
->> Scratch that -- operator failure.  ;)
->> The patch makes no difference over hibernates in the SMART logs.
->>
->> It's still logging extra Power-Off_Retract_Count pegs,
->> which it DID NOT USED TO DO not so long ago.
->>
->> Now I'll poke at the shutdown again.
->>
->> Meanwhile, Stephen:  Could you try without this line in the patched file:
->>
->>        case ATA_16:
->> +               dev->needs_sync_cache = 1;
->>
->> Ie. comment out that last "dev->needs_sync_cache" line.
->>
->>
-> No joy - even with that line commented out I get a click and my
-> Power-Off_Retract_Count has incremented.
-> 
+2.6.20.7 works fine.
+As indeed does the updated Suse 2.6.18 kernel.
 
-I found a solution of sorts on Fedora 6:
+Case closed.
+
+Roger
 
 
-Edit /etc/rc0.d/S01halt, changing the third-from-last line so it reads:
 
-HALTARGS="-d -h -n"
+>We do consider 0xff as port empty these days.  Roger, which kernel
+>version are you using?  Can you give a shot at 2.6.20.7?
+>
+>--
+>tejun
 
-Then use the halt(8) command to shut down and turn off the power manually.
-No click and the "retract" counter does not increment. (Even this procedure
-incremented the counter until I changed the script.)
 
-Seems safe, using the IDE drivers, since they sync the cache anyway.
 
