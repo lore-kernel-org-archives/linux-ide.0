@@ -1,42 +1,67 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Wed, 18 Apr 2007 19:51:37 -0400
-Message-ID: <4626AF09.8020307@rtr.ca>
-References: <461D4E2C.6000704@redhat.com>	 <Pine.LNX.4.61.0704112315480.20436@yvahk01.tjqt.qr>	 <461D54AF.3060706@redhat.com> <414cba4e0704150907r215bf196n637070dd40bccc3b@mail.gmail.com> <46253F14.4020304@rtr.ca> <462540CD.9080406@redhat.com> <46254416.6090202@rtr.ca> <4625AF20.7050904@gmail.com> <4626AB77.20709@rtr.ca>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: 2.6.21-rc6-mm1 ATA HPT37x regression
+Date: Wed, 18 Apr 2007 21:34:22 -0400
+Message-ID: <17958.50974.973764.356099@smtp.charter.net>
+References: <17956.12963.163961.762444@smtp.charter.net>
+	<4624D4C3.9010109@ru.mvista.com>
+	<17956.63043.521397.597430@smtp.charter.net>
+	<4624FE88.2010908@ru.mvista.com>
+	<20070417181340.7de99868@the-village.bc.nu>
+	<17957.8073.587946.969040@smtp.charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-128-89.s-ip.magma.ca ([64.26.128.89]:2357 "EHLO
-	mail.rtr.ca" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S2993008AbXDRXvm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Apr 2007 19:51:42 -0400
-In-Reply-To: <4626AB77.20709@rtr.ca>
+Received: from Mycroft.westnet.com ([216.187.52.7]:61352 "EHLO
+	Mycroft.westnet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993078AbXDSBee (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2007 21:34:34 -0400
+In-Reply-To: <17957.8073.587946.969040@smtp.charter.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, Stephen.Clark@seclark.us
+To: John Stoffel <john@stoffel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->>
->> 1. shutdown(8) issues SYNCHRONIZE_CACHE followed by STANDBY_NOW
->> 2. kernel shutdown starts
->> 3. libata shutdown issues SYNCHRONIZE_CACHE
->> 4. power goes off
-> 
-> Okay, after some experimentatino, it's the STANDBY_NOW that
-> is causing the Power-Off_Retract_Count to increment on my machine.
-> 
-> Tell me again why we think we need to issue that command ?
+>>>>> "John" == John Stoffel <john@stoffel.org> writes:
 
-Arghh.. okay, removing that from the code has no effect on it either.
-I just don't understand the problem any more, since I don't actually
-have it here (I think).
+>>> > Ok, so do I need to do anything special with the next -mm release and
+>>> > the next version?
+>>> 
+>>> Well, let Alan decide that (2Alan: and I said that HPT code is bogus :-).
 
-Can somebody explain again what the issue was, when it began happening,
-and whatever else?  And what Tejun's fix (2.6.22) does again?
+Alan> Try drivers/ide/pci/hpt366 - if that works grab a dmesg and let
+Alan> me know.  It means that Sergei's DPLL sync code seems to work
+Alan> better than the vendor code and its time to swap it over.
 
-I've lost all of the early postings.
+John> Ok, I'll give that a whirl under 2.6.21-rc7 tonight.  I'll build them
+John> in modular so I can switch around more easily.  I hope.  :]
 
-Thanks
+Ok, here's the dmesg output using the hpt366 old IDE driver,
+2.6.21-rc7, SMP: 
+
+[  160.926355] HPT302: IDE controller at PCI slot 0000:03:06.0
+[  160.928030] ACPI: PCI Interrupt 0000:03:06.0[A] -> GSI 18 (level, low) -> IRQ
+ 18
+[  160.931212] HPT302: chipset revision 1
+[  160.932801] HPT302: DPLL base: 66 MHz, f_CNT: 100, assuming 33 MHz PCI
+[  160.941157] HPT302: using 66 MHz DPLL clock
+[  160.942646] HPT302: 100% native mode on irq 18
+[  160.943918]     ide2: BM-DMA at 0xe800-0xe807, BIOS settings: hde:DMA, hdf:pi
+o
+[  160.946636]     ide3: BM-DMA at 0xe808-0xe80f, BIOS settings: hdg:DMA, hdh:pi
+o
+[  160.949439] Probing IDE interface ide2...
+[  161.213560] hde: WDC WD1200JB-00CRA1, ATA DISK drive
+[  161.828020] ide2 at 0xecf8-0xecff,0xecf2 on irq 18
+[  161.829616] Probing IDE interface ide3...
+[  162.094086] hdg: WDC WD1200JB-00EVA0, ATA DISK drive
+[  162.709002] ide3 at 0xece0-0xece7,0xecda on irq 18
+
+
+Which looks ok to me I guess.  It found my MD disks on there and
+assmebled them, eventually.  *grin*
+
+I'll reboot and send out the corresponding ATA HPT37x driver dmesg...
+
+John
+
