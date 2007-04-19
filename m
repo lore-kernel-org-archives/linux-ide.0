@@ -1,45 +1,62 @@
-From: "Tomi Orava" <Tomi.Orava@ncircle.nullnet.fi>
-Subject: Re: sata_promise ata exceptions (2.6.20.6)
-Date: Thu, 19 Apr 2007 13:55:02 +0300 (EEST)
-Message-ID: <5741.194.237.142.10.1176980102.squirrel@ncircle.nullnet.fi>
-References: <200704132121.l3DLLRDb020449@harpo.it.uu.se>
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Thu, 19 Apr 2007 08:59:05 -0400
+Message-ID: <46276799.3080200@seclark.us>
+References: <88SeR-5Sf-15@gated-at.bofh.it> <88Sov-662-3@gated-at.bofh.it> <88SHV-6uL-29@gated-at.bofh.it> <8agVk-3wc-81@gated-at.bofh.it> <8b3IR-4mE-25@gated-at.bofh.it> <8b3SA-4z3-5@gated-at.bofh.it> <8b42g-51N-15@gated-at.bofh.it> <8bbdm-7iS-27@gated-at.bofh.it> <E1He8dA-0000mw-LI@be1.lrz> <46260981.1040109@gmail.com> <20070418132904.3322ba5f@the-village.bc.nu> <46261337.3010406@gmail.com> <20070418140346.636879a1@the-village.bc.nu> <46261F92.2080607@seclark.us> <Pine.LNX.4.61.0704190915320.30549@yvahk01.tjqt.qr>
+Reply-To: Stephen.Clark@seclark.us
 Mime-Version: 1.0
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:49183 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993226AbXDSKzI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Apr 2007 06:55:08 -0400
-In-Reply-To: <200704132121.l3DLLRDb020449@harpo.it.uu.se>
+Received: from smtpauth04.prod.mesa1.secureserver.net ([64.202.165.95]:58321
+	"HELO smtpauth04.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S637756AbXDSM7I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Apr 2007 08:59:08 -0400
+In-Reply-To: <Pine.LNX.4.61.0704190915320.30549@yvahk01.tjqt.qr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, 7eggert@gmx.de, Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
+Jan Engelhardt wrote:
 
-Hi,
+>On Apr 18 2007 09:39, Stephen Clark wrote:
+>  
+>
+>>So this is the pop I hear on my new laptop that is using
+>>libata=combined_mode when I shut my system down. I didn't get the
+>>pop with the same disk drive in an older laptop that was only ide.
+>>It sounds like a relay closing or opening, but is really my drive
+>>head doing an emergency retract/park?
+>>    
+>>
+>
+>Most(?) disks' heads are spring-/power-based so that whenever
+>they lose power, the spring retracts the head back to the park zone.
+>
+>Whether it is the disk head or something else.. take out the disk,
+>and retry. Might not be that easy with laptops, though.
+>
+>
+>Jan
+>  
+>
+It is definitely the disk drive. It is located in the right front corner 
+of my laptop so I put my ear
+by it during shutdown and that is where the click is coming from. As I 
+said before I had this same
+drive in another laptop that was strictly ide so it used the older ide 
+driver and it never did this.
 
-> My theory is that either TBG clocking (which drives the SATA interfaces)
-> or SET FEATURE snooping (which adjusts internal parameters for different
-> PIO/(U)DMA modes) is borked for SATAII/3Gbps. I hope to have time to
-> investigate that soon. If you can limit transfer speeds to 1.5Gpbs then
-> that may provide a workaround for now.
+Steve
 
-For your information, a friend of mine has the exact same SATA-card &
-hard-disk combination (Promise Sata300TX4 + 2*Seagate 7200.10) with Intel
-P4 & 875P chipset and gets similar error messages every once in a while
-when there is above average disk I/O in the system (for example
-raid-recheck).
+-- 
 
-ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata4.00: cmd 25/00:00:bf:0f:87/00:04:05:00:00/e0 tag 0 cdb 0x0 data 524288 in
-res 50/00:00:be:13:87/00:00:05:00:00/e0 Emask 0x1 (device error)
+"They that give up essential liberty to obtain temporary safety, 
+deserve neither liberty nor safety."  (Ben Franklin)
 
-So at least it doesn't seem like my hard-disks or SATA-card are
-faulty/broken.
+"The course of history shows that as a government grows, liberty 
+decreases."  (Thomas Jefferson)
 
-Regards,
-Tomi Orava
 
 
