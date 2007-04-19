@@ -1,58 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_sis: Fix oops on boot
-Date: Thu, 19 Apr 2007 11:09:52 +0100
-Message-ID: <20070419110952.13470b08@the-village.bc.nu>
+From: "Tomi Orava" <Tomi.Orava@ncircle.nullnet.fi>
+Subject: Re: sata_promise ata exceptions (2.6.20.6)
+Date: Thu, 19 Apr 2007 13:55:02 +0300 (EEST)
+Message-ID: <5741.194.237.142.10.1176980102.squirrel@ncircle.nullnet.fi>
+References: <200704132121.l3DLLRDb020449@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57735 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161479AbXDSKGr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Apr 2007 06:06:47 -0400
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:49183 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993226AbXDSKzI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Apr 2007 06:55:08 -0400
+In-Reply-To: <200704132121.l3DLLRDb020449@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, akpm@osdl.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
 
-A small number of SiS setups require special handling (not many judging
-by how long this dumb bug survived). A couple of Fedora 7 devel testers
-hit an Oops on pata_sis loading which is caused by terminal confusion
-between chipset as 'the chipset we have found' and chipset as 'array
-iterator'
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Hi,
 
---- linux.vanilla-2.6.21-rc6-mm1/drivers/ata/pata_sis.c	2007-04-12 14:15:03.000000000 +0100
-+++ linux-2.6.21-rc6-mm1/drivers/ata/pata_sis.c	2007-04-19 10:42:36.966672184 +0100
-@@ -831,6 +831,7 @@
- 	struct ata_port_info *port;
- 	struct pci_dev *host = NULL;
- 	struct sis_chipset *chipset = NULL;
-+	struct sis_chipset *sets;
- 
- 	static struct sis_chipset sis_chipsets[] = {
- 
-@@ -885,10 +886,11 @@
- 
- 	/* We have to find the bridge first */
- 
--	for (chipset = &sis_chipsets[0]; chipset->device; chipset++) {
--		host = pci_get_device(PCI_VENDOR_ID_SI, chipset->device, NULL);
-+	for (sets = &sis_chipsets[0]; sets->device; sets++) {
-+		host = pci_get_device(PCI_VENDOR_ID_SI, sets->device, NULL);
- 		if (host != NULL) {
--			if (chipset->device == 0x630) {	/* SIS630 */
-+			chipset = sets;			/* Match found */
-+			if (sets->device == 0x630) {	/* SIS630 */
- 				u8 host_rev;
- 				pci_read_config_byte(host, PCI_REVISION_ID, &host_rev);
- 				if (host_rev >= 0x30)	/* 630 ET */
-@@ -899,7 +901,7 @@
- 	}
- 
- 	/* Look for concealed bridges */
--	if (host == NULL) {
-+	if (chipset == NULL) {
- 		/* Second check */
- 		u32 idemisc;
- 		u16 trueid;
+> My theory is that either TBG clocking (which drives the SATA interfaces)
+> or SET FEATURE snooping (which adjusts internal parameters for different
+> PIO/(U)DMA modes) is borked for SATAII/3Gbps. I hope to have time to
+> investigate that soon. If you can limit transfer speeds to 1.5Gpbs then
+> that may provide a workaround for now.
+
+For your information, a friend of mine has the exact same SATA-card &
+hard-disk combination (Promise Sata300TX4 + 2*Seagate 7200.10) with Intel
+P4 & 875P chipset and gets similar error messages every once in a while
+when there is above average disk I/O in the system (for example
+raid-recheck).
+
+ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata4.00: cmd 25/00:00:bf:0f:87/00:04:05:00:00/e0 tag 0 cdb 0x0 data 524288 in
+res 50/00:00:be:13:87/00:00:05:00:00/e0 Emask 0x1 (device error)
+
+So at least it doesn't seem like my hard-disks or SATA-card are
+faulty/broken.
+
+Regards,
+Tomi Orava
+
+
