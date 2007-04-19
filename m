@@ -1,42 +1,58 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Thu, 19 Apr 2007 09:18:20 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0704190915320.30549@yvahk01.tjqt.qr>
-References: <88SeR-5Sf-15@gated-at.bofh.it> <88Sov-662-3@gated-at.bofh.it>
- <88SHV-6uL-29@gated-at.bofh.it> <8agVk-3wc-81@gated-at.bofh.it>
- <8b3IR-4mE-25@gated-at.bofh.it> <8b3SA-4z3-5@gated-at.bofh.it>
- <8b42g-51N-15@gated-at.bofh.it> <8bbdm-7iS-27@gated-at.bofh.it>
- <E1He8dA-0000mw-LI@be1.lrz> <46260981.1040109@gmail.com>
- <20070418132904.3322ba5f@the-village.bc.nu> <46261337.3010406@gmail.com>
- <20070418140346.636879a1@the-village.bc.nu> <46261F92.2080607@seclark.us>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_sis: Fix oops on boot
+Date: Thu, 19 Apr 2007 11:09:52 +0100
+Message-ID: <20070419110952.13470b08@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailer.gwdg.de ([134.76.10.26]:54987 "EHLO mailer.gwdg.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751657AbXDSHcQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Apr 2007 03:32:16 -0400
-In-Reply-To: <46261F92.2080607@seclark.us>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57735 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161479AbXDSKGr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Apr 2007 06:06:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephen Clark <Stephen.Clark@seclark.us>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, 7eggert@gmx.de, Chuck Ebbert <cebbert@redhat.com>, emisca <emisca.ml@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, akpm@osdl.org
 
+A small number of SiS setups require special handling (not many judging
+by how long this dumb bug survived). A couple of Fedora 7 devel testers
+hit an Oops on pata_sis loading which is caused by terminal confusion
+between chipset as 'the chipset we have found' and chipset as 'array
+iterator'
 
-On Apr 18 2007 09:39, Stephen Clark wrote:
->>
-> So this is the pop I hear on my new laptop that is using
-> libata=combined_mode when I shut my system down. I didn't get the
-> pop with the same disk drive in an older laptop that was only ide.
-> It sounds like a relay closing or opening, but is really my drive
-> head doing an emergency retract/park?
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-Most(?) disks' heads are spring-/power-based so that whenever
-they lose power, the spring retracts the head back to the park zone.
-
-Whether it is the disk head or something else.. take out the disk,
-and retry. Might not be that easy with laptops, though.
-
-
-Jan
--- 
+--- linux.vanilla-2.6.21-rc6-mm1/drivers/ata/pata_sis.c	2007-04-12 14:15:03.000000000 +0100
++++ linux-2.6.21-rc6-mm1/drivers/ata/pata_sis.c	2007-04-19 10:42:36.966672184 +0100
+@@ -831,6 +831,7 @@
+ 	struct ata_port_info *port;
+ 	struct pci_dev *host = NULL;
+ 	struct sis_chipset *chipset = NULL;
++	struct sis_chipset *sets;
+ 
+ 	static struct sis_chipset sis_chipsets[] = {
+ 
+@@ -885,10 +886,11 @@
+ 
+ 	/* We have to find the bridge first */
+ 
+-	for (chipset = &sis_chipsets[0]; chipset->device; chipset++) {
+-		host = pci_get_device(PCI_VENDOR_ID_SI, chipset->device, NULL);
++	for (sets = &sis_chipsets[0]; sets->device; sets++) {
++		host = pci_get_device(PCI_VENDOR_ID_SI, sets->device, NULL);
+ 		if (host != NULL) {
+-			if (chipset->device == 0x630) {	/* SIS630 */
++			chipset = sets;			/* Match found */
++			if (sets->device == 0x630) {	/* SIS630 */
+ 				u8 host_rev;
+ 				pci_read_config_byte(host, PCI_REVISION_ID, &host_rev);
+ 				if (host_rev >= 0x30)	/* 630 ET */
+@@ -899,7 +901,7 @@
+ 	}
+ 
+ 	/* Look for concealed bridges */
+-	if (host == NULL) {
++	if (chipset == NULL) {
+ 		/* Second check */
+ 		u32 idemisc;
+ 		u16 trueid;
