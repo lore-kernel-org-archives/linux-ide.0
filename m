@@ -1,95 +1,101 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] IDE fixes
-Date: Fri, 20 Apr 2007 22:19:30 +0200
-Message-ID: <200704202219.30464.bzolnier@gmail.com>
+Subject: Re: Kernel 2.6.18 and above
+Date: Fri, 20 Apr 2007 22:41:13 +0200
+Message-ID: <200704202241.13223.bzolnier@gmail.com>
+References: <4626AEF7.9010804@users.sourceforge.net> <46286D36.5090609@users.sourceforge.net> <1177057830.17978.13.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:35965 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.171]:52212 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993320AbXDTUPR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 16:15:17 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so975039uga
-        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2007 13:15:16 -0700 (PDT)
+	with ESMTP id S1767238AbXDTUbI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 16:31:08 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so977626uga
+        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2007 13:31:05 -0700 (PDT)
+In-Reply-To: <1177057830.17978.13.camel@localhost.localdomain>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Mike <michael_six@users.sourceforge.net>, B.Zolnierkiewicz@elka.pw.edu.pl, list linux-ide <linux-ide@vger.kernel.org>
 
+On Friday 20 April 2007, Benjamin Herrenschmidt wrote:
+> I'm CC'ing linux-ide... looks like the disk which you say is 20GB is
+> misdetected by the IDE layer as being 2GB.
+> 
+> Ok, so we have:
+> 
+> > >> Probing IDE interface ide0...
+> > >> hda: WDC WD800JB-00FMA0, ATA DISK drive
+> > >> hdb: IC35L020AVVN07-0, ATA DISK drive
+> > >> hda: Enabling Ultra DMA 4
+> > >> hdb: Enabling Ultra DMA 4
+> > >> ide0 at 0xf139c000-0xf139c007,0xf139c160 on irq 19
+> > >> ide1: Found Apple KeyLargo ATA-3 controller, bus ID 0, irq 20
+> > >> Probing IDE interface ide1...
+> > >> hdc: PIONEER DVD-RW DVR-111D, ATAPI CD/DVD-ROM drive
+> > >> hdd: IOMEGA ZIP 250 ATAPI, ATAPI FLOPPY drive
+> > >> hdc: Enabling MultiWord DMA 2
+> > >> ide1 at 0xf139e000-0xf139e007,0xf139e160 on irq 20
+> > >> ide2: Found Apple KeyLargo ATA-3 controller, bus ID 1, irq 21
+> > >> Probing IDE interface ide2...
+> > >> Probing IDE interface ide2...
+> > >> hda: max request size: 128KiB
+> > >> hda: 156301488 sectors (80026 MB) w/8192KiB Cache, CHS=65535/16/63, UDMA(66)
+> > >> hda: cache flushes supported
+> > >>  hda: [mac] hda1 hda2 hda3 hda4 hda5 hda6 hda7 hda8 hda9 hda10 hda11 hda12 hda13
+> > >> hdb: max request size: 128KiB
+> > >> hdb: 4128768 sectors (2113 MB) w/1863KiB Cache, CHS=4096/16/63, UDMA(66)
+> 
+> Here the drive claims to be 2GB, not 20GB (or is detected as such).
+> 
+> > /dev/hdb
+> >         #                    type name                length   base    ( 
+> > size )  system
+> > /dev/hdb1     Apple_partition_map Apple                   63 @ 1       ( 
+> > 31.5k)  Partition map
+> > /dev/hdb2          Apple_Driver43 Macintosh               56 @ 64      ( 
+> > 28.0k)  Driver 4.3
+> > /dev/hdb3          Apple_Driver43 Macintosh               56 @ 120     ( 
+> > 28.0k)  Driver 4.3
+> > /dev/hdb4        Apple_Driver_ATA Macintosh               56 @ 176     ( 
+> > 28.0k)  Unknown
+> > /dev/hdb5        Apple_Driver_ATA Macintosh               56 @ 232     ( 
+> > 28.0k)  Unknown
+> > /dev/hdb6          Apple_FWDriver Macintosh              512 @ 288     
+> > (256.0k)  Unknown
+> > /dev/hdb7      Apple_Driver_IOKit Macintosh              512 @ 800     
+> > (256.0k)  Unknown
+> > /dev/hdb8           Apple_Patches Patch Partition        512 @ 1312    
+> > (256.0k)  Unknown
+> > /dev/hdb9              Apple_Free                     262144 @ 1824    
+> > (128.0M)  Free space
+> > /dev/hdb10              Apple_HFS Apple_HFS_Untitled_2 39924976 @ 
+> > 263968  ( 19.0G)  HFS
+> > /dev/hdb11             Apple_Free                         16 @ 40188944 
+> > (  8.0k)  Free space
+> > 
+> > Block size=512, Number of Blocks=40188960
+> > DeviceType=0x0, DeviceId=0x0
+> > Drivers-
+> > 1: @ 64 for 23, type=0x1
+> > 2: @ 120 for 36, type=0xffff
+> > 3: @ 176 for 21, type=0x701
+> > 4: @ 232 for 34, type=0xf8ff
+> 
+> And here you can see that the partition map tries to use about 20GB...
+> so there is a discrepancy between what the partition map says and what
+> the IDE driver says. I suspect old kernel just ignores the later, while
+> newer kernels enforce the limit which causes your problem.
+> 
+> Bart, I'm a bit at lost as to why the device size would be misdetected,
+> do you have an idea ? Might be worth getting a dump of the ID block...
+> Mike, can you send us a dump of the binary file /proc/ide/hdb/identify ?
 
-Hopefully the last update for 2.6.21.
+Since this is a 2.6.17->2.6.18 regression narrowing the problem down to
+the specific changeset (or at least -git or even -rc) seems like a most
+promising way in discovering the source of the issue.
 
-Please pull from:
-
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-
-to receive the following updates:
-
- drivers/ide/Kconfig         |    1 +
- drivers/ide/pci/delkin_cb.c |    1 +
- drivers/ide/pci/hpt366.c    |    5 +++--
- 3 files changed, 5 insertions(+), 2 deletions(-)
-
-
-Bartlomiej Zolnierkiewicz (1):
-      ide/Kconfig: add missing range check for IDE_MAX_HWIFS
-
-Mark Lord (1):
-      ide/pci/delkin_cb.c: add new PCI ID
-
-Sergei Shtylyov (1):
-      hpt366: fix kernel oops with HPT302N
-
-
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index ca2e4f8..5bdf64b 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -57,6 +57,7 @@ if IDE
- config IDE_MAX_HWIFS
- 	int "Max IDE interfaces"
- 	depends on ALPHA || SUPERH || IA64 || EMBEDDED
-+	range 1 10
- 	default 4
- 	help
- 	  This is the maximum number of IDE hardware interfaces that will
-diff --git a/drivers/ide/pci/delkin_cb.c b/drivers/ide/pci/delkin_cb.c
-index d4b753e..dd7ec37 100644
---- a/drivers/ide/pci/delkin_cb.c
-+++ b/drivers/ide/pci/delkin_cb.c
-@@ -108,6 +108,7 @@ delkin_cb_remove (struct pci_dev *dev)
- 
- static struct pci_device_id delkin_cb_pci_tbl[] __devinitdata = {
- 	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{ 0x1145, 0xf024, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, delkin_cb_pci_tbl);
-diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
-index 60ecdc2..ab6fa27 100644
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -1,10 +1,10 @@
- /*
-- * linux/drivers/ide/pci/hpt366.c		Version 1.01	Dec 23, 2006
-+ * linux/drivers/ide/pci/hpt366.c		Version 1.02	Apr 18, 2007
-  *
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-  * Portions Copyright (C) 2003		Red Hat Inc
-- * Portions Copyright (C) 2005-2006	MontaVista Software, Inc.
-+ * Portions Copyright (C) 2005-2007	MontaVista Software, Inc.
-  *
-  * Thanks to HighPoint Technologies for their assistance, and hardware.
-  * Special Thanks to Jon Burchmore in SanDiego for the deep pockets, his
-@@ -494,6 +494,7 @@ static struct hpt_info hpt302n __devinitdata = {
- 	.chip_type	= HPT302N,
- 	.max_mode	= HPT302_ALLOW_ATA133_6 ? 4 : 3,
- 	.dpll_clk	= 77,
-+	.settings	= hpt37x_settings
- };
- 
- static struct hpt_info hpt371n __devinitdata = {
+Bart
