@@ -1,97 +1,29 @@
-From: Stephen Clark <Stephen.Clark@seclark.us>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Fri, 20 Apr 2007 08:15:15 -0400
-Message-ID: <4628AED3.9080203@seclark.us>
-References: <88SeR-5Sf-15@gated-at.bofh.it>	<88Sov-662-3@gated-at.bofh.it>	<88SHV-6uL-29@gated-at.bofh.it>	<8agVk-3wc-81@gated-at.bofh.it>	<8b3IR-4mE-25@gated-at.bofh.it>	<8b3SA-4z3-5@gated-at.bofh.it>	<8b42g-51N-15@gated-at.bofh.it>	<8bbdm-7iS-27@gated-at.bofh.it>	<E1He8dA-0000mw-LI@be1.lrz>	<46260981.1040109@gmail.com>	<20070418132904.3322ba5f@the-village.bc.nu>	<46261337.3010406@gmail.com>	<20070418140346.636879a1@the-village.bc.nu>	<46262C0E.9000103@rtr.ca> <20070418160627.7ab77c30@the-village.bc.nu> <46263650.3080705@rtr.ca> <46263859.2060309@gmail.com> <46265089.4000409@rtr.ca> <46265307.7060405@rtr.ca> <4626596E.4040304@seclark.us> <4627ABE9.8090906@redhat.com>
-Reply-To: Stephen.Clark@seclark.us
+From: Gene Stapp <genestapp@gmail.com>
+Subject: Correct way to enable port multiplier support in kernel 2.6.20-1?
+Date: Fri, 20 Apr 2007 08:37:13 -0500
+Message-ID: <4628C209.6030607@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpauth12.prod.mesa1.secureserver.net ([64.202.165.35]:36337
-	"HELO smtpauth12.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1767073AbXDTMPR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 08:15:17 -0400
-In-Reply-To: <4627ABE9.8090906@redhat.com>
+Received: from wx-out-0506.google.com ([66.249.82.224]:38966 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992592AbXDTMhQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 08:37:16 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so966621wxd
+        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2007 05:37:16 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Chuck Ebbert wrote:
+I don't see any patches to get port multiplier support working for 
+kernel 2.6.20-1  I recompiled the kernel manually and made sure I 
+config'd it with everything current but it appears port multiplier isn't 
+in the mainline (it still does not work).
+My question is, what do I need to do to get my addonics 3726 working 
+with kernel 2.6.20-1? I'm not a developer by any means and the guide on 
+the addonics website would have worked for me but it is out of date.
+http://www.addonics.com/support/faqs/faq-pmsupport_desktop.asp
 
->Stephen Clark wrote:
->  
->
->>Mark Lord wrote:
->>
->>    
->>
->>>Mark Lord wrote:
->>> 
->>>
->>>      
->>>
->>>>With the patch applied, I don't see *any* new activity in those
->>>>S.M.A.R.T.
->>>>attributes over multiple hibernates (Linux "suspend-to-disk").
->>>>  
->>>>        
->>>>
->>>Scratch that -- operator failure.  ;)
->>>The patch makes no difference over hibernates in the SMART logs.
->>>
->>>It's still logging extra Power-Off_Retract_Count pegs,
->>>which it DID NOT USED TO DO not so long ago.
->>>
->>>Now I'll poke at the shutdown again.
->>>
->>>Meanwhile, Stephen:  Could you try without this line in the patched file:
->>>
->>>       case ATA_16:
->>>+               dev->needs_sync_cache = 1;
->>>
->>>Ie. comment out that last "dev->needs_sync_cache" line.
->>>
->>>
->>>      
->>>
->>No joy - even with that line commented out I get a click and my
->>Power-Off_Retract_Count has incremented.
->>
->>    
->>
->
->I found a solution of sorts on Fedora 6:
->
->
->Edit /etc/rc0.d/S01halt, changing the third-from-last line so it reads:
->
->HALTARGS="-d -h -n"
->
->Then use the halt(8) command to shut down and turn off the power manually.
->No click and the "retract" counter does not increment. (Even this procedure
->incremented the counter until I changed the script.)
->
->Seems safe, using the IDE drivers, since they sync the cache anyway.
->
->
->  
->
-Hi Chuck,
-
-I got a chance to try this and it works for me also. No pop and my 
-retract counter does not increment.
-
-Steve
-
--- 
-
-"They that give up essential liberty to obtain temporary safety, 
-deserve neither liberty nor safety."  (Ben Franklin)
-
-"The course of history shows that as a government grows, liberty 
-decreases."  (Thomas Jefferson)
-
-
-
+Gene Stapp
