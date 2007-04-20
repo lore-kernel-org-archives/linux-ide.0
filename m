@@ -1,111 +1,96 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 14/15] ide: rework the code for selecting the best DMA
- transfer mode
-Date: Fri, 20 Apr 2007 22:00:27 +0400
-Message-ID: <4628FFBB.2090900@ru.mvista.com>
-References: <20070203135301.2546.54884.sendpatchset@localhost.localdomain> <20070203135323.2546.29438.sendpatchset@localhost.localdomain> <4627C386.9020407@ru.mvista.com> <4627C5D1.5010602@ru.mvista.com> <4628D64B.7080500@ru.mvista.com>
+From: "Fabio Comolli" <fabio.comolli@gmail.com>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Fri, 20 Apr 2007 21:57:56 +0200
+Message-ID: <b637ec0b0704201257l24d9e9c8ha31221c9c9d8da3e@mail.gmail.com>
+References: <88SeR-5Sf-15@gated-at.bofh.it>
+	 <20070418140346.636879a1@the-village.bc.nu> <46262C0E.9000103@rtr.ca>
+	 <20070418160627.7ab77c30@the-village.bc.nu> <46263650.3080705@rtr.ca>
+	 <46263859.2060309@gmail.com> <46265089.4000409@rtr.ca>
+	 <46265307.7060405@rtr.ca> <4626596E.4040304@seclark.us>
+	 <4627ABE9.8090906@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:47887 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S2993106AbXDTR7d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 13:59:33 -0400
-In-Reply-To: <4628D64B.7080500@ru.mvista.com>
+Received: from an-out-0708.google.com ([209.85.132.243]:59289 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753525AbXDTT57 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 15:57:59 -0400
+Received: by an-out-0708.google.com with SMTP id b33so1074577ana
+        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2007 12:57:58 -0700 (PDT)
+In-Reply-To: <4627ABE9.8090906@redhat.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Stephen.Clark@seclark.us, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
-Hello, I wrote:
+Bingo!
+I switched from ata_piix.c to piix_ide.c and the "pop" disappeared.
 
->>>> Index: b/drivers/ide/pci/hpt366.c
->>>> ===================================================================
->>>> --- a/drivers/ide/pci/hpt366.c
->>>> +++ b/drivers/ide/pci/hpt366.c
->>>> @@ -513,43 +513,31 @@ static int check_in_drive_list(ide_drive
->>>>      return 0;
->>>>  }
->>>>  
->>>> -static u8 hpt3xx_ratemask(ide_drive_t *drive)
->>>> -{
->>>> -    struct hpt_info *info    = pci_get_drvdata(HWIF(drive)->pci_dev);
->>>> -    u8 mode            = info->max_mode;
->>>> -
->>>> -    if (!eighty_ninty_three(drive) && mode)
->>>> -        mode = min(mode, (u8)1);
->>>> -    return mode;
->>>> -}
->>>> -
->>>>  /*
->>>>   *    Note for the future; the SATA hpt37x we must set
->>>>   *    either PIO or UDMA modes 0,4,5
->>>>   */
->>>> - -static u8 hpt3xx_ratefilter(ide_drive_t *drive, u8 speed)
->>>> +
->>>> +static u8 hpt3xx_udma_filter(ide_drive_t *drive)
->>>>  {
->>>>      struct hpt_info *info    = pci_get_drvdata(HWIF(drive)->pci_dev);
->>>>      u8 chip_type        = info->chip_type;
->>>> -    u8 mode            = hpt3xx_ratemask(drive);
->>>> -
->>>> -    if (drive->media != ide_disk)
->>>> -        return min(speed, (u8)XFER_PIO_4);
->>>> +    u8 mode            = info->max_mode;
->>>> +    u8 mask;
->>>>  
->>>>      switch (mode) {
->>>>          case 0x04:
->>>> -            speed = min_t(u8, speed, XFER_UDMA_6);
->>>> +            mask = 0x7f;
->>>>              break;
->>>>          case 0x03:
->>>> -            speed = min_t(u8, speed, XFER_UDMA_5);
->>>> +            mask = 0x3f;
->>>>              if (chip_type >= HPT374)
->>>>                  break;
->>>>              if (!check_in_drive_list(drive, bad_ata100_5))
->>>>                  goto check_bad_ata33;
->>>>              /* fall thru */
->>>>          case 0x02:
->>>> -            speed = min_t(u8, speed, XFER_UDMA_4);
->>>> +            mask = 0x1f;
->>>>  
->>>>              /*
->>>>               * CHECK ME, Does this need to be changed to HPT374 ??
->>>> @@ -560,13 +548,13 @@ static u8 hpt3xx_ratefilter(ide_drive_t 
->>>>                  !check_in_drive_list(drive, bad_ata66_4))
->>>>                  goto check_bad_ata33;
->>>>  
->>>> -            speed = min_t(u8, speed, XFER_UDMA_3);
+I must say that the "pop" also disappeared after suspending to disk
+using suspend2 (obviously without executing halt -n -h -p) . In both
+cases it was present with the previous setup.
 
-  Hm, found a buglet in my former filtering rewrite -- the condition in the preceding if stmt should be a reverse one, and speed limitation to XFER_UDMA_3 should have been left under it.  With the current code, XFER_UDMA_2 limitation wouldn't have been applied if the same drive is not in both 'bad_ata66_4' and 'bad_ata66_3' lists -- this, however, actually is not the case since WDC AC310200R drive is in both these lists (maybe I wrote it this way because of this fact :-).
+This is with a pure PATA setup with no SATA ports and the disk is:
 
->>>> +            mask = 0x0f;
->>>>              if (HPT366_ALLOW_ATA66_3 &&
->>>>                  !check_in_drive_list(drive, bad_ata66_3))
->>>>                  goto check_bad_ata33;
->>>>              /* fall thru */
->>>>          case 0x01:
->>>> -            speed = min_t(u8, speed, XFER_UDMA_2);
->>>> +            mask = 0x07;
->>>>  
->>>>          check_bad_ata33:
->>>>              if (chip_type >= HPT370A)
+hda: TOSHIBA MK8025GAS, ATA DISK drive
 
->>>   This case 0x01 will *never* be hit for HPT370 chip with the new 
->>> code, therefore the filter won't get applied.
+Many thanks!
+regards,
+Fabio
 
->>   Oh, and for HPT36x chips used with 40c cable too (unless they're 
->> artificaially reduced to UltraDMA/33 by the driver #define's).
 
->   It will still get applied since the code always resorts to looking up 
-> the 'bad_ata33' list for HPT36x/370.
-> I've got a bit muddled in my own code -- not sure if it got much clearer 
-> after I'd untangled hpt3xx_ratemask() / hpt3xx_ratefilter() puzzle. :-)
 
-  Yeah, I'm definitely having trouble understanding my own code after some months have passed... :-/
 
-MBR, Sergei
-
+On 4/19/07, Chuck Ebbert <cebbert@redhat.com> wrote:
+> Stephen Clark wrote:
+> > Mark Lord wrote:
+> >
+> >> Mark Lord wrote:
+> >>
+> >>
+> >>> With the patch applied, I don't see *any* new activity in those
+> >>> S.M.A.R.T.
+> >>> attributes over multiple hibernates (Linux "suspend-to-disk").
+> >>>
+> >>
+> >> Scratch that -- operator failure.  ;)
+> >> The patch makes no difference over hibernates in the SMART logs.
+> >>
+> >> It's still logging extra Power-Off_Retract_Count pegs,
+> >> which it DID NOT USED TO DO not so long ago.
+> >>
+> >> Now I'll poke at the shutdown again.
+> >>
+> >> Meanwhile, Stephen:  Could you try without this line in the patched file:
+> >>
+> >>        case ATA_16:
+> >> +               dev->needs_sync_cache = 1;
+> >>
+> >> Ie. comment out that last "dev->needs_sync_cache" line.
+> >>
+> >>
+> > No joy - even with that line commented out I get a click and my
+> > Power-Off_Retract_Count has incremented.
+> >
+>
+> I found a solution of sorts on Fedora 6:
+>
+>
+> Edit /etc/rc0.d/S01halt, changing the third-from-last line so it reads:
+>
+> HALTARGS="-d -h -n"
+>
+> Then use the halt(8) command to shut down and turn off the power manually.
+> No click and the "retract" counter does not increment. (Even this procedure
+> incremented the counter until I changed the script.)
+>
+> Seems safe, using the IDE drivers, since they sync the cache anyway.
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
