@@ -1,39 +1,44 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Kernel 2.6.18 and above
-Date: Sat, 21 Apr 2007 10:15:32 +1000
-Message-ID: <1177114532.6080.13.camel@localhost.localdomain>
-References: <4626AEF7.9010804@users.sourceforge.net>
-	 <46286D36.5090609@users.sourceforge.net>
-	 <1177057830.17978.13.camel@localhost.localdomain>
-	 <200704202241.13223.bzolnier@gmail.com>
+From: "David Lebel" <lebel@lebel.org>
+Subject: Re: Correct way to enable port multiplier support in kernel 2.6.20-1?
+Date: Fri, 20 Apr 2007 23:19:55 -0400
+Message-ID: <d03b6e70704202019gfd7a20atbd9035daacfa9e48@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:45042 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753736AbXDUATv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Apr 2007 20:19:51 -0400
-In-Reply-To: <200704202241.13223.bzolnier@gmail.com>
+Received: from an-out-0708.google.com ([209.85.132.243]:32678 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754070AbXDUDT4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 23:19:56 -0400
+Received: by an-out-0708.google.com with SMTP id b33so1176784ana
+        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2007 20:19:55 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Mike <michael_six@users.sourceforge.net>, B.Zolnierkiewicz@elka.pw.edu.pl, list linux-ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
+> I don't see any patches to get port multiplier support working for kernel 2.6.20-1 I
+> recompiled the kernel manually and made sure I config'd it with everything current but it
+> appears port multiplier isn't in the mainline (it still does not work). My question is, what do I > need to do to get my addonics 3726 working with kernel 2.6.20-1? I'm not a developer
+> by any means and the guide on the addonics website would have worked for me but
+> it is out of date.
 
-> Since this is a 2.6.17->2.6.18 regression narrowing the problem down to
-> the specific changeset (or at least -git or even -rc) seems like a most
-> promising way in discovering the source of the issue.
+I have a similar issue.  I'm running Ubuntu-server 7.04, with kernel
+2.6.20-15 and the kernel doesn't support PMP still.  Would have love
+to use an older kernel with patch sets provided by the links from
+addonics, but kernel compilation didn't work. Failed somehow.
 
-Dunno... unless I missed something in the logs, both 2.6.17 and .18 seem
-to report initially the wrong size (2GB), but the kernel seems to ignore
-the size from the IDE layer and use the one in the partition map in .17
-and not in .18 ...
+I have a Fusion 500P device (which uses a 3726 chipset), plus a
+3132-based controller.
 
-To me at least, it looks like it's not a regression per-se but a latent
-bug made visible.
+Any easy-to-use, non-developper oriented patch that could allow me to
+build a kernel package that would enable PMP so I can see all 5 drives
+in my library, and not only the first one?
 
-Cheers,
-Ben.
+Ciao,
+  ...David
 
-
+-- 
+// david lebel <lebel@lebel.org>
+// http://www.lebel.org/
+// pgp: 3633 6999 D47E 73ED 099F  4341 08A4 8E48 EF56 61D1
