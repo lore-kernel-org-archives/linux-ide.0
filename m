@@ -1,44 +1,88 @@
-From: "David Lebel" <lebel@lebel.org>
-Subject: Re: Correct way to enable port multiplier support in kernel 2.6.20-1?
-Date: Fri, 20 Apr 2007 23:19:55 -0400
-Message-ID: <d03b6e70704202019gfd7a20atbd9035daacfa9e48@mail.gmail.com>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: Re: Correct way to enable port multiplier support in kernel
+	2.6.20-1?
+Date: Fri, 20 Apr 2007 20:36:00 -0700
+Message-ID: <20070421033600.GA14976@curie-int.orbis-terrarum.net>
+References: <d03b6e70704202019gfd7a20atbd9035daacfa9e48@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="xHFwDpU9dbj6ez1V"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:32678 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754070AbXDUDT4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 23:19:56 -0400
-Received: by an-out-0708.google.com with SMTP id b33so1176784ana
-        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2007 20:19:55 -0700 (PDT)
+Received: from b01.ext.isohunt.com ([208.71.112.51]:36395 "EHLO
+	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754094AbXDUDfs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 23:35:48 -0400
 Content-Disposition: inline
+In-Reply-To: <d03b6e70704202019gfd7a20atbd9035daacfa9e48@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: David Lebel <lebel@lebel.org>, linux-ide@vger.kernel.org
 
-> I don't see any patches to get port multiplier support working for kernel 2.6.20-1 I
-> recompiled the kernel manually and made sure I config'd it with everything current but it
-> appears port multiplier isn't in the mainline (it still does not work). My question is, what do I > need to do to get my addonics 3726 working with kernel 2.6.20-1? I'm not a developer
-> by any means and the guide on the addonics website would have worked for me but
-> it is out of date.
 
-I have a similar issue.  I'm running Ubuntu-server 7.04, with kernel
-2.6.20-15 and the kernel doesn't support PMP still.  Would have love
-to use an older kernel with patch sets provided by the links from
-addonics, but kernel compilation didn't work. Failed somehow.
+--xHFwDpU9dbj6ez1V
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I have a Fusion 500P device (which uses a 3726 chipset), plus a
-3132-based controller.
+On Fri, Apr 20, 2007 at 11:19:55PM -0400, David Lebel wrote:
+>  I have a Fusion 500P device (which uses a 3726 chipset), plus a
+>  3132-based controller.
+"Does it work?" For me - yes. I have the Fusion 500P, and a 3132
+controller (I also have a sata_mv, but that's nowhere near PMP ready
+codewise :-( ).
 
-Any easy-to-use, non-developper oriented patch that could allow me to
-build a kernel package that would enable PMP so I can see all 5 drives
-in my library, and not only the first one?
+There is also still the weird issue of the 1.5Gb speed limit on the 3132
+somewhere (when the path hardware-wise is all 3Gb).
 
-Ciao,
-  ...David
+>  Any easy-to-use, non-developper oriented patch that could allow me to
+>  build a kernel package that would enable PMP so I can see all 5 drives
+>  in my library, and not only the first one?
+Nope.
 
--- 
-// david lebel <lebel@lebel.org>
-// http://www.lebel.org/
-// pgp: 3633 6999 D47E 73ED 099F  4341 08A4 8E48 EF56 61D1
+However now is probably a good time to start on a plan for this stuff.
+
+Tejun Heo did the initial stuff, and I used his Git tree to update some
+patches to a 2.6.20rc2+libata-upstream level.
+
+Those patches I published here:
+http://dev.gentoo.org/~robbat2/libata-development/
+The sign-off lines esp for the hp_poll should probably reference Tejun,
+unless he just picked them up somewhere else.
+
+They really don't apply on top of current kernels, and hopefully some of
+the local ata.gods around here can report on the status of the major
+portions of them for integration maybe during the 2.6.23 timeframe (and
+perhaps 2.6.22-mm).
+
+hp_poll series:
+This implemented SATA hotplug-by-polling for cases where
+hotplug-by-interrupt was not available.
+
+ata_link:
+I'll just include Tejun's description from 4/18
+"Introduce ata_link.  It abstracts PHY and sits between ata_port and
+ata_device.  This new level of abstraction is necessary to support SATA
+Port Multiplier, which basically adds a bunch of links (PHYs) to a ATA
+host port.  Fields related to command execution, spd_limit and EH are
+per-link and thus moved to ata_link."
+
+--=20
+Robin Hugh Johnson
+Gentoo Linux Developer & Council Member
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+
+--xHFwDpU9dbj6ez1V
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.2 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+
+iD8DBQFGKYagPpIsIjIzwiwRAgrdAJ9B9Xeiy/4OyrLbeBzxbvQoTXrc9ACeP/yg
+gRP1uq5FYQxcvP/NCF4YDwg=
+=GrdZ
+-----END PGP SIGNATURE-----
+
+--xHFwDpU9dbj6ez1V--
