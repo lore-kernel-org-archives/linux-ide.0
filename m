@@ -1,50 +1,46 @@
-From: "Fabio Comolli" <fabio.comolli@gmail.com>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Sat, 21 Apr 2007 17:11:10 +0200
-Message-ID: <b637ec0b0704210811t3815ebb9y6f601637e5b21571@mail.gmail.com>
-References: <88SeR-5Sf-15@gated-at.bofh.it>
-	 <20070418160627.7ab77c30@the-village.bc.nu> <46263650.3080705@rtr.ca>
-	 <46263859.2060309@gmail.com> <46265089.4000409@rtr.ca>
-	 <46265307.7060405@rtr.ca> <4626596E.4040304@seclark.us>
-	 <4627ABE9.8090906@redhat.com>
-	 <b637ec0b0704201257l24d9e9c8ha31221c9c9d8da3e@mail.gmail.com>
-	 <Pine.LNX.4.61.0704211631540.9989@yvahk01.tjqt.qr>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Kernel 2.6.18 and above
+Date: Sat, 21 Apr 2007 11:28:25 -0400
+Message-ID: <462A2D99.9090201@rtr.ca>
+References: <4626AEF7.9010804@users.sourceforge.net> <46286D36.5090609@users.sourceforge.net> <1177057830.17978.13.camel@localhost.localdomain> <200704202241.13223.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:3490 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753180AbXDUPLM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2007 11:11:12 -0400
-Received: by an-out-0708.google.com with SMTP id b33so1287639ana
-        for <linux-ide@vger.kernel.org>; Sat, 21 Apr 2007 08:11:11 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.61.0704211631540.9989@yvahk01.tjqt.qr>
-Content-Disposition: inline
+Received: from rtr.ca ([64.26.128.89]:2280 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1749667AbXDUP21 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 21 Apr 2007 11:28:27 -0400
+In-Reply-To: <200704202241.13223.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Stephen.Clark@seclark.us, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, emisca <emisca.ml@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Mike <michael_six@users.sourceforge.net>, B.Zolnierkiewicz@elka.pw.edu.pl, list linux-ide <linux-ide@vger.kernel.org>
 
-Jan,
-mine does not pop running Linux but  only during the shutdown. As I
-wrote before, switching from PATA to IDE has solved the problem for
-me.
-Regards,
-Fabio
+Bartlomiej Zolnierkiewicz wrote:
+> On Friday 20 April 2007, Benjamin Herrenschmidt wrote:
+>> I'm CC'ing linux-ide... looks like the disk which you say is 20GB is
+>> misdetected by the IDE layer as being 2GB.
+..
+>> And here you can see that the partition map tries to use about 20GB...
+>> so there is a discrepancy between what the partition map says and what
+>> the IDE driver says. I suspect old kernel just ignores the later, while
+>> newer kernels enforce the limit which causes your problem.
+>>
+>> Bart, I'm a bit at lost as to why the device size would be misdetected,
+>> do you have an idea ? Might be worth getting a dump of the ID block...
+>> Mike, can you send us a dump of the binary file /proc/ide/hdb/identify ?
+> 
+> Since this is a 2.6.17->2.6.18 regression narrowing the problem down to
+> the specific changeset (or at least -git or even -rc) seems like a most
+> promising way in discovering the source of the issue.
 
+Oddly enough, the IDENTIFY data that was posted shows this:
 
-On 4/21/07, Jan Engelhardt <jengelh@linux01.gwdg.de> wrote:
->
-> >On Apr 20 2007 21:57, Fabio Comolli wrote:
-> >
-> > hda: TOSHIBA MK8025GAS, ATA DISK drive
->
-> MK...? These sort of disks do that stupid pop. Mine -- a MK2003GAH --
-> does it even while running Linux, if the disk is _idle_.
-> See http://lkml.org/lkml/2006/11/15/413 - hope it provides some pointers.
->
-> Regards,
-> Jan
-> --
->
+        CHS current addressable sectors:    4128768
+        LBA    user addressable sectors:   40188960
+
+So, using CHS it appears as a 2GB drive, but using LBA we get a 20GB drive.
+Is something mistakenly using CHS instead of LBA ??
+
+-ml
