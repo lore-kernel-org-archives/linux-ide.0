@@ -1,49 +1,34 @@
-From: "David Lebel" <lebel@lebel.org>
-Subject: Re: Correct way to enable port multiplier support in kernel 2.6.20-1?
-Date: Sat, 21 Apr 2007 10:42:55 -0400
-Message-ID: <d03b6e70704210742w63d07e8dk9fe590c412ef5c23@mail.gmail.com>
-References: <d03b6e70704202019gfd7a20atbd9035daacfa9e48@mail.gmail.com>
-	 <20070421033600.GA14976@curie-int.orbis-terrarum.net>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: Loud "pop" coming from hard drive on reboot
+Date: Sat, 21 Apr 2007 16:33:23 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0704211631540.9989@yvahk01.tjqt.qr>
+References: <88SeR-5Sf-15@gated-at.bofh.it>  <20070418140346.636879a1@the-village.bc.nu>
+ <46262C0E.9000103@rtr.ca>  <20070418160627.7ab77c30@the-village.bc.nu>
+ <46263650.3080705@rtr.ca>  <46263859.2060309@gmail.com> <46265089.4000409@rtr.ca>
+  <46265307.7060405@rtr.ca> <4626596E.4040304@seclark.us>  <4627ABE9.8090906@redhat.com>
+ <b637ec0b0704201257l24d9e9c8ha31221c9c9d8da3e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:47560 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031252AbXDUOm4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2007 10:42:56 -0400
-Received: by an-out-0708.google.com with SMTP id b33so1282087ana
-        for <linux-ide@vger.kernel.org>; Sat, 21 Apr 2007 07:42:55 -0700 (PDT)
-In-Reply-To: <20070421033600.GA14976@curie-int.orbis-terrarum.net>
-Content-Disposition: inline
+Received: from mailer.gwdg.de ([134.76.10.26]:50178 "EHLO mailer.gwdg.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031267AbXDUOxI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 21 Apr 2007 10:53:08 -0400
+In-Reply-To: <b637ec0b0704201257l24d9e9c8ha31221c9c9d8da3e@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, robbat2@gentoo.org
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Cc: Chuck Ebbert <cebbert@redhat.com>, Stephen.Clark@seclark.us, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, emisca <emisca.ml@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
 
-On 4/20/07, Robin H. Johnson <robbat2@gentoo.org> wrote:
-> Tejun Heo did the initial stuff, and I used his Git tree to update some
-> patches to a 2.6.20rc2+libata-upstream level.
+
+>On Apr 20 2007 21:57, Fabio Comolli wrote:
 >
-> Those patches I published here:
-> http://dev.gentoo.org/~robbat2/libata-development/
-> The sign-off lines esp for the hp_poll should probably reference Tejun,
-> unless he just picked them up somewhere else.
+> hda: TOSHIBA MK8025GAS, ATA DISK drive
 
-I did get the linux-2.6.20rc2 tarball from kernel.org, but when I
-tried to apply the patches from your link, the first ones seems to
-have been applied already for some of the files, so I had .rej files
-for some of the chunks. It was late tho, didn't go far.
+MK...? These sort of disks do that stupid pop. Mine -- a MK2003GAH --
+does it even while running Linux, if the disk is _idle_.
+See http://lkml.org/lkml/2006/11/15/413 - hope it provides some pointers.
 
-I never used git myself, as I said, I'm not a kernel guru, I'm just a
-sysadmin :)
-
-However, I can handle patch, and if I know the correct way to do it, I
-could do it on a specific version of the kernel.
-
-Ciao,
-  ...David
-
+Regards,
+Jan
 -- 
-// david lebel <lebel@lebel.org>
-// http://www.lebel.org/
-// pgp: 3633 6999 D47E 73ED 099F  4341 08A4 8E48 EF56 61D1
