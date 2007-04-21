@@ -1,36 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 12/15] ide: make ide_hwif_t.ide_dma_host_on void
-Date: Sat, 21 Apr 2007 00:36:52 +0400
-Message-ID: <46292464.90403@ru.mvista.com>
-References: <20070119003058.14846.43637.sendpatchset@localhost.localdomain> <20070119003220.14846.14258.sendpatchset@localhost.localdomain> <460800A8.4050501@ru.mvista.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: Kernel 2.6.18 and above
+Date: Sat, 21 Apr 2007 10:15:32 +1000
+Message-ID: <1177114532.6080.13.camel@localhost.localdomain>
+References: <4626AEF7.9010804@users.sourceforge.net>
+	 <46286D36.5090609@users.sourceforge.net>
+	 <1177057830.17978.13.camel@localhost.localdomain>
+	 <200704202241.13223.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:48531 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030866AbXDTUf4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2007 16:35:56 -0400
-In-Reply-To: <460800A8.4050501@ru.mvista.com>
+Received: from gate.crashing.org ([63.228.1.57]:45042 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753736AbXDUATv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Apr 2007 20:19:51 -0400
+In-Reply-To: <200704202241.13223.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Mike <michael_six@users.sourceforge.net>, B.Zolnierkiewicz@elka.pw.edu.pl, list linux-ide <linux-ide@vger.kernel.org>
 
-Hello, once I wrote:
 
->> [PATCH] ide: make ide_hwif_t.ide_dma_host_on void
- 
->> * since ide_hwif_t.ide_dma_host_on is called either when 
->> drive->using_dma == 1
->>   or when return value is discarded make it void, also drop "ide_" prefix
->> * make __ide_dma_host_on() void and drop "__" prefix
+> Since this is a 2.6.17->2.6.18 regression narrowing the problem down to
+> the specific changeset (or at least -git or even -rc) seems like a most
+> promising way in discovering the source of the issue.
 
->    BTW, it would also make sense to make hwif->ide_dma_timeout() and 
-> hwif->ide_dma_lostirq void too (and possibly drop the ide_ prefix). 
-> Their results are *explicitly* ignored.
+Dunno... unless I missed something in the logs, both 2.6.17 and .18 seem
+to report initially the wrong size (2GB), but the kernel seems to ignore
+the size from the IDE layer and use the one in the partition map in .17
+and not in .18 ...
 
-   I've started preparing the patches and found out that aec62xx has completely bogus ide_dma_timeout() -- the same as ide_dma_lostirq() and it doesn't even call __ide_dma_timeout()... :-/
-   Don't know whether to deal with this in a separate patch...
+To me at least, it looks like it's not a regression per-se but a latent
+bug made visible.
 
-MBR, Sergei
+Cheers,
+Ben.
+
+
