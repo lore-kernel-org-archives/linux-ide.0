@@ -1,46 +1,43 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: add missing call to ->cable_detect() in new EH path
-Date: Mon, 23 Apr 2007 02:05:53 +0900
-Message-ID: <20070422170553.GL10619@htj.dyndns.org>
+Subject: [PATCH] libata-acpi: fix _GTF command protocol for ATAPI devices
+Date: Mon, 23 Apr 2007 02:06:46 +0900
+Message-ID: <20070422170646.GM10619@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.237]:14241 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.235]:14794 "EHLO
 	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161509AbXDVRF6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 13:05:58 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1326759wra
-        for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 10:05:58 -0700 (PDT)
+	with ESMTP id S1161514AbXDVRGw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 13:06:52 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so1326890wra
+        for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 10:06:52 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-->cable_detect() used to be called on by the old ata_bus_probe() path.
-Add invocation to ata_eh_revalidate_and_attach() right after IDENTIFYs
-are done.
+_GTF command is never ATA_PROT_ATAPI_NODATA whether the device is
+ATAPI or not.  It's always ATA_PROT_NODATA.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 ---
- drivers/ata/libata-eh.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/ata/libata-acpi.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 0dbee55..67bf150 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1810,6 +1810,10 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
- 		}
- 	}
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 03a0acf..cb3eab6 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -489,8 +489,7 @@ static void taskfile_load_raw(struct ata_port *ap,
  
-+	/* PDIAG- should have been released, ask cable type if post-reset */
-+	if ((ehc->i.flags & ATA_EHI_DID_RESET) && ap->ops->cable_detect)
-+		ap->cbl = ap->ops->cable_detect(ap);
-+
- 	/* Configure new devices forward such that user doesn't see
- 	 * device detection messages backwards.
- 	 */
+ 	/* convert gtf to tf */
+ 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE; /* TBD */
+-	tf.protocol = atadev->class == ATA_DEV_ATAPI ?
+-		ATA_PROT_ATAPI_NODATA : ATA_PROT_NODATA;
++	tf.protocol = ATA_PROT_NODATA;
+ 	tf.feature = gtf->tfa[0];	/* 0x1f1 */
+ 	tf.nsect   = gtf->tfa[1];	/* 0x1f2 */
+ 	tf.lbal    = gtf->tfa[2];	/* 0x1f3 */
 -- 
 1.5.0.3
 
