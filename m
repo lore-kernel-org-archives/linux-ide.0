@@ -1,55 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] pata_amd: remove contamination added during cable_detect
- conversion
-Date: Mon, 23 Apr 2007 02:51:33 +0900
-Message-ID: <462BA0A5.2080900@gmail.com>
-References: <20070422170438.GK10619@htj.dyndns.org> <20070422184037.537ae748@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 07/13] libata-acpi: add ATA_FLAG_ACPI_SATA port flag
+Date: Sun, 22 Apr 2007 18:53:51 +0100
+Message-ID: <20070422185351.12adf7d8@the-village.bc.nu>
+References: <11772636651400-git-send-email-htejun@gmail.com>
+	<11772636662936-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:28661 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753296AbXDVRvj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 13:51:39 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1333794wra
-        for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 10:51:38 -0700 (PDT)
-In-Reply-To: <20070422184037.537ae748@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <11772636662936-git-send-email-htejun@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, trenn@suse.de, forrest.zhao@gmail.com, kristen.c.accardi@intel.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Hello,
+On Mon, 23 Apr 2007 02:41:06 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Alan Cox wrote:
-> On Mon, 23 Apr 2007 02:04:38 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
-> 
->> This is added by added by cff63dfceb52c564fe1ba5394d50ab7d599a11b9
->>  - pata: cable methods.
-> 
-> The Cable method fix for the Nvidia hardware if ACPI drivers are present
-> and usable is to use the ACPI driver, so its not a "contamination" its a
-> fix for the fact the Nvidia code can't do cable detect any other way
+> Whether a controller needs IDE or SATA ACPI hierarchy is determined by
+> the programming interface of the controller not by whether the
+> controller is SATA or PATA
 
-But pata_amd modifications should be merged together with pata_acpi not
-separately.
+NAK
 
-Anyways, I've been testing pata_acpi and it doesn't work on my nforce
-ultra machine.  Whether the cable is 40c or not, _STM happily sets UDMA
-mode above 2 resulting in a series of transfer errors.  EH kicks in
-eventually and drops transfer speed.
+I keep trying to point out that this is not true.
 
-Also, ata_acpi_gtm() implementation was broken in that it skipped one
-level of indirection (acpi_object, please take a look at the last patch
-of just posted patchset), so it was basically returning garbage values.
+The ACPI interface to use can only be safely determined one way - and
+that is to see what methods the BIOS has attached to the device and use
+those.
 
-I have patches to update pata_amd to use _STM/_GTM for cable detection
-(a lot are taken from pata_acpi) but ACPI cable detection is just as
-broken as PCI config one.
+Take the ACPI handle, go look for _GTF, _SDD etc and believe the
+firmware. Nothing else works.
 
-Thanks.
-
--- 
-tejun
+Alan
