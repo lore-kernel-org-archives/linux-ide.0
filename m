@@ -1,41 +1,41 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 07/13] libata-acpi: add ATA_FLAG_ACPI_SATA port flag
-Date: Sun, 22 Apr 2007 19:14:49 +0100
-Message-ID: <20070422191449.726e0fb4@the-village.bc.nu>
-References: <11772636651400-git-send-email-htejun@gmail.com>
-	<11772636662936-git-send-email-htejun@gmail.com>
-	<20070422185351.12adf7d8@the-village.bc.nu>
-	<462BA35C.5040702@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] pata_amd: remove contamination added during cable_detect
+ conversion
+Date: Mon, 23 Apr 2007 03:14:31 +0900
+Message-ID: <462BA607.5010603@gmail.com>
+References: <20070422170438.GK10619@htj.dyndns.org>	<20070422184037.537ae748@the-village.bc.nu>	<462BA0A5.2080900@gmail.com> <20070422185917.5fe14e97@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <462BA35C.5040702@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, trenn@suse.de, forrest.zhao@gmail.com, kristen.c.accardi@intel.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.234]:51001 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754311AbXDVSOh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 14:14:37 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so1110320nze
+        for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 11:14:37 -0700 (PDT)
+In-Reply-To: <20070422185917.5fe14e97@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-> > Take the ACPI handle, go look for _GTF, _SDD etc and believe the
-> > firmware. Nothing else works.
+Alan Cox wrote:
+>> I have patches to update pata_amd to use _STM/_GTM for cable detection
+>> (a lot are taken from pata_acpi) but ACPI cable detection is just as
+>> broken as PCI config one.
 > 
-> Actually, that's dangerous.  For example, you must not do _STM/_GTM on
-> ahci becuase _STM/_GTM access PCI config registers which must not be
-> accessed in achi modes and some BIOSen supply the same _STM/_GTM nodes
-> whether the controller is in ata_piix mode or ahci mode.  Also, on ICH8,
-> the association gets quite weird due to PCI device splitting.
+> I'm unclear we can safely mix _STM/_GTM and direct access to the drive in
+> a general form. The ACPI documentation seems to be carefully very silent
+> on the subject.
+> 
+> Whatever works in this area is good.
 
-You can end up with _SDD methods for SFF format controllers (or what we
-think of as SFF format controllers) when we don't have the knowledge to
-drive them in their full super-whizzo method (eg Marvell)
+Yeap, definitely.  Can you please retest pata_acpi with ata_acpi_gtm()
+fixed?  I have an UDMA2 ODD (HL-DT-ST DVDRAM GSA-H10N) and UDMA4 HDD
+(WDC WD153AA) attached to 40c cable and ACPI mode discovery doesn't work
+at all.  The only thing I can get working here is storing the BIOS
+setting.  :-(
 
-> The ACPI spec says the layout is dependent on controller interface and I
->  can see reasons why we need to follow that but not the other way
-> around.  Do you have counter-examples?
-
-The first problem is the words "the spec". 
-
-Agreed that STM/GTM are not safe except when expected (and not always safe
-when they are) but that ought to be ok as we then set all the modes
-properly ourselves afterwards.
-
+-- 
+tejun
