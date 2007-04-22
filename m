@@ -1,81 +1,46 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 13/15] ide: fix UDMA/MWDMA/SWDMA masks
-Date: Sun, 22 Apr 2007 20:19:45 +0400
-Message-ID: <462B8B21.1030805@ru.mvista.com>
-References: <20070203172415.4926.29574.sendpatchset@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] pata_amd: remove contamination added during cable_detect conversion
+Date: Mon, 23 Apr 2007 02:04:38 +0900
+Message-ID: <20070422170438.GK10619@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:55955 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161362AbXDVQSv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Apr 2007 12:18:51 -0400
-In-Reply-To: <20070203172415.4926.29574.sendpatchset@localhost.localdomain>
+Received: from wr-out-0506.google.com ([64.233.184.236]:13962 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161499AbXDVREo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 13:04:44 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so1326581wra
+        for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 10:04:43 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello.
+This is added by added by cff63dfceb52c564fe1ba5394d50ab7d599a11b9
+ - pata: cable methods.
 
-Bartlomiej Zolnierkiewicz wrote:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+---
+ drivers/ata/pata_amd.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-> [PATCH] ide: fix UDMA/MWDMA/SWDMA masks
-
-> * use 0x00 instead of 0x80 to disable ->{ultra,mwdma,swdma}_mask
-> * add udma_mask field to ide_pci_device_t and use it to initialize
->   ->ultra_mask in aec62xx, cmd64x, pdc202xx_{new,old} and piix drivers
-> * fix UDMA masks to match with chipset specific *_ratemask()
->   (alim15x3, hpt366, serverworks and siimage drivers need UDMA mask
->    filtering method - done in the next patch)
-> 
-> v2:
-> * piix: fix cable detection for 82801AA_1 and 82372FB_1
->   [ Noticed by Sergei Shtylyov <sshtylyov@ru.mvista.com>. ]
-> * cmd64x: use hwif->cds->udma_mask
->   [ Suggested by Sergei Shtylyov <sshtylyov@ru.mvista.com>. ]
-> * aec62xx: fix newly introduced bug - check DMA status not command register
->   [ Noticed by Sergei Shtylyov <sshtylyov@ru.mvista.com>. ]
-
-> v3:
-> * piix: use hwif->cds->udma_mask
->   [ Suggested by Sergei Shtylyov <sshtylyov@ru.mvista.com>. ]
-
-> Index: b/drivers/ide/pci/aec62xx.c
-> ===================================================================
-> --- a/drivers/ide/pci/aec62xx.c
-> +++ b/drivers/ide/pci/aec62xx.c
-> @@ -270,11 +270,13 @@ static unsigned int __devinit init_chips
->  
->  static void __devinit init_hwif_aec62xx(ide_hwif_t *hwif)
->  {
-> +	struct pci_dev *dev = hwif->pci_dev;
-> +
->  	hwif->autodma = 0;
->  	hwif->tuneproc = &aec62xx_tune_drive;
->  	hwif->speedproc = &aec62xx_tune_chipset;
->  
-> -	if (hwif->pci_dev->device == PCI_DEVICE_ID_ARTOP_ATP850UF)
-> +	if (dev->device == PCI_DEVICE_ID_ARTOP_ATP850UF)
->  		hwif->serialized = hwif->channel;
->  
->  	if (hwif->mate)
-> @@ -286,7 +288,15 @@ static void __devinit init_hwif_aec62xx(
->  		return;
->  	}
->  
-> -	hwif->ultra_mask = 0x7f;
-> +	hwif->ultra_mask = hwif->cds->udma_mask;
-> +
-> +	/* atp865 and atp865r */
-> +	if (hwif->ultra_mask == 0x3f) {
-> +		/* check bit 0x10 of DMA status register */
-> +		if (inb(pci_resource_start(dev, 4) + 2) & 0x10)
-> + 			hwif->ultra_mask = 0x7f; /* udma0-6 */
-> +	}
-> +
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 5a77e4e..536ee89 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -639,11 +639,6 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (type == 1 && rev > 0x7)
+ 		type = 2;
  
-   IMO, this asks to be put into init_setup_aec6x80() instead but since I'm already cleaning up that function, I'll move it there myself.
+-#if defined(CONFIG_ATA_ACPI)
+-	/* Prefer the ACPI driver for Nvidia hardware */
+-	if (pdev->vendor == PCI_VENDOR_ID_NVIDIA && ata_pata_acpi_present(pdev))
+-		return -ENODEV;
+-#endif
+ 	/* Check for AMD7411 */
+ 	if (type == 3)
+ 		/* FIFO is broken */
+-- 
+1.5.0.3
 
-MBR, Sergei
