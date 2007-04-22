@@ -1,43 +1,29 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata-acpi: fix _GTF command protocol for ATAPI devices
-Date: Mon, 23 Apr 2007 02:06:46 +0900
-Message-ID: <20070422170646.GM10619@htj.dyndns.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata-acpi: fix _GTF command protocol for ATAPI
+ devices
+Date: Sun, 22 Apr 2007 18:38:16 +0100
+Message-ID: <20070422183816.42dad6d5@the-village.bc.nu>
+References: <20070422170646.GM10619@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:14794 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161514AbXDVRGw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 13:06:52 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1326890wra
-        for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 10:06:52 -0700 (PDT)
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55676 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751208AbXDVRev (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 13:34:51 -0400
+In-Reply-To: <20070422170646.GM10619@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-_GTF command is never ATA_PROT_ATAPI_NODATA whether the device is
-ATAPI or not.  It's always ATA_PROT_NODATA.
+On Mon, 23 Apr 2007 02:06:46 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-acpi.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+> _GTF command is never ATA_PROT_ATAPI_NODATA whether the device is
+> ATAPI or not.  It's always ATA_PROT_NODATA.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 03a0acf..cb3eab6 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -489,8 +489,7 @@ static void taskfile_load_raw(struct ata_port *ap,
- 
- 	/* convert gtf to tf */
- 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE; /* TBD */
--	tf.protocol = atadev->class == ATA_DEV_ATAPI ?
--		ATA_PROT_ATAPI_NODATA : ATA_PROT_NODATA;
-+	tf.protocol = ATA_PROT_NODATA;
- 	tf.feature = gtf->tfa[0];	/* 0x1f1 */
- 	tf.nsect   = gtf->tfa[1];	/* 0x1f2 */
- 	tf.lbal    = gtf->tfa[2];	/* 0x1f3 */
--- 
-1.5.0.3
-
+Acked-by: Alan Cox <alan@redhat.com>
