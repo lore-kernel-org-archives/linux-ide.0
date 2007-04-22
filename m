@@ -1,78 +1,81 @@
-From: Arnd Hannemann <arnd@arndnet.de>
-Subject: libata sata_sil error handling
-Date: Sun, 22 Apr 2007 11:13:44 +0200
-Message-ID: <462B2748.3080200@arndnet.de>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 13/15] ide: fix UDMA/MWDMA/SWDMA masks
+Date: Sun, 22 Apr 2007 20:19:45 +0400
+Message-ID: <462B8B21.1030805@ru.mvista.com>
+References: <20070203172415.4926.29574.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from slowhand.arndnet.de ([88.198.19.76]:37306 "EHLO i-q-net.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754154AbXDVJpa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Apr 2007 05:45:30 -0400
-Received: from [192.168.2.133] (solaris.kawo2.RWTH-Aachen.DE [134.130.181.140])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by i-q-net.de (Postfix) with ESMTP id 42AC813EA5
-	for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 11:13:36 +0200 (CEST)
+Received: from h155.mvista.com ([63.81.120.155]:55955 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161362AbXDVQSv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Apr 2007 12:18:51 -0400
+In-Reply-To: <20070203172415.4926.29574.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Hello.
 
-tried to use my SiI 3512 card in the 2nd slot of a riser card on my
-mobo. Probably the BIOS did not assign a correct IRQ to the card, so I
-got this error message when loading the sata_sil module on my 2.6.20.7
-kernel:
+Bartlomiej Zolnierkiewicz wrote:
 
-> libata version 2.00 loaded.
-> sata_sil 0000:00:0b.0: version 2.0
-> sata_sil 0000:00:0b.0: Applying R_ERR on DMA activate FIS errata fix
-> ata1: SATA max UDMA/100 cmd 0xEF980080 ctl 0xEF98008A bmdma 0xEF980000 irq 255
-> ata2: SATA max UDMA/100 cmd 0xEF9800C0 ctl 0xEF9800CA bmdma 0xEF980008 irq 255
-> sata_sil 0000:00:0b.0: irq 255 request failed: -22
+> [PATCH] ide: fix UDMA/MWDMA/SWDMA masks
 
-Of course I don't blame libata for above, because the error seems to be
-with my BIOS or riser card. But now when I tried to rmmod sata_sil, I
-got these:
+> * use 0x00 instead of 0x80 to disable ->{ultra,mwdma,swdma}_mask
+> * add udma_mask field to ide_pci_device_t and use it to initialize
+>   ->ultra_mask in aec62xx, cmd64x, pdc202xx_{new,old} and piix drivers
+> * fix UDMA masks to match with chipset specific *_ratemask()
+>   (alim15x3, hpt366, serverworks and siimage drivers need UDMA mask
+>    filtering method - done in the next patch)
+> 
+> v2:
+> * piix: fix cable detection for 82801AA_1 and 82372FB_1
+>   [ Noticed by Sergei Shtylyov <sshtylyov@ru.mvista.com>. ]
+> * cmd64x: use hwif->cds->udma_mask
+>   [ Suggested by Sergei Shtylyov <sshtylyov@ru.mvista.com>. ]
+> * aec62xx: fix newly introduced bug - check DMA status not command register
+>   [ Noticed by Sergei Shtylyov <sshtylyov@ru.mvista.com>. ]
 
-> BUG: unable to handle kernel NULL pointer dereference at virtual address 00000010
->  printing eip:
-> ef9c8b05
-> *pde = 00000000
-> Oops: 0000 [#1]
-> Modules linked in: af_packet tun xt_state ipt_MASQUERADE ipt_REJECT ipt_recent ipt_LOG iptable_mangle iptax
-> CPU:    0
-> EIP:    0060:[<ef9c8b05>]    Not tainted VLI
-> EFLAGS: 00010282   (2.6.20.7 #2)
-> EIP is at ata_host_remove+0x5/0xd0 [libata]
-> eax: 00000000   ebx: b18d9400   ecx: b18d9448   edx: ef9cce20
-> esi: 00000000   edi: ef97bbe4   ebp: e3a51000   esp: e3a51ef4
-> ds: 007b   es: 007b   ss: 0068
-> Process rmmod (pid: 4110, ti=e3a51000 task=e7444550 task.ti=e3a51000)
-> Stack: b18d9400 b18d9448 ef97bbe4 ef9cce3a b18d9400 ef97bb94 b01dc036 b18d9448
->        b02262b4 b18d9448 ef97bb94 b02267e5 ef97bb94 ef97bb94 b033d180 b0225e89
->        ef97bb94 ef97bd00 00000000 b0226818 ef97bb60 b01dc10d 00000880 ef97bd00
-> Call Trace:
->  [<ef9cce3a>] ata_pci_remove_one+0x1a/0x40 [libata]
->  [<b01dc036>] pci_device_remove+0x16/0x40
->  [<b02262b4>] __device_release_driver+0x64/0x90
->  [<b02267e5>] driver_detach+0x95/0xa0
->  [<b0225e89>] bus_remove_driver+0x69/0x90
->  [<b0226818>] driver_unregister+0x8/0x20
->  [<b01dc10d>] pci_unregister_driver+0xd/0x60
->  [<b01305d0>] sys_delete_module+0x140/0x1b0
->  [<b0142499>] remove_vma+0x39/0x50
->  [<b0142e37>] do_munmap+0x197/0x1f0
->  [<b0102cb0>] syscall_call+0x7/0xb
->  =======================
-> Code: 74 24 04 8b 7c 24 08 8b 6c 24 0c 83 c4 10 e9 f3 cb fd ff 8d 76 00 0f ba b7 f0 1f 00 00 00 eb d0 8d b
-> EIP: [<ef9c8b05>] ata_host_remove+0x5/0xd0 [libata] SS:ESP 0068:e3a51ef4
+> v3:
+> * piix: use hwif->cds->udma_mask
+>   [ Suggested by Sergei Shtylyov <sshtylyov@ru.mvista.com>. ]
 
-I don't know if there exists a clean way to bail out at this type of
-error (i.e. is it possible refusing to load the module at all if IRQ
-Request failed?) but just wanted to give you some input.
+> Index: b/drivers/ide/pci/aec62xx.c
+> ===================================================================
+> --- a/drivers/ide/pci/aec62xx.c
+> +++ b/drivers/ide/pci/aec62xx.c
+> @@ -270,11 +270,13 @@ static unsigned int __devinit init_chips
+>  
+>  static void __devinit init_hwif_aec62xx(ide_hwif_t *hwif)
+>  {
+> +	struct pci_dev *dev = hwif->pci_dev;
+> +
+>  	hwif->autodma = 0;
+>  	hwif->tuneproc = &aec62xx_tune_drive;
+>  	hwif->speedproc = &aec62xx_tune_chipset;
+>  
+> -	if (hwif->pci_dev->device == PCI_DEVICE_ID_ARTOP_ATP850UF)
+> +	if (dev->device == PCI_DEVICE_ID_ARTOP_ATP850UF)
+>  		hwif->serialized = hwif->channel;
+>  
+>  	if (hwif->mate)
+> @@ -286,7 +288,15 @@ static void __devinit init_hwif_aec62xx(
+>  		return;
+>  	}
+>  
+> -	hwif->ultra_mask = 0x7f;
+> +	hwif->ultra_mask = hwif->cds->udma_mask;
+> +
+> +	/* atp865 and atp865r */
+> +	if (hwif->ultra_mask == 0x3f) {
+> +		/* check bit 0x10 of DMA status register */
+> +		if (inb(pci_resource_start(dev, 4) + 2) & 0x10)
+> + 			hwif->ultra_mask = 0x7f; /* udma0-6 */
+> +	}
+> +
+ 
+   IMO, this asks to be put into init_setup_aec6x80() instead but since I'm already cleaning up that function, I'll move it there myself.
 
-Best regards,
-Arnd Hannemann
+MBR, Sergei
