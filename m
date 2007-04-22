@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/13] libata-acpi: add ATA_FLAG_ACPI_SATA port flag
+Subject: [PATCH 10/13] libata-acpi: miscellaneous cleanups
 Date: Mon, 23 Apr 2007 02:41:06 +0900
-Message-ID: <11772636662936-git-send-email-htejun@gmail.com>
+Message-ID: <11772636663624-git-send-email-htejun@gmail.com>
 References: <11772636651400-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:25346 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.227]:25215 "EHLO
 	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbXDVRlS (ORCPT
+	with ESMTP id S1752246AbXDVRlS (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 13:41:18 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1332009wra
+Received: by wr-out-0506.google.com with SMTP id 76so1332011wra
         for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 10:41:17 -0700 (PDT)
 In-Reply-To: <11772636651400-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,110 +20,119 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, trenn@suse.de, alan@lxorguk.ukuu.org.uk, forrest.zhao@gmail.com, kristen.c.accardi@intel.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Whether a controller needs IDE or SATA ACPI hierarchy is determined by
-the programming interface of the controller not by whether the
-controller is SATA or PATA, or it supports slave device or not.  This
-patch adds ATA_FLAG_ACPI_SATA port flags which tells libata-acpi that
-the port needs SATA ACPI nodes, and sets the flag for ahci and
-sata_sil24.
+* Add missing LOCKING: and RETURNS: to function comment.
+
+* Don't conditionalize warning messages with ata_msg_probe().  Print
+  directly with KERN_WARNING.
+
+* Drop duplicate debug messages.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c        |    3 ++-
- drivers/ata/libata-acpi.c |   10 +++++-----
- drivers/ata/sata_sil24.c  |    3 ++-
- include/linux/libata.h    |    1 +
- 4 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/ata/libata-acpi.c |   51 ++++++++++++++++++++------------------------
+ 1 files changed, 23 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 34c5534..7f739e8 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -173,7 +173,8 @@ enum {
- 
- 	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
--					  ATA_FLAG_SKIP_D2H_BSY,
-+					  ATA_FLAG_SKIP_D2H_BSY |
-+					  ATA_FLAG_ACPI_SATA,
- };
- 
- struct ahci_cmd_hdr {
 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index f005730..24c2198 100644
+index 21aad07..2750c36 100644
 --- a/drivers/ata/libata-acpi.c
 +++ b/drivers/ata/libata-acpi.c
-@@ -321,7 +321,7 @@ static int do_drive_get_GTF(struct ata_device *adev, unsigned int *gtf_length,
+@@ -174,21 +174,17 @@ static int do_drive_get_GTF(struct ata_device *adev, struct ata_acpi_gtf **gtf,
  
- 	/* Don't continue if device has no _ADR method.
- 	 * _GTF is intended for known motherboard devices. */
--	if (!(ap->cbl == ATA_CBL_SATA)) {
-+	if (!(ap->flags & ATA_FLAG_ACPI_SATA)) {
- 		err = pata_get_dev_handle(dev, &dev_handle, &pcidevfn);
- 		if (err < 0) {
- 			if (ata_msg_probe(ap))
-@@ -343,7 +343,7 @@ static int do_drive_get_GTF(struct ata_device *adev, unsigned int *gtf_length,
+ 	out_obj = output.pointer;
+ 	if (out_obj->type != ACPI_TYPE_BUFFER) {
+-		if (ata_msg_probe(ap))
+-			ata_dev_printk(adev, KERN_DEBUG, "%s: Run _GTF: "
+-				"error: expected object type of "
+-				" ACPI_TYPE_BUFFER, got 0x%x\n",
+-				__FUNCTION__, out_obj->type);
++		ata_dev_printk(adev, KERN_WARNING,
++			       "_GTF unexpected object type 0x%x\n",
++			       out_obj->type);
+ 		rc = -EINVAL;
+ 		goto out_free;
+ 	}
  
- 	/* Get this drive's _ADR info. if not already known. */
- 	if (!adev->obj_handle) {
--		if (!(ap->cbl == ATA_CBL_SATA)) {
-+		if (!(ap->flags & ATA_FLAG_ACPI_SATA)) {
- 			/* get child objects of dev_handle == channel objects,
- 	 		 * + _their_ children == drive objects */
- 			/* channel is ap->port_no */
-@@ -528,7 +528,7 @@ static int do_drive_set_taskfiles(struct ata_device *adev,
- 		ata_dev_printk(adev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
- 			       __FUNCTION__, ap->port_no);
+ 	if (out_obj->buffer.length % REGS_PER_GTF) {
+-		if (ata_msg_drv(ap))
+-			ata_dev_printk(adev, KERN_ERR,
+-				"%s: unexpected GTF length (%d) or addr (0x%p)\n",
+-				__FUNCTION__, out_obj->buffer.length,
+-				out_obj->buffer.pointer);
++		ata_dev_printk(adev, KERN_WARNING,
++			       "unexpected _GTF length (%d)\n",
++			       out_obj->buffer.length);
+ 		rc = -EINVAL;
+ 		goto out_free;
+ 	}
+@@ -319,6 +315,12 @@ static int do_drive_set_taskfiles(struct ata_device *adev,
+  * @ap: the ata_port for the drive
+  *
+  * This applies to both PATA and SATA drives.
++ *
++ * LOCKING:
++ * EH context.
++ *
++ * RETURNS:
++ * 0 on success, -errno on failure.
+  */
+ int ata_acpi_exec_tfs(struct ata_port *ap)
+ {
+@@ -344,24 +346,14 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+ 		ret = do_drive_get_GTF(adev, &gtf, &ptr_to_free);
+ 		if (ret == 0)
+ 			continue;
+-		if (ret < 0) {
+-			if (ata_msg_probe(ap))
+-				ata_port_printk(ap, KERN_DEBUG,
+-					"%s: get_GTF error (%d)\n",
+-					__FUNCTION__, ret);
++		if (ret < 0)
+ 			break;
+-		}
+ 		gtf_count = ret;
  
--	if (libata_noacpi || !(ap->cbl == ATA_CBL_SATA))
-+	if (libata_noacpi || !(ap->flags & ATA_FLAG_ACPI_SATA))
- 		return 0;
+ 		ret = do_drive_set_taskfiles(adev, gtf, gtf_count);
+ 		kfree(ptr_to_free);
+-		if (ret < 0) {
+-			if (ata_msg_probe(ap))
+-				ata_port_printk(ap, KERN_DEBUG,
+-					"%s: set_taskfiles error (%d)\n",
+-					__FUNCTION__, ret);
++		if (ret < 0)
+ 			break;
+-		}
+ 	}
  
- 	if (!ata_dev_enabled(adev) || (ap->flags & ATA_FLAG_DISABLED))
-@@ -578,7 +578,7 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
- 	 * we should not run GTF on PATA devices since some
- 	 * PATA require execution of GTM/STM before GTF.
- 	 */
--	if (!(ap->cbl == ATA_CBL_SATA))
-+	if (!(ap->flags & ATA_FLAG_ACPI_SATA))
- 		return 0;
+ 	return ret;
+@@ -376,6 +368,12 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+  * ATM this function never returns a failure.  It is an optional
+  * method and if it fails for whatever reason, we should still
+  * just keep going.
++ *
++ * LOCKING:
++ * EH context.
++ *
++ * RETURNS:
++ * 0 on success, -errno on failure.
+  */
+ int ata_acpi_push_id(struct ata_device *adev)
+ {
+@@ -415,12 +413,9 @@ int ata_acpi_push_id(struct ata_device *adev)
+ 	swap_buf_le16(adev->id, ATA_ID_WORDS);
  
- 	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
-@@ -641,7 +641,7 @@ int ata_acpi_push_id(struct ata_device *adev)
- 			       __FUNCTION__, adev->devno, ap->port_no);
+ 	err = ACPI_FAILURE(status) ? -EIO : 0;
+-	if (err < 0) {
+-		if (ata_msg_probe(ap))
+-			ata_dev_printk(adev, KERN_DEBUG,
+-				       "%s _SDD error: status = 0x%x\n",
+-				       __FUNCTION__, status);
+-	}
++	if (err < 0)
++		ata_dev_printk(adev, KERN_WARNING,
++			       "ACPI _SDD failed (AE 0x%x)\n", status);
  
- 	/* Don't continue if not a SATA device. */
--	if (!(ap->cbl == ATA_CBL_SATA)) {
-+	if (!(ap->flags & ATA_FLAG_ACPI_SATA)) {
- 		if (ata_msg_probe(ap))
- 			ata_dev_printk(adev, KERN_DEBUG,
- 				"%s: Not a SATA device\n", __FUNCTION__);
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index e6223ba..a499369 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -237,7 +237,8 @@ enum {
- 	/* host flags */
- 	SIL24_COMMON_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
--				  ATA_FLAG_NCQ | ATA_FLAG_SKIP_D2H_BSY,
-+				  ATA_FLAG_NCQ | ATA_FLAG_SKIP_D2H_BSY |
-+				  ATA_FLAG_ACPI_SATA,
- 	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
- 
- 	IRQ_STAT_4PORTS		= 0xf,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 8a577c2..a26bb7f 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -174,6 +174,7 @@ enum {
- 	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
- 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
- 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
-+	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
- 
- 	/* The following flag belongs to ap->pflags but is kept in
- 	 * ap->flags because it's referenced in many LLDs and will be
+ 	/* always return success */
+ out:
 -- 
 1.5.0.3
 
